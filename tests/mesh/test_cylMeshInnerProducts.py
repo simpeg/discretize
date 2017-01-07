@@ -1,6 +1,6 @@
 from __future__ import print_function
 import discretize
-from discretize import utils, Tests
+from discretize import Tests
 import numpy as np
 import sympy
 from sympy.abc import r, t, z
@@ -11,6 +11,7 @@ TOL = 1e-1
 TOLD = 0.7  # tolerance on deriv checks
 
 np.random.seed(99)
+
 
 class FaceInnerProductFctsIsotropic(object):
     """ Some made up face functions to test the face inner product """
@@ -419,9 +420,9 @@ class TestCylInnerProductsAnisotropic_Deriv(unittest.TestCase):
             x = np.repeat(np.atleast_2d(x), 3, axis=0).T
             x0 = np.repeat(self.x0, 3, axis=0).T
 
-            Zero = sp.csr_matrix((self.mesh.nC, self.mesh.nC))
-            Eye = sp.eye(self.mesh.nC)
-            P = sp.vstack([sp.hstack([Eye, Zero, Eye])])
+            zero = sp.csr_matrix((self.mesh.nC, self.mesh.nC))
+            eye = sp.eye(self.mesh.nC)
+            P = sp.vstack([sp.hstack([eye, zero, eye])])
 
             MfSig = self.mesh.getFaceInnerProduct(x)
             MfSigDeriv = self.mesh.getFaceInnerProductDeriv(x0)
@@ -437,9 +438,9 @@ class TestCylInnerProductsAnisotropic_Deriv(unittest.TestCase):
             x = np.repeat(np.atleast_2d(x), 3, axis=0).T
             x0 = np.repeat(self.x0, 3, axis=0).T
 
-            Zero = sp.csr_matrix((self.mesh.nC, self.mesh.nC))
-            Eye = sp.eye(self.mesh.nC)
-            P = sp.vstack([sp.hstack([Eye, Zero, Eye])])
+            zero = sp.csr_matrix((self.mesh.nC, self.mesh.nC))
+            eye = sp.eye(self.mesh.nC)
+            P = sp.vstack([sp.hstack([eye, zero, eye])])
 
             MfSig = self.mesh.getFaceInnerProduct(x, invProp=True)
             MfSigDeriv = self.mesh.getFaceInnerProductDeriv(x0,
@@ -457,9 +458,9 @@ class TestCylInnerProductsAnisotropic_Deriv(unittest.TestCase):
             x = np.repeat(np.atleast_2d(x), 3, axis=0).T
             x0 = np.repeat(self.x0, 3, axis=0).T
 
-            Zero = sp.csr_matrix((self.mesh.nC, self.mesh.nC))
-            Eye = sp.eye(self.mesh.nC)
-            P = sp.vstack([sp.hstack([Eye, Zero, Eye])])
+            zero = sp.csr_matrix((self.mesh.nC, self.mesh.nC))
+            eye = sp.eye(self.mesh.nC)
+            P = sp.vstack([sp.hstack([eye, zero, eye])])
 
             MfSig = self.mesh.getFaceInnerProduct(x, invMat=True)
             MfSigDeriv = self.mesh.getFaceInnerProductDeriv(x0, invMat=True)
@@ -476,9 +477,9 @@ class TestCylInnerProductsAnisotropic_Deriv(unittest.TestCase):
             x = np.repeat(np.atleast_2d(x), 3, axis=0).T
             x0 = np.repeat(self.x0, 3, axis=0).T
 
-            Zero = sp.csr_matrix((self.mesh.nC, self.mesh.nC))
-            Eye = sp.eye(self.mesh.nC)
-            P = sp.vstack([sp.hstack([Eye, Zero, Eye])])
+            zero = sp.csr_matrix((self.mesh.nC, self.mesh.nC))
+            eye = sp.eye(self.mesh.nC)
+            P = sp.vstack([sp.hstack([eye, zero, eye])])
 
             MfSig = self.mesh.getFaceInnerProduct(x, invProp=True, invMat=True)
             MfSigDeriv = self.mesh.getFaceInnerProductDeriv(x0,
@@ -497,9 +498,9 @@ class TestCylInnerProductsAnisotropic_Deriv(unittest.TestCase):
             x = np.repeat(np.atleast_2d(x), 3, axis=0).T
             x0 = np.repeat(self.x0, 3, axis=0).T
 
-            Zero = sp.csr_matrix((self.mesh.nC, self.mesh.nC))
-            Eye = sp.eye(self.mesh.nC)
-            P = sp.vstack([sp.hstack([Zero, Eye, Zero])])
+            zero = sp.csr_matrix((self.mesh.nC, self.mesh.nC))
+            eye = sp.eye(self.mesh.nC)
+            P = sp.vstack([sp.hstack([zero, eye, zero])])
 
             MeSig = self.mesh.getEdgeInnerProduct(x.reshape(self.mesh.nC, 3))
             MeSigDeriv = self.mesh.getEdgeInnerProductDeriv(x0)
@@ -516,9 +517,9 @@ class TestCylInnerProductsAnisotropic_Deriv(unittest.TestCase):
             x = np.repeat(np.atleast_2d(x), 3, axis=0).T
             x0 = np.repeat(self.x0, 3, axis=0).T
 
-            Zero = sp.csr_matrix((self.mesh.nC, self.mesh.nC))
-            Eye = sp.eye(self.mesh.nC)
-            P = sp.vstack([sp.hstack([Zero, Eye, Zero])])
+            zero = sp.csr_matrix((self.mesh.nC, self.mesh.nC))
+            eye = sp.eye(self.mesh.nC)
+            P = sp.vstack([sp.hstack([zero, eye, zero])])
 
             MeSig = self.mesh.getEdgeInnerProduct(x, invProp=True)
             MeSigDeriv = self.mesh.getEdgeInnerProductDeriv(x0, invProp=True)
@@ -535,9 +536,9 @@ class TestCylInnerProductsAnisotropic_Deriv(unittest.TestCase):
             x = np.repeat(np.atleast_2d(x), 3, axis=0).T
             x0 = np.repeat(self.x0, 3, axis=0).T
 
-            Zero = sp.csr_matrix((self.mesh.nC, self.mesh.nC))
-            Eye = sp.eye(self.mesh.nC)
-            P = sp.vstack([sp.hstack([Zero, Eye, Zero])])
+            zero = sp.csr_matrix((self.mesh.nC, self.mesh.nC))
+            eye = sp.eye(self.mesh.nC)
+            P = sp.vstack([sp.hstack([zero, eye, zero])])
 
             MeSig = self.mesh.getEdgeInnerProduct(x, invMat=True)
             MeSigDeriv = self.mesh.getEdgeInnerProductDeriv(x0, invMat=True)
@@ -554,9 +555,9 @@ class TestCylInnerProductsAnisotropic_Deriv(unittest.TestCase):
             x = np.repeat(np.atleast_2d(x), 3, axis=0).T
             x0 = np.repeat(self.x0, 3, axis=0).T
 
-            Zero = sp.csr_matrix((self.mesh.nC, self.mesh.nC))
-            Eye = sp.eye(self.mesh.nC)
-            P = sp.vstack([sp.hstack([Zero, Eye, Zero])])
+            zero = sp.csr_matrix((self.mesh.nC, self.mesh.nC))
+            eye = sp.eye(self.mesh.nC)
+            P = sp.vstack([sp.hstack([zero, eye, zero])])
 
             MeSig = self.mesh.getEdgeInnerProduct(x, invProp=True, invMat=True)
             MeSigDeriv = self.mesh.getEdgeInnerProductDeriv(x0,

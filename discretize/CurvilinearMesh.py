@@ -36,9 +36,9 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts,CurvView
     .. plot::
             :include-source:
 
-            from SimPEG import Mesh, utils
-            X, Y = utils.exampleLrmGrid([3,3],'rotate')
-            M = Mesh.CurvilinearMesh([X, Y])
+            import discretize
+            X, Y = discretize.utils.exampleLrmGrid([3,3],'rotate')
+            M = discretize.CurvilinearMesh([X, Y])
             M.plotGrid(showIt=True)
     """
 

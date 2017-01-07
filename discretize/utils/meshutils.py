@@ -1,9 +1,8 @@
 import numpy as np
-from scipy import sparse as sp
-from .matutils import mkvc, ndgrid, sub2ind, sdiag
+from .matutils import ndgrid, sub2ind, sdiag
 from .codeutils import asArray_N_x_Dim
 from .codeutils import isScalar
-import os
+
 
 def exampleLrmGrid(nC, exType):
     assert type(nC) == list, "nC must be a list containing the number of nodes"
@@ -26,6 +25,7 @@ def exampleLrmGrid(nC, exType):
             amt = 0.5-np.sqrt((X - 0.5)**2 + (Y - 0.5)**2 + (Z - 0.5)**2)
             amt[amt < 0] = 0
             return [X + (-(Y - 0.5))*amt, Y + (-(Z - 0.5))*amt, Z + (-(X - 0.5))*amt]
+
 
 def meshTensor(value):
     """
@@ -52,8 +52,8 @@ def meshTensor(value):
         .. plot::
 
             from SimPEG import Mesh
-            tx = [(10.0,10,-1.3),(10.0,40),(10.0,10,1.3)]
-            ty = [(10.0,10,-1.3),(10.0,40)]
+            tx = [(10.0, 10, -1.3), (10.0, 40), (10.0, 10, 1.3)]
+            ty = [(10.0, 10, -1.3), (10.0, 40)]
             M = Mesh.TensorMesh([tx, ty])
             M.plotGrid(showIt=True)
 
@@ -79,6 +79,7 @@ def meshTensor(value):
 
     return np.array(proposed)
 
+
 def closestPoints(mesh, pts, gridLoc='CC'):
     """
         Move a list of points to the closest points on a grid.
@@ -98,9 +99,10 @@ def closestPoints(mesh, pts, gridLoc='CC'):
         if mesh.dim == 1:
             nodeInds[i] = ((pt - grid)**2).argmin()
         else:
-            nodeInds[i] = ((np.tile(pt, (grid.shape[0],1)) - grid)**2).sum(axis=1).argmin()
+            nodeInds[i] = ((np.tile(pt, (grid.shape[0], 1)) - grid)**2).sum(axis=1).argmin()
 
     return nodeInds
+
 
 def ExtractCoreMesh(xyzlim, mesh, meshType='tensor'):
     """
@@ -121,7 +123,7 @@ def ExtractCoreMesh(xyzlim, mesh, meshType='tensor'):
         xyzlim = xyzlim.flatten()
         xmin, xmax = xyzlim[0], xyzlim[1]
 
-        xind = np.logical_and(mesh.vectorCCx>xmin, mesh.vectorCCx<xmax)
+        xind = np.logical_and(mesh.vectorCCx > xmin, mesh.vectorCCx < xmax)
 
         xc = mesh.vectorCCx[xind]
 
@@ -131,14 +133,14 @@ def ExtractCoreMesh(xyzlim, mesh, meshType='tensor'):
 
         meshCore = Mesh.TensorMesh([hx, hy], x0=x0)
 
-        actind = (mesh.gridCC[:,0]>xmin) & (mesh.gridCC[:,0]<xmax)
+        actind = (mesh.gridCC[:, 0] > xmin) & (mesh.gridCC[:, 0] < xmax)
 
     elif mesh.dim == 2:
-        xmin, xmax = xyzlim[0,0], xyzlim[0,1]
-        ymin, ymax = xyzlim[1,0], xyzlim[1,1]
+        xmin, xmax = xyzlim[0, 0], xyzlim[0, 1]
+        ymin, ymax = xyzlim[1, 0], xyzlim[1, 1]
 
-        yind = np.logical_and(mesh.vectorCCy>ymin, mesh.vectorCCy<ymax)
-        zind = np.logical_and(mesh.vectorCCz>zmin, mesh.vectorCCz<zmax)
+        yind = np.logical_and(mesh.vectorCCy > ymin, mesh.vectorCCy < ymax)
+        zind = np.logical_and(mesh.vectorCCz > zmin, mesh.vectorCCz < zmax)
 
         xc = mesh.vectorCCx[xind]
         yc = mesh.vectorCCy[yind]
@@ -150,17 +152,17 @@ def ExtractCoreMesh(xyzlim, mesh, meshType='tensor'):
 
         meshCore = Mesh.TensorMesh([hx, hy], x0=x0)
 
-        actind = (mesh.gridCC[:,0]>xmin) & (mesh.gridCC[:,0]<xmax) \
-               & (mesh.gridCC[:,1]>ymin) & (mesh.gridCC[:,1]<ymax) \
+        actind = (mesh.gridCC[:, 0] > xmin) & (mesh.gridCC[:, 0] < xmax) \
+               & (mesh.gridCC[:, 1] > ymin) & (mesh.gridCC[:, 1] < ymax) \
 
     elif mesh.dim == 3:
-        xmin, xmax = xyzlim[0,0], xyzlim[0,1]
-        ymin, ymax = xyzlim[1,0], xyzlim[1,1]
-        zmin, zmax = xyzlim[2,0], xyzlim[2,1]
+        xmin, xmax = xyzlim[0, 0], xyzlim[0, 1]
+        ymin, ymax = xyzlim[1, 0], xyzlim[1, 1]
+        zmin, zmax = xyzlim[2, 0], xyzlim[2, 1]
 
-        xind = np.logical_and(mesh.vectorCCx>xmin, mesh.vectorCCx<xmax)
-        yind = np.logical_and(mesh.vectorCCy>ymin, mesh.vectorCCy<ymax)
-        zind = np.logical_and(mesh.vectorCCz>zmin, mesh.vectorCCz<zmax)
+        xind = np.logical_and(mesh.vectorCCx > xmin, mesh.vectorCCx < xmax)
+        yind = np.logical_and(mesh.vectorCCy > ymin, mesh.vectorCCy < ymax)
+        zind = np.logical_and(mesh.vectorCCz > zmin, mesh.vectorCCz < zmax)
 
         xc = mesh.vectorCCx[xind]
         yc = mesh.vectorCCy[yind]
@@ -174,13 +176,14 @@ def ExtractCoreMesh(xyzlim, mesh, meshType='tensor'):
 
         meshCore = Mesh.TensorMesh([hx, hy, hz], x0=x0)
 
-        actind = (mesh.gridCC[:,0]>xmin) & (mesh.gridCC[:,0]<xmax) \
-               & (mesh.gridCC[:,1]>ymin) & (mesh.gridCC[:,1]<ymax) \
-               & (mesh.gridCC[:,2]>zmin) & (mesh.gridCC[:,2]<zmax)
+        actind = (
+            (mesh.gridCC[:, 0] > xmin) & (mesh.gridCC[:, 0] < xmax) &
+            (mesh.gridCC[:, 1] > ymin) & (mesh.gridCC[:, 1] < ymax) &
+            (mesh.gridCC[:, 2] > zmin) & (mesh.gridCC[:, 2] < zmax)
+        )
 
     else:
-        raise(Exception("Not implemented!"))
-
+        raise Exception("Not implemented!")
 
     return actind, meshCore
 
@@ -188,8 +191,8 @@ def ExtractCoreMesh(xyzlim, mesh, meshType='tensor'):
 if __name__ == '__main__':
     from SimPEG import Mesh
     import matplotlib.pyplot as plt
-    tx = [(10.0,10,-1.3),(10.0,40),(10.0,10,1.3)]
-    ty = [(10.0,10,-1.3),(10.0,40)]
+    tx = [(10.0, 10, -1.3), (10.0, 40), (10.0, 10, 1.3)]
+    ty = [(10.0, 10, -1.3), (10.0, 40)]
     M = Mesh.TensorMesh([tx, ty])
     M.plotGrid()
     plt.gca().axis('tight')

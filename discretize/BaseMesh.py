@@ -59,9 +59,10 @@ class BaseMesh(object):
         .. plot::
             :include-source:
 
-            from SimPEG import Mesh, np
-            M = Mesh.TensorMesh([np.ones(n) for n in [2,3]])
-            M.plotGrid(centers=True,showIt=True)
+            import discretize
+            import numpy as np
+            M = discretize.TensorMesh([np.ones(n) for n in [2,3]])
+            M.plotGrid(centers=True, showIt=True)
         """
         return int(self._n.prod())
 
@@ -76,9 +77,10 @@ class BaseMesh(object):
         .. plot::
             :include-source:
 
-            from SimPEG import Mesh, np
-            M = Mesh.TensorMesh([np.ones(n) for n in [2,3]])
-            M.plotGrid(nodes=True,showIt=True)
+            import discretize
+            import numpy as np
+            M = discretize.TensorMesh([np.ones(n) for n in [2,3]])
+            M.plotGrid(nodes=True, showIt=True)
         """
         return int((self._n+1).prod())
 
@@ -127,9 +129,10 @@ class BaseMesh(object):
         .. plot::
             :include-source:
 
-            from SimPEG import Mesh, np
-            M = Mesh.TensorMesh([np.ones(n) for n in [2,3]])
-            M.plotGrid(edges=True,showIt=True)
+            import discretize
+            import numpy as np
+            M = discretize.TensorMesh([np.ones(n) for n in [2,3]])
+            M.plotGrid(edges=True, showIt=True)
         """
         return np.array(
             [x for x in [self.nEx, self.nEy, self.nEz] if x is not None],
@@ -192,9 +195,10 @@ class BaseMesh(object):
         .. plot::
             :include-source:
 
-            from SimPEG import Mesh, np
-            M = Mesh.TensorMesh([np.ones(n) for n in [2,3]])
-            M.plotGrid(faces=True,showIt=True)
+            import discretize
+            import numpy as np
+            M = discretize.TensorMesh([np.ones(n) for n in [2,3]])
+            M.plotGrid(faces=True, showIt=True)
         """
         return np.array(
             [x for x in [self.nFx, self.nFy, self.nFz] if x is not None],
@@ -582,14 +586,13 @@ class BaseRectangularMesh(BaseMesh):
         return int(self.vnFz.prod())
 
     def r(self, x, xType='CC', outType='CC', format='V'):
-        """
-        Mesh.r is a quick reshape command that will do the best it
+        """`r` is a quick reshape command that will do the best it
         can at giving you what you want.
 
         For example, you have a face variable, and you want the x
         component of it reshaped to a 3D matrix.
 
-        Mesh.r can fulfil your dreams::
+        `r` can fulfil your dreams::
 
             mesh.r(V, 'F', 'Fx', 'M')
                    |   |     |    |

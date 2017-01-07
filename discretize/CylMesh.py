@@ -485,13 +485,3 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
         Pc2r = self.getInterpolationMat(G, interpType)
         Proj = utils.sdiag(proj)
         return Proj * Pc2r
-
-if __name__ == '__main__':
-
-    from SimPEG import Mesh
-    hx = np.r_[1, 1, 0.5]
-    hz = np.r_[2, 1]
-    M = Mesh.CylMesh([hx, 1, hz], x0='00N')
-
-    M.plotImage(np.random.rand(M.nC), showIt=False)
-    M.plotGrid(centers=True, showIt=True)

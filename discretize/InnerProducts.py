@@ -8,43 +8,43 @@ import numpy as np
 
 
 class InnerProducts(object):
-    """
-        This is a base for the SimPEG.Mesh classes. This mixIn creates the all the inner product matrices that you need!
+    """This is a base for the discretize mesh classes.
+    This mixIn creates the all the inner product matrices that you need!
     """
     def __init__(self):
         raise Exception('InnerProducts is a base class providing inner product matrices for meshes and cannot run on its own. Inherit to your favorite Mesh class.')
 
     def getFaceInnerProduct(self, prop=None, invProp=False, invMat=False, doFast=True):
         """
-            :param numpy.array prop: material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
-            :param bool invProp: inverts the material property
-            :param bool invMat: inverts the matrix
-            :param bool doFast: do a faster implementation if available.
-            :rtype: scipy.sparse.csr_matrix
-            :return: M, the inner product matrix (nF, nF)
+        :param numpy.array prop: material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
+        :param bool invProp: inverts the material property
+        :param bool invMat: inverts the matrix
+        :param bool doFast: do a faster implementation if available.
+        :rtype: scipy.sparse.csr_matrix
+        :return: M, the inner product matrix (nF, nF)
         """
         return self._getInnerProduct('F', prop=prop, invProp=invProp, invMat=invMat, doFast=doFast)
 
     def getEdgeInnerProduct(self, prop=None, invProp=False, invMat=False, doFast=True):
         """
-            :param numpy.array prop: material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
-            :param bool invProp: inverts the material property
-            :param bool invMat: inverts the matrix
-            :param bool doFast: do a faster implementation if available.
-            :rtype: scipy.sparse.csr_matrix
-            :return: M, the inner product matrix (nE, nE)
+        :param numpy.array prop: material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
+        :param bool invProp: inverts the material property
+        :param bool invMat: inverts the matrix
+        :param bool doFast: do a faster implementation if available.
+        :rtype: scipy.sparse.csr_matrix
+        :return: M, the inner product matrix (nE, nE)
         """
         return self._getInnerProduct('E', prop=prop, invProp=invProp, invMat=invMat, doFast=doFast)
 
     def _getInnerProduct(self, projType, prop=None, invProp=False, invMat=False, doFast=True):
         """
-            :param str projType: 'F' for faces 'E' for edges
-            :param numpy.array prop: material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
-            :param bool invProp: inverts the material property
-            :param bool invMat: inverts the matrix
-            :param bool doFast: do a faster implementation if available.
-            :rtype: scipy.sparse.csr_matrix
-            :return: M, the inner product matrix (nE, nE)
+        :param str projType: 'F' for faces 'E' for edges
+        :param numpy.array prop: material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
+        :param bool invProp: inverts the material property
+        :param bool invMat: inverts the matrix
+        :param bool doFast: do a faster implementation if available.
+        :rtype: scipy.sparse.csr_matrix
+        :return: M, the inner product matrix (nE, nE)
         """
         assert projType in ['F', 'E'], "projType must be 'F' for faces or 'E' for edges"
 
@@ -72,8 +72,8 @@ class InnerProducts(object):
 
     def _getInnerProductProjectionMatrices(self, projType, tensorType):
         """
-            :param str projType: 'F' for faces 'E' for edges
-            :param TensorType tensorType: type of the tensor: TensorType(mesh, sigma)
+        :param str projType: 'F' for faces 'E' for edges
+        :param TensorType tensorType: type of the tensor: TensorType(mesh, sigma)
         """
         assert isinstance(tensorType, TensorType), 'tensorType must be an instance of TensorType.'
         assert projType in ['F', 'E'], "projType must be 'F' for faces or 'E' for edges"
@@ -115,41 +115,41 @@ class InnerProducts(object):
 
     def getFaceInnerProductDeriv(self, prop, doFast=True, invProp=False, invMat=False):
         """
-            :param numpy.array prop: material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
-            :param bool doFast: do a faster implementation if available.
-            :param bool invProp: inverts the material property
-            :param bool invMat: inverts the matrix
-            :return: dMdmu(u), the derivative of the inner product matrix (u)
+        :param numpy.array prop: material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
+        :param bool doFast: do a faster implementation if available.
+        :param bool invProp: inverts the material property
+        :param bool invMat: inverts the matrix
+        :return: dMdmu(u), the derivative of the inner product matrix (u)
 
-            Given u, dMdmu returns (nF, nC*nA)
+        Given u, dMdmu returns (nF, nC*nA)
 
-            :param numpy.ndarray u: vector that multiplies dMdmu
-            :rtype: scipy.sparse.csr_matrix
-            :return: dMdmu, the derivative of the inner product matrix for a certain u
+        :param numpy.ndarray u: vector that multiplies dMdmu
+        :rtype: scipy.sparse.csr_matrix
+        :return: dMdmu, the derivative of the inner product matrix for a certain u
         """
         return self._getInnerProductDeriv(prop, 'F', doFast=doFast, invProp=invProp, invMat=invMat)
 
 
     def getEdgeInnerProductDeriv(self, prop, doFast=True, invProp=False, invMat=False):
         """
-            :param numpy.array prop: material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
-            :param bool doFast: do a faster implementation if available.
-            :param bool invProp: inverts the material property
-            :param bool invMat: inverts the matrix
-            :rtype: scipy.sparse.csr_matrix
-            :return: dMdm, the derivative of the inner product matrix (nE, nC*nA)
+        :param numpy.array prop: material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
+        :param bool doFast: do a faster implementation if available.
+        :param bool invProp: inverts the material property
+        :param bool invMat: inverts the matrix
+        :rtype: scipy.sparse.csr_matrix
+        :return: dMdm, the derivative of the inner product matrix (nE, nC*nA)
         """
         return self._getInnerProductDeriv(prop, 'E', doFast=doFast, invProp=invProp, invMat=invMat)
 
     def _getInnerProductDeriv(self, prop, projType, doFast=True, invProp=False, invMat=False):
         """
-            :param numpy.array prop: material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
-            :param str projType: 'F' for faces 'E' for edges
-            :param bool doFast: do a faster implementation if available.
-            :param bool invProp: inverts the material property
-            :param bool invMat: inverts the matrix
-            :rtype: scipy.sparse.csr_matrix
-            :return: dMdm, the derivative of the inner product matrix (nE, nC*nA)
+        :param numpy.array prop: material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
+        :param str projType: 'F' for faces 'E' for edges
+        :param bool doFast: do a faster implementation if available.
+        :param bool invProp: inverts the material property
+        :param bool invMat: inverts the matrix
+        :rtype: scipy.sparse.csr_matrix
+        :return: dMdm, the derivative of the inner product matrix (nE, nC*nA)
         """
         fast = None
         if hasattr(self, '_fastInnerProductDeriv') and doFast:
@@ -162,18 +162,19 @@ class InnerProducts(object):
 
         tensorType = TensorType(self, prop)
         P = self._getInnerProductProjectionMatrices(projType, tensorType=tensorType)
+
         def innerProductDeriv(v):
             return self._getInnerProductDerivFunction(tensorType, P, projType, v)
         return innerProductDeriv
 
     def _getInnerProductDerivFunction(self, tensorType, P, projType, v):
         """
-            :param numpy.array prop: material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
-            :param numpy.array v: vector to multiply (required in the general implementation)
-            :param list P: list of projection matrices
-            :param str projType: 'F' for faces 'E' for edges
-            :rtype: scipy.sparse.csr_matrix
-            :return: dMdm, the derivative of the inner product matrix (n, nC*nA)
+        :param numpy.array prop: material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
+        :param numpy.array v: vector to multiply (required in the general implementation)
+        :param list P: list of projection matrices
+        :param str projType: 'F' for faces 'E' for edges
+        :rtype: scipy.sparse.csr_matrix
+        :return: dMdm, the derivative of the inner product matrix (n, nC*nA)
         """
         assert projType in ['F', 'E'], "projType must be 'F' for faces or 'E' for edges"
         n = getattr(self,'n'+projType)
@@ -279,11 +280,8 @@ class InnerProducts(object):
     #         |                                     |/
     #    node(i+1,j,k) ------ edge2(i+1,j,k) ----- node(i+1,j+1,k)
 
-
     def _getFacePx(M):
-        """Returns a function for creating projection matrices
-
-        """
+        """Returns a function for creating projection matrices"""
         ii = np.arange(M.nCx)
 
         def Px(xFace):
@@ -300,32 +298,32 @@ class InnerProducts(object):
     def _getFacePxx(M):
         """returns a function for creating projection matrices
 
-            Mats takes you from faces a subset of all faces on only the
-            faces that you ask for.
+        Mats takes you from faces a subset of all faces on only the
+        faces that you ask for.
 
-            These are centered around a single nodes.
+        These are centered around a single nodes.
 
-            For example, if this was your entire mesh:
+        For example, if this was your entire mesh:
 
-                            f3(Yp)
-                      2_______________3
-                      |               |
-                      |               |
-                      |               |
-              f0(Xm)  |       x       |  f1(Xp)
-                      |               |
-                      |               |
-                      |_______________|
-                      0               1
-                            f2(Ym)
+                        f3(Yp)
+                  2_______________3
+                  |               |
+                  |               |
+                  |               |
+          f0(Xm)  |       x       |  f1(Xp)
+                  |               |
+                  |               |
+                  |_______________|
+                  0               1
+                        f2(Ym)
 
-            Pxx('fXm','fYm') = | 1, 0, 0, 0 |
-                               | 0, 0, 1, 0 |
+        Pxx('fXm','fYm') = | 1, 0, 0, 0 |
+                           | 0, 0, 1, 0 |
 
-            Pxx('fXp','fYm') = | 0, 1, 0, 0 |
-                               | 0, 0, 1, 0 |
+        Pxx('fXp','fYm') = | 0, 1, 0, 0 |
+                           | 0, 0, 1, 0 |
 
-            """
+        """
         i, j = np.arange(M.nCx), np.arange(M.nCy)
 
         iijj = ndgrid(i, j)
@@ -368,10 +366,10 @@ class InnerProducts(object):
     def _getFacePxxx(M):
         """returns a function for creating projection matrices
 
-            Mats takes you from faces a subset of all faces on only the
-            faces that you ask for.
+        Mats takes you from faces a subset of all faces on only the
+        faces that you ask for.
 
-            These are centered around a single nodes.
+        These are centered around a single nodes.
         """
 
         i, j, k = np.arange(M.nCx), np.arange(M.nCy), np.arange(M.nCz)
@@ -386,9 +384,9 @@ class InnerProducts(object):
 
         def Pxxx(xFace, yFace, zFace):
             """
-                xFace is 'fXp' or 'fXm'
-                yFace is 'fYp' or 'fYm'
-                zFace is 'fZp' or 'fZm'
+            xFace is 'fXp' or 'fXm'
+            yFace is 'fYp' or 'fYm'
+            zFace is 'fZp' or 'fZm'
             """
 
             # no  | node        | f1        | f2        | f3
@@ -440,11 +438,13 @@ class InnerProducts(object):
             eT2 = M.r(M.tangents, 'E', 'Ey', 'M')
 
         def Pxx(xEdge, yEdge):
-            # no | node      | e1      | e2
-            # 00 | i  ,j     | i  ,j   | i  ,j
-            # 10 | i+1,j     | i  ,j   | i+1,j
-            # 01 | i  ,j+1   | i  ,j+1 | i  ,j
-            # 11 | i+1,j+1   | i  ,j+1 | i+1,j
+            """
+            no | node      | e1      | e2
+            00 | i  ,j     | i  ,j   | i  ,j
+            10 | i+1,j     | i  ,j   | i+1,j
+            01 | i  ,j+1   | i  ,j+1 | i  ,j
+            11 | i+1,j+1   | i  ,j+1 | i+1,j
+            """
             posX = 0 if xEdge == 'eX0' else 1
             posY = 0 if yEdge == 'eY0' else 1
 
@@ -475,16 +475,17 @@ class InnerProducts(object):
             eT3 = M.r(M.tangents, 'E', 'Ez', 'M')
 
         def Pxxx(xEdge, yEdge, zEdge):
-
-            # no  | node        | e1          | e2          | e3
-            # 000 | i  ,j  ,k   | i  ,j  ,k   | i  ,j  ,k   | i  ,j  ,k
-            # 100 | i+1,j  ,k   | i  ,j  ,k   | i+1,j  ,k   | i+1,j  ,k
-            # 010 | i  ,j+1,k   | i  ,j+1,k   | i  ,j  ,k   | i  ,j+1,k
-            # 110 | i+1,j+1,k   | i  ,j+1,k   | i+1,j  ,k   | i+1,j+1,k
-            # 001 | i  ,j  ,k+1 | i  ,j  ,k+1 | i  ,j  ,k+1 | i  ,j  ,k
-            # 101 | i+1,j  ,k+1 | i  ,j  ,k+1 | i+1,j  ,k+1 | i+1,j  ,k
-            # 011 | i  ,j+1,k+1 | i  ,j+1,k+1 | i  ,j  ,k+1 | i  ,j+1,k
-            # 111 | i+1,j+1,k+1 | i  ,j+1,k+1 | i+1,j  ,k+1 | i+1,j+1,k
+            """
+            no  | node        | e1          | e2          | e3
+            000 | i  ,j  ,k   | i  ,j  ,k   | i  ,j  ,k   | i  ,j  ,k
+            100 | i+1,j  ,k   | i  ,j  ,k   | i+1,j  ,k   | i+1,j  ,k
+            010 | i  ,j+1,k   | i  ,j+1,k   | i  ,j  ,k   | i  ,j+1,k
+            110 | i+1,j+1,k   | i  ,j+1,k   | i+1,j  ,k   | i+1,j+1,k
+            001 | i  ,j  ,k+1 | i  ,j  ,k+1 | i  ,j  ,k+1 | i  ,j  ,k
+            101 | i+1,j  ,k+1 | i  ,j  ,k+1 | i+1,j  ,k+1 | i+1,j  ,k
+            011 | i  ,j+1,k+1 | i  ,j+1,k+1 | i  ,j  ,k+1 | i  ,j+1,k
+            111 | i+1,j+1,k+1 | i  ,j+1,k+1 | i+1,j  ,k+1 | i+1,j+1,k
+            """
 
             posX = [0,0] if xEdge == 'eX0' else [1, 0] if xEdge == 'eX1' else [0,1] if xEdge == 'eX2' else [1,1]
             posY = [0,0] if yEdge == 'eY0' else [1, 0] if yEdge == 'eY1' else [0,1] if yEdge == 'eY2' else [1,1]

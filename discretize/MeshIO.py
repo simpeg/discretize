@@ -9,7 +9,7 @@ class TensorMeshIO(object):
     @classmethod
     def readUBC(TensorMesh, fileName):
         """
-            Read UBC GIF 3D tensor mesh and generate 3D TensorMesh in SimPEG.
+            Read UBC GIF 3D tensor mesh and generate 3D TensorMesh.
 
             :param string fileName: path to the UBC GIF mesh file
             :rtype: TensorMesh

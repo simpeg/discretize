@@ -5,13 +5,13 @@ import scipy.sparse as sp
 from SimPEG.Utils import (sdiag, sub2ind, ndgrid, mkvc, isScalar,
                           inv2X2BlockDiagonal, inv3X3BlockDiagonal,
                           invPropertyTensor, makePropertyTensor, indexCube,
-                          ind2sub, asArray_N_x_Dim, TensorType, diagEst, count,
-                          timeIt, Counter)
+                          ind2sub, asArray_N_x_Dim, TensorType)
 from SimPEG import Mesh
 from SimPEG.Tests import checkDerivative
 import sys
 
 TOL = 1e-8
+
 
 class TestCheckDerivative(unittest.TestCase):
 
@@ -34,26 +34,6 @@ class TestCheckDerivative(unittest.TestCase):
         self.assertTrue(not passed, True)
 
 
-class TestCounter(unittest.TestCase):
-    def test_simpleFail(self):
-        class MyClass(object):
-            def __init__(self, url):
-                self.counter = Counter()
-
-            @count
-            def MyMethod(self):
-                pass
-
-            @timeIt
-            def MySecondMethod(self):
-                pass
-
-        c = MyClass('blah')
-        for i in range(100): c.MyMethod()
-        for i in range(300): c.MySecondMethod()
-        c.counter.summary()
-        self.assertTrue(True)
-
 class TestSequenceFunctions(unittest.TestCase):
 
     def setUp(self):
@@ -63,7 +43,7 @@ class TestSequenceFunctions(unittest.TestCase):
 
     def test_mkvc1(self):
         x = mkvc(self.a)
-        self.assertTrue(x.shape, (3,))
+        self.assertTrue(x.shape, (3, ))
 
     def test_mkvc2(self):
         x = mkvc(self.a, 2)
@@ -94,18 +74,18 @@ class TestSequenceFunctions(unittest.TestCase):
         self.assertTrue(np.all(XYZ[:, 2] == X3_test))
 
     def test_sub2ind(self):
-        x = np.ones((5,2))
-        self.assertTrue(np.all(sub2ind(x.shape, [0,0]) == [0]))
-        self.assertTrue(np.all(sub2ind(x.shape, [4,0]) == [4]))
-        self.assertTrue(np.all(sub2ind(x.shape, [0,1]) == [5]))
-        self.assertTrue(np.all(sub2ind(x.shape, [4,1]) == [9]))
-        self.assertTrue(np.all(sub2ind(x.shape, [[4,1]]) == [9]))
-        self.assertTrue(np.all(sub2ind(x.shape, [[0,0],[4,0],[0,1],[4,1]]) == [0,4,5,9]))
+        x = np.ones((5, 2))
+        self.assertTrue(np.all(sub2ind(x.shape, [0, 0]) == [0]))
+        self.assertTrue(np.all(sub2ind(x.shape, [4, 0]) == [4]))
+        self.assertTrue(np.all(sub2ind(x.shape, [0, 1]) == [5]))
+        self.assertTrue(np.all(sub2ind(x.shape, [4, 1]) == [9]))
+        self.assertTrue(np.all(sub2ind(x.shape, [[4, 1]]) == [9]))
+        self.assertTrue(np.all(sub2ind(x.shape, [[0, 0], [4, 0], [0, 1], [4, 1]]) == [0, 4, 5, 9]))
 
     def test_ind2sub(self):
-        x = np.ones((5,2))
-        self.assertTrue(np.all(ind2sub(x.shape, [0,4,5,9])[0] == [0,4,0,4]))
-        self.assertTrue(np.all(ind2sub(x.shape, [0,4,5,9])[1] == [0,0,1,1]))
+        x = np.ones((5, 2))
+        self.assertTrue(np.all(ind2sub(x.shape, [0, 4, 5, 9])[0] == [0, 4, 0, 4]))
+        self.assertTrue(np.all(ind2sub(x.shape, [0, 4, 5, 9])[1] == [0, 0, 1, 1]))
 
     def test_indexCube_2D(self):
         nN = np.array([3, 3])
@@ -146,7 +126,6 @@ class TestSequenceFunctions(unittest.TestCase):
         Z3 = B*A - sp.identity(15)
 
         self.assertTrue(np.linalg.norm(Z3.todense().ravel(), 2) < TOL)
-
 
     def test_invPropertyTensor2D(self):
         M = Mesh.TensorMesh([6, 6])
@@ -201,7 +180,6 @@ class TestSequenceFunctions(unittest.TestCase):
         self.assertRaises(Exception, TensorType, M, np.c_[a1, a2, a3, a3])
         self.assertTrue(TensorType(M, None) == -1)
 
-
     def test_invPropertyTensor3D(self):
         M = Mesh.TensorMesh([6, 6, 6])
         a1 = np.random.rand(M.nC)
@@ -228,44 +206,32 @@ class TestSequenceFunctions(unittest.TestCase):
     def test_isScalar(self):
         self.assertTrue(isScalar(1.))
         self.assertTrue(isScalar(1))
-        if sys.version_info < (3,):
+        if sys.version_info < (3, ):
             self.assertTrue(isScalar(long(1)))
         self.assertTrue(isScalar(np.r_[1.]))
         self.assertTrue(isScalar(np.r_[1]))
 
     def test_asArray_N_x_Dim(self):
 
-        true = np.array([[1,2,3]])
+        true = np.array([[1, 2, 3]])
 
-        listArray = asArray_N_x_Dim([1,2,3],3)
+        listArray = asArray_N_x_Dim([1, 2, 3], 3)
         self.assertTrue(np.all(true == listArray))
         self.assertTrue(true.shape == listArray.shape)
 
-        listArray = asArray_N_x_Dim(np.r_[1,2,3],3)
+        listArray = asArray_N_x_Dim(np.r_[1, 2, 3], 3)
         self.assertTrue(np.all(true == listArray))
         self.assertTrue(true.shape == listArray.shape)
 
-        listArray = asArray_N_x_Dim(np.array([[1,2,3.]]),3)
+        listArray = asArray_N_x_Dim(np.array([[1, 2, 3.]]), 3)
         self.assertTrue(np.all(true == listArray))
         self.assertTrue(true.shape == listArray.shape)
 
-        true = np.array([[1,2],[4,5]])
+        true = np.array([[1, 2], [4, 5]])
 
-        listArray = asArray_N_x_Dim([[1,2],[4,5]],2)
+        listArray = asArray_N_x_Dim([[1, 2], [4, 5]], 2)
         self.assertTrue(np.all(true == listArray))
         self.assertTrue(true.shape == listArray.shape)
-
-class TestDiagEst(unittest.TestCase):
-
-    def setUp(self):
-        self.n = 10
-        self.A = np.random.rand(self.n,self.n)
-        self.Adiag = np.diagonal(self.A)
-
-    def testOnes(self):
-        Adiagtest = diagEst(self.A,self.n,self.n)
-        r = np.abs(Adiagtest-self.Adiag)
-        self.assertTrue(r.dot(r) < TOL)
 
 
 if __name__ == '__main__':

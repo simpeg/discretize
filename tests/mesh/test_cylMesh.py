@@ -10,9 +10,9 @@ np.random.seed(13)
 class TestCyl2DMesh(unittest.TestCase):
 
     def setUp(self):
-        hx = np.r_[1,1,0.5]
-        hz = np.r_[2,1]
-        self.mesh = discretize.CylMesh([hx, 1,hz])
+        hx = np.r_[1, 1, 0.5]
+        hz = np.r_[2, 1]
+        self.mesh = discretize.CylMesh([hx, 1, hz])
 
     def test_dim(self):
         self.assertTrue(self.mesh.dim == 3)
@@ -74,16 +74,16 @@ class TestCyl2DMesh(unittest.TestCase):
     def test_area(self):
         r = np.r_[0, 1, 2, 2.5]
         a = r[1:]*2*np.pi
-        areaX = np.r_[2*a,a]
+        areaX = np.r_[2*a, a]
         a = (r[1:]**2 - r[:-1]**2)*np.pi
-        areaZ = np.r_[a,a,a]
+        areaZ = np.r_[a, a, a]
         area = np.r_[areaX, areaZ]
         self.assertTrue(np.linalg.norm((area-self.mesh.area)) == 0)
 
     def test_vol(self):
         r = np.r_[0, 1, 2, 2.5]
         a = (r[1:]**2 - r[:-1]**2)*np.pi
-        vol = np.r_[2*a,a]
+        vol = np.r_[2*a, a]
         self.assertTrue(np.linalg.norm((vol-self.mesh.vol)) == 0)
 
     def test_vol_simple(self):
@@ -106,38 +106,38 @@ class TestCyl2DMesh(unittest.TestCase):
         self.assertTrue(self.mesh.gridEz is None)
 
     def test_gridCC(self):
-        x = np.r_[0.5,1.5,2.25,0.5,1.5,2.25]
+        x = np.r_[0.5, 1.5, 2.25, 0.5, 1.5, 2.25]
         y = np.zeros(6)
-        z = np.r_[1,1,1,2.5,2.5,2.5]
-        G = np.c_[x,y,z]
+        z = np.r_[1, 1, 1, 2.5, 2.5, 2.5]
+        G = np.c_[x, y, z]
         self.assertTrue(np.linalg.norm((G-self.mesh.gridCC).ravel()) == 0)
 
     def test_gridN(self):
-        x = np.r_[1,2,2.5,1,2,2.5,1,2,2.5]
+        x = np.r_[1, 2, 2.5, 1, 2, 2.5, 1, 2, 2.5]
         y = np.zeros(9)
-        z = np.r_[0,0,0,2,2,2,3,3,3.]
-        G = np.c_[x,y,z]
+        z = np.r_[0, 0, 0, 2, 2, 2, 3, 3, 3.]
+        G = np.c_[x, y, z]
         self.assertTrue(np.linalg.norm((G-self.mesh.gridN).ravel()) == 0)
 
     def test_gridFx(self):
-        x = np.r_[1,2,2.5,1,2,2.5]
+        x = np.r_[1, 2, 2.5, 1, 2, 2.5]
         y = np.zeros(6)
-        z = np.r_[1,1,1,2.5,2.5,2.5]
-        G = np.c_[x,y,z]
+        z = np.r_[1, 1, 1, 2.5, 2.5, 2.5]
+        G = np.c_[x, y, z]
         self.assertTrue(np.linalg.norm((G-self.mesh.gridFx).ravel()) == 0)
 
     def test_gridFz(self):
-        x = np.r_[0.5,1.5,2.25,0.5,1.5,2.25,0.5,1.5,2.25]
+        x = np.r_[0.5, 1.5, 2.25, 0.5, 1.5, 2.25, 0.5, 1.5, 2.25]
         y = np.zeros(9)
-        z = np.r_[0,0,0,2,2,2,3,3,3.]
-        G = np.c_[x,y,z]
+        z = np.r_[0, 0, 0, 2, 2, 2, 3, 3, 3.]
+        G = np.c_[x, y, z]
         self.assertTrue(np.linalg.norm((G-self.mesh.gridFz).ravel()) == 0)
 
     def test_gridEy(self):
-        x = np.r_[1,2,2.5,1,2,2.5,1,2,2.5]
+        x = np.r_[1, 2, 2.5, 1, 2, 2.5, 1, 2, 2.5]
         y = np.zeros(9)
-        z = np.r_[0,0,0,2,2,2,3,3,3.]
-        G = np.c_[x,y,z]
+        z = np.r_[0, 0, 0, 2, 2, 2, 3, 3, 3.]
+        G = np.c_[x, y, z]
         self.assertTrue(np.linalg.norm((G-self.mesh.gridEy).ravel()) == 0)
 
     def test_lightOperators(self):
@@ -145,36 +145,36 @@ class TestCyl2DMesh(unittest.TestCase):
 
     def test_getInterpMatCartMesh_Cells(self):
 
-        Mr = discretize.TensorMesh([100,100,2], x0='CC0')
-        Mc = discretize.CylMesh([np.ones(10)/5,1,10],x0='0C0',cartesianOrigin=[-0.2,-0.2,0])
+        Mr = discretize.TensorMesh([100, 100, 2], x0='CC0')
+        Mc = discretize.CylMesh([np.ones(10)/5, 1, 10], x0='0C0', cartesianOrigin=[-0.2, -0.2, 0])
 
         mc = np.arange(Mc.nC)
-        xr = np.linspace(0,0.4,50)
-        xc = np.linspace(0,0.4,50) + 0.2
-        Pr = Mr.getInterpolationMat(np.c_[xr,np.ones(50)*-0.2,np.ones(50)*0.5],'CC')
-        Pc = Mc.getInterpolationMat(np.c_[xc,np.zeros(50),np.ones(50)*0.5],'CC')
+        xr = np.linspace(0, 0.4, 50)
+        xc = np.linspace(0, 0.4, 50) + 0.2
+        Pr = Mr.getInterpolationMat(np.c_[xr, np.ones(50)*-0.2, np.ones(50)*0.5], 'CC')
+        Pc = Mc.getInterpolationMat(np.c_[xc, np.zeros(50), np.ones(50)*0.5], 'CC')
         Pc2r = Mc.getInterpolationMatCartMesh(Mr, 'CC')
 
         assert np.abs(Pr*(Pc2r*mc) - Pc*mc).max() < 1e-3
 
     def test_getInterpMatCartMesh_Cells2Nodes(self):
 
-        Mr = discretize.TensorMesh([100,100,2], x0='CC0')
-        Mc = discretize.CylMesh([np.ones(10)/5,1,10],x0='0C0',cartesianOrigin=[-0.2,-0.2,0])
+        Mr = discretize.TensorMesh([100, 100, 2], x0='CC0')
+        Mc = discretize.CylMesh([np.ones(10)/5, 1, 10], x0='0C0', cartesianOrigin=[-0.2, -0.2, 0])
 
         mc = np.arange(Mc.nC)
-        xr = np.linspace(0,0.4,50)
-        xc = np.linspace(0,0.4,50) + 0.2
-        Pr = Mr.getInterpolationMat(np.c_[xr,np.ones(50)*-0.2,np.ones(50)*0.5],'N')
-        Pc = Mc.getInterpolationMat(np.c_[xc,np.zeros(50),np.ones(50)*0.5],'CC')
+        xr = np.linspace(0, 0.4, 50)
+        xc = np.linspace(0, 0.4, 50) + 0.2
+        Pr = Mr.getInterpolationMat(np.c_[xr, np.ones(50)*-0.2, np.ones(50)*0.5], 'N')
+        Pc = Mc.getInterpolationMat(np.c_[xc, np.zeros(50), np.ones(50)*0.5], 'CC')
         Pc2r = Mc.getInterpolationMatCartMesh(Mr, 'CC', locTypeTo='N')
 
         assert np.abs(Pr*(Pc2r*mc) - Pc*mc).max() < 1e-3
 
     def test_getInterpMatCartMesh_Faces(self):
 
-        Mr = discretize.TensorMesh([100,100,2], x0='CC0')
-        Mc = discretize.CylMesh([np.ones(10)/5,1,10],x0='0C0',cartesianOrigin=[-0.2,-0.2,0])
+        Mr = discretize.TensorMesh([100, 100, 2], x0='CC0')
+        Mc = discretize.CylMesh([np.ones(10)/5, 1, 10], x0='0C0', cartesianOrigin=[-0.2, -0.2, 0])
 
         Pf = Mc.getInterpolationMatCartMesh(Mr, 'F')
         mf = np.ones(Mc.nF)
@@ -196,16 +196,15 @@ class TestCyl2DMesh(unittest.TestCase):
         assert np.abs((fzcc - 1).sum()) < TOL
 
         mag = (fxcc**2 + fycc**2)**0.5
-        dist = ((Mr.gridCC[:,0] + 0.2)**2  + (Mr.gridCC[:,1] + 0.2)**2)**0.5
+        dist = ((Mr.gridCC[:, 0] + 0.2)**2  + (Mr.gridCC[:, 1] + 0.2)**2)**0.5
 
         assert np.abs(mag[dist > 0.1].max() - 1) < TOL
         assert np.abs(mag[dist > 0.1].min() - 1) < TOL
 
-
     def test_getInterpMatCartMesh_Faces2Edges(self):
 
-        Mr = discretize.TensorMesh([100,100,2], x0='CC0')
-        Mc = discretize.CylMesh([np.ones(10)/5,1,10],x0='0C0',cartesianOrigin=[-0.2,-0.2,0])
+        Mr = discretize.TensorMesh([100, 100, 2], x0='CC0')
+        Mc = discretize.CylMesh([np.ones(10)/5, 1, 10], x0='0C0', cartesianOrigin=[-0.2, -0.2, 0])
 
         Pf2e = Mc.getInterpolationMatCartMesh(Mr, 'F', locTypeTo='E')
         mf = np.ones(Mc.nF)
@@ -227,16 +226,15 @@ class TestCyl2DMesh(unittest.TestCase):
         assert np.abs((ezcc - 1).sum()) < TOL
 
         mag = (excc**2 + eycc**2)**0.5
-        dist = ((Mr.gridCC[:,0] + 0.2)**2  + (Mr.gridCC[:,1] + 0.2)**2)**0.5
+        dist = ((Mr.gridCC[:, 0] + 0.2)**2  + (Mr.gridCC[:, 1] + 0.2)**2)**0.5
 
         assert np.abs(mag[dist > 0.1].max() - 1) < TOL
         assert np.abs(mag[dist > 0.1].min() - 1) < TOL
 
-
     def test_getInterpMatCartMesh_Edges(self):
 
-        Mr = discretize.TensorMesh([100,100,2], x0='CC0')
-        Mc = discretize.CylMesh([np.ones(10)/5,1,10],x0='0C0',cartesianOrigin=[-0.2,-0.2,0])
+        Mr = discretize.TensorMesh([100, 100, 2], x0='CC0')
+        Mc = discretize.CylMesh([np.ones(10)/5, 1, 10], x0='0C0', cartesianOrigin=[-0.2, -0.2, 0])
 
         Pe = Mc.getInterpolationMatCartMesh(Mr, 'E')
         me = np.ones(Mc.nE)
@@ -258,16 +256,15 @@ class TestCyl2DMesh(unittest.TestCase):
         assert np.abs(ezcc.sum()) < TOL
 
         mag = (excc**2 + eycc**2)**0.5
-        dist = ((Mr.gridCC[:,0] + 0.2)**2  + (Mr.gridCC[:,1] + 0.2)**2)**0.5
+        dist = ((Mr.gridCC[:, 0] + 0.2)**2  + (Mr.gridCC[:, 1] + 0.2)**2)**0.5
 
         assert np.abs(mag[dist > 0.1].max() - 1) < TOL
         assert np.abs(mag[dist > 0.1].min() - 1) < TOL
 
-
     def test_getInterpMatCartMesh_Edges2Faces(self):
 
-        Mr = discretize.TensorMesh([100,100,2], x0='CC0')
-        Mc = discretize.CylMesh([np.ones(10)/5,1,10],x0='0C0',cartesianOrigin=[-0.2,-0.2,0])
+        Mr = discretize.TensorMesh([100, 100, 2], x0='CC0')
+        Mc = discretize.CylMesh([np.ones(10)/5, 1, 10], x0='0C0', cartesianOrigin=[-0.2, -0.2, 0])
 
         Pe2f = Mc.getInterpolationMatCartMesh(Mr, 'E', locTypeTo='F')
         me = np.ones(Mc.nE)
@@ -289,7 +286,7 @@ class TestCyl2DMesh(unittest.TestCase):
         assert np.abs(ezcc.sum()) < TOL
 
         mag = (excc**2 + eycc**2)**0.5
-        dist = ((Mr.gridCC[:,0] + 0.2)**2  + (Mr.gridCC[:,1] + 0.2)**2)**0.5
+        dist = ((Mr.gridCC[:, 0] + 0.2)**2  + (Mr.gridCC[:, 1] + 0.2)**2)**0.5
 
         assert np.abs(mag[dist > 0.1].max() - 1) < TOL
         assert np.abs(mag[dist > 0.1].min() - 1) < TOL
@@ -316,7 +313,7 @@ class TestFaceDiv2D(Tests.OrderTest):
         sol = lambda r, t, z: (2*np.pi*r*np.cos(2*np.pi*r) + np.sin(2*np.pi*r))/r + 2*np.pi*np.cos(2*np.pi*z)
 
         Fc = cylF2(self.M, funR, funZ)
-        Fc = np.c_[Fc[:,0],np.zeros(self.M.nF),Fc[:,1]]
+        Fc = np.c_[Fc[:, 0], np.zeros(self.M.nF), Fc[:, 1]]
         F = self.M.projectFaceVector(Fc)
 
         divF = self.M.faceDiv.dot(F)
@@ -328,6 +325,7 @@ class TestFaceDiv2D(Tests.OrderTest):
     def test_order(self):
         self.orderTest()
 
+
 class TestEdgeCurl2D(Tests.OrderTest):
     name = "EdgeCurl"
     meshTypes = MESHTYPES
@@ -337,15 +335,15 @@ class TestEdgeCurl2D(Tests.OrderTest):
         # To Recreate or change the functions:
 
         # import sympy
-        # r,t,z = sympy.symbols('r,t,z')
+        # r, t, z = sympy.symbols('r, t, z')
 
         # fR = 0
         # fZ = 0
         # fT = sympy.sin(2.*sympy.pi*z)
 
-        # print(1/r*sympy.diff(fZ,t) - sympy.diff(fT,z))
-        # print(sympy.diff(fR,z) - sympy.diff(fZ,r))
-        # print(1/r*(sympy.diff(r*fT,r) - sympy.diff(fR,t)))
+        # print(1/r*sympy.diff(fZ, t) - sympy.diff(fT, z))
+        # print(sympy.diff(fR, z) - sympy.diff(fZ, r))
+        # print(1/r*(sympy.diff(r*fT, r) - sympy.diff(fR, t)))
 
         funT = lambda r, t, z: np.sin(2.*np.pi*z)
 
@@ -357,7 +355,7 @@ class TestEdgeCurl2D(Tests.OrderTest):
         curlE = self.M.edgeCurl.dot(E)
 
         Fc = cylF2(self.M, solR, solZ)
-        Fc = np.c_[Fc[:,0],np.zeros(self.M.nF),Fc[:,1]]
+        Fc = np.c_[Fc[:, 0], np.zeros(self.M.nF), Fc[:, 1]]
         curlE_ana = self.M.projectFaceVector(Fc)
 
         err = np.linalg.norm((curlE-curlE_ana), np.inf)
@@ -366,7 +364,7 @@ class TestEdgeCurl2D(Tests.OrderTest):
     def test_order(self):
         self.orderTest()
 
-# class TestCellGrad2D_Dirichlet(Tests.OrderTest):
+
 class TestCellGrad2D_Dirichlet(unittest.TestCase):
     # name = "Cell Grad 2 - Dirichlet"
     # meshTypes = MESHTYPES
@@ -382,7 +380,7 @@ class TestCellGrad2D_Dirichlet(unittest.TestCase):
     #     xc = call2(sol, self.M.gridCC)
 
     #     Fc = cylF2(self.M, fx, fz)
-    #     Fc = np.c_[Fc[:,0],np.zeros(self.M.nF),Fc[:,1]]
+    #     Fc = np.c_[Fc[:, 0], np.zeros(self.M.nF), Fc[:, 1]]
     #     gradX_ana = self.M.projectFaceVector(Fc)
 
     #     gradX = self.M.cellGrad.dot(xc)
@@ -397,7 +395,7 @@ class TestCellGrad2D_Dirichlet(unittest.TestCase):
     def setUp(self):
         hx = np.random.rand(10)
         hz = np.random.rand(10)
-        self.mesh = discretize.CylMesh([hx, 1,hz])
+        self.mesh = discretize.CylMesh([hx, 1, hz])
 
     def test_NotImplementedError(self):
         with self.assertRaises(NotImplementedError):
@@ -409,7 +407,7 @@ class TestAveragingSimple(unittest.TestCase):
     def setUp(self):
         hx = np.random.rand(10)
         hz = np.random.rand(10)
-        self.mesh = discretize.CylMesh([hx, 1,hz])
+        self.mesh = discretize.CylMesh([hx, 1, hz])
 
     def test_constantEdges(self):
         edge_vec = np.ones(self.mesh.nE)
@@ -475,13 +473,13 @@ class TestAveF2CCV(Tests.OrderTest):
         funZ = lambda r, z: np.sin(3.*np.pi*z) * np.cos(2.*np.pi*r)
 
         Fc = cylF2(self.M, funR, funZ)
-        Fc = np.c_[Fc[:,0],np.zeros(self.M.nF), Fc[:,1]]
+        Fc = np.c_[Fc[:, 0], np.zeros(self.M.nF), Fc[:, 1]]
         F = self.M.projectFaceVector(Fc)
 
         aveF = self.M.aveF2CCV * F
 
-        aveF_anaR = funR(self.M.gridCC[:,0], self.M.gridCC[:,2])
-        aveF_anaZ = funZ(self.M.gridCC[:,0], self.M.gridCC[:,2])
+        aveF_anaR = funR(self.M.gridCC[:, 0], self.M.gridCC[:, 2])
+        aveF_anaZ = funZ(self.M.gridCC[:, 0], self.M.gridCC[:, 2])
 
         aveF_ana = np.hstack([aveF_anaR, aveF_anaZ])
 
@@ -502,17 +500,18 @@ class TestAveF2CC(Tests.OrderTest):
         fun = lambda r, z: np.sin(2.*np.pi*z) * np.cos(np.pi*r)
 
         Fc = cylF2(self.M, fun, fun)
-        Fc = np.c_[Fc[:,0],np.zeros(self.M.nF), Fc[:,1]]
+        Fc = np.c_[Fc[:, 0], np.zeros(self.M.nF), Fc[:, 1]]
         F = self.M.projectFaceVector(Fc)
 
         aveF = self.M.aveF2CC * F
-        aveF_ana = fun(self.M.gridCC[:,0], self.M.gridCC[:,2])
+        aveF_ana = fun(self.M.gridCC[:, 0], self.M.gridCC[:, 2])
 
         err = np.linalg.norm((aveF-aveF_ana), np.inf)
         return err
 
     def test_order(self):
         self.orderTest()
+
 
 class TestInnerProducts2D(Tests.OrderTest):
     """Integrate an function over a unit cube domain using edgeInnerProducts and faceInnerProducts."""
@@ -555,7 +554,7 @@ class TestInnerProducts2D(Tests.OrderTest):
 #             Fr = call(funR, self.M.gridFx)
 #             Fz = call(funZ, self.M.gridFz)
 #             A = self.M.getFaceInnerProduct(sigma)
-#             F = np.r_[Fr,Fz]
+#             F = np.r_[Fr, Fz]
 #             numeric = F.T.dot(A.dot(F))
 
 #         print(numeric)
@@ -572,10 +571,10 @@ class TestInnerProducts2D(Tests.OrderTest):
 class TestCyl3DMesh(unittest.TestCase):
 
     def setUp(self):
-        hx = np.r_[1,1,0.5]
+        hx = np.r_[1, 1, 0.5]
         hy = np.r_[np.pi, np.pi]
-        hz = np.r_[2,1]
-        self.mesh = discretize.CylMesh([hx, hy,hz])
+        hz = np.r_[2, 1]
+        self.mesh = discretize.CylMesh([hx, hy, hz])
 
     def test_dim(self):
         self.assertTrue(self.mesh.dim == 3)

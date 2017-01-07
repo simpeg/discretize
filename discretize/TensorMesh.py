@@ -224,13 +224,13 @@ class BaseTensorMesh(BaseMesh):
 
         if locType == 'N' and self._meshType == 'CYL':
             #NOTE: for a CYL mesh we add a node to check if we are inside in the radial direction!
-            tensors[0] = np.r_[0.,tensors[0]]
+            tensors[0] = np.r_[0., tensors[0]]
             tensors[1] = np.r_[tensors[1], 2.0*np.pi]
 
-        inside = np.ones(pts.shape[0],dtype=bool)
+        inside = np.ones(pts.shape[0], dtype=bool)
         for i, tensor in enumerate(tensors):
             TOL = np.diff(tensor).min() * 1.0e-10
-            inside = inside & (pts[:,i] >= tensor.min()-TOL) & (pts[:,i] <= tensor.max()+TOL)
+            inside = inside & (pts[:, i] >= tensor.min()-TOL) & (pts[:, i] <= tensor.max()+TOL)
         return inside
 
     def _getInterpolationMat(self, loc, locType='CC', zerosOutside=False):
@@ -494,24 +494,28 @@ class TensorMesh(BaseTensorMesh, BaseRectangularMesh, TensorView, DiffOperators,
 
     ::
 
-        hx = np.array([1,1,1])
-        hy = np.array([1,2])
-        hz = np.array([1,1,1,1])
+        hx = np.array([1, 1, 1])
+        hy = np.array([1, 2])
+        hz = np.array([1, 1, 1, 1])
 
         mesh = Mesh.TensorMesh([hx, hy, hz])
 
-    Example of a padded tensor mesh using :func:`SimPEG.utils.meshutils.meshTensor`:
+    Example of a padded tensor mesh using
+    :func:`discretize.utils.meshutils.meshTensor`:
 
     .. plot::
         :include-source:
 
-        from SimPEG import Mesh, utils
-        M = Mesh.TensorMesh([[(10,10,-1.3),(10,40),(10,10,1.3)], [(10,10,-1.3),(10,20)]])
+        import discretize
+        M = discretize.TensorMesh([
+            [(10, 10, -1.3), (10, 40), (10, 10, 1.3)],
+            [(10, 10, -1.3), (10, 20)]
+        ])
         M.plotGrid()
 
     For a quick tensor mesh on a (10x12x15) unit cube::
 
-        mesh = Mesh.TensorMesh([10, 12, 15])
+        mesh = discretize.TensorMesh([10, 12, 15])
 
     """
 
@@ -540,9 +544,9 @@ class TensorMesh(BaseTensorMesh, BaseRectangularMesh, TensorView, DiffOperators,
                         break
 
                 if n == 1:
-                    outStr += ' {0:.2f},'.format(h)
+                    outStr += ' {0:.2f}, '.format(h)
                 else:
-                    outStr += ' {0:d}*{1:.2f},'.format(n,h)
+                    outStr += ' {0:d}*{1:.2f}, '.format(n, h)
 
             return outStr[:-1]
 
@@ -643,18 +647,18 @@ class TensorMesh(BaseTensorMesh, BaseRectangularMesh, TensorView, DiffOperators,
             indxu = (self.gridFx==max(self.gridFx))
             return indxd, indxu
         elif self.dim==2:
-            indxd = (self.gridFx[:,0]==min(self.gridFx[:,0]))
-            indxu = (self.gridFx[:,0]==max(self.gridFx[:,0]))
-            indyd = (self.gridFy[:,1]==min(self.gridFy[:,1]))
-            indyu = (self.gridFy[:,1]==max(self.gridFy[:,1]))
+            indxd = (self.gridFx[:, 0]==min(self.gridFx[:, 0]))
+            indxu = (self.gridFx[:, 0]==max(self.gridFx[:, 0]))
+            indyd = (self.gridFy[:, 1]==min(self.gridFy[:, 1]))
+            indyu = (self.gridFy[:, 1]==max(self.gridFy[:, 1]))
             return indxd, indxu, indyd, indyu
         elif self.dim==3:
-            indxd = (self.gridFx[:,0]==min(self.gridFx[:,0]))
-            indxu = (self.gridFx[:,0]==max(self.gridFx[:,0]))
-            indyd = (self.gridFy[:,1]==min(self.gridFy[:,1]))
-            indyu = (self.gridFy[:,1]==max(self.gridFy[:,1]))
-            indzd = (self.gridFz[:,2]==min(self.gridFz[:,2]))
-            indzu = (self.gridFz[:,2]==max(self.gridFz[:,2]))
+            indxd = (self.gridFx[:, 0]==min(self.gridFx[:, 0]))
+            indxu = (self.gridFx[:, 0]==max(self.gridFx[:, 0]))
+            indyd = (self.gridFy[:, 1]==min(self.gridFy[:, 1]))
+            indyu = (self.gridFy[:, 1]==max(self.gridFy[:, 1]))
+            indzd = (self.gridFz[:, 2]==min(self.gridFz[:, 2]))
+            indzu = (self.gridFz[:, 2]==max(self.gridFz[:, 2]))
             return indxd, indxu, indyd, indyu, indzd, indzu
 
     @property
@@ -667,16 +671,16 @@ class TensorMesh(BaseTensorMesh, BaseRectangularMesh, TensorView, DiffOperators,
             indxu = (self.gridCC==max(self.gridCC))
             return indxd, indxu
         elif self.dim==2:
-            indxd = (self.gridCC[:,0]==min(self.gridCC[:,0]))
-            indxu = (self.gridCC[:,0]==max(self.gridCC[:,0]))
-            indyd = (self.gridCC[:,1]==min(self.gridCC[:,1]))
-            indyu = (self.gridCC[:,1]==max(self.gridCC[:,1]))
+            indxd = (self.gridCC[:, 0]==min(self.gridCC[:, 0]))
+            indxu = (self.gridCC[:, 0]==max(self.gridCC[:, 0]))
+            indyd = (self.gridCC[:, 1]==min(self.gridCC[:, 1]))
+            indyu = (self.gridCC[:, 1]==max(self.gridCC[:, 1]))
             return indxd, indxu, indyd, indyu
         elif self.dim==3:
-            indxd = (self.gridCC[:,0]==min(self.gridCC[:,0]))
-            indxu = (self.gridCC[:,0]==max(self.gridCC[:,0]))
-            indyd = (self.gridCC[:,1]==min(self.gridCC[:,1]))
-            indyu = (self.gridCC[:,1]==max(self.gridCC[:,1]))
-            indzd = (self.gridCC[:,2]==min(self.gridCC[:,2]))
-            indzu = (self.gridCC[:,2]==max(self.gridCC[:,2]))
+            indxd = (self.gridCC[:, 0]==min(self.gridCC[:, 0]))
+            indxu = (self.gridCC[:, 0]==max(self.gridCC[:, 0]))
+            indyd = (self.gridCC[:, 1]==min(self.gridCC[:, 1]))
+            indyu = (self.gridCC[:, 1]==max(self.gridCC[:, 1]))
+            indzd = (self.gridCC[:, 2]==min(self.gridCC[:, 2]))
+            indzu = (self.gridCC[:, 2]==max(self.gridCC[:, 2]))
             return indxd, indxu, indyd, indyu, indzd, indzu

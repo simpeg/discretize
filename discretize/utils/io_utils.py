@@ -1,8 +1,5 @@
 from __future__ import print_function
 import numpy as np
-from SimPEG import Mesh
-import time as tm
-import re
 
 
 def read_GOCAD_ts(tsfile):
