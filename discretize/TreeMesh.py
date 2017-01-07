@@ -510,7 +510,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         ind = self._asIndex(ind)
         pointer = self._asPointer(pointer if pointer is not None else ind)
         if ind not in self:
-            raise CellLookUpException(ind)
+            raise IndexError(ind)
         children = self._childPointers(pointer, returnAll=True)
         for child in children:
             self._cells.add(self._asIndex(child))
@@ -521,7 +521,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         ind = self._asIndex(ind)
         pointer = self._asPointer(pointer if pointer is not None else ind)
         if ind not in self:
-            raise CellLookUpException(ind)
+            raise IndexError(ind)
         parent = self._parentPointer(pointer)
         children = self._childPointers(parent, returnAll=True)
         for child in children:
@@ -2183,7 +2183,6 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         assert vType in ['CC','F','E']
         assert self.dim == 3
 
-
         import matplotlib.pyplot as plt
         import matplotlib
         from mpl_toolkits.mplot3d import Axes3D
@@ -2191,11 +2190,12 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         import matplotlib.cm as cmx
 
         szSliceDim = len(getattr(self, 'h'+normal.lower())) #: Size of the sliced dimension
-        if ind is None: ind = int(szSliceDim//2)
+        if ind is None:
+            ind = int(szSliceDim//2)
         assert type(ind) in integer_types, 'ind must be an integer'
-        indLoc = getattr(self,'vectorCC'+normal.lower())[ind]
-        normalInd = {'X':0,'Y':1,'Z':2}[normal]
-        antiNormalInd = {'X':[1,2],'Y':[0,2],'Z':[0,1]}[normal]
+        indLoc = getattr(self, 'vectorCC'+normal.lower())[ind]
+        normalInd = {'X': 0, 'Y': 1, 'Z': 2}[normal]
+        antiNormalInd = {'X': [1, 2], 'Y': [0, 2], 'Z': [0, 1]}[normal]
         h2d = []
         x2d = []
         if 'X' not in normal:
@@ -2207,21 +2207,22 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         if 'Z' not in normal:
             h2d.append(self.hz)
             x2d.append(self.x0[2])
-        tM = TensorMesh(h2d, x2d) #: Temp Mesh
+        tM = TensorMesh(h2d, x2d)  #: Temp Mesh
 
         def getLocs(*args):
             if len(args) == 1:
-                grids = (args[0],args[0],args[0])
+                grids = (args[0], args[0], args[0])
             else:
                 assert len(args) == 3
                 grids = args
-            one = np.ones((grids[0].shape[0],1))*indLoc
+            one = np.ones((grids[0].shape[0], 1))*indLoc
             if normal == 'X':
-                return np.hstack((one, grids[0][:,[0]], grids[1][:,[1]]))
+                return np.hstack((one, grids[0][:, [0]], grids[1][:, [1]]))
             if normal == 'Y':
-                return np.hstack((grids[0][:,[0]], one, grids[1][:,[1]]))
+                return np.hstack((grids[0][:, [0]], one, grids[1][:, [1]]))
             if normal == 'Z':
-                return np.hstack((grids[0][:,[0]], grids[1][:,[1]], one))
+                return np.hstack((grids[0][:, [0]], grids[1][:, [1]], one))
+
         def doSlice(v):
             if vType == 'CC':
                 P    = self.getInterpolationMat(getLocs(tM.gridCC),'CC')
@@ -2229,8 +2230,8 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
                 Ps = []
                 gridX = getLocs(getattr(tM, 'grid' + vType + 'x'))
                 gridY = getLocs(getattr(tM, 'grid' + vType + 'y'))
-                Ps += [self.getInterpolationMat(gridX,vType + ('y' if normal == 'X' else 'x'))]
-                Ps += [self.getInterpolationMat(gridY,vType + ('y' if normal == 'Z' else 'z'))]
+                Ps += [self.getInterpolationMat(gridX, vType + ('y' if normal == 'X' else 'x'))]
+                Ps += [self.getInterpolationMat(gridY, vType + ('y' if normal == 'Z' else 'z'))]
                 P = sp.vstack(Ps)
             return P*v
 
@@ -2273,14 +2274,16 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         return self.nC
 
     def __getitem__(self, key):
-        if isinstance( key, slice ) :
-            #Get the start, stop, and step from the slice
+        if isinstance(key, slice):
+            # Get the start, stop, and step from the slice
             return [self[ii] for ii in xrange(*key.indices(len(self)))]
-        elif isinstance( key, int ) :
-            if key < 0 : #Handle negative indices
-                key += len( self )
-            if key >= len( self ) :
-                raise IndexError("The index ({0:d}) is out of range.".format(key))
+        elif isinstance(key, int):
+            if key < 0:  # Handle negative indices
+                key += len(self)
+            if key >= len(self):
+                raise IndexError(
+                    "The index ({0:d}) is out of range.".format(key)
+                )
 
             self._numberCells() # no-op if numbered
             index   = self._i2cc[key]
@@ -2292,8 +2295,8 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
 class Cell(object):
     def __init__(self, mesh, index, pointer):
-        self.mesh     = mesh
-        self._index   = index
+        self.mesh = mesh
+        self._index = index
         self._pointer = pointer
 
     @property
@@ -2342,9 +2345,7 @@ class Cell(object):
 
 
 def SortGrid(grid, offset=0):
-    """
-        Sorts a grid by the x0 location.
-    """
+    """Sorts a grid by the x0 location."""
 
     eps = 1e-7
 
@@ -2385,15 +2386,3 @@ def SortGrid(grid, offset=0):
             return mycmp(self.obj, other.obj) != 0
 
     return sorted(list(range(offset, grid.shape[0]+offset)), key=K)
-
-
-class TreeException(Exception):
-    pass
-
-
-class NotBalancedException(TreeException):
-    pass
-
-
-class CellLookUpException(TreeException):
-    pass
