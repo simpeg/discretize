@@ -1,7 +1,7 @@
 from __future__ import print_function
 import numpy as np
 import unittest
-from SimPEG import Utils, Tests
+import discretize
 
 MESHTYPES = ['uniformTree'] #['randomTree', 'uniformTree']
 call2 = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1])
@@ -17,20 +17,17 @@ cartE3 = lambda M, ex, ey, ez: np.vstack((cart_row3(M.gridEx, ex, ey, ez), cart_
 plotIt = False
 np.random.seed(1)
 
-MESHTYPES = ['uniformTree','notatreeTree']
+MESHTYPES = ['uniformTree', 'notatreeTree']
 
 
-"""
-
-    Face interpolation is O(h)
+class TestInterpolation2d(discretize.Tests.OrderTest):
+    """Face interpolation is O(h)
     Edge interpolation is O(h^2)
+    """
 
-"""
-
-class TestInterpolation2d(Tests.OrderTest):
     name = "Interpolation 2D"
-    LOCS = np.random.rand(50,2)*0.6+0.2
-    # LOCS = np.c_[np.ones(100)*0.51, np.linspace(0.3,0.7,100)]
+    LOCS = np.random.rand(50, 2)*0.6+0.2
+    # LOCS = np.c_[np.ones(100)*0.51, np.linspace(0.3, 0.7, 100)]
     meshTypes = MESHTYPES
     # tolerance = TOLERANCES
     meshDimension = 2
@@ -70,12 +67,12 @@ class TestInterpolation2d(Tests.OrderTest):
             import matplotlib.pyplot as plt
             ax = plt.subplot(211)
             self.M.plotGrid(ax=ax)
-            plt.plot(self.LOCS[:,0],self.LOCS[:,1], 'mx')
+            plt.plot(self.LOCS[:, 0], self.LOCS[:, 1], 'mx')
             # ax = plt.subplot(111)
-            # self.M.plotImage(call2(funX, self.M.gridCC),ax=ax)
+            # self.M.plotImage(call2(funX, self.M.gridCC), ax=ax)
             ax = plt.subplot(212)
-            plt.plot(self.LOCS[:,1],comp, 'bx')
-            plt.plot(self.LOCS[:,1],ana, 'ro')
+            plt.plot(self.LOCS[:, 1], comp, 'bx')
+            plt.plot(self.LOCS[:, 1], ana, 'ro')
             plt.show()
         return err
 
@@ -90,10 +87,9 @@ class TestInterpolation2d(Tests.OrderTest):
         self.orderTest()
 
 
-
-class TestInterpolation3D(Tests.OrderTest):
+class TestInterpolation3D(discretize.Tests.OrderTest):
     name = "Interpolation"
-    LOCS = np.random.rand(50,3)*0.6+0.2
+    LOCS = np.random.rand(50, 3)*0.6+0.2
     meshTypes = MESHTYPES
     # tolerance = TOLERANCES
     meshDimension = 3

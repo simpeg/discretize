@@ -1,8 +1,8 @@
 from __future__ import print_function
 import numpy as np
 import unittest
-from SimPEG.Mesh import TensorMesh, CurvilinearMesh
-from SimPEG.Utils import ndgrid
+from discretize import TensorMesh, CurvilinearMesh
+from discretize.utils import ndgrid
 
 
 class BasicCurvTests(unittest.TestCase):

@@ -1,9 +1,7 @@
 from __future__ import print_function
 import numpy as np
 import unittest
-from SimPEG.Tests import OrderTest
-import matplotlib.pyplot as plt
-from SimPEG import Mesh
+import discretize
 
 # Tolerance
 TOL = 1e-14
@@ -22,7 +20,7 @@ cartF3 = lambda M, fx, fy, fz: np.vstack((cart_row3(M.gridFx, fx, fy, fz), cart_
 cartE3 = lambda M, ex, ey, ez: np.vstack((cart_row3(M.gridEx, ex, ey, ez), cart_row3(M.gridEy, ex, ey, ez), cart_row3(M.gridEz, ex, ey, ez)))
 
 
-class TestCurl(OrderTest):
+class TestCurl(discretize.Tests.OrderTest):
     name = "Curl"
     meshTypes = MESHTYPES
 
@@ -56,7 +54,8 @@ class TestCurl(OrderTest):
     def test_order(self):
         self.orderTest()
 
-class TestCurl2D(OrderTest):
+
+class TestCurl2D(discretize.Tests.OrderTest):
     name = "Cell Grad 2D - Dirichlet"
     meshTypes = ['uniformTensorMesh']
     meshDimension = 2
@@ -78,7 +77,7 @@ class TestCurl2D(OrderTest):
     def test_order(self):
         self.orderTest()
 
-class TestCellGrad1D_InhomogeneousDirichlet(OrderTest):
+class TestCellGrad1D_InhomogeneousDirichlet(discretize.Tests.OrderTest):
     name = "Cell Grad 1D - Dirichlet"
     meshTypes = ['uniformTensorMesh']
     meshDimension = 1
@@ -106,7 +105,7 @@ class TestCellGrad1D_InhomogeneousDirichlet(OrderTest):
     def test_order(self):
         self.orderTest()
 
-class TestCellGrad2D_Dirichlet(OrderTest):
+class TestCellGrad2D_Dirichlet(discretize.Tests.OrderTest):
     name = "Cell Grad 2D - Dirichlet"
     meshTypes = ['uniformTensorMesh']
     meshDimension = 2
@@ -134,7 +133,7 @@ class TestCellGrad2D_Dirichlet(OrderTest):
         self.orderTest()
 
 
-class TestCellGrad3D_Dirichlet(OrderTest):
+class TestCellGrad3D_Dirichlet(discretize.Tests.OrderTest):
     name = "Cell Grad 3D - Dirichlet"
     meshTypes = ['uniformTensorMesh']
     meshDimension = 3
@@ -162,7 +161,7 @@ class TestCellGrad3D_Dirichlet(OrderTest):
     def test_order(self):
         self.orderTest()
 
-class TestCellGrad2D_Neumann(OrderTest):
+class TestCellGrad2D_Neumann(discretize.Tests.OrderTest):
     name = "Cell Grad 2D - Neumann"
     meshTypes = ['uniformTensorMesh']
     meshDimension = 2
@@ -190,7 +189,7 @@ class TestCellGrad2D_Neumann(OrderTest):
         self.orderTest()
 
 
-class TestCellGrad3D_Neumann(OrderTest):
+class TestCellGrad3D_Neumann(discretize.Tests.OrderTest):
     name = "Cell Grad 3D - Neumann"
     meshTypes = ['uniformTensorMesh']
     meshDimension = 3
@@ -218,7 +217,7 @@ class TestCellGrad3D_Neumann(OrderTest):
     def test_order(self):
         self.orderTest()
 
-class TestFaceDiv3D(OrderTest):
+class TestFaceDiv3D(discretize.Tests.OrderTest):
     name = "Face Divergence 3D"
     meshTypes = MESHTYPES
     meshSizes = [8, 16, 32, 64]
@@ -248,7 +247,7 @@ class TestFaceDiv3D(OrderTest):
         self.orderTest()
 
 
-class TestFaceDiv2D(OrderTest):
+class TestFaceDiv2D(discretize.Tests.OrderTest):
     name = "Face Divergence 2D"
     meshTypes = MESHTYPES
     meshDimension = 2
@@ -274,7 +273,7 @@ class TestFaceDiv2D(OrderTest):
         self.orderTest()
 
 
-class TestNodalGrad(OrderTest):
+class TestNodalGrad(discretize.Tests.OrderTest):
     name = "Nodal Gradient"
     meshTypes = MESHTYPES
 
@@ -300,7 +299,7 @@ class TestNodalGrad(OrderTest):
         self.orderTest()
 
 
-class TestNodalGrad2D(OrderTest):
+class TestNodalGrad2D(discretize.Tests.OrderTest):
     name = "Nodal Gradient 2D"
     meshTypes = MESHTYPES
     meshDimension = 2
@@ -330,7 +329,7 @@ class TestAverating2DSimple(unittest.TestCase):
     def setUp(self):
         hx = np.random.rand(10)
         hy = np.random.rand(10)
-        self.mesh = Mesh.TensorMesh([hx, hy])
+        self.mesh = discretize.TensorMesh([hx, hy])
 
     def test_constantEdges(self):
         edge_vec = np.ones(self.mesh.nE)
@@ -343,7 +342,7 @@ class TestAverating2DSimple(unittest.TestCase):
         assert all(self.mesh.aveF2CCV * face_vec == 1.)
 
 
-class TestAveraging2D(OrderTest):
+class TestAveraging2D(discretize.Tests.OrderTest):
     name = "Averaging 2D"
     meshTypes = MESHTYPES
     meshDimension = 2
@@ -428,7 +427,7 @@ class TestAverating3DSimple(unittest.TestCase):
         hx = np.random.rand(10)
         hy = np.random.rand(10)
         hz = np.random.rand(10)
-        self.mesh = Mesh.TensorMesh([hx, hy, hz])
+        self.mesh = discretize.TensorMesh([hx, hy, hz])
 
     def test_constantEdges(self):
         edge_vec = np.ones(self.mesh.nE)
@@ -441,7 +440,7 @@ class TestAverating3DSimple(unittest.TestCase):
         assert all(np.absolute(self.mesh.aveF2CCV * face_vec - 1.) < TOL)
 
 
-class TestAveraging3D(OrderTest):
+class TestAveraging3D(discretize.Tests.OrderTest):
     name = "Averaging 3D"
     meshTypes = MESHTYPES
     meshDimension = 3

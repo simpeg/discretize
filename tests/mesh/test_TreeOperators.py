@@ -1,8 +1,8 @@
 from __future__ import print_function
 import numpy as np
 import unittest
-from SimPEG import Utils, Tests
 import matplotlib.pyplot as plt
+import discretize
 
 MESHTYPES = ['uniformTree'] #['randomTree', 'uniformTree']
 call2 = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1])
@@ -18,7 +18,8 @@ cartE3 = lambda M, ex, ey, ez: np.vstack((cart_row3(M.gridEx, ex, ey, ez), cart_
 plotIt = False
 np.random.seed(90)
 
-class TestFaceDiv2D(Tests.OrderTest):
+
+class TestFaceDiv2D(discretize.Tests.OrderTest):
     name = "Face Divergence 2D"
     meshTypes = MESHTYPES
     meshDimension = 2
@@ -45,7 +46,7 @@ class TestFaceDiv2D(Tests.OrderTest):
     def test_order(self):
         self.orderTest()
 
-class TestFaceDiv3D(Tests.OrderTest):
+class TestFaceDiv3D(discretize.Tests.OrderTest):
     name = "Face Divergence 3D"
     meshTypes = MESHTYPES
     meshSizes = [8, 16]
@@ -69,7 +70,7 @@ class TestFaceDiv3D(Tests.OrderTest):
         self.orderTest()
 
 
-class TestCurl(Tests.OrderTest):
+class TestCurl(discretize.Tests.OrderTest):
     name = "Curl"
     meshTypes = ['notatreeTree', 'uniformTree'] #, 'randomTree']#, 'uniformTree']
     meshSizes = [8, 16]#, 32]
@@ -104,7 +105,7 @@ class TestCurl(Tests.OrderTest):
         self.orderTest()
 
 
-class TestNodalGrad(Tests.OrderTest):
+class TestNodalGrad(discretize.Tests.OrderTest):
     name = "Nodal Gradient"
     meshTypes = ['notatreeTree', 'uniformTree'] #['randomTree', 'uniformTree']
     meshSizes = [8, 16]#, 32]
@@ -132,7 +133,7 @@ class TestNodalGrad(Tests.OrderTest):
         self.orderTest()
 
 
-class TestNodalGrad2D(Tests.OrderTest):
+class TestNodalGrad2D(discretize.Tests.OrderTest):
     name = "Nodal Gradient 2D"
     meshTypes = ['notatreeTree', 'uniformTree'] #['randomTree', 'uniformTree']
     meshSizes = [8, 16]#, 32]
@@ -160,7 +161,7 @@ class TestNodalGrad2D(Tests.OrderTest):
         self.orderTest()
 
 
-class TestTreeInnerProducts(Tests.OrderTest):
+class TestTreeInnerProducts(discretize.Tests.OrderTest):
     """Integrate an function over a unit cube domain using edgeInnerProducts and faceInnerProducts."""
 
     meshTypes = ['uniformTree', 'notatreeTree'] #['uniformTensorMesh', 'uniformCurv', 'rotateCurv']
@@ -202,7 +203,7 @@ class TestTreeInnerProducts(Tests.OrderTest):
             E = self.M.projectEdgeVector(Ec)
 
             if self.invProp:
-                A = self.M.getEdgeInnerProduct(Utils.invPropertyTensor(self.M, sigma), invProp=True)
+                A = self.M.getEdgeInnerProduct(discretize.utils.invPropertyTensor(self.M, sigma), invProp=True)
             else:
                 A = self.M.getEdgeInnerProduct(sigma)
             numeric = E.T.dot(A.dot(E))
@@ -214,7 +215,7 @@ class TestTreeInnerProducts(Tests.OrderTest):
             F = self.M.projectFaceVector(Fc)
 
             if self.invProp:
-                A = self.M.getFaceInnerProduct(Utils.invPropertyTensor(self.M, sigma), invProp=True)
+                A = self.M.getFaceInnerProduct(discretize.utils.invPropertyTensor(self.M, sigma), invProp=True)
             else:
                 A = self.M.getFaceInnerProduct(sigma)
             numeric = F.T.dot(A.dot(F))
@@ -307,7 +308,7 @@ class TestTreeInnerProducts(Tests.OrderTest):
         self.orderTest()
 
 
-class TestTreeInnerProducts2D(Tests.OrderTest):
+class TestTreeInnerProducts2D(discretize.Tests.OrderTest):
     """Integrate an function over a unit cube domain using edgeInnerProducts and faceInnerProducts."""
 
     meshTypes = ['uniformTree']
@@ -344,7 +345,7 @@ class TestTreeInnerProducts2D(Tests.OrderTest):
                             cart(self.M.gridEy)))
             E = self.M.projectEdgeVector(Ec)
             if self.invProp:
-                A = self.M.getEdgeInnerProduct(Utils.invPropertyTensor(self.M, sigma), invProp=True)
+                A = self.M.getEdgeInnerProduct(discretize.utils.invPropertyTensor(self.M, sigma), invProp=True)
             else:
                 A = self.M.getEdgeInnerProduct(sigma)
             numeric = E.T.dot(A.dot(E))
@@ -355,7 +356,7 @@ class TestTreeInnerProducts2D(Tests.OrderTest):
             F = self.M.projectFaceVector(Fc)
 
             if self.invProp:
-                A = self.M.getFaceInnerProduct(Utils.invPropertyTensor(self.M, sigma), invProp=True)
+                A = self.M.getFaceInnerProduct(discretize.utils.invPropertyTensor(self.M, sigma), invProp=True)
             else:
                 A = self.M.getFaceInnerProduct(sigma)
             numeric = F.T.dot(A.dot(F))
@@ -448,7 +449,7 @@ class TestTreeInnerProducts2D(Tests.OrderTest):
         self.orderTest()
 
 
-class TestTreeAveraging2D(Tests.OrderTest):
+class TestTreeAveraging2D(discretize.Tests.OrderTest):
     """Integrate an function over a unit cube domain using edgeInnerProducts and faceInnerProducts."""
 
     meshTypes = ['notatreeTree', 'uniformTree']#, 'randomTree']
@@ -538,7 +539,7 @@ class TestTreeAveraging2D(Tests.OrderTest):
     #     self.orderTest()
     #     self.expectedOrders = 2
 
-class TestAveraging3D(Tests.OrderTest):
+class TestAveraging3D(discretize.Tests.OrderTest):
     name = "Averaging 3D"
     meshTypes = ['notatreeTree', 'uniformTree']#, 'randomTree']
     meshDimension = 3

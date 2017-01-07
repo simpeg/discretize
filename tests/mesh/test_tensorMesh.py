@@ -1,10 +1,11 @@
 from __future__ import print_function
 import numpy as np
 import unittest
-from SimPEG.Mesh import TensorMesh
-from SimPEG import Solver, Tests
+import discretize
+from SimPEG import Solver
 
 TOL = 1e-10
+
 
 class BasicTensorMeshTests(unittest.TestCase):
 
@@ -12,8 +13,8 @@ class BasicTensorMeshTests(unittest.TestCase):
         a = np.array([1, 1, 1])
         b = np.array([1, 2])
         c = np.array([1, 4])
-        self.mesh2 = TensorMesh([a, b], [3, 5])
-        self.mesh3 = TensorMesh([a, b, c])
+        self.mesh2 = discretize.TensorMesh([a, b], [3, 5])
+        self.mesh3 = discretize.TensorMesh([a, b, c])
 
     def test_vectorN_2D(self):
         testNx = np.array([3, 4, 5, 6])
@@ -58,40 +59,41 @@ class BasicTensorMeshTests(unittest.TestCase):
 
     def test_oneCell(self):
         hx = np.array([1e-5])
-        M = TensorMesh([hx])
+        M = discretize.TensorMesh([hx])
         self.assertTrue(M.nC == 1)
 
     def test_printing(self):
-        print(TensorMesh([10]))
-        print(TensorMesh([10,10]))
-        print(TensorMesh([10,10,10]))
+        print(discretize.TensorMesh([10]))
+        print(discretize.TensorMesh([10, 10]))
+        print(discretize.TensorMesh([10, 10, 10]))
 
     def test_centering(self):
-        M1d = TensorMesh([10], 'C')
-        M2d = TensorMesh([10,10], 'CC')
-        M3d = TensorMesh([10,10,10], 'CCC')
+        M1d = discretize.TensorMesh([10], 'C')
+        M2d = discretize.TensorMesh([10, 10], 'CC')
+        M3d = discretize.TensorMesh([10, 10, 10], 'CCC')
         self.assertLess(np.abs(M1d.x0 + 0.5).sum(), TOL)
         self.assertLess(np.abs(M2d.x0 + 0.5).sum(), TOL)
         self.assertLess(np.abs(M3d.x0 + 0.5).sum(), TOL)
 
     def test_negative(self):
-        M1d = TensorMesh([10], 'N')
-        self.assertRaises(Exception, TensorMesh, [10], 'F')
-        M2d = TensorMesh([10,10], 'NN')
-        M3d = TensorMesh([10,10,10], 'NNN')
+        M1d = discretize.TensorMesh([10], 'N')
+        self.assertRaises(Exception, discretize.TensorMesh, [10], 'F')
+        M2d = discretize.TensorMesh([10, 10], 'NN')
+        M3d = discretize.TensorMesh([10, 10, 10], 'NNN')
         self.assertLess(np.abs(M1d.x0 + 1.0).sum(), TOL)
         self.assertLess(np.abs(M2d.x0 + 1.0).sum(), TOL)
         self.assertLess(np.abs(M3d.x0 + 1.0).sum(), TOL)
 
     def test_cent_neg(self):
-        M3d = TensorMesh([10,10,10], 'C0N')
-        self.assertLess(np.abs(M3d.x0 + np.r_[0.5,0,1.0]).sum(), TOL)
+        M3d = discretize.TensorMesh([10, 10, 10], 'C0N')
+        self.assertLess(np.abs(M3d.x0 + np.r_[0.5, 0, 1.0]).sum(), TOL)
 
     def test_tensor(self):
-        M = TensorMesh([[(10.,2)]])
-        self.assertLess(np.abs(M.hx - np.r_[10.,10.]).sum(), TOL)
+        M = discretize.TensorMesh([[(10., 2)]])
+        self.assertLess(np.abs(M.hx - np.r_[10., 10.]).sum(), TOL)
 
-class TestPoissonEqn(Tests.OrderTest):
+
+class TestPoissonEqn(discretize.Tests.OrderTest):
     name = "Poisson Equation"
     meshSizes = [10, 16, 20]
 

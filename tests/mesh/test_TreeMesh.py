@@ -1,12 +1,11 @@
 from __future__ import print_function
-from SimPEG import Mesh, Tests
-from SimPEG.Mesh.TreeMesh import CellLookUpException
 import numpy as np
-import matplotlib.pyplot as plt
 import unittest
+import discretize
 
 TOL = 1e-8
 np.random.seed(12)
+
 
 class TestSimpleQuadTree(unittest.TestCase):
 
@@ -15,7 +14,7 @@ class TestSimpleQuadTree(unittest.TestCase):
         h1 = np.random.rand(nc)*nc*0.5 + nc*0.5
         h2 = np.random.rand(nc)*nc*0.5 + nc*0.5
         h = [hi/np.sum(hi) for hi in [h1, h2]]  # normalize
-        M = Mesh.TreeMesh(h)
+        M = discretize.TreeMesh(h)
         M._refineCell([0,0,0])
         M._refineCell([0,0,1])
         M.number()
@@ -29,7 +28,7 @@ class TestSimpleQuadTree(unittest.TestCase):
         assert np.allclose(np.r_[M._areaFxFull, M._areaFyFull], M._deflationMatrix('F') * M.area)
 
     def test_getitem(self):
-        M = Mesh.TreeMesh([4,4])
+        M = discretize.TreeMesh([4,4])
         M.refine(1)
         assert M.nC == 4
         assert len(M) == M.nC
@@ -39,7 +38,7 @@ class TestSimpleQuadTree(unittest.TestCase):
             assert np.allclose(M._gridN[n,:], actual[i])
 
     def test_getitem3D(self):
-        M = Mesh.TreeMesh([4,4,4])
+        M = discretize.TreeMesh([4,4,4])
         M.refine(1)
         assert M.nC == 8
         assert len(M) == M.nC
@@ -50,7 +49,7 @@ class TestSimpleQuadTree(unittest.TestCase):
             assert np.allclose(M._gridN[n,:], actual[i])
 
     def test_refine(self):
-        M = Mesh.TreeMesh([4,4,4])
+        M = discretize.TreeMesh([4,4,4])
         M.refine(1)
         assert M.nC == 8
         M.refine(0)
@@ -63,7 +62,7 @@ class TestSimpleQuadTree(unittest.TestCase):
         h1 = np.random.rand(nc)*nc*0.5 + nc*0.5
         h2 = np.random.rand(nc)*nc*0.5 + nc*0.5
         h = [hi/np.sum(hi) for hi in [h1, h2]]  # normalize
-        M = Mesh.TreeMesh(h)
+        M = discretize.TreeMesh(h)
         M._refineCell([0,0,0])
         M._refineCell([0,0,1])
         self.assertRaises(CellLookUpException, M._refineCell, [0,0,1])
@@ -111,10 +110,10 @@ class TestSimpleQuadTree(unittest.TestCase):
     def test_faceDiv(self):
 
         hx, hy = np.r_[1.,2,3,4], np.r_[5.,6,7,8]
-        T = Mesh.TreeMesh([hx, hy], levels=2)
+        T = discretize.TreeMesh([hx, hy], levels=2)
         T.refine(lambda xc:2)
         # T.plotGrid(showIt=True)
-        M = Mesh.TensorMesh([hx, hy])
+        M = discretize.TensorMesh([hx, hy])
         assert M.nC == T.nC
         assert M.nF == T.nF
         assert M.nFx == T.nFx
@@ -141,7 +140,7 @@ class TestOcTree(unittest.TestCase):
         h2 = np.random.rand(nc)*nc*0.5 + nc*0.5
         h3 = np.random.rand(nc)*nc*0.5 + nc*0.5
         h = [hi/np.sum(hi) for hi in [h1, h2, h3]]  # normalize
-        M = Mesh.TreeMesh(h, levels=3)
+        M = discretize.TreeMesh(h, levels=3)
         M._refineCell([0,0,0,0])
         M._refineCell([0,0,0,1])
         M.number()
@@ -162,10 +161,10 @@ class TestOcTree(unittest.TestCase):
     def test_faceDiv(self):
 
         hx, hy, hz = np.r_[1.,2,3,4], np.r_[5.,6,7,8], np.r_[9.,10,11,12]
-        M = Mesh.TreeMesh([hx, hy, hz], levels=2)
+        M = discretize.TreeMesh([hx, hy, hz], levels=2)
         M.refine(lambda xc:2)
         # M.plotGrid(showIt=True)
-        Mr = Mesh.TensorMesh([hx, hy, hz])
+        Mr = discretize.TensorMesh([hx, hy, hz])
         assert M.nC == Mr.nC
         assert M.nF == Mr.nF
         assert M.nFx == Mr.nFx
@@ -187,10 +186,10 @@ class TestOcTree(unittest.TestCase):
     def test_edgeCurl(self):
 
         hx, hy, hz = np.r_[1.,2,3,4], np.r_[5.,6,7,8], np.r_[9.,10,11,12]
-        M = Mesh.TreeMesh([hx, hy, hz], levels=2)
+        M = discretize.TreeMesh([hx, hy, hz], levels=2)
         M.refine(lambda xc:2)
         # M.plotGrid(showIt=True)
-        Mr = Mesh.TensorMesh([hx, hy, hz])
+        Mr = discretize.TensorMesh([hx, hy, hz])
 
         # plt.subplot(211).spy(Mr.faceDiv)
         # plt.subplot(212).spy(M.permuteCC.T*M.faceDiv*M.permuteF)
@@ -203,10 +202,10 @@ class TestOcTree(unittest.TestCase):
         hx, hy, hz = np.r_[1.,2,3,4], np.r_[5.,6,7,8], np.r_[9.,10,11,12]
         # hx, hy, hz = [[(1,4)], [(1,4)], [(1,4)]]
 
-        M = Mesh.TreeMesh([hx, hy, hz], levels=2)
+        M = discretize.TreeMesh([hx, hy, hz], levels=2)
         M.refine(lambda xc:2)
         # M.plotGrid(showIt=True)
-        Mr = Mesh.TensorMesh([hx, hy, hz])
+        Mr = discretize.TensorMesh([hx, hy, hz])
 
         # plt.subplot(211).spy(Mr.getFaceInnerProduct())
         # plt.subplot(212).spy(M.getFaceInnerProduct())
@@ -220,16 +219,16 @@ class TestOcTree(unittest.TestCase):
     def test_VectorIdenties(self):
         hx, hy, hz = [[(1,4)], [(1,4)], [(1,4)]]
 
-        M = Mesh.TreeMesh([hx, hy, hz], levels=2)
-        Mr = Mesh.TensorMesh([hx, hy, hz])
+        M = discretize.TreeMesh([hx, hy, hz], levels=2)
+        Mr = discretize.TensorMesh([hx, hy, hz])
 
         assert (M.faceDiv * M.edgeCurl).nnz == 0
         assert (Mr.faceDiv * Mr.edgeCurl).nnz == 0
 
         hx, hy, hz = np.r_[1.,2,3,4], np.r_[5.,6,7,8], np.r_[9.,10,11,12]
 
-        M = Mesh.TreeMesh([hx, hy, hz], levels=2)
-        Mr = Mesh.TensorMesh([hx, hy, hz])
+        M = discretize.TreeMesh([hx, hy, hz], levels=2)
+        Mr = discretize.TensorMesh([hx, hy, hz])
 
         assert np.max(np.abs((M.faceDiv * M.edgeCurl).todense().flatten())) < TOL
         assert np.max(np.abs((Mr.faceDiv * Mr.edgeCurl).todense().flatten())) < TOL
@@ -259,7 +258,7 @@ class Test2DInterpolation(unittest.TestCase):
             else:
                 return 0
 
-        M = Mesh.TreeMesh([64,64],levels=6)
+        M = discretize.TreeMesh([64,64],levels=6)
         M.refine(function)
         self.M = M
 
@@ -289,7 +288,7 @@ class Test3DInterpolation(unittest.TestCase):
             else:
                 return 0
 
-        M = Mesh.TreeMesh([16,16,16],levels=4)
+        M = discretize.TreeMesh([16,16,16],levels=4)
         M.refine(function)
         # M.plotGrid(showIt=True)
         self.M = M

@@ -1,9 +1,8 @@
 from __future__ import print_function
 import numpy as np
-import scipy.sparse as sp
 import unittest
-import matplotlib.pyplot as plt
-from SimPEG import Mesh, Tests, Utils, Solver
+import discretize
+from SimPEG import Solver
 
 MESHTYPES = ['uniformTensorMesh']
 
@@ -179,7 +178,7 @@ def getxBCyBC_CC(mesh, alpha, beta, gamma):
     return xBC, yBC
 
 
-class Test1D_InhomogeneousMixed(Tests.OrderTest):
+class Test1D_InhomogeneousMixed(discretize.Tests.OrderTest):
     name = "1D - Mixed"
     meshTypes = MESHTYPES
     meshDimension = 1
@@ -219,13 +218,13 @@ class Test1D_InhomogeneousMixed(Tests.OrderTest):
         sigma = np.ones(self.M.nC)
         Mfrho = self.M.getFaceInnerProduct(1./sigma)
         MfrhoI = self.M.getFaceInnerProduct(1./sigma, invMat=True)
-        V = Utils.sdiag(self.M.vol)
+        V = discretize.utils.sdiag(self.M.vol)
         Div = V*self.M.faceDiv
         P_BC, B = self.M.getBCProjWF_simple()
         q = q_fun(self.M.gridCC)
         M = B*self.M.aveCC2F
-        G = Div.T - P_BC*Utils.sdiag(y_BC)*M
-        # Mrhoj = D.T V phi + P_BC*Utils.sdiag(y_BC)*M phi - P_BC*x_BC
+        G = Div.T - P_BC*discretize.utils.sdiag(y_BC)*M
+        # Mrhoj = D.T V phi + P_BC*discretize.utils.sdiag(y_BC)*M phi - P_BC*x_BC
         rhs = V*q + Div*MfrhoI*P_BC*x_BC
         A = Div*MfrhoI*G
 
@@ -245,7 +244,7 @@ class Test1D_InhomogeneousMixed(Tests.OrderTest):
         self.orderTest()
 
 
-class Test2D_InhomogeneousMixed(Tests.OrderTest):
+class Test2D_InhomogeneousMixed(discretize.Tests.OrderTest):
     name = "2D - Mixed"
     meshTypes = MESHTYPES
     meshDimension = 2
@@ -320,12 +319,12 @@ class Test2D_InhomogeneousMixed(Tests.OrderTest):
         sigma = np.ones(self.M.nC)
         Mfrho = self.M.getFaceInnerProduct(1./sigma)
         MfrhoI = self.M.getFaceInnerProduct(1./sigma, invMat=True)
-        V = Utils.sdiag(self.M.vol)
+        V = discretize.utils.sdiag(self.M.vol)
         Div = V*self.M.faceDiv
         P_BC, B = self.M.getBCProjWF_simple()
         q = q_fun(self.M.gridCC)
         M = B*self.M.aveCC2F
-        G = Div.T - P_BC*Utils.sdiag(y_BC)*M
+        G = Div.T - P_BC*discretize.utils.sdiag(y_BC)*M
         rhs = V*q + Div*MfrhoI*P_BC*x_BC
         A = Div*MfrhoI*G
 
@@ -344,7 +343,7 @@ class Test2D_InhomogeneousMixed(Tests.OrderTest):
         self.orderTest()
 
 
-class Test3D_InhomogeneousMixed(Tests.OrderTest):
+class Test3D_InhomogeneousMixed(discretize.Tests.OrderTest):
     name = "3D - Mixed"
     meshTypes = MESHTYPES
     meshDimension = 3
@@ -436,12 +435,12 @@ class Test3D_InhomogeneousMixed(Tests.OrderTest):
         sigma = np.ones(self.M.nC)
         Mfrho = self.M.getFaceInnerProduct(1./sigma)
         MfrhoI = self.M.getFaceInnerProduct(1./sigma, invMat=True)
-        V = Utils.sdiag(self.M.vol)
+        V = discretize.utils.sdiag(self.M.vol)
         Div = V*self.M.faceDiv
         P_BC, B = self.M.getBCProjWF_simple()
         q = q_fun(self.M.gridCC)
         M = B*self.M.aveCC2F
-        G = Div.T - P_BC*Utils.sdiag(y_BC)*M
+        G = Div.T - P_BC*discretize.utils.sdiag(y_BC)*M
         rhs = V*q + Div*MfrhoI*P_BC*x_BC
         A = Div*MfrhoI*G
 

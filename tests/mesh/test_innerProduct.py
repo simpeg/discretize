@@ -292,7 +292,6 @@ class TestInnerProducts2D(Tests.OrderTest):
         self.orderTest()
 
 
-
 class TestInnerProducts1D(Tests.OrderTest):
     """Integrate an function over a unit cube domain using edgeInnerProducts and faceInnerProducts."""
 

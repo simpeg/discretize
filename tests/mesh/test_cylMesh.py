@@ -1,17 +1,18 @@
 from __future__ import print_function
 import unittest
-import sys
 import numpy as np
-from SimPEG import Mesh, Tests, Utils
+import discretize
+from discretize import Tests, utils
 
 np.random.seed(13)
+
 
 class TestCyl2DMesh(unittest.TestCase):
 
     def setUp(self):
         hx = np.r_[1,1,0.5]
         hz = np.r_[2,1]
-        self.mesh = Mesh.CylMesh([hx, 1,hz])
+        self.mesh = discretize.CylMesh([hx, 1,hz])
 
     def test_dim(self):
         self.assertTrue(self.mesh.dim == 3)
@@ -86,10 +87,10 @@ class TestCyl2DMesh(unittest.TestCase):
         self.assertTrue(np.linalg.norm((vol-self.mesh.vol)) == 0)
 
     def test_vol_simple(self):
-        mesh = Mesh.CylMesh([1., 1., 1.])
+        mesh = discretize.CylMesh([1., 1., 1.])
         self.assertTrue(mesh.vol == np.pi)
 
-        mesh = Mesh.CylMesh([2., 1., 1.])
+        mesh = discretize.CylMesh([2., 1., 1.])
         self.assertTrue(np.all(mesh.vol == np.pi*np.r_[0.5**2, 1 - 0.5**2]))
 
     def test_gridSizes(self):
@@ -144,8 +145,8 @@ class TestCyl2DMesh(unittest.TestCase):
 
     def test_getInterpMatCartMesh_Cells(self):
 
-        Mr = Mesh.TensorMesh([100,100,2], x0='CC0')
-        Mc = Mesh.CylMesh([np.ones(10)/5,1,10],x0='0C0',cartesianOrigin=[-0.2,-0.2,0])
+        Mr = discretize.TensorMesh([100,100,2], x0='CC0')
+        Mc = discretize.CylMesh([np.ones(10)/5,1,10],x0='0C0',cartesianOrigin=[-0.2,-0.2,0])
 
         mc = np.arange(Mc.nC)
         xr = np.linspace(0,0.4,50)
@@ -158,8 +159,8 @@ class TestCyl2DMesh(unittest.TestCase):
 
     def test_getInterpMatCartMesh_Cells2Nodes(self):
 
-        Mr = Mesh.TensorMesh([100,100,2], x0='CC0')
-        Mc = Mesh.CylMesh([np.ones(10)/5,1,10],x0='0C0',cartesianOrigin=[-0.2,-0.2,0])
+        Mr = discretize.TensorMesh([100,100,2], x0='CC0')
+        Mc = discretize.CylMesh([np.ones(10)/5,1,10],x0='0C0',cartesianOrigin=[-0.2,-0.2,0])
 
         mc = np.arange(Mc.nC)
         xr = np.linspace(0,0.4,50)
@@ -172,8 +173,8 @@ class TestCyl2DMesh(unittest.TestCase):
 
     def test_getInterpMatCartMesh_Faces(self):
 
-        Mr = Mesh.TensorMesh([100,100,2], x0='CC0')
-        Mc = Mesh.CylMesh([np.ones(10)/5,1,10],x0='0C0',cartesianOrigin=[-0.2,-0.2,0])
+        Mr = discretize.TensorMesh([100,100,2], x0='CC0')
+        Mc = discretize.CylMesh([np.ones(10)/5,1,10],x0='0C0',cartesianOrigin=[-0.2,-0.2,0])
 
         Pf = Mc.getInterpolationMatCartMesh(Mr, 'F')
         mf = np.ones(Mc.nF)
@@ -184,8 +185,8 @@ class TestCyl2DMesh(unittest.TestCase):
         fycc = Mr.aveFy2CC*Mr.r(frect, 'F', 'Fy')
         fzcc = Mr.r(frect, 'F', 'Fz')
 
-        indX = Utils.closestPoints(Mr, [0.45, -0.2, 0.5])
-        indY = Utils.closestPoints(Mr, [-0.2, 0.45, 0.5])
+        indX = utils.closestPoints(Mr, [0.45, -0.2, 0.5])
+        indY = utils.closestPoints(Mr, [-0.2, 0.45, 0.5])
 
         TOL = 1e-2
         assert np.abs(float(fxcc[indX]) - 1) < TOL
@@ -203,8 +204,8 @@ class TestCyl2DMesh(unittest.TestCase):
 
     def test_getInterpMatCartMesh_Faces2Edges(self):
 
-        Mr = Mesh.TensorMesh([100,100,2], x0='CC0')
-        Mc = Mesh.CylMesh([np.ones(10)/5,1,10],x0='0C0',cartesianOrigin=[-0.2,-0.2,0])
+        Mr = discretize.TensorMesh([100,100,2], x0='CC0')
+        Mc = discretize.CylMesh([np.ones(10)/5,1,10],x0='0C0',cartesianOrigin=[-0.2,-0.2,0])
 
         Pf2e = Mc.getInterpolationMatCartMesh(Mr, 'F', locTypeTo='E')
         mf = np.ones(Mc.nF)
@@ -215,8 +216,8 @@ class TestCyl2DMesh(unittest.TestCase):
         eycc = Mr.aveEy2CC*Mr.r(ecart, 'E', 'Ey')
         ezcc = Mr.r(ecart, 'E', 'Ez')
 
-        indX = Utils.closestPoints(Mr, [0.45, -0.2, 0.5])
-        indY = Utils.closestPoints(Mr, [-0.2, 0.45, 0.5])
+        indX = utils.closestPoints(Mr, [0.45, -0.2, 0.5])
+        indY = utils.closestPoints(Mr, [-0.2, 0.45, 0.5])
 
         TOL = 1e-2
         assert np.abs(float(excc[indX]) - 1) < TOL
@@ -234,8 +235,8 @@ class TestCyl2DMesh(unittest.TestCase):
 
     def test_getInterpMatCartMesh_Edges(self):
 
-        Mr = Mesh.TensorMesh([100,100,2], x0='CC0')
-        Mc = Mesh.CylMesh([np.ones(10)/5,1,10],x0='0C0',cartesianOrigin=[-0.2,-0.2,0])
+        Mr = discretize.TensorMesh([100,100,2], x0='CC0')
+        Mc = discretize.CylMesh([np.ones(10)/5,1,10],x0='0C0',cartesianOrigin=[-0.2,-0.2,0])
 
         Pe = Mc.getInterpolationMatCartMesh(Mr, 'E')
         me = np.ones(Mc.nE)
@@ -246,8 +247,8 @@ class TestCyl2DMesh(unittest.TestCase):
         eycc = Mr.aveEy2CC*Mr.r(ecart, 'E', 'Ey')
         ezcc = Mr.aveEz2CC*Mr.r(ecart, 'E', 'Ez')
 
-        indX = Utils.closestPoints(Mr, [0.45, -0.2, 0.5])
-        indY = Utils.closestPoints(Mr, [-0.2, 0.45, 0.5])
+        indX = utils.closestPoints(Mr, [0.45, -0.2, 0.5])
+        indY = utils.closestPoints(Mr, [-0.2, 0.45, 0.5])
 
         TOL = 1e-2
         assert np.abs(float(excc[indX]) - 0) < TOL
@@ -265,8 +266,8 @@ class TestCyl2DMesh(unittest.TestCase):
 
     def test_getInterpMatCartMesh_Edges2Faces(self):
 
-        Mr = Mesh.TensorMesh([100,100,2], x0='CC0')
-        Mc = Mesh.CylMesh([np.ones(10)/5,1,10],x0='0C0',cartesianOrigin=[-0.2,-0.2,0])
+        Mr = discretize.TensorMesh([100,100,2], x0='CC0')
+        Mc = discretize.CylMesh([np.ones(10)/5,1,10],x0='0C0',cartesianOrigin=[-0.2,-0.2,0])
 
         Pe2f = Mc.getInterpolationMatCartMesh(Mr, 'E', locTypeTo='F')
         me = np.ones(Mc.nE)
@@ -277,8 +278,8 @@ class TestCyl2DMesh(unittest.TestCase):
         eycc = Mr.aveFy2CC*Mr.r(frect, 'F', 'Fy')
         ezcc = Mr.r(frect, 'F', 'Fz')
 
-        indX = Utils.closestPoints(Mr, [0.45, -0.2, 0.5])
-        indY = Utils.closestPoints(Mr, [-0.2, 0.45, 0.5])
+        indX = utils.closestPoints(Mr, [0.45, -0.2, 0.5])
+        indY = utils.closestPoints(Mr, [-0.2, 0.45, 0.5])
 
         TOL = 1e-2
         assert np.abs(float(excc[indX]) - 0) < TOL
@@ -396,7 +397,7 @@ class TestCellGrad2D_Dirichlet(unittest.TestCase):
     def setUp(self):
         hx = np.random.rand(10)
         hz = np.random.rand(10)
-        self.mesh = Mesh.CylMesh([hx, 1,hz])
+        self.mesh = discretize.CylMesh([hx, 1,hz])
 
     def test_NotImplementedError(self):
         with self.assertRaises(NotImplementedError):
@@ -408,7 +409,7 @@ class TestAveragingSimple(unittest.TestCase):
     def setUp(self):
         hx = np.random.rand(10)
         hz = np.random.rand(10)
-        self.mesh = Mesh.CylMesh([hx, 1,hz])
+        self.mesh = discretize.CylMesh([hx, 1,hz])
 
     def test_constantEdges(self):
         edge_vec = np.ones(self.mesh.nE)
@@ -574,7 +575,7 @@ class TestCyl3DMesh(unittest.TestCase):
         hx = np.r_[1,1,0.5]
         hy = np.r_[np.pi, np.pi]
         hz = np.r_[2,1]
-        self.mesh = Mesh.CylMesh([hx, hy,hz])
+        self.mesh = discretize.CylMesh([hx, hy,hz])
 
     def test_dim(self):
         self.assertTrue(self.mesh.dim == 3)

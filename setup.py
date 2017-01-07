@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 from __future__ import print_function
-"""SimPEG: Simulation and Parameter Estimation in Geophysics
+"""discretize
 
-SimPEG is a python package for simulation and gradient based
-parameter estimation in the context of geophysical applications.
+Discretization tools for finite volume and inverse problems.
 """
 
 import sys
@@ -65,8 +64,8 @@ class NumpyBuild(build_ext):
 ext = '.pyx' if USE_CYTHON else '.c'
 
 cython_files = [
-                    "SimPEG/Utils/interputils_cython",
-                    "SimPEG/Mesh/TreeUtils"
+                    "discretize/utils/interputils_cython",
+                    "discretize/TreeUtils"
                ]
 extensions = [Extension(f, [f+ext]) for f in cython_files]
 scripts = [f+'.pyx' for f in cython_files]
@@ -79,8 +78,8 @@ with open("README.rst") as f:
     LONG_DESCRIPTION = ''.join(f.readlines())
 
 setup(
-    name="SimPEG",
-    version="0.3.1",
+    name="discretize",
+    version="0.0.5",
     packages=find_packages(),
     install_requires=[
         'numpy>=1.7',
@@ -92,12 +91,12 @@ setup(
     ],
     author="Rowan Cockett",
     author_email="rowanc1@gmail.com",
-    description="SimPEG: Simulation and Parameter Estimation in Geophysics",
+    description="Discretization tools for finite volume and inverse problems",
     long_description=LONG_DESCRIPTION,
     license="MIT",
-    keywords="geophysics inverse problem",
+    keywords="finite volume, discretization, pde, ode",
     url="http://simpeg.xyz/",
-    download_url="http://github.com/simpeg/simpeg",
+    download_url="http://github.com/simpeg/discretize",
     classifiers=CLASSIFIERS,
     platforms=["Windows", "Linux", "Solaris", "Mac OS-X", "Unix"],
     use_2to3=False,

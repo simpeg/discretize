@@ -2,23 +2,21 @@ from __future__ import print_function
 import numpy as np
 import unittest
 import os
-import SimPEG as simpeg
-from SimPEG.Mesh import TensorMesh, TreeMesh
+import discretize
 
 try:
     import vtk
 except ImportError:
-    has_vtk=False
+    has_vtk = False
 else:
-    has_vtk=True
-
+    has_vtk = True
 
 
 class TestTensorMeshIO(unittest.TestCase):
 
     def setUp(self):
         h = np.ones(16)
-        mesh = TensorMesh([h, 2*h, 3*h])
+        mesh = discretize.TensorMesh([h, 2*h, 3*h])
         self.mesh = mesh
 
     def test_UBCfiles(self):
@@ -28,7 +26,7 @@ class TestTensorMeshIO(unittest.TestCase):
         vec = np.arange(mesh.nC)
         # Write and read
         mesh.writeUBC('temp.msh', {'arange.txt': vec})
-        meshUBC = TensorMesh.readUBC('temp.msh')
+        meshUBC = discretize.TensorMesh.readUBC('temp.msh')
         vecUBC = meshUBC.readModelUBC('arange.txt')
 
         # The mesh
@@ -55,7 +53,7 @@ class TestTensorMeshIO(unittest.TestCase):
             vec = np.arange(mesh.nC)
 
             mesh.writeVTK('temp.vtr', {'arange.txt': vec})
-            meshVTR, models = TensorMesh.readVTK('temp.vtr')
+            meshVTR, models = discretize.TensorMesh.readVTK('temp.vtr')
 
             assert mesh.__str__() == meshVTR.__str__()
             assert np.all(np.array(mesh.h) - np.array(meshVTR.h) == 0)
@@ -68,12 +66,11 @@ class TestTensorMeshIO(unittest.TestCase):
             os.remove('temp.vtr')
 
 
-
 class TestOcTreeMeshIO(unittest.TestCase):
 
     def setUp(self):
         h = np.ones(16)
-        mesh = TreeMesh([h, 2*h, 3*h])
+        mesh = discretize.TreeMesh([h, 2*h, 3*h])
         mesh.refine(3)
         mesh._refineCell([0, 0, 0, 3])
         mesh._refineCell([0, 2, 0, 3])
@@ -86,7 +83,7 @@ class TestOcTreeMeshIO(unittest.TestCase):
         vec = np.arange(mesh.nC)
         # Write and read
         mesh.writeUBC('temp.msh', {'arange.txt': vec})
-        meshUBC = TreeMesh.readUBC('temp.msh')
+        meshUBC = discretize.TreeMesh.readUBC('temp.msh')
         vecUBC = meshUBC.readModelUBC('arange.txt')
 
         # The mesh

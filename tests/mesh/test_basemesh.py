@@ -1,6 +1,6 @@
 from __future__ import print_function
 import unittest
-from SimPEG.Mesh.BaseMesh import BaseRectangularMesh
+from discretize.BaseMesh import BaseRectangularMesh
 import numpy as np
 
 

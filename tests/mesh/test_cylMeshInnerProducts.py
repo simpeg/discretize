@@ -1,5 +1,6 @@
 from __future__ import print_function
-from SimPEG import Mesh, Utils, Tests
+import discretize
+from discretize import utils, Tests
 import numpy as np
 import sympy
 from sympy.abc import r, t, z
@@ -148,7 +149,7 @@ class TestCylInnerProducts_simple(unittest.TestCase):
 
     def setUp(self):
         n = 100.
-        self.mesh = Mesh.CylMesh([n, 1, n])
+        self.mesh = discretize.CylMesh([n, 1, n])
 
     def test_FaceInnerProductIsotropic(self):
         # Here we will make up some j vectors that vary in space
@@ -288,7 +289,7 @@ class TestCylInnerProducts_Deriv(unittest.TestCase):
 
     def setUp(self):
         n = 2
-        self.mesh = Mesh.CylMesh([n, 1, n])
+        self.mesh = discretize.CylMesh([n, 1, n])
         self.face_vec = np.random.rand(self.mesh.nF)
         self.edge_vec = np.random.rand(self.mesh.nE)
         # make up a smooth function
@@ -403,7 +404,7 @@ class TestCylInnerProductsAnisotropic_Deriv(unittest.TestCase):
 
     def setUp(self):
         n = 60
-        self.mesh = Mesh.CylMesh([n, 1, n])
+        self.mesh = discretize.CylMesh([n, 1, n])
         self.face_vec = np.random.rand(self.mesh.nF)
         self.edge_vec = np.random.rand(self.mesh.nE)
         # make up a smooth function
