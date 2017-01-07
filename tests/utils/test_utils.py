@@ -2,11 +2,13 @@ from __future__ import print_function
 import unittest
 import numpy as np
 import scipy.sparse as sp
-from SimPEG.Utils import (sdiag, sub2ind, ndgrid, mkvc, isScalar,
-                          inv2X2BlockDiagonal, inv3X3BlockDiagonal,
-                          invPropertyTensor, makePropertyTensor, indexCube,
-                          ind2sub, asArray_N_x_Dim, TensorType)
-from SimPEG import Mesh
+from discretize.utils import (
+    sdiag, sub2ind, ndgrid, mkvc, isScalar,
+    inv2X2BlockDiagonal, inv3X3BlockDiagonal,
+    invPropertyTensor, makePropertyTensor, indexCube,
+    ind2sub, asArray_N_x_Dim, TensorType
+)
+import discretize
 from SimPEG.Tests import checkDerivative
 import sys
 
@@ -128,7 +130,7 @@ class TestSequenceFunctions(unittest.TestCase):
         self.assertTrue(np.linalg.norm(Z3.todense().ravel(), 2) < TOL)
 
     def test_invPropertyTensor2D(self):
-        M = Mesh.TensorMesh([6, 6])
+        M = discretize.TensorMesh([6, 6])
         a1 = np.random.rand(M.nC)
         a2 = np.random.rand(M.nC)
         a3 = np.random.rand(M.nC)
@@ -148,7 +150,7 @@ class TestSequenceFunctions(unittest.TestCase):
             self.assertTrue(np.linalg.norm(Z.todense().ravel(), 2) < TOL)
 
     def test_TensorType2D(self):
-        M = Mesh.TensorMesh([6, 6])
+        M = discretize.TensorMesh([6, 6])
         a1 = np.random.rand(M.nC)
         a2 = np.random.rand(M.nC)
         a3 = np.random.rand(M.nC)
@@ -163,7 +165,7 @@ class TestSequenceFunctions(unittest.TestCase):
         self.assertTrue(TensorType(M, None) == -1)
 
     def test_TensorType3D(self):
-        M = Mesh.TensorMesh([6, 6, 7])
+        M = discretize.TensorMesh([6, 6, 7])
         a1 = np.random.rand(M.nC)
         a2 = np.random.rand(M.nC)
         a3 = np.random.rand(M.nC)
@@ -181,7 +183,7 @@ class TestSequenceFunctions(unittest.TestCase):
         self.assertTrue(TensorType(M, None) == -1)
 
     def test_invPropertyTensor3D(self):
-        M = Mesh.TensorMesh([6, 6, 6])
+        M = discretize.TensorMesh([6, 6, 6])
         a1 = np.random.rand(M.nC)
         a2 = np.random.rand(M.nC)
         a3 = np.random.rand(M.nC)
