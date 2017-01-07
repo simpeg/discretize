@@ -1,6 +1,6 @@
 from __future__ import print_function
 import numpy as np
-from SimPEG.Utils import mkvc
+from discretize.utils import mkvc
 from six import integer_types
 try:
     import matplotlib.pyplot as plt
@@ -11,8 +11,7 @@ except ImportError:
 
 
 class TensorView(object):
-    """
-    Provides viewing functions for TensorMesh
+    """Provides viewing functions for TensorMesh
 
     This class is inherited by TensorMesh
     """
@@ -22,12 +21,12 @@ class TensorView(object):
     # def components(self):
 
     #     plotAll = len(imageType) == 1
-    #     options = {"direction":direction,"numbering":numbering,"annotationColor":annotationColor,"showIt":False}
+    #     options = {"direction":direction, "numbering":numbering, "annotationColor":annotationColor, "showIt":False}
     #     fig = plt.figure(figNum)
     #     # Determine the subplot number: 131, 121
     #     numPlots = 130 if plotAll else len(imageType)//2*10+100
     #     pltNum = 1
-    #     fxyz = self.r(I,'F','F','M')
+    #     fxyz = self.r(I, 'F', 'F', 'M')
     #     if plotAll or 'Fx' in imageType:
     #         ax_x = plt.subplot(numPlots+pltNum)
     #         self.plotImage(fxyz[0], imageType='Fx', ax=ax_x, **options)
@@ -60,7 +59,7 @@ class TensorView(object):
 
         Optional Inputs:
 
-        :param str vType: type of vector ('CC','N','F','Fx','Fy','Fz','E','Ex','Ey','Ez')
+        :param str vType: type of vector ('CC', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez')
         :param matplotlib.axes.Axes ax: axis to plot to
         :param bool showIt: call plt.show()
 
@@ -72,32 +71,34 @@ class TensorView(object):
         .. plot::
             :include-source:
 
-            from SimPEG import Mesh, np
-            M = Mesh.TensorMesh([20, 20])
-            v = np.sin(M.gridCC[:,0]*2*np.pi)*np.sin(M.gridCC[:,1]*2*np.pi)
+            import discretize
+            import numpy as np
+            M = discretize.TensorMesh([20, 20])
+            v = np.sin(M.gridCC[:, 0]*2*np.pi)*np.sin(M.gridCC[:, 1]*2*np.pi)
             M.plotImage(v, showIt=True)
 
         .. plot::
             :include-source:
 
-            from SimPEG import Mesh, np
-            M = Mesh.TensorMesh([20,20,20])
-            v = np.sin(M.gridCC[:,0]*2*np.pi)*np.sin(M.gridCC[:,1]*2*np.pi)*np.sin(M.gridCC[:,2]*2*np.pi)
+            import discretize
+            import numpy as np
+            M = discretize.TensorMesh([20, 20, 20])
+            v = np.sin(M.gridCC[:, 0]*2*np.pi)*np.sin(M.gridCC[:, 1]*2*np.pi)*np.sin(M.gridCC[:, 2]*2*np.pi)
             M.plotImage(v, annotationColor='k', showIt=True)
 
         """
         if pcolorOpts is None:
             pcolorOpts = {}
         if streamOpts is None:
-            streamOpts = {'color':'k'}
+            streamOpts = {'color': 'k'}
         if gridOpts is None:
-            gridOpts = {'color':'k'}
+            gridOpts = {'color': 'k'}
 
         if ax is None:
             fig = plt.figure()
             ax = plt.subplot(111)
         else:
-            assert isinstance(ax,matplotlib.axes.Axes), "ax must be an Axes!"
+            assert isinstance(ax, matplotlib.axes.Axes), "ax must be an Axes!"
             fig = ax.figure
 
         if self.dim == 1:
@@ -120,13 +121,13 @@ class TensorView(object):
                 vc = (self.aveN2CC*v).reshape(self.vnC, order='F')
             elif vType in ['Fx', 'Fy', 'Fz', 'Ex', 'Ey', 'Ez']:
                 aveOp = 'ave' + vType[0] + '2CCV'
-                # n = getattr(self,'vn'+vType[0])
-                # if 'x' in vType: v = np.r_[v,np.zeros(n[1]),np.zeros(n[2])]
-                # if 'y' in vType: v = np.r_[np.zeros(n[0]),v,np.zeros(n[2])]
-                # if 'z' in vType: v = np.r_[np.zeros(n[0]),np.zeros(n[1]),v]
-                v = getattr(self,aveOp)*v # average to cell centers
-                ind_xyz = {'x':0,'y':1,'z':2}[vType[1]]
-                vc = self.r(v.reshape((self.nC,-1),order='F'), 'CC','CC','M')[ind_xyz]
+                # n = getattr(self, 'vn'+vType[0])
+                # if 'x' in vType: v = np.r_[v, np.zeros(n[1]), np.zeros(n[2])]
+                # if 'y' in vType: v = np.r_[np.zeros(n[0]), v, np.zeros(n[2])]
+                # if 'z' in vType: v = np.r_[np.zeros(n[0]), np.zeros(n[1]), v]
+                v = getattr(self, aveOp)*v # average to cell centers
+                ind_xyz = {'x':0, 'y':1, 'z':2}[vType[1]]
+                vc = self.r(v.reshape((self.nC, -1), order='F'), 'CC', 'CC', 'M')[ind_xyz]
 
             # determine number oE slices in x and y dimension
             nX = np.ceil(np.sqrt(self.nCz))
@@ -136,7 +137,7 @@ class TensorView(object):
             nCx = self.nCx
             nCy = self.nCy
 
-            C = np.zeros((nX*nCx,nY*nCy))
+            C = np.zeros((nX*nCx, nY*nCy))
 
             for iy in range(int(nY)):
                 for ix in range(int(nX)):
@@ -152,7 +153,7 @@ class TensorView(object):
             # Plot the mesh
 
             if clim is None:
-                clim = [C.min(),C.max()]
+                clim = [C.min(), C.max()]
             ph = ax.pcolormesh(xx, yy, C.T, vmin=clim[0], vmax=clim[1])
             # Plot the lines
             gx =  np.arange(nX+1)*(self.vectorNx[-1]-self.x0[0])
@@ -172,8 +173,8 @@ class TensorView(object):
                     for ix in range(int(nX)):
                         iz = ix + iy*nX
                         if iz < self.nCz:
-                            ax.text((ix+1)*(self.vectorNx[-1]-self.x0[0])-pad,(iy)*(self.vectorNy[-1]-self.x0[1])+pad,
-                                     '#{0:.0f}'.format(iz),color=annotationColor,verticalalignment='bottom',horizontalalignment='right',size='x-large')
+                            ax.text((ix+1)*(self.vectorNx[-1]-self.x0[0])-pad, (iy)*(self.vectorNy[-1]-self.x0[1])+pad,
+                                     '#{0:.0f}'.format(iz), color=annotationColor, verticalalignment='bottom', horizontalalignment='right', size='x-large')
 
         ax.set_title(vType)
         if showIt: plt.show()
@@ -192,15 +193,16 @@ class TensorView(object):
 
         .. plot::
 
-            from SimPEG import *
-            hx = [(5,2,-1.3),(2,4),(5,2,1.3)]
-            hy = [(2,2,-1.3),(2,6),(2,2,1.3)]
-            hz = [(2,2,-1.3),(2,6),(2,2,1.3)]
-            M = Mesh.TensorMesh([hx,hy,hz])
+            import discretize
+            import numpy as np
+            hx = [(5, 2, -1.3), (2, 4), (5, 2, 1.3)]
+            hy = [(2, 2, -1.3), (2, 6), (2, 2, 1.3)]
+            hz = [(2, 2, -1.3), (2, 6), (2, 2, 1.3)]
+            M = discretize.TensorMesh([hx, hy, hz])
             q = np.zeros(M.vnC)
-            q[[4,4],[4,4],[2,6]]=[-1,1]
+            q[[4, 4], [4, 4], [2, 6]]=[-1, 1]
             q = Utils.mkvc(q)
-            A = M.faceDiv*M.cellGrad
+            A = M.faceDiv * M.cellGrad
             b = Solver(A) * (q)
             M.plotSlice(M.cellGrad*b, 'F', view='vec', grid=True, showIt=True, pcolorOpts={'alpha':0.8})
 
@@ -213,20 +215,20 @@ class TensorView(object):
             gridOpts = {'color':'k', 'alpha':0.5}
         if type(vType) in [list, tuple]:
             assert ax is None, "cannot specify an axis to plot on with this function."
-            fig, axs = plt.subplots(1,len(vType))
+            fig, axs = plt.subplots(1, len(vType))
             out = []
             for vTypeI, ax in zip(vType, axs):
-                out += [self.plotSlice(v,vType=vTypeI, normal=normal, ind=ind, grid=grid, view=view, ax=ax, clim=clim, showIt=False, pcolorOpts=pcolorOpts, streamOpts=streamOpts, gridOpts=gridOpts)]
+                out += [self.plotSlice(v, vType=vTypeI, normal=normal, ind=ind, grid=grid, view=view, ax=ax, clim=clim, showIt=False, pcolorOpts=pcolorOpts, streamOpts=streamOpts, gridOpts=gridOpts)]
             return out
-        viewOpts = ['real','imag','abs','vec']
+        viewOpts = ['real', 'imag', 'abs', 'vec']
         normalOpts = ['X', 'Y', 'Z']
-        vTypeOpts = ['CC', 'CCv','N','F','E','Fx','Fy','Fz','E','Ex','Ey','Ez']
+        vTypeOpts = ['CC', 'CCv', 'N', 'F', 'E', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez']
 
         # Some user error checking
-        assert vType in vTypeOpts, "vType must be in ['{0!s}']".format("','".join(vTypeOpts))
+        assert vType in vTypeOpts, "vType must be in ['{0!s}']".format("', '".join(vTypeOpts))
         assert self.dim == 3, 'Must be a 3D mesh. Use plotImage.'
-        assert view in viewOpts, "view must be in ['{0!s}']".format("','".join(viewOpts))
-        assert normal in normalOpts, "normal must be in ['{0!s}']".format("','".join(normalOpts))
+        assert view in viewOpts, "view must be in ['{0!s}']".format("', '".join(viewOpts))
+        assert normal in normalOpts, "normal must be in ['{0!s}']".format("', '".join(normalOpts))
         assert type(grid) is bool, 'grid must be a boolean'
 
         szSliceDim = getattr(self, 'nC'+normal.lower()) #: Size of the sliced dimension
@@ -237,27 +239,30 @@ class TensorView(object):
         # The slicing and plotting code!!
 
         def getIndSlice(v):
-            if   normal == 'X': v = v[ind,:,:]
-            elif normal == 'Y': v = v[:,ind,:]
-            elif normal == 'Z': v = v[:,:,ind]
+            if   normal == 'X':
+                v = v[ind, :, :]
+            elif normal == 'Y':
+                v = v[:, ind, :]
+            elif normal == 'Z':
+                v = v[:, :, ind]
             return v
 
         def doSlice(v):
             if vType == 'CC':
-                return getIndSlice(self.r(v,'CC','CC','M'))
+                return getIndSlice(self.r(v, 'CC', 'CC', 'M'))
             elif vType == 'CCv':
                 assert view == 'vec', 'Other types for CCv not supported'
             else:
-                # Now just deal with 'F' and 'E' (x,y,z, maybe...)
+                # Now just deal with 'F' and 'E' (x, y, z, maybe...)
                 aveOp = 'ave' + vType + ('2CCV' if view == 'vec' else '2CC')
-                Av = getattr(self,aveOp)
+                Av = getattr(self, aveOp)
                 if v.size == Av.shape[1]:
                     v = Av * v
                 else:
-                    v = self.r(v,vType[0],vType) # get specific component
+                    v = self.r(v, vType[0], vType) # get specific component
                     v = Av * v
                 # we should now be averaged to cell centers (might be a vector)
-            v = self.r(v.reshape((self.nC,-1),order='F'),'CC','CC','M')
+            v = self.r(v.reshape((self.nC, -1), order='F'), 'CC', 'CC', 'M')
             if view == 'vec':
                 outSlice = []
                 if 'X' not in normal: outSlice.append(getIndSlice(v[0]))
@@ -265,7 +270,7 @@ class TensorView(object):
                 if 'Z' not in normal: outSlice.append(getIndSlice(v[2]))
                 return np.r_[mkvc(outSlice[0]), mkvc(outSlice[1])]
             else:
-                return getIndSlice(self.r(v,'CC','CC','M'))
+                return getIndSlice(self.r(v, 'CC', 'CC', 'M'))
 
         h2d = []
         x2d = []
@@ -289,41 +294,42 @@ class TensorView(object):
             assert isinstance(ax, matplotlib.axes.Axes), "ax must be an matplotlib.axes.Axes"
             fig = ax.figure
 
-        out = tM._plotImage2D(v2d, vType=('CCv' if view == 'vec' else 'CC'), grid=grid, view=view,
-                        ax=ax, clim=clim, showIt=showIt,
-                        pcolorOpts=pcolorOpts, streamOpts=streamOpts,
-                        gridOpts=gridOpts)
-
+        out = tM._plotImage2D(
+            v2d, vType=('CCv' if view == 'vec' else 'CC'),
+            grid=grid, view=view,
+            ax=ax, clim=clim, showIt=showIt,
+            pcolorOpts=pcolorOpts, streamOpts=streamOpts,
+            gridOpts=gridOpts
+        )
 
         ax.set_xlabel('y' if normal == 'X' else 'x')
         ax.set_ylabel('y' if normal == 'Z' else 'z')
         ax.set_title('Slice {0:.0f}'.format(ind))
         return out
 
-
-    def _plotImage2D(self, v, vType='CC', grid=False, view='real',
-              ax=None, clim=None, showIt=False,
-              pcolorOpts=None,
-              streamOpts=None,
-              gridOpts=None
-              ):
+    def _plotImage2D(
+        self, v, vType='CC', grid=False, view='real',
+        ax=None, clim=None, showIt=False,
+        pcolorOpts=None,
+        streamOpts=None,
+        gridOpts=None
+    ):
 
         if pcolorOpts is None:
             pcolorOpts = {}
         if streamOpts is None:
-            streamOpts = {'color':'k'}
+            streamOpts = {'color': 'k'}
         if gridOpts is None:
-            gridOpts = {'color':'k'}
-        vTypeOptsCC = ['N','CC','Fx','Fy','Ex','Ey']
-        vTypeOptsV = ['CCv','F','E']
+            gridOpts = {'color': 'k'}
+        vTypeOptsCC = ['N', 'CC', 'Fx', 'Fy', 'Ex', 'Ey']
+        vTypeOptsV = ['CCv', 'F', 'E']
         vTypeOpts = vTypeOptsCC + vTypeOptsV
         if view == 'vec':
-            assert vType in vTypeOptsV, "vType must be in ['{0!s}'] when view='vec'".format("','".join(vTypeOptsV))
-        assert vType in vTypeOpts, "vType must be in ['{0!s}']".format("','".join(vTypeOpts))
+            assert vType in vTypeOptsV, "vType must be in ['{0!s}'] when view='vec'".format("', '".join(vTypeOptsV))
+        assert vType in vTypeOpts, "vType must be in ['{0!s}']".format("', '".join(vTypeOpts))
 
-        viewOpts = ['real','imag','abs','vec']
-        assert view in viewOpts, "view must be in ['{0!s}']".format("','".join(viewOpts))
-
+        viewOpts = ['real', 'imag', 'abs', 'vec']
+        assert view in viewOpts, "view must be in ['{0!s}']".format("', '".join(viewOpts))
 
         if ax is None:
             fig = plt.figure()
@@ -339,26 +345,26 @@ class TensorView(object):
             assert view == 'vec', 'Other types for CCv not supported'
         elif vType in ['F', 'E', 'N']:
             aveOp = 'ave' + vType + ('2CCV' if view == 'vec' else '2CC')
-            v = getattr(self,aveOp)*v # average to cell centers (might be a vector)
-        elif vType in ['Fx','Fy','Ex','Ey']:
+            v = getattr(self, aveOp)*v # average to cell centers (might be a vector)
+        elif vType in ['Fx', 'Fy', 'Ex', 'Ey']:
             aveOp = 'ave' + vType[0] + '2CCV'
-            v = getattr(self,aveOp)*v # average to cell centers (might be a vector)
-            xORy = {'x':0,'y':1}[vType[1]]
-            v = v.reshape((self.nC,-1), order='F')[:,xORy]
+            v = getattr(self, aveOp)*v # average to cell centers (might be a vector)
+            xORy = {'x':0, 'y':1}[vType[1]]
+            v = v.reshape((self.nC, -1), order='F')[:, xORy]
 
         out = ()
-        if view in ['real','imag','abs']:
+        if view in ['real', 'imag', 'abs']:
             v = self.r(v, 'CC', 'CC', 'M')
-            v = getattr(np,view)(v) # e.g. np.real(v)
+            v = getattr(np, view)(v) # e.g. np.real(v)
             if clim is None:
-                clim = [v.min(),v.max()]
+                clim = [v.min(), v.max()]
             v = np.ma.masked_where(np.isnan(v), v)
-            out += (ax.pcolormesh(self.vectorNx, self.vectorNy, v.T, vmin=clim[0], vmax=clim[1], **pcolorOpts),)
+            out += (ax.pcolormesh(self.vectorNx, self.vectorNy, v.T, vmin=clim[0], vmax=clim[1], **pcolorOpts), )
         elif view in ['vec']:
-            U, V = self.r(v.reshape((self.nC,-1), order='F'), 'CC', 'CC', 'M')
+            U, V = self.r(v.reshape((self.nC, -1), order='F'), 'CC', 'CC', 'M')
             if clim is None:
                 uv = np.sqrt(U**2 + V**2)
-                clim = [uv.min(),uv.max()]
+                clim = [uv.min(), uv.max()]
 
             # Matplotlib seems to not support irregular
             # spaced vectors at the moment. So we will
@@ -368,33 +374,32 @@ class TensorView(object):
             nyi = int(self.hy.sum()/self.hy.min())
             tMi = self.__class__([np.ones(nxi)*self.hx.sum()/nxi,
                                   np.ones(nyi)*self.hy.sum()/nyi], self.x0)
-            P = self.getInterpolationMat(tMi.gridCC,'CC',zerosOutside=True)
+            P = self.getInterpolationMat(tMi.gridCC, 'CC', zerosOutside=True)
             Ui = tMi.r(P*mkvc(U), 'CC', 'CC', 'M')
             Vi = tMi.r(P*mkvc(V), 'CC', 'CC', 'M')
             # End Interpolation
 
-            out += (ax.pcolormesh(self.vectorNx, self.vectorNy, np.sqrt(U**2+V**2).T, vmin=clim[0], vmax=clim[1], **pcolorOpts),)
-            out += (ax.streamplot(tMi.vectorCCx, tMi.vectorCCy, Ui.T, Vi.T, **streamOpts),)
+            out += (ax.pcolormesh(self.vectorNx, self.vectorNy, np.sqrt(U**2+V**2).T, vmin=clim[0], vmax=clim[1], **pcolorOpts), )
+            out += (ax.streamplot(tMi.vectorCCx, tMi.vectorCCy, Ui.T, Vi.T, **streamOpts), )
 
         if grid:
-            xXGrid = np.c_[self.vectorNx,self.vectorNx,np.nan*np.ones(self.nNx)].flatten()
-            xYGrid = np.c_[self.vectorNy[0]*np.ones(self.nNx),self.vectorNy[-1]*np.ones(self.nNx),np.nan*np.ones(self.nNx)].flatten()
-            yXGrid = np.c_[self.vectorNx[0]*np.ones(self.nNy),self.vectorNx[-1]*np.ones(self.nNy),np.nan*np.ones(self.nNy)].flatten()
-            yYGrid = np.c_[self.vectorNy,self.vectorNy,np.nan*np.ones(self.nNy)].flatten()
-            out += (ax.plot(np.r_[xXGrid,yXGrid],np.r_[xYGrid,yYGrid],**gridOpts)[0],)
-
+            xXGrid = np.c_[self.vectorNx, self.vectorNx, np.nan*np.ones(self.nNx)].flatten()
+            xYGrid = np.c_[self.vectorNy[0]*np.ones(self.nNx), self.vectorNy[-1]*np.ones(self.nNx), np.nan*np.ones(self.nNx)].flatten()
+            yXGrid = np.c_[self.vectorNx[0]*np.ones(self.nNy), self.vectorNx[-1]*np.ones(self.nNy), np.nan*np.ones(self.nNy)].flatten()
+            yYGrid = np.c_[self.vectorNy, self.vectorNy, np.nan*np.ones(self.nNy)].flatten()
+            out += (ax.plot(np.r_[xXGrid, yXGrid], np.r_[xYGrid, yYGrid], **gridOpts)[0], )
 
         ax.set_xlabel('x')
         ax.set_ylabel('y')
-        ax.set_xlim(*self.vectorNx[[0,-1]])
-        ax.set_ylim(*self.vectorNy[[0,-1]])
+        ax.set_xlim(*self.vectorNx[[0, -1]])
+        ax.set_ylim(*self.vectorNy[[0, -1]])
 
-        if showIt: plt.show()
+        if showIt:
+            plt.show()
         return out
 
-
     def plotGrid(self, ax=None, nodes=False, faces=False, centers=False, edges=False, lines=True, showIt=False):
-        """Plot the nodal, cell-centered and staggered grids for 1,2 and 3 dimensions.
+        """Plot the nodal, cell-centered and staggered grids for 1, 2 and 3 dimensions.
 
         :param bool nodes: plot nodes
         :param bool faces: plot faces
@@ -406,20 +411,22 @@ class TensorView(object):
         .. plot::
            :include-source:
 
-           from SimPEG import Mesh, np
-           h1 = np.linspace(.1,.5,3)
-           h2 = np.linspace(.1,.5,5)
-           mesh = Mesh.TensorMesh([h1, h2])
+           import discretize
+           import numpy as np
+           h1 = np.linspace(.1, .5, 3)
+           h2 = np.linspace(.1, .5, 5)
+           mesh = discretize.TensorMesh([h1, h2])
            mesh.plotGrid(nodes=True, faces=True, centers=True, lines=True, showIt=True)
 
         .. plot::
            :include-source:
 
-           from SimPEG import Mesh, np
-           h1 = np.linspace(.1,.5,3)
-           h2 = np.linspace(.1,.5,5)
-           h3 = np.linspace(.1,.5,3)
-           mesh = Mesh.TensorMesh([h1,h2,h3])
+           import discretize
+           import numpy as np
+           h1 = np.linspace(.1, .5, 3)
+           h2 = np.linspace(.1, .5, 5)
+           h3 = np.linspace(.1, .5, 3)
+           mesh = discretize.TensorMesh([h1, h2, h3])
            mesh.plotGrid(nodes=True, faces=True, centers=True, lines=True, showIt=True)
 
         """
@@ -500,7 +507,8 @@ class TensorView(object):
             ax.set_zlabel('x3')
 
         ax.grid(True)
-        if showIt: plt.show()
+        if showIt:
+            plt.show()
 
 
 class CylView(object):
@@ -532,7 +540,7 @@ class CylView(object):
             if len(args) > 0:
                 tmp = args[0].reshape(self.vnC[0], self.vnC[2], order='F')
                 tmp = mkvc(np.vstack([np.flipud(tmp), tmp]))
-                args = (tmp,) + args[1:]
+                args = (tmp, ) + args[1:]
         else:
             M = TensorMesh([self.hx, self.hz], x0=[self.x0[0], self.x0[2]])
 
@@ -559,12 +567,12 @@ class CylView(object):
 
         return out
 
-
     def plotGrid(self, *args, **kwargs):
         return self._plotCylTensorMesh('plotGrid', *args, **kwargs)
 
     def plotImage(self, *args, **kwargs):
         return self._plotCylTensorMesh('plotImage', *args, **kwargs)
+
 
 class CurvView(object):
     """
@@ -576,16 +584,15 @@ class CurvView(object):
     def __init__(self):
         pass
 
-
     def plotGrid(self, ax=None, nodes=False, faces=False, centers=False, edges=False, lines=True, showIt=False):
-        """Plot the nodal, cell-centered and staggered grids for 1,2 and 3 dimensions.
+        """Plot the nodal, cell-centered and staggered grids for 1, 2 and 3 dimensions.
 
 
         .. plot::
             :include-source:
 
             from SimPEG import Mesh, Utils
-            X, Y = Utils.exampleLrmGrid([3,3],'rotate')
+            X, Y = Utils.exampleLrmGrid([3, 3], 'rotate')
             M = Mesh.CurvilinearMesh([X, Y])
             M.plotGrid(showIt=True)
 
@@ -595,7 +602,8 @@ class CurvView(object):
         from mpl_toolkits.mplot3d import Axes3D
 
         axOpts = {'projection':'3d'} if self.dim == 3 else {}
-        if ax is None: ax = plt.subplot(111, **axOpts)
+        if ax is None:
+            ax = plt.subplot(111, **axOpts)
 
         NN = self.r(self.gridN, 'N', 'N', 'M')
         if self.dim == 2:
@@ -612,7 +620,7 @@ class CurvView(object):
 
                 ax.plot(X, Y, 'b-')
             if centers:
-                ax.plot(self.gridCC[:,0],self.gridCC[:,1],'ro')
+                ax.plot(self.gridCC[:, 0], self.gridCC[:, 1], 'ro')
 
             # Nx = self.r(self.normals, 'F', 'Fx', 'V')
             # Ny = self.r(self.normals, 'F', 'Fy', 'V')
@@ -688,15 +696,15 @@ class CurvView(object):
         # ax.set_xlim((self.x0[0], self.h[0].sum()))
         # ax.set_ylim((self.x0[1], self.h[1].sum()))
 
-        Nx = self.r(self.gridN[:,0],'N','N','M')
-        Ny = self.r(self.gridN[:,1],'N','N','M')
-        cell = self.r(I,'CC','CC','M')
+        Nx = self.r(self.gridN[:, 0], 'N', 'N', 'M')
+        Ny = self.r(self.gridN[:, 1], 'N', 'N', 'M')
+        cell = self.r(I, 'CC', 'CC', 'M')
 
         for ii in range(self.nCx):
             for jj in range(self.nCy):
-                I = [ii,ii+1,ii+1,ii]
-                J = [jj,jj,jj+1,jj+1]
-                ax.add_patch(plt.Polygon(np.c_[Nx[I,J],Ny[I,J]], facecolor=scalarMap.to_rgba(cell[ii,jj]), edgecolor='k' if grid else 'none'))
+                I = [ii, ii+1, ii+1, ii]
+                J = [jj, jj, jj+1, jj+1]
+                ax.add_patch(plt.Polygon(np.c_[Nx[I, J], Ny[I, J]], facecolor=scalarMap.to_rgba(cell[ii, jj]), edgecolor='k' if grid else 'none'))
 
         scalarMap._A = []  # http://stackoverflow.com/questions/8342549/matplotlib-add-colorbar-to-a-sequence-of-line-plots
         ax.set_xlabel('x')

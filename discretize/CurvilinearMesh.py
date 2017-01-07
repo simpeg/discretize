@@ -25,11 +25,8 @@ def normalize3D(x):
     return x/np.kron(np.ones((1, 3)), utils.mkvc(length3D(x), 2))
 
 
-# Curvi Mesh
-
 class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts,CurvView):
-    """
-    CurvilinearMesh is a mesh class that deals with curvilinear meshes.
+    """CurvilinearMesh is a mesh class that deals with curvilinear meshes.
 
     Example of a curvilinear mesh:
 
@@ -314,9 +311,7 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts,CurvView
 
     @property
     def edge(self):
-        """
-        Edge lengths
-        """
+        """Edge lengths"""
         if getattr(self, '_edge', None) is None:
             if(self.dim == 2):
                 xy = self.gridN
@@ -354,27 +349,7 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts,CurvView
 
     @property
     def tangents(self):
-        """
-        Edge tangents
-        """
+        """Edge tangents"""
         if getattr(self, '_tangents', None) is None:
             self.edge  # calling .edge will create the tangents
         return self._tangents
-
-
-
-if __name__ == '__main__':
-    nc = 5
-    h1 = np.cumsum(np.r_[0, np.ones(nc)/(nc)])
-    nc = 7
-    h2 = np.cumsum(np.r_[0, np.ones(nc)/(nc)])
-    h3 = np.cumsum(np.r_[0, np.ones(nc)/(nc)])
-    dee3 = True
-    if dee3:
-        X, Y, Z = utils.ndgrid(h1, h2, h3, vector=False)
-        M = CurvilinearMesh([X, Y, Z])
-    else:
-        X, Y = utils.ndgrid(h1, h2, vector=False)
-        M = CurvilinearMesh([X, Y])
-
-    print(M.r(M.normals, 'F', 'Fx', 'V'))

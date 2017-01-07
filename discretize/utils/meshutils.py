@@ -186,14 +186,3 @@ def ExtractCoreMesh(xyzlim, mesh, meshType='tensor'):
         raise Exception("Not implemented!")
 
     return actind, meshCore
-
-
-if __name__ == '__main__':
-    from SimPEG import Mesh
-    import matplotlib.pyplot as plt
-    tx = [(10.0, 10, -1.3), (10.0, 40), (10.0, 10, 1.3)]
-    ty = [(10.0, 10, -1.3), (10.0, 40)]
-    M = Mesh.TensorMesh([tx, ty])
-    M.plotGrid()
-    plt.gca().axis('tight')
-    plt.show()
