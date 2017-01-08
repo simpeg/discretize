@@ -1,13 +1,17 @@
 from __future__ import print_function
 import numpy as np
 import scipy.sparse as sp
+from scipy.sparse import linalg
 import unittest
-import matplotlib.pyplot as plt
-from SimPEG import Mesh, Utils, Tests, Solver, SolverCG
+import discretize
+from discretize import utils
+from pymatsolver import Solver, SolverCG
+
 
 MESHTYPES = ['uniformTensorMesh']
 
-class Test1D_InhomogeneousDirichlet(Tests.OrderTest):
+
+class Test1D_InhomogeneousDirichlet(discretize.Tests.OrderTest):
     name = "1D - Dirichlet"
     meshTypes = MESHTYPES
     meshDimension = 1
@@ -34,8 +38,8 @@ class Test1D_InhomogeneousDirichlet(Tests.OrderTest):
         P, Pin, Pout = self.M.getBCProjWF([['dirichlet', 'dirichlet']])
 
         Mc = self.M.getFaceInnerProduct()
-        McI = Utils.sdInv(self.M.getFaceInnerProduct())
-        V = Utils.sdiag(self.M.vol)
+        McI = utils.sdInv(self.M.getFaceInnerProduct())
+        V = utils.sdiag(self.M.vol)
         G = -Pin.T*Pin*self.M.faceDiv.T * V
         D = self.M.faceDiv
         j = McI*(G*xc_ana + P*phi_bc)
@@ -56,12 +60,12 @@ class Test1D_InhomogeneousDirichlet(Tests.OrderTest):
             #TODO: fix the null space
             solver = SolverCG(A, maxiter=1000)
             xc = solver * (rhs)
-            print('ACCURACY', np.linalg.norm(Utils.mkvc(A*xc) - rhs))
+            print('ACCURACY', np.linalg.norm(utils.mkvc(A*xc) - rhs))
             err = np.linalg.norm((xc-xc_ana), np.inf)
         elif self.myTest == 'xcJ':
             #TODO: fix the null space
             xc = Solver(A) * (rhs)
-            print(np.linalg.norm(Utils.mkvc(A*xc) - rhs))
+            print(np.linalg.norm(utils.mkvc(A*xc) - rhs))
             j = McI*(G*xc + P*phi_bc)
             err = np.linalg.norm((j-j_ana), np.inf)
 
@@ -88,7 +92,7 @@ class Test1D_InhomogeneousDirichlet(Tests.OrderTest):
         self.orderTest()
 
 
-class Test2D_InhomogeneousDirichlet(Tests.OrderTest):
+class Test2D_InhomogeneousDirichlet(discretize.Tests.OrderTest):
     name = "2D - Dirichlet"
     meshTypes = MESHTYPES
     meshDimension = 2
@@ -123,8 +127,8 @@ class Test2D_InhomogeneousDirichlet(Tests.OrderTest):
         P, Pin, Pout = self.M.getBCProjWF('dirichlet')
 
         Mc = self.M.getFaceInnerProduct()
-        McI = Utils.sdInv(self.M.getFaceInnerProduct())
-        G = -self.M.faceDiv.T * Utils.sdiag(self.M.vol)
+        McI = utils.sdInv(self.M.getFaceInnerProduct())
+        G = -self.M.faceDiv.T * utils.sdiag(self.M.vol)
         D = self.M.faceDiv
         j = McI*(G*xc_ana + P*bc)
         q = D*j
@@ -169,7 +173,7 @@ class Test2D_InhomogeneousDirichlet(Tests.OrderTest):
         self.myTest = 'xcJ'
         self.orderTest()
 
-class Test1D_InhomogeneousNeumann(Tests.OrderTest):
+class Test1D_InhomogeneousNeumann(discretize.Tests.OrderTest):
     name = "1D - Neumann"
     meshTypes = MESHTYPES
     meshDimension = 1
@@ -196,8 +200,8 @@ class Test1D_InhomogeneousNeumann(Tests.OrderTest):
         P, Pin, Pout = self.M.getBCProjWF([['neumann', 'neumann']])
 
         Mc = self.M.getFaceInnerProduct()
-        McI = Utils.sdInv(self.M.getFaceInnerProduct())
-        V = Utils.sdiag(self.M.vol)
+        McI = utils.sdInv(self.M.getFaceInnerProduct())
+        V = utils.sdiag(self.M.vol)
         G = -Pin.T*Pin*self.M.faceDiv.T * V
         D = self.M.faceDiv
         j = McI*(G*xc_ana + P*phi_bc)
@@ -209,7 +213,6 @@ class Test1D_InhomogeneousNeumann(Tests.OrderTest):
         # A = D*McI*G
         # rhs = q_ana - D*McI*P*phi_bc
 
-
         if self.myTest == 'j':
             err = np.linalg.norm((Pin*j-Pin*j_ana), np.inf)
         elif self.myTest == 'q':
@@ -220,7 +223,7 @@ class Test1D_InhomogeneousNeumann(Tests.OrderTest):
             err = np.linalg.norm((xc-xc_ana), np.inf)
             if info > 0:
                 print('Solve does not work well')
-                print('ACCURACY', np.linalg.norm(Utils.mkvc(A*xc) - rhs))
+                print('ACCURACY', np.linalg.norm(utils.mkvc(A*xc) - rhs))
         elif self.myTest == 'xcJ':
             #TODO: fix the null space
             xc, info = sp.linalg.minres(A, rhs, tol = 1e-6)
@@ -228,7 +231,7 @@ class Test1D_InhomogeneousNeumann(Tests.OrderTest):
             err = np.linalg.norm((Pin*j-Pin*j_ana), np.inf)
             if info > 0:
                 print('Solve does not work well')
-                print('ACCURACY', np.linalg.norm(Utils.mkvc(A*xc) - rhs))
+                print('ACCURACY', np.linalg.norm(utils.mkvc(A*xc) - rhs))
         return err
 
     def test_orderJ(self):
@@ -246,7 +249,7 @@ class Test1D_InhomogeneousNeumann(Tests.OrderTest):
         self.myTest = 'xcJ'
         self.orderTest()
 
-class Test2D_InhomogeneousNeumann(Tests.OrderTest):
+class Test2D_InhomogeneousNeumann(discretize.Tests.OrderTest):
     name = "2D - Neumann"
     meshTypes = MESHTYPES
     meshDimension = 2
@@ -286,8 +289,8 @@ class Test2D_InhomogeneousNeumann(Tests.OrderTest):
         P, Pin, Pout = self.M.getBCProjWF('neumann')
 
         Mc = self.M.getFaceInnerProduct()
-        McI = Utils.sdInv(self.M.getFaceInnerProduct())
-        V = Utils.sdiag(self.M.vol)
+        McI = utils.sdInv(self.M.getFaceInnerProduct())
+        V = utils.sdiag(self.M.vol)
         G = -Pin.T*Pin*self.M.faceDiv.T * V
         D = self.M.faceDiv
         j = McI*(G*xc_ana + P*phi_bc)
@@ -307,7 +310,7 @@ class Test2D_InhomogeneousNeumann(Tests.OrderTest):
             err = np.linalg.norm((xc-xc_ana), np.inf)
             if info > 0:
                 print('Solve does not work well')
-                print('ACCURACY', np.linalg.norm(Utils.mkvc(A*xc) - rhs))
+                print('ACCURACY', np.linalg.norm(utils.mkvc(A*xc) - rhs))
         elif self.myTest == 'xcJ':
             #TODO: fix the null space
             xc, info = sp.linalg.minres(A, rhs, tol = 1e-6)
@@ -315,7 +318,7 @@ class Test2D_InhomogeneousNeumann(Tests.OrderTest):
             err = np.linalg.norm((Pin*j-Pin*j_ana), np.inf)
             if info > 0:
                 print('Solve does not work well')
-                print('ACCURACY', np.linalg.norm(Utils.mkvc(A*xc) - rhs))
+                print('ACCURACY', np.linalg.norm(utils.mkvc(A*xc) - rhs))
         return err
 
     def test_orderJ(self):
@@ -333,7 +336,8 @@ class Test2D_InhomogeneousNeumann(Tests.OrderTest):
         self.myTest = 'xcJ'
         self.orderTest()
 
-class Test1D_InhomogeneousMixed(Tests.OrderTest):
+
+class Test1D_InhomogeneousMixed(discretize.Tests.OrderTest):
     name = "1D - Mixed"
     meshTypes = MESHTYPES
     meshDimension = 1
@@ -360,8 +364,8 @@ class Test1D_InhomogeneousMixed(Tests.OrderTest):
         P, Pin, Pout = self.M.getBCProjWF([['dirichlet', 'neumann']])
 
         Mc = self.M.getFaceInnerProduct()
-        McI = Utils.sdInv(self.M.getFaceInnerProduct())
-        V = Utils.sdiag(self.M.vol)
+        McI = utils.sdInv(self.M.getFaceInnerProduct())
+        V = utils.sdiag(self.M.vol)
         G = -Pin.T*Pin*self.M.faceDiv.T * V
         D = self.M.faceDiv
         j = McI*(G*xc_ana + P*phi_bc)
@@ -384,7 +388,7 @@ class Test1D_InhomogeneousMixed(Tests.OrderTest):
             err = np.linalg.norm((xc-xc_ana), np.inf)
             if info > 0:
                 print('Solve does not work well')
-                print('ACCURACY', np.linalg.norm(Utils.mkvc(A*xc) - rhs))
+                print('ACCURACY', np.linalg.norm(utils.mkvc(A*xc) - rhs))
         elif self.myTest == 'xcJ':
             #TODO: fix the null space
             xc, info = sp.linalg.minres(A, rhs, tol = 1e-6)
@@ -392,7 +396,7 @@ class Test1D_InhomogeneousMixed(Tests.OrderTest):
             err = np.linalg.norm((Pin*j-Pin*j_ana), np.inf)
             if info > 0:
                 print('Solve does not work well')
-                print('ACCURACY', np.linalg.norm(Utils.mkvc(A*xc) - rhs))
+                print('ACCURACY', np.linalg.norm(utils.mkvc(A*xc) - rhs))
         return err
 
     def test_orderJ(self):
@@ -410,7 +414,8 @@ class Test1D_InhomogeneousMixed(Tests.OrderTest):
         self.myTest = 'xcJ'
         self.orderTest()
 
-class Test2D_InhomogeneousMixed(Tests.OrderTest):
+
+class Test2D_InhomogeneousMixed(discretize.Tests.OrderTest):
     name = "2D - Mixed"
     meshTypes = MESHTYPES
     meshDimension = 2
@@ -450,8 +455,8 @@ class Test2D_InhomogeneousMixed(Tests.OrderTest):
         P, Pin, Pout = self.M.getBCProjWF([['dirichlet', 'neumann'], ['dirichlet', 'neumann']])
 
         Mc = self.M.getFaceInnerProduct()
-        McI = Utils.sdInv(self.M.getFaceInnerProduct())
-        V = Utils.sdiag(self.M.vol)
+        McI = utils.sdInv(self.M.getFaceInnerProduct())
+        V = utils.sdiag(self.M.vol)
         G = -Pin.T*Pin*self.M.faceDiv.T * V
         D = self.M.faceDiv
         j = McI*(G*xc_ana + P*phi_bc)
@@ -471,7 +476,7 @@ class Test2D_InhomogeneousMixed(Tests.OrderTest):
             err = np.linalg.norm((xc-xc_ana), np.inf)
             if info > 0:
                 print('Solve does not work well')
-                print('ACCURACY', np.linalg.norm(Utils.mkvc(A*xc) - rhs))
+                print('ACCURACY', np.linalg.norm(utils.mkvc(A*xc) - rhs))
         elif self.myTest == 'xcJ':
             #TODO: fix the null space
             xc, info = sp.linalg.minres(A, rhs, tol = 1e-6)
@@ -479,7 +484,7 @@ class Test2D_InhomogeneousMixed(Tests.OrderTest):
             err = np.linalg.norm((Pin*j-Pin*j_ana), np.inf)
             if info > 0:
                 print('Solve does not work well')
-                print('ACCURACY', np.linalg.norm(Utils.mkvc(A*xc) - rhs))
+                print('ACCURACY', np.linalg.norm(utils.mkvc(A*xc) - rhs))
         return err
 
     def test_orderJ(self):
