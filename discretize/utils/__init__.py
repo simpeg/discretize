@@ -4,10 +4,7 @@ from .matutils import (mkvc, sdiag, sdInv, speye, kron3, spzeros, ddx, av,
                        inv3X3BlockDiagonal, inv2X2BlockDiagonal, TensorType,
                        makePropertyTensor, invPropertyTensor, Zero,
                        Identity)
-from .codeutils import (memProfileWrapper, hook, setKwargs,
-                        printTitles, printLine, checkStoppers, printStoppers,
-                        callHooks, dependentProperty, isScalar,
-                        asArray_N_x_Dim, requires)
+from .codeutils import (isScalar, asArray_N_x_Dim)
 from .meshutils import (exampleLrmGrid, meshTensor, closestPoints,
                         ExtractCoreMesh)
 from .curvutils import volTetra, faceInfo, indexCube
