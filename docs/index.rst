@@ -18,18 +18,6 @@ Examples
 
    content/api_core/api_Examples
 
-Packages
-********
-
-.. toctree::
-   :maxdepth: 3
-
-   content/em/index
-   content/dc/index
-   content/ip/index
-   content/pf/index
-   content/flow/index
-
 Finite Volume
 *************
 
@@ -37,30 +25,6 @@ Finite Volume
    :maxdepth: 3
 
    content/api_core/api_FiniteVolume
-
-Forward Problems
-****************
-
-.. toctree::
-   :maxdepth: 3
-
-   content/api_core/api_ForwardProblem
-
-Inversion Components
-********************
-
-.. toctree::
-   :maxdepth: 3
-
-   content/api_core/api_InversionComponents
-
-Maps
-****
-
-.. toctree::
-   :maxdepth: 3
-
-   content/api_core/api_Maps
 
 Utility Codes
 *************

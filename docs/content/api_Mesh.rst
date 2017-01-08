@@ -23,8 +23,8 @@ the implementations.
 
 .. plot::
 
-    from SimPEG import Examples
-    Examples.Mesh_Basic_Types.run()
+    from discretize import examples
+    examples.Mesh_Basic_Types.run()
 
 
 Variable Locations and Terminology
