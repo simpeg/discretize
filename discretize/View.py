@@ -41,13 +41,14 @@ class TensorView(object):
     #         pltNum +=1
     #     if showIt: plt.show()
 
-    def plotImage(self, v, vType='CC', grid=False, view='real',
-                  ax=None, clim=None, showIt=False,
-                  pcolorOpts=None,
-                  streamOpts=None,
-                  gridOpts=None,
-                  numbering=True, annotationColor='w'
-                  ):
+    def plotImage(
+        self, v, vType='CC', grid=False, view='real',
+        ax=None, clim=None, showIt=False,
+        pcolorOpts=None,
+        streamOpts=None,
+        gridOpts=None,
+        numbering=True, annotationColor='w'
+    ):
         """
         Mesh.plotImage(v)
 
@@ -283,9 +284,8 @@ class TensorView(object):
         if 'Z' not in normal:
             h2d.append(self.hz)
             x2d.append(self.x0[2])
-        tM = self.__class__(h2d, x2d) #: Temp Mesh
+        tM = self.__class__(h2d, x2d)  #: Temp Mesh
         v2d = doSlice(v)
-
 
         if ax is None:
             fig = plt.figure()
@@ -431,13 +431,12 @@ class TensorView(object):
 
         """
 
-        axOpts = {'projection':'3d'} if self.dim == 3 else {}
+        axOpts = {'projection': '3d'} if self.dim == 3 else {}
         if ax is None:
-            fig = plt.figure()
+            plt.figure()
             ax = plt.subplot(111, **axOpts)
         else:
             assert isinstance(ax, matplotlib.axes.Axes), "ax must be an matplotlib.axes.Axes"
-            fig = ax.figure
 
         if self.dim == 1:
             if nodes:
@@ -546,12 +545,11 @@ class CylView(object):
 
         ax = kwargs.get('ax', None)
         if ax is None:
-            fig = plt.figure()
+            plt.figure()
             ax = plt.subplot(111)
             kwargs['ax'] = ax
         else:
             assert isinstance(ax, matplotlib.axes.Axes), "ax must be an matplotlib.axes.Axes"
-            fig = ax.figure
 
         # Don't show things in the TM.plotImage
         showIt = kwargs.get('showIt', False)
@@ -601,7 +599,7 @@ class CurvView(object):
         import matplotlib
         from mpl_toolkits.mplot3d import Axes3D
 
-        axOpts = {'projection':'3d'} if self.dim == 3 else {}
+        axOpts = {'projection': '3d'} if self.dim == 3 else {}
         if ax is None:
             ax = plt.subplot(111, **axOpts)
 
@@ -686,7 +684,9 @@ class CurvView(object):
         import matplotlib.colors as colors
         import matplotlib.cm as cmx
 
-        if ax is None: ax = plt.subplot(111)
+        if ax is None:
+            ax = plt.subplot(111)
+
         jet = cm = plt.get_cmap('jet')
         cNorm  = colors.Normalize(
             vmin=I.min() if clim is None else clim[0],

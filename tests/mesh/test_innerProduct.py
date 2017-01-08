@@ -1,11 +1,12 @@
 from __future__ import print_function
 import numpy as np
 import unittest
-from SimPEG import Utils, Tests
+import discretize
 
 
-class TestInnerProducts(Tests.OrderTest):
-    """Integrate an function over a unit cube domain using edgeInnerProducts and faceInnerProducts."""
+class TestInnerProducts(discretize.Tests.OrderTest):
+    """Integrate an function over a unit cube domain
+    using edgeInnerProducts and faceInnerProducts."""
 
     meshTypes = ['uniformTensorMesh', 'uniformCurv', 'rotateCurv']
     meshDimension = 3
@@ -46,7 +47,7 @@ class TestInnerProducts(Tests.OrderTest):
             E = self.M.projectEdgeVector(Ec)
 
             if self.invProp:
-                A = self.M.getEdgeInnerProduct(Utils.invPropertyTensor(self.M, sigma), invProp=True)
+                A = self.M.getEdgeInnerProduct(discretize.utils.invPropertyTensor(self.M, sigma), invProp=True)
             else:
                 A = self.M.getEdgeInnerProduct(sigma)
             numeric = E.T.dot(A.dot(E))
@@ -58,7 +59,7 @@ class TestInnerProducts(Tests.OrderTest):
             F = self.M.projectFaceVector(Fc)
 
             if self.invProp:
-                A = self.M.getFaceInnerProduct(Utils.invPropertyTensor(self.M, sigma), invProp=True)
+                A = self.M.getFaceInnerProduct(discretize.utils.invPropertyTensor(self.M, sigma), invProp=True)
             else:
                 A = self.M.getFaceInnerProduct(sigma)
             numeric = F.T.dot(A.dot(F))
@@ -151,8 +152,9 @@ class TestInnerProducts(Tests.OrderTest):
         self.orderTest()
 
 
-class TestInnerProducts2D(Tests.OrderTest):
-    """Integrate an function over a unit cube domain using edgeInnerProducts and faceInnerProducts."""
+class TestInnerProducts2D(discretize.Tests.OrderTest):
+    """Integrate an function over a unit cube domain
+    using edgeInnerProducts and faceInnerProducts."""
 
     meshTypes = ['uniformTensorMesh', 'uniformCurv', 'rotateCurv']
     meshDimension = 2
@@ -188,7 +190,7 @@ class TestInnerProducts2D(Tests.OrderTest):
                             cart(self.M.gridEy)))
             E = self.M.projectEdgeVector(Ec)
             if self.invProp:
-                A = self.M.getEdgeInnerProduct(Utils.invPropertyTensor(self.M, sigma), invProp=True)
+                A = self.M.getEdgeInnerProduct(discretize.utils.invPropertyTensor(self.M, sigma), invProp=True)
             else:
                 A = self.M.getEdgeInnerProduct(sigma)
             numeric = E.T.dot(A.dot(E))
@@ -199,7 +201,7 @@ class TestInnerProducts2D(Tests.OrderTest):
             F = self.M.projectFaceVector(Fc)
 
             if self.invProp:
-                A = self.M.getFaceInnerProduct(Utils.invPropertyTensor(self.M, sigma), invProp=True)
+                A = self.M.getFaceInnerProduct(discretize.utils.invPropertyTensor(self.M, sigma), invProp=True)
             else:
                 A = self.M.getFaceInnerProduct(sigma)
             numeric = F.T.dot(A.dot(F))
@@ -292,8 +294,9 @@ class TestInnerProducts2D(Tests.OrderTest):
         self.orderTest()
 
 
-class TestInnerProducts1D(Tests.OrderTest):
-    """Integrate an function over a unit cube domain using edgeInnerProducts and faceInnerProducts."""
+class TestInnerProducts1D(discretize.Tests.OrderTest):
+    """Integrate an function over a unit cube domain
+    using edgeInnerProducts and faceInnerProducts."""
 
     meshTypes = ['uniformTensorMesh']
     meshDimension = 1

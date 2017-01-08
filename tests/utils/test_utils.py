@@ -6,10 +6,10 @@ from discretize.utils import (
     sdiag, sub2ind, ndgrid, mkvc, isScalar,
     inv2X2BlockDiagonal, inv3X3BlockDiagonal,
     invPropertyTensor, makePropertyTensor, indexCube,
-    ind2sub, asArray_N_x_Dim, TensorType
+    ind2sub, asArray_N_x_Dim, TensorType,
 )
+from discretize.Tests import checkDerivative
 import discretize
-from SimPEG.Tests import checkDerivative
 import sys
 
 TOL = 1e-8

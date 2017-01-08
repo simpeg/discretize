@@ -14,12 +14,14 @@
 
 """
 
+
 def bitrange(long x, int width, int start, int end):
     """
         Extract a bit range as an integer.
         (start, end) is inclusive lower bound, exclusive upper bound.
     """
     return x >> (width-end) & ((2**(end-start))-1)
+
 
 def index(int dimension, int bits, int levelBits, list p, int level):
     cdef long idx = 0
@@ -34,11 +36,12 @@ def index(int dimension, int bits, int levelBits, list p, int level):
     iwidth = bits * dimension
     for i in range(iwidth):
         bitoff = bits-(i/dimension)-1
-        poff = dimension-(i%dimension)-1
+        poff = dimension-(i % dimension)-1
         b = bitrange(p[poff], bits, bitoff, bitoff+1) << i
         idx |= b
 
     return (idx << levelBits) + level
+
 
 def point(int dimension, int bits, int levelBits, long idx):
     cdef list p
@@ -46,14 +49,14 @@ def point(int dimension, int bits, int levelBits, long idx):
     cdef int i, n
     cdef long b
 
-    n   = idx & (2**levelBits-1)
+    n = idx & (2**levelBits-1)
     idx = idx >> levelBits
 
     p = [0]*dimension
     iwidth = bits * dimension
     for i in range(iwidth):
         b = bitrange(idx, iwidth, i, i+1) << (iwidth-i-1)/dimension
-        p[i%dimension] |= b
+        p[i % dimension] |= b
     p.reverse()
     return p + [n]
 

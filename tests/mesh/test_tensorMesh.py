@@ -2,7 +2,7 @@ from __future__ import print_function
 import numpy as np
 import unittest
 import discretize
-from SimPEG import Solver
+from pymatsolver import Solver
 
 TOL = 1e-10
 
