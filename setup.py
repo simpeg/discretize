@@ -5,13 +5,19 @@ from __future__ import print_function
 Discretization tools for finite volume and inverse problems.
 """
 
-import sys
-import subprocess
-
 from distutils.core import setup
-from distutils.command.build_ext import build_ext
 from setuptools import find_packages
-from distutils.extension import Extension
+from Cython.Build import cythonize
+from Cython.Distutils import build_ext
+import numpy
+
+
+class NumpyBuild(build_ext):
+    def finalize_options(self):
+        build_ext.finalize_options(self)
+        __builtins__.__NUMPY_SETUP__ = False
+        self.include_dirs.append(numpy.get_include())
+
 
 CLASSIFIERS = [
     'Development Status :: 4 - Beta',
@@ -29,53 +35,14 @@ CLASSIFIERS = [
     'Natural Language :: English',
 ]
 
-args = sys.argv[1:]
-
-# Make a `cleanall` rule to get rid of intermediate and library files
-if "cleanall" in args:
-    print("Deleting cython files...")
-    # Just in case the build directory was created by accident,
-    # note that shell=True should be OK here because the command is constant.
-    subprocess.Popen("rm -rf build", shell=True, executable="/bin/bash")
-    subprocess.Popen("find . -name \*.c -type f -delete", shell=True, executable="/bin/bash")
-    subprocess.Popen("find . -name \*.so -type f -delete", shell=True, executable="/bin/bash")
-    # Now do a normal clean
-    sys.argv[sys.argv.index('cleanall')] = "clean"
-
-# We want to always use build_ext --inplace
-if args.count("build_ext") > 0 and args.count("--inplace") == 0:
-    sys.argv.insert(sys.argv.index("build_ext")+1, "--inplace")
-
-try:
-    from Cython.Build import cythonize
-    from Cython.Distutils import build_ext
-    USE_CYTHON = True
-except Exception as e:
-    USE_CYTHON = False
-
-
-class NumpyBuild(build_ext):
-    def finalize_options(self):
-        build_ext.finalize_options(self)
-        __builtins__.__NUMPY_SETUP__ = False
-        import numpy
-        self.include_dirs.append(numpy.get_include())
-
-ext = '.pyx' if USE_CYTHON else '.c'
-
-cython_files = [
-                    "discretize/utils/interputils_cython",
-                    "discretize/TreeUtils"
-               ]
-extensions = [Extension(f, [f+ext]) for f in cython_files]
-scripts = [f+'.pyx' for f in cython_files]
-
-if USE_CYTHON and "cleanall" not in args:
-    from Cython.Build import cythonize
-    extensions = cythonize(extensions)
 
 with open("README.rst") as f:
     LONG_DESCRIPTION = ''.join(f.readlines())
+
+cython_files = [
+    "discretize/utils/interputils_cython.pyx",
+    "discretize/TreeUtils.pyx"
+]
 
 setup(
     name="discretize",
@@ -100,8 +67,7 @@ setup(
     classifiers=CLASSIFIERS,
     platforms=["Windows", "Linux", "Solaris", "Mac OS-X", "Unix"],
     use_2to3=False,
+    setup_requires=['numpy', 'cython'],
     cmdclass={'build_ext': NumpyBuild},
-    setup_requires=['numpy'],
-    ext_modules=extensions,
-    scripts=scripts,
+    ext_modules=cythonize(cython_files)
 )
