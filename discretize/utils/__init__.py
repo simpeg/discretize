@@ -13,4 +13,3 @@ from .meshutils import (exampleLrmGrid, meshTensor, closestPoints,
 from .curvutils import volTetra, faceInfo, indexCube
 from .interputils import interpmat
 from .coordutils import rotatePointsFromNormals, rotationMatrixFromNormals
-from .modelutils import surface2ind_topo
