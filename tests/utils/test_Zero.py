@@ -1,6 +1,6 @@
 from __future__ import print_function
 import unittest
-from SimPEG.Utils import Zero, Identity, sdiag, mkvc
+from discretize.utils import Zero, Identity, sdiag, mkvc
 import numpy as np
 
 
