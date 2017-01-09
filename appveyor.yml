@@ -21,8 +21,8 @@ install:
   - "conda create -q -n test-environment python=%PYTHON% numpy scipy matplotlib cython ipython"
   - activate test-environment
   - pip install -r requirements_dev.txt
-  - "%PYTHON%\\python setup.py install"
-  - "%PYTHON%\\python setup.py build_ext -i -b ."
+  - "%PYTHON%\\python.exe setup.py install"
+  - "%PYTHON%\\python.exe setup.py build_ext -i -b ."
 
 test_script:
   - nosetests
