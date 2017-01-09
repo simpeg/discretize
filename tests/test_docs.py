@@ -8,7 +8,7 @@ class Doc_Test(unittest.TestCase):
     @property
     def path_to_docs(self):
         dirname, filename = os.path.split(os.path.abspath(__file__))
-        return os.path.sep.join(dirname.split(os.path.sep)[:-2] + ['docs'])
+        return os.path.sep.join(dirname.split(os.path.sep)[:-1] + ['docs'])
 
     def test_html(self):
         doctrees_path = os.path.sep.join(self.path_to_docs.split(os.path.sep) + ['_build']+['doctrees'])
