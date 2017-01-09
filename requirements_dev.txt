@@ -6,7 +6,7 @@ pylint
 numpy>=1.7
 scipy>=0.13
 cython
-pymatsolver
+pymatsolver>=0.1.2
 ipython
 matplotlib
 properties[math]
