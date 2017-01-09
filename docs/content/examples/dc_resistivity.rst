@@ -1,4 +1,4 @@
-.. _examples_direct_current_resistivit:
+.. _examples_dc_resistivity:
 
 .. --------------------------------- ..
 ..                                   ..
@@ -18,8 +18,8 @@ Basic Forward 2D DC Resistivity
 .. plot::
 
     from discretize import examples
-    examples.direct_current_resistivit.run()
+    examples.dc_resistivity.run()
 
-.. literalinclude:: ../../../discretize/examples/direct_current_resistivit.py
+.. literalinclude:: ../../../discretize/examples/dc_resistivity.py
     :language: python
     :linenos:

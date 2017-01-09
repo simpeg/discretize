@@ -3,7 +3,7 @@ from __future__ import print_function
 
 ##### AUTOIMPORTS #####
 from discretize.examples import cahn_hilliard
-from discretize.examples import direct_current_resistivity
+from discretize.examples import dc_resistivity
 from discretize.examples import mesh_types
 from discretize.examples import plot_cyl_mirror
 from discretize.examples import plot_image
@@ -12,7 +12,7 @@ from discretize.examples import quadtree_hanging
 from discretize.examples import quadtree_refine
 from discretize.examples import tensors
 
-__examples__ = ["cahn_hilliard", "direct_current_resistivity", "mesh_types", "plot_cyl_mirror", "plot_image", "quadtree_divergence", "quadtree_hanging", "quadtree_refine", "tensors"]
+__examples__ = ["cahn_hilliard", "dc_resistivity", "mesh_types", "plot_cyl_mirror", "plot_image", "quadtree_divergence", "quadtree_hanging", "quadtree_refine", "tensors"]
 
 ##### AUTOIMPORTS #####
 
@@ -63,11 +63,16 @@ if __name__ == '__main__':
     def _makeExample(filePath, runFunction):
         """Makes the example given a path of the file and the run function."""
         filePath = os.path.realpath(filePath)
-        name = filePath.split(os.path.sep)[-1].rstrip('.pyc').rstrip('.py')
+        name = (
+            filePath
+            .split(os.path.sep)[-1]
+            .replace('.pyc', '')
+            .replace('.py', '')
+        )
 
         docstr = runFunction.__doc__
         if docstr is None:
-            doc = '{0!s}\n{1!s}'.format(name.replace('_',' '), '='*len(name))
+            doc = '{0!s}\n{1!s}'.format(name.replace('_', ' '), '='*len(name))
         else:
             doc = '\n'.join([_[8:].rstrip() for _ in docstr.split('\n')])
 
