@@ -5,7 +5,7 @@ from discretize.CurvilinearMesh import CurvilinearMesh
 from discretize.TreeMesh import TreeMesh
 from discretize import Tests
 
-__version__   = '0.1.0'
+__version__   = '0.1.1b0'
 __author__    = 'Rowan Cockett'
 __license__   = 'MIT'
 __copyright__ = 'Copyright 2017 Rowan Cockett'
