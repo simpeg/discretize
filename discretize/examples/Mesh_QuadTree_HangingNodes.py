@@ -1,11 +1,11 @@
-from SimPEG import Mesh
+import discretize
 import matplotlib.pyplot as plt
 
 
 def run(plotIt=True):
     """
-        Mesh: QuadTree: Hanging Nodes
-        =============================
+        QuadTree: Hanging Nodes
+        =======================
 
         You can give the refine method a function, which is evaluated on every
         cell of the TreeMesh.
@@ -15,7 +15,7 @@ def run(plotIt=True):
         on an 8x8 mesh (2^3).
 
     """
-    M = Mesh.TreeMesh([8, 8])
+    M = discretize.TreeMesh([8, 8])
 
     def refine(cell):
         xyz = cell.center

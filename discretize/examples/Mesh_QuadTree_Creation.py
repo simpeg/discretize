@@ -1,12 +1,12 @@
-from SimPEG import Mesh
+import discretize
 import numpy as np
 import matplotlib.pyplot as plt
 
 
 def run(plotIt=True):
     """
-        Mesh: QuadTree: Creation
-        ========================
+        QuadTree: Creation
+        ==================
 
         You can give the refine method a function, which is evaluated on every
         cell of the TreeMesh.
@@ -14,9 +14,8 @@ def run(plotIt=True):
         Occasionally it is useful to initially refine to a constant level
         (e.g. 3 in this 32x32 mesh). This means the function is first evaluated
         on an 8x8 mesh (2^3).
-
     """
-    M = Mesh.TreeMesh([32, 32])
+    M = discretize.TreeMesh([32, 32])
     M.refine(3)
 
     def refine(cell):

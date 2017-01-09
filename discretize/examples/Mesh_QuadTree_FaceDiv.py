@@ -1,17 +1,15 @@
-from SimPEG import Mesh
+import discretize
 import matplotlib.pyplot as plt
 
 
 def run(plotIt=True, n=60):
     """
-        Mesh: QuadTree: FaceDiv
-        =======================
-
-
+        QuadTree: FaceDiv
+        =================
 
     """
 
-    M = Mesh.TreeMesh([[(1, 16)], [(1, 16)]], levels=4)
+    M = discretize.TreeMesh([[(1, 16)], [(1, 16)]], levels=4)
     M._refineCell([0, 0, 0])
     M._refineCell([0, 0, 1])
     M._refineCell([4, 4, 2])

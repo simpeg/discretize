@@ -1,20 +1,22 @@
-from SimPEG import Mesh, Utils, np, SolverLU
+import discretize
+from pymatsolver import SolverLU
+import numpy as np
 import matplotlib.pyplot as plt
 
 
 def run(plotIt=True):
 
     """
-        Mesh: Basic Forward 2D DC Resistivity
-        =====================================
+        Basic Forward 2D DC Resistivity
+        ===============================
 
         2D DC forward modeling example with Tensor and Curvilinear Meshes
     """
 
     # Step1: Generate Tensor and Curvilinear Mesh
     sz = [40, 40]
-    tM = Mesh.TensorMesh(sz)
-    rM = Mesh.CurvilinearMesh(Utils.meshutils.exampleLrmGrid(sz, 'rotate'))
+    tM = discretize.TensorMesh(sz)
+    rM = discretize.CurvilinearMesh(discretize.utils.exampleLrmGrid(sz, 'rotate'))
 
     # Step2: Direct Current (DC) operator
     def DCfun(mesh, pts):
@@ -24,7 +26,7 @@ def run(plotIt=True):
         A = -D*MsigI*D.T
         A[-1, -1] /= mesh.vol[-1]  # Remove null space
         rhs = np.zeros(mesh.nC)
-        txind = Utils.meshutils.closestPoints(mesh, pts)
+        txind = discretize.utils.closestPoints(mesh, pts)
         rhs[txind] = np.r_[1, -1]
         return A, rhs
 

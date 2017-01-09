@@ -2,42 +2,19 @@ from __future__ import print_function
 # Run this file to add imports.
 
 ##### AUTOIMPORTS #####
-from SimPEG.Examples import DC_Analytic_Dipole
-from SimPEG.Examples import DC_Forward_PseudoSection
-from SimPEG.Examples import EM_FDEM_1D_Inversion
-from SimPEG.Examples import EM_FDEM_Analytic_MagDipoleWholespace
-from SimPEG.Examples import EM_FDEM_Mu_Inversion
-from SimPEG.Examples import EM_Heagyetal2016_Casing
-from SimPEG.Examples import EM_Heagyetal2016_CylInversions
-from SimPEG.Examples import EM_NSEM_1D_ForwardAndInversion
-from SimPEG.Examples import EM_NSEM_3D_Foward
-from SimPEG.Examples import EM_Schenkel_Morrison_Casing
-from SimPEG.Examples import EM_TDEM_1D_Inversion
-from SimPEG.Examples import EM_TDEM_1D_Inversion_RawWaveform
-from SimPEG.Examples import FLOW_Richards_1D_Celia1990
-from SimPEG.Examples import Inversion_Linear
-from SimPEG.Examples import Inversion_Linear_IRLS
-from SimPEG.Examples import Maps_ComboMaps
-from SimPEG.Examples import Maps_Mesh2Mesh
-from SimPEG.Examples import Maps_ParametrizedBlockInLayer
-from SimPEG.Examples import Maps_ParametrizedLayer
-from SimPEG.Examples import Mesh_Basic_ForwardDC
-from SimPEG.Examples import Mesh_Basic_PlotImage
-from SimPEG.Examples import Mesh_Basic_Types
-from SimPEG.Examples import Mesh_Operators_CahnHilliard
-from SimPEG.Examples import Mesh_Plot_Cyl
-from SimPEG.Examples import Mesh_QuadTree_Creation
-from SimPEG.Examples import Mesh_QuadTree_FaceDiv
-from SimPEG.Examples import Mesh_QuadTree_HangingNodes
-from SimPEG.Examples import Mesh_Tensor_Creation
-from SimPEG.Examples import PF_Gravity_Inversion_Linear
-from SimPEG.Examples import PF_Gravity_Laguna_del_Maule_Inversion
-from SimPEG.Examples import PF_Magnetics_Analytics
-from SimPEG.Examples import PF_Magnetics_Inversion_Linear
-from SimPEG.Examples import Utils_plot2Ddata
-from SimPEG.Examples import Utils_surface2ind_topo
+from discretize.examples import Mesh_Basic_ForwardDC
+from discretize.examples import Mesh_Basic_PlotImage
+from discretize.examples import Mesh_Basic_Types
+from discretize.examples import Mesh_Operators_CahnHilliard
+from discretize.examples import Mesh_Plot_Cyl
+from discretize.examples import Mesh_QuadTree_Creation
+from discretize.examples import Mesh_QuadTree_FaceDiv
+from discretize.examples import Mesh_QuadTree_HangingNodes
+from discretize.examples import Mesh_Tensor_Creation
+from discretize.examples import Utils_plot2Ddata
+from discretize.examples import Utils_surface2ind_topo
 
-__examples__ = ["DC_Analytic_Dipole", "DC_Forward_PseudoSection", "EM_FDEM_1D_Inversion", "EM_FDEM_Analytic_MagDipoleWholespace", "EM_FDEM_Mu_Inversion", "EM_Heagyetal2016_Casing", "EM_Heagyetal2016_CylInversions", "EM_NSEM_1D_ForwardAndInversion", "EM_NSEM_3D_Foward", "EM_Schenkel_Morrison_Casing", "EM_TDEM_1D_Inversion", "EM_TDEM_1D_Inversion_RawWaveform", "FLOW_Richards_1D_Celia1990", "Inversion_Linear", "Inversion_Linear_IRLS", "Maps_ComboMaps", "Maps_Mesh2Mesh", "Maps_ParametrizedBlockInLayer", "Maps_ParametrizedLayer", "Mesh_Basic_ForwardDC", "Mesh_Basic_PlotImage", "Mesh_Basic_Types", "Mesh_Operators_CahnHilliard", "Mesh_Plot_Cyl", "Mesh_QuadTree_Creation", "Mesh_QuadTree_FaceDiv", "Mesh_QuadTree_HangingNodes", "Mesh_Tensor_Creation", "PF_Gravity_Inversion_Linear", "PF_Gravity_Laguna_del_Maule_Inversion", "PF_Magnetics_Analytics", "PF_Magnetics_Inversion_Linear", "Utils_plot2Ddata", "Utils_surface2ind_topo"]
+__examples__ = ["Mesh_Basic_ForwardDC", "Mesh_Basic_PlotImage", "Mesh_Basic_Types", "Mesh_Operators_CahnHilliard", "Mesh_Plot_Cyl", "Mesh_QuadTree_Creation", "Mesh_QuadTree_FaceDiv", "Mesh_QuadTree_HangingNodes", "Mesh_Tensor_Creation", "Utils_plot2Ddata", "Utils_surface2ind_topo"]
 
 ##### AUTOIMPORTS #####
 
@@ -48,14 +25,15 @@ if __name__ == '__main__':
 
     """
 
-    import shutil, os
-    from SimPEG import Examples
+    import shutil
+    import os
+    from discretize import examples
 
     # Create the examples dir in the docs folder.
     fName = os.path.realpath(__file__)
-    docExamplesDir = os.path.sep.join(fName.split(os.path.sep)[:-3] + ['docs', 'content', 'examples'])
-    shutil.rmtree(docExamplesDir)
-    os.makedirs(docExamplesDir)
+    doc_examples_dir = os.path.sep.join(fName.split(os.path.sep)[:-3] + ['docs', 'content', 'examples'])
+    shutil.rmtree(doc_examples_dir)
+    os.makedirs(doc_examples_dir)
 
     # Get all the python examples in this folder
     thispath = os.path.sep.join(fName.split(os.path.sep)[:-1])
@@ -74,7 +52,7 @@ if __name__ == '__main__':
         if line == "##### AUTOIMPORTS #####\n":
             inimports = not inimports
             if inimports:
-                out += '\n'.join(["from SimPEG.Examples import {0!s}".format(_)
+                out += '\n'.join(["from discretize.examples import {0!s}".format(_)
                                   for _ in exfiles])
                 out += '\n\n__examples__ = ["' + '", "'.join(exfiles)+ '"]\n'
                 out += '\n##### AUTOIMPORTS #####\n'
@@ -101,7 +79,7 @@ if __name__ == '__main__':
 ..                                   ..
 ..    THIS FILE IS AUTO GENEREATED   ..
 ..                                   ..
-..    SimPEG/Examples/__init__.py    ..
+..    discretize/examples/__init__.py    ..
 ..                                   ..
 .. --------------------------------- ..
 
@@ -109,10 +87,10 @@ if __name__ == '__main__':
 
 .. plot::
 
-    from SimPEG import Examples
-    Examples.{2!s}.run()
+    from discretize import examples
+    examples.{2!s}.run()
 
-.. literalinclude:: ../../../SimPEG/Examples/{3!s}.py
+.. literalinclude:: ../../../discretize/examples/{3!s}.py
     :language: python
     :linenos:
 """.format(name, doc, name, name)
@@ -125,8 +103,8 @@ if __name__ == '__main__':
         f.write(out)
         f.close()
 
-    for ex in dir(Examples):
+    for ex in dir(examples):
         if ex.startswith('_') or ex.startswith('print_function'):
             continue
-        E = getattr(Examples, ex)
+        E = getattr(examples, ex)
         _makeExample(E.__file__, E.run)

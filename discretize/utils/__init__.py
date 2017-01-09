@@ -7,7 +7,7 @@ from .matutils import (mkvc, sdiag, sdInv, speye, kron3, spzeros, ddx, av,
                        Identity)
 from .codeutils import (isScalar, asArray_N_x_Dim)
 from .meshutils import (exampleLrmGrid, meshTensor, closestPoints,
-                        ExtractCoreMesh)
+                        ExtractCoreMesh, random_model)
 from .curvutils import volTetra, faceInfo, indexCube
 from .interputils import interpmat
 from .coordutils import rotatePointsFromNormals, rotationMatrixFromNormals
