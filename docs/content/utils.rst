@@ -33,8 +33,8 @@ Interpolation Utilities
     :members:
     :undoc-members:
 
-Testing SimPEG
-==============
+Testing
+=======
 
 .. automodule:: discretize.Tests
     :members:

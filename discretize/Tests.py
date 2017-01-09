@@ -182,7 +182,8 @@ class OrderTest(unittest.TestCase):
         # if we just provide one expected order, repeat it for each mesh type
         if type(self.expectedOrders) == float or type(self.expectedOrders) == int:
             self.expectedOrders = [self.expectedOrders for i in self.meshTypes]
-
+        if isinstance(self.expectedOrders, np.ndarray):
+            self.expectedOrders = list(self.expectedOrders)
         assert type(self.expectedOrders) == list, 'expectedOrders must be a list'
         assert len(self.expectedOrders) == len(self.meshTypes), 'expectedOrders must have the same length as the meshTypes'
 

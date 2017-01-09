@@ -11,9 +11,9 @@ try:
     _interpmat3D = pyx._interpmat3D
     _interpCython = True
 except ImportError:
-    print("""Efficiency Warning: Interpolation will be slow, use setup.py!
+    print("""Interpolation will not work, use setup.py to compile the cython:
 
-            python setup.py build_ext --inplace""")
+        python setup.py build_ext --inplace""")
     _interpCython = False
 
 
@@ -66,99 +66,3 @@ def interpmat(locs, x, y=None, z=None):
     Q = sp.csr_matrix((vals, (I, J)),
                       shape=(npts, np.prod(shape)))
     return Q
-
-if not _interpCython:
-
-    def _interp_point_1D(x, xr_i):
-        """given a point, xr_i, this will find which two integers
-        it lies between.
-
-        :param numpy.ndarray x: Tensor vector of 1st dimension of grid.
-        :param float xr_i: Location of a point
-        :rtype: int, int, float, float
-        :return: index1, index2, portion1, portion2
-         """
-        im = np.argmin(abs(x-xr_i))
-        if xr_i - x[im] >= 0:  # Point on the left
-            ind_x1 = im
-            ind_x2 = im+1
-        elif xr_i - x[im] < 0:  # Point on the right
-            ind_x1 = im-1
-            ind_x2 = im
-        ind_x1 = max(min(ind_x1, x.size-1), 0)
-        ind_x2 = max(min(ind_x2, x.size-1), 0)
-
-        if ind_x1 == ind_x2:
-            return ind_x1, ind_x1, 0.5, 0.5
-
-        hx = x[ind_x2] - x[ind_x1]
-        wx1 = 1 - (xr_i - x[ind_x1])/hx
-        wx2 = 1 - (x[ind_x2] - xr_i)/hx
-
-        return ind_x1, ind_x2, wx1, wx2
-
-    def _interpmat1D(locs, x):
-        """Use interpmat with only x component provided."""
-        npts = locs.shape[0]
-
-        inds, vals = [], []
-
-        for i in range(npts):
-            ind_x1, ind_x2, wx1, wx2 = _interp_point_1D(x, locs[i])
-            inds += [ind_x1, ind_x2]
-            vals += [wx1, wx2]
-
-        return inds, vals
-
-    def _interpmat2D(locs, x, y):
-        """Use interpmat with only x and y components provided."""
-        npts = locs.shape[0]
-
-        inds, vals = [], []
-
-        for i in range(npts):
-            ind_x1, ind_x2, wx1, wx2 = _interp_point_1D(x, locs[i, 0])
-            ind_y1, ind_y2, wy1, wy2 = _interp_point_1D(y, locs[i, 1])
-
-            inds += [(ind_x1, ind_y1),
-                     (ind_x1, ind_y2),
-                     (ind_x2, ind_y1),
-                     (ind_x2, ind_y2)]
-
-            vals += [wx1*wy1,
-                     wx1*wy2,
-                     wx2*wy1,
-                     wx2*wy2]
-
-        return inds, vals
-
-    def _interpmat3D(locs, x, y, z):
-        """Use interpmat."""
-        npts = locs.shape[0]
-
-        inds, vals = [], []
-
-        for i in range(npts):
-            ind_x1, ind_x2, wx1, wx2 = _interp_point_1D(x, locs[i, 0])
-            ind_y1, ind_y2, wy1, wy2 = _interp_point_1D(y, locs[i, 1])
-            ind_z1, ind_z2, wz1, wz2 = _interp_point_1D(z, locs[i, 2])
-
-            inds += [(ind_x1, ind_y1, ind_z1),
-                     (ind_x1, ind_y2, ind_z1),
-                     (ind_x2, ind_y1, ind_z1),
-                     (ind_x2, ind_y2, ind_z1),
-                     (ind_x1, ind_y1, ind_z2),
-                     (ind_x1, ind_y2, ind_z2),
-                     (ind_x2, ind_y1, ind_z2),
-                     (ind_x2, ind_y2, ind_z2)]
-
-            vals += [wx1*wy1*wz1,
-                     wx1*wy2*wz1,
-                     wx2*wy1*wz1,
-                     wx2*wy2*wz1,
-                     wx1*wy1*wz2,
-                     wx1*wy2*wz2,
-                     wx2*wy1*wz2,
-                     wx2*wy2*wz2]
-
-        return inds, vals

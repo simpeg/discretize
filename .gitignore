@@ -38,9 +38,7 @@ nosetests.xml
 *.sublime-project
 *.sublime-workspace
 docs/_build/
-Makefile
 docs/warnings.txt
 .DS_Store
-*.c
 docs/auto_examples
 docs/modules

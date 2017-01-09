@@ -19,6 +19,7 @@ Development Dependencies
 - sphinx
 - sphinx_rtd_theme
 - sphinx-gallery
+- pillow
 - nose-cov
 - pylint
 

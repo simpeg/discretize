@@ -106,7 +106,10 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
     def __init__(self, h, x0=None, levels=None):
         if not _IMPORT_TREEUTILS:
-            raise Exception('Could not import the Cython code to run the TreeMesh Try:.\n\npython setup.py build_ext --inplace')
+            raise Exception(
+                'Could not import the Cython code to run the '
+                'TreeMesh Try:.\n\npython setup.py build_ext --inplace'
+            )
         assert type(h) is list, 'h must be a list'
         assert len(h) in [2, 3], "There is only support for TreeMesh in 2D or 3D."
 

@@ -5,18 +5,22 @@ from __future__ import print_function
 Discretization tools for finite volume and inverse problems.
 """
 
-from distutils.core import setup
 from setuptools import find_packages
-from Cython.Build import cythonize
-from Cython.Distutils import build_ext
+from distutils.core import setup
+
+import os
+import sys
 import numpy
 
-
-class NumpyBuild(build_ext):
-    def finalize_options(self):
-        build_ext.finalize_options(self)
-        __builtins__.__NUMPY_SETUP__ = False
-        self.include_dirs.append(numpy.get_include())
+if 'cython' in sys.argv:
+    del sys.argv[sys.argv.index('cython')]  # delete the command
+    from Cython.Build import cythonize
+    from Cython.Distutils import build_ext
+    USE_CYTHON = True
+else:
+    from setuptools.command.build_ext import build_ext
+    from distutils.extension import Extension
+    USE_CYTHON = False
 
 
 CLASSIFIERS = [
@@ -35,18 +39,34 @@ CLASSIFIERS = [
     'Natural Language :: English',
 ]
 
+ext = '.pyx' if USE_CYTHON else '.c'
 
 with open("README.rst") as f:
     LONG_DESCRIPTION = ''.join(f.readlines())
 
 cython_files = [
-    "discretize/utils/interputils_cython.pyx",
-    "discretize/TreeUtils.pyx"
+    "discretize/utils/interputils_cython".replace('/', os.sep),
+    "discretize/TreeUtils".replace('/', os.sep)
 ]
+
+scripts = [s + '.pyx' for s in cython_files] + [s + '.c' for s in cython_files]
+
+if USE_CYTHON:
+    extensions = cythonize([s + '.pyx' for s in cython_files])
+else:
+    extensions = [Extension(cf, [cf+ext]) for cf in cython_files]
+
+
+class NumpyBuild(build_ext):
+    def finalize_options(self):
+        build_ext.finalize_options(self)
+        __builtins__.__NUMPY_SETUP__ = False
+        self.include_dirs.append(numpy.get_include())
+
 
 setup(
     name="discretize",
-    version="0.0.5",
+    version="0.1.1b1",
     packages=find_packages(),
     install_requires=[
         'numpy>=1.7',
@@ -68,7 +88,8 @@ setup(
     classifiers=CLASSIFIERS,
     platforms=["Windows", "Linux", "Solaris", "Mac OS-X", "Unix"],
     use_2to3=False,
-    setup_requires=['numpy', 'cython'],
+    ext_modules=extensions if not USE_CYTHON else cythonize(extensions),
+    scripts=scripts,
     cmdclass={'build_ext': NumpyBuild},
-    ext_modules=cythonize(cython_files)
+    setup_requires=['numpy']
 )

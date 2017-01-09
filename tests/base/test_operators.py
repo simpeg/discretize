@@ -6,10 +6,15 @@ import discretize
 # Tolerance
 TOL = 1e-14
 
-np.random.seed(26)
+np.random.seed(1)
 
-MESHTYPES = ['uniformTensorMesh', 'randomTensorMesh', 'uniformCurv',
-             'rotateCurv']
+MESHTYPES = [
+    'uniformTensorMesh',
+    # 'randomTensorMesh',
+    'uniformCurv',
+    'rotateCurv'
+]
+ORDERS = np.r_[2.0, 2.0, 2.0]
 call2 = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1])
 call3 = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1], xyz[:, 2])
 cart_row2 = lambda g, xfun, yfun: np.c_[call2(xfun, g), call2(yfun, g)]
@@ -346,7 +351,7 @@ class TestAveraging2D(discretize.Tests.OrderTest):
     name = "Averaging 2D"
     meshTypes = MESHTYPES
     meshDimension = 2
-    meshSizes = [8, 16, 32]
+    meshSizes = [16, 32, 64]
 
     def getError(self):
         num = self.getAve(self.M) * self.getHere(self.M)
@@ -400,9 +405,9 @@ class TestAveraging2D(discretize.Tests.OrderTest):
         self.getHere = lambda M: call2(fun, M.gridCC)
         self.getThere = lambda M: np.r_[call2(fun, M.gridFx), call2(fun, M.gridFy)]
         self.getAve = lambda M: M.aveCC2F
-        self.expectedOrders = 1
+        self.expectedOrders = ORDERS/2.0
         self.orderTest()
-        self.expectedOrders = 2
+        self.expectedOrders = ORDERS
 
     def test_orderE2CC(self):
         self.name = "Averaging 2D: E2CC"
@@ -444,7 +449,7 @@ class TestAveraging3D(discretize.Tests.OrderTest):
     name = "Averaging 3D"
     meshTypes = MESHTYPES
     meshDimension = 3
-    meshSizes = [8, 16, 32, 64]
+    meshSizes = [16, 32, 64]
 
     def getError(self):
         num = self.getAve(self.M) * self.getHere(self.M)
@@ -509,6 +514,7 @@ class TestAveraging3D(discretize.Tests.OrderTest):
         self.getHere = lambda M: np.r_[call3(funX, M.gridEx), call3(funY, M.gridEy), call3(funZ, M.gridEz)]
         self.getThere = lambda M: np.r_[call3(funX, M.gridCC), call3(funY, M.gridCC), call3(funZ, M.gridCC)]
         self.getAve = lambda M: M.aveE2CCV
+        self.expectedOrders = ORDERS
         self.orderTest()
 
     def test_orderCC2F(self):
@@ -517,10 +523,9 @@ class TestAveraging3D(discretize.Tests.OrderTest):
         self.getHere = lambda M: call3(fun, M.gridCC)
         self.getThere = lambda M: np.r_[call3(fun, M.gridFx), call3(fun, M.gridFy), call3(fun, M.gridFz)]
         self.getAve = lambda M: M.aveCC2F
-        self.expectedOrders = 1
+        self.expectedOrders = ORDERS/2.0
         self.orderTest()
-        # self.expectedOrders = 2
-
+        self.expectedOrders = ORDERS
 
 
 if __name__ == '__main__':

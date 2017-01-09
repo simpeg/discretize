@@ -1,7 +1,7 @@
 Tutorial
 ********
 
-The Mesh objects in SimPEG provide a numerical grid on which to solve
+The Mesh objects in discretize provide a numerical grid on which to solve
 differential equations. Each mesh type has a similar API to make switching
 between different meshes relatively simple.
 
@@ -43,9 +43,7 @@ Variable Locations and Terminology
 ==================================
 
 We will go over the basics of using a TensorMesh, but these skills are transferable
-to the other meshes available in SimPEG. All of the mesh generation code is located
-in the Mesh package in SimPEG (i.e. SimPEG.Mesh).
-
+to the other meshes available in discretize.
 
 To create a TensorMesh we need to create mesh tensors, the widths of
 each cell of the mesh in each dimension. We will call these tensors h,
@@ -105,15 +103,15 @@ and live on the edges(!) of the cell.
     :include-source:
 
     from __future__ import print_function
-    from SimPEG import Mesh
-    Mesh.TensorMesh([1,1,1]).plotGrid(faces=True, edges=True, centers=True, showIt=True)
+    import discretize
+    discretize.TensorMesh([1,1,1]).plotGrid(faces=True, edges=True, centers=True, showIt=True)
 
 How many of each?
 -----------------
 
 When making variables that live in each of these locations, it is
 important to know how many of each variable type you are dealing with.
-SimPEG makes this pretty easy:
+discretize makes this pretty easy:
 
 ::
 
@@ -144,7 +142,7 @@ SimPEG makes this pretty easy:
              'numCells': 32
             }
 
-SimPEG also counts the nodes, faces, and edges.
+discretize also counts the nodes, faces, and edges.
 
 ::
 
@@ -195,9 +193,9 @@ notation::
     A 'N' will make the entire mesh negative, and a '0' (or a 0) will
     make the mesh start at zero.
 
-Hopefully, you now know how to create TensorMesh objects in SimPEG,
+Hopefully, you now know how to create TensorMesh objects in discretize,
 and by extension you are also familiar with how to create and use
-other types of meshes in this SimPEG framework.
+other types of meshes in discretize.
 
 
 The API
