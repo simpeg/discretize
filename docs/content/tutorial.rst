@@ -29,8 +29,6 @@ the implementations.
     qM.refine(refine)
     rM = discretize.CurvilinearMesh(discretize.utils.exampleLrmGrid(sz, 'rotate'))
 
-    if not plotIt:
-        return
     fig, axes = plt.subplots(1, 3, figsize=(14, 5))
     opts = {}
     tM.plotGrid(ax=axes[0], **opts)

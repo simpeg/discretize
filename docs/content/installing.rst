@@ -1,16 +1,26 @@
 .. _api_installing:
 
-Getting Started with SimPEG
-***************************
+Getting Started
+***************
 
 Dependencies
 ============
 
-- Python 2.7
+- Python 2.7, 3.4 or 3.5
 - NumPy 1.8 (or greater)
 - SciPy 0.13 (or greater)
 - matplotlib 1.3 (or greater)
+- pymatsolver 0.1.2 (or greater)
 - Cython 0.20 (or greater)
+- properties[math]
+
+Development Dependencies
+------------------------
+- sphinx
+- sphinx_rtd_theme
+- sphinx-gallery
+- nose-cov
+- pylint
 
 Installing Python
 =================
@@ -28,12 +38,12 @@ You can download the package manager and use it to install the dependencies abov
         conda update anaconda
 
 
-Installing SimPEG
-=================
+Installing discretize
+=====================
 
-SimPEG is on pip!!::
+discretize is on pip::
 
-    pip install SimPEG
+    pip install discretize
 
 
 Installing from Source
@@ -41,13 +51,17 @@ Installing from Source
 
 First (you need git)::
 
-    git clone https://github.com/simpeg/simpeg
+    git clone https://github.com/simpeg/discretize
 
-Second (from the root of the simpeg repository)::
+Second (from the root of the discretize repository)::
 
-    python setup.py install
+    python setup.py build_ext --inline
+
+This builds the cython extensions. You will also need to add
+the discretize directory to your PYTHON_PATH.
 
 .. attention:: Windows users
+
 	A common error when installing the setup.py is:
 	``Missing linker, needs MSC v.1500 (Microsoft Visual C++ 2008) Runtime Library``
 
