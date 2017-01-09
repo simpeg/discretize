@@ -10,6 +10,9 @@ environment:
     # - PYTHON: 3.5
     #   MINICONDA: C:\Miniconda3
 
+platform:
+  - x64
+
 init:
   - "ECHO %PYTHON% %MINICONDA%"
 
@@ -18,7 +21,7 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda info -a
-  - "conda create -q -n test-environment python=%PYTHON% numpy scipy matplotlib cython ipython"
+  - "conda create -q -n test-environment python=%PYTHON% numpy scipy matplotlib cython ipython pillow"
   - activate test-environment
   - pip install -r requirements_dev.txt
   - python setup.py install
