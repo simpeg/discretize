@@ -28,34 +28,34 @@ def exampleLrmGrid(nC, exType):
 
 
 def meshTensor(value):
-    """
-        **meshTensor** takes a list of numbers and tuples that have the form::
+    """**meshTensor** takes a list of numbers and tuples
+    that have the form::
 
-            mT = [ float, (cellSize, numCell), (cellSize, numCell, factor) ]
+        mT = [ float, (cellSize, numCell), (cellSize, numCell, factor) ]
 
-        For example, a time domain mesh code needs
-        many time steps at one time::
+    For example, a time domain mesh code needs
+    many time steps at one time::
 
-            [(1e-5, 30), (1e-4, 30), 1e-3]
+        [(1e-5, 30), (1e-4, 30), 1e-3]
 
-        Means take 30 steps at 1e-5 and then 30 more at 1e-4,
-        and then one step of 1e-3.
+    Means take 30 steps at 1e-5 and then 30 more at 1e-4,
+    and then one step of 1e-3.
 
-        Tensor meshes can also be created by increase factors::
+    Tensor meshes can also be created by increase factors::
 
-            [(10.0, 5, -1.3), (10.0, 50), (10.0, 5, 1.3)]
+        [(10.0, 5, -1.3), (10.0, 50), (10.0, 5, 1.3)]
 
-        When there is a third number in the tuple, it
-        refers to the increase factor, if this number
-        is negative this section of the tensor is flipped right-to-left.
+    When there is a third number in the tuple, it
+    refers to the increase factor, if this number
+    is negative this section of the tensor is flipped right-to-left.
 
-        .. plot::
+    .. plot::
 
-            from SimPEG import Mesh
-            tx = [(10.0, 10, -1.3), (10.0, 40), (10.0, 10, 1.3)]
-            ty = [(10.0, 10, -1.3), (10.0, 40)]
-            M = Mesh.TensorMesh([tx, ty])
-            M.plotGrid(showIt=True)
+        from SimPEG import Mesh
+        tx = [(10.0, 10, -1.3), (10.0, 40), (10.0, 10, 1.3)]
+        ty = [(10.0, 10, -1.3), (10.0, 40)]
+        M = Mesh.TensorMesh([tx, ty])
+        M.plotGrid(showIt=True)
 
     """
     if type(value) is not list:
@@ -81,14 +81,13 @@ def meshTensor(value):
 
 
 def closestPoints(mesh, pts, gridLoc='CC'):
-    """
-        Move a list of points to the closest points on a grid.
+    """Move a list of points to the closest points on a grid.
 
-        :param BaseMesh mesh: The mesh
-        :param numpy.ndarray pts: Points to move
-        :param string gridLoc: ['CC', 'N', 'Fx', 'Fy', 'Fz', 'Ex', 'Ex', 'Ey', 'Ez']
-        :rtype: numpy.ndarray
-        :return: nodeInds
+    :param BaseMesh mesh: The mesh
+    :param numpy.ndarray pts: Points to move
+    :param string gridLoc: ['CC', 'N', 'Fx', 'Fy', 'Fz', 'Ex', 'Ex', 'Ey', 'Ez']
+    :rtype: numpy.ndarray
+    :return: nodeInds
     """
 
     pts = asArray_N_x_Dim(pts, mesh.dim)
@@ -105,8 +104,7 @@ def closestPoints(mesh, pts, gridLoc='CC'):
 
 
 def ExtractCoreMesh(xyzlim, mesh, meshType='tensor'):
-    """
-    Extracts Core Mesh from Global mesh
+    """Extracts Core Mesh from Global mesh
 
     :param numpy.ndarray xyzlim: 2D array [ndim x 2]
     :param BaseMesh mesh: The mesh

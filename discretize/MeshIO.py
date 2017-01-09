@@ -8,12 +8,11 @@ class TensorMeshIO(object):
 
     @classmethod
     def readUBC(TensorMesh, fileName):
-        """
-            Read UBC GIF 3D tensor mesh and generate 3D TensorMesh.
+        """Read UBC GIF 3D tensor mesh and generate 3D TensorMesh.
 
-            :param string fileName: path to the UBC GIF mesh file
-            :rtype: TensorMesh
-            :return: The tensor mesh for the fileName.
+        :param string fileName: path to the UBC GIF mesh file
+        :rtype: TensorMesh
+        :return: The tensor mesh for the fileName.
         """
 
         # Interal function to read cell size lines for the UBC mesh files.
@@ -45,16 +44,13 @@ class TensorMeshIO(object):
 
     @classmethod
     def readVTK(TensorMesh, fileName):
-        """
-            Read VTK Rectilinear (vtr xml file) and return Tensor mesh and model
+        """Read VTK Rectilinear (vtr xml file) and return Tensor mesh and model
 
-            Input:
-            :param string fileName: path to the vtr model file to read
-            :rtype: tuple
-            :return: (TensorMesh, modelDictionary)
-
+        Input:
+        :param string fileName: path to the vtr model file to read
+        :rtype: tuple
+        :return: (TensorMesh, modelDictionary)
         """
-        # Import
         from vtk import vtkXMLRectilinearGridReader as vtrFileReader
         from vtk.util.numpy_support import vtk_to_numpy
 
@@ -97,15 +93,13 @@ class TensorMeshIO(object):
         return tensMsh, models
 
     def writeVTK(mesh, fileName, models=None):
-        """
-        Makes and saves a VTK rectilinear file (vtr) for a simpeg Tensor mesh and model.
+        """Makes and saves a VTK rectilinear file (vtr)
+        for a Tensor mesh and model.
 
         Input:
         :param string fileName: path to the output vtk file
         :param dict models: dictionary of numpy.array - Name('s) and array('s). Match number of cells
-
         """
-        # Import
         from vtk import vtkRectilinearGrid as rectGrid, vtkXMLRectilinearGridWriter as rectWriter, VTK_VERSION
         from vtk.util.numpy_support import numpy_to_vtk
 
@@ -156,7 +150,8 @@ class TensorMeshIO(object):
 
     def _toVTRObj(mesh, models=None):
         """
-        Makes and saves a VTK rectilinear file (vtr) for a simpeg Tensor mesh and model.
+        Makes and saves a VTK rectilinear file (vtr) for a
+        Tensor mesh and model.
 
         Input:
         :param str, path to the output vtk file
@@ -200,12 +195,11 @@ class TensorMeshIO(object):
         return vtkObj
 
     def readModelUBC(mesh, fileName):
-        """
-            Read UBC 3DTensor mesh model and generate 3D Tensor mesh model in simpeg
+        """Read UBC 3DTensor mesh model and generate 3D Tensor mesh model
 
-            :param string fileName: path to the UBC GIF mesh file to read
-            :rtype: numpy.ndarray
-            :return: model with TensorMesh ordered
+        :param string fileName: path to the UBC GIF mesh file to read
+        :rtype: numpy.ndarray
+        :return: model with TensorMesh ordered
         """
         f = open(fileName, 'r')
         model = np.array(list(map(float, f.readlines())))
@@ -217,12 +211,11 @@ class TensorMeshIO(object):
         return model
 
     def writeModelUBC(mesh, fileName, model):
-        """
-            Writes a model associated with a TensorMesh
-            to a UBC-GIF format model file.
+        """Writes a model associated with a TensorMesh
+        to a UBC-GIF format model file.
 
-            :param string fileName: File to write to
-            :param numpy.ndarray model: The model
+        :param string fileName: File to write to
+        :param numpy.ndarray model: The model
         """
 
         # Reshape model to a matrix
@@ -235,17 +228,18 @@ class TensorMeshIO(object):
         np.savetxt(fileName, modelMatTR.ravel())
 
     def writeUBC(mesh, fileName, models=None):
-        """
-            Writes a TensorMesh to a UBC-GIF format mesh file.
+        """Writes a TensorMesh to a UBC-GIF format mesh file.
 
-            :param string fileName: File to write to
-            :param dict models: A dictionary of the models
+        :param string fileName: File to write to
+        :param dict models: A dictionary of the models
 
         """
         assert mesh.dim == 3
         s = ''
         s += '{0:d} {1:d} {2:d}\n'.format(*tuple(mesh.vnC))
-        origin = mesh.x0 + np.array([0, 0, mesh.hz.sum()]) # Have to it in the same operation or use mesh.x0.copy(), otherwise the mesh.x0 is updated.
+        # Have to it in the same operation or use mesh.x0.copy(),
+        # otherwise the mesh.x0 is updated.
+        origin = mesh.x0 + np.array([0, 0, mesh.hz.sum()])
         origin.dtype = float
 
         s += '{0:.2f} {1:.2f} {2:.2f}\n'.format(*tuple(origin))
@@ -262,14 +256,15 @@ class TensorMeshIO(object):
             assert type(key) is str, 'The dict key is a file name'
             mesh.writeModelUBC(key, models[key])
 
+
 class TreeMeshIO(object):
 
     def writeUBC(mesh, fileName, models=None):
-        """
-            Write UBC ocTree mesh and model files from a simpeg ocTree mesh and model.
+        """Write UBC ocTree mesh and model files from a
+        octree mesh and model.
 
-            :param string fileName: File to write to
-            :param dict models: The models in a dictionary, where the keys is the name of the of the model file
+        :param string fileName: File to write to
+        :param dict models: Models in a dict, where each key is the filename
         """
 
         # Calculate information to write in the file.
@@ -282,49 +277,60 @@ class TreeMeshIO(object):
         # Number of cells
         nrCells = mesh.nC
 
-        ## Extract iformation about the cells.
-        # cell pointers
+        # Extract information about the cells.
         cellPointers = np.array([c._pointer for c in mesh])
-        # cell with
-        cellW = np.array([ mesh._levelWidth(i) for i in cellPointers[:, -1] ])
+        cellW = np.array([mesh._levelWidth(i) for i in cellPointers[:, -1]])
         # Need to shift the pointers to work with UBC indexing
-        # UBC Octree indexes always the top-left-close (top-south-west) corner first and orders the cells in z(top-down), x, y vs x, y, z(bottom-up).
+        # UBC Octree indexes always the top-left-close (top-south-west) corner
+        # first and orders the cells in z(top-down), x, y vs x, y, z(bottom-up)
         # Shift index up by 1
         ubcCellPt = cellPointers[:, 0:-1].copy() + np.array([1., 1., 1.])
-        # Need reindex the z index to be from the top-left-close corner and to be from the global top.
-        ubcCellPt[:, 2] = ( nCunderMesh[-1] + 2) - (ubcCellPt[:, 2] + cellW)
+        # Need re-index the z index to be from the top-left-close corner and to
+        # be from the global top.
+        ubcCellPt[:, 2] = (nCunderMesh[-1] + 2) - (ubcCellPt[:, 2] + cellW)
 
         # Reorder the ubcCellPt
-        ubcReorder = np.argsort(ubcCellPt.view(', '.join(3*['float'])), axis=0, order=['f2', 'f1', 'f0'])[:, 0]
-        # Make a array with the pointers and the withs, that are order in the ubc ordering
-        indArr = np.concatenate((ubcCellPt[ubcReorder, :], cellW[ubcReorder].reshape((-1, 1)) ), axis=1)
-
-        ## Write the UBC octree mesh file
-        head = ('{:.0f} {:.0f} {:.0f}\n'.format(nCunderMesh[0], nCunderMesh[1], nCunderMesh[2])+
-            '{:.4f} {:.4f} {:.4f}\n'.format(tswCorn[0], tswCorn[1], tswCorn[2])+
-            '{:.3f} {:.3f} {:.3f}\n'.format(smallCell[0], smallCell[1], smallCell[2])+
-            '{:.0f} \n'.format(nrCells))
+        ubcReorder = np.argsort(
+            ubcCellPt.view(', '.join(3*['float'])),
+            axis=0,
+            order=['f2', 'f1', 'f0']
+        )[:, 0]
+        # Make a array with the pointers and the withs,
+        # that are order in the ubc ordering
+        indArr = np.concatenate(
+            (ubcCellPt[ubcReorder, :], cellW[ubcReorder].reshape((-1, 1))),
+            axis=1
+        )
+        # Write the UBC octree mesh file
+        head = (
+            '{:.0f} {:.0f} {:.0f}\n'.format(
+                nCunderMesh[0], nCunderMesh[1], nCunderMesh[2]
+            ) +
+            '{:.4f} {:.4f} {:.4f}\n'.format(
+                tswCorn[0], tswCorn[1], tswCorn[2]
+            ) +
+            '{:.3f} {:.3f} {:.3f}\n'.format(
+                smallCell[0], smallCell[1], smallCell[2]
+            ) +
+            '{:.0f} \n'.format(nrCells)
+        )
         np.savetxt(fileName, indArr, fmt='%i', header=head, comments='')
 
-        ## Print the models
+        # Print the models
         # Assign the model('s) to the object
         if models is not None:
-            # indUBCvector = np.argsort(cX0[np.argsort(np.concatenate((cX0[:, 0:2], cX0[:, 2:3].max() - cX0[:, 2:3]), axis=1).view(', '.join(3*['float'])), axis=0, order=('f2', 'f1', 'f0'))[:, 0]].view(', '.join(3*['float'])), axis=0, order=('f2', 'f1', 'f0'))[:, 0]
             for item in six.iteritems(models):
                 # Save the data
                 np.savetxt(item[0], item[1][ubcReorder], fmt='%3.5e')
 
     @classmethod
     def readUBC(TreeMesh, meshFile):
-        from io import StringIO
-        """
-            Read UBC 3D OcTree mesh and/or modelFiles
+        """Read UBC 3D OcTree mesh and/or modelFiles
 
-            Input:
-            :param str meshFile: path to the UBC GIF OcTree mesh file to read
-            :rtype: discretize.TreeMesh
-            :return: The octree mesh
-
+        Input:
+        :param str meshFile: path to the UBC GIF OcTree mesh file to read
+        :rtype: discretize.TreeMesh
+        :return: The octree mesh
         """
 
         # Read the file lines
@@ -340,23 +346,30 @@ class TreeMeshIO(object):
 
         if np.unique(nCunderMesh).size >1:
             raise Exception('TreeMeshes have the same number of cell in all directions')
-        tswCorn = np.array(fileLines[1].
-            split('!')[0].split(), dtype=float)
-        smallCell = np.array(fileLines[2].
-            split('!')[0].split(), dtype=float)
-        nrCells = np.array(fileLines[3].
-            split('!')[0].split(), dtype=float)
+        tswCorn = np.array(
+            fileLines[1].split('!')[0].split(),
+            dtype=float
+        )
+        smallCell = np.array(
+            fileLines[2].split('!')[0].split(),
+            dtype=float
+        )
+        nrCells = np.array(
+            fileLines[3].split('!')[0].split(),
+            dtype=float
+        )
         # Read the index array
         indArr = np.genfromtxt((line.encode('utf8') for line in fileLines[4::]), dtype=np.int)
 
-        ## Calculate simpeg parameters
+        # Calculate simpeg parameters
         h1, h2, h3 = [np.ones(nr)*sz for nr, sz in zip(nCunderMesh, smallCell)]
         x0 = tswCorn - np.array([0, 0, np.sum(h3)])
-        # Need to convert the index array to a points list that complies with TreeMesh.
+        # Convert the index array to a points list that complies with TreeMesh
         # Shift to start at 0
         simpegCellPt = indArr[:, 0:-1].copy()
         simpegCellPt[:, 2] = ( nCunderMesh[-1] + 2) - (simpegCellPt[:, 2] + indArr[:, 3])
-        # Need reindex the z index to be from the bottom-left-close corner and to be from the global bottom.
+        # Need reindex the z index to be from the bottom-left-close corner
+        # and to be from the global bottom.
         simpegCellPt = simpegCellPt - np.array([1., 1., 1.])
 
         # Calculate the cell level
@@ -364,24 +377,24 @@ class TreeMeshIO(object):
         # Make a pointer matrix
         simpegPointers = np.concatenate((simpegCellPt, simpegLevel.reshape((-1, 1))), axis=1)
 
-        ## Make the tree mesh
+        # Make the tree mesh
         mesh = TreeMesh([h1, h2, h3], x0)
         mesh._cells = set([mesh._index(p) for p in simpegPointers.tolist()])
 
         # Figure out the reordering
-        mesh._simpegReorderUBC = np.argsort(np.array([mesh._index(i) for i in simpegPointers.tolist()]))
+        mesh._simpegReorderUBC = np.argsort(
+            np.array([mesh._index(i) for i in simpegPointers.tolist()])
+        )
         # mesh._simpegReorderUBC = np.argsort((np.array([[1, 1, 1, -1]])*simpegPointers).view(', '.join(4*['float'])), axis=0, order=['f3', 'f2', 'f1', 'f0'])[:, 0]
 
         return mesh
 
-
     def readModelUBC(mesh, fileName):
-        """
-            Read UBC OcTree model and get vector
+        """Read UBC OcTree model and get vector
 
-            :param string fileName: path to the UBC GIF model file to read
-            :rtype: numpy.ndarray
-            :return: OcTree model
+        :param string fileName: path to the UBC GIF model file to read
+        :rtype: numpy.ndarray
+        :return: OcTree model
         """
 
         if type(fileName) is list:
@@ -402,9 +415,7 @@ class TreeMeshIO(object):
         return modList
 
     def writeVTK(mesh, fileName, models=None):
-        """
-        Function to write a VTU file from a TreeMesh and model.
-        """
+        """Function to write a VTU file from a TreeMesh and model."""
         import vtk
         from vtk import vtkXMLUnstructuredGridWriter as Writer, VTK_VERSION
         from vtk.util.numpy_support import numpy_to_vtk, numpy_to_vtkIdTypeArray

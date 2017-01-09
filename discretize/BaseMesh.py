@@ -30,8 +30,7 @@ class BaseMesh(object):
 
     @property
     def x0(self):
-        """
-        Origin of the mesh
+        """Origin of the mesh
 
         :rtype: numpy.array
         :return: x0, (dim, )
@@ -40,8 +39,7 @@ class BaseMesh(object):
 
     @property
     def dim(self):
-        """
-        The dimension of the mesh (1, 2, or 3).
+        """The dimension of the mesh (1, 2, or 3).
 
         :rtype: int
         :return: dim
@@ -50,8 +48,7 @@ class BaseMesh(object):
 
     @property
     def nC(self):
-        """
-        Total number of cells in the mesh.
+        """Total number of cells in the mesh.
 
         :rtype: int
         :return: nC
@@ -68,8 +65,7 @@ class BaseMesh(object):
 
     @property
     def nN(self):
-        """
-        Total number of nodes
+        """Total number of nodes
 
         :rtype: int
         :return: nN
@@ -86,8 +82,7 @@ class BaseMesh(object):
 
     @property
     def nEx(self):
-        """
-        Number of x-edges
+        """Number of x-edges
 
         :rtype: int
         :return: nEx
@@ -96,8 +91,7 @@ class BaseMesh(object):
 
     @property
     def nEy(self):
-        """
-        Number of y-edges
+        """Number of y-edges
 
         :rtype: int
         :return: nEy
@@ -108,8 +102,7 @@ class BaseMesh(object):
 
     @property
     def nEz(self):
-        """
-        Number of z-edges
+        """Number of z-edges
 
         :rtype: int
         :return: nEz
@@ -120,8 +113,7 @@ class BaseMesh(object):
 
     @property
     def vnE(self):
-        """
-        Total number of edges in each direction
+        """Total number of edges in each direction
 
         :rtype: numpy.array
         :return: [nEx, nEy, nEz], (dim, )
@@ -141,8 +133,7 @@ class BaseMesh(object):
 
     @property
     def nE(self):
-        """
-        Total number of edges.
+        """Total number of edges.
 
         :rtype: int
         :return: sum([nEx, nEy, nEz])
@@ -152,8 +143,7 @@ class BaseMesh(object):
 
     @property
     def nFx(self):
-        """
-        Number of x-faces
+        """Number of x-faces
 
         :rtype: int
         :return: nFx
@@ -162,8 +152,7 @@ class BaseMesh(object):
 
     @property
     def nFy(self):
-        """
-        Number of y-faces
+        """Number of y-faces
 
         :rtype: int
         :return: nFy
@@ -174,8 +163,7 @@ class BaseMesh(object):
 
     @property
     def nFz(self):
-        """
-        Number of z-faces
+        """Number of z-faces
 
         :rtype: int
         :return: nFz
@@ -186,8 +174,7 @@ class BaseMesh(object):
 
     @property
     def vnF(self):
-        """
-        Total number of faces in each direction
+        """Total number of faces in each direction
 
         :rtype: numpy.array
         :return: [nFx, nFy, nFz], (dim, )
@@ -207,8 +194,7 @@ class BaseMesh(object):
 
     @property
     def nF(self):
-        """
-        Total number of faces.
+        """Total number of faces.
 
         :rtype: int
         :return: sum([nFx, nFy, nFz])
@@ -218,8 +204,7 @@ class BaseMesh(object):
 
     @property
     def normals(self):
-        """
-        Face Normals
+        """Face Normals
 
         :rtype: numpy.array
         :return: normals, (sum(nF), dim)
@@ -246,8 +231,7 @@ class BaseMesh(object):
 
     @property
     def tangents(self):
-        """
-        Edge Tangents
+        """Edge Tangents
 
         :rtype: numpy.array
         :return: normals, (sum(nE), dim)
@@ -273,8 +257,7 @@ class BaseMesh(object):
             return np.r_[tX, tY, tZ]
 
     def projectFaceVector(self, fV):
-        """
-        Given a vector, fV, in cartesian coordinates, this will project
+        """Given a vector, fV, in cartesian coordinates, this will project
         it onto the mesh using the normals
 
         :param numpy.array fV: face vector with shape (nF, dim)
@@ -291,8 +274,7 @@ class BaseMesh(object):
         return np.sum(fV*self.normals, 1)
 
     def projectEdgeVector(self, eV):
-        """
-        Given a vector, eV, in cartesian coordinates, this will project
+        """Given a vector, eV, in cartesian coordinates, this will project
         it onto the mesh using the tangents
 
         :param numpy.array eV: edge vector with shape (nE, dim)
@@ -316,8 +298,7 @@ class BaseRectangularMesh(BaseMesh):
 
     @property
     def nCx(self):
-        """
-        Number of cells in the x direction
+        """Number of cells in the x direction
 
         :rtype: int
         :return: nCx
@@ -326,8 +307,7 @@ class BaseRectangularMesh(BaseMesh):
 
     @property
     def nCy(self):
-        """
-        Number of cells in the y direction
+        """Number of cells in the y direction
 
         :rtype: int
         :return: nCy or None if dim < 2
@@ -349,8 +329,7 @@ class BaseRectangularMesh(BaseMesh):
 
     @property
     def vnC(self):
-        """
-        Total number of cells in each direction
+        """Total number of cells in each direction
 
         :rtype: numpy.array
         :return: [nCx, nCy, nCz]
@@ -362,8 +341,7 @@ class BaseRectangularMesh(BaseMesh):
 
     @property
     def nNx(self):
-        """
-        Number of nodes in the x-direction
+        """Number of nodes in the x-direction
 
         :rtype: int
         :return: nNx
@@ -372,8 +350,7 @@ class BaseRectangularMesh(BaseMesh):
 
     @property
     def nNy(self):
-        """
-        Number of nodes in the y-direction
+        """Number of nodes in the y-direction
 
         :rtype: int
         :return: nNy or None if dim < 2
@@ -384,8 +361,7 @@ class BaseRectangularMesh(BaseMesh):
 
     @property
     def nNz(self):
-        """
-        Number of nodes in the z-direction
+        """Number of nodes in the z-direction
 
         :rtype: int
         :return: nNz or None if dim < 3
@@ -396,8 +372,7 @@ class BaseRectangularMesh(BaseMesh):
 
     @property
     def vnN(self):
-        """
-        Total number of nodes in each direction
+        """Total number of nodes in each direction
 
         :rtype: numpy.array
         :return: [nNx, nNy, nNz]
@@ -409,8 +384,7 @@ class BaseRectangularMesh(BaseMesh):
 
     @property
     def vnEx(self):
-        """
-        Number of x-edges in each direction
+        """Number of x-edges in each direction
 
         :rtype: numpy.array
         :return: vnEx
@@ -422,8 +396,7 @@ class BaseRectangularMesh(BaseMesh):
 
     @property
     def vnEy(self):
-        """
-        Number of y-edges in each direction
+        """Number of y-edges in each direction
 
         :rtype: numpy.array
         :return: vnEy or None if dim < 2
@@ -437,8 +410,7 @@ class BaseRectangularMesh(BaseMesh):
 
     @property
     def vnEz(self):
-        """
-        Number of z-edges in each direction
+        """Number of z-edges in each direction
 
         :rtype: numpy.array
         :return: vnEz or None if dim < 3
@@ -452,8 +424,7 @@ class BaseRectangularMesh(BaseMesh):
 
     @property
     def vnFx(self):
-        """
-        Number of x-faces in each direction
+        """Number of x-faces in each direction
 
         :rtype: numpy.array
         :return: vnFx
@@ -465,8 +436,7 @@ class BaseRectangularMesh(BaseMesh):
 
     @property
     def vnFy(self):
-        """
-        Number of y-faces in each direction
+        """Number of y-faces in each direction
 
         :rtype: numpy.array
         :return: vnFy or None if dim < 2
@@ -480,8 +450,7 @@ class BaseRectangularMesh(BaseMesh):
 
     @property
     def vnFz(self):
-        """
-        Number of z-faces in each direction
+        """Number of z-faces in each direction
 
         :rtype: numpy.array
         :return: vnFz or None if dim < 3
@@ -499,8 +468,7 @@ class BaseRectangularMesh(BaseMesh):
 
     @property
     def nC(self):
-        """
-        Total number of cells
+        """Total number of cells
 
         :rtype: int
         :return: nC
@@ -509,8 +477,7 @@ class BaseRectangularMesh(BaseMesh):
 
     @property
     def nN(self):
-        """
-        Total number of nodes
+        """Total number of nodes
 
         :rtype: int
         :return: nN
@@ -519,8 +486,7 @@ class BaseRectangularMesh(BaseMesh):
 
     @property
     def nEx(self):
-        """
-        Number of x-edges
+        """Number of x-edges
 
         :rtype: int
         :return: nEx
@@ -529,8 +495,7 @@ class BaseRectangularMesh(BaseMesh):
 
     @property
     def nEy(self):
-        """
-        Number of y-edges
+        """Number of y-edges
 
         :rtype: int
         :return: nEy
@@ -541,8 +506,7 @@ class BaseRectangularMesh(BaseMesh):
 
     @property
     def nEz(self):
-        """
-        Number of z-edges
+        """Number of z-edges
 
         :rtype: int
         :return: nEz
@@ -553,8 +517,7 @@ class BaseRectangularMesh(BaseMesh):
 
     @property
     def nFx(self):
-        """
-        Number of x-faces
+        """Number of x-faces
 
         :rtype: int
         :return: nFx
@@ -563,8 +526,7 @@ class BaseRectangularMesh(BaseMesh):
 
     @property
     def nFy(self):
-        """
-        Number of y-faces
+        """Number of y-faces
 
         :rtype: int
         :return: nFy
@@ -575,8 +537,7 @@ class BaseRectangularMesh(BaseMesh):
 
     @property
     def nFz(self):
-        """
-        Number of z-faces
+        """Number of z-faces
 
         :rtype: int
         :return: nFz
