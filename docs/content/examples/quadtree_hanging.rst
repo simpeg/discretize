@@ -1,4 +1,4 @@
-.. _examples_QuadTree_Creation:
+.. _examples_quadtree_hanging:
 
 .. --------------------------------- ..
 ..                                   ..
@@ -9,8 +9,8 @@
 .. --------------------------------- ..
 
 
-QuadTree: Creation
-==================
+QuadTree: Hanging Nodes
+=======================
 
 You can give the refine method a function, which is evaluated on every
 cell of the TreeMesh.
@@ -20,11 +20,12 @@ Occasionally it is useful to initially refine to a constant level
 on an 8x8 mesh (2^3).
 
 
+
 .. plot::
 
     from discretize import examples
-    examples.QuadTree_Creation.run()
+    examples.quadtree_hanging.run()
 
-.. literalinclude:: ../../../discretize/examples/QuadTree_Creation.py
+.. literalinclude:: ../../../discretize/examples/quadtree_hanging.py
     :language: python
     :linenos:

@@ -572,7 +572,7 @@ class CylView(object):
         return self._plotCylTensorMesh('plotImage', *args, **kwargs)
 
 
-class CurvView(object):
+class CurviView(object):
     """
     Provides viewing functions for CurvilinearMesh
 

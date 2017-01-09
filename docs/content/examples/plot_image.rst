@@ -1,4 +1,4 @@
-.. _examples_QuadTree_FaceDiv:
+.. _examples_plot_image:
 
 .. --------------------------------- ..
 ..                                   ..
@@ -9,16 +9,19 @@
 .. --------------------------------- ..
 
 
-QuadTree: FaceDiv
-=================
+Basic: PlotImage
+================
+
+You can use M.PlotImage to plot images on all of the Meshes.
+
 
 
 
 .. plot::
 
     from discretize import examples
-    examples.QuadTree_FaceDiv.run()
+    examples.plot_image.run()
 
-.. literalinclude:: ../../../discretize/examples/QuadTree_FaceDiv.py
+.. literalinclude:: ../../../discretize/examples/plot_image.py
     :language: python
     :linenos:

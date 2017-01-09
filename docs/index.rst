@@ -7,8 +7,8 @@ About SimPEG
 .. toctree::
    :maxdepth: 2
 
-   content/api_bigPicture
-   content/api_installing
+   content/big_picture
+   content/installing
 
 Examples
 ********
@@ -16,7 +16,8 @@ Examples
 .. toctree::
    :maxdepth: 2
 
-   content/api_Examples
+   content/tutorial
+   content/examples
 
 Finite Volume
 *************
@@ -24,7 +25,7 @@ Finite Volume
 .. toctree::
    :maxdepth: 3
 
-   content/api_FiniteVolume
+   content/finite_volume
 
 Utility Codes
 *************
@@ -32,7 +33,7 @@ Utility Codes
 .. toctree::
    :maxdepth: 3
 
-   content/api_Utilities
+   content/utils
 
 
 Project Index & Search

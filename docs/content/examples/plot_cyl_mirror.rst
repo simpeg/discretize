@@ -1,4 +1,4 @@
-.. _examples_Basic_PlotImage:
+.. _examples_plot_cyl_mirror:
 
 .. --------------------------------- ..
 ..                                   ..
@@ -9,19 +9,18 @@
 .. --------------------------------- ..
 
 
-Basic: PlotImage
-================
+Plot Mirrored Cylindrically Symmetric Model
+===========================================
 
-You can use M.PlotImage to plot images on all of the Meshes.
-
-
+Here, we demonstrate plotting a model on a cylindrically
+symmetric mesh with the plotting symmetric about x=0.
 
 
 .. plot::
 
     from discretize import examples
-    examples.Basic_PlotImage.run()
+    examples.plot_cyl_mirror.run()
 
-.. literalinclude:: ../../../discretize/examples/Basic_PlotImage.py
+.. literalinclude:: ../../../discretize/examples/plot_cyl_mirror.py
     :language: python
     :linenos:

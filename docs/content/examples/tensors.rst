@@ -1,4 +1,4 @@
-.. _examples_Tensor_Creation:
+.. _examples_tensors:
 
 .. --------------------------------- ..
 ..                                   ..
@@ -36,8 +36,8 @@ notation::
 .. plot::
 
     from discretize import examples
-    examples.Tensor_Creation.run()
+    examples.tensors.run()
 
-.. literalinclude:: ../../../discretize/examples/Tensor_Creation.py
+.. literalinclude:: ../../../discretize/examples/tensors.py
     :language: python
     :linenos:

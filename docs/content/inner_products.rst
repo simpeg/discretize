@@ -1,6 +1,3 @@
-.. _api_InnerProducts:
-
-
 Inner Products
 **************
 

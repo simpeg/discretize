@@ -31,10 +31,9 @@ four mesh types:
     3) curvilinear mesh :class:`discretize.CurvilinearMesh`
     4) octree and quadtree meshes :class:`discretize.TreeMesh`
 
-This work contributes an overview of finite volume techniques in the
+:code:`discretize` contributes an overview of finite volume techniques in the
 context of geoscience inverse problems, which are treated in a consistent way
 across various mesh types, highlighting similarities and differences.
-
 
 .. include:: ../../CITATION.rst
 

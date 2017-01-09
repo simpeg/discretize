@@ -1,4 +1,4 @@
-.. _examples_Basic_Types:
+.. _examples_direct_current_resistivit:
 
 .. --------------------------------- ..
 ..                                   ..
@@ -9,18 +9,17 @@
 .. --------------------------------- ..
 
 
-Basic: Types
-============
+Basic Forward 2D DC Resistivity
+===============================
 
-Here we show SimPEG used to create three different types of meshes.
-
+2D DC forward modeling example with Tensor and Curvilinear Meshes
 
 
 .. plot::
 
     from discretize import examples
-    examples.Basic_Types.run()
+    examples.direct_current_resistivit.run()
 
-.. literalinclude:: ../../../discretize/examples/Basic_Types.py
+.. literalinclude:: ../../../discretize/examples/direct_current_resistivit.py
     :language: python
     :linenos:

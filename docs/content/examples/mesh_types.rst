@@ -1,4 +1,4 @@
-.. _examples_Plot_Cyl:
+.. _examples_mesh_types:
 
 .. --------------------------------- ..
 ..                                   ..
@@ -9,18 +9,18 @@
 .. --------------------------------- ..
 
 
-Plot Mirrored Cylindrically Symmetric Model
-===========================================
+Basic: Types
+============
 
-Here, we demonstrate plotting a model on a cylindrically
-symmetric mesh with the plotting symmetric about x=0.
+Here we show SimPEG used to create three different types of meshes.
+
 
 
 .. plot::
 
     from discretize import examples
-    examples.Plot_Cyl.run()
+    examples.mesh_types.run()
 
-.. literalinclude:: ../../../discretize/examples/Plot_Cyl.py
+.. literalinclude:: ../../../discretize/examples/mesh_types.py
     :language: python
     :linenos:

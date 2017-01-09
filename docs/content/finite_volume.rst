@@ -22,6 +22,10 @@ faces, or edges as seen in the figure below.
 .. toctree::
    :maxdepth: 2
 
-   api_Mesh
-   api_DiffOps
-   api_InnerProducts
+   base
+   mesh_tensor
+   mesh_cylindrical
+   mesh_tree
+   mesh_curvilinear
+   operators
+   inner_products

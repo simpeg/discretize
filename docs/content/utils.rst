@@ -1,5 +1,5 @@
-Utils
-*****
+Utilities
+*********
 
 .. automodule:: discretize.utils
     :members:
@@ -30,5 +30,12 @@ Interpolation Utilities
 =======================
 
 .. automodule:: discretize.utils.interputils
+    :members:
+    :undoc-members:
+
+Testing SimPEG
+==============
+
+.. automodule:: discretize.Tests
     :members:
     :undoc-members:

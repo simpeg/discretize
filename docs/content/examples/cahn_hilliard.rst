@@ -1,4 +1,4 @@
-.. _examples_Operators_CahnHilliard:
+.. _examples_cahn_hilliard:
 
 .. --------------------------------- ..
 ..                                   ..
@@ -54,8 +54,8 @@ as the time increases.
 .. plot::
 
     from discretize import examples
-    examples.Operators_CahnHilliard.run()
+    examples.cahn_hilliard.run()
 
-.. literalinclude:: ../../../discretize/examples/Operators_CahnHilliard.py
+.. literalinclude:: ../../../discretize/examples/cahn_hilliard.py
     :language: python
     :linenos:

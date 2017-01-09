@@ -1,7 +1,5 @@
-.. _api_Mesh:
-
-SimPEG Meshes
-*************
+Tutorial
+********
 
 The Mesh objects in SimPEG provide a numerical grid on which to solve
 differential equations. Each mesh type has a similar API to make switching
@@ -9,13 +7,6 @@ between different meshes relatively simple.
 
 Overview of Meshes Available
 ============================
-
-The following meshes are available for use:
-
-.. toctree::
-   :maxdepth: 2
-
-   api_MeshCode
 
 Each mesh code follows the guiding principles that are present in this
 tutorial, but the details, advantages and disadvantages differ between

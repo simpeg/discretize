@@ -2,17 +2,17 @@ from __future__ import print_function
 # Run this file to add imports.
 
 ##### AUTOIMPORTS #####
-from discretize.examples import Basic_ForwardDC
-from discretize.examples import Basic_PlotImage
-from discretize.examples import Basic_Types
-from discretize.examples import Operators_CahnHilliard
-from discretize.examples import Plot_Cyl
-from discretize.examples import QuadTree_Creation
-from discretize.examples import QuadTree_FaceDiv
-from discretize.examples import QuadTree_HangingNodes
-from discretize.examples import Tensor_Creation
+from discretize.examples import cahn_hilliard
+from discretize.examples import direct_current_resistivity
+from discretize.examples import mesh_types
+from discretize.examples import plot_cyl_mirror
+from discretize.examples import plot_image
+from discretize.examples import quadtree_divergence
+from discretize.examples import quadtree_hanging
+from discretize.examples import quadtree_refine
+from discretize.examples import tensors
 
-__examples__ = ["Basic_ForwardDC", "Basic_PlotImage", "Basic_Types", "Operators_CahnHilliard", "Plot_Cyl", "QuadTree_Creation", "QuadTree_FaceDiv", "QuadTree_HangingNodes", "Tensor_Creation"]
+__examples__ = ["cahn_hilliard", "direct_current_resistivity", "mesh_types", "plot_cyl_mirror", "plot_image", "quadtree_divergence", "quadtree_hanging", "quadtree_refine", "tensors"]
 
 ##### AUTOIMPORTS #####
 

@@ -1,4 +1,4 @@
-.. _examples_Basic_ForwardDC:
+.. _examples_quadtree_divergence:
 
 .. --------------------------------- ..
 ..                                   ..
@@ -9,17 +9,16 @@
 .. --------------------------------- ..
 
 
-Basic Forward 2D DC Resistivity
-===============================
+QuadTree: FaceDiv
+=================
 
-2D DC forward modeling example with Tensor and Curvilinear Meshes
 
 
 .. plot::
 
     from discretize import examples
-    examples.Basic_ForwardDC.run()
+    examples.quadtree_divergence.run()
 
-.. literalinclude:: ../../../discretize/examples/Basic_ForwardDC.py
+.. literalinclude:: ../../../discretize/examples/quadtree_divergence.py
     :language: python
     :linenos:
