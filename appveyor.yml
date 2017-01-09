@@ -4,10 +4,10 @@ build: off
 
 environment:
   matrix:
-    - PYTHON: 2.7
-      MINICONDA: C:\Miniconda
-    # - PYTHON: 3.5
-    #   MINICONDA: C:\Miniconda3
+    # - PYTHON: 2.7
+    #   MINICONDA: C:\Miniconda
+    - PYTHON: 3.5
+      MINICONDA: C:\Miniconda3
 
 init:
   - "ECHO %PYTHON% %MINICONDA%"
