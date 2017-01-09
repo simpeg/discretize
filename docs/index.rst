@@ -1,8 +1,8 @@
 .. include:: ../README.rst
 
 
-About SimPEG
-************
+About discretize
+****************
 
 .. toctree::
    :maxdepth: 2

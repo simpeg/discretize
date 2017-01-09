@@ -2,7 +2,7 @@
 Mesh Types
 ==========
 
-Here we show SimPEG used to create three different types of meshes.
+Here we show :code:`discretize` used to create three different types of meshes.
 """
 import discretize
 import numpy as np

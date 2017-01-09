@@ -120,10 +120,10 @@ def meshTensor(value):
 
     .. plot::
 
-        from SimPEG import Mesh
+        import discretize
         tx = [(10.0, 10, -1.3), (10.0, 40), (10.0, 10, 1.3)]
         ty = [(10.0, 10, -1.3), (10.0, 40)]
-        M = Mesh.TensorMesh([tx, ty])
+        M = discretize.TensorMesh([tx, ty])
         M.plotGrid(showIt=True)
 
     """
@@ -181,11 +181,11 @@ def ExtractCoreMesh(xyzlim, mesh, meshType='tensor'):
     This function ouputs::
 
         - actind: corresponding boolean index from global to core
-        - meshcore: core SimPEG mesh
+        - meshcore: core mesh
 
     Warning: 1D and 2D has not been tested
     """
-    from SimPEG import Mesh
+    from discretize import Mesh
     if mesh.dim == 1:
         xyzlim = xyzlim.flatten()
         xmin, xmax = xyzlim[0], xyzlim[1]
