@@ -21,20 +21,22 @@ discretize
     :alt: Coverage status
 
 
-discretize - A python package for finite volume discretize and simulations in the context of geophysical inverse problems.
+**discretize** - A python package for finite volume discretization.
 
-The vision is to create a package for finite volume simulation with applications to geophysical imaging and subsurface flow. To enable the understanding of the many different components, this package has the following features:
+The vision is to create a package for finite volume simulation with a
+focus on large scale inverse problems.
+This package has the following features:
 
-* modular with respect to the spacial discretization, optimization routine, and geophysical problem
+* modular with respect to the spacial discretization
 * built with the inverse problem in mind
-* provides a framework for geophysical and hydrogeologic problems
 * supports 1D, 2D and 3D problems
-* designed for large-scale inversions
+* access to sparse matrix operators
+* access to derivatives to mesh variables
 
 Citing discretize
 -----------------
 
-There is a paper about discretize!
+Please cite the SimPEG paper when using discretize in your work:
 
 
     Cockett, R., Kang, S., Heagy, L. J., Pidlisecky, A., & Oldenburg, D. W. (2015). SimPEG: An open source framework for simulation and gradient based parameter estimation in geophysical applications. Computers & Geosciences.
@@ -63,16 +65,12 @@ http://docs.simpeg.xyz
 
 
 Code:
-https://github.com/simpeg/simpeg
+https://github.com/simpeg/discretize
 
 
 Tests:
-https://travis-ci.org/simpeg/simpeg
+https://travis-ci.org/simpeg/discretize
 
 
 Bugs & Issues:
-https://github.com/simpeg/simpeg/issues
-
-
-Code Snippets & Tutorials:
-http://simpeg.xyz/journal
+https://github.com/simpeg/discretize/issues
