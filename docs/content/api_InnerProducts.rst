@@ -190,8 +190,9 @@ Which is nice and easy to invert if necessary, however, in the fully anisotropic
 
 .. plot::
 
-    from SimPEG import Mesh, np
-    mesh = Mesh.TensorMesh([10,50,3])
+    import discretize
+    import numpy as np
+    mesh = discretize.TensorMesh([10,50,3])
     m1 = np.random.rand(mesh.nC)
     m2 = np.random.rand(mesh.nC,3)
     m3 = np.random.rand(mesh.nC,6)
@@ -296,6 +297,6 @@ and returned.
 The API
 -------
 
-.. autoclass:: SimPEG.Mesh.InnerProducts.InnerProducts
+.. autoclass:: discretize.InnerProducts.InnerProducts
     :members:
     :undoc-members:

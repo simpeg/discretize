@@ -131,8 +131,8 @@ class TensorView(object):
                 vc = self.r(v.reshape((self.nC, -1), order='F'), 'CC', 'CC', 'M')[ind_xyz]
 
             # determine number oE slices in x and y dimension
-            nX = np.ceil(np.sqrt(self.nCz))
-            nY = np.ceil(self.nCz/nX)
+            nX = int(np.ceil(np.sqrt(self.nCz)))
+            nY = int(np.ceil(self.nCz/nX))
 
             #  allocate space for montage
             nCx = self.nCx
@@ -178,7 +178,8 @@ class TensorView(object):
                                      '#{0:.0f}'.format(iz), color=annotationColor, verticalalignment='bottom', horizontalalignment='right', size='x-large')
 
         ax.set_title(vType)
-        if showIt: plt.show()
+        if showIt:
+            plt.show()
         return ph
 
     def plotSlice(self, v, vType='CC',
@@ -519,7 +520,7 @@ class CylView(object):
         assert plotType in ['plotImage', 'plotGrid']
         # Hackity Hack:
         # Just create a TM and use its view.
-        from SimPEG.Mesh import TensorMesh
+        from discretize import TensorMesh
 
         mirror = kwargs.pop('mirror', None)
         if mirror is True:
@@ -589,9 +590,9 @@ class CurvView(object):
         .. plot::
             :include-source:
 
-            from SimPEG import Mesh, Utils
-            X, Y = Utils.exampleLrmGrid([3, 3], 'rotate')
-            M = Mesh.CurvilinearMesh([X, Y])
+            import discretize
+            X, Y = discretize.utils.exampleLrmGrid([3, 3], 'rotate')
+            M = discretize.CurvilinearMesh([X, Y])
             M.plotGrid(showIt=True)
 
         """

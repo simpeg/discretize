@@ -43,11 +43,12 @@ of the TensorMesh.
 .. plot::
     :include-source:
 
-    from SimPEG import Mesh, np
+    import discretize
+    import numpy as np
     import matplotlib.pyplot as plt
     hx = np.r_[3,2,1,1,1,1,2,3]
     hy = np.r_[3,1,1,3]
-    M = Mesh.TensorMesh([hx, hy])
+    M = discretize.TensorMesh([hx, hy])
     M.plotGrid(centers=True)
     plt.show()
 
@@ -65,11 +66,12 @@ plotted above as red circles. Other terminology for this mesh are:
 .. plot::
     :include-source:
 
-    from SimPEG import Mesh, np
+    import discretize
+    import numpy as np
     import matplotlib.pyplot as plt
     hx = np.r_[3,2,1,1,1,1,2,3]
     hy = np.r_[3,1,1,3]
-    M = Mesh.TensorMesh([hx, hy])
+    M = discretize.TensorMesh([hx, hy])
     M.plotGrid(faces=True, nodes=True)
     plt.title('Cell faces in the x- and y-directions.')
     plt.legend(('Nodes', 'X-Faces', 'Y-Faces'))
@@ -148,8 +150,8 @@ vector grid size.
 .. plot::
     :include-source:
 
-    from SimPEG import Mesh
-    Mesh.TensorMesh([4,5]).plotGrid(faces=True, showIt=True)
+    import discretize
+    discretize.TensorMesh([4,5]).plotGrid(faces=True, showIt=True)
 
 
 Making Tensors
@@ -170,9 +172,9 @@ notation::
 .. plot::
     :include-source:
 
-    from SimPEG import Mesh, Utils
+    import discretize
     h1 = [(10, 5, -1.3), (5, 20), (10, 3, 1.3)]
-    M = Mesh.TensorMesh([h1, h1], x0='CN')
+    M = discretize.TensorMesh([h1, h1], x0='CN')
     M.plotGrid(showIt=True)
 
 .. note::
@@ -189,6 +191,6 @@ other types of meshes in this SimPEG framework.
 The API
 =======
 
-.. autoclass:: SimPEG.Mesh.BaseMesh.BaseMesh
+.. autoclass:: discretize.BaseMesh.BaseMesh
     :members:
     :undoc-members:
