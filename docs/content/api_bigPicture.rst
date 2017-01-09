@@ -36,9 +36,6 @@ context of geoscience inverse problems, which are treated in a consistent way
 across various mesh types, highlighting similarities and differences.
 
 
-Citation
---------
-
 .. include:: ../../CITATION.rst
 
 Authors

@@ -196,6 +196,7 @@ class TensorView(object):
         .. plot::
 
             import discretize
+            from pymatsolver import Solver
             import numpy as np
             hx = [(5, 2, -1.3), (2, 4), (5, 2, 1.3)]
             hy = [(2, 2, -1.3), (2, 6), (2, 2, 1.3)]
@@ -203,7 +204,7 @@ class TensorView(object):
             M = discretize.TensorMesh([hx, hy, hz])
             q = np.zeros(M.vnC)
             q[[4, 4], [4, 4], [2, 6]]=[-1, 1]
-            q = Utils.mkvc(q)
+            q = discretize.utils.mkvc(q)
             A = M.faceDiv * M.cellGrad
             b = Solver(A) * (q)
             M.plotSlice(M.cellGrad*b, 'F', view='vec', grid=True, showIt=True, pcolorOpts={'alpha':0.8})
@@ -289,11 +290,10 @@ class TensorView(object):
         v2d = doSlice(v)
 
         if ax is None:
-            fig = plt.figure()
+            plt.figure()
             ax = plt.subplot(111)
         else:
             assert isinstance(ax, matplotlib.axes.Axes), "ax must be an matplotlib.axes.Axes"
-            fig = ax.figure
 
         out = tM._plotImage2D(
             v2d, vType=('CCv' if view == 'vec' else 'CC'),
@@ -333,11 +333,10 @@ class TensorView(object):
         assert view in viewOpts, "view must be in ['{0!s}']".format("', '".join(viewOpts))
 
         if ax is None:
-            fig = plt.figure()
+            plt.figure()
             ax = plt.subplot(111)
         else:
             assert isinstance(ax, matplotlib.axes.Axes), "ax must be an matplotlib.axes.Axes"
-            fig = ax.figure
 
         # Reshape to a cell centered variable
         if vType == 'CC':

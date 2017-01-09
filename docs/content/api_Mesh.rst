@@ -24,7 +24,7 @@ the implementations.
 .. plot::
 
     from discretize import examples
-    examples.Mesh_Basic_Types.run()
+    examples.Basic_Types.run()
 
 
 Variable Locations and Terminology

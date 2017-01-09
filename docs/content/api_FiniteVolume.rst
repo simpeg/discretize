@@ -13,7 +13,7 @@ Shashkov, 1999 <http://math.lanl.gov/~mac/papers/numerics/HS99B.pdf>`_). This
 approach requires the definitions of variables at either cell-centers, nodes,
 faces, or edges as seen in the figure below.
 
-.. image:: ../../images/finitevolrealestate.png
+.. image:: ../images/finitevolrealestate.png
    :width: 400 px
    :alt: FiniteVolume
    :align: center
