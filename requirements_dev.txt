@@ -2,6 +2,7 @@ sphinx
 sphinx_rtd_theme
 sphinx-gallery
 nose
+pillow
 nose-cov
 pylint
 numpy>=1.7
