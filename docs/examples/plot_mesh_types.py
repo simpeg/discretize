@@ -1,16 +1,15 @@
+"""
+Mesh Types
+==========
+
+Here we show SimPEG used to create three different types of meshes.
+"""
 import discretize
 import numpy as np
 import matplotlib.pyplot as plt
 
 
 def run(plotIt=True):
-    """
-        Basic: Types
-        ============
-
-        Here we show SimPEG used to create three different types of meshes.
-
-    """
     sz = [16, 16]
     tM = discretize.TensorMesh(sz)
     qM = discretize.TreeMesh(sz)

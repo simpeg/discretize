@@ -1,16 +1,16 @@
+"""
+Plot Mirrored Cylindrically Symmetric Model
+===========================================
+
+Here, we demonstrate plotting a model on a cylindrically
+symmetric mesh with the plotting symmetric about x=0.
+"""
 import numpy as np
 import matplotlib.pyplot as plt
 import discretize
 
 
 def run(plotIt=True):
-    """
-        Plot Mirrored Cylindrically Symmetric Model
-        ===========================================
-
-        Here, we demonstrate plotting a model on a cylindrically
-        symmetric mesh with the plotting symmetric about x=0.
-    """
 
     sig_halfspace = 1e-6
     sig_sphere = 1e0

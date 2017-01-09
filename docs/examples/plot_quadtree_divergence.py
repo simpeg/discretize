@@ -1,13 +1,20 @@
+"""
+QuadTree: FaceDiv
+=================
+
+For a tree mesh, there needs to be special attention taken for the hanging
+faces to achieve second order convergence for the divergence operator.
+Although the divergence cannot be constructed through Kronecker product
+operations, the initial steps are exactly the same for calculating the
+stencil, volumes, and areas. This yields a divergence defined for every
+cell in the mesh using all faces. There is, however, redundant information
+when hanging faces are included.
+"""
 import discretize
 import matplotlib.pyplot as plt
 
 
 def run(plotIt=True, n=60):
-    """
-        QuadTree: FaceDiv
-        =================
-
-    """
 
     M = discretize.TreeMesh([[(1, 16)], [(1, 16)]], levels=4)
     M._refineCell([0, 0, 0])

@@ -17,7 +17,7 @@ Examples
    :maxdepth: 2
 
    content/tutorial
-   content/examples
+   auto_examples/index
 
 Finite Volume
 *************

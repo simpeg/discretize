@@ -1,15 +1,4 @@
-.. _examples_tensors:
-
-.. --------------------------------- ..
-..                                   ..
-..    THIS FILE IS AUTO GENEREATED   ..
-..                                   ..
-..    discretize/examples/__init__.py    ..
-..                                   ..
-.. --------------------------------- ..
-
-
-
+"""
 Tensor: Creation
 ================
 
@@ -31,13 +20,17 @@ notation::
     A 'N' will make the entire mesh negative, and a '0' (or a 0) will
     make the mesh start at zero.
 
+"""
+import discretize
+import matplotlib.pyplot as plt
 
 
-.. plot::
+def run(plotIt=True):
+    h1 = [(10, 5, -1.3), (5, 20), (10, 3, 1.3)]
+    M = discretize.TensorMesh([h1, h1], x0='CN')
+    if plotIt:
+        M.plotGrid()
 
-    from discretize import examples
-    examples.tensors.run()
-
-.. literalinclude:: ../../../discretize/examples/tensors.py
-    :language: python
-    :linenos:
+if __name__ == '__main__':
+    run()
+    plt.show()

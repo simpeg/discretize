@@ -1,3 +1,9 @@
+"""
+Basic Forward 2D DC Resistivity
+===============================
+
+2D DC forward modeling example with Tensor and Curvilinear Meshes
+"""
 import discretize
 from pymatsolver import SolverLU
 import numpy as np
@@ -6,12 +12,6 @@ import matplotlib.pyplot as plt
 
 def run(plotIt=True):
 
-    """
-        Basic Forward 2D DC Resistivity
-        ===============================
-
-        2D DC forward modeling example with Tensor and Curvilinear Meshes
-    """
 
     # Step1: Generate Tensor and Curvilinear Mesh
     sz = [40, 40]

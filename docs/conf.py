@@ -35,7 +35,8 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
-    'matplotlib.sphinxext.plot_directive'
+    'matplotlib.sphinxext.plot_directive',
+    'sphinx_gallery.gen_gallery'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -267,6 +268,13 @@ texinfo_documents = [
     u'Rowan Cockett', 'discretize', 'Finite volume methods for python.',
     'Miscellaneous'),
 ]
+
+# Sphinx Gallery
+sphinx_gallery_conf = {
+    # path to your examples scripts
+    'examples_dirs' : 'examples',
+    'gallery_dirs'  : 'auto_examples'
+}
 
 # Documents to append as an appendix to all manuals.
 #texinfo_appendices = []

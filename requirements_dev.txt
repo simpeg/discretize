@@ -1,0 +1,12 @@
+sphinx
+sphinx_rtd_theme
+sphinx-gallery
+nose-cov
+pylint
+numpy>=1.7
+scipy>=0.13
+cython
+pymatsolver
+ipython
+matplotlib
+properties[math]
