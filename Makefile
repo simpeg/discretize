@@ -1,6 +1,7 @@
-.PHONY: build coverage lint graphs tests docs
+.PHONY: build coverage lint graphs tests docs clean clean_cython deploy
 
 build:
+	mkdir -p docs/modules/generated
 	python setup.py build_ext --inplace
 
 coverage:
@@ -22,6 +23,10 @@ docs:
 clean:
 	cd docs;make clean
 	find . -name "*.pyc" | xargs -I {} rm -v "{}"
+
+clean_cython: clean
+	find . -name "*.c" | xargs -I {} rm -v "{}"
+	find . -name "*.so" | xargs -I {} rm -v "{}"
 
 deploy:
 	python setup.py sdist bdist_wheel upload
