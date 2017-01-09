@@ -6,7 +6,7 @@ import discretize
 # Tolerance
 TOL = 1e-14
 
-np.random.seed(25)
+np.random.seed(1)
 
 MESHTYPES = [
     'uniformTensorMesh',
@@ -351,7 +351,7 @@ class TestAveraging2D(discretize.Tests.OrderTest):
     name = "Averaging 2D"
     meshTypes = MESHTYPES
     meshDimension = 2
-    meshSizes = [8, 16, 32]
+    meshSizes = [16, 32, 64]
 
     def getError(self):
         num = self.getAve(self.M) * self.getHere(self.M)
@@ -449,7 +449,7 @@ class TestAveraging3D(discretize.Tests.OrderTest):
     name = "Averaging 3D"
     meshTypes = MESHTYPES
     meshDimension = 3
-    meshSizes = [8, 16, 32, 64]
+    meshSizes = [32, 64, 128]
 
     def getError(self):
         num = self.getAve(self.M) * self.getHere(self.M)
@@ -526,7 +526,6 @@ class TestAveraging3D(discretize.Tests.OrderTest):
         self.expectedOrders = ORDERS/2.0
         self.orderTest()
         self.expectedOrders = ORDERS
-
 
 
 if __name__ == '__main__':
