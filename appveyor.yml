@@ -7,11 +7,9 @@ environment:
   matrix:
     - PYTHON: 2.7
       MINICONDA: C:\Miniconda
+      PYTHON_ARCH: "64"
     # - PYTHON: 3.5
     #   MINICONDA: C:\Miniconda3
-
-platform:
-  - x64
 
 init:
   - "ECHO %PYTHON% %MINICONDA%"
