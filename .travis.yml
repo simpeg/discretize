@@ -9,25 +9,6 @@ matrix:
 
 sudo: false
 
-addons:
-  apt:
-    packages:
-    - gcc
-    - gfortran
-    - libopenmpi-dev
-    - libmumps-seq-dev
-    - libblas-dev
-    - liblapack-dev
-
-env:
-    - TEST_DIR="tests/mesh tests/utils"
-    # - TEST_DIR=tests/examples
-    # - TEST_DIR=tests/docs;
-    #   GAE_PYTHONPATH=${HOME}/.cache/google_appengine;
-    #   PATH=$PATH:${HOME}/google-cloud-sdk/bin;
-    #   PYTHONPATH=${PYTHONPATH}:${GAE_PYTHONPATH};
-    #   CLOUDSDK_CORE_DISABLE_PROMPTS=1
-
 before_install:
   - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then
       wget http://repo.continuum.io/miniconda/Miniconda-3.8.3-Linux-x86_64.sh -O miniconda.sh;
@@ -41,16 +22,16 @@ before_install:
 
 install:
   - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then
-      conda install --yes pip python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib cython ipython h5py nose sphinx sympy vtk;
+      conda install --yes pip python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib cython ipython vtk;
     else
-      conda install --yes pip python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib cython ipython h5py nose sphinx sympy;
+      conda install --yes pip python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib cython ipython;
     fi
-  - pip install nose-cov python-coveralls pymatsolver
+  - pip install -r requirements_dev.txt
   - python setup.py install
   - python setup.py build_ext --inplace
 
 script:
-  - nosetests $TEST_DIR --with-cov --cov discretize --cov-config .coveragerc -v -s;
+  - nosetests --with-cov --cov discretize --cov-config .coveragerc -v -s;
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
