@@ -186,4 +186,3 @@ def faceInfo(xyz, A, B, C, D, average=True, normalizeNormals=True):
     area = (length(nA)+length(nB)+length(nC)+length(nD))/4
 
     return N, area
-

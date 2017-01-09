@@ -1,3 +1,4 @@
+from discretize.BaseMesh import BaseMesh
 from discretize.TensorMesh import TensorMesh
 from discretize.CylMesh import CylMesh
 from discretize.CurvilinearMesh import CurvilinearMesh

@@ -50,7 +50,7 @@ def sdiag(h):
 
 def sdInv(M):
     "Inverse of a sparse diagonal matrix"
-    return sdiag(1/M.diagonal())
+    return sdiag(1.0 / M.diagonal())
 
 
 def speye(n):
@@ -84,11 +84,14 @@ def av(n):
     )
 
 
-def avExtrap(n):
+def av_extrap(n):
     """Define 1D averaging operator from cell-centers to nodes."""
     Av = (
         sp.spdiags(
-            (0.5 * np.ones((n, 1)) * [1, 1]).T, [-1, 0], n + 1, n, format="csr"
+            (0.5 * np.ones((n, 1)) * [1, 1]).T,
+            [-1, 0],
+            n + 1, n,
+            format="csr"
         ) +
         sp.csr_matrix(([0.5, 0.5], ([0, n], [0, n-1])), shape=(n+1, n))
     )

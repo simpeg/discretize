@@ -2,7 +2,7 @@ from __future__ import print_function
 import numpy as np
 from scipy import sparse as sp
 from six import string_types
-from discretize.utils import sdiag, speye, kron3, spzeros, ddx, av, avExtrap
+from discretize.utils import sdiag, speye, kron3, spzeros, ddx, av, av_extrap
 
 
 def checkBC(bc):
@@ -746,18 +746,18 @@ class DiffOperators(object):
         if getattr(self, '_aveCC2F', None) is None:
             n = self.vnC
             if(self.dim == 1):
-                self._aveCC2F = avExtrap(n[0])
+                self._aveCC2F = av_extrap(n[0])
             elif(self.dim == 2):
                 self._aveCC2F = sp.vstack((sp.kron(speye(n[1]),
-                                           avExtrap(n[0])),
-                                           sp.kron(avExtrap(n[1]),
+                                           av_extrap(n[0])),
+                                           sp.kron(av_extrap(n[1]),
                                            speye(n[0]))), format="csr")
             elif(self.dim == 3):
                 self._aveCC2F = sp.vstack((kron3(speye(n[2]), speye(n[1]),
-                                                 avExtrap(n[0])),
-                                           kron3(speye(n[2]), avExtrap(n[1]),
+                                                 av_extrap(n[0])),
+                                           kron3(speye(n[2]), av_extrap(n[1]),
                                                  speye(n[0])),
-                                           kron3(avExtrap(n[2]), speye(n[1]),
+                                           kron3(av_extrap(n[2]), speye(n[1]),
                                                  speye(n[0]))),
                                           format="csr")
         return self._aveCC2F

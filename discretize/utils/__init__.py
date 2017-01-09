@@ -1,6 +1,7 @@
 from __future__ import print_function
+
 from .matutils import (mkvc, sdiag, sdInv, speye, kron3, spzeros, ddx, av,
-                       avExtrap, ndgrid, ind2sub, sub2ind, getSubArray,
+                       av_extrap, ndgrid, ind2sub, sub2ind, getSubArray,
                        inv3X3BlockDiagonal, inv2X2BlockDiagonal, TensorType,
                        makePropertyTensor, invPropertyTensor, Zero,
                        Identity)
