@@ -1,7 +1,6 @@
 # AppVeyor.com is a Continuous Integration service to build and run tests under Windows
 
-build:
-  verbosity: normal
+build: off
 
 environment:
   matrix:
