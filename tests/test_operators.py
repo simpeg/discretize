@@ -10,11 +10,11 @@ np.random.seed(1)
 
 MESHTYPES = [
     'uniformTensorMesh',
-    'randomTensorMesh',
+    # 'randomTensorMesh',
     'uniformCurv',
     'rotateCurv'
 ]
-ORDERS = np.r_[2.0, 1.8, 2.0, 2.0]
+ORDERS = np.r_[2.0, 2.0, 2.0]
 call2 = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1])
 call3 = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1], xyz[:, 2])
 cart_row2 = lambda g, xfun, yfun: np.c_[call2(xfun, g), call2(yfun, g)]
@@ -449,7 +449,7 @@ class TestAveraging3D(discretize.Tests.OrderTest):
     name = "Averaging 3D"
     meshTypes = MESHTYPES
     meshDimension = 3
-    meshSizes = [32, 64, 128]
+    meshSizes = [16, 32, 64]
 
     def getError(self):
         num = self.getAve(self.M) * self.getHere(self.M)
