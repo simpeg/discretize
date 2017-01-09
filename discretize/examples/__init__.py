@@ -2,19 +2,17 @@ from __future__ import print_function
 # Run this file to add imports.
 
 ##### AUTOIMPORTS #####
-from discretize.examples import Mesh_Basic_ForwardDC
-from discretize.examples import Mesh_Basic_PlotImage
-from discretize.examples import Mesh_Basic_Types
-from discretize.examples import Mesh_Operators_CahnHilliard
-from discretize.examples import Mesh_Plot_Cyl
-from discretize.examples import Mesh_QuadTree_Creation
-from discretize.examples import Mesh_QuadTree_FaceDiv
-from discretize.examples import Mesh_QuadTree_HangingNodes
-from discretize.examples import Mesh_Tensor_Creation
-from discretize.examples import Utils_plot2Ddata
-from discretize.examples import Utils_surface2ind_topo
+from discretize.examples import Basic_ForwardDC
+from discretize.examples import Basic_PlotImage
+from discretize.examples import Basic_Types
+from discretize.examples import Operators_CahnHilliard
+from discretize.examples import Plot_Cyl
+from discretize.examples import QuadTree_Creation
+from discretize.examples import QuadTree_FaceDiv
+from discretize.examples import QuadTree_HangingNodes
+from discretize.examples import Tensor_Creation
 
-__examples__ = ["Mesh_Basic_ForwardDC", "Mesh_Basic_PlotImage", "Mesh_Basic_Types", "Mesh_Operators_CahnHilliard", "Mesh_Plot_Cyl", "Mesh_QuadTree_Creation", "Mesh_QuadTree_FaceDiv", "Mesh_QuadTree_HangingNodes", "Mesh_Tensor_Creation", "Utils_plot2Ddata", "Utils_surface2ind_topo"]
+__examples__ = ["Basic_ForwardDC", "Basic_PlotImage", "Basic_Types", "Operators_CahnHilliard", "Plot_Cyl", "QuadTree_Creation", "QuadTree_FaceDiv", "QuadTree_HangingNodes", "Tensor_Creation"]
 
 ##### AUTOIMPORTS #####
 
