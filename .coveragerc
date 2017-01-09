@@ -1,5 +1,5 @@
 [run]
-source = SimPEG
+source = discretize
 omit =
     */python?.?/*
     */lib-python/?.?/*.py
