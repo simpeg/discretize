@@ -66,7 +66,7 @@ class NumpyBuild(build_ext):
 
 setup(
     name="discretize",
-    version="0.1.1b0",
+    version="0.1.1b1",
     packages=find_packages(),
     install_requires=[
         'numpy>=1.7',
