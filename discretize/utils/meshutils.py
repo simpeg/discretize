@@ -185,7 +185,7 @@ def ExtractCoreMesh(xyzlim, mesh, meshType='tensor'):
 
     Warning: 1D and 2D has not been tested
     """
-    from discretize import Mesh
+    import discretize
     if mesh.dim == 1:
         xyzlim = xyzlim.flatten()
         xmin, xmax = xyzlim[0], xyzlim[1]
@@ -198,7 +198,7 @@ def ExtractCoreMesh(xyzlim, mesh, meshType='tensor'):
 
         x0 = [xc[0]-hx[0]*0.5, yc[0]-hy[0]*0.5]
 
-        meshCore = Mesh.TensorMesh([hx, hy], x0=x0)
+        meshCore = discretize.TensorMesh([hx, hy], x0=x0)
 
         actind = (mesh.gridCC[:, 0] > xmin) & (mesh.gridCC[:, 0] < xmax)
 
@@ -217,7 +217,7 @@ def ExtractCoreMesh(xyzlim, mesh, meshType='tensor'):
 
         x0 = [xc[0]-hx[0]*0.5, yc[0]-hy[0]*0.5]
 
-        meshCore = Mesh.TensorMesh([hx, hy], x0=x0)
+        meshCore = discretize.TensorMesh([hx, hy], x0=x0)
 
         actind = (mesh.gridCC[:, 0] > xmin) & (mesh.gridCC[:, 0] < xmax) \
                & (mesh.gridCC[:, 1] > ymin) & (mesh.gridCC[:, 1] < ymax) \
@@ -241,7 +241,7 @@ def ExtractCoreMesh(xyzlim, mesh, meshType='tensor'):
 
         x0 = [xc[0]-hx[0]*0.5, yc[0]-hy[0]*0.5, zc[0]-hz[0]*0.5]
 
-        meshCore = Mesh.TensorMesh([hx, hy, hz], x0=x0)
+        meshCore = discretize.TensorMesh([hx, hy, hz], x0=x0)
 
         actind = (
             (mesh.gridCC[:, 0] > xmin) & (mesh.gridCC[:, 0] < xmax) &

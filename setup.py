@@ -70,5 +70,6 @@ setup(
     use_2to3=False,
     setup_requires=['numpy', 'cython'],
     cmdclass={'build_ext': NumpyBuild},
-    ext_modules=cythonize(cython_files)
+    ext_modules = cythonize(cython_files),
+    scripts=cython_files + [s.replace('.pyx', '.c') for s in cython_files]
 )
