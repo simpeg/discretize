@@ -23,4 +23,4 @@ install:
   - python setup.py install build_ext -i cython
 
 test_script:
-  - nosetests tests\base -v -s
+  - nosetests tests\tree -v -s
