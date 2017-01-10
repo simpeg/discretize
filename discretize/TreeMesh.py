@@ -83,13 +83,15 @@ import numpy as np
 import scipy.sparse as sp
 
 from discretize import utils
+from . import TreeUtils
 
+'''
 try:
     from . import TreeUtils
     _IMPORT_TREEUTILS = True
 except Exception:
     _IMPORT_TREEUTILS = False
-
+'''
 
 from .InnerProducts import InnerProducts
 from .TensorMesh import TensorMesh, BaseTensorMesh
@@ -105,11 +107,13 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
     _meshType = 'TREE'
 
     def __init__(self, h, x0=None, levels=None):
+        '''
         if not _IMPORT_TREEUTILS:
             raise Exception(
                 'Could not import the Cython code to run the '
                 'TreeMesh Try:.\n\npython setup.py build_ext --inplace'
             )
+        '''
         assert type(h) is list, 'h must be a list'
         assert len(h) in [2, 3], "There is only support for TreeMesh in 2D or 3D."
 
