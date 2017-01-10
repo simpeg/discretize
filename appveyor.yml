@@ -23,4 +23,5 @@ install:
   - python setup.py install
 
 test_script:
-  - nosetests tests\tree -v -s
+  - cd tests
+  - nosetests tree -v -s
