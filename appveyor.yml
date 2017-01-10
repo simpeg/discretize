@@ -20,7 +20,7 @@ install:
   - "conda create -q -n test-environment python=%PYTHON% numpy scipy matplotlib cython ipython pillow"
   - activate test-environment
   - pip install -r requirements_dev.txt
-  - python setup.py install build_ext -i cython
+  - python setup.py install
 
 test_script:
   - nosetests tests\tree -v -s
