@@ -12,16 +12,6 @@ import os
 import sys
 import numpy
 
-#if 'cython' in sys.argv:
-#    del sys.argv[sys.argv.index('cython')]  # delete the command
-#    from Cython.Build import cythonize
-#    from Cython.Distutils import build_ext
-#    USE_CYTHON = True
-#else:
-#    from setuptools.command.build_ext import build_ext
-#    from distutils.extension import Extension
-#    USE_CYTHON = False
-
 
 CLASSIFIERS = [
     'Development Status :: 4 - Beta',
@@ -39,31 +29,9 @@ CLASSIFIERS = [
     'Natural Language :: English',
 ]
 
-#ext = '.pyx' if USE_CYTHON else '.c'
-
 with open("README.rst") as f:
     LONG_DESCRIPTION = ''.join(f.readlines())
-
-'''
-#cython_files = [
-#    "discretize/utils/interputils_cython".replace('/', os.sep),
-#    "discretize/TreeUtils".replace('/', os.sep)
-#]
-
-#scripts = [s + '.pyx' for s in cython_files] + [s + '.c' for s in cython_files]
-
-#if USE_CYTHON:
-#    extensions = cythonize([s + '.pyx' for s in cython_files])
-#else:
-#    extensions = [Extension(cf, [cf+ext]) for cf in cython_files]
-
-
-class NumpyBuild(build_ext):
-    def finalize_options(self):
-        build_ext.finalize_options(self)
-        __builtins__.__NUMPY_SETUP__ = False
-        self.include_dirs.append(numpy.get_include())
-'''
+    
 def configuration(parent_package='',top_path=None):
     from numpy.distutils.misc_util import Configuration
 
@@ -75,7 +43,6 @@ def configuration(parent_package='',top_path=None):
 
     config.add_subpackage('discretize')
 
-    #config.get_version('numpy/version.py') # sets config.version
     return config
 
 setup(
@@ -101,9 +68,6 @@ setup(
     classifiers=CLASSIFIERS,
     platforms=["Windows", "Linux", "Solaris", "Mac OS-X", "Unix"],
     use_2to3=False,
-    #ext_modules=extensions if not USE_CYTHON else cythonize(extensions),
-    #scripts=scripts,
-    #cmdclass={'build_ext': NumpyBuild},
     setup_requires=['numpy'],
     configuration=configuration
 )
