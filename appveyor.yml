@@ -24,4 +24,4 @@ install:
 
 test_script:
   - cd tests
-  - nosetests tree -v -s
+  - nosetests base tree -v -s
