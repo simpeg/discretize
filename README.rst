@@ -1,6 +1,3 @@
-.. image:: https://raw.github.com/simpeg/simpeg/master/docs/images/simpeg-logo.png
-    :alt: discretize Logo
-
 discretize
 ==========
 
@@ -8,7 +5,7 @@ discretize
     :target: https://pypi.python.org/pypi/discretize
     :alt: Latest PyPI version
 
-.. image:: https://img.shields.io/badge/license-MIT-blue.svg
+.. image:: https://img.shields.io/github/license/simpeg/simpeg.svg
     :target: https://github.com/simpeg/discretize/blob/master/LICENSE
     :alt: MIT license
 
