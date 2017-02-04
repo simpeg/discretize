@@ -15,7 +15,7 @@
 """
 
 
-def bitrange(long x, int width, int start, int end):
+def bitrange(long long x, int width, int start, int end):
     """
         Extract a bit range as an integer.
         (start, end) is inclusive lower bound, exclusive upper bound.
@@ -24,10 +24,10 @@ def bitrange(long x, int width, int start, int end):
 
 
 def index(int dimension, int bits, int levelBits, list p, int level):
-    cdef long idx = 0
+    cdef long long idx = 0
     cdef int iwidth
     cdef int i
-    cdef long b
+    cdef long long b
     cdef int bitoff
 
     p = [_ for _ in p]
@@ -43,11 +43,11 @@ def index(int dimension, int bits, int levelBits, list p, int level):
     return (idx << levelBits) + level
 
 
-def point(int dimension, int bits, int levelBits, long idx):
+def point(int dimension, int bits, int levelBits, long long idx):
     cdef list p
     cdef int iwidth
     cdef int i, n
-    cdef long b
+    cdef long long b
 
     n = idx & (2**levelBits-1)
     idx = idx >> levelBits
