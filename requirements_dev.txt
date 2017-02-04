@@ -13,3 +13,4 @@ pymatsolver>=0.1.2
 ipython
 matplotlib
 properties[math]
+wheel
