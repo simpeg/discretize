@@ -31,8 +31,9 @@ CLASSIFIERS = [
 
 with open("README.rst") as f:
     LONG_DESCRIPTION = ''.join(f.readlines())
-    
-def configuration(parent_package='',top_path=None):
+
+
+def configuration(parent_package='', top_path=None):
     from numpy.distutils.misc_util import Configuration
 
     config = Configuration(None, parent_package, top_path)
