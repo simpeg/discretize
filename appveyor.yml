@@ -23,7 +23,9 @@ install:
   - python setup.py install
 
 test_script:
-  - nosetests tests\base tests\tree -v -s
+  - cd tests
+  - nosetests base tree -v -s
+  - cd ..
 
 after_test:
   # This step builds your wheels.
