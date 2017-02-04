@@ -615,7 +615,7 @@ class TestCyl3DMesh(unittest.TestCase):
     def test_vectorsCC(self):
         v = np.r_[0.5, 1.5, 2.25]
         self.assertTrue(np.linalg.norm((v-self.mesh.vectorCCx)) == 0)
-        v = np.r_[0, np.pi]
+        v = np.r_[0, np.pi] + np.pi/2
         self.assertTrue(np.linalg.norm((v-self.mesh.vectorCCy)) == 0)
         v = np.r_[1, 2.5]
         self.assertTrue(np.linalg.norm((v-self.mesh.vectorCCz)) == 0)

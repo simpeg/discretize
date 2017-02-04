@@ -123,7 +123,9 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
     @property
     def vectorCCy(self):
         """Cell-centered grid vector (1D) in the y direction."""
-        return np.r_[0, self.hy[:-1]]
+        if self.isSymmetric:
+            return np.r_[0, self.hy[:-1]]
+        return np.r_[0, self.hy[:-1].cumsum()] + self.hy*0.5
 
     @property
     def vectorNx(self):
@@ -142,39 +144,89 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
         return np.r_[0, self.hy[:-1].cumsum()] + self.hy[0]*0.5
 
     @property
+    def vectorNz(self):
+        return np.r_[0, self.hz].cumsum()
+
+    @property
     def edge(self):
         """Edge lengths"""
         if getattr(self, '_edge', None) is None:
             if self.isSymmetric:
                 self._edge = 2*pi*self.gridN[:, 0]
             else:
-                raise NotImplementedError('edges not yet implemented for 3D '
-                                          'cyl mesh')
+                raise NotImplementedError(
+                    'edges not yet implemented for 3D cyl mesh'
+                )
+                # edgeR =
+                # edgeT =
+                # edgeZ =
         return self._edge
 
     @property
     def area(self):
         """Face areas"""
         if getattr(self, '_area', None) is None:
-            if self.nCy > 1:
-                raise NotImplementedError('area not yet implemented for 3D '
-                                          'cyl mesh')
-            areaR = np.kron(self.hz, 2*pi*self.vectorNx)
-            areaZ = np.kron(np.ones_like(self.vectorNz), pi*(self.vectorNx**2 -
-                            np.r_[0, self.vectorNx[:-1]]**2))
-            self._area = np.r_[areaR, areaZ]
+            if self.isSymmetric:
+                areaR = np.kron(self.hz, 2*pi*self.vectorNx)
+                areaZ = np.kron(
+                    np.ones_like(self.vectorNz), pi*(self.vectorNx**2 -
+                    np.r_[0, self.vectorNx[:-1]]**2)
+                )
+                self._area = np.r_[areaR, areaZ]
+            else:
+                areaR = np.kron(self.hz, np.kron(self.hy, self.vectorNx[1:]))
+                areaT = np.kron(self.hz, np.kron(np.ones(self.nNy), self.hx))
+                areaZ = np.kron(
+                    np.ones(self.nNz), np.kron(
+                        self.hy,
+                        0.5 * (self.vectorNx[1:]**2 - self.vectorNx[:-1]**2)
+                    )
+                )
+                self._area = np.r_[areaR, areaT, areaZ]
         return self._area
 
     @property
     def vol(self):
         """Volume of each cell"""
         if getattr(self, '_vol', None) is None:
-            if self.nCy > 1:
-                raise NotImplementedError('vol not yet implemented for 3D '
-                                          'cyl mesh')
-            az = pi*(self.vectorNx**2 - np.r_[0, self.vectorNx[:-1]]**2)
-            self._vol = np.kron(self.hz, az)
+            if self.isSymmetric:
+                az = pi*(self.vectorNx**2 - np.r_[0, self.vectorNx[:-1]]**2)
+                self._vol = np.kron(self.hz, az)
+            else:
+                self._vol = np.kron(
+                    self.hz, np.kron(
+                        self.hy,
+                        0.5 * (self.vectorNx[1:]**2 - self.vectorNx[:-1]**2)
+                    )
+                )
         return self._vol
+
+    ####################################################
+    # Grids
+    ####################################################
+
+    @property
+    def gridFx(self):
+        if getattr(self, '_gridFx', None) is None:
+            if self.isSymmetric:
+                return super(CylMesh, self).gridFx
+            else:
+                self._gridFx = utils.ndgrid([
+                    self.vectorNx[1:], self.vectorCCy, self.vectorCCz
+                ])
+        return self._gridFx
+
+    @property
+    def gridFy(self):
+        if getattr(self, '_gridFy', None) is None:
+            if self.isSymmetric:
+                return super(CylMesh, self).gridFy
+            else:
+                self._gridFy = utils.ndgrid([
+                    self.vectorCCx, self.vectorNy, self.vectorCCz
+                ])
+        return self._gridFy
+
 
     ####################################################
     # Operators
@@ -203,8 +255,11 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
         (face-stg to cell-centres).
         """
         if getattr(self, '_faceDivx', None) is None:
-            D1 = utils.kron3(utils.speye(self.nCz), utils.speye(self.nCy),
-                             utils.ddx(self.nCx)[:,1:])
+            D1 = utils.kron3(
+                utils.speye(self.nCz),
+                utils.speye(self.nCy),
+                utils.ddx(self.nCx)[:,1:]
+            )
             S = self.r(self.area, 'F', 'Fx', 'V')
             V = self.vol
             self._faceDivx = utils.sdiag(1/V)*D1*utils.sdiag(S)
@@ -216,13 +271,23 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
         Construct divergence operator in the y component
         (face-stg to cell-centres).
         """
-        raise NotImplementedError('Wrapping the utils.ddx is not yet '
-                                  'implemented.')
+        # raise NotImplementedError(
+        #     'Wrapping the utils.ddx is not yet implemented.')
         if getattr(self, '_faceDivy', None) is None:
             # TODO: this needs to wrap to join up faces which are
             # connected in the cylinder
-            D2 = utils.kron3(utils.speye(self.nCz), utils.ddx(self.nCy),
-                            utils.speye(self.nCx))
+            dTheta = (
+                utils.ddx(self.nCy)[:,:-1] +
+                sp.csr_matrix(
+                    (np.r_[1.], (np.r_[self.nCy-1], np.r_[0])),
+                    shape=(self.nCy, self.nCy)
+                )
+            )
+            D2 = utils.kron3(
+                utils.speye(self.nCz),
+                dTheta,
+                utils.speye(self.nCx)
+            )
             S = self.r(self.area, 'F', 'Fy', 'V')
             V = self.vol
             self._faceDivy = utils.sdiag(1/V)*D2*utils.sdiag(S)
@@ -235,8 +300,11 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
         (face-stg to cell-centres).
         """
         if getattr(self, '_faceDivz', None) is None:
-            D3 = utils.kron3(utils.ddx(self.nCz), utils.speye(self.nCy),
-                             utils.speye(self.nCx))
+            D3 = utils.kron3(
+                utils.ddx(self.nCz),
+                utils.speye(self.nCy),
+                utils.speye(self.nCx)
+            )
             S = self.r(self.area, 'F', 'Fz', 'V')
             V = self.vol
             self._faceDivz = utils.sdiag(1/V)*D3*utils.sdiag(S)
