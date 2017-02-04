@@ -31,7 +31,7 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
 
     def __init__(self, h, x0=None, cartesianOrigin=None):
         BaseTensorMesh.__init__(self, h, x0)
-        assert self.hy.sum() == 2*np.pi, "The 2nd dimension must sum to 2*pi"
+        assert np.abs(self.hy.sum() - 2*np.pi) < 1e-10, "The 2nd dimension must sum to 2*pi"
         if self.dim == 2:
             print('Warning, a disk mesh has not been tested thoroughly.')
         cartesianOrigin = (np.zeros(self.dim) if cartesianOrigin is None
@@ -53,7 +53,7 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
         :rtype: int
         :return: nNx
         """
-        if self.isSymmetric:
+        if self.isSymmetric is True:
             return self.nCx
         return self.nCx + 1
 
@@ -65,7 +65,7 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
         :rtype: int
         :return: nNy
         """
-        if self.isSymmetric:
+        if self.isSymmetric is True:
             return 0
         return self.nCy
 
@@ -98,7 +98,7 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
         :rtype: numpy.array
         :return: vnEz or None if nCy > 1, (dim, )
         """
-        if self.isSymmetric:
+        if self.isSymmetric is True:
             return np.r_[self.nNx, self.nNy, self.nCz]
         else:
             return None
@@ -111,7 +111,7 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
         :rtype: int
         :return: nEz
         """
-        if self.isSymmetric:
+        if self.isSymmetric is True:
             return self.vnEz.prod()
         return (np.r_[self.nNx-1, self.nNy, self.nCz]).prod() + self.nCz
 
@@ -123,25 +123,25 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
     @property
     def vectorCCy(self):
         """Cell-centered grid vector (1D) in the y direction."""
-        if self.isSymmetric:
+        if self.isSymmetric is True:
             return np.r_[0, self.hy[:-1]]
         return np.r_[0, self.hy[:-1].cumsum()] + self.hy*0.5
 
     @property
     def vectorNx(self):
         """Nodal grid vector (1D) in the x direction."""
-        if self.isSymmetric:
+        if self.isSymmetric is True:
             return self.hx.cumsum()
         return np.r_[0, self.hx].cumsum()
 
     @property
     def vectorNy(self):
         """Nodal grid vector (1D) in the y direction."""
-        if self.isSymmetric:
+        if self.isSymmetric is True:
             # There aren't really any nodes, but all the grids need
             # somewhere to live, why not zero?!
             return np.r_[0]
-        return np.r_[0, self.hy[:-1].cumsum()] + self.hy[0]*0.5
+        return np.r_[0, self.hy[:-1].cumsum()]
 
     @property
     def vectorNz(self):
@@ -151,7 +151,7 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
     def edge(self):
         """Edge lengths"""
         if getattr(self, '_edge', None) is None:
-            if self.isSymmetric:
+            if self.isSymmetric is True:
                 self._edge = 2*pi*self.gridN[:, 0]
             else:
                 raise NotImplementedError(
@@ -166,7 +166,7 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
     def area(self):
         """Face areas"""
         if getattr(self, '_area', None) is None:
-            if self.isSymmetric:
+            if self.isSymmetric is True:
                 areaR = np.kron(self.hz, 2*pi*self.vectorNx)
                 areaZ = np.kron(
                     np.ones_like(self.vectorNz), pi*(self.vectorNx**2 -
@@ -189,7 +189,7 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
     def vol(self):
         """Volume of each cell"""
         if getattr(self, '_vol', None) is None:
-            if self.isSymmetric:
+            if self.isSymmetric is True:
                 az = pi*(self.vectorNx**2 - np.r_[0, self.vectorNx[:-1]]**2)
                 self._vol = np.kron(self.hz, az)
             else:
@@ -208,7 +208,7 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
     @property
     def gridFx(self):
         if getattr(self, '_gridFx', None) is None:
-            if self.isSymmetric:
+            if self.isSymmetric is True:
                 return super(CylMesh, self).gridFx
             else:
                 self._gridFx = utils.ndgrid([
@@ -219,7 +219,7 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
     @property
     def gridFy(self):
         if getattr(self, '_gridFy', None) is None:
-            if self.isSymmetric:
+            if self.isSymmetric is True:
                 return super(CylMesh, self).gridFy
             else:
                 self._gridFy = utils.ndgrid([
@@ -240,7 +240,7 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
             # Compute faceDivergence operator on faces
             D1 = self.faceDivx
             D3 = self.faceDivz
-            if self.isSymmetric:
+            if self.isSymmetric is True:
                 D = sp.hstack((D1, D3), format="csr")
             elif self.nCy > 1:
                 D2 = self.faceDivy
@@ -319,7 +319,7 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
     def nodalGrad(self):
         """Construct gradient operator (nodes to edges)."""
         # Nodal grad does not make sense for cylindrically symmetric mesh.
-        if self.isSymmetric:
+        if self.isSymmetric is True:
             return None
         raise NotImplementedError('nodalGrad not yet implemented')
 
@@ -332,24 +332,30 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
     def edgeCurl(self):
         """The edgeCurl property."""
         if self.nCy > 1:
-            raise NotImplementedError('Edge curl not yet implemented for '
-                                      'nCy > 1')
+            raise NotImplementedError(
+                'Edge curl not yet implemented for nCy > 1')
         if getattr(self, '_edgeCurl', None) is None:
+            if self.isSymmetric is True:
             # 1D Difference matricies
-            dr = sp.spdiags((np.ones((self.nCx+1, 1))*[-1, 1]).T, [-1, 0],
-                            self.nCx, self.nCx, format="csr")
-            dz = sp.spdiags((np.ones((self.nCz+1, 1))*[-1, 1]).T, [0, 1],
-                            self.nCz, self.nCz+1, format="csr")
+                dr = sp.spdiags(
+                    (np.ones((self.nCx+1, 1))*[-1, 1]).T, [-1, 0],
+                    self.nCx, self.nCx, format="csr"
+                )
+                dz = sp.spdiags(
+                    (np.ones((self.nCz+1, 1))*[-1, 1]).T, [0, 1],
+                    self.nCz, self.nCz+1, format="csr"
+                )
 
-            # 2D Difference matricies
-            Dr = sp.kron(sp.identity(self.nNz), dr)
-            Dz = -sp.kron(dz, sp.identity(self.nCx))
+                # 2D Difference matricies
+                Dr = sp.kron(sp.identity(self.nNz), dr)
+                Dz = -sp.kron(dz, sp.identity(self.nCx))
 
-            A = self.area
-            E = self.edge
-            # Edge curl operator
-            self._edgeCurl = (utils.sdiag(1/A)*sp.vstack((Dz, Dr)) *
-                              utils.sdiag(E))
+                A = self.area
+                E = self.edge
+                # Edge curl operator
+                self._edgeCurl = (
+                    utils.sdiag(1/A)*sp.vstack((Dz, Dr)) * utils.sdiag(E)
+                )
         return self._edgeCurl
 
     @property
@@ -358,7 +364,7 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
         if getattr(self, '_aveE2CC', None) is None:
             # The number of cell centers in each direction
             n = self.vnC
-            if self.isSymmetric:
+            if self.isSymmetric is True:
                 avR = utils.av(n[0])[:, 1:]
                 avR[0, 0] = 1.
                 self._aveE2CC = sp.kron(utils.av(n[2]), avR, format="csr")
@@ -383,7 +389,7 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
         if getattr(self, '_aveE2CCV', None) is None:
             # The number of cell centers in each direction
             n = self.vnC
-            if self.isSymmetric:
+            if self.isSymmetric is True:
                 return self.aveE2CC
             else:
                 raise NotImplementedError('wrapping in the averaging is not '
@@ -395,7 +401,7 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
         "Construct the averaging operator on cell faces to cell centers."
         if getattr(self, '_aveF2CC', None) is None:
             n = self.vnC
-            if self.isSymmetric:
+            if self.isSymmetric is True:
                 avR = utils.av(n[0])[:, 1:]
                 avR[0, 0] = 1.
                 self._aveF2CC = ((0.5)*sp.hstack((sp.kron(utils.speye(n[2]),
@@ -423,7 +429,7 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
         "Construct the averaging operator on cell faces to cell centers."
         if getattr(self, '_aveF2CCV', None) is None:
             n = self.vnC
-            if self.isSymmetric:
+            if self.isSymmetric is True:
                 avR = utils.av(n[0])[:, 1:]
                 avR[0, 0] = 1.
                 self._aveF2CCV = sp.block_diag((sp.kron(utils.speye(n[2]),

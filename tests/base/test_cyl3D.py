@@ -64,17 +64,17 @@ class TestFaceDiv3D(Tests.OrderTest):
     name = "FaceDiv"
     meshTypes = MESHTYPES
     meshDimension = 3
-    meshSizes = [16, 32, 64]
+    meshSizes = [8, 16, 32, 64]
 
     def getError(self):
 
         funR = lambda r, t, z: np.sin(2.*np.pi*r)
-        funT = lambda r, t, z: r * np.sin(2*t)
+        funT = lambda r, t, z: r*np.exp(-r)*np.sin(t) #* np.sin(2.*np.pi*r)
         funZ = lambda r, t, z: np.sin(2.*np.pi*z)
 
         sol = lambda r, t, z: (
             (2*np.pi*r*np.cos(2*np.pi*r) + np.sin(2*np.pi*r))/r +
-            2*np.cos(2*t) +
+            np.exp(-r)*np.cos(t) +
             2*np.pi*np.cos(2*np.pi*z)
         )
 
