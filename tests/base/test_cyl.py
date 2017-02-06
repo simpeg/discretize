@@ -623,7 +623,7 @@ class TestCyl3DMesh(unittest.TestCase):
     def test_vectorsN(self):
         v = np.r_[0, 1, 2, 2.5]
         self.assertTrue(np.linalg.norm((v-self.mesh.vectorNx)) == 0)
-        v = np.r_[np.pi/2, 1.5*np.pi]
+        v = np.r_[0., np.pi]
         self.assertTrue(np.linalg.norm((v-self.mesh.vectorNy)) == 0)
         v = np.r_[0, 2, 3]
         self.assertTrue(np.linalg.norm((v-self.mesh.vectorNz)) == 0)
