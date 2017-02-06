@@ -331,10 +331,13 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
     @property
     def edgeCurl(self):
         """The edgeCurl property."""
-        if self.nCy > 1:
-            raise NotImplementedError(
-                'Edge curl not yet implemented for nCy > 1')
+        # if self.nCy > 1:
+        #     raise NotImplementedError(
+        #         'Edge curl not yet implemented for nCy > 1')
         if getattr(self, '_edgeCurl', None) is None:
+            A = self.area
+            E = self.edge
+
             if self.isSymmetric is True:
             # 1D Difference matricies
                 dr = sp.spdiags(
@@ -345,17 +348,25 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
                     (np.ones((self.nCz+1, 1))*[-1, 1]).T, [0, 1],
                     self.nCz, self.nCz+1, format="csr"
                 )
-
                 # 2D Difference matricies
                 Dr = sp.kron(sp.identity(self.nNz), dr)
                 Dz = -sp.kron(dz, sp.identity(self.nCx))
 
-                A = self.area
-                E = self.edge
                 # Edge curl operator
                 self._edgeCurl = (
                     utils.sdiag(1/A)*sp.vstack((Dz, Dr)) * utils.sdiag(E)
                 )
+            else:
+                # curl R
+                vnC = self.vnC
+                OR = utils.spzeros()
+                D00 = kron3(speye(n[0], ddx))
+
+                # curl T
+                dt = sp.spdiags(
+                    (np.ones(self.nCy+1, 1)*[-1, 1]).T, diags, m, n
+                )
+
         return self._edgeCurl
 
     @property
