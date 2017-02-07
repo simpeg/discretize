@@ -154,12 +154,18 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
             if self.isSymmetric is True:
                 self._edge = 2*pi*self.gridN[:, 0]
             else:
-                raise NotImplementedError(
-                    'edges not yet implemented for 3D cyl mesh'
+                edgeR = np.kron(
+                    np.ones(self.vnC[2]+1),
+                    np.kron(np.ones(self.vnC[1]), self.hx)
                 )
-                # edgeR =
-                # edgeT =
-                # edgeZ =
+                edgeT = np.kron(
+                    np.ones(self.vnC[2]+1),
+                    np.kron(self.hy, self.vectorNx[1:])
+                )
+                edgeZ = np.kron(
+                    self.hz, np.ones(self.vnC[:2].prod()+1)
+                )
+                self._edge = np.hstack([edgeR, edgeT, edgeZ])
         return self._edge
 
     @property
@@ -226,6 +232,36 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
                     self.vectorCCx, self.vectorNy, self.vectorCCz
                 ])
         return self._gridFy
+
+    @property
+    def gridEy(self):
+        if getattr(self, '_gridEy', None) is None:
+            if self.isSymmetric is True:
+                return super(CylMesh, self).gridEy
+            else:
+                self._gridEy = utils.ndgrid([
+                    self.vectorNx[1:], self.vectorCCy, self.vectorNz
+                ])
+        return self._gridEy
+
+    @property
+    def gridEz(self):
+        if getattr(self, '_gridEz', None) is None:
+            if self.isSymmetric is True:
+                return super(CylMesh, self).gridEz
+            else:
+                gridEz = super(CylMesh, self).gridEz
+
+                removeme = np.arange(self.vnN[0], self.vnN[:2].prod(), step=self.vnN[0])
+                keepme = np.ones(self.vnN[:2].prod(), dtype=bool)
+                keepme[removeme] = False
+
+                eye = sp.eye(self.vnN[:2].prod())
+                eye = eye.tocsr()[keepme, :]
+                keepme = sp.kron(utils.speye(self.nCz), eye)
+
+                self._gridEz = keepme * gridEz
+        return self._gridEz
 
 
     ####################################################
@@ -357,14 +393,65 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
                     utils.sdiag(1/A)*sp.vstack((Dz, Dr)) * utils.sdiag(E)
                 )
             else:
-                # curl R
-                vnC = self.vnC
-                OR = utils.spzeros()
-                D00 = kron3(speye(n[0], ddx))
+                ### Curl that lands on R-faces ###
+                # Theta contribution
+                Dt_r = utils.kron3(
+                    utils.ddx(self.nCz),
+                    utils.speye(self.nCy),
+                    utils.speye(self.nCx)
+                )
+                ddxz = utils.ddx(self.nCy)[:,:-1] + sp.csr_matrix((np.r_[1.], (np.r_[self.nCy-1], np.r_[0])), shape=(self.nCy, self.nCy))
+                # ddxz = sp.hstack([utils.spzeros(self.nCy, 1), ddxz])
 
-                # curl T
-                dt = sp.spdiags(
-                    (np.ones(self.nCy+1, 1)*[-1, 1]).T, diags, m, n
+                Dz_r = sp.kron(ddxz, utils.speye(self.nCx))
+                Dz_r = sp.hstack([utils.spzeros(self.vnC[:2].prod(), 1), Dz_r])
+                Dz_r = sp.kron(utils.speye(self.nCz), Dz_r)
+
+
+                # Zeros of the right size
+                O1 = utils.spzeros(self.nFx, self.nEx)
+
+                # R-contribution to Curl
+                Cr = sp.hstack((O1, -Dt_r, Dz_r))
+
+                ### Curl that lands on T-faces ###
+                # contribution from R
+                Dr_t = utils.kron3(utils.ddx(self.nCz), utils.speye(self.nCy), utils.speye(self.nCx))
+
+                # Zeros of the right size
+                O2 = utils.spzeros(self.nFy, self.nEy)
+
+                # contribution from Z
+                ddxr = utils.ddx(self.nCx)
+                Ddxr = sp.kron(utils.speye(self.nCy), ddxr[:,1:])
+                wrap_z = sp.csr_matrix((-1*np.ones(self.nCy), (np.arange(0, self.vnC[:2].prod(), step=self.vnC[0]), np.zeros(self.nCy))), shape=(self.vnC[:2].prod(), 1))
+                Dz_t = sp.kron(utils.speye(self.nCz), sp.hstack([wrap_z, Ddxr]))
+
+                # T-contribution to the Curl
+                Ct = sp.hstack((Dr_t, O2, -Dz_t))
+
+                ### Curl that lands on the Z-faces ###
+                # contribution from R
+                ddxz = utils.ddx(self.nCy)[:,:-1] + sp.csr_matrix((np.r_[1.], (np.r_[self.nCy-1], np.r_[0])), shape=(self.nCy, self.nCy))
+                Dr_z = utils.kron3(ddxz, utils.speye(self.nCz+1), utils.speye(self.nCx))
+                # = sp.kron(utils.speye(self.nCz+1), ddxz)
+
+                # contribution from T
+                ddxt = utils.ddx(self.nCx)[:,1:]
+                Dt_z = utils.kron3(
+                    utils.speye(self.nCz+1), utils.speye(self.nCy), ddxt
+                )
+
+                # Zeros of the right size
+                O3 = utils.spzeros(self.nFz, self.nEz)
+
+                # Z contribution to the curl
+                Cz = sp.hstack((-Dr_z, Dt_z, O3))
+
+                self._edgeCurl = (
+                    utils.sdiag(1/A) *
+                    sp.vstack([Cr, Ct, Cz], format="csr") *
+                    utils.sdiag(E)
                 )
 
         return self._edgeCurl
@@ -380,8 +467,9 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
                 avR[0, 0] = 1.
                 self._aveE2CC = sp.kron(utils.av(n[2]), avR, format="csr")
             else:
-                raise NotImplementedError('wrapping in the averaging is not '
-                                          'yet implemented')
+                raise NotImplementedError(
+                    'wrapping in the averaging is not yet implemented'
+                )
                 # self._aveE2CC = (1./3)*sp.hstack((utils.kron3(utils.av(n[2]),
                 #                                               utils.av(n[1]),
                 #                                               utils.speye(n[0])),
@@ -505,35 +593,43 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
             the cartesian grid.
         """
 
-        assert self.isSymmetric, ("Currently we have not taken into account "
-                                  "other projections for more complicated "
-                                  "CylMeshes")
+        assert self.isSymmetric, (
+            "Currently we have not taken into account other projections for "
+            "more complicated CylMeshes"
+        )
 
         if locTypeTo is None:
             locTypeTo = locType
 
         if locType == 'F':
             # do this three times for each component
-            X = self.getInterpolationMatCartMesh(Mrect, locType='Fx',
-                                                 locTypeTo=locTypeTo+'x')
-            Y = self.getInterpolationMatCartMesh(Mrect, locType='Fy',
-                                                 locTypeTo=locTypeTo+'y')
-            Z = self.getInterpolationMatCartMesh(Mrect, locType='Fz',
-                                                 locTypeTo=locTypeTo+'z')
+            X = self.getInterpolationMatCartMesh(
+                Mrect, locType='Fx', locTypeTo=locTypeTo+'x'
+            )
+            Y = self.getInterpolationMatCartMesh(
+                Mrect, locType='Fy', locTypeTo=locTypeTo+'y'
+            )
+            Z = self.getInterpolationMatCartMesh(
+                Mrect, locType='Fz', locTypeTo=locTypeTo+'z'
+            )
             return sp.vstack((X, Y, Z))
         if locType == 'E':
-            X = self.getInterpolationMatCartMesh(Mrect, locType='Ex',
-                                                 locTypeTo=locTypeTo+'x')
-            Y = self.getInterpolationMatCartMesh(Mrect, locType='Ey',
-                                                 locTypeTo=locTypeTo+'y')
+            X = self.getInterpolationMatCartMesh(
+                Mrect, locType='Ex', locTypeTo=locTypeTo+'x'
+            )
+            Y = self.getInterpolationMatCartMesh(
+                Mrect, locType='Ey', locTypeTo=locTypeTo+'y'
+            )
             Z = utils.spzeros(getattr(Mrect, 'n' + locTypeTo + 'z'), self.nE)
             return sp.vstack((X, Y, Z))
 
         grid = getattr(Mrect, 'grid' + locTypeTo)
         # This is unit circle stuff, 0 to 2*pi, starting at x-axis, rotating
         # counter clockwise in an x-y slice
-        theta = - np.arctan2(grid[:, 0] - self.cartesianOrigin[0], grid[:, 1] -
-                             self.cartesianOrigin[1]) + np.pi/2
+        theta = - np.arctan2(
+            grid[:, 0] - self.cartesianOrigin[0], grid[:, 1] -
+            self.cartesianOrigin[1]
+        ) + np.pi/2
         theta[theta < 0] += np.pi*2.0
         r = ((grid[:, 0] - self.cartesianOrigin[0])**2 + (grid[:, 1] -
              self.cartesianOrigin[1])**2)**0.5
@@ -542,22 +638,22 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
             G, proj = np.c_[r, theta, grid[:, 2]], np.ones(r.size)
         else:
             dotMe = {
-                        'Fx': Mrect.normals[:Mrect.nFx, :],
-                        'Fy': Mrect.normals[Mrect.nFx:(Mrect.nFx + Mrect.nFy),
-                                            :],
-                        'Fz': Mrect.normals[-Mrect.nFz:, :],
-                        'Ex': Mrect.tangents[:Mrect.nEx, :],
-                        'Ey': Mrect.tangents[Mrect.nEx:(Mrect.nEx+Mrect.nEy),
-                                             :],
-                        'Ez': Mrect.tangents[-Mrect.nEz:, :],
-                    }[locTypeTo]
+                'Fx': Mrect.normals[:Mrect.nFx, :],
+                'Fy': Mrect.normals[Mrect.nFx:(Mrect.nFx + Mrect.nFy), :],
+                'Fz': Mrect.normals[-Mrect.nFz:, :],
+                'Ex': Mrect.tangents[:Mrect.nEx, :],
+                'Ey': Mrect.tangents[Mrect.nEx:(Mrect.nEx+Mrect.nEy), :],
+                'Ez': Mrect.tangents[-Mrect.nEz:, :],
+            }[locTypeTo]
             if 'F' in locType:
-                normals = np.c_[np.cos(theta), np.sin(theta),
-                                np.zeros(theta.size)]
+                normals = np.c_[
+                    np.cos(theta), np.sin(theta), np.zeros(theta.size)
+                ]
                 proj = (normals * dotMe).sum(axis=1)
             if 'E' in locType:
-                tangents = np.c_[-np.sin(theta), np.cos(theta),
-                                 np.zeros(theta.size)]
+                tangents = np.c_[
+                    -np.sin(theta), np.cos(theta), np.zeros(theta.size)
+                ]
                 proj = (tangents * dotMe).sum(axis=1)
             G = np.c_[r, theta, grid[:, 2]]
 

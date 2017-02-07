@@ -34,6 +34,31 @@ class TestCyl3DGeometries(unittest.TestCase):
             )
         )
 
+    def test_edges(self):
+        edge = self.mesh.edge
+        self.assertTrue(self.mesh.nE == len(edge))
+        self.assertTrue(
+            np.all(edge[:self.mesh.vnF[0]] == self.mesh.hx)
+        )
+        self.assertTrue(
+            np.all(
+                self.mesh.edge[self.mesh.vnE[0]:self.mesh.vnE[:2].sum()] ==
+                np.kron(np.ones(self.mesh.nCz+1), self.mesh.hx*self.mesh.hy)
+            )
+        )
+        self.assertTrue(
+            np.all(
+                self.mesh.edge[self.mesh.vnE[0]:self.mesh.vnE[:2].sum()] ==
+                np.kron(np.ones(self.mesh.nCz+1), self.mesh.hx*self.mesh.hy)
+            )
+        )
+        self.assertTrue(
+            np.all(
+                self.mesh.edge[self.mesh.vnE[:2].sum():] ==
+                np.kron(self.mesh.hz, np.ones(self.mesh.nCy+1))
+            )
+        )
+
     def test_vol(self):
         self.assertTrue(
             self.mesh.vol.sum() == np.pi * self.mesh.hx ** 2 * self.mesh.hz
@@ -58,7 +83,11 @@ cylF3 = lambda M, fx, fy, fz: np.vstack((
     cyl_row3(M.gridFy, fx, fy, fz),
     cyl_row3(M.gridFz, fx, fy, fz)
 ))
-
+cylE3 = lambda M, ex, ey, ez: np.vstack((
+    cyl_row3(M.gridEx, ex, ey, ez),
+    cyl_row3(M.gridEy, ex, ey, ez),
+    cyl_row3(M.gridEz, ex, ey, ez)
+))
 
 class TestFaceDiv3D(Tests.OrderTest):
     name = "FaceDiv"
@@ -86,6 +115,50 @@ class TestFaceDiv3D(Tests.OrderTest):
         divF_ana = call3(sol, self.M.gridCC)
 
         err = np.linalg.norm((divF-divF_ana), np.inf)
+        return err
+
+    def test_order(self):
+        self.orderTest()
+
+
+class TestEdgeCurl3D(Tests.OrderTest):
+
+    name = "edgeCurl"
+    meshTypes = MESHTYPES
+    meshDimension = 3
+    meshSizes = [8, 16, 32, 64]
+
+    def getError(self):
+
+        # use the same function in r, t, z
+        fun = lambda r, t, z: (
+            np.sin(2.*np.pi*r) * np.sin(t) * np.sin(2.*np.pi*z)
+        )
+
+        deriv_r = lambda r, t, z: (
+            2*np.pi*np.cos(2.*np.pi*r) * np.sin(t) * np.sin(2.*np.pi*z)
+        )
+        deriv_t = lambda r, t, z: (
+            np.sin(2.*np.pi*r) * np.cos(t) * np.sin(2.*np.pi*z)
+        )
+        deriv_z = lambda r, t, z: (
+            2.*np.pi * np.sin(2.*np.pi*r) * np.sin(t) * np.cos(2.*np.pi*z)
+        )
+
+        sol_r = lambda r, t, z: 1./r * deriv_t(r, t, z) - deriv_z(r, t, z)
+        sol_t = lambda r, t, z: deriv_z(r, t, z) - deriv_r(r, t, z)
+        sol_z = lambda r, t, z: 1/r * (
+            deriv_r(r, t, z) + fun(r, t, z) - deriv_t(r, t, z)
+        )
+
+        Ec = cylE3(self.M, fun, fun, fun)
+        E = self.M.projectEdgeVector(Ec)
+        curlE_num = self.M.edgeCurl * E
+
+        Fc = cylF3(self.M, sol_r, sol_t, sol_z)
+        curlE_ana = self.M.projectFaceVector(Fc)
+
+        err = np.linalg.norm((curlE_num-curlE_ana), np.inf)
         return err
 
     def test_order(self):

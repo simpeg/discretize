@@ -289,7 +289,8 @@ class BaseTensorMesh(BaseMesh):
 
         else:
             raise NotImplementedError(
-                'getInterpolationMat: locType=='+locType+' and mesh.dim=='+str(self.dim)
+                'getInterpolationMat: locType=='+locType+
+                ' and mesh.dim=='+str(self.dim)
             )
 
         if zerosOutside:
@@ -473,10 +474,11 @@ class BaseTensorMesh(BaseMesh):
         if dMdprop is not None:
             def innerProductDeriv(v=None):
                 if v is None:
-                    warnings.warn("Depreciation Warning: "
-                                  "TensorMesh.innerProductDeriv."
-                                  " You should be supplying a vector. "
-                                  "Use: sdiag(u)*dMdprop", FutureWarning)
+                    warnings.warn(
+                        "Depreciation Warning: TensorMesh.innerProductDeriv."
+                        " You should be supplying a vector. "
+                        "Use: sdiag(u)*dMdprop", FutureWarning
+                    )
                     return dMdprop
                 return utils.sdiag(v) * dMdprop
             return innerProductDeriv
@@ -484,8 +486,10 @@ class BaseTensorMesh(BaseMesh):
             return None
 
 
-class TensorMesh(BaseTensorMesh, BaseRectangularMesh, TensorView, DiffOperators,
-      InnerProducts, TensorMeshIO):
+class TensorMesh(
+    BaseTensorMesh, BaseRectangularMesh, TensorView, DiffOperators,
+    InnerProducts, TensorMeshIO
+):
     """
     TensorMesh is a mesh class that deals with tensor product meshes.
 
