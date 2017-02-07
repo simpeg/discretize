@@ -43,11 +43,11 @@ cdef void _get_inds_ws(np.float64_t[:] x, np.float64_t xp, IIFF* out) nogil:
     cdef np.int64_t nx = x.shape[0]
     out.i2 = ind
     out.i1 = ind-1
-    if(out.i2==0): #Then was at or before the first element
+    if(x[0]==xp):
+        out.i2=1
         out.i1=0
-    elif(out.i2>=nx): #Then was after the last element
-        out.i1=nx-1
-        out.i2=nx-1
+    out.i2 = max(min(out.i2,nx-1),0)
+    out.i1 = max(min(out.i1,nx-1),0)
     if(out.i1==out.i2):
         out.w1 = 0.5
     else:
