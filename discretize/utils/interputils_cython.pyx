@@ -37,15 +37,25 @@ cdef np.int64_t _bisect_left(np.float64_t[:] a, np.float64_t x) nogil:
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.nonecheck(False)
+cdef np.int64_t _bisect_right(np.float64_t[:] a, np.float64_t x) nogil:
+    cdef np.int64_t lo, hi, mid
+    lo = 0
+    hi = a.shape[0]
+    while lo < hi:
+      mid = (lo+hi)//2
+      if x < a[mid]: hi = mid
+      else: lo = mid+1
+    return lo
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.nonecheck(False)
 @cython.cdivision(True)
 cdef void _get_inds_ws(np.float64_t[:] x, np.float64_t xp, IIFF* out) nogil:
-    cdef np.int64_t ind = _bisect_left(x,xp)
+    cdef np.int64_t ind = _bisect_right(x,xp)
     cdef np.int64_t nx = x.shape[0]
     out.i2 = ind
     out.i1 = ind-1
-    if(x[0]==xp):
-        out.i2=1
-        out.i1=0
     out.i2 = max(min(out.i2,nx-1),0)
     out.i1 = max(min(out.i1,nx-1),0)
     if(out.i1==out.i2):
