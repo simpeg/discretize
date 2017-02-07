@@ -44,20 +44,20 @@ cdef void _get_inds_ws(np.float64_t[:] x, np.float64_t xp, IIFF* out) nogil:
     if(nx==1):
         out.i1 = 0
         out.i2 = 0
-        out.w1 = 0.5
+        out.w1 = 1.0
     else:
         out.i2 = ind
         if(ind<nx):
             if(ind==0):
                 out.i1 = 0
-                out.w1 = 0.5
+                out.w1 = 1.0
             else:
                 out.i1 = out.i2-1
                 out.w1 = (x[out.i2]-xp)/(x[out.i2]-x[out.i1])
         else:
             out.i2 = nx-1
             out.i1 = nx-1
-            out.w1 = 0.5
+            out.w1 = 1.0
     out.w2 = 1-out.w1
 
 @cython.boundscheck(False)
