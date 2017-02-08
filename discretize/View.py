@@ -47,7 +47,8 @@ class TensorView(object):
         pcolorOpts=None,
         streamOpts=None,
         gridOpts=None,
-        numbering=True, annotationColor='w'
+        numbering=True, annotationColor='w',
+        range_x=None, range_y=None, sample_grid=None
     ):
         """
         Mesh.plotImage(v)
@@ -110,10 +111,13 @@ class TensorView(object):
             ax.set_xlabel("x")
             ax.axis('tight')
         elif self.dim == 2:
-            return self._plotImage2D(v, vType=vType, grid=grid, view=view,
-                                     ax=ax, clim=clim, showIt=showIt,
-                                     pcolorOpts=pcolorOpts, streamOpts=streamOpts,
-                                     gridOpts=gridOpts)
+            return self._plotImage2D(
+                v, vType=vType, grid=grid, view=view,
+                ax=ax, clim=clim, showIt=showIt,
+                pcolorOpts=pcolorOpts, streamOpts=streamOpts,
+                gridOpts=gridOpts, range_x=range_x, range_y=range_y,
+                sample_grid=sample_grid
+            )
         elif self.dim == 3:
             # get copy of image and average to cell-centers is necessary
             if vType == 'CC':
@@ -187,7 +191,8 @@ class TensorView(object):
                   ax=None, clim=None, showIt=False,
                   pcolorOpts=None,
                   streamOpts=None,
-                  gridOpts=None
+                  gridOpts=None,
+                  range_x=None, range_y=None
                   ):
 
         """
@@ -313,7 +318,10 @@ class TensorView(object):
         ax=None, clim=None, showIt=False,
         pcolorOpts=None,
         streamOpts=None,
-        gridOpts=None
+        gridOpts=None,
+        range_x=None,
+        range_y=None,
+        sample_grid=None
     ):
 
         if pcolorOpts is None:
@@ -370,17 +378,57 @@ class TensorView(object):
             # spaced vectors at the moment. So we will
             # Interpolate down to a regular mesh at the
             # smallest mesh size in this 2D slice.
-            nxi = int(self.hx.sum()/self.hx.min())
-            nyi = int(self.hy.sum()/self.hy.min())
-            tMi = self.__class__([np.ones(nxi)*self.hx.sum()/nxi,
-                                  np.ones(nyi)*self.hy.sum()/nyi], self.x0)
+            if sample_grid is not None:
+                hxmin = sample_grid[0]
+                hymin = sample_grid[1]
+            else:
+                hxmin = self.hx.min()
+                hymin = self.hy.min()
+
+            if range_x is not None:
+                dx = (range_x[1] - range_x[0])
+                nxi = int(dx/hxmin)
+                hx = np.ones(nxi)*dx/nxi
+                x0_x = range_x[0]
+            else:
+                nxi = int(self.hx.sum()/hxmin)
+                hx = np.ones(nxi)*self.hx.sum()/nxi
+                x0_x = self.x0[0]
+
+            if range_y is not None:
+                dy = (range_y[1] - range_y[0])
+                nyi = int(dy/hymin)
+                hy = np.ones(nyi)*dy/nyi
+                x0_y = range_y[0]
+            else:
+                nyi = int(self.hy.sum()/hymin)
+                hy = np.ones(nyi)*self.hy.sum()/nyi
+                x0_y = self.x0[1]
+
+            tMi = self.__class__([hx, hy], np.r_[x0_x, x0_y])
             P = self.getInterpolationMat(tMi.gridCC, 'CC', zerosOutside=True)
+
             Ui = tMi.r(P*mkvc(U), 'CC', 'CC', 'M')
             Vi = tMi.r(P*mkvc(V), 'CC', 'CC', 'M')
             # End Interpolation
 
-            out += (ax.pcolormesh(self.vectorNx, self.vectorNy, np.sqrt(U**2+V**2).T, vmin=clim[0], vmax=clim[1], **pcolorOpts), )
-            out += (ax.streamplot(tMi.vectorCCx, tMi.vectorCCy, Ui.T, Vi.T, **streamOpts), )
+            x = self.vectorNx
+            y = self.vectorNy
+
+            ind_CCx = np.ones(self.vnC, dtype=bool)
+            ind_CCy = np.ones(self.vnC, dtype=bool)
+            if range_x is not None:
+                x = tMi.vectorNx
+
+            if range_y is not None:
+                y = tMi.vectorNy
+
+            if range_x is not None or range_y is not None:  # use interpolated values
+                U = Ui
+                V = Vi
+
+            out += (ax.pcolormesh(x, y, np.sqrt(U**2+V**2).T, vmin=clim[0], vmax=clim[1], **pcolorOpts),)
+            out += (ax.streamplot(tMi.vectorCCx, tMi.vectorCCy, Ui.T, Vi.T, **streamOpts),)
 
         if grid:
             xXGrid = np.c_[self.vectorNx, self.vectorNx, np.nan*np.ones(self.nNx)].flatten()
@@ -391,15 +439,27 @@ class TensorView(object):
 
         ax.set_xlabel('x')
         ax.set_ylabel('y')
-        ax.set_xlim(*self.vectorNx[[0, -1]])
-        ax.set_ylim(*self.vectorNy[[0, -1]])
+
+        if range_x is not None:
+            ax.set_xlim(*range_x)
+        else:
+            ax.set_xlim(*self.vectorNx[[0, -1]])
+
+        if range_y is not None:
+            ax.set_ylim(*range_y)
+        else:
+            ax.set_ylim(*self.vectorNy[[0, -1]])
 
         if showIt:
             plt.show()
         return out
 
-    def plotGrid(self, ax=None, nodes=False, faces=False, centers=False, edges=False, lines=True, showIt=False):
-        """Plot the nodal, cell-centered and staggered grids for 1, 2 and 3 dimensions.
+
+    def plotGrid(
+        self, ax=None, nodes=False, faces=False, centers=False, edges=False,
+        lines=True, showIt=False
+    ):
+        """Plot the nodal, cell-centered and staggered grids for 1,2 and 3 dimensions.
 
         :param bool nodes: plot nodes
         :param bool faces: plot faces
@@ -521,15 +581,18 @@ class CylView(object):
         # Just create a TM and use its view.
         from discretize import TensorMesh
 
+        vType = kwargs.pop('vType', None)
+        if vType is not None:
+            if vType.upper() != 'CCV':
+                if vType.upper() == 'F':
+                    val = mkvc(self.aveF2CCV * args[0])
+                    kwargs['vType'] = 'CCv'  # now the vector is cell centered
+                if vType.upper() == 'E':
+                    val = mkvc(self.aveE2CCV * args[0])
+                args = (val,) + args[1:]
+
         mirror = kwargs.pop('mirror', None)
         if mirror is True:
-            if kwargs.get('vType', None) is not None:
-                if kwargs.get('vType', None) != 'CC':
-                    raise NotImplementedError(
-                        'Mirroring has not yet been implemented for non-cell '
-                        'centered values'
-                    )
-
             # create a mirrored mesh
             hx = np.hstack([np.flipud(self.hx), self.hx])
             x00 = self.x0[0] - self.hx.sum()
@@ -537,19 +600,36 @@ class CylView(object):
 
             # mirror the data
             if len(args) > 0:
-                tmp = args[0].reshape(self.vnC[0], self.vnC[2], order='F')
-                tmp = mkvc(np.vstack([np.flipud(tmp), tmp]))
-                args = (tmp, ) + args[1:]
+                val = args[0]
+
+            if len(val) == self.nC:  # only a single value at cell centers
+                val = val.reshape(self.vnC[0], self.vnC[2], order='F')
+                val = mkvc(np.vstack([np.flipud(val), val]))
+
+            elif len(val) == 2*self.nC:
+                val_x = val[:self.nC]
+                val_z = val[self.nC:]
+
+                val_x = val_x.reshape(self.vnC[0], self.vnC[2], order='F')
+                val_x = mkvc(np.vstack([-1.*np.flipud(val_x), val_x])) # by symmetry
+
+                val_z = val_z.reshape(self.vnC[0], self.vnC[2], order='F')
+                val_z = mkvc(np.vstack([np.flipud(val_z), val_z]))
+
+                val = np.hstack([val_x, val_z])
+
+            args = (val,) + args[1:]
         else:
             M = TensorMesh([self.hx, self.hz], x0=[self.x0[0], self.x0[2]])
 
         ax = kwargs.get('ax', None)
         if ax is None:
-            plt.figure()
+            fig = plt.figure()
             ax = plt.subplot(111)
             kwargs['ax'] = ax
         else:
             assert isinstance(ax, matplotlib.axes.Axes), "ax must be an matplotlib.axes.Axes"
+            fig = ax.figure
 
         # Don't show things in the TM.plotImage
         showIt = kwargs.get('showIt', False)
@@ -674,7 +754,9 @@ class CurviView(object):
         if showIt:
             plt.show()
 
-    def plotImage(self, I, ax=None, showIt=False, grid=False, clim=None):
+    def plotImage(
+        self, I, ax=None, showIt=False, grid=False, clim=None
+    ):
         if self.dim == 3:
             raise NotImplementedError('This is not yet done!')
 
