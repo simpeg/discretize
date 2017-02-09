@@ -294,8 +294,8 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
             D1 = utils.kron3(
                 utils.speye(self.nCz),
                 utils.speye(self.nCy),
-                utils.ddx(self.nCx)[:,1:]
-            )
+                utils.ddx(self.nCx)
+            ) * self._deflationMatrix('Fx')
             S = self.r(self.area, 'F', 'Fx', 'V')
             V = self.vol
             self._faceDivx = utils.sdiag(1/V)*D1*utils.sdiag(S)
@@ -308,22 +308,14 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
         (face-stg to cell-centres).
         """
         # raise NotImplementedError(
-        #     'Wrapping the utils.ddx is not yet implemented.')
         if getattr(self, '_faceDivy', None) is None:
             # TODO: this needs to wrap to join up faces which are
             # connected in the cylinder
-            dTheta = (
-                utils.ddx(self.nCy)[:,:-1] +
-                sp.csr_matrix(
-                    (np.r_[1.], (np.r_[self.nCy-1], np.r_[0])),
-                    shape=(self.nCy, self.nCy)
-                )
-            )
             D2 = utils.kron3(
                 utils.speye(self.nCz),
-                dTheta,
+                utils.ddx(self.nCy),
                 utils.speye(self.nCx)
-            )
+            ) * self._deflationMatrix('Fy')
             S = self.r(self.area, 'F', 'Fy', 'V')
             V = self.vol
             self._faceDivy = utils.sdiag(1/V)*D2*utils.sdiag(S)
@@ -541,6 +533,50 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
                                           'yet implemented')
         return self._aveF2CCV
 
+
+    ####################################################
+    # Deflation Matrices
+    ####################################################
+
+    def _deflationMatrix(self, location):
+        assert(
+            location in ['N','F','Fx','Fy','E','Ex','Ey'] + (
+                ['Fz','Ez'] if self.dim == 3 else []
+            )
+        )
+
+        wrap_theta = sp.csr_matrix(
+            (
+                [1]*(self.vnC[1] + 1),
+                (np.arange(0, self.vnC[1]+1), np.hstack((np.arange(0, self.vnC[1]), [0])) )
+            ),
+            shape=(self.vnC[1]+1, self.vnC[1])
+        )
+
+        collapse_x = sp.csr_matrix(
+            (
+                [1]*self.vnC[0],
+                (np.arange(1, self.vnC[0]+1), np.arange(0, self.vnC[0]))), shape=(self.vnC[0]+1, self.vnC[0])
+        )
+
+        if location == 'Fx':
+            return utils.kron3(
+                utils.speye(self.vnC[2]), utils.speye(self.vnC[1]), collapse_x
+            )
+
+        elif location == 'Fy':
+            return utils.kron3(
+                utils.speye(self.vnC[2]),
+                wrap_theta,
+                utils.speye(self.vnC[0])
+            )
+        elif location == 'Fz':
+            return utils.speye(self.vnF[2])
+
+
+    ####################################################
+    # Interpolation
+    ####################################################
 
     def getInterpolationMat(self, loc, locType='CC', zerosOutside=False):
         """ Produces interpolation matrix
