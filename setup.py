@@ -1,101 +1,74 @@
 #!/usr/bin/env python
-"""SimPEG: Simulation and Parameter Estimation in Geophysics
+from __future__ import print_function
+"""discretize
 
-SimPEG is a python package for simulation and gradient based
-parameter estimation in the context of geophysical applications.
+Discretization tools for finite volume and inverse problems.
 """
 
-import numpy as np
+from setuptools import find_packages
+from numpy.distutils.core import setup
 
 import os
 import sys
-import subprocess
+import numpy
 
-from distutils.core import setup
-from setuptools import find_packages
-from distutils.extension import Extension
 
 CLASSIFIERS = [
-'Development Status :: 4 - Beta',
-'Intended Audience :: Developers',
-'Intended Audience :: Science/Research',
-'License :: OSI Approved :: MIT License',
-'Programming Language :: Python',
-'Topic :: Scientific/Engineering',
-'Topic :: Scientific/Engineering :: Mathematics',
-'Topic :: Scientific/Engineering :: Physics',
-'Operating System :: Microsoft :: Windows',
-'Operating System :: POSIX',
-'Operating System :: Unix',
-'Operating System :: MacOS',
-'Natural Language :: English',
+    'Development Status :: 4 - Beta',
+    'Intended Audience :: Developers',
+    'Intended Audience :: Science/Research',
+    'License :: OSI Approved :: MIT License',
+    'Programming Language :: Python',
+    'Topic :: Scientific/Engineering',
+    'Topic :: Scientific/Engineering :: Mathematics',
+    'Topic :: Scientific/Engineering :: Physics',
+    'Operating System :: Microsoft :: Windows',
+    'Operating System :: POSIX',
+    'Operating System :: Unix',
+    'Operating System :: MacOS',
+    'Natural Language :: English',
 ]
-
-args = sys.argv[1:]
-
-# Make a `cleanall` rule to get rid of intermediate and library files
-if "cleanall" in args:
-    print "Deleting cython files..."
-    # Just in case the build directory was created by accident,
-    # note that shell=True should be OK here because the command is constant.
-    subprocess.Popen("rm -rf build", shell=True, executable="/bin/bash")
-    subprocess.Popen("find . -name \*.c -type f -delete", shell=True, executable="/bin/bash")
-    subprocess.Popen("find . -name \*.so -type f -delete", shell=True, executable="/bin/bash")
-    # Now do a normal clean
-    sys.argv[sys.argv.index('cleanall')] = "clean"
-
-# We want to always use build_ext --inplace
-if args.count("build_ext") > 0 and args.count("--inplace") == 0:
-    sys.argv.insert(sys.argv.index("build_ext")+1, "--inplace")
-
-try:
-    from Cython.Build import cythonize
-    from Cython.Distutils import build_ext
-    cythonKwargs = dict(cmdclass={'build_ext': build_ext})
-    USE_CYTHON = True
-except Exception, e:
-    USE_CYTHON = False
-    cythonKwargs = dict()
-
-ext = '.pyx' if USE_CYTHON else '.c'
-
-cython_files = [
-                    "SimPEG/Utils/interputils_cython",
-                    "SimPEG/Mesh/TreeUtils"
-               ]
-extensions = [Extension(f, [f+ext]) for f in cython_files]
-scripts = [f+'.pyx' for f in cython_files]
-
-if USE_CYTHON and "cleanall" not in args:
-    from Cython.Build import cythonize
-    extensions = cythonize(extensions)
-
-import os, os.path
 
 with open("README.rst") as f:
     LONG_DESCRIPTION = ''.join(f.readlines())
 
+
+def configuration(parent_package='', top_path=None):
+    from numpy.distutils.misc_util import Configuration
+
+    config = Configuration(None, parent_package, top_path)
+    config.set_options(ignore_setup_xxx_py=True,
+                       assume_default_configuration=True,
+                       delegate_options_to_subpackages=True,
+                       quiet=True)
+
+    config.add_subpackage('discretize')
+
+    return config
+
 setup(
-    name = "SimPEG",
-    version = "0.1.9",
-    packages = find_packages(),
-    install_requires = ['numpy>=1.7',
-                        'scipy>=0.13',
-                        'Cython'
-                       ],
-    author = "Rowan Cockett",
-    author_email = "rowan@3ptscience.com",
-    description = "SimPEG: Simulation and Parameter Estimation in Geophysics",
-    long_description = LONG_DESCRIPTION,
-    license = "MIT",
-    keywords = "geophysics inverse problem",
-    url = "http://simpeg.xyz/",
-    download_url = "http://github.com/simpeg/simpeg",
+    name="discretize",
+    version="0.1.2",
+    install_requires=[
+        'numpy>=1.7',
+        'scipy>=0.13',
+        'cython',
+        'ipython',
+        'matplotlib',
+        'pymatsolver>=0.1.2',
+        'properties[math]'
+    ],
+    author="Rowan Cockett",
+    author_email="rowanc1@gmail.com",
+    description="Discretization tools for finite volume and inverse problems",
+    long_description=LONG_DESCRIPTION,
+    license="MIT",
+    keywords="finite volume, discretization, pde, ode",
+    url="http://simpeg.xyz/",
+    download_url="http://github.com/simpeg/discretize",
     classifiers=CLASSIFIERS,
-    platforms = ["Windows", "Linux", "Solaris", "Mac OS-X", "Unix"],
-    use_2to3 = False,
-    include_dirs=[np.get_include()],
-    ext_modules = extensions,
-    scripts=scripts,
-    **cythonKwargs
+    platforms=["Windows", "Linux", "Solaris", "Mac OS-X", "Unix"],
+    use_2to3=False,
+    setup_requires=['numpy'],
+    configuration=configuration
 )

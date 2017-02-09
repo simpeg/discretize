@@ -1,0 +1,39 @@
+# AppVeyor.com is a Continuous Integration service to build and run tests under Windows
+
+build: off
+
+environment:
+  matrix:
+    # - PYTHON: 2.7
+    #   MINICONDA: C:\Miniconda
+    - PYTHON: 3.5
+      MINICONDA: C:\Miniconda3
+
+init:
+  - "ECHO %PYTHON% %MINICONDA%"
+
+install:
+  - "set PATH=%MINICONDA%;%MINICONDA%\\Scripts;%PATH%"
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  - conda info -a
+  - "conda create -q -n test-environment python=%PYTHON% numpy scipy matplotlib cython ipython pillow"
+  - activate test-environment
+  - pip install -r requirements_dev.txt
+  - python setup.py install
+
+test_script:
+  - cd tests
+  - nosetests base tree -v -s
+  - cd ..
+
+after_test:
+  # This step builds your wheels.
+  # Again, you only need build.cmd if you're building C extensions for
+  # 64-bit Python 3.3/3.4. And you need to use %PYTHON% to get the correct
+  # interpreter
+  - python setup.py bdist_wheel
+
+artifacts:
+  # bdist_wheel puts your built wheel in the dist directory
+  - path: dist\*

@@ -1,56 +1,40 @@
 language: python
 python:
-  - 2.7
+- 2.7
+- 3.5
+- 3.6
+matrix:
+  allow_failures:
+    - python: 3.6
 
 sudo: false
 
-addons:
-  apt:
-    packages:
-    - gcc
-    - gfortran
-    - libopenmpi-dev
-    - libmumps-seq-dev
-    - libblas-dev
-    - liblapack-dev
-
-env:
-    - TEST_DIR="tests/mesh tests/base tests/utils"
-    - TEST_DIR=tests/em/fdem/inverse/derivs
-    - TEST_DIR=tests/em/tdem
-    - TEST_DIR=tests/flow
-    - TEST_DIR=tests/examples
-    - TEST_DIR=tests/em/fdem/inverse/adjoint
-    - TEST_DIR=tests/em/fdem/forward
-
-# Setup anaconda
 before_install:
-  - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then wget http://repo.continuum.io/miniconda/Miniconda-3.8.3-Linux-x86_64.sh -O miniconda.sh; else wget http://repo.continuum.io/miniconda/Miniconda3-3.8.3-Linux-x86_64.sh -O miniconda.sh; fi
+  - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then
+      wget http://repo.continuum.io/miniconda/Miniconda-3.8.3-Linux-x86_64.sh -O miniconda.sh;
+    else
+      wget http://repo.continuum.io/miniconda/Miniconda3-3.8.3-Linux-x86_64.sh -O miniconda.sh;
+    fi
   - chmod +x miniconda.sh
-  - ./miniconda.sh -b
+  - ./miniconda.sh -b -p $HOME/miniconda
   - export PATH=/home/travis/anaconda/bin:/home/travis/miniconda/bin:$PATH
   - conda update --yes conda
 
-# Install packages
 install:
-  - conda install --yes pip python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib cython ipython nose vtk
-  - pip install nose-cov python-coveralls
-
-  - git clone https://github.com/rowanc1/pymatsolver.git
-  - cd pymatsolver; python setup.py install; cd ..
-
+  - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then
+      conda install --yes pip python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib pillow cython ipython vtk;
+    else
+      conda install --yes pip python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib pillow cython ipython;
+    fi
+  - pip install -r requirements_dev.txt
   - python setup.py install
-  - python setup.py build_ext --inplace
+  - make build
 
-# Run test
 script:
-  - nosetests $TEST_DIR --with-cov --cov SimPEG --cov-config .coveragerc -v -s
+  - nosetests tests/base tests/tree tests/docs --with-cov --cov discretize --cov-config .coveragerc -v -s;
 
-# Calculate coverage
 after_success:
-  - coveralls --config_file .coveragerc
+  - bash <(curl -s https://codecov.io/bash)
 
 notifications:
-  email:
-    - rowanc1@gmail.com
-    - lindseyheagy@gmail.com
+  slack: simpeg:1KZq5giMtlJJ58TijIPgqf7n
