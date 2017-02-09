@@ -1,1 +1,2 @@
-include *.rst *.c *.pyx LICENSE
+include *.rst LICENSE
+global-include *.pyx
