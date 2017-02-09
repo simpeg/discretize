@@ -83,13 +83,7 @@ import numpy as np
 import scipy.sparse as sp
 
 from discretize import utils
-
-try:
-    from . import TreeUtils
-    _IMPORT_TREEUTILS = True
-except Exception:
-    _IMPORT_TREEUTILS = False
-
+from . import TreeUtils
 
 from .InnerProducts import InnerProducts
 from .TensorMesh import TensorMesh, BaseTensorMesh
@@ -105,13 +99,8 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
     _meshType = 'TREE'
 
     def __init__(self, h, x0=None, levels=None):
-        if not _IMPORT_TREEUTILS:
-            raise Exception(
-                'Could not import the Cython code to run the '
-                'TreeMesh Try:.\n\npython setup.py build_ext --inplace'
-            )
         assert type(h) is list, 'h must be a list'
-        assert len(h) in [2, 3], "There is only support for TreeMesh in 2D or 3D."
+        assert len(h) in [2, 3], "TreeMesh is only in 2D or 3D."
 
         BaseTensorMesh.__init__(self, h, x0)
 
@@ -370,7 +359,8 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
     @property
     def ntEy(self):
-        if self.dim == 2:return self.ntFx
+        if self.dim == 2:
+            return self.ntFx
         self.number()
         return len(self._edgesY)
 
@@ -389,13 +379,13 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
     @property
     def permuteCC(self):
-        #TODO: cache these?
+        # TODO: cache these?
         P  = SortGrid(self.gridCC)
         return sp.identity(self.nC).tocsr()[P,:]
 
     @property
     def permuteF(self):
-        #TODO: cache these?
+        # TODO: cache these?
         P = SortGrid(self.gridFx)
         P += SortGrid(self.gridFy, offset=self.nFx)
         if self.dim == 3:
@@ -404,16 +394,16 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
     @property
     def permuteE(self):
-        #TODO: cache these?
+        # TODO: cache these?
         if self.dim == 2:
             P = SortGrid(self.gridFy)
             P += SortGrid(self.gridFx, offset=self.nEx)
-            return sp.identity(self.nE).tocsr()[P,:]
+            return sp.identity(self.nE).tocsr()[P, :]
         if self.dim == 3:
             P = SortGrid(self.gridEx)
             P += SortGrid(self.gridEy, offset=self.nEx)
             P += SortGrid(self.gridEz, offset=self.nEx+self.nEy)
-            return sp.identity(self.nE).tocsr()[P,:]
+            return sp.identity(self.nE).tocsr()[P, :]
 
     def _index(self, pointer):
         assert len(pointer) is self.dim+1
