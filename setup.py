@@ -55,7 +55,7 @@ setup(
         'cython',
         'ipython',
         'matplotlib',
-        'pymatsolver>=0.1.3b0',
+        'pymatsolver>=0.1.2',
         'properties[math]'
     ],
     author="Rowan Cockett",
