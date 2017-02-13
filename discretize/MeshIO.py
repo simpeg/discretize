@@ -338,7 +338,7 @@ class TreeMeshIO(object):
             delimiter='\n', comments='!')
         # Extract the data
         nCunderMesh = np.array(fileLines[0].
-            split('!')[0].split(), dtype=float)
+            split('!')[0].split(), dtype=int)
         # I think this is the case?
         # Format of file changed... First 3 values are the # of cells in the
         # underlying mesh and remaining 6 values are padding for the core region.
