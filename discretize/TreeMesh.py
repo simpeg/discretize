@@ -1947,8 +1947,9 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
                     newJ = [numberer[cell], numberer[plusFace]]
                 I += [ii]*len(newJ)
                 J += newJ
-                V += weights
+                V += [weights]
 
+            V = np.hstack(V)
             components[ind] = sp.csr_matrix((V,(I,J)), shape=(locs.shape[0], nF_nE[ind]))
             # remove any zero blocks (hstack complains)
             components = [comp for comp in components if comp.shape[1] > 0]
@@ -1969,8 +1970,9 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
                 I += [ii]*len(newJ)
                 J += newJ
-                V += weights
+                V += [weights]
 
+            V = np.hstack(V)
             Q = sp.csr_matrix((V,(I,J)), shape=(locs.shape[0], self.ntN))
             R = self._deflationMatrix('N',withHanging=True)
         elif locType == 'CC':
@@ -1978,6 +1980,8 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
                 I += [ii]
                 J += [numberer[cell]]
                 V += [1.0]
+
+            V = np.hstack(V)
             Q = sp.csr_matrix((V,(I,J)), shape=(locs.shape[0], self.nC))
             R = utils.Identity()
         else:
