@@ -31,14 +31,17 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
 
     def __init__(self, h, x0=None, cartesianOrigin=None):
         BaseTensorMesh.__init__(self, h, x0)
-        assert np.abs(self.hy.sum() - 2*np.pi) < 1e-10, "The 2nd dimension must sum to 2*pi"
+        assert np.abs(self.hy.sum() - 2*np.pi) < 1e-10, (
+            "The 2nd dimension must sum to 2*pi"
+        )
         if self.dim == 2:
             print('Warning, a disk mesh has not been tested thoroughly.')
         cartesianOrigin = (np.zeros(self.dim) if cartesianOrigin is None
                            else cartesianOrigin)
-        assert len(cartesianOrigin) == self.dim, ("cartesianOrigin must be the "
-                                                  "same length as the dimension"
-                                                  " of the mesh.")
+        assert len(cartesianOrigin) == self.dim, (
+            "cartesianOrigin must be the same length as the dimension of the "
+            "mesh."
+        )
         self.cartesianOrigin = np.array(cartesianOrigin, dtype=float)
 
     @property
@@ -175,8 +178,10 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
             if self.isSymmetric is True:
                 areaR = np.kron(self.hz, 2*pi*self.vectorNx)
                 areaZ = np.kron(
-                    np.ones_like(self.vectorNz), pi*(self.vectorNx**2 -
-                    np.r_[0, self.vectorNx[:-1]]**2)
+                    np.ones_like(self.vectorNz), pi*(
+                        self.vectorNx**2 -
+                        np.r_[0, self.vectorNx[:-1]]**2
+                    )
                 )
                 self._area = np.r_[areaR, areaZ]
             else:
@@ -254,7 +259,6 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
 
                 self._gridEz = self._deflationMatrix('Ez') * gridEz
         return self._gridEz
-
 
     ####################################################
     # Operators
@@ -359,7 +363,7 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
             E = self.edge
 
             if self.isSymmetric is True:
-            # 1D Difference matricies
+                # 1D Difference matricies
                 dr = sp.spdiags(
                     (np.ones((self.nCx+1, 1))*[-1, 1]).T, [-1, 0],
                     self.nCx, self.nCx, format="csr"
@@ -377,22 +381,26 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
                     utils.sdiag(1/A)*sp.vstack((Dz, Dr)) * utils.sdiag(E)
                 )
             else:
-                ### Curl that lands on R-faces ###
+                # -- Curl that lands on R-faces -- #
                 # Theta contribution
                 Dt_r = utils.kron3(
                     utils.ddx(self.nCz),
                     utils.speye(self.nCy),
                     utils.speye(self.nCx)
                 )
-                ddxz = utils.ddx(self.nCy)[:,:-1] + sp.csr_matrix((np.r_[1.], (np.r_[self.nCy-1], np.r_[0])), shape=(self.nCy, self.nCy))
-                # ddxz = sp.hstack([utils.spzeros(self.nCy, 1), ddxz])
+                ddxz = (
+                    utils.ddx(self.nCy)[:, :-1] +
+                    sp.csr_matrix(
+                        (np.r_[1.], (np.r_[self.nCy-1], np.r_[0])),
+                        shape=(self.nCy, self.nCy)
+                    )
+                )
 
                 Dz_r = sp.kron(ddxz, utils.speye(self.nCx))
                 Dz_r = sp.hstack([utils.spzeros(self.vnC[:2].prod(), 1), Dz_r])
                 Dz_r = sp.kron(utils.speye(self.nCz), Dz_r)
 
                 # Z contribution
-                # Dz_r = sp.hstack([utils.spzeros(self.vnF[1], 1), ddxz])
 
                 # Zeros of the right size
                 O1 = utils.spzeros(self.nFx, self.nEx)
@@ -400,30 +408,54 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
                 # R-contribution to Curl
                 Cr = sp.hstack((O1, -Dt_r, Dz_r))
 
-                ### Curl that lands on T-faces ###
+                # -- Curl that lands on T-faces -- #
                 # contribution from R
-                Dr_t = utils.kron3(utils.ddx(self.nCz), utils.speye(self.nCy), utils.speye(self.nCx))
+                Dr_t = utils.kron3(
+                    utils.ddx(self.nCz),
+                    utils.speye(self.nCy),
+                    utils.speye(self.nCx)
+                )
 
                 # Zeros of the right size
                 O2 = utils.spzeros(self.nFy, self.nEy)
 
                 # contribution from Z
                 ddxr = utils.ddx(self.nCx)
-                Ddxr = sp.kron(utils.speye(self.nCy), ddxr[:,1:])
-                wrap_z = sp.csr_matrix((-1*np.ones(self.nCy), (np.arange(0, self.vnC[:2].prod(), step=self.vnC[0]), np.zeros(self.nCy))), shape=(self.vnC[:2].prod(), 1))
-                Dz_t = sp.kron(utils.speye(self.nCz), sp.hstack([wrap_z, Ddxr]))
+                Ddxr = sp.kron(utils.speye(self.nCy), ddxr[:, 1:])
+                wrap_z = sp.csr_matrix(
+                    (
+                        -1*np.ones(self.nCy),
+                        (
+                            np.arange(
+                                0, self.vnC[:2].prod(), step=self.vnC[0]
+                            ),
+                            np.zeros(self.nCy))
+                        ),
+                    shape=(self.vnC[:2].prod(), 1)
+                )
+                Dz_t = sp.kron(
+                    utils.speye(self.nCz), sp.hstack([wrap_z, Ddxr])
+                )
 
                 # T-contribution to the Curl
                 Ct = sp.hstack((Dr_t, O2, -Dz_t))
 
-                ### Curl that lands on the Z-faces ###
+                # -- Curl that lands on the Z-faces -- #
                 # contribution from R
-                ddxz = utils.ddx(self.nCy)[:,:-1] + sp.csr_matrix((np.r_[1.], (np.r_[self.nCy-1], np.r_[0])), shape=(self.nCy, self.nCy))
-                Dr_z = utils.kron3(utils.speye(self.nCz+1), ddxz, utils.speye(self.nCx))
+                ddxz = (
+                    utils.ddx(self.nCy)[:, :-1] +
+                    sp.csr_matrix(
+                        (np.r_[1.], (np.r_[self.nCy-1], np.r_[0])),
+                        shape=(self.nCy, self.nCy)
+                    )
+                )
+                Dr_z = utils.kron3(
+                    utils.speye(self.nCz+1), ddxz, utils.speye(self.nCx)
+                )
                 # = sp.kron(utils.speye(self.nCz+1), ddxz)
 
                 # contribution from T
-                ddxt = utils.ddx(self.nCx)[:,1:]
+                ddxt = utils.ddx(self.nCx)[:, 1:]
                 Dt_z = utils.kron3(
                     utils.speye(self.nCz+1), utils.speye(self.nCy), ddxt
                 )
@@ -527,7 +559,6 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
                                           'yet implemented')
         return self._aveF2CCV
 
-
     ####################################################
     # Deflation Matrices
     ####################################################
@@ -550,7 +581,9 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
         collapse_x = sp.csr_matrix(
             (
                 [1]*self.vnC[0],
-                (np.arange(1, self.vnC[0]+1), np.arange(0, self.vnC[0]))), shape=(self.vnC[0]+1, self.vnC[0])
+                (np.arange(1, self.vnC[0]+1), np.arange(0, self.vnC[0]))
+            ),
+            shape=(self.vnC[0]+1, self.vnC[0])
         )
 
         if location in ['E', 'F']:
@@ -577,14 +610,15 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
             pass
 
         elif location == 'Ez':
-            removeme = np.arange(self.vnN[0], self.vnN[:2].prod(), step=self.vnN[0])
+            removeme = np.arange(
+                self.vnN[0], self.vnN[:2].prod(), step=self.vnN[0]
+            )
             keepme = np.ones(self.vnN[:2].prod(), dtype=bool)
             keepme[removeme] = False
 
             eye = sp.eye(self.vnN[:2].prod())
             eye = eye.tocsr()[keepme, :]
             return sp.kron(utils.speye(self.nCz), eye)
-
 
     ####################################################
     # Interpolation
