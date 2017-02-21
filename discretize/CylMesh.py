@@ -514,49 +514,64 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
         return self._aveE2CCV
 
     @property
+    def _aveFx2CC(self):
+        "averaging operator of x-faces to cell centers"
+        avR = utils.av(self.vnC[0])[:, 1:]
+        avR[0, 0] = 1.
+        return utils.kron3(
+            utils.speye(self.vnC[2]), utils.speye(self.vnC[1]), avR
+        )
+
+    @property
+    def _aveFy2CC(self):
+        "averaging from y-faces to cell centers"
+
+        return utils.kron3(
+            utils.speye(self.vnC[2]), utils.av(self.vnC[1]),
+            utils.speye(self.vnC[0])
+        ) * self._deflationMatrix('Fy')
+
+    @property
+    def _aveFz2CC(self):
+        "averaging from z-faces to cell centers"
+
+        return utils.kron3(
+            utils.av(self.vnC[2]), utils.speye(self.vnC[1]),
+            utils.speye(self.vnC[0])
+        )
+
+    @property
     def aveF2CC(self):
         "Construct the averaging operator on cell faces to cell centers."
         if getattr(self, '_aveF2CC', None) is None:
             n = self.vnC
             if self.isSymmetric is True:
-                avR = utils.av(n[0])[:, 1:]
-                avR[0, 0] = 1.
-                self._aveF2CC = ((0.5)*sp.hstack((sp.kron(utils.speye(n[2]),
-                                                          avR),
-                                                  sp.kron(utils.av(n[2]),
-                                                          utils.speye(n[0]))),
-                                                 format="csr"))
+                self._aveF2CC = 0.5*(
+                    sp.hstack((self._aveFx2CC, self._aveFz2CC), format="csr")
+                )
             else:
-                raise NotImplementedError('wrapping in the averaging is not '
-                                          'yet implemented')
-                # self._aveF2CC = (1./3.)*sp.hstack((utils.kron3(utils.speye(n[2]),
-                #                                                utils.speye(n[1]),
-                #                                                utils.av(n[0])),
-                #                                    utils.kron3(utils.speye(n[2]),
-                #                                                utils.av(n[1]),
-                #                                                utils.speye(n[0])),
-                #                                    utils.kron3(utils.av(n[2]),
-                #                                                utils.speye(n[1]),
-                #                                                utils.speye(n[0]))),
-                #                                   format="csr")
+                self._aveF2CC = 1./self.dim*(
+                    sp.hstack(
+                        (self._aveFx2CC, self._aveFy2CC, self._aveFz2CC),
+                        format="csr"
+                    )
+                )
         return self._aveF2CC
 
     @property
     def aveF2CCV(self):
         "Construct the averaging operator on cell faces to cell centers."
         if getattr(self, '_aveF2CCV', None) is None:
-            n = self.vnC
+            # n = self.vnC
             if self.isSymmetric is True:
-                avR = utils.av(n[0])[:, 1:]
-                avR[0, 0] = 1.
-                self._aveF2CCV = sp.block_diag((sp.kron(utils.speye(n[2]),
-                                                        avR),
-                                                sp.kron(utils.av(n[2]),
-                                                        utils.speye(n[0]))),
-                                               format="csr")
+                self._aveF2CCV = sp.block_diag(
+                    (self._aveFx2CC, self._aveFz2CC), format="csr"
+                )
             else:
-                raise NotImplementedError('wrapping in the averaging is not '
-                                          'yet implemented')
+                self._aveF2CCV = sp.block_diag(
+                    (self._aveFx2CC, self._aveFy2CC, self._aveFz2CC),
+                    format="csr"
+                )
         return self._aveF2CCV
 
     ####################################################
