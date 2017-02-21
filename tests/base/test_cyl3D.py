@@ -131,27 +131,28 @@ class TestEdgeCurl3D(Tests.OrderTest):
     def getError(self):
 
         # use the same function in r, t, z
-        fun = lambda r, t, z: (
-            np.sin(2.*np.pi*r) * np.sin(t) * np.sin(2.*np.pi*z)
-        )
+        # need to pick functions that make sense at the axis of symmetry
+        # careful that r, theta contributions make sense at axis of symmetry
 
-        deriv_r = lambda r, t, z: (
-            2*np.pi*np.cos(2.*np.pi*r) * np.sin(t) * np.sin(2.*np.pi*z)
-        )
-        deriv_t = lambda r, t, z: (
-            np.sin(2.*np.pi*r) * np.cos(t) * np.sin(2.*np.pi*z)
-        )
-        deriv_z = lambda r, t, z: (
-            2.*np.pi * np.sin(2.*np.pi*r) * np.sin(t) * np.cos(2.*np.pi*z)
-        )
+        funR = lambda r, t, z: np.sin(2*np.pi*z) * np.sin(np.pi*r) * np.sin(t)
+        funT = lambda r, t, z: np.cos(np.pi*z) * np.sin(np.pi*r) * np.sin(t)
+        funZ = lambda r, t, z: np.sin(np.pi*r) * np.sin(t)
 
-        sol_r = lambda r, t, z: 1./r * deriv_t(r, t, z) - deriv_z(r, t, z)
-        sol_t = lambda r, t, z: deriv_z(r, t, z) - deriv_r(r, t, z)
-        sol_z = lambda r, t, z: 1/r * (
-            deriv_r(r, t, z) + fun(r, t, z) - deriv_t(r, t, z)
-        )
+        derivR_t = lambda r, t, z: np.sin(2*np.pi*z) * np.sin(np.pi*r) * np.cos(t)
+        derivR_z = lambda r, t, z: 2*np.pi * np.cos(2*np.pi*z) * np.sin(np.pi*r) * np.sin(t)
 
-        Ec = cylE3(self.M, fun, fun, fun)
+        derivT_r = lambda r, t, z: np.pi * np.cos(np.pi*z) * np.cos(np.pi*r) * np.sin(t)
+        derivT_z = lambda r, t, z: -np.pi * np.sin(np.pi*z) * np.sin(np.pi*r) * np.sin(t)
+
+        derivZ_r = lambda r, t, z: np.pi*np.cos(np.pi*r) * np.sin(t)
+        derivZ_t = lambda r, t, z: np.sin(np.pi*r) * np.cos(t)
+
+        sol_r = lambda r, t, z: 1./r * derivZ_t(r, t, z) - derivT_z(r, t, z)
+        sol_t = lambda r, t, z: derivR_z(r, t, z) - derivZ_r(r, t, z)
+        sol_z = lambda r, t, z: 1./r * ( r * derivT_r(r, t, z) + funT(r, t, z) - derivR_t(r, t, z))
+
+
+        Ec = cylE3(self.M, funR, funT, funZ)
         E = self.M.projectEdgeVector(Ec)
         curlE_num = self.M.edgeCurl * E
 

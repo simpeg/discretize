@@ -252,15 +252,7 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
             else:
                 gridEz = super(CylMesh, self).gridEz
 
-                removeme = np.arange(self.vnN[0], self.vnN[:2].prod(), step=self.vnN[0])
-                keepme = np.ones(self.vnN[:2].prod(), dtype=bool)
-                keepme[removeme] = False
-
-                eye = sp.eye(self.vnN[:2].prod())
-                eye = eye.tocsr()[keepme, :]
-                keepme = sp.kron(utils.speye(self.nCz), eye)
-
-                self._gridEz = keepme * gridEz
+                self._gridEz = self._deflationMatrix('Ez') * gridEz
         return self._gridEz
 
 
@@ -399,6 +391,8 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
                 Dz_r = sp.hstack([utils.spzeros(self.vnC[:2].prod(), 1), Dz_r])
                 Dz_r = sp.kron(utils.speye(self.nCz), Dz_r)
 
+                # Z contribution
+                # Dz_r = sp.hstack([utils.spzeros(self.vnF[1], 1), ddxz])
 
                 # Zeros of the right size
                 O1 = utils.spzeros(self.nFx, self.nEx)
@@ -425,7 +419,7 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
                 ### Curl that lands on the Z-faces ###
                 # contribution from R
                 ddxz = utils.ddx(self.nCy)[:,:-1] + sp.csr_matrix((np.r_[1.], (np.r_[self.nCy-1], np.r_[0])), shape=(self.nCy, self.nCy))
-                Dr_z = utils.kron3(ddxz, utils.speye(self.nCz+1), utils.speye(self.nCx))
+                Dr_z = utils.kron3(utils.speye(self.nCz+1), ddxz, utils.speye(self.nCx))
                 # = sp.kron(utils.speye(self.nCz+1), ddxz)
 
                 # contribution from T
@@ -559,6 +553,9 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
                 (np.arange(1, self.vnC[0]+1), np.arange(0, self.vnC[0]))), shape=(self.vnC[0]+1, self.vnC[0])
         )
 
+        if location in ['E', 'F']:
+            pass
+
         if location == 'Fx':
             return utils.kron3(
                 utils.speye(self.vnC[2]), utils.speye(self.vnC[1]), collapse_x
@@ -572,6 +569,21 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
             )
         elif location == 'Fz':
             return utils.speye(self.vnF[2])
+
+        elif location == 'Ex':
+            pass
+
+        elif location == 'Ey':
+            pass
+
+        elif location == 'Ez':
+            removeme = np.arange(self.vnN[0], self.vnN[:2].prod(), step=self.vnN[0])
+            keepme = np.ones(self.vnN[:2].prod(), dtype=bool)
+            keepme[removeme] = False
+
+            eye = sp.eye(self.vnN[:2].prod())
+            eye = eye.tocsr()[keepme, :]
+            return sp.kron(utils.speye(self.nCz), eye)
 
 
     ####################################################
