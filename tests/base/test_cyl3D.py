@@ -7,7 +7,7 @@ from sympy.abc import r, t, z
 import discretize
 from discretize import Tests, utils
 
-np.random.seed(13)
+np.random.seed(16)
 
 TOL = 1e-1
 
@@ -171,6 +171,91 @@ class TestEdgeCurl3D(Tests.OrderTest):
         self.orderTest()
 
 
+class TestAverageSimple(unittest.TestCase):
+
+    def setUp(self):
+        n = 10
+        hx = np.random.rand(n)
+        hy = np.random.rand(n)
+        hy = hy * 2 * np.pi / hy.sum()
+        hz = np.random.rand(n)
+        self.mesh = discretize.CylMesh([hx, hy, hz])
+
+    def test_constantEdges(self):
+        edge_vec = np.ones(self.mesh.nE)
+        assert all(self.mesh.aveE2CC * edge_vec == 1.)
+        assert all(self.mesh.aveE2CCV * edge_vec == 1.)
+
+    def test_constantFaces(self):
+        face_vec = np.ones(self.mesh.nF)
+        assert np.allclose(self.mesh.aveF2CC * face_vec, 1.)
+        assert np.allclose(self.mesh.aveF2CCV * face_vec, 1.)
+
+
+class TestAveF2CCV(Tests.OrderTest):
+    name = "aveF2CCV"
+    meshTypes = MESHTYPES
+    meshSizes = [8, 16, 32, 64]
+    meshDimension = 3
+    expectedOrders = 1  # the averaging does not account for differences in radial face sizes (inner product does though)
+
+
+    def getError(self):
+
+        funR = lambda r, t, z: np.sin(np.pi*z) * np.sin(np.pi*r) #* np.sin(t)
+        funT = lambda r, t, z: np.sin(np.pi*z) * np.sin(np.pi*r) #* np.sin(t)
+        funZ = lambda r, t, z: np.sin(np.pi*z) * np.sin(np.pi*r) #* np.sin(t)
+
+        Fc = cylF3(self.M, funR, funT, funZ)
+        F = self.M.projectFaceVector(Fc)
+
+        aveF = self.M.aveF2CCV * F
+
+        aveF_anaR = funR(
+            self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2]
+        )
+        aveF_anaT = funR(
+            self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2]
+        )
+        aveF_anaZ = funZ(
+            self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2]
+        )
+
+        aveF_ana = np.hstack([aveF_anaR, aveF_anaT, aveF_anaZ])
+
+        err = np.linalg.norm((aveF-aveF_ana), np.inf)
+        return err
+
+    def test_order(self):
+        self.orderTest()
+
+
+class TestAveF2CC(Tests.OrderTest):
+    name = "aveF2CC"
+    meshTypes = MESHTYPES
+    meshSizes = [8, 16, 32, 64]
+    meshDimension = 3
+    expectedOrders = 1  # the averaging does not account for differences in radial face sizes (inner product does though)
+
+    def getError(self):
+
+        fun = lambda r, t, z: np.sin(np.pi*z) * np.sin(np.pi*r) #* np.sin(t)
+
+        Fc = cylF3(self.M, fun, fun, fun)
+        F = self.M.projectFaceVector(Fc)
+
+        aveF = self.M.aveF2CC * F
+        aveF_ana = fun(
+            self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2]
+        )
+
+        err = np.linalg.norm((aveF-aveF_ana), np.inf)
+        return err
+
+    def test_order(self):
+        self.orderTest()
+
+
 class FaceInnerProductFctsIsotropic(object):
 
     def fcts(self):
@@ -223,6 +308,54 @@ class FaceInnerProductFctsIsotropic(object):
         return sig, np.r_[jr, jt, jz]
 
 
+class EdgeInnerProductFctsIsotropic(object):
+    def fcts(self):
+        h = sympy.Matrix([
+            r**2 * sympy.sin(t) * z,
+            r * sympy.sin(t) * z,
+            r * sympy.sin(t) * z**2,
+        ])
+
+        # Create an isotropic sigma vector
+        Sig = sympy.Matrix([
+            [1120/(69*sympy.pi)*(r*z)**2 * sympy.sin(t)**2, 0, 0],
+            [0, 1120/(69*sympy.pi)*(r*z)**2 * sympy.sin(t)**2, 0],
+            [0, 0, 1120/(69*sympy.pi)*(r*z)**2 * sympy.sin(t)**2]
+        ])
+
+        return h, Sig
+
+    def sol(self):
+        h, Sig = self.fcts()
+
+        hTSh = h.T*Sig*h
+        ans  = sympy.integrate(
+            sympy.integrate(
+                sympy.integrate(r * hTSh, (r, 0, 1)),
+                (t, 0, 2*sympy.pi)),
+            (z, 0, 1)
+        )[0] # The `[0]` is to make it a scalar
+
+        return ans
+
+    def vectors(self, mesh):
+        h, Sig = self.fcts()
+
+        f_hr = sympy.lambdify((r, t, z), h[0], 'numpy')
+        f_ht = sympy.lambdify((r, t, z), h[1], 'numpy')
+        f_hz = sympy.lambdify((r, t, z), h[2], 'numpy')
+
+        f_sig = sympy.lambdify((r, t, z), Sig[0], 'numpy')
+
+        hr = f_hr(mesh.gridEx[:, 0], mesh.gridEx[:, 1], mesh.gridEx[:, 2])
+        ht = f_ht(mesh.gridEy[:, 0], mesh.gridEy[:, 1], mesh.gridEy[:, 2])
+        hz = f_hz(mesh.gridEz[:, 0], mesh.gridEz[:, 1], mesh.gridEz[:, 2])
+
+        sig = f_sig(mesh.gridCC[:, 0], mesh.gridCC[:, 1], mesh.gridCC[:, 2])
+
+        return sig, np.r_[hr, ht, hz]
+
+
 class TestCylInnerProducts_simple(unittest.TestCase):
 
     def setUp(self):
@@ -247,6 +380,24 @@ class TestCylInnerProducts_simple(unittest.TestCase):
                ratio=float(numeric_ans)/ans))
         assert(np.abs(ans-numeric_ans) < TOL)
 
+    def test_EdgeInnerProduct(self):
+        # Here we will make up some j vectors that vary in space
+        # h = [h_t] - to test edge inner products
+
+        fcts = EdgeInnerProductFctsIsotropic()
+        sig, hv = fcts.vectors(self.mesh)
+        MeSig = self.mesh.getEdgeInnerProduct(sig)
+        numeric_ans = hv.T.dot(MeSig.dot(hv))
+
+        ans = fcts.sol()
+
+        print('------ Testing Edge Inner Product-----------')
+        print(' Analytic: {analytic}, Numeric: {numeric}, '
+              'ratio (num/ana): {ratio}'.format(
+               analytic=ans, numeric=numeric_ans,
+               ratio=float(numeric_ans)/ans))
+        assert(np.abs(ans-numeric_ans) < TOL)
+
 
 class TestCylFaceInnerProducts_Order(Tests.OrderTest):
 
@@ -262,6 +413,20 @@ class TestCylFaceInnerProducts_Order(Tests.OrderTest):
     def test_order(self):
         self.orderTest()
 
+
+class TestCylEdgeInnerProducts_Order(Tests.OrderTest):
+
+    meshTypes = ['uniformCylMesh']
+    meshDimension = 3
+
+    def getError(self):
+        fct = EdgeInnerProductFctsIsotropic()
+        sig, hv = fct.vectors(self.M)
+        Msig = self.M.getEdgeInnerProduct(sig)
+        return float(fct.sol()) - hv.T.dot(Msig.dot(hv))
+
+    def test_order(self):
+        self.orderTest()
 
 if __name__ == '__main__':
     unittest.main()

@@ -110,6 +110,7 @@ class TestCellGrad1D_InhomogeneousDirichlet(discretize.Tests.OrderTest):
     def test_order(self):
         self.orderTest()
 
+
 class TestCellGrad2D_Dirichlet(discretize.Tests.OrderTest):
     name = "Cell Grad 2D - Dirichlet"
     meshTypes = ['uniformTensorMesh']
@@ -221,6 +222,7 @@ class TestCellGrad3D_Neumann(discretize.Tests.OrderTest):
 
     def test_order(self):
         self.orderTest()
+
 
 class TestFaceDiv3D(discretize.Tests.OrderTest):
     name = "Face Divergence 3D"

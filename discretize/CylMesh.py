@@ -420,21 +420,25 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
                 O2 = utils.spzeros(self.nFy, self.nEy)
 
                 # contribution from Z
+
                 ddxr = utils.ddx(self.nCx)
-                Ddxr = sp.kron(utils.speye(self.nCy), ddxr[:, 1:])
+                Ddxr = sp.kron(utils.speye(self.nCy), ddxr)
                 wrap_z = sp.csr_matrix(
                     (
-                        -1*np.ones(self.nCy),
+                        np.ones(self.nCy - 1),
                         (
                             np.arange(
-                                0, self.vnC[:2].prod(), step=self.vnC[0]
+                                self.vnC[0], self.vnC[:2].prod(),
+                                step=self.vnC[0]
                             ),
-                            np.zeros(self.nCy))
+                            np.zeros(self.nCy - 1))
                         ),
-                    shape=(self.vnC[:2].prod(), 1)
+                    shape=(self.vnC[:2].prod(), self.vnC[:2].prod() + 1)
                 )
-                Dz_t = sp.kron(
-                    utils.speye(self.nCz), sp.hstack([wrap_z, Ddxr])
+                Dz_t = (
+                    sp.kron(utils.speye(self.nCz), Ddxr) *
+                    self._deflationMatrix('Ez').T -
+                    sp.kron(utils.speye(self.nCz), wrap_z)
                 )
 
                 # T-contribution to the Curl
@@ -475,29 +479,81 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
         return self._edgeCurl
 
     @property
+    def aveEx2CC(self):
+        "averaging operator of x-faces to cell centers"
+        wrap_theta = sp.csr_matrix(
+            (
+                [1]*(self.vnC[1] + 1),
+                (np.arange(0, self.vnC[1]+1), np.hstack((np.arange(0, self.vnC[1]), [0])) )
+            ),
+            shape=(self.vnC[1]+1, self.vnC[1])
+        )
+
+        return sp.kron(
+            utils.av(self.vnC[2]),
+            sp.kron(
+                utils.av(self.vnC[1]),
+                utils.speye(self.vnC[0])
+            ) * sp.kron(wrap_theta, utils.speye(self.vnC[0]))
+        )
+
+    @property
+    def aveEy2CC(self):
+        "averaging from y-faces to cell centers"
+
+        avR = utils.av(self.vnC[0])[:, 1:]
+        avR[0, 0] = 1.
+        return utils.kron3(
+            utils.av(self.vnC[2]), utils.speye(self.vnC[1]), avR
+        )
+
+    @property
+    def aveEz2CC(self):
+        "averaging from z-faces to cell centers"
+        avR = utils.av(self.vnC[0])[:, 1:]
+
+        wrap_theta = sp.csr_matrix(
+            (
+                [1]*(self.vnC[1] + 1),
+                (np.arange(0, self.vnC[1]+1), np.hstack((np.arange(0, self.vnC[1]), [0])) )
+            ),
+            shape=(self.vnC[1]+1, self.vnC[1])
+        )
+
+        wrap_z = sp.csr_matrix(
+            (
+                np.ones(self.nCy),
+                (
+                    np.arange(
+                        0, self.vnC[:2].prod(),
+                        step=self.vnC[0]
+                    ),
+                    np.zeros(self.nCy))
+                ),
+            shape=(self.vnC[:2].prod(), self.vnC[:2].prod() + 1)
+        )
+
+        aveEz = sp.hstack((
+            utils.spzeros(self.vnC[:2].prod(), 1),
+            sp.kron(utils.av(self.vnC[1]), avR) *
+            sp.kron(wrap_theta, utils.speye(self.vnC[0]))
+        ))
+
+        return sp.kron(utils.speye(self.vnC[2]), aveEz + 0.5*wrap_z)
+
+    @property
     def aveE2CC(self):
         "Construct the averaging operator on cell edges to cell centers."
         if getattr(self, '_aveE2CC', None) is None:
             # The number of cell centers in each direction
-            n = self.vnC
+            # n = self.vnC
             if self.isSymmetric is True:
-                avR = utils.av(n[0])[:, 1:]
-                avR[0, 0] = 1.
-                self._aveE2CC = sp.kron(utils.av(n[2]), avR, format="csr")
+                self._aveE2CC = self.aveEy2CC
             else:
-                raise NotImplementedError(
-                    'wrapping in the averaging is not yet implemented'
+                self._aveE2CC = 1./self.dim * sp.hstack(
+                    (self.aveEx2CC, self.aveEy2CC, self.aveEz2CC),
+                    format="csr"
                 )
-                # self._aveE2CC = (1./3)*sp.hstack((utils.kron3(utils.av(n[2]),
-                #                                               utils.av(n[1]),
-                #                                               utils.speye(n[0])),
-                #                                   utils.kron3(utils.av(n[2]),
-                #                                               utils.speye(n[1]),
-                #                                               utils.av(n[0])),
-                #                                   utils.kron3(utils.speye(n[2]),
-                #                                               utils.av(n[1]),
-                #                                               utils.av(n[0]))),
-                #                                  format="csr")
         return self._aveE2CC
 
     @property
@@ -509,12 +565,14 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
             if self.isSymmetric is True:
                 return self.aveE2CC
             else:
-                raise NotImplementedError('wrapping in the averaging is not '
-                                          'yet implemented')
+                self._aveE2CCV = sp.block_diag(
+                    (self.aveEx2CC, self.aveEy2CC, self.aveEz2CC),
+                    format="csr"
+                )
         return self._aveE2CCV
 
     @property
-    def _aveFx2CC(self):
+    def aveFx2CC(self):
         "averaging operator of x-faces to cell centers"
         avR = utils.av(self.vnC[0])[:, 1:]
         avR[0, 0] = 1.
@@ -523,7 +581,7 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
         )
 
     @property
-    def _aveFy2CC(self):
+    def aveFy2CC(self):
         "averaging from y-faces to cell centers"
 
         return utils.kron3(
@@ -532,7 +590,7 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
         ) * self._deflationMatrix('Fy')
 
     @property
-    def _aveFz2CC(self):
+    def aveFz2CC(self):
         "averaging from z-faces to cell centers"
 
         return utils.kron3(
@@ -547,12 +605,12 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
             n = self.vnC
             if self.isSymmetric is True:
                 self._aveF2CC = 0.5*(
-                    sp.hstack((self._aveFx2CC, self._aveFz2CC), format="csr")
+                    sp.hstack((self.aveFx2CC, self.aveFz2CC), format="csr")
                 )
             else:
                 self._aveF2CC = 1./self.dim*(
                     sp.hstack(
-                        (self._aveFx2CC, self._aveFy2CC, self._aveFz2CC),
+                        (self.aveFx2CC, self.aveFy2CC, self.aveFz2CC),
                         format="csr"
                     )
                 )
@@ -565,11 +623,11 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
             # n = self.vnC
             if self.isSymmetric is True:
                 self._aveF2CCV = sp.block_diag(
-                    (self._aveFx2CC, self._aveFz2CC), format="csr"
+                    (self.aveFx2CC, self.aveFz2CC), format="csr"
                 )
             else:
                 self._aveF2CCV = sp.block_diag(
-                    (self._aveFx2CC, self._aveFy2CC, self._aveFz2CC),
+                    (self.aveFx2CC, self.aveFy2CC, self.aveFz2CC),
                     format="csr"
                 )
         return self._aveF2CCV
@@ -580,8 +638,8 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
 
     def _deflationMatrix(self, location):
         assert(
-            location in ['N','F','Fx','Fy','E','Ex','Ey'] + (
-                ['Fz','Ez'] if self.dim == 3 else []
+            location in ['N', 'F', 'Fx', 'Fy', 'E', 'Ex', 'Ey'] + (
+                ['Fz', 'Ez'] if self.dim == 3 else []
             )
         )
 
