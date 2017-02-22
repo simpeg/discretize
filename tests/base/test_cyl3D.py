@@ -202,9 +202,9 @@ class TestAveF2CCV(Tests.OrderTest):
 
     def getError(self):
 
-        funR = lambda r, t, z: np.sin(np.pi*z) * np.sin(np.pi*r) #* np.sin(t)
-        funT = lambda r, t, z: np.sin(np.pi*z) * np.sin(np.pi*r) #* np.sin(t)
-        funZ = lambda r, t, z: np.sin(np.pi*z) * np.sin(np.pi*r) #* np.sin(t)
+        funR = lambda r, t, z: np.sin(np.pi*z) * np.sin(np.pi*r) * np.sin(t)
+        funT = lambda r, t, z: np.sin(np.pi*z) * np.sin(np.pi*r) * np.sin(t)
+        funZ = lambda r, t, z: np.sin(np.pi*z) * np.sin(np.pi*r) * np.sin(t)
 
         Fc = cylF3(self.M, funR, funT, funZ)
         F = self.M.projectFaceVector(Fc)
@@ -235,11 +235,11 @@ class TestAveF2CC(Tests.OrderTest):
     meshTypes = MESHTYPES
     meshSizes = [8, 16, 32, 64]
     meshDimension = 3
-    expectedOrders = 1  # the averaging does not account for differences in radial face sizes (inner product does though)
+    expectedOrders = 1  # the averaging does not account for differences in theta edge lengths (inner product does though)
 
     def getError(self):
 
-        fun = lambda r, t, z: np.sin(np.pi*z) * np.sin(np.pi*r) #* np.sin(t)
+        fun = lambda r, t, z: np.sin(np.pi*z) * np.sin(np.pi*r) * np.sin(t)
 
         Fc = cylF3(self.M, fun, fun, fun)
         F = self.M.projectFaceVector(Fc)
@@ -306,6 +306,69 @@ class FaceInnerProductFctsIsotropic(object):
         sig = f_sig(mesh.gridCC[:, 0], mesh.gridCC[:, 1], mesh.gridCC[:, 2])
 
         return sig, np.r_[jr, jt, jz]
+
+
+class TestAveE2CCV(Tests.OrderTest):
+    name = "aveE2CCV"
+    meshTypes = MESHTYPES
+    meshSizes = [8, 16, 32, 64]
+    meshDimension = 3
+    expectedOrders = 1  # the averaging does not account for differences in theta edge lengths (inner product does though)
+
+    def getError(self):
+
+        funR = lambda r, t, z: np.sin(np.pi*z) * np.sin(np.pi*r) * np.sin(t)
+        funT = lambda r, t, z: np.sin(np.pi*z) * np.sin(np.pi*r) * np.sin(t)
+        funZ = lambda r, t, z: np.sin(np.pi*z) * np.sin(np.pi*r) * np.sin(t)
+
+        Ec = cylE3(self.M, funR, funT, funZ)
+        E = self.M.projectEdgeVector(Ec)
+
+        aveE = self.M.aveE2CCV * E
+
+        aveE_anaR = funR(
+            self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2]
+        )
+        aveE_anaT = funR(
+            self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2]
+        )
+        aveE_anaZ = funZ(
+            self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2]
+        )
+
+        aveE_ana = np.hstack([aveE_anaR, aveE_anaT, aveE_anaZ])
+
+        err = np.linalg.norm((aveE-aveE_ana), np.inf)
+        return err
+
+    def test_order(self):
+        self.orderTest()
+
+
+class TestAveE2CC(Tests.OrderTest):
+    name = "aveE2CC"
+    meshTypes = MESHTYPES
+    meshSizes = [8, 16, 32, 64]
+    meshDimension = 3
+    expectedOrders = 1  # the averaging does not account for differences in radial face sizes (inner product does though)
+
+    def getError(self):
+
+        fun = lambda r, t, z: np.sin(np.pi*z) * np.sin(np.pi*r) * np.sin(t)
+
+        Ec = cylE3(self.M, fun, fun, fun)
+        E = self.M.projectEdgeVector(Ec)
+
+        aveE = self.M.aveE2CC * E
+        aveE_ana = fun(
+            self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2]
+        )
+
+        err = np.linalg.norm((aveE-aveE_ana), np.inf)
+        return err
+
+    def test_order(self):
+        self.orderTest()
 
 
 class EdgeInnerProductFctsIsotropic(object):
