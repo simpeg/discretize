@@ -147,10 +147,6 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
         return np.r_[0, self.hy[:-1].cumsum()]
 
     @property
-    def vectorNz(self):
-        return np.r_[0, self.hz].cumsum() + self.x0[2]
-
-    @property
     def edge(self):
         """Edge lengths"""
         if getattr(self, '_edge', None) is None:
