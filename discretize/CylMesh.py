@@ -148,7 +148,7 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
 
     @property
     def vectorNz(self):
-        return np.r_[0, self.hz].cumsum()
+        return np.r_[0, self.hz].cumsum() + self.x0[2]
 
     @property
     def edge(self):
