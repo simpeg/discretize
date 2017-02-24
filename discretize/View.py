@@ -454,7 +454,6 @@ class TensorView(object):
             plt.show()
         return out
 
-
     def plotGrid(
         self, ax=None, nodes=False, faces=False, centers=False, edges=False,
         lines=True, showIt=False
@@ -581,7 +580,7 @@ class CylView(object):
         # Just create a TM and use its view.
         from discretize import TensorMesh
 
-        vType = kwargs.pop('vType', None)
+        vType = kwargs.get('vType', None)
         if vType is not None:
             if vType.upper() != 'CCV':
                 if vType.upper() == 'F':
