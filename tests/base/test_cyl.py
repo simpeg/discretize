@@ -410,25 +410,33 @@ class TestAveragingSimple(unittest.TestCase):
         hz = np.random.rand(10)
         self.mesh = discretize.CylMesh([hx, 1, hz])
 
-    def test_constantEdges(self):
-        edge_vec = np.ones(self.mesh.nE)
-        assert all(self.mesh.aveE2CC * edge_vec == 1.)
-        assert all(self.mesh.aveE2CCV * edge_vec == 1.)
+    def test_simpleEdges(self):
+        edge_vec = self.mesh.gridEy[:, 0]
+        assert np.linalg.norm(
+            self.mesh.aveE2CC * edge_vec - self.mesh.gridCC[:, 0]
+        ) < 1e-10
+        assert np.linalg.norm(
+            self.mesh.aveE2CCV * edge_vec - self.mesh.gridCC[:, 0]
+        ) < 1e-10
 
     def test_constantFaces(self):
-        face_vec = np.ones(self.mesh.nF)
-        assert all(self.mesh.aveF2CC * face_vec == 1.)
-        assert all(self.mesh.aveF2CCV * face_vec == 1.)
+        face_vec = np.hstack([self.mesh.gridFx[:, 0], self.mesh.gridFz[:, 0]])
+        assert np.linalg.norm(
+            self.mesh.aveF2CCV * face_vec - np.hstack(
+                2*[self.mesh.gridCC[:, 2]]
+            )
+        )
 
 
 class TestAveE2CC(Tests.OrderTest):
     name = "aveE2CC"
     meshTypes = MESHTYPES
     meshDimension = 2
+    meshSizes = [8, 16, 32, 64]
 
     def getError(self):
 
-        fun = lambda r, t, z: np.sin(2.*np.pi*z) * np.cos(np.pi*r)
+        fun = lambda r, t, z: np.sin(2.*np.pi*z) * np.sin(np.pi*r)
 
         E = call3(fun, self.M.gridEy)
 
@@ -446,10 +454,11 @@ class TestAveE2CCV(Tests.OrderTest):
     name = "aveE2CCV"
     meshTypes = MESHTYPES
     meshDimension = 2
+    meshSizes = [8, 16, 32, 64]
 
     def getError(self):
 
-        fun = lambda r, t, z: np.sin(2.*np.pi*z) * np.cos(np.pi*r)
+        fun = lambda r, t, z: np.sin(2.*np.pi*z) * np.sin(2*np.pi*r)
 
         E = call3(fun, self.M.gridEy)
 
@@ -470,8 +479,8 @@ class TestAveF2CCV(Tests.OrderTest):
 
     def getError(self):
 
-        funR = lambda r, z: np.sin(2.*np.pi*z) * np.cos(np.pi*r)
-        funZ = lambda r, z: np.sin(3.*np.pi*z) * np.cos(2.*np.pi*r)
+        funR = lambda r, z: np.sin(2.*np.pi*z) * np.sin(np.pi*r)
+        funZ = lambda r, z: np.sin(3.*np.pi*z) * np.sin(2.*np.pi*r)
 
         Fc = cylF2(self.M, funR, funZ)
         Fc = np.c_[Fc[:, 0], np.zeros(self.M.nF), Fc[:, 1]]
@@ -498,7 +507,7 @@ class TestAveF2CC(Tests.OrderTest):
 
     def getError(self):
 
-        fun = lambda r, z: np.sin(2.*np.pi*z) * np.cos(np.pi*r)
+        fun = lambda r, z: np.sin(2.*np.pi*z) * np.sin(np.pi*r)
 
         Fc = cylF2(self.M, fun, fun)
         Fc = np.c_[Fc[:, 0], np.zeros(self.M.nF), Fc[:, 1]]

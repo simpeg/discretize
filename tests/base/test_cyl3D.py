@@ -183,7 +183,7 @@ class TestAverageSimple(unittest.TestCase):
 
     def test_constantEdges(self):
         funR = lambda r, t, z: r
-        funT = lambda r, t, z: np.zeros_like(t)  # theta edges don't exist at the center of the mesh
+        funT = lambda r, t, z: r  # theta edges don't exist at the center of the mesh
         funZ = lambda r, t, z: z
 
         Ec = cylE3(self.mesh, funR, funT, funZ)
@@ -207,7 +207,7 @@ class TestAverageSimple(unittest.TestCase):
 
     def test_simplefct(self):
         funR = lambda r, t, z: r
-        funT = lambda r, t, z: np.ones_like(t)
+        funT = lambda r, t, z: r
         funZ = lambda r, t, z: z
 
         Fc = cylF3(self.mesh, funR, funT, funZ)
