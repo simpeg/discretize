@@ -477,11 +477,12 @@ class Zero(object):
     def __gt__(self, v):
         return 0 > v
 
-    @property
-    def transpose(self): return Zero()
+    def transpose(self):
+        return self
 
     @property
-    def T(self): return Zero()
+    def T(self):
+        return self
 
 
 class Identity(object):
@@ -561,3 +562,10 @@ class Identity(object):
 
     def __gt__(self, v):
         return 1 > v if self._positive else -1 > v
+
+    @property
+    def T(self):
+        return self
+
+    def transpose(self):
+        return self

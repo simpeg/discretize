@@ -266,7 +266,7 @@ class TestZero(unittest.TestCase):
         assert mkvc(z) == 0
         assert sdiag(z)*a == 0
         assert z.T == 0
-        assert z.transpose == 0
+        assert z.transpose() == 0
 
     def test_mat_zero(self):
         z = Zero()
@@ -319,6 +319,9 @@ class TestZero(unittest.TestCase):
         assert -o/2. == -0.5
         assert 2/o == 2
         assert 2/-o == -2
+
+        assert o.T == 1
+        assert o.transpose() == 1
 
     def test_mat_one(self):
 
