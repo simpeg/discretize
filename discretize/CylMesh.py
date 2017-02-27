@@ -498,7 +498,7 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
         "averaging from y-faces to cell centers"
 
         avR = utils.av(self.vnC[0])[:, 1:]
-        avR[0, 0] = 1.
+        avR[0, 0] = 0.5
         return utils.kron3(
             utils.av(self.vnC[2]), utils.speye(self.vnC[1]), avR
         )
@@ -571,7 +571,7 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
     def aveFx2CC(self):
         "averaging operator of x-faces to cell centers"
         avR = utils.av(self.vnC[0])[:, 1:]
-        avR[0, 0] = 1.
+        avR[0, 0] = 0.5  # averaging with zero flux due to symmetry at center
         return utils.kron3(
             utils.speye(self.vnC[2]), utils.speye(self.vnC[1]), avR
         )

@@ -182,14 +182,52 @@ class TestAverageSimple(unittest.TestCase):
         self.mesh = discretize.CylMesh([hx, hy, hz])
 
     def test_constantEdges(self):
-        edge_vec = np.ones(self.mesh.nE)
-        assert all(self.mesh.aveE2CC * edge_vec == 1.)
-        assert all(self.mesh.aveE2CCV * edge_vec == 1.)
+        funR = lambda r, t, z: r
+        funT = lambda r, t, z: np.zeros_like(t)  # theta edges don't exist at the center of the mesh
+        funZ = lambda r, t, z: z
 
-    def test_constantFaces(self):
-        face_vec = np.ones(self.mesh.nF)
-        assert np.allclose(self.mesh.aveF2CC * face_vec, 1.)
-        assert np.allclose(self.mesh.aveF2CCV * face_vec, 1.)
+        Ec = cylE3(self.mesh, funR, funT, funZ)
+        E = self.mesh.projectEdgeVector(Ec)
+
+        aveE = self.mesh.aveE2CCV * E
+
+        aveE_anaR = funR(
+            self.mesh.gridCC[:, 0], self.mesh.gridCC[:, 1], self.mesh.gridCC[:, 2]
+        )
+        aveE_anaT = funT(
+            self.mesh.gridCC[:, 0], self.mesh.gridCC[:, 1], self.mesh.gridCC[:, 2]
+        )
+        aveE_anaZ = funZ(
+            self.mesh.gridCC[:, 0], self.mesh.gridCC[:, 1], self.mesh.gridCC[:, 2]
+        )
+
+        aveE_ana = np.hstack([aveE_anaR, aveE_anaT, aveE_anaZ])
+
+        assert np.linalg.norm(aveE - aveE_ana) < 1e-10
+
+    def test_simplefct(self):
+        funR = lambda r, t, z: r
+        funT = lambda r, t, z: np.ones_like(t)
+        funZ = lambda r, t, z: z
+
+        Fc = cylF3(self.mesh, funR, funT, funZ)
+        F = self.mesh.projectFaceVector(Fc)
+
+        aveF = self.mesh.aveF2CCV * F
+
+        aveF_anaR = funR(
+            self.mesh.gridCC[:, 0], self.mesh.gridCC[:, 1], self.mesh.gridCC[:, 2]
+        )
+        aveF_anaT = funT(
+            self.mesh.gridCC[:, 0], self.mesh.gridCC[:, 1], self.mesh.gridCC[:, 2]
+        )
+        aveF_anaZ = funZ(
+            self.mesh.gridCC[:, 0], self.mesh.gridCC[:, 1], self.mesh.gridCC[:, 2]
+        )
+
+        aveF_ana = np.hstack([aveF_anaR, aveF_anaT, aveF_anaZ])
+
+        assert np.linalg.norm(aveF - aveF_ana) < 1e-10
 
 
 class TestAveF2CCV(Tests.OrderTest):
@@ -197,14 +235,13 @@ class TestAveF2CCV(Tests.OrderTest):
     meshTypes = MESHTYPES
     meshSizes = [8, 16, 32, 64]
     meshDimension = 3
-    expectedOrders = 1  # the averaging does not account for differences in radial face sizes (inner product does though)
-
+    expectedOrders = 2  # the averaging does not account for differences in radial face sizes (inner product does though)
 
     def getError(self):
 
-        funR = lambda r, t, z: np.sin(np.pi*z) * np.sin(np.pi*r) * np.sin(t)
-        funT = lambda r, t, z: np.sin(np.pi*z) * np.sin(np.pi*r) * np.sin(t)
-        funZ = lambda r, t, z: np.sin(np.pi*z) * np.sin(np.pi*r) * np.sin(t)
+        funR = lambda r, t, z: np.sin(2*np.pi*z) * np.sin(np.pi*r) * np.sin(t)
+        funT = lambda r, t, z: np.sin(np.pi*z) * np.sin(np.pi*r) * np.sin(2*t)
+        funZ = lambda r, t, z: np.sin(np.pi*z) * np.sin(2*np.pi*r) * np.sin(t)
 
         Fc = cylF3(self.M, funR, funT, funZ)
         F = self.M.projectFaceVector(Fc)
@@ -214,7 +251,7 @@ class TestAveF2CCV(Tests.OrderTest):
         aveF_anaR = funR(
             self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2]
         )
-        aveF_anaT = funR(
+        aveF_anaT = funT(
             self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2]
         )
         aveF_anaZ = funZ(
@@ -223,7 +260,7 @@ class TestAveF2CCV(Tests.OrderTest):
 
         aveF_ana = np.hstack([aveF_anaR, aveF_anaT, aveF_anaZ])
 
-        err = np.linalg.norm((aveF-aveF_ana), np.inf)
+        err = np.linalg.norm((aveF[:self.M.vnF[0]]-aveF_anaR), np.inf)
         return err
 
     def test_order(self):
@@ -235,7 +272,7 @@ class TestAveF2CC(Tests.OrderTest):
     meshTypes = MESHTYPES
     meshSizes = [8, 16, 32, 64]
     meshDimension = 3
-    expectedOrders = 1  # the averaging does not account for differences in theta edge lengths (inner product does though)
+    expectedOrders = 2  # the averaging does not account for differences in theta edge lengths (inner product does though)
 
     def getError(self):
 
@@ -313,7 +350,7 @@ class TestAveE2CCV(Tests.OrderTest):
     meshTypes = MESHTYPES
     meshSizes = [8, 16, 32, 64]
     meshDimension = 3
-    expectedOrders = 1  # the averaging does not account for differences in theta edge lengths (inner product does though)
+    expectedOrders = 2  # the averaging does not account for differences in theta edge lengths (inner product does though)
 
     def getError(self):
 
@@ -329,7 +366,7 @@ class TestAveE2CCV(Tests.OrderTest):
         aveE_anaR = funR(
             self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2]
         )
-        aveE_anaT = funR(
+        aveE_anaT = funT(
             self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2]
         )
         aveE_anaZ = funZ(
@@ -350,7 +387,7 @@ class TestAveE2CC(Tests.OrderTest):
     meshTypes = MESHTYPES
     meshSizes = [8, 16, 32, 64]
     meshDimension = 3
-    expectedOrders = 1  # the averaging does not account for differences in radial face sizes (inner product does though)
+    expectedOrders = 2  # the averaging does not account for differences in radial face sizes (inner product does though)
 
     def getError(self):
 
