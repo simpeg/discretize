@@ -320,6 +320,9 @@ class TestZero(unittest.TestCase):
         assert 2/o == 2
         assert 2/-o == -2
 
+        assert o.T == 1
+        assert o.transpose == 1
+
     def test_mat_one(self):
 
         o = Identity()
