@@ -659,10 +659,11 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
             )
 
         elif location == 'Ey':
+            nNx = self.nNx if self.isSymmetric else self.nNx - 1
             return utils.kron3(
                 utils.speye(self.vnN[2]),
-                utils.speye(self.vnN[1]),
-                utils.speye(self.vnN[0])[:, 1:]
+                utils.speye(self.vnC[1]),
+                utils.speye(nNx+1)[:, 1:]
             )
 
         elif location == 'Ez':

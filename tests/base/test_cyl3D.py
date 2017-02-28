@@ -219,7 +219,7 @@ class TestAverageSimple(unittest.TestCase):
             self.mesh.gridCC[:, 0], self.mesh.gridCC[:, 1], self.mesh.gridCC[:, 2]
         )
         aveF_anaT = funT(
-            self.mesh.gridCC[:, 0], self.mesh.gridCC[:, 1], self.mesh.gridCC[:, 2]
+         self.mesh.gridCC[:, 0], self.mesh.gridCC[:, 1], self.mesh.gridCC[:, 2]
         )
         aveF_anaZ = funZ(
             self.mesh.gridCC[:, 0], self.mesh.gridCC[:, 1], self.mesh.gridCC[:, 2]
@@ -235,7 +235,7 @@ class TestAveF2CCV(Tests.OrderTest):
     meshTypes = MESHTYPES
     meshSizes = [8, 16, 32, 64]
     meshDimension = 3
-    expectedOrders = 2  # the averaging does not account for differences in radial face sizes (inner product does though)
+    expectedOrders = 2
 
     def getError(self):
 
@@ -350,7 +350,6 @@ class TestAveE2CCV(Tests.OrderTest):
     meshTypes = MESHTYPES
     meshSizes = [8, 16, 32, 64]
     meshDimension = 3
-    expectedOrders = 2  # the averaging does not account for differences in theta edge lengths (inner product does though)
 
     def getError(self):
 
@@ -387,7 +386,6 @@ class TestAveE2CC(Tests.OrderTest):
     meshTypes = MESHTYPES
     meshSizes = [8, 16, 32, 64]
     meshDimension = 3
-    expectedOrders = 2  # the averaging does not account for differences in radial face sizes (inner product does though)
 
     def getError(self):
 
