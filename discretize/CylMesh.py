@@ -218,21 +218,11 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
             if self.isSymmetric is True:
                 return super(CylMesh, self).gridFx
             else:
-                self._gridFx = utils.ndgrid([
-                    self.vectorNx[1:], self.vectorCCy, self.vectorCCz
+                self._gridFx = self._deflationMatrix('Fx').T * utils.ndgrid([
+                    self.vectorNx, self.vectorCCy, self.vectorCCz
                 ])
         return self._gridFx
 
-    @property
-    def gridFy(self):
-        if getattr(self, '_gridFy', None) is None:
-            if self.isSymmetric is True:
-                return super(CylMesh, self).gridFy
-            else:
-                self._gridFy = utils.ndgrid([
-                    self.vectorCCx, self.vectorNy, self.vectorCCz
-                ])
-        return self._gridFy
 
     @property
     def gridEy(self):
@@ -240,8 +230,8 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
             if self.isSymmetric is True:
                 return super(CylMesh, self).gridEy
             else:
-                self._gridEy = utils.ndgrid([
-                    self.vectorNx[1:], self.vectorCCy, self.vectorNz
+                self._gridEy = self._deflationMatrix('Ey').T * utils.ndgrid([
+                    self.vectorNx, self.vectorCCy, self.vectorNz
                 ])
         return self._gridEy
 
@@ -249,11 +239,9 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
     def gridEz(self):
         if getattr(self, '_gridEz', None) is None:
             if self.isSymmetric is True:
-                return super(CylMesh, self).gridEz
+                self._gridEz = super(CylMesh, self).gridEz
             else:
-                gridEz = super(CylMesh, self).gridEz
-
-                self._gridEz = self._deflationMatrix('Ez') * gridEz
+                self._gridEz = self._deflationMatrix('Ez').T * super(CylMesh, self).gridEz
         return self._gridEz
 
     ####################################################
@@ -262,7 +250,7 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
 
     @property
     def faceDiv(self):
-        """Construct divergence operator (face-stg to cell-centres)."""
+        """Construct divergence operator (faces to cell-centres)."""
         if getattr(self, '_faceDiv', None) is None:
             n = self.vnC
             # Compute faceDivergence operator on faces
@@ -280,7 +268,7 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
     def faceDivx(self):
         """
         Construct divergence operator in the x component
-        (face-stg to cell-centres).
+        (faces to cell-centres).
         """
         if getattr(self, '_faceDivx', None) is None:
             D1 = utils.kron3(
@@ -297,7 +285,7 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
     def faceDivy(self):
         """
         Construct divergence operator in the y component
-        (face-stg to cell-centres).
+        (faces to cell-centres).
         """
         # raise NotImplementedError(
         if getattr(self, '_faceDivy', None) is None:
@@ -317,7 +305,7 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
     def faceDivz(self):
         """
         Construct divergence operator in the z component
-        (face-stg to cell-centres).
+        (faces to cell-centres).
         """
         if getattr(self, '_faceDivz', None) is None:
             D3 = utils.kron3(
@@ -351,9 +339,6 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
     @property
     def edgeCurl(self):
         """The edgeCurl property."""
-        # if self.nCy > 1:
-        #     raise NotImplementedError(
-        #         'Edge curl not yet implemented for nCy > 1')
         if getattr(self, '_edgeCurl', None) is None:
             A = self.area
             E = self.edge
@@ -433,7 +418,7 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
                 )
                 Dz_t = (
                     sp.kron(utils.speye(self.nCz), Ddxr) *
-                    self._deflationMatrix('Ez').T -
+                    self._deflationMatrix('Ez') -
                     sp.kron(utils.speye(self.nCz), wrap_z)
                 )
 
@@ -477,31 +462,20 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
     @property
     def aveEx2CC(self):
         "averaging operator of x-faces to cell centers"
-        wrap_theta = sp.csr_matrix(
-            (
-                [1]*(self.vnC[1] + 1),
-                (np.arange(0, self.vnC[1]+1), np.hstack((np.arange(0, self.vnC[1]), [0])) )
-            ),
-            shape=(self.vnC[1]+1, self.vnC[1])
-        )
-
-        return sp.kron(
+        return utils.kron3(
             utils.av(self.vnC[2]),
-            sp.kron(
-                utils.av(self.vnC[1]),
-                utils.speye(self.vnC[0])
-            ) * sp.kron(wrap_theta, utils.speye(self.vnC[0]))
-        )
+            utils.av(self.vnC[1]),
+            utils.speye(self.vnC[0])
+        ) * self._deflationMatrix('Ex')
 
     @property
     def aveEy2CC(self):
         "averaging from y-faces to cell centers"
-
-        avR = utils.av(self.vnC[0])[:, 1:]
-        avR[0, 0] = 0.5
         return utils.kron3(
-            utils.av(self.vnC[2]), utils.speye(self.vnC[1]), avR
-        )
+            utils.av(self.vnC[2]),
+            utils.speye(self.vnC[1]),
+            utils.av(self.vnC[0])
+        ) * self._deflationMatrix('Ey')
 
     @property
     def aveEz2CC(self):
@@ -535,7 +509,11 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
             sp.kron(wrap_theta, utils.speye(self.vnC[0]))
         ))
 
-        return sp.kron(utils.speye(self.vnC[2]), aveEz + 0.5*wrap_z)
+        return (
+            sp.kron(utils.speye(self.vnC[2]), aveEz) +
+            0.5*sp.kron(utils.speye(self.vnC[2]), wrap_z)
+        )
+
 
     @property
     def aveE2CC(self):
@@ -571,7 +549,6 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
     def aveFx2CC(self):
         "averaging operator of x-faces to cell centers"
         avR = utils.av(self.vnC[0])[:, 1:]
-        avR[0, 0] = 0.5  # averaging with zero flux due to symmetry at center
         return utils.kron3(
             utils.speye(self.vnC[2]), utils.speye(self.vnC[1]), avR
         )
@@ -647,18 +624,20 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
             shape=(self.vnC[1]+1, self.vnC[1])
         )
 
-        collapse_x = sp.csr_matrix(
-            (
-                [1]*self.vnC[0],
-                (np.arange(1, self.vnC[0]+1), np.arange(0, self.vnC[0]))
-            ),
-            shape=(self.vnC[0]+1, self.vnC[0])
-        )
-
         if location in ['E', 'F']:
-            pass
+            return sp.block_diag([
+                self._deflationMatrix(location+coord) for coord in
+                ['x', 'y', 'z']
+            ])
 
         if location == 'Fx':
+            collapse_x = sp.csr_matrix(
+                (
+                    [1]*self.vnC[0],
+                    (np.arange(1, self.vnC[0]+1), np.arange(0, self.vnC[0]))
+                ),
+                shape=(self.vnC[0]+1, self.vnC[0])
+            )
             return utils.kron3(
                 utils.speye(self.vnC[2]), utils.speye(self.vnC[1]), collapse_x
             )
@@ -673,10 +652,18 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
             return utils.speye(self.vnF[2])
 
         elif location == 'Ex':
-            pass
+            return utils.kron3(
+                utils.speye(self.vnC[2]+1),
+                wrap_theta,
+                utils.speye(self.vnC[0])
+            )
 
         elif location == 'Ey':
-            pass
+            return utils.kron3(
+                utils.speye(self.vnN[2]),
+                utils.speye(self.vnN[1]),
+                utils.speye(self.vnN[0])[:, 1:]
+            )
 
         elif location == 'Ez':
             removeme = np.arange(
@@ -686,7 +673,7 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
             keepme[removeme] = False
 
             eye = sp.eye(self.vnN[:2].prod())
-            eye = eye.tocsr()[keepme, :]
+            eye = eye.tocsr()[:, keepme]
             return sp.kron(utils.speye(self.nCz), eye)
 
     ####################################################
