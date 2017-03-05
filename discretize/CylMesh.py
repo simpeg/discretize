@@ -73,6 +73,16 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
         return self.nCy
 
     @property
+    def nN(self):
+        """
+        Total number of nodes
+
+        :rtype: int
+        :return: nN
+        """
+        return (self.nNx - 1) * self.nNy * self.nNz + self.nNz
+
+    @property
     def vnFx(self):
         """
         Number of x-faces in each direction
@@ -101,10 +111,7 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
         :rtype: numpy.array
         :return: vnEz or None if nCy > 1, (dim, )
         """
-        if self.isSymmetric is True:
-            return np.r_[self.nNx, self.nNy, self.nCz]
-        else:
-            return None
+        return np.r_[self.nNx, self.nNy, self.nCz]
 
     @property
     def nEz(self):

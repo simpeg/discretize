@@ -76,11 +76,62 @@ class TestCyl3DGeometries(unittest.TestCase):
             )
         )
 
+# ----------------------- Test Grids and Counting --------------------------- #
+
+
+class Cyl3DGrid(unittest.TestCase):
+
+    def test_counting(self):
+        mesh = discretize.CylMesh([2, 4, 1])
+
+        # cell centers
+        self.assertTrue(mesh.nC == 8)
+        self.assertTrue(mesh.nCx == 2)
+        self.assertTrue(mesh.nCy == 4)
+        self.assertTrue(mesh.nCz == 1)
+        self.assertTrue((mesh.vnC == [2, 4, 1]).all())
+
+        # faces
+        self.assertTrue(mesh.nFx == 8)
+        self.assertTrue(mesh.nFy == 8)
+        self.assertTrue(mesh.nFz == 16)
+        self.assertTrue(mesh.nF == 32)
+        self.assertTrue((mesh.vnFx == [2, 4, 1]).all())
+        self.assertTrue((mesh.vnFy == [2, 4, 1]).all())
+        self.assertTrue((mesh.vnFz == [2, 4, 2]).all())
+        self.assertTrue((mesh.vnF == [8, 8, 16]).all())
+
+        # edges
+        self.assertTrue(mesh.nEx == 16)
+        self.assertTrue(mesh.nEy == 16)
+        self.assertTrue(mesh.nEz == 9)  # there is an edge at the center
+        self.assertTrue(mesh.nE == 41)
+        self.assertTrue((mesh.vnEx == [2, 4, 2]).all())
+        self.assertTrue((mesh.vnEy == [2, 4, 2]).all())
+        self.assertTrue((mesh.vnEz == [3, 4, 1]).all())
+        self.assertTrue((mesh.vnE == [16, 16, 9]).all())
+        self.assertFalse(mesh.vnEz.prod() == mesh.nEz)  # periodic boundary condition
+
+        # nodes
+        self.assertTrue(mesh.nNx == 3)
+        self.assertTrue(mesh.nNy == 4)
+        self.assertTrue(mesh.nNz == 2)
+        self.assertTrue((mesh.vnN == [3, 4, 2]).all())
+        self.assertTrue(mesh.nN == 18)
+        self.assertFalse(mesh.nN == mesh.vnN.prod())  # periodic boundary condition
+
+
+
+# ----------------------------- Test Operators ------------------------------ #
+
+
 MESHTYPES = ['uniformCylMesh']
 call2 = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 2])
 call3 = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1], xyz[:, 2])
 cyl_row2 = lambda g, xfun, yfun: np.c_[call2(xfun, g), call2(yfun, g)]
-cyl_row3 = lambda g, xfun, yfun, zfun: np.c_[call3(xfun, g), call3(yfun, g), call3(zfun, g)]
+cyl_row3 = lambda g, xfun, yfun, zfun: np.c_[
+    call3(xfun, g), call3(yfun, g), call3(zfun, g)
+]
 cylF2 = lambda M, fx, fy: np.vstack((
     cyl_row2(M.gridFx, fx, fy), cyl_row2(M.gridFz, fx, fy)
 ))
@@ -94,6 +145,7 @@ cylE3 = lambda M, ex, ey, ez: np.vstack((
     cyl_row3(M.gridEy, ex, ey, ez),
     cyl_row3(M.gridEz, ex, ey, ez)
 ))
+
 
 class TestFaceDiv3D(Tests.OrderTest):
     name = "FaceDiv"
