@@ -81,8 +81,11 @@ class TestCyl3DGeometries(unittest.TestCase):
 
 class Cyl3DGrid(unittest.TestCase):
 
+    def setUp(self):
+        self.mesh = discretize.CylMesh([2, 4, 1])
+
     def test_counting(self):
-        mesh = discretize.CylMesh([2, 4, 1])
+        mesh = self.mesh
 
         # cell centers
         self.assertTrue(mesh.nC == 8)
@@ -120,7 +123,123 @@ class Cyl3DGrid(unittest.TestCase):
         self.assertTrue(mesh.nN == 18)
         self.assertFalse(mesh.nN == mesh.vnN.prod())  # periodic boundary condition
 
+    def test_gridCC(self):
+        mesh = self.mesh
 
+        # Cell centers
+        self.assertTrue((mesh.vectorCCx == [0.25, 0.75]).all())
+        self.assertTrue((
+            mesh.vectorCCy == 2.*np.pi*np.r_[1./8., 3./8., 5./8., 7./8.]
+        ).all())
+        self.assertTrue(mesh.vectorCCz == 0.5)
+
+        self.assertTrue((mesh.gridCC[:, 0] == 4*[0.25, 0.75]).all())
+        self.assertTrue((
+            mesh.gridCC[:, 1] == 2.*np.pi*np.r_[
+                1./8., 1./8., 3./8., 3./8., 5./8., 5./8., 7./8., 7./8.
+            ]
+        ).all())
+        self.assertTrue((mesh.gridCC[:, 2] == 8*[0.5]).all())
+
+    def test_gridN(self):
+        mesh = self.mesh
+
+        # Nodes
+        self.assertTrue((mesh.vectorNx == [0., 0.5, 1.]).all())
+        self.assertTrue((
+            mesh.vectorNy == 2*np.pi*np.r_[0., 0.25, 0.5, 0.75]
+        ).all())
+        self.assertTrue((mesh.vectorNz == np.r_[0., 1.]).all())
+
+        self.assertTrue((
+            mesh.gridN[:, 0] == 2*[0., 0.5, 1., 0.5, 1., 0.5, 1., 0.5, 1.]
+        ).all())
+        self.assertTrue((
+            mesh.gridN[:, 1] == 2*np.pi*np.hstack(
+                2*[3*[0.], 2*[1./4.], 2*[1./2.], 2*[3./4.]]
+            )
+        ).all())
+        self.assertTrue((mesh.gridN[:, 2] == 9*[0.] + 9*[1.]).all())
+
+    def test_gridFx(self):
+        mesh = self.mesh
+
+        # x-faces
+        self.assertTrue((mesh.gridFx[:, 0] == 4*[0.5, 1.]).all())
+        self.assertTrue((
+            mesh.gridFx[:, 1] == 2*np.pi*np.hstack(
+                [2*[1./8.], 2*[3./8.], 2*[5./8.], 2*[7./8.]]
+            )
+        ).all())
+        self.assertTrue((mesh.gridFx[:, 2] == 8*[0.5]).all())
+
+    def test_gridFy(self):
+        mesh = self.mesh
+
+        # y-faces
+        self.assertTrue((mesh.gridFy[:, 0] == 4*[0.25, 0.75]).all())
+        self.assertTrue((
+            mesh.gridFy[:, 1] == 2*np.pi*np.hstack(
+                [2*[0.], 2*[1./4.], 2*[1./2.], 2*[3./4.]]
+            )
+        ).all())
+        self.assertTrue((mesh.gridFy[:, 2] == 8*[0.5]).all())
+
+    def test_gridFz(self):
+        mesh = self.mesh
+
+        # z-faces
+        self.assertTrue((mesh.gridFz[:, 0] == 8*[0.25, 0.75]).all())
+        self.assertTrue((
+            mesh.gridFz[:, 1] == 2*np.pi*np.hstack(
+                2*[2*[1./8.], 2*[3./8.], 2*[5./8.], 2*[7./8.]]
+            )
+        ).all())
+        self.assertTrue((
+            mesh.gridFz[:, 2] == np.hstack([8*[0.], 8*[1.]])
+        ).all())
+
+    def test_gridEx(self):
+        mesh = self.mesh
+
+        # x-edges
+        self.assertTrue((mesh.gridEx[:, 0] == 8*[0.25, 0.75]).all())
+        self.assertTrue((
+            mesh.gridEx[:, 1] == 2*np.pi*np.hstack(
+                2*[2*[0.], 2*[1./4.], 2*[1./2.], 2*[3./4.]]
+            )
+        ).all())
+        self.assertTrue((
+            mesh.gridEx[:, 2] == np.hstack([8*[0.], 8*[1.]])
+        ).all())
+
+    def test_gridEy(self):
+        mesh = self.mesh
+
+        # y-edges
+        self.assertTrue((mesh.gridEy[:, 0] == 8*[0.5, 1.]).all())
+        self.assertTrue((
+            mesh.gridEy[:, 1] == 2*np.pi*np.hstack(
+                2*[2*[1./8.], 2*[3./8.], 2*[5./8.], 2*[7./8.]]
+            )
+        ).all())
+        self.assertTrue((
+            mesh.gridEy[:, 2] == np.hstack([8*[0.], 8*[1.]])
+        ).all())
+
+    def test_gridEz(self):
+        mesh = self.mesh
+
+        # z-edges
+        self.assertTrue((
+            mesh.gridEz[:, 0] == np.hstack([[0., 0.5, 1.] + 3*[0.5, 1.]])
+        ).all())
+        self.assertTrue((
+            mesh.gridEz[:, 1] == 2*np.pi*np.hstack(
+                [3*[0.], 2*[1./4.], 2*[1./2.], 2*[3./4.]]
+            )
+        ).all())
+        self.assertTrue((mesh.gridEz[:, 2] == 9*[0.5]).all())
 
 # ----------------------------- Test Operators ------------------------------ #
 

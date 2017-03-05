@@ -220,6 +220,17 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
     ####################################################
 
     @property
+    def gridN(self):
+        if self.isSymmetric:
+            return None  # there are no nodes in a cyl symmetric mesh
+        if getattr(self, '_gridN', None) is None:
+            self._gridN = (
+                self._deflationMatrix('N').T * super(CylMesh, self).gridN
+            )
+        return self._gridN
+
+
+    @property
     def gridFx(self):
         if getattr(self, '_gridFx', None) is None:
             if self.isSymmetric is True:
@@ -631,6 +642,7 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
             shape=(self.vnC[1]+1, self.vnC[1])
         )
 
+
         if location in ['E', 'F']:
             return sp.block_diag([
                 self._deflationMatrix(location+coord) for coord in
@@ -683,6 +695,17 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
             eye = sp.eye(self.vnN[:2].prod())
             eye = eye.tocsr()[:, keepme]
             return sp.kron(utils.speye(self.nCz), eye)
+
+        elif location == 'N':
+            removeme = np.arange(
+                self.vnN[0], self.vnN[:2].prod(), step=self.vnN[0]
+            )
+            keepme = np.ones(self.vnN[:2].prod(), dtype=bool)
+            keepme[removeme] = False
+
+            eye = sp.eye(self.vnN[:2].prod())
+            eye = eye.tocsr()[:, keepme]
+            return sp.kron(utils.speye(self.nNz), eye)
 
     ####################################################
     # Interpolation
