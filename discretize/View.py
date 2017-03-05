@@ -667,7 +667,7 @@ class CylView(object):
         else:
             ax = kwargs.pop('ax', None)
             if ax is not None:
-                if len(ax) != 2:
+                if not isinstance(ax, list) or len(ax) != 2:
                     warnings.warn(
                         "two axes handles must be provided to plot both theta "
                         "and z slices through the mesh. Over-writing the axes."
@@ -709,7 +709,6 @@ for reference, see: http://matplotlib.org/examples/pylab_examples/polar_demo.htm
             self._plotGridZSlice(*args, **kwargspolar)
             self._plotGridThetaSlice(*args, **kwargscart)
             plt.tight_layout()
-
 
     def _plotGridThetaSlice(self, *args, **kwargs):
         if self.isSymmetric:
