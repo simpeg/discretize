@@ -1,7 +1,9 @@
 from __future__ import print_function
 import numpy as np
-from discretize.utils import mkvc
+from discretize.utils import mkvc, ndgrid
 from six import integer_types
+import warnings
+
 try:
     import matplotlib.pyplot as plt
     import matplotlib
@@ -360,6 +362,38 @@ class TensorView(object):
             xORy = {'x':0, 'y':1}[vType[1]]
             v = v.reshape((self.nC, -1), order='F')[:, xORy]
 
+
+        # Matplotlib seems to not support irregular
+        # spaced vectors at the moment. So we will
+        # Interpolate down to a regular mesh at the
+        # smallest mesh size in this 2D slice.
+        if sample_grid is not None:
+            hxmin = sample_grid[0]
+            hymin = sample_grid[1]
+        else:
+            hxmin = self.hx.min()
+            hymin = self.hy.min()
+
+        if range_x is not None:
+            dx = (range_x[1] - range_x[0])
+            nxi = int(dx/hxmin)
+            hx = np.ones(nxi)*dx/nxi
+            x0_x = range_x[0]
+        else:
+            nxi = int(self.hx.sum()/hxmin)
+            hx = np.ones(nxi)*self.hx.sum()/nxi
+            x0_x = self.x0[0]
+
+        if range_y is not None:
+            dy = (range_y[1] - range_y[0])
+            nyi = int(dy/hymin)
+            hy = np.ones(nyi)*dy/nyi
+            x0_y = range_y[0]
+        else:
+            nyi = int(self.hy.sum()/hymin)
+            hy = np.ones(nyi)*self.hy.sum()/nyi
+            x0_y = self.x0[1]
+
         out = ()
         if view in ['real', 'imag', 'abs']:
             v = self.r(v, 'CC', 'CC', 'M')
@@ -373,37 +407,6 @@ class TensorView(object):
             if clim is None:
                 uv = np.sqrt(U**2 + V**2)
                 clim = [uv.min(), uv.max()]
-
-            # Matplotlib seems to not support irregular
-            # spaced vectors at the moment. So we will
-            # Interpolate down to a regular mesh at the
-            # smallest mesh size in this 2D slice.
-            if sample_grid is not None:
-                hxmin = sample_grid[0]
-                hymin = sample_grid[1]
-            else:
-                hxmin = self.hx.min()
-                hymin = self.hy.min()
-
-            if range_x is not None:
-                dx = (range_x[1] - range_x[0])
-                nxi = int(dx/hxmin)
-                hx = np.ones(nxi)*dx/nxi
-                x0_x = range_x[0]
-            else:
-                nxi = int(self.hx.sum()/hxmin)
-                hx = np.ones(nxi)*self.hx.sum()/nxi
-                x0_x = self.x0[0]
-
-            if range_y is not None:
-                dy = (range_y[1] - range_y[0])
-                nyi = int(dy/hymin)
-                hy = np.ones(nyi)*dy/nyi
-                x0_y = range_y[0]
-            else:
-                nyi = int(self.hy.sum()/hymin)
-                hy = np.ones(nyi)*self.hy.sum()/nyi
-                x0_y = self.x0[1]
 
             tMi = self.__class__([hx, hy], np.r_[x0_x, x0_y])
             P = self.getInterpolationMat(tMi.gridCC, 'CC', zerosOutside=True)
@@ -645,7 +648,120 @@ class CylView(object):
         return out
 
     def plotGrid(self, *args, **kwargs):
-        return self._plotCylTensorMesh('plotGrid', *args, **kwargs)
+        if self.isSymmetric:
+            return self._plotCylTensorMesh('plotGrid', *args, **kwargs)
+
+        # allow a slice to be provided for the mesh
+        slc = kwargs.pop('slice', None)
+        if isinstance(slc, str):
+            slc = slc.lower()
+        assert slc in ['theta', 'z', 'both', None], (
+            "slice must be either 'theta','z', or 'both' not {}".format(slc)
+        )
+
+        # if slc is None, provide slices in both the theta and z directions
+        if slc == 'theta':
+            self._plotGridThetaSlice(*args, **kwargs)
+        elif slc == 'z':
+            self._plotGridZSlice(*args, **kwargs)
+        else:
+            ax = kwargs.pop('ax', None)
+            if ax is not None:
+                if len(ax) != 2:
+                    warnings.warn(
+                        "two axes handles must be provided to plot both theta "
+                        "and z slices through the mesh. Over-writing the axes."
+                    )
+                    ax = None
+                else:
+                    # find the one with a polar projection and pass it to the
+                    # theta slice, other one to the z-slice
+                    polarax = [a for a in ax if a.__class__.__name__ == 'PolarAxesSubplot']
+                    if len(polarax) != 1:
+                        warnings.warn("""
+No polar axes provided. Over-writing the axes. If you prefer to create your
+own, please use
+
+    `ax = plt.subplot(121, projection='polar')`
+
+for reference, see: http://matplotlib.org/examples/pylab_examples/polar_demo.html
+                    https://github.com/matplotlib/matplotlib/issues/312
+                    """)
+                        ax = None
+
+                    else:
+                        polarax = polarax[0]
+                        cartax = [a for a in ax if a != polarax][0]
+
+            # ax may have been None to start with or set to None
+            if ax is None:
+                fig = plt.figure(figsize=(12, 5))
+                polarax = plt.subplot(121, projection='polar')
+                cartax = plt.subplot(122)
+
+            # update kwargs with respective axes handles
+            kwargspolar = kwargs.copy()
+            kwargspolar['ax'] = polarax
+
+            kwargscart = kwargs.copy()
+            kwargscart['ax'] = cartax
+
+            self._plotGridZSlice(*args, **kwargspolar)
+            self._plotGridThetaSlice(*args, **kwargscart)
+            plt.tight_layout()
+
+
+    def _plotGridThetaSlice(self, *args, **kwargs):
+        if self.isSymmetric:
+            return self.plotGrid(*args, **kwargs)
+
+        # make a cyl symmetric mesh
+        h2d = [self.hx, 1, self.hz]
+        mesh2D = self.__class__(h2d, self.x0)
+        return mesh2D.plotGrid(*args, **kwargs)
+
+    def _plotGridZSlice(self, *args, **kwargs):
+        # https://github.com/matplotlib/matplotlib/issues/312
+        ax = kwargs.get('ax', None)
+        if ax is not None:
+            if ax.__class__.__name__ != "PolarAxesSubplot":
+                warnings.warn(
+                    """
+Creating new axes with Polar projection. If you prefer to create your own, please use
+
+    `ax = plt.subplot(121, projection='polar')`
+
+for reference, see: http://matplotlib.org/examples/pylab_examples/polar_demo.html
+                    https://github.com/matplotlib/matplotlib/issues/312
+                    """
+                )
+                ax = plt.subplot(111, projection='polar')
+        else:
+            ax = plt.subplot(111, projection='polar')
+
+        # radial lines
+        NN = ndgrid(self.vectorNx, self.vectorNy, np.r_[0])[:, :2]
+        NN = NN.reshape((self.vnN[0], self.vnN[1], 2), order='F')
+        NN = [NN[:, :, 0], NN[:, :, 1]]
+        X1 = np.c_[
+            mkvc(NN[0][0, :]),
+            mkvc(NN[0][self.nCx, :]),
+            mkvc(NN[0][0, :])*np.nan
+        ].flatten()
+        Y1 = np.c_[
+            mkvc(NN[1][0, :]),
+            mkvc(NN[1][self.nCx, :]),
+            mkvc(NN[1][0, :])*np.nan
+        ].flatten()
+
+        ax.plot(Y1, X1, '-b')
+
+        # circles
+        n = 100
+        XY2 = [
+            ax.plot(np.linspace(0., np.pi*2, n), r*np.ones(n), '-b')
+            for r in self.vectorNx
+        ]
 
     def plotImage(self, *args, **kwargs):
         return self._plotCylTensorMesh('plotImage', *args, **kwargs)
