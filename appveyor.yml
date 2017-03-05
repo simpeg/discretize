@@ -21,6 +21,7 @@ install:
   - activate test-environment
   - pip install -r requirements_dev.txt
   - python setup.py install
+  - "set MPLBACKEND="agg""
 
 test_script:
   - cd tests

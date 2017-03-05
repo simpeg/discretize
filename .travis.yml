@@ -29,6 +29,7 @@ install:
   - pip install -r requirements_dev.txt
   - python setup.py install
   - make build
+  - export MPLBACKEND="agg"
 
 script:
   - nosetests tests/base tests/tree tests/docs --with-cov --cov discretize --cov-config .coveragerc -v -s;
