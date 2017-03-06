@@ -80,6 +80,8 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
         :rtype: int
         :return: nN
         """
+        if self.isSymmetric:
+            return 0  # there are no nodes on a cylindrically symmetric mesh
         return (self.nNx - 1) * self.nNy * self.nNz + self.nNz
 
     @property
@@ -222,7 +224,7 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
     @property
     def gridN(self):
         if self.isSymmetric:
-            return None  # there are no nodes in a cyl symmetric mesh
+            self._gridN = super(CylMesh, self).gridN
         if getattr(self, '_gridN', None) is None:
             self._gridN = (
                 self._deflationMatrix('N').T * super(CylMesh, self).gridN
