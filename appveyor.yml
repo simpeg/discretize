@@ -23,7 +23,7 @@ install:
   - python setup.py install
 
   # Use the Agg backend in Matplotlib
-  - echo backend:Agg > matplotlibrc
+  - "set MPLBACKEND=Agg"
 
 test_script:
   - cd tests
