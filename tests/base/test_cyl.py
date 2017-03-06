@@ -596,7 +596,7 @@ class TestCyl3DMesh(unittest.TestCase):
         self.assertTrue(np.all(self.mesh.vnC == [3, 2, 2]))
 
     def test_nN(self):
-        self.assertTrue(self.mesh.nN == 24)
+        self.assertTrue(self.mesh.nN == 21)
         self.assertTrue(self.mesh.nNx == 4)
         self.assertTrue(self.mesh.nNy == 2)
         self.assertTrue(self.mesh.nNz == 3)
@@ -618,7 +618,7 @@ class TestCyl3DMesh(unittest.TestCase):
         self.assertTrue(self.mesh.nEy == 18)
         self.assertTrue(np.all(self.mesh.vnEy == [3, 2, 3]))
         self.assertTrue(self.mesh.nEz == 12 + 2)
-        self.assertTrue(self.mesh.vnEz is None)
+        self.assertTrue(np.all(self.mesh.vnEz == [4, 2, 2]))
         self.assertTrue(self.mesh.nE == 50)
         self.assertTrue(np.all(self.mesh.vnE == [18, 18, 14]))
 
