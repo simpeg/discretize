@@ -698,5 +698,40 @@ class TestCylEdgeInnerProducts_Order(Tests.OrderTest):
     def test_order(self):
         self.orderTest()
 
+
+# ------------------- Test conversion to Cartesian ----------------------- #
+
+class TestCartesianGrid(unittest.TestCase):
+
+    def test_cartesianGrid(self):
+        mesh = discretize.CylMesh([1, 4, 1])
+
+        root2over2 = np.sqrt(2.)/2.
+
+        # cell centers
+        cartCC = mesh.cartesianGrid('CC')
+        self.assertTrue(np.allclose(
+            cartCC[:, 0], 0.5*root2over2*np.r_[1., -1., -1., 1.]
+        ))
+        self.assertTrue(np.allclose(
+            cartCC[:, 1], 0.5*root2over2*np.r_[1., 1., -1., -1.]
+        ))
+        self.assertTrue(np.allclose(
+            cartCC[:, 2], 0.5*np.ones(4)
+        ))
+
+        # nodes
+        cartN = mesh.cartesianGrid('N')
+        self.assertTrue(np.allclose(
+            cartN[:, 0], np.hstack(2*[0., 1., 0., -1., 0.])
+        ))
+        self.assertTrue(np.allclose(
+            cartN[:, 1], np.hstack(2*[0., 0., 1., 0., -1.])
+        ))
+        self.assertTrue(np.allclose(
+            cartN[:, 2], np.hstack(5*[0.] + 5*[1.])
+        ))
+
+
 if __name__ == '__main__':
     unittest.main()

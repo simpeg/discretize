@@ -758,6 +758,18 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
 
         return self._getInterpolationMat(loc, locType, zerosOutside)
 
+    def cartesianGrid(self, locType='CC'):
+        """
+        Takes a grid location ('CC', 'N', 'Ex', 'Ey', 'Ez', 'Fx', 'Fy', 'Fz')
+        and returns that grid in cartesian coordinates
+        """
+        grid = getattr(self, 'grid{}'.format(locType))
+        return np.vstack([
+            grid[:, 0]*np.cos(grid[:, 1]),
+            grid[:, 0]*np.sin(grid[:, 1]),
+            grid[:, 2]
+        ]).T
+
     def getInterpolationMatCartMesh(self, Mrect, locType='CC', locTypeTo=None):
         """
             Takes a cartesian mesh and returns a projection to translate onto
