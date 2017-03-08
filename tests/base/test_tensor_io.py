@@ -48,7 +48,8 @@ class TestTensorMeshIO(unittest.TestCase):
         os.remove('arange2.txt')
 
     def test_read_ubc_mesh(self):
-        mesh = discretize.TensorMesh.readUBC('ubc_tensor_mesh.msh')
+        fname = os.path.join(os.path.split(__file__)[0], 'ubc_tensor_mesh.msh')
+        mesh = discretize.TensorMesh.readUBC(fname)
         assert mesh.nCx == 78
         assert mesh.nCy == 50
         assert mesh.nCz == 51
