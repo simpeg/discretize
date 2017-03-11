@@ -17,13 +17,16 @@ class TensorMeshIO(object):
 
         # Interal function to read cell size lines for the UBC mesh files.
         def readCellLine(line):
+            line_list = []
             for seg in line.split():
                 if '*' in seg:
-                    st = seg
                     sp = seg.split('*')
-                    re = int(sp[0])*(' ' + sp[1])
-                    line = line.replace(st, re.strip())
-            return np.array(line.split(), dtype=float)
+                    seg_arr = np.ones((int(sp[0]),)) * float(sp[1])
+                else:
+                    seg_arr = np.array([float(seg)],float)
+                line_list.append(seg_arr)
+            return np.concatenate(line_list)
+
         # Read the file as line strings, remove lines with comment = !
         msh = np.genfromtxt(fileName, delimiter='\n', dtype=np.str, comments='!')
 
