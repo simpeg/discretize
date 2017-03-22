@@ -764,11 +764,7 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
         and returns that grid in cartesian coordinates
         """
         grid = getattr(self, 'grid{}'.format(locType))
-        return np.vstack([
-            grid[:, 0]*np.cos(grid[:, 1]),
-            grid[:, 0]*np.sin(grid[:, 1]),
-            grid[:, 2]
-        ]).T
+        return utils.cyl2cart(grid)
 
     def getInterpolationMatCartMesh(self, Mrect, locType='CC', locTypeTo=None):
         """

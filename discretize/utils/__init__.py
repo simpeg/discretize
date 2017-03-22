@@ -10,4 +10,6 @@ from .meshutils import (exampleLrmGrid, meshTensor, closestPoints,
                         ExtractCoreMesh, random_model)
 from .curvutils import volTetra, faceInfo, indexCube
 from .interputils import interpmat
-from .coordutils import rotatePointsFromNormals, rotationMatrixFromNormals
+from .coordutils import (
+    rotatePointsFromNormals, rotationMatrixFromNormals, cyl2cart
+)

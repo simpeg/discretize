@@ -2,6 +2,18 @@ import numpy as np
 from .matutils import mkvc
 
 
+def cyl2cart(grid):
+    """
+    Take a grid defined in cylindrical coordinates :math:`(r, \theta, z)` and
+    transform it to cartesian coordinates.
+    """
+    return np.hstack([
+        mkvc(grid[:, 0]*np.cos(grid[:, 1]), 2),
+        mkvc(grid[:, 0]*np.sin(grid[:, 1]), 2),
+        mkvc(grid[:, 2], 2)
+    ])
+
+
 def rotationMatrixFromNormals(v0, v1, tol=1e-20):
     """
         Performs the minimum number of rotations to define a rotation from the direction indicated by the vector n0 to the direction indicated by n1.
