@@ -304,9 +304,18 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts, CurviVi
         if self.dim == 2:
             return normalize2D(np.r_[self._normals[0], self._normals[1]])
         elif self.dim == 3:
-            normal1 = (self._normals[0][0] + self._normals[0][1] + self._normals[0][2] + self._normals[0][3])/4
-            normal2 = (self._normals[1][0] + self._normals[1][1] + self._normals[1][2] + self._normals[1][3])/4
-            normal3 = (self._normals[2][0] + self._normals[2][1] + self._normals[2][2] + self._normals[2][3])/4
+            normal1 = (
+                self._normals[0][0] + self._normals[0][1] +
+                self._normals[0][2] + self._normals[0][3]
+            )/4
+            normal2 = (
+                self._normals[1][0] + self._normals[1][1] +
+                self._normals[1][2] + self._normals[1][3]
+            )/4
+            normal3 = (
+                self._normals[2][0] + self._normals[2][1] +
+                self._normals[2][2] + self._normals[2][3]
+            )/4
             return normalize3D(np.r_[normal1, normal2, normal3])
 
     @property

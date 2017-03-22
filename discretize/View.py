@@ -336,17 +336,27 @@ class TensorView(object):
         vTypeOptsV = ['CCv', 'F', 'E']
         vTypeOpts = vTypeOptsCC + vTypeOptsV
         if view == 'vec':
-            assert vType in vTypeOptsV, "vType must be in ['{0!s}'] when view='vec'".format("', '".join(vTypeOptsV))
-        assert vType in vTypeOpts, "vType must be in ['{0!s}']".format("', '".join(vTypeOpts))
+            assert vType in vTypeOptsV, (
+                "vType must be in ['{0!s}'] when view='vec'".format(
+                    "', '".join(vTypeOptsV)
+                )
+            )
+        assert vType in vTypeOpts, (
+            "vType must be in ['{0!s}']".format("', '".join(vTypeOpts))
+        )
 
         viewOpts = ['real', 'imag', 'abs', 'vec']
-        assert view in viewOpts, "view must be in ['{0!s}']".format("', '".join(viewOpts))
+        assert view in viewOpts, (
+            "view must be in ['{0!s}']".format("', '".join(viewOpts))
+        )
 
         if ax is None:
             plt.figure()
             ax = plt.subplot(111)
         else:
-            assert isinstance(ax, matplotlib.axes.Axes), "ax must be an matplotlib.axes.Axes"
+            assert isinstance(ax, matplotlib.axes.Axes), (
+                "ax must be an matplotlib.axes.Axes"
+            )
 
         # Reshape to a cell centered variable
         if vType == 'CC':
@@ -355,10 +365,10 @@ class TensorView(object):
             assert view == 'vec', 'Other types for CCv not supported'
         elif vType in ['F', 'E', 'N']:
             aveOp = 'ave' + vType + ('2CCV' if view == 'vec' else '2CC')
-            v = getattr(self, aveOp)*v # average to cell centers (might be a vector)
+            v = getattr(self, aveOp)*v  # average to cell centers (might be a vector)
         elif vType in ['Fx', 'Fy', 'Ex', 'Ey']:
             aveOp = 'ave' + vType[0] + '2CCV'
-            v = getattr(self, aveOp)*v # average to cell centers (might be a vector)
+            v = getattr(self, aveOp)*v  # average to cell centers (might be a vector)
             xORy = {'x':0, 'y':1}[vType[1]]
             v = v.reshape((self.nC, -1), order='F')[:, xORy]
 
