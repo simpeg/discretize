@@ -8,15 +8,22 @@ def configuration(parent_package='', top_path=None):
     config = Configuration('utils', parent_package, top_path)
 
     ext = 'interputils_cython'
+    ext2 = 'prodAvec'
     try:
         from Cython.Build import cythonize
         cythonize(os.path.join(base_path, ext+'.pyx'))
+        cythonize(os.path.join(base_path, ext2+'.pyx'))
     except ImportError:
         pass
 
     config.add_extension(
         ext,
         sources=[ext+'.c'],
+        include_dirs=[get_numpy_include_dirs()]
+    )
+    config.add_extension(
+        ext2,
+        sources=[ext2+'.c'],
         include_dirs=[get_numpy_include_dirs()]
     )
 
