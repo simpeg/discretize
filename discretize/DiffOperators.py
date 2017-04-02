@@ -218,40 +218,19 @@ class DiffOperators(object):
         Construct divergence operator in the x component (face-stg to
         cell-centres).
         """
-        if getattr(self, '_faceDivx', None) is None:
-            # The number of cell centers in each direction
-            n = self.vnC
-            # Compute faceDivergence operator on faces
-            if(self.dim == 1):
-                D1 = ddx(n[0])
-            elif(self.dim == 2):
-                D1 = sp.kron(speye(n[1]), ddx(n[0]))
-            elif(self.dim == 3):
-                D1 = kron3(speye(n[2]), speye(n[1]), ddx(n[0]))
-            # Compute areas of cell faces & volumes
-            S = self.r(self.area, 'F', 'Fx', 'V')
-            V = self.vol
-            self._faceDivx = sdiag(1/V)*D1*sdiag(S)
-
-        return self._faceDivx
+        # Compute areas of cell faces & volumes
+        S = self.r(self.area, 'F', 'Fx', 'V')
+        V = self.vol
+        return sdiag(1/V)*self._faceDivStencilx*sdiag(S)
 
     @property
     def faceDivy(self):
         if(self.dim < 2):
             return None
-        if getattr(self, '_faceDivy', None) is None:
-            # The number of cell centers in each direction
-            n = self.vnC
-            # Compute faceDivergence operator on faces
-            if(self.dim == 2):
-                D2 = sp.kron(ddx(n[1]), speye(n[0]))
-            elif(self.dim == 3):
-                D2 = kron3(speye(n[2]), ddx(n[1]), speye(n[0]))
-            # Compute areas of cell faces & volumes
-            S = self.r(self.area, 'F', 'Fy', 'V')
-            V = self.vol
-            self._faceDivy = sdiag(1/V)*D2*sdiag(S)
-        return self._faceDivy
+        # Compute areas of cell faces & volumes
+        S = self.r(self.area, 'F', 'Fy', 'V')
+        V = self.vol
+        return sdiag(1/V)*self._faceDivStencily*sdiag(S)
 
     @property
     def faceDivz(self):
@@ -261,16 +240,10 @@ class DiffOperators(object):
         """
         if(self.dim < 3):
             return None
-        if getattr(self, '_faceDivz', None) is None:
-            # The number of cell centers in each direction
-            n = self.vnC
-            # Compute faceDivergence operator on faces
-            D3 = kron3(ddx(n[2]), speye(n[1]), speye(n[0]))
-            # Compute areas of cell faces & volumes
-            S = self.r(self.area, 'F', 'Fz', 'V')
-            V = self.vol
-            self._faceDivz = sdiag(1/V)*D3*sdiag(S)
-        return self._faceDivz
+        # Compute areas of cell faces & volumes
+        S = self.r(self.area, 'F', 'Fz', 'V')
+        V = self.vol
+        return sdiag(1/V)*self._faceDivStencilz*sdiag(S)
 
     ###########################################################################
     #                                                                         #
