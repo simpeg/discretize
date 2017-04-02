@@ -163,7 +163,7 @@ class DiffOperators(object):
         elif self.dim == 2:
             Dy = sp.kron(ddx(self.nCy), speye(self.nCx))
         elif self.dim == 3:
-            Dy = kron3((self.nCz), ddx(self.nCy), speye(self.nCx))
+            Dy = kron3(speye(self.nCz), ddx(self.nCy), speye(self.nCx))
         return Dy
 
     @property
@@ -174,20 +174,20 @@ class DiffOperators(object):
         if self.dim == 1 or self.dim == 2:
             return None
         elif self.dim == 3:
-            Dy = kron3(ddx(self.nCz), speye(self.nCy), speye(self.nCx))
-        return Dy
+            Dz = kron3(ddx(self.nCz), speye(self.nCy), speye(self.nCx))
+        return Dz
 
     @property
     def _faceDivStencil(self):
         # Compute faceDivergence stencil on faces
-        if(self.dim == 1):
+        if self.dim == 1:
             D = self._faceDivStencilx
-        elif(self.dim == 2):
+        elif self.dim == 2:
             D = sp.hstack((
                 self._faceDivStencilx,
                 self._faceDivStencily
             ), format="csr")
-        elif(self.dim == 3):
+        elif self.dim == 3:
             D = sp.hstack((
                 self._faceDivStencilx,
                 self._faceDivStencily,
@@ -253,13 +253,12 @@ class DiffOperators(object):
         """
         Stencil for the nodal grad in the x-direction (nodes to x-edges)
         """
-        n = self.vnC
         if self.dim == 1:
-            Gx = ddx(n[0])
+            Gx = ddx(self.nCx)
         elif self.dim == 2:
-            Gx = sp.kron(speye(n[1]+1), ddx(n[0]))
+            Gx = sp.kron(speye(self.nNy), ddx(self.nCx))
         elif self.dim == 3:
-            Gx = kron3(speye(n[2]+1), speye(n[1]+1), ddx(n[0]))
+            Gx = kron3(speye(self.nNz), speye(self.nNy), ddx(self.nCx))
         return Gx
 
     @property
@@ -267,13 +266,12 @@ class DiffOperators(object):
         """
         Stencil for the nodal grad in the y-direction (nodes to y-edges)
         """
-        n = self.vnC
         if self.dim == 1:
             return None
         elif self.dim == 2:
-            Gy = sp.kron(ddx(n[1]), speye(n[0]+1))
+            Gy = sp.kron(ddx(self.nCy), speye(self.nNx))
         elif self.dim == 3:
-            Gy = kron3(speye(n[2]+1), ddx(n[1]), speye(n[0]+1))
+            Gy = kron3(speye(self.nNz), ddx(self.nCy), speye(self.nNx))
         return Gy
 
     @property
@@ -281,11 +279,10 @@ class DiffOperators(object):
         """
         Stencil for the nodal grad in the z-direction (nodes to z- edges)
         """
-        n = self.vnC
         if self.dim == 1 or self.dim == 2:
             return None
         else:
-            Gz = kron3(ddx(n[2]), speye(n[1]+1), speye(n[0]+1))
+            Gz = kron3(ddx(self.nCz), speye(self.nNy), speye(self.nNx))
         return Gz
 
     @property
@@ -294,14 +291,14 @@ class DiffOperators(object):
         Stencil for the nodal grad
         """
         # Compute divergence operator on faces
-        if(self.dim == 1):
+        if self.dim == 1:
             G = self._nodalGradStencilx
-        elif(self.dim == 2):
+        elif self.dim == 2:
             G = sp.vstack((
                 self._nodalGradStencilx,
                 self._nodalGradStencily
             ), format="csr")
-        elif(self.dim == 3):
+        elif self.dim == 3:
             G = sp.vstack((
                 self._nodalGradStencilx,
                 self._nodalGradStencily,
@@ -397,16 +394,18 @@ class DiffOperators(object):
             warnings.warn('Laplacian has not been tested rigorously.')
             # Compute divergence operator on faces
             if self.dim == 1:
-                L = self._nodalLaplacianx
+                self._nodalLaplacian = self._nodalLaplacianx
             elif self.dim == 2:
-                L = self._nodalLaplacianx + self._nodalLaplaciany
+                self._nodalLaplacian = (
+                    self._nodalLaplacianx +
+                    self._nodalLaplaciany
+                )
             elif self.dim == 3:
-                L = (
+                self._nodalLaplacian = (
                     self._nodalLaplacianx +
                     self._nodalLaplaciany +
                     self._nodalLaplacianz
                 )
-            self._nodalLaplacian = L
         return self._nodalLaplacian
 
     ###########################################################################
@@ -414,6 +413,8 @@ class DiffOperators(object):
     #                                Cell Grad                                #
     #                                                                         #
     ###########################################################################
+
+    _cellGradBC_list = 'neumann'
 
     def setCellGradBC(self, BC):
         """
@@ -446,22 +447,57 @@ class DiffOperators(object):
         self._cellGradBC = None
         self._cellGradBC_list = BC
         return BC
-    _cellGradBC_list = 'neumann'
+
+    @property
+    def _cellGradxStencil(self):
+        # TODO: remove this hard-coding
+        BC = ['neumann', 'neumann']
+        if self.dim == 1:
+            G1 = ddxCellGrad(self.nCx, BC)
+        elif self.dim == 2:
+            G1 = sp.kron(speye(self.nCy), ddxCellGrad(self.nCx, BC))
+        elif self.dim == 3:
+            G1 = kron3(
+                speye(self.nCz),
+                speye(self.nCy),
+                ddxCellGrad(self.nCx, BC)
+            )
+        return G1
+
+    @property
+    def _cellGradyStencil(self):
+        if self.dim < 2:
+            return None
+        BC = ['neumann', 'neumann'] # TODO: remove this hard-coding
+        n = self.vnC
+        if(self.dim == 2):
+            G2 = sp.kron(ddxCellGrad(n[1], BC), speye(n[0]))
+        elif self.dim == 3:
+            G2 = kron3(speye(n[2]), ddxCellGrad(n[1], BC), speye(n[0]))
+        return G2
+
+    @property
+    def _cellGradzStencil(self):
+        if self.dim < 3:
+            return None
+        BC = ['neumann', 'neumann'] # TODO: remove this hard-coding
+        n = self.vnC
+        G3 = kron3(ddxCellGrad(n[2], BC), speye(n[1]), speye(n[0]))
+        return G3
 
     @property
     def _cellGradStencil(self):
         BC = self.setCellGradBC(self._cellGradBC_list)
-        n = self.vnC
-        if(self.dim == 1):
-            G = ddxCellGrad(n[0], BC[0])
-        elif(self.dim == 2):
-            G1 = sp.kron(speye(n[1]), ddxCellGrad(n[0], BC[0]))
-            G2 = sp.kron(ddxCellGrad(n[1], BC[1]), speye(n[0]))
+        if self.dim == 1:
+            G = ddxCellGrad(self.nCx, BC[0])
+        elif self.dim == 2:
+            G1 = sp.kron(speye(self.nCy), ddxCellGrad(self.nCx, BC[0]))
+            G2 = sp.kron(ddxCellGrad(self.nCy, BC[1]), speye(self.nCx))
             G = sp.vstack((G1, G2), format="csr")
-        elif(self.dim == 3):
-            G1 = kron3(speye(n[2]), speye(n[1]), ddxCellGrad(n[0], BC[0]))
-            G2 = kron3(speye(n[2]), ddxCellGrad(n[1], BC[1]), speye(n[0]))
-            G3 = kron3(ddxCellGrad(n[2], BC[2]), speye(n[1]), speye(n[0]))
+        elif self.dim == 3:
+            G1 = kron3(speye(self.nCz), speye(self.nCy), ddxCellGrad(self.nCx, BC[0]))
+            G2 = kron3(speye(self.nCz), ddxCellGrad(self.nCy, BC[1]), speye(self.nCx))
+            G3 = kron3(ddxCellGrad(self.nCz, BC[2]), speye(self.nCy), speye(self.nCx))
             G = sp.vstack((G1, G2, G3), format="csr")
         return G
 
@@ -485,13 +521,13 @@ class DiffOperators(object):
         if getattr(self, '_cellGradBC', None) is None:
             BC = self.setCellGradBC(self._cellGradBC_list)
             n = self.vnC
-            if(self.dim == 1):
+            if self.dim == 1:
                 G = ddxCellGradBC(n[0], BC[0])
-            elif(self.dim == 2):
+            elif self.dim == 2:
                 G1 = sp.kron(speye(n[1]), ddxCellGradBC(n[0], BC[0]))
                 G2 = sp.kron(ddxCellGradBC(n[1], BC[1]), speye(n[0]))
                 G = sp.block_diag((G1, G2), format="csr")
-            elif(self.dim == 3):
+            elif self.dim == 3:
                 G1 = kron3(speye(n[2]), speye(n[1]), ddxCellGradBC(n[0], BC[0]))
                 G2 = kron3(speye(n[2]), ddxCellGradBC(n[1], BC[1]), speye(n[0]))
                 G3 = kron3(ddxCellGradBC(n[2], BC[2]), speye(n[1]), speye(n[0]))
@@ -501,45 +537,6 @@ class DiffOperators(object):
             V = self.aveCC2F*self.vol  # Average volume between adjacent cells
             self._cellGradBC = sdiag(S/V)*G
         return self._cellGradBC
-
-    # def cellGradBC():
-    #     doc = "The cell centered Gradient boundary condition matrix"
-
-    #     def fget(self):
-    #         if(self._cellGradBC is None):
-    #             BC = self.setCellGradBC(self._cellGradBC_list)
-    #             n = self.vnC
-    #             if(self.dim == 1):
-    #                 G = ddxCellGradBC(n[0], BC[0])
-    #             elif(self.dim == 2):
-    #                 G1 = sp.kron(speye(n[1]), ddxCellGradBC(n[0], BC[0]))
-    #                 G2 = sp.kron(ddxCellGradBC(n[1], BC[1]), speye(n[0]))
-    #                 G = sp.block_diag((G1, G2), format="csr")
-    #             elif(self.dim == 3):
-    #                 G1 = kron3(speye(n[2]), speye(n[1]), ddxCellGradBC(n[0], BC[0]))
-    #                 G2 = kron3(speye(n[2]), ddxCellGradBC(n[1], BC[1]), speye(n[0]))
-    #                 G3 = kron3(ddxCellGradBC(n[2], BC[2]), speye(n[1]), speye(n[0]))
-    #                 G = sp.block_diag((G1, G2, G3), format="csr")
-    #             # Compute areas of cell faces & volumes
-    #             S = self.area
-    #             V = self.aveCC2F*self.vol  # Average volume between adjacent cells
-    #             self._cellGradBC = sdiag(S/V)*G
-    #         return self._cellGradBC
-    #     return locals()
-    # _cellGradBC = None
-    # cellGradBC = property(**cellGradBC())
-
-    @property
-    def _cellGradxStencil(self):
-        BC = ['neumann', 'neumann']
-        n = self.vnC
-        if(self.dim == 1):
-            G1 = ddxCellGrad(n[0], BC)
-        elif(self.dim == 2):
-            G1 = sp.kron(speye(n[1]), ddxCellGrad(n[0], BC))
-        elif(self.dim == 3):
-            G1 = kron3(speye(n[2]), speye(n[1]), ddxCellGrad(n[0], BC))
-        return G1
 
     @property
     def cellGradx(self):
@@ -556,18 +553,6 @@ class DiffOperators(object):
         return self._cellGradx
 
     @property
-    def _cellGradyStencil(self):
-        if self.dim < 2:
-            return None
-        BC = ['neumann', 'neumann']
-        n = self.vnC
-        if(self.dim == 2):
-            G2 = sp.kron(ddxCellGrad(n[1], BC), speye(n[0]))
-        elif(self.dim == 3):
-            G2 = kron3(speye(n[2]), ddxCellGrad(n[1], BC), speye(n[0]))
-        return G2
-
-    @property
     def cellGrady(self):
         if self.dim < 2:
             return None
@@ -578,15 +563,6 @@ class DiffOperators(object):
             L = self.r(self.area/V, 'F', 'Fy', 'V')
             self._cellGrady = sdiag(L)*G2
         return self._cellGrady
-
-    @property
-    def _cellGradzStencil(self):
-        if self.dim < 3:
-            return None
-        BC = ['neumann', 'neumann']
-        n = self.vnC
-        G3 = kron3(ddxCellGrad(n[2], BC), speye(n[1]), speye(n[0]))
-        return G3
 
     @property
     def cellGradz(self):
@@ -603,6 +579,12 @@ class DiffOperators(object):
             L = self.r(self.area/V, 'F', 'Fz', 'V')
             self._cellGradz = sdiag(L)*G3
         return self._cellGradz
+
+    ###########################################################################
+    #                                                                         #
+    #                                Edge Curl                                #
+    #                                                                         #
+    ###########################################################################
 
     @property
     def edgeCurl(self):
@@ -661,8 +643,10 @@ class DiffOperators(object):
         """
 
         if discretization is not 'CC':
-            raise NotImplementedError('Boundary conditions only implemented'
-                                      'for CC discretization.')
+            raise NotImplementedError(
+                'Boundary conditions only implemented'
+                'for CC discretization.'
+            )
 
         if isinstance(BC, string_types):
             BC = [BC for _ in self.vnC]  # Repeat the str self.dim times
@@ -705,7 +689,7 @@ class DiffOperators(object):
 
         n = self.vnC
         indF = self.faceBoundaryInd
-        if(self.dim == 1):
+        if self.dim == 1:
             Pbc = projDirichlet(n[0], BC[0])
             indF = indF[0] | indF[1]
             Pbc = Pbc*sdiag(self.area[indF])
@@ -714,7 +698,7 @@ class DiffOperators(object):
 
             Pout = projNeumannOut(n[0], BC[0])
 
-        elif(self.dim == 2):
+        elif self.dim == 2:
             Pbc1 = sp.kron(speye(n[1]), projDirichlet(n[0], BC[0]))
             Pbc2 = sp.kron(projDirichlet(n[1], BC[1]), speye(n[0]))
             Pbc = sp.block_diag((Pbc1, Pbc2), format="csr")
@@ -729,7 +713,7 @@ class DiffOperators(object):
             P2 = sp.kron(projNeumannOut(n[1], BC[1]), speye(n[0]))
             Pout = sp.block_diag((P1, P2), format="csr")
 
-        elif(self.dim == 3):
+        elif self.dim == 3:
             Pbc1 = kron3(speye(n[2]), speye(n[1]), projDirichlet(n[0], BC[0]))
             Pbc2 = kron3(speye(n[2]), projDirichlet(n[1], BC[1]), speye(n[0]))
             Pbc3 = kron3(projDirichlet(n[2], BC[2]), speye(n[1]), speye(n[0]))
@@ -785,13 +769,13 @@ class DiffOperators(object):
         n = self.vnC
         indF = self.faceBoundaryInd
 
-        if(self.dim == 1):
+        if self.dim == 1:
             Pbc = projDirichlet(n[0], BC[0])
             B = projBC(n[0])
             indF = indF[0] | indF[1]
             Pbc = Pbc*sdiag(self.area[indF])
 
-        elif(self.dim == 2):
+        elif self.dim == 2:
             Pbc1 = sp.kron(speye(n[1]), projDirichlet(n[0], BC[0]))
             Pbc2 = sp.kron(projDirichlet(n[1], BC[1]), speye(n[0]))
             Pbc = sp.block_diag((Pbc1, Pbc2), format="csr")
@@ -801,7 +785,7 @@ class DiffOperators(object):
             indF = np.r_[(indF[0] | indF[1]), (indF[2] | indF[3])]
             Pbc = Pbc*sdiag(self.area[indF])
 
-        elif(self.dim == 3):
+        elif self.dim == 3:
             Pbc1 = kron3(speye(n[2]), speye(n[1]), projDirichlet(n[0], BC[0]))
             Pbc2 = kron3(speye(n[2]), projDirichlet(n[1], BC[1]), speye(n[0]))
             Pbc3 = kron3(projDirichlet(n[2], BC[2]), speye(n[1]), speye(n[0]))
@@ -818,30 +802,40 @@ class DiffOperators(object):
             Pbc = Pbc*sdiag(self.area[indF])
 
         return Pbc, B.T
-    # --------------- Averaging ---------------------
+
+    ###########################################################################
+    #                                                                         #
+    #                                Averaging                                #
+    #                                                                         #
+    ###########################################################################
 
     @property
     def aveF2CC(self):
         "Construct the averaging operator on cell faces to cell centers."
-        if(self.dim == 1):
+        if self.dim == 1:
             return self.aveFx2CC
-        elif(self.dim == 2):
-            return (0.5)*sp.hstack((self.aveFx2CC, self.aveFy2CC),
-                                   format="csr")
-        elif(self.dim == 3):
-            return (1./3.)*sp.hstack((self.aveFx2CC, self.aveFy2CC,
-                                      self.aveFz2CC), format="csr")
+        elif self.dim == 2:
+            return (0.5)*sp.hstack((
+                self.aveFx2CC, self.aveFy2CC
+            ), format="csr")
+        elif self.dim == 3:
+            return (1./3.)*sp.hstack((
+                self.aveFx2CC, self.aveFy2CC, self.aveFz2CC
+            ), format="csr")
 
     @property
     def aveF2CCV(self):
         "Construct the averaging operator on cell faces to cell centers."
-        if(self.dim == 1):
+        if self.dim == 1:
             return self.aveFx2CC
-        elif(self.dim == 2):
-            return sp.block_diag((self.aveFx2CC, self.aveFy2CC), format="csr")
-        elif(self.dim == 3):
-            return sp.block_diag((self.aveFx2CC, self.aveFy2CC, self.aveFz2CC),
-                                 format="csr")
+        elif self.dim == 2:
+            return sp.block_diag((
+                self.aveFx2CC, self.aveFy2CC
+            ), format="csr")
+        elif self.dim == 3:
+            return sp.block_diag((
+                self.aveFx2CC, self.aveFy2CC, self.aveFz2CC
+            ), format="csr")
 
     @property
     def aveFx2CC(self):
@@ -852,11 +846,11 @@ class DiffOperators(object):
 
         if getattr(self, '_aveFx2CC', None) is None:
             n = self.vnC
-            if(self.dim == 1):
+            if self.dim == 1:
                 self._aveFx2CC = av(n[0])
-            elif(self.dim == 2):
+            elif self.dim == 2:
                 self._aveFx2CC = sp.kron(speye(n[1]), av(n[0]))
-            elif(self.dim == 3):
+            elif self.dim == 3:
                 self._aveFx2CC = kron3(speye(n[2]), speye(n[1]), av(n[0]))
         return self._aveFx2CC
 
@@ -872,7 +866,7 @@ class DiffOperators(object):
             n = self.vnC
             if(self.dim == 2):
                 self._aveFy2CC = sp.kron(av(n[1]), speye(n[0]))
-            elif(self.dim == 3):
+            elif self.dim == 3:
                 self._aveFy2CC = kron3(speye(n[2]), av(n[1]), speye(n[0]))
         return self._aveFy2CC
 
@@ -894,44 +888,47 @@ class DiffOperators(object):
     def aveCC2F(self):
         "Construct the averaging operator on cell cell centers to faces."
         if getattr(self, '_aveCC2F', None) is None:
-            n = self.vnC
-            if(self.dim == 1):
-                self._aveCC2F = av_extrap(n[0])
-            elif(self.dim == 2):
-                self._aveCC2F = sp.vstack((sp.kron(speye(n[1]),
-                                           av_extrap(n[0])),
-                                           sp.kron(av_extrap(n[1]),
-                                           speye(n[0]))), format="csr")
-            elif(self.dim == 3):
-                self._aveCC2F = sp.vstack((kron3(speye(n[2]), speye(n[1]),
-                                                 av_extrap(n[0])),
-                                           kron3(speye(n[2]), av_extrap(n[1]),
-                                                 speye(n[0])),
-                                           kron3(av_extrap(n[2]), speye(n[1]),
-                                                 speye(n[0]))),
-                                          format="csr")
+            if self.dim == 1:
+                self._aveCC2F = av_extrap(self.nCx)
+            elif self.dim == 2:
+                self._aveCC2F = sp.vstack((
+                    sp.kron(speye(self.nCy), av_extrap(self.nCx)),
+                    sp.kron(av_extrap(self.nCy), speye(self.nCx))
+                ), format="csr")
+            elif self.dim == 3:
+                self._aveCC2F = sp.vstack((
+                    kron3(
+                        speye(self.nCz), speye(self.nCy), av_extrap(self.nCx)
+                    ),
+                    kron3(
+                        speye(self.nCz), av_extrap(self.nCy), speye(self.nCx)
+                    ),
+                    kron3(
+                        av_extrap(self.nCz), speye(self.nCy), speye(self.nCx)
+                    )
+                ), format="csr")
         return self._aveCC2F
 
     @property
     def aveE2CC(self):
         "Construct the averaging operator on cell edges to cell centers."
-        if(self.dim == 1):
+        if self.dim == 1:
             return self.aveEx2CC
-        elif(self.dim == 2):
+        elif self.dim == 2:
             return 0.5*sp.hstack((self.aveEx2CC, self.aveEy2CC), format="csr")
-        elif(self.dim == 3):
-            return (1./3)*sp.hstack(
-                (self.aveEx2CC, self.aveEy2CC, self.aveEz2CC), format="csr"
-            )
+        elif self.dim == 3:
+            return (1./3)*sp.hstack((
+                self.aveEx2CC, self.aveEy2CC, self.aveEz2CC
+            ), format="csr")
 
     @property
     def aveE2CCV(self):
         "Construct the averaging operator on cell edges to cell centers."
-        if(self.dim == 1):
+        if self.dim == 1:
             return self.aveEx2CC
-        elif(self.dim == 2):
+        elif self.dim == 2:
             return sp.block_diag((self.aveEx2CC, self.aveEy2CC), format="csr")
-        elif(self.dim == 3):
+        elif self.dim == 3:
             return sp.block_diag(
                 (self.aveEx2CC, self.aveEy2CC, self.aveEz2CC), format="csr"
             )
@@ -945,11 +942,11 @@ class DiffOperators(object):
         if getattr(self, '_aveEx2CC', None) is None:
             # The number of cell centers in each direction
             n = self.vnC
-            if(self.dim == 1):
+            if self.dim == 1:
                 self._aveEx2CC = speye(n[0])
-            elif(self.dim == 2):
+            elif self.dim == 2:
                 self._aveEx2CC = sp.kron(av(n[1]), speye(n[0]))
-            elif(self.dim == 3):
+            elif self.dim == 3:
                 self._aveEx2CC = kron3(av(n[2]), av(n[1]), speye(n[0]))
         return self._aveEx2CC
 
@@ -966,7 +963,7 @@ class DiffOperators(object):
             n = self.vnC
             if(self.dim == 2):
                 self._aveEy2CC = sp.kron(speye(n[1]), av(n[0]))
-            elif(self.dim == 3):
+            elif self.dim == 3:
                 self._aveEy2CC = kron3(av(n[2]), speye(n[1]), av(n[0]))
         return self._aveEy2CC
 
@@ -990,14 +987,47 @@ class DiffOperators(object):
         "Construct the averaging operator on cell nodes to cell centers."
         if getattr(self, '_aveN2CC', None) is None:
             # The number of cell centers in each direction
-            n = self.vnC
-            if(self.dim == 1):
-                self._aveN2CC = av(n[0])
-            elif(self.dim == 2):
-                self._aveN2CC = sp.kron(av(n[1]), av(n[0])).tocsr()
-            elif(self.dim == 3):
-                self._aveN2CC = kron3(av(n[2]), av(n[1]), av(n[0])).tocsr()
+            if self.dim == 1:
+                self._aveN2CC = av(self.nCx)
+            elif self.dim == 2:
+                self._aveN2CC = sp.kron(av(self.nCy), av(self.nCx)).tocsr()
+            elif self.dim == 3:
+                self._aveN2CC = kron3(av(self.nCz), av(self.nCy), av(self.nCx)).tocsr()
         return self._aveN2CC
+
+    @property
+    def _aveN2Ex(self):
+        """
+        Averaging operator on cell nodes to x-edges
+        """
+        if self.dim == 1:
+            aveN2Ex = av(self.nCx)
+        elif self.dim == 2:
+            aveN2Ex = sp.kron(speye(self.nNy), av(self.nCx))
+        elif self.dim == 3:
+            aveN2Ex = kron3(speye(self.nNz), speye(self.nNy), av(self.nCx))
+        return aveN2Ex
+
+    @property
+    def _aveN2Ey(self):
+        """
+        Averaging operator on cell nodes to y-edges
+        """
+        if self.dim == 1:
+            return None
+        elif self.dim == 2:
+            aveN2Ey = sp.kron(av(self.nCy), speye(self.nNx))
+        elif self.dim == 3:
+            aveN2Ey = kron3(speye(self.nNz), av(self.nCy), speye(self.nNx))
+        return aveN2Ey
+
+    @property
+    def _aveN2Ez(self):
+        if self.dim == 1 or self.dim == 2:
+            return None
+        elif self.dim == 3:
+            aveN2Ez = kron3(av(self.nCz), speye(self.nNy), speye(self.nNx))
+        return aveN2Ez
 
     @property
     def aveN2E(self):
@@ -1005,24 +1035,47 @@ class DiffOperators(object):
         Construct the averaging operator on cell nodes to cell edges, keeping
         each dimension separate.
         """
-
         if getattr(self, '_aveN2E', None) is None:
             # The number of cell centers in each direction
-            n = self.vnC
-            if(self.dim == 1):
-                self._aveN2E = av(n[0])
-            elif(self.dim == 2):
+            if self.dim == 1:
+                self._aveN2E = self._aveN2Ex
+            elif self.dim == 2:
                 self._aveN2E = sp.vstack((
-                    sp.kron(speye(n[1]+1), av(n[0])),
-                    sp.kron(av(n[1]), speye(n[0]+1))
+                    self._aveN2Ex, self._aveN2Ey
                 ), format="csr")
-            elif(self.dim == 3):
+            elif self.dim == 3:
                 self._aveN2E = sp.vstack((
-                    kron3(speye(n[2]+1), speye(n[1]+1), av(n[0])),
-                    kron3(speye(n[2]+1), av(n[1]), speye(n[0]+1)),
-                    kron3(av(n[2]), speye(n[1]+1), speye(n[0]+1))
+                    self._aveN2Ex, self._aveN2Ey, self._aveN2Ez
                 ), format="csr")
         return self._aveN2E
+
+    @property
+    def _aveN2Fx(self):
+        if self.dim == 1:
+            aveN2Fx = av(self.nCx)
+        elif self.dim == 2:
+            aveN2Fx = sp.kron(av(self.nCy), speye(self.nNx))
+        elif self.dim == 3:
+            aveN2Fx = kron3(av(self.nCz), av(self.nCy), speye(self.nNx))
+        return aveN2Fx
+
+    @property
+    def _aveN2Fy(self):
+        if self.dim == 1:
+            return None
+        elif self.dim == 2:
+            aveN2Fy = sp.kron(speye(self.nNy), av(self.nCx))
+        elif self.dim == 3:
+            aveN2Fy = kron3(av(self.nCz), speye(self.nNy), av(self.nCx))
+        return aveN2Fy
+
+    @property
+    def _aveN2Fz(self):
+        if self.dim == 1 or self.dim == 2:
+            return None
+        else:
+            aveN2Fz = kron3(speye(self.nNz), av(self.nCy), av(self.nCx))
+        return aveN2Fz
 
     @property
     def aveN2F(self):
@@ -1032,18 +1085,14 @@ class DiffOperators(object):
         """
         if getattr(self, '_aveN2F', None) is None:
             # The number of cell centers in each direction
-            n = self.vnC
-            if(self.dim == 1):
-                self._aveN2F = av(n[0])
-            elif(self.dim == 2):
+            if self.dim == 1:
+                self._aveN2F = self._aveN2Fx
+            elif self.dim == 2:
                 self._aveN2F = sp.vstack((
-                    sp.kron(av(n[1]), speye(n[0]+1)),
-                    sp.kron(speye(n[1]+1), av(n[0]))
+                    self._aveN2Fx, self._aveN2Fy
                 ), format="csr")
-            elif(self.dim == 3):
+            elif self.dim == 3:
                 self._aveN2F = sp.vstack((
-                    kron3(av(n[2]), av(n[1]), speye(n[0]+1)),
-                    kron3(av(n[2]), speye(n[1]+1), av(n[0])),
-                    kron3(speye(n[2]+1), av(n[1]), av(n[0]))
+                    self._aveN2Fx, self._aveN2Fy, self._aveN2Fz
                 ), format="csr")
         return self._aveN2F
