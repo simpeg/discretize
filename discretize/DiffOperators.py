@@ -2,6 +2,7 @@ from __future__ import print_function
 import numpy as np
 from scipy import sparse as sp
 from six import string_types
+import warnings
 from discretize.utils import sdiag, speye, kron3, spzeros, ddx, av, av_extrap
 
 
@@ -144,13 +145,12 @@ class DiffOperators(object):
         """
         Face divergence operator in the x-direction (x-faces to cell centers)
         """
-        n = self.vnC
         if self.dim == 1:
-            Dx = ddx(n[0])
+            Dx = ddx(self.nCx)
         elif self.dim == 2:
-            Dx = sp.kron(speye(n[1]), ddx(n[0]))
+            Dx = sp.kron(speye(self.nCy), ddx(self.nCx))
         elif self.dim == 3:
-            Dx = kron3(speye(n[2]), speye(n[1]), ddx(n[0]))
+            Dx = kron3(speye(self.nCz), speye(self.nCy), ddx(self.nCx))
         return Dx
 
     @property
@@ -158,13 +158,12 @@ class DiffOperators(object):
         """
         Face divergence operator in the y-direction (y-faces to cell centers)
         """
-        n = self.vnC
         if self.dim == 1:
             return None
         elif self.dim == 2:
-            Dy = sp.kron(ddx(n[1]), speye(n[0]))
+            Dy = sp.kron(ddx(self.nCy), speye(self.nCx))
         elif self.dim == 3:
-            Dy = kron3(speye(n[2]), ddx(n[1]), speye(n[0]))
+            Dy = kron3((self.nCz), ddx(self.nCy), speye(self.nCx))
         return Dy
 
     @property
@@ -172,16 +171,14 @@ class DiffOperators(object):
         """
         Face divergence operator in the z-direction (z-faces to cell centers)
         """
-        n = self.vnC
         if self.dim == 1 or self.dim == 2:
             return None
         elif self.dim == 3:
-            Dy = kron3(ddx(n[2]), speye(n[1]), speye(n[0]))
+            Dy = kron3(ddx(self.nCz), speye(self.nCy), speye(self.nCx))
         return Dy
 
     @property
     def _faceDivStencil(self):
-        # n = self.vnC
         # Compute faceDivergence stencil on faces
         if(self.dim == 1):
             D = self._faceDivStencilx
@@ -252,29 +249,144 @@ class DiffOperators(object):
     ###########################################################################
 
     @property
+    def _nodalGradStencilx(self):
+        """
+        Stencil for the nodal grad in the x-direction (nodes to x-edges)
+        """
+        n = self.vnC
+        if self.dim == 1:
+            Gx = ddx(n[0])
+        elif self.dim == 2:
+            Gx = sp.kron(speye(n[1]+1), ddx(n[0]))
+        elif self.dim == 3:
+            Gx = kron3(speye(n[2]+1), speye(n[1]+1), ddx(n[0]))
+        return Gx
+
+    @property
+    def _nodalGradStencily(self):
+        """
+        Stencil for the nodal grad in the y-direction (nodes to y-edges)
+        """
+        n = self.vnC
+        if self.dim == 1:
+            return None
+        elif self.dim == 2:
+            Gy = sp.kron(ddx(n[1]), speye(n[0]+1))
+        elif self.dim == 3:
+            Gy = kron3(speye(n[2]+1), ddx(n[1]), speye(n[0]+1))
+        return Gy
+
+    @property
+    def _nodalGradStencilz(self):
+        """
+        Stencil for the nodal grad in the z-direction (nodes to z- edges)
+        """
+        n = self.vnC
+        if self.dim == 1 or self.dim == 2:
+            return None
+        else:
+            Gz = kron3(ddx(n[2]), speye(n[1]+1), speye(n[0]+1))
+        return Gz
+
+    @property
+    def _nodalGradStencil(self):
+        """
+        Stencil for the nodal grad
+        """
+        # Compute divergence operator on faces
+        if(self.dim == 1):
+            G = self._nodalGradStencilx
+        elif(self.dim == 2):
+            G = sp.vstack((
+                self._nodalGradStencilx,
+                self._nodalGradStencily
+            ), format="csr")
+        elif(self.dim == 3):
+            G = sp.vstack((
+                self._nodalGradStencilx,
+                self._nodalGradStencily,
+                self._nodalGradStencilz
+            ), format="csr")
+        return G
+
+    @property
     def nodalGrad(self):
         """
         Construct gradient operator (nodes to edges).
         """
         if getattr(self, '_nodalGrad', None) is None:
-            # The number of cell centers in each direction
-            n = self.vnC
-            # Compute divergence operator on faces
-            if(self.dim == 1):
-                G = ddx(n[0])
-            elif(self.dim == 2):
-                D1 = sp.kron(speye(n[1]+1), ddx(n[0]))
-                D2 = sp.kron(ddx(n[1]), speye(n[0]+1))
-                G = sp.vstack((D1, D2), format="csr")
-            elif(self.dim == 3):
-                D1 = kron3(speye(n[2]+1), speye(n[1]+1), ddx(n[0]))
-                D2 = kron3(speye(n[2]+1), ddx(n[1]), speye(n[0]+1))
-                D3 = kron3(ddx(n[2]), speye(n[1]+1), speye(n[0]+1))
-                G = sp.vstack((D1, D2, D3), format="csr")
-            # Compute lengths of cell edges
+            G = self._nodalGradStencil
             L = self.edge
             self._nodalGrad = sdiag(1/L)*G
         return self._nodalGrad
+
+    @property
+    def _nodalLaplacianStencilx(self):
+        warnings.warn('Laplacian has not been tested rigorously.')
+
+        Dx = ddx(self.nCx)
+        Lx = - Dx.T * Dx
+
+        if self.dim == 2:
+            Lx = sp.kron(speye(self.nNy), Lx)
+        elif self.dim == 3:
+            Lx = kron3(speye(self.nNz), speye(self.nNy), Lx)
+        return Lx
+
+    @property
+    def _nodalLaplacianStencily(self):
+        warnings.warn('Laplacian has not been tested rigorously.')
+
+        if self.dim == 1:
+            return None
+
+        Dy = ddx(self.nCy)
+        Ly = - Dy.T * Dy
+
+        if self.dim == 2:
+            Ly = sp.kron(Ly, speye(self.nNx))
+        elif self.dim == 3:
+            Ly = kron3(speye(self.nNz), Ly, speye(self.nNx))
+        return Ly
+
+    @property
+    def _nodalLaplacianStencilz(self):
+        warnings.warn('Laplacian has not been tested rigorously.')
+
+        if self.dim == 1 or self.dim == 2:
+            return None
+
+        Dz = ddx(self.nCz)
+        Lz = - Dz.T * Dz
+        return kron3(Lz, speye(self.nNy), speye(self.nNx))
+
+    @property
+    def _nodalLaplacianx(self):
+        Hx = sdiag(1./self.hx)
+        if self.dim == 2:
+            Hx = sp.kron(speye(self.nNy), Hx)
+        elif self.dim == 3:
+            Hx = kron3(speye(self.nNz), speye(self.nNy), Hx)
+        return Hx.T * self._nodalGradStencilx * Hx
+
+    @property
+    def _nodalLaplaciany(self):
+        Hy = sdiag(1./self.hy)
+        if self.dim == 1:
+            return None
+        elif self.dim == 2:
+            Hy = sp.kron(Hy, speye(self.nNx))
+        elif self.dim == 3:
+            Hy = kron3(speye(self.nNz), Hy, speye(self.nNx))
+        return Hy.T * self._nodalGradStencily * Hy
+
+    @property
+    def _nodalLaplacianz(self):
+        if self.dim == 1 or self.dim == 2:
+            return None
+        Hz = sdiag(1./self.hz)
+        Hz = kron3(Hz, speye(self.nNy), speye(self.nNx))
+        return Hz.T * self._nodalLaplacianStencilz * Hz
 
     @property
     def nodalLaplacian(self):
@@ -282,27 +394,18 @@ class DiffOperators(object):
         Construct laplacian operator (nodes to edges).
         """
         if getattr(self, '_nodalLaplacian', None) is None:
-            print('Warning: Laplacian has not been tested rigorously.')
-            # The number of cell centers in each direction
-            n = self.vnC
+            warnings.warn('Laplacian has not been tested rigorously.')
             # Compute divergence operator on faces
-            if(self.dim == 1):
-                D1 = sdiag(1./self.hx) * ddx(self.nCx)
-                L = - D1.T*D1
-            elif(self.dim == 2):
-                D1 = sdiag(1./self.hx) * ddx(n[0])
-                D2 = sdiag(1./self.hy) * ddx(n[1])
-                L1 = sp.kron(speye(n[1]+1), - D1.T * D1)
-                L2 = sp.kron(- D2.T * D2, speye(n[0]+1))
-                L = L1 + L2
-            elif(self.dim == 3):
-                D1 = sdiag(1./self.hx) * ddx(n[0])
-                D2 = sdiag(1./self.hy) * ddx(n[1])
-                D3 = sdiag(1./self.hz) * ddx(n[2])
-                L1 = kron3(speye(n[2]+1), speye(n[1]+1), - D1.T * D1)
-                L2 = kron3(speye(n[2]+1), - D2.T * D2, speye(n[0]+1))
-                L3 = kron3(- D3.T * D3, speye(n[1]+1), speye(n[0]+1))
-                L = L1 + L2 + L3
+            if self.dim == 1:
+                L = self._nodalLaplacianx
+            elif self.dim == 2:
+                L = self._nodalLaplacianx + self._nodalLaplaciany
+            elif self.dim == 3:
+                L = (
+                    self._nodalLaplacianx +
+                    self._nodalLaplaciany +
+                    self._nodalLaplacianz
+                )
             self._nodalLaplacian = L
         return self._nodalLaplacian
 
