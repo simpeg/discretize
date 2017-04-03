@@ -596,11 +596,12 @@ class CylView(object):
         vType = kwargs.get('vType', None)
         if vType is not None:
             if vType.upper() != 'CCV':
+                val = args[0]
                 if vType.upper() == 'F':
-                    val = mkvc(self.aveF2CCV * args[0])
+                    val = mkvc(self.aveF2CCV * val)
                     kwargs['vType'] = 'CCv'  # now the vector is cell centered
                 if vType.upper() == 'E':
-                    val = mkvc(self.aveE2CCV * args[0])
+                    val = mkvc(self.aveE2CCV * val)
                 args = (val,) + args[1:]
 
         mirror = kwargs.pop('mirror', None)
