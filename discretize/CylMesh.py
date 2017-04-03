@@ -3,13 +3,16 @@ import numpy as np
 import scipy.sparse as sp
 from scipy.constants import pi
 
-from discretize import utils
-from discretize.TensorMesh import BaseTensorMesh, BaseRectangularMesh
-from discretize.InnerProducts import InnerProducts
-from discretize.View import CylView
+from . import utils
+from .TensorMesh import BaseTensorMesh, BaseRectangularMesh
+from .InnerProducts import InnerProducts
+from .View import CylView
+from .DiffOperators import DiffOperators, ddxCellGrad
 
 
-class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
+class CylMesh(
+    BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView, DiffOperators
+):
     """
         CylMesh is a mesh class for cylindrical problems
 
@@ -337,6 +340,41 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
             V = self.vol
             self._faceDivz = utils.sdiag(1/V)*D3*utils.sdiag(S)
         return self._faceDivz
+
+    @property
+    def _cellGradxStencil(self):
+        BC = ['neumann', 'neumann']
+        n = self.vnC
+
+        if self.isSymmetric:
+            G1 = sp.kron(utils.speye(n[2]), ddxCellGrad(n[0], BC))
+        else:
+            G1 = utils.kron3(
+                utils.speye(n[2]), utils.speye(n[1]), ddxCellGrad(n[0], BC)
+            )
+        return G1
+
+    # @property
+    # def cellGradx(self):
+    #     if getattr(self, '_cellGradx', None) is None:
+    #         G1 = self._cellGradxStencil
+    #         V = self.aveCC2F*self.vol
+    #         L = self.r(self.area/V, 'F', 'Fx', 'V')
+    #         self._cellGradx = sdiag(L)*G1
+
+
+    @property
+    def _cellGradyStencil(self):
+        raise NotImplementedError
+
+    @property
+    def _cellGradzStencil(self):
+        raise NotImplementedError
+
+    @property
+    def _cellGradStencil(self):
+        raise NotImplementedError
+
 
     @property
     def cellGrad(self):
