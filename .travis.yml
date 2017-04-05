@@ -2,6 +2,7 @@ language: python
 python:
 - 2.7
 - 3.6
+- 3.7
 matrix:
   allow_failures:
     - python: 3.7
@@ -56,7 +57,7 @@ after_success:
   - tar -xvzf credentials.tar.gz
 
   #deploy to pypi
-  - if [ "$TRAVIS_BRANCH" = "$MASTER_BRANCH" ]; then
+  - if [ "$TRAVIS_BRANCH" = "$MASTER_BRANCH" -a "$TRAVIS_TAG" = "true" ]; then
       mv credentials/.pypirc ~/.pypirc ;
       python setup.py register -r pypi ;
       travis_wait 20 twine upload -r pypi --skip-existing dist/* ;
