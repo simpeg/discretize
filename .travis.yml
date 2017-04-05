@@ -59,8 +59,8 @@ after_success:
   - if [ "$TRAVIS_BRANCH" = "$MASTER_BRANCH" ]; then
       mv credentials/.pypirc ~/.pypirc ;
       python setup.py register -r pypi ;
-      travis_wait 20 python setup.py sdist upload -r pypi ;
-      # travis_wait 20 twine upload -r pypi --skip-existing dist/* ;
+      # travis_wait 20 python setup.py sdist upload -r pypi ;
+      travis_wait 20 twine upload -r pypi --skip-existing dist/* ;
     fi
 
 notifications:
