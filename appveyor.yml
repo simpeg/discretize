@@ -10,12 +10,19 @@ environment:
     - PYTHON: 3.5
       MINICONDA: C:\Miniconda3
       PYTHON_ARCH: 32
+    - PYTHON: 3.6
+      MINICONDA: C:\Miniconda3
+      PYTHON_ARCH: 32
     - PYTHON: 2.7
       MINICONDA: C:\Miniconda
       PYTHON_ARCH: 64
     - PYTHON: 3.5
       MINICONDA: C:\Miniconda3
       PYTHON_ARCH: 64
+    - PYTHON: 3.6
+      MINICONDA: C:\Miniconda3
+      PYTHON_ARCH: 64
+
   pypi_password:
     secure: S2mZCxm5LzIF4KFDss/f7g==
 
@@ -58,5 +65,6 @@ deploy_script:
   - echo repository=https://pypi.python.org/pypi >> %USERPROFILE%\\.pypirc
   - echo username=lheagy >> %USERPROFILE%\\.pypirc
   - echo password=%pypi_password% >> %USERPROFILE%\\.pypirc
-  # - ps: If ($env:APPVEYOR_REPO_TAG -eq "true" -And $env:APPVEYOR_REPO_BRANCH -eq "distribution") { Invoke-Expression "twine upload -r pypi --skip-existing dist/*" 2>$null } Else { write-output "Not on a tag on master, won't deploy to pypi"}
-  - ps: If ($env:APPVEYOR_REPO_BRANCH -eq "distribution") { Invoke-Expression "twine upload -r pypi --skip-existing dist/*" 2>$null } Else { write-output "Not on a tag on master, won't deploy to pypi"}
+  # deploy on dev or master
+  - ps: If ($env:APPVEYOR_REPO_TAG -eq "true" ) { Invoke-Expression "twine upload -r pypi --skip-existing dist/*" 2>$null } Else { write-output "Not on a tag, won't deploy to pypi"}
+  - ps: If ($env:APPVEYOR_REPO_TAG -eq "true" ) { Invoke-Expression "twine upload -r pypi --skip-existing dist/*" 2>$null } Else { write-output "Not on a tag, won't deploy to pypi"}
