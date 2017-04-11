@@ -677,7 +677,7 @@ class TensorMesh(
     def edgeEx(self):
         """x-edge lengths"""
         if getattr(self, '_edgeEx', None) is None:
-             # Ensure that we are working with column vectors
+            # Ensure that we are working with column vectors
             vh = self.h
             # The number of cell centers in each direction
             n = self.vnC
