@@ -598,47 +598,153 @@ class TensorMesh(
         return self._vol
 
     @property
-    def area(self):
-        """Construct face areas of the 3D model as 1d array."""
-        if getattr(self, '_area', None) is None:
+    def areaFx(self):
+        """
+        Area of the x-faces
+        """
+        if getattr(self, '_areaFx', None) is None:
             # Ensure that we are working with column vectors
             vh = self.h
             # The number of cell centers in each direction
             n = self.vnC
             # Compute areas of cell faces
-            if(self.dim == 1):
-                self._area = np.ones(n[0]+1)
-            elif(self.dim == 2):
-                area1 = np.outer(np.ones(n[0]+1), vh[1])
-                area2 = np.outer(vh[0], np.ones(n[1]+1))
-                self._area = np.r_[utils.mkvc(area1), utils.mkvc(area2)]
-            elif(self.dim == 3):
-                area1 = np.outer(np.ones(n[0]+1), utils.mkvc(np.outer(vh[1], vh[2])))
-                area2 = np.outer(vh[0], utils.mkvc(np.outer(np.ones(n[1]+1), vh[2])))
-                area3 = np.outer(vh[0], utils.mkvc(np.outer(vh[1], np.ones(n[2]+1))))
-                self._area = np.r_[utils.mkvc(area1), utils.mkvc(area2), utils.mkvc(area3)]
-        return self._area
+            if self.dim == 1:
+                areaFx = np.ones(n[0]+1)
+            elif self.dim == 2:
+                areaFx = np.outer(np.ones(n[0]+1), vh[1])
+            elif self.dim == 3:
+                areaFx = np.outer(
+                    np.ones(n[0]+1), utils.mkvc(np.outer(vh[1], vh[2]))
+                )
+            self._areaFx = utils.mkvc(areaFx)
+        return self._areaFx
 
     @property
-    def edge(self):
-        """Construct edge legnths of the 3D model as 1d array."""
-        if getattr(self, '_edge', None) is None:
+    def areaFy(self):
+        """
+        Area of the y-faces
+        """
+        if getattr(self, '_areaFy', None) is None:
+            # Ensure that we are working with column vectors
+            vh = self.h
+            # The number of cell centers in each direction
+            n = self.vnC
+            # Compute areas of cell faces
+            if self.dim == 1:
+                raise Exception('1D meshes do not have y-Faces')
+            elif self.dim == 2:
+                areaFy = np.outer(vh[0], np.ones(n[1]+1))
+            elif self.dim == 3:
+                areaFy = np.outer(
+                    vh[0], utils.mkvc(np.outer(np.ones(n[1]+1), vh[2]))
+                )
+            self._areaFy = utils.mkvc(areaFy)
+        return self._areaFy
+
+    @property
+    def areaFz(self):
+        """
+        Area of the z-faces
+        """
+        if getattr(self, '_areaFz', None) is None:
+            # Ensure that we are working with column vectors
+            vh = self.h
+            # The number of cell centers in each direction
+            n = self.vnC
+            # Compute areas of cell faces
+            if self.dim == 1 or self.dim == 2:
+                raise Exception(
+                    '{}D meshes do not have z-Faces'.format(self.dim)
+                )
+            elif self.dim == 3:
+                areaFz = np.outer(
+                    vh[0], utils.mkvc(np.outer(vh[1], np.ones(n[2]+1)))
+                )
+            self._areaFz = utils.mkvc(areaFz)
+        return self._areaFz
+
+    @property
+    def area(self):
+        """Construct face areas of the 3D model as 1d array."""
+        if self.dim == 1:
+            return self.areaFx
+        elif self.dim == 2:
+            return np.r_[self.areaFx, self.areaFy]
+        elif self.dim == 3:
+            return np.r_[self.areaFx, self.areaFy, self.areaFz]
+
+    @property
+    def edgeEx(self):
+        """x-edge lengths"""
+        if getattr(self, '_edgeEx', None) is None:
+             # Ensure that we are working with column vectors
+            vh = self.h
+            # The number of cell centers in each direction
+            n = self.vnC
+            # Compute edge lengths
+            if self.dim == 1:
+                edgeEx = vh[0]
+            elif self.dim == 2:
+                edgeEx = np.outer(vh[0], np.ones(n[1]+1))
+            elif self.dim == 3:
+                edgeEx = np.outer(
+                    vh[0],
+                    utils.mkvc(np.outer(np.ones(n[1]+1), np.ones(n[2]+1)))
+                )
+            self._edgeEx = utils.mkvc(edgeEx)
+        return self._edgeEx
+
+    @property
+    def edgeEy(self):
+        """y-edge lengths"""
+        if getattr(self, '_edgeEy', None) is None:
             # Ensure that we are working with column vectors
             vh = self.h
             # The number of cell centers in each direction
             n = self.vnC
             # Compute edge lengths
-            if(self.dim == 1):
-                self._edge = utils.mkvc(vh[0])
-            elif(self.dim == 2):
-                l1 = np.outer(vh[0], np.ones(n[1]+1))
-                l2 = np.outer(np.ones(n[0]+1), vh[1])
-                self._edge = np.r_[utils.mkvc(l1), utils.mkvc(l2)]
-            elif(self.dim == 3):
-                l1 = np.outer(vh[0], utils.mkvc(np.outer(np.ones(n[1]+1), np.ones(n[2]+1))))
-                l2 = np.outer(np.ones(n[0]+1), utils.mkvc(np.outer(vh[1], np.ones(n[2]+1))))
-                l3 = np.outer(np.ones(n[0]+1), utils.mkvc(np.outer(np.ones(n[1]+1), vh[2])))
-                self._edge = np.r_[utils.mkvc(l1), utils.mkvc(l2), utils.mkvc(l3)]
+            if self.dim == 1:
+                raise Exception('1D meshes do not have y-edges')
+            elif self.dim == 2:
+                edgeEy = np.outer(np.ones(n[0]+1), vh[1])
+            elif self.dim == 3:
+                edgeEy = np.outer(
+                    np.ones(n[0]+1),
+                    utils.mkvc(np.outer(vh[1], np.ones(n[2]+1)))
+                )
+            self._edgeEy = utils.mkvc(edgeEy)
+        return self._edgeEy
+
+    @property
+    def edgeEz(self):
+        """z-edge lengths"""
+        if getattr(self, '_edgeEz', None) is None:
+            # Ensure that we are working with column vectors
+            vh = self.h
+            # The number of cell centers in each direction
+            n = self.vnC
+            # Compute edge lengths
+            if self.dim == 1 or self.dim == 2:
+                raise Exception(
+                    '{}D meshes do not have y-edges'.format(self.dim)
+                )
+            elif self.dim == 3:
+                edgeEz = np.outer(
+                    np.ones(n[0]+1),
+                    utils.mkvc(np.outer(np.ones(n[1]+1), vh[2]))
+                )
+            self._edgeEz = utils.mkvc(edgeEz)
+        return self._edgeEz
+
+    @property
+    def edge(self):
+        """Construct edge legnths of the 3D model as 1d array."""
+        if self.dim == 1:
+            return self.edgeEx
+        elif self.dim == 2:
+            return np.r_[self.edgeEx, self.edgeEy]
+        elif(self.dim == 3):
+            return np.r_[self.edgeEx, self.edgeEy, self.edgeEz]
         return self._edge
 
     @property
@@ -646,23 +752,23 @@ class TensorMesh(
         """
             Find indices of boundary faces in each direction
         """
-        if self.dim==1:
-            indxd = (self.gridFx==min(self.gridFx))
-            indxu = (self.gridFx==max(self.gridFx))
+        if self.dim == 1:
+            indxd = (self.gridFx == min(self.gridFx))
+            indxu = (self.gridFx == max(self.gridFx))
             return indxd, indxu
-        elif self.dim==2:
-            indxd = (self.gridFx[:, 0]==min(self.gridFx[:, 0]))
-            indxu = (self.gridFx[:, 0]==max(self.gridFx[:, 0]))
-            indyd = (self.gridFy[:, 1]==min(self.gridFy[:, 1]))
-            indyu = (self.gridFy[:, 1]==max(self.gridFy[:, 1]))
+        elif self.dim == 2:
+            indxd = (self.gridFx[:, 0] == min(self.gridFx[:, 0]))
+            indxu = (self.gridFx[:, 0] == max(self.gridFx[:, 0]))
+            indyd = (self.gridFy[:, 1] == min(self.gridFy[:, 1]))
+            indyu = (self.gridFy[:, 1] == max(self.gridFy[:, 1]))
             return indxd, indxu, indyd, indyu
-        elif self.dim==3:
-            indxd = (self.gridFx[:, 0]==min(self.gridFx[:, 0]))
-            indxu = (self.gridFx[:, 0]==max(self.gridFx[:, 0]))
-            indyd = (self.gridFy[:, 1]==min(self.gridFy[:, 1]))
-            indyu = (self.gridFy[:, 1]==max(self.gridFy[:, 1]))
-            indzd = (self.gridFz[:, 2]==min(self.gridFz[:, 2]))
-            indzu = (self.gridFz[:, 2]==max(self.gridFz[:, 2]))
+        elif self.dim == 3:
+            indxd = (self.gridFx[:, 0] == min(self.gridFx[:, 0]))
+            indxu = (self.gridFx[:, 0] == max(self.gridFx[:, 0]))
+            indyd = (self.gridFy[:, 1] == min(self.gridFy[:, 1]))
+            indyu = (self.gridFy[:, 1] == max(self.gridFy[:, 1]))
+            indzd = (self.gridFz[:, 2] == min(self.gridFz[:, 2]))
+            indzu = (self.gridFz[:, 2] == max(self.gridFz[:, 2]))
             return indxd, indxu, indyd, indyu, indzd, indzu
 
     @property
@@ -670,21 +776,21 @@ class TensorMesh(
         """
             Find indices of boundary faces in each direction
         """
-        if self.dim==1:
-            indxd = (self.gridCC==min(self.gridCC))
-            indxu = (self.gridCC==max(self.gridCC))
+        if self.dim == 1:
+            indxd = (self.gridCC == min(self.gridCC))
+            indxu = (self.gridCC == max(self.gridCC))
             return indxd, indxu
-        elif self.dim==2:
-            indxd = (self.gridCC[:, 0]==min(self.gridCC[:, 0]))
-            indxu = (self.gridCC[:, 0]==max(self.gridCC[:, 0]))
-            indyd = (self.gridCC[:, 1]==min(self.gridCC[:, 1]))
-            indyu = (self.gridCC[:, 1]==max(self.gridCC[:, 1]))
+        elif self.dim == 2:
+            indxd = (self.gridCC[:, 0] == min(self.gridCC[:, 0]))
+            indxu = (self.gridCC[:, 0] == max(self.gridCC[:, 0]))
+            indyd = (self.gridCC[:, 1] == min(self.gridCC[:, 1]))
+            indyu = (self.gridCC[:, 1] == max(self.gridCC[:, 1]))
             return indxd, indxu, indyd, indyu
-        elif self.dim==3:
-            indxd = (self.gridCC[:, 0]==min(self.gridCC[:, 0]))
-            indxu = (self.gridCC[:, 0]==max(self.gridCC[:, 0]))
-            indyd = (self.gridCC[:, 1]==min(self.gridCC[:, 1]))
-            indyu = (self.gridCC[:, 1]==max(self.gridCC[:, 1]))
-            indzd = (self.gridCC[:, 2]==min(self.gridCC[:, 2]))
-            indzu = (self.gridCC[:, 2]==max(self.gridCC[:, 2]))
+        elif self.dim == 3:
+            indxd = (self.gridCC[:, 0] == min(self.gridCC[:, 0]))
+            indxu = (self.gridCC[:, 0] == max(self.gridCC[:, 0]))
+            indyd = (self.gridCC[:, 1] == min(self.gridCC[:, 1]))
+            indyu = (self.gridCC[:, 1] == max(self.gridCC[:, 1]))
+            indzd = (self.gridCC[:, 2] == min(self.gridCC[:, 2]))
+            indzu = (self.gridCC[:, 2] == max(self.gridCC[:, 2]))
             return indxd, indxu, indyd, indyu, indzd, indzu
