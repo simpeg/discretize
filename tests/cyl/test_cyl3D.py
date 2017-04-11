@@ -277,5 +277,19 @@ class TestCartesianGrid(unittest.TestCase):
         ))
 
 
+class Deflation(unittest.TestCase):
+
+    def test_areas(self):
+        mesh = discretize.CylMesh([2, 5, 3])
+
+        self.assertTrue(np.all(
+            mesh._deflationMatrix('F').T * mesh._areaFull == mesh.area
+        ))
+
+        # self.assertTrue(np.all(
+        #     mesh._deflationMatrix('E').T * mesh._edgeFull == mesh.edges
+        # ))
+
+
 if __name__ == '__main__':
     unittest.main()

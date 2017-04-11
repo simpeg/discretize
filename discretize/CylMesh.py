@@ -52,6 +52,10 @@ class CylMesh(
         return self.nCy == 1
 
     @property
+    def _ntNx(self):
+        return self.nCx + 1
+
+    @property
     def nNx(self):
         """
         Number of nodes in the x-direction
@@ -61,7 +65,13 @@ class CylMesh(
         """
         if self.isSymmetric is True:
             return self.nCx
-        return self.nCx + 1
+        return self._ntNx
+
+    @property
+    def _ntNy(self):
+        if self.isSymmetric is True:
+            return 0
+        return self.nCy + 1
 
     @property
     def nNy(self):
@@ -74,6 +84,10 @@ class CylMesh(
         if self.isSymmetric is True:
             return 0
         return self.nCy
+
+    @property
+    def _ntNz(self):
+        return self.nNz
 
     @property
     def nN(self):
@@ -159,50 +173,124 @@ class CylMesh(
         return np.r_[0, self.hy[:-1].cumsum()]
 
     @property
-    def edge(self):
-        """Edge lengths"""
-        if getattr(self, '_edge', None) is None:
-            if self.isSymmetric is True:
-                self._edge = 2*pi*self.gridN[:, 0]
-            else:
-                edgeR = np.kron(
-                    np.ones(self.vnC[2]+1),
-                    np.kron(np.ones(self.vnC[1]), self.hx)
-                )
-                edgeT = np.kron(
-                    np.ones(self.vnC[2]+1),
-                    np.kron(self.hy, self.vectorNx[1:])
-                )
-                edgeZ = np.kron(
-                    self.hz, np.ones(self.vnC[:2].prod()+1)
-                )
-                self._edge = np.hstack([edgeR, edgeT, edgeZ])
-        return self._edge
+    def _edgeExFull(self):
+        return np.kron(
+            np.ones(self._ntNz), np.kron(np.ones(self._ntNy), self.hx)
+        )
 
     @property
-    def area(self):
-        """Face areas"""
-        if getattr(self, '_area', None) is None:
-            if self.isSymmetric is True:
-                areaR = np.kron(self.hz, 2*pi*self.vectorNx)
-                areaZ = np.kron(
+    def edgeEx(self):
+        if getattr(self, '_edgeEx', None) is None:
+            # self._edgeEx = np.kron(
+            #     np.ones(self.vnC[2]+1),
+            #     np.kron(np.ones(self.vnC[1]), self.hx)
+            # )
+            self._edgeEx = self._deflationMatrix('Ex').T * self._edgeExFull
+        return self._edgeEx
+
+    @property
+    def _edgeEyFull(self):
+        pass
+
+    @property
+    def edgeEy(self):
+        if getattr(self, '_edgeEy', None) is None:
+            self._edgeEy = np.kron(
+                np.ones(self.vnC[2]+1),
+                np.kron(self.hy, self.vectorNx[1:])
+            )
+        return self._edgeEy
+
+    @property
+    def _edgeEzFull(self):
+        pass
+
+    @property
+    def edgeEz(self):
+        if getattr(self, '_edgeEz', None) is None:
+            self._edgeEz = np.kron(
+                self.hz, np.ones(self.vnC[:2].prod()+1)
+            )
+        return self._edgeEz
+
+    @property
+    def _edgeFull(self):
+        if self.isSymmetric:
+            raise NotImplementedError
+        else:
+            return np.r_[self._edgeExFull, self._edgeEyFull, self._edgeEzFull]
+
+    @property
+    def edge(self):
+        """Edge lengths"""
+        if self.isSymmetric is True:
+            return 2*pi*self.gridN[:, 0]
+        else:
+            return np.r_[self.edgeEx, self.edgeEy, self.edgeEz]
+
+    @property
+    def _areaFxFull(self):
+        return np.kron(self.hz, np.kron(self.hy, self.vectorNx))
+
+    @property
+    def areaFx(self):
+        if getattr(self, '_areaFx', None) is None:
+            if self.isSymmetric:
+                self._areaFx = np.kron(self.hz, 2*pi*self.vectorNx)
+            # self._areaFx = np.kron(self.hz, np.kron(self.hy, self.vectorNx[1:]))
+            else:
+                self._areaFx = self._deflationMatrix('Fx').T * self._areaFxFull
+        return self._areaFx
+
+    @property
+    def _areaFyFull(self):
+        return np.kron(self.hz, np.kron(np.ones(self._ntNy), self.hx))
+
+    @property
+    def areaFy(self):
+        if getattr(self, '_areaFy', None) is None:
+            self._areaFy = self._deflationMatrix('Fy').T * self._areaFyFull
+        return self._areaFy
+
+    @property
+    def _areaFzFull(self):
+        if self.isSymmetric:
+            return np.kron(
                     np.ones_like(self.vectorNz), pi*(
                         self.vectorNx**2 -
                         np.r_[0, self.vectorNx[:-1]]**2
                     )
                 )
-                self._area = np.r_[areaR, areaZ]
-            else:
-                areaR = np.kron(self.hz, np.kron(self.hy, self.vectorNx[1:]))
-                areaT = np.kron(self.hz, np.kron(np.ones(self.nNy), self.hx))
-                areaZ = np.kron(
-                    np.ones(self.nNz), np.kron(
-                        self.hy,
-                        0.5 * (self.vectorNx[1:]**2 - self.vectorNx[:-1]**2)
-                    )
+        else:
+            return np.kron(
+                np.ones(self.nNz), np.kron(
+                    self.hy,
+                    0.5 * (self.vectorNx[1:]**2 - self.vectorNx[:-1]**2)
                 )
-                self._area = np.r_[areaR, areaT, areaZ]
-        return self._area
+            )
+
+    @property
+    def areaFz(self):
+        if getattr(self, '_areaFz', None) is None:
+            self._areaFz = self._areaFzFull
+        return self._areaFz
+
+    @property
+    def _areaFull(self):
+        if self.isSymmetric is True:
+            return np.r_[self._areaFxFull, self._areaFzFull]
+        else:
+            return np.r_[self._areaFxFull, self._areaFyFull, self._areaFzFull]
+
+    @property
+    def area(self):
+        """Face areas"""
+        # if getattr(self, '_area', None) is None:
+        if self.isSymmetric is True:
+            return np.r_[self.areaFx, self.areaFz]
+        else:
+            return np.r_[self.areaFx, self.areaFy, self.areaFz]
+        # return self._area
 
     @property
     def vol(self):
@@ -349,18 +437,22 @@ class CylMesh(
         if self.isSymmetric:
             G1 = sp.kron(utils.speye(n[2]), ddxCellGrad(n[0], BC))
         else:
-            G1 = utils.kron3(
+            G1 = self._deflationMatrix('Fx').T * utils.kron3(
                 utils.speye(n[2]), utils.speye(n[1]), ddxCellGrad(n[0], BC)
             )
         return G1
 
-    # @property
-    # def cellGradx(self):
-    #     if getattr(self, '_cellGradx', None) is None:
-    #         G1 = self._cellGradxStencil
-    #         V = self.aveCC2F*self.vol
-    #         L = self.r(self.area/V, 'F', 'Fx', 'V')
-    #         self._cellGradx = sdiag(L)*G1
+    @property
+    def cellGradx(self):
+        print('getting cellGradx')
+        if getattr(self, '_cellGradx', None) is None:
+            G1 = self._cellGradxStencil
+            V = self.aveCC2F*self.vol
+            A = self._deflationMatrix('F')*self.area
+            # L = self.r(A/V, 'F', 'Fx', 'V')
+            L = A[:self.nFx]
+            self._cellGradx = utils.sdiag(L)*G1
+        return self._cellGradx
 
 
     @property
