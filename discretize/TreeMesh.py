@@ -1324,7 +1324,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
             # TODO: Preallocate!
             I, J, V = [], [], []
-            PM = [-1,1]*self.dim # plus / minus
+            PM = [-1, 1]*self.dim # plus / minus
 
             # TODO total number of faces?
             offset = [0]*2 + [self.ntFx]*2 + [self.ntFx+self.ntFy]*2
