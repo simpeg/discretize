@@ -257,10 +257,6 @@ class CylMesh(
     @property
     def edgeEx(self):
         if getattr(self, '_edgeEx', None) is None:
-            # self._edgeEx = np.kron(
-            #     np.ones(self.vnC[2]+1),
-            #     np.kron(np.ones(self.vnC[1]), self.hx)
-            # )
             self._edgeEx = (
                 self._deflationMatrix('Ex', withHanging=False) *
                 self._edgeExFull
@@ -271,16 +267,12 @@ class CylMesh(
     def _edgeEyFull(self):
         return np.kron(
             np.ones(self._ntNz),
-            np.kron(self.hy, np.ones(self._ntNx))
+            np.kron(self.hy, self.vectorNx)
         )
 
     @property
     def edgeEy(self):
         if getattr(self, '_edgeEy', None) is None:
-            # self._edgeEy = np.kron(
-            #     np.ones(self.vnC[2]+1),
-            #     np.kron(self.hy, self.vectorNx[1:])
-            # )
             self._edgeEy = (
                 self._deflationMatrix('Ey', withHanging=False) *
                 self._edgeEyFull
@@ -289,7 +281,6 @@ class CylMesh(
 
     @property
     def _edgeEzFull(self):
-        # pass
         return np.kron(
             self.hz,
             np.kron(np.ones(self._ntNy), np.ones(self._ntNx))
@@ -298,9 +289,7 @@ class CylMesh(
     @property
     def edgeEz(self):
         if getattr(self, '_edgeEz', None) is None:
-            # self._edgeEz = np.kron(
-            #     self.hz, np.ones(self.vnC[:2].prod()+1)
-            # )
+
             self._edgeEz = (
                 self._deflationMatrix('Ez', withHanging=False) *
                 self._edgeEzFull
@@ -887,106 +876,12 @@ class CylMesh(
                     utils.sdiag(1/A)*sp.vstack((Dz, Dr)) * utils.sdiag(E)
                 )
             else:
-                # # -- Curl that lands on R-faces -- #
-                # # Theta contribution
-                # Dt_r = utils.kron3(
-                #     utils.ddx(self.nCz),
-                #     utils.speye(self.nCy),
-                #     utils.speye(self.nCx)
-                # )
-                # ddxz = (
-                #     utils.ddx(self.nCy)[:, :-1] +
-                #     sp.csr_matrix(
-                #         (np.r_[1.], (np.r_[self.nCy-1], np.r_[0])),
-                #         shape=(self.nCy, self.nCy)
-                #     )
-                # )
-
-                # Dz_r = sp.kron(ddxz, utils.speye(self.nCx))
-                # Dz_r = sp.hstack([utils.spzeros(self.vnC[:2].prod(), 1), Dz_r])
-                # Dz_r = sp.kron(utils.speye(self.nCz), Dz_r)
-
-                # # Z contribution
-
-                # # Zeros of the right size
-                # O1 = utils.spzeros(self.nFx, self.nEx)
-
-                # # R-contribution to Curl
-                # Cr = sp.hstack((O1, -Dt_r, Dz_r))
-
-                # # -- Curl that lands on T-faces -- #
-                # # contribution from R
-                # Dr_t = utils.kron3(
-                #     utils.ddx(self.nCz),
-                #     utils.speye(self.nCy),
-                #     utils.speye(self.nCx)
-                # )
-
-                # # Zeros of the right size
-                # O2 = utils.spzeros(self.nFy, self.nEy)
-
-                # # contribution from Z
-
-                # ddxr = utils.ddx(self.nCx)
-                # Ddxr = sp.kron(utils.speye(self.nCy), ddxr)
-                # wrap_z = sp.csr_matrix(
-                #     (
-                #         np.ones(self.nCy - 1),
-                #         (
-                #             np.arange(
-                #                 self.vnC[0], self.vnC[:2].prod(),
-                #                 step=self.vnC[0]
-                #             ),
-                #             np.zeros(self.nCy - 1))
-                #         ),
-                #     shape=(self.vnC[:2].prod(), self.vnC[:2].prod() + 1)
-                # )
-                # Dz_t = (
-                #     sp.kron(utils.speye(self.nCz), Ddxr) *
-                #     self._deflationMatrix('Ez') -
-                #     sp.kron(utils.speye(self.nCz), wrap_z)
-                # )
-
-                # # T-contribution to the Curl
-                # Ct = sp.hstack((Dr_t, O2, -Dz_t))
-
-                # # -- Curl that lands on the Z-faces -- #
-                # # contribution from R
-                # ddxz = (
-                #     utils.ddx(self.nCy)[:, :-1] +
-                #     sp.csr_matrix(
-                #         (np.r_[1.], (np.r_[self.nCy-1], np.r_[0])),
-                #         shape=(self.nCy, self.nCy)
-                #     )
-                # )
-                # Dr_z = utils.kron3(
-                #     utils.speye(self.nCz+1), ddxz, utils.speye(self.nCx)
-                # )
-                # # = sp.kron(utils.speye(self.nCz+1), ddxz)
-
-                # # contribution from T
-                # ddxt = utils.ddx(self.nCx)[:, 1:]
-                # Dt_z = utils.kron3(
-                #     utils.speye(self.nCz+1), utils.speye(self.nCy), ddxt
-                # )
-
-                # # Zeros of the right size
-                # O3 = utils.spzeros(self.nFz, self.nEz)
-
-                # # Z contribution to the curl
-                # Cz = sp.hstack((-Dr_z, Dt_z, O3))
-
-                # self._edgeCurl = (
-                #     utils.sdiag(1/A) *
-                #     sp.vstack([Cr, Ct, Cz], format="csr") *
-                #     utils.sdiag(E)
-                # )
                 self._edgeCurl = (
                     utils.sdiag(1/self.area) *
                     self._deflationMatrix('F', withHanging=True, asOnes=False) *
                     self._edgeCurlStencil *
-                    self._deflationMatrix('E', withHanging=True).T *
-                    utils.sdiag(self.edge)
+                    utils.sdiag(self._edgeFull) *
+                    self._deflationMatrix('E', withHanging=True, asOnes=True).T
                 )
 
         return self._edgeCurl
@@ -1012,49 +907,11 @@ class CylMesh(
     @property
     def aveEz2CC(self):
         "averaging from z-faces to cell centers"
-        # avR = utils.av(self.vnC[0])[:, 1:]
-
         return utils.kron3(
             utils.speye(self.vnC[2]),
             utils.av(self.vnC[1]),
             utils.av(self.vnC[0])
         ) * self._deflationMatrix('Ez', withHanging=True, asOnes=True).T
-
-        # wrap_theta = sp.csr_matrix(
-        #     (
-        #         [1]*(self.vnC[1] + 1),
-        #         (
-        #             np.arange(0, self.vnC[1]+1),
-        #             np.hstack((np.arange(0, self.vnC[1]), [0]))
-        #         )
-        #     ),
-        #     shape=(self.vnC[1]+1, self.vnC[1])
-        # )
-
-        # wrap_z = sp.csr_matrix(
-        #     (
-        #         np.ones(self.nCy),
-        #         (
-        #             np.arange(
-        #                 0, self.vnC[:2].prod(),
-        #                 step=self.vnC[0]
-        #             ),
-        #             np.zeros(self.nCy))
-        #         ),
-        #     shape=(self.vnC[:2].prod(), self.vnC[:2].prod() + 1)
-        # )
-
-        # aveEz = sp.hstack((
-        #     utils.spzeros(self.vnC[:2].prod(), 1),
-        #     sp.kron(utils.av(self.vnC[1]), avR) *
-        #     sp.kron(wrap_theta, utils.speye(self.vnC[0]))
-        # ))
-
-        # return (
-        #     sp.kron(utils.speye(self.vnC[2]), aveEz) +
-        #     0.5*sp.kron(utils.speye(self.vnC[2]), wrap_z)
-        # )
-
 
     @property
     def aveE2CC(self):
@@ -1156,7 +1013,9 @@ class CylMesh(
         )
         if location in ['E', 'F']:
             return sp.block_diag([
-                self._deflationMatrix(location+coord, withHanging=withHanging)
+                self._deflationMatrix(
+                    location+coord, withHanging=withHanging, asOnes=asOnes
+                )
                 for coord in ['x', 'y', 'z']
             ])
 
@@ -1164,17 +1023,15 @@ class CylMesh(
         hanging = getattr(self, '_hanging{}'.format(location))
         nothanging = ~getattr(self, '_ishanging{}'.format(location))
 
-        # if hasattr(self, '_reorder{}'.format(location)):
-        #     reorder = getattr(self, '_reorder{}'.format(location))
-        #     R[reorder.values(), reorder.keys()] = 1
-
         if withHanging:
+            print('with hanging')
             # remove eliminated edges / faces (eg. Fx just doesn't exist)
             hang = {k: v for k, v in hanging.items() if v is not None}
 
             entries = np.ones(len(hang.values()))
 
-            if not asOnes and len(hang) > 0:
+            if asOnes is False and len(hang) > 0:
+                print('not ones')
                 repeats = set(hang.values())
                 repeat_locs = [
                     (np.r_[hang.values()] == repeat).nonzero()[0] for repeat in repeats
@@ -1189,14 +1046,6 @@ class CylMesh(
                     getattr(self, '_nt{}'.format(location))
                 )
             )
-            # if len(keep) > 0:
-            #     i = np.r_[hanging.values()][keep]
-            #     j = np.r_[hanging.keys()][keep]
-            #     R[i, j] = 1
-            # if not asOnes:
-            #     repeats = set(hang.values())
-            #     repeat_locs = [(mesh._hangingEz.values() == repeat).nonzero() for repeat in repeats]
-            #     Hang
             R = R + Hang
 
         R = R[nothanging, :]
@@ -1207,63 +1056,6 @@ class CylMesh(
         return R
 
 
-        # if location == 'Fx':
-        #     collapse_x = sp.csr_matrix(
-        #         (
-        #             [1]*self.vnC[0],
-        #             (np.arange(1, self.vnC[0]+1), np.arange(0, self.vnC[0]))
-        #         ),
-        #         shape=(self.vnC[0]+1, self.vnC[0])
-        #     )
-        #     return utils.kron3(
-        #         utils.speye(self.vnC[2]), utils.speye(self.vnC[1]), collapse_x
-        #     )
-
-        # elif location == 'Fy':
-        #     return utils.kron3(
-        #         utils.speye(self.vnC[2]),
-        #         wrap_theta,
-        #         utils.speye(self.vnC[0])
-        #     )
-        # elif location == 'Fz':
-        #     return utils.speye(self.vnF[2])
-
-        # elif location == 'Ex':
-        #     return utils.kron3(
-        #         utils.speye(self.vnC[2]+1),
-        #         wrap_theta,
-        #         utils.speye(self.vnC[0])
-        #     )
-
-        # elif location == 'Ey':
-        #     nNx = self.nNx if self.isSymmetric else self.nNx - 1
-        #     return utils.kron3(
-        #         utils.speye(self.vnN[2]),
-        #         utils.speye(self.vnC[1]),
-        #         utils.speye(nNx+1)[:, 1:]
-        #     )
-
-        # elif location == 'Ez':
-        #     removeme = np.arange(
-        #         self.vnN[0], self.vnN[:2].prod(), step=self.vnN[0]
-        #     )
-        #     keepme = np.ones(self.vnN[:2].prod(), dtype=bool)
-        #     keepme[removeme] = False
-
-        #     eye = sp.eye(self.vnN[:2].prod())
-        #     eye = eye.tocsr()[:, keepme]
-        #     return sp.kron(utils.speye(self.nCz), eye)
-
-        # elif location == 'N':
-        #     removeme = np.arange(
-        #         self.vnN[0], self.vnN[:2].prod(), step=self.vnN[0]
-        #     )
-        #     keepme = np.ones(self.vnN[:2].prod(), dtype=bool)
-        #     keepme[removeme] = False
-
-        #     eye = sp.eye(self.vnN[:2].prod())
-        #     eye = eye.tocsr()[:, keepme]
-        #     return sp.kron(utils.speye(self.nNz), eye)
 
     ####################################################
     # Interpolation
