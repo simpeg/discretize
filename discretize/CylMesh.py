@@ -808,7 +808,6 @@ class CylMesh(
 
     @property
     def cellGradx(self):
-        print('getting cellGradx')
         if getattr(self, '_cellGradx', None) is None:
             G1 = self._cellGradxStencil
             V = self.aveCC2F*self.vol
@@ -1024,14 +1023,12 @@ class CylMesh(
         nothanging = ~getattr(self, '_ishanging{}'.format(location))
 
         if withHanging:
-            print('with hanging')
             # remove eliminated edges / faces (eg. Fx just doesn't exist)
             hang = {k: v for k, v in hanging.items() if v is not None}
 
             entries = np.ones(len(hang.values()))
 
             if asOnes is False and len(hang) > 0:
-                print('not ones')
                 repeats = set(hang.values())
                 repeat_locs = [
                     (np.r_[hang.values()] == repeat).nonzero()[0] for repeat in repeats
