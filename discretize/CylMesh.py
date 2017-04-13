@@ -90,6 +90,12 @@ class CylMesh(
         return self.nNz
 
     @property
+    def _ntN(self):
+        if self.isSymmetric:
+            return 0
+        return int(self._ntNx * self._ntNy * self._ntNz)
+
+    @property
     def nN(self):
         """
         Total number of nodes
@@ -102,6 +108,20 @@ class CylMesh(
         return (self.nNx - 1) * self.nNy * self.nNz + self.nNz
 
     @property
+    def _vntFx(self):
+        if self.isSymmetric:
+            return np.r_[self._ntNx, 1, self.nCz]
+        return np.r_[self._ntNx, self.nCy, self.nCz]
+
+    @property
+    def _ntFx(self):
+        return int(self._vntFx.prod())
+
+    @property
+    def _nhFx(self):
+        return int(self.nCy * self.nCz)
+
+    @property
     def vnFx(self):
         """
         Number of x-faces in each direction
@@ -110,6 +130,50 @@ class CylMesh(
         :return: vnFx, (dim, )
         """
         return self.vnC
+
+    @property
+    def _vntFy(self):
+        if self.isSymmetric:
+            return np.r_[0, 0, 0]
+        return np.r_[self.nCx, self._ntNy, self.nCz]
+
+    @property
+    def _ntFy(self):
+        return int(self._vntFy.prod())
+
+    @property
+    def _nhFy(self):
+        return int(self.nCx * self.nCz)
+
+    @property
+    def _vntFz(self):
+        if self.isSymmetric:
+            return np.r_[self.nCx, 1, self._ntNz]
+        return np.r_[self.nCx, self.nCy, self._ntNz]
+
+    @property
+    def _ntFz(self):
+        return int(self._vntFz.prod())
+
+    @property
+    def _nhFz(self):
+        return int(self.nCx * self.nCz)
+
+    @property
+    def _vntEx(self):
+        return np.r_[self.nCx, self._ntNy, self._ntNz]
+
+    @property
+    def _ntEx(self):
+        return int(self._vntEx.prod())
+
+    @property
+    def _vntEy(self):
+        return np.r_[self._ntNx, self.nCy, self._ntNz]
+
+    @property
+    def _ntEy(self):
+        return int(self._vntEy.prod())
 
     @property
     def vnEy(self):
@@ -121,6 +185,14 @@ class CylMesh(
         """
         nNx = self.nNx if self.isSymmetric else self.nNx - 1
         return np.r_[nNx, self.nCy, self.nNz]
+
+    @property
+    def _vntEz(self):
+        return np.r_[self._ntNx, self._ntNy, self.nCz]
+
+    @property
+    def _ntEz(self):
+        return int(self._vntEz.prod())
 
     @property
     def vnEz(self):
@@ -164,6 +236,10 @@ class CylMesh(
         return np.r_[0, self.hx].cumsum()
 
     @property
+    def _vectorNyFull(self):
+        return np.r_[0, self.hy.cumsum()]
+
+    @property
     def vectorNy(self):
         """Nodal grid vector (1D) in the y direction."""
         if self.isSymmetric is True:
@@ -185,31 +261,49 @@ class CylMesh(
             #     np.ones(self.vnC[2]+1),
             #     np.kron(np.ones(self.vnC[1]), self.hx)
             # )
-            self._edgeEx = self._deflationMatrix('Ex').T * self._edgeExFull
+            self._edgeEx = (
+                self._deflationMatrix('Ex', withHanging=False) *
+                self._edgeExFull
+            )
         return self._edgeEx
 
     @property
     def _edgeEyFull(self):
-        pass
+        return np.kron(
+            np.ones(self._ntNz),
+            np.kron(self.hy, np.ones(self._ntNx))
+        )
 
     @property
     def edgeEy(self):
         if getattr(self, '_edgeEy', None) is None:
-            self._edgeEy = np.kron(
-                np.ones(self.vnC[2]+1),
-                np.kron(self.hy, self.vectorNx[1:])
+            # self._edgeEy = np.kron(
+            #     np.ones(self.vnC[2]+1),
+            #     np.kron(self.hy, self.vectorNx[1:])
+            # )
+            self._edgeEy = (
+                self._deflationMatrix('Ey', withHanging=False) *
+                self._edgeEyFull
             )
         return self._edgeEy
 
     @property
     def _edgeEzFull(self):
-        pass
+        # pass
+        return np.kron(
+            self.hz,
+            np.kron(np.ones(self._ntNy), np.ones(self._ntNx))
+        )
 
     @property
     def edgeEz(self):
         if getattr(self, '_edgeEz', None) is None:
-            self._edgeEz = np.kron(
-                self.hz, np.ones(self.vnC[:2].prod()+1)
+            # self._edgeEz = np.kron(
+            #     self.hz, np.ones(self.vnC[:2].prod()+1)
+            # )
+            self._edgeEz = (
+                self._deflationMatrix('Ez', withHanging=False) *
+                self._edgeEzFull
             )
         return self._edgeEz
 
@@ -239,7 +333,10 @@ class CylMesh(
                 self._areaFx = np.kron(self.hz, 2*pi*self.vectorNx)
             # self._areaFx = np.kron(self.hz, np.kron(self.hy, self.vectorNx[1:]))
             else:
-                self._areaFx = self._deflationMatrix('Fx').T * self._areaFxFull
+                self._areaFx = (
+                    self._deflationMatrix('Fx', withHanging=False) *
+                    self._areaFxFull
+                )
         return self._areaFx
 
     @property
@@ -249,7 +346,10 @@ class CylMesh(
     @property
     def areaFy(self):
         if getattr(self, '_areaFy', None) is None:
-            self._areaFy = self._deflationMatrix('Fy').T * self._areaFyFull
+            self._areaFy = (
+                self._deflationMatrix('Fy', withHanging=False) *
+                self._areaFyFull
+            )
         return self._areaFy
 
     @property
@@ -263,7 +363,7 @@ class CylMesh(
                 )
         else:
             return np.kron(
-                np.ones(self.nNz), np.kron(
+                np.ones(self._ntNz), np.kron(
                     self.hy,
                     0.5 * (self.vectorNx[1:]**2 - self.vectorNx[:-1]**2)
                 )
@@ -272,7 +372,7 @@ class CylMesh(
     @property
     def areaFz(self):
         if getattr(self, '_areaFz', None) is None:
-            self._areaFz = self._areaFzFull
+            self._areaFz = self._deflationMatrix('Fz') * self._areaFzFull
         return self._areaFz
 
     @property
@@ -309,8 +409,266 @@ class CylMesh(
         return self._vol
 
     ####################################################
+    # Active and Hanging Edges and Faces
+    ####################################################
+
+    @property
+    def _ishangingFx(self):
+        if getattr(self, '__ishangingFx', None) is None:
+            hang_x = np.zeros(self._ntNx, dtype=bool)
+            hang_x[0] = True
+            self.__ishangingFx = np.kron(
+                np.ones(self.nCz, dtype=bool),
+                np.kron(
+                    np.ones(self.nCy, dtype=bool),
+                    hang_x
+                )
+            )
+        return self.__ishangingFx
+
+    @property
+    def _hangingFx(self):
+        if getattr(self, '__hangingFx', None) is None:
+            self.__hangingFx = dict(zip(
+                np.nonzero(self._ishangingFx)[0].tolist(), [None]*self._nhFx
+            ))
+        return self.__hangingFx
+
+    @property
+    def _ishangingFy(self):
+        if getattr(self, '__ishangingFy', None) is None:
+            hang_y = np.zeros(self._ntNy, dtype=bool)
+            hang_y[-1] = True
+            self.__ishangingFy = np.kron(
+                np.ones(self.nCz, dtype=bool),
+                np.kron(
+                    hang_y,
+                    np.ones(self.nCx, dtype=bool)
+                )
+            )
+        return self.__ishangingFy
+
+    @property
+    def _hangingFy(self):
+        if getattr(self, '__hangingFy', None) is None:
+            deflate_y = np.zeros(self._ntNy, dtype=bool)
+            deflate_y[0] = True
+            deflateFy = np.nonzero(np.kron(
+                np.ones(self.nCz, dtype=bool),
+                np.kron(
+                    deflate_y,
+                    np.ones(self.nCx, dtype=bool)
+                )
+            ))[0].tolist()
+            self.__hangingFy = dict(zip(
+                np.nonzero(self._ishangingFy)[0].tolist(),
+                deflateFy)
+            )
+        return self.__hangingFy
+
+    @property
+    def _ishangingFz(self):
+        if getattr(self, '__ishangingFz', None) is None:
+            self.__ishangingFz = np.kron(
+                np.zeros(self.nNz, dtype=bool),
+                np.kron(
+                    np.zeros(self.nCy, dtype=bool),
+                    np.zeros(self.nCx, dtype=bool)
+                )
+            )
+        return self.__ishangingFz
+
+    @property
+    def _hangingFz(self):
+        return {}
+
+    @property
+    def _ishangingEx(self):
+        if getattr(self, '__ishangingEx', None) is None:
+            hang_y = np.zeros(self._ntNy, dtype=bool)
+            hang_y[-1] = True
+            self.__ishangingEx = np.kron(
+                np.ones(self._ntNz, dtype=bool),
+                np.kron(
+                    hang_y,
+                    np.ones(self.nCx, dtype=bool)
+                )
+            )
+        return self.__ishangingEx
+
+    @property
+    def _hangingEx(self):
+        if getattr(self, '__hangingEx', None) is None:
+            deflate_y = np.zeros(self._ntNy, dtype=bool)
+            deflate_y[0] = True
+            deflateEx = np.nonzero(np.kron(
+                np.ones(self._ntNz, dtype=bool),
+                np.kron(
+                    deflate_y,
+                    np.ones(self.nCx, dtype=bool)
+                )
+            ))[0].tolist()
+            self.__hangingEx = dict(zip(
+                np.nonzero(self._ishangingEx)[0].tolist(), deflateEx
+            ))
+        return self.__hangingEx
+
+    @property
+    def _ishangingEy(self):
+        if getattr(self, '__ishangingEy', None) is None:
+            hang_x = np.zeros(self._ntNx, dtype=bool)
+            hang_x[0] = True
+            self.__ishangingEy = np.kron(
+                np.ones(self._ntNz, dtype=bool),
+                np.kron(
+                    np.ones(self.nCy, dtype=bool),
+                    hang_x
+                )
+            )
+        return self.__ishangingEy
+
+    @property
+    def _hangingEy(self):
+        if getattr(self, '__hangingEy', None) is None:
+            self.__hangingEy = dict(zip(
+                np.nonzero(self._ishangingEy)[0].tolist(),
+                [None]*len(self.__ishangingEy))
+            )
+        return self.__hangingEy
+
+    @property
+    def _axis_of_symmetry_Ez(self):
+        if getattr(self, '__axis_of_symmetry_Ez', None) is None:
+            axis_x = np.zeros(self._ntNx, dtype=bool)
+            axis_x[0] = True
+
+            axis_y = np.zeros(self._ntNy, dtype=bool)
+            axis_y[0] = True
+            self.__axis_of_symmetry_Ez = np.kron(
+                np.ones(self.nCz, dtype=bool),
+                np.kron(
+                    axis_y,
+                    axis_x
+                )
+            )
+        return self.__axis_of_symmetry_Ez
+
+    @property
+    def _ishangingEz(self):
+        if getattr(self, '__ishangingEz', None) is None:
+            hang_x = np.zeros(self._ntNx, dtype=bool)
+            hang_x[0] = True
+
+            hang_y = np.zeros(self._ntNy, dtype=bool)
+            hang_y[-1] = True
+
+            hangingEz = np.kron(
+                np.ones(self.nCz, dtype=bool),
+                (
+                    np.kron(
+                        np.ones(self._ntNy, dtype=bool),
+                        hang_x
+                    ) |
+                    np.kron(
+                        hang_y,
+                        np.ones(self._ntNx, dtype=bool)
+                    )
+                )
+            )
+
+            self.__ishangingEz = hangingEz & ~self._axis_of_symmetry_Ez
+
+        return self.__ishangingEz
+
+    @property
+    def _hangingEz(self):
+        if getattr(self, '__hangingEz', None) is None:
+            # deflate
+            deflateEz = np.hstack([
+                np.hstack([
+                    np.zeros(self._ntNy-1, dtype=int),
+                    np.arange(1, self._ntNx, dtype=int)
+                ]) +
+                i*int(self._ntNx*self._ntNy)
+                for i in range(self.nCz)
+            ])
+            deflate = zip(
+                np.nonzero(self._ishangingEz)[0].tolist(), deflateEz
+            )
+
+            self.__hangingEz = dict(deflate)
+        return self.__hangingEz
+
+    @property
+    def _axis_of_symmetry_N(self):
+        if getattr(self, '__axis_of_symmetry_N', None) is None:
+            axis_x = np.zeros(self._ntNx, dtype=bool)
+            axis_x[0] = True
+
+            axis_y = np.zeros(self._ntNy, dtype=bool)
+            axis_y[0] = True
+            self.__axis_of_symmetry_N = np.kron(
+                np.ones(self._ntNz, dtype=bool),
+                np.kron(
+                    axis_y,
+                    axis_x
+                )
+            )
+        return self.__axis_of_symmetry_N
+
+    @property
+    def _ishangingN(self):
+        if getattr(self, '__ishangingN', None) is None:
+            hang_x = np.zeros(self._ntNx, dtype=bool)
+            hang_x[0] = True
+
+            hang_y = np.zeros(self._ntNy, dtype=bool)
+            hang_y[-1] = True
+
+            hangingN = np.kron(
+                np.ones(self._ntNz, dtype=bool),
+                (
+                    np.kron(
+                        np.ones(self._ntNy, dtype=bool),
+                        hang_x
+                    ) |
+                    np.kron(
+                        hang_y,
+                        np.ones(self._ntNx, dtype=bool)
+                    )
+                )
+            )
+
+            self.__ishangingN = hangingN & ~self._axis_of_symmetry_N
+
+        return self.__ishangingN
+
+    @property
+    def _hangingN(self):
+        if getattr(self, '__hangingN', None) is None:
+            # go by layer
+            deflateN = np.hstack([
+                np.hstack([
+                    np.zeros(self._ntNy-1, dtype=int),
+                    np.arange(1, self._ntNx, dtype=int)
+                ]) +
+                i*int(self._ntNx*self._ntNy)
+                for i in range(self._ntNz)
+            ]).tolist()
+            self.__hangingN = dict(zip(
+                np.nonzero(self._ishangingN)[0].tolist(), deflateN
+            ))
+        return self.__hangingN
+
+    ####################################################
     # Grids
     ####################################################
+
+    @property
+    def _gridNFull(self):
+        return utils.ndgrid([
+            self.vectorNx, self._vectorNyFull, self.vectorNz
+        ])
 
     @property
     def gridN(self):
@@ -318,7 +676,9 @@ class CylMesh(
             self._gridN = super(CylMesh, self).gridN
         if getattr(self, '_gridN', None) is None:
             self._gridN = (
-                self._deflationMatrix('N').T * super(CylMesh, self).gridN
+                self._deflationMatrix('N', withHanging=False) *
+                self._gridNFull
+                # super(CylMesh, self).gridN
             )
         return self._gridN
 
@@ -329,9 +689,12 @@ class CylMesh(
             if self.isSymmetric is True:
                 return super(CylMesh, self).gridFx
             else:
-                self._gridFx = self._deflationMatrix('Fx').T * utils.ndgrid([
-                    self.vectorNx, self.vectorCCy, self.vectorCCz
-                ])
+                self._gridFx = (
+                    self._deflationMatrix('Fx', withHanging=False) *
+                    utils.ndgrid([
+                        self.vectorNx, self.vectorCCy, self.vectorCCz
+                    ])
+                )
         return self._gridFx
 
 
@@ -341,10 +704,19 @@ class CylMesh(
             if self.isSymmetric is True:
                 return super(CylMesh, self).gridEy
             else:
-                self._gridEy = self._deflationMatrix('Ey').T * utils.ndgrid([
-                    self.vectorNx, self.vectorCCy, self.vectorNz
-                ])
+                self._gridEy = (
+                    self._deflationMatrix('Ey', withHanging=False) *
+                    utils.ndgrid([
+                        self.vectorNx, self.vectorCCy, self.vectorNz
+                    ])
+                )
         return self._gridEy
+
+    @property
+    def _gridEzFull(self):
+        return utils.ndgrid([
+            self.vectorNx, self._vectorNyFull, self.vectorCCz
+        ])
 
     @property
     def gridEz(self):
@@ -352,7 +724,10 @@ class CylMesh(
             if self.isSymmetric is True:
                 self._gridEz = super(CylMesh, self).gridEz
             else:
-                self._gridEz = self._deflationMatrix('Ez').T * super(CylMesh, self).gridEz
+                self._gridEz = (
+                    self._deflationMatrix('Ez', withHanging=False) *
+                    self._gridEzFull
+                )
         return self._gridEz
 
     ####################################################
@@ -386,7 +761,7 @@ class CylMesh(
                 utils.speye(self.nCz),
                 utils.speye(self.nCy),
                 utils.ddx(self.nCx)
-            ) * self._deflationMatrix('Fx')
+            ) * self._deflationMatrix('Fx', withHanging=False).T
             S = self.r(self.area, 'F', 'Fx', 'V')
             V = self.vol
             self._faceDivx = utils.sdiag(1/V)*D1*utils.sdiag(S)
@@ -406,7 +781,7 @@ class CylMesh(
                 utils.speye(self.nCz),
                 utils.ddx(self.nCy),
                 utils.speye(self.nCx)
-            ) * self._deflationMatrix('Fy')
+            ) * self._deflationMatrix('Fy', withHanging=False).T
             S = self.r(self.area, 'F', 'Fy', 'V')
             V = self.vol
             self._faceDivy = utils.sdiag(1/V)*D2*utils.sdiag(S)
@@ -512,99 +887,106 @@ class CylMesh(
                     utils.sdiag(1/A)*sp.vstack((Dz, Dr)) * utils.sdiag(E)
                 )
             else:
-                # -- Curl that lands on R-faces -- #
-                # Theta contribution
-                Dt_r = utils.kron3(
-                    utils.ddx(self.nCz),
-                    utils.speye(self.nCy),
-                    utils.speye(self.nCx)
-                )
-                ddxz = (
-                    utils.ddx(self.nCy)[:, :-1] +
-                    sp.csr_matrix(
-                        (np.r_[1.], (np.r_[self.nCy-1], np.r_[0])),
-                        shape=(self.nCy, self.nCy)
-                    )
-                )
+                # # -- Curl that lands on R-faces -- #
+                # # Theta contribution
+                # Dt_r = utils.kron3(
+                #     utils.ddx(self.nCz),
+                #     utils.speye(self.nCy),
+                #     utils.speye(self.nCx)
+                # )
+                # ddxz = (
+                #     utils.ddx(self.nCy)[:, :-1] +
+                #     sp.csr_matrix(
+                #         (np.r_[1.], (np.r_[self.nCy-1], np.r_[0])),
+                #         shape=(self.nCy, self.nCy)
+                #     )
+                # )
 
-                Dz_r = sp.kron(ddxz, utils.speye(self.nCx))
-                Dz_r = sp.hstack([utils.spzeros(self.vnC[:2].prod(), 1), Dz_r])
-                Dz_r = sp.kron(utils.speye(self.nCz), Dz_r)
+                # Dz_r = sp.kron(ddxz, utils.speye(self.nCx))
+                # Dz_r = sp.hstack([utils.spzeros(self.vnC[:2].prod(), 1), Dz_r])
+                # Dz_r = sp.kron(utils.speye(self.nCz), Dz_r)
 
-                # Z contribution
+                # # Z contribution
 
-                # Zeros of the right size
-                O1 = utils.spzeros(self.nFx, self.nEx)
+                # # Zeros of the right size
+                # O1 = utils.spzeros(self.nFx, self.nEx)
 
-                # R-contribution to Curl
-                Cr = sp.hstack((O1, -Dt_r, Dz_r))
+                # # R-contribution to Curl
+                # Cr = sp.hstack((O1, -Dt_r, Dz_r))
 
-                # -- Curl that lands on T-faces -- #
-                # contribution from R
-                Dr_t = utils.kron3(
-                    utils.ddx(self.nCz),
-                    utils.speye(self.nCy),
-                    utils.speye(self.nCx)
-                )
+                # # -- Curl that lands on T-faces -- #
+                # # contribution from R
+                # Dr_t = utils.kron3(
+                #     utils.ddx(self.nCz),
+                #     utils.speye(self.nCy),
+                #     utils.speye(self.nCx)
+                # )
 
-                # Zeros of the right size
-                O2 = utils.spzeros(self.nFy, self.nEy)
+                # # Zeros of the right size
+                # O2 = utils.spzeros(self.nFy, self.nEy)
 
-                # contribution from Z
+                # # contribution from Z
 
-                ddxr = utils.ddx(self.nCx)
-                Ddxr = sp.kron(utils.speye(self.nCy), ddxr)
-                wrap_z = sp.csr_matrix(
-                    (
-                        np.ones(self.nCy - 1),
-                        (
-                            np.arange(
-                                self.vnC[0], self.vnC[:2].prod(),
-                                step=self.vnC[0]
-                            ),
-                            np.zeros(self.nCy - 1))
-                        ),
-                    shape=(self.vnC[:2].prod(), self.vnC[:2].prod() + 1)
-                )
-                Dz_t = (
-                    sp.kron(utils.speye(self.nCz), Ddxr) *
-                    self._deflationMatrix('Ez') -
-                    sp.kron(utils.speye(self.nCz), wrap_z)
-                )
+                # ddxr = utils.ddx(self.nCx)
+                # Ddxr = sp.kron(utils.speye(self.nCy), ddxr)
+                # wrap_z = sp.csr_matrix(
+                #     (
+                #         np.ones(self.nCy - 1),
+                #         (
+                #             np.arange(
+                #                 self.vnC[0], self.vnC[:2].prod(),
+                #                 step=self.vnC[0]
+                #             ),
+                #             np.zeros(self.nCy - 1))
+                #         ),
+                #     shape=(self.vnC[:2].prod(), self.vnC[:2].prod() + 1)
+                # )
+                # Dz_t = (
+                #     sp.kron(utils.speye(self.nCz), Ddxr) *
+                #     self._deflationMatrix('Ez') -
+                #     sp.kron(utils.speye(self.nCz), wrap_z)
+                # )
 
-                # T-contribution to the Curl
-                Ct = sp.hstack((Dr_t, O2, -Dz_t))
+                # # T-contribution to the Curl
+                # Ct = sp.hstack((Dr_t, O2, -Dz_t))
 
-                # -- Curl that lands on the Z-faces -- #
-                # contribution from R
-                ddxz = (
-                    utils.ddx(self.nCy)[:, :-1] +
-                    sp.csr_matrix(
-                        (np.r_[1.], (np.r_[self.nCy-1], np.r_[0])),
-                        shape=(self.nCy, self.nCy)
-                    )
-                )
-                Dr_z = utils.kron3(
-                    utils.speye(self.nCz+1), ddxz, utils.speye(self.nCx)
-                )
-                # = sp.kron(utils.speye(self.nCz+1), ddxz)
+                # # -- Curl that lands on the Z-faces -- #
+                # # contribution from R
+                # ddxz = (
+                #     utils.ddx(self.nCy)[:, :-1] +
+                #     sp.csr_matrix(
+                #         (np.r_[1.], (np.r_[self.nCy-1], np.r_[0])),
+                #         shape=(self.nCy, self.nCy)
+                #     )
+                # )
+                # Dr_z = utils.kron3(
+                #     utils.speye(self.nCz+1), ddxz, utils.speye(self.nCx)
+                # )
+                # # = sp.kron(utils.speye(self.nCz+1), ddxz)
 
-                # contribution from T
-                ddxt = utils.ddx(self.nCx)[:, 1:]
-                Dt_z = utils.kron3(
-                    utils.speye(self.nCz+1), utils.speye(self.nCy), ddxt
-                )
+                # # contribution from T
+                # ddxt = utils.ddx(self.nCx)[:, 1:]
+                # Dt_z = utils.kron3(
+                #     utils.speye(self.nCz+1), utils.speye(self.nCy), ddxt
+                # )
 
-                # Zeros of the right size
-                O3 = utils.spzeros(self.nFz, self.nEz)
+                # # Zeros of the right size
+                # O3 = utils.spzeros(self.nFz, self.nEz)
 
-                # Z contribution to the curl
-                Cz = sp.hstack((-Dr_z, Dt_z, O3))
+                # # Z contribution to the curl
+                # Cz = sp.hstack((-Dr_z, Dt_z, O3))
 
+                # self._edgeCurl = (
+                #     utils.sdiag(1/A) *
+                #     sp.vstack([Cr, Ct, Cz], format="csr") *
+                #     utils.sdiag(E)
+                # )
                 self._edgeCurl = (
-                    utils.sdiag(1/A) *
-                    sp.vstack([Cr, Ct, Cz], format="csr") *
-                    utils.sdiag(E)
+                    utils.sdiag(1/self.area) *
+                    self._deflationMatrix('F', withHanging=True, asOnes=False) *
+                    self._edgeCurlStencil *
+                    self._deflationMatrix('E', withHanging=True).T *
+                    utils.sdiag(self.edge)
                 )
 
         return self._edgeCurl
@@ -616,7 +998,7 @@ class CylMesh(
             utils.av(self.vnC[2]),
             utils.av(self.vnC[1]),
             utils.speye(self.vnC[0])
-        ) * self._deflationMatrix('Ex')
+        ) * self._deflationMatrix('Ex', withHanging=True, asOnes=True).T
 
     @property
     def aveEy2CC(self):
@@ -625,44 +1007,53 @@ class CylMesh(
             utils.av(self.vnC[2]),
             utils.speye(self.vnC[1]),
             utils.av(self.vnC[0])
-        ) * self._deflationMatrix('Ey')
+        ) * self._deflationMatrix('Ey', withHanging=True, asOnes=True).T
 
     @property
     def aveEz2CC(self):
         "averaging from z-faces to cell centers"
-        avR = utils.av(self.vnC[0])[:, 1:]
+        # avR = utils.av(self.vnC[0])[:, 1:]
 
-        wrap_theta = sp.csr_matrix(
-            (
-                [1]*(self.vnC[1] + 1),
-                (np.arange(0, self.vnC[1]+1), np.hstack((np.arange(0, self.vnC[1]), [0])) )
-            ),
-            shape=(self.vnC[1]+1, self.vnC[1])
-        )
+        return utils.kron3(
+            utils.speye(self.vnC[2]),
+            utils.av(self.vnC[1]),
+            utils.av(self.vnC[0])
+        ) * self._deflationMatrix('Ez', withHanging=True, asOnes=True).T
 
-        wrap_z = sp.csr_matrix(
-            (
-                np.ones(self.nCy),
-                (
-                    np.arange(
-                        0, self.vnC[:2].prod(),
-                        step=self.vnC[0]
-                    ),
-                    np.zeros(self.nCy))
-                ),
-            shape=(self.vnC[:2].prod(), self.vnC[:2].prod() + 1)
-        )
+        # wrap_theta = sp.csr_matrix(
+        #     (
+        #         [1]*(self.vnC[1] + 1),
+        #         (
+        #             np.arange(0, self.vnC[1]+1),
+        #             np.hstack((np.arange(0, self.vnC[1]), [0]))
+        #         )
+        #     ),
+        #     shape=(self.vnC[1]+1, self.vnC[1])
+        # )
 
-        aveEz = sp.hstack((
-            utils.spzeros(self.vnC[:2].prod(), 1),
-            sp.kron(utils.av(self.vnC[1]), avR) *
-            sp.kron(wrap_theta, utils.speye(self.vnC[0]))
-        ))
+        # wrap_z = sp.csr_matrix(
+        #     (
+        #         np.ones(self.nCy),
+        #         (
+        #             np.arange(
+        #                 0, self.vnC[:2].prod(),
+        #                 step=self.vnC[0]
+        #             ),
+        #             np.zeros(self.nCy))
+        #         ),
+        #     shape=(self.vnC[:2].prod(), self.vnC[:2].prod() + 1)
+        # )
 
-        return (
-            sp.kron(utils.speye(self.vnC[2]), aveEz) +
-            0.5*sp.kron(utils.speye(self.vnC[2]), wrap_z)
-        )
+        # aveEz = sp.hstack((
+        #     utils.spzeros(self.vnC[:2].prod(), 1),
+        #     sp.kron(utils.av(self.vnC[1]), avR) *
+        #     sp.kron(wrap_theta, utils.speye(self.vnC[0]))
+        # ))
+
+        # return (
+        #     sp.kron(utils.speye(self.vnC[2]), aveEz) +
+        #     0.5*sp.kron(utils.speye(self.vnC[2]), wrap_z)
+        # )
 
 
     @property
@@ -710,7 +1101,7 @@ class CylMesh(
         return utils.kron3(
             utils.speye(self.vnC[2]), utils.av(self.vnC[1]),
             utils.speye(self.vnC[0])
-        ) * self._deflationMatrix('Fy')
+        ) * self._deflationMatrix('Fy', withHanging=True, asOnes=True).T
 
     @property
     def aveFz2CC(self):
@@ -759,85 +1150,120 @@ class CylMesh(
     # Deflation Matrices
     ####################################################
 
-    def _deflationMatrix(self, location):
+    def _deflationMatrix(self, location, withHanging=True, asOnes=False):
         assert(
-            location in ['N', 'F', 'Fx', 'Fy', 'E', 'Ex', 'Ey'] + (
-                ['Fz', 'Ez'] if self.dim == 3 else []
-            )
+            location in ['N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez']
         )
-
-        wrap_theta = sp.csr_matrix(
-            (
-                [1]*(self.vnC[1] + 1),
-                (np.arange(0, self.vnC[1]+1), np.hstack((np.arange(0, self.vnC[1]), [0])) )
-            ),
-            shape=(self.vnC[1]+1, self.vnC[1])
-        )
-
-
         if location in ['E', 'F']:
             return sp.block_diag([
-                self._deflationMatrix(location+coord) for coord in
-                ['x', 'y', 'z']
+                self._deflationMatrix(location+coord, withHanging=withHanging)
+                for coord in ['x', 'y', 'z']
             ])
 
-        if location == 'Fx':
-            collapse_x = sp.csr_matrix(
-                (
-                    [1]*self.vnC[0],
-                    (np.arange(1, self.vnC[0]+1), np.arange(0, self.vnC[0]))
-                ),
-                shape=(self.vnC[0]+1, self.vnC[0])
-            )
-            return utils.kron3(
-                utils.speye(self.vnC[2]), utils.speye(self.vnC[1]), collapse_x
-            )
+        R = utils.speye(getattr(self, '_nt{}'.format(location)))
+        hanging = getattr(self, '_hanging{}'.format(location))
+        nothanging = ~getattr(self, '_ishanging{}'.format(location))
 
-        elif location == 'Fy':
-            return utils.kron3(
-                utils.speye(self.vnC[2]),
-                wrap_theta,
-                utils.speye(self.vnC[0])
+        # if hasattr(self, '_reorder{}'.format(location)):
+        #     reorder = getattr(self, '_reorder{}'.format(location))
+        #     R[reorder.values(), reorder.keys()] = 1
+
+        if withHanging:
+            # remove eliminated edges / faces (eg. Fx just doesn't exist)
+            hang = {k: v for k, v in hanging.items() if v is not None}
+
+            entries = np.ones(len(hang.values()))
+
+            if not asOnes and len(hang) > 0:
+                repeats = set(hang.values())
+                repeat_locs = [
+                    (np.r_[hang.values()] == repeat).nonzero()[0] for repeat in repeats
+                ]
+                for loc in repeat_locs:
+                    entries[loc] = 1./len(loc)
+
+            Hang = sp.csr_matrix(
+                (entries, (hang.values(), hang.keys())),
+                shape=(
+                    getattr(self, '_nt{}'.format(location)),
+                    getattr(self, '_nt{}'.format(location))
+                )
             )
-        elif location == 'Fz':
-            return utils.speye(self.vnF[2])
+            # if len(keep) > 0:
+            #     i = np.r_[hanging.values()][keep]
+            #     j = np.r_[hanging.keys()][keep]
+            #     R[i, j] = 1
+            # if not asOnes:
+            #     repeats = set(hang.values())
+            #     repeat_locs = [(mesh._hangingEz.values() == repeat).nonzero() for repeat in repeats]
+            #     Hang
+            R = R + Hang
 
-        elif location == 'Ex':
-            return utils.kron3(
-                utils.speye(self.vnC[2]+1),
-                wrap_theta,
-                utils.speye(self.vnC[0])
-            )
+        R = R[nothanging, :]
 
-        elif location == 'Ey':
-            nNx = self.nNx if self.isSymmetric else self.nNx - 1
-            return utils.kron3(
-                utils.speye(self.vnN[2]),
-                utils.speye(self.vnC[1]),
-                utils.speye(nNx+1)[:, 1:]
-            )
+        if not asOnes:
+            R = utils.sdiag(1./R.sum(1)) * R
 
-        elif location == 'Ez':
-            removeme = np.arange(
-                self.vnN[0], self.vnN[:2].prod(), step=self.vnN[0]
-            )
-            keepme = np.ones(self.vnN[:2].prod(), dtype=bool)
-            keepme[removeme] = False
+        return R
 
-            eye = sp.eye(self.vnN[:2].prod())
-            eye = eye.tocsr()[:, keepme]
-            return sp.kron(utils.speye(self.nCz), eye)
 
-        elif location == 'N':
-            removeme = np.arange(
-                self.vnN[0], self.vnN[:2].prod(), step=self.vnN[0]
-            )
-            keepme = np.ones(self.vnN[:2].prod(), dtype=bool)
-            keepme[removeme] = False
+        # if location == 'Fx':
+        #     collapse_x = sp.csr_matrix(
+        #         (
+        #             [1]*self.vnC[0],
+        #             (np.arange(1, self.vnC[0]+1), np.arange(0, self.vnC[0]))
+        #         ),
+        #         shape=(self.vnC[0]+1, self.vnC[0])
+        #     )
+        #     return utils.kron3(
+        #         utils.speye(self.vnC[2]), utils.speye(self.vnC[1]), collapse_x
+        #     )
 
-            eye = sp.eye(self.vnN[:2].prod())
-            eye = eye.tocsr()[:, keepme]
-            return sp.kron(utils.speye(self.nNz), eye)
+        # elif location == 'Fy':
+        #     return utils.kron3(
+        #         utils.speye(self.vnC[2]),
+        #         wrap_theta,
+        #         utils.speye(self.vnC[0])
+        #     )
+        # elif location == 'Fz':
+        #     return utils.speye(self.vnF[2])
+
+        # elif location == 'Ex':
+        #     return utils.kron3(
+        #         utils.speye(self.vnC[2]+1),
+        #         wrap_theta,
+        #         utils.speye(self.vnC[0])
+        #     )
+
+        # elif location == 'Ey':
+        #     nNx = self.nNx if self.isSymmetric else self.nNx - 1
+        #     return utils.kron3(
+        #         utils.speye(self.vnN[2]),
+        #         utils.speye(self.vnC[1]),
+        #         utils.speye(nNx+1)[:, 1:]
+        #     )
+
+        # elif location == 'Ez':
+        #     removeme = np.arange(
+        #         self.vnN[0], self.vnN[:2].prod(), step=self.vnN[0]
+        #     )
+        #     keepme = np.ones(self.vnN[:2].prod(), dtype=bool)
+        #     keepme[removeme] = False
+
+        #     eye = sp.eye(self.vnN[:2].prod())
+        #     eye = eye.tocsr()[:, keepme]
+        #     return sp.kron(utils.speye(self.nCz), eye)
+
+        # elif location == 'N':
+        #     removeme = np.arange(
+        #         self.vnN[0], self.vnN[:2].prod(), step=self.vnN[0]
+        #     )
+        #     keepme = np.ones(self.vnN[:2].prod(), dtype=bool)
+        #     keepme[removeme] = False
+
+        #     eye = sp.eye(self.vnN[:2].prod())
+        #     eye = eye.tocsr()[:, keepme]
+        #     return sp.kron(utils.speye(self.nNz), eye)
 
     ####################################################
     # Interpolation

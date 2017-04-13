@@ -587,43 +587,47 @@ class DiffOperators(object):
     ###########################################################################
 
     @property
+    def _edgeCurlStencil(self):
+        assert self.dim > 1, "Edge Curl only programed for 2 or 3D."
+
+        n = self.vnC  # The number of cell centers in each direction
+        L = self.edge  # Compute lengths of cell edges
+        S = self.area # Compute areas of cell faces
+
+        # Compute divergence operator on faces
+        if self.dim == 2:
+
+            D21 = sp.kron(ddx(n[1]), speye(n[0]))
+            D12 = sp.kron(speye(n[1]), ddx(n[0]))
+            C = sp.hstack((-D21, D12), format="csr")
+            self._edgeCurl = C*sdiag(1/S)
+
+        elif self.dim == 3:
+
+            D32 = kron3(ddx(n[2]), speye(n[1]), speye(n[0]+1))
+            D23 = kron3(speye(n[2]), ddx(n[1]), speye(n[0]+1))
+            D31 = kron3(ddx(n[2]), speye(n[1]+1), speye(n[0]))
+            D13 = kron3(speye(n[2]), speye(n[1]+1), ddx(n[0]))
+            D21 = kron3(speye(n[2]+1), ddx(n[1]), speye(n[0]))
+            D12 = kron3(speye(n[2]+1), speye(n[1]), ddx(n[0]))
+
+            O1 = spzeros(np.shape(D32)[0], np.shape(D31)[1])
+            O2 = spzeros(np.shape(D31)[0], np.shape(D32)[1])
+            O3 = spzeros(np.shape(D21)[0], np.shape(D13)[1])
+
+            C = sp.vstack((sp.hstack((O1, -D32, D23)),
+                           sp.hstack((D31, O2, -D13)),
+                           sp.hstack((-D21, D12, O3))), format="csr")
+
+            return C
+
+    @property
     def edgeCurl(self):
         """
         Construct the 3D curl operator.
         """
         if getattr(self, '_edgeCurl', None) is None:
-            assert self.dim > 1, "Edge Curl only programed for 2 or 3D."
-
-            n = self.vnC  # The number of cell centers in each direction
-            L = self.edge  # Compute lengths of cell edges
-            S = self.area # Compute areas of cell faces
-
-            # Compute divergence operator on faces
-            if self.dim == 2:
-
-                D21 = sp.kron(ddx(n[1]), speye(n[0]))
-                D12 = sp.kron(speye(n[1]), ddx(n[0]))
-                C = sp.hstack((-D21, D12), format="csr")
-                self._edgeCurl = C*sdiag(1/S)
-
-            elif self.dim == 3:
-
-                D32 = kron3(ddx(n[2]), speye(n[1]), speye(n[0]+1))
-                D23 = kron3(speye(n[2]), ddx(n[1]), speye(n[0]+1))
-                D31 = kron3(ddx(n[2]), speye(n[1]+1), speye(n[0]))
-                D13 = kron3(speye(n[2]), speye(n[1]+1), ddx(n[0]))
-                D21 = kron3(speye(n[2]+1), ddx(n[1]), speye(n[0]))
-                D12 = kron3(speye(n[2]+1), speye(n[1]), ddx(n[0]))
-
-                O1 = spzeros(np.shape(D32)[0], np.shape(D31)[1])
-                O2 = spzeros(np.shape(D31)[0], np.shape(D32)[1])
-                O3 = spzeros(np.shape(D21)[0], np.shape(D13)[1])
-
-                C = sp.vstack((sp.hstack((O1, -D32, D23)),
-                               sp.hstack((D31, O2, -D13)),
-                               sp.hstack((-D21, D12, O3))), format="csr")
-
-                self._edgeCurl = sdiag(1/S)*(C*sdiag(L))
+                self._edgeCurl = sdiag(1/S)*(self._edgeCurlStencil*sdiag(L))
         return self._edgeCurl
 
     def getBCProjWF(self, BC, discretization='CC'):

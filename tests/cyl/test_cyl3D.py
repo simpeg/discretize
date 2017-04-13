@@ -283,12 +283,14 @@ class Deflation(unittest.TestCase):
         mesh = discretize.CylMesh([2, 5, 3])
 
         self.assertTrue(np.all(
-            mesh._deflationMatrix('F').T * mesh._areaFull == mesh.area
+            mesh._deflationMatrix('F', withHanging=False) * mesh._areaFull ==
+            mesh.area
         ))
 
-        # self.assertTrue(np.all(
-        #     mesh._deflationMatrix('E').T * mesh._edgeFull == mesh.edges
-        # ))
+        self.assertTrue(np.all(
+            mesh._deflationMatrix('E', withHanging=False) * mesh._edgeFull ==
+            mesh.edge
+        ))
 
 
 if __name__ == '__main__':
