@@ -793,28 +793,28 @@ class CylMesh(
             self._faceDivz = utils.sdiag(1/V)*D3*utils.sdiag(S)
         return self._faceDivz
 
-    @property
-    def _cellGradxStencil(self):
-        BC = ['neumann', 'neumann']
-        n = self.vnC
+    # @property
+    # def _cellGradxStencil(self):
+    #     n = self.vnC
 
-        if self.isSymmetric:
-            G1 = sp.kron(utils.speye(n[2]), ddxCellGrad(n[0], BC))
-        else:
-            G1 = self._deflationMatrix('Fx').T * utils.kron3(
-                utils.speye(n[2]), utils.speye(n[1]), ddxCellGrad(n[0], BC)
-            )
-        return G1
+    #     if self.isSymmetric:
+    #         G1 = sp.kron(utils.speye(n[2]), ddxCellGrad(n[0], BC))
+    #     else:
+    #         G1 = self._deflationMatrix('Fx').T * utils.kron3(
+    #             utils.speye(n[2]), utils.speye(n[1]), ddxCellGrad(n[0], BC)
+    #         )
+    #     return G1
 
     @property
     def cellGradx(self):
         if getattr(self, '_cellGradx', None) is None:
-            G1 = self._cellGradxStencil
-            V = self.aveCC2F*self.vol
-            A = self._deflationMatrix('F')*self.area
-            # L = self.r(A/V, 'F', 'Fx', 'V')
-            L = A[:self.nFx]
-            self._cellGradx = utils.sdiag(L)*G1
+            G1 = super(CylMesh, self)._cellGradxStencil
+            V = self._deflationMatrix('F', withHanging='True', asOnes='True')*self.aveCC2F*self.vol
+            A = self.area
+            L = (A/V)[:self._ntFx]
+            # L = self.r(L, 'F', 'Fx', 'V')
+            # L = A[:self.nFx] / V
+            self._cellGradx = self._deflationMatrix('Fx')*utils.sdiag(L)*G1
         return self._cellGradx
 
 
