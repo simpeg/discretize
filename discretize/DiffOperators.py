@@ -591,8 +591,6 @@ class DiffOperators(object):
         assert self.dim > 1, "Edge Curl only programed for 2 or 3D."
 
         n = self.vnC  # The number of cell centers in each direction
-        L = self.edge  # Compute lengths of cell edges
-        S = self.area # Compute areas of cell faces
 
         # Compute divergence operator on faces
         if self.dim == 2:
@@ -600,7 +598,7 @@ class DiffOperators(object):
             D21 = sp.kron(ddx(n[1]), speye(n[0]))
             D12 = sp.kron(speye(n[1]), ddx(n[0]))
             C = sp.hstack((-D21, D12), format="csr")
-            self._edgeCurl = C*sdiag(1/S)
+            return C
 
         elif self.dim == 3:
 
@@ -626,8 +624,18 @@ class DiffOperators(object):
         """
         Construct the 3D curl operator.
         """
+        L = self.edge  # Compute lengths of cell edges
+        S = self.area # Compute areas of cell faces
+
         if getattr(self, '_edgeCurl', None) is None:
+
+            assert self.dim > 1, "Edge Curl only programed for 2 or 3D."
+
+            if self.dim == 2:
+                self._edgeCurl = self._edgeCurlStencil*sdiag(1/S)
+            elif self.dim == 3:
                 self._edgeCurl = sdiag(1/S)*(self._edgeCurlStencil*sdiag(L))
+
         return self._edgeCurl
 
     def getBCProjWF(self, BC, discretization='CC'):
