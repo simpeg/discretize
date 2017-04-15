@@ -15,7 +15,7 @@ TOL = 1e-1
 # ----------------------------- Test Operators ------------------------------ #
 
 
-MESHTYPES = ['uniformCylMesh']
+MESHTYPES = ['uniformCylMesh', 'randomCylMesh']
 call2 = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 2])
 call3 = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1], xyz[:, 2])
 cyl_row2 = lambda g, xfun, yfun: np.c_[call2(xfun, g), call2(yfun, g)]

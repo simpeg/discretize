@@ -320,7 +320,6 @@ class CylMesh(
         if getattr(self, '_areaFx', None) is None:
             if self.isSymmetric:
                 self._areaFx = np.kron(self.hz, 2*pi*self.vectorNx)
-            # self._areaFx = np.kron(self.hz, np.kron(self.hy, self.vectorNx[1:]))
             else:
                 self._areaFx = (
                     self._deflationMatrix('Fx', withHanging=False) *
@@ -361,7 +360,10 @@ class CylMesh(
     @property
     def areaFz(self):
         if getattr(self, '_areaFz', None) is None:
-            self._areaFz = self._deflationMatrix('Fz') * self._areaFzFull
+            self._areaFz = (
+                self._deflationMatrix('Fz', withHanging=False) *
+                self._areaFzFull
+            )
         return self._areaFz
 
     @property
