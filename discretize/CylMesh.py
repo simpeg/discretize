@@ -1048,7 +1048,7 @@ class CylMesh(
                         'Ey', withHanging=withHanging, asOnes=asOnes
                     )
                 elif location == 'F':
-                   return sp.block_diag([
+                    return sp.block_diag([
                         self._deflationMatrix(
                             location+coord, withHanging=withHanging, asOnes=asOnes
                         )
@@ -1067,7 +1067,7 @@ class CylMesh(
 
         if withHanging:
             # remove eliminated edges / faces (eg. Fx just doesn't exist)
-            hang = {k: v for k, v in hanging.iteritems() if v is not None}
+            hang = {k: v for k, v in hanging.items() if v is not None}
 
             entries = np.ones(len(hang.values()))
 
@@ -1080,7 +1080,7 @@ class CylMesh(
                     entries[loc] = 1./len(loc)
 
             Hang = sp.csr_matrix(
-                (entries, (hang.values(), hang.keys())),
+                (entries, (list(hang.values()), list(hang.keys()))),
                 shape=(
                     getattr(self, '_nt{}'.format(location)),
                     getattr(self, '_nt{}'.format(location))
