@@ -29,7 +29,6 @@ class CylMesh(
     """
 
     _meshType = 'CYL'
-
     _unitDimensions = [1, 2*np.pi, 1]
 
     def __init__(self, h, x0=None, cartesianOrigin=None):
@@ -63,14 +62,14 @@ class CylMesh(
         :rtype: int
         :return: nNx
         """
-        if self.isSymmetric is True:
-            return self.nCx
+        # if self.isSymmetric is True:
+        #     return self.nCx
         return self._ntNx
 
     @property
     def _ntNy(self):
         if self.isSymmetric is True:
-            return 0
+            return 1
         return self.nCy + 1
 
     @property
@@ -91,8 +90,8 @@ class CylMesh(
 
     @property
     def _ntN(self):
-        if self.isSymmetric:
-            return 0
+        # if self.isSymmetric:
+        #     return 0
         return int(self._ntNx * self._ntNy * self._ntNz)
 
     @property
@@ -109,8 +108,8 @@ class CylMesh(
 
     @property
     def _vntFx(self):
-        if self.isSymmetric:
-            return np.r_[self._ntNx, 1, self.nCz]
+        # if self.isSymmetric:
+        #     return np.r_[self._ntNx, 1, self.nCz]
         return np.r_[self._ntNx, self.nCy, self.nCz]
 
     @property
@@ -133,8 +132,8 @@ class CylMesh(
 
     @property
     def _vntFy(self):
-        if self.isSymmetric:
-            return np.r_[0, 0, 0]
+        # if self.isSymmetric:
+        #     return np.r_[0, 0, 0]
         return np.r_[self.nCx, self._ntNy, self.nCz]
 
     @property
@@ -147,8 +146,8 @@ class CylMesh(
 
     @property
     def _vntFz(self):
-        if self.isSymmetric:
-            return np.r_[self.nCx, 1, self._ntNz]
+        # if self.isSymmetric:
+        #     return np.r_[self.nCx, 1, self._ntNz]
         return np.r_[self.nCx, self.nCy, self._ntNz]
 
     @property
@@ -183,8 +182,7 @@ class CylMesh(
         :rtype: numpy.array
         :return: vnEy or None if dim < 2, (dim, )
         """
-        nNx = self.nNx if self.isSymmetric else self.nNx - 1
-        return np.r_[nNx, self.nCy, self.nNz]
+        return np.r_[self.nNx - 1, self.nCy, self.nNz]
 
     @property
     def _vntEz(self):
@@ -231,21 +229,23 @@ class CylMesh(
     @property
     def vectorNx(self):
         """Nodal grid vector (1D) in the x direction."""
-        if self.isSymmetric is True:
-            return self.hx.cumsum()
+        # if self.isSymmetric is True:
+        #     return self.hx.cumsum()
         return np.r_[0, self.hx].cumsum()
 
     @property
     def _vectorNyFull(self):
+        if self.isSymmetric:
+            return np.r_[0]
         return np.r_[0, self.hy.cumsum()]
 
     @property
     def vectorNy(self):
         """Nodal grid vector (1D) in the y direction."""
-        if self.isSymmetric is True:
-            # There aren't really any nodes, but all the grids need
-            # somewhere to live, why not zero?!
-            return np.r_[0]
+        # if self.isSymmetric is True:
+        #     # There aren't really any nodes, but all the grids need
+        #     # somewhere to live, why not zero?!
+        #     return np.r_[0]
         return np.r_[0, self.hy[:-1].cumsum()]
 
     @property
@@ -307,7 +307,8 @@ class CylMesh(
     def edge(self):
         """Edge lengths"""
         if self.isSymmetric is True:
-            return 2*pi*self.gridN[:, 0]
+            return self.edgeEy
+            # return 2*pi*self.gridN[:, 0]
         else:
             return np.r_[self.edgeEx, self.edgeEy, self.edgeEz]
 
@@ -318,13 +319,10 @@ class CylMesh(
     @property
     def areaFx(self):
         if getattr(self, '_areaFx', None) is None:
-            if self.isSymmetric:
-                self._areaFx = np.kron(self.hz, 2*pi*self.vectorNx)
-            else:
-                self._areaFx = (
-                    self._deflationMatrix('Fx', withHanging=False) *
-                    self._areaFxFull
-                )
+            self._areaFx = (
+                self._deflationMatrix('Fx', withHanging=False) *
+                self._areaFxFull
+            )
         return self._areaFx
 
     @property
@@ -334,6 +332,10 @@ class CylMesh(
     @property
     def areaFy(self):
         if getattr(self, '_areaFy', None) is None:
+            if self.isSymmetric is True:
+                raise Exception(
+                    'There are no y-faces on the Cyl Symmetric mesh'
+                )
             self._areaFy = (
                 self._deflationMatrix('Fy', withHanging=False) *
                 self._areaFyFull
@@ -342,20 +344,12 @@ class CylMesh(
 
     @property
     def _areaFzFull(self):
-        if self.isSymmetric:
-            return np.kron(
-                    np.ones_like(self.vectorNz), pi*(
-                        self.vectorNx**2 -
-                        np.r_[0, self.vectorNx[:-1]]**2
-                    )
-                )
-        else:
-            return np.kron(
-                np.ones(self._ntNz), np.kron(
-                    self.hy,
-                    0.5 * (self.vectorNx[1:]**2 - self.vectorNx[:-1]**2)
-                )
+        return np.kron(
+            np.ones(self._ntNz), np.kron(
+                self.hy,
+                0.5 * (self.vectorNx[1:]**2 - self.vectorNx[:-1]**2)
             )
+        )
 
     @property
     def areaFz(self):
@@ -368,10 +362,7 @@ class CylMesh(
 
     @property
     def _areaFull(self):
-        if self.isSymmetric is True:
-            return np.r_[self._areaFxFull, self._areaFzFull]
-        else:
-            return np.r_[self._areaFxFull, self._areaFyFull, self._areaFzFull]
+        return np.r_[self._areaFxFull, self._areaFyFull, self._areaFzFull]
 
     @property
     def area(self):
@@ -381,22 +372,17 @@ class CylMesh(
             return np.r_[self.areaFx, self.areaFz]
         else:
             return np.r_[self.areaFx, self.areaFy, self.areaFz]
-        # return self._area
 
     @property
     def vol(self):
         """Volume of each cell"""
         if getattr(self, '_vol', None) is None:
-            if self.isSymmetric is True:
-                az = pi*(self.vectorNx**2 - np.r_[0, self.vectorNx[:-1]]**2)
-                self._vol = np.kron(self.hz, az)
-            else:
-                self._vol = np.kron(
-                    self.hz, np.kron(
-                        self.hy,
-                        0.5 * (self.vectorNx[1:]**2 - self.vectorNx[:-1]**2)
-                    )
+            self._vol = np.kron(
+                self.hz, np.kron(
+                    self.hy,
+                    0.5 * (self.vectorNx[1:]**2 - self.vectorNx[:-1]**2)
                 )
+            )
         return self._vol
 
     ####################################################
@@ -547,27 +533,30 @@ class CylMesh(
     @property
     def _ishangingEz(self):
         if getattr(self, '__ishangingEz', None) is None:
-            hang_x = np.zeros(self._ntNx, dtype=bool)
-            hang_x[0] = True
+            if self.isSymmetric:
+                self.__ishangingEz = np.ones(self._ntEz, dtype=bool)
+            else:
+                hang_x = np.zeros(self._ntNx, dtype=bool)
+                hang_x[0] = True
 
-            hang_y = np.zeros(self._ntNy, dtype=bool)
-            hang_y[-1] = True
+                hang_y = np.zeros(self._ntNy, dtype=bool)
+                hang_y[-1] = True
 
-            hangingEz = np.kron(
-                np.ones(self.nCz, dtype=bool),
-                (
-                    np.kron(
-                        np.ones(self._ntNy, dtype=bool),
-                        hang_x
-                    ) |
-                    np.kron(
-                        hang_y,
-                        np.ones(self._ntNx, dtype=bool)
+                hangingEz = np.kron(
+                    np.ones(self.nCz, dtype=bool),
+                    (
+                        np.kron(
+                            np.ones(self._ntNy, dtype=bool),
+                            hang_x
+                        ) |
+                        np.kron(
+                            hang_y,
+                            np.ones(self._ntNx, dtype=bool)
+                        )
                     )
                 )
-            )
 
-            self.__ishangingEz = hangingEz & ~self._axis_of_symmetry_Ez
+                self.__ishangingEz = hangingEz & ~self._axis_of_symmetry_Ez
 
         return self.__ishangingEz
 
@@ -664,12 +653,11 @@ class CylMesh(
     @property
     def gridN(self):
         if self.isSymmetric:
-            self._gridN = super(CylMesh, self).gridN
+            self._gridN = None
         if getattr(self, '_gridN', None) is None:
             self._gridN = (
                 self._deflationMatrix('N', withHanging=False) *
                 self._gridNFull
-                # super(CylMesh, self).gridN
             )
         return self._gridN
 
@@ -677,30 +665,30 @@ class CylMesh(
     @property
     def gridFx(self):
         if getattr(self, '_gridFx', None) is None:
-            if self.isSymmetric is True:
-                return super(CylMesh, self).gridFx
-            else:
-                self._gridFx = (
-                    self._deflationMatrix('Fx', withHanging=False) *
-                    utils.ndgrid([
-                        self.vectorNx, self.vectorCCy, self.vectorCCz
-                    ])
-                )
+            # if self.isSymmetric is True:
+            #     return super(CylMesh, self).gridFx
+            # else:
+            self._gridFx = (
+                self._deflationMatrix('Fx', withHanging=False) *
+                utils.ndgrid([
+                    self.vectorNx, self.vectorCCy, self.vectorCCz
+                ])
+            )
         return self._gridFx
 
 
     @property
     def gridEy(self):
         if getattr(self, '_gridEy', None) is None:
-            if self.isSymmetric is True:
-                return super(CylMesh, self).gridEy
-            else:
-                self._gridEy = (
-                    self._deflationMatrix('Ey', withHanging=False) *
-                    utils.ndgrid([
-                        self.vectorNx, self.vectorCCy, self.vectorNz
-                    ])
-                )
+            # if self.isSymmetric is True:
+            #     return super(CylMesh, self).gridEy
+            # else:
+            self._gridEy = (
+                self._deflationMatrix('Ey', withHanging=False) *
+                utils.ndgrid([
+                    self.vectorNx, self.vectorCCy, self.vectorNz
+                ])
+            )
         return self._gridEy
 
     @property
@@ -713,7 +701,7 @@ class CylMesh(
     def gridEz(self):
         if getattr(self, '_gridEz', None) is None:
             if self.isSymmetric is True:
-                self._gridEz = super(CylMesh, self).gridEz
+                self._gridEz = None
             else:
                 self._gridEz = (
                     self._deflationMatrix('Ez', withHanging=False) *
@@ -748,14 +736,13 @@ class CylMesh(
         (faces to cell-centres).
         """
         if getattr(self, '_faceDivx', None) is None:
-            D1 = utils.kron3(
-                utils.speye(self.nCz),
-                utils.speye(self.nCy),
-                utils.ddx(self.nCx)
-            ) * self._deflationMatrix('Fx', withHanging=False).T
-            S = self.r(self.area, 'F', 'Fx', 'V')
+            D1 = super(CylMesh, self)._faceDivStencilx
+            S = self._areaFxFull
             V = self.vol
-            self._faceDivx = utils.sdiag(1/V)*D1*utils.sdiag(S)
+            self._faceDivx = (
+                utils.sdiag(1/V)*D1*utils.sdiag(S) *
+                self._deflationMatrix('Fx', withHanging=True, asOnes=True).T
+            )
         return self._faceDivx
 
     @property
@@ -764,18 +751,14 @@ class CylMesh(
         Construct divergence operator in the y component
         (faces to cell-centres).
         """
-        # raise NotImplementedError(
         if getattr(self, '_faceDivy', None) is None:
-            # TODO: this needs to wrap to join up faces which are
-            # connected in the cylinder
-            D2 = utils.kron3(
-                utils.speye(self.nCz),
-                utils.ddx(self.nCy),
-                utils.speye(self.nCx)
-            ) * self._deflationMatrix('Fy', withHanging=False).T
-            S = self.r(self.area, 'F', 'Fy', 'V')
+            D2 = super(CylMesh, self)._faceDivStencily
+            S = self._areaFyFull #self.r(self.area, 'F', 'Fy', 'V')
             V = self.vol
-            self._faceDivy = utils.sdiag(1/V)*D2*utils.sdiag(S)
+            self._faceDivy = (
+                utils.sdiag(1/V)*D2*utils.sdiag(S) *
+                self._deflationMatrix('Fy', withHanging=True, asOnes=True).T
+            )
         return self._faceDivy
 
     @property
@@ -785,14 +768,13 @@ class CylMesh(
         (faces to cell-centres).
         """
         if getattr(self, '_faceDivz', None) is None:
-            D3 = utils.kron3(
-                utils.ddx(self.nCz),
-                utils.speye(self.nCy),
-                utils.speye(self.nCx)
-            )
-            S = self.r(self.area, 'F', 'Fz', 'V')
+            D3 = super(CylMesh, self)._faceDivStencilz
+            S = self._areaFzFull
             V = self.vol
-            self._faceDivz = utils.sdiag(1/V)*D3*utils.sdiag(S)
+            self._faceDivz = (
+                utils.sdiag(1/V)*D3*utils.sdiag(S) *
+                self._deflationMatrix('Fz', withHanging=True, asOnes=True)
+            )
         return self._faceDivz
 
     # @property
@@ -1009,10 +991,25 @@ class CylMesh(
     ####################################################
 
     def _deflationMatrix(self, location, withHanging=True, asOnes=False):
-        assert(
-            location in ['N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez']
+        assert location in ['N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez', 'CC'], (
+            'Location must be a grid location, not {}'.format(location)
         )
-        if location in ['E', 'F']:
+        if location == 'CC':
+            return utils.speye(self.nC)
+
+        elif location in ['E', 'F']:
+            if self.isSymmetric:
+                if location == 'E':
+                    return self._deflationMatrix(
+                        'Ey', withHanging=withHanging, asOnes=asOnes
+                    )
+                elif location == 'F':
+                   return sp.block_diag([
+                        self._deflationMatrix(
+                            location+coord, withHanging=withHanging, asOnes=asOnes
+                        )
+                        for coord in ['x', 'z']
+                    ])
             return sp.block_diag([
                 self._deflationMatrix(
                     location+coord, withHanging=withHanging, asOnes=asOnes
@@ -1103,7 +1100,14 @@ class CylMesh(
 
             return Q.tocsr()
 
-        return self._getInterpolationMat(loc, locType, zerosOutside)
+        P = self._getInterpolationMat(loc, locType, zerosOutside)
+
+        if locType in ['Ex', 'Ey', 'Ez', 'Fx', 'Fy']:
+            P = P * self._deflationMatrix(
+                locType[0], withHanging=False
+            ).T
+
+        return P
 
     def cartesianGrid(self, locType='CC'):
         """

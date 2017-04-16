@@ -27,10 +27,10 @@ class TestCyl2DMesh(unittest.TestCase):
 
     def test_nN(self):
         self.assertTrue(self.mesh.nN == 0)
-        self.assertTrue(self.mesh.nNx == 3)
+        self.assertTrue(self.mesh.nNx == 4)
         self.assertTrue(self.mesh.nNy == 0)
         self.assertTrue(self.mesh.nNz == 3)
-        self.assertTrue(np.all(self.mesh.vnN == [3, 0, 3]))
+        self.assertTrue(np.all(self.mesh.vnN == [4, 0, 3]))
 
     def test_nF(self):
         self.assertTrue(self.mesh.nFx == 6)
@@ -48,7 +48,7 @@ class TestCyl2DMesh(unittest.TestCase):
         self.assertTrue(self.mesh.nEy == 9)
         self.assertTrue(np.all(self.mesh.vnEy == [3, 1, 3]))
         self.assertTrue(self.mesh.nEz == 0)
-        self.assertTrue(np.all(self.mesh.vnEz == [3, 0, 2]))
+        self.assertTrue(np.all(self.mesh.vnEz == [4, 0, 2]))
         self.assertTrue(self.mesh.nE == 9)
         self.assertTrue(np.all(self.mesh.vnE == [0, 9, 0]))
 
@@ -61,7 +61,7 @@ class TestCyl2DMesh(unittest.TestCase):
         self.assertTrue(np.linalg.norm((v-self.mesh.vectorCCz)) == 0)
 
     def test_vectorsN(self):
-        v = np.r_[1, 2, 2.5]
+        v = np.r_[0, 1, 2, 2.5]
         self.assertTrue(np.linalg.norm((v-self.mesh.vectorNx)) == 0)
         v = np.r_[0]
         self.assertTrue(np.linalg.norm((v-self.mesh.vectorNy)) == 0)
@@ -96,7 +96,8 @@ class TestCyl2DMesh(unittest.TestCase):
 
     def test_gridSizes(self):
         self.assertTrue(self.mesh.gridCC.shape == (self.mesh.nC, 3))
-        self.assertTrue(self.mesh.gridN.shape == (9, 3))
+        print(self.mesh.gridN.shape)
+        self.assertTrue(self.mesh._gridNFull.shape == (12, 3))
 
         self.assertTrue(self.mesh.gridFx.shape == (self.mesh.nFx, 3))
         self.assertTrue(self.mesh.gridFy is None)
@@ -114,11 +115,11 @@ class TestCyl2DMesh(unittest.TestCase):
         self.assertTrue(np.linalg.norm((G-self.mesh.gridCC).ravel()) == 0)
 
     def test_gridN(self):
-        x = np.r_[1, 2, 2.5, 1, 2, 2.5, 1, 2, 2.5]
-        y = np.zeros(9)
-        z = np.r_[0, 0, 0, 2, 2, 2, 3, 3, 3.]
+        x = np.r_[0., 1, 2, 2.5, 0., 1, 2, 2.5, 0., 1, 2, 2.5]
+        y = np.zeros(12)
+        z = np.r_[0, 0, 0, 0, 2, 2, 2, 2, 3, 3, 3, 3]
         G = np.c_[x, y, z]
-        self.assertTrue(np.linalg.norm((G-self.mesh.gridN).ravel()) == 0)
+        self.assertTrue(np.linalg.norm((G-self.mesh._gridNFull).ravel()) == 0)
 
     def test_gridFx(self):
         x = np.r_[1, 2, 2.5, 1, 2, 2.5]
@@ -260,12 +261,15 @@ class TestCyl2DMesh(unittest.TestCase):
         dist = ((Mr.gridCC[:, 0] + 0.2)**2  + (Mr.gridCC[:, 1] + 0.2)**2)**0.5
 
         assert np.abs(mag[dist > 0.1].max() - 1) < TOL
+        print(np.abs(mag[dist > 0.1].min() - 1) , TOL)
         assert np.abs(mag[dist > 0.1].min() - 1) < TOL
 
     def test_getInterpMatCartMesh_Edges2Faces(self):
 
         Mr = discretize.TensorMesh([100, 100, 2], x0='CC0')
-        Mc = discretize.CylMesh([np.ones(10)/5, 1, 10], x0='0C0', cartesianOrigin=[-0.2, -0.2, 0])
+        Mc = discretize.CylMesh(
+            [np.ones(10)/5, 1, 10], x0='0C0', cartesianOrigin=[-0.2, -0.2, 0]
+        )
 
         Pe2f = Mc.getInterpolationMatCartMesh(Mr, 'E', locTypeTo='F')
         me = np.ones(Mc.nE)

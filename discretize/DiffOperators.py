@@ -587,13 +587,45 @@ class DiffOperators(object):
     ###########################################################################
 
     @property
+    def _edgeCurlStencilx(self):
+        n = self.vnC  # The number of cell centers in each direction
+
+        D32 = kron3(ddx(n[2]), speye(n[1]), speye(n[0]+1))
+        D23 = kron3(speye(n[2]), ddx(n[1]), speye(n[0]+1))
+        # O1 = spzeros(np.shape(D32)[0], np.shape(D31)[1])
+        O1 = spzeros((n[0]+1)*n[1]*n[2], n[0]*(n[1]+1)*(n[2]+1))
+
+        return sp.hstack((O1, -D32, D23))
+
+    @property
+    def _edgeCurlStencily(self):
+        n = self.vnC  # The number of cell centers in each direction
+
+        D31 = kron3(ddx(n[2]), speye(n[1]+1), speye(n[0]))
+        D13 = kron3(speye(n[2]), speye(n[1]+1), ddx(n[0]))
+        # O2 = spzeros(np.shape(D31)[0], np.shape(D32)[1])
+        O2 = spzeros(n[0]*(n[1]+1)*n[2], (n[0]+1)*n[1]*(n[2]+1))
+
+        return sp.hstack((D31, O2, -D13))
+
+    @property
+    def _edgeCurlStencilz(self):
+        n = self.vnC  # The number of cell centers in each direction
+
+        D21 = kron3(speye(n[2]+1), ddx(n[1]), speye(n[0]))
+        D12 = kron3(speye(n[2]+1), speye(n[1]), ddx(n[0]))
+        # O3 = spzeros(np.shape(D21)[0], np.shape(D13)[1])
+        O3 = spzeros(n[0]*n[1]*(n[2]+1), (n[0]+1)*(n[1]+1)*n[2])
+
+        return sp.hstack((-D21, D12, O3))
+
+    @property
     def _edgeCurlStencil(self):
         assert self.dim > 1, "Edge Curl only programed for 2 or 3D."
 
-        n = self.vnC  # The number of cell centers in each direction
-
         # Compute divergence operator on faces
         if self.dim == 2:
+            n = self.vnC  # The number of cell centers in each direction
 
             D21 = sp.kron(ddx(n[1]), speye(n[0]))
             D12 = sp.kron(speye(n[1]), ddx(n[0]))
@@ -602,20 +634,26 @@ class DiffOperators(object):
 
         elif self.dim == 3:
 
-            D32 = kron3(ddx(n[2]), speye(n[1]), speye(n[0]+1))
-            D23 = kron3(speye(n[2]), ddx(n[1]), speye(n[0]+1))
-            D31 = kron3(ddx(n[2]), speye(n[1]+1), speye(n[0]))
-            D13 = kron3(speye(n[2]), speye(n[1]+1), ddx(n[0]))
-            D21 = kron3(speye(n[2]+1), ddx(n[1]), speye(n[0]))
-            D12 = kron3(speye(n[2]+1), speye(n[1]), ddx(n[0]))
+            # D32 = kron3(ddx(n[2]), speye(n[1]), speye(n[0]+1))
+            # D23 = kron3(speye(n[2]), ddx(n[1]), speye(n[0]+1))
+            # D31 = kron3(ddx(n[2]), speye(n[1]+1), speye(n[0]))
+            # D13 = kron3(speye(n[2]), speye(n[1]+1), ddx(n[0]))
+            # D21 = kron3(speye(n[2]+1), ddx(n[1]), speye(n[0]))
+            # D12 = kron3(speye(n[2]+1), speye(n[1]), ddx(n[0]))
 
-            O1 = spzeros(np.shape(D32)[0], np.shape(D31)[1])
-            O2 = spzeros(np.shape(D31)[0], np.shape(D32)[1])
-            O3 = spzeros(np.shape(D21)[0], np.shape(D13)[1])
+            # O1 = spzeros(np.shape(D32)[0], np.shape(D31)[1])
+            # O2 = spzeros(np.shape(D31)[0], np.shape(D32)[1])
+            # O3 = spzeros(np.shape(D21)[0], np.shape(D13)[1])
 
-            C = sp.vstack((sp.hstack((O1, -D32, D23)),
-                           sp.hstack((D31, O2, -D13)),
-                           sp.hstack((-D21, D12, O3))), format="csr")
+            # C = sp.vstack((sp.hstack((O1, -D32, D23)),
+            #                sp.hstack((D31, O2, -D13)),
+            #                sp.hstack((-D21, D12, O3))), format="csr")
+
+            C = sp.vstack((
+                self._edgeCurlStencilx,
+                self._edgeCurlStencily,
+                self._edgeCurlStencilz
+            ), format="csr")
 
             return C
 
