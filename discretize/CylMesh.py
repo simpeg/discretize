@@ -1102,10 +1102,10 @@ class CylMesh(
 
         P = self._getInterpolationMat(loc, locType, zerosOutside)
 
-        if locType in ['Ex', 'Ey', 'Ez', 'Fx', 'Fy']:
-            P = P * self._deflationMatrix(
-                locType[0], withHanging=False
-            ).T
+        # if locType in ['Ex', 'Ey', 'Ez', 'Fx', 'Fy']:
+        P = P * self._deflationMatrix(
+            locType[0], withHanging=True
+        ).T
 
         return P
 
