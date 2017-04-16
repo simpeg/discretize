@@ -1,4 +1,5 @@
 from __future__ import print_function
+
 import numpy as np
 import scipy.sparse as sp
 from scipy.constants import pi
@@ -1066,7 +1067,7 @@ class CylMesh(
 
         if withHanging:
             # remove eliminated edges / faces (eg. Fx just doesn't exist)
-            hang = {k: v for k, v in hanging.items() if v is not None}
+            hang = {k: v for k, v in hanging.iteritems() if v is not None}
 
             entries = np.ones(len(hang.values()))
 
