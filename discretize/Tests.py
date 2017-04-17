@@ -124,6 +124,12 @@ class OrderTest(unittest.TestCase):
         elif 'CylMesh' in self._meshType:
             if 'uniform' in self._meshType:
                 h = [nc, nc, nc]
+            elif 'random' in self._meshType:
+                h1 = np.random.rand(nc)*nc*0.5 + nc*0.5
+                h2 = np.random.rand(nc)*nc*0.5 + nc*0.5
+                h3 = np.random.rand(nc)*nc*0.5 + nc*0.5
+                h = [hi/np.sum(hi) for hi in [h1, h2, h3]]  # normalize
+                h[1] = h[1]*2*np.pi
             else:
                 raise Exception('Unexpected meshType')
 
