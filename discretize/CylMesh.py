@@ -1069,18 +1069,20 @@ class CylMesh(
             # remove eliminated edges / faces (eg. Fx just doesn't exist)
             hang = {k: v for k, v in hanging.items() if v is not None}
 
-            entries = np.ones(len(hang.values()))
+            values = list(hang.values())
+            entries = np.ones(len(values))
 
             if asOnes is False and len(hang) > 0:
-                repeats = set(hang.values())
+                repeats = set(values)
                 repeat_locs = [
-                    (np.r_[hang.values()] == repeat).nonzero()[0] for repeat in repeats
+                    (np.r_[values] == repeat).nonzero()[0]
+                    for repeat in repeats
                 ]
                 for loc in repeat_locs:
                     entries[loc] = 1./len(loc)
 
             Hang = sp.csr_matrix(
-                (entries, (list(hang.values()), list(hang.keys()))),
+                (entries, (values, list(hang.keys()))),
                 shape=(
                     getattr(self, '_nt{}'.format(location)),
                     getattr(self, '_nt{}'.format(location))
