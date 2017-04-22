@@ -273,7 +273,8 @@ texinfo_documents = [
 sphinx_gallery_conf = {
     # path to your examples scripts
     'examples_dirs' : 'examples',
-    'gallery_dirs'  : 'auto_examples'
+    'gallery_dirs'  : 'auto_examples',
+    'backreferences_dir' : False
 }
 
 # Documents to append as an appendix to all manuals.
