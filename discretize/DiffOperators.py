@@ -862,30 +862,34 @@ class DiffOperators(object):
     @property
     def aveF2CC(self):
         "Construct the averaging operator on cell faces to cell centers."
-        if self.dim == 1:
-            return self.aveFx2CC
-        elif self.dim == 2:
-            return (0.5)*sp.hstack((
-                self.aveFx2CC, self.aveFy2CC
-            ), format="csr")
-        elif self.dim == 3:
-            return (1./3.)*sp.hstack((
-                self.aveFx2CC, self.aveFy2CC, self.aveFz2CC
-            ), format="csr")
+        if getattr(self, '_aveF2CC', None) is None:
+            if self.dim == 1:
+                self._aveF2CC = self.aveFx2CC
+            elif self.dim == 2:
+                self._aveF2CC = (0.5)*sp.hstack((
+                    self.aveFx2CC, self.aveFy2CC
+                ), format="csr")
+            elif self.dim == 3:
+                self._aveF2CC = (1./3.)*sp.hstack((
+                    self.aveFx2CC, self.aveFy2CC, self.aveFz2CC
+                ), format="csr")
+        return self._aveF2CC
 
     @property
     def aveF2CCV(self):
         "Construct the averaging operator on cell faces to cell centers."
-        if self.dim == 1:
-            return self.aveFx2CC
-        elif self.dim == 2:
-            return sp.block_diag((
-                self.aveFx2CC, self.aveFy2CC
-            ), format="csr")
-        elif self.dim == 3:
-            return sp.block_diag((
-                self.aveFx2CC, self.aveFy2CC, self.aveFz2CC
-            ), format="csr")
+        if getattr(self, '_aveF2CCV', None) is None:
+            if self.dim == 1:
+                self._aveF2CCV = self.aveFx2CC
+            elif self.dim == 2:
+                self._aveF2CCV = sp.block_diag((
+                    self.aveFx2CC, self.aveFy2CC
+                ), format="csr")
+            elif self.dim == 3:
+                self._aveF2CCV = sp.block_diag((
+                    self.aveFx2CC, self.aveFy2CC, self.aveFz2CC
+                ), format="csr")
+        return self._aveF2CCV
 
     @property
     def aveFx2CC(self):
@@ -962,26 +966,34 @@ class DiffOperators(object):
     @property
     def aveE2CC(self):
         "Construct the averaging operator on cell edges to cell centers."
-        if self.dim == 1:
-            return self.aveEx2CC
-        elif self.dim == 2:
-            return 0.5*sp.hstack((self.aveEx2CC, self.aveEy2CC), format="csr")
-        elif self.dim == 3:
-            return (1./3)*sp.hstack((
-                self.aveEx2CC, self.aveEy2CC, self.aveEz2CC
-            ), format="csr")
+        if getattr(self, '_aveE2CC', None) is None:
+            if self.dim == 1:
+                self._avE2CC = self.aveEx2CC
+            elif self.dim == 2:
+                self._avE2CC = 0.5*sp.hstack(
+                    (self.aveEx2CC, self.aveEy2CC), format="csr"
+                )
+            elif self.dim == 3:
+                self._avE2CC = (1./3)*sp.hstack((
+                    self.aveEx2CC, self.aveEy2CC, self.aveEz2CC
+                ), format="csr")
+        return self._avE2CC
 
     @property
     def aveE2CCV(self):
         "Construct the averaging operator on cell edges to cell centers."
-        if self.dim == 1:
-            return self.aveEx2CC
-        elif self.dim == 2:
-            return sp.block_diag((self.aveEx2CC, self.aveEy2CC), format="csr")
-        elif self.dim == 3:
-            return sp.block_diag(
-                (self.aveEx2CC, self.aveEy2CC, self.aveEz2CC), format="csr"
-            )
+        if getattr(self, '_aveE2CCV', None) is None:
+            if self.dim == 1:
+                self._aveE2CCV = self.aveEx2CC
+            elif self.dim == 2:
+                self._aveE2CCV = sp.block_diag(
+                    (self.aveEx2CC, self.aveEy2CC), format="csr"
+                )
+            elif self.dim == 3:
+                self._aveE2CCV = sp.block_diag(
+                    (self.aveEx2CC, self.aveEy2CC, self.aveEz2CC), format="csr"
+                )
+        return self._aveE2CCV
 
     @property
     def aveEx2CC(self):
