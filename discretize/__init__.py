@@ -5,7 +5,7 @@ from discretize.CurvilinearMesh import CurvilinearMesh
 from discretize.TreeMesh import TreeMesh
 from discretize import Tests
 
-__version__   = '0.1.4'
-__author__    = 'Rowan Cockett'
+__version__   = '0.1.5'
+__author__    = 'SimPEG Team'
 __license__   = 'MIT'
-__copyright__ = 'Copyright 2017 Rowan Cockett'
+__copyright__ = '2013 - 2017, SimPEG Developers, http://simpeg.xyz'
