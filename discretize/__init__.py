@@ -6,5 +6,6 @@ from discretize.TreeMesh import TreeMesh
 from discretize import Tests
 
 __version__   = '0.1.5'
-__author__    = 'SimPEG Development Team'
+__author__    = 'SimPEG Team'
 __license__   = 'MIT'
+__copyright__ = '2017, SimPEG Team, http://simpeg.xyz'
