@@ -81,6 +81,18 @@ class TestTensorMeshIO(unittest.TestCase):
             print('IO of VTR tensor mesh files is working')
             os.remove('temp.vtr')
 
+    def test_read_ubc_DC2Dmesh(self):
+        fname = os.path.join(os.path.split(__file__)[0], 'ubc_DC2D_tensor_mesh.msh')
+        mesh = discretize.TensorMesh.readUBC_DC2DMesh(fname)
+        assert mesh.nCx == 178
+        assert mesh.nCy == 67
+        # spot check a few things in the file
+        assert mesh.hx[0] == 600.
+        # The x0 is in a different place (-z)
+        assert mesh.x0[-1] == - np.sum(mesh.hy)
+        # the z axis is flipped
+        assert mesh.hy[0] == 600.
+        assert mesh.hy[-1] == 10.
 
 if __name__ == '__main__':
     unittest.main()
