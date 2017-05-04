@@ -51,7 +51,7 @@ class TensorMeshIO(object):
         Read UBC GIF 2DTensor mesh and generate 2D Tensor mesh in simpeg
 
         :param string fileName: path to the UBC GIF mesh file
-        :rtype: Mesh.TensorMesh
+        :rtype: TensorMesh
         :return: SimPEG TensorMesh 2D object
 
         Created on Thu Nov 12 13:14:10 2015
