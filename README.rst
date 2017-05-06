@@ -17,6 +17,14 @@ discretize
     :target: https://codecov.io/gh/simpeg/discretize
     :alt: Coverage status
 
+.. image:: https://api.codacy.com/project/badge/Grade/644262e9ee5d4fa79b7041e1ad61f131
+    :target: https://www.codacy.com/app/lindseyheagy/discretize?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=simpeg/discretize&amp;utm_campaign=Badge_Grade
+    :alt: codacy status
+
+.. image:: https://www.quantifiedcode.com/api/v1/project/97126041a7e7400fbf1c5555bed514dc/badge.svg
+    :target: https://www.quantifiedcode.com/app/project/97126041a7e7400fbf1c5555bed514dc
+    :alt: Code issues
+
 
 **discretize** - A python package for finite volume discretization.
 
