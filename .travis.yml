@@ -11,7 +11,7 @@ sudo: false
 
 env:
   global:
-    - MASTER_BRANCH=distribution
+    - MASTER_BRANCH=master
     - DEV_BRANCH=dev
     - PYPI_PY=3.6  # deploy to pypi from python 3.6
 
