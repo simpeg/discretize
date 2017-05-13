@@ -50,7 +50,7 @@ class TensorMeshIO(object):
         """Read UBC GIF 2DTensor mesh and generate 2D Tensor mesh in simpeg
 
         :param string fileName: path to the UBC GIF mesh file
-        :rtype: TensorMesh
+        :rtype: discretize TensorMesh
         :return: SimPEG TensorMesh 2D object
         """
 
@@ -59,19 +59,15 @@ class TensorMeshIO(object):
         # Read down the file and unpack dx vector
         def unpackdx(fid, nrows):
             for ii in range(nrows):
-
                 line = fid.readline()
                 var = np.array(line.split(), dtype=float)
-
                 if ii == 0:
                     x0 = var[0]
                     xvec = np.ones(int(var[2])) * (var[1] - var[0]) / int(var[2])
                     xend = var[1]
-
                 else:
                     xvec = np.hstack((xvec, np.ones(int(var[1])) * (var[0] - xend) / int(var[1])))
                     xend = var[0]
-
             return x0, xvec
 
         # Start with dx block
