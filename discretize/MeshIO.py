@@ -7,11 +7,11 @@ import six
 class TensorMeshIO(object):
 
     @classmethod
-    def readUBC(TensorMesh, fileName):
-        """Read UBC GIF 3D tensor mesh and generate 3D TensorMesh.
+    def _readUBC_3DMesh(TensorMesh, fileName):
+        """Read UBC GIF 3D tensor mesh and generate same dimension TensorMesh.
 
         :param string fileName: path to the UBC GIF mesh file
-        :rtype: TensorMesh
+        :rtype: discretize TensorMesh
         :return: The tensor mesh for the fileName.
         """
 
@@ -23,13 +23,12 @@ class TensorMeshIO(object):
                     sp = seg.split('*')
                     seg_arr = np.ones((int(sp[0]),)) * float(sp[1])
                 else:
-                    seg_arr = np.array([float(seg)],float)
+                    seg_arr = np.array([float(seg)], float)
                 line_list.append(seg_arr)
             return np.concatenate(line_list)
 
         # Read the file as line strings, remove lines with comment = !
         msh = np.genfromtxt(fileName, delimiter='\n', dtype=np.str, comments='!')
-
         # Fist line is the size of the model
         sizeM = np.array(msh[0].split(), dtype=float)
         # Second line is the South-West-Top corner coordinates.
@@ -38,26 +37,21 @@ class TensorMeshIO(object):
         h1 = readCellLine(msh[2])
         h2 = readCellLine(msh[3])
         h3temp = readCellLine(msh[4])
-        h3 = h3temp[::-1] # Invert the indexing of the vector to start from the bottom.
+        # Invert the indexing of the vector to start from the bottom.
+        h3 = h3temp[::-1]
         # Adjust the reference point to the bottom south west corner
         x0[2] = x0[2] - np.sum(h3)
         # Make the mesh
         tensMsh = TensorMesh([h1, h2, h3], x0)
         return tensMsh
-    
+
     @classmethod
-    def readUBC_DC2DMesh(TensorMesh,fileName):
-        """
-        Read UBC GIF 2DTensor mesh and generate 2D Tensor mesh in simpeg
+    def _readUBC_2DMesh(TensorMesh, fileName):
+        """Read UBC GIF 2DTensor mesh and generate 2D Tensor mesh in simpeg
 
         :param string fileName: path to the UBC GIF mesh file
         :rtype: TensorMesh
         :return: SimPEG TensorMesh 2D object
-
-        Created on Thu Nov 12 13:14:10 2015
-
-        @author: dominiquef
-
         """
 
         fopen = open(fileName, 'r')
@@ -69,8 +63,8 @@ class TensorMeshIO(object):
                 line = fid.readline()
                 var = np.array(line.split(), dtype=float)
 
-                if ii==0:
-                    x0= var[0]
+                if ii == 0:
+                    x0 = var[0]
                     xvec = np.ones(int(var[2])) * (var[1] - var[0]) / int(var[2])
                     xend = var[1]
 
@@ -83,7 +77,10 @@ class TensorMeshIO(object):
         # Start with dx block
         # First line specifies the number of rows for x-cells
         line = fopen.readline()
-        nl = np.array(line.split(), dtype=float)
+        # Strip comments lines
+        while line.startswith("!"):
+            line = fopen.readline()
+        nl = np.array(line.split(), dtype=int)
         [x0, dx] = unpackdx(fopen, nl)
         # Move down the file until reaching the z-block
         line = fopen.readline()
@@ -92,7 +89,7 @@ class TensorMeshIO(object):
         # End with dz block
         # First line specifies the number of rows for z-cells
         line = fopen.readline()
-        nl = np.array(line.split(), dtype=float)
+        nl = np.array(line.split(), dtype=int)
         [z0, dz] = unpackdx(fopen, nl)
         # Flip z0 to be the bottom of the mesh for SimPEG
         z0 = z0 - sum(dz)
@@ -101,6 +98,36 @@ class TensorMeshIO(object):
         tensMsh = TensorMesh([dx, dz], (x0, z0))
         return tensMsh
 
+    @classmethod
+    def readUBC(TensorMesh, fileName, meshdim=None):
+        """Wrapper to Read UBC GIF 2D  and 3D tensor mesh and generate same dimension TensorMesh.
+
+        :param string fileName: path to the UBC GIF mesh file
+        :param int meshdim: expected dimension of the mesh, if unknown the default argument is None
+        :rtype: discretize TensorMesh
+        :return: The tensor mesh for the fileName.
+        """
+        # Check the expected mesh dimensions
+        if meshdim == None:
+            # Read the file as line strings, remove lines with comment = !
+            msh = np.genfromtxt(fileName, delimiter='\n', dtype=np.str, comments='!', max_rows=1)
+            # Fist line is the size of the model
+            sizeM = np.array(msh.ravel()[0].split(), dtype=float)
+            # Check if the mesh is a UBC 2D mesh
+            if sizeM.shape[0] == 1:
+                Tnsmsh = TensorMesh._readUBC_2DMesh(fileName)
+            # Check if the mesh is a UBC 3D mesh
+            elif sizeM.shape[0] == 3:
+                Tnsmsh = TensorMesh._readUBC_3DMesh(fileName)
+            else:
+                raise Exception('File format not recognized')
+        # expected dimension is 2
+        elif meshdim == 2:
+            Tnsmsh = TensorMesh._readUBC_2DMesh(fileName)
+        # expected dimension is 3
+        elif meshdim == 3:
+            Tnsmsh = TensorMesh._readUBC_3DMesh(fileName)
+        return Tnsmsh
 
     @classmethod
     def readVTK(TensorMesh, fileName):
@@ -496,7 +523,7 @@ class TreeMeshIO(object):
         cellsMat = np.concatenate((np.ones((cellConn.shape[0], 1), dtype=np.int64)*cellConn.shape[1], cellConn), axis=1).ravel()
         cellsArr = vtk.vtkCellArray()
         cellsArr.SetNumberOfCells(cellConn.shape[0])
-        cellsArr.SetCells(cellConn.shape[0], numpy_to_vtkIdTypeArray(cellsMat, deep=True))
+        cellsArr.SetCells(cellConn.shape[0], numpy_to_vtkIdTypeArray(cellsMat, deep =True))
 
         # Make the object
         vtuObj = vtk.vtkUnstructuredGrid()

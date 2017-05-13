@@ -81,9 +81,9 @@ class TestTensorMeshIO(unittest.TestCase):
             print('IO of VTR tensor mesh files is working')
             os.remove('temp.vtr')
 
-    def test_read_ubc_DC2Dmesh(self):
+    def test_read_ubc_2Dmesh(self):
         fname = os.path.join(os.path.split(__file__)[0], 'ubc_DC2D_tensor_mesh.msh')
-        mesh = discretize.TensorMesh.readUBC_DC2DMesh(fname)
+        mesh = discretize.TensorMesh.readUBC(fname)
         assert mesh.nCx == 178
         assert mesh.nCy == 67
         # spot check a few things in the file
