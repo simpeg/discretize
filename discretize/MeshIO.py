@@ -11,7 +11,7 @@ class TensorMeshIO(object):
         """Read UBC GIF 3D tensor mesh and generate same dimension TensorMesh.
 
         :param string fileName: path to the UBC GIF mesh file
-        :rtype: discretize TensorMesh
+        :rtype: TensorMesh
         :return: The tensor mesh for the fileName.
         """
 
@@ -50,7 +50,7 @@ class TensorMeshIO(object):
         """Read UBC GIF 2DTensor mesh and generate 2D Tensor mesh in simpeg
 
         :param string fileName: path to the UBC GIF mesh file
-        :rtype: discretize TensorMesh
+        :rtype: TensorMesh
         :return: SimPEG TensorMesh 2D object
         """
 
@@ -100,7 +100,7 @@ class TensorMeshIO(object):
 
         :param string fileName: path to the UBC GIF mesh file
         :param int meshdim: expected dimension of the mesh, if unknown the default argument is None
-        :rtype: discretize TensorMesh
+        :rtype: TensorMesh
         :return: The tensor mesh for the fileName.
         """
         # Check the expected mesh dimensions
