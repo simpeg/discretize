@@ -6,7 +6,15 @@ Discretization tools for finite volume and inverse problems.
 """
 
 from setuptools import find_packages
-from numpy.distutils.core import setup
+
+try:
+    from numpy.distutils.core import setup
+except Exception:
+    raise Exception(
+        "Install requires numpy. "
+        "If you use conda, `conda install numpy` "
+        "or you can use pip, `pip install numpy`"
+    )
 
 import os
 import sys
