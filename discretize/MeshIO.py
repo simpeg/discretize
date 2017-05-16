@@ -245,10 +245,10 @@ class TensorMeshIO(object):
         origin = mesh.x0 + np.array([0, 0, mesh.hz.sum()])
         origin.dtype = float
 
-        s += '{0:.2f} {1:.2f} {2:.2f}\n'.format(*tuple(origin))
-        s += ('%.2f '*mesh.nCx+'\n')%tuple(mesh.hx)
-        s += ('%.2f '*mesh.nCy+'\n')%tuple(mesh.hy)
-        s += ('%.2f '*mesh.nCz+'\n')%tuple(mesh.hz[::-1])
+        s += '{0:.6f} {1:.6f} {2:.6f}\n'.format(*tuple(origin))
+        s += ('%.6f '*mesh.nCx+'\n')%tuple(mesh.hx)
+        s += ('%.6f '*mesh.nCy+'\n')%tuple(mesh.hy)
+        s += ('%.6f '*mesh.nCz+'\n')%tuple(mesh.hz[::-1])
         f = open(fileName, 'w')
         f.write(s)
         f.close()
