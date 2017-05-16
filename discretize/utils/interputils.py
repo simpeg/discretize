@@ -13,7 +13,7 @@ try:
 except ImportError:
     print("""Interpolation will not work, use setup.py to compile the cython:
 
-        python setup.py build_ext --inplace""")
+        python setup.py install""")
     _interpCython = False
 
 
