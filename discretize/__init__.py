@@ -2,8 +2,20 @@ from discretize.BaseMesh import BaseMesh
 from discretize.TensorMesh import TensorMesh
 from discretize.CylMesh import CylMesh
 from discretize.CurvilinearMesh import CurvilinearMesh
-from discretize.TreeMesh import TreeMesh
 from discretize import Tests
+
+try:
+    from discretize.TreeMesh import TreeMesh
+except ImportError:
+    print(
+        """
+        TreeMesh not imported. You need to run:
+
+        python setup.py install
+
+        to build the TreeMesh cython code.
+        """
+    )
 
 __version__   = '0.1.5'
 __author__    = 'SimPEG Team'
