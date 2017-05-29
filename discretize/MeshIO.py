@@ -77,7 +77,7 @@ class TensorMeshIO(object):
         while line.startswith("!"):
             line = fopen.readline()
         nl = np.array(line.split(), dtype=int)
-        [x0, dx] = unpackdx(fopen, nl)
+        [x0, dx] = unpackdx(fopen, nl[0])
         # Move down the file until reaching the z-block
         line = fopen.readline()
         if not line:
@@ -86,12 +86,15 @@ class TensorMeshIO(object):
         # First line specifies the number of rows for z-cells
         line = fopen.readline()
         nl = np.array(line.split(), dtype=int)
-        [z0, dz] = unpackdx(fopen, nl)
+        [z0, dz] = unpackdx(fopen, nl[0])
         # Flip z0 to be the bottom of the mesh for SimPEG
         z0 = z0 - sum(dz)
         dz = dz[::-1]
         # Make the mesh
         tensMsh = TensorMesh([dx, dz], (x0, z0))
+
+        fopen.close()
+
         return tensMsh
 
     @classmethod
