@@ -530,5 +530,45 @@ class TestAveraging3D(discretize.Tests.OrderTest):
         self.expectedOrders = ORDERS
 
 
+class MimeticProperties(unittest.TestCase):
+    meshTypes = MESHTYPES
+    meshDimension = 3
+    meshSize = 64
+    tol = 1e-11  # there is still some error due to rounding
+
+    def test_DivCurl(self):
+
+        for meshType in self.meshTypes:
+            mesh, _ = discretize.Tests.setupMesh(
+                meshType, self.meshSize, self.meshDimension
+            )
+            v = np.random.rand(mesh.nE)
+            divcurlv = mesh.faceDiv * (mesh.edgeCurl * v)
+            rel_err = np.linalg.norm(divcurlv) / np.linalg.norm(v)
+            passed = rel_err  < self.tol
+            print(
+                "Testing Div * Curl on {} : |Div Curl v| / |v| = {} "
+                "... {}".format(
+                    meshType, rel_err, 'FAIL' if passed is False else 'ok'
+                )
+            )
+
+    def test_CurlGrad(self):
+
+        for meshType in self.meshTypes:
+            mesh, _ = discretize.Tests.setupMesh(
+                meshType, self.meshSize, self.meshDimension
+            )
+            v = np.random.rand(mesh.nN)
+            curlgradv = mesh.edgeCurl * (mesh.nodalGrad * v)
+            rel_err = np.linalg.norm(curlgradv) / np.linalg.norm(v)
+            passed = rel_err  < self.tol
+            print(
+                "Testing Curl * Grad on {} : |Curl Grad v| / |v|= {} "
+                "... {}".format(
+                    meshType, rel_err, 'FAIL' if passed is False else 'ok'
+                )
+            )
+
 if __name__ == '__main__':
     unittest.main()
