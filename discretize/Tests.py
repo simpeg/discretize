@@ -106,7 +106,7 @@ def setupMesh(meshType, nC, nDim):
             raise Exception('Unexpected meshType')
 
         levels = int(np.log(nC)/np.log(2))
-        mesh = Tree(h[:self.meshDimension], levels=levels)
+        mesh = Tree(h[:nDim], levels=levels)
 
         def function(cell):
             if 'notatree' in meshType:
