@@ -119,7 +119,7 @@ def setupMesh(meshType, nC, nDim):
         mesh.refine(function, balance=False)
         mesh.number(balance=False)
         # mesh.plotGrid(showIt=True)
-        max_h = max([np.max(hi) for hi in self.M.h])
+        max_h = max([np.max(hi) for hi in mesh.h])
     return mesh, max_h
 
 
