@@ -43,7 +43,7 @@ install:
   - export MPLBACKEND="agg"
 
 script:
-  - nosetests tests/base tests/tree tests/docs tests/cyl --with-cov --cov discretize --cov-config .coveragerc -v -s;
+  - nosetests $TEST_DIR --with-cov --cov discretize --cov-config .coveragerc -v -s;
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
