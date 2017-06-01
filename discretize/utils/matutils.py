@@ -3,6 +3,17 @@ import numpy as np
 import scipy.sparse as sp
 from .codeutils import isScalar
 
+try:
+    from . import prodAvec as pyx
+    _CprodAvec = pyx.prodAvec
+    _CprodAtvec = pyx.prodAtvec
+    _Cythonprod = True
+except ImportError:
+    print("""A times a vector will be slow
+
+            python setup.py build_ext --inplace
+    """)
+    _Cythonprod = False
 
 def mkvc(x, numDims=1):
     """Creates a vector with the number of dimension specified
@@ -569,3 +580,32 @@ class Identity(object):
 
     def transpose(self):
         return self
+
+
+def prodAvec(A, x):
+    """
+    Do the product A times a vector in cython with OpenMP
+    """
+
+    # if Cythonprod:
+    y = _CprodAvec(A, x)
+    # else:
+    #     y = np.empty(A.shape[0])
+    #     for ii in range(A.shape[0]):
+    #         y[ii] = A[ii, :].dot(x)
+    return y
+
+
+def prodAtvec(A, x):
+    """
+    Do the product A transposed times a vector in
+    cython with OpenMP
+    """
+    # if Cythonprod:
+    y = _CprodAtvec(A, x)
+
+    # else:
+    #     y = np.empty(A.shape[1])
+    #     for ii in range(A.shape[1]):
+    #         y[ii] = A[:, ii].dot(x)
+    return y

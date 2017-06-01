@@ -4,7 +4,7 @@ from .matutils import (mkvc, sdiag, sdInv, speye, kron3, spzeros, ddx, av,
                        av_extrap, ndgrid, ind2sub, sub2ind, getSubArray,
                        inv3X3BlockDiagonal, inv2X2BlockDiagonal, TensorType,
                        makePropertyTensor, invPropertyTensor, Zero,
-                       Identity)
+                       Identity, prodAvec, prodAtvec)
 from .codeutils import (isScalar, asArray_N_x_Dim)
 from .meshutils import (exampleLrmGrid, meshTensor, closestPoints,
                         ExtractCoreMesh, random_model)
