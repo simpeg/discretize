@@ -14,6 +14,11 @@ env:
     - MASTER_BRANCH=distribution
     - DEV_BRANCH=dev
     - PYPI_PY=3.6  # deploy to pypi from python 3.6
+  matrix:
+    - TEST_DIR=tests/base
+    - TEST_DIR=tests/cyl
+    - TEST_DIR=tests/tree
+    - TEST_DIR=tests/docs
 
 before_install:
   - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then
