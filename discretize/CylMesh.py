@@ -457,7 +457,7 @@ class CylMesh(
         .. math::
             A_x = r \theta h_z
 
-        :rtype: np.ndarray
+        :rtype: numpy.ndarray
         :return: area of x-faces
         """
         if getattr(self, '_areaFx', None) is None:
@@ -526,7 +526,7 @@ class CylMesh(
         Area of z-faces.
 
         .. math::
-            A_z = \frac{\theta}{2}(r_2^2 - r_1^2)z
+            A_z = \\frac{\theta}{2} (r_2^2 - r_1^2)z
 
         :rtype: numpy.ndarray
         :return: area of the z-faces
