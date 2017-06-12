@@ -64,8 +64,8 @@ def kron3(A, B, C):
 
 
 def spzeros(n1, n2):
-    """spzeros"""
-    return sp.csr_matrix((n1, n2))
+    """a sparse matrix of zeros"""
+    return sp.dia_matrix((n1, n2))
 
 
 def ddx(n):
@@ -415,42 +415,55 @@ class Zero(object):
     __numpy_ufunc__ = True
 
     def __add__(self, v):
+        # raise Exception
         return v
 
     def __radd__(self, v):
+        # raise Exception
         return v
 
     def __iadd__(self, v):
+        # raise Exception
         return v
 
     def __sub__(self, v):
+        # raise Exception
         return -v
 
     def __rsub__(self, v):
+        # raise Exception
         return v
 
     def __isub__(self, v):
+        # raise Exception
         return v
 
     def __mul__(self, v):
+        # raise Exception
         return self
 
     def __rmul__(self, v):
+        # raise Exception
         return self
 
     def __div__(self, v):
+        # raise Exception
         return self
 
     def __truediv__(self, v):
+        # raise Exception
         return self
 
     def __rdiv__(self, v):
+        # raise Exception
         raise ZeroDivisionError('Cannot divide by zero.')
 
     def __rtruediv__(self, v):
+        # raise Exception
         raise ZeroDivisionError('Cannot divide by zero.')
 
     def __rfloordiv__(self, v):
+        # raise Exception
         raise ZeroDivisionError('Cannot divide by zero.')
 
     def __pos__(self):
@@ -460,6 +473,7 @@ class Zero(object):
         return self
 
     def __lt__(self, v):
+        # raise Exception
         return 0 < v
 
     def __le__(self, v):
