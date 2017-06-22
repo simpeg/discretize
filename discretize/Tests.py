@@ -5,7 +5,12 @@ import scipy.sparse as sp
 from discretize.utils import mkvc, sdiag
 from discretize import utils
 from discretize import TensorMesh, CurvilinearMesh, CylMesh
-from discretize.TreeMesh import TreeMesh as Tree
+
+try:
+    from discretize.TreeMesh import TreeMesh as Tree
+except ImportError as e:
+    Tree = None
+    pass
 
 import unittest
 import inspect
@@ -94,6 +99,10 @@ def setupMesh(meshType, nC, nDim):
         max_h = 1./nC
 
     elif 'Tree' in meshType:
+        if Tree is None:
+            raise Exception(
+                "Tree Mesh not installed. Run 'python setup.py install'"
+            )
         nC *= 2
         if 'uniform' in meshType or 'notatree' in meshType:
             h = [nC, nC, nC]

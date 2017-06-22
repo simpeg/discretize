@@ -64,8 +64,8 @@ def kron3(A, B, C):
 
 
 def spzeros(n1, n2):
-    """spzeros"""
-    return sp.csr_matrix((n1, n2))
+    """a sparse matrix of zeros"""
+    return sp.dia_matrix((n1, n2))
 
 
 def ddx(n):
@@ -413,6 +413,7 @@ def invPropertyTensor(M, tensor, returnMatrix=False):
 class Zero(object):
 
     __numpy_ufunc__ = True
+    __array_ufunc__ = None
 
     def __add__(self, v):
         return v
@@ -488,6 +489,7 @@ class Zero(object):
 class Identity(object):
 
     __numpy_ufunc__ = True
+    __array_ufunc__ = None
 
     _positive = True
 
