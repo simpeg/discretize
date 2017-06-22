@@ -5,7 +5,12 @@ import scipy.sparse as sp
 from discretize.utils import mkvc, sdiag
 from discretize import utils
 from discretize import TensorMesh, CurvilinearMesh, CylMesh
-from discretize.TreeMesh import TreeMesh as Tree
+
+try:
+    from discretize.TreeMesh import TreeMesh as Tree
+except ImportError as e:
+    Tree = None
+    pass
 
 import unittest
 import inspect
@@ -136,6 +141,10 @@ class OrderTest(unittest.TestCase):
             return 1./nc
 
         elif 'Tree' in self._meshType:
+            if Tree is None:
+                raise Exception(
+                    "Tree Mesh not installed. Run 'python setup.py install'"
+                )
             nc *= 2
             if 'uniform' in self._meshType or 'notatree' in self._meshType:
                 h = [nc, nc, nc]
@@ -149,6 +158,7 @@ class OrderTest(unittest.TestCase):
 
             levels = int(np.log(nc)/np.log(2))
             self.M = Tree(h[:self.meshDimension], levels=levels)
+
             def function(cell):
                 if 'notatree' in self._meshType:
                     return levels - 1
