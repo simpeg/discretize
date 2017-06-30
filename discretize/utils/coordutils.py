@@ -7,6 +7,7 @@ def cyl2cart(grid):
     Take a grid defined in cylindrical coordinates :math:`(r, \theta, z)` and
     transform it to cartesian coordinates.
     """
+    grid = np.atleast_2d(grid)
     return np.hstack([
         mkvc(grid[:, 0]*np.cos(grid[:, 1]), 2),
         mkvc(grid[:, 0]*np.sin(grid[:, 1]), 2),
