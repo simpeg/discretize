@@ -15,6 +15,26 @@ def cyl2cart(grid):
     ])
 
 
+def cart2cyl(grid, points=None):
+    """
+    Take a grid defined in cartesian coordinates and transform it to cyl
+    coordinates
+    """
+    if points is None:
+        points = grid
+
+    points = np.atleast_2d(points)
+    grid = np.atleast_2d(grid)
+
+    theta = np.arctan2(grid[:, 1], grid[:, 0])
+
+    return np.hstack([
+        mkvc(np.cos(theta)*points[:, 0] + np.sin(theta)*points[:, 1], 2),
+        mkvc(-np.sin(theta)*points[:, 0] + np.cos(theta)*points[:, 1], 2),
+        mkvc(points[:, 2], 2)
+    ])
+
+
 def rotationMatrixFromNormals(v0, v1, tol=1e-20):
     """
     Performs the minimum number of rotations to define a rotation from the
