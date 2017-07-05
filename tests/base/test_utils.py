@@ -398,7 +398,7 @@ class TestMeshUtils(unittest.TestCase):
         assert meshCore1d.vectorCCx.max() < xzlim1d[0, :].max()
 
         # 2D Test on TensorMesh
-        meshtest2d = discretize.TensorMesh([[(50, 10.)], [(25, 10.)]])
+        meshtest2d = discretize.TensorMesh([[(50., 10)], [(25., 10)]])
         xzlim2d = xyzlim = np.r_[[[0., 200.], [0., 200.]]]
         actind2d, meshCore2d = ExtractCoreMesh(xzlim2d, meshtest2d)
 
