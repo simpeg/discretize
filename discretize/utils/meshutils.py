@@ -173,7 +173,8 @@ def closestPoints(mesh, pts, gridLoc='CC'):
 
 
 def ExtractCoreMesh(xyzlim, mesh, meshType='tensor'):
-    """Extracts Core Mesh from Global mesh
+    """
+    Extracts Core Mesh from Global mesh
 
     :param numpy.ndarray xyzlim: 2D array [ndim x 2]
     :param BaseMesh mesh: The mesh
@@ -181,9 +182,7 @@ def ExtractCoreMesh(xyzlim, mesh, meshType='tensor'):
     This function ouputs::
 
         - actind: corresponding boolean index from global to core
-        - meshcore: core mesh
-
-    Warning: 1D and 2D has not been tested
+        - meshcore: core sdiscretize mesh
     """
     import discretize
     if mesh.dim == 1:
@@ -196,18 +195,18 @@ def ExtractCoreMesh(xyzlim, mesh, meshType='tensor'):
 
         hx = mesh.hx[xind]
 
-        x0 = [xc[0]-hx[0]*0.5, yc[0]-hy[0]*0.5]
+        x0 = [xc[0]-hx[0]*0.5]
 
-        meshCore = discretize.TensorMesh([hx, hy], x0=x0)
+        meshCore = discretize.TensorMesh([hx], x0=x0)
 
-        actind = (mesh.gridCC[:, 0] > xmin) & (mesh.gridCC[:, 0] < xmax)
+        actind = (mesh.gridCC > xmin) & (mesh.gridCC < xmax)
 
     elif mesh.dim == 2:
         xmin, xmax = xyzlim[0, 0], xyzlim[0, 1]
         ymin, ymax = xyzlim[1, 0], xyzlim[1, 1]
 
+        xind = np.logical_and(mesh.vectorCCx > xmin, mesh.vectorCCx < xmax)
         yind = np.logical_and(mesh.vectorCCy > ymin, mesh.vectorCCy < ymax)
-        zind = np.logical_and(mesh.vectorCCz > zmin, mesh.vectorCCz < zmax)
 
         xc = mesh.vectorCCx[xind]
         yc = mesh.vectorCCy[yind]
@@ -219,8 +218,10 @@ def ExtractCoreMesh(xyzlim, mesh, meshType='tensor'):
 
         meshCore = discretize.TensorMesh([hx, hy], x0=x0)
 
-        actind = (mesh.gridCC[:, 0] > xmin) & (mesh.gridCC[:, 0] < xmax) \
-               & (mesh.gridCC[:, 1] > ymin) & (mesh.gridCC[:, 1] < ymax) \
+        actind = (
+            (mesh.gridCC[:, 0] > xmin) & (mesh.gridCC[:, 0] < xmax) &
+            (mesh.gridCC[:, 1] > ymin) & (mesh.gridCC[:, 1] < ymax)
+        )
 
     elif mesh.dim == 3:
         xmin, xmax = xyzlim[0, 0], xyzlim[0, 1]
