@@ -188,14 +188,15 @@ class TensorView(object):
             plt.show()
         return ph
 
-    def plotSlice(self, v, vType='CC',
-                  normal='Z', ind=None, grid=False, view='real',
-                  ax=None, clim=None, showIt=False,
-                  pcolorOpts=None,
-                  streamOpts=None,
-                  gridOpts=None,
-                  range_x=None, range_y=None
-                  ):
+    def plotSlice(
+        self, v, vType='CC',
+        normal='Z', ind=None, grid=False, view='real',
+        ax=None, clim=None, showIt=False,
+        pcolorOpts=None,
+        streamOpts=None,
+        gridOpts=None,
+        range_x=None, range_y=None
+    ):
 
         """
         Plots a slice of a 3D mesh.
@@ -581,6 +582,8 @@ class TensorView(object):
         if showIt:
             plt.show()
 
+        return ax
+
 
 class CylView(object):
 
@@ -656,7 +659,7 @@ class CylView(object):
         if showIt:
             plt.show()
 
-        return out
+        return ax
 
     def plotGrid(self, *args, **kwargs):
         if self.isSymmetric:
@@ -721,6 +724,8 @@ for reference, see: http://matplotlib.org/examples/pylab_examples/polar_demo.htm
             self._plotGridThetaSlice(*args, **kwargscart)
             plt.tight_layout()
 
+        return [polarax, cartax]
+
     def _plotGridThetaSlice(self, *args, **kwargs):
         if self.isSymmetric:
             return self.plotGrid(*args, **kwargs)
@@ -772,6 +777,8 @@ for reference, see: http://matplotlib.org/examples/pylab_examples/polar_demo.htm
             ax.plot(np.linspace(0., np.pi*2, n), r*np.ones(n), '-b')
             for r in self.vectorNx
         ]
+
+        return ax
 
     def plotImage(self, *args, **kwargs):
         return self._plotCylTensorMesh('plotImage', *args, **kwargs)
@@ -878,6 +885,8 @@ class CurviView(object):
 
         if showIt:
             plt.show()
+
+        return ax
 
     def plotImage(
         self, I, ax=None, showIt=False, grid=False, clim=None
