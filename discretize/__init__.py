@@ -17,7 +17,7 @@ except ImportError:
         """
     )
 
-__version__   = '0.1.8'
+__version__   = '0.1.9'
 __author__    = 'SimPEG Team'
 __license__   = 'MIT'
 __copyright__ = '2013 - 2017, SimPEG Developers, http://simpeg.xyz'
