@@ -659,7 +659,7 @@ class CylView(object):
         if showIt:
             plt.show()
 
-        return ax
+        return out
 
     def plotGrid(self, *args, **kwargs):
         if self.isSymmetric:
