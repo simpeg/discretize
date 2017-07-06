@@ -675,9 +675,9 @@ class CylView(object):
 
         # if slc is None, provide slices in both the theta and z directions
         if slc == 'theta':
-            self._plotGridThetaSlice(*args, **kwargs)
+            return self._plotGridThetaSlice(*args, **kwargs)
         elif slc == 'z':
-            self._plotGridZSlice(*args, **kwargs)
+            return self._plotGridZSlice(*args, **kwargs)
         else:
             ax = kwargs.pop('ax', None)
             if ax is not None:
@@ -720,11 +720,12 @@ for reference, see: http://matplotlib.org/examples/pylab_examples/polar_demo.htm
             kwargscart = kwargs.copy()
             kwargscart['ax'] = cartax
 
-            self._plotGridZSlice(*args, **kwargspolar)
-            self._plotGridThetaSlice(*args, **kwargscart)
+            ax = []
+            ax.append(self._plotGridZSlice(*args, **kwargspolar))
+            ax.append(self._plotGridThetaSlice(*args, **kwargscart))
             plt.tight_layout()
 
-        return [polarax, cartax]
+        return ax
 
     def _plotGridThetaSlice(self, *args, **kwargs):
         if self.isSymmetric:
