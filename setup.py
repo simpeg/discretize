@@ -56,7 +56,7 @@ def configuration(parent_package='', top_path=None):
 
 setup(
     name="discretize",
-    version="0.1.8",
+    version="0.1.9",
     install_requires=[
         'numpy>=1.7',
         'scipy>=0.13',
