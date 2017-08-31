@@ -1,41 +1,51 @@
 import numpy as np
+import properties
 from discretize import utils
 
 
-class BaseMesh(object):
-    """BaseMesh does all the counting you don't want to do.
+class BaseMesh(properties.HasProperties):
+    """
+    BaseMesh does all the counting you don't want to do.
     BaseMesh should be inherited by meshes with a regular structure.
-
-    :param numpy.array n: (or list) number of cells in each direction (dim, )
-    :param numpy.array x0: (or list) Origin of the mesh (dim, )
-
     """
 
-    def __init__(self, n, x0=None):
+    # Properties
+    n = properties.Array(
+        "number of cells in each direction (dim, )",
+        dtype=int,
+        required=True,
+        shape=('*',)
+    )
 
-        # Check inputs
-        if x0 is None:
-            x0 = np.zeros(len(n))
+    x0 = properties.Array(
+        "origin of the mesh (dim, )",
+        dtype=float,
+        shape=('*',),
+        required=True
+    )
 
-        if not len(n) == len(x0):
+    def __init__(self, n, **kwargs):
+        self.n = n  # number of dimensions
+        super(BaseMesh, self).__init__(**kwargs)
+
+        # set x0 to zeros if it is none
+        if self.x0 is None:
+            self.x0 = np.zeros(len(self.n))
+
+    # Validators
+    @properties.validator('n')
+    def check_n_shape(self, change):
+        change['value'] = np.array(change['value'], dtype=int).ravel()
+        if len(change['value']) > 3:
+            raise Exception(
+                "Dimensions of {}, which is higher than 3 are not "
+                "supported".format(change['value'])
+            )
+
+    @properties.validator('x0')
+    def check_x0_vs_n(self, change):
+        if len(self.n) != len(change['value']):
             raise Exception("Dimension mismatch. x0 != len(n)")
-
-        if len(n) > 3:
-            raise Exception("Dimensions higher than 3 are not supported.")
-
-        # Ensure x0 & n are 1D vectors
-        self._n = np.array(n, dtype=int).ravel()
-        self._x0 = np.array(x0, dtype=float).ravel()
-        self._dim = len(self._x0)
-
-    @property
-    def x0(self):
-        """Origin of the mesh
-
-        :rtype: numpy.array
-        :return: x0, (dim, )
-        """
-        return self._x0
 
     @property
     def dim(self):
@@ -44,7 +54,7 @@ class BaseMesh(object):
         :rtype: int
         :return: dim
         """
-        return self._dim
+        return len(self.n)
 
     @property
     def nC(self):
@@ -293,8 +303,8 @@ class BaseMesh(object):
 
 class BaseRectangularMesh(BaseMesh):
     """BaseRectangularMesh"""
-    def __init__(self, n, x0=None):
-        BaseMesh.__init__(self, n, x0)
+    def __init__(self, n, **kwargs):
+        BaseMesh.__init__(self, n, **kwargs)
 
     @property
     def nCx(self):
@@ -303,7 +313,7 @@ class BaseRectangularMesh(BaseMesh):
         :rtype: int
         :return: nCx
         """
-        return int(self._n[0])
+        return int(self.n[0])
 
     @property
     def nCy(self):
@@ -314,7 +324,7 @@ class BaseRectangularMesh(BaseMesh):
         """
         if self.dim < 2:
             return None
-        return int(self._n[1])
+        return int(self.n[1])
 
     @property
     def nCz(self):
@@ -325,7 +335,7 @@ class BaseRectangularMesh(BaseMesh):
         """
         if self.dim < 3:
             return None
-        return int(self._n[2])
+        return int(self.n[2])
 
     @property
     def vnC(self):
@@ -622,7 +632,7 @@ class BaseRectangularMesh(BaseMesh):
         def switchKernal(xx):
             """Switches over the different options."""
             if xType in ['CC', 'N']:
-                nn = (self._n) if xType == 'CC' else (self._n+1)
+                nn = (self.n) if xType == 'CC' else (self._n+1)
                 assert xx.size == np.prod(nn), "Number of elements must not change."
                 return outKernal(xx, nn)
             elif xType in ['F', 'E']:
