@@ -1,6 +1,7 @@
 from __future__ import print_function
 import numpy as np
 import scipy.sparse as sp
+import properties
 
 from discretize import utils
 
@@ -18,7 +19,22 @@ class BaseTensorMesh(BaseMesh):
 
     _unitDimensions = [1, 1, 1]
 
-    def __init__(self, h_in, x0_in=None):
+    # properties
+    h = properties.List(
+        "h is a list containing the cell widths of the tensor mesh in each "
+        "dimension.",
+        properties.Array(
+            "widths of the tensor mesh in a single dimension",
+            dtype=float,
+            shape=("*",)
+        ),
+        max_length=3
+    )
+
+    def __init__(self, h, x0=None):
+        h_in = h
+        x0_in = x0
+
         assert type(h_in) in [list, tuple], 'h_in must be a list'
         assert len(h_in) in [1, 2, 3], 'h_in must be of dimension 1, 2, or 3'
         h = list(range(len(h_in)))
@@ -55,38 +71,27 @@ class BaseTensorMesh(BaseMesh):
                         "'C' to center, or 'N' to be negative.".format(i)
                     )
 
-        if isinstance(self, BaseRectangularMesh):
-            BaseRectangularMesh.__init__(
-                self, np.array([x.size for x in h]), x0
-            )
-        else:
-            BaseMesh.__init__(self, np.array([x.size for x in h]), x0)
+        super(BaseTensorMesh, self).__init__(
+            np.array([x.size for x in h]), x0=x0
+        )
 
         # Ensure h contains 1D vectors
-        self._h = [utils.mkvc(x.astype(float)) for x in h]
-
-    @property
-    def h(self):
-        """
-        h is a list containing the cell widths of the tensor mesh in each
-        dimension.
-        """
-        return self._h
+        self.h = [utils.mkvc(x.astype(float)) for x in h]
 
     @property
     def hx(self):
         "Width of cells in the x direction"
-        return self._h[0]
+        return self.h[0]
 
     @property
     def hy(self):
         "Width of cells in the y direction"
-        return None if self.dim < 2 else self._h[1]
+        return None if self.dim < 2 else self.h[1]
 
     @property
     def hz(self):
         "Width of cells in the z direction"
-        return None if self.dim < 3 else self._h[2]
+        return None if self.dim < 3 else self.h[2]
 
     @property
     def vectorNx(self):
