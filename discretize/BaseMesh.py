@@ -25,8 +25,10 @@ class BaseMesh(properties.HasProperties):
     )
 
     # Instantiate the class
-    def __init__(self, n, **kwargs):
+    def __init__(self, n, x0=None, **kwargs):
         self.n = n  # number of dimensions
+        if x0 is not None:
+            self.x0 = x0
         super(BaseMesh, self).__init__(**kwargs)
 
         # set x0 to zeros if it is none
@@ -304,8 +306,8 @@ class BaseMesh(properties.HasProperties):
 
 class BaseRectangularMesh(BaseMesh):
     """BaseRectangularMesh"""
-    def __init__(self, n, **kwargs):
-        BaseMesh.__init__(self, n, **kwargs)
+    def __init__(self, n, x0=None, **kwargs):
+        BaseMesh.__init__(self, n, x0=None, **kwargs)
 
     @property
     def nCx(self):
