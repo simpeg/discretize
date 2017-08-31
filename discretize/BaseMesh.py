@@ -24,6 +24,7 @@ class BaseMesh(properties.HasProperties):
         required=True
     )
 
+    # Instantiate the class
     def __init__(self, n, **kwargs):
         self.n = n  # number of dimensions
         super(BaseMesh, self).__init__(**kwargs)
@@ -600,16 +601,34 @@ class BaseRectangularMesh(BaseMesh):
             eX, eY, eZ = r(edgeVector, 'E', 'E', 'V')
         """
 
-        assert (type(x) == list or isinstance(x, np.ndarray)), "x must be either a list or a ndarray"
-        assert xType in ['CC', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez'], "xType must be either 'CC', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', or 'Ez'"
-        assert outType in ['CC', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez'], "outType must be either 'CC', 'N', 'F', Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', or 'Ez'"
+        allowed_xType = [
+            'CC', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez'
+        ]
+        assert (
+            type(x) == list or isinstance(x, np.ndarray)
+        ), "x must be either a list or a ndarray"
+        assert xType in allowed_xType, (
+            "xType must be either "
+            "'CC', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', or 'Ez'"
+        )
+        assert outType in allowed_xType, (
+            "outType must be either "
+            "'CC', 'N', 'F', Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', or 'Ez'"
+        )
         assert format in ['M', 'V'], "format must be either 'M' or 'V'"
-        assert outType[:len(xType)] == xType, "You cannot change types when reshaping."
-        assert xType in outType, 'You cannot change type of components.'
+        assert outType[:len(xType)] == xType, (
+            "You cannot change types when reshaping."
+        )
+        assert xType in outType, "You cannot change type of components."
+
         if type(x) == list:
             for i, xi in enumerate(x):
-                assert isinstance(x, np.ndarray), "x[{0:d}] must be a numpy array".format(i)
-                assert xi.size == x[0].size, "Number of elements in list must not change."
+                assert isinstance(x, np.ndarray), (
+                    "x[{0:d}] must be a numpy array".format(i)
+                )
+                assert xi.size == x[0].size, (
+                    "Number of elements in list must not change."
+                )
 
             x_array = np.ones((x.size, len(x)))
             # Unwrap it and put it in a np array
@@ -620,7 +639,11 @@ class BaseRectangularMesh(BaseMesh):
         assert isinstance(x, np.ndarray), "x must be a numpy array"
 
         x = x[:]  # make a copy.
-        xTypeIsFExyz = len(xType) > 1 and xType[0] in ['F', 'E'] and xType[1] in ['x', 'y', 'z']
+        xTypeIsFExyz = (
+            len(xType) > 1 and
+            xType[0] in ['F', 'E'] and
+            xType[1] in ['x', 'y', 'z']
+        )
 
         def outKernal(xx, nn):
             """Returns xx as either a matrix (shape == nn) or a vector."""
@@ -633,10 +656,13 @@ class BaseRectangularMesh(BaseMesh):
             """Switches over the different options."""
             if xType in ['CC', 'N']:
                 nn = (self.n) if xType == 'CC' else (self.n+1)
-                assert xx.size == np.prod(nn), "Number of elements must not change."
+                assert xx.size == np.prod(nn), (
+                    "Number of elements must not change."
+                )
                 return outKernal(xx, nn)
             elif xType in ['F', 'E']:
-                # This will only deal with components of fields, not full 'F' or 'E'
+                # This will only deal with components of fields,
+                # not full 'F' or 'E'
                 xx = utils.mkvc(xx)  # unwrap it in case it is a matrix
                 nn = self.vnF if xType == 'F' else self.vnE
                 nn = np.r_[0, nn]
@@ -648,13 +674,20 @@ class BaseRectangularMesh(BaseMesh):
 
                 for dim, dimName in enumerate(['x', 'y', 'z']):
                     if dimName in outType:
-                        assert self.dim > dim, ("Dimensions of mesh not great enough for %s%s", (xType, dimName))
-                        assert xx.size == np.sum(nn), 'Vector is not the right size.'
+                        assert self.dim > dim, (
+                            "Dimensions of mesh not great enough for "
+                            "{}{}".format(xType, dimName)
+                        )
+                        assert xx.size == np.sum(nn), (
+                            "Vector is not the right size."
+                        )
                         start = np.sum(nn[:dim+1])
                         end = np.sum(nn[:dim+2])
                         return outKernal(xx[start:end], nx[dim])
+
             elif xTypeIsFExyz:
-                # This will deal with partial components (x, y or z) lying on edges or faces
+                # This will deal with partial components (x, y or z)
+                # lying on edges or faces
                 if 'x' in xType:
                     nn = self.vnFx if 'F' in xType else self.vnEx
                 elif 'y' in xType:
@@ -668,7 +701,9 @@ class BaseRectangularMesh(BaseMesh):
         isVectorQuantity = len(x.shape) == 2 and x.shape[1] == self.dim
 
         if outType in ['F', 'E']:
-            assert ~isVectorQuantity, 'Not sure what to do with a vector vector quantity..'
+            assert ~isVectorQuantity, (
+                'Not sure what to do with a vector vector quantity..'
+            )
             outTypeCopy = outType
             out = ()
             for ii, dirName in enumerate(['x', 'y', 'z'][:self.dim]):
