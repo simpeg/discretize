@@ -25,15 +25,14 @@ class BaseMesh(properties.HasProperties):
     )
 
     # Instantiate the class
-    def __init__(self, n, x0=None, **kwargs):
+    def __init__(self, n, x0=None):
         self.n = n  # number of dimensions
-        if x0 is not None:
-            self.x0 = x0
-        super(BaseMesh, self).__init__(**kwargs)
 
-        # set x0 to zeros if it is none
-        if self.x0 is None:
+        # origin of the mesh
+        if x0 is None:
             self.x0 = np.zeros(len(self.n))
+        else:
+            self.x0 = x0
 
     # Validators
     @properties.validator('n')
@@ -306,8 +305,8 @@ class BaseMesh(properties.HasProperties):
 
 class BaseRectangularMesh(BaseMesh):
     """BaseRectangularMesh"""
-    def __init__(self, n, x0=None, **kwargs):
-        BaseMesh.__init__(self, n, x0=None, **kwargs)
+    def __init__(self, n, x0=None):
+        BaseMesh.__init__(self, n, x0=x0)
 
     @property
     def nCx(self):
