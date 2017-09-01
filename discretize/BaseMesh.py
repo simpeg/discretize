@@ -1,5 +1,7 @@
 import numpy as np
 import properties
+import os
+import json
 from discretize import utils
 
 
@@ -25,10 +27,11 @@ class BaseMesh(properties.HasProperties):
     )
 
     # Instantiate the class
-    def __init__(self, n, x0=None):
+    def __init__(self, n, **kwargs):
         self.n = n  # number of dimensions
 
         # origin of the mesh
+        x0 = kwargs.pop('x0')
         if x0 is None:
             self.x0 = np.zeros(len(self.n))
         else:
@@ -301,6 +304,22 @@ class BaseMesh(properties.HasProperties):
             eV.shape[1] == self.dim
         ), 'eV must be an ndarray of shape (nE x dim)'
         return np.sum(eV*self.tangents, 1)
+
+    def save(self, filename='mesh.json', verbose=False):
+        """
+        Save the mesh to json
+        :param str file: filename for saving the casing properties
+        :param str directory: working directory for saving the file
+        """
+
+        f = os.path.abspath(filename)  # make sure we are working with abs path
+        with open(f, 'w') as outfile:
+            json.dump(self.serialize(), outfile)
+
+        if verbose is True:
+            print('Saved {}'.format(f))
+
+        return f
 
 
 class BaseRectangularMesh(BaseMesh):

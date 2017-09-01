@@ -1,4 +1,6 @@
 import numpy as np
+import properties
+import json
 from .matutils import ndgrid
 from .codeutils import asArray_N_x_Dim
 from .codeutils import isScalar
@@ -10,6 +12,22 @@ if sys.version_info < (3,):
     num_types = [int, long, float]
 else:
     num_types = [int, float]
+
+
+def load_mesh(filename):
+    """
+    Open a json file and load the mesh into the target class
+
+    As long as there are no namespace conflicts, the target __class__
+    will be stored on the properties.HasProperties registry and may be
+    fetched from there.
+
+    :param str filename: name of file to read in
+    """
+    with open(filename, 'r') as outfile:
+        jsondict = json.load(outfile)
+        data = properties.HasProperties.deserialize(jsondict, trusted=True)
+    return data
 
 
 def exampleLrmGrid(nC, exType):

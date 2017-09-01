@@ -31,29 +31,46 @@ class BaseTensorMesh(BaseMesh):
         max_length=3
     )
 
-    def __init__(self, h, x0=None):
-        h_in = h
-        x0_in = x0
+    def __init__(self, h_in=None, **kwargs):
 
-        assert type(h_in) in [list, tuple], 'h_in must be a list'
-        assert len(h_in) in [1, 2, 3], 'h_in must be of dimension 1, 2, or 3'
-        h = list(range(len(h_in)))
-        for i, h_i in enumerate(h_in):
-            if utils.isScalar(h_i) and type(h_i) is not np.ndarray:
-                # This gives you something over the unit cube.
-                h_i = self._unitDimensions[i] * np.ones(int(h_i))/int(h_i)
-            elif type(h_i) is list:
-                h_i = utils.meshTensor(h_i)
-            assert isinstance(h_i, np.ndarray), (
-                "h[{0:d}] is not a numpy array.".format(i)
+        # Cell widths
+        if h_in is not None:
+            # Sanity Checks
+            assert 'h' not in kwargs.keys(), (
+                'Only 1 descriptor of cell sizes can be used to instantiate '
+                'the class'
             )
-            assert len(h_i.shape) == 1, (
-                "h[{0:d}] must be a 1D numpy array.".format(i)
+            assert type(h_in) in [list, tuple], 'h_in must be a list'
+            assert len(h_in) in [1, 2, 3], (
+                'h_in must be of dimension 1, 2, or 3'
             )
-            h[i] = h_i[:]  # make a copy.
 
+            # build h
+            h = list(range(len(h_in)))
+            for i, h_i in enumerate(h_in):
+                if utils.isScalar(h_i) and type(h_i) is not np.ndarray:
+                    # This gives you something over the unit cube.
+                    h_i = self._unitDimensions[i] * np.ones(int(h_i))/int(h_i)
+                elif type(h_i) is list:
+                    h_i = utils.meshTensor(h_i)
+                assert isinstance(h_i, np.ndarray), (
+                    "h[{0:d}] is not a numpy array.".format(i)
+                )
+                assert len(h_i.shape) == 1, (
+                    "h[{0:d}] must be a 1D numpy array.".format(i)
+                )
+                h[i] = h_i[:]  # make a copy.
+
+        else:
+            assert 'h' in kwargs.keys(), 'cell widths must be provided'
+            h = kwargs.pop('h')
+
+        # Origin of the mesh
         x0 = np.zeros(len(h))
-        if x0_in is not None:
+
+        if 'x0' in kwargs.keys():
+            x0_in = kwargs.pop('x0')
+
             assert len(h) == len(x0_in), "Dimension mismatch. x0 != len(h)"
             for i in range(len(h)):
                 x_i, h_i = x0_in[i], h[i]
@@ -526,8 +543,8 @@ class TensorMesh(BaseTensorMesh, BaseRectangularMesh, TensorView, DiffOperators,
 
     _meshType = 'TENSOR'
 
-    def __init__(self, h_in, x0=None):
-        BaseTensorMesh.__init__(self, h_in, x0)
+    def __init__(self, h_in=None, **kwargs):
+        BaseTensorMesh.__init__(self, h_in, **kwargs)
 
     def __str__(self):
         outStr = '  ---- {0:d}-D TensorMesh ----  '.format(self.dim)
