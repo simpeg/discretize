@@ -291,7 +291,7 @@ class TensorView(object):
         if 'Z' not in normal:
             h2d.append(self.hz)
             x2d.append(self.x0[2])
-        tM = self.__class__(h2d, x2d)  #: Temp Mesh
+        tM = self.__class__(h2d, x0=x2d)  #: Temp Mesh
         v2d = doSlice(v)
 
         if ax is None:
@@ -405,7 +405,7 @@ class TensorView(object):
                 hy = np.ones(nyi)*self.hy.sum()/nyi
                 x0_y = self.x0[1]
 
-            tMi = self.__class__([hx, hy], np.r_[x0_x, x0_y])
+            tMi = self.__class__([hx, hy], x0=np.r_[x0_x, x0_y])
             P = self.getInterpolationMat(tMi.gridCC, 'CC', zerosOutside=True)
 
             Ui = tMi.r(P*mkvc(U), 'CC', 'CC', 'M')
