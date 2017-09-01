@@ -3,6 +3,21 @@ import os
 import discretize
 
 
+def compare_meshes(mesh0, mesh1):
+    assert mesh0.nC == mesh1.nC , (
+        'Number of cells not the same, {} != {}'.format(mesh0.nC, mesh1.nC)
+    )
+
+    assert (mesh0.x0 == mesh1.x0).all(), (
+        'x0 different. {} != {}'.format(mesh0.x0, mesh1.x0)
+    )
+
+    for i in range(len(mesh0.h)):
+        assert (mesh0.h[i] == mesh1.h[i]).all(), (
+            'mesh h[{}] different'.format(i)
+        )
+
+
 class TensorTest(unittest.TestCase):
 
     n = [4, 5, 9]
@@ -16,21 +31,16 @@ class TensorTest(unittest.TestCase):
         mesh0 = self.mesh
         f = mesh0.save()
         mesh1 = discretize.utils.load_mesh(f)
-
-        assert mesh0.nC == mesh1.nC , (
-            'Number of cells not the same, {} != {}'.format(mesh0.nC, mesh1.nC)
-        )
-
-        assert (mesh0.x0 == mesh1.x0).all(), (
-            'x0 different. {} != {}'.format(mesh0.x0, mesh1.x0)
-        )
-
-        for i in range(len(mesh0.h)):
-            assert (mesh0.h[i] == mesh1.h[i]).all(), (
-                'mesh h[{}] different'.format(i)
-            )
-
+        compare_meshes(mesh0, mesh1)
         os.remove(f)
+        print('ok\n')
+
+    def test_copy(self):
+        print('\nTesting copy of Tensor Mesh ...')
+        mesh0 = self.mesh
+        mesh1 = mesh0.copy()
+        compare_meshes(mesh0, mesh1)
+        print('ok\n')
 
 
 

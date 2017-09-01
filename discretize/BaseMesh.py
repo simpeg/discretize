@@ -321,6 +321,12 @@ class BaseMesh(properties.HasProperties):
 
         return f
 
+    def copy(self):
+        """
+        Make a copy of the current mesh
+        """
+        return properties.copy(self)
+
 
 class BaseRectangularMesh(BaseMesh):
     """BaseRectangularMesh"""
