@@ -1,5 +1,6 @@
 from __future__ import print_function
 import numpy as np
+import properties
 import scipy.sparse as sp
 from scipy.constants import pi
 
@@ -29,17 +30,39 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
 
     _unitDimensions = [1, 2*np.pi, 1]
 
-    def __init__(self, h, x0=None, cartesianOrigin=None):
-        BaseTensorMesh.__init__(self, h, x0)
+    cartesianOrigin = properties.Array(
+        "Cartesian origin of the mesh",
+        dtype=float,
+        shape=('*',)
+    )
+
+    def __init__(self, h_in=None, **kwargs):
+        BaseTensorMesh.__init__(self, h_in=h_in, **kwargs)
         assert self.hy.sum() == 2*np.pi, "The 2nd dimension must sum to 2*pi"
         if self.dim == 2:
             print('Warning, a disk mesh has not been tested thoroughly.')
-        cartesianOrigin = (np.zeros(self.dim) if cartesianOrigin is None
-                           else cartesianOrigin)
-        assert len(cartesianOrigin) == self.dim, ("cartesianOrigin must be the "
-                                                  "same length as the dimension"
-                                                  " of the mesh.")
-        self.cartesianOrigin = np.array(cartesianOrigin, dtype=float)
+
+        if 'cartesianOrigin' in kwargs.keys():
+            self.cartesianOrigin = kwargs.pop('cartesianOrigin')
+        else:
+            self.cartesianOrigin = np.zeros(self.dim)
+
+        # assert len(self.cartesianOrigin) == self.dim, (
+        #     "cartesianOrigin must be the same length as the dimension"
+        #     " of the mesh."
+        # )
+        # self.cartesianOrigin = np.array(self.cartesianOrigin, dtype=float)
+
+    @properties.validator('cartesianOrigin')
+    def check_cartesian_origin_shape(self, change):
+        change['value'] = np.array(change['value'], dtype=float).ravel()
+        if len(change['value']) != self.dim:
+            raise Exception(
+                "Dimension mismatch. The mesh dimension is {}, and the "
+                "cartesianOrigin provided has length {}".format(
+                    self.dim, len(change['value'])
+                )
+            )
 
     @property
     def isSymmetric(self):

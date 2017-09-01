@@ -50,7 +50,10 @@ class BaseMesh(properties.HasProperties):
     @properties.validator('x0')
     def check_x0_vs_n(self, change):
         if len(self.n) != len(change['value']):
-            raise Exception("Dimension mismatch. x0 != len(n)")
+            raise Exception(
+                "Dimension mismatch. x0 has length {} != len(n) which is "
+                "{}".format(len(x0), len(n))
+            )
 
     @property
     def dim(self):

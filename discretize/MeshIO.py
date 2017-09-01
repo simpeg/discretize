@@ -42,7 +42,7 @@ class TensorMeshIO(object):
         # Adjust the reference point to the bottom south west corner
         x0[2] = x0[2] - np.sum(h3)
         # Make the mesh
-        tensMsh = TensorMesh([h1, h2, h3], x0)
+        tensMsh = TensorMesh([h1, h2, h3], x0=x0)
         return tensMsh
 
     @classmethod
