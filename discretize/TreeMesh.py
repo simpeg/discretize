@@ -105,8 +105,8 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         BaseTensorMesh.__init__(self, h, x0)
 
         if levels is None:
-            levels = int(np.log2(len(self._h[0])))
-        assert np.all(len(_) == 2**levels for _ in self._h), "must make h and levels match"
+            levels = int(np.log2(len(self.h[0])))
+        assert np.all(len(_) == 2**levels for _ in self.h), "must make h and levels match"
 
         self._levels = levels
         self._levelBits = int(np.ceil(np.sqrt(levels)))+1
