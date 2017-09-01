@@ -104,14 +104,14 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         min=0
     )
 
-    def __init__(self, h, **kwargs):
+    def __init__(self, h, x0=None, **kwargs):
         assert type(h) is list, 'h must be a list'
         assert len(h) in [2, 3], "TreeMesh is only in 2D or 3D."
 
         if 'levels' in kwargs.keys():
             self.levels = kwargs.pop('levels')
 
-        BaseTensorMesh.__init__(self, h, **kwargs)
+        BaseTensorMesh.__init__(self, h, x0, **kwargs)
 
         if self.levels is None:
             self.levels = int(np.log2(len(self.h[0])))

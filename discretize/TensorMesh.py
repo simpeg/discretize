@@ -31,7 +31,10 @@ class BaseTensorMesh(BaseMesh):
         max_length=3
     )
 
-    def __init__(self, h_in=None, **kwargs):
+    def __init__(self, h=None, x0=None, **kwargs):
+
+        h_in = h
+        x0_in = x0
 
         # Cell widths
         if h_in is not None:
@@ -68,9 +71,7 @@ class BaseTensorMesh(BaseMesh):
         # Origin of the mesh
         x0 = np.zeros(len(h))
 
-        if 'x0' in kwargs.keys():
-            x0_in = kwargs.pop('x0')
-
+        if x0_in is not None:
             assert len(h) == len(x0_in), "Dimension mismatch. x0 != len(h)"
             for i in range(len(h)):
                 x_i, h_i = x0_in[i], h[i]
@@ -543,8 +544,8 @@ class TensorMesh(BaseTensorMesh, BaseRectangularMesh, TensorView, DiffOperators,
 
     _meshType = 'TENSOR'
 
-    def __init__(self, h_in=None, **kwargs):
-        BaseTensorMesh.__init__(self, h_in, **kwargs)
+    def __init__(self, h=None, x0=None):
+        BaseTensorMesh.__init__(self, h=h, x0=x0)
 
     def __str__(self):
         outStr = '  ---- {0:d}-D TensorMesh ----  '.format(self.dim)

@@ -13,13 +13,12 @@ class BasicTensorMeshTests(unittest.TestCase):
         a = np.array([1, 1, 1])
         b = np.array([1, 2])
         c = np.array([1, 4])
-        self.mesh2 = discretize.TensorMesh([a, b], x0=[3, 5])
+        self.mesh2 = discretize.TensorMesh([a, b], [3, 5])
         self.mesh3 = discretize.TensorMesh([a, b, c])
 
     def test_vectorN_2D(self):
         testNx = np.array([3, 4, 5, 6])
         testNy = np.array([5, 6, 8])
-
         xtest = np.all(self.mesh2.vectorNx == testNx)
         ytest = np.all(self.mesh2.vectorNy == testNy)
         self.assertTrue(xtest and ytest)

@@ -12,7 +12,7 @@ class TestCyl2DMesh(unittest.TestCase):
     def setUp(self):
         hx = np.r_[1, 1, 0.5]
         hz = np.r_[2, 1]
-        self.mesh = discretize.CylMesh([hx, 1, hz])
+        self.mesh = discretize.CylMesh([hx, 1, hz], np.r_[0., 0., 0.])
 
     def test_dim(self):
         self.assertTrue(self.mesh.dim == 3)

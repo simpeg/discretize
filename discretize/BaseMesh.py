@@ -27,11 +27,11 @@ class BaseMesh(properties.HasProperties):
     )
 
     # Instantiate the class
-    def __init__(self, n, **kwargs):
+    def __init__(self, n, x0=None):
         self.n = n  # number of dimensions
 
         # origin of the mesh
-        x0 = kwargs.pop('x0')
+        # x0 = kwargs.pop('x0')
         if x0 is None:
             self.x0 = np.zeros(len(self.n))
         else:
