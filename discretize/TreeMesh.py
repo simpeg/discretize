@@ -81,6 +81,7 @@ from __future__ import print_function
 
 import numpy as np
 import scipy.sparse as sp
+import properties
 
 from discretize import utils
 from . import TreeUtils
@@ -98,23 +99,37 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
     _meshType = 'TREE'
 
-    def __init__(self, h, x0=None, levels=None):
+    levels = properties.Integer(
+        "discretization level",
+        min=0
+    )
+
+    def __init__(self, h, **kwargs):
         assert type(h) is list, 'h must be a list'
         assert len(h) in [2, 3], "TreeMesh is only in 2D or 3D."
 
-        BaseTensorMesh.__init__(self, h, x0)
+        if 'levels' in kwargs.keys():
+            self.levels = kwargs.pop('levels')
 
-        if levels is None:
-            levels = int(np.log2(len(self.h[0])))
-        assert np.all(len(_) == 2**levels for _ in self.h), "must make h and levels match"
+        BaseTensorMesh.__init__(self, h, **kwargs)
 
-        self._levels = levels
-        self._levelBits = int(np.ceil(np.sqrt(levels)))+1
+        if self.levels is None:
+            self.levels = int(np.log2(len(self.h[0])))
+
+        # self._levels = levels
+        self._levelBits = int(np.ceil(np.sqrt(self.levels)))+1
 
         self.__dirty__ = True #: The numbering is dirty!
 
         self._cells = set()
         self._cells.add(0)
+
+    @properties.validator('levels')
+    def check_levels(self, change):
+        assert np.all(
+            len(_) == 2**change['value'] for _ in self.h
+        ), "must make h and levels match"
+
 
     @property
     def __dirty__(self):
@@ -147,9 +162,9 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         for p in deleteThese:
             if hasattr(self, p): delattr(self, p)
 
-    @property
-    def levels(self):
-        return self._levels
+    # @property
+    # def levels(self):
+    #     return self._levels
 
     @property
     def fill(self):
