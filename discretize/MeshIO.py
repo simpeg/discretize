@@ -91,7 +91,7 @@ class TensorMeshIO(object):
         z0 = z0 - sum(dz)
         dz = dz[::-1]
         # Make the mesh
-        tensMsh = TensorMesh([dx, dz], (x0, z0))
+        tensMsh = TensorMesh([dx, dz], x0=(x0, z0))
 
         fopen.close()
 
@@ -161,7 +161,7 @@ class TensorMeshIO(object):
         x0 = np.array([xR, yR, zR])
 
         # Make the object
-        tensMsh = TensorMesh([hx, hy, hz], x0)
+        tensMsh = TensorMesh([hx, hy, hz], x0=x0)
 
         # Grap the models
         models = {}
@@ -464,7 +464,7 @@ class TreeMeshIO(object):
         simpegPointers = np.concatenate((simpegCellPt, simpegLevel.reshape((-1, 1))), axis=1)
 
         # Make the tree mesh
-        mesh = TreeMesh([h1, h2, h3], x0)
+        mesh = TreeMesh([h1, h2, h3], x0=x0)
         mesh._cells = set([mesh._index(p) for p in simpegPointers.tolist()])
 
         # Figure out the reordering
