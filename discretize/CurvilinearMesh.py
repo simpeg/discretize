@@ -28,6 +28,23 @@ def normalize3D(x):
 
 
 class Array(properties.Array):
+    """
+    An Array property (inheriting from
+    :class:`properties Array <properties.array>` that allows for arbitrary
+    shape.
+
+    **Available keywords** (in addition to those inherited from
+    :ref:`Property <property>`):
+
+    * **shape** - '*' or Tuple that describes the allowed shape of the array.
+      Length of shape tuple corresponds to number of dimensions; values
+      correspond to the allowed length for each dimension. These values
+      may be integers or '*' for any length.
+      For example, an n x 3 array would be shape ('*', 3).
+      The default value is ('*',). '*' indicated an arbitrary shape.
+    * **dtype** - Allowed data type for the array. May be float, int,
+      bool, or a tuple containing any of these. The default is (float, int).
+    """
 
     @property
     def shape(self):

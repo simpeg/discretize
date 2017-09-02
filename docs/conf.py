@@ -302,3 +302,7 @@ def _supress_nonlocal_image_warn(self, msg, node, **kwargs):
         self._warnfunc(msg, '{0!s}:{1!s}'.format(*get_source_line(node)))
 
 supress_nonlocal_image_warn()
+
+nitpick_ignore = [
+    ('py:class', 'discretize.CurvilinearMesh.Array')
+]
