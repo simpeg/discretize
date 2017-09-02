@@ -1,9 +1,12 @@
 import unittest
 import os
+import numpy as np
 import discretize
 
 
 def compare_meshes(mesh0, mesh1):
+
+    # check some basic properties
     assert mesh0.nC == mesh1.nC , (
         'Number of cells not the same, {} != {}'.format(mesh0.nC, mesh1.nC)
     )
@@ -16,6 +19,11 @@ def compare_meshes(mesh0, mesh1):
         assert (mesh0.h[i] == mesh1.h[i]).all(), (
             'mesh h[{}] different'.format(i)
         )
+
+    # check edges, faces, volumes
+    assert (mesh0.edge == mesh1.edge).all()
+    assert (mesh0.area == mesh1.area).all()
+    assert (mesh0.vol == mesh1.vol).all()
 
     if hasattr(mesh0, 'cells'):
         assert (mesh0.cells == mesh1.cells)
