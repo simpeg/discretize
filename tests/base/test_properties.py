@@ -26,6 +26,12 @@ def compare_meshes(mesh0, mesh1):
     assert (mesh0.area == mesh1.area).all()
     assert (mesh0.vol == mesh1.vol).all()
 
+    # check strings
+    # print(mesh0.__str__())
+    # print(mesh1.__str__())
+    print("{}".format(mesh0.__str__()))
+    print("{}".format(mesh1.__str__()))
+
     # Tree mesh specific
     if hasattr(mesh0, 'cells'):
         assert (mesh0.cells == mesh1.cells)

@@ -465,7 +465,7 @@ class TreeMeshIO(object):
 
         # Make the tree mesh
         mesh = TreeMesh([h1, h2, h3], x0=x0)
-        mesh._cells = set([mesh._index(p) for p in simpegPointers.tolist()])
+        mesh.cells = set([mesh._index(p) for p in simpegPointers.tolist()])
 
         # Figure out the reordering
         mesh._simpegReorderUBC = np.argsort(
