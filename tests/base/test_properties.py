@@ -17,7 +17,6 @@ def compare_meshes(mesh0, mesh1):
             'mesh h[{}] different'.format(i)
         )
 
-
 class TensorTest(unittest.TestCase):
 
     n = [4, 5, 9]
@@ -41,6 +40,66 @@ class TensorTest(unittest.TestCase):
         mesh1 = mesh0.copy()
         compare_meshes(mesh0, mesh1)
         print('ok\n')
+
+
+class CylTest(unittest.TestCase):
+
+    n = [4, 1, 9]
+
+    def setUp(self):
+        self.mesh = discretize.CylMesh(self.n, x0='00C')
+
+    def test_save_load(self):
+        print('\nTesting save / load of Cyl Mesh ...')
+        mesh0 = self.mesh
+        f = mesh0.save()
+        mesh1 = discretize.utils.load_mesh(f)
+        compare_meshes(mesh0, mesh1)
+        os.remove(f)
+        print('ok\n')
+
+    def test_copy(self):
+        print('\nTesting copy of Cyl Mesh ...')
+        mesh0 = self.mesh
+        mesh1 = mesh0.copy()
+        compare_meshes(mesh0, mesh1)
+        print('ok\n')
+
+
+# class TreeTest(unittest.TestCase):
+
+#     n = [4, 1, 9]
+
+#     def setUp(self):
+#         M = discretize.TreeMesh([8, 8])
+
+#         def refine(cell):
+#             xyz = cell.center
+#             dist = ((xyz - [0.25, 0.25])**2).sum()**0.5
+#             if dist < 0.25:
+#                 return 3
+#             return 2
+
+#         M.refine(refine)
+#         M.number()
+
+#         self.mesh = M
+
+#     def test_save_load(self):
+#         print('\nTesting save / load of Tree Mesh ...')
+#         mesh0 = self.mesh
+#         f = mesh0.save()
+#         mesh1 = discretize.utils.load_mesh(f)
+#         compare_meshes(mesh0, mesh1)
+#         os.remove(f)
+#         print('ok\n')
+
+#     def test_copy(self):
+#         print('\nTesting copy of Tree Mesh ...')
+#         mesh0 = self.mesh
+#         mesh1 = mesh0.copy()
+#         compare_meshes(mesh0, mesh1)
+#         print('ok\n')
 
 
 

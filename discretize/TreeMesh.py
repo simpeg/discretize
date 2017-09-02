@@ -151,20 +151,18 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         self.__dirtySets__ = True
 
         deleteThese = [
-                        '__sortedCells',
-                        '_gridCC', '_gridN', '_gridFx', '_gridFy', '_gridFz', '_gridEx', '_gridEy', '_gridEz',
-                        '_area', '_edge', '_vol',
-                        '_faceDiv', '_edgeCurl', '_nodalGrad',
-                        '_aveFx2CC', '_aveFy2CC', '_aveFz2CC', '_aveF2CC', '_aveF2CCV',
-                        '_aveEx2CC', '_aveEy2CC', '_aveEz2CC', '_aveE2CC', '_aveE2CCV',
-                        '_aveN2CC',
-                      ]
+            '__sortedCells',
+            '_gridCC',
+            '_gridN', '_gridFx', '_gridFy', '_gridFz',
+            '_gridEx', '_gridEy', '_gridEz',
+            '_area', '_edge', '_vol',
+            '_faceDiv', '_edgeCurl', '_nodalGrad',
+            '_aveFx2CC', '_aveFy2CC', '_aveFz2CC', '_aveF2CC', '_aveF2CCV',
+            '_aveEx2CC', '_aveEy2CC', '_aveEz2CC', '_aveE2CC', '_aveE2CCV',
+            '_aveN2CC',
+        ]
         for p in deleteThese:
             if hasattr(self, p): delattr(self, p)
-
-    # @property
-    # def levels(self):
-    #     return self._levels
 
     @property
     def fill(self):
@@ -432,7 +430,10 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
     def __contains__(self, v):
         return self._asIndex(v) in self._cells
 
-    def refine(self, function=None, recursive=True, cells=None, balance=True, verbose=False, _inRecursion=False):
+    def refine(
+        self, function=None, recursive=True, cells=None, balance=True,
+        verbose=False, _inRecursion=False
+    ):
 
         if type(function) in integer_types:
             level = function
@@ -454,20 +455,29 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             elif type(result) in integer_types:
                 do = result > p[-1]
             else:
-                raise Exception('You must tell the program what to refine. Use BOOL or INT (level)')
+                raise Exception(
+                    'You must tell the program what to refine. '
+                    'Use BOOL or INT (level)'
+                )
             if do:
                 recurse += self._refineCell(cell, p)
 
         if verbose: print('   ', time.time() - tic)
 
         if recursive and len(recurse) > 0:
-            recurse += self.refine(function=function, recursive=True, cells=recurse, balance=balance, verbose=verbose, _inRecursion=True)
+            recurse += self.refine(
+                function=function, recursive=True, cells=recurse,
+                balance=balance, verbose=verbose, _inRecursion=True
+            )
 
         if balance and not _inRecursion:
             self.balance()
         return recurse
 
-    def corsen(self, function=None, recursive=True, cells=None, balance=True, verbose=False, _inRecursion=False):
+    def corsen(
+        self, function=None, recursive=True, cells=None, balance=True,
+        verbose=False, _inRecursion=False
+    ):
 
         if type(function) in integer_types:
             level = function
@@ -490,14 +500,20 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             elif type(result) in integer_types:
                 do = result < p[-1]
             else:
-                raise Exception('You must tell the program what to corsen. Use BOOL or INT (level)')
+                raise Exception(
+                    'You must tell the program what to corsen. Use BOOL or '
+                    'INT (level)'
+                )
             if do:
                 recurse += self._corsenCell(cell, p)
 
         if verbose: print('   ', time.time() - tic)
 
         if recursive and len(recurse) > 0:
-            recurse += self.corsen(function=function, recursive=True, cells=recurse, balance=balance, verbose=verbose, _inRecursion=True)
+            recurse += self.corsen(
+                function=function, recursive=True, cells=recurse,
+                balance=balance, verbose=verbose, _inRecursion=True
+            )
 
         if balance and not _inRecursion:
             self.balance()

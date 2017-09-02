@@ -37,7 +37,7 @@ class CylMesh(BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView):
     )
 
     def __init__(self, h=None, x0=None, **kwargs):
-        BaseTensorMesh.__init__(self, h=h, x0=x0)
+        BaseTensorMesh.__init__(self, h=h, x0=x0, **kwargs)
         assert self.hy.sum() == 2*np.pi, "The 2nd dimension must sum to 2*pi"
         if self.dim == 2:
             print('Warning, a disk mesh has not been tested thoroughly.')

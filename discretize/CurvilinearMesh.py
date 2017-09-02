@@ -25,7 +25,9 @@ def normalize3D(x):
     return x/np.kron(np.ones((1, 3)), utils.mkvc(length3D(x), 2))
 
 
-class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts, CurviView):
+class CurvilinearMesh(
+    BaseRectangularMesh, DiffOperators, InnerProducts, CurviView
+):
     """CurvilinearMesh is a mesh class that deals with curvilinear meshes.
 
     Example of a curvilinear mesh:

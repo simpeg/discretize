@@ -89,8 +89,16 @@ class BaseTensorMesh(BaseMesh):
                         "'C' to center, or 'N' to be negative.".format(i)
                     )
 
+        if 'n' in kwargs.keys():
+            n = kwargs.pop('n')
+            assert (n == np.array([x.size for x in h])).all(), (
+                "Dimension mismatch. The provided n doesn't "
+            )
+
+        n = np.array([x.size for x in h])
+
         super(BaseTensorMesh, self).__init__(
-            np.array([x.size for x in h]), x0=x0
+            n, x0=x0
         )
 
         # Ensure h contains 1D vectors
@@ -344,7 +352,6 @@ class BaseTensorMesh(BaseMesh):
         """
         return self._getInterpolationMat(loc, locType, zerosOutside)
 
-
     def _fastInnerProduct(self, projType, prop=None, invProp=False, invMat=False):
         """
             Fast version of getFaceInnerProduct.
@@ -544,8 +551,8 @@ class TensorMesh(BaseTensorMesh, BaseRectangularMesh, TensorView, DiffOperators,
 
     _meshType = 'TENSOR'
 
-    def __init__(self, h=None, x0=None):
-        BaseTensorMesh.__init__(self, h=h, x0=x0)
+    def __init__(self, h=None, x0=None, **kwargs):
+        BaseTensorMesh.__init__(self, h=h, x0=x0, **kwargs)
 
     def __str__(self):
         outStr = '  ---- {0:d}-D TensorMesh ----  '.format(self.dim)
