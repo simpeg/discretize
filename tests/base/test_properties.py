@@ -15,6 +15,19 @@ def compare_meshes(mesh0, mesh1):
         'x0 different. {} != {}'.format(mesh0.x0, mesh1.x0)
     )
 
+    assert (mesh0.nE == mesh1.nE)
+    assert (mesh0.nF == mesh1.nF)
+    assert (mesh0.nN == mesh1.nN)
+
+    if hasattr(mesh0, 'vnC'):
+        assert (mesh0.vnC == mesh1.vnC).all()
+        assert (mesh0.vnE == mesh1.vnE).all()
+        assert (mesh0.vnF == mesh1.vnF).all()
+        assert (mesh0.vnN == mesh1.vnN).all()
+
+    assert (mesh0.normals == mesh1.normals).all()
+    assert (mesh0.tangents == mesh1.tangents).all()
+
     if hasattr(mesh0, 'h'):
         for i in range(len(mesh0.h)):
             assert (mesh0.h[i] == mesh1.h[i]).all(), (
@@ -25,12 +38,6 @@ def compare_meshes(mesh0, mesh1):
     assert (mesh0.edge == mesh1.edge).all()
     assert (mesh0.area == mesh1.area).all()
     assert (mesh0.vol == mesh1.vol).all()
-
-    # check strings
-    # print(mesh0.__str__())
-    # print(mesh1.__str__())
-    print("{}".format(mesh0.__str__()))
-    print("{}".format(mesh1.__str__()))
 
     # Tree mesh specific
     if hasattr(mesh0, 'cells'):
