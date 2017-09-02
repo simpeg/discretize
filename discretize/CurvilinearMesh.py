@@ -1,5 +1,7 @@
 from __future__ import print_function
 import numpy as np
+import properties
+from properties.math import TYPE_MAPPINGS
 
 from discretize import utils
 from discretize.BaseMesh import BaseRectangularMesh
@@ -25,6 +27,59 @@ def normalize3D(x):
     return x/np.kron(np.ones((1, 3)), utils.mkvc(length3D(x), 2))
 
 
+class Array(properties.Array):
+
+    @property
+    def shape(self):
+        """Valid array shape.
+
+        Must be a tuple with integer or '*' engries corresponding to valid
+        array shapes. '*' means the dimension can be any length.
+        """
+        return getattr(self, '_shape', '*')
+
+    @shape.setter
+    def shape(self, value):
+        if not isinstance(value, tuple):
+            if not (isinstance(value, str) and value == '*'):
+                raise TypeError(
+                    "{}: Invalid shape - must be a tuple (e.g. ('*',3) for an "
+                    "array of length-3 arrays) or '*'".format(value)
+                )
+        else:
+            for shp in value:
+                if shp != '*' and not isinstance(shp, integer_types):
+                    raise TypeError(
+                        "{}: Invalid shape - values must be '*' or int".format(
+                            value
+                        )
+                    )
+        self._shape = value
+
+    def validate(self, instance, value):
+        """Determine if array is valid based on shape and dtype"""
+        if not isinstance(value, (tuple, list, np.ndarray)):
+            self.error(instance, value)
+        value = self.wrapper(value)
+        if not isinstance(value, np.ndarray):
+            raise NotImplementedError(
+                'Array validation is only implmented for wrappers that are '
+                'subclasses of numpy.ndarray'
+            )
+        if value.dtype.kind not in (TYPE_MAPPINGS[typ] for typ in self.dtype):
+            self.error(instance, value)
+        if not isinstance(self.shape, str):
+            if len(self.shape) != value.ndim:
+                self.error(instance, value)
+            for i, shp in enumerate(self.shape):
+                if shp != '*' and value.shape[i] != shp:
+                    self.error(instance, value)
+        else:
+            if self.shape != '*':
+                self.error(isinstance, value)
+        return value
+
+
 class CurvilinearMesh(
     BaseRectangularMesh, DiffOperators, InnerProducts, CurviView
 ):
@@ -43,27 +98,47 @@ class CurvilinearMesh(
 
     _meshType = 'Curv'
 
-    def __init__(self, nodes):
-        assert type(nodes) == list, ("'nodes' variable must be a list of "
-                                     "np.ndarray")
-        assert len(nodes) > 1, "len(node) must be greater than 1"
+    nodes = properties.List(
+        "List of arrays describing the node locations",
+        Array(
+            "node locations in a dimension",
+            shape='*'
+        ),
+    )
 
-        for i, nodes_i in enumerate(nodes):
-            assert isinstance(nodes_i, np.ndarray), ("nodes[{0:d}] is not a"
-                                                     "numpy array.".format(i))
-            assert nodes_i.shape == nodes[0].shape, ("nodes[{0:d}] is not the "
-                                                     "same shape as nodes[0]"
-                                                     .format(i))
+    def __init__(self, nodes=nodes, **kwargs):
 
-        assert len(nodes[0].shape) == len(nodes), "Dimension mismatch"
-        assert len(nodes[0].shape) > 1, "Not worth using Curv for a 1D mesh."
+        self.nodes = nodes
 
-        BaseRectangularMesh.__init__(self, np.array(nodes[0].shape)-1, None)
+        if 'n' in kwargs.keys():
+            n = kwargs.pop('n')
+            assert (n == np.array(self.nodes[0].shape)-1).all(), (
+                "Unexpected n-values. {} was provided, {} was expected".format(
+                    n, np.array(self.nodes[0].shape)-1
+                )
+            )
+        else:
+            n = np.array(self.nodes[0].shape)-1
+
+        BaseRectangularMesh.__init__(self, n, **kwargs)
 
         # Save nodes to private variable _gridN as vectors
-        self._gridN = np.ones((nodes[0].size, self.dim))
-        for i, node_i in enumerate(nodes):
+        self._gridN = np.ones((self.nodes[0].size, self.dim))
+        for i, node_i in enumerate(self.nodes):
             self._gridN[:, i] = utils.mkvc(node_i.astype(float))
+
+    @properties.validator('nodes')
+    def check_nodes(self, change):
+        assert len(change['value']) > 1, "len(node) must be greater than 1"
+
+        for i, change['value'][i] in enumerate(change['value']):
+            assert change['value'][i].shape == change['value'][0].shape, (
+                "change['value'][{0:d}] is not the same shape as change['value'][0]".format(i)
+            )
+
+        assert len(change['value'][0].shape) == len(change['value']), "Dimension mismatch"
+        assert len(change['value'][0].shape) > 1, "Not worth using Curv for a 1D mesh."
+
 
     @property
     def gridCC(self):
