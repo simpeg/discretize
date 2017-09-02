@@ -17,6 +17,10 @@ def compare_meshes(mesh0, mesh1):
             'mesh h[{}] different'.format(i)
         )
 
+    if hasattr(mesh0, 'cells'):
+        assert (mesh0.cells == mesh1.cells)
+
+
 class TensorTest(unittest.TestCase):
 
     n = [4, 5, 9]
@@ -66,42 +70,38 @@ class CylTest(unittest.TestCase):
         print('ok\n')
 
 
-# class TreeTest(unittest.TestCase):
+class TreeTest(unittest.TestCase):
 
-#     n = [4, 1, 9]
+    def setUp(self):
+        M = discretize.TreeMesh([8, 8])
 
-#     def setUp(self):
-#         M = discretize.TreeMesh([8, 8])
+        def refine(cell):
+            xyz = cell.center
+            dist = ((xyz - [0.25, 0.25])**2).sum()**0.5
+            if dist < 0.25:
+                return 3
+            return 2
 
-#         def refine(cell):
-#             xyz = cell.center
-#             dist = ((xyz - [0.25, 0.25])**2).sum()**0.5
-#             if dist < 0.25:
-#                 return 3
-#             return 2
+        M.refine(refine)
+        M.number()
 
-#         M.refine(refine)
-#         M.number()
+        self.mesh = M
 
-#         self.mesh = M
+    def test_save_load(self):
+        print('\nTesting save / load of Tree Mesh ...')
+        mesh0 = self.mesh
+        f = mesh0.save()
+        mesh1 = discretize.utils.load_mesh(f)
+        compare_meshes(mesh0, mesh1)
+        os.remove(f)
+        print('ok\n')
 
-#     def test_save_load(self):
-#         print('\nTesting save / load of Tree Mesh ...')
-#         mesh0 = self.mesh
-#         f = mesh0.save()
-#         mesh1 = discretize.utils.load_mesh(f)
-#         compare_meshes(mesh0, mesh1)
-#         os.remove(f)
-#         print('ok\n')
-
-#     def test_copy(self):
-#         print('\nTesting copy of Tree Mesh ...')
-#         mesh0 = self.mesh
-#         mesh1 = mesh0.copy()
-#         compare_meshes(mesh0, mesh1)
-#         print('ok\n')
-
-
+    def test_copy(self):
+        print('\nTesting copy of Tree Mesh ...')
+        mesh0 = self.mesh
+        mesh1 = mesh0.copy()
+        compare_meshes(mesh0, mesh1)
+        print('ok\n')
 
 
 if __name__ == '__main__':
