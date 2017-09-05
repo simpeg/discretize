@@ -26,7 +26,7 @@ class BaseTensorMesh(BaseMesh):
         properties.Array(
             "widths of the tensor mesh in a single dimension",
             dtype=float,
-            shape=("*",)
+            shape=("*",),
         ),
         max_length=3
     )

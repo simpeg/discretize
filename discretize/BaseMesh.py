@@ -38,6 +38,11 @@ class BaseMesh(properties.HasProperties):
     # Validators
     @properties.validator('n')
     def check_n_shape(self, change):
+        assert (
+            not isinstance(change['value'], properties.utils.Sentinel) and
+            change['value'] is not None
+        ), "Cannot delete n. Instead, create a new mesh"
+
         change['value'] = np.array(change['value'], dtype=int).ravel()
         if len(change['value']) > 3:
             raise Exception(
@@ -45,8 +50,46 @@ class BaseMesh(properties.HasProperties):
                 "supported".format(change['value'])
             )
 
+        if change['previous'] != properties.undefined:
+            # can't change dimension of the mesh
+            assert len(change['previous']) == len(change['value']), (
+                "Cannot change dimensionality of the mesh. Expected {} "
+                "dimensions, got {} dimensions".format(
+                    len(change['previous']), len(change['value'])
+                )
+            )
+
+            # check that if h has been set, sizes still agree
+            if getattr(self, 'h', None) is not None and len(self.h) > 0:
+                for i in range(len(change['value'])):
+                    assert len(self.h[i]) == change['value'][i], (
+                        "Mismatched shape of n. Expected {}, len(h[{}]), got "
+                        "{}".format(
+                            len(self.h[i]), i, change['value'][i]
+                        )
+                    )
+
+            # check that if nodes have been set for curvi mesh, sizes still
+            # agree
+            if (
+                getattr(self, 'nodes', None) is not None and
+                len(self.nodes) > 0
+            ):
+                for i in range(len(change['value'])):
+                    assert self.nodes[0].shape[i]-1 == change['value'][i], (
+                        "Mismatched shape of n. Expected {}, len(nodes[{}]), "
+                        "got {}".format(
+                            self.nodes[0].shape[i]-1, i, change['value'][i]
+                        )
+                    )
+
     @properties.validator('x0')
-    def check_x0_vs_n(self, change):
+    def check_x0(self, change):
+        assert (
+            not isinstance(change['value'], properties.utils.Sentinel) and
+            change['value'] is not None
+        ), "n must be set prior to setting x0"
+
         if len(self.n) != len(change['value']):
             raise Exception(
                 "Dimension mismatch. x0 has length {} != len(n) which is "

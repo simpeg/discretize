@@ -110,7 +110,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             "cell number",
             min=0
         ),
-        default=set()
+        default=set
     )
 
     def __init__(self, h, x0=None, **kwargs):
@@ -128,7 +128,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         # self._levels = levels
         self._levelBits = int(np.ceil(np.sqrt(self.levels)))+1
 
-        self.__dirty__ = True #: The numbering is dirty!
+        self.__dirty__ = True  #: The numbering is dirty!
 
         if 'cells' in kwargs.keys():
             self.cells = kwargs.pop('cells')
