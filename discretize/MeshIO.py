@@ -1,7 +1,27 @@
 import os
+import json
+import properties
 import numpy as np
-from discretize import utils
 import six
+
+from . import utils
+from .BaseMesh import BaseMesh
+
+
+def load_mesh(filename):
+    """
+    Open a json file and load the mesh into the target class
+
+    As long as there are no namespace conflicts, the target __class__
+    will be stored on the properties.HasProperties registry and may be
+    fetched from there.
+
+    :param str filename: name of file to read in
+    """
+    with open(filename, 'r') as outfile:
+        jsondict = json.load(outfile)
+        data = BaseMesh.deserialize(jsondict, trusted=True)
+    return data
 
 
 class TensorMeshIO(object):

@@ -2,7 +2,7 @@ import numpy as np
 import properties
 import os
 import json
-from discretize import utils
+from .utils.matutils import mkvc
 
 
 class BaseMesh(properties.HasProperties):
@@ -10,6 +10,8 @@ class BaseMesh(properties.HasProperties):
     BaseMesh does all the counting you don't want to do.
     BaseMesh should be inherited by meshes with a regular structure.
     """
+
+    _REGISTRY = {}
 
     # Properties
     n = properties.Array(
@@ -703,7 +705,7 @@ class BaseRectangularMesh(BaseMesh):
             x_array = np.ones((x.size, len(x)))
             # Unwrap it and put it in a np array
             for i, xi in enumerate(x):
-                x_array[:, i] = utils.mkvc(xi)
+                x_array[:, i] = mkvc(xi)
             x = x_array
 
         assert isinstance(x, np.ndarray), "x must be a numpy array"
@@ -720,7 +722,7 @@ class BaseRectangularMesh(BaseMesh):
             if format == 'M':
                 return xx.reshape(nn, order='F')
             elif format == 'V':
-                return utils.mkvc(xx)
+                return mkvc(xx)
 
         def switchKernal(xx):
             """Switches over the different options."""
@@ -733,7 +735,7 @@ class BaseRectangularMesh(BaseMesh):
             elif xType in ['F', 'E']:
                 # This will only deal with components of fields,
                 # not full 'F' or 'E'
-                xx = utils.mkvc(xx)  # unwrap it in case it is a matrix
+                xx = mkvc(xx)  # unwrap it in case it is a matrix
                 nn = self.vnF if xType == 'F' else self.vnE
                 nn = np.r_[0, nn]
 

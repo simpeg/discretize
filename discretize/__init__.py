@@ -3,6 +3,7 @@ from discretize.TensorMesh import TensorMesh
 from discretize.CylMesh import CylMesh
 from discretize.CurvilinearMesh import CurvilinearMesh
 from discretize import Tests
+from discretize.MeshIO import load_mesh
 
 try:
     from discretize.TreeMesh import TreeMesh

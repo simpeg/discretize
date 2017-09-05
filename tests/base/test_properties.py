@@ -61,7 +61,7 @@ class TensorTest(unittest.TestCase):
         print('\nTesting save / load of Tensor Mesh ...')
         mesh0 = self.mesh
         f = mesh0.save()
-        mesh1 = discretize.utils.load_mesh(f)
+        mesh1 = discretize.load_mesh(f)
         compare_meshes(mesh0, mesh1)
         os.remove(f)
         print('ok\n')
@@ -97,7 +97,7 @@ class CylTest(unittest.TestCase):
         print('\nTesting save / load of Cyl Mesh ...')
         mesh0 = self.mesh
         f = mesh0.save()
-        mesh1 = discretize.utils.load_mesh(f)
+        mesh1 = discretize.load_mesh(f)
         compare_meshes(mesh0, mesh1)
         os.remove(f)
         print('ok\n')
@@ -131,7 +131,7 @@ class TreeTest(unittest.TestCase):
         print('\nTesting save / load of Tree Mesh ...')
         mesh0 = self.mesh
         f = mesh0.save()
-        mesh1 = discretize.utils.load_mesh(f)
+        mesh1 = discretize.load_mesh(f)
         compare_meshes(mesh0, mesh1)
         os.remove(f)
         print('ok\n')
@@ -168,7 +168,7 @@ class CurviTest(unittest.TestCase):
         print('\nTesting save / load of Curvi Mesh ...')
         mesh0 = self.mesh
         f = mesh0.save()
-        mesh1 = discretize.utils.load_mesh(f)
+        mesh1 = discretize.load_mesh(f)
         compare_meshes(mesh0, mesh1)
         os.remove(f)
         print('ok\n')
