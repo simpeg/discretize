@@ -27,76 +27,6 @@ def normalize3D(x):
     return x/np.kron(np.ones((1, 3)), utils.mkvc(length3D(x), 2))
 
 
-class Array(properties.Array):
-    """
-    An Array property (inheriting from
-    :class:`properties Array <properties.array>` that allows for arbitrary
-    shape.
-
-    **Available keywords** (in addition to those inherited from
-    :ref:`Property <property>`):
-
-    * **shape** - '*' or Tuple that describes the allowed shape of the array.
-      Length of shape tuple corresponds to number of dimensions; values
-      correspond to the allowed length for each dimension. These values
-      may be integers or '*' for any length.
-      For example, an n x 3 array would be shape ('*', 3).
-      The default value is ('*',). '*' indicated an arbitrary shape.
-    * **dtype** - Allowed data type for the array. May be float, int,
-      bool, or a tuple containing any of these. The default is (float, int).
-    """
-
-    @property
-    def shape(self):
-        """Valid array shape.
-
-        Must be a tuple with integer or '*' engries corresponding to valid
-        array shapes. '*' means the dimension can be any length.
-        """
-        return getattr(self, '_shape', '*')
-
-    @shape.setter
-    def shape(self, value):
-        if not isinstance(value, tuple):
-            if not (isinstance(value, str) and value == '*'):
-                raise TypeError(
-                    "{}: Invalid shape - must be a tuple (e.g. ('*',3) for an "
-                    "array of length-3 arrays) or '*'".format(value)
-                )
-        else:
-            for shp in value:
-                if shp != '*' and not isinstance(shp, integer_types):
-                    raise TypeError(
-                        "{}: Invalid shape - values must be '*' or int".format(
-                            value
-                        )
-                    )
-        self._shape = value
-
-    def validate(self, instance, value):
-        """Determine if array is valid based on shape and dtype"""
-        if not isinstance(value, (tuple, list, np.ndarray)):
-            self.error(instance, value)
-        value = self.wrapper(value)
-        if not isinstance(value, np.ndarray):
-            raise NotImplementedError(
-                'Array validation is only implmented for wrappers that are '
-                'subclasses of numpy.ndarray'
-            )
-        if value.dtype.kind not in (TYPE_MAPPINGS[typ] for typ in self.dtype):
-            self.error(instance, value)
-        if not isinstance(self.shape, str):
-            if len(self.shape) != value.ndim:
-                self.error(instance, value)
-            for i, shp in enumerate(self.shape):
-                if shp != '*' and value.shape[i] != shp:
-                    self.error(instance, value)
-        else:
-            if self.shape != '*':
-                self.error(isinstance, value)
-        return value
-
-
 class CurvilinearMesh(
     BaseRectangularMesh, DiffOperators, InnerProducts, CurviView
 ):
@@ -117,13 +47,18 @@ class CurvilinearMesh(
 
     nodes = properties.List(
         "List of arrays describing the node locations",
-        Array(
-            "node locations in a dimension",
-            shape='*'
+        prop=properties.Union(
+            "node locations in an n-dimensional array",
+            props=[
+                properties.Array('2D array', shape=('*', '*')),
+                properties.Array('3D array', shape=('*', '*', '*')),
+            ]
         ),
+        min_length=2,
+        max_length=3
     )
 
-    def __init__(self, nodes=nodes, **kwargs):
+    def __init__(self, nodes=None, **kwargs):
 
         self.nodes = nodes
 
@@ -150,12 +85,13 @@ class CurvilinearMesh(
 
         for i, change['value'][i] in enumerate(change['value']):
             assert change['value'][i].shape == change['value'][0].shape, (
-                "change['value'][{0:d}] is not the same shape as change['value'][0]".format(i)
+                "change['value'][{0:d}] is not the same shape as "
+                "change['value'][0]".format(i)
             )
 
-        assert len(change['value'][0].shape) == len(change['value']), "Dimension mismatch"
-        assert len(change['value'][0].shape) > 1, "Not worth using Curv for a 1D mesh."
-
+        assert len(change['value'][0].shape) == len(change['value']), (
+            "Dimension mismatch"
+        )
 
     @property
     def gridCC(self):
@@ -163,9 +99,9 @@ class CurvilinearMesh(
         Cell-centered grid
         """
         if getattr(self, '_gridCC', None) is None:
-            self._gridCC = np.concatenate([self.aveN2CC*self.gridN[:, i]
-                                           for i in range(self.dim)]).reshape(
-                                           (-1, self.dim), order='F')
+            self._gridCC = np.concatenate(
+                [self.aveN2CC*self.gridN[:, i] for i in range(self.dim)]
+            ).reshape((-1, self.dim), order='F')
         return self._gridCC
 
     @property
