@@ -40,8 +40,8 @@ def compare_meshes(mesh0, mesh1):
     assert (mesh0.vol == mesh1.vol).all()
 
     # Tree mesh specific
-    if hasattr(mesh0, 'cells'):
-        assert (mesh0.cells == mesh1.cells)
+    if hasattr(mesh0, '_cells'):
+        assert (mesh0._cells == mesh1._cells)
 
     # curvi-specific
     if hasattr(mesh0, 'nodes'):
