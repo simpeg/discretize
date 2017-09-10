@@ -99,7 +99,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
     _meshType = 'TREE'
 
-    levels = properties.Integer(
+    _levels = properties.Integer(
         "discretization level",
         min=0
     )
@@ -117,16 +117,16 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         assert type(h) is list, 'h must be a list'
         assert len(h) in [2, 3], "TreeMesh is only in 2D or 3D."
 
-        if 'levels' in kwargs.keys():
-            self.levels = kwargs.pop('levels')
+        if '_levels' in kwargs.keys():
+            self._levels = kwargs.pop('_levels')
 
         BaseTensorMesh.__init__(self, h, x0, **kwargs)
 
-        if self.levels is None:
-            self.levels = int(np.log2(len(self.h[0])))
+        if self._levels is None:
+            self._levels = int(np.log2(len(self.h[0])))
 
         # self._levels = levels
-        self._levelBits = int(np.ceil(np.sqrt(self.levels)))+1
+        self._levelBits = int(np.ceil(np.sqrt(self._levels)))+1
 
         self.__dirty__ = True  #: The numbering is dirty!
 
@@ -135,7 +135,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         else:
             self._cells.add(0)
 
-    @properties.validator('levels')
+    @properties.validator('_levels')
     def check_levels(self, change):
         assert np.all(
             len(_) == 2**change['value'] for _ in self.h
@@ -431,7 +431,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
     def _index(self, pointer):
         assert len(pointer) is self.dim+1
-        assert pointer[-1] <= self.levels
+        assert pointer[-1] <= self._levels
         return TreeUtils.index(self.dim, MAX_BITS, self._levelBits, pointer[:-1], pointer[-1])
 
     def _pointer(self, index):
@@ -459,7 +459,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         tic = time.time()
         for cell in cells:
             p = self._pointer(cell)
-            if p[-1] >= self.levels: continue
+            if p[-1] >= self._levels: continue
             result = function(Cell(self, cell, p))
             if type(result) is bool:
                 do = result
@@ -504,7 +504,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         for cell in cells:
             if cell not in self._cells: continue # already removed
             p = self._pointer(cell)
-            if p[-1] >= self.levels: continue
+            if p[-1] >= self._levels: continue
             result = function(Cell(self, cell, p))
             if type(result) is bool:
                 do = result
@@ -559,7 +559,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             return self._pointer(ind)
         if type(ind) is list:
             assert len(ind) == (self.dim + 1), str(ind) +' is not valid pointer'
-            assert ind[-1] <= self.levels, str(ind) +' is not valid pointer'
+            assert ind[-1] <= self._levels, str(ind) +' is not valid pointer'
             return ind
         if isinstance(ind, np.ndarray):
             return ind.tolist()
@@ -626,12 +626,12 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         return (np.array(self._cellH(p))/2.0 + self._cellN(p)).tolist()
 
     def _levelWidth(self, level):
-        return 2**(self.levels - level)
+        return 2**(self._levels - level)
 
     def _isInsideMesh(self, pointer):
         inside = True
         for p in pointer[:-1]:
-            inside = inside and p >= 0 and p < 2**self.levels
+            inside = inside and p >= 0 and p < 2**self._levels
         return inside
 
     def _getNextCell(self, ind, direction=0, positive=True, _lookUp=True):
@@ -643,7 +643,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         if direction >= self.dim:
             return None
         pointer = self._asPointer(ind)
-        if pointer[-1] > self.levels:
+        if pointer[-1] > self._levels:
             return None
 
         step = (1 if positive else -1) * self._levelWidth(pointer[-1])
@@ -656,7 +656,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         if nextCell in self:
             return self._index(nextCell)
 
-        if nextCell[-1] + 1 <= self.levels: # if I am not the smallest.
+        if nextCell[-1] + 1 <= self._levels: # if I am not the smallest.
             children  = self._childPointers(pointer, direction=direction, positive=positive)
             nextCells = [self._getNextCell(child, direction=direction, positive=positive, _lookUp=False) for child in children]
             if nextCells[0] is not None:
@@ -685,7 +685,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
         for cell in cells:
             p = self._asPointer(cell)
-            if p[-1] == self.levels: continue
+            if p[-1] == self._levels: continue
 
             cs = list(range(6))
             cs[0] = self._getNextCell(cell, direction=0, positive=False)
@@ -1033,7 +1033,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         # Compute from x faces
         for fx in self._facesX:
             p = self._pointer(fx)
-            if p[-1] + 1 > self.levels: continue
+            if p[-1] + 1 > self._levels: continue
             sl = p[-1] + 1 #: small level
             test = self._index(p[:-1] + [sl])
             if test not in self._facesX:
@@ -1130,7 +1130,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         # Compute from y faces
         for fy in self._facesY:
             p = self._pointer(fy)
-            if p[-1] + 1 > self.levels: continue
+            if p[-1] + 1 > self._levels: continue
             sl = p[-1] + 1 #: small level
             test = self._index(p[:-1] + [sl])
             if test not in self._facesY:
@@ -1230,7 +1230,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         # Compute from z faces
         for fz in self._facesZ:
             p = self._pointer(fz)
-            if p[-1] + 1 > self.levels: continue
+            if p[-1] + 1 > self._levels: continue
             sl = p[-1] + 1 #: small level
             test = self._index(p[:-1] + [sl])
             if test not in self._facesZ:
@@ -1924,7 +1924,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
         out = []
         for pointer in zip(*pointers):
-            for level in range(self.levels+1):
+            for level in range(self._levels+1):
                 width = self._levelWidth(level)
                 testPointer = [((p-1)//width)*width for p in pointer] + [level]
                 test = self._index(testPointer)
