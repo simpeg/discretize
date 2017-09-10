@@ -14,7 +14,7 @@ class BaseMesh(properties.HasProperties):
     _REGISTRY = {}
 
     # Properties
-    n = properties.Array(
+    _n = properties.Array(
         "number of cells in each direction (dim, )",
         dtype=int,
         required=True,
@@ -30,15 +30,15 @@ class BaseMesh(properties.HasProperties):
 
     # Instantiate the class
     def __init__(self, n, x0=None):
-        self.n = n  # number of dimensions
+        self._n = n  # number of dimensions
 
         if x0 is None:
-            self.x0 = np.zeros(len(self.n))
+            self.x0 = np.zeros(len(self._n))
         else:
             self.x0 = x0
 
     # Validators
-    @properties.validator('n')
+    @properties.validator('_n')
     def check_n_shape(self, change):
         assert (
             not isinstance(change['value'], properties.utils.Sentinel) and
@@ -92,7 +92,7 @@ class BaseMesh(properties.HasProperties):
             change['value'] is not None
         ), "n must be set prior to setting x0"
 
-        if len(self.n) != len(change['value']):
+        if len(self._n) != len(change['value']):
             raise Exception(
                 "Dimension mismatch. x0 has length {} != len(n) which is "
                 "{}".format(len(x0), len(n))
@@ -105,7 +105,7 @@ class BaseMesh(properties.HasProperties):
         :rtype: int
         :return: dim
         """
-        return len(self.n)
+        return len(self._n)
 
     @property
     def nC(self):
@@ -122,7 +122,7 @@ class BaseMesh(properties.HasProperties):
             M = discretize.TensorMesh([np.ones(n) for n in [2,3]])
             M.plotGrid(centers=True, showIt=True)
         """
-        return int(self.n.prod())
+        return int(self._n.prod())
 
     @property
     def nN(self):
@@ -139,7 +139,7 @@ class BaseMesh(properties.HasProperties):
             M = discretize.TensorMesh([np.ones(n) for n in [2,3]])
             M.plotGrid(nodes=True, showIt=True)
         """
-        return int((self.n+1).prod())
+        return int((self._n+1).prod())
 
     @property
     def nEx(self):
@@ -148,7 +148,7 @@ class BaseMesh(properties.HasProperties):
         :rtype: int
         :return: nEx
         """
-        return int((self.n + np.r_[0, 1, 1][:self.dim]).prod())
+        return int((self._n + np.r_[0, 1, 1][:self.dim]).prod())
 
     @property
     def nEy(self):
@@ -159,7 +159,7 @@ class BaseMesh(properties.HasProperties):
         """
         if self.dim < 2:
             return None
-        return int((self.n + np.r_[1, 0, 1][:self.dim]).prod())
+        return int((self._n + np.r_[1, 0, 1][:self.dim]).prod())
 
     @property
     def nEz(self):
@@ -170,7 +170,7 @@ class BaseMesh(properties.HasProperties):
         """
         if self.dim < 3:
             return None
-        return int((self.n + np.r_[1, 1, 0][:self.dim]).prod())
+        return int((self._n + np.r_[1, 1, 0][:self.dim]).prod())
 
     @property
     def vnE(self):
@@ -209,7 +209,7 @@ class BaseMesh(properties.HasProperties):
         :rtype: int
         :return: nFx
         """
-        return int((self.n + np.r_[1, 0, 0][:self.dim]).prod())
+        return int((self._n + np.r_[1, 0, 0][:self.dim]).prod())
 
     @property
     def nFy(self):
@@ -220,7 +220,7 @@ class BaseMesh(properties.HasProperties):
         """
         if self.dim < 2:
             return None
-        return int((self.n + np.r_[0, 1, 0][:self.dim]).prod())
+        return int((self._n + np.r_[0, 1, 0][:self.dim]).prod())
 
     @property
     def nFz(self):
@@ -231,7 +231,7 @@ class BaseMesh(properties.HasProperties):
         """
         if self.dim < 3:
             return None
-        return int((self.n + np.r_[0, 0, 1][:self.dim]).prod())
+        return int((self._n + np.r_[0, 0, 1][:self.dim]).prod())
 
     @property
     def vnF(self):
@@ -386,7 +386,7 @@ class BaseRectangularMesh(BaseMesh):
         :rtype: int
         :return: nCx
         """
-        return int(self.n[0])
+        return int(self._n[0])
 
     @property
     def nCy(self):
@@ -397,7 +397,7 @@ class BaseRectangularMesh(BaseMesh):
         """
         if self.dim < 2:
             return None
-        return int(self.n[1])
+        return int(self._n[1])
 
     @property
     def nCz(self):
@@ -408,7 +408,7 @@ class BaseRectangularMesh(BaseMesh):
         """
         if self.dim < 3:
             return None
-        return int(self.n[2])
+        return int(self._n[2])
 
     @property
     def vnC(self):
@@ -727,7 +727,7 @@ class BaseRectangularMesh(BaseMesh):
         def switchKernal(xx):
             """Switches over the different options."""
             if xType in ['CC', 'N']:
-                nn = (self.n) if xType == 'CC' else (self.n+1)
+                nn = (self._n) if xType == 'CC' else (self._n+1)
                 assert xx.size == np.prod(nn), (
                     "Number of elements must not change."
                 )

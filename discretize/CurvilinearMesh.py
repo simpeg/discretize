@@ -62,8 +62,8 @@ class CurvilinearMesh(
 
         self.nodes = nodes
 
-        if 'n' in kwargs.keys():
-            n = kwargs.pop('n')
+        if '_n' in kwargs.keys():
+            n = kwargs.pop('_n')
             assert (n == np.array(self.nodes[0].shape)-1).all(), (
                 "Unexpected n-values. {} was provided, {} was expected".format(
                     n, np.array(self.nodes[0].shape)-1
