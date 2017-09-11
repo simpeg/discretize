@@ -47,12 +47,9 @@ class CurvilinearMesh(
 
     nodes = properties.List(
         "List of arrays describing the node locations",
-        prop=properties.Union(
+        prop=properties.Array(
             "node locations in an n-dimensional array",
-            props=[
-                properties.Array('2D array', shape=('*', '*')),
-                properties.Array('3D array', shape=('*', '*', '*')),
-            ]
+            shape={('*', '*'), ('*', '*', '*')}
         ),
         min_length=2,
         max_length=3
