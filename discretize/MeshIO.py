@@ -398,7 +398,7 @@ class TreeMeshIO(object):
             '{:.3f} {:.3f} {:.3f}\n'.format(
                 smallCell[0], smallCell[1], smallCell[2]
             ) +
-            '{:.0f} \n'.format(nrCells)
+            '{:.0f}'.format(nrCells)
         )
         np.savetxt(fileName, indArr, fmt='%i', header=head, comments='')
 
