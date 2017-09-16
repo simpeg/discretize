@@ -1367,6 +1367,103 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         return self._faceDiv
 
     @property
+    def cellGradStencil(self):
+        if getattr(self, '_cellGradStencil', None) is None:
+            self.number()
+
+            # TODO: Preallocate!
+            I, J, V = [], [], []
+            PM = [-1, 1]*self.dim  # plus / minus
+
+            # TODO total number of faces?
+            offset = [0]*2 + [self.ntFx]*2 + [self.ntFx+self.ntFy]*2
+
+            for ii, ind in enumerate(self._sortedCells):
+
+                p = self._pointer(ind)
+                w = self._levelWidth(p[-1])
+
+                if self.dim == 2:
+                    faces = [
+                             self._fx2i[self._index([p[0], p[1], p[2]])],
+                             self._fx2i[self._index([p[0] + w, p[1], p[2]])],
+                             self._fy2i[self._index([p[0], p[1], p[2]])],
+                             self._fy2i[self._index([p[0], p[1] + w, p[2]])]
+                            ]
+                elif self.dim == 3:
+                    faces = [
+                             self._fx2i[self._index([p[0], p[1], p[2], p[3]])],
+                             self._fx2i[self._index([p[0] + w, p[1], p[2], p[3]])],
+                             self._fy2i[self._index([p[0], p[1], p[2], p[3]])],
+                             self._fy2i[self._index([p[0], p[1] + w, p[2], p[3]])],
+                             self._fz2i[self._index([p[0], p[1], p[2], p[3]])],
+                             self._fz2i[self._index([p[0], p[1], p[2] + w, p[3]])]
+                            ]
+
+                for off, pm, face in zip(offset, PM, faces):
+                    I += [ii]
+                    J += [face + off]
+                    V += [pm]
+
+            D = sp.csr_matrix((V, (I, J)), shape=(self.nC, self.ntF))
+            R = self._deflationMatrix('F', asOnes=True)
+            VOL = self.vol
+            if self.dim == 2:
+                S = np.r_[self._areaFxFull, self._areaFyFull]
+            elif self.dim == 3:
+                S = np.r_[self._areaFxFull, self._areaFyFull, self._areaFzFull]
+            self._cellGradStencil = (D*R).T
+        return self._cellGradStencil
+
+    def _cellGradxStencil(self):
+
+        if self.dim == 2:
+            S = sp.hstack([sp.identity(self.ntFx),
+                           sp.csr_matrix((self.ntFx, self.ntFy))])
+
+        elif self.dim == 3:
+            S = sp.hstack([sp.identity(self.ntFx),
+                           sp.csr_matrix((self.ntFx, self.ntFy)),
+                           sp.csr_matrix((self.ntFx, self.ntFz))])
+
+        G1 = (self._deflationMatrix('Fx').T * S *
+              (self._deflationMatrix('F') *
+               self.cellGradStencil))
+
+        return G1
+
+    def _cellGradyStencil(self):
+
+        if self.dim == 2:
+            S = sp.hstack([sp.csr_matrix((self.ntFy, self.ntFx)),
+                           sp.identity(self.ntFy)])
+
+        elif self.dim == 3:
+            S = sp.hstack([sp.csr_matrix((self.ntFy, self.ntFx)),
+                           sp.identity(self.ntFy),
+                           sp.csr_matrix((self.ntFy, self.ntFz))])
+
+        G2 = (self._deflationMatrix('Fy').T * S *
+              (self._deflationMatrix('F') *
+               self.cellGradStencil))
+
+        return G2
+
+    def _cellGradzStencil(self):
+
+        assert self.dim == 3, 'cellGradzStencil only possible for TreeMesh 3D'
+
+        S = sp.hstack([sp.csr_matrix((self.ntFz, self.ntFx)),
+                       sp.csr_matrix((self.ntFz, self.ntFy)),
+                       sp.identity(self.ntFz)])
+
+        G3 = (self._deflationMatrix('Fz').T * S *
+              (self._deflationMatrix('F') *
+               self.cellGradStencil))
+
+        return G3
+
+    @property
     def edgeCurl(self):
         """Construct the 3D curl operator."""
         assert self.dim > 2, "Edge Curl only programed for 3D."
