@@ -1407,11 +1407,11 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
             D = sp.csr_matrix((V, (I, J)), shape=(self.nC, self.ntF))
             R = self._deflationMatrix('F', asOnes=True)
-            VOL = self.vol
-            if self.dim == 2:
-                S = np.r_[self._areaFxFull, self._areaFyFull]
-            elif self.dim == 3:
-                S = np.r_[self._areaFxFull, self._areaFyFull, self._areaFzFull]
+            # VOL = self.vol
+            # if self.dim == 2:
+            #     S = np.r_[self._areaFxFull, self._areaFyFull]
+            # elif self.dim == 3:
+            #     S = np.r_[self._areaFxFull, self._areaFyFull, self._areaFzFull]
             self._cellGradStencil = (D*R).T
         return self._cellGradStencil
 
