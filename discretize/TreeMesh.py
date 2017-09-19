@@ -81,6 +81,7 @@ from __future__ import print_function
 
 import numpy as np
 import scipy.sparse as sp
+import properties
 
 from discretize import utils
 from . import TreeUtils
@@ -98,23 +99,48 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
     _meshType = 'TREE'
 
-    def __init__(self, h, x0=None, levels=None):
+    _levels = properties.Integer(
+        "discretization level",
+        min=0
+    )
+
+    _cells = properties.Set(
+        "cells in the tree mesh",
+        properties.Integer(
+            "cell number",
+            min=0
+        ),
+        default=set
+    )
+
+    def __init__(self, h, x0=None, **kwargs):
         assert type(h) is list, 'h must be a list'
         assert len(h) in [2, 3], "TreeMesh is only in 2D or 3D."
 
-        BaseTensorMesh.__init__(self, h, x0)
+        if '_levels' in kwargs.keys():
+            self._levels = kwargs.pop('_levels')
 
-        if levels is None:
-            levels = int(np.log2(len(self._h[0])))
-        assert np.all(len(_) == 2**levels for _ in self._h), "must make h and levels match"
+        BaseTensorMesh.__init__(self, h, x0, **kwargs)
 
-        self._levels = levels
-        self._levelBits = int(np.ceil(np.sqrt(levels)))+1
+        if self._levels is None:
+            self._levels = int(np.log2(len(self.h[0])))
 
-        self.__dirty__ = True #: The numbering is dirty!
+        # self._levels = levels
+        self._levelBits = int(np.ceil(np.sqrt(self._levels)))+1
 
-        self._cells = set()
-        self._cells.add(0)
+        self.__dirty__ = True  #: The numbering is dirty!
+
+        if '_cells' in kwargs.keys():
+            self._cells = kwargs.pop('_cells')
+        else:
+            self._cells.add(0)
+
+    @properties.validator('_levels')
+    def check_levels(self, change):
+        assert np.all(
+            len(_) == 2**change['value'] for _ in self.h
+        ), "must make h and levels match"
+
 
     @property
     def __dirty__(self):
@@ -136,20 +162,18 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         self.__dirtySets__ = True
 
         deleteThese = [
-                        '__sortedCells',
-                        '_gridCC', '_gridN', '_gridFx', '_gridFy', '_gridFz', '_gridEx', '_gridEy', '_gridEz',
-                        '_area', '_edge', '_vol',
-                        '_faceDiv', '_edgeCurl', '_nodalGrad',
-                        '_aveFx2CC', '_aveFy2CC', '_aveFz2CC', '_aveF2CC', '_aveF2CCV',
-                        '_aveEx2CC', '_aveEy2CC', '_aveEz2CC', '_aveE2CC', '_aveE2CCV',
-                        '_aveN2CC',
-                      ]
+            '__sortedCells',
+            '_gridCC',
+            '_gridN', '_gridFx', '_gridFy', '_gridFz',
+            '_gridEx', '_gridEy', '_gridEz',
+            '_area', '_edge', '_vol',
+            '_faceDiv', '_edgeCurl', '_nodalGrad',
+            '_aveFx2CC', '_aveFy2CC', '_aveFz2CC', '_aveF2CC', '_aveF2CCV',
+            '_aveEx2CC', '_aveEy2CC', '_aveEz2CC', '_aveE2CC', '_aveE2CCV',
+            '_aveN2CC',
+        ]
         for p in deleteThese:
             if hasattr(self, p): delattr(self, p)
-
-    @property
-    def levels(self):
-        return self._levels
 
     @property
     def fill(self):
@@ -162,7 +186,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         l = 0
         for cell in self._cells:
             p = self._pointer(cell)
-            l = max(l,p[-1])
+            l = max(l, p[-1])
         return l
 
     def __str__(self):
@@ -407,7 +431,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
     def _index(self, pointer):
         assert len(pointer) is self.dim+1
-        assert pointer[-1] <= self.levels
+        assert pointer[-1] <= self._levels
         return TreeUtils.index(self.dim, MAX_BITS, self._levelBits, pointer[:-1], pointer[-1])
 
     def _pointer(self, index):
@@ -417,7 +441,10 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
     def __contains__(self, v):
         return self._asIndex(v) in self._cells
 
-    def refine(self, function=None, recursive=True, cells=None, balance=True, verbose=False, _inRecursion=False):
+    def refine(
+        self, function=None, recursive=True, cells=None, balance=True,
+        verbose=False, _inRecursion=False
+    ):
 
         if type(function) in integer_types:
             level = function
@@ -432,27 +459,36 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         tic = time.time()
         for cell in cells:
             p = self._pointer(cell)
-            if p[-1] >= self.levels: continue
+            if p[-1] >= self._levels: continue
             result = function(Cell(self, cell, p))
             if type(result) is bool:
                 do = result
             elif type(result) in integer_types:
                 do = result > p[-1]
             else:
-                raise Exception('You must tell the program what to refine. Use BOOL or INT (level)')
+                raise Exception(
+                    'You must tell the program what to refine. '
+                    'Use BOOL or INT (level)'
+                )
             if do:
                 recurse += self._refineCell(cell, p)
 
         if verbose: print('   ', time.time() - tic)
 
         if recursive and len(recurse) > 0:
-            recurse += self.refine(function=function, recursive=True, cells=recurse, balance=balance, verbose=verbose, _inRecursion=True)
+            recurse += self.refine(
+                function=function, recursive=True, cells=recurse,
+                balance=balance, verbose=verbose, _inRecursion=True
+            )
 
         if balance and not _inRecursion:
             self.balance()
         return recurse
 
-    def corsen(self, function=None, recursive=True, cells=None, balance=True, verbose=False, _inRecursion=False):
+    def corsen(
+        self, function=None, recursive=True, cells=None, balance=True,
+        verbose=False, _inRecursion=False
+    ):
 
         if type(function) in integer_types:
             level = function
@@ -468,21 +504,27 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         for cell in cells:
             if cell not in self._cells: continue # already removed
             p = self._pointer(cell)
-            if p[-1] >= self.levels: continue
+            if p[-1] >= self._levels: continue
             result = function(Cell(self, cell, p))
             if type(result) is bool:
                 do = result
             elif type(result) in integer_types:
                 do = result < p[-1]
             else:
-                raise Exception('You must tell the program what to corsen. Use BOOL or INT (level)')
+                raise Exception(
+                    'You must tell the program what to corsen. Use BOOL or '
+                    'INT (level)'
+                )
             if do:
                 recurse += self._corsenCell(cell, p)
 
         if verbose: print('   ', time.time() - tic)
 
         if recursive and len(recurse) > 0:
-            recurse += self.corsen(function=function, recursive=True, cells=recurse, balance=balance, verbose=verbose, _inRecursion=True)
+            recurse += self.corsen(
+                function=function, recursive=True, cells=recurse,
+                balance=balance, verbose=verbose, _inRecursion=True
+            )
 
         if balance and not _inRecursion:
             self.balance()
@@ -517,7 +559,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             return self._pointer(ind)
         if type(ind) is list:
             assert len(ind) == (self.dim + 1), str(ind) +' is not valid pointer'
-            assert ind[-1] <= self.levels, str(ind) +' is not valid pointer'
+            assert ind[-1] <= self._levels, str(ind) +' is not valid pointer'
             return ind
         if isinstance(ind, np.ndarray):
             return ind.tolist()
@@ -584,12 +626,12 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         return (np.array(self._cellH(p))/2.0 + self._cellN(p)).tolist()
 
     def _levelWidth(self, level):
-        return 2**(self.levels - level)
+        return 2**(self._levels - level)
 
     def _isInsideMesh(self, pointer):
         inside = True
         for p in pointer[:-1]:
-            inside = inside and p >= 0 and p < 2**self.levels
+            inside = inside and p >= 0 and p < 2**self._levels
         return inside
 
     def _getNextCell(self, ind, direction=0, positive=True, _lookUp=True):
@@ -601,7 +643,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         if direction >= self.dim:
             return None
         pointer = self._asPointer(ind)
-        if pointer[-1] > self.levels:
+        if pointer[-1] > self._levels:
             return None
 
         step = (1 if positive else -1) * self._levelWidth(pointer[-1])
@@ -614,7 +656,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         if nextCell in self:
             return self._index(nextCell)
 
-        if nextCell[-1] + 1 <= self.levels: # if I am not the smallest.
+        if nextCell[-1] + 1 <= self._levels: # if I am not the smallest.
             children  = self._childPointers(pointer, direction=direction, positive=positive)
             nextCells = [self._getNextCell(child, direction=direction, positive=positive, _lookUp=False) for child in children]
             if nextCells[0] is not None:
@@ -643,7 +685,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
         for cell in cells:
             p = self._asPointer(cell)
-            if p[-1] == self.levels: continue
+            if p[-1] == self._levels: continue
 
             cs = list(range(6))
             cs[0] = self._getNextCell(cell, direction=0, positive=False)
@@ -991,7 +1033,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         # Compute from x faces
         for fx in self._facesX:
             p = self._pointer(fx)
-            if p[-1] + 1 > self.levels: continue
+            if p[-1] + 1 > self._levels: continue
             sl = p[-1] + 1 #: small level
             test = self._index(p[:-1] + [sl])
             if test not in self._facesX:
@@ -1088,7 +1130,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         # Compute from y faces
         for fy in self._facesY:
             p = self._pointer(fy)
-            if p[-1] + 1 > self.levels: continue
+            if p[-1] + 1 > self._levels: continue
             sl = p[-1] + 1 #: small level
             test = self._index(p[:-1] + [sl])
             if test not in self._facesY:
@@ -1188,7 +1230,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         # Compute from z faces
         for fz in self._facesZ:
             p = self._pointer(fz)
-            if p[-1] + 1 > self.levels: continue
+            if p[-1] + 1 > self._levels: continue
             sl = p[-1] + 1 #: small level
             test = self._index(p[:-1] + [sl])
             if test not in self._facesZ:
@@ -1882,7 +1924,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
         out = []
         for pointer in zip(*pointers):
-            for level in range(self.levels+1):
+            for level in range(self._levels+1):
                 width = self._levelWidth(level)
                 testPointer = [((p-1)//width)*width for p in pointer] + [level]
                 test = self._index(testPointer)

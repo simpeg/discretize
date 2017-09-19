@@ -3,6 +3,7 @@ from discretize.TensorMesh import TensorMesh
 from discretize.CylMesh import CylMesh
 from discretize.CurvilinearMesh import CurvilinearMesh
 from discretize import Tests
+from discretize.MeshIO import load_mesh
 
 try:
     from discretize.TreeMesh import TreeMesh
@@ -17,7 +18,7 @@ except ImportError:
         """
     )
 
-__version__   = '0.1.9'
+__version__   = '0.1.10b0'
 __author__    = 'SimPEG Team'
 __license__   = 'MIT'
 __copyright__ = '2013 - 2017, SimPEG Developers, http://simpeg.xyz'

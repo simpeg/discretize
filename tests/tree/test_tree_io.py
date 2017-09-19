@@ -32,7 +32,7 @@ class TestOcTreeMeshIO(unittest.TestCase):
         meshUBC = discretize.TreeMesh.readUBC('temp.msh')
         vecUBC = meshUBC.readModelUBC('arange.txt')
 
-        # The mesh
+        assert(mesh.nC == meshUBC.nC)
         assert mesh.__str__() == meshUBC.__str__()
         assert np.sum(mesh.gridCC - meshUBC.gridCC) == 0
         assert np.sum(vec - vecUBC) == 0
