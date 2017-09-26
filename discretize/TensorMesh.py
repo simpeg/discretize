@@ -160,6 +160,25 @@ class BaseTensorMesh(BaseMesh):
         return self._getTensorGrid('N')
 
     @property
+    def gridH(self):
+        """Cell widths in grid."""
+        
+        if self.dim == 1:
+            H = self.h
+            return H
+        if self.dim == 2:
+            H = np.meshgrid(H[0],H[1])
+            hx = np.reshape(H[0],self.nC)
+            hy = np.reshape(H[1],self.nC)
+            return np.c_[hx,hy]
+        elif self.dim == 3:
+            H = np.meshgrid(H[0],H[1],H[2])
+            hx = np.reshape(H[0],self.nC)
+            hy = np.reshape(H[1],self.nC)
+            hz = np.reshape(H[2],self.nC)
+            return np.c_[hx,hy,hz]
+
+    @property
     def gridFx(self):
         """Face staggered grid in the x direction."""
         if self.nFx == 0:

@@ -729,6 +729,15 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         return R.T * self._gridN + np.repeat([self.x0],self.nN,axis=0)
 
     @property
+    def gridH(self):
+        if getattr(self, '_gridH', None) is None:
+            self._gridH = np.zeros((len(self._cells),self.dim))
+            for ii, ind in enumerate(self._sortedCells):
+                p = self._asPointer(ind)
+                self._gridH[ii, :] = self._cellH(p)
+        return self._gridH
+
+    @property
     def gridFx(self):
         self.number()
         R = self._deflationMatrix('Fx', withHanging=False)
