@@ -162,9 +162,8 @@ class BaseTensorMesh(BaseMesh):
     @property
     def gridH(self):
         """Cell widths in grid."""
-        
+        H = self.h
         if self.dim == 1:
-            H = self.h
             return H
         if self.dim == 2:
             H = np.meshgrid(H[0],H[1])
