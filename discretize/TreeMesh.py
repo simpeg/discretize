@@ -1731,6 +1731,9 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
     @property
     def aveFx2CC(self):
         if getattr(self, '_aveFx2CC', None) is None:
+
+            self.number()
+
             I, J, V = [], [], []
             PM = [1./2.]*self.dim # 0.5, 0.5
 
@@ -1764,6 +1767,9 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
     @property
     def aveFy2CC(self):
         if getattr(self, '_aveFy2CC', None) is None:
+
+            self.number()
+
             I, J, V = [], [], []
             PM = [1./2.]*2 # 0.5, 0.5
 
@@ -1796,6 +1802,9 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
     @property
     def aveFz2CC(self):
         if getattr(self, '_aveFz2CC', None) is None:
+
+            self.number()
+
             I, J, V = [], [], []
             PM = [1./2.]*2 # 0.5, 0.5
 
@@ -2090,12 +2099,11 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         return Q * R
 
     def plotGrid(self, ax=None, showIt=False,
-        grid=True,
-        cells=False, cellLine=False,
-        nodes=False,
-        facesX=False, facesY=False, facesZ=False,
-        edgesX=False, edgesY=False, edgesZ=False):
-
+                 grid=True,
+                 cells=False, cellLine=False,
+                 nodes=False,
+                 facesX=False, facesY=False, facesZ=False,
+                 edgesX=False, edgesY=False, edgesZ=False):
 
         import matplotlib.pyplot as plt
         import matplotlib
@@ -2104,12 +2112,11 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         import matplotlib.cm as cmx
 
         # self.number()
-
-        axOpts = {'projection':'3d'} if self.dim == 3 else {}
+        axOpts = {'projection': '3d'} if self.dim == 3 else {}
         if ax is None:
             ax = plt.subplot(111, **axOpts)
         else:
-            assert isinstance(ax,matplotlib.axes.Axes), "ax must be an Axes!"
+            assert isinstance(ax, matplotlib.axes.Axes), "ax must be an Axes!"
             fig = ax.figure
 
         if grid:
@@ -2131,10 +2138,14 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
                         X += [n[0] + s[0], n[0] + s[0]]
                         Y += [n[1] + s[1], n[1] + s[1]]
                         Z += [n[2]       , n[2] + h[2]]
+
+            X += self.x0[0]
+            Y += self.x0[1]
             if self.dim == 2:
-                ax.plot(X,Y, 'b-')
+                ax.plot(X, Y, 'b-')
             elif self.dim == 3:
-                ax.plot(X,Y, 'b-', zs=Z)
+                Z += self.x0[2]
+                ax.plot(X, Y, 'b-', zs=Z)
 
         if self.dim == 2:
             if cells:
