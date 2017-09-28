@@ -1240,15 +1240,15 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
                 # self._hangingEz[self._ez2i[i200]] = ([self._ez2i[ez1], chz0 / lenZ], )
                 # self._hangingEz[self._ez2i[i201]] = ([self._ez2i[ez1], chz1 / lenZ], )
 
-                self._hangingN[ self._n2i[ i000]] = ([self._n2i[n0],   1.0], )
-                self._hangingN[ self._n2i[ i100]] = ([self._n2i[n0],   0.5], [self._n2i[n1], 0.5])
-                self._hangingN[ self._n2i[ i200]] = ([self._n2i[n1],   1.0], )
-                self._hangingN[ self._n2i[ i001]] = ([self._n2i[n0],   0.5], [self._n2i[n2], 0.5])
-                self._hangingN[ self._n2i[ i101]] = ([self._n2i[n0],   0.25], [self._n2i[n1], 0.25], [self._n2i[n2], 0.25], [self._n2i[n3], 0.25])
-                self._hangingN[ self._n2i[ i201]] = ([self._n2i[n1],   0.5], [self._n2i[n3], 0.5])
-                self._hangingN[ self._n2i[ i002]] = ([self._n2i[n2],   1.0], )
-                self._hangingN[ self._n2i[ i102]] = ([self._n2i[n2],   0.5], [self._n2i[n3], 0.5])
-                self._hangingN[ self._n2i[ i202]] = ([self._n2i[n3],   1.0], )
+                self._hangingN[self._n2i[i000]] = ([self._n2i[n0],   1.0], )
+                self._hangingN[self._n2i[i100]] = ([self._n2i[n0],   0.5], [self._n2i[n1], 0.5])
+                self._hangingN[self._n2i[i200]] = ([self._n2i[n1],   1.0], )
+                self._hangingN[self._n2i[i001]] = ([self._n2i[n0],   0.5], [self._n2i[n2], 0.5])
+                self._hangingN[self._n2i[i101]] = ([self._n2i[n0],   0.25], [self._n2i[n1], 0.25], [self._n2i[n2], 0.25], [self._n2i[n3], 0.25])
+                self._hangingN[self._n2i[i201]] = ([self._n2i[n1],   0.5], [self._n2i[n3], 0.5])
+                self._hangingN[self._n2i[i002]] = ([self._n2i[n2],   1.0], )
+                self._hangingN[self._n2i[i102]] = ([self._n2i[n2],   0.5], [self._n2i[n3], 0.5])
+                self._hangingN[self._n2i[i202]] = ([self._n2i[n3],   1.0], )
 
         if self.dim == 2:
             self.__dirtyHanging__ = False
@@ -1326,15 +1326,15 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             # self._hangingEy[self._ey2i[i200]] = ([self._ey2i[ey1], chy0 / lenY], )
             # self._hangingEy[self._ey2i[i210]] = ([self._ey2i[ey1], chy1 / lenY], )
 
-            self._hangingN[ self._n2i[ i000]] = ([self._n2i[n0],   1.0], )
-            self._hangingN[ self._n2i[ i100]] = ([self._n2i[n0],   0.5], [self._n2i[n1], 0.5])
-            self._hangingN[ self._n2i[ i200]] = ([self._n2i[n1],   1.0], )
-            self._hangingN[ self._n2i[ i010]] = ([self._n2i[n0],   0.5], [self._n2i[n2], 0.5])
-            self._hangingN[ self._n2i[ i110]] = ([self._n2i[n0],   0.25], [self._n2i[n1], 0.25], [self._n2i[n2], 0.25], [self._n2i[n3], 0.25])
-            self._hangingN[ self._n2i[ i210]] = ([self._n2i[n1],   0.5], [self._n2i[n3], 0.5])
-            self._hangingN[ self._n2i[ i020]] = ([self._n2i[n2],   1.0], )
-            self._hangingN[ self._n2i[ i120]] = ([self._n2i[n2],   0.5], [self._n2i[n3], 0.5])
-            self._hangingN[ self._n2i[ i220]] = ([self._n2i[n3],   1.0], )
+            self._hangingN[self._n2i[i000]] = ([self._n2i[n0],   1.0], )
+            self._hangingN[self._n2i[i100]] = ([self._n2i[n0],   0.5], [self._n2i[n1], 0.5])
+            self._hangingN[self._n2i[i200]] = ([self._n2i[n1],   1.0], )
+            self._hangingN[self._n2i[i010]] = ([self._n2i[n0],   0.5], [self._n2i[n2], 0.5])
+            self._hangingN[self._n2i[i110]] = ([self._n2i[n0],   0.25], [self._n2i[n1], 0.25], [self._n2i[n2], 0.25], [self._n2i[n3], 0.25])
+            self._hangingN[self._n2i[i210]] = ([self._n2i[n1],   0.5], [self._n2i[n3], 0.5])
+            self._hangingN[self._n2i[i020]] = ([self._n2i[n2],   1.0], )
+            self._hangingN[self._n2i[i120]] = ([self._n2i[n2],   0.5], [self._n2i[n3], 0.5])
+            self._hangingN[self._n2i[i220]] = ([self._n2i[n3],   1.0], )
 
         self.__dirtyHanging__ = False
 
@@ -1861,7 +1861,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             self.number()
 
             I, J, V = [], [], []
-            PM = [1./2.]*2  # 0.5, 0.5
+            PM = [1./2.]*self.dim  # 0.5, 0.5
 
             for ii, ind in enumerate(self._sortedCells):
                 p = self._pointer(ind)
@@ -1900,7 +1900,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             self.number()
 
             I, J, V = [], [], []
-            PM = [1./2.]*2  # 0.5, 0.5
+            PM = [1./2.]*self.dim  # 0.5, 0.5
 
             for ii, ind in enumerate(self._sortedCells):
                 p = self._pointer(ind)
@@ -2194,7 +2194,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
                 R = self._deflationMatrix(locType[0], asOnes=True, withHanging=True)
         elif locType == 'N':
             for ii, cell in enumerate(cells):
-                loc = locs[ii,:]
+                loc = locs[ii, :]
                 p = self._asPointer(cell)
                 h, n = self._cellH(p), self._cellN(p)
                 w = self._levelWidth(p[-1])
@@ -2260,8 +2260,9 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
                     X += [n[0], n[0] + h[0], n[0] + h[0], n[0], n[0], np.nan]*2
                     Y += [n[1], n[1], n[1] + h[1], n[1] + h[1], n[1], np.nan]*2
                     Z += [n[2]]*5+[np.nan]
-                    Z += [n[2] + h[2], n[2] + h[2], n[2] + h[2], n[2] + h[2], n[2] + h[2], np.nan]
-                    sides = [0, 0], [h[0], 0], [0,h[1]], [h[0],h[1]]
+                    Z += [n[2] + h[2], n[2] + h[2], n[2] + h[2],
+                          n[2] + h[2], n[2] + h[2], np.nan]
+                    sides = [0, 0], [h[0], 0], [0, h[1]], [h[0], h[1]]
                     for s in sides:
                         X += [n[0] + s[0], n[0] + s[0]]
                         Y += [n[1] + s[1], n[1] + s[1]]
