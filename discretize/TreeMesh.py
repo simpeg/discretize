@@ -41,11 +41,11 @@ from __future__ import print_function
 #
 #      2_______________3                    _______________
 #      |               |                   |       |       |
-#   ^  |               |                   | (0, 1) | (1, 1) |
+#   ^  |               |                   |(0, 1) |(1, 1) |
 #   |  |               |                   |       |       |
 #   |  |       x       |        --->       |-------+-------|
 #   t1 |               |                   |       |       |
-#      |               |                   | (0, 0) | (1, 0) |
+#      |               |                   |(0, 0) |(1, 0) |
 #      |_______________|                   |_______|_______|
 #      0      t0-->    1
 #
@@ -69,15 +69,22 @@ from __future__ import print_function
 #                   fZm
 #
 #
-#            fX                                  fY                                 fZ
-#      2___________3                       2___________3                      2___________3
-#      |     e1    |                       |     e1    |                      |     e1    |
-#      |           |                       |           |                      |           |
-#   e2 |     x     | e3      z          e2 |     x     | e3      z         e2 |     x     | e3      y
-#      |           |         ^             |           |         ^            |           |         ^
-#      |___________|         |___> y       |___________|         |___> x      |___________|         |___> x
-#      0    e0     1                       0    e0     1                      0    e0     1
-#
+#            fX                                  fY
+#      2___________3                       2___________3
+#      |     e1    |                       |     e1    |
+#      |           |                       |           |
+#   e2 |     x     | e3      z          e2 |     x     | e3      z
+#      |           |         ^             |           |         ^
+#      |___________|         |___> y       |___________|         |___> x
+#      0    e0     1                       0    e0     1
+#           fZ
+#      2___________3
+#      |     e1    |
+#      |           |
+#   e2 |     x     | e3      y
+#      |           |         ^
+#      |___________|         |___> x
+#      0    e0     1
 
 import numpy as np
 import scipy.sparse as sp
@@ -106,7 +113,8 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
         if levels is None:
             levels = int(np.log2(len(self._h[0])))
-        assert np.all(len(_) == 2**levels for _ in self._h), "must make h and levels match"
+        assert (np.all(len(_) == 2**levels for _ in self._h),
+                "must make h and levels match")
 
         self._levels = levels
         self._levelBits = int(np.ceil(np.sqrt(levels)))+1
@@ -137,11 +145,15 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
         deleteThese = [
                         '__sortedCells',
-                        '_gridCC', '_gridN', '_gridFx', '_gridFy', '_gridFz', '_gridEx', '_gridEy', '_gridEz',
+                        '_gridCC', '_gridN',
+                        '_gridFx', '_gridFy', '_gridFz',
+                        '_gridEx', '_gridEy', '_gridEz',
                         '_area', '_edge', '_vol',
                         '_faceDiv', '_edgeCurl', '_nodalGrad',
-                        '_aveFx2CC', '_aveFy2CC', '_aveFz2CC', '_aveF2CC', '_aveF2CCV',
-                        '_aveEx2CC', '_aveEy2CC', '_aveEz2CC', '_aveE2CC', '_aveE2CCV',
+                        '_aveFx2CC', '_aveFy2CC', '_aveFz2CC',
+                        '_aveF2CC', '_aveF2CCV',
+                        '_aveEx2CC', '_aveEy2CC', '_aveEz2CC',
+                        '_aveE2CC', '_aveE2CCV',
                         '_aveN2CC',
                       ]
         for p in deleteThese:
@@ -448,7 +460,8 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             elif type(result) in integer_types:
                 do = result > p[-1]
             else:
-                raise Exception('You must tell the program what to refine. Use BOOL or INT (level)')
+                raise Exception('You must tell the program what to refine.' +
+                                ' Use BOOL or INT (level)')
             if do:
                 recurse += self._refineCell(cell, p)
 
@@ -464,7 +477,8 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             self.balance()
         return recurse
 
-    def corsen(self, function=None, recursive=True, cells=None, balance=True, verbose=False, _inRecursion=False):
+    def corsen(self, function=None, recursive=True, cells=None,
+               balance=True, verbose=False, _inRecursion=False):
 
         if type(function) in integer_types:
             level = function
@@ -487,14 +501,17 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             elif type(result) in integer_types:
                 do = result < p[-1]
             else:
-                raise Exception('You must tell the program what to corsen. Use BOOL or INT (level)')
+                raise Exception('You must tell the program what to corsen.' +
+                                ' Use BOOL or INT (level)')
             if do:
                 recurse += self._corsenCell(cell, p)
 
         if verbose: print('   ', time.time() - tic)
 
         if recursive and len(recurse) > 0:
-            recurse += self.corsen(function=function, recursive=True, cells=recurse, balance=balance, verbose=verbose, _inRecursion=True)
+            recurse += self.corsen(function=function, recursive=True,
+                                   cells=recurse, balance=balance,
+                                   verbose=verbose, _inRecursion=True)
 
         if balance and not _inRecursion:
             self.balance()
@@ -528,8 +545,8 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         if type(ind) in integer_types:
             return self._pointer(ind)
         if type(ind) is list:
-            assert len(ind) == (self.dim + 1), str(ind) +' is not valid pointer'
-            assert ind[-1] <= self.levels, str(ind) +' is not valid pointer'
+            assert len(ind) == (self.dim + 1), str(ind) + ' is not valid pointer'
+            assert ind[-1] <= self.levels, str(ind) + ' is not valid pointer'
             return ind
         if isinstance(ind, np.ndarray):
             return ind.tolist()
@@ -542,7 +559,8 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             return self._index(pointer)
         raise Exception
 
-    def _childPointers(self, pointer, direction=0, positive=True, returnAll=False):
+    def _childPointers(self, pointer, direction=0,
+                       positive=True, returnAll=False):
         l = self._levelWidth(pointer[-1] + 1)
 
         if self.dim == 2:
@@ -557,18 +575,29 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         elif self.dim == 3:
 
             children = [
-                            [pointer[0], pointer[1], pointer[2], pointer[-1] + 1],
-                            [pointer[0] + l, pointer[1], pointer[2], pointer[-1] + 1],
-                            [pointer[0], pointer[1] + l, pointer[2], pointer[-1] + 1],
-                            [pointer[0] + l, pointer[1] + l, pointer[2], pointer[-1] + 1],
-                            [pointer[0], pointer[1], pointer[2] + l, pointer[-1] + 1],
-                            [pointer[0] + l, pointer[1], pointer[2] + l, pointer[-1] + 1],
-                            [pointer[0], pointer[1] + l, pointer[2] + l, pointer[-1] + 1],
-                            [pointer[0] + l, pointer[1] + l, pointer[2] + l, pointer[-1] + 1]
+                            [pointer[0], pointer[1],
+                             pointer[2], pointer[-1] + 1],
+                            [pointer[0] + l, pointer[1],
+                             pointer[2], pointer[-1] + 1],
+                            [pointer[0], pointer[1] + l,
+                             pointer[2], pointer[-1] + 1],
+                            [pointer[0] + l, pointer[1] + l,
+                             pointer[2], pointer[-1] + 1],
+                            [pointer[0], pointer[1],
+                             pointer[2] + l, pointer[-1] + 1],
+                            [pointer[0] + l, pointer[1],
+                             pointer[2] + l, pointer[-1] + 1],
+                            [pointer[0], pointer[1] + l,
+                             pointer[2] + l, pointer[-1] + 1],
+                            [pointer[0] + l, pointer[1] + l,
+                             pointer[2] + l, pointer[-1] + 1]
                        ]
-        if direction == 0: ind = [0,2,4,6] if not positive else [1,3,5,7]
-        if direction == 1: ind = [0, 1,4,5] if not positive else [2,3,6,7]
-        if direction == 2: ind = [0, 1,2,3] if not positive else [4,5,6,7]
+        if direction == 0:
+            ind = [0, 2, 4, 6] if not positive else [1, 3, 5, 7]
+        if direction == 1:
+            ind = [0, 1, 4, 5] if not positive else [2, 3, 6, 7]
+        if direction == 2:
+            ind = [0, 1, 2, 3] if not positive else [4, 5, 6, 7]
 
         if returnAll:
             return children
@@ -581,7 +610,9 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         return [p - (p % mod) for p in pointer[:-1]] + [pointer[-1]-1]
 
     def _cellN(self, p):
-        """Node location [x,y(,z)] of a single cell, closest to origin, given a pointer."""
+        """Node location [x,y(,z)] of a single cell,
+        closest to origin, given a pointer.
+        """
         p = self._asPointer(p)
         return [hi[:p[ii]].sum() for ii, hi in enumerate(self.h)]
 
@@ -592,7 +623,10 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         return [hi[p[ii]:p[ii]+w].sum() for ii, hi in enumerate(self.h)]
 
     def _cellC(self, p):
-        """Cell center of a single cell (without origin correction), given a pointer."""
+        """
+            Cell center of a single cell (without origin correction),
+            given a pointer.
+        """
         return (np.array(self._cellH(p))/2.0 + self._cellN(p)).tolist()
 
     def _levelWidth(self, level):
@@ -626,9 +660,11 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         if nextCell in self:
             return self._index(nextCell)
 
-        if nextCell[-1] + 1 <= self.levels: # if I am not the smallest.
-            children  = self._childPointers(pointer, direction=direction, positive=positive)
-            nextCells = [self._getNextCell(child, direction=direction, positive=positive, _lookUp=False) for child in children]
+        if nextCell[-1] + 1 <= self.levels:  # if I am not the smallest.
+            children = self._childPointers(pointer, direction=direction,
+                                           positive=positive)
+            nextCells = [self._getNextCell(child, direction=direction,
+                                           positive=positive, _lookUp=False) for child in children]
             if nextCells[0] is not None:
                 return nextCells
 
@@ -637,9 +673,10 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
         # it might be bigger than me?
         return self._getNextCell(self._parentPointer(pointer),
-                direction=direction, positive=positive)
+                                 direction=direction, positive=positive)
 
-    def balance(self, recursive=True, cells=None, verbose=False, _inRecursion=False):
+    def balance(self, recursive=True, cells=None,
+                verbose=False, _inRecursion=False):
 
         tic = time.time()
         if not _inRecursion:
