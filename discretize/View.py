@@ -604,7 +604,13 @@ class CylView(object):
 
             if len(val) == self.nC:  # only a single value at cell centers
                 val = val.reshape(self.vnC[0], self.vnC[2], order='F')
-                val = mkvc(np.vstack([np.flipud(val), val]))
+
+                if vType is not None:
+                    if vType.upper() == "E":
+                        val_left = -np.flipud(val)
+                else:
+                    val_left = np.flipud(val)
+                val = mkvc(np.vstack([val_left, val]))
 
             elif len(val) == 2*self.nC:
                 val_x = val[:self.nC]
