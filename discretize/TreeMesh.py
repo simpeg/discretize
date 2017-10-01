@@ -1475,7 +1475,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
                     V += [pm]
 
             D = sp.csr_matrix((V, (I, J)), shape=(self.nC, self.ntF))
-            R = self._deflationMatrix('F', asOnes=True)
+            R = self._deflationMatrix('F')
             # VOL = self.vol
             # if self.dim == 2:
             #     S = np.r_[self._areaFxFull, self._areaFyFull]
