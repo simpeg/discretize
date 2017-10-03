@@ -1348,7 +1348,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         assert location in ['N', 'F', 'Fx', 'Fy', 'E', 'Ex', 'Ey'] + (['Fz', 'Ez'] if self.dim == 3 else [])
 
         args = dict()
-        args['N'] =  (self._nodes,  self._hangingN,  self._n2i )
+        args['N'] = (self._nodes,  self._hangingN,  self._n2i )
         args['Fx'] = (self._facesX, self._hangingFx, self._fx2i)
         args['Fy'] = (self._facesY, self._hangingFy, self._fy2i)
         if self.dim == 3:
@@ -1360,8 +1360,9 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             args['Ex'] = (self._facesY, self._hangingFy, self._fy2i)
             args['Ey'] = (self._facesX, self._hangingFx, self._fx2i)
         if location in ['F', 'E']:
-            Rlist = [self._deflationMatrix(location + subLoc, withHanging=withHanging, asOnes=asOnes) for subLoc in ['x', 'y', 'z'][:self.dim]]
+            Rlist = [self._deflationMatrix(location + subLoc, withHanging=withHanging, asOnes=asOnes, large=large) for subLoc in ['x', 'y', 'z'][:self.dim]]
             return sp.block_diag(Rlist)
+
         return self.__deflationMatrix(*args[location], withHanging=withHanging, asOnes=asOnes)
 
     def __deflationMatrix(self, theSet, theHang, theIndex, withHanging=True, asOnes=False):
@@ -1384,7 +1385,45 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
                     V += [1.0]*len(hf)
                 else:
                     V += [_[1] for _ in hf]
+        print(I)
+        print(J)
         return sp.csr_matrix((V, (I, J)), shape=(len(theSet), len(reducedInd)))
+
+#     def __deflationMatrixHang(self, theSet, theHang, theIndex, withHanging=True, asOnes=False):
+#         reducedInd = dict()  # final reduced index
+#         ii = 0
+#         I, J, V = [], [], []
+
+#         # Loop through the hangings and flag the overlaping element
+#         oLap = dict()
+#         for key in theHang.keys():
+#             if not theHang[key][0][0] in oLap.keys():
+#                 oLap[theHang[key][0][0]] = [key]
+#             else:
+#                 oLap[theHang[key][0][0]] += [key]
+
+#         for fx in sorted(theSet):
+#             if theIndex[fx] not in theHang:
+#                 if theIndex[fx] not in oLap.keys():
+# #                reducedInd[theIndex[fx]] = ii
+#                     I += [theIndex[fx]]
+#                     J += [ii]
+#                     V += [1.0]
+#                     ii += 1
+
+#                 else:
+#                     for hfkey in oLap[theIndex[fx]]:
+
+#                         #if theHang[hfkey][0][0] == theIndex[fx]:
+#                         # hf = theHang[hfkey]
+
+#                         # for h in theHang[hfkey]:
+#                         I += [hfkey]
+#                         J += [ii]
+#                         V += [1.0]
+#                         ii += 1
+
+#         return sp.csr_matrix((V, (I, J)), shape=(len(theSet), len(J)))
 
     @property
     def faceDiv(self):
@@ -1475,7 +1514,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
                     V += [pm]
 
             D = sp.csr_matrix((V, (I, J)), shape=(self.nC, self.ntF))
-            R = self._deflationMatrix('F')
+            R = self._deflationMatrix('F', large=True)
             # VOL = self.vol
             # if self.dim == 2:
             #     S = np.r_[self._areaFxFull, self._areaFyFull]
@@ -1485,50 +1524,195 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         return self._cellGradStencil
 
     def _cellGradxStencil(self):
+        self.number()
+        # if self.dim == 2:
+        #     S = sp.hstack([sp.identity(self.ntFx),
+        #                    sp.csr_matrix((self.ntFx, self.ntFy))])
 
-        if self.dim == 2:
-            S = sp.hstack([sp.identity(self.ntFx),
-                           sp.csr_matrix((self.ntFx, self.ntFy))])
+        # elif self.dim == 3:
+        #     S = sp.hstack([sp.identity(self.ntFx),
+        #                    sp.csr_matrix((self.ntFx, self.ntFy)),
+        #                    sp.csr_matrix((self.ntFx, self.ntFz))])
 
-        elif self.dim == 3:
-            S = sp.hstack([sp.identity(self.ntFx),
-                           sp.csr_matrix((self.ntFx, self.ntFy)),
-                           sp.csr_matrix((self.ntFx, self.ntFz))])
+        # G1 = (self._deflationMatrix('Fx', large=True).T * S *
+        #       (self._deflationMatrix('F', large=True) *
+        #        self.cellGradStencil))
 
-        G1 = (self._deflationMatrix('Fx').T * S *
-              (self._deflationMatrix('F') *
-               self.cellGradStencil))
+        faceParent = dict()
+        theHang = self._hangingFx
+        for key in theHang.keys():
+            if not theHang[key][0][0] in faceParent.keys():
+                faceParent[theHang[key][0][0]] = [key]
+            else:
+                faceParent[theHang[key][0][0]] += [key]
+
+        I, J, V = [], [], []
+        PM = [-1, 1]#*mesh.dim  # plus / minus
+
+        for ii, ind in enumerate(self._sortedCells):
+
+            p = self._pointer(ind)
+        #     w = self._levelWidth(p[-1])
+
+            if self.dim == 2:
+                cells = self._getNextCell(self._index([p[0], p[1], p[2]]), direction=0)
+            elif self.dim == 3:
+                cells = self._getNextCell(self._index([p[0], p[1], p[2], p[3]]), direction=0)
+
+            if cells:
+                if isinstance(cells, int):
+                    cells = [cells]
+
+                for cell in cells:
+
+                    pN = self._pointer(cell)
+
+                    if pN[-1] < p[-1]:
+                        if self.dim == 2:
+                            hangs = faceParent[self._fx2i[self._index([pN[0], pN[1], pN[2]])]]
+                            count = int(np.abs((p[1] - pN[1]) % 2))
+
+                        elif self.dim == 3:
+                            hangs = faceParent[self._fx2i[self._index([pN[0],
+                                                                        pN[1], pN[2], pN[3]])]]
+                            count = int(np.abs((p[1] - pN[1]) % 2))
+                            count += int(2*np.abs((p[2] - pN[2]) % 2))
+                        face = hangs[count]
+                    else:
+                        if self.dim == 2:
+                            face = self._fx2i[self._index([pN[0], pN[1], pN[2]])]
+                        elif self.dim == 3:
+                            face = self._fx2i[self._index([pN[0], pN[1], pN[2], pN[3]])]
+
+                    I += [face]*2
+                    J += [self._cc2i[ind], self._cc2i[cell]]
+                    V += PM
+
+        G1 = sp.csr_matrix((V, (I, J)), shape=(self.ntFx, self.nC))
 
         return G1
 
     def _cellGradyStencil(self):
+        self.number()
+        # if self.dim == 2:
+        #     S = sp.hstack([sp.csr_matrix((self.ntFy, self.ntFx)),
+        #                    sp.identity(self.ntFy)])
 
-        if self.dim == 2:
-            S = sp.hstack([sp.csr_matrix((self.ntFy, self.ntFx)),
-                           sp.identity(self.ntFy)])
+        # elif self.dim == 3:
+        #     S = sp.hstack([sp.csr_matrix((self.ntFy, self.ntFx)),
+        #                    sp.identity(self.ntFy),
+        #                    sp.csr_matrix((self.ntFy, self.ntFz))])
 
-        elif self.dim == 3:
-            S = sp.hstack([sp.csr_matrix((self.ntFy, self.ntFx)),
-                           sp.identity(self.ntFy),
-                           sp.csr_matrix((self.ntFy, self.ntFz))])
+        # G2 = (self._deflationMatrix('Fy', large=True).T * S *
+        #       (self._deflationMatrix('F', large=True) *
+        #        self.cellGradStencil))
 
-        G2 = (self._deflationMatrix('Fy').T * S *
-              (self._deflationMatrix('F') *
-               self.cellGradStencil))
+        faceParent = dict()
+        theHang = self._hangingFy
+        for key in theHang.keys():
+            if not theHang[key][0][0] in faceParent.keys():
+                faceParent[theHang[key][0][0]] = [key]
+            else:
+                faceParent[theHang[key][0][0]] += [key]
+
+        I, J, V = [], [], []
+        PM = [-1, 1]#*mesh.dim  # plus / minus
+
+        for ii, ind in enumerate(self._sortedCells):
+
+            p = self._pointer(ind)
+        #     w = self._levelWidth(p[-1])
+
+            if self.dim == 2:
+                cells = self._getNextCell(self._index([p[0], p[1], p[2]]), direction=1)
+            elif self.dim == 3:
+                cells = self._getNextCell(self._index([p[0], p[1], p[2], p[3]]), direction=1)
+
+            if cells:
+                if isinstance(cells, int):
+                    cells = [cells]
+
+                for cell in cells:
+
+                    pN = self._pointer(cell)
+
+                    if pN[-1] < p[-1]:
+                        if self.dim == 2:
+                            hangs = faceParent[self._fy2i[self._index([pN[0], pN[1], pN[2]])]]
+                            count = int(np.abs((p[0] - pN[0]) % 2))
+
+                        elif self.dim == 3:
+                            hangs = faceParent[self._fy2i[self._index([pN[0],
+                                                                        pN[1], pN[2], pN[3]])]]
+                            count = int(np.abs((p[0] - pN[0]) % 2))
+                            count += int(2*np.abs((p[2] - pN[2]) % 2))
+                        face = hangs[count]
+                    else:
+                        if self.dim == 2:
+                            face = self._fy2i[self._index([pN[0], pN[1], pN[2]])]
+                        elif self.dim == 3:
+                            face = self._fy2i[self._index([pN[0], pN[1], pN[2], pN[3]])]
+
+                    I += [face]*2
+                    J += [self._cc2i[ind], self._cc2i[cell]]
+                    V += PM
+
+        G2 = sp.csr_matrix((V, (I, J)), shape=(self.ntFy, self.nC))
 
         return G2
 
     def _cellGradzStencil(self):
-
+        self.number()
         assert self.dim == 3, 'cellGradzStencil only possible for TreeMesh 3D'
 
-        S = sp.hstack([sp.csr_matrix((self.ntFz, self.ntFx)),
-                       sp.csr_matrix((self.ntFz, self.ntFy)),
-                       sp.identity(self.ntFz)])
+        # S = sp.hstack([sp.csr_matrix((self.ntFz, self.ntFx)),
+        #                sp.csr_matrix((self.ntFz, self.ntFy)),
+        #                sp.identity(self.ntFz)])
 
-        G3 = (self._deflationMatrix('Fz').T * S *
-              (self._deflationMatrix('F') *
-               self.cellGradStencil))
+        # G3 = (self._deflationMatrix('Fz', large=True).T * S *
+        #       (self._deflationMatrix('F', large=True) *
+        #        self.cellGradStencil))
+
+        faceParent = dict()
+        theHang = self._hangingFz
+        for key in theHang.keys():
+            if not theHang[key][0][0] in faceParent.keys():
+                faceParent[theHang[key][0][0]] = [key]
+            else:
+                faceParent[theHang[key][0][0]] += [key]
+
+        I, J, V = [], [], []
+        PM = [-1, 1]#*mesh.dim  # plus / minus
+
+        for ii, ind in enumerate(self._sortedCells):
+
+            p = self._pointer(ind)
+        #     w = self._levelWidth(p[-1])
+
+            cells = self._getNextCell(self._index([p[0], p[1], p[2], p[3]]), direction=2)
+
+            if cells:
+                if isinstance(cells, int):
+                    cells = [cells]
+
+                for cell in cells:
+
+                    pN = self._pointer(cell)
+
+                    if pN[-1] < p[-1]:
+                        hangs = faceParent[self._fz2i[self._index([pN[0],
+                                                                    pN[1], pN[2], pN[3]])]]
+                        count = int(np.abs((p[0] - pN[0]) % 2))
+                        count += int(2*np.abs((p[1] - pN[1]) % 2))
+                        face = hangs[count]
+                    else:
+                        face = self._fz2i[self._index([pN[0], pN[1], pN[2], pN[3]])]
+
+                    I += [face]*2
+                    J += [self._cc2i[ind], self._cc2i[cell]]
+                    V += PM
+
+        G3 = sp.csr_matrix((V, (I, J)), shape=(self.ntFz, self.nC))
 
         return G3
 
@@ -2004,6 +2188,169 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
             self._aveN2CC = Av*Re
         return self._aveN2CC
+
+    def aveCC2Fx(self):
+        if getattr(self, '_aveCC2Fx', None) is None:
+            self.number()
+
+            faceParent = dict()
+            theHang = self._hangingFx
+            for key in theHang.keys():
+                if not theHang[key][0][0] in faceParent.keys():
+                    faceParent[theHang[key][0][0]] = [key]
+                else:
+                    faceParent[theHang[key][0][0]] += [key]
+
+            I, J, V = [], [], []
+            PM = [0.5, 0.5]#*mesh.dim  # plus / minus
+
+            for ii, ind in enumerate(self._sortedCells):
+
+                p = self._pointer(ind)
+            #     w = self._levelWidth(p[-1])
+
+                if self.dim == 2:
+                    cells = self._getNextCell(self._index([p[0], p[1], p[2]]), direction=0)
+                elif self.dim == 3:
+                    cells = self._getNextCell(self._index([p[0], p[1], p[2], p[3]]), direction=0)
+
+                if cells:
+                    if isinstance(cells, int):
+                        cells = [cells]
+
+                    for cell in cells:
+
+                        pN = self._pointer(cell)
+
+                        if pN[-1] < p[-1]:
+                            if self.dim == 2:
+                                hangs = faceParent[self._fx2i[self._index([pN[0], pN[1], pN[2]])]]
+                                count = int(np.abs((p[1] - pN[1]) % 2))
+
+                            elif self.dim == 3:
+                                hangs = faceParent[self._fx2i[self._index([pN[0],
+                                                                            pN[1], pN[2], pN[3]])]]
+                                count = int(np.abs((p[1] - pN[1]) % 2))
+                                count += int(2*np.abs((p[2] - pN[2]) % 2))
+                            face = hangs[count]
+                        else:
+                            if self.dim == 2:
+                                face = self._fx2i[self._index([pN[0], pN[1], pN[2]])]
+                            elif self.dim == 3:
+                                face = self._fx2i[self._index([pN[0], pN[1], pN[2], pN[3]])]
+
+                        I += [face]*2
+                        J += [self._cc2i[ind], self._cc2i[cell]]
+                        V += PM
+
+            self._aveCC2Fx = sp.csr_matrix((V, (I, J)), shape=(self.ntFx, self.nC))
+        # self._aveCC2Fx = aveCC2Fx * utils.sdiag(1./aveCC2Fx.sum(0))
+
+        return self._aveCC2Fx
+
+    def aveCC2Fy(self):
+        if getattr(self, '_aveCC2Fy', None) is None:
+            self.number()
+
+            faceParent = dict()
+            theHang = self._hangingFy
+            for key in theHang.keys():
+                if not theHang[key][0][0] in faceParent.keys():
+                    faceParent[theHang[key][0][0]] = [key]
+                else:
+                    faceParent[theHang[key][0][0]] += [key]
+            I, J, V = [], [], []
+            PM = [0.5, 0.5]#*mesh.dim  # plus / minus
+
+            for ii, ind in enumerate(self._sortedCells):
+
+                p = self._pointer(ind)
+            #     w = self._levelWidth(p[-1])
+
+                if self.dim == 2:
+                    cells = self._getNextCell(self._index([p[0], p[1], p[2]]), direction=1)
+                elif self.dim == 3:
+                    cells = self._getNextCell(self._index([p[0], p[1], p[2], p[3]]), direction=1)
+
+                if cells:
+                    if isinstance(cells, int):
+                        cells = [cells]
+
+                    for cell in cells:
+
+                        pN = self._pointer(cell)
+
+                        if pN[-1] < p[-1]:
+                            if self.dim == 2:
+                                hangs = faceParent[self._fy2i[self._index([pN[0], pN[1], pN[2]])]]
+                                count = int(np.abs((p[0] - pN[0]) % 2))
+
+                            elif self.dim == 3:
+                                hangs = faceParent[self._fy2i[self._index([pN[0],
+                                                                            pN[1], pN[2], pN[3]])]]
+                                count = int(np.abs((p[0] - pN[0]) % 2))
+                                count += int(2*np.abs((p[3] - pN[3]) % 2))
+                            face = hangs[count]
+                        else:
+                            if self.dim == 2:
+                                face = self._fy2i[self._index([pN[0], pN[1], pN[2]])]
+                            elif self.dim == 3:
+                                face = self._fy2i[self._index([pN[0], pN[1], pN[2], pN[3]])]
+
+                        I += [face]*2
+                        J += [self._cc2i[ind], self._cc2i[cell]]
+                        V += PM
+
+            self._aveCC2Fy = sp.csr_matrix((V, (I, J)), shape=(self.ntFy, self.nC))
+        # self._aveCC2Fy = aveCC2Fy * utils.sdiag(1./aveCC2Fy.sum(0))
+
+        return self._aveCC2Fy
+
+    def aveCC2Fz(self):
+        if getattr(self, '_aveCC2Fz', None) is None:
+            faceParent = dict()
+            theHang = self._hangingFz
+            for key in theHang.keys():
+                if not theHang[key][0][0] in faceParent.keys():
+                    faceParent[theHang[key][0][0]] = [key]
+                else:
+                    faceParent[theHang[key][0][0]] += [key]
+
+            I, J, V = [], [], []
+            PM = [0.5, 0.5]#*mesh.dim  # plus / minus
+
+            for ii, ind in enumerate(self._sortedCells):
+
+                p = self._pointer(ind)
+            #     w = self._levelWidth(p[-1])
+
+                cells = self._getNextCell(self._index([p[0], p[1], p[2], p[3]]), direction=2)
+
+                if cells:
+                    if isinstance(cells, int):
+                        cells = [cells]
+
+                    for cell in cells:
+
+                        pN = self._pointer(cell)
+
+                        if pN[-1] < p[-1]:
+                            hangs = faceParent[self._fz2i[self._index([pN[0],
+                                                                        pN[1], pN[2], pN[3]])]]
+                            count = int(np.abs((p[0] - pN[0]) % 2))
+                            count += int(2*np.abs((p[1] - pN[1]) % 2))
+                            face = hangs[count]
+                        else:
+                            face = self._fz2i[self._index([pN[0], pN[1], pN[2], pN[3]])]
+
+                        I += [face]*2
+                        J += [self._cc2i[ind], self._cc2i[cell]]
+                        V += PM
+
+            self._aveCC2Fz = sp.csr_matrix((V, (I, J)), shape=(self.ntFz, self.nC))
+        # self._aveCC2Fz = aveCC2Fz * utils.sdiag(1./aveCC2Fz.sum(0))
+
+        return self._aveCC2Fz
 
     def _getFaceP(self, xFace, yFace, zFace):
         ind1, ind2, ind3 = [], [], []
