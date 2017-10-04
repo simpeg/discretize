@@ -1,6 +1,7 @@
 from __future__ import print_function
 import numpy as np
 import scipy.sparse as sp
+import properties
 
 from discretize import utils
 
@@ -18,9 +19,30 @@ class BaseTensorMesh(BaseMesh):
 
     _unitDimensions = [1, 1, 1]
 
-    def __init__(self, h_in, x0_in=None):
+    # properties
+    h = properties.List(
+        "h is a list containing the cell widths of the tensor mesh in each "
+        "dimension.",
+        properties.Array(
+            "widths of the tensor mesh in a single dimension",
+            dtype=float,
+            shape=("*",),
+        ),
+        max_length=3
+    )
+
+    def __init__(self, h=None, x0=None, **kwargs):
+
+        h_in = h
+        x0_in = x0
+
+        # Sanity Checks
         assert type(h_in) in [list, tuple], 'h_in must be a list'
-        assert len(h_in) in [1, 2, 3], 'h_in must be of dimension 1, 2, or 3'
+        assert len(h_in) in [1, 2, 3], (
+            'h_in must be of dimension 1, 2, or 3'
+        )
+
+        # build h
         h = list(range(len(h_in)))
         for i, h_i in enumerate(h_in):
             if utils.isScalar(h_i) and type(h_i) is not np.ndarray:
@@ -36,7 +58,9 @@ class BaseTensorMesh(BaseMesh):
             )
             h[i] = h_i[:]  # make a copy.
 
+        # Origin of the mesh
         x0 = np.zeros(len(h))
+
         if x0_in is not None:
             assert len(h) == len(x0_in), "Dimension mismatch. x0 != len(h)"
             for i in range(len(h)):
@@ -55,38 +79,35 @@ class BaseTensorMesh(BaseMesh):
                         "'C' to center, or 'N' to be negative.".format(i)
                     )
 
-        if isinstance(self, BaseRectangularMesh):
-            BaseRectangularMesh.__init__(
-                self, np.array([x.size for x in h]), x0
+        if 'n' in kwargs.keys():
+            n = kwargs.pop('n')
+            assert (n == np.array([x.size for x in h])).all(), (
+                "Dimension mismatch. The provided n doesn't "
             )
         else:
-            BaseMesh.__init__(self, np.array([x.size for x in h]), x0)
+            n = np.array([x.size for x in h])
+
+        super(BaseTensorMesh, self).__init__(
+            n, x0=x0
+        )
 
         # Ensure h contains 1D vectors
-        self._h = [utils.mkvc(x.astype(float)) for x in h]
-
-    @property
-    def h(self):
-        """
-        h is a list containing the cell widths of the tensor mesh in each
-        dimension.
-        """
-        return self._h
+        self.h = [utils.mkvc(x.astype(float)) for x in h]
 
     @property
     def hx(self):
         "Width of cells in the x direction"
-        return self._h[0]
+        return self.h[0]
 
     @property
     def hy(self):
         "Width of cells in the y direction"
-        return None if self.dim < 2 else self._h[1]
+        return None if self.dim < 2 else self.h[1]
 
     @property
     def hz(self):
         "Width of cells in the z direction"
-        return None if self.dim < 3 else self._h[2]
+        return None if self.dim < 3 else self.h[2]
 
     @property
     def vectorNx(self):
@@ -96,12 +117,16 @@ class BaseTensorMesh(BaseMesh):
     @property
     def vectorNy(self):
         """Nodal grid vector (1D) in the y direction."""
-        return None if self.dim < 2 else np.r_[0., self.hy.cumsum()] + self.x0[1]
+        return (
+            None if self.dim < 2 else np.r_[0., self.hy.cumsum()] + self.x0[1]
+        )
 
     @property
     def vectorNz(self):
         """Nodal grid vector (1D) in the z direction."""
-        return None if self.dim < 3 else np.r_[0., self.hz.cumsum()] + self.x0[2]
+        return (
+            None if self.dim < 3 else np.r_[0., self.hz.cumsum()] + self.x0[2]
+        )
 
     @property
     def vectorCCx(self):
@@ -111,12 +136,18 @@ class BaseTensorMesh(BaseMesh):
     @property
     def vectorCCy(self):
         """Cell-centered grid vector (1D) in the y direction."""
-        return None if self.dim < 2 else np.r_[0, self.hy[:-1].cumsum()] + self.hy*0.5 + self.x0[1]
+        return (
+            None if self.dim < 2 else
+            np.r_[0, self.hy[:-1].cumsum()] + self.hy*0.5 + self.x0[1]
+        )
 
     @property
     def vectorCCz(self):
         """Cell-centered grid vector (1D) in the z direction."""
-        return None if self.dim < 3 else np.r_[0, self.hz[:-1].cumsum()] + self.hz*0.5 + self.x0[2]
+        return (
+            None if self.dim < 3 else
+            np.r_[0, self.hz[:-1].cumsum()] + self.hz*0.5 + self.x0[2]
+        )
 
     @property
     def gridCC(self):
@@ -131,37 +162,43 @@ class BaseTensorMesh(BaseMesh):
     @property
     def gridFx(self):
         """Face staggered grid in the x direction."""
-        if self.nFx == 0: return
+        if self.nFx == 0:
+            return
         return self._getTensorGrid('Fx')
 
     @property
     def gridFy(self):
         """Face staggered grid in the y direction."""
-        if self.nFy == 0 or self.dim < 2: return
+        if self.nFy == 0 or self.dim < 2:
+            return
         return self._getTensorGrid('Fy')
 
     @property
     def gridFz(self):
         """Face staggered grid in the z direction."""
-        if self.nFz == 0 or self.dim < 3: return
+        if self.nFz == 0 or self.dim < 3:
+            return
         return self._getTensorGrid('Fz')
 
     @property
     def gridEx(self):
         """Edge staggered grid in the x direction."""
-        if self.nEx == 0: return
+        if self.nEx == 0:
+            return
         return self._getTensorGrid('Ex')
 
     @property
     def gridEy(self):
         """Edge staggered grid in the y direction."""
-        if self.nEy == 0 or self.dim < 2: return
+        if self.nEy == 0 or self.dim < 2:
+            return
         return self._getTensorGrid('Ey')
 
     @property
     def gridEz(self):
         """Edge staggered grid in the z direction."""
-        if self.nEz == 0 or self.dim < 3: return
+        if self.nEz == 0 or self.dim < 3:
+            return
         return self._getTensorGrid('Ez')
 
     def _getTensorGrid(self, key):
@@ -189,22 +226,22 @@ class BaseTensorMesh(BaseMesh):
 
         """
 
-        if   key == 'Fx':
-            ten = [self.vectorNx , self.vectorCCy, self.vectorCCz]
+        if key == 'Fx':
+            ten = [self.vectorNx, self.vectorCCy, self.vectorCCz]
         elif key == 'Fy':
-            ten = [self.vectorCCx, self.vectorNy , self.vectorCCz]
+            ten = [self.vectorCCx, self.vectorNy, self.vectorCCz]
         elif key == 'Fz':
-            ten = [self.vectorCCx, self.vectorCCy, self.vectorNz ]
+            ten = [self.vectorCCx, self.vectorCCy, self.vectorNz]
         elif key == 'Ex':
-            ten = [self.vectorCCx, self.vectorNy , self.vectorNz ]
+            ten = [self.vectorCCx, self.vectorNy, self.vectorNz]
         elif key == 'Ey':
-            ten = [self.vectorNx , self.vectorCCy, self.vectorNz ]
+            ten = [self.vectorNx, self.vectorCCy, self.vectorNz]
         elif key == 'Ez':
-            ten = [self.vectorNx , self.vectorNy , self.vectorCCz]
+            ten = [self.vectorNx, self.vectorNy, self.vectorCCz]
         elif key == 'CC':
             ten = [self.vectorCCx, self.vectorCCy, self.vectorCCz]
         elif key == 'N':
-            ten = [self.vectorNx , self.vectorNy , self.vectorNz ]
+            ten = [self.vectorNx, self.vectorNy, self.vectorNz]
 
         return [t for t in ten if t is not None]
 
@@ -223,14 +260,19 @@ class BaseTensorMesh(BaseMesh):
         tensors = self.getTensor(locType)
 
         if locType == 'N' and self._meshType == 'CYL':
-            #NOTE: for a CYL mesh we add a node to check if we are inside in the radial direction!
+            # NOTE: for a CYL mesh we add a node to check if we are inside in
+            # the radial direction!
             tensors[0] = np.r_[0., tensors[0]]
             tensors[1] = np.r_[tensors[1], 2.0*np.pi]
 
         inside = np.ones(pts.shape[0], dtype=bool)
         for i, tensor in enumerate(tensors):
             TOL = np.diff(tensor).min() * 1.0e-10
-            inside = inside & (pts[:, i] >= tensor.min()-TOL) & (pts[:, i] <= tensor.max()+TOL)
+            inside = (
+                inside &
+                (pts[:, i] >= tensor.min()-TOL) &
+                (pts[:, i] <= tensor.max()+TOL)
+            )
         return inside
 
     def _getInterpolationMat(self, loc, locType='CC', zerosOutside=False):
@@ -262,7 +304,9 @@ class BaseTensorMesh(BaseMesh):
             assert np.all(self.isInside(loc)), "Points outside of mesh"
         else:
             indZeros = np.logical_not(self.isInside(loc))
-            loc[indZeros, :] = np.array([v.mean() for v in self.getTensor('CC')])
+            loc[indZeros, :] = np.array([
+                v.mean() for v in self.getTensor('CC')
+            ])
 
         if locType in ['Fx', 'Fy', 'Fz', 'Ex', 'Ey', 'Ez']:
             ind = {'x': 0, 'y': 1, 'z': 2}[locType[1]]
@@ -289,7 +333,8 @@ class BaseTensorMesh(BaseMesh):
 
         else:
             raise NotImplementedError(
-                'getInterpolationMat: locType=='+locType+' and mesh.dim=='+str(self.dim)
+                'getInterpolationMat: locType==' + locType +
+                ' and mesh.dim==' + str(self.dim)
             )
 
         if zerosOutside:
@@ -321,8 +366,9 @@ class BaseTensorMesh(BaseMesh):
         """
         return self._getInterpolationMat(loc, locType, zerosOutside)
 
-
-    def _fastInnerProduct(self, projType, prop=None, invProp=False, invMat=False):
+    def _fastInnerProduct(
+        self, projType, prop=None, invProp=False, invMat=False
+    ):
         """
             Fast version of getFaceInnerProduct.
             This does not handle the case of a full tensor prop.
@@ -335,8 +381,9 @@ class BaseTensorMesh(BaseMesh):
             :rtype: scipy.sparse.csr_matrix
             :return: M, the inner product matrix (nF, nF)
         """
-        assert projType in ['F', 'E'], ("projType must be 'F' for faces or 'E'"
-                                        " for edges")
+        assert projType in ['F', 'E'], (
+            "projType must be 'F' for faces or 'E' for edges"
+        )
 
         if prop is None:
             prop = np.ones(self.nC)
@@ -368,7 +415,7 @@ class BaseTensorMesh(BaseMesh):
             # for faces, x, z matters, for edges, y (which is theta) matters
             if self._meshType == 'CYL':
                 if projType == 'E':
-                    prop = prop[:, 1] # this is the action of a projection mat
+                    prop = prop[:, 1]  # this is the action of a projection mat
                 elif projType == 'F':
                     prop = prop[:, [0, 2]]
 
@@ -411,23 +458,26 @@ class BaseTensorMesh(BaseMesh):
         else:
             n_elements = self.dim
 
-
         if tensorType == 0:  # isotropic, constant
             Av = getattr(self, 'ave'+projType+'2CC')
             V = utils.sdiag(self.vol)
-            ones = sp.csr_matrix((np.ones(self.nC), (range(self.nC),
-                                                     np.zeros(self.nC))),
-                                 shape=(self.nC, 1))
+            ones = sp.csr_matrix(
+                (np.ones(self.nC), (range(self.nC), np.zeros(self.nC))),
+                shape=(self.nC, 1)
+            )
             if not invMat and not invProp:
                 dMdprop = n_elements * Av.T * V * ones
             elif invMat and invProp:
-                dMdprop =  n_elements * (utils.sdiag(MI.diagonal()**2) * Av.T *
-                                         V * ones * utils.sdiag(1./prop**2))
+                dMdprop =  n_elements * (
+                    utils.sdiag(MI.diagonal()**2) * Av.T * V * ones *
+                    utils.sdiag(1./prop**2)
+                )
             elif invProp:
                 dMdprop = n_elements * Av.T * V * utils.sdiag(- 1./prop**2)
             elif invMat:
-                dMdprop = n_elements * (utils.sdiag(- MI.diagonal()**2) * Av.T
-                                        * V)
+                dMdprop = n_elements * (
+                    utils.sdiag(- MI.diagonal()**2) * Av.T * V
+                )
 
         elif tensorType == 1:  # isotropic, variable in space
             Av = getattr(self, 'ave'+projType+'2CC')
@@ -435,13 +485,16 @@ class BaseTensorMesh(BaseMesh):
             if not invMat and not invProp:
                 dMdprop = n_elements * Av.T * V
             elif invMat and invProp:
-                dMdprop =  n_elements * (utils.sdiag(MI.diagonal()**2) * Av.T *
-                                         V * utils.sdiag(1./prop**2))
+                dMdprop =  n_elements * (
+                    utils.sdiag(MI.diagonal()**2) * Av.T * V *
+                    utils.sdiag(1./prop**2)
+                )
             elif invProp:
                 dMdprop = n_elements * Av.T * V * utils.sdiag(-1./prop**2)
             elif invMat:
-                dMdprop = n_elements * (utils.sdiag(- MI.diagonal()**2) * Av.T
-                                        * V)
+                dMdprop = n_elements * (
+                    utils.sdiag(- MI.diagonal()**2) * Av.T * V
+                )
 
         elif tensorType == 2: # anisotropic
             Av = getattr(self, 'ave'+projType+'2CCV')
@@ -484,8 +537,10 @@ class BaseTensorMesh(BaseMesh):
             return None
 
 
-class TensorMesh(BaseTensorMesh, BaseRectangularMesh, TensorView, DiffOperators,
-      InnerProducts, TensorMeshIO):
+class TensorMesh(
+    BaseTensorMesh, BaseRectangularMesh, TensorView, DiffOperators,
+    InnerProducts, TensorMeshIO
+):
     """
     TensorMesh is a mesh class that deals with tensor product meshes.
 
@@ -521,8 +576,8 @@ class TensorMesh(BaseTensorMesh, BaseRectangularMesh, TensorView, DiffOperators,
 
     _meshType = 'TENSOR'
 
-    def __init__(self, h_in, x0=None):
-        BaseTensorMesh.__init__(self, h_in, x0)
+    def __init__(self, h=None, x0=None, **kwargs):
+        BaseTensorMesh.__init__(self, h=h, x0=x0, **kwargs)
 
     def __str__(self):
         outStr = '  ---- {0:d}-D TensorMesh ----  '.format(self.dim)
@@ -575,7 +630,6 @@ class TensorMesh(BaseTensorMesh, BaseRectangularMesh, TensorView, DiffOperators,
 
         return outStr
 
-
     # --------------- Geometries ---------------------
     @property
     def vol(self):
@@ -590,7 +644,9 @@ class TensorMesh(BaseTensorMesh, BaseRectangularMesh, TensorView, DiffOperators,
                 self._vol = utils.mkvc(np.outer(vh[0], vh[1]))
             elif self.dim == 3:
                 # Cell sizes in each direction
-                self._vol = utils.mkvc(np.outer(utils.mkvc(np.outer(vh[0], vh[1])), vh[2]))
+                self._vol = utils.mkvc(
+                    np.outer(utils.mkvc(np.outer(vh[0], vh[1])), vh[2])
+                )
         return self._vol
 
     @property
@@ -609,10 +665,18 @@ class TensorMesh(BaseTensorMesh, BaseRectangularMesh, TensorView, DiffOperators,
                 area2 = np.outer(vh[0], np.ones(n[1]+1))
                 self._area = np.r_[utils.mkvc(area1), utils.mkvc(area2)]
             elif(self.dim == 3):
-                area1 = np.outer(np.ones(n[0]+1), utils.mkvc(np.outer(vh[1], vh[2])))
-                area2 = np.outer(vh[0], utils.mkvc(np.outer(np.ones(n[1]+1), vh[2])))
-                area3 = np.outer(vh[0], utils.mkvc(np.outer(vh[1], np.ones(n[2]+1))))
-                self._area = np.r_[utils.mkvc(area1), utils.mkvc(area2), utils.mkvc(area3)]
+                area1 = np.outer(
+                    np.ones(n[0]+1), utils.mkvc(np.outer(vh[1], vh[2]))
+                )
+                area2 = np.outer(
+                    vh[0], utils.mkvc(np.outer(np.ones(n[1]+1), vh[2]))
+                )
+                area3 = np.outer(
+                    vh[0], utils.mkvc(np.outer(vh[1], np.ones(n[2]+1)))
+                )
+                self._area = np.r_[
+                    utils.mkvc(area1), utils.mkvc(area2), utils.mkvc(area3)
+                ]
         return self._area
 
     @property
@@ -631,10 +695,21 @@ class TensorMesh(BaseTensorMesh, BaseRectangularMesh, TensorView, DiffOperators,
                 l2 = np.outer(np.ones(n[0]+1), vh[1])
                 self._edge = np.r_[utils.mkvc(l1), utils.mkvc(l2)]
             elif(self.dim == 3):
-                l1 = np.outer(vh[0], utils.mkvc(np.outer(np.ones(n[1]+1), np.ones(n[2]+1))))
-                l2 = np.outer(np.ones(n[0]+1), utils.mkvc(np.outer(vh[1], np.ones(n[2]+1))))
-                l3 = np.outer(np.ones(n[0]+1), utils.mkvc(np.outer(np.ones(n[1]+1), vh[2])))
-                self._edge = np.r_[utils.mkvc(l1), utils.mkvc(l2), utils.mkvc(l3)]
+                l1 = np.outer(
+                    vh[0],
+                    utils.mkvc(np.outer(np.ones(n[1]+1), np.ones(n[2]+1)))
+                )
+                l2 = np.outer(
+                    np.ones(n[0]+1),
+                    utils.mkvc(np.outer(vh[1], np.ones(n[2]+1)))
+                )
+                l3 = np.outer(
+                    np.ones(n[0]+1),
+                    utils.mkvc(np.outer(np.ones(n[1]+1), vh[2]))
+                )
+                self._edge = np.r_[
+                    utils.mkvc(l1), utils.mkvc(l2), utils.mkvc(l3)
+                ]
         return self._edge
 
     @property
@@ -642,23 +717,23 @@ class TensorMesh(BaseTensorMesh, BaseRectangularMesh, TensorView, DiffOperators,
         """
             Find indices of boundary faces in each direction
         """
-        if self.dim==1:
-            indxd = (self.gridFx==min(self.gridFx))
-            indxu = (self.gridFx==max(self.gridFx))
+        if self.dim == 1:
+            indxd = (self.gridFx == min(self.gridFx))
+            indxu = (self.gridFx == max(self.gridFx))
             return indxd, indxu
-        elif self.dim==2:
-            indxd = (self.gridFx[:, 0]==min(self.gridFx[:, 0]))
-            indxu = (self.gridFx[:, 0]==max(self.gridFx[:, 0]))
-            indyd = (self.gridFy[:, 1]==min(self.gridFy[:, 1]))
-            indyu = (self.gridFy[:, 1]==max(self.gridFy[:, 1]))
+        elif self.dim == 2:
+            indxd = (self.gridFx[:, 0] == min(self.gridFx[:, 0]))
+            indxu = (self.gridFx[:, 0] == max(self.gridFx[:, 0]))
+            indyd = (self.gridFy[:, 1] == min(self.gridFy[:, 1]))
+            indyu = (self.gridFy[:, 1] == max(self.gridFy[:, 1]))
             return indxd, indxu, indyd, indyu
-        elif self.dim==3:
-            indxd = (self.gridFx[:, 0]==min(self.gridFx[:, 0]))
-            indxu = (self.gridFx[:, 0]==max(self.gridFx[:, 0]))
-            indyd = (self.gridFy[:, 1]==min(self.gridFy[:, 1]))
-            indyu = (self.gridFy[:, 1]==max(self.gridFy[:, 1]))
-            indzd = (self.gridFz[:, 2]==min(self.gridFz[:, 2]))
-            indzu = (self.gridFz[:, 2]==max(self.gridFz[:, 2]))
+        elif self.dim == 3:
+            indxd = (self.gridFx[:, 0] == min(self.gridFx[:, 0]))
+            indxu = (self.gridFx[:, 0] == max(self.gridFx[:, 0]))
+            indyd = (self.gridFy[:, 1] == min(self.gridFy[:, 1]))
+            indyu = (self.gridFy[:, 1] == max(self.gridFy[:, 1]))
+            indzd = (self.gridFz[:, 2] == min(self.gridFz[:, 2]))
+            indzu = (self.gridFz[:, 2] == max(self.gridFz[:, 2]))
             return indxd, indxu, indyd, indyu, indzd, indzu
 
     @property
@@ -666,21 +741,21 @@ class TensorMesh(BaseTensorMesh, BaseRectangularMesh, TensorView, DiffOperators,
         """
             Find indices of boundary faces in each direction
         """
-        if self.dim==1:
-            indxd = (self.gridCC==min(self.gridCC))
-            indxu = (self.gridCC==max(self.gridCC))
+        if self.dim == 1:
+            indxd = (self.gridCC == min(self.gridCC))
+            indxu = (self.gridCC == max(self.gridCC))
             return indxd, indxu
-        elif self.dim==2:
-            indxd = (self.gridCC[:, 0]==min(self.gridCC[:, 0]))
-            indxu = (self.gridCC[:, 0]==max(self.gridCC[:, 0]))
-            indyd = (self.gridCC[:, 1]==min(self.gridCC[:, 1]))
-            indyu = (self.gridCC[:, 1]==max(self.gridCC[:, 1]))
+        elif self.dim == 2:
+            indxd = (self.gridCC[:, 0] == min(self.gridCC[:, 0]))
+            indxu = (self.gridCC[:, 0] == max(self.gridCC[:, 0]))
+            indyd = (self.gridCC[:, 1] == min(self.gridCC[:, 1]))
+            indyu = (self.gridCC[:, 1] == max(self.gridCC[:, 1]))
             return indxd, indxu, indyd, indyu
-        elif self.dim==3:
-            indxd = (self.gridCC[:, 0]==min(self.gridCC[:, 0]))
-            indxu = (self.gridCC[:, 0]==max(self.gridCC[:, 0]))
-            indyd = (self.gridCC[:, 1]==min(self.gridCC[:, 1]))
-            indyu = (self.gridCC[:, 1]==max(self.gridCC[:, 1]))
-            indzd = (self.gridCC[:, 2]==min(self.gridCC[:, 2]))
-            indzu = (self.gridCC[:, 2]==max(self.gridCC[:, 2]))
+        elif self.dim == 3:
+            indxd = (self.gridCC[:, 0] == min(self.gridCC[:, 0]))
+            indxu = (self.gridCC[:, 0] == max(self.gridCC[:, 0]))
+            indyd = (self.gridCC[:, 1] == min(self.gridCC[:, 1]))
+            indyu = (self.gridCC[:, 1] == max(self.gridCC[:, 1]))
+            indzd = (self.gridCC[:, 2] == min(self.gridCC[:, 2]))
+            indzu = (self.gridCC[:, 2] == max(self.gridCC[:, 2]))
             return indxd, indxu, indyd, indyu, indzd, indzu
