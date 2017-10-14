@@ -13,7 +13,7 @@ class TestCyl2DMesh(unittest.TestCase):
     def setUp(self):
         hx = np.r_[1, 1, 0.5]
         hz = np.r_[2, 1]
-        self.mesh = discretize.CylMesh([hx, 1, hz])
+        self.mesh = discretize.CylMesh([hx, 1, hz], np.r_[0., 0., 0.])
 
     def test_dim(self):
         self.assertTrue(self.mesh.dim == 3)
@@ -205,7 +205,11 @@ class TestCyl2DMesh(unittest.TestCase):
     def test_getInterpMatCartMesh_Faces2Edges(self):
 
         Mr = discretize.TensorMesh([100, 100, 2], x0='CC0')
-        Mc = discretize.CylMesh([np.ones(10)/5, 1, 10], x0='0C0', cartesianOrigin=[-0.2, -0.2, 0])
+        Mc = discretize.CylMesh(
+            [np.ones(10)/5, 1, 10], x0='0C0', cartesianOrigin=[-0.2, -0.2, 0]
+        )
+
+        self.assertTrue((Mc.cartesianOrigin == [-0.2, -0.2, 0]).all())
 
         Pf2e = Mc.getInterpolationMatCartMesh(Mr, 'F', locTypeTo='E')
         mf = np.ones(Mc.nF)

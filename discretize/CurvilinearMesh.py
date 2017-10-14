@@ -1,5 +1,7 @@
 from __future__ import print_function
 import numpy as np
+import properties
+from properties.math import TYPE_MAPPINGS
 
 from discretize import utils
 from discretize.BaseMesh import BaseRectangularMesh
@@ -25,7 +27,9 @@ def normalize3D(x):
     return x/np.kron(np.ones((1, 3)), utils.mkvc(length3D(x), 2))
 
 
-class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts, CurviView):
+class CurvilinearMesh(
+    BaseRectangularMesh, DiffOperators, InnerProducts, CurviView
+):
     """CurvilinearMesh is a mesh class that deals with curvilinear meshes.
 
     Example of a curvilinear mesh:
@@ -41,27 +45,50 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts, CurviVi
 
     _meshType = 'Curv'
 
-    def __init__(self, nodes):
-        assert type(nodes) == list, ("'nodes' variable must be a list of "
-                                     "np.ndarray")
-        assert len(nodes) > 1, "len(node) must be greater than 1"
+    nodes = properties.List(
+        "List of arrays describing the node locations",
+        prop=properties.Array(
+            "node locations in an n-dimensional array",
+            shape={('*', '*'), ('*', '*', '*')}
+        ),
+        min_length=2,
+        max_length=3
+    )
 
-        for i, nodes_i in enumerate(nodes):
-            assert isinstance(nodes_i, np.ndarray), ("nodes[{0:d}] is not a"
-                                                     "numpy array.".format(i))
-            assert nodes_i.shape == nodes[0].shape, ("nodes[{0:d}] is not the "
-                                                     "same shape as nodes[0]"
-                                                     .format(i))
+    def __init__(self, nodes=None, **kwargs):
 
-        assert len(nodes[0].shape) == len(nodes), "Dimension mismatch"
-        assert len(nodes[0].shape) > 1, "Not worth using Curv for a 1D mesh."
+        self.nodes = nodes
 
-        BaseRectangularMesh.__init__(self, np.array(nodes[0].shape)-1, None)
+        if '_n' in kwargs.keys():
+            n = kwargs.pop('_n')
+            assert (n == np.array(self.nodes[0].shape)-1).all(), (
+                "Unexpected n-values. {} was provided, {} was expected".format(
+                    n, np.array(self.nodes[0].shape)-1
+                )
+            )
+        else:
+            n = np.array(self.nodes[0].shape)-1
+
+        BaseRectangularMesh.__init__(self, n, **kwargs)
 
         # Save nodes to private variable _gridN as vectors
-        self._gridN = np.ones((nodes[0].size, self.dim))
-        for i, node_i in enumerate(nodes):
+        self._gridN = np.ones((self.nodes[0].size, self.dim))
+        for i, node_i in enumerate(self.nodes):
             self._gridN[:, i] = utils.mkvc(node_i.astype(float))
+
+    @properties.validator('nodes')
+    def check_nodes(self, change):
+        assert len(change['value']) > 1, "len(node) must be greater than 1"
+
+        for i, change['value'][i] in enumerate(change['value']):
+            assert change['value'][i].shape == change['value'][0].shape, (
+                "change['value'][{0:d}] is not the same shape as "
+                "change['value'][0]".format(i)
+            )
+
+        assert len(change['value'][0].shape) == len(change['value']), (
+            "Dimension mismatch"
+        )
 
     @property
     def gridCC(self):
@@ -69,9 +96,9 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts, CurviVi
         Cell-centered grid
         """
         if getattr(self, '_gridCC', None) is None:
-            self._gridCC = np.concatenate([self.aveN2CC*self.gridN[:, i]
-                                           for i in range(self.dim)]).reshape(
-                                           (-1, self.dim), order='F')
+            self._gridCC = np.concatenate(
+                [self.aveN2CC*self.gridN[:, i] for i in range(self.dim)]
+            ).reshape((-1, self.dim), order='F')
         return self._gridCC
 
     @property

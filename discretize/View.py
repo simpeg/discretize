@@ -1,9 +1,7 @@
 from __future__ import print_function
 import numpy as np
-from discretize.utils import mkvc, ndgrid
+from discretize.utils import mkvc
 from six import integer_types
-import warnings
-
 try:
     import matplotlib.pyplot as plt
     import matplotlib
@@ -294,7 +292,7 @@ class TensorView(object):
         if 'Z' not in normal:
             h2d.append(self.hz)
             x2d.append(self.x0[2])
-        tM = self.__class__(h2d, x2d)  #: Temp Mesh
+        tM = self.__class__(h2d, x0=x2d)  #: Temp Mesh
         v2d = doSlice(v)
 
         if ax is None:

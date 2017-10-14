@@ -1,41 +1,102 @@
 import numpy as np
-from discretize import utils
+import properties
+import os
+import json
+from .utils.matutils import mkvc
 
 
-class BaseMesh(object):
-    """BaseMesh does all the counting you don't want to do.
+class BaseMesh(properties.HasProperties):
+    """
+    BaseMesh does all the counting you don't want to do.
     BaseMesh should be inherited by meshes with a regular structure.
-
-    :param numpy.array n: (or list) number of cells in each direction (dim, )
-    :param numpy.array x0: (or list) Origin of the mesh (dim, )
-
     """
 
+    _REGISTRY = {}
+
+    # Properties
+    _n = properties.Array(
+        "number of cells in each direction (dim, )",
+        dtype=int,
+        required=True,
+        shape=('*',)
+    )
+
+    x0 = properties.Array(
+        "origin of the mesh (dim, )",
+        dtype=float,
+        shape=('*',),
+        required=True
+    )
+
+    # Instantiate the class
     def __init__(self, n, x0=None):
+        self._n = n  # number of dimensions
 
-        # Check inputs
         if x0 is None:
-            x0 = np.zeros(len(n))
+            self.x0 = np.zeros(len(self._n))
+        else:
+            self.x0 = x0
 
-        if not len(n) == len(x0):
-            raise Exception("Dimension mismatch. x0 != len(n)")
+    # Validators
+    @properties.validator('_n')
+    def check_n_shape(self, change):
+        assert (
+            not isinstance(change['value'], properties.utils.Sentinel) and
+            change['value'] is not None
+        ), "Cannot delete n. Instead, create a new mesh"
 
-        if len(n) > 3:
-            raise Exception("Dimensions higher than 3 are not supported.")
+        change['value'] = np.array(change['value'], dtype=int).ravel()
+        if len(change['value']) > 3:
+            raise Exception(
+                "Dimensions of {}, which is higher than 3 are not "
+                "supported".format(change['value'])
+            )
 
-        # Ensure x0 & n are 1D vectors
-        self._n = np.array(n, dtype=int).ravel()
-        self._x0 = np.array(x0, dtype=float).ravel()
-        self._dim = len(self._x0)
+        if change['previous'] != properties.undefined:
+            # can't change dimension of the mesh
+            assert len(change['previous']) == len(change['value']), (
+                "Cannot change dimensionality of the mesh. Expected {} "
+                "dimensions, got {} dimensions".format(
+                    len(change['previous']), len(change['value'])
+                )
+            )
 
-    @property
-    def x0(self):
-        """Origin of the mesh
+            # check that if h has been set, sizes still agree
+            if getattr(self, 'h', None) is not None and len(self.h) > 0:
+                for i in range(len(change['value'])):
+                    assert len(self.h[i]) == change['value'][i], (
+                        "Mismatched shape of n. Expected {}, len(h[{}]), got "
+                        "{}".format(
+                            len(self.h[i]), i, change['value'][i]
+                        )
+                    )
 
-        :rtype: numpy.array
-        :return: x0, (dim, )
-        """
-        return self._x0
+            # check that if nodes have been set for curvi mesh, sizes still
+            # agree
+            if (
+                getattr(self, 'nodes', None) is not None and
+                len(self.nodes) > 0
+            ):
+                for i in range(len(change['value'])):
+                    assert self.nodes[0].shape[i]-1 == change['value'][i], (
+                        "Mismatched shape of n. Expected {}, len(nodes[{}]), "
+                        "got {}".format(
+                            self.nodes[0].shape[i]-1, i, change['value'][i]
+                        )
+                    )
+
+    @properties.validator('x0')
+    def check_x0(self, change):
+        assert (
+            not isinstance(change['value'], properties.utils.Sentinel) and
+            change['value'] is not None
+        ), "n must be set prior to setting x0"
+
+        if len(self._n) != len(change['value']):
+            raise Exception(
+                "Dimension mismatch. x0 has length {} != len(n) which is "
+                "{}".format(len(x0), len(n))
+            )
 
     @property
     def dim(self):
@@ -44,7 +105,7 @@ class BaseMesh(object):
         :rtype: int
         :return: dim
         """
-        return self._dim
+        return len(self._n)
 
     @property
     def nC(self):
@@ -290,11 +351,33 @@ class BaseMesh(object):
         ), 'eV must be an ndarray of shape (nE x dim)'
         return np.sum(eV*self.tangents, 1)
 
+    def save(self, filename='mesh.json', verbose=False):
+        """
+        Save the mesh to json
+        :param str file: filename for saving the casing properties
+        :param str directory: working directory for saving the file
+        """
+
+        f = os.path.abspath(filename)  # make sure we are working with abs path
+        with open(f, 'w') as outfile:
+            json.dump(self.serialize(), outfile)
+
+        if verbose is True:
+            print('Saved {}'.format(f))
+
+        return f
+
+    def copy(self):
+        """
+        Make a copy of the current mesh
+        """
+        return properties.copy(self)
+
 
 class BaseRectangularMesh(BaseMesh):
     """BaseRectangularMesh"""
     def __init__(self, n, x0=None):
-        BaseMesh.__init__(self, n, x0)
+        BaseMesh.__init__(self, n, x0=x0)
 
     @property
     def nCx(self):
@@ -590,44 +673,69 @@ class BaseRectangularMesh(BaseMesh):
             eX, eY, eZ = r(edgeVector, 'E', 'E', 'V')
         """
 
-        assert (type(x) == list or isinstance(x, np.ndarray)), "x must be either a list or a ndarray"
-        assert xType in ['CC', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez'], "xType must be either 'CC', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', or 'Ez'"
-        assert outType in ['CC', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez'], "outType must be either 'CC', 'N', 'F', Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', or 'Ez'"
+        allowed_xType = [
+            'CC', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez'
+        ]
+        assert (
+            type(x) == list or isinstance(x, np.ndarray)
+        ), "x must be either a list or a ndarray"
+        assert xType in allowed_xType, (
+            "xType must be either "
+            "'CC', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', or 'Ez'"
+        )
+        assert outType in allowed_xType, (
+            "outType must be either "
+            "'CC', 'N', 'F', Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', or 'Ez'"
+        )
         assert format in ['M', 'V'], "format must be either 'M' or 'V'"
-        assert outType[:len(xType)] == xType, "You cannot change types when reshaping."
-        assert xType in outType, 'You cannot change type of components.'
+        assert outType[:len(xType)] == xType, (
+            "You cannot change types when reshaping."
+        )
+        assert xType in outType, "You cannot change type of components."
+
         if type(x) == list:
             for i, xi in enumerate(x):
-                assert isinstance(x, np.ndarray), "x[{0:d}] must be a numpy array".format(i)
-                assert xi.size == x[0].size, "Number of elements in list must not change."
+                assert isinstance(x, np.ndarray), (
+                    "x[{0:d}] must be a numpy array".format(i)
+                )
+                assert xi.size == x[0].size, (
+                    "Number of elements in list must not change."
+                )
 
             x_array = np.ones((x.size, len(x)))
             # Unwrap it and put it in a np array
             for i, xi in enumerate(x):
-                x_array[:, i] = utils.mkvc(xi)
+                x_array[:, i] = mkvc(xi)
             x = x_array
 
         assert isinstance(x, np.ndarray), "x must be a numpy array"
 
         x = x[:]  # make a copy.
-        xTypeIsFExyz = len(xType) > 1 and xType[0] in ['F', 'E'] and xType[1] in ['x', 'y', 'z']
+        xTypeIsFExyz = (
+            len(xType) > 1 and
+            xType[0] in ['F', 'E'] and
+            xType[1] in ['x', 'y', 'z']
+        )
 
         def outKernal(xx, nn):
             """Returns xx as either a matrix (shape == nn) or a vector."""
             if format == 'M':
                 return xx.reshape(nn, order='F')
             elif format == 'V':
-                return utils.mkvc(xx)
+                return mkvc(xx)
 
         def switchKernal(xx):
             """Switches over the different options."""
             if xType in ['CC', 'N']:
                 nn = (self._n) if xType == 'CC' else (self._n+1)
-                assert xx.size == np.prod(nn), "Number of elements must not change."
+                assert xx.size == np.prod(nn), (
+                    "Number of elements must not change."
+                )
                 return outKernal(xx, nn)
             elif xType in ['F', 'E']:
-                # This will only deal with components of fields, not full 'F' or 'E'
-                xx = utils.mkvc(xx)  # unwrap it in case it is a matrix
+                # This will only deal with components of fields,
+                # not full 'F' or 'E'
+                xx = mkvc(xx)  # unwrap it in case it is a matrix
                 nn = self.vnF if xType == 'F' else self.vnE
                 nn = np.r_[0, nn]
 
@@ -638,13 +746,20 @@ class BaseRectangularMesh(BaseMesh):
 
                 for dim, dimName in enumerate(['x', 'y', 'z']):
                     if dimName in outType:
-                        assert self.dim > dim, ("Dimensions of mesh not great enough for %s%s", (xType, dimName))
-                        assert xx.size == np.sum(nn), 'Vector is not the right size.'
+                        assert self.dim > dim, (
+                            "Dimensions of mesh not great enough for "
+                            "{}{}".format(xType, dimName)
+                        )
+                        assert xx.size == np.sum(nn), (
+                            "Vector is not the right size."
+                        )
                         start = np.sum(nn[:dim+1])
                         end = np.sum(nn[:dim+2])
                         return outKernal(xx[start:end], nx[dim])
+
             elif xTypeIsFExyz:
-                # This will deal with partial components (x, y or z) lying on edges or faces
+                # This will deal with partial components (x, y or z)
+                # lying on edges or faces
                 if 'x' in xType:
                     nn = self.vnFx if 'F' in xType else self.vnEx
                 elif 'y' in xType:
@@ -658,7 +773,9 @@ class BaseRectangularMesh(BaseMesh):
         isVectorQuantity = len(x.shape) == 2 and x.shape[1] == self.dim
 
         if outType in ['F', 'E']:
-            assert ~isVectorQuantity, 'Not sure what to do with a vector vector quantity..'
+            assert ~isVectorQuantity, (
+                'Not sure what to do with a vector vector quantity..'
+            )
             outTypeCopy = outType
             out = ()
             for ii, dirName in enumerate(['x', 'y', 'z'][:self.dim]):
