@@ -1,6 +1,7 @@
 from __future__ import print_function
 import numpy as np
-from discretize.utils import mkvc
+import warnings
+from discretize.utils import mkvc, ndgrid
 from six import integer_types
 try:
     import matplotlib.pyplot as plt
