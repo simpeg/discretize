@@ -19,6 +19,46 @@ plotIt = False
 np.random.seed(90)
 
 
+class TestCellGrad2D(discretize.Tests.OrderTest):
+    name = "Cell Gradient 2D - Stencil"
+    meshTypes = MESHTYPES
+    meshDimension = 2
+    meshSizes = [16, 32]
+
+    def getError(self):
+        #Test function
+        Fx = lambda x: 2*np.pi*np.cos(2*np.pi*x)
+        Fy = lambda y: 2*np.pi*np.cos(2*np.pi*y)
+        # Fz = lambda z: 2*np.pi*np.cos(2*np.pi*z)
+
+        F = lambda xyz: np.sin(2*np.pi*xyz[:, 0])+np.sin(2*np.pi*xyz[:, 1]) #+np.sin(2*np.pi*xyz[:, 2])
+
+        area = discretize.utils.sdiag(np.r_[self.M._areaFxFull, self.M._areaFyFull])#, self.M._areaFzFull])
+        vol = discretize.utils.sdiag(1./self.M.vol)
+
+
+        # Fc = cartF2(mesh, solFx, solFy)
+        # F = self.M.projectFaceVector(Fc)
+        gradV = area * self.M.cellGradStencil * vol
+
+        BC = discretize.utils.mkvc(np.abs(gradV).sum(1) == 0)
+        gradF = gradV.dot(F(self.M.gridCC))
+
+        gradF_ana = np.r_[Fx(self.M._gridFx[:, 0]),
+                          Fy(self.M._gridFy[:, 1])]
+                         #Fz(self.M._gridFz[:, 2])]
+        gradF_ana[BC] = 0
+
+        err = np.linalg.norm((gradF-gradF_ana), np.inf)
+
+        # self.M.plotImage(divF-divF_ana, showIt=True)
+
+        return err
+
+    def test_order(self):
+        self.orderTest()
+
+
 class TestFaceDiv2D(discretize.Tests.OrderTest):
     name = "Face Divergence 2D"
     meshTypes = MESHTYPES

@@ -730,7 +730,8 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         tic = time.time()
         if not _inRecursion:
             self.__dirty__ = True
-            if verbose: print('Balancing Mesh:')
+            if verbose:
+                print('Balancing Mesh:')
 
         cells = cells if cells is not None else sorted(self._cells)
 
@@ -754,7 +755,8 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             cs[5] = self._getNextCell(cell, direction=2, positive=True)  # this will be None if in 2D
 
             do = np.any([
-                        type(c) is list and np.any([type(_) is list for _ in c])
+                        type(c) is list and np.any([type(_) is list
+                                                    for _ in c])
                         for c in cs
                         if c is not None
                         ])
@@ -1161,15 +1163,19 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
                 self._hangingEy[self._ey2i[i000]] = ([self._ey2i[ey0], 1.0], )
                 self._hangingEy[self._ey2i[i010]] = ([self._ey2i[ey0], 1.0], )
-                self._hangingEy[self._ey2i[i001]] = ([self._ey2i[ey0], 0.5], [self._ey2i[ey1], 0.5])
-                self._hangingEy[self._ey2i[i011]] = ([self._ey2i[ey0], 0.5], [self._ey2i[ey1], 0.5])
+                self._hangingEy[self._ey2i[i001]] = ([self._ey2i[ey0], 0.5],
+                                                     [self._ey2i[ey1], 0.5])
+                self._hangingEy[self._ey2i[i011]] = ([self._ey2i[ey0], 0.5],
+                                                     [self._ey2i[ey1], 0.5])
                 self._hangingEy[self._ey2i[i002]] = ([self._ey2i[ey1], 1.0], )
                 self._hangingEy[self._ey2i[i012]] = ([self._ey2i[ey1], 1.0], )
 
                 self._hangingEz[self._ez2i[i000]] = ([self._ez2i[ez0], 1.0], )
                 self._hangingEz[self._ez2i[i001]] = ([self._ez2i[ez0], 1.0], )
-                self._hangingEz[self._ez2i[i010]] = ([self._ez2i[ez0], 0.5], [self._ez2i[ez1], 0.5])
-                self._hangingEz[self._ez2i[i011]] = ([self._ez2i[ez0], 0.5], [self._ez2i[ez1], 0.5])
+                self._hangingEz[self._ez2i[i010]] = ([self._ez2i[ez0], 0.5],
+                                                     [self._ez2i[ez1], 0.5])
+                self._hangingEz[self._ez2i[i011]] = ([self._ez2i[ez0], 0.5],
+                                                     [self._ez2i[ez1], 0.5])
                 self._hangingEz[self._ez2i[i020]] = ([self._ez2i[ez1], 1.0], )
                 self._hangingEz[self._ez2i[i021]] = ([self._ez2i[ez1], 1.0], )
 
@@ -1222,7 +1228,8 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
                 chx0 = self._cellH([p[0], p[1], sl])[0]
                 chx1 = self._cellH([p[0] + w, p[1], sl])[0]
 
-                self._hangingFy[self._fy2i[test]] = ([self._fy2i[fy], chx0 / (chx0 + chx1)], )
+                self._hangingFy[self._fy2i[test]] = ([self._fy2i[fy],
+                                                      chx0 / (chx0 + chx1)], )
                 self._hangingFy[self._fy2i[self._index([p[0] + w, p[1], sl])]] = ([self._fy2i[fy], chx1 / (chx0 + chx1)], )
 
                 n0, n1 = fy, self._index([p[0] + 2*w, p[1], p[-1]])
@@ -1298,13 +1305,20 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
                 # self._hangingEz[self._ez2i[i201]] = ([self._ez2i[ez1], chz1 / lenZ], )
 
                 self._hangingN[self._n2i[i000]] = ([self._n2i[n0],   1.0], )
-                self._hangingN[self._n2i[i100]] = ([self._n2i[n0],   0.5], [self._n2i[n1], 0.5])
+                self._hangingN[self._n2i[i100]] = ([self._n2i[n0],   0.5],
+                                                   [self._n2i[n1], 0.5])
                 self._hangingN[self._n2i[i200]] = ([self._n2i[n1],   1.0], )
-                self._hangingN[self._n2i[i001]] = ([self._n2i[n0],   0.5], [self._n2i[n2], 0.5])
-                self._hangingN[self._n2i[i101]] = ([self._n2i[n0],   0.25], [self._n2i[n1], 0.25], [self._n2i[n2], 0.25], [self._n2i[n3], 0.25])
-                self._hangingN[self._n2i[i201]] = ([self._n2i[n1],   0.5], [self._n2i[n3], 0.5])
+                self._hangingN[self._n2i[i001]] = ([self._n2i[n0],   0.5],
+                                                   [self._n2i[n2], 0.5])
+                self._hangingN[self._n2i[i101]] = ([self._n2i[n0],   0.25],
+                                                   [self._n2i[n1], 0.25],
+                                                   [self._n2i[n2], 0.25],
+                                                   [self._n2i[n3], 0.25])
+                self._hangingN[self._n2i[i201]] = ([self._n2i[n1],   0.5],
+                                                   [self._n2i[n3], 0.5])
                 self._hangingN[self._n2i[i002]] = ([self._n2i[n2],   1.0], )
-                self._hangingN[self._n2i[i102]] = ([self._n2i[n2],   0.5], [self._n2i[n3], 0.5])
+                self._hangingN[self._n2i[i102]] = ([self._n2i[n2],   0.5],
+                                                   [self._n2i[n3], 0.5])
                 self._hangingN[self._n2i[i202]] = ([self._n2i[n3],   1.0], )
 
         if self.dim == 2:
@@ -1315,7 +1329,8 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         for fz in self._facesZ:
             p = self._pointer(fz)
 
-            if p[-1] + 1 > self._levels: continue
+            if p[-1] + 1 > self._levels:
+                continue
             sl = p[-1] + 1  #: small level
 
             test = self._index(p[:-1] + [sl])
@@ -1363,15 +1378,19 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
             self._hangingEx[self._ex2i[i000]] = ([self._ex2i[ex0], 1.0], )
             self._hangingEx[self._ex2i[i100]] = ([self._ex2i[ex0], 1.0], )
-            self._hangingEx[self._ex2i[i010]] = ([self._ex2i[ex0], 0.5], [self._ex2i[ex1], 0.5])
-            self._hangingEx[self._ex2i[i110]] = ([self._ex2i[ex0], 0.5], [self._ex2i[ex1], 0.5])
+            self._hangingEx[self._ex2i[i010]] = ([self._ex2i[ex0], 0.5],
+                                                 [self._ex2i[ex1], 0.5])
+            self._hangingEx[self._ex2i[i110]] = ([self._ex2i[ex0], 0.5],
+                                                 [self._ex2i[ex1], 0.5])
             self._hangingEx[self._ex2i[i020]] = ([self._ex2i[ex1], 1.0], )
             self._hangingEx[self._ex2i[i120]] = ([self._ex2i[ex1], 1.0], )
 
             self._hangingEy[self._ey2i[i000]] = ([self._ey2i[ey0], 1.0], )
             self._hangingEy[self._ey2i[i010]] = ([self._ey2i[ey0], 1.0], )
-            self._hangingEy[self._ey2i[i100]] = ([self._ey2i[ey0], 0.5], [self._ey2i[ey1], 0.5])
-            self._hangingEy[self._ey2i[i110]] = ([self._ey2i[ey0], 0.5], [self._ey2i[ey1], 0.5])
+            self._hangingEy[self._ey2i[i100]] = ([self._ey2i[ey0], 0.5],
+                                                 [self._ey2i[ey1], 0.5])
+            self._hangingEy[self._ey2i[i110]] = ([self._ey2i[ey0], 0.5],
+                                                 [self._ey2i[ey1], 0.5])
             self._hangingEy[self._ey2i[i200]] = ([self._ey2i[ey1], 1.0], )
             self._hangingEy[self._ey2i[i210]] = ([self._ey2i[ey1], 1.0], )
 
@@ -1389,22 +1408,30 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             # self._hangingEy[self._ey2i[i200]] = ([self._ey2i[ey1], chy0 / lenY], )
             # self._hangingEy[self._ey2i[i210]] = ([self._ey2i[ey1], chy1 / lenY], )
 
-            self._hangingN[self._n2i[i000]] = ([self._n2i[n0],   1.0], )
-            self._hangingN[self._n2i[i100]] = ([self._n2i[n0],   0.5], [self._n2i[n1], 0.5])
-            self._hangingN[self._n2i[i200]] = ([self._n2i[n1],   1.0], )
-            self._hangingN[self._n2i[i010]] = ([self._n2i[n0],   0.5], [self._n2i[n2], 0.5])
-            self._hangingN[self._n2i[i110]] = ([self._n2i[n0],   0.25], [self._n2i[n1], 0.25], [self._n2i[n2], 0.25], [self._n2i[n3], 0.25])
-            self._hangingN[self._n2i[i210]] = ([self._n2i[n1],   0.5], [self._n2i[n3], 0.5])
-            self._hangingN[self._n2i[i020]] = ([self._n2i[n2],   1.0], )
-            self._hangingN[self._n2i[i120]] = ([self._n2i[n2],   0.5], [self._n2i[n3], 0.5])
-            self._hangingN[self._n2i[i220]] = ([self._n2i[n3],   1.0], )
+            self._hangingN[self._n2i[i000]] = ([self._n2i[n0], 1.0], )
+            self._hangingN[self._n2i[i100]] = ([self._n2i[n0], 0.5],
+                                               [self._n2i[n1], 0.5])
+            self._hangingN[self._n2i[i200]] = ([self._n2i[n1], 1.0], )
+            self._hangingN[self._n2i[i010]] = ([self._n2i[n0], 0.5],
+                                               [self._n2i[n2], 0.5])
+            self._hangingN[self._n2i[i110]] = ([self._n2i[n0], 0.25],
+                                               [self._n2i[n1], 0.25],
+                                               [self._n2i[n2], 0.25],
+                                               [self._n2i[n3], 0.25])
+            self._hangingN[self._n2i[i210]] = ([self._n2i[n1], 0.5],
+                                               [self._n2i[n3], 0.5])
+            self._hangingN[self._n2i[i020]] = ([self._n2i[n2], 1.0], )
+            self._hangingN[self._n2i[i120]] = ([self._n2i[n2], 0.5],
+                                               [self._n2i[n3], 0.5])
+            self._hangingN[self._n2i[i220]] = ([self._n2i[n3], 1.0], )
 
         self.__dirtyHanging__ = False
 
     def number(self, balance=True, force=False):
         if not self.__dirty__ and not force:
             return
-        if balance: self.balance()
+        if balance:
+            self.balance()
         self._hanging(force=force)
 
     def _deflationMatrix(self, location, withHanging=True, asOnes=False):
@@ -1550,56 +1577,63 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
     @property
     def cellGradStencil(self):
         if getattr(self, '_cellGradStencil', None) is None:
-            self.number()
+            # self.number()
 
-            # TODO: Preallocate!
-            I, J, V = [], [], []
-            PM = [-1, 1]*self.dim  # plus / minus
+            # # TODO: Preallocate!
+            # I, J, V = [], [], []
+            # PM = [-1, 1]*self.dim  # plus / minus
 
-            # TODO total number of faces?
-            offset = [0]*2 + [self.ntFx]*2 + [self.ntFx+self.ntFy]*2
+            # # TODO total number of faces?
+            # offset = [0]*2 + [self.ntFx]*2 + [self.ntFx+self.ntFy]*2
 
-            for ii, ind in enumerate(self._sortedCells):
+            # for ii, ind in enumerate(self._sortedCells):
 
-                p = self._pointer(ind)
-                w = self._levelWidth(p[-1])
+            #     p = self._pointer(ind)
+            #     w = self._levelWidth(p[-1])
 
-                if self.dim == 2:
-                    faces = [
-                             self._fx2i[self._index([p[0], p[1], p[2]])],
-                             self._fx2i[self._index([p[0] + w, p[1], p[2]])],
-                             self._fy2i[self._index([p[0], p[1], p[2]])],
-                             self._fy2i[self._index([p[0], p[1] + w, p[2]])]
-                            ]
-                elif self.dim == 3:
-                    faces = [
-                             self._fx2i[self._index([p[0], p[1],
-                                                     p[2], p[3]])],
-                             self._fx2i[self._index([p[0] + w, p[1],
-                                                     p[2], p[3]])],
-                             self._fy2i[self._index([p[0], p[1],
-                                                     p[2], p[3]])],
-                             self._fy2i[self._index([p[0], p[1] + w,
-                                                     p[2], p[3]])],
-                             self._fz2i[self._index([p[0], p[1],
-                                                     p[2], p[3]])],
-                             self._fz2i[self._index([p[0], p[1],
-                                                     p[2] + w, p[3]])]
-                            ]
+            #     if self.dim == 2:
+            #         faces = [
+            #                  self._fx2i[self._index([p[0], p[1], p[2]])],
+            #                  self._fx2i[self._index([p[0] + w, p[1], p[2]])],
+            #                  self._fy2i[self._index([p[0], p[1], p[2]])],
+            #                  self._fy2i[self._index([p[0], p[1] + w, p[2]])]
+            #                 ]
+            #     elif self.dim == 3:
+            #         faces = [
+            #                  self._fx2i[self._index([p[0], p[1],
+            #                                          p[2], p[3]])],
+            #                  self._fx2i[self._index([p[0] + w, p[1],
+            #                                          p[2], p[3]])],
+            #                  self._fy2i[self._index([p[0], p[1],
+            #                                          p[2], p[3]])],
+            #                  self._fy2i[self._index([p[0], p[1] + w,
+            #                                          p[2], p[3]])],
+            #                  self._fz2i[self._index([p[0], p[1],
+            #                                          p[2], p[3]])],
+            #                  self._fz2i[self._index([p[0], p[1],
+            #                                          p[2] + w, p[3]])]
+            #                 ]
 
-                for off, pm, face in zip(offset, PM, faces):
-                    I += [ii]
-                    J += [face + off]
-                    V += [pm]
+            #     for off, pm, face in zip(offset, PM, faces):
+            #         I += [ii]
+            #         J += [face + off]
+            #         V += [pm]
 
-            D = sp.csr_matrix((V, (I, J)), shape=(self.nC, self.ntF))
-            R = self._deflationMatrix('F')
+            # D = sp.csr_matrix((V, (I, J)), shape=(self.nC, self.ntF))
+            # R = self._deflationMatrix('F')
             # VOL = self.vol
             # if self.dim == 2:
             #     S = np.r_[self._areaFxFull, self._areaFyFull]
             # elif self.dim == 3:
             #     S = np.r_[self._areaFxFull, self._areaFyFull, self._areaFzFull]
-            self._cellGradStencil = (D*R).T
+            # self._cellGradStencil = (D*R).T
+
+            self._cellGradStencil = sp.vstack([self._cellGradxStencil(),
+                                               self._cellGradyStencil()])
+            if self.dim == 3:
+                self._cellGradStencil = sp.vstack([self._cellGradStencil,
+                                                   self._cellGradzStencil()])
+
         return self._cellGradStencil
 
     def _cellGradxStencil(self):
@@ -1613,7 +1647,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         #                    sp.csr_matrix((self.ntFx, self.ntFy)),
         #                    sp.csr_matrix((self.ntFx, self.ntFz))])
 
-        # G1 = (self._deflationMatrix('Fx', large=True).T * S *
+        # Gx = (self._deflationMatrix('Fx', large=True).T * S *
         #       (self._deflationMatrix('F', large=True) *
         #        self.cellGradStencil))
 
@@ -1626,7 +1660,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
                 faceParent[theHang[key][0][0]] += [key]
 
         I, J, V = [], [], []
-        PM = [-1, 1]#*mesh.dim  # plus / minus
+        PM = [-1, 1]  # *mesh.dim  # plus / minus
 
         for ii, ind in enumerate(self._sortedCells):
 
@@ -1648,30 +1682,37 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
                     pN = self._pointer(cell)
 
+                    # Check if neighbour has lower tree level
                     if pN[-1] < p[-1]:
                         if self.dim == 2:
-                            hangs = faceParent[self._fx2i[self._index([pN[0], pN[1], pN[2]])]]
+                            hangs = faceParent[self._fx2i[self._index([pN[0],
+                                                                       pN[1],
+                                                                       pN[2]])]]
                             count = int(np.abs((p[1] - pN[1]) % 2))
 
                         elif self.dim == 3:
                             hangs = faceParent[self._fx2i[self._index([pN[0],
-                                                                        pN[1], pN[2], pN[3]])]]
+                                                                       pN[1],
+                                                                       pN[2],
+                                                                       pN[3]])]]
                             count = int(np.abs((p[1] - pN[1]) % 2))
                             count += int(2*np.abs((p[2] - pN[2]) % 2))
                         face = hangs[count]
                     else:
                         if self.dim == 2:
-                            face = self._fx2i[self._index([pN[0], pN[1], pN[2]])]
+                            face = self._fx2i[self._index([pN[0], pN[1],
+                                                           pN[2]])]
                         elif self.dim == 3:
-                            face = self._fx2i[self._index([pN[0], pN[1], pN[2], pN[3]])]
+                            face = self._fx2i[self._index([pN[0], pN[1],
+                                                           pN[2], pN[3]])]
 
                     I += [face]*2
                     J += [self._cc2i[ind], self._cc2i[cell]]
                     V += PM
 
-        G1 = sp.csr_matrix((V, (I, J)), shape=(self.ntFx, self.nC))
+        Gx = sp.csr_matrix((V, (I, J)), shape=(self.ntFx, self.nC))
 
-        return G1
+        return Gx
 
     def _cellGradyStencil(self):
         self.number()
@@ -1684,7 +1725,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         #                    sp.identity(self.ntFy),
         #                    sp.csr_matrix((self.ntFy, self.ntFz))])
 
-        # G2 = (self._deflationMatrix('Fy', large=True).T * S *
+        # Gy = (self._deflationMatrix('Fy', large=True).T * S *
         #       (self._deflationMatrix('F', large=True) *
         #        self.cellGradStencil))
 
@@ -1697,7 +1738,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
                 faceParent[theHang[key][0][0]] += [key]
 
         I, J, V = [], [], []
-        PM = [-1, 1] #*mesh.dim  # plus / minus
+        PM = [-1, 1]   # *mesh.dim  # plus / minus
 
         for ii, ind in enumerate(self._sortedCells):
 
@@ -1705,9 +1746,12 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         #     w = self._levelWidth(p[-1])
 
             if self.dim == 2:
-                cells = self._getNextCell(self._index([p[0], p[1], p[2]]), direction=1)
+                cells = self._getNextCell(self._index([p[0], p[1], p[2]]),
+                                          direction=1)
             elif self.dim == 3:
-                cells = self._getNextCell(self._index([p[0], p[1], p[2], p[3]]), direction=1)
+                cells = self._getNextCell(self._index([p[0], p[1],
+                                                       p[2], p[3]]),
+                                          direction=1)
 
             if cells:
                 if isinstance(cells, int):
@@ -1717,30 +1761,37 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
                     pN = self._pointer(cell)
 
+                    # Check if neighbour has lower tree level
                     if pN[-1] < p[-1]:
                         if self.dim == 2:
-                            hangs = faceParent[self._fy2i[self._index([pN[0], pN[1], pN[2]])]]
+                            hangs = faceParent[self._fy2i[self._index([pN[0],
+                                                                       pN[1],
+                                                                       pN[2]])]]
                             count = int(np.abs((p[0] - pN[0]) % 2))
 
                         elif self.dim == 3:
                             hangs = faceParent[self._fy2i[self._index([pN[0],
-                                                                        pN[1], pN[2], pN[3]])]]
+                                                                       pN[1],
+                                                                       pN[2],
+                                                                       pN[3]])]]
                             count = int(np.abs((p[0] - pN[0]) % 2))
                             count += int(2*np.abs((p[2] - pN[2]) % 2))
                         face = hangs[count]
                     else:
                         if self.dim == 2:
-                            face = self._fy2i[self._index([pN[0], pN[1], pN[2]])]
+                            face = self._fy2i[self._index([pN[0], pN[1],
+                                                           pN[2]])]
                         elif self.dim == 3:
-                            face = self._fy2i[self._index([pN[0], pN[1], pN[2], pN[3]])]
+                            face = self._fy2i[self._index([pN[0], pN[1],
+                                                           pN[2], pN[3]])]
 
                     I += [face]*2
                     J += [self._cc2i[ind], self._cc2i[cell]]
                     V += PM
 
-        G2 = sp.csr_matrix((V, (I, J)), shape=(self.ntFy, self.nC))
+        Gy = sp.csr_matrix((V, (I, J)), shape=(self.ntFy, self.nC))
 
-        return G2
+        return Gy
 
     def _cellGradzStencil(self):
         self.number()
@@ -1750,7 +1801,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         #                sp.csr_matrix((self.ntFz, self.ntFy)),
         #                sp.identity(self.ntFz)])
 
-        # G3 = (self._deflationMatrix('Fz', large=True).T * S *
+        # Gz = (self._deflationMatrix('Fz', large=True).T * S *
         #       (self._deflationMatrix('F', large=True) *
         #        self.cellGradStencil))
 
@@ -1763,14 +1814,15 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
                 faceParent[theHang[key][0][0]] += [key]
 
         I, J, V = [], [], []
-        PM = [-1, 1]#*mesh.dim  # plus / minus
+        PM = [-1, 1]  # *mesh.dim  # plus / minus
 
         for ii, ind in enumerate(self._sortedCells):
 
             p = self._pointer(ind)
         #     w = self._levelWidth(p[-1])
 
-            cells = self._getNextCell(self._index([p[0], p[1], p[2], p[3]]), direction=2)
+            cells = self._getNextCell(self._index([p[0], p[1], p[2], p[3]]),
+                                      direction=2)
 
             if cells:
                 if isinstance(cells, int):
@@ -1780,22 +1832,26 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
                     pN = self._pointer(cell)
 
+                    # Check if neighbour has lower tree level
                     if pN[-1] < p[-1]:
                         hangs = faceParent[self._fz2i[self._index([pN[0],
-                                                                    pN[1], pN[2], pN[3]])]]
+                                                                   pN[1],
+                                                                   pN[2],
+                                                                   pN[3]])]]
                         count = int(np.abs((p[0] - pN[0]) % 2))
                         count += int(2*np.abs((p[1] - pN[1]) % 2))
                         face = hangs[count]
                     else:
-                        face = self._fz2i[self._index([pN[0], pN[1], pN[2], pN[3]])]
+                        face = self._fz2i[self._index([pN[0], pN[1],
+                                                       pN[2], pN[3]])]
 
                     I += [face]*2
                     J += [self._cc2i[ind], self._cc2i[cell]]
                     V += PM
 
-        G3 = sp.csr_matrix((V, (I, J)), shape=(self.ntFz, self.nC))
+        Gz = sp.csr_matrix((V, (I, J)), shape=(self.ntFz, self.nC))
 
-        return G3
+        return Gz
 
     @property
     def edgeCurl(self):
