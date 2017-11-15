@@ -785,8 +785,8 @@ class DiffOperators(object):
             if self.dim == 1:
                 self._aveCC2FV = self._aveCC2Fx
             elif self.dim == 2:
-                self.aveCC2Fx = sp.kron(speye(self.nCy), av_extrap(self.nCx))
-                self.aveCC2Fy = sp.kron(speye(self.nCy), av_extrap(self.nCx))
+                self._aveCC2Fx = sp.kron(speye(self.nCy), av_extrap(self.nCx))
+                self._aveCC2Fy = sp.kron(speye(self.nCy), av_extrap(self.nCx))
                 self._aveCC2FV = sp.block_diag((
                         self.aveCC2Fx, self.aveCC2Fy
                         ), format="csr")
@@ -801,7 +801,7 @@ class DiffOperators(object):
                     av_extrap(self.nCz), speye(self.nCy), speye(self.nCx)
                     )
                 self._aveCC2FV = sp.block_diag((
-                        self.aveCC2Fx, self.aveCC2Fy, self.aveCC2Fz
+                        self._aveCC2Fx, self._aveCC2Fy, self._aveCC2Fz
                     ), format="csr")
         return self._aveCC2FV
 
