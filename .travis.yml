@@ -59,7 +59,7 @@ after_success:
   # deploy to pypi on tags
   - if [ "$TRAVIS_TAG" = "true" -o "$TRAVIS_BRANCH" = "ref/travis" ]; then
       mv credentials/.pypirc ~/.pypirc ;
-      python setup.py sdist bdist_wheel ;
+      python setup.py bdist_wheel --universal ;
       travis_wait 20 twine upload -r pypi --skip-existing dist/* ;
     fi
 # travis_wait 20 python setup.py sdist upload -r pypi ;
