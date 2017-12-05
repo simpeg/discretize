@@ -12,7 +12,6 @@ sudo: false
 env:
   global:
     - MASTER_BRANCH=master
-    - DEV_BRANCH=dev
     - PYPI_PY=3.6  # deploy to pypi from python 3.6
 
 before_install:
@@ -43,7 +42,7 @@ after_success:
   - bash <(curl -s https://codecov.io/bash)
 
    # early exit if not on a deplotment branch
-  - if ! [ "$TRAVIS_BRANCH" = "$MASTER_BRANCH" -o "$TRAVIS_BRANCH" = "$DEV_BRANCH" -o "$TRAVIS_TAG" = "true" ]; then
+  - if ! [ "$TRAVIS_BRANCH" = "$MASTER_BRANCH" -o "$TRAVIS_TAG" = "true" ]; then
       echo "Not deploying (because this is not a deployment branch)" ;
       exit 0 ;
     fi
