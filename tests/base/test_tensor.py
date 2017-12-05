@@ -19,7 +19,6 @@ class BasicTensorMeshTests(unittest.TestCase):
     def test_vectorN_2D(self):
         testNx = np.array([3, 4, 5, 6])
         testNy = np.array([5, 6, 8])
-
         xtest = np.all(self.mesh2.vectorNx == testNx)
         ytest = np.all(self.mesh2.vectorNy == testNy)
         self.assertTrue(xtest and ytest)
@@ -33,12 +32,18 @@ class BasicTensorMeshTests(unittest.TestCase):
         self.assertTrue(xtest and ytest)
 
     def test_area_3D(self):
-        test_area = np.array([1, 1, 1, 1, 2, 2, 2, 2, 4, 4, 4, 4, 8, 8, 8, 8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 1, 1, 2, 2, 2, 1, 1, 1, 2, 2, 2, 1, 1, 1, 2, 2, 2])
+        test_area = np.array([
+            1, 1, 1, 1, 2, 2, 2, 2, 4, 4, 4, 4, 8, 8, 8, 8, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 1, 1, 2, 2, 2, 1, 1, 1, 2,
+            2, 2, 1, 1, 1, 2, 2, 2
+        ])
         t1 = np.all(self.mesh3.area == test_area)
         self.assertTrue(t1)
 
     def test_vol_3D(self):
-        test_vol = np.array([1, 1, 1, 2, 2, 2, 4, 4, 4, 8, 8, 8])
+        test_vol = np.array([
+            1, 1, 1, 2, 2, 2, 4, 4, 4, 8, 8, 8
+        ])
         t1 = np.all(self.mesh3.vol == test_vol)
         self.assertTrue(t1)
 
@@ -48,12 +53,19 @@ class BasicTensorMeshTests(unittest.TestCase):
         self.assertTrue(t1)
 
     def test_edge_3D(self):
-        test_edge = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4])
+        test_edge = np.array([
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 2, 2, 2, 2, 1,
+            1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 4, 4,
+            4, 4, 4, 4, 4, 4, 4, 4, 4
+        ])
         t1 = np.all(self.mesh3.edge == test_edge)
         self.assertTrue(t1)
 
     def test_edge_2D(self):
-        test_edge = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2])
+        test_edge = np.array([
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2
+        ])
         t1 = np.all(self.mesh2.edge == test_edge)
         self.assertTrue(t1)
 
@@ -68,24 +80,24 @@ class BasicTensorMeshTests(unittest.TestCase):
         print(discretize.TensorMesh([10, 10, 10]))
 
     def test_centering(self):
-        M1d = discretize.TensorMesh([10], 'C')
-        M2d = discretize.TensorMesh([10, 10], 'CC')
-        M3d = discretize.TensorMesh([10, 10, 10], 'CCC')
+        M1d = discretize.TensorMesh([10], x0='C')
+        M2d = discretize.TensorMesh([10, 10], x0='CC')
+        M3d = discretize.TensorMesh([10, 10, 10], x0='CCC')
         self.assertLess(np.abs(M1d.x0 + 0.5).sum(), TOL)
         self.assertLess(np.abs(M2d.x0 + 0.5).sum(), TOL)
         self.assertLess(np.abs(M3d.x0 + 0.5).sum(), TOL)
 
     def test_negative(self):
-        M1d = discretize.TensorMesh([10], 'N')
+        M1d = discretize.TensorMesh([10], x0='N')
         self.assertRaises(Exception, discretize.TensorMesh, [10], 'F')
-        M2d = discretize.TensorMesh([10, 10], 'NN')
-        M3d = discretize.TensorMesh([10, 10, 10], 'NNN')
+        M2d = discretize.TensorMesh([10, 10], x0='NN')
+        M3d = discretize.TensorMesh([10, 10, 10], x0='NNN')
         self.assertLess(np.abs(M1d.x0 + 1.0).sum(), TOL)
         self.assertLess(np.abs(M2d.x0 + 1.0).sum(), TOL)
         self.assertLess(np.abs(M3d.x0 + 1.0).sum(), TOL)
 
     def test_cent_neg(self):
-        M3d = discretize.TensorMesh([10, 10, 10], 'C0N')
+        M3d = discretize.TensorMesh([10, 10, 10], x0='C0N')
         self.assertLess(np.abs(M3d.x0 + np.r_[0.5, 0, 1.0]).sum(), TOL)
 
     def test_tensor(self):

@@ -1,9 +1,10 @@
 import numpy as np
+import scipy.ndimage as ndi
+import scipy.sparse as sp
+
 from .matutils import ndgrid
 from .codeutils import asArray_N_x_Dim
 from .codeutils import isScalar
-import scipy.ndimage as ndi
-import scipy.sparse as sp
 
 import sys
 if sys.version_info < (3,):
