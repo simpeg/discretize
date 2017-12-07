@@ -37,9 +37,9 @@ class BaseTensorMesh(BaseMesh):
         x0_in = x0
 
         # Sanity Checks
-        assert type(h_in) in [list, tuple], 'h_in must be a list'
+        assert type(h_in) in [list, tuple], 'h_in must be a list, not {}'.format(type(h_in))
         assert len(h_in) in [1, 2, 3], (
-            'h_in must be of dimension 1, 2, or 3'
+            'h_in must be of dimension 1, 2, or 3 not {}'.format(len(h_in))
         )
 
         # build h
