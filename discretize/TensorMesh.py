@@ -160,22 +160,22 @@ class BaseTensorMesh(BaseMesh):
         return self._getTensorGrid('N')
 
     @property
-    def gridH(self):
-        """Cell widths in grid."""
+    def cellH(self):
+        """Cell widths of all cells in order."""
         H = self.h
         if self.dim == 1:
             return H
         if self.dim == 2:
-            H = np.meshgrid(H[0],H[1])
-            hx = np.reshape(H[0],self.nC)
-            hy = np.reshape(H[1],self.nC)
-            return np.c_[hx,hy]
+            H = np.meshgrid(H[0], H[1])
+            hx = np.reshape(H[0], self.nC)
+            hy = np.reshape(H[1], self.nC)
+            return np.c_[hx, hy]
         elif self.dim == 3:
-            H = np.meshgrid(H[0],H[1],H[2])
-            hx = np.reshape(H[0],self.nC)
-            hy = np.reshape(H[1],self.nC)
-            hz = np.reshape(H[2],self.nC)
-            return np.c_[hx,hy,hz]
+            H = np.meshgrid(H[0], H[1], H[2])
+            hx = np.reshape(H[0], self.nC)
+            hy = np.reshape(H[1], self.nC)
+            hz = np.reshape(H[2], self.nC)
+            return np.c_[hx, hy, hz]
 
     @property
     def gridFx(self):
