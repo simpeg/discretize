@@ -160,21 +160,19 @@ class BaseTensorMesh(BaseMesh):
         return self._getTensorGrid('N')
 
     @property
-    def cellH(self):
+    def cellWidths(self):
         """Cell widths of all cells in order."""
-        H = self.h
+
         if self.dim == 1:
-            return H
+            return self.h
         if self.dim == 2:
-            H = np.meshgrid(H[0], H[1])
-            hx = np.reshape(H[0], self.nC)
-            hy = np.reshape(H[1], self.nC)
+            hx = np.kron(np.ones(self.nCy), self.hx)
+            hy = np.kron(self.hy, np.ones(self.nCx))
             return np.c_[hx, hy]
         elif self.dim == 3:
-            H = np.meshgrid(H[0], H[1], H[2])
-            hx = np.reshape(H[0], self.nC)
-            hy = np.reshape(H[1], self.nC)
-            hz = np.reshape(H[2], self.nC)
+            hx = np.kron(np.ones(self.nCy*self.nCz), self.hx)
+            hy = np.kron(np.ones(self.nCz), np.kron(self.hy, np.ones(self.nCx)))
+            hz = np.kron(self.hz, np.ones(self.nCx*self.nCy))
             return np.c_[hx, hy, hz]
 
     @property
