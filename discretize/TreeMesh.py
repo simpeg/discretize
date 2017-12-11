@@ -729,13 +729,13 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         return R.T * self._gridN + np.repeat([self.x0],self.nN,axis=0)
 
     @property
-    def gridH(self):
-        if getattr(self, '_gridH', None) is None:
-            self._gridH = np.zeros((len(self._cells),self.dim))
+    def h_gridded(self):
+        if getattr(self, '_h_gridded', None) is None:
+            self._h_gridded = np.zeros((len(self._cells), self.dim))
             for ii, ind in enumerate(self._sortedCells):
                 p = self._asPointer(ind)
-                self._gridH[ii, :] = self._cellH(p)
-        return self._gridH
+                self._h_gridded[ii, :] = self._cellH(p)
+        return self._h_gridded
 
     @property
     def gridFx(self):

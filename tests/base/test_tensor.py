@@ -16,14 +16,14 @@ class BasicTensorMeshTests(unittest.TestCase):
         self.mesh2 = discretize.TensorMesh([a, b], [3, 5])
         self.mesh3 = discretize.TensorMesh([a, b, c])
 
-    def test_cellWidths_2D(self):
-        H = self.mesh2.cellWidths
+    def test_gridded_2D(self):
+        H = self.mesh2.h_gridded
         test_hx = np.all(H[:, 0] == np.r_[1., 1., 1., 1., 1., 1.])
         test_hy = np.all(H[:, 1] == np.r_[1., 1., 1., 2., 2., 2.])
         self.assertTrue(test_hx and test_hy)
 
-    def test_cellWidths_3D(self):
-        H = self.mesh3.cellWidths
+    def test_gridded_3D(self):
+        H = self.mesh3.h_gridded
         test_hx = np.all(H[:, 0] == np.r_[1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.])
         test_hy = np.all(H[:, 1] == np.r_[1., 1., 1., 2., 2., 2., 1., 1., 1., 2., 2., 2.])
         test_hz = np.all(H[:, 2] == np.r_[1., 1., 1., 1., 1., 1., 4., 4., 4., 4., 4., 4.])

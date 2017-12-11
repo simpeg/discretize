@@ -107,6 +107,26 @@ class TestSimpleQuadTree(unittest.TestCase):
         assert M._index([0, 2, 2]) not in M
         assert M._index([2, 2, 2]) not in M
 
+    def test_h_gridded_2D(self):
+        hx, hy = np.ones(4), np.r_[1., 2., 3., 4.]
+
+        M = discretize.TreeMesh([hx, hy])
+
+        def refinefcn(cell):
+            xyz = cell.center
+            d = (xyz**2).sum()**0.5
+            if d < 3:
+                return 2
+            return 1
+
+        M.refine(refinefcn)
+        H = M.h_gridded
+
+        test_hx = np.all(H[:, 0] == np.r_[1., 1., 1., 1., 2., 2., 2.])
+        test_hy = np.all(H[:, 1] == np.r_[1., 1., 2., 2., 3., 7., 7.])
+
+        self.assertTrue(test_hx and test_hy)
+
     def test_faceDiv(self):
 
         hx, hy = np.r_[1., 2, 3, 4], np.r_[5., 6, 7, 8]
@@ -233,6 +253,26 @@ class TestOcTree(unittest.TestCase):
         assert np.max(np.abs((M.faceDiv * M.edgeCurl).todense().flatten())) < TOL
         assert np.max(np.abs((Mr.faceDiv * Mr.edgeCurl).todense().flatten())) < TOL
 
+    def test_h_gridded_3D(self):
+        hx, hy, hz = np.ones(4), np.r_[1., 2., 3., 4.], 2*np.ones(4)
+
+        M = discretize.TreeMesh([hx, hy, hz])
+
+        def refinefcn(cell):
+            xyz = cell.center
+            d = (xyz**2).sum()**0.5
+            if d < 3:
+                return 2
+            return 1
+
+        M.refine(refinefcn)
+        H = M.h_gridded
+
+        test_hx = np.all(H[:, 0] == np.r_[1., 1., 1., 1., 1., 1., 1., 1., 2., 2., 2., 2., 2., 2., 2.])
+        test_hy = np.all(H[:, 1] == np.r_[1., 1., 2., 2., 1., 1., 2., 2., 3., 7., 7., 3., 3., 7., 7.])
+        test_hz = np.all(H[:, 2] == np.r_[2., 2., 2., 2., 2., 2., 2., 2., 4., 4., 4., 4., 4., 4., 4.])
+
+        self.assertTrue(test_hx and test_hy and test_hz)
 
 class Test2DInterpolation(unittest.TestCase):
 
