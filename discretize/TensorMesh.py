@@ -161,7 +161,8 @@ class BaseTensorMesh(BaseMesh):
 
     @property
     def h_gridded(self):
-        """Dimensions of all cells in order."""
+        """Returns an M by N numpy array with the widths of all cells in order.
+M is the number of cells and N=1,2,3 is the dimension of the mesh."""
 
         if self.dim == 1:
             return self.h

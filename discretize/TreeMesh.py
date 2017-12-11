@@ -715,6 +715,9 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
     @property
     def gridCC(self):
+        """Returns an M by N numpy array with the center locations of all cells
+in order. M is the number of cells and N=1,2,3 is the dimension of the mesh."""
+
         if getattr(self, '_gridCC', None) is None:
             self._gridCC = np.zeros((len(self._cells),self.dim))
             for ii, ind in enumerate(self._sortedCells):
@@ -724,12 +727,18 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
     @property
     def gridN(self):
+        """Returns an M by N numpy array with the widths of all cells in order.
+M is the number of nodes and N=1,2,3 is the dimension of the mesh."""
+
         self.number()
         R = self._deflationMatrix('N', withHanging=False)
         return R.T * self._gridN + np.repeat([self.x0],self.nN,axis=0)
 
     @property
     def h_gridded(self):
+        """Returns an M by N numpy array with the widths of all cells in order.
+M is the number of cells and N=1,2,3 is the dimension of the mesh."""
+
         if getattr(self, '_h_gridded', None) is None:
             self._h_gridded = np.zeros((len(self._cells), self.dim))
             for ii, ind in enumerate(self._sortedCells):
