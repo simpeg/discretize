@@ -20,43 +20,75 @@ np.random.seed(90)
 
 
 class TestCellGrad2D(discretize.Tests.OrderTest):
-    name = "Cell Gradient 2D - Stencil"
+    name = "Cell Gradient 2D"
     meshTypes = MESHTYPES
     meshDimension = 2
+    meshSizes = [16]
+
+    def getError(self):
+        #Test function
+        F = lambda x, y: np.cos(2*np.pi*x)*np.cos(2*np.pi*y)
+        dFdx = lambda x, y: -2*np.pi*np.sin(2*np.pi*x)*np.cos(2*np.pi*y)
+        dFdy = lambda x, y: -2*np.pi*np.sin(2*np.pi*y)*np.cos(2*np.pi*x)
+
+        # F = lambda x, y: np.sin(2*np.pi*x)*np.sin(2*np.pi*y)
+        # dFdx = lambda x, y: 2*np.pi*np.cos(2*np.pi*x)*np.sin(2*np.pi*y)
+        # dFdy = lambda x, y: 2*np.pi*np.cos(2*np.pi*y)*np.sin(2*np.pi*x)
+
+        # F = lambda x, y: (np.cos(2*np.pi*x) + np.cos(2*np.pi*y))
+        # dFdx = lambda x: -2*np.pi*np.sin(2*np.pi*x)
+        # dFdy = lambda y: -2*np.pi*np.sin(2*np.pi*y)
+
+        phi = call2(F, self.M.gridCC)
+        gradEx = self.M.cellGradx.dot(phi)
+        gradEy = self.M.cellGrady.dot(phi)
+        gradE = np.hstack([gradEx, gradEy])
+        gradEx_ana = dFdx(self.M._gridFx[:, 0], self.M._gridFx[:, 1])
+        gradEy_ana = dFdy(self.M._gridFy[:, 0], self.M._gridFy[:, 1])
+        gradE_ana = np.r_[gradEx_ana, gradEy_ana]
+
+        err = np.linalg.norm((gradE-gradE_ana), np.inf)
+        fig = plt.figure()
+        plt.plot(gradE, 'ro')
+        plt.plot(gradE_ana, 'k.')
+        plt.show()
+        return err
+
+    def test_order(self):
+        self.orderTest()
+
+
+
+class TestCellGrad3D(discretize.Tests.OrderTest):
+    name = "Cell Gradient 3D"
+    meshTypes = MESHTYPES
+    meshDimension = 3
     meshSizes = [16, 32]
 
     def getError(self):
         #Test function
-        Fx = lambda x: 2*np.pi*np.cos(2*np.pi*x)
-        Fy = lambda y: 2*np.pi*np.cos(2*np.pi*y)
-        # Fz = lambda z: 2*np.pi*np.cos(2*np.pi*z)
+        F = lambda x, y, z: (np.cos(2*np.pi*x) + np.cos(2*np.pi*y) + np.cos(2*np.pi*z))
+        dFdx = lambda x: -2*np.pi*np.sin(2*np.pi*x)
+        dFdy = lambda y: -2*np.pi*np.sin(2*np.pi*y)
+        dFdz = lambda z: -2*np.pi*np.sin(2*np.pi*z)
 
-        F = lambda xyz: np.sin(2*np.pi*xyz[:, 0])+np.sin(2*np.pi*xyz[:, 1]) #+np.sin(2*np.pi*xyz[:, 2])
+        phi = call3(F, self.M.gridCC)
+        gradEx = self.M.cellGradx.dot(phi)
+        gradEy = self.M.cellGrady.dot(phi)
+        gradEz = self.M.cellGradz.dot(phi)
+        gradE = np.hstack([gradEx, gradEy, gradEz])
 
-        area = discretize.utils.sdiag(np.r_[self.M._areaFxFull, self.M._areaFyFull])#, self.M._areaFzFull])
-        vol = discretize.utils.sdiag(1./self.M.vol)
+        gradE_ana = np.r_[dFdx(self.M._gridFx[:, 0]),
+                  dFdy(self.M._gridFy[:, 1]),
+                  dFdz(self.M._gridFz[:, 2])]
 
-
-        # Fc = cartF2(mesh, solFx, solFy)
-        # F = self.M.projectFaceVector(Fc)
-        gradV = area * self.M.cellGradStencil * vol
-
-        BC = discretize.utils.mkvc(np.abs(gradV).sum(1) == 0)
-        gradF = gradV.dot(F(self.M.gridCC))
-
-        gradF_ana = np.r_[Fx(self.M._gridFx[:, 0]),
-                          Fy(self.M._gridFy[:, 1])]
-                         #Fz(self.M._gridFz[:, 2])]
-        gradF_ana[BC] = 0
-
-        err = np.linalg.norm((gradF-gradF_ana), np.inf)
-
-        # self.M.plotImage(divF-divF_ana, showIt=True)
+        err = np.linalg.norm((gradE-gradE_ana), np.inf)
 
         return err
 
     def test_order(self):
         self.orderTest()
+
 
 
 class TestFaceDiv2D(discretize.Tests.OrderTest):
