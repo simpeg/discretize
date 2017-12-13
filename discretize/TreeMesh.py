@@ -736,8 +736,9 @@ M is the number of nodes and N=1,2,3 is the dimension of the mesh."""
 
     @property
     def h_gridded(self):
-        """Returns an M by N numpy array with the widths of all cells in order.
-M is the number of cells and N=1,2,3 is the dimension of the mesh."""
+        """
+Returns an (nC, dim) numpy array with the widths of all cells in order
+        """
 
         if getattr(self, '_h_gridded', None) is None:
             self._h_gridded = np.zeros((len(self._cells), self.dim))
