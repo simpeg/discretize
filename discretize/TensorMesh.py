@@ -166,7 +166,7 @@ class BaseTensorMesh(BaseMesh):
         """
 
         if self.dim == 1:
-            return self.h
+            return np.reshape(self.h, (self.nC, 1))
         elif self.dim == 2:
             hx = np.kron(np.ones(self.nCy), self.h[0])
             hy = np.kron(self.h[1], np.ones(self.nCx))
