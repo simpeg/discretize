@@ -170,7 +170,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             '_faceDiv', '_edgeCurl', '_nodalGrad',
             '_aveFx2CC', '_aveFy2CC', '_aveFz2CC', '_aveF2CC', '_aveF2CCV',
             '_aveEx2CC', '_aveEy2CC', '_aveEz2CC', '_aveE2CC', '_aveE2CCV',
-            '_aveN2CC',
+            '_aveN2CC', '_h_gridded'
         ]
         for p in deleteThese:
             if hasattr(self, p): delattr(self, p)

@@ -127,6 +127,20 @@ class TestSimpleQuadTree(unittest.TestCase):
 
         self.assertTrue(test_hx and test_hy)
 
+    def test_h_gridded_updates(self):
+        mesh = discretize.TreeMesh([8, 8])
+        mesh.refine(1)
+
+        H = mesh.h_gridded
+        self.assertTrue(np.all(H[:, 0] == 0.5*np.ones(4)))
+        self.assertTrue(np.all(H[:, 1] == 0.5*np.ones(4)))
+
+        # refine the mesh and make sure h_gridded is updated
+        mesh.refine(2)
+        H = mesh.h_gridded
+        self.assertTrue(np.all(H[:, 0] == 0.25*np.ones(16)))
+        self.assertTrue(np.all(H[:, 1] == 0.25*np.ones(16)))
+
     def test_faceDiv(self):
 
         hx, hy = np.r_[1., 2, 3, 4], np.r_[5., 6, 7, 8]
