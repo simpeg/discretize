@@ -162,7 +162,7 @@ class BaseTensorMesh(BaseMesh):
     @property
     def h_gridded(self):
         """
-Returns an (nC, dim) numpy array with the widths of all cells in order
+        Returns an (nC, dim) numpy array with the widths of all cells in order
         """
 
         if self.dim == 1:
