@@ -27,9 +27,9 @@ before_install:
 
 install:
   - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then
-      conda install --yes pip python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib pillow cython ipython vtk;
+      conda install --debug --yes pip python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib pillow cython ipython vtk;
     else
-      conda install --yes pip python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib pillow cython ipython;
+      conda install --debug --yes pip python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib pillow cython ipython;
     fi
   - pip install -r requirements_dev.txt
   - python setup.py install
