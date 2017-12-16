@@ -44,205 +44,116 @@ np.random.seed(90)
 
 #         err = np.linalg.norm((gradEx-gradEx_ana), np.inf)
 
-#         # fig = plt.figure()
-#         # plt.plot(gradEx, 'ro')
-#         # plt.plot(gradEx_ana, 'k.')
-#         # plt.show()
+# #         # fig = plt.figure()
+# #         # plt.plot(gradEx, 'ro')
+# #         # plt.plot(gradEx_ana, 'k.')
+# #         # plt.show()
 
-#         # Gdiff = gradEx-gradEx_ana
+# #         # Gdiff = gradEx-gradEx_ana
 
-#         # print(Gdiff.min())
-#         # print(Gdiff.max())
+# #         # print(Gdiff.min())
+# #         # print(Gdiff.max())
 
-#         # import matplotlib.colors as colors
-#         # import matplotlib.cm as cmx
-#         # from mpl_toolkits.axes_grid1 import make_axes_locatable
+# #         # import matplotlib.colors as colors
+# #         # import matplotlib.cm as cmx
+# #         # from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-#         # jet = plt.get_cmap('jet')
-#         # cNorm = colors.Normalize(vmin=Gdiff.min(), vmax=Gdiff.max())
-#         # scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
-#         # GdiffColors = scalarMap.to_rgba(Gdiff)
+# #         # jet = plt.get_cmap('jet')
+# #         # cNorm = colors.Normalize(vmin=Gdiff.min(), vmax=Gdiff.max())
+# #         # scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
+# #         # GdiffColors = scalarMap.to_rgba(Gdiff)
 
-#         # fig = plt.figure()
-#         # ax = fig.add_subplot(111)
-#         # self.M.plotGrid()
-#         # ax.scatter(self.M.gridFx[:, 0], self.M.gridFx[:, 1], c=GdiffColors)
-#         # ax.set_xlim([0,1])
-#         # ax.set_ylim([0,1])
-#         # # plt.colorbar(GdiffColors)
-#         # plt.show()
-#         # # print(self.M.gridFx)
+# #         # fig = plt.figure()
+# #         # ax = fig.add_subplot(111)
+# #         # self.M.plotGrid()
+# #         # ax.scatter(self.M.gridFx[:, 0], self.M.gridFx[:, 1], c=GdiffColors)
+# #         # ax.set_xlim([0,1])
+# #         # ax.set_ylim([0,1])
+# #         # # plt.colorbar(GdiffColors)
+# #         # plt.show()
+# #         # # print(self.M.gridFx)
 
-#         # fig= plt.figure()
-#         # self.M.plotImage(Gdiff, grid=True)
-#         # plt.show()
+# #         # fig= plt.figure()
+# #         # self.M.plotImage(Gdiff, grid=True)
+# #         # plt.show()
 
-#         return err
+# #         return err
 
-#     def test_order(self):
-#         self.orderTest()
-
-
-# class TestCellGrad2D(discretize.Tests.OrderTest):
-#     name = "Cell Gradient 2D"
-#     meshTypes = MESHTYPES
-#     meshDimension = 2
-#     meshSizes = [16]
-
-#     def getError(self):
-#         #Test function
-#         F = lambda x, y: np.cos(2*np.pi*x)*np.cos(2*np.pi*y)
-#         dFdx = lambda x, y: -2*np.pi*np.sin(2*np.pi*x)*np.cos(2*np.pi*y)
-#         dFdy = lambda x, y: -2*np.pi*np.sin(2*np.pi*y)*np.cos(2*np.pi*x)
-
-#         # F = lambda x, y: np.sin(2*np.pi*x)*np.sin(2*np.pi*y)
-#         # dFdx = lambda x, y: 2*np.pi*np.cos(2*np.pi*x)*np.sin(2*np.pi*y)
-#         # dFdy = lambda x, y: 2*np.pi*np.cos(2*np.pi*y)*np.sin(2*np.pi*x)
-
-#         # F = lambda x, y: (np.cos(2*np.pi*x) + np.cos(2*np.pi*y))
-#         # dFdx = lambda x: -2*np.pi*np.sin(2*np.pi*x)
-#         # dFdy = lambda y: -2*np.pi*np.sin(2*np.pi*y)
-
-#         phi = call2(F, self.M.gridCC)
-#         # gradEx = self.M.cellGradx.dot(phi)
-#         # gradEy = self.M.cellGrady.dot(phi)
-#         gradEx = self.M.cellGradx.dot(phi)
-#         gradEy = self.M.cellGrady.dot(phi)
-
-#         gradE = np.hstack([gradEx, gradEy])
-#         gradEx_ana = dFdx(self.M._gridFx[:, 0], self.M._gridFx[:, 1])
-#         gradEy_ana = dFdy(self.M._gridFy[:, 0], self.M._gridFy[:, 1])
-#         gradE_ana = np.r_[gradEx_ana, gradEy_ana]
+# #     def test_order(self):
+# #         self.orderTest()
 
 
-#         err = np.linalg.norm((gradE-gradE_ana), np.inf)
-
-#         fig = plt.figure()
-#         plt.plot(gradEx, 'ro')
-#         plt.plot(gradEx_ana, 'k.')
-#         plt.show()
-
-#         GxDiff = gradEx-gradEx_ana
-#         GyDiff = gradEy-gradEy_ana
-
-#         import matplotlib.colors as colors
-#         import matplotlib.cm as cmx
-#         from mpl_toolkits.axes_grid1 import make_axes_locatable
-
-#         jet = plt.get_cmap('jet')
-#         cNorm = colors.Normalize(vmin=np.min([GxDiff,GyDiff]), vmax=np.max([GxDiff,GyDiff]))
-#         scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
-#         GxDiffColors = scalarMap.to_rgba(GxDiff)
-#         GyDiffColors = scalarMap.to_rgba(GyDiff)
-
-#         fig = plt.figure()
-#         ax = fig.add_subplot(111)
-#         self.M.plotGrid()
-#         ax.scatter(self.M.gridFx[:, 0], self.M.gridFx[:, 1], c=GxDiffColors)
-#         ax.scatter(self.M.gridFy[:, 0], self.M.gridFy[:, 1], c=GyDiffColors)
-#         ax.set_xlim([0,1])
-#         ax.set_ylim([0,1])
-#         # plt.colorbar(GdiffColors)
-#         plt.show()
-
-#         fig= plt.figure()
-#         self.M.plotImage(GxDiff, grid=True)
-#         plt.title('Gx_Diff')
-#         plt.show()
-
-#         fig= plt.figure()
-#         self.M.plotImage(GyDiff, grid=True)
-#         plt.title('Gy_Diff')
-#         plt.show()
-
-#         return err
-
-#     def test_order(self):
-#         self.orderTest()
-
-
-
-# class TestCellGrad3D(discretize.Tests.OrderTest):
-#     name = "Cell Gradient 3D"
-#     meshTypes = MESHTYPES
-#     meshDimension = 3
-#     meshSizes = [16, 32]
-
-#     def getError(self):
-#         #Test function
-#         F = lambda x, y, z: (np.cos(2*np.pi*x) + np.cos(2*np.pi*y) + np.cos(2*np.pi*z))
-#         dFdx = lambda x: -2*np.pi*np.sin(2*np.pi*x)
-#         dFdy = lambda y: -2*np.pi*np.sin(2*np.pi*y)
-#         dFdz = lambda z: -2*np.pi*np.sin(2*np.pi*z)
-
-#         phi = call3(F, self.M.gridCC)
-#         gradEx = self.M.cellGradx.dot(phi)
-#         gradEy = self.M.cellGrady.dot(phi)
-#         gradEz = self.M.cellGradz.dot(phi)
-#         gradE = np.hstack([gradEx, gradEy, gradEz])
-
-#         gradE_ana = np.r_[dFdx(self.M._gridFx[:, 0]),
-#                   dFdy(self.M._gridFy[:, 1]),
-#                   dFdz(self.M._gridFz[:, 2])]
-
-#         err = np.linalg.norm((gradE-gradE_ana), np.inf)
-
-#         return err
-
-#     def test_order(self):
-#         self.orderTest()
-
-
-class TestFaceDiv2D(discretize.Tests.OrderTest):
-    name = "Face Divergence 2D"
+class TestCellGrad2D(discretize.Tests.OrderTest):
+    name = "Cell Gradient 2D, using cellGradx and cellGrady"
     meshTypes = MESHTYPES
     meshDimension = 2
     meshSizes = [16, 32]
 
     def getError(self):
         #Test function
-        fx = lambda x, y: np.sin(2*np.pi*x)
-        fy = lambda x, y: np.sin(2*np.pi*y)
-        sol = lambda x, y: 2*np.pi*(np.cos(2*np.pi*x)+np.cos(2*np.pi*y))
+        F = lambda x, y: np.cos(2*np.pi*x)*np.cos(2*np.pi*y)
+        dFdx = lambda x, y: -2*np.pi*np.sin(2*np.pi*x)*np.cos(2*np.pi*y)
+        dFdy = lambda x, y: -2*np.pi*np.sin(2*np.pi*y)*np.cos(2*np.pi*x)
 
-        Fc = cartF2(self.M, fx, fy)
-        F = self.M.projectFaceVector(Fc)
+        # F = lambda x, y: np.sin(2*np.pi*x)*np.sin(2*np.pi*y)
+        # dFdx = lambda x, y: 2*np.pi*np.cos(2*np.pi*x)*np.sin(2*np.pi*y)
+        # dFdy = lambda x, y: 2*np.pi*np.cos(2*np.pi*y)*np.sin(2*np.pi*x)
 
-        divF = self.M.faceDiv.dot(F)
-        divF_ana = call2(sol, self.M.gridCC)
+        # F = lambda x, y: (np.cos(2*np.pi*x) + np.cos(2*np.pi*y))
+        # dFdx = lambda x: -2*np.pi*np.sin(2*np.pi*x)
+        # dFdy = lambda y: -2*np.pi*np.sin(2*np.pi*y)
 
-        err = np.linalg.norm((divF-divF_ana), np.inf)
+        phi = call2(F, self.M.gridCC)
+        # gradEx = self.M.cellGradx.dot(phi)
+        # gradEy = self.M.cellGrady.dot(phi)
+        gradEx = self.M.cellGradx.dot(phi)
+        gradEy = self.M.cellGrady.dot(phi)
 
-        # self.M.plotImage(divF-divF_ana, showIt=True)
+        gradE = np.hstack([gradEx, gradEy])
+        gradEx_ana = dFdx(self.M.gridFx[:, 0], self.M.gridFx[:, 1])
+        gradEy_ana = dFdy(self.M.gridFy[:, 0], self.M.gridFy[:, 1])
+        gradE_ana = np.r_[gradEx_ana, gradEy_ana]
 
-        return err
 
-    def test_order(self):
-        self.orderTest()
+        err = np.linalg.norm((gradE-gradE_ana), np.inf)
 
-class TestFaceDivxy2D(discretize.Tests.OrderTest):
-    name = "Face Divergence 2D, Testing faceDivx and faceDivy"
-    meshTypes = MESHTYPES
-    meshDimension = 2
-    meshSizes = [16, 32]
+        # fig = plt.figure()
+        # plt.plot(gradEx, 'ro')
+        # plt.plot(gradEx_ana, 'k.')
+        # plt.show()
 
-    def getError(self):
-        #Test function
-        fx = lambda x, y: np.sin(2*np.pi*x)
-        fy = lambda x, y: np.sin(2*np.pi*y)
-        sol = lambda x, y: 2*np.pi*(np.cos(2*np.pi*x)+np.cos(2*np.pi*y))
+        # GxDiff = gradEx-gradEx_ana
+        # GyDiff = gradEy-gradEy_ana
 
-        Fx = call2(fx, self.M.gridFx)
-        Fy = call2(fy, self.M.gridFy)
-        divFx = self.M.faceDivx.dot(Fx)
-        divFy = self.M.faceDivy.dot(Fy)
-        divF = divFx + divFy
+        # import matplotlib.colors as colors
+        # import matplotlib.cm as cmx
+        # from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-        divF_ana = call2(sol, self.M.gridCC)
+        # jet = plt.get_cmap('jet')
+        # cNorm = colors.Normalize(vmin=np.min([GxDiff,GyDiff]), vmax=np.max([GxDiff,GyDiff]))
+        # scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
+        # GxDiffColors = scalarMap.to_rgba(GxDiff)
+        # GyDiffColors = scalarMap.to_rgba(GyDiff)
 
-        err = np.linalg.norm((divF-divF_ana), np.inf)
+        # fig = plt.figure()
+        # ax = fig.add_subplot(111)
+        # self.M.plotGrid()
+        # ax.scatter(self.M.gridFx[:, 0], self.M.gridFx[:, 1], c=GxDiffColors)
+        # ax.scatter(self.M.gridFy[:, 0], self.M.gridFy[:, 1], c=GyDiffColors)
+        # ax.set_xlim([0,1])
+        # ax.set_ylim([0,1])
+        # # plt.colorbar(GdiffColors)
+        # plt.show()
 
-        # self.M.plotImage(divF-divF_ana, showIt=True)
+        # fig= plt.figure()
+        # self.M.plotImage(GxDiff, grid=True)
+        # plt.title('Gx_Diff')
+        # plt.show()
+
+        # fig= plt.figure()
+        # self.M.plotImage(GyDiff, grid=True)
+        # plt.title('Gy_Diff')
+        # plt.show()
 
         return err
 
@@ -250,61 +161,176 @@ class TestFaceDivxy2D(discretize.Tests.OrderTest):
         self.orderTest()
 
 
-class TestFaceDiv3D(discretize.Tests.OrderTest):
-    name = "Face Divergence 3D"
-    meshTypes = MESHTYPES
-    meshSizes = [8, 16]
-
-    def getError(self):
-        fx = lambda x, y, z: np.sin(2*np.pi*x)
-        fy = lambda x, y, z: np.sin(2*np.pi*y)
-        fz = lambda x, y, z: np.sin(2*np.pi*z)
-        sol = lambda x, y, z: (2*np.pi*np.cos(2*np.pi*x)+2*np.pi*np.cos(2*np.pi*y)+2*np.pi*np.cos(2*np.pi*z))
-
-        Fc = cartF3(self.M, fx, fy, fz)
-        F = self.M.projectFaceVector(Fc)
-
-        divF = self.M.faceDiv.dot(F)
-        divF_ana = call3(sol, self.M.gridCC)
-
-        return np.linalg.norm((divF-divF_ana), np.inf)
-
-
-    def test_order(self):
-        self.orderTest()
-
-
-class TestFaceDivxyz3D(discretize.Tests.OrderTest):
-    name = "Face Divergence 3D, Testing faceDivx, faceDivy, and faceDivz"
+class TestCellGrad3D(discretize.Tests.OrderTest):
+    name = "Cell Gradient 3D, using cellGradx, cellGrady, and cellGradz"
     meshTypes = MESHTYPES
     meshDimension = 3
     meshSizes = [8, 16]
 
     def getError(self):
         #Test function
-        fx = lambda x, y, z: np.sin(2*np.pi*x)
-        fy = lambda x, y, z: np.sin(2*np.pi*y)
-        fz = lambda x, y, z: np.sin(2*np.pi*z)
-        sol = lambda x, y, z: (2*np.pi*np.cos(2*np.pi*x)+2*np.pi*np.cos(2*np.pi*y)+2*np.pi*np.cos(2*np.pi*z))
+        F = lambda x, y, z: (np.cos(2*np.pi*x) + np.cos(2*np.pi*y) + np.cos(2*np.pi*z))
+        dFdx = lambda x: -2*np.pi*np.sin(2*np.pi*x)
+        dFdy = lambda y: -2*np.pi*np.sin(2*np.pi*y)
+        dFdz = lambda z: -2*np.pi*np.sin(2*np.pi*z)
 
-        Fx = call3(fx, self.M.gridFx)
-        Fy = call3(fy, self.M.gridFy)
-        Fz = call3(fz, self.M.gridFz)
-        divFx = self.M.faceDivx.dot(Fx)
-        divFy = self.M.faceDivy.dot(Fy)
-        divFz = self.M.faceDivz.dot(Fz)
-        divF = divFx + divFy + divFz
+        phi = call3(F, self.M.gridCC)
+        gradEx = self.M.cellGradx.dot(phi)
+        gradEy = self.M.cellGrady.dot(phi)
+        gradEz = self.M.cellGradz.dot(phi)
+        gradE = np.hstack([gradEx, gradEy, gradEz])
 
-        divF_ana = call3(sol, self.M.gridCC)
+        gradE_ana = np.r_[dFdx(self.M.gridFx[:, 0]),
+                  dFdy(self.M.gridFy[:, 1]),
+                  dFdz(self.M.gridFz[:, 2])]
 
-        err = np.linalg.norm((divF-divF_ana), np.inf)
-
-        # self.M.plotImage(divF-divF_ana, showIt=True)
+        err = np.linalg.norm((gradE-gradE_ana), np.inf)
 
         return err
 
     def test_order(self):
         self.orderTest()
+
+class TestCellGrad3D(discretize.Tests.OrderTest):
+    name = "Cell Gradient 3D"
+    meshTypes = MESHTYPES
+    meshDimension = 3
+    meshSizes = [8, 16]
+
+    def getError(self):
+        #Test function
+        F = lambda x, y, z: (np.cos(2*np.pi*x) + np.cos(2*np.pi*y) + np.cos(2*np.pi*z))
+        dFdx = lambda x: -2*np.pi*np.sin(2*np.pi*x)
+        dFdy = lambda y: -2*np.pi*np.sin(2*np.pi*y)
+        dFdz = lambda z: -2*np.pi*np.sin(2*np.pi*z)
+
+        phi = call3(F, self.M.gridCC)
+        gradE = self.M.cellGrad.dot(phi)
+
+        gradE_ana = np.r_[dFdx(self.M.gridFx[:, 0]),
+                  dFdy(self.M.gridFy[:, 1]),
+                  dFdz(self.M.gridFz[:, 2])]
+
+        err = np.linalg.norm((gradE-gradE_ana), np.inf)
+
+        return err
+
+    def test_order(self):
+        self.orderTest()
+
+
+# class TestFaceDiv2D(discretize.Tests.OrderTest):
+#     name = "Face Divergence 2D"
+#     meshTypes = MESHTYPES
+#     meshDimension = 2
+#     meshSizes = [16, 32]
+
+#     def getError(self):
+#         #Test function
+#         fx = lambda x, y: np.sin(2*np.pi*x)
+#         fy = lambda x, y: np.sin(2*np.pi*y)
+#         sol = lambda x, y: 2*np.pi*(np.cos(2*np.pi*x)+np.cos(2*np.pi*y))
+
+#         Fc = cartF2(self.M, fx, fy)
+#         F = self.M.projectFaceVector(Fc)
+
+#         divF = self.M.faceDiv.dot(F)
+#         divF_ana = call2(sol, self.M.gridCC)
+
+#         err = np.linalg.norm((divF-divF_ana), np.inf)
+
+#         # self.M.plotImage(divF-divF_ana, showIt=True)
+
+#         return err
+
+#     def test_order(self):
+#         self.orderTest()
+
+# class TestFaceDivxy2D(discretize.Tests.OrderTest):
+#     name = "Face Divergence 2D, Testing faceDivx and faceDivy"
+#     meshTypes = MESHTYPES
+#     meshDimension = 2
+#     meshSizes = [16, 32]
+
+#     def getError(self):
+#         #Test function
+#         fx = lambda x, y: np.sin(2*np.pi*x)
+#         fy = lambda x, y: np.sin(2*np.pi*y)
+#         sol = lambda x, y: 2*np.pi*(np.cos(2*np.pi*x)+np.cos(2*np.pi*y))
+
+#         Fx = call2(fx, self.M.gridFx)
+#         Fy = call2(fy, self.M.gridFy)
+#         divFx = self.M.faceDivx.dot(Fx)
+#         divFy = self.M.faceDivy.dot(Fy)
+#         divF = divFx + divFy
+
+#         divF_ana = call2(sol, self.M.gridCC)
+
+#         err = np.linalg.norm((divF-divF_ana), np.inf)
+
+#         # self.M.plotImage(divF-divF_ana, showIt=True)
+
+#         return err
+
+#     def test_order(self):
+#         self.orderTest()
+
+
+# class TestFaceDiv3D(discretize.Tests.OrderTest):
+#     name = "Face Divergence 3D"
+#     meshTypes = MESHTYPES
+#     meshSizes = [8, 16]
+
+#     def getError(self):
+#         fx = lambda x, y, z: np.sin(2*np.pi*x)
+#         fy = lambda x, y, z: np.sin(2*np.pi*y)
+#         fz = lambda x, y, z: np.sin(2*np.pi*z)
+#         sol = lambda x, y, z: (2*np.pi*np.cos(2*np.pi*x)+2*np.pi*np.cos(2*np.pi*y)+2*np.pi*np.cos(2*np.pi*z))
+
+#         Fc = cartF3(self.M, fx, fy, fz)
+#         F = self.M.projectFaceVector(Fc)
+
+#         divF = self.M.faceDiv.dot(F)
+#         divF_ana = call3(sol, self.M.gridCC)
+
+#         return np.linalg.norm((divF-divF_ana), np.inf)
+
+
+#     def test_order(self):
+#         self.orderTest()
+
+
+# class TestFaceDivxyz3D(discretize.Tests.OrderTest):
+#     name = "Face Divergence 3D, Testing faceDivx, faceDivy, and faceDivz"
+#     meshTypes = MESHTYPES
+#     meshDimension = 3
+#     meshSizes = [8, 16]
+
+#     def getError(self):
+#         #Test function
+#         fx = lambda x, y, z: np.sin(2*np.pi*x)
+#         fy = lambda x, y, z: np.sin(2*np.pi*y)
+#         fz = lambda x, y, z: np.sin(2*np.pi*z)
+#         sol = lambda x, y, z: (2*np.pi*np.cos(2*np.pi*x)+2*np.pi*np.cos(2*np.pi*y)+2*np.pi*np.cos(2*np.pi*z))
+
+#         Fx = call3(fx, self.M.gridFx)
+#         Fy = call3(fy, self.M.gridFy)
+#         Fz = call3(fz, self.M.gridFz)
+#         divFx = self.M.faceDivx.dot(Fx)
+#         divFy = self.M.faceDivy.dot(Fy)
+#         divFz = self.M.faceDivz.dot(Fz)
+#         divF = divFx + divFy + divFz
+
+#         divF_ana = call3(sol, self.M.gridCC)
+
+#         err = np.linalg.norm((divF-divF_ana), np.inf)
+
+#         # self.M.plotImage(divF-divF_ana, showIt=True)
+
+#         return err
+
+#     def test_order(self):
+#         self.orderTest()
 
 
 # class TestCurl(discretize.Tests.OrderTest):

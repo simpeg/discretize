@@ -1646,7 +1646,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
                     facesX = [self._fx2i[self._index([p[0], p[1], p[2]])],
                               self._fx2i[self._index([p[0] + w, p[1], p[2]])]]
 
-                if self.dim == 3:
+                elif self.dim == 3:
                     facesX = [self._fx2i[self._index([p[0], p[1], p[2], p[3]])],
                               self._fx2i[self._index([p[0] + w, p[1], p[2], p[3]])]]
 
@@ -1682,7 +1682,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
                     facesY = [self._fy2i[self._index([p[0], p[1], p[2]])],
                               self._fy2i[self._index([p[0], p[1] + w, p[2]])]]
 
-                if self.dim == 3:
+                elif self.dim == 3:
                     facesY = [self._fy2i[self._index([p[0], p[1], p[2], p[3]])],
                               self._fy2i[self._index([p[0], p[1] + w, p[2], p[3]])]]
 
@@ -2012,262 +2012,360 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
 
     @property
-    def cellGradx(self, bc=['neumann','neumann']):
+    def cellGrad(self):
         """
-        Cell centered Gradient in the x dimension. Default neumann boundary
-        conditions.
+        Cell centered Gradient operator built off of the faceDiv operator.
         """
+        if getattr(self, '_cellGrad', None) is None:
+
+            indBoundary = np.ones(self.nC, dtype=float)
+
+            indBoundary_Fx = (self.aveFx2CC.T * indBoundary) != 0.5
+            ix = np.zeros(self.nFx)
+            ix[indBoundary_Fx] = 1.
+            Pafx = utils.sdiag(ix)
+
+            indBoundary_Fy = (self.aveFy2CC.T * indBoundary) != 0.5
+            iy = np.zeros(self.nFy)
+            iy[indBoundary_Fy] = 1.
+            Pafy = utils.sdiag(iy)
+
+            MfI = self.getFaceInnerProduct(invMat=True)
+
+            if self.dim == 2:
+                Pi = sp.block_diag([Pafx, Pafy])
+
+            elif self.dim == 3:
+                indBoundary_Fz = (self.aveFz2CC.T * indBoundary) != 0.5
+                iz = np.zeros(self.nFz)
+                iz[indBoundary_Fz] = 1.
+                Pafz = utils.sdiag(iz)
+                Pi = sp.block_diag([Pafx, Pafy, Pafz])
+
+            self._cellGrad = Pi * MfI * self.faceDiv.T * utils.sdiag(self.vol)
+
+        return self._cellGrad
+
+
+    @property
+    def cellGradx(self):
         if getattr(self, '_cellGradx', None) is None:
-            self.number()
 
-            faceParent = dict()
-            theHang = self._hangingFx
-            for key in theHang.keys():
-                if not theHang[key][0][0] in faceParent.keys():
-                    faceParent[theHang[key][0][0]] = [key]
-                else:
-                    faceParent[theHang[key][0][0]] += [key]
+            nFx = self.nFx
+            indBoundary = np.ones(self.nC, dtype=float)
 
-            I, J, V = [], [], []
+            indBoundary_Fx = (self.aveFx2CC.T * indBoundary) != 0.5
+            ix = np.zeros(self.nFx)
+            ix[indBoundary_Fx] = 1.
+            Pafx = utils.sdiag(ix)
 
-            for ii, ind in enumerate(self._sortedCells):
+            MfI = self.getFaceInnerProduct(invMat=True)
+            MfIx = utils.sdiag(MfI.diagonal()[:nFx])
 
-                p = self._pointer(ind)
-            #     w = self._levelWidth(p[-1])
-
-                if self.dim == 2:
-                    cells = self._getNextCell(self._index([p[0], p[1], p[2]]),
-                                              direction=0)
-                elif self.dim == 3:
-                    cells = self._getNextCell(self._index([p[0], p[1], p[2],
-                                                           p[3]]), direction=0)
-
-                if cells:
-                    if isinstance(cells, int):
-                        cells = [cells]
-
-                    for cell in cells:
-                        pN = self._pointer(cell)
-
-                        # Check if neighbour has lower tree level
-                        if pN[-1] < p[-1]:
-                            if self.dim == 2:
-                                hangs = faceParent[self._fx2i[self._index([pN[0],
-                                                                           pN[1],
-                                                                           pN[2]])]]
-                                count = int(np.abs((p[1] - pN[1]) % 2))
-
-                            elif self.dim == 3:
-                                hangs = faceParent[self._fx2i[self._index([pN[0],
-                                                                           pN[1],
-                                                                           pN[2],
-                                                                           pN[3]])]]
-                                count = int(np.abs((p[1] - pN[1]) % 2))
-                                count += int(2*np.abs((p[2] - pN[2]) % 2))
-                            face = hangs[count]
-                        else:
-                            if self.dim == 2:
-                                face = self._fx2i[self._index([pN[0], pN[1],
-                                                               pN[2]])]
-                            elif self.dim == 3:
-                                face = self._fx2i[self._index([pN[0], pN[1],
-                                                               pN[2], pN[3]])]
-
-                        p_cellHx = self._cellH(p[-1])[0]
-                        pN_cellHx = self._cellH(pN[-1])[0]
-
-                        L = p_cellHx/2 + pN_cellHx/2
-                        I += [face]*2
-                        J += [self._cc2i[ind], self._cc2i[cell]]
-
-                        # # Set Boundary conditions
-                        # # Set the first side
-                        # if cell == cells[0]:
-                        #     if(bc[0] == 'dirichlet'):
-                        #         V += list((1/L)*np.array([2.0, 1.0]))
-                        #     elif(bc[0] == 'neumann'):
-                        #         V += list((1/L)*np.array([0.0, 1.0]))
-                        # elif cell == cells[-1]:
-                        #     if(bc[0] == 'dirichlet'):
-                        #         V += list((1/L)*np.array([-1.0, -2.0]))
-                        #     elif(bc[0] == 'neumann'):
-                        #         V += list((1/L)*np.array([-1.0, 0.0]))
-                        # else:
-                        V += list((1/L)*np.array([-1.0, 1.0]))
-
-            self._cellGradx = sp.csr_matrix((V, (I, J)), shape=(self.ntFx, self.nC))
-
-            # # Set Boundary conditions
-            # # Set the first side
-            # if(bc[0] == 'dirichlet'):
-            #     self._cellGradx[0, 0] = 2
-            # elif(bc[0] == 'neumann'):
-            #     self._cellGradx[0, 0] = 0
-            # # Set the second side
-            # if(bc[1] == 'dirichlet'):
-            #     self._cellGradx[-1, -1] = -2
-            # elif(bc[1] == 'neumann'):
-            #     self._cellGradx[-1, -1] = 0
+            self._cellGradx = Pafx * MfIx * self.faceDivx.T * utils.sdiag(self.vol)
 
         return self._cellGradx
 
 
     @property
-    def cellGrady(self, bc=['neumann','neumann']):
-        """
-        Cell centered Gradient in the y dimension. Has neumann boundary
-        conditions.
-        """
+    def cellGrady(self):
         if getattr(self, '_cellGrady', None) is None:
-            self.number()
 
-            faceParent = dict()
-            theHang = self._hangingFy
-            for key in theHang.keys():
-                if not theHang[key][0][0] in faceParent.keys():
-                    faceParent[theHang[key][0][0]] = [key]
-                else:
-                    faceParent[theHang[key][0][0]] += [key]
+            nFx = self.nFx
+            nFy = self.nFy
+            indBoundary = np.ones(self.nC, dtype=float)
 
-            I, J, V = [], [], []
+            indBoundary_Fy = (self.aveFy2CC.T * indBoundary) != 0.5
+            iy = np.zeros(self.nFy)
+            iy[indBoundary_Fy] = 1.
+            Pafy = utils.sdiag(iy)
 
-            for ii, ind in enumerate(self._sortedCells):
-                p = self._pointer(ind)
-            #     w = self._levelWidth(p[-1])
+            MfI = self.getFaceInnerProduct(invMat=True)
+            MfIy = utils.sdiag(MfI.diagonal()[nFx:nFx+nFy])
 
-                if self.dim == 2:
-                    cells = self._getNextCell(self._index([p[0], p[1], p[2]]),
-                                              direction=1)
-                elif self.dim == 3:
-                    cells = self._getNextCell(self._index([p[0], p[1],
-                                                           p[2], p[3]]),
-                                              direction=1)
-
-                if cells:
-                    if isinstance(cells, int):
-                        cells = [cells]
-
-                    for cell in cells:
-                        pN = self._pointer(cell)
-
-                        # Check if neighbour has lower tree level
-                        if pN[-1] < p[-1]:
-                            if self.dim == 2:
-                                hangs = faceParent[self._fy2i[self._index([pN[0],
-                                                                           pN[1],
-                                                                           pN[2]])]]
-                                count = int(np.abs((p[0] - pN[0]) % 2))
-
-                            elif self.dim == 3:
-                                hangs = faceParent[self._fy2i[self._index([pN[0],
-                                                                           pN[1],
-                                                                           pN[2],
-                                                                           pN[3]])]]
-                                count = int(np.abs((p[0] - pN[0]) % 2))
-                                count += int(2*np.abs((p[2] - pN[2]) % 2))
-                            face = hangs[count]
-                        else:
-                            if self.dim == 2:
-                                face = self._fy2i[self._index([pN[0], pN[1],
-                                                               pN[2]])]
-                            elif self.dim == 3:
-                                face = self._fy2i[self._index([pN[0], pN[1],
-                                                               pN[2], pN[3]])]
-
-                        p_cellHy = self._cellH(p[-1])[1]
-                        pN_cellHy = self._cellH(pN[-1])[1]
-
-                        L = p_cellHy/2 + pN_cellHy/2
-                        I += [face]*2
-                        J += [self._cc2i[ind], self._cc2i[cell]]
-                        V += list((1/L)*np.array([-1.0, 1.0]))
-
-            self._cellGrady = sp.csr_matrix((V, (I, J)), shape=(self.ntFy, self.nC))
-
-            # # Set Boundary conditions
-            # # Set the first side
-            # if(bc[0] == 'dirichlet'):
-            #     self._cellGrady[0, 0] = 2
-            # elif(bc[0] == 'neumann'):
-            #     self._cellGrady[0, 0] = 0
-            # # Set the second side
-            # if(bc[1] == 'dirichlet'):
-            #     self._cellGrady[-1, -1] = -2
-            # elif(bc[1] == 'neumann'):
-            #     self._cellGrady[-1, -1] = 0
+            self._cellGrady = Pafy * MfIy * self.faceDivy.T * utils.sdiag(self.vol)
 
         return self._cellGrady
 
 
     @property
-    def cellGradz(self, bc=['neumann','neumann']):
-        """
-        Cell centered Gradient in the z dimension. Has neumann boundary
-        conditions.
-        """
+    def cellGradz(self):
         if getattr(self, '_cellGradz', None) is None:
-            self.number()
-            assert self.dim == 3, 'cellGradzStencil only possible for TreeMesh 3D'
 
-            faceParent = dict()
-            theHang = self._hangingFz
+            nFx = self.nFx
+            nFy = self.nFy
+            indBoundary = np.ones(self.nC, dtype=float)
 
-            for key in theHang.keys():
-                if not theHang[key][0][0] in faceParent.keys():
-                    faceParent[theHang[key][0][0]] = [key]
-                else:
-                    faceParent[theHang[key][0][0]] += [key]
+            indBoundary_Fz = (self.aveFz2CC.T * indBoundary) != 0.5
+            iz = np.zeros(self.nFz)
+            iz[indBoundary_Fz] = 1.
+            Pafz = utils.sdiag(iz)
 
-            I, J, V = [], [], []
+            MfI = self.getFaceInnerProduct(invMat=True)
+            MfIz = utils.sdiag(MfI.diagonal()[nFx+nFy:])
 
-            for ii, ind in enumerate(self._sortedCells):
-                p = self._pointer(ind)
-            #     w = self._levelWidth(p[-1])
-                cells = self._getNextCell(self._index([p[0], p[1], p[2], p[3]]),
-                                          direction=2)
-                if cells:
-                    if isinstance(cells, int):
-                        cells = [cells]
-
-                    for cell in cells:
-                        pN = self._pointer(cell)
-
-                        # Check if neighbour has lower tree level
-                        if pN[-1] < p[-1]:
-                            hangs = faceParent[self._fz2i[self._index([pN[0],
-                                                                       pN[1],
-                                                                       pN[2],
-                                                                       pN[3]])]]
-                            count = int(np.abs((p[0] - pN[0]) % 2))
-                            count += int(2*np.abs((p[1] - pN[1]) % 2))
-                            face = hangs[count]
-                        else:
-                            face = self._fz2i[self._index([pN[0], pN[1],
-                                                           pN[2], pN[3]])]
-
-                        p_cellHz = self._cellH(p[-1])[2]
-                        pN_cellHz = self._cellH(pN[-1])[2]
-
-                        L = p_cellHz/2 + pN_cellHz/2
-                        I += [face]*2
-                        J += [self._cc2i[ind], self._cc2i[cell]]
-                        V += list((1/L)*np.array([-1.0, 1.0]))
-
-            self._cellGradz = sp.csr_matrix((V, (I, J)), shape=(self.ntFz, self.nC))
-
-            # # Set Boundary conditions
-            # # Set the first side
-            # if(bc[0] == 'dirichlet'):
-            #     self._cellGradz[0, 0] = 2
-            # elif(bc[0] == 'neumann'):
-            #     self._cellGradz[0, 0] = 0
-            # # Set the second side
-            # if(bc[1] == 'dirichlet'):
-            #     self._cellGradz[-1, -1] = -2
-            # elif(bc[1] == 'neumann'):
-            #     self._cellGradz[-1, -1] = 0
+            self._cellGradz = Pafz * MfIz * self.faceDivz.T * utils.sdiag(self.vol)
 
         return self._cellGradz
+
+
+    # @property
+    # def cellGradx(self, bc=['neumann','neumann']):
+    #     """
+    #     Cell centered Gradient in the x dimension. Default neumann boundary
+    #     conditions.
+    #     """
+    #     if getattr(self, '_cellGradx', None) is None:
+    #         self.number()
+
+    #         faceParent = dict()
+    #         theHang = self._hangingFx
+    #         for key in theHang.keys():
+    #             if not theHang[key][0][0] in faceParent.keys():
+    #                 faceParent[theHang[key][0][0]] = [key]
+    #             else:
+    #                 faceParent[theHang[key][0][0]] += [key]
+
+    #         I, J, V = [], [], []
+
+    #         for ii, ind in enumerate(self._sortedCells):
+
+    #             p = self._pointer(ind)
+    #         #     w = self._levelWidth(p[-1])
+
+    #             if self.dim == 2:
+    #                 cells = self._getNextCell(self._index([p[0], p[1], p[2]]),
+    #                                           direction=0)
+    #             elif self.dim == 3:
+    #                 cells = self._getNextCell(self._index([p[0], p[1], p[2],
+    #                                                        p[3]]), direction=0)
+
+    #             if cells:
+    #                 if isinstance(cells, int):
+    #                     cells = [cells]
+
+    #                 for cell in cells:
+    #                     pN = self._pointer(cell)
+
+    #                     # Check if neighbour has lower tree level
+    #                     if pN[-1] < p[-1]:
+    #                         if self.dim == 2:
+    #                             hangs = faceParent[self._fx2i[self._index([pN[0],
+    #                                                                        pN[1],
+    #                                                                        pN[2]])]]
+    #                             count = int(np.abs((p[1] - pN[1]) % 2))
+
+    #                         elif self.dim == 3:
+    #                             hangs = faceParent[self._fx2i[self._index([pN[0],
+    #                                                                        pN[1],
+    #                                                                        pN[2],
+    #                                                                        pN[3]])]]
+    #                             count = int(np.abs((p[1] - pN[1]) % 2))
+    #                             count += int(2*np.abs((p[2] - pN[2]) % 2))
+    #                         face = hangs[count]
+    #                     else:
+    #                         if self.dim == 2:
+    #                             face = self._fx2i[self._index([pN[0], pN[1],
+    #                                                            pN[2]])]
+    #                         elif self.dim == 3:
+    #                             face = self._fx2i[self._index([pN[0], pN[1],
+    #                                                            pN[2], pN[3]])]
+
+    #                     p_cellHx = self._cellH(p[-1])[0]
+    #                     pN_cellHx = self._cellH(pN[-1])[0]
+
+    #                     L = p_cellHx/2 + pN_cellHx/2
+    #                     I += [face]*2
+    #                     J += [self._cc2i[ind], self._cc2i[cell]]
+
+    #                     # # Set Boundary conditions
+    #                     # # Set the first side
+    #                     # if cell == cells[0]:
+    #                     #     if(bc[0] == 'dirichlet'):
+    #                     #         V += list((1/L)*np.array([2.0, 1.0]))
+    #                     #     elif(bc[0] == 'neumann'):
+    #                     #         V += list((1/L)*np.array([0.0, 1.0]))
+    #                     # elif cell == cells[-1]:
+    #                     #     if(bc[0] == 'dirichlet'):
+    #                     #         V += list((1/L)*np.array([-1.0, -2.0]))
+    #                     #     elif(bc[0] == 'neumann'):
+    #                     #         V += list((1/L)*np.array([-1.0, 0.0]))
+    #                     # else:
+    #                     V += list((1/L)*np.array([-1.0, 1.0]))
+
+    #         self._cellGradx = sp.csr_matrix((V, (I, J)), shape=(self.ntFx, self.nC))
+
+    #         # # Set Boundary conditions
+    #         # # Set the first side
+    #         # if(bc[0] == 'dirichlet'):
+    #         #     self._cellGradx[0, 0] = 2
+    #         # elif(bc[0] == 'neumann'):
+    #         #     self._cellGradx[0, 0] = 0
+    #         # # Set the second side
+    #         # if(bc[1] == 'dirichlet'):
+    #         #     self._cellGradx[-1, -1] = -2
+    #         # elif(bc[1] == 'neumann'):
+    #         #     self._cellGradx[-1, -1] = 0
+
+    #     return self._cellGradx
+
+
+    # @property
+    # def cellGrady(self, bc=['neumann','neumann']):
+    #     """
+    #     Cell centered Gradient in the y dimension. Has neumann boundary
+    #     conditions.
+    #     """
+    #     if getattr(self, '_cellGrady', None) is None:
+    #         self.number()
+
+    #         faceParent = dict()
+    #         theHang = self._hangingFy
+    #         for key in theHang.keys():
+    #             if not theHang[key][0][0] in faceParent.keys():
+    #                 faceParent[theHang[key][0][0]] = [key]
+    #             else:
+    #                 faceParent[theHang[key][0][0]] += [key]
+
+    #         I, J, V = [], [], []
+
+    #         for ii, ind in enumerate(self._sortedCells):
+    #             p = self._pointer(ind)
+    #         #     w = self._levelWidth(p[-1])
+
+    #             if self.dim == 2:
+    #                 cells = self._getNextCell(self._index([p[0], p[1], p[2]]),
+    #                                           direction=1)
+    #             elif self.dim == 3:
+    #                 cells = self._getNextCell(self._index([p[0], p[1],
+    #                                                        p[2], p[3]]),
+    #                                           direction=1)
+
+    #             if cells:
+    #                 if isinstance(cells, int):
+    #                     cells = [cells]
+
+    #                 for cell in cells:
+    #                     pN = self._pointer(cell)
+
+    #                     # Check if neighbour has lower tree level
+    #                     if pN[-1] < p[-1]:
+    #                         if self.dim == 2:
+    #                             hangs = faceParent[self._fy2i[self._index([pN[0],
+    #                                                                        pN[1],
+    #                                                                        pN[2]])]]
+    #                             count = int(np.abs((p[0] - pN[0]) % 2))
+
+    #                         elif self.dim == 3:
+    #                             hangs = faceParent[self._fy2i[self._index([pN[0],
+    #                                                                        pN[1],
+    #                                                                        pN[2],
+    #                                                                        pN[3]])]]
+    #                             count = int(np.abs((p[0] - pN[0]) % 2))
+    #                             count += int(2*np.abs((p[2] - pN[2]) % 2))
+    #                         face = hangs[count]
+    #                     else:
+    #                         if self.dim == 2:
+    #                             face = self._fy2i[self._index([pN[0], pN[1],
+    #                                                            pN[2]])]
+    #                         elif self.dim == 3:
+    #                             face = self._fy2i[self._index([pN[0], pN[1],
+    #                                                            pN[2], pN[3]])]
+
+    #                     p_cellHy = self._cellH(p[-1])[1]
+    #                     pN_cellHy = self._cellH(pN[-1])[1]
+
+    #                     L = p_cellHy/2 + pN_cellHy/2
+    #                     I += [face]*2
+    #                     J += [self._cc2i[ind], self._cc2i[cell]]
+    #                     V += list((1/L)*np.array([-1.0, 1.0]))
+
+    #         self._cellGrady = sp.csr_matrix((V, (I, J)), shape=(self.ntFy, self.nC))
+
+    #         # # Set Boundary conditions
+    #         # # Set the first side
+    #         # if(bc[0] == 'dirichlet'):
+    #         #     self._cellGrady[0, 0] = 2
+    #         # elif(bc[0] == 'neumann'):
+    #         #     self._cellGrady[0, 0] = 0
+    #         # # Set the second side
+    #         # if(bc[1] == 'dirichlet'):
+    #         #     self._cellGrady[-1, -1] = -2
+    #         # elif(bc[1] == 'neumann'):
+    #         #     self._cellGrady[-1, -1] = 0
+
+    #     return self._cellGrady
+
+
+    # @property
+    # def cellGradz(self, bc=['neumann','neumann']):
+    #     """
+    #     Cell centered Gradient in the z dimension. Has neumann boundary
+    #     conditions.
+    #     """
+    #     if getattr(self, '_cellGradz', None) is None:
+    #         self.number()
+    #         assert self.dim == 3, 'cellGradzStencil only possible for TreeMesh 3D'
+
+    #         faceParent = dict()
+    #         theHang = self._hangingFz
+
+    #         for key in theHang.keys():
+    #             if not theHang[key][0][0] in faceParent.keys():
+    #                 faceParent[theHang[key][0][0]] = [key]
+    #             else:
+    #                 faceParent[theHang[key][0][0]] += [key]
+
+    #         I, J, V = [], [], []
+
+    #         for ii, ind in enumerate(self._sortedCells):
+    #             p = self._pointer(ind)
+    #         #     w = self._levelWidth(p[-1])
+    #             cells = self._getNextCell(self._index([p[0], p[1], p[2], p[3]]),
+    #                                       direction=2)
+    #             if cells:
+    #                 if isinstance(cells, int):
+    #                     cells = [cells]
+
+    #                 for cell in cells:
+    #                     pN = self._pointer(cell)
+
+    #                     # Check if neighbour has lower tree level
+    #                     if pN[-1] < p[-1]:
+    #                         hangs = faceParent[self._fz2i[self._index([pN[0],
+    #                                                                    pN[1],
+    #                                                                    pN[2],
+    #                                                                    pN[3]])]]
+    #                         count = int(np.abs((p[0] - pN[0]) % 2))
+    #                         count += int(2*np.abs((p[1] - pN[1]) % 2))
+    #                         face = hangs[count]
+    #                     else:
+    #                         face = self._fz2i[self._index([pN[0], pN[1],
+    #                                                        pN[2], pN[3]])]
+
+    #                     p_cellHz = self._cellH(p[-1])[2]
+    #                     pN_cellHz = self._cellH(pN[-1])[2]
+
+    #                     L = p_cellHz/2 + pN_cellHz/2
+    #                     I += [face]*2
+    #                     J += [self._cc2i[ind], self._cc2i[cell]]
+    #                     V += list((1/L)*np.array([-1.0, 1.0]))
+
+    #         self._cellGradz = sp.csr_matrix((V, (I, J)), shape=(self.ntFz, self.nC))
+
+    #         # # Set Boundary conditions
+    #         # # Set the first side
+    #         # if(bc[0] == 'dirichlet'):
+    #         #     self._cellGradz[0, 0] = 2
+    #         # elif(bc[0] == 'neumann'):
+    #         #     self._cellGradz[0, 0] = 0
+    #         # # Set the second side
+    #         # if(bc[1] == 'dirichlet'):
+    #         #     self._cellGradz[-1, -1] = -2
+    #         # elif(bc[1] == 'neumann'):
+    #         #     self._cellGradz[-1, -1] = 0
+
+    #     return self._cellGradz
 
 
     @property
