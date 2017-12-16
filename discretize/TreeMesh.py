@@ -1524,6 +1524,9 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             self.number()
 
             # TODO: Preallocate!
+            # Ix, Jx, Vx = [], [], []
+            # Iy, Jy, Vy = [], [], []
+            # Iz, Jz, Vz = [], [], []
             I, J, V = [], [], []
             PM = [-1, 1]*self.dim  # plus / minus
 
@@ -1536,43 +1539,197 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
                 w = self._levelWidth(p[-1])
 
                 if self.dim == 2:
-                    faces = [
-                                self._fx2i[self._index([p[0], p[1], p[2]])],
-                                self._fx2i[self._index([p[0] + w, p[1],
-                                                        p[2]])],
-                                self._fy2i[self._index([p[0], p[1], p[2]])],
-                                self._fy2i[self._index([p[0], p[1] + w, p[2]])]
-                            ]
+                    facesX = [self._fx2i[self._index([p[0], p[1], p[2]])],
+                              self._fx2i[self._index([p[0] + w, p[1], p[2]])]]
+                    facesY = [self._fy2i[self._index([p[0], p[1], p[2]])],
+                              self._fy2i[self._index([p[0], p[1] + w, p[2]])]]
+
+                    faces = facesX + facesY
+
+                    # faces = [
+                    #             self._fx2i[self._index([p[0], p[1], p[2]])],
+                    #             self._fx2i[self._index([p[0] + w, p[1],
+                    #                                     p[2]])],
+                    #             self._fy2i[self._index([p[0], p[1], p[2]])],
+                    #             self._fy2i[self._index([p[0], p[1] + w, p[2]])]
+                    #         ]
                 elif self.dim == 3:
-                    faces = [
-                                self._fx2i[self._index([p[0], p[1],
-                                                        p[2], p[3]])],
-                                self._fx2i[self._index([p[0] + w, p[1],
-                                                        p[2], p[3]])],
-                                self._fy2i[self._index([p[0], p[1],
-                                                        p[2], p[3]])],
-                                self._fy2i[self._index([p[0], p[1] + w,
-                                                        p[2], p[3]])],
-                                self._fz2i[self._index([p[0], p[1],
-                                                        p[2], p[3]])],
-                                self._fz2i[self._index([p[0], p[1],
-                                                        p[2] + w, p[3]])]
-                            ]
+                    facesX = [self._fx2i[self._index([p[0], p[1], p[2], p[3]])],
+                              self._fx2i[self._index([p[0] + w, p[1], p[2], p[3]])]]
+
+                    facesY = [self._fy2i[self._index([p[0], p[1], p[2], p[3]])],
+                              self._fy2i[self._index([p[0], p[1] + w, p[2], p[3]])]]
+
+                    facesZ = [self._fz2i[self._index([p[0], p[1], p[2], p[3]])],
+                              self._fz2i[self._index([p[0], p[1], p[2] + w, p[3]])]]
+
+                    faces = facesX + facesY + facesZ
+
+                    # faces = [
+                    #             self._fx2i[self._index([p[0], p[1],
+                    #                                     p[2], p[3]])],
+                    #             self._fx2i[self._index([p[0] + w, p[1],
+                    #                                     p[2], p[3]])],
+                    #             self._fy2i[self._index([p[0], p[1],
+                    #                                     p[2], p[3]])],
+                    #             self._fy2i[self._index([p[0], p[1] + w,
+                    #                                     p[2], p[3]])],
+                    #             self._fz2i[self._index([p[0], p[1],
+                    #                                     p[2], p[3]])],
+                    #             self._fz2i[self._index([p[0], p[1],
+                    #                                     p[2] + w, p[3]])]
+                    #         ]
+
+                # for pm, faceX in zip(PM, facesX):
+                #     Ix += [ii]
+                #     Jx += [faceX]
+                #     Vx += [pm]
+
+                # for pm, faceY in zip(PM, facesY):
+                #     Iy += [ii]
+                #     Jy += [faceY]
+                #     Vy += [pm]
+
+                # if self.dim == 3:
+                #     for pm, faceZ in zip(PM, facesZ):
+                #         Iz += [ii]
+                #         Jz += [faceZ]
+                #         Vz += [pm]
 
                 for off, pm, face in zip(offset, PM, faces):
                     I += [ii]
                     J += [face + off]
                     V += [pm]
 
+            # Dx = sp.csr_matrix((Vx, (Ix, Jx)), shape=(self.nC, self.ntFx))
+            # Dy = sp.csr_matrix((Vy, (Iy, Jy)), shape=(self.nC, self.ntFy))
             D = sp.csr_matrix((V, (I, J)), shape=(self.nC, self.ntF))
+
+            # Rx = self._deflationMatrix('Fx', asOnes=True)
+            # Ry = self._deflationMatrix('Fy', asOnes=True)
             R = self._deflationMatrix('F', asOnes=True)
             VOL = self.vol
+
+            # self._faceDivx = utils.sdiag(1.0/VOL)*Dx*utils.sdiag(self._areaFxFull)*Rx
+            # self._faceDivy = utils.sdiag(1.0/VOL)*Dy*utils.sdiag(self._areaFyFull)*Ry
+
             if self.dim == 2:
                 S = np.r_[self._areaFxFull, self._areaFyFull]
+
             elif self.dim == 3:
                 S = np.r_[self._areaFxFull, self._areaFyFull, self._areaFzFull]
+
+                # Dz = sp.csr_matrix((Vz, (Iz, Jz)), shape=(self.nC, self.ntFz))
+                # Rz = self._deflationMatrix('Fz', asOnes=True)
+                # self._faceDivz = utils.sdiag(1.0/VOL)*Dz*utils.sdiag(self._areaFzFull)*Rz
+
             self._faceDiv = utils.sdiag(1.0/VOL)*D*utils.sdiag(S)*R
+
         return self._faceDiv
+
+
+    @property
+    def faceDivx(self):
+        if getattr(self, '_faceDivx', None) is None:
+            self.number()
+
+            # TODO: Preallocate!
+            Ix, Jx, Vx = [], [], []
+            PM = [-1, 1]*self.dim  # plus / minus
+
+            for ii, ind in enumerate(self._sortedCells):
+
+                p = self._pointer(ind)
+                w = self._levelWidth(p[-1])
+
+                if self.dim == 2:
+                    facesX = [self._fx2i[self._index([p[0], p[1], p[2]])],
+                              self._fx2i[self._index([p[0] + w, p[1], p[2]])]]
+
+                if self.dim == 3:
+                    facesX = [self._fx2i[self._index([p[0], p[1], p[2], p[3]])],
+                              self._fx2i[self._index([p[0] + w, p[1], p[2], p[3]])]]
+
+                for pm, faceX in zip(PM, facesX):
+                    Ix += [ii]
+                    Jx += [faceX]
+                    Vx += [pm]
+
+            Dx = sp.csr_matrix((Vx, (Ix, Jx)), shape=(self.nC, self.ntFx))
+            Rx = self._deflationMatrix('Fx', asOnes=True)
+            VOL = self.vol
+
+            self._faceDivx = utils.sdiag(1.0/VOL)*Dx*utils.sdiag(self._areaFxFull)*Rx
+
+        return self._faceDivx
+
+
+    @property
+    def faceDivy(self):
+        if getattr(self, '_faceDivy', None) is None:
+            self.number()
+
+            # TODO: Preallocate!
+            Iy, Jy, Vy = [], [], []
+            PM = [-1, 1]*self.dim  # plus / minus
+
+            for ii, ind in enumerate(self._sortedCells):
+
+                p = self._pointer(ind)
+                w = self._levelWidth(p[-1])
+
+                if self.dim == 2:
+                    facesY = [self._fy2i[self._index([p[0], p[1], p[2]])],
+                              self._fy2i[self._index([p[0], p[1] + w, p[2]])]]
+
+                if self.dim == 3:
+                    facesY = [self._fy2i[self._index([p[0], p[1], p[2], p[3]])],
+                              self._fy2i[self._index([p[0], p[1] + w, p[2], p[3]])]]
+
+                for pm, faceY in zip(PM, facesY):
+                    Iy += [ii]
+                    Jy += [faceY]
+                    Vy += [pm]
+
+            Dy = sp.csr_matrix((Vy, (Iy, Jy)), shape=(self.nC, self.ntFy))
+            Ry = self._deflationMatrix('Fy', asOnes=True)
+            VOL = self.vol
+
+            self._faceDivy = utils.sdiag(1.0/VOL)*Dy*utils.sdiag(self._areaFyFull)*Ry
+
+        return self._faceDivy
+
+
+    @property
+    def faceDivz(self):
+        if getattr(self, '_faceDivz', None) is None:
+            self.number()
+
+            # TODO: Preallocate!
+            Iz, Jz, Vz = [], [], []
+            PM = [-1, 1]*self.dim  # plus / minus
+
+            for ii, ind in enumerate(self._sortedCells):
+
+                p = self._pointer(ind)
+                w = self._levelWidth(p[-1])
+
+                facesZ = [self._fz2i[self._index([p[0], p[1], p[2], p[3]])],
+                              self._fz2i[self._index([p[0], p[1], p[2] + w, p[3]])]]
+
+                for pm, faceZ in zip(PM, facesZ):
+                    Iz += [ii]
+                    Jz += [faceZ]
+                    Vz += [pm]
+
+            Dz = sp.csr_matrix((Vz, (Iz, Jz)), shape=(self.nC, self.ntFz))
+            Rz = self._deflationMatrix('Fz', asOnes=True)
+            VOL = self.vol
+
+            self._faceDivz = utils.sdiag(1.0/VOL)*Dz*utils.sdiag(self._areaFzFull)*Rz
+
+        return self._faceDivz
+
 
     @property
     def cellGradStencil(self):
@@ -1855,9 +2012,9 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
 
     @property
-    def cellGradx(self):
+    def cellGradx(self, bc=['neumann','neumann']):
         """
-        Cell centered Gradient in the x dimension. Has neumann boundary
+        Cell centered Gradient in the x dimension. Default neumann boundary
         conditions.
         """
         if getattr(self, '_cellGradx', None) is None:
@@ -1922,15 +2079,41 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
                         L = p_cellHx/2 + pN_cellHx/2
                         I += [face]*2
                         J += [self._cc2i[ind], self._cc2i[cell]]
+
+                        # # Set Boundary conditions
+                        # # Set the first side
+                        # if cell == cells[0]:
+                        #     if(bc[0] == 'dirichlet'):
+                        #         V += list((1/L)*np.array([2.0, 1.0]))
+                        #     elif(bc[0] == 'neumann'):
+                        #         V += list((1/L)*np.array([0.0, 1.0]))
+                        # elif cell == cells[-1]:
+                        #     if(bc[0] == 'dirichlet'):
+                        #         V += list((1/L)*np.array([-1.0, -2.0]))
+                        #     elif(bc[0] == 'neumann'):
+                        #         V += list((1/L)*np.array([-1.0, 0.0]))
+                        # else:
                         V += list((1/L)*np.array([-1.0, 1.0]))
 
             self._cellGradx = sp.csr_matrix((V, (I, J)), shape=(self.ntFx, self.nC))
+
+            # # Set Boundary conditions
+            # # Set the first side
+            # if(bc[0] == 'dirichlet'):
+            #     self._cellGradx[0, 0] = 2
+            # elif(bc[0] == 'neumann'):
+            #     self._cellGradx[0, 0] = 0
+            # # Set the second side
+            # if(bc[1] == 'dirichlet'):
+            #     self._cellGradx[-1, -1] = -2
+            # elif(bc[1] == 'neumann'):
+            #     self._cellGradx[-1, -1] = 0
 
         return self._cellGradx
 
 
     @property
-    def cellGrady(self):
+    def cellGrady(self, bc=['neumann','neumann']):
         """
         Cell centered Gradient in the y dimension. Has neumann boundary
         conditions.
@@ -2001,11 +2184,23 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
             self._cellGrady = sp.csr_matrix((V, (I, J)), shape=(self.ntFy, self.nC))
 
+            # # Set Boundary conditions
+            # # Set the first side
+            # if(bc[0] == 'dirichlet'):
+            #     self._cellGrady[0, 0] = 2
+            # elif(bc[0] == 'neumann'):
+            #     self._cellGrady[0, 0] = 0
+            # # Set the second side
+            # if(bc[1] == 'dirichlet'):
+            #     self._cellGrady[-1, -1] = -2
+            # elif(bc[1] == 'neumann'):
+            #     self._cellGrady[-1, -1] = 0
+
         return self._cellGrady
 
 
     @property
-    def cellGradz(self):
+    def cellGradz(self, bc=['neumann','neumann']):
         """
         Cell centered Gradient in the z dimension. Has neumann boundary
         conditions.
@@ -2059,6 +2254,18 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
                         V += list((1/L)*np.array([-1.0, 1.0]))
 
             self._cellGradz = sp.csr_matrix((V, (I, J)), shape=(self.ntFz, self.nC))
+
+            # # Set Boundary conditions
+            # # Set the first side
+            # if(bc[0] == 'dirichlet'):
+            #     self._cellGradz[0, 0] = 2
+            # elif(bc[0] == 'neumann'):
+            #     self._cellGradz[0, 0] = 0
+            # # Set the second side
+            # if(bc[1] == 'dirichlet'):
+            #     self._cellGradz[-1, -1] = -2
+            # elif(bc[1] == 'neumann'):
+            #     self._cellGradz[-1, -1] = 0
 
         return self._cellGradz
 
