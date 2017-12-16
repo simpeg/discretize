@@ -2042,7 +2042,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
                 Pafz = utils.sdiag(iz)
                 Pi = sp.block_diag([Pafx, Pafy, Pafz])
 
-            self._cellGrad = Pi * MfI * self.faceDiv.T * utils.sdiag(self.vol)
+            self._cellGrad = -Pi * MfI * self.faceDiv.T * utils.sdiag(self.vol)
 
         return self._cellGrad
 
@@ -2062,7 +2062,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             MfI = self.getFaceInnerProduct(invMat=True)
             MfIx = utils.sdiag(MfI.diagonal()[:nFx])
 
-            self._cellGradx = Pafx * MfIx * self.faceDivx.T * utils.sdiag(self.vol)
+            self._cellGradx = -Pafx * MfIx * self.faceDivx.T * utils.sdiag(self.vol)
 
         return self._cellGradx
 
@@ -2083,7 +2083,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             MfI = self.getFaceInnerProduct(invMat=True)
             MfIy = utils.sdiag(MfI.diagonal()[nFx:nFx+nFy])
 
-            self._cellGrady = Pafy * MfIy * self.faceDivy.T * utils.sdiag(self.vol)
+            self._cellGrady = -Pafy * MfIy * self.faceDivy.T * utils.sdiag(self.vol)
 
         return self._cellGrady
 
@@ -2104,7 +2104,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             MfI = self.getFaceInnerProduct(invMat=True)
             MfIz = utils.sdiag(MfI.diagonal()[nFx+nFy:])
 
-            self._cellGradz = Pafz * MfIz * self.faceDivz.T * utils.sdiag(self.vol)
+            self._cellGradz = -Pafz * MfIz * self.faceDivz.T * utils.sdiag(self.vol)
 
         return self._cellGradz
 
