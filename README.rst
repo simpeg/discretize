@@ -21,7 +21,8 @@ discretize
     :target: https://www.codacy.com/app/lindseyheagy/discretize?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=simpeg/discretize&amp;utm_campaign=Badge_Grade
     :alt: codacy status
 
-**discretize** - A python package for finite volume discretization.
+
+**discretize** - A python package for finite volume discretization. 
 
 The vision is to create a package for finite volume simulation with a
 focus on large scale inverse problems.
@@ -32,6 +33,31 @@ This package has the following features:
 * supports 1D, 2D and 3D problems
 * access to sparse matrix operators
 * access to derivatives to mesh variables
+
+.. image:: https://raw.githubusercontent.com/simpeg/figures/master/finitevolume/cell-anatomy-tensor.png
+
+Currently, discretize supports:
+
+* Tensor Meshes (1D, 2D and 3D)
+* Cylindrically Symmetric Meshes
+* QuadTree and OcTree Meshes (2D and 3D)
+* Logically Rectangular Meshes (2D and 3D)
+
+Installing
+----------
+
+**discretize** is on pypi
+
+.. code::
+
+    pip install discretize
+    
+To install from source
+
+.. code:: 
+
+    git clone https://github.com/simpeg/discretize.git
+    python setup.py install
 
 Citing discretize
 -----------------
@@ -59,18 +85,21 @@ Links
 Website:
 http://simpeg.xyz
 
-
 Documentation:
-http://docs.simpeg.xyz
-
+http://discretize.simpeg.xyz
 
 Code:
 https://github.com/simpeg/discretize
 
-
 Tests:
 https://travis-ci.org/simpeg/discretize
 
-
 Bugs & Issues:
 https://github.com/simpeg/discretize/issues
+
+Questions:
+https://groups.google.com/forum/#!forum/simpeg
+
+Chat:
+http://slack.simpeg.xyz/
+
