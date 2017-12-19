@@ -2010,11 +2010,11 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
         return Gz
 
-
     @property
     def cellGrad(self):
         """
         Cell centered Gradient operator built off of the faceDiv operator.
+        Grad =  - (Mf)^{-1} * Div * diag (volume)
         """
         if getattr(self, '_cellGrad', None) is None:
 
@@ -2049,6 +2049,10 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
     @property
     def cellGradx(self):
+        """
+        Cell centered Gradient operator in x-direction (Gradx)
+        Grad = sp.vstack((Gradx, Grady, Gradz))
+        """
         if getattr(self, '_cellGradx', None) is None:
 
             nFx = self.nFx
@@ -2062,13 +2066,19 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             MfI = self.getFaceInnerProduct(invMat=True)
             MfIx = utils.sdiag(MfI.diagonal()[:nFx])
 
-            self._cellGradx = -Pafx * MfIx * self.faceDivx.T * utils.sdiag(self.vol)
+            self._cellGradx = (
+                -Pafx * MfIx * self.faceDivx.T * utils.sdiag(self.vol)
+            )
 
         return self._cellGradx
 
 
     @property
     def cellGrady(self):
+        """
+        Cell centered Gradient operator in y-direction (Gradx)
+        Grad = sp.vstack((Gradx, Grady, Gradz))
+        """
         if getattr(self, '_cellGrady', None) is None:
 
             nFx = self.nFx
@@ -2083,13 +2093,19 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             MfI = self.getFaceInnerProduct(invMat=True)
             MfIy = utils.sdiag(MfI.diagonal()[nFx:nFx+nFy])
 
-            self._cellGrady = -Pafy * MfIy * self.faceDivy.T * utils.sdiag(self.vol)
+            self._cellGrady = (
+                -Pafy * MfIy * self.faceDivy.T * utils.sdiag(self.vol)
+            )
 
         return self._cellGrady
 
 
     @property
     def cellGradz(self):
+        """
+        Cell centered Gradient operator in y-direction (Gradz)
+        Grad = sp.vstack((Gradx, Grady, Gradz))
+        """
         if getattr(self, '_cellGradz', None) is None:
 
             nFx = self.nFx
