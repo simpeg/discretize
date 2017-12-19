@@ -12,14 +12,13 @@ sudo: false
 env:
   global:
     - MASTER_BRANCH=master
-    - DEV_BRANCH=dev
     - PYPI_PY=3.6  # deploy to pypi from python 3.6
 
 before_install:
   - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then
-      wget http://repo.continuum.io/miniconda/Miniconda-3.8.3-Linux-x86_64.sh -O miniconda.sh;
+      wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
     else
-      wget http://repo.continuum.io/miniconda/Miniconda3-3.8.3-Linux-x86_64.sh -O miniconda.sh;
+      wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
     fi
   - chmod +x miniconda.sh
   - ./miniconda.sh -b -p $HOME/miniconda
@@ -28,9 +27,9 @@ before_install:
 
 install:
   - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then
-      conda install --yes pip python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib pillow cython ipython vtk;
+      conda install --quiet --yes pip python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib pillow cython ipython vtk;
     else
-      conda install --yes pip python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib pillow cython ipython;
+      conda install --quiet --yes pip python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib pillow cython ipython;
     fi
   - pip install -r requirements_dev.txt
   - python setup.py install
@@ -40,10 +39,11 @@ script:
   - nosetests tests/base tests/tree tests/docs --with-cov --cov discretize --cov-config .coveragerc -v -s;
 
 after_success:
+
   - bash <(curl -s https://codecov.io/bash)
 
-   # early exit if not on a deplotment branch
-  - if ! [ "$TRAVIS_BRANCH" = "$MASTER_BRANCH" -o "$TRAVIS_BRANCH" = "$DEV_BRANCH" -o "$TRAVIS_TAG" = "true" ]; then
+  # early exit if not on a deplotment branch
+  - if ! [ "$TRAVIS_BRANCH" = "$MASTER_BRANCH" -o "$TRAVIS_TAG" = "true" ]; then
       echo "Not deploying (because this is not a deployment branch)" ;
       exit 0 ;
     fi
@@ -57,13 +57,11 @@ after_success:
   - tar -xvzf credentials.tar.gz
 
   # deploy to pypi on tags
-  - if [ "$TRAVIS_TAG" = "true" ]; then
+  - if [ "$TRAVIS_TAG" = "true" -o "$TRAVIS_BRANCH" = "ref/travis" ]; then
       mv credentials/.pypirc ~/.pypirc ;
-      python setup.py sdist bdist_wheel ;
+      python setup.py sdist bdist_wheel --universal ;
       travis_wait 20 twine upload -r pypi --skip-existing dist/* ;
     fi
-
-# travis_wait 20 python setup.py sdist upload -r pypi ;
 
 
 notifications:
