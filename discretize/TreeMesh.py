@@ -1927,10 +1927,13 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
                             count = int(np.abs((p[0] - pN[0]) % 2))
 
                         elif self.dim == 3:
-                            hangs = faceParent[self._fy2i[self._index([pN[0],
-                                                                       pN[1],
-                                                                       pN[2],
-                                                                       pN[3]])]]
+                            hangs = faceParent[
+                                        self._fy2i[self._index([pN[0],
+                                                                pN[1],
+                                                                pN[2],
+                                                                pN[3]])
+                                                   ]
+                                    ]
                             count = int(np.abs((p[0] - pN[0]) % 2))
                             count += int(2*np.abs((p[2] - pN[2]) % 2))
                         face = hangs[count]
@@ -2020,12 +2023,12 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
             indBoundary = np.ones(self.nC, dtype=float)
 
-            indBoundary_Fx = (self.aveFx2CC.T * indBoundary) != 0.5
+            indBoundary_Fx = (self.aveFx2CC.T * indBoundary) >= 1
             ix = np.zeros(self.nFx)
             ix[indBoundary_Fx] = 1.
             Pafx = utils.sdiag(ix)
 
-            indBoundary_Fy = (self.aveFy2CC.T * indBoundary) != 0.5
+            indBoundary_Fy = (self.aveFy2CC.T * indBoundary) >= 1
             iy = np.zeros(self.nFy)
             iy[indBoundary_Fy] = 1.
             Pafy = utils.sdiag(iy)
@@ -2036,7 +2039,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
                 Pi = sp.block_diag([Pafx, Pafy])
 
             elif self.dim == 3:
-                indBoundary_Fz = (self.aveFz2CC.T * indBoundary) != 0.5
+                indBoundary_Fz = (self.aveFz2CC.T * indBoundary) >= 1
                 iz = np.zeros(self.nFz)
                 iz[indBoundary_Fz] = 1.
                 Pafz = utils.sdiag(iz)
@@ -2045,7 +2048,6 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             self._cellGrad = -Pi * MfI * self.faceDiv.T * utils.sdiag(self.vol)
 
         return self._cellGrad
-
 
     @property
     def cellGradx(self):
@@ -2058,7 +2060,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             nFx = self.nFx
             indBoundary = np.ones(self.nC, dtype=float)
 
-            indBoundary_Fx = (self.aveFx2CC.T * indBoundary) != 0.5
+            indBoundary_Fx = (self.aveFx2CC.T * indBoundary) >= 1
             ix = np.zeros(self.nFx)
             ix[indBoundary_Fx] = 1.
             Pafx = utils.sdiag(ix)
@@ -2072,7 +2074,6 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
         return self._cellGradx
 
-
     @property
     def cellGrady(self):
         """
@@ -2085,7 +2086,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             nFy = self.nFy
             indBoundary = np.ones(self.nC, dtype=float)
 
-            indBoundary_Fy = (self.aveFy2CC.T * indBoundary) != 0.5
+            indBoundary_Fy = (self.aveFy2CC.T * indBoundary) >= 1
             iy = np.zeros(self.nFy)
             iy[indBoundary_Fy] = 1.
             Pafy = utils.sdiag(iy)
@@ -2112,7 +2113,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             nFy = self.nFy
             indBoundary = np.ones(self.nC, dtype=float)
 
-            indBoundary_Fz = (self.aveFz2CC.T * indBoundary) != 0.5
+            indBoundary_Fz = (self.aveFz2CC.T * indBoundary) >= 1
             iz = np.zeros(self.nFz)
             iz[indBoundary_Fz] = 1.
             Pafz = utils.sdiag(iz)
