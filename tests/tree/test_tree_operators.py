@@ -19,153 +19,82 @@ cartE3 = lambda M, ex, ey, ez: np.vstack((cart_row3(M.gridEx, ex, ey, ez), cart_
 plotIt = False
 np.random.seed(90)
 
-# class TestCellGradx(discretize.Tests.OrderTest):
-#     name = "Cell Gradient X"
+# class TestCellGradxy2D(discretize.Tests.OrderTest):
+#     name = "Cell Gradient 2D, using cellGradx and cellGrady"
 #     meshTypes = MESHTYPES
 #     meshDimension = 2
-#     meshSizes = [32]
+#     meshSizes = [8, 16, 32]
+#     expectedOrders = 0.9 # because of the averaging involved in the ghost point. u_b = (u_n + u_g)/2
 
 #     def getError(self):
 #         #Test function
-#         # F = lambda x, y: np.cos(2*np.pi*x)*np.cos(2*np.pi*y)
-#         # dFdx = lambda x, y: -2*np.pi*np.sin(2*np.pi*x)*np.cos(2*np.pi*y)
-#         # dFdy = lambda x, y: -2*np.pi*np.sin(2*np.pi*y)*np.cos(2*np.pi*x)
+#         F = lambda x, y: np.cos(2*np.pi*x)*np.cos(2*np.pi*y)
+#         dFdx = lambda x, y: -2*np.pi*np.sin(2*np.pi*x)*np.cos(2*np.pi*y)
+#         dFdy = lambda x, y: -2*np.pi*np.sin(2*np.pi*y)*np.cos(2*np.pi*x)
 
 #         # F = lambda x, y: np.sin(2*np.pi*x)*np.sin(2*np.pi*y)
 #         # dFdx = lambda x, y: 2*np.pi*np.cos(2*np.pi*x)*np.sin(2*np.pi*y)
 #         # dFdy = lambda x, y: 2*np.pi*np.cos(2*np.pi*y)*np.sin(2*np.pi*x)
 
-#         F = lambda x, y: np.cos(2*np.pi*x)
-#         dFdx = lambda x, y: -2*np.pi*np.sin(2*np.pi*x)
+#         # F = lambda x, y: (np.cos(2*np.pi*x) + np.cos(2*np.pi*y))
+#         # dFdx = lambda x: -2*np.pi*np.sin(2*np.pi*x)
+#         # dFdy = lambda y: -2*np.pi*np.sin(2*np.pi*y)
 
 #         phi = call2(F, self.M.gridCC)
 #         gradEx = self.M.cellGradx.dot(phi)
-#         gradEx_ana = dFdx(self.M._gridFx[:, 0], self.M._gridFx[:, 1])
+#         gradEy = self.M.cellGrady.dot(phi)
 
-#         err = np.linalg.norm((gradEx-gradEx_ana), np.inf)
+#         gradE = np.hstack([gradEx, gradEy])
+#         gradEx_ana = dFdx(self.M.gridFx[:, 0], self.M.gridFx[:, 1])
+#         gradEy_ana = dFdy(self.M.gridFy[:, 0], self.M.gridFy[:, 1])
+#         gradE_ana = np.r_[gradEx_ana, gradEy_ana]
 
-# #         # fig = plt.figure()
-# #         # plt.plot(gradEx, 'ro')
-# #         # plt.plot(gradEx_ana, 'k.')
-# #         # plt.show()
+#         err = np.linalg.norm((gradE-gradE_ana), np.inf)
 
-# #         # Gdiff = gradEx-gradEx_ana
+#         # fig = plt.figure()
+#         # plt.plot(gradEx, 'ro')
+#         # plt.plot(gradEx_ana, 'k.')
+#         # plt.show()
 
-# #         # print(Gdiff.min())
-# #         # print(Gdiff.max())
+#         return err
 
-# #         # import matplotlib.colors as colors
-# #         # import matplotlib.cm as cmx
-# #         # from mpl_toolkits.axes_grid1 import make_axes_locatable
-
-# #         # jet = plt.get_cmap('jet')
-# #         # cNorm = colors.Normalize(vmin=Gdiff.min(), vmax=Gdiff.max())
-# #         # scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
-# #         # GdiffColors = scalarMap.to_rgba(Gdiff)
-
-# #         # fig = plt.figure()
-# #         # ax = fig.add_subplot(111)
-# #         # self.M.plotGrid()
-# #         # ax.scatter(self.M.gridFx[:, 0], self.M.gridFx[:, 1], c=GdiffColors)
-# #         # ax.set_xlim([0,1])
-# #         # ax.set_ylim([0,1])
-# #         # # plt.colorbar(GdiffColors)
-# #         # plt.show()
-# #         # # print(self.M.gridFx)
-
-# #         # fig= plt.figure()
-# #         # self.M.plotImage(Gdiff, grid=True)
-# #         # plt.show()
-
-# #         return err
-
-# #     def test_order(self):
-# #         self.orderTest()
+#     def test_order(self):
+#         self.orderTest()
 
 
-class TestCellGrad2D(discretize.Tests.OrderTest):
-    name = "Cell Gradient 2D, using cellGradx and cellGrady"
-    meshTypes = MESHTYPES
-    meshDimension = 2
-    meshSizes = [16, 32]
-    expectedOrders = 0.9 # because of the averaging involved in the ghost point. u_b = (u_n + u_g)/2
+# class TestCellGrad2D(discretize.Tests.OrderTest):
+#     name = "Cell Gradient 2D"
+#     meshTypes = MESHTYPES
+#     meshDimension = 2
+#     meshSizes = [8, 16, 32]
+#     expectedOrders = 0.9 # because of the averaging involved in the ghost point. u_b = (u_n + u_g)/2
 
-    def getError(self):
-        #Test function
-        F = lambda x, y: np.cos(2*np.pi*x)*np.cos(2*np.pi*y)
-        dFdx = lambda x, y: -2*np.pi*np.sin(2*np.pi*x)*np.cos(2*np.pi*y)
-        dFdy = lambda x, y: -2*np.pi*np.sin(2*np.pi*y)*np.cos(2*np.pi*x)
+#     def getError(self):
+#         #Test function
+#         F = lambda x, y: np.cos(2*np.pi*x)*np.cos(2*np.pi*y)
+#         dFdx = lambda x, y: -2*np.pi*np.sin(2*np.pi*x)*np.cos(2*np.pi*y)
+#         dFdy = lambda x, y: -2*np.pi*np.sin(2*np.pi*y)*np.cos(2*np.pi*x)
 
-        # F = lambda x, y: np.sin(2*np.pi*x)*np.sin(2*np.pi*y)
-        # dFdx = lambda x, y: 2*np.pi*np.cos(2*np.pi*x)*np.sin(2*np.pi*y)
-        # dFdy = lambda x, y: 2*np.pi*np.cos(2*np.pi*y)*np.sin(2*np.pi*x)
+#         phi = call2(F, self.M.gridCC)
+#         gradE = self.M.cellGrad.dot(phi)
 
-        # F = lambda x, y: (np.cos(2*np.pi*x) + np.cos(2*np.pi*y))
-        # dFdx = lambda x: -2*np.pi*np.sin(2*np.pi*x)
-        # dFdy = lambda y: -2*np.pi*np.sin(2*np.pi*y)
+#         gradEx_ana = dFdx(self.M.gridFx[:, 0], self.M.gridFx[:, 1])
+#         gradEy_ana = dFdy(self.M.gridFy[:, 0], self.M.gridFy[:, 1])
+#         gradE_ana = np.r_[gradEx_ana, gradEy_ana]
 
-        phi = call2(F, self.M.gridCC)
-        # gradEx = self.M.cellGradx.dot(phi)
-        # gradEy = self.M.cellGrady.dot(phi)
-        gradEx = self.M.cellGradx.dot(phi)
-        gradEy = self.M.cellGrady.dot(phi)
+#         err = np.linalg.norm((gradE-gradE_ana), np.inf)
 
-        gradE = np.hstack([gradEx, gradEy])
-        gradEx_ana = dFdx(self.M.gridFx[:, 0], self.M.gridFx[:, 1])
-        gradEy_ana = dFdy(self.M.gridFy[:, 0], self.M.gridFy[:, 1])
-        gradE_ana = np.r_[gradEx_ana, gradEy_ana]
+#         return err
 
-        err = np.linalg.norm((gradE-gradE_ana), np.inf)
-
-        # fig = plt.figure()
-        # plt.plot(gradEx, 'ro')
-        # plt.plot(gradEx_ana, 'k.')
-        # plt.show()
-
-        # GxDiff = gradEx-gradEx_ana
-        # GyDiff = gradEy-gradEy_ana
-
-        # import matplotlib.colors as colors
-        # import matplotlib.cm as cmx
-        # from mpl_toolkits.axes_grid1 import make_axes_locatable
-
-        # jet = plt.get_cmap('jet')
-        # cNorm = colors.Normalize(vmin=np.min([GxDiff,GyDiff]), vmax=np.max([GxDiff,GyDiff]))
-        # scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
-        # GxDiffColors = scalarMap.to_rgba(GxDiff)
-        # GyDiffColors = scalarMap.to_rgba(GyDiff)
-
-        # fig = plt.figure()
-        # ax = fig.add_subplot(111)
-        # self.M.plotGrid()
-        # ax.scatter(self.M.gridFx[:, 0], self.M.gridFx[:, 1], c=GxDiffColors)
-        # ax.scatter(self.M.gridFy[:, 0], self.M.gridFy[:, 1], c=GyDiffColors)
-        # ax.set_xlim([0,1])
-        # ax.set_ylim([0,1])
-        # # plt.colorbar(GdiffColors)
-        # plt.show()
-
-        # fig= plt.figure()
-        # self.M.plotImage(GxDiff, grid=True)
-        # plt.title('Gx_Diff')
-        # plt.show()
-
-        # fig= plt.figure()
-        # self.M.plotImage(GyDiff, grid=True)
-        # plt.title('Gy_Diff')
-        # plt.show()
-
-        return err
-
-    def test_order(self):
-        self.orderTest()
+#     def test_order(self):
+#         self.orderTest()
 
 
-# class TestCellGrad3D(discretize.Tests.OrderTest):
+# class TestCellGradxyz3D(discretize.Tests.OrderTest):
 #     name = "Cell Gradient 3D, using cellGradx, cellGrady, and cellGradz"
 #     meshTypes = MESHTYPES
 #     meshDimension = 3
-#     meshSizes = [8, 16]
+#     meshSizes = [8, 16, 32, 64]
 
 #     def getError(self):
 #         #Test function
@@ -180,11 +109,31 @@ class TestCellGrad2D(discretize.Tests.OrderTest):
 #         gradEz = self.M.cellGradz.dot(phi)
 #         gradE = np.hstack([gradEx, gradEy, gradEz])
 
-#         gradE_ana = np.r_[dFdx(self.M.gridFx[:, 0]),
-#                   dFdy(self.M.gridFy[:, 1]),
-#                   dFdz(self.M.gridFz[:, 2])]
+#         gradEx_ana = dFdx(self.M.gridFx[:, 0])
+#         gradEy_ana = dFdy(self.M.gridFy[:, 1])
+#         gradEz_ana = dFdz(self.M.gridFz[:, 2])
+#         gradE_ana = np.r_[gradEx_ana, gradEy_ana, gradEz_ana]
+
+#         # gradE_ana = np.r_[dFdx(self.M.gridFx[:, 0]),
+#         #           dFdy(self.M.gridFy[:, 1]),
+#         #           dFdz(self.M.gridFz[:, 2])]
 
 #         err = np.linalg.norm((gradE-gradE_ana), np.inf)
+
+#         # fig = plt.figure()
+#         # plt.plot(gradEx, 'ro')
+#         # plt.plot(gradEx_ana, 'k.')
+#         # plt.show()
+
+#         # fig = plt.figure()
+#         # plt.plot(gradEy, 'ro')
+#         # plt.plot(gradEy_ana, 'k.')
+#         # plt.show()
+
+#         # fig = plt.figure()
+#         # plt.plot(gradEz, 'ro')
+#         # plt.plot(gradEz_ana, 'k.')
+#         # plt.show()
 
 #         return err
 
@@ -219,32 +168,32 @@ class TestCellGrad2D(discretize.Tests.OrderTest):
 #         self.orderTest()
 
 
-class TestFaceDiv2D(discretize.Tests.OrderTest):
-    name = "Face Divergence 2D"
-    meshTypes = MESHTYPES
-    meshDimension = 2
-    meshSizes = [16, 32]
+# class TestFaceDiv2D(discretize.Tests.OrderTest):
+#     name = "Face Divergence 2D"
+#     meshTypes = MESHTYPES
+#     meshDimension = 2
+#     meshSizes = [16, 32]
 
-    def getError(self):
-        #Test function
-        fx = lambda x, y: np.sin(2*np.pi*x)
-        fy = lambda x, y: np.sin(2*np.pi*y)
-        sol = lambda x, y: 2*np.pi*(np.cos(2*np.pi*x)+np.cos(2*np.pi*y))
+#     def getError(self):
+#         #Test function
+#         fx = lambda x, y: np.sin(2*np.pi*x)
+#         fy = lambda x, y: np.sin(2*np.pi*y)
+#         sol = lambda x, y: 2*np.pi*(np.cos(2*np.pi*x)+np.cos(2*np.pi*y))
 
-        Fc = cartF2(self.M, fx, fy)
-        F = self.M.projectFaceVector(Fc)
+#         Fc = cartF2(self.M, fx, fy)
+#         F = self.M.projectFaceVector(Fc)
 
-        divF = self.M.faceDiv.dot(F)
-        divF_ana = call2(sol, self.M.gridCC)
+#         divF = self.M.faceDiv.dot(F)
+#         divF_ana = call2(sol, self.M.gridCC)
 
-        err = np.linalg.norm((divF-divF_ana), np.inf)
+#         err = np.linalg.norm((divF-divF_ana), np.inf)
 
-        # self.M.plotImage(divF-divF_ana, showIt=True)
+#         # self.M.plotImage(divF-divF_ana, showIt=True)
 
-        return err
+#         return err
 
-    def test_order(self):
-        self.orderTest()
+#     def test_order(self):
+#         self.orderTest()
 
 # class TestFaceDivxy2D(discretize.Tests.OrderTest):
 #     name = "Face Divergence 2D, Testing faceDivx and faceDivy"
@@ -368,32 +317,32 @@ class TestFaceDiv2D(discretize.Tests.OrderTest):
 #         self.orderTest()
 
 
-# class TestNodalGrad(discretize.Tests.OrderTest):
-#     name = "Nodal Gradient"
-#     meshTypes = ['notatreeTree', 'uniformTree'] #['randomTree', 'uniformTree']
-#     meshSizes = [8, 16]#, 32]
-#     expectedOrders = [2,1]
+class TestNodalGrad(discretize.Tests.OrderTest):
+    name = "Nodal Gradient"
+    meshTypes = ['notatreeTree', 'uniformTree'] #['randomTree', 'uniformTree']
+    meshSizes = [8, 16]#, 32]
+    expectedOrders = [2,1]
 
-#     def getError(self):
-#         #Test function
-#         fun = lambda x, y, z: (np.cos(x)+np.cos(y)+np.cos(z))
-#         # i (sin(x)) + j (sin(y)) + k (sin(z))
-#         solX = lambda x, y, z: -np.sin(x)
-#         solY = lambda x, y, z: -np.sin(y)
-#         solZ = lambda x, y, z: -np.sin(z)
+    def getError(self):
+        #Test function
+        fun = lambda x, y, z: (np.cos(x)+np.cos(y)+np.cos(z))
+        # i (sin(x)) + j (sin(y)) + k (sin(z))
+        solX = lambda x, y, z: -np.sin(x)
+        solY = lambda x, y, z: -np.sin(y)
+        solZ = lambda x, y, z: -np.sin(z)
 
-#         phi = call3(fun, self.M.gridN)
-#         gradE = self.M.nodalGrad.dot(phi)
+        phi = call3(fun, self.M.gridN)
+        gradE = self.M.nodalGrad.dot(phi)
 
-#         Ec = cartE3(self.M, solX, solY, solZ)
-#         gradE_ana = self.M.projectEdgeVector(Ec)
+        Ec = cartE3(self.M, solX, solY, solZ)
+        gradE_ana = self.M.projectEdgeVector(Ec)
 
-#         err = np.linalg.norm((gradE-gradE_ana), np.inf)
+        err = np.linalg.norm((gradE-gradE_ana), np.inf)
 
-#         return err
+        return err
 
-#     def test_order(self):
-#         self.orderTest()
+    def test_order(self):
+        self.orderTest()
 
 
 # class TestNodalGrad2D(discretize.Tests.OrderTest):
