@@ -308,8 +308,8 @@ class TensorMeshIO(object):
         :param string fileName: path to the UBC GIF 2D model file
 
         Output:
-        :param SimPEG TensorMesh 2D object
-        :return
+        :rtype: numpy.ndarray
+        :return: model with TensorMesh ordered
         """
 
         # Open fileand skip header... assume that we know the mesh already
@@ -498,7 +498,7 @@ class TensorMeshIO(object):
 
         :param string fileName: File to write to
         :param dict models: A dictionary of the models
-
+        :param str comment_lines: comment lines preceded with '!' to add
         """
         if mesh.dim == 3:
             mesh._writeUBC_3DMesh(fileName, comment_lines=comment_lines)

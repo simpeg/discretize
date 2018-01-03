@@ -62,7 +62,6 @@ class TestTensorMeshIO(unittest.TestCase):
         assert mesh.hz[0] == 20000
         assert mesh.hz[-1] == 250
 
-
     if has_vtk:
         def test_VTKfiles(self):
             mesh = self.mesh
@@ -82,7 +81,10 @@ class TestTensorMeshIO(unittest.TestCase):
             os.remove('temp.vtr')
 
     def test_write_read_ubc_2Dmesh(self):
-        fname = os.path.join(os.path.split(__file__)[0], 'ubc_DC2D_tensor_mesh.msh')
+        fname = os.path.join(
+            os.path.split(__file__)[0],
+            'ubc_DC2D_tensor_mesh.msh'
+        )
 
         # Create 2D Mesh
         # Cells size
@@ -106,7 +108,7 @@ class TestTensorMeshIO(unittest.TestCase):
 
         # Create Model
         model = background*np.ones(mesh.nC)
-        csph = (np.sqrt((mesh.gridCC[:, 1]-z0)**2.+(mesh.gridCC[:, 0]-x0)**2.))< r0
+        csph = (np.sqrt((mesh.gridCC[:, 1]-z0)**2.+(mesh.gridCC[:, 0]-x0)**2.)) < r0
         model[csph] = sphere0*np.ones_like(model[csph])
         # Define the sphere limit
         rsph = (np.sqrt((mesh.gridCC[:, 1]-z1)**2.+(mesh.gridCC[:, 0]-x1)**2.)) < r1
