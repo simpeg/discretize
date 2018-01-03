@@ -300,7 +300,56 @@ class TensorMeshIO(object):
             vtkObj.GetCellData().SetActiveScalars(models.keys()[0])
         return vtkObj
 
-    def readModelUBC(mesh, fileName):
+    def _readModelUBC_2D(mesh, fileName):
+        """
+        Read UBC GIF 2DTensor model and generate 2D Tensor model in simpeg
+
+        Input:
+        :param string fileName: path to the UBC GIF 2D model file
+
+        Output:
+        :param SimPEG TensorMesh 2D object
+        :return
+        """
+
+        # Open fileand skip header... assume that we know the mesh already
+        obsfile = np.genfromtxt(
+            fileName, delimiter=' \n',
+            dtype=np.str, comments='!'
+        )
+
+        dim = np.array(obsfile[0].split(), dtype=int)
+
+        temp = np.array(obsfile[1].split(), dtype=float)
+
+        if len(temp) > 1:
+            model = np.zeros((dim[0], dim[1]))
+
+            for ii in range(len(obsfile)-1):
+                mm = np.array(obsfile[ii+1].split(), dtype=float)
+                model[:, ii] = mm
+
+            model = model[:, ::-1]
+
+        else:
+
+            if len(obsfile[1:]) == 1:
+                mm = np.array(obsfile[1:].split(), dtype=float)
+
+            else:
+                mm = np.array(obsfile[1:], dtype=float)
+
+            # Permute the second dimension to flip the order
+            model = mm.reshape(dim[1], dim[0])
+
+            model = model[::-1, :]
+            model = np.transpose(model, (1, 0))
+
+        model = utils.mkvc(model)
+
+        return model
+
+    def _readModelUBC_3D(mesh, fileName):
         """Read UBC 3DTensor mesh model and generate 3D Tensor mesh model
 
         :param string fileName: path to the UBC GIF mesh file to read
@@ -310,10 +359,26 @@ class TensorMeshIO(object):
         f = open(fileName, 'r')
         model = np.array(list(map(float, f.readlines())))
         f.close()
-        model = np.reshape(model, (mesh.nCz, mesh.nCx, mesh.nCy), order = 'F')
+        model = np.reshape(model, (mesh.nCz, mesh.nCx, mesh.nCy), order='F')
         model = model[::-1, :, :]
         model = np.transpose(model, (1, 2, 0))
         model = utils.mkvc(model)
+        return model
+
+    def readModelUBC(mesh, fileName):
+        """Read UBC 2D or 3D Tensor mesh model
+            and generate Tensor mesh model
+
+        :param string fileName: path to the UBC GIF mesh file to read
+        :rtype: numpy.ndarray
+        :return: model with TensorMesh ordered
+        """
+        if mesh.dim == 3:
+            model = mesh._readModelUBC_3D(fileName)
+        elif mesh.dim == 2:
+            model = mesh._readModelUBC_2D(fileName)
+        else:
+            raise Exception('mesh must be a Tensor Mesh 2D or 3D')
         return model
 
     def writeModelUBC(mesh, fileName, model):
@@ -333,7 +398,7 @@ class TensorMeshIO(object):
             np.savetxt(fileName, modelMatTR.ravel())
 
         elif mesh.dim == 2:
-            modelMat = mesh.r(model[::-1], 'CC', 'CC', 'M').T
+            modelMat = mesh.r(model, 'CC', 'CC', 'M').T[::-1]
             f = open(fileName, 'w')
             f.write('{:d} {:d}\n'.format(mesh.nCx, mesh.nCy))
             f.close()
@@ -342,9 +407,9 @@ class TensorMeshIO(object):
             f.close()
 
         else:
-            raise Exception('mesh must be 2D or 3D')
+            raise Exception('mesh must be a Tensor Mesh 2D or 3D')
 
-    def _writeUBC_3DMesh(mesh, fileName):
+    def _writeUBC_3DMesh(mesh, fileName, comment_lines=''):
         """Writes a TensorMesh to a UBC-GIF format mesh file.
 
         :param string fileName: File to write to
@@ -352,7 +417,7 @@ class TensorMeshIO(object):
 
         """
         assert mesh.dim == 3
-        s = ''
+        s = comment_lines
         s += '{0:d} {1:d} {2:d}\n'.format(*tuple(mesh.vnC))
         # Have to it in the same operation or use mesh.x0.copy(),
         # otherwise the mesh.x0 is updated.
@@ -367,7 +432,7 @@ class TensorMeshIO(object):
         f.write(s)
         f.close()
 
-    def _writeUBC_2DMesh(mesh, fileName):
+    def _writeUBC_2DMesh(mesh, fileName, comment_lines=''):
         """Writes a TensorMesh to a UBC-GIF format mesh file.
 
         :param string fileName: File to write to
@@ -403,10 +468,10 @@ class TensorMeshIO(object):
 
                 number_segment += 1
                 if origin:
-                    auxStr += '{:.2f} {:.2f} {:d} \n'.format(x0, f, n)
+                    auxStr += '{:.10f} {:.10f} {:d} \n'.format(x0, f, n)
                     origin = False
                 else:
-                    auxStr += '{:.2f} {:d} \n'.format(f, n)
+                    auxStr += '{:.10f} {:d} \n'.format(f, n)
 
             auxStr = '{:d}\n'.format(number_segment) + auxStr
             outStr += auxStr
@@ -418,7 +483,7 @@ class TensorMeshIO(object):
         fz = -mesh.vectorNy[::-1]
 
         # Create the string
-        outStr = ''
+        outStr = comment_lines
         outStr = writeF(fx, outStr=outStr)
         outStr += '\n'
         outStr = writeF(fz, outStr=outStr)
@@ -428,7 +493,7 @@ class TensorMeshIO(object):
         f.write(outStr)
         f.close()
 
-    def writeUBC(mesh, fileName, models=None):
+    def writeUBC(mesh, fileName, models=None, comment_lines=''):
         """Writes a TensorMesh to a UBC-GIF format mesh file.
 
         :param string fileName: File to write to
@@ -436,11 +501,11 @@ class TensorMeshIO(object):
 
         """
         if mesh.dim == 3:
-            mesh._writeUBC_3DMesh(fileName)
+            mesh._writeUBC_3DMesh(fileName, comment_lines=comment_lines)
         elif mesh.dim == 2:
-            mesh._writeUBC_2DMesh(fileName)
+            mesh._writeUBC_2DMesh(fileName, comment_lines=comment_lines)
         else:
-            raise Exception('mesh must be 2D or 3D')
+            raise Exception('mesh must be a Tensor Mesh 2D or 3D')
 
         if models is None:
             return
