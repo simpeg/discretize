@@ -113,7 +113,7 @@ class TestTensorMeshIO(unittest.TestCase):
         # Define the sphere limit
         rsph = (np.sqrt((mesh.gridCC[:, 1]-z1)**2.+(mesh.gridCC[:, 0]-x1)**2.)) < r1
         model[rsph] = sphere1*np.ones_like(model[rsph])
-        modeldict = {'model': model}
+        modeldict = {'2d_2cyl_model': model}
 
         # Write Mesh and model
         comment_lines = '!comment line\n'+'!again\n'+'!and again\n'
@@ -121,7 +121,7 @@ class TestTensorMeshIO(unittest.TestCase):
 
         # Read back mesh and model
         mesh = discretize.TensorMesh.readUBC(fname)
-        modelfname = os.path.join(os.path.split(__file__)[0], 'model')
+        modelfname = os.path.join(os.path.split(__file__)[0], '2d_2cyl_model')
         readmodel = mesh.readModelUBC(modelfname)
         assert mesh.nCx == 135
         assert mesh.nCy == 47
