@@ -323,17 +323,28 @@ class TensorMeshIO(object):
         :param string fileName: File to write to
         :param numpy.ndarray model: The model
         """
+        if mesh.dim == 3:
+            # Reshape model to a matrix
+            modelMat = mesh.r(model, 'CC', 'CC', 'M')
+            # Transpose the axes
+            modelMatT = modelMat.transpose((2, 0, 1))
+            # Flip z to positive down
+            modelMatTR = utils.mkvc(modelMatT[::-1, :, :])
+            np.savetxt(fileName, modelMatTR.ravel())
 
-        # Reshape model to a matrix
-        modelMat = mesh.r(model, 'CC', 'CC', 'M')
-        # Transpose the axes
-        modelMatT = modelMat.transpose((2, 0, 1))
-        # Flip z to positive down
-        modelMatTR = utils.mkvc(modelMatT[::-1, :, :])
+        elif mesh.dim == 2:
+            modelMat = mesh.r(model[::-1], 'CC', 'CC', 'M').T
+            f = open(fileName, 'w')
+            f.write('{:d} {:d}\n'.format(mesh.nCx, mesh.nCy))
+            f.close()
+            f = open(fileName, 'ab')
+            np.savetxt(f, modelMat)
+            f.close()
 
-        np.savetxt(fileName, modelMatTR.ravel())
+        else:
+            raise Exception('mesh must be 2D or 3D')
 
-    def writeUBC(mesh, fileName, models=None):
+    def _writeUBC_3DMesh(mesh, fileName):
         """Writes a TensorMesh to a UBC-GIF format mesh file.
 
         :param string fileName: File to write to
@@ -349,14 +360,90 @@ class TensorMeshIO(object):
         origin.dtype = float
 
         s += '{0:.6f} {1:.6f} {2:.6f}\n'.format(*tuple(origin))
-        s += ('%.6f '*mesh.nCx+'\n')%tuple(mesh.hx)
-        s += ('%.6f '*mesh.nCy+'\n')%tuple(mesh.hy)
-        s += ('%.6f '*mesh.nCz+'\n')%tuple(mesh.hz[::-1])
+        s += ('%.6f '*mesh.nCx+'\n') % tuple(mesh.hx)
+        s += ('%.6f '*mesh.nCy+'\n') % tuple(mesh.hy)
+        s += ('%.6f '*mesh.nCz+'\n') % tuple(mesh.hz[::-1])
         f = open(fileName, 'w')
         f.write(s)
         f.close()
 
-        if models is None: return
+    def _writeUBC_2DMesh(mesh, fileName):
+        """Writes a TensorMesh to a UBC-GIF format mesh file.
+
+        :param string fileName: File to write to
+        :param dict models: A dictionary of the models
+
+        """
+        assert mesh.dim == 2
+
+        def writeF(fx, outStr=''):
+            # Init
+            i = 0
+            origin = True
+            x0 = fx[i]
+            f = fx[i]
+            number_segment = 0
+            auxStr = ''
+
+            while True:
+                i = i + 1
+                if i >= fx.size:
+                    break
+                dx = -f + fx[i]
+                f = fx[i]
+                n = 1
+
+                for j in range(i+1, fx.size):
+                    if -f + fx[j] == dx:
+                        n += 1
+                        i += 1
+                        f = fx[j]
+                    else:
+                        break
+
+                number_segment += 1
+                if origin:
+                    auxStr += '{:.2f} {:.2f} {:d} \n'.format(x0, f, n)
+                    origin = False
+                else:
+                    auxStr += '{:.2f} {:d} \n'.format(f, n)
+
+            auxStr = '{:d}\n'.format(number_segment) + auxStr
+            outStr += auxStr
+
+            return outStr
+
+        # Grab face coordinates
+        fx = mesh.vectorNx
+        fz = -mesh.vectorNy[::-1]
+
+        # Create the string
+        outStr = ''
+        outStr = writeF(fx, outStr=outStr)
+        outStr += '\n'
+        outStr = writeF(fz, outStr=outStr)
+
+        # Write file
+        f = open(fileName, 'w')
+        f.write(outStr)
+        f.close()
+
+    def writeUBC(mesh, fileName, models=None):
+        """Writes a TensorMesh to a UBC-GIF format mesh file.
+
+        :param string fileName: File to write to
+        :param dict models: A dictionary of the models
+
+        """
+        if mesh.dim == 3:
+            mesh._writeUBC_3DMesh(fileName)
+        elif mesh.dim == 2:
+            mesh._writeUBC_2DMesh(fileName)
+        else:
+            raise Exception('mesh must be 2D or 3D')
+
+        if models is None:
+            return
         assert type(models) is dict, 'models must be a dict'
         for key in models:
             assert type(key) is str, 'The dict key is a file name'
