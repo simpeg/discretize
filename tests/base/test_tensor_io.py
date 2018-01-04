@@ -79,7 +79,7 @@ class TestTensorMeshIO(unittest.TestCase):
             os.remove(os.path.join(self.basePath, vtrfname))
             os.rmdir(self.basePath)
 
-    def test_write_read_ubc_mesh_model_3d(self):
+    def test_write_read_ubc_mesh_model_2d(self):
         if not os.path.exists(self.basePath):
             os.mkdir(self.basePath)
 
