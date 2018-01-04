@@ -30,7 +30,10 @@ class TensorMeshIO(object):
     def _readUBC_3DMesh(TensorMesh, fileName):
         """Read UBC GIF 3D tensor mesh and generate same dimension TensorMesh.
 
+        Input:
         :param string fileName: path to the UBC GIF mesh file
+
+        Output:
         :rtype: TensorMesh
         :return: The tensor mesh for the fileName.
         """
@@ -69,7 +72,10 @@ class TensorMeshIO(object):
     def _readUBC_2DMesh(TensorMesh, fileName):
         """Read UBC GIF 2DTensor mesh and generate 2D Tensor mesh in simpeg
 
+        Input:
         :param string fileName: path to the UBC GIF mesh file
+
+        Output:
         :rtype: TensorMesh
         :return: SimPEG TensorMesh 2D object
         """
@@ -121,10 +127,12 @@ class TensorMeshIO(object):
     def readUBC(TensorMesh, fileName, meshdim=None, directory=''):
         """Wrapper to Read UBC GIF 2D  and 3D tensor mesh and generate same dimension TensorMesh.
 
-        :param str fileName: path to the UBC GIF mesh file or just its name
-        if directory is specified
+        Input:
+        :param str fileName: path to the UBC GIF mesh file or just its name if directory is specified
         :param str directory: directory where the UBC GIF file lives
         :param int meshdim: expected dimension of the mesh, if unknown the default argument is None
+
+        Output:
         :rtype: TensorMesh
         :return: The tensor mesh for the fileName.
         """
@@ -156,9 +164,10 @@ class TensorMeshIO(object):
         """Read VTK Rectilinear (vtr xml file) and return Tensor mesh and model
 
         Input:
-        :param str fileName: path to the vtr model file to read
-        or just its name if directory is specified
+        :param str fileName: path to the vtr model file to read or just its name if directory is specified
         :param str directory: directory where the UBC GIF file lives
+
+        Output:
         :rtype: tuple
         :return: (TensorMesh, modelDictionary)
         """
@@ -209,8 +218,7 @@ class TensorMeshIO(object):
         for a Tensor mesh and model.
 
         Input:
-        :param str fileName:  path to the output vtk file
-        or just its name if directory is specified
+        :param str fileName:  path to the output vtk file or just its name if directory is specified
         :param str directory: directory where the UBC GIF file lives
         :param dict models: dictionary of numpy.array - Name('s) and array('s).
         Match number of cells
@@ -349,7 +357,10 @@ class TensorMeshIO(object):
     def _readModelUBC_3D(mesh, fileName):
         """Read UBC 3DTensor mesh model and generate 3D Tensor mesh model
 
+        Input:
         :param string fileName: path to the UBC GIF mesh file to read
+
+        Output:
         :rtype: numpy.ndarray
         :return: model with TensorMesh ordered
         """
@@ -366,9 +377,12 @@ class TensorMeshIO(object):
         """Read UBC 2D or 3D Tensor mesh model
             and generate Tensor mesh model
 
+        Input:
         :param str fileName:  path to the UBC GIF mesh file to read
         or just its name if directory is specified
         :param str directory: directory where the UBC GIF file lives
+
+        Output:
         :rtype: numpy.ndarray
         :return: model with TensorMesh ordered
         """
@@ -385,6 +399,7 @@ class TensorMeshIO(object):
         """Writes a model associated with a TensorMesh
         to a UBC-GIF format model file.
 
+        Input:
         :param str fileName:  File to write to
         or just its name if directory is specified
         :param str directory: directory where the UBC GIF file lives
@@ -415,9 +430,9 @@ class TensorMeshIO(object):
     def _writeUBC_3DMesh(mesh, fileName, comment_lines=''):
         """Writes a TensorMesh to a UBC-GIF format mesh file.
 
+        Input:
         :param string fileName: File to write to
         :param dict models: A dictionary of the models
-
         """
         if not mesh.dim == 3:
             raise Exception('Mesh must be 3D')
@@ -440,6 +455,7 @@ class TensorMeshIO(object):
     def _writeUBC_2DMesh(mesh, fileName, comment_lines=''):
         """Writes a TensorMesh to a UBC-GIF format mesh file.
 
+        Input:
         :param string fileName: File to write to
         :param dict models: A dictionary of the models
 
@@ -502,6 +518,7 @@ class TensorMeshIO(object):
     def writeUBC(mesh, fileName, models=None, directory='', comment_lines=''):
         """Writes a TensorMesh to a UBC-GIF format mesh file.
 
+        Input:
         :param str fileName: File to write to
         :param str directory: directory where to save model
         :param dict models: A dictionary of the models
