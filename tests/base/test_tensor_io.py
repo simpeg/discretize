@@ -38,14 +38,14 @@ class TestTensorMeshIO(unittest.TestCase):
         vec2UBC = mesh.readModelUBC(modelfname1, folder=self.basePath)
 
         # The mesh
-        assert mesh.__str__() == meshUBC.__str__()
-        assert np.sum(mesh.gridCC - meshUBC.gridCC) == 0
-        assert np.sum(vec - vecUBC) == 0
-        assert np.all(np.array(mesh.h) - np.array(meshUBC.h) == 0)
+        self.assertTrue(mesh.__str__() == meshUBC.__str__())
+        self.assertTrue(np.sum(mesh.gridCC - meshUBC.gridCC) == 0)
+        self.assertTrue(np.sum(vec - vecUBC) == 0)
+        self.assertTrue(np.all(np.array(mesh.h) - np.array(meshUBC.h) == 0))
 
         # The models
-        assert np.sum(vec - vecUBC) == 0
-        assert np.sum(vec + 1 - vec2UBC) == 0
+        self.assertTrue(np.sum(vec - vecUBC) == 0)
+        self.assertTrue(np.sum(vec + 1 - vec2UBC) == 0)
 
         print('IO of UBC 3D tensor mesh files is working')
         os.remove(os.path.join(self.basePath, mshfname))
@@ -68,12 +68,14 @@ class TestTensorMeshIO(unittest.TestCase):
                 vtrfname, folder=self.basePath
             )
 
-            assert mesh.__str__() == meshVTR.__str__()
-            assert np.all(np.array(mesh.h) - np.array(meshVTR.h) == 0)
+            self.assertTrue(mesh.__str__() == meshVTR.__str__())
+            self.assertTrue(
+                np.all(np.array(mesh.h) - np.array(meshVTR.h) == 0)
+            )
 
-            assert modelfname in models
+            self.assertTrue(modelfname in models)
             vecVTK = models[modelfname]
-            assert np.sum(vec - vecVTK) == 0
+            self.assertTrue(np.sum(vec - vecVTK) == 0)
 
             print('IO of VTR tensor mesh files is working')
             os.remove(os.path.join(self.basePath, vtrfname))
@@ -125,17 +127,17 @@ class TestTensorMeshIO(unittest.TestCase):
         mesh = discretize.TensorMesh.readUBC(fname)
         modelfname = os.path.sep.join([self.basePath, '2d_2cyl_model'])
         readmodel = mesh.readModelUBC(modelfname)
-        assert mesh.nCx == 135
-        assert mesh.nCy == 47
+        self.assertTrue(mesh.nCx == 135)
+        self.assertTrue(mesh.nCy == 47)
         # spot check a few things in the file
-        assert mesh.hx[0] == 2.84765625
+        self.assertTrue(mesh.hx[0] == 2.84765625)
         # The x0 is in a different place (-z)
-        assert mesh.x0[-1] == - np.sum(mesh.hy)
+        self.assertTrue(mesh.x0[-1] == - np.sum(mesh.hy))
         # the z axis is flipped
-        assert mesh.hy[0] == 2.84765625
-        assert mesh.hy[-1] == csz
-        assert mesh.dim == 2
-        assert np.all(model == readmodel)
+        self.assertTrue(mesh.hy[0] == 2.84765625)
+        self.assertTrue(mesh.hy[-1] == csz)
+        self.assertTrue(mesh.dim == 2)
+        self.assertTrue(np.all(model == readmodel))
 
         # Clean up the working directory
         print('IO of UBC 2D tensor mesh files is working')

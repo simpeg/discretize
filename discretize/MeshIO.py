@@ -325,8 +325,17 @@ class TensorMeshIO(object):
         if not np.all([mesh.nCx, mesh.nCy] == dim):
             raise Exception('Dimension of the model and mesh mismatch')
 
+        # Make a list of the lines
         model = [line.split() for line in obsfile[1:]]
-        model = utils.mkvc(np.array(model, dtype=float)[::-1].T)
+        # Address the case where lines are not split equally
+        model = [cellvalue for sublist in model[::-1] for cellvalue in sublist]
+        # Make the vector
+        model = utils.mkvc(np.array(model, dtype=float).T)
+        if not len(model) == mesh.nC:
+            raise Exception(
+                """Something is not right, expected size is {:d}
+                but unwrap vector is size {:d}""".format(mesh.nC, len(model))
+            )
 
         return model
 
@@ -399,7 +408,9 @@ class TensorMeshIO(object):
         :param dict models: A dictionary of the models
 
         """
-        assert mesh.dim == 3
+        if not mesh.dim == 3:
+            raise Exception('Mesh must be 3D')
+
         s = comment_lines
         s += '{0:d} {1:d} {2:d}\n'.format(*tuple(mesh.vnC))
         # Have to it in the same operation or use mesh.x0.copy(),
@@ -422,7 +433,8 @@ class TensorMeshIO(object):
         :param dict models: A dictionary of the models
 
         """
-        assert mesh.dim == 2
+        if not mesh.dim == 2:
+            raise Exception('Mesh must be 2D')
 
         def writeF(fx, outStr=''):
             # Init
