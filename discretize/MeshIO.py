@@ -118,16 +118,18 @@ class TensorMeshIO(object):
         return tensMsh
 
     @classmethod
-    def readUBC(TensorMesh, fileName, meshdim=None, folder=''):
+    def readUBC(TensorMesh, fileName, meshdim=None, directory=''):
         """Wrapper to Read UBC GIF 2D  and 3D tensor mesh and generate same dimension TensorMesh.
 
-        :param string fileName: path to the UBC GIF mesh file
+        :param str fileName: path to the UBC GIF mesh file or just its name
+        if directory is specified
+        :param str directory: directory where the UBC GIF file lives
         :param int meshdim: expected dimension of the mesh, if unknown the default argument is None
         :rtype: TensorMesh
         :return: The tensor mesh for the fileName.
         """
         # Check the expected mesh dimensions
-        fname = os.path.join(folder, fileName)
+        fname = os.path.join(directory, fileName)
         if meshdim == None:
             # Read the file as line strings, remove lines with comment = !
             msh = np.genfromtxt(fname, delimiter='\n', dtype=np.str, comments='!', max_rows=1)
@@ -150,18 +152,20 @@ class TensorMeshIO(object):
         return Tnsmsh
 
     @classmethod
-    def readVTK(TensorMesh, fileName, folder=''):
+    def readVTK(TensorMesh, fileName, directory=''):
         """Read VTK Rectilinear (vtr xml file) and return Tensor mesh and model
 
         Input:
-        :param string fileName: path to the vtr model file to read
+        :param str fileName: path to the vtr model file to read
+        or just its name if directory is specified
+        :param str directory: directory where the UBC GIF file lives
         :rtype: tuple
         :return: (TensorMesh, modelDictionary)
         """
         from vtk import vtkXMLRectilinearGridReader as vtrFileReader
         from vtk.util.numpy_support import vtk_to_numpy
 
-        fname = os.path.join(folder, fileName)
+        fname = os.path.join(directory, fileName)
         # Read the file
         vtrReader = vtrFileReader()
         vtrReader.SetFileName(fname)
@@ -200,18 +204,21 @@ class TensorMeshIO(object):
         # Return the data
         return tensMsh, models
 
-    def writeVTK(mesh, fileName, models=None, folder=''):
+    def writeVTK(mesh, fileName, models=None, directory=''):
         """Makes and saves a VTK rectilinear file (vtr)
         for a Tensor mesh and model.
 
         Input:
-        :param string fileName: path to the output vtk file
-        :param dict models: dictionary of numpy.array - Name('s) and array('s). Match number of cells
+        :param str fileName:  path to the output vtk file
+        or just its name if directory is specified
+        :param str directory: directory where the UBC GIF file lives
+        :param dict models: dictionary of numpy.array - Name('s) and array('s).
+        Match number of cells
         """
         from vtk import vtkRectilinearGrid as rectGrid, vtkXMLRectilinearGridWriter as rectWriter, VTK_VERSION
         from vtk.util.numpy_support import numpy_to_vtk
 
-        fname = os.path.join(folder, fileName)
+        fname = os.path.join(directory, fileName)
         # Deal with dimensionalities
         if mesh.dim >= 1:
             vX = mesh.vectorNx
@@ -355,15 +362,17 @@ class TensorMeshIO(object):
         model = utils.mkvc(model)
         return model
 
-    def readModelUBC(mesh, fileName, folder=''):
+    def readModelUBC(mesh, fileName, directory=''):
         """Read UBC 2D or 3D Tensor mesh model
             and generate Tensor mesh model
 
-        :param string fileName: path to the UBC GIF mesh file to read
+        :param str fileName:  path to the UBC GIF mesh file to read
+        or just its name if directory is specified
+        :param str directory: directory where the UBC GIF file lives
         :rtype: numpy.ndarray
         :return: model with TensorMesh ordered
         """
-        fname = os.path.join(folder, fileName)
+        fname = os.path.join(directory, fileName)
         if mesh.dim == 3:
             model = mesh._readModelUBC_3D(fname)
         elif mesh.dim == 2:
@@ -372,14 +381,16 @@ class TensorMeshIO(object):
             raise Exception('mesh must be a Tensor Mesh 2D or 3D')
         return model
 
-    def writeModelUBC(mesh, fileName, model, folder=''):
+    def writeModelUBC(mesh, fileName, model, directory=''):
         """Writes a model associated with a TensorMesh
         to a UBC-GIF format model file.
 
-        :param string fileName: File to write to
+        :param str fileName:  File to write to
+        or just its name if directory is specified
+        :param str directory: directory where the UBC GIF file lives
         :param numpy.ndarray model: The model
         """
-        fname = os.path.join(folder, fileName)
+        fname = os.path.join(directory, fileName)
         if mesh.dim == 3:
             # Reshape model to a matrix
             modelMat = mesh.r(model, 'CC', 'CC', 'M')
@@ -488,15 +499,15 @@ class TensorMeshIO(object):
         f.write(outStr)
         f.close()
 
-    def writeUBC(mesh, fileName, models=None, folder='', comment_lines=''):
+    def writeUBC(mesh, fileName, models=None, directory='', comment_lines=''):
         """Writes a TensorMesh to a UBC-GIF format mesh file.
 
         :param str fileName: File to write to
-        :param str folder: folder where to save model
+        :param str directory: directory where to save model
         :param dict models: A dictionary of the models
         :param str comment_lines: comment lines preceded with '!' to add
         """
-        fname = os.path.join(folder, fileName)
+        fname = os.path.join(directory, fileName)
         if mesh.dim == 3:
             mesh._writeUBC_3DMesh(fname, comment_lines=comment_lines)
         elif mesh.dim == 2:
@@ -509,7 +520,7 @@ class TensorMeshIO(object):
         assert type(models) is dict, 'models must be a dict'
         for key in models:
             assert type(key) is str, 'The dict key is a file name'
-            mesh.writeModelUBC(key, models[key], folder=folder)
+            mesh.writeModelUBC(key, models[key], directory=directory)
 
 
 class TreeMeshIO(object):

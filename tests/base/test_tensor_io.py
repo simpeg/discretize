@@ -32,10 +32,12 @@ class TestTensorMeshIO(unittest.TestCase):
         modelfname = 'arange.txt'
         modelfname1 = 'arange2.txt'
         modeldict = {modelfname: vec, modelfname1: vec + 1}
-        mesh.writeUBC('temp.msh', modeldict, folder=self.basePath)
-        meshUBC = discretize.TensorMesh.readUBC(mshfname, folder=self.basePath)
-        vecUBC = meshUBC.readModelUBC(modelfname, folder=self.basePath)
-        vec2UBC = mesh.readModelUBC(modelfname1, folder=self.basePath)
+        mesh.writeUBC('temp.msh', modeldict, directory=self.basePath)
+        meshUBC = discretize.TensorMesh.readUBC(
+            mshfname, directory=self.basePath
+        )
+        vecUBC = meshUBC.readModelUBC(modelfname, directory=self.basePath)
+        vec2UBC = mesh.readModelUBC(modelfname1, directory=self.basePath)
 
         # The mesh
         self.assertTrue(mesh.__str__() == meshUBC.__str__())
@@ -63,9 +65,9 @@ class TestTensorMeshIO(unittest.TestCase):
             vtrfname = 'temp.vtr'
             modelfname = 'arange.txt'
             modeldict = {modelfname: vec}
-            mesh.writeVTK(vtrfname, modeldict, folder=self.basePath)
+            mesh.writeVTK(vtrfname, modeldict, directory=self.basePath)
             meshVTR, models = discretize.TensorMesh.readVTK(
-                vtrfname, folder=self.basePath
+                vtrfname, directory=self.basePath
             )
 
             self.assertTrue(mesh.__str__() == meshVTR.__str__())
@@ -119,7 +121,7 @@ class TestTensorMeshIO(unittest.TestCase):
         comment_lines = '!comment line\n'+'!again\n'+'!and again\n'
         mesh.writeUBC(
             fname, models=modeldict,
-            folder=self.basePath, comment_lines=comment_lines
+            directory=self.basePath, comment_lines=comment_lines
         )
 
         # Read back mesh and model
