@@ -150,7 +150,7 @@ class TensorMeshIO(object):
         return Tnsmsh
 
     @classmethod
-    def readVTK(TensorMesh, fileName):
+    def readVTK(TensorMesh, fileName, folder=''):
         """Read VTK Rectilinear (vtr xml file) and return Tensor mesh and model
 
         Input:
@@ -161,9 +161,10 @@ class TensorMeshIO(object):
         from vtk import vtkXMLRectilinearGridReader as vtrFileReader
         from vtk.util.numpy_support import vtk_to_numpy
 
+        fname = os.path.join(folder, fileName)
         # Read the file
         vtrReader = vtrFileReader()
-        vtrReader.SetFileName(fileName)
+        vtrReader.SetFileName(fname)
         vtrReader.Update()
         vtrGrid = vtrReader.GetOutput()
         # Sort information
@@ -199,7 +200,7 @@ class TensorMeshIO(object):
         # Return the data
         return tensMsh, models
 
-    def writeVTK(mesh, fileName, models=None):
+    def writeVTK(mesh, fileName, models=None, folder=''):
         """Makes and saves a VTK rectilinear file (vtr)
         for a Tensor mesh and model.
 
@@ -210,6 +211,7 @@ class TensorMeshIO(object):
         from vtk import vtkRectilinearGrid as rectGrid, vtkXMLRectilinearGridWriter as rectWriter, VTK_VERSION
         from vtk.util.numpy_support import numpy_to_vtk
 
+        fname = os.path.join(folder, fileName)
         # Deal with dimensionalities
         if mesh.dim >= 1:
             vX = mesh.vectorNx
@@ -241,18 +243,18 @@ class TensorMeshIO(object):
             vtkObj.GetCellData().SetActiveScalars(models.keys()[0])
 
         # Check the extension of the fileName
-        ext = os.path.splitext(fileName)[1]
+        ext = os.path.splitext(fname)[1]
         if ext is '':
-            fileName = fileName + '.vtr'
+            fname = fname + '.vtr'
         elif ext not in '.vtr':
             raise IOError('{:s} is an incorrect extension, has to be .vtr')
         # Write the file.
         vtrWriteFilter = rectWriter()
-        if float(VTK_VERSION.split('.')[0]) >=6:
+        if float(VTK_VERSION.split('.')[0]) >= 6:
             vtrWriteFilter.SetInputData(vtkObj)
         else:
             vtuWriteFilter.SetInput(vtuObj)
-        vtrWriteFilter.SetFileName(fileName)
+        vtrWriteFilter.SetFileName(fname)
         vtrWriteFilter.Update()
 
     def _toVTRObj(mesh, models=None):
