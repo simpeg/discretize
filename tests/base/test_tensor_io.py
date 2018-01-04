@@ -3,7 +3,6 @@ import numpy as np
 import unittest
 import os
 import discretize
-import shutil
 
 try:
     import vtk
