@@ -63,8 +63,10 @@ class TestTensorMeshIO(unittest.TestCase):
             vtrfname = 'temp.vtr'
             modelfname = 'arange.txt'
             modeldict = {modelfname: vec}
-            mesh.writeVTK(vtrfname, modeldict)
-            meshVTR, models = discretize.TensorMesh.readVTK(vtrfname)
+            mesh.writeVTK(vtrfname, modeldict, folder=self.basePath)
+            meshVTR, models = discretize.TensorMesh.readVTK(
+                vtrfname, folder=self.basePath
+            )
 
             assert mesh.__str__() == meshVTR.__str__()
             assert np.all(np.array(mesh.h) - np.array(meshVTR.h) == 0)
