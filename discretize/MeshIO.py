@@ -118,7 +118,7 @@ class TensorMeshIO(object):
         return tensMsh
 
     @classmethod
-    def readUBC(TensorMesh, fileName, meshdim=None):
+    def readUBC(TensorMesh, fileName, meshdim=None, folder=''):
         """Wrapper to Read UBC GIF 2D  and 3D tensor mesh and generate same dimension TensorMesh.
 
         :param string fileName: path to the UBC GIF mesh file
@@ -127,25 +127,26 @@ class TensorMeshIO(object):
         :return: The tensor mesh for the fileName.
         """
         # Check the expected mesh dimensions
+        fname = os.path.join(folder, fileName)
         if meshdim == None:
             # Read the file as line strings, remove lines with comment = !
-            msh = np.genfromtxt(fileName, delimiter='\n', dtype=np.str, comments='!', max_rows=1)
+            msh = np.genfromtxt(fname, delimiter='\n', dtype=np.str, comments='!', max_rows=1)
             # Fist line is the size of the model
             sizeM = np.array(msh.ravel()[0].split(), dtype=float)
             # Check if the mesh is a UBC 2D mesh
             if sizeM.shape[0] == 1:
-                Tnsmsh = TensorMesh._readUBC_2DMesh(fileName)
+                Tnsmsh = TensorMesh._readUBC_2DMesh(fname)
             # Check if the mesh is a UBC 3D mesh
             elif sizeM.shape[0] == 3:
-                Tnsmsh = TensorMesh._readUBC_3DMesh(fileName)
+                Tnsmsh = TensorMesh._readUBC_3DMesh(fname)
             else:
                 raise Exception('File format not recognized')
         # expected dimension is 2
         elif meshdim == 2:
-            Tnsmsh = TensorMesh._readUBC_2DMesh(fileName)
+            Tnsmsh = TensorMesh._readUBC_2DMesh(fname)
         # expected dimension is 3
         elif meshdim == 3:
-            Tnsmsh = TensorMesh._readUBC_3DMesh(fileName)
+            Tnsmsh = TensorMesh._readUBC_3DMesh(fname)
         return Tnsmsh
 
     @classmethod
@@ -319,33 +320,11 @@ class TensorMeshIO(object):
         )
 
         dim = np.array(obsfile[0].split(), dtype=int)
+        if not np.all([mesh.nCx, mesh.nCy] == dim):
+            raise Exception('Dimension of the model and mesh mismatch')
 
-        temp = np.array(obsfile[1].split(), dtype=float)
-
-        if len(temp) > 1:
-            model = np.zeros((dim[0], dim[1]))
-
-            for ii in range(len(obsfile)-1):
-                mm = np.array(obsfile[ii+1].split(), dtype=float)
-                model[:, ii] = mm
-
-            model = model[:, ::-1]
-
-        else:
-
-            if len(obsfile[1:]) == 1:
-                mm = np.array(obsfile[1:].split(), dtype=float)
-
-            else:
-                mm = np.array(obsfile[1:], dtype=float)
-
-            # Permute the second dimension to flip the order
-            model = mm.reshape(dim[1], dim[0])
-
-            model = model[::-1, :]
-            model = np.transpose(model, (1, 0))
-
-        model = utils.mkvc(model)
+        model = [line.split() for line in obsfile[1:]]
+        model = utils.mkvc(np.array(model, dtype=float)[::-1].T)
 
         return model
 
@@ -365,7 +344,7 @@ class TensorMeshIO(object):
         model = utils.mkvc(model)
         return model
 
-    def readModelUBC(mesh, fileName):
+    def readModelUBC(mesh, fileName, folder=''):
         """Read UBC 2D or 3D Tensor mesh model
             and generate Tensor mesh model
 
@@ -373,21 +352,23 @@ class TensorMeshIO(object):
         :rtype: numpy.ndarray
         :return: model with TensorMesh ordered
         """
+        fname = os.path.join(folder, fileName)
         if mesh.dim == 3:
-            model = mesh._readModelUBC_3D(fileName)
+            model = mesh._readModelUBC_3D(fname)
         elif mesh.dim == 2:
-            model = mesh._readModelUBC_2D(fileName)
+            model = mesh._readModelUBC_2D(fname)
         else:
             raise Exception('mesh must be a Tensor Mesh 2D or 3D')
         return model
 
-    def writeModelUBC(mesh, fileName, model):
+    def writeModelUBC(mesh, fileName, model, folder=''):
         """Writes a model associated with a TensorMesh
         to a UBC-GIF format model file.
 
         :param string fileName: File to write to
         :param numpy.ndarray model: The model
         """
+        fname = os.path.join(folder, fileName)
         if mesh.dim == 3:
             # Reshape model to a matrix
             modelMat = mesh.r(model, 'CC', 'CC', 'M')
@@ -395,14 +376,14 @@ class TensorMeshIO(object):
             modelMatT = modelMat.transpose((2, 0, 1))
             # Flip z to positive down
             modelMatTR = utils.mkvc(modelMatT[::-1, :, :])
-            np.savetxt(fileName, modelMatTR.ravel())
+            np.savetxt(fname, modelMatTR.ravel())
 
         elif mesh.dim == 2:
             modelMat = mesh.r(model, 'CC', 'CC', 'M').T[::-1]
-            f = open(fileName, 'w')
+            f = open(fname, 'w')
             f.write('{:d} {:d}\n'.format(mesh.nCx, mesh.nCy))
             f.close()
-            f = open(fileName, 'ab')
+            f = open(fname, 'ab')
             np.savetxt(f, modelMat)
             f.close()
 
@@ -493,17 +474,19 @@ class TensorMeshIO(object):
         f.write(outStr)
         f.close()
 
-    def writeUBC(mesh, fileName, models=None, comment_lines=''):
+    def writeUBC(mesh, fileName, models=None, folder='', comment_lines=''):
         """Writes a TensorMesh to a UBC-GIF format mesh file.
 
-        :param string fileName: File to write to
+        :param str fileName: File to write to
+        :param str folder: folder where to save model
         :param dict models: A dictionary of the models
         :param str comment_lines: comment lines preceded with '!' to add
         """
+        fname = os.path.join(folder, fileName)
         if mesh.dim == 3:
-            mesh._writeUBC_3DMesh(fileName, comment_lines=comment_lines)
+            mesh._writeUBC_3DMesh(fname, comment_lines=comment_lines)
         elif mesh.dim == 2:
-            mesh._writeUBC_2DMesh(fileName, comment_lines=comment_lines)
+            mesh._writeUBC_2DMesh(fname, comment_lines=comment_lines)
         else:
             raise Exception('mesh must be a Tensor Mesh 2D or 3D')
 
@@ -512,7 +495,7 @@ class TensorMeshIO(object):
         assert type(models) is dict, 'models must be a dict'
         for key in models:
             assert type(key) is str, 'The dict key is a file name'
-            mesh.writeModelUBC(key, models[key])
+            mesh.writeModelUBC(key, models[key], folder=folder)
 
 
 class TreeMeshIO(object):

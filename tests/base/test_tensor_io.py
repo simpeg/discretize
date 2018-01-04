@@ -3,6 +3,7 @@ import numpy as np
 import unittest
 import os
 import discretize
+import shutil
 
 try:
     import vtk
@@ -18,16 +19,21 @@ class TestTensorMeshIO(unittest.TestCase):
         h = np.ones(16)
         mesh = discretize.TensorMesh([h, 2*h, 3*h])
         self.mesh = mesh
+        self.basePath = os.path.expanduser('~/TestIO')
 
     def test_UBCfiles(self):
+        if not os.path.exists(self.basePath):
+            os.mkdir(self.basePath)
 
         mesh = self.mesh
         # Make a vector
         vec = np.arange(mesh.nC)
         # Write and read
-        mesh.writeUBC('temp.msh', {'arange.txt': vec})
-        meshUBC = discretize.TensorMesh.readUBC('temp.msh')
-        vecUBC = meshUBC.readModelUBC('arange.txt')
+        fname = 'temp.msh'
+        modelfname = 'arange.txt'
+        mesh.writeUBC('temp.msh', {modelfname: vec}, folder=self.basePath)
+        meshUBC = discretize.TensorMesh.readUBC(fname, folder=self.basePath)
+        vecUBC = meshUBC.readModelUBC(modelfname, folder=self.basePath)
 
         # The mesh
         assert mesh.__str__() == meshUBC.__str__()
@@ -35,17 +41,19 @@ class TestTensorMeshIO(unittest.TestCase):
         assert np.sum(vec - vecUBC) == 0
         assert np.all(np.array(mesh.h) - np.array(meshUBC.h) == 0)
 
-        vecUBC = mesh.readModelUBC('arange.txt')
+        vecUBC = mesh.readModelUBC(modelfname, folder=self.basePath)
         assert np.sum(vec - vecUBC) == 0
 
-        mesh.writeModelUBC('arange2.txt', vec + 1)
-        vec2UBC = mesh.readModelUBC('arange2.txt')
+        modelfname1 = 'arange2.txt'
+        mesh.writeModelUBC(modelfname1, vec + 1, folder=self.basePath)
+        vec2UBC = mesh.readModelUBC(modelfname1, folder=self.basePath)
         assert np.sum(vec + 1 - vec2UBC) == 0
 
         print('IO of UBC tensor mesh files is working')
-        os.remove('temp.msh')
-        os.remove('arange.txt')
-        os.remove('arange2.txt')
+        os.remove(os.path.join(self.basePath, fname))
+        os.remove(os.path.join(self.basePath, modelfname))
+        os.remove(os.path.join(self.basePath, modelfname1))
+        os.rmdir(self.basePath)
 
     def test_write_read_ubc_mesh(self):
         fname = os.path.join(os.path.split(__file__)[0], 'ubc_tensor_mesh.msh')
@@ -81,11 +89,10 @@ class TestTensorMeshIO(unittest.TestCase):
             os.remove('temp.vtr')
 
     def test_write_read_ubc_2Dmesh(self):
-        fname = os.path.join(
-            os.path.split(__file__)[0],
-            'ubc_DC2D_tensor_mesh.msh'
-        )
+        if not os.path.exists(self.basePath):
+            os.mkdir(self.basePath)
 
+        fname = 'ubc_DC2D_tensor_mesh.msh'
         # Create 2D Mesh
         # Cells size
         csx, csz = 0.25, 0.25
@@ -117,11 +124,15 @@ class TestTensorMeshIO(unittest.TestCase):
 
         # Write Mesh and model
         comment_lines = '!comment line\n'+'!again\n'+'!and again\n'
-        mesh.writeUBC(fname, models=modeldict, comment_lines=comment_lines)
+        mesh.writeUBC(
+            fname, models=modeldict,
+            folder=self.basePath, comment_lines=comment_lines
+        )
 
         # Read back mesh and model
+        fname = os.path.sep.join([self.basePath, 'ubc_DC2D_tensor_mesh.msh'])
         mesh = discretize.TensorMesh.readUBC(fname)
-        modelfname = os.path.join(os.path.split(__file__)[0], '2d_2cyl_model')
+        modelfname = os.path.sep.join([self.basePath, '2d_2cyl_model'])
         readmodel = mesh.readModelUBC(modelfname)
         assert mesh.nCx == 135
         assert mesh.nCy == 47
@@ -134,6 +145,12 @@ class TestTensorMeshIO(unittest.TestCase):
         assert mesh.hy[-1] == csz
         assert mesh.dim == 2
         assert np.all(model == readmodel)
+
+        # Clean up the working directory
+        os.remove(os.path.join(self.basePath, fname))
+        os.remove(os.path.join(self.basePath, modelfname))
+        os.rmdir(self.basePath)
+
 
 if __name__ == '__main__':
     unittest.main()
