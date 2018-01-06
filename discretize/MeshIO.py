@@ -124,13 +124,12 @@ class TensorMeshIO(object):
         return tensMsh
 
     @classmethod
-    def readUBC(TensorMesh, fileName, meshdim=None, directory=''):
+    def readUBC(TensorMesh, fileName, directory=''):
         """Wrapper to Read UBC GIF 2D  and 3D tensor mesh and generate same dimension TensorMesh.
 
         Input:
         :param str fileName: path to the UBC GIF mesh file or just its name if directory is specified
         :param str directory: directory where the UBC GIF file lives
-        :param int meshdim: expected dimension of the mesh, if unknown the default argument is None
 
         Output:
         :rtype: TensorMesh
@@ -138,25 +137,21 @@ class TensorMeshIO(object):
         """
         # Check the expected mesh dimensions
         fname = os.path.join(directory, fileName)
-        if meshdim == None:
-            # Read the file as line strings, remove lines with comment = !
-            msh = np.genfromtxt(fname, delimiter='\n', dtype=np.str, comments='!', max_rows=1)
-            # Fist line is the size of the model
-            sizeM = np.array(msh.ravel()[0].split(), dtype=float)
-            # Check if the mesh is a UBC 2D mesh
-            if sizeM.shape[0] == 1:
-                Tnsmsh = TensorMesh._readUBC_2DMesh(fname)
-            # Check if the mesh is a UBC 3D mesh
-            elif sizeM.shape[0] == 3:
-                Tnsmsh = TensorMesh._readUBC_3DMesh(fname)
-            else:
-                raise Exception('File format not recognized')
-        # expected dimension is 2
-        elif meshdim == 2:
+        # Read the file as line strings, remove lines with comment = !
+        msh = np.genfromtxt(
+            fname, delimiter='\n', dtype=np.str,
+            comments='!', max_rows=1
+        )
+        # Fist line is the size of the model
+        sizeM = np.array(msh.ravel()[0].split(), dtype=float)
+        # Check if the mesh is a UBC 2D mesh
+        if sizeM.shape[0] == 1:
             Tnsmsh = TensorMesh._readUBC_2DMesh(fname)
-        # expected dimension is 3
-        elif meshdim == 3:
+        # Check if the mesh is a UBC 3D mesh
+        elif sizeM.shape[0] == 3:
             Tnsmsh = TensorMesh._readUBC_3DMesh(fname)
+        else:
+            raise Exception('File format not recognized')
         return Tnsmsh
 
     @classmethod
