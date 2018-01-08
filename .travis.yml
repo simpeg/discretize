@@ -58,8 +58,7 @@ after_success:
 
   # deploy to pypi on tags
   - mv credentials/.pypirc ~/.pypirc ;
-  - python setup.py sdist bdist_wheel --universal ;
-  - travis_wait 20 twine upload -r pypi --skip-existing dist/* ;
+  - python setup.py sdist bdist_wheel --universal upload;
 
 
 notifications:
