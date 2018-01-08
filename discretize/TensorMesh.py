@@ -160,6 +160,24 @@ class BaseTensorMesh(BaseMesh):
         return self._getTensorGrid('N')
 
     @property
+    def h_gridded(self):
+        """
+        Returns an (nC, dim) numpy array with the widths of all cells in order
+        """
+
+        if self.dim == 1:
+            return np.reshape(self.h, (self.nC, 1))
+        elif self.dim == 2:
+            hx = np.kron(np.ones(self.nCy), self.h[0])
+            hy = np.kron(self.h[1], np.ones(self.nCx))
+            return np.c_[hx, hy]
+        elif self.dim == 3:
+            hx = np.kron(np.ones(self.nCy*self.nCz), self.h[0])
+            hy = np.kron(np.ones(self.nCz), np.kron(self.h[1], np.ones(self.nCx)))
+            hz = np.kron(self.h[2], np.ones(self.nCx*self.nCy))
+            return np.c_[hx, hy, hz]
+
+    @property
     def gridFx(self):
         """Face staggered grid in the x direction."""
         if self.nFx == 0:
