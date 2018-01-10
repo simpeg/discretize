@@ -1124,16 +1124,26 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
                 chy1 = self._cellH([p[0], p[1] + w, sl])[1]
                 A = (chy0 + chy1)
 
-                self._hangingFx[self._fx2i[test]] = ([self._fx2i[fx],
-                                                      chy0 / A], )
-                self._hangingFx[self._fx2i[self._index([p[0],
-                                           p[1] + w, sl])]] = ([self._fx2i[fx],
-                                                                chy1 / A], )
+                self._hangingFx[self._fx2i[test]] = (
+                    [self._fx2i[fx], chy0 / A],
+                )
+                self._hangingFx[
+                    self._fx2i[self._index([p[0], p[1] + w, sl])]
+                ] = (
+                    [self._fx2i[fx], chy1 / A],
+                )
 
                 n0, n1 = fx, self._index([p[0], p[1] + 2*w, p[-1]])
                 self._hangingN[self._n2i[test]] = ([self._n2i[n0], 1.0], )
-                self._hangingN[self._n2i[self._index([p[0], p[1] + w, sl])]] = ([self._n2i[n0], 1.0 - chy0 / A], [self._n2i[n1], 1.0 - chy1 / A])
-                self._hangingN[self._n2i[self._index([p[0], p[1] + 2*w, sl])]] = ([self._n2i[n1], 1.0], )
+                self._hangingN[
+                    self._n2i[self._index([p[0], p[1] + w, sl])]
+                ] = (
+                    [self._n2i[n0], 1.0 - chy0 / A],
+                    [self._n2i[n1], 1.0 - chy1 / A]
+                )
+                self._hangingN[
+                    self._n2i[self._index([p[0], p[1] + 2*w, sl])]
+                ] = ([self._n2i[n1], 1.0], )
 
             elif self.dim == 3:
 
@@ -1166,7 +1176,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
                 i022 = self._index([p[0], p[1] + 2*w, p[2] + 2*w, sl])
 
                 self._hangingFx[self._fx2i[i000]] = (
-                    [self._fx2i[fx], hy0*chz0 / A],
+                    [self._fx2i[fx], chy0*chz0 / A],
                 )
                 self._hangingFx[self._fx2i[i010]] = (
                     [self._fx2i[fx], chy1*chz0 / A],
