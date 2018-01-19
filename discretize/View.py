@@ -49,7 +49,7 @@ class TensorView(object):
         gridOpts=None,
         numbering=True, annotationColor='w',
         range_x=None, range_y=None, sample_grid=None,
-        mask_stream_below=None
+        stream_threshold=None
     ):
         """
         Mesh.plotImage(v)
@@ -117,7 +117,7 @@ class TensorView(object):
                 ax=ax, clim=clim, showIt=showIt,
                 pcolorOpts=pcolorOpts, streamOpts=streamOpts,
                 gridOpts=gridOpts, range_x=range_x, range_y=range_y,
-                sample_grid=sample_grid, mask_stream_below=mask_stream_below
+                sample_grid=sample_grid, stream_threshold=stream_threshold
             )
         elif self.dim == 3:
             # get copy of image and average to cell-centers is necessary
@@ -324,7 +324,7 @@ class TensorView(object):
         range_x=None,
         range_y=None,
         sample_grid=None,
-        mask_stream_below=None
+        stream_threshold=None
     ):
 
         if pcolorOpts is None:
@@ -430,8 +430,8 @@ class TensorView(object):
                 U = Ui
                 V = Vi
 
-            if mask_stream_below is not None:
-                mask_me = np.sqrt(U**2 + V**2) <= mask_stream_below
+            if stream_threshold is not None:
+                mask_me = np.sqrt(U**2 + V**2) <= stream_threshold
                 Ui = np.ma.masked_where(mask_me, Ui)
                 Vi = np.ma.masked_where(mask_me, Vi)
 
