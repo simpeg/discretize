@@ -203,7 +203,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         level = 0
         for cell in self._cells:
             p = self._pointer(cell)
-            level = max(l, p[-1])
+            level = max(level, p[-1])
         return level
 
     def __str__(self):
