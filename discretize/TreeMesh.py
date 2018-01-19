@@ -176,11 +176,10 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             '_gridEx', '_gridEy', '_gridEz',
             '_area', '_edge', '_vol',
             '_faceDiv', '_edgeCurl', '_nodalGrad',
-            '_aveFx2CC', '_aveFy2CC', '_aveFz2CC',
-            '_aveF2CC', '_aveF2CCV',
-            '_aveEx2CC', '_aveEy2CC', '_aveEz2CC',
-            '_aveE2CC', '_aveE2CCV',
-            '_aveN2CC',
+            '_aveFx2CC', '_aveFy2CC', '_aveFz2CC', '_aveF2CC', '_aveF2CCV',
+            '_aveEx2CC', '_aveEy2CC', '_aveEz2CC', '_aveE2CC', '_aveE2CCV',
+            '_aveN2CC', '_h_gridded'
+
         ]
 
         for p in deleteThese:
@@ -787,6 +786,12 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
     @property
     def gridCC(self):
+        """
+        Returns an M by N numpy array with the center locations of all cells
+        in order. M is the number of cells and N=1,2,3 is the dimension of the
+        mesh.
+        """
+
         if getattr(self, '_gridCC', None) is None:
             self._gridCC = np.zeros((len(self._cells), self.dim))
             for ii, ind in enumerate(self._sortedCells):
@@ -796,9 +801,27 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
     @property
     def gridN(self):
+        """
+        Returns an M by N numpy array with the widths of all cells in order.
+        M is the number of nodes and N=1,2,3 is the dimension of the mesh.
+        """
+
         self.number()
         R = self._deflationMatrix('N', withHanging=False)
         return R.T * self._gridN + np.repeat([self.x0], self.nN, axis=0)
+
+    @property
+    def h_gridded(self):
+        """
+        Returns an (nC, dim) numpy array with the widths of all cells in order
+        """
+
+        if getattr(self, '_h_gridded', None) is None:
+            self._h_gridded = np.zeros((len(self._cells), self.dim))
+            for ii, ind in enumerate(self._sortedCells):
+                p = self._asPointer(ind)
+                self._h_gridded[ii, :] = self._cellH(p)
+        return self._h_gridded
 
     @property
     def gridFx(self):

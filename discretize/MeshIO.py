@@ -30,7 +30,10 @@ class TensorMeshIO(object):
     def _readUBC_3DMesh(TensorMesh, fileName):
         """Read UBC GIF 3D tensor mesh and generate same dimension TensorMesh.
 
+        Input:
         :param string fileName: path to the UBC GIF mesh file
+
+        Output:
         :rtype: TensorMesh
         :return: The tensor mesh for the fileName.
         """
@@ -69,7 +72,10 @@ class TensorMeshIO(object):
     def _readUBC_2DMesh(TensorMesh, fileName):
         """Read UBC GIF 2DTensor mesh and generate 2D Tensor mesh in simpeg
 
+        Input:
         :param string fileName: path to the UBC GIF mesh file
+
+        Output:
         :rtype: TensorMesh
         :return: SimPEG TensorMesh 2D object
         """
@@ -118,51 +124,55 @@ class TensorMeshIO(object):
         return tensMsh
 
     @classmethod
-    def readUBC(TensorMesh, fileName, meshdim=None):
+    def readUBC(TensorMesh, fileName, directory=''):
         """Wrapper to Read UBC GIF 2D  and 3D tensor mesh and generate same dimension TensorMesh.
 
-        :param string fileName: path to the UBC GIF mesh file
-        :param int meshdim: expected dimension of the mesh, if unknown the default argument is None
+        Input:
+        :param str fileName: path to the UBC GIF mesh file or just its name if directory is specified
+        :param str directory: directory where the UBC GIF file lives
+
+        Output:
         :rtype: TensorMesh
         :return: The tensor mesh for the fileName.
         """
         # Check the expected mesh dimensions
-        if meshdim == None:
-            # Read the file as line strings, remove lines with comment = !
-            msh = np.genfromtxt(fileName, delimiter='\n', dtype=np.str, comments='!', max_rows=1)
-            # Fist line is the size of the model
-            sizeM = np.array(msh.ravel()[0].split(), dtype=float)
-            # Check if the mesh is a UBC 2D mesh
-            if sizeM.shape[0] == 1:
-                Tnsmsh = TensorMesh._readUBC_2DMesh(fileName)
-            # Check if the mesh is a UBC 3D mesh
-            elif sizeM.shape[0] == 3:
-                Tnsmsh = TensorMesh._readUBC_3DMesh(fileName)
-            else:
-                raise Exception('File format not recognized')
-        # expected dimension is 2
-        elif meshdim == 2:
-            Tnsmsh = TensorMesh._readUBC_2DMesh(fileName)
-        # expected dimension is 3
-        elif meshdim == 3:
-            Tnsmsh = TensorMesh._readUBC_3DMesh(fileName)
+        fname = os.path.join(directory, fileName)
+        # Read the file as line strings, remove lines with comment = !
+        msh = np.genfromtxt(
+            fname, delimiter='\n', dtype=np.str,
+            comments='!', max_rows=1
+        )
+        # Fist line is the size of the model
+        sizeM = np.array(msh.ravel()[0].split(), dtype=float)
+        # Check if the mesh is a UBC 2D mesh
+        if sizeM.shape[0] == 1:
+            Tnsmsh = TensorMesh._readUBC_2DMesh(fname)
+        # Check if the mesh is a UBC 3D mesh
+        elif sizeM.shape[0] == 3:
+            Tnsmsh = TensorMesh._readUBC_3DMesh(fname)
+        else:
+            raise Exception('File format not recognized')
         return Tnsmsh
 
     @classmethod
-    def readVTK(TensorMesh, fileName):
+    def readVTK(TensorMesh, fileName, directory=''):
         """Read VTK Rectilinear (vtr xml file) and return Tensor mesh and model
 
         Input:
-        :param string fileName: path to the vtr model file to read
+        :param str fileName: path to the vtr model file to read or just its name if directory is specified
+        :param str directory: directory where the UBC GIF file lives
+
+        Output:
         :rtype: tuple
         :return: (TensorMesh, modelDictionary)
         """
         from vtk import vtkXMLRectilinearGridReader as vtrFileReader
         from vtk.util.numpy_support import vtk_to_numpy
 
+        fname = os.path.join(directory, fileName)
         # Read the file
         vtrReader = vtrFileReader()
-        vtrReader.SetFileName(fileName)
+        vtrReader.SetFileName(fname)
         vtrReader.Update()
         vtrGrid = vtrReader.GetOutput()
         # Sort information
@@ -198,17 +208,20 @@ class TensorMeshIO(object):
         # Return the data
         return tensMsh, models
 
-    def writeVTK(mesh, fileName, models=None):
+    def writeVTK(mesh, fileName, models=None, directory=''):
         """Makes and saves a VTK rectilinear file (vtr)
         for a Tensor mesh and model.
 
         Input:
-        :param string fileName: path to the output vtk file
-        :param dict models: dictionary of numpy.array - Name('s) and array('s). Match number of cells
+        :param str fileName:  path to the output vtk file or just its name if directory is specified
+        :param str directory: directory where the UBC GIF file lives
+        :param dict models: dictionary of numpy.array - Name('s) and array('s).
+        Match number of cells
         """
         from vtk import vtkRectilinearGrid as rectGrid, vtkXMLRectilinearGridWriter as rectWriter, VTK_VERSION
         from vtk.util.numpy_support import numpy_to_vtk
 
+        fname = os.path.join(directory, fileName)
         # Deal with dimensionalities
         if mesh.dim >= 1:
             vX = mesh.vectorNx
@@ -240,18 +253,18 @@ class TensorMeshIO(object):
             vtkObj.GetCellData().SetActiveScalars(models.keys()[0])
 
         # Check the extension of the fileName
-        ext = os.path.splitext(fileName)[1]
+        ext = os.path.splitext(fname)[1]
         if ext is '':
-            fileName = fileName + '.vtr'
+            fname = fname + '.vtr'
         elif ext not in '.vtr':
             raise IOError('{:s} is an incorrect extension, has to be .vtr')
         # Write the file.
         vtrWriteFilter = rectWriter()
-        if float(VTK_VERSION.split('.')[0]) >=6:
+        if float(VTK_VERSION.split('.')[0]) >= 6:
             vtrWriteFilter.SetInputData(vtkObj)
         else:
             vtuWriteFilter.SetInput(vtuObj)
-        vtrWriteFilter.SetFileName(fileName)
+        vtrWriteFilter.SetFileName(fname)
         vtrWriteFilter.Update()
 
     def _toVTRObj(mesh, models=None):
@@ -300,48 +313,126 @@ class TensorMeshIO(object):
             vtkObj.GetCellData().SetActiveScalars(models.keys()[0])
         return vtkObj
 
-    def readModelUBC(mesh, fileName):
+    def _readModelUBC_2D(mesh, fileName):
+        """
+        Read UBC GIF 2DTensor model and generate 2D Tensor model in simpeg
+
+        Input:
+        :param string fileName: path to the UBC GIF 2D model file
+
+        Output:
+        :rtype: numpy.ndarray
+        :return: model with TensorMesh ordered
+        """
+
+        # Open fileand skip header... assume that we know the mesh already
+        obsfile = np.genfromtxt(
+            fileName, delimiter=' \n',
+            dtype=np.str, comments='!'
+        )
+
+        dim = np.array(obsfile[0].split(), dtype=int)
+        if not np.all([mesh.nCx, mesh.nCy] == dim):
+            raise Exception('Dimension of the model and mesh mismatch')
+
+        # Make a list of the lines
+        model = [line.split() for line in obsfile[1:]]
+        # Address the case where lines are not split equally
+        model = [cellvalue for sublist in model[::-1] for cellvalue in sublist]
+        # Make the vector
+        model = utils.mkvc(np.array(model, dtype=float).T)
+        if not len(model) == mesh.nC:
+            raise Exception(
+                """Something is not right, expected size is {:d}
+                but unwrap vector is size {:d}""".format(mesh.nC, len(model))
+            )
+
+        return model
+
+    def _readModelUBC_3D(mesh, fileName):
         """Read UBC 3DTensor mesh model and generate 3D Tensor mesh model
 
+        Input:
         :param string fileName: path to the UBC GIF mesh file to read
+
+        Output:
         :rtype: numpy.ndarray
         :return: model with TensorMesh ordered
         """
         f = open(fileName, 'r')
         model = np.array(list(map(float, f.readlines())))
         f.close()
-        model = np.reshape(model, (mesh.nCz, mesh.nCx, mesh.nCy), order = 'F')
+        model = np.reshape(model, (mesh.nCz, mesh.nCx, mesh.nCy), order='F')
         model = model[::-1, :, :]
         model = np.transpose(model, (1, 2, 0))
         model = utils.mkvc(model)
         return model
 
-    def writeModelUBC(mesh, fileName, model):
+    def readModelUBC(mesh, fileName, directory=''):
+        """Read UBC 2D or 3D Tensor mesh model
+            and generate Tensor mesh model
+
+        Input:
+        :param str fileName:  path to the UBC GIF mesh file to read
+        or just its name if directory is specified
+        :param str directory: directory where the UBC GIF file lives
+
+        Output:
+        :rtype: numpy.ndarray
+        :return: model with TensorMesh ordered
+        """
+        fname = os.path.join(directory, fileName)
+        if mesh.dim == 3:
+            model = mesh._readModelUBC_3D(fname)
+        elif mesh.dim == 2:
+            model = mesh._readModelUBC_2D(fname)
+        else:
+            raise Exception('mesh must be a Tensor Mesh 2D or 3D')
+        return model
+
+    def writeModelUBC(mesh, fileName, model, directory=''):
         """Writes a model associated with a TensorMesh
         to a UBC-GIF format model file.
 
-        :param string fileName: File to write to
+        Input:
+        :param str fileName:  File to write to
+        or just its name if directory is specified
+        :param str directory: directory where the UBC GIF file lives
         :param numpy.ndarray model: The model
         """
+        fname = os.path.join(directory, fileName)
+        if mesh.dim == 3:
+            # Reshape model to a matrix
+            modelMat = mesh.r(model, 'CC', 'CC', 'M')
+            # Transpose the axes
+            modelMatT = modelMat.transpose((2, 0, 1))
+            # Flip z to positive down
+            modelMatTR = utils.mkvc(modelMatT[::-1, :, :])
+            np.savetxt(fname, modelMatTR.ravel())
 
-        # Reshape model to a matrix
-        modelMat = mesh.r(model, 'CC', 'CC', 'M')
-        # Transpose the axes
-        modelMatT = modelMat.transpose((2, 0, 1))
-        # Flip z to positive down
-        modelMatTR = utils.mkvc(modelMatT[::-1, :, :])
+        elif mesh.dim == 2:
+            modelMat = mesh.r(model, 'CC', 'CC', 'M').T[::-1]
+            f = open(fname, 'w')
+            f.write('{:d} {:d}\n'.format(mesh.nCx, mesh.nCy))
+            f.close()
+            f = open(fname, 'ab')
+            np.savetxt(f, modelMat)
+            f.close()
 
-        np.savetxt(fileName, modelMatTR.ravel())
+        else:
+            raise Exception('mesh must be a Tensor Mesh 2D or 3D')
 
-    def writeUBC(mesh, fileName, models=None):
+    def _writeUBC_3DMesh(mesh, fileName, comment_lines=''):
         """Writes a TensorMesh to a UBC-GIF format mesh file.
 
+        Input:
         :param string fileName: File to write to
         :param dict models: A dictionary of the models
-
         """
-        assert mesh.dim == 3
-        s = ''
+        if not mesh.dim == 3:
+            raise Exception('Mesh must be 3D')
+
+        s = comment_lines
         s += '{0:d} {1:d} {2:d}\n'.format(*tuple(mesh.vnC))
         # Have to it in the same operation or use mesh.x0.copy(),
         # otherwise the mesh.x0 is updated.
@@ -349,18 +440,99 @@ class TensorMeshIO(object):
         origin.dtype = float
 
         s += '{0:.6f} {1:.6f} {2:.6f}\n'.format(*tuple(origin))
-        s += ('%.6f '*mesh.nCx+'\n')%tuple(mesh.hx)
-        s += ('%.6f '*mesh.nCy+'\n')%tuple(mesh.hy)
-        s += ('%.6f '*mesh.nCz+'\n')%tuple(mesh.hz[::-1])
+        s += ('%.6f '*mesh.nCx+'\n') % tuple(mesh.hx)
+        s += ('%.6f '*mesh.nCy+'\n') % tuple(mesh.hy)
+        s += ('%.6f '*mesh.nCz+'\n') % tuple(mesh.hz[::-1])
         f = open(fileName, 'w')
         f.write(s)
         f.close()
 
-        if models is None: return
+    def _writeUBC_2DMesh(mesh, fileName, comment_lines=''):
+        """Writes a TensorMesh to a UBC-GIF format mesh file.
+
+        Input:
+        :param string fileName: File to write to
+        :param dict models: A dictionary of the models
+
+        """
+        if not mesh.dim == 2:
+            raise Exception('Mesh must be 2D')
+
+        def writeF(fx, outStr=''):
+            # Init
+            i = 0
+            origin = True
+            x0 = fx[i]
+            f = fx[i]
+            number_segment = 0
+            auxStr = ''
+
+            while True:
+                i = i + 1
+                if i >= fx.size:
+                    break
+                dx = -f + fx[i]
+                f = fx[i]
+                n = 1
+
+                for j in range(i+1, fx.size):
+                    if -f + fx[j] == dx:
+                        n += 1
+                        i += 1
+                        f = fx[j]
+                    else:
+                        break
+
+                number_segment += 1
+                if origin:
+                    auxStr += '{:.10f} {:.10f} {:d} \n'.format(x0, f, n)
+                    origin = False
+                else:
+                    auxStr += '{:.10f} {:d} \n'.format(f, n)
+
+            auxStr = '{:d}\n'.format(number_segment) + auxStr
+            outStr += auxStr
+
+            return outStr
+
+        # Grab face coordinates
+        fx = mesh.vectorNx
+        fz = -mesh.vectorNy[::-1]
+
+        # Create the string
+        outStr = comment_lines
+        outStr = writeF(fx, outStr=outStr)
+        outStr += '\n'
+        outStr = writeF(fz, outStr=outStr)
+
+        # Write file
+        f = open(fileName, 'w')
+        f.write(outStr)
+        f.close()
+
+    def writeUBC(mesh, fileName, models=None, directory='', comment_lines=''):
+        """Writes a TensorMesh to a UBC-GIF format mesh file.
+
+        Input:
+        :param str fileName: File to write to
+        :param str directory: directory where to save model
+        :param dict models: A dictionary of the models
+        :param str comment_lines: comment lines preceded with '!' to add
+        """
+        fname = os.path.join(directory, fileName)
+        if mesh.dim == 3:
+            mesh._writeUBC_3DMesh(fname, comment_lines=comment_lines)
+        elif mesh.dim == 2:
+            mesh._writeUBC_2DMesh(fname, comment_lines=comment_lines)
+        else:
+            raise Exception('mesh must be a Tensor Mesh 2D or 3D')
+
+        if models is None:
+            return
         assert type(models) is dict, 'models must be a dict'
         for key in models:
             assert type(key) is str, 'The dict key is a file name'
-            mesh.writeModelUBC(key, models[key])
+            mesh.writeModelUBC(key, models[key], directory=directory)
 
 
 class TreeMeshIO(object):
