@@ -1939,7 +1939,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             iy[indBoundary_Fy] = 1.
             Pafy = utils.sdiag(iy)
 
-            Mfrow = self.getFacerownnerProduct(invMat=True)
+            MfI = self.getFaceInnerProduct(invMat=True)
 
             if self.dim == 2:
                 Pi = sp.block_diag([Pafx, Pafy])
@@ -1951,7 +1951,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
                 Pafz = utils.sdiag(iz)
                 Pi = sp.block_diag([Pafx, Pafy, Pafz])
 
-            self._cellGrad = -Pi * Mfrow * self.faceDiv.T * utils.sdiag(self.vol)
+            self._cellGrad = -Pi * MfI * self.faceDiv.T * utils.sdiag(self.vol)
 
         return self._cellGrad
 
@@ -1971,11 +1971,11 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             ix[indBoundary_Fx] = 1.
             Pafx = utils.sdiag(ix)
 
-            Mfrow = self.getFacerownnerProduct(invMat=True)
-            Mfrowx = utils.sdiag(Mfrow.diagonal()[:nFx])
+            MfI = self.getFaceInnerProduct(invMat=True)
+            MfIx = utils.sdiag(MfI.diagonal()[:nFx])
 
             self._cellGradx = (
-                -Pafx * Mfrowx * self.faceDivx.T * utils.sdiag(self.vol)
+                -Pafx * MfIx * self.faceDivx.T * utils.sdiag(self.vol)
             )
 
         return self._cellGradx
@@ -1997,11 +1997,11 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             iy[indBoundary_Fy] = 1.
             Pafy = utils.sdiag(iy)
 
-            Mfrow = self.getFacerownnerProduct(invMat=True)
-            Mfrowy = utils.sdiag(Mfrow.diagonal()[nFx:nFx+nFy])
+            MfI = self.getFaceInnerProduct(invMat=True)
+            MfIy = utils.sdiag(MfI.diagonal()[nFx:nFx+nFy])
 
             self._cellGrady = (
-                -Pafy * Mfrowy * self.faceDivy.T * utils.sdiag(self.vol)
+                -Pafy * MfIy * self.faceDivy.T * utils.sdiag(self.vol)
             )
 
         return self._cellGrady
@@ -2023,11 +2023,11 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             iz[indBoundary_Fz] = 1.
             Pafz = utils.sdiag(iz)
 
-            Mfrow = self.getFacerownnerProduct(invMat=True)
-            Mfrowz = utils.sdiag(Mfrow.diagonal()[nFx+nFy:])
+            MfI = self.getFaceInnerProduct(invMat=True)
+            MfIz = utils.sdiag(MfI.diagonal()[nFx+nFy:])
 
             self._cellGradz = (
-                -Pafz * Mfrowz * self.faceDivz.T * utils.sdiag(self.vol)
+                -Pafz * MfIz * self.faceDivz.T * utils.sdiag(self.vol)
             )
 
         return self._cellGradz
@@ -2213,7 +2213,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             row, col, val = [], [], []
 
             if self.dim == 2:
-                raise NotrowmplementedError('aveEy2CC not implemented in 2D')
+                raise NotImplementedError('aveEy2CC not implemented in 2D')
 
             if self.dim == 3:
                 PM = [1./4.]*4  # plus / plus
@@ -2703,12 +2703,12 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
                 )
 
         if self.dim == 2:
-            rowND = np.r_[ind1, ind2]
+            IND = np.r_[ind1, ind2]
         if self.dim == 3:
-            rowND = np.r_[ind1, ind2, ind3]
+            IND = np.r_[ind1, ind2, ind3]
 
         PXXX = sp.coo_matrix(
-            (np.ones(self.dim*self.nC), (range(self.dim*self.nC), rowND)),
+            (np.ones(self.dim*self.nC), (range(self.dim*self.nC), IND)),
             shape=(self.dim*self.nC, self.ntF)
         ).tocsr()
 
@@ -2769,10 +2769,10 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
                 ] + self.ntEx + self.ntEy
             )
 
-        rowND = np.r_[ind1, ind2, ind3]
+        IND = np.r_[ind1, ind2, ind3]
 
         PXXX = sp.coo_matrix(
-            (np.ones(self.dim*self.nC), (range(self.dim*self.nC), rowND)),
+            (np.ones(self.dim*self.nC), (range(self.dim*self.nC), IND)),
             shape=(self.dim*self.nC, self.ntE)
         ).tocsr()
 
@@ -2821,7 +2821,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
                     break
         return out
 
-    def getrownterpolationMat(self, locs, locType, zerosOutside=False):
+    def getInterpolationMat(self, locs, locType, zerosOutside=False):
         """ Produces interpolation matrix
 
         :param numpy.ndarray locs: Location of points to interpolate to
@@ -2841,7 +2841,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             'CC'    -> scalar field defined on cell centers
         """
         if 'E' in locType and self.dim == 2:
-            raise Exception('rownterpolation for edges is not supported in 2D.')
+            raise Exception('Interpolation for edges is not supported in 2D.')
         locs = utils.asArray_N_x_Dim(locs, self.dim)
 
         TOL = 1e-10
@@ -2852,15 +2852,15 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         numberer = getattr(self, '_'+locType.lower()+'2i')
 
         if zerosOutside is False:
-            assert np.all(self.isrownside(locs)), "Points outside of mesh"
+            assert np.all(self.isInside(locs)), "Points outside of mesh"
         else:
-            indZeros = np.logical_not(self.isrownside(locs))
+            indZeros = np.logical_not(self.isInside(locs))
             locs[indZeros, :] = np.array([v.mean() for v in self.getTensor('CC')])
 
         if locType in ['Fx', 'Fy', 'Fz', 'Ex', 'Ey', 'Ez']:
             ind = {'x': 0, 'y': 1, 'z': 2}[locType[1]]
             assert self.dim >= ind, 'mesh is not high enough dimension.'
-            antirownd = {
+            antiInd = {
                 'x': [1, 2], 'y': [0, 2], 'z': [0, 1]
             }[locType[1]][:self.dim-1]
             nF_nE = self.vntF if 'F' in locType else self.vntE
@@ -2873,18 +2873,18 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
                 w = self._levelWidth(p[-1])
                 if 'E' in locType:
                     iLocs, weights = utils.interputils._interpmat2D(
-                        np.array([(loc-n-self.x0)[antirownd]]),
-                        np.r_[0., h[antirownd[0]]+TOL],
-                        np.r_[0., h[antirownd[1]]+TOL]
+                        np.array([(loc-n-self.x0)[antiInd]]),
+                        np.r_[0., h[antiInd[0]]+TOL],
+                        np.r_[0., h[antiInd[1]]+TOL]
                     )
                     newcol = [
                         numberer[
                             self._index([
-                                __+w*iLocs[rowND][0] if _ == antirownd[0]
-                                else __+w*iLocs[rowND][1] if _ == antirownd[1]
+                                __+w*iLocs[IND][0] if _ == antiInd[0]
+                                else __+w*iLocs[IND][1] if _ == antiInd[1]
                                 else __ for _, __ in enumerate(p[:-1])
                             ] + [p[-1]])
-                        ] for rowND in range(4)
+                        ] for IND in range(4)
                     ]  # sorry
                 elif 'F' in locType:
                     _, weights = utils.interputils._interpmat1D(
@@ -2931,9 +2931,9 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
                 newcol = [
                     numberer[
                         self._index(
-                            [__+w*iLocs[rowND][_] for _, __ in enumerate(p[:-1])]
-                            + [p[-1]])
-                    ] for rowND in range(8)
+                            [__+w*iLocs[IND][_] for _, __ in enumerate(p[:-1])] +
+                            [p[-1]])
+                    ] for IND in range(8)
                 ]  # sorry
 
                 row += [ii]*len(newcol)
@@ -2951,10 +2951,10 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
             val = np.hstack(val)
             Q = sp.csr_matrix((val, (row, col)), shape=(locs.shape[0], self.nC))
-            R = utils.rowdentity()
+            R = utils.Identity()
         else:
-            raise NotrowmplementedError(
-                'getrownterpolationMat: locType==' + locType +
+            raise NotImplementedError(
+                'getInterpolationMat: locType==' + locType +
                 ' and mesh.dim=='+str(self.dim)
             )
 
@@ -2964,7 +2964,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         return Q * R
 
     def plotGrid(
-        self, ax=None, showrowt=False,
+        self, ax=None, showIt=False,
         grid=True,
         cells=False, cellLine=False,
         nodes=False,
@@ -3197,10 +3197,10 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             ax.set_zlabel('x3')
         ax.grid(True)
 
-        if showrowt:
+        if showIt:
             plt.show()
 
-    def plotrowmage(self, row, ax=None, showrowt=False, grid=False, clim=None):
+    def plotImage(self, I, ax=None, showIt=False, grid=False, clim=None):
         if self.dim == 3:
             raise Exception('Use plot slice?')
 
@@ -3214,8 +3214,8 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             ax = plt.subplot(111)
         jet = cm = plt.get_cmap('jet')
         cNorm = colors.Normalize(
-            vmin=row.min() if clim is None else clim[0],
-            vmax=row.max() if clim is None else clim[1])
+            vmin=I.min() if clim is None else clim[0],
+            vmax=I.max() if clim is None else clim[1])
 
         scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
         ax.set_xlim((self.x0[0], self.h[0].sum()))
@@ -3224,7 +3224,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             x0, sz = self._cellN(node), self._cellH(node)
             ax.add_patch(
                 plt.Rectangle((x0[0], x0[1]), sz[0], sz[1],
-                facecolor=scalarMap.to_rgba(row[ii]),
+                facecolor=scalarMap.to_rgba(I[ii]),
                 edgecolor='k' if grid else 'none')
             )
             # if text: ax.text(self.center[0], self.center[1], self.num)
@@ -3232,14 +3232,14 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         scalarMap._A = []
         ax.set_xlabel('x')
         ax.set_ylabel('y')
-        if showrowt:
+        if showIt:
             plt.show()
         return [scalarMap]
 
     def plotSlice(
         self, v, vType='CC',
         normal='Z', ind=None, grid=True, view='real',
-        ax=None, clim=None, showrowt=False,
+        ax=None, clim=None, showIt=False,
         pcolorOpts=None, streamOpts=None, gridOpts=None
     ):
 
@@ -3264,8 +3264,8 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             ind = int(szSliceDim//2)
         assert type(ind) in integer_types, 'ind must be an integer'
         indLoc = getattr(self, 'vectorCC'+normal.lower())[ind]
-        normalrownd = {'X': 0, 'Y': 1, 'Z': 2}[normal]
-        antiNormalrownd = {'X': [1, 2], 'Y': [0, 2], 'Z': [0, 1]}[normal]
+        normalInd = {'X': 0, 'Y': 1, 'Z': 2}[normal]
+        antiNormalInd = {'X': [1, 2], 'Y': [0, 2], 'Z': [0, 1]}[normal]
         h2d = []
         x2d = []
         if 'X' not in normal:
@@ -3295,15 +3295,15 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
         def doSlice(v):
             if vType == 'CC':
-                P = self.getrownterpolationMat(getLocs(tM.gridCC), 'CC')
+                P = self.getInterpolationMat(getLocs(tM.gridCC), 'CC')
             elif vType in ['F', 'E']:
                 Ps = []
                 gridX = getLocs(getattr(tM, 'grid' + vType + 'x'))
                 gridY = getLocs(getattr(tM, 'grid' + vType + 'y'))
-                Ps += [self.getrownterpolationMat(
+                Ps += [self.getInterpolationMat(
                     gridX, vType + ('y' if normal == 'X' else 'x')
                 )]
-                Ps += [self.getrownterpolationMat(
+                Ps += [self.getInterpolationMat(
                     gridY, vType + ('y' if normal == 'Z' else 'z')
                 )]
                 P = sp.vstack(Ps)
@@ -3318,7 +3318,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             assert isinstance(ax, matplotlib.axes.Axes), "ax must be an matplotlib.axes.Axes"
             fig = ax.figure
 
-        out = tM._plotrowmage2D(
+        out = tM._plotImage2D(
             v2d, vType=vType, view=view, ax=ax, clim=clim,
             pcolorOpts=pcolorOpts, streamOpts=streamOpts
         )
@@ -3330,13 +3330,13 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         )
 
         if grid:
-            _ = antiNormalrownd
+            _ = antiNormalInd
             X = []
             Y = []
             for cell in self._cells:
                 p = self._pointer(cell)
                 n, h = self._cellN(p), self._cellH(p)
-                if n[normalrownd] < indLoc and n[normalrownd]+h[normalrownd] > indLoc:
+                if n[normalInd] < indLoc and n[normalInd]+h[normalInd] > indLoc:
                     X += [
                         n[_[0]], n[_[0]] + h[_[0]], n[_[0]] + h[_[0]],
                         n[_[0]], n[_[0]], np.nan
@@ -3350,7 +3350,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             if len(out) > 2:  # this is not robust, searching for the streamlines would be better
                 out[1].lines.set_zorder(200)
                 out[1].arrows.set_zorder(201)
-        if showrowt:
+        if showIt:
             plt.show()
         return tuple(out)
 
@@ -3374,7 +3374,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
             pointer = self._asPointer(index)
             return Cell(self, index, pointer)
         else:
-            raise TypeError("rownvalid argument type.")
+            raise TypeError("Invalid argument type.")
 
 
 class Cell(object):
