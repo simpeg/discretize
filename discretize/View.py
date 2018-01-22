@@ -48,7 +48,8 @@ class TensorView(object):
         streamOpts=None,
         gridOpts=None,
         numbering=True, annotationColor='w',
-        range_x=None, range_y=None, sample_grid=None
+        range_x=None, range_y=None, sample_grid=None,
+        stream_threshold=None
     ):
         """
         Mesh.plotImage(v)
@@ -116,7 +117,7 @@ class TensorView(object):
                 ax=ax, clim=clim, showIt=showIt,
                 pcolorOpts=pcolorOpts, streamOpts=streamOpts,
                 gridOpts=gridOpts, range_x=range_x, range_y=range_y,
-                sample_grid=sample_grid
+                sample_grid=sample_grid, stream_threshold=stream_threshold
             )
         elif self.dim == 3:
             # get copy of image and average to cell-centers is necessary
@@ -186,14 +187,15 @@ class TensorView(object):
             plt.show()
         return ph
 
-    def plotSlice(self, v, vType='CC',
-                  normal='Z', ind=None, grid=False, view='real',
-                  ax=None, clim=None, showIt=False,
-                  pcolorOpts=None,
-                  streamOpts=None,
-                  gridOpts=None,
-                  range_x=None, range_y=None
-                  ):
+    def plotSlice(
+        self, v, vType='CC',
+        normal='Z', ind=None, grid=False, view='real',
+        ax=None, clim=None, showIt=False,
+        pcolorOpts=None,
+        streamOpts=None,
+        gridOpts=None,
+        range_x=None, range_y=None
+    ):
 
         """
         Plots a slice of a 3D mesh.
@@ -321,7 +323,8 @@ class TensorView(object):
         gridOpts=None,
         range_x=None,
         range_y=None,
-        sample_grid=None
+        sample_grid=None,
+        stream_threshold=None
     ):
 
         if pcolorOpts is None:
@@ -427,8 +430,21 @@ class TensorView(object):
                 U = Ui
                 V = Vi
 
-            out += (ax.pcolormesh(x, y, np.sqrt(U**2+V**2).T, vmin=clim[0], vmax=clim[1], **pcolorOpts),)
-            out += (ax.streamplot(tMi.vectorCCx, tMi.vectorCCy, Ui.T, Vi.T, **streamOpts),)
+            if stream_threshold is not None:
+                mask_me = np.sqrt(U**2 + V**2) <= stream_threshold
+                Ui = np.ma.masked_where(mask_me, Ui)
+                Vi = np.ma.masked_where(mask_me, Vi)
+
+            out += (
+                ax.pcolormesh(
+                    x, y, np.sqrt(U**2+V**2).T, vmin=clim[0], vmax=clim[1],
+                    **pcolorOpts),
+            )
+            out += (
+                ax.streamplot(
+                    tMi.vectorCCx, tMi.vectorCCy, Ui.T, Vi.T, **streamOpts
+                ),
+            )
 
         if grid:
             xXGrid = np.c_[self.vectorNx, self.vectorNx, np.nan*np.ones(self.nNx)].flatten()
