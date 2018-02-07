@@ -774,7 +774,6 @@ class DiffOperators(object):
                 ), format="csr")
         return self._aveCC2F
 
-    # TODO: modularize
     @property
     def aveCC2FV(self):
         """
@@ -785,23 +784,23 @@ class DiffOperators(object):
             if self.dim == 1:
                 self._aveCC2FV = self._aveCC2Fx
             elif self.dim == 2:
-                self._aveCC2Fx = sp.kron(speye(self.nCy), av_extrap(self.nCx))
-                self._aveCC2Fy = sp.kron(speye(self.nCy), av_extrap(self.nCx))
+                aveCC2Fx = sp.kron(speye(self.nCy), av_extrap(self.nCx))
+                aveCC2Fy = sp.kron(av_extrap(self.nCy), speye(self.nCx))
                 self._aveCC2FV = sp.block_diag((
-                        self.aveCC2Fx, self.aveCC2Fy
+                        aveCC2Fx, aveCC2Fy
                         ), format="csr")
             elif self.dim == 3:
-                self._aveCC2Fx = kron3(
+                aveCC2Fx = kron3(
                     speye(self.nCz), speye(self.nCy), av_extrap(self.nCx)
                     )
-                self._aveCC2Fy = kron3(
+                aveCC2Fy = kron3(
                     speye(self.nCz), av_extrap(self.nCy), speye(self.nCx)
                     )
-                self._aveCC2Fz = kron3(
+                aveCC2Fz = kron3(
                     av_extrap(self.nCz), speye(self.nCy), speye(self.nCx)
                     )
                 self._aveCC2FV = sp.block_diag((
-                        self._aveCC2Fx, self._aveCC2Fy, self._aveCC2Fz
+                        aveCC2Fx, aveCC2Fy, aveCC2Fz
                     ), format="csr")
         return self._aveCC2FV
 
