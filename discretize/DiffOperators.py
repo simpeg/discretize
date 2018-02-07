@@ -782,7 +782,7 @@ class DiffOperators(object):
         """
         if getattr(self, '_aveCC2FV', None) is None:
             if self.dim == 1:
-                self._aveCC2FV = self._aveCC2Fx
+                self._aveCC2FV = self.aveCC2F
             elif self.dim == 2:
                 aveCC2Fx = sp.kron(speye(self.nCy), av_extrap(self.nCx))
                 aveCC2Fy = sp.kron(av_extrap(self.nCy), speye(self.nCx))
