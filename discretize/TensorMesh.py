@@ -37,9 +37,9 @@ class BaseTensorMesh(BaseMesh):
         x0_in = x0
 
         # Sanity Checks
-        assert type(h_in) in [list, tuple], 'h_in must be a list'
+        assert type(h_in) in [list, tuple], 'h_in must be a list, not {}'.format(type(h_in))
         assert len(h_in) in [1, 2, 3], (
-            'h_in must be of dimension 1, 2, or 3'
+            'h_in must be of dimension 1, 2, or 3 not {}'.format(len(h_in))
         )
 
         # build h
@@ -158,6 +158,24 @@ class BaseTensorMesh(BaseMesh):
     def gridN(self):
         """Nodal grid."""
         return self._getTensorGrid('N')
+
+    @property
+    def h_gridded(self):
+        """
+        Returns an (nC, dim) numpy array with the widths of all cells in order
+        """
+
+        if self.dim == 1:
+            return np.reshape(self.h, (self.nC, 1))
+        elif self.dim == 2:
+            hx = np.kron(np.ones(self.nCy), self.h[0])
+            hy = np.kron(self.h[1], np.ones(self.nCx))
+            return np.c_[hx, hy]
+        elif self.dim == 3:
+            hx = np.kron(np.ones(self.nCy*self.nCz), self.h[0])
+            hy = np.kron(np.ones(self.nCz), np.kron(self.h[1], np.ones(self.nCx)))
+            hz = np.kron(self.h[2], np.ones(self.nCx*self.nCy))
+            return np.c_[hx, hy, hz]
 
     @property
     def gridFx(self):
