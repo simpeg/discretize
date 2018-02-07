@@ -107,9 +107,13 @@ class TensorView(object):
 
         if self.dim == 1:
             if vType == 'CC':
-                ph = ax.plot(self.vectorCCx, v, '-ro')
+                ph = ax.plot(
+                    self.vectorCCx, v, linestyle="-", color="C1", marker="o"
+                )
             elif vType == 'N':
-                ph = ax.plot(self.vectorNx, v, '-bs')
+                ph = ax.plot(
+                    self.vectorNx, v, linestyle="-", color="C0", marker="s"
+                )
             ax.set_xlabel("x")
             ax.axis('tight')
         elif self.dim == 2:
@@ -133,8 +137,10 @@ class TensorView(object):
                 # if 'y' in vType: v = np.r_[np.zeros(n[0]), v, np.zeros(n[2])]
                 # if 'z' in vType: v = np.r_[np.zeros(n[0]), np.zeros(n[1]), v]
                 v = getattr(self, aveOp)*v # average to cell centers
-                ind_xyz = {'x':0, 'y':1, 'z':2}[vType[1]]
-                vc = self.r(v.reshape((self.nC, -1), order='F'), 'CC', 'CC', 'M')[ind_xyz]
+                ind_xyz = {'x': 0, 'y': 1, 'z': 2}[vType[1]]
+                vc = self.r(
+                    v.reshape((self.nC, -1), order='F'), 'CC', 'CC', 'M'
+                )[ind_xyz]
 
             # determine number oE slices in x and y dimension
             nX = int(np.ceil(np.sqrt(self.nCz)))
@@ -371,7 +377,7 @@ class TensorView(object):
         elif vType in ['Fx', 'Fy', 'Ex', 'Ey']:
             aveOp = 'ave' + vType[0] + '2CCV'
             v = getattr(self, aveOp)*v  # average to cell centers (might be a vector)
-            xORy = {'x':0, 'y':1}[vType[1]]
+            xORy = {'x': 0, 'y':1 }[vType[1]]
             v = v.reshape((self.nC, -1), order='F')[:, xORy]
 
 
@@ -527,23 +533,49 @@ class TensorView(object):
 
         if self.dim == 1:
             if nodes:
-                ax.plot(self.gridN, np.ones(self.nN), 'bs')
+                ax.plot(
+                    self.gridN, np.ones(self.nN), color="C0", marker="s",
+                    linestyle=""
+                )
             if centers:
-                ax.plot(self.gridCC, np.ones(self.nC), 'ro')
+                ax.plot(
+                    self.gridCC, np.ones(self.nC), color="C1", marker="o",
+                    linestyle=""
+                )
             if lines:
-                ax.plot(self.gridN, np.ones(self.nN), 'b.-')
+                ax.plot(
+                    self.gridN, np.ones(self.nN), color="C0", linestyle=".-"
+                )
             ax.set_xlabel('x1')
         elif self.dim == 2:
             if nodes:
-                ax.plot(self.gridN[:, 0], self.gridN[:, 1], 'bs')
+                ax.plot(
+                    self.gridN[:, 0], self.gridN[:, 1], color="C0", marker="s",
+                    linestyle=""
+                )
             if centers:
-                ax.plot(self.gridCC[:, 0], self.gridCC[:, 1], 'ro')
+                ax.plot(
+                    self.gridCC[:, 0], self.gridCC[:, 1], color="C1",
+                    marker="o", linestyle=""
+                )
             if faces:
-                ax.plot(self.gridFx[:, 0], self.gridFx[:, 1], 'g>')
-                ax.plot(self.gridFy[:, 0], self.gridFy[:, 1], 'g^')
+                ax.plot(
+                    self.gridFx[:, 0], self.gridFx[:, 1], color="C2",
+                    marker=">", linestyle=""
+                )
+                ax.plot(
+                    self.gridFy[:, 0], self.gridFy[:, 1], color="C2",
+                    marker="^", linestyle=""
+                )
             if edges:
-                ax.plot(self.gridEx[:, 0], self.gridEx[:, 1], 'c>')
-                ax.plot(self.gridEy[:, 0], self.gridEy[:, 1], 'c^')
+                ax.plot(
+                    self.gridEx[:, 0], self.gridEx[:, 1], color="C3",
+                    marker=">", linestyle=""
+                )
+                ax.plot(
+                    self.gridEy[:, 0], self.gridEy[:, 1], color="C3",
+                    marker="^", linestyle=""
+                )
 
             # Plot the grid lines
             if lines:
@@ -554,23 +586,47 @@ class TensorView(object):
                 Y2 = np.c_[mkvc(NN[1][:, 0]), mkvc(NN[1][:, self.nCy]), mkvc(NN[1][:, 0])*np.nan].flatten()
                 X = np.r_[X1, X2]
                 Y = np.r_[Y1, Y2]
-                ax.plot(X, Y, 'b-')
+                ax.plot(X, Y, color="C0", linestyle="-")
 
             ax.set_xlabel('x1')
             ax.set_ylabel('x2')
         elif self.dim == 3:
             if nodes:
-                ax.plot(self.gridN[:, 0], self.gridN[:, 1], 'bs', zs=self.gridN[:, 2])
+                ax.plot(
+                    self.gridN[:, 0], self.gridN[:, 1], color="C0", marker="s",
+                    linestyle="", zs=self.gridN[:, 2]
+                )
             if centers:
-                ax.plot(self.gridCC[:, 0], self.gridCC[:, 1], 'ro', zs=self.gridCC[:, 2])
+                ax.plot(
+                    self.gridCC[:, 0], self.gridCC[:, 1], color="C1",
+                    marker="o", linestyle="", zs=self.gridCC[:, 2]
+                )
             if faces:
-                ax.plot(self.gridFx[:, 0], self.gridFx[:, 1], 'g>', zs=self.gridFx[:, 2])
-                ax.plot(self.gridFy[:, 0], self.gridFy[:, 1], 'g<', zs=self.gridFy[:, 2])
-                ax.plot(self.gridFz[:, 0], self.gridFz[:, 1], 'g^', zs=self.gridFz[:, 2])
+                ax.plot(
+                    self.gridFx[:, 0], self.gridFx[:, 1], color="C2",
+                    marker=">", linestyle="", zs=self.gridFx[:, 2]
+                )
+                ax.plot(
+                    self.gridFy[:, 0], self.gridFy[:, 1], color="C2",
+                    marker="<", linestyle="", zs=self.gridFy[:, 2]
+                )
+                ax.plot(
+                    self.gridFz[:, 0], self.gridFz[:, 1], color="C2",
+                    marker="^", linestyle="", zs=self.gridFz[:, 2]
+                )
             if edges:
-                ax.plot(self.gridEx[:, 0], self.gridEx[:, 1], 'k>', zs=self.gridEx[:, 2])
-                ax.plot(self.gridEy[:, 0], self.gridEy[:, 1], 'k<', zs=self.gridEy[:, 2])
-                ax.plot(self.gridEz[:, 0], self.gridEz[:, 1], 'k^', zs=self.gridEz[:, 2])
+                ax.plot(
+                    self.gridEx[:, 0], self.gridEx[:, 1], color="C3",
+                    marker=">", linestyle="", zs=self.gridEx[:, 2]
+                )
+                ax.plot(
+                    self.gridEy[:, 0], self.gridEy[:, 1], color="C3",
+                    marker="<", linestyle="", zs=self.gridEy[:, 2]
+                )
+                ax.plot(
+                    self.gridEz[:, 0], self.gridEz[:, 1], color="C3",
+                    marker="^", linestyle="", zs=self.gridEz[:, 2]
+                )
 
             # Plot the grid lines
             if lines:
@@ -587,7 +643,7 @@ class TensorView(object):
                 X = np.r_[X1, X2, X3]
                 Y = np.r_[Y1, Y2, Y3]
                 Z = np.r_[Z1, Z2, Z3]
-                ax.plot(X, Y, 'b-', zs=Z)
+                ax.plot(X, Y, color="C0", linestyle="-", zs=Z)
             ax.set_xlabel('x1')
             ax.set_ylabel('x2')
             ax.set_zlabel('x3')
@@ -809,7 +865,10 @@ class CurviView(object):
     def __init__(self):
         pass
 
-    def plotGrid(self, ax=None, nodes=False, faces=False, centers=False, edges=False, lines=True, showIt=False):
+    def plotGrid(
+        self, ax=None, nodes=False, faces=False, centers=False, edges=False,
+        lines=True, showIt=False
+    ):
         """Plot the nodal, cell-centered and staggered grids for 1, 2 and 3 dimensions.
 
 
@@ -843,9 +902,12 @@ class CurviView(object):
                 X = np.r_[X1, X2]
                 Y = np.r_[Y1, Y2]
 
-                ax.plot(X, Y, 'b-')
+                ax.plot(X, Y, color="C0", linestyle="-")
             if centers:
-                ax.plot(self.gridCC[:, 0], self.gridCC[:, 1], 'ro')
+                ax.plot(
+                    self.gridCC[:, 0], self.gridCC[:, 1], color="C1",
+                    linestyle="", marker="o"
+                )
 
             # Nx = self.r(self.normals, 'F', 'Fx', 'V')
             # Ny = self.r(self.normals, 'F', 'Fy', 'V')
@@ -891,7 +953,7 @@ class CurviView(object):
             Y = np.r_[Y1, Y2, Y3]
             Z = np.r_[Z1, Z2, Z3]
 
-            ax.plot(X, Y, 'b', zs=Z)
+            ax.plot(X, Y, 'C0', zs=Z)
             ax.set_zlabel('x3')
 
         ax.grid(True)
