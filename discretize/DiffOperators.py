@@ -787,21 +787,21 @@ class DiffOperators(object):
                 aveCC2Fx = sp.kron(speye(self.nCy), av_extrap(self.nCx))
                 aveCC2Fy = sp.kron(av_extrap(self.nCy), speye(self.nCx))
                 self._aveCC2FV = sp.block_diag((
-                        aveCC2Fx, aveCC2Fy
-                        ), format="csr")
+                    aveCC2Fx, aveCC2Fy
+                ), format="csr")
             elif self.dim == 3:
                 aveCC2Fx = kron3(
                     speye(self.nCz), speye(self.nCy), av_extrap(self.nCx)
-                    )
+                )
                 aveCC2Fy = kron3(
                     speye(self.nCz), av_extrap(self.nCy), speye(self.nCx)
-                    )
+                )
                 aveCC2Fz = kron3(
                     av_extrap(self.nCz), speye(self.nCy), speye(self.nCx)
-                    )
+                )
                 self._aveCC2FV = sp.block_diag((
                         aveCC2Fx, aveCC2Fy, aveCC2Fz
-                    ), format="csr")
+                ), format="csr")
         return self._aveCC2FV
 
     @property
