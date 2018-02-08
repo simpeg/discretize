@@ -840,12 +840,15 @@ for reference, see: http://matplotlib.org/examples/pylab_examples/polar_demo.htm
             mkvc(NN[1][0, :])*np.nan
         ].flatten()
 
-        ax.plot(Y1, X1, '-b')
+        ax.plot(Y1, X1, linestyle="-", color="C0")
 
         # circles
         n = 100
         XY2 = [
-            ax.plot(np.linspace(0., np.pi*2, n), r*np.ones(n), '-b')
+            ax.plot(
+                np.linspace(0., np.pi*2, n), r*np.ones(n), linestyle="-",
+                color="C0"
+        )
             for r in self.vectorNx
         ]
 
