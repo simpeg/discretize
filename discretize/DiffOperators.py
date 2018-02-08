@@ -751,7 +751,7 @@ class DiffOperators(object):
 
     @property
     def aveCC2F(self):
-        "Construct the averaging operator on cell cell centers to faces."
+        "Construct the averaging operator on cell centers to faces."
         if getattr(self, '_aveCC2F', None) is None:
             if self.dim == 1:
                 self._aveCC2F = av_extrap(self.nCx)
@@ -777,7 +777,7 @@ class DiffOperators(object):
     @property
     def aveCC2FV(self):
         """
-        Construct the averaging operator on cell cell centers to
+        Construct the averaging operator on cell centers to
         faces as a vector.
         """
         if getattr(self, '_aveCC2FV', None) is None:
