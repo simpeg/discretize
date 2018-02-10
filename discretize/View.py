@@ -666,41 +666,62 @@ class CylView(object):
         # Just create a TM and use its view.
         from discretize import TensorMesh
 
+        if len(args) > 0:
+            val = args[0]
+
         vType = kwargs.get('vType', None)
+        mirror = kwargs.pop('mirror', None)
+        mirror_data = kwargs.pop('mirror_data', None)
+
+        if mirror_data is not None and mirror is None:
+            mirror = True
+
         if vType is not None:
             if vType.upper() != 'CCV':
-                val = args[0]
                 if vType.upper() == 'F':
                     val = mkvc(self.aveF2CCV * val)
+                    if mirror_data is not None:
+                        mirror_data = mkvc(self.aveF2CCV * mirror_data)
                     kwargs['vType'] = 'CCv'  # now the vector is cell centered
                 if vType.upper() == 'E':
                     val = mkvc(self.aveE2CCV * val)
+                    if mirror_data is not None:
+                        mirror_data = mkvc(self.aveE2CCV * mirror_data)
                 args = (val,) + args[1:]
 
-        mirror = kwargs.pop('mirror', None)
         if mirror is True:
             # create a mirrored mesh
             hx = np.hstack([np.flipud(self.hx), self.hx])
             x00 = self.x0[0] - self.hx.sum()
             M = TensorMesh([hx, self.hz], x0=[x00, self.x0[2]])
 
-            # mirror the data
-            if len(args) > 0:
-                val = args[0]
+            if mirror_data is None:
+                mirror_data = val
 
             if len(val) == self.nC:  # only a single value at cell centers
                 val = val.reshape(self.vnC[0], self.vnC[2], order='F')
-                val = mkvc(np.vstack([np.flipud(val), val]))
+                mirror_val = mirror_data.reshape(
+                    self.vnC[0], self.vnC[2], order='F'
+                )
+                val = mkvc(np.vstack([np.flipud(mirror_val), val]))
 
             elif len(val) == 2*self.nC:
-                val_x = val[:self.nC]
-                val_z = val[self.nC:]
+                val_x = val[:self.nC].reshape(
+                    self.vnC[0], self.vnC[2], order='F'
+                )
+                val_z = val[self.nC:].reshape(
+                    self.vnC[0], self.vnC[2], order='F'
+                )
 
-                val_x = val_x.reshape(self.vnC[0], self.vnC[2], order='F')
-                val_x = mkvc(np.vstack([-1.*np.flipud(val_x), val_x])) # by symmetry
+                mirror_x = mirror_data[:self.nC].reshape(
+                    self.vnC[0], self.vnC[2], order='F'
+                )
+                mirror_z = mirror_data[self.nC:].reshape(
+                    self.vnC[0], self.vnC[2], order='F'
+                )
 
-                val_z = val_z.reshape(self.vnC[0], self.vnC[2], order='F')
-                val_z = mkvc(np.vstack([np.flipud(val_z), val_z]))
+                val_x = mkvc(np.vstack([-1.*np.flipud(mirror_x), val_x])) # by symmetry
+                val_z = mkvc(np.vstack([np.flipud(mirror_z), val_z]))
 
                 val = np.hstack([val_x, val_z])
 
@@ -848,7 +869,7 @@ for reference, see: http://matplotlib.org/examples/pylab_examples/polar_demo.htm
             ax.plot(
                 np.linspace(0., np.pi*2, n), r*np.ones(n), linestyle="-",
                 color="C0"
-        )
+            )
             for r in self.vectorNx
         ]
 
