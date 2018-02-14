@@ -4,7 +4,7 @@ import unittest
 import matplotlib.pyplot as plt
 import discretize
 
-MESHTYPES = ['uniformTree'] #['randomTree', 'uniformTree']
+MESHTYPES = ['uniformTree', 'randomTree']
 # MESHTYPES = ['randomTree']
 call2 = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1])
 call3 = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1], xyz[:, 2])
@@ -107,7 +107,7 @@ class TestFaceDivxy2D(discretize.Tests.OrderTest):
 class TestFaceDiv3D(discretize.Tests.OrderTest):
     name = "Face Divergence 3D"
     meshTypes = MESHTYPES
-    meshSizes = [8, 16]
+    meshSizes = [8, 16, 32]
 
     def getError(self):
         fx = lambda x, y, z: np.sin(2*np.pi*x)
@@ -165,7 +165,7 @@ class TestCurl(discretize.Tests.OrderTest):
     name = "Curl"
     meshTypes = ['notatreeTree', 'uniformTree'] #, 'randomTree']#, 'uniformTree']
     meshSizes = [8, 16]#, 32]
-    expectedOrders = [2,1] # This is due to linear interpolation in the Re projection
+    expectedOrders = [2, 1] # This is due to linear interpolation in the Re projection
 
     def getError(self):
         # fun: i (cos(y)) + j (cos(z)) + k (cos(x))
