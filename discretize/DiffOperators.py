@@ -775,34 +775,34 @@ class DiffOperators(object):
         return self._aveCC2F
 
     @property
-    def aveCC2FV(self):
+    def aveCCV2F(self):
         """
         Construct the averaging operator on cell centers to
         faces as a vector.
         """
-        if getattr(self, '_aveCC2FV', None) is None:
+        if getattr(self, '_aveCCV2F', None) is None:
             if self.dim == 1:
-                self._aveCC2FV = self.aveCC2F
+                self._aveCCV2F = self.aveCC2F
             elif self.dim == 2:
-                aveCC2Fx = sp.kron(speye(self.nCy), av_extrap(self.nCx))
-                aveCC2Fy = sp.kron(av_extrap(self.nCy), speye(self.nCx))
-                self._aveCC2FV = sp.block_diag((
-                    aveCC2Fx, aveCC2Fy
+                aveCCV2Fx = sp.kron(speye(self.nCy), av_extrap(self.nCx))
+                aveCC2VFy = sp.kron(av_extrap(self.nCy), speye(self.nCx))
+                self._aveCCV2F = sp.block_diag((
+                    aveCCV2Fx, aveCC2VFy
                 ), format="csr")
             elif self.dim == 3:
-                aveCC2Fx = kron3(
+                aveCCV2Fx = kron3(
                     speye(self.nCz), speye(self.nCy), av_extrap(self.nCx)
                 )
-                aveCC2Fy = kron3(
+                aveCC2VFy = kron3(
                     speye(self.nCz), av_extrap(self.nCy), speye(self.nCx)
                 )
-                aveCC2Fz = kron3(
+                aveCC2BFz = kron3(
                     av_extrap(self.nCz), speye(self.nCy), speye(self.nCx)
                 )
-                self._aveCC2FV = sp.block_diag((
-                        aveCC2Fx, aveCC2Fy, aveCC2Fz
+                self._aveCCV2F = sp.block_diag((
+                        aveCCV2Fx, aveCC2VFy, aveCC2BFz
                 ), format="csr")
-        return self._aveCC2FV
+        return self._aveCCV2F
 
     @property
     def aveE2CC(self):
