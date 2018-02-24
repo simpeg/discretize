@@ -5,7 +5,7 @@ import properties
 import scipy.sparse as sp
 from scipy.constants import pi
 
-from . import utils
+from .utils import kron3, ndgrid, av, speye, ddx, sdiag
 from .TensorMesh import BaseTensorMesh, BaseRectangularMesh
 from .InnerProducts import InnerProducts
 from .View import CylView
@@ -40,7 +40,7 @@ class CylMesh(
     )
 
     def __init__(self, h=None, x0=None, **kwargs):
-        BaseTensorMesh.__init__(self, h=h, x0=x0, **kwargs)
+        super(CylMesh, self).__init__(h=h, x0=x0, **kwargs)
 
         assert np.abs(self.hy.sum() - 2*np.pi) < 1e-10, (
             "The 2nd dimension must sum to 2*pi"
@@ -871,7 +871,7 @@ class CylMesh(
 
     @property
     def _gridNFull(self):
-        return utils.ndgrid([
+        return ndgrid([
             self.vectorNx, self._vectorNyFull, self.vectorNz
         ])
 
@@ -908,12 +908,11 @@ class CylMesh(
             else:
                 self._gridFx = (
                     self._deflationMatrix('Fx', withHanging=False) *
-                    utils.ndgrid([
+                    ndgrid([
                         self.vectorNx, self.vectorCCy, self.vectorCCz
                     ])
                 )
         return self._gridFx
-
 
     @property
     def gridEy(self):
@@ -930,7 +929,7 @@ class CylMesh(
             else:
                 self._gridEy = (
                     self._deflationMatrix('Ey', withHanging=False) *
-                    utils.ndgrid([
+                    ndgrid([
                         self.vectorNx, self.vectorCCy, self.vectorNz
                     ])
                 )
@@ -938,7 +937,7 @@ class CylMesh(
 
     @property
     def _gridEzFull(self):
-        return utils.ndgrid([
+        return ndgrid([
             self.vectorNx, self._vectorNyFull, self.vectorCCz
         ])
 
@@ -990,16 +989,16 @@ class CylMesh(
         """
         if getattr(self, '_faceDivx', None) is None:
             if self.isSymmetric:
-                D1 = utils.kron3(
-                    utils.speye(self.nCz), utils.speye(self.nCy),
-                    utils.ddx(self.nCx)[:, 1:]
+                D1 = kron3(
+                    speye(self.nCz), speye(self.nCy),
+                    ddx(self.nCx)[:, 1:]
                 )
             else:
                 D1 = super(CylMesh, self)._faceDivStencilx
 
             S = self._areaFxFull
             V = self.vol
-            self._faceDivx = utils.sdiag(1/V)*D1*utils.sdiag(S)
+            self._faceDivx = sdiag(1/V)*D1*sdiag(S)
 
             if not self.isSymmetric:
                 self._faceDivx = (
@@ -1022,7 +1021,7 @@ class CylMesh(
             S = self._areaFyFull  # self.r(self.area, 'F', 'Fy', 'V')
             V = self.vol
             self._faceDivy = (
-                utils.sdiag(1/V)*D2*utils.sdiag(S) *
+                sdiag(1/V)*D2*sdiag(S) *
                 self._deflationMatrix('Fy', withHanging=True, asOnes=True).T
             )
         return self._faceDivy
@@ -1037,7 +1036,7 @@ class CylMesh(
             D3 = super(CylMesh, self)._faceDivStencilz
             S = self._areaFzFull
             V = self.vol
-            self._faceDivz = utils.sdiag(1/V)*D3*utils.sdiag(S)
+            self._faceDivz = sdiag(1/V)*D3*sdiag(S)
         return self._faceDivz
 
     # @property
@@ -1045,10 +1044,10 @@ class CylMesh(
     #     n = self.vnC
 
     #     if self.isSymmetric:
-    #         G1 = sp.kron(utils.speye(n[2]), ddxCellGrad(n[0], BC))
+    #         G1 = sp.kron(speye(n[2]), ddxCellGrad(n[0], BC))
     #     else:
-    #         G1 = self._deflationMatrix('Fx').T * utils.kron3(
-    #             utils.speye(n[2]), utils.speye(n[1]), ddxCellGrad(n[0], BC)
+    #         G1 = self._deflationMatrix('Fx').T * kron3(
+    #             speye(n[2]), speye(n[1]), ddxCellGrad(n[0], BC)
     #         )
     #     return G1
 
@@ -1062,7 +1061,7 @@ class CylMesh(
         #     L = (A/V)[:self._ntFx]
         #     # L = self.r(L, 'F', 'Fx', 'V')
         #     # L = A[:self.nFx] / V
-        #     self._cellGradx = self._deflationMatrix('Fx')*utils.sdiag(L)*G1
+        #     self._cellGradx = self._deflationMatrix('Fx')*sdiag(L)*G1
         # return self._cellGradx
 
     @property
@@ -1077,19 +1076,48 @@ class CylMesh(
     def _cellGradStencil(self):
         raise NotImplementedError
 
-
     @property
     def cellGrad(self):
         """The cell centered Gradient, takes you to cell faces."""
         raise NotImplementedError('Cell Grad is not yet implemented.')
 
-    @property
-    def nodalGrad(self):
-        """Construct gradient operator (nodes to edges)."""
-        # Nodal grad does not make sense for cylindrically symmetric mesh.
-        if self.isSymmetric is True:
-            return None
-        raise NotImplementedError('nodalGrad not yet implemented')
+    # @property
+    # def _nodalGradStencilx(self):
+    #     if self.isSymmetric is True:
+    #         return None
+    #     return kron3(speye(self.nNz), speye(self.nNy), ddx(self.nCx))
+
+    # @property
+    # def _nodalGradStencily(self):
+    #     if self.isSymmetric is True:
+    #         None
+    #         # return kron3(speye(self.nNz), ddx(self.nCy), speye(self.nNx)) * self._deflationMatrix('Ey')
+    #     return kron3(speye(self.nNz), ddx(self.nCy), speye(self.nNx))
+
+    # @property
+    # def _nodalGradStencilz(self):
+    #     if self.isSymmetric is True:
+    #         return None
+    #     return kron3(ddx(self.nCz), speye(self.nNy), speye(self.nNx))
+
+    # @property
+    # def _nodalGradStencil(self):
+    #     if self.isSymmetric is True:
+    #         return None
+    #     else:
+    #         G = self._deflationMatrix('E').T * sp.vstack((
+    #             self._nodalGradStencilx,
+    #             self._nodalGradStencily,
+    #             self._nodalGradStencilz
+    #         ), format="csr") * self._deflationMatrix('N')
+    #     return G
+
+    # @property
+    # def nodalGrad(self):
+    #     """Construct gradient operator (nodes to edges)."""
+    #     if self.isSymmetric is True:
+    #         return
+    #     raise NotImplementedError('nodalGrad not yet implemented')
 
     @property
     def nodalLaplacian(self):
@@ -1124,14 +1152,14 @@ class CylMesh(
 
                 # Edge curl operator
                 self._edgeCurl = (
-                    utils.sdiag(1/A)*sp.vstack((Dz, Dr)) * utils.sdiag(E)
+                    sdiag(1/A)*sp.vstack((Dz, Dr)) * sdiag(E)
                 )
             else:
                 self._edgeCurl = (
-                    utils.sdiag(1/self.area) *
+                    sdiag(1/self.area) *
                     self._deflationMatrix('F', withHanging=True, asOnes=False) *
                     self._edgeCurlStencil *
-                    utils.sdiag(self._edgeFull) *
+                    sdiag(self._edgeFull) *
                     self._deflationMatrix('E', withHanging=True, asOnes=True).T
                 )
 
@@ -1147,10 +1175,10 @@ class CylMesh(
         """
         if self.isSymmetric:
             raise Exception('There are no x-edges on a cyl symmetric mesh')
-        return utils.kron3(
-            utils.av(self.vnC[2]),
-            utils.av(self.vnC[1]),
-            utils.speye(self.vnC[0])
+        return kron3(
+            av(self.vnC[2]),
+            av(self.vnC[1]),
+            speye(self.vnC[0])
         ) * self._deflationMatrix('Ex', withHanging=True, asOnes=True).T
 
     @property
@@ -1162,13 +1190,13 @@ class CylMesh(
         :return: matrix that averages from y-edges to cell centers
         """
         if self.isSymmetric:
-            avR = utils.av(self.vnC[0])[:, 1:]
-            return sp.kron(utils.av(self.vnC[2]), avR, format="csr")
+            avR = av(self.vnC[0])[:, 1:]
+            return sp.kron(av(self.vnC[2]), avR, format="csr")
         else:
-            return utils.kron3(
-                utils.av(self.vnC[2]),
-                utils.speye(self.vnC[1]),
-                utils.av(self.vnC[0])
+            return kron3(
+                av(self.vnC[2]),
+                speye(self.vnC[1]),
+                av(self.vnC[0])
             )*self._deflationMatrix('Ey', withHanging=True, asOnes=True).T
 
     @property
@@ -1181,10 +1209,10 @@ class CylMesh(
         """
         if self.isSymmetric:
             raise Exception('There are no z-edges on a cyl symmetric mesh')
-        return utils.kron3(
-            utils.speye(self.vnC[2]),
-            utils.av(self.vnC[1]),
-            utils.av(self.vnC[0])
+        return kron3(
+            speye(self.vnC[2]),
+            av(self.vnC[1]),
+            av(self.vnC[0])
         ) * self._deflationMatrix('Ez', withHanging=True, asOnes=True).T
 
     @property
@@ -1233,9 +1261,9 @@ class CylMesh(
         :rtype: scipy.sparse.csr_matrix
         :return: matrix that averages from x-faces to cell centers
         """
-        avR = utils.av(self.vnC[0])[:, 1:]  # TODO: this should be handled by a deflation matrix
-        return utils.kron3(
-            utils.speye(self.vnC[2]), utils.speye(self.vnC[1]), avR
+        avR = av(self.vnC[0])[:, 1:]  # TODO: this should be handled by a deflation matrix
+        return kron3(
+            speye(self.vnC[2]), speye(self.vnC[1]), avR
         )
 
     @property
@@ -1246,9 +1274,9 @@ class CylMesh(
         :rtype: scipy.sparse.csr_matrix
         :return: matrix that averages from y-faces to cell centers
         """
-        return utils.kron3(
-            utils.speye(self.vnC[2]), utils.av(self.vnC[1]),
-            utils.speye(self.vnC[0])
+        return kron3(
+            speye(self.vnC[2]), av(self.vnC[1]),
+            speye(self.vnC[0])
         ) * self._deflationMatrix('Fy', withHanging=True, asOnes=True).T
 
     @property
@@ -1260,9 +1288,9 @@ class CylMesh(
         :return: matrix that averages from z-faces to cell centers
         """
 
-        return utils.kron3(
-            utils.av(self.vnC[2]), utils.speye(self.vnC[1]),
-            utils.speye(self.vnC[0])
+        return kron3(
+            av(self.vnC[2]), speye(self.vnC[1]),
+            speye(self.vnC[0])
         )
 
     @property
@@ -1320,7 +1348,7 @@ class CylMesh(
             'Location must be a grid location, not {}'.format(location)
         )
         if location == 'CC':
-            return utils.speye(self.nC)
+            return speye(self.nC)
 
         elif location in ['E', 'F']:
             if self.isSymmetric:
@@ -1343,7 +1371,7 @@ class CylMesh(
                 for coord in ['x', 'y', 'z']
             ])
 
-        R = utils.speye(getattr(self, '_nt{}'.format(location)))
+        R = speye(getattr(self, '_nt{}'.format(location)))
         hanging = getattr(self, '_hanging{}'.format(location))
         nothanging = ~getattr(self, '_ishanging{}'.format(location))
 
@@ -1375,7 +1403,7 @@ class CylMesh(
         R = R[nothanging, :]
 
         if not asOnes:
-            R = utils.sdiag(1./R.sum(1)) * R
+            R = sdiag(1./R.sum(1)) * R
 
         return R
 
@@ -1520,5 +1548,5 @@ class CylMesh(
             interpType = 'Ey'
 
         Pc2r = self.getInterpolationMat(G, interpType)
-        Proj = utils.sdiag(proj)
+        Proj = sdiag(proj)
         return Proj * Pc2r
