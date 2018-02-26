@@ -428,6 +428,17 @@ class TestAveraging2D(discretize.Tests.OrderTest):
         self.getAve = lambda M: M.aveE2CCV
         self.orderTest()
 
+    def test_orderCC2FV(self):
+        self.name = "Averaging 2D: CC2FV"
+        funX = lambda x, y: (np.cos(x)+np.sin(y))
+        funY = lambda x, y: (np.cos(y)*np.sin(x))
+        self.getHere = lambda M: np.r_[call2(funX, M.gridCC), call2(funY, M.gridCC)]
+        self.getThere = lambda M: np.r_[call2(funX, M.gridFx), call2(funY, M.gridFy)]
+        self.getAve = lambda M: M.aveCCV2F
+        self.expectedOrders = ORDERS/2.0
+        self.orderTest()
+        self.expectedOrders = ORDERS
+
 
 class TestAverating3DSimple(unittest.TestCase):
     def setUp(self):
@@ -529,6 +540,17 @@ class TestAveraging3D(discretize.Tests.OrderTest):
         self.orderTest()
         self.expectedOrders = ORDERS
 
+    def test_orderCCV2F(self):
+        self.name = "Averaging 3D: CC2FV"
+        funX = lambda x, y, z: (np.cos(x)+np.sin(y)+np.exp(z))
+        funY = lambda x, y, z: (np.cos(x)+np.sin(y)*np.exp(z))
+        funZ = lambda x, y, z: (np.cos(x)*np.sin(y)+np.exp(z))
+        self.getHere = lambda M: np.r_[call3(funX, M.gridCC), call3(funY, M.gridCC), call3(funZ, M.gridCC)]
+        self.getThere = lambda M: np.r_[call3(funX, M.gridFx), call3(funY, M.gridFy), call3(funZ, M.gridFz)]
+        self.getAve = lambda M: M.aveCCV2F
+        self.expectedOrders = ORDERS/2.0
+        self.orderTest()
+        self.expectedOrders = ORDERS
 
 class MimeticProperties(unittest.TestCase):
     meshTypes = MESHTYPES
