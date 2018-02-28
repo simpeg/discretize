@@ -5,7 +5,9 @@ import properties
 import scipy.sparse as sp
 from scipy.constants import pi
 
-from .utils import kron3, ndgrid, av, speye, ddx, sdiag
+from .utils import (
+    kron3, ndgrid, av, speye, ddx, sdiag, interpmat, spzeros, cyl2cart
+)
 from .TensorMesh import BaseTensorMesh, BaseRectangularMesh
 from .InnerProducts import InnerProducts
 from .View import CylView
@@ -616,43 +618,46 @@ class CylMesh(
 
     @property
     def _ishangingFx(self):
-        if getattr(self, '__ishangingFx', None) is None:
+        """
+        indicies of the hanging x-Faces
+        """
+        if getattr(self, '_ishangingFxBool', None) is None:
             hang_x = np.zeros(self._ntNx, dtype=bool)
             hang_x[0] = True
-            self.__ishangingFx = np.kron(
+            self._ishangingFxBool = np.kron(
                 np.ones(self.nCz, dtype=bool),
                 np.kron(
                     np.ones(self.nCy, dtype=bool),
                     hang_x
                 )
             )
-        return self.__ishangingFx
+        return self._ishangingFxBool
 
     @property
     def _hangingFx(self):
-        if getattr(self, '__hangingFx', None) is None:
-            self.__hangingFx = dict(zip(
+        if getattr(self, '_hangingFxDict', None) is None:
+            self._hangingFxDict = dict(zip(
                 np.nonzero(self._ishangingFx)[0].tolist(), [None]*self._nhFx
             ))
-        return self.__hangingFx
+        return self._hangingFxDict
 
     @property
     def _ishangingFy(self):
-        if getattr(self, '__ishangingFy', None) is None:
+        if getattr(self, '_ishangingFyBool', None) is None:
             hang_y = np.zeros(self._ntNy, dtype=bool)
             hang_y[-1] = True
-            self.__ishangingFy = np.kron(
+            self._ishangingFyBool = np.kron(
                 np.ones(self.nCz, dtype=bool),
                 np.kron(
                     hang_y,
                     np.ones(self.nCx, dtype=bool)
                 )
             )
-        return self.__ishangingFy
+        return self._ishangingFyBool
 
     @property
     def _hangingFy(self):
-        if getattr(self, '__hangingFy', None) is None:
+        if getattr(self, '_hangingFyDict', None) is None:
             deflate_y = np.zeros(self._ntNy, dtype=bool)
             deflate_y[0] = True
             deflateFy = np.nonzero(np.kron(
@@ -662,23 +667,23 @@ class CylMesh(
                     np.ones(self.nCx, dtype=bool)
                 )
             ))[0].tolist()
-            self.__hangingFy = dict(zip(
+            self._hangingFyDict = dict(zip(
                 np.nonzero(self._ishangingFy)[0].tolist(),
                 deflateFy)
             )
-        return self.__hangingFy
+        return self._hangingFyDict
 
     @property
     def _ishangingFz(self):
-        if getattr(self, '__ishangingFz', None) is None:
-            self.__ishangingFz = np.kron(
+        if getattr(self, '_ishangingFzBool', None) is None:
+            self._ishangingFzBool = np.kron(
                 np.zeros(self.nNz, dtype=bool),
                 np.kron(
                     np.zeros(self.nCy, dtype=bool),
                     np.zeros(self.nCx, dtype=bool)
                 )
             )
-        return self.__ishangingFz
+        return self._ishangingFzBool
 
     @property
     def _hangingFz(self):
@@ -686,21 +691,21 @@ class CylMesh(
 
     @property
     def _ishangingEx(self):
-        if getattr(self, '__ishangingEx', None) is None:
+        if getattr(self, '_ishangingExBool', None) is None:
             hang_y = np.zeros(self._ntNy, dtype=bool)
             hang_y[-1] = True
-            self.__ishangingEx = np.kron(
+            self._ishangingExBool = np.kron(
                 np.ones(self._ntNz, dtype=bool),
                 np.kron(
                     hang_y,
                     np.ones(self.nCx, dtype=bool)
                 )
             )
-        return self.__ishangingEx
+        return self._ishangingExBool
 
     @property
     def _hangingEx(self):
-        if getattr(self, '__hangingEx', None) is None:
+        if getattr(self, '_hangingExDict', None) is None:
             deflate_y = np.zeros(self._ntNy, dtype=bool)
             deflate_y[0] = True
             deflateEx = np.nonzero(np.kron(
@@ -710,56 +715,56 @@ class CylMesh(
                     np.ones(self.nCx, dtype=bool)
                 )
             ))[0].tolist()
-            self.__hangingEx = dict(zip(
+            self._hangingExDict = dict(zip(
                 np.nonzero(self._ishangingEx)[0].tolist(), deflateEx
             ))
-        return self.__hangingEx
+        return self._hangingExDict
 
     @property
     def _ishangingEy(self):
-        if getattr(self, '__ishangingEy', None) is None:
+        if getattr(self, '_ishangingEyBool', None) is None:
             hang_x = np.zeros(self._ntNx, dtype=bool)
             hang_x[0] = True
-            self.__ishangingEy = np.kron(
+            self._ishangingEyBool = np.kron(
                 np.ones(self._ntNz, dtype=bool),
                 np.kron(
                     np.ones(self.nCy, dtype=bool),
                     hang_x
                 )
             )
-        return self.__ishangingEy
+        return self._ishangingEyBool
 
     @property
     def _hangingEy(self):
-        if getattr(self, '__hangingEy', None) is None:
-            self.__hangingEy = dict(zip(
+        if getattr(self, '_hangingEyDict', None) is None:
+            self._hangingEyDict = dict(zip(
                 np.nonzero(self._ishangingEy)[0].tolist(),
-                [None]*len(self.__ishangingEy))
+                [None]*len(self._ishangingEyBool))
             )
-        return self.__hangingEy
+        return self._hangingEyDict
 
     @property
     def _axis_of_symmetry_Ez(self):
-        if getattr(self, '__axis_of_symmetry_Ez', None) is None:
+        if getattr(self, '_axis_of_symmetry_EzBool', None) is None:
             axis_x = np.zeros(self._ntNx, dtype=bool)
             axis_x[0] = True
 
             axis_y = np.zeros(self._ntNy, dtype=bool)
             axis_y[0] = True
-            self.__axis_of_symmetry_Ez = np.kron(
+            self._axis_of_symmetry_EzBool = np.kron(
                 np.ones(self.nCz, dtype=bool),
                 np.kron(
                     axis_y,
                     axis_x
                 )
             )
-        return self.__axis_of_symmetry_Ez
+        return self._axis_of_symmetry_EzBool
 
     @property
     def _ishangingEz(self):
-        if getattr(self, '__ishangingEz', None) is None:
+        if getattr(self, '_ishangingEzBool', None) is None:
             if self.isSymmetric:
-                self.__ishangingEz = np.ones(self._ntEz, dtype=bool)
+                self._ishangingEzBool = np.ones(self._ntEz, dtype=bool)
             else:
                 hang_x = np.zeros(self._ntNx, dtype=bool)
                 hang_x[0] = True
@@ -781,13 +786,13 @@ class CylMesh(
                     )
                 )
 
-                self.__ishangingEz = hangingEz & ~self._axis_of_symmetry_Ez
+                self._ishangingEzBool = hangingEz & ~self._axis_of_symmetry_Ez
 
-        return self.__ishangingEz
+        return self._ishangingEzBool
 
     @property
     def _hangingEz(self):
-        if getattr(self, '__hangingEz', None) is None:
+        if getattr(self, '_hangingEzDict', None) is None:
             # deflate
             deflateEz = np.hstack([
                 np.hstack([
@@ -801,29 +806,29 @@ class CylMesh(
                 np.nonzero(self._ishangingEz)[0].tolist(), deflateEz
             )
 
-            self.__hangingEz = dict(deflate)
-        return self.__hangingEz
+            self._hangingEzDict = dict(deflate)
+        return self._hangingEzDict
 
     @property
     def _axis_of_symmetry_N(self):
-        if getattr(self, '__axis_of_symmetry_N', None) is None:
+        if getattr(self, '_axis_of_symmetry_NBool', None) is None:
             axis_x = np.zeros(self._ntNx, dtype=bool)
             axis_x[0] = True
 
             axis_y = np.zeros(self._ntNy, dtype=bool)
             axis_y[0] = True
-            self.__axis_of_symmetry_N = np.kron(
+            self._axis_of_symmetry_NBool = np.kron(
                 np.ones(self._ntNz, dtype=bool),
                 np.kron(
                     axis_y,
                     axis_x
                 )
             )
-        return self.__axis_of_symmetry_N
+        return self._axis_of_symmetry_NBool
 
     @property
     def _ishangingN(self):
-        if getattr(self, '__ishangingN', None) is None:
+        if getattr(self, '_ishangingNBool', None) is None:
             hang_x = np.zeros(self._ntNx, dtype=bool)
             hang_x[0] = True
 
@@ -844,13 +849,13 @@ class CylMesh(
                 )
             )
 
-            self.__ishangingN = hangingN & ~self._axis_of_symmetry_N
+            self._ishangingNBool = hangingN & ~self._axis_of_symmetry_N
 
-        return self.__ishangingN
+        return self._ishangingNBool
 
     @property
     def _hangingN(self):
-        if getattr(self, '__hangingN', None) is None:
+        if getattr(self, '_hangingNDict', None) is None:
             # go by layer
             deflateN = np.hstack([
                 np.hstack([
@@ -860,10 +865,10 @@ class CylMesh(
                 i*int(self._ntNx*self._ntNy)
                 for i in range(self._ntNz)
             ]).tolist()
-            self.__hangingN = dict(zip(
+            self._hangingNDict = dict(zip(
                 np.nonzero(self._ishangingN)[0].tolist(), deflateN
             ))
-        return self.__hangingN
+        return self._hangingNDict
 
     ####################################################
     # Grids
@@ -1440,8 +1445,8 @@ class CylMesh(
             )
 
         if locType in ['CCVx', 'CCVy', 'CCVz']:
-            Q = utils.interpmat(loc, *self.getTensor('CC'))
-            Z = utils.spzeros(loc.shape[0], self.nC)
+            Q = interpmat(loc, *self.getTensor('CC'))
+            Z = spzeros(loc.shape[0], self.nC)
             if locType == 'CCVx':
                 Q = sp.hstack([Q, Z])
             elif locType == 'CCVy':
@@ -1469,7 +1474,7 @@ class CylMesh(
         and returns that grid in cartesian coordinates
         """
         grid = getattr(self, 'grid{}'.format(locType))
-        return utils.cyl2cart(grid)
+        return cyl2cart(grid)
 
     def getInterpolationMatCartMesh(self, Mrect, locType='CC', locTypeTo=None):
         """
@@ -1504,7 +1509,7 @@ class CylMesh(
             Y = self.getInterpolationMatCartMesh(
                 Mrect, locType='Ey', locTypeTo=locTypeTo+'y'
             )
-            Z = utils.spzeros(getattr(Mrect, 'n' + locTypeTo + 'z'), self.nE)
+            Z = spzeros(getattr(Mrect, 'n' + locTypeTo + 'z'), self.nE)
             return sp.vstack((X, Y, Z))
 
         grid = getattr(Mrect, 'grid' + locTypeTo)
