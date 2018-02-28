@@ -4,7 +4,8 @@ import unittest
 import matplotlib.pyplot as plt
 import discretize
 
-MESHTYPES = ['uniformTree'] #['randomTree', 'uniformTree']
+MESHTYPES = ['uniformTree', 'randomTree']
+# MESHTYPES = ['randomTree']
 call2 = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1])
 call3 = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1], xyz[:, 2])
 cart_row2 = lambda g, xfun, yfun: np.c_[call2(xfun, g), call2(yfun, g)]
@@ -19,8 +20,62 @@ plotIt = False
 np.random.seed(90)
 
 
-class TestFaceDiv2D(discretize.Tests.OrderTest):
-    name = "Face Divergence 2D"
+class TestCellGrad2D(discretize.Tests.OrderTest):
+    name = "Cell Gradient 2D, using cellGradx and cellGrady"
+    meshTypes = MESHTYPES
+    meshDimension = 2
+    meshSizes = [8, 16]
+    # because of the averaging involved in the ghost point. u_b = (u_n + u_g)/2
+    expectedOrders = 1
+
+    def getError(self):
+        #Test function
+        sol = lambda x, y: np.cos(2*np.pi*x)*np.cos(2*np.pi*y)
+        fx = lambda x, y: -2*np.pi*np.sin(2*np.pi*x)*np.cos(2*np.pi*y)
+        fy = lambda x, y: -2*np.pi*np.sin(2*np.pi*y)*np.cos(2*np.pi*x)
+
+        phi = call2(sol, self.M.gridCC)
+        gradF = self.M.cellGrad * phi
+        Fc = cartF2(self.M, fx, fy)
+        gradF_ana = self.M.projectFaceVector(Fc)
+
+        err = np.linalg.norm((gradF-gradF_ana), np.inf)
+
+        return err
+
+    def test_order(self):
+        self.orderTest()
+
+
+class TestCellGrad3D(discretize.Tests.OrderTest):
+    name = "Cell Gradient 3D, using cellGradx, cellGrady, and cellGradz"
+    meshTypes = MESHTYPES
+    meshDimension = 3
+    meshSizes = [8, 16]
+    # because of the averaging involved in the ghost point. u_b = (u_n + u_g)/2
+    expectedOrders = 1
+
+    def getError(self):
+        #Test function
+        sol = lambda x, y, z: np.cos(2*np.pi*x)*np.cos(2*np.pi*y)*np.cos(2*np.pi*z)
+        fx = lambda x, y, z: -2*np.pi*np.sin(2*np.pi*x)*np.cos(2*np.pi*y)*np.cos(2*np.pi*z)
+        fy = lambda x, y, z: -2*np.pi*np.cos(2*np.pi*x)*np.sin(2*np.pi*y)*np.cos(2*np.pi*z)
+        fz = lambda x, y, z: -2*np.pi*np.cos(2*np.pi*x)*np.cos(2*np.pi*y)*np.sin(2*np.pi*z)
+        phi = call3(sol, self.M.gridCC)
+        gradF = self.M.cellGrad * phi
+        Fc = cartF3(self.M, fx, fy, fz)
+        gradF_ana = self.M.projectFaceVector(Fc)
+
+        err = np.linalg.norm((gradF-gradF_ana), np.inf)
+
+        return err
+
+    def test_order(self):
+        self.orderTest()
+
+
+class TestFaceDivxy2D(discretize.Tests.OrderTest):
+    name = "Face Divergence 2D, Testing faceDivx and faceDivy"
     meshTypes = MESHTYPES
     meshDimension = 2
     meshSizes = [16, 32]
@@ -31,10 +86,12 @@ class TestFaceDiv2D(discretize.Tests.OrderTest):
         fy = lambda x, y: np.sin(2*np.pi*y)
         sol = lambda x, y: 2*np.pi*(np.cos(2*np.pi*x)+np.cos(2*np.pi*y))
 
-        Fc = cartF2(self.M, fx, fy)
-        F = self.M.projectFaceVector(Fc)
+        Fx = call2(fx, self.M.gridFx)
+        Fy = call2(fy, self.M.gridFy)
+        divFx = self.M.faceDivx.dot(Fx)
+        divFy = self.M.faceDivy.dot(Fy)
+        divF = divFx + divFy
 
-        divF = self.M.faceDiv.dot(F)
         divF_ana = call2(sol, self.M.gridCC)
 
         err = np.linalg.norm((divF-divF_ana), np.inf)
@@ -46,10 +103,11 @@ class TestFaceDiv2D(discretize.Tests.OrderTest):
     def test_order(self):
         self.orderTest()
 
+
 class TestFaceDiv3D(discretize.Tests.OrderTest):
     name = "Face Divergence 3D"
     meshTypes = MESHTYPES
-    meshSizes = [8, 16]
+    meshSizes = [8, 16, 32]
 
     def getError(self):
         fx = lambda x, y, z: np.sin(2*np.pi*x)
@@ -70,11 +128,44 @@ class TestFaceDiv3D(discretize.Tests.OrderTest):
         self.orderTest()
 
 
+class TestFaceDivxyz3D(discretize.Tests.OrderTest):
+    name = "Face Divergence 3D, Testing faceDivx, faceDivy, and faceDivz"
+    meshTypes = MESHTYPES
+    meshDimension = 3
+    meshSizes = [8, 16]
+
+    def getError(self):
+        #Test function
+        fx = lambda x, y, z: np.sin(2*np.pi*x)
+        fy = lambda x, y, z: np.sin(2*np.pi*y)
+        fz = lambda x, y, z: np.sin(2*np.pi*z)
+        sol = lambda x, y, z: (2*np.pi*np.cos(2*np.pi*x)+2*np.pi*np.cos(2*np.pi*y)+2*np.pi*np.cos(2*np.pi*z))
+
+        Fx = call3(fx, self.M.gridFx)
+        Fy = call3(fy, self.M.gridFy)
+        Fz = call3(fz, self.M.gridFz)
+        divFx = self.M.faceDivx.dot(Fx)
+        divFy = self.M.faceDivy.dot(Fy)
+        divFz = self.M.faceDivz.dot(Fz)
+        divF = divFx + divFy + divFz
+
+        divF_ana = call3(sol, self.M.gridCC)
+
+        err = np.linalg.norm((divF-divF_ana), np.inf)
+
+        # self.M.plotImage(divF-divF_ana, showIt=True)
+
+        return err
+
+    def test_order(self):
+        self.orderTest()
+
+
 class TestCurl(discretize.Tests.OrderTest):
     name = "Curl"
     meshTypes = ['notatreeTree', 'uniformTree'] #, 'randomTree']#, 'uniformTree']
     meshSizes = [8, 16]#, 32]
-    expectedOrders = [2,1] # This is due to linear interpolation in the Re projection
+    expectedOrders = [2, 1] # This is due to linear interpolation in the Re projection
 
     def getError(self):
         # fun: i (cos(y)) + j (cos(z)) + k (cos(x))
@@ -141,7 +232,7 @@ class TestNodalGrad2D(discretize.Tests.OrderTest):
     meshDimension = 2
 
     def getError(self):
-        #Test function
+        # Test function
         fun = lambda x, y: (np.cos(x)+np.cos(y))
         # i (sin(x)) + j (sin(y)) + k (sin(z))
         solX = lambda x, y: -np.sin(x)
@@ -539,6 +630,7 @@ class TestTreeAveraging2D(discretize.Tests.OrderTest):
     #     self.orderTest()
     #     self.expectedOrders = 2
 
+
 class TestAveraging3D(discretize.Tests.OrderTest):
     name = "Averaging 3D"
     meshTypes = ['notatreeTree', 'uniformTree']#, 'randomTree']
@@ -663,15 +755,15 @@ class TestAveraging3D(discretize.Tests.OrderTest):
         self.getAve = lambda M: M.aveE2CCV
         self.orderTest()
 
-#     def test_orderCC2F(self):
-#         self.name = "Averaging 3D: CC2F"
-#         fun = lambda x, y, z: (np.cos(x)+np.sin(y)+np.exp(z))
-#         self.getHere = lambda M: call3(fun, M.gridCC)
-#         self.getThere = lambda M: np.r_[call3(fun, M.gridFx), call3(fun, M.gridFy), call3(fun, M.gridFz)]
-#         self.getAve = lambda M: M.aveCC2F
-#         self.expectedOrders = 1
-#         self.orderTest()
-#         self.expectedOrders = 2
+    # def test_orderCC2F(self):
+    #     self.name = "Averaging 3D: CC2F"
+    #     fun = lambda x, y, z: (np.cos(x)+np.sin(y)+np.exp(z))
+    #     self.getHere = lambda M: call3(fun, M.gridCC)
+    #     self.getThere = lambda M: np.r_[call3(fun, M.gridFx), call3(fun, M.gridFy), call3(fun, M.gridFz)]
+    #     self.getAve = lambda M: M.aveCC2F
+    #     self.expectedOrders = 1
+    #     self.orderTest()
+    #     self.expectedOrders = 2
 
 
 if __name__ == '__main__':
