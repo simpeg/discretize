@@ -18,18 +18,18 @@ class CylMesh(
     BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView, DiffOperators
 ):
     """
-        CylMesh is a mesh class for cylindrical problems
+    CylMesh is a mesh class for cylindrical problems
 
-        .. note::
+    .. note::
 
-            for a cylindrically symmetric mesh use [hx, 1, hz]
+        for a cylindrically symmetric mesh use [hx, 1, hz]
 
-        ::
+    ::
 
-            cs, nc, npad = 20., 30, 8
-            hx = utils.meshTensor([(cs,npad+10,-0.7), (cs,nc), (cs,npad,1.3)])
-            hz = utils.meshTensor([(cs,npad   ,-1.3), (cs,nc), (cs,npad,1.3)])
-            mesh = Mesh.CylMesh([hx,1,hz], [0.,0,-hz.sum()/2.])
+        cs, nc, npad = 20., 30, 8
+        hx = utils.meshTensor([(cs,npad+10,-0.7), (cs,nc), (cs,npad,1.3)])
+        hz = utils.meshTensor([(cs,npad   ,-1.3), (cs,nc), (cs,npad,1.3)])
+        mesh = Mesh.CylMesh([hx,1,hz], [0.,0,-hz.sum()/2.])
     """
 
     _meshType = 'CYL'
@@ -619,7 +619,7 @@ class CylMesh(
     @property
     def _ishangingFx(self):
         """
-        indicies of the hanging x-Faces
+        bool vector indicating if an x-face is hanging or not
         """
         if getattr(self, '_ishangingFxBool', None) is None:
             hang_x = np.zeros(self._ntNx, dtype=bool)
@@ -635,6 +635,10 @@ class CylMesh(
 
     @property
     def _hangingFx(self):
+        """
+        dictionary of the indices of the hanging x-faces (keys) and a list
+        of indices that the eliminated faces map to (if applicable)
+        """
         if getattr(self, '_hangingFxDict', None) is None:
             self._hangingFxDict = dict(zip(
                 np.nonzero(self._ishangingFx)[0].tolist(), [None]*self._nhFx
@@ -643,6 +647,9 @@ class CylMesh(
 
     @property
     def _ishangingFy(self):
+        """
+        bool vector indicating if a y-face is hanging or not
+        """
         if getattr(self, '_ishangingFyBool', None) is None:
             hang_y = np.zeros(self._ntNy, dtype=bool)
             hang_y[-1] = True
@@ -657,6 +664,10 @@ class CylMesh(
 
     @property
     def _hangingFy(self):
+        """
+        dictionary of the indices of the hanging y-faces (keys) and a list
+        of indices that the eliminated faces map to (if applicable)
+        """
         if getattr(self, '_hangingFyDict', None) is None:
             deflate_y = np.zeros(self._ntNy, dtype=bool)
             deflate_y[0] = True
@@ -675,6 +686,9 @@ class CylMesh(
 
     @property
     def _ishangingFz(self):
+        """
+        bool vector indicating if a z-face is hanging or not
+        """
         if getattr(self, '_ishangingFzBool', None) is None:
             self._ishangingFzBool = np.kron(
                 np.zeros(self.nNz, dtype=bool),
@@ -687,10 +701,17 @@ class CylMesh(
 
     @property
     def _hangingFz(self):
+        """
+        dictionary of the indices of the hanging z-faces (keys) and a list
+        of indices that the eliminated faces map to (if applicable)
+        """
         return {}
 
     @property
     def _ishangingEx(self):
+        """
+        bool vector indicating if a x-edge is hanging or not
+        """
         if getattr(self, '_ishangingExBool', None) is None:
             hang_y = np.zeros(self._ntNy, dtype=bool)
             hang_y[-1] = True
@@ -705,6 +726,10 @@ class CylMesh(
 
     @property
     def _hangingEx(self):
+        """
+        dictionary of the indices of the hanging x-edges (keys) and a list
+        of indices that the eliminated faces map to (if applicable)
+        """
         if getattr(self, '_hangingExDict', None) is None:
             deflate_y = np.zeros(self._ntNy, dtype=bool)
             deflate_y[0] = True
@@ -722,6 +747,9 @@ class CylMesh(
 
     @property
     def _ishangingEy(self):
+        """
+        bool vector indicating if a y-edge is hanging or not
+        """
         if getattr(self, '_ishangingEyBool', None) is None:
             hang_x = np.zeros(self._ntNx, dtype=bool)
             hang_x[0] = True
@@ -736,6 +764,10 @@ class CylMesh(
 
     @property
     def _hangingEy(self):
+        """
+        dictionary of the indices of the hanging y-edges (keys) and a list
+        of indices that the eliminated faces map to (if applicable)
+        """
         if getattr(self, '_hangingEyDict', None) is None:
             self._hangingEyDict = dict(zip(
                 np.nonzero(self._ishangingEy)[0].tolist(),
@@ -745,6 +777,9 @@ class CylMesh(
 
     @property
     def _axis_of_symmetry_Ez(self):
+        """
+        bool vector indicating if a z-edge is along the axis of symmetry or not
+        """
         if getattr(self, '_axis_of_symmetry_EzBool', None) is None:
             axis_x = np.zeros(self._ntNx, dtype=bool)
             axis_x[0] = True
@@ -762,6 +797,9 @@ class CylMesh(
 
     @property
     def _ishangingEz(self):
+        """
+        bool vector indicating if a z-edge is hanging or not
+        """
         if getattr(self, '_ishangingEzBool', None) is None:
             if self.isSymmetric:
                 self._ishangingEzBool = np.ones(self._ntEz, dtype=bool)
@@ -792,6 +830,10 @@ class CylMesh(
 
     @property
     def _hangingEz(self):
+        """
+        dictionary of the indices of the hanging z-edges (keys) and a list
+        of indices that the eliminated faces map to (if applicable)
+        """
         if getattr(self, '_hangingEzDict', None) is None:
             # deflate
             deflateEz = np.hstack([
@@ -811,6 +853,9 @@ class CylMesh(
 
     @property
     def _axis_of_symmetry_N(self):
+        """
+        bool vector indicating if a node is along the axis of symmetry or not
+        """
         if getattr(self, '_axis_of_symmetry_NBool', None) is None:
             axis_x = np.zeros(self._ntNx, dtype=bool)
             axis_x[0] = True
@@ -828,6 +873,9 @@ class CylMesh(
 
     @property
     def _ishangingN(self):
+        """
+        bool vector indicating if a node is hanging or not
+        """
         if getattr(self, '_ishangingNBool', None) is None:
             hang_x = np.zeros(self._ntNx, dtype=bool)
             hang_x[0] = True
@@ -855,6 +903,10 @@ class CylMesh(
 
     @property
     def _hangingN(self):
+        """
+        dictionary of the indices of the hanging nodes (keys) and a list
+        of indices that the eliminated faces map to (if applicable)
+        """
         if getattr(self, '_hangingNDict', None) is None:
             # go by layer
             deflateN = np.hstack([
@@ -876,6 +928,9 @@ class CylMesh(
 
     @property
     def _gridNFull(self):
+        """
+        Full Nodal grid (including hanging nodes)
+        """
         return ndgrid([
             self.vectorNx, self._vectorNyFull, self.vectorNz
         ])
@@ -942,6 +997,9 @@ class CylMesh(
 
     @property
     def _gridEzFull(self):
+        """
+        Full z-edge grid (including hanging edges)
+        """
         return ndgrid([
             self.vectorNx, self._vectorNyFull, self.vectorCCz
         ])
@@ -1347,6 +1405,10 @@ class CylMesh(
     ####################################################
 
     def _deflationMatrix(self, location, withHanging=True, asOnes=False):
+        """
+        construct the deflation matrix to remove hanging edges / faces / nodes
+        from the operators
+        """
         assert location in [
             'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez', 'CC'
         ], (
@@ -1472,14 +1534,22 @@ class CylMesh(
         """
         Takes a grid location ('CC', 'N', 'Ex', 'Ey', 'Ez', 'Fx', 'Fy', 'Fz')
         and returns that grid in cartesian coordinates
+
+        :param str locType: grid location
+        :rtype: numpy.ndarray
+        :return: cartesian coordinates for the cylindrical grid
         """
         grid = getattr(self, 'grid{}'.format(locType))
         return cyl2cart(grid)
 
     def getInterpolationMatCartMesh(self, Mrect, locType='CC', locTypeTo=None):
         """
-            Takes a cartesian mesh and returns a projection to translate onto
-            the cartesian grid.
+        Takes a cartesian mesh and returns a projection to translate onto
+        the cartesian grid.
+
+        :param discretize.BaseMesh Mrect: the mesh to interpolate on to
+        :param str locType: grid location ('CC', 'N', 'Ex', 'Ey', 'Ez', 'Fx', 'Fy', 'Fz')
+        :param str locTypeTo: grid location to interpolate to. If None, the same grid type as `locType` will be assumed
         """
 
         assert self.isSymmetric, (
