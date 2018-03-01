@@ -1175,12 +1175,12 @@ class CylMesh(
     #         ), format="csr") * self._deflationMatrix('N')
     #     return G
 
-    # @property
-    # def nodalGrad(self):
-    #     """Construct gradient operator (nodes to edges)."""
-    #     if self.isSymmetric is True:
-    #         return
-    #     raise NotImplementedError('nodalGrad not yet implemented')
+    @property
+    def nodalGrad(self):
+        """Construct gradient operator (nodes to edges)."""
+        if self.isSymmetric is True:
+            return None
+        raise NotImplementedError('nodalGrad not yet implemented')
 
     @property
     def nodalLaplacian(self):
