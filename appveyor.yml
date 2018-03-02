@@ -36,6 +36,7 @@ install:
   - conda info -a
   - "conda create -q -n test-environment python=%PYTHON% numpy scipy matplotlib cython ipython pillow wheel"
   - activate test-environment
+  - conda install --quiet --yes -c menpo vtk
   - pip install -r requirements_dev.txt
   - python setup.py install
 
