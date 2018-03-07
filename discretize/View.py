@@ -194,7 +194,8 @@ class TensorView(object):
         pcolorOpts=None,
         streamOpts=None,
         gridOpts=None,
-        range_x=None, range_y=None
+        range_x=None, range_y=None,
+        stream_threshold=None
     ):
 
         """
@@ -228,7 +229,14 @@ class TensorView(object):
             fig, axs = plt.subplots(1, len(vType))
             out = []
             for vTypeI, ax in zip(vType, axs):
-                out += [self.plotSlice(v, vType=vTypeI, normal=normal, ind=ind, grid=grid, view=view, ax=ax, clim=clim, showIt=False, pcolorOpts=pcolorOpts, streamOpts=streamOpts, gridOpts=gridOpts)]
+                out += [
+                    self.plotSlice(
+                        v, vType=vTypeI, normal=normal, ind=ind, grid=grid,
+                        view=view, ax=ax, clim=clim, showIt=False,
+                        pcolorOpts=pcolorOpts, streamOpts=streamOpts,
+                        gridOpts=gridOpts, stream_threshold=stream_threshold
+                    )
+                ]
             return out
         viewOpts = ['real', 'imag', 'abs', 'vec']
         normalOpts = ['X', 'Y', 'Z']
@@ -307,7 +315,7 @@ class TensorView(object):
             grid=grid, view=view,
             ax=ax, clim=clim, showIt=showIt,
             pcolorOpts=pcolorOpts, streamOpts=streamOpts,
-            gridOpts=gridOpts
+            gridOpts=gridOpts, stream_threshold=stream_threshold
         )
 
         ax.set_xlabel('y' if normal == 'X' else 'x')
