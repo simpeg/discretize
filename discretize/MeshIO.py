@@ -244,13 +244,13 @@ class TensorMeshIO(object):
 
         # Assign the model('s) to the object
         if models is not None:
-            for item in six.iteritems(models):
+            for key in models:
                 # Convert numpy array
-                vtkDoubleArr = numpy_to_vtk(item[1], deep=1)
-                vtkDoubleArr.SetName(item[0])
+                vtkDoubleArr = numpy_to_vtk(models[key], deep=1)
+                vtkDoubleArr.SetName(key)
                 vtkObj.GetCellData().AddArray(vtkDoubleArr)
             # Set the active scalar
-            vtkObj.GetCellData().SetActiveScalars(list(models.keys())[0])
+            vtkObj.GetCellData().SetActiveScalars(key)
 
         # Check the extension of the fileName
         ext = os.path.splitext(fname)[1]
