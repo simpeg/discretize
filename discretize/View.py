@@ -439,7 +439,7 @@ class TensorView(object):
                 V = Vi
 
             if stream_threshold is not None:
-                mask_me = np.sqrt(U**2 + V**2) <= stream_threshold
+                mask_me = np.sqrt(Ui**2 + Vi**2) <= stream_threshold
                 Ui = np.ma.masked_where(mask_me, Ui)
                 Vi = np.ma.masked_where(mask_me, Vi)
 
