@@ -250,7 +250,7 @@ class TensorMeshIO(object):
                 vtkDoubleArr.SetName(item[0])
                 vtkObj.GetCellData().AddArray(vtkDoubleArr)
             # Set the active scalar
-            vtkObj.GetCellData().SetActiveScalars(models.keys()[0])
+            vtkObj.GetCellData().SetActiveScalars(list(models.keys())[0])
 
         # Check the extension of the fileName
         ext = os.path.splitext(fname)[1]
@@ -310,7 +310,7 @@ class TensorMeshIO(object):
                 vtkDoubleArr.SetName(item[0])
                 vtkObj.GetCellData().AddArray(vtkDoubleArr)
             # Set the active scalar
-            vtkObj.GetCellData().SetActiveScalars(models.keys()[0])
+            vtkObj.GetCellData().SetActiveScalars(list(models.keys())[0])
         return vtkObj
 
     def _readModelUBC_2D(mesh, fileName):
