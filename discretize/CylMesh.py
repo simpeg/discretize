@@ -595,6 +595,12 @@ class CylMesh(
 
     ####################################################
     # Active and Hanging Edges and Faces
+    #
+    #    - to find the active edges, faces, we use
+    #      krons of bools (sorry). It is more efficient
+    #      than working with 3D matrices. For an
+    #      example, see the comments in `_ishangingFx`
+    #
     ####################################################
 
     @property
@@ -603,10 +609,18 @@ class CylMesh(
         bool vector indicating if an x-face is hanging or not
         """
         if getattr(self, '_ishangingFxBool', None) is None:
+
+            # the following is equivalent to
+            #     hang_x = np.zeros(self._vntFx, dtype=bool)
+            #     hang_x[0, :, :] = True
+            #     isHangingFxBool = mkvc(hang_x)
+            #
+            # but krons of bools is more efficient
+
             hang_x = np.zeros(self._ntNx, dtype=bool)
             hang_x[0] = True
             self._ishangingFxBool = np.kron(
-                np.ones(self.nCz, dtype=bool),
+                np.ones(self.nCz, dtype=bool),  # 1 * 0 == 0
                 np.kron(
                     np.ones(self.nCy, dtype=bool),
                     hang_x
@@ -631,6 +645,7 @@ class CylMesh(
         """
         bool vector indicating if a y-face is hanging or not
         """
+
         if getattr(self, '_ishangingFyBool', None) is None:
             hang_y = np.zeros(self._ntNy, dtype=bool)
             hang_y[-1] = True
