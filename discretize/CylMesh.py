@@ -1414,11 +1414,11 @@ class CylMesh(
             ])
 
         R = speye(getattr(self, '_nt{}'.format(location)))
-        hanging = getattr(self, '_hanging{}'.format(location))
+        hanging_dict = getattr(self, '_hanging{}'.format(location))
         nothanging = ~getattr(self, '_ishanging{}'.format(location))
 
         # remove eliminated edges / faces (eg. Fx just doesn't exist)
-        hang = {k: v for k, v in hanging.items() if v is not None}
+        hang = {k: v for k, v in hanging_dict.items() if v is not None}
 
         values = list(hang.values())
         entries = np.ones(len(values))
