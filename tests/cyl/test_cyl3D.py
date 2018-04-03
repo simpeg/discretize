@@ -280,17 +280,26 @@ class TestCartesianGrid(unittest.TestCase):
 class Deflation(unittest.TestCase):
 
     def test_areas(self):
+        mesh = discretize.CylMesh([1, 2, 1])
+
+        areas = np.hstack([[np.pi]*2, [1]*2, [np.pi/2]*4])
+        self.assertTrue(np.all(mesh.area == areas))
+
+        edges = np.hstack([[1]*4, [np.pi]*4, [1]*3])
+        self.assertTrue(np.all(mesh.edge == edges))
+
         mesh = discretize.CylMesh([2, 5, 3])
 
-        self.assertTrue(np.all(
-            mesh._deflationMatrix('F', withHanging=False) * mesh._areaFull ==
-            mesh.area
-        ))
-
-        self.assertTrue(np.all(
-            mesh._deflationMatrix('E', withHanging=False) * mesh._edgeFull ==
-            mesh.edge
-        ))
+        hangingF = np.hstack([
+            getattr(mesh, '_ishangingF{}'.format(dim))
+            for dim in ['x', 'y', 'z']
+        ])
+        self.assertTrue(np.all(mesh._areaFull[~hangingF] == mesh.area))
+        hangingE = np.hstack([
+            getattr(mesh, '_ishangingE{}'.format(dim))
+            for dim in ['x', 'y', 'z']
+        ])
+        self.assertTrue(np.all(mesh._edgeFull[~hangingE] == mesh.edge))
 
 
 if __name__ == '__main__':
