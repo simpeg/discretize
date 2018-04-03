@@ -671,13 +671,7 @@ class CylMesh(
         bool vector indicating if a z-face is hanging or not
         """
         if getattr(self, '_ishangingFzBool', None) is None:
-            self._ishangingFzBool = np.kron(
-                np.zeros(self.nNz, dtype=bool),
-                np.kron(
-                    np.zeros(self.nCy, dtype=bool),
-                    np.zeros(self.nCx, dtype=bool)
-                )
-            )
+            self._ishangingFzBool = np.zeros(self._ntFz, dtype=bool)
         return self._ishangingFzBool
 
     @property
