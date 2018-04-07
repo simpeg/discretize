@@ -194,7 +194,9 @@ class TensorView(object):
         pcolorOpts=None,
         streamOpts=None,
         gridOpts=None,
-        range_x=None, range_y=None,
+        range_x=None,
+        range_y=None,
+        sample_grid=None,
         stream_threshold=None
     ):
 
@@ -315,7 +317,11 @@ class TensorView(object):
             grid=grid, view=view,
             ax=ax, clim=clim, showIt=showIt,
             pcolorOpts=pcolorOpts, streamOpts=streamOpts,
-            gridOpts=gridOpts, stream_threshold=stream_threshold
+            gridOpts=gridOpts,
+            range_x=range_x,
+            range_y=range_y,
+            sample_grid=sample_grid,
+            stream_threshold=stream_threshold
         )
 
         ax.set_xlabel('y' if normal == 'X' else 'x')
