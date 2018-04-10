@@ -53,5 +53,24 @@ class coorutilsTest(unittest.TestCase):
         XYZ2 = utils.coordutils.rotatePointsFromNormals(XYZ0, n0, n1)
         self.assertTrue(np.linalg.norm(utils.mkvc(XYZ1) - utils.mkvc(XYZ2))/np.linalg.norm(utils.mkvc(XYZ1)) < tol)
 
+    def test_rotate_vec_cyl2cart(self):
+        vec = np.r_[1., 0, 0].reshape(1, 3)
+        grid = np.r_[1., np.pi/4, 0].reshape(1, 3)
+        self.assertTrue(np.allclose(
+            utils.rotate_vec_cyl2cart(grid, vec), np.sqrt(2)/2 * np.r_[1, 1, 0]
+        ))
+
+        vec = np.r_[0, 1, 2].reshape(1, 3)
+        grid = np.r_[1, np.pi/4, 0].reshape(1, 3)
+        self.assertTrue(np.allclose(
+            utils.rotate_vec_cyl2cart(grid, vec), np.r_[-np.sqrt(2)/2, np.sqrt(2)/2, 2]
+        ))
+
+        vec = np.r_[1., 0]
+        grid = np.r_[1., np.pi/4].reshape(1, 2)
+        self.assertTrue(np.allclose(
+            utils.rotate_vec_cyl2cart(grid, vec), np.sqrt(2)/2 * np.r_[1, 1]
+        ))
+
 if __name__ == '__main__':
     unittest.main()

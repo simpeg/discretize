@@ -35,6 +35,29 @@ def cart2cyl(grid, points=None):
     ])
 
 
+def rotate_vec_cyl2cart(grid, vec):
+    """
+    Rotate a vector defined in cylindrical coordinates to its definition in
+    cartesian coordinates.
+
+    :param numpy.ndarray grid: grid in cylindrical coordinates on which the 3D
+                               vector is defined [r, theta, z]
+    :param numpy.ndarray vec: vector defined on a cylindrical grid
+    """
+
+    if len(vec.shape) == 1 or vec.shape[1] == 1:
+        vec = vec.reshape(grid.shape, order='F')
+
+    x = vec[:, 0] * np.cos(grid[:, 1]) - vec[:, 1] * np.sin(grid[:, 1])
+    y = vec[:, 0] * np.sin(grid[:, 1]) + vec[:, 1] * np.cos(grid[:, 1])
+
+    newvec = [x, y]
+    if grid.shape[1] == 3:
+        z = vec[:, 2]
+        newvec += [z]
+
+    return np.vstack(newvec).T
+
 def rotationMatrixFromNormals(v0, v1, tol=1e-20):
     """
     Performs the minimum number of rotations to define a rotation from the
