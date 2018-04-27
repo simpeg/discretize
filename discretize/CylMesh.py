@@ -1513,7 +1513,7 @@ class CylMesh(
 
         # return P
 
-    def cartesianGrid(self, locType='CC'):
+    def cartesianGrid(self, locType='CC', theta_shift=None):
         """
         Takes a grid location ('CC', 'N', 'Ex', 'Ey', 'Ez', 'Fx', 'Fy', 'Fz')
         and returns that grid in cartesian coordinates
@@ -1522,7 +1522,9 @@ class CylMesh(
         :rtype: numpy.ndarray
         :return: cartesian coordinates for the cylindrical grid
         """
-        grid = getattr(self, 'grid{}'.format(locType))
+        grid = getattr(self, 'grid{}'.format(locType)).copy()
+        if theta_shift is not None:
+            grid[:, 1] = grid[:, 1] - theta_shift
         return cyl2cart(grid)
 
     def getInterpolationMatCartMesh(self, Mrect, locType='CC', locTypeTo=None):
