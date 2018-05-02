@@ -5,6 +5,7 @@ import numpy as np
 from scipy.spatial import Delaunay
 import scipy.sparse as sp
 from . import utils
+import six
 
 class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts):
     _meshType = 'TREE'
@@ -408,8 +409,8 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts):
         ubc_order = mesh._ubc_order
         # order_ubc will re-order from treemesh ordering to UBC ordering
         # need the opposite operation
-        un_order = np.empty_like(order_ubc)
-        un_order[order_ubc] = np.arange(len(ubc_order))
+        un_order = np.empty_like(ubc_order)
+        un_order[ubc_order] = np.arange(len(ubc_order))
 
         modList.append(modArr[un_order])
         return modList
@@ -450,7 +451,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts):
         if models is not None:
             for item in six.iteritems(models):
                 # Save the data
-                np.savetxt(item[0], item[1][ubcReorder], fmt='%3.5e')
+                np.savetxt(item[0], item[1][ubc_order], fmt='%3.5e')
 
 
     def writeVTK(self, fileName, models=None):
@@ -461,17 +462,12 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts):
 
         # Make the data parts for the vtu object
         # Points
-        #mesh.number()
-        if(type(mesh) is TreeMesh):
-            ptshMat = mesh.gridhN
-            ptsMat = np.vstack((mesh.gridN, mesh.gridhN))
-        else:
-            ptsMat = mesh._gridN + mesh.x0
+        ptsMat = np.vstack((self.gridN, self.gridhN))
 
         vtkPts = vtk.vtkPoints()
         vtkPts.SetData(numpy_to_vtk(ptsMat, deep=True))
         # Cells
-        cellConn = np.array([c.nodes for c in mesh], dtype=np.int64)
+        cellConn = np.array([c.nodes for c in self], dtype=np.int64)
 
         cellsMat = np.concatenate((np.ones((cellConn.shape[0], 1), dtype=np.int64)*cellConn.shape[1], cellConn), axis=1).ravel()
         cellsArr = vtk.vtkCellArray()

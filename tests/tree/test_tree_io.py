@@ -17,9 +17,9 @@ class TestOcTreeMeshIO(unittest.TestCase):
     def setUp(self):
         h = np.ones(16)
         mesh = discretize.TreeMesh([h, 2*h, 3*h])
-        mesh.refine(3)
-        mesh._refineCell([0, 0, 0, 3])
-        mesh._refineCell([0, 2, 0, 3])
+        mesh._insert_cells([[0, 0, 0, 4],
+                            [0, 2, 0, 4]])
+        mesh.number()
         self.mesh = mesh
 
     def test_UBCfiles(self):
