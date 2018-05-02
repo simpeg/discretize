@@ -167,8 +167,8 @@ class OrderTest(unittest.TestCase):
                 if dist < 0.2:
                     return levels
                 return levels - 1
-            self.M.refine(function,balance=False)
-            self.M.number(balance=False)
+            self.M.refine(function)
+            #self.M.number(balance=False)
             # self.M.plotGrid(showIt=True)
             max_h = max([np.max(hi) for hi in self.M.h])
             return max_h
