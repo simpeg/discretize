@@ -4,6 +4,9 @@
 #include <iostream>
 
 Node::Node(){
+    location_ind[0] = 0;
+    location_ind[1] = 0;
+    location_ind[2] = 0;
     location[0] = 0;
     location[1] = 0;
     location[2] = 0;
@@ -17,11 +20,14 @@ Node::Node(){
     parents[3] = NULL;
 };
 
-Node::Node(int_t x, int_t y, int_t z){
-    location[0] = x;
-    location[1] = y;
-    location[2] = z;
-    key = key_func(x, y, z);
+Node::Node(int_t ix, int_t iy, int_t iz, double* xs, double *ys, double *zs){
+    location_ind[0] = ix;
+    location_ind[1] = iy;
+    location_ind[2] = iz;
+    location[0] = xs[ix];
+    location[1] = ys[iy];
+    location[2] = zs[iz];
+    key = key_func(ix, iy, iz);
     reference = 0;
     hanging = false;
     parents[0] = NULL;
@@ -31,6 +37,9 @@ Node::Node(int_t x, int_t y, int_t z){
 };
 
 Edge::Edge(){
+    location_ind[0] = 0;
+    location_ind[1] = 0;
+    location_ind[2] = 0;
     location[0] = 0;
     location[1] = 0;
     location[2] = 0;
@@ -47,15 +56,21 @@ Edge::Edge(){
 Edge::Edge(Node& p1, Node& p2){
       points[0] = &p1;
       points[1] = &p2;
-      int_t x, y, z;
-      x = (p1[0]+p2[0])/2;
-      y = (p1[1]+p2[1])/2;
-      z = (p1[2]+p2[2])/2;
-      key = key_func(x, y, z);
-      location[0] = x;
-      location[1] = y;
-      location[2] = z;
-      length = (p2[0]-p1[0])+(p2[1]-p1[1])+(p2[2]-p1[2]);
+      int_t ix, iy, iz;
+      ix = (p1.location_ind[0]+p2.location_ind[0])/2;
+      iy = (p1.location_ind[1]+p2.location_ind[1])/2;
+      iz = (p1.location_ind[2]+p2.location_ind[2])/2;
+      key = key_func(ix, iy, iz);
+      location_ind[0] = ix;
+      location_ind[1] = iy;
+      location_ind[2] = iz;
+
+      location[0] = (p1[0]+p2[0])*0.5;
+      location[1] = (p1[1]+p2[1])*0.5;
+      location[2] = (p1[2]+p2[2])*0.5;
+      length = (p2[0]-p1[0])
+                +(p2[1]-p1[1])
+                +(p2[2]-p1[2]);
       reference = 0;
       hanging = false;
       parents[0] = NULL;
@@ -63,9 +78,9 @@ Edge::Edge(Node& p1, Node& p2){
 }
 
 Face::Face(){
-    location[0] = 0;
-    location[1] = 0;
-    location[2] = 0;
+    location_ind[0] = 0;
+    location_ind[1] = 0;
+    location_ind[2] = 0;
     key = 0;
     reference = 0;
     index = 0;
@@ -87,16 +102,20 @@ Face::Face(Node& p1, Node& p2, Node& p3, Node& p4){
     points[1]= &p2;
     points[2]= &p3;
     points[3]= &p4;
-    int_t x, y, z;
-    x = (p1[0]+p2[0]+p3[0]+p4[0])/4;
-    y = (p1[1]+p2[1]+p3[1]+p4[1])/4;
-    z = (p1[2]+p2[2]+p3[2]+p4[2])/4;
-    key = key_func(x, y, z);
-    location[0] = x;
-    location[1] = y;
-    location[2] = z;
-    int_t length = (p2[0]-p1[0])+(p2[1]-p1[1])+(p2[2]-p1[2]);
-    area = length*length;
+    int_t ix, iy, iz;
+    ix = (p1.location_ind[0]+p2.location_ind[0]+p3.location_ind[0]+p4.location_ind[0])/4;
+    iy = (p1.location_ind[1]+p2.location_ind[1]+p3.location_ind[1]+p4.location_ind[1])/4;
+    iz = (p1.location_ind[2]+p2.location_ind[2]+p3.location_ind[2]+p4.location_ind[2])/4;
+    key = key_func(ix, iy, iz);
+    location_ind[0] = ix;
+    location_ind[1] = iy;
+    location_ind[2] = iz;
+
+    location[0] = (p1[0]+p2[0]+p3[0]+p4[0])*0.25;
+    location[1] = (p1[1]+p2[1]+p3[1]+p4[1])*0.25;
+    location[2] = (p1[2]+p2[2]+p3[2]+p4[2])*0.25;
+    area = ((p2[0]-p1[0])+(p2[1]-p1[1])+(p2[2]-p1[2]))*
+           ((p3[0]-p1[0])+(p3[1]-p1[1])+(p3[2]-p1[2]));
     reference = 0;
     hanging = false;
     parent = NULL;
@@ -106,11 +125,12 @@ Face::Face(Node& p1, Node& p2, Node& p3, Node& p4){
     edges[3] = NULL;
 }
 
-Node * set_default_node(node_map_t& nodes, int_t x, int_t y, int_t z){
+Node * set_default_node(node_map_t& nodes, int_t x, int_t y, int_t z,
+                        double *xs, double *ys, double *zs){
   int_t key = key_func(x, y, z);
   Node * point;
   if(nodes.count(key)==0){
-    point = new Node(x, y, z);
+    point = new Node(x, y, z, xs, ys, zs);
     nodes[key] = point;
   }
   else{
@@ -120,9 +140,9 @@ Node * set_default_node(node_map_t& nodes, int_t x, int_t y, int_t z){
 }
 
 Edge * set_default_edge(edge_map_t& edges, Node& p1, Node& p2){
-  int_t xC = (p1[0]+p2[0])/2;
-  int_t yC = (p1[1]+p2[1])/2;
-  int_t zC = (p1[2]+p2[2])/2;
+  int_t xC = (p1.location_ind[0]+p2.location_ind[0])/2;
+  int_t yC = (p1.location_ind[1]+p2.location_ind[1])/2;
+  int_t zC = (p1.location_ind[2]+p2.location_ind[2])/2;
   int_t key = key_func(xC, yC, zC);
   Edge * edge;
   if(edges.count(key)==0){
@@ -137,9 +157,9 @@ Edge * set_default_edge(edge_map_t& edges, Node& p1, Node& p2){
 
 Face * set_default_face(face_map_t& faces, Node& p1, Node& p2, Node& p3, Node& p4){
     int_t x, y, z, key;
-    x = (p1[0]+p2[0]+p3[0]+p4[0])/4;
-    y = (p1[1]+p2[1]+p3[1]+p4[1])/4;
-    z = (p1[2]+p2[2]+p3[2]+p4[2])/4;
+    x = (p1.location_ind[0]+p2.location_ind[0]+p3.location_ind[0]+p4.location_ind[0])/4;
+    y = (p1.location_ind[1]+p2.location_ind[1]+p3.location_ind[1]+p4.location_ind[1])/4;
+    z = (p1.location_ind[2]+p2.location_ind[2]+p3.location_ind[2]+p4.location_ind[2])/4;
     key = key_func(x, y, z);
     Face * face;
     if(faces.count(key)==0){
@@ -163,13 +183,16 @@ Cell::Cell(Node *pts[8], int_t ndim, int_t maxlevel, function func){
     test_func = func;
     Node p1 = *pts[0];
     Node p2 = *pts[n_points-1];
-    center[0] = (p1[0]+p2[0])/2;
-    center[1] = (p1[1]+p2[1])/2;
-    center[2] = (p1[2]+p2[2])/2;
+    location_ind[0] = (p1.location_ind[0]+p2.location_ind[0])/2;
+    location_ind[1] = (p1.location_ind[1]+p2.location_ind[1])/2;
+    location_ind[2] = (p1.location_ind[2]+p2.location_ind[2])/2;
+    location[0] = (p1[0]+p2[0])*0.5;
+    location[1] = (p1[1]+p2[1])*0.5;
+    location[2] = (p1[2]+p2[2])*0.5;
     volume = (p2[0]-p1[0])*(p2[1]-p1[1]);
     if(n_dim==3)
         volume *= (p2[2]-p1[2]);
-    key = key_func(center[0],center[1],center[2]);
+    key = key_func(location_ind[0],location_ind[1],location_ind[2]);
     for(int_t i=0; i<n_points; ++i)
         children[i] = NULL;
     for(int_t i=0; i<2*n_dim; ++i)
@@ -186,13 +209,18 @@ Cell::Cell(Node *pts[8], Cell *parent){
     test_func = parent->test_func;
     Node p1 = *pts[0];
     Node p2 = *pts[n_points-1];
-    center[0] = (p1[0]+p2[0])/2;
-    center[1] = (p1[1]+p2[1])/2;
-    center[2] = (p1[2]+p2[2])/2;
-    volume = parent->volume/n_points;
-    //if(n_dim==3)
-    //    volume *= (p2[2]-p1[2]);
-    key = key_func(center[0], center[1], center[2]);
+    location_ind[0] = (p1.location_ind[0]+p2.location_ind[0])/2;
+    location_ind[1] = (p1.location_ind[1]+p2.location_ind[1])/2;
+    location_ind[2] = (p1.location_ind[2]+p2.location_ind[2])/2;
+    location[0] = (p1[0]+p2[0])*0.5;
+    location[1] = (p1[1]+p2[1])*0.5;
+    location[2] = (p1[2]+p2[2])*0.5;
+
+    volume = (p2[0]-p1[0])*(p2[1]-p1[1]);
+    if(n_dim==3)
+        volume *= (p2[2]-p1[2]);
+
+    key = key_func(location_ind[0], location_ind[1], location_ind[2]);
 
     for(int_t i=0; i<n_points; ++i)
         children[i] = NULL;
@@ -200,7 +228,7 @@ Cell::Cell(Node *pts[8], Cell *parent){
         neighbors[i] = NULL;
 };
 
-void Cell::spawn(node_map_t& nodes, Cell *kids[8]){
+void Cell::spawn(node_map_t& nodes, Cell *kids[8], double *xs, double *ys, double *zs){
     /*      z0              z0+dz/2          z0+dz
         p03--p13--p04    p20--p21--p22   p07--p27--p08
         |     |    |     |     |    |    |     |    |
@@ -215,20 +243,20 @@ void Cell::spawn(node_map_t& nodes, Cell *kids[8]){
 
     int_t x0, y0, xC, yC, xF, yF, z0;
 
-    x0 = p1->location[0];
-    y0 = p1->location[1];
-    xF = p4->location[0];
-    yF = p4->location[1];
-    z0 = p1->location[2];
-    xC = center[0];
-    yC = center[1];
+    x0 = p1->location_ind[0];
+    y0 = p1->location_ind[1];
+    xF = p4->location_ind[0];
+    yF = p4->location_ind[1];
+    z0 = p1->location_ind[2];
+    xC = location_ind[0];
+    yC = location_ind[1];
 
     Node *p9, *p10, *p11, *p12, *p13;
-    p9  = set_default_node(nodes, xC, y0, z0);
-    p10 = set_default_node(nodes, x0, yC, z0);
-    p11 = set_default_node(nodes, xC, yC, z0);
-    p12 = set_default_node(nodes, xF, yC, z0);
-    p13 = set_default_node(nodes, xC, yF, z0);
+    p9  = set_default_node(nodes, xC, y0, z0, xs, ys, zs);
+    p10 = set_default_node(nodes, x0, yC, z0, xs, ys, zs);
+    p11 = set_default_node(nodes, xC, yC, z0, xs, ys, zs);
+    p12 = set_default_node(nodes, xF, yC, z0, xs, ys, zs);
+    p13 = set_default_node(nodes, xC, yF, z0, xs, ys, zs);
 
     //Increment node references for new nodes
     p9->reference += 2;
@@ -245,27 +273,27 @@ void Cell::spawn(node_map_t& nodes, Cell *kids[8]){
 
         int_t zC, zF;
 
-        zF = p8->location[2];
-        zC = center[2];
+        zF = p8->location_ind[2];
+        zC = location_ind[2];
 
         Node *p14, *p15, *p16, *p17, *p18, *p19, *p20, *p21, *p22;
         Node *p23, *p24, *p25, *p26, *p27;
 
-        p14 = set_default_node(nodes, x0, y0, zC);
-        p15 = set_default_node(nodes, xC, y0, zC);
-        p16 = set_default_node(nodes, xF, y0, zC);
-        p17 = set_default_node(nodes, x0, yC, zC);
-        p18 = set_default_node(nodes, xC, yC, zC);
-        p19 = set_default_node(nodes, xF, yC, zC);
-        p20 = set_default_node(nodes, x0, yF, zC);
-        p21 = set_default_node(nodes, xC, yF, zC);
-        p22 = set_default_node(nodes, xF, yF, zC);
+        p14 = set_default_node(nodes, x0, y0, zC, xs, ys, zs);
+        p15 = set_default_node(nodes, xC, y0, zC, xs, ys, zs);
+        p16 = set_default_node(nodes, xF, y0, zC, xs, ys, zs);
+        p17 = set_default_node(nodes, x0, yC, zC, xs, ys, zs);
+        p18 = set_default_node(nodes, xC, yC, zC, xs, ys, zs);
+        p19 = set_default_node(nodes, xF, yC, zC, xs, ys, zs);
+        p20 = set_default_node(nodes, x0, yF, zC, xs, ys, zs);
+        p21 = set_default_node(nodes, xC, yF, zC, xs, ys, zs);
+        p22 = set_default_node(nodes, xF, yF, zC, xs, ys, zs);
 
-        p23 = set_default_node(nodes, xC, y0, zF);
-        p24 = set_default_node(nodes, x0, yC, zF);
-        p25 = set_default_node(nodes, xC, yC, zF);
-        p26 = set_default_node(nodes, xF, yC, zF);
-        p27 = set_default_node(nodes, xC, yF, zF);
+        p23 = set_default_node(nodes, xC, y0, zF, xs, ys, zs);
+        p24 = set_default_node(nodes, x0, yC, zF, xs, ys, zs);
+        p25 = set_default_node(nodes, xC, yC, zF, xs, ys, zs);
+        p26 = set_default_node(nodes, xF, yC, zF, xs, ys, zs);
+        p27 = set_default_node(nodes, xC, yF, zF, xs, ys, zs);
 
         //Increment node references
         p14->reference += 2;
@@ -326,22 +354,22 @@ void Cell::set_neighbor(Cell * other, int_t position){
     }
 };
 
-void Cell::insert_cell(node_map_t& nodes, int_t *new_cell, int_t p_level){
+void Cell::insert_cell(node_map_t& nodes, double *new_cell, int_t p_level, double *xs, double *ys, double *zs){
     //Inserts a cell at max(max_level,p_level) that contains the given point
     if(p_level>level){
         // Need to go look in children,
         // Need to spawn children if i don't have any...
         if(is_leaf()){
-            divide(nodes, true);
+            divide(nodes, xs, ys, zs, true);
         }
-        int ix = new_cell[0] > center[0];
-        int iy = new_cell[1] > center[1];
-        int iz = n_dim>2 && new_cell[2]>center[2];
-        children[ix + 2*iy + 4*iz]->insert_cell(nodes, new_cell, p_level);
+        int ix = new_cell[0] > location[0];
+        int iy = new_cell[1] > location[1];
+        int iz = n_dim>2 && new_cell[2]>location[2];
+        children[ix + 2*iy + 4*iz]->insert_cell(nodes, new_cell, p_level, xs, ys, zs);
     }
 };
 
-void Cell::divide(node_map_t& nodes, bool force, bool balance){
+void Cell::divide(node_map_t& nodes, double* xs, double* ys, double* zs, bool force, bool balance){
     bool do_splitting = false;
     if(level==max_level){
         do_splitting = false;
@@ -358,7 +386,7 @@ void Cell::divide(node_map_t& nodes, bool force, bool balance){
     }
     //If i haven't already been split...
     if(children[0]==NULL){
-        spawn(nodes, children);
+        spawn(nodes, children, xs, ys, zs);
 
         //If I need to be split, and my neighbor is below my level
         //Then it needs to be split
@@ -366,7 +394,7 @@ void Cell::divide(node_map_t& nodes, bool force, bool balance){
         if(balance){
             for(int_t i=0;i<2*n_dim;++i){
                 if(neighbors[i]!= NULL && neighbors[i]->level < level){
-                    neighbors[i]->divide(nodes, true);
+                    neighbors[i]->divide(nodes, xs, ys, zs, true);
                 }
             }
         }
@@ -485,7 +513,7 @@ void Cell::divide(node_map_t& nodes, bool force, bool balance){
     }
     if(!force){
         for(int_t i=0;i<(1<<n_dim);++i){
-            children[i]->divide(nodes);
+            children[i]->divide(nodes, xs, ys, zs);
         }
     }
 };
@@ -504,9 +532,9 @@ Cell* Cell::containing_cell(double x, double y, double z){
     if(is_leaf()){
       return this;
     }
-    int ix = x>center[0];
-    int iy = y>center[1];
-    int iz = n_dim>2 && z>center[2];
+    int ix = x>location[0];
+    int iy = y>location[1];
+    int iz = n_dim>2 && z>location[2];
     return children[ix + 2*iy + 4*iz]->containing_cell(x,y,z);
 };
 
@@ -539,19 +567,25 @@ void Tree::set_level(int_t levels){
     nz = ((n_dim==3)? 2<<max_level:0);
 };
 
-void Tree::insert_cell(int_t *new_center, int_t p_level){
+void Tree::set_xs(double *x, double *y, double *z){
+    xs = x;
+    ys = y;
+    zs = z;
+}
+
+void Tree::insert_cell(double *new_center, int_t p_level){
     if(root == NULL){
         Node* points[8];
 
-        points[0] = new Node( 0, 0, 0);
-        points[1] = new Node(nx, 0, 0);
-        points[2] = new Node( 0,ny, 0);
-        points[3] = new Node(nx,ny, 0);
+        points[0] = new Node( 0, 0, 0, xs, ys, zs);
+        points[1] = new Node(nx, 0, 0, xs, ys, zs);
+        points[2] = new Node( 0,ny, 0, xs, ys, zs);
+        points[3] = new Node(nx,ny, 0, xs, ys, zs);
         if(n_dim==3){
-            points[4] = new Node( 0, 0,nz);
-            points[5] = new Node(nx, 0,nz);
-            points[6] = new Node( 0,ny,nz);
-            points[7] = new Node(nx,ny,nz);
+            points[4] = new Node( 0, 0,nz, xs, ys, zs);
+            points[5] = new Node(nx, 0,nz, xs, ys, zs);
+            points[6] = new Node( 0,ny,nz, xs, ys, zs);
+            points[7] = new Node(nx,ny,nz, xs, ys, zs);
         }
         for(int_t i=0;i< (1<<n_dim); ++i){
             nodes[points[i]->key] = points[i];
@@ -559,29 +593,29 @@ void Tree::insert_cell(int_t *new_center, int_t p_level){
         }
         root = new Cell(points, n_dim, max_level, NULL);
     }
-    root->insert_cell(nodes, new_center, p_level);
+    root->insert_cell(nodes, new_center, p_level, xs, ys, zs);
 }
 
 void Tree::build_tree_from_function(function test_func){
 
     Node* points[8];
 
-    points[0] = new Node( 0, 0, 0);
-    points[1] = new Node(nx, 0, 0);
-    points[2] = new Node( 0,ny, 0);
-    points[3] = new Node(nx,ny, 0);
+    points[0] = new Node( 0,  0, 0, xs, ys, zs);
+    points[1] = new Node(nx,  0, 0, xs, ys, zs);
+    points[2] = new Node( 0, ny, 0, xs, ys, zs);
+    points[3] = new Node(nx, ny, 0, xs, ys, zs);
     if(n_dim==3){
-        points[4] = new Node( 0, 0,nz);
-        points[5] = new Node(nx, 0,nz);
-        points[6] = new Node( 0,ny,nz);
-        points[7] = new Node(nx,ny,nz);
+        points[4] = new Node( 0,  0, nz, xs, ys, zs);
+        points[5] = new Node(nx,  0, nz, xs, ys, zs);
+        points[6] = new Node( 0, ny, nz, xs, ys, zs);
+        points[7] = new Node(nx, ny, nz, xs, ys, zs);
     }
     for(int_t i=0;i< (1<<n_dim); ++i){
         nodes[points[i]->key] = points[i];
         points[i]->reference += 1;
     }
     root = new Cell(points, n_dim, max_level, test_func);
-    root->divide(nodes);
+    root->divide(nodes, xs, ys, zs);
     finalize_lists();
 };
 
@@ -678,7 +712,7 @@ void Tree::finalize_lists(){
             Face *face = it->second;
             if(face->reference<2){
                 int_t x;
-                x = face->location[0];
+                x = face->location_ind[0];
                 if( x==0 || x==nx) continue; // Face was on the outside, and is not hanging
                 if(nodes.count(face->key)) continue; // I will have children (there is a node at my center)
                 Node *node;
@@ -737,7 +771,7 @@ void Tree::finalize_lists(){
             Face *face = it->second;
             if(face->reference<2){
                 int_t y;
-                y = face->location[1];
+                y = face->location_ind[1];
                 if( y==0 || y==ny){
                     // Face was on the outside, and is not hanging
                     continue;
@@ -804,7 +838,7 @@ void Tree::finalize_lists(){
             Face *face = it->second;
             if(face->reference<2){
                 int_t z;
-                z = face->location[2];
+                z = face->location_ind[2];
                 if( z==0 || z==nz){
                     // Face was on the outside, and is not hanging
                     continue;
@@ -894,7 +928,7 @@ void Tree::finalize_lists(){
         for(edge_it_type it = edges_x.begin(); it != edges_x.end(); ++it){
             Edge *edge = it->second;
             if(edge->reference <2){
-                int_t y = edge->location[1];
+                int_t y = edge->location_ind[1];
                 if(y==0 or y==ny) continue; //I am on the boundary
                 if(nodes.count(edge->key)) continue; //I am a parent
                 //I am a hanging edge find my parent
@@ -918,7 +952,7 @@ void Tree::finalize_lists(){
         for(edge_it_type it = edges_y.begin(); it != edges_y.end(); ++it){
             Edge *edge = it->second;
             if(edge->reference <2){
-                int_t x = edge->location[0];
+                int_t x = edge->location_ind[0];
                 if(x==0 or x==nx) continue; //I am on the boundary
                 if(nodes.count(edge->key)) continue; //I am a parent
                 //I am a hanging edge find my parent

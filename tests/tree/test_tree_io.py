@@ -17,8 +17,10 @@ class TestOcTreeMeshIO(unittest.TestCase):
     def setUp(self):
         h = np.ones(16)
         mesh = discretize.TreeMesh([h, 2*h, 3*h])
-        mesh._insert_cells([[0, 0, 0, 4],
-                            [0, 2, 0, 4]])
+        cell_points = np.array([[0.5, 0.5, 0.5],
+                                [0.5, 2.5, 0.5]])
+        cell_levels = np.array([4, 4])
+        mesh._insert_cells(cell_points, cell_levels)
         mesh.number()
         self.mesh = mesh
 

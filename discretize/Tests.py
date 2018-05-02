@@ -162,7 +162,7 @@ class OrderTest(unittest.TestCase):
             def function(cell):
                 if 'notatree' in self._meshType:
                     return levels - 1
-                r = cell.center - np.array([0.5]*len(cell.center))
+                r = cell.center - 0.5
                 dist = np.sqrt(r.dot(r))
                 if dist < 0.2:
                     return levels

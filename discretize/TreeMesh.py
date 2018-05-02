@@ -1,5 +1,6 @@
 from .TensorMesh import BaseTensorMesh
 from .InnerProducts import InnerProducts
+from .MeshIO import TreeMeshIO
 from .tree_ext import _TreeMesh
 import numpy as np
 from scipy.spatial import Delaunay
@@ -7,7 +8,7 @@ import scipy.sparse as sp
 from . import utils
 import six
 
-class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts):
+class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
     _meshType = 'TREE'
 
     #inheriting stuff from BaseTensorMesh that isn't defined in _QuadTree
@@ -17,14 +18,8 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts):
         if levels is None:
             levels = int(np.log2(len(self.h[0])))
 
-        if(self.dim == 2):
-            xF = np.array([self.vectorNx[-1], self.vectorNy[-1]])
-        else:
-            xF = np.array([self.vectorNx[-1], self.vectorNy[-1], self.vectorNz[-1]])
-        ws = xF-self.x0
-
         # Now can initialize cpp tree parent
-        _TreeMesh.__init__(self, levels, self.x0, ws)
+        _TreeMesh.__init__(self, levels, self.x0, self.h)
 
     def __str__(self):
         outStr = '  ---- {0!s}TreeMesh ----  '.format(
@@ -348,186 +343,29 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts):
     @property
     def permuteCC(self):
         # TODO: cache these?
-        P = np.lexsort(self.gridCC.T[::-1]) #sort by x, then y, then z
+        P = np.lexsort(self.gridCC.T) # sort by x, then y, then z
         return sp.identity(self.nC).tocsr()[P]
 
     @property
     def permuteF(self):
         # TODO: cache these?
-        Px = np.lexsort(self.gridFx.T[::-1])
-        Py = np.lexsort(self.gridFy.T[::-1])+self.nFx
+        Px = np.lexsort(self.gridFx.T)
+        Py = np.lexsort(self.gridFy.T)+self.nFx
         if self.dim == 2:
             P = np.r_[Px, Py]
         else:
-            Pz = np.lexsort(self.gridFz.T[::-1])+(self.nFx+self.nFy)
+            Pz = np.lexsort(self.gridFz.T)+(self.nFx+self.nFy)
             P = np.r_[Px, Py, Pz]
         return sp.identity(self.nF).tocsr()[P]
 
     @property
     def permuteE(self):
         # TODO: cache these?
-        Px = np.lexsort(self.gridEx.T[::-1])
-        Py = np.lexsort(self.gridEy.T[::-1]) + self.nEx
+        Px = np.lexsort(self.gridEx.T)
+        Py = np.lexsort(self.gridEy.T) + self.nEx
         if self.dim == 2:
             P = np.r_[Px, Py]
         if self.dim == 3:
-            Pz = np.lexsort(self.gridEz.T[::-1]) + (self.nEx+self.nEy)
+            Pz = np.lexsort(self.gridEz.T) + (self.nEx+self.nEy)
             P = np.r_[Px, Py, Pz]
         return sp.identity(self.nE).tocsr()[P]
-
-    @classmethod
-    def readUBC(self, meshFile):
-        """Read UBC 3D OcTree mesh file
-        Input:
-        :param str meshFile: path to the UBC GIF OcTree mesh file to read
-        :rtype: discretize.TreeMesh
-        :return: The octree mesh
-        """
-        fileLines = np.genfromtxt(meshFile, dtype=str,
-                                  delimiter='\n', comments='!')
-        nCunderMesh = np.array(fileLines[0].split('!')[0].split(), dtype=int)
-        nCunderMesh = nCunderMesh[0:3]
-
-        tswCorn = np.array(
-            fileLines[1].split('!')[0].split(),
-            dtype=float
-        )
-        smallCell = np.array(
-            fileLines[2].split('!')[0].split(),
-            dtype=float
-        )
-        # Read the index array
-        indArr = np.genfromtxt((line.encode('utf8') for line in fileLines[4::]),
-                               dtype=np.int)
-
-        h1, h2, h3 = [np.ones(nr)*sz for nr, sz in zip(nCunderMesh, smallCell)]
-        x0 = tswCorn - np.array([0, 0, np.sum(h3)])
-
-        max_level = int(np.log2(nCunderMesh[0]))
-        mesh = TreeMesh([h1, h2, h3], x0=x0, levels=max_level)
-
-        # Convert indArr to points in local coordinates of underlying cpp tree
-        # indArr is ix, iy, iz(top-down) need it in ix, iy, iz (bottom-up)
-        indArr[:, :-1] -= 1 #shift by 1....
-        indArr[:, :-1] = 2*indArr[:, :-1] + indArr[:, -1, None]
-        indArr[:, 2] = (2<<max_level) - indArr[:, 2]
-
-        indArr[:, -1] = max_level-np.log2(indArr[:, -1])
-
-        mesh._insert_cells(indArr)
-        mesh.number()
-        return mesh
-
-    def readModelUBC(mesh, fileName):
-        """Read UBC OcTree model and get vector
-        :param string fileName: path to the UBC GIF model file to read
-        :rtype: numpy.ndarray
-        :return: OcTree model
-        """
-
-        if type(fileName) is list:
-            out = {}
-            for f in fileName:
-                out[f] = mesh.readModelUBC(f)
-            return out
-
-        assert mesh.dim == 3
-
-        modList = []
-        modArr = np.loadtxt(fileName)
-
-        ubc_order = mesh._ubc_order
-        # order_ubc will re-order from treemesh ordering to UBC ordering
-        # need the opposite operation
-        un_order = np.empty_like(ubc_order)
-        un_order[ubc_order] = np.arange(len(ubc_order))
-
-        modList.append(modArr[un_order])
-        return modList
-
-    def writeUBC(mesh, fileName, models=None):
-        """Write UBC ocTree mesh and model files from a
-        octree mesh and model.
-        :param string fileName: File to write to
-        :param dict models: Models in a dict, where each key is the filename
-        """
-        nCunderMesh = np.array([h.size for h in mesh.h], dtype=np.int64)
-        tswCorn = mesh.x0 + np.array([0, 0, np.sum(mesh.h[2])])
-        smallCell = np.array([h.min() for h in mesh.h])
-        nrCells = mesh.nC
-
-        indArr = mesh._ubc_indArr
-        ubc_order = mesh._ubc_order
-
-        indArr = indArr[ubc_order]
-
-        # Write the UBC octree mesh file
-        head = (
-            '{:.0f} {:.0f} {:.0f}\n'.format(
-                nCunderMesh[0], nCunderMesh[1], nCunderMesh[2]
-            ) +
-            '{:.4f} {:.4f} {:.4f}\n'.format(
-                tswCorn[0], tswCorn[1], tswCorn[2]
-            ) +
-            '{:.3f} {:.3f} {:.3f}\n'.format(
-                smallCell[0], smallCell[1], smallCell[2]
-            ) +
-            '{:.0f}'.format(nrCells)
-        )
-        np.savetxt(fileName, indArr, fmt='%i', header=head, comments='')
-
-        # Print the models
-        # Assign the model('s) to the object
-        if models is not None:
-            for item in six.iteritems(models):
-                # Save the data
-                np.savetxt(item[0], item[1][ubc_order], fmt='%3.5e')
-
-
-    def writeVTK(self, fileName, models=None):
-        """Function to write a VTU file from a TreeMesh and model."""
-        import vtk
-        from vtk import vtkXMLUnstructuredGridWriter as Writer, VTK_VERSION
-        from vtk.util.numpy_support import numpy_to_vtk, numpy_to_vtkIdTypeArray
-
-        # Make the data parts for the vtu object
-        # Points
-        ptsMat = np.vstack((self.gridN, self.gridhN))
-
-        vtkPts = vtk.vtkPoints()
-        vtkPts.SetData(numpy_to_vtk(ptsMat, deep=True))
-        # Cells
-        cellConn = np.array([c.nodes for c in self], dtype=np.int64)
-
-        cellsMat = np.concatenate((np.ones((cellConn.shape[0], 1), dtype=np.int64)*cellConn.shape[1], cellConn), axis=1).ravel()
-        cellsArr = vtk.vtkCellArray()
-        cellsArr.SetNumberOfCells(cellConn.shape[0])
-        cellsArr.SetCells(cellConn.shape[0], numpy_to_vtkIdTypeArray(cellsMat, deep =True))
-
-        # Make the object
-        vtuObj = vtk.vtkUnstructuredGrid()
-        vtuObj.SetPoints(vtkPts)
-        vtuObj.SetCells(vtk.VTK_VOXEL, cellsArr)
-        # Add the level of refinement as a cell array
-        cellSides = np.array([np.array(vtuObj.GetCell(i).GetBounds()).reshape((3, 2)).dot(np.array([-1, 1])) for i in np.arange(vtuObj.GetNumberOfCells())])
-        uniqueLevel, indLevel = np.unique(np.prod(cellSides, axis=1), return_inverse=True)
-        refineLevelArr = numpy_to_vtk(indLevel.max() - indLevel, deep=1)
-        refineLevelArr.SetName('octreeLevel')
-        vtuObj.GetCellData().AddArray(refineLevelArr)
-        # Assign the model('s) to the object
-        if models is not None:
-            for item in six.iteritems(models):
-                # Convert numpy array
-                vtkDoubleArr = numpy_to_vtk(item[1], deep=1)
-                vtkDoubleArr.SetName(item[0])
-                vtuObj.GetCellData().AddArray(vtkDoubleArr)
-
-        # Make the writer
-        vtuWriteFilter = Writer()
-        if float(VTK_VERSION.split('.')[0]) >= 6:
-            vtuWriteFilter.SetInputData(vtuObj)
-        else:
-            vtuWriteFilter.SetInput(vtuObj)
-        vtuWriteFilter.SetFileName(fileName)
-        # Write the file
-        vtuWriteFilter.Update()

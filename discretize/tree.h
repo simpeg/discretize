@@ -32,47 +32,44 @@ typedef std::vector<Cell *> cell_vec_t;
 
 class PyWrapper{
   public:
-    void *py_obj;
     void *py_func;
-    int_t (*eval)(void*, void *, Cell*);
+    int_t (*eval)(void *, Cell*);
   PyWrapper(){
     py_func = NULL;
   };
-
-  void set(void* obj, void* func, int_t (*wrapper)(void*, void*, Cell*)){
-    py_obj = obj;
+  void set(void* func, int_t (*wrapper)(void*, Cell*)){
     py_func = func;
     eval = wrapper;
   };
-
   int operator()(Cell * cell){
-    return eval(py_obj, py_func, cell);
+    return eval(py_func, cell);
   };
-
 };
 
 class Node{
   public:
-    int_t location[3];
+    int_t location_ind[3];
+    double location[3];
     int_t key;
     int_t reference;
     int_t index;
     bool hanging;
     Node *parents[4];
     Node();
-    Node(int_t, int_t, int_t);
-    int_t operator[](int_t index){
+    Node(int_t, int_t, int_t, double*, double*, double*);
+    double operator[](int_t index){
       return location[index];
     };
 };
 
 class Edge{
   public:
-    int_t location[3];
+    int_t location_ind[3];
+    double location[3];
     int_t key;
     int_t reference;
     int_t index;
-    int_t length;
+    double length;
     bool hanging;
     Node *points[2];
     Edge *parents[2];
@@ -82,11 +79,12 @@ class Edge{
 
 class Face{
     public:
-        int_t location[3];
+        int_t location_ind[3];
+        double location[3];
         int_t key;
         int_t reference;
         int_t index;
-        int_t area;
+        double area;
         bool hanging;
         Node *points[4];
         Edge *edges[4];
@@ -104,8 +102,9 @@ class Cell{
     Edge *edges[12];
     Face *faces[6];
 
-    int_t center[3], index, key, level, max_level;
-    int_t volume;
+    int_t location_ind[3], index, key, level, max_level;
+    double location[3];
+    double volume;
     function test_func;
 
     Cell();
@@ -114,12 +113,12 @@ class Cell{
     ~Cell();
 
     bool inline is_leaf(){ return children[0]==NULL;};
-    void spawn(node_map_t& nodes, Cell *kids[8]);
-    void divide(node_map_t& nodes, bool force=false, bool balance=true);
+    void spawn(node_map_t& nodes, Cell *kids[8], double* xs, double *ys, double *zs);
+    void divide(node_map_t& nodes, double* xs, double* ys, double* zs, bool force=false, bool balance=true);
     void set_neighbor(Cell* other, int_t direction);
     void build_cell_vector(cell_vec_t& cells);
 
-    void insert_cell(node_map_t &nodes, int_t *new_center, int_t p_level);
+    void insert_cell(node_map_t &nodes, double *new_center, int_t p_level, double* xs, double *ys, double *zs);
 
     Cell* containing_cell(double, double, double);
 };
@@ -130,6 +129,9 @@ class Tree{
     Cell *root;
     function test_func;
     int_t max_level, nx, ny, nz;
+    double *xs;
+    double *ys;
+    double *zs;
 
     std::vector<Cell *> cells;
     node_map_t nodes;
@@ -144,11 +146,12 @@ class Tree{
 
     void set_dimension(int_t dim);
     void set_level(int_t max_level);
+    void set_xs(double *x , double *y, double *z);
     void build_tree_from_function(function test_func);
     void number();
     void finalize_lists();
 
-    void insert_cell(int_t *new_center, int_t p_level);
+    void insert_cell(double *new_center, int_t p_level);
 
     Cell* containing_cell(double, double, double);
 };
