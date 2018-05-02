@@ -15,11 +15,11 @@ class TestSimpleQuadTree(unittest.TestCase):
         h2 = np.random.rand(nc)*nc*0.5 + nc*0.5
         h = [hi/np.sum(hi) for hi in [h1, h2]]  # normalize
         M = discretize.TreeMesh(h)
-        M._refineCell([0, 0, 0])
-        M._refineCell([0, 0, 1])
+        M._insert_cells([[0, 0, 1, 3]])
         M.number()
-        # M.plotGrid(showIt=True)
+
         print(M)
+        
         assert M.nhFx == 2
         assert M.nFx == 9
 
@@ -206,6 +206,20 @@ class TestOcTree(unittest.TestCase):
         assert M.nE == Mr.nE
         assert M.nEx == Mr.nEx
         assert M.nEy == Mr.nEy
+
+        print('here 4')
+        area = M.area
+        print('here 5')
+        edge = M.edge
+        print('here 6')
+        vol = M.vol
+        print('here 7')
+        pF = M.permuteF
+        print('here 8')
+        pE = M.permuteE
+        print('here 9')
+        pC = M.permuteCC
+        print('here 10')
         assert np.allclose(Mr.area, M.permuteF*M.area)
         assert np.allclose(Mr.edge, M.permuteE*M.edge)
         assert np.allclose(Mr.vol, M.permuteCC*M.vol)

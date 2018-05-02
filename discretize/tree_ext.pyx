@@ -41,7 +41,7 @@ cdef class Cell:
 
     @property
     def center(self):
-        if self._dim==2: return(tuple((self._x, self._y)))
+        if self._dim==2: return np.array(tuple((self._x, self._y)))
         return np.array(tuple((self._x, self._y, self._z)))
 
     @property
@@ -668,11 +668,10 @@ cdef class _TreeMesh:
     @property
     def vol(self):
         cdef np.float64_t[:] vol
-        cdef np.float64_t scale
+        cdef double scale = self._scale[0]*self._scale[1]
+        if self.dim==3:
+            scale *= self._scale[2]
         if self._vol is None:
-            scale = 1.0
-            for id in range(self.dim):
-                scale *= self._scale[id]
             self._vol = np.empty(self.nC, dtype=np.float64)
             vol = self._vol
             for cell in self.tree.cells:
@@ -681,34 +680,35 @@ cdef class _TreeMesh:
 
     @property
     def area(self):
-        if self.dim==2:
+        if self.dim == 2:
             return self.vol
         cdef np.float64_t[:] area
-        cdef int_t ind, offset
+        cdef int_t ind, offset = 0
         cdef Face *face
-        cdef np.float64_t scale
+        cdef double scale
         if self._area is None:
             self._area = np.empty(self.nF, dtype=np.float64)
             area = self._area
+
             scale = self._scale[1]*self._scale[2]
             for it in self.tree.faces_x:
                 if face.hanging: continue
                 face = it.second
-                area[face.index] = scale*face.area
+                area[face.index] = face.area*scale
 
-            scale = self._scale[0]*self._scale[2]
             offset = self.nFx
+            scale = self._scale[0]*self._scale[2]
             for it in self.tree.faces_y:
                 face = it.second
                 if face.hanging: continue
-                area[face.index+offset] = scale*face.area
+                area[face.index+offset] = face.area*scale
 
+            offset = self.nFx + self.nFy
             scale = self._scale[0]*self._scale[1]
-            offset += self.nFy
             for it in self.tree.faces_z:
                 face = it.second
                 if face.hanging: continue
-                area[face.index+offset] = scale*face.area
+                area[face.index+offset] = face.area*scale
         return self._area
 
     @property
@@ -719,7 +719,7 @@ cdef class _TreeMesh:
         cdef Edge *edge
         cdef int_t ind, offset
         if self._edge is None:
-            self._edge = np.empty(self.nF, dtype=np.float64)
+            self._edge = np.empty(self.nE, dtype=np.float64)
             edge_l = self._edge
 
             for it in self.tree.edges_x:
@@ -733,7 +733,7 @@ cdef class _TreeMesh:
                 if edge.hanging: continue
                 edge_l[edge.index+offset] = self._scale[1]*edge.length
 
-            offset += self.nEy
+            offset = self.nEx + self.nEy
             for it in self.tree.edges_z:
                 edge = it.second
                 if edge.hanging: continue

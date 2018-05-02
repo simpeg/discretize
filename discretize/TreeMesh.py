@@ -345,6 +345,36 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts):
             inds[ind] = self._get_containing_cell_index(loc)
         return inds
 
+    @property
+    def permuteCC(self):
+        # TODO: cache these?
+        P = np.lexsort(self.gridCC.T[::-1]) #sort by x, then y, then z
+        return sp.identity(self.nC).tocsr()[P]
+
+    @property
+    def permuteF(self):
+        # TODO: cache these?
+        Px = np.lexsort(self.gridFx.T[::-1])
+        Py = np.lexsort(self.gridFy.T[::-1])+self.nFx
+        if self.dim == 2:
+            P = np.r_[Px, Py]
+        else:
+            Pz = np.lexsort(self.gridFz.T[::-1])+(self.nFx+self.nFy)
+            P = np.r_[Px, Py, Pz]
+        return sp.identity(self.nF).tocsr()[P]
+
+    @property
+    def permuteE(self):
+        # TODO: cache these?
+        Px = np.lexsort(self.gridEx.T[::-1])
+        Py = np.lexsort(self.gridEy.T[::-1]) + self.nEx
+        if self.dim == 2:
+            P = np.r_[Px, Py]
+        if self.dim == 3:
+            Pz = np.lexsort(self.gridEz.T[::-1]) + (self.nEx+self.nEy)
+            P = np.r_[Px, Py, Pz]
+        return sp.identity(self.nE).tocsr()[P]
+
     @classmethod
     def readUBC(self, meshFile):
         """Read UBC 3D OcTree mesh file

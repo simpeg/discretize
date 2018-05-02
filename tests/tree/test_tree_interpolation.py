@@ -32,7 +32,7 @@ class TestInterpolation2d(discretize.Tests.OrderTest):
     # tolerance = TOLERANCES
     meshDimension = 2
     meshSizes = [8, 16, 32]
-    expectedOrders = 1
+    expectedOrders = 2
 
     def getError(self):
         funX = lambda x, y: np.cos(2.*np.pi*y)*np.cos(2.*np.pi*x) + x
