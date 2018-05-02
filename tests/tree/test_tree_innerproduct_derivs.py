@@ -15,7 +15,6 @@ class TestInnerProductsDerivsTensor(unittest.TestCase):
         elif meshType == 'Tree':
             mesh = discretize.TreeMesh(h, levels=3)
             mesh.refine(lambda xc: 3)
-            mesh.number(balance=False)
         elif meshType == 'Tensor':
             mesh = discretize.TensorMesh(h)
         v = np.random.rand(mesh.nF)
@@ -35,7 +34,6 @@ class TestInnerProductsDerivsTensor(unittest.TestCase):
         elif meshType == 'Tree':
             mesh = discretize.TreeMesh(h, levels=3)
             mesh.refine(lambda xc: 3)
-            mesh.number(balance=False)
         elif meshType == 'Tensor':
             mesh = discretize.TensorMesh(h)
         v = np.random.rand(mesh.nE)

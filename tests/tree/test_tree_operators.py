@@ -252,6 +252,7 @@ class TestNodalGrad2D(discretize.Tests.OrderTest):
         self.orderTest()
 
 
+
 class TestTreeInnerProducts(discretize.Tests.OrderTest):
     """Integrate an function over a unit cube domain using edgeInnerProducts and faceInnerProducts."""
 
@@ -553,6 +554,8 @@ class TestTreeAveraging2D(discretize.Tests.OrderTest):
             plt.spy(self.getAve(self.M))
             plt.show()
 
+        A = self.getAve(self.M)
+        d = self.getHere(self.M)
         num = self.getAve(self.M) * self.getHere(self.M)
         err = np.linalg.norm((self.getThere(self.M)-num), np.inf)
 
@@ -643,6 +646,8 @@ class TestAveraging3D(discretize.Tests.OrderTest):
             plt.spy(self.getAve(self.M))
             plt.show()
 
+        A = self.getAve(self.M)
+        d = self.getHere(self.M)
         num = self.getAve(self.M) * self.getHere(self.M)
         err = np.linalg.norm((self.getThere(self.M)-num), np.inf)
         return err
