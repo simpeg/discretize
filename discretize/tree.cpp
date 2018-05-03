@@ -722,7 +722,7 @@ void Tree::finalize_lists(){
                 for(int_t i=0;i<4;++i){
                     node = face->points[i];
                     if(faces_x.count(node->key)){
-                        face->parent = faces_x.at(node->key);
+                        face->parent = faces_x[node->key];
                         ip = i;
                         break;
                     }
@@ -788,7 +788,7 @@ void Tree::finalize_lists(){
                 for(int_t i=0;i<4;++i){
                     node = face->points[i];
                     if(faces_y.count(node->key)){
-                        face->parent = faces_y.at(node->key);
+                        face->parent = faces_y[node->key];
                         ip = i;
                         break;
                     }
@@ -855,7 +855,7 @@ void Tree::finalize_lists(){
                 for(int_t i=0;i<4;++i){
                     node = face->points[i];
                     if(faces_z.count(node->key)){
-                        face->parent = faces_z.at(node->key);
+                        face->parent = faces_z[node->key];
                         ip = i;
                         break;
                     }
@@ -938,7 +938,7 @@ void Tree::finalize_lists(){
                 }else{
                     node = edge->points[1];
                 }
-                edge->parents[0] = edges_x.at(node->key);
+                edge->parents[0] = edges_x[node->key];
                 edge->parents[1] = edge->parents[0];
 
                 node->hanging = true;
@@ -962,7 +962,7 @@ void Tree::finalize_lists(){
                 }else{
                     node = edge->points[1];
                 }
-                edge->parents[0] = edges_y.at(node->key);
+                edge->parents[0] = edges_y[node->key];
                 edge->parents[1] = edge->parents[0];
 
                 node->hanging = true;
