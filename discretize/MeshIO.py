@@ -657,7 +657,7 @@ class TreeMeshIO(object):
         """Function to write a VTU file from a TreeMesh and model."""
         import vtk
         from vtk import vtkXMLUnstructuredGridWriter as Writer, VTK_VERSION
-        from vtk.util.numpy_support import numpy_to_vtk, numpy_to_vtkIdTypeArray
+        from vtk.util.numpy_support import numpy_to_vtk
 
         # Make the data parts for the vtu object
         # Points
@@ -666,12 +666,12 @@ class TreeMeshIO(object):
         vtkPts = vtk.vtkPoints()
         vtkPts.SetData(numpy_to_vtk(ptsMat, deep=True))
         # Cells
-        cellConn = np.array([c.nodes for c in self], dtype=np.int64)
+        cellConn = np.array([c.nodes for c in self])
 
-        cellsMat = np.concatenate((np.ones((cellConn.shape[0], 1), dtype=np.int64)*cellConn.shape[1], cellConn), axis=1).ravel()
+        cellsMat = np.concatenate((np.ones((cellConn.shape[0], 1))*cellConn.shape[1], cellConn), axis=1).ravel()
         cellsArr = vtk.vtkCellArray()
         cellsArr.SetNumberOfCells(cellConn.shape[0])
-        cellsArr.SetCells(cellConn.shape[0], numpy_to_vtkIdTypeArray(cellsMat, deep =True))
+        cellsArr.SetCells(cellConn.shape[0], numpy_to_vtk(cellsMat, deep=True, array_type=vtk.VTK_ID_TYPE))
 
         # Make the object
         vtuObj = vtk.vtkUnstructuredGrid()

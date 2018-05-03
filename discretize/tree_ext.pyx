@@ -196,10 +196,12 @@ cdef class _TreeMesh:
         self.tree.build_tree_from_function(self.wrapper)
         self.number()
 
-    def _insert_cells(self, double[:, :] cells, long[:] levels):
+    def _insert_cells(self, cells, levels):
+        cdef double[:,:] cs = np.atleast_2d(cells)
+        cdef int[:] ls = np.asarray(levels, dtype=np.int32)
         cdef int_t i
         for i in range(levels.shape[0]):
-            self.tree.insert_cell(&cells[i, 0], levels[i])
+            self.tree.insert_cell(&cs[i, 0], ls[i])
         self.tree.finalize_lists()
 
     def _get_xs(self):
@@ -1737,7 +1739,7 @@ cdef class _TreeMesh:
         proj_point = np.empty_like(points[0])
         point = np.empty_like(points[0])
 
-        np_outside_points = np.where(npsimps==-1)[0].astype(np.int)
+        np_outside_points = np.where(npsimps==-1)[0].astype(np.int32)
         cdef int[:] outside_points = np_outside_points
         n_outside = outside_points.shape[0]
         cdef double[:] barys = np.empty(dim, dtype=float)
@@ -1764,7 +1766,7 @@ cdef class _TreeMesh:
             n_hull_simps = hull.shape[0]
 
             kdtree = cKDTree(tri.points[np_hull_points])
-            npis = kdtree.query(locs[np_outside_points])[1]
+            npis = kdtree.query(locs[np_outside_points])[1].astype(np.int32)
 
             for i_out in range(n_outside):
                 i_p = outside_points[i_out]
