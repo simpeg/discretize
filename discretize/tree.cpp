@@ -929,7 +929,7 @@ void Tree::finalize_lists(){
             Edge *edge = it->second;
             if(edge->reference <2){
                 int_t y = edge->location_ind[1];
-                if(y==0 or y==ny) continue; //I am on the boundary
+                if(y==0 || y==ny) continue; //I am on the boundary
                 if(nodes.count(edge->key)) continue; //I am a parent
                 //I am a hanging edge find my parent
                 Node *node;
@@ -953,7 +953,7 @@ void Tree::finalize_lists(){
             Edge *edge = it->second;
             if(edge->reference <2){
                 int_t x = edge->location_ind[0];
-                if(x==0 or x==nx) continue; //I am on the boundary
+                if(x==0 || x==nx) continue; //I am on the boundary
                 if(nodes.count(edge->key)) continue; //I am a parent
                 //I am a hanging edge find my parent
                 Node *node;

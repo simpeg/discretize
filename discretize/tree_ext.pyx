@@ -1732,13 +1732,13 @@ cdef class _TreeMesh:
         cdef int[:] simplex
         cdef int[:, :] hull
         cdef int[:] hull_points
-        cdef long[:] npis
+        cdef int[:] npis
 
         proj_point = np.empty_like(points[0])
         point = np.empty_like(points[0])
 
-        np_outside_points = np.where(npsimps==-1)[0]
-        cdef long[:] outside_points = np_outside_points
+        np_outside_points = np.where(npsimps==-1)[0].astype(np.int)
+        cdef int[:] outside_points = np_outside_points
         n_outside = outside_points.shape[0]
         cdef double[:] barys = np.empty(dim, dtype=float)
 
