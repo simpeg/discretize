@@ -29,11 +29,13 @@ install:
   - conda install --quiet --yes pip python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib pillow cython ipython;
   - conda install --quiet --yes -c menpo vtk
   - pip install -r requirements_dev.txt
+  - python --version
   - python setup.py install
-  - make build
 
 script:
-  - nosetests tests/base tests/tree tests/docs --with-cov --cov discretize --cov-config .coveragerc -v -s;
+  - cd tests
+  - nosetests base tree docs --with-cov --cov discretize --cov-config .coveragerc -v -s;
+  - cd ..
 
 after_success:
 
