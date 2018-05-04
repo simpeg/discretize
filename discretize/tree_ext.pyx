@@ -84,6 +84,7 @@ cdef int_t _evaluate_func(void* function, c_Cell* cell) with gil:
 cdef inline int sign(double val):
     return (0<val)-(val<0)
 
+
 cdef class _TreeMesh:
     cdef c_Tree *tree
     cdef PyWrapper *wrapper
@@ -2025,6 +2026,35 @@ cdef class _TreeMesh:
         if showIt:
             plt.show()
 
+    def plotImage(self):
+        pass
+
+    def plotSlice(self):
+        pass
+
+    def __getstate__(self):
+        cdef int id, dim = self.dim
+        indArr = np.empty((self.nC, dim+1), dtype=np.int)
+        cdef np.int_t[:,:] _indArr = indArr
+        for cell in self.tree.cells:
+            for id in range(dim):
+                _indArr[cell.index, id] = cell.location_ind[id]
+            _indArr[cell.index, dim] = cell.level
+        return indArr
+
+    def __setstate__(self, state):
+        indArr = state[:, :-1]
+        levels = state[:, -1]
+        xs = np.array(self._xs)
+        ys = np.array(self._ys)
+        if self.dim == 3:
+            zs = np.array(self._zs)
+            points = np.column_stack((xs[indArr[:,0]], ys[indArr[:,1]], zs[indArr[:,2]]))
+        else:
+            points = np.column_stack((xs[indArr[:,0]], ys[indArr[:,1]]))
+        self._insert_cells(points, levels)
+        self.tree.number()
+
     def __len__(self):
         return self.nC
 
@@ -2049,14 +2079,7 @@ cdef class _TreeMesh:
     def _ubc_indArr(self):
         if self.__ubc_indArr is not None:
             return self.__ubc_indArr
-        indArr = np.empty((self.nC, 4), dtype=np.int)
-        cdef np.int_t[:,:] _indArr = indArr
-        cdef int id, dim = self.dim
-
-        for cell in self.tree.cells:
-            for id in range(dim):
-                _indArr[cell.index, id] = cell.location_ind[id]
-            _indArr[cell.index, 3] = cell.level
+        indArr = self.__getstate__()
 
         max_level = self.max_level
 

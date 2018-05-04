@@ -202,7 +202,6 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
     @property
     def faceDivx(self):
         if getattr(self, '_faceDivx', None) is None:
-            print(self.faceDiv.shape, self.nFx)
             self._faceDivx = self.faceDiv[:, :self.nFx]
         return self._faceDivx
 
@@ -369,3 +368,6 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
             Pz = np.lexsort(self.gridEz.T) + (self.nEx+self.nEy)
             P = np.r_[Px, Py, Pz]
         return sp.identity(self.nE).tocsr()[P]
+
+    def __reduce__(self):
+        return TreeMesh, (self.h, self.x0), self.__getstate__()
