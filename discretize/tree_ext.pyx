@@ -1985,36 +1985,32 @@ cdef class _TreeMesh:
             ax.plot(*self.gridCC.T, 'r:')
             ax.plot(self.gridCC[[0,-1],0], self.gridCC[[0,-1],1], 'ro')
         if nodes:
-            ax.plot(*self.gridN.T, 'ms')
+            ax.plot(*np.r_[self.gridN, self.gridhN].T, 'ms')
             # Hanging Nodes
-            ax.plot(*self.gridhN.T, 'ms')
             ax.plot(*self.gridhN.T, 'ms', ms=10, mfc='none', mec='m')
         if facesX:
-            ax.plot(*self.gridFx.T, 'g>')
+            ax.plot(*np.r_[self.gridFx, self.gridhFx].T, 'g>')
             # Hanging Faces x
-            ax.plot(*self.gridhFx.T, 'g>')
             ax.plot(*self.gridhFx.T, 'gs', ms=10, mfc='none', mec='g')
         if facesY:
-            ax.plot(*self.gridFy.T, 'g^')
+            ax.plot(*np.r_[self.gridFy, self.gridhFy].T, 'g^')
             # Hanging Faces y
-            ax.plot(*self.gridhFy.T, 'g^')
             ax.plot(*self.gridhFy.T, 'gs', ms=10, mfc='none', mec='g')
         if facesZ:
-            ax.plot(*self.gridFz.T, 'g^')
-            #Hanging
-            ax.plot(*self.gridhFz.T, 'gs')
+            ax.plot(*np.r_[self.gridFz, self.gridhFz].T, 'g^')
+            # Hangin Faces z
             ax.plot(*self.gridhFz.T, 'gs', ms=10, mfc='none', mec='g')
         if edgesX:
-            ax.plot(*self.gridEx.T, 'k>')
-            ax.plot(*self.gridhEx.T, 'k>')
+            ax.plot(*np.r_[self.gridEx, self.gridhEx].T, 'k>')
+            # Hanging Edges x
             ax.plot(*self.gridhEx.T, 'ks', ms=10, mfc='none', mec='k')
         if edgesY:
-            ax.plot(*self.gridEy.T, 'k>')
-            ax.plot(*self.gridhEy.T, 'k>')
+            ax.plot(*np.r_[self.gridEy, self.gridhEy].T, 'k>')
+            # Hanging Edges y
             ax.plot(*self.gridhEy.T, 'ks', ms=10, mfc='none', mec='k')
         if edgesZ:
-            ax.plot(*self.gridEz.T, 'k>')
-            ax.plot(*self.gridhEz.T, 'k>')
+            ax.plot(*np.r_[self.gridEz, self.gridhEz].T, 'k>')
+            # Hanging Edges z
             ax.plot(*self.gridhEz.T, 'ks', ms=10, mfc='none', mec='k')
 
         ax.set_xlabel('x1')
@@ -2038,12 +2034,12 @@ cdef class _TreeMesh:
 
         if ax is None:
             ax = plt.subplot(111)
-        jet = cm = plt.get_cmap('jet')
+        default = cm = plt.get_cmap()
         cNorm = colors.Normalize(
             vmin=I.min() if clim is None else clim[0],
             vmax=I.max() if clim is None else clim[1])
 
-        scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
+        scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=default)
         ax.set_xlim((self.x0[0], self.h[0].sum()))
         ax.set_ylim((self.x0[1], self.h[1].sum()))
         edge_color = 'k' if grid else 'none'

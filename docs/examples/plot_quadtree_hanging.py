@@ -25,7 +25,6 @@ def run(plotIt=True):
         return 2
 
     M.refine(refine)
-    M.number()
     if plotIt:
         M.plotGrid(nodes=True, cells=True, facesX=True)
         plt.legend((
