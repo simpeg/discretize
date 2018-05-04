@@ -3,6 +3,7 @@ import numpy as np
 import unittest
 import os
 import discretize
+import pickle
 
 try:
     import vtk
@@ -50,6 +51,51 @@ class TestOcTreeMeshIO(unittest.TestCase):
             mesh.writeVTK('temp.vtu', {'arange': vec})
             print('Writing of VTU files is working')
             os.remove('temp.vtu')
+
+
+class TestPickle(unittest.TestCase):
+
+    def test_pickle2D(self):
+        mesh0 = discretize.TreeMesh([8, 8])
+
+        def refine(cell):
+            xyz = cell.center
+            dist = ((xyz - 0.25)**2).sum()**0.5
+            if dist < 0.25:
+                return 3
+            return 2
+
+        mesh0.refine(refine)
+
+        byte_string = pickle.dumps(mesh0)
+        mesh1 = pickle.loads(byte_string)
+
+        assert(mesh0.nC == mesh1.nC)
+        assert mesh0.__str__() == mesh1.__str__()
+        assert np.allclose(mesh0.gridCC, mesh1.gridCC)
+        assert np.all(np.array(mesh0.h) - np.array(mesh1.h) == 0)
+        print('Pickling of 2D TreeMesh is working')
+
+    def test_pickle3D(self):
+        mesh0 = discretize.TreeMesh([8, 8, 8])
+
+        def refine(cell):
+            xyz = cell.center
+            dist = ((xyz - 0.25)**2).sum()**0.5
+            if dist < 0.25:
+                return 3
+            return 2
+
+        mesh0.refine(refine)
+
+        byte_string = pickle.dumps(mesh0)
+        mesh1 = pickle.loads(byte_string)
+
+        assert(mesh0.nC == mesh1.nC)
+        assert mesh0.__str__() == mesh1.__str__()
+        assert np.allclose(mesh0.gridCC, mesh1.gridCC)
+        assert np.all(np.array(mesh0.h) - np.array(mesh1.h) == 0)
+        print('Pickling of 3D TreeMesh is working')
 
 
 if __name__ == '__main__':
