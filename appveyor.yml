@@ -27,12 +27,6 @@ init:
   - ps: Write-Host $Env:PYTHON_VERSION
   - ps: Write-Host $Env:CONDA
   - ps: Write-Host $Env:PLATFORM
-  - ps: if ($env:APPVEYOR_PULL_REQUEST_NUMBER -and $env:APPVEYOR_BUILD_NUMBER -ne ((Invoke-RestMethod `
-        https://ci.appveyor.com/api/projects/$env:APPVEYOR_ACCOUNT_NAME/$env:APPVEYOR_PROJECT_SLUG/history?recordsNumber=50).builds | `
-        Where-Object pullRequestId -eq $env:APPVEYOR_PULL_REQUEST_NUMBER)[0].buildNumber) { `
-          Write-Host "There are newer queued builds for this pull request, skipping build."
-          Exit-AppveyorBuild
-        }
 
 install:
   # Load the conda root environment, configure and install some packages
