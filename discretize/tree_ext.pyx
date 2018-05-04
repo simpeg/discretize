@@ -2026,10 +2026,47 @@ cdef class _TreeMesh:
         if showIt:
             plt.show()
 
-    def plotImage(self):
-        pass
+    def plotImage(self, I, ax=None, showIt=False, grid=False, clim=None):
+        if self.dim == 3:
+            raise Exception('Use plot slice?')
 
-    def plotSlice(self):
+        import matplotlib.pyplot as plt
+        import matplotlib
+        from mpl_toolkits.mplot3d import Axes3D
+        import matplotlib.colors as colors
+        import matplotlib.cm as cmx
+
+        if ax is None:
+            ax = plt.subplot(111)
+        jet = cm = plt.get_cmap('jet')
+        cNorm = colors.Normalize(
+            vmin=I.min() if clim is None else clim[0],
+            vmax=I.max() if clim is None else clim[1])
+
+        scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
+        ax.set_xlim((self.x0[0], self.h[0].sum()))
+        ax.set_ylim((self.x0[1], self.h[1].sum()))
+        edge_color = 'k' if grid else 'none'
+        for cell in self.tree.cells:
+            x0 = np.array([cell.points[0].location[0], cell.points[0].location[1]])
+            sz = np.array([cell.edges[0].length, cell.edges[2].length])
+            ii = cell.index
+            ax.add_patch(
+                plt.Rectangle((x0[0], x0[1]), sz[0], sz[1],
+                facecolor=scalarMap.to_rgba(I[ii]),
+                edgecolor=edge_color)
+            )
+            # if text: ax.text(self.center[0], self.center[1], self.num)
+        # http://stackoverflow.com/questions/8342549/matplotlib-add-colorbar-to-a-sequence-of-line-plots
+        scalarMap._A = []
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
+        if showIt:
+            plt.show()
+        return [scalarMap]
+
+    def plotSlice(self, *args, **kwargs):
+        raise Exception('PlotSlice has not been implemented yet')
         pass
 
     def __getstate__(self):
