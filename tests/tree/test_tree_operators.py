@@ -1,7 +1,6 @@
 from __future__ import print_function
 import numpy as np
 import unittest
-import matplotlib.pyplot as plt
 import discretize
 
 MESHTYPES = ['uniformTree', 'randomTree']
@@ -16,7 +15,6 @@ cartF3 = lambda M, fx, fy, fz: np.vstack((cart_row3(M.gridFx, fx, fy, fz), cart_
 cartE3 = lambda M, ex, ey, ez: np.vstack((cart_row3(M.gridEx, ex, ey, ez), cart_row3(M.gridEy, ex, ey, ez), cart_row3(M.gridEz, ex, ey, ez)))
 
 
-plotIt = False
 np.random.seed(90)
 
 
@@ -550,19 +548,9 @@ class TestTreeAveraging2D(discretize.Tests.OrderTest):
     expectedOrders = [2,1]
 
     def getError(self):
-        if plotIt:
-            plt.spy(self.getAve(self.M))
-            plt.show()
 
-        A = self.getAve(self.M)
-        d = self.getHere(self.M)
         num = self.getAve(self.M) * self.getHere(self.M)
         err = np.linalg.norm((self.getThere(self.M)-num), np.inf)
-
-        if plotIt:
-            self.M.plotImage(self.getThere(self.M)-num)
-            plt.show()
-            plt.tight_layout
 
         return err
 
@@ -642,12 +630,7 @@ class TestAveraging3D(discretize.Tests.OrderTest):
     expectedOrders = [2,1]
 
     def getError(self):
-        if plotIt:
-            plt.spy(self.getAve(self.M))
-            plt.show()
 
-        A = self.getAve(self.M)
-        d = self.getHere(self.M)
         num = self.getAve(self.M) * self.getHere(self.M)
         err = np.linalg.norm((self.getThere(self.M)-num), np.inf)
         return err
