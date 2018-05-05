@@ -1730,7 +1730,7 @@ cdef class _TreeMesh:
 
         n_points = points.shape[0]
         n_grid = grid_points.shape[0]
-        npsimps = tri.find_simplex(locs)
+        npsimps = tri.find_simplex(locs).astype(np.int32)
         cdef int[:] simps = npsimps
         cdef int[:] simplex
         cdef int[:, :] hull
