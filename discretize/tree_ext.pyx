@@ -1730,8 +1730,8 @@ cdef class _TreeMesh:
 
         n_points = points.shape[0]
         n_grid = grid_points.shape[0]
-        npsimps = tri.find_simplex(locs).astype(np.int32)
-        cdef int[:] simps = npsimps
+        npsimps = tri.find_simplex(locs)
+        cdef int[:] simps = npsimps.astype(np.int32)
         cdef int[:] simplex
         cdef int[:, :] hull
         cdef int[:] hull_points
@@ -1750,8 +1750,8 @@ cdef class _TreeMesh:
         bs = np.einsum('ikj,ij->ik', trans[:, :dim], shift)
         bs = np.c_[bs, 1-bs.sum(axis=1)]
 
-        I = np.column_stack((dim+1)*[np.arange(n_points)])
-        J = tri.simplices[npsimps]
+        I = np.column_stack((dim+1)*[np.arange(n_points, dtype=np.int32)])
+        J = (tri.simplices[npsimps]).astype(np.int32)
         V = bs
         cdef int[:,:] Js = J
         cdef double[:, :] Vs = V
@@ -1759,9 +1759,9 @@ cdef class _TreeMesh:
         if n_outside > 0 and not zerosOutside:
             #oh boy got some points that need to be extrapolated
 
-            hull = tri.convex_hull
+            hull = (tri.convex_hull).astype(np.int32)
             np_hull_points = np.unique(hull)
-            hull_points = np_hull_points
+            hull_points = np_hull_points.astype(np.int32)
 
 
             n_hull_simps = hull.shape[0]
@@ -2065,7 +2065,7 @@ cdef class _TreeMesh:
         raise Exception('PlotSlice has not been implemented yet')
         pass
 
-    def __getstate__(self):
+    def _getdata(self):
         cdef int id, dim = self.dim
         indArr = np.empty((self.nC, dim+1), dtype=np.int)
         cdef np.int_t[:,:] _indArr = indArr
@@ -2112,7 +2112,7 @@ cdef class _TreeMesh:
     def _ubc_indArr(self):
         if self.__ubc_indArr is not None:
             return self.__ubc_indArr
-        indArr = self.__getstate__()
+        indArr = self._getdata()
 
         max_level = self.max_level
 
