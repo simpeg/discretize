@@ -1713,14 +1713,14 @@ cdef class _TreeMesh:
         if self.dim==2 and locType in ['Ez','Fz']:
             raise Exception('Unable to interpolate from Z edges/face in 2D')
 
-        cdef int[:,:] simplices = tri.simplices
+        cdef int[:,:] simplices = tri.simplices.astype(np.int32)
 
         cdef int i_out, i_p, i, dim, n_points, npi, n_grid
         cdef int found = 0
         dim = self.dim
 
-        cdef double[:,:] points = np.atleast_2d(locs).copy()
-        cdef double[:,:] grid_points = tri.points
+        cdef double[:, :] points = np.atleast_2d(locs).copy()
+        cdef double[:, :] grid_points = tri.points
         cdef double[:] point, proj_point
         cdef double *p0
         cdef double *p1
