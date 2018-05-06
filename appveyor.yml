@@ -3,11 +3,8 @@
 build: off
 
 environment:
-  global:
-    # SDK v7.0 MSVC Express 2008's SetEnv.cmd script will fail if the
-    # /E:ON and /V:ON options are not enabled in the batch script interpreter
-    # See: http://stackoverflow.com/a/13751649/163740
-    WITH_ENV: "cmd /E:ON /V:ON /C run_with_env.cmd"
+  APPVEYOR_RDP_PASSWORD:
+    secure: VbinLEC9qUoSJ2JMQkYgk2vNetSISjPnvIf7mUnv+Ho=
 
   matrix:
     - PYTHON_VERSION: 2.7
@@ -25,7 +22,7 @@ environment:
 image: Visual Studio 2015
 
 platform:
-- x86
+#- x86
 - x64
 
 init:
@@ -33,6 +30,8 @@ init:
   - ps: Write-Host $Env:PYTHON_VERSION
   - ps: Write-Host $Env:CONDA
   - ps: Write-Host $Env:PLATFORM
+  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+
 
 install:
   # Load the conda root environment, configure and install some packages
@@ -74,3 +73,6 @@ deploy_script:
   # deploy on dev or master
   - ps: If ($env:APPVEYOR_REPO_TAG -eq "true" ) { Invoke-Expression "twine upload -r pypi --skip-existing dist/*" 2>$null } Else { write-output "Not on a tag, won't deploy to pypi"}
   - ps: If ($env:APPVEYOR_REPO_TAG -eq "true" ) { Invoke-Expression "twine upload -r pypi --skip-existing dist/*" 2>$null } Else { write-output "Not on a tag, won't deploy to pypi"}
+
+on_finish:
+  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
