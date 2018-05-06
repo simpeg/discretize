@@ -1609,7 +1609,7 @@ cdef class _TreeMesh:
         cdef np.float64_t[:, :] points = ps.astype(np.float64)
         cdef np.int64_t[:, :] simplices = simps.astype(np.int64)
         cdef int cull_x, cull_y, cull_z
-        cdef int i, ii, id, n_simps, dim
+        cdef np.int64_t i, ii, id, n_simps, dim
 
         n_simps = simplices.shape[0]
         dim = self.dim
@@ -1623,6 +1623,7 @@ cdef class _TreeMesh:
         cdef double diff
 
         for i in range(n_simps):
+            center[:] = 0.0
             for ii in range(dim+1):
                 for id in range(dim):
                     center[id] += points[simplices[i,ii],id]
@@ -1651,7 +1652,6 @@ cdef class _TreeMesh:
                 if ((diff<0 and cell.neighbors[4]==NULL) or
                     (diff>0 and cell.neighbors[5]==NULL)):
                     is_inside[i] = False
-            center[:] = 0.0
         return is_inside
 
     def _get_grid_triang(self, grid='CC', double eps=1E-8):

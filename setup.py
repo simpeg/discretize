@@ -79,5 +79,6 @@ setup(
     platforms=["Windows", "Linux", "Solaris", "Mac OS-X", "Unix"],
     use_2to3=False,
     setup_requires=['numpy'],
-    configuration=configuration
+    configuration=configuration,
+    zip_safe=False
 )
