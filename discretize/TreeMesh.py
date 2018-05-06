@@ -456,4 +456,4 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         return sp.identity(self.nE).tocsr()[P]
 
     def __reduce__(self):
-        return TreeMesh, (self.h, self.x0), self._ind_data
+        return TreeMesh, (self.h, self.x0), self.__getstate__()

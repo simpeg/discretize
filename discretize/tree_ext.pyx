@@ -2065,8 +2065,7 @@ cdef class _TreeMesh:
         raise Exception('PlotSlice has not been implemented yet')
         pass
 
-    @property
-    def _ind_data(self):
+    def __getstate__(self):
         cdef int id, dim = self.dim
         indArr = np.empty((self.nC, dim+1), dtype=np.int)
         cdef np.int_t[:,:] _indArr = indArr
@@ -2113,7 +2112,7 @@ cdef class _TreeMesh:
     def _ubc_indArr(self):
         if self.__ubc_indArr is not None:
             return self.__ubc_indArr
-        indArr = self._ind_data
+        indArr = self.__getstate__()
 
         max_level = self.max_level
 
