@@ -1605,8 +1605,9 @@ cdef class _TreeMesh:
             return self._getEdgeP(xEdge, yEdge, zEdge)
         return Pxxx
 
-    def _cull_outer_simplices(self, np.float64_t[:,:] points, int[:,:] simplices,
-                       cull_dir='xyz'):
+    def _cull_outer_simplices(self, ps, simps, cull_dir='xyz'):
+        cdef np.float64_t[:, :] points = ps.astype(np.float64)
+        cdef np.int64_t[:, :] simplices = simps.astype(np.int64)
         cdef int cull_x, cull_y, cull_z
         cdef int i, ii, id, n_simps, dim
 
@@ -1713,15 +1714,14 @@ cdef class _TreeMesh:
         if self.dim==2 and locType in ['Ez','Fz']:
             raise Exception('Unable to interpolate from Z edges/face in 2D')
 
-        cdef int[:,:] simplices = tri.simplices.astype(np.int32)
+        cdef np.int64_t[:,:] simplices = tri.simplices.astype(np.int64)
 
-        cdef int i_out, i_p, i, dim, n_points, npi, n_grid
-        cdef int found = 0
+        cdef np.int64_t i_out, i_p, i, dim, n_points, npi, n_grid, n_outside
         dim = self.dim
 
-        cdef double[:, :] points = np.atleast_2d(locs).copy()
-        cdef double[:, :] grid_points = tri.points
-        cdef double[:] point, proj_point
+        cdef np.float64_t[:, :] points = np.atleast_2d(locs).copy()
+        cdef np.float64_t[:, :] grid_points = tri.points
+        cdef np.float64_t[:] point, proj_point
         cdef double *p0
         cdef double *p1
         cdef double *p2
@@ -1730,44 +1730,44 @@ cdef class _TreeMesh:
 
         n_points = points.shape[0]
         n_grid = grid_points.shape[0]
-        npsimps = tri.find_simplex(locs)
-        cdef int[:] simps = npsimps.astype(np.int32)
-        cdef int[:] simplex
-        cdef int[:, :] hull
-        cdef int[:] hull_points
-        cdef int[:] npis
+        npsimps = tri.find_simplex(locs).astype(np.int64)
+        cdef np.int64_t[:] simps = npsimps
+        cdef np.int64_t[:] simplex
+        cdef np.int64_t[:, :] hull
+        cdef np.int64_t[:] hull_points
+        cdef np.int64_t[:] npis
 
         proj_point = np.empty_like(points[0])
         point = np.empty_like(points[0])
 
-        np_outside_points = np.where(npsimps==-1)[0].astype(np.int32)
-        cdef int[:] outside_points = np_outside_points
+        np_outside_points = (np.where(npsimps==-1)[0]).astype(np.int64)
+        cdef np.int64_t[:] outside_points = np_outside_points
         n_outside = outside_points.shape[0]
-        cdef double[:] barys = np.empty(dim, dtype=float)
+        cdef np.float64_t[:] barys = np.empty(dim, dtype=np.float64)
 
         trans = tri.transform[npsimps]
         shift = np.array(points)-trans[:, dim]
         bs = np.einsum('ikj,ij->ik', trans[:, :dim], shift)
         bs = np.c_[bs, 1-bs.sum(axis=1)]
 
-        I = np.column_stack((dim+1)*[np.arange(n_points, dtype=np.int32)])
-        J = (tri.simplices[npsimps]).astype(np.int32)
-        V = bs
-        cdef int[:,:] Js = J
-        cdef double[:, :] Vs = V
+        I = np.column_stack((dim+1)*[np.arange(n_points, dtype=np.int64)])
+        J = (tri.simplices[npsimps]).astype(np.int64)
+        V = bs.astype(np.float64)
+        cdef np.int64_t[:,:] Js = J
+        cdef np.float64_t[:, :] Vs = V
 
         if n_outside > 0 and not zerosOutside:
             #oh boy got some points that need to be extrapolated
 
-            hull = (tri.convex_hull).astype(np.int32)
+            hull = (tri.convex_hull).astype(np.int64)
             np_hull_points = np.unique(hull)
-            hull_points = np_hull_points.astype(np.int32)
+            hull_points = np_hull_points.astype(np.int64)
 
 
             n_hull_simps = hull.shape[0]
 
             kdtree = cKDTree(tri.points[np_hull_points])
-            npis = kdtree.query(locs[np_outside_points])[1].astype(np.int32)
+            npis = kdtree.query(locs[np_outside_points])[1].astype(np.int64)
 
             for i_out in range(n_outside):
                 i_p = outside_points[i_out]
@@ -2065,7 +2065,8 @@ cdef class _TreeMesh:
         raise Exception('PlotSlice has not been implemented yet')
         pass
 
-    def _getdata(self):
+    @property
+    def _ind_data(self):
         cdef int id, dim = self.dim
         indArr = np.empty((self.nC, dim+1), dtype=np.int)
         cdef np.int_t[:,:] _indArr = indArr
@@ -2112,7 +2113,7 @@ cdef class _TreeMesh:
     def _ubc_indArr(self):
         if self.__ubc_indArr is not None:
             return self.__ubc_indArr
-        indArr = self._getdata()
+        indArr = self._ind_data
 
         max_level = self.max_level
 
@@ -2139,12 +2140,6 @@ cdef class _TreeMesh:
 
 cdef inline double _clip01(double x) nogil:
     return min(1, max(x, 0))
-
-cdef inline double _sctp(double *v0, double *v1, double *v2) nogil:
-    #dim = 3
-    return (v0[0]*(v1[1]*v2[2] - v1[2]*v2[1])
-            - v0[1]*(v1[0]*v2[2] - v1[2]*v2[0])
-            + v0[2]*(v1[0]*v2[1] - v1[1]*v2[0]))
 
 @cython.cdivision(True)
 cdef void _project_point_to_edge(double *p, double *p0, double *p1,
@@ -2180,26 +2175,6 @@ cdef void _project_point_to_triangle(double *p, double *p0, double *p1, double *
         for i in range(dim):
             out[i] = bary[0]*p0[i] + bary[1]*p1[i] + bary[2]*p2[i]
 
-@cython.cdivision(True)
-cdef void _project_point_to_tetrahedron(double *p, double *p0, double *p1,
-                                       double *p2, double *p3, double *out) nogil:
-    cdef double[4] bary
-
-    _barycentric_tetrahedron(p, p0, p1, p2, p3, bary)
-
-    if bary[0] < 0:
-        _project_point_to_triangle(p, p1, p2, p3, 3, out)
-    elif bary[1] < 0:
-        _project_point_to_triangle(p, p0, p2, p3, 3, out)
-    elif bary[2] < 0:
-        _project_point_to_triangle(p, p0, p1, p3, 3, out)
-    elif bary[3] < 0:
-        _project_point_to_triangle(p, p0, p1, p2, 3, out)
-    else:
-        out[0] = p[0]
-        out[1] = p[1]
-        out[2] = p[2]
-
 
 @cython.cdivision(True)
 cdef void _barycentric_edge(double *p, double *p0, double *p1, double *bary, int dim) nogil:
@@ -2232,22 +2207,3 @@ cdef void _barycentric_triangle(double *p, double *p0, double *p1, double *p2,
     bary[1] = (d11 * d20 - d01 * d21) * bary[0]
     bary[2] = (d00 * d21 - d01 * d20) * bary[0]
     bary[0] = 1.0 - bary[1] - bary[2]
-
-@cython.cdivision(True)
-cdef void _barycentric_tetrahedron(double *p, double *p0, double *p1,
-                               double *p2, double *p3, double *bary) nogil:
-    cdef double[3] vap, vab, vac, vad
-    cdef int i
-    for i in range(3):
-        vap[i] = p[i]-p0[i]
-
-        vab[i] = p1[i]-p0[i] #
-        vac[i] = p2[i]-p0[i] #
-        vad[i] = p3[i]-p0[i] #
-
-    bary[0] = 1.0/_sctp(vab, vac, vad)
-
-    bary[1] = _sctp(vap, vac, vad)*bary[0]
-    bary[2] = _sctp(vap, vad, vab)*bary[0]
-    bary[3] = _sctp(vap, vab, vac)*bary[0]
-    bary[0] = 1.0 - bary[1] - bary[2] - bary[3]
