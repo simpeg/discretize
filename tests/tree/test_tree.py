@@ -173,13 +173,10 @@ class TestOcTree(unittest.TestCase):
 
         Mr = discretize.TensorMesh([hx, hy, hz])
 
-        A1 = Mr.edgeCurl
-        A2 = M.permuteF*M.edgeCurl*M.permuteE.T
 
         A = Mr.edgeCurl - M.permuteF*M.edgeCurl*M.permuteE.T
 
-
-        assert np.allclose(A.data, 0) or len(A.data==0)
+        assert len(A.data)==0 or np.allclose(A.data, 0)
 
     def test_faceInnerProduct(self):
 

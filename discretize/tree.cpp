@@ -741,7 +741,7 @@ void Tree::finalize_lists(){
                 }
                 // the point oposite the parent node key should not be hanging
                 // and also label the edges' parents
-                if(face->points[ip^3]->reference!=6)
+                if(face->points[ip^3]->reference != 6)
                     face->points[ip^3]->hanging = false;
 
                 face->edges[0]->parents[0] = face->parent->edges[0];
@@ -807,7 +807,7 @@ void Tree::finalize_lists(){
                 }
                 // the point oposite the parent node key should not be hanging
                 // and also label the edges' parents
-                if(face->points[ip^3]->reference!=6)
+                if(face->points[ip^3]->reference != 6)
                     face->points[ip^3]->hanging = false;
 
                 face->edges[0]->parents[0] = face->parent->edges[0];
@@ -876,7 +876,7 @@ void Tree::finalize_lists(){
                 // the point oposite the parent node key should not be hanging
                 // most of the time
                 // and also label the edges' parents
-                if(face->points[ip^3]->reference!=6)
+                if(face->points[ip^3]->reference != 6)
                     face->points[ip^3]->hanging = false;
 
                 face->edges[0]->parents[0] = face->parent->edges[0];
@@ -1128,25 +1128,25 @@ Tree::~Tree(){
         return;
     }
     delete root;
-    for(node_it_type it = nodes.begin(); it != nodes.end(); it++){
+    for(node_it_type it = nodes.begin(); it != nodes.end(); ++it){
         delete it->second;
     }
-    for(face_it_type it = faces_x.begin(); it != faces_x.end(); it++){
+    for(face_it_type it = faces_x.begin(); it != faces_x.end(); ++it){
         delete it->second;
     }
-    for(face_it_type it = faces_y.begin(); it != faces_y.end(); it++){
+    for(face_it_type it = faces_y.begin(); it != faces_y.end(); ++it){
         delete it->second;
     }
-    for(face_it_type it = faces_z.begin(); it != faces_z.end(); it++){
+    for(face_it_type it = faces_z.begin(); it != faces_z.end(); ++it){
         delete it->second;
     }
-    for(edge_it_type it = edges_x.begin(); it != edges_x.end(); it++){
+    for(edge_it_type it = edges_x.begin(); it != edges_x.end(); ++it){
         delete it->second;
     }
-    for(edge_it_type it = edges_y.begin(); it != edges_y.end(); it++){
+    for(edge_it_type it = edges_y.begin(); it != edges_y.end(); ++it){
         delete it->second;
     }
-    for(edge_it_type it = edges_z.begin(); it != edges_z.end(); it++){
+    for(edge_it_type it = edges_z.begin(); it != edges_z.end(); ++it){
         delete it->second;
     }
     cells.clear();
