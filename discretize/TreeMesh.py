@@ -87,12 +87,11 @@
 from .TensorMesh import BaseTensorMesh
 from .InnerProducts import InnerProducts
 from .MeshIO import TreeMeshIO
+from . import utils
 from .tree_ext import _TreeMesh
 import numpy as np
 from scipy.spatial import Delaunay
 import scipy.sparse as sp
-from . import utils
-import six
 
 class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
     _meshType = 'TREE'
@@ -105,7 +104,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
             levels = int(np.log2(len(self.h[0])))
 
         # Now can initialize cpp tree parent
-        _TreeMesh.__init__(self, levels, self.x0, self.h)
+        _TreeMesh.__init__(self, self.h, self.x0, levels)
 
     def __str__(self):
         outStr = '  ---- {0!s}TreeMesh ----  '.format(

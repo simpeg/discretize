@@ -23,18 +23,17 @@ cdef class Cell:
         self._y = cell.location[1]
         self._y0 = cell.points[0].location[1]
 
-        self._wx = 2*(self._x-self._x0)
-        self._wy = 2*(self._y-self._y0)
-        if(self._dim>2):
+        self._wx = cell.points[3].location[0] - self._x0
+        self._wy = cell.points[3].location[1] - self._y0
+        if(self._dim > 2):
             self._z = cell.location[2]
             self._z0 = cell.points[0].location[2]
-
-            self._wz = 2*(self._z-self._z0)
+            self._wz = cell.points[7].location[2] - self._z0
 
     @property
     def nodes(self):
         cdef c_Cell* cell = self._cell
-        if self._dim>2:
+        if self._dim > 2:
             return tuple((cell.points[0].index, cell.points[1].index,
                           cell.points[2].index, cell.points[3].index,
                           cell.points[4].index, cell.points[5].index,
@@ -44,18 +43,18 @@ cdef class Cell:
 
     @property
     def center(self):
-        if self._dim==2: return np.array(tuple((self._x, self._y)))
-        return np.array(tuple((self._x, self._y, self._z)))
+        if self._dim == 2: return np.array([self._x, self._y])
+        return np.array([self._x, self._y, self._z])
 
     @property
     def x0(self):
-        if self._dim==2: return np.array(tuple((self._x0, self._y0)))
-        return np.array(tuple((self._x0, self._y0, self._z0)))
+        if self._dim == 2: return np.array([self._x0, self._y0])
+        return np.array([self._x0, self._y0, self._z0])
 
     @property
     def h(self):
-        if self._dim==2: return np.array(tuple((self._wx, self._wy)))
-        return np.array(tuple((self._wx, self._wy, self._wz)))
+        if self._dim == 2: return np.array([self._wx, self._wy])
+        return np.array([self._wx, self._wy, self._wz])
 
     @property
     def dim(self):
@@ -67,7 +66,7 @@ cdef class Cell:
 
     @property
     def _index_loc(self):
-        if self._dim==2:
+        if self._dim == 2:
             return tuple((self._cell.location_ind[0], self._cell.location_ind[1]))
         return tuple((self._cell.location_ind[0], self._cell.location_ind[1],
                       self._cell.location_ind[2]))
@@ -76,19 +75,16 @@ cdef class Cell:
         return self._cell.level
 
 cdef int_t _evaluate_func(void* function, c_Cell* cell) with gil:
+    # Wraps a function to be called in C++
     func = <object> function
     pycell = Cell()
     pycell._set(cell)
     return <int_t> func(pycell)
 
-cdef inline int sign(double val):
-    return (0<val)-(val<0)
-
-
 cdef class _TreeMesh:
     cdef c_Tree *tree
     cdef PyWrapper *wrapper
-    cdef int_t _nx, _ny, _nz, max_level
+    cdef int_t _nx, _ny, _nz, max_level, _dim
     cdef double[3] _xc, _xf
 
     cdef double[:] _xs, _ys, _zs
@@ -109,32 +105,33 @@ cdef class _TreeMesh:
         self.wrapper = new PyWrapper()
         self.tree = new c_Tree()
 
-    def __init__(self, max_level, x0, h):
+    def __init__(self, h, x0, max_level):
         self.max_level = max_level
         self._nx = 2<<max_level
         self._ny = 2<<max_level
+        self._dim = len(x0)
 
-        xs = np.empty(self._nx+1, dtype=float)
-        xs[::2] = np.cumsum(np.r_[x0[0],h[0]])
-        xs[1::2] = (xs[:-1:2]+xs[2::2])/2
+        xs = np.empty(self._nx + 1, dtype=float)
+        xs[::2] = np.cumsum(np.r_[x0[0], h[0]])
+        xs[1::2] = (xs[:-1:2] + xs[2::2])/2
         self._xs = xs
 
-        ys = np.empty(self._ny+1, dtype=float)
+        ys = np.empty(self._ny + 1, dtype=float)
         ys[::2] = np.cumsum(np.r_[x0[1],h[1]])
-        ys[1::2] = (ys[:-1:2]+ys[2::2])/2
+        ys[1::2] = (ys[:-1:2] + ys[2::2])/2
         self._ys = ys
 
-        if self.dim>2:
+        if self._dim > 2:
             self._nz = 2<<max_level
 
-            zs = np.empty(self._nz+1, dtype=float)
+            zs = np.empty(self._nz + 1, dtype=float)
             zs[::2] = np.cumsum(np.r_[x0[2],h[2]])
-            zs[1::2] = (zs[:-1:2]+zs[2::2])/2
+            zs[1::2] = (zs[:-1:2] + zs[2::2])/2
             self._zs = zs
         else:
             self._zs = np.zeros(1, dtype=float)
 
-        self.tree.set_dimension(self.dim)
+        self.tree.set_dimension(self._dim)
         self.tree.set_level(self.max_level)
         self.tree.set_xs(&self._xs[0], &self._ys[0], &self._zs[0])
 
@@ -198,15 +195,12 @@ cdef class _TreeMesh:
         self.number()
 
     def _insert_cells(self, cells, levels):
-        cdef double[:,:] cs = np.atleast_2d(cells)
+        cdef double[:, :] cs = np.atleast_2d(cells)
         cdef int[:] ls = np.asarray(levels, dtype=np.int32)
         cdef int_t i
         for i in range(levels.shape[0]):
             self.tree.insert_cell(&cs[i, 0], ls[i])
         self.tree.finalize_lists()
-
-    def _get_xs(self):
-        return np.array(self._xs), np.array(self._ys), np.array(self._zs)
 
     def number(self):
         self.tree.number()
@@ -221,7 +215,7 @@ cdef class _TreeMesh:
         How filled is the mesh compared to a TensorMesh?
         As a fraction: [0, 1].
         """
-        return float(self.nC)/((2**self.maxLevel)**self.dim)
+        return float(self.nC)/((2**self.maxLevel)**self._dim)
 
     @property
     def maxLevel(self):
@@ -240,7 +234,7 @@ cdef class _TreeMesh:
 
     @property
     def nN(self):
-        return self.ntN-self.nhN
+        return self.ntN - self.nhN
 
     @property
     def ntN(self):
@@ -252,27 +246,27 @@ cdef class _TreeMesh:
 
     @property
     def nE(self):
-        return self.nEx+self.nEy+self.nEz
+        return self.nEx + self.nEy + self.nEz
 
     @property
     def nhE(self):
-        return self.nhEx+self.nhEy+self.nhEz
+        return self.nhEx + self.nhEy + self.nhEz
 
     @property
     def ntE(self):
-        return self.nE+self.nhE
+        return self.nE + self.nhE
 
     @property
     def nEx(self):
-        return self.ntEx-self.nhEx
+        return self.ntEx - self.nhEx
 
     @property
     def nEy(self):
-        return self.ntEy-self.nhEy
+        return self.ntEy - self.nhEy
 
     @property
     def nEz(self):
-        return self.ntEz-self.nhEz
+        return self.ntEz - self.nhEz
 
     @property
     def ntEx(self):
@@ -300,56 +294,56 @@ cdef class _TreeMesh:
 
     @property
     def nF(self):
-        return self.nFx+self.nFy+self.nFz
+        return self.nFx + self.nFy + self.nFz
 
     @property
     def nhF(self):
-        return self.nhFx+self.nhFy+self.nhFz
+        return self.nhFx + self.nhFy + self.nhFz
 
     @property
     def ntF(self):
-        return self.nF+self.nhF
+        return self.nF + self.nhF
 
     @property
     def nFx(self):
-        return self.ntFx-self.nhFx
+        return self.ntFx - self.nhFx
 
     @property
     def nFy(self):
-        return self.ntFy-self.nhFy
+        return self.ntFy - self.nhFy
 
     @property
     def nFz(self):
-        return self.ntFz-self.nhFz
+        return self.ntFz - self.nhFz
 
     @property
     def ntFx(self):
-        if(self.dim==2): return self.ntEy
+        if(self._dim == 2): return self.ntEy
         return self.tree.faces_x.size()
 
     @property
     def ntFy(self):
-        if(self.dim==2): return self.ntEx
+        if(self._dim == 2): return self.ntEx
         return self.tree.faces_y.size()
 
     @property
     def ntFz(self):
-        if(self.dim==2): return 0
+        if(self._dim == 2): return 0
         return self.tree.faces_z.size()
 
     @property
     def nhFx(self):
-        if(self.dim==2): return self.nhEy
+        if(self._dim == 2): return self.nhEy
         return self.tree.hanging_faces_x.size()
 
     @property
     def nhFy(self):
-        if(self.dim==2): return self.nhEx
+        if(self._dim == 2): return self.nhEx
         return self.tree.hanging_faces_y.size()
 
     @property
     def nhFz(self):
-        if(self.dim==2): return 0
+        if(self._dim == 2): return 0
         return self.tree.hanging_faces_z.size()
 
     @property
@@ -362,8 +356,8 @@ cdef class _TreeMesh:
         cdef np.float64_t[:, :] gridCC
         cdef np.int64_t ii, ind, dim
         if self._gridCC is None:
-            dim = self.dim
-            self._gridCC = np.empty((self.nC, dim), dtype=np.float64)
+            dim = self._dim
+            self._gridCC = np.empty((self.nC, self._dim), dtype=np.float64)
             gridCC = self._gridCC
             for cell in self.tree.cells:
                 ind = cell.index
@@ -381,7 +375,7 @@ cdef class _TreeMesh:
         cdef Node *node
         cdef np.int64_t ii, ind, dim
         if self._gridN is None:
-            dim = self.dim
+            dim = self._dim
             self._gridN = np.empty((self.nN, dim) ,dtype=np.float64)
             gridN = self._gridN
             for it in self.tree.nodes:
@@ -398,7 +392,7 @@ cdef class _TreeMesh:
         cdef Node *node
         cdef np.int64_t ii, ind, dim
         if self._gridhN is None:
-            dim = self.dim
+            dim = self._dim
             self._gridhN = np.empty((self.nhN, dim), dtype=np.float64)
             gridhN = self._gridhN
             for node in self.tree.hanging_nodes:
@@ -417,7 +411,7 @@ cdef class _TreeMesh:
         cdef np.int64_t ii, ind, dim
         cdef np.float64_t len
         if self._h_gridded is None:
-            dim = self.dim
+            dim = self._dim
             self._h_gridded = np.empty((self.nC, dim), dtype=np.float64)
             h_gridded = self._h_gridded
             for cell in self:
@@ -433,7 +427,7 @@ cdef class _TreeMesh:
         cdef Edge *edge
         cdef np.int64_t ii, ind, dim
         if self._gridEx is None:
-            dim = self.dim
+            dim = self._dim
             self._gridEx = np.empty((self.nEx, dim), dtype=np.float64)
             gridEx = self._gridEx
             for it in self.tree.edges_x:
@@ -450,13 +444,13 @@ cdef class _TreeMesh:
         cdef Edge *edge
         cdef np.int64_t ii, ind, dim
         if self._gridhEx is None:
-            dim = self.dim
+            dim = self._dim
             self._gridhEx = np.empty((self.nhEx, dim), dtype=np.float64)
             gridhEx = self._gridhEx
             for edge in self.tree.hanging_edges_x:
                 ind = edge.index-self.nEx
                 for ii in range(dim):
-                    gridhEx[ind,ii] = edge.location[ii]
+                    gridhEx[ind, ii] = edge.location[ii]
         return self._gridhEx
 
     @property
@@ -465,7 +459,7 @@ cdef class _TreeMesh:
         cdef Edge *edge
         cdef np.int64_t ii, ind, dim
         if self._gridEy is None:
-            dim = self.dim
+            dim = self._dim
             self._gridEy = np.empty((self.nEy, dim), dtype=np.float64)
             gridEy = self._gridEy
             for it in self.tree.edges_y:
@@ -473,16 +467,16 @@ cdef class _TreeMesh:
                 if not edge.hanging:
                     ind = edge.index
                     for ii in range(dim):
-                        gridEy[ind,ii] = edge.location[ii]
+                        gridEy[ind, ii] = edge.location[ii]
         return self._gridEy
 
     @property
     def gridhEy(self):
-        cdef np.float64_t[:,:] gridhEy
+        cdef np.float64_t[:, :] gridhEy
         cdef Edge *edge
         cdef np.int64_t ii, ind, dim
         if self._gridhEy is None:
-            dim = self.dim
+            dim = self._dim
             self._gridhEy = np.empty((self.nhEy, dim), dtype=np.float64)
             gridhEy = self._gridhEy
             for edge in self.tree.hanging_edges_y:
@@ -497,7 +491,7 @@ cdef class _TreeMesh:
         cdef Edge *edge
         cdef np.int64_t ii, ind, dim
         if self._gridEz is None:
-            dim = self.dim
+            dim = self._dim
             self._gridEz = np.empty((self.nEz, dim), dtype=np.float64)
             gridEz = self._gridEz
             for it in self.tree.edges_z:
@@ -505,16 +499,16 @@ cdef class _TreeMesh:
                 if not edge.hanging:
                     ind = edge.index
                     for ii in range(dim):
-                        gridEz[ind,ii] = edge.location[ii]
+                        gridEz[ind, ii] = edge.location[ii]
         return self._gridEz
 
     @property
     def gridhEz(self):
-        cdef np.float64_t[:,:] gridhEz
+        cdef np.float64_t[:, :] gridhEz
         cdef Edge *edge
         cdef np.int64_t ii, ind, dim
         if self._gridhEz is None:
-            dim = self.dim
+            dim = self._dim
             self._gridhEz = np.empty((self.nhEz, dim), dtype=np.float64)
             gridhEz = self._gridhEz
             for edge in self.tree.hanging_edges_z:
@@ -525,13 +519,13 @@ cdef class _TreeMesh:
 
     @property
     def gridFx(self):
-        if(self.dim==2): return self.gridEy
+        if(self._dim == 2): return self.gridEy
 
-        cdef np.float64_t[:,:] gridFx
+        cdef np.float64_t[:, :] gridFx
         cdef Face *face
         cdef np.int64_t ii, ind, dim
         if self._gridFx is None:
-            dim = self.dim
+            dim = self._dim
             self._gridFx = np.empty((self.nFx, dim), dtype=np.float64)
             gridFx = self._gridFx
             for it in self.tree.faces_x:
@@ -544,12 +538,12 @@ cdef class _TreeMesh:
 
     @property
     def gridFy(self):
-        if(self.dim==2): return self.gridEx
-        cdef np.float64_t[:,:] gridFy
+        if(self._dim == 2): return self.gridEx
+        cdef np.float64_t[:, :] gridFy
         cdef Face *face
         cdef np.int64_t ii, ind, dim
         if self._gridFy is None:
-            dim = self.dim
+            dim = self._dim
             self._gridFy = np.empty((self.nFy, dim), dtype=np.float64)
             gridFy = self._gridFy
             for it in self.tree.faces_y:
@@ -562,13 +556,13 @@ cdef class _TreeMesh:
 
     @property
     def gridFz(self):
-        if(self.dim==2): return self.gridCC
+        if(self._dim == 2): return self.gridCC
 
-        cdef np.float64_t[:,:] gridFz
+        cdef np.float64_t[:, :] gridFz
         cdef Face *face
         cdef np.int64_t ii, ind, dim
         if self._gridFz is None:
-            dim = self.dim
+            dim = self._dim
             self._gridFz = np.empty((self.nFz, dim), dtype=np.float64)
             gridFz = self._gridFz
             for it in self.tree.faces_z:
@@ -581,13 +575,13 @@ cdef class _TreeMesh:
 
     @property
     def gridhFx(self):
-        if(self.dim==2): return self.gridhEy
+        if(self._dim == 2): return self.gridhEy
 
-        cdef np.float64_t[:,:] gridFx
+        cdef np.float64_t[:, :] gridFx
         cdef Face *face
         cdef np.int64_t ii, ind, dim
         if self._gridhFx is None:
-            dim = self.dim
+            dim = self._dim
             self._gridhFx = np.empty((self.nhFx, dim), dtype=np.float64)
             gridhFx = self._gridhFx
             for face in self.tree.hanging_faces_x:
@@ -598,13 +592,13 @@ cdef class _TreeMesh:
 
     @property
     def gridhFy(self):
-        if(self.dim==2): return self.gridhEx
+        if(self._dim == 2): return self.gridhEx
 
-        cdef np.float64_t[:,:] gridhFy
+        cdef np.float64_t[:, :] gridhFy
         cdef Face *face
         cdef np.int64_t ii, ind, dim
         if self._gridhFy is None:
-            dim = self.dim
+            dim = self._dim
             self._gridhFy = np.empty((self.nhFy, dim), dtype=np.float64)
             gridhFy = self._gridhFy
             for face in self.tree.hanging_faces_y:
@@ -615,13 +609,13 @@ cdef class _TreeMesh:
 
     @property
     def gridhFz(self):
-        if(self.dim==2): return np.array([])
+        if(self._dim == 2): return np.array([])
 
-        cdef np.float64_t[:,:] gridhFz
+        cdef np.float64_t[:, :] gridhFz
         cdef Face *face
         cdef np.int64_t ii, ind, dim
         if self._gridhFz is None:
-            dim = self.dim
+            dim = self._dim
             self._gridhFz = np.empty((self.nhFz, dim), dtype=np.float64)
             gridhFz = self._gridhFz
             for face in self.tree.hanging_faces_z:
@@ -642,7 +636,7 @@ cdef class _TreeMesh:
 
     @property
     def area(self):
-        if self.dim == 2 and self._area is None:
+        if self._dim == 2 and self._area is None:
             self._area = np.r_[self.edge[self.nEx:], self.edge[:self.nEx]]
         cdef np.float64_t[:] area
         cdef int_t ind, offset = 0
@@ -660,13 +654,13 @@ cdef class _TreeMesh:
             for it in self.tree.faces_y:
                 face = it.second
                 if face.hanging: continue
-                area[face.index+offset] = face.area
+                area[face.index + offset] = face.area
 
             offset = self.nFx + self.nFy
             for it in self.tree.faces_z:
                 face = it.second
                 if face.hanging: continue
-                area[face.index+offset] = face.area
+                area[face.index + offset] = face.area
         return self._area
 
     @property
@@ -687,21 +681,21 @@ cdef class _TreeMesh:
             for it in self.tree.edges_y:
                 edge = it.second
                 if edge.hanging: continue
-                edge_l[edge.index+offset] = edge.length
+                edge_l[edge.index + offset] = edge.length
 
-            if self.dim>2:
+            if self._dim > 2:
                 offset = self.nEx + self.nEy
                 for it in self.tree.edges_z:
                     edge = it.second
                     if edge.hanging: continue
-                    edge_l[edge.index+offset] = edge.length
+                    edge_l[edge.index + offset] = edge.length
         return self._edge
 
     @property
     def faceDiv(self):
-        if(self._faceDiv is not None):
+        if self._faceDiv is not None:
             return self._faceDiv
-        if(self.dim==2):
+        if self._dim == 2:
             D = self._faceDiv2D() # Because it uses edges instead of faces
         else:
             D = self._faceDiv3D()
@@ -724,17 +718,17 @@ cdef class _TreeMesh:
         for cell in self.tree.cells:
             edges = cell.edges
             i = cell.index
-            I[i*4:i*4+4] = i
-            J[i*4  ] = edges[0].index+offset #x edge, y face (add offset)
-            J[i*4+1] = edges[1].index+offset #x edge, y face (add offset)
-            J[i*4+2] = edges[2].index #y edge, x face
-            J[i*4+3] = edges[3].index #y edge, x face
+            I[i*4 : i*4 + 4] = i
+            J[i*4    ] = edges[0].index + offset #x edge, y face (add offset)
+            J[i*4 + 1] = edges[1].index + offset #x edge, y face (add offset)
+            J[i*4 + 2] = edges[2].index #y edge, x face
+            J[i*4 + 3] = edges[3].index #y edge, x face
 
             volume = cell.volume
-            V[i*4  ] = -(edges[0].length/volume)
-            V[i*4+1] = edges[1].length/volume
-            V[i*4+2] = -(edges[2].length/volume)
-            V[i*4+3] = edges[3].length/volume
+            V[i*4    ] = -edges[0].length/volume
+            V[i*4 + 1] =  edges[1].length/volume
+            V[i*4 + 2] = -edges[2].length/volume
+            V[i*4 + 3] =  edges[3].length/volume
         return sp.csr_matrix((V, (I, J)))
 
     @cython.cdivision(True)
@@ -748,30 +742,30 @@ cdef class _TreeMesh:
             np.int64_t i = 0
             Face *faces[6]
             np.int64_t offset1 = self.tree.faces_x.size()
-            np.int64_t offset2 = offset1+self.tree.faces_y.size()
+            np.int64_t offset2 = offset1 + self.tree.faces_y.size()
             double volume, fx_area, fy_area, fz_area
 
         for cell in self.tree.cells:
             faces = cell.faces
             i = cell.index
-            I[i*6:i*6+6] = i
-            J[i*6  ] = faces[0].index #x1 face
-            J[i*6+1] = faces[1].index #x2 face
-            J[i*6+2] = faces[2].index+offset1 #y face (add offset1)
-            J[i*6+3] = faces[3].index+offset1 #y face (add offset1)
-            J[i*6+4] = faces[4].index+offset2 #z face (add offset2)
-            J[i*6+5] = faces[5].index+offset2 #z face (add offset2)
+            I[i*6 : i*6 + 6] = i
+            J[i*6    ] = faces[0].index #x1 face
+            J[i*6 + 1] = faces[1].index #x2 face
+            J[i*6 + 2] = faces[2].index+offset1 #y face (add offset1)
+            J[i*6 + 3] = faces[3].index+offset1 #y face (add offset1)
+            J[i*6 + 4] = faces[4].index+offset2 #z face (add offset2)
+            J[i*6 + 5] = faces[5].index+offset2 #z face (add offset2)
 
             volume = cell.volume
             fx_area = faces[0].area
             fy_area = faces[2].area
             fz_area = faces[4].area
-            V[i*6  ] = -(fx_area)/volume
-            V[i*6+1] =  (fx_area)/volume
-            V[i*6+2] = -(fy_area)/volume
-            V[i*6+3] =  (fy_area)/volume
-            V[i*6+4] = -(fz_area)/volume
-            V[i*6+5] =  (fz_area)/volume
+            V[i*6    ] = -fx_area/volume
+            V[i*6 + 1] =  fx_area/volume
+            V[i*6 + 2] = -fy_area/volume
+            V[i*6 + 3] =  fy_area/volume
+            V[i*6 + 4] = -fz_area/volume
+            V[i*6 + 5] =  fz_area/volume
         return sp.csr_matrix((V, (I, J)))
 
     @property
@@ -781,16 +775,16 @@ cdef class _TreeMesh:
         if self._edgeCurl is not None:
             return self._edgeCurl
         cdef:
-            int_t dim = self.dim
+            int_t dim = self._dim
             np.int64_t[:] I = np.empty(4*self.nF, dtype=np.int64)
             np.int64_t[:] J = np.empty(4*self.nF, dtype=np.int64)
             np.float64_t[:] V = np.empty(4*self.nF, dtype=np.float64)
             Face *face
             int_t ii
             int_t face_offset_y = self.nFx
-            int_t face_offset_z = self.nFx+self.nFy
+            int_t face_offset_z = self.nFx + self.nFy
             int_t edge_offset_y = self.ntEx
-            int_t edge_offset_z = self.ntEx+self.ntEy
+            int_t edge_offset_z = self.ntEx + self.ntEy
             double area
 
         for it in self.tree.faces_x:
@@ -798,51 +792,51 @@ cdef class _TreeMesh:
             if face.hanging:
                 continue
             ii = face.index
-            I[4*ii:4*ii+4] = ii
-            J[4*ii  ] = face.edges[0].index+edge_offset_z
-            J[4*ii+1] = face.edges[1].index+edge_offset_y
-            J[4*ii+2] = face.edges[2].index+edge_offset_z
-            J[4*ii+3] = face.edges[3].index+edge_offset_y
+            I[4*ii : 4*ii + 4] = ii
+            J[4*ii    ] = face.edges[0].index + edge_offset_z
+            J[4*ii + 1] = face.edges[1].index + edge_offset_y
+            J[4*ii + 2] = face.edges[2].index + edge_offset_z
+            J[4*ii + 3] = face.edges[3].index + edge_offset_y
 
             area = face.area
-            V[4*ii  ] = -(face.edges[0].length/area)
-            V[4*ii+1] = -(face.edges[1].length/area)
-            V[4*ii+2] = (face.edges[2].length/area)
-            V[4*ii+3] = (face.edges[3].length/area)
+            V[4*ii    ] = -face.edges[0].length/area
+            V[4*ii + 1] = -face.edges[1].length/area
+            V[4*ii + 2] =  face.edges[2].length/area
+            V[4*ii + 3] =  face.edges[3].length/area
 
         for it in self.tree.faces_y:
             face = it.second
             if face.hanging:
                 continue
-            ii = face.index+face_offset_y
-            I[4*ii:4*ii+4] = ii
-            J[4*ii  ] = face.edges[0].index+edge_offset_z
-            J[4*ii+1] = face.edges[1].index
-            J[4*ii+2] = face.edges[2].index+edge_offset_z
-            J[4*ii+3] = face.edges[3].index
+            ii = face.index + face_offset_y
+            I[4*ii : 4*ii + 4] = ii
+            J[4*ii    ] = face.edges[0].index + edge_offset_z
+            J[4*ii + 1] = face.edges[1].index
+            J[4*ii + 2] = face.edges[2].index + edge_offset_z
+            J[4*ii + 3] = face.edges[3].index
 
             area = face.area
-            V[4*ii  ] = (face.edges[0].length/area)
-            V[4*ii+1] = (face.edges[1].length/area)
-            V[4*ii+2] = -(face.edges[2].length/area)
-            V[4*ii+3] = -(face.edges[3].length/area)
+            V[4*ii    ] =  face.edges[0].length/area
+            V[4*ii + 1] =  face.edges[1].length/area
+            V[4*ii + 2] = -face.edges[2].length/area
+            V[4*ii + 3] = -face.edges[3].length/area
 
         for it in self.tree.faces_z:
             face = it.second
             if face.hanging:
                 continue
-            ii = face.index+face_offset_z
-            I[4*ii:4*ii+4] = ii
-            J[4*ii  ] = face.edges[0].index+edge_offset_y
-            J[4*ii+1] = face.edges[1].index
-            J[4*ii+2] = face.edges[2].index+edge_offset_y
-            J[4*ii+3] = face.edges[3].index
+            ii = face.index + face_offset_z
+            I[4*ii : 4*ii + 4] = ii
+            J[4*ii    ] = face.edges[0].index + edge_offset_y
+            J[4*ii + 1] = face.edges[1].index
+            J[4*ii + 2] = face.edges[2].index + edge_offset_y
+            J[4*ii + 3] = face.edges[3].index
 
             area = face.area
-            V[4*ii  ] = -(face.edges[0].length/area)
-            V[4*ii+1] = -(face.edges[1].length/area)
-            V[4*ii+2] = (face.edges[2].length/area)
-            V[4*ii+3] = (face.edges[3].length/area)
+            V[4*ii    ] = -face.edges[0].length/area
+            V[4*ii + 1] = -face.edges[1].length/area
+            V[4*ii + 2] =  face.edges[2].length/area
+            V[4*ii + 3] =  face.edges[3].length/area
 
         C = sp.csr_matrix((V, (I, J)),shape=(self.nF, self.ntE))
         R = self._deflate_edges()
@@ -856,7 +850,7 @@ cdef class _TreeMesh:
         if self._nodalGrad is not None:
             return self._nodalGrad
         cdef:
-            int_t dim = self.dim
+            int_t dim = self._dim
             np.int64_t[:] I = np.empty(2*self.nE, dtype=np.int64)
             np.int64_t[:] J = np.empty(2*self.nE, dtype=np.int64)
             np.float64_t[:] V = np.empty(2*self.nE, dtype=np.float64)
@@ -864,44 +858,44 @@ cdef class _TreeMesh:
             double length
             int_t ii
             np.int64_t offset1 = self.nEx
-            np.int64_t offset2 = offset1+self.nEy
+            np.int64_t offset2 = offset1 + self.nEy
 
         for it in self.tree.edges_x:
             edge = it.second
             if edge.hanging: continue
             ii = edge.index
-            I[ii*2:ii*2+2] = ii
-            J[ii*2  ] = edge.points[0].index
-            J[ii*2+1] = edge.points[1].index
+            I[ii*2 : ii*2 + 2] = ii
+            J[ii*2    ] = edge.points[0].index
+            J[ii*2 + 1] = edge.points[1].index
 
             length = edge.length
-            V[ii*2  ] = -1.0/length
-            V[ii*2+1] = 1.0/length
+            V[ii*2    ] = -1.0/length
+            V[ii*2 + 1] =  1.0/length
 
         for it in self.tree.edges_y:
             edge = it.second
             if edge.hanging: continue
             ii = edge.index+offset1
-            I[ii*2:ii*2+2] = ii
-            J[ii*2] = edge.points[0].index
-            J[ii*2+1] = edge.points[1].index
+            I[ii*2 : ii*2 + 2] = ii
+            J[ii*2    ] = edge.points[0].index
+            J[ii*2 + 1] = edge.points[1].index
 
             length = edge.length
-            V[ii*2  ] = -1.0/length
-            V[ii*2+1] = 1.0/length
+            V[ii*2    ] = -1.0/length
+            V[ii*2 + 1] =  1.0/length
 
         if(dim>2):
             for it in self.tree.edges_z:
                 edge = it.second
                 if edge.hanging: continue
                 ii = edge.index+offset2
-                I[ii*2:ii*2+2] = ii
-                J[ii*2  ] = edge.points[0].index
-                J[ii*2+1] = edge.points[1].index
+                I[ii*2 : ii*2 + 2] = ii
+                J[ii*2    ] = edge.points[0].index
+                J[ii*2 + 1] = edge.points[1].index
 
                 length = edge.length
-                V[ii*2  ] = -1.0/length
-                V[ii*2+1] = 1.0/length
+                V[ii*2    ] = -1.0/length
+                V[ii*2 + 1] =  1.0/length
 
 
         Rn = self._deflate_nodes()
@@ -914,49 +908,49 @@ cdef class _TreeMesh:
         cdef np.int64_t[:] I = np.zeros(2*self.ntFx, dtype=np.int64)
         cdef np.int64_t[:] J = np.zeros(2*self.ntFx, dtype=np.int64)
         cdef np.float64_t[:] V = np.zeros(2*self.ntFx, dtype=np.float64)
-        cdef int dim = self.dim
+        cdef int dim = self._dim
         cdef int_t ind
 
         for cell in self.tree.cells :
             next_cell = cell.neighbors[1]
-            if next_cell==NULL:
+            if next_cell == NULL:
                 continue
-            if dim==2:
+            if dim == 2:
                 if next_cell.is_leaf():
                     ind = cell.edges[3].index
-                    I[2*ind  ] = ind
-                    I[2*ind+1] = ind
-                    J[2*ind  ] = cell.index
-                    J[2*ind+1] = next_cell.index
-                    V[2*ind  ] = -1.0
-                    V[2*ind+1] = 1.0
+                    I[2*ind    ] = ind
+                    I[2*ind + 1] = ind
+                    J[2*ind    ] = cell.index
+                    J[2*ind + 1] = next_cell.index
+                    V[2*ind    ] = -1.0
+                    V[2*ind + 1] =  1.0
                 else:
                     for i in range(2): # two neighbors in +x direction
                         ind = next_cell.children[2*i].edges[2].index
-                        I[2*ind  ] = ind
-                        I[2*ind+1] = ind
-                        J[2*ind  ] = cell.index
-                        J[2*ind+1] = next_cell.children[2*i].index
-                        V[2*ind  ] = -1.0
-                        V[2*ind+1] = 1.0
+                        I[2*ind    ] = ind
+                        I[2*ind + 1] = ind
+                        J[2*ind    ] = cell.index
+                        J[2*ind + 1] = next_cell.children[2*i].index
+                        V[2*ind    ] = -1.0
+                        V[2*ind + 1] =  1.0
             else:
                 if cell.neighbors[1].is_leaf():
                     ind = cell.faces[1].index
-                    I[2*ind  ] = ind
-                    I[2*ind+1] = ind
-                    J[2*ind  ] = cell.index
-                    J[2*ind+1] = next_cell.index
-                    V[2*ind  ] = -1.0
-                    V[2*ind+1] = 1.0
+                    I[2*ind    ] = ind
+                    I[2*ind + 1] = ind
+                    J[2*ind    ] = cell.index
+                    J[2*ind + 1] = next_cell.index
+                    V[2*ind    ] = -1.0
+                    V[2*ind + 1] =  1.0
                 else:
                     for i in range(4): # four neighbors in +x direction
                         ind = next_cell.children[2*i].faces[0].index
-                        I[2*ind  ] = ind
-                        I[2*ind+1] = ind
-                        J[2*ind  ] = cell.index
-                        J[2*ind+1] = next_cell.children[2*i].index
-                        V[2*ind  ] = -1.0
-                        V[2*ind+1] = 1.0
+                        I[2*ind    ] = ind
+                        I[2*ind + 1] = ind
+                        J[2*ind    ] = cell.index
+                        J[2*ind + 1] = next_cell.children[2*i].index
+                        V[2*ind    ] = -1.0
+                        V[2*ind + 1] =  1.0
 
         return sp.csr_matrix((V, (I,J)), shape=(self.ntFx, self.nC))
 
@@ -965,7 +959,7 @@ cdef class _TreeMesh:
         cdef np.int64_t[:] I = np.zeros(2*self.ntFy, dtype=np.int64)
         cdef np.int64_t[:] J = np.zeros(2*self.ntFy, dtype=np.int64)
         cdef np.float64_t[:] V = np.zeros(2*self.ntFy, dtype=np.float64)
-        cdef int dim = self.dim
+        cdef int dim = self._dim
         cdef int_t ind
 
         for cell in self.tree.cells :
@@ -975,39 +969,39 @@ cdef class _TreeMesh:
             if dim==2:
                 if next_cell.is_leaf():
                     ind = cell.edges[1].index
-                    I[2*ind  ] = ind
-                    I[2*ind+1] = ind
-                    J[2*ind  ] = cell.index
-                    J[2*ind+1] = next_cell.index
-                    V[2*ind  ] = -1.0
-                    V[2*ind+1] = 1.0
+                    I[2*ind    ] = ind
+                    I[2*ind + 1] = ind
+                    J[2*ind    ] = cell.index
+                    J[2*ind + 1] = next_cell.index
+                    V[2*ind    ] = -1.0
+                    V[2*ind + 1] =  1.0
                 else:
                     for i in range(2): # two neighbors in +y direction
                         ind = next_cell.children[i].edges[0].index
-                        I[2*ind  ] = ind
-                        I[2*ind+1] = ind
-                        J[2*ind  ] = cell.index
-                        J[2*ind+1] = next_cell.children[i].index
-                        V[2*ind  ] = -1.0
-                        V[2*ind+1] = 1.0
+                        I[2*ind    ] = ind
+                        I[2*ind + 1] = ind
+                        J[2*ind    ] = cell.index
+                        J[2*ind + 1] = next_cell.children[i].index
+                        V[2*ind    ] = -1.0
+                        V[2*ind + 1] =  1.0
             else:
                 if next_cell.is_leaf():
                     ind = cell.faces[3].index
-                    I[2*ind  ] = ind
-                    I[2*ind+1] = ind
-                    J[2*ind  ] = cell.index
-                    J[2*ind+1] = next_cell.index
-                    V[2*ind  ] = -1.0
-                    V[2*ind+1] = 1.0
+                    I[2*ind    ] = ind
+                    I[2*ind + 1] = ind
+                    J[2*ind    ] = cell.index
+                    J[2*ind + 1] = next_cell.index
+                    V[2*ind    ] = -1.0
+                    V[2*ind + 1] =  1.0
                 else:
                     for i in range(4): # four neighbors in +x direction
                         ind = next_cell.children[i].faces[2].index
-                        I[2*ind  ] = ind
-                        I[2*ind+1] = ind
-                        J[2*ind  ] = cell.index
-                        J[2*ind+1] = next_cell.children[i].index
-                        V[2*ind  ] = -1.0
-                        V[2*ind+1] = 1.0
+                        I[2*ind    ] = ind
+                        I[2*ind + 1] = ind
+                        J[2*ind    ] = cell.index
+                        J[2*ind + 1] = next_cell.children[i].index
+                        V[2*ind    ] = -1.0
+                        V[2*ind + 1] = 1.0
 
         return sp.csr_matrix((V, (I,J)), shape=(self.ntFy, self.nC))
 
@@ -1024,21 +1018,21 @@ cdef class _TreeMesh:
                 continue
             if next_cell.is_leaf():
                 ind = cell.faces[5].index
-                I[2*ind  ] = ind
-                I[2*ind+1] = ind
-                J[2*ind  ] = cell.index
-                J[2*ind+1] = next_cell.index
-                V[2*ind  ] = -1.0
-                V[2*ind+1] = 1.0
+                I[2*ind    ] = ind
+                I[2*ind + 1] = ind
+                J[2*ind    ] = cell.index
+                J[2*ind + 1] = next_cell.index
+                V[2*ind    ] = -1.0
+                V[2*ind + 1] =  1.0
             else:
                 for i in range(4): # four neighbors in +z direction
                     ind = next_cell.children[i].faces[4].index
-                    I[2*ind  ] = ind
-                    I[2*ind+1] = ind
-                    J[2*ind  ] = cell.index
-                    J[2*ind+1] = next_cell.children[i].index
-                    V[2*ind  ] = -1.0
-                    V[2*ind+1] = 1.0
+                    I[2*ind    ] = ind
+                    I[2*ind + 1] = ind
+                    J[2*ind    ] = cell.index
+                    J[2*ind + 1] = next_cell.children[i].index
+                    V[2*ind    ] = -1.0
+                    V[2*ind + 1] =  1.0
 
         return sp.csr_matrix((V, (I,J)), shape=(self.ntFz, self.nC))
 
@@ -1055,30 +1049,30 @@ cdef class _TreeMesh:
         for it in self.tree.edges_x:
             edge = it.second
             ii = edge.index
-            I[2*ii  ] = ii
-            I[2*ii+1] = ii
+            I[2*ii    ] = ii
+            I[2*ii + 1] = ii
             if edge.hanging:
-                J[2*ii  ] = edge.parents[0].index
-                J[2*ii+1] = edge.parents[1].index
+                J[2*ii    ] = edge.parents[0].index
+                J[2*ii + 1] = edge.parents[1].index
             else:
-                J[2*ii  ] = ii
-                J[2*ii+1] = ii
-            V[2*ii  ] = 0.5
-            V[2*ii+1] = 0.5
+                J[2*ii    ] = ii
+                J[2*ii + 1] = ii
+            V[2*ii    ] = 0.5
+            V[2*ii + 1] = 0.5
         Rh = sp.csr_matrix((V, (I, J)), shape=(self.ntEx, self.ntEx))
         # Test if it needs to be deflated again, (if any parents were also hanging)
         last_ind = max(np.nonzero(Rh.getnnz(0)>0)[0][-1], self.nEx)
         while(last_ind > self.nEx):
             Rh = Rh*Rh
             last_ind = max(np.nonzero(Rh.getnnz(0)>0)[0][-1], self.nEx)
-        Rh = Rh[:,:last_ind]
+        Rh = Rh[:, : last_ind]
         return Rh
 
     @cython.boundscheck(False)
     def _deflate_edges_y(self):
         #I is output index (with hanging)
         #J is input index (without hanging)
-        cdef int_t dim = self.dim
+        cdef int_t dim = self._dim
         cdef np.int64_t[:] I = np.empty(2*self.ntEy, dtype=np.int64)
         cdef np.int64_t[:] J = np.empty(2*self.ntEy, dtype=np.int64)
         cdef np.float64_t[:] V = np.empty(2*self.ntEy, dtype=np.float64)
@@ -1088,30 +1082,30 @@ cdef class _TreeMesh:
         for it in self.tree.edges_y:
             edge = it.second
             ii = edge.index
-            I[2*ii  ] = ii
-            I[2*ii+1] = ii
+            I[2*ii    ] = ii
+            I[2*ii + 1] = ii
             if edge.hanging:
-                J[2*ii  ] = edge.parents[0].index
-                J[2*ii+1] = edge.parents[1].index
+                J[2*ii    ] = edge.parents[0].index
+                J[2*ii + 1] = edge.parents[1].index
             else:
-                J[2*ii  ] = ii
-                J[2*ii+1] = ii
-            V[2*ii  ] = 0.5
-            V[2*ii+1] = 0.5
+                J[2*ii    ] = ii
+                J[2*ii + 1] = ii
+            V[2*ii    ] = 0.5
+            V[2*ii + 1] = 0.5
         Rh = sp.csr_matrix((V, (I, J)), shape=(self.ntEy, self.ntEy))
         # Test if it needs to be deflated again, (if any parents were also hanging)
         last_ind = max(np.nonzero(Rh.getnnz(0)>0)[0][-1], self.nEy)
         while(last_ind > self.nEy):
             Rh = Rh*Rh
             last_ind = max(np.nonzero(Rh.getnnz(0)>0)[0][-1], self.nEy)
-        Rh = Rh[:,:last_ind]
+        Rh = Rh[:, : last_ind]
         return Rh
 
     @cython.boundscheck(False)
     def _deflate_edges_z(self):
         #I is output index (with hanging)
         #J is input index (without hanging)
-        cdef int_t dim = self.dim
+        cdef int_t dim = self._dim
         cdef np.int64_t[:] I = np.empty(2*self.ntEz, dtype=np.int64)
         cdef np.int64_t[:] J = np.empty(2*self.ntEz, dtype=np.int64)
         cdef np.float64_t[:] V = np.empty(2*self.ntEz, dtype=np.float64)
@@ -1121,23 +1115,23 @@ cdef class _TreeMesh:
         for it in self.tree.edges_z:
             edge = it.second
             ii = edge.index
-            I[2*ii  ] = ii
-            I[2*ii+1] = ii
+            I[2*ii    ] = ii
+            I[2*ii + 1] = ii
             if edge.hanging:
-                J[2*ii  ] = edge.parents[0].index
-                J[2*ii+1] = edge.parents[1].index
+                J[2*ii    ] = edge.parents[0].index
+                J[2*ii + 1] = edge.parents[1].index
             else:
-                J[2*ii  ] = ii
-                J[2*ii+1] = ii
-            V[2*ii  ] = 0.5
-            V[2*ii+1] = 0.5
+                J[2*ii    ] = ii
+                J[2*ii + 1] = ii
+            V[2*ii    ] = 0.5
+            V[2*ii + 1] = 0.5
         Rh = sp.csr_matrix((V, (I, J)), shape=(self.ntEz, self.ntEz))
         # Test if it needs to be deflated again, (if any parents were also hanging)
         last_ind = max(np.nonzero(Rh.getnnz(0)>0)[0][-1], self.nEz)
         while(last_ind > self.nEz):
             Rh = Rh*Rh
             last_ind = max(np.nonzero(Rh.getnnz(0)>0)[0][-1], self.nEz)
-        Rh = Rh[:,:last_ind]
+        Rh = Rh[:, : last_ind]
         return Rh
 
     def _deflate_edges(self):
@@ -1147,7 +1141,7 @@ cdef class _TreeMesh:
         return sp.block_diag((Rx, Ry, Rz))
 
     def _deflate_faces(self):
-        if(self.dim==2):
+        if(self._dim == 2):
             Rx = self._deflate_edges_x()
             Ry = self._deflate_edges_y()
             return sp.block_diag((Ry, Rx))
@@ -1236,15 +1230,15 @@ cdef class _TreeMesh:
         for it in self.tree.nodes:
             node = it.second
             ii = node.index
-            I[4*ii:4*ii+4] = ii
+            I[4*ii:4*ii + 4] = ii
             if node.hanging:
-                J[4*ii  ] = node.parents[0].index
-                J[4*ii+1] = node.parents[1].index
-                J[4*ii+2] = node.parents[2].index
-                J[4*ii+3] = node.parents[3].index
+                J[4*ii    ] = node.parents[0].index
+                J[4*ii + 1] = node.parents[1].index
+                J[4*ii + 2] = node.parents[2].index
+                J[4*ii + 3] = node.parents[3].index
             else:
-                J[4*ii:4*ii+4] = ii
-            V[4*ii:4*ii+4] = 0.25;
+                J[4*ii : 4*ii + 4] = ii
+            V[4*ii : 4*ii + 4] = 0.25;
 
         Rh = sp.csr_matrix((V, (I, J)), shape=(self.ntN, self.ntN))
         # Test if it needs to be deflated again, (if any parents were also hanging)
@@ -1252,7 +1246,7 @@ cdef class _TreeMesh:
         while(last_ind > self.nN):
             Rh = Rh*Rh
             last_ind = max(np.nonzero(Rh.getnnz(0)>0)[0][-1], self.nN)
-        Rh = Rh[:,:last_ind]
+        Rh = Rh[:, : last_ind]
         return Rh
 
     @property
@@ -1265,7 +1259,7 @@ cdef class _TreeMesh:
         cdef np.int64_t ind, ii, n_epc
         cdef double scale
 
-        n_epc = 2*(self.dim-1)
+        n_epc = 2*(self._dim-1)
         I = np.empty(self.nC*n_epc, dtype=np.int64)
         J = np.empty(self.nC*n_epc, dtype=np.int64)
         V = np.empty(self.nC*n_epc, dtype=np.float64)
@@ -1273,9 +1267,9 @@ cdef class _TreeMesh:
         for cell in self.tree.cells:
             ind = cell.index
             for ii in range(n_epc):
-                I[ind*n_epc+ii] = ind
-                J[ind*n_epc+ii] = cell.edges[ii].index
-                V[ind*n_epc+ii] = scale
+                I[ind*n_epc + ii] = ind
+                J[ind*n_epc + ii] = cell.edges[ii].index
+                V[ind*n_epc + ii] = scale
 
         Rex = self._deflate_edges_x()
         self._aveEx2CC = sp.csr_matrix((V, (I, J)))*Rex
@@ -1291,7 +1285,7 @@ cdef class _TreeMesh:
         cdef np.int64_t ind, ii, n_epc
         cdef double scale
 
-        n_epc = 2*(self.dim-1)
+        n_epc = 2*(self._dim-1)
         I = np.empty(self.nC*n_epc, dtype=np.int64)
         J = np.empty(self.nC*n_epc, dtype=np.int64)
         V = np.empty(self.nC*n_epc, dtype=np.float64)
@@ -1299,9 +1293,9 @@ cdef class _TreeMesh:
         for cell in self.tree.cells:
             ind = cell.index
             for ii in range(n_epc):
-                I[ind*n_epc+ii] = ind
-                J[ind*n_epc+ii] = cell.edges[n_epc+ii].index #y edges
-                V[ind*n_epc+ii] = scale
+                I[ind*n_epc + ii] = ind
+                J[ind*n_epc + ii] = cell.edges[n_epc + ii].index #y edges
+                V[ind*n_epc + ii] = scale
 
         Rey = self._deflate_edges_y()
         self._aveEy2CC = sp.csr_matrix((V, (I, J)))*Rey
@@ -1312,14 +1306,14 @@ cdef class _TreeMesh:
     def aveEz2CC(self):
         if self._aveEz2CC is not None:
             return self._aveEz2CC
-        if self.dim == 2:
+        if self._dim == 2:
             raise Exception('There are no z-edges in 2D')
         cdef np.int64_t[:] I,J
         cdef np.float64_t[:] V
         cdef np.int64_t ind, ii, n_epc
         cdef double scale
 
-        n_epc = 2*(self.dim-1)
+        n_epc = 2*(self._dim-1)
         I = np.empty(self.nC*n_epc, dtype=np.int64)
         J = np.empty(self.nC*n_epc, dtype=np.int64)
         V = np.empty(self.nC*n_epc, dtype=np.float64)
@@ -1327,9 +1321,9 @@ cdef class _TreeMesh:
         for cell in self.tree.cells:
             ind = cell.index
             for ii in range(n_epc):
-                I[ind*n_epc+ii] = ind
-                J[ind*n_epc+ii] = cell.edges[ii+2*n_epc].index
-                V[ind*n_epc+ii] = scale
+                I[ind*n_epc + ii] = ind
+                J[ind*n_epc + ii] = cell.edges[ii + 2*n_epc].index
+                V[ind*n_epc + ii] = scale
 
         Rez = self._deflate_edges_z()
         self._aveEz2CC = sp.csr_matrix((V, (I, J)))*Rez
@@ -1339,16 +1333,16 @@ cdef class _TreeMesh:
     def aveE2CC(self):
         if self._aveE2CC is None:
             stacks = [self.aveEx2CC, self.aveEy2CC]
-            if self.dim==3:
+            if self._dim == 3:
                 stacks += [self.aveEz2CC]
-            self._aveE2CC = 1.0/self.dim * sp.hstack(stacks).tocsr()
+            self._aveE2CC = 1.0/self._dim * sp.hstack(stacks).tocsr()
         return self._aveE2CC
 
     @property
     def aveE2CCV(self):
         if self._aveE2CCV is None:
             stacks = [self.aveEx2CC, self.aveEy2CC]
-            if self.dim==3:
+            if self._dim == 3:
                 stacks += [self.aveEz2CC]
             self._aveE2CCV = sp.block_diag(stacks).tocsr()
         return self._aveE2CCV
@@ -1358,7 +1352,7 @@ cdef class _TreeMesh:
     def aveFx2CC(self):
         if self._aveFx2CC is not None:
             return self._aveFx2CC
-        if self.dim == 2:
+        if self._dim == 2:
             return self.aveEy2CC
 
         cdef np.int64_t[:] I,J
@@ -1369,14 +1363,16 @@ cdef class _TreeMesh:
         I = np.empty(self.nC*2, dtype=np.int64)
         J = np.empty(self.nC*2, dtype=np.int64)
         V = np.empty(self.nC*2, dtype=np.float64)
+
         for cell in self.tree.cells:
             face1 = cell.faces[0] #y edge/ x face
             face2 = cell.faces[1] #y edge/ x face
             ii = cell.index
-            I[ii*2:ii*2+2] = ii
-            J[ii*2] = face1.index
-            J[ii*2+1] = face2.index
-            V[ii*2:ii*2+2] = 0.5
+            I[ii*2 : ii*2 + 2] = ii
+            J[ii*2    ] = face1.index
+            J[ii*2 + 1] = face2.index
+            V[ii*2 : ii*2 + 2] = 0.5
+
         Rfx = self._deflate_faces_x()
         self._aveFx2CC = sp.csr_matrix((V, (I, J)))*Rfx
         return self._aveFx2CC
@@ -1386,7 +1382,7 @@ cdef class _TreeMesh:
     def aveFy2CC(self):
         if self._aveFy2CC is not None:
             return self._aveFy2CC
-        if self.dim == 2:
+        if self._dim == 2:
             return self.aveEx2CC
 
         cdef np.int64_t[:] I,J
@@ -1397,14 +1393,16 @@ cdef class _TreeMesh:
         I = np.empty(self.nC*2, dtype=np.int64)
         J = np.empty(self.nC*2, dtype=np.int64)
         V = np.empty(self.nC*2, dtype=np.float64)
+
         for cell in self.tree.cells:
             face1 = cell.faces[2] #x edge/ y face
             face2 = cell.faces[3] #x edge/ y face
             ii = cell.index
-            I[ii*2:ii*2+2] = ii
-            J[ii*2] = face1.index
-            J[ii*2+1] = face2.index
-            V[ii*2:ii*2+2] = 0.5
+            I[ii*2 : ii*2 + 2] = ii
+            J[ii*2    ] = face1.index
+            J[ii*2 + 1] = face2.index
+            V[ii*2 : ii*2 + 2] = 0.5
+
         Rfy = self._deflate_faces_y()
         self._aveFy2CC = sp.csr_matrix((V, (I, J)))*Rfy
         return self._aveFy2CC
@@ -1414,7 +1412,7 @@ cdef class _TreeMesh:
     def aveFz2CC(self):
         if self._aveFz2CC is not None:
             return self._aveFz2CC
-        if self.dim == 2:
+        if self._dim == 2:
             raise Exception('There are no z-faces in 2D')
         cdef np.int64_t[:] I,J
         cdef np.float64_t[:] V
@@ -1424,14 +1422,16 @@ cdef class _TreeMesh:
         I = np.empty(self.nC*2, dtype=np.int64)
         J = np.empty(self.nC*2, dtype=np.int64)
         V = np.empty(self.nC*2, dtype=np.float64)
+
         for cell in self.tree.cells:
             face1 = cell.faces[4]
             face2 = cell.faces[5]
             ii = cell.index
-            I[ii*2:ii*2+2] = ii
-            J[ii*2] = face1.index
-            J[ii*2+1] = face2.index
-            V[ii*2:ii*2+2] = 0.5
+            I[ii*2 : ii*2 + 2] = ii
+            J[ii*2    ] = face1.index
+            J[ii*2 + 1] = face2.index
+            V[ii*2 : ii*2 + 2] = 0.5
+
         Rfy = self._deflate_faces_z()
         self._aveFz2CC = sp.csr_matrix((V, (I, J)))*Rfy
         return self._aveFz2CC
@@ -1441,10 +1441,9 @@ cdef class _TreeMesh:
         "Construct the averaging operator on cell faces to cell centers."
         if self._aveF2CC is None:
             stacks = [self.aveFx2CC, self.aveFy2CC]
-            if self.dim == 3:
+            if self._dim == 3:
                 stacks += [self.aveFz2CC]
-
-            self._aveF2CC = 1./self.dim*sp.hstack(stacks).tocsr()
+            self._aveF2CC = 1./self._dim*sp.hstack(stacks).tocsr()
         return self._aveF2CC
 
     @property
@@ -1452,9 +1451,8 @@ cdef class _TreeMesh:
         "Construct the averaging operator on cell faces to cell centers."
         if self._aveF2CCV is None:
             stacks = [self.aveFx2CC, self.aveFy2CC]
-            if self.dim == 3:
+            if self._dim == 3:
                 stacks += [self.aveFz2CC]
-
             self._aveF2CCV = sp.block_diag(stacks).tocsr()
         return self._aveF2CCV
 
@@ -1466,33 +1464,35 @@ cdef class _TreeMesh:
         cdef np.int64_t ii, id, n_ppc
         cdef double scale
         if self._aveN2CC is None:
-            n_ppc = 1<<self.dim
+            n_ppc = 1<<self._dim
             scale = 1.0/n_ppc
             I = np.empty(self.nC*n_ppc, dtype=np.int64)
             J = np.empty(self.nC*n_ppc, dtype=np.int64)
             V = np.empty(self.nC*n_ppc, dtype=np.float64)
+
             for cell in self.tree.cells:
                 ii = cell.index
                 for id in range(n_ppc):
-                    I[ii*n_ppc+id] = ii
-                    J[ii*n_ppc+id] = cell.points[id].index
-                    V[ii*n_ppc+id] = scale
+                    I[ii*n_ppc + id] = ii
+                    J[ii*n_ppc + id] = cell.points[id].index
+                    V[ii*n_ppc + id] = scale
+
             Rn = self._deflate_nodes()
             self._aveN2CC = sp.csr_matrix((V, (I, J)))*Rn
         return self._aveN2CC
 
     def _get_containing_cell_index(self, loc):
-        cdef double x,y,z
+        cdef double x, y, z
         x = loc[0]
         y = loc[1]
-        if self.dim==3:
+        if self._dim == 3:
             z = loc[2]
         else:
             z = 0
         return self.tree.containing_cell(x, y, z).index
 
     def _getFaceP(self, xFace, yFace, zFace):
-        cdef int dim = self.dim
+        cdef int dim = self._dim
         cdef int_t ind, id
 
         cdef np.int64_t[:] I, J, J1, J2, J3
@@ -1504,7 +1504,7 @@ cdef class _TreeMesh:
             J3 = np.empty(self.nC, dtype=np.int64)
 
         cdef int[3] faces
-        cdef np.int64_t[:] offsets = np.empty(self.dim, dtype=np.int64)
+        cdef np.int64_t[:] offsets = np.empty(self._dim, dtype=np.int64)
         faces[0] = (xFace == 'fXp')
         faces[1] = (yFace == 'fYp')
         if dim == 3:
@@ -1516,17 +1516,17 @@ cdef class _TreeMesh:
         else:
             offsets[0] = 0
             offsets[1] = self.ntFx
-            offsets[2] = self.ntFx+self.ntFy
+            offsets[2] = self.ntFx + self.ntFy
 
         for cell in self.tree.cells:
             ind = cell.index
             if dim==2:
-                J1[ind] = cell.edges[2+faces[0]].index
-                J2[ind] = cell.edges[  faces[1]].index + offsets[1]
+                J1[ind] = cell.edges[2 + faces[0]].index
+                J2[ind] = cell.edges[    faces[1]].index + offsets[1]
             else:
-                J1[ind] = cell.faces[  faces[0]].index
-                J2[ind] = cell.faces[2+faces[1]].index + offsets[1]
-                J3[ind] = cell.faces[4+faces[2]].index + offsets[2]
+                J1[ind] = cell.faces[    faces[0]].index
+                J2[ind] = cell.faces[2 + faces[1]].index + offsets[1]
+                J3[ind] = cell.faces[4 + faces[2]].index + offsets[2]
 
         I = np.arange(dim*self.nC, dtype=np.int64)
         if dim==2:
@@ -1535,7 +1535,7 @@ cdef class _TreeMesh:
             J = np.r_[J1, J2, J3]
         V = np.ones(self.nC*dim, dtype=np.float64)
 
-        P = sp.csr_matrix((V, (I, J)), shape=(self.dim*self.nC, self.ntF))
+        P = sp.csr_matrix((V, (I, J)), shape=(self._dim*self.nC, self.ntF))
         Rf = self._deflate_faces()
         return P*Rf
 
@@ -1550,7 +1550,7 @@ cdef class _TreeMesh:
         return Pxxx
 
     def _getEdgeP(self, xEdge, yEdge, zEdge):
-        cdef int dim = self.dim
+        cdef int dim = self._dim
         cdef int_t ind, id
         cdef int epc = 1<<(dim-1) #edges per cell 2/4
 
@@ -1559,15 +1559,15 @@ cdef class _TreeMesh:
 
         J1 = np.empty(self.nC, dtype=np.int64)
         J2 = np.empty(self.nC, dtype=np.int64)
-        if dim==3:
+        if dim == 3:
             J3 = np.empty(self.nC, dtype=np.int64)
 
         cdef int[3] edges
-        cdef np.int64_t[:] offsets = np.empty(self.dim, dtype=np.int64)
+        cdef np.int64_t[:] offsets = np.empty(self._dim, dtype=np.int64)
         try:
             edges[0] = int(xEdge[-1]) #0, 1, 2, 3
             edges[1] = int(yEdge[-1]) #0, 1, 2, 3
-            if dim==3:
+            if dim == 3:
                 edges[2] = int(zEdge[-1]) #0, 1, 2, 3
         except ValueError:
             raise Exception('Last character of edge string must be 0, 1, 2, or 3')
@@ -1575,7 +1575,7 @@ cdef class _TreeMesh:
         offsets[0] = 0
         offsets[1] = self.ntEx
         if dim==3:
-            offsets[2] = self.ntEx+self.ntEy
+            offsets[2] = self.ntEx + self.ntEy
 
         for cell in self.tree.cells:
             ind = cell.index
@@ -1591,7 +1591,7 @@ cdef class _TreeMesh:
             J = np.r_[J1, J2, J3]
         V = np.ones(self.nC*dim, dtype=np.float64)
 
-        P = sp.csr_matrix((V, (I, J)), shape=(self.dim*self.nC, self.ntE))
+        P = sp.csr_matrix((V, (I, J)), shape=(self._dim*self.nC, self.ntE))
         Rf = self._deflate_edges()
         return P*Rf
 
@@ -1612,11 +1612,11 @@ cdef class _TreeMesh:
         cdef np.int64_t i, ii, id, n_simps, dim
 
         n_simps = simplices.shape[0]
-        dim = self.dim
+        dim = self._dim
 
-        cull_x = 1 if 'x' in cull_dir else 0
-        cull_y = 1 if 'y' in cull_dir else 0
-        cull_z = 1 if (dim==3 and 'z' in cull_dir) else 0
+        cull_x = ('x' in cull_dir)
+        cull_y = ('y' in cull_dir)
+        cull_z = (dim == 3 and 'z' in cull_dir)
         cdef np.float64_t[:] center = np.zeros(dim)
         cdef c_Cell *cell
         is_inside = np.ones(n_simps, dtype=np.bool)
@@ -1624,12 +1624,12 @@ cdef class _TreeMesh:
 
         for i in range(n_simps):
             center[:] = 0.0
-            for ii in range(dim+1):
+            for ii in range(dim + 1):
                 for id in range(dim):
-                    center[id] += points[simplices[i,ii],id]
+                    center[id] += points[simplices[i, ii], id]
 
             for id in range(dim):
-                center[id] *= 1.0/(dim+1.0)
+                center[id] *= 1.0/(dim + 1.0)
 
             if dim==2:
                 cell = self.tree.containing_cell(center[0], center[1], 0.0)
@@ -1638,24 +1638,23 @@ cdef class _TreeMesh:
                 cell = self.tree.containing_cell(center[0], center[1], center[2])
 
             if cull_x:
-                diff = center[0]-cell.location[0]
-                if ((diff<0 and cell.neighbors[0]==NULL) or
-                    (diff>0 and cell.neighbors[1]==NULL)):
+                diff = center[0] - cell.location[0]
+                if ((diff < 0 and cell.neighbors[0] == NULL) or
+                    (diff > 0 and cell.neighbors[1] == NULL)):
                     is_inside[i] = False
             if cull_y:
-                diff = center[1]-cell.location[1]
-                if ((diff<0 and cell.neighbors[2]==NULL) or
-                    (diff>0 and cell.neighbors[3]==NULL)):
+                diff = center[1] - cell.location[1]
+                if ((diff < 0 and cell.neighbors[2] == NULL) or
+                    (diff > 0 and cell.neighbors[3] == NULL)):
                     is_inside[i] = False
             if cull_z:
-                diff = center[2]-cell.location[2]
-                if ((diff<0 and cell.neighbors[4]==NULL) or
-                    (diff>0 and cell.neighbors[5]==NULL)):
+                diff = center[2] - cell.location[2]
+                if ((diff < 0 and cell.neighbors[4] == NULL) or
+                    (diff > 0 and cell.neighbors[5] == NULL)):
                     is_inside[i] = False
         return is_inside
 
     def _get_grid_triang(self, grid='CC', double eps=1E-8):
-
         if grid=='CC':
             points = self.gridCC
             cull = 'xyz'
@@ -1682,7 +1681,7 @@ cdef class _TreeMesh:
 
         is_inside = self._cull_outer_simplices(points, triang.simplices, cull)
 
-        p = np.full(triang.nsimplex+1,-1, dtype=triang.neighbors.dtype)
+        p = np.full(triang.nsimplex + 1, -1, dtype=triang.neighbors.dtype)
 
         triang.simplices = triang.simplices[is_inside].copy()
         triang.equations = triang.equations[is_inside].copy()
@@ -1707,17 +1706,17 @@ cdef class _TreeMesh:
     def getInterpolationMat(self, locs, locType, zerosOutside=False):
         if locType not in ['N', 'CC', "Ex", "Ey", "Ez", "Fx", "Fy", "Fz"]:
             raise Exception('locType must be one of N, CC, Ex, Ey, Ez, Fx, Fy, or Fz')
-        if locType=='N':
+        if locType == 'N':
             return self._getNodeIntMat(locs, zerosOutside)
         tri = self._get_grid_triang(grid=locType)
 
-        if self.dim==2 and locType in ['Ez','Fz']:
+        if self._dim == 2 and locType in ['Ez','Fz']:
             raise Exception('Unable to interpolate from Z edges/face in 2D')
 
-        cdef np.int64_t[:,:] simplices = tri.simplices.astype(np.int64)
+        cdef np.int64_t[:, :] simplices = tri.simplices.astype(np.int64)
 
         cdef np.int64_t i_out, i_p, i, dim, n_points, npi, n_grid, n_outside
-        dim = self.dim
+        dim = self._dim
 
         cdef np.float64_t[:, :] points = np.atleast_2d(locs).copy()
         cdef np.float64_t[:, :] grid_points = tri.points
@@ -1740,20 +1739,20 @@ cdef class _TreeMesh:
         proj_point = np.empty_like(points[0])
         point = np.empty_like(points[0])
 
-        np_outside_points = (np.where(npsimps==-1)[0]).astype(np.int64)
+        np_outside_points = (np.where(npsimps == -1)[0]).astype(np.int64)
         cdef np.int64_t[:] outside_points = np_outside_points
         n_outside = outside_points.shape[0]
         cdef np.float64_t[:] barys = np.empty(dim, dtype=np.float64)
 
         trans = tri.transform[npsimps]
-        shift = np.array(points)-trans[:, dim]
+        shift = np.array(points) - trans[:, dim]
         bs = np.einsum('ikj,ij->ik', trans[:, :dim], shift)
-        bs = np.c_[bs, 1-bs.sum(axis=1)]
+        bs = np.c_[bs, 1 - bs.sum(axis=1)]
 
-        I = np.column_stack((dim+1)*[np.arange(n_points, dtype=np.int64)])
+        I = np.column_stack((dim + 1)*[np.arange(n_points, dtype=np.int64)])
         J = (tri.simplices[npsimps]).astype(np.int64)
         V = bs.astype(np.float64)
-        cdef np.int64_t[:,:] Js = J
+        cdef np.int64_t[:, :] Js = J
         cdef np.float64_t[:, :] Vs = V
 
         if n_outside > 0 and not zerosOutside:
@@ -1792,16 +1791,16 @@ cdef class _TreeMesh:
 
                     dsq = 0
                     for i in range(dim):
-                        dsq += (point[i]-proj_point[i])*(point[i]-proj_point[i])
+                        dsq += (point[i] - proj_point[i])*(point[i] - proj_point[i])
                     if dsq < d:
                         d = dsq
                         if dim==2:
                             _barycentric_edge(&proj_point[0], p0, p1, &barys[0], dim)
                         else:
                             _barycentric_triangle(&proj_point[0], p0, p1, p2, &barys[0], dim)
-                        Js[i_p,0:dim] = simplex[:]
-                        Vs[i_p,0:dim] = barys[:]
-                        Vs[i_p,dim] = 0.0
+                        Js[i_p, 0:dim] = simplex[:]
+                        Vs[i_p, 0:dim] = barys[:]
+                        Vs[i_p, dim] = 0.0
 
         if zerosOutside:
                 V[outside_points] = 0.0
@@ -1825,14 +1824,14 @@ cdef class _TreeMesh:
     def _getNodeIntMat(self, locs, zerosOutside):
         cdef:
             double[:, :] locations = locs
-            int_t dim = self.dim
+            int_t dim = self._dim
             int_t n_loc = locs.shape[0]
             int_t n_nodes = 1<<dim
             np.int64_t[:] I = np.empty(n_loc*n_nodes, dtype=np.int64)
             np.int64_t[:] J = np.empty(n_loc*n_nodes, dtype=np.int64)
             np.float64_t[:] V = np.empty(n_loc*n_nodes, dtype=np.float64)
 
-            int_t ii,i
+            int_t ii, i
             c_Cell *cell
             double x, y, z
             double wx, wy, wz
@@ -1847,45 +1846,45 @@ cdef class _TreeMesh:
             else:
                 z = 0.0
             #get containing (or closest) cell
-            cell = self.tree.containing_cell(x,y,z)
+            cell = self.tree.containing_cell(x, y, z)
             #calculate weights
-            wx = ((cell.points[3].location[0]-x)/
-                  (cell.points[3].location[0]-cell.points[0].location[0]))
-            wy = ((cell.points[3].location[1]-y)/
-                  (cell.points[3].location[1]-cell.points[0].location[1]))
-            if dim==3:
-                wz = ((cell.points[7].location[2]-z)/
-                      (cell.points[7].location[2]-cell.points[0].location[2]))
+            wx = ((cell.points[3].location[0] - x)/
+                  (cell.points[3].location[0] - cell.points[0].location[0]))
+            wy = ((cell.points[3].location[1] - y)/
+                  (cell.points[3].location[1] - cell.points[0].location[1]))
+            if dim == 3:
+                wz = ((cell.points[7].location[2] - z)/
+                      (cell.points[7].location[2] - cell.points[0].location[2]))
             else:
                 wz = 1.0
 
 
-            I[n_nodes*i:n_nodes*i+n_nodes] = i
+            I[n_nodes*i:n_nodes*i + n_nodes] = i
 
 
             if zeros_out:
-                if (wx<-eps or wy<-eps or wz<-eps or
-                    wx>1+eps or wy>1+eps or wz>1+eps):
+                if (wx < -eps or wy < -eps or wz < -eps or
+                    wx>1 + eps or wy > 1 + eps or wz > 1 + eps):
                     for ii in range(n_nodes):
-                        J[n_nodes*i+ii] = 0
-                        V[n_nodes*i+ii] = 0.0
+                        J[n_nodes*i + ii] = 0
+                        V[n_nodes*i + ii] = 0.0
                     continue
 
             wx = _clip01(wx)
             wy = _clip01(wy)
             wz = _clip01(wz)
             for ii in range(n_nodes):
-                J[n_nodes*i+ii] = cell.points[ii].index
+                J[n_nodes*i + ii] = cell.points[ii].index
 
-            V[n_nodes*i  ] = wx*wy*wz
-            V[n_nodes*i+1] = (1-wx)*wy*wz
-            V[n_nodes*i+2] = wx*(1-wy)*wz
-            V[n_nodes*i+3] = (1-wx)*(1-wy)*wz
+            V[n_nodes*i    ] = wx*wy*wz
+            V[n_nodes*i + 1] = (1 - wx)*wy*wz
+            V[n_nodes*i + 2] = wx*(1 - wy)*wz
+            V[n_nodes*i + 3] = (1 - wx)*(1 - wy)*wz
             if dim==3:
-                V[n_nodes*i+4] = wx*wy*(1-wz)
-                V[n_nodes*i+5] = (1-wx)*wy*(1-wz)
-                V[n_nodes*i+6] = wx*(1-wy)*(1-wz)
-                V[n_nodes*i+7] = (1-wx)*(1-wy)*(1-wz)
+                V[n_nodes*i + 4] = wx*wy*(1 - wz)
+                V[n_nodes*i + 5] = (1 - wx)*wy*(1 - wz)
+                V[n_nodes*i + 6] = wx*(1 - wy)*(1 - wz)
+                V[n_nodes*i + 7] = (1 - wx)*(1 - wy)*(1 - wz)
 
         Rn = self._deflate_nodes()
         return sp.csr_matrix((V, (I, J)), shape=(locs.shape[0],self.ntN))*Rn
@@ -1902,7 +1901,7 @@ cdef class _TreeMesh:
             import matplotlib.pyplot as plt
             import matplotlib.colors as colors
             import matplotlib.cm as cmx
-            if(self.dim==2):
+            if(self._dim == 2):
                 ax = plt.subplot(111)
             else:
                 from mpl_toolkits.mplot3d import Axes3D
@@ -1918,42 +1917,42 @@ cdef class _TreeMesh:
             Edge *edge
 
         if grid:
-            if(self.dim)==2:
-                X = np.empty((self.nE*3,))
-                Y = np.empty((self.nE*3,))
+            if(self._dim) == 2:
+                X = np.empty((self.nE*3))
+                Y = np.empty((self.nE*3))
                 for it in self.tree.edges_x:
                     edge = it.second
                     if(edge.hanging): continue
                     i = edge.index*3
                     p1 = edge.points[0]
                     p2 = edge.points[1]
-                    X[i:i+3] = [p1.location[0],p2.location[0],np.nan]
-                    Y[i:i+3] = [p1.location[1],p2.location[1],np.nan]
+                    X[i:i + 3] = [p1.location[0], p2.location[0], np.nan]
+                    Y[i:i + 3] = [p1.location[1], p2.location[1], np.nan]
 
                 offset = self.nEx
                 for it in self.tree.edges_y:
                     edge = it.second
                     if(edge.hanging): continue
-                    i = (edge.index+offset)*3
+                    i = (edge.index + offset)*3
                     p1 = edge.points[0]
                     p2 = edge.points[1]
-                    X[i:i+3] = [p1.location[0],p2.location[0],np.nan]
-                    Y[i:i+3] = [p1.location[1],p2.location[1],np.nan]
+                    X[i : i+3] = [p1.location[0], p2.location[0], np.nan]
+                    Y[i : i+3] = [p1.location[1], p2.location[1], np.nan]
 
                 ax.plot(X, Y, 'b-')
             else:
-                X = np.empty((self.nE*3,))
-                Y = np.empty((self.nE*3,))
-                Z = np.empty((self.nE*3,))
+                X = np.empty((self.nE*3))
+                Y = np.empty((self.nE*3))
+                Z = np.empty((self.nE*3))
                 for it in self.tree.edges_x:
                     edge = it.second
                     if(edge.hanging): continue
                     i = edge.index*3
                     p1 = edge.points[0]
                     p2 = edge.points[1]
-                    X[i:i+3] = [p1.location[0], p2.location[0], np.nan]
-                    Y[i:i+3] = [p1.location[1], p2.location[1], np.nan]
-                    Z[i:i+3] = [p1.location[2], p2.location[2], np.nan]
+                    X[i : i+3] = [p1.location[0], p2.location[0], np.nan]
+                    Y[i : i+3] = [p1.location[1], p2.location[1], np.nan]
+                    Z[i : i+3] = [p1.location[2], p2.location[2], np.nan]
 
                 offset = self.nEx
                 for it in self.tree.edges_y:
@@ -1962,20 +1961,20 @@ cdef class _TreeMesh:
                     i = (edge.index+offset)*3
                     p1 = edge.points[0]
                     p2 = edge.points[1]
-                    X[i:i+3] = [p1.location[0], p2.location[0], np.nan]
-                    Y[i:i+3] = [p1.location[1], p2.location[1], np.nan]
-                    Z[i:i+3] = [p1.location[2], p2.location[2], np.nan]
+                    X[i : i+3] = [p1.location[0], p2.location[0], np.nan]
+                    Y[i : i+3] = [p1.location[1], p2.location[1], np.nan]
+                    Z[i : i+3] = [p1.location[2], p2.location[2], np.nan]
 
                 offset += self.nEy
                 for it in self.tree.edges_z:
                     edge = it.second
                     if(edge.hanging): continue
-                    i = (edge.index+offset)*3
+                    i = (edge.index + offset)*3
                     p1 = edge.points[0]
                     p2 = edge.points[1]
-                    X[i:i+3] = [p1.location[0], p2.location[0], np.nan]
-                    Y[i:i+3] = [p1.location[1], p2.location[1], np.nan]
-                    Z[i:i+3] = [p1.location[2], p2.location[2], np.nan]
+                    X[i : i+3] = [p1.location[0], p2.location[0], np.nan]
+                    Y[i : i+3] = [p1.location[1], p2.location[1], np.nan]
+                    Z[i : i+3] = [p1.location[2], p2.location[2], np.nan]
 
                 ax.plot(X, Y, 'b-', zs=Z)
 
@@ -2015,7 +2014,7 @@ cdef class _TreeMesh:
 
         ax.set_xlabel('x1')
         ax.set_ylabel('x2')
-        if self.dim==3:
+        if self._dim == 3:
             ax.set_zlabel('x3')
 
         ax.grid(True)
@@ -2023,7 +2022,7 @@ cdef class _TreeMesh:
             plt.show()
 
     def plotImage(self, I, ax=None, showIt=False, grid=False, clim=None):
-        if self.dim == 3:
+        if self._dim == 3:
             raise Exception('Use plot slice?')
 
         import matplotlib.pyplot as plt
@@ -2052,7 +2051,6 @@ cdef class _TreeMesh:
                 facecolor=scalarMap.to_rgba(I[ii]),
                 edgecolor=edge_color)
             )
-            # if text: ax.text(self.center[0], self.center[1], self.num)
         # http://stackoverflow.com/questions/8342549/matplotlib-add-colorbar-to-a-sequence-of-line-plots
         scalarMap._A = []
         ax.set_xlabel('x')
@@ -2066,25 +2064,28 @@ cdef class _TreeMesh:
         pass
 
     def __getstate__(self):
-        cdef int id, dim = self.dim
-        indArr = np.empty((self.nC, dim+1), dtype=np.int)
-        cdef np.int_t[:,:] _indArr = indArr
+        cdef int id, dim = self._dim
+        indArr = np.empty((self.nC, dim), dtype=np.int)
+        levels = np.empty((self.nC), dtype=np.int)
+        cdef np.int_t[:, :] _indArr = indArr
+        cdef np.int_t[:] _levels = levels
         for cell in self.tree.cells:
             for id in range(dim):
                 _indArr[cell.index, id] = cell.location_ind[id]
-            _indArr[cell.index, dim] = cell.level
-        return indArr
+            _levels[cell.index] = cell.level
+        return indArr, levels
 
     def __setstate__(self, state):
-        indArr = state[:, :-1]
-        levels = state[:, -1]
+        indArr, levels = state
         xs = np.array(self._xs)
         ys = np.array(self._ys)
-        if self.dim == 3:
+        if self._dim == 3:
             zs = np.array(self._zs)
-            points = np.column_stack((xs[indArr[:,0]], ys[indArr[:,1]], zs[indArr[:,2]]))
+            points = np.column_stack((xs[indArr[:, 0]],
+                                      ys[indArr[:, 1]],
+                                      zs[indArr[:, 2]]))
         else:
-            points = np.column_stack((xs[indArr[:,0]], ys[indArr[:,1]]))
+            points = np.column_stack((xs[indArr[:, 0]], ys[indArr[:, 1]]))
         self._insert_cells(points, levels)
         self.tree.number()
 
@@ -2112,24 +2113,24 @@ cdef class _TreeMesh:
     def _ubc_indArr(self):
         if self.__ubc_indArr is not None:
             return self.__ubc_indArr
-        indArr = self.__getstate__()
+        indArr, levels = self.__getstate__()
 
         max_level = self.max_level
 
-        indArr[:, -1] = 1<<(max_level - indArr[:, -1])
+        levels = 1<<(max_level - levels)
+
         indArr[:, 2] = (2<<max_level) - indArr[:, 2]
+        indArr = (indArr - levels[:, None])//2
+        indArr += 1
 
-        indArr[:, :-1] = (indArr[:, :-1] - indArr[:, -1, None])//2
-        indArr[:, :-1] += 1
-
-        self.__ubc_indArr = indArr
+        self.__ubc_indArr = (indArr, levels)
         return self.__ubc_indArr
 
     @property
     def _ubc_order(self):
         if self.__ubc_order is not None:
             return self.__ubc_order
-        indArr = self._ubc_indArr
+        indArr, _ = self._ubc_indArr
         self.__ubc_order = np.lexsort((indArr[:, 0], indArr[:, 1], indArr[:, 2]))
         return self.__ubc_order
 
@@ -2151,11 +2152,11 @@ cdef void _project_point_to_edge(double *p, double *p0, double *p1,
     cdef int i
 
     for i in range(dim):
-        v1 += (p[i]-p0[i])*(p1[i]-p0[i])
-        v2 += (p1[i]-p0[i])*(p1[i]-p0[i])
+        v1 += (p[i] - p0[i])*(p1[i] - p0[i])
+        v2 += (p1[i] - p0[i])*(p1[i] - p0[i])
     t = _clip01(v1/v2)
     for i in range(dim):
-        out[i] = (1.0-t)*p0[i] + t*p1[i]
+        out[i] = (1.0 - t)*p0[i] + t*p1[i]
 
 @cython.cdivision(True)
 cdef void _project_point_to_triangle(double *p, double *p0, double *p1, double *p2,
@@ -2181,10 +2182,10 @@ cdef void _barycentric_edge(double *p, double *p0, double *p1, double *bary, int
     cdef int i
 
     for i in range(dim):
-        v1 += (p[i]-p0[i])*(p1[i]-p0[i])
-        v2 += (p1[i]-p0[i])*(p1[i]-p0[i])
+        v1 += (p[i] - p0[i])*(p1[i] - p0[i])
+        v2 += (p1[i] - p0[i])*(p1[i] - p0[i])
     bary[1] = v1/v2
-    bary[0] = 1-bary[1]
+    bary[0] = 1 - bary[1]
 
 @cython.cdivision(True)
 cdef void _barycentric_triangle(double *p, double *p0, double *p1, double *p2,
@@ -2192,9 +2193,9 @@ cdef void _barycentric_triangle(double *p, double *p0, double *p1, double *p2,
     cdef double d00=0, d01=0, d11=0, d20=0, d21=0
     cdef int i
     for i in range(dim):
-        bary[0] = p1[i]-p0[i]
-        bary[1] = p2[i]-p0[i]
-        bary[2] = p[i]-p0[i]
+        bary[0] = p1[i] - p0[i]
+        bary[1] = p2[i] - p0[i]
+        bary[2] = p[i] - p0[i]
 
         d00 += bary[0]*bary[0]
         d01 += bary[0]*bary[1]
@@ -2203,6 +2204,6 @@ cdef void _barycentric_triangle(double *p, double *p0, double *p1, double *p2,
         d21 += bary[2]*bary[1]
 
     bary[0] = 1.0/(d00*d11 - d01*d01)
-    bary[1] = (d11 * d20 - d01 * d21) * bary[0]
-    bary[2] = (d00 * d21 - d01 * d20) * bary[0]
+    bary[1] = (d11*d20 - d01*d21)*bary[0]
+    bary[2] = (d00*d21 - d01*d20)*bary[0]
     bary[0] = 1.0 - bary[1] - bary[2]

@@ -568,23 +568,19 @@ class TreeMeshIO(object):
         max_level = int(np.log2(nCunderMesh[0]))
         mesh = TreeMesh([h1, h2, h3], x0=x0, levels=max_level)
 
+
         # Convert indArr to points in coordinates of underlying cpp tree
         # indArr is ix, iy, iz(top-down) need it in ix, iy, iz (bottom-up)
-        indArr[:, :-1] -= 1 #shift by 1....
-        indArr[:, :-1] = 2*indArr[:, :-1] + indArr[:, -1, None]
-        indArr[:, 2] = (2<<max_level) - indArr[:, 2]
 
-        indArr[:, -1] = max_level-np.log2(indArr[:, -1])
-
-        #convert indArr to list of points
         levels = indArr[:, -1]
+        indArr = indArr[:, :-1]
 
-        xs, ys, zs = mesh._get_xs()
+        indArr -= 1 #shift by 1....
+        indArr = 2*indArr + levels[:, None]
+        indArr[:, 2] = (2<<max_level) - indArr[:, 2]
+        levels = max_level-np.log2(levels)
 
-        points = np.column_stack((xs[indArr[:,0]], ys[indArr[:,1]], zs[indArr[:,2]]))
-
-        mesh._insert_cells(points, levels)
-        mesh.number()
+        mesh.__setstate__((indArr, levels))
         return mesh
 
     def readModelUBC(mesh, fileName):
@@ -625,10 +621,11 @@ class TreeMeshIO(object):
         smallCell = np.array([h.min() for h in mesh.h])
         nrCells = mesh.nC
 
-        indArr = mesh._ubc_indArr
+        indArr, levels = mesh._ubc_indArr
         ubc_order = mesh._ubc_order
 
         indArr = indArr[ubc_order]
+        levels = levels[ubc_order]
 
         # Write the UBC octree mesh file
         head = (
@@ -643,7 +640,7 @@ class TreeMeshIO(object):
             ) +
             '{:.0f}'.format(nrCells)
         )
-        np.savetxt(fileName, indArr, fmt='%i', header=head, comments='')
+        np.savetxt(fileName, np.c_[indArr, levels], fmt='%i', header=head, comments='')
 
         # Print the models
         # Assign the model('s) to the object

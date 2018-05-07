@@ -127,7 +127,6 @@ class Tree{
   public:
     int_t n_dim;
     Cell *root;
-    function test_func;
     int_t max_level, nx, ny, nz;
     double *xs;
     double *ys;

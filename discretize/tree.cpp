@@ -29,6 +29,7 @@ Node::Node(int_t ix, int_t iy, int_t iz, double* xs, double *ys, double *zs){
     location[2] = zs[iz];
     key = key_func(ix, iy, iz);
     reference = 0;
+    index = 0;
     hanging = false;
     parents[0] = NULL;
     parents[1] = NULL;
@@ -46,6 +47,7 @@ Edge::Edge(){
     key = 0;
     index = 0;
     reference = 0;
+    length = 0.0;
     hanging = false;
     points[0] = NULL;
     points[1] = NULL;
@@ -72,6 +74,7 @@ Edge::Edge(Node& p1, Node& p2){
                 +(p2[1]-p1[1])
                 +(p2[2]-p1[2]);
       reference = 0;
+      index = 0;
       hanging = false;
       parents[0] = NULL;
       parents[1] = NULL;
@@ -81,6 +84,9 @@ Face::Face(){
     location_ind[0] = 0;
     location_ind[1] = 0;
     location_ind[2] = 0;
+    location[0] = 0.0;
+    location[1] = 0.0;
+    location[2] = 0.0;
     key = 0;
     reference = 0;
     index = 0;
@@ -117,6 +123,7 @@ Face::Face(Node& p1, Node& p2, Node& p3, Node& p4){
     area = ((p2[0]-p1[0])+(p2[1]-p1[1])+(p2[2]-p1[2]))*
            ((p3[0]-p1[0])+(p3[1]-p1[1])+(p3[2]-p1[2]));
     reference = 0;
+    index = 0;
     hanging = false;
     parent = NULL;
     edges[0] = NULL;
@@ -851,7 +858,7 @@ void Tree::finalize_lists(){
                 Node *node;
 
                 //Find Parent
-                int_t ip;
+                int_t ip = 0; // this is gauranteed to change
                 for(int_t i=0;i<4;++i){
                     node = face->points[i];
                     if(faces_z.count(node->key)){
