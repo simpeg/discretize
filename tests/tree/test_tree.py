@@ -21,37 +21,37 @@ class TestSimpleQuadTree(unittest.TestCase):
         M._insert_cells(points, level)
         M.number()
 
-        assert M.nhFx == 4
-        assert M.nFx == 12
+        self.assertEqual(M.nhFx, 4)
+        self.assertEqual(M.nFx, 12)
 
-        assert np.allclose(M.vol.sum(), 1.0)
-        #assert np.allclose(np.r_[M._areaFxFull, M._areaFyFull], M._deflationMatrix('F') * M.area)
+        self.assertTrue(np.allclose(M.vol.sum(), 1.0))
+        #self.assertTrue(np.allclose(np.r_[M._areaFxFull, M._areaFyFull], M._deflationMatrix('F') * M.area)
 
     def test_getitem(self):
         M = discretize.TreeMesh([4, 4])
         M.refine(1)
-        assert M.nC == 4
-        assert len(M) == M.nC
-        assert np.allclose(M[0].center, [0.25, 0.25])
-        #actual = [[0, 0], [0.5, 0], [0, 0.5], [0.5, 0.5]]
-        #for i, n in enumerate(M[0].nodes):
-        #    assert np.allclose(, actual[i])
+        self.assertEqual(M.nC, 4)
+        self.assertEqual(len(M), M.nC)
+        self.assertTrue(np.allclose(M[0].center, [0.25, 0.25]))
+        # actual = [[0, 0], [0.5, 0], [0, 0.5], [0.5, 0.5]]
+        # for i, n in enumerate(M[0].nodes):
+        #    self.assertTrue(np.allclose(, actual[i])
 
     def test_getitem3D(self):
         M = discretize.TreeMesh([4, 4, 4])
         M.refine(1)
-        assert M.nC == 8
-        assert len(M) == M.nC
-        assert np.allclose(M[0].center, [0.25, 0.25, 0.25])
-        #actual = [[0, 0, 0], [0.5, 0, 0], [0, 0.5, 0], [0.5, 0.5, 0],
+        self.assertEqual(M.nC, 8)
+        self.assertEqual(len(M), M.nC)
+        self.assertTrue(np.allclose(M[0].center, [0.25, 0.25, 0.25]))
+        # actual = [[0, 0, 0], [0.5, 0, 0], [0, 0.5, 0], [0.5, 0.5, 0],
         #          [0, 0, 0.5], [0.5, 0, 0.5], [0, 0.5, 0.5], [0.5, 0.5, 0.5]]
-        #for i, n in enumerate(M[0].nodes):
-        #    assert np.allclose(M._gridN[n, :], actual[i])
+        # for i, n in enumerate(M[0].nodes):
+        #    self.assertTrue(np.allclose(M._gridN[n, :], actual[i])
 
     def test_refine(self):
         M = discretize.TreeMesh([4, 4, 4])
         M.refine(1)
-        assert M.nC == 8
+        self.assertEqual(M.nC, 8)
 
     def test_h_gridded_2D(self):
         hx, hy = np.ones(4), np.r_[1., 2., 3., 4.]
@@ -94,23 +94,23 @@ class TestSimpleQuadTree(unittest.TestCase):
         T.refine(lambda xc: 2)
         # T.plotGrid(showIt=True)
         M = discretize.TensorMesh([hx, hy])
-        assert M.nC == T.nC
-        assert M.nF == T.nF
-        assert M.nFx == T.nFx
-        assert M.nFy == T.nFy
-        assert M.nE == T.nE
-        assert M.nEx == T.nEx
-        assert M.nEy == T.nEy
+        self.assertEqual(M.nC, T.nC)
+        self.assertEqual(M.nF, T.nF)
+        self.assertEqual(M.nFx, T.nFx)
+        self.assertEqual(M.nFy, T.nFy)
+        self.assertEqual(M.nE, T.nE)
+        self.assertEqual(M.nEx, T.nEx)
+        self.assertEqual(M.nEy, T.nEy)
 
-        assert np.allclose(M.area, T.permuteF*T.area)
-        assert np.allclose(M.edge, T.permuteE*T.edge)
-        assert np.allclose(M.vol, T.permuteCC*T.vol)
+        self.assertTrue(np.allclose(M.area, T.permuteF*T.area))
+        self.assertTrue(np.allclose(M.edge, T.permuteE*T.edge))
+        self.assertTrue(np.allclose(M.vol, T.permuteCC*T.vol))
 
         # plt.subplot(211).spy(M.faceDiv)
         # plt.subplot(212).spy(T.permuteCC*T.faceDiv*T.permuteF.T)
         # plt.show()
 
-        assert (M.faceDiv - T.permuteCC*T.faceDiv*T.permuteF.T).nnz == 0
+        self.assertEqual((M.faceDiv - T.permuteCC*T.faceDiv*T.permuteF.T).nnz, 0)
 
 
 class TestOcTree(unittest.TestCase):
@@ -128,19 +128,19 @@ class TestOcTree(unittest.TestCase):
         M._insert_cells(points, levels)
         M.number()
         # M.plotGrid(showIt=True)
-        assert M.nhFx == 4
-        assert M.nFx == 19
-        assert M.nC == 15
+        self.assertEqual(M.nhFx, 4)
+        self.assertTrue(M.nFx, 19)
+        self.assertTrue(M.nC, 15)
 
-        assert np.allclose(M.vol.sum(), 1.0)
+        self.assertTrue(np.allclose(M.vol.sum(), 1.0))
 
-        # assert np.allclose(M._areaFxFull, (M._deflationMatrix('F') * M.area)[:M.ntFx])
-        # assert np.allclose(M._areaFyFull, (M._deflationMatrix('F') * M.area)[M.ntFx:(M.ntFx+M.ntFy)])
-        # assert np.allclose(M._areaFzFull, (M._deflationMatrix('F') * M.area)[(M.ntFx+M.ntFy):])
+        # self.assertTrue(np.allclose(M._areaFxFull, (M._deflationMatrix('F') * M.area)[:M.ntFx]))
+        # self.assertTrue(np.allclose(M._areaFyFull, (M._deflationMatrix('F') * M.area)[M.ntFx:(M.ntFx+M.ntFy)])
+        # self.assertTrue(np.allclose(M._areaFzFull, (M._deflationMatrix('F') * M.area)[(M.ntFx+M.ntFy):])
 
-        # assert np.allclose(M._edgeExFull, (M._deflationMatrix('E') * M.edge)[:M.ntEx])
-        # assert np.allclose(M._edgeEyFull, (M._deflationMatrix('E') * M.edge)[M.ntEx:(M.ntEx+M.ntEy)])
-        # assert np.allclose(M._edgeEzFull, (M._deflationMatrix('E') * M.edge)[(M.ntEx+M.ntEy):])
+        # self.assertTrue(np.allclose(M._edgeExFull, (M._deflationMatrix('E') * M.edge)[:M.ntEx])
+        # self.assertTrue(np.allclose(M._edgeEyFull, (M._deflationMatrix('E') * M.edge)[M.ntEx:(M.ntEx+M.ntEy)])
+        # self.assertTrue(np.allclose(M._edgeEzFull, (M._deflationMatrix('E') * M.edge)[(M.ntEx+M.ntEy):]))
 
     def test_faceDiv(self):
 
@@ -149,20 +149,20 @@ class TestOcTree(unittest.TestCase):
         M.refine(lambda xc: 2)
         # M.plotGrid(showIt=True)
         Mr = discretize.TensorMesh([hx, hy, hz])
-        assert M.nC == Mr.nC
-        assert M.nF == Mr.nF
-        assert M.nFx == Mr.nFx
-        assert M.nFy == Mr.nFy
-        assert M.nE == Mr.nE
-        assert M.nEx == Mr.nEx
-        assert M.nEy == Mr.nEy
+        self.assertEqual(M.nC, Mr.nC)
+        self.assertEqual(M.nF, Mr.nF)
+        self.assertEqual(M.nFx, Mr.nFx)
+        self.assertEqual(M.nFy, Mr.nFy)
+        self.assertEqual(M.nE, Mr.nE)
+        self.assertEqual(M.nEx, Mr.nEx)
+        self.assertEqual(M.nEy , Mr.nEy)
 
-        assert np.allclose(Mr.area, M.permuteF*M.area)
-        assert np.allclose(Mr.edge, M.permuteE*M.edge)
-        assert np.allclose(Mr.vol, M.permuteCC*M.vol)
+        self.assertTrue(np.allclose(Mr.area, M.permuteF*M.area))
+        self.assertTrue(np.allclose(Mr.edge, M.permuteE*M.edge))
+        self.assertTrue(np.allclose(Mr.vol, M.permuteCC*M.vol))
 
         A = Mr.faceDiv - M.permuteCC*M.faceDiv*M.permuteF.T
-        assert np.allclose(A.data, 0)
+        self.assertTrue(np.allclose(A.data, 0))
 
 
     def test_edgeCurl(self):
@@ -176,7 +176,7 @@ class TestOcTree(unittest.TestCase):
 
         A = Mr.edgeCurl - M.permuteF*M.edgeCurl*M.permuteE.T
 
-        assert len(A.data)==0 or np.allclose(A.data, 0)
+        self.assertTrue(len(A.data)==0 or np.allclose(A.data, 0))
 
     def test_faceInnerProduct(self):
 
@@ -190,9 +190,12 @@ class TestOcTree(unittest.TestCase):
 
 
         # print(M.nC, M.nF, M.getFaceInnerProduct().shape, M.permuteF.shape)
+        A_face = Mr.getFaceInnerProduct() - M.permuteF * M.getFaceInnerProduct() * M.permuteF.T
+        A_edge = Mr.getEdgeInnerProduct() - M.permuteE * M.getEdgeInnerProduct() * M.permuteE.T
 
-        assert np.allclose(Mr.getFaceInnerProduct().todense(), (M.permuteF * M.getFaceInnerProduct() * M.permuteF.T).todense())
-        assert np.allclose(Mr.getEdgeInnerProduct().todense(), (M.permuteE * M.getEdgeInnerProduct() * M.permuteE.T).todense())
+
+        self.assertTrue(len(A_face.data)==0 or np.allclose(A_face.data, 0))
+        self.assertTrue(len(A_edge.data)==0 or np.allclose(A_edge.data, 0))
 
     def test_VectorIdenties(self):
         hx, hy, hz = [[(1, 4)], [(1, 4)], [(1, 4)]]
@@ -201,16 +204,18 @@ class TestOcTree(unittest.TestCase):
         Mr = discretize.TensorMesh([hx, hy, hz])
         M.refine(2) #Why wasn't this here before?
 
-        assert np.allclose((M.faceDiv * M.edgeCurl).data, 0)
+        self.assertTrue(np.allclose((M.faceDiv * M.edgeCurl).data, 0))
 
         hx, hy, hz = np.r_[1., 2, 3, 4], np.r_[5., 6, 7, 8], np.r_[9., 10, 11, 12]
 
         M = discretize.TreeMesh([hx, hy, hz], levels=2)
         Mr = discretize.TensorMesh([hx, hy, hz])
         M.refine(2)
+        A1 = M.faceDiv * M.edgeCurl
+        A2 = Mr.faceDiv * Mr.edgeCurl
 
-        assert np.max(np.abs((M.faceDiv * M.edgeCurl).todense().flatten())) < TOL
-        assert np.max(np.abs((Mr.faceDiv * Mr.edgeCurl).todense().flatten())) < TOL
+        self.assertTrue(len(A1.data)==0 or np.allclose(A1.data, 0))
+        self.assertTrue(len(A2.data)==0 or np.allclose(A2.data, 0))
 
     def test_h_gridded_3D(self):
         hx, hy, hz = np.ones(4), np.r_[1., 2., 3., 4.], 2*np.ones(4)
@@ -265,12 +270,12 @@ class Test2DInterpolation(unittest.TestCase):
     def test_fx(self):
         r = np.random.rand(self.M.nFx)
         P = self.M.getInterpolationMat(self.M.gridFx, 'Fx')
-        assert np.abs(P[:, :self.M.nFx]*r - r).max() < TOL
+        self.assertLess(np.abs(P[:, :self.M.nFx]*r - r).max(), TOL)
 
     def test_fy(self):
         r = np.random.rand(self.M.nFy)
         P = self.M.getInterpolationMat(self.M.gridFy, 'Fy')
-        assert np.abs(P[:, self.M.nFx:]*r - r).max() < TOL
+        self.assertLess(np.abs(P[:, self.M.nFx:]*r - r).max(), TOL)
 
 
 class Test3DInterpolation(unittest.TestCase):
@@ -296,32 +301,32 @@ class Test3DInterpolation(unittest.TestCase):
     def test_Fx(self):
         r = np.random.rand(self.M.nFx)
         P = self.M.getInterpolationMat(self.M.gridFx, 'Fx')
-        assert np.abs(P[:, :self.M.nFx]*r - r).max() < TOL
+        self.assertLess(np.abs(P[:, :self.M.nFx]*r - r).max(), TOL)
 
     def test_Fy(self):
         r = np.random.rand(self.M.nFy)
         P = self.M.getInterpolationMat(self.M.gridFy, 'Fy')
-        assert np.abs(P[:, self.M.nFx:(self.M.nFx+self.M.nFy)]*r - r).max() < TOL
+        self.assertLess(np.abs(P[:, self.M.nFx:(self.M.nFx+self.M.nFy)]*r - r).max(), TOL)
 
     def test_Fz(self):
         r = np.random.rand(self.M.nFz)
         P = self.M.getInterpolationMat(self.M.gridFz, 'Fz')
-        assert np.abs(P[:, (self.M.nFx+self.M.nFy):]*r - r).max() < TOL
+        self.assertLess(np.abs(P[:, (self.M.nFx+self.M.nFy):]*r - r).max(), TOL)
 
     def test_Ex(self):
         r = np.random.rand(self.M.nEx)
         P = self.M.getInterpolationMat(self.M.gridEx, 'Ex')
-        assert np.abs(P[:, :self.M.nEx]*r - r).max() < TOL
+        self.assertLess(np.abs(P[:, :self.M.nEx]*r - r).max(), TOL)
 
     def test_Ey(self):
         r = np.random.rand(self.M.nEy)
         P = self.M.getInterpolationMat(self.M.gridEy, 'Ey')
-        assert np.abs(P[:, self.M.nEx:(self.M.nEx+self.M.nEy)]*r - r).max() < TOL
+        self.assertLess(np.abs(P[:, self.M.nEx:(self.M.nEx+self.M.nEy)]*r - r).max(), TOL)
 
     def test_Ez(self):
         r = np.random.rand(self.M.nEz)
         P = self.M.getInterpolationMat(self.M.gridEz, 'Ez')
-        assert np.abs(P[:, (self.M.nEx+self.M.nEy):]*r - r).max() < TOL
+        self.assertLess(np.abs(P[:, (self.M.nEx+self.M.nEy):]*r - r).max(), TOL)
 
 
 if __name__ == '__main__':

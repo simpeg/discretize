@@ -4,49 +4,49 @@ import numpy as np
 import discretize
 
 
-def compare_meshes(mesh0, mesh1):
+def compare_meshes(test, mesh0, mesh1):
 
     # check some basic properties
-    assert mesh0.nC == mesh1.nC , (
+    test.assertEqual(mesh0.nC, mesh1.nC, msg=(
         'Number of cells not the same, {} != {}'.format(mesh0.nC, mesh1.nC)
-    )
+    ))
 
-    assert (mesh0.x0 == mesh1.x0).all(), (
+    test.assertTrue((mesh0.x0 == mesh1.x0).all(), msg=(
         'x0 different. {} != {}'.format(mesh0.x0, mesh1.x0)
-    )
+    ))
 
-    assert (mesh0.nE == mesh1.nE)
-    assert (mesh0.nF == mesh1.nF)
-    assert (mesh0.nN == mesh1.nN)
+    test.assertEqual(mesh0.nE, mesh1.nE)
+    test.assertEqual(mesh0.nF, mesh1.nF)
+    test.assertEqual(mesh0.nN, mesh1.nN)
 
     if hasattr(mesh0, 'vnC'):
-        assert (mesh0.vnC == mesh1.vnC).all()
-        assert (mesh0.vnE == mesh1.vnE).all()
-        assert (mesh0.vnF == mesh1.vnF).all()
-        assert (mesh0.vnN == mesh1.vnN).all()
+        test.assertTrue((mesh0.vnC == mesh1.vnC).all())
+        test.assertTrue((mesh0.vnE == mesh1.vnE).all())
+        test.assertTrue((mesh0.vnF == mesh1.vnF).all())
+        test.assertTrue((mesh0.vnN == mesh1.vnN).all())
 
-    assert (mesh0.normals == mesh1.normals).all()
-    assert (mesh0.tangents == mesh1.tangents).all()
+    test.assertTrue((mesh0.normals == mesh1.normals).all())
+    test.assertTrue((mesh0.tangents == mesh1.tangents).all())
 
     if hasattr(mesh0, 'h'):
         for i in range(len(mesh0.h)):
-            assert (mesh0.h[i] == mesh1.h[i]).all(), (
+            test.assertTrue((mesh0.h[i] == mesh1.h[i]).all(), (
                 'mesh h[{}] different'.format(i)
-            )
+            ))
 
     # check edges, faces, volumes
-    assert (mesh0.edge == mesh1.edge).all()
-    assert (mesh0.area == mesh1.area).all()
-    assert (mesh0.vol == mesh1.vol).all()
+    test.assertTrue((mesh0.edge == mesh1.edge).all())
+    test.assertTrue((mesh0.area == mesh1.area).all())
+    test.assertTrue((mesh0.vol == mesh1.vol).all())
 
     # Tree mesh specific
-    if hasattr(mesh0, '_cells'):
-        assert (mesh0._cells == mesh1._cells)
+    # if hasattr(mesh0, '_cells'):
+    #    test.assertTrue(mesh0._cells == mesh1._cells)
 
     # curvi-specific
     if hasattr(mesh0, 'nodes'):
         for i in range(len(mesh0.nodes)):
-            assert (mesh0.nodes[i] == mesh1.nodes[i]).all()
+            test.assertTrue((mesh0.nodes[i] == mesh1.nodes[i]).all())
 
 
 class TensorTest(unittest.TestCase):
@@ -62,16 +62,14 @@ class TensorTest(unittest.TestCase):
         mesh0 = self.mesh
         f = mesh0.save()
         mesh1 = discretize.load_mesh(f)
-        compare_meshes(mesh0, mesh1)
+        compare_meshes(self, mesh0, mesh1)
         os.remove(f)
-        print('ok\n')
 
     def test_copy(self):
         print('\nTesting copy of Tensor Mesh ...')
         mesh0 = self.mesh
         mesh1 = mesh0.copy()
-        compare_meshes(mesh0, mesh1)
-        print('ok\n')
+        compare_meshes(self, mesh0, mesh1)
 
     def test_base_updates(self):
         with self.assertRaises(Exception):
@@ -98,16 +96,14 @@ class CylTest(unittest.TestCase):
         mesh0 = self.mesh
         f = mesh0.save()
         mesh1 = discretize.load_mesh(f)
-        compare_meshes(mesh0, mesh1)
+        compare_meshes(self, mesh0, mesh1)
         os.remove(f)
-        print('ok\n')
 
     def test_copy(self):
         print('\nTesting copy of Cyl Mesh ...')
         mesh0 = self.mesh
         mesh1 = mesh0.copy()
-        compare_meshes(mesh0, mesh1)
-        print('ok\n')
+        compare_meshes(self, mesh0, mesh1)
 
 """
 class TreeTest(unittest.TestCase):
@@ -132,16 +128,14 @@ class TreeTest(unittest.TestCase):
         mesh0 = self.mesh
         f = mesh0.save()
         mesh1 = discretize.load_mesh(f)
-        compare_meshes(mesh0, mesh1)
+        compare_meshes(self, mesh0, mesh1)
         os.remove(f)
-        print('ok\n')
 
     def test_copy(self):
         print('\nTesting copy of Tree Mesh ...')
         mesh0 = self.mesh
         mesh1 = mesh0.copy()
-        compare_meshes(mesh0, mesh1)
-        print('ok\n')
+        compare_meshes(self, mesh0, mesh1)
 
     def test_base_updates(self):
         with self.assertRaises(Exception):
@@ -170,16 +164,14 @@ class CurviTest(unittest.TestCase):
         mesh0 = self.mesh
         f = mesh0.save()
         mesh1 = discretize.load_mesh(f)
-        compare_meshes(mesh0, mesh1)
+        compare_meshes(self, mesh0, mesh1)
         os.remove(f)
-        print('ok\n')
 
     def test_copy(self):
         print('\nTesting copy of Curvi Mesh ...')
         mesh0 = self.mesh
         mesh1 = mesh0.copy()
-        compare_meshes(mesh0, mesh1)
-        print('ok\n')
+        compare_meshes(self, mesh0, mesh1)
 
     def test_base_updates(self):
         with self.assertRaises(Exception):

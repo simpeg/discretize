@@ -35,11 +35,11 @@ class TestOcTreeMeshIO(unittest.TestCase):
         meshUBC = discretize.TreeMesh.readUBC('temp.msh')
         vecUBC = meshUBC.readModelUBC('arange.txt')
 
-        assert(mesh.nC == meshUBC.nC)
-        assert mesh.__str__() == meshUBC.__str__()
-        assert np.sum(mesh.gridCC - meshUBC.gridCC) == 0
-        assert np.sum(vec - vecUBC) == 0
-        assert np.all(np.array(mesh.h) - np.array(meshUBC.h) == 0)
+        self.assertEqual(mesh.nC, meshUBC.nC)
+        self.assertEqual(mesh.__str__(), meshUBC.__str__())
+        self.assertTrue(np.allclose(mesh.gridCC, meshUBC.gridCC))
+        self.assertTrue(np.allclose(vec, vecUBC))
+        self.assertTrue(np.allclose(np.array(mesh.h), np.array(meshUBC.h)))
         print('IO of UBC octree files is working')
         os.remove('temp.msh')
         os.remove('arange.txt')
@@ -69,10 +69,10 @@ class TestPickle(unittest.TestCase):
         byte_string = pickle.dumps(mesh0)
         mesh1 = pickle.loads(byte_string)
 
-        assert(mesh0.nC == mesh1.nC)
-        assert mesh0.__str__() == mesh1.__str__()
-        assert np.allclose(mesh0.gridCC, mesh1.gridCC)
-        assert np.all(np.array(mesh0.h) - np.array(mesh1.h) == 0)
+        self.assertEqual(mesh0.nC, mesh1.nC)
+        self.assertEqual(mesh0.__str__(), mesh1.__str__())
+        self.assertTrue(np.allclose(mesh0.gridCC, mesh1.gridCC))
+        self.assertTrue(np.allclose(np.array(mesh0.h), np.array(mesh1.h)))
         print('Pickling of 2D TreeMesh is working')
 
     def test_pickle3D(self):
@@ -90,10 +90,10 @@ class TestPickle(unittest.TestCase):
         byte_string = pickle.dumps(mesh0)
         mesh1 = pickle.loads(byte_string)
 
-        assert(mesh0.nC == mesh1.nC)
-        assert mesh0.__str__() == mesh1.__str__()
-        assert np.allclose(mesh0.gridCC, mesh1.gridCC)
-        assert np.all(np.array(mesh0.h) - np.array(mesh1.h) == 0)
+        self.assertEqual(mesh0.nC, mesh1.nC)
+        self.assertEqual(mesh0.__str__(), mesh1.__str__())
+        self.assertTrue(np.allclose(mesh0.gridCC, mesh1.gridCC))
+        self.assertTrue(np.allclose(np.array(mesh0.h), np.array(mesh1.h)))
         print('Pickling of 3D TreeMesh is working')
 
 if __name__ == '__main__':

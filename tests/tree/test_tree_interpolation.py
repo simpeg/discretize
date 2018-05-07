@@ -120,8 +120,6 @@ class TestInterpolation3D(discretize.Tests.OrderTest):
         elif 'N' == self.type:
             grid = call3(funX, self.M.gridN)
 
-        intM = self.M.getInterpolationMat(self.LOCS, self.type)
-
         comp = self.M.getInterpolationMat(self.LOCS, self.type)*grid
 
         err = np.linalg.norm((comp - ana), np.inf)
