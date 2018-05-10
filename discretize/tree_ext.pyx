@@ -9,6 +9,7 @@ import scipy.sparse as sp
 from scipy.spatial import Delaunay, cKDTree
 from six import integer_types
 import numpy as np
+from properties.utils import Sentinel
 
 cdef class Cell:
     cdef double _x, _y, _z, _x0, _y0, _z0, _wx, _wy, _wz
@@ -88,9 +89,12 @@ cdef class _TreeMesh:
     cdef double[3] _xc, _xf
 
     cdef double[:] _xs, _ys, _zs
+    cdef double[:] _x0
 
-    cdef object _gridCC, _gridN, _gridEx, _gridEy
-    cdef object _gridhN, _gridhEx, _gridhEy
+    cdef object _gridCC, _gridN, _gridhN
+    cdef object _gridEx, _gridEy, _gridEz, _gridhEx, _gridhEy, _gridhEz
+    cdef object _gridFx, _gridFy, _gridFz, _gridhFx, _gridhFy, _gridhFz
+
     cdef object _h_gridded
     cdef object _vol, _area, _edge
     cdef object _aveFx2CC, _aveFy2CC, _aveFz2CC, _aveF2CC, _aveF2CCV,
@@ -110,6 +114,7 @@ cdef class _TreeMesh:
         self._nx = 2<<max_level
         self._ny = 2<<max_level
         self._dim = len(x0)
+        self._x0 = x0
 
         xs = np.empty(self._nx + 1, dtype=float)
         xs[::2] = np.cumsum(np.r_[x0[0], h[0]])
@@ -179,7 +184,7 @@ cdef class _TreeMesh:
         self.__ubc_order = None
         self.__ubc_indArr = None
 
-    def refine(self, function, **kwargs):
+    def refine(self, function, finalize=True):
         if type(function) in integer_types:
             level = function
             function = lambda cell: level
@@ -192,22 +197,120 @@ cdef class _TreeMesh:
 
         #Then tell c++ to build the tree
         self.tree.build_tree_from_function(self.wrapper)
-        self.number()
+        if finalize:
+            self.finalize()
 
-    def _insert_cells(self, cells, levels):
-        cdef double[:, :] cs = np.atleast_2d(cells)
+    def insert_cells(self, points, levels, finalize=True):
+        cdef double[:, :] cs = np.atleast_2d(points)
         cdef int[:] ls = np.asarray(levels, dtype=np.int32)
         cdef int_t i
         for i in range(levels.shape[0]):
             self.tree.insert_cell(&cs[i, 0], ls[i])
+        if finalize:
+            self.finalize()
+
+    def finalize(self):
         self.tree.finalize_lists()
+        self.tree.number()
 
     def number(self):
         self.tree.number()
 
     @property
     def xC(self):
-        return self._xc
+        return np.array(self._xc)
+
+    @property
+    def x0(self):
+        return np.array(self._x0)
+
+    @x0.setter
+    def x0(self, x0):
+        # On object creation, x0 attempts to be set to properties.utils.Sentinel, so guard against this
+        # I believe this happens in the BaseMesh class
+        if isinstance(x0, Sentinel):
+            return # do nothing!!
+        if not isinstance(x0, (list, tuple, np.ndarray)):
+            raise ValueError('x0 must be a list, tuple or numpy array')
+        self._x0 = np.asarray(x0, dtype=np.float64)
+        cdef int_t dim = self._x0.shape[0]
+        cdef double[:] shift
+        #cdef c_Cell *cell
+        cdef Node *node
+        cdef Edge *edge
+        cdef Face *face
+        if self.tree.root != NULL:
+            shift = np.empty(dim, dtype=np.float64)
+
+            shift[0] = self._x0[0] - self._xs[0]
+            shift[1] = self._x0[1] - self._ys[0]
+            if dim == 3:
+                shift[2] = self._x0[2] - self._zs[0]
+
+            for i in range(self._xs.shape[0]):
+                self._xs[i] += shift[0]
+            for i in range(self._ys.shape[0]):
+                self._ys[i] += shift[1]
+            if dim == 3:
+                for i in range(self._zs.shape[0]):
+                    self._zs[i] += shift[2]
+
+            #update the locations of all of the items
+            for cell in self.tree.cells:
+                for i in range(dim):
+                    cell.location[i] += shift[i]
+
+            for itN in self.tree.nodes:
+                node = itN.second
+                for i in range(dim):
+                    node.location[i] += shift[i]
+
+            for itE in self.tree.edges_x:
+                edge = itE.second
+                for i in range(dim):
+                    edge.location[i] += shift[i]
+
+            for itE in self.tree.edges_y:
+                edge = itE.second
+                for i in range(dim):
+                    edge.location[i] += shift[i]
+
+            if dim == 3:
+                for itE in self.tree.edges_z:
+                    edge = itE.second
+                    for i in range(dim):
+                        edge.location[i] += shift[i]
+
+                for itF in self.tree.faces_x:
+                    face = itF.second
+                    for i in range(dim):
+                        face.location[i] += shift[i]
+
+                for itF in self.tree.faces_y:
+                    face = itF.second
+                    for i in range(dim):
+                        face.location[i] += shift[i]
+
+                for itF in self.tree.faces_z:
+                    face = itF.second
+                    for i in range(dim):
+                        face.location[i] += shift[i]
+            #clear out all cached grids
+            self._gridCC = None
+            self._gridN = None
+            self._gridhN = None
+            self._gridEx = None
+            self._gridhEx = None
+            self._gridEy = None
+            self._gridhEy = None
+            self._gridEz = None
+            self._gridhEz = None
+            self._gridFx = None
+            self._gridhFx = None
+            self._gridFy = None
+            self._gridhFy = None
+            self._gridFz = None
+            self._gridhFz = None
 
     @property
     def fill(self):
@@ -751,10 +854,10 @@ cdef class _TreeMesh:
             I[i*6 : i*6 + 6] = i
             J[i*6    ] = faces[0].index #x1 face
             J[i*6 + 1] = faces[1].index #x2 face
-            J[i*6 + 2] = faces[2].index+offset1 #y face (add offset1)
-            J[i*6 + 3] = faces[3].index+offset1 #y face (add offset1)
-            J[i*6 + 4] = faces[4].index+offset2 #z face (add offset2)
-            J[i*6 + 5] = faces[5].index+offset2 #z face (add offset2)
+            J[i*6 + 2] = faces[2].index + offset1 #y face (add offset1)
+            J[i*6 + 3] = faces[3].index + offset1 #y face (add offset1)
+            J[i*6 + 4] = faces[4].index + offset2 #z face (add offset2)
+            J[i*6 + 5] = faces[5].index + offset2 #z face (add offset2)
 
             volume = cell.volume
             fx_area = faces[0].area
@@ -875,7 +978,7 @@ cdef class _TreeMesh:
         for it in self.tree.edges_y:
             edge = it.second
             if edge.hanging: continue
-            ii = edge.index+offset1
+            ii = edge.index + offset1
             I[ii*2 : ii*2 + 2] = ii
             J[ii*2    ] = edge.points[0].index
             J[ii*2 + 1] = edge.points[1].index
@@ -888,7 +991,7 @@ cdef class _TreeMesh:
             for it in self.tree.edges_z:
                 edge = it.second
                 if edge.hanging: continue
-                ii = edge.index+offset2
+                ii = edge.index + offset2
                 I[ii*2 : ii*2 + 2] = ii
                 J[ii*2    ] = edge.points[0].index
                 J[ii*2 + 1] = edge.points[1].index
@@ -1762,7 +1865,6 @@ cdef class _TreeMesh:
             np_hull_points = np.unique(hull)
             hull_points = np_hull_points.astype(np.int64)
 
-
             n_hull_simps = hull.shape[0]
 
             kdtree = cKDTree(tri.points[np_hull_points])
@@ -2086,8 +2188,7 @@ cdef class _TreeMesh:
                                       zs[indArr[:, 2]]))
         else:
             points = np.column_stack((xs[indArr[:, 0]], ys[indArr[:, 1]]))
-        self._insert_cells(points, levels)
-        self.tree.number()
+        self.insert_cells(points, levels)
 
     def __len__(self):
         return self.nC

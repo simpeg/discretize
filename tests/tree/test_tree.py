@@ -18,7 +18,7 @@ class TestSimpleQuadTree(unittest.TestCase):
         points = np.array([[0.1, 0.1, 0.3]])
         level = np.array([3])
 
-        M._insert_cells(points, level)
+        M.insert_cells(points, level)
         M.number()
 
         self.assertEqual(M.nhFx, 4)
@@ -125,7 +125,7 @@ class TestOcTree(unittest.TestCase):
         points = np.array([[0.2, 0.1, 0.7],
                           [0.8, 0.4, 0.2]])
         levels = np.array([1, 2])
-        M._insert_cells(points, levels)
+        M.insert_cells(points, levels)
         M.number()
         # M.plotGrid(showIt=True)
         self.assertEqual(M.nhFx, 4)

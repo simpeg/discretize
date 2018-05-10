@@ -21,8 +21,7 @@ class TestOcTreeMeshIO(unittest.TestCase):
         cell_points = np.array([[0.5, 0.5, 0.5],
                                 [0.5, 2.5, 0.5]])
         cell_levels = np.array([4, 4])
-        mesh._insert_cells(cell_points, cell_levels)
-        mesh.number()
+        mesh.insert_cells(cell_points, cell_levels)
         self.mesh = mesh
 
     def test_UBCfiles(self):
