@@ -6401,7 +6401,7 @@ static PyObject *__pyx_pf_10discretize_8tree_ext_9_TreeMesh_6insert_cells(struct
   __Pyx_memviewslice __pyx_t_5 = { 0, 0, { 0 }, { 0 }, { 0 } };
   PyObject *__pyx_t_6 = NULL;
   __Pyx_memviewslice __pyx_t_7 = { 0, 0, { 0 }, { 0 }, { 0 } };
-  long __pyx_t_8;
+  Py_ssize_t __pyx_t_8;
   int_t __pyx_t_9;
   Py_ssize_t __pyx_t_10;
   Py_ssize_t __pyx_t_11;
@@ -6477,7 +6477,7 @@ static PyObject *__pyx_pf_10discretize_8tree_ext_9_TreeMesh_6insert_cells(struct
  *         cdef double[:, :] cs = np.atleast_2d(points)
  *         cdef int[:] ls = np.asarray(levels, dtype=np.int32)             # <<<<<<<<<<<<<<
  *         cdef int_t i
- *         for i in range(levels.shape[0]):
+ *         for i in range(ls.shape[0]):
  */
   __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 205, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
@@ -6513,23 +6513,17 @@ static PyObject *__pyx_pf_10discretize_8tree_ext_9_TreeMesh_6insert_cells(struct
   /* "discretize/tree_ext.pyx":207
  *         cdef int[:] ls = np.asarray(levels, dtype=np.int32)
  *         cdef int_t i
- *         for i in range(levels.shape[0]):             # <<<<<<<<<<<<<<
+ *         for i in range(ls.shape[0]):             # <<<<<<<<<<<<<<
  *             self.tree.insert_cell(&cs[i, 0], ls[i])
  *         if finalize:
  */
-  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_levels, __pyx_n_s_shape); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 207, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_6);
-  __pyx_t_4 = __Pyx_GetItemInt(__pyx_t_6, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 207, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_4);
-  __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-  __pyx_t_8 = __Pyx_PyInt_As_long(__pyx_t_4); if (unlikely((__pyx_t_8 == (long)-1) && PyErr_Occurred())) __PYX_ERR(0, 207, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  __pyx_t_8 = (__pyx_v_ls.shape[0]);
   for (__pyx_t_9 = 0; __pyx_t_9 < __pyx_t_8; __pyx_t_9+=1) {
     __pyx_v_i = __pyx_t_9;
 
     /* "discretize/tree_ext.pyx":208
  *         cdef int_t i
- *         for i in range(levels.shape[0]):
+ *         for i in range(ls.shape[0]):
  *             self.tree.insert_cell(&cs[i, 0], ls[i])             # <<<<<<<<<<<<<<
  *         if finalize:
  *             self.finalize()
@@ -6563,7 +6557,7 @@ static PyObject *__pyx_pf_10discretize_8tree_ext_9_TreeMesh_6insert_cells(struct
   }
 
   /* "discretize/tree_ext.pyx":209
- *         for i in range(levels.shape[0]):
+ *         for i in range(ls.shape[0]):
  *             self.tree.insert_cell(&cs[i, 0], ls[i])
  *         if finalize:             # <<<<<<<<<<<<<<
  *             self.finalize()
@@ -6579,30 +6573,30 @@ static PyObject *__pyx_pf_10discretize_8tree_ext_9_TreeMesh_6insert_cells(struct
  * 
  *     def finalize(self):
  */
-    __pyx_t_6 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_finalize); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 210, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_6);
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_finalize); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 210, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_4);
     __pyx_t_1 = NULL;
-    if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_6))) {
-      __pyx_t_1 = PyMethod_GET_SELF(__pyx_t_6);
+    if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_4))) {
+      __pyx_t_1 = PyMethod_GET_SELF(__pyx_t_4);
       if (likely(__pyx_t_1)) {
-        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_6);
+        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_4);
         __Pyx_INCREF(__pyx_t_1);
         __Pyx_INCREF(function);
-        __Pyx_DECREF_SET(__pyx_t_6, function);
+        __Pyx_DECREF_SET(__pyx_t_4, function);
       }
     }
     if (__pyx_t_1) {
-      __pyx_t_4 = __Pyx_PyObject_CallOneArg(__pyx_t_6, __pyx_t_1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 210, __pyx_L1_error)
+      __pyx_t_6 = __Pyx_PyObject_CallOneArg(__pyx_t_4, __pyx_t_1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 210, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     } else {
-      __pyx_t_4 = __Pyx_PyObject_CallNoArg(__pyx_t_6); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 210, __pyx_L1_error)
+      __pyx_t_6 = __Pyx_PyObject_CallNoArg(__pyx_t_4); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 210, __pyx_L1_error)
     }
-    __Pyx_GOTREF(__pyx_t_4);
-    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+    __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
     /* "discretize/tree_ext.pyx":209
- *         for i in range(levels.shape[0]):
+ *         for i in range(ls.shape[0]):
  *             self.tree.insert_cell(&cs[i, 0], ls[i])
  *         if finalize:             # <<<<<<<<<<<<<<
  *             self.finalize()
@@ -7209,16 +7203,16 @@ static int __pyx_pf_10discretize_8tree_ext_9_TreeMesh_2x0_2__set__(struct __pyx_
   /* "discretize/tree_ext.pyx":242
  *         cdef Edge *edge
  *         cdef Face *face
- *         if self.tree.root != NULL:             # <<<<<<<<<<<<<<
+ *         if self.tree.n_dim > 0: # Will only happen if __init__ has been called             # <<<<<<<<<<<<<<
  *             shift = np.empty(dim, dtype=np.float64)
  * 
  */
-  __pyx_t_4 = ((__pyx_v_self->tree->root != NULL) != 0);
+  __pyx_t_4 = ((__pyx_v_self->tree->n_dim > 0) != 0);
   if (__pyx_t_4) {
 
     /* "discretize/tree_ext.pyx":243
  *         cdef Face *face
- *         if self.tree.root != NULL:
+ *         if self.tree.n_dim > 0: # Will only happen if __init__ has been called
  *             shift = np.empty(dim, dtype=np.float64)             # <<<<<<<<<<<<<<
  * 
  *             shift[0] = self._x0[0] - self._xs[0]
@@ -8281,7 +8275,7 @@ static int __pyx_pf_10discretize_8tree_ext_9_TreeMesh_2x0_2__set__(struct __pyx_
     /* "discretize/tree_ext.pyx":242
  *         cdef Edge *edge
  *         cdef Face *face
- *         if self.tree.root != NULL:             # <<<<<<<<<<<<<<
+ *         if self.tree.n_dim > 0: # Will only happen if __init__ has been called             # <<<<<<<<<<<<<<
  *             shift = np.empty(dim, dtype=np.float64)
  * 
  */

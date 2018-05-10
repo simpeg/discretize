@@ -204,7 +204,7 @@ cdef class _TreeMesh:
         cdef double[:, :] cs = np.atleast_2d(points)
         cdef int[:] ls = np.asarray(levels, dtype=np.int32)
         cdef int_t i
-        for i in range(levels.shape[0]):
+        for i in range(ls.shape[0]):
             self.tree.insert_cell(&cs[i, 0], ls[i])
         if finalize:
             self.finalize()
@@ -239,7 +239,7 @@ cdef class _TreeMesh:
         cdef Node *node
         cdef Edge *edge
         cdef Face *face
-        if self.tree.root != NULL:
+        if self.tree.n_dim > 0: # Will only happen if __init__ has been called
             shift = np.empty(dim, dtype=np.float64)
 
             shift[0] = self._x0[0] - self._xs[0]
