@@ -44,9 +44,9 @@ cdef extern from "tree.h":
         Face()
         Face(Node& p1, Node& p2, Node& p3, Node& p4)
 
-    ctypedef map[int_t,Node *] node_map_t
-    ctypedef map[int_t,Edge *] edge_map_t
-    ctypedef map[int_t,Face *] face_map_t
+    ctypedef map[int_t, Node *] node_map_t
+    ctypedef map[int_t, Edge *] edge_map_t
+    ctypedef map[int_t, Face *] face_map_t
 
     cdef cppclass Cell:
         int_t n_dim

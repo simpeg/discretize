@@ -10,7 +10,6 @@ try:
     from discretize.TreeMesh import TreeMesh as Tree
 except ImportError as e:
     Tree = None
-    pass
 
 import unittest
 import inspect
@@ -185,7 +184,8 @@ class OrderTest(unittest.TestCase):
 
 
         """
-        assert type(self.meshTypes) == list, 'meshTypes must be a list'
+        if not isinstance(self.meshTypes, list):
+            raise TypeError('meshTypes must be a list')
         if type(self.tolerance) is not list:
             self.tolerance = np.ones(len(self.meshTypes))*self.tolerance
 

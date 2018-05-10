@@ -362,7 +362,7 @@ void Cell::set_neighbor(Cell * other, int_t position){
 };
 
 void Cell::insert_cell(node_map_t& nodes, double *new_cell, int_t p_level, double *xs, double *ys, double *zs){
-    //Inserts a cell at max(max_level,p_level) that contains the given point
+    //Inserts a cell at min(max_level,p_level) that contains the given point
     if(p_level > level){
         // Need to go look in children,
         // Need to spawn children if i don't have any...
@@ -400,7 +400,7 @@ void Cell::divide(node_map_t& nodes, double* xs, double* ys, double* zs, bool fo
         //-x,+x,-y,+y,-z,+z
         if(balance){
             for(int_t i = 0; i < 2*n_dim; ++i){
-                if(neighbors[i]!= NULL && neighbors[i]->level<level){
+                if(neighbors[i] != NULL && neighbors[i]->level < level){
                     neighbors[i]->divide(nodes, xs, ys, zs, true);
                 }
             }
@@ -605,31 +605,33 @@ void Tree::insert_cell(double *new_center, int_t p_level){
 
 void Tree::build_tree_from_function(function test_func){
 
-    Node* points[8];
+    if(root == NULL){
+        Node* points[8];
 
-    points[0] = new Node( 0,  0, 0, xs, ys, zs);
-    points[1] = new Node(nx,  0, 0, xs, ys, zs);
-    points[2] = new Node( 0, ny, 0, xs, ys, zs);
-    points[3] = new Node(nx, ny, 0, xs, ys, zs);
-    if(n_dim == 3){
-        points[4] = new Node( 0,  0, nz, xs, ys, zs);
-        points[5] = new Node(nx,  0, nz, xs, ys, zs);
-        points[6] = new Node( 0, ny, nz, xs, ys, zs);
-        points[7] = new Node(nx, ny, nz, xs, ys, zs);
+        points[0] = new Node( 0,  0, 0, xs, ys, zs);
+        points[1] = new Node(nx,  0, 0, xs, ys, zs);
+        points[2] = new Node( 0, ny, 0, xs, ys, zs);
+        points[3] = new Node(nx, ny, 0, xs, ys, zs);
+        if(n_dim == 3){
+            points[4] = new Node( 0,  0, nz, xs, ys, zs);
+            points[5] = new Node(nx,  0, nz, xs, ys, zs);
+            points[6] = new Node( 0, ny, nz, xs, ys, zs);
+            points[7] = new Node(nx, ny, nz, xs, ys, zs);
+        }
+        for(int_t i = 0; i < (1<<n_dim); ++i){
+            nodes[points[i]->key] = points[i];
+            points[i]->reference += 1;
+        }
+        root = new Cell(points, n_dim, max_level, test_func);
     }
-    for(int_t i = 0; i < (1<<n_dim); ++i){
-        nodes[points[i]->key] = points[i];
-        points[i]->reference += 1;
-    }
-    root = new Cell(points, n_dim, max_level, test_func);
     root->divide(nodes, xs, ys, zs);
-    finalize_lists();
+    //finalize_lists();
 };
 
 void Tree::finalize_lists(){
     root->build_cell_vector(cells);
 
-    if(n_dim==3){
+    if(n_dim == 3){
         // Generate Faces and edges
         for(std::vector<Cell *>::size_type i = 0; i != cells.size(); i++){
             Cell *cell = cells[i];
@@ -702,9 +704,9 @@ void Tree::finalize_lists(){
             cell->faces[5] = fz2;
 
             for(int_t it = 0; it < 4; ++it){
-                cell->edges[it  ] = ex[it];
-                cell->edges[it+4] = ey[it];
-                cell->edges[it+8] = ez[it];
+                cell->edges[it    ] = ex[it];
+                cell->edges[it + 4] = ey[it];
+                cell->edges[it + 8] = ez[it];
             }
 
             for(int_t it = 0; it < 6; ++it)
@@ -1017,7 +1019,7 @@ void Tree::number(){
     //Number Nodes
     int_t ii, ih;
     ii = 0;
-    ih = nodes.size()-hanging_nodes.size();
+    ih = nodes.size() - hanging_nodes.size();
     for(node_it_type it = nodes.begin(); it != nodes.end(); ++it){
         Node *node = it->second;
         if(node->hanging){

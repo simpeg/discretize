@@ -12,7 +12,7 @@ inline int_t key_func(int_t x, int_t y){
     return ((x+y)*(x+y+1))/2+y;
 }
 inline int_t key_func(int_t x, int_t y, int_t z){
-    return key_func(key_func(x,y), z);
+    return key_func(key_func(x, y), z);
 }
 class Node;
 class Edge;
@@ -34,13 +34,16 @@ class PyWrapper{
   public:
     void *py_func;
     int_t (*eval)(void *, Cell*);
+
   PyWrapper(){
     py_func = NULL;
   };
+
   void set(void* func, int_t (*wrapper)(void*, Cell*)){
     py_func = func;
     eval = wrapper;
   };
+
   int operator()(Cell * cell){
     return eval(py_func, cell);
   };
