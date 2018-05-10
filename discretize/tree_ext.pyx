@@ -1097,12 +1097,12 @@ cdef class _TreeMesh:
                     V[2*ind    ] = 0.5
                     V[2*ind + 1] = 0.5
                 else:
-                    for i in range(4): # four neighbors in +x direction
-                        ind = next_cell.children[i].faces[2].index
+                    for i in range(4): # four neighbors in +y direction
+                        ind = next_cell.children[(i>>1)*4 + i%2].faces[2].index
                         I[2*ind    ] = ind
                         I[2*ind + 1] = ind
                         J[2*ind    ] = cell.index
-                        J[2*ind + 1] = next_cell.children[i].index
+                        J[2*ind + 1] = next_cell.children[(i>>1)*4 + i%2].index
                         V[2*ind    ] = 0.5
                         V[2*ind + 1] = 0.5
         return sp.csr_matrix((V, (I,J)), shape=(self.ntFy, self.nC))
@@ -1179,7 +1179,7 @@ cdef class _TreeMesh:
                     V[2*ind + 1] =  1.0
                 else:
                     for i in range(4): # four neighbors in +x direction
-                        ind = next_cell.children[2*i].faces[0].index
+                        ind = next_cell.children[2*i].faces[0].index #0 2 4 6
                         I[2*ind    ] = ind
                         I[2*ind + 1] = ind
                         J[2*ind    ] = cell.index
@@ -1199,7 +1199,7 @@ cdef class _TreeMesh:
 
         for cell in self.tree.cells :
             next_cell = cell.neighbors[3]
-            if next_cell==NULL:
+            if next_cell == NULL:
                 continue
             if dim==2:
                 if next_cell.is_leaf():
@@ -1229,12 +1229,12 @@ cdef class _TreeMesh:
                     V[2*ind    ] = -1.0
                     V[2*ind + 1] =  1.0
                 else:
-                    for i in range(4): # four neighbors in +x direction
-                        ind = next_cell.children[i].faces[2].index
+                    for i in range(4): # four neighbors in +y direction
+                        ind = next_cell.children[(i>>1)*4 + i%2].faces[2].index #0, 1, 4, 5
                         I[2*ind    ] = ind
                         I[2*ind + 1] = ind
                         J[2*ind    ] = cell.index
-                        J[2*ind + 1] = next_cell.children[i].index
+                        J[2*ind + 1] = next_cell.children[(i>>1)*4 + i%2].index
                         V[2*ind    ] = -1.0
                         V[2*ind + 1] = 1.0
 
@@ -1261,7 +1261,7 @@ cdef class _TreeMesh:
                 V[2*ind + 1] =  1.0
             else:
                 for i in range(4): # four neighbors in +z direction
-                    ind = next_cell.children[i].faces[4].index
+                    ind = next_cell.children[i].faces[4].index #0, 1, 2, 3
                     I[2*ind    ] = ind
                     I[2*ind + 1] = ind
                     J[2*ind    ] = cell.index
