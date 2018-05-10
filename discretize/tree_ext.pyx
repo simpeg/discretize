@@ -1007,6 +1007,138 @@ cdef class _TreeMesh:
         return self._nodalGrad
 
     @cython.boundscheck(False)
+    def _aveCC2FxStencil(self):
+        cdef np.int64_t[:] I = np.zeros(2*self.ntFx, dtype=np.int64)
+        cdef np.int64_t[:] J = np.zeros(2*self.ntFx, dtype=np.int64)
+        cdef np.float64_t[:] V = np.zeros(2*self.ntFx, dtype=np.float64)
+        cdef int dim = self._dim
+        cdef int_t ind
+
+        for cell in self.tree.cells :
+            next_cell = cell.neighbors[1]
+            if next_cell == NULL:
+                continue
+            if dim == 2:
+                if next_cell.is_leaf():
+                    ind = cell.edges[3].index
+                    I[2*ind    ] = ind
+                    I[2*ind + 1] = ind
+                    J[2*ind    ] = cell.index
+                    J[2*ind + 1] = next_cell.index
+                    V[2*ind    ] = 0.5
+                    V[2*ind + 1] = 0.5
+                else:
+                    for i in range(2): # two neighbors in +x direction
+                        ind = next_cell.children[2*i].edges[2].index
+                        I[2*ind    ] = ind
+                        I[2*ind + 1] = ind
+                        J[2*ind    ] = cell.index
+                        J[2*ind + 1] = next_cell.children[2*i].index
+                        V[2*ind    ] = 0.5
+                        V[2*ind + 1] = 0.5
+            else:
+                if cell.neighbors[1].is_leaf():
+                    ind = cell.faces[1].index
+                    I[2*ind    ] = ind
+                    I[2*ind + 1] = ind
+                    J[2*ind    ] = cell.index
+                    J[2*ind + 1] = next_cell.index
+                    V[2*ind    ] = 0.5
+                    V[2*ind + 1] = 0.5
+                else:
+                    for i in range(4): # four neighbors in +x direction
+                        ind = next_cell.children[2*i].faces[0].index
+                        I[2*ind    ] = ind
+                        I[2*ind + 1] = ind
+                        J[2*ind    ] = cell.index
+                        J[2*ind + 1] = next_cell.children[2*i].index
+                        V[2*ind    ] = 0.5
+                        V[2*ind + 1] = 0.5
+
+        return sp.csr_matrix((V, (I,J)), shape=(self.ntFx, self.nC))
+
+    @cython.boundscheck(False)
+    def _aveCC2FyStencil(self):
+        cdef np.int64_t[:] I = np.zeros(2*self.ntFy, dtype=np.int64)
+        cdef np.int64_t[:] J = np.zeros(2*self.ntFy, dtype=np.int64)
+        cdef np.float64_t[:] V = np.zeros(2*self.ntFy, dtype=np.float64)
+        cdef int dim = self._dim
+        cdef int_t ind
+
+        for cell in self.tree.cells :
+            next_cell = cell.neighbors[3]
+            if next_cell==NULL:
+                continue
+            if dim==2:
+                if next_cell.is_leaf():
+                    ind = cell.edges[1].index
+                    I[2*ind    ] = ind
+                    I[2*ind + 1] = ind
+                    J[2*ind    ] = cell.index
+                    J[2*ind + 1] = next_cell.index
+                    V[2*ind    ] = 0.5
+                    V[2*ind + 1] = 0.5
+                else:
+                    for i in range(2): # two neighbors in +y direction
+                        ind = next_cell.children[i].edges[0].index
+                        I[2*ind    ] = ind
+                        I[2*ind + 1] = ind
+                        J[2*ind    ] = cell.index
+                        J[2*ind + 1] = next_cell.children[i].index
+                        V[2*ind    ] = 0.5
+                        V[2*ind + 1] = 0.5
+            else:
+                if next_cell.is_leaf():
+                    ind = cell.faces[3].index
+                    I[2*ind    ] = ind
+                    I[2*ind + 1] = ind
+                    J[2*ind    ] = cell.index
+                    J[2*ind + 1] = next_cell.index
+                    V[2*ind    ] = 0.5
+                    V[2*ind + 1] = 0.5
+                else:
+                    for i in range(4): # four neighbors in +x direction
+                        ind = next_cell.children[i].faces[2].index
+                        I[2*ind    ] = ind
+                        I[2*ind + 1] = ind
+                        J[2*ind    ] = cell.index
+                        J[2*ind + 1] = next_cell.children[i].index
+                        V[2*ind    ] = 0.5
+                        V[2*ind + 1] = 0.5
+        return sp.csr_matrix((V, (I,J)), shape=(self.ntFy, self.nC))
+
+    @cython.boundscheck(False)
+    def _aveCC2FzStencil(self):
+        cdef np.int64_t[:] I = np.zeros(2*self.ntFz, dtype=np.int64)
+        cdef np.int64_t[:] J = np.zeros(2*self.ntFz, dtype=np.int64)
+        cdef np.float64_t[:] V = np.zeros(2*self.ntFz, dtype=np.float64)
+        cdef int_t ind
+
+        for cell in self.tree.cells :
+            next_cell = cell.neighbors[5]
+            if next_cell==NULL:
+                continue
+            if next_cell.is_leaf():
+                ind = cell.faces[5].index
+                I[2*ind    ] = ind
+                I[2*ind + 1] = ind
+                J[2*ind    ] = cell.index
+                J[2*ind + 1] = next_cell.index
+                V[2*ind    ] = 0.5
+                V[2*ind + 1] = 0.5
+            else:
+                for i in range(4): # four neighbors in +z direction
+                    ind = next_cell.children[i].faces[4].index
+                    I[2*ind    ] = ind
+                    I[2*ind + 1] = ind
+                    J[2*ind    ] = cell.index
+                    J[2*ind + 1] = next_cell.children[i].index
+                    V[2*ind    ] = 0.5
+                    V[2*ind + 1] = 0.5
+
+        return sp.csr_matrix((V, (I,J)), shape=(self.ntFz, self.nC))
+
+    @cython.boundscheck(False)
     def _cellGradxStencil(self):
         cdef np.int64_t[:] I = np.zeros(2*self.ntFx, dtype=np.int64)
         cdef np.int64_t[:] J = np.zeros(2*self.ntFx, dtype=np.int64)
