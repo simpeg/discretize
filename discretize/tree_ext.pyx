@@ -10,6 +10,7 @@ from scipy.spatial import Delaunay, cKDTree
 from six import integer_types
 import numpy as np
 from properties.utils import Sentinel
+from discretize import utils
 
 cdef class Cell:
     cdef double _x, _y, _z, _x0, _y0, _z0, _wx, _wy, _wz
@@ -1939,6 +1940,7 @@ cdef class _TreeMesh:
         return triang
 
     def getInterpolationMat(self, locs, locType, zerosOutside=False):
+        locs = utils.asArray_N_x_Dim(locs, self.dim)
         if locType not in ['N', 'CC', "Ex", "Ey", "Ez", "Fx", "Fy", "Fz"]:
             raise Exception('locType must be one of N, CC, Ex, Ey, Ez, Fx, Fy, or Fz')
         if locType == 'N':
