@@ -2327,17 +2327,20 @@ cdef class _TreeMesh:
             ax = plt.subplot(111)
         default = cm = plt.get_cmap()
         cNorm = colors.Normalize(
-            vmin=I.min() if clim is None else clim[0],
-            vmax=I.max() if clim is None else clim[1])
+            vmin=np.nanmin(I) if clim is None else clim[0],
+            vmax=np.nanmax(I) if clim is None else clim[1])
 
         scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=default)
         ax.set_xlim((self.x0[0], self.h[0].sum()))
         ax.set_ylim((self.x0[1], self.h[1].sum()))
         edge_color = 'k' if grid else 'none'
         for cell in self.tree.cells:
+            ii = cell.index
+            if np.isnan(I[ii]):
+                continue
+
             x0 = np.array([cell.points[0].location[0], cell.points[0].location[1]])
             sz = np.array([cell.edges[0].length, cell.edges[2].length])
-            ii = cell.index
             ax.add_patch(
                 plt.Rectangle((x0[0], x0[1]), sz[0], sz[1],
                 facecolor=scalarMap.to_rgba(I[ii]),
