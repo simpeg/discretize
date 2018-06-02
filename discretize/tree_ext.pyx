@@ -67,6 +67,62 @@ cdef class Cell:
         return self._cell.index
 
     @property
+    def neighbors(self):
+        neighbors = np.empty(self._dim*2, dtype=object)
+
+        for i in range(self._dim*2):
+            if self._cell.neighbors[i] is NULL:
+                neighbors[i] = -1
+            elif self._cell.neighbors[i].is_leaf():
+                neighbors[i] = self._cell.neighbors[i].index
+            else:
+                if self._dim==2:
+                    if i==0:
+                        neighbors[i] = [self._cell.neighbors[i].children[1].index,
+                                        self._cell.neighbors[i].children[3].index]
+                    elif i==1:
+                        neighbors[i] = [self._cell.neighbors[i].children[0].index,
+                                        self._cell.neighbors[i].children[2].index]
+                    elif i==2:
+                        neighbors[i] = [self._cell.neighbors[i].children[2].index,
+                                        self._cell.neighbors[i].children[3].index]
+                    else:
+                        neighbors[i] = [self._cell.neighbors[i].children[0].index,
+                                        self._cell.neighbors[i].children[1].index]
+                else:
+                    if i==0:
+                        neighbors[i] = [self._cell.neighbors[i].children[1].index,
+                                        self._cell.neighbors[i].children[3].index,
+                                        self._cell.neighbors[i].children[5].index,
+                                        self._cell.neighbors[i].children[7].index]
+                    elif i==1:
+                        neighbors[i] = [self._cell.neighbors[i].children[0].index,
+                                        self._cell.neighbors[i].children[2].index,
+                                        self._cell.neighbors[i].children[4].index,
+                                        self._cell.neighbors[i].children[6].index]
+                    elif i==2:
+                        neighbors[i] = [self._cell.neighbors[i].children[2].index,
+                                        self._cell.neighbors[i].children[3].index,
+                                        self._cell.neighbors[i].children[6].index,
+                                        self._cell.neighbors[i].children[7].index]
+                    elif i==3:
+                        neighbors[i] = [self._cell.neighbors[i].children[0].index,
+                                        self._cell.neighbors[i].children[1].index,
+                                        self._cell.neighbors[i].children[4].index,
+                                        self._cell.neighbors[i].children[5].index]
+                    elif i==4:
+                        neighbors[i] = [self._cell.neighbors[i].children[4].index,
+                                        self._cell.neighbors[i].children[5].index,
+                                        self._cell.neighbors[i].children[6].index,
+                                        self._cell.neighbors[i].children[7].index]
+                    else:
+                        neighbors[i] = [self._cell.neighbors[i].children[0].index,
+                                        self._cell.neighbors[i].children[1].index,
+                                        self._cell.neighbors[i].children[2].index,
+                                        self._cell.neighbors[i].children[3].index]
+        return neighbors
+
+    @property
     def _index_loc(self):
         if self._dim == 2:
             return tuple((self._cell.location_ind[0], self._cell.location_ind[1]))
