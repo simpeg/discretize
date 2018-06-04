@@ -53,7 +53,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'discretize'
-copyright = u'2013 - 2017, SimPEG Developers, http://simpeg.xyz'
+copyright = u'2013 - 2018, SimPEG Developers, http://simpeg.xyz'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

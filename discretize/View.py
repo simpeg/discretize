@@ -227,6 +227,7 @@ class TensorView(object):
             M.plotSlice(M.cellGrad*b, 'F', view='vec', grid=True, showIt=True, pcolorOpts={'alpha':0.8})
 
         """
+        normal = normal.upper()
         if pcolorOpts is None:
             pcolorOpts = {}
         if streamOpts is None:
@@ -266,7 +267,7 @@ class TensorView(object):
         # The slicing and plotting code!!
 
         def getIndSlice(v):
-            if   normal == 'X':
+            if normal == 'X':
                 v = v[ind, :, :]
             elif normal == 'Y':
                 v = v[:, ind, :]
