@@ -2,48 +2,19 @@ import numpy as np
 from .matutils import mkvc
 
 
-def cyl2cart(grid):
+def cyl2cart(grid, vec=None):
     """
     Take a grid defined in cylindrical coordinates :math:`(r, \theta, z)` and
     transform it to cartesian coordinates.
     """
     grid = np.atleast_2d(grid)
-    return np.hstack([
-        mkvc(grid[:, 0]*np.cos(grid[:, 1]), 2),
-        mkvc(grid[:, 0]*np.sin(grid[:, 1]), 2),
-        mkvc(grid[:, 2], 2)
-    ])
 
-
-def cart2cyl(grid, points=None):
-    """
-    Take a grid defined in cartesian coordinates and transform it to cyl
-    coordinates
-    """
-    if points is None:
-        points = grid
-
-    points = np.atleast_2d(points)
-    grid = np.atleast_2d(grid)
-
-    theta = np.arctan2(grid[:, 1], grid[:, 0])
-
-    return np.hstack([
-        mkvc(np.cos(theta)*points[:, 0] + np.sin(theta)*points[:, 1], 2),
-        mkvc(-np.sin(theta)*points[:, 0] + np.cos(theta)*points[:, 1], 2),
-        mkvc(points[:, 2], 2)
-    ])
-
-
-def rotate_vec_cyl2cart(grid, vec):
-    """
-    Rotate a vector defined in cylindrical coordinates to its definition in
-    cartesian coordinates.
-
-    :param numpy.ndarray grid: grid in cylindrical coordinates on which the 3D
-                               vector is defined [r, theta, z]
-    :param numpy.ndarray vec: vector defined on a cylindrical grid
-    """
+    if vec is None:
+        return np.hstack([
+            mkvc(grid[:, 0]*np.cos(grid[:, 1]), 2),
+            mkvc(grid[:, 0]*np.sin(grid[:, 1]), 2),
+            mkvc(grid[:, 2], 2)
+        ])
 
     if len(vec.shape) == 1 or vec.shape[1] == 1:
         vec = vec.reshape(grid.shape, order='F')
@@ -57,6 +28,26 @@ def rotate_vec_cyl2cart(grid, vec):
         newvec += [z]
 
     return np.vstack(newvec).T
+
+def cart2cyl(grid, vec=None):
+    """
+    Take a grid defined in cartesian coordinates and transform it to cyl
+    coordinates
+    """
+    if vec is None:
+        vec = grid
+
+    vec = np.atleast_2d(vec)
+    grid = np.atleast_2d(grid)
+
+    theta = np.arctan2(grid[:, 1], grid[:, 0])
+
+    return np.hstack([
+        mkvc(np.cos(theta)*vec[:, 0] + np.sin(theta)*vec[:, 1], 2),
+        mkvc(-np.sin(theta)*vec[:, 0] + np.cos(theta)*vec[:, 1], 2),
+        mkvc(vec[:, 2], 2)
+    ])
+
 
 def rotationMatrixFromNormals(v0, v1, tol=1e-20):
     """

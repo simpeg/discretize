@@ -11,7 +11,7 @@ from .utils import (
 from .TensorMesh import BaseTensorMesh, BaseRectangularMesh
 from .InnerProducts import InnerProducts
 from .View import CylView
-from .DiffOperators import DiffOperators, ddxCellGrad
+from .DiffOperators import DiffOperators
 
 
 class CylMesh(
@@ -44,9 +44,8 @@ class CylMesh(
     def __init__(self, h=None, x0=None, **kwargs):
         super(CylMesh, self).__init__(h=h, x0=x0, **kwargs)
 
-        assert np.abs(self.hy.sum() - 2*np.pi) < 1e-10, (
-            "The 2nd dimension must sum to 2*pi"
-        )
+        if not np.abs(self.hy.sum() - 2*np.pi) < 1e-10:
+            raise AssertionError("The 2nd dimension must sum to 2*pi")
 
         if self.dim == 2:
             print('Warning, a disk mesh has not been tested thoroughly.')
@@ -55,12 +54,6 @@ class CylMesh(
             self.cartesianOrigin = kwargs.pop('cartesianOrigin')
         else:
             self.cartesianOrigin = np.zeros(self.dim)
-
-        # assert len(self.cartesianOrigin) == self.dim, (
-        #     "cartesianOrigin must be the same length as the dimension"
-        #     " of the mesh."
-        # )
-        # self.cartesianOrigin = np.array(self.cartesianOrigin, dtype=float)
 
     @properties.validator('cartesianOrigin')
     def check_cartesian_origin_shape(self, change):
@@ -1400,11 +1393,12 @@ class CylMesh(
         construct the deflation matrix to remove hanging edges / faces / nodes
         from the operators
         """
-        assert location in [
+        if location not in [
             'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez', 'CC'
-        ], (
-            'Location must be a grid location, not {}'.format(location)
-        )
+        ]:
+            raise AssertionError(
+                'Location must be a grid location, not {}'.format(location)
+            )
         if location == 'CC':
             return speye(self.nC)
 
@@ -1506,13 +1500,6 @@ class CylMesh(
 
         return self._getInterpolationMat(loc, locType, zerosOutside)
 
-        # if locType in ['Ex', 'Ey', 'Ez', 'Fx', 'Fy']:
-        # P = P * self._deflationMatrix(
-        #     locType[0], asOnes=True
-        # ).T
-
-        # return P
-
     def cartesianGrid(self, locType='CC', theta_shift=None):
         """
         Takes a grid location ('CC', 'N', 'Ex', 'Ey', 'Ez', 'Fx', 'Fy', 'Fz')
@@ -1525,7 +1512,7 @@ class CylMesh(
         grid = getattr(self, 'grid{}'.format(locType)).copy()
         if theta_shift is not None:
             grid[:, 1] = grid[:, 1] - theta_shift
-        return cyl2cart(grid)
+        return cyl2cart(grid)  # TODO: account for cartesian origin
 
     def getInterpolationMatCartMesh(self, Mrect, locType='CC', locTypeTo=None):
         """
@@ -1537,10 +1524,11 @@ class CylMesh(
         :param str locTypeTo: grid location to interpolate to. If None, the same grid type as `locType` will be assumed
         """
 
-        assert self.isSymmetric, (
-            "Currently we have not taken into account other projections for "
-            "more complicated CylMeshes"
-        )
+        if not self.isSymmetric:
+            raise AssertionError(
+                "Currently we have not taken into account other projections "
+                "for more complicated CylMeshes"
+            )
 
         if locTypeTo is None:
             locTypeTo = locType

@@ -21,9 +21,10 @@ def checkBC(bc):
 
     for bc_i in bc:
         assert isinstance(bc_i, string_types), "each bc must be a string"
-        assert bc_i in ['dirichlet', 'neumann'], (
-            "each bc must be either, 'dirichlet' or 'neumann'"
-        )
+        if bc_i not in ['dirichlet', 'neumann']:
+            raise AssertionError(
+                "each bc must be either, 'dirichlet' or 'neumann'"
+            )
     return bc
 
 

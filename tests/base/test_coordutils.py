@@ -57,20 +57,25 @@ class coorutilsTest(unittest.TestCase):
         vec = np.r_[1., 0, 0].reshape(1, 3)
         grid = np.r_[1., np.pi/4, 0].reshape(1, 3)
         self.assertTrue(np.allclose(
-            utils.rotate_vec_cyl2cart(grid, vec), np.sqrt(2)/2 * np.r_[1, 1, 0]
+            utils.cyl2cart(grid, vec), np.sqrt(2)/2 * np.r_[1, 1, 0]
+        ))
+        self.assertTrue(np.allclose(
+            utils.cyl2cart(grid), np.sqrt(2)/2 * np.r_[1, 1, 0]
         ))
 
         vec = np.r_[0, 1, 2].reshape(1, 3)
         grid = np.r_[1, np.pi/4, 0].reshape(1, 3)
         self.assertTrue(np.allclose(
-            utils.rotate_vec_cyl2cart(grid, vec), np.r_[-np.sqrt(2)/2, np.sqrt(2)/2, 2]
+            utils.cyl2cart(grid, vec), np.r_[-np.sqrt(2)/2, np.sqrt(2)/2, 2]
         ))
 
         vec = np.r_[1., 0]
         grid = np.r_[1., np.pi/4].reshape(1, 2)
         self.assertTrue(np.allclose(
-            utils.rotate_vec_cyl2cart(grid, vec), np.sqrt(2)/2 * np.r_[1, 1]
+            utils.cyl2cart(grid, vec), np.sqrt(2)/2 * np.r_[1, 1]
         ))
+
+
 
 if __name__ == '__main__':
     unittest.main()
