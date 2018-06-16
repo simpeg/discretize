@@ -581,7 +581,7 @@ void Tree::set_levels(int_t l_x, int_t l_y, int_t l_z){
     int_t min_l = std::min(l_x, l_y);
     if(n_dim == 3) min_l = std::min(min_l, l_z);
     max_level = min_l;
-    if(l_x != l_y or (n_dim==3 and l_y!=l_z)) ++max_level;
+    if(l_x != l_y || (n_dim==3 && l_y!=l_z)) ++max_level;
 
     nx = 2<<l_x;
     ny = 2<<l_y;
@@ -591,7 +591,7 @@ void Tree::set_levels(int_t l_x, int_t l_y, int_t l_z){
     ny_roots = 1<<(l_y-(max_level-1));
     nz_roots = (n_dim==3)? 1<<(l_z-(max_level-1)) : 1;
 
-    if (l_x==l_y and (n_dim==2 or l_y==l_z)){
+    if (l_x==l_y && (n_dim==2 || l_y==l_z)){
         --nx_roots;
         --ny_roots;
         --nz_roots;
@@ -668,7 +668,7 @@ void Tree::initialize_roots(){
                         ps[7] = points[iz+1][iy+1][ix+1];
                     }
                     roots[iz][iy][ix] = new Cell(ps, n_dim, max_level, NULL);
-                    if (nx==ny and (n_dim==2 or ny==nz)){
+                    if (nx==ny && (n_dim==2 || ny==nz)){
                         roots[iz][iy][ix]->level = 0;
                     }else{
                         roots[iz][iy][ix]->level = 1;
@@ -703,14 +703,14 @@ void Tree::insert_cell(double *new_center, int_t p_level){
     int_t ix = 0;
     int_t iy = 0;
     int_t iz = 0;
-    while (new_center[0]>=xs[ixs[ix+1]] and ix<nx_roots-1){
+    while (new_center[0]>=xs[ixs[ix+1]] && ix<nx_roots-1){
         ++ix;
     }
-    while (new_center[1]>=ys[iys[iy+1]] and iy<ny_roots-1){
+    while (new_center[1]>=ys[iys[iy+1]] && iy<ny_roots-1){
         ++iy;
     }
     if(n_dim == 3){
-        while(new_center[2]>=zs[izs[iz+1]] and iz<nz_roots-1){
+        while(new_center[2]>=zs[izs[iz+1]] && iz<nz_roots-1){
             ++iz;
         }
     }
@@ -1276,14 +1276,14 @@ Cell* Tree::containing_cell(double x, double y, double z){
     int_t ix = 0;
     int_t iy = 0;
     int_t iz = 0;
-    while (x>=xs[ixs[ix+1]] and ix<nx_roots-1){
+    while (x>=xs[ixs[ix+1]] && ix<nx_roots-1){
         ++ix;
     }
-    while (y>=ys[iys[iy+1]] and iy<ny_roots-1){
+    while (y>=ys[iys[iy+1]] && iy<ny_roots-1){
         ++iy;
     }
     if(n_dim == 3){
-        while(z>=zs[izs[iz+1]] and iz<nz_roots-1){
+        while(z>=zs[izs[iz+1]] && iz<nz_roots-1){
             ++iz;
         }
     }
