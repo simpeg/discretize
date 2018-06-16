@@ -142,8 +142,9 @@ cdef int_t _evaluate_func(void* function, c_Cell* cell) with gil:
 cdef class _TreeMesh:
     cdef c_Tree *tree
     cdef PyWrapper *wrapper
-    cdef int_t _nx, _ny, _nz, max_level, _dim
+    cdef int_t _dim
     cdef double[3] _xc, _xf
+    cdef int_t[3] ls
 
     cdef double[:] _xs, _ys, _zs
     cdef double[:] _x0
@@ -166,36 +167,40 @@ cdef class _TreeMesh:
         self.wrapper = new PyWrapper()
         self.tree = new c_Tree()
 
-    def __init__(self, h, x0, max_level):
-        self.max_level = max_level
-        self._nx = 2<<max_level
-        self._ny = 2<<max_level
+    def __init__(self, h, x0):
+        nx2 = 2*len(h[0])
+        ny2 = 2*len(h[1])
         self._dim = len(x0)
         self._x0 = x0
 
-        xs = np.empty(self._nx + 1, dtype=float)
+        xs = np.empty(nx2 + 1, dtype=float)
         xs[::2] = np.cumsum(np.r_[x0[0], h[0]])
         xs[1::2] = (xs[:-1:2] + xs[2::2])/2
         self._xs = xs
+        self.ls[0] = int(np.log2(len(h[0])))
 
-        ys = np.empty(self._ny + 1, dtype=float)
+        ys = np.empty(ny2 + 1, dtype=float)
         ys[::2] = np.cumsum(np.r_[x0[1],h[1]])
         ys[1::2] = (ys[:-1:2] + ys[2::2])/2
         self._ys = ys
+        self.ls[1] = int(np.log2(len(h[1])))
 
         if self._dim > 2:
-            self._nz = 2<<max_level
+            nz2 = 2*len(h[2])
 
-            zs = np.empty(self._nz + 1, dtype=float)
+            zs = np.empty(nz2 + 1, dtype=float)
             zs[::2] = np.cumsum(np.r_[x0[2],h[2]])
             zs[1::2] = (zs[:-1:2] + zs[2::2])/2
             self._zs = zs
+            self.ls[2] = int(np.log2(len(h[2])))
         else:
             self._zs = np.zeros(1, dtype=float)
+            self.ls[2] = 1
 
         self.tree.set_dimension(self._dim)
-        self.tree.set_level(self.max_level)
+        self.tree.set_levels(self.ls[0], self.ls[1], self.ls[2])
         self.tree.set_xs(&self._xs[0], &self._ys[0], &self._zs[0])
+        self.tree.initialize_roots()
 
         self._gridCC = None
         self._gridN = None
@@ -247,11 +252,8 @@ cdef class _TreeMesh:
             function = lambda cell: level
 
         #Wrapping function so it can be called in c++
-        cdef void * self_ptr
-        cdef void * func_ptr;
-        func_ptr = <void *> function;
+        cdef void * func_ptr = <void *> function
         self.wrapper.set(func_ptr, _evaluate_func)
-
         #Then tell c++ to build the tree
         self.tree.build_tree_from_function(self.wrapper)
         if finalize:
@@ -312,10 +314,9 @@ cdef class _TreeMesh:
                 for i in range(self._zs.shape[0]):
                     self._zs[i] += shift[2]
 
+
             #update the locations of all of the items
-            for cell in self.tree.cells:
-                for i in range(dim):
-                    cell.location[i] += shift[i]
+            self.tree.shift_cell_centers(&shift[0])
 
             for itN in self.tree.nodes:
                 node = itN.second
@@ -375,7 +376,12 @@ cdef class _TreeMesh:
         How filled is the mesh compared to a TensorMesh?
         As a fraction: [0, 1].
         """
-        return float(self.nC)/((2**self.maxLevel)**self._dim)
+        #Tensor mesh cells:
+        cdef int_t nxc, nyc, nzc;
+        nxc = (self._xs.shape[0]-1)//2
+        nyc = (self._ys.shape[0]-1)//2
+        nzc = (self._zs.shape[0]-1)//2 if self._dim==3 else 1
+        return float(self.nC)/(nxc * nyc * nzc)
 
     @property
     def maxLevel(self):
@@ -2409,11 +2415,11 @@ cdef class _TreeMesh:
             return self.__ubc_indArr
         indArr, levels = self.__getstate__()
 
-        max_level = self.max_level
+        max_level = self.tree.max_level
 
         levels = 1<<(max_level - levels)
 
-        indArr[:, 2] = (2<<max_level) - indArr[:, 2]
+        indArr[:, 2] = (self._zs.shape[0]-1) - indArr[:, 2]
         indArr = (indArr - levels[:, None])//2
         indArr += 1
 

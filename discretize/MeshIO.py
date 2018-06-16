@@ -565,9 +565,13 @@ class TreeMeshIO(object):
         h1, h2, h3 = [np.ones(nr)*sz for nr, sz in zip(nCunderMesh, smallCell)]
         x0 = tswCorn - np.array([0, 0, np.sum(h3)])
 
-        max_level = int(np.log2(nCunderMesh[0]))
-        mesh = TreeMesh([h1, h2, h3], x0=x0, levels=max_level)
+        ls = np.log2(nCunderMesh).astype(int)
+        if ls[0] == ls[1] and ls[1] == ls[2]:
+            max_level = ls[0]
+        else:
+            max_level = min(ls)+1
 
+        mesh = TreeMesh([h1, h2, h3], x0=x0)
 
         # Convert indArr to points in coordinates of underlying cpp tree
         # indArr is ix, iy, iz(top-down) need it in ix, iy, iz (bottom-up)
@@ -575,10 +579,10 @@ class TreeMeshIO(object):
         levels = indArr[:, -1]
         indArr = indArr[:, :-1]
 
-        indArr -= 1 #shift by 1....
-        indArr = 2*indArr + levels[:, None]
-        indArr[:, 2] = (2<<max_level) - indArr[:, 2]
-        levels = max_level-np.log2(levels)
+        indArr -= 1  # shift by 1....
+        indArr = 2*indArr + levels[:, None]  # get cell center index
+        indArr[:, 2] = 2*nCunderMesh[2] - indArr[:, 2]  # switch direction of iz
+        levels = max_level-np.log2(levels)  # calculate level
 
         mesh.__setstate__((indArr, levels))
         return mesh
@@ -616,9 +620,12 @@ class TreeMeshIO(object):
         :param string fileName: File to write to
         :param dict models: Models in a dict, where each key is the filename
         """
+        uniform_hs = np.array([np.allclose(h, h[0]) for h in mesh.h])
+        if np.any(~uniform_hs):
+            raise Exception('UBC form does not support variable cell widths')
         nCunderMesh = np.array([h.size for h in mesh.h], dtype=np.int64)
         tswCorn = mesh.x0 + np.array([0, 0, np.sum(mesh.h[2])])
-        smallCell = np.array([h.min() for h in mesh.h])
+        smallCell = np.array([h[0] for h in mesh.h])
         nrCells = mesh.nC
 
         indArr, levels = mesh._ubc_indArr
@@ -663,7 +670,8 @@ class TreeMeshIO(object):
         vtkPts = vtk.vtkPoints()
         vtkPts.SetData(numpy_to_vtk(ptsMat, deep=True))
         # Cells
-        cellConn = np.array([c.nodes for c in self])
+        cellArray = [c for c in self]
+        cellConn = np.array([cell.nodes for cell in cellArray])
 
         cellsMat = np.concatenate((np.ones((cellConn.shape[0], 1))*cellConn.shape[1], cellConn), axis=1).ravel()
         cellsArr = vtk.vtkCellArray()
@@ -675,9 +683,8 @@ class TreeMeshIO(object):
         vtuObj.SetPoints(vtkPts)
         vtuObj.SetCells(vtk.VTK_VOXEL, cellsArr)
         # Add the level of refinement as a cell array
-        cellSides = np.array([np.array(vtuObj.GetCell(i).GetBounds()).reshape((3, 2)).dot(np.array([-1, 1])) for i in np.arange(vtuObj.GetNumberOfCells())])
-        uniqueLevel, indLevel = np.unique(np.prod(cellSides, axis=1), return_inverse=True)
-        refineLevelArr = numpy_to_vtk(indLevel.max() - indLevel, deep=1)
+        cell_levels = np.array([cell._level for cell in cellArray])
+        refineLevelArr = numpy_to_vtk(cell_levels, deep=1)
         refineLevelArr.SetName('octreeLevel')
         vtuObj.GetCellData().AddArray(refineLevelArr)
         # Assign the model('s) to the object

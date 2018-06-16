@@ -361,6 +361,17 @@ void Cell::set_neighbor(Cell * other, int_t position){
     }
 };
 
+void Cell::shift_centers(double *shift){
+    for(int_t id = 0; id<n_dim; ++id){
+        location[id] += shift[id];
+    }
+    if(!is_leaf()){
+        for(int_t i = 0; i < (1<<n_dim); ++i){
+            children[i]->shift_centers(shift);
+        }
+    }
+}
+
 void Cell::insert_cell(node_map_t& nodes, double *new_cell, int_t p_level, double *xs, double *ys, double *zs){
     //Inserts a cell at min(max_level,p_level) that contains the given point
     if(p_level > level){
@@ -369,9 +380,9 @@ void Cell::insert_cell(node_map_t& nodes, double *new_cell, int_t p_level, doubl
         if(is_leaf()){
             divide(nodes, xs, ys, zs, true);
         }
-        int ix = new_cell[0] > location[0];
-        int iy = new_cell[1] > location[1];
-        int iz = n_dim>2 && new_cell[2]>location[2];
+        int ix = new_cell[0] > children[0]->points[3]->location[0];
+        int iy = new_cell[1] > children[0]->points[3]->location[1];
+        int iz = n_dim>2 && new_cell[2]>children[0]->points[7]->location[2];
         children[ix + 2*iy + 4*iz]->insert_cell(nodes, new_cell, p_level, xs, ys, zs);
     }
 };
@@ -539,9 +550,9 @@ Cell* Cell::containing_cell(double x, double y, double z){
     if(is_leaf()){
       return this;
     }
-    int ix = x > location[0];
-    int iy = y > location[1];
-    int iz = n_dim>2 && z>location[2];
+    int ix = x > children[0]->points[3]->location[0];
+    int iy = y > children[0]->points[3]->location[1];
+    int iz = n_dim>2 && z>children[0]->points[7]->location[2];
     return children[ix + 2*iy + 4*iz]->containing_cell(x, y, z);
 };
 
@@ -560,18 +571,58 @@ Tree::Tree(){
     nz = 0;
     n_dim = 0;
     max_level = 0;
-    root = NULL;
 };
 
 void Tree::set_dimension(int_t dim){
     n_dim = dim;
 }
 
-void Tree::set_level(int_t levels){
-    max_level = levels;
-    nx = 2<<max_level;
-    ny = 2<<max_level;
-    nz = ((n_dim == 3)? 2<<max_level : 0);
+void Tree::set_levels(int_t l_x, int_t l_y, int_t l_z){
+    int_t min_l = std::min(l_x, l_y);
+    if(n_dim == 3) min_l = std::min(min_l, l_z);
+    max_level = min_l;
+    if(l_x != l_y or (n_dim==3 and l_y!=l_z)) ++max_level;
+
+    nx = 2<<l_x;
+    ny = 2<<l_y;
+    nz = (n_dim == 3)? 2<<l_z : 0;
+
+    nx_roots = 1<<(l_x-(max_level-1));
+    ny_roots = 1<<(l_y-(max_level-1));
+    nz_roots = (n_dim==3)? 1<<(l_z-(max_level-1)) : 1;
+
+    if (l_x==l_y and (n_dim==2 or l_y==l_z)){
+        --nx_roots;
+        --ny_roots;
+        --nz_roots;
+    }
+    ixs = new int_t[nx_roots+1];
+    iys = new int_t[ny_roots+1];
+    izs = new int_t[nz_roots+1];
+
+    int_t min_n = 2<<min_l;
+    for(int_t i=0; i<nx_roots+1; ++i){
+        ixs[i] = min_n*i;
+    }
+    for(int_t i=0; i<ny_roots+1; ++i){
+        iys[i] = min_n*i;
+    }
+    for(int_t i=0; i<nz_roots+1; ++i){
+        izs[i] = min_n*i;
+    }
+    if(n_dim == 2) nz_roots = 1;
+
+    // Initialize root cell container
+    roots.resize(nz_roots);
+    for(int_t iz=0; iz<nz_roots; ++iz){
+        roots[iz].resize(ny_roots);
+        for(int_t iy=0; iy<ny_roots; ++iy){
+            roots[iz][iy].resize(nx_roots);
+            for(int_t ix=0; ix<nx_roots; ++ix){
+                roots[iz][iy][ix] = NULL;
+            }
+        }
+    }
 };
 
 void Tree::set_xs(double *x, double *y, double *z){
@@ -580,57 +631,110 @@ void Tree::set_xs(double *x, double *y, double *z){
     zs = z;
 }
 
-void Tree::insert_cell(double *new_center, int_t p_level){
-    if(root == NULL){
-        Node* points[8];
+void Tree::initialize_roots(){
+    if(roots[0][0][0]==NULL){
+        //Create grid of root nodes
+        std::vector<std::vector<std::vector<Node *> > > points;
+        if(n_dim == 2){
+            points.resize(1);
+        }else{
+            points.resize(nz_roots+1);
+        }
+        for(int_t iz = 0; iz<points.size(); ++iz){
+            points[iz].resize(ny_roots+1);
+            for(int_t iy = 0; iy<ny_roots+1; ++iy){
+                points[iz][iy].resize(nx_roots+1);
+                for(int_t ix = 0; ix<nx_roots+1; ++ix){
+                    points[iz][iy][ix] = new Node(ixs[ix], iys[iy], izs[iz],
+                                                  xs, ys, zs);
+                    nodes[points[iz][iy][ix]->key] = points[iz][iy][ix];
+                }
+            }
+        }
 
-        points[0] = new Node( 0, 0, 0, xs, ys, zs);
-        points[1] = new Node(nx, 0, 0, xs, ys, zs);
-        points[2] = new Node( 0,ny, 0, xs, ys, zs);
-        points[3] = new Node(nx,ny, 0, xs, ys, zs);
-        if(n_dim==3){
-            points[4] = new Node( 0, 0, nz, xs, ys, zs);
-            points[5] = new Node(nx, 0, nz, xs, ys, zs);
-            points[6] = new Node( 0,ny, nz, xs, ys, zs);
-            points[7] = new Node(nx,ny, nz, xs, ys, zs);
+        // Create grid of root cells
+        for (int_t iz = 0; iz<nz_roots; ++iz){
+            for (int_t iy = 0; iy<ny_roots; ++iy){
+                for (int_t ix = 0; ix<nx_roots; ++ix){
+                    Node *ps[8];
+                    ps[0] = points[iz][iy  ][ix  ];
+                    ps[1] = points[iz][iy  ][ix+1];
+                    ps[2] = points[iz][iy+1][ix  ];
+                    ps[3] = points[iz][iy+1][ix+1];
+                    if (n_dim == 3){
+                        ps[4] = points[iz+1][iy  ][ix  ];
+                        ps[5] = points[iz+1][iy  ][ix+1];
+                        ps[6] = points[iz+1][iy+1][ix  ];
+                        ps[7] = points[iz+1][iy+1][ix+1];
+                    }
+                    roots[iz][iy][ix] = new Cell(ps, n_dim, max_level, NULL);
+                    if (nx==ny and (n_dim==2 or ny==nz)){
+                        roots[iz][iy][ix]->level = 0;
+                    }else{
+                        roots[iz][iy][ix]->level = 1;
+                    }
+                    for(int_t i = 0; i < (1<<n_dim); ++i){
+                        ps[i]->reference += 1;
+                    }
+                }
+            }
         }
-        for(int_t i = 0; i < (1<<n_dim); ++i){
-            nodes[points[i]->key] = points[i];
-            points[i]->reference += 1;
-        }
-        root = new Cell(points, n_dim, max_level, NULL);
+        // Set root cell neighbors
+        // +x neighbors
+        for(int_t iz=0; iz<nz_roots; ++iz)
+            for (int_t iy=0; iy<ny_roots; ++iy)
+                for(int_t ix=0; ix<nx_roots-1; ++ix)
+                    roots[iz][iy][ix]->set_neighbor(roots[iz][iy][ix+1], 1);
+        // +y neighbors
+        for(int_t iz=0; iz<nz_roots; ++iz)
+            for(int_t iy=0; iy<ny_roots-1; ++iy)
+                for(int_t ix=0; ix<nx_roots; ++ix)
+                    roots[iz][iy][ix]->set_neighbor(roots[iz][iy+1][ix], 3);
+        // +z neighbors
+        for(int_t iz=0; iz<nz_roots-1; ++iz)
+            for(int_t iy=0; iy<ny_roots; ++iy)
+                for(int_t ix=0; ix<nx_roots; ++ix)
+                    roots[iz][iy][ix]->set_neighbor(roots[iz+1][iy][ix], 5);
     }
-    root->insert_cell(nodes, new_center, p_level, xs, ys, zs);
+}
+
+void Tree::insert_cell(double *new_center, int_t p_level){
+    // find containing root
+    int_t ix = 0;
+    int_t iy = 0;
+    int_t iz = 0;
+    while (new_center[0]>=xs[ixs[ix+1]] and ix<nx_roots-1){
+        ++ix;
+    }
+    while (new_center[1]>=ys[iys[iy+1]] and iy<ny_roots-1){
+        ++iy;
+    }
+    if(n_dim == 3){
+        while(new_center[2]>=zs[izs[iz+1]] and iz<nz_roots-1){
+            ++iz;
+        }
+    }
+    roots[iz][iy][ix]->insert_cell(nodes, new_center, p_level, xs, ys, zs);
 }
 
 void Tree::build_tree_from_function(function test_func){
-
-    if(root == NULL){
-        Node* points[8];
-
-        points[0] = new Node( 0,  0, 0, xs, ys, zs);
-        points[1] = new Node(nx,  0, 0, xs, ys, zs);
-        points[2] = new Node( 0, ny, 0, xs, ys, zs);
-        points[3] = new Node(nx, ny, 0, xs, ys, zs);
-        if(n_dim == 3){
-            points[4] = new Node( 0,  0, nz, xs, ys, zs);
-            points[5] = new Node(nx,  0, nz, xs, ys, zs);
-            points[6] = new Node( 0, ny, nz, xs, ys, zs);
-            points[7] = new Node(nx, ny, nz, xs, ys, zs);
-        }
-        for(int_t i = 0; i < (1<<n_dim); ++i){
-            nodes[points[i]->key] = points[i];
-            points[i]->reference += 1;
-        }
-        root = new Cell(points, n_dim, max_level, test_func);
-    }
-    root->divide(nodes, xs, ys, zs);
-    //finalize_lists();
+    //Must set the test_func of all of the roots before I can start dividing
+    for(int_t iz=0; iz<nz_roots; ++iz)
+        for(int_t iy=0; iy<ny_roots; ++iy)
+            for(int_t ix=0; ix<nx_roots; ++ix)
+                roots[iz][iy][ix]->test_func = test_func;
+    //Now we can divide
+    for(int_t iz=0; iz<nz_roots; ++iz)
+        for(int_t iy=0; iy<ny_roots; ++iy)
+            for(int_t ix=0; ix<nx_roots; ++ix)
+                roots[iz][iy][ix]->divide(nodes, xs, ys, zs);
 };
 
 void Tree::finalize_lists(){
-    root->build_cell_vector(cells);
-
+    for(int_t iz=0; iz<nz_roots; ++iz)
+        for(int_t iy=0; iy<ny_roots; ++iy)
+            for(int_t ix=0; ix<nx_roots; ++ix)
+                roots[iz][iy][ix]->build_cell_vector(cells);
     if(n_dim == 3){
         // Generate Faces and edges
         for(std::vector<Cell *>::size_type i = 0; i != cells.size(); i++){
@@ -723,6 +827,7 @@ void Tree::finalize_lists(){
                 int_t x;
                 x = face->location_ind[0];
                 if(x==0 || x==nx) continue; // Face was on the outside, and is not hanging
+
                 if(nodes.count(face->key)) continue; // I will have children (there is a node at my center)
                 Node *node;
 
@@ -736,6 +841,7 @@ void Tree::finalize_lists(){
                         break;
                     }
                 }
+
                 //all of my edges are hanging, and most of my points
                 for(int_t i = 0; i < 4; ++i){
                     face->edges[i]->hanging = true;
@@ -781,15 +887,8 @@ void Tree::finalize_lists(){
             if(face->reference < 2){
                 int_t y;
                 y = face->location_ind[1];
-                if(y==0 || y==ny){
-                    // Face was on the outside, and is not hanging
-                    continue;
-                }
-                //check if I am a parent or a child
-                if(nodes.count(face->key)){
-                    // I will have children (there is a node at my center)
-                    continue;
-                }
+                if(y==0 || y==ny) continue; // Face was on the outside, and is not hanging
+                if(nodes.count(face->key)) continue; // I will have children (there is a node at my center)
                 Node *node;
 
                 //Find Parent
@@ -910,6 +1009,7 @@ void Tree::finalize_lists(){
                 }
             }
         }
+
     }
     else{
         //Generate Edges (and 1 face for consistency)
@@ -1126,10 +1226,19 @@ void Tree::number(){
 };
 
 Tree::~Tree(){
-    if (root==NULL){
+    if (roots.size() == 0){
         return;
     }
-    delete root;
+    for(int_t iz=0; iz<nz_roots; ++iz){
+        for(int_t iy=0; iy<ny_roots; ++iy){
+            for(int_t ix=0; ix<nx_roots; ++ix){
+                delete roots[iz][iy][ix];
+            }
+        }
+    }
+    delete[] ixs;
+    delete[] iys;
+    delete[] izs;
     for(node_it_type it = nodes.begin(); it != nodes.end(); ++it){
         delete it->second;
     }
@@ -1151,6 +1260,7 @@ Tree::~Tree(){
     for(edge_it_type it = edges_z.begin(); it != edges_z.end(); ++it){
         delete it->second;
     }
+    roots.clear();
     cells.clear();
     nodes.clear();
     faces_x.clear();
@@ -1162,5 +1272,27 @@ Tree::~Tree(){
 };
 
 Cell* Tree::containing_cell(double x, double y, double z){
-    return root->containing_cell(x, y, z);
+    // find containing root
+    int_t ix = 0;
+    int_t iy = 0;
+    int_t iz = 0;
+    while (x>=xs[ixs[ix+1]] and ix<nx_roots-1){
+        ++ix;
+    }
+    while (y>=ys[iys[iy+1]] and iy<ny_roots-1){
+        ++iy;
+    }
+    if(n_dim == 3){
+        while(z>=zs[izs[iz+1]] and iz<nz_roots-1){
+            ++iz;
+        }
+    }
+    return roots[iz][iy][ix]->containing_cell(x, y, z);
+}
+
+void Tree::shift_cell_centers(double *shift){
+    for(int_t iz=0; iz<nz_roots; ++iz)
+        for(int_t iy=0; iy<ny_roots; ++iy)
+            for(int_t ix=0; ix<nx_roots; ++ix)
+                roots[iz][iy][ix]->shift_centers(shift);
 }

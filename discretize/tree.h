@@ -124,13 +124,16 @@ class Cell{
     void insert_cell(node_map_t &nodes, double *new_center, int_t p_level, double* xs, double *ys, double *zs);
 
     Cell* containing_cell(double, double, double);
+    void shift_centers(double * shift);
 };
 
 class Tree{
   public:
     int_t n_dim;
-    Cell *root;
+    std::vector<std::vector<std::vector<Cell *> > > roots;
     int_t max_level, nx, ny, nz;
+    int_t *ixs, *iys, *izs;
+    int_t nx_roots, ny_roots, nz_roots;
     double *xs;
     double *ys;
     double *zs;
@@ -147,8 +150,9 @@ class Tree{
     ~Tree();
 
     void set_dimension(int_t dim);
-    void set_level(int_t max_level);
+    void set_levels(int_t l_x, int_t l_y, int_t l_z);
     void set_xs(double *x , double *y, double *z);
+    void initialize_roots();
     void build_tree_from_function(function test_func);
     void number();
     void finalize_lists();
@@ -156,5 +160,7 @@ class Tree{
     void insert_cell(double *new_center, int_t p_level);
 
     Cell* containing_cell(double, double, double);
+
+    void shift_cell_centers(double *shift);
 };
 #endif

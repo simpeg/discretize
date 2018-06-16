@@ -97,14 +97,17 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
     _meshType = 'TREE'
 
     #inheriting stuff from BaseTensorMesh that isn't defined in _QuadTree
-    def __init__(self, h, x0=None, levels=None, **kwargs):
+    def __init__(self, h, x0=None, **kwargs):
         BaseTensorMesh.__init__(self, h, x0, **kwargs)
 
-        if levels is None:
-            levels = int(np.log2(len(self.h[0])))
-
+        nx = len(self.h[0])
+        ny = len(self.h[1])
+        nz = len(self.h[2]) if self.dim == 3 else 2
+        def is_pow2(num): return ((num & (num - 1)) == 0) and num != 0
+        if not (is_pow2(nx) and is_pow2(ny) and is_pow2(nz)):
+            raise ValueError("length of cell width vectors must be a power of 2")
         # Now can initialize cpp tree parent
-        _TreeMesh.__init__(self, self.h, self.x0, levels)
+        _TreeMesh.__init__(self, self.h, self.x0)
 
     def __str__(self):
         outStr = '  ---- {0!s}TreeMesh ----  '.format(

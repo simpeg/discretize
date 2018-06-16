@@ -68,7 +68,6 @@ cdef extern from "tree.h":
 
     cdef cppclass Tree:
         int_t n_dim
-        Cell *root
         int_t max_level, nx, ny, nz
 
         vector[Cell *] cells
@@ -82,10 +81,12 @@ cdef extern from "tree.h":
         Tree()
 
         void set_dimension(int_t)
-        void set_level(int_t)
+        void set_levels(int_t, int_t, int_t)
         void set_xs(double*, double*, double*)
         void build_tree_from_function(PyWrapper *)
         void number()
+        void initialize_roots()
         void insert_cell(double *new_center, int_t p_level);
         void finalize_lists()
         Cell * containing_cell(double, double, double)
+        void shift_cell_centers(double*)
