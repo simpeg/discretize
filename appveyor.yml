@@ -27,8 +27,6 @@ init:
   - ps: Write-Host $Env:PYTHON_VERSION
   - ps: Write-Host $Env:CONDA
   - ps: Write-Host $Env:PLATFORM
-  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
-
 
 install:
   # Load the conda root environment, configure and install some packages
@@ -43,7 +41,7 @@ install:
 
 test_script:
   - cd tests
-  - nosetests tree -v -s
+  - nosetests tree base -v -s
   - cd ..
 
 after_test:
