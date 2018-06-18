@@ -2,6 +2,7 @@
 #include <map>
 #include "tree.h"
 #include <iostream>
+#include <algorithm>
 
 Node::Node(){
     location_ind[0] = 0;

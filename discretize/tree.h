@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 #include <iostream>
+#include <algorithm>
 
 typedef std::size_t int_t;
 
