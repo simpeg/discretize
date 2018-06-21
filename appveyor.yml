@@ -41,7 +41,8 @@ install:
 
 test_script:
   - cd tests
-  - nosetests tree base -v -s
+  - nosetests -v -s base
+  - nosetests -v -s tree
   - cd ..
 
 after_test:
