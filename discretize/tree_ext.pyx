@@ -143,7 +143,6 @@ cdef class _TreeMesh:
     cdef c_Tree *tree
     cdef PyWrapper *wrapper
     cdef int_t _dim
-    cdef double[3] _xc, _xf
     cdef int_t[3] ls
 
     cdef double[:] _xs, _ys, _zs
@@ -276,10 +275,6 @@ cdef class _TreeMesh:
         self.tree.number()
 
     @property
-    def xC(self):
-        return np.array(self._xc)
-
-    @property
     def x0(self):
         return np.array(self._x0)
 
@@ -313,7 +308,6 @@ cdef class _TreeMesh:
             if dim == 3:
                 for i in range(self._zs.shape[0]):
                     self._zs[i] += shift[2]
-
 
             #update the locations of all of the items
             self.tree.shift_cell_centers(&shift[0])
