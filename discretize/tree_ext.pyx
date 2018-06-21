@@ -852,6 +852,104 @@ cdef class _TreeMesh:
         return self._edge
 
     @property
+    def cellBoundaryInd(self):
+        cdef np.int64_t[:] indxu, indxd, indyu, indyd, indzu, indzd
+        indxu = np.empty(self.nC, dtype=np.int64)
+        indxd = np.empty(self.nC, dtype=np.int64)
+        indyu = np.empty(self.nC, dtype=np.int64)
+        indyd = np.empty(self.nC, dtype=np.int64)
+        if self._dim == 3:
+            indzu = np.empty(self.nC, dtype=np.int64)
+            indzd = np.empty(self.nC, dtype=np.int64)
+        cdef int_t nxu, nxd, nyu, nyd, nzu, nzd
+        nxu = 0
+        nxd = 0
+        nyu = 0
+        nyd = 0
+        nzu = 0
+        nzd = 0
+        for cell in self.tree.cells:
+            if cell.neighbors[0] == NULL:
+                indxd[nxd] = cell.index
+                nxd += 1
+            if cell.neighbors[1] == NULL:
+                indxu[nxu] = cell.index
+                nxu += 1
+            if cell.neighbors[2] == NULL:
+                indyd[nyd] = cell.index
+                nyd += 1
+            if cell.neighbors[3] == NULL:
+                indyu[nyu] = cell.index
+                nyu += 1
+            if self._dim == 3:
+                if cell.neighbors[4] == NULL:
+                    indzd[nzd] = cell.index
+                    nzd += 1
+                if cell.neighbors[5] == NULL:
+                    indzu[nzu] = cell.index
+                    nzu += 1
+        ixd = np.array(indxd)[:nxd]
+        ixu = np.array(indxu)[:nxu]
+        iyd = np.array(indyd)[:nyd]
+        iyu = np.array(indyu)[:nyu]
+        if self._dim == 3:
+            izd = np.array(indzd)[:nzd]
+            izu = np.array(indzu)[:nzu]
+            return ixd, ixu, iyd, iyu, izd, izu
+        else:
+            return ixd, ixu, iyd, iyu
+
+    @property
+    def faceBoundaryInd(self):
+        cell_boundary_inds = self.cellBoundaryInd
+        cdef np.int64_t[:] c_indxu, c_indxd, c_indyu, c_indyd, c_indzu, c_indzd
+        cdef np.int64_t[:] f_indxu, f_indxd, f_indyu, f_indyd, f_indzu, f_indzd
+        if self._dim == 2:
+            c_indxd, c_indxu, c_indyd, c_indyu = cell_boundary_inds
+        else:
+            c_indxd, c_indxu, c_indyd, c_indyu, c_indzd, c_indzu = cell_boundary_inds
+
+        f_indxd = np.empty(c_indxd.shape[0], dtype=np.int64)
+        f_indxu = np.empty(c_indxu.shape[0], dtype=np.int64)
+        f_indyd = np.empty(c_indyd.shape[0], dtype=np.int64)
+        f_indyu = np.empty(c_indyu.shape[0], dtype=np.int64)
+        if self._dim == 2:
+            for i in range(f_indxd.shape[0]):
+                f_indxd[i] = self.tree.cells[c_indxd[i]].edges[2].index
+            for i in range(f_indxu.shape[0]):
+                f_indxu[i] = self.tree.cells[c_indxu[i]].edges[3].index
+            for i in range(f_indyd.shape[0]):
+                f_indyd[i] = self.tree.cells[c_indyd[i]].edges[0].index
+            for i in range(f_indyu.shape[0]):
+                f_indyu[i] = self.tree.cells[c_indyu[i]].edges[1].index
+        if self._dim == 3:
+            f_indzd = np.empty(c_indzd.shape[0], dtype=np.int64)
+            f_indzu = np.empty(c_indzu.shape[0], dtype=np.int64)
+
+            for i in range(f_indxd.shape[0]):
+                f_indxd[i] = self.tree.cells[c_indxd[i]].faces[0].index
+            for i in range(f_indxu.shape[0]):
+                f_indxu[i] = self.tree.cells[c_indxu[i]].faces[1].index
+            for i in range(f_indyd.shape[0]):
+                f_indyd[i] = self.tree.cells[c_indyd[i]].faces[2].index
+            for i in range(f_indyu.shape[0]):
+                f_indyu[i] = self.tree.cells[c_indyu[i]].faces[3].index
+            for i in range(f_indzd.shape[0]):
+                f_indzd[i] = self.tree.cells[c_indzd[i]].faces[4].index
+            for i in range(f_indzu.shape[0]):
+                f_indzu[i] = self.tree.cells[c_indzu[i]].faces[5].index
+        ixd = np.array(f_indxd)
+        ixu = np.array(f_indxu)
+        iyd = np.array(f_indyd)
+        iyu = np.array(f_indyu)
+        if self._dim == 3:
+            izd = np.array(f_indzd)
+            izu = np.array(f_indzu)
+            return ixd, ixu, iyd, iyu, izd, izu
+        else:
+            return ixd, ixu, iyd, iyu
+
+    @property
     def faceDiv(self):
         if self._faceDiv is not None:
             return self._faceDiv
