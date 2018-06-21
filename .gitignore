@@ -42,3 +42,5 @@ docs/warnings.txt
 .DS_Store
 docs/auto_examples
 docs/modules
+tree_ext.cpp
+interputils_cython.c
