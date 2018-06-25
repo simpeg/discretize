@@ -92,6 +92,7 @@ from .tree_ext import _TreeMesh
 import numpy as np
 from scipy.spatial import Delaunay
 import scipy.sparse as sp
+from six import integer_types
 
 class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
     _meshType = 'TREE'
@@ -456,6 +457,93 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
             Pz = np.lexsort(self.gridEz.T) + (self.nEx+self.nEy)
             P = np.r_[Px, Py, Pz]
         return sp.identity(self.nE).tocsr()[P]
+
+    def plotSlice(
+        self, v, vType='CC',
+        normal='Z', ind=None, grid=True, view='real',
+        ax=None, clim=None, showIt=False,
+        pcolorOpts=None, streamOpts=None, gridOpts=None
+    ):
+
+        if pcolorOpts is None:
+            pcolorOpts = {}
+        if streamOpts is None:
+            streamOpts = {'color': 'k'}
+        if gridOpts is None:
+            gridOpts = {'color': 'k', 'alpha': 0.5}
+        if vType not in ['CC', 'F', 'E']:
+            raise ValueError('vType must be one of CC, F, or E')
+        if self.dim == 2:
+            raise Exception('plotSlice not support for 2D, use plotImage')
+
+        import matplotlib.pyplot as plt
+        import matplotlib
+
+        normalInd = {'X': 0, 'Y': 1, 'Z': 2}[normal]
+        antiNormalInd = {'X': [1, 2], 'Y': [0, 2], 'Z': [0, 1]}[normal]
+
+        h2d = (self.h[antiNormalInd[0]], self.h[antiNormalInd[1]])
+        x2d = (self.x0[antiNormalInd[0]], self.x0[antiNormalInd[1]])
+
+        #: Size of the sliced dimension
+        szSliceDim = len(self.h[normalInd])
+        if ind is None:
+            ind = int(szSliceDim//2)
+
+        cc_tensor = [None, None, None]
+        for i in range(3):
+            cc_tensor[i] = np.cumsum(np.r_[self.x0[i], self.h[i]])
+            cc_tensor[i] = (cc_tensor[i][1:] + cc_tensor[i][:-1])*0.5
+        slice_loc = cc_tensor[normalInd][ind]
+
+        if type(ind) not in integer_types:
+            raise ValueError('ind must be an integer')
+
+        #create a temporary TreeMesh with the slice through
+        temp_mesh = TreeMesh(h2d, x2d)
+        level_diff = self.max_level - temp_mesh.max_level
+
+        XS = [None, None, None]
+        XS[antiNormalInd[0]], XS[antiNormalInd[1]] = np.meshgrid(cc_tensor[antiNormalInd[0]],
+                                                                 cc_tensor[antiNormalInd[1]])
+        XS[normalInd] = np.ones_like(XS[antiNormalInd[0]])*slice_loc
+        loc_grid = np.c_[XS[0].reshape(-1), XS[1].reshape(-1), XS[2].reshape(-1)]
+        inds = np.unique(self._get_containing_cell_indexes(loc_grid))
+
+        grid2d = self.gridCC[inds][:, antiNormalInd].copy()
+        levels = self._cell_levels_by_indexes(inds) - level_diff
+        temp_mesh.insert_cells(grid2d, levels)
+        tm_gridboost = np.empty((temp_mesh.nC, 3))
+        tm_gridboost[:, antiNormalInd] = temp_mesh.gridCC
+        tm_gridboost[:, normalInd] = slice_loc
+
+        #interpolate values to self.gridCC if not 'CC'
+        if vType in ['F', 'E']:
+            aveOp = 'ave' + vType + '2CC'
+            Av = getattr(self, aveOp)
+            v = Av*v
+
+        #interpolate values from self.gridCC to grid2d
+        ind_3d_to_2d = self._get_containing_cell_indexes(tm_gridboost)
+        v2d = v[ind_3d_to_2d]
+
+        if ax is None:
+            fig = plt.figure()
+            ax = plt.subplot(111)
+        else:
+            assert isinstance(ax, matplotlib.axes.Axes), "ax must be an matplotlib.axes.Axes"
+            fig = ax.figure
+
+        out = temp_mesh.plotImage(v2d, ax=ax, grid=grid, showIt=showIt, clim=clim)
+
+        ax.set_xlabel('y' if normal == 'X' else 'x')
+        ax.set_ylabel('y' if normal == 'Z' else 'z')
+        ax.set_title(
+            'Slice {0:d}, {1!s} = {2:4.2f}'.format(ind, normal, slice_loc)
+        )
+        if showIt:
+            plt.show()
+        return tuple(out)
 
     def __reduce__(self):
         return TreeMesh, (self.h, self.x0), self.__getstate__()

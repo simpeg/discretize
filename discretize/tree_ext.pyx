@@ -389,6 +389,10 @@ cdef class _TreeMesh:
         return level
 
     @property
+    def max_level(self):
+        return self.tree.max_level
+
+    @property
     def nC(self):
         return self.tree.cells.size()
 
@@ -1881,6 +1885,32 @@ cdef class _TreeMesh:
             z = 0
         return self.tree.containing_cell(x, y, z).index
 
+    def _get_containing_cell_indexes(self, locs):
+        cdef double[:,:] d_locs = np.atleast_2d(locs).astype(np.float64)
+        cdef int_t n_locs = d_locs.shape[0]
+        cdef np.int64_t[:] indexes = np.empty(n_locs, dtype=np.int64)
+        cdef double x, y, z
+        for i in range(n_locs):
+            x = d_locs[i, 0]
+            y = d_locs[i, 1]
+            if self._dim == 3:
+                z = d_locs[i, 2]
+            else:
+                z = 0
+            indexes[i] = self.tree.containing_cell(x, y, z).index
+        return np.array(indexes)
+
+    def _cell_levels_by_indexes(self, index):
+        cdef np.int64_t[:] inds = np.atleast_1d(index).astype(np.int64)
+        cdef int_t n_cells = inds.shape[0]
+        cdef np.int64_t[:] levels = np.empty(n_cells, dtype=np.int64)
+        for i in range(n_cells):
+            levels[i] = self.tree.cells[inds[i]].level
+        if n_cells == 1:
+            return levels[0]
+        else:
+            return np.array(levels)
+
     def _getFaceP(self, xFace, yFace, zFace):
         cdef int dim = self._dim
         cdef int_t ind, id
@@ -2284,7 +2314,7 @@ cdef class _TreeMesh:
         cells=False, cellLine=False,
         nodes = False,
         facesX = False, facesY = False, facesZ = False,
-        edgesX = False, edgesY = False, edgesZ = False):
+        edgesX = False, edgesY = False, edgesZ = False, gridOpts=None):
 
         import matplotlib
         if ax is None:
@@ -2307,6 +2337,8 @@ cdef class _TreeMesh:
             Edge *edge
 
         if grid:
+            if gridOpts is None:
+                gridOpts = {'color': 'b'}
             if(self._dim) == 2:
                 X = np.empty((self.nE*3))
                 Y = np.empty((self.nE*3))
@@ -2329,7 +2361,7 @@ cdef class _TreeMesh:
                     X[i : i+3] = [p1.location[0], p2.location[0], np.nan]
                     Y[i : i+3] = [p1.location[1], p2.location[1], np.nan]
 
-                ax.plot(X, Y, 'b-')
+                ax.plot(X, Y, **gridOpts)
             else:
                 X = np.empty((self.nE*3))
                 Y = np.empty((self.nE*3))
@@ -2366,7 +2398,7 @@ cdef class _TreeMesh:
                     Y[i : i+3] = [p1.location[1], p2.location[1], np.nan]
                     Z[i : i+3] = [p1.location[2], p2.location[2], np.nan]
 
-                ax.plot(X, Y, 'b-', zs=Z)
+                ax.plot(X, Y, Z, **gridOpts)
 
         if cells:
             ax.plot(*self.gridCC.T, 'r.')
@@ -2413,13 +2445,13 @@ cdef class _TreeMesh:
 
     def plotImage(self, I, ax=None, showIt=False, grid=False, clim=None):
         if self._dim == 3:
-            raise Exception('Use plot slice?')
+            raise Exception('Use plot slice')
 
         import matplotlib.pyplot as plt
         import matplotlib
-        from mpl_toolkits.mplot3d import Axes3D
         import matplotlib.colors as colors
         import matplotlib.cm as cmx
+        from matplotlib.collections import PatchCollection
 
         if ax is None:
             ax = plt.subplot(111)
@@ -2432,18 +2464,20 @@ cdef class _TreeMesh:
         ax.set_xlim((self.x0[0], self.h[0].sum()))
         ax.set_ylim((self.x0[1], self.h[1].sum()))
         edge_color = 'k' if grid else 'none'
+        rectangles = []
+        facecolors = []
         for cell in self.tree.cells:
             ii = cell.index
             if np.isnan(I[ii]):
                 continue
-
             x0 = np.array([cell.points[0].location[0], cell.points[0].location[1]])
             sz = np.array([cell.edges[0].length, cell.edges[2].length])
-            ax.add_patch(
-                plt.Rectangle((x0[0], x0[1]), sz[0], sz[1],
-                facecolor=scalarMap.to_rgba(I[ii]),
-                edgecolor=edge_color)
-            )
+            rectangles.append(plt.Rectangle((x0[0], x0[1]), sz[0], sz[1]))
+            facecolors.append(scalarMap.to_rgba(I[ii]))
+
+        pc = PatchCollection(rectangles, facecolor=facecolors, edgecolor=edge_color)
+        # Add collection to axes
+        ax.add_collection(pc)
         # http://stackoverflow.com/questions/8342549/matplotlib-add-colorbar-to-a-sequence-of-line-plots
         scalarMap._A = []
         ax.set_xlabel('x')
@@ -2451,10 +2485,6 @@ cdef class _TreeMesh:
         if showIt:
             plt.show()
         return [scalarMap]
-
-    def plotSlice(self, *args, **kwargs):
-        raise Exception('PlotSlice has not been implemented yet')
-        pass
 
     def __getstate__(self):
         cdef int id, dim = self._dim
