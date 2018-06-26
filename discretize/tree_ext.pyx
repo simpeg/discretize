@@ -259,7 +259,9 @@ cdef class _TreeMesh:
             self.finalize()
 
     def insert_cells(self, points, levels, finalize=True):
-        cdef double[:, :] cs = np.atleast_2d(points)
+        points = np.require(np.atleast_2d(points), dtype=np.float64,
+                            requirements='C')
+        cdef double[:, :] cs = points
         cdef int[:] ls = np.asarray(levels, dtype=np.int32)
         cdef int_t i
         for i in range(ls.shape[0]):
@@ -1886,7 +1888,8 @@ cdef class _TreeMesh:
         return self.tree.containing_cell(x, y, z).index
 
     def _get_containing_cell_indexes(self, locs):
-        cdef double[:,:] d_locs = np.atleast_2d(locs).astype(np.float64)
+        locs = np.require(np.atleast_2d(locs), dtype=np.float64, requirements='C')
+        cdef double[:,:] d_locs = locs
         cdef int_t n_locs = d_locs.shape[0]
         cdef np.int64_t[:] indexes = np.empty(n_locs, dtype=np.int64)
         cdef double x, y, z
@@ -1901,7 +1904,8 @@ cdef class _TreeMesh:
         return np.array(indexes)
 
     def _cell_levels_by_indexes(self, index):
-        cdef np.int64_t[:] inds = np.atleast_1d(index).astype(np.int64)
+        index = np.require(np.atleast_1d(index), dtype=np.int64, requirements='C')
+        cdef np.int64_t[:] inds = index
         cdef int_t n_cells = inds.shape[0]
         cdef np.int64_t[:] levels = np.empty(n_cells, dtype=np.int64)
         for i in range(n_cells):
@@ -2026,8 +2030,11 @@ cdef class _TreeMesh:
         return Pxxx
 
     def _cull_outer_simplices(self, ps, simps, cull_dir='xyz'):
-        cdef np.float64_t[:, :] points = ps.astype(np.float64)
-        cdef np.int64_t[:, :] simplices = simps.astype(np.int64)
+        ps = np.require(ps, dtype=np.float64, requirements='C')
+        simps = np.require(simps, dtype=np.int64, requirements='C')
+
+        cdef np.float64_t[:, :] points = ps
+        cdef np.int64_t[:, :] simplices = simps
         cdef int cull_x, cull_y, cull_z
         cdef np.int64_t i, ii, id, n_simps, dim
 
@@ -2134,13 +2141,19 @@ cdef class _TreeMesh:
         if self._dim == 2 and locType in ['Ez','Fz']:
             raise Exception('Unable to interpolate from Z edges/face in 2D')
 
-        cdef np.int64_t[:, :] simplices = tri.simplices.astype(np.int64)
+        cdef np.int64_t[:, :] simplices = np.require(tri.simplices,
+                                                     dtype=np.int64,
+                                                     requirements='C')
 
         cdef np.int64_t i_out, i_p, i, dim, n_points, npi, n_grid, n_outside
         dim = self._dim
 
-        cdef np.float64_t[:, :] points = np.atleast_2d(locs).copy()
-        cdef np.float64_t[:, :] grid_points = tri.points
+        cdef np.float64_t[:, :] points = np.require(np.atleast_2d(locs),
+                                                    dtype=np.float64,
+                                                    requirements='C')
+        cdef np.float64_t[:, :] grid_points = np.require(tri.points,
+                                                         dtype=np.float64,
+                                                         requirements = 'C')
         cdef np.float64_t[:] point, proj_point
         cdef double *p0
         cdef double *p1
@@ -2150,7 +2163,8 @@ cdef class _TreeMesh:
 
         n_points = points.shape[0]
         n_grid = grid_points.shape[0]
-        npsimps = tri.find_simplex(locs).astype(np.int64)
+        npsimps = np.require(tri.find_simplex(locs), dtype=np.int64,
+                             requirements = 'C')
         cdef np.int64_t[:] simps = npsimps
         cdef np.int64_t[:] simplex
         cdef np.int64_t[:, :] hull
@@ -2160,7 +2174,8 @@ cdef class _TreeMesh:
         proj_point = np.empty_like(points[0])
         point = np.empty_like(points[0])
 
-        np_outside_points = (np.where(npsimps == -1)[0]).astype(np.int64)
+        np_outside_points = np.require(np.where(npsimps == -1)[0],
+                                      dtype=np.int64, requirements='C')
         cdef np.int64_t[:] outside_points = np_outside_points
         n_outside = outside_points.shape[0]
         cdef np.float64_t[:] barys = np.empty(dim, dtype=np.float64)
@@ -2168,11 +2183,11 @@ cdef class _TreeMesh:
         trans = tri.transform[npsimps]
         shift = np.array(points) - trans[:, dim]
         bs = np.einsum('ikj,ij->ik', trans[:, :dim], shift)
-        bs = np.c_[bs, 1 - bs.sum(axis=1)]
+        bs = np.require(np.c_[bs, 1 - bs.sum(axis=1)], dtype=np.float64, requirements='C')
 
         I = np.column_stack((dim + 1)*[np.arange(n_points, dtype=np.int64)])
-        J = (tri.simplices[npsimps]).astype(np.int64)
-        V = bs.astype(np.float64)
+        J = np.require(tri.simplices[npsimps], dtype=np.int64, requirements='C')
+        V = bs
         cdef np.int64_t[:, :] Js = J
         cdef np.float64_t[:, :] Vs = V
 
@@ -2242,6 +2257,7 @@ cdef class _TreeMesh:
                              shape=(n_points,n_grid))
 
     def _getNodeIntMat(self, locs, zerosOutside):
+        locs = np.require(np.atleast_2d(locs), dtype=np.float64, requirements='C')
         cdef:
             double[:, :] locations = locs
             int_t dim = self._dim

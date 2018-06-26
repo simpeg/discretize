@@ -510,7 +510,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         loc_grid = np.c_[XS[0].reshape(-1), XS[1].reshape(-1), XS[2].reshape(-1)]
         inds = np.unique(self._get_containing_cell_indexes(loc_grid))
 
-        grid2d = self.gridCC[inds][:, antiNormalInd].copy()
+        grid2d = self.gridCC[inds][:, antiNormalInd]
         levels = self._cell_levels_by_indexes(inds) - level_diff
         temp_mesh.insert_cells(grid2d, levels)
         tm_gridboost = np.empty((temp_mesh.nC, 3))
