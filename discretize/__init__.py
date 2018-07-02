@@ -4,19 +4,7 @@ from discretize.CylMesh import CylMesh
 from discretize.CurvilinearMesh import CurvilinearMesh
 from discretize import Tests
 from discretize.MeshIO import load_mesh
-
-try:
-    from discretize.TreeMesh import TreeMesh
-except ImportError:
-    print(
-        """
-        TreeMesh not imported. You need to run:
-
-        python setup.py install
-
-        to build the TreeMesh cython code.
-        """
-    )
+from discretize.TreeMesh import TreeMesh
 
 __version__   = '0.1.19'
 __author__    = 'SimPEG Team'
