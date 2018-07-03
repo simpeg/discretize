@@ -155,8 +155,10 @@ cdef class _TreeMesh:
     cdef object _h_gridded
     cdef object _vol, _area, _edge
     cdef object _aveFx2CC, _aveFy2CC, _aveFz2CC, _aveF2CC, _aveF2CCV,
-    cdef object _aveN2CC
+    cdef object _aveN2CC, _aveN2E, _aveN2Ex, _aveN2Ey, _aveN2Ez
+    cdef object _aveN2F, _aveN2Fx, _aveN2Fy, _aveN2Fz
     cdef object _aveEx2CC, _aveEy2CC, _aveEz2CC,_aveE2CC,_aveE2CCV
+    cdef object _aveCC2F, _aveCCV2F, _aveCC2Fx, _aveCC2Fy, _aveCC2Fz
     cdef object _faceDiv
     cdef object _edgeCurl, _nodalGrad
 
@@ -224,6 +226,11 @@ cdef class _TreeMesh:
         self._area = None
         self._edge = None
 
+        self._aveCC2F = None
+        self._aveCC2Fx = None
+        self._aveCC2Fy = None
+        self._aveCC2Fz = None
+
         self._aveFx2CC = None
         self._aveFy2CC = None
         self._aveFz2CC = None
@@ -237,6 +244,14 @@ cdef class _TreeMesh:
         self._aveE2CCV = None
 
         self._aveN2CC = None
+        self._aveN2E = None
+        self._aveN2F = None
+        self._aveN2Ex = None
+        self._aveN2Ey = None
+        self._aveN2Ez = None
+        self._aveN2Fx = None
+        self._aveN2Fy = None
+        self._aveN2Fz = None
 
         self._faceDiv = None
         self._nodalGrad = None
@@ -1531,10 +1546,15 @@ cdef class _TreeMesh:
         return Rh
 
     def _deflate_edges(self):
-        Rx = self._deflate_edges_x()
-        Ry = self._deflate_edges_y()
-        Rz = self._deflate_edges_z()
-        return sp.block_diag((Rx, Ry, Rz))
+        if self._dim == 2:
+            Rx = self._deflate_edges_x()
+            Ry = self._deflate_edges_y()
+            return sp.block_diag((Rx, Ry))
+        else:
+            Rx = self._deflate_edges_x()
+            Ry = self._deflate_edges_y()
+            Rz = self._deflate_edges_z()
+            return sp.block_diag((Rx, Ry, Rz))
 
     def _deflate_faces(self):
         if(self._dim == 2):
@@ -1761,8 +1781,8 @@ cdef class _TreeMesh:
         V = np.empty(self.nC*2, dtype=np.float64)
 
         for cell in self.tree.cells:
-            face1 = cell.faces[0] #y edge/ x face
-            face2 = cell.faces[1] #y edge/ x face
+            face1 = cell.faces[0] # x face
+            face2 = cell.faces[1] # x face
             ii = cell.index
             I[ii*2 : ii*2 + 2] = ii
             J[ii*2    ] = face1.index
@@ -1791,8 +1811,8 @@ cdef class _TreeMesh:
         V = np.empty(self.nC*2, dtype=np.float64)
 
         for cell in self.tree.cells:
-            face1 = cell.faces[2] #x edge/ y face
-            face2 = cell.faces[3] #x edge/ y face
+            face1 = cell.faces[2] # y face
+            face2 = cell.faces[3] # y face
             ii = cell.index
             I[ii*2 : ii*2 + 2] = ii
             J[ii*2    ] = face1.index
@@ -1874,8 +1894,506 @@ cdef class _TreeMesh:
                     V[ii*n_ppc + id] = scale
 
             Rn = self._deflate_nodes()
-            self._aveN2CC = sp.csr_matrix((V, (I, J)))*Rn
+            self._aveN2CC = sp.csr_matrix((V, (I, J)), shape=(self.nC, self.ntN))*Rn
         return self._aveN2CC
+
+    @property
+    def aveN2Ex(self):
+        if self._aveN2Ex is not None:
+            return self._aveN2Ex
+        cdef np.int64_t[:] I, J
+        cdef np.float64_t[:] V
+        cdef np.int64_t ii, id
+        I = np.empty(self.nEx*2, dtype=np.int64)
+        J = np.empty(self.nEx*2, dtype=np.int64)
+        V = np.empty(self.nEx*2, dtype=np.float64)
+
+        for it in self.tree.edges_x:
+            edge = it.second
+            if edge.hanging:
+                continue
+            ii = edge.index
+            for id in range(2):
+                I[ii*2 + id] = ii
+                J[ii*2 + id] = edge.points[id].index
+                V[ii*2 + id] = 0.5
+
+        Rn = self._deflate_nodes()
+        self._aveN2Ex = sp.csr_matrix((V, (I, J)), shape=(self.nEx, self.ntN))*Rn
+        return self._aveN2Ex
+
+    @property
+    def aveN2Ey(self):
+        if self._aveN2Ey is not None:
+            return self._aveN2Ey
+        cdef np.int64_t[:] I, J
+        cdef np.float64_t[:] V
+        cdef np.int64_t ii, id
+        I = np.empty(self.nEy*2, dtype=np.int64)
+        J = np.empty(self.nEy*2, dtype=np.int64)
+        V = np.empty(self.nEy*2, dtype=np.float64)
+
+        for it in self.tree.edges_y:
+            edge = it.second
+            if edge.hanging:
+                continue
+            ii = edge.index
+            for id in range(2):
+                I[ii*2 + id] = ii
+                J[ii*2 + id] = edge.points[id].index
+                V[ii*2 + id] = 0.5
+
+        Rn = self._deflate_nodes()
+        self._aveN2Ey = sp.csr_matrix((V, (I, J)), shape=(self.nEy, self.ntN))*Rn
+        return self._aveN2Ey
+
+    @property
+    def aveN2Ez(self):
+        if self._dim == 2:
+            raise Exception('TreeMesh has no z-edges in 2D')
+        if self._aveN2Ez is not None:
+            return self._aveN2Ez
+        cdef np.int64_t[:] I, J
+        cdef np.float64_t[:] V
+        cdef np.int64_t ii, id
+        I = np.empty(self.nEz*2, dtype=np.int64)
+        J = np.empty(self.nEz*2, dtype=np.int64)
+        V = np.empty(self.nEz*2, dtype=np.float64)
+
+        for it in self.tree.edges_z:
+            edge = it.second
+            if edge.hanging:
+                continue
+            ii = edge.index
+            for id in range(2):
+                I[ii*2 + id] = ii
+                J[ii*2 + id] = edge.points[id].index
+                V[ii*2 + id] = 0.5
+
+        Rn = self._deflate_nodes()
+        self._aveN2Ez = sp.csr_matrix((V, (I, J)), shape=(self.nEz, self.ntN))*Rn
+        return self._aveN2Ez
+
+    @property
+    def aveN2E(self):
+        """
+        Construct the averaging operator on cell nodes to cell edges, keeping
+        each dimension separate.
+        """
+        if self._aveN2E is not None:
+            return self._aveN2E
+
+        stacks = [self.aveN2Ex, self.aveN2Ey]
+        if self._dim == 3:
+            stacks += [self.aveN2Ez]
+        self._aveN2E = sp.vstack(stacks).tocsr()
+        return self._aveN2E
+
+    @property
+    def aveN2Fx(self):
+        if self._dim == 2:
+            return self.aveN2Ey
+        if self._aveN2Fx is not None:
+            return self._aveN2Fx
+        cdef np.int64_t[:] I, J
+        cdef np.float64_t[:] V
+        cdef np.int64_t ii, id
+        I = np.empty(self.nFx*4, dtype=np.int64)
+        J = np.empty(self.nFx*4, dtype=np.int64)
+        V = np.empty(self.nFx*4, dtype=np.float64)
+
+        for it in self.tree.faces_x:
+            face = it.second
+            if face.hanging:
+                continue
+            ii = face.index
+            for id in range(4):
+                I[ii*4 + id] = ii
+                J[ii*4 + id] = face.points[id].index
+                V[ii*4 + id] = 0.25
+
+        Rn = self._deflate_nodes()
+        self._aveN2Fx = sp.csr_matrix((V, (I, J)), shape=(self.nFx, self.ntN))*Rn
+        return self._aveN2Fx
+
+    @property
+    def aveN2Fy(self):
+        if self._dim == 2:
+            return self.aveN2Ex
+        if self._aveN2Fy is not None:
+            return self._aveN2Fy
+        cdef np.int64_t[:] I, J
+        cdef np.float64_t[:] V
+        cdef np.int64_t ii, id
+
+        I = np.empty(self.nFy*4, dtype=np.int64)
+        J = np.empty(self.nFy*4, dtype=np.int64)
+        V = np.empty(self.nFy*4, dtype=np.float64)
+
+        for it in self.tree.faces_y:
+            face = it.second
+            if face.hanging:
+                continue
+            ii = face.index
+            for id in range(4):
+                I[ii*4 + id] = ii
+                J[ii*4 + id] = face.points[id].index
+                V[ii*4 + id] = 0.25
+
+        Rn = self._deflate_nodes()
+        self._aveN2Fy = sp.csr_matrix((V, (I, J)), shape=(self.nFy, self.ntN))*Rn
+        return self._aveN2Fy
+
+    @property
+    def aveN2Fz(self):
+        if self._dim == 2:
+            raise Exception('TreeMesh has no z faces in 2D')
+        cdef np.int64_t[:] I, J
+        cdef np.float64_t[:] V
+        cdef np.int64_t ii, id,
+        if self._aveN2Fz is not None:
+            return self._aveN2Fz
+
+        I = np.empty(self.nFz*4, dtype=np.int64)
+        J = np.empty(self.nFz*4, dtype=np.int64)
+        V = np.empty(self.nFz*4, dtype=np.float64)
+
+        for it in self.tree.faces_z:
+            face = it.second
+            if face.hanging:
+                continue
+            ii = face.index
+            for id in range(4):
+                I[ii*4 + id] = ii
+                J[ii*4 + id] = face.points[id].index
+                V[ii*4 + id] = 0.25
+
+        Rn = self._deflate_nodes()
+        self._aveN2Fz = sp.csr_matrix((V, (I, J)), shape=(self.nFz, self.ntN))*Rn
+        return self._aveN2Fz
+
+    @property
+    def aveN2F(self):
+        """
+        Construct the averaging operator on cell nodes to cell edges, keeping
+        each dimension separate.
+        """
+        if self._aveN2F is not None:
+            return self._aveN2F
+
+        stacks = [self.aveN2Fx, self.aveN2Fy]
+        if self._dim == 3:
+            stacks += [self.aveN2Fz]
+        self._aveN2F = sp.vstack(stacks).tocsr()
+        return self._aveN2F
+
+    @property
+    def aveCC2F(self):
+        if self._aveCC2F is not None:
+            return self._aveCC2F
+        stacks = [self.aveCC2Fx, self.aveCC2Fy]
+        if self._dim == 3:
+            stacks.append(self.aveCC2Fz)
+
+        self._aveCC2F = sp.vstack(stacks).tocsr()
+        return self._aveCC2F
+
+    @property
+    def aveCCV2F(self):
+        if self._aveCCV2F is not None:
+            return self._aveCCV2F
+        stacks = [self.aveCC2Fx, self.aveCC2Fy]
+        if self._dim == 3:
+            stacks.append(self.aveCC2Fz)
+
+        self._aveCCV2F = sp.block_diag(stacks).tocsr()
+        return self._aveCCV2F
+
+    @property
+    def aveCC2Fx(self):
+        if self._aveCC2Fx is not None:
+            return self._aveCC2Fx
+        "Construct the averaging operator on cell centers to cell x-faces."
+        cdef np.int64_t[:] I = np.zeros(2*self.ntFx, dtype=np.int64)
+        cdef np.int64_t[:] J = np.zeros(2*self.ntFx, dtype=np.int64)
+        cdef np.float64_t[:] V = np.zeros(2*self.ntFx, dtype=np.float64)
+        cdef int dim = self._dim
+        cdef int_t ind, ind_parent
+        cdef int_t children_per_parent = (dim-1)*2
+        cdef c_Cell* child
+        cdef c_Cell* next_cell
+        cdef c_Cell* prev_cell
+        cdef double w
+
+        for cell in self.tree.cells :
+            next_cell = cell.neighbors[1]
+            prev_cell = cell.neighbors[0]
+            # handle extrapolation to boundary faces
+            if next_cell == NULL:
+                if dim == 2:
+                    ind = cell.edges[3].index # +x face
+                else:
+                    ind = cell.faces[1].index # +x face
+                I[2*ind  ] = ind
+                J[2*ind  ] = cell.index
+                V[2*ind  ] = 1.0
+                continue
+            if prev_cell == NULL:
+                if dim == 2:
+                    ind = cell.edges[2].index # -x face
+                else:
+                    ind = cell.faces[0].index # -x face
+                I[2*ind  ] = ind
+                J[2*ind  ] = cell.index
+                V[2*ind  ] = 1.0
+
+            if next_cell.is_leaf():
+                if next_cell.level == cell.level:
+                    #I am on the same level and easy to interpolate
+                    if dim == 2:
+                        ind = cell.edges[3].index
+                        w = (next_cell.location[0] - cell.edges[3].location[0])/(
+                             next_cell.location[0] - cell.location[0])
+                    else:
+                        ind = cell.faces[1].index
+                        w = (next_cell.location[0] - cell.faces[1].location[0])/(
+                             next_cell.location[0] - cell.location[0])
+                    I[2*ind  ] = ind
+                    I[2*ind+1] = ind
+                    J[2*ind  ] = cell.index
+                    J[2*ind+1] = next_cell.index
+                    V[2*ind  ] = w
+                    V[2*ind+1] = (1.0-w)
+                else:
+                    # if next cell is a level larger than i am, then i need to accumulate into w
+                    if dim == 2:
+                        ind = cell.edges[3].index
+                        ind_parent = cell.edges[3].parents[0].index
+                        w = (next_cell.location[0] - cell.edges[3].location[0])/(
+                             next_cell.location[0] - cell.location[0])
+                    else:
+                        ind = cell.faces[1].index
+                        ind_parent = cell.faces[1].parent.index
+                        w = (next_cell.location[0] - cell.faces[1].location[0])/(
+                             next_cell.location[0] - cell.location[0])
+                    I[2*ind  ] = ind_parent
+                    I[2*ind+1] = ind_parent
+                    J[2*ind  ] = cell.index
+                    J[2*ind+1] = next_cell.index
+                    V[2*ind  ] = w/children_per_parent
+                    V[2*ind+1] = (1.0-w)/children_per_parent
+            else:
+                #should mean next cell is not a leaf so need to loop over children
+                if dim == 2:
+                    ind_parent = cell.edges[3].index
+                    w = (next_cell.children[0].location[0] - cell.edges[3].location[0])/(
+                         next_cell.children[0].location[0] - cell.location[0])
+                    for i in range(2):
+                        child = next_cell.children[2*i]
+                        ind = child.edges[2].index
+                        I[2*ind    ] = ind_parent
+                        I[2*ind + 1] = ind_parent
+                        J[2*ind    ] = cell.index
+                        J[2*ind + 1] = child.index
+                        V[2*ind    ] = w/children_per_parent
+                        V[2*ind + 1] = (1.0-w)/children_per_parent
+                else:
+                    ind_parent = cell.faces[1].index
+                    w = (next_cell.children[0].location[0] - cell.faces[1].location[0])/(
+                         next_cell.children[0].location[0] - cell.location[0])
+                    for i in range(4): # four neighbors in +x direction
+                        child = next_cell.children[2*i] #0 2 4 6
+                        ind = child.faces[0].index
+                        I[2*ind    ] = ind_parent
+                        I[2*ind + 1] = ind_parent
+                        J[2*ind    ] = cell.index
+                        J[2*ind + 1] = child.index
+                        V[2*ind    ] = w/children_per_parent
+                        V[2*ind + 1] = (1.0-w)/children_per_parent
+
+        self._aveCC2Fx = sp.csr_matrix((V, (I, J)), shape=(self.nFx, self.nC))
+        return self._aveCC2Fx
+
+    @property
+    def aveCC2Fy(self):
+        "Construct the averaging operator on cell centers to cell y-faces."
+        if self._aveCC2Fy is not None:
+            return self._aveCC2Fy
+        cdef np.int64_t[:] I = np.zeros(2*self.ntFy, dtype=np.int64)
+        cdef np.int64_t[:] J = np.zeros(2*self.ntFy, dtype=np.int64)
+        cdef np.float64_t[:] V = np.zeros(2*self.ntFy, dtype=np.float64)
+        cdef int dim = self._dim
+        cdef int_t ind, ind_parent
+        cdef int_t children_per_parent = (dim-1)*2
+        cdef c_Cell* child
+        cdef c_Cell* next_cell
+        cdef c_Cell* prev_cell
+        cdef double w
+
+        for cell in self.tree.cells :
+            next_cell = cell.neighbors[3]
+            prev_cell = cell.neighbors[2]
+            # handle extrapolation to boundary faces
+            if next_cell == NULL:
+                if dim == 2:
+                    ind = cell.edges[1].index
+                else:
+                    ind = cell.faces[3].index
+                I[2*ind  ] = ind
+                J[2*ind  ] = cell.index
+                V[2*ind  ] = 1.0
+                continue
+            if prev_cell == NULL:
+                if dim == 2:
+                    ind = cell.edges[0].index
+                else:
+                    ind = cell.faces[2].index
+                I[2*ind  ] = ind
+                J[2*ind  ] = cell.index
+                V[2*ind  ] = 1.0
+
+            if next_cell.is_leaf():
+                if next_cell.level == cell.level:
+                    #I am on the same level and easy to interpolate
+                    if dim == 2:
+                        ind = cell.edges[1].index
+                        w = (next_cell.location[1] - cell.edges[1].location[1])/(
+                             next_cell.location[1] - cell.location[1])
+                    else:
+                        ind = cell.faces[3].index
+                        w = (next_cell.location[1] - cell.faces[3].location[1])/(
+                             next_cell.location[1] - cell.location[1])
+                    I[2*ind  ] = ind
+                    I[2*ind+1] = ind
+                    J[2*ind  ] = cell.index
+                    J[2*ind+1] = next_cell.index
+                    V[2*ind  ] = w
+                    V[2*ind+1] = (1.0-w)
+                else:
+                    # if next cell is a level larger than i am
+                    if dim == 2:
+                        ind = cell.edges[1].index
+                        ind_parent = cell.edges[1].parents[0].index
+                        w = (next_cell.location[1] - cell.edges[1].location[1])/(
+                             next_cell.location[1] - cell.location[1])
+                    else:
+                        ind = cell.faces[3].index
+                        ind_parent = cell.faces[3].parent.index
+                        w = (next_cell.location[1] - cell.faces[3].location[1])/(
+                             next_cell.location[1] - cell.location[1])
+                    I[2*ind  ] = ind_parent
+                    I[2*ind+1] = ind_parent
+                    J[2*ind  ] = cell.index
+                    J[2*ind+1] = next_cell.index
+                    V[2*ind  ] = w/children_per_parent
+                    V[2*ind+1] = (1.0-w)/children_per_parent
+            else:
+                #should mean next cell is not a leaf so need to loop over children
+                if dim == 2:
+                    ind_parent = cell.edges[1].index
+                    w = (next_cell.children[0].location[1] - cell.edges[1].location[1])/(
+                         next_cell.children[0].location[1] - cell.location[1])
+                    for i in range(2):
+                        child = next_cell.children[i]
+                        ind = child.edges[0].index
+                        I[2*ind    ] = ind_parent
+                        I[2*ind + 1] = ind_parent
+                        J[2*ind    ] = cell.index
+                        J[2*ind + 1] = child.index
+                        V[2*ind    ] = w/children_per_parent
+                        V[2*ind + 1] = (1.0-w)/children_per_parent
+                else:
+                    ind_parent = cell.faces[3].index
+                    w = (next_cell.children[0].location[1] - cell.faces[3].location[1])/(
+                         next_cell.children[0].location[1] - cell.location[1])
+                    for i in range(4): # four neighbors in +y direction
+                        child = next_cell.children[(i>>1)*4 + i%2] #0 1 4 5
+                        ind = child.faces[2].index
+                        I[2*ind    ] = ind_parent
+                        I[2*ind + 1] = ind_parent
+                        J[2*ind    ] = cell.index
+                        J[2*ind + 1] = child.index
+                        V[2*ind    ] = w/children_per_parent
+                        V[2*ind + 1] = (1.0-w)/children_per_parent
+
+        self._aveCC2Fy = sp.csr_matrix((V, (I,J)), shape=(self.nFy, self.nC))
+        return self._aveCC2Fy
+
+    @property
+    def aveCC2Fz(self):
+        "Construct the averaging operator on cell centers to cell z-faces."
+        if self.dim == 2:
+            raise Exception('TreeMesh has no z-faces in 2D')
+        if self._aveCC2Fz is not None:
+            return self._aveCC2Fz
+        cdef np.int64_t[:] I = np.zeros(2*self.ntFz, dtype=np.int64)
+        cdef np.int64_t[:] J = np.zeros(2*self.ntFz, dtype=np.int64)
+        cdef np.float64_t[:] V = np.zeros(2*self.ntFz, dtype=np.float64)
+        cdef int dim = self._dim
+        cdef int_t ind, ind_parent
+        cdef int_t children_per_parent = (dim-1)*2
+        cdef c_Cell* child
+        cdef c_Cell* next_cell
+        cdef c_Cell* prev_cell
+        cdef double w
+
+        for cell in self.tree.cells :
+            next_cell = cell.neighbors[5]
+            prev_cell = cell.neighbors[4]
+            # handle extrapolation to boundary faces
+            if next_cell == NULL:
+                ind = cell.faces[5].index # +z face
+                I[2*ind  ] = ind
+                J[2*ind  ] = cell.index
+                V[2*ind  ] = 1.0
+                continue
+            if prev_cell == NULL:
+                ind = cell.faces[4].index # -z face
+                I[2*ind  ] = ind
+                J[2*ind  ] = cell.index
+                V[2*ind  ] = 1.0
+
+            if next_cell.is_leaf():
+                if next_cell.level == cell.level:
+                    #I am on the same level and easy to interpolate
+                    ind = cell.faces[5].index
+                    w = (next_cell.location[2] - cell.faces[5].location[2])/(
+                         next_cell.location[2] - cell.location[2])
+                    I[2*ind  ] = ind
+                    I[2*ind+1] = ind
+                    J[2*ind  ] = cell.index
+                    J[2*ind+1] = next_cell.index
+                    V[2*ind  ] = w
+                    V[2*ind+1] = (1.0-w)
+                else:
+                    # if next cell is a level larger than i am
+                    ind = cell.faces[5].index
+                    ind_parent = cell.faces[5].parent.index
+                    w = (next_cell.location[2] - cell.faces[5].location[2])/(
+                         next_cell.location[2] - cell.location[2])
+                    I[2*ind  ] = ind_parent
+                    I[2*ind+1] = ind_parent
+                    J[2*ind  ] = cell.index
+                    J[2*ind+1] = next_cell.index
+                    V[2*ind  ] = w/children_per_parent
+                    V[2*ind+1] = (1.0-w)/children_per_parent
+            else:
+                #should mean next cell is not a leaf so need to loop over children
+                ind_parent = cell.faces[5].index
+                w = (next_cell.children[0].location[2] - cell.faces[5].location[2])/(
+                     next_cell.children[0].location[2] - cell.location[2])
+                for i in range(4): # four neighbors in +x direction
+                    child = next_cell.children[i]
+                    ind = child.faces[4].index #0 1 2 3
+                    I[2*ind    ] = ind_parent
+                    I[2*ind + 1] = ind_parent
+                    J[2*ind    ] = cell.index
+                    J[2*ind + 1] = child.index
+                    V[2*ind    ] = w/children_per_parent
+                    V[2*ind + 1] = (1.0-w)/children_per_parent
+
+        self._aveCC2Fz = sp.csr_matrix((V, (I,J)), shape=(self.nFz, self.nC))
+        return self._aveCC2Fz
 
     def _get_containing_cell_index(self, loc):
         cdef double x, y, z
