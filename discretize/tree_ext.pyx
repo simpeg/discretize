@@ -2029,235 +2029,154 @@ cdef class _TreeMesh:
             return self._getEdgeP(xEdge, yEdge, zEdge)
         return Pxxx
 
-    def _cull_outer_simplices(self, ps, simps, cull_dir='xyz'):
-        ps = np.require(ps, dtype=np.float64, requirements='C')
-        simps = np.require(simps, dtype=np.int64, requirements='C')
-
-        cdef np.float64_t[:, :] points = ps
-        cdef np.int64_t[:, :] simplices = simps
-        cdef int cull_x, cull_y, cull_z
-        cdef np.int64_t i, ii, id, n_simps, dim
-
-        n_simps = simplices.shape[0]
-        dim = self._dim
-
-        cull_x = ('x' in cull_dir)
-        cull_y = ('y' in cull_dir)
-        cull_z = (dim == 3 and 'z' in cull_dir)
-        cdef np.float64_t[:] center = np.zeros(dim)
-        cdef c_Cell *cell
-        is_inside = np.ones(n_simps, dtype=np.bool)
-        cdef double diff
-
-        for i in range(n_simps):
-            center[:] = 0.0
-            for ii in range(dim + 1):
-                for id in range(dim):
-                    center[id] += points[simplices[i, ii], id]
-
-            for id in range(dim):
-                center[id] *= 1.0/(dim + 1.0)
-
-            if dim==2:
-                cell = self.tree.containing_cell(center[0], center[1], 0.0)
-                iz = 0
-            else:
-                cell = self.tree.containing_cell(center[0], center[1], center[2])
-
-            if cull_x:
-                diff = center[0] - cell.location[0]
-                if ((diff < 0 and cell.neighbors[0] == NULL) or
-                    (diff > 0 and cell.neighbors[1] == NULL)):
-                    is_inside[i] = False
-            if cull_y:
-                diff = center[1] - cell.location[1]
-                if ((diff < 0 and cell.neighbors[2] == NULL) or
-                    (diff > 0 and cell.neighbors[3] == NULL)):
-                    is_inside[i] = False
-            if cull_z:
-                diff = center[2] - cell.location[2]
-                if ((diff < 0 and cell.neighbors[4] == NULL) or
-                    (diff > 0 and cell.neighbors[5] == NULL)):
-                    is_inside[i] = False
-        return is_inside
-
-    def _get_grid_triang(self, grid='CC', double eps=1E-8):
-        if grid=='CC':
-            points = self.gridCC
-            cull = 'xyz'
-        elif grid=='Fx':
-            points = self.gridFx
-            cull = 'yz'
-        elif grid=='Fy':
-            points = self.gridFy
-            cull = 'xz'
-        elif grid=='Fz':
-            points = self.gridFz
-            cull = 'xy'
-        elif grid=='Ex':
-            points = self.gridEx
-            cull = 'x'
-        elif grid=='Ey':
-            points = self.gridEy
-            cull = 'y'
-        elif grid=='Ez':
-            points = self.gridEz
-            cull = 'z'
-
-        triang = Delaunay(points)
-
-        is_inside = self._cull_outer_simplices(points, triang.simplices, cull)
-
-        p = np.full(triang.nsimplex + 1, -1, dtype=triang.neighbors.dtype)
-
-        triang.simplices = triang.simplices[is_inside].copy()
-        triang.equations = triang.equations[is_inside].copy()
-        triang.nsimplex = triang.simplices.shape[0]
-
-        p[:-1][is_inside] = np.arange(triang.nsimplex, dtype=p.dtype)
-
-        #neighbors need to be renumbered
-        neighbors = triang.neighbors[is_inside].copy()
-        neighbors = p[neighbors]
-
-        triang.neighbors = neighbors
-        triang._transform = None
-        triang._vertex_to_simplex = None
-        triang._vertex_neighbor_vertices = None
-
-        # Backwards compatibility (Scipy < 0.12.0)
-        triang.vertices = triang.simplices
-
-        return triang
-
     def getInterpolationMat(self, locs, locType, zerosOutside=False):
         locs = utils.asArray_N_x_Dim(locs, self.dim)
         if locType not in ['N', 'CC', "Ex", "Ey", "Ez", "Fx", "Fy", "Fz"]:
             raise Exception('locType must be one of N, CC, Ex, Ey, Ez, Fx, Fy, or Fz')
-        if locType == 'N':
-            return self._getNodeIntMat(locs, zerosOutside)
-        tri = self._get_grid_triang(grid=locType)
 
         if self._dim == 2 and locType in ['Ez','Fz']:
             raise Exception('Unable to interpolate from Z edges/face in 2D')
 
-        cdef np.int64_t[:, :] simplices = np.require(tri.simplices,
-                                                     dtype=np.int64,
-                                                     requirements='C')
+        locs = np.require(np.atleast_2d(locs), dtype=np.float64, requirements='C')
 
-        cdef np.int64_t i_out, i_p, i, dim, n_points, npi, n_grid, n_outside
-        dim = self._dim
+        if locType == 'N':
+            Av = self._getNodeIntMat(locs, zerosOutside)
+        elif locType in ['Ex', 'Ey', 'Ez']:
+            Av = self._getEdgeIntMat(locs, zerosOutside, locType[1])
+        elif locType in ['Fx', 'Fy', 'Fz']:
+            Av = self._getFaceIntMat(locs, zerosOutside, locType[1])
+        elif locType in ['CC']:
+            Av = self._getCellIntMat(locs, zerosOutside)
+        return Av
 
-        cdef np.float64_t[:, :] points = np.require(np.atleast_2d(locs),
-                                                    dtype=np.float64,
-                                                    requirements='C')
-        cdef np.float64_t[:, :] grid_points = np.require(tri.points,
-                                                         dtype=np.float64,
-                                                         requirements = 'C')
-        cdef np.float64_t[:] point, proj_point
-        cdef double *p0
-        cdef double *p1
-        cdef double *p2
-        cdef double d, dsq, inf=np.inf
-        cdef int contains_point
+    def _getEdgeIntMat(self, locs, zerosOutside, direction):
+        cdef:
+            double[:, :] locations = locs
+            int_t dir, dir1, dir2
+            int_t dim = self._dim
+            int_t n_loc = locs.shape[0]
+            int_t n_edges = 2 if self._dim == 2 else 4
+            np.int64_t[:] I = np.empty(n_loc*n_edges, dtype=np.int64)
+            np.int64_t[:] J = np.empty(n_loc*n_edges, dtype=np.int64)
+            np.float64_t[:] V = np.empty(n_loc*n_edges, dtype=np.float64)
 
-        n_points = points.shape[0]
-        n_grid = grid_points.shape[0]
-        npsimps = np.require(tri.find_simplex(locs), dtype=np.int64,
-                             requirements = 'C')
-        cdef np.int64_t[:] simps = npsimps
-        cdef np.int64_t[:] simplex
-        cdef np.int64_t[:, :] hull
-        cdef np.int64_t[:] hull_points
-        cdef np.int64_t[:] npis
+            int_t ii, i, j, offset
+            c_Cell *cell
+            double x, y, z
+            double w1, w2
+            double eps = 100*np.finfo(float).eps
+            int zeros_out = zerosOutside
 
-        proj_point = np.empty_like(points[0])
-        point = np.empty_like(points[0])
+        if direction == 'x':
+            dir, dir1, dir2 = 0, 1, 2
+            offset = 0
+        elif direction == 'y':
+            dir, dir1, dir2 = 1, 0, 2
+            offset = self.ntEx
+        elif direction == 'z':
+            dir, dir1, dir2 = 2, 0, 1
+            offset = self.ntEx + self.ntEy
+        else:
+            raise ValueError('Invalid direction, must be x, y, or z')
 
-        np_outside_points = np.require(np.where(npsimps == -1)[0],
-                                      dtype=np.int64, requirements='C')
-        cdef np.int64_t[:] outside_points = np_outside_points
-        n_outside = outside_points.shape[0]
-        cdef np.float64_t[:] barys = np.empty(dim, dtype=np.float64)
+        for i in range(n_loc):
+            x = locations[i, 0]
+            y = locations[i, 1]
+            z = locations[i, 2] if dim==3 else 0.0
+            #get containing (or closest) cell
+            cell = self.tree.containing_cell(x, y, z)
+            for j in range(n_edges):
+                I[n_edges*i+j] = i
+                J[n_edges*i+j] = cell.edges[n_edges*dir+j].index + offset
 
-        trans = tri.transform[npsimps]
-        shift = np.array(points) - trans[:, dim]
-        bs = np.einsum('ikj,ij->ik', trans[:, :dim], shift)
-        bs = np.require(np.c_[bs, 1 - bs.sum(axis=1)], dtype=np.float64, requirements='C')
+            w1 = ((cell.edges[n_edges*dir+1].location[dir1] - locations[i, dir1])/
+                  (cell.edges[n_edges*dir+1].location[dir1] - cell.edges[n_edges*dir].location[dir1]))
+            if dim == 3:
+                w2 = ((cell.edges[n_edges*dir+3].location[dir2] - locations[i, dir2])/
+                      (cell.edges[n_edges*dir+3].location[dir2] - cell.edges[n_edges*dir].location[dir2]))
+            else:
+                w2 = 1.0
+            if zeros_out:
+                if (w1 < -eps or w1 > 1 + eps or w2 < -eps or w2 > eps):
+                    for j in range(n_edges):
+                        V[n_edges*i + j] = 0.0
+                    continue
+            w1 = _clip01(w1)
+            w2 = _clip01(w2)
 
-        I = np.column_stack((dim + 1)*[np.arange(n_points, dtype=np.int64)])
-        J = np.require(tri.simplices[npsimps], dtype=np.int64, requirements='C')
-        V = bs
-        cdef np.int64_t[:, :] Js = J
-        cdef np.float64_t[:, :] Vs = V
+            V[n_edges*i  ] = w1*w2
+            V[n_edges*i+1] = (1.0-w1)*w2
+            if dim == 3:
+                V[n_edges*i+2] = w1*(1.0-w2)
+                V[n_edges*i+3] = (1.0-w1)*(1.0-w2)
 
-        if n_outside > 0 and not zerosOutside:
-            #oh boy got some points that need to be extrapolated
+        Re = self._deflate_edges()
+        A = sp.csr_matrix((V, (I, J)), shape=(locs.shape[0], self.ntE))
+        return A*Re
 
-            hull = (tri.convex_hull).astype(np.int64)
-            np_hull_points = np.unique(hull)
-            hull_points = np_hull_points.astype(np.int64)
+    def _getFaceIntMat(self, locs, zerosOutside, direction):
+        cdef:
+            double[:, :] locations = locs
+            int_t dir, dir2d
+            int_t dim = self._dim
+            int_t n_loc = locs.shape[0]
+            int_t n_faces = 2
+            np.int64_t[:] I = np.empty(n_loc*n_faces, dtype=np.int64)
+            np.int64_t[:] J = np.empty(n_loc*n_faces, dtype=np.int64)
+            np.float64_t[:] V = np.empty(n_loc*n_faces, dtype=np.float64)
 
-            n_hull_simps = hull.shape[0]
+            int_t ii, i, offset
+            c_Cell *cell
+            double x, y, z
+            double w
+            double eps = 100*np.finfo(float).eps
+            int zeros_out = zerosOutside
 
-            kdtree = cKDTree(tri.points[np_hull_points])
-            npis = kdtree.query(locs[np_outside_points])[1].astype(np.int64)
+        if direction == 'x':
+            dir = 0
+            dir2d = 1
+            offset = 0
+        elif direction == 'y':
+            dir = 1
+            dir2d = 0
+            offset = self.ntFx
+        elif direction == 'z':
+            dir = 2
+            offset = self.ntFx + self.ntFy
+        else:
+            raise ValueError('Invalid direction, must be x, y, or z')
 
-            for i_out in range(n_outside):
-                i_p = outside_points[i_out]
-                point[:] = points[i_p]
-                npi = hull_points[npis[i_out]]
+        for i in range(n_loc):
+            x = locations[i, 0]
+            y = locations[i, 1]
+            z = locations[i, 2] if dim==3 else 0.0
+            #get containing (or closest) cell
+            cell = self.tree.containing_cell(x, y, z)
+            I[n_faces*i  ] = i
+            I[n_faces*i+1] = i
+            if self._dim == 3:
+                J[n_faces*i  ] = cell.faces[dir*2  ].index + offset
+                J[n_faces*i+1] = cell.faces[dir*2+1].index + offset
+                w = ((cell.faces[dir*2+1].location[dir] - locations[i, dir])/
+                      (cell.faces[dir*2+1].location[dir] - cell.faces[dir*2].location[dir]))
+            else:
+                J[n_faces*i  ] = cell.edges[dir2d*2  ].index + offset
+                J[n_faces*i+1] = cell.edges[dir2d*2+1].index + offset
+                w = ((cell.edges[dir2d*2+1].location[dir] - locations[i, dir])/
+                      (cell.edges[dir2d*2+1].location[dir] - cell.edges[dir2d*2].location[dir]))
+            if zeros_out:
+                if (w < -eps or w > 1 + eps):
+                    V[n_faces*i  ] = 0.0
+                    V[n_faces*i+1] = 0.0
+                    continue
+            w = _clip01(w)
+            V[n_faces*i  ] = w
+            V[n_faces*i+1] = 1.0-w
 
-                d = inf
-                for i_s in range(n_hull_simps):
-                    simplex = hull[i_s]
-                    contains_point = 0
-                    for i in range(dim):
-                        contains_point = contains_point or simplex[i]==npi
-                    if not contains_point:
-                        continue
-                    p0 = &grid_points[simplex[0], 0]
-                    p1 = &grid_points[simplex[1], 0]
-                    if dim==2:
-                        _project_point_to_edge(&point[0], p0, p1, dim, &proj_point[0])
-                    else:
-                        p2 = &grid_points[simplex[2], 0]
-                        _project_point_to_triangle(&point[0], p0, p1, p2, dim, &proj_point[0])
-
-                    dsq = 0
-                    for i in range(dim):
-                        dsq += (point[i] - proj_point[i])*(point[i] - proj_point[i])
-                    if dsq < d:
-                        d = dsq
-                        if dim==2:
-                            _barycentric_edge(&proj_point[0], p0, p1, &barys[0], dim)
-                        else:
-                            _barycentric_triangle(&proj_point[0], p0, p1, p2, &barys[0], dim)
-                        Js[i_p, 0:dim] = simplex[:]
-                        Vs[i_p, 0:dim] = barys[:]
-                        Vs[i_p, dim] = 0.0
-
-        if zerosOutside:
-                V[outside_points] = 0.0
-
-        if locType[0] == 'F':
-            n_grid = self.nF
-            if locType[-1] == 'y':
-                J += self.nFx
-            elif locType[-1] == 'z':
-                J += self.nFx + self.nFy
-        elif locType[0] == 'E':
-            n_grid = self.nE
-            if locType[-1] == 'y':
-                J += self.nEx
-            elif locType[-1] == 'z':
-                J += self.nEx + self.nEy
-
-        return sp.csr_matrix((V.reshape(-1), (I.reshape(-1), J.reshape(-1))),
-                             shape=(n_points,n_grid))
+        Rf = self._deflate_faces()
+        return sp.csr_matrix((V, (I, J)), shape=(locs.shape[0], self.ntF))*Rf
 
     def _getNodeIntMat(self, locs, zerosOutside):
-        locs = np.require(np.atleast_2d(locs), dtype=np.float64, requirements='C')
         cdef:
             double[:, :] locations = locs
             int_t dim = self._dim
@@ -2277,10 +2196,7 @@ cdef class _TreeMesh:
         for i in range(n_loc):
             x = locations[i, 0]
             y = locations[i, 1]
-            if dim==3:
-                z = locations[i, 1]
-            else:
-                z = 0.0
+            z = locations[i, 2] if dim==3 else 0.0
             #get containing (or closest) cell
             cell = self.tree.containing_cell(x, y, z)
             #calculate weights
@@ -2324,6 +2240,44 @@ cdef class _TreeMesh:
 
         Rn = self._deflate_nodes()
         return sp.csr_matrix((V, (I, J)), shape=(locs.shape[0],self.ntN))*Rn
+
+    def _getCellIntMat(self, locs, zerosOutside):
+        cdef:
+            double[:, :] locations = locs
+            int_t dim = self._dim
+            int_t n_loc = locations.shape[0]
+            np.int64_t[:] I = np.arange(n_loc, dtype=np.int64)
+            np.int64_t[:] J = np.empty(n_loc, dtype=np.int64)
+            np.float64_t[:] V = np.ones(n_loc, dtype=np.float64)
+
+            int_t ii, i
+            c_Cell *cell
+            double x, y, z
+            double eps = 100*np.finfo(float).eps
+            int zeros_out = zerosOutside
+
+        for i in range(n_loc):
+            x = locations[i, 0]
+            y = locations[i, 1]
+            z = locations[i, 2] if dim==3 else 0.0
+            # get containing (or closest) cell
+            cell = self.tree.containing_cell(x, y, z)
+            J[i] = cell.index
+            if zeros_out:
+                if x < cell.points[0].location[0]-eps:
+                    V[i] = 0.0
+                elif x > cell.points[3].location[0]+eps:
+                    V[i] = 0.0
+                elif y < cell.points[0].location[1]-eps:
+                    V[i] = 0.0
+                elif y > cell.points[3].location[1]+eps:
+                    V[i] = 0.0
+                elif dim == 3 and z < cell.points[0].location[2]-eps:
+                    V[i] = 0.0
+                elif dim == 3 and z > cell.points[7].location[2]+eps:
+                    V[i] = 0.0
+
+        return sp.csr_matrix((V, (I, J)), shape=(locs.shape[0],self.nC))
 
     def plotGrid(self, ax=None, showIt=False,
         grid=True,
@@ -2578,70 +2532,3 @@ cdef class _TreeMesh:
 
 cdef inline double _clip01(double x) nogil:
     return min(1, max(x, 0))
-
-@cython.cdivision(True)
-cdef void _project_point_to_edge(double *p, double *p0, double *p1,
-                                 int dim, double *out) nogil:
-    # dim can equal 2 or 3
-    """Projects a point onto a line segment."""
-    # Projects a point onto a line segment
-
-    cdef double v1=0.0, v2=0.0, t = 0.0
-    cdef int i
-
-    for i in range(dim):
-        v1 += (p[i] - p0[i])*(p1[i] - p0[i])
-        v2 += (p1[i] - p0[i])*(p1[i] - p0[i])
-    t = _clip01(v1/v2)
-    for i in range(dim):
-        out[i] = (1.0 - t)*p0[i] + t*p1[i]
-
-@cython.cdivision(True)
-cdef void _project_point_to_triangle(double *p, double *p0, double *p1, double *p2,
-                                    int dim, double *out) nogil:
-    #dim can equal 2 or 3
-    cdef double[3] bary
-    cdef int i
-    _barycentric_triangle(p, p0, p1, p2, bary, dim)
-    if bary[0] < 0:
-        _project_point_to_edge(p, p1, p2, dim, out)
-    elif bary[1] < 0:
-        _project_point_to_edge(p, p0, p2, dim, out)
-    elif bary[2] < 0:
-        _project_point_to_edge(p, p0, p1, dim, out)
-    else:
-        for i in range(dim):
-            out[i] = bary[0]*p0[i] + bary[1]*p1[i] + bary[2]*p2[i]
-
-
-@cython.cdivision(True)
-cdef void _barycentric_edge(double *p, double *p0, double *p1, double *bary, int dim) nogil:
-    cdef double v1=0.0, v2=0.0
-    cdef int i
-
-    for i in range(dim):
-        v1 += (p[i] - p0[i])*(p1[i] - p0[i])
-        v2 += (p1[i] - p0[i])*(p1[i] - p0[i])
-    bary[1] = v1/v2
-    bary[0] = 1 - bary[1]
-
-@cython.cdivision(True)
-cdef void _barycentric_triangle(double *p, double *p0, double *p1, double *p2,
-                            double *bary, int dim) nogil:
-    cdef double d00=0, d01=0, d11=0, d20=0, d21=0
-    cdef int i
-    for i in range(dim):
-        bary[0] = p1[i] - p0[i]
-        bary[1] = p2[i] - p0[i]
-        bary[2] = p[i] - p0[i]
-
-        d00 += bary[0]*bary[0]
-        d01 += bary[0]*bary[1]
-        d11 += bary[1]*bary[1]
-        d20 += bary[2]*bary[0]
-        d21 += bary[2]*bary[1]
-
-    bary[0] = 1.0/(d00*d11 - d01*d01)
-    bary[1] = (d11*d20 - d01*d21)*bary[0]
-    bary[2] = (d00*d21 - d01*d20)*bary[0]
-    bary[0] = 1.0 - bary[1] - bary[2]
