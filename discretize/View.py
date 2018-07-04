@@ -273,7 +273,7 @@ class TensorView(object):
             raise AssertionError(
                 "normal must be in ['{0!s}']".format("', '".join(normalOpts))
             )
-        if type(grid) is not bool:
+        if not isinstance(grid, bool):
             raise AssertionError('grid must be a boolean')
 
         szSliceDim = getattr(self, 'nC'+normal.lower()) #: Size of the sliced dimension

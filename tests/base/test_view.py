@@ -1,5 +1,4 @@
 from __future__ import print_function
-import matplotlib
 
 import unittest
 import numpy as np
@@ -8,7 +7,6 @@ import matplotlib.pyplot as plt
 import discretize
 from discretize import Tests, utils
 
-import warnings
 import pytest
 
 np.random.seed(16)

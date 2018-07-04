@@ -5,7 +5,7 @@ import sympy
 from sympy.abc import r, t, z
 
 import discretize
-from discretize import Tests, utils
+from discretize import Tests
 
 np.random.seed(16)
 
