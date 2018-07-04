@@ -102,7 +102,8 @@ class TensorView(object):
             fig = plt.figure()
             ax = plt.subplot(111)
         else:
-            assert isinstance(ax, matplotlib.axes.Axes), "ax must be an Axes!"
+            if not isinstance(ax, matplotlib.axes.Axes):
+                raise AssertionError("ax must be an Axes!")
             fig = ax.figure
 
         if self.dim == 1:
@@ -235,7 +236,10 @@ class TensorView(object):
         if gridOpts is None:
             gridOpts = {'color':'k', 'alpha':0.5}
         if type(vType) in [list, tuple]:
-            assert ax is None, "cannot specify an axis to plot on with this function."
+            if ax is not None:
+                raise AssertionError(
+                    "cannot specify an axis to plot on with this function."
+                )
             fig, axs = plt.subplots(1, len(vType))
             out = []
             for vTypeI, ax in zip(vType, axs):
@@ -253,17 +257,32 @@ class TensorView(object):
         vTypeOpts = ['CC', 'CCv', 'N', 'F', 'E', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez']
 
         # Some user error checking
-        assert vType in vTypeOpts, "vType must be in ['{0!s}']".format("', '".join(vTypeOpts))
-        assert self.dim == 3, 'Must be a 3D mesh. Use plotImage.'
-        assert view in viewOpts, "view must be in ['{0!s}']".format("', '".join(viewOpts))
-        assert normal in normalOpts, "normal must be in ['{0!s}']".format("', '".join(normalOpts))
-        assert type(grid) is bool, 'grid must be a boolean'
+        if vType not in vTypeOpts:
+            raise AssertionError(
+                "vType must be in ['{0!s}']".format("', '".join(vTypeOpts))
+            )
+        if not self.dim == 3:
+            raise AssertionError(
+                'Must be a 3D mesh. Use plotImage.'
+            )
+        if view not in viewOpts:
+            raise AssertionError(
+                "view must be in ['{0!s}']".format("', '".join(viewOpts))
+            )
+        if normal not in normalOpts:
+            raise AssertionError(
+                "normal must be in ['{0!s}']".format("', '".join(normalOpts))
+            )
+        if type(grid) is not bool:
+            raise AssertionError('grid must be a boolean')
 
         szSliceDim = getattr(self, 'nC'+normal.lower()) #: Size of the sliced dimension
         if ind is None: ind = int(szSliceDim/2)
-        assert type(ind) in integer_types, 'ind must be an integer'
+        if type(ind) not in integer_types:
+            raise AssertionError('ind must be an integer')
 
-        assert not (v.dtype == complex and view == 'vec'), 'Can not plot a complex vector.'
+        if (v.dtype == complex and view == 'vec'):
+            raise AssertionError('Can not plot a complex vector.')
         # The slicing and plotting code!!
 
         def getIndSlice(v):
@@ -279,7 +298,8 @@ class TensorView(object):
             if vType == 'CC':
                 return getIndSlice(self.r(v, 'CC', 'CC', 'M'))
             elif vType == 'CCv':
-                assert view == 'vec', 'Other types for CCv not supported'
+                if view != 'vec':
+                    raise AssertionError('Other types for CCv not supported')
             else:
                 # Now just deal with 'F' and 'E' (x, y, z, maybe...)
                 aveOp = 'ave' + vType + ('2CCV' if view == 'vec' else '2CC')
@@ -318,7 +338,8 @@ class TensorView(object):
             plt.figure()
             ax = plt.subplot(111)
         else:
-            assert isinstance(ax, matplotlib.axes.Axes), "ax must be an matplotlib.axes.Axes"
+            if not isinstance(ax, matplotlib.axes.Axes):
+                raise AssertionError("ax must be an matplotlib.axes.Axes")
 
         out = tM._plotImage2D(
             v2d, vType=('CCv' if view == 'vec' else 'CC'),
@@ -359,33 +380,38 @@ class TensorView(object):
         vTypeOptsV = ['CCv', 'F', 'E']
         vTypeOpts = vTypeOptsCC + vTypeOptsV
         if view == 'vec':
-            assert vType in vTypeOptsV, (
-                "vType must be in ['{0!s}'] when view='vec'".format(
-                    "', '".join(vTypeOptsV)
+            if vType not in vTypeOptsV:
+                raise AssertionError(
+                    "vType must be in ['{0!s}'] when view='vec'".format(
+                        "', '".join(vTypeOptsV)
+                    )
                 )
+        if vType not in vTypeOpts:
+            raise AssertionError(
+                "vType must be in ['{0!s}']".format("', '".join(vTypeOpts))
             )
-        assert vType in vTypeOpts, (
-            "vType must be in ['{0!s}']".format("', '".join(vTypeOpts))
-        )
 
         viewOpts = ['real', 'imag', 'abs', 'vec']
-        assert view in viewOpts, (
-            "view must be in ['{0!s}']".format("', '".join(viewOpts))
-        )
+        if view not in viewOpts:
+            raise AssertionError(
+                "view must be in ['{0!s}']".format("', '".join(viewOpts))
+            )
 
         if ax is None:
             plt.figure()
             ax = plt.subplot(111)
         else:
-            assert isinstance(ax, matplotlib.axes.Axes), (
-                "ax must be an matplotlib.axes.Axes"
-            )
+            if not isinstance(ax, matplotlib.axes.Axes):
+                raise AssertionError(
+                    "ax must be an matplotlib.axes.Axes"
+                )
 
         # Reshape to a cell centered variable
         if vType == 'CC':
             pass
         elif vType == 'CCv':
-            assert view == 'vec', 'Other types for CCv not supported'
+            if view != 'vec':
+                raise AssertionError('Other types for CCv not supported')
         elif vType in ['F', 'E', 'N']:
             aveOp = 'ave' + vType + ('2CCV' if view == 'vec' else '2CC')
             v = getattr(self, aveOp)*v  # average to cell centers (might be a vector)
@@ -544,7 +570,8 @@ class TensorView(object):
             plt.figure()
             ax = plt.subplot(111, **axOpts)
         else:
-            assert isinstance(ax, matplotlib.axes.Axes), "ax must be an matplotlib.axes.Axes"
+            if not isinstance(ax, matplotlib.axes.Axes):
+                raise AssertionError("ax must be an matplotlib.axes.Axes")
 
         if self.dim == 1:
             if nodes:
@@ -750,7 +777,8 @@ class CylView(object):
             ax = plt.subplot(111)
             kwargs['ax'] = ax
         else:
-            assert isinstance(ax, matplotlib.axes.Axes), "ax must be an matplotlib.axes.Axes"
+            if not isinstance(ax, matplotlib.axes.Axes):
+                raise AssertionError("ax must be an matplotlib.axes.Axes")
             fig = ax.figure
 
         # Don't show things in the TM.plotImage
@@ -775,9 +803,12 @@ class CylView(object):
         slc = kwargs.pop('slice', None)
         if isinstance(slc, str):
             slc = slc.lower()
-        assert slc in ['theta', 'z', 'both', None], (
-            "slice must be either 'theta','z', or 'both' not {}".format(slc)
-        )
+        if slc not in ['theta', 'z', 'both', None]:
+            raise AssertionError(
+                "slice must be either 'theta','z', or 'both' not {}".format(
+                    slc
+                )
+            )
 
         # if slc is None, provide slices in both the theta and z directions
         if slc == 'theta':
