@@ -421,38 +421,6 @@ class TensorView(object):
             xORy = {'x': 0, 'y':1 }[vType[1]]
             v = v.reshape((self.nC, -1), order='F')[:, xORy]
 
-
-        # Matplotlib seems to not support irregular
-        # spaced vectors at the moment. So we will
-        # Interpolate down to a regular mesh at the
-        # smallest mesh size in this 2D slice.
-        if sample_grid is not None:
-            hxmin = sample_grid[0]
-            hymin = sample_grid[1]
-        else:
-            hxmin = self.hx.min()
-            hymin = self.hy.min()
-
-        if range_x is not None:
-            dx = (range_x[1] - range_x[0])
-            nxi = int(dx/hxmin)
-            hx = np.ones(nxi)*dx/nxi
-            x0_x = range_x[0]
-        else:
-            nxi = int(self.hx.sum()/hxmin)
-            hx = np.ones(nxi)*self.hx.sum()/nxi
-            x0_x = self.x0[0]
-
-        if range_y is not None:
-            dy = (range_y[1] - range_y[0])
-            nyi = int(dy/hymin)
-            hy = np.ones(nyi)*dy/nyi
-            x0_y = range_y[0]
-        else:
-            nyi = int(self.hy.sum()/hymin)
-            hy = np.ones(nyi)*self.hy.sum()/nyi
-            x0_y = self.x0[1]
-
         out = ()
         if view in ['real', 'imag', 'abs']:
             v = self.r(v, 'CC', 'CC', 'M')
@@ -462,6 +430,37 @@ class TensorView(object):
             v = np.ma.masked_where(np.isnan(v), v)
             out += (ax.pcolormesh(self.vectorNx, self.vectorNy, v.T, vmin=clim[0], vmax=clim[1], **pcolorOpts), )
         elif view in ['vec']:
+            # Matplotlib seems to not support irregular
+            # spaced vectors at the moment. So we will
+            # Interpolate down to a regular mesh at the
+            # smallest mesh size in this 2D slice.
+            if sample_grid is not None:
+                hxmin = sample_grid[0]
+                hymin = sample_grid[1]
+            else:
+                hxmin = self.hx.min()
+                hymin = self.hy.min()
+
+            if range_x is not None:
+                dx = (range_x[1] - range_x[0])
+                nxi = int(dx/hxmin)
+                hx = np.ones(nxi)*dx/nxi
+                x0_x = range_x[0]
+            else:
+                nxi = int(self.hx.sum()/hxmin)
+                hx = np.ones(nxi)*self.hx.sum()/nxi
+                x0_x = self.x0[0]
+
+            if range_y is not None:
+                dy = (range_y[1] - range_y[0])
+                nyi = int(dy/hymin)
+                hy = np.ones(nyi)*dy/nyi
+                x0_y = range_y[0]
+            else:
+                nyi = int(self.hy.sum()/hymin)
+                hy = np.ones(nyi)*self.hy.sum()/nyi
+                x0_y = self.x0[1]
+
             U, V = self.r(v.reshape((self.nC, -1), order='F'), 'CC', 'CC', 'M')
             if clim is None:
                 uv = np.sqrt(U**2 + V**2)
