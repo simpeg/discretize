@@ -197,7 +197,8 @@ class TensorView(object):
         range_x=None,
         range_y=None,
         sample_grid=None,
-        stream_threshold=None
+        stream_threshold=None,
+        stream_thickness=None
     ):
 
         """
@@ -236,7 +237,8 @@ class TensorView(object):
                         v, vType=vTypeI, normal=normal, ind=ind, grid=grid,
                         view=view, ax=ax, clim=clim, showIt=False,
                         pcolorOpts=pcolorOpts, streamOpts=streamOpts,
-                        gridOpts=gridOpts, stream_threshold=stream_threshold
+                        gridOpts=gridOpts, stream_threshold=stream_threshold,
+                        stream_thickness=stream_thickness
                     )
                 ]
             return out
@@ -321,7 +323,9 @@ class TensorView(object):
             range_x=range_x,
             range_y=range_y,
             sample_grid=sample_grid,
-            stream_threshold=stream_threshold
+            stream_threshold=stream_threshold,
+            stream_thickness=stream_thickness
+
         )
 
         ax.set_xlabel('y' if normal == 'X' else 'x')
@@ -338,7 +342,8 @@ class TensorView(object):
         range_x=None,
         range_y=None,
         sample_grid=None,
-        stream_threshold=None
+        stream_threshold=None,
+        stream_thickness=None
     ):
 
         if pcolorOpts is None:
@@ -448,6 +453,13 @@ class TensorView(object):
                 mask_me = np.sqrt(Ui**2 + Vi**2) <= stream_threshold
                 Ui = np.ma.masked_where(mask_me, Ui)
                 Vi = np.ma.masked_where(mask_me, Vi)
+
+            if stream_thickness is not None:
+                stream_thickness = stream_thickness*(np.sqrt(U**2+V**2).T / np.sqrt(U**2+V**2).T.max())
+                print(stream_thickness.shape)
+                streamOpts.update({'linewidth':stream_thickness})
+                print(streamOpts)
+
 
             out += (
                 ax.pcolormesh(
