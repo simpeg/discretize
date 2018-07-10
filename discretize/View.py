@@ -454,11 +454,35 @@ class TensorView(object):
                 Ui = np.ma.masked_where(mask_me, Ui)
                 Vi = np.ma.masked_where(mask_me, Vi)
 
+
             if stream_thickness is not None:
-                stream_thickness = stream_thickness*(np.sqrt(U**2+V**2).T / np.sqrt(U**2+V**2).T.max())
-                print(stream_thickness.shape)
+                scaleFact = np.copy(stream_thickness)
+
+                # Calculate vector amplitude
+                vecAmp = np.sqrt(U**2 + V**2).T
+
+                # Form bounds to knockout the top and bottom 10%
+                vecAmp_sort = np.sort(vecAmp.ravel())
+                nVecAmp = vecAmp.size
+                tenPercInd = int(np.ceil(0.1*nVecAmp))
+                lowerBound = vecAmp_sort[tenPercInd]
+                upperBound = vecAmp_sort[-tenPercInd]
+
+                lowInds = np.where(vecAmp < lowerBound)
+                vecAmp[lowInds] = lowerBound
+
+                highInds = np.where(vecAmp > upperBound)
+                vecAmp[highInds] = upperBound
+
+                # Normalize amplitudes 0-1
+                # norm_thickness = (np.log10(vecAmp) - np.log10(vecAmp.min())) / (np.log10(vecAmp.max()) - np.log10(vecAmp.min()))
+                norm_thickness = vecAmp/vecAmp.max()
+
+                # Scale by user defined thickness factor
+                stream_thickness = scaleFact*norm_thickness
+
+                # Add linewidth to streamOpts
                 streamOpts.update({'linewidth':stream_thickness})
-                print(streamOpts)
 
 
             out += (
