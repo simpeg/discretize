@@ -1,6 +1,7 @@
 from __future__ import print_function
 import unittest
 import numpy as np
+
 import discretize
 from discretize import Tests, utils
 
@@ -95,7 +96,7 @@ class TestCyl2DMesh(unittest.TestCase):
 
     def test_gridSizes(self):
         self.assertTrue(self.mesh.gridCC.shape == (self.mesh.nC, 3))
-        self.assertTrue(self.mesh.gridN.shape == (9, 3))
+        self.assertTrue(self.mesh._gridNFull.shape == (9, 3))
 
         self.assertTrue(self.mesh.gridFx.shape == (self.mesh.nFx, 3))
         self.assertTrue(self.mesh.gridFy is None)
@@ -113,9 +114,9 @@ class TestCyl2DMesh(unittest.TestCase):
         self.assertTrue(np.linalg.norm((G-self.mesh.gridCC).ravel()) == 0)
 
     def test_gridN(self):
-        x = np.r_[1, 2, 2.5, 1, 2, 2.5, 1, 2, 2.5]
+        x = np.r_[ 1, 2, 2.5, 1, 2, 2.5, 1, 2, 2.5]
         y = np.zeros(9)
-        z = np.r_[0, 0, 0, 2, 2, 2, 3, 3, 3.]
+        z = np.r_[0, 0, 0, 2, 2, 2, 3, 3, 3]
         G = np.c_[x, y, z]
         self.assertTrue(np.linalg.norm((G-self.mesh.gridN).ravel()) == 0)
 
@@ -268,7 +269,9 @@ class TestCyl2DMesh(unittest.TestCase):
     def test_getInterpMatCartMesh_Edges2Faces(self):
 
         Mr = discretize.TensorMesh([100, 100, 2], x0='CC0')
-        Mc = discretize.CylMesh([np.ones(10)/5, 1, 10], x0='0C0', cartesianOrigin=[-0.2, -0.2, 0])
+        Mc = discretize.CylMesh(
+            [np.ones(10)/5, 1, 10], x0='0C0', cartesianOrigin=[-0.2, -0.2, 0]
+        )
 
         Pe2f = Mc.getInterpolationMatCartMesh(Mr, 'E', locTypeTo='F')
         me = np.ones(Mc.nE)
@@ -413,25 +416,33 @@ class TestAveragingSimple(unittest.TestCase):
         hz = np.random.rand(10)
         self.mesh = discretize.CylMesh([hx, 1, hz])
 
-    def test_constantEdges(self):
-        edge_vec = np.ones(self.mesh.nE)
-        assert all(self.mesh.aveE2CC * edge_vec == 1.)
-        assert all(self.mesh.aveE2CCV * edge_vec == 1.)
+    def test_simpleEdges(self):
+        edge_vec = self.mesh.gridEy[:, 0]
+        assert np.linalg.norm(
+            self.mesh.aveE2CC * edge_vec - self.mesh.gridCC[:, 0]
+        ) < 1e-10
+        assert np.linalg.norm(
+            self.mesh.aveE2CCV * edge_vec - self.mesh.gridCC[:, 0]
+        ) < 1e-10
 
     def test_constantFaces(self):
-        face_vec = np.ones(self.mesh.nF)
-        assert all(self.mesh.aveF2CC * face_vec == 1.)
-        assert all(self.mesh.aveF2CCV * face_vec == 1.)
+        face_vec = np.hstack([self.mesh.gridFx[:, 0], self.mesh.gridFz[:, 0]])
+        assert np.linalg.norm(
+            self.mesh.aveF2CCV * face_vec - np.hstack(
+                2*[self.mesh.gridCC[:, 2]]
+            )
+        )
 
 
 class TestAveE2CC(Tests.OrderTest):
     name = "aveE2CC"
     meshTypes = MESHTYPES
     meshDimension = 2
+    meshSizes = [8, 16, 32, 64]
 
     def getError(self):
 
-        fun = lambda r, t, z: np.sin(2.*np.pi*z) * np.cos(np.pi*r)
+        fun = lambda r, t, z: np.sin(2.*np.pi*z) * np.sin(np.pi*r)
 
         E = call3(fun, self.M.gridEy)
 
@@ -449,10 +460,11 @@ class TestAveE2CCV(Tests.OrderTest):
     name = "aveE2CCV"
     meshTypes = MESHTYPES
     meshDimension = 2
+    meshSizes = [8, 16, 32, 64]
 
     def getError(self):
 
-        fun = lambda r, t, z: np.sin(2.*np.pi*z) * np.cos(np.pi*r)
+        fun = lambda r, t, z: np.sin(2.*np.pi*z) * np.sin(2*np.pi*r)
 
         E = call3(fun, self.M.gridEy)
 
@@ -473,8 +485,8 @@ class TestAveF2CCV(Tests.OrderTest):
 
     def getError(self):
 
-        funR = lambda r, z: np.sin(2.*np.pi*z) * np.cos(np.pi*r)
-        funZ = lambda r, z: np.sin(3.*np.pi*z) * np.cos(2.*np.pi*r)
+        funR = lambda r, z: np.sin(2.*np.pi*z) * np.sin(np.pi*r)
+        funZ = lambda r, z: np.sin(3.*np.pi*z) * np.sin(2.*np.pi*r)
 
         Fc = cylF2(self.M, funR, funZ)
         Fc = np.c_[Fc[:, 0], np.zeros(self.M.nF), Fc[:, 1]]
@@ -501,7 +513,7 @@ class TestAveF2CC(Tests.OrderTest):
 
     def getError(self):
 
-        fun = lambda r, z: np.sin(2.*np.pi*z) * np.cos(np.pi*r)
+        fun = lambda r, z: np.sin(2.*np.pi*z) * np.sin(np.pi*r)
 
         Fc = cylF2(self.M, fun, fun)
         Fc = np.c_[Fc[:, 0], np.zeros(self.M.nF), Fc[:, 1]]
@@ -590,7 +602,7 @@ class TestCyl3DMesh(unittest.TestCase):
         self.assertTrue(np.all(self.mesh.vnC == [3, 2, 2]))
 
     def test_nN(self):
-        self.assertTrue(self.mesh.nN == 24)
+        self.assertTrue(self.mesh.nN == 21)
         self.assertTrue(self.mesh.nNx == 4)
         self.assertTrue(self.mesh.nNy == 2)
         self.assertTrue(self.mesh.nNz == 3)
@@ -612,14 +624,14 @@ class TestCyl3DMesh(unittest.TestCase):
         self.assertTrue(self.mesh.nEy == 18)
         self.assertTrue(np.all(self.mesh.vnEy == [3, 2, 3]))
         self.assertTrue(self.mesh.nEz == 12 + 2)
-        self.assertTrue(self.mesh.vnEz is None)
+        self.assertTrue(np.all(self.mesh.vnEz == [4, 2, 2]))
         self.assertTrue(self.mesh.nE == 50)
         self.assertTrue(np.all(self.mesh.vnE == [18, 18, 14]))
 
     def test_vectorsCC(self):
         v = np.r_[0.5, 1.5, 2.25]
         self.assertTrue(np.linalg.norm((v-self.mesh.vectorCCx)) == 0)
-        v = np.r_[0, np.pi]
+        v = np.r_[0, np.pi] + np.pi/2
         self.assertTrue(np.linalg.norm((v-self.mesh.vectorCCy)) == 0)
         v = np.r_[1, 2.5]
         self.assertTrue(np.linalg.norm((v-self.mesh.vectorCCz)) == 0)
@@ -627,7 +639,7 @@ class TestCyl3DMesh(unittest.TestCase):
     def test_vectorsN(self):
         v = np.r_[0, 1, 2, 2.5]
         self.assertTrue(np.linalg.norm((v-self.mesh.vectorNx)) == 0)
-        v = np.r_[np.pi/2, 1.5*np.pi]
+        v = np.r_[0., np.pi]
         self.assertTrue(np.linalg.norm((v-self.mesh.vectorNy)) == 0)
         v = np.r_[0, 2, 3]
         self.assertTrue(np.linalg.norm((v-self.mesh.vectorNz)) == 0)

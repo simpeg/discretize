@@ -56,7 +56,7 @@ def configuration(parent_package='', top_path=None):
 
 setup(
     name="discretize",
-    version="0.1.19",
+    version="0.2.0",
     install_requires=[
         'numpy>=1.7',
         'scipy>=0.13',
@@ -64,8 +64,7 @@ setup(
         'ipython',
         'matplotlib',
         'pymatsolver>=0.1.2',
-        'properties>=0.3.6b0',
-        'vectormath'
+        'properties[math]',
     ],
     author="Rowan Cockett",
     author_email="rowanc1@gmail.com",

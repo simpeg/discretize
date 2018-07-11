@@ -2,10 +2,10 @@ language: python
 python:
 - 2.7
 - 3.6
-- 3.7
+- "nightly"
 matrix:
   allow_failures:
-    - python: 3.7
+    - python: "nightly"
 
 sudo: false
 
@@ -13,6 +13,11 @@ env:
   global:
     - MASTER_BRANCH=master
     - PYPI_PY=3.6  # deploy to pypi from python 3.6
+  matrix:
+    - TEST_DIR=tests/base
+    - TEST_DIR=tests/cyl
+    - TEST_DIR=tests/tree
+    - TEST_DIR=tests/docs
 
 before_install:
   - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then
@@ -31,9 +36,10 @@ install:
   - pip install -r requirements_dev.txt
   - python setup.py install
   - make build
+  - export MPLBACKEND="agg"
 
 script:
-  - nosetests tests/base tests/tree tests/docs --with-cov --cov discretize --cov-config .coveragerc -v -s;
+  - nosetests $TEST_DIR --with-cov --cov discretize --cov-config .coveragerc -v -s;
 
 after_success:
 

@@ -1717,15 +1717,16 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
         if getattr(self, '_cellGradStencil', None) is None:
 
             self._cellGradStencil = sp.vstack([
-                self._cellGradxStencil(), self._cellGradyStencil()
+                self._cellGradxStencil, self._cellGradyStencil
             ])
             if self.dim == 3:
                 self._cellGradStencil = sp.vstack([
-                    self._cellGradStencil, self._cellGradzStencil()
+                    self._cellGradStencil, self._cellGradzStencil
                 ])
 
         return self._cellGradStencil
 
+    @property
     def _cellGradxStencil(self):
         self.number()
 
@@ -1795,6 +1796,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
         return Gx
 
+    @property
     def _cellGradyStencil(self):
         self.number()
 
@@ -1865,6 +1867,7 @@ class TreeMesh(BaseTensorMesh, InnerProducts, TreeMeshIO):
 
         return Gy
 
+    @property
     def _cellGradzStencil(self):
         self.number()
         assert self.dim == 3, 'cellGradzStencil only possible for TreeMesh 3D'

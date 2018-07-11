@@ -42,3 +42,6 @@ docs/warnings.txt
 .DS_Store
 docs/auto_examples
 docs/modules
+
+# Jupyter
+*.ipynb
