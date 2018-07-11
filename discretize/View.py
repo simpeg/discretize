@@ -1,6 +1,7 @@
 from __future__ import print_function
 import numpy as np
-from discretize.utils import mkvc
+import warnings
+from discretize.utils import mkvc, ndgrid
 from six import integer_types
 try:
     import matplotlib.pyplot as plt
@@ -101,14 +102,19 @@ class TensorView(object):
             fig = plt.figure()
             ax = plt.subplot(111)
         else:
-            assert isinstance(ax, matplotlib.axes.Axes), "ax must be an Axes!"
+            if not isinstance(ax, matplotlib.axes.Axes):
+                raise AssertionError("ax must be an Axes!")
             fig = ax.figure
 
         if self.dim == 1:
             if vType == 'CC':
-                ph = ax.plot(self.vectorCCx, v, '-ro')
+                ph = ax.plot(
+                    self.vectorCCx, v, linestyle="-", color="C1", marker="o"
+                )
             elif vType == 'N':
-                ph = ax.plot(self.vectorNx, v, '-bs')
+                ph = ax.plot(
+                    self.vectorNx, v, linestyle="-", color="C0", marker="s"
+                )
             ax.set_xlabel("x")
             ax.axis('tight')
         elif self.dim == 2:
@@ -132,8 +138,10 @@ class TensorView(object):
                 # if 'y' in vType: v = np.r_[np.zeros(n[0]), v, np.zeros(n[2])]
                 # if 'z' in vType: v = np.r_[np.zeros(n[0]), np.zeros(n[1]), v]
                 v = getattr(self, aveOp)*v # average to cell centers
-                ind_xyz = {'x':0, 'y':1, 'z':2}[vType[1]]
-                vc = self.r(v.reshape((self.nC, -1), order='F'), 'CC', 'CC', 'M')[ind_xyz]
+                ind_xyz = {'x': 0, 'y': 1, 'z': 2}[vType[1]]
+                vc = self.r(
+                    v.reshape((self.nC, -1), order='F'), 'CC', 'CC', 'M'
+                )[ind_xyz]
 
             # determine number oE slices in x and y dimension
             nX = int(np.ceil(np.sqrt(self.nCz)))
@@ -221,6 +229,7 @@ class TensorView(object):
             M.plotSlice(M.cellGrad*b, 'F', view='vec', grid=True, showIt=True, pcolorOpts={'alpha':0.8})
 
         """
+        normal = normal.upper()
         if pcolorOpts is None:
             pcolorOpts = {}
         if streamOpts is None:
@@ -228,7 +237,10 @@ class TensorView(object):
         if gridOpts is None:
             gridOpts = {'color':'k', 'alpha':0.5}
         if type(vType) in [list, tuple]:
-            assert ax is None, "cannot specify an axis to plot on with this function."
+            if ax is not None:
+                raise AssertionError(
+                    "cannot specify an axis to plot on with this function."
+                )
             fig, axs = plt.subplots(1, len(vType))
             out = []
             for vTypeI, ax in zip(vType, axs):
@@ -247,21 +259,36 @@ class TensorView(object):
         vTypeOpts = ['CC', 'CCv', 'N', 'F', 'E', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez']
 
         # Some user error checking
-        assert vType in vTypeOpts, "vType must be in ['{0!s}']".format("', '".join(vTypeOpts))
-        assert self.dim == 3, 'Must be a 3D mesh. Use plotImage.'
-        assert view in viewOpts, "view must be in ['{0!s}']".format("', '".join(viewOpts))
-        assert normal in normalOpts, "normal must be in ['{0!s}']".format("', '".join(normalOpts))
-        assert type(grid) is bool, 'grid must be a boolean'
+        if vType not in vTypeOpts:
+            raise AssertionError(
+                "vType must be in ['{0!s}']".format("', '".join(vTypeOpts))
+            )
+        if not self.dim == 3:
+            raise AssertionError(
+                'Must be a 3D mesh. Use plotImage.'
+            )
+        if view not in viewOpts:
+            raise AssertionError(
+                "view must be in ['{0!s}']".format("', '".join(viewOpts))
+            )
+        if normal not in normalOpts:
+            raise AssertionError(
+                "normal must be in ['{0!s}']".format("', '".join(normalOpts))
+            )
+        if not isinstance(grid, bool):
+            raise AssertionError('grid must be a boolean')
 
         szSliceDim = getattr(self, 'nC'+normal.lower()) #: Size of the sliced dimension
         if ind is None: ind = int(szSliceDim/2)
-        assert type(ind) in integer_types, 'ind must be an integer'
+        if type(ind) not in integer_types:
+            raise AssertionError('ind must be an integer')
 
-        assert not (v.dtype == complex and view == 'vec'), 'Can not plot a complex vector.'
+        if (v.dtype == complex and view == 'vec'):
+            raise AssertionError('Can not plot a complex vector.')
         # The slicing and plotting code!!
 
         def getIndSlice(v):
-            if   normal == 'X':
+            if normal == 'X':
                 v = v[ind, :, :]
             elif normal == 'Y':
                 v = v[:, ind, :]
@@ -273,7 +300,8 @@ class TensorView(object):
             if vType == 'CC':
                 return getIndSlice(self.r(v, 'CC', 'CC', 'M'))
             elif vType == 'CCv':
-                assert view == 'vec', 'Other types for CCv not supported'
+                if view != 'vec':
+                    raise AssertionError('Other types for CCv not supported')
             else:
                 # Now just deal with 'F' and 'E' (x, y, z, maybe...)
                 aveOp = 'ave' + vType + ('2CCV' if view == 'vec' else '2CC')
@@ -305,14 +333,15 @@ class TensorView(object):
         if 'Z' not in normal:
             h2d.append(self.hz)
             x2d.append(self.x0[2])
-        tM = self.__class__(h2d, x0=x2d)  #: Temp Mesh
+        tM = self.__class__(h=h2d, x0=x2d)  #: Temp Mesh
         v2d = doSlice(v)
 
         if ax is None:
             plt.figure()
             ax = plt.subplot(111)
         else:
-            assert isinstance(ax, matplotlib.axes.Axes), "ax must be an matplotlib.axes.Axes"
+            if not isinstance(ax, matplotlib.axes.Axes):
+                raise AssertionError("ax must be an matplotlib.axes.Axes")
 
         out = tM._plotImage2D(
             v2d, vType=('CCv' if view == 'vec' else 'CC'),
@@ -356,30 +385,45 @@ class TensorView(object):
         vTypeOptsV = ['CCv', 'F', 'E']
         vTypeOpts = vTypeOptsCC + vTypeOptsV
         if view == 'vec':
-            assert vType in vTypeOptsV, "vType must be in ['{0!s}'] when view='vec'".format("', '".join(vTypeOptsV))
-        assert vType in vTypeOpts, "vType must be in ['{0!s}']".format("', '".join(vTypeOpts))
+            if vType not in vTypeOptsV:
+                raise AssertionError(
+                    "vType must be in ['{0!s}'] when view='vec'".format(
+                        "', '".join(vTypeOptsV)
+                    )
+                )
+        if vType not in vTypeOpts:
+            raise AssertionError(
+                "vType must be in ['{0!s}']".format("', '".join(vTypeOpts))
+            )
 
         viewOpts = ['real', 'imag', 'abs', 'vec']
-        assert view in viewOpts, "view must be in ['{0!s}']".format("', '".join(viewOpts))
+        if view not in viewOpts:
+            raise AssertionError(
+                "view must be in ['{0!s}']".format("', '".join(viewOpts))
+            )
 
         if ax is None:
             plt.figure()
             ax = plt.subplot(111)
         else:
-            assert isinstance(ax, matplotlib.axes.Axes), "ax must be an matplotlib.axes.Axes"
+            if not isinstance(ax, matplotlib.axes.Axes):
+                raise AssertionError(
+                    "ax must be an matplotlib.axes.Axes"
+                )
 
         # Reshape to a cell centered variable
         if vType == 'CC':
             pass
         elif vType == 'CCv':
-            assert view == 'vec', 'Other types for CCv not supported'
+            if view != 'vec':
+                raise AssertionError('Other types for CCv not supported')
         elif vType in ['F', 'E', 'N']:
             aveOp = 'ave' + vType + ('2CCV' if view == 'vec' else '2CC')
-            v = getattr(self, aveOp)*v # average to cell centers (might be a vector)
+            v = getattr(self, aveOp)*v  # average to cell centers (might be a vector)
         elif vType in ['Fx', 'Fy', 'Ex', 'Ey']:
             aveOp = 'ave' + vType[0] + '2CCV'
-            v = getattr(self, aveOp)*v # average to cell centers (might be a vector)
-            xORy = {'x':0, 'y':1}[vType[1]]
+            v = getattr(self, aveOp)*v  # average to cell centers (might be a vector)
+            xORy = {'x': 0, 'y':1 }[vType[1]]
             v = v.reshape((self.nC, -1), order='F')[:, xORy]
 
         out = ()
@@ -391,11 +435,6 @@ class TensorView(object):
             v = np.ma.masked_where(np.isnan(v), v)
             out += (ax.pcolormesh(self.vectorNx, self.vectorNy, v.T, vmin=clim[0], vmax=clim[1], **pcolorOpts), )
         elif view in ['vec']:
-            U, V = self.r(v.reshape((self.nC, -1), order='F'), 'CC', 'CC', 'M')
-            if clim is None:
-                uv = np.sqrt(U**2 + V**2)
-                clim = [uv.min(), uv.max()]
-
             # Matplotlib seems to not support irregular
             # spaced vectors at the moment. So we will
             # Interpolate down to a regular mesh at the
@@ -427,7 +466,12 @@ class TensorView(object):
                 hy = np.ones(nyi)*self.hy.sum()/nyi
                 x0_y = self.x0[1]
 
-            tMi = self.__class__([hx, hy], x0=np.r_[x0_x, x0_y])
+            U, V = self.r(v.reshape((self.nC, -1), order='F'), 'CC', 'CC', 'M')
+            if clim is None:
+                uv = np.sqrt(U**2 + V**2)
+                clim = [uv.min(), uv.max()]
+
+            tMi = self.__class__(h=[hx, hy], x0=np.r_[x0_x, x0_y])
             P = self.getInterpolationMat(tMi.gridCC, 'CC', zerosOutside=True)
 
             Ui = tMi.r(P*mkvc(U), 'CC', 'CC', 'M')
@@ -520,7 +564,6 @@ class TensorView(object):
             plt.show()
         return out
 
-
     def plotGrid(
         self, ax=None, nodes=False, faces=False, centers=False, edges=False,
         lines=True, showIt=False
@@ -562,27 +605,54 @@ class TensorView(object):
             plt.figure()
             ax = plt.subplot(111, **axOpts)
         else:
-            assert isinstance(ax, matplotlib.axes.Axes), "ax must be an matplotlib.axes.Axes"
+            if not isinstance(ax, matplotlib.axes.Axes):
+                raise AssertionError("ax must be an matplotlib.axes.Axes")
 
         if self.dim == 1:
             if nodes:
-                ax.plot(self.gridN, np.ones(self.nN), 'bs')
+                ax.plot(
+                    self.gridN, np.ones(self.nN), color="C0", marker="s",
+                    linestyle=""
+                )
             if centers:
-                ax.plot(self.gridCC, np.ones(self.nC), 'ro')
+                ax.plot(
+                    self.gridCC, np.ones(self.nC), color="C1", marker="o",
+                    linestyle=""
+                )
             if lines:
-                ax.plot(self.gridN, np.ones(self.nN), 'b.-')
+                ax.plot(
+                    self.gridN, np.ones(self.nN), color="C0", linestyle=".-"
+                )
             ax.set_xlabel('x1')
         elif self.dim == 2:
             if nodes:
-                ax.plot(self.gridN[:, 0], self.gridN[:, 1], 'bs')
+                ax.plot(
+                    self.gridN[:, 0], self.gridN[:, 1], color="C0", marker="s",
+                    linestyle=""
+                )
             if centers:
-                ax.plot(self.gridCC[:, 0], self.gridCC[:, 1], 'ro')
+                ax.plot(
+                    self.gridCC[:, 0], self.gridCC[:, 1], color="C1",
+                    marker="o", linestyle=""
+                )
             if faces:
-                ax.plot(self.gridFx[:, 0], self.gridFx[:, 1], 'g>')
-                ax.plot(self.gridFy[:, 0], self.gridFy[:, 1], 'g^')
+                ax.plot(
+                    self.gridFx[:, 0], self.gridFx[:, 1], color="C2",
+                    marker=">", linestyle=""
+                )
+                ax.plot(
+                    self.gridFy[:, 0], self.gridFy[:, 1], color="C2",
+                    marker="^", linestyle=""
+                )
             if edges:
-                ax.plot(self.gridEx[:, 0], self.gridEx[:, 1], 'c>')
-                ax.plot(self.gridEy[:, 0], self.gridEy[:, 1], 'c^')
+                ax.plot(
+                    self.gridEx[:, 0], self.gridEx[:, 1], color="C3",
+                    marker=">", linestyle=""
+                )
+                ax.plot(
+                    self.gridEy[:, 0], self.gridEy[:, 1], color="C3",
+                    marker="^", linestyle=""
+                )
 
             # Plot the grid lines
             if lines:
@@ -593,23 +663,47 @@ class TensorView(object):
                 Y2 = np.c_[mkvc(NN[1][:, 0]), mkvc(NN[1][:, self.nCy]), mkvc(NN[1][:, 0])*np.nan].flatten()
                 X = np.r_[X1, X2]
                 Y = np.r_[Y1, Y2]
-                ax.plot(X, Y, 'b-')
+                ax.plot(X, Y, color="C0", linestyle="-")
 
             ax.set_xlabel('x1')
             ax.set_ylabel('x2')
         elif self.dim == 3:
             if nodes:
-                ax.plot(self.gridN[:, 0], self.gridN[:, 1], 'bs', zs=self.gridN[:, 2])
+                ax.plot(
+                    self.gridN[:, 0], self.gridN[:, 1], color="C0", marker="s",
+                    linestyle="", zs=self.gridN[:, 2]
+                )
             if centers:
-                ax.plot(self.gridCC[:, 0], self.gridCC[:, 1], 'ro', zs=self.gridCC[:, 2])
+                ax.plot(
+                    self.gridCC[:, 0], self.gridCC[:, 1], color="C1",
+                    marker="o", linestyle="", zs=self.gridCC[:, 2]
+                )
             if faces:
-                ax.plot(self.gridFx[:, 0], self.gridFx[:, 1], 'g>', zs=self.gridFx[:, 2])
-                ax.plot(self.gridFy[:, 0], self.gridFy[:, 1], 'g<', zs=self.gridFy[:, 2])
-                ax.plot(self.gridFz[:, 0], self.gridFz[:, 1], 'g^', zs=self.gridFz[:, 2])
+                ax.plot(
+                    self.gridFx[:, 0], self.gridFx[:, 1], color="C2",
+                    marker=">", linestyle="", zs=self.gridFx[:, 2]
+                )
+                ax.plot(
+                    self.gridFy[:, 0], self.gridFy[:, 1], color="C2",
+                    marker="<", linestyle="", zs=self.gridFy[:, 2]
+                )
+                ax.plot(
+                    self.gridFz[:, 0], self.gridFz[:, 1], color="C2",
+                    marker="^", linestyle="", zs=self.gridFz[:, 2]
+                )
             if edges:
-                ax.plot(self.gridEx[:, 0], self.gridEx[:, 1], 'k>', zs=self.gridEx[:, 2])
-                ax.plot(self.gridEy[:, 0], self.gridEy[:, 1], 'k<', zs=self.gridEy[:, 2])
-                ax.plot(self.gridEz[:, 0], self.gridEz[:, 1], 'k^', zs=self.gridEz[:, 2])
+                ax.plot(
+                    self.gridEx[:, 0], self.gridEx[:, 1], color="C3",
+                    marker=">", linestyle="", zs=self.gridEx[:, 2]
+                )
+                ax.plot(
+                    self.gridEy[:, 0], self.gridEy[:, 1], color="C3",
+                    marker="<", linestyle="", zs=self.gridEy[:, 2]
+                )
+                ax.plot(
+                    self.gridEz[:, 0], self.gridEz[:, 1], color="C3",
+                    marker="^", linestyle="", zs=self.gridEz[:, 2]
+                )
 
             # Plot the grid lines
             if lines:
@@ -626,7 +720,7 @@ class TensorView(object):
                 X = np.r_[X1, X2, X3]
                 Y = np.r_[Y1, Y2, Y3]
                 Z = np.r_[Z1, Z2, Z3]
-                ax.plot(X, Y, 'b-', zs=Z)
+                ax.plot(X, Y, color="C0", linestyle="-", zs=Z)
             ax.set_xlabel('x1')
             ax.set_ylabel('x2')
             ax.set_zlabel('x3')
@@ -634,6 +728,8 @@ class TensorView(object):
         ax.grid(True)
         if showIt:
             plt.show()
+
+        return ax
 
 
 class CylView(object):
@@ -647,40 +743,62 @@ class CylView(object):
         # Just create a TM and use its view.
         from discretize import TensorMesh
 
-        vType = kwargs.pop('vType', None)
+        if len(args) > 0:
+            val = args[0]
+
+        vType = kwargs.get('vType', None)
+        mirror = kwargs.pop('mirror', None)
+        mirror_data = kwargs.pop('mirror_data', None)
+
+        if mirror_data is not None and mirror is None:
+            mirror = True
+
         if vType is not None:
             if vType.upper() != 'CCV':
                 if vType.upper() == 'F':
-                    val = mkvc(self.aveF2CCV * args[0])
+                    val = mkvc(self.aveF2CCV * val)
+                    if mirror_data is not None:
+                        mirror_data = mkvc(self.aveF2CCV * mirror_data)
                     kwargs['vType'] = 'CCv'  # now the vector is cell centered
                 if vType.upper() == 'E':
-                    val = mkvc(self.aveE2CCV * args[0])
+                    val = mkvc(self.aveE2CCV * val)
+                    if mirror_data is not None:
+                        mirror_data = mkvc(self.aveE2CCV * mirror_data)
                 args = (val,) + args[1:]
 
-        mirror = kwargs.pop('mirror', None)
         if mirror is True:
             # create a mirrored mesh
             hx = np.hstack([np.flipud(self.hx), self.hx])
             x00 = self.x0[0] - self.hx.sum()
             M = TensorMesh([hx, self.hz], x0=[x00, self.x0[2]])
 
-            # mirror the data
-            if len(args) > 0:
-                val = args[0]
+            if mirror_data is None:
+                mirror_data = val
 
             if len(val) == self.nC:  # only a single value at cell centers
                 val = val.reshape(self.vnC[0], self.vnC[2], order='F')
-                val = mkvc(np.vstack([np.flipud(val), val]))
+                mirror_val = mirror_data.reshape(
+                    self.vnC[0], self.vnC[2], order='F'
+                )
+                val = mkvc(np.vstack([np.flipud(mirror_val), val]))
 
             elif len(val) == 2*self.nC:
-                val_x = val[:self.nC]
-                val_z = val[self.nC:]
+                val_x = val[:self.nC].reshape(
+                    self.vnC[0], self.vnC[2], order='F'
+                )
+                val_z = val[self.nC:].reshape(
+                    self.vnC[0], self.vnC[2], order='F'
+                )
 
-                val_x = val_x.reshape(self.vnC[0], self.vnC[2], order='F')
-                val_x = mkvc(np.vstack([-1.*np.flipud(val_x), val_x])) # by symmetry
+                mirror_x = mirror_data[:self.nC].reshape(
+                    self.vnC[0], self.vnC[2], order='F'
+                )
+                mirror_z = mirror_data[self.nC:].reshape(
+                    self.vnC[0], self.vnC[2], order='F'
+                )
 
-                val_z = val_z.reshape(self.vnC[0], self.vnC[2], order='F')
-                val_z = mkvc(np.vstack([np.flipud(val_z), val_z]))
+                val_x = mkvc(np.vstack([-1.*np.flipud(mirror_x), val_x])) # by symmetry
+                val_z = mkvc(np.vstack([np.flipud(mirror_z), val_z]))
 
                 val = np.hstack([val_x, val_z])
 
@@ -694,7 +812,8 @@ class CylView(object):
             ax = plt.subplot(111)
             kwargs['ax'] = ax
         else:
-            assert isinstance(ax, matplotlib.axes.Axes), "ax must be an matplotlib.axes.Axes"
+            if not isinstance(ax, matplotlib.axes.Axes):
+                raise AssertionError("ax must be an matplotlib.axes.Axes")
             fig = ax.figure
 
         # Don't show things in the TM.plotImage
@@ -712,7 +831,130 @@ class CylView(object):
         return out
 
     def plotGrid(self, *args, **kwargs):
-        return self._plotCylTensorMesh('plotGrid', *args, **kwargs)
+        if self.isSymmetric:
+            return self._plotCylTensorMesh('plotGrid', *args, **kwargs)
+
+        # allow a slice to be provided for the mesh
+        slc = kwargs.pop('slice', None)
+        if isinstance(slc, str):
+            slc = slc.lower()
+        if slc not in ['theta', 'z', 'both', None]:
+            raise AssertionError(
+                "slice must be either 'theta','z', or 'both' not {}".format(
+                    slc
+                )
+            )
+
+        # if slc is None, provide slices in both the theta and z directions
+        if slc == 'theta':
+            return self._plotGridThetaSlice(*args, **kwargs)
+        elif slc == 'z':
+            return self._plotGridZSlice(*args, **kwargs)
+        else:
+            ax = kwargs.pop('ax', None)
+            if ax is not None:
+                if not isinstance(ax, list) or len(ax) != 2:
+                    warnings.warn(
+                        "two axes handles must be provided to plot both theta "
+                        "and z slices through the mesh. Over-writing the axes."
+                    )
+                    ax = None
+                else:
+                    # find the one with a polar projection and pass it to the
+                    # theta slice, other one to the z-slice
+                    polarax = [a for a in ax if a.__class__.__name__ == 'PolarAxesSubplot']
+                    if len(polarax) != 1:
+                        warnings.warn("""
+No polar axes provided. Over-writing the axes. If you prefer to create your
+own, please use
+
+    `ax = plt.subplot(121, projection='polar')`
+
+for reference, see: http://matplotlib.org/examples/pylab_examples/polar_demo.html
+                    https://github.com/matplotlib/matplotlib/issues/312
+                    """)
+                        ax = None
+
+                    else:
+                        polarax = polarax[0]
+                        cartax = [a for a in ax if a != polarax][0]
+
+            # ax may have been None to start with or set to None
+            if ax is None:
+                fig = plt.figure(figsize=(12, 5))
+                polarax = plt.subplot(121, projection='polar')
+                cartax = plt.subplot(122)
+
+            # update kwargs with respective axes handles
+            kwargspolar = kwargs.copy()
+            kwargspolar['ax'] = polarax
+
+            kwargscart = kwargs.copy()
+            kwargscart['ax'] = cartax
+
+            ax = []
+            ax.append(self._plotGridZSlice(*args, **kwargspolar))
+            ax.append(self._plotGridThetaSlice(*args, **kwargscart))
+            plt.tight_layout()
+
+        return ax
+
+    def _plotGridThetaSlice(self, *args, **kwargs):
+        if self.isSymmetric:
+            return self.plotGrid(*args, **kwargs)
+
+        # make a cyl symmetric mesh
+        h2d = [self.hx, 1, self.hz]
+        mesh2D = self.__class__(h=h2d, x0=self.x0)
+        return mesh2D.plotGrid(*args, **kwargs)
+
+    def _plotGridZSlice(self, *args, **kwargs):
+        # https://github.com/matplotlib/matplotlib/issues/312
+        ax = kwargs.get('ax', None)
+        if ax is not None:
+            if ax.__class__.__name__ != "PolarAxesSubplot":
+                warnings.warn(
+                    """
+Creating new axes with Polar projection. If you prefer to create your own, please use
+
+    `ax = plt.subplot(121, projection='polar')`
+
+for reference, see: http://matplotlib.org/examples/pylab_examples/polar_demo.html
+                    https://github.com/matplotlib/matplotlib/issues/312
+                    """
+                )
+                ax = plt.subplot(111, projection='polar')
+        else:
+            ax = plt.subplot(111, projection='polar')
+
+        # radial lines
+        NN = ndgrid(self.vectorNx, self.vectorNy, np.r_[0])[:, :2]
+        NN = NN.reshape((self.vnN[0], self.vnN[1], 2), order='F')
+        NN = [NN[:, :, 0], NN[:, :, 1]]
+        X1 = np.c_[
+            mkvc(NN[0][0, :]),
+            mkvc(NN[0][self.nCx, :]),
+            mkvc(NN[0][0, :])*np.nan
+        ].flatten()
+        Y1 = np.c_[
+            mkvc(NN[1][0, :]),
+            mkvc(NN[1][self.nCx, :]),
+            mkvc(NN[1][0, :])*np.nan
+        ].flatten()
+
+        ax.plot(Y1, X1, linestyle="-", color="C0")
+
+        # circles
+        n = 100
+        XY2 = [
+            ax.plot(
+                np.linspace(0., np.pi*2, n), r*np.ones(n), linestyle="-",
+                color="C0"
+            )
+            for r in self.vectorNx
+        ]
+
+        return ax
 
     def plotImage(self, *args, **kwargs):
         return self._plotCylTensorMesh('plotImage', *args, **kwargs)
@@ -728,7 +970,10 @@ class CurviView(object):
     def __init__(self):
         pass
 
-    def plotGrid(self, ax=None, nodes=False, faces=False, centers=False, edges=False, lines=True, showIt=False):
+    def plotGrid(
+        self, ax=None, nodes=False, faces=False, centers=False, edges=False,
+        lines=True, showIt=False
+    ):
         """Plot the nodal, cell-centered and staggered grids for 1, 2 and 3 dimensions.
 
 
@@ -762,9 +1007,12 @@ class CurviView(object):
                 X = np.r_[X1, X2]
                 Y = np.r_[Y1, Y2]
 
-                ax.plot(X, Y, 'b-')
+                ax.plot(X, Y, color="C0", linestyle="-")
             if centers:
-                ax.plot(self.gridCC[:, 0], self.gridCC[:, 1], 'ro')
+                ax.plot(
+                    self.gridCC[:, 0], self.gridCC[:, 1], color="C1",
+                    linestyle="", marker="o"
+                )
 
             # Nx = self.r(self.normals, 'F', 'Fx', 'V')
             # Ny = self.r(self.normals, 'F', 'Fy', 'V')
@@ -810,7 +1058,7 @@ class CurviView(object):
             Y = np.r_[Y1, Y2, Y3]
             Z = np.r_[Z1, Z2, Z3]
 
-            ax.plot(X, Y, 'b', zs=Z)
+            ax.plot(X, Y, 'C0', zs=Z)
             ax.set_zlabel('x3')
 
         ax.grid(True)
@@ -819,6 +1067,8 @@ class CurviView(object):
 
         if showIt:
             plt.show()
+
+        return ax
 
     def plotImage(
         self, I, ax=None, showIt=False, grid=False, clim=None
