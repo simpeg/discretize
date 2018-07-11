@@ -586,15 +586,37 @@ class CylMesh(
                 )
         return self._vol
 
-    ####################################################
+    ###########################################################################
     # Active and Hanging Edges and Faces
     #
-    #    - to find the active edges, faces, we use
-    #      krons of bools (sorry). It is more efficient
-    #      than working with 3D matrices. For an
-    #      example, see the comments in `_ishangingFx`
+    #    To find the active edges, faces, we use krons of bools (sorry). It is
+    #    more efficient than working with 3D matrices. For example...
     #
-    ####################################################
+    #    The computation of `ishangingFx` (is the Fx face hanging? a vector of
+    #    True and False corresponding to each face) can be computed using krons
+    #    of bools:
+    #
+    #          hang_x = np.zeros(self._ntNx, dtype=bool)
+    #          hang_x[0] = True
+    #          ishangingFxBool = np.kron(
+    #              np.ones(self.nCz, dtype=bool),  # 1 * 0 == 0
+    #              np.kron(np.ones(self.nCy, dtype=bool), hang_x)
+    #          )
+    #          return self._ishangingFxBool
+    #
+    #
+    #   This is equivalent to forming the 3D matrix and indexing the
+    #   corresponding rows and columns (here, the hanging faces are all of
+    #   the first x-faces along the axis of symmetry):
+    #
+    #         hang_x = np.zeros(self._vntFx, dtype=bool)
+    #         hang_x[0, :, :] = True
+    #         isHangingFxBool = mkvc(hang_x)
+    #
+    #
+    # but krons of bools is more efficient.
+    #
+    ###########################################################################
 
     @property
     def _ishangingFx(self):
