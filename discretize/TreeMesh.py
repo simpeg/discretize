@@ -166,11 +166,11 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         if getattr(self, '_cellGradStencil', None) is None:
 
             self._cellGradStencil = sp.vstack([
-                self._cellGradxStencil(), self._cellGradyStencil()
+                self._cellGradxStencil, self._cellGradyStencil
             ])
             if self.dim == 3:
                 self._cellGradStencil = sp.vstack([
-                    self._cellGradStencil, self._cellGradzStencil()
+                    self._cellGradStencil, self._cellGradzStencil
                 ])
 
         return self._cellGradStencil
