@@ -62,8 +62,6 @@ artifacts:
 deploy_script:
   # following https://github.com/AndrewAnnex/SpiceyPy/blob/master/appveyor.yml
   - echo "Starting Artifact deployment"
-  - echo [distutils] > %USERPROFILE%\\.pypirc
-  - echo index-servers = >> %USERPROFILE%\\.pypirc
   - echo   pypi >> %USERPROFILE%\\.pypirc
   - echo [pypi] >> %USERPROFILE%\\.pypirc
   - echo repository=https://pypi.python.org/pypi >> %USERPROFILE%\\.pypirc
