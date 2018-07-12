@@ -20,8 +20,115 @@ try:
 except Exception as e:
     name = 'You'
 
-happiness = ['The test be workin!', 'You get a gold star!', 'Yay passed!', 'Happy little convergence test!', 'That was easy!', 'Testing is important.', 'You are awesome.', 'Go Test Go!', 'Once upon a time, a happy little test passed.', 'And then everyone was happy.','Not just a pretty face '+name, 'You deserve a pat on the back!', 'Well done '+name+'!', 'Awesome, '+name+', just awesome.']
-sadness = ['No gold star for you.', 'Try again soon.', 'Thankfully,  persistence is a great substitute for talent.', 'It might be easier to call this a feature...', 'Coffee break?',  'Boooooooo  :(',  'Testing is important. Do it again.', "Did you put your clever trousers on today?", 'Just think about a dancing dinosaur and life will get better!', 'You had so much promise '+name+', oh well...', name.upper()+' ERROR!', 'Get on it '+name+'!', 'You break it, you fix it.']
+happiness = [
+    'The test be workin!', 'You get a gold star!', 'Yay passed!',
+    'Happy little convergence test!', 'That was easy!',
+    'Testing is important.', 'You are awesome.', 'Go Test Go!',
+    'Once upon a time, a happy little test passed.',
+    'And then everyone was happy.','Not just a pretty face '+name,
+    'You deserve a pat on the back!', 'Well done '+name+'!',
+    'Awesome, '+name+', just awesome.'
+]
+sadness = [
+    'No gold star for you.', 'Try again soon.',
+    'Thankfully,  persistence is a great substitute for talent.',
+    'It might be easier to call this a feature...', 'Coffee break?',
+    'Boooooooo  :(',  'Testing is important. Do it again.',
+    "Did you put your clever trousers on today?",
+    'Just think about a dancing dinosaur and life will get better!',
+    'You had so much promise '+name+', oh well...', name.upper()+' ERROR!',
+    'Get on it '+name+'!', 'You break it, you fix it.'
+]
+
+
+def setupMesh(meshType, nC, nDim):
+    """
+    For a given number of cells nc, generate a TensorMesh with uniform
+    cells with edge length h=1/nc.
+    """
+
+    if 'TensorMesh' in meshType:
+        if 'uniform' in meshType:
+            h = [nC, nC, nC]
+        elif 'random' in meshType:
+            h1 = np.random.rand(nC)*nC*0.5 + nC*0.5
+            h2 = np.random.rand(nC)*nC*0.5 + nC*0.5
+            h3 = np.random.rand(nC)*nC*0.5 + nC*0.5
+            h = [hi/np.sum(hi) for hi in [h1, h2, h3]]  # normalize
+        else:
+            raise Exception('Unexpected meshType')
+
+        mesh = TensorMesh(h[:nDim])
+        max_h = max([np.max(hi) for hi in mesh.h])
+
+    elif 'CylMesh' in meshType:
+        if 'uniform' in meshType:
+            h = [nC, nC, nC]
+        elif 'random' in meshType:
+            h1 = np.random.rand(nC)*nC*0.5 + nC*0.5
+            h2 = np.random.rand(nC)*nC*0.5 + nC*0.5
+            h3 = np.random.rand(nC)*nC*0.5 + nC*0.5
+            h = [hi/np.sum(hi) for hi in [h1, h2, h3]]  # normalize
+            h[1] = h[1]*2*np.pi
+        else:
+            raise Exception('Unexpected meshType')
+
+        if nDim == 2:
+            mesh = CylMesh([h[0], 1, h[2]])
+            max_h = max([np.max(hi) for hi in [mesh.hx, mesh.hz]])
+        elif nDim == 3:
+            mesh = CylMesh(h)
+            max_h = max([np.max(hi) for hi in mesh.h])
+
+    elif 'Curv' in meshType:
+        if 'uniform' in meshType:
+            kwrd = 'rect'
+        elif 'rotate' in meshType:
+            kwrd = 'rotate'
+        else:
+            raise Exception('Unexpected meshType')
+        if nDim == 1:
+            raise Exception('Lom not supported for 1D')
+        elif nDim == 2:
+            X, Y = utils.exampleLrmGrid([nC, nC], kwrd)
+            mesh = CurvilinearMesh([X, Y])
+        elif nDim == 3:
+            X, Y, Z = utils.exampleLrmGrid([nC, nC, nC], kwrd)
+            mesh = CurvilinearMesh([X, Y, Z])
+        max_h = 1./nC
+
+    elif 'Tree' in meshType:
+        if Tree is None:
+            raise Exception(
+                "Tree Mesh not installed. Run 'python setup.py install'"
+            )
+        nC *= 2
+        if 'uniform' in meshType or 'notatree' in meshType:
+            h = [nC, nC, nC]
+        elif 'random' in meshType:
+            h1 = np.random.rand(nC)*nC*0.5 + nC*0.5
+            h2 = np.random.rand(nC)*nC*0.5 + nC*0.5
+            h3 = np.random.rand(nC)*nC*0.5 + nC*0.5
+            h = [hi/np.sum(hi) for hi in [h1, h2, h3]]  # normalize
+        else:
+            raise Exception('Unexpected meshType')
+
+        levels = int(np.log(nC)/np.log(2))
+        mesh = Tree(h[:nDim], levels=levels)
+
+        def function(cell):
+            if 'notatree' in meshType:
+                return levels - 1
+            r = cell.center - np.array([0.5]*len(cell.center))
+            dist = np.sqrt(r.dot(r))
+            if dist < 0.2:
+                return levels
+            return levels - 1
+        mesh.refine(function, balance=False)
+        mesh.number(balance=False)
+        # mesh.plotGrid(showIt=True)
+        max_h = max([np.max(hi) for hi in mesh.h])
+    return mesh, max_h
 
 
 class OrderTest(unittest.TestCase):
@@ -89,88 +196,10 @@ class OrderTest(unittest.TestCase):
     _meshType = meshTypes[0]
     meshDimension = 3
 
-    def setupMesh(self, nc):
-        """
-        For a given number of cells nc, generate a TensorMesh with uniform cells with edge length h=1/nc.
-        """
-        if 'TensorMesh' in self._meshType:
-            if 'uniform' in self._meshType:
-                h = [nc, nc, nc]
-            elif 'random' in self._meshType:
-                h1 = np.random.rand(nc)*nc*0.5 + nc*0.5
-                h2 = np.random.rand(nc)*nc*0.5 + nc*0.5
-                h3 = np.random.rand(nc)*nc*0.5 + nc*0.5
-                h = [hi/np.sum(hi) for hi in [h1, h2, h3]]  # normalize
-            else:
-                raise Exception('Unexpected meshType')
-
-            self.M = TensorMesh(h[:self.meshDimension])
-            max_h = max([np.max(hi) for hi in self.M.h])
-            return max_h
-
-        elif 'CylMesh' in self._meshType:
-            if 'uniform' in self._meshType:
-                h = [nc, nc, nc]
-            else:
-                raise Exception('Unexpected meshType')
-
-            if self.meshDimension == 2:
-                self.M = CylMesh([h[0], 1, h[2]])
-                max_h = max([np.max(hi) for hi in [self.M.hx, self.M.hz]])
-            elif self.meshDimension == 3:
-                self.M = CylMesh(h)
-                max_h = max([np.max(hi) for hi in self.M.h])
-            return max_h
-
-        elif 'Curv' in self._meshType:
-            if 'uniform' in self._meshType:
-                kwrd = 'rect'
-            elif 'rotate' in self._meshType:
-                kwrd = 'rotate'
-            else:
-                raise Exception('Unexpected meshType')
-            if self.meshDimension == 1:
-                raise Exception('Lom not supported for 1D')
-            elif self.meshDimension == 2:
-                X, Y = utils.exampleLrmGrid([nc, nc], kwrd)
-                self.M = CurvilinearMesh([X, Y])
-            elif self.meshDimension == 3:
-                X, Y, Z = utils.exampleLrmGrid([nc, nc, nc], kwrd)
-                self.M = CurvilinearMesh([X, Y, Z])
-            return 1./nc
-
-        elif 'Tree' in self._meshType:
-            if Tree is None:
-                raise Exception(
-                    "Tree Mesh not installed. Run 'python setup.py install'"
-                )
-            nc *= 2
-            if 'uniform' in self._meshType or 'notatree' in self._meshType:
-                h = [nc, nc, nc]
-            elif 'random' in self._meshType:
-                h1 = np.random.rand(nc)*nc*0.5 + nc*0.5
-                h2 = np.random.rand(nc)*nc*0.5 + nc*0.5
-                h3 = np.random.rand(nc)*nc*0.5 + nc*0.5
-                h = [hi/np.sum(hi) for hi in [h1, h2, h3]]  # normalize
-            else:
-                raise Exception('Unexpected meshType')
-
-            levels = int(np.log(nc)/np.log(2))
-            self.M = Tree(h[:self.meshDimension], levels=levels)
-
-            def function(cell):
-                if 'notatree' in self._meshType:
-                    return levels - 1
-                r = cell.center - 0.5
-                dist = np.sqrt(r.dot(r))
-                if dist < 0.2:
-                    return levels
-                return levels - 1
-            self.M.refine(function)
-            #self.M.number(balance=False)
-            # self.M.plotGrid(showIt=True)
-            max_h = max([np.max(hi) for hi in self.M.h])
-            return max_h
+    def setupMesh(self, nC):
+        mesh, max_h = setupMesh(self._meshType, nC, self.meshDimension)
+        self.M = mesh
+        return max_h
 
     def getError(self):
         """For given h, generate A[h], f and A(f) and return norm of error."""
