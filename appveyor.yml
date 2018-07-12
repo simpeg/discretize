@@ -63,7 +63,6 @@ deploy_script:
   # following https://github.com/AndrewAnnex/SpiceyPy/blob/master/appveyor.yml
   - echo "Starting Artifact deployment"
   - echo [pypi] >> %USERPROFILE%\\.pypirc
-  - echo repository=https://pypi.python.org/pypi >> %USERPROFILE%\\.pypirc
   - echo username=lheagy >> %USERPROFILE%\\.pypirc
   - echo password=%pypi_password% >> %USERPROFILE%\\.pypirc
   - twine upload dist\* --skip-existing
