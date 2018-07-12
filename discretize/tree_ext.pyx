@@ -1314,8 +1314,11 @@ cdef class _TreeMesh:
 
         return sp.csr_matrix((V, (I,J)), shape=(self.ntFz, self.nC))
 
+    @property
     @cython.boundscheck(False)
     def _cellGradxStencil(self):
+        if getattr(self, '_cellGradxStencilMat', None) is not None:
+            return self._cellGradxStencilMat
         cdef np.int64_t[:] I = np.zeros(2*self.ntFx, dtype=np.int64)
         cdef np.int64_t[:] J = np.zeros(2*self.ntFx, dtype=np.int64)
         cdef np.float64_t[:] V = np.zeros(2*self.ntFx, dtype=np.float64)
@@ -1363,10 +1366,17 @@ cdef class _TreeMesh:
                         V[2*ind    ] = -1.0
                         V[2*ind + 1] =  1.0
 
-        return sp.csr_matrix((V, (I,J)), shape=(self.ntFx, self.nC))
+        self._cellGradxStencilMat = (
+            sp.csr_matrix((V, (I,J)), shape=(self.ntFx, self.nC))
+        )
+        return self._cellGradxStencilMat
 
+    @property
     @cython.boundscheck(False)
     def _cellGradyStencil(self):
+        if getattr(self, '_cellGradyStencilMat', None) is not None:
+            return self._cellGradyStencilMat
+
         cdef np.int64_t[:] I = np.zeros(2*self.ntFy, dtype=np.int64)
         cdef np.int64_t[:] J = np.zeros(2*self.ntFy, dtype=np.int64)
         cdef np.float64_t[:] V = np.zeros(2*self.ntFy, dtype=np.float64)
@@ -1414,10 +1424,17 @@ cdef class _TreeMesh:
                         V[2*ind    ] = -1.0
                         V[2*ind + 1] = 1.0
 
-        return sp.csr_matrix((V, (I,J)), shape=(self.ntFy, self.nC))
+        self._cellGradyStencilMat = (
+            sp.csr_matrix((V, (I,J)), shape=(self.ntFy, self.nC))
+        )
+        return self._cellGradyStencilMat
 
+    @property
     @cython.boundscheck(False)
     def _cellGradzStencil(self):
+        if getattr(self, '_cellGradzStencilMat', None) is not None:
+            return self._cellGradzStencilMat
+
         cdef np.int64_t[:] I = np.zeros(2*self.ntFz, dtype=np.int64)
         cdef np.int64_t[:] J = np.zeros(2*self.ntFz, dtype=np.int64)
         cdef np.float64_t[:] V = np.zeros(2*self.ntFz, dtype=np.float64)
@@ -1445,7 +1462,10 @@ cdef class _TreeMesh:
                     V[2*ind    ] = -1.0
                     V[2*ind + 1] =  1.0
 
-        return sp.csr_matrix((V, (I,J)), shape=(self.ntFz, self.nC))
+        self._cellGradzStencilMat = (
+            sp.csr_matrix((V, (I,J)), shape=(self.ntFz, self.nC))
+        )
+        return self._cellGradzStencilMat
 
     @cython.boundscheck(False)
     def _deflate_edges_x(self):
