@@ -119,13 +119,13 @@ def setupMesh(meshType, nC, nDim):
         def function(cell):
             if 'notatree' in meshType:
                 return levels - 1
-            r = cell.center - np.array([0.5]*len(cell.center))
+            r = cell.center - 0.5
             dist = np.sqrt(r.dot(r))
             if dist < 0.2:
                 return levels
             return levels - 1
         mesh.refine(function)
-        mesh.number()
+        # mesh.number()
         # mesh.plotGrid(showIt=True)
         max_h = max([np.max(hi) for hi in mesh.h])
     return mesh, max_h
