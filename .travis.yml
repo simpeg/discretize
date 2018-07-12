@@ -61,7 +61,7 @@ after_success:
 
   # deploy to pypi
   - mv credentials/.pypirc ~/.pypirc ;
-  - python setup.py sdist ;
+  - python setup.py sdist bdist_wheel ;
   - twine upload dist/* --skip-existing;
 
 notifications:
