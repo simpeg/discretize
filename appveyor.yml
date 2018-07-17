@@ -7,8 +7,8 @@ environment:
     - PYTHON_VERSION: 2.7
       CONDA: C:\Miniconda
 
-#    - PYTHON_VERSION: 3.5
-#      CONDA: C:\Miniconda35
+    - PYTHON_VERSION: 3.5
+      CONDA: C:\Miniconda35
 
     - PYTHON_VERSION: 3.6
       CONDA: C:\Miniconda36
@@ -41,7 +41,7 @@ install:
 
 test_script:
   - cd tests
-  - nosetests -v -s base
+  - nosetests -v -s base/test_interpolation.py base/test_tensor_io.py
   - nosetests -v -s tree
   - cd ..
 
