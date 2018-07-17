@@ -50,7 +50,7 @@ after_test:
   # Again, you only need build.cmd if you're building C extensions for
   # 64-bit Python 3.3/3.4. And you need to use %PYTHON% to get the correct
   # interpreter
-  - python setup.py sdist bdist_wheel
+  - python setup.py bdist_wheel
 
 artifacts:
   # bdist_wheel puts your built wheel in the dist directory
@@ -64,4 +64,4 @@ deploy_script:
   - echo password=%pypi_password% >> %USERPROFILE%\\.pypirc
   # - twine upload dist\* --skip-existing
   # deploy on dev or master
-  - ps: If ($env:APPVEYOR_REPO_TAG -eq "true" ) { Invoke-Expression "twine upload dist\* --skip-existing" 2>$null } Else { write-output "Not on a tag, won't deploy to pypi"}
+  - ps: If ($env:APPVEYOR_REPO_TAG -eq "true" ) { Invoke-Expression "twine upload dist\*.whl --skip-existing" 2>$null } Else { write-output "Not on a tag, won't deploy to pypi"}
