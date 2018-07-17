@@ -183,16 +183,16 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         """
         if getattr(self, '_cellGrad', None) is None:
 
-            indBoundary = np.ones(self.nC, dtype=float)
+            i_s = self.faceBoundaryInd
 
-            indBoundary_Fx = (self.aveFx2CC.T * indBoundary) >= 1
-            ix = np.zeros(self.nFx)
-            ix[indBoundary_Fx] = 1.
+            ix = np.ones(self.nFx)
+            ix[i_s[0]] = 0.
+            ix[i_s[1]] = 0.
             Pafx = sp.diags(ix)
 
-            indBoundary_Fy = (self.aveFy2CC.T * indBoundary) >= 1
-            iy = np.zeros(self.nFy)
-            iy[indBoundary_Fy] = 1.
+            iy = np.ones(self.nFy)
+            iy[i_s[2]] = 0.
+            iy[i_s[3]] = 0.
             Pafy = sp.diags(iy)
 
             MfI = self.getFaceInnerProduct(invMat=True)
@@ -201,9 +201,9 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
                 Pi = sp.block_diag([Pafx, Pafy])
 
             elif self.dim == 3:
-                indBoundary_Fz = (self.aveFz2CC.T * indBoundary) >= 1
-                iz = np.zeros(self.nFz)
-                iz[indBoundary_Fz] = 1.
+                iz = np.ones(self.nFz)
+                iz[i_s[4]] = 0.
+                iz[i_s[5]] = 0.
                 Pafz = sp.diags(iz)
                 Pi = sp.block_diag([Pafx, Pafy, Pafz])
 
@@ -220,11 +220,11 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         if getattr(self, '_cellGradx', None) is None:
 
             nFx = self.nFx
-            indBoundary = np.ones(self.nC, dtype=float)
+            i_s = self.faceBoundaryInd
 
-            indBoundary_Fx = (self.aveFx2CC.T * indBoundary) >= 1
-            ix = np.zeros(self.nFx)
-            ix[indBoundary_Fx] = 1.
+            ix = np.ones(self.nFx)
+            ix[i_s[0]] = 0.0
+            ix[i_s[1]] = 0.0
             Pafx = sp.diags(ix)
 
             MfI = self.getFaceInnerProduct(invMat=True)
@@ -246,11 +246,11 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
 
             nFx = self.nFx
             nFy = self.nFy
-            indBoundary = np.ones(self.nC, dtype=float)
+            i_s = self.faceBoundaryInd
 
-            indBoundary_Fy = (self.aveFy2CC.T * indBoundary) >= 1
-            iy = np.zeros(self.nFy)
-            iy[indBoundary_Fy] = 1.
+            iy = np.ones(self.nFy)
+            iy[i_s[2]] = 0.
+            iy[i_s[3]] = 0.
             Pafy = sp.diags(iy)
 
             MfI = self.getFaceInnerProduct(invMat=True)
@@ -265,18 +265,18 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
     @property
     def cellGradz(self):
         """
-        Cell centered Gradient operator in y-direction (Gradz)
+        Cell centered Gradient operator in z-direction (Gradz)
         Grad = sp.vstack((Gradx, Grady, Gradz))
         """
         if getattr(self, '_cellGradz', None) is None:
 
             nFx = self.nFx
             nFy = self.nFy
-            indBoundary = np.ones(self.nC, dtype=float)
+            i_s = self.faceBoundaryInd
 
-            indBoundary_Fz = (self.aveFz2CC.T * indBoundary) >= 1
-            iz = np.zeros(self.nFz)
-            iz[indBoundary_Fz] = 1.
+            iz = np.ones(self.nFz)
+            iz[i_s[4]] = 0.
+            iz[i_s[5]] = 0.
             Pafz = sp.diags(iz)
 
             MfI = self.getFaceInnerProduct(invMat=True)
