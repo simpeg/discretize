@@ -611,8 +611,8 @@ class TreeMeshIO(object):
         un_order = np.empty_like(ubc_order)
         un_order[ubc_order] = np.arange(len(ubc_order))
 
-        modList.append(modArr[un_order])
-        return modList
+        model = modArr[un_order].copy() # ensure a contiguous array
+        return model
 
     def writeUBC(mesh, fileName, models=None):
         """Write UBC ocTree mesh and model files from a
