@@ -431,5 +431,14 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
             plt.show()
         return tuple(out)
 
+    def save(self, *args, **kwargs):
+        raise NotImplementedError()
+
+    def load(self, *args, **kwargs):
+        raise NotImplementedError()
+
+    def copy(self, *args, **kwargs):
+        raise NotImplementedError()
+
     def __reduce__(self):
         return TreeMesh, (self.h, self.x0), self.__getstate__()
