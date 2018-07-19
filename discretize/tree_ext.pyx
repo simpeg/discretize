@@ -970,6 +970,67 @@ cdef class _TreeMesh:
         else:
             return ixd, ixu, iyd, iyu
 
+    def get_boundary_cells(self, active_ind=None, direction='zu'):
+        """Returns the indices of boundary cells in a given direction given an active index array.
+
+        Optional Input:
+        :param numpy.array active_ind: None or Boolean array of active indexes in the mesh
+        :param str direction: one of ('zu', 'zd', 'xu', 'xd', 'yu', 'yd')
+
+        Output:
+        :rtype: numpy.array
+        :return: Array of indices for the boundary cells in a given direction
+        """
+
+        direction = direction.lower()
+        if direction[0] == 'z' and self._dim == 2:
+            dir_str = 'y'+direction[1]
+        else:
+            dir_str = direction
+        cdef int_t dir_ind = {'xd':0, 'xu':1, 'yd':2, 'yu':3, 'zd':4, 'zu':5}[dir_str]
+        if active_ind is None:
+            return self.cellBoundaryInd[dir_ind]
+
+        active_ind = np.require(active_ind, dtype=np.int8, requirements='C')
+        cdef np.int8_t[:] act = active_ind
+        cdef np.int8_t[:] is_on_boundary = np.zeros(self.nC, dtype=np.int8)
+
+        cdef c_Cell *cell
+        cdef c_Cell *neighbor
+
+        for cell in self.tree.cells:
+            if not act[cell.index]:
+                continue
+            is_bound = 0
+            neighbor = cell.neighbors[dir_ind]
+            if neighbor is NULL:
+                is_bound = 1
+            elif neighbor.is_leaf():
+                is_bound = not act[neighbor.index]
+            else:
+                if dir_ind == 1 or dir_ind == 3 or dir_ind == 5:
+                    is_bound = is_bound or (not act[neighbor.children[0].index])
+                if dir_ind == 0 or dir_ind == 3 or dir_ind == 5:
+                    is_bound = is_bound or (not act[neighbor.children[1].index])
+                if dir_ind == 1 or dir_ind == 2 or dir_ind == 5:
+                    is_bound = is_bound or (not act[neighbor.children[2].index])
+                if dir_ind == 0 or dir_ind == 2 or dir_ind == 5:
+                    is_bound = is_bound or (not act[neighbor.children[3].index])
+
+                if self._dim == 3:
+                    if dir_ind == 1 or dir_ind == 3 or dir_ind == 4:
+                        is_bound = is_bound or (not act[neighbor.children[4].index])
+                    if dir_ind == 0 or dir_ind == 3 or dir_ind == 4:
+                        is_bound = is_bound or (not act[neighbor.children[5].index])
+                    if dir_ind == 1 or dir_ind == 2 or dir_ind == 4:
+                        is_bound = is_bound or (not act[neighbor.children[6].index])
+                    if dir_ind == 0 or dir_ind == 2 or dir_ind == 4:
+                        is_bound = is_bound or (not act[neighbor.children[7].index])
+
+            is_on_boundary[cell.index] = is_bound
+
+        return np.where(is_on_boundary)
+
     @property
     def faceDiv(self):
         if self._faceDiv is not None:
