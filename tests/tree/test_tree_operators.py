@@ -1,7 +1,6 @@
 from __future__ import print_function
 import numpy as np
 import unittest
-import matplotlib.pyplot as plt
 import discretize
 
 MESHTYPES = ['uniformTree', 'randomTree']
@@ -16,7 +15,6 @@ cartF3 = lambda M, fx, fy, fz: np.vstack((cart_row3(M.gridFx, fx, fy, fz), cart_
 cartE3 = lambda M, ex, ey, ez: np.vstack((cart_row3(M.gridEx, ex, ey, ez), cart_row3(M.gridEy, ex, ey, ez), cart_row3(M.gridEz, ex, ey, ez)))
 
 
-plotIt = False
 np.random.seed(90)
 
 
@@ -252,6 +250,7 @@ class TestNodalGrad2D(discretize.Tests.OrderTest):
         self.orderTest()
 
 
+
 class TestTreeInnerProducts(discretize.Tests.OrderTest):
     """Integrate an function over a unit cube domain using edgeInnerProducts and faceInnerProducts."""
 
@@ -455,33 +454,33 @@ class TestTreeInnerProducts2D(discretize.Tests.OrderTest):
         err = np.abs(numeric - analytic)
         return err
 
-    # def test_order1_edges(self):
-    #     self.name = "2D Edge Inner Product - Isotropic"
-    #     self.location = 'edges'
-    #     self.sigmaTest = 1
-    #     self.invProp = False
-    #     self.orderTest()
+    def test_order1_edges(self):
+        self.name = "2D Edge Inner Product - Isotropic"
+        self.location = 'edges'
+        self.sigmaTest = 1
+        self.invProp = False
+        self.orderTest()
 
-    # def test_order1_edges_invProp(self):
-    #     self.name = "2D Edge Inner Product - Isotropic - invProp"
-    #     self.location = 'edges'
-    #     self.sigmaTest = 1
-    #     self.invProp = True
-    #     self.orderTest()
+    def test_order1_edges_invProp(self):
+        self.name = "2D Edge Inner Product - Isotropic - invProp"
+        self.location = 'edges'
+        self.sigmaTest = 1
+        self.invProp = True
+        self.orderTest()
 
-    # def test_order3_edges(self):
-    #     self.name = "2D Edge Inner Product - Anisotropic"
-    #     self.location = 'edges'
-    #     self.sigmaTest = 2
-    #     self.invProp = False
-    #     self.orderTest()
+    def test_order3_edges(self):
+        self.name = "2D Edge Inner Product - Anisotropic"
+        self.location = 'edges'
+        self.sigmaTest = 2
+        self.invProp = False
+        self.orderTest()
 
-    # def test_order3_edges_invProp(self):
-    #     self.name = "2D Edge Inner Product - Anisotropic - invProp"
-    #     self.location = 'edges'
-    #     self.sigmaTest = 2
-    #     self.invProp = True
-    #     self.orderTest()
+    def test_order3_edges_invProp(self):
+        self.name = "2D Edge Inner Product - Anisotropic - invProp"
+        self.location = 'edges'
+        self.sigmaTest = 2
+        self.invProp = True
+        self.orderTest()
 
     # def test_order6_edges(self):
     #     self.name = "2D Edge Inner Product - Full Tensor"
@@ -539,28 +538,18 @@ class TestTreeInnerProducts2D(discretize.Tests.OrderTest):
         self.invProp = True
         self.orderTest()
 
-
 class TestTreeAveraging2D(discretize.Tests.OrderTest):
     """Integrate an function over a unit cube domain using edgeInnerProducts and faceInnerProducts."""
 
-    meshTypes = ['notatreeTree', 'uniformTree']#, 'randomTree']
+    meshTypes = ['notatreeTree', 'uniformTree']# 'randomTree']
     meshDimension = 2
     meshSizes = [4,8,16]
     expectedOrders = [2,1]
 
     def getError(self):
-        if plotIt:
-            plt.spy(self.getAve(self.M))
-            plt.show()
 
         num = self.getAve(self.M) * self.getHere(self.M)
         err = np.linalg.norm((self.getThere(self.M)-num), np.inf)
-
-        if plotIt:
-            self.M.plotImage(self.getThere(self.M)-num)
-            plt.show()
-            plt.tight_layout
-
         return err
 
     def test_orderN2CC(self):
@@ -571,21 +560,21 @@ class TestTreeAveraging2D(discretize.Tests.OrderTest):
         self.getAve = lambda M: M.aveN2CC
         self.orderTest()
 
-    # def test_orderN2F(self):
-    #     self.name = "Averaging 2D: N2F"
-    #     fun = lambda x, y: (np.cos(x)+np.sin(y))
-    #     self.getHere = lambda M: call2(fun, M.gridN)
-    #     self.getThere = lambda M: np.r_[call2(fun, M.gridFx), call2(fun, M.gridFy)]
-    #     self.getAve = lambda M: M.aveN2F
-    #     self.orderTest()
+    def test_orderN2Fx(self):
+        self.name = "Averaging 2D: N2Fx"
+        fun = lambda x, y: (np.cos(x)+np.sin(y))
+        self.getHere = lambda M: call2(fun, M.gridN)
+        self.getThere = lambda M: np.r_[call2(fun, M.gridFx), call2(fun, M.gridFy)]
+        self.getAve = lambda M: M.aveN2F
+        self.orderTest()
 
-    # def test_orderN2E(self):
-    #     self.name = "Averaging 2D: N2E"
-    #     fun = lambda x, y: (np.cos(x)+np.sin(y))
-    #     self.getHere = lambda M: call2(fun, M.gridN)
-    #     self.getThere = lambda M: np.r_[call2(fun, M.gridEx), call2(fun, M.gridEy)]
-    #     self.getAve = lambda M: M.aveN2E
-    #     self.orderTest()
+    def test_orderN2E(self):
+        self.name = "Averaging 2D: N2E"
+        fun = lambda x, y: (np.cos(x)+np.sin(y))
+        self.getHere = lambda M: call2(fun, M.gridN)
+        self.getThere = lambda M: np.r_[call2(fun, M.gridEx), call2(fun, M.gridEy)]
+        self.getAve = lambda M: M.aveN2E
+        self.orderTest()
 
     def test_orderF2CC(self):
         self.name = "Averaging 2D: F2CC"
@@ -620,15 +609,15 @@ class TestTreeAveraging2D(discretize.Tests.OrderTest):
         self.getAve = lambda M: M.aveF2CCV
         self.orderTest()
 
-    # def test_orderCC2F(self):
-    #     self.name = "Averaging 2D: CC2F"
-    #     fun = lambda x, y: (np.cos(x)+np.sin(y))
-    #     self.getHere = lambda M: call2(fun, M.gridCC)
-    #     self.getThere = lambda M: np.r_[call2(fun, M.gridFx), call2(fun, M.gridFy)]
-    #     self.getAve = lambda M: M.aveCC2F
-    #     self.expectedOrders = 1
-    #     self.orderTest()
-    #     self.expectedOrders = 2
+    def test_orderCC2F(self):
+        self.name = "Averaging 2D: CC2F"
+        fun = lambda x, y: (np.cos(x)+np.sin(y))
+        self.getHere = lambda M: call2(fun, M.gridCC)
+        self.getThere = lambda M: np.r_[call2(fun, M.gridFx), call2(fun, M.gridFy)]
+        self.getAve = lambda M: M.aveCC2F
+        self.expectedOrders = 1
+        self.orderTest()
+        self.expectedOrders = 2
 
 
 class TestAveraging3D(discretize.Tests.OrderTest):
@@ -639,9 +628,6 @@ class TestAveraging3D(discretize.Tests.OrderTest):
     expectedOrders = [2,1]
 
     def getError(self):
-        if plotIt:
-            plt.spy(self.getAve(self.M))
-            plt.show()
 
         num = self.getAve(self.M) * self.getHere(self.M)
         err = np.linalg.norm((self.getThere(self.M)-num), np.inf)
@@ -655,21 +641,21 @@ class TestAveraging3D(discretize.Tests.OrderTest):
         self.getAve = lambda M: M.aveN2CC
         self.orderTest()
 
-#     def test_orderN2F(self):
-#         self.name = "Averaging 3D: N2F"
-#         fun = lambda x, y, z: (np.cos(x)+np.sin(y)+np.exp(z))
-#         self.getHere = lambda M: call3(fun, M.gridN)
-#         self.getThere = lambda M: np.r_[call3(fun, M.gridFx), call3(fun, M.gridFy), call3(fun, M.gridFz)]
-#         self.getAve = lambda M: M.aveN2F
-#         self.orderTest()
+    def test_orderN2F(self):
+        self.name = "Averaging 3D: N2F"
+        fun = lambda x, y, z: (np.cos(x)+np.sin(y)+np.exp(z))
+        self.getHere = lambda M: call3(fun, M.gridN)
+        self.getThere = lambda M: np.r_[call3(fun, M.gridFx), call3(fun, M.gridFy), call3(fun, M.gridFz)]
+        self.getAve = lambda M: M.aveN2F
+        self.orderTest()
 
-#     def test_orderN2E(self):
-#         self.name = "Averaging 3D: N2E"
-#         fun = lambda x, y, z: (np.cos(x)+np.sin(y)+np.exp(z))
-#         self.getHere = lambda M: call3(fun, M.gridN)
-#         self.getThere = lambda M: np.r_[call3(fun, M.gridEx), call3(fun, M.gridEy), call3(fun, M.gridEz)]
-#         self.getAve = lambda M: M.aveN2E
-#         self.orderTest()
+    def test_orderN2E(self):
+        self.name = "Averaging 3D: N2E"
+        fun = lambda x, y, z: (np.cos(x)+np.sin(y)+np.exp(z))
+        self.getHere = lambda M: call3(fun, M.gridN)
+        self.getThere = lambda M: np.r_[call3(fun, M.gridEx), call3(fun, M.gridEy), call3(fun, M.gridEz)]
+        self.getAve = lambda M: M.aveN2E
+        self.orderTest()
 
     def test_orderF2CC(self):
         self.name = "Averaging 3D: F2CC"
@@ -755,16 +741,15 @@ class TestAveraging3D(discretize.Tests.OrderTest):
         self.getAve = lambda M: M.aveE2CCV
         self.orderTest()
 
-    # def test_orderCC2F(self):
-    #     self.name = "Averaging 3D: CC2F"
-    #     fun = lambda x, y, z: (np.cos(x)+np.sin(y)+np.exp(z))
-    #     self.getHere = lambda M: call3(fun, M.gridCC)
-    #     self.getThere = lambda M: np.r_[call3(fun, M.gridFx), call3(fun, M.gridFy), call3(fun, M.gridFz)]
-    #     self.getAve = lambda M: M.aveCC2F
-    #     self.expectedOrders = 1
-    #     self.orderTest()
-    #     self.expectedOrders = 2
-
+    def test_orderCC2F(self):
+        self.name = "Averaging 3D: CC2F"
+        fun = lambda x, y, z: (np.cos(x)+np.sin(y)+np.exp(z))
+        self.getHere = lambda M: call3(fun, M.gridCC)
+        self.getThere = lambda M: np.r_[call3(fun, M.gridFx), call3(fun, M.gridFy), call3(fun, M.gridFz)]
+        self.getAve = lambda M: M.aveCC2F
+        self.expectedOrders = 1
+        self.orderTest()
+        self.expectedOrders = 2
 
 if __name__ == '__main__':
     unittest.main()

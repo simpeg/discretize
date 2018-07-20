@@ -10,7 +10,6 @@ try:
     from discretize.TreeMesh import TreeMesh as Tree
 except ImportError as e:
     Tree = None
-    pass
 
 import unittest
 import inspect
@@ -120,13 +119,13 @@ def setupMesh(meshType, nC, nDim):
         def function(cell):
             if 'notatree' in meshType:
                 return levels - 1
-            r = cell.center - np.array([0.5]*len(cell.center))
+            r = cell.center - 0.5
             dist = np.sqrt(r.dot(r))
             if dist < 0.2:
                 return levels
             return levels - 1
-        mesh.refine(function, balance=False)
-        mesh.number(balance=False)
+        mesh.refine(function)
+        # mesh.number()
         # mesh.plotGrid(showIt=True)
         max_h = max([np.max(hi) for hi in mesh.h])
     return mesh, max_h
@@ -214,7 +213,8 @@ class OrderTest(unittest.TestCase):
 
 
         """
-        assert type(self.meshTypes) == list, 'meshTypes must be a list'
+        if not isinstance(self.meshTypes, list):
+            raise TypeError('meshTypes must be a list')
         if type(self.tolerance) is not list:
             self.tolerance = np.ones(len(self.meshTypes))*self.tolerance
 

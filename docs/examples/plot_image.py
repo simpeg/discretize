@@ -14,7 +14,6 @@ def run(plotIt=True):
     v = discretize.utils.mkvc(v)
 
     O = discretize.TreeMesh([32, 32])
-    O.refine(1)
 
     def function(cell):
         if (
