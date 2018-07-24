@@ -19,7 +19,7 @@ env:
 script:
   - echo $TRAVIS_BRANCH
   - echo $MASTER_BRANCH
-  - echo "$TRAVIS_BRANCH" == "$MASTER_BRANCH"
+  - echo "$TRAVIS_BRANCH = $MASTER_BRANCH"
 #     - TEST_DIR=tests/cyl
 #     - TEST_DIR=tests/tree
 #     - TEST_DIR=tests/docs
