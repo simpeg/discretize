@@ -47,11 +47,11 @@ after_success:
   - bash <(curl -s https://codecov.io/bash)
 
   # early exit if not on a deplotment branch
-  - if ![ "$TRAVIS_BRANCH" = "$MASTER_BRANCH" -o "$TRAVIS_TAG" = "true" ]; then
+  - if [ "$TRAVIS_BRANCH" == "$MASTER_BRANCH" -o "$TRAVIS_TAG" == "true" ]; then
       echo "Not deploying (because this is not a deployment branch)" ;
       exit 0 ;
     fi
-  - if [ "$TRAVIS_PULL_REQUEST" = "true" ]; then
+  - if [ "$TRAVIS_PULL_REQUEST" == "true" ]; then
       echo "Not deploying (because this is a pull request)" ;
       exit 0 ;
     fi
