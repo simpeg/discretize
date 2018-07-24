@@ -19,9 +19,10 @@ env:
 script:
   - echo $TRAVIS_BRANCH
   - echo $MASTER_BRANCH
-  - echo $TRAVIS_BRANCH = $MASTER_BRANCH
+  - echo [ "$TRAVIS_BRANCH" = "$MASTER_BRANCH" ]
+  - echo [ $TRAVIS_BRANCH" = $MASTER_BRANCH ]
   - echo $TRAVIS_TAG
-  - echo $TRAVIS_TAG = "true"
+  - echo [ "$TRAVIS_TAG" = "true" ]
   - exit 0
 #     - TEST_DIR=tests/cyl
 #     - TEST_DIR=tests/tree
