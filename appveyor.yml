@@ -4,48 +4,45 @@ build: off
 
 environment:
   matrix:
-    - PYTHON: 2.7
-      MINICONDA: C:\Miniconda
-      PYTHON_ARCH: 32
-    - PYTHON: 3.5
-      MINICONDA: C:\Miniconda3
-      PYTHON_ARCH: 32
-    - PYTHON: 3.6
-      MINICONDA: C:\Miniconda3
-      PYTHON_ARCH: 32
-    - PYTHON: 2.7
-      MINICONDA: C:\Miniconda
-      PYTHON_ARCH: 64
-    - PYTHON: 3.5
-      MINICONDA: C:\Miniconda3
-      PYTHON_ARCH: 64
-    - PYTHON: 3.6
-      MINICONDA: C:\Miniconda3
-      PYTHON_ARCH: 64
+    - PYTHON_VERSION: 2.7
+      CONDA: C:\Miniconda
+
+    - PYTHON_VERSION: 3.5
+      CONDA: C:\Miniconda35
+
+    - PYTHON_VERSION: 3.6
+      CONDA: C:\Miniconda36
 
   pypi_password:
     secure: S2mZCxm5LzIF4KFDss/f7g==
 
+image: Visual Studio 2015
+
+platform:
+- x86
+- x64
+
 init:
-  - "ECHO %PYTHON% %MINICONDA%"
+  - ps: if ($Env:PLATFORM -eq "x64") { $Env:CONDA = "${Env:CONDA}-x64" }
+  - ps: Write-Host $Env:PYTHON_VERSION
+  - ps: Write-Host $Env:CONDA
+  - ps: Write-Host $Env:PLATFORM
 
 install:
-  - "set PATH=%MINICONDA%;%MINICONDA%\\Scripts;%PATH%"
+  # Load the conda root environment, configure and install some packages
+  - '"%CONDA%\Scripts\activate.bat"'
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda info -a
-  - "conda create -q -n test-environment python=%PYTHON% numpy scipy matplotlib cython ipython pillow wheel"
-  - activate test-environment
-  - conda install --quiet --yes -c menpo vtk
+  - conda install numpy scipy matplotlib cython ipython pillow wheel
+  - conda install -c menpo vtk
   - pip install -r requirements_dev.txt
   - python setup.py install
 
-  # Use the Agg backend in Matplotlib
-  - "set MPLBACKEND=Agg"
-
 test_script:
   - cd tests
-  - nosetests base -v -s
+  - nosetests -v -s base/test_interpolation.py base/test_tensor_io.py
+  - nosetests -v -s tree
   - cd ..
 
 after_test:
@@ -53,7 +50,7 @@ after_test:
   # Again, you only need build.cmd if you're building C extensions for
   # 64-bit Python 3.3/3.4. And you need to use %PYTHON% to get the correct
   # interpreter
-  - python setup.py sdist bdist_wheel
+  - python setup.py bdist_wheel
 
 artifacts:
   # bdist_wheel puts your built wheel in the dist directory
@@ -62,13 +59,9 @@ artifacts:
 deploy_script:
   # following https://github.com/AndrewAnnex/SpiceyPy/blob/master/appveyor.yml
   - echo "Starting Artifact deployment"
-  - echo [distutils] > %USERPROFILE%\\.pypirc
-  - echo index-servers = >> %USERPROFILE%\\.pypirc
-  - echo   pypi >> %USERPROFILE%\\.pypirc
   - echo [pypi] >> %USERPROFILE%\\.pypirc
-  - echo repository=https://pypi.python.org/pypi >> %USERPROFILE%\\.pypirc
   - echo username=lheagy >> %USERPROFILE%\\.pypirc
   - echo password=%pypi_password% >> %USERPROFILE%\\.pypirc
+  # - twine upload dist\* --skip-existing
   # deploy on dev or master
-  - ps: If ($env:APPVEYOR_REPO_TAG -eq "true" ) { Invoke-Expression "twine upload -r pypi --skip-existing dist/*" 2>$null } Else { write-output "Not on a tag, won't deploy to pypi"}
-  - ps: If ($env:APPVEYOR_REPO_TAG -eq "true" ) { Invoke-Expression "twine upload -r pypi --skip-existing dist/*" 2>$null } Else { write-output "Not on a tag, won't deploy to pypi"}
+  - ps: If ($env:APPVEYOR_REPO_TAG -eq "true" ) { Invoke-Expression "twine upload dist\*.whl --skip-existing" 2>$null } Else { write-output "Not on a tag, won't deploy to pypi"}

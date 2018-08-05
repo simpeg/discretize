@@ -26,7 +26,10 @@ class TestInterpolation2d(discretize.Tests.OrderTest):
     """
 
     name = "Interpolation 2D"
-    LOCS = np.random.rand(50, 2)*0.6+0.2
+    #LOCS = np.random.rand(50, 2)*0.6+0.2
+    #loc_type = 'Ex'
+    X, Y = np.mgrid[0:1:250j, 0:1:250j]
+    LOCS = np.c_[X.reshape(-1), Y.reshape(-1)]
     # LOCS = np.c_[np.ones(100)*0.51, np.linspace(0.3, 0.7, 100)]
     meshTypes = MESHTYPES
     # tolerance = TOLERANCES
@@ -58,9 +61,7 @@ class TestInterpolation2d(discretize.Tests.OrderTest):
         elif 'N' == self.type:
             grid = call2(funX, self.M.gridN)
 
-        P = self.M.getInterpolationMat(self.LOCS, self.type)
-        # print(P)
-        comp = P*grid
+        comp = self.M.getInterpolationMat(self.LOCS, self.type)*grid
 
         err = np.linalg.norm((comp - ana), np.inf)
         if plotIt:
@@ -76,6 +77,18 @@ class TestInterpolation2d(discretize.Tests.OrderTest):
             plt.show()
         return err
 
+    def test_orderCC(self):
+        self.type = 'CC'
+        self.name = 'Interpolation 2D: CC'
+        self.orderTest()
+
+    def test_orderN(self):
+        self.type = 'N'
+        self.name = 'Interpolation 2D: N'
+        self.expectedOrders = 2
+        self.orderTest()
+        self.expectedOrders = 1
+
     def test_orderFx(self):
         self.type = 'Fx'
         self.name = 'TreeMesh Interpolation 2D: Fx'
@@ -86,10 +99,22 @@ class TestInterpolation2d(discretize.Tests.OrderTest):
         self.name = 'TreeMesh Interpolation 2D: Fy'
         self.orderTest()
 
+    def test_orderEx(self):
+        self.type = 'Ex'
+        self.name = 'TreeMesh Interpolation 2D: Ex'
+        self.orderTest()
+
+    def test_orderEy(self):
+        self.type = 'Ey'
+        self.name = 'TreeMesh Interpolation 2D: Ey'
+        self.orderTest()
+
 
 class TestInterpolation3D(discretize.Tests.OrderTest):
     name = "Interpolation"
-    LOCS = np.random.rand(50, 3)*0.6+0.2
+    #LOCS = np.random.rand(50, 3)*0.6+0.2
+    X, Y, Z = np.mgrid[0:1:50j, 0:1:50j, 0:1:50j]
+    LOCS = np.c_[X.reshape(-1), Y.reshape(-1), Z.reshape(-1)]
     meshTypes = MESHTYPES
     # tolerance = TOLERANCES
     meshDimension = 3
@@ -120,15 +145,16 @@ class TestInterpolation3D(discretize.Tests.OrderTest):
         elif 'N' == self.type:
             grid = call3(funX, self.M.gridN)
 
-        comp = self.M.getInterpolationMat(self.LOCS, self.type)*grid
+        A = self.M.getInterpolationMat(self.LOCS, self.type)
+        comp = A*grid
 
         err = np.linalg.norm((comp - ana), np.inf)
         return err
 
     def test_orderCC(self):
         self.type = 'CC'
-        self.name = 'Interpolation 3D: CC'
         self.expectedOrders = 1
+        self.name = 'Interpolation 3D: CC'
         self.orderTest()
         self.expectedOrders = 2
 

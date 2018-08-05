@@ -12,15 +12,13 @@ when hanging faces are included.
 """
 import discretize
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 def run(plotIt=True, n=60):
 
     M = discretize.TreeMesh([[(1, 16)], [(1, 16)]], levels=4)
-    M._refineCell([0, 0, 0])
-    M._refineCell([0, 0, 1])
-    M._refineCell([4, 4, 2])
-    M.__dirty__ = True
+    M.insert_cells(np.array([5., 5.]), np.array([3]))
     M.number()
 
     if plotIt:

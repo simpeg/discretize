@@ -10,10 +10,26 @@ try:
     _interpmat2D = pyx._interpmat2D
     _interpmat3D = pyx._interpmat3D
     _interpCython = True
-except ImportError:
-    print("""Interpolation will not work, use setup.py to compile the cython:
+except ImportError as err:
+    print(err)
+    import os
+    # Check if being called from non-standard location (i.e. a git repository)
+    # is tree_ext.cpp here? will not be in the folder if installed to site-packages...
+    file_test = os.path.dirname(os.path.abspath(__file__))+"/interputils_cython.pyx"
+    if os.path.isfile(file_test):
+        # Then we are being run from a repository
+        print(
+            """
+            Unable to import interputils_cython.
 
-        python setup.py install""")
+            It would appear that discretize is being imported from its repository.
+            If this is intentional, you need to run:
+
+            python setup.py build_ext --inplace
+
+            to build the cython code.
+            """
+            )
     _interpCython = False
 
 

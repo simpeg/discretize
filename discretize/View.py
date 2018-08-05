@@ -621,7 +621,7 @@ class TensorView(object):
                 )
             if lines:
                 ax.plot(
-                    self.gridN, np.ones(self.nN), color="C0", linestyle=".-"
+                    self.gridN, np.ones(self.nN), color="C0", linestyle="-"
                 )
             ax.set_xlabel('x1')
         elif self.dim == 2:
