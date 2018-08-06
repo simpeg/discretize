@@ -1074,3 +1074,256 @@ class CurviView(object):
         if showIt:
             plt.show()
         return [scalarMap]
+
+
+def plot_slicer(grid, xslice=None, yslice=None, zslice=None, transparent=None):
+    """Plot slices of a 3D volume, interactively (scroll wheel).
+
+    If called from a notebook, make sure to set
+
+        %matplotlib notebook
+
+
+    Parameters
+    ----------
+    grid : mesh.Grid structure.
+        - sigma : the actual data.
+        - xc, yc, zc : center points of cells.
+        - xx, yy, zz : edges of cells.
+
+    xslice, yslice, zslice : floats, optional
+        Initial slice locations (in axis units);
+        defaults to the middle of the volume.
+
+    transparent : list of floats, optional
+        Values to be removed. E.g. air, water.
+
+    """
+    # Initiate figure
+    fig = plt.figure()
+
+    # Populate figure
+    tracker = Slicer(grid, xslice, yslice, zslice, transparent)
+
+    # Connect figure to scrolling
+    fig.canvas.mpl_connect('scroll_event', tracker.onscroll)
+
+    # Show figure
+    plt.show()
+
+
+class Slicer(object):
+    """For interactive slices"""
+    # TODO GENERAL REMARKS
+    #
+    # - "TODO replace" :
+    #       Places where the parameter has to be replaced by the corresponding
+    #       discretize parameter
+    #
+    # - "TODO linlog":
+    #       At the moment, it is in log10, because I use it for conductivities.
+    #       However, this might have to be generalized.
+
+    def __init__(self, grid, xslice, yslice, zslice, transparent):
+        """Initialize interactive figure."""
+
+        # 1. Store relevant data
+
+        # Store data
+        self.sigma = grid.sigma.copy()  # TODO replace
+
+        # Axis (in km)
+        self.x = grid.xx/1000   # TODO replace
+        self.y = grid.yy/1000   # TODO replace
+        self.z = grid.zz/1000   # TODO replace
+        self.xc = grid.xc/1000  # TODO replace
+        self.yc = grid.yc/1000  # TODO replace
+        self.zc = grid.zc/1000  # TODO replace
+
+        # Store initial slice indices
+        if xslice:
+            self.xind = np.argmin(np.abs(self.xc - xslice))
+        else:
+            self.xind = self.xc.size // 2
+        if xslice:
+            self.yind = np.argmin(np.abs(self.yc - yslice))
+        else:
+            self.yind = self.yc.size // 2
+        if zslice:
+            self.zind = np.argmin(np.abs(self.zc - zslice))
+        else:
+            self.zind = self.zc.size // 2
+
+        # Remove transparent value
+        # Note: This could be extended; e.g. to
+        #       - permit ranges;
+        #       - create a range-slider on the plot.
+        if self.transparent:
+            for value in transparent:
+                self.sigma[self.sigma == value] = np.nan
+
+        # 2. Start figure
+
+        # Create subplots
+        plt.subplots_adjust(wspace=.075, hspace=.1)
+
+        # X-Y
+        self.ax1 = plt.subplot2grid((3, 3), (0, 0), colspan=2, rowspan=2)
+        plt.ylabel('y-distance (km)')
+        self.ax1.xaxis.set_ticks_position('top')
+        plt.setp(self.ax1.get_xticklabels(), visible=False)
+
+        # X-Z
+        self.ax2 = plt.subplot2grid((3, 3), (2, 0), colspan=2, sharex=self.ax1)
+        self.ax2.yaxis.set_ticks_position('both')
+        plt.gca().invert_yaxis()
+        plt.xlabel('x-distance (km)')
+        plt.ylabel('Depth (km)')
+
+        # Z-Y
+        self.ax3 = plt.subplot2grid((3, 3), (0, 2), rowspan=2, sharey=self.ax1)
+        self.ax3.yaxis.set_ticks_position('right')
+        self.ax3.xaxis.set_ticks_position('both')
+        plt.setp(self.ax3.get_yticklabels(), visible=False)
+
+        # Title
+        plt.suptitle('Interactive Slicer')  # TODO Insert something meaningful
+
+        # Cross-line properties  # TODO Depending on the colormap this might
+        #                               have to be adjusted.
+        self.clprops = {'c': 'r', 'lw': 1, 'dashes': [1, 4], 'zorder': 10}
+
+        # Store min and max of all data  # TODO linlog
+        self.pcm_props = {'vmin': np.log10(np.min(self.data)),
+                          'vmax': np.log10(np.max(self.data))}
+
+        # Create colorbar  # TODO linlog
+        plt.sca(self.ax3)
+        plt.pcolormesh(self.z, self.y, np.log10(self.data[self.xind, :, :]),
+                       **self.pcm_props)
+        plt.colorbar(label='$\log_{10}$ [Conductivity (S/m)]', pad=0.15)
+        # TODO label of colorbar has to be adjusted to data type
+
+        # Initial draw
+        self.update_xy()
+        self.update_xz()
+        self.update_zy()
+
+        # 3. Keep depth in X-Z and Z-Y in sync
+
+        def do_adjust():
+            """Return True if z-axis in X-Z and Z-Y are different."""
+            one = np.array(self.ax2.get_ylim())
+            two = np.array(self.ax3.get_xlim())[::-1]
+            return sum(abs(one - two)) > 0.001  # Difference at least 1 m.
+
+        def on_ylims_changed(ax):
+            """Adjust Z-Y if X-Z changed."""
+            if do_adjust():
+                self.ax3.set_xlim([self.ax2.get_ylim()[1],
+                                   self.ax2.get_ylim()[0]])
+
+        def on_xlims_changed(ax):
+            """Adjust X-Z if Z-Y changed."""
+            if do_adjust():
+                self.ax2.set_ylim([self.ax3.get_xlim()[1],
+                                   self.ax3.get_xlim()[0]])
+
+        self.ax3.callbacks.connect('xlim_changed', on_xlims_changed)
+        self.ax2.callbacks.connect('ylim_changed', on_ylims_changed)
+
+    def onscroll(self, event):
+        """Update index and data when scrolling."""
+
+        # Get scroll direction
+        if event.button == 'up':
+            pm = 1
+        else:
+            pm = -1
+
+        # Update slice index depending on subplot over which mouse is
+        if event.inaxes == self.ax1:    # X-Y
+            self.zind = (self.zind + pm) % (self.zc.size - 1)
+            self.update_xy()
+        elif event.inaxes == self.ax2:  # X-Z
+            self.yind = (self.yind + pm) % (self.yc.size - 1)
+            self.update_xz()
+        elif event.inaxes == self.ax3:  # Z-Y
+            self.xind = (self.xind + pm) % (self.xc.size - 1)
+            self.update_zy()
+
+        plt.draw()
+
+    def update_xy(self):
+        """Update plot for change in Z-index."""
+
+        # Clean up
+        self.clear_element('xy_pc')
+        self.clear_element('xz_ah')
+        self.clear_element('zy_av')
+
+        # Draw X-Y slice
+        plt.sca(self.ax1)
+        zdat = np.log10(self.data[:, :, self.zind]).transpose()  # TODO linlog
+        self.xy_pc = plt.pcolormesh(self.x, self.y, zdat, **self.pcm_props)
+
+        # Draw Z-slice intersection in X-Z plot
+        plt.sca(self.ax2)
+        self.xz_ah = plt.axhline(self.zc[self.zind], self.x[0], self.x[-1],
+                                 **self.clprops)
+
+        # Draw Z-slice intersection in Z-Y plot
+        plt.sca(self.ax3)
+        self.zy_av = plt.axvline(self.zc[self.zind], self.y[0], self.y[-1],
+                                 **self.clprops)
+
+    def update_xz(self):
+        """Update plot for change in Y-index."""
+
+        # Clean up
+        self.clear_element('xz_pc')
+        self.clear_element('zy_ah')
+        self.clear_element('xy_ah')
+
+        # Draw X-Z slice
+        plt.sca(self.ax2)
+        ydat = np.log10(self.data[:, self.yind, :]).transpose()  # TODO linlog
+        self.xz_pc = plt.pcolormesh(self.x, self.z, ydat, **self.pcm_props)
+
+        # Draw X-slice intersection in X-Y plot
+        plt.sca(self.ax1)
+        self.xy_ah = plt.axhline(self.yc[self.yind], self.x[0], self.x[-1],
+                                 **self.clprops)
+
+        # Draw X-slice intersection in Z-Y plot
+        plt.sca(self.ax3)
+        self.zy_ah = plt.axhline(self.yc[self.yind], self.z[0], self.z[-1],
+                                 **self.clprops)
+
+    def update_zy(self):
+        """Update plot for change in X-index."""
+
+        # Clean up
+        self.clear_element('zy_pc')
+        self.clear_element('xz_av')
+        self.clear_element('xy_av')
+
+        # Draw Z-Y slice
+        plt.sca(self.ax3)
+        xdat = np.log10(self.data[self.xind, :, :])  # TODO linlog
+        self.zy_pc = plt.pcolormesh(self.z, self.y, xdat, **self.pcm_props)
+
+        # Draw Y-slice intersection in X-Y plot
+        plt.sca(self.ax1)
+        self.xy_av = plt.axvline(self.xc[self.xind], self.y[0], self.y[-1],
+                                 **self.clprops)
+
+        # Draw Y-slice intersection in X-Z plot
+        plt.sca(self.ax2)
+        self.xz_av = plt.axvline(self.xc[self.xind], self.z[0], self.z[-1],
+                                 **self.clprops)
+
+    def clear_element(self, name):
+        """Remove element <name> from plot if it exists."""
+        if hasattr(self, name):
+            getattr(self, name).remove()
