@@ -33,6 +33,13 @@ Interpolation Utilities
     :members:
     :undoc-members:
 
+Coordinate Utilities
+====================
+
+.. automodule:: discretize.utils.coordutils
+    :members:
+    :undoc-members:
+
 Testing
 =======
 

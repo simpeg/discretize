@@ -8,7 +8,7 @@ tol = 1e-15
 
 class coorutilsTest(unittest.TestCase):
 
-    def test_rotationMatrixFromNormals(self):
+    def test_rotation_matrix_from_normals(self):
         np.random.seed(0)
         v0 = np.random.rand(3)
         v0 *= 1./np.linalg.norm(v0)
@@ -17,13 +17,13 @@ class coorutilsTest(unittest.TestCase):
         v1 = np.random.rand(3)
         v1 *= 1./np.linalg.norm(v1)
 
-        Rf = utils.coordutils.rotationMatrixFromNormals(v0, v1)
-        Ri = utils.coordutils.rotationMatrixFromNormals(v1, v0)
+        Rf = utils.coordutils.rotation_matrix_from_normals(v0, v1)
+        Ri = utils.coordutils.rotation_matrix_from_normals(v1, v0)
 
         self.assertTrue(np.linalg.norm(utils.mkvc(Rf.dot(v0) - v1)) < tol)
         self.assertTrue(np.linalg.norm(utils.mkvc(Ri.dot(v1) - v0)) < tol)
 
-    def test_rotatePointsFromNormals(self):
+    def test_rotate_points_from_normals(self):
         np.random.seed(10)
         v0 = np.random.rand(3)
         v0 *= 1./np.linalg.norm(v0)
@@ -32,7 +32,7 @@ class coorutilsTest(unittest.TestCase):
         v1 = np.random.rand(3)
         v1 *= 1./np.linalg.norm(v1)
 
-        v2 = utils.mkvc(utils.coordutils.rotatePointsFromNormals(utils.mkvc(v0, 2).T, v0, v1))
+        v2 = utils.mkvc(utils.coordutils.rotate_points_from_normals(utils.mkvc(v0, 2).T, v0, v1))
 
         self.assertTrue(np.linalg.norm(v2-v1) < tol)
 
@@ -50,29 +50,29 @@ class coorutilsTest(unittest.TestCase):
         XYZ0 = scale * n0
         XYZ1 = scale * n1
 
-        XYZ2 = utils.coordutils.rotatePointsFromNormals(XYZ0, n0, n1)
+        XYZ2 = utils.coordutils.rotate_points_from_normals(XYZ0, n0, n1)
         self.assertTrue(np.linalg.norm(utils.mkvc(XYZ1) - utils.mkvc(XYZ2))/np.linalg.norm(utils.mkvc(XYZ1)) < tol)
 
-    def test_rotate_vec_cyl2cart(self):
+    def test_rotate_vec_cylindrical2cartesian(self):
         vec = np.r_[1., 0, 0].reshape(1, 3)
         grid = np.r_[1., np.pi/4, 0].reshape(1, 3)
         self.assertTrue(np.allclose(
-            utils.cyl2cart(grid, vec), np.sqrt(2)/2 * np.r_[1, 1, 0]
+            utils.cylindrical2cartesian(grid, vec), np.sqrt(2)/2 * np.r_[1, 1, 0]
         ))
         self.assertTrue(np.allclose(
-            utils.cyl2cart(grid), np.sqrt(2)/2 * np.r_[1, 1, 0]
+            utils.cylindrical2cartesian(grid), np.sqrt(2)/2 * np.r_[1, 1, 0]
         ))
 
         vec = np.r_[0, 1, 2].reshape(1, 3)
         grid = np.r_[1, np.pi/4, 0].reshape(1, 3)
         self.assertTrue(np.allclose(
-            utils.cyl2cart(grid, vec), np.r_[-np.sqrt(2)/2, np.sqrt(2)/2, 2]
+            utils.cylindrical2cartesian(grid, vec), np.r_[-np.sqrt(2)/2, np.sqrt(2)/2, 2]
         ))
 
         vec = np.r_[1., 0]
         grid = np.r_[1., np.pi/4].reshape(1, 2)
         self.assertTrue(np.allclose(
-            utils.cyl2cart(grid, vec), np.sqrt(2)/2 * np.r_[1, 1]
+            utils.cylindrical2cartesian(grid, vec), np.sqrt(2)/2 * np.r_[1, 1]
         ))
 
 

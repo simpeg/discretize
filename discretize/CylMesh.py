@@ -6,7 +6,7 @@ import scipy.sparse as sp
 from scipy.constants import pi
 
 from .utils import (
-    kron3, ndgrid, av, speye, ddx, sdiag, interpmat, spzeros, cyl2cart
+    kron3, ndgrid, av, speye, ddx, sdiag, interpmat, spzeros, cylindrical2cartesian
 )
 from .TensorMesh import BaseTensorMesh, BaseRectangularMesh
 from .InnerProducts import InnerProducts
@@ -1534,7 +1534,7 @@ class CylMesh(
         grid = getattr(self, 'grid{}'.format(locType)).copy()
         if theta_shift is not None:
             grid[:, 1] = grid[:, 1] - theta_shift
-        return cyl2cart(grid)  # TODO: account for cartesian origin
+        return cylindrical2cartesian(grid)  # TODO: account for cartesian origin
 
     def getInterpolationMatCartMesh(self, Mrect, locType='CC', locTypeTo=None):
         """

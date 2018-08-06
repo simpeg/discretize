@@ -15,6 +15,6 @@ from .meshutils import (
 from .curvutils import volTetra, faceInfo, indexCube
 from .interputils import interpmat
 from .coordutils import (
-    rotatePointsFromNormals, rotationMatrixFromNormals, cyl2cart, cart2cyl
-    # rotate_vec_cyl2cart
+    rotate_points_from_normals, rotation_matrix_from_formals,
+    cylindrical2cartesian, cartesian2cylindrical
 )

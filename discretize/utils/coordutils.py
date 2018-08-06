@@ -2,10 +2,23 @@ import numpy as np
 from .matutils import mkvc
 
 
-def cyl2cart(grid, vec=None):
+def cylindrical2cartesian(grid, vec=None):
     """
     Take a grid defined in cylindrical coordinates :math:`(r, \theta, z)` and
-    transform it to cartesian coordinates.
+    transform it to cartesian coordinates :math:`(x, y, z)`. If no vector is
+    provided, the grid is rotated to cartesian coordinates
+
+    **Required**
+    :param numpy.ndarray grid: :math:`(r, \theta, z)` grid locations in
+                               cylindrical coordinates
+
+    **Optional**
+    :param numpy.ndarray vec: vector defined on the :math:`(r, \theta, z)` grid
+                              to be rotated
+
+    **Returns**
+    :rtype: numpy.ndaray
+    :returns: vector, if provided, or grid defined in cartesian coordinates
     """
     grid = np.atleast_2d(grid)
 
@@ -29,10 +42,23 @@ def cyl2cart(grid, vec=None):
 
     return np.vstack(newvec).T
 
-def cart2cyl(grid, vec=None):
+def cartesian2cylindrical(grid, vec=None):
     """
-    Take a grid defined in cartesian coordinates and transform it to cyl
-    coordinates
+    Take a grid defined in cartesial coordinates :math:`(x, y, z)` and
+    transforms it to cylindrical coordinates :math:`(r, \theta, z)`.
+    If no vector is provided, the grid is rotated to cylindrical coordinates
+
+    **Required**
+    :param numpy.ndarray grid: :math:`(x, y, z)` grid locations in
+                               cylindrical coordinates
+
+    **Optional**
+    :param numpy.ndarray vec: vector defined on the :math:`(r, \theta, z)` grid
+                              to be rotated
+
+    **Returns**
+    :rtype: numpy.ndaray
+    :returns: vector, if provided, or grid defined in cylindrical coordinates
     """
     if vec is None:
         vec = grid
@@ -49,7 +75,7 @@ def cart2cyl(grid, vec=None):
     ])
 
 
-def rotationMatrixFromNormals(v0, v1, tol=1e-20):
+def rotation_matrix_from_normals(v0, v1, tol=1e-20):
     """
     Performs the minimum number of rotations to define a rotation from the
     direction indicated by the vector n0 to the direction indicated by n1.
@@ -59,8 +85,8 @@ def rotationMatrixFromNormals(v0, v1, tol=1e-20):
     :param numpy.array v0: vector of length 3
     :param numpy.array v1: vector of length 3
     :param tol = 1e-20: tolerance. If the norm of the cross product between the two vectors is below this, no rotation is performed
-    :rtype: numpy.array, 3x3
-    :return: rotation matrix which rotates the frame so that n0 is aligned with n1
+    :rtype: numpy.ndarray
+    :return: 3x3 rotation matrix which rotates the frame so that n0 is aligned with n1
     """
 
     # ensure both n0, n1 are vectors of length 1
@@ -95,18 +121,18 @@ def rotationMatrixFromNormals(v0, v1, tol=1e-20):
     return np.eye(3, dtype=float) + sinT*ux + (1.-cosT)*(ux.dot(ux))
 
 
-def rotatePointsFromNormals(XYZ, n0, n1, x0=np.r_[0., 0., 0.]):
+def rotate_points_from_normals(XYZ, n0, n1, x0=np.r_[0., 0., 0.]):
     """
         rotates a grid so that the vector n0 is aligned with the vector n1
 
         :param numpy.array n0: vector of length 3, should have norm 1
         :param numpy.array n1: vector of length 3, should have norm 1
         :param numpy.array x0: vector of length 3, point about which we perform the rotation
-        :rtype: numpy.array, 3x3
-        :return: rotation matrix which rotates the frame so that n0 is aligned with n1
+        :rtype: numpy.array
+        :return: 3x3 rotation matrix which rotates the frame so that n0 is aligned with n1
     """
 
-    R = rotationMatrixFromNormals(n0, n1)
+    R = rotation_matrix_from_normals(n0, n1)
 
     assert XYZ.shape[1] == 3, "Grid XYZ should be 3 wide"
     assert len(x0) == 3, "x0 should have length 3"
