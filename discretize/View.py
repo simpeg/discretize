@@ -618,8 +618,8 @@ class TensorView(object):
                     marker="^", linestyle=""
                 )
 
-            line_color = kwargs.get('line_color', 'C0')
-            line_width = kwargs.get('line_width', 1.)
+            color = kwargs.get('color', 'C0')
+            linewidth = kwargs.get('linewidth', 1.)
             # Plot the grid lines
             if lines:
                 NN = self.r(self.gridN, 'N', 'N', 'M')
@@ -629,7 +629,7 @@ class TensorView(object):
                 Y2 = np.c_[mkvc(NN[1][:, 0]), mkvc(NN[1][:, self.nCy]), mkvc(NN[1][:, 0])*np.nan].flatten()
                 X = np.r_[X1, X2]
                 Y = np.r_[Y1, Y2]
-                ax.plot(X, Y, color=line_color, linestyle="-", lw=line_width)
+                ax.plot(X, Y, color=color, linestyle="-", lw=linewidth)
 
             ax.set_xlabel('x1')
             ax.set_ylabel('x2')
@@ -910,16 +910,16 @@ for reference, see: http://matplotlib.org/examples/pylab_examples/polar_demo.htm
             mkvc(NN[1][0, :])*np.nan
         ].flatten()
 
-        line_color = kwargs.get('line_color', 'C0')
-        line_width = kwargs.get('line_width', 1.)
-        ax.plot(Y1, X1, linestyle="-", color=line_color, lw=line_width)
+        color = kwargs.get('color', 'C0')
+        linewidth = kwargs.get('linewidth', 1.)
+        ax.plot(Y1, X1, linestyle="-", color=color, lw=linewidth)
 
         # circles
         n = 100
         XY2 = [
             ax.plot(
                 np.linspace(0., np.pi*2, n), r*np.ones(n), linestyle="-",
-                color=line_color, lw=line_width
+                color=color, lw=linewidth
             )
             for r in self.vectorNx
         ]
