@@ -696,6 +696,40 @@ class TensorView(object):
         return ax
 
 
+    def plot3DSlicer(self, v, xslice=None, yslice=None, zslice=None,
+                     transparent=None):
+        """Plot slices of a 3D volume, interactively (scroll wheel).
+
+        If called from a notebook, make sure to set
+
+            %matplotlib notebook
+
+
+
+        Parameters
+        ----------
+
+        xslice, yslice, zslice : floats, optional
+            Initial slice locations (in axis units);
+            defaults to the middle of the volume.
+
+        transparent : list of floats, optional
+            Values to be removed. E.g. air, water.
+
+        """
+        # Initiate figure
+        fig = plt.figure()
+
+        # Populate figure
+        tracker = Slicer(self, v, xslice, yslice, zslice, transparent)
+
+        # Connect figure to scrolling
+        fig.canvas.mpl_connect('scroll_event', tracker.onscroll)
+
+        # Show figure
+        plt.show()
+
+
 class CylView(object):
 
     def _plotCylTensorMesh(self, plotType, *args, **kwargs):
@@ -1076,42 +1110,6 @@ class CurviView(object):
         return [scalarMap]
 
 
-def plot_slicer(grid, xslice=None, yslice=None, zslice=None, transparent=None):
-    """Plot slices of a 3D volume, interactively (scroll wheel).
-
-    If called from a notebook, make sure to set
-
-        %matplotlib notebook
-
-
-    Parameters
-    ----------
-    grid : mesh.Grid structure.
-        - sigma : the actual data.
-        - xc, yc, zc : center points of cells.
-        - xx, yy, zz : edges of cells.
-
-    xslice, yslice, zslice : floats, optional
-        Initial slice locations (in axis units);
-        defaults to the middle of the volume.
-
-    transparent : list of floats, optional
-        Values to be removed. E.g. air, water.
-
-    """
-    # Initiate figure
-    fig = plt.figure()
-
-    # Populate figure
-    tracker = Slicer(grid, xslice, yslice, zslice, transparent)
-
-    # Connect figure to scrolling
-    fig.canvas.mpl_connect('scroll_event', tracker.onscroll)
-
-    # Show figure
-    plt.show()
-
-
 class Slicer(object):
     """For interactive slices"""
     # TODO GENERAL REMARKS
@@ -1124,21 +1122,21 @@ class Slicer(object):
     #       At the moment, it is in log10, because I use it for conductivities.
     #       However, this might have to be generalized.
 
-    def __init__(self, grid, xslice, yslice, zslice, transparent):
+    def __init__(self, mesh, v, xslice, yslice, zslice, transparent):
         """Initialize interactive figure."""
 
         # 1. Store relevant data
 
-        # Store data
-        self.sigma = grid.sigma.copy()  # TODO replace
+        # Store data in self
+        self.values = v.reshape(mesh.nCx, mesh.nCy, mesh.nCz, order='F')
 
-        # Axis (in km)
-        self.x = grid.xx/1000   # TODO replace
-        self.y = grid.yy/1000   # TODO replace
-        self.z = grid.zz/1000   # TODO replace
-        self.xc = grid.xc/1000  # TODO replace
-        self.yc = grid.yc/1000  # TODO replace
-        self.zc = grid.zc/1000  # TODO replace
+        # Axis (in m)
+        self.x = mesh.vectorNx  # x-node locations
+        self.y = mesh.vectorNy  # y-node locations
+        self.z = mesh.vectorNz  # z-node locations
+        self.xc = mesh.vectorCCx  # x-cell center locations
+        self.yc = mesh.vectorCCy  # y-cell center locations
+        self.zc = mesh.vectorCCz  # z-cell center locations
 
         # Store initial slice indices
         if xslice:
@@ -1158,9 +1156,9 @@ class Slicer(object):
         # Note: This could be extended; e.g. to
         #       - permit ranges;
         #       - create a range-slider on the plot.
-        if self.transparent:
+        if transparent:
             for value in transparent:
-                self.sigma[self.sigma == value] = np.nan
+                self.values[self.values == value] = np.nan
 
         # 2. Start figure
 
@@ -1169,7 +1167,7 @@ class Slicer(object):
 
         # X-Y
         self.ax1 = plt.subplot2grid((3, 3), (0, 0), colspan=2, rowspan=2)
-        plt.ylabel('y-distance (km)')
+        plt.ylabel('y')
         self.ax1.xaxis.set_ticks_position('top')
         plt.setp(self.ax1.get_xticklabels(), visible=False)
 
@@ -1177,8 +1175,8 @@ class Slicer(object):
         self.ax2 = plt.subplot2grid((3, 3), (2, 0), colspan=2, sharex=self.ax1)
         self.ax2.yaxis.set_ticks_position('both')
         plt.gca().invert_yaxis()
-        plt.xlabel('x-distance (km)')
-        plt.ylabel('Depth (km)')
+        plt.xlabel('x')
+        plt.ylabel('z')
 
         # Z-Y
         self.ax3 = plt.subplot2grid((3, 3), (0, 2), rowspan=2, sharey=self.ax1)
@@ -1194,12 +1192,12 @@ class Slicer(object):
         self.clprops = {'c': 'r', 'lw': 1, 'dashes': [1, 4], 'zorder': 10}
 
         # Store min and max of all data  # TODO linlog
-        self.pcm_props = {'vmin': np.log10(np.min(self.data)),
-                          'vmax': np.log10(np.max(self.data))}
+        self.pcm_props = {'vmin': np.log10(np.min(self.values)),
+                          'vmax': np.log10(np.max(self.values))}
 
         # Create colorbar  # TODO linlog
         plt.sca(self.ax3)
-        plt.pcolormesh(self.z, self.y, np.log10(self.data[self.xind, :, :]),
+        plt.pcolormesh(self.z, self.y, np.log10(self.values[self.xind, :, :]),
                        **self.pcm_props)
         plt.colorbar(label='$\log_{10}$ [Conductivity (S/m)]', pad=0.15)
         # TODO label of colorbar has to be adjusted to data type
@@ -1264,7 +1262,7 @@ class Slicer(object):
 
         # Draw X-Y slice
         plt.sca(self.ax1)
-        zdat = np.log10(self.data[:, :, self.zind]).transpose()  # TODO linlog
+        zdat = np.log10(self.values[:, :, self.zind]).transpose()  # TODO linlog
         self.xy_pc = plt.pcolormesh(self.x, self.y, zdat, **self.pcm_props)
 
         # Draw Z-slice intersection in X-Z plot
@@ -1287,7 +1285,7 @@ class Slicer(object):
 
         # Draw X-Z slice
         plt.sca(self.ax2)
-        ydat = np.log10(self.data[:, self.yind, :]).transpose()  # TODO linlog
+        ydat = np.log10(self.values[:, self.yind, :]).transpose()  # TODO linlog
         self.xz_pc = plt.pcolormesh(self.x, self.z, ydat, **self.pcm_props)
 
         # Draw X-slice intersection in X-Y plot
@@ -1310,7 +1308,7 @@ class Slicer(object):
 
         # Draw Z-Y slice
         plt.sca(self.ax3)
-        xdat = np.log10(self.data[self.xind, :, :])  # TODO linlog
+        xdat = np.log10(self.values[self.xind, :, :])  # TODO linlog
         self.zy_pc = plt.pcolormesh(self.z, self.y, xdat, **self.pcm_props)
 
         # Draw Y-slice intersection in X-Y plot
