@@ -697,7 +697,7 @@ class TensorView(object):
 
 
     def plot3DSlicer(self, v, xslice=None, yslice=None, zslice=None,
-                     transparent=None):
+                     transparent=None, clim=None, pcolorOpts=None):
         """Plot slices of a 3D volume, interactively (scroll wheel).
 
         If called from a notebook, make sure to set
@@ -726,11 +726,11 @@ class TensorView(object):
 
         """
         # Initiate figure
-        fig = plt.figure('SimPEG 3D Slicer')
-        plt.clf()  # Just in case it exists already
+        fig = plt.figure()
 
         # Populate figure
-        tracker = Slicer(self, v, xslice, yslice, zslice, transparent)
+        tracker = Slicer(self, v, xslice, yslice, zslice, transparent, clim,
+                         pcolorOpts)
 
         # Connect figure to scrolling
         fig.canvas.mpl_connect('scroll_event', tracker.onscroll)
@@ -1124,7 +1124,6 @@ class Slicer(object):
 
     MISSING FEATURES
 
-    - pcolorOpts
     - Adjust for logarithmic colour-scale (at the moment is linear).
 
     POSSIBLE IMPROVEMENTS
@@ -1134,7 +1133,7 @@ class Slicer(object):
     """
 
     def __init__(self, mesh, v, xslice=None, yslice=None, zslice=None,
-                 transparent=None):
+                 transparent=None, clim=None, pcolorOpts=None):
         """Initialize interactive figure."""
 
         # 1. Store relevant data
@@ -1218,7 +1217,13 @@ class Slicer(object):
         self.clpropsk = {'c': 'k', 'lw': 1, 'zorder': 11}
 
         # Store min and max of all data
-        self.pc_props = {'vmin': np.nanmin(self.v), 'vmax': np.nanmax(self.v)}
+        if clim is None:
+            clim = [np.nanmin(self.v), np.nanmax(self.v)]
+        self.pc_props = {'vmin': clim[0], 'vmax': clim[1]}
+
+        # Add pcolorOpts
+        if pcolorOpts is not None:
+            self.pc_props.update(pcolorOpts)
 
         # Initial draw
         self.update_xy()
