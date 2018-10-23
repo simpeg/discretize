@@ -698,48 +698,14 @@ class TensorView(object):
 
     def plot3DSlicer(self, v, xslice=None, yslice=None, zslice=None,
                      transparent=None, clim=None, aspect='auto',
-                     pcolorOpts=None):
+                     grid=[2, 2, 1], pcolorOpts=None):
         """Plot slices of a 3D volume, interactively (scroll wheel).
 
         If called from a notebook, make sure to set
 
             %matplotlib notebook
 
-
-        See the class `Slicer` for more information.
-
-        Parameters
-        ----------
-
-        v : array
-            Data array of length self.nC.
-
-        xslice, yslice, zslice : floats, optional
-            Initial slice locations (in meter);
-            defaults to the middle of the volume.
-
-        transparent : list of floats or pairs of floats, optional
-            Values to be removed. E.g. air, water.
-            If single value, only exact matches are removed. Pairs are treated
-            as ranges. E.g. [0.3, [1, 4], [-np.infty, -10]] removes all values
-            equal to 0.3, all values between 1 and 4, and all values smaller
-            than -10.
-
-        clim : None or list of [min, max]
-            For pcolormesh (vmin, vmax).
-
-        aspect : 'auto', 'equal', or num
-            Aspect ratio of subplots. Defaults to 'auto'.
-
-            A list of two values can be provided. The first will be for the
-            XY-plot, the second for the XZ- and YZ-plots, e.g. ['equal', 2] to
-            have the vertical dimension exaggerated by a factor of 2.
-
-            WARNING: For anything else than 'auto', unexpected things might
-            happen when zooming, and the subplot-arrangement won't look pretty.
-
-        pcolorOpts : dictionary
-            Passed to pcolormesh.
+        See the class `discretize.View.Slicer` for more information.
 
         """
         # Initiate figure
@@ -747,7 +713,7 @@ class TensorView(object):
 
         # Populate figure
         tracker = Slicer(self, v, xslice, yslice, zslice, transparent, clim,
-                         aspect, pcolorOpts)
+                         aspect, grid, pcolorOpts)
 
         # Connect figure to scrolling
         fig.canvas.mpl_connect('scroll_event', tracker.onscroll)
@@ -1144,8 +1110,6 @@ class Slicer(object):
         %matplotlib notebook
 
 
-    See the class `Slicer` for more information.
-
     Parameters
     ----------
 
@@ -1175,13 +1139,17 @@ class Slicer(object):
         WARNING: For anything else than 'auto', unexpected things might happen
                  when zooming, and the subplot-arrangement won't look pretty.
 
+    grid : list of 3 int
+        Number of cells occupied by x, y, and z dimension on plt.subplot2grid.
+
     pcolorOpts : dictionary
         Passed to pcolormesh.
 
     """
 
     def __init__(self, mesh, v, xslice=None, yslice=None, zslice=None,
-                 transparent=None, clim=None, aspect='auto', pcolorOpts=None):
+                 transparent=None, clim=None, aspect='auto', grid=[2, 2, 1],
+                 pcolorOpts=None):
         """Initialize interactive figure."""
 
         # 1. Store relevant data
@@ -1246,26 +1214,31 @@ class Slicer(object):
 
         # 2. Start populating figure
 
+        # Get plot2grid dimension
+        figgrid = (grid[0]+grid[2], grid[1]+grid[2])
+
         # Create subplots
         self.fig = plt.gcf()
         self.fig.subplots_adjust(wspace=.075, hspace=.1)
 
         # X-Y
-        self.ax1 = plt.subplot2grid((3, 3), (0, 0), colspan=2, rowspan=2,
-                                    aspect=aspect1)
+        self.ax1 = plt.subplot2grid(figgrid, (0, 0), colspan=grid[1],
+                                    rowspan=grid[0], aspect=aspect1)
         self.ax1.set_ylabel('y')
         self.ax1.xaxis.set_ticks_position('top')
         plt.setp(self.ax1.get_xticklabels(), visible=False)
 
         # X-Z
-        self.ax2 = plt.subplot2grid((3, 3), (2, 0), colspan=2, sharex=self.ax1,
+        self.ax2 = plt.subplot2grid(figgrid, (grid[0], 0), colspan=grid[1],
+                                    rowspan=grid[2], sharex=self.ax1,
                                     aspect=aspect2)
         self.ax2.yaxis.set_ticks_position('both')
         self.ax2.set_xlabel('x')
         self.ax2.set_ylabel('z')
 
         # Z-Y
-        self.ax3 = plt.subplot2grid((3, 3), (0, 2), rowspan=2, sharey=self.ax1,
+        self.ax3 = plt.subplot2grid(figgrid, (0, grid[1]), colspan=grid[2],
+                                    rowspan=grid[0], sharey=self.ax1,
                                     aspect=aspect3)
         self.ax3.yaxis.set_ticks_position('right')
         self.ax3.xaxis.set_ticks_position('both')
