@@ -11,7 +11,7 @@ from discretize import TensorMesh
 
 ###############################################################################
 # Create mesh
-# -----
+# -----------
 #
 # Minimum cell size in each direction
 dx = 1.
@@ -37,8 +37,8 @@ mesh = TensorMesh([hx, hy, hz],[x0,y0,z0])
 print(mesh.nC)
 
 ###############################################################################
-#
 # Define arbitrary function to plot
+# ---------------------------------
 #
 
 X = mesh.gridCC[:,0]
@@ -51,7 +51,7 @@ W = 1 + X + Y - Z**2
 
 ###############################################################################
 # Plot streamlines
-# ----------------------
+# ----------------
 #
 # Create figure
 fig = plt.figure()
@@ -80,4 +80,4 @@ dat = mesh.plotSlice(
 # --------------
 #
 # If you have suggestions for improving this example, please create a
-# `pull request on the example in discretize
+# pull request on the example in discretize
