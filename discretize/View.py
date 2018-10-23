@@ -1149,7 +1149,6 @@ class Slicer(object):
         self.xc = mesh.vectorCCx  # x-cell center locations
         self.yc = mesh.vectorCCy  # y-cell center locations
         self.zc = mesh.vectorCCz  # z-cell center locations
-        self.x0 = mesh.x0         # Origin
 
         # Store initial slice indices
         # If not provided, takes the middle
@@ -1217,9 +1216,6 @@ class Slicer(object):
         # spots.
         self.clpropsw = {'c': 'w', 'lw': 2, 'zorder': 10}
         self.clpropsk = {'c': 'k', 'lw': 1, 'zorder': 11}
-        self.xminmax = self.x[[0, -1]]-self.x0[0]
-        self.yminmax = self.y[[0, -1]]-self.x0[1]
-        self.zminmax = self.z[[0, -1]]-self.x0[2]
 
         # Store min and max of all data
         self.pc_props = {'vmin': np.nanmin(self.v), 'vmax': np.nanmax(self.v)}
@@ -1288,16 +1284,12 @@ class Slicer(object):
         self.xy_pc = self.ax1.pcolormesh(self.x, self.y, zdat, **self.pc_props)
 
         # Draw Z-slice intersection in X-Z plot
-        self.xz_ahw = self.ax2.axhline(self.zc[self.zind], *self.xminmax,
-                                       **self.clpropsw)
-        self.xz_ahk = self.ax2.axhline(self.zc[self.zind], *self.xminmax,
-                                       **self.clpropsk)
+        self.xz_ahw = self.ax2.axhline(self.zc[self.zind], **self.clpropsw)
+        self.xz_ahk = self.ax2.axhline(self.zc[self.zind], **self.clpropsk)
 
         # Draw Z-slice intersection in Z-Y plot
-        self.zy_avw = self.ax3.axvline(self.zc[self.zind], *self.yminmax,
-                                       **self.clpropsw)
-        self.zy_avk = self.ax3.axvline(self.zc[self.zind], *self.yminmax,
-                                       **self.clpropsk)
+        self.zy_avw = self.ax3.axvline(self.zc[self.zind], **self.clpropsw)
+        self.zy_avk = self.ax3.axvline(self.zc[self.zind], **self.clpropsk)
 
     def update_xz(self):
         """Update plot for change in Y-index."""
@@ -1310,16 +1302,12 @@ class Slicer(object):
         self.xz_pc = self.ax2.pcolormesh(self.x, self.z, ydat, **self.pc_props)
 
         # Draw X-slice intersection in X-Y plot
-        self.xy_ahw = self.ax1.axhline(self.yc[self.yind], *self.xminmax,
-                                       **self.clpropsw)
-        self.xy_ahk = self.ax1.axhline(self.yc[self.yind], *self.xminmax,
-                                       **self.clpropsk)
+        self.xy_ahw = self.ax1.axhline(self.yc[self.yind], **self.clpropsw)
+        self.xy_ahk = self.ax1.axhline(self.yc[self.yind], **self.clpropsk)
 
         # Draw X-slice intersection in Z-Y plot
-        self.zy_ahw = self.ax3.axhline(self.yc[self.yind], *self.zminmax,
-                                       **self.clpropsw)
-        self.zy_ahk = self.ax3.axhline(self.yc[self.yind], *self.zminmax,
-                                       **self.clpropsk)
+        self.zy_ahw = self.ax3.axhline(self.yc[self.yind], **self.clpropsw)
+        self.zy_ahk = self.ax3.axhline(self.yc[self.yind], **self.clpropsk)
 
     def update_zy(self):
         """Update plot for change in X-index."""
@@ -1332,16 +1320,12 @@ class Slicer(object):
         self.zy_pc = self.ax3.pcolormesh(self.z, self.y, xdat, **self.pc_props)
 
         # Draw Y-slice intersection in X-Y plot
-        self.xy_avw = self.ax1.axvline(self.xc[self.xind], *self.yminmax,
-                                       **self.clpropsw)
-        self.xy_avk = self.ax1.axvline(self.xc[self.xind], *self.yminmax,
-                                       **self.clpropsk)
+        self.xy_avw = self.ax1.axvline(self.xc[self.xind], **self.clpropsw)
+        self.xy_avk = self.ax1.axvline(self.xc[self.xind], **self.clpropsk)
 
         # Draw Y-slice intersection in X-Z plot
-        self.xz_avw = self.ax2.axvline(self.xc[self.xind], *self.zminmax,
-                                       **self.clpropsw)
-        self.xz_avk = self.ax2.axvline(self.xc[self.xind], *self.zminmax,
-                                       **self.clpropsk)
+        self.xz_avw = self.ax2.axvline(self.xc[self.xind], **self.clpropsw)
+        self.xz_avk = self.ax2.axvline(self.xc[self.xind], **self.clpropsk)
 
     def _clear_elements(self, names):
         """Remove elements from list <names> from plot if they exists."""
