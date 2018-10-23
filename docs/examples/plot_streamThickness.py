@@ -1,6 +1,8 @@
 """
 Simple example to vary streamline thickness based on the vector amplitudes
-=================================
+==========================================================================
+
+Author: `@micmitch <https://github.com/micmitch>`
 """
 import numpy as np
 import matplotlib.pyplot as plt
@@ -67,10 +69,15 @@ print(dataVec.shape)
 streamOpts = {'color':'w', 'density':2.0}
 pcolorOpts = {"cmap":"viridis"}
 
-dat = mesh.plotSlice(dataVec, ax=ax, normal='Z', ind=5, vType='CCv', view='vec', streamOpts=streamOpts, gridOpts={"color":"k", "alpha":0.1}, grid=True, clim=None, stream_thickness=3)
+dat = mesh.plotSlice(
+    dataVec, ax=ax, normal='Z', ind=5, vType='CCv', view='vec',
+    streamOpts=streamOpts, gridOpts={"color":"k", "alpha":0.1}, grid=True,
+    clim=None, stream_thickness=3
+)
 
 ###############################################################################
 # Moving Forward
 # --------------
 #
-# If you have suggestions for improving this example, please create a `pull request on the example in discretize
+# If you have suggestions for improving this example, please create a
+# `pull request on the example in discretize
