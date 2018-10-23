@@ -5,7 +5,7 @@ Simple example to vary streamline thickness based on the vector amplitudes
 import numpy as np
 import matplotlib.pyplot as plt
 
-from SimPEG import Mesh, Utils
+from discretize import TensorMesh
 
 ###############################################################################
 # Create mesh
