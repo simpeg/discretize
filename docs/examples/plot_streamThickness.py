@@ -70,13 +70,6 @@ pcolorOpts = {"cmap":"viridis"}
 dat = mesh.plotSlice(dataVec, ax=ax, normal='Z', ind=5, vType='CCv', view='vec', streamOpts=streamOpts, gridOpts={"color":"k", "alpha":0.1}, grid=True, clim=None, stream_thickness=3)
 
 ###############################################################################
-# Print the version of SimPEG and dependencies
-# --------------------------------------------
-#
-
-versions()
-
-###############################################################################
 # Moving Forward
 # --------------
 #
