@@ -697,7 +697,8 @@ class TensorView(object):
 
 
     def plot3DSlicer(self, v, xslice=None, yslice=None, zslice=None,
-                     transparent=None, clim=None, pcolorOpts=None):
+                     transparent=None, clim=None, aspect='auto',
+                     pcolorOpts=None):
         """Plot slices of a 3D volume, interactively (scroll wheel).
 
         If called from a notebook, make sure to set
@@ -724,13 +725,29 @@ class TensorView(object):
             equal to 0.3, all values between 1 and 4, and all values smaller
             than -10.
 
+        clim : None or list of [min, max]
+            For pcolormesh (vmin, vmax).
+
+        aspect : 'auto', 'equal', or num
+            Aspect ratio of subplots. Defaults to 'auto'.
+
+            A list of two values can be provided. The first will be for the
+            XY-plot, the second for the XZ- and YZ-plots, e.g. ['equal', 2] to
+            have the vertical dimension exaggerated by a factor of 2.
+
+            WARNING: For anything else than 'auto', unexpected things might
+            happen when zooming, and the subplot-arrangement won't look pretty.
+
+        pcolorOpts : dictionary
+            Passed to pcolormesh.
+
         """
         # Initiate figure
         fig = plt.figure()
 
         # Populate figure
         tracker = Slicer(self, v, xslice, yslice, zslice, transparent, clim,
-                         pcolorOpts)
+                         aspect, pcolorOpts)
 
         # Connect figure to scrolling
         fig.canvas.mpl_connect('scroll_event', tracker.onscroll)
@@ -1120,20 +1137,51 @@ class CurviView(object):
 
 
 class Slicer(object):
-    """For interactive (scroll with mouse wheel) slices.
+    """Plot slices of a 3D volume, interactively (scroll wheel).
 
-    MISSING FEATURES
+    If called from a notebook, make sure to set
 
-    - Adjust for logarithmic colour-scale (at the moment is linear).
+        %matplotlib notebook
 
-    POSSIBLE IMPROVEMENTS
 
-    - Create a slider for a transparent range
+    See the class `Slicer` for more information.
+
+    Parameters
+    ----------
+
+    v : array
+        Data array of length self.nC.
+
+    xslice, yslice, zslice : floats, optional
+        Initial slice locations (in meter);
+        defaults to the middle of the volume.
+
+    transparent : list of floats or pairs of floats, optional
+        Values to be removed. E.g. air, water.
+        If single value, only exact matches are removed. Pairs are treated as
+        ranges. E.g. [0.3, [1, 4], [-np.infty, -10]] removes all values equal
+        to 0.3, all values between 1 and 4, and all values smaller than -10.
+
+    clim : None or list of [min, max]
+        For pcolormesh (vmin, vmax).
+
+    aspect : 'auto', 'equal', or num
+        Aspect ratio of subplots. Defaults to 'auto'.
+
+        A list of two values can be provided. The first will be for the
+        XY-plot, the second for the XZ- and YZ-plots, e.g. ['equal', 2] to have
+        the vertical dimension exaggerated by a factor of 2.
+
+        WARNING: For anything else than 'auto', unexpected things might happen
+                 when zooming, and the subplot-arrangement won't look pretty.
+
+    pcolorOpts : dictionary
+        Passed to pcolormesh.
 
     """
 
     def __init__(self, mesh, v, xslice=None, yslice=None, zslice=None,
-                 transparent=None, clim=None, pcolorOpts=None):
+                 transparent=None, clim=None, aspect='auto', pcolorOpts=None):
         """Initialize interactive figure."""
 
         # 1. Store relevant data
@@ -1164,6 +1212,18 @@ class Slicer(object):
         else:
             self.zind = self.zc.size // 2
 
+        # Aspect ratio
+        if isinstance(aspect, (list, tuple)):
+            aspect1 = aspect[0]
+            aspect2 = aspect[1]
+        else:
+            aspect1 = aspect
+            aspect2 = aspect
+        if aspect2 in ['auto', 'equal']:
+            aspect3 = aspect2
+        else:
+            aspect3 = 1.0/aspect2
+
         # Remove transparent value
         if transparent:
             # Catch NaN's, anf +/-infinity
@@ -1191,19 +1251,22 @@ class Slicer(object):
         self.fig.subplots_adjust(wspace=.075, hspace=.1)
 
         # X-Y
-        self.ax1 = plt.subplot2grid((3, 3), (0, 0), colspan=2, rowspan=2)
+        self.ax1 = plt.subplot2grid((3, 3), (0, 0), colspan=2, rowspan=2,
+                                    aspect=aspect1)
         self.ax1.set_ylabel('y')
         self.ax1.xaxis.set_ticks_position('top')
         plt.setp(self.ax1.get_xticklabels(), visible=False)
 
         # X-Z
-        self.ax2 = plt.subplot2grid((3, 3), (2, 0), colspan=2, sharex=self.ax1)
+        self.ax2 = plt.subplot2grid((3, 3), (2, 0), colspan=2, sharex=self.ax1,
+                                    aspect=aspect2)
         self.ax2.yaxis.set_ticks_position('both')
         self.ax2.set_xlabel('x')
         self.ax2.set_ylabel('z')
 
         # Z-Y
-        self.ax3 = plt.subplot2grid((3, 3), (0, 2), rowspan=2, sharey=self.ax1)
+        self.ax3 = plt.subplot2grid((3, 3), (0, 2), rowspan=2, sharey=self.ax1,
+                                    aspect=aspect3)
         self.ax3.yaxis.set_ticks_position('right')
         self.ax3.xaxis.set_ticks_position('both')
         self.ax3.invert_xaxis()
