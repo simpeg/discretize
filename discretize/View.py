@@ -709,6 +709,19 @@ class TensorView(object):
 
         See the class `discretize.View.Slicer` for more information.
 
+        It returns nothing. However, if you need the different figure handles
+        you can get it via
+
+          `fig = plt.gcf()`
+
+        and subsequently its children via
+
+          `fig.get_children()`
+
+        and recursively deeper, e.g.,
+
+          `fig.get_children()[0].get_children()`.
+
         """
         # Initiate figure
         fig = plt.figure()
@@ -825,8 +838,6 @@ class CylView(object):
     def plotGrid(self, *args, **kwargs):
         if self.isSymmetric:
             return self._plotCylTensorMesh('plotGrid', *args, **kwargs)
-
-
 
         # allow a slice to be provided for the mesh
         slc = kwargs.pop('slice', None)
@@ -1115,6 +1126,20 @@ class Slicer(object):
 
         %matplotlib notebook
 
+    The straight forward usage for the Slicer is through, e.g., a
+    `TensorMesh`-mesh, by accessing its `mesh.plot3DSlicer`.
+
+    If you, however, call this class directly, you have first to initiate a
+    figure, and afterwards connect it:
+
+    >>> # You have to initialize a figure
+    >>> fig = plt.figure()
+    >>> # Then you have to get the tracker from the Slicer
+    >>> tracker = discretize.View.Slicer(mesh, Lpout)
+    >>> # Finally you have to connect the tracker to the figure
+    >>> fig.canvas.mpl_connect('scroll_event', tracker.onscroll)
+    >>> plt.show()
+
 
     Parameters
     ----------
@@ -1158,6 +1183,10 @@ class Slicer(object):
                  pcolorOpts=None):
         """Initialize interactive figure."""
 
+        # 0. Some checks, not very extensive
+        if mesh.dim != 3:
+            raise ValueError('Must be a 3D mesh. Use plotImage instead.')
+
         # 1. Store relevant data
 
         # Store data in self as (nx, ny, nz)
@@ -1171,17 +1200,16 @@ class Slicer(object):
         self.yc = mesh.vectorCCy  # y-cell center locations
         self.zc = mesh.vectorCCz  # z-cell center locations
 
-        # Store initial slice indices
-        # If not provided, takes the middle
-        if xslice:
+        # Store initial slice indices; if not provided, takes the middle.
+        if xslice is not None:
             self.xind = np.argmin(np.abs(self.xc - xslice))
         else:
             self.xind = self.xc.size // 2
-        if xslice:
+        if xslice is not None:
             self.yind = np.argmin(np.abs(self.yc - yslice))
         else:
             self.yind = self.yc.size // 2
-        if zslice:
+        if zslice is not None:
             self.zind = np.argmin(np.abs(self.zc - zslice))
         else:
             self.zind = self.zc.size // 2
@@ -1199,7 +1227,7 @@ class Slicer(object):
             aspect3 = 1.0/aspect2
 
         # Remove transparent value
-        if transparent:
+        if transparent is not None:
             # Catch NaN's, anf +/-infinity
             # (Otherwise >=/==/<= will through errors)
             mask = ~np.isfinite(self.v)
