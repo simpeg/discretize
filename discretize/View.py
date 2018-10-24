@@ -1424,7 +1424,7 @@ class Slicer(object):
 
         # Draw X-Z slice
         if self.yx:
-            ydat = np.fliplr(self.v[self.xind, :, :].transpose())
+            ydat = self.v[-self.xind, :, :].transpose()
             hor = self.y
             ver = self.z
             ind = self.xc[self.xind]
