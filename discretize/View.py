@@ -5,6 +5,7 @@ from discretize.utils import mkvc, ndgrid
 from six import integer_types
 try:
     import matplotlib.pyplot as plt
+    from matplotlib.widgets import Slider
     import matplotlib
     from mpl_toolkits.mplot3d import Axes3D
 except ImportError:
@@ -1151,11 +1152,13 @@ class Slicer(object):
         Initial slice locations (in meter);
         defaults to the middle of the volume.
 
-    transparent : list of floats or pairs of floats, optional
+    transparent : 'slider' or list of floats or pairs of floats, optional
         Values to be removed. E.g. air, water.
         If single value, only exact matches are removed. Pairs are treated as
         ranges. E.g. [0.3, [1, 4], [-np.infty, -10]] removes all values equal
         to 0.3, all values between 1 and 4, and all values smaller than -10.
+        If 'slider' is provided it will plot an interactive slider to choose
+        the shown range.
 
     clim : None or list of [min, max]
         For pcolormesh (vmin, vmax).
@@ -1191,6 +1194,7 @@ class Slicer(object):
 
         # Store data in self as (nx, ny, nz)
         self.v = v.reshape(mesh.nCx, mesh.nCy, mesh.nCz, order='F').copy()
+        self.v = np.ma.masked_where(np.isnan(self.v), self.v)
 
         # Store relevant information from mesh in self
         self.x = mesh.vectorNx    # x-node locations
@@ -1226,25 +1230,10 @@ class Slicer(object):
         else:
             aspect3 = 1.0/aspect2
 
-        # Remove transparent value
-        if transparent is not None:
-            # Catch NaN's, anf +/-infinity
-            # (Otherwise >=/==/<= will through errors)
-            mask = ~np.isfinite(self.v)
-            np.nan_to_num(self.v, False)
-
-            # Loop over values
-            for value in transparent:
-                # If value is a list/tuple, we treat is as a range
-                if isinstance(value, (list, tuple)):
-                    indlow = self.v >= value[0]
-                    indhig = self.v <= value[1]
-                    self.v[indlow*indhig] = np.nan
-                else: # Exact value
-                    self.v[self.v == value] = np.nan
-
-            # Put NaN's back
-            self.v[mask] = np.nan
+        # Store min and max of all data
+        if clim is None:
+            clim = [np.nanmin(self.v), np.nanmax(self.v)]
+        self.pc_props = {'vmin': clim[0], 'vmax': clim[1]}
 
         # 2. Start populating figure
 
@@ -1286,11 +1275,6 @@ class Slicer(object):
         self.clpropsw = {'c': 'w', 'lw': 2, 'zorder': 10}
         self.clpropsk = {'c': 'k', 'lw': 1, 'zorder': 11}
 
-        # Store min and max of all data
-        if clim is None:
-            clim = [np.nanmin(self.v), np.nanmax(self.v)]
-        self.pc_props = {'vmin': clim[0], 'vmax': clim[1]}
-
         # Add pcolorOpts
         if pcolorOpts is not None:
             self.pc_props.update(pcolorOpts)
@@ -1302,6 +1286,43 @@ class Slicer(object):
 
         # Create colorbar
         plt.colorbar(self.zy_pc, pad=0.15)
+
+        # Remove transparent value
+        if isinstance(transparent, str) and transparent.lower() == 'slider':
+            # Sliders
+            self.ax_smin = plt.axes([0.7, 0.11, 0.15, 0.03])
+            self.ax_smax = plt.axes([0.7, 0.15, 0.15, 0.03])
+
+            # Limits slightly below/above actual limits, clips otherwise
+            self.smin = Slider(self.ax_smin, 'Min', *clim, valinit=clim[0])
+            self.smax = Slider(self.ax_smax, 'Max', *clim, valinit=clim[1])
+
+            def update(val):
+                self.v.mask = False  # Re-set
+                self.v = np.ma.masked_outside(self.v.data, self.smin.val,
+                                              self.smax.val)
+                # Update plots
+                self.update_xy()
+                self.update_xz()
+                self.update_zy()
+
+            self.smax.on_changed(update)
+            self.smin.on_changed(update)
+
+        elif transparent is not None:
+
+            # Loop over values
+            for value in transparent:
+                # If value is a list/tuple, we treat is as a range
+                if isinstance(value, (list, tuple)):
+                    self.v = np.ma.masked_inside(self.v, value[0], value[1])
+                else: # Exact value
+                    self.v = np.ma.masked_equal(self.v, value)
+
+            # Update plots
+            self.update_xy()
+            self.update_xz()
+            self.update_zy()
 
         # 3. Keep depth in X-Z and Z-Y in sync
 
