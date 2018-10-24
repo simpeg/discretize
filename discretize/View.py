@@ -699,7 +699,7 @@ class TensorView(object):
         return ax
 
 
-    def plot3DSlicer(self, v, xslice=None, yslice=None, zslice=None,
+    def plot3DSlicer(self, v, xslice=None, yslice=None, zslice=None, view='xy',
                      transparent=None, clim=None, aspect='auto',
                      grid=[2, 2, 1], pcolorOpts=None):
         """Plot slices of a 3D volume, interactively (scroll wheel).
@@ -728,8 +728,8 @@ class TensorView(object):
         fig = plt.figure()
 
         # Populate figure
-        tracker = Slicer(self, v, xslice, yslice, zslice, transparent, clim,
-                         aspect, grid, pcolorOpts)
+        tracker = Slicer(self, v, xslice, yslice, zslice, view, transparent,
+                         clim, aspect, grid, pcolorOpts)
 
         # Connect figure to scrolling
         fig.canvas.mpl_connect('scroll_event', tracker.onscroll)
@@ -1152,6 +1152,9 @@ class Slicer(object):
         Initial slice locations (in meter);
         defaults to the middle of the volume.
 
+    view : 'xy' (default) or 'yx'
+        'xy': horizontal axis is x, vertical axis is y. Reversed otherwise.
+
     transparent : 'slider' or list of floats or pairs of floats, optional
         Values to be removed. E.g. air, water.
         If single value, only exact matches are removed. Pairs are treated as
@@ -1182,8 +1185,8 @@ class Slicer(object):
     """
 
     def __init__(self, mesh, v, xslice=None, yslice=None, zslice=None,
-                 transparent=None, clim=None, aspect='auto', grid=[2, 2, 1],
-                 pcolorOpts=None):
+                 view='xy', transparent=None, clim=None, aspect='auto',
+                 grid=[2, 2, 1], pcolorOpts=None):
         """Initialize interactive figure."""
 
         # 0. Some checks, not very extensive
@@ -1203,6 +1206,13 @@ class Slicer(object):
         self.xc = mesh.vectorCCx  # x-cell center locations
         self.yc = mesh.vectorCCy  # y-cell center locations
         self.zc = mesh.vectorCCz  # z-cell center locations
+
+        # View: Default ('xy'): horizontal axis is x, vertical axis is y.
+        # Reversed otherwise.
+        if view == 'yx':
+            self.yx = True
+        else:
+            self.yx = False
 
         # Store initial slice indices; if not provided, takes the middle.
         if xslice is not None:
@@ -1247,7 +1257,10 @@ class Slicer(object):
         # X-Y
         self.ax1 = plt.subplot2grid(figgrid, (0, 0), colspan=grid[1],
                                     rowspan=grid[0], aspect=aspect1)
-        self.ax1.set_ylabel('y')
+        if self.yx:
+            self.ax1.set_ylabel('x')
+        else:
+            self.ax1.set_ylabel('y')
         self.ax1.xaxis.set_ticks_position('top')
         plt.setp(self.ax1.get_xticklabels(), visible=False)
 
@@ -1256,7 +1269,10 @@ class Slicer(object):
                                     rowspan=grid[2], sharex=self.ax1,
                                     aspect=aspect2)
         self.ax2.yaxis.set_ticks_position('both')
-        self.ax2.set_xlabel('x')
+        if self.yx:
+            self.ax2.set_xlabel('y')
+        else:
+            self.ax2.set_xlabel('x')
         self.ax2.set_ylabel('z')
 
         # Z-Y
@@ -1361,10 +1377,16 @@ class Slicer(object):
             self.zind = (self.zind + pm) % (self.zc.size - 1)
             self.update_xy()
         elif event.inaxes == self.ax2:  # X-Z
-            self.yind = (self.yind + pm) % (self.yc.size - 1)
+            if self.yx:
+                self.xind = (self.xind + pm) % (self.xc.size - 1)
+            else:
+                self.yind = (self.yind + pm) % (self.yc.size - 1)
             self.update_xz()
         elif event.inaxes == self.ax3:  # Z-Y
-            self.xind = (self.xind + pm) % (self.xc.size - 1)
+            if self.yx:
+                self.yind = (self.yind + pm) % (self.yc.size - 1)
+            else:
+                self.xind = (self.xind + pm) % (self.xc.size - 1)
             self.update_zy()
 
         plt.draw()
@@ -1376,8 +1398,15 @@ class Slicer(object):
         self._clear_elements(['xy_pc', 'xz_ahw', 'xz_ahk', 'zy_avw', 'zy_avk'])
 
         # Draw X-Y slice
-        zdat = self.v[:, :, self.zind].transpose()
-        self.xy_pc = self.ax1.pcolormesh(self.x, self.y, zdat, **self.pc_props)
+        if self.yx:
+            zdat = np.rot90(self.v[:, :, self.zind].transpose())
+            hor = self.y
+            ver = self.x
+        else:
+            zdat = self.v[:, :, self.zind].transpose()
+            hor = self.x
+            ver = self.y
+        self.xy_pc = self.ax1.pcolormesh(hor, ver, zdat, **self.pc_props)
 
         # Draw Z-slice intersection in X-Z plot
         self.xz_ahw = self.ax2.axhline(self.zc[self.zind], **self.clpropsw)
@@ -1394,16 +1423,25 @@ class Slicer(object):
         self._clear_elements(['xz_pc', 'zy_ahk', 'zy_ahw', 'xy_ahk', 'xy_ahw'])
 
         # Draw X-Z slice
-        ydat = self.v[:, self.yind, :].transpose()
-        self.xz_pc = self.ax2.pcolormesh(self.x, self.z, ydat, **self.pc_props)
+        if self.yx:
+            ydat = np.fliplr(self.v[self.xind, :, :].transpose())
+            hor = self.y
+            ver = self.z
+            ind = self.xc[self.xind]
+        else:
+            ydat = self.v[:, self.yind, :].transpose()
+            hor = self.x
+            ver = self.z
+            ind = self.yc[self.yind]
+        self.xz_pc = self.ax2.pcolormesh(hor, ver, ydat, **self.pc_props)
 
         # Draw X-slice intersection in X-Y plot
-        self.xy_ahw = self.ax1.axhline(self.yc[self.yind], **self.clpropsw)
-        self.xy_ahk = self.ax1.axhline(self.yc[self.yind], **self.clpropsk)
+        self.xy_ahw = self.ax1.axhline(ind, **self.clpropsw)
+        self.xy_ahk = self.ax1.axhline(ind, **self.clpropsk)
 
         # Draw X-slice intersection in Z-Y plot
-        self.zy_ahw = self.ax3.axhline(self.yc[self.yind], **self.clpropsw)
-        self.zy_ahk = self.ax3.axhline(self.yc[self.yind], **self.clpropsk)
+        self.zy_ahw = self.ax3.axhline(ind, **self.clpropsw)
+        self.zy_ahk = self.ax3.axhline(ind, **self.clpropsk)
 
     def update_zy(self):
         """Update plot for change in X-index."""
@@ -1412,16 +1450,25 @@ class Slicer(object):
         self._clear_elements(['zy_pc', 'xz_avw', 'xz_avk', 'xy_avw', 'xy_avk'])
 
         # Draw Z-Y slice
-        xdat = self.v[self.xind, :, :]
-        self.zy_pc = self.ax3.pcolormesh(self.z, self.y, xdat, **self.pc_props)
+        if self.yx:
+            xdat = np.flipud(self.v[:, self.yind, :])
+            hor = self.z
+            ver = self.x
+            ind = self.yc[self.yind]
+        else:
+            xdat = self.v[self.xind, :, :]
+            hor = self.z
+            ver = self.y
+            ind = self.xc[self.xind]
+        self.zy_pc = self.ax3.pcolormesh(hor, ver, xdat, **self.pc_props)
 
         # Draw Y-slice intersection in X-Y plot
-        self.xy_avw = self.ax1.axvline(self.xc[self.xind], **self.clpropsw)
-        self.xy_avk = self.ax1.axvline(self.xc[self.xind], **self.clpropsk)
+        self.xy_avw = self.ax1.axvline(ind, **self.clpropsw)
+        self.xy_avk = self.ax1.axvline(ind, **self.clpropsk)
 
         # Draw Y-slice intersection in X-Z plot
-        self.xz_avw = self.ax2.axvline(self.xc[self.xind], **self.clpropsw)
-        self.xz_avk = self.ax2.axvline(self.xc[self.xind], **self.clpropsk)
+        self.xz_avw = self.ax2.axvline(ind, **self.clpropsw)
+        self.xz_avk = self.ax2.axvline(ind, **self.clpropsk)
 
     def _clear_elements(self, names):
         """Remove elements from list <names> from plot if they exists."""
