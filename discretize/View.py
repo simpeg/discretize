@@ -530,7 +530,7 @@ class TensorView(object):
 
     def plotGrid(
         self, ax=None, nodes=False, faces=False, centers=False, edges=False,
-        lines=True, showIt=False
+        lines=True, showIt=False, **kwargs
     ):
         """Plot the nodal, cell-centered and staggered grids for 1,2 and 3 dimensions.
 
@@ -618,6 +618,8 @@ class TensorView(object):
                     marker="^", linestyle=""
                 )
 
+            color = kwargs.get('color', 'C0')
+            linewidth = kwargs.get('linewidth', 1.)
             # Plot the grid lines
             if lines:
                 NN = self.r(self.gridN, 'N', 'N', 'M')
@@ -627,7 +629,7 @@ class TensorView(object):
                 Y2 = np.c_[mkvc(NN[1][:, 0]), mkvc(NN[1][:, self.nCy]), mkvc(NN[1][:, 0])*np.nan].flatten()
                 X = np.r_[X1, X2]
                 Y = np.r_[Y1, Y2]
-                ax.plot(X, Y, color="C0", linestyle="-")
+                ax.plot(X, Y, color=color, linestyle="-", lw=linewidth)
 
             ax.set_xlabel('x1')
             ax.set_ylabel('x2')
@@ -824,6 +826,8 @@ class CylView(object):
         if self.isSymmetric:
             return self._plotCylTensorMesh('plotGrid', *args, **kwargs)
 
+
+
         # allow a slice to be provided for the mesh
         slc = kwargs.pop('slice', None)
         if isinstance(slc, str):
@@ -932,14 +936,16 @@ for reference, see: http://matplotlib.org/examples/pylab_examples/polar_demo.htm
             mkvc(NN[1][0, :])*np.nan
         ].flatten()
 
-        ax.plot(Y1, X1, linestyle="-", color="C0")
+        color = kwargs.get('color', 'C0')
+        linewidth = kwargs.get('linewidth', 1.)
+        ax.plot(Y1, X1, linestyle="-", color=color, lw=linewidth)
 
         # circles
         n = 100
         XY2 = [
             ax.plot(
                 np.linspace(0., np.pi*2, n), r*np.ones(n), linestyle="-",
-                color="C0"
+                color=color, lw=linewidth
             )
             for r in self.vectorNx
         ]
