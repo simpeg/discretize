@@ -1,3 +1,5 @@
+import datetime as _datetime
+
 from discretize.BaseMesh import BaseMesh
 from discretize.TensorMesh import TensorMesh
 from discretize.CylMesh import CylMesh
@@ -30,4 +32,4 @@ except ImportError as err:
 __version__   = '0.3.3'
 __author__    = 'SimPEG Team'
 __license__   = 'MIT'
-__copyright__ = '2013 - 2017, SimPEG Developers, http://simpeg.xyz'
+__copyright__ = f"2013 - {_datetime.datetime.now().year}, {__author__}, http://simpeg.xyz"

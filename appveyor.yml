@@ -4,9 +4,6 @@ build: off
 
 environment:
   matrix:
-    - PYTHON_VERSION: 2.7
-      CONDA: C:\Miniconda
-
     - PYTHON_VERSION: 3.5
       CONDA: C:\Miniconda35
 
