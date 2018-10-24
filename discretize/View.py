@@ -699,9 +699,9 @@ class TensorView(object):
         return ax
 
 
-    def plot3DSlicer(self, v, xslice=None, yslice=None, zslice=None, view='xy',
-                     transparent=None, clim=None, aspect='auto',
-                     grid=[2, 2, 1], pcolorOpts=None):
+    def plot_3d_slicer(self, v, xslice=None, yslice=None, zslice=None,
+                       view='xy', transparent=None, clim=None, aspect='auto',
+                       grid=[2, 2, 1], pcolorOpts=None):
         """Plot slices of a 3D volume, interactively (scroll wheel).
 
         If called from a notebook, make sure to set
@@ -1128,7 +1128,7 @@ class Slicer(object):
         %matplotlib notebook
 
     The straight forward usage for the Slicer is through, e.g., a
-    `TensorMesh`-mesh, by accessing its `mesh.plot3DSlicer`.
+    `TensorMesh`-mesh, by accessing its `mesh.plot_3d_slicer`.
 
     If you, however, call this class directly, you have first to initiate a
     figure, and afterwards connect it:
