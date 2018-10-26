@@ -29,7 +29,7 @@ except ImportError as err:
             """
             )
 
-__version__   = '0.3.3'
+__version__   = '0.4.0'
 __author__    = 'SimPEG Team'
 __license__   = 'MIT'
 __copyright__ = f"2013 - {_datetime.datetime.now().year}, {__author__}, http://simpeg.xyz"
