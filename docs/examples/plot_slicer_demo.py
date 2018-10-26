@@ -2,14 +2,14 @@
 Slicer demo
 ===========
 
-The example demonstrates the `plot3DSlicer`
+The example demonstrates the `plot_3d_slicer`
 
 - contributed by `@prisae <https://github.com/prisae>`_
 
 Using the inversion result from the example notebook
 `plot_laguna_del_maule_inversion.ipynb <http://docs.simpeg.xyz/content/examples/04-grav/plot_laguna_del_maule_inversion.html#sphx-glr-content-examples-04-grav-plot-laguna-del-maule-inversion-py>`_
 
-In the notebook, you have use :code:`%matplotlib notebook`.
+In the notebook, you have to use :code:`%matplotlib notebook`.
 """
 
 # %matplotlib notebook
@@ -52,6 +52,9 @@ mesh.plot_3d_slicer(Lpout)
 ###############################################################################
 # 1.2 Create a function to improve plots, labeling after creation
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# Depending on your data the default option might look a bit odd. The look
+# of the figure can be improved by getting its handle and adjust it.
 
 def beautify(title, fig=None):
     """Beautify the 3D Slicer result."""
@@ -102,6 +105,10 @@ beautify('mesh.plot_3d_slicer(Lpout)')
 ###############################################################################
 # 1.3 Set `xslice`, `yslice`, and `zslice`; transparent region
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# The 2nd-4th input arguments are the initial x-, y-, and z-slice location
+# (they default to the middle of the volume). The transparency-parameter can
+# be used to define transparent regions.
 
 mesh.plot_3d_slicer(Lpout, 370000, 6002500, -2500, transparent=[[-0.02, 0.1]])
 beautify(
@@ -153,6 +160,9 @@ beautify("mesh.plot_3d_slicer(Lpout, aspect=['equal', 1.5], grid=[4, 4, 3])")
 ###############################################################################
 # 1.7 Transparency-slider
 # ^^^^^^^^^^^^^^^^^^^^^^^
+#
+# Setting the transparent-parameter to 'slider' will create interactive sliders
+# to change which range of values of the data is visible.
 
 mesh.plot_3d_slicer(Lpout, transparent='slider')
 beautify("mesh.plot_3d_slicer(Lpout, transparent='slider')")
