@@ -18,3 +18,5 @@ from .coordutils import (
     rotatePointsFromNormals, rotationMatrixFromNormals, cyl2cart, cart2cyl
     # rotate_vec_cyl2cart
 )
+
+from .io_utils import download
