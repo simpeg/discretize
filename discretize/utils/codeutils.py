@@ -1,10 +1,7 @@
-from __future__ import print_function, division
 import numpy as np
 import sys
-if sys.version_info < (3,):
-    scalarTypes = [float, int, long, np.float_, np.int_]
-else:
-    scalarTypes = [float, int, np.float_, np.int_]
+
+scalarTypes = [float, int, np.float_, np.int_]
 
 
 def isScalar(f):

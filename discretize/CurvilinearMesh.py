@@ -1,13 +1,12 @@
-from __future__ import print_function
 import numpy as np
 import properties
 from properties.math import TYPE_MAPPINGS
 
-from discretize import utils
-from discretize.BaseMesh import BaseRectangularMesh
-from discretize.DiffOperators import DiffOperators
-from discretize.InnerProducts import InnerProducts
-from discretize.View import CurviView
+from . import utils
+from .BaseMesh import BaseRectangularMesh
+from .DiffOperators import DiffOperators
+from .InnerProducts import InnerProducts
+from .View import CurviView
 
 
 # Some helper functions.

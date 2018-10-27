@@ -1,9 +1,8 @@
-from __future__ import print_function
 import numpy as np
 import scipy.sparse as sp
 import properties
 
-from discretize import utils
+from . import utils
 
 from .BaseMesh import BaseMesh, BaseRectangularMesh
 from .View import TensorView

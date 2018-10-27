@@ -1,4 +1,3 @@
-# from __future__ import division
 import numpy as np
 import cython
 cimport numpy as np
@@ -73,7 +72,7 @@ def _interpmat1D(np.ndarray[np.float64_t, ndim=1] locs,
     cdef IIFF xs
     cdef int npts = locs.shape[0]
     cdef int i
-    
+
     cdef np.ndarray[np.int64_t,ndim=1] inds = np.empty(npts*2,dtype=np.int64)
     cdef np.ndarray[np.float64_t,ndim=1] vals = np.empty(npts*2,dtype=np.float64)
     for i in range(npts):
@@ -83,7 +82,7 @@ def _interpmat1D(np.ndarray[np.float64_t, ndim=1] locs,
         inds[2*i+1] = xs.i2
         vals[2*i  ] = xs.w1
         vals[2*i+1] = xs.w2
-    
+
     return inds,vals
 
 @cython.boundscheck(False)
@@ -117,7 +116,7 @@ def _interpmat2D(np.ndarray[np.float64_t, ndim=2] locs,
         vals[4*i+1] = xs.w1*ys.w2
         vals[4*i+2] = xs.w2*ys.w1
         vals[4*i+3] = xs.w2*ys.w2
-    
+
     return inds,vals
 
 @cython.boundscheck(False)
@@ -133,7 +132,7 @@ def _interpmat3D(np.ndarray[np.float64_t, ndim=2] locs,
     cdef IIFF xs,ys,zs
     cdef int npts = locs.shape[0]
     cdef int i
-    
+
     cdef np.ndarray[np.int64_t,ndim=2] inds = np.empty((npts*8,3),dtype=np.int64)
     cdef np.ndarray[np.float64_t,ndim=1] vals = np.empty(npts*8,dtype=np.float64)
     for i in range(npts):
@@ -176,5 +175,5 @@ def _interpmat3D(np.ndarray[np.float64_t, ndim=2] locs,
         vals[8*i+5] = xs.w1*ys.w2*zs.w2
         vals[8*i+6] = xs.w2*ys.w1*zs.w2
         vals[8*i+7] = xs.w2*ys.w2*zs.w2
-    
+
     return inds,vals

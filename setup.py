@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from __future__ import print_function
 """discretize
 
 Discretization tools for finite volume and inverse problems.
@@ -59,7 +58,7 @@ setup(
     version="0.4.0",
     install_requires=[
         'numpy>=1.7',
-        'scipy>=0.13',
+        'scipy>=1',
         'cython',
         'ipython',
         'matplotlib',
@@ -76,7 +75,6 @@ setup(
     download_url="http://github.com/simpeg/discretize",
     classifiers=CLASSIFIERS,
     platforms=["Windows", "Linux", "Solaris", "Mac OS-X", "Unix"],
-    use_2to3=False,
     setup_requires=['numpy'],
     python_requires=">=3.6",
     configuration=configuration
