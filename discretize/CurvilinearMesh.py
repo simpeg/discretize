@@ -389,3 +389,52 @@ class CurvilinearMesh(
         if getattr(self, '_tangents', None) is None:
             self.edge  # calling .edge will create the tangents
         return self._tangents
+
+
+    def toVTK(self, models=None):
+        """
+        Constructs a VTK object of this mesh and the given
+        models as CellData of that object.
+
+        Input:
+        :param models, dictionary of numpy.array - Name('s) and array('s). Match number of cells
+
+        """
+        import vtk
+        import vtk.util.numpy_support as nps
+
+        # Make the data parts for the vtu object
+        # Points
+        ptsMat = self.gridN
+
+        dims = [self.nCx, self.nCy, self.nCz]
+        # Adjust if result was 2D:
+        if ptsMat.shape[1] == 2:
+            # Figure out which dim is null
+            nullDim = dims.index(None)
+            ptsMat = np.insert(ptsMat, nullDim, np.zeros(ptsMat.shape[0]), axis=1)
+        if ptsMat.shape[1] != 3:
+            raise RuntimeError('Points of the mesh are improperly defined.')
+
+        vtkPts = vtk.vtkPoints()
+        vtkPts.SetData(nps.numpy_to_vtk(ptsMat, deep=True))
+
+        dims = [self.nCx, self.nCy, self.nCz]
+        for i, d in enumerate(dims):
+            if d is None:
+                dims[i] = 0
+            dims[i] = dims[i] + 1
+
+        output = vtk.vtkStructuredGrid()
+        output.SetDimensions(dims[0], dims[1], dims[2]) # note this subtracts 1
+        output.SetPoints(vtkPts)
+
+        # Assign the model('s) to the object
+        if models is not None:
+            for item in six.iteritems(models):
+                # Convert numpy array
+                vtkDoubleArr = nps.numpy_to_vtk(item[1], deep=1)
+                vtkDoubleArr.SetName(item[0])
+                output.GetCellData().AddArray(vtkDoubleArr)
+
+        return output

@@ -1620,3 +1620,14 @@ class CylMesh(
         Pc2r = self.getInterpolationMat(G, interpType)
         Proj = sdiag(proj)
         return Proj * Pc2r
+
+
+    def toVTK(self, models=None):
+        """
+        Constructs a VTK object of this mesh and the given
+        models as CellData of that object.
+
+        Input:
+        :param models, dictionary of numpy.array - Name('s) and array('s). Match number of cells
+
+        """

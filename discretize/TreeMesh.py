@@ -442,3 +442,60 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
 
     def __reduce__(self):
         return TreeMesh, (self.h, self.x0), self.__getstate__()
+
+    def toVTK(self, models=None):
+        """
+        Constructs a ``vtkUnstructuredGrid`` object of this mesh and the given
+        models as CellData of that grid.
+
+        Input:
+        :param models, dictionary of numpy.array - Name('s) and array('s). Match number of cells
+
+        """
+        import vtk
+        import vtk.util.numpy_support as nps
+
+        # Make the data parts for the vtu object
+        # Points
+        ptsMat = np.vstack((self.gridN, self.gridhN))
+
+        # Adjust if result was 2D (voxels are pixels in 2D):
+        VTK_CELL_TYPE = vtk.VTK_VOXEL
+        if ptsMat.shape[1] == 2:
+            # TODO: assumes any 2D tree meshes are on the XY Plane
+            # Add Z values of 0.0 if 2D
+            ptsMat = np.c_[ptsMat, np.zeros(ptsMat.shape[0])]
+            VTK_CELL_TYPE = vtk.VTK_PIXEL
+        if ptsMat.shape[1] != 3:
+            raise RuntimeError('Points of the mesh are improperly defined.')
+
+        vtkPts = vtk.vtkPoints()
+        vtkPts.SetData(nps.numpy_to_vtk(ptsMat, deep=True))
+
+        # Cells
+        cellArray = [c for c in self]
+        cellConn = np.array([cell.nodes for cell in cellArray])
+
+        cellsMat = np.concatenate((np.ones((cellConn.shape[0], 1), dtype=np.int64)*cellConn.shape[1], cellConn), axis=1).ravel()
+        cellsArr = vtk.vtkCellArray()
+        cellsArr.SetNumberOfCells(cellConn.shape[0])
+        cellsArr.SetCells(cellConn.shape[0], nps.numpy_to_vtkIdTypeArray(cellsMat, deep=True))
+
+        # Make the object
+        vtuObj = vtk.vtkUnstructuredGrid()
+        vtuObj.SetPoints(vtkPts)
+        vtuObj.SetCells(VTK_CELL_TYPE, cellsArr)
+        # Add the level of refinement as a cell array
+        cell_levels = np.array([cell._level for cell in cellArray])
+        refineLevelArr = nps.numpy_to_vtk(cell_levels, deep=1)
+        refineLevelArr.SetName('octreeLevel')
+        vtuObj.GetCellData().AddArray(refineLevelArr)
+        # Assign the model('s) to the object
+        if models is not None:
+            for item in six.iteritems(models):
+                # Convert numpy array
+                vtkDoubleArr = nps.numpy_to_vtk(item[1], deep=1)
+                vtkDoubleArr.SetName(item[0])
+                vtuObj.GetCellData().AddArray(vtkDoubleArr)
+
+        return vtuObj

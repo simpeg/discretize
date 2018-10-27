@@ -218,41 +218,13 @@ class TensorMeshIO(object):
         :param dict models: dictionary of numpy.array - Name('s) and array('s).
         Match number of cells
         """
-        from vtk import vtkRectilinearGrid as rectGrid, vtkXMLRectilinearGridWriter as rectWriter, VTK_VERSION
+        from vtk import vtkXMLRectilinearGridWriter as rectWriter, VTK_VERSION
         from vtk.util.numpy_support import numpy_to_vtk
 
-        fname = os.path.join(directory, fileName)
-        # Deal with dimensionalities
-        if mesh.dim >= 1:
-            vX = mesh.vectorNx
-            xD = mesh.nNx
-            yD, zD = 1, 1
-            vY, vZ = np.array([0, 0])
-        if mesh.dim >= 2:
-            vY = mesh.vectorNy
-            yD = mesh.nNy
-        if mesh.dim == 3:
-            vZ = mesh.vectorNz
-            zD = mesh.nNz
-        # Use rectilinear VTK grid.
-        # Assign the spatial information.
-        vtkObj = rectGrid()
-        vtkObj.SetDimensions(xD, yD, zD)
-        vtkObj.SetXCoordinates(numpy_to_vtk(vX, deep=1))
-        vtkObj.SetYCoordinates(numpy_to_vtk(vY, deep=1))
-        vtkObj.SetZCoordinates(numpy_to_vtk(vZ, deep=1))
-
-        # Assign the model('s) to the object
-        if models is not None:
-            for item in six.iteritems(models):
-                # Convert numpy array
-                vtkDoubleArr = numpy_to_vtk(item[1], deep=1)
-                vtkDoubleArr.SetName(item[0])
-                vtkObj.GetCellData().AddArray(vtkDoubleArr)
-            # Set the active scalar
-            vtkObj.GetCellData().SetActiveScalars(list(models.keys())[0])
+        vtkObj = mesh.toVTK(models)
 
         # Check the extension of the fileName
+        fname = os.path.join(directory, fileName)
         ext = os.path.splitext(fname)[1]
         if ext is '':
             fname = fname + '.vtr'
@@ -267,51 +239,6 @@ class TensorMeshIO(object):
         vtrWriteFilter.SetFileName(fname)
         vtrWriteFilter.Update()
 
-    def _toVTRObj(mesh, models=None):
-        """
-        Makes and saves a VTK rectilinear file (vtr) for a
-        Tensor mesh and model.
-
-        Input:
-        :param str, path to the output vtk file
-        :param mesh, TensorMesh object - mesh to be transfer to VTK
-        :param models, dictionary of numpy.array - Name('s) and array('s). Match number of cells
-
-        """
-        # Import
-        from vtk import vtkRectilinearGrid as rectGrid, VTK_VERSION
-        from vtk.util.numpy_support import numpy_to_vtk
-
-        # Deal with dimensionalities
-        if mesh.dim >= 1:
-            vX = mesh.vectorNx
-            xD = mesh.nNx
-            yD, zD = 1, 1
-            vY, vZ = np.array([0, 0])
-        if mesh.dim >= 2:
-            vY = mesh.vectorNy
-            yD = mesh.nNy
-        if mesh.dim == 3:
-            vZ = mesh.vectorNz
-            zD = mesh.nNz
-        # Use rectilinear VTK grid.
-        # Assign the spatial information.
-        vtkObj = rectGrid()
-        vtkObj.SetDimensions(xD, yD, zD)
-        vtkObj.SetXCoordinates(numpy_to_vtk(vX, deep=1))
-        vtkObj.SetYCoordinates(numpy_to_vtk(vY, deep=1))
-        vtkObj.SetZCoordinates(numpy_to_vtk(vZ, deep=1))
-
-        # Assign the model('s) to the object
-        if models is not None:
-            for item in models.iteritems():
-                # Convert numpy array
-                vtkDoubleArr = numpy_to_vtk(item[1], deep=1)
-                vtkDoubleArr.SetName(item[0])
-                vtkObj.GetCellData().AddArray(vtkDoubleArr)
-            # Set the active scalar
-            vtkObj.GetCellData().SetActiveScalars(list(models.keys())[0])
-        return vtkObj
 
     def _readModelUBC_2D(mesh, fileName):
         """
@@ -657,44 +584,11 @@ class TreeMeshIO(object):
                 np.savetxt(item[0], item[1][ubc_order], fmt='%3.5e')
 
 
-    def writeVTK(self, fileName, models=None):
+    def writeVTK(mesh, fileName, models=None):
         """Function to write a VTU file from a TreeMesh and model."""
-        import vtk
         from vtk import vtkXMLUnstructuredGridWriter as Writer, VTK_VERSION
-        from vtk.util.numpy_support import numpy_to_vtk
-
-        # Make the data parts for the vtu object
-        # Points
-        ptsMat = np.vstack((self.gridN, self.gridhN))
-
-        vtkPts = vtk.vtkPoints()
-        vtkPts.SetData(numpy_to_vtk(ptsMat, deep=True))
-        # Cells
-        cellArray = [c for c in self]
-        cellConn = np.array([cell.nodes for cell in cellArray])
-
-        cellsMat = np.concatenate((np.ones((cellConn.shape[0], 1))*cellConn.shape[1], cellConn), axis=1).ravel()
-        cellsArr = vtk.vtkCellArray()
-        cellsArr.SetNumberOfCells(cellConn.shape[0])
-        cellsArr.SetCells(cellConn.shape[0], numpy_to_vtk(cellsMat, deep=True, array_type=vtk.VTK_ID_TYPE))
-
-        # Make the object
-        vtuObj = vtk.vtkUnstructuredGrid()
-        vtuObj.SetPoints(vtkPts)
-        vtuObj.SetCells(vtk.VTK_VOXEL, cellsArr)
-        # Add the level of refinement as a cell array
-        cell_levels = np.array([cell._level for cell in cellArray])
-        refineLevelArr = numpy_to_vtk(cell_levels, deep=1)
-        refineLevelArr.SetName('octreeLevel')
-        vtuObj.GetCellData().AddArray(refineLevelArr)
-        # Assign the model('s) to the object
-        if models is not None:
-            for item in six.iteritems(models):
-                # Convert numpy array
-                vtkDoubleArr = numpy_to_vtk(item[1], deep=1)
-                vtkDoubleArr.SetName(item[0])
-                vtuObj.GetCellData().AddArray(vtkDoubleArr)
-
+        # Generate the VTU object
+        vtuObj = mesh.toVTK(models)
         # Make the writer
         vtuWriteFilter = Writer()
         if float(VTK_VERSION.split('.')[0]) >= 6:

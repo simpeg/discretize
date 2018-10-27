@@ -865,3 +865,48 @@ class TensorMesh(
             indzd = (self.gridCC[:, 2] == min(self.gridCC[:, 2]))
             indzu = (self.gridCC[:, 2] == max(self.gridCC[:, 2]))
             return indxd, indxu, indyd, indyu, indzd, indzu
+
+
+    def toVTK(self, models=None):
+        """
+        Constructs a ``vtkRectilinearGrid`` object of this mesh and the given
+        models as CellData of that grid.
+
+        Input:
+        :param models, dictionary of numpy.array - Name('s) and array('s). Match number of cells
+
+        """
+        # Import
+        from vtk import vtkRectilinearGrid as rectGrid
+        from vtk.util.numpy_support import numpy_to_vtk
+
+        # Deal with dimensionalities
+        if self.dim >= 1:
+            vX = self.vectorNx
+            xD = self.nNx
+            yD, zD = 1, 1
+            vY, vZ = np.array([0, 0])
+        if self.dim >= 2:
+            vY = self.vectorNy
+            yD = self.nNy
+        if self.dim == 3:
+            vZ = self.vectorNz
+            zD = self.nNz
+        # Use rectilinear VTK grid.
+        # Assign the spatial information.
+        vtkObj = rectGrid()
+        vtkObj.SetDimensions(xD, yD, zD)
+        vtkObj.SetXCoordinates(numpy_to_vtk(vX, deep=1))
+        vtkObj.SetYCoordinates(numpy_to_vtk(vY, deep=1))
+        vtkObj.SetZCoordinates(numpy_to_vtk(vZ, deep=1))
+
+        # Assign the model('s) to the object
+        if models is not None:
+            for item in models.iteritems():
+                # Convert numpy array
+                vtkDoubleArr = numpy_to_vtk(item[1], deep=1)
+                vtkDoubleArr.SetName(item[0])
+                vtkObj.GetCellData().AddArray(vtkDoubleArr)
+            # Set the active scalar
+            vtkObj.GetCellData().SetActiveScalars(list(models.keys())[0])
+        return vtkObj
