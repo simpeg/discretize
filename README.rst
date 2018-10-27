@@ -21,6 +21,15 @@ discretize
     :target: https://www.codacy.com/app/lindseyheagy/discretize?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=simpeg/discretize&amp;utm_campaign=Badge_Grade
     :alt: codacy status
 
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.596411.svg
+   :target: https://doi.org/10.5281/zenodo.596411
+
+.. image:: https://img.shields.io/badge/Slack-simpeg-4B0082.svg?logo=slack
+    :target: http://slack.simpeg.xyz
+
+.. image:: https://img.shields.io/badge/Google%20group-simpeg-da5247.svg
+    :target: https://groups.google.com/forum/#!forum/simpeg
+    
 
 **discretize** - A python package for finite volume discretization. 
 
