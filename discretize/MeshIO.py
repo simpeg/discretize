@@ -592,7 +592,7 @@ class TreeMeshIO(object):
         # Make the writer
         vtuWriteFilter = Writer()
         if float(VTK_VERSION.split('.')[0]) >= 6:
-            vtuWriteFilter.SetInputData(vtuObj)
+            vtuWriteFilter.SetInputDataObject(vtuObj)
         else:
             vtuWriteFilter.SetInput(vtuObj)
         vtuWriteFilter.SetFileName(fileName)
