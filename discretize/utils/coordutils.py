@@ -56,10 +56,10 @@ def rotationMatrixFromNormals(v0, v1, tol=1e-20):
     The axis of rotation is n0 x n1
     https://en.wikipedia.org/wiki/Rodrigues%27_rotation_formula
 
-    :param numpy.array v0: vector of length 3
-    :param numpy.array v1: vector of length 3
+    :param numpy.ndarray v0: vector of length 3
+    :param numpy.ndarray v1: vector of length 3
     :param tol = 1e-20: tolerance. If the norm of the cross product between the two vectors is below this, no rotation is performed
-    :rtype: numpy.array, 3x3
+    :rtype: numpy.ndarray, 3x3
     :return: rotation matrix which rotates the frame so that n0 is aligned with n1
     """
 
@@ -99,10 +99,10 @@ def rotatePointsFromNormals(XYZ, n0, n1, x0=np.r_[0., 0., 0.]):
     """
         rotates a grid so that the vector n0 is aligned with the vector n1
 
-        :param numpy.array n0: vector of length 3, should have norm 1
-        :param numpy.array n1: vector of length 3, should have norm 1
-        :param numpy.array x0: vector of length 3, point about which we perform the rotation
-        :rtype: numpy.array, 3x3
+        :param numpy.ndarray n0: vector of length 3, should have norm 1
+        :param numpy.ndarray n1: vector of length 3, should have norm 1
+        :param numpy.ndarray x0: vector of length 3, point about which we perform the rotation
+        :rtype: numpy.ndarray, 3x3
         :return: rotation matrix which rotates the frame so that n0 is aligned with n1
     """
 

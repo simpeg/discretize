@@ -58,7 +58,7 @@ class TensorView(object):
 
         Input:
 
-        :param numpy.array v: vector
+        :param numpy.ndarray v: vector
 
         Optional Inputs:
 

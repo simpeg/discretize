@@ -276,32 +276,32 @@ def Rosenbrock(x, return_g=True, return_H=True):
 
 def checkDerivative(fctn, x0, num=7, plotIt=True, dx=None, expectedOrder=2, tolerance=0.85, eps=1e-10, ax=None):
     """
-        Basic derivative check
+    Basic derivative check
 
-        Compares error decay of 0th and 1st order Taylor approximation at point
-        x0 for a randomized search direction.
+    Compares error decay of 0th and 1st order Taylor approximation at point
+    x0 for a randomized search direction.
 
-        :param callable fctn: function handle
-        :param numpy.array x0: point at which to check derivative
-        :param int num: number of times to reduce step length, h
-        :param bool plotIt: if you would like to plot
-        :param numpy.array dx: step direction
-        :param int expectedOrder: The order that you expect the derivative to yield.
-        :param float tolerance: The tolerance on the expected order.
-        :param float eps: What is zero?
-        :rtype: bool
-        :return: did you pass the test?!
+    :param callable fctn: function handle
+    :param numpy.ndarray x0: point at which to check derivative
+    :param int num: number of times to reduce step length, h
+    :param bool plotIt: if you would like to plot
+    :param numpy.ndarray dx: step direction
+    :param int expectedOrder: The order that you expect the derivative to yield.
+    :param float tolerance: The tolerance on the expected order.
+    :param float eps: What is zero?
+    :rtype: bool
+    :return: did you pass the test?!
 
 
-        .. plot::
-            :include-source:
+    .. plot::
+        :include-source:
 
-            from discretize import Tests, utils
-            import numpy as np
+        from discretize import Tests, utils
+        import numpy as np
 
-            def simplePass(x):
-                return np.sin(x), utils.sdiag(np.cos(x))
-            Tests.checkDerivative(simplePass, np.random.randn(5))
+        def simplePass(x):
+            return np.sin(x), utils.sdiag(np.cos(x))
+        Tests.checkDerivative(simplePass, np.random.randn(5))
     """
 
     print("{0!s} checkDerivative {1!s}".format('='*20, '='*20))
@@ -374,13 +374,15 @@ def checkDerivative(fctn, x0, num=7, plotIt=True, dx=None, expectedOrder=2, tole
 
 def getQuadratic(A, b, c=0):
     """
-        Given A, b and c, this returns a quadratic, Q
+    Given A, b and c, this returns a quadratic, Q
 
-        .. math::
+    .. math::
 
-            \mathbf{Q( x ) = 0.5 x A x + b x} + c
+        \\mathbf{Q( x ) = 0.5 x A x + b x} + c
+
     """
     def Quadratic(x, return_g=True, return_H=True):
+        """Quadratic function"""
         f = 0.5 * x.dot( A.dot(x)) + b.dot( x ) + c
         out = (f,)
         if return_g:

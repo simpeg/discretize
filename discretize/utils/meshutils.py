@@ -153,9 +153,9 @@ def meshTensor(value):
 def closestPoints(mesh, pts, gridLoc='CC'):
     """Move a list of points to the closest points on a grid.
 
-    :param BaseMesh mesh: The mesh
+    :param discretize.BaseMesh.BaseMesh mesh: The mesh
     :param numpy.ndarray pts: Points to move
-    :param string gridLoc: ['CC', 'N', 'Fx', 'Fy', 'Fz', 'Ex', 'Ex', 'Ey', 'Ez']
+    :param str gridLoc: ['CC', 'N', 'Fx', 'Fy', 'Fz', 'Ex', 'Ex', 'Ey', 'Ez']
     :rtype: numpy.ndarray
     :return: nodeInds
     """

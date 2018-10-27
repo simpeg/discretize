@@ -974,11 +974,11 @@ cdef class _TreeMesh:
         """Returns the indices of boundary cells in a given direction given an active index array.
 
         Optional Input:
-        :param numpy.array active_ind: None or Boolean array of active indexes in the mesh
+        :param numpy.ndarray active_ind: None or Boolean array of active indexes in the mesh
         :param str direction: one of ('zu', 'zd', 'xu', 'xd', 'yu', 'yd')
 
         Output:
-        :rtype: numpy.array
+        :rtype: numpy.ndarray
         :return: Array of indices for the boundary cells in a given direction
         """
 

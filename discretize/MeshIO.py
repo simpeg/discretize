@@ -215,8 +215,7 @@ class TensorMeshIO(object):
         Input:
         :param str fileName:  path to the output vtk file or just its name if directory is specified
         :param str directory: directory where the UBC GIF file lives
-        :param dict models: dictionary of numpy.array - Name('s) and array('s).
-        Match number of cells
+        :param dict models: dictionary of numpy.ndarray - Name('s) and array('s). Match number of cells
         """
         from vtk import vtkRectilinearGrid as rectGrid, vtkXMLRectilinearGridWriter as rectWriter, VTK_VERSION
         from vtk.util.numpy_support import numpy_to_vtk
@@ -273,9 +272,8 @@ class TensorMeshIO(object):
         Tensor mesh and model.
 
         Input:
-        :param str, path to the output vtk file
-        :param mesh, TensorMesh object - mesh to be transfer to VTK
-        :param models, dictionary of numpy.array - Name('s) and array('s). Match number of cells
+        :param mesh discretize.TensorMesh: mesh to be transfer to VTK
+        :param models dict: dictionary of numpy.ndarray - Name('s) and array('s). Match number of cells
 
         """
         # Import
@@ -373,8 +371,7 @@ class TensorMeshIO(object):
             and generate Tensor mesh model
 
         Input:
-        :param str fileName:  path to the UBC GIF mesh file to read
-        or just its name if directory is specified
+        :param str fileName:  path to the UBC GIF mesh file to read or just its name if directory is specified
         :param str directory: directory where the UBC GIF file lives
 
         Output:
@@ -395,8 +392,7 @@ class TensorMeshIO(object):
         to a UBC-GIF format model file.
 
         Input:
-        :param str fileName:  File to write to
-        or just its name if directory is specified
+        :param str fileName:  File to write to or just its name if directory is specified
         :param str directory: directory where the UBC GIF file lives
         :param numpy.ndarray model: The model
         """

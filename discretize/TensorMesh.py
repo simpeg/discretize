@@ -390,7 +390,7 @@ class BaseTensorMesh(BaseMesh):
             Fast version of getFaceInnerProduct.
             This does not handle the case of a full tensor prop.
 
-            :param numpy.array prop: material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
+            :param numpy.ndarray prop: material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
             :param str projType: 'E' or 'F'
             :param bool returnP: returns the projection matrices
             :param bool invProp: inverts the material property
