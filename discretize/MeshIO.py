@@ -222,7 +222,7 @@ class TensorMeshIO(object):
             Match number of cells
             """
             from .mixins import vtkInterface
-            return vtkInterface.saveVTK(fileName, mesh, models=models, directory=directory)
+            return vtkInterface.writeVTK(fileName, mesh, models=models, directory=directory)
     except:
         pass
 
@@ -584,6 +584,6 @@ class TreeMeshIO(object):
             Match number of cells
             """
             from .mixins import vtkInterface
-            return vtkInterface.saveVTK(fileName, mesh, models=models, directory=directory)
+            return vtkInterface.writeVTK(fileName, mesh, models=models, directory=directory)
     except ImportError as err:
         pass

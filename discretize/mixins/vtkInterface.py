@@ -278,8 +278,8 @@ class vtkInterface(object):
         vtrWriteFilter.Update()
 
     @staticmethod
-    def saveVTK(fileName, mesh, models=None, directory=''):
-        """Save any mesh object to its corresponding VTK data format."""
+    def writeVTK(fileName, mesh, models=None, directory=''):
+        """Write any mesh object to its corresponding VTK data format."""
         vtkObj = vtkInterface.toVTK(mesh, models=models)
         writers = {
             'vtkUnstructuredGrid' : vtkInterface._saveUnstructuredGrid,
