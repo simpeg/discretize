@@ -208,36 +208,23 @@ class TensorMeshIO(object):
         # Return the data
         return tensMsh, models
 
-    def writeVTK(mesh, fileName, models=None, directory=''):
-        """Makes and saves a VTK rectilinear file (vtr)
-        for a Tensor mesh and model.
 
-        Input:
-        :param str fileName:  path to the output vtk file or just its name if directory is specified
-        :param str directory: directory where the UBC GIF file lives
-        :param dict models: dictionary of numpy.array - Name('s) and array('s).
-        Match number of cells
-        """
-        from vtk import vtkXMLRectilinearGridWriter as rectWriter, VTK_VERSION
-        from vtk.util.numpy_support import numpy_to_vtk
+    try:
+        from .mixins import vtkInterface
+        def writeVTK(mesh, fileName, models=None, directory=''):
+            """Makes and saves a VTK rectilinear file (vtr)
+            for a Tensor mesh and model.
 
-        vtkObj = mesh.toVTK(models)
-
-        # Check the extension of the fileName
-        fname = os.path.join(directory, fileName)
-        ext = os.path.splitext(fname)[1]
-        if ext is '':
-            fname = fname + '.vtr'
-        elif ext not in '.vtr':
-            raise IOError('{:s} is an incorrect extension, has to be .vtr')
-        # Write the file.
-        vtrWriteFilter = rectWriter()
-        if float(VTK_VERSION.split('.')[0]) >= 6:
-            vtrWriteFilter.SetInputData(vtkObj)
-        else:
-            vtuWriteFilter.SetInput(vtuObj)
-        vtrWriteFilter.SetFileName(fname)
-        vtrWriteFilter.Update()
+            Input:
+            :param str fileName:  path to the output vtk file or just its name if directory is specified
+            :param str directory: directory where the UBC GIF file lives
+            :param dict models: dictionary of numpy.array - Name('s) and array('s).
+            Match number of cells
+            """
+            from .mixins import vtkInterface
+            return vtkInterface.saveVTK(fileName, mesh, models=models, directory=directory)
+    except:
+        pass
 
 
     def _readModelUBC_2D(mesh, fileName):
@@ -584,17 +571,19 @@ class TreeMeshIO(object):
                 np.savetxt(item[0], item[1][ubc_order], fmt='%3.5e')
 
 
-    def writeVTK(mesh, fileName, models=None):
-        """Function to write a VTU file from a TreeMesh and model."""
-        from vtk import vtkXMLUnstructuredGridWriter as Writer, VTK_VERSION
-        # Generate the VTU object
-        vtuObj = mesh.toVTK(models)
-        # Make the writer
-        vtuWriteFilter = Writer()
-        if float(VTK_VERSION.split('.')[0]) >= 6:
-            vtuWriteFilter.SetInputDataObject(vtuObj)
-        else:
-            vtuWriteFilter.SetInput(vtuObj)
-        vtuWriteFilter.SetFileName(fileName)
-        # Write the file
-        vtuWriteFilter.Update()
+    try:
+        from .mixins import vtkInterface
+        def writeVTK(mesh, fileName, models=None, directory=''):
+            """Makes and saves a VTK unstructured grid file (vtu)
+            for a TreeMesh and set of models.
+
+            Input:
+            :param str fileName:  path to the output vtk file or just its name if directory is specified
+            :param str directory: directory where the UBC GIF file lives
+            :param dict models: dictionary of numpy.array - Name('s) and array('s).
+            Match number of cells
+            """
+            from .mixins import vtkInterface
+            return vtkInterface.saveVTK(fileName, mesh, models=models, directory=directory)
+    except ImportError as err:
+        pass
