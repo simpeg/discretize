@@ -903,7 +903,7 @@ class TensorMesh(
 
         # Assign the model('s) to the object
         if models is not None:
-            for item in models.iteritems():
+            for item in models.items():
                 # Convert numpy array
                 vtkDoubleArr = numpy_to_vtk(item[1], deep=1)
                 vtkDoubleArr.SetName(item[0])
