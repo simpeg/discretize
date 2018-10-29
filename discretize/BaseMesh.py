@@ -4,8 +4,12 @@ import os
 import json
 from .utils.matutils import mkvc
 
+try:
+    from .mixins import vtkInterface
+except ImportError as err:
+    vtkInterface = None
 
-class BaseMesh(properties.HasProperties):
+class BaseMesh(properties.HasProperties, vtkInterface):
     """
     BaseMesh does all the counting you don't want to do.
     BaseMesh should be inherited by meshes with a regular structure.

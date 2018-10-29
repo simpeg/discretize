@@ -13,13 +13,7 @@ from vtk import VTK_VERSION
 from vtk import vtkXMLRectilinearGridWriter
 from vtk import vtkXMLUnstructuredGridWriter
 from vtk import vtkStructuredGridWriter
-
-# TODO: WHY CANT I DO LOCAL IMPORTS?
-# from ..TensorMesh import TensorMesh
-# from ..TreeMesh import TreeMesh
-# from ..CurvilinearMesh import CurvilinearMesh
-# from ..CylMesh import CylMesh
-
+from vtk import vtkXMLRectilinearGridReader
 
 class vtkInterface(object):
     """This class is full of static methods that enable ``discretize`` meshes to
@@ -27,8 +21,7 @@ class vtkInterface(object):
     """
 
 
-    @staticmethod
-    def _treeMeshToVTK(mesh, models=None):
+    def __treeMeshToVTK(mesh, models=None):
         """
         Constructs a ``vtkUnstructuredGrid`` object of this tree mesh and the
         given models as ``CellData`` of that VTK dataset.
@@ -83,8 +76,7 @@ class vtkInterface(object):
 
         return vtuObj
 
-    @staticmethod
-    def _tensorMeshToVTK(mesh, models=None):
+    def __tensorMeshToVTK(mesh, models=None):
         """
         Constructs a ``vtkRectilinearGrid`` object of this tensor mesh and the
         given models as ``CellData`` of that grid.
@@ -126,8 +118,7 @@ class vtkInterface(object):
         return vtkObj
 
 
-    @staticmethod
-    def _curvilinearMeshToVTK(mesh, models=None):
+    def __curvilinearMeshToVTK(mesh, models=None):
         """
         Constructs a ``vtkStructuredGrid`` of this mesh and the given
         models as ``CellData`` of that object.
@@ -173,18 +164,16 @@ class vtkInterface(object):
 
         return output
 
-    @staticmethod
-    def _cylMeshToVTK(mesh, models=None):
+    def __cylMeshToVTK(mesh, models=None):
         # TODO: implement this!
         pass
 
-    @staticmethod
     def toVTK(mesh, models=None):
         """Convert any mesh object to it's proper VTK data object."""
         converters = {
-            'TreeMesh' : vtkInterface._treeMeshToVTK,
-            'TensorMesh' : vtkInterface._tensorMeshToVTK,
-            'CurvilinearMesh' : vtkInterface._curvilinearMeshToVTK,
+            'TreeMesh' : vtkInterface.__treeMeshToVTK,
+            'TensorMesh' : vtkInterface.__tensorMeshToVTK,
+            'CurvilinearMesh' : vtkInterface.__curvilinearMeshToVTK,
             #TODO: 'CylMesh' : vtkInterface._cylMeshToVTK,
             }
         key = type(mesh).__name__
@@ -277,9 +266,15 @@ class vtkInterface(object):
         vtrWriteFilter.SetFileName(fname)
         vtrWriteFilter.Update()
 
-    @staticmethod
-    def writeVTK(fileName, mesh, models=None, directory=''):
-        """Write any mesh object to its corresponding VTK data format."""
+    def writeVTK(mesh, fileName, models=None, directory=''):
+        """Makes and saves a VTK object from this mesh and models
+
+        Input:
+        :param str fileName:  path to the output vtk file or just its name if directory is specified
+        :param str directory: directory where the UBC GIF file lives
+        :param dict models: dictionary of numpy.array - Name('s) and array('s).
+        Match number of cells
+        """
         vtkObj = vtkInterface.toVTK(mesh, models=models)
         writers = {
             'vtkUnstructuredGrid' : vtkInterface._saveUnstructuredGrid,
@@ -293,3 +288,59 @@ class vtkInterface(object):
         except:
             raise RuntimeError('VTK data type `%s` is not currently supported.' % key)
         return write(fileName, vtkObj, directory=directory)
+
+
+class vtkTensorRead(object):
+    """Provides a convienance method for reading VTK Rectilinear Grid files
+    as TensorMesh objects."""
+
+    @classmethod
+    def readVTK(TensorMesh, fileName, directory=''):
+        """Read VTK Rectilinear (vtr xml file) and return Tensor mesh and model
+
+        Input:
+        :param str fileName: path to the vtr model file to read or just its name if directory is specified
+        :param str directory: directory where the UBC GIF file lives
+
+        Output:
+        :rtype: tuple
+        :return: (TensorMesh, modelDictionary)
+        """
+        fname = os.path.join(directory, fileName)
+        # Read the file
+        vtrReader = vtkXMLRectilinearGridReader()
+        vtrReader.SetFileName(fname)
+        vtrReader.Update()
+        vtrGrid = vtrReader.GetOutput()
+        # Sort information
+        hx = np.abs(np.diff(nps.vtk_to_numpy(vtrGrid.GetXCoordinates())))
+        xR = nps.vtk_to_numpy(vtrGrid.GetXCoordinates())[0]
+        hy = np.abs(np.diff(nps.vtk_to_numpy(vtrGrid.GetYCoordinates())))
+        yR = nps.vtk_to_numpy(vtrGrid.GetYCoordinates())[0]
+        zD = np.diff(nps.vtk_to_numpy(vtrGrid.GetZCoordinates()))
+        # Check the direction of hz
+        if np.all(zD < 0):
+            hz = np.abs(zD[::-1])
+            zR = nps.vtk_to_numpy(vtrGrid.GetZCoordinates())[-1]
+        else:
+            hz = np.abs(zD)
+            zR = nps.vtk_to_numpy(vtrGrid.GetZCoordinates())[0]
+        x0 = np.array([xR, yR, zR])
+
+        # Make the object
+        tensMsh = TensorMesh([hx, hy, hz], x0=x0)
+
+        # Grap the models
+        models = {}
+        for i in np.arange(vtrGrid.GetCellData().GetNumberOfArrays()):
+            modelName = vtrGrid.GetCellData().GetArrayName(i)
+            if np.all(zD < 0):
+                modFlip = nps.vtk_to_numpy(vtrGrid.GetCellData().GetArray(i))
+                tM = tensMsh.r(modFlip, 'CC', 'CC', 'M')
+                modArr = tensMsh.r(tM[:, :, ::-1], 'CC', 'CC', 'V')
+            else:
+                modArr = nps.vtk_to_numpy(vtrGrid.GetCellData().GetArray(i))
+            models[modelName] = modArr
+
+        # Return the data
+        return tensMsh, models

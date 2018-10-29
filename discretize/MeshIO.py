@@ -7,6 +7,11 @@ import six
 from . import utils
 from .BaseMesh import BaseMesh
 
+try:
+    from .mixins import vtkTensorRead
+except ImportError as err:
+    vtkTensorRead = None
+
 
 def load_mesh(filename):
     """
@@ -24,7 +29,7 @@ def load_mesh(filename):
     return data
 
 
-class TensorMeshIO(object):
+class TensorMeshIO(vtkTensorRead if vtkTensorRead else object):
 
     @classmethod
     def _readUBC_3DMesh(TensorMesh, fileName):
@@ -153,78 +158,6 @@ class TensorMeshIO(object):
         else:
             raise Exception('File format not recognized')
         return Tnsmsh
-
-    @classmethod
-    def readVTK(TensorMesh, fileName, directory=''):
-        """Read VTK Rectilinear (vtr xml file) and return Tensor mesh and model
-
-        Input:
-        :param str fileName: path to the vtr model file to read or just its name if directory is specified
-        :param str directory: directory where the UBC GIF file lives
-
-        Output:
-        :rtype: tuple
-        :return: (TensorMesh, modelDictionary)
-        """
-        from vtk import vtkXMLRectilinearGridReader as vtrFileReader
-        from vtk.util.numpy_support import vtk_to_numpy
-
-        fname = os.path.join(directory, fileName)
-        # Read the file
-        vtrReader = vtrFileReader()
-        vtrReader.SetFileName(fname)
-        vtrReader.Update()
-        vtrGrid = vtrReader.GetOutput()
-        # Sort information
-        hx = np.abs(np.diff(vtk_to_numpy(vtrGrid.GetXCoordinates())))
-        xR = vtk_to_numpy(vtrGrid.GetXCoordinates())[0]
-        hy = np.abs(np.diff(vtk_to_numpy(vtrGrid.GetYCoordinates())))
-        yR = vtk_to_numpy(vtrGrid.GetYCoordinates())[0]
-        zD = np.diff(vtk_to_numpy(vtrGrid.GetZCoordinates()))
-        # Check the direction of hz
-        if np.all(zD < 0):
-            hz = np.abs(zD[::-1])
-            zR = vtk_to_numpy(vtrGrid.GetZCoordinates())[-1]
-        else:
-            hz = np.abs(zD)
-            zR = vtk_to_numpy(vtrGrid.GetZCoordinates())[0]
-        x0 = np.array([xR, yR, zR])
-
-        # Make the object
-        tensMsh = TensorMesh([hx, hy, hz], x0=x0)
-
-        # Grap the models
-        models = {}
-        for i in np.arange(vtrGrid.GetCellData().GetNumberOfArrays()):
-            modelName = vtrGrid.GetCellData().GetArrayName(i)
-            if np.all(zD < 0):
-                modFlip = vtk_to_numpy(vtrGrid.GetCellData().GetArray(i))
-                tM = tensMsh.r(modFlip, 'CC', 'CC', 'M')
-                modArr = tensMsh.r(tM[:, :, ::-1], 'CC', 'CC', 'V')
-            else:
-                modArr = vtk_to_numpy(vtrGrid.GetCellData().GetArray(i))
-            models[modelName] = modArr
-
-        # Return the data
-        return tensMsh, models
-
-
-    try:
-        from .mixins import vtkInterface
-        def writeVTK(mesh, fileName, models=None, directory=''):
-            """Makes and saves a VTK rectilinear file (vtr)
-            for a Tensor mesh and model.
-
-            Input:
-            :param str fileName:  path to the output vtk file or just its name if directory is specified
-            :param str directory: directory where the UBC GIF file lives
-            :param dict models: dictionary of numpy.array - Name('s) and array('s).
-            Match number of cells
-            """
-            from .mixins import vtkInterface
-            return vtkInterface.writeVTK(fileName, mesh, models=models, directory=directory)
-    except:
-        pass
 
 
     def _readModelUBC_2D(mesh, fileName):
@@ -569,21 +502,3 @@ class TreeMeshIO(object):
             for item in six.iteritems(models):
                 # Save the data
                 np.savetxt(item[0], item[1][ubc_order], fmt='%3.5e')
-
-
-    try:
-        from .mixins import vtkInterface
-        def writeVTK(mesh, fileName, models=None, directory=''):
-            """Makes and saves a VTK unstructured grid file (vtu)
-            for a TreeMesh and set of models.
-
-            Input:
-            :param str fileName:  path to the output vtk file or just its name if directory is specified
-            :param str directory: directory where the UBC GIF file lives
-            :param dict models: dictionary of numpy.array - Name('s) and array('s).
-            Match number of cells
-            """
-            from .mixins import vtkInterface
-            return vtkInterface.writeVTK(fileName, mesh, models=models, directory=directory)
-    except ImportError as err:
-        pass
