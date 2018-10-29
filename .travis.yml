@@ -31,8 +31,14 @@ before_install:
   - conda update --yes conda
 
 install:
-  - conda install --quiet --yes pip python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib pillow cython ipython;
+  - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then
+      echo "Using native pip to install dependencies"
+    else
+      conda install --quiet --yes pip python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib pillow cython ipython;
+    fi
   - conda install --quiet --yes -c menpo vtk
+  - which pip
+  - pip install --upgrade pip
   - pip install -r requirements_dev.txt
   - python --version
   - python setup.py install
