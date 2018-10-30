@@ -12,7 +12,7 @@ import vtk.util.numpy_support as nps
 from vtk import VTK_VERSION
 from vtk import vtkXMLRectilinearGridWriter
 from vtk import vtkXMLUnstructuredGridWriter
-from vtk import vtkStructuredGridWriter
+from vtk import vtkXMLStructuredGridWriter
 from vtk import vtkXMLRectilinearGridReader
 
 class vtkInterface(object):
@@ -68,10 +68,10 @@ class vtkInterface(object):
         vtuObj.GetCellData().AddArray(refineLevelArr)
         # Assign the model('s) to the object
         if models is not None:
-            for item in six.iteritems(models):
+            for name, mod in models.items():
                 # Convert numpy array
-                vtkDoubleArr = nps.numpy_to_vtk(item[1], deep=1)
-                vtkDoubleArr.SetName(item[0])
+                vtkDoubleArr = nps.numpy_to_vtk(mod, deep=1)
+                vtkDoubleArr.SetName(name)
                 vtuObj.GetCellData().AddArray(vtkDoubleArr)
 
         return vtuObj
@@ -156,10 +156,10 @@ class vtkInterface(object):
 
         # Assign the model('s) to the object
         if models is not None:
-            for item in six.iteritems(models):
+            for name, mod in models.items():
                 # Convert numpy array
-                vtkDoubleArr = nps.numpy_to_vtk(item[1], deep=1)
-                vtkDoubleArr.SetName(item[0])
+                vtkDoubleArr = nps.numpy_to_vtk(mod, deep=1)
+                vtkDoubleArr.SetName(name)
                 output.GetCellData().AddArray(vtkDoubleArr)
 
         return output
@@ -200,7 +200,7 @@ class vtkInterface(object):
         if ext is '':
             fname = fname + '.vtu'
         elif ext not in '.vtu':
-            raise IOError('{:s} is an incorrect extension, has to be .vtu')
+            raise IOError('{:s} is an incorrect extension, has to be .vtu'.format(ext))
         # Make the writer
         vtuWriteFilter = vtkXMLUnstructuredGridWriter()
         if float(VTK_VERSION.split('.')[0]) >= 6:
@@ -226,11 +226,11 @@ class vtkInterface(object):
         fname = os.path.join(directory, fileName)
         ext = os.path.splitext(fname)[1]
         if ext is '':
-            fname = fname + '.vtk'
-        elif ext not in '.vtk':
-            raise IOError('{:s} is an incorrect extension, has to be .vtk')
+            fname = fname + '.vts'
+        elif ext not in '.vts':
+            raise IOError('{:s} is an incorrect extension, has to be .vts'.format(ext))
         # Make the writer
-        writer = vtkStructuredGridWriter()
+        writer = vtkXMLStructuredGridWriter()
         if float(VTK_VERSION.split('.')[0]) >= 6:
             writer.SetInputDataObject(vtkStructGrid)
         else:
@@ -256,7 +256,7 @@ class vtkInterface(object):
         if ext is '':
             fname = fname + '.vtr'
         elif ext not in '.vtr':
-            raise IOError('{:s} is an incorrect extension, has to be .vtr')
+            raise IOError('{:s} is an incorrect extension, has to be .vtr'.format(ext))
         # Write the file.
         vtrWriteFilter = vtkXMLRectilinearGridWriter()
         if float(VTK_VERSION.split('.')[0]) >= 6:
