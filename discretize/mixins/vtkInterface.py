@@ -7,6 +7,8 @@ import os
 import numpy as np
 import six
 
+from ..utils import cyl2cart
+
 import vtk
 import vtk.util.numpy_support as nps
 from vtk import VTK_VERSION
@@ -16,10 +18,29 @@ from vtk import vtkXMLStructuredGridWriter
 from vtk import vtkXMLRectilinearGridReader
 
 class vtkInterface(object):
-    """This class is full of static methods that enable ``discretize`` meshes to
+    """This class is full of methods that enable ``discretize`` meshes to
     be converted to VTK data objects (and back when possible).
     """
+    # NOTE: I name wrangle the class specific VTK conversions to force the user
+    #       to use the ``toVTK()`` method.
 
+    @staticmethod
+    def __assignCellData(vtkDS, models=None):
+        """Assign the model(s) to the VTK dataset as CellData
+
+        Input:
+        :param models, dictionary of numpy.array - Name('s) and array('s). Match number of cells
+        """
+        nc = vtkDS.GetNumberOfCells()
+        if models is not None:
+            for name, mod in models.items():
+                # Convert numpy array
+                if mod.size != nc:
+                    raise RuntimeError('Number of model cells ({}) does not match number of mesh cells ({}).'.format(mod.size, nc))
+                vtkDoubleArr = nps.numpy_to_vtk(mod, deep=1)
+                vtkDoubleArr.SetName(name)
+                vtkDS.GetCellData().AddArray(vtkDoubleArr)
+        return vtkDS
 
     def __treeMeshToVTK(mesh, models=None):
         """
@@ -44,37 +65,27 @@ class vtkInterface(object):
             VTK_CELL_TYPE = vtk.VTK_PIXEL
         if ptsMat.shape[1] != 3:
             raise RuntimeError('Points of the mesh are improperly defined.')
-
+        # Grab the points
         vtkPts = vtk.vtkPoints()
         vtkPts.SetData(nps.numpy_to_vtk(ptsMat, deep=True))
-
         # Cells
         cellArray = [c for c in mesh]
         cellConn = np.array([cell.nodes for cell in cellArray])
-
         cellsMat = np.concatenate((np.ones((cellConn.shape[0], 1), dtype=np.int64)*cellConn.shape[1], cellConn), axis=1).ravel()
         cellsArr = vtk.vtkCellArray()
         cellsArr.SetNumberOfCells(cellConn.shape[0])
         cellsArr.SetCells(cellConn.shape[0], nps.numpy_to_vtkIdTypeArray(cellsMat, deep=True))
-
         # Make the object
-        vtuObj = vtk.vtkUnstructuredGrid()
-        vtuObj.SetPoints(vtkPts)
-        vtuObj.SetCells(VTK_CELL_TYPE, cellsArr)
+        output = vtk.vtkUnstructuredGrid()
+        output.SetPoints(vtkPts)
+        output.SetCells(VTK_CELL_TYPE, cellsArr)
         # Add the level of refinement as a cell array
         cell_levels = np.array([cell._level for cell in cellArray])
         refineLevelArr = nps.numpy_to_vtk(cell_levels, deep=1)
         refineLevelArr.SetName('octreeLevel')
-        vtuObj.GetCellData().AddArray(refineLevelArr)
+        output.GetCellData().AddArray(refineLevelArr)
         # Assign the model('s) to the object
-        if models is not None:
-            for name, mod in models.items():
-                # Convert numpy array
-                vtkDoubleArr = nps.numpy_to_vtk(mod, deep=1)
-                vtkDoubleArr.SetName(name)
-                vtuObj.GetCellData().AddArray(vtkDoubleArr)
-
-        return vtuObj
+        return vtkInterface.__assignCellData(output, models=models)
 
     def __tensorMeshToVTK(mesh, models=None):
         """
@@ -100,22 +111,36 @@ class vtkInterface(object):
             zD = mesh.nNz
         # Use rectilinear VTK grid.
         # Assign the spatial information.
-        vtkObj = vtk.vtkRectilinearGrid()
-        vtkObj.SetDimensions(xD, yD, zD)
-        vtkObj.SetXCoordinates(nps.numpy_to_vtk(vX, deep=1))
-        vtkObj.SetYCoordinates(nps.numpy_to_vtk(vY, deep=1))
-        vtkObj.SetZCoordinates(nps.numpy_to_vtk(vZ, deep=1))
-
+        output = vtk.vtkRectilinearGrid()
+        output.SetDimensions(xD, yD, zD)
+        output.SetXCoordinates(nps.numpy_to_vtk(vX, deep=1))
+        output.SetYCoordinates(nps.numpy_to_vtk(vY, deep=1))
+        output.SetZCoordinates(nps.numpy_to_vtk(vZ, deep=1))
         # Assign the model('s) to the object
-        if models is not None:
-            for item in models.items():
-                # Convert numpy array
-                vtkDoubleArr = nps.numpy_to_vtk(item[1], deep=1)
-                vtkDoubleArr.SetName(item[0])
-                vtkObj.GetCellData().AddArray(vtkDoubleArr)
-            # Set the active scalar
-            vtkObj.GetCellData().SetActiveScalars(list(models.keys())[0])
-        return vtkObj
+        return vtkInterface.__assignCellData(output, models=models)
+
+    @staticmethod
+    def __createStructGrid(ptsMat, dims, models=None):
+        # Adjust if result was 2D:
+        if ptsMat.shape[1] == 2:
+            # Figure out which dim is null
+            nullDim = dims.index(None)
+            ptsMat = np.insert(ptsMat, nullDim, np.zeros(ptsMat.shape[0]), axis=1)
+        if ptsMat.shape[1] != 3:
+            raise RuntimeError('Points of the mesh are improperly defined.')
+        # Convert the points
+        vtkPts = vtk.vtkPoints()
+        vtkPts.SetData(nps.numpy_to_vtk(ptsMat, deep=True))
+        # Uncover hidden dimension
+        for i, d in enumerate(dims):
+            if d is None:
+                dims[i] = 0
+            dims[i] = dims[i] + 1
+        output = vtk.vtkStructuredGrid()
+        output.SetDimensions(dims[0], dims[1], dims[2]) # note this subtracts 1
+        output.SetPoints(vtkPts)
+        # Assign the model('s) to the object
+        return vtkInterface.__assignCellData(output, models=models)
 
 
     def __curvilinearMeshToVTK(mesh, models=None):
@@ -128,45 +153,21 @@ class vtkInterface(object):
         :param models, dictionary of numpy.array - Name('s) and array('s). Match number of cells
 
         """
-        # Make the data parts for the vtu object
-        # Points
         ptsMat = mesh.gridN
-
         dims = [mesh.nCx, mesh.nCy, mesh.nCz]
-        # Adjust if result was 2D:
-        if ptsMat.shape[1] == 2:
-            # Figure out which dim is null
-            nullDim = dims.index(None)
-            ptsMat = np.insert(ptsMat, nullDim, np.zeros(ptsMat.shape[0]), axis=1)
-        if ptsMat.shape[1] != 3:
-            raise RuntimeError('Points of the mesh are improperly defined.')
+        return vtkInterface.__createStructGrid(ptsMat, dims, models=models)
 
-        vtkPts = vtk.vtkPoints()
-        vtkPts.SetData(nps.numpy_to_vtk(ptsMat, deep=True))
-
-        dims = [mesh.nCx, mesh.nCy, mesh.nCz]
-        for i, d in enumerate(dims):
-            if d is None:
-                dims[i] = 0
-            dims[i] = dims[i] + 1
-
-        output = vtk.vtkStructuredGrid()
-        output.SetDimensions(dims[0], dims[1], dims[2]) # note this subtracts 1
-        output.SetPoints(vtkPts)
-
-        # Assign the model('s) to the object
-        if models is not None:
-            for name, mod in models.items():
-                # Convert numpy array
-                vtkDoubleArr = nps.numpy_to_vtk(mod, deep=1)
-                vtkDoubleArr.SetName(name)
-                output.GetCellData().AddArray(vtkDoubleArr)
-
-        return output
 
     def __cylMeshToVTK(mesh, models=None):
-        # TODO: implement this!
+        """This treats the CylindricalMesh defined in cylindrical coordinates
+        :math:`(r, \theta, z)` and transforms it to cartesian coordinates.
+        """
+        # # Points
+        # ptsMat = cyl2cart(mesh.gridN)
+        # dims = [mesh.nCx, mesh.nCy, mesh.nCz]
+        # return vtkInterface.__createStructGrid(ptsMat, dims, models=models)
         pass
+
 
     def toVTK(mesh, models=None):
         """Convert any mesh object to it's proper VTK data object."""
@@ -174,7 +175,7 @@ class vtkInterface(object):
             'TreeMesh' : vtkInterface.__treeMeshToVTK,
             'TensorMesh' : vtkInterface.__tensorMeshToVTK,
             'CurvilinearMesh' : vtkInterface.__curvilinearMeshToVTK,
-            #TODO: 'CylMesh' : vtkInterface._cylMeshToVTK,
+            #TODO: 'CylMesh' : vtkInterface.__cylMeshToVTK,
             }
         key = type(mesh).__name__
         try:
@@ -280,7 +281,6 @@ class vtkInterface(object):
             'vtkUnstructuredGrid' : vtkInterface._saveUnstructuredGrid,
             'vtkRectilinearGrid' : vtkInterface._saveRectilinearGrid,
             'vtkStructuredGrid' : vtkInterface._saveStructuredGrid,
-            #TODO: 'CylMesh' : vtkInterface.???,
             }
         key = type(vtkObj).__name__
         try:
