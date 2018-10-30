@@ -7,7 +7,7 @@ from .utils.matutils import mkvc
 try:
     from .mixins import vtkInterface
 except ImportError as err:
-    vtkInterface = None
+    vtkInterface = object
 
 class BaseMesh(properties.HasProperties, vtkInterface):
     """

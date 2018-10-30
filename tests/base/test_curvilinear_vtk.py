@@ -50,7 +50,7 @@ if has_vtk:
             models = {'arange.txt': vec}
             mesh.writeVTK('temp.vts', models)
             print('Writing of VTK files is working')
-            os.remove('temp.vtk')
+            os.remove('temp.vts')
 
 
 

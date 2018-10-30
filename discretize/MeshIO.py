@@ -10,7 +10,7 @@ from .BaseMesh import BaseMesh
 try:
     from .mixins import vtkTensorRead
 except ImportError as err:
-    vtkTensorRead = None
+    vtkTensorRead = object
 
 
 def load_mesh(filename):
@@ -29,7 +29,7 @@ def load_mesh(filename):
     return data
 
 
-class TensorMeshIO(vtkTensorRead if vtkTensorRead else object):
+class TensorMeshIO(vtkTensorRead):
 
     @classmethod
     def _readUBC_3DMesh(TensorMesh, fileName):
