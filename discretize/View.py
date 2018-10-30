@@ -942,7 +942,7 @@ class CurviView(object):
 
     def plotGrid(
         self, ax=None, nodes=False, faces=False, centers=False, edges=False,
-        lines=True, showIt=False
+        lines=True, showIt=False, **kwargs
     ):
         """Plot the nodal, cell-centered and staggered grids for 1, 2 and 3 dimensions.
 
@@ -977,11 +977,11 @@ class CurviView(object):
                 X = np.r_[X1, X2]
                 Y = np.r_[Y1, Y2]
 
-                ax.plot(X, Y, color="C0", linestyle="-")
+                ax.plot(X, Y, color="C0", linestyle="-", **kwargs)
             if centers:
                 ax.plot(
                     self.gridCC[:, 0], self.gridCC[:, 1], color="C1",
-                    linestyle="", marker="o"
+                    linestyle="", marker="o", **kwargs
                 )
 
             # Nx = self.r(self.normals, 'F', 'Fx', 'V')
@@ -1028,7 +1028,7 @@ class CurviView(object):
             Y = np.r_[Y1, Y2, Y3]
             Z = np.r_[Z1, Z2, Z3]
 
-            ax.plot(X, Y, 'C0', zs=Z)
+            ax.plot(X, Y, 'C0', zs=Z, **kwargs)
             ax.set_zlabel('x3')
 
         ax.grid(True)
