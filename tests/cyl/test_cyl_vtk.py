@@ -25,10 +25,10 @@ if has_vtk:
             self.mesh = discretize.CylMesh([hx, htheta, hz])
 
         def test_VTK_object_conversion(self):
-            mesh = self.mesh
-            vec = np.arange(mesh.nC)
-            models = {'arange': vec}
-
+            # mesh = self.mesh
+            # vec = np.arange(mesh.nC)
+            # models = {'arange': vec}
+            #
             # TODO:
             # vtkObj = mesh.toVTK(models)
             #

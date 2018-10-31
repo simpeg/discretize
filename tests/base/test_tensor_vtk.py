@@ -1,11 +1,9 @@
 from __future__ import print_function
 import numpy as np
 import unittest
-import os
 import discretize
 
 try:
-    import vtk
     import vtk.util.numpy_support as nps
 except ImportError:
     has_vtk = False

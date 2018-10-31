@@ -5,7 +5,6 @@ import os
 import discretize
 
 try:
-    import vtk
     import vtk.util.numpy_support as nps
 except ImportError:
     has_vtk = False

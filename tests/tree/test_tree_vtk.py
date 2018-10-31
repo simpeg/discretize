@@ -1,11 +1,9 @@
 from __future__ import print_function
 import numpy as np
 import unittest
-import os
 import discretize
 
 try:
-    import vtk
     import vtk.util.numpy_support as nps
 except ImportError:
     has_vtk = False
@@ -42,7 +40,7 @@ if has_vtk:
             self.assertEqual(mesh.x0[2], bnds[4])
 
             names = list(models.keys())
-            for i, name in enumerate(names):
+            for name in names:
                 arr = nps.vtk_to_numpy(vtkObj.GetCellData().GetArray(name))
                 arr = arr.flatten(order='F')
                 self.assertTrue(np.allclose(models[name], arr))

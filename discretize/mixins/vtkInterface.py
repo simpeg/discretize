@@ -5,7 +5,6 @@ converted to VTK data objects (and back when possible).
 """
 import os
 import numpy as np
-import six
 
 from ..utils import cyl2cart
 
