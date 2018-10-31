@@ -4,7 +4,6 @@ from discretize.CylMesh import CylMesh
 from discretize.CurvilinearMesh import CurvilinearMesh
 from discretize import Tests
 from discretize.MeshIO import load_mesh
-import discretize.mixins
 try:
     from discretize.TreeMesh import TreeMesh
 except ImportError as err:
