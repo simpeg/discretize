@@ -700,8 +700,8 @@ class TensorView(object):
 
 
     def plot_3d_slicer(self, v, xslice=None, yslice=None, zslice=None,
-                       view='xy', transparent=None, clim=None, aspect='auto',
-                       grid=[2, 2, 1], pcolorOpts=None):
+                       vType='CC', view='xy', transparent=None, clim=None,
+                       aspect='auto', grid=[2, 2, 1], pcolorOpts=None):
         """Plot slices of a 3D volume, interactively (scroll wheel).
 
         If called from a notebook, make sure to set
@@ -728,8 +728,8 @@ class TensorView(object):
         fig = plt.figure()
 
         # Populate figure
-        tracker = Slicer(self, v, xslice, yslice, zslice, view, transparent,
-                         clim, aspect, grid, pcolorOpts)
+        tracker = Slicer(self, v, xslice, yslice, zslice, vType, view,
+                         transparent, clim, aspect, grid, pcolorOpts)
 
         # Connect figure to scrolling
         fig.canvas.mpl_connect('scroll_event', tracker.onscroll)
@@ -1152,6 +1152,9 @@ class Slicer(object):
         Initial slice locations (in meter);
         defaults to the middle of the volume.
 
+    vType: str
+        Type of visualization. At the moment only 'CC' is implemented.
+
     view : 'xy' (default) or 'yx'
         'xy': horizontal axis is x, vertical axis is y. Reversed otherwise.
 
@@ -1185,13 +1188,21 @@ class Slicer(object):
     """
 
     def __init__(self, mesh, v, xslice=None, yslice=None, zslice=None,
-                 view='xy', transparent=None, clim=None, aspect='auto',
-                 grid=[2, 2, 1], pcolorOpts=None):
+                 vType='CC', view='xy', transparent=None, clim=None,
+                 aspect='auto', grid=[2, 2, 1], pcolorOpts=None):
         """Initialize interactive figure."""
 
         # 0. Some checks, not very extensive
         if mesh.dim != 3:
-            raise ValueError('Must be a 3D mesh. Use plotImage instead.')
+            err = 'Must be a 3D mesh. Use plotImage instead.'
+            err += ' Mesh provided has {} dimension(s).'.format(mesh.dim)
+            raise ValueError(err)
+
+        vTypeOpts = ['CC', ]
+        if vType not in vTypeOpts:
+            err = "vType must be in ['{0!s}'].".format("', '".join(vTypeOpts))
+            err += " vType provided: '{0!s}'.".format(vType)
+            raise ValueError(err)
 
         # 1. Store relevant data
 
