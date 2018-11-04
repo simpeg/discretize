@@ -19,6 +19,7 @@ import numpy as np
 import tarfile
 import matplotlib.pyplot as plt
 from matplotlib.colors import SymLogNorm
+import sys
 
 
 ###############################################################################
@@ -35,7 +36,12 @@ tar = tarfile.open(f, "r")
 tar.extractall()
 tar.close()
 
-db = shelve.open('./laguna_del_maule_slicer/laguna_del_maule-result')
+if sys.version_info[0] < 3:
+    db = shelve.open(
+        './laguna_del_maule_slicer/laguna_del_maule-result', protocol=2
+    )
+else:
+    db = shelve.open('./laguna_del_maule_slicer/laguna_del_maule-result')
 mesh = db['mesh']
 Lpout = db['Lpout']
 db.close()
