@@ -35,9 +35,9 @@ tar = tarfile.open(f, "r")
 tar.extractall()
 tar.close()
 
-with shelve.open('./laguna_del_maule_slicer/laguna_del_maule-result') as db:
-    mesh = db['mesh']
-    Lpout = db['Lpout']
+db = shelve.open('./laguna_del_maule_slicer/laguna_del_maule-result')
+mesh = db['mesh']
+Lpout = db['Lpout']
 db.close()
 
 ###############################################################################
