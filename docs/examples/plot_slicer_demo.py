@@ -22,7 +22,8 @@ from matplotlib.colors import SymLogNorm
 import sys
 
 if sys.version_info[0] < 3:
-    sys.exit("This example only runs on Python 3")
+    print("This example only runs on Python 3")
+    sys.exit(0)
 
 ###############################################################################
 # Download and load data
