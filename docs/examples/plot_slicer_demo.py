@@ -38,7 +38,7 @@ tar.close()
 with shelve.open('./laguna_del_maule_slicer/laguna_del_maule-result') as db:
     mesh = db['mesh']
     Lpout = db['Lpout']
-
+db.close()
 
 ###############################################################################
 # Case 1: Using the intrinsinc functionality
