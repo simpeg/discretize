@@ -37,7 +37,7 @@ mean of 0.5. The grid is 60x60 and takes a few seconds to solve ~130
 times. The results are seen below, and you can see the field separating
 as the time increases.
 
-.. _FiPy: http://www.ctcms.nist.gov/fipy/examples/cahnHilliard/generated/examples.cahnHilliard.mesh2DCoupled.html
+.. _FiPy: https://www.ctcms.nist.gov/fipy/examples/cahnHilliard/generated/examples.cahnHilliard.mesh2DCoupled.html
 
 """
 import discretize

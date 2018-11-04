@@ -8,7 +8,7 @@ Dependencies
 
 - Python 2.7, 3.4 or 3.5
 - NumPy 1.8 (or greater)
-- SciPy 0.13 (or greater)
+- SciPy 1.0 (or greater)
 - matplotlib 1.3 (or greater)
 - pymatsolver 0.1.2 (or greater)
 - Cython 0.20 (or greater)
@@ -28,8 +28,7 @@ Installing Python
 
 Python is available on all major operating systems, but if you are getting started with python
 it is best to use a package manager such as
-`Continuum Anaconda <https://www.anaconda.com/download>`_ or
-`Enthought Canopy <https://www.enthought.com/products/canopy/>`_.
+`Continuum Anaconda <https://www.anaconda.com/download>`_.
 You can download the package manager and use it to install the dependencies above.
 
 .. note::
@@ -103,4 +102,3 @@ There are numerous ways to edit and test Python (see `PythonWiki <http://wiki.py
 * `Sublime <http://www.sublimetext.com/>`_
 * `iPython Notebook <http://ipython.org/notebook.html>`_
 * `iPython <http://ipython.org/>`_
-* `Enthought Canopy <https://www.enthought.com/products/canopy/>`_
