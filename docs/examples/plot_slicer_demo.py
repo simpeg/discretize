@@ -21,6 +21,8 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import SymLogNorm
 import sys
 
+if sys.version_info[0] < 3:
+    sys.exit("This example only runs on Python 3")
 
 ###############################################################################
 # Download and load data
@@ -36,15 +38,9 @@ tar = tarfile.open(f, "r")
 tar.extractall()
 tar.close()
 
-if sys.version_info[0] < 3:
-    db = shelve.open(
-        './laguna_del_maule_slicer/laguna_del_maule-result', protocol=2
-    )
-else:
-    db = shelve.open('./laguna_del_maule_slicer/laguna_del_maule-result')
-mesh = db['mesh']
-Lpout = db['Lpout']
-db.close()
+with shelve.open('./laguna_del_maule_slicer/laguna_del_maule-result') as db:
+    mesh = db['mesh']
+    Lpout = db['Lpout']
 
 ###############################################################################
 # Case 1: Using the intrinsinc functionality
