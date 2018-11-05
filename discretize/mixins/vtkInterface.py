@@ -6,6 +6,8 @@ converted to VTK data objects (and back when possible).
 import os
 import numpy as np
 
+import properties
+
 from ..utils import cyl2cart
 
 import vtk
@@ -58,12 +60,13 @@ class vtkInterface(object):
         # Adjust if result was 2D (voxels are pixels in 2D):
         VTK_CELL_TYPE = vtk.VTK_VOXEL
         if ptsMat.shape[1] == 2:
-            # TODO: assumes any 2D tree meshes are on the XY Plane
             # Add Z values of 0.0 if 2D
             ptsMat = np.c_[ptsMat, np.zeros(ptsMat.shape[0])]
             VTK_CELL_TYPE = vtk.VTK_PIXEL
         if ptsMat.shape[1] != 3:
             raise RuntimeError('Points of the mesh are improperly defined.')
+        # Rotate the points to the cartesian system
+        ptsMat = np.dot(ptsMat, mesh.rotMtx)
         # Grab the points
         vtkPts = vtk.vtkPoints()
         vtkPts.SetData(nps.numpy_to_vtk(ptsMat, deep=True))
@@ -83,38 +86,6 @@ class vtkInterface(object):
         refineLevelArr = nps.numpy_to_vtk(cell_levels, deep=1)
         refineLevelArr.SetName('octreeLevel')
         output.GetCellData().AddArray(refineLevelArr)
-        # Assign the model('s) to the object
-        return vtkInterface.__assignCellData(output, models=models)
-
-    def __tensorMeshToVTK(mesh, models=None):
-        """
-        Constructs a ``vtkRectilinearGrid`` object of this tensor mesh and the
-        given models as ``CellData`` of that grid.
-
-        Input:
-        :param mesh, discretize.TensorMesh - The tensor mesh to convert to a ``vtkRectilinearGrid``
-        :param models, dictionary of numpy.array - Name('s) and array('s). Match number of cells
-
-        """
-        # Deal with dimensionalities
-        if mesh.dim >= 1:
-            vX = mesh.vectorNx
-            xD = mesh.nNx
-            yD, zD = 1, 1
-            vY, vZ = np.array([0, 0])
-        if mesh.dim >= 2:
-            vY = mesh.vectorNy
-            yD = mesh.nNy
-        if mesh.dim == 3:
-            vZ = mesh.vectorNz
-            zD = mesh.nNz
-        # Use rectilinear VTK grid.
-        # Assign the spatial information.
-        output = vtk.vtkRectilinearGrid()
-        output.SetDimensions(xD, yD, zD)
-        output.SetXCoordinates(nps.numpy_to_vtk(vX, deep=1))
-        output.SetYCoordinates(nps.numpy_to_vtk(vY, deep=1))
-        output.SetZCoordinates(nps.numpy_to_vtk(vZ, deep=1))
         # Assign the model('s) to the object
         return vtkInterface.__assignCellData(output, models=models)
 
@@ -141,6 +112,60 @@ class vtkInterface(object):
         # Assign the model('s) to the object
         return vtkInterface.__assignCellData(output, models=models)
 
+    def __getRotatedNodes(mesh):
+        """A helper to get the nodes of a mesh rotated by specified axes"""
+        nodes = mesh.gridN
+        if mesh.dim == 1:
+            nodes = np.c_[mesh.gridN, np.zeros((mesh.nN, 2))]
+        elif mesh.dim == 2:
+            nodes = np.c_[mesh.gridN, np.zeros((mesh.nN, 1))]
+        # Now garuntee nodes are correct
+        if nodes.shape != (mesh.nN, 3):
+            raise RuntimeError('Nodes of the grid are improperly defined.')
+        # Rotate the points based on the axis orientations
+        mesh._validate_orientation()
+        return np.dot(nodes, mesh.rotMtx)
+
+    def __tensorMeshToVTK(mesh, models=None):
+        """
+        Constructs a ``vtkRectilinearGrid`` (or a ``vtkStructuredGrid``) object
+        of this tensor mesh and the given models as ``CellData`` of that grid.
+        If the mesh is defined on a normal cartesian system then a rectilinear
+        grid is generated. Otherwise, a structured grid is generated
+
+        Input:
+        :param mesh, discretize.TensorMesh - The tensor mesh to convert to a ``vtkRectilinearGrid``
+        :param models, dictionary of numpy.array - Name('s) and array('s). Match number of cells
+
+        """
+        # Deal with dimensionalities
+        if mesh.dim >= 1:
+            vX = mesh.vectorNx
+            xD = mesh.nNx
+            yD, zD = 1, 1
+            vY, vZ = np.array([0, 0])
+        if mesh.dim >= 2:
+            vY = mesh.vectorNy
+            yD = mesh.nNy
+        if mesh.dim == 3:
+            vZ = mesh.vectorNz
+            zD = mesh.nNz
+        # If axis orientations are standard then use a vtkRectilinearGrid
+        if mesh.cartesian:
+            # Use rectilinear VTK grid.
+            # Assign the spatial information.
+            output = vtk.vtkRectilinearGrid()
+            output.SetDimensions(xD, yD, zD)
+            output.SetXCoordinates(nps.numpy_to_vtk(vX, deep=1))
+            output.SetYCoordinates(nps.numpy_to_vtk(vY, deep=1))
+            output.SetZCoordinates(nps.numpy_to_vtk(vZ, deep=1))
+            return vtkInterface.__assignCellData(output, models=models)
+        # Use a structured grid where points are rotated to the cartesian system
+        ptsMat = vtkInterface.__getRotatedNodes(mesh)
+        dims = [mesh.nCx, mesh.nCy, mesh.nCz]
+        # Assign the model('s) to the object
+        return vtkInterface.__createStructGrid(ptsMat, dims, models=models)
+
 
     def __curvilinearMeshToVTK(mesh, models=None):
         """
@@ -152,7 +177,7 @@ class vtkInterface(object):
         :param models, dictionary of numpy.array - Name('s) and array('s). Match number of cells
 
         """
-        ptsMat = mesh.gridN
+        ptsMat = vtkInterface.__getRotatedNodes(mesh)
         dims = [mesh.nCx, mesh.nCy, mesh.nCz]
         return vtkInterface.__createStructGrid(ptsMat, dims, models=models)
 

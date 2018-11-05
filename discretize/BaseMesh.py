@@ -377,6 +377,46 @@ class BaseMesh(properties.HasProperties, vtkInterface):
         """
         return properties.copy(self)
 
+    axis_u = properties.Vector3(
+        'Vector orientation of u-direction',
+        default='X',
+        length=1
+    )
+    axis_v = properties.Vector3(
+        'Vector orientation of v-direction',
+        default='Y',
+        length=1
+    )
+    axis_w = properties.Vector3(
+        'Vector orientation of w-direction',
+        default='Z',
+        length=1
+    )
+
+    @properties.validator
+    def _validate_orientation(self):
+        """Check if axes are orthogonal"""
+        if not (np.abs(self.axis_u.dot(self.axis_v) < 1e-6) and
+                np.abs(self.axis_v.dot(self.axis_w) < 1e-6) and
+                np.abs(self.axis_w.dot(self.axis_u) < 1e-6)):
+            raise ValueError('axis_u, axis_v, and axis_w must be orthogonal')
+        return True
+
+    @property
+    def cartesian(self):
+        """True if the axes are defined in the traditional <X,Y,Z> manner"""
+        if (    np.allclose(self.axis_u, (1, 0, 0)) and
+                np.allclose(self.axis_v, (0, 1, 0)) and
+                np.allclose(self.axis_w, (0, 0, 1)) ):
+            return True
+        return False
+
+    @property
+    def rotMtx(self):
+        """Builds a rotation matrix to transform coordinates from their coordinate
+        system into a conventional cartesian system"""
+        return np.array([self.axis_u, self.axis_v, self.axis_w])
+
 
 class BaseRectangularMesh(BaseMesh):
     """BaseRectangularMesh"""
