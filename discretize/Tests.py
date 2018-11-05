@@ -283,10 +283,10 @@ def checkDerivative(fctn, x0, num=7, plotIt=True, dx=None, expectedOrder=2, tole
         x0 for a randomized search direction.
 
         :param callable fctn: function handle
-        :param numpy.array x0: point at which to check derivative
+        :param numpy.ndarray x0: point at which to check derivative
         :param int num: number of times to reduce step length, h
         :param bool plotIt: if you would like to plot
-        :param numpy.array dx: step direction
+        :param numpy.ndarray dx: step direction
         :param int expectedOrder: The order that you expect the derivative to yield.
         :param float tolerance: The tolerance on the expected order.
         :param float eps: What is zero?

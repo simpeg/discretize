@@ -20,7 +20,7 @@ class InnerProducts(object):
 
     def getFaceInnerProduct(self, prop=None, invProp=False, invMat=False, doFast=True):
         """
-        :param numpy.array prop: material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
+        :param numpy.ndarray prop: material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
         :param bool invProp: inverts the material property
         :param bool invMat: inverts the matrix
         :param bool doFast: do a faster implementation if available.
@@ -31,7 +31,7 @@ class InnerProducts(object):
 
     def getEdgeInnerProduct(self, prop=None, invProp=False, invMat=False, doFast=True):
         """
-        :param numpy.array prop: material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
+        :param numpy.ndarray prop: material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
         :param bool invProp: inverts the material property
         :param bool invMat: inverts the matrix
         :param bool doFast: do a faster implementation if available.
@@ -43,7 +43,7 @@ class InnerProducts(object):
     def _getInnerProduct(self, projType, prop=None, invProp=False, invMat=False, doFast=True):
         """
         :param str projType: 'F' for faces 'E' for edges
-        :param numpy.array prop: material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
+        :param numpy.ndarray prop: material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
         :param bool invProp: inverts the material property
         :param bool invMat: inverts the matrix
         :param bool doFast: do a faster implementation if available.
@@ -119,7 +119,7 @@ class InnerProducts(object):
 
     def getFaceInnerProductDeriv(self, prop, doFast=True, invProp=False, invMat=False):
         """
-        :param numpy.array prop: material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
+        :param numpy.ndarray prop: material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
         :param bool doFast: do a faster implementation if available.
         :param bool invProp: inverts the material property
         :param bool invMat: inverts the matrix
@@ -136,7 +136,7 @@ class InnerProducts(object):
 
     def getEdgeInnerProductDeriv(self, prop, doFast=True, invProp=False, invMat=False):
         """
-        :param numpy.array prop: material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
+        :param numpy.ndarray prop: material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
         :param bool doFast: do a faster implementation if available.
         :param bool invProp: inverts the material property
         :param bool invMat: inverts the matrix
@@ -147,7 +147,7 @@ class InnerProducts(object):
 
     def _getInnerProductDeriv(self, prop, projType, doFast=True, invProp=False, invMat=False):
         """
-        :param numpy.array prop: material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
+        :param numpy.ndarray prop: material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
         :param str projType: 'F' for faces 'E' for edges
         :param bool doFast: do a faster implementation if available.
         :param bool invProp: inverts the material property
@@ -173,8 +173,8 @@ class InnerProducts(object):
 
     def _getInnerProductDerivFunction(self, tensorType, P, projType, v):
         """
-        :param numpy.array prop: material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
-        :param numpy.array v: vector to multiply (required in the general implementation)
+        :param numpy.ndarray prop: material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
+        :param numpy.ndarray v: vector to multiply (required in the general implementation)
         :param list P: list of projection matrices
         :param str projType: 'F' for faces 'E' for edges
         :rtype: scipy.sparse.csr_matrix

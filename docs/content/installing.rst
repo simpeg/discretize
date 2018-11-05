@@ -28,8 +28,7 @@ Installing Python
 
 Python is available on all major operating systems, but if you are getting started with python
 it is best to use a package manager such as
-`Continuum Anaconda <https://www.anaconda.com/download>`_ or
-`Enthought Canopy <https://www.enthought.com/products/canopy/>`_.
+`Continuum Anaconda <https://www.anaconda.com/download>`_.
 You can download the package manager and use it to install the dependencies above.
 
 .. note::
@@ -102,5 +101,4 @@ There are numerous ways to edit and test Python (see `PythonWiki <http://wiki.py
 
 * `Sublime <http://www.sublimetext.com/>`_
 * `iPython Notebook <http://ipython.org/notebook.html>`_
-* `iPython <http://ipython.org/>`_
-* `Enthought Canopy <https://www.enthought.com/products/canopy/>`_
+* `iPython <http://ipython.org/>`__
