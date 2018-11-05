@@ -5,10 +5,9 @@ converted to VTK data objects (and back when possible).
 """
 import os
 import numpy as np
-
 import properties
 
-from ..utils import cyl2cart
+# from ..utils import cyl2cart
 
 import vtk
 import vtk.util.numpy_support as nps
@@ -22,7 +21,7 @@ class vtkInterface(object):
     """This class is full of methods that enable ``discretize`` meshes to
     be converted to VTK data objects (and back when possible).
     """
-    # NOTE: I name wrangle the class specific VTK conversions to force the user
+    # NOTE: I name mangle the class specific VTK conversions to force the user
     #       to use the ``toVTK()`` method.
 
     @staticmethod
@@ -91,6 +90,7 @@ class vtkInterface(object):
 
     @staticmethod
     def __createStructGrid(ptsMat, dims, models=None):
+        """An internal helper to build out structured grids"""
         # Adjust if result was 2D:
         if ptsMat.shape[1] == 2:
             # Figure out which dim is null
@@ -131,7 +131,7 @@ class vtkInterface(object):
         Constructs a ``vtkRectilinearGrid`` (or a ``vtkStructuredGrid``) object
         of this tensor mesh and the given models as ``CellData`` of that grid.
         If the mesh is defined on a normal cartesian system then a rectilinear
-        grid is generated. Otherwise, a structured grid is generated
+        grid is generated. Otherwise, a structured grid is generated.
 
         Input:
         :param mesh, discretize.TensorMesh - The tensor mesh to convert to a ``vtkRectilinearGrid``
@@ -190,7 +190,7 @@ class vtkInterface(object):
         # ptsMat = cyl2cart(mesh.gridN)
         # dims = [mesh.nCx, mesh.nCy, mesh.nCz]
         # return vtkInterface.__createStructGrid(ptsMat, dims, models=models)
-        pass
+        raise NotImplementedError('`CylMesh`s are not currently supported for VTK conversion.')
 
 
     def toVTK(mesh, models=None):
