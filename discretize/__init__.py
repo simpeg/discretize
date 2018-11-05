@@ -1,11 +1,11 @@
 import datetime as _datetime
 
-from discretize.BaseMesh import BaseMesh
-from discretize.TensorMesh import TensorMesh
-from discretize.CylMesh import CylMesh
-from discretize.CurvilinearMesh import CurvilinearMesh
-from discretize import Tests
-from discretize.MeshIO import load_mesh
+from .BaseMesh import BaseMesh
+from .TensorMesh import TensorMesh
+from .CylMesh import CylMesh
+from .CurvilinearMesh import CurvilinearMesh
+from .import Tests
+from .MeshIO import load_mesh
 try:
     from discretize.TreeMesh import TreeMesh
 except ImportError as err:

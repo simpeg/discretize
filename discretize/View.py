@@ -1,6 +1,6 @@
 import numpy as np
 import warnings
-from discretize.utils import mkvc, ndgrid
+from .utils import mkvc, ndgrid
 from six import integer_types
 try:
     import matplotlib.pyplot as plt
