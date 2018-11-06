@@ -403,19 +403,47 @@ class BaseMesh(properties.HasProperties, vtkInterface):
         return True
 
     @property
-    def is_cartesian(self):
-        """True if the axes are defined in the traditional <X,Y,Z> manner"""
+    def reference_is_rotated(self):
+        """True if the axes are rotated from the traditional <X,Y,Z> system
+        with vectors of :math:`(1,0,0)`, :math:`(0,1,0)`, and :math:`(0,0,1)`
+        """
         if (    np.allclose(self.axis_u, (1, 0, 0)) and
                 np.allclose(self.axis_v, (0, 1, 0)) and
                 np.allclose(self.axis_w, (0, 0, 1)) ):
-            return True
-        return False
+            return False
+        return True
 
     @property
     def rotation_matrix(self):
         """Builds a rotation matrix to transform coordinates from their coordinate
         system into a conventional cartesian system"""
         return np.array([self.axis_u, self.axis_v, self.axis_w])
+
+
+    reference_system = properties.String(
+        'The type of coordinate reference frame. Can take on the values ' +
+        'cartesian, cylindrical, or spherical. Abbreviations of these are allowed.',
+        default='cartesian',
+        change_case='lower',
+    )
+
+    @properties.validator
+    def _validate_reference_system(self):
+        """Check if the reference system is of a known type."""
+        choices = ['cartesian', 'cylindrical', 'spherical']
+        # Here are a few abbreviations that users can harnes
+        abrevs = {
+            'car': choices[0],
+            'cart': choices[0],
+            'cy': choices[1],
+            'cyl': choices[1],
+            'sph': choices[2],
+        }
+        # Get the name and fix it if it is abbreviated
+        checkme = abrevs.get(self.reference_system, self.reference_system)
+        if checkme not in choices:
+            raise ValueError('Coordinate system ({}) unknown.'.format(checkme))
+        return True
 
 
 class BaseRectangularMesh(BaseMesh):
