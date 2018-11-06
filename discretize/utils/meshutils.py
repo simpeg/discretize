@@ -155,7 +155,7 @@ def closestPoints(mesh, pts, gridLoc='CC'):
 
     :param BaseMesh mesh: The mesh
     :param numpy.ndarray pts: Points to move
-    :param string gridLoc: ['CC', 'N', 'Fx', 'Fy', 'Fz', 'Ex', 'Ex', 'Ey', 'Ez']
+    :param str gridLoc: ['CC', 'N', 'Fx', 'Fy', 'Fz', 'Ex', 'Ex', 'Ey', 'Ez']
     :rtype: numpy.ndarray
     :return: nodeInds
     """

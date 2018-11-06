@@ -60,7 +60,7 @@ class TensorView(object):
 
         Input:
 
-        :param numpy.array v: vector
+        :param numpy.ndarray v: vector
 
         Optional Inputs:
 
@@ -1142,8 +1142,7 @@ class Slicer(object):
     >>> plt.show()
 
 
-    Parameters
-    ----------
+    **Parameters**
 
     v : array
         Data array of length self.nC.
