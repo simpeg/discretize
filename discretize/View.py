@@ -1215,11 +1215,8 @@ class Slicer(object):
 
         if vType == 'CC':
             pass
-        elif vType == 'CCv':
-            if view != 'vec':
-                raise AssertionError('Other types for CCv not supported')
         else:
-            aveOp = 'ave' + vType + ('2CCV' if view == 'vec' else '2CC')
+            aveOp = 'ave' + vType + '2CC'
             Av = getattr(mesh, aveOp)
             if v.size == Av.shape[1]:
                 v = Av * v
@@ -1234,8 +1231,8 @@ class Slicer(object):
             axis = view
             view = 'real'
 
-        viewOpts = ['real', 'imag', 'abs', 'vec']
-        if view in ['real', 'imag', 'abs']:
+        viewOpts = ['real', 'imag', 'abs']
+        if view in viewOpts:
             v = getattr(np, view)(v) # e.g. np.real(v)
         else:
             err = "view must be in ['{0!s}'].".format("', '".join(viewOpts))
