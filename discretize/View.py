@@ -1228,6 +1228,12 @@ class Slicer(object):
                 v = Av * v
 
         # (c) vOpts  # Not yet working for 'vec'
+
+        # Backwards compatibility
+        if view in ['xy', 'yx']:
+            axis = view
+            view = 'real'
+
         viewOpts = ['real', 'imag', 'abs', 'vec']
         if view in ['real', 'imag', 'abs']:
             v = getattr(np, view)(v) # e.g. np.real(v)
@@ -1252,7 +1258,7 @@ class Slicer(object):
 
         # View: Default ('xy'): horizontal axis is x, vertical axis is y.
         # Reversed otherwise.
-        if view == 'yx':
+        if axis == 'yx':
             self.yx = True
         else:
             self.yx = False
