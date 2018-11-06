@@ -1385,19 +1385,19 @@ class Slicer(object):
 
         # Update slice index depending on subplot over which mouse is
         if event.inaxes == self.ax1:    # X-Y
-            self.zind = (self.zind + pm) % (self.zc.size - 1)
+            self.zind = (self.zind + pm) % self.zc.size
             self.update_xy()
         elif event.inaxes == self.ax2:  # X-Z
             if self.yx:
-                self.xind = (self.xind + pm) % (self.xc.size - 1)
+                self.xind = (self.xind + pm) % self.xc.size
             else:
-                self.yind = (self.yind + pm) % (self.yc.size - 1)
+                self.yind = (self.yind + pm) % self.yc.size
             self.update_xz()
         elif event.inaxes == self.ax3:  # Z-Y
             if self.yx:
-                self.yind = (self.yind + pm) % (self.yc.size - 1)
+                self.yind = (self.yind + pm) % self.yc.size
             else:
-                self.xind = (self.xind + pm) % (self.xc.size - 1)
+                self.xind = (self.xind + pm) % self.xc.size
             self.update_zy()
 
         plt.draw()
