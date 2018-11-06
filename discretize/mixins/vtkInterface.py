@@ -65,7 +65,7 @@ class vtkInterface(object):
         if ptsMat.shape[1] != 3:
             raise RuntimeError('Points of the mesh are improperly defined.')
         # Rotate the points to the cartesian system
-        ptsMat = np.dot(ptsMat, mesh.rotMtx)
+        ptsMat = np.dot(ptsMat, mesh.rotation_matrix)
         # Grab the points
         vtkPts = vtk.vtkPoints()
         vtkPts.SetData(nps.numpy_to_vtk(ptsMat, deep=True))
@@ -124,7 +124,7 @@ class vtkInterface(object):
             raise RuntimeError('Nodes of the grid are improperly defined.')
         # Rotate the points based on the axis orientations
         mesh._validate_orientation()
-        return np.dot(nodes, mesh.rotMtx)
+        return np.dot(nodes, mesh.rotation_matrix)
 
     def __tensorMeshToVTK(mesh, models=None):
         """
@@ -151,7 +151,7 @@ class vtkInterface(object):
             vZ = mesh.vectorNz
             zD = mesh.nNz
         # If axis orientations are standard then use a vtkRectilinearGrid
-        if mesh.cartesian:
+        if mesh.is_cartesian:
             # Use rectilinear VTK grid.
             # Assign the spatial information.
             output = vtk.vtkRectilinearGrid()

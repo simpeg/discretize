@@ -403,7 +403,7 @@ class BaseMesh(properties.HasProperties, vtkInterface):
         return True
 
     @property
-    def cartesian(self):
+    def is_cartesian(self):
         """True if the axes are defined in the traditional <X,Y,Z> manner"""
         if (    np.allclose(self.axis_u, (1, 0, 0)) and
                 np.allclose(self.axis_v, (0, 1, 0)) and
@@ -412,7 +412,7 @@ class BaseMesh(properties.HasProperties, vtkInterface):
         return False
 
     @property
-    def rotMtx(self):
+    def rotation_matrix(self):
         """Builds a rotation matrix to transform coordinates from their coordinate
         system into a conventional cartesian system"""
         return np.array([self.axis_u, self.axis_v, self.axis_w])
