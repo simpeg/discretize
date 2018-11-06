@@ -151,7 +151,7 @@ class vtkInterface(object):
             vZ = mesh.vectorNz
             zD = mesh.nNz
         # If axis orientations are standard then use a vtkRectilinearGrid
-        if mesh.is_cartesian:
+        if not mesh.reference_is_rotated:
             # Use rectilinear VTK grid.
             # Assign the spatial information.
             output = vtk.vtkRectilinearGrid()
