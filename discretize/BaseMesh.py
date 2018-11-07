@@ -33,13 +33,14 @@ class BaseMesh(properties.HasProperties, vtkInterface):
     )
 
     # Instantiate the class
-    def __init__(self, n, x0=None):
+    def __init__(self, n, x0=None, **kwargs):
         self._n = n  # number of dimensions
 
         if x0 is None:
             self.x0 = np.zeros(len(self._n))
         else:
             self.x0 = x0
+        super(BaseMesh, self).__init__(**kwargs)
 
     # Validators
     @properties.validator('_n')
@@ -56,7 +57,7 @@ class BaseMesh(properties.HasProperties, vtkInterface):
                 "supported".format(change['value'])
             )
 
-        if change['previous'] != properties.undefined:
+        if np.any(change['previous'] != properties.undefined):
             # can't change dimension of the mesh
             assert len(change['previous']) == len(change['value']), (
                 "Cannot change dimensionality of the mesh. Expected {} "
@@ -448,8 +449,8 @@ class BaseMesh(properties.HasProperties, vtkInterface):
 
 class BaseRectangularMesh(BaseMesh):
     """BaseRectangularMesh"""
-    def __init__(self, n, x0=None):
-        BaseMesh.__init__(self, n, x0=x0)
+    def __init__(self, n, x0=None, **kwargs):
+        BaseMesh.__init__(self, n, x0=x0, **kwargs)
 
     @property
     def nCx(self):

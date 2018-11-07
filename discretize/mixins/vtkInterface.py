@@ -17,30 +17,33 @@ from vtk import vtkXMLUnstructuredGridWriter
 from vtk import vtkXMLStructuredGridWriter
 from vtk import vtkXMLRectilinearGridReader
 
+
+
+def assignCellData(vtkDS, models=None):
+    """Assign the model(s) to the VTK dataset as CellData
+
+    Input:
+    :param models, dictionary of numpy.array - Name('s) and array('s). Match number of cells
+    """
+    nc = vtkDS.GetNumberOfCells()
+    if models is not None:
+        for name, mod in models.items():
+            # Convert numpy array
+            if mod.size != nc:
+                raise RuntimeError('Number of model cells ({}) does not match number of mesh cells ({}).'.format(mod.size, nc))
+            vtkDoubleArr = nps.numpy_to_vtk(mod, deep=1)
+            vtkDoubleArr.SetName(name)
+            vtkDS.GetCellData().AddArray(vtkDoubleArr)
+    return vtkDS
+
+
+
 class vtkInterface(object):
     """This class is full of methods that enable ``discretize`` meshes to
     be converted to VTK data objects (and back when possible).
     """
     # NOTE: I name mangle the class specific VTK conversions to force the user
     #       to use the ``toVTK()`` method.
-
-    @staticmethod
-    def __assignCellData(vtkDS, models=None):
-        """Assign the model(s) to the VTK dataset as CellData
-
-        Input:
-        :param models, dictionary of numpy.array - Name('s) and array('s). Match number of cells
-        """
-        nc = vtkDS.GetNumberOfCells()
-        if models is not None:
-            for name, mod in models.items():
-                # Convert numpy array
-                if mod.size != nc:
-                    raise RuntimeError('Number of model cells ({}) does not match number of mesh cells ({}).'.format(mod.size, nc))
-                vtkDoubleArr = nps.numpy_to_vtk(mod, deep=1)
-                vtkDoubleArr.SetName(name)
-                vtkDS.GetCellData().AddArray(vtkDoubleArr)
-        return vtkDS
 
     def __treeMeshToVTK(mesh, models=None):
         """
@@ -86,7 +89,7 @@ class vtkInterface(object):
         refineLevelArr.SetName('octreeLevel')
         output.GetCellData().AddArray(refineLevelArr)
         # Assign the model('s) to the object
-        return vtkInterface.__assignCellData(output, models=models)
+        return assignCellData(output, models=models)
 
     @staticmethod
     def __createStructGrid(ptsMat, dims, models=None):
@@ -110,7 +113,7 @@ class vtkInterface(object):
         output.SetDimensions(dims[0], dims[1], dims[2]) # note this subtracts 1
         output.SetPoints(vtkPts)
         # Assign the model('s) to the object
-        return vtkInterface.__assignCellData(output, models=models)
+        return assignCellData(output, models=models)
 
     def __getRotatedNodes(mesh):
         """A helper to get the nodes of a mesh rotated by specified axes"""
@@ -159,7 +162,7 @@ class vtkInterface(object):
             output.SetXCoordinates(nps.numpy_to_vtk(vX, deep=1))
             output.SetYCoordinates(nps.numpy_to_vtk(vY, deep=1))
             output.SetZCoordinates(nps.numpy_to_vtk(vZ, deep=1))
-            return vtkInterface.__assignCellData(output, models=models)
+            return assignCellData(output, models=models)
         # Use a structured grid where points are rotated to the cartesian system
         ptsMat = vtkInterface.__getRotatedNodes(mesh)
         dims = [mesh.nCx, mesh.nCy, mesh.nCz]
@@ -195,6 +198,7 @@ class vtkInterface(object):
 
     def toVTK(mesh, models=None):
         """Convert any mesh object to it's proper VTK data object."""
+        mesh.validate()
         converters = {
             'TreeMesh' : vtkInterface.__treeMeshToVTK,
             'TensorMesh' : vtkInterface.__tensorMeshToVTK,
