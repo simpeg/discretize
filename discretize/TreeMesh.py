@@ -100,7 +100,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
 
     #inheriting stuff from BaseTensorMesh that isn't defined in _QuadTree
     def __init__(self, h, x0=None, **kwargs):
-        BaseTensorMesh.__init__(self, h, x0, **kwargs)
+        BaseTensorMesh.__init__(self, h, x0)#TODO:, **kwargs) # pass the kwargs for copy/paste
 
         nx = len(self.h[0])
         ny = len(self.h[1])
