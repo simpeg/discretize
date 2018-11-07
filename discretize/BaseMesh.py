@@ -442,9 +442,9 @@ class BaseMesh(properties.HasProperties, vtkInterface):
             'sph': choices[2],
         }
         # Get the name and fix it if it is abbreviated
-        checkme = abrevs.get(self.reference_system, self.reference_system)
-        if checkme not in choices:
-            raise ValueError('Coordinate system ({}) unknown.'.format(checkme))
+        self.reference_system = abrevs.get(self.reference_system, self.reference_system)
+        if self.reference_system not in choices:
+            raise ValueError('Coordinate system ({}) unknown.'.format(self.reference_system))
         return True
 
 
