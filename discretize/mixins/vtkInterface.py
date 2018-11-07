@@ -198,7 +198,7 @@ class vtkInterface(object):
 
     def toVTK(mesh, models=None):
         """Convert any mesh object to it's proper VTK data object."""
-        mesh.validate()
+        # TODO: mesh.validate()
         converters = {
             'TreeMesh' : vtkInterface.__treeMeshToVTK,
             'TensorMesh' : vtkInterface.__tensorMeshToVTK,
