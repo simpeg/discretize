@@ -1253,12 +1253,9 @@ class Slicer(object):
         self.yc = mesh.vectorCCy  # y-cell center locations
         self.zc = mesh.vectorCCz  # z-cell center locations
 
-        # View: Default ('xy'): horizontal axis is x, vertical axis is y.
+        # Axis: Default ('xy'): horizontal axis is x, vertical axis is y.
         # Reversed otherwise.
-        if axis == 'yx':
-            self.yx = True
-        else:
-            self.yx = False
+        self.yx = axis == 'yx'
 
         # Store initial slice indices; if not provided, takes the middle.
         if xslice is not None:
