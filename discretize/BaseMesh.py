@@ -34,13 +34,13 @@ class BaseMesh(properties.HasProperties, vtkInterface):
 
     # Instantiate the class
     def __init__(self, n, x0=None, **kwargs):
+        super(BaseMesh, self).__init__(**kwargs)
         self._n = n  # number of dimensions
 
         if x0 is None:
             self.x0 = np.zeros(len(self._n))
         else:
             self.x0 = x0
-        super(BaseMesh, self).__init__(**kwargs)
 
     # Validators
     @properties.validator('_n')
