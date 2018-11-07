@@ -93,7 +93,6 @@ import numpy as np
 from scipy.spatial import Delaunay
 import scipy.sparse as sp
 from six import integer_types
-import six
 
 class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
     _meshType = 'TREE'

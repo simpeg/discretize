@@ -4,7 +4,6 @@ import numpy as np
 import properties
 import scipy.sparse as sp
 from scipy.constants import pi
-import six
 
 from .utils import (
     kron3, ndgrid, av, speye, ddx, sdiag, interpmat, spzeros, cyl2cart

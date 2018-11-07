@@ -2,7 +2,6 @@ from __future__ import print_function
 import numpy as np
 import scipy.sparse as sp
 import properties
-import six
 
 from discretize import utils
 

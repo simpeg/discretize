@@ -2,7 +2,6 @@ from __future__ import print_function
 import numpy as np
 import properties
 from properties.math import TYPE_MAPPINGS
-import six
 
 from discretize import utils
 from discretize.BaseMesh import BaseRectangularMesh
