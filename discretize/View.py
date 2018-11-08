@@ -1155,7 +1155,7 @@ class Slicer(object):
 
     vType: str
         Type of visualization. Default is 'CC'.
-        One of ['CC', 'N', 'F', 'E', 'Fx', 'Fy', 'Fz', 'Ex', 'Ey', 'Ez'].
+        One of ['CC', 'Fx', 'Fy', 'Fz', 'Ex', 'Ey', 'Ez'].
 
     view : str
         Which component to show. Defaults to 'real'.
@@ -1207,15 +1207,13 @@ class Slicer(object):
             raise ValueError(err)
 
         # (b) vType  # Not yet working for ['CCv']
-        vTypeOpts = ['CC', 'N', 'F', 'E', 'Fx', 'Fy', 'Fz', 'Ex', 'Ey', 'Ez']
+        vTypeOpts = ['CC', 'Fx', 'Fy', 'Fz', 'Ex', 'Ey', 'Ez']
         if vType not in vTypeOpts:
             err = "vType must be in ['{0!s}'].".format("', '".join(vTypeOpts))
             err += " vType provided: '{0!s}'.".format(vType)
             raise ValueError(err)
 
-        if vType == 'CC':
-            pass
-        else:
+        if vType != 'CC':
             aveOp = 'ave' + vType + '2CC'
             Av = getattr(mesh, aveOp)
             if v.size == Av.shape[1]:
