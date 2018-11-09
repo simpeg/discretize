@@ -51,7 +51,6 @@ def configuration(parent_package='', top_path=None):
                        quiet=True)
 
     config.add_subpackage('discretize')
-    config.add_subpackage('mixins')
 
     return config
 
