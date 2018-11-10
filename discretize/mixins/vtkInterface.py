@@ -74,7 +74,7 @@ class vtkInterface(object):
         # Cells
         cellArray = [c for c in mesh]
         cellConn = np.array([cell.nodes for cell in cellArray])
-        cellsMat = np.concatenate((np.ones((cellConn.shape[0], 1), dtype=np.int64)*cellConn.shape[1], cellConn), axis=1).ravel()
+        cellsMat = np.concatenate((np.ones((cellConn.shape[0], 1), dtype=np.int)*cellConn.shape[1], cellConn), axis=1).ravel()
         cellsArr = vtk.vtkCellArray()
         cellsArr.SetNumberOfCells(cellConn.shape[0])
         cellsArr.SetCells(cellConn.shape[0], nps.numpy_to_vtkIdTypeArray(cellsMat, deep=True))
