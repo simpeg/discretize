@@ -1,7 +1,6 @@
 """
-The ``vtkInterface`` module provides an way for ``discretize`` meshes to be
+This module provides an way for ``discretize`` meshes to be
 converted to VTK data objects (and back when possible).
-
 """
 import os
 import numpy as np
