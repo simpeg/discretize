@@ -1,4 +1,4 @@
 try:
-    from .vtkInterface import vtkInterface, vtkTensorRead
+    from .vtkModule import vtkInterface, vtkTensorRead
 except ImportError as err:
     pass
