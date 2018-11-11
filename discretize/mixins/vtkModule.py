@@ -38,10 +38,10 @@ def assignCellData(vtkDS, models=None):
 
 class vtkInterface(object):
     """This class is full of methods that enable ``discretize`` meshes to
-    be converted to VTK data objects (and back when possible).
+    be converted to VTK data objects (and back when possible). Simply inherrit
+    this class and update the ``toVTK`` method to handle your mesh type!
+    Curvilinear, tree, and tensor meshes are currently implemented.
     """
-    # NOTE: I name mangle the class specific VTK conversions to force the user
-    #       to use the ``toVTK()`` method.
 
     def __treeMeshToVTK(mesh, models=None):
         """
@@ -195,7 +195,12 @@ class vtkInterface(object):
 
 
     def toVTK(mesh, models=None):
-        """Convert any mesh object to it's proper VTK data object."""
+        """Convert this mesh object to it's proper VTK data object with the
+        given model dictionary as the cell data of that dataset.
+
+        Input:
+        :param models, dictionary of numpy.array - Name('s) and array('s). Match number of cells
+        """
         # TODO: mesh.validate()
         converters = {
             'TreeMesh' : vtkInterface.__treeMeshToVTK,
@@ -206,8 +211,8 @@ class vtkInterface(object):
         key = type(mesh).__name__
         try:
             convert = converters[key]
-        except:
-            raise RuntimeError('Mesh type `%s` is not currently supported for VTK conversion.' % key)
+        except KeyError:
+            raise RuntimeError('Mesh type `{}` is not currently supported for VTK conversion.'.format(key))
         return convert(mesh, models=models)
 
     @staticmethod
@@ -248,7 +253,7 @@ class vtkInterface(object):
         :param str directory: directory where the UBC GIF file lives
         """
         if not isinstance(vtkStructGrid, vtk.vtkStructuredGrid):
-            raise RuntimeError('`_saveStructuredGrid` can only handle `vtkStructuredGrid` objects. `%s` is not supported.' % vtkStructGrid.__class__)
+            raise RuntimeError('`_saveStructuredGrid` can only handle `vtkStructuredGrid` objects. `{}` is not supported.'.format(vtkStructGrid.__class__))
         # Check the extension of the fileName
         fname = os.path.join(directory, fileName)
         ext = os.path.splitext(fname)[1]
@@ -276,7 +281,7 @@ class vtkInterface(object):
         :param str directory: directory where the UBC GIF file lives
         """
         if not isinstance(vtkRectGrid, vtk.vtkRectilinearGrid):
-            raise RuntimeError('`_saveRectilinearGrid` can only handle `vtkRectilinearGrid` objects. `%s` is not supported.' % vtkRectGrid.__class__)
+            raise RuntimeError('`_saveRectilinearGrid` can only handle `vtkRectilinearGrid` objects. `{}` is not supported.'.format(vtkRectGrid.__class__))
         # Check the extension of the fileName
         fname = os.path.join(directory, fileName)
         ext = os.path.splitext(fname)[1]
@@ -294,13 +299,12 @@ class vtkInterface(object):
         vtrWriteFilter.Update()
 
     def writeVTK(mesh, fileName, models=None, directory=''):
-        """Makes and saves a VTK object from this mesh and models
+        """Makes and saves a VTK object from this mesh and given models
 
         Input:
         :param str fileName:  path to the output vtk file or just its name if directory is specified
+        :param dict models: dictionary of numpy.array - Name('s) and array('s). Match number of cells
         :param str directory: directory where the UBC GIF file lives
-        :param dict models: dictionary of numpy.array - Name('s) and array('s).
-        Match number of cells
         """
         vtkObj = vtkInterface.toVTK(mesh, models=models)
         writers = {
@@ -318,7 +322,7 @@ class vtkInterface(object):
 
 class vtkTensorRead(object):
     """Provides a convienance method for reading VTK Rectilinear Grid files
-    as TensorMesh objects."""
+    as ``TensorMesh`` objects."""
 
     @classmethod
     def readVTK(TensorMesh, fileName, directory=''):
