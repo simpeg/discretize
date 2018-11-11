@@ -73,16 +73,10 @@ class vtkInterface(object):
         # Cells
         cellArray = [c for c in mesh]
         cellConn = np.array([cell.nodes for cell in cellArray])
-        #- determine dtype for ID array (windows issue)
-        isize = vtk.vtkCommonCore.vtkIdTypeArray().GetDataTypeSize()
-        if isize == 4:
-            dtype = numpy.int32
-        else:
-            dtype = numpy.int64
-        cellsMat = np.concatenate((np.ones((cellConn.shape[0], 1), dtype=dtype)*cellConn.shape[1], cellConn), axis=1).ravel()
+        cellsMat = np.concatenate((np.ones((cellConn.shape[0], 1), dtype=int)*cellConn.shape[1], cellConn), axis=1).ravel()
         cellsArr = vtk.vtkCellArray()
         cellsArr.SetNumberOfCells(cellConn.shape[0])
-        cellsArr.SetCells(cellConn.shape[0], nps.numpy_to_vtkIdTypeArray(cellsMat, deep=True))
+        cellsArr.SetCells(cellConn.shape[0], nps.numpy_to_vtk(cellsMat, deep=True, array_type=vtk.VTK_ID_TYPE))
         # Make the object
         output = vtk.vtkUnstructuredGrid()
         output.SetPoints(vtkPts)
