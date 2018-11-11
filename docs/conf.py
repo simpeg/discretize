@@ -305,5 +305,6 @@ supress_nonlocal_image_warn()
 
 nitpick_ignore = [
     ('py:class', 'discretize.CurvilinearMesh.Array'),
-    ('py:class', 'discretize.mixins.vtkModule.vtkTensorRead')]
+    ('py:class', 'discretize.mixins.vtkModule.vtkTensorRead'),
+    ('py:class', 'callable'),
 ]

@@ -182,7 +182,7 @@ class BaseMesh(properties.HasProperties, vtkInterface):
     def vnE(self):
         """Total number of edges in each direction
 
-        :rtype: numpy.array
+        :rtype: numpy.ndarray
         :return: [nEx, nEy, nEz], (dim, )
 
         .. plot::
@@ -243,7 +243,7 @@ class BaseMesh(properties.HasProperties, vtkInterface):
     def vnF(self):
         """Total number of faces in each direction
 
-        :rtype: numpy.array
+        :rtype: numpy.ndarray
         :return: [nFx, nFy, nFz], (dim, )
 
         .. plot::
@@ -273,7 +273,7 @@ class BaseMesh(properties.HasProperties, vtkInterface):
     def normals(self):
         """Face Normals
 
-        :rtype: numpy.array
+        :rtype: numpy.ndarray
         :return: normals, (sum(nF), dim)
         """
         if self.dim == 2:
@@ -300,7 +300,7 @@ class BaseMesh(properties.HasProperties, vtkInterface):
     def tangents(self):
         """Edge Tangents
 
-        :rtype: numpy.array
+        :rtype: numpy.ndarray
         :return: normals, (sum(nE), dim)
         """
         if self.dim == 2:
@@ -327,8 +327,8 @@ class BaseMesh(properties.HasProperties, vtkInterface):
         """Given a vector, fV, in cartesian coordinates, this will project
         it onto the mesh using the normals
 
-        :param numpy.array fV: face vector with shape (nF, dim)
-        :rtype: numpy.array
+        :param numpy.ndarray fV: face vector with shape (nF, dim)
+        :rtype: numpy.ndarray
         :return: projected face vector, (nF, )
 
         """
@@ -344,8 +344,8 @@ class BaseMesh(properties.HasProperties, vtkInterface):
         """Given a vector, eV, in cartesian coordinates, this will project
         it onto the mesh using the tangents
 
-        :param numpy.array eV: edge vector with shape (nE, dim)
-        :rtype: numpy.array
+        :param numpy.ndarray eV: edge vector with shape (nE, dim)
+        :rtype: numpy.ndarray
         :return: projected edge vector, (nE, )
 
         """
@@ -488,7 +488,7 @@ class BaseRectangularMesh(BaseMesh):
     def vnC(self):
         """Total number of cells in each direction
 
-        :rtype: numpy.array
+        :rtype: numpy.ndarray
         :return: [nCx, nCy, nCz]
         """
         return np.array(
@@ -531,7 +531,7 @@ class BaseRectangularMesh(BaseMesh):
     def vnN(self):
         """Total number of nodes in each direction
 
-        :rtype: numpy.array
+        :rtype: numpy.ndarray
         :return: [nNx, nNy, nNz]
         """
         return np.array(
@@ -543,7 +543,7 @@ class BaseRectangularMesh(BaseMesh):
     def vnEx(self):
         """Number of x-edges in each direction
 
-        :rtype: numpy.array
+        :rtype: numpy.ndarray
         :return: vnEx
         """
         return np.array(
@@ -555,7 +555,7 @@ class BaseRectangularMesh(BaseMesh):
     def vnEy(self):
         """Number of y-edges in each direction
 
-        :rtype: numpy.array
+        :rtype: numpy.ndarray
         :return: vnEy or None if dim < 2
         """
         if self.dim < 2:
@@ -569,7 +569,7 @@ class BaseRectangularMesh(BaseMesh):
     def vnEz(self):
         """Number of z-edges in each direction
 
-        :rtype: numpy.array
+        :rtype: numpy.ndarray
         :return: vnEz or None if dim < 3
         """
         if self.dim < 3:
@@ -583,7 +583,7 @@ class BaseRectangularMesh(BaseMesh):
     def vnFx(self):
         """Number of x-faces in each direction
 
-        :rtype: numpy.array
+        :rtype: numpy.ndarray
         :return: vnFx
         """
         return np.array(
@@ -595,7 +595,7 @@ class BaseRectangularMesh(BaseMesh):
     def vnFy(self):
         """Number of y-faces in each direction
 
-        :rtype: numpy.array
+        :rtype: numpy.ndarray
         :return: vnFy or None if dim < 2
         """
         if self.dim < 2:
@@ -609,7 +609,7 @@ class BaseRectangularMesh(BaseMesh):
     def vnFz(self):
         """Number of z-faces in each direction
 
-        :rtype: numpy.array
+        :rtype: numpy.ndarray
         :return: vnFz or None if dim < 3
         """
         if self.dim < 3:
