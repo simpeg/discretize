@@ -86,6 +86,14 @@ class vtkInterface(object):
         refineLevelArr = nps.numpy_to_vtk(cell_levels, deep=1)
         refineLevelArr.SetName('octreeLevel')
         output.GetCellData().AddArray(refineLevelArr)
+        ubc_order = mesh._ubc_order
+        # order_ubc will re-order from treemesh ordering to UBC ordering
+        # need the opposite operation
+        un_order = np.empty_like(ubc_order)
+        un_order[ubc_order] = np.arange(len(ubc_order))
+        order = nps.numpy_to_vtk(un_order)
+        order.SetName('index_cell_corner')
+        output.GetCellData().AddArray(order)
         # Assign the model('s) to the object
         return assignCellData(output, models=models)
 
