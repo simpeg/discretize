@@ -1,6 +1,43 @@
 """
-This module provides an way for ``discretize`` meshes to be
-converted to VTK data objects (and back when possible).
+This module provides a way for ``discretize`` meshes to be
+converted to VTK data objects (and back when possible) if the
+`VTK Python package`_ is available.
+The ``vtkInterface`` class becomes inherrited by all mesh objects and allows
+users to directly convert any given mesh by calling that mesh's ``toVTK()``
+method (note that this method will not be available if VTK is not available).
+
+.. _`VTK Python package`: https://pypi.org/project/vtk/
+
+This functionality was originally developed so that discretize could be
+interoperable with PVGeo_, providing a direct interface for discretize meshes
+within ParaView and other VTK powered platforms. This interoperablity allows
+users to visualize their finite volume meshes and model data from discretize
+along side all their other datasets in a common rendering environment.
+
+.. _PVGeo: http://pvgeo.org
+
+Here's an example of the types of integrated visualizations that are possible in
+ParaView leveraging the link between discretize and PVGeo_:
+
+.. image:: ../images/vtk-pvgeo-example.png
+   :target: http://pvgeo.org
+   :alt: PVGeo Example Visualization
+
+.. admonition:: Laguna del Maule Bouguer Gravity
+   :class: note
+
+    This data scene is was produced from the `Laguna del Maule Bouguer Gravity`_
+    example provided by Craig Miller (see Maule volcanic field, Chile. Refer to
+    Miller et al 2016 EPSL for full details.)
+
+    The rendering below shows several data sets and a model integrated together:
+
+    * `Point Data`: the Bouguer gravity anomalies
+    * Topography Surface
+    * `Inverted Model`: The model has been both sliced and thresholded for low values
+
+.. _`Laguna del Maule Bouguer Gravity`: http://docs.simpeg.xyz/content/examples/04-grav/plot_laguna_del_maule_inversion.html#sphx-glr-content-examples-04-grav-plot-laguna-del-maule-inversion-py
+
 """
 import os
 import numpy as np
@@ -21,7 +58,10 @@ def assignCellData(vtkDS, models=None):
     """Assign the model(s) to the VTK dataset as CellData
 
     Input:
-    :param models, dictionary of numpy.array - Name('s) and array('s). Match number of cells
+
+    :param vtk.vtkDataSet vtkDS: - Any given VTK data object that has cell data
+    :param dict(numpy.ndarray) models: Name('s) and array('s). Match number of cells
+
     """
     nc = vtkDS.GetNumberOfCells()
     if models is not None:
@@ -38,9 +78,64 @@ def assignCellData(vtkDS, models=None):
 
 class vtkInterface(object):
     """This class is full of methods that enable ``discretize`` meshes to
-    be converted to VTK data objects (and back when possible). Simply inherrit
-    this class and update the ``toVTK`` method to handle your mesh type!
-    Curvilinear, tree, and tensor meshes are currently implemented.
+    be converted to VTK data objects (and back when possible). This is
+    inherritted by the ``BaseMesh`` class so all these methods are available to
+    any mesh object!
+
+    ``CurvilinearMesh``, ``TreeMesh``, and ``TensorMesh`` are all currently
+    implemented. The ``CylMesh`` is not implemeted and will raise and excpetion.
+    The following is an example of how to use the VTK interface to construct
+    VTK data objects or write VTK files.
+
+    .. code-block:: python
+       :emphasize-lines: 8,11
+
+       import discretize
+       import numpy as np
+       h1 = np.linspace(.1, .5, 3)
+       h2 = np.linspace(.1, .5, 5)
+       h3 = np.linspace(.1, .5, 3)
+       mesh = discretize.TensorMesh([h1, h2, h3])
+
+       # Get a VTK data object
+       mesh.toVTK()
+
+       # Save this mesh to a VTK file
+       mesh.writeVTK('sample_mesh')
+
+    Note that if your mesh is defined on a reference frame that is not the
+    traditional <X,Y,Z> system with vectors of :math:`(1,0,0)`, :math:`(0,1,0)`,
+    and :math:`(0,0,1)`, then the mesh will be rotated to be on the traditional
+    reference frame. The previous example snippet provides a
+    ``vtkRectilinearGrid`` object because that tensor mesh lies on the
+    traditional reference frame. If we alter the reference frame, then we yield
+    a ``vtkStructuredGrid`` that is the same mesh rotated in space.
+
+    .. code-block:: python
+
+       # Defined a rotated reference frame
+       mesh.axis_u = (1,-1,0)
+       mesh.axis_v = (-1,-1,0)
+       mesh.axis_w = (0,0,1)
+       # Check that the referenc fram is valid
+       mesh._validate_orientation()
+
+       # Yield the rotated vtkStructuredGrid
+       mesh.toVTK()
+
+       # or write it out to a VTK format
+       mesh.writeVTK('sample_rotated')
+
+    The two above code snippets produce a ``vtkRectilinearGrid`` and a
+    ``vtkStructuredGrid`` respecitvely. To demonstarte the difference, we have
+    plotted the two datasets next to eachother where the first mesh is in green
+    and its data axes are parrallel to the traditional cartesian reference frame.
+    The second, rotated mesh is shown in red and its data axii are rotated from
+    the traditional cartesian refence frame as specified by the ``axis_u``,
+    ``axis_v``, and ``axis_w`` properties.
+
+    .. image:: ../images/vtk-rotated-example.png
+
     """
 
     def __treeMeshToVTK(mesh, models=None):
@@ -49,8 +144,9 @@ class vtkInterface(object):
         given models as ``CellData`` of that VTK dataset.
 
         Input:
-        :param mesh, discretize.TreeMesh - The tree mesh to convert to a ``vtkUnstructuredGrid``
-        :param models, dictionary of numpy.array - Name('s) and array('s). Match number of cells
+
+        :param discretize.TreeMesh mesh: The tree mesh to convert to a ``vtkUnstructuredGrid``
+        :param dict(numpy.ndarray) models: Name('s) and array('s). Match number of cells
 
         """
         # Make the data parts for the vtu object
@@ -143,8 +239,9 @@ class vtkInterface(object):
         grid is generated. Otherwise, a structured grid is generated.
 
         Input:
-        :param mesh, discretize.TensorMesh - The tensor mesh to convert to a ``vtkRectilinearGrid``
-        :param models, dictionary of numpy.array - Name('s) and array('s). Match number of cells
+
+        :param discretize.TensorMesh mesh: The tensor mesh to convert to a ``vtkRectilinearGrid``
+        :param dict(numpy.ndarray) models: Name('s) and array('s). Match number of cells
 
         """
         # Deal with dimensionalities
@@ -182,8 +279,9 @@ class vtkInterface(object):
         models as ``CellData`` of that object.
 
         Input:
-        :param mesh, discretize.CurvilinearMesh - The curvilinear mesh to convert to a ``vtkStructuredGrid``
-        :param models, dictionary of numpy.array - Name('s) and array('s). Match number of cells
+
+        :param discretize.CurvilinearMesh mesh: The curvilinear mesh to convert to a ``vtkStructuredGrid``
+        :param dict(numpy.ndarray) models: Name('s) and array('s). Match number of cells
 
         """
         ptsMat = vtkInterface.__getRotatedNodes(mesh)
@@ -207,7 +305,8 @@ class vtkInterface(object):
         given model dictionary as the cell data of that dataset.
 
         Input:
-        :param models, dictionary of numpy.array - Name('s) and array('s). Match number of cells
+
+        :param dict(numpy.ndarray) models: Name('s) and array('s). Match number of cells
         """
         # TODO: mesh.validate()
         converters = {
@@ -229,7 +328,8 @@ class vtkInterface(object):
         ``vtkUnstructuredGrid`` object.
 
         Input:
-        :param str fileName:  path to the output vtk file or just its name if directory is specified
+
+        :param str fileName: path to the output vtk file or just its name if directory is specified
         :param str directory: directory where the UBC GIF file lives
         """
         if not isinstance(vtkUnstructGrid, vtk.vtkUnstructuredGrid):
@@ -247,7 +347,7 @@ class vtkInterface(object):
             vtuWriteFilter.SetInputDataObject(vtkUnstructGrid)
         else:
             vtuWriteFilter.SetInput(vtkUnstructGrid)
-        vtuWriteFilter.SetFileName(fileName)
+        vtuWriteFilter.SetFileName(fname)
         # Write the file
         vtuWriteFilter.Update()
 
@@ -257,7 +357,8 @@ class vtkInterface(object):
         ``vtkStructuredGrid`` object.
 
         Input:
-        :param str fileName:  path to the output vtk file or just its name if directory is specified
+
+        :param str fileName: path to the output vtk file or just its name if directory is specified
         :param str directory: directory where the UBC GIF file lives
         """
         if not isinstance(vtkStructGrid, vtk.vtkStructuredGrid):
@@ -275,7 +376,7 @@ class vtkInterface(object):
             writer.SetInputDataObject(vtkStructGrid)
         else:
             writer.SetInput(vtkStructGrid)
-        writer.SetFileName(fileName)
+        writer.SetFileName(fname)
         # Write the file
         writer.Update()
 
@@ -285,7 +386,8 @@ class vtkInterface(object):
         ``vtkRectilinearGrid`` object.
 
         Input:
-        :param str fileName:  path to the output vtk file or just its name if directory is specified
+
+        :param str fileName: path to the output vtk file or just its name if directory is specified
         :param str directory: directory where the UBC GIF file lives
         """
         if not isinstance(vtkRectGrid, vtk.vtkRectilinearGrid):
@@ -310,9 +412,11 @@ class vtkInterface(object):
         """Makes and saves a VTK object from this mesh and given models
 
         Input:
+
         :param str fileName:  path to the output vtk file or just its name if directory is specified
         :param dict models: dictionary of numpy.array - Name('s) and array('s). Match number of cells
         :param str directory: directory where the UBC GIF file lives
+
         """
         vtkObj = vtkInterface.toVTK(mesh, models=models)
         writers = {
@@ -337,10 +441,12 @@ class vtkTensorRead(object):
         """Read VTK Rectilinear (vtr xml file) and return Tensor mesh and model
 
         Input:
+
         :param str fileName: path to the vtr model file to read or just its name if directory is specified
         :param str directory: directory where the UBC GIF file lives
 
         Output:
+
         :rtype: tuple
         :return: (TensorMesh, modelDictionary)
         """
