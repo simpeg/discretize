@@ -32,8 +32,8 @@ if has_vtk:
 
             self.assertEqual(mesh.nC, vtkObj.GetNumberOfCells())
             # TODO: this is actually different?: self.assertEqual(mesh.nN, vtkObj.GetNumberOfPoints())
-            # Remember that the tree vtk conversion adds an array
-            self.assertEqual(len(models.keys())+1, vtkObj.GetCellData().GetNumberOfArrays())
+            # Remember that the tree vtk conversion adds two arrays
+            self.assertEqual(len(models.keys())+2, vtkObj.GetCellData().GetNumberOfArrays())
             bnds = vtkObj.GetBounds()
             self.assertEqual(mesh.x0[0], bnds[0])
             self.assertEqual(mesh.x0[1], bnds[2])
