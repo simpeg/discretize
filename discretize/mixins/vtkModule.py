@@ -310,12 +310,12 @@ class vtkInterface(object):
         """
         # TODO: mesh.validate()
         converters = {
-            'TreeMesh' : vtkInterface.__treeMeshToVTK,
-            'TensorMesh' : vtkInterface.__tensorMeshToVTK,
-            'CurvilinearMesh' : vtkInterface.__curvilinearMeshToVTK,
+            'tree' : vtkInterface.__treeMeshToVTK,
+            'tensor' : vtkInterface.__tensorMeshToVTK,
+            'curv' : vtkInterface.__curvilinearMeshToVTK,
             #TODO: 'CylMesh' : vtkInterface.__cylMeshToVTK,
             }
-        key = type(mesh).__name__
+        key = mesh._meshType.lower()
         try:
             convert = converters[key]
         except KeyError:
@@ -424,7 +424,7 @@ class vtkInterface(object):
             'vtkRectilinearGrid' : vtkInterface._saveRectilinearGrid,
             'vtkStructuredGrid' : vtkInterface._saveStructuredGrid,
             }
-        key = type(vtkObj).__name__
+        key = vtkObj.GetClassName()
         try:
             write = writers[key]
         except:
