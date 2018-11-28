@@ -1,6 +1,8 @@
 """
-Simple example to vary streamline thickness based on the vector amplitudes
-==========================================================================
+Plotting: Streamline thickness
+==============================
+
+A simple example to vary streamline thickness based on the vector amplitudes
 
 Author: `@micmitch <https://github.com/micmitch>`
 """

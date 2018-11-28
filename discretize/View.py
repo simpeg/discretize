@@ -520,7 +520,6 @@ class TensorView(object):
                 vecAmp[highInds] = upperBound
 
                 # Normalize amplitudes 0-1
-                # norm_thickness = (np.log10(vecAmp) - np.log10(vecAmp.min())) / (np.log10(vecAmp.max()) - np.log10(vecAmp.min()))
                 norm_thickness = vecAmp/vecAmp.max()
 
                 # Scale by user defined thickness factor
