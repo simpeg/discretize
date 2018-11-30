@@ -380,17 +380,17 @@ class BaseMesh(properties.HasProperties, vtkInterface):
         return properties.copy(self)
 
     axis_u = properties.Vector3(
-        'Vector orientation of u-direction',
+        'Vector orientation of u-direction. For more details see the docs for the :attr:`~discretize.BaseMesh.BaseMesh.rotation_matrix` property.',
         default='X',
         length=1
     )
     axis_v = properties.Vector3(
-        'Vector orientation of v-direction',
+        'Vector orientation of v-direction. For more details see the docs for the :attr:`~discretize.BaseMesh.BaseMesh.rotation_matrix` property.',
         default='Y',
         length=1
     )
     axis_w = properties.Vector3(
-        'Vector orientation of w-direction',
+        'Vector orientation of w-direction. For more details see the docs for the :attr:`~discretize.BaseMesh.BaseMesh.rotation_matrix` property.',
         default='Z',
         length=1
     )
@@ -418,7 +418,20 @@ class BaseMesh(properties.HasProperties, vtkInterface):
     @property
     def rotation_matrix(self):
         """Builds a rotation matrix to transform coordinates from their coordinate
-        system into a conventional cartesian system"""
+        system into a conventional cartesian system. This is built off of the
+        three `axis_u`, `axis_v`, and `axis_w` properties; these mapping
+        coordinates use the letters U, V, and W (the three letters preceding X,
+        Y, and Z in the alphabet) to define the projection of the X, Y, and Z
+        durections. These UVW vectors describe the placement and transformation
+        of the mesh's coordinate sytem assuming at most 3 directions.
+
+        Why would you want to use these UVW mapping vectors the this
+        `rotation_matrix` property? They allow us to define the realationship
+        between local and global coordinate systems and provide a tool for
+        switching between the two while still maintaing the connectivity of the
+        mesh's cells. For a visual example of this, please see the figure in the
+        docs for the :class:`~discretize.mixins.vtkModule.vtkInterface`.
+        """
         return np.array([self.axis_u, self.axis_v, self.axis_w])
 
 
