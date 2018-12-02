@@ -7,6 +7,11 @@ import six
 from . import utils
 from .BaseMesh import BaseMesh
 
+try:
+    from .mixins import vtkTensorRead
+except ImportError as err:
+    vtkTensorRead = object
+
 
 def load_mesh(filename):
     """
@@ -24,7 +29,7 @@ def load_mesh(filename):
     return data
 
 
-class TensorMeshIO(object):
+class TensorMeshIO(vtkTensorRead):
 
     @classmethod
     def _readUBC_3DMesh(TensorMesh, fileName):
@@ -154,164 +159,6 @@ class TensorMeshIO(object):
             raise Exception('File format not recognized')
         return Tnsmsh
 
-    @classmethod
-    def readVTK(TensorMesh, fileName, directory=''):
-        """Read VTK Rectilinear (vtr xml file) and return Tensor mesh and model
-
-        Input:
-        :param str fileName: path to the vtr model file to read or just its name if directory is specified
-        :param str directory: directory where the UBC GIF file lives
-
-        Output:
-        :rtype: tuple
-        :return: (TensorMesh, modelDictionary)
-        """
-        from vtk import vtkXMLRectilinearGridReader as vtrFileReader
-        from vtk.util.numpy_support import vtk_to_numpy
-
-        fname = os.path.join(directory, fileName)
-        # Read the file
-        vtrReader = vtrFileReader()
-        vtrReader.SetFileName(fname)
-        vtrReader.Update()
-        vtrGrid = vtrReader.GetOutput()
-        # Sort information
-        hx = np.abs(np.diff(vtk_to_numpy(vtrGrid.GetXCoordinates())))
-        xR = vtk_to_numpy(vtrGrid.GetXCoordinates())[0]
-        hy = np.abs(np.diff(vtk_to_numpy(vtrGrid.GetYCoordinates())))
-        yR = vtk_to_numpy(vtrGrid.GetYCoordinates())[0]
-        zD = np.diff(vtk_to_numpy(vtrGrid.GetZCoordinates()))
-        # Check the direction of hz
-        if np.all(zD < 0):
-            hz = np.abs(zD[::-1])
-            zR = vtk_to_numpy(vtrGrid.GetZCoordinates())[-1]
-        else:
-            hz = np.abs(zD)
-            zR = vtk_to_numpy(vtrGrid.GetZCoordinates())[0]
-        x0 = np.array([xR, yR, zR])
-
-        # Make the object
-        tensMsh = TensorMesh([hx, hy, hz], x0=x0)
-
-        # Grap the models
-        models = {}
-        for i in np.arange(vtrGrid.GetCellData().GetNumberOfArrays()):
-            modelName = vtrGrid.GetCellData().GetArrayName(i)
-            if np.all(zD < 0):
-                modFlip = vtk_to_numpy(vtrGrid.GetCellData().GetArray(i))
-                tM = tensMsh.r(modFlip, 'CC', 'CC', 'M')
-                modArr = tensMsh.r(tM[:, :, ::-1], 'CC', 'CC', 'V')
-            else:
-                modArr = vtk_to_numpy(vtrGrid.GetCellData().GetArray(i))
-            models[modelName] = modArr
-
-        # Return the data
-        return tensMsh, models
-
-    def writeVTK(mesh, fileName, models=None, directory=''):
-        """Makes and saves a VTK rectilinear file (vtr)
-        for a Tensor mesh and model.
-
-        Input:
-        :param str fileName:  path to the output vtk file or just its name if directory is specified
-        :param str directory: directory where the UBC GIF file lives
-        :param dict models: dictionary of numpy.array - Name('s) and array('s).
-        Match number of cells
-        """
-        from vtk import vtkRectilinearGrid as rectGrid, vtkXMLRectilinearGridWriter as rectWriter, VTK_VERSION
-        from vtk.util.numpy_support import numpy_to_vtk
-
-        fname = os.path.join(directory, fileName)
-        # Deal with dimensionalities
-        if mesh.dim >= 1:
-            vX = mesh.vectorNx
-            xD = mesh.nNx
-            yD, zD = 1, 1
-            vY, vZ = np.array([0, 0])
-        if mesh.dim >= 2:
-            vY = mesh.vectorNy
-            yD = mesh.nNy
-        if mesh.dim == 3:
-            vZ = mesh.vectorNz
-            zD = mesh.nNz
-        # Use rectilinear VTK grid.
-        # Assign the spatial information.
-        vtkObj = rectGrid()
-        vtkObj.SetDimensions(xD, yD, zD)
-        vtkObj.SetXCoordinates(numpy_to_vtk(vX, deep=1))
-        vtkObj.SetYCoordinates(numpy_to_vtk(vY, deep=1))
-        vtkObj.SetZCoordinates(numpy_to_vtk(vZ, deep=1))
-
-        # Assign the model('s) to the object
-        if models is not None:
-            for item in six.iteritems(models):
-                # Convert numpy array
-                vtkDoubleArr = numpy_to_vtk(item[1], deep=1)
-                vtkDoubleArr.SetName(item[0])
-                vtkObj.GetCellData().AddArray(vtkDoubleArr)
-            # Set the active scalar
-            vtkObj.GetCellData().SetActiveScalars(list(models.keys())[0])
-
-        # Check the extension of the fileName
-        ext = os.path.splitext(fname)[1]
-        if ext is '':
-            fname = fname + '.vtr'
-        elif ext not in '.vtr':
-            raise IOError('{:s} is an incorrect extension, has to be .vtr')
-        # Write the file.
-        vtrWriteFilter = rectWriter()
-        if float(VTK_VERSION.split('.')[0]) >= 6:
-            vtrWriteFilter.SetInputData(vtkObj)
-        else:
-            vtuWriteFilter.SetInput(vtuObj)
-        vtrWriteFilter.SetFileName(fname)
-        vtrWriteFilter.Update()
-
-    def _toVTRObj(mesh, models=None):
-        """
-        Makes and saves a VTK rectilinear file (vtr) for a
-        Tensor mesh and model.
-
-        Input:
-        :param str, path to the output vtk file
-        :param mesh, TensorMesh object - mesh to be transfer to VTK
-        :param models, dictionary of numpy.array - Name('s) and array('s). Match number of cells
-
-        """
-        # Import
-        from vtk import vtkRectilinearGrid as rectGrid, VTK_VERSION
-        from vtk.util.numpy_support import numpy_to_vtk
-
-        # Deal with dimensionalities
-        if mesh.dim >= 1:
-            vX = mesh.vectorNx
-            xD = mesh.nNx
-            yD, zD = 1, 1
-            vY, vZ = np.array([0, 0])
-        if mesh.dim >= 2:
-            vY = mesh.vectorNy
-            yD = mesh.nNy
-        if mesh.dim == 3:
-            vZ = mesh.vectorNz
-            zD = mesh.nNz
-        # Use rectilinear VTK grid.
-        # Assign the spatial information.
-        vtkObj = rectGrid()
-        vtkObj.SetDimensions(xD, yD, zD)
-        vtkObj.SetXCoordinates(numpy_to_vtk(vX, deep=1))
-        vtkObj.SetYCoordinates(numpy_to_vtk(vY, deep=1))
-        vtkObj.SetZCoordinates(numpy_to_vtk(vZ, deep=1))
-
-        # Assign the model('s) to the object
-        if models is not None:
-            for item in models.iteritems():
-                # Convert numpy array
-                vtkDoubleArr = numpy_to_vtk(item[1], deep=1)
-                vtkDoubleArr.SetName(item[0])
-                vtkObj.GetCellData().AddArray(vtkDoubleArr)
-            # Set the active scalar
-            vtkObj.GetCellData().SetActiveScalars(list(models.keys())[0])
-        return vtkObj
 
     def _readModelUBC_2D(mesh, fileName):
         """
@@ -655,52 +502,3 @@ class TreeMeshIO(object):
             for item in six.iteritems(models):
                 # Save the data
                 np.savetxt(item[0], item[1][ubc_order], fmt='%3.5e')
-
-
-    def writeVTK(self, fileName, models=None):
-        """Function to write a VTU file from a TreeMesh and model."""
-        import vtk
-        from vtk import vtkXMLUnstructuredGridWriter as Writer, VTK_VERSION
-        from vtk.util.numpy_support import numpy_to_vtk
-
-        # Make the data parts for the vtu object
-        # Points
-        ptsMat = np.vstack((self.gridN, self.gridhN))
-
-        vtkPts = vtk.vtkPoints()
-        vtkPts.SetData(numpy_to_vtk(ptsMat, deep=True))
-        # Cells
-        cellArray = [c for c in self]
-        cellConn = np.array([cell.nodes for cell in cellArray])
-
-        cellsMat = np.concatenate((np.ones((cellConn.shape[0], 1))*cellConn.shape[1], cellConn), axis=1).ravel()
-        cellsArr = vtk.vtkCellArray()
-        cellsArr.SetNumberOfCells(cellConn.shape[0])
-        cellsArr.SetCells(cellConn.shape[0], numpy_to_vtk(cellsMat, deep=True, array_type=vtk.VTK_ID_TYPE))
-
-        # Make the object
-        vtuObj = vtk.vtkUnstructuredGrid()
-        vtuObj.SetPoints(vtkPts)
-        vtuObj.SetCells(vtk.VTK_VOXEL, cellsArr)
-        # Add the level of refinement as a cell array
-        cell_levels = np.array([cell._level for cell in cellArray])
-        refineLevelArr = numpy_to_vtk(cell_levels, deep=1)
-        refineLevelArr.SetName('octreeLevel')
-        vtuObj.GetCellData().AddArray(refineLevelArr)
-        # Assign the model('s) to the object
-        if models is not None:
-            for item in six.iteritems(models):
-                # Convert numpy array
-                vtkDoubleArr = numpy_to_vtk(item[1], deep=1)
-                vtkDoubleArr.SetName(item[0])
-                vtuObj.GetCellData().AddArray(vtkDoubleArr)
-
-        # Make the writer
-        vtuWriteFilter = Writer()
-        if float(VTK_VERSION.split('.')[0]) >= 6:
-            vtuWriteFilter.SetInputData(vtuObj)
-        else:
-            vtuWriteFilter.SetInput(vtuObj)
-        vtuWriteFilter.SetFileName(fileName)
-        # Write the file
-        vtuWriteFilter.Update()
