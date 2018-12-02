@@ -35,6 +35,14 @@ Utility Codes
 
    content/utils
 
+Mixins
+******
+
+.. toctree::
+   :maxdepth: 3
+
+   content/mixins
+
 Visualization
 *************
 
