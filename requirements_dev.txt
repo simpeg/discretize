@@ -17,3 +17,4 @@ vectormath
 wheel
 pytest
 twine
+vtk
