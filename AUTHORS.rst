@@ -12,3 +12,4 @@
 - Doug Oldenburg, (`@dougoldenburg <https://github.com/dougoldenburg/>`_)
 - Adam Pidlisecky, (`@aPid1 <https://github.com/aPid1/>`_)
 - Dieter Werthmüller, (`@prisae <https://github.com/prisae/>`_)
+- Bane Sullivan, (`@banesullivan <https://github.com/banesullivan>`_)
