@@ -30,11 +30,7 @@ before_install:
   - conda update --yes conda
 
 install:
-  - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then
-      echo "Using native pip to install dependencies"
-    else
-      conda install --quiet --yes pip python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib pillow cython ipython;
-    fi
+  - conda install --quiet --yes pip numpy scipy matplotlib pillow cython ipython;
   - conda install --quiet --yes -c menpo vtk
   - which pip
   - pip install --upgrade pip
