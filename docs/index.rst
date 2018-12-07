@@ -35,6 +35,22 @@ Utility Codes
 
    content/utils
 
+Mixins
+******
+
+.. toctree::
+   :maxdepth: 3
+
+   content/mixins
+
+Visualization
+*************
+
+.. toctree::
+   :maxdepth: 3
+
+   content/view
+
 
 Project Index & Search
 **********************

@@ -4,8 +4,12 @@ import os
 import json
 from .utils.matutils import mkvc
 
+try:
+    from .mixins import vtkInterface
+except ImportError as err:
+    vtkInterface = object
 
-class BaseMesh(properties.HasProperties):
+class BaseMesh(properties.HasProperties, vtkInterface):
     """
     BaseMesh does all the counting you don't want to do.
     BaseMesh should be inherited by meshes with a regular structure.
@@ -29,13 +33,15 @@ class BaseMesh(properties.HasProperties):
     )
 
     # Instantiate the class
-    def __init__(self, n, x0=None):
+    def __init__(self, n, x0=None, **kwargs):
         self._n = n  # number of dimensions
 
         if x0 is None:
             self.x0 = np.zeros(len(self._n))
         else:
             self.x0 = x0
+
+        super(BaseMesh, self).__init__(**kwargs)
 
     # Validators
     @properties.validator('_n')
@@ -52,7 +58,7 @@ class BaseMesh(properties.HasProperties):
                 "supported".format(change['value'])
             )
 
-        if change['previous'] != properties.undefined:
+        if np.any(change['previous'] != properties.undefined):
             # can't change dimension of the mesh
             assert len(change['previous']) == len(change['value']), (
                 "Cannot change dimensionality of the mesh. Expected {} "
@@ -176,7 +182,7 @@ class BaseMesh(properties.HasProperties):
     def vnE(self):
         """Total number of edges in each direction
 
-        :rtype: numpy.array
+        :rtype: numpy.ndarray
         :return: [nEx, nEy, nEz], (dim, )
 
         .. plot::
@@ -237,7 +243,7 @@ class BaseMesh(properties.HasProperties):
     def vnF(self):
         """Total number of faces in each direction
 
-        :rtype: numpy.array
+        :rtype: numpy.ndarray
         :return: [nFx, nFy, nFz], (dim, )
 
         .. plot::
@@ -267,7 +273,7 @@ class BaseMesh(properties.HasProperties):
     def normals(self):
         """Face Normals
 
-        :rtype: numpy.array
+        :rtype: numpy.ndarray
         :return: normals, (sum(nF), dim)
         """
         if self.dim == 2:
@@ -294,7 +300,7 @@ class BaseMesh(properties.HasProperties):
     def tangents(self):
         """Edge Tangents
 
-        :rtype: numpy.array
+        :rtype: numpy.ndarray
         :return: normals, (sum(nE), dim)
         """
         if self.dim == 2:
@@ -321,8 +327,8 @@ class BaseMesh(properties.HasProperties):
         """Given a vector, fV, in cartesian coordinates, this will project
         it onto the mesh using the normals
 
-        :param numpy.array fV: face vector with shape (nF, dim)
-        :rtype: numpy.array
+        :param numpy.ndarray fV: face vector with shape (nF, dim)
+        :rtype: numpy.ndarray
         :return: projected face vector, (nF, )
 
         """
@@ -338,8 +344,8 @@ class BaseMesh(properties.HasProperties):
         """Given a vector, eV, in cartesian coordinates, this will project
         it onto the mesh using the tangents
 
-        :param numpy.array eV: edge vector with shape (nE, dim)
-        :rtype: numpy.array
+        :param numpy.ndarray eV: edge vector with shape (nE, dim)
+        :rtype: numpy.ndarray
         :return: projected edge vector, (nE, )
 
         """
@@ -373,11 +379,92 @@ class BaseMesh(properties.HasProperties):
         """
         return properties.copy(self)
 
+    axis_u = properties.Vector3(
+        'Vector orientation of u-direction. For more details see the docs for the :attr:`~discretize.BaseMesh.BaseMesh.rotation_matrix` property.',
+        default='X',
+        length=1
+    )
+    axis_v = properties.Vector3(
+        'Vector orientation of v-direction. For more details see the docs for the :attr:`~discretize.BaseMesh.BaseMesh.rotation_matrix` property.',
+        default='Y',
+        length=1
+    )
+    axis_w = properties.Vector3(
+        'Vector orientation of w-direction. For more details see the docs for the :attr:`~discretize.BaseMesh.BaseMesh.rotation_matrix` property.',
+        default='Z',
+        length=1
+    )
+
+    @properties.validator
+    def _validate_orientation(self):
+        """Check if axes are orthogonal"""
+        if not (np.abs(self.axis_u.dot(self.axis_v) < 1e-6) and
+                np.abs(self.axis_v.dot(self.axis_w) < 1e-6) and
+                np.abs(self.axis_w.dot(self.axis_u) < 1e-6)):
+            raise ValueError('axis_u, axis_v, and axis_w must be orthogonal')
+        return True
+
+    @property
+    def reference_is_rotated(self):
+        """True if the axes are rotated from the traditional <X,Y,Z> system
+        with vectors of :math:`(1,0,0)`, :math:`(0,1,0)`, and :math:`(0,0,1)`
+        """
+        if (    np.allclose(self.axis_u, (1, 0, 0)) and
+                np.allclose(self.axis_v, (0, 1, 0)) and
+                np.allclose(self.axis_w, (0, 0, 1)) ):
+            return False
+        return True
+
+    @property
+    def rotation_matrix(self):
+        """Builds a rotation matrix to transform coordinates from their coordinate
+        system into a conventional cartesian system. This is built off of the
+        three `axis_u`, `axis_v`, and `axis_w` properties; these mapping
+        coordinates use the letters U, V, and W (the three letters preceding X,
+        Y, and Z in the alphabet) to define the projection of the X, Y, and Z
+        durections. These UVW vectors describe the placement and transformation
+        of the mesh's coordinate sytem assuming at most 3 directions.
+
+        Why would you want to use these UVW mapping vectors the this
+        `rotation_matrix` property? They allow us to define the realationship
+        between local and global coordinate systems and provide a tool for
+        switching between the two while still maintaing the connectivity of the
+        mesh's cells. For a visual example of this, please see the figure in the
+        docs for the :class:`~discretize.mixins.vtkModule.vtkInterface`.
+        """
+        return np.array([self.axis_u, self.axis_v, self.axis_w])
+
+
+    reference_system = properties.String(
+        'The type of coordinate reference frame. Can take on the values ' +
+        'cartesian, cylindrical, or spherical. Abbreviations of these are allowed.',
+        default='cartesian',
+        change_case='lower',
+    )
+
+    @properties.validator
+    def _validate_reference_system(self):
+        """Check if the reference system is of a known type."""
+        choices = ['cartesian', 'cylindrical', 'spherical']
+        # Here are a few abbreviations that users can harnes
+        abrevs = {
+            'car': choices[0],
+            'cart': choices[0],
+            'cy': choices[1],
+            'cyl': choices[1],
+            'sph': choices[2],
+        }
+        # Get the name and fix it if it is abbreviated
+        self.reference_system = abrevs.get(self.reference_system, self.reference_system)
+        if self.reference_system not in choices:
+            raise ValueError('Coordinate system ({}) unknown.'.format(self.reference_system))
+        return True
+
 
 class BaseRectangularMesh(BaseMesh):
     """BaseRectangularMesh"""
-    def __init__(self, n, x0=None):
-        BaseMesh.__init__(self, n, x0=x0)
+    def __init__(self, n, x0=None, **kwargs):
+        BaseMesh.__init__(self, n, x0=x0, **kwargs)
 
     @property
     def nCx(self):
@@ -414,7 +501,7 @@ class BaseRectangularMesh(BaseMesh):
     def vnC(self):
         """Total number of cells in each direction
 
-        :rtype: numpy.array
+        :rtype: numpy.ndarray
         :return: [nCx, nCy, nCz]
         """
         return np.array(
@@ -457,7 +544,7 @@ class BaseRectangularMesh(BaseMesh):
     def vnN(self):
         """Total number of nodes in each direction
 
-        :rtype: numpy.array
+        :rtype: numpy.ndarray
         :return: [nNx, nNy, nNz]
         """
         return np.array(
@@ -469,7 +556,7 @@ class BaseRectangularMesh(BaseMesh):
     def vnEx(self):
         """Number of x-edges in each direction
 
-        :rtype: numpy.array
+        :rtype: numpy.ndarray
         :return: vnEx
         """
         return np.array(
@@ -481,7 +568,7 @@ class BaseRectangularMesh(BaseMesh):
     def vnEy(self):
         """Number of y-edges in each direction
 
-        :rtype: numpy.array
+        :rtype: numpy.ndarray
         :return: vnEy or None if dim < 2
         """
         if self.dim < 2:
@@ -495,7 +582,7 @@ class BaseRectangularMesh(BaseMesh):
     def vnEz(self):
         """Number of z-edges in each direction
 
-        :rtype: numpy.array
+        :rtype: numpy.ndarray
         :return: vnEz or None if dim < 3
         """
         if self.dim < 3:
@@ -509,7 +596,7 @@ class BaseRectangularMesh(BaseMesh):
     def vnFx(self):
         """Number of x-faces in each direction
 
-        :rtype: numpy.array
+        :rtype: numpy.ndarray
         :return: vnFx
         """
         return np.array(
@@ -521,7 +608,7 @@ class BaseRectangularMesh(BaseMesh):
     def vnFy(self):
         """Number of y-faces in each direction
 
-        :rtype: numpy.array
+        :rtype: numpy.ndarray
         :return: vnFy or None if dim < 2
         """
         if self.dim < 2:
@@ -535,7 +622,7 @@ class BaseRectangularMesh(BaseMesh):
     def vnFz(self):
         """Number of z-faces in each direction
 
-        :rtype: numpy.array
+        :rtype: numpy.ndarray
         :return: vnFz or None if dim < 3
         """
         if self.dim < 3:

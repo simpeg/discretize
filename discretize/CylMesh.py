@@ -43,6 +43,7 @@ class CylMesh(
 
     def __init__(self, h=None, x0=None, **kwargs):
         super(CylMesh, self).__init__(h=h, x0=x0, **kwargs)
+        self.reference_system = 'cylindrical'
 
         if not np.abs(self.hy.sum() - 2*np.pi) < 1e-10:
             raise AssertionError("The 2nd dimension must sum to 2*pi")
@@ -186,7 +187,7 @@ class CylMesh(
         """
         Number of x-faces in each direction
 
-        :rtype: numpy.array
+        :rtype: numpy.ndarray
         :return: vnFx, (dim, )
         """
         return self.vnC
@@ -270,7 +271,7 @@ class CylMesh(
         """
         Number of y-edges in each direction
 
-        :rtype: numpy.array
+        :rtype: numpy.ndarray
         :return: vnEy or None if dim < 2, (dim, )
         """
         if self.isSymmetric:
@@ -296,7 +297,7 @@ class CylMesh(
         """
         Number of z-edges in each direction
 
-        :rtype: numpy.array
+        :rtype: numpy.ndarray
         :return: vnEz or None if nCy > 1, (dim, )
         """
         return np.r_[self.nNx, self.nNy, self.nCz]
