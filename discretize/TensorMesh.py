@@ -87,7 +87,7 @@ class BaseTensorMesh(BaseMesh):
             n = np.array([x.size for x in h])
 
         super(BaseTensorMesh, self).__init__(
-            n, x0=x0
+            n, x0=x0, **kwargs
         )
 
         # Ensure h contains 1D vectors

@@ -10,3 +10,4 @@ cython
 wheel
 pytest
 twine
+vtk

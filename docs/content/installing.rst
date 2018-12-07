@@ -28,7 +28,7 @@ Installing Python
 
 Python is available on all major operating systems, but if you are getting started with python
 it is best to use a package manager such as
-`Continuum Anaconda <https://www.anaconda.com/download>`_.
+`Anaconda <https://www.anaconda.com/download>`_.
 You can download the package manager and use it to install the dependencies above.
 
 .. note::

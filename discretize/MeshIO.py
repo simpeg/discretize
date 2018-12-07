@@ -7,6 +7,11 @@ import six
 from . import utils
 from .BaseMesh import BaseMesh
 
+try:
+    from .mixins import vtkTensorRead
+except ImportError as err:
+    vtkTensorRead = object
+
 
 def load_mesh(filename):
     """
@@ -24,7 +29,7 @@ def load_mesh(filename):
     return data
 
 
-class TensorMeshIO(object):
+class TensorMeshIO(vtkTensorRead):
 
     @classmethod
     def _readUBC_3DMesh(TensorMesh, fileName):
@@ -651,52 +656,3 @@ class TreeMeshIO(object):
             for item in six.iteritems(models):
                 # Save the data
                 np.savetxt(item[0], item[1][ubc_order], fmt='%3.5e')
-
-
-    def writeVTK(self, fileName, models=None):
-        """Function to write a VTU file from a TreeMesh and model."""
-        import vtk
-        from vtk import vtkXMLUnstructuredGridWriter as Writer, VTK_VERSION
-        from vtk.util.numpy_support import numpy_to_vtk
-
-        # Make the data parts for the vtu object
-        # Points
-        ptsMat = np.vstack((self.gridN, self.gridhN))
-
-        vtkPts = vtk.vtkPoints()
-        vtkPts.SetData(numpy_to_vtk(ptsMat, deep=True))
-        # Cells
-        cellArray = [c for c in self]
-        cellConn = np.array([cell.nodes for cell in cellArray])
-
-        cellsMat = np.concatenate((np.ones((cellConn.shape[0], 1))*cellConn.shape[1], cellConn), axis=1).ravel()
-        cellsArr = vtk.vtkCellArray()
-        cellsArr.SetNumberOfCells(cellConn.shape[0])
-        cellsArr.SetCells(cellConn.shape[0], numpy_to_vtk(cellsMat, deep=True, array_type=vtk.VTK_ID_TYPE))
-
-        # Make the object
-        vtuObj = vtk.vtkUnstructuredGrid()
-        vtuObj.SetPoints(vtkPts)
-        vtuObj.SetCells(vtk.VTK_VOXEL, cellsArr)
-        # Add the level of refinement as a cell array
-        cell_levels = np.array([cell._level for cell in cellArray])
-        refineLevelArr = numpy_to_vtk(cell_levels, deep=1)
-        refineLevelArr.SetName('octreeLevel')
-        vtuObj.GetCellData().AddArray(refineLevelArr)
-        # Assign the model('s) to the object
-        if models is not None:
-            for item in six.iteritems(models):
-                # Convert numpy array
-                vtkDoubleArr = numpy_to_vtk(item[1], deep=1)
-                vtkDoubleArr.SetName(item[0])
-                vtuObj.GetCellData().AddArray(vtkDoubleArr)
-
-        # Make the writer
-        vtuWriteFilter = Writer()
-        if float(VTK_VERSION.split('.')[0]) >= 6:
-            vtuWriteFilter.SetInputData(vtuObj)
-        else:
-            vtuWriteFilter.SetInput(vtuObj)
-        vtuWriteFilter.SetFileName(fileName)
-        # Write the file
-        vtuWriteFilter.Update()
