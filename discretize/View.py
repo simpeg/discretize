@@ -735,8 +735,9 @@ class TensorView(object):
 
 
     def plot_3d_slicer(self, v, xslice=None, yslice=None, zslice=None,
-                       vType='CC', view='xy', transparent=None, clim=None,
-                       aspect='auto', grid=[2, 2, 1], pcolorOpts=None):
+                       vType='CC', view='real', axis='xy', transparent=None,
+                       clim=None, aspect='auto', grid=[2, 2, 1],
+                       pcolorOpts=None):
         """Plot slices of a 3D volume, interactively (scroll wheel).
 
         If called from a notebook, make sure to set
@@ -763,7 +764,7 @@ class TensorView(object):
         fig = plt.figure()
 
         # Populate figure
-        tracker = Slicer(self, v, xslice, yslice, zslice, vType, view,
+        tracker = Slicer(self, v, xslice, yslice, zslice, vType, view, axis,
                          transparent, clim, aspect, grid, pcolorOpts)
 
         # Connect figure to scrolling
@@ -1187,9 +1188,14 @@ class Slicer(object):
         defaults to the middle of the volume.
 
     vType: str
-        Type of visualization. At the moment only 'CC' is implemented.
+        Type of visualization. Default is 'CC'.
+        One of ['CC', 'Fx', 'Fy', 'Fz', 'Ex', 'Ey', 'Ez'].
 
-    view : 'xy' (default) or 'yx'
+    view : str
+        Which component to show. Defaults to 'real'.
+        One of  ['real', 'imag', 'abs'].
+
+    axis : 'xy' (default) or 'yx'
         'xy': horizontal axis is x, vertical axis is y. Reversed otherwise.
 
     transparent : 'slider' or list of floats or pairs of floats, optional
@@ -1222,26 +1228,53 @@ class Slicer(object):
     """
 
     def __init__(self, mesh, v, xslice=None, yslice=None, zslice=None,
-                 vType='CC', view='xy', transparent=None, clim=None,
-                 aspect='auto', grid=[2, 2, 1], pcolorOpts=None):
+                 vType='CC', view='real', axis='xy', transparent=None,
+                 clim=None, aspect='auto', grid=[2, 2, 1], pcolorOpts=None):
         """Initialize interactive figure."""
 
         # 0. Some checks, not very extensive
+
+        # (a) Mesh dimensionality
         if mesh.dim != 3:
             err = 'Must be a 3D mesh. Use plotImage instead.'
             err += ' Mesh provided has {} dimension(s).'.format(mesh.dim)
             raise ValueError(err)
 
-        vTypeOpts = ['CC', ]
+        # (b) vType  # Not yet working for ['CCv']
+        vTypeOpts = ['CC', 'Fx', 'Fy', 'Fz', 'Ex', 'Ey', 'Ez']
         if vType not in vTypeOpts:
             err = "vType must be in ['{0!s}'].".format("', '".join(vTypeOpts))
             err += " vType provided: '{0!s}'.".format(vType)
             raise ValueError(err)
 
+        if vType != 'CC':
+            aveOp = 'ave' + vType + '2CC'
+            Av = getattr(mesh, aveOp)
+            if v.size == Av.shape[1]:
+                v = Av * v
+            else:
+                v = mesh.r(v, vType[0], vType) # get specific component
+                v = Av * v
+
+        # (c) vOpts  # Not yet working for 'vec'
+
+        # Backwards compatibility
+        if view in ['xy', 'yx']:
+            axis = view
+            view = 'real'
+
+        viewOpts = ['real', 'imag', 'abs']
+        if view in viewOpts:
+            v = getattr(np, view)(v) # e.g. np.real(v)
+        else:
+            err = "view must be in ['{0!s}'].".format("', '".join(viewOpts))
+            err += " view provided: '{0!s}'.".format(view)
+            raise ValueError(err)
+
         # 1. Store relevant data
 
         # Store data in self as (nx, ny, nz)
-        self.v = v.reshape(mesh.nCx, mesh.nCy, mesh.nCz, order='F').copy()
+        self.v = mesh.r(v.reshape((mesh.nC, -1), order='F'), 'CC', 'CC', 'M')
         self.v = np.ma.masked_where(np.isnan(self.v), self.v)
 
         # Store relevant information from mesh in self
@@ -1252,12 +1285,9 @@ class Slicer(object):
         self.yc = mesh.vectorCCy  # y-cell center locations
         self.zc = mesh.vectorCCz  # z-cell center locations
 
-        # View: Default ('xy'): horizontal axis is x, vertical axis is y.
+        # Axis: Default ('xy'): horizontal axis is x, vertical axis is y.
         # Reversed otherwise.
-        if view == 'yx':
-            self.yx = True
-        else:
-            self.yx = False
+        self.yx = axis == 'yx'
 
         # Store initial slice indices; if not provided, takes the middle.
         if xslice is not None:
@@ -1419,19 +1449,19 @@ class Slicer(object):
 
         # Update slice index depending on subplot over which mouse is
         if event.inaxes == self.ax1:    # X-Y
-            self.zind = (self.zind + pm) % (self.zc.size - 1)
+            self.zind = (self.zind + pm) % self.zc.size
             self.update_xy()
         elif event.inaxes == self.ax2:  # X-Z
             if self.yx:
-                self.xind = (self.xind + pm) % (self.xc.size - 1)
+                self.xind = (self.xind + pm) % self.xc.size
             else:
-                self.yind = (self.yind + pm) % (self.yc.size - 1)
+                self.yind = (self.yind + pm) % self.yc.size
             self.update_xz()
         elif event.inaxes == self.ax3:  # Z-Y
             if self.yx:
-                self.yind = (self.yind + pm) % (self.yc.size - 1)
+                self.yind = (self.yind + pm) % self.yc.size
             else:
-                self.xind = (self.xind + pm) % (self.xc.size - 1)
+                self.xind = (self.xind + pm) % self.xc.size
             self.update_zy()
 
         plt.draw()
