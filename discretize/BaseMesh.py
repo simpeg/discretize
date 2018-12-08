@@ -865,7 +865,7 @@ class BaseRectangularMesh(BaseMesh):
 
                 for dim, dimName in enumerate(['x', 'y', 'z']):
                     if dimName in outType:
-                        if self.dim < dim:
+                        if self.dim <= dim:
                             raise ValueError(
                                 "Dimensions of mesh not great enough for "
                                 "{}{}".format(xType, dimName)
