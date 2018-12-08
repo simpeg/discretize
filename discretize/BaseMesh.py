@@ -380,17 +380,20 @@ class BaseMesh(properties.HasProperties, vtkInterface):
         return properties.copy(self)
 
     axis_u = properties.Vector3(
-        'Vector orientation of u-direction. For more details see the docs for the :attr:`~discretize.BaseMesh.BaseMesh.rotation_matrix` property.',
+        'Vector orientation of u-direction. For more details see the docs for '
+        'the :attr:`~discretize.BaseMesh.BaseMesh.rotation_matrix` property.',
         default='X',
         length=1
     )
     axis_v = properties.Vector3(
-        'Vector orientation of v-direction. For more details see the docs for the :attr:`~discretize.BaseMesh.BaseMesh.rotation_matrix` property.',
+        'Vector orientation of v-direction. For more details see the docs for '
+        'the :attr:`~discretize.BaseMesh.BaseMesh.rotation_matrix` property.',
         default='Y',
         length=1
     )
     axis_w = properties.Vector3(
-        'Vector orientation of w-direction. For more details see the docs for the :attr:`~discretize.BaseMesh.BaseMesh.rotation_matrix` property.',
+        'Vector orientation of w-direction. For more details see the docs for '
+        'the :attr:`~discretize.BaseMesh.BaseMesh.rotation_matrix` property.',
         default='Z',
         length=1
     )
@@ -417,27 +420,29 @@ class BaseMesh(properties.HasProperties, vtkInterface):
 
     @property
     def rotation_matrix(self):
-        """Builds a rotation matrix to transform coordinates from their coordinate
-        system into a conventional cartesian system. This is built off of the
-        three `axis_u`, `axis_v`, and `axis_w` properties; these mapping
-        coordinates use the letters U, V, and W (the three letters preceding X,
-        Y, and Z in the alphabet) to define the projection of the X, Y, and Z
-        durections. These UVW vectors describe the placement and transformation
-        of the mesh's coordinate sytem assuming at most 3 directions.
+        """Builds a rotation matrix to transform coordinates from their
+        coordinate system into a conventional cartesian system. This is built
+        off of the three `axis_u`, `axis_v`, and `axis_w` properties; these
+        mapping coordinates use the letters U, V, and W (the three letters
+        preceding X, Y, and Z in the alphabet) to define the projection of the
+        X, Y, and Z directions. These UVW vectors describe the placement and
+        transformation of the mesh's coordinate sytem assuming at most 3
+        directions.
 
         Why would you want to use these UVW mapping vectors the this
         `rotation_matrix` property? They allow us to define the realationship
         between local and global coordinate systems and provide a tool for
         switching between the two while still maintaing the connectivity of the
-        mesh's cells. For a visual example of this, please see the figure in the
-        docs for the :class:`~discretize.mixins.vtkModule.vtkInterface`.
+        mesh's cells. For a visual example of this, please see the figure in
+        the docs for the :class:`~discretize.mixins.vtkModule.vtkInterface`.
         """
         return np.array([self.axis_u, self.axis_v, self.axis_w])
 
 
     reference_system = properties.String(
         'The type of coordinate reference frame. Can take on the values ' +
-        'cartesian, cylindrical, or spherical. Abbreviations of these are allowed.',
+        'cartesian, cylindrical, or spherical. Abbreviations of these are '
+        'allowed.',
         default='cartesian',
         change_case='lower',
     )
@@ -455,9 +460,13 @@ class BaseMesh(properties.HasProperties, vtkInterface):
             'sph': choices[2],
         }
         # Get the name and fix it if it is abbreviated
-        self.reference_system = abrevs.get(self.reference_system, self.reference_system)
+        self.reference_system = abrevs.get(
+            self.reference_system, self.reference_system
+        )
         if self.reference_system not in choices:
-            raise ValueError('Coordinate system ({}) unknown.'.format(self.reference_system))
+            raise ValueError(
+                'Coordinate system ({}) unknown.'.format(self.reference_system)
+            )
         return True
 
 
@@ -717,13 +726,20 @@ class BaseRectangularMesh(BaseMesh):
         return int(self.vnFz.prod())
 
     def r(self, x, xType='CC', outType='CC', format='V'):
-        """`r` is a quick reshape command that will do the best it
+        raise DeprecationWarning(
+            'This method will be depreciated in favor if `reshape`. Please use'
+            ' `reshape` instead.'
+        ):
+        return self.reshape(x, xType, outType, format)
+
+    def reshape(self, x, xType='CC', outType='CC', format='V'):
+        """`reshape` is a quick reshape command that will do the best it
         can at giving you what you want.
 
         For example, you have a face variable, and you want the x
         component of it reshaped to a 3D matrix.
 
-        `r` can fulfil your dreams::
+        `reshape` can fulfil your dreams::
 
             mesh.r(V, 'F', 'Fx', 'M')
                    |   |     |    |
