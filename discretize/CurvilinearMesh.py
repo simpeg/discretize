@@ -11,18 +11,30 @@ from .View import CurviView
 
 # Some helper functions.
 def length2D(x):
+    """length2D computes the length of a 2D vector `x`. The shape of
+    `x` is (n, 2).
+    """
     return (x[:, 0]**2 + x[:, 1]**2)**0.5
 
 
 def length3D(x):
+    """length3D computes the length of a 3D vector `x`. The shape of
+    `x` is (n, 3)
+    """
     return (x[:, 0]**2 + x[:, 1]**2 + x[:, 2]**2)**0.5
 
 
 def normalize2D(x):
+    """normalize2D normalizes a 2D vector `x` by its length. The shape of
+    `x` is (n, 2).
+    """
     return x/np.kron(np.ones((1, 2)), utils.mkvc(length2D(x), 2))
 
 
 def normalize3D(x):
+    """normalize2D normalizes a 3D vector `x` by its length. The shape of
+    `x` is (n, 3).
+    """
     return x/np.kron(np.ones((1, 3)), utils.mkvc(length3D(x), 2))
 
 
@@ -37,9 +49,9 @@ class CurvilinearMesh(
             :include-source:
 
             import discretize
-            X, Y = discretize.utils.exampleLrmGrid([3,3],'rotate')
-            M = discretize.CurvilinearMesh([X, Y])
-            M.plotGrid(showIt=True)
+            x, y = discretize.utils.exampleLrmGrid([3, 3], 'rotate')
+            mesh = discretize.CurvilinearMesh([x, y])
+            mesh.plotGrid(showIt=True)
     """
 
     _meshType = 'Curv'
@@ -76,7 +88,7 @@ class CurvilinearMesh(
             self._gridN[:, i] = utils.mkvc(node_i.astype(float))
 
     @properties.validator('nodes')
-    def check_nodes(self, change):
+    def _check_nodes(self, change):
         assert len(change['value']) > 1, "len(node) must be greater than 1"
 
         for i, change['value'][i] in enumerate(change['value']):
@@ -244,26 +256,32 @@ class CurvilinearMesh(
                 # Each polyhedron can be decomposed into 5 tetrahedrons
                 # However, this presents a choice so we may as well divide in
                 # two ways and average.
-                A, B, C, D, E, F, G, H = utils.indexCube('ABCDEFGH', self.vnC +
-                                                         1)
+                A, B, C, D, E, F, G, H = utils.indexCube(
+                    'ABCDEFGH', self.vnC + 1
+                )
 
-                vol1 = (utils.volTetra(self.gridN, A, B, D, E) +  # cutted edge top
-                        utils.volTetra(self.gridN, B, E, F, G) +  # cutted edge top
-                        utils.volTetra(self.gridN, B, D, E, G) +  # middle
-                        utils.volTetra(self.gridN, B, C, D, G) +  # cutted edge bottom
-                        utils.volTetra(self.gridN, D, E, G, H))   # cutted edge bottom
+                vol1 = (
+                    utils.volTetra(self.gridN, A, B, D, E) +  # cutted edge top
+                    utils.volTetra(self.gridN, B, E, F, G) +  # cutted edge top
+                    utils.volTetra(self.gridN, B, D, E, G) +  # middle
+                    utils.volTetra(self.gridN, B, C, D, G) +  # cutted edge bottom
+                    utils.volTetra(self.gridN, D, E, G, H)    # cutted edge bottom
+                )
 
-                vol2 = (utils.volTetra(self.gridN, A, F, B, C) +  # cutted edge top
-                        utils.volTetra(self.gridN, A, E, F, H) +  # cutted edge top
-                        utils.volTetra(self.gridN, A, H, F, C) +  # middle
-                        utils.volTetra(self.gridN, C, H, D, A) +  # cutted edge bottom
-                        utils.volTetra(self.gridN, C, G, H, F))   # cutted edge bottom
+                vol2 = (
+                    utils.volTetra(self.gridN, A, F, B, C) +  # cutted edge top
+                    utils.volTetra(self.gridN, A, E, F, H) +  # cutted edge top
+                    utils.volTetra(self.gridN, A, H, F, C) +  # middle
+                    utils.volTetra(self.gridN, C, H, D, A) +  # cutted edge bottom
+                    utils.volTetra(self.gridN, C, G, H, F)    # cutted edge bottom
+                )
 
                 self._vol = (vol1 + vol2)/2
         return self._vol
 
     @property
     def area(self):
+        """Area of the faces"""
         if (getattr(self, '_area', None) is None or
             getattr(self, '_normals', None) is None):
             # Compute areas of cell faces
@@ -288,23 +306,32 @@ class CurvilinearMesh(
 
             elif(self.dim == 3):
 
-                A, E, F, B = utils.indexCube('AEFB', self.vnC+1, np.array(
-                                             [self.nNx, self.nCy, self.nCz]))
-                normal1, area1 = utils.faceInfo(self.gridN, A, E, F, B,
-                                                average=False,
-                                                normalizeNormals=False)
+                A, E, F, B = utils.indexCube(
+                    'AEFB', self.vnC+1,
+                    np.array([self.nNx, self.nCy, self.nCz])
+                )
+                normal1, area1 = utils.faceInfo(
+                    self.gridN, A, E, F, B, average=False,
+                    normalizeNormals=False
+                )
 
-                A, D, H, E = utils.indexCube('ADHE', self.vnC+1, np.array(
-                                             [self.nCx, self.nNy, self.nCz]))
-                normal2, area2 = utils.faceInfo(self.gridN, A, D, H, E,
-                                                average=False,
-                                                normalizeNormals=False)
+                A, D, H, E = utils.indexCube(
+                    'ADHE', self.vnC+1,
+                    np.array([self.nCx, self.nNy, self.nCz])
+                )
+                normal2, area2 = utils.faceInfo(
+                    self.gridN, A, D, H, E,
+                    average=False, normalizeNormals=False
+                )
 
-                A, B, C, D = utils.indexCube('ABCD', self.vnC+1, np.array(
-                                             [self.nCx, self.nCy, self.nNz]))
-                normal3, area3 = utils.faceInfo(self.gridN, A, B, C, D,
-                                                average=False,
-                                                normalizeNormals=False)
+                A, B, C, D = utils.indexCube(
+                    'ABCD', self.vnC+1,
+                    np.array([self.nCx, self.nCy, self.nNz])
+                )
+                normal3, area3 = utils.faceInfo(
+                    self.gridN, A, B, C, D,
+                    average=False, normalizeNormals=False
+                )
 
                 self._area = np.r_[utils.mkvc(area1), utils.mkvc(area2),
                                    utils.mkvc(area3)]
@@ -350,11 +377,13 @@ class CurvilinearMesh(
         if getattr(self, '_edge', None) is None:
             if(self.dim == 2):
                 xy = self.gridN
-                A, D = utils.indexCube('AD', self.vnC+1, np.array([self.nCx,
-                                                                  self.nNy]))
+                A, D = utils.indexCube(
+                    'AD', self.vnC+1, np.array([self.nCx, self.nNy])
+                )
                 edge1 = xy[D, :] - xy[A, :]
-                A, B = utils.indexCube('AB', self.vnC+1, np.array([self.nNx,
-                                                                   self.nCy]))
+                A, B = utils.indexCube(
+                    'AB', self.vnC+1, np.array([self.nNx, self.nCy])
+                )
                 edge2 = xy[B, :] - xy[A, :]
                 self._edge = np.r_[utils.mkvc(length2D(edge1)),
                                    utils.mkvc(length2D(edge2))]

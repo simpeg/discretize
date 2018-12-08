@@ -52,7 +52,7 @@ def indexCube(nodes, gridSize, n=None):
            |    cell(i,j)   |
            |        I       |
            |                |
-          D -------------- C
+           D -------------- C
       node(i+1,j)        node(i+1,j+1)
 
 
