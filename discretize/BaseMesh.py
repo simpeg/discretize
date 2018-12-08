@@ -334,12 +334,14 @@ class BaseMesh(properties.HasProperties, vtkInterface):
         :return: projected face vector, (nF, )
 
         """
-        assert isinstance(fV, np.ndarray), 'fV must be an ndarray'
-        assert (
+        if not isinstance(fV, np.ndarray):
+            raise TypeError('fV must be an ndarray')
+        if not (
             len(fV.shape) == 2 and
             fV.shape[0] == self.nF and
             fV.shape[1] == self.dim
-        ), 'fV must be an ndarray of shape (nF x dim)'
+        ):
+            raise ValueError('fV must be an ndarray of shape (nF x dim)')
         return np.sum(fV*self.normals, 1)
 
     def projectEdgeVector(self, eV):
@@ -351,12 +353,14 @@ class BaseMesh(properties.HasProperties, vtkInterface):
         :return: projected edge vector, (nE, )
 
         """
-        assert isinstance(eV, np.ndarray), 'eV must be an ndarray'
-        assert (
+        if not isinstance(eV, np.ndarray):
+            raise TypeError('eV must be an ndarray')
+        if not (
             len(eV.shape) == 2 and
             eV.shape[0] == self.nE and
             eV.shape[1] == self.dim
-        ), 'eV must be an ndarray of shape (nE x dim)'
+        ):
+            raise ValueError('eV must be an ndarray of shape (nE x dim)')
         return np.sum(eV*self.tangents, 1)
 
     def save(self, filename='mesh.json', verbose=False):
@@ -743,7 +747,7 @@ class BaseRectangularMesh(BaseMesh):
 
         `reshape` can fulfil your dreams::
 
-            mesh.r(V, 'F', 'Fx', 'M')
+            mesh.reshape(V, 'F', 'Fx', 'M')
                    |   |     |    |
                    |   |     |    {
                    |   |     |      How: 'M' or ['V'] for a matrix
@@ -781,31 +785,39 @@ class BaseRectangularMesh(BaseMesh):
         allowed_xType = [
             'CC', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez'
         ]
-        assert (
+
+        # Check inputs
+        if not (
             type(x) == list or isinstance(x, np.ndarray)
-        ), "x must be either a list or a ndarray"
-        assert xType in allowed_xType, (
-            "xType must be either "
-            "'CC', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', or 'Ez'"
-        )
-        assert outType in allowed_xType, (
-            "outType must be either "
-            "'CC', 'N', 'F', Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', or 'Ez'"
-        )
-        assert format in ['M', 'V'], "format must be either 'M' or 'V'"
-        assert outType[:len(xType)] == xType, (
-            "You cannot change types when reshaping."
-        )
-        assert xType in outType, "You cannot change type of components."
+        ):
+            raise TypeError("x must be either a list or a ndarray")
+        if xType not in allowed_xType:
+            raise ValueError(
+                "xType must be either "
+                "'CC', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', or 'Ez'"
+            )
+        if outType not in allowed_xType:
+            raise ValueError(
+                "outType must be either "
+                "'CC', 'N', 'F', Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', or 'Ez'"
+            )
+        if format not in ['M', 'V']:
+            raise ValueError("format must be either 'M' or 'V'")
+        if outType[:len(xType)] != xType:
+            raise ValueError("You cannot change types when reshaping.")
+        if xType not in outType:
+            raise ValueError("You cannot change type of components.")
 
         if type(x) == list:
             for i, xi in enumerate(x):
-                assert isinstance(x, np.ndarray), (
-                    "x[{0:d}] must be a numpy array".format(i)
-                )
-                assert xi.size == x[0].size, (
-                    "Number of elements in list must not change."
-                )
+                if not isinstance(x, np.ndarray):
+                    raise TypeError(
+                        "x[{0:d}] must be a numpy array".format(i)
+                    )
+                if xi.size != x[0].size:
+                    raise ValueError(
+                        "Number of elements in list must not change."
+                    )
 
             x_array = np.ones((x.size, len(x)))
             # Unwrap it and put it in a np array
@@ -813,7 +825,8 @@ class BaseRectangularMesh(BaseMesh):
                 x_array[:, i] = mkvc(xi)
             x = x_array
 
-        assert isinstance(x, np.ndarray), "x must be a numpy array"
+        if not isinstance(x, np.ndarray):
+            raise TypeError("x must be a numpy array")
 
         x = x[:]  # make a copy.
         xTypeIsFExyz = (
@@ -833,9 +846,10 @@ class BaseRectangularMesh(BaseMesh):
             """Switches over the different options."""
             if xType in ['CC', 'N']:
                 nn = (self._n) if xType == 'CC' else (self._n+1)
-                assert xx.size == np.prod(nn), (
-                    "Number of elements must not change."
-                )
+                if xx.size != np.prod(nn):
+                    raise ValueError(
+                        "Number of elements must not change."
+                    )
                 return outKernal(xx, nn)
             elif xType in ['F', 'E']:
                 # This will only deal with components of fields,
@@ -851,13 +865,15 @@ class BaseRectangularMesh(BaseMesh):
 
                 for dim, dimName in enumerate(['x', 'y', 'z']):
                     if dimName in outType:
-                        assert self.dim > dim, (
-                            "Dimensions of mesh not great enough for "
-                            "{}{}".format(xType, dimName)
-                        )
-                        assert xx.size == np.sum(nn), (
-                            "Vector is not the right size."
-                        )
+                        if self.dim < dim:
+                            raise ValueError(
+                                "Dimensions of mesh not great enough for "
+                                "{}{}".format(xType, dimName)
+                            )
+                        if xx.size != np.sum(nn):
+                            raise ValueError(
+                                "Vector is not the right size."
+                            )
                         start = np.sum(nn[:dim+1])
                         end = np.sum(nn[:dim+2])
                         return outKernal(xx[start:end], nx[dim])
@@ -871,16 +887,18 @@ class BaseRectangularMesh(BaseMesh):
                     nn = self.vnFy if 'F' in xType else self.vnEy
                 elif 'z' in xType:
                     nn = self.vnFz if 'F' in xType else self.vnEz
-                assert xx.size == np.prod(nn), 'Vector is not the right size.'
+                if xx.size != np.prod(nn):
+                    raise ValueError('Vector is not the right size.')
                 return outKernal(xx, nn)
 
         # Check if we are dealing with a vector quantity
         isVectorQuantity = len(x.shape) == 2 and x.shape[1] == self.dim
 
         if outType in ['F', 'E']:
-            assert ~isVectorQuantity, (
-                'Not sure what to do with a vector vector quantity..'
-            )
+            if isVectorQuantity:
+                raise ValueError(
+                    'Not sure what to do with a vector vector quantity..'
+                )
             outTypeCopy = outType
             out = ()
             for ii, dirName in enumerate(['x', 'y', 'z'][:self.dim]):
