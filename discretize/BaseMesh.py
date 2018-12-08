@@ -2,6 +2,8 @@ import numpy as np
 import properties
 import os
 import json
+import warnings
+
 from .utils.matutils import mkvc
 
 try:
@@ -726,10 +728,10 @@ class BaseRectangularMesh(BaseMesh):
         return int(self.vnFz.prod())
 
     def r(self, x, xType='CC', outType='CC', format='V'):
-        raise DeprecationWarning(
+        warnings.warn(
             'This method will be depreciated in favor if `reshape`. Please use'
-            ' `reshape` instead.'
-        ):
+            ' `reshape` instead.', FutureWarning
+        )
         return self.reshape(x, xType, outType, format)
 
     def reshape(self, x, xType='CC', outType='CC', format='V'):
