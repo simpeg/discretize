@@ -206,7 +206,8 @@ class TensorView(object):
         range_x=None,
         range_y=None,
         sample_grid=None,
-        stream_threshold=None
+        stream_threshold=None,
+        stream_thickness=None
     ):
 
         """
@@ -249,7 +250,8 @@ class TensorView(object):
                         v, vType=vTypeI, normal=normal, ind=ind, grid=grid,
                         view=view, ax=ax, clim=clim, showIt=False,
                         pcolorOpts=pcolorOpts, streamOpts=streamOpts,
-                        gridOpts=gridOpts, stream_threshold=stream_threshold
+                        gridOpts=gridOpts, stream_threshold=stream_threshold,
+                        stream_thickness=stream_thickness
                     )
                 ]
             return out
@@ -351,7 +353,9 @@ class TensorView(object):
             range_x=range_x,
             range_y=range_y,
             sample_grid=sample_grid,
-            stream_threshold=stream_threshold
+            stream_threshold=stream_threshold,
+            stream_thickness=stream_thickness
+
         )
 
         ax.set_xlabel('y' if normal == 'X' else 'x')
@@ -368,7 +372,8 @@ class TensorView(object):
         range_x=None,
         range_y=None,
         sample_grid=None,
-        stream_threshold=None
+        stream_threshold=None,
+        stream_thickness=None
     ):
 
         if pcolorOpts is None:
@@ -493,6 +498,36 @@ class TensorView(object):
                 mask_me = np.sqrt(Ui**2 + Vi**2) <= stream_threshold
                 Ui = np.ma.masked_where(mask_me, Ui)
                 Vi = np.ma.masked_where(mask_me, Vi)
+
+
+            if stream_thickness is not None:
+                scaleFact = np.copy(stream_thickness)
+
+                # Calculate vector amplitude
+                vecAmp = np.sqrt(U**2 + V**2).T
+
+                # Form bounds to knockout the top and bottom 10%
+                vecAmp_sort = np.sort(vecAmp.ravel())
+                nVecAmp = vecAmp.size
+                tenPercInd = int(np.ceil(0.1*nVecAmp))
+                lowerBound = vecAmp_sort[tenPercInd]
+                upperBound = vecAmp_sort[-tenPercInd]
+
+                lowInds = np.where(vecAmp < lowerBound)
+                vecAmp[lowInds] = lowerBound
+
+                highInds = np.where(vecAmp > upperBound)
+                vecAmp[highInds] = upperBound
+
+                # Normalize amplitudes 0-1
+                norm_thickness = vecAmp/vecAmp.max()
+
+                # Scale by user defined thickness factor
+                stream_thickness = scaleFact*norm_thickness
+
+                # Add linewidth to streamOpts
+                streamOpts.update({'linewidth':stream_thickness})
+
 
             out += (
                 ax.pcolormesh(
