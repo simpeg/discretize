@@ -13,6 +13,7 @@
 
 import sys
 import os
+from datetime import datetime
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -53,7 +54,9 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'discretize'
-copyright = u'2013 - 2018, SimPEG Developers, http://simpeg.xyz'
+copyright = u'2013 - {}, SimPEG Developers, http://simpeg.xyz'.format(
+    datetime.now().year
+)
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -273,7 +276,7 @@ texinfo_documents = [
 # Sphinx Gallery
 sphinx_gallery_conf = {
     # path to your examples scripts
-    'examples_dirs' : 'examples',
+    'examples_dirs' : '../examples',
     'gallery_dirs'  : 'auto_examples',
     'backreferences_dir' : False
 }
