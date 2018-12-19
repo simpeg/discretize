@@ -2,10 +2,10 @@ import numpy as np
 import properties
 import os
 import json
-from .utils.matutils import mkvc
+from ..utils import mkvc
 
 try:
-    from .mixins import vtkInterface
+    from ..mixins import vtkInterface
 except ImportError as err:
     vtkInterface = object
 

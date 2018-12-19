@@ -4,7 +4,7 @@ import properties
 from properties.math import TYPE_MAPPINGS
 
 from discretize import utils
-from discretize.BaseMesh import BaseRectangularMesh
+from .base import BaseRectangularMesh
 from discretize.DiffOperators import DiffOperators
 from discretize.InnerProducts import InnerProducts
 from discretize.View import CurviView

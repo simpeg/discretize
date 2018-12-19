@@ -66,7 +66,7 @@ setup(
         'pymatsolver>=0.1.2',
         'properties[math]',
     ],
-    author="Rowan Cockett",
+    author="SimPEG developers",
     author_email="rowanc1@gmail.com",
     description="Discretization tools for finite volume and inverse problems",
     long_description=LONG_DESCRIPTION,
