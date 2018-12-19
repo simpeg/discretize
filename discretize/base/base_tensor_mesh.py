@@ -20,6 +20,7 @@ class BaseTensorMesh(BaseMesh):
     Parameters
     ----------
 
+
     Attributes
     ----------
 
