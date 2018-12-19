@@ -46,7 +46,7 @@ install:
   - export MPLBACKEND="agg"
 
 script:
-  - nosetests $TEST_DIR --with-cov --cov discretize --cov-config .coveragerc -v -s;
+  - pytest $TEST_DIR --with-cov --cov discretize --cov-config .coveragerc -v -s;
 
 after_success:
 

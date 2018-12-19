@@ -45,7 +45,7 @@ class BaseMesh(properties.HasProperties, vtkInterface):
 
     # Validators
     @properties.validator('_n')
-    def check_n_shape(self, change):
+    def _check_n_shape(self, change):
         assert (
             not isinstance(change['value'], properties.utils.Sentinel) and
             change['value'] is not None
@@ -92,7 +92,7 @@ class BaseMesh(properties.HasProperties, vtkInterface):
                     )
 
     @properties.validator('x0')
-    def check_x0(self, change):
+    def _check_x0(self, change):
         assert (
             not isinstance(change['value'], properties.utils.Sentinel) and
             change['value'] is not None
@@ -108,8 +108,10 @@ class BaseMesh(properties.HasProperties, vtkInterface):
     def dim(self):
         """The dimension of the mesh (1, 2, or 3).
 
-        :rtype: int
-        :return: dim
+        Returns
+        -------
+        int
+            dimension of the mesh
         """
         return len(self._n)
 
@@ -117,16 +119,22 @@ class BaseMesh(properties.HasProperties, vtkInterface):
     def nC(self):
         """Total number of cells in the mesh.
 
-        :rtype: int
-        :return: nC
+        Returns
+        -------
+        int
+            number of cells in the mesh
 
+        Example
+        -------
         .. plot::
             :include-source:
 
             import discretize
             import numpy as np
-            M = discretize.TensorMesh([np.ones(n) for n in [2,3]])
-            M.plotGrid(centers=True, showIt=True)
+            mesh = discretize.TensorMesh([np.ones(n) for n in [2,3]])
+            mesh.plotGrid(centers=True, showIt=True)
+
+            print(mesh.nC)
         """
         return int(self._n.prod())
 
@@ -134,16 +142,22 @@ class BaseMesh(properties.HasProperties, vtkInterface):
     def nN(self):
         """Total number of nodes
 
-        :rtype: int
-        :return: nN
+        Returns
+        -------
+        int
+            number of nodes in the mesh
 
+        Example
+        -------
         .. plot::
             :include-source:
 
             import discretize
             import numpy as np
-            M = discretize.TensorMesh([np.ones(n) for n in [2,3]])
-            M.plotGrid(nodes=True, showIt=True)
+            mesh = discretize.TensorMesh([np.ones(n) for n in [2,3]])
+            mesh.plotGrid(nodes=True, showIt=True)
+
+            print(mesh.nN)
         """
         return int((self._n+1).prod())
 

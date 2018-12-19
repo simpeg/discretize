@@ -1,60 +1,75 @@
 .. include:: ../README.rst
 
 
-About discretize
-****************
-
 .. toctree::
    :maxdepth: 2
+   :hidden:
+   :caption: Getting Started
 
    content/big_picture
-   content/installing
-
-Examples
-********
+   content/intalling
 
 .. toctree::
-   :maxdepth: 2
+    :maxdepth: 2
+    :hidden:
+    :caption: Reference documentation
 
-   content/tutorial
-   auto_examples/index
+    api/index.rst
 
-Finite Volume
-*************
+.. About discretize
+.. ****************
 
-.. toctree::
-   :maxdepth: 3
+.. .. toctree::
+..    :maxdepth: 2
 
-   content/finite_volume
+..    content/big_picture
+..    content/installing
 
-Utility Codes
-*************
+.. Examples
+.. ********
 
-.. toctree::
-   :maxdepth: 3
+.. .. toctree::
+..    :maxdepth: 2
 
-   content/utils
+..    content/tutorial
+..    auto_examples/index
 
-Mixins
-******
+.. Finite Volume
+.. *************
 
-.. toctree::
-   :maxdepth: 3
+.. .. toctree::
+..    :maxdepth: 3
 
-   content/mixins
+..    content/finite_volume
 
-Visualization
-*************
+.. Utility Codes
+.. *************
 
-.. toctree::
-   :maxdepth: 3
+.. .. toctree::
+..    :maxdepth: 3
 
-   content/view
+..    content/utils
+
+.. Mixins
+.. ******
+
+.. .. toctree::
+..    :maxdepth: 3
+
+..    content/mixins
+
+.. Visualization
+.. *************
+
+.. .. toctree::
+..    :maxdepth: 3
+
+..    content/view
 
 
-Project Index & Search
-**********************
+.. Project Index & Search
+.. **********************
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. * :ref:`genindex`
+.. * :ref:`modindex`
+.. * :ref:`search`
