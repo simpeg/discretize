@@ -7,17 +7,20 @@ API Reference
 
 .. currentmodule:: discretize
 
-Tensor Mesh
------------
+Meshes
+------
 
 .. autosummary::
     :toctree: generated/
 
-Cylindrical Mesh
-----------------
+    TensorMesh
+    CylMesh
+    TreeMesh
+    CurvilinearMesh
 
-.. autosummary::
-    :toctree: generated/
+.. automodule:: discretize.base
+
+.. currentmodule:: discretize
 
 
 Base Mesh
@@ -26,5 +29,6 @@ Base Mesh
 .. autosummary::
     :toctree: generated/
 
-    BaseMesh
-    BaseRectangularMesh
+    base.BaseMesh
+    base.BaseRectangularMesh
+    base.BaseTensorMesh

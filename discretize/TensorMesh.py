@@ -25,7 +25,8 @@ class TensorMesh(
 
     Example
     -------
-    ::
+
+    .. code::
 
         hx = np.array([1, 1, 1])
         hy = np.array([1, 2])
@@ -34,7 +35,7 @@ class TensorMesh(
         mesh = Mesh.TensorMesh([hx, hy, hz])
 
     Example of a padded tensor mesh using
-    :func:`discretize.utils.meshutils.meshTensor`:
+    :func:`discretize.utils.meshTensor`:
 
     .. plot::
         :include-source:
@@ -46,7 +47,9 @@ class TensorMesh(
         ])
         mesh.plotGrid()
 
-    For a quick tensor mesh on a (10x12x15) unit cube::
+    For a quick tensor mesh on a (10x12x15) unit cube
+
+    .. code::
 
         mesh = discretize.TensorMesh([10, 12, 15])
 

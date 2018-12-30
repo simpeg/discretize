@@ -15,19 +15,7 @@ class BaseTensorMesh(BaseMesh):
 
     Do not use this class directly, instead, inherit it if you plan to develop
     a tensor-style mesh (e.g. a spherical mesh) or use the
-    :meth:`~discretize.TensorMesh` class to create a cartesian tensor mesh.
-
-    Parameters
-    ----------
-
-
-    Attributes
-    ----------
-
-    See also
-    --------
-    discretize.TensorMesh : cartesian mesh
-    discretize.CylMesh : cylindrical mesh
+    :meth:`discretize.TensorMesh` class to create a cartesian tensor mesh.
 
     """
     _meshType = 'BASETENSOR'

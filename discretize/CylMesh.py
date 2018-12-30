@@ -24,7 +24,7 @@ class CylMesh(
 
         for a cylindrically symmetric mesh use [hx, 1, hz]
 
-    ::
+    .. code::
 
         cs, nc, npad = 20., 30, 8
         hx = utils.meshTensor([(cs,npad+10,-0.7), (cs,nc), (cs,npad,1.3)])
