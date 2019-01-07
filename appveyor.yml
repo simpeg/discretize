@@ -35,8 +35,7 @@ install:
   - conda update -q conda
   - conda info -a
   - conda install numpy scipy matplotlib cython ipython pillow wheel
-  - conda install -c menpo vtk
-  - pip install -r requirements_dev.txt
+  - pip install nose
   - python setup.py install
 
 test_script:
