@@ -1,3 +1,7 @@
+"""
+Base class for tensor-product style meshes
+"""
+
 import numpy as np
 import scipy.sparse as sp
 import properties

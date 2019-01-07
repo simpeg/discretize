@@ -1,3 +1,7 @@
+"""
+Base classes for all discretize meshes
+"""
+
 import numpy as np
 import properties
 import os
@@ -476,7 +480,11 @@ class BaseMesh(properties.HasProperties, vtkInterface):
 
 
 class BaseRectangularMesh(BaseMesh):
-    """BaseRectangularMesh"""
+    """
+    BaseRectangularMesh
+    """
+
+
     def __init__(self, n, x0=None, **kwargs):
         BaseMesh.__init__(self, n, x0=x0, **kwargs)
 

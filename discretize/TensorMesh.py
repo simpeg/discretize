@@ -23,8 +23,8 @@ class TensorMesh(
     Any Mesh that has a constant width along the entire axis
     such that it can defined by a single width vector, called 'h'.
 
-    Example
-    -------
+    Examples
+    --------
 
     .. code::
 
