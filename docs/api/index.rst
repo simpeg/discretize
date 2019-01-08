@@ -4,6 +4,7 @@ API Reference
 =============
 
 .. automodule:: discretize
+    :show-inheritance:
 
 .. currentmodule:: discretize
 
@@ -20,54 +21,54 @@ Meshes
 
 
 
-.. automodule:: discretize.utils
+.. .. automodule:: discretize.utils
 
-.. currentmodule:: discretize
+.. .. currentmodule:: discretize
 
-Utilities
----------
+.. Utilities
+.. ---------
 
-General Utilities
-*****************
+.. General Utilities
+.. *****************
 
-.. autosummary::
-    :toctree: generated/
+.. .. autosummary::
+..     :toctree: generated/
 
-    utils.download
+..     utils.download
 
-Matrix Utilities
-****************
+.. Matrix Utilities
+.. ****************
 
-.. autosummary::
-    :toctree: generated/
+.. .. autosummary::
+..     :toctree: generated/
 
-    utils.mkvc
-    utils.sdiag
-    utils.sdInv
-
-
-
-Curvilinear Mesh Utilities
-**************************
-
-.. autosummary::
-    :toctree: generated/
-
-    utils.volTetra
-    utils.faceInfo
-    utils.indexCube
+..     utils.mkvc
+..     utils.sdiag
+..     utils.sdInv
 
 
 
-Visualization
--------------
+.. Curvilinear Mesh Utilities
+.. **************************
 
-.. autosummary::
-    :toctree: generated/
+.. .. autosummary::
+..     :toctree: generated/
+
+..     utils.volTetra
+..     utils.faceInfo
+..     utils.indexCube
 
 
-.. automodule:: discretize.base
-    :members:
+
+.. Visualization
+.. -------------
+
+.. .. autosummary::
+..     :toctree: generated/
+
+
+.. automodule:: discretize.base.base_mesh
+..     :members:
 
 .. currentmodule:: discretize
 
@@ -79,9 +80,9 @@ Base Mesh
 .. autosummary::
     :toctree: generated/
 
-    base.BaseMesh
-    base.BaseRectangularMesh
-    base.BaseTensorMesh
+    base.base_mesh.BaseMesh
+    base.base_mesh.BaseRectangularMesh
+    base.base_tenros_mesh.BaseTensorMesh
 
 
 
