@@ -12,3 +12,4 @@ twine
 vtk
 numpydoc
 nbsphinx
+vtki>=0.13.0

@@ -52,6 +52,7 @@ from vtk import vtkXMLUnstructuredGridWriter
 from vtk import vtkXMLStructuredGridWriter
 from vtk import vtkXMLRectilinearGridReader
 
+import warnings
 
 
 def assignCellData(vtkDS, models=None):
@@ -320,7 +321,14 @@ class vtkInterface(object):
             convert = converters[key]
         except KeyError:
             raise RuntimeError('Mesh type `{}` is not currently supported for VTK conversion.'.format(key))
-        return convert(mesh, models=models)
+        # Convert the data object then attempt a wrapping with `vtki`
+        cvtd = convert(mesh, models=models)
+        try:
+            import vtki
+            cvtd = vtki.wrap(cvtd)
+        except ImportError:
+            warnings.warn('For easier use of VTK objects, you should install `vtki` (the VTK interface): pip install vtki>=0.13.0')
+        return cvtd
 
     @staticmethod
     def _saveUnstructuredGrid(fileName, vtkUnstructGrid, directory=''):
