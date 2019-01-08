@@ -21,54 +21,7 @@ Meshes
 
 
 
-.. .. automodule:: discretize.utils
-
-.. .. currentmodule:: discretize
-
-.. Utilities
-.. ---------
-
-.. General Utilities
-.. *****************
-
-.. .. autosummary::
-..     :toctree: generated/
-
-..     utils.download
-
-.. Matrix Utilities
-.. ****************
-
-.. .. autosummary::
-..     :toctree: generated/
-
-..     utils.mkvc
-..     utils.sdiag
-..     utils.sdInv
-
-
-
-.. Curvilinear Mesh Utilities
-.. **************************
-
-.. .. autosummary::
-..     :toctree: generated/
-
-..     utils.volTetra
-..     utils.faceInfo
-..     utils.indexCube
-
-
-
-.. Visualization
-.. -------------
-
-.. .. autosummary::
-..     :toctree: generated/
-
-
-.. automodule:: discretize.base.base_mesh
-..     :members:
+.. automodule:: discretize.base
 
 .. currentmodule:: discretize
 
@@ -80,9 +33,9 @@ Base Mesh
 .. autosummary::
     :toctree: generated/
 
-    base.base_mesh.BaseMesh
-    base.base_mesh.BaseRectangularMesh
-    base.base_tenros_mesh.BaseTensorMesh
+    base.BaseMesh
+    base.BaseRectangularMesh
+    base.BaseTensorMesh
 
 
 
