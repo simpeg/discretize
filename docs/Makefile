@@ -4,7 +4,7 @@
 # You can set these variables from the command line.
 SPHINXOPTS    = -n -w warnings.txt
 SPHINXBUILD   = sphinx-build
-PAPER         =
+SPHINXAUTOGEN = sphinx-autogen
 BUILDDIR      = _build
 
 # Internal variables.
@@ -38,18 +38,27 @@ help:
 	@echo "  linkcheck  to check all external links for integrity"
 	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
 
+all: html
+
+api:
+	@echo
+	@echo "Building API docs."
+	@echo
+	$(SPHINXAUTOGEN) -i -t _templates -o api/generated api/index.rst
 
 clean:
 	rm -rf $(BUILDDIR)/*
-	rm -rf auto_examples/
+	rm -rf api/generated
+	rm -rf gallery/
+	rm -rf tutorials/
 	rm -rf modules/generated/*
 
-html-noplot:
+html-noplot: api
 	$(SPHINXBUILD) -D plot_gallery=0 -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
-html:
+html: api
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."

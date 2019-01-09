@@ -6,15 +6,16 @@
     :caption: Getting Started
 
     content/big_picture
-    content/intalling
-    auto_examples/index
+    content/installing
+    gallery/index
+    content/additional_resources
 
 .. toctree::
     :maxdepth: 2
     :hidden:
     :caption: User Guide
 
-    content/tutorial
+    tutorials/mesh_overview
     content/finite_volume
     content/inner_products
 
