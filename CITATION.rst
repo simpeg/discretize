@@ -10,9 +10,9 @@ if you use this code, please help our scientific visibility by citing our work!
 
 BibTex:
 
-.. code::
+.. code:: Latex
 
-    @article{cockett2015simpeg,
+    @article{Cockett2015,
       title={SimPEG: An open source framework for simulation and gradient based parameter estimation in geophysical applications},
       author={Cockett, Rowan and Kang, Seogi and Heagy, Lindsey J and Pidlisecky, Adam and Oldenburg, Douglas W},
       journal={Computers \& Geosciences},

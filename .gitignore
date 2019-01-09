@@ -40,7 +40,8 @@ nosetests.xml
 docs/_build/
 docs/warnings.txt
 .DS_Store
-docs/auto_examples
+docs/gallery
+docs/tutorials
 docs/modules
 tree_ext.cpp
 interputils_cython.c
