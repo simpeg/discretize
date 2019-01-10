@@ -51,3 +51,6 @@ docs/api/generated/*
 docs/gallery
 docs/tutorials
 docs/modules
+
+# downloads for examples
+laguna_del_maule_slicer/*

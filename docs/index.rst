@@ -16,6 +16,8 @@
     :caption: User Guide
 
     tutorials/mesh_overview
+    tutorials/tensor_mesh
+    tutorials/cylindrical_mesh
     content/finite_volume
     content/inner_products
 
