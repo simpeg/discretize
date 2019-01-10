@@ -8,6 +8,7 @@ API Reference
 
 .. currentmodule:: discretize
 
+
 Meshes
 ------
 
@@ -18,6 +19,130 @@ Meshes
     CylMesh
     TreeMesh
     CurvilinearMesh
+
+
+Differential Operators
+----------------------
+
+.. autosummary::
+    :toctree: generated/
+
+    DiffOperators
+
+Mesh IO
+-------
+
+.. autosummary::
+    :toctree: generated/
+
+    load_mesh
+    MeshIO.TensorMeshIO
+    MeshIO.TreeMeshIO
+
+
+Visualization
+-------------
+
+.. autosummary::
+    :toctree: generated/
+
+    View.TensorView
+    View.CylView
+    View.CurviView
+    View.Slicer
+    mixins.vtkModule
+
+
+
+Testing
+-------
+
+.. autosummary::
+    :toctree: generated/
+
+    Tests.OrderTest
+    Tests.checkDerivative
+    Tests.getQuadratic
+    Tests.Rosenbrock
+
+
+Utilities
+---------
+
+General Utilities
+*****************
+
+.. autosummary::
+    :toctree: generated/
+
+    utils.download
+
+Mesh Utilities
+**************
+
+.. autosummary::
+    :toctree: generated/
+
+    utils.exampleLrmGrid
+    utils.meshTensor
+    utils.closestPoints
+    utils.ExtractCoreMesh
+    utils.random_model
+
+
+Matrix Utilities
+****************
+
+.. autosummary::
+    :toctree: generated/
+
+    utils.mkvc
+    utils.sdiag
+    utils.sdInv
+    utils.speye
+    utils.kron3
+    utils.spzeros
+    utils.ddx
+    utils.av
+    utils.av_extrap
+    utils.ndgrid
+    utils.ind2sub
+    utils.sub2ind
+    utils.getSubArray
+    utils.inv3X3BlockDiagonal
+    utils.inv2X2BlockDiagonal
+    utils.TensorType
+    utils.makePropertyTensor
+    utils.invPropertyTensor
+    utils.Zero
+    utils.Identity
+
+
+Mathematical Operations
+***********************
+
+.. autosummary::
+    :toctree: generated/
+
+    utils.rotatePointsFromNormals
+    utils.rotationMatrixFromNormals
+    utils.cyl2cart
+    utils.cart2cyl
+    utils.isScalar
+    utils.asArray_N_x_Dim
+
+
+
+Curvilinear Mesh Utilities
+**************************
+
+.. autosummary::
+    :toctree: generated/
+
+    utils.volTetra
+    utils.faceInfo
+    utils.indexCube
+
 
 
 
@@ -36,44 +161,3 @@ Base Mesh
     base.BaseMesh
     base.BaseRectangularMesh
     base.BaseTensorMesh
-
-
-
-
-..     :members:
-..     :undoc-members:
-
-.. Matrix Utilities
-.. ================
-
-.. .. automodule::
-..     :members:
-..     :undoc-members:
-
-.. Curv Utilities
-.. ==============
-
-.. .. automodule:: discretize.utils.curvutils
-..     :members:
-..     :undoc-members:
-
-.. Mesh Utilities
-.. ==============
-
-.. .. automodule:: discretize.utils.meshutils
-..     :members:
-..     :undoc-members:
-
-.. Interpolation Utilities
-.. =======================
-
-.. .. automodule:: discretize.utils.interputils
-..     :members:
-..     :undoc-members:
-
-.. Testing
-.. =======
-
-.. .. automodule:: discretize.Tests
-..     :members:
-..     :undoc-members:

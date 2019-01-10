@@ -37,14 +37,17 @@ nosetests.xml
 
 *.sublime-project
 *.sublime-workspace
-docs/_build/
-docs/warnings.txt
 .DS_Store
-docs/gallery
-docs/tutorials
-docs/modules
 tree_ext.cpp
 interputils_cython.c
 
 # Jupyter
 *.ipynb
+
+# docs
+docs/_build/
+docs/warnings.txt
+docs/api/generated/*
+docs/gallery
+docs/tutorials
+docs/modules
