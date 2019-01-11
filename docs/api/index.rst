@@ -21,13 +21,20 @@ Meshes
     CurvilinearMesh
 
 
-Differential Operators
-----------------------
+
+Numerical Operators
+-------------------
+
+.. automodule:: discretize.InnerProducts
+
+.. currentmodule:: discretize
 
 .. autosummary::
     :toctree: generated/
 
     DiffOperators
+    InnerProducts
+
 
 Mesh IO
 -------
@@ -142,13 +149,6 @@ Curvilinear Mesh Utilities
     utils.volTetra
     utils.faceInfo
     utils.indexCube
-
-
-
-
-.. automodule:: discretize.base
-
-.. currentmodule:: discretize
 
 
 
