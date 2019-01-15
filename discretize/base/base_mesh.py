@@ -398,17 +398,17 @@ class BaseMesh(properties.HasProperties, vtkInterface):
         return properties.copy(self)
 
     axis_u = properties.Vector3(
-        'Vector orientation of u-direction. For more details see the docs for the :attr:`~discretize.BaseMesh.BaseMesh.rotation_matrix` property.',
+        'Vector orientation of u-direction. For more details see the docs for the :attr:`~discretize.base.BaseMesh.rotation_matrix` property.',
         default='X',
         length=1
     )
     axis_v = properties.Vector3(
-        'Vector orientation of v-direction. For more details see the docs for the :attr:`~discretize.BaseMesh.BaseMesh.rotation_matrix` property.',
+        'Vector orientation of v-direction. For more details see the docs for the :attr:`~discretize.base.BaseMesh.rotation_matrix` property.',
         default='Y',
         length=1
     )
     axis_w = properties.Vector3(
-        'Vector orientation of w-direction. For more details see the docs for the :attr:`~discretize.BaseMesh.BaseMesh.rotation_matrix` property.',
+        'Vector orientation of w-direction. For more details see the docs for the :attr:`~discretize.base.BaseMesh.rotation_matrix` property.',
         default='Z',
         length=1
     )

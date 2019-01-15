@@ -2,7 +2,7 @@
 #
 
 # You can set these variables from the command line.
-SPHINXOPTS    = -n -w warnings.txt
+SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 SPHINXAUTOGEN = sphinx-autogen
 BUILDDIR      = _build
