@@ -15,7 +15,7 @@ cartF3 = lambda M, fx, fy, fz: np.vstack((cart_row3(M.gridFx, fx, fy, fz), cart_
 cartE3 = lambda M, ex, ey, ez: np.vstack((cart_row3(M.gridEx, ex, ey, ez), cart_row3(M.gridEy, ex, ey, ez), cart_row3(M.gridEz, ex, ey, ez)))
 
 
-np.random.seed(90)
+np.random.seed(80)
 
 
 class TestCellGrad2D(discretize.Tests.OrderTest):
