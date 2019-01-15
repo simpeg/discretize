@@ -1,4 +1,4 @@
-.PHONY: build coverage lint graphs tests docs clean clean_pyc clean_c clean_so clean_cython deploy
+.PHONY: build coverage lint graphs tests docs clean clean_pyc clean_c clean_so clean_cython deploy install
 
 PROJECT=discretize
 LINT_FILES=setup.py $(PROJECT)
@@ -17,7 +17,10 @@ help:
 	@echo "  clean          clean up build and generated files"
 	@echo ""
 
-install:
+install: build
+	pip install -e .
+
+build:
 	mkdir -p docs/modules/generated
 	python setup.py build_ext -i -b .
 
