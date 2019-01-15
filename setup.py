@@ -76,6 +76,6 @@ setup(
     classifiers=CLASSIFIERS,
     platforms=["Windows", "Linux", "Solaris", "Mac OS-X", "Unix"],
     use_2to3=False,
-    setup_requires=['numpy', 'cython'],
+    setup_requires=['numpy'],
     configuration=configuration
 )
