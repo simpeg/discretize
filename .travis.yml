@@ -43,7 +43,8 @@ install:
   - pip install --upgrade pip
   - pip install -r requirements_dev.txt
   - python --version
-  - make install
+  - python setup.py install
+  - make build
   - export MPLBACKEND="agg"
 
 script:
