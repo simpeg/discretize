@@ -8,7 +8,7 @@ FLAKE8_FILES=setup.py $(PROJECT) docs/examples
 help:
 	@echo "Commands:"
 	@echo ""
-	@echo "  install        install in editable mode"
+	@echo "  build        install in editable mode"
 	@echo "  build_cython   install in editable mode"
 	@echo "  test           run the test suite (including doctests) and report coverage"
 	@echo "  format         run black to automatically format the code"
@@ -17,8 +17,6 @@ help:
 	@echo "  clean          clean up build and generated files"
 	@echo ""
 
-install: build
-	pip install -e .
 
 build:
 	mkdir -p docs/modules/generated
