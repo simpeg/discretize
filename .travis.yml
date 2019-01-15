@@ -74,11 +74,11 @@ after_success:
   - python setup.py sdist ;
   - twine upload dist/* --skip-existing ;
 
-deploy:
-  - provider: script
-    script: ci/deploy-docs.sh
-    on:
-      condition: '$TEST_DIR == "tests/docs"'
+# deploy:
+#   - provider: script
+#     script: ci/deploy-docs.sh
+#     on:
+#       condition: '$TEST_DIR == "tests/docs"'
 
 notifications:
   slack: simpeg:1KZq5giMtlJJ58TijIPgqf7n
