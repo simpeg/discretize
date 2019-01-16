@@ -128,7 +128,6 @@ after_success:
 
 deploy:
   # pypi release
-  -
 
   # deploy the docs
 
