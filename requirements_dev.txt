@@ -8,9 +8,9 @@ pytest-cov
 pylint
 sympy
 wheel
-pytest
 twine
 vtk
 numpydoc
 nbsphinx
 vtki>=0.13.0
+coverage

@@ -133,12 +133,14 @@ deploy:
   # pypi release
   - provider: script
     script: ci/deploy-pypi.sh
+    skip_cleanup: true
     on:
       tags: true
       condition: '$DEPLOY_PYPI == "true"'
   # deploy docs
   - provider: script
     script: ci/deploy-docs.sh
+    skip_cleanup: true
     # on:
     #   tags: true
     #   condition: '$DEPLOY_DOCS == "true"'
