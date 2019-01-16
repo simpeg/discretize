@@ -14,7 +14,7 @@ env:
     - TEST_DIR=""
     - DEPLOY_DOCS=false
     - DEPLOY_PYPI=false
-    - CONDA_REQUIREMENTS="numpy scipy matplotlib cython properties[math]"
+    - CONDA_REQUIREMENTS="numpy scipy matplotlib cython properties[math] pip"
     - CONDA_REQUIREMENTS_DEV=requirements_dev.txt
 
 matrix:
@@ -128,6 +128,7 @@ after_success:
 
 deploy:
   # pypi release
+  -
 
   # deploy the docs
 

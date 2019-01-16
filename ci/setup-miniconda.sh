@@ -87,6 +87,7 @@ if [ -f $requirements_file ]; then
     echo "Installing collected dependencies:"
     cat $requirements_file
     conda install --quiet --file $requirements_file python=$PYTHON
+    pip install -r $requirements_file
 else
     echo "No requirements defined."
 fi
