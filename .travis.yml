@@ -118,7 +118,7 @@ install:
 script:
   - if [ "$TEST" == "true"]; then
       export MPLBACKEND="agg" ;
-      pytest $TEST_DIR --cov=discretize --cov-config .coveragerc -v -s
+      pytest $TEST_DIR --cov=discretize --cov-config .coveragerc -v -s ;
     fi
 
 after_success:
