@@ -116,8 +116,9 @@ install:
   - make build
 
 script:
-  - if [ "$TEST" == "true"]; then
+  - if [ "$TEST" == "true" ]; then
       export MPLBACKEND="agg" ;
+      echo "testing $TEST_DIR" ;
       pytest $TEST_DIR --cov=discretize --cov-config .coveragerc -v -s ;
     fi
 
@@ -125,7 +126,7 @@ after_success:
   - if [ "$TEST" == "true" ]; then
       coverage xml;
       echo "Uploading coverage to Codecov";
-      codecov -e PYTHON;
+      codecov -e PYTHON ;
     fi
 
 deploy:
