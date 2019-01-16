@@ -3,12 +3,6 @@
 # We use miniconda for Python so don't need any Python specific tools
 language: generic
 
-# language: python
-# python:
-# - 2.7
-# - 3.6
-# - 3.7
-
 sudo: false
 
 env:
@@ -73,6 +67,7 @@ matrix:
         - TEST=true
         - TEST_DIR="tests/tree"
         - DEPLOY_PYPI=true
+        - CONDA_INSTALL_EXTRA="twine"
     - name: "Python 3.6 - tree"
       os: linux
       env:
@@ -80,6 +75,7 @@ matrix:
         - TEST=true
         - TEST_DIR="tests/tree"
         - DEPLOY_PYPI=true
+        - CONDA_INSTALL_EXTRA="twine"
     - name: "Python 3.7 - tree"
       os: linux
       env:
@@ -87,6 +83,7 @@ matrix:
         - TEST=true
         - TEST_DIR="tests/tree"
         - DEPLOY_PYPI=true
+        - CONDA_INSTALL_EXTRA="twine"
 
     # test the docs code on 2.7, 3.6, 3.7
     - name: "Python 2.7 - docs"
@@ -121,6 +118,18 @@ script:
   - if [ "$TEST" == "true"]; then
       pytest $TEST_DIR --cov=discretize --cov-config .coveragerc -v -s
     fi
+
+after_success:
+  - if [ "$TEST" == "true" ]; then
+      coverage xml;
+      echo "Uploading coverage to Codecov";
+      codecov -e PYTHON;
+    fi
+
+deploy:
+  # pypi release
+
+  # deploy the docs
 
 # before_install:
 #   - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then

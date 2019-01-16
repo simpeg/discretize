@@ -68,8 +68,12 @@ echo "Installing dependencies"
 echo "========================================================================"
 requirements_file=full-conda-requirements.txt
 if [ ! -z "$CONDA_REQUIREMENTS" ]; then
-    echo "Capturing dependencies from $CONDA_REQUIREMENTS"
-    cat $CONDA_REQUIREMENTS >> $requirements_file
+    if [ -f "$CONDA_REQUIREMENTS" ]; then
+        echo "Capturing dependencies from $CONDA_REQUIREMENTS"
+        cat $CONDA_REQUIREMENTS >> $requirements_file
+    else
+        echo $CONDA_INSTALL_EXTRA | xargs -n 1 >> $requirements_file
+    fi
 fi
 if [ ! -z "$CONDA_REQUIREMENTS_DEV" ]; then
     echo "Capturing dependencies from $CONDA_REQUIREMENTS_DEV"
