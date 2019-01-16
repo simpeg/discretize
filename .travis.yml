@@ -134,14 +134,13 @@ deploy:
     script: ci/deploy-pypi.sh
     on:
       tags: true
-      condition: [ "$DEPLOY_PYPI" == "true" ]
-
+      condition: '$DEPLOY_PYPI == "true"'
   # deploy docs
   - provider: script
     script: ci/deploy-docs.sh
     on:
       tags: true
-      condition: [ "$DEPLOY_DOCS" == "true" ]
+      condition: '$DEPLOY_DOCS == "true"'
 
   # deploy the docs
 
