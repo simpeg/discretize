@@ -72,6 +72,7 @@ if [ ! -z "$CONDA_REQUIREMENTS" ]; then
         echo "Capturing dependencies from $CONDA_REQUIREMENTS"
         cat $CONDA_REQUIREMENTS >> $requirements_file
     else
+        echo "Adding dependencies: $CONDA_REQUIREMENTS"
         echo $CONDA_REQUIREMENTS | xargs -n 1 >> $requirements_file
     fi
 fi
@@ -86,7 +87,7 @@ fi
 if [ -f $requirements_file ]; then
     echo "Installing collected dependencies:"
     cat $requirements_file
-    conda install --quiet --file $requirements_file python=$PYTHON=
+    conda install --quiet --file $requirements_file python=$PYTHON
 else
     echo "No requirements defined."
 fi
