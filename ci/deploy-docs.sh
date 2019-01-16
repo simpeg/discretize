@@ -16,14 +16,14 @@ conda activate py27
 mkdir lib
 pip install -t lib/ flask
 ls lib
-curl -O https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-228.0.0-linux-x86_64.tar.gz | bash; fi ;
+curl -O https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-228.0.0-linux-x86_64.tar.gz
 tar zxvf google-cloud-sdk
-pip install google-compute-engine;
+pip install google-compute-engine
 
 # deploy
 gcloud auth activate-service-account --key-file credentials/client-secret.json
-gcloud config set project $GAE_PROJECT;
-gcloud app deploy app.yaml --version ${TRAVIS_COMMIT} --promote;
+gcloud config set project $GAE_PROJECT
+gcloud app deploy app.yaml --version ${TRAVIS_COMMIT} --promote
 
 # deactivate python 2.7 environment
 conda deactivate
