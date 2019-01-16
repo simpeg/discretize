@@ -23,29 +23,91 @@ env:
     - CONDA_REQUIREMENTS=requirements.txt
     - CONDA_REQUIREMENTS_DEV=requirements_dev.txt
 
-  # matrix:
-  #   - TEST_DIR=tests/base
-  #   - TEST_DIR=tests/cyl
-  #   - TEST_DIR=tests/tree
-  #   - TEST_DIR=tests/docs
-
 matrix:
   include:
+    # test the base code on 2.7, 3.6, 3.7
     - name: "Python 2.7 - base"
       os: linux
       env:
         - PYTHON=2.7
         - TEST=true
+        - TEST_DIR="tests/base"
     - name: "Python 3.6 - base"
       os: linux
       env:
         - PYTHON=3.6
         - TEST=true
+        - TEST_DIR="tests/base"
     - name: "Python 3.7 - base"
       os: linux
       env:
         - PYTHON=3.7
         - TEST=true
+        - TEST_DIR="tests/base"
+
+    # test the cyl code on 2.7, 3.6, 3.7
+    - name: "Python 2.7 - cyl"
+      os: linux
+      env:
+        - PYTHON=2.7
+        - TEST=true
+        - TEST_DIR="tests/cyl"
+    - name: "Python 3.6 - cyl"
+      os: linux
+      env:
+        - PYTHON=3.6
+        - TEST=true
+        - TEST_DIR="tests/cyl"
+    - name: "Python 3.7 - cyl"
+      os: linux
+      env:
+        - PYTHON=3.7
+        - TEST=true
+        - TEST_DIR="tests/cyl"
+
+    # test the cyl code on 2.7, 3.6, 3.7
+    - name: "Python 2.7 - tree"
+      os: linux
+      env:
+        - PYTHON=2.7
+        - TEST=true
+        - TEST_DIR="tests/tree"
+        - DEPLOY_PYPI=true
+    - name: "Python 3.6 - tree"
+      os: linux
+      env:
+        - PYTHON=3.6
+        - TEST=true
+        - TEST_DIR="tests/tree"
+        - DEPLOY_PYPI=true
+    - name: "Python 3.7 - tree"
+      os: linux
+      env:
+        - PYTHON=3.7
+        - TEST=true
+        - TEST_DIR="tests/tree"
+        - DEPLOY_PYPI=true
+
+    # test the docs code on 2.7, 3.6, 3.7
+    - name: "Python 2.7 - docs"
+      os: linux
+      env:
+        - PYTHON=2.7
+        - TEST=true
+        - TEST_DIR="tests/docs"
+    - name: "Python 3.6 - docs"
+      os: linux
+      env:
+        - PYTHON=3.6
+        - TEST=true
+        - TEST_DIR="tests/docs"
+    - name: "Python 3.7 - docs"
+      os: linux
+      env:
+        - PYTHON=3.7
+        - TEST=true
+        - TEST_DIR="tests/docs"
+        - DEPLOY_DOCS="true"
 
 before_install:
   - source ci/setup-miniconda.sh
