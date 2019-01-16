@@ -64,7 +64,7 @@ source activate testing
 
 # Install dependencies
 echo ""
-echo "Installing dependencies"
+echo "Installing conda dependencies"
 echo "========================================================================"
 requirements_file=full-conda-requirements.txt
 if [ ! -z "$CONDA_REQUIREMENTS" ]; then
@@ -86,10 +86,20 @@ fi
 if [ -f $requirements_file ]; then
     echo "Installing collected dependencies:"
     cat $requirements_file
-    conda install --quiet --file $requirements_file python=$PYTHON
-    pip install -r $requirements_file
+    conda install --quiet --file $requirements_file python=$PYTHON=
 else
     echo "No requirements defined."
+fi
+
+echo ""
+echo "Installing pypi dependencies"
+echo "========================================================================"
+if [ ! -z "$PYPI_REQUIREMENTS" ]; then
+    pip install -r $PYPI_REQUIREMENTS
+fi
+
+if [ ! -z "$PYPI_REQUIREMENTS_DEV" ]; then
+    pip install -r $PYPI_REQUIREMENTS_DEV
 fi
 
 # Make sure that this is the correct Python version. Sometimes conda will try to upgrade
