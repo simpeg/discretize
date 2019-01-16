@@ -139,70 +139,9 @@ deploy:
   # deploy docs
   - provider: script
     script: ci/deploy-docs.sh
-    on:
-      tags: true
-      condition: '$DEPLOY_DOCS == "true"'
-
-  # deploy the docs
-
-# before_install:
-#   - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then
-#       wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
-#     else
-#       wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-#     fi
-#   - chmod +x miniconda.sh
-#   - ./miniconda.sh -b -p $HOME/miniconda
-#   - export PATH=/home/travis/anaconda/bin:/home/travis/miniconda/bin:$PATH
-#   - conda update --yes conda
-
-# install:
-#   - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then
-#       echo "Using native pip to install dependencies"
-#     else
-#       conda install --quiet --yes pip python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib pillow cython ipython;
-#     fi
-#   - conda install --quiet --yes -c menpo vtk
-#   - which pip
-#   - pip install --upgrade pip
-#   - pip install -r requirements_dev.txt
-#   - python --version
-#   - pip install -e .
-#   - make build
-#   - export MPLBACKEND="agg"
-
-# script:
-#   - pytest $TEST_DIR --cov=discretize --cov-config .coveragerc -v -s;
-
-# after_success:
-
-#   - bash <(curl -s https://codecov.io/bash)
-
-#   # early exit if not on a deplotment branch
-#   - if ! [ "$TRAVIS_BRANCH" = "$MASTER_BRANCH" -o "$TRAVIS_TAG" = "true" ]; then
-#       echo "Not deploying (because this is not a deployment branch)" ;
-#       exit 0 ;
-#     fi
-#   - if ! [ $TRAVIS_PULL_REQUEST = "false" ] ; then
-#       echo "Not deploying (because this is a pull request)" ;
-#       exit 0 ;
-#     fi
-#   - echo "Deploying"
-
-#   # unpack credentials
-#   - openssl aes-256-cbc -K $encrypted_5813a1339455_key -iv $encrypted_5813a1339455_iv -in credentials.tar.gz.enc -out credentials.tar.gz -d
-#   - tar -xvzf credentials.tar.gz
-
-#   # deploy to pypi
-#   - mv credentials/.pypirc ~/.pypirc ;
-#   - python setup.py sdist ;
-#   - twine upload dist/* --skip-existing ;
-
-# deploy:
-#   - provider: script
-#     script: ci/deploy-docs.sh
-#     on:
-#       condition: '$TEST_DIR == "tests/docs"'
+    # on:
+    #   tags: true
+    #   condition: '$DEPLOY_DOCS == "true"'
 
 notifications:
   slack: simpeg:1KZq5giMtlJJ58TijIPgqf7n
