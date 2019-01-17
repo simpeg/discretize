@@ -105,7 +105,7 @@ matrix:
         - PYTHON=3.7
         - TEST=true
         - TEST_DIR="tests/docs"
-        - DEPLOY_DOCS="true"
+        - DEPLOY_DOCS=true
 
 before_install:
   - source ci/setup-miniconda.sh
@@ -147,4 +147,4 @@ deploy:
 
 notifications:
   slack: simpeg:1KZq5giMtlJJ58TijIPgqf7n
-  email: False
+  email: false
