@@ -135,7 +135,7 @@ class vtkInterface(object):
     the traditional cartesian refence frame as specified by the ``axis_u``,
     ``axis_v``, and ``axis_w`` properties.
 
-    .. image:: ../images/vtk-rotated-example.png
+    .. image:: ../../images/vtk-rotated-example.png
 
     """
 
