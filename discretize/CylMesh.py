@@ -1542,7 +1542,7 @@ class CylMesh(
         Takes a cartesian mesh and returns a projection to translate onto
         the cartesian grid.
 
-        :param discretize.BaseMesh.BaseMesh Mrect: the mesh to interpolate on to
+        :param discretize.base.BaseMesh Mrect: the mesh to interpolate on to
         :param str locType: grid location ('CC', 'N', 'Ex', 'Ey', 'Ez', 'Fx', 'Fy', 'Fz')
         :param str locTypeTo: grid location to interpolate to. If None, the same grid type as `locType` will be assumed
         """

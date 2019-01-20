@@ -1,4 +1,4 @@
-.PHONY: build coverage lint graphs tests docs clean clean_pyc clean_c clean_so clean_cython deploy install
+.PHONY: build coverage lint graphs tests docs clean clean_pyc clean_c clean_so clean_cython deploy
 
 PROJECT=discretize
 LINT_FILES=setup.py $(PROJECT)

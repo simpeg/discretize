@@ -169,8 +169,10 @@ class BaseMesh(properties.HasProperties, vtkInterface):
     def nEx(self):
         """Number of x-edges
 
-        :rtype: int
-        :return: nEx
+        Returns
+        -------
+        nEx : int
+
         """
         return int((self._n + np.r_[0, 1, 1][:self.dim]).prod())
 
@@ -178,8 +180,11 @@ class BaseMesh(properties.HasProperties, vtkInterface):
     def nEy(self):
         """Number of y-edges
 
-        :rtype: int
-        :return: nEy
+        Returns
+        -------
+        nEy : int
+
+
         """
         if self.dim < 2:
             return None
@@ -189,8 +194,11 @@ class BaseMesh(properties.HasProperties, vtkInterface):
     def nEz(self):
         """Number of z-edges
 
-        :rtype: int
-        :return: nEz
+        Returns
+        -------
+        nEz : int
+
+
         """
         if self.dim < 3:
             return None
@@ -200,8 +208,9 @@ class BaseMesh(properties.HasProperties, vtkInterface):
     def vnE(self):
         """Total number of edges in each direction
 
-        :rtype: numpy.ndarray
-        :return: [nEx, nEy, nEz], (dim, )
+        Returns
+        -------
+        vnE : numpy.ndarray = [nEx, nEy, nEz], (dim, )
 
         .. plot::
             :include-source:
