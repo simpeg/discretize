@@ -15,7 +15,7 @@ cd docs
 echo "Starting deploy of the docs"
 
 # install and setup lib
-conda create -n py27 python=2.7 anaconda
+conda create -n py27 python=2.7
 conda activate py27
 mkdir lib
 pip install -t lib/ flask
