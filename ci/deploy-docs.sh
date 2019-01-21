@@ -9,7 +9,10 @@ if [ ! -d "credentials" ]; then
     tar -xvzf credentials.tar.gz
 fi
 
+# add conda activate to the shell
 echo ". /home/travis/miniconda/etc/profile.d/conda.sh" >> ~/.bashrc
+source ~/.bashrc
+
 # authenticate with gcloud
 cd docs
 echo "Starting deploy of the docs"
