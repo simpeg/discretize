@@ -234,20 +234,28 @@ class BaseTensorMesh(BaseMesh):
     def getTensor(self, key):
         """ Returns a tensor list.
 
-        :param str key: What tensor (see below)
-        :rtype: list
-        :return: list of the tensors that make up the mesh.
+        Parameters
+        ----------
 
-        key can be::
+        key : str
+            Which tensor (see below)
 
-            'CC'    -> scalar field defined on cell centers
-            'N'     -> scalar field defined on nodes
-            'Fx'    -> x-component of field defined on faces
-            'Fy'    -> y-component of field defined on faces
-            'Fz'    -> z-component of field defined on faces
-            'Ex'    -> x-component of field defined on edges
-            'Ey'    -> y-component of field defined on edges
-            'Ez'    -> z-component of field defined on edges
+            key can be::
+
+                'CC'    -> scalar field defined on cell centers
+                'N'     -> scalar field defined on nodes
+                'Fx'    -> x-component of field defined on faces
+                'Fy'    -> y-component of field defined on faces
+                'Fz'    -> z-component of field defined on faces
+                'Ex'    -> x-component of field defined on edges
+                'Ey'    -> y-component of field defined on edges
+                'Ez'    -> z-component of field defined on edges
+
+        Returns
+        -------
+
+        list
+            list of the tensors that make up the mesh.
 
         """
 
@@ -303,24 +311,33 @@ class BaseTensorMesh(BaseMesh):
     def _getInterpolationMat(self, loc, locType='CC', zerosOutside=False):
         """ Produces interpolation matrix
 
-        :param numpy.ndarray loc: Location of points to interpolate to
-        :param str locType: What to interpolate (see below)
-        :rtype: scipy.sparse.csr_matrix
-        :return: M, the interpolation matrix
+        Parameters
+        ----------
+        loc : numpy.ndarray
+            Location of points to interpolate to
 
-        locType can be::
+        locType: stc
+            What to interpolate
 
-            'Ex'    -> x-component of field defined on edges
-            'Ey'    -> y-component of field defined on edges
-            'Ez'    -> z-component of field defined on edges
-            'Fx'    -> x-component of field defined on faces
-            'Fy'    -> y-component of field defined on faces
-            'Fz'    -> z-component of field defined on faces
-            'N'     -> scalar field defined on nodes
-            'CC'    -> scalar field defined on cell centers
-            'CCVx'  -> x-component of vector field defined on cell centers
-            'CCVy'  -> y-component of vector field defined on cell centers
-            'CCVz'  -> z-component of vector field defined on cell centers
+            locType can be::
+
+                'Ex'    -> x-component of field defined on edges
+                'Ey'    -> y-component of field defined on edges
+                'Ez'    -> z-component of field defined on edges
+                'Fx'    -> x-component of field defined on faces
+                'Fy'    -> y-component of field defined on faces
+                'Fz'    -> z-component of field defined on faces
+                'N'     -> scalar field defined on nodes
+                'CC'    -> scalar field defined on cell centers
+                'CCVx'  -> x-component of vector field defined on cell centers
+                'CCVy'  -> y-component of vector field defined on cell centers
+                'CCVz'  -> z-component of vector field defined on cell centers
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            M, the interpolation matrix
+
         """
 
         loc = utils.asArray_N_x_Dim(loc, self.dim)
@@ -370,41 +387,66 @@ class BaseTensorMesh(BaseMesh):
     def getInterpolationMat(self, loc, locType='CC', zerosOutside=False):
         """ Produces interpolation matrix
 
-        :param numpy.ndarray loc: Location of points to interpolate to
-        :param str locType: What to interpolate (see below)
-        :rtype: scipy.sparse.csr_matrix
-        :return: M, the interpolation matrix
+        Parameters
+        ----------
+        loc : numpy.ndarray
+            Location of points to interpolate to
 
-        locType can be::
+        locType : str
+            What to interpolate (see below)
 
-            'Ex'    -> x-component of field defined on edges
-            'Ey'    -> y-component of field defined on edges
-            'Ez'    -> z-component of field defined on edges
-            'Fx'    -> x-component of field defined on faces
-            'Fy'    -> y-component of field defined on faces
-            'Fz'    -> z-component of field defined on faces
-            'N'     -> scalar field defined on nodes
-            'CC'    -> scalar field defined on cell centers
-            'CCVx'  -> x-component of vector field defined on cell centers
-            'CCVy'  -> y-component of vector field defined on cell centers
-            'CCVz'  -> z-component of vector field defined on cell centers
+            locType can be::
+
+                'Ex'    -> x-component of field defined on edges
+                'Ey'    -> y-component of field defined on edges
+                'Ez'    -> z-component of field defined on edges
+                'Fx'    -> x-component of field defined on faces
+                'Fy'    -> y-component of field defined on faces
+                'Fz'    -> z-component of field defined on faces
+                'N'     -> scalar field defined on nodes
+                'CC'    -> scalar field defined on cell centers
+                'CCVx'  -> x-component of vector field defined on cell centers
+                'CCVy'  -> y-component of vector field defined on cell centers
+                'CCVz'  -> z-component of vector field defined on cell centers
+
+        Returns
+        -------
+
+        scipy.sparse.csr_matrix
+            M, the interpolation matrix
+
         """
         return self._getInterpolationMat(loc, locType, zerosOutside)
 
     def _fastInnerProduct(
         self, projType, prop=None, invProp=False, invMat=False
     ):
-        """
-            Fast version of getFaceInnerProduct.
+        """ Fast version of getFaceInnerProduct.
             This does not handle the case of a full tensor prop.
 
-            :param numpy.array prop: material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
-            :param str projType: 'E' or 'F'
-            :param bool returnP: returns the projection matrices
-            :param bool invProp: inverts the material property
-            :param bool invMat: inverts the matrix
-            :rtype: scipy.sparse.csr_matrix
-            :return: M, the inner product matrix (nF, nF)
+        Parameters
+        ----------
+
+        prop : numpy.array
+            material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
+
+        projType : str
+            'E' or 'F'
+
+        returnP : bool
+            returns the projection matrices
+
+        invProp : bool
+            inverts the material property
+
+        invMat : bool
+            inverts the matrix
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            M, the inner product matrix (nF, nF)
+
         """
         assert projType in ['F', 'E'], (
             "projType must be 'F' for faces or 'E' for edges"
@@ -457,12 +499,28 @@ class BaseTensorMesh(BaseMesh):
     def _fastInnerProductDeriv(self, projType, prop, invProp=False,
                                invMat=False):
         """
-            :param str projType: 'E' or 'F'
-            :param TensorType tensorType: type of the tensor
-            :param bool invProp: inverts the material property
-            :param bool invMat: inverts the matrix
-            :rtype: function
-            :return: dMdmu, the derivative of the inner product matrix
+
+        Parameters
+        ----------
+
+        projType : str
+            'E' or 'F'
+
+        tensorType : TensorType
+            type of the tensor
+
+        invProp : bool
+            inverts the material property
+
+        invMat : bool
+            inverts the matrix
+
+
+        Returns
+        -------
+        function
+            dMdmu, the derivative of the inner product matrix
+
         """
         assert projType in ['F', 'E'], ("projType must be 'F' for faces or 'E'"
                                         " for edges")

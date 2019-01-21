@@ -6,7 +6,7 @@ set -e
 # unpack credentials if they are not already open
 if [ ! -d "credentials" ]; then
     openssl aes-256-cbc -K $encrypted_5813a1339455_key -iv $encrypted_5813a1339455_iv -in credentials.tar.gz.enc -out credentials.tar.gz -d
-    tar -xvzf credentials.tar.gz
+    tar -xzf credentials.tar.gz
 fi
 
 # add conda to path

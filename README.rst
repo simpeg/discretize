@@ -29,9 +29,9 @@ discretize
 
 .. image:: https://img.shields.io/badge/Google%20group-simpeg-da5247.svg
     :target: https://groups.google.com/forum/#!forum/simpeg
-    
 
-**discretize** - A python package for finite volume discretization. 
+
+**discretize** - A python package for finite volume discretization.
 
 The vision is to create a package for finite volume simulation with a
 focus on large scale inverse problems.
@@ -57,13 +57,13 @@ Installing
 
 **discretize** is on pypi
 
-.. code::
+.. code:: shell
 
     pip install discretize
-    
+
 To install from source
 
-.. code:: 
+.. code:: shell
 
     git clone https://github.com/simpeg/discretize.git
     python setup.py install
@@ -78,7 +78,7 @@ Please cite the SimPEG paper when using discretize in your work:
 
 **BibTex:**
 
-.. code::
+.. code:: Latex
 
     @article{cockett2015simpeg,
       title={SimPEG: An open source framework for simulation and gradient based parameter estimation in geophysical applications},

@@ -9,17 +9,6 @@ API Reference
 .. currentmodule:: discretize
 
 
-.. automodule:: discretize.base
-    :show-inheritance:
-
-.. currentmodule:: discretize
-
-
-.. automodule:: discretize.CurvilinearMesh
-    :show-inheritance:
-
-.. currentmodule:: discretize
-
 Meshes
 ------
 
@@ -43,8 +32,8 @@ Numerical Operators
 .. autosummary::
     :toctree: generated/
 
-    DiffOperators
-    InnerProducts
+    DiffOperators.DiffOperators
+    InnerProducts.InnerProducts
 
 
 Mesh IO
