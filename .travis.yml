@@ -139,7 +139,7 @@ deploy:
       condition: '$DEPLOY_PYPI == "true"'
   # deploy docs
   - provider: script
-    script: ci/deploy-docs.sh
+    script: sh ci/deploy-docs.sh
     skip_cleanup: true
     on:
     #   tags: true
