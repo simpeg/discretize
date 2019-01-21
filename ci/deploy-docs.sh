@@ -10,7 +10,7 @@ if [ ! -d "credentials" ]; then
 fi
 
 # add conda activate to the shell
-# echo ". /home/travis/miniconda/etc/profile.d/conda.sh" >> ~/.bashrc
+# echo ". $HOME/miniconda/etc/profile.d/conda.sh" >> ~/.bashrc
 # source ~/.bashrc
 
 # authenticate with gcloud
@@ -19,7 +19,7 @@ echo "Starting deploy of the docs"
 
 # install and setup lib
 conda create -n py27 python=2.7
-source activate py27
+$HOME/miniconda/etc/profile.d/conda.sh activate py27
 mkdir lib
 pip install -t lib/ flask
 ls lib
@@ -35,7 +35,7 @@ gcloud app deploy app.yaml --version ${TRAVIS_COMMIT} --promote
 echo "Done deploying docs"
 
 # deactivate python 2.7 environment
-source deactivate
+$HOME/miniconda/etc/profile.d/conda.sh deactivate
 cd ../
 
 # Workaround for https://github.com/travis-ci/travis-ci/issues/6522
