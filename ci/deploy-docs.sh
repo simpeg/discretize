@@ -9,8 +9,8 @@ if [ ! -d "credentials" ]; then
     tar -xvzf credentials.tar.gz
 fi
 
-# deactivate the current testing environment
-source deactivate
+# add conda to path
+export PATH="$HOME/miniconda/bin:$PATH"
 
 # authenticate with gcloud
 cd docs
