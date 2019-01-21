@@ -229,8 +229,9 @@ class BaseMesh(properties.HasProperties, vtkInterface):
     def nE(self):
         """Total number of edges.
 
-        :rtype: int
-        :return: sum([nEx, nEy, nEz])
+        Returns
+        -------
+        nE : int = sum([nEx, nEy, nEz])
 
         """
         return int(self.vnE.sum())
