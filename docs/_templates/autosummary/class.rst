@@ -3,6 +3,7 @@
 .. currentmodule:: {{ module }}
 
 .. autoclass:: {{ objname }}
+    :show-inheritance:
 
 .. include:: backreferences/{{ fullname }}.examples
 

@@ -26,13 +26,16 @@ class TensorMesh(
     Examples
     --------
 
-    .. code::
+    .. code:: python
+
+        import discretize
 
         hx = np.array([1, 1, 1])
         hy = np.array([1, 2])
         hz = np.array([1, 1, 1, 1])
 
-        mesh = Mesh.TensorMesh([hx, hy, hz])
+        mesh = discretize.TensorMesh([hx, hy, hz])
+
 
     Example of a padded tensor mesh using
     :func:`discretize.utils.meshTensor`:
@@ -49,8 +52,9 @@ class TensorMesh(
 
     For a quick tensor mesh on a (10x12x15) unit cube
 
-    .. code::
+    .. code:: python
 
+        import discretize
         mesh = discretize.TensorMesh([10, 12, 15])
 
     """
@@ -283,7 +287,7 @@ class TensorMesh(
     @property
     def faceBoundaryInd(self):
         """
-            Find indices of boundary faces in each direction
+        Find indices of boundary faces in each direction
         """
         if self.dim == 1:
             indxd = (self.gridFx == min(self.gridFx))
@@ -307,7 +311,7 @@ class TensorMesh(
     @property
     def cellBoundaryInd(self):
         """
-            Find indices of boundary faces in each direction
+        Find indices of boundary faces in each direction
         """
         if self.dim == 1:
             indxd = (self.gridCC == min(self.gridCC))

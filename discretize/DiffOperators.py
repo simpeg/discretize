@@ -7,11 +7,9 @@ from discretize.utils import sdiag, speye, kron3, spzeros, ddx, av, av_extrap
 
 
 def checkBC(bc):
-    """
+    """Checks if boundary condition 'bc' is valid.
 
-        Checks if boundary condition 'bc' is valid.
-
-        Each bc must be either 'dirichlet' or 'neumann'
+    Each bc must be either 'dirichlet' or 'neumann'
 
     """
     if isinstance(bc, string_types):
@@ -29,8 +27,7 @@ def checkBC(bc):
 
 
 def ddxCellGrad(n, bc):
-    """
-        Create 1D derivative operator from cell-centers to nodes this means we
+    """Create 1D derivative operator from cell-centers to nodes this means we
         go from n to n+1
 
         For Cell-Centered **Dirichlet**, use a ghost point::
@@ -75,8 +72,7 @@ def ddxCellGrad(n, bc):
 
 
 def ddxCellGradBC(n, bc):
-    """
-        Create 1D derivative operator from cell-centers to nodes this means we
+    """Create 1D derivative operator from cell-centers to nodes this means we
         go from n to n+1
 
         For Cell-Centered **Dirichlet**, use a ghost point::
@@ -127,7 +123,7 @@ def ddxCellGradBC(n, bc):
 
 class DiffOperators(object):
     """
-        Class creates the differential operators that you need!
+    Class creates the differential operators that you need!
     """
     def __init__(self):
         raise Exception(
@@ -422,7 +418,10 @@ class DiffOperators(object):
         Function that sets the boundary conditions for cell-centred derivative
         operators.
 
-        Examples::
+        Example
+        -------
+        ..code:: python
+
             # Neumann in all directions
             BC = 'neumann'
 
@@ -679,10 +678,13 @@ class DiffOperators(object):
 
     def getBCProjWF(self, BC, discretization='CC'):
         """
-
         The weak form boundary condition projection matrices.
 
-        Examples::
+        Example
+        -------
+
+        .. code:: python
+
             # Neumann in all directions
             BC = 'neumann'
 
@@ -789,8 +791,7 @@ class DiffOperators(object):
         return Pbc, Pin, Pout
 
     def getBCProjWF_simple(self, discretization='CC'):
-        """
-        The weak form boundary condition projection matrices
+        """The weak form boundary condition projection matrices
         when mixed boundary condition is used
         """
 
