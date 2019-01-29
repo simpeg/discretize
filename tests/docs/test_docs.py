@@ -38,7 +38,7 @@ class Doc_Test(unittest.TestCase):
 
         check = subprocess.call([
             "sphinx-build",
-            # "-nW",
+            "-nW",
             "-b", "html", "-d",
             "{0!s}".format((os.path.sep.join(self.path_to_doctrees))),
             "{0!s}".format((os.path.sep.join(self.path_to_docs))),
@@ -61,7 +61,7 @@ class Doc_Test(unittest.TestCase):
 
         check = subprocess.call([
             "sphinx-build",
-            # "-nW",
+            "-nW",
             "-b", "linkcheck", "-d",
             "%s"%(os.path.sep.join(self.path_to_doctrees)),
             "%s"%(os.path.sep.join(self.path_to_docs)),

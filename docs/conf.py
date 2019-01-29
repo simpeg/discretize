@@ -337,5 +337,9 @@ nitpick_ignore = [
     ('py:class', 'discretize.CurvilinearMesh.Array'),
     ('py:class', 'discretize.mixins.vtkModule.vtkTensorRead'),
     ('py:class', 'callable'),
-    ('py:obj', 'vtk.vtkDataSet')
+    ('py:obj', 'vtk.vtkDataSet'),
+    ('py:obj', 'discretize.mixins.vtkModule.vtkXMLRectilinearGridWriter'),
+    ('py:obj', 'discretize.mixins.vtkModule.vtkXMLUnstructuredGridWriter'),
+    ('py:obj', 'discretize.mixins.vtkModule.vtkXMLStructuredGridWriter'),
+    ('py:obj', 'discretize.mixins.vtkModule.vtkXMLRectilinearGridReader'),
 ]

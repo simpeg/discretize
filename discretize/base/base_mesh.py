@@ -778,9 +778,7 @@ class BaseRectangularMesh(BaseMesh):
                    }
 
 
-        For example:
-
-        ..code::
+        For example::
 
             # Separates each component of the Ex grid into 3 matrices
             Xex, Yex, Zex = r(mesh.gridEx, 'Ex', 'Ex', 'M')

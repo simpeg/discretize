@@ -53,7 +53,7 @@ Currently, discretize supports:
 * Logically Rectangular Meshes (2D and 3D)
 
 Installing
-----------
+^^^^^^^^^^
 
 **discretize** is on pypi
 
@@ -69,7 +69,7 @@ To install from source
     python setup.py install
 
 Citing discretize
------------------
+^^^^^^^^^^^^^^^^^
 
 Please cite the SimPEG paper when using discretize in your work:
 
@@ -89,7 +89,7 @@ Please cite the SimPEG paper when using discretize in your work:
     }
 
 Links
------
+^^^^^
 
 Website:
 http://simpeg.xyz

@@ -27,31 +27,32 @@ def checkBC(bc):
 
 
 def ddxCellGrad(n, bc):
-    """Create 1D derivative operator from cell-centers to nodes this means we
-        go from n to n+1
+    """
+    Create 1D derivative operator from cell-centers to nodes this means we
+    go from n to n+1
 
-        For Cell-Centered **Dirichlet**, use a ghost point::
+    For Cell-Centered **Dirichlet**, use a ghost point::
 
-            (u_1 - u_g)/hf = grad
+        (u_1 - u_g)/hf = grad
 
-                u_g       u_1      u_2
-                 *    |    *   |    *     ...
-                      ^
-                      0
+            u_g       u_1      u_2
+             *    |    *   |    *     ...
+                  ^
+                  0
 
-            u_g = - u_1
-            grad = 2*u1/dx
-            negitive on the other side.
+        u_g = - u_1
+        grad = 2*u1/dx
+        negitive on the other side.
 
-        For Cell-Centered **Neumann**, use a ghost point::
+    For Cell-Centered **Neumann**, use a ghost point::
 
-            (u_1 - u_g)/hf = 0
+        (u_1 - u_g)/hf = 0
 
-                u_g       u_1      u_2
-                 *    |    *   |    *     ...
+            u_g       u_1      u_2
+             *    |    *   |    *     ...
 
-            u_g = u_1
-            grad = 0;  put a zero in.
+        u_g = u_1
+        grad = 0;  put a zero in.
 
     """
     bc = checkBC(bc)
@@ -72,33 +73,34 @@ def ddxCellGrad(n, bc):
 
 
 def ddxCellGradBC(n, bc):
-    """Create 1D derivative operator from cell-centers to nodes this means we
-        go from n to n+1
+    """
+    Create 1D derivative operator from cell-centers to nodes this means we
+    go from n to n+1
 
-        For Cell-Centered **Dirichlet**, use a ghost point::
+    For Cell-Centered **Dirichlet**, use a ghost point::
 
-            (u_1 - u_g)/hf = grad
+        (u_1 - u_g)/hf = grad
 
-             u_g       u_1      u_2
-              *    |    *   |    *     ...
-                   ^
-                  u_b
+         u_g       u_1      u_2
+          *    |    *   |    *     ...
+               ^
+              u_b
 
-        We know the value at the boundary (u_b)::
+    We know the value at the boundary (u_b)::
 
-            (u_g+u_1)/2 = u_b               (the average)
-            u_g = 2*u_b - u_1
+        (u_g+u_1)/2 = u_b               (the average)
+        u_g = 2*u_b - u_1
 
-            So plug in to gradient:
+        So plug in to gradient:
 
-            (u_1 - (2*u_b - u_1))/hf = grad
-            2*(u_1-u_b)/hf = grad
+        (u_1 - (2*u_b - u_1))/hf = grad
+        2*(u_1-u_b)/hf = grad
 
-        Separate, because BC are known (and can move to RHS later)::
+    Separate, because BC are known (and can move to RHS later)::
 
-            ( 2/hf )*u_1 + ( -2/hf )*u_b = grad
+        ( 2/hf )*u_1 + ( -2/hf )*u_b = grad
 
-                           (   ^   ) JUST RETURN THIS
+                       (   ^   ) JUST RETURN THIS
 
 
     """

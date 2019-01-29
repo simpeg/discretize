@@ -19,7 +19,7 @@ along side all their other datasets in a common rendering environment.
 Here's an example of the types of integrated visualizations that are possible in
 ParaView leveraging the link between discretize and PVGeo_:
 
-.. image:: ../images/vtk-pvgeo-example.png
+.. image:: ../../images/vtk-pvgeo-example.png
    :target: http://pvgeo.org
    :alt: PVGeo Example Visualization
 
@@ -58,10 +58,14 @@ import warnings
 def assignCellData(vtkDS, models=None):
     """Assign the model(s) to the VTK dataset as CellData
 
-    Input:
+    Parameters
+    ----------
 
-    :param vtk.vtkDataSet vtkDS: - Any given VTK data object that has cell data
-    :param dict(numpy.ndarray) models: Name('s) and array('s). Match number of cells
+    vtkDS : vtk.vtkDataSet
+        Any given VTK data object that has cell data
+
+    models : dict(numpy.ndarray)
+        Name('s) and array('s). Match number of cells
 
     """
     nc = vtkDS.GetNumberOfCells()
@@ -144,10 +148,14 @@ class vtkInterface(object):
         Constructs a ``vtkUnstructuredGrid`` object of this tree mesh and the
         given models as ``CellData`` of that VTK dataset.
 
-        Input:
+        Parameters
+        ----------
 
-        :param discretize.TreeMesh mesh: The tree mesh to convert to a ``vtkUnstructuredGrid``
-        :param dict(numpy.ndarray) models: Name('s) and array('s). Match number of cells
+        mesh : discretize.TreeMesh
+            The tree mesh to convert to a ``vtkUnstructuredGrid``
+
+        models : dict(numpy.ndarray)
+            Name('s) and array('s). Match number of cells
 
         """
         # Make the data parts for the vtu object
@@ -239,10 +247,14 @@ class vtkInterface(object):
         If the mesh is defined on a normal cartesian system then a rectilinear
         grid is generated. Otherwise, a structured grid is generated.
 
-        Input:
+        Parameters
+        ----------
 
-        :param discretize.TensorMesh mesh: The tensor mesh to convert to a ``vtkRectilinearGrid``
-        :param dict(numpy.ndarray) models: Name('s) and array('s). Match number of cells
+        mesh : discretize.TensorMesh
+            The tensor mesh to convert to a ``vtkRectilinearGrid``
+
+        models : dict(numpy.ndarray)
+            Name('s) and array('s). Match number of cells
 
         """
         # Deal with dimensionalities
@@ -279,10 +291,14 @@ class vtkInterface(object):
         Constructs a ``vtkStructuredGrid`` of this mesh and the given
         models as ``CellData`` of that object.
 
-        Input:
+        Parameters
+        ----------
 
-        :param discretize.CurvilinearMesh mesh: The curvilinear mesh to convert to a ``vtkStructuredGrid``
-        :param dict(numpy.ndarray) models: Name('s) and array('s). Match number of cells
+        mesh : discretize.CurvilinearMesh
+            The curvilinear mesh to convert to a ``vtkStructuredGrid``
+
+        models : dict(numpy.ndarray)
+            Name('s) and array('s). Match number of cells
 
         """
         ptsMat = vtkInterface.__getRotatedNodes(mesh)
@@ -305,9 +321,12 @@ class vtkInterface(object):
         """Convert this mesh object to it's proper VTK data object with the
         given model dictionary as the cell data of that dataset.
 
-        Input:
+        Parameters
+        ----------
 
-        :param dict(numpy.ndarray) models: Name('s) and array('s). Match number of cells
+        models : dict(numpy.ndarray)
+            Name('s) and array('s). Match number of cells
+
         """
         # TODO: mesh.validate()
         converters = {
@@ -335,10 +354,15 @@ class vtkInterface(object):
         """Saves a VTK unstructured grid file (vtu) for an already generated
         ``vtkUnstructuredGrid`` object.
 
-        Input:
+        Parameters
+        ----------
 
-        :param str fileName: path to the output vtk file or just its name if directory is specified
-        :param str directory: directory where the UBC GIF file lives
+        fileName : str
+            path to the output vtk file or just its name if directory is specified
+
+        directory : str
+            directory where the UBC GIF file lives
+
         """
         if not isinstance(vtkUnstructGrid, vtk.vtkUnstructuredGrid):
             raise RuntimeError('`_saveUnstructuredGrid` can only handle `vtkUnstructuredGrid` objects. `%s` is not supported.' % vtkUnstructGrid.__class__)
@@ -364,10 +388,15 @@ class vtkInterface(object):
         """Saves a VTK structured grid file (vtk) for an already generated
         ``vtkStructuredGrid`` object.
 
-        Input:
+        Parameters
+        ----------
 
-        :param str fileName: path to the output vtk file or just its name if directory is specified
-        :param str directory: directory where the UBC GIF file lives
+        fileName : str
+            path to the output vtk file or just its name if directory is specified
+
+        directory : str
+            directory where the UBC GIF file lives
+
         """
         if not isinstance(vtkStructGrid, vtk.vtkStructuredGrid):
             raise RuntimeError('`_saveStructuredGrid` can only handle `vtkStructuredGrid` objects. `{}` is not supported.'.format(vtkStructGrid.__class__))
@@ -393,10 +422,15 @@ class vtkInterface(object):
         """Saves a VTK rectilinear file (vtr) ffor an already generated
         ``vtkRectilinearGrid`` object.
 
-        Input:
+        Parameters
+        ----------
 
-        :param str fileName: path to the output vtk file or just its name if directory is specified
-        :param str directory: directory where the UBC GIF file lives
+        fileName : str
+            path to the output vtk file or just its name if directory is specified
+
+        directory : str
+            directory where the UBC GIF file lives
+
         """
         if not isinstance(vtkRectGrid, vtk.vtkRectilinearGrid):
             raise RuntimeError('`_saveRectilinearGrid` can only handle `vtkRectilinearGrid` objects. `{}` is not supported.'.format(vtkRectGrid.__class__))
@@ -419,11 +453,18 @@ class vtkInterface(object):
     def writeVTK(mesh, fileName, models=None, directory=''):
         """Makes and saves a VTK object from this mesh and given models
 
-        Input:
+        Parameters
+        ----------
 
-        :param str fileName:  path to the output vtk file or just its name if directory is specified
-        :param dict models: dictionary of numpy.array - Name('s) and array('s). Match number of cells
-        :param str directory: directory where the UBC GIF file lives
+        fileName : str
+            path to the output vtk file or just its name if directory is specified
+
+        models : dict
+            dictionary of numpy.array - Name('s) and array('s). Match number of cells
+
+        directory : str
+            directory where the UBC GIF file lives
+
 
         """
         vtkObj = vtkInterface.toVTK(mesh, models=models)
@@ -448,15 +489,20 @@ class vtkTensorRead(object):
     def readVTK(TensorMesh, fileName, directory=''):
         """Read VTK Rectilinear (vtr xml file) and return Tensor mesh and model
 
-        Input:
+        Parameters
+        ----------
 
-        :param str fileName: path to the vtr model file to read or just its name if directory is specified
-        :param str directory: directory where the UBC GIF file lives
+        fileName : str
+            path to the vtr model file to read or just its name if directory is specified
 
-        Output:
+        directory : str
+            directory where the UBC GIF file lives
 
-        :rtype: tuple
-        :return: (TensorMesh, modelDictionary)
+
+        Returns
+        -------
+        tuple
+            (TensorMesh, modelDictionary)
         """
         fname = os.path.join(directory, fileName)
         # Read the file

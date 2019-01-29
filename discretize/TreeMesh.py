@@ -95,6 +95,9 @@ import scipy.sparse as sp
 from six import integer_types
 
 class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
+    """
+    TreeMesh is a class for adaptive QuadTree (2D) and OcTree (3D) meshes.
+    """
     _meshType = 'TREE'
 
     #inheriting stuff from BaseTensorMesh that isn't defined in _QuadTree

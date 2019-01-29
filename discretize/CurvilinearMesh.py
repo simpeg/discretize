@@ -35,12 +35,12 @@ class CurvilinearMesh(
     Example of a curvilinear mesh:
 
     .. plot::
-            :include-source:
+        :include-source:
 
-            import discretize
-            X, Y = discretize.utils.exampleLrmGrid([3,3],'rotate')
-            M = discretize.CurvilinearMesh([X, Y])
-            M.plotGrid(showIt=True)
+        import discretize
+        X, Y = discretize.utils.exampleLrmGrid([3,3],'rotate')
+        mesh = discretize.CurvilinearMesh([X, Y])
+        mesh.plotGrid(showIt=True)
     """
 
     _meshType = 'Curv'

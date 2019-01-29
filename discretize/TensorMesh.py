@@ -23,10 +23,8 @@ class TensorMesh(
     Any Mesh that has a constant width along the entire axis
     such that it can defined by a single width vector, called 'h'.
 
-    Examples
-    --------
-
-    .. code:: python
+    .. plot::
+        :include-source:
 
         import discretize
 
@@ -35,6 +33,7 @@ class TensorMesh(
         hz = np.array([1, 1, 1, 1])
 
         mesh = discretize.TensorMesh([hx, hy, hz])
+        mesh.plotGrid()
 
 
     Example of a padded tensor mesh using
