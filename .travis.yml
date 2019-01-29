@@ -142,9 +142,8 @@ deploy:
     script: sh ci/deploy-docs.sh
     skip_cleanup: true
     on:
-    #   tags: true
       condition: '$DEPLOY_DOCS == "true"'
-      branch: repo-cleanup
+      branch: master
 
 notifications:
   slack: simpeg:1KZq5giMtlJJ58TijIPgqf7n
