@@ -21,84 +21,84 @@ env:
 matrix:
   include:
     # test the base code on 2.7, 3.6, 3.7
-    # - name: "Python 2.7 - base"
-    #   os: linux
-    #   env:
-    #     - PYTHON=2.7
-    #     - TEST=true
-    #     - TEST_DIR="tests/base"
-    # - name: "Python 3.6 - base"
-    #   os: linux
-    #   env:
-    #     - PYTHON=3.6
-    #     - TEST=true
-    #     - TEST_DIR="tests/base"
-    # - name: "Python 3.7 - base"
-    #   os: linux
-    #   env:
-    #     - PYTHON=3.7
-    #     - TEST=true
-    #     - TEST_DIR="tests/base"
+    - name: "Python 2.7 - base"
+      os: linux
+      env:
+        - PYTHON=2.7
+        - TEST=true
+        - TEST_DIR="tests/base"
+    - name: "Python 3.6 - base"
+      os: linux
+      env:
+        - PYTHON=3.6
+        - TEST=true
+        - TEST_DIR="tests/base"
+    - name: "Python 3.7 - base"
+      os: linux
+      env:
+        - PYTHON=3.7
+        - TEST=true
+        - TEST_DIR="tests/base"
 
-    # # test the cyl code on 2.7, 3.6, 3.7
-    # - name: "Python 2.7 - cyl"
-    #   os: linux
-    #   env:
-    #     - PYTHON=2.7
-    #     - TEST=true
-    #     - TEST_DIR="tests/cyl"
-    # - name: "Python 3.6 - cyl"
-    #   os: linux
-    #   env:
-    #     - PYTHON=3.6
-    #     - TEST=true
-    #     - TEST_DIR="tests/cyl"
-    # - name: "Python 3.7 - cyl"
-    #   os: linux
-    #   env:
-    #     - PYTHON=3.7
-    #     - TEST=true
-    #     - TEST_DIR="tests/cyl"
+    # test the cyl code on 2.7, 3.6, 3.7
+    - name: "Python 2.7 - cyl"
+      os: linux
+      env:
+        - PYTHON=2.7
+        - TEST=true
+        - TEST_DIR="tests/cyl"
+    - name: "Python 3.6 - cyl"
+      os: linux
+      env:
+        - PYTHON=3.6
+        - TEST=true
+        - TEST_DIR="tests/cyl"
+    - name: "Python 3.7 - cyl"
+      os: linux
+      env:
+        - PYTHON=3.7
+        - TEST=true
+        - TEST_DIR="tests/cyl"
 
-    # # test the cyl code on 2.7, 3.6, 3.7
-    # - name: "Python 2.7 - tree"
-    #   os: linux
-    #   env:
-    #     - PYTHON=2.7
-    #     - TEST=true
-    #     - TEST_DIR="tests/tree"
-    #     - DEPLOY_PYPI=true
-    #     - CONDA_INSTALL_EXTRA="twine"
-    # - name: "Python 3.6 - tree"
-    #   os: linux
-    #   env:
-    #     - PYTHON=3.6
-    #     - TEST=true
-    #     - TEST_DIR="tests/tree"
-    #     - DEPLOY_PYPI=true
-    #     - CONDA_INSTALL_EXTRA="twine"
-    # - name: "Python 3.7 - tree"
-    #   os: linux
-    #   env:
-    #     - PYTHON=3.7
-    #     - TEST=true
-    #     - TEST_DIR="tests/tree"
-    #     - DEPLOY_PYPI=true
-    #     - CONDA_INSTALL_EXTRA="twine"
+    # test the cyl code on 2.7, 3.6, 3.7
+    - name: "Python 2.7 - tree"
+      os: linux
+      env:
+        - PYTHON=2.7
+        - TEST=true
+        - TEST_DIR="tests/tree"
+        - DEPLOY_PYPI=true
+        - CONDA_INSTALL_EXTRA="twine"
+    - name: "Python 3.6 - tree"
+      os: linux
+      env:
+        - PYTHON=3.6
+        - TEST=true
+        - TEST_DIR="tests/tree"
+        - DEPLOY_PYPI=true
+        - CONDA_INSTALL_EXTRA="twine"
+    - name: "Python 3.7 - tree"
+      os: linux
+      env:
+        - PYTHON=3.7
+        - TEST=true
+        - TEST_DIR="tests/tree"
+        - DEPLOY_PYPI=true
+        - CONDA_INSTALL_EXTRA="twine"
 
-    # # test the docs code on 2.7, 3.6, 3.7
-    # - name: "Python 2.7 - docs"
-    #   os: linux
-    #   env:
-    #     - PYTHON=2.7
-    #     - TEST=true
-    #     - TEST_DIR="tests/docs"
-    # - name: "Python 3.6 - docs"
-    #   os: linux
-    #   env:
-    #     - PYTHON=3.6
-    #     - TEST=true
-    #     - TEST_DIR="tests/docs"
+    # test the docs code on 2.7, 3.6, 3.7
+    - name: "Python 2.7 - docs"
+      os: linux
+      env:
+        - PYTHON=2.7
+        - TEST=true
+        - TEST_DIR="tests/docs"
+    - name: "Python 3.6 - docs"
+      os: linux
+      env:
+        - PYTHON=3.6
+        - TEST=true
+        - TEST_DIR="tests/docs"
     - name: "Python 3.7 - docs"
       os: linux
       env:
@@ -119,7 +119,7 @@ script:
   - if [ "$TEST" == "true" ]; then
       export MPLBACKEND="agg" ;
       echo "testing $TEST_DIR" ;
-      pytest $TEST_DIR --cov=discretize --cov-config .coveragerc -v -s ;
+      pytest $TEST_DIR --cov-config .coveragerc --cov=discretize -v -s ;
     fi
 
 after_success:
