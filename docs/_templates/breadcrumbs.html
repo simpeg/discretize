@@ -3,9 +3,9 @@
 {# Adapted from: https://github.com/fatiando/verde/blob/master/doc/_templates/breadcrumbs.html #}
 {% extends "!breadcrumbs.html" %}
 
-
 {% block breadcrumbs_aside %}
-    <li class="source-link">
+
+    <li class="wy-breadcrumbs-aside">
         {% if hasdoc(pagename) %}
             {% if pagename.startswith("api/generated") or suffix == ".ipynb" %}
                 {% set title = "Suggested improvement for " + pagename %}

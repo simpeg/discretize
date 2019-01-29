@@ -317,21 +317,25 @@ sphinx_gallery_conf = {
 # How to display URL addresses: 'footnote', 'no', or 'inline'.
 #texinfo_show_urls = 'footnote'
 
+html_context = {
+    'menu_links_name': 'Getting connected',
+    'menu_links': [
+        ('<i class="fa fa-external-link-square fa-fw"></i> SimPEG', 'https://simpeg'),
+        # ('<i class="fa fa-gavel fa-fw"></i> Code of Conduct', 'https://github.com/fatiando/verde/blob/master/CODE_OF_CONDUCT.md'),
+        ('<i class="fa fa-comment fa-fw"></i> Contact', 'http://slack.simpeg.xyz'),
+        ('<i class="fa fa-github fa-fw"></i> Source Code', 'https://github.com/simpeg/discretize'),
+    ],
+    # Custom variables to enable "Improve this page"" and "Download notebook"
+    # links
+    'doc_path': 'doc',
+    'galleries': sphinx_gallery_conf['gallery_dirs'],
+    'gallery_dir': dict(zip(sphinx_gallery_conf['gallery_dirs'],
+                            sphinx_gallery_conf['examples_dirs'])),
+    'github_repo': 'simpeg/discretize',
+    'github_version': 'master',
+}
+
 autodoc_member_order = 'bysource'
-
-
-# def supress_nonlocal_image_warn():
-#     import sphinx.environment
-#     sphinx.environment.BuildEnvironment.warn_node = _supress_nonlocal_image_warn
-
-
-# def _supress_nonlocal_image_warn(self, msg, node, **kwargs):
-#     from docutils.utils import get_source_line
-
-#     if not msg.startswith('nonlocal image URI found:'):
-#         self._warnfunc(msg, '{0!s}:{1!s}'.format(*get_source_line(node)))
-
-# supress_nonlocal_image_warn()
 
 nitpick_ignore = [
     ('py:class', 'discretize.CurvilinearMesh.Array'),
