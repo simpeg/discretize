@@ -12,6 +12,8 @@ API Reference
 Meshes
 ------
 
+.. currentmodule:: discretize
+
 .. autosummary::
     :toctree: generated/
 

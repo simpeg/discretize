@@ -18,18 +18,44 @@ class CylMesh(
     BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView, DiffOperators
 ):
     """
-    CylMesh is a mesh class for cylindrical problems
+    CylMesh is a mesh class for cylindrical problems. It supports both
+    cylindrically symmetric and 3D cylindrical meshes that include an azimuthal
+    discretization
 
-    .. note::
 
-        for a cylindrically symmetric mesh use [hx, 1, hz]
+    Parameters
+    ----------
 
-    .. code::
+    h : list(numpy.ndarray) or list(tuple)
+        Cell widths in each dimension. Can be a list of numpy arrays or a
+        list of tuples from which the cell widths are constructed using
+        :meth:`discretize.utils.meshTensor`.
+
+    x0 : numpy.ndarray
+        coordinates of the origin of the mesh
+
+
+    Example
+    -------
+
+    The following example constructs a cylindrically symmetric mesh:
+
+    .. code:: python
+
+        import discretize
+        from discretize import utils
 
         cs, nc, npad = 20., 30, 8
         hx = utils.meshTensor([(cs,npad+10,-0.7), (cs,nc), (cs,npad,1.3)])
         hz = utils.meshTensor([(cs,npad   ,-1.3), (cs,nc), (cs,npad,1.3)])
-        mesh = Mesh.CylMesh([hx,1,hz], [0.,0,-hz.sum()/2.])
+        mesh = discretize.CylMesh([hx,1,hz], x0=[0.,0,-hz.sum()/2.])
+        mesh.plotGrid()
+
+    Notes
+    -----
+
+    For a cylindrically symmetric mesh use :code:`h = [hx, 1, hz]`
+
     """
 
     _meshType = 'CYL'
