@@ -10,63 +10,22 @@ class Doc_Test(unittest.TestCase):
         dirname, filename = os.path.split(os.path.abspath(__file__))
         return dirname.split(os.path.sep)[:-2] + ['docs']
 
-    @property
-    def path_to_build(self):
-        return self.path_to_docs + ["_build"]
-
-    @property
-    def path_to_doctrees(self):
-        return self.path_to_build + ["doctrees"]
-
-    @property
-    def path_to_html(self):
-        return self.path_to_build + ["html"]
-
-    @property
-    def path_to_api(self):
-        return self.path_to_build + ["api"]
-
-    def setUp(self):
-
-        subprocess.call([
-           "sphinx-autogen", "-i", "-t", "_templates", "-o",
-           "{}".format(os.path.sep.join(self.path_to_api + ["generated"])),
-           "{}".format(os.path.sep.join(self.path_to_api + ["index.rst"]))
-        ])
-
     def test_html(self):
         wd = os.getcwd()
         os.chdir(os.path.sep.join(self.path_to_docs))
 
-        check = subprocess.call([
-            "make", "html"
-        ])
-        assert check == 0
-        oc.chdir(wd)
-
-    # def test_latex(self):
-    #     path_to_doctrees = os.path.sep.join(self.path_to_docs.split(os.path.sep) + ['_build']+['doctrees'])
-    #     latex_path = os.path.sep.join(self.path_to_docs.split(os.path.sep) + ['_build']+['latex'])
-
-    #     check = subprocess.call(["sphinx-build", "-nW", "-b", "latex", "-d",
-    #         "%s"%(path_to_doctrees),
-    #         "%s"%(self.path_to_docs),
-    #         "%s"%(latex_path)])
-    #     assert check == 0
+        response = subprocess.run(["make", "html"])
+        self.assertTrue(response.returncode == 0)
+        os.chdir(wd)
 
     def test_linkcheck(self):
-        link_path = os.path.sep.join(self.path_to_docs + ['_build'])
+        wd = os.getcwd()
+        os.chdir(os.path.sep.join(self.path_to_docs))
 
-        check = subprocess.call([
-            "make", "linkcheck"
-            # "sphinx-build",
-            # "-nW",
-            # "-b", "linkcheck", "-d",
-            # "%s"%(os.path.sep.join(self.path_to_doctrees)),
-            # "%s"%(os.path.sep.join(self.path_to_docs)),
-            # "%s"%(os.path.sep.join(self.path_to_build + ["linkcheck"]))
-        ])
-        assert check == 0
+        response = subprocess.run(["make", "linkcheck"])
+        print(response.returncode)
+        self.assertTrue(response.returncode == 0)
+        os.chdir(wd)
 
 if __name__ == '__main__':
     unittest.main()

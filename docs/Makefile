@@ -2,7 +2,7 @@
 #
 
 # You can set these variables from the command line.
-SPHINXOPTS    = -n
+SPHINXOPTS    = -W
 SPHINXBUILD   = sphinx-build
 SPHINXAUTOGEN = sphinx-autogen
 BUILDDIR      = _build
@@ -161,8 +161,7 @@ changes:
 linkcheck: api
 	$(SPHINXBUILD) -b linkcheck $(ALLSPHINXOPTS) $(BUILDDIR)/linkcheck
 	@echo
-	@echo "Link check complete; look for any errors in the above output " \
-	      "or in $(BUILDDIR)/linkcheck/output.txt."
+	@echo "Link check complete; look for any errors in the above output or in $(BUILDDIR)/linkcheck/output.txt."
 
 doctest:
 	$(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) $(BUILDDIR)/doctest

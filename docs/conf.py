@@ -320,7 +320,7 @@ sphinx_gallery_conf = {
 html_context = {
     'menu_links_name': 'Getting connected',
     'menu_links': [
-        ('<i class="fa fa-external-link-square fa-fw"></i> SimPEG', 'https://simpeg'),
+        ('<i class="fa fa-external-link-square fa-fw"></i> SimPEG', 'https://simpeg.xyz'),
         # ('<i class="fa fa-gavel fa-fw"></i> Code of Conduct', 'https://github.com/fatiando/verde/blob/master/CODE_OF_CONDUCT.md'),
         ('<i class="fa fa-comment fa-fw"></i> Contact', 'http://slack.simpeg.xyz'),
         ('<i class="fa fa-github fa-fw"></i> Source Code', 'https://github.com/simpeg/discretize'),
