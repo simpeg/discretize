@@ -342,19 +342,4 @@ nitpick_ignore = [
     ('py:class', 'discretize.mixins.vtkModule.vtkTensorRead'),
     ('py:class', 'callable'),
     ('py:obj', 'vtk.vtkDataSet'),
-    ('py:class', 'vtkModule.vtkXMLRectilinearGridWriter'),
-    ('py:class', 'vtkModule.vtkXMLUnstructuredGridWriter'),
-    ('py:class', 'vtkModule.vtkXMLStructuredGridWriter'),
-    ('py:class', 'vtkModule.vtkXMLRectilinearGridReader'),
 ]
-
-def supress_unexpected_indentation():
-    import sphinx.environment
-    sphinx.environment.BuildEnvironment.warn_node = _supress_unexpected_indentation
-
-def _supress_unexpected_indentation(self, msg, node, **kwargs):
-    from docutils.utils import get_source_line
-
-    if 'unexpected indentation' not in msg.lower():
-        self._warnfunc(msg, '%s:%s' % get_source_line(node))
-
