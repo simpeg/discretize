@@ -35,16 +35,14 @@ class Doc_Test(unittest.TestCase):
         ])
 
     def test_html(self):
+        wd = os.getcwd()
+        os.chdir(os.path.sep.join(self.path_to_docs))
 
         check = subprocess.call([
-            "sphinx-build",
-            "-nW",
-            "-b", "html", "-d",
-            "{0!s}".format((os.path.sep.join(self.path_to_doctrees))),
-            "{0!s}".format((os.path.sep.join(self.path_to_docs))),
-            "{0!s}".format((os.path.sep.join(self.path_to_html)))
+            "make", "html"
         ])
         assert check == 0
+        oc.chdir(wd)
 
     # def test_latex(self):
     #     path_to_doctrees = os.path.sep.join(self.path_to_docs.split(os.path.sep) + ['_build']+['doctrees'])
@@ -60,12 +58,13 @@ class Doc_Test(unittest.TestCase):
         link_path = os.path.sep.join(self.path_to_docs + ['_build'])
 
         check = subprocess.call([
-            "sphinx-build",
-            "-nW",
-            "-b", "linkcheck", "-d",
-            "%s"%(os.path.sep.join(self.path_to_doctrees)),
-            "%s"%(os.path.sep.join(self.path_to_docs)),
-            "%s"%(os.path.sep.join(self.path_to_build + ["linkcheck"]))
+            "make", "linkcheck"
+            # "sphinx-build",
+            # "-nW",
+            # "-b", "linkcheck", "-d",
+            # "%s"%(os.path.sep.join(self.path_to_doctrees)),
+            # "%s"%(os.path.sep.join(self.path_to_docs)),
+            # "%s"%(os.path.sep.join(self.path_to_build + ["linkcheck"]))
         ])
         assert check == 0
 
