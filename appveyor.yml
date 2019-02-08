@@ -35,13 +35,13 @@ install:
   - conda update -q conda
   - conda info -a
   - conda install numpy scipy matplotlib cython ipython pillow wheel
-  - pip install nose
+  - pip install pytest
   - python setup.py install
 
 test_script:
   - cd tests
-  - nosetests -v -s base/test_interpolation.py base/test_tensor_io.py
-  - nosetests -v -s tree
+  - pytest -v -s base/test_interpolation.py base/test_tensor_io.py
+  - pytest -v -s tree
   - cd ..
 
 after_test:
@@ -63,4 +63,4 @@ deploy_script:
   - echo password=%pypi_password% >> %USERPROFILE%\\.pypirc
   # - twine upload dist\* --skip-existing
   # deploy on dev or master
-  - ps: If ($env:APPVEYOR_REPO_TAG -eq "true" ) { Invoke-Expression "twine upload dist\*.whl --skip-existing" 2>$null } Else { write-output "Not on a tag, won't deploy to pypi"}
+  - ps: If ($env:APPVEYOR_REPO_TAG -eq "true" ) { Invoke-Expression "twine upload dist\* --skip-existing" 2>$null } Else { write-output "Not on a tag, won't deploy to pypi"}

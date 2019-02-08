@@ -112,6 +112,7 @@ before_install:
   - conda list
 
 install:
+  - conda install -c conda-forge codecov
   - pip install -e .
   - make build
 
@@ -124,9 +125,8 @@ script:
 
 after_success:
   - if [ "$TEST" == "true" ]; then
-      coverage xml;
       echo "Uploading coverage to Codecov";
-      codecov -e PYTHON ;
+      codecov;
     fi
 
 deploy:
