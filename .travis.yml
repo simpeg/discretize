@@ -112,7 +112,6 @@ before_install:
   - conda list
 
 install:
-  - conda install -c conda-forge codecov
   - pip install -e .
   - make build
 
