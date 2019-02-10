@@ -86,13 +86,7 @@ matrix:
         - DEPLOY_PYPI=true
         - CONDA_INSTALL_EXTRA="twine"
 
-    # test the docs code on 2.7, 3.6, 3.7
-    - name: "Python 2.7 - docs"
-      os: linux
-      env:
-        - PYTHON=2.7
-        - TEST=true
-        - TEST_DIR="tests/docs"
+    # test the docs code on 3.6, 3.7
     - name: "Python 3.6 - docs"
       os: linux
       env:
