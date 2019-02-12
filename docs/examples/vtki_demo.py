@@ -125,7 +125,7 @@ cpos = [(395020.7332989303, 6039949.0452080015, 20387.583125699253),
 p.camera_position = cpos
 
 # Show the scene!
-p.show(auto_close=False)
+p.show(window_size=[1924, 1598], auto_close=False)
 
 # Save a screenshot:
 #p.screenshot('vtki_laguna_del_maule.png')
