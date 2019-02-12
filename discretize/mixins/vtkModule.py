@@ -2,9 +2,9 @@
 This module provides a way for ``discretize`` meshes to be
 converted to VTK data objects (and back when possible) if the
 `VTK Python package`_ is available.
-The :class:`discretize.mixins.vtkInterface` class becomes inherrited by all mesh
-objects and allows users to directly convert any given mesh by calling that
-mesh's ``toVTK()`` method
+The :class:`discretize.mixins.vtkModule.vtkInterface` class becomes inherrited
+by all mesh objects and allows users to directly convert any given mesh by
+calling that mesh's ``toVTK()`` method
 (note that this method will not be available if VTK is not available).
 
 .. _`VTK Python package`: https://pypi.org/project/vtk/
@@ -93,8 +93,8 @@ def assignCellData(vtkDS, models=None):
 class vtkInterface(object):
     """This class is full of methods that enable ``discretize`` meshes to
     be converted to VTK data objects (and back when possible). This is
-    inherritted by the :class:`discretize.BaseMesh` class so all these methods
-    are available to any mesh object!
+    inherritted by the :class:`discretize.BaseMesh.BaseMesh` class so all these
+    methods are available to any mesh object!
 
     ``CurvilinearMesh``, ``TreeMesh``, and ``TensorMesh`` are all currently
     implemented. The ``CylMesh`` is not implemeted and will raise and excpetion.
