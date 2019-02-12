@@ -2,9 +2,10 @@
 This module provides a way for ``discretize`` meshes to be
 converted to VTK data objects (and back when possible) if the
 `VTK Python package`_ is available.
-The ``vtkInterface`` class becomes inherrited by all mesh objects and allows
-users to directly convert any given mesh by calling that mesh's ``toVTK()``
-method (note that this method will not be available if VTK is not available).
+The :class:`discretize.mixins.vtkInterface` class becomes inherrited by all mesh
+objects and allows users to directly convert any given mesh by calling that
+mesh's ``toVTK()`` method
+(note that this method will not be available if VTK is not available).
 
 .. _`VTK Python package`: https://pypi.org/project/vtk/
 
@@ -12,14 +13,26 @@ This functionality was originally developed so that discretize could be
 interoperable with PVGeo_, providing a direct interface for discretize meshes
 within ParaView and other VTK powered platforms. This interoperablity allows
 users to visualize their finite volume meshes and model data from discretize
-along side all their other datasets in a common rendering environment.
+along side all their other georeferenced datasets in a common rendering
+environment.
 
 .. _PVGeo: http://pvgeo.org
+.. _vtki: http://www.vtki.org
 
-Here's an example of the types of integrated visualizations that are possible in
-ParaView leveraging the link between discretize and PVGeo_:
+Another notable VTK powered software platforms is ``vtki`` (see vtki_ docs)
+which provides a direct interface to the VTK software library through accesible
+Python data structures and NumPy arrays::
 
-.. image:: ../images/vtk-pvgeo-example.png
+    pip install vtki
+
+By default, the ``toVTK()`` method will return a ``vtki`` data object so that
+users can immediately start visualizing their data in 3D.
+
+See :ref:`vtki_demo_ref` for an example of the types of integrated
+visualizations that are possible leveraging the link between discretize, vtki_,
+and PVGeo_:
+
+.. image:: ../images/vtki_laguna_del_maule.png
    :target: http://pvgeo.org
    :alt: PVGeo Example Visualization
 
@@ -80,8 +93,8 @@ def assignCellData(vtkDS, models=None):
 class vtkInterface(object):
     """This class is full of methods that enable ``discretize`` meshes to
     be converted to VTK data objects (and back when possible). This is
-    inherritted by the ``BaseMesh`` class so all these methods are available to
-    any mesh object!
+    inherritted by the :class:`discretize.BaseMesh` class so all these methods
+    are available to any mesh object!
 
     ``CurvilinearMesh``, ``TreeMesh``, and ``TensorMesh`` are all currently
     implemented. The ``CylMesh`` is not implemeted and will raise and excpetion.
@@ -95,11 +108,11 @@ class vtkInterface(object):
        import numpy as np
        h1 = np.linspace(.1, .5, 3)
        h2 = np.linspace(.1, .5, 5)
-       h3 = np.linspace(.1, .5, 3)
+       h3 = np.linspace(.1, .8, 3)
        mesh = discretize.TensorMesh([h1, h2, h3])
 
        # Get a VTK data object
-       mesh.toVTK()
+       dataset = mesh.toVTK()
 
        # Save this mesh to a VTK file
        mesh.writeVTK('sample_mesh')
@@ -122,7 +135,7 @@ class vtkInterface(object):
        mesh._validate_orientation()
 
        # Yield the rotated vtkStructuredGrid
-       mesh.toVTK()
+       dataset_r = mesh.toVTK()
 
        # or write it out to a VTK format
        mesh.writeVTK('sample_rotated')
@@ -134,6 +147,17 @@ class vtkInterface(object):
     The second, rotated mesh is shown in red and its data axii are rotated from
     the traditional cartesian refence frame as specified by the ``axis_u``,
     ``axis_v``, and ``axis_w`` properties.
+
+    .. code-block:: python
+
+        import vtki
+        vtki.set_plot_theme('document')
+
+        p = vtki.BackgroundPlotter()
+        p.add_mesh(dataset, color='green', show_edges=True)
+        p.add_mesh(dataset_r, color='maroon', show_edges=True)
+        p.grid()
+        p.screenshot('vtk-rotated-example.png')
 
     .. image:: ../images/vtk-rotated-example.png
 
