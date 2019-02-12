@@ -351,7 +351,7 @@ class vtkInterface(object):
             import vtki
             cvtd = vtki.wrap(cvtd)
         except ImportError:
-            warnings.warn('For easier use of VTK objects, you should install `vtki` (the VTK interface): pip install vtki>=0.13.0')
+            warnings.warn('For easier use of VTK objects, you should install `vtki` (the VTK interface): pip install vtki')
         return cvtd
 
     @staticmethod
