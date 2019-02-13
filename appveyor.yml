@@ -36,7 +36,7 @@ install:
   - conda info -a
   - conda install numpy scipy matplotlib cython ipython pillow wheel
   - pip install pytest
-  - python setup.py install
+  - pip install -e .
 
 test_script:
   - cd tests
