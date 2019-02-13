@@ -256,6 +256,7 @@ intersphinx_mapping = {
     'scipy': ('https://docs.scipy.org/doc/scipy/reference/', None),
     'matplotlib': ('http://matplotlib.org/', None),
     'properties': ('http://propertiespy.readthedocs.io/en/latest/', None),
+    'vtki': ('http://vtkinterface.readthedocs.io/en/latest/', None),
 }
 
 

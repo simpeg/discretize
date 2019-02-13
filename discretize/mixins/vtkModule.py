@@ -73,7 +73,7 @@ def assignCellData(vtkDS, models=None):
 
     Input:
 
-    :param vtk.vtkDataSet vtkDS: - Any given VTK data object that has cell data
+    :param vtki.Common vtkDS: - Any given VTK data object that has cell data
     :param dict(numpy.ndarray) models: Name('s) and array('s). Match number of cells
 
     """
@@ -121,9 +121,9 @@ class vtkInterface(object):
     traditional <X,Y,Z> system with vectors of :math:`(1,0,0)`, :math:`(0,1,0)`,
     and :math:`(0,0,1)`, then the mesh will be rotated to be on the traditional
     reference frame. The previous example snippet provides a
-    ``vtkRectilinearGrid`` object because that tensor mesh lies on the
+    :class:`vtki.RectilinearGrid` object because that tensor mesh lies on the
     traditional reference frame. If we alter the reference frame, then we yield
-    a ``vtkStructuredGrid`` that is the same mesh rotated in space.
+    a :class:`vtki.StructuredGrid` that is the same mesh rotated in space.
 
     .. code-block:: python
 
@@ -140,13 +140,13 @@ class vtkInterface(object):
        # or write it out to a VTK format
        mesh.writeVTK('sample_rotated')
 
-    The two above code snippets produce a ``vtkRectilinearGrid`` and a
-    ``vtkStructuredGrid`` respecitvely. To demonstarte the difference, we have
-    plotted the two datasets next to eachother where the first mesh is in green
-    and its data axes are parrallel to the traditional cartesian reference frame.
-    The second, rotated mesh is shown in red and its data axii are rotated from
-    the traditional cartesian refence frame as specified by the ``axis_u``,
-    ``axis_v``, and ``axis_w`` properties.
+    The two above code snippets produce a :class:`vtki.RectilinearGrid` and a
+    :class:`vtki.StructuredGrid` respecitvely. To demonstarte the difference, we
+    have plotted the two datasets next to eachother where the first mesh is in
+    green and its data axes are parrallel to the traditional cartesian reference
+    frame. The second, rotated mesh is shown in red and its data axii are
+    rotated from the traditional cartesian refence frame as specified by the
+    ``axis_u``, ``axis_v``, and ``axis_w`` properties.
 
     .. code-block:: python
 
@@ -165,12 +165,12 @@ class vtkInterface(object):
 
     def __treeMeshToVTK(mesh, models=None):
         """
-        Constructs a ``vtkUnstructuredGrid`` object of this tree mesh and the
-        given models as ``CellData`` of that VTK dataset.
+        Constructs a :class:`vtki.UnstructuredGrid` object of this tree mesh and
+        the given models as ``cell_arrays`` of that ``vtki`` dataset.
 
         Input:
 
-        :param discretize.TreeMesh mesh: The tree mesh to convert to a ``vtkUnstructuredGrid``
+        :param discretize.TreeMesh mesh: The tree mesh to convert to a :class:`vtki.UnstructuredGrid`
         :param dict(numpy.ndarray) models: Name('s) and array('s). Match number of cells
 
         """
@@ -258,14 +258,15 @@ class vtkInterface(object):
 
     def __tensorMeshToVTK(mesh, models=None):
         """
-        Constructs a ``vtkRectilinearGrid`` (or a ``vtkStructuredGrid``) object
-        of this tensor mesh and the given models as ``CellData`` of that grid.
+        Constructs a :class:`vtki.RectilinearGrid`
+        (or a :class:`vtki.StructuredGrid`) object of this tensor mesh and the
+        given models as ``cell_arrays`` of that grid.
         If the mesh is defined on a normal cartesian system then a rectilinear
         grid is generated. Otherwise, a structured grid is generated.
 
         Input:
 
-        :param discretize.TensorMesh mesh: The tensor mesh to convert to a ``vtkRectilinearGrid``
+        :param discretize.TensorMesh mesh: The tensor mesh to convert to a :class:`vtki.RectilinearGrid`
         :param dict(numpy.ndarray) models: Name('s) and array('s). Match number of cells
 
         """
@@ -300,12 +301,12 @@ class vtkInterface(object):
 
     def __curvilinearMeshToVTK(mesh, models=None):
         """
-        Constructs a ``vtkStructuredGrid`` of this mesh and the given
-        models as ``CellData`` of that object.
+        Constructs a :class:`vtki.StructuredGrid` of this mesh and the given
+        models as ``cell_arrays`` of that object.
 
         Input:
 
-        :param discretize.CurvilinearMesh mesh: The curvilinear mesh to convert to a ``vtkStructuredGrid``
+        :param discretize.CurvilinearMesh mesh: The curvilinear mesh to convert to a :class:`vtki.StructuredGrid`
         :param dict(numpy.ndarray) models: Name('s) and array('s). Match number of cells
 
         """
@@ -326,8 +327,8 @@ class vtkInterface(object):
 
 
     def toVTK(mesh, models=None):
-        """Convert this mesh object to it's proper VTK data object with the
-        given model dictionary as the cell data of that dataset.
+        """Convert this mesh object to it's proper ``vtki`` data object with
+        the given model dictionary as the cell data of that dataset.
 
         Input:
 
@@ -357,7 +358,7 @@ class vtkInterface(object):
     @staticmethod
     def _saveUnstructuredGrid(fileName, vtkUnstructGrid, directory=''):
         """Saves a VTK unstructured grid file (vtu) for an already generated
-        ``vtkUnstructuredGrid`` object.
+        :class:`vtki.UnstructuredGrid` object.
 
         Input:
 
@@ -386,7 +387,7 @@ class vtkInterface(object):
     @staticmethod
     def _saveStructuredGrid(fileName, vtkStructGrid, directory=''):
         """Saves a VTK structured grid file (vtk) for an already generated
-        ``vtkStructuredGrid`` object.
+        :class:`vtki.StructuredGrid` object.
 
         Input:
 
@@ -415,7 +416,7 @@ class vtkInterface(object):
     @staticmethod
     def _saveRectilinearGrid(fileName, vtkRectGrid, directory=''):
         """Saves a VTK rectilinear file (vtr) ffor an already generated
-        ``vtkRectilinearGrid`` object.
+        :class:`vtki.RectilinearGrid` object.
 
         Input:
 
