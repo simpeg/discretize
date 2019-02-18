@@ -1,8 +1,8 @@
 """
 .. _vtki_demo_ref:
 
-vtki demo
-=========
+3D Visualization with ``vtki``
+==============================
 
 The example demonstrates the how to use the VTK interface via the vtki_ library.
 To run this example, you will need to `install vtki`_.
@@ -104,7 +104,7 @@ dataset_t = dataset.threshold()
 vtki.set_plot_theme('document')
 
 # Create the rendering scene
-p = vtki.Plotter()
+p = vtki.Plotter(off_screen=True)
 # add a grid axes
 p.add_bounds_axes(grid=True, location='outer')
 
@@ -125,10 +125,26 @@ cpos = [(395020.7332989303, 6039949.0452080015, 20387.583125699253),
 p.camera_position = cpos
 
 # Show the scene!
-p.show(window_size=[1924, 1598], auto_close=False)
+# NOTE: grab the screenshot as an image array to display it in the docs
+cpos, image = p.show(window_size=[1924, 1598], auto_close=False, screenshot=True)
 
 # Save a screenshot:
 #p.screenshot('vtki_laguna_del_maule.png')
 
 # Finally, close the plotter.
 p.close()
+
+
+###############################################################################
+# Use the screenshot...
+# ---------------------
+#
+# This extra snippet displays he screenshot of the scene do that it appears in
+# the docs!
+
+
+# EXTRA: display the screenshot with matplotlib so it shows in the documentation
+import matplotlib.pyplot as plt
+plt.imshow(image)
+plt.axis('off')
+plt.show()
