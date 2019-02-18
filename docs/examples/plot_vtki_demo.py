@@ -28,6 +28,8 @@ import discretize
 import vtki
 import numpy as np
 
+print('vtki Version: {}'.format(vtki.__version__))
+
 ###############################################################################
 # Download and load data
 # ----------------------
