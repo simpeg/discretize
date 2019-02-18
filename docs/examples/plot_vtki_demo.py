@@ -113,7 +113,7 @@ p.add_mesh(dataset_t.slice('x'), name='x-slice', show_edges=True)
 p.add_mesh(dataset_t.slice('y'), name='y-slice', show_edges=True)
 p.add_mesh(dataset_t.threshold(0.2,), name='vol', show_edges=True)
 p.add_mesh(topo, name='topo', color='grey',
-           #cmap='gist_earth', rng=[1.7e+03, 3.104e+03],
+           #cmap='gist_earth', clim=[1.7e+03, 3.104e+03],
            point_size=1, opacity=0.75,)
 p.add_mesh(grav, name='gravity', cmap='viridis',
            render_points_as_spheres=True, point_size=15)
