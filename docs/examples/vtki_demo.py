@@ -106,7 +106,7 @@ dataset_t = dataset.threshold()
 vtki.set_plot_theme('document')
 
 # Create the rendering scene
-p = vtki.Plotter(off_screen=True)
+p = vtki.Plotter()
 # add a grid axes
 p.add_bounds_axes(grid=True, location='outer')
 
@@ -127,8 +127,7 @@ cpos = [(395020.7332989303, 6039949.0452080015, 20387.583125699253),
 p.camera_position = cpos
 
 # Show the scene!
-# NOTE: grab the screenshot as an image array to display it in the docs
-cpos, image = p.show(window_size=[1924, 1598], auto_close=False, screenshot=True)
+p.show(window_size=[1924, 1598], auto_close=False)
 
 # Save a screenshot:
 #p.screenshot('vtki_laguna_del_maule.png')
