@@ -135,19 +135,3 @@ cpos, image = p.show(window_size=[1924, 1598], auto_close=False, screenshot=True
 
 # Finally, close the plotter.
 p.close()
-
-
-###############################################################################
-# Use the screenshot...
-# ---------------------
-#
-# This extra snippet displays he screenshot of the scene so that it appears in
-# the gallery of examples in the documentation.
-
-
-# EXTRA: display the screenshot with matplotlib so it shows in the documentation
-import matplotlib.pyplot as plt
-plt.figure(figsize=(20,20))
-plt.imshow(image)
-plt.axis('off')
-plt.show()
