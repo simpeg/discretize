@@ -84,6 +84,7 @@ linkcheck_ignore = [
     'http://wiki.python.org/moin/PythonEditors',
     'http://docs.scipy.org/doc/numpy/reference/generated/numpy.array.html#numpy.array',
     'http://dx.doi.org/10.1016/j.cageo.2015.09.015',
+    'http://slack.simpeg.xyz',
 ]
 
 linkcheck_retries = 3
