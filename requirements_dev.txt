@@ -10,8 +10,8 @@ sympy
 wheel
 twine
 vtk
+vtki>=0.16.9
 numpydoc
 nbsphinx
-vtki>=0.13.0
 coverage
 codecov
