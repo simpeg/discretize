@@ -8,7 +8,6 @@ cell widths in each dimension. They can be defined in 1, 2, or 3 dimensions.
 
 import numpy as np
 import discretize
-import matplotlib.pyplot as plt
 
 ###############################################################################
 # In the simplest case, you can instantiate a tensor mesh by providing the

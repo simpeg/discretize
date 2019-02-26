@@ -5,7 +5,7 @@ import properties
 
 from discretize import utils
 
-from .base import BaseMesh, BaseRectangularMesh, BaseTensorMesh
+from .base import BaseRectangularMesh, BaseTensorMesh
 from .View import TensorView
 from .DiffOperators import DiffOperators
 from .InnerProducts import InnerProducts

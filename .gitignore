@@ -51,6 +51,7 @@ docs/api/generated/*
 docs/gallery
 docs/tutorials
 docs/modules
+docs/auto_examples
 
 # Examples data
 docs/examples/Chile_GRAV_4_Miller
