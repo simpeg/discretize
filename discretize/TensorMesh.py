@@ -1,7 +1,5 @@
 from __future__ import print_function
 import numpy as np
-import scipy.sparse as sp
-import properties
 
 from discretize import utils
 
@@ -10,7 +8,6 @@ from .View import TensorView
 from .DiffOperators import DiffOperators
 from .InnerProducts import InnerProducts
 from .MeshIO import TensorMeshIO
-import warnings
 
 
 class TensorMesh(

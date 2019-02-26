@@ -156,7 +156,7 @@ class TestMeshNumbers2D(unittest.TestCase):
         tex, tey = self.mesh.r(e, 'E', 'E', 'V')
         self.assertTrue(np.all(tex == ex))
         self.assertTrue(np.all(tey == ey))
-        self.assertRaises(AssertionError,   self.mesh.r, e, 'E', 'Ez', 'V')
+        self.assertRaises(Exception,   self.mesh.r, e, 'E', 'Ez', 'V')
 
     def test_mesh_r_F_V(self):
         fx = np.ones(self.mesh.nFx)
@@ -169,7 +169,7 @@ class TestMeshNumbers2D(unittest.TestCase):
         tfx, tfy = self.mesh.r(f, 'F', 'F', 'V')
         self.assertTrue(np.all(tfx == fx))
         self.assertTrue(np.all(tfy == fy))
-        self.assertRaises(AssertionError,   self.mesh.r, f, 'F', 'Fz', 'V')
+        self.assertRaises(Exception,   self.mesh.r, f, 'F', 'Fz', 'V')
 
     def test_mesh_r_E_M(self):
         g = np.ones((np.prod(self.mesh.vnEx), 2))

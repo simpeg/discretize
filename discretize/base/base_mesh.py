@@ -50,10 +50,11 @@ class BaseMesh(properties.HasProperties, vtkInterface):
     # Validators
     @properties.validator('_n')
     def _check_n_shape(self, change):
-        assert (
+        if not (
             not isinstance(change['value'], properties.utils.Sentinel) and
             change['value'] is not None
-        ), "Cannot delete n. Instead, create a new mesh"
+        ):
+            raise Exception("Cannot delete n. Instead, create a new mesh")
 
         change['value'] = np.array(change['value'], dtype=int).ravel()
         if len(change['value']) > 3:
@@ -64,22 +65,24 @@ class BaseMesh(properties.HasProperties, vtkInterface):
 
         if np.any(change['previous'] != properties.undefined):
             # can't change dimension of the mesh
-            assert len(change['previous']) == len(change['value']), (
-                "Cannot change dimensionality of the mesh. Expected {} "
-                "dimensions, got {} dimensions".format(
-                    len(change['previous']), len(change['value'])
+            if len(change['previous']) != len(change['value']):
+                raise Exception(
+                    "Cannot change dimensionality of the mesh. Expected {} "
+                    "dimensions, got {} dimensions".format(
+                        len(change['previous']), len(change['value'])
+                    )
                 )
-            )
 
             # check that if h has been set, sizes still agree
             if getattr(self, 'h', None) is not None and len(self.h) > 0:
                 for i in range(len(change['value'])):
-                    assert len(self.h[i]) == change['value'][i], (
-                        "Mismatched shape of n. Expected {}, len(h[{}]), got "
-                        "{}".format(
-                            len(self.h[i]), i, change['value'][i]
+                    if len(self.h[i]) != change['value'][i]:
+                        raise Exception(
+                            "Mismatched shape of n. Expected {}, len(h[{}]), got "
+                            "{}".format(
+                                len(self.h[i]), i, change['value'][i]
+                            )
                         )
-                    )
 
             # check that if nodes have been set for curvi mesh, sizes still
             # agree
@@ -88,19 +91,21 @@ class BaseMesh(properties.HasProperties, vtkInterface):
                 len(self.nodes) > 0
             ):
                 for i in range(len(change['value'])):
-                    assert self.nodes[0].shape[i]-1 == change['value'][i], (
-                        "Mismatched shape of n. Expected {}, len(nodes[{}]), "
-                        "got {}".format(
-                            self.nodes[0].shape[i]-1, i, change['value'][i]
+                    if self.nodes[0].shape[i]-1 != change['value'][i]:
+                        raise Exception(
+                            "Mismatched shape of n. Expected {}, len(nodes[{}]), "
+                            "got {}".format(
+                                self.nodes[0].shape[i]-1, i, change['value'][i]
+                            )
                         )
-                    )
 
     @properties.validator('x0')
     def _check_x0(self, change):
-        assert (
+        if not (
             not isinstance(change['value'], properties.utils.Sentinel) and
             change['value'] is not None
-        ), "n must be set prior to setting x0"
+        ):
+            raise Exception("n must be set prior to setting x0")
 
         if len(self._n) != len(change['value']):
             raise Exception(
@@ -360,12 +365,14 @@ class BaseMesh(properties.HasProperties, vtkInterface):
         :return: projected face vector, (nF, )
 
         """
-        assert isinstance(fV, np.ndarray), 'fV must be an ndarray'
-        assert (
+        if not isinstance(fV, np.ndarray):
+            raise Exception('fV must be an ndarray')
+        if not (
             len(fV.shape) == 2 and
             fV.shape[0] == self.nF and
             fV.shape[1] == self.dim
-        ), 'fV must be an ndarray of shape (nF x dim)'
+        ):
+            raise Exception('fV must be an ndarray of shape (nF x dim)')
         return np.sum(fV*self.normals, 1)
 
     def projectEdgeVector(self, eV):
@@ -377,12 +384,14 @@ class BaseMesh(properties.HasProperties, vtkInterface):
         :return: projected edge vector, (nE, )
 
         """
-        assert isinstance(eV, np.ndarray), 'eV must be an ndarray'
-        assert (
+        if not isinstance(eV, np.ndarray):
+            raise Exception('eV must be an ndarray')
+        if not (
             len(eV.shape) == 2 and
             eV.shape[0] == self.nE and
             eV.shape[1] == self.dim
-        ), 'eV must be an ndarray of shape (nE x dim)'
+        ):
+            raise Exception('eV must be an ndarray of shape (nE x dim)')
         return np.sum(eV*self.tangents, 1)
 
     def save(self, filename='mesh.json', verbose=False):
@@ -793,31 +802,39 @@ class BaseRectangularMesh(BaseMesh):
         allowed_xType = [
             'CC', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez'
         ]
-        assert (
-            type(x) == list or isinstance(x, np.ndarray)
-        ), "x must be either a list or a ndarray"
-        assert xType in allowed_xType, (
-            "xType must be either "
-            "'CC', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', or 'Ez'"
-        )
-        assert outType in allowed_xType, (
-            "outType must be either "
-            "'CC', 'N', 'F', Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', or 'Ez'"
-        )
-        assert format in ['M', 'V'], "format must be either 'M' or 'V'"
-        assert outType[:len(xType)] == xType, (
-            "You cannot change types when reshaping."
-        )
-        assert xType in outType, "You cannot change type of components."
+        if not (
+            isinstance(x, list) or isinstance(x, np.ndarray)
+        ):
+            raise Exception("x must be either a list or a ndarray")
+        if xType not in allowed_xType:
+            raise Exception (
+                "xType must be either "
+                "'CC', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', or 'Ez'"
+            )
+        if outType not in allowed_xType:
+            raise Exception(
+                "outType must be either "
+                "'CC', 'N', 'F', Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', or 'Ez'"
+            )
+        if format not in ['M', 'V']:
+            raise Exception("format must be either 'M' or 'V'")
+        if outType[:len(xType)] != xType:
+            raise Exception(
+                "You cannot change types when reshaping."
+            )
+        if xType not in outType:
+            raise Exception("You cannot change type of components.")
 
-        if type(x) == list:
+        if isinstance(x, list):
             for i, xi in enumerate(x):
-                assert isinstance(x, np.ndarray), (
-                    "x[{0:d}] must be a numpy array".format(i)
-                )
-                assert xi.size == x[0].size, (
-                    "Number of elements in list must not change."
-                )
+                if not isinstance(x, np.ndarray):
+                    raise Exception(
+                        "x[{0:d}] must be a numpy array".format(i)
+                    )
+                if xi.size != x[0].size:
+                    raise Exception(
+                        "Number of elements in list must not change."
+                    )
 
             x_array = np.ones((x.size, len(x)))
             # Unwrap it and put it in a np array
@@ -825,7 +842,8 @@ class BaseRectangularMesh(BaseMesh):
                 x_array[:, i] = mkvc(xi)
             x = x_array
 
-        assert isinstance(x, np.ndarray), "x must be a numpy array"
+        if not isinstance(x, np.ndarray):
+            raise Exception("x must be a numpy array")
 
         x = x[:]  # make a copy.
         xTypeIsFExyz = (
@@ -845,9 +863,10 @@ class BaseRectangularMesh(BaseMesh):
             """Switches over the different options."""
             if xType in ['CC', 'N']:
                 nn = (self._n) if xType == 'CC' else (self._n+1)
-                assert xx.size == np.prod(nn), (
-                    "Number of elements must not change."
-                )
+                if xx.size != np.prod(nn):
+                    raise Exception(
+                        "Number of elements must not change."
+                    )
                 return outKernal(xx, nn)
             elif xType in ['F', 'E']:
                 # This will only deal with components of fields,
@@ -863,13 +882,15 @@ class BaseRectangularMesh(BaseMesh):
 
                 for dim, dimName in enumerate(['x', 'y', 'z']):
                     if dimName in outType:
-                        assert self.dim > dim, (
-                            "Dimensions of mesh not great enough for "
-                            "{}{}".format(xType, dimName)
-                        )
-                        assert xx.size == np.sum(nn), (
-                            "Vector is not the right size."
-                        )
+                        if self.dim <= dim:
+                            raise Exception(
+                                "Dimensions of mesh not great enough for "
+                                "{}{}".format(xType, dimName)
+                            )
+                        if xx.size != np.sum(nn):
+                            raise Exception(
+                                "Vector is not the right size."
+                            )
                         start = np.sum(nn[:dim+1])
                         end = np.sum(nn[:dim+2])
                         return outKernal(xx[start:end], nx[dim])
@@ -883,16 +904,18 @@ class BaseRectangularMesh(BaseMesh):
                     nn = self.vnFy if 'F' in xType else self.vnEy
                 elif 'z' in xType:
                     nn = self.vnFz if 'F' in xType else self.vnEz
-                assert xx.size == np.prod(nn), 'Vector is not the right size.'
+                if xx.size != np.prod(nn):
+                    raise Exception('Vector is not the right size.')
                 return outKernal(xx, nn)
 
         # Check if we are dealing with a vector quantity
         isVectorQuantity = len(x.shape) == 2 and x.shape[1] == self.dim
 
         if outType in ['F', 'E']:
-            assert ~isVectorQuantity, (
-                'Not sure what to do with a vector vector quantity..'
-            )
+            if isVectorQuantity:
+                raise Exception(
+                    'Not sure what to do with a vector vector quantity..'
+                )
             outTypeCopy = outType
             out = ()
             for ii, dirName in enumerate(['x', 'y', 'z'][:self.dim]):
