@@ -18,4 +18,4 @@ wheel
 pytest
 twine
 vtk
-vtki>=0.13.0
+vtki>=0.16.9
