@@ -108,7 +108,7 @@ vtki.set_plot_theme('document')
 # Create the rendering scene
 p = vtki.Plotter()
 # add a grid axes
-p.add_bounds_axes(grid=True, location='outer')
+p.show_grid()
 
 # Add spatially referenced data to the scene
 p.add_mesh(dataset_t.slice('x'), name='x-slice', show_edges=True)

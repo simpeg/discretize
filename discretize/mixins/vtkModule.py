@@ -160,7 +160,7 @@ class vtkInterface(object):
         p = vtki.BackgroundPlotter()
         p.add_mesh(dataset, color='green', show_edges=True)
         p.add_mesh(dataset_r, color='maroon', show_edges=True)
-        p.grid()
+        p.show_grid()
         p.screenshot('vtk-rotated-example.png')
 
     .. image:: ../../images/vtk-rotated-example.png
