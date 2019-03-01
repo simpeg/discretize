@@ -255,3 +255,216 @@ def ExtractCoreMesh(xyzlim, mesh, meshType='tensor'):
         raise Exception("Not implemented!")
 
     return actind, meshCore
+
+
+def refineTreeXYZ(
+            mesh, xyz,
+            method="radial",
+            octreeLevels=[1, 1, 1],
+            octreeLevels_XY=None,
+            finalize=False,
+):
+    """
+    Refine a TreeMesh based on XYZ point locations
+
+    :param BaseMesh mesh: The mesh
+    :param numpy.ndarray xyz: 2D array of points
+
+    [OPTIONAL]
+    :param method: Method used to refine the mesh based on xyz locations
+        'radial' (default): Based on radial distance xyz and cell centers
+        'surface': Along triangulated surface repeated vertically
+        'box': Inside limits defined by outer xyz locations
+    :param octreeLevels: List defining the minimum number of cells
+        in each octree level.
+    :param octreeLevels_XY: List defining the minimum number of padding cells
+        added outside the data hull of each octree levels. Optionanl for
+        method='surface' and 'box' only
+    :param finalize: True | False (default) Finalize the TreeMesh
+
+
+    This function ouputs::
+
+        - Refined TreeMesh
+
+
+    """
+
+    if octreeLevels_XY is not None:
+        assert len(octreeLevels_XY) == len(octreeLevels), (
+            "'octreeLevels_XY' must be the length %i" % len(octreeLevels)
+        )
+
+    else:
+        octreeLevels_XY = np.zeros_like(octreeLevels)
+
+    # Calculate maximum octree level
+    maxLevel = int(np.log2(mesh.hx.shape[0]))
+
+    # Trigger different refine methods
+    if dtype == "radial":
+
+        # Build a cKDTree for fast nearest lookup
+        tree = cKDTree(xyz)
+
+        # Compute the outer limits of each octree level
+        rMax = np.cumsum(
+            mesh.hx.min() *
+            np.asarray(octreeLevels) *
+            2**np.arange(len(octreeLevels))
+        )
+
+        # Seed the refinement
+        # mesh.insert_cells(xyz, np.ones(xyz.shape[0]) * (maxLevel - np.nonzero(octreeLevels)[0][0] - 1), finalize=False)
+
+        # Radial function
+        def inBall(cell):
+            xyz = cell.center
+            r, ind = tree.query(xyz)
+
+            for ii, nC in enumerate(octreeLevels):
+
+                if r < rMax[ii]:
+
+                    return maxLevel-ii
+
+            return 0
+
+        mesh.refine(inBall, finalize=finalize)
+
+    elif dtype == 'surface':
+
+        # Compute centroid
+        centroid = np.mean(xyz, axis=0)
+
+        if mesh.dim == 2:
+            rOut = np.abs(centroid[0]-xyz).max()
+            hz = mesh.hy.min()
+        else:
+            # Largest outer point distance
+            rOut = np.linalg.norm(np.r_[
+                np.abs(centroid[0]-xyz[:, 0]).max(),
+                np.abs(centroid[1]-xyz[:, 1]).max()
+                ]
+            )
+            hz = mesh.hz.min()
+
+        # Compute maximum depth of refinement
+        zmax = np.cumsum(
+            hz *
+            np.asarray(octreeLevels) *
+            2**np.arange(len(octreeLevels))
+        )
+
+        # Compute maximum horizontal padding offset
+        padWidth = np.cumsum(
+            mesh.hx.min() *
+            np.asarray(octreeLevels_XY) *
+            2**np.arange(len(octreeLevels_XY))
+        )
+
+        # Increment the vertical offset
+        zOffset = 0
+        xyPad = -1
+        depth = zmax[-1]
+        # Cycle through the Tree levels backward
+        for ii in range(len(octreeLevels)-1, -1, -1):
+
+            dx = mesh.hx.min() * 2**ii
+
+            if mesh.dim == 3:
+                dz = mesh.hz.min() * 2**ii
+            else:
+                dz = mesh.hy.min() * 2**ii
+
+            # Increase the horizontal extent of the surface
+            if xyPad != padWidth[ii]:
+                xyPad = padWidth[ii]
+
+                # Calculate expansion for padding XY cells
+                expFactor = (rOut + xyPad) / rOut
+                xLoc = (xyz - centroid)*expFactor + centroid
+
+                if mesh.dim == 3:
+                    # Create a new triangulated surface
+                    tri2D = Delaunay(xLoc[:, :2])
+                    F = interpolate.LinearNDInterpolator(tri2D, xLoc[:, 2])
+                else:
+                    F = interpolate.interp1d(xLoc[:, 0], xLoc[:, 1])
+
+            limx = np.r_[xLoc[:, 0].max(), xLoc[:, 0].min()]
+            nCx = int(np.ceil((limx[0]-limx[1]) / dx))
+
+            if mesh.dim == 3:
+                limy = np.r_[xLoc[:, 1].max(), xLoc[:, 1].min()]
+                nCy = int(np.ceil((limy[0]-limy[1]) / dy))
+
+                # Create a grid at the octree level in xy
+                CCx, CCy = np.meshgrid(
+                    np.linspace(
+                        limx[1], limx[0], nCx
+                        ),
+                    np.linspace(
+                        limy[1], limy[0], nCy
+                        )
+                )
+
+                xy = np.c_[CCx.reshape(-1), CCy.reshape(-1)]
+
+                # Only keep points within triangulation
+                indexTri = tri2D.find_simplex(xy)
+
+            else:
+                xy = np.linspace(
+                        limx[1], limx[0], nCx
+                        )
+                indexTri = np.ones_like(xy, dtype='bool')
+
+            # Interpolate the elevation linearly
+            z = F(xy[indexTri != -1])
+
+            # Apply vertical padding for current octree level
+            zOffset = 0
+            while zOffset < depth:
+
+                mesh.insert_cells(
+                    np.c_[xy[indexTri != -1], z-zOffset],
+                    np.ones_like(z)*maxLevel-ii,
+                    finalize=False
+                )
+
+                zOffset += dz
+
+            depth -= dz * octreeLevels[ii]
+
+        if finalize:
+            mesh.finalize()
+
+    elif dtype == 'box':
+
+        limx = np.r_[xLoc[:, 0].max(), xLoc[:, 0].min()]
+        limy = np.r_[xLoc[:, 1].max(), xLoc[:, 1].min()]
+
+        if mesh.dim == 3:
+            limz = np.r_[xLoc[:, 2].max(), xLoc[:, 2].min()]
+
+        def inBox(cell):
+            xyz = cell.center
+
+            if ((xyz[0] < 100) and (xyz[0] > 20) and
+                (xyz[1] < 100) and (xyz[1] > 20) and
+                (xyz[2] < 100) and (xyz[2] > 20)):
+                return maxLevel
+
+            else:
+                return cell._level
+
+        mesh.refine(inBox, finalize=finalize)
+
+    else:
+        NotImplementedError(
+            "Only method= 'radial', 'surface'"
+            " or 'box' have been implemented"
+        )
+
+    return mesh
