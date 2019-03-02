@@ -5,6 +5,8 @@ import scipy.sparse as sp
 from .matutils import ndgrid
 from .codeutils import asArray_N_x_Dim
 from .codeutils import isScalar
+from scipy.spatial import cKDTree, Delaunay
+from scipy import interpolate
 
 import sys
 if sys.version_info < (3,):
@@ -373,6 +375,7 @@ def refineTreeXYZ(
             dx = mesh.hx.min() * 2**ii
 
             if mesh.dim == 3:
+                dy = mesh.hy.min() * 2**ii
                 dz = mesh.hz.min() * 2**ii
             else:
                 dz = mesh.hy.min() * 2**ii
