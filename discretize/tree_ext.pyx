@@ -3019,9 +3019,22 @@ cdef class _TreeMesh:
         if showIt:
             plt.show()
 
-    def plotImage(self, I, ax=None, showIt=False, grid=False, clim=None):
+    def plotImage(self, v, vType='CC', grid=False, view='real',
+                  ax=None, clim=False, showIt=False,
+                  pcolorOpts=None,
+                  gridOpts=None,
+                  range_x=None, range_y=None,
+                  **other_kwargs,
+                  ):
         if self._dim == 3:
-            raise Exception('Use plot slice')
+            self.plotSlice(v, vType=vType, grid=grid, view=view,
+                           ax=ax, clim=clim, showIt=showIt,
+                           pcolorOpts=pcolorOpts,
+                           range_x=range_x, range_y=range_y,
+                           **other_kwargs)
+
+        if view == 'vec':
+            raise NotImplementedError('Vector ploting is not supported on TreeMesh (yet)')
 
         import matplotlib.pyplot as plt
         import matplotlib
@@ -3029,19 +3042,65 @@ cdef class _TreeMesh:
         import matplotlib.cm as cmx
         from matplotlib.collections import PatchCollection
 
+        if vType == 'CC':
+            I = v
+        elif vType == 'N':
+            I = self.aveN2CC*v
+        elif vType in ['Fx', 'Fy', 'Ex', 'Ey']:
+            aveOp = 'ave' + vType[0] + '2CCV'
+            ind_xy = {'x': 0, 'y': 1}[vType[1]]
+            I = (getattr(self, aveOp)*v).reshape(2, self.nC)[ind_xy] # average to cell centers
+
+        if view in ['real', 'imag', 'abs']:
+            v = getattr(np, view)(v) # e.g. np.real(v)
         if ax is None:
             ax = plt.subplot(111)
-        default = cm = plt.get_cmap()
-        cNorm = colors.Normalize(
-            vmin=np.nanmin(I) if clim is None else clim[0],
-            vmax=np.nanmax(I) if clim is None else clim[1])
+        if pcolorOpts is None:
+            pcolorOpts = {}
+        if 'cmap' in pcolorOpts:
+            cm = pcolorOpts['cmap']
+        else:
+            cm = plt.get_cmap()
+        if 'vmin' in pcolorOpts:
+            vmin = pcolorOpts['vmin']
+        else:
+            vmin = np.nanmin(I) if clim is None else clim[0]
+        if 'vmax' in pcolorOpts:
+            vmax = pcolorOpts['vmax']
+        else:
+            vmax = np.nanmax(I) if clim is None else clim[1]
+        if 'alpha' in pcolorOpts:
+            alpha = pcolorOpts['alpha']
+        else:
+            alpha = 1.0
 
-        scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=default)
-        ax.set_xlim((self.x0[0], self.h[0].sum()))
-        ax.set_ylim((self.x0[1], self.h[1].sum()))
-        edge_color = 'k' if grid else 'none'
+        if gridOpts is None:
+            gridOpts = {'color','k'}
+        if 'color' not in gridOpts:
+            gridOpts['color'] = 'k'
+
+        cNorm = colors.Normalize(
+            vmin=vmin, vmax=vmax)
+
+        scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=cm)
+
+        if 'edge_color' in pcolorOpts:
+            edge_color = pcolorOpts['edge_color']
+        else:
+            edge_color = gridOpts['color'] if grid else 'none'
+        if 'alpha' in gridOpts:
+            edge_alpha = gridOpts['alpha']
+        else:
+            edge_alpha = 1.0
+        if edge_color.lower() != 'none':
+            if isinstance(edge_color, str):
+                edge_color = colors.to_rgba(edge_color, edge_alpha)
+            else:
+                edge_color = colors.to_rgba_array(edge_color, edge_alpha)
+
         rectangles = []
-        facecolors = []
+        facecolors = scalarMap.to_rgba(I[~np.isnan(I)])
+        facecolors[:,-1] = alpha
         for cell in self.tree.cells:
             ii = cell.index
             if np.isnan(I[ii]):
@@ -3049,7 +3108,6 @@ cdef class _TreeMesh:
             x0 = np.array([cell.points[0].location[0], cell.points[0].location[1]])
             sz = np.array([cell.edges[0].length, cell.edges[2].length])
             rectangles.append(plt.Rectangle((x0[0], x0[1]), sz[0], sz[1]))
-            facecolors.append(scalarMap.to_rgba(I[ii]))
 
         pc = PatchCollection(rectangles, facecolor=facecolors, edgecolor=edge_color)
         # Add collection to axes
@@ -3058,6 +3116,17 @@ cdef class _TreeMesh:
         scalarMap._A = []
         ax.set_xlabel('x')
         ax.set_ylabel('y')
+
+        if range_x is not None:
+            ax.set_xlim(*range_x)
+        else:
+            ax.set_xlim(*self.vectorNx[[0, -1]])
+
+        if range_y is not None:
+            ax.set_ylim(*range_y)
+        else:
+            ax.set_ylim(*self.vectorNy[[0, -1]])
+
         if showIt:
             plt.show()
         return [scalarMap]

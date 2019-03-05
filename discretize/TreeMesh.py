@@ -346,9 +346,10 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
 
     def plotSlice(
         self, v, vType='CC',
-        normal='Z', ind=None, grid=True, view='real',
+        normal='Z', ind=None, grid=False, view='real',
         ax=None, clim=None, showIt=False,
-        pcolorOpts=None, streamOpts=None, gridOpts=None
+        pcolorOpts=None, streamOpts=None, gridOpts=None,
+        range_x=None, range_y=None,
     ):
 
         if pcolorOpts is None:
@@ -357,10 +358,33 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
             streamOpts = {'color': 'k'}
         if gridOpts is None:
             gridOpts = {'color': 'k', 'alpha': 0.5}
-        if vType not in ['CC', 'F', 'E']:
-            raise ValueError('vType must be one of CC, F, or E')
+        vTypeOpts = ['CC', 'N', 'F', 'E', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez']
+        viewOpts = ['real', 'imag', 'abs']
+        normalOpts = ['X', 'Y', 'Z']
+        if vType not in vTypeOpts:
+            raise ValueError(
+                "vType must be in ['{0!s}']".format("', '".join(vTypeOpts))
+            )
         if self.dim == 2:
-            raise Exception('plotSlice not support for 2D, use plotImage')
+            raise NotImplementedError(
+                'Must be a 3D mesh. Use plotImage.'
+            )
+        if view == 'vec':
+            raise NotImplementedError(
+                'Vector view plotting is not implemented for TreeMesh (yet)'
+            )
+        if view not in viewOpts:
+            raise ValueError(
+                "view must be in ['{0!s}']".format("', '".join(viewOpts))
+            )
+        normal = normal.upper()
+        if normal not in normalOpts:
+            raise ValueError(
+                "normal must be in ['{0!s}']".format("', '".join(normalOpts))
+            )
+
+        if not isinstance(grid, bool):
+            raise TypeError('grid must be a boolean')
 
         import matplotlib.pyplot as plt
         import matplotlib
@@ -385,7 +409,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         if type(ind) not in integer_types:
             raise ValueError('ind must be an integer')
 
-        #create a temporary TreeMesh with the slice through
+        # create a temporary TreeMesh with the slice through
         temp_mesh = TreeMesh(h2d, x2d)
         level_diff = self.max_level - temp_mesh.max_level
 
@@ -403,24 +427,41 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         tm_gridboost[:, antiNormalInd] = temp_mesh.gridCC
         tm_gridboost[:, normalInd] = slice_loc
 
-        #interpolate values to self.gridCC if not 'CC'
-        if vType in ['F', 'E']:
+        # interpolate values to self.gridCC if not 'CC'
+        if vType is not 'CC':
             aveOp = 'ave' + vType + '2CC'
             Av = getattr(self, aveOp)
-            v = Av*v
+            if v.size == Av.shape[1]:
+                v = Av*v
+            elif len(vType) == 2:
+                # was one of Fx, Fy, Fz, Ex, Ey, Ez
+                # assuming v has all three components in these cases
+                vec_ind = {'x': 0, 'y': 1, 'z': 2}[vType[1]]
+                if vType[0] == 'E':
+                    i_s = np.cumsum([0, self.nEx, self.nEy, self.nEz])
+                elif vType[0] == 'F':
+                    i_s = np.cumsum([0, self.nFx, self.nFy, self.nFz])
+                v = v[i_s[vec_ind]:i_s[vec_ind+1]]
+                v = Av*v
 
-        #interpolate values from self.gridCC to grid2d
+        # interpolate values from self.gridCC to grid2d
         ind_3d_to_2d = self._get_containing_cell_indexes(tm_gridboost)
         v2d = v[ind_3d_to_2d]
 
         if ax is None:
-            fig = plt.figure()
+            plt.figure()
             ax = plt.subplot(111)
-        else:
-            assert isinstance(ax, matplotlib.axes.Axes), "ax must be an matplotlib.axes.Axes"
-            fig = ax.figure
+        elif not isinstance(ax, matplotlib.axes.Axes):
+            raise Exception("ax must be an matplotlib.axes.Axes")
 
-        out = temp_mesh.plotImage(v2d, ax=ax, grid=grid, showIt=showIt, clim=clim)
+        out = temp_mesh.plotImage(
+            v2d, vType='CC',
+            grid=grid, view=view,
+            ax=ax, clim=clim, showIt=False,
+            pcolorOpts=pcolorOpts,
+            gridOpts=gridOpts,
+            range_x=range_x,
+            range_y=range_y)
 
         ax.set_xlabel('y' if normal == 'X' else 'x')
         ax.set_ylabel('y' if normal == 'Z' else 'z')
