@@ -144,6 +144,7 @@ cdef class _TreeMesh:
     cdef PyWrapper *wrapper
     cdef int_t _dim
     cdef int_t[3] ls
+    cdef int _finalized
 
     cdef double[:] _xs, _ys, _zs
     cdef double[:] _x0
@@ -202,7 +203,10 @@ cdef class _TreeMesh:
         self.tree.set_levels(self.ls[0], self.ls[1], self.ls[2])
         self.tree.set_xs(&self._xs[0], &self._ys[0], &self._zs[0])
         self.tree.initialize_roots()
+        self._finalized = False
+        self._clear_cache()
 
+    def _clear_cache(self):
         self._gridCC = None
         self._gridN = None
         self._gridhN = None
@@ -277,7 +281,8 @@ cdef class _TreeMesh:
         points = np.require(np.atleast_2d(points), dtype=np.float64,
                             requirements='C')
         cdef double[:, :] cs = points
-        cdef int[:] ls = np.asarray(levels, dtype=np.int32)
+        cdef int[:] ls = np.require(np.atleast_1d(levels), dtype=np.int32,
+                                    requirements='C')
         cdef int_t i
         for i in range(ls.shape[0]):
             self.tree.insert_cell(&cs[i, 0], ls[i])
@@ -285,8 +290,10 @@ cdef class _TreeMesh:
             self.finalize()
 
     def finalize(self):
-        self.tree.finalize_lists()
-        self.tree.number()
+        if not self._finalized:
+            self.tree.finalize_lists()
+            self.tree.number()
+            self._finalized=True
 
     def number(self):
         self.tree.number()
