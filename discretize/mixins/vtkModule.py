@@ -533,4 +533,4 @@ class vtkTensorRead(object):
         vtrReader.SetFileName(fname)
         vtrReader.Update()
         vtrGrid = vtrReader.GetOutput()
-        return vtkTensorRead.vtkToTensorMesh(TensorMesh, vtkRectGrid)
+        return vtkTensorRead.vtkToTensorMesh(TensorMesh, vtrGrid)
