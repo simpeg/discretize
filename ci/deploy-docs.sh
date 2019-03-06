@@ -22,6 +22,7 @@ source activate py27
 mkdir lib
 pip install -t lib/ flask
 ls lib
+source deactivate
 curl -O https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-228.0.0-linux-x86_64.tar.gz
 tar zxvf google-cloud-sdk
 pip install google-compute-engine
