@@ -5,6 +5,7 @@ import scipy.sparse as sp
 from .matutils import ndgrid
 from .codeutils import asArray_N_x_Dim
 from .codeutils import isScalar
+import discretize
 from scipy.spatial import cKDTree, Delaunay
 from scipy import interpolate
 
@@ -187,7 +188,7 @@ def ExtractCoreMesh(xyzlim, mesh, meshType='tensor'):
         - actind: corresponding boolean index from global to core
         - meshcore: core sdiscretize mesh
     """
-    import discretize
+
     if mesh.dim == 1:
         xyzlim = xyzlim.flatten()
         xmin, xmax = xyzlim[0], xyzlim[1]
@@ -259,6 +260,150 @@ def ExtractCoreMesh(xyzlim, mesh, meshType='tensor'):
     return actind, meshCore
 
 
+def meshBuilderXYZ(
+    xyz, h,
+    padX=[0, 0], padY=[0, 0], padZ=[0, 0],
+    baseMesh=None,
+    expFact=1.3,
+    meshType='TENSOR',
+    verticalAlignment='top'
+):
+    """
+        Function to quickly generate a Tensor mesh
+        given a cloud of xyz points, finest core cell size
+        and padding distance.
+        If a baseMesh is provided, the core cells will be centered
+        on the underlaying mesh to reduce interpolation errors.
+
+        :param numpy.ndarray xyz: n x 3 array of locations [x, y, z]
+        :param numpy.ndarray h: 1 x 3 cell size for the core mesh
+        :param numpy.ndarray padDist: 2 x 3 padding distances [W,E,S,N,Down,Up]
+        [OPTIONAL]
+        :param numpy.ndarray padCore: Number of core cells around the xyz locs
+        :object SimPEG.Mesh: Base mesh used to shift the new mesh for overlap
+        :param float expFact: Expension factor for padding cells [1.3]
+        :param string meshType: Specify output mesh type: "TensorMesh"
+
+        RETURNS:
+        :object SimPEG.Mesh: Mesh object
+
+    """
+
+    assert meshType in ['TENSOR', 'TREE'], ('Revise meshType. Only ' +
+                                            ' TENSOR | TREE mesh ' +
+                                            'are implemented')
+
+    assert verticalAlignment in ['center', 'top'], ("verticalAlignment must be 'center' | 'top'")
+
+    # Get extent of points
+    limx = np.r_[xyz[:, 0].max(), xyz[:, 0].min()]
+    limy = np.r_[xyz[:, 1].max(), xyz[:, 1].min()]
+    limz = np.r_[xyz[:, 2].max(), xyz[:, 2].min()]
+
+    # Get center of the mesh
+    midX = np.mean(limx)
+    midY = np.mean(limy)
+
+    if verticalAlignment == 'center':
+        midZ = np.mean(limz)
+    else:
+        midZ = limz[0]
+
+    nCx = int(limx[0]-limx[1]) / h[0]
+    nCy = int(limy[0]-limy[1]) / h[1]
+    nCz = int(limz[0]-limz[1]+int(np.min(np.r_[nCx, nCy])/3)) / h[2]
+
+    if meshType == 'TENSOR':
+        # Make sure the core has odd number of cells for centereing
+        # on global mesh
+        if baseMesh is not None:
+            nCx += 1 - int(nCx % 2)
+            nCy += 1 - int(nCy % 2)
+            nCz += 1 - int(nCz % 2)
+
+        # Figure out padding cells from distance
+        def expand(dx, pad):
+            L = 0
+            nC = 0
+            while L < pad:
+                nC += 1
+                L = np.sum(dx * expFact**(np.asarray(range(nC))+1))
+
+            return nC
+
+        # Figure number of padding cells required to fill the space
+        npadEast = expand(h[0], padX[0])
+        npadWest = expand(h[0], padX[1])
+        npadSouth = expand(h[1], padY[0])
+        npadNorth = expand(h[1], padY[1])
+        npadDown = expand(h[2], padZ[0])
+        npadUp = expand(h[2], padZ[1])
+
+        # Create discretization
+        hx = [(h[0], npadWest, -expFact),
+              (h[0], nCx),
+              (h[0], npadEast, expFact)]
+        hy = [(h[1], npadSouth, -expFact),
+              (h[1], nCy), (h[1],
+              npadNorth, expFact)]
+        hz = [(h[2], npadDown, -expFact),
+              (h[2], nCz),
+              (h[2], npadUp, expFact)]
+
+        # Create mesh
+        mesh = discretize.TensorMesh([hx, hy, hz], 'CC0')
+
+        # Re-set the mesh at the center of input locations
+        # Set origin
+        x0 = [midX-np.sum(mesh.hx)/2., midY-np.sum(mesh.hy)/2., midZ - np.sum(mesh.hz)]
+
+        if verticalAlignment == 'center':
+            x0[2] = midZ - np.sum(mesh.hz)/2.
+
+        mesh.x0 = x0
+
+    elif meshType == 'TREE':
+
+        # Figure out full extent required from input
+        extent = np.max(np.r_[nCx * h[0] + np.sum(padX),
+                              nCy * h[1] + np.sum(padY),
+                              nCz * h[2] + np.sum(padZ)])
+
+        # Number of cells at the small octree level
+        # For now equal in 3D
+        maxLevel = int(np.log2(extent/h[0]))+1
+        nCx, nCy, nCz = 2**(maxLevel), 2**(maxLevel), 2**(maxLevel)
+
+        # Define the mesh and origin
+        mesh = discretize.TreeMesh([
+            np.ones(nCx)*h[0],
+            np.ones(nCx)*h[1],
+            np.ones(nCx)*h[2]
+        ])
+
+        # Shift mesh if global mesh is used
+        center = np.r_[midX, midY, midZ]
+        if baseMesh is not None:
+
+            tree = cKDTree(baseMesh.gridCC)
+            _, ind = tree.query(center, k=1)
+            center = baseMesh.gridCC[ind, :]
+
+        # Set origin
+        x0 = np.r_[
+                center[0] - (nCx-1)*h[0]/2.,
+                center[1] - (nCy-1)*h[1]/2.,
+                center[2] - (nCz-1)*h[2]
+            ]
+
+        if verticalAlignment == 'center':
+            x0[2] = center[2] - (nCz-1)*h[2]/2.
+
+        mesh.x0 = x0
+
+    return mesh
+
+
 def refineTreeXYZ(
             mesh, xyz,
             method="radial",
@@ -300,8 +445,12 @@ def refineTreeXYZ(
     else:
         octreeLevels_XY = np.zeros_like(octreeLevels)
 
-    # Calculate maximum octree level
-    maxLevel = int(np.log2(mesh.hx.shape[0]))
+    # Prime the refinement against large cells
+    mesh.insert_cells(
+        xyz,
+        [mesh.max_level - np.nonzero(octreeLevels)[0][0]]*xyz.shape[0],
+        finalize=False
+    )
 
     # Trigger different refine methods
     if method == "radial":
@@ -316,9 +465,6 @@ def refineTreeXYZ(
             2**np.arange(len(octreeLevels))
         )
 
-        # Seed the refinement
-        # mesh.insert_cells(xyz, np.ones(xyz.shape[0]) * (maxLevel - np.nonzero(octreeLevels)[0][0] - 1), finalize=False)
-
         # Radial function
         def inBall(cell):
             xyz = cell.center
@@ -328,7 +474,7 @@ def refineTreeXYZ(
 
                 if r < rMax[ii]:
 
-                    return maxLevel-ii
+                    return mesh.max_level-ii
 
             return 0
 
@@ -432,7 +578,7 @@ def refineTreeXYZ(
 
                 mesh.insert_cells(
                     np.c_[xy[indexTri != -1], z-zOffset],
-                    np.ones_like(z)*maxLevel-ii,
+                    np.ones_like(z)*mesh.max_level-ii,
                     finalize=False
                 )
 
@@ -522,7 +668,7 @@ def refineTreeXYZ(
             for ii, (nC, bsw, tne) in enumerate(zip(octreeLevels, BSW, TNE)):
 
                 if np.all([xyz > bsw, xyz < tne]):
-                    return maxLevel-ii
+                    return mesh.max_level-ii
 
             return cell._level
 
