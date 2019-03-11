@@ -511,30 +511,11 @@ class vtkTensorRead(object):
     as ``TensorMesh`` objects."""
 
     @classmethod
-    def readVTK(TensorMesh, fileName, directory=''):
-        """Read VTK Rectilinear (vtr xml file) and return Tensor mesh and model
+    def vtkToTensorMesh(TensorMesh, vtrGrid):
+        """Converts a ``vtkRectilinearGrid`` or :class:`vtki.RectilinearGrid`
+        to a :class:`discretize.TensorMesh` object.
 
-        Parameters
-        ----------
-
-        fileName : str
-            path to the vtr model file to read or just its name if directory is specified
-
-        directory : str
-            directory where the UBC GIF file lives
-
-
-        Returns
-        -------
-        tuple
-            (TensorMesh, modelDictionary)
         """
-        fname = os.path.join(directory, fileName)
-        # Read the file
-        vtrReader = vtkXMLRectilinearGridReader()
-        vtrReader.SetFileName(fname)
-        vtrReader.Update()
-        vtrGrid = vtrReader.GetOutput()
         # Sort information
         hx = np.abs(np.diff(nps.vtk_to_numpy(vtrGrid.GetXCoordinates())))
         xR = nps.vtk_to_numpy(vtrGrid.GetXCoordinates())[0]
@@ -567,3 +548,30 @@ class vtkTensorRead(object):
 
         # Return the data
         return tensMsh, models
+
+    @classmethod
+    def readVTK(TensorMesh, fileName, directory=''):
+        """Read VTK Rectilinear (vtr xml file) and return Tensor mesh and model
+
+        Parameters
+        ----------
+
+        fileName : str
+            path to the vtr model file to read or just its name if directory is specified
+
+        directory : str
+            directory where the UBC GIF file lives
+
+
+        Returns
+        -------
+        tuple
+            (TensorMesh, modelDictionary)
+        """
+        fname = os.path.join(directory, fileName)
+        # Read the file
+        vtrReader = vtkXMLRectilinearGridReader()
+        vtrReader.SetFileName(fname)
+        vtrReader.Update()
+        vtrGrid = vtrReader.GetOutput()
+        return TensorMesh.vtkToTensorMesh(vtrGrid)
