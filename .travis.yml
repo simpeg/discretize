@@ -136,7 +136,6 @@ deploy:
     skip_cleanup: true
     on:
       condition: '$DEPLOY_DOCS == "true"'
-      # branch: master
 
 notifications:
   slack: simpeg:1KZq5giMtlJJ58TijIPgqf7n
