@@ -460,6 +460,56 @@ class BaseMesh(properties.HasProperties, vtkInterface):
             raise ValueError('Coordinate system ({}) unknown.'.format(self.reference_system))
         return True
 
+    @property
+    def bounds(self):
+        coords = self.gridN
+        bounds = []
+        for dim in range(self.dim):
+            bounds.append(np.nanmin(coords[:,dim]))
+            bounds.append(np.nanmax(coords[:,dim]))
+        return tuple(bounds)
+
+
+    def _get_attrs(self):
+        """An internal helper for the representation methods"""
+        attrs = []
+        attrs.append(("Dimensionality", self.dim, "{}"))
+        attrs.append(("Number of Cells", self.nC, "{}"))
+        attrs.append(("Number of Nodes", self.nN, "{}"))
+        bounds = np.array(self.bounds).reshape((-1, 2))
+        for i, bds in enumerate(bounds):
+            attrs.append(("Dimension {:d} Bounds".format(i), (bds[0], bds[1]), "{:.1f}, {:.1f}"))
+        return attrs
+
+
+    def __repr__(self):
+        fmt = "{} ({})\n".format(type(self).__name__, hex(id(self)))
+        # now make a call on the object to get its attributes as a list of len 2 tuples
+        row = "  {}:\t{}\n"
+        for attr in self._get_attrs():
+            try:
+                fmt += row.format(attr[0], attr[2].format(*attr[1]))
+            except:
+                fmt += row.format(attr[0], attr[2].format(attr[1]))
+        return fmt
+
+    def _repr_html_(self):
+        fmt = ""
+        # HTML version
+        fmt += "\n"
+        fmt += "<table>\n"
+        fmt += "<tr><th>{}</th><th>Information</th></tr>\n".format(type(self).__name__)
+        row = "<tr><td>{}</td><td>{}</td></tr>\n"
+        # now make a call on the object to get its attributes as a list of len 2 tuples
+        for attr in self._get_attrs():
+            try:
+                fmt += row.format(attr[0], attr[2].format(*attr[1]))
+            except:
+                fmt += row.format(attr[0], attr[2].format(attr[1]))
+        fmt += "</table>\n"
+        fmt += "\n"
+        return fmt
+
 
 class BaseRectangularMesh(BaseMesh):
     """BaseRectangularMesh"""
