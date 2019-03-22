@@ -423,6 +423,61 @@ class TestMeshUtils(unittest.TestCase):
         assert meshCore3d.vectorCCz.min() > xzlim3d[2, :].min()
         assert meshCore3d.vectorCCz.max() < xzlim3d[2, :].max()
 
+    def test_get_domain():
+        # Test default values (and therefore skindepth etc)
+        h1, d1 = utils.get_domain()
+        assert_allclose(h1, 55.133753)
+        assert_allclose(d1, [-1378.343816, 1378.343816])
+
+        # Ensure fact_min/fact_neg/fact_pos
+        h2, d2 = utils.get_domain(fact_min=1, fact_neg=10, fact_pos=20)
+        assert h2 == 5*h1
+        assert 2*d1[0] == d2[0]
+        assert -2*d2[0] == d2[1]
+
+        # Check limits and min_width
+        h3, d3 = utils.get_domain(limits=[-10000, 10000], min_width=[1, 10])
+        assert h3 == 10
+        assert np.sum(d3) == 0
+
+    def test_get_stretched_h(capsys):
+        # Test min_space bigger (11) then required (10)
+        h1 = utils.get_stretched_h(11, [0, 100], nx=10)
+        assert_allclose(np.ones(10)*10, h1)
+        out, _ = capsys.readouterr()  # Empty capsys
+        assert "extent :        0.0 - 100.0" in out
+        assert "min/max width:   10.0 - 10.0  ; stretching: 1.000" in out
+
+        # Test with range, wont end at 100
+        h2 = utils.get_stretched_h(10, [-100, 100], nx=10, x0=20, x1=60)
+        assert_allclose(np.ones(4)*10, h2[5:9])
+        assert -100+np.sum(h2) != 100
+
+        # Now ensure 100
+        h3 = utils.get_stretched_h(10, [-100, 100], nx=10, x0=20, x1=60,
+                                resp_domain=True)
+        assert -100+np.sum(h3) == 100
+
+        out, _ = capsys.readouterr()  # Empty capsys
+        _ = utils.get_stretched_h(10, [-100, 100], nx=5, x0=20, x1=60)
+        out, _ = capsys.readouterr()
+        assert "Warning :: Not enough points for non-stretched part" in out
+
+    def test_get_hx():
+        # Test alpha <= 0
+        hx1 = utils.get_hx(-.5, [0, 10], 5, 3.33)
+        assert_allclose(np.ones(5)*2, hx1)
+
+        # Test x0 on domain
+        hx2a = utils.get_hx(0.1, [0, 10], 5, 0)
+        assert_allclose(np.ones(4)*1.1, hx2a[1:]/hx2a[:-1])
+        hx2b = utils.get_hx(0.1, [0, 10], 5, 10)
+        assert_allclose(np.ones(4)/1.1, hx2b[1:]/hx2b[:-1])
+        assert np.sum(hx2b) == 10.0
+
+        # Test resp_domain
+        hx3 = utils.get_hx(0.1, [0, 10], 3, 8, False)
+        assert np.sum(hx3) != 10.0
 
 if __name__ == '__main__':
     unittest.main()
