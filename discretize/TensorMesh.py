@@ -609,8 +609,8 @@ class TensorMesh(
             minh = np.nanmin(hx)
             maxh = np.nanmax(hx)
             max_fact = np.nanmax(np.r_[hx[:-1]/hx[1:], hx[1:]/hx[:-1]])
-            attrs.append((dims[i], getattr(self, 'nC'+dims[i]), (minN, maxN),
-                         (minh, maxh), max_fact))
+            attrs.append((dims[i], getattr(self, 'nC'+dims[i]), minN, maxN,
+                         minh, maxh, max_fact))
         return attrs
 
     def __repr__(self):
@@ -621,7 +621,7 @@ class TensorMesh(
         # Now make a call on the object to get its attributes as a list
         row = "   {} {:6} {:11,.2f} {:11,.2f} {:9,.2f} {:9,.2f} {:9.2f}\n"
         for attr in self._get_attrs():
-            fmt += row.format(attr[0], attr[1], *attr[2], *attr[3], attr[4])
+            fmt += row.format(*attr)
         fmt += "\n"
         return fmt
 
@@ -642,7 +642,7 @@ class TensorMesh(
         row += "<td>{:,.2f}</td><td>{:,.2f}</td><td>{:.2f}</td></tr>\n"
         # Now make a call on the object to get its attributes as a list
         for attr in self._get_attrs():
-            fmt += row.format(attr[0], attr[1], *attr[2], *attr[3], attr[4])
+            fmt += row.format(*attr)
         fmt += "</table>\n"
         fmt += "\n"
         return fmt
