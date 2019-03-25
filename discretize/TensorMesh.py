@@ -598,56 +598,53 @@ class TensorMesh(
     def __init__(self, h=None, x0=None, **kwargs):
         BaseTensorMesh.__init__(self, h=h, x0=x0, **kwargs)
 
-    def __str__(self):
-        outStr = '  ---- {0:d}-D TensorMesh ----  '.format(self.dim)
-        def printH(hx, outStr=''):
-            i = -1
-            while True:
-                i = i + 1
-                if i > hx.size:
-                    break
-                elif i == hx.size:
-                    break
-                h = hx[i]
-                n = 1
-                for j in range(i+1, hx.size):
-                    if hx[j] == h:
-                        n = n + 1
-                        i = i + 1
-                    else:
-                        break
+    def _get_attrs(self):
+        """An internal helper for the representation methods"""
+        attrs = []
+        dims = ['x', 'y', 'z']
+        for i in range(self.dim):
+            minN = np.nanmin(getattr(self, 'vectorN'+dims[i]))
+            maxN = np.nanmax(getattr(self, 'vectorN'+dims[i]))
+            hx = getattr(self, 'h'+dims[i])
+            minh = np.nanmin(hx)
+            maxh = np.nanmax(hx)
+            max_fact = np.nanmax(np.r_[hx[:-1]/hx[1:], hx[1:]/hx[:-1]])
+            attrs.append((dims[i], getattr(self, 'nC'+dims[i]), (minN, maxN),
+                         (minh, maxh), max_fact))
+        return attrs
 
-                if n == 1:
-                    outStr += ' {0:.2f}, '.format(h)
-                else:
-                    outStr += ' {0:d}*{1:.2f}, '.format(n, h)
+    def __repr__(self):
+        fmt = "\n"+15*" "
+        fmt += "== {}: {} cells ==\n\n".format(type(self).__name__, self.nC)
+        fmt += "  dir    nC     min(N)     max(N)   min(h)   max(h)  max(fac)"
+        fmt += "\n "+60*'-'+"\n"
+        # Now make a call on the object to get its attributes as a list
+        row = "   {} {:6} {:10.2f} {:10.2f} {:8.2f} {:8.2f} {:9.2f}\n"
+        for attr in self._get_attrs():
+            fmt += row.format(attr[0], attr[1], *attr[2], *attr[3], attr[4])
+        return fmt
 
-            return outStr[:-1]
-
-        if self.dim == 1:
-            outStr += '\n   x0: {0:.2f}'.format(self.x0[0])
-            outStr += '\n  nCx: {0:d}'.format(self.nCx)
-            outStr += printH(self.hx, outStr='\n   hx:')
-            pass
-        elif self.dim == 2:
-            outStr += '\n   x0: {0:.2f}'.format(self.x0[0])
-            outStr += '\n   y0: {0:.2f}'.format(self.x0[1])
-            outStr += '\n  nCx: {0:d}'.format(self.nCx)
-            outStr += '\n  nCy: {0:d}'.format(self.nCy)
-            outStr += printH(self.hx, outStr='\n   hx:')
-            outStr += printH(self.hy, outStr='\n   hy:')
-        elif self.dim == 3:
-            outStr += '\n   x0: {0:.2f}'.format(self.x0[0])
-            outStr += '\n   y0: {0:.2f}'.format(self.x0[1])
-            outStr += '\n   z0: {0:.2f}'.format(self.x0[2])
-            outStr += '\n  nCx: {0:d}'.format(self.nCx)
-            outStr += '\n  nCy: {0:d}'.format(self.nCy)
-            outStr += '\n  nCz: {0:d}'.format(self.nCz)
-            outStr += printH(self.hx, outStr='\n   hx:')
-            outStr += printH(self.hy, outStr='\n   hy:')
-            outStr += printH(self.hz, outStr='\n   hz:')
-
-        return outStr
+    def _repr_html_(self):
+        fmt = ""
+        # HTML version
+        fmt += "\n"
+        fmt += "<table>\n"
+        fmt += "<tr><td style='font-weight: bold; font-size: 1.2em; "
+        fmt += "text-align: center;' colspan='2'>{}</td>".format(
+                type(self).__name__)
+        fmt += "<td style='font-size: 1.2em; text-align: center;'"
+        fmt += "colspan='3'>{} cells</td></tr>\n".format(self.nC)
+        fmt += "<tr><th>dir</th><th>nC</th>"
+        fmt += "<th>[min(N), max(N)]</th><th>[min(h), max(h)]</th>"
+        fmt += "<th>max(factor)</th></tr>\n"
+        row = "<tr><td>{}</td><td>{}</td><td>[{:.2f}, {:.2f}]</td>"
+        row += "<td>[{:.2f}, {:.2f}]</td><td>{:.2f}</td></tr>\n"
+        # Now make a call on the object to get its attributes as a list
+        for attr in self._get_attrs():
+            fmt += row.format(attr[0], attr[1], *attr[2], *attr[3], attr[4])
+        fmt += "</table>\n"
+        fmt += "\n"
+        return fmt
 
     # --------------- Geometries ---------------------
     @property

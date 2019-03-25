@@ -460,51 +460,6 @@ class BaseMesh(properties.HasProperties, vtkInterface):
             raise ValueError('Coordinate system ({}) unknown.'.format(self.reference_system))
         return True
 
-    def _get_attrs(self):
-        """An internal helper for the representation methods"""
-        attrs = []
-        dims = ['x', 'y', 'z']
-        for i in range(self.dim):
-            minN = np.nanmin(getattr(self, 'vectorN'+dims[i]))
-            maxN = np.nanmax(getattr(self, 'vectorN'+dims[i]))
-            hx = getattr(self, 'h'+dims[i])
-            minh = np.nanmin(hx)
-            maxh = np.nanmax(hx)
-            max_fact = np.nanmax(np.r_[hx[:-1]/hx[1:], hx[1:]/hx[:-1]])
-            attrs.append((dims[i], getattr(self, 'nC'+dims[i]), (minN, maxN),
-                         (minh, maxh), max_fact))
-        return attrs
-
-    def __repr__(self):
-        fmt = "{} ({} cells)\n".format(type(self).__name__, self.nC)
-        # Now make a call on the object to get its attributes as a list
-        row = "  {}:\t{}\t[{:.2f}, {:.2f}]\t[{:.2f}, {:.2f}]\t{:.2f}\n"
-        for attr in self._get_attrs():
-            fmt += row.format(attr[0], attr[1], *attr[2], *attr[3], attr[4])
-        return fmt
-
-    def _repr_html_(self):
-        fmt = ""
-        # HTML version
-        fmt += "\n"
-        fmt += "<table>\n"
-        fmt += "<tr><td style='font-weight: bold; font-size: 1.2em; "
-        fmt += "text-align: center;' colspan='2'>{}</td>".format(
-                type(self).__name__)
-        fmt += "<td style='font-size: 1.2em; text-align: center;'"
-        fmt += "colspan='3'>{} cells</td></tr>\n".format(self.nC)
-        fmt += "<tr><th>dir</th><th>nC</th>"
-        fmt += "<th>[min(N), max(N)]</th><th>[min(h), max(h)]</th>"
-        fmt += "<th>max(factor)</th></tr>\n"
-        row = "<tr><td>{}</td><td>{}</td><td>[{:.2f}, {:.2f}]</td>"
-        row += "<td>[{:.2f}, {:.2f}]</td><td>{:.2f}</td></tr>\n"
-        # Now make a call on the object to get its attributes as a list
-        for attr in self._get_attrs():
-            fmt += row.format(attr[0], attr[1], *attr[2], *attr[3], attr[4])
-        fmt += "</table>\n"
-        fmt += "\n"
-        return fmt
-
 
 class BaseRectangularMesh(BaseMesh):
     """BaseRectangularMesh"""
