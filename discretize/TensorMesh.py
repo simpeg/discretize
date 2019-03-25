@@ -614,14 +614,15 @@ class TensorMesh(
         return attrs
 
     def __repr__(self):
-        fmt = "\n"+15*" "
-        fmt += "== {}: {} cells ==\n\n".format(type(self).__name__, self.nC)
-        fmt += "  dir    nC     min(N)     max(N)   min(h)   max(h)  max(fac)"
-        fmt += "\n "+60*'-'+"\n"
+        fmt = "\n"+12*" "+"==  "
+        fmt += "{}: {:,} cells  ==\n\n".format(type(self).__name__, self.nC)
+        fmt += "  dir    nC      min(N)      max(N)    min(h)    max(h)"
+        fmt += "  max(fac)\n "+64*'-'+"\n"
         # Now make a call on the object to get its attributes as a list
-        row = "   {} {:6} {:10.2f} {:10.2f} {:8.2f} {:8.2f} {:9.2f}\n"
+        row = "   {} {:6} {:11,.2f} {:11,.2f} {:9,.2f} {:9,.2f} {:9.2f}\n"
         for attr in self._get_attrs():
             fmt += row.format(attr[0], attr[1], *attr[2], *attr[3], attr[4])
+        fmt += "\n"
         return fmt
 
     def _repr_html_(self):
@@ -630,15 +631,15 @@ class TensorMesh(
         fmt += "\n"
         fmt += "<table>\n"
         fmt += "<tr><td style='font-weight: bold; font-size: 1.2em; "
-        fmt += "text-align: center;' colspan='2'>{}</td>".format(
+        fmt += "text-align: center;' colspan='3'>{}</td>".format(
                 type(self).__name__)
         fmt += "<td style='font-size: 1.2em; text-align: center;'"
-        fmt += "colspan='3'>{} cells</td></tr>\n".format(self.nC)
+        fmt += "colspan='4'>{:,} cells</td></tr>\n".format(self.nC)
         fmt += "<tr><th>dir</th><th>nC</th>"
-        fmt += "<th>[min(N), max(N)]</th><th>[min(h), max(h)]</th>"
-        fmt += "<th>max(factor)</th></tr>\n"
-        row = "<tr><td>{}</td><td>{}</td><td>[{:.2f}, {:.2f}]</td>"
-        row += "<td>[{:.2f}, {:.2f}]</td><td>{:.2f}</td></tr>\n"
+        fmt += "<th>min(N)</th><th>max(N)</th><th>min(h)</th><th>max(h)</th>"
+        fmt += "<th>max(fac)</th></tr>\n"
+        row = "<tr><td>{}</td><td>{}</td><td>{:,.2f}</td><td>{:,.2f}</td>"
+        row += "<td>{:,.2f}</td><td>{:,.2f}</td><td>{:.2f}</td></tr>\n"
         # Now make a call on the object to get its attributes as a list
         for attr in self._get_attrs():
             fmt += row.format(attr[0], attr[1], *attr[2], *attr[3], attr[4])
