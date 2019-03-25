@@ -760,14 +760,15 @@ class TensorView(object):
           `fig.get_children()[0].get_children()`.
 
         One can also provide an existing figure instance, which can be useful
-        for interactive widgets in Notebooks.
+        for interactive widgets in Notebooks. The provided figure is cleared
+        first.
 
         """
         # Initiate figure
-        do_show = False
         if fig is None:
-            do_not_show = True
             fig = plt.figure()
+        else:
+            fig.clf()
 
         # Populate figure
         tracker = Slicer(self, v, xslice, yslice, zslice, vType, view, axis,
@@ -777,8 +778,7 @@ class TensorView(object):
         fig.canvas.mpl_connect('scroll_event', tracker.onscroll)
 
         # Show figure
-        if do_show:
-            plt.show()
+        plt.show()
 
 
 class CylView(object):
