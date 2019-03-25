@@ -737,7 +737,7 @@ class TensorView(object):
     def plot_3d_slicer(self, v, xslice=None, yslice=None, zslice=None,
                        vType='CC', view='real', axis='xy', transparent=None,
                        clim=None, aspect='auto', grid=[2, 2, 1],
-                       pcolorOpts=None):
+                       pcolorOpts=None, fig=None):
         """Plot slices of a 3D volume, interactively (scroll wheel).
 
         If called from a notebook, make sure to set
@@ -759,9 +759,15 @@ class TensorView(object):
 
           `fig.get_children()[0].get_children()`.
 
+        One can also provide an existing figure instance, which can be useful
+        for interactive widgets in Notebooks.
+
         """
         # Initiate figure
-        fig = plt.figure()
+        do_show = False
+        if fig is None:
+            do_not_show = True
+            fig = plt.figure()
 
         # Populate figure
         tracker = Slicer(self, v, xslice, yslice, zslice, vType, view, axis,
@@ -771,7 +777,8 @@ class TensorView(object):
         fig.canvas.mpl_connect('scroll_event', tracker.onscroll)
 
         # Show figure
-        plt.show()
+        if do_show:
+            plt.show()
 
 
 class CylView(object):
