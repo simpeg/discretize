@@ -603,12 +603,23 @@ class TensorMesh(
         attrs = []
         dims = ['x', 'y', 'z']
         for i in range(self.dim):
-            minN = np.nanmin(getattr(self, 'vectorN'+dims[i]))
-            maxN = np.nanmax(getattr(self, 'vectorN'+dims[i]))
-            hx = getattr(self, 'h'+dims[i])
-            minh = np.nanmin(hx)
-            maxh = np.nanmax(hx)
-            max_fact = np.nanmax(np.r_[hx[:-1]/hx[1:], hx[1:]/hx[:-1]])
+            # Get min/max node
+            n_vector = getattr(self, 'vectorN'+dims[i])
+            minN = np.nanmin(n_vector)
+            maxN = np.nanmax(n_vector)
+
+            # Get min/max cell width
+            h_vector = getattr(self, 'h'+dims[i])
+            minh = np.nanmin(h_vector)
+            maxh = np.nanmax(h_vector)
+
+            # Get max stretching factor
+            if len(h_vector) < 2:
+                max_fact = 1
+            else:
+                max_fact = np.nanmax(np.r_[h_vector[:-1]/h_vector[1:],
+                                           h_vector[1:]/h_vector[:-1]])
+
             attrs.append((dims[i], getattr(self, 'nC'+dims[i]), minN, maxN,
                          minh, maxh, max_fact))
         return attrs
