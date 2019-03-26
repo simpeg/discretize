@@ -49,6 +49,9 @@ discretize is on pip::
 Installing from Source
 ----------------------
 
+If you are not a developer then pip is really the preferred way. However, if
+you are an active developer of discretize you might want to install if from source:
+
 First (you need git)::
 
     git clone https://github.com/simpeg/discretize
