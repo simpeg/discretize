@@ -55,7 +55,7 @@ First (you need git)::
 
 Second (from the root of the discretize repository)::
 
-    python setup.py build_ext --inline
+    python setup.py build_ext --inplace
 
 This builds the cython extensions. You will also need to add
 the discretize directory to your PYTHON_PATH.
