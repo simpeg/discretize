@@ -391,13 +391,13 @@ def meshBuilderXYZ(
 
         # Set origin
         x0 = np.r_[
-                center[0] - (nCx-1)*h[0]/2.,
-                center[1] - (nCy-1)*h[1]/2.,
-                center[2] - (nCz-1)*h[2]
+                center[0] - (nCx)*h[0]/2.,
+                center[1] - (nCy)*h[1]/2.,
+                center[2] - (nCz)*h[2]
             ]
 
         if verticalAlignment == 'center':
-            x0[2] = center[2] - (nCz-1)*h[2]/2.
+            x0[2] = center[2] - (nCz)*h[2]/2.
 
         mesh.x0 = x0
 
