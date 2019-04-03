@@ -3020,7 +3020,7 @@ cdef class _TreeMesh:
             plt.show()
 
     def plotImage(self, v, vType='CC', grid=False, view='real',
-                  ax=None, clim=False, showIt=False,
+                  ax=None, clim=None, showIt=False,
                   pcolorOpts=None,
                   gridOpts=None,
                   range_x=None, range_y=None,
@@ -3075,7 +3075,7 @@ cdef class _TreeMesh:
             alpha = 1.0
 
         if gridOpts is None:
-            gridOpts = {'color','k'}
+            gridOpts = {'color':'k'}
         if 'color' not in gridOpts:
             gridOpts['color'] = 'k'
 
