@@ -358,7 +358,6 @@ def mesh_builder_xyz(
             )
 
             # Number of cells at the small octree level
-            print(extent, h[ii])
             maxLevel = int(np.log2(extent / h[ii])) + 1
             h_dim += [np.ones(2**maxLevel) * h[ii]]
 
@@ -371,7 +370,6 @@ def mesh_builder_xyz(
     for ii, hi in enumerate(mesh.h):
         x0 += [limits[ii][1] - np.sum(hi[:nC_x0[ii]])]
 
-    # print(np.hstack(x0))
     mesh.x0 = np.hstack(x0)
 
     # Shift mesh if global mesh is used based on closest to centroid
