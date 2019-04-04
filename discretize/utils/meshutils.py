@@ -262,11 +262,11 @@ def ExtractCoreMesh(xyzlim, mesh, mesh_type='tensor'):
 
 def mesh_builder_xyz(
     xyz, h,
-    pad_x=[0, 0], pad_y=[0, 0], pad_z=[0, 0],
+    padding_distance=[[0, 0], [0, 0], [0, 0]],
     base_mesh=None,
+    depth_core=None,
     expansion_factor=1.3,
     mesh_type='TENSOR',
-    vertical_alignment='top'
 ):
     """
         Function to quickly generate a Tensor mesh
@@ -274,135 +274,131 @@ def mesh_builder_xyz(
         and padding distance.
         If a base_mesh is provided, the core cells will be centered
         on the underlaying mesh to reduce interpolation errors.
+        The core region extent is set by the bounding box of the xyz location.
 
-        :param numpy.ndarray xyz: n x 3 array of locations [x, y, z]
-        :param numpy.ndarray h: 1 x 3 cell size for the core mesh
+        :param numpy.ndarray xyz: n x dim array of locations [x, y, [z]]
+        :param numpy.ndarray of list h: 1 x dim cell size for the core mesh
 
         [OPTIONAL]
-        :param numpy.ndarray pad_x: 1x2 padding distances [W,E]
-        :param numpy.ndarray pad_x: 1x2 padding distances [N,S]
-        :param numpy.ndarray pad_x: 1x2 padding distances [Down,Up]
+        :param list padding_distance: 1 x dim padding distances [[W,E], [N,S], [Down,Up]]
         :object SimPEG.Mesh base_mesh: SimPEG mesh used to center the core mesh
+        :param float depth_core: Depth of core mesh below xyz
         :param float expansion_factor: Expension factor for padding cells [1.3]
-        :param string mesh_type: Specify output mesh type: "TENSOR" | "TREE"
-        :param string vertical_alignment: 'top' | 'center' with respect to xyz
+        :param string mesh_type: Specify output mesh type: ["TENSOR"] or "TREE"
 
         RETURNS:
-        :object SimPEG.Mesh: Mesh object
+        :object SimPEG.Mesh: Mesh object specified by "mesh_type"
 
     """
-
     if mesh_type not in ['TENSOR', 'TREE']:
         raise 'Revise mesh_type. Only TENSOR | TREE mesh are implemented'
 
-    if vertical_alignment not in ['center', 'top']:
-        raise "vertical_alignment must be 'center' | 'top'"
-
     # Get extent of points
-    limx = np.r_[xyz[:, 0].max(), xyz[:, 0].min()]
-    limy = np.r_[xyz[:, 1].max(), xyz[:, 1].min()]
-    limz = np.r_[xyz[:, 2].max(), xyz[:, 2].min()]
+    limits = []
+    center = []
+    nC = []
+    for dim in range(xyz.shape[1]):
 
-    # Get center of the mesh
-    midX = np.mean(limx)
-    midY = np.mean(limy)
+        max_min = np.r_[xyz[:, dim].max(), xyz[:, dim].min()]
+        limits += [max_min]
+        center += [np.mean(max_min)]
+        nC += [int((max_min[0] - max_min[1]) / h[dim])]
 
-    if vertical_alignment == 'center':
-        midZ = np.mean(limz)
-    else:
-        midZ = limz[0]
-
-    nCx = int(limx[0]-limx[1]) / h[0]
-    nCy = int(limy[0]-limy[1]) / h[1]
-    nCz = int(limz[0]-limz[1]+int(np.min(np.r_[nCx, nCy])/3)) / h[2]
+    if depth_core is not None:
+        nC[-1] += int(depth_core / h[-1])
+        limits[-1][1] -= depth_core
 
     if mesh_type == 'TENSOR':
-        # Make sure the core has odd number of cells for centereing
-        # on global mesh
-        if base_mesh is not None:
-            nCx += 1 - int(nCx % 2)
-            nCy += 1 - int(nCy % 2)
-            nCz += 1 - int(nCz % 2)
 
         # Figure out padding cells from distance
         def expand(dx, pad):
-            L = 0
-            nC = 0
-            while L < pad:
-                nC += 1
-                L = np.sum(dx * expansion_factor**(np.asarray(range(nC))+1))
+            length = 0
+            nc = 0
+            while length < pad:
+                nc += 1
+                length = np.sum(dx * expansion_factor**(np.asarray(range(nc))+1))
 
-            return nC
+            return nc
 
-        # Figure number of padding cells required to fill the space
-        npadEast = expand(h[0], pad_x[0])
-        npadWest = expand(h[0], pad_x[1])
-        npadSouth = expand(h[1], pad_y[0])
-        npadNorth = expand(h[1], pad_y[1])
-        npadDown = expand(h[2], pad_z[0])
-        npadUp = expand(h[2], pad_z[1])
+        # Define h along each dimension
+        h_dim = []
+        nC_x0 = []
+        for dim in range(xyz.shape[1]):
+            h_dim += [[
+                (
+                    h[dim],
+                    expand(h[dim], padding_distance[dim][0]),
+                    -expansion_factor
+                ),
+                (h[dim], nC[dim]),
+                (
+                    h[dim],
+                    expand(h[dim], padding_distance[dim][1]),
+                    expansion_factor
+                )
+            ]]
 
-        # Create discretization
-        hx = [(h[0], npadWest, -expansion_factor),
-              (h[0], nCx),
-              (h[0], npadEast, expansion_factor)]
-        hy = [(h[1], npadSouth, -expansion_factor),
-              (h[1], nCy), (h[1],
-              npadNorth, expansion_factor)]
-        hz = [(h[2], npadDown, -expansion_factor),
-              (h[2], nCz),
-              (h[2], npadUp, expansion_factor)]
+            nC_x0 += [h_dim[-1][0][1]]
 
         # Create mesh
-        mesh = discretize.TensorMesh([hx, hy, hz], 'CC0')
-
-        # Re-set the mesh at the center of input locations
-        # Set origin
-        x0 = [midX-np.sum(mesh.hx)/2., midY-np.sum(mesh.hy)/2., midZ - np.sum(mesh.hz)]
-
-        if vertical_alignment == 'center':
-            x0[2] = midZ - np.sum(mesh.hz)/2.
-
-        mesh.x0 = x0
+        mesh = discretize.TensorMesh(h_dim, 'CC0')
 
     elif mesh_type == 'TREE':
 
         # Figure out full extent required from input
-        extent = np.max(np.r_[nCx * h[0] + np.sum(pad_x),
-                              nCy * h[1] + np.sum(pad_y),
-                              nCz * h[2] + np.sum(pad_z)])
+        h_dim = []
+        nC_x0 = []
+        for ii, cc in enumerate(nC):
+            extent = (
+                limits[ii][0] -
+                limits[ii][0] +
+                np.sum(padding_distance[ii])
+            )
 
-        # Number of cells at the small octree level
-        # For now equal in 3D
-        maxLevel = int(np.log2(extent/h[0]))+1
-        nCx, nCy, nCz = 2**(maxLevel), 2**(maxLevel), 2**(maxLevel)
+            # Number of cells at the small octree level
+            maxLevel = int(np.log2(extent / h[ii])) + 1
+            h_dim += [np.ones(2**maxLevel) * h[ii]]
 
+            nC_x0 += [int(padding_distance[ii][0] / h[ii])]
         # Define the mesh and origin
-        mesh = discretize.TreeMesh([
-            np.ones(nCx)*h[0],
-            np.ones(nCx)*h[1],
-            np.ones(nCx)*h[2]
-        ])
+        mesh = discretize.TreeMesh(h_dim)
 
-        # Shift mesh if global mesh is used
-        center = np.r_[midX, midY, midZ]
-        if base_mesh is not None:
 
-            tree = cKDTree(base_mesh.gridCC)
-            _, ind = tree.query(center, k=1)
-            center = base_mesh.gridCC[ind, :]
+    # Set origin
+    x0 = []
+    for ii, hi in enumerate(mesh.h):
+        x0 += [limits[ii][1] - np.sum(hi[:nC_x0[ii]])]
 
-        # Set origin
-        x0 = np.r_[
-                center[0] - (nCx)*h[0]/2.,
-                center[1] - (nCy)*h[1]/2.,
-                center[2] - (nCz)*h[2]
-            ]
+    # print(np.hstack(x0))
+    mesh.x0 = np.hstack(x0)
 
-        if vertical_alignment == 'center':
-            x0[2] = center[2] - (nCz)*h[2]/2.
+    # Shift mesh if global mesh is used based on closest to centroid
+    axis = ["x", "y", "z"]
+    if base_mesh is not None:
+        for dim in range(base_mesh.dim):
 
-        mesh.x0 = x0
+            cc_base = getattr(
+                    base_mesh,
+                    "vectorCC{orientation}".format(
+                            orientation=axis[dim]
+                        )
+            )
+
+            cc_local = getattr(
+                    mesh,
+                    "vectorCC{orientation}".format(
+                            orientation=axis[dim]
+                        )
+            )
+
+            shift = (
+                cc_base[np.max([np.searchsorted(cc_base, center[dim])-1, 0])] -
+                cc_local[np.max([np.searchsorted(cc_local, center[dim])-1, 0])]
+            )
+
+            x0[dim] += shift
+
+            mesh.x0 = np.hstack(x0)
 
     return mesh
 
