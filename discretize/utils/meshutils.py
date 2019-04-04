@@ -99,7 +99,6 @@ def random_model(shape, seed=None, anisotropy=None, its=100, bounds=None):
     return mi
 
 
-
 def meshTensor(value):
     """**meshTensor** takes a list of numbers and tuples
     that have the form::
@@ -266,7 +265,7 @@ def mesh_builder_xyz(
     base_mesh=None,
     depth_core=None,
     expansion_factor=1.3,
-    mesh_type='TENSOR',
+    mesh_type='TENSOR'
 ):
     """
         Function to quickly generate a Tensor of Tree mesh
@@ -276,18 +275,36 @@ def mesh_builder_xyz(
         on the underlaying mesh to reduce interpolation errors.
         The core extent is set by the bounding box of the xyz location.
 
-        :param numpy.ndarray xyz: n x dim array of locations [x, y, [z]]
-        :param numpy.ndarray of list h: 1 x dim cell size for the core mesh
-
-        [OPTIONAL]
-        :param list padding_distance: 1 x dim padding distances [[W,E], [N,S], [Down,Up]]
-        :object SimPEG.Mesh base_mesh: SimPEG mesh used to center the core mesh
+        :param numpy.ndarray xyz: Location points [n x dim]
+        :param list h: Cell size for the core mesh [1 x ndim]
+        :param list padding_distance: Padding distances
+            [[W,E], [N,S], [Down,Up]]
+        :param BaseMesh base_mesh: SimPEG mesh used to center the core mesh
         :param float depth_core: Depth of core mesh below xyz
         :param float expansion_factor: Expension factor for padding cells [1.3]
-        :param string mesh_type: Specify output mesh type: ["TENSOR"] or "TREE"
+        :param str mesh_type: Specify output mesh type: ["TENSOR"] or "TREE"
+        :return: Mesh of "mesh_type"
 
-        RETURNS:
-        :object SimPEG.Mesh: Mesh object specified by "mesh_type"
+    .. plot::
+
+        import discretize
+        import matplotlib.pyplot as plt
+        import numpy as np
+
+        xyLoc = np.random.randn(8,2)
+
+        mesh = discretize.utils.meshutils.mesh_builder_xyz(xyLoc, [0.1, 0.1],
+                                          depth_core=0.5,
+                                          padding_distance=[[1,2], [1,0]],
+                                          mesh_type='TENSOR',
+        )
+
+        # mesh.refine(5, finalize=True)
+        axs = plt.subplot()
+        mesh.plotImage(mesh.vol, grid=True, ax=axs)
+        axs.scatter(xyLoc[:,0], xyLoc[:,1], 15, c='w', zorder=3)
+        axs.set_aspect('equal')
+        plt.show()
 
     """
     if mesh_type not in ['TENSOR', 'TREE']:
@@ -343,7 +360,7 @@ def mesh_builder_xyz(
             nC_x0 += [h_dim[-1][0][1]]
 
         # Create mesh
-        mesh = discretize.TensorMesh(h_dim, 'CC0')
+        mesh = discretize.TensorMesh(h_dim)
 
     elif mesh_type == 'TREE':
 
@@ -415,25 +432,18 @@ def refine_tree_xyz(
 
     :param BaseMesh mesh: The TreeMesh object to be refined
     :param numpy.ndarray xyz: 2D array of points
+    :param str method: Method used to refine the mesh based on xyz locations
 
-    [OPTIONAL]
-    :param method: Method used to refine the mesh based on xyz locations
-        'radial' (default): Based on radial distance xyz and cell centers
-        'surface': Along triangulated surface repeated vertically
-        'box': Inside limits defined by outer xyz locations
-    :param octree_levels: List defining the minimum number of cells
-        in each octree level.
-    :param octree_levels_padding: List defining the minimum number of padding cells
-        added outside the data hull of each octree levels. Optionanl for
-        method='surface' and 'box' only
-    :param finalize: True | False (default) Finalize the TreeMesh
-
-
-    This function ouputs::
-
-        - Refined TreeMesh
-
-
+        - "radial": Based on radial distance xyz and cell centers
+        - "surface": Along triangulated surface repeated vertically
+        - "box": Inside limits defined by outer xyz locations
+    :param list octree_levels: Minimum number of cells around points
+        in each k octree level [N(k), N(k-1), ...]
+    :param list octree_levels_padding: Padding cells
+        added to the outer limits of the data each octree levels
+        used for method= "surface" and "box" [N(k), N(k-1), ...].
+    :param bool finalize: True | [False]    Finalize the TreeMesh
+    :return: TreeMesh mesh
     """
 
     if octree_levels_padding is not None:
