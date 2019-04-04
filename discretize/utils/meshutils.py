@@ -269,12 +269,12 @@ def mesh_builder_xyz(
     mesh_type='TENSOR',
 ):
     """
-        Function to quickly generate a Tensor mesh
+        Function to quickly generate a Tensor of Tree mesh
         given a cloud of xyz points, finest core cell size
         and padding distance.
         If a base_mesh is provided, the core cells will be centered
         on the underlaying mesh to reduce interpolation errors.
-        The core region extent is set by the bounding box of the xyz location.
+        The core extent is set by the bounding box of the xyz location.
 
         :param numpy.ndarray xyz: n x dim array of locations [x, y, [z]]
         :param numpy.ndarray of list h: 1 x dim cell size for the core mesh
@@ -291,7 +291,9 @@ def mesh_builder_xyz(
 
     """
     if mesh_type not in ['TENSOR', 'TREE']:
-        raise 'Revise mesh_type. Only TENSOR | TREE mesh are implemented'
+        raise Exception(
+            'Revise mesh_type. Only TENSOR | TREE mesh are implemented'
+        )
 
     # Get extent of points
     limits = []
@@ -351,18 +353,18 @@ def mesh_builder_xyz(
         for ii, cc in enumerate(nC):
             extent = (
                 limits[ii][0] -
-                limits[ii][0] +
+                limits[ii][1] +
                 np.sum(padding_distance[ii])
             )
 
             # Number of cells at the small octree level
+            print(extent, h[ii])
             maxLevel = int(np.log2(extent / h[ii])) + 1
             h_dim += [np.ones(2**maxLevel) * h[ii]]
 
             nC_x0 += [int(padding_distance[ii][0] / h[ii])]
         # Define the mesh and origin
         mesh = discretize.TreeMesh(h_dim)
-
 
     # Set origin
     x0 = []
@@ -413,7 +415,7 @@ def refine_tree_xyz(
     """
     Refine a TreeMesh based on xyz point locations
 
-    :param BaseMesh mesh: The mesh
+    :param BaseMesh mesh: The TreeMesh object to be refined
     :param numpy.ndarray xyz: 2D array of points
 
     [OPTIONAL]
@@ -439,7 +441,9 @@ def refine_tree_xyz(
     if octree_levels_padding is not None:
 
         if len(octree_levels_padding) != len(octree_levels):
-            raise "'octree_levels_padding' must be the length %i" % len(octree_levels)
+            raise Exception(
+                "'octree_levels_padding' must be the length %i" % len(octree_levels)
+            )
 
     else:
         octree_levels_padding = np.zeros_like(octree_levels)
@@ -538,7 +542,7 @@ def refine_tree_xyz(
                     tri2D = Delaunay(xLoc[:, :2])
                     F = interpolate.LinearNDInterpolator(tri2D, xLoc[:, 2])
                 else:
-                    F = interpolate.interp1d(xLoc[:, 0], xLoc[:, 1])
+                    F = interpolate.interp1d(xLoc[:, 0], xLoc[:, 1], fill_value='extrapolate')
 
             limx = np.r_[xLoc[:, 0].max(), xLoc[:, 0].min()]
             nCx = int(np.ceil((limx[0]-limx[1]) / dx))
