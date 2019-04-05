@@ -383,7 +383,9 @@ def mesh_builder_xyz(
 
         for ii, cc in enumerate(nC):
             core = limits[ii][0] - limits[ii][1]
-            nC_x0 += [int(np.ceil((mesh.h[ii].sum() - core) / h[ii] / 2))]
+            pad2 = int(np.log2(padding_distance[ii][0] / h[ii] + 1))
+
+            nC_x0 += [int(np.ceil((mesh.h[ii].sum() - core) / h[ii] / 2)) + pad2]
 
 
     # Set origin
@@ -430,6 +432,7 @@ def refine_tree_xyz(
             octree_levels=[1, 1, 1],
             octree_levels_padding=None,
             finalize=False,
+            min_level=0,
             max_distance=np.inf
 ):
     """
@@ -493,6 +496,8 @@ def refine_tree_xyz(
                 if r < rMax[ii]:
 
                     return mesh.max_level-ii
+
+            return min_level
 
         mesh.refine(inBall, finalize=finalize)
 
@@ -597,14 +602,14 @@ def refine_tree_xyz(
             # Apply vertical padding for current octree level
             zOffset = 0
             while zOffset < depth:
-                indIn = r < (maxDist + padWidth[ii])
+                indIn = r < (max_distance + padWidth[ii])
                 nnz = int(np.sum(indIn))
                 if nnz > 0:
                     mesh.insert_cells(
                         np.c_[
                                 newLoc[indIn, :2],
                                 newLoc[indIn, 2]-zOffset],
-                        np.ones_like(nnz)*mesh.max_level-ii,
+                        np.ones(nnz)*mesh.max_level-ii,
                         finalize=False
                     )
 
