@@ -430,7 +430,7 @@ def refine_tree_xyz(
             octree_levels=[1, 1, 1],
             octree_levels_padding=None,
             finalize=False,
-            min_level=1
+            max_distance=np.inf
 ):
     """
     Refine a TreeMesh based on xyz point locations
@@ -448,6 +448,8 @@ def refine_tree_xyz(
         added to the outer limits of the data each octree levels
         used for method= "surface" and "box" [N(k), N(k-1), ...].
     :param bool finalize: True | [False]    Finalize the TreeMesh
+    :param float max_distance: Maximum refinement distance from xyz locations.
+        Used for method="surface" to reduce interpolation distance.
     :return: TreeMesh mesh
     """
 
@@ -460,8 +462,6 @@ def refine_tree_xyz(
 
     else:
         octree_levels_padding = np.zeros_like(octree_levels)
-
-    mesh.refine(min_level, finalize=False)
 
     # Prime the refinement against large cells
     mesh.insert_cells(
@@ -588,15 +588,25 @@ def refine_tree_xyz(
             # Interpolate the elevation linearly
             z = F(xy[indexTri != -1])
 
+            newLoc = np.c_[xy[indexTri != -1], z]
+
+            # Only keep points within max_distance
+            tree = cKDTree(xyz)
+            r, ind = tree.query(newLoc)
+
             # Apply vertical padding for current octree level
             zOffset = 0
             while zOffset < depth:
-
-                mesh.insert_cells(
-                    np.c_[xy[indexTri != -1], z-zOffset],
-                    np.ones_like(z)*mesh.max_level-ii,
-                    finalize=False
-                )
+                indIn = r < (maxDist + padWidth[ii])
+                nnz = int(np.sum(indIn))
+                if nnz > 0:
+                    mesh.insert_cells(
+                        np.c_[
+                                newLoc[indIn, :2],
+                                newLoc[indIn, 2]-zOffset],
+                        np.ones_like(nnz)*mesh.max_level-ii,
+                        finalize=False
+                    )
 
                 zOffset += dz
 
