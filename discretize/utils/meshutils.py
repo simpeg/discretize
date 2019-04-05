@@ -268,7 +268,7 @@ def mesh_builder_xyz(
     mesh_type='TENSOR'
 ):
     """
-        Function to quickly generate a Tensor of Tree mesh
+        Function to quickly generate a Tensor or Tree mesh
         given a cloud of xyz points, finest core cell size
         and padding distance.
         If a base_mesh is provided, the core cells will be centered
@@ -308,7 +308,7 @@ def mesh_builder_xyz(
 
     """
     if mesh_type not in ['TENSOR', 'TREE']:
-        raise Exception(
+        raise ValueError(
             'Revise mesh_type. Only TENSOR | TREE mesh are implemented'
         )
 
@@ -378,9 +378,13 @@ def mesh_builder_xyz(
             maxLevel = int(np.log2(extent / h[ii])) + 1
             h_dim += [np.ones(2**maxLevel) * h[ii]]
 
-            nC_x0 += [int(padding_distance[ii][0] / h[ii])]
         # Define the mesh and origin
         mesh = discretize.TreeMesh(h_dim)
+
+        for ii, cc in enumerate(nC):
+            core = limits[ii][0] - limits[ii][1]
+            nC_x0 += [int(np.ceil((mesh.h[ii].sum() - core) / h[ii] / 2))]
+
 
     # Set origin
     x0 = []
@@ -426,6 +430,7 @@ def refine_tree_xyz(
             octree_levels=[1, 1, 1],
             octree_levels_padding=None,
             finalize=False,
+            min_level=1
 ):
     """
     Refine a TreeMesh based on xyz point locations
@@ -449,12 +454,14 @@ def refine_tree_xyz(
     if octree_levels_padding is not None:
 
         if len(octree_levels_padding) != len(octree_levels):
-            raise Exception(
+            raise ValueError(
                 "'octree_levels_padding' must be the length %i" % len(octree_levels)
             )
 
     else:
         octree_levels_padding = np.zeros_like(octree_levels)
+
+    mesh.refine(min_level, finalize=False)
 
     # Prime the refinement against large cells
     mesh.insert_cells(
@@ -486,8 +493,6 @@ def refine_tree_xyz(
                 if r < rMax[ii]:
 
                     return mesh.max_level-ii
-
-            return 0
 
         mesh.refine(inBall, finalize=finalize)
 
