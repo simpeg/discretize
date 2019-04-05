@@ -385,7 +385,7 @@ def mesh_builder_xyz(
             core = limits[ii][0] - limits[ii][1]
             pad2 = int(np.log2(padding_distance[ii][0] / h[ii] + 1))
 
-            nC_x0 += [int(np.ceil((mesh.h[ii].sum() - core) / h[ii] / 2)) + pad2]
+            nC_x0 += [int(np.ceil((mesh.h[ii].sum() - core) / h[ii] / 2))]
 
 
     # Set origin
