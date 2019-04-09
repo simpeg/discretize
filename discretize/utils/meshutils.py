@@ -474,7 +474,7 @@ def refine_tree_xyz(
     )
 
     # Trigger different refine methods
-    if method == "radial":
+    if method.lower() == "radial":
 
         # Build a cKDTree for fast nearest lookup
         tree = cKDTree(xyz)
