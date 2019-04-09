@@ -502,7 +502,7 @@ def refine_tree_xyz(
 
         mesh.refine(inBall, finalize=finalize)
 
-    elif method == 'surface':
+    elif method.lower() == 'surface':
 
         # Compute centroid
         centroid = np.mean(xyz, axis=0)
