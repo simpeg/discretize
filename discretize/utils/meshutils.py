@@ -279,7 +279,7 @@ def mesh_builder_xyz(
         :param list h: Cell size for the core mesh [1 x ndim]
         :param list padding_distance: Padding distances
             [[W,E], [N,S], [Down,Up]]
-        :param BaseMesh base_mesh: SimPEG mesh used to center the core mesh
+        :param BaseMesh base_mesh: discretize mesh used to center the core mesh
         :param float depth_core: Depth of core mesh below xyz
         :param float expansion_factor: Expension factor for padding cells [1.3]
         :param str mesh_type: Specify output mesh type: ["TENSOR"] or "TREE"
