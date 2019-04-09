@@ -621,7 +621,7 @@ def refine_tree_xyz(
         if finalize:
             mesh.finalize()
 
-    elif method == 'box':
+    elif method.lower() == 'box':
 
         # Define the data extend [bottom SW, top NE]
         bsw = np.min(xyz, axis=0)
