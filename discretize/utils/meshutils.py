@@ -286,6 +286,7 @@ def mesh_builder_xyz(
         :return: Mesh of "mesh_type"
 
     .. plot::
+        :include-source:
 
         import discretize
         import matplotlib.pyplot as plt
