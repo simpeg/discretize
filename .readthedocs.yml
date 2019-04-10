@@ -25,4 +25,3 @@ python:
   install:
     - requirements: requirements_dev.txt
     - method: setuptools
-      path: .
