@@ -598,41 +598,25 @@ class TensorMesh(
     def __init__(self, h=None, x0=None, **kwargs):
         BaseTensorMesh.__init__(self, h=h, x0=x0, **kwargs)
 
-    def _get_attrs(self):
-        """An internal helper for the representation methods"""
-        attrs = []
-        dims = ['x', 'y', 'z']
-        for i in range(self.dim):
-            # Get min/max node
-            n_vector = getattr(self, 'vectorN'+dims[i])
-            minN = np.nanmin(n_vector)
-            maxN = np.nanmax(n_vector)
-
-            # Get min/max cell width
-            h_vector = getattr(self, 'h'+dims[i])
-            minh = np.nanmin(h_vector)
-            maxh = np.nanmax(h_vector)
-
-            # Get max stretching factor
-            if len(h_vector) < 2:
-                max_fact = 1
-            else:
-                max_fact = np.nanmax(np.r_[h_vector[:-1]/h_vector[1:],
-                                           h_vector[1:]/h_vector[:-1]])
-
-            attrs.append((dims[i], getattr(self, 'nC'+dims[i]), minN, maxN,
-                         minh, maxh, max_fact))
-        return attrs
-
     def __repr__(self):
-        fmt = "\n"+12*" "+"==  "
+        fmt = "\n"+14*" "+"==  "
         fmt += "{}: {:,} cells  ==\n\n".format(type(self).__name__, self.nC)
-        fmt += "  dir    nC      min(N)      max(N)    min(h)    max(h)"
-        fmt += "  max(fac)\n "+64*'-'+"\n"
-        # Now make a call on the object to get its attributes as a list
-        row = "   {} {:6} {:11,.2f} {:11,.2f} {:9,.2f} {:9,.2f} {:9.2f}\n"
-        for attr in self._get_attrs():
-            fmt += row.format(*attr)
+        fmt += "  dir    nC        origin        extent    min(h)    max(h)"
+        fmt += "  max(fac)\n "+68*'-'+"\n"
+
+        # Get attributes and put into table.
+        attrs = self.attributes
+        for i in range(self.dim):
+            name = self.dim_names[i]
+            iattr = attrs[name]
+            fmt += "   {}".format(name)
+            fmt += " {:6}".format(iattr['nC'])
+            for p in ['start', 'end']:
+                fmt += " {:13,.2f}".format(iattr[p])
+            for p in ['h_min', 'h_max', 'max_fact']:
+                fmt += " {:9,.2f}".format(iattr[p])
+            fmt += "\n"  # End row
+
         fmt += "\n"
         return fmt
 
@@ -646,14 +630,25 @@ class TensorMesh(
                 type(self).__name__)
         fmt += "<td style='font-size: 1.2em; text-align: center;'"
         fmt += "colspan='4'>{:,} cells</td></tr>\n".format(self.nC)
-        fmt += "<tr><th>dir</th><th>nC</th>"
-        fmt += "<th>min(N)</th><th>max(N)</th><th>min(h)</th><th>max(h)</th>"
+        fmt += "<tr><th>dir</th><th>nC</th><th>origin</th>"
+        fmt += "<th>extent</th><th>min(h)</th><th>max(h)</th>"
         fmt += "<th>max(fac)</th></tr>\n"
-        row = "<tr><td>{}</td><td>{}</td><td>{:,.2f}</td><td>{:,.2f}</td>"
-        row += "<td>{:,.2f}</td><td>{:,.2f}</td><td>{:.2f}</td></tr>\n"
-        # Now make a call on the object to get its attributes as a list
-        for attr in self._get_attrs():
-            fmt += row.format(*attr)
+
+        row = "<td>{:,.2f}</td>"
+        row += "<td>{:,.2f}</td><td>{:,.2f}</td><td>{:.2f}</td>"
+
+        # Get attributes and put into table.
+        attrs = self.attributes
+        for i in range(self.dim):
+            name = self.dim_names[i]
+            iattr = attrs[name]
+            fmt += "<tr>"  # Start row
+            fmt += "<td>{}</td>".format(name)
+            fmt += "<td>{}</td>".format(iattr['nC'])
+            for p in ['start', 'end', 'h_min', 'h_max', 'max_fact']:
+                fmt += "<td>{:,.2f}</td>".format(iattr[p])
+            fmt += "</tr>\n"  # End row
+
         fmt += "</table>\n"
         fmt += "\n"
         return fmt
@@ -851,6 +846,7 @@ class TensorMesh(
             indzu = (self.gridFz[:, 2] == max(self.gridFz[:, 2]))
             return indxd, indxu, indyd, indyu, indzd, indzu
 
+
     @property
     def cellBoundaryInd(self):
         """
@@ -874,3 +870,45 @@ class TensorMesh(
             indzd = (self.gridCC[:, 2] == min(self.gridCC[:, 2]))
             indzu = (self.gridCC[:, 2] == max(self.gridCC[:, 2]))
             return indxd, indxu, indyd, indyu, indzd, indzu
+
+    @property
+    def dim_names(self):
+        """Names of the dimensions.
+
+        Different for different meshes.
+        """
+        return ['x', 'y', 'z'][:self.dim]
+
+    @property
+    def attributes(self):
+        """Collection of attributes of the mesh in a handy dict."""
+        attrs = {}
+
+        # Loop over dimensions.
+        for i in range(self.dim):
+            name = self.dim_names[i]  # Name of this dimension
+            attrs[name] = {}
+
+            # Get min/max node.
+            n_vector = getattr(self, 'vectorN'+name)
+            attrs[name]['start'] = np.nanmin(n_vector)
+            attrs[name]['end'] = np.nanmax(n_vector)
+
+            # Get min/max cell width.
+            h_vector = getattr(self, 'h'+name)
+            attrs[name]['h_min'] = np.nanmin(h_vector)
+            attrs[name]['h_max'] = np.nanmax(h_vector)
+
+            # Get max stretching factor.
+            if len(h_vector) < 2:
+                attrs[name]['max_fact'] = 1.0
+            else:
+                attrs[name]['max_fact'] = np.nanmax(
+                    np.r_[h_vector[:-1]/h_vector[1:],
+                          h_vector[1:]/h_vector[:-1]]
+                )
+
+            # Add number of cells.
+            attrs[name]['nC'] = getattr(self, 'nC'+name)
+
+        return attrs
