@@ -12,6 +12,7 @@ dependencies:
   - scipy
   - sphinx
   - sympy
+  - vtk
   - pip:
     - nbsphinx
     - numpydoc
@@ -19,5 +20,4 @@ dependencies:
     - pymatsolver
     - sphinx_rtd_theme
     - sphinx-gallery
-    - vtk
     - vtki
