@@ -24,4 +24,4 @@ python:
   version: 3.7
   install:
     - method: setuptools
-      path: discretize
+      path: .
