@@ -611,7 +611,7 @@ class TensorMesh(
             iattr = attrs[name]
             fmt += "   {}".format(name)
             fmt += " {:6}".format(iattr['nC'])
-            for p in ['start', 'end']:
+            for p in ['origin', 'extent']:
                 fmt += " {:13,.2f}".format(iattr[p])
             for p in ['h_min', 'h_max', 'max_fact']:
                 fmt += " {:9,.2f}".format(iattr[p])
@@ -645,7 +645,7 @@ class TensorMesh(
             fmt += "<tr>"  # Start row
             fmt += "<td>{}</td>".format(name)
             fmt += "<td>{}</td>".format(iattr['nC'])
-            for p in ['start', 'end', 'h_min', 'h_max', 'max_fact']:
+            for p in ['origin', 'extent', 'h_min', 'h_max', 'max_fact']:
                 fmt += "<td>{:,.2f}</td>".format(iattr[p])
             fmt += "</tr>\n"  # End row
 
@@ -891,8 +891,8 @@ class TensorMesh(
 
             # Get min/max node.
             n_vector = getattr(self, 'vectorN'+name)
-            attrs[name]['start'] = np.nanmin(n_vector)
-            attrs[name]['end'] = np.nanmax(n_vector)
+            attrs[name]['origin'] = np.nanmin(n_vector)
+            attrs[name]['extent'] = np.nanmax(n_vector)
 
             # Get min/max cell width.
             h_vector = getattr(self, 'h'+name)
