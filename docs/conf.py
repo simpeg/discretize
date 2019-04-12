@@ -283,9 +283,12 @@ sphinx_gallery_conf = {
     'examples_dirs' : 'examples',
     'gallery_dirs'  : 'auto_examples',
     'backreferences_dir' : False,
-    # Requires vtki>=0.18.0
-    "image_scrapers": (vtki.Scraper(), 'matplotlib'),
 }
+# Do not run `vtki` examples on Python 2 because sphinx gallery doesn't support
+#   custom scrapers
+if sys.version_info[0] >= 3:
+    # Requires vtki>=0.18.0 and Python 3
+    sphinx_gallery_conf["image_scrapers"] = (vtki.Scraper(), 'matplotlib')
 
 # Documents to append as an appendix to all manuals.
 #texinfo_appendices = []
