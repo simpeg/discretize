@@ -9,6 +9,11 @@ matrix:
 
 sudo: false
 
+addons:
+  apt:
+    packages:
+      - xvfb # Needed for vtki/3D rendering
+
 env:
   global:
     - MASTER_BRANCH=master
@@ -20,6 +25,12 @@ env:
     - TEST_DIR=tests/docs
 
 before_install:
+  # configure a headless display for 3D rendering
+  - export DISPLAY=:99.0
+  - export VTKI_OFFSCREEN=True
+  - which Xvfb
+  - Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+  - sleep 3 # give xvfb some time to start
   - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then
       wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
     else
