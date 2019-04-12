@@ -289,6 +289,10 @@ sphinx_gallery_conf = {
 if sys.version_info[0] >= 3:
     # Requires vtki>=0.18.0 and Python 3
     sphinx_gallery_conf["image_scrapers"] = (vtki.Scraper(), 'matplotlib')
+else:
+    # Don't run vtki examples on Python 2
+    # Primarily because data used for it was pickled in Python 3
+    sphinx_gallery_conf["filename_pattern"] = r"plot_(?!vtki)\.py",
 
 # Documents to append as an appendix to all manuals.
 #texinfo_appendices = []
