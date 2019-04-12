@@ -257,7 +257,7 @@ intersphinx_mapping = {
     'scipy': ('https://docs.scipy.org/doc/scipy/reference/', None),
     'matplotlib': ('http://matplotlib.org/', None),
     'properties': ('http://propertiespy.readthedocs.io/en/latest/', None),
-    'vtki': ('http://vtkinterface.readthedocs.io/en/latest/', None),
+    'vtki': ('http://docs.vtki.org', None),
 }
 
 
@@ -272,12 +272,19 @@ texinfo_documents = [
     'Miscellaneous'),
 ]
 
+
+# Set up vtki for generatign example
+import vtki
+vtki.OFF_SCREEN = True
+
 # Sphinx Gallery
 sphinx_gallery_conf = {
     # path to your examples scripts
     'examples_dirs' : 'examples',
     'gallery_dirs'  : 'auto_examples',
-    'backreferences_dir' : False
+    'backreferences_dir' : False,
+    # Requires vtki>=0.18.0
+    "image_scrapers": (vtki.Scraper(), 'matplotlib'),
 }
 
 # Documents to append as an appendix to all manuals.

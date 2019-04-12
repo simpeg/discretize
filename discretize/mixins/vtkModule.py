@@ -17,7 +17,7 @@ along side all their other georeferenced datasets in a common rendering
 environment.
 
 .. _PVGeo: http://pvgeo.org
-.. _vtki: http://www.vtki.org
+.. _vtki: http://docs.vtki.org
 
 Another notable VTK powered software platforms is ``vtki`` (see vtki_ docs)
 which provides a direct interface to the VTK software library through accesible

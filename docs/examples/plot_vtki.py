@@ -7,18 +7,16 @@
 The example demonstrates the how to use the VTK interface via the vtki_ library.
 To run this example, you will need to `install vtki`_.
 
-.. _vtki: http://www.vtki.org
-.. _install vtki: http://www.vtki.org/en/latest/getting-started/installation.html
+.. _vtki: http://docs.vtki.org
+.. _install vtki: http://docs.vtki.org/getting-started/installation.html
 
 - contributed by `@banesullivan <https://github.com/banesullivan>`_
-
-.. image:: ../images/vtki_laguna_del_maule.png
 
 Using the inversion result from the example notebook
 `plot_laguna_del_maule_inversion.ipynb <http://docs.simpeg.xyz/content/examples/04-grav/plot_laguna_del_maule_inversion.html#sphx-glr-content-examples-04-grav-plot-laguna-del-maule-inversion-py>`_
 
 """
-
+# sphinx_gallery_thumbnail_number = 2
 import os
 import shutil
 import tarfile
@@ -27,6 +25,9 @@ import tarfile
 import discretize
 import vtki
 import numpy as np
+
+# Set a documentation friendly plotting theme
+vtki.set_plot_theme('document')
 
 print('vtki Version: {}'.format(vtki.__version__))
 
@@ -65,8 +66,6 @@ mesh = discretize.TensorMesh.copy(mesh)
 models = {'Lpout':Lpout}
 
 
-
-
 ###############################################################################
 # Create ``vtki`` data objects
 # ----------------------------
@@ -77,10 +76,14 @@ models = {'Lpout':Lpout}
 # Get the ``vtki`` dataset of the inverted model
 dataset = mesh.toVTK(models)
 
+###############################################################################
+
 # Load topography points from text file as XYZ numpy array
 topo_pts = np.loadtxt('Chile_GRAV_4_Miller/LdM_topo.topo', skiprows=1)
 # Create the topography points and apply an elevation filter
-topo = vtki.PolyData(topo_pts).elevation()
+topo = vtki.PolyData(topo_pts).delaunay_2d().elevation()
+
+###############################################################################
 
 # Load the gravity data from text file as XYZ+attributes numpy array
 grav_data = np.loadtxt('Chile_GRAV_4_Miller/LdM_grav_obs.grv', skiprows=1)
@@ -91,19 +94,37 @@ grav = vtki.PolyData(grav_data[:,0:3])
 grav.point_arrays['comp-1'] = grav_data[:,3]
 grav.point_arrays['comp-2'] = grav_data[:,4]
 
+###############################################################################
+# Plot the topographic surface and the gravity data
+
+p = vtki.Plotter()
+p.add_mesh(topo, color='grey')
+p.add_mesh(grav, stitle='Observed Gravtiy Data', point_size=15,
+           render_points_as_spheres=True)
+# Use a non-phot-realistic shading technique to show topographic relief
+p.enable_eye_dome_lighting()
+p.show(window_size=[1024, 768])
+
 
 ###############################################################################
 # Visualize Using ``vtki``
 # ------------------------
 #
-# Here we start making visualizing all the data in 3D!
+# Here we visualize all the data in 3D!
 
+# Create display parameters for inverted model
+dparams = dict(
+    show_edges=False,
+    cmap='bwr',
+    clim=[-0.6, 0.6],
+)
 
 # Apply a threshold filter to remove topography
+#  no arguments will remove the NaN values
 dataset_t = dataset.threshold()
 
-# Set a documentation friendly plotting theme
-vtki.set_plot_theme('document')
+# Extract volumetric threshold
+threshed = dataset_t.threshold(-0.2, invert=True)
 
 # Create the rendering scene
 p = vtki.Plotter()
@@ -111,26 +132,21 @@ p = vtki.Plotter()
 p.show_grid()
 
 # Add spatially referenced data to the scene
-p.add_mesh(dataset_t.slice('x'), name='x-slice', show_edges=True)
-p.add_mesh(dataset_t.slice('y'), name='y-slice', show_edges=True)
-p.add_mesh(dataset_t.threshold(0.2,), name='vol', show_edges=True)
-p.add_mesh(topo, name='topo', color='grey',
+p.add_mesh(dataset_t.slice('x'), **dparams)
+p.add_mesh(dataset_t.slice('y'), **dparams)
+p.add_mesh(threshed, **dparams)
+p.add_mesh(topo, opacity=0.75, color='grey',
            #cmap='gist_earth', clim=[1.7e+03, 3.104e+03],
-           point_size=1, opacity=0.75,)
-p.add_mesh(grav, name='gravity', cmap='viridis',
-           render_points_as_spheres=True, point_size=15)
+           )
+p.add_mesh(grav, cmap='viridis', point_size=15,
+           render_points_as_spheres=True)
 
 # Here is a nice camera position we manually found:
 cpos = [(395020.7332989303, 6039949.0452080015, 20387.583125699253),
- (364528.3152860675, 6008839.363092581, -3776.318305935185),
- (-0.3423732500124074, -0.34364514928896667, 0.8744647328772646)]
+        (364528.3152860675, 6008839.363092581, -3776.318305935185),
+        (-0.3423732500124074, -0.34364514928896667, 0.8744647328772646)]
 p.camera_position = cpos
 
-# Show the scene!
-p.show(window_size=[1924, 1598], auto_close=False)
 
-# Save a screenshot:
-#p.screenshot('vtki_laguna_del_maule.png')
-
-# Finally, close the plotter.
-p.close()
+# Render the scene!
+p.show(window_size=[1024, 768])
