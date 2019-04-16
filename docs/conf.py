@@ -41,6 +41,7 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.todo',
     'sphinx.ext.viewcode',
+    'sphinxcontrib.apidoc',
     'matplotlib.sphinxext.plot_directive',
     # 'numpydoc',
     'nbsphinx',
@@ -135,6 +136,14 @@ pygments_style = 'sphinx'
 
 # A list of ignored prefixes for module index sorting.
 #modindex_common_prefix = []
+
+# API doc options
+apidoc_module_dir = '../discretize'
+apidoc_output_dir = 'api/generated'
+apidoc_toc_file = False
+apidoc_excluded_paths = []
+apidoc_separate_modules = True
+# apidoc_extra_args = ['-t _templates']
 
 
 # -- Options for HTML output ---------------------------------------------------
@@ -283,7 +292,7 @@ intersphinx_mapping = {
     'scipy': ('https://docs.scipy.org/doc/scipy/reference/', None),
     'matplotlib': ('https://matplotlib.org/', None),
     'properties': ('https://propertiespy.readthedocs.io/en/latest/', None),
-    'vtki': ('http://vtkinterface.readthedocs.io/en/latest/', None),
+    'vtki': ('http://docs.vtki.org/', None),
 }
 
 
