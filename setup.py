@@ -56,17 +56,16 @@ def configuration(parent_package='', top_path=None):
 
 setup(
     name="discretize",
-    version="0.3.11",
+    version="0.4.0",
     install_requires=[
-        'numpy>=1.7',
+        'numpy>=1.8',
         'scipy>=0.13',
-        'cython',
-        'ipython',
-        'matplotlib',
+        'cython>=0.2',
+        'matplotlib>=1.3',
         'pymatsolver>=0.1.2',
         'properties[math]',
     ],
-    author="Rowan Cockett",
+    author="SimPEG developers",
     author_email="rowanc1@gmail.com",
     description="Discretization tools for finite volume and inverse problems",
     long_description=LONG_DESCRIPTION,

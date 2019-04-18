@@ -3,9 +3,6 @@ import numpy as np
 import unittest
 import discretize
 
-np.random.seed(50)
-
-
 
 def doTestFace(h, rep, fast, meshType, invProp=False, invMat=False):
     if meshType == 'Curv':

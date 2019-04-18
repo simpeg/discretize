@@ -5,7 +5,7 @@ import numpy as np
 import six
 
 from . import utils
-from .BaseMesh import BaseMesh
+from .base import BaseMesh
 
 try:
     from .mixins import vtkTensorRead
