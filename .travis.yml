@@ -12,6 +12,8 @@ env:
     - TEST_DIR=""
     - DEPLOY_PYPI=false
     - CONDA_REQUIREMENTS="numpy scipy matplotlib cython pip"
+    - PYPI_REQUIREMENTS=requirements.txt
+    - PYPI_REQUIREMENTS_DEV=requirements_dev.txt
 
 matrix:
   include:
