@@ -121,7 +121,7 @@ after_success:
 deploy:
   # pypi release
   - provider: script
-    script: ci/deploy-pypi.sh
+    script: sh ci/deploy-pypi.sh
     skip_cleanup: true
     on:
       condition: '$DEPLOY_PYPI == "true"'
