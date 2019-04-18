@@ -15,7 +15,6 @@ cartE3 = lambda M, ex, ey, ez: np.vstack((cart_row3(M.gridEx, ex, ey, ez), cart_
 
 
 plotIt = False
-np.random.seed(1)
 
 MESHTYPES = ['uniformTree', 'notatreeTree']
 
