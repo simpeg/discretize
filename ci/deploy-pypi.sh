@@ -15,19 +15,10 @@ echo ""
 echo "Packages built:"
 ls dist
 
-# unpack credentials if they are not already open
-if [ ! -d "credentials" ]; then
-    openssl aes-256-cbc -K $encrypted_5813a1339455_key -iv $encrypted_5813a1339455_iv -in credentials.tar.gz.enc -out credentials.tar.gz -d
-    tar -xzf credentials.tar.gz
-fi
-
-# move pypi credentials to home directory
-mv credentials/.pypirc ~/.pypirc ;
-
 echo ""
 echo "Deploy to PyPI using twine."
 echo ""
-# Upload to PyPI. Credentials are set using the TWINCE_PASSWORD and
+# Upload to PyPI. Credentials are set using the TWINE_PASSWORD and
 # TWINE_USERNAME env variables.
 twine upload --skip-existing dist/*
 

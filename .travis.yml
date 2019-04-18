@@ -8,15 +8,10 @@ sudo: false
 env:
   global:
     - MASTER_BRANCH=master
-    - PYPI_PY=3.7  # deploy to pypi from python 3.6
-    - GAE_PROJECT=discretize  # name of the google app engine project
     - TEST=false
     - TEST_DIR=""
-    - DEPLOY_DOCS=false
     - DEPLOY_PYPI=false
     - CONDA_REQUIREMENTS="numpy scipy matplotlib cython pip"
-    - PYPI_REQUIREMENTS=requirements.txt
-    - PYPI_REQUIREMENTS_DEV=requirements_dev.txt
 
 matrix:
   include:
@@ -99,7 +94,6 @@ matrix:
         - PYTHON=3.7
         - TEST=true
         - TEST_DIR="tests/docs"
-        - DEPLOY_DOCS=true
 
 before_install:
   - source ci/setup-miniconda.sh
@@ -128,14 +122,7 @@ deploy:
     script: ci/deploy-pypi.sh
     skip_cleanup: true
     on:
-      tags: true
       condition: '$DEPLOY_PYPI == "true"'
-  # deploy docs
-  - provider: script
-    script: ci/deploy-docs.sh
-    skip_cleanup: true
-    on:
-      condition: '$DEPLOY_DOCS == "true"'
 
 notifications:
   slack: simpeg:1KZq5giMtlJJ58TijIPgqf7n
