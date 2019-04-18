@@ -265,7 +265,7 @@ def mesh_builder_xyz(
     base_mesh=None,
     depth_core=None,
     expansion_factor=1.3,
-    mesh_type='TENSOR'
+    mesh_type='tensor'
 ):
     """
         Function to quickly generate a Tensor or Tree mesh
@@ -297,7 +297,7 @@ def mesh_builder_xyz(
         mesh = discretize.utils.meshutils.mesh_builder_xyz(xyLoc, [0.1, 0.1],
                                           depth_core=0.5,
                                           padding_distance=[[1,2], [1,0]],
-                                          mesh_type='TENSOR',
+                                          mesh_type='tensor',
         )
 
         # mesh.refine(5, finalize=True)
@@ -308,7 +308,7 @@ def mesh_builder_xyz(
         plt.show()
 
     """
-    if mesh_type not in ['TENSOR', 'TREE']:
+    if mesh_type.lower() not in ['tensor', 'tree']:
         raise ValueError(
             'Revise mesh_type. Only TENSOR | TREE mesh are implemented'
         )
@@ -328,7 +328,7 @@ def mesh_builder_xyz(
         nC[-1] += int(depth_core / h[-1])
         limits[-1][1] -= depth_core
 
-    if mesh_type == 'TENSOR':
+    if mesh_type.lower() == 'tensor':
 
         # Figure out padding cells from distance
         def expand(dx, pad):
@@ -363,7 +363,7 @@ def mesh_builder_xyz(
         # Create mesh
         mesh = discretize.TensorMesh(h_dim)
 
-    elif mesh_type == 'TREE':
+    elif mesh_type.lower() == 'tree':
 
         # Figure out full extent required from input
         h_dim = []
