@@ -1,4 +1,4 @@
-from discretize.BaseMesh import BaseMesh
+# from discretize.BaseMesh import BaseMesh
 from discretize.TensorMesh import TensorMesh
 from discretize.CylMesh import CylMesh
 from discretize.CurvilinearMesh import CurvilinearMesh
@@ -30,4 +30,4 @@ except ImportError as err:
 __version__   = '0.3.11'
 __author__    = 'SimPEG Team'
 __license__   = 'MIT'
-__copyright__ = '2013 - 2017, SimPEG Developers, http://simpeg.xyz'
+__copyright__ = '2013 - 2019, SimPEG Developers, http://simpeg.xyz'
