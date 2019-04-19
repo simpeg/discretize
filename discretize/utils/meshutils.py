@@ -707,7 +707,7 @@ def refine_tree_xyz(
         mesh.refine(inBox, finalize=finalize)
 
     else:
-        NotImplementedError(
+        raise NotImplementedError(
             "Only method= 'radial', 'surface'"
             " or 'box' have been implemented"
         )

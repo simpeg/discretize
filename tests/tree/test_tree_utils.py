@@ -102,6 +102,35 @@ class TestRefineOcTree(unittest.TestCase):
 
         self.assertTrue(residual < 5)
 
+    def test_errors(self):
+        dx = 0.25
+        rad = 10
+        self.assertRaises(ValueError, meshutils.mesh_builder_xyz,
+            np.c_[0.01, 0.01, 0.01], [dx, dx, dx],
+            depth_core=0,
+            padding_distance=[[0, 20], [0, 20], [0, 20]],
+            mesh_type='cyl',
+        )
+
+        mesh = meshutils.mesh_builder_xyz(
+            np.c_[0.01, 0.01, 0.01], [dx, dx, dx],
+            depth_core=0,
+            padding_distance=[[0, 20], [0, 20], [0, 20]],
+            mesh_type='tree',
+        )
+
+        radCell = int(np.ceil(rad/dx))
+        self.assertRaises(NotImplementedError, meshutils.refine_tree_xyz,
+            mesh, np.c_[0, 0, 0], octree_levels=[radCell], method='other',
+            finalize=True
+        )
+
+        self.assertRaises(ValueError, meshutils.refine_tree_xyz,
+            mesh, np.c_[0, 0, 0], octree_levels=[radCell],
+            octree_levels_padding=[], method='surface',
+            finalize=True
+        )
+
 
 if __name__ == '__main__':
     unittest.main()
