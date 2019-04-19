@@ -35,7 +35,7 @@ install:
   - conda update -q conda
   - conda info -a
   - conda install numpy scipy matplotlib cython ipython pillow wheel
-  - pip install pytest
+  - pip install pytest twine
   - pip install -e .
 
 test_script:
