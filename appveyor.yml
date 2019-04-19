@@ -60,6 +60,6 @@ deploy_script:
   - echo [pypi] >> %USERPROFILE%\\.pypirc
   - echo username=lheagy >> %USERPROFILE%\\.pypirc
   - echo password=%pypi_password% >> %USERPROFILE%\\.pypirc
-  # - twine upload dist\* --skip-existing
+  - twine upload dist\* --skip-existing
   # deploy on dev or master
-  - ps: If ($env:APPVEYOR_REPO_TAG -eq "true" ) { Invoke-Expression "twine upload dist\* --skip-existing" 2>$null } Else { write-output "Not on a tag, won't deploy to pypi"}
+  # - if "%APPVEYOR_REPO_TAG%"=="true" ( twine upload dist\* --skip-existing ) else ( echo "Not deploying because not a tagged commit." )
