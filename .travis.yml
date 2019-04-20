@@ -1,4 +1,5 @@
 # Configuration file for TravisCI
+dist: xenial # must use xenial for vtki
 
 # We use miniconda for Python so don't need any Python specific tools
 language: generic
