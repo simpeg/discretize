@@ -8,7 +8,7 @@ def download(
     """
     Function to download all files stored in a cloud directory
 
-    :param str url: url or list of urls for the file(s) to be downloaded ("https://...")
+    :param str url: url or list of urls for the file(s) to be downloaded
     :param str folder: folder to where the directory is created and files downloaded (default is the current directory)
     :param bool overwrite: overwrite if a file with the specified name already exists
     :param bool verbose: print out progress

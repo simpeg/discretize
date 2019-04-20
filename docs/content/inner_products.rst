@@ -291,9 +291,3 @@ example, is:
 These are computed for each of the 8 projections, horizontally concatenated,
 and returned.
 
-The API
--------
-
-.. autoclass:: discretize.InnerProducts.InnerProducts
-    :members:
-    :undoc-members:
