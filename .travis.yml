@@ -105,6 +105,9 @@ matrix:
 before_install:
   - source ci/setup-miniconda.sh
   - conda list
+  # configure a headless display for vtki
+  - git clone --depth 1 git://github.com/vtkiorg/gl-ci-helpers.git
+  - source ./gl-ci-helpers/travis/setup_headless_display.sh
 
 install:
   - pip install -e .
