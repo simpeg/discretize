@@ -308,8 +308,9 @@ texinfo_documents = [
 ]
 
 
-# Set up vtki for generatign example
+# Use vtki's image scraper for example gallery
 import vtki
+# Make sure off screen is set to true when building locally
 vtki.OFF_SCREEN = True
 
 # Sphinx Gallery
@@ -322,13 +323,13 @@ sphinx_gallery_conf = {
     'doc_module': 'discretize',
     # 'reference_url': {'discretize': None},
 }
-# Do not run `vtki` examples on Python 2 because sphinx gallery doesn't support
-#   custom scrapers
+# Do not run or scrape `vtki` examples on Python 2 because sphinx gallery
+# doesn't support custom scrapers. But also, data was pickled in Python 3
 if sys.version_info[0] >= 3:
     # Requires vtki>=0.18.0 and Python 3
     sphinx_gallery_conf["image_scrapers"] = (vtki.Scraper(), 'matplotlib')
 else:
-    # Don't run vtki examples on Python 2
+    # Don't run vtki examples at all on Python 2
     # Primarily because data used for it was pickled in Python 3
     sphinx_gallery_conf["filename_pattern"] = r"plot_(?!vtki)\.py",
 
