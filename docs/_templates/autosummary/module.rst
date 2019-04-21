@@ -1,4 +1,4 @@
- .. raw:: html
+.. raw:: html
 
     <div class="api-module">
 
