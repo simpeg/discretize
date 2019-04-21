@@ -35,7 +35,7 @@ install:
   - conda update -q conda
   - conda info -a
   - conda install numpy scipy matplotlib cython ipython pillow wheel
-  - pip install pytest
+  - pip install pytest twine
   - pip install -e .
 
 test_script:
@@ -62,4 +62,4 @@ deploy_script:
   - echo password=%pypi_password% >> %USERPROFILE%\\.pypirc
   # - twine upload dist\* --skip-existing
   # deploy on dev or master
-  - ps: If ($env:APPVEYOR_REPO_TAG -eq "true" ) { Invoke-Expression "twine upload dist\* --skip-existing" 2>$null } Else { write-output "Not on a tag, won't deploy to pypi"}
+  - if "%APPVEYOR_REPO_TAG%"=="true" ( twine upload dist\* --skip-existing ) else ( echo "Not deploying because not a tagged commit." )
