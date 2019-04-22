@@ -19,36 +19,86 @@ class InnerProducts(object):
         )
 
     def getFaceInnerProduct(self, prop=None, invProp=False, invMat=False, doFast=True):
-        """
-        :param numpy.ndarray prop: material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
-        :param bool invProp: inverts the material property
-        :param bool invMat: inverts the matrix
-        :param bool doFast: do a faster implementation if available.
-        :rtype: scipy.sparse.csr_matrix
-        :return: M, the inner product matrix (nF, nF)
+        """Generate the face inner product matrix
+
+        Parameters
+        ----------
+        prop : numpy.ndarray
+            material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
+
+        invProp : bool
+            inverts the material property
+
+        invMat : bool
+            inverts the matrix
+
+        doFast : bool
+            do a faster implementation if available.
+
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            M, the inner product matrix (nF, nF)
+
         """
         return self._getInnerProduct('F', prop=prop, invProp=invProp, invMat=invMat, doFast=doFast)
 
     def getEdgeInnerProduct(self, prop=None, invProp=False, invMat=False, doFast=True):
-        """
-        :param numpy.ndarray prop: material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
-        :param bool invProp: inverts the material property
-        :param bool invMat: inverts the matrix
-        :param bool doFast: do a faster implementation if available.
-        :rtype: scipy.sparse.csr_matrix
-        :return: M, the inner product matrix (nE, nE)
+        """Generate the edge inner product matrix
+
+        Parameters
+        ----------
+
+        prop : numpy.ndarray
+            material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
+
+        invProp : bool
+            inverts the material property
+
+        invMat : bool
+            inverts the matrix
+
+        doFast : bool
+            do a faster implementation if available.
+
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            M, the inner product matrix (nE, nE)
+
         """
         return self._getInnerProduct('E', prop=prop, invProp=invProp, invMat=invMat, doFast=doFast)
 
     def _getInnerProduct(self, projType, prop=None, invProp=False, invMat=False, doFast=True):
-        """
-        :param str projType: 'F' for faces 'E' for edges
-        :param numpy.ndarray prop: material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
-        :param bool invProp: inverts the material property
-        :param bool invMat: inverts the matrix
-        :param bool doFast: do a faster implementation if available.
-        :rtype: scipy.sparse.csr_matrix
-        :return: M, the inner product matrix (nE, nE)
+        """get the inner product matrix
+
+        Parameters
+        ----------
+
+        str : projType
+            'F' for faces 'E' for edges
+
+        numpy.ndarray : prop
+            material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
+
+        bool : invProp
+            inverts the material property
+
+        bool : invMat
+            inverts the matrix
+
+        bool : doFast
+            do a faster implementation if available.
+
+
+        Returns
+        -------
+
+        scipy.sparse.csr_matrix
+            M, the inner product matrix (nE, nE)
+
         """
         assert projType in ['F', 'E'], "projType must be 'F' for faces or 'E' for edges"
 
@@ -76,8 +126,13 @@ class InnerProducts(object):
 
     def _getInnerProductProjectionMatrices(self, projType, tensorType):
         """
-        :param str projType: 'F' for faces 'E' for edges
-        :param TensorType tensorType: type of the tensor: TensorType(mesh, sigma)
+        Parameters
+        ----------
+        projType : str
+            'F' for faces 'E' for edges
+
+        tensorType : TensorType
+            type of the tensor: TensorType(mesh, sigma)
         """
         assert isinstance(tensorType, TensorType), 'tensorType must be an instance of TensorType.'
         assert projType in ['F', 'E'], "projType must be 'F' for faces or 'E' for edges"
@@ -119,41 +174,80 @@ class InnerProducts(object):
 
     def getFaceInnerProductDeriv(self, prop, doFast=True, invProp=False, invMat=False):
         """
-        :param numpy.ndarray prop: material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
-        :param bool doFast: do a faster implementation if available.
-        :param bool invProp: inverts the material property
-        :param bool invMat: inverts the matrix
-        :return: dMdmu(u), the derivative of the inner product matrix (u)
+        Parameters
+        ----------
+        prop : numpy.ndarray
+            material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
 
-        Given u, dMdmu returns (nF, nC*nA)
+        doFast :
+            bool  do a faster implementation if available.
 
-        :param numpy.ndarray u: vector that multiplies dMdmu
-        :rtype: scipy.sparse.csr_matrix
-        :return: dMdmu, the derivative of the inner product matrix for a certain u
+        invProp : bool
+            inverts the material property
+
+        invMat : bool
+            inverts the matrix
+
+        Returns
+        -------
+
+        scipy.sparse.csr_matrix
+            dMdmu(u), the derivative of the inner product matrix for a certain u
+
         """
         return self._getInnerProductDeriv(prop, 'F', doFast=doFast, invProp=invProp, invMat=invMat)
 
 
     def getEdgeInnerProductDeriv(self, prop, doFast=True, invProp=False, invMat=False):
         """
-        :param numpy.ndarray prop: material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
-        :param bool doFast: do a faster implementation if available.
-        :param bool invProp: inverts the material property
-        :param bool invMat: inverts the matrix
-        :rtype: scipy.sparse.csr_matrix
-        :return: dMdm, the derivative of the inner product matrix (nE, nC*nA)
+        Parameters
+        ----------
+        prop : numpy.ndarray
+            material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
+
+        doFast : bool
+            do a faster implementation if available.
+
+        invProp : bool
+            inverts the material property
+
+        invMat : bool
+            inverts the matrix
+
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            dMdm, the derivative of the inner product matrix (nE, nC*nA)
+
         """
         return self._getInnerProductDeriv(prop, 'E', doFast=doFast, invProp=invProp, invMat=invMat)
 
     def _getInnerProductDeriv(self, prop, projType, doFast=True, invProp=False, invMat=False):
         """
-        :param numpy.ndarray prop: material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
-        :param str projType: 'F' for faces 'E' for edges
-        :param bool doFast: do a faster implementation if available.
-        :param bool invProp: inverts the material property
-        :param bool invMat: inverts the matrix
-        :rtype: scipy.sparse.csr_matrix
-        :return: dMdm, the derivative of the inner product matrix (nE, nC*nA)
+        Parameters
+        ----------
+        prop : numpy.ndarray
+            material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
+
+        projType : str
+            'F' for faces 'E' for edges
+
+        doFast : bool
+            do a faster implementation if available.
+
+        invProp : bool
+            inverts the material property
+
+        invMat : bool
+            inverts the matrix
+
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            dMdm, the derivative of the inner product matrix (nE, nC*nA)
+
         """
         fast = None
         if hasattr(self, '_fastInnerProductDeriv') and doFast:
@@ -173,12 +267,26 @@ class InnerProducts(object):
 
     def _getInnerProductDerivFunction(self, tensorType, P, projType, v):
         """
-        :param numpy.ndarray prop: material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
-        :param numpy.ndarray v: vector to multiply (required in the general implementation)
-        :param list P: list of projection matrices
-        :param str projType: 'F' for faces 'E' for edges
-        :rtype: scipy.sparse.csr_matrix
-        :return: dMdm, the derivative of the inner product matrix (n, nC*nA)
+        Parameters
+        ----------
+        prop : numpy.ndarray
+            material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
+
+        v : numpy.ndarray
+            vector to multiply (required in the general implementation)
+
+        P : list
+            list of projection matrices
+
+        projType : str
+            'F' for faces 'E' for edges
+
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            dMdm, the derivative of the inner product matrix (n, nC*nA)
+
         """
         assert projType in ['F', 'E'], "projType must be 'F' for faces or 'E' for edges"
         n = getattr(self,'n'+projType)
@@ -339,8 +447,8 @@ class InnerProducts(object):
 
         def Pxx(xFace, yFace):
             """
-                xFace is 'fXp' or 'fXm'
-                yFace is 'fYp' or 'fYm'
+            xFace is 'fXp' or 'fXm'
+            yFace is 'fYp' or 'fYm'
             """
             # no | node      | f1     | f2
             # 00 | i  ,j     | i  , j | i, j

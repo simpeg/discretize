@@ -1,60 +1,29 @@
 .. include:: ../README.rst
 
+.. toctree::
+    :maxdepth: 2
+    :hidden:
+    :caption: Getting Started
 
-About discretize
-****************
+    content/big_picture
+    content/installing
+    gallery/index
+    content/additional_resources
 
 .. toctree::
-   :maxdepth: 2
+    :maxdepth: 2
+    :hidden:
+    :caption: User Guide
 
-   content/big_picture
-   content/installing
-
-Examples
-********
-
-.. toctree::
-   :maxdepth: 2
-
-   content/tutorial
-   auto_examples/index
-
-Finite Volume
-*************
+    tutorials/mesh_overview
+    tutorials/tensor_mesh
+    tutorials/cylindrical_mesh
+    content/finite_volume
+    content/inner_products
 
 .. toctree::
-   :maxdepth: 3
+    :maxdepth: 2
+    :hidden:
+    :caption: Reference documentation
 
-   content/finite_volume
-
-Utility Codes
-*************
-
-.. toctree::
-   :maxdepth: 3
-
-   content/utils
-
-Mixins
-******
-
-.. toctree::
-   :maxdepth: 3
-
-   content/mixins
-
-Visualization
-*************
-
-.. toctree::
-   :maxdepth: 3
-
-   content/view
-
-
-Project Index & Search
-**********************
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+    api/index.rst

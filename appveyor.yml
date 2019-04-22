@@ -13,6 +13,9 @@ environment:
     - PYTHON_VERSION: 3.6
       CONDA: C:\Miniconda36
 
+    - PYTHON_VERSION: 3.7
+      CONDA: C:\Miniconda37
+
   pypi_password:
     secure: S2mZCxm5LzIF4KFDss/f7g==
 
@@ -35,14 +38,13 @@ install:
   - conda update -q conda
   - conda info -a
   - conda install numpy scipy matplotlib cython ipython pillow wheel
-  - pip install nose
-  - python setup.py install
+  - pip install pytest twine
+  - pip install -e .
 
 test_script:
-  - cd tests
-  - nosetests -v -s base/test_interpolation.py base/test_tensor_io.py
-  - nosetests -v -s tree
-  - cd ..
+  - pytest -v tests/base/test_interpolation.py
+  - pytest -v tests/base/test_tensor_io.py
+  - pytest -v tests/tree
 
 after_test:
   # This step builds your wheels.
@@ -63,4 +65,4 @@ deploy_script:
   - echo password=%pypi_password% >> %USERPROFILE%\\.pypirc
   # - twine upload dist\* --skip-existing
   # deploy on dev or master
-  - ps: If ($env:APPVEYOR_REPO_TAG -eq "true" ) { Invoke-Expression "twine upload dist\*.whl --skip-existing" 2>$null } Else { write-output "Not on a tag, won't deploy to pypi"}
+  - if "%APPVEYOR_REPO_TAG%"=="true" ( twine upload dist\* --skip-existing ) else ( echo "Not deploying because not a tagged commit." )

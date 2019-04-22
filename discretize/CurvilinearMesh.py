@@ -4,7 +4,7 @@ import properties
 from properties.math import TYPE_MAPPINGS
 
 from discretize import utils
-from discretize.BaseMesh import BaseRectangularMesh
+from .base import BaseRectangularMesh
 from discretize.DiffOperators import DiffOperators
 from discretize.InnerProducts import InnerProducts
 from discretize.View import CurviView
@@ -35,12 +35,12 @@ class CurvilinearMesh(
     Example of a curvilinear mesh:
 
     .. plot::
-            :include-source:
+        :include-source:
 
-            import discretize
-            X, Y = discretize.utils.exampleLrmGrid([3,3],'rotate')
-            M = discretize.CurvilinearMesh([X, Y])
-            M.plotGrid(showIt=True)
+        import discretize
+        X, Y = discretize.utils.exampleLrmGrid([3,3],'rotate')
+        mesh = discretize.CurvilinearMesh([X, Y])
+        mesh.plotGrid(showIt=True)
     """
 
     _meshType = 'Curv'
@@ -77,7 +77,7 @@ class CurvilinearMesh(
             self._gridN[:, i] = utils.mkvc(node_i.astype(float))
 
     @properties.validator('nodes')
-    def check_nodes(self, change):
+    def _check_nodes(self, change):
         assert len(change['value']) > 1, "len(node) must be greater than 1"
 
         for i, change['value'][i] in enumerate(change['value']):
@@ -265,6 +265,9 @@ class CurvilinearMesh(
 
     @property
     def area(self):
+        """
+        Area of the faces
+        """
         if (getattr(self, '_area', None) is None or
             getattr(self, '_normals', None) is None):
             # Compute areas of cell faces

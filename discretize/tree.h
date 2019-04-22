@@ -120,6 +120,7 @@ class Cell{
     void spawn(node_map_t& nodes, Cell *kids[8], double* xs, double *ys, double *zs);
     void divide(node_map_t& nodes, double* xs, double* ys, double* zs, bool force=false, bool balance=true);
     void set_neighbor(Cell* other, int_t direction);
+    void set_test_function(function func);
     void build_cell_vector(cell_vec_t& cells);
 
     void insert_cell(node_map_t &nodes, double *new_center, int_t p_level, double* xs, double *ys, double *zs);

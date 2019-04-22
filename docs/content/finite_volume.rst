@@ -19,13 +19,3 @@ faces, or edges as seen in the figure below.
    :align: center
 
 
-.. toctree::
-   :maxdepth: 2
-
-   base
-   mesh_tensor
-   mesh_cylindrical
-   mesh_tree
-   mesh_curvilinear
-   operators
-   inner_products
