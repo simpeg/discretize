@@ -6,11 +6,6 @@ language: generic
 
 sudo: false
 
-addons:
-  apt:
-    packages:
-      - xvfb # Needed for vtki/3D rendering
-
 env:
   global:
     - MASTER_BRANCH=master
