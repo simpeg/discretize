@@ -101,6 +101,8 @@ Mesh Utilities
     utils.closestPoints
     utils.ExtractCoreMesh
     utils.random_model
+    utils.mesh_builder_xyz
+    utils.refine_tree_xyz
 
 
 Matrix Utilities
