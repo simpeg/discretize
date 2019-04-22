@@ -15,7 +15,7 @@ Meshes
 .. currentmodule:: discretize
 
 .. autosummary::
-    :toctree: generated/
+    :toctree: generated
 
     TensorMesh
     CylMesh
@@ -32,7 +32,7 @@ Numerical Operators
 .. currentmodule:: discretize
 
 .. autosummary::
-    :toctree: generated/
+    :toctree: generated
 
     DiffOperators.DiffOperators
     InnerProducts.InnerProducts
@@ -42,7 +42,7 @@ Mesh IO
 -------
 
 .. autosummary::
-    :toctree: generated/
+    :toctree: generated
 
     load_mesh
     MeshIO.TensorMeshIO
@@ -53,7 +53,7 @@ Visualization
 -------------
 
 .. autosummary::
-    :toctree: generated/
+    :toctree: generated
 
     View.TensorView
     View.CylView
@@ -67,7 +67,7 @@ Testing
 -------
 
 .. autosummary::
-    :toctree: generated/
+    :toctree: generated
 
     Tests.OrderTest
     Tests.checkDerivative
@@ -78,11 +78,15 @@ Testing
 Utilities
 ---------
 
+.. automodule:: discretize.utils
+
+.. currentmodule:: discretize
+
 General Utilities
 *****************
 
 .. autosummary::
-    :toctree: generated/
+    :toctree: generated
 
     utils.download
 
@@ -90,7 +94,7 @@ Mesh Utilities
 **************
 
 .. autosummary::
-    :toctree: generated/
+    :toctree: generated
 
     utils.exampleLrmGrid
     utils.meshTensor
@@ -103,7 +107,7 @@ Matrix Utilities
 ****************
 
 .. autosummary::
-    :toctree: generated/
+    :toctree: generated
 
     utils.mkvc
     utils.sdiag
@@ -131,7 +135,7 @@ Mathematical Operations
 ***********************
 
 .. autosummary::
-    :toctree: generated/
+    :toctree: generated
 
     utils.rotatePointsFromNormals
     utils.rotationMatrixFromNormals
@@ -146,7 +150,7 @@ Curvilinear Mesh Utilities
 **************************
 
 .. autosummary::
-    :toctree: generated/
+    :toctree: generated
 
     utils.volTetra
     utils.faceInfo
@@ -157,8 +161,12 @@ Curvilinear Mesh Utilities
 Base Mesh
 ---------
 
+.. automodule:: discretize.base
+
+.. currentmodule:: discretize
+
 .. autosummary::
-    :toctree: generated/
+    :toctree: generated
 
     base.BaseMesh
     base.BaseRectangularMesh
