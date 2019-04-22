@@ -8,7 +8,7 @@ The example demonstrates the how to use the VTK interface via the vtki_ library.
 To run this example, you will need to `install vtki`_.
 
 .. _vtki: http://www.vtki.org
-.. _install vtki: http://www.vtki.org/en/latest/getting-started/installation.html
+.. _install vtki: http://docs.vtki.org/getting-started/installation.html
 
 - contributed by `@banesullivan <https://github.com/banesullivan>`_
 
