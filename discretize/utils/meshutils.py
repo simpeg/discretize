@@ -41,25 +41,38 @@ def exampleLrmGrid(nC, exType):
 
 def random_model(shape, seed=None, anisotropy=None, its=100, bounds=None):
     """
-        Create a random model by convolving a kernel with a
-        uniformly distributed model.
+    Create a random model by convolving a kernel with a
+    uniformly distributed model.
 
-        :param tuple shape: shape of the model.
-        :param int seed: pick which model to produce, prints the seed if you don't choose.
-        :param numpy.ndarray anisotropy: this is the (3 x n) blurring kernel that is used.
-        :param int its: number of smoothing iterations
-        :param list bounds: bounds on the model, len(list) == 2
-        :rtype: numpy.ndarray
-        :return: M, the model
+    Parameters
+    ----------
+    shape: tuple
+        shape of the model.
+    seed: int
+        pick which model to produce, prints the seed if you don't choose.
+    anisotropy: numpy.ndarray
+        this is the (3 x n) blurring kernel that is used.
+    its: int
+        number of smoothing iterations
+    bounds: list
+        bounds on the model, len(list) == 2
 
+    Returns
+    -------
+    numpy.ndarray
+        M, the model
 
-        .. plot::
+    Example
+    -------
 
-            import matplotlib.pyplot as plt
-            import discretize
-            plt.colorbar(plt.imshow(discretize.utils.random_model((50, 50), bounds=[-4, 0])))
-            plt.title('A very cool, yet completely random model.')
-            plt.show()
+    .. plot::
+        :include-source:
+
+        import matplotlib.pyplot as plt
+        import discretize
+        plt.colorbar(plt.imshow(discretize.utils.random_model((50, 50), bounds=[-4, 0])))
+        plt.title('A very cool, yet completely random model.')
+        plt.show()
 
 
     """
@@ -122,12 +135,13 @@ def meshTensor(value):
     is negative this section of the tensor is flipped right-to-left.
 
     .. plot::
+        :include-source:
 
         import discretize
         tx = [(10.0, 10, -1.3), (10.0, 40), (10.0, 10, 1.3)]
         ty = [(10.0, 10, -1.3), (10.0, 40)]
-        M = discretize.TensorMesh([tx, ty])
-        M.plotGrid(showIt=True)
+        mesh = discretize.TensorMesh([tx, ty])
+        mesh.plotGrid(showIt=True)
 
     """
     if type(value) is not list:
@@ -155,11 +169,20 @@ def meshTensor(value):
 def closestPoints(mesh, pts, gridLoc='CC'):
     """Move a list of points to the closest points on a grid.
 
-    :param BaseMesh mesh: The mesh
-    :param numpy.ndarray pts: Points to move
-    :param str gridLoc: ['CC', 'N', 'Fx', 'Fy', 'Fz', 'Ex', 'Ex', 'Ey', 'Ez']
-    :rtype: numpy.ndarray
-    :return: nodeInds
+    Parameters
+    ----------
+    mesh: BaseMesh
+        The mesh
+    pts: numpy.ndarray
+        Points to move
+    gridLoc: str
+        ['CC', 'N', 'Fx', 'Fy', 'Fz', 'Ex', 'Ex', 'Ey', 'Ez']
+
+    Returns
+    -------
+    numpy.ndarray
+        nodeInds
+
     """
 
     pts = asArray_N_x_Dim(pts, mesh.dim)
@@ -179,13 +202,19 @@ def ExtractCoreMesh(xyzlim, mesh, mesh_type='tensor'):
     """
     Extracts Core Mesh from Global mesh
 
-    :param numpy.ndarray xyzlim: 2D array [ndim x 2]
-    :param BaseMesh mesh: The mesh
+    Parameters
+    ----------
+    xyzlim: numpy.ndarray
+        2D array [ndim x 2]
+    mesh: BaseMesh
+        The mesh
 
-    This function ouputs::
-
-        - actind: corresponding boolean index from global to core
-        - meshcore: core sdiscretize mesh
+    Returns
+    -------
+    tuple
+        This function ouputs::
+            - actind: corresponding boolean index from global to core
+            - meshcore: core sdiscretize mesh
     """
 
     if mesh.dim == 1:
@@ -268,23 +297,37 @@ def mesh_builder_xyz(
     mesh_type='tensor'
 ):
     """
-        Function to quickly generate a Tensor or Tree mesh
-        given a cloud of xyz points, finest core cell size
-        and padding distance.
-        If a base_mesh is provided, the core cells will be centered
-        on the underlaying mesh to reduce interpolation errors.
-        The core extent is set by the bounding box of the xyz location.
+    Function to quickly generate a Tensor or Tree mesh
+    given a cloud of xyz points, finest core cell size
+    and padding distance.
+    If a base_mesh is provided, the core cells will be centered
+    on the underlaying mesh to reduce interpolation errors.
+    The core extent is set by the bounding box of the xyz location.
 
-        :param numpy.ndarray xyz: Location points [n x dim]
-        :param list h: Cell size for the core mesh [1 x ndim]
-        :param list padding_distance: Padding distances
-            [[W,E], [N,S], [Down,Up]]
-        :param BaseMesh base_mesh: discretize mesh used to center the core mesh
-        :param float depth_core: Depth of core mesh below xyz
-        :param float expansion_factor: Expension factor for padding cells [1.3]
-        :param str mesh_type: Specify output mesh type: ["TENSOR"] or "TREE"
-        :return: Mesh of "mesh_type"
+    Parameters
+    ----------
+    xyz: numpy.ndarray
+        Location points [n x dim]
+    h: list
+        Cell size for the core mesh [1 x ndim]
+    padding_distance: list
+        Padding distances [[W,E], [N,S], [Down,Up]]
+    base_mesh: discretize.BaseMesh
+        discretize mesh used to center the core mesh
+    depth_core: float
+        Depth of core mesh below xyz
+    expansion_factor: float
+        Expension factor for padding cells [1.3]
+    mesh_type: str
+        Specify output mesh type: ["TENSOR"] or "TREE"
 
+    Returns
+    --------
+    discretize.BaseMesh
+        Mesh of "mesh_type"
+
+    Example
+    -------
     .. plot::
         :include-source:
 
@@ -428,33 +471,47 @@ def mesh_builder_xyz(
 
 
 def refine_tree_xyz(
-            mesh, xyz,
-            method="radial",
-            octree_levels=[1, 1, 1],
-            octree_levels_padding=None,
-            finalize=False,
-            min_level=0,
-            max_distance=np.inf
+    mesh, xyz,
+    method="radial",
+    octree_levels=[1, 1, 1],
+    octree_levels_padding=None,
+    finalize=False,
+    min_level=0,
+    max_distance=np.inf
 ):
     """
     Refine a TreeMesh based on xyz point locations
 
-    :param BaseMesh mesh: The TreeMesh object to be refined
-    :param numpy.ndarray xyz: 2D array of points
-    :param str method: Method used to refine the mesh based on xyz locations
+    Parameters
+    ----------
+    mesh: BaseMesh
+        The TreeMesh object to be refined
+    xyz: numpy.ndarray
+        2D array of points
+    method: str
+        Method used to refine the mesh based on xyz locations
 
         - "radial": Based on radial distance xyz and cell centers
         - "surface": Along triangulated surface repeated vertically
         - "box": Inside limits defined by outer xyz locations
-    :param list octree_levels: Minimum number of cells around points
-        in each k octree level [N(k), N(k-1), ...]
-    :param list octree_levels_padding: Padding cells
-        added to the outer limits of the data each octree levels
+
+    octree_levels: list
+        Minimum number of cells around points in each k octree level
+        [N(k), N(k-1), ...]
+    octree_levels_padding: list
+        Padding cells added to the outer limits of the data each octree levels
         used for method= "surface" and "box" [N(k), N(k-1), ...].
-    :param bool finalize: True | [False]    Finalize the TreeMesh
-    :param float max_distance: Maximum refinement distance from xyz locations.
+    finalize: bool
+        True | [False]    Finalize the TreeMesh
+    max_distance: float
+        Maximum refinement distance from xyz locations.
         Used for method="surface" to reduce interpolation distance.
-    :return: TreeMesh mesh
+
+    Returns
+    --------
+    discretize.TreeMesh
+        mesh
+
     """
 
     if octree_levels_padding is not None:
