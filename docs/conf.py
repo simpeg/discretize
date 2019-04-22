@@ -39,7 +39,7 @@ extensions = [
     'sphinx.ext.extlinks',
     'sphinx.ext.intersphinx',
     'sphinx.ext.mathjax',
-    # 'sphinx.ext.napoleon',
+    'sphinx.ext.napoleon',
     'sphinx.ext.todo',
     'sphinx.ext.viewcode',
     'matplotlib.sphinxext.plot_directive',
@@ -53,16 +53,16 @@ autosummary_generate = False
 
 numpydoc_class_members_toctree = False
 
-# napoleon_numpy_docstring = True
-# napoleon_include_init_with_doc = False
-# napoleon_include_private_with_doc = False
-# napoleon_include_special_with_doc = True
-# napoleon_use_admonition_for_examples = False
-# napoleon_use_admonition_for_notes = False
-# napoleon_use_admonition_for_references = False
-# napoleon_use_ivar = False
-# napoleon_use_param = True
-# napoleon_use_rtype = True
+napoleon_numpy_docstring = True
+napoleon_include_init_with_doc = False
+napoleon_include_private_with_doc = False
+napoleon_include_special_with_doc = True
+napoleon_use_admonition_for_examples = False
+napoleon_use_admonition_for_notes = False
+napoleon_use_admonition_for_references = False
+napoleon_use_ivar = False
+napoleon_use_param = True
+napoleon_use_rtype = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -155,7 +155,7 @@ try:
     html_theme = 'sphinx_rtd_theme'
     html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
     pass
-except Exception, e:
+except Exception:
     html_theme = 'default'
 
 # Theme options are theme-specific and customize the look and feel of a theme
