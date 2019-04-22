@@ -1,11 +1,10 @@
-# from discretize.BaseMesh import BaseMesh
-from discretize.TensorMesh import TensorMesh
-from discretize.CylMesh import CylMesh
-from discretize.CurvilinearMesh import CurvilinearMesh
-from discretize import Tests
-from discretize.MeshIO import load_mesh
+from discretize.tensor_mesh import TensorMesh
+from discretize.cylindrical_mesh import CylMesh
+from discretize.curvilinear_mesh import CurvilinearMesh
+from discretize import tests
+from discretize.mesh_io import load_mesh
 try:
-    from discretize.TreeMesh import TreeMesh
+    from discretize.tree_mesh import TreeMesh
 except ImportError as err:
     print(err)
     import os
