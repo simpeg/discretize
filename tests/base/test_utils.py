@@ -9,7 +9,7 @@ from discretize.utils import (
     ind2sub, asArray_N_x_Dim, TensorType, Zero, Identity,
     ExtractCoreMesh
 )
-from discretize.Tests import checkDerivative
+from discretize.tests import checkDerivative
 import discretize
 import sys
 

@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import discretize
-from discretize import Tests, utils
+from discretize import utils
 
 import pytest
 

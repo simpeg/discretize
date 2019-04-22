@@ -3,11 +3,11 @@ import numpy as np
 import properties
 from properties.math import TYPE_MAPPINGS
 
-from discretize import utils
 from .base import BaseRectangularMesh
-from discretize.DiffOperators import DiffOperators
-from discretize.InnerProducts import InnerProducts
-from discretize.View import CurviView
+from . import utils
+from .differential_operators import DiffOperators
+from .inner_products import InnerProducts
+from .view import CurviView
 
 
 # Some helper functions.

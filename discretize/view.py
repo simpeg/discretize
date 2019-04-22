@@ -1,7 +1,7 @@
 from __future__ import print_function
 import numpy as np
 import warnings
-from discretize.utils import mkvc, ndgrid
+
 from six import integer_types
 try:
     import matplotlib.pyplot as plt
@@ -11,6 +11,7 @@ try:
 except ImportError:
     print('Trouble importing matplotlib.')
 
+from .utils import mkvc, ndgrid
 
 class TensorView(object):
     """Provides viewing functions for TensorMesh

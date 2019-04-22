@@ -8,10 +8,10 @@ from scipy.constants import pi
 from .utils import (
     kron3, ndgrid, av, speye, ddx, sdiag, interpmat, spzeros, cyl2cart
 )
-from .TensorMesh import BaseTensorMesh, BaseRectangularMesh
-from .InnerProducts import InnerProducts
-from .View import CylView
-from .DiffOperators import DiffOperators
+from .tensor_mesh import BaseTensorMesh, BaseRectangularMesh
+from .inner_products import InnerProducts
+from .view import CylView
+from .differential_operators import DiffOperators
 
 
 class CylMesh(

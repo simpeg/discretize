@@ -4,7 +4,7 @@ import unittest
 import discretize
 
 
-class TestInnerProducts(discretize.Tests.OrderTest):
+class TestInnerProducts(discretize.tests.OrderTest):
     """Integrate an function over a unit cube domain
     using edgeInnerProducts and faceInnerProducts."""
 
@@ -152,7 +152,7 @@ class TestInnerProducts(discretize.Tests.OrderTest):
         self.orderTest()
 
 
-class TestInnerProducts2D(discretize.Tests.OrderTest):
+class TestInnerProducts2D(discretize.tests.OrderTest):
     """Integrate an function over a unit cube domain
     using edgeInnerProducts and faceInnerProducts."""
 
@@ -294,7 +294,7 @@ class TestInnerProducts2D(discretize.Tests.OrderTest):
         self.orderTest()
 
 
-class TestInnerProducts1D(discretize.Tests.OrderTest):
+class TestInnerProducts1D(discretize.tests.OrderTest):
     """Integrate an function over a unit cube domain
     using edgeInnerProducts and faceInnerProducts."""
 

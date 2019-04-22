@@ -4,10 +4,10 @@ import numpy as np
 from discretize import utils
 
 from .base import BaseRectangularMesh, BaseTensorMesh
-from .View import TensorView
-from .DiffOperators import DiffOperators
-from .InnerProducts import InnerProducts
-from .MeshIO import TensorMeshIO
+from .view import TensorView
+from .differential_operators import DiffOperators
+from .inner_products import InnerProducts
+from .mesh_io import TensorMeshIO
 
 
 class TensorMesh(

@@ -3,7 +3,8 @@ import numpy as np
 from scipy import sparse as sp
 from six import string_types
 import warnings
-from discretize.utils import sdiag, speye, kron3, spzeros, ddx, av, av_extrap
+
+from .utils import sdiag, speye, kron3, spzeros, ddx, av, av_extrap
 
 
 def checkBC(bc):

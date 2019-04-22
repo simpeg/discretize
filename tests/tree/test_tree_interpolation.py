@@ -19,7 +19,7 @@ plotIt = False
 MESHTYPES = ['uniformTree', 'notatreeTree']
 
 
-class TestInterpolation2d(discretize.Tests.OrderTest):
+class TestInterpolation2d(discretize.tests.OrderTest):
     """Face interpolation is O(h)
     Edge interpolation is O(h^2)
     """
@@ -109,7 +109,7 @@ class TestInterpolation2d(discretize.Tests.OrderTest):
         self.orderTest()
 
 
-class TestInterpolation3D(discretize.Tests.OrderTest):
+class TestInterpolation3D(discretize.tests.OrderTest):
     name = "Interpolation"
     #LOCS = np.random.rand(50, 3)*0.6+0.2
     X, Y, Z = np.mgrid[0:1:50j, 0:1:50j, 0:1:50j]

@@ -118,7 +118,7 @@ class BasicTensorMeshTests(unittest.TestCase):
         self.assertLess(np.abs(M.hx - np.r_[10., 10.]).sum(), TOL)
 
 
-class TestPoissonEqn(discretize.Tests.OrderTest):
+class TestPoissonEqn(discretize.tests.OrderTest):
     name = "Poisson Equation"
     meshSizes = [10, 16, 20]
 

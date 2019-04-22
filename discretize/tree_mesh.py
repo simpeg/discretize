@@ -84,15 +84,17 @@
 #      |           |         ^
 #      |___________|         |___> x
 #      0    e3     1
-from .base import BaseTensorMesh
-from .InnerProducts import InnerProducts
-from .MeshIO import TreeMeshIO
-from . import utils
-from .tree_ext import _TreeMesh
+
 import numpy as np
 from scipy.spatial import Delaunay
 import scipy.sparse as sp
 from six import integer_types
+
+from .base import BaseTensorMesh
+from .inner_products import InnerProducts
+from .mesh_io import TreeMeshIO
+from . import utils
+from .tree_ext import _TreeMesh
 
 class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
     """

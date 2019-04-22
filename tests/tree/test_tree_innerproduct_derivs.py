@@ -21,7 +21,7 @@ def doTestFace(h, rep, fast, meshType, invProp=False, invMat=False):
         Md = mesh.getFaceInnerProductDeriv(sig, invProp=invProp, invMat=invMat, doFast=fast)
         return M*v, Md(v)
     print(meshType, 'Face', h, rep, fast, ('harmonic' if invProp and invMat else 'standard'))
-    return discretize.Tests.checkDerivative(fun, sig, num=5, plotIt=False)
+    return discretize.tests.checkDerivative(fun, sig, num=5, plotIt=False)
 
 
 
@@ -41,7 +41,7 @@ def doTestEdge(h, rep, fast, meshType, invProp=False, invMat=False):
         Md = mesh.getEdgeInnerProductDeriv(sig, invProp=invProp, invMat=invMat, doFast=fast)
         return M*v, Md(v)
     print(meshType, 'Edge', h, rep, fast, ('harmonic' if invProp and invMat else 'standard'))
-    return discretize.Tests.checkDerivative(fun, sig, num=5, plotIt=False)
+    return discretize.tests.checkDerivative(fun, sig, num=5, plotIt=False)
 
 
 class TestInnerProductsDerivsTensor(unittest.TestCase):

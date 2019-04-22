@@ -178,7 +178,7 @@ def getxBCyBC_CC(mesh, alpha, beta, gamma):
     return xBC, yBC
 
 
-class Test1D_InhomogeneousMixed(discretize.Tests.OrderTest):
+class Test1D_InhomogeneousMixed(discretize.tests.OrderTest):
     name = "1D - Mixed"
     meshTypes = MESHTYPES
     meshDimension = 1
@@ -244,7 +244,7 @@ class Test1D_InhomogeneousMixed(discretize.Tests.OrderTest):
         self.orderTest()
 
 
-class Test2D_InhomogeneousMixed(discretize.Tests.OrderTest):
+class Test2D_InhomogeneousMixed(discretize.tests.OrderTest):
     name = "2D - Mixed"
     meshTypes = MESHTYPES
     meshDimension = 2
@@ -343,7 +343,7 @@ class Test2D_InhomogeneousMixed(discretize.Tests.OrderTest):
         self.orderTest()
 
 
-class Test3D_InhomogeneousMixed(discretize.Tests.OrderTest):
+class Test3D_InhomogeneousMixed(discretize.tests.OrderTest):
     name = "3D - Mixed"
     meshTypes = MESHTYPES
     meshDimension = 3

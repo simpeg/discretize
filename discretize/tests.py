@@ -2,12 +2,12 @@ from __future__ import print_function
 import numpy as np
 import scipy.sparse as sp
 
-from discretize.utils import mkvc, sdiag
+from .utils import mkvc, sdiag
 from discretize import utils
 from discretize import TensorMesh, CurvilinearMesh, CylMesh
 
 try:
-    from discretize.TreeMesh import TreeMesh as Tree
+    from discretize.tree_mesh import TreeMesh as Tree
 except ImportError as e:
     Tree = None
 

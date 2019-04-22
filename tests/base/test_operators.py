@@ -25,7 +25,7 @@ cartF3 = lambda M, fx, fy, fz: np.vstack((cart_row3(M.gridFx, fx, fy, fz), cart_
 cartE3 = lambda M, ex, ey, ez: np.vstack((cart_row3(M.gridEx, ex, ey, ez), cart_row3(M.gridEy, ex, ey, ez), cart_row3(M.gridEz, ex, ey, ez)))
 
 
-class TestCurl(discretize.Tests.OrderTest):
+class TestCurl(discretize.tests.OrderTest):
     name = "Curl"
     meshTypes = MESHTYPES
 
@@ -60,7 +60,7 @@ class TestCurl(discretize.Tests.OrderTest):
         self.orderTest()
 
 
-class TestCurl2D(discretize.Tests.OrderTest):
+class TestCurl2D(discretize.tests.OrderTest):
     name = "Cell Grad 2D - Dirichlet"
     meshTypes = ['uniformTensorMesh']
     meshDimension = 2
@@ -82,7 +82,7 @@ class TestCurl2D(discretize.Tests.OrderTest):
     def test_order(self):
         self.orderTest()
 
-class TestCellGrad1D_InhomogeneousDirichlet(discretize.Tests.OrderTest):
+class TestCellGrad1D_InhomogeneousDirichlet(discretize.tests.OrderTest):
     name = "Cell Grad 1D - Dirichlet"
     meshTypes = ['uniformTensorMesh']
     meshDimension = 1
@@ -111,7 +111,7 @@ class TestCellGrad1D_InhomogeneousDirichlet(discretize.Tests.OrderTest):
         self.orderTest()
 
 
-class TestCellGrad2D_Dirichlet(discretize.Tests.OrderTest):
+class TestCellGrad2D_Dirichlet(discretize.tests.OrderTest):
     name = "Cell Grad 2D - Dirichlet"
     meshTypes = ['uniformTensorMesh']
     meshDimension = 2
@@ -139,7 +139,7 @@ class TestCellGrad2D_Dirichlet(discretize.Tests.OrderTest):
         self.orderTest()
 
 
-class TestCellGrad3D_Dirichlet(discretize.Tests.OrderTest):
+class TestCellGrad3D_Dirichlet(discretize.tests.OrderTest):
     name = "Cell Grad 3D - Dirichlet"
     meshTypes = ['uniformTensorMesh']
     meshDimension = 3
@@ -167,7 +167,7 @@ class TestCellGrad3D_Dirichlet(discretize.Tests.OrderTest):
     def test_order(self):
         self.orderTest()
 
-class TestCellGrad2D_Neumann(discretize.Tests.OrderTest):
+class TestCellGrad2D_Neumann(discretize.tests.OrderTest):
     name = "Cell Grad 2D - Neumann"
     meshTypes = ['uniformTensorMesh']
     meshDimension = 2
@@ -195,7 +195,7 @@ class TestCellGrad2D_Neumann(discretize.Tests.OrderTest):
         self.orderTest()
 
 
-class TestCellGrad3D_Neumann(discretize.Tests.OrderTest):
+class TestCellGrad3D_Neumann(discretize.tests.OrderTest):
     name = "Cell Grad 3D - Neumann"
     meshTypes = ['uniformTensorMesh']
     meshDimension = 3
@@ -224,7 +224,7 @@ class TestCellGrad3D_Neumann(discretize.Tests.OrderTest):
         self.orderTest()
 
 
-class TestFaceDiv3D(discretize.Tests.OrderTest):
+class TestFaceDiv3D(discretize.tests.OrderTest):
     name = "Face Divergence 3D"
     meshTypes = MESHTYPES
     meshSizes = [8, 16, 32, 64]
@@ -254,7 +254,7 @@ class TestFaceDiv3D(discretize.Tests.OrderTest):
         self.orderTest()
 
 
-class TestFaceDiv2D(discretize.Tests.OrderTest):
+class TestFaceDiv2D(discretize.tests.OrderTest):
     name = "Face Divergence 2D"
     meshTypes = MESHTYPES
     meshDimension = 2
@@ -280,7 +280,7 @@ class TestFaceDiv2D(discretize.Tests.OrderTest):
         self.orderTest()
 
 
-class TestNodalGrad(discretize.Tests.OrderTest):
+class TestNodalGrad(discretize.tests.OrderTest):
     name = "Nodal Gradient"
     meshTypes = MESHTYPES
 
@@ -306,7 +306,7 @@ class TestNodalGrad(discretize.Tests.OrderTest):
         self.orderTest()
 
 
-class TestNodalGrad2D(discretize.Tests.OrderTest):
+class TestNodalGrad2D(discretize.tests.OrderTest):
     name = "Nodal Gradient 2D"
     meshTypes = MESHTYPES
     meshDimension = 2
@@ -349,7 +349,7 @@ class TestAverating2DSimple(unittest.TestCase):
         assert all(self.mesh.aveF2CCV * face_vec == 1.)
 
 
-class TestAveraging2D(discretize.Tests.OrderTest):
+class TestAveraging2D(discretize.tests.OrderTest):
     name = "Averaging 2D"
     meshTypes = MESHTYPES
     meshDimension = 2
@@ -458,7 +458,7 @@ class TestAverating3DSimple(unittest.TestCase):
         assert all(np.absolute(self.mesh.aveF2CCV * face_vec - 1.) < TOL)
 
 
-class TestAveraging3D(discretize.Tests.OrderTest):
+class TestAveraging3D(discretize.tests.OrderTest):
     name = "Averaging 3D"
     meshTypes = MESHTYPES
     meshDimension = 3
@@ -561,7 +561,7 @@ class MimeticProperties(unittest.TestCase):
     def test_DivCurl(self):
 
         for meshType in self.meshTypes:
-            mesh, _ = discretize.Tests.setupMesh(
+            mesh, _ = discretize.tests.setupMesh(
                 meshType, self.meshSize, self.meshDimension
             )
             v = np.random.rand(mesh.nE)
@@ -578,7 +578,7 @@ class MimeticProperties(unittest.TestCase):
     def test_CurlGrad(self):
 
         for meshType in self.meshTypes:
-            mesh, _ = discretize.Tests.setupMesh(
+            mesh, _ = discretize.tests.setupMesh(
                 meshType, self.meshSize, self.meshDimension
             )
             v = np.random.rand(mesh.nN)
