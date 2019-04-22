@@ -13,6 +13,9 @@ environment:
     - PYTHON_VERSION: 3.6
       CONDA: C:\Miniconda36
 
+    - PYTHON_VERSION: 3.7
+      CONDA: C:\Miniconda37
+
   pypi_password:
     secure: S2mZCxm5LzIF4KFDss/f7g==
 
