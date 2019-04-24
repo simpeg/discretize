@@ -1,4 +1,5 @@
 # distutils: language=c++
+#cython: embedsignature=True
 cimport cython
 cimport numpy as np
 from libc.math cimport sqrt, abs, cbrt
