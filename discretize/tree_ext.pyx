@@ -34,14 +34,45 @@ cdef class Cell:
 
     @property
     def nodes(self):
-        cdef c_Cell* cell = self._cell
-        if self._dim > 2:
-            return tuple((cell.points[0].index, cell.points[1].index,
-                          cell.points[2].index, cell.points[3].index,
-                          cell.points[4].index, cell.points[5].index,
-                          cell.points[6].index, cell.points[7].index))
-        return tuple((cell.points[0].index, cell.points[1].index,
-                      cell.points[2].index, cell.points[3].index))
+        cdef Node *points[8]
+        points = self._cell.points
+        if self._dim == 3:
+            return tuple((points[0].index, points[1].index,
+                          points[2].index, points[3].index,
+                          points[4].index, points[5].index,
+                          points[6].index, points[7].index))
+        return tuple((points[0].index, points[1].index,
+                      points[2].index, points[3].index))
+
+    @property
+    def edges(self):
+        cdef Edge *edges[12]
+        edges = self._cell.edges
+        if self._dim == 2:
+            return tuple((edges[0].index, edges[1].index,
+                          edges[2].index, edges[3].index))
+        return tuple((
+                edges[0].index, edges[1].index, edges[2].index, edges[3].index,
+                edges[4].index, edges[5].index, edges[6].index, edges[7].index,
+                edges[8].index, edges[9].index, edges[10].index, edges[11].index,
+                ))
+
+    @property
+    def faces(self):
+        cdef Face *faces[6]
+        faces = self._cell.faces
+        if self._dim == 3:
+            return tuple((
+                faces[0].index, faces[1].index,
+                faces[2].index, faces[3].index,
+                faces[4].index, faces[5].index
+            ))
+        cdef Edge *edges[12]
+        edges = self._cell.edges
+        return tuple((
+            edges[2].index, edges[3].index,
+            edges[0].index, edges[1].index,
+        ))
 
     @property
     def center(self):
