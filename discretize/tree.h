@@ -106,7 +106,8 @@ class Cell{
     Edge *edges[12];
     Face *faces[6];
 
-    int_t location_ind[3], index, key, level, max_level;
+    int_t location_ind[3], key, level, max_level;
+    long long int index; // non root parents will have a -1 value
     double location[3];
     double volume;
     function test_func;
