@@ -62,13 +62,16 @@ discretize is on pypi::
 Installing from Source
 ----------------------
 
+If you are not a developer then pip is really the preferred way. However, if
+you are an active developer of discretize you might want to install if from source:
+
 First (you need git)::
 
     git clone https://github.com/simpeg/discretize
 
 Second (from the root of the discretize repository)::
 
-    python setup.py build_ext --inline
+    python setup.py build_ext --inplace
 
 This builds the cython extensions. You will also need to add
 the discretize directory to your PYTHON_PATH.
