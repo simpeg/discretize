@@ -2,6 +2,8 @@
 cimport cython
 cimport numpy as np
 from libc.math cimport sqrt, abs, cbrt
+from libcpp.vector cimport vector
+from numpy.math cimport INFINITY
 
 from tree cimport int_t, Tree as c_Tree, PyWrapper, Node, Edge, Face, Cell as c_Cell
 
@@ -1068,6 +1070,111 @@ cdef class _TreeMesh:
             is_on_boundary[cell.index] = is_bound
 
         return np.where(is_on_boundary)
+
+    @cython.cdivision(True)
+    def get_cells_along_line(self, x0, x1):
+        cdef np.float64_t ax, ay, az, bx, by, bz
+
+        cdef int dim = self.dim
+        ax = x0[0]
+        ay = x0[1]
+        az = x0[2] if dim==3 else 0
+
+        bx = x1[0]
+        by = x1[1]
+        bz = x1[2] if dim==3 else 0
+
+        cdef vector[long long int] cell_indexes;
+
+        #find initial cell
+        cdef c_Cell *cur_cell = self.tree.containing_cell(ax, ay, az)
+        cell_indexes.push_back(cur_cell.index)
+        #find last cell
+        cdef c_Cell *last_cell = self.tree.containing_cell(bx, by, bz)
+        cdef c_Cell *next_cell
+        cdef int ix, iy, iz
+        cdef double tx, ty, tz, ipx, ipy, ipz
+
+        if dim==3:
+            last_point = 7
+        else:
+            last_point = 3
+
+        cdef int iter = 0
+
+        while cur_cell.index != last_cell.index:
+            #find which direction to look:
+            p0 = cur_cell.points[0].location
+            pF = cur_cell.points[last_point].location
+
+            if ax>bx:
+                tx = (p0[0]-ax)/(bx-ax)
+            elif ax<bx:
+                tx = (pF[0]-ax)/(bx-ax)
+            else:
+                tx = INFINITY
+
+            if ay>by:
+                ty = (p0[1]-ay)/(by-ay)
+            elif ay<by:
+                ty = (pF[1]-ay)/(by-ay)
+            else:
+                ty = INFINITY
+
+            if az>bz:
+                tz = (p0[2]-az)/(bz-az)
+            elif az<bz:
+                tz = (pF[2]-az)/(bz-az)
+            else:
+                tz = INFINITY
+
+            t = min(tx,ty,tz)
+
+            #intersection point
+            ipx = (bx-ax)*t+ax
+            ipy = (by-ay)*t+ay
+            ipz = (bz-az)*t+az
+
+            next_cell = cur_cell
+            if tx<=ty and tx<=tz:
+                # step in x direction
+                if ax>bx: # go -x
+                    next_cell = next_cell.neighbors[0]
+                else: # go +x
+                    next_cell = next_cell.neighbors[1]
+            if ty<=tx and ty<=tz:
+                # step in y direction
+                if ay>by: # go -y
+                    next_cell = next_cell.neighbors[2]
+                else: # go +y
+                    next_cell = next_cell.neighbors[3]
+            if dim==3 and tz<=tx and tz<=ty:
+                # step in z direction
+                if az>bz: # go -z
+                    next_cell = next_cell.neighbors[4]
+                else: # go +z
+                    next_cell = next_cell.neighbors[5]
+
+            # check if next_cell is not a leaf
+            # (if so need to traverse down the children and find the closest leaf cell)
+            while not next_cell.is_leaf():
+                # should be able to use cp to check which cell to go to
+                cp = next_cell.children[0].points[last_point].location
+                # this basically finds the child cell closest to the intersection point
+                ix = ipx>cp[0] or (ipx==cp[0] and ax<bx)
+                iy = ipy>cp[1] or (ipy==cp[1] and ay<by)
+                iz = dim==3 and (ipz>cp[2] or  (ipz==cp[2] and az<bz))
+                next_cell = next_cell.children[ix + 2*iy + 4*iz]
+
+            #this now should have stepped appropriately across diagonals and such
+
+            cur_cell = next_cell
+            cell_indexes.push_back(cur_cell.index)
+            if cur_cell.index == -1:
+                raise Exception('Path not found')
+        return cell_indexes
+
+
 
     @property
     def faceDiv(self):
