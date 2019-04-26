@@ -18,8 +18,6 @@
     tutorials/mesh_overview
     tutorials/tensor_mesh
     tutorials/cylindrical_mesh
-    content/finite_volume
-    content/inner_products
 
 .. toctree::
     :maxdepth: 2
@@ -27,3 +25,12 @@
     :caption: Reference documentation
 
     api/index.rst
+
+
+.. toctree::
+    :maxdepth: 2
+    :hidden:
+    :caption: Theory
+
+    content/finite_volume
+    content/inner_products
