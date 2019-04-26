@@ -7,13 +7,13 @@
 
     content/big_picture
     content/installing
-    gallery/index
+    demo_examples/index
     content/additional_resources
 
 .. toctree::
     :maxdepth: 2
     :hidden:
-    :caption: User Guide
+    :caption: Tutorials
 
     tutorials/mesh_overview
     tutorials/tensor_mesh
