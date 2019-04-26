@@ -60,56 +60,74 @@ class TensorMesh(
     def __init__(self, h=None, x0=None, **kwargs):
         BaseTensorMesh.__init__(self, h=h, x0=x0, **kwargs)
 
-    def __str__(self):
-        outStr = '  ---- {0:d}-D TensorMesh ----  '.format(self.dim)
-        def printH(hx, outStr=''):
-            i = -1
-            while True:
-                i = i + 1
-                if i > hx.size:
-                    break
-                elif i == hx.size:
-                    break
-                h = hx[i]
-                n = 1
-                for j in range(i+1, hx.size):
-                    if hx[j] == h:
-                        n = n + 1
-                        i = i + 1
-                    else:
-                        break
+    def __repr__(self):
+        """Plain text representation."""
+        fmt = "\n  {}: {:,} cells\n\n".format(type(self).__name__, self.nC)
+        fmt += 22*" "+"MESH EXTENT"+13*" "+"CELL WIDTH      FACTOR\n"
+        fmt += "  dir    nC        min           max         min       max "
+        fmt += "     max\n  ---   ---  "+27*"-"+"  "+18*"-"+"  ------\n"
 
-                if n == 1:
-                    outStr += ' {0:.2f}, '.format(h)
-                else:
-                    outStr += ' {0:d}*{1:.2f}, '.format(n, h)
+        # Get attributes and put into table.
+        attrs = self._repr_attributes()
+        for i in range(self.dim):
+            name = attrs['names'][i]
+            iattr = attrs[name]
+            fmt += "   {}".format(name)
+            fmt += " {:6}".format(iattr['nC'])
+            for p in ['min', 'max']:
+                fmt += " {:13,.2f}".format(iattr[p])
+            for p in ['h_min', 'h_max']:
+                fmt += " {:9,.2f}".format(iattr[p])
+            fmt += "{:8,.2f}".format(iattr['max_fact'])
+            fmt += "\n"  # End row
 
-            return outStr[:-1]
+        fmt += "\n"
+        return fmt
 
-        if self.dim == 1:
-            outStr += '\n   x0: {0:.2f}'.format(self.x0[0])
-            outStr += '\n  nCx: {0:d}'.format(self.nCx)
-            outStr += printH(self.hx, outStr='\n   hx:')
-            pass
-        elif self.dim == 2:
-            outStr += '\n   x0: {0:.2f}'.format(self.x0[0])
-            outStr += '\n   y0: {0:.2f}'.format(self.x0[1])
-            outStr += '\n  nCx: {0:d}'.format(self.nCx)
-            outStr += '\n  nCy: {0:d}'.format(self.nCy)
-            outStr += printH(self.hx, outStr='\n   hx:')
-            outStr += printH(self.hy, outStr='\n   hy:')
-        elif self.dim == 3:
-            outStr += '\n   x0: {0:.2f}'.format(self.x0[0])
-            outStr += '\n   y0: {0:.2f}'.format(self.x0[1])
-            outStr += '\n   z0: {0:.2f}'.format(self.x0[2])
-            outStr += '\n  nCx: {0:d}'.format(self.nCx)
-            outStr += '\n  nCy: {0:d}'.format(self.nCy)
-            outStr += '\n  nCz: {0:d}'.format(self.nCz)
-            outStr += printH(self.hx, outStr='\n   hx:')
-            outStr += printH(self.hy, outStr='\n   hy:')
-            outStr += printH(self.hz, outStr='\n   hz:')
+    def _repr_html_(self):
+        """HTML representation."""
+        style = " style='padding: 5px 20px 5px 20px;'"
 
-        return outStr
+        fmt = "<table>\n"
+        fmt += "  <tr>\n"
+        fmt += "    <td style='font-weight: bold; font-size: 1.2em; text-align"
+        fmt += ": center;' colspan='3'>{}</td\n>".format(type(self).__name__)
+        fmt += "    <td style='font-size: 1.2em; text-align: center;'"
+        fmt += "colspan='4'>{:,} cells</td>\n".format(self.nC)
+        fmt += "  </tr>\n"
+
+        fmt += "  <tr>\n"
+        fmt += "    <th></th\n>"
+        fmt += "    <th></th\n>"
+        fmt += "    <th colspan='2'"+style+">MESH EXTENT</th\n>"
+        fmt += "    <th colspan='2'"+style+">CELL WIDTH</th\n>"
+        fmt += "    <th"+style+">FACTOR</th\n>"
+        fmt += "  </tr\n>"
+
+        fmt += "  <tr>\n"
+        fmt += "    <th"+style+">dir</th>\n"
+        fmt += "    <th"+style+">nC</th>\n"
+        fmt += "    <th"+style+">min</th>\n"
+        fmt += "    <th"+style+">max</th>\n"
+        fmt += "    <th"+style+">min</th>\n"
+        fmt += "    <th"+style+">max</th>\n"
+        fmt += "    <th"+style+">max</th>\n"
+        fmt += "  </tr>\n"
+
+        # Get attributes and put into table.
+        attrs = self._repr_attributes()
+        for i in range(self.dim):
+            name = attrs['names'][i]
+            iattr = attrs[name]
+            fmt += "  <tr>\n"  # Start row
+            fmt += "    <td"+style+">{}</td>\n".format(name)
+            fmt += "    <td"+style+">{}</td>\n".format(iattr['nC'])
+            for p in ['min', 'max', 'h_min', 'h_max', 'max_fact']:
+                fmt += "    <td"+style+">{:,.2f}</td>\n".format(iattr[p])
+            fmt += "  </tr>\n"  # End row
+
+        fmt += "</table>\n"
+        return fmt
 
     # --------------- Geometries ---------------------
     @property
@@ -327,3 +345,38 @@ class TensorMesh(
             indzd = (self.gridCC[:, 2] == min(self.gridCC[:, 2]))
             indzu = (self.gridCC[:, 2] == max(self.gridCC[:, 2]))
             return indxd, indxu, indyd, indyu, indzd, indzu
+
+    def _repr_attributes(self):
+        """Attributes for the representation of the mesh."""
+
+        attrs = {}
+        attrs['names'] = ['x', 'y', 'z'][:self.dim]
+
+        # Loop over dimensions.
+        for i in range(self.dim):
+            name = attrs['names'][i]  # Name of this dimension
+            attrs[name] = {}
+
+            # Get min/max node.
+            n_vector = getattr(self, 'vectorN'+name)
+            attrs[name]['min'] = np.nanmin(n_vector)
+            attrs[name]['max'] = np.nanmax(n_vector)
+
+            # Get min/max cell width.
+            h_vector = getattr(self, 'h'+name)
+            attrs[name]['h_min'] = np.nanmin(h_vector)
+            attrs[name]['h_max'] = np.nanmax(h_vector)
+
+            # Get max stretching factor.
+            if len(h_vector) < 2:
+                attrs[name]['max_fact'] = 1.0
+            else:
+                attrs[name]['max_fact'] = np.nanmax(
+                    np.r_[h_vector[:-1]/h_vector[1:],
+                          h_vector[1:]/h_vector[:-1]]
+                )
+
+            # Add number of cells.
+            attrs[name]['nC'] = getattr(self, 'nC'+name)
+
+        return attrs
