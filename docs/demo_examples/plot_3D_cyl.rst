@@ -43,7 +43,7 @@ If you wish to plot only one slice, you can use
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.169 seconds)
+   **Total running time of the script:** ( 0 minutes  0.185 seconds)
 
 
 .. _sphx_glr_download_demo_examples_plot_3D_cyl.py:

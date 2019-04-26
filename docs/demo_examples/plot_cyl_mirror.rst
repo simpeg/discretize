@@ -83,7 +83,7 @@ symmetric mesh with the plotting symmetric about x=0.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.222 seconds)
+   **Total running time of the script:** ( 0 minutes  0.255 seconds)
 
 
 .. _sphx_glr_download_demo_examples_plot_cyl_mirror.py:

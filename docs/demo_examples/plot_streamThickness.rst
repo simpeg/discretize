@@ -146,7 +146,7 @@ pull request on the example in discretize
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  1.079 seconds)
+   **Total running time of the script:** ( 0 minutes  1.081 seconds)
 
 
 .. _sphx_glr_download_demo_examples_plot_streamThickness.py:

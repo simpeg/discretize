@@ -72,6 +72,7 @@ get from running the laguna-del-maule inversion notebook.
 
  .. code-block:: none
 
+    file already exists, new file is called D:\Documents\Repositories\discretize\demo_examples\laguna_del_maule_slicer.tar.gz
     Downloading https://storage.googleapis.com/simpeg/laguna_del_maule_slicer.tar.gz
        saved to: D:\Documents\Repositories\discretize\demo_examples\laguna_del_maule_slicer.tar.gz
     Download completed!
@@ -333,7 +334,7 @@ This way you get the figure-handle, and can do further stuff with the figure.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  3.176 seconds)
+   **Total running time of the script:** ( 0 minutes  3.525 seconds)
 
 
 .. _sphx_glr_download_demo_examples_plot_slicer_demo.py:
