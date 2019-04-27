@@ -1,13 +1,39 @@
 """
 Tensor meshes
-=============
+*************
 
-Tensor meshes (:class:`~discretize.TensorMesh`) are defined by a vectors of
-cell widths in each dimension. They can be defined in 1, 2, or 3 dimensions.
+Tensor meshes are the most basic class of meshes that can be created with
+discretize. They belong to the class (:class:`~discretize.TensorMesh`).
+Tensor meshes can be defined in 1, 2 or 3 dimensions. Here we demonstrate:
+
+	- How to create basic tensor meshes
+	- How to include padding cells
+	- How to plot tensor meshes
+	- How to extract properties from meshes
+
 """
+
+###############################################################################
+# Import Packages
+# ===============
+# 
+# Here we import the packages required for this tutorial.
 
 import numpy as np
 import discretize
+
+###############################################################################
+# B Meshes
+# ====================
+# 
+# 
+
+
+
+
+
+
+
 
 ###############################################################################
 # In the simplest case, you can instantiate a tensor mesh by providing the
