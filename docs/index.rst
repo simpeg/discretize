@@ -15,7 +15,9 @@
     :hidden:
     :caption: Tutorials
 
-    tutorials/mesh_generation/index
+    tutorials/mesh_generation/tensor_mesh
+    tutorials/mesh_generation/cylindrical_mesh
+    tutorials/mesh_generation/tree_mesh
 
 .. toctree::
     :maxdepth: 2
