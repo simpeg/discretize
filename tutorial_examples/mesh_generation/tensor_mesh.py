@@ -1,122 +1,152 @@
 """
 Tensor meshes
-*************
+=============
 
 Tensor meshes are the most basic class of meshes that can be created with
 discretize. They belong to the class (:class:`~discretize.TensorMesh`).
 Tensor meshes can be defined in 1, 2 or 3 dimensions. Here we demonstrate:
 
-	- How to create basic tensor meshes
-	- How to include padding cells
-	- How to plot tensor meshes
-	- How to extract properties from meshes
+    - How to create basic tensor meshes
+    - How to include padding cells
+    - How to plot tensor meshes
+    - How to extract properties from meshes
 
 """
 
-###############################################################################
+###############################################
 # Import Packages
-# ===============
+# ---------------
 # 
 # Here we import the packages required for this tutorial.
+#
 
+from discretize import TensorMesh
 import numpy as np
-import discretize
 
-###############################################################################
-# B Meshes
-# ====================
+###############################################
+# Basic Example
+# -------------
+#
+# The easiest way to define a tensor mesh is to define the cell widths in
+# x, y and z as 1D numpy arrays. And to provide the position of the bottom
+# southwest corner of the mesh. We demonstrate this here for a 2D mesh (thus
+# we do not need to consider the z-dimension).
+
+ncx = 10     # number of core mesh cells in x
+ncy = 15     # number of core mesh cells in y
+dx = 15      # base cell width x
+dy = 10      # base cell width y
+hx = dx*np.ones(ncx)
+hy = dy*np.ones(ncy)
+
+x0 = 0
+y0 = -150
+
+mesh = TensorMesh([hx, hy],x0=[x0, y0])
+
+mesh.plotGrid()
+
+
+###############################################
+# Padding Cells
+# -------------
 # 
+# For practical purposes, the user may want to define a region where the cell
+# widths are increasing/decreasing in size. For example, padding is often used
+# to define a large domain while reducing the total number of mesh cells.
+# Here we demonstrate how to create tensor meshes that have padding cells.
+#
+
+ncx = 10     # number of core mesh cells in x
+ncy = 15     # number of core mesh cells in y
+dx = 15      # base cell width x
+dy = 10      # base cell width y
+npad_x = 4   # number of padding cells in x
+npad_y = 4   # number of padding cells in y
+exp_x = 1.25 # expansion rate of padding cells in x
+exp_y = 1.25 # expansion rate of padding cells in y
+
+# Use a list of tuples to define cell widths in each direction. Each tuple
+# contains the cell with, number of cells and the expansion factor (+ve/-ve).
+hx = [(dx, npad_x, -exp_x), (dx, ncx), (dx, npad_x, exp_x)]
+hy = [(dy, npad_y, -exp_y), (dy, ncy), (dy, npad_y, exp_y)]
+
+# We can use flags 'C', '0' and 'N' to define the xyz position of the mesh.
+mesh = TensorMesh([hx, hy],x0='CN')
+
+mesh.plotGrid()
+
+###############################################
+# Extracting Mesh Properties
+# --------------------------
 # 
+# Once the mesh is created, you may want to extract certain properties. Here,
+# we show some properties that can be extracted from 2D meshes.
+#
+
+ncx = 10     # number of core mesh cells in x
+ncy = 15     # number of core mesh cells in y
+dx = 15      # base cell width x
+dy = 10      # base cell width y
+npad_x = 4   # number of padding cells in x
+npad_y = 4   # number of padding cells in y
+exp_x = 1.25 # expansion rate of padding cells in x
+exp_y = 1.25 # expansion rate of padding cells in y
+
+hx = [(dx, npad_x, -exp_x), (dx, ncx), (dx, npad_x, exp_x)]
+hy = [(dy, npad_y, -exp_y), (dy, ncy), (dy, npad_y, exp_y)]
+
+mesh = TensorMesh([hx, hy],x0='C0')
+
+# EXTRACTING SOME PROPERTIES
+
+# The bottom west corner
+x0 = mesh.x0
+
+# The total number of cells
+nC = mesh.nC
+
+# An (nC, 2) array containing the cell-center locations
+cc = mesh.gridCC
+
+# A boolean array specifying which cells lie on the boundary
+bInd = mesh.cellBoundaryInd
+
+# The cell areas (2D "volume")
+s = mesh.vol
+mesh.plotImage(s, grid=True)
+
+###############################################
+# 3D Example
+# ----------
+# 
+# Here we show how the same approach can be used to create and extract
+# properties from a 3D tensor mesh.
+#
+
+nc = 10      # number of core mesh cells in x, y and z
+dh = 10      # base cell width in x, y and z
+npad = 5     # number of padding cells
+exp = 1.25   # expansion rate of padding cells
+
+h = [(dh, npad, -exp), (dh, nc), (dh, npad, exp)]
+mesh = TensorMesh([h, h, h],x0='C00')
+
+# The bottom southwest corner
+x0 = mesh.x0
+
+# The total number of cells
+nC = mesh.nC
+
+# An (nC, 3) array containing the cell-center locations
+cc = mesh.gridCC
+
+# A boolean array specifying which cells lie on the boundary
+bInd = mesh.cellBoundaryInd
+
+# The cell volumes
+v = mesh.vol
+
+mesh.plotImage(v, grid=True)
 
 
-
-
-
-
-
-
-###############################################################################
-# In the simplest case, you can instantiate a tensor mesh by providing the
-# number of cells in each dimension. This assumes that the extent of each
-# dimension is unity.
-
-ncx = 16
-ncy = 16
-tensor_mesh = discretize.TensorMesh([ncx, ncy])
-
-tensor_mesh.plotGrid()
-
-###############################################################################
-# If instead, you want a mesh that has 16 cells in each dimension and the width
-# of each cell is 1 (so that the extent of the domain is 16), you can instead
-# specify the vector of cell widths.
-
-hx2 = np.ones(ncx)
-hy2 = np.ones(ncy)
-tensor_mesh2 = discretize.TensorMesh([hx2, hy2])
-
-tensor_mesh2.plotGrid()
-
-###############################################################################
-# In one lin, the above mesh can be specified by providing tuples to TensorMesh
-# (cell_size, number_of_cells)
-
-cell_size = 1
-tensor_mesh2b = discretize.TensorMesh([
-    [(cell_size, ncx)],  # hx
-    [(cell_size, ncy)]  # hy
-])
-
-###############################################################################
-# The widths of the cells can be variable. For example when solving problems
-# in electromagnetics, it is necessary to add "padding cells" which expand
-# near the boundary so that we satisfy the boundary conditions
-
-n_padding_cells = 4
-padding_factor = 1.3
-h_padding = padding_factor * np.arange(n_padding_cells)
-h_core = np.ones(ncx)
-
-hx3 = np.hstack([np.flipud(h_padding), h_core, h_padding])
-hy3 = hx3
-
-tensor_mesh3 = discretize.TensorMesh([hx3, hy3])
-
-tensor_mesh3.plotGrid()
-
-###############################################################################
-# Since it is common to include padding in meshes for numerical simulations,
-# we simplify the above steps by allowing you to provide a list of tuples
-# describing parts of the mesh. When there is a third number in the tuple, it
-# refers to the factor by which we increase the cell size. If the number is
-# negative, the tensor is flipped so that the widest cells are first.
-
-hx4 = [
-    (cell_size, n_padding_cells, -padding_factor),  # padding on the left
-    (cell_size, ncx),  # core part of the mesh (uniform cells)
-    (cell_size, n_padding_cells, padding_factor),  # padding on the right
-]
-hy4 = hx4
-tensor_mesh4 = discretize.TensorMesh([hx4, hy4])
-
-tensor_mesh4.plotGrid()
-
-###############################################################################
-# The origin of the mesh can be moved by assigning the `x0` variable. When a
-# mesh is instantiated, the `x0` can be provided as a keyword. Alternatively,
-# it can be set by setting the `x0` property after a mesh has been created.
-# Here, we will position the origin in the center of the mesh created in the
-# previous step.
-
-x0 = [-tensor_mesh4.hx.sum()/2, -tensor_mesh4.hy.sum()/2]
-tensor_mesh4.x0 = x0
-
-tensor_mesh4.plotGrid()
-
-###############################################################################
-# The above is equivalent to passing `x0='CC'` which states that you want both
-# the x and y directions of the mesh to be centered. A 'N'
-# will make the entire mesh negative, and a '0' (or a 0) will
-# make the mesh start at zero.
-
-tensor_mesh4b = discretize.TensorMesh([hx4, hx4], x0='CC').plotGrid()
