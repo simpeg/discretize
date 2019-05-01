@@ -262,13 +262,13 @@ Examples
 
   .. container:: sphx-glr-download
 
-    :download:`Download all examples in Python source code: demo_examples_python.zip </D:/Documents/Repositories/discretize/docs/demo_examples/demo_examples_python.zip>`
+    :download:`Download all examples in Python source code: demo_examples_python.zip </C:/Users/Sarah/Documents/Repositories/discretize/docs/demo_examples/demo_examples_python.zip>`
 
 
 
   .. container:: sphx-glr-download
 
-    :download:`Download all examples in Jupyter notebooks: demo_examples_jupyter.zip </D:/Documents/Repositories/discretize/docs/demo_examples/demo_examples_jupyter.zip>`
+    :download:`Download all examples in Jupyter notebooks: demo_examples_jupyter.zip </C:/Users/Sarah/Documents/Repositories/discretize/docs/demo_examples/demo_examples_jupyter.zip>`
 
 
 .. only:: html

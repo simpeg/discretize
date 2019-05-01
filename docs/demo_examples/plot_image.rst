@@ -74,7 +74,7 @@ You can use M.PlotImage to plot images on all of the Meshes.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.265 seconds)
+   **Total running time of the script:** ( 0 minutes  0.440 seconds)
 
 
 .. _sphx_glr_download_demo_examples_plot_image.py:

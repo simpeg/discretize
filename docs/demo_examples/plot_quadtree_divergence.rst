@@ -76,7 +76,7 @@ when hanging faces are included.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.153 seconds)
+   **Total running time of the script:** ( 0 minutes  0.238 seconds)
 
 
 .. _sphx_glr_download_demo_examples_plot_quadtree_divergence.py:

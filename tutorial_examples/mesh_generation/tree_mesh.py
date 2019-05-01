@@ -18,16 +18,19 @@ discretization around certain points or within certain regions. When
 creating tree meshes, we must remember certain rules:
 
     - The number of base mesh cells in x, y and z must all be powers of 2
-    - We cannot refine the mesh to create cells smaller than those defining the base mesh
-    - The range of cell sizes in the tree mesh depends on the number of base mesh cells in x, y and z
+    - We cannot refine the mesh to create cells smaller than those defining the
+    base mesh
+    - The range of cell sizes in the tree mesh depends on the number of base
+    mesh cells in x, y and z
+
 
 """
 
 ###############################################
-# 
+#
 # Import Packages
 # ---------------
-# 
+#
 # Here we import the packages required for this tutorial.
 #
 
@@ -39,10 +42,13 @@ import numpy as np
 # Basic Example
 # -------------
 #
-# sd sd asdf asdfasdfas
+# Here we demonstrate the basic two step process for creating a 2D tree mesh
+# (QuadTree mesh). The region of highest discretization if defined within a
+# rectangular box.
+#
 
-dh = 5   # minimum cell width (base mesh cell width)
-nbc = 64 # number of base mesh cells in x
+dh = 5    # minimum cell width (base mesh cell width)
+nbc = 64  # number of base mesh cells in x
 
 # Define base mesh
 h = dh*np.ones(nbc)
@@ -52,11 +58,10 @@ xp, yp = np.meshgrid([120., 240.], [80., 160.])
 xy = np.c_[matutils.mkvc(xp), matutils.mkvc(yp)]
 
 # Discretize to finest cell size within rectangular region
-# mesh = meshutils.refine_tree_xyz(mesh, xy, 
-#     octree_levels=[2, 2], 
-#     method='box', finalize=False)
+# mesh = meshutils.refine_tree_xyz(mesh, xy, octree_levels=[2, 2],
+#                                  method='box', finalize=False)
 
-mesh.finalize()
+mesh.finalize()  # Must finalize tree mesh before use
 
 mesh.plotGrid(showIt=True)
 
@@ -65,7 +70,10 @@ mesh.plotGrid(showIt=True)
 # Intermediate Example
 # --------------------
 #
-# Points-based refinement and shift mesh
+# The widths of the base mesh cells do not need to be the same in x and y but
+# the number of base mesh cells in x and y does need to be a power of 2. Here
+# we show a method for mesh refinement which discretizes more finely around a
+# set of points. This is usedful for discretizing surface topography.
 
 dx = 5    # minimum cell width (base mesh cell width) in x
 dy = 5    # minimum cell width (base mesh cell width) in y
@@ -86,26 +94,25 @@ mesh = TreeMesh([hx, hy], x0='CC')
 xx = mesh.vectorNx
 yy = -3*np.exp((xx**2) / 100**2) + 50.
 pts = np.c_[matutils.mkvc(xx), matutils.mkvc(yy)]
-# mesh = meshutils.refine_tree_xyz(mesh, pts, 
-#     octree_levels=[2,2], 
-#     method='radial', finalize=False)
+# mesh = meshutils.refine_tree_xyz(mesh, pts, octree_levels=[2,2],
+#                                  method='radial', finalize=False)
 
 # Refine polygon
 xx = np.array([0., 10., 0., -10.])
 yy = np.array([-20., -10., 0., -10])
 pts = np.c_[matutils.mkvc(xx), matutils.mkvc(yy)]
-# mesh = meshutils.refine_tree_xyz(mesh, pts, 
-#     octree_levels=[2, 2], 
-#     method='radial', finalize=False)
+# mesh = meshutils.refine_tree_xyz(mesh, pts, octree_levels=[2, 2],
+#                                  method='radial', finalize=False)
 
 mesh.finalize()
 mesh.plotGrid(showIt=True)
 
 ####################################################
-# Extracting Mesh Properties and Polygon Refinement
-# -------------------------------------------------
+# Extracting Mesh Properties
+# --------------------------
 #
-# dsfasdfsadfas
+# Once the mesh is created, you may want to extract certain properties. Here,
+# we show some properties that can be extracted from a QuadTree mesh.
 
 dx = 5    # minimum cell width (base mesh cell width) in x
 dy = 5    # minimum cell width (base mesh cell width) in y
@@ -126,21 +133,17 @@ mesh = TreeMesh([hx, hy], x0='CC')
 xx = mesh.vectorNx
 yy = -3*np.exp((xx**2) / 100**2) + 50.
 pts = np.c_[matutils.mkvc(xx), matutils.mkvc(yy)]
-# mesh = meshutils.refine_tree_xyz(mesh, pts, 
-#     octree_levels=[2,2], 
-#     method='radial', finalize=False)
+# mesh = meshutils.refine_tree_xyz(mesh, pts, octree_levels=[2,2],
+#                                  method='radial', finalize=False)
 
 # Refine polygon
 xx = np.array([0., 10., 0., -10.])
 yy = np.array([-20., -10., 0., -10])
 pts = np.c_[matutils.mkvc(xx), matutils.mkvc(yy)]
-# mesh = meshutils.refine_tree_xyz(mesh, pts, 
-#     octree_levels=[2, 2], 
-#     method='radial', finalize=False)
+# mesh = meshutils.refine_tree_xyz(mesh, pts, octree_levels=[2, 2],
+#                                  method='radial', finalize=False)
 
 mesh.finalize()
-
-# EXTRACTING SOME PROPERTIES
 
 # The bottom west corner
 x0 = mesh.x0
@@ -170,7 +173,7 @@ dx = 5    # minimum cell width (base mesh cell width) in x
 dy = 5    # minimum cell width (base mesh cell width) in y
 dz = 5    # minimum cell width (base mesh cell width) in z
 
-x_length = 300.    # domain width in x
+x_length = 300.     # domain width in x
 y_length = 300.     # domain width in y
 z_length = 300.     # domain width in y
 
@@ -189,21 +192,17 @@ mesh = TreeMesh([hx, hy, hz], x0='CCC')
 [xx, yy] = np.meshgrid(mesh.vectorNx, mesh.vectorNy)
 zz = -3*np.exp((xx**2 + yy**2) / 100**2) + 50.
 pts = np.c_[matutils.mkvc(xx), matutils.mkvc(yy), matutils.mkvc(zz)]
-mesh = meshutils.refine_tree_xyz(mesh, pts, 
-    octree_levels=[2, 2], 
-    method='radial', finalize=False)
+mesh = meshutils.refine_tree_xyz(mesh, pts, octree_levels=[2, 2],
+                                 method='radial', finalize=False)
 
 # Refine box
 xp, yp, zp = np.meshgrid([-40., 40.], [-40., 40.], [-60., 0.])
 xyz = np.c_[matutils.mkvc(xp), matutils.mkvc(yp), matutils.mkvc(zp)]
 
-# mesh = meshutils.refine_tree_xyz(mesh, xyz, 
-#     octree_levels=[2, 2], 
-#     method='box', finalize=False)
+# mesh = meshutils.refine_tree_xyz(mesh, xyz, octree_levels=[2, 2],
+#                                  method='box', finalize=False)
 
 mesh.finalize()
-
-# EXTRACTING SOME PROPERTIES
 
 # The bottom west corner
 x0 = mesh.x0
@@ -220,5 +219,3 @@ bInd = mesh.cellBoundaryInd
 # The cell areas (2D "volume")
 s = mesh.vol
 # mesh.plotSlice(s, normal='Y', ind=int(mesh.hy.size/2), grid=True)
-
-
