@@ -38,6 +38,8 @@ from discretize import TreeMesh
 from discretize.utils import matutils, meshutils
 import numpy as np
 
+# sphinx_gallery_thumbnail_number = 3
+
 ###############################################
 # Basic Example
 # -------------
@@ -58,10 +60,10 @@ xp, yp = np.meshgrid([120., 240.], [80., 160.])
 xy = np.c_[matutils.mkvc(xp), matutils.mkvc(yp)]
 
 # Discretize to finest cell size within rectangular region
-mesh = meshutils.refine_tree_xyz(mesh, xy, octree_levels=[2, 2],
+mesh2 = meshutils.refine_tree_xyz(mesh, xy, octree_levels=[2, 2],
                                  method='box', finalize=False)
 
-mesh.finalize()  # Must finalize tree mesh before use
+mesh2.finalize()  # Must finalize tree mesh before use
 
 mesh.plotGrid(showIt=True)
 
@@ -94,15 +96,15 @@ mesh = TreeMesh([hx, hy], x0='CC')
 xx = mesh.vectorNx
 yy = -3*np.exp((xx**2) / 100**2) + 50.
 pts = np.c_[matutils.mkvc(xx), matutils.mkvc(yy)]
-# mesh = meshutils.refine_tree_xyz(mesh, pts, octree_levels=[2,2],
-#                                  method='radial', finalize=False)
+mesh = meshutils.refine_tree_xyz(mesh, pts, octree_levels=[2,2],
+                                  method='radial', finalize=False)
 
 # Refine polygon
 xx = np.array([0., 10., 0., -10.])
 yy = np.array([-20., -10., 0., -10])
 pts = np.c_[matutils.mkvc(xx), matutils.mkvc(yy)]
-# mesh = meshutils.refine_tree_xyz(mesh, pts, octree_levels=[2, 2],
-#                                  method='radial', finalize=False)
+mesh = meshutils.refine_tree_xyz(mesh, pts, octree_levels=[2, 2],
+                                  method='radial', finalize=False)
 
 mesh.finalize()
 mesh.plotGrid(showIt=True)
@@ -133,15 +135,15 @@ mesh = TreeMesh([hx, hy], x0='CC')
 xx = mesh.vectorNx
 yy = -3*np.exp((xx**2) / 100**2) + 50.
 pts = np.c_[matutils.mkvc(xx), matutils.mkvc(yy)]
-# mesh = meshutils.refine_tree_xyz(mesh, pts, octree_levels=[2,2],
-#                                  method='radial', finalize=False)
+mesh = meshutils.refine_tree_xyz(mesh, pts, octree_levels=[2,2],
+                                 method='radial', finalize=False)
 
 # Refine polygon
 xx = np.array([0., 10., 0., -10.])
 yy = np.array([-20., -10., 0., -10])
 pts = np.c_[matutils.mkvc(xx), matutils.mkvc(yy)]
-# mesh = meshutils.refine_tree_xyz(mesh, pts, octree_levels=[2, 2],
-#                                  method='radial', finalize=False)
+mesh = meshutils.refine_tree_xyz(mesh, pts, octree_levels=[2, 2],
+                                 method='radial', finalize=False)
 
 mesh.finalize()
 
@@ -159,7 +161,7 @@ bInd = mesh.cellBoundaryInd
 
 # The cell areas (2D "volume")
 s = mesh.vol
-# mesh.plotImage(s, grid=True)
+mesh.plotImage(s, grid=True)
 
 
 ###############################################
@@ -199,8 +201,8 @@ mesh = meshutils.refine_tree_xyz(mesh, pts, octree_levels=[2, 2],
 xp, yp, zp = np.meshgrid([-40., 40.], [-40., 40.], [-60., 0.])
 xyz = np.c_[matutils.mkvc(xp), matutils.mkvc(yp), matutils.mkvc(zp)]
 
-# mesh = meshutils.refine_tree_xyz(mesh, xyz, octree_levels=[2, 2],
-#                                  method='box', finalize=False)
+mesh = meshutils.refine_tree_xyz(mesh, xyz, octree_levels=[2, 2],
+                                 method='box', finalize=False)
 
 mesh.finalize()
 
@@ -218,4 +220,4 @@ bInd = mesh.cellBoundaryInd
 
 # The cell areas (2D "volume")
 s = mesh.vol
-# mesh.plotSlice(s, normal='Y', ind=int(mesh.hy.size/2), grid=True)
+mesh.plotSlice(s, normal='Y', ind=int(mesh.hy.size/2), grid=True)

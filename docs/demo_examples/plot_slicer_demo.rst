@@ -334,7 +334,7 @@ This way you get the figure-handle, and can do further stuff with the figure.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  3.066 seconds)
+   **Total running time of the script:** ( 0 minutes  2.643 seconds)
 
 
 .. _sphx_glr_download_demo_examples_plot_slicer_demo.py:
