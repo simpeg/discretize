@@ -13,9 +13,40 @@ from scipy.spatial import Delaunay, cKDTree
 from six import integer_types
 import numpy as np
 from properties.utils import Sentinel
-from discretize import utils
 
 cdef class Cell:
+    """A Cell of the `TreeMesh`
+
+    This cannot be created in python, it can only be accessed by indexing the
+    `TreeMesh` object.
+
+    This is also the object that is passed to the user defined refine function
+    when calling `TreeMesh.refine(func)`.
+
+    Attributes
+    ----------
+    dim : int
+    x0 : numpy.array of length dim
+        origin of this cell
+    center : numpy.array of length dim
+        center of this cell
+    h : numpy.array of length dim
+        width of this cell
+    nodes : tuple of int
+        indexes of this cell's nodes
+    edges : tuple of int
+        indexes of this cell's edges
+    faces : tuple of int
+        indexes of this cell's faces
+    neighbors : tuple of int and tuple
+        indexes of this cell's neighbors. If a cell has more than one neighbor
+        in a certain direction, then that entry will also be a tuple of all of
+        those neighbors.
+
+    Notes
+    -----
+    When called as part of the `refine` function, only the x0, center, and h properties are valid.
+    """
     cdef double _x, _y, _z, _x0, _y0, _z0, _wx, _wy, _wz
     cdef int_t _dim
     cdef c_Cell* _cell
@@ -64,7 +95,7 @@ cdef class Cell:
     def faces(self):
         cdef Face *faces[6]
         faces = self._cell.faces
-        if self._dim == 3:
+        if self._ == 3:
             return tuple((
                 faces[0].index, faces[1].index,
                 faces[2].index, faces[3].index,
@@ -299,6 +330,43 @@ cdef class _TreeMesh:
         self.__ubc_indArr = None
 
     def refine(self, function, finalize=True):
+        """ Refine a TreeMesh using a user supplied function.
+
+        Refines the TreeMesh using a function that is recursively called on each
+        cell of the mesh. It must accept an object of type `discretize.TreeMesh.Cell`
+        and return an integer like object defining the desired level.
+        The function can also simply be an integer, which will then cause all
+        cells to be at least that level.
+
+        Parameters
+        ----------
+        function : callable | int
+            a function describing the desired level,
+            or an integer to refine all cells to at least that level.
+        finalize : bool, optional
+            Whether to finalize the mesh
+
+        Examples
+        --------
+        >>> from discretize import TreeMesh
+        >>> mesh = TreeMesh([32,32])
+        >>> def func(cell):
+        >>>     r = np.linalg.norm(cell.center-0.5)
+        >>>     return mesh.max_level if r<0.2 else mesh.max_level-1
+        >>> mesh.refine(func)
+        >>> mesh
+        ---- QuadTreeMesh ----
+         x0: 0.00
+         y0: 0.00
+         hx: 32*0.03,
+         hy: 32*0.03,
+        nC: 352
+        Fill: 34.38%
+
+        See Also
+        --------
+        discretize.TreeMesh.Cell : a description of the Cell object
+        """
         if type(function) in integer_types:
             level = function
             function = lambda cell: level
@@ -312,6 +380,32 @@ cdef class _TreeMesh:
             self.finalize()
 
     def insert_cells(self, points, levels, finalize=True):
+        """Insert cells into the TreeMesh that contain given points
+
+        Insert cell(s) into the TreeMesh that contain the given point(s) at the
+        assigned level(s).
+
+        Parameters
+        ----------
+        points : array_like with shape (N, dim)
+        levels : array_like of integers with shape (N)
+        finalize : bool, optional
+            Whether to finalize after inserting point(s)
+
+        Examples
+        --------
+        >>> from discretize import TreeMesh
+        >>> mesh = TreeMesh([32,32])
+        >>> mesh.insert_cells([0.5, 0.5], mesh.max_level)
+        >>> print(mesh)
+        ---- QuadTreeMesh ----
+         x0: 0.00
+         y0: 0.00
+         hx: 32*0.03,
+         hy: 32*0.03,
+        nC: 40
+        Fill: 3.91%
+        """
         points = np.require(np.atleast_2d(points), dtype=np.float64,
                             requirements='C')
         cdef double[:, :] cs = points
@@ -324,16 +418,22 @@ cdef class _TreeMesh:
             self.finalize()
 
     def finalize(self):
+        """Finalize the TreeMesh
+        Called after finished cronstruction of the mesh. Can only be called once.
+        After finalize is called, all other attributes and functions are valid.
+        """
         if not self._finalized:
             self.tree.finalize_lists()
             self.tree.number()
             self._finalized=True
 
     def number(self):
+        """Number the cells, nodes, faces, and edges of the TreeMesh"""
         self.tree.number()
 
     @property
     def x0(self):
+        """Origin of the mesh"""
         return np.array(self._x0)
 
     @x0.setter
@@ -439,7 +539,7 @@ cdef class _TreeMesh:
     def maxLevel(self):
         """
         The maximum level used, which may be
-        less than `levels`.
+        less than `levels` or `max_level`.
         """
         cdef int level = 0
         for cell in self.tree.cells:
@@ -448,132 +548,160 @@ cdef class _TreeMesh:
 
     @property
     def max_level(self):
+        """The maximum possible level for a cell on this mesh"""
         return self.tree.max_level
 
     @property
     def nC(self):
+        """Number of cells"""
         return self.tree.cells.size()
 
     @property
     def nN(self):
+        """Number of non-hanging nodes"""
         return self.ntN - self.nhN
 
     @property
     def ntN(self):
+        """Number of non-hanging and hanging nodes"""
         return self.tree.nodes.size()
 
     @property
     def nhN(self):
+        """Number of hanging nodes"""
         return self.tree.hanging_nodes.size()
 
     @property
     def nE(self):
+        """Total number of non-hanging edges amongst all dimensions"""
         return self.nEx + self.nEy + self.nEz
 
     @property
     def nhE(self):
+        """Total number of hanging edges amongst all dimensions"""
         return self.nhEx + self.nhEy + self.nhEz
 
     @property
     def ntE(self):
+        """Total number of non-hanging and hanging edges amongst all dimensions"""
         return self.nE + self.nhE
 
     @property
     def nEx(self):
+        """Number of non-hanging edges oriented along the first dimension"""
         return self.ntEx - self.nhEx
 
     @property
     def nEy(self):
+        """Number of non-hanging edges oriented along the second dimension"""
         return self.ntEy - self.nhEy
 
     @property
     def nEz(self):
+        """Number of non-hanging edges oriented along the third dimension"""
         return self.ntEz - self.nhEz
 
     @property
     def ntEx(self):
+        """Number of non-hanging and hanging edges oriented along the first dimension"""
         return self.tree.edges_x.size()
 
     @property
     def ntEy(self):
+        """Number of non-hanging and hanging edges oriented along the second dimension"""
         return self.tree.edges_y.size()
 
     @property
     def ntEz(self):
+        """Number of non-hanging and hanging edges oriented along the third dimension"""
         return self.tree.edges_z.size()
 
     @property
     def nhEx(self):
+        """Number of hanging edges oriented along the first dimension"""
         return self.tree.hanging_edges_x.size()
 
     @property
     def nhEy(self):
+        """Number of hanging edges oriented along the second dimension"""
         return self.tree.hanging_edges_y.size()
 
     @property
     def nhEz(self):
+        """Number of hanging edges oriented along the third dimension"""
         return self.tree.hanging_edges_z.size()
 
     @property
     def nF(self):
+        """Total number of non-hanging faces amongst all dimensions"""
         return self.nFx + self.nFy + self.nFz
 
     @property
     def nhF(self):
+        """Total number of hanging faces amongst all dimensions"""
         return self.nhFx + self.nhFy + self.nhFz
 
     @property
     def ntF(self):
+        """Total number of hanging and non-hanging faces amongst all dimensions"""
         return self.nF + self.nhF
 
     @property
     def nFx(self):
+        """Number of non-hanging faces oriented along the first dimension"""
         return self.ntFx - self.nhFx
 
     @property
     def nFy(self):
+        """Number of non-hanging faces oriented along the second dimension"""
         return self.ntFy - self.nhFy
 
     @property
     def nFz(self):
+        """Number of non-hanging faces oriented along the third dimension"""
         return self.ntFz - self.nhFz
 
     @property
     def ntFx(self):
+        """Number of non-hanging and hanging faces oriented along the first dimension"""
         if(self._dim == 2): return self.ntEy
         return self.tree.faces_x.size()
 
     @property
     def ntFy(self):
+        """Number of non-hanging and hanging faces oriented along the second dimension"""
         if(self._dim == 2): return self.ntEx
         return self.tree.faces_y.size()
 
     @property
     def ntFz(self):
+        """Number of non-hanging and hanging faces oriented along the third dimension"""
         if(self._dim == 2): return 0
         return self.tree.faces_z.size()
 
     @property
     def nhFx(self):
+        """Number of hanging faces oriented along the first dimension"""
         if(self._dim == 2): return self.nhEy
         return self.tree.hanging_faces_x.size()
 
     @property
     def nhFy(self):
+        """Number of hanging faces oriented along the second dimension"""
         if(self._dim == 2): return self.nhEx
         return self.tree.hanging_faces_y.size()
 
     @property
     def nhFz(self):
+        """Number of hanging faces oriented along the third dimension"""
         if(self._dim == 2): return 0
         return self.tree.hanging_faces_z.size()
 
     @property
     def gridCC(self):
         """
-        Returns an M by N numpy array with the center locations of all cells
-        in order. M is the number of cells and N=2,3 is the dimension of the
-        mesh.
+        Returns a numpy arrayof shape (nC, dim) with the center locations of all cells
+        in order.
         """
         cdef np.float64_t[:, :] gridCC
         cdef np.int64_t ii, ind, dim
@@ -590,8 +718,8 @@ cdef class _TreeMesh:
     @property
     def gridN(self):
         """
-        Returns an M by N numpy array with the widths of all cells in order.
-        M is the number of nodes and N=2,3 is the dimension of the mesh.
+        Returns a numpy array of shape (nN, dim) with the locations of all
+        non-hanging nodes in order.
         """
         cdef np.float64_t[:, :] gridN
         cdef Node *node
@@ -610,6 +738,10 @@ cdef class _TreeMesh:
 
     @property
     def gridhN(self):
+        """
+        Returns a numpy array of shape (nN, dim) with the locations of all
+        hanging nodes in order.
+        """
         cdef np.float64_t[:, :] gridN
         cdef Node *node
         cdef np.int64_t ii, ind, dim
@@ -645,6 +777,10 @@ cdef class _TreeMesh:
 
     @property
     def gridEx(self):
+        """
+        Returns a numpy array of shape (nEx, dim) with the centers of all
+        non-hanging edges along the first dimension in order.
+        """
         cdef np.float64_t[:, :] gridEx
         cdef Edge *edge
         cdef np.int64_t ii, ind, dim
@@ -662,6 +798,10 @@ cdef class _TreeMesh:
 
     @property
     def gridhEx(self):
+        """
+        Returns a numpy array of shape (nhEx, dim) with the centers of all
+        hanging edges along the first dimension in order.
+        """
         cdef np.float64_t[:, :] gridhEx
         cdef Edge *edge
         cdef np.int64_t ii, ind, dim
@@ -677,6 +817,10 @@ cdef class _TreeMesh:
 
     @property
     def gridEy(self):
+        """
+        Returns a numpy array of shape (nEy, dim) with the centers of all
+        non-hanging edges along the second dimension in order.
+        """
         cdef np.float64_t[:, :] gridEy
         cdef Edge *edge
         cdef np.int64_t ii, ind, dim
@@ -694,6 +838,10 @@ cdef class _TreeMesh:
 
     @property
     def gridhEy(self):
+        """
+        Returns a numpy array of shape (nhEy, dim) with the centers of all
+        hanging edges along the second dimension in order.
+        """
         cdef np.float64_t[:, :] gridhEy
         cdef Edge *edge
         cdef np.int64_t ii, ind, dim
@@ -709,6 +857,10 @@ cdef class _TreeMesh:
 
     @property
     def gridEz(self):
+        """
+        Returns a numpy array of shape (nEz, dim) with the centers of all
+        non-hanging edges along the third dimension in order.
+        """
         cdef np.float64_t[:, :] gridEz
         cdef Edge *edge
         cdef np.int64_t ii, ind, dim
@@ -726,6 +878,10 @@ cdef class _TreeMesh:
 
     @property
     def gridhEz(self):
+        """
+        Returns a numpy array of shape (nhEz, dim) with the centers of all
+        hanging edges along the third dimension in order.
+        """
         cdef np.float64_t[:, :] gridhEz
         cdef Edge *edge
         cdef np.int64_t ii, ind, dim
@@ -741,6 +897,10 @@ cdef class _TreeMesh:
 
     @property
     def gridFx(self):
+        """
+        Returns a numpy array of shape (nFx, dim) with the centers of all
+        non-hanging faces along the first dimension in order.
+        """
         if(self._dim == 2): return self.gridEy
 
         cdef np.float64_t[:, :] gridFx
@@ -760,6 +920,10 @@ cdef class _TreeMesh:
 
     @property
     def gridFy(self):
+        """
+        Returns a numpy array of shape (nFy, dim) with the centers of all
+        non-hanging faces along the second dimension in order.
+        """
         if(self._dim == 2): return self.gridEx
         cdef np.float64_t[:, :] gridFy
         cdef Face *face
@@ -778,6 +942,10 @@ cdef class _TreeMesh:
 
     @property
     def gridFz(self):
+        """
+        Returns a numpy array of shape (nFz, dim) with the centers of all
+        non-hanging faces along the third dimension in order.
+        """
         if(self._dim == 2): return self.gridCC
 
         cdef np.float64_t[:, :] gridFz
@@ -797,6 +965,10 @@ cdef class _TreeMesh:
 
     @property
     def gridhFx(self):
+        """
+        Returns a numpy array of shape (nhFx, dim) with the centers of all
+        hanging faces along the first dimension in order.
+        """
         if(self._dim == 2): return self.gridhEy
 
         cdef np.float64_t[:, :] gridFx
@@ -814,6 +986,10 @@ cdef class _TreeMesh:
 
     @property
     def gridhFy(self):
+        """
+        Returns a numpy array of shape (nhFy, dim) with the centers of all
+        hanging faces along the second dimension in order.
+        """
         if(self._dim == 2): return self.gridhEx
 
         cdef np.float64_t[:, :] gridhFy
@@ -831,6 +1007,10 @@ cdef class _TreeMesh:
 
     @property
     def gridhFz(self):
+        """
+        Returns a numpy array of shape (nhFz, dim) with the centers of all
+        hanging faces along the third dimension in order.
+        """
         if(self._dim == 2): return np.array([])
 
         cdef np.float64_t[:, :] gridhFz
@@ -848,6 +1028,10 @@ cdef class _TreeMesh:
 
     @property
     def vol(self):
+        """
+        Returns a numpy array of length nC with the volumes (areas in 2D) of all
+        cells in order.
+        """
         cdef np.float64_t[:] vol
         if self._vol is None:
             self._vol = np.empty(self.nC, dtype=np.float64)
@@ -858,6 +1042,10 @@ cdef class _TreeMesh:
 
     @property
     def area(self):
+        """
+        Returns a numpy array of length nF with the area (length in 2D) of all
+        faces ordered by x, then y, then z.
+        """
         if self._dim == 2 and self._area is None:
             self._area = np.r_[self.edge[self.nEx:], self.edge[:self.nEx]]
         cdef np.float64_t[:] area
@@ -887,6 +1075,10 @@ cdef class _TreeMesh:
 
     @property
     def edge(self):
+        """
+        Returns a numpy array of length nE with the length of all edges ordered
+        by x, then y, then z.
+        """
         cdef np.float64_t[:] edge_l
         cdef Edge *edge
         cdef int_t ind, offset
@@ -915,6 +1107,9 @@ cdef class _TreeMesh:
 
     @property
     def cellBoundaryInd(self):
+        """Returns a tuple of arrays of indexes for boundary cells in each direction
+        xdown, xup, ydown, yup, zdown, zup
+        """
         cdef np.int64_t[:] indxu, indxd, indyu, indyd, indzu, indzd
         indxu = np.empty(self.nC, dtype=np.int64)
         indxd = np.empty(self.nC, dtype=np.int64)
@@ -963,6 +1158,9 @@ cdef class _TreeMesh:
 
     @property
     def faceBoundaryInd(self):
+        """Returns a tuple of arrays of indexes for boundary faces in each direction
+        xdown, xup, ydown, yup, zdown, zup
+        """
         cell_boundary_inds = self.cellBoundaryInd
         cdef np.int64_t[:] c_indxu, c_indxd, c_indyu, c_indyd, c_indzu, c_indzd
         cdef np.int64_t[:] f_indxu, f_indxd, f_indyu, f_indyd, f_indzu, f_indzd
@@ -1014,13 +1212,17 @@ cdef class _TreeMesh:
     def get_boundary_cells(self, active_ind=None, direction='zu'):
         """Returns the indices of boundary cells in a given direction given an active index array.
 
-        Optional Input:
-        :param numpy.array active_ind: None or Boolean array of active indexes in the mesh
-        :param str direction: one of ('zu', 'zd', 'xu', 'xd', 'yu', 'yd')
+        Parameters
+        ----------
+        active_ind : array_like of bool, optional
+            If not None, then this must show which cells are active
+        direction: str, optional
+            must be one of ('zu', 'zd', 'xu', 'xd', 'yu', 'yd')
 
-        Output:
-        :rtype: numpy.array
-        :return: Array of indices for the boundary cells in a given direction
+        Returns
+        -------
+        numpy.array
+            Array of indices for the boundary cells in the requested direction
         """
 
         direction = direction.lower()
@@ -1074,6 +1276,19 @@ cdef class _TreeMesh:
 
     @cython.cdivision(True)
     def get_cells_along_line(self, x0, x1):
+        """Finds the cells along a line segment defined by two points
+
+        Parameters
+        ----------
+        x0,x1 : array_like of length (dim)
+            Begining and ending point of the line segment.
+
+        Returns
+        -------
+        list of ints
+            Indexes for cells that contain the a line defined by the two input
+            points, ordered in the direction of the line.
+        """
         cdef np.float64_t ax, ay, az, bx, by, bz
 
         cdef int dim = self.dim
@@ -1176,9 +1391,11 @@ cdef class _TreeMesh:
         return cell_indexes
 
 
-
     @property
     def faceDiv(self):
+        """
+        Construct divergence operator (face-stg to cell-centres).
+        """
         if self._faceDiv is not None:
             return self._faceDiv
         if self._dim == 2:
@@ -1258,6 +1475,9 @@ cdef class _TreeMesh:
     @cython.cdivision(True)
     @cython.boundscheck(False)
     def edgeCurl(self):
+        """
+        Construct the 3D curl operator.
+        """
         if self._edgeCurl is not None:
             return self._edgeCurl
         cdef:
@@ -1333,6 +1553,9 @@ cdef class _TreeMesh:
     @cython.cdivision(True)
     @cython.boundscheck(False)
     def nodalGrad(self):
+        """
+        Construct gradient operator (nodes to edges).
+        """
         if self._nodalGrad is not None:
             return self._nodalGrad
         cdef:
@@ -1388,6 +1611,10 @@ cdef class _TreeMesh:
         G = sp.csr_matrix((V, (I, J)), shape=(self.nE, self.ntN))
         self._nodalGrad = G*Rn
         return self._nodalGrad
+
+    @property
+    def nodalLaplacian(self):
+        raise NotImplementedError('Nodal Laplacian has not been implemented for TreeMesh')
 
     @cython.boundscheck(False)
     def _aveCC2FxStencil(self):
@@ -1773,6 +2000,11 @@ cdef class _TreeMesh:
         return Rh
 
     def _deflate_edges(self):
+        """Returns a matrix to remove hanging edges.
+        A hanging edge can either have 1 or 2 parents.
+        If a hanging edge has a single parent, it's value is the same as the parent
+        If a hanging edge has 2 parents, it's an average of the two parents
+        """
         if self._dim == 2:
             Rx = self._deflate_edges_x()
             Ry = self._deflate_edges_y()
@@ -1784,6 +2016,10 @@ cdef class _TreeMesh:
             return sp.block_diag((Rx, Ry, Rz))
 
     def _deflate_faces(self):
+        """ Returns a matrix that removes hanging faces
+        The operation assigns the hanging face the value of its parent.
+        A hanging face will only ever have 1 parent.
+        """
         if(self._dim == 2):
             Rx = self._deflate_edges_x()
             Ry = self._deflate_edges_y()
@@ -1859,6 +2095,10 @@ cdef class _TreeMesh:
 
     @cython.boundscheck(False)
     def _deflate_nodes(self):
+        """ Returns a matrix that removes hanging faces
+        A hanging node will have 2 parents in 2D or 2 or 4 parents in 3D.
+        This matrix assigns the hanging node the average value of its parents.
+        """
         cdef np.int64_t[:] I = np.empty(4*self.ntN, dtype=np.int64)
         cdef np.int64_t[:] J = np.empty(4*self.ntN, dtype=np.int64)
         cdef np.float64_t[:] V = np.empty(4*self.ntN, dtype=np.float64)
@@ -1895,6 +2135,10 @@ cdef class _TreeMesh:
     @property
     @cython.boundscheck(False)
     def aveEx2CC(self):
+        """
+        Construct the averaging operator on cell edges in the x direction to
+        cell centers.
+        """
         if self._aveEx2CC is not None:
             return self._aveEx2CC
         cdef np.int64_t[:] I,J
@@ -1921,6 +2165,10 @@ cdef class _TreeMesh:
     @property
     @cython.boundscheck(False)
     def aveEy2CC(self):
+        """
+        Construct the averaging operator on cell edges in the y direction to
+        cell centers.
+        """
         if self._aveEy2CC is not None:
             return self._aveEy2CC
         cdef np.int64_t[:] I,J
@@ -1947,6 +2195,10 @@ cdef class _TreeMesh:
     @property
     @cython.boundscheck(False)
     def aveEz2CC(self):
+        """
+        Construct the averaging operator on cell edges in the z direction to
+        cell centers.
+        """
         if self._aveEz2CC is not None:
             return self._aveEz2CC
         if self._dim == 2:
@@ -1974,6 +2226,7 @@ cdef class _TreeMesh:
 
     @property
     def aveE2CC(self):
+        "Construct the averaging operator on cell edges to cell centers."
         if self._aveE2CC is None:
             stacks = [self.aveEx2CC, self.aveEy2CC]
             if self._dim == 3:
@@ -1983,6 +2236,7 @@ cdef class _TreeMesh:
 
     @property
     def aveE2CCV(self):
+        "Construct the averaging operator on cell edges to cell centers."
         if self._aveE2CCV is None:
             stacks = [self.aveEx2CC, self.aveEy2CC]
             if self._dim == 3:
@@ -1993,6 +2247,10 @@ cdef class _TreeMesh:
     @property
     @cython.boundscheck(False)
     def aveFx2CC(self):
+        """
+        Construct the averaging operator on cell faces in the x direction to
+        cell centers.
+        """
         if self._aveFx2CC is not None:
             return self._aveFx2CC
         if self._dim == 2:
@@ -2023,6 +2281,10 @@ cdef class _TreeMesh:
     @property
     @cython.boundscheck(False)
     def aveFy2CC(self):
+        """
+        Construct the averaging operator on cell faces in the y direction to
+        cell centers.
+        """
         if self._aveFy2CC is not None:
             return self._aveFy2CC
         if self._dim == 2:
@@ -2053,6 +2315,10 @@ cdef class _TreeMesh:
     @property
     @cython.boundscheck(False)
     def aveFz2CC(self):
+        """
+        Construct the averaging operator on cell faces in the z direction to
+        cell centers.
+        """
         if self._aveFz2CC is not None:
             return self._aveFz2CC
         if self._dim == 2:
@@ -2102,6 +2368,7 @@ cdef class _TreeMesh:
     @property
     @cython.boundscheck(False)
     def aveN2CC(self):
+        "Construct the averaging operator on cell nodes to cell centers."
         cdef np.int64_t[:] I, J
         cdef np.float64_t[:] V
         cdef np.int64_t ii, id, n_ppc
@@ -2126,6 +2393,9 @@ cdef class _TreeMesh:
 
     @property
     def aveN2Ex(self):
+        """
+        Averaging operator on cell nodes to x-edges
+        """
         if self._aveN2Ex is not None:
             return self._aveN2Ex
         cdef np.int64_t[:] I, J
@@ -2151,6 +2421,9 @@ cdef class _TreeMesh:
 
     @property
     def aveN2Ey(self):
+        """
+        Averaging operator on cell nodes to y-edges
+        """
         if self._aveN2Ey is not None:
             return self._aveN2Ey
         cdef np.int64_t[:] I, J
@@ -2176,6 +2449,9 @@ cdef class _TreeMesh:
 
     @property
     def aveN2Ez(self):
+        """
+        Averaging operator on cell nodes to z-edges
+        """
         if self._dim == 2:
             raise Exception('TreeMesh has no z-edges in 2D')
         if self._aveN2Ez is not None:
@@ -2218,6 +2494,9 @@ cdef class _TreeMesh:
 
     @property
     def aveN2Fx(self):
+        """
+        Averaging operator on cell nodes to x-faces
+        """
         if self._dim == 2:
             return self.aveN2Ey
         if self._aveN2Fx is not None:
@@ -2245,6 +2524,9 @@ cdef class _TreeMesh:
 
     @property
     def aveN2Fy(self):
+        """
+        Averaging operator on cell nodes to y-faces
+        """
         if self._dim == 2:
             return self.aveN2Ex
         if self._aveN2Fy is not None:
@@ -2273,6 +2555,9 @@ cdef class _TreeMesh:
 
     @property
     def aveN2Fz(self):
+        """
+        Averaging operator on cell nodes to z-faces
+        """
         if self._dim == 2:
             raise Exception('TreeMesh has no z faces in 2D')
         cdef np.int64_t[:] I, J
@@ -2316,6 +2601,7 @@ cdef class _TreeMesh:
 
     @property
     def aveCC2F(self):
+        "Construct the averaging operator on cell centers to cell faces."
         if self._aveCC2F is not None:
             return self._aveCC2F
         stacks = [self.aveCC2Fx, self.aveCC2Fy]
@@ -2327,6 +2613,7 @@ cdef class _TreeMesh:
 
     @property
     def aveCCV2F(self):
+        "Construct the averaging operator on cell centers to cell faces."
         if self._aveCCV2F is not None:
             return self._aveCCV2F
         stacks = [self.aveCC2Fx, self.aveCC2Fy]
@@ -2338,9 +2625,9 @@ cdef class _TreeMesh:
 
     @property
     def aveCC2Fx(self):
+        "Construct the averaging operator on cell centers to cell x-faces."
         if self._aveCC2Fx is not None:
             return self._aveCC2Fx
-        "Construct the averaging operator on cell centers to cell x-faces."
         cdef np.int64_t[:] I = np.zeros(2*self.ntFx, dtype=np.int64)
         cdef np.int64_t[:] J = np.zeros(2*self.ntFx, dtype=np.int64)
         cdef np.float64_t[:] V = np.zeros(2*self.ntFx, dtype=np.float64)
@@ -2773,26 +3060,6 @@ cdef class _TreeMesh:
         def Pxxx(xEdge, yEdge, zEdge):
             return self._getEdgeP(xEdge, yEdge, zEdge)
         return Pxxx
-
-    def getInterpolationMat(self, locs, locType, zerosOutside=False):
-        locs = utils.asArray_N_x_Dim(locs, self.dim)
-        if locType not in ['N', 'CC', "Ex", "Ey", "Ez", "Fx", "Fy", "Fz"]:
-            raise Exception('locType must be one of N, CC, Ex, Ey, Ez, Fx, Fy, or Fz')
-
-        if self._dim == 2 and locType in ['Ez','Fz']:
-            raise Exception('Unable to interpolate from Z edges/face in 2D')
-
-        locs = np.require(np.atleast_2d(locs), dtype=np.float64, requirements='C')
-
-        if locType == 'N':
-            Av = self._getNodeIntMat(locs, zerosOutside)
-        elif locType in ['Ex', 'Ey', 'Ez']:
-            Av = self._getEdgeIntMat(locs, zerosOutside, locType[1])
-        elif locType in ['Fx', 'Fy', 'Fz']:
-            Av = self._getFaceIntMat(locs, zerosOutside, locType[1])
-        elif locType in ['CC']:
-            Av = self._getCellIntMat(locs, zerosOutside)
-        return Av
 
     def _getEdgeIntMat(self, locs, zerosOutside, direction):
         cdef:
@@ -3232,6 +3499,30 @@ cdef class _TreeMesh:
                   range_x=None, range_y=None,
                   **other_kwargs,
                   ):
+        """ Plots an image of values defined on the TreeMesh
+        If 3D, this function plots a default slice of the TreeMesh
+
+        Parameters
+        ----------
+        v : array_like
+            Array containing the values to plot
+        vType : str, optional
+            type of value in `v` one of 'CC', 'N', 'Fx', 'Fy', 'Fz', 'Ex', 'Ey', or 'Ez'
+        grid : bool, optional
+            plot the grid lines
+        view : ['real', 'imag', 'abs'], optional
+            The values to plot from v
+        ax : matplotlib.axes.Axes or None, optional
+            The axes handle
+        clim : array_like of length 2, or None, optional
+            A pair of [min, max] for the Colorbar
+        pcolorOpts : dict, or None
+            options to be passed on to pcolormesh
+        gridOpt : dict, or None
+            options for the plotting the grid
+        range_x, range_y: array_like, optional
+            pairs of [min, max] values for the x and y ranges
+        """
         if self._dim == 3:
             self.plotSlice(v, vType=vType, grid=grid, view=view,
                            ax=ax, clim=clim, showIt=showIt,
@@ -3248,6 +3539,9 @@ cdef class _TreeMesh:
         import matplotlib.cm as cmx
         from matplotlib.collections import PatchCollection
 
+
+        if view in ['real', 'imag', 'abs']:
+            v = getattr(np, view)(v) # e.g. np.real(v)
         if vType == 'CC':
             I = v
         elif vType == 'N':
@@ -3257,8 +3551,6 @@ cdef class _TreeMesh:
             ind_xy = {'x': 0, 'y': 1}[vType[1]]
             I = (getattr(self, aveOp)*v).reshape(2, self.nC)[ind_xy] # average to cell centers
 
-        if view in ['real', 'imag', 'abs']:
-            v = getattr(np, view)(v) # e.g. np.real(v)
         if ax is None:
             ax = plt.subplot(111)
         if pcolorOpts is None:

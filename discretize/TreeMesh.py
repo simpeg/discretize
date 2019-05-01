@@ -88,7 +88,7 @@ from .base import BaseTensorMesh
 from .InnerProducts import InnerProducts
 from .MeshIO import TreeMeshIO
 from . import utils
-from .tree_ext import _TreeMesh
+from .tree_ext import _TreeMesh, Cell
 import numpy as np
 from scipy.spatial import Delaunay
 import scipy.sparse as sp
@@ -112,6 +112,10 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
             raise ValueError("length of cell width vectors must be a power of 2")
         # Now can initialize cpp tree parent
         _TreeMesh.__init__(self, self.h, self.x0)
+
+    def __repr__(self):
+         """Plain text representation."""
+         return self.__str__()
 
     def __str__(self):
         outStr = '  ---- {0!s}TreeMesh ----  '.format(
@@ -158,10 +162,12 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
 
     @property
     def vntF(self):
+        """Total number of hanging and non-hanging faces in a [nx,ny,nz] form"""
         return [self.ntFx, self.ntFy] + ([] if self.dim == 2 else [self.ntFz])
 
     @property
     def vntE(self):
+        """Total number of hanging and non-hanging edges in a [nx,ny,nz] form"""
         return [self.ntEx, self.ntEy] + ([] if self.dim == 2 else [self.ntEz])
 
     @property
@@ -242,7 +248,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
     @property
     def cellGrady(self):
         """
-        Cell centered Gradient operator in y-direction (Gradx)
+        Cell centered Gradient operator in y-direction (Grady)
         Grad = sp.vstack((Gradx, Grady, Gradz))
         """
         if getattr(self, '_cellGrady', None) is None:
@@ -271,6 +277,8 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         Cell centered Gradient operator in z-direction (Gradz)
         Grad = sp.vstack((Gradx, Grady, Gradz))
         """
+        if self.dim == 2:
+            raise TypeError("z derivative not defined in 2D")
         if getattr(self, '_cellGradz', None) is None:
 
             nFx = self.nFx
@@ -310,21 +318,98 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         return self._faceDivz
 
     def point2index(self, locs):
-        locs = utils.asArray_N_x_Dim(locs, self.dim)
+        """Finds cells that contain the given points.
+        Returns an array of index values of the cells that contain the given
+        points
 
-        inds = np.empty(locs.shape[0], dtype=np.int64)
-        for ind, loc in enumerate(locs):
-            inds[ind] = self._get_containing_cell_index(loc)
+        Parameters
+        ----------
+        locs: array_like of shape (N, dim)
+            points to search for the location of
+
+        Returns
+        -------
+        numpy.array of integers of length(N)
+            Cell indices that contain the points
+        """
+        locs = utils.asArray_N_x_Dim(locs, self.dim)
+        inds = self._get_containing_cell_indexes(locs)
         return inds
+
+    def cell_levels_by_index(self, indices):
+        """Fast function to return a list of levels for the given cell indices
+
+        Parameters
+        ----------
+        index: array_like of length (N)
+            Cell indexes to query
+
+        Returns
+        -------
+        numpy.array of length (N)
+            Levels for the cells.
+        """
+
+        return self._cell_levels_by_indexes(indices)
+
+
+        def getInterpolationMat(self, locs, locType, zerosOutside=False):
+            """ Produces interpolation matrix
+
+            Parameters
+            ----------
+            loc : numpy.ndarray
+                Location of points to interpolate to
+
+            locType: str
+                What to interpolate
+
+                locType can be::
+
+                    'Ex'    -> x-component of field defined on edges
+                    'Ey'    -> y-component of field defined on edges
+                    'Ez'    -> z-component of field defined on edges
+                    'Fx'    -> x-component of field defined on faces
+                    'Fy'    -> y-component of field defined on faces
+                    'Fz'    -> z-component of field defined on faces
+                    'N'     -> scalar field defined on nodes
+                    'CC'    -> scalar field defined on cell centers
+
+            Returns
+            -------
+            scipy.sparse.csr_matrix
+                M, the interpolation matrix
+
+            """
+            locs = utils.asArray_N_x_Dim(locs, self.dim)
+            if locType not in ['N', 'CC', "Ex", "Ey", "Ez", "Fx", "Fy", "Fz"]:
+                raise Exception('locType must be one of N, CC, Ex, Ey, Ez, Fx, Fy, or Fz')
+
+            if self._dim == 2 and locType in ['Ez', 'Fz']:
+                raise Exception('Unable to interpolate from Z edges/face in 2D')
+
+            locs = np.require(np.atleast_2d(locs), dtype=np.float64, requirements='C')
+
+            if locType == 'N':
+                Av = self._getNodeIntMat(locs, zerosOutside)
+            elif locType in ['Ex', 'Ey', 'Ez']:
+                Av = self._getEdgeIntMat(locs, zerosOutside, locType[1])
+            elif locType in ['Fx', 'Fy', 'Fz']:
+                Av = self._getFaceIntMat(locs, zerosOutside, locType[1])
+            elif locType in ['CC']:
+                Av = self._getCellIntMat(locs, zerosOutside)
+            return Av
 
     @property
     def permuteCC(self):
+        """Permutation matrix re-ordering of cells sorted by x, then y, then z"""
         # TODO: cache these?
         P = np.lexsort(self.gridCC.T) # sort by x, then y, then z
         return sp.identity(self.nC).tocsr()[P]
 
     @property
     def permuteF(self):
+        """Permutation matrix re-ordering of faces sorted by x, then y, then z"""
         # TODO: cache these?
         Px = np.lexsort(self.gridFx.T)
         Py = np.lexsort(self.gridFy.T)+self.nFx
@@ -337,6 +422,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
 
     @property
     def permuteE(self):
+        """Permutation matrix re-ordering of edges sorted by x, then y, then z"""
         # TODO: cache these?
         Px = np.lexsort(self.gridEx.T)
         Py = np.lexsort(self.gridEy.T) + self.nEx
