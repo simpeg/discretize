@@ -24,6 +24,8 @@ Tensor meshes can be defined in 1, 2 or 3 dimensions. Here we demonstrate:
 from discretize import TensorMesh
 import numpy as np
 
+# sphinx_gallery_thumbnail_number = 3
+
 ###############################################
 # Basic Example
 # -------------

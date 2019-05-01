@@ -8,7 +8,7 @@ cells. Tree meshes belong to the class (:class:`~discretize.TreeMesh`).
 Tree meshes can be defined in 2 or 3 dimensions. Here we demonstrate:
 
     - How to create basic tree meshes in 2D and 3D
-    - Stretegies for local mesh refinement
+    - Strategies for local mesh refinement
     - How to plot tree meshes
     - How to extract properties from tree meshes
 
@@ -58,8 +58,8 @@ xp, yp = np.meshgrid([120., 240.], [80., 160.])
 xy = np.c_[matutils.mkvc(xp), matutils.mkvc(yp)]
 
 # Discretize to finest cell size within rectangular region
-# mesh = meshutils.refine_tree_xyz(mesh, xy, octree_levels=[2, 2],
-#                                  method='box', finalize=False)
+mesh = meshutils.refine_tree_xyz(mesh, xy, octree_levels=[2, 2],
+                                 method='box', finalize=False)
 
 mesh.finalize()  # Must finalize tree mesh before use
 

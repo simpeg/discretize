@@ -2,12 +2,6 @@
 Overview of Mesh Types
 ======================
 
-`discretize` provides a numerical grid on which to solve differential
-equations. Each mesh type has a similar API to make switching between
-different meshes relatively simple. Within `discretize`, all meshes are
-classes that have properties like the number of cells `nC`, and methods,
-like `plotGrid`.
-
 Here we provide an overview of mesh types and define some terminology.
 Separate tutorials have been provided for each mesh type.
 
@@ -23,12 +17,11 @@ import matplotlib.pyplot as plt
 #
 # The three main types of meshes in discretize are
 #
-#   - **Tensor meshes** (:class:`discretize.TensorMesh`); which includes
-#   **cylindrical meshes** (:class:`discretize.CylMesh`)
-#   - **Tree meshes** (:class:`discretize.TreeMesh`): also referred to as
-#   QuadTree or OcTree meshes
-#   - **Curvilinear meshes** (:class:`discretize.CurviMesh`): also referred to
-#   as logically rectangular
+#    - **Tensor meshes** (:class:`discretize.TensorMesh`); which includes **cylindrical meshes** (:class:`discretize.CylMesh`)
+#
+#    - **Tree meshes** (:class:`discretize.TreeMesh`): also referred to as QuadTree or OcTree meshes
+#
+#    - **Curvilinear meshes** (:class:`discretize.CurviMesh`): also referred to as logically rectangular
 #
 # Examples for each mesh type are shown below.
 
@@ -40,6 +33,7 @@ tensor_mesh = discretize.TensorMesh([ncx, ncy])
 
 # create a tree mesh and refine some of the cells
 tree_mesh = discretize.TreeMesh([ncx, ncy])
+
 
 def refine(cell):
     if np.sqrt(((np.r_[cell.center]-0.5)**2).sum()) < 0.2:
@@ -54,7 +48,7 @@ curvi_mesh = discretize.CurvilinearMesh(
 )
 
 # Plot
-fig, axes = plt.subplots(1, 3, figsize=(14, 4))
+fig, axes = plt.subplots(1, 3, figsize=(15, 4))
 tensor_mesh.plotGrid(ax=axes[0])
 axes[0].set_title('TensorMesh')
 
@@ -83,7 +77,7 @@ hy = np.r_[3, 2, 1, 1, 1, 1, 2, 3]
 tensor_mesh2 = discretize.TensorMesh([hx, hy])
 
 # Plot
-fig, axes2 = plt.subplots(1, 3, figsize=(14, 5))
+fig, axes2 = plt.subplots(1, 3, figsize=(15, 5))
 tensor_mesh2.plotGrid(ax=axes2[0], nodes=True, centers=True)
 axes2[0].legend(('Nodes', 'Centers'))
 axes2[0].set_title('Nodes and cell centers')
@@ -99,4 +93,3 @@ axes2[2].set_title('Cell faces')
 # Note that we define X-edges as being edges that lie parallel to the x-axis.
 # And we define X-faces as being faces whose normal lies parallel to the
 # axis. In 3D, the difference between edges and faces is more obvious.
-
