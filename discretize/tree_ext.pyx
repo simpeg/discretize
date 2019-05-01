@@ -3024,13 +3024,48 @@ cdef class _TreeMesh:
 
         return sp.csr_matrix((V, (I, J)), shape=(locs.shape[0],self.nC))
 
-    def plotGrid(self, ax=None, showIt=False,
-        grid=True,
-        cells=False, cellLine=False,
-        nodes = False,
-        facesX = False, facesY = False, facesZ = False,
-        edgesX = False, edgesY = False, edgesZ = False, gridOpts=None):
+    def plotGrid(self,
+        ax=None, nodes=False, faces=False, centers=False, edges=False,
+        lines=True, cell_line=False,
+        faces_x=False, faces_y=False, faces_z=False,
+        edges_x=False, edges_y=False, edges_z=False,
+        showIt=False, **kwargs):
+        """ Plot the nodel, cell-centered, and staggered grids for 2 and 3 dimensions
+        Plots the mesh grid in either 2D or 3D of the TreeMesh
 
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes or None, optional
+            The axes handle to plot on
+        nodes : bool, optional
+            Plot the nodal points
+        faces : bool, optional
+            Plot the center points of the faces
+        centers : bool, optional
+            Plot the center points of the cells
+        edges : bool, optional
+            Plot the center points of the edges
+        lines : bool, optional
+            Plot the lines connecting the nodes
+        cell_line : bool, optional
+            Plot the line through the cell centers in order
+        faces_x, faces_y, faces_z : bool, optional
+            Plot the center points of the x, y, or z faces
+        edges_x, edges_y, edges_z : bool, optional
+            Plot the center points of the x, y, or z edges
+        showIt : bool, optional
+            whether to call plt.show() within the codes
+        color : Color or str, optional
+            if lines=True, the color of the lines, defaults to first color.
+        linewidth : float, optional
+            if lines=True, the linewidth for the lines.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            Axes handle for the plot
+
+        """
         import matplotlib
         if ax is None:
             import matplotlib.pyplot as plt
@@ -3042,8 +3077,18 @@ cdef class _TreeMesh:
                 from mpl_toolkits.mplot3d import Axes3D
                 ax = plt.subplot(111, projection='3d')
         else:
-            assert isinstance(ax,matplotlib.axes.Axes), "ax must be an Axes!"
+            if not isinstance(ax, matplotlib.axes.Axes):
+                raise TypeError("ax must be a matplotlib.axes.Axes")
             fig = ax.figure
+
+        if faces:
+            faces_x = faces_y = True
+            if self._dim==3:
+                faces_z = True
+        if edges:
+            edges_x = edges_y = True
+            if self._dim==3:
+                edges_z = True
 
         cdef:
             int_t i, offset
@@ -3051,9 +3096,63 @@ cdef class _TreeMesh:
             Node *p2
             Edge *edge
 
-        if grid:
-            if gridOpts is None:
-                gridOpts = {'color': 'b'}
+        if nodes:
+            ax.plot(
+                *np.r_[self.gridN, self.gridhN].T, color="C0", marker='s',
+                linestyle="")
+            # Hanging Nodes
+            ax.plot(*self.gridhN.T, color="C0", marker='s', linestyle="",
+                    markersize=10, markerfacecolor='none', markeredgecolor='C0')
+        if centers:
+            ax.plot(*self.gridCC.T, color="C1", marker="o", linestyle="")
+        if cell_line:
+            ax.plot(*self.gridCC.T, color="C1", linestyle=":")
+            ax.plot(
+                self.gridCC[[0,-1],0], self.gridCC[[0,-1],1],
+                color="C1", marker='o', linestyle="")
+
+        y_mark = "<" if self._dim==3 else "^"
+
+        if faces_x:
+            ax.plot(*np.r_[self.gridFx, self.gridhFx].T,
+                    color="C2", marker=">", linestyle="")
+            # Hanging Faces x
+            ax.plot(*self.gridhFx.T, color="C2", marker='s', linestyle="",
+                    markersize=10, markerfacecolor='none', markeredgecolor='C2')
+        if faces_y:
+            ax.plot(*np.r_[self.gridFy, self.gridhFy].T,
+                    color="C2", marker=y_mark, linestyle="")
+            # Hanging Faces y
+            ax.plot(*self.gridhFy.T, color="C2", marker='s', linestyle="",
+                    markersize=10, markerfacecolor='none', markeredgecolor='C2')
+        if faces_z:
+            ax.plot(*np.r_[self.gridFz, self.gridhFz].T,
+                    color="C2", marker="^", linestyle="")
+            # Hangin Faces z
+            ax.plot(*self.gridhFz.T, color="C2", marker='s', linestyle="",
+                    markersize=10, markerfacecolor='none', markeredgecolor='C2')
+        if edges_x:
+            ax.plot(*np.r_[self.gridEx, self.gridhEx].T,
+                    color="C3", marker=">", linestyle="")
+            # Hanging Edges x
+            ax.plot(*self.gridhEx.T, color="C3", marker='s', linestyle="",
+                    markersize=10, markerfacecolor='none', markeredgecolor='C3')
+        if edges_y:
+            ax.plot(*np.r_[self.gridEy, self.gridhEy].T,
+                    color="C3", marker=y_mark, linestyle="")
+            # Hanging Edges y
+            ax.plot(*self.gridhEy.T, color="C3", marker='s', linestyle="",
+                    markersize=10, markerfacecolor='none', markeredgecolor='C3')
+        if edges_z:
+            ax.plot(*np.r_[self.gridEz, self.gridhEz].T,
+                    color="C3", marker="^", linestyle="")
+            # Hanging Edges z
+            ax.plot(*self.gridhEz.T, color="C3", marker='s', linestyle="",
+                    markersize=10, markerfacecolor='none', markeredgecolor='C3')
+
+        if lines:
+            color = kwargs.get('color', 'C0')
+            linewidth = kwargs.get('linewidth', 1.)
             if(self._dim) == 2:
                 X = np.empty((self.nE*3))
                 Y = np.empty((self.nE*3))
@@ -3076,7 +3175,7 @@ cdef class _TreeMesh:
                     X[i : i+3] = [p1.location[0], p2.location[0], np.nan]
                     Y[i : i+3] = [p1.location[1], p2.location[1], np.nan]
 
-                ax.plot(X, Y, **gridOpts)
+                ax.plot(X, Y, color=color, linestyle="-", lw=linewidth)
             else:
                 X = np.empty((self.nE*3))
                 Y = np.empty((self.nE*3))
@@ -3113,41 +3212,7 @@ cdef class _TreeMesh:
                     Y[i : i+3] = [p1.location[1], p2.location[1], np.nan]
                     Z[i : i+3] = [p1.location[2], p2.location[2], np.nan]
 
-                ax.plot(X, Y, Z, **gridOpts)
-
-        if cells:
-            ax.plot(*self.gridCC.T, 'r.')
-        if cellLine:
-            ax.plot(*self.gridCC.T, 'r:')
-            ax.plot(self.gridCC[[0,-1],0], self.gridCC[[0,-1],1], 'ro')
-        if nodes:
-            ax.plot(*np.r_[self.gridN, self.gridhN].T, 'ms')
-            # Hanging Nodes
-            ax.plot(*self.gridhN.T, 'ms', ms=10, mfc='none', mec='m')
-        if facesX:
-            ax.plot(*np.r_[self.gridFx, self.gridhFx].T, 'g>')
-            # Hanging Faces x
-            ax.plot(*self.gridhFx.T, 'gs', ms=10, mfc='none', mec='g')
-        if facesY:
-            ax.plot(*np.r_[self.gridFy, self.gridhFy].T, 'g^')
-            # Hanging Faces y
-            ax.plot(*self.gridhFy.T, 'gs', ms=10, mfc='none', mec='g')
-        if facesZ:
-            ax.plot(*np.r_[self.gridFz, self.gridhFz].T, 'g^')
-            # Hangin Faces z
-            ax.plot(*self.gridhFz.T, 'gs', ms=10, mfc='none', mec='g')
-        if edgesX:
-            ax.plot(*np.r_[self.gridEx, self.gridhEx].T, 'k>')
-            # Hanging Edges x
-            ax.plot(*self.gridhEx.T, 'ks', ms=10, mfc='none', mec='k')
-        if edgesY:
-            ax.plot(*np.r_[self.gridEy, self.gridhEy].T, 'k>')
-            # Hanging Edges y
-            ax.plot(*self.gridhEy.T, 'ks', ms=10, mfc='none', mec='k')
-        if edgesZ:
-            ax.plot(*np.r_[self.gridEz, self.gridhEz].T, 'k>')
-            # Hanging Edges z
-            ax.plot(*self.gridhEz.T, 'ks', ms=10, mfc='none', mec='k')
+                ax.plot(X, Y, Z, color=color, linestyle="-", lw=linewidth)
 
         ax.set_xlabel('x1')
         ax.set_ylabel('x2')
@@ -3157,6 +3222,8 @@ cdef class _TreeMesh:
         ax.grid(True)
         if showIt:
             plt.show()
+
+        return ax
 
     def plotImage(self, v, vType='CC', grid=False, view='real',
                   ax=None, clim=None, showIt=False,
