@@ -5,6 +5,7 @@ import scipy.sparse as sp
 from discretize.utils import mkvc, sdiag
 from discretize import utils
 from discretize import TensorMesh, CurvilinearMesh, CylMesh
+from discretize.utils.codeutils import requires
 
 try:
     from discretize.TreeMesh import TreeMesh as Tree
@@ -13,6 +14,13 @@ except ImportError as e:
 
 import unittest
 import inspect
+
+# matplotlib is a soft dependencies for discretize
+try:
+    import matplotlib
+    import matplotlib.pyplot as plt
+except ImportError:
+    matplotlib = False
 
 try:
     import getpass
@@ -356,8 +364,8 @@ def checkDerivative(fctn, x0, num=7, plotIt=True, dx=None, expectedOrder=2, tole
         print(sadness[np.random.randint(len(sadness))]+'\n')
 
 
+    @requires({'matplotlib': matplotlib})
     if plotIt:
-        import matplotlib.pyplot as plt
         ax = ax or plt.subplot(111)
         ax.loglog(h, E0, 'b')
         ax.loglog(h, E1, 'g--')
