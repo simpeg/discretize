@@ -36,6 +36,7 @@ creating tree meshes, we must remember certain rules:
 
 from discretize import TreeMesh
 from discretize.utils import matutils, meshutils
+import matplotlib.pyplot as plt
 import numpy as np
 
 # sphinx_gallery_thumbnail_number = 3
@@ -69,8 +70,8 @@ mesh.plotGrid(showIt=True)
 
 
 ###############################################
-# Intermediate Example
-# --------------------
+# Intermediate Example and Plotting
+# ---------------------------------
 #
 # The widths of the base mesh cells do not need to be the same in x and y but
 # the number of base mesh cells in x and y does need to be a power of 2. Here
@@ -107,7 +108,14 @@ mesh = meshutils.refine_tree_xyz(mesh, pts, octree_levels=[2, 2],
                                   method='radial', finalize=False)
 
 mesh.finalize()
-mesh.plotGrid(showIt=True)
+
+# We can apply the plotGrid method and output to a specified axes object
+Fig = plt.figure(figsize=(6, 6))
+Ax = Fig.add_subplot(111)
+mesh.plotGrid(ax=Ax)
+Ax.set_xbound(mesh.x0[0], mesh.x0[0]+np.sum(mesh.hx))
+Ax.set_ybound(mesh.x0[1], mesh.x0[1]+np.sum(mesh.hy))
+Ax.set_title('QuadTree Mesh')
 
 ####################################################
 # Extracting Mesh Properties
@@ -161,8 +169,13 @@ bInd = mesh.cellBoundaryInd
 
 # The cell areas (2D "volume")
 s = mesh.vol
-mesh.plotImage(s, grid=True)
 
+Fig = plt.figure(figsize=(6, 6))
+Ax = Fig.add_subplot(111)
+mesh.plotImage(s, grid=True, ax=Ax)
+Ax.set_xbound(mesh.x0[0], mesh.x0[0]+np.sum(mesh.hx))
+Ax.set_ybound(mesh.x0[1], mesh.x0[1]+np.sum(mesh.hy))
+Ax.set_title('Cell Areas')
 
 ###############################################
 # 3D Example
@@ -218,6 +231,7 @@ cc = mesh.gridCC
 # A boolean array specifying which cells lie on the boundary
 bInd = mesh.cellBoundaryInd
 
-# The cell areas (2D "volume")
-s = mesh.vol
-mesh.plotSlice(s, normal='Y', ind=int(mesh.hy.size/2), grid=True)
+# Cell volumes
+v = mesh.vol
+
+mesh.plotSlice(v, normal='Y', ind=int(mesh.hy.size/2), grid=True)

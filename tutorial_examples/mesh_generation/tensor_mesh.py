@@ -22,6 +22,7 @@ Tensor meshes can be defined in 1, 2 or 3 dimensions. Here we demonstrate:
 #
 
 from discretize import TensorMesh
+import matplotlib.pyplot as plt
 import numpy as np
 
 # sphinx_gallery_thumbnail_number = 3
@@ -34,6 +35,7 @@ import numpy as np
 # x, y and z as 1D numpy arrays. And to provide the position of the bottom
 # southwest corner of the mesh. We demonstrate this here for a 2D mesh (thus
 # we do not need to consider the z-dimension).
+#
 
 ncx = 10     # number of core mesh cells in x
 ncy = 15     # number of core mesh cells in y
@@ -51,8 +53,8 @@ mesh.plotGrid()
 
 
 ###############################################
-# Padding Cells
-# -------------
+# Padding Cells and Plotting
+# --------------------------
 #
 # For practical purposes, the user may want to define a region where the cell
 # widths are increasing/decreasing in size. For example, padding is often used
@@ -77,7 +79,13 @@ hy = [(dy, npad_y, -exp_y), (dy, ncy), (dy, npad_y, exp_y)]
 # We can use flags 'C', '0' and 'N' to define the xyz position of the mesh.
 mesh = TensorMesh([hx, hy], x0='CN')
 
-mesh.plotGrid()
+# We can apply the plotGrid method and output to a specified axes object
+Fig = plt.figure(figsize=(6, 6))
+Ax = Fig.add_subplot(111)
+mesh.plotGrid(ax=Ax)
+Ax.set_xbound(mesh.x0[0], mesh.x0[0]+np.sum(mesh.hx))
+Ax.set_ybound(mesh.x0[1], mesh.x0[1]+np.sum(mesh.hy))
+Ax.set_title('Tensor Mesh')
 
 ###############################################
 # Extracting Mesh Properties
@@ -113,9 +121,16 @@ cc = mesh.gridCC
 # A boolean array specifying which cells lie on the boundary
 bInd = mesh.cellBoundaryInd
 
-# The cell areas (2D "volume")
+# Plot the cell areas (2D "volume")
 s = mesh.vol
-mesh.plotImage(s, grid=True)
+
+Fig = plt.figure(figsize=(6, 6))
+Ax = Fig.add_subplot(111)
+mesh.plotImage(s, grid=True, ax=Ax)
+Ax.set_xbound(mesh.x0[0], mesh.x0[0]+np.sum(mesh.hx))
+Ax.set_ybound(mesh.x0[1], mesh.x0[1]+np.sum(mesh.hy))
+Ax.set_title('Cell Areas')
+
 
 ###############################################
 # 3D Example
@@ -148,4 +163,14 @@ bInd = mesh.cellBoundaryInd
 # The cell volumes
 v = mesh.vol
 
-mesh.plotImage(v, grid=True)
+# Plot all cells volumes or plot cell volumes for a particular horizontal slice
+Fig = plt.figure(figsize=(9, 4))
+Ax1 = Fig.add_subplot(121)
+Ax2 = Fig.add_subplot(122)
+
+mesh.plotImage(v, grid=True, ax=Ax1)
+Ax1.set_title('All Cell Volumes')
+
+cplot = mesh.plotSlice(v, grid=True, ax=Ax2, normal='Z', ind=2)
+cplot[0].set_clim(np.min(v), np.max(v))
+Ax2.set_title('Cell Volumes #2')

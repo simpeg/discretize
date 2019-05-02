@@ -25,6 +25,7 @@ demonstrate:
 #
 
 from discretize import CylMesh
+import matplotlib.pyplot as plt
 import numpy as np
 
 ###############################################
@@ -88,7 +89,14 @@ hz = [(dz, npad_z, -exp_z), (dz, ncz), (dz, npad_z, exp_z)]
 # We can use flags 'C', '0' and 'N' to define the xyz position of the mesh.
 mesh = CylMesh([hr, hp, hz], x0='00C')
 
-mesh.plotGrid()
+# We can apply the plotGrid method and change the axis properties
+Ax = mesh.plotGrid()
+Ax[0].set_title('Discretization in phi')
+
+Ax[1].set_title('Discretization in r and z')
+Ax[1].set_xlabel('r')
+Ax[1].set_xbound(mesh.x0[0], mesh.x0[0]+np.sum(mesh.hx))
+Ax[1].set_ybound(mesh.x0[2], mesh.x0[2]+np.sum(mesh.hz))
 
 # The bottom end of the vertical axis of rotational symmetry
 x0 = mesh.x0
@@ -142,6 +150,19 @@ nC = mesh.nC
 # An (nC, 3) array containing the cell-center locations
 cc = mesh.gridCC
 
-# The cell volumes
+# Plot the cell volumes
 v = mesh.vol
-mesh.plotImage(v, grid=True)
+
+Fig = plt.figure(figsize=(6, 7))
+Ax = Fig.add_subplot(111)
+mesh.plotImage(v, grid=True, ax=Ax)
+Ax.set_xlabel('r')
+Ax.set_xbound(mesh.x0[0], mesh.x0[0]+np.sum(mesh.hx))
+Ax.set_ybound(mesh.x0[2], mesh.x0[2]+np.sum(mesh.hz))
+Ax.set_title('Cell Volumes')
+
+##############################################################################
+# Notice that we do not plot the discretization in phi as it is irrelevant.
+#
+
+

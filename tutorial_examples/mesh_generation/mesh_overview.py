@@ -48,7 +48,7 @@ curvi_mesh = discretize.CurvilinearMesh(
 )
 
 # Plot
-fig, axes = plt.subplots(1, 3, figsize=(15, 4))
+fig, axes = plt.subplots(1, 3, figsize=(14.5, 4))
 tensor_mesh.plotGrid(ax=axes[0])
 axes[0].set_title('TensorMesh')
 
@@ -77,7 +77,7 @@ hy = np.r_[3, 2, 1, 1, 1, 1, 2, 3]
 tensor_mesh2 = discretize.TensorMesh([hx, hy])
 
 # Plot
-fig, axes2 = plt.subplots(1, 3, figsize=(15, 5))
+fig, axes2 = plt.subplots(1, 3, figsize=(14.5, 5))
 tensor_mesh2.plotGrid(ax=axes2[0], nodes=True, centers=True)
 axes2[0].legend(('Nodes', 'Centers'))
 axes2[0].set_title('Nodes and cell centers')
@@ -90,6 +90,7 @@ tensor_mesh2.plotGrid(ax=axes2[2], faces=True)
 axes2[2].legend(('X-faces', 'Y-faces'))
 axes2[2].set_title('Cell faces')
 
+###############################################################################
 # Note that we define X-edges as being edges that lie parallel to the x-axis.
 # And we define X-faces as being faces whose normal lies parallel to the
 # axis. In 3D, the difference between edges and faces is more obvious.
