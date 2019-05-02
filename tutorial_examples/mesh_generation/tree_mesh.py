@@ -62,7 +62,7 @@ xy = np.c_[matutils.mkvc(xp), matutils.mkvc(yp)]
 
 # Discretize to finest cell size within rectangular region
 mesh2 = meshutils.refine_tree_xyz(mesh, xy, octree_levels=[2, 2],
-                                 method='box', finalize=False)
+                                  method='box', finalize=False)
 
 mesh2.finalize()  # Must finalize tree mesh before use
 
@@ -73,10 +73,11 @@ mesh.plotGrid(showIt=True)
 # Intermediate Example and Plotting
 # ---------------------------------
 #
-# The widths of the base mesh cells do not need to be the same in x and y but
-# the number of base mesh cells in x and y does need to be a power of 2. Here
-# we show a method for mesh refinement which discretizes more finely around a
-# set of points. This is usedful for discretizing surface topography.
+# The widths of the base mesh cells do not need to be the same in x and y.
+# However the number of base mesh cells in x and y each needs to be a power of
+# 2. Here we show topography-based mesh refinement and refinement about a
+# set of points. We also show some aspect of customizing plots.
+#
 
 dx = 5    # minimum cell width (base mesh cell width) in x
 dy = 5    # minimum cell width (base mesh cell width) in y
@@ -97,15 +98,15 @@ mesh = TreeMesh([hx, hy], x0='CC')
 xx = mesh.vectorNx
 yy = -3*np.exp((xx**2) / 100**2) + 50.
 pts = np.c_[matutils.mkvc(xx), matutils.mkvc(yy)]
-mesh = meshutils.refine_tree_xyz(mesh, pts, octree_levels=[2,2],
-                                  method='radial', finalize=False)
+mesh = meshutils.refine_tree_xyz(mesh, pts, octree_levels=[2, 2],
+                                 method='surface', finalize=False)
 
-# Refine polygon
+# Refine near points
 xx = np.array([0., 10., 0., -10.])
 yy = np.array([-20., -10., 0., -10])
 pts = np.c_[matutils.mkvc(xx), matutils.mkvc(yy)]
 mesh = meshutils.refine_tree_xyz(mesh, pts, octree_levels=[2, 2],
-                                  method='radial', finalize=False)
+                                 method='radial', finalize=False)
 
 mesh.finalize()
 
@@ -123,6 +124,7 @@ Ax.set_title('QuadTree Mesh')
 #
 # Once the mesh is created, you may want to extract certain properties. Here,
 # we show some properties that can be extracted from a QuadTree mesh.
+#
 
 dx = 5    # minimum cell width (base mesh cell width) in x
 dy = 5    # minimum cell width (base mesh cell width) in y
@@ -143,10 +145,10 @@ mesh = TreeMesh([hx, hy], x0='CC')
 xx = mesh.vectorNx
 yy = -3*np.exp((xx**2) / 100**2) + 50.
 pts = np.c_[matutils.mkvc(xx), matutils.mkvc(yy)]
-mesh = meshutils.refine_tree_xyz(mesh, pts, octree_levels=[2,2],
-                                 method='radial', finalize=False)
+mesh = meshutils.refine_tree_xyz(mesh, pts, octree_levels=[2, 2],
+                                 method='surface', finalize=False)
 
-# Refine polygon
+# Refine near points
 xx = np.array([0., 10., 0., -10.])
 yy = np.array([-20., -10., 0., -10])
 pts = np.c_[matutils.mkvc(xx), matutils.mkvc(yy)]
@@ -183,6 +185,7 @@ Ax.set_title('Cell Areas')
 #
 # Here we show how the same approach can be used to create and extract
 # properties from a 3D tensor mesh.
+#
 
 dx = 5    # minimum cell width (base mesh cell width) in x
 dy = 5    # minimum cell width (base mesh cell width) in y
@@ -208,7 +211,7 @@ mesh = TreeMesh([hx, hy, hz], x0='CCC')
 zz = -3*np.exp((xx**2 + yy**2) / 100**2) + 50.
 pts = np.c_[matutils.mkvc(xx), matutils.mkvc(yy), matutils.mkvc(zz)]
 mesh = meshutils.refine_tree_xyz(mesh, pts, octree_levels=[2, 2],
-                                 method='radial', finalize=False)
+                                 method='surface', finalize=False)
 
 # Refine box
 xp, yp, zp = np.meshgrid([-40., 40.], [-40., 40.], [-60., 0.])
