@@ -114,51 +114,122 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         _TreeMesh.__init__(self, self.h, self.x0)
 
     def __repr__(self):
-         """Plain text representation."""
-         return self.__str__()
+        """Plain text representation."""
+        mesh_name = '{0!s}TreeMesh'.format(('Oc' if self.dim==3 else 'Quad'))
 
-    def __str__(self):
-        outStr = '  ---- {0!s}TreeMesh ----  '.format(
-            ('Oc' if self.dim == 3 else 'Quad')
-        )
+        top = "\n"+mesh_name+": {0:2.2f}% filled\n\n".format(self.fill*100)
 
-        def printH(hx, outStr=''):
-            i = -1
-            while True:
-                i = i + 1
-                if i > hx.size:
-                    break
-                elif i == hx.size:
-                    break
-                h = hx[i]
-                n = 1
-                for j in range(i+1, hx.size):
-                    if hx[j] == h:
-                        n = n + 1
-                        i = i + 1
-                    else:
-                        break
-                if n == 1:
-                    outStr += ' {0:.2f}, '.format(h)
-                else:
-                    outStr += ' {0:d}*{1:.2f}, '.format(n, h)
-            return outStr[:-1]
+        # Number of cells per level
+        level_count = self._count_cells_per_index()
+        non_zero_levels = np.nonzero(level_count)[0]
+        cell_display = ["Level : Number of cells"]
+        cell_display.append("-----------------------")
+        for level in non_zero_levels:
+            cell_display.append("{:^5} : {:^15}".format(level, level_count[level]))
+        cell_display.append("-----------------------")
+        cell_display.append("Total : {:^15}".format(self.nC))
 
-        if self.dim == 2:
-            outStr += '\n   x0: {0:.2f}'.format(self.x0[0])
-            outStr += '\n   y0: {0:.2f}'.format(self.x0[1])
-            outStr += printH(self.hx, outStr='\n   hx:')
-            outStr += printH(self.hy, outStr='\n   hy:')
-        elif self.dim == 3:
-            outStr += '\n   x0: {0:.2f}'.format(self.x0[0])
-            outStr += '\n   y0: {0:.2f}'.format(self.x0[1])
-            outStr += '\n   z0: {0:.2f}'.format(self.x0[2])
-            outStr += printH(self.hx, outStr='\n   hx:')
-            outStr += printH(self.hy, outStr='\n   hy:')
-            outStr += printH(self.hz, outStr='\n   hz:')
-        outStr += '\n  nC: {0:d}'.format(self.nC)
-        outStr += '\n  Fill: {0:2.2f}%'.format((self.fill*100))
-        return outStr
+        extent_display =     ["            Mesh Extent       "]
+        extent_display.append("        min     ,     max     ")
+        extent_display.append("   ---------------------------")
+        dim_label = {0:'x',1:'y',2:'z'}
+        for dim in range(self.dim):
+            n_vector = getattr(self, 'vectorN'+dim_label[dim])
+            extent_display.append("{}: {:^13},{:^13}".format(dim_label[dim], n_vector[0], n_vector[-1]))
+
+        for i, line in enumerate(extent_display):
+            if i==len(cell_display):
+                cell_display.append(" "*(len(cell_display[0])-3-len(line)))
+            cell_display[i] += 3*" " + line
+
+        h_display =     ['     Cell Widths    ']
+        h_display.append("    min   ,   max   ")
+        h_display.append("-"*(len(h_display[0])))
+        h_gridded = self.h_gridded
+        mins = np.min(h_gridded,axis=0)
+        maxs = np.max(h_gridded,axis=0)
+        for dim in range(self.dim):
+            h_display.append("{:^10}, {:^10}".format(mins[dim], maxs[dim]))
+
+        for i, line in enumerate(h_display):
+            if i==len(cell_display):
+                cell_display.append(" "*len(cell_display[0]))
+            cell_display[i] += 3*" " + line
+
+        return top+"\n".join(cell_display)
+
+    def _repr_html_(self):
+        """html representation"""
+        mesh_name = '{0!s}TreeMesh'.format(('Oc' if self.dim==3 else 'Quad'))
+        level_count = self._count_cells_per_index()
+        non_zero_levels = np.nonzero(level_count)[0]
+        dim_label = {0:'x',1:'y',2:'z'}
+        h_gridded = self.h_gridded
+        mins = np.min(h_gridded,axis=0)
+        maxs = np.max(h_gridded,axis=0)
+
+        style = " style='padding: 5px 20px 5px 20px;'"
+        #Cell level table:
+        cel_tbl =  "<table>\n"
+        cel_tbl += "<tr>\n"
+        cel_tbl += "<th"+style+">Level</th>\n"
+        cel_tbl += "<th"+style+">Number of cells</th>\n"
+        cel_tbl += "</tr>\n"
+        for level in non_zero_levels:
+            cel_tbl += "<tr>\n"
+            cel_tbl += "<td"+style+f">{level}</td>\n"
+            cel_tbl += "<td"+style+f">{level_count[level]}</td>\n"
+            cel_tbl += "</tr>\n"
+        cel_tbl += "<tr>\n"
+        cel_tbl += "<td style='font-weight: bold; padding: 5px 20px 5px 20px;'> Total </td>\n"
+        cel_tbl += "<td"+style+f"> {self.nC} </td>\n"
+        cel_tbl += "</tr>\n"
+        cel_tbl += "</table>\n"
+
+        det_tbl =  "<table>\n"
+        det_tbl += "<tr>\n"
+        det_tbl += "<th></th>\n"
+        det_tbl += "<th"+style+" colspan='2'>Mesh extent</th>\n"
+        det_tbl += "<th"+style+" colspan='2'>Cell widths</th>\n"
+        det_tbl += "</tr>\n"
+
+        det_tbl += "<tr>\n"
+        det_tbl += "<th></th>\n"
+        det_tbl += "<th"+style+">min</th>\n"
+        det_tbl += "<th"+style+">max</th>\n"
+        det_tbl += "<th"+style+">min</th>\n"
+        det_tbl += "<th"+style+">max</th>\n"
+        det_tbl += "</tr>\n"
+        for dim in range(self.dim):
+            n_vector = getattr(self, 'vectorN'+dim_label[dim])
+            det_tbl += "<tr>\n"
+            det_tbl += "<td"+style+f">{dim_label[dim]}</td>\n"
+            det_tbl += "<td"+style+f">{n_vector[0]}</td>\n"
+            det_tbl += "<td"+style+f">{n_vector[-1]}</td>\n"
+            det_tbl += "<td"+style+f">{mins[dim]}</td>\n"
+            det_tbl += "<td"+style+f">{maxs[dim]}</td>\n"
+            det_tbl += "</tr>\n"
+        det_tbl += "</table>\n"
+
+        full_tbl =  "<table>\n"
+        full_tbl += "<tr>\n"
+        full_tbl += f"<td style='font-weight: bold; font-size: 1.2em; text-align: center;'>{mesh_name}</td>\n"
+        full_tbl += "<td style='font-size: 1.2em; text-align: center;' colspan='2'>{0:2.2f}% filled</td>\n".format(100*self.fill)
+        full_tbl += "</tr>\n"
+        full_tbl += "<tr>\n"
+
+        full_tbl += "<td>\n"
+        full_tbl += cel_tbl
+        full_tbl += "</td>\n"
+
+        full_tbl += "<td>\n"
+        full_tbl += det_tbl
+        full_tbl += "</td>\n"
+
+        full_tbl += "</tr>\n"
+        full_tbl += "</table>\n"
+
+        return full_tbl
 
     @property
     def vntF(self):

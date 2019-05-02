@@ -760,18 +760,19 @@ cdef class _TreeMesh:
         """
         Returns an (nC, dim) numpy array with the widths of all cells in order
         """
-        # TODO
+        if self._h_gridded is not None:
+            return self._h_gridded
         cdef np.float64_t[:, :] gridCH
         cdef np.int64_t ii, ind, dim
         cdef np.float64_t len
-        if self._h_gridded is None:
-            dim = self._dim
-            self._h_gridded = np.empty((self.nC, dim), dtype=np.float64)
-            h_gridded = self._h_gridded
-            for cell in self:
-                ind = cell.index
-                for ii in range(dim):
-                    h_gridded[ind, ii] = cell.h[ii]
+        cdef int epc = 4 if self._dim==3 else 2
+        dim = self._dim
+        self._h_gridded = np.empty((self.nC, dim), dtype=np.float64)
+        gridCH = self._h_gridded
+        for cell in self.tree.cells:
+            ind = cell.index
+            for ii in range(dim):
+                gridCH[ind, ii] = cell.edges[ii*epc].length
 
         return self._h_gridded
 
@@ -2933,7 +2934,15 @@ cdef class _TreeMesh:
             else:
                 z = 0
             indexes[i] = self.tree.containing_cell(x, y, z).index
+        if n_locs==1:
+            return indexes[0]
         return np.array(indexes)
+
+    def _count_cells_per_index(self):
+        cdef np.int64_t[:] counts = np.zeros(self.max_level+1, dtype=np.int64)
+        for cell in self.tree.cells:
+            counts[cell.level] += 1
+        return np.array(counts)
 
     def _cell_levels_by_indexes(self, index):
         index = np.require(np.atleast_1d(index), dtype=np.int64, requirements='C')
@@ -3661,7 +3670,7 @@ cdef class _TreeMesh:
         if isinstance(key, slice):
             # Get the start, stop, and step from the slice
             return [self[ii] for ii in range(*key.indices(len(self)))]
-        elif isinstance(key, int):
+        elif isinstance(key, (*integer_types, np.integer)):
             if key < 0:  # Handle negative indices
                 key += len(self)
             if key >= len(self):
