@@ -14,38 +14,19 @@ from six import integer_types
 import numpy as np
 from properties.utils import Sentinel
 
-cdef class Cell:
+cdef class TreeCell:
     """A Cell of the `TreeMesh`
 
     This cannot be created in python, it can only be accessed by indexing the
     `TreeMesh` object.
 
     This is also the object that is passed to the user defined refine function
-    when calling `TreeMesh.refine(func)`.
-
-    Attributes
-    ----------
-    dim : int
-    x0 : numpy.array of length dim
-        origin of this cell
-    center : numpy.array of length dim
-        center of this cell
-    h : numpy.array of length dim
-        width of this cell
-    nodes : tuple of int
-        indexes of this cell's nodes
-    edges : tuple of int
-        indexes of this cell's edges
-    faces : tuple of int
-        indexes of this cell's faces
-    neighbors : tuple of int and tuple
-        indexes of this cell's neighbors. If a cell has more than one neighbor
-        in a certain direction, then that entry will also be a tuple of all of
-        those neighbors.
+    when calling TreeMesh.refine(func).
 
     Notes
     -----
-    When called as part of the `refine` function, only the x0, center, and h properties are valid.
+    When called as part of the `refine` function, only the x0, center, and h
+    properties are valid.
     """
     cdef double _x, _y, _z, _x0, _y0, _z0, _wx, _wy, _wz
     cdef int_t _dim
@@ -68,76 +49,109 @@ cdef class Cell:
 
     @property
     def nodes(self):
+        """indexes of this cell's nodes
+
+        Returns
+        -------
+        list of ints
+        """
         cdef Node *points[8]
         points = self._cell.points
         if self._dim == 3:
-            return tuple((points[0].index, points[1].index,
-                          points[2].index, points[3].index,
-                          points[4].index, points[5].index,
-                          points[6].index, points[7].index))
-        return tuple((points[0].index, points[1].index,
-                      points[2].index, points[3].index))
+            return [points[0].index, points[1].index,
+                    points[2].index, points[3].index,
+                    points[4].index, points[5].index,
+                    points[6].index, points[7].index]
+        return [points[0].index, points[1].index,
+                points[2].index, points[3].index]
 
     @property
     def edges(self):
+        """indexes of this cell's edges
+
+        Returns
+        -------
+        list of ints
+        """
         cdef Edge *edges[12]
         edges = self._cell.edges
         if self._dim == 2:
-            return tuple((edges[0].index, edges[1].index,
-                          edges[2].index, edges[3].index))
-        return tuple((
-                edges[0].index, edges[1].index, edges[2].index, edges[3].index,
-                edges[4].index, edges[5].index, edges[6].index, edges[7].index,
-                edges[8].index, edges[9].index, edges[10].index, edges[11].index,
-                ))
-
+            return [edges[0].index, edges[1].index,
+                    edges[2].index, edges[3].index]
+        return [
+            edges[0].index, edges[1].index, edges[2].index, edges[3].index,
+            edges[4].index, edges[5].index, edges[6].index, edges[7].index,
+            edges[8].index, edges[9].index, edges[10].index, edges[11].index,
+        ]
     @property
     def faces(self):
+        """indexes of this cell's faces
+        Returns
+        -------
+        list of ints
+        """
         cdef Face *faces[6]
         faces = self._cell.faces
         if self._ == 3:
-            return tuple((
+            return [
                 faces[0].index, faces[1].index,
                 faces[2].index, faces[3].index,
                 faces[4].index, faces[5].index
-            ))
+            ]
         cdef Edge *edges[12]
         edges = self._cell.edges
-        return tuple((
-            edges[2].index, edges[3].index,
-            edges[0].index, edges[1].index,
-        ))
+        return [edges[2].index, edges[3].index,
+                edges[0].index, edges[1].index]
 
     @property
     def center(self):
+        """numpy.array of length dim"""
         if self._dim == 2: return np.array([self._x, self._y])
         return np.array([self._x, self._y, self._z])
 
     @property
     def x0(self):
+        """numpy.array of length dim"""
         if self._dim == 2: return np.array([self._x0, self._y0])
         return np.array([self._x0, self._y0, self._z0])
 
     @property
     def h(self):
+        """ numpy.array of length dim
+        width of this cell
+        """
         if self._dim == 2: return np.array([self._wx, self._wy])
         return np.array([self._wx, self._wy, self._wz])
 
     @property
     def dim(self):
+        """"int dimension of cell"""
         return self._dim
 
     @property
     def index(self):
+        """integer index of this cell"""
         return self._cell.index
 
     @property
     def neighbors(self):
-        neighbors = np.empty(self._dim*2, dtype=object)
+        """ The indexes of this cell's neighbors
+
+        Indexes of this cell's neighbors. If a cell has more than one neighbor
+        in a certain direction (i.e. when a level changes between adjacent cells),
+        then that entry will also be a list of all of those neighbor indices.
+        The list is order -x, +x, -y, +y, -z, +z. If a cell has no neighbor in
+        that direction, the value will be -1.
+
+        Returns
+        -------
+        list of ints or list of ints
+        """
+        neighbors = [-1]*self._dim*2
 
         for i in range(self._dim*2):
             if self._cell.neighbors[i] is NULL:
-                neighbors[i] = -1
+                continue
             elif self._cell.neighbors[i].is_leaf():
                 neighbors[i] = self._cell.neighbors[i].index
             else:
@@ -200,7 +214,7 @@ cdef class Cell:
 cdef int_t _evaluate_func(void* function, c_Cell* cell) with gil:
     # Wraps a function to be called in C++
     func = <object> function
-    pycell = Cell()
+    pycell = TreeCell()
     pycell._set(cell)
     return <int_t> func(pycell)
 
@@ -365,7 +379,7 @@ cdef class _TreeMesh:
 
         See Also
         --------
-        discretize.TreeMesh.Cell : a description of the Cell object
+        discretize.TreeMesh.TreeCell : a description of the TreeCell object
         """
         if type(function) in integer_types:
             level = function
@@ -3677,7 +3691,7 @@ cdef class _TreeMesh:
                 raise IndexError(
                     "The index ({0:d}) is out of range.".format(key)
                 )
-            pycell = Cell()
+            pycell = TreeCell()
             pycell._set(self.tree.cells[key])
             return pycell
         else:

@@ -88,7 +88,7 @@ from .base import BaseTensorMesh
 from .InnerProducts import InnerProducts
 from .MeshIO import TreeMeshIO
 from . import utils
-from .tree_ext import _TreeMesh, Cell
+from .tree_ext import _TreeMesh, TreeCell
 import numpy as np
 from scipy.spatial import Delaunay
 import scipy.sparse as sp
@@ -424,52 +424,52 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         return self._cell_levels_by_indexes(indices)
 
 
-        def getInterpolationMat(self, locs, locType, zerosOutside=False):
-            """ Produces interpolation matrix
+    def getInterpolationMat(self, locs, locType, zerosOutside=False):
+        """ Produces interpolation matrix
 
-            Parameters
-            ----------
-            loc : numpy.ndarray
-                Location of points to interpolate to
+        Parameters
+        ----------
+        loc : numpy.ndarray
+            Location of points to interpolate to
 
-            locType: str
-                What to interpolate
+        locType: str
+            What to interpolate
 
-                locType can be::
+            locType can be::
 
-                    'Ex'    -> x-component of field defined on edges
-                    'Ey'    -> y-component of field defined on edges
-                    'Ez'    -> z-component of field defined on edges
-                    'Fx'    -> x-component of field defined on faces
-                    'Fy'    -> y-component of field defined on faces
-                    'Fz'    -> z-component of field defined on faces
-                    'N'     -> scalar field defined on nodes
-                    'CC'    -> scalar field defined on cell centers
+                'Ex'    -> x-component of field defined on edges
+                'Ey'    -> y-component of field defined on edges
+                'Ez'    -> z-component of field defined on edges
+                'Fx'    -> x-component of field defined on faces
+                'Fy'    -> y-component of field defined on faces
+                'Fz'    -> z-component of field defined on faces
+                'N'     -> scalar field defined on nodes
+                'CC'    -> scalar field defined on cell centers
 
-            Returns
-            -------
-            scipy.sparse.csr_matrix
-                M, the interpolation matrix
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            M, the interpolation matrix
 
-            """
-            locs = utils.asArray_N_x_Dim(locs, self.dim)
-            if locType not in ['N', 'CC', "Ex", "Ey", "Ez", "Fx", "Fy", "Fz"]:
-                raise Exception('locType must be one of N, CC, Ex, Ey, Ez, Fx, Fy, or Fz')
+        """
+        locs = utils.asArray_N_x_Dim(locs, self.dim)
+        if locType not in ['N', 'CC', "Ex", "Ey", "Ez", "Fx", "Fy", "Fz"]:
+            raise Exception('locType must be one of N, CC, Ex, Ey, Ez, Fx, Fy, or Fz')
 
-            if self._dim == 2 and locType in ['Ez', 'Fz']:
-                raise Exception('Unable to interpolate from Z edges/face in 2D')
+        if self.dim == 2 and locType in ['Ez', 'Fz']:
+            raise Exception('Unable to interpolate from Z edges/face in 2D')
 
-            locs = np.require(np.atleast_2d(locs), dtype=np.float64, requirements='C')
+        locs = np.require(np.atleast_2d(locs), dtype=np.float64, requirements='C')
 
-            if locType == 'N':
-                Av = self._getNodeIntMat(locs, zerosOutside)
-            elif locType in ['Ex', 'Ey', 'Ez']:
-                Av = self._getEdgeIntMat(locs, zerosOutside, locType[1])
-            elif locType in ['Fx', 'Fy', 'Fz']:
-                Av = self._getFaceIntMat(locs, zerosOutside, locType[1])
-            elif locType in ['CC']:
-                Av = self._getCellIntMat(locs, zerosOutside)
-            return Av
+        if locType == 'N':
+            Av = self._getNodeIntMat(locs, zerosOutside)
+        elif locType in ['Ex', 'Ey', 'Ez']:
+            Av = self._getEdgeIntMat(locs, zerosOutside, locType[1])
+        elif locType in ['Fx', 'Fy', 'Fz']:
+            Av = self._getFaceIntMat(locs, zerosOutside, locType[1])
+        elif locType in ['CC']:
+            Av = self._getCellIntMat(locs, zerosOutside)
+        return Av
 
     @property
     def permuteCC(self):
