@@ -310,8 +310,16 @@ texinfo_documents = [
 # Sphinx Gallery
 sphinx_gallery_conf = {
     # path to your examples scripts
-    'examples_dirs': ['../demo_examples', '../tutorial_examples/mesh_generation'],
-    'gallery_dirs': ['demo_examples', 'tutorials/mesh_generation'],
+    'examples_dirs': [
+        '../demo_examples',
+        '../tutorial_examples/mesh_generation',
+        '../tutorial_examples/operators'
+        ],
+    'gallery_dirs': [
+        'demo_examples',
+        'tutorials/mesh_generation',
+        'tutorials/operators'
+        ],
     'filename_pattern': '\.py',
     'backreferences_dir': 'api/generated/backreferences',
     'doc_module': 'discretize',

@@ -16,6 +16,7 @@
     :caption: Tutorials
 
     tutorials/mesh_generation/index
+    tutorials/operators/index
 
 .. toctree::
     :maxdepth: 2
