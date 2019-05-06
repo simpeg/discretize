@@ -47,20 +47,22 @@ import numpy as np
 #
 # Here we demonstrate the basic two step process for creating a 2D tree mesh
 # (QuadTree mesh). The region of highest discretization if defined within a
-# rectangular box.
+# rectangular box. We use the keyword argument *octree_levels* to define the
+# rate of cell width increase outside the box.
 #
 
 dh = 5    # minimum cell width (base mesh cell width)
 nbc = 64  # number of base mesh cells in x
 
-# Define base mesh
+# Define base mesh (domain and finest discretization)
 h = dh*np.ones(nbc)
 mesh = TreeMesh([h, h])
 
+# Define corner points for rectangular box
 xp, yp = np.meshgrid([120., 240.], [80., 160.])
 xy = np.c_[matutils.mkvc(xp), matutils.mkvc(yp)]
 
-# Discretize to finest cell size within rectangular region
+# Discretize to finest cell size within rectangular box
 mesh2 = meshutils.refine_tree_xyz(mesh, xy, octree_levels=[2, 2],
                                   method='box', finalize=False)
 
@@ -75,8 +77,13 @@ mesh.plotGrid(showIt=True)
 #
 # The widths of the base mesh cells do not need to be the same in x and y.
 # However the number of base mesh cells in x and y each needs to be a power of
-# 2. Here we show topography-based mesh refinement and refinement about a
-# set of points. We also show some aspect of customizing plots.
+# 2.
+#
+# Here we show topography-based mesh refinement and refinement about a
+# set of points. We also show some aspect of customizing plots. We use the
+# keyword argument *octree_levels* to define the rate of cell width increase
+# relative to our surface and the set of discrete points about which we are
+# refining.
 #
 
 dx = 5    # minimum cell width (base mesh cell width) in x
@@ -101,7 +108,7 @@ pts = np.c_[matutils.mkvc(xx), matutils.mkvc(yy)]
 mesh = meshutils.refine_tree_xyz(mesh, pts, octree_levels=[2, 2],
                                  method='surface', finalize=False)
 
-# Refine near points
+# Refine mesh near points
 xx = np.array([0., 10., 0., -10.])
 yy = np.array([-20., -10., 0., -10])
 pts = np.c_[matutils.mkvc(xx), matutils.mkvc(yy)]

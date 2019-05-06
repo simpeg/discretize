@@ -11,7 +11,7 @@ only constructed when called.
 
 Here we discuss:
 
-    - How to construct and apply averaging matricies to a vector
+    - How to construct and apply averaging matricies
     - Averaging matricies in 1D, 2D and 3D
     - Averaging discontinuous functions
     - The transpose of an averaging matrix
@@ -29,7 +29,6 @@ Here we discuss:
 
 from discretize import TensorMesh
 import matplotlib.pyplot as plt
-from IPython.display import display
 import numpy as np
 
 # sphinx_gallery_thumbnail_number = 3
@@ -42,7 +41,7 @@ import numpy as np
 # Here we compute a scalar function on cell nodes and average to cell centers.
 # We then compute the scalar function at cell centers to validate the
 # averaging operator.
-# 
+#
 
 # Create a uniform grid
 h = 10*np.ones(20)
@@ -52,27 +51,34 @@ mesh = TensorMesh([h], 'C')
 x_nodes = mesh.vectorNx
 x_centers = mesh.vectorCCx
 
+
+# Define a continuous function
+def fun(x):
+    return np.exp(-x**2 / 50**2)
+
 # Compute function on nodes and cell centers
-v_nodes = np.exp(-(x_nodes**2) / 50**2)
-v_centers = np.exp(-(x_centers**2) / 50**2)
+v_nodes = fun(x_nodes)
+v_centers = fun(x_centers)
 
 # Create operator and average from nodes to cell centers
 A = mesh.aveN2CC
 v_approx = A*v_nodes
 
 # Compare
-fig = plt.figure(figsize=(8, 4))
-Ax1 = fig.add_subplot(121)
+fig = plt.figure(figsize=(12, 4))
+Ax1 = fig.add_axes([0.03, 0.01, 0.3, 0.93])
 Ax1.spy(A, markersize=5)
 Ax1.set_title('Sparse representation of A', pad=10)
 
-Ax2 = fig.add_subplot(122)
-Ax2.plot(x_centers, np.c_[v_centers, v_approx, v_centers-v_approx])
+Ax2 = fig.add_axes([0.4, 0.06, 0.55, 0.88])
+Ax2.plot(x_centers, v_centers, 'b-',
+         x_centers, v_approx, 'ko',
+         x_centers, np.c_[v_centers-v_approx], 'r-'
+         )
 Ax2.set_title('Comparison plot')
-Ax2.legend(('true','approx','error'))
+Ax2.legend(('evaluated at centers', 'averaged from nodes', 'absolute error'))
 
-display(fig)
-plt.close()
+fig.show()
 
 #############################################
 # 1D, 2D and 3D Averaging
@@ -81,8 +87,8 @@ plt.close()
 # Here we discuss averaging operators in 1D, 2D and 3D. In 1D we can
 # average between nodes and cell centers. In higher dimensions, we may need to
 # average between nodes, cell centers, faces and edges. For this example we
-# consider the averaging operator from faces to cell centers.
-#  
+# describe the averaging operator from faces to cell centers in 1D, 2D and 3D.
+#
 
 # Construct uniform meshes in 1D, 2D and 3D
 h = 10*np.ones(10)
@@ -105,12 +111,11 @@ Ax2 = fig.add_axes([0.17, 0.42, 0.6, 0.22])
 Ax2.spy(A2, markersize=1)
 Ax2.set_title('Faces to centers in 2D', pad=17)
 
-Ax3 = fig.add_axes([0, 0, 1, 0.4])
+Ax3 = fig.add_axes([0.05, 0, 0.93, 0.4])
 Ax3.spy(A3, markersize=0.5)
 Ax3.set_title('Faces to centers in 3D', pad=17)
 
-display(fig)
-plt.close()
+fig.show()
 
 # Print some properties
 print('\n For 1D mesh:')
@@ -137,14 +142,14 @@ print('- Number of non-zero elements:', str(A3.nnz))
 # -----------------------------------------
 #
 # Here we show the effects of applying averaging operators to discontinuous
-# functions. We will see that averaging smears the function at any
+# functions. We will see that averaging smears the function at
 # discontinuities.
 #
-# For a uniform mesh, the transpose of an averaging operator is also an
+# The transpose of an averaging operator is also an
 # averaging operator. For example, we can average from cell centers to faces
 # by taking the transpose of operator that averages from faces to cell centers.
 # Note that values on the boundaries are not accurate when applying the
-# transpose. 
+# transpose as an averaging operator. This is also true for staggered grids.
 #
 
 # Create mesh and obtain averaging operators
@@ -158,8 +163,8 @@ A4 = mesh.aveF2CC  # faces to cell centers
 # Create a variable on cell centers
 v = 100.*np.ones(mesh.nC)
 xy = mesh.gridCC
-v[(xy[:, 1]>0)] = 0.
-v[(xy[:, 1]<-10.) & (xy[:, 0]>-10.) & (xy[:, 0]<10.)] = 50.
+v[(xy[:, 1] > 0)] = 0.
+v[(xy[:, 1] < -10.) & (xy[:, 0] > -10.) & (xy[:, 0] < 10.)] = 50.
 
 fig = plt.figure(figsize=(10, 10))
 Ax1 = fig.add_subplot(221)
@@ -181,8 +186,4 @@ Ax4 = fig.add_subplot(224)
 mesh.plotImage(A4.T*v, ax=Ax4, vType='F')
 Ax4.set_title('Cell centers to faces using transpose')
 
-
-
-
-
-
+fig.show()
