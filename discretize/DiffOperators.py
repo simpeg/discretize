@@ -363,7 +363,7 @@ class DiffOperators(object):
             Hx = sp.kron(speye(self.nNy), Hx)
         elif self.dim == 3:
             Hx = kron3(speye(self.nNz), speye(self.nNy), Hx)
-        return Hx.T * self._nodalGradStencilx * Hx
+        return self._nodalGradStencilx.T * Hx.T * Hx * self._nodalGradStencilx
 
     @property
     def _nodalLaplaciany(self):
@@ -374,7 +374,7 @@ class DiffOperators(object):
             Hy = sp.kron(Hy, speye(self.nNx))
         elif self.dim == 3:
             Hy = kron3(speye(self.nNz), Hy, speye(self.nNx))
-        return Hy.T * self._nodalGradStencily * Hy
+        return self._nodalGradStencily.T * Hy.T * Hy * self._nodalGradStencily
 
     @property
     def _nodalLaplacianz(self):
@@ -382,7 +382,7 @@ class DiffOperators(object):
             return None
         Hz = sdiag(1./self.hz)
         Hz = kron3(Hz, speye(self.nNy), speye(self.nNx))
-        return Hz.T * self._nodalLaplacianStencilz * Hz
+        return self._nodalGradStencilz.T * Hz.T * Hz * self._nodalGradStencilz
 
     @property
     def nodalLaplacian(self):
