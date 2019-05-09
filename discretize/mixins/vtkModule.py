@@ -17,22 +17,22 @@ along side all their other georeferenced datasets in a common rendering
 environment.
 
 .. _PVGeo: http://pvgeo.org
-.. _vtki: http://docs.vtki.org
+.. _vista: http://docs.pyvista.org
 
-Another notable VTK powered software platforms is ``vtki`` (see vtki_ docs)
+Another notable VTK powered software platforms is ``vista`` (see vista_ docs)
 which provides a direct interface to the VTK software library through accesible
 Python data structures and NumPy arrays::
 
-    pip install vtki
+    pip install vista
 
-By default, the ``toVTK()`` method will return a ``vtki`` data object so that
+By default, the ``toVTK()`` method will return a ``vista`` data object so that
 users can immediately start visualizing their data in 3D.
 
-See :ref:`vtki_demo_ref` for an example of the types of integrated
-visualizations that are possible leveraging the link between discretize, vtki_,
+See :ref:`vista_demo_ref` for an example of the types of integrated
+visualizations that are possible leveraging the link between discretize, vista_,
 and PVGeo_:
 
-.. image:: ../images/vtki_laguna_del_maule.png
+.. image:: ../images/vista_laguna_del_maule.png
    :target: http://pvgeo.org
    :alt: PVGeo Example Visualization
 
@@ -74,7 +74,7 @@ def assignCellData(vtkDS, models=None):
     Parameters
     ----------
 
-    vtkDS : vtki.Common
+    vtkDS : vista.Common
         Any given VTK data object that has cell data
 
     models : dict(numpy.ndarray)
@@ -125,9 +125,9 @@ class vtkInterface(object):
     traditional <X,Y,Z> system with vectors of :math:`(1,0,0)`, :math:`(0,1,0)`,
     and :math:`(0,0,1)`, then the mesh will be rotated to be on the traditional
     reference frame. The previous example snippet provides a
-    :class:`vtki.RectilinearGrid` object because that tensor mesh lies on the
+    :class:`vista.RectilinearGrid` object because that tensor mesh lies on the
     traditional reference frame. If we alter the reference frame, then we yield
-    a :class:`vtki.StructuredGrid` that is the same mesh rotated in space.
+    a :class:`vista.StructuredGrid` that is the same mesh rotated in space.
 
     .. code-block:: python
 
@@ -144,8 +144,8 @@ class vtkInterface(object):
        # or write it out to a VTK format
        mesh.writeVTK('sample_rotated')
 
-    The two above code snippets produce a :class:`vtki.RectilinearGrid` and a
-    :class:`vtki.StructuredGrid` respecitvely. To demonstarte the difference, we
+    The two above code snippets produce a :class:`vista.RectilinearGrid` and a
+    :class:`vista.StructuredGrid` respecitvely. To demonstarte the difference, we
     have plotted the two datasets next to eachother where the first mesh is in
     green and its data axes are parrallel to the traditional cartesian reference
     frame. The second, rotated mesh is shown in red and its data axii are
@@ -154,10 +154,10 @@ class vtkInterface(object):
 
     .. code-block:: python
 
-        import vtki
-        vtki.set_plot_theme('document')
+        import vista
+        vista.set_plot_theme('document')
 
-        p = vtki.BackgroundPlotter()
+        p = vista.BackgroundPlotter()
         p.add_mesh(dataset, color='green', show_edges=True)
         p.add_mesh(dataset_r, color='maroon', show_edges=True)
         p.show_grid()
@@ -169,14 +169,14 @@ class vtkInterface(object):
 
     def __treeMeshToVTK(mesh, models=None):
         """
-        Constructs a :class:`vtki.UnstructuredGrid` object of this tree mesh and
-        the given models as ``cell_arrays`` of that ``vtki`` dataset.
+        Constructs a :class:`vista.UnstructuredGrid` object of this tree mesh and
+        the given models as ``cell_arrays`` of that ``vista`` dataset.
 
         Parameters
         ----------
 
         mesh : discretize.TreeMesh
-            The tree mesh to convert to a :class:`vtki.UnstructuredGrid`
+            The tree mesh to convert to a :class:`vista.UnstructuredGrid`
 
         models : dict(numpy.ndarray)
             Name('s) and array('s). Match number of cells
@@ -266,8 +266,8 @@ class vtkInterface(object):
 
     def __tensorMeshToVTK(mesh, models=None):
         """
-        Constructs a :class:`vtki.RectilinearGrid`
-        (or a :class:`vtki.StructuredGrid`) object of this tensor mesh and the
+        Constructs a :class:`vista.RectilinearGrid`
+        (or a :class:`vista.StructuredGrid`) object of this tensor mesh and the
         given models as ``cell_arrays`` of that grid.
         If the mesh is defined on a normal cartesian system then a rectilinear
         grid is generated. Otherwise, a structured grid is generated.
@@ -276,7 +276,7 @@ class vtkInterface(object):
         ----------
 
         mesh : discretize.TensorMesh
-            The tensor mesh to convert to a :class:`vtki.RectilinearGrid`
+            The tensor mesh to convert to a :class:`vista.RectilinearGrid`
 
         models : dict(numpy.ndarray)
             Name('s) and array('s). Match number of cells
@@ -313,14 +313,14 @@ class vtkInterface(object):
 
     def __curvilinearMeshToVTK(mesh, models=None):
         """
-        Constructs a :class:`vtki.StructuredGrid` of this mesh and the given
+        Constructs a :class:`vista.StructuredGrid` of this mesh and the given
         models as ``cell_arrays`` of that object.
 
         Parameters
         ----------
 
         mesh : discretize.CurvilinearMesh
-            The curvilinear mesh to convert to a :class:`vtki.StructuredGrid`
+            The curvilinear mesh to convert to a :class:`vista.StructuredGrid`
 
         models : dict(numpy.ndarray)
             Name('s) and array('s). Match number of cells
@@ -343,7 +343,7 @@ class vtkInterface(object):
 
 
     def toVTK(mesh, models=None):
-        """Convert this mesh object to it's proper ``vtki`` data object with
+        """Convert this mesh object to it's proper ``vista`` data object with
         the given model dictionary as the cell data of that dataset.
 
         Parameters
@@ -365,19 +365,19 @@ class vtkInterface(object):
             convert = converters[key]
         except KeyError:
             raise RuntimeError('Mesh type `{}` is not currently supported for VTK conversion.'.format(key))
-        # Convert the data object then attempt a wrapping with `vtki`
+        # Convert the data object then attempt a wrapping with `vista`
         cvtd = convert(mesh, models=models)
         try:
-            import vtki
-            cvtd = vtki.wrap(cvtd)
+            import vista
+            cvtd = vista.wrap(cvtd)
         except ImportError:
-            warnings.warn('For easier use of VTK objects, you should install `vtki` (the VTK interface): pip install vtki')
+            warnings.warn('For easier use of VTK objects, you should install `vista` (the VTK interface): pip install vista')
         return cvtd
 
     @staticmethod
     def _saveUnstructuredGrid(fileName, vtkUnstructGrid, directory=''):
         """Saves a VTK unstructured grid file (vtu) for an already generated
-        :class:`vtki.UnstructuredGrid` object.
+        :class:`vista.UnstructuredGrid` object.
 
         Parameters
         ----------
@@ -411,7 +411,7 @@ class vtkInterface(object):
     @staticmethod
     def _saveStructuredGrid(fileName, vtkStructGrid, directory=''):
         """Saves a VTK structured grid file (vtk) for an already generated
-        :class:`vtki.StructuredGrid` object.
+        :class:`vista.StructuredGrid` object.
 
         Parameters
         ----------
@@ -445,7 +445,7 @@ class vtkInterface(object):
     @staticmethod
     def _saveRectilinearGrid(fileName, vtkRectGrid, directory=''):
         """Saves a VTK rectilinear file (vtr) ffor an already generated
-        :class:`vtki.RectilinearGrid` object.
+        :class:`vista.RectilinearGrid` object.
 
         Parameters
         ----------
@@ -512,7 +512,7 @@ class vtkTensorRead(object):
 
     @classmethod
     def vtkToTensorMesh(TensorMesh, vtrGrid):
-        """Converts a ``vtkRectilinearGrid`` or :class:`vtki.RectilinearGrid`
+        """Converts a ``vtkRectilinearGrid`` or :class:`vista.RectilinearGrid`
         to a :class:`discretize.TensorMesh` object.
 
         """

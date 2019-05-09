@@ -1,5 +1,5 @@
 # Configuration file for TravisCI
-dist: xenial # must use xenial for vtki
+dist: xenial # must use xenial for vista
 
 # We use miniconda for Python so don't need any Python specific tools
 language: generic
@@ -101,8 +101,8 @@ matrix:
 before_install:
   - source ci/setup-miniconda.sh
   - conda list
-  # configure a headless display for vtki
-  - git clone --depth 1 git://github.com/vtkiorg/gl-ci-helpers.git
+  # configure a headless display for vista
+  - git clone --depth 1 git://github.com/pyvista/gl-ci-helpers.git
   - source ./gl-ci-helpers/travis/setup_headless_display.sh
 
 install:

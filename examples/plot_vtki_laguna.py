@@ -1,14 +1,14 @@
 """
-.. _vtki_demo_ref:
+.. _vista_demo_ref:
 
-3D Visualization with ``vtki``
-==============================
+3D Visualization with ``vista``
+===============================
 
-The example demonstrates the how to use the VTK interface via the vtki_ library.
-To run this example, you will need to `install vtki`_.
+The example demonstrates the how to use the VTK interface via the vista_ library.
+To run this example, you will need to `install vista`_.
 
-.. _vtki: http://docs.vtki.org
-.. _install vtki: http://docs.vtki.org/getting-started/installation.html
+.. _vista: http://docs.pyvista.org
+.. _install vista: http://docs.pyvista.org/getting-started/installation.html
 
 - contributed by `@banesullivan <https://github.com/banesullivan>`_
 
@@ -23,13 +23,13 @@ import tarfile
 import shelve
 import tarfile
 import discretize
-import vtki
+import vista
 import numpy as np
 
 # Set a documentation friendly plotting theme
-vtki.set_plot_theme('document')
+vista.set_plot_theme('document')
 
-print('vtki Version: {}'.format(vtki.__version__))
+print('vista Version: {}'.format(vista.__version__))
 
 ###############################################################################
 # Download and load data
@@ -67,13 +67,13 @@ models = {'Lpout':Lpout}
 
 
 ###############################################################################
-# Create ``vtki`` data objects
-# ----------------------------
+# Create ``vista`` data objects
+# -----------------------------
 #
-# Here we start making ``vtki`` data objects of all the spatially referenced
+# Here we start making ``vista`` data objects of all the spatially referenced
 # data.
 
-# Get the ``vtki`` dataset of the inverted model
+# Get the ``vista`` dataset of the inverted model
 dataset = mesh.toVTK(models)
 
 ###############################################################################
@@ -81,7 +81,7 @@ dataset = mesh.toVTK(models)
 # Load topography points from text file as XYZ numpy array
 topo_pts = np.loadtxt('Chile_GRAV_4_Miller/LdM_topo.topo', skiprows=1)
 # Create the topography points and apply an elevation filter
-topo = vtki.PolyData(topo_pts).delaunay_2d().elevation()
+topo = vista.PolyData(topo_pts).delaunay_2d().elevation()
 
 ###############################################################################
 
@@ -89,7 +89,7 @@ topo = vtki.PolyData(topo_pts).delaunay_2d().elevation()
 grav_data = np.loadtxt('Chile_GRAV_4_Miller/LdM_grav_obs.grv', skiprows=1)
 print('gravity file shape: ', grav_data.shape)
 # Use the points to create PolyData
-grav = vtki.PolyData(grav_data[:,0:3])
+grav = vista.PolyData(grav_data[:,0:3])
 # Add the data arrays
 grav.point_arrays['comp-1'] = grav_data[:,3]
 grav.point_arrays['comp-2'] = grav_data[:,4]
@@ -97,7 +97,7 @@ grav.point_arrays['comp-2'] = grav_data[:,4]
 ###############################################################################
 # Plot the topographic surface and the gravity data
 
-p = vtki.Plotter()
+p = vista.Plotter()
 p.add_mesh(topo, color='grey')
 p.add_mesh(grav, stitle='Observed Gravtiy Data', point_size=15,
            render_points_as_spheres=True)
@@ -107,8 +107,8 @@ p.show(window_size=[1024, 768])
 
 
 ###############################################################################
-# Visualize Using ``vtki``
-# ------------------------
+# Visualize Using ``vista``
+# -------------------------
 #
 # Here we visualize all the data in 3D!
 
@@ -127,7 +127,7 @@ dataset_t = dataset.threshold()
 threshed = dataset_t.threshold(-0.2, invert=True)
 
 # Create the rendering scene
-p = vtki.Plotter()
+p = vista.Plotter()
 # add a grid axes
 p.show_grid()
 
