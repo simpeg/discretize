@@ -292,7 +292,7 @@ intersphinx_mapping = {
     'scipy': ('https://docs.scipy.org/doc/scipy/reference/', None),
     'matplotlib': ('https://matplotlib.org/', None),
     'properties': ('https://propertiespy.readthedocs.io/en/latest/', None),
-    'vista': ('http://docs.pyvista.org/', None),
+    'pyvista': ('http://docs.pyvista.org/', None),
 }
 
 
@@ -308,10 +308,10 @@ texinfo_documents = [
 ]
 
 
-# Use vista's image scraper for example gallery
-import vista
+# Use pyvista's image scraper for example gallery
+import pyvista
 # Make sure off screen is set to true when building locally
-vista.OFF_SCREEN = True
+pyvista.OFF_SCREEN = True
 
 # Sphinx Gallery
 sphinx_gallery_conf = {
@@ -323,15 +323,15 @@ sphinx_gallery_conf = {
     'doc_module': 'discretize',
     # 'reference_url': {'discretize': None},
 }
-# Do not run or scrape `vista` examples on Python 2 because sphinx gallery
+# Do not run or scrape `pyvista` examples on Python 2 because sphinx gallery
 # doesn't support custom scrapers. But also, data was pickled in Python 3
 if sys.version_info[0] >= 3:
-    # Requires vista>=0.18.0 and Python 3
-    sphinx_gallery_conf["image_scrapers"] = (vista.Scraper(), 'matplotlib')
+    # Requires pyvista>=0.18.0 and Python 3
+    sphinx_gallery_conf["image_scrapers"] = (pyvista.Scraper(), 'matplotlib')
 else:
-    # Don't run vista examples at all on Python 2
+    # Don't run pyvista examples at all on Python 2
     # Primarily because data used for it was pickled in Python 3
-    sphinx_gallery_conf["filename_pattern"] = r"plot_(?!vista)\.py",
+    sphinx_gallery_conf["filename_pattern"] = r"plot_(?!pyvista)\.py",
 
 # Documents to append as an appendix to all manuals.
 #texinfo_appendices = []

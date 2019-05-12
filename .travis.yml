@@ -1,5 +1,5 @@
 # Configuration file for TravisCI
-dist: xenial # must use xenial for vista
+dist: xenial # must use xenial for pyvista
 
 # We use miniconda for Python so don't need any Python specific tools
 language: generic
@@ -101,7 +101,7 @@ matrix:
 before_install:
   - source ci/setup-miniconda.sh
   - conda list
-  # configure a headless display for vista
+  # configure a headless display for pyvista
   - git clone --depth 1 git://github.com/pyvista/gl-ci-helpers.git
   - source ./gl-ci-helpers/travis/setup_headless_display.sh
 

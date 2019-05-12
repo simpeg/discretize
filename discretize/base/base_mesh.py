@@ -6,14 +6,12 @@ import numpy as np
 import properties
 import os
 import json
+
 from ..utils import mkvc
+from ..mixins import InterfaceMixins
 
-try:
-    from ..mixins import vtkInterface
-except ImportError as err:
-    vtkInterface = object
 
-class BaseMesh(properties.HasProperties, vtkInterface):
+class BaseMesh(properties.HasProperties, InterfaceMixins):
     """
     BaseMesh does all the counting you don't want to do.
     BaseMesh should be inherited by meshes with a regular structure.
