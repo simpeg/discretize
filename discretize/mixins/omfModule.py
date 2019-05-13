@@ -6,7 +6,7 @@ import omf
 import numpy as np
 
 
-def ravelDataArray(arr, mesh):
+def ravel_data_array(arr, mesh):
     """Ravel's a numpy array into proper order for passing to the OMF
     specification from ``discretize``/UBC formats
     """
@@ -68,7 +68,7 @@ class omfInterface(object):
         omfmesh.data = []
         for name, arr in models.items():
             data = omf.ScalarData(name=name,
-                                  array=ravelDataArray(arr, mesh),
+                                  array=ravel_data_array(arr, mesh),
                                   location='cells')
             omfmesh.data.append(data)
         # Validate to make sure a proper OMF object is returned to the user
