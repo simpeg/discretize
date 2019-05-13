@@ -119,7 +119,13 @@ script:
       echo "testing $TEST_DIR" ;
       pytest $TEST_DIR --cov-config .coveragerc --cov=discretize -v -s ;
     fi
-  - if [ "$DEPLOY_DOCS" == "true" ]; then
+
+after_success:
+  - if [ "$TEST" == "true" ]; then
+      echo "Uploading coverage to Codecov";
+      codecov;
+    fi
+  - if [ ("$DEPLOY_DOCS" == "true") && ($TRAVIS_PYTHON_VERSION == 3.7) && ($TRAVIS_REPO_SLUG == 'simpeg/discretize') && ($TRAVIS_BRANCH == 'master') && ($DOCS_TRIGGER == 'BANE_RULES')]; then
       pip install doctr ;
       export MPLBACKEND="agg" ;
       echo "Delpoying docs" ;
@@ -130,11 +136,6 @@ script:
       doctr deploy --built-docs ./docs/_build/html/ --deploy-repo simpeg/discretize-docs ./en/master/ ;
     fi
 
-after_success:
-  - if [ "$TEST" == "true" ]; then
-      echo "Uploading coverage to Codecov";
-      codecov;
-    fi
 
 deploy:
   # pypi release
