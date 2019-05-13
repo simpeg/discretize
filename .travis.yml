@@ -127,7 +127,7 @@ script:
       cd docs/ ;
       make html ;
       cd .. ;
-      doctr deploy --built-docs ./docs/_build/html/ --deploy-repo simpeg/discretize-docs . ;
+      doctr deploy --built-docs ./docs/_build/html/ --deploy-repo simpeg/discretize-docs ./en/master/ ;
     fi
 
 after_success:
