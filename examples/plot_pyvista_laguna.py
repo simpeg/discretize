@@ -1,8 +1,8 @@
 """
 .. _pyvista_demo_ref:
 
-3D Visualization with ``pyvista``
-===============================
+3D Visualization with PyVista
+=============================
 
 The example demonstrates the how to use the VTK interface via the pyvista_ library.
 To run this example, you will need to `install pyvista`_.
@@ -23,13 +23,13 @@ import tarfile
 import shelve
 import tarfile
 import discretize
-import pyvista
+import pyvista as pv
 import numpy as np
 
 # Set a documentation friendly plotting theme
-pyvista.set_plot_theme('document')
+pv.set_plot_theme('document')
 
-print('pyvista Version: {}'.format(pyvista.__version__))
+print('PyVista Version: {}'.format(pv.__version__))
 
 ###############################################################################
 # Download and load data
@@ -67,21 +67,21 @@ models = {'Lpout':Lpout}
 
 
 ###############################################################################
-# Create ``pyvista`` data objects
-# -----------------------------
+# Create PyVista data objects
+# ---------------------------
 #
-# Here we start making ``pyvista`` data objects of all the spatially referenced
+# Here we start making PyVista data objects of all the spatially referenced
 # data.
 
-# Get the ``pyvista`` dataset of the inverted model
-dataset = mesh.toVTK(models)
+# Get the PyVista dataset of the inverted model
+dataset = mesh.to_vtk(models)
 
 ###############################################################################
 
 # Load topography points from text file as XYZ numpy array
 topo_pts = np.loadtxt('Chile_GRAV_4_Miller/LdM_topo.topo', skiprows=1)
 # Create the topography points and apply an elevation filter
-topo = pyvista.PolyData(topo_pts).delaunay_2d().elevation()
+topo = pv.PolyData(topo_pts).delaunay_2d().elevation()
 
 ###############################################################################
 
@@ -89,7 +89,7 @@ topo = pyvista.PolyData(topo_pts).delaunay_2d().elevation()
 grav_data = np.loadtxt('Chile_GRAV_4_Miller/LdM_grav_obs.grv', skiprows=1)
 print('gravity file shape: ', grav_data.shape)
 # Use the points to create PolyData
-grav = pyvista.PolyData(grav_data[:,0:3])
+grav = pv.PolyData(grav_data[:,0:3])
 # Add the data arrays
 grav.point_arrays['comp-1'] = grav_data[:,3]
 grav.point_arrays['comp-2'] = grav_data[:,4]
@@ -97,7 +97,7 @@ grav.point_arrays['comp-2'] = grav_data[:,4]
 ###############################################################################
 # Plot the topographic surface and the gravity data
 
-p = pyvista.Plotter()
+p = pv.Plotter()
 p.add_mesh(topo, color='grey')
 p.add_mesh(grav, stitle='Observed Gravtiy Data', point_size=15,
            render_points_as_spheres=True)
@@ -107,8 +107,8 @@ p.show(window_size=[1024, 768])
 
 
 ###############################################################################
-# Visualize Using ``pyvista``
-# -------------------------
+# Visualize Using PyVista
+# -----------------------
 #
 # Here we visualize all the data in 3D!
 
@@ -127,7 +127,7 @@ dataset_t = dataset.threshold()
 threshed = dataset_t.threshold(-0.2, invert=True)
 
 # Create the rendering scene
-p = pyvista.Plotter()
+p = pv.Plotter()
 # add a grid axes
 p.show_grid()
 
