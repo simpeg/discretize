@@ -8,14 +8,14 @@ provide extra functionality that different finite volume meshes can inherrit.
 AVAILABLE_MIXIN_CLASSES = []
 
 try:
-    from .vtkModule import vtkInterface, vtkTensorRead
-    AVAILABLE_MIXIN_CLASSES.append(vtkInterface)
+    from .vtkModule import InterfaceVTK, InterfaceTensorReadVTK
+    AVAILABLE_MIXIN_CLASSES.append(InterfaceVTK)
 except ImportError as err:
     pass
 
 try:
-    from .omfModule import omfInterface
-    AVAILABLE_MIXIN_CLASSES.append(omfInterface)
+    from .omfModule import InterfaceOMF
+    AVAILABLE_MIXIN_CLASSES.append(InterfaceOMF)
 except ImportError as err:
     pass
 

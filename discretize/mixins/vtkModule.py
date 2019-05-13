@@ -2,7 +2,7 @@
 This module provides a way for ``discretize`` meshes to be
 converted to VTK data objects (and back when possible) if the
 `VTK Python package`_ is available.
-The :class:`discretize.mixins.vtkModule.vtkInterface` class becomes inherrited
+The :class:`discretize.mixins.vtkModule.InterfaceVTK` class becomes inherrited
 by all mesh objects and allows users to directly convert any given mesh by
 calling that mesh's ``toVTK()`` method
 (note that this method will not be available if VTK is not available).
@@ -68,7 +68,7 @@ from vtk import vtkXMLRectilinearGridReader
 import warnings
 
 
-def assignCellData(vtkDS, models=None):
+def assign_cell_data(vtkDS, models=None):
     """Assign the model(s) to the VTK dataset as CellData
 
     Parameters
@@ -94,7 +94,7 @@ def assignCellData(vtkDS, models=None):
 
 
 
-class vtkInterface(object):
+class InterfaceVTK(object):
     """This class is full of methods that enable ``discretize`` meshes to
     be converted to VTK data objects (and back when possible). This is
     inherritted by the :class:`discretize.BaseMesh.BaseMesh` class so all these
@@ -167,7 +167,7 @@ class vtkInterface(object):
 
     """
 
-    def __treeMeshToVTK(mesh, models=None):
+    def __tree_mesh_to_vtk(mesh, models=None):
         """
         Constructs a :class:`pyvista.UnstructuredGrid` object of this tree mesh and
         the given models as ``cell_arrays`` of that ``pyvista`` dataset.
@@ -224,10 +224,10 @@ class vtkInterface(object):
         order.SetName('index_cell_corner')
         output.GetCellData().AddArray(order)
         # Assign the model('s) to the object
-        return assignCellData(output, models=models)
+        return assign_cell_data(output, models=models)
 
     @staticmethod
-    def __createStructGrid(ptsMat, dims, models=None):
+    def __create_structured_grid(ptsMat, dims, models=None):
         """An internal helper to build out structured grids"""
         # Adjust if result was 2D:
         if ptsMat.shape[1] == 2:
@@ -248,9 +248,9 @@ class vtkInterface(object):
         output.SetDimensions(dims[0], dims[1], dims[2]) # note this subtracts 1
         output.SetPoints(vtkPts)
         # Assign the model('s) to the object
-        return assignCellData(output, models=models)
+        return assign_cell_data(output, models=models)
 
-    def __getRotatedNodes(mesh):
+    def __get_rotated_nodes(mesh):
         """A helper to get the nodes of a mesh rotated by specified axes"""
         nodes = mesh.gridN
         if mesh.dim == 1:
@@ -264,7 +264,7 @@ class vtkInterface(object):
         mesh._validate_orientation()
         return np.dot(nodes, mesh.rotation_matrix)
 
-    def __tensorMeshToVTK(mesh, models=None):
+    def __tensor_mesh_to_vtk(mesh, models=None):
         """
         Constructs a :class:`pyvista.RectilinearGrid`
         (or a :class:`pyvista.StructuredGrid`) object of this tensor mesh and the
@@ -303,15 +303,15 @@ class vtkInterface(object):
             output.SetXCoordinates(nps.numpy_to_vtk(vX, deep=1))
             output.SetYCoordinates(nps.numpy_to_vtk(vY, deep=1))
             output.SetZCoordinates(nps.numpy_to_vtk(vZ, deep=1))
-            return assignCellData(output, models=models)
+            return assign_cell_data(output, models=models)
         # Use a structured grid where points are rotated to the cartesian system
-        ptsMat = vtkInterface.__getRotatedNodes(mesh)
+        ptsMat = InterfaceVTK.__get_rotated_nodes(mesh)
         dims = [mesh.nCx, mesh.nCy, mesh.nCz]
         # Assign the model('s) to the object
-        return vtkInterface.__createStructGrid(ptsMat, dims, models=models)
+        return InterfaceVTK.__create_structured_grid(ptsMat, dims, models=models)
 
 
-    def __curvilinearMeshToVTK(mesh, models=None):
+    def __curvilinear_mesh_to_vtk(mesh, models=None):
         """
         Constructs a :class:`pyvista.StructuredGrid` of this mesh and the given
         models as ``cell_arrays`` of that object.
@@ -326,19 +326,19 @@ class vtkInterface(object):
             Name('s) and array('s). Match number of cells
 
         """
-        ptsMat = vtkInterface.__getRotatedNodes(mesh)
+        ptsMat = InterfaceVTK.__get_rotated_nodes(mesh)
         dims = [mesh.nCx, mesh.nCy, mesh.nCz]
-        return vtkInterface.__createStructGrid(ptsMat, dims, models=models)
+        return InterfaceVTK.__create_structured_grid(ptsMat, dims, models=models)
 
 
-    def __cylMeshToVTK(mesh, models=None):
+    def __cyl_mesh_to_vtk(mesh, models=None):
         """This treats the CylindricalMesh defined in cylindrical coordinates
         :math:`(r, \theta, z)` and transforms it to cartesian coordinates.
         """
         # # Points
         # ptsMat = cyl2cart(mesh.gridN)
         # dims = [mesh.nCx, mesh.nCy, mesh.nCz]
-        # return vtkInterface.__createStructGrid(ptsMat, dims, models=models)
+        # return InterfaceVTK.__create_structured_grid(ptsMat, dims, models=models)
         raise NotImplementedError('`CylMesh`s are not currently supported for VTK conversion.')
 
 
@@ -355,10 +355,10 @@ class vtkInterface(object):
         """
         # TODO: mesh.validate()
         converters = {
-            'tree' : vtkInterface.__treeMeshToVTK,
-            'tensor' : vtkInterface.__tensorMeshToVTK,
-            'curv' : vtkInterface.__curvilinearMeshToVTK,
-            #TODO: 'CylMesh' : vtkInterface.__cylMeshToVTK,
+            'tree' : InterfaceVTK.__tree_mesh_to_vtk,
+            'tensor' : InterfaceVTK.__tensor_mesh_to_vtk,
+            'curv' : InterfaceVTK.__curvilinear_mesh_to_vtk,
+            #TODO: 'CylMesh' : InterfaceVTK.__cyl_mesh_to_vtk,
             }
         key = mesh._meshType.lower()
         try:
@@ -374,15 +374,28 @@ class vtkInterface(object):
             warnings.warn('For easier use of VTK objects, you should install `pyvista` (the VTK interface): pip install pyvista')
         return cvtd
 
+    def to_vtk(mesh, models=None):
+        """Convert this mesh object to it's proper VTK or ``pyvista`` data
+        object with the given model dictionary as the cell data of that dataset.
+
+        Parameters
+        ----------
+
+        models : dict(numpy.ndarray)
+            Name('s) and array('s). Match number of cells
+
+        """
+        return InterfaceVTK.toVTK(mesh, models=models)
+
     @staticmethod
-    def _saveUnstructuredGrid(fileName, vtkUnstructGrid, directory=''):
+    def _save_unstructured_grid(filename, vtkUnstructGrid, directory=''):
         """Saves a VTK unstructured grid file (vtu) for an already generated
         :class:`pyvista.UnstructuredGrid` object.
 
         Parameters
         ----------
 
-        fileName : str
+        filename : str
             path to the output vtk file or just its name if directory is specified
 
         directory : str
@@ -390,9 +403,9 @@ class vtkInterface(object):
 
         """
         if not isinstance(vtkUnstructGrid, vtk.vtkUnstructuredGrid):
-            raise RuntimeError('`_saveUnstructuredGrid` can only handle `vtkUnstructuredGrid` objects. `%s` is not supported.' % vtkUnstructGrid.__class__)
-        # Check the extension of the fileName
-        fname = os.path.join(directory, fileName)
+            raise RuntimeError('`_save_unstructured_grid` can only handle `vtkUnstructuredGrid` objects. `%s` is not supported.' % vtkUnstructGrid.__class__)
+        # Check the extension of the filename
+        fname = os.path.join(directory, filename)
         ext = os.path.splitext(fname)[1]
         if ext is '':
             fname = fname + '.vtu'
@@ -409,14 +422,14 @@ class vtkInterface(object):
         vtuWriteFilter.Update()
 
     @staticmethod
-    def _saveStructuredGrid(fileName, vtkStructGrid, directory=''):
+    def _save_structured_grid(filename, vtkStructGrid, directory=''):
         """Saves a VTK structured grid file (vtk) for an already generated
         :class:`pyvista.StructuredGrid` object.
 
         Parameters
         ----------
 
-        fileName : str
+        filename : str
             path to the output vtk file or just its name if directory is specified
 
         directory : str
@@ -424,9 +437,9 @@ class vtkInterface(object):
 
         """
         if not isinstance(vtkStructGrid, vtk.vtkStructuredGrid):
-            raise RuntimeError('`_saveStructuredGrid` can only handle `vtkStructuredGrid` objects. `{}` is not supported.'.format(vtkStructGrid.__class__))
-        # Check the extension of the fileName
-        fname = os.path.join(directory, fileName)
+            raise RuntimeError('`_save_structured_grid` can only handle `vtkStructuredGrid` objects. `{}` is not supported.'.format(vtkStructGrid.__class__))
+        # Check the extension of the filename
+        fname = os.path.join(directory, filename)
         ext = os.path.splitext(fname)[1]
         if ext is '':
             fname = fname + '.vts'
@@ -443,14 +456,14 @@ class vtkInterface(object):
         writer.Update()
 
     @staticmethod
-    def _saveRectilinearGrid(fileName, vtkRectGrid, directory=''):
+    def _save_rectilinear_grid(filename, vtkRectGrid, directory=''):
         """Saves a VTK rectilinear file (vtr) ffor an already generated
         :class:`pyvista.RectilinearGrid` object.
 
         Parameters
         ----------
 
-        fileName : str
+        filename : str
             path to the output vtk file or just its name if directory is specified
 
         directory : str
@@ -458,9 +471,9 @@ class vtkInterface(object):
 
         """
         if not isinstance(vtkRectGrid, vtk.vtkRectilinearGrid):
-            raise RuntimeError('`_saveRectilinearGrid` can only handle `vtkRectilinearGrid` objects. `{}` is not supported.'.format(vtkRectGrid.__class__))
-        # Check the extension of the fileName
-        fname = os.path.join(directory, fileName)
+            raise RuntimeError('`_save_rectilinear_grid` can only handle `vtkRectilinearGrid` objects. `{}` is not supported.'.format(vtkRectGrid.__class__))
+        # Check the extension of the filename
+        fname = os.path.join(directory, filename)
         ext = os.path.splitext(fname)[1]
         if ext is '':
             fname = fname + '.vtr'
@@ -475,13 +488,13 @@ class vtkInterface(object):
         vtrWriteFilter.SetFileName(fname)
         vtrWriteFilter.Update()
 
-    def writeVTK(mesh, fileName, models=None, directory=''):
+    def writeVTK(mesh, filename, models=None, directory=''):
         """Makes and saves a VTK object from this mesh and given models
 
         Parameters
         ----------
 
-        fileName : str
+        filename : str
             path to the output vtk file or just its name if directory is specified
 
         models : dict
@@ -492,26 +505,45 @@ class vtkInterface(object):
 
 
         """
-        vtkObj = vtkInterface.toVTK(mesh, models=models)
+        vtkObj = InterfaceVTK.toVTK(mesh, models=models)
         writers = {
-            'vtkUnstructuredGrid' : vtkInterface._saveUnstructuredGrid,
-            'vtkRectilinearGrid' : vtkInterface._saveRectilinearGrid,
-            'vtkStructuredGrid' : vtkInterface._saveStructuredGrid,
+            'vtkUnstructuredGrid' : InterfaceVTK._save_unstructured_grid,
+            'vtkRectilinearGrid' : InterfaceVTK._save_rectilinear_grid,
+            'vtkStructuredGrid' : InterfaceVTK._save_structured_grid,
             }
         key = vtkObj.GetClassName()
         try:
             write = writers[key]
         except:
             raise RuntimeError('VTK data type `%s` is not currently supported.' % key)
-        return write(fileName, vtkObj, directory=directory)
+        return write(filename, vtkObj, directory=directory)
+
+    def write_vtk(mesh, filename, models=None, directory=''):
+        """Makes and saves a VTK object from this mesh and given models
+
+        Parameters
+        ----------
+
+        filename : str
+            path to the output vtk file or just its name if directory is specified
+
+        models : dict
+            dictionary of numpy.array - Name('s) and array('s). Match number of cells
+
+        directory : str
+            directory where the UBC GIF file lives
 
 
-class vtkTensorRead(object):
+        """
+        return InterfaceVTK.writeVTK(mesh, filename, models=models, directory=directory)
+
+
+class InterfaceTensorReadVTK(object):
     """Provides a convienance method for reading VTK Rectilinear Grid files
     as ``TensorMesh`` objects."""
 
     @classmethod
-    def vtkToTensorMesh(TensorMesh, vtrGrid):
+    def vtk_to_tensor_mesh(TensorMesh, vtrGrid):
         """Converts a ``vtkRectilinearGrid`` or :class:`pyvista.RectilinearGrid`
         to a :class:`discretize.TensorMesh` object.
 
@@ -550,13 +582,13 @@ class vtkTensorRead(object):
         return tensMsh, models
 
     @classmethod
-    def readVTK(TensorMesh, fileName, directory=''):
+    def readVTK(TensorMesh, filename, directory=''):
         """Read VTK Rectilinear (vtr xml file) and return Tensor mesh and model
 
         Parameters
         ----------
 
-        fileName : str
+        filename : str
             path to the vtr model file to read or just its name if directory is specified
 
         directory : str
@@ -568,10 +600,32 @@ class vtkTensorRead(object):
         tuple
             (TensorMesh, modelDictionary)
         """
-        fname = os.path.join(directory, fileName)
+        fname = os.path.join(directory, filename)
         # Read the file
         vtrReader = vtkXMLRectilinearGridReader()
         vtrReader.SetFileName(fname)
         vtrReader.Update()
         vtrGrid = vtrReader.GetOutput()
-        return TensorMesh.vtkToTensorMesh(vtrGrid)
+        return TensorMesh.vtk_to_tensor_mesh(vtrGrid)
+
+
+    @classmethod
+    def read_vtk(TensorMesh, filename, directory=''):
+        """Read VTK Rectilinear (vtr xml file) and return Tensor mesh and model
+
+        Parameters
+        ----------
+
+        filename : str
+            path to the vtr model file to read or just its name if directory is specified
+
+        directory : str
+            directory where the UBC GIF file lives
+
+
+        Returns
+        -------
+        tuple
+            (TensorMesh, modelDictionary)
+        """
+        return InterfaceTensorReadVTK.readVTK(TensorMesh, filename, directory=directory)

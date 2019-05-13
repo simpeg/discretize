@@ -14,10 +14,10 @@ def ravel_data_array(arr, mesh):
     return np.reshape(arr, dim).ravel(order='F')
 
 
-class omfInterface(object):
+class InterfaceOMF(object):
 
 
-    def _tensorMeshToOMF(mesh, models=None):
+    def _tensor_mesh_to_omf(mesh, models=None):
         """
         Constructs an :class:`omf.VolumeElement` object of this tensor mesh and
         the given models as cell data of that grid.
@@ -76,19 +76,19 @@ class omfInterface(object):
         return omfmesh
 
 
-    def _treeMeshToOMF(mesh, models=None):
+    def _tree_mesh_to_omf(mesh, models=None):
         raise NotImplementedError()
 
 
-    def _curvilinearMeshToOMF(mesh, models=None):
+    def _curvilinear_mesh_to_omf(mesh, models=None):
         raise NotImplementedError()
 
 
-    def _cylMeshToOMF(mesh, models=None):
+    def _cyl_mesh_to_omf(mesh, models=None):
         raise NotImplementedError()
 
 
-    def toOMF(mesh, models=None):
+    def to_omf(mesh, models=None):
         """Convert this mesh object to it's proper ``omf`` data object with
         the given model dictionary as the cell data of that dataset.
 
@@ -101,10 +101,10 @@ class omfInterface(object):
         """
         # TODO: mesh.validate()
         converters = {
-            # TODO: 'tree' : omfInterface._treeMeshToOMF,
-            'tensor' : omfInterface._tensorMeshToOMF,
-            # TODO: 'curv' : omfInterface._curvilinearMeshToOMF,
-            # TODO: 'CylMesh' : omfInterface._cylMeshToOMF,
+            # TODO: 'tree' : InterfaceOMF._tree_mesh_to_omf,
+            'tensor' : InterfaceOMF._tensor_mesh_to_omf,
+            # TODO: 'curv' : InterfaceOMF._curvilinear_mesh_to_omf,
+            # TODO: 'CylMesh' : InterfaceOMF._cyl_mesh_to_omf,
             }
         key = mesh._meshType.lower()
         try:

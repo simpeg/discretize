@@ -364,7 +364,7 @@ autodoc_member_order = 'bysource'
 
 nitpick_ignore = [
     ('py:class', 'discretize.CurvilinearMesh.Array'),
-    ('py:class', 'discretize.mixins.vtkModule.vtkTensorRead'),
+    ('py:class', 'discretize.mixins.vtkModule.InterfaceTensorReadVTK'),
     ('py:class', 'callable'),
     ('py:obj', 'vtk.vtkDataSet'),
 ]

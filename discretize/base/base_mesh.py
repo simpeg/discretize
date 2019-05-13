@@ -465,7 +465,7 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         between local and global coordinate systems and provide a tool for
         switching between the two while still maintaing the connectivity of the
         mesh's cells. For a visual example of this, please see the figure in the
-        docs for the :class:`~discretize.mixins.vtkModule.vtkInterface`.
+        docs for the :class:`~discretize.mixins.vtkModule.InterfaceVTK`.
         """
         return np.array([self.axis_u, self.axis_v, self.axis_w])
 
