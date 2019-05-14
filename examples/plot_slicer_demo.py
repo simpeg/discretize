@@ -50,6 +50,7 @@ with shelve.open('./laguna_del_maule_slicer/laguna_del_maule-result') as db:
 # 1.1 Default options
 # ^^^^^^^^^^^^^^^^^^^
 
+fig = plt.figure(figsize=(12, 12))
 mesh.plot_3d_slicer(Lpout)
 
 ###############################################################################
