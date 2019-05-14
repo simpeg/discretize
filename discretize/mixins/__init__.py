@@ -8,7 +8,7 @@ provide extra functionality that different finite volume meshes can inherrit.
 AVAILABLE_MIXIN_CLASSES = []
 
 try:
-    from .vtkModule import InterfaceVTK, InterfaceTensorReadVTK
+    from .vtkModule import InterfaceVTK, InterfaceTensorread_vtk
     AVAILABLE_MIXIN_CLASSES.append(InterfaceVTK)
 except ImportError as err:
     pass

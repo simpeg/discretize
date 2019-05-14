@@ -4,7 +4,7 @@ converted to VTK data objects (and back when possible) if the
 `VTK Python package`_ is available.
 The :class:`discretize.mixins.vtkModule.InterfaceVTK` class becomes inherrited
 by all mesh objects and allows users to directly convert any given mesh by
-calling that mesh's ``toVTK()`` method
+calling that mesh's ``to_vtk()`` method
 (note that this method will not be available if VTK is not available).
 
 .. _`VTK Python package`: https://pypi.org/project/vtk/
@@ -25,7 +25,7 @@ Python data structures and NumPy arrays::
 
     pip install pyvista
 
-By default, the ``toVTK()`` method will return a ``pyvista`` data object so that
+By default, the ``to_vtk()`` method will return a ``pyvista`` data object so that
 users can immediately start visualizing their data in 3D.
 
 See :ref:`pyvista_demo_ref` for an example of the types of integrated
@@ -116,7 +116,7 @@ class InterfaceVTK(object):
        mesh = discretize.TensorMesh([h1, h2, h3])
 
        # Get a VTK data object
-       dataset = mesh.toVTK()
+       dataset = mesh.to_vtk()
 
        # Save this mesh to a VTK file
        mesh.writeVTK('sample_mesh')
@@ -139,7 +139,7 @@ class InterfaceVTK(object):
        mesh._validate_orientation()
 
        # Yield the rotated vtkStructuredGrid
-       dataset_r = mesh.toVTK()
+       dataset_r = mesh.to_vtk()
 
        # or write it out to a VTK format
        mesh.writeVTK('sample_rotated')
@@ -509,7 +509,7 @@ class InterfaceVTK(object):
 
 
         """
-        vtkObj = InterfaceVTK.toVTK(mesh, models=models)
+        vtkObj = InterfaceVTK.to_vtk(mesh, models=models)
         writers = {
             'vtkUnstructuredGrid' : InterfaceVTK._save_unstructured_grid,
             'vtkRectilinearGrid' : InterfaceVTK._save_rectilinear_grid,
@@ -542,7 +542,7 @@ class InterfaceVTK(object):
         return InterfaceVTK.writeVTK(mesh, filename, models=models, directory=directory)
 
 
-class InterfaceTensorReadVTK(object):
+class InterfaceTensorread_vtk(object):
     """Provides a convienance method for reading VTK Rectilinear Grid files
     as ``TensorMesh`` objects."""
 
@@ -636,4 +636,4 @@ class InterfaceTensorReadVTK(object):
             "Deprecation Warning: `readVTK` is deprecated, use `read_vtk` instead",
             category=FutureWarning
         )
-        return InterfaceTensorReadVTK.read_vtk(TensorMesh, filename, directory=directory)
+        return InterfaceTensorread_vtk.read_vtk(TensorMesh, filename, directory=directory)
