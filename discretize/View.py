@@ -777,9 +777,6 @@ class TensorView(object):
         # Connect figure to scrolling
         fig.canvas.mpl_connect('scroll_event', tracker.onscroll)
 
-        # Show figure
-        plt.show()
-
         return fig
 
 
