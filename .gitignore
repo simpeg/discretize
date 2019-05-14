@@ -48,8 +48,9 @@ interputils_cython.c
 docs/_build/
 docs/warnings.txt
 docs/api/generated/*
-docs/gallery
-docs/tutorials
+docs/examples
+docs/tutorials/mesh_generation
+docs/tutorials/operators
 docs/modules
 docs/auto_examples
 
