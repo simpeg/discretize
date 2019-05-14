@@ -7,18 +7,16 @@
 
     content/big_picture
     content/installing
-    gallery/index
+    examples/index
     content/additional_resources
 
 .. toctree::
     :maxdepth: 2
     :hidden:
-    :caption: User Guide
+    :caption: Tutorials
 
-    tutorials/mesh_generation
-    tutorials/operators
-    content/finite_volume
-    content/inner_products
+    tutorials/mesh_generation/index
+    tutorials/operators/index
 
 .. toctree::
     :maxdepth: 2
@@ -26,3 +24,11 @@
     :caption: Reference documentation
 
     api/index.rst
+
+.. toctree::
+    :maxdepth: 2
+    :hidden:
+    :caption: Theory
+
+    content/finite_volume
+    content/inner_products
