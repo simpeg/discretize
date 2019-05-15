@@ -243,3 +243,50 @@ mesh.plotImage(curl_w, ax=Ax2)
 Ax2.set_title('curl of w at cell centers')
 
 fig.show()
+
+
+#########################################################
+# Vector Calculus Identities
+# --------------------------
+#
+# Here we show that vector calculus identities hold for the discrete
+# differential operators. Namely that for a scalar quantity :math:`\\phi` and
+# a vector quantity :math:`\mathbf{v}`:
+#
+# .. math::
+#     \\nabla \\times (\\nabla \\phi ) = 0 \n
+#     \\nabla \cdot (\\nabla \\times \mathbf{v}) = 0
+#
+# We do this by computing the CURL*GRAD and DIV*CURL matricies. We then
+# plot the sparse representations and show neither contain any non-zero
+# entries; e.g. each is just a matrix of zeros.
+#
+
+# Create a uniform grid
+h = np.ones(20)
+mesh = TensorMesh([h, h, h], 'CCC')
+
+# Get operators
+GRAD = mesh.nodalGrad  # nodes to edges
+DIV = mesh.faceDiv       # faces to centers
+CURL = mesh.edgeCurl     # edges to faces
+
+# Plot
+fig = plt.figure(figsize=(11, 7))
+
+Ax1 = fig.add_axes([0.12, 0.1, 0.2, 0.8])
+Ax1.spy(CURL*GRAD, markersize=0.5)
+Ax1.set_title('CURL*GRAD')
+
+Ax2 = fig.add_axes([0.35, 0.64, 0.6, 0.25])
+Ax2.spy(DIV*CURL, markersize=0.5)
+Ax2.set_title('DIV*CURL', pad=20)
+
+
+
+
+
+
+
+
+
