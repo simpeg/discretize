@@ -66,7 +66,7 @@ class TestTensorMeshIO(unittest.TestCase):
             modelfname = 'arange.txt'
             modeldict = {modelfname: vec}
             mesh.writeVTK(vtrfname, modeldict, directory=self.basePath)
-            meshVTR, models = discretize.TensorMesh.readVTK(
+            meshVTR, models = discretize.TensorMesh.read_vtk(
                 vtrfname, directory=self.basePath
             )
 
