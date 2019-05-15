@@ -49,10 +49,8 @@ docs/_build/
 docs/warnings.txt
 docs/api/generated/*
 docs/examples
-docs/tutorials/mesh_generation
-docs/tutorials/operators
-docs/modules
-docs/auto_examples
+docs/gallery/*
+docs/tutorials/*
 
 # Examples data
 docs/examples/Chile_GRAV_4_Miller
