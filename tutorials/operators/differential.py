@@ -250,20 +250,23 @@ fig.show()
 # --------------------------
 #
 # Here we show that vector calculus identities hold for the discrete
-# differential operators. Namely that for a scalar quantity :math:`\\phi` and
+# differential operators. Namely that for a scalar quantity :math:`\phi` and
 # a vector quantity :math:`\mathbf{v}`:
 #
 # .. math::
-#     \\nabla \\times (\\nabla \\phi ) = 0 \n
-#     \\nabla \cdot (\\nabla \\times \mathbf{v}) = 0
+#     \begin{align}
+#     &\nabla \times (\nabla \phi ) = 0 \\
+#     &\nabla \cdot (\nabla \times \mathbf{v}) = 0
+#     \end{align}
+#
 #
 # We do this by computing the CURL*GRAD and DIV*CURL matricies. We then
 # plot the sparse representations and show neither contain any non-zero
 # entries; e.g. each is just a matrix of zeros.
 #
 
-# Create a uniform grid
-h = np.ones(20)
+# Create a mesh
+h = 5*np.ones(20)
 mesh = TensorMesh([h, h, h], 'CCC')
 
 # Get operators
