@@ -25,7 +25,7 @@ if has_vtk:
             vec = np.arange(mesh.nC)
             models = {'arange': vec}
 
-            vtkObj = mesh.toVTK(models)
+            vtkObj = mesh.to_vtk(models)
 
             self.assertEqual(mesh.nC, vtkObj.GetNumberOfCells())
             self.assertEqual(mesh.nN, vtkObj.GetNumberOfPoints())
