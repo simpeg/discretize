@@ -61,10 +61,10 @@ xp, yp = np.meshgrid([120., 240.], [80., 160.])
 xy = np.c_[matutils.mkvc(xp), matutils.mkvc(yp)]
 
 # Discretize to finest cell size within rectangular box
-mesh2 = meshutils.refine_tree_xyz(mesh, xy, octree_levels=[2, 2],
-                                  method='box', finalize=False)
+mesh = meshutils.refine_tree_xyz(mesh, xy, octree_levels=[2, 2],
+                                 method='box', finalize=False)
 
-mesh2.finalize()  # Must finalize tree mesh before use
+mesh.finalize()  # Must finalize tree mesh before use
 
 mesh.plotGrid(showIt=True)
 
