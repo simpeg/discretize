@@ -125,6 +125,11 @@ after_success:
       echo "Uploading coverage to Codecov";
       codecov;
     fi
+  - echo $DEPLOY_DOC
+  - echo $TRAVIS_PYTHON_VERSION
+  - echo $TRAVIS_REPO_SLUG
+  - echo $TRAVIS_BRANCH
+  - echo $DOCS_TRIGGER
   - if [[ ("$DEPLOY_DOCS" == "true") && ($TRAVIS_PYTHON_VERSION == 3.7) && ($TRAVIS_REPO_SLUG == 'simpeg/discretize') && ($TRAVIS_BRANCH == 'master') && ($DOCS_TRIGGER == 'BANE_RULES')]]; then
       pip install doctr ;
       export MPLBACKEND="agg" ;
