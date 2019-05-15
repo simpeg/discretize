@@ -11,8 +11,9 @@ sympy
 wheel
 twine
 vtk
-vtki>=0.16.9
+pyvista>=0.20.1
 numpydoc
 nbsphinx
 coverage
 codecov
+omf
