@@ -112,6 +112,7 @@ linkcheck_ignore = [
     'http://docs.scipy.org/doc/numpy/reference/generated/numpy.array.html#numpy.array',
     'http://dx.doi.org/10.1016/j.cageo.2015.09.015',
     'http://slack.simpeg.xyz',
+    'http://docs.simpeg.xyz/content/examples/04-grav/plot_laguna_del_maule_inversion.html#sphx-glr-content-examples-04-grav-plot-laguna-del-maule-inversion-py',
 ]
 
 linkcheck_retries = 3
