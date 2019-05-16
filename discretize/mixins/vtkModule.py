@@ -85,8 +85,8 @@ def assign_cell_data(vtkDS, models=None):
     if models is not None:
         for name, mod in models.items():
             # Convert numpy array
-            if mod.size != nc:
-                raise RuntimeError('Number of model cells ({}) does not match number of mesh cells ({}).'.format(mod.size, nc))
+            if mod.shape[0] != nc:
+                raise RuntimeError('Number of model cells ({}) (first axis of model array) for "{}" does not match number of mesh cells ({}).'.format(mod.shape[0], name, nc))
             vtkDoubleArr = nps.numpy_to_vtk(mod, deep=1)
             vtkDoubleArr.SetName(name)
             vtkDS.GetCellData().AddArray(vtkDoubleArr)
