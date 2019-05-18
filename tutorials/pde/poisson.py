@@ -2,12 +2,17 @@
 Gauss' Law of Electrostatics
 ============================
 
+Here we use the discretize package to solve for the electric potential
+(:math:`\phi`) and electric fields (:math:`\mathbf{E}`) in 2D that result from
+a static charge distribution. The goal of this tutorial is to demonstrate:
+
+    - How to formulate PDEs in the weak form and apply the finite volume approach
+    - How to construct the final discrete system using the *discretize* package
+
 Derivation
 ----------
 
-Here we use the discretize package to solve for the electric potential
-(:math:`\phi`) and electric fields (:math:`\mathbf{E}`) in 2D that result from
-a static charge distribution. Starting with Gauss' law and Faraday's law:
+Starting with Gauss' law and Faraday's law:
 
 .. math::
     &\\nabla \\cdot \\mathbf{E} = \\frac{\\rho}{\\epsilon_0} \n

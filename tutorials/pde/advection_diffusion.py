@@ -2,10 +2,16 @@
 Advection-Diffusion Equation
 ============================
 
+Here we use the discretize package to model the advection-diffusion
+equation. The goal of this tutorial is to demonstrate:
+
+    - How to solve time-dependent PDEs
+    - How to apply Neumann boundary conditions
+
+
 Derivation
 ----------
 
-Here we use the discretize package to model the advection-diffusion equation.
 If we assume the fluid is incompressible and that diffusivity is spatially,
 the advection-diffusion equation with Neumann boundary conditions is given by:
 
@@ -67,18 +73,17 @@ where
 
 
 For the example, we will discretize in time using backward Euler. This results
-in the following system which must be solve at every time step :math:`k` :
+in the following system which must be solve at every time step :math:`k`. 
+Where :math:`\\Delta t` is the step size:
 
 .. math::
     \\big [ \\mathbf{I} + \\Delta t \\, \\mathbf{M} \\big ] \\mathbf{p}^{k+1} =
     \\mathbf{p}^k + \\Delta t \\, \\textrm{diag} ( \\mathbf{v} ) \\, \\mathbf{s}
 
-where :math:`\\Delta t` is the step size.
-
 
 """
 
-########################################################################
+###################################################
 #
 # Import Packages
 # ---------------
@@ -93,7 +98,7 @@ import numpy as np
 from discretize.utils.matutils import sdiag
 
 
-########################################################################
+##################################################
 #
 # Solving Problem in 2D
 # ---------------------
@@ -114,7 +119,7 @@ u = np.r_[ux, uy]
 # Define source term
 xycc = mesh.gridCC
 k1 = (xycc[:, 0]==-20) & (xycc[:, 1]==20)   # source at (-10, 10)
-k2 = (xycc[:, 0]==25) & (xycc[:, 1]==-25)   # sink at (10, -10)
+k2 = (xycc[:, 0]==25) & (xycc[:, 1]==-25)   # source at (10, -10)
 
 s = np.zeros(mesh.nC)
 s[k1] = 10
