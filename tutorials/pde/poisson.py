@@ -72,8 +72,8 @@ import numpy as np
 
 ########################################################################
 #
-# Solving the Problem
-# -------------------
+# Solving Problem in 2D
+# ---------------------
 #
 
 # Create a tensor mesh

@@ -2,6 +2,9 @@
 Advection-Diffusion Equation
 ============================
 
+Derivation
+----------
+
 Here we use the discretize package to model the advection-diffusion equation.
 If we assume the fluid is incompressible and that diffusivity is spatially,
 the advection-diffusion equation with Neumann boundary conditions is given by:
@@ -75,12 +78,26 @@ where :math:`\\Delta t` is the step size.
 
 """
 
+########################################################################
+#
+# Import Packages
+# ---------------
+#
+# Here we import the packages required for this tutorial.
+#
+
 from discretize import TensorMesh
 from pymatsolver import SolverLU
 import matplotlib.pyplot as plt
 import numpy as np
 from discretize.utils.matutils import sdiag
 
+
+########################################################################
+#
+# Solving Problem in 2D
+# ---------------------
+#
 
 # Create a tensor mesh
 h = np.ones(75)
