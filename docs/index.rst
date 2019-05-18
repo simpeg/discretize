@@ -17,6 +17,7 @@
 
     tutorials/mesh_generation/index
     tutorials/operators/index
+    tutorials/pde/index
 
 .. toctree::
     :maxdepth: 2

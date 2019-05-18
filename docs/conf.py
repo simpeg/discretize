@@ -318,11 +318,13 @@ sphinx_gallery_conf = {
     # path to your examples scripts
     'examples_dirs': ['../examples',
                       '../tutorials/mesh_generation',
-                      '../tutorials/operators'
+                      '../tutorials/operators',
+                      '../tutorials/pde'
                       ],
     'gallery_dirs': ['examples',
                      'tutorials/mesh_generation',
-                     'tutorials/operators'
+                     'tutorials/operators',
+                     'tutorials/pde'
                      ],
     'filename_pattern': '\.py',
     'backreferences_dir': 'api/generated/backreferences',
