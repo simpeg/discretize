@@ -666,7 +666,7 @@ def refine_tree_xyz(
                     mesh.insert_cells(
                         np.c_[
                                 newLoc[indIn, :2],
-                                newLoc[indIn, 2]-zOffset],
+                                newLoc[indIn, -1]-zOffset],
                         np.ones(nnz)*mesh.max_level-ii,
                         finalize=False
                     )
