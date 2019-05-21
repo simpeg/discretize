@@ -27,7 +27,7 @@ take the inner product of each equation with an appropriate test function:
 
 .. math::
     &\\int_\\Omega \\psi (\\nabla \\cdot \\mathbf{E}) dV = \\frac{1}{\\epsilon_0} \\int_\\Omega \\psi \\rho dV \n
-    &\\int_\\Omega \\mathbf{f \\cdot e} \\; dV = - \\int_\\Omega \\mathbf{f} \\cdot (\\nabla \\phi ) \\, dV
+    &\\int_\\Omega \\mathbf{f \\cdot E} \\; dV = - \\int_\\Omega \\mathbf{f} \\cdot (\\nabla \\phi ) \\, dV
 
 
 where :math:`\\psi` is a scalar test function and :math:`\\mathbf{f}` is a
