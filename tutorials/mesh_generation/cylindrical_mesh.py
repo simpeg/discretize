@@ -159,11 +159,11 @@ v = mesh.vol
 
 Fig = plt.figure(figsize=(6, 7))
 Ax = Fig.add_subplot(111)
-mesh.plotImage(v, grid=True, ax=Ax)
+mesh.plotImage(np.log10(v), grid=True, ax=Ax)
 Ax.set_xlabel('r')
 Ax.set_xbound(mesh.x0[0], mesh.x0[0]+np.sum(mesh.hx))
 Ax.set_ybound(mesh.x0[2], mesh.x0[2]+np.sum(mesh.hz))
-Ax.set_title('Cell Volumes')
+Ax.set_title('Cell Log-Volumes')
 
 ##############################################################################
 # Notice that we do not plot the discretization in phi as it is irrelevant.

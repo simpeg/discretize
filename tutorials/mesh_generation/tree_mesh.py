@@ -37,7 +37,7 @@ from discretize.utils import matutils, meshutils
 import matplotlib.pyplot as plt
 import numpy as np
 
-# sphinx_gallery_thumbnail_number = 3
+# sphinx_gallery_thumbnail_number = 4
 
 ###############################################
 # Basic Example
@@ -215,7 +215,7 @@ mesh = TreeMesh([hx, hy, hz], x0='CCC')
 zz = -3*np.exp((xx**2 + yy**2) / 100**2) + 50.
 pts = np.c_[matutils.mkvc(xx), matutils.mkvc(yy), matutils.mkvc(zz)]
 mesh = meshutils.refine_tree_xyz(mesh, pts, octree_levels=[2, 2],
-                                method='surface', finalize=False)
+                                 method='surface', finalize=False)
 
 # Refine box
 xp, yp, zp = np.meshgrid([-40., 40.], [-40., 40.], [-60., 0.])
@@ -241,4 +241,7 @@ bInd = mesh.cellBoundaryInd
 # Cell volumes
 v = mesh.vol
 
-mesh.plotSlice(v, normal='Y', ind=int(mesh.hy.size/2), grid=True)
+Fig = plt.figure(figsize=(6, 6))
+Ax = Fig.add_subplot(111)
+mesh.plotSlice(np.log(v), normal='Y', ax=Ax, ind=int(mesh.hy.size/2), grid=True)
+Ax.set_title('Cell Log-Volumes at Y = 0 m')

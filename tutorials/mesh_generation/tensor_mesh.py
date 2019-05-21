@@ -168,9 +168,9 @@ Fig = plt.figure(figsize=(9, 4))
 Ax1 = Fig.add_subplot(121)
 Ax2 = Fig.add_subplot(122)
 
-mesh.plotImage(v, grid=True, ax=Ax1)
-Ax1.set_title('All Cell Volumes')
+mesh.plotImage(np.log10(v), grid=True, ax=Ax1)
+Ax1.set_title('All Cell Log-Volumes')
 
-cplot = mesh.plotSlice(v, grid=True, ax=Ax2, normal='Z', ind=2)
+cplot = mesh.plotSlice(np.log10(v), grid=True, ax=Ax2, normal='Z', ind=2)
 cplot[0].set_clim(np.min(v), np.max(v))
-Ax2.set_title('Cell Volumes #2')
+Ax2.set_title('Cell Log-Volumes #2')
