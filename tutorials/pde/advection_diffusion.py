@@ -91,7 +91,7 @@ Where :math:`\\Delta t` is the step size:
 .. math::
     \\big [ \\mathbf{I} + \\Delta t \\, \\mathbf{M} \\big ] \\mathbf{p}^{k+1} =
     \\mathbf{p}^k + \\Delta t \\, \\mathbf{s}
-
+    
 
 
 """
@@ -110,6 +110,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 from discretize.utils.matutils import sdiag
 
+###############################################
+#
+# Solving the Problem
+# -------------------
+#
 
 # Create a tensor mesh
 h = np.ones(75)
