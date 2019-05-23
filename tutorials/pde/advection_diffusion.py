@@ -20,9 +20,13 @@ the advection-diffusion equation with Neumann boundary conditions is given by:
     - \\mathbf{u} \\cdot \\nabla p + s \n
     \\textrm{s.t.} \;\;\; \\frac{\\partial p}{\\partial n} \Bigg |_{\partial \Omega} = 0
 
-where :math:`p` is an unknown variable, :math:`\\alpha` is the
-diffusivity constant, :math:`\\mathbf{u}` the velocity
-field and :math:`s` is the source term.
+where :math:`p` is an unknown variable, :math:`\\alpha` is the diffusivity
+constant, :math:`\\mathbf{u}` the velocity field and :math:`s` is the source
+term. We will consider the case where there are two point sources within our
+domain. Thus:
+
+.. math::
+    s = s_0 \\big [ \\delta ( \\mathbf{r_1}) + \\delta (\\mathbf{r_2} ) \\big ]
 
 To solve this problem numerically, we use the weak formulation; that is, we
 take the inner product of the equation with an appropriate test function
@@ -31,10 +35,17 @@ take the inner product of the equation with an appropriate test function
 .. math::
     \int_\\Omega \\psi \\, p_t \\, dv =
     \\alpha \int_\\Omega \\psi (\\nabla \\cdot \\nabla p) \\, dv
-    - \int_\\Omega (\\psi \\, \mathbf{u} ) \\cdot \\nabla p dv
+    - \int_\\Omega \\psi \\, \mathbf{u} \\cdot \\nabla p \\, dv
     + \int_\\Omega \\psi \\, s \\, dv
 
-In the weak formulation, we generally remove divergence terms. If we use the identity
+The source term is a volume integral containing the Dirac delta function, thus:
+
+.. math::
+    \int_\\Omega \\psi \\, s \\, dv = \\psi \\, q
+
+where :math:`q=s_0` at the location of either point source and zero everywhere
+else. In the weak formulation, we generally remove divergence terms. If we use
+the identity
 :math:`\\phi \\nabla \\cdot \\mathbf{a} = \\nabla \\cdot (\\phi \\mathbf{a}) - \\mathbf{a} \\cdot (\\nabla \\phi )`
 on the diffusion term and apply the divergence theorem we obtain:
 
@@ -43,42 +54,44 @@ on the diffusion term and apply the divergence theorem we obtain:
     \\alpha \int_{\\partial \\Omega} \\mathbf{n} \\cdot ( \\psi \\nabla p ) \\, da
     - \\alpha \int_\\Omega (\\nabla \\psi ) \\cdot (\\nabla p ) \\, dv
     - \int_\\Omega (\\psi \\, \mathbf{u} ) \\cdot \\nabla p dv
-    + \int_\\Omega \\psi \\, s \\, dv
+    + \\psi \\, q
 
 Since the flux on the faces is zero at the boundaries, we can eliminate
 the first term on the right-hand side. By evaluating the inner products
 according to the finite volume approach we obtain:
 
 .. math::
-    \\mathbf{\\psi^T p_t} = - \\alpha \\mathbf{\\psi^T G^T} \\textrm{diag} (\\mathbf{A_{cf}v}) \\mathbf{G \\, p}
-    - \\mathbf{\\psi^T A_{cf}^T} \\textrm{diag} ( \\mathbf{u} \\odot (\\mathbf{A_{cf} v})) \\mathbf{G \\, p}
-    + \\mathbf{\\psi^T} \\textrm{diag} (\\mathbf{v}) \\mathbf{s}
+    \\mathbf{\\psi^T M_c p_t} = - \\alpha \\mathbf{\\psi^T G^T M_f G \\, p}
+    - \\mathbf{\\psi^T M_c A_{fc}} \\textrm{diag} ( \\mathbf{u} ) \\mathbf{G \\, p}
+    + \\mathbf{\\psi^T M_c s}
 
-where :math:`\\mathbf{\\psi}`, :math:`\\mathbf{p}`, :math:`\\mathbf{p_t}` and
-:math:`\\mathbf{v}` live at cell centers and :math:`\\mathbf{u}` lives on faces.
-:math:`\\mathbf{D}` and :math:`\\mathbf{G}` are the discrete
-divergence and gradient operators, respectively. And :math:`\\mathbf{A_{cf}}`
-averages from cell centers to faces.
+where :math:`\\mathbf{\\psi}`, :math:`\\mathbf{p}` and :math:`\\mathbf{p_t}`
+live at cell centers and :math:`\\mathbf{u}` lives on faces. :math:`\\mathbf{G}`
+is the discrete gradient operators. And :math:`\\mathbf{A_{cf}}`
+averages the component of :math:`\\mathbf{u} \\cdot \\nabla p` to cell centers
+and sums them. :math:`\\mathbf{M_c}` and :math:`\\mathbf{M_f}` are the cell
+center and face inner product matricies, respectively.
 
-By eliminating :math:`\\psi^T` and amalgamating terms we obtain:
+By eliminating :math:`\\psi^T` and multiplying both sides by
+:math:`\\mathbf{M_c^{-1}}` we obtain:
 
 .. math::
-    \\mathbf{p_t} = - \\mathbf{M} \\mathbf{p} + \\textrm{diag} (\\mathbf{v}) \\mathbf{s}
+    \\mathbf{p_t} = - \\mathbf{M} \\mathbf{p} + \\mathbf{s}
 
 where
 
 .. math::
-    \\mathbf{M} = \\alpha \\mathbf{G^T} \\textrm{diag} (\\mathbf{A_{cf}v}) \\mathbf{G}
-    + \\mathbf{A_{cf}^T} \\textrm{diag} ( \\mathbf{u} \\odot (\\mathbf{A_{cf} v})) \\mathbf{G}
-
+    \\mathbf{M} = \\alpha \\mathbf{M_c^{-1} G^T M_f G}
+    + \\mathbf{A_{fc}} \\textrm{diag}(\\mathbf{u}) \\mathbf{G}
 
 For the example, we will discretize in time using backward Euler. This results
-in the following system which must be solve at every time step :math:`k`. 
+in the following system which must be solve at every time step :math:`k`.
 Where :math:`\\Delta t` is the step size:
 
 .. math::
     \\big [ \\mathbf{I} + \\Delta t \\, \\mathbf{M} \\big ] \\mathbf{p}^{k+1} =
-    \\mathbf{p}^k + \\Delta t \\, \\textrm{diag} ( \\mathbf{v} ) \\, \\mathbf{s}
+    \\mathbf{p}^k + \\Delta t \\, \\mathbf{s}
+
 
 
 """
@@ -98,12 +111,6 @@ import numpy as np
 from discretize.utils.matutils import sdiag
 
 
-##################################################
-#
-# Solving Problem in 2D
-# ---------------------
-#
-
 # Create a tensor mesh
 h = np.ones(75)
 mesh = TensorMesh([h, h], 'CC')
@@ -116,24 +123,24 @@ ux = 10*np.ones((mesh.nFx))
 uy = - 10*np.ones((mesh.nFy))
 u = np.r_[ux, uy]
 
-# Define source term
+# Define source term diag(v)*s
 xycc = mesh.gridCC
-k1 = (xycc[:, 0]==-20) & (xycc[:, 1]==20)   # source at (-10, 10)
-k2 = (xycc[:, 0]==25) & (xycc[:, 1]==-25)   # source at (10, -10)
+k1 = (xycc[:, 0]==-25) & (xycc[:, 1]==25)   # source at (-25, 25)
+k2 = (xycc[:, 0]==25) & (xycc[:, 1]==-25)   # sink at (25, -25)
 
 s = np.zeros(mesh.nC)
 s[k1] = 10
 s[k2] = 10
 
 # Define system M
-v = mesh.vol  # Cell volumes (area in 2d)
+Afc = 2*mesh.aveF2CC
+Mc_inv = sdiag(1/mesh.vol)
+Mf = mesh.getFaceInnerProduct()
 
-Acf = mesh.aveCC2F  # Average centers to faces
+mesh.setCellGradBC(['neumann', 'neumann'])  # Set Neumann BC
+G = mesh.cellGrad
 
-mesh.setCellGradBC(['neumann','neumann'])  # Set Neumann BC
-G = mesh.cellGrad  # Cell centers to faces gradient
-
-M = a*G.T*(sdiag(Acf*v)*G) + Acf.T*(sdiag(u*(Acf*v))*G)
+M = a*Mc_inv*G.T*Mf*G + Afc*sdiag(u)*G
 
 # Set time stepping, initial conditions and final matricies
 dt = 0.02              # Step width

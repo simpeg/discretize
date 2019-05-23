@@ -22,7 +22,7 @@ To solve this problem numerically, we use the weak formulation; that is, we
 take the inner product of each equation with an appropriate test function.
 Where :math:`\\psi` is a scalar test function and :math:`\\mathbf{f}` is a
 vector test function:
-    
+
 .. math::
     \\int_\\Omega \\psi (\\nabla \\cdot \\mathbf{E}) dV = \\frac{1}{\\epsilon_0} \\int_\\Omega \\psi \\rho dV \n
     \\int_\\Omega \\mathbf{f \\cdot E} \\, dV = - \\int_\\Omega \\mathbf{f} \\cdot (\\nabla \\phi ) dV
@@ -65,7 +65,7 @@ Evaluating this expression according to the finite volume approach we obtain:
 where :math:`\\mathbf{f}` lives on cell faces and :math:`\\mathbf{M_f}` is the
 inner product matrix for quantities that live on cell faces. By canceling terms
 and combining the set of discrete equations we obtain:
-    
+
 .. math::
     \\big [ \\mathbf{M_c D M_f^{-1} D^T M_c} \\big ] \\mathbf{\\phi} = \\frac{1}{\epsilon_0} \mathbf{q}
 
