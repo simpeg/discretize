@@ -3,64 +3,83 @@ Gauss' Law of Electrostatics
 ============================
 
 Here we use the discretize package to solve for the electric potential
-(:math:`\phi`) and electric fields (:math:`\mathbf{E}`) in 2D that result from
-a static charge distribution. The goal of this tutorial is to demonstrate:
-
-    - How to formulate PDEs in the weak form and apply the finite volume approach
-    - How to construct the final discrete system using the *discretize* package
-
-Derivation
-----------
-
-Starting with Gauss' law and Faraday's law:
+(:math:`\phi`) and electric fields (:math:`\mathbf{e}`) in 2D that result from
+a static charge distribution. Starting with Gauss' law and Faraday's law:
+    
+.. math::
+    &\\nabla \\cdot \mathbf{E} = \\frac{\\rho}{\\epsilon_0} \n
+    &\\nabla \\times \mathbf{E} = \\mathbf{0} \;\;\; \Rightarrow \;\;\; \\mathbf{E} = -\\nabla \\phi \n
+    &\\textrm{s.t.} \;\;\; \phi \Big |_{\partial \Omega} = 0
+    
+where :math:`\\sigma` is the charge density and :math:`\\epsilon_0` is the
+permittivity of free space. We will consider the case where there is both a
+positive and a negative charge of equal magnitude within our domain. Thus:
 
 .. math::
-    &\\nabla \\cdot \\mathbf{E} = \\frac{\\rho}{\\epsilon_0} \n
-    &\\nabla \\times \\mathbf{E} = \\mathbf{0} \\;\\;\\; \\Rightarrow \;\;\; \\mathbf{E} = -\\nabla \phi \n
-    &\\textrm{s.t.} \;\;\; \\phi \\Big |_{\\partial \\Omega} = 0
-
-where :math:`\\rho` is the charge density and :math:`\\epsilon_0` is the
-permittivity of free space.
+    \\rho = \\rho_0 \\big [ \\delta ( \\mathbf{r_+}) - \\delta (\\mathbf{r_-} ) \\big ]
 
 To solve this problem numerically, we use the weak formulation; that is, we
-take the inner product of each equation with an appropriate test function:
+take the inner product of each equation with an appropriate test function.
+Where :math:`\\psi` is a scalar test function and :math:`\\mathbf{f}` is a
+vector test function:
+    
+.. math::
+    \\int_\\Omega \\psi (\\nabla \\cdot \\mathbf{E}) dV = \\frac{1}{\\epsilon_0} \\int_\\Omega \\psi \\rho dV \n
+    \\int_\\Omega \\mathbf{f \\cdot E} \\, dV = - \\int_\\Omega \\mathbf{f} \\cdot (\\nabla \\phi ) dV
+
+
+In the case of Gauss' law, we have a volume integral containing the Dirac delta
+function, thus:
 
 .. math::
-    &\\int_\\Omega \\psi (\\nabla \\cdot \\mathbf{E}) dV = \\frac{1}{\\epsilon_0} \\int_\\Omega \\psi \\rho dV \n
-    &\\int_\\Omega \\mathbf{f \\cdot E} \\; dV = - \\int_\\Omega \\mathbf{f} \\cdot (\\nabla \\phi ) \\, dV
+    \\int_\\Omega \\psi (\\nabla \\cdot \\mathbf{E}) dV = \\frac{1}{\\epsilon_0} \\psi \\, q
 
-
-where :math:`\\psi` is a scalar test function and :math:`\\mathbf{f}` is a
-vector test function. We then evaluate the inner products according to the
-finite volume approach:
+where :math:`q=\\rho_0` at the location of the positive charge and
+:math:`q=-\\rho_0` at the location of the negative charge. By applying the
+finite volume approach to this expression we obtain:
 
 .. math::
-    &\\mathbf{\\psi^T} \\textrm{diag} (\\mathbf{v}) \\mathbf{D e} = \\frac{1}{\\epsilon_0} \\mathbf{\\psi^T} \\textrm{diag} (\\mathbf{v}) \\mathbf{\\rho} \n
-    &\\mathbf{f^T} \\textrm{diag} (\\mathbf{A_{cf} v}) \\mathbf{e} = - \\mathbf{f^T} \\textrm{diag} (\\mathbf{A_{cf} v}) \\mathbf{G} \\mathbf{\\phi}
+    \\mathbf{\\psi^T M_c D e} = \\frac{1}{\\epsilon_0} \\mathbf{\\psi^T q}
 
+where :math:`\mathbf{\psi}` and :math:`\mathbf{q}` live at cell centers and
+:math:`\mathbf{e}` lives on cell faces. :math:`\mathbf{q}` is a sparse vector
+that only contains non-zero values for cells containing point charges.
+:math:`\mathbf{D}` is the discrete divergence operator. :math:`\\mathbf{M_c}`
+is an inner product matrix for cell centered quantities.
 
-where :math:`\\mathbf{\\psi}`, :math:`\\mathbf{\\rho}` and :math:`\\mathbf{v}`
-live at cell centers, and :math:`\\mathbf{f}` and :math:`\\mathbf{e}` live on
-cell faces. :math:`\\mathbf{D}` and :math:`\\mathbf{G}` are the discrete
-divergence and gradient operators, respectively. And :math:`\\mathbf{A_{cf}}`
-averages from cell centers to faces.
-
-By cancelling terms and combining the set of discrete equations we obtain:
+For the second weak form equation, we make use of the divergence theorem as
+follows:
 
 .. math::
-    \\mathbf{D \\, G \\, \\phi} = -\\frac{1}{\\epsilon_0} \\mathbf{\\rho}
+    \\int_\\Omega \\mathbf{f \\cdot E} \\, dV &= - \\int_\\Omega \\mathbf{f} \\cdot (\\nabla \\phi ) dV \n
+    & = - \\frac{1}{\\epsilon_0} \\int_\\Omega \\nabla \\cdot (\\mathbf{f} \\phi ) dV + \\frac{1}{\\epsilon_0} \\int_\\Omega ( \\nabla \\cdot \\mathbf{f} ) \\phi \\, dV \n
+    & = - \\frac{1}{\\epsilon_0} \\int_{\\partial \\Omega} \\mathbf{n} \\cdot (\\mathbf{f} \\phi ) da + \\frac{1}{\\epsilon_0} \\int_\\Omega ( \\nabla \\cdot \\mathbf{f} ) \\phi \\, dV \n
+    & = 0 + \\frac{1}{\\epsilon_0} \\int_\\Omega ( \\nabla \\cdot \\mathbf{f} ) \\phi \\, dV
 
-from which we can solve for :math:`\\mathbf{\\phi}`. The electric field can be
+where the surface integral is zero due to the boundary conditions we imposed.
+Evaluating this expression according to the finite volume approach we obtain:
+
+.. math::
+    \\mathbf{f^T M_f e} = \\mathbf{f^T D^T M_c \\phi}
+
+where :math:`\\mathbf{f}` lives on cell faces and :math:`\\mathbf{M_f}` is the
+inner product matrix for quantities that live on cell faces. By canceling terms
+and combining the set of discrete equations we obtain:
+    
+.. math::
+    \\big [ \\mathbf{M_c D M_f^{-1} D^T M_c} \\big ] \\mathbf{\\phi} = \\frac{1}{\epsilon_0} \mathbf{q}
+
+from which we can solve for :math:`\mathbf{\phi}`. The electric field can be
 obtained by computing:
 
 .. math::
-    \\mathbf{e = - G \\, \\phi}
+    \mathbf{e} = \\mathbf{M_f^{-1} D^T M_c \\phi}
 
 
 
 """
 
-########################################################################
+###############################################
 #
 # Import Packages
 # ---------------
@@ -73,42 +92,40 @@ from discretize import TensorMesh
 from pymatsolver import SolverLU
 import matplotlib.pyplot as plt
 import numpy as np
+from discretize.utils.matutils import sdiag
 
 
-########################################################################
+###############################################
 #
-# Solving Problem in 2D
-# ---------------------
+# Solving the Problem
+# -------------------
 #
 
 # Create a tensor mesh
 h = np.ones(75)
 mesh = TensorMesh([h, h], 'CC')
 
-# Define charge distributions at cell centers
+# Create system
+DIV = mesh.faceDiv  # Faces to cell centers divergence
+Mf_inv = mesh.getFaceInnerProduct(invMat=True)
+Mc = sdiag(mesh.vol)
+A = Mc*DIV*Mf_inv*DIV.T*Mc
+
+# Define RHS (charge distributions at cell centers)
 xycc = mesh.gridCC
-kneg = (xycc[:, 0]==-10) & (xycc[:, 1]==0)  # -ve charge distr. at (-10, 0)
-kpos = (xycc[:, 0]==10) & (xycc[:, 1]==0)   # +ve charge distr. at (10, 0)
+kneg = (xycc[:, 0] == -10) & (xycc[:, 1] == 0)  # -ve charge distr. at (-10, 0)
+kpos = (xycc[:, 0] == 10) & (xycc[:, 1] == 0)   # +ve charge distr. at (10, 0)
 
 rho = np.zeros(mesh.nC)
 rho[kneg] = -1
 rho[kpos] = 1
 
-# Create system
-DIV = mesh.faceDiv  # Faces to cell centers divergence
-mesh.setCellGradBC(['dirichlet','dirichlet'])  # Set Dirichlet BC
-GRAD = mesh.cellGrad  # Cell centers to faces gradient
-A = DIV*GRAD
-
-# Define RHS
-RHS = -rho
-
 # LU factorization and solve
 AinvM = SolverLU(A)
-phi = AinvM*RHS
+phi = AinvM*rho
 
 # Compute electric fields
-E = - mesh.cellGrad*phi
+E = Mf_inv*DIV.T*Mc*phi
 
 # Plotting
 fig = plt.figure(figsize=(14, 4))
@@ -125,4 +142,3 @@ Ax3 = fig.add_subplot(133)
 mesh.plotImage(E, ax=Ax3, vType='F', view='vec',
                streamOpts={'color': 'w', 'density': 1.0})
 Ax3.set_title('Electric Fields')
-
