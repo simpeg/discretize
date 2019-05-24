@@ -141,13 +141,13 @@ print('Cell-centered approx.:', ipc)
 # will define a vector quantity:
 #
 # .. math::
-#     \vec{v} = \Bigg [ \frac{-y}{r} \hat{x} + \frac{x}{r} \hat{y} \Bigg ]
+#     \vec{v}(x,y) = \Bigg [ \frac{-y}{r} \hat{x} + \frac{x}{r} \hat{y} \Bigg ]
 #     \, e^{-\frac{x^2+y^2}{2\sigma^2}}
 #
 # We will then evaluate the inner product of the function and itself
 #
 # .. math::
-#     (\vec{v}, \vec{v}) = \int_{-\infty}^\infty \vec{v} \cdot \vec{v} \, dv
+#     (\vec{v}, \vec{v}) = \int_{-\infty}^\infty \int_{-\infty}^\infty \vec{v} \cdot \vec{v} \, dv
 #     = 2 \pi \sigma^2
 #
 # using inner-product matricies. Next we compare the numerical evaluation
