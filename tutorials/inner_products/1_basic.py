@@ -91,7 +91,7 @@ import numpy as np
 # We will then evaluate the following inner product:
 #
 # .. math::
-#     (\phi , \phi) = \int_\\Omega \phi^2 \, dx = \frac{1}{2\sigma \sqrt{\pi}}
+#     (\phi , \phi) = \int_\Omega \phi^2 \, dx = \frac{1}{2\sigma \sqrt{\pi}}
 #
 #
 # according to the mid-point rule using inner-product matricies. Next we
@@ -156,7 +156,7 @@ print('Cell-centered approx.:', ipc)
 # We will then evaluate the following inner product:
 #
 # .. math::
-#     (\vec{v}, \vec{v}) = \int_\\Omega \vec{v} \cdot \vec{v} \, da
+#     (\vec{v}, \vec{v}) = \int_\Omega \vec{v} \cdot \vec{v} \, da
 #     = 2 \pi \sigma^2
 #
 # using inner-product matricies. Next we compare the numerical evaluation
