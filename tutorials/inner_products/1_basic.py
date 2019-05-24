@@ -2,8 +2,14 @@
 Basic Inner Products
 ====================
 
-Here we demonstrate how to evaluate basic inner products between scalar or
-vector quantities. For scalar quantities :math:`\\psi` and :math:`\\phi`, the
+Inner products between two scalar or vector quantities represents the most
+basic class of inner products. For this class of inner products, we demonstrate:
+
+    - How to construct the inner product matrix
+    - How to use inner product matricies to approximate the inner product
+    - How to construct the inverse of the inner product matrix.
+
+For scalar quantities :math:`\\psi` and :math:`\\phi`, the
 inner product is given by:
 
 .. math::
@@ -23,22 +29,23 @@ In discretized form, we can approximate the aforementioned inner-products as:
     (\\psi , \\phi) \\approx \\mathbf{\\psi^T \\, M \\, \\phi}
 
 
-or
+and
 
 .. math::
     (\\vec{u}, \\vec{v}) \\approx \\mathbf{u^T \\, M \\, v}
 
 
-where :math:`\\mathbf{M}` in either equation represents the
+where :math:`\\mathbf{M}` in either equation represents an
 *inner-product matrix*. :math:`\\mathbf{\\psi}`, :math:`\\mathbf{\\phi}`,
 :math:`\\mathbf{u}` and :math:`\\mathbf{v}` are discrete variables that live
 on the mesh. It is important to note a few things about the
 inner-product matrix in this case:
 
-    1. It depends on the dimension and discretization of the mesh
+    1. It depends on the dimensions and discretization of the mesh
     2. It depends on where the discrete variables live; e.g. edges, faces, nodes, centers
 
-For this simple class of inner products, the inner product matricies:
+For this simple class of inner products, the inner product matricies for
+discrete quantities living on varioud parts of the mesh have the form:
 
 .. math::
     \\textrm{Centers:} \\; \\mathbf{M_c} &= \\textrm{diag} (\\mathbf{v} ) \n
@@ -47,8 +54,9 @@ For this simple class of inner products, the inner product matricies:
     \\textrm{Edges:} \\; \\mathbf{M_e} &= \\frac{1}{4^{k-1}} \\mathbf{P_e^T } \\textrm{diag} (\\mathbf{I_k \\otimes v}) \\mathbf{P_e}
 
 where :math:`k = 1,2,3`, :math:`\\mathbf{I_k}` is the identity matrix and
-:math:`\\otimes` is the kronecker product. :math:`\\mathbf{P}` are matricies
-that project quantities from one part of the cell to cell centers.
+:math:`\\otimes` is the kronecker product. :math:`\\mathbf{P}` are projection
+matricies that map quantities from one part of the cell (nodes, faces, edges)
+to cell centers.
     
 
 """
@@ -74,21 +82,22 @@ import numpy as np
 # -------
 #
 # It is natural for scalar quantities to live at cell centers or nodes. Here
-# we will define a scalar function (Gaussian distribution):
+# we will define a scalar function (a Gaussian distribution in this case):
 #
 # .. math::
 #     \phi(x) = \frac{1}{\sqrt{2 \pi \sigma^2}} \, e^{- \frac{(x- \mu )^2}{2 \sigma^2}}
 #
 #
-# We will then evaluate the inner product of the function with itself:
+# We will then evaluate the following inner product:
 #
 # .. math::
-#     (\phi , \phi) = \int_{-\infty}^{\infty} \phi^2 \, dv = \frac{1}{2\sigma \sqrt{\pi}}
+#     (\phi , \phi) = \int_\\Omega \phi^2 \, dx = \frac{1}{2\sigma \sqrt{\pi}}
 #
 #
-# using inner-product matricies. Next we compare the numerical evaluation
-# of the inner product with the analytic solution. *Note that the method for
-# evaluating inner products here can be extended to variables in 2D and 3D*.
+# according to the mid-point rule using inner-product matricies. Next we
+# compare the numerical approximation of the inner product with the analytic
+# solution. *Note that the method for evaluating inner products here can be
+# extended to variables in 2D and 3D*.
 #
 
 
@@ -138,16 +147,16 @@ print('Cell-centered approx.:', ipc)
 #
 # To preserve the natural boundary conditions for each cell, it is standard
 # practice to define fields on cell edges and fluxes on cell faces. Here we
-# will define a vector quantity:
+# will define a 2D vector quantity:
 #
 # .. math::
 #     \vec{v}(x,y) = \Bigg [ \frac{-y}{r} \hat{x} + \frac{x}{r} \hat{y} \Bigg ]
 #     \, e^{-\frac{x^2+y^2}{2\sigma^2}}
 #
-# We will then evaluate the inner product of the function and itself
+# We will then evaluate the following inner product:
 #
 # .. math::
-#     (\vec{v}, \vec{v}) = \int_{-\infty}^\infty \int_{-\infty}^\infty \vec{v} \cdot \vec{v} \, dv
+#     (\vec{v}, \vec{v}) = \int_\\Omega \vec{v} \cdot \vec{v} \, da
 #     = 2 \pi \sigma^2
 #
 # using inner-product matricies. Next we compare the numerical evaluation
@@ -212,7 +221,7 @@ print('Face variable approx.:', ipf)
 # ----------------------------------
 #
 # The final discretized system using the finite volume method may contain
-# the inverse of the inner-product matrix. Here we show how the inverse of
+# the inverse of an inner-product matrix. Here we show how the inverse of
 # the inner product matrix can be explicitly constructed. We validate its
 # accuracy for cell-centers, nodes, edges and faces by computing the folling
 # L2-norm for each:

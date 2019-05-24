@@ -284,12 +284,3 @@ Ax1.set_title('CURL*GRAD')
 Ax2 = fig.add_axes([0.35, 0.64, 0.6, 0.25])
 Ax2.spy(DIV*CURL, markersize=0.5)
 Ax2.set_title('DIV*CURL', pad=20)
-
-
-
-
-
-
-
-
-
