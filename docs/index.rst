@@ -17,6 +17,7 @@
 
     tutorials/mesh_generation/index
     tutorials/operators/index
+    tutorials/inner_products/index
     tutorials/pde/index
 
 .. toctree::

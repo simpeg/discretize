@@ -319,11 +319,13 @@ sphinx_gallery_conf = {
     'examples_dirs': ['../examples',
                       '../tutorials/mesh_generation',
                       '../tutorials/operators',
+                      '../tutorials/inner_products',
                       '../tutorials/pde'
                       ],
     'gallery_dirs': ['examples',
                      'tutorials/mesh_generation',
                      'tutorials/operators',
+                     'tutorials/inner_products',
                      'tutorials/pde'
                      ],
     'filename_pattern': '\.py',
