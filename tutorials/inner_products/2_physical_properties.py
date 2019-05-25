@@ -295,13 +295,13 @@ Mf3 = mesh.getFaceInnerProduct(sig)
 # this expression is given by:
 #
 # .. math::
-#     (\vec{v}, \Gamma^{-1} \vec{E} ) = \int_\Omega \vec{v} \cdot \Gamma^{-1} \vec{E}  \\, dv
+#     (\vec{v}, \Gamma^{-1} \vec{E} ) = \int_\Omega \vec{v} \cdot \Gamma^{-1} \vec{E}  \, dv
 #
 # Once again we would like to approximate the inner product numerically using an
-# *inner-product matrix* :math:`\\mathbf{M_\Gamma}` such that:
+# *inner-product matrix* :math:`\mathbf{M_\Gamma}` such that:
 #
 # .. math::
-#     (\vec{v}, \Gamma{-1} \vec{E} ) \approx \mathbf{v^T M_\Gamma e}
+#     (\vec{v}, \Gamma^{-1} \vec{E} ) \approx \mathbf{v^T M_\Gamma e}
 #
 # Here we demonstrate how to form the inner-product matricies
 # :math:`\mathbf{M_\rho}` and :math:`\mathbf{M_\Gamma}`.
