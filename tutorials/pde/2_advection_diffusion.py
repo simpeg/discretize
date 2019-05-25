@@ -62,15 +62,15 @@ according to the finite volume approach we obtain:
 
 .. math::
     \\mathbf{\\psi^T M_c p_t} = - \\alpha \\mathbf{\\psi^T G^T M_f G \\, p}
-    - \\mathbf{\\psi^T M_c A_{fc}} \\textrm{diag} ( \\mathbf{u} ) \\mathbf{G \\, p}
+    - \\mathbf{\\psi^T M_c \\tilde{A}_{fc}} \\textrm{diag} ( \\mathbf{u} ) \\mathbf{G \\, p}
     + \\mathbf{\\psi^T M_c s}
 
 where :math:`\\mathbf{\\psi}`, :math:`\\mathbf{p}` and :math:`\\mathbf{p_t}`
 live at cell centers and :math:`\\mathbf{u}` lives on faces. :math:`\\mathbf{G}`
-is the discrete gradient operators. And :math:`\\mathbf{A_{cf}}`
-averages the component of :math:`\\mathbf{u} \\cdot \\nabla p` to cell centers
-and sums them. :math:`\\mathbf{M_c}` and :math:`\\mathbf{M_f}` are the cell
-center and face inner product matricies, respectively.
+is the discrete gradient operators. :math:`\\mathbf{M_c}` and
+:math:`\\mathbf{M_f}` are the cell center and face inner product matricies,
+respectively. :math:`\\mathbf{\\tilde{A}_{cf}}` averages the x, y and z
+contributions of :math:`\\mathbf{u} \\cdot \\nabla p` to cell centers and sums them.
 
 By eliminating :math:`\\psi^T` and multiplying both sides by
 :math:`\\mathbf{M_c^{-1}}` we obtain:
@@ -138,7 +138,7 @@ s[k1] = 10
 s[k2] = 10
 
 # Define system M
-Afc = 2*mesh.aveF2CC
+Afc = mesh.dim*mesh.aveF2CC
 Mc_inv = sdiag(1/mesh.vol)
 Mf = mesh.getFaceInnerProduct()
 
