@@ -6,12 +6,23 @@ import omf
 import numpy as np
 
 
+import discretize
+
+
 def ravel_data_array(arr, mesh):
     """Ravel's a numpy array into proper order for passing to the OMF
     specification from ``discretize``/UBC formats
     """
     dim = (mesh.nCz, mesh.nCy, mesh.nCx)
-    return np.reshape(arr, dim).ravel(order='F')
+    return np.reshape(arr, dim, order='C').ravel(order='F')
+
+
+def unravel_data_array(arr, mesh):
+    """Unravel's a numpy array from the OMF specification to
+    ``discretize``/UBC formats - the is the inverse of ``ravel_data_array``
+    """
+    dim = (mesh.nCz, mesh.nCy, mesh.nCx)
+    return np.reshape(arr, dim, order='F').ravel(order='C')
 
 
 class InterfaceOMF(object):
@@ -79,15 +90,15 @@ class InterfaceOMF(object):
 
 
     def _tree_mesh_to_omf(mesh, models=None):
-        raise NotImplementedError()
+        raise NotImplementedError('Not possible until OMF v2 is released.')
 
 
     def _curvilinear_mesh_to_omf(mesh, models=None):
-        raise NotImplementedError()
+        raise NotImplementedError('Not currently possible.')
 
 
     def _cyl_mesh_to_omf(mesh, models=None):
-        raise NotImplementedError()
+        raise NotImplementedError('Not currently possible.')
 
 
     def to_omf(mesh, models=None):
@@ -115,3 +126,42 @@ class InterfaceOMF(object):
             raise RuntimeError('Mesh type `{}` is not currently supported for OMF conversion.'.format(key))
         # Convert the data object
         return convert(mesh, models=models)
+
+
+    def _omf_volume_to_tensor(element):
+        """Convert an :class:`omf.VolumeElement` to :class:`discretize.TensorMesh`
+        """
+        geometry = element.geometry
+        h = geometry.tensor_u, geometry.tensor_v, geometry.tensor_w
+        mesh = discretize.TensorMesh(h)
+        mesh.axis_u = geometry.axis_u
+        mesh.axis_v = geometry.axis_v
+        mesh.axis_w = geometry.axis_w
+        mesh.x0 = geometry.origin
+
+        data_dict = {}
+        for data in element.data:
+            # NOTE: this is agnostic about data location - i.e. nodes vs cells
+            data_dict[data.name] = unravel_data_array(np.array(data.array), mesh)
+
+        # Return TensorMesh and data dictionary
+        return mesh, data_dict
+
+
+    @staticmethod
+    def from_omf(element):
+        """Convert an OMF element to it's proper ``discretize`` type.
+        Automatically determines the output type. Returns both the mesh and a
+        dictionary of model arrays.
+        """
+        element.validate()
+        converters = {
+            omf.VolumeElement.__name__ : InterfaceOMF._omf_volume_to_tensor,
+            }
+        key = element.__class__.__name__
+        try:
+            convert = converters[key]
+        except KeyError:
+            raise RuntimeError('OMF type `{}` is not currently supported for conversion.'.format(key))
+        # Convert the data object
+        return convert(element)
