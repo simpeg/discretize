@@ -25,8 +25,8 @@ import matplotlib.pyplot as plt
 
 
 #####################################################
-# Constitive Relations with Differential Operators
-# ------------------------------------------------
+# Constitive Relations and Differential Operators
+# -----------------------------------------------
 #
 # Where :math:`\psi` and :math:`\phi` are scalar quantities,
 # :math:`\vec{u}` and :math:`\vec{v}` are vector quantities, and
@@ -104,10 +104,3 @@ Mf_tensor = mesh.getFaceInnerProduct(Sig)  # inner product matrix for tensor
 Ax2 = fig.add_subplot(122)
 Ax2.spy(Mf_tensor*Cef, markersize=0.5)
 Ax2.set_title('Me(sig)*Cef (Anisotropic)')
-
-
-
-
-
-
-

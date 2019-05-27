@@ -13,5 +13,13 @@ The discrete operators are properties of each mesh class (*tensor mesh*,
 called. Since each mesh type has a similar API, the operators can be
 called using the same syntax.
 
+To learn about discrete operators, we have provided a set
+of tutorials. These tutorials aim to teach the user:
+
+	- how to construct averaging and differential operators from a mesh
+	- how to apply the discrete operators to discrete variables
+	- how to impose boundary conditions using differential operators
+	- how discrete differential operators preserve vector calculus identities
+
 
 
