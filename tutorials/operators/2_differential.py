@@ -65,11 +65,11 @@ dvdx_approx = G*v
 
 # Compare
 fig = plt.figure(figsize=(12, 4))
-Ax1 = fig.add_axes([0.03, 0.01, 0.3, 0.92])
+Ax1 = fig.add_axes([0.03, 0.01, 0.3, 0.89])
 Ax1.spy(G, markersize=5)
 Ax1.set_title('Sparse representation of G', pad=10)
 
-Ax2 = fig.add_axes([0.4, 0.06, 0.55, 0.88])
+Ax2 = fig.add_axes([0.4, 0.06, 0.55, 0.85])
 Ax2.plot(x_nodes, v, 'b-',
          x_centers, dvdx, 'r-',
          x_centers, dvdx_approx, 'ko'
@@ -262,7 +262,7 @@ fig.show()
 #
 # We do this by computing the CURL*GRAD and DIV*CURL matricies. We then
 # plot the sparse representations and show neither contain any non-zero
-# entries; e.g. each is just a matrix of zeros.
+# entries; **e.g. each is just a matrix of zeros**.
 #
 
 # Create a mesh

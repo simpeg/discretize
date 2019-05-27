@@ -88,7 +88,7 @@ mesh.setCellGradBC(['neumann', 'dirichlet', 'neumann'])  # Set boundary conditio
 Gc = mesh.cellGrad               # Cells to faces gradient
 
 # Plot Sparse Representation
-fig = plt.figure(figsize=(7, 8))
+fig = plt.figure(figsize=(5, 6))
 
 Ax1 = fig.add_subplot(121)
 Ax1.spy(Me*Gn, markersize=0.5)
@@ -116,7 +116,7 @@ Ax2.set_title('Mf*Gc')
 # (:math:`\mathbf{M_f}`) for quantities living on cell faces, e.g.:
 #
 # .. math::
-#    (\psi , \nabla \cdot \vec{v}) \approx \mathbf{\psi^T} \textrm{diag} (\mathbf{vol} ) \mathbf D v}
+#    (\psi , \nabla \cdot \vec{v}) \approx \mathbf{\psi^T} \textrm{diag} (\mathbf{vol} ) \mathbf{D v}
 #
     
 # Make basic mesh
@@ -128,11 +128,11 @@ Mc = sdiag(mesh.vol)             # Basic inner product matrix (centers)
 D = mesh.faceDiv                 # Faces to centers divergence
 
 # Plot sparse representation
-fig = plt.figure()
+fig = plt.figure(figsize=(8, 5))
 
 Ax1 = fig.add_subplot(111)
 Ax1.spy(Mc*D, markersize=0.5)
-Ax1.set_title('Mc*D')
+Ax1.set_title('Mc*D', pad=20)
 
 #####################################################
 # Curl
@@ -185,15 +185,15 @@ Me = mesh.getEdgeInnerProduct()  # Basic inner product matrix (edges)
 Cf = mesh.edgeCurl.T             # Faces to edges curl (assumes Dirichlet)
     
 # Plot Sparse Representation
-fig = plt.figure(figsize=(9, 8))
+fig = plt.figure(figsize=(9, 5))
 
 Ax1 = fig.add_subplot(121)
 Ax1.spy(Mf*Ce, markersize=0.5)
-Ax1.set_title('Mf*Ce')
+Ax1.set_title('Mf*Ce', pad=10)
 
 Ax2 = fig.add_subplot(122)
 Ax2.spy(Me*Cf, markersize=0.5)
-Ax2.set_title('Me*Cf')
+Ax2.set_title('Me*Cf', pad=10)
 
 
 ###########################################################
@@ -211,8 +211,8 @@ Ax2.set_title('Me*Cf')
 # and the Divergence theorem we obtain:
 #
 # .. math::
-#     \int_{\partial \Omega} \mathbf{n} \cdot ( \psi \nabla \phi ) \\, da
-#     - \int_\Omega (\nabla \psi ) \cdot (\nabla \phi ) \\, dv
+#     \int_{\partial \Omega} \mathbf{n} \cdot ( \psi \nabla \phi ) \, da
+#     - \int_\Omega (\nabla \psi ) \cdot (\nabla \phi ) \, dv
 # 
 # In this case, the surface integral can be eliminated if we can assume a
 # Neumann condition of :math:`\partial \phi/\partial n = 0` on the boundary.
@@ -252,17 +252,14 @@ Gn = mesh.nodalGrad              # Nodes to edges gradient
 Mf = mesh.getFaceInnerProduct()  # Basic inner product matrix (faces)
 mesh.setCellGradBC(['dirichlet','dirichlet','dirichlet'])
 Gc = mesh.cellGrad            # Centers to faces gradient
-    
+
 # Plot Sparse Representation
 fig = plt.figure(figsize=(9, 4))
 
 Ax1 = fig.add_subplot(121)
 Ax1.spy(Gn.T*Me*Gn, markersize=0.5)
-Ax1.set_title('Gn.T*Me*Gn')
+Ax1.set_title('Gn.T*Me*Gn', pad=5)
 
 Ax2 = fig.add_subplot(122)
 Ax2.spy(Gc.T*Mf*Gc, markersize=0.5)
-Ax2.set_title('Gc.T*Mf*Gc')
-
-
-
+Ax2.set_title('Gc.T*Mf*Gc', pad=5)

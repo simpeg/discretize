@@ -98,9 +98,9 @@ fig = plt.figure(figsize=(9, 5))
 
 Ax1 = fig.add_subplot(121)
 Ax1.spy(Mf*Cef, markersize=0.5)
-Ax1.set_title('Me(sig)*Cef (Isotropic)')
+Ax1.set_title('Me(sig)*Cef (Isotropic)', pad=10)
 
 Mf_tensor = mesh.getFaceInnerProduct(Sig)  # inner product matrix for tensor
 Ax2 = fig.add_subplot(122)
 Ax2.spy(Mf_tensor*Cef, markersize=0.5)
-Ax2.set_title('Me(sig)*Cef (Anisotropic)')
+Ax2.set_title('Me(sig)*Cef (Anisotropic)', pad=10)

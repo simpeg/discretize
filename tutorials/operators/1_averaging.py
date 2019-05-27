@@ -66,11 +66,11 @@ v_approx = A*v_nodes
 
 # Compare
 fig = plt.figure(figsize=(12, 4))
-Ax1 = fig.add_axes([0.03, 0.01, 0.3, 0.93])
+Ax1 = fig.add_axes([0.03, 0.01, 0.3, 0.91])
 Ax1.spy(A, markersize=5)
 Ax1.set_title('Sparse representation of A', pad=10)
 
-Ax2 = fig.add_axes([0.4, 0.06, 0.55, 0.88])
+Ax2 = fig.add_axes([0.4, 0.06, 0.55, 0.85])
 Ax2.plot(x_centers, v_centers, 'b-',
          x_centers, v_approx, 'ko',
          x_centers, np.c_[v_centers-v_approx], 'r-'

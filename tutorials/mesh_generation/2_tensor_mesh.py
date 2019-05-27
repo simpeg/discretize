@@ -172,5 +172,5 @@ mesh.plotImage(np.log10(v), grid=True, ax=Ax1)
 Ax1.set_title('All Cell Log-Volumes')
 
 cplot = mesh.plotSlice(np.log10(v), grid=True, ax=Ax2, normal='Z', ind=2)
-cplot[0].set_clim(np.min(v), np.max(v))
+cplot[0].set_clim(np.min(np.log10(v)), np.max(np.log10(v)))
 Ax2.set_title('Cell Log-Volumes #2')
