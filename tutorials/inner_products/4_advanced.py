@@ -104,3 +104,64 @@ Mf_tensor = mesh.getFaceInnerProduct(Sig)  # inner product matrix for tensor
 Ax2 = fig.add_subplot(122)
 Ax2.spy(Mf_tensor*Cef, markersize=0.5)
 Ax2.set_title('Me(sig)*Cef (Anisotropic)', pad=10)
+
+#####################################################
+# Divergence of a Scalar and a Vector Field
+# -----------------------------------------
+#
+# Where :math:`\psi` and :math:`\phi` are scalar quantities, and
+# :math:`\vec{u}` is a known vector field, we may need to derive
+# a discrete approximation for the following inner product:
+#
+# .. math::
+#     (\psi , \nabla \cdot \phi \vec{u})
+#
+# Scalar and vector quantities are generally discretized to lie on
+# different locations on the mesh. As result, it is better to use the
+# identity :math:`\nabla \cdot \phi \vec{u} = \phi \nabla \cdot \vec{u} + \vec{u} \cdot \nabla \phi`
+# and separate the inner product into two parts:
+#
+# .. math::
+#    (\psi , \phi \nabla \cdot \vec{u} ) + (\psi , \vec{u} \cdot \nabla \phi)
+#
+# **Term 1:**
+#
+# If the vector field :math:`\vec{u}` is divergence free, there is no need
+# to evaluate the first inner product term. This is the case for advection when
+# the fluid is incompressible.
+#
+# Where :math:`\mathbf{D_{fc}}` is the faces to centers divergence operator, and
+# :math:`\mathbf{M_c}` is the basic inner product matrix for cell centered
+# quantities, we can approximate this inner product as:
+#
+# .. math::
+#     (\psi , \phi \nabla \cdot \vec{u} ) = \mathbf{\psi_c^T M_c} \textrm{diag} (\mathbf{D_{fc} u_f} ) \, \mathbf{\phi_c}
+#
+# **Term 2:**
+#
+# Let :math:`\mathbf{G_{cf}}` be the cell centers to faces gradient operator,
+# :math:`\mathbf{M_c}` be the basic inner product matrix for cell centered
+# quantities, and :math:`\mathbf{\tilde{A}_{fc}}` and averages *and* sums the
+# cartesian contributions of :math:`\vec{u} \cdot \nabla \phi`, we can
+# approximate the inner product as:
+#
+# .. math::
+#     (\psi , \vec{u} \cdot \nabla \phi) = \mathbf{\psi_c^T M_c \tilde A_{fc}} \text{diag} (\mathbf{u_f} ) \mathbf{G_{cf} \, \phi_c}
+#
+# **With the operators constructed below, you can compute all of the
+# inner products.**
+
+# Make basic mesh
+h = np.ones(10)
+mesh = TensorMesh([h, h, h])
+
+# Inner product matricies
+Mc = sdiag(mesh.vol*sig)             # Inner product matrix (centers)
+
+# Differential operators
+mesh.setCellGradBC(['neumann', 'dirichlet', 'neumann'])  # Set boundary conditions
+Gcf = mesh.cellGrad               # Cells to faces gradient
+Dfc = mesh.faceDiv                # Faces to centers divergence
+
+# Averaging and summing matrix
+Afc = mesh.dim*mesh.aveF2CC
