@@ -59,4 +59,5 @@ examples/Chile_GRAV_4_Miller
 examples/*.tar.gz
 
 # downloads for examples
-*/laguna_del_maule_slicer/*
+laguna_del_maule_slicer/*
+laguna_del_maule_slicer.tar.gz
