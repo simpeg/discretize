@@ -58,11 +58,12 @@ mesh = TreeMesh([h, h])
 
 # Define corner points for rectangular box
 xp, yp = np.meshgrid([120., 240.], [80., 160.])
-xy = np.c_[matutils.mkvc(xp), matutils.mkvc(yp)]
+xy = np.c_[matutils.mkvc(xp), matutils.mkvc(yp)]  # matutils.mkvc creates vectors
 
 # Discretize to finest cell size within rectangular box
-mesh = meshutils.refine_tree_xyz(mesh, xy, octree_levels=[2, 2],
-                                  method='box', finalize=False)
+mesh = meshutils.refine_tree_xyz(
+    mesh, xy, octree_levels=[2, 2], method='box', finalize=False
+    )
 
 mesh.finalize()  # Must finalize tree mesh before use
 
@@ -102,25 +103,27 @@ mesh = TreeMesh([hx, hy], x0='CC')
 xx = mesh.vectorNx
 yy = -3*np.exp((xx**2) / 100**2) + 50.
 pts = np.c_[matutils.mkvc(xx), matutils.mkvc(yy)]
-mesh = meshutils.refine_tree_xyz(mesh, pts, octree_levels=[2, 2],
-                                 method='surface', finalize=False)
+mesh = meshutils.refine_tree_xyz(
+    mesh, pts, octree_levels=[2, 2], method='surface', finalize=False
+    )
 
 # Refine mesh near points
 xx = np.array([0., 10., 0., -10.])
 yy = np.array([-20., -10., 0., -10])
 pts = np.c_[matutils.mkvc(xx), matutils.mkvc(yy)]
-mesh = meshutils.refine_tree_xyz(mesh, pts, octree_levels=[2, 2],
-                                 method='radial', finalize=False)
+mesh = meshutils.refine_tree_xyz(
+    mesh, pts, octree_levels=[2, 2], method='radial', finalize=False
+    )
 
 mesh.finalize()
 
 # We can apply the plotGrid method and output to a specified axes object
-Fig = plt.figure(figsize=(6, 6))
-Ax = Fig.add_subplot(111)
-mesh.plotGrid(ax=Ax)
-Ax.set_xbound(mesh.x0[0], mesh.x0[0]+np.sum(mesh.hx))
-Ax.set_ybound(mesh.x0[1], mesh.x0[1]+np.sum(mesh.hy))
-Ax.set_title('QuadTree Mesh')
+fig = plt.figure(figsize=(6, 6))
+ax = fig.add_subplot(111)
+mesh.plotGrid(ax=ax)
+ax.set_xbound(mesh.x0[0], mesh.x0[0]+np.sum(mesh.hx))
+ax.set_ybound(mesh.x0[1], mesh.x0[1]+np.sum(mesh.hy))
+ax.set_title('QuadTree Mesh')
 
 ####################################################
 # Extracting Mesh Properties
@@ -149,15 +152,17 @@ mesh = TreeMesh([hx, hy], x0='CC')
 xx = mesh.vectorNx
 yy = -3*np.exp((xx**2) / 100**2) + 50.
 pts = np.c_[matutils.mkvc(xx), matutils.mkvc(yy)]
-mesh = meshutils.refine_tree_xyz(mesh, pts, octree_levels=[2, 2],
-                                method='surface', finalize=False)
+mesh = meshutils.refine_tree_xyz(
+    mesh, pts, octree_levels=[2, 2], method='surface', finalize=False
+    )
 
 # Refine near points
 xx = np.array([0., 10., 0., -10.])
 yy = np.array([-20., -10., 0., -10])
 pts = np.c_[matutils.mkvc(xx), matutils.mkvc(yy)]
-mesh = meshutils.refine_tree_xyz(mesh, pts, octree_levels=[2, 2],
-                                 method='radial', finalize=False)
+mesh = meshutils.refine_tree_xyz(
+    mesh, pts, octree_levels=[2, 2], method='radial', finalize=False
+    )
 
 mesh.finalize()
 
@@ -176,12 +181,12 @@ bInd = mesh.cellBoundaryInd
 # The cell areas (2D "volume")
 s = mesh.vol
 
-Fig = plt.figure(figsize=(6, 6))
-Ax = Fig.add_subplot(111)
-mesh.plotImage(s, grid=True, ax=Ax)
-Ax.set_xbound(mesh.x0[0], mesh.x0[0]+np.sum(mesh.hx))
-Ax.set_ybound(mesh.x0[1], mesh.x0[1]+np.sum(mesh.hy))
-Ax.set_title('Cell Areas')
+fig = plt.figure(figsize=(6, 6))
+ax = fig.add_subplot(111)
+mesh.plotImage(np.log10(s), grid=True, ax=ax)
+ax.set_xbound(mesh.x0[0], mesh.x0[0]+np.sum(mesh.hx))
+ax.set_ybound(mesh.x0[1], mesh.x0[1]+np.sum(mesh.hy))
+ax.set_title('Log of Cell Areas')
 
 ###############################################
 # 3D Example
@@ -214,15 +219,17 @@ mesh = TreeMesh([hx, hy, hz], x0='CCC')
 [xx, yy] = np.meshgrid(mesh.vectorNx, mesh.vectorNy)
 zz = -3*np.exp((xx**2 + yy**2) / 100**2) + 50.
 pts = np.c_[matutils.mkvc(xx), matutils.mkvc(yy), matutils.mkvc(zz)]
-mesh = meshutils.refine_tree_xyz(mesh, pts, octree_levels=[2, 2],
-                                 method='surface', finalize=False)
+mesh = meshutils.refine_tree_xyz(
+    mesh, pts, octree_levels=[2, 2], method='surface', finalize=False
+    )
 
 # Refine box
 xp, yp, zp = np.meshgrid([-40., 40.], [-40., 40.], [-60., 0.])
 xyz = np.c_[matutils.mkvc(xp), matutils.mkvc(yp), matutils.mkvc(zp)]
 
-mesh = meshutils.refine_tree_xyz(mesh, xyz, octree_levels=[2, 2],
-                                 method='box', finalize=False)
+mesh = meshutils.refine_tree_xyz(
+    mesh, xyz, octree_levels=[2, 2], method='box', finalize=False
+    )
 
 mesh.finalize()
 
@@ -241,7 +248,7 @@ bInd = mesh.cellBoundaryInd
 # Cell volumes
 v = mesh.vol
 
-Fig = plt.figure(figsize=(6, 6))
-Ax = Fig.add_subplot(111)
-mesh.plotSlice(np.log(v), normal='Y', ax=Ax, ind=int(mesh.hy.size/2), grid=True)
-Ax.set_title('Cell Log-Volumes at Y = 0 m')
+fig = plt.figure(figsize=(6, 6))
+ax = fig.add_subplot(111)
+mesh.plotSlice(np.log10(v), normal='Y', ax=ax, ind=int(mesh.hy.size/2), grid=True)
+ax.set_title('Cell Log-Volumes at Y = 0 m')

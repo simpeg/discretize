@@ -65,17 +65,17 @@ dvdx_approx = G*v
 
 # Compare
 fig = plt.figure(figsize=(12, 4))
-Ax1 = fig.add_axes([0.03, 0.01, 0.3, 0.89])
-Ax1.spy(G, markersize=5)
-Ax1.set_title('Sparse representation of G', pad=10)
+ax1 = fig.add_axes([0.03, 0.01, 0.3, 0.89])
+ax1.spy(G, markersize=5)
+ax1.set_title('Sparse representation of G', pad=10)
 
-Ax2 = fig.add_axes([0.4, 0.06, 0.55, 0.85])
-Ax2.plot(x_nodes, v, 'b-',
+ax2 = fig.add_axes([0.4, 0.06, 0.55, 0.85])
+ax2.plot(x_nodes, v, 'b-',
          x_centers, dvdx, 'r-',
          x_centers, dvdx_approx, 'ko'
          )
-Ax2.set_title('Comparison plot')
-Ax2.legend(('function', 'analytic derivative', 'numeric derivative'))
+ax2.set_title('Comparison plot')
+ax2.legend(('function', 'analytic derivative', 'numeric derivative'))
 
 fig.show()
 
@@ -112,17 +112,17 @@ CURL = mesh.edgeCurl   # Curl edges to cell centers
 
 fig = plt.figure(figsize=(9, 8))
 
-Ax1 = fig.add_axes([0.07, 0, 0.20, .7])
-Ax1.spy(GRAD, markersize=0.5)
-Ax1.set_title('Gradient (nodes to edges)')
+ax1 = fig.add_axes([0.07, 0, 0.20, .7])
+ax1.spy(GRAD, markersize=0.5)
+ax1.set_title('Gradient (nodes to edges)')
 
-Ax2 = fig.add_axes([0.345, 0.73, 0.59, 0.185])
-Ax2.spy(DIV, markersize=0.5)
-Ax2.set_title('Divergence (faces to centers)', pad=20)
+ax2 = fig.add_axes([0.345, 0.73, 0.59, 0.185])
+ax2.spy(DIV, markersize=0.5)
+ax2.set_title('Divergence (faces to centers)', pad=20)
 
-Ax3 = fig.add_axes([0.31, 0.05, 0.67, 0.60])
-Ax3.spy(CURL, markersize=0.5)
-Ax3.set_title('Curl (edges to faces)')
+ax3 = fig.add_axes([0.31, 0.05, 0.67, 0.60])
+ax3.spy(CURL, markersize=0.5)
+ax3.set_title('Curl (edges to faces)')
 
 fig.show()
 
@@ -205,42 +205,42 @@ curl_w = CURL*w
 # Plot Gradient of u
 fig = plt.figure(figsize=(10, 5))
 
-Ax1 = fig.add_subplot(121)
-mesh.plotImage(u, ax=Ax1, vType='N')
-Ax1.set_title('u at cell centers')
+ax1 = fig.add_subplot(121)
+mesh.plotImage(u, ax=ax1, vType='N')
+ax1.set_title('u at cell centers')
 
-Ax2 = fig.add_subplot(122)
-mesh.plotImage(grad_u, ax=Ax2, vType='E', view='vec',
+ax2 = fig.add_subplot(122)
+mesh.plotImage(grad_u, ax=ax2, vType='E', view='vec',
                streamOpts={'color': 'w', 'density': 1.0})
-Ax2.set_title('gradient of u on edges')
+ax2.set_title('gradient of u on edges')
 
 fig.show()
 
 # Plot divergence of v
 fig = plt.figure(figsize=(10, 5))
 
-Ax1 = fig.add_subplot(121)
-mesh.plotImage(v, ax=Ax1, vType='F', view='vec',
+ax1 = fig.add_subplot(121)
+mesh.plotImage(v, ax=ax1, vType='F', view='vec',
                streamOpts={'color': 'w', 'density': 1.0})
-Ax1.set_title('v at cell faces')
+ax1.set_title('v at cell faces')
 
-Ax2 = fig.add_subplot(122)
-mesh.plotImage(div_v, ax=Ax2)
-Ax2.set_title('divergence of v at cell centers')
+ax2 = fig.add_subplot(122)
+mesh.plotImage(div_v, ax=ax2)
+ax2.set_title('divergence of v at cell centers')
 
 fig.show()
 
 # Plot curl of w
 fig = plt.figure(figsize=(10, 5))
 
-Ax1 = fig.add_subplot(121)
-mesh.plotImage(w, ax=Ax1, vType='E', view='vec',
+ax1 = fig.add_subplot(121)
+mesh.plotImage(w, ax=ax1, vType='E', view='vec',
                streamOpts={'color': 'w', 'density': 1.0})
-Ax1.set_title('w at cell edges')
+ax1.set_title('w at cell edges')
 
-Ax2 = fig.add_subplot(122)
-mesh.plotImage(curl_w, ax=Ax2)
-Ax2.set_title('curl of w at cell centers')
+ax2 = fig.add_subplot(122)
+mesh.plotImage(curl_w, ax=ax2)
+ax2.set_title('curl of w at cell centers')
 
 fig.show()
 
@@ -277,10 +277,10 @@ CURL = mesh.edgeCurl     # edges to faces
 # Plot
 fig = plt.figure(figsize=(11, 7))
 
-Ax1 = fig.add_axes([0.12, 0.1, 0.2, 0.8])
-Ax1.spy(CURL*GRAD, markersize=0.5)
-Ax1.set_title('CURL*GRAD')
+ax1 = fig.add_axes([0.12, 0.1, 0.2, 0.8])
+ax1.spy(CURL*GRAD, markersize=0.5)
+ax1.set_title('CURL*GRAD')
 
-Ax2 = fig.add_axes([0.35, 0.64, 0.6, 0.25])
-Ax2.spy(DIV*CURL, markersize=0.5)
-Ax2.set_title('DIV*CURL', pad=20)
+ax2 = fig.add_axes([0.35, 0.64, 0.6, 0.25])
+ax2.spy(DIV*CURL, markersize=0.5)
+ax2.set_title('DIV*CURL', pad=20)

@@ -81,7 +81,7 @@ Sig = np.random.rand(mesh.nC, 6)  # anisotropic
 
 # Inner product matricies
 Mc = sdiag(mesh.vol*sig)             # Inner product matrix (centers)
-#Mn = mesh.getNodalInnerProduct(sig)  # Inner product matrix (nodes)
+# Mn = mesh.getNodalInnerProduct(sig)  # Inner product matrix (nodes)  (*functionality pending*)
 Me = mesh.getEdgeInnerProduct(sig)   # Inner product matrix (edges)
 Mf = mesh.getFaceInnerProduct(sig)   # Inner product matrix for tensor (faces)
 
@@ -96,14 +96,14 @@ Cfe = mesh.edgeCurl.T             # Faces to edges curl
 # EXAMPLE: (u, sig*Curl*v)
 fig = plt.figure(figsize=(9, 5))
 
-Ax1 = fig.add_subplot(121)
-Ax1.spy(Mf*Cef, markersize=0.5)
-Ax1.set_title('Me(sig)*Cef (Isotropic)', pad=10)
+ax1 = fig.add_subplot(121)
+ax1.spy(Mf*Cef, markersize=0.5)
+ax1.set_title('Me(sig)*Cef (Isotropic)', pad=10)
 
 Mf_tensor = mesh.getFaceInnerProduct(Sig)  # inner product matrix for tensor
-Ax2 = fig.add_subplot(122)
-Ax2.spy(Mf_tensor*Cef, markersize=0.5)
-Ax2.set_title('Me(sig)*Cef (Anisotropic)', pad=10)
+ax2 = fig.add_subplot(122)
+ax2.spy(Mf_tensor*Cef, markersize=0.5)
+ax2.set_title('Me(sig)*Cef (Anisotropic)', pad=10)
 
 #####################################################
 # Divergence of a Scalar and a Vector Field

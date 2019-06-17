@@ -159,7 +159,7 @@ Binv = SolverLU(B)
 
 # Perform backward Euler and plot
 fig = plt.figure(figsize=(14, 4))
-Ax = 3*[None]
+ax = 3*[None]
 n = 0
 
 for ii in range(250):
@@ -167,8 +167,8 @@ for ii in range(250):
     p = Binv*(p + s)
 
     if ii+1 in (1, 25, 250):
-        Ax[n] = fig.add_subplot(1, 3, n+1)
-        mesh.plotImage(p, vType='CC', ax=Ax[n])
+        ax[n] = fig.add_subplot(1, 3, n+1)
+        mesh.plotImage(p, vType='CC', ax=ax[n])
         title_str = 'p at t = ' + str((ii+1)*dt) + ' s'
-        Ax[n].set_title(title_str)
+        ax[n].set_title(title_str)
         n = n+1

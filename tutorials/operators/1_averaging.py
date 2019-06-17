@@ -66,17 +66,17 @@ v_approx = A*v_nodes
 
 # Compare
 fig = plt.figure(figsize=(12, 4))
-Ax1 = fig.add_axes([0.03, 0.01, 0.3, 0.91])
-Ax1.spy(A, markersize=5)
-Ax1.set_title('Sparse representation of A', pad=10)
+ax1 = fig.add_axes([0.03, 0.01, 0.3, 0.91])
+ax1.spy(A, markersize=5)
+ax1.set_title('Sparse representation of A', pad=10)
 
-Ax2 = fig.add_axes([0.4, 0.06, 0.55, 0.85])
-Ax2.plot(x_centers, v_centers, 'b-',
+ax2 = fig.add_axes([0.4, 0.06, 0.55, 0.85])
+ax2.plot(x_centers, v_centers, 'b-',
          x_centers, v_approx, 'ko',
          x_centers, np.c_[v_centers-v_approx], 'r-'
          )
-Ax2.set_title('Comparison plot')
-Ax2.legend(('evaluated at centers', 'averaged from nodes', 'absolute error'))
+ax2.set_title('Comparison plot')
+ax2.legend(('evaluated at centers', 'averaged from nodes', 'absolute error'))
 
 fig.show()
 
@@ -103,17 +103,17 @@ A3 = mesh3D.aveF2CC  # Averages from x, y and z faces to centers
 
 # Plot sparse representation
 fig = plt.figure(figsize=(7, 8))
-Ax1 = fig.add_axes([0.37, 0.72, 0.2, 0.2])
-Ax1.spy(A1, markersize=2.5)
-Ax1.set_title('Faces to centers in 1D', pad=17)
+ax1 = fig.add_axes([0.37, 0.72, 0.2, 0.2])
+ax1.spy(A1, markersize=2.5)
+ax1.set_title('Faces to centers in 1D', pad=17)
 
-Ax2 = fig.add_axes([0.17, 0.42, 0.6, 0.22])
-Ax2.spy(A2, markersize=1)
-Ax2.set_title('Faces to centers in 2D', pad=17)
+ax2 = fig.add_axes([0.17, 0.42, 0.6, 0.22])
+ax2.spy(A2, markersize=1)
+ax2.set_title('Faces to centers in 2D', pad=17)
 
-Ax3 = fig.add_axes([0.05, 0, 0.93, 0.4])
-Ax3.spy(A3, markersize=0.5)
-Ax3.set_title('Faces to centers in 3D', pad=17)
+ax3 = fig.add_axes([0.05, 0, 0.93, 0.4])
+ax3.spy(A3, markersize=0.5)
+ax3.set_title('Faces to centers in 3D', pad=17)
 
 fig.show()
 
@@ -167,23 +167,23 @@ v[(xy[:, 1] > 0)] = 0.
 v[(xy[:, 1] < -10.) & (xy[:, 0] > -10.) & (xy[:, 0] < 10.)] = 50.
 
 fig = plt.figure(figsize=(10, 10))
-Ax1 = fig.add_subplot(221)
-mesh.plotImage(v, ax=Ax1)
-Ax1.set_title('Variable at cell centers')
+ax1 = fig.add_subplot(221)
+mesh.plotImage(v, ax=ax1)
+ax1.set_title('Variable at cell centers')
 
 # Apply cell centers to faces averaging
-Ax2 = fig.add_subplot(222)
-mesh.plotImage(A2*v, ax=Ax2, vType='F')
-Ax2.set_title('Cell centers to faces')
+ax2 = fig.add_subplot(222)
+mesh.plotImage(A2*v, ax=ax2, vType='F')
+ax2.set_title('Cell centers to faces')
 
 # Use the transpose to go from cell centers to nodes
-Ax3 = fig.add_subplot(223)
-mesh.plotImage(A3.T*v, ax=Ax3, vType='N')
-Ax3.set_title('Cell centers to nodes using transpose')
+ax3 = fig.add_subplot(223)
+mesh.plotImage(A3.T*v, ax=ax3, vType='N')
+ax3.set_title('Cell centers to nodes using transpose')
 
 # Use the transpose to go from cell centers to faces
-Ax4 = fig.add_subplot(224)
-mesh.plotImage(A4.T*v, ax=Ax4, vType='F')
-Ax4.set_title('Cell centers to faces using transpose')
+ax4 = fig.add_subplot(224)
+mesh.plotImage(A4.T*v, ax=ax4, vType='F')
+ax4.set_title('Cell centers to faces using transpose')
 
 fig.show()

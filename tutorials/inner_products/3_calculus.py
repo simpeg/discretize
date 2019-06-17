@@ -90,13 +90,13 @@ Gc = mesh.cellGrad               # Cells to faces gradient
 # Plot Sparse Representation
 fig = plt.figure(figsize=(5, 6))
 
-Ax1 = fig.add_subplot(121)
-Ax1.spy(Me*Gn, markersize=0.5)
-Ax1.set_title('Me*Gn')
+ax1 = fig.add_subplot(121)
+ax1.spy(Me*Gn, markersize=0.5)
+ax1.set_title('Me*Gn')
 
-Ax2 = fig.add_subplot(122)
-Ax2.spy(Mf*Gc, markersize=0.5)
-Ax2.set_title('Mf*Gc')
+ax2 = fig.add_subplot(122)
+ax2.spy(Mf*Gc, markersize=0.5)
+ax2.set_title('Mf*Gc')
 
 #####################################################
 # Divergence
@@ -130,9 +130,9 @@ D = mesh.faceDiv                 # Faces to centers divergence
 # Plot sparse representation
 fig = plt.figure(figsize=(8, 5))
 
-Ax1 = fig.add_subplot(111)
-Ax1.spy(Mc*D, markersize=0.5)
-Ax1.set_title('Mc*D', pad=20)
+ax1 = fig.add_subplot(111)
+ax1.spy(Mc*D, markersize=0.5)
+ax1.set_title('Mc*D', pad=20)
 
 #####################################################
 # Curl
@@ -187,13 +187,13 @@ Cf = mesh.edgeCurl.T             # Faces to edges curl (assumes Dirichlet)
 # Plot Sparse Representation
 fig = plt.figure(figsize=(9, 5))
 
-Ax1 = fig.add_subplot(121)
-Ax1.spy(Mf*Ce, markersize=0.5)
-Ax1.set_title('Mf*Ce', pad=10)
+ax1 = fig.add_subplot(121)
+ax1.spy(Mf*Ce, markersize=0.5)
+ax1.set_title('Mf*Ce', pad=10)
 
-Ax2 = fig.add_subplot(122)
-Ax2.spy(Me*Cf, markersize=0.5)
-Ax2.set_title('Me*Cf', pad=10)
+ax2 = fig.add_subplot(122)
+ax2.spy(Me*Cf, markersize=0.5)
+ax2.set_title('Me*Cf', pad=10)
 
 
 ###########################################################
@@ -256,10 +256,10 @@ Gc = mesh.cellGrad            # Centers to faces gradient
 # Plot Sparse Representation
 fig = plt.figure(figsize=(9, 4))
 
-Ax1 = fig.add_subplot(121)
-Ax1.spy(Gn.T*Me*Gn, markersize=0.5)
-Ax1.set_title('Gn.T*Me*Gn', pad=5)
+ax1 = fig.add_subplot(121)
+ax1.spy(Gn.T*Me*Gn, markersize=0.5)
+ax1.set_title('Gn.T*Me*Gn', pad=5)
 
-Ax2 = fig.add_subplot(122)
-Ax2.spy(Gc.T*Mf*Gc, markersize=0.5)
-Ax2.set_title('Gc.T*Mf*Gc', pad=5)
+ax2 = fig.add_subplot(122)
+ax2.spy(Gc.T*Mf*Gc, markersize=0.5)
+ax2.set_title('Gc.T*Mf*Gc', pad=5)

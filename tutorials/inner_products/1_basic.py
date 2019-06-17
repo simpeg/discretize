@@ -120,17 +120,17 @@ phi_n = fcn_gaussian(mesh.gridN, mu, sig)
 
 # Define inner-product matricies
 Mc = sdiag(mesh.vol)  # cell-centered
-#Mn = mesh.getNodalInnerProduct()  # on nodes
+# Mn = mesh.getNodalInnerProduct()  # on nodes (*functionality pending*)
 
 # Compute the inner product
 ipt = 1/(2*sig*np.sqrt(np.pi))  # true value of (f, f)
 ipc = np.dot(phi_c, (Mc*phi_c))
-#ipn = np.dot(phi_n, (Mn*phi_n))
+# ipn = np.dot(phi_n, (Mn*phi_n)) (*functionality pending*)
 
 fig = plt.figure(figsize=(5, 5))
-Ax = fig.add_subplot(111)
-Ax.plot(mesh.gridCC, phi_c)
-Ax.set_title('phi at cell centers')
+ax = fig.add_subplot(111)
+ax.plot(mesh.gridCC, phi_c)
+ax.set_title('phi at cell centers')
 
 fig.show()
 
@@ -138,7 +138,7 @@ fig.show()
 print('ACCURACY')
 print('Analytic solution:    ', ipt)
 print('Cell-centered approx.:', ipc)
-#print('Nodal approx.:        ', ipn)
+# print('Nodal approx.:        ', ipn)
 
 
 #####################################################
@@ -203,10 +203,10 @@ ipt = np.pi*sig**2
 
 # Plot the vector function
 fig = plt.figure(figsize=(5, 5))
-Ax = fig.add_subplot(111)
-mesh.plotImage(v, ax=Ax, vType='F', view='vec',
+ax = fig.add_subplot(111)
+mesh.plotImage(v, ax=ax, vType='F', view='vec',
                streamOpts={'color': 'w', 'density': 1.0})
-Ax.set_title('v at cell faces')
+ax.set_title('v at cell faces')
 
 fig.show()
 
@@ -240,9 +240,9 @@ mesh = TensorMesh([h, h], 'CC')
 Mc = sdiag(mesh.vol)
 Mc_inv = sdiag(1/mesh.vol)
 
-# Nodes for scalar quantities
-#Mn = mesh.getNodalInnerProduct()
-#Mn_inv = mesh.getNodalInnerProduct(invMat=True)
+# Nodes for scalar quantities  (*functionality pending*)
+# Mn = mesh.getNodalInnerProduct()
+# Mn_inv = mesh.getNodalInnerProduct(invMat=True)
 
 # Edges for vector quantities
 Me = mesh.getEdgeInnerProduct()
@@ -260,13 +260,13 @@ vec_f = np.random.rand(mesh.nF)
 
 # Generate some random vectors
 norm_c = np.linalg.norm(phi_c - Mc_inv.dot(Mc.dot(phi_c)))
-#norm_n = np.linalg.norm(phi_n - Mn_inv*Mn*phi_n)
+# norm_n = np.linalg.norm(phi_n - Mn_inv*Mn*phi_n)
 norm_e = np.linalg.norm(vec_e - Me_inv*Me*vec_e)
 norm_f = np.linalg.norm(vec_f - Mf_inv*Mf*vec_f)
 
 # Verify accuracy
 print('ACCURACY')
 print('Norm for centers:', norm_c)
-#print('Norm for nodes:  ', norm_n)
+# print('Norm for nodes:  ', norm_n)
 print('Norm for edges:  ', norm_e)
 print('Norm for faces:  ', norm_f)

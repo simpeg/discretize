@@ -6,7 +6,7 @@ When solving PDEs using the finite volume approach, inner products may
 contain constitutive relations; examples include Ohm's law and Hooke's law.
 For this class of inner products, you will learn how to:
 
-    - Construct the inner-product matrix in the case of isotropic, linear and anisotropic constitutive relations
+    - Construct the inner-product matrix in the case of isotropic and anisotropic constitutive relations
     - Construct the inverse of the inner-product matrix
     - Work with constitutive relations defined by the reciprocal of a parameter
 
@@ -35,8 +35,8 @@ where the inner product matrix :math:`\\mathbf{M_\\sigma}` now depends on:
     2. where :math:`\\mathbf{v}` and :math:`\\mathbf{e}` live
     3. the spatial distribution of the property :math:`\\sigma`
 
-Constitutive relations may also be defined by a tensor (:math:`\\Sigma`). In
-this case, the constitutive relation is of the form:
+In the case of anisotropy, the constitutive relations are defined by a tensor
+(:math:`\\Sigma`). Here, the constitutive relation is of the form:
 
 .. math::
     \\vec{J} = \\Sigma \\vec{E}
@@ -88,14 +88,15 @@ import matplotlib.pyplot as plt
 # constitutive relationship is:
 # 
 #     - **isotropic:** :math:`\sigma_1 = \sigma_2 = \sigma_3 = \sigma` and :math:`\sigma_4 = \sigma_5 = \sigma_6 = 0`; e.g. :math:`\vec{J} = \sigma \vec{E}`
-#     - **linear:** independent parameters :math:`\sigma_1, \sigma_2, \sigma_3` and :math:`\sigma_4 = \sigma_5 = \sigma_6 = 0`
-#     - **anisotropic:** independent parameters :math:`\sigma_1, \sigma_2, \sigma_3, \sigma_4, \sigma_5, \sigma_6`
+#     - **diagonal anisotropic:** independent parameters :math:`\sigma_1, \sigma_2, \sigma_3` and :math:`\sigma_4 = \sigma_5 = \sigma_6 = 0`
+#     - **fully anisotropic:** independent parameters :math:`\sigma_1, \sigma_2, \sigma_3, \sigma_4, \sigma_5, \sigma_6`
 # 
 # When approximating the inner product according to the finite volume approach,
 # the constitutive parameters are defined at cell centers; even if the
-# fields/fluxes live at cell edges/faces. As we will see, the inner-product
-# matrix is diagonal in the linear case, but contains a significant number
-# of non-diagonal entries in the anisotropic case.
+# fields/fluxes live at cell edges/faces. As we will see, inner-product
+# matricies are generally diagonal; except for in the fully anisotropic case
+# where the inner product matrix contains a significant number of non-diagonal
+# entries.
 # 
 
 # Create a single 3D cell
@@ -111,13 +112,13 @@ sig_tensor_1 = np.diag(sig1*np.ones(3))
 Me1 = mesh.getEdgeInnerProduct(sig)  # Edges inner product matrix
 Mf1 = mesh.getFaceInnerProduct(sig)  # Faces inner product matrix
 
-# Linear case
+# Diagonal anisotropic
 sig = np.c_[sig1, sig2, sig3]
 sig_tensor_2 = np.diag(np.array([sig1, sig2, sig3]))
 Me2 = mesh.getEdgeInnerProduct(sig)
 Mf2 = mesh.getFaceInnerProduct(sig)
 
-# Anisotropic case
+# Full anisotropic
 sig = np.c_[sig1, sig2, sig3, sig4, sig5, sig6]
 sig_tensor_3 = np.diag(np.array([sig1, sig2, sig3]))
 sig_tensor_3[(0, 1), (1, 0)] = sig4
@@ -129,41 +130,41 @@ Mf3 = mesh.getFaceInnerProduct(sig)
 # Plotting matrix entries
 fig = plt.figure(figsize=(12, 12))
 
-Ax1 = fig.add_subplot(331)
-Ax1.imshow(sig_tensor_1)
-Ax1.set_title('Property Tensor (isotropic)')
+ax1 = fig.add_subplot(331)
+ax1.imshow(sig_tensor_1)
+ax1.set_title('Property Tensor (isotropic)')
 
-Ax2 = fig.add_subplot(332)
-Ax2.imshow(sig_tensor_2)
-Ax2.set_title('Property Tensor (linear)')
+ax2 = fig.add_subplot(332)
+ax2.imshow(sig_tensor_2)
+ax2.set_title('Property Tensor (diagonal anisotropic)')
 
-Ax3 = fig.add_subplot(333)
-Ax3.imshow(sig_tensor_3)
-Ax3.set_title('Property Tensor (anisotropic)')
+ax3 = fig.add_subplot(333)
+ax3.imshow(sig_tensor_3)
+ax3.set_title('Property Tensor (full anisotropic)')
 
-Ax4 = fig.add_subplot(334)
-Ax4.imshow(Mf1.todense())
-Ax4.set_title('M-faces Matrix (isotropic)')
+ax4 = fig.add_subplot(334)
+ax4.imshow(Mf1.todense())
+ax4.set_title('M-faces Matrix (isotropic)')
 
-Ax5 = fig.add_subplot(335)
-Ax5.imshow(Mf2.todense())
-Ax5.set_title('M-faces Matrix (linear)')
+ax5 = fig.add_subplot(335)
+ax5.imshow(Mf2.todense())
+ax5.set_title('M-faces Matrix (diagonal anisotropic)')
 
-Ax6 = fig.add_subplot(336)
-Ax6.imshow(Mf3.todense())
-Ax6.set_title('M-faces Matrix (anisotropic)')
+ax6 = fig.add_subplot(336)
+ax6.imshow(Mf3.todense())
+ax6.set_title('M-faces Matrix (full anisotropic)')
 
-Ax7 = fig.add_subplot(337)
-Ax7.imshow(Me1.todense())
-Ax7.set_title('M-edges Matrix (isotropic)')
+ax7 = fig.add_subplot(337)
+ax7.imshow(Me1.todense())
+ax7.set_title('M-edges Matrix (isotropic)')
 
-Ax8 = fig.add_subplot(338)
-Ax8.imshow(Me2.todense())
-Ax8.set_title('M-edges Matrix (linear)')
+ax8 = fig.add_subplot(338)
+ax8.imshow(Me2.todense())
+ax8.set_title('M-edges Matrix (diagonal anisotropic)')
 
-Ax9 = fig.add_subplot(339)
-Ax9.imshow(Me3.todense())
-Ax9.set_title('M-edges Matrix (anisotropic)')
+ax9 = fig.add_subplot(339)
+ax9.imshow(Me3.todense())
+ax9.set_title('M-edges Matrix (full anisotropic)')
 
 
 #############################################################
@@ -221,14 +222,14 @@ print('- Number non-zero (anisotropic):', str(Me3.nnz), '\n')
 # the inverse of the inner-product matrix. Here we show how to call this
 # using the *invMat* keyword argument.
 #
-# For the isotropic and linear cases, the inner product matrix is diagonal.
-# As a result, its inverse can be easily formed. For the anisotropic case
-# however, we cannot expicitly form the inverse because the inner product
-# matrix contains a significant number of off-diagonal elements.
+# For the isotropic and diagonally anisotropic cases, the inner product matrix
+# is diagonal. As a result, its inverse can be easily formed. For the full
+# anisotropic case however, we cannot expicitly form the inverse because the
+# inner product matrix contains a significant number of off-diagonal elements.
 #
-# For the isotropic case, we form M_inv and apply it to a vector using
-# the :math:`*` operator. For the anisotropic case, we must form the
-# inner product matrix and do a numerical solve.
+# For the isotropic case, we form :math:\mathbf{M}^{-1} and apply it to a
+# vector using the :math:`*` operator. For the anisotropic case, we must form
+# the inner product matrix and do a numerical solve.
 #
 
 # Create a small 3D mesh
@@ -240,12 +241,12 @@ sig = np.random.rand(mesh.nC)
 Me1_inv = mesh.getEdgeInnerProduct(sig, invMat=True)
 Mf1_inv = mesh.getFaceInnerProduct(sig, invMat=True)
 
-# Linear case: (nC, dim) numpy array
+# Diagonal anisotropic: (nC, dim) numpy array
 sig = np.random.rand(mesh.nC, mesh.dim)
 Me2_inv = mesh.getEdgeInnerProduct(sig, invMat=True)
 Mf2_inv = mesh.getFaceInnerProduct(sig, invMat=True)
 
-# Anisotropic case: (nC, 3) for 2D and (nC, 6) for 3D
+# Full anisotropic: (nC, 3) for 2D and (nC, 6) for 3D
 sig = np.random.rand(mesh.nC, 6)
 Me3 = mesh.getEdgeInnerProduct(sig)
 Mf3 = mesh.getFaceInnerProduct(sig)
@@ -319,12 +320,12 @@ rho = rho1*np.ones((1, 1))
 Me1 = mesh.getEdgeInnerProduct(rho, invProp=True)  # Edges inner product matrix
 Mf1 = mesh.getFaceInnerProduct(rho, invProp=True)  # Faces inner product matrix
 
-# Linear case
+# Diagonal anisotropic case
 rho = np.c_[rho1, rho2, rho3]
 Me2 = mesh.getEdgeInnerProduct(rho, invProp=True)
 Mf2 = mesh.getFaceInnerProduct(rho, invProp=True)
 
-# Anisotropic case
+# Full anisotropic case
 rho = np.c_[rho1, rho2, rho3, rho4, rho5, rho6]
 Me3 = mesh.getEdgeInnerProduct(rho, invProp=True)
 Mf3 = mesh.getFaceInnerProduct(rho, invProp=True)
@@ -332,26 +333,26 @@ Mf3 = mesh.getFaceInnerProduct(rho, invProp=True)
 # Plotting matrix entries
 fig = plt.figure(figsize=(14, 9))
 
-Ax1 = fig.add_subplot(231)
-Ax1.imshow(Mf1.todense())
-Ax1.set_title('Isotropic (Faces)')
+ax1 = fig.add_subplot(231)
+ax1.imshow(Mf1.todense())
+ax1.set_title('Isotropic (Faces)')
 
-Ax2 = fig.add_subplot(232)
-Ax2.imshow(Mf2.todense())
-Ax2.set_title('Linear (Faces)')
+ax2 = fig.add_subplot(232)
+ax2.imshow(Mf2.todense())
+ax2.set_title('Diagonal Anisotropic (Faces)')
 
-Ax3 = fig.add_subplot(233)
-Ax3.imshow(Mf3.todense())
-Ax3.set_title('Anisotropic (Faces)')
+ax3 = fig.add_subplot(233)
+ax3.imshow(Mf3.todense())
+ax3.set_title('Full Anisotropic (Faces)')
 
-Ax4 = fig.add_subplot(234)
-Ax4.imshow(Me1.todense())
-Ax4.set_title('Isotropic (Edges)')
+ax4 = fig.add_subplot(234)
+ax4.imshow(Me1.todense())
+ax4.set_title('Isotropic (Edges)')
 
-Ax5 = fig.add_subplot(235)
-Ax5.imshow(Me2.todense())
-Ax5.set_title('Linear (Edges)')
+ax5 = fig.add_subplot(235)
+ax5.imshow(Me2.todense())
+ax5.set_title('Diagonal Anisotropic (Edges)')
 
-Ax6 = fig.add_subplot(236)
-Ax6.imshow(Me3.todense())
-Ax6.set_title('Anisotropic (Edges)')
+ax6 = fig.add_subplot(236)
+ax6.imshow(Me3.todense())
+ax6.set_title('Full Anisotropic (Edges)')

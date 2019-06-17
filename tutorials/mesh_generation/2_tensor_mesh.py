@@ -72,20 +72,23 @@ exp_x = 1.25  # expansion rate of padding cells in x
 exp_y = 1.25  # expansion rate of padding cells in y
 
 # Use a list of tuples to define cell widths in each direction. Each tuple
-# contains the cell with, number of cells and the expansion factor (+ve/-ve).
+# contains the cell with, number of cells and the expansion factor. A
+# negative sign is used to indicate an interval where cells widths go
+# from largest to smallest.
 hx = [(dx, npad_x, -exp_x), (dx, ncx), (dx, npad_x, exp_x)]
 hy = [(dy, npad_y, -exp_y), (dy, ncy), (dy, npad_y, exp_y)]
 
-# We can use flags 'C', '0' and 'N' to define the xyz position of the mesh.
+# We can use flags 'C', '0' and 'N' to shift the xyz position of the mesh
+# relative to the origin
 mesh = TensorMesh([hx, hy], x0='CN')
 
 # We can apply the plotGrid method and output to a specified axes object
-Fig = plt.figure(figsize=(6, 6))
-Ax = Fig.add_subplot(111)
-mesh.plotGrid(ax=Ax)
-Ax.set_xbound(mesh.x0[0], mesh.x0[0]+np.sum(mesh.hx))
-Ax.set_ybound(mesh.x0[1], mesh.x0[1]+np.sum(mesh.hy))
-Ax.set_title('Tensor Mesh')
+fig = plt.figure(figsize=(6, 6))
+ax = fig.add_subplot(111)
+mesh.plotGrid(ax=ax)
+ax.set_xbound(mesh.x0[0], mesh.x0[0]+np.sum(mesh.hx))
+ax.set_ybound(mesh.x0[1], mesh.x0[1]+np.sum(mesh.hy))
+ax.set_title('Tensor Mesh')
 
 ###############################################
 # Extracting Mesh Properties
@@ -124,12 +127,12 @@ bInd = mesh.cellBoundaryInd
 # Plot the cell areas (2D "volume")
 s = mesh.vol
 
-Fig = plt.figure(figsize=(6, 6))
-Ax = Fig.add_subplot(111)
-mesh.plotImage(s, grid=True, ax=Ax)
-Ax.set_xbound(mesh.x0[0], mesh.x0[0]+np.sum(mesh.hx))
-Ax.set_ybound(mesh.x0[1], mesh.x0[1]+np.sum(mesh.hy))
-Ax.set_title('Cell Areas')
+fig = plt.figure(figsize=(6, 6))
+ax = fig.add_subplot(111)
+mesh.plotImage(s, grid=True, ax=ax)
+ax.set_xbound(mesh.x0[0], mesh.x0[0]+np.sum(mesh.hx))
+ax.set_ybound(mesh.x0[1], mesh.x0[1]+np.sum(mesh.hy))
+ax.set_title('Cell Areas')
 
 
 ###############################################
@@ -164,13 +167,13 @@ bInd = mesh.cellBoundaryInd
 v = mesh.vol
 
 # Plot all cells volumes or plot cell volumes for a particular horizontal slice
-Fig = plt.figure(figsize=(9, 4))
-Ax1 = Fig.add_subplot(121)
-Ax2 = Fig.add_subplot(122)
+fig = plt.figure(figsize=(9, 4))
+ax1 = fig.add_subplot(121)
+ax2 = fig.add_subplot(122)
 
-mesh.plotImage(np.log10(v), grid=True, ax=Ax1)
-Ax1.set_title('All Cell Log-Volumes')
+mesh.plotImage(np.log10(v), grid=True, ax=ax1)
+ax1.set_title('All Cell Log-Volumes')
 
-cplot = mesh.plotSlice(np.log10(v), grid=True, ax=Ax2, normal='Z', ind=2)
+cplot = mesh.plotSlice(np.log10(v), grid=True, ax=ax2, normal='Z', ind=2)
 cplot[0].set_clim(np.min(np.log10(v)), np.max(np.log10(v)))
-Ax2.set_title('Cell Log-Volumes #2')
+ax2.set_title('Cell Log-Volumes #2')

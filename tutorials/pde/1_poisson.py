@@ -130,15 +130,15 @@ E = Mf_inv*DIV.T*Mc*phi
 # Plotting
 fig = plt.figure(figsize=(14, 4))
 
-Ax1 = fig.add_subplot(131)
-mesh.plotImage(rho, vType='CC', ax=Ax1)
-Ax1.set_title('Charge Density')
+ax1 = fig.add_subplot(131)
+mesh.plotImage(rho, vType='CC', ax=ax1)
+ax1.set_title('Charge Density')
 
-Ax2 = fig.add_subplot(132)
-mesh.plotImage(phi, vType='CC', ax=Ax2)
-Ax2.set_title('Electric Potential')
+ax2 = fig.add_subplot(132)
+mesh.plotImage(phi, vType='CC', ax=ax2)
+ax2.set_title('Electric Potential')
 
-Ax3 = fig.add_subplot(133)
-mesh.plotImage(E, ax=Ax3, vType='F', view='vec',
+ax3 = fig.add_subplot(133)
+mesh.plotImage(E, ax=ax3, vType='F', view='vec',
                streamOpts={'color': 'w', 'density': 1.0})
-Ax3.set_title('Electric Fields')
+ax3.set_title('Electric Fields')
