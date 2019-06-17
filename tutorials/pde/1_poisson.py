@@ -34,18 +34,21 @@ function, thus:
 .. math::
     \\int_\\Omega \\psi (\\nabla \\cdot \\mathbf{E}) dV = \\frac{1}{\\epsilon_0} \\psi \\, q
 
-where :math:`q=\\rho_0` at the location of the positive charge and
-:math:`q=-\\rho_0` at the location of the negative charge. By applying the
-finite volume approach to this expression we obtain:
+where :math:`q` represents an integrated charge density. By applying the finite
+volume approach to this expression we obtain:
 
 .. math::
     \\mathbf{\\psi^T M_c D e} = \\frac{1}{\\epsilon_0} \\mathbf{\\psi^T q}
 
-where :math:`\mathbf{\psi}` and :math:`\mathbf{q}` live at cell centers and
-:math:`\mathbf{e}` lives on cell faces. :math:`\mathbf{q}` is a sparse vector
-that only contains non-zero values for cells containing point charges.
-:math:`\mathbf{D}` is the discrete divergence operator. :math:`\\mathbf{M_c}`
-is an inner product matrix for cell centered quantities.
+where :math:`\mathbf{q}` denotes the total enclosed charge for each cell. Thus
+:math:`\mathbf{q_i}=\\rho_0` for the cell containing the positive charge and
+:math:`\mathbf{q_i}=-\\rho_0` for the cell containing the negative charge. It
+is zero for every other cell. 
+
+:math:`\mathbf{\psi}` and :math:`\mathbf{q}` live at cell centers and
+:math:`\mathbf{e}` lives on cell faces. :math:`\mathbf{D}` is the discrete
+divergence operator. :math:`\\mathbf{M_c}` is an inner product matrix for cell
+centered quantities.
 
 For the second weak form equation, we make use of the divergence theorem as
 follows:
