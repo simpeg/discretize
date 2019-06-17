@@ -73,7 +73,6 @@ Once again we would like to approximate the inner product numerically using an
 # Here we import the packages required for this tutorial
 #
 
-from discretize.utils.matutils import sdiag
 from discretize import TensorMesh
 import numpy as np
 import matplotlib.pyplot as plt
@@ -227,9 +226,10 @@ print('- Number non-zero (anisotropic):', str(Me3.nnz), '\n')
 # anisotropic case however, we cannot expicitly form the inverse because the
 # inner product matrix contains a significant number of off-diagonal elements.
 #
-# For the isotropic case, we form :math:\mathbf{M}^{-1} and apply it to a
-# vector using the :math:`*` operator. For the anisotropic case, we must form
-# the inner product matrix and do a numerical solve.
+# For the isotropic and diagonal anisotropic cases we can form
+# :math:`\mathbf{M}^{-1}` then apply it to a vector using the :math:`*`
+# operator. For the full anisotropic case, we must form the inner product
+# matrix and do a numerical solve.
 #
 
 # Create a small 3D mesh
@@ -274,38 +274,38 @@ Mf3 = mesh.getFaceInnerProduct(sig)
 #     (\vec{v}, \rho^{-1} \vec{E} ) = \int_\Omega \vec{v} \cdot \rho^{-1} \vec{E} \, dv
 #
 # where the inner product is approximated using an inner product matrix
-# :math:`\mathbf{M_\rho}` as follows:
+# :math:`\mathbf{M_{\rho^{-1}}}` as follows:
 #
 # .. math::
-#     (\vec{v}, \rho^{-1} \vec{E} ) \approx \mathbf{v^T M_\rho e}
+#     (\vec{v}, \rho^{-1} \vec{E} ) \approx \mathbf{v^T M_{\rho^{-1}} e}
 #
-# In the case that the constitutive relation is defined by the inverse of a
-# tensor :math:`\Gamma`, e.g.:
+# In the case that the constitutive relation is defined by a
+# tensor :math:`P`, e.g.:
 #
 # .. math::
-#     \vec{J} = \Gamma^{-1} \vec{E}
+#     \vec{J} = P \vec{E}
 #
 # where
 #
 # .. math::
-#     \Gamma = \begin{bmatrix} \rho_{1} & \rho_{4} & \rho_{5} \\
-#     \rho_{4} & \rho_{2} & \rho_{6} \\
-#     \rho_{5} & \rho_{6} & \rho_{3} \end{bmatrix}
+#     P = \begin{bmatrix} \rho_{1}^{-1} & \rho_{4}^{-1} & \rho_{5}^{-1} \\
+#     \rho_{4}^{-1} & \rho_{2}^{-1} & \rho_{6}^{-1} \\
+#     \rho_{5}^{-1} & \rho_{6}^{-1} & \rho_{3}^{-1} \end{bmatrix}
 #
 # The inner product between a vector :math:`\vec{v}` and the right-hand side of
 # this expression is given by:
 #
 # .. math::
-#     (\vec{v}, \Gamma^{-1} \vec{E} ) = \int_\Omega \vec{v} \cdot \Gamma^{-1} \vec{E}  \, dv
+#     (\vec{v}, P \vec{E} ) = \int_\Omega \vec{v} \cdot P \vec{E}  \, dv
 #
 # Once again we would like to approximate the inner product numerically using an
-# *inner-product matrix* :math:`\mathbf{M_\Gamma}` such that:
+# *inner-product matrix* :math:`\mathbf{M_P}` such that:
 #
 # .. math::
-#     (\vec{v}, \Gamma^{-1} \vec{E} ) \approx \mathbf{v^T M_\Gamma e}
+#     (\vec{v}, P \vec{E} ) \approx \mathbf{v^T M_P e}
 #
 # Here we demonstrate how to form the inner-product matricies
-# :math:`\mathbf{M_\rho}` and :math:`\mathbf{M_\Gamma}`.
+# :math:`\mathbf{M_{\rho^{-1}}}` and :math:`\mathbf{M_P}`.
 #
 
 # Create a small 3D mesh

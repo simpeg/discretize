@@ -31,7 +31,7 @@ boundary conditions.
 # Here we import the packages required for this tutorial
 #
 
-from discretize.utils.matutils import sdiag
+from discretize.utils import sdiag
 from discretize import TensorMesh
 import numpy as np
 import matplotlib.pyplot as plt

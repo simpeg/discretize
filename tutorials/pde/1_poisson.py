@@ -92,7 +92,7 @@ from discretize import TensorMesh
 from pymatsolver import SolverLU
 import matplotlib.pyplot as plt
 import numpy as np
-from discretize.utils.matutils import sdiag
+from discretize.utils import sdiag
 
 
 ###############################################

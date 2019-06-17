@@ -45,7 +45,7 @@ inner-product matrix in this case:
     2. It depends on where the discrete variables live; e.g. edges, faces, nodes, centers
 
 For this simple class of inner products, the inner product matricies for
-discrete quantities living on varioud parts of the mesh have the form:
+discrete quantities living on various parts of the mesh have the form:
 
 .. math::
     \\textrm{Centers:} \\; \\mathbf{M_c} &= \\textrm{diag} (\\mathbf{v} ) \n
@@ -69,7 +69,7 @@ to cell centers.
 # Here we import the packages required for this tutorial
 #
 
-from discretize.utils.matutils import sdiag
+from discretize.utils import sdiag
 from discretize import TensorMesh
 import matplotlib.pyplot as plt
 import numpy as np
