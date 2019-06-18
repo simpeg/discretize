@@ -43,7 +43,7 @@ volume approach to this expression we obtain:
 where :math:`\mathbf{q}` denotes the total enclosed charge for each cell. Thus
 :math:`\mathbf{q_i}=\\rho_0` for the cell containing the positive charge and
 :math:`\mathbf{q_i}=-\\rho_0` for the cell containing the negative charge. It
-is zero for every other cell. 
+is zero for every other cell.
 
 :math:`\mathbf{\psi}` and :math:`\mathbf{q}` live at cell centers and
 :math:`\mathbf{e}` lives on cell faces. :math:`\mathbf{D}` is the discrete

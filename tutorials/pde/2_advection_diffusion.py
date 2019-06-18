@@ -53,7 +53,7 @@ and apply the divergence theorem we obtain:
     \int_\\Omega \\psi \\, p_t \\, dv =
     \\alpha \int_{\\partial \\Omega} \\mathbf{n} & \\cdot ( \\psi \\nabla p ) \\, da
     - \\alpha \int_\\Omega (\\nabla \\psi ) \\cdot (\\nabla p ) \\, dv \n
-    &- \int_{\\partial \\Omega} \\mathbf{n} \\cdot ( \\psi p ) \\, da
+    &- \int_{\\partial \\Omega} \\mathbf{n} \\cdot ( \\psi p \\mathbf{u}) \\, da
     + \int_\\Omega \\big ( \\nabla \\cdot (\mathbf{u} \\, \\psi ) \\big) \\, p dv
     + \\psi \\, q
 
@@ -69,8 +69,9 @@ the inner products according to the finite volume approach we obtain:
 
 where :math:`\\mathbf{\\psi}`, :math:`\\mathbf{p}` and :math:`\\mathbf{p_t}`
 live at cell centers and :math:`\\mathbf{u}` lives on faces. :math:`\\mathbf{D}`
-is the discrete divergence operator. :math:`\\mathbf{M_c}` and
-:math:`\\mathbf{M_f}` are the cell center and face inner product matricies,
+is the discrete divergence operator. :math:`\\mathbf{G}`
+is the discrete gradient operator. :math:`\\mathbf{M_c}` and
+:math:`\\mathbf{M_f}` are the cell center and cell faces inner product matricies,
 respectively. :math:`\\mathbf{A_{cf}}` averages from cell centers to cell
 faces.
 
