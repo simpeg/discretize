@@ -365,18 +365,25 @@ def checkDerivative(fctn, x0, num=7, plotIt=True, dx=None, expectedOrder=2, tole
 
 
     @requires({'matplotlib': matplotlib})
-    if plotIt:
-        ax = ax or plt.subplot(111)
-        ax.loglog(h, E0, 'b')
-        ax.loglog(h, E1, 'g--')
-        ax.set_title('Check Derivative - {0!s}'.format(('PASSED :)' if passTest else 'FAILED :(')))
-        ax.set_xlabel('h')
-        ax.set_ylabel('Error')
-        leg = ax.legend(['$\mathcal{O}(h)$', '$\mathcal{O}(h^2)$'], loc='best',
-            title="$f(x + h\Delta x) - f(x) - h g(x) \Delta x - \mathcal{O}(h^2) = 0$",
-            frameon=False)
-        plt.setp(leg.get_title(),fontsize=15)
-        plt.show()
+    def plot_it():
+        if plotIt:
+            ax = ax or plt.subplot(111)
+            ax.loglog(h, E0, 'b')
+            ax.loglog(h, E1, 'g--')
+            ax.set_title(
+                'Check Derivative - {0!s}'.format(('PASSED :)'
+                if passTest else 'FAILED :('))
+            )
+            ax.set_xlabel('h')
+            ax.set_ylabel('Error')
+            leg = ax.legend(
+                ['$\mathcal{O}(h)$', '$\mathcal{O}(h^2)$'], loc='best',
+                title="$f(x + h\Delta x) - f(x) - h g(x) \Delta x - \mathcal{O}(h^2) = 0$",
+                frameon=False)
+            plt.setp(leg.get_title(),fontsize=15)
+            plt.show()
+
+    plot_it()
 
     return passTest
 
