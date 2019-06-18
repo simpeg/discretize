@@ -77,7 +77,7 @@ obtained by computing:
 
 .. math::
     \mathbf{e} = \\mathbf{M_f^{-1} D^T M_c \\phi}
-
+    
 
 
 """

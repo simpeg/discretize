@@ -47,30 +47,32 @@ where :math:`q=s_0` at the location of either point source and zero everywhere
 else. In the weak formulation, we generally remove divergence terms. If we use
 the identity
 :math:`\\phi \\nabla \\cdot \\mathbf{a} = \\nabla \\cdot (\\phi \\mathbf{a}) - \\mathbf{a} \\cdot (\\nabla \\phi )`
-on the diffusion term and apply the divergence theorem we obtain:
+and apply the divergence theorem we obtain:
 
 .. math::
     \int_\\Omega \\psi \\, p_t \\, dv =
-    \\alpha \int_{\\partial \\Omega} \\mathbf{n} \\cdot ( \\psi \\nabla p ) \\, da
-    - \\alpha \int_\\Omega (\\nabla \\psi ) \\cdot (\\nabla p ) \\, dv
-    - \int_\\Omega (\\psi \\, \mathbf{u} ) \\cdot \\nabla p dv
+    \\alpha \int_{\\partial \\Omega} \\mathbf{n} & \\cdot ( \\psi \\nabla p ) \\, da
+    - \\alpha \int_\\Omega (\\nabla \\psi ) \\cdot (\\nabla p ) \\, dv \n
+    &- \int_{\\partial \\Omega} \\mathbf{n} \\cdot ( \\psi p ) \\, da
+    + \int_\\Omega \\big ( \\nabla \\cdot (\mathbf{u} \\, \\psi ) \\big) \\, p dv
     + \\psi \\, q
 
 Since the flux on the faces is zero at the boundaries, we can eliminate
-the first term on the right-hand side. By evaluating the inner products
-according to the finite volume approach we obtain:
+the first term on the right-hand side. By defining :math:`\\mathbf{n \\cdot u} = 0`
+on the boundary, the third term on the right-hand side is zero. By evaluating
+the inner products according to the finite volume approach we obtain:
 
 .. math::
     \\mathbf{\\psi^T M_c p_t} = - \\alpha \\mathbf{\\psi^T G^T M_f G \\, p}
-    - \\mathbf{\\psi^T M_c \\tilde{A}_{fc}} \\textrm{diag} ( \\mathbf{u} ) \\mathbf{G \\, p}
+    + \\mathbf{\\psi^T A_{cf}^T} \\textrm{diag} ( \\mathbf{u} ) \\mathbf{D^T \\, M_c \\, p}
     + \\mathbf{\\psi^T M_c s}
 
 where :math:`\\mathbf{\\psi}`, :math:`\\mathbf{p}` and :math:`\\mathbf{p_t}`
-live at cell centers and :math:`\\mathbf{u}` lives on faces. :math:`\\mathbf{G}`
-is the discrete gradient operators. :math:`\\mathbf{M_c}` and
+live at cell centers and :math:`\\mathbf{u}` lives on faces. :math:`\\mathbf{D}`
+is the discrete divergence operator. :math:`\\mathbf{M_c}` and
 :math:`\\mathbf{M_f}` are the cell center and face inner product matricies,
-respectively. :math:`\\mathbf{\\tilde{A}_{cf}}` averages the x, y and z
-contributions of :math:`\\mathbf{u} \\cdot \\nabla p` to cell centers and sums them.
+respectively. :math:`\\mathbf{A_{cf}}` averages from cell centers to cell
+faces.
 
 By eliminating :math:`\\psi^T` and multiplying both sides by
 :math:`\\mathbf{M_c^{-1}}` we obtain:
@@ -82,7 +84,7 @@ where
 
 .. math::
     \\mathbf{M} = \\alpha \\mathbf{M_c^{-1} G^T M_f G}
-    + \\mathbf{A_{fc}} \\textrm{diag}(\\mathbf{u}) \\mathbf{G}
+    - \\mathbf{M_c^{-1} A_{cf}^T} \\textrm{diag}(\\mathbf{u}) \\mathbf{D^T M_c}
 
 For the example, we will discretize in time using backward Euler. This results
 in the following system which must be solve at every time step :math:`k`.
@@ -92,7 +94,6 @@ Where :math:`\\Delta t` is the step size:
     \\big [ \\mathbf{I} + \\Delta t \\, \\mathbf{M} \\big ] \\mathbf{p}^{k+1} =
     \\mathbf{p}^k + \\Delta t \\, \\mathbf{s}
     
-
 
 """
 
@@ -125,7 +126,7 @@ a = 25
 
 # Define velocity vector u = [ux, uy] = [1, -1] on faces
 ux = 10*np.ones((mesh.nFx))
-uy = - 10*np.ones((mesh.nFy))
+uy = 0*np.ones((mesh.nFy))
 u = np.r_[ux, uy]
 
 # Define source term diag(v)*s
@@ -138,14 +139,16 @@ s[k1] = 10
 s[k2] = 10
 
 # Define system M
-Afc = mesh.dim*mesh.aveF2CC
+Acf = mesh.aveCC2F
 Mc_inv = sdiag(1/mesh.vol)
+Mc = sdiag(mesh.vol)
 Mf = mesh.getFaceInnerProduct()
 
 mesh.setCellGradBC(['neumann', 'neumann'])  # Set Neumann BC
 G = mesh.cellGrad
+D = mesh.faceDiv
 
-M = a*Mc_inv*G.T*Mf*G + Afc*sdiag(u)*G
+M = a*Mc_inv*G.T*Mf*G - Mc_inv*Acf.T*sdiag(u)*D.T*Mc
 
 # Set time stepping, initial conditions and final matricies
 dt = 0.02              # Step width
@@ -162,11 +165,11 @@ fig = plt.figure(figsize=(14, 4))
 ax = 3*[None]
 n = 0
 
-for ii in range(250):
+for ii in range(100):
 
     p = Binv*(p + s)
 
-    if ii+1 in (1, 25, 250):
+    if ii+1 in (1, 25, 100):
         ax[n] = fig.add_subplot(1, 3, n+1)
         mesh.plotImage(p, vType='CC', ax=ax[n])
         title_str = 'p at t = ' + str((ii+1)*dt) + ' s'
