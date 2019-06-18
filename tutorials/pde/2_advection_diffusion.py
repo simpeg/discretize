@@ -125,9 +125,9 @@ mesh = TensorMesh([h, h], 'CC')
 # Define diffusivity constant
 a = 25
 
-# Define velocity vector u = [ux, uy] = [1, -1] on faces
+# Define velocity vector u = [ux, uy] = [10, 0] on faces
 ux = 10*np.ones((mesh.nFx))
-uy = 0*np.ones((mesh.nFy))
+uy = np.zeros((mesh.nFy))
 u = np.r_[ux, uy]
 
 # Define source term diag(v)*s
