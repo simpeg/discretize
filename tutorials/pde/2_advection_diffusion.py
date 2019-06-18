@@ -53,8 +53,8 @@ and apply the divergence theorem we obtain:
     \int_\\Omega \\psi \\, p_t \\, dv =
     \\alpha \int_{\\partial \\Omega} \\mathbf{n} & \\cdot ( \\psi \\nabla p ) \\, da
     - \\alpha \int_\\Omega (\\nabla \\psi ) \\cdot (\\nabla p ) \\, dv \n
-    &- \int_{\\partial \\Omega} \\mathbf{n} \\cdot ( \\psi p \\mathbf{u}) \\, da
-    + \int_\\Omega \\big ( \\nabla \\cdot (\mathbf{u} \\, \\psi ) \\big) \\, p dv
+    &- \int_{\\partial \\Omega} \\mathbf{n} \\cdot ( \\psi \\, p \\, \\mathbf{u}) \\, da
+    + \int_\\Omega \\big ( \\nabla \\cdot (\mathbf{u} \\, \\psi ) \\big) \\, p \\, dv
     + \\psi \\, q
 
 Since the flux on the faces is zero at the boundaries, we can eliminate
@@ -64,7 +64,7 @@ the inner products according to the finite volume approach we obtain:
 
 .. math::
     \\mathbf{\\psi^T M_c p_t} = - \\alpha \\mathbf{\\psi^T G^T M_f G \\, p}
-    + \\mathbf{\\psi^T A_{cf}^T} \\textrm{diag} ( \\mathbf{u} ) \\mathbf{D^T \\, M_c \\, p}
+    + \\mathbf{\\psi^T A_{cf}^T} \\, \\textrm{diag} ( \\mathbf{u} ) \\mathbf{D^T \\, M_c \\, p}
     + \\mathbf{\\psi^T M_c s}
 
 where :math:`\\mathbf{\\psi}`, :math:`\\mathbf{p}` and :math:`\\mathbf{p_t}`
@@ -85,7 +85,7 @@ where
 
 .. math::
     \\mathbf{M} = \\alpha \\mathbf{M_c^{-1} G^T M_f G}
-    - \\mathbf{M_c^{-1} A_{cf}^T} \\textrm{diag}(\\mathbf{u}) \\mathbf{D^T M_c}
+    - \\mathbf{M_c^{-1} A_{cf}^T} \\, \\textrm{diag}(\\mathbf{u}) \\mathbf{D^T M_c}
 
 For the example, we will discretize in time using backward Euler. This results
 in the following system which must be solve at every time step :math:`k`.
