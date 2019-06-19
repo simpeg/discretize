@@ -71,6 +71,32 @@ class InnerProducts(object):
         """
         return self._getInnerProduct('E', prop=prop, invProp=invProp, invMat=invMat, doFast=doFast)
 
+    def getNodalInnerProduct(self, prop=None, invProp=False, invMat=False, doFast=True):
+        """Generate the face inner product matrix
+
+        Parameters
+        ----------
+        prop : numpy.ndarray
+            material property (tensor properties are NOT possible) at each cell center (nC, 1)
+
+        invProp : bool
+            inverts the material property
+
+        invMat : bool
+            inverts the matrix
+
+        doFast : bool
+            do a faster implementation if available.
+
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            M, the inner product matrix (nF, nF)
+
+        """
+        return self._getInnerProduct('N', prop=prop, invProp=invProp, invMat=invMat, doFast=doFast)
+
     def _getInnerProduct(self, projType, prop=None, invProp=False, invMat=False, doFast=True):
         """get the inner product matrix
 
@@ -78,7 +104,7 @@ class InnerProducts(object):
         ----------
 
         str : projType
-            'F' for faces 'E' for edges
+            'F' for faces 'E' for edges 'N' for nodes
 
         numpy.ndarray : prop
             material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
@@ -100,13 +126,16 @@ class InnerProducts(object):
             M, the inner product matrix (nE, nE)
 
         """
-        assert projType in ['F', 'E'], "projType must be 'F' for faces or 'E' for edges"
+        assert projType in ['F', 'E', 'N'], "projType must be 'F' for faces or 'E' for edges"
 
         fast = None
         if hasattr(self, '_fastInnerProduct') and doFast:
             fast = self._fastInnerProduct(projType, prop=prop, invProp=invProp, invMat=invMat)
         if fast is not None:
             return fast
+
+        if (projType is 'N') & (doFast is False):
+            raise InputError("Only fast approximation of inner product matrix available for nodes")
 
         if invProp:
             prop = invPropertyTensor(self, prop)

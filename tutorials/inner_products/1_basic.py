@@ -120,12 +120,12 @@ phi_n = fcn_gaussian(mesh.gridN, mu, sig)
 
 # Define inner-product matricies
 Mc = sdiag(mesh.vol)  # cell-centered
-# Mn = mesh.getNodalInnerProduct()  # on nodes (*functionality pending*)
+Mn = mesh.getNodalInnerProduct()  # on nodes
 
 # Compute the inner product
 ipt = 1/(2*sig*np.sqrt(np.pi))  # true value of (f, f)
 ipc = np.dot(phi_c, (Mc*phi_c))
-# ipn = np.dot(phi_n, (Mn*phi_n)) (*functionality pending*)
+ipn = np.dot(phi_n, (Mn*phi_n))
 
 fig = plt.figure(figsize=(5, 5))
 ax = fig.add_subplot(111)
@@ -138,7 +138,7 @@ fig.show()
 print('ACCURACY')
 print('Analytic solution:    ', ipt)
 print('Cell-centered approx.:', ipc)
-# print('Nodal approx.:        ', ipn)
+print('Nodal approx.:        ', ipn)
 
 
 #####################################################
@@ -241,8 +241,8 @@ Mc = sdiag(mesh.vol)
 Mc_inv = sdiag(1/mesh.vol)
 
 # Nodes for scalar quantities  (*functionality pending*)
-# Mn = mesh.getNodalInnerProduct()
-# Mn_inv = mesh.getNodalInnerProduct(invMat=True)
+Mn = mesh.getNodalInnerProduct()
+Mn_inv = mesh.getNodalInnerProduct(invMat=True)
 
 # Edges for vector quantities
 Me = mesh.getEdgeInnerProduct()
@@ -260,13 +260,13 @@ vec_f = np.random.rand(mesh.nF)
 
 # Generate some random vectors
 norm_c = np.linalg.norm(phi_c - Mc_inv.dot(Mc.dot(phi_c)))
-# norm_n = np.linalg.norm(phi_n - Mn_inv*Mn*phi_n)
+norm_n = np.linalg.norm(phi_n - Mn_inv*Mn*phi_n)
 norm_e = np.linalg.norm(vec_e - Me_inv*Me*vec_e)
 norm_f = np.linalg.norm(vec_f - Mf_inv*Mf*vec_f)
 
 # Verify accuracy
 print('ACCURACY')
 print('Norm for centers:', norm_c)
-# print('Norm for nodes:  ', norm_n)
+print('Norm for nodes:  ', norm_n)
 print('Norm for edges:  ', norm_e)
 print('Norm for faces:  ', norm_f)
