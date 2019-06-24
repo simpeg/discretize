@@ -9,19 +9,19 @@ import numpy as np
 import discretize
 
 
-def ravel_data_array(arr, mesh):
+def ravel_data_array(arr, nx, ny, nz):
     """Ravel's a numpy array into proper order for passing to the OMF
     specification from ``discretize``/UBC formats
     """
-    dim = (mesh.nCz, mesh.nCy, mesh.nCx)
+    dim = (nz, ny, nx)
     return np.reshape(arr, dim, order='C').ravel(order='F')
 
 
-def unravel_data_array(arr, mesh):
+def unravel_data_array(arr, nx, ny, nz):
     """Unravel's a numpy array from the OMF specification to
     ``discretize``/UBC formats - the is the inverse of ``ravel_data_array``
     """
-    dim = (mesh.nCz, mesh.nCy, mesh.nCx)
+    dim = (nz, ny, nx)
     return np.reshape(arr, dim, order='F').ravel(order='C')
 
 
@@ -81,7 +81,7 @@ class InterfaceOMF(object):
         omfmesh.data = []
         for name, arr in models.items():
             data = omf.ScalarData(name=name,
-                                  array=ravel_data_array(arr, mesh),
+                                  array=ravel_data_array(arr, mesh.nCx, mesh.nCy, mesh.nCz),
                                   location='cells')
             omfmesh.data.append(data)
         # Validate to make sure a proper OMF object is returned to the user
@@ -132,7 +132,7 @@ class InterfaceOMF(object):
         """Convert an :class:`omf.VolumeElement` to :class:`discretize.TensorMesh`
         """
         geometry = element.geometry
-        h = geometry.tensor_u, geometry.tensor_v, geometry.tensor_w
+        h = [geometry.tensor_u, geometry.tensor_v, geometry.tensor_w]
         mesh = discretize.TensorMesh(h)
         mesh.axis_u = geometry.axis_u
         mesh.axis_v = geometry.axis_v
@@ -142,7 +142,7 @@ class InterfaceOMF(object):
         data_dict = {}
         for data in element.data:
             # NOTE: this is agnostic about data location - i.e. nodes vs cells
-            data_dict[data.name] = unravel_data_array(np.array(data.array), mesh)
+            data_dict[data.name] = unravel_data_array(np.array(data.array), mesh.nCx, mesh.nCy, mesh.nCz)
 
         # Return TensorMesh and data dictionary
         return mesh, data_dict
