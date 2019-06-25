@@ -31,7 +31,7 @@ Here we demonstrate:
 # Here we import the packages required for this tutorial.
 #
 
-from discretize import TensorMesh
+from discretize import TensorMesh, TreeMesh
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -243,6 +243,55 @@ mesh.plotImage(curl_w, ax=ax2)
 ax2.set_title('curl of w at cell centers')
 
 fig.show()
+
+#########################################################
+# Tree Mesh Divergence
+# --------------------
+#
+# For a tree mesh, there needs to be special attention taken for the hanging
+# faces to achieve second order convergence for the divergence operator.
+# Although the divergence cannot be constructed through Kronecker product
+# operations, the initial steps are exactly the same for calculating the
+# stencil, volumes, and areas. This yields a divergence defined for every
+# cell in the mesh using all faces. There is, however, redundant information
+# when hanging faces are included.
+#
+
+mesh = TreeMesh([[(1, 16)], [(1, 16)]], levels=4)
+mesh.insert_cells(np.array([5., 5.]), np.array([3]))
+mesh.number()
+
+fig = plt.figure(figsize=(10, 10))
+
+ax1 = fig.add_subplot(211)
+
+mesh.plotGrid(cells=True, nodes=False, ax=ax1)
+ax1.axis('off')
+ax1.set_title('Simple QuadTree Mesh')
+ax1.set_xlim([-1, 17])
+ax1.set_ylim([-1, 17])
+
+for ii, loc in zip(range(mesh.nC), mesh.gridCC):
+    ax1.text(loc[0]+0.2, loc[1], '{0:d}'.format(ii), color='r')
+
+ax1.plot(mesh.gridFx[:, 0], mesh.gridFx[:, 1], 'g>')
+for ii, loc in zip(range(mesh.nFx), mesh.gridFx):
+    ax1.text(loc[0]+0.2, loc[1], '{0:d}'.format(ii), color='g')
+
+ax1.plot(mesh.gridFy[:, 0], mesh.gridFy[:, 1], 'm^')
+for ii, loc in zip(range(mesh.nFy), mesh.gridFy):
+    ax1.text(
+        loc[0]+0.2, loc[1]+0.2, '{0:d}'.format(
+            (ii+mesh.nFx)
+        ),
+        color='m'
+    )
+
+ax2 = fig.add_subplot(212)
+ax2.spy(mesh.faceDiv)
+ax2.set_title('Face Divergence')
+ax2.set_ylabel('Cell Number')
+ax2.set_xlabel('Face Number')
 
 
 #########################################################

@@ -154,10 +154,10 @@ nC = mesh.nC
 # An (nC, 3) array containing the cell-center locations
 cc = mesh.gridCC
 
-# Plot the cell volumes
+# Plot the cell volumes.
 v = mesh.vol
 
-fig = plt.figure(figsize=(6, 7))
+fig = plt.figure(figsize=(6, 4))
 ax = fig.add_subplot(111)
 mesh.plotImage(np.log10(v), grid=True, ax=ax)
 ax.set_xlabel('r')
