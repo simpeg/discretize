@@ -431,7 +431,7 @@ class BaseTensorMesh(BaseMesh):
             material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
 
         projType : str
-            'E' or 'F' or 'N'
+            'E' or 'F'
 
         returnP : bool
             returns the projection matrices
@@ -448,8 +448,8 @@ class BaseTensorMesh(BaseMesh):
             M, the inner product matrix (nF, nF)
 
         """
-        assert projType in ['F', 'E', 'N'], (
-            "projType must be 'F' for faces, 'E' for edges of 'N' for nodes"
+        assert projType in ['F', 'E'], (
+            "projType must be 'F' for faces or 'E' for edges"
         )
 
         if prop is None:
