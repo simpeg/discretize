@@ -128,6 +128,7 @@ class InterfaceOMF(object):
         return convert(mesh, models=models)
 
 
+    @staticmethod
     def _omf_volume_to_tensor(element):
         """Convert an :class:`omf.VolumeElement` to :class:`discretize.TensorMesh`
         """
