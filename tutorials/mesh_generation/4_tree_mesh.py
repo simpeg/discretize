@@ -33,7 +33,8 @@ creating tree meshes, we must remember certain rules:
 #
 
 from discretize import TreeMesh
-from discretize.utils import matutils, meshutils
+from discretize.utils.matutils import mkvc
+from discretize.utils.meshutils import refine_tree_xyz
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -58,10 +59,10 @@ mesh = TreeMesh([h, h])
 
 # Define corner points for rectangular box
 xp, yp = np.meshgrid([120., 240.], [80., 160.])
-xy = np.c_[matutils.mkvc(xp), matutils.mkvc(yp)]  # matutils.mkvc creates vectors
+xy = np.c_[mkvc(xp), mkvc(yp)]  # matutils.mkvc creates vectors
 
 # Discretize to finest cell size within rectangular box
-mesh = meshutils.refine_tree_xyz(
+mesh = refine_tree_xyz(
     mesh, xy, octree_levels=[2, 2], method='box', finalize=False
     )
 
@@ -102,16 +103,16 @@ mesh = TreeMesh([hx, hy], x0='CC')
 # Refine surface topography
 xx = mesh.vectorNx
 yy = -3*np.exp((xx**2) / 100**2) + 50.
-pts = np.c_[matutils.mkvc(xx), matutils.mkvc(yy)]
-mesh = meshutils.refine_tree_xyz(
+pts = np.c_[mkvc(xx), mkvc(yy)]
+mesh = refine_tree_xyz(
     mesh, pts, octree_levels=[2, 2], method='surface', finalize=False
     )
 
 # Refine mesh near points
 xx = np.array([0., 10., 0., -10.])
 yy = np.array([-20., -10., 0., -10])
-pts = np.c_[matutils.mkvc(xx), matutils.mkvc(yy)]
-mesh = meshutils.refine_tree_xyz(
+pts = np.c_[mkvc(xx), mkvc(yy)]
+mesh = refine_tree_xyz(
     mesh, pts, octree_levels=[2, 2], method='radial', finalize=False
     )
 
@@ -151,16 +152,16 @@ mesh = TreeMesh([hx, hy], x0='CC')
 # Refine surface topography
 xx = mesh.vectorNx
 yy = -3*np.exp((xx**2) / 100**2) + 50.
-pts = np.c_[matutils.mkvc(xx), matutils.mkvc(yy)]
-mesh = meshutils.refine_tree_xyz(
+pts = np.c_[mkvc(xx), mkvc(yy)]
+mesh = refine_tree_xyz(
     mesh, pts, octree_levels=[2, 2], method='surface', finalize=False
     )
 
 # Refine near points
 xx = np.array([0., 10., 0., -10.])
 yy = np.array([-20., -10., 0., -10])
-pts = np.c_[matutils.mkvc(xx), matutils.mkvc(yy)]
-mesh = meshutils.refine_tree_xyz(
+pts = np.c_[mkvc(xx), mkvc(yy)]
+mesh = refine_tree_xyz(
     mesh, pts, octree_levels=[2, 2], method='radial', finalize=False
     )
 
@@ -218,16 +219,16 @@ mesh = TreeMesh([hx, hy, hz], x0='CCC')
 # Refine surface topography
 [xx, yy] = np.meshgrid(mesh.vectorNx, mesh.vectorNy)
 zz = -3*np.exp((xx**2 + yy**2) / 100**2) + 50.
-pts = np.c_[matutils.mkvc(xx), matutils.mkvc(yy), matutils.mkvc(zz)]
-mesh = meshutils.refine_tree_xyz(
+pts = np.c_[mkvc(xx), mkvc(yy), mkvc(zz)]
+mesh = refine_tree_xyz(
     mesh, pts, octree_levels=[2, 2], method='surface', finalize=False
     )
 
 # Refine box
 xp, yp, zp = np.meshgrid([-40., 40.], [-40., 40.], [-60., 0.])
-xyz = np.c_[matutils.mkvc(xp), matutils.mkvc(yp), matutils.mkvc(zp)]
+xyz = np.c_[mkvc(xp), mkvc(yp), mkvc(zp)]
 
-mesh = meshutils.refine_tree_xyz(
+mesh = refine_tree_xyz(
     mesh, xyz, octree_levels=[2, 2], method='box', finalize=False
     )
 
