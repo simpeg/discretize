@@ -33,8 +33,7 @@ creating tree meshes, we must remember certain rules:
 #
 
 from discretize import TreeMesh
-from discretize.utils.matutils import mkvc
-from discretize.utils.meshutils import refine_tree_xyz
+from discretize.utils import mkvc, refine_tree_xyz
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -59,7 +58,7 @@ mesh = TreeMesh([h, h])
 
 # Define corner points for rectangular box
 xp, yp = np.meshgrid([120., 240.], [80., 160.])
-xy = np.c_[mkvc(xp), mkvc(yp)]  # matutils.mkvc creates vectors
+xy = np.c_[mkvc(xp), mkvc(yp)]  # mkvc creates vectors
 
 # Discretize to finest cell size within rectangular box
 mesh = refine_tree_xyz(
