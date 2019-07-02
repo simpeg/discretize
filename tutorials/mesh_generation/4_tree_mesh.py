@@ -33,7 +33,7 @@ creating tree meshes, we must remember certain rules:
 #
 
 from discretize import TreeMesh
-from discretize.utils import matutils, meshutils
+from discretize.utils import mkvc, regine_tree_xyz
 import matplotlib.pyplot as plt
 import numpy as np
 
