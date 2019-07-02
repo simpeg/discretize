@@ -58,7 +58,7 @@ mesh = TreeMesh([h, h])
 
 # Define corner points for rectangular box
 xp, yp = np.meshgrid([120., 240.], [80., 160.])
-xy = np.c_[matutils.mkvc(xp), matutils.mkvc(yp)]  # matutils.mkvc creates vectors
+xy = np.c_[mkvc(xp), mkvc(yp)]  # mkvc creates vectors
 
 # Discretize to finest cell size within rectangular box
 mesh = meshutils.refine_tree_xyz(
