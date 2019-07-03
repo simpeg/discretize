@@ -2,16 +2,22 @@ from __future__ import print_function
 import numpy as np
 import warnings
 from discretize.utils import mkvc, ndgrid
+from discretize.utils.codeutils import requires
 from six import integer_types
+
+# matplotlib is a soft dependencies for discretize
 try:
+    import matplotlib
     import matplotlib.pyplot as plt
     from matplotlib.widgets import Slider
-    import matplotlib
     from mpl_toolkits.mplot3d import Axes3D
+    import matplotlib.colors as colors
+    import matplotlib.cm as cmx
 except ImportError:
-    print('Trouble importing matplotlib.')
+    matplotlib = False
 
 
+@requires({'matplotlib': matplotlib})
 class TensorView(object):
     """Provides viewing functions for TensorMesh
 
@@ -786,6 +792,7 @@ class TensorView(object):
         plt.show()
 
 
+@requires({'matplotlib': matplotlib})
 class CylView(object):
 
     def _plotCylTensorMesh(self, plotType, *args, **kwargs):
@@ -1016,6 +1023,7 @@ for reference, see: http://matplotlib.org/examples/pylab_examples/polar_demo.htm
         return self._plotCylTensorMesh('plotImage', *args, **kwargs)
 
 
+@requires({'matplotlib': matplotlib})
 class CurviView(object):
     """
     Provides viewing functions for CurvilinearMesh
@@ -1042,9 +1050,6 @@ class CurviView(object):
             M.plotGrid(showIt=True)
 
         """
-        import matplotlib.pyplot as plt
-        import matplotlib
-        from mpl_toolkits.mplot3d import Axes3D
 
         axOpts = {'projection': '3d'} if self.dim == 3 else {}
         if ax is None:
@@ -1132,12 +1137,6 @@ class CurviView(object):
         if self.dim == 3:
             raise NotImplementedError('This is not yet done!')
 
-        import matplotlib.pyplot as plt
-        import matplotlib
-        from mpl_toolkits.mplot3d import Axes3D
-        import matplotlib.colors as colors
-        import matplotlib.cm as cmx
-
         if ax is None:
             ax = plt.subplot(111)
 
@@ -1168,6 +1167,7 @@ class CurviView(object):
         return [scalarMap]
 
 
+@requires({'matplotlib': matplotlib})
 class Slicer(object):
     """Plot slices of a 3D volume, interactively (scroll wheel).
 

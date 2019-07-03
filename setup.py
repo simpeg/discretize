@@ -56,12 +56,11 @@ def configuration(parent_package='', top_path=None):
 
 setup(
     name="discretize",
-    version="0.4.4",
+    version="0.4.6",
     install_requires=[
         'numpy>=1.8',
         'scipy>=0.13',
         'cython>=0.2',
-        'matplotlib>=1.3',
         'pymatsolver>=0.1.2',
         'properties[math]',
     ],
