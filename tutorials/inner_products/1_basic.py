@@ -57,7 +57,7 @@ where :math:`k = 1,2,3`, :math:`\\mathbf{I_k}` is the identity matrix and
 :math:`\\otimes` is the kronecker product. :math:`\\mathbf{P}` are projection
 matricies that map quantities from one part of the cell (nodes, faces, edges)
 to cell centers.
-    
+
 
 """
 
@@ -131,8 +131,6 @@ fig = plt.figure(figsize=(5, 5))
 ax = fig.add_subplot(111)
 ax.plot(mesh.gridCC, phi_c)
 ax.set_title('phi at cell centers')
-
-fig.show()
 
 # Verify accuracy
 print('ACCURACY')

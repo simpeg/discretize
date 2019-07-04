@@ -53,13 +53,13 @@ docs/gallery/*
 docs/tutorials/*
 
 # Examples data
-docs/examples/Chile_GRAV_4_Miller
-docs/examples/*.tar.gz
+/examples/Chile_GRAV_4_Miller
+/examples/*.tar.gz
 examples/Chile_GRAV_4_Miller
 examples/*.tar.gz
 
 # downloads for examples
-laguna_del_maule_slicer/*
-laguna_del_maule_slicer.tar.gz
-examples/laguna_del_maule_slicer/laguna_del_maule-result.dat
-examples/laguna_del_maule_slicer/laguna_del_maule-result.dir
+*.tar.gz
+*.dat
+*.dir
+*.bak

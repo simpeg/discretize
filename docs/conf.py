@@ -317,18 +317,20 @@ pyvista.OFF_SCREEN = True
 # Sphinx Gallery
 sphinx_gallery_conf = {
     # path to your examples scripts
-    'examples_dirs': ['../examples',
-                      '../tutorials/mesh_generation',
-                      '../tutorials/operators',
-                      '../tutorials/inner_products',
-                      '../tutorials/pde'
-                      ],
-    'gallery_dirs': ['examples',
-                     'tutorials/mesh_generation',
-                     'tutorials/operators',
-                     'tutorials/inner_products',
-                     'tutorials/pde'
-                     ],
+    'examples_dirs': [
+        '../examples',
+        '../tutorials/mesh_generation',
+        '../tutorials/operators',
+        '../tutorials/inner_products',
+        '../tutorials/pde',
+    ],
+    'gallery_dirs': [
+        'examples',
+        'tutorials/mesh_generation',
+        'tutorials/operators',
+        'tutorials/inner_products',
+        'tutorials/pde',
+    ],
     'within_subsection_order': FileNameSortKey,
     'filename_pattern': '\.py',
     'backreferences_dir': 'api/generated/backreferences',
