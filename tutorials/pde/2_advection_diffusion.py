@@ -36,7 +36,7 @@ re-express the advection-diffusion equation as a set of first order PDEs:
     \\; \\; p_t = \\nabla \\cdot \\mathbf{j} - \\mathbf{u} \\cdot \\mathbf{w} + s \\;\\;\\; (1)\n
     \\; \\; \\mathbf{w} = \\nabla p \\;\\;\\; (2) \n
     \\; \\; \\alpha^{-1} \\mathbf{j} = \\mathbf{w} \\;\\;\\; (3)
-    
+
 
 We then apply the weak formulation; that is, we
 take the inner product of each equation with an appropriate test function.
@@ -45,13 +45,13 @@ take the inner product of each equation with an appropriate test function.
 
 Let :math:`\\psi` be a scalar test function. By taking the inner product with
 expression (1) we obtain:
-    
-.. math:: 
+
+.. math::
     \int_\\Omega \\psi \\, p_t \\, dv =
     \int_\\Omega \\psi \\, (\\nabla \\cdot \\mathbf{j}) \\, dv
     - \int_\\Omega \\psi \\, \\big ( \mathbf{u} \\cdot \\mathbf{w} \\big ) \\, dv
     + s_0 \int_\\Omega \\psi \\, \\delta (\\mathbf{r}) \\, dv
-    
+
 The source term is a volume integral containing the Dirac delta function, thus:
 
 .. math::
@@ -69,11 +69,11 @@ we obtain:
 where :math:`\\mathbf{\\psi}`, :math:`\\mathbf{p}` and :math:`\\mathbf{p_t}`
 live at cell centers and :math:`\\mathbf{j}`, :math:`\\mathbf{u}` and
 :math:`\\mathbf{w}` live on cell faces. :math:`\\mathbf{D}`
-is a discrete divergence operator. :math:`\\mathbf{M_c}` is the cell center 
+is a discrete divergence operator. :math:`\\mathbf{M_c}` is the cell center
 inner product matrix. :math:`\\mathbf{A_{fc}}` takes the dot product of
 :math:`\\mathbf{u}` and :math:`\\mathbf{w}`, projects it to cell centers and sums
 the contributions by each Cartesian component.
-    
+
 **Expression 2:**
 
 Let :math:`\\mathbf{f}` be a vector test function. By taking the inner product
@@ -95,7 +95,7 @@ and apply the divergence theorem we obtain:
 If we assume that :math:`f=0` on the boundary, we can eliminate the surface
 integral. By evaluating the inner products in the weak formulation according
 to the finite volume approach we obtain:
-    
+
 .. math::
     \\mathbf{f^T M_f w} = - \\mathbf{f^T D^T M_c}p
 
@@ -113,7 +113,7 @@ with expression (3) we obtain:
 
 By evaluating the inner products according to the finite volume approach
 we obtain:
-    
+
 .. math::
     \\mathbf{f^T M_\\alpha \\, j} = \\mathbf{f^T M_f \\, w}
 
@@ -123,7 +123,7 @@ depends on the inverse of the diffusivity.
 **Final Numerical System:**
 
 By combining the set of discrete expressions and letting
-:math:`\\mathbf{s} = \\mathbf{M_c^{-1} q}`, we obtain: 
+:math:`\\mathbf{s} = \\mathbf{M_c^{-1} q}`, we obtain:
 
 .. math::
     \\mathbf{p_t} =
@@ -151,7 +151,7 @@ Where :math:`\\Delta t` is the step size:
 .. math::
     \\big [ \\mathbf{I} + \\Delta t \\, \\mathbf{M} \\big ] \\mathbf{p}^{k+1} =
     \\mathbf{p}^k + \\Delta t \\, \\mathbf{s}
-    
+
 
 """
 
@@ -234,16 +234,17 @@ fig = plt.figure(figsize=(15, 15))
 ax = 9*[None]
 
 ax[0] = fig.add_subplot(332)
-mesh.plotImage(u, ax=ax[0], vType='F', view='vec',
-               streamOpts={'color': 'w', 'density': 1.0},
-               pcolorOpts={'cmap': 'Greens'})
+mesh.plotImage(
+    u, ax=ax[0], vType='F', view='vec',
+    streamOpts={'color': 'w', 'density': 1.0},
+    clim=[0., 10.]
+)
 ax[0].set_title('Divergence free vector field')
 
 ax[1] = fig.add_subplot(333)
 ax[1].set_aspect(10, anchor='W')
-norm = mpl.colors.Normalize(vmin=0., vmax=10.)
 cbar = mpl.colorbar.ColorbarBase(
-    ax[1], norm=norm, orientation='vertical', cmap = 'Greens'
+    ax[1], orientation='vertical'
 )
 cbar.set_label(
     'Velocity (m/s)',
