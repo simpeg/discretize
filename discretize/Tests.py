@@ -367,7 +367,8 @@ def checkDerivative(fctn, x0, num=7, plotIt=True, dx=None, expectedOrder=2, tole
     @requires({'matplotlib': matplotlib})
     def plot_it():
         if plotIt:
-            ax = ax or plt.subplot(111)
+            if ax is None:
+                ax = plt.subplot(111)
             ax.loglog(h, E0, 'b')
             ax.loglog(h, E1, 'g--')
             ax.set_title(

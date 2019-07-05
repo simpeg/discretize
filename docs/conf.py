@@ -16,6 +16,7 @@ import os
 from datetime import datetime
 import discretize
 import subprocess
+from sphinx_gallery.sorting import FileNameSortKey
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -316,8 +317,21 @@ pyvista.OFF_SCREEN = True
 # Sphinx Gallery
 sphinx_gallery_conf = {
     # path to your examples scripts
-    'examples_dirs': ['../examples', '../tutorials'],
-    'gallery_dirs': ['gallery', 'tutorials'],
+    'examples_dirs': [
+        '../examples',
+        '../tutorials/mesh_generation',
+        '../tutorials/operators',
+        '../tutorials/inner_products',
+        '../tutorials/pde',
+    ],
+    'gallery_dirs': [
+        'examples',
+        'tutorials/mesh_generation',
+        'tutorials/operators',
+        'tutorials/inner_products',
+        'tutorials/pde',
+    ],
+    'within_subsection_order': FileNameSortKey,
     'filename_pattern': '\.py',
     'backreferences_dir': 'api/generated/backreferences',
     'doc_module': 'discretize',

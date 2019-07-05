@@ -4,11 +4,9 @@
 3D Visualization with PyVista
 =============================
 
-The example demonstrates the how to use the VTK interface via the pyvista_ library.
-To run this example, you will need to `install pyvista`_.
-
-.. _pyvista: http://docs.pyvista.org
-.. _install pyvista: http://docs.pyvista.org/getting-started/installation.html
+The example demonstrates the how to use the VTK interface via the
+`pyvista library <http://docs.pyvista.org>`__ .
+To run this example, you will need to `install pyvista <http://docs.pyvista.org/getting-started/installation.html>`__ .
 
 - contributed by `@banesullivan <https://github.com/banesullivan>`_
 
