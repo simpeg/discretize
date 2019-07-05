@@ -48,16 +48,18 @@ interputils_cython.c
 docs/_build/
 docs/warnings.txt
 docs/api/generated/*
-docs/gallery
-docs/tutorials
-docs/modules
-docs/auto_examples
+docs/examples
+docs/gallery/*
+docs/tutorials/*
 
 # Examples data
-docs/examples/Chile_GRAV_4_Miller
-docs/examples/*.tar.gz
+/examples/Chile_GRAV_4_Miller
+/examples/*.tar.gz
 examples/Chile_GRAV_4_Miller
 examples/*.tar.gz
 
 # downloads for examples
-*/laguna_del_maule_slicer/*
+*.tar.gz
+*.dat
+*.dir
+*.bak
