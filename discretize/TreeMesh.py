@@ -177,12 +177,12 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         cel_tbl += "</tr>\n"
         for level in non_zero_levels:
             cel_tbl += "<tr>\n"
-            cel_tbl += "<td"+style+f">{level}</td>\n"
-            cel_tbl += "<td"+style+f">{level_count[level]}</td>\n"
+            cel_tbl += "<td"+style+">{}</td>\n".format(level)
+            cel_tbl += "<td"+style+">{}</td>\n".format(level_count[level])
             cel_tbl += "</tr>\n"
         cel_tbl += "<tr>\n"
         cel_tbl += "<td style='font-weight: bold; padding: 5px 20px 5px 20px;'> Total </td>\n"
-        cel_tbl += "<td"+style+f"> {self.nC} </td>\n"
+        cel_tbl += "<td"+style+"> {} </td>\n".format(self.nC)
         cel_tbl += "</tr>\n"
         cel_tbl += "</table>\n"
 
@@ -203,17 +203,17 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         for dim in range(self.dim):
             n_vector = getattr(self, 'vectorN'+dim_label[dim])
             det_tbl += "<tr>\n"
-            det_tbl += "<td"+style+f">{dim_label[dim]}</td>\n"
-            det_tbl += "<td"+style+f">{n_vector[0]}</td>\n"
-            det_tbl += "<td"+style+f">{n_vector[-1]}</td>\n"
-            det_tbl += "<td"+style+f">{mins[dim]}</td>\n"
-            det_tbl += "<td"+style+f">{maxs[dim]}</td>\n"
+            det_tbl += "<td"+style+">{}</td>\n".format(dim_label[dim])
+            det_tbl += "<td"+style+">{}</td>\n".format(n_vector[0])
+            det_tbl += "<td"+style+">{}</td>\n".format(n_vector[-1])
+            det_tbl += "<td"+style+">{}</td>\n".format(mins[dim])
+            det_tbl += "<td"+style+">{}</td>\n".format(maxs[dim])
             det_tbl += "</tr>\n"
         det_tbl += "</table>\n"
 
         full_tbl =  "<table>\n"
         full_tbl += "<tr>\n"
-        full_tbl += f"<td style='font-weight: bold; font-size: 1.2em; text-align: center;'>{mesh_name}</td>\n"
+        full_tbl += "<td style='font-weight: bold; font-size: 1.2em; text-align: center;'>{}</td>\n".format(mesh_name)
         full_tbl += "<td style='font-size: 1.2em; text-align: center;' colspan='2'>{0:2.2f}% filled</td>\n".format(100*self.fill)
         full_tbl += "</tr>\n"
         full_tbl += "<tr>\n"
