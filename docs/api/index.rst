@@ -20,6 +20,7 @@ Meshes
     TensorMesh
     CylMesh
     TreeMesh
+    TreeMesh.TreeCell
     CurvilinearMesh
 
 

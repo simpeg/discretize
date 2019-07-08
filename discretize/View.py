@@ -613,6 +613,9 @@ class TensorView(object):
         else:
             if not isinstance(ax, matplotlib.axes.Axes):
                 raise AssertionError("ax must be an matplotlib.axes.Axes")
+        if lines:
+            color = kwargs.get('color', 'C0')
+            linewidth = kwargs.get('linewidth', 1.)
 
         if self.dim == 1:
             if nodes:
@@ -660,8 +663,7 @@ class TensorView(object):
                     marker="^", linestyle=""
                 )
 
-            color = kwargs.get('color', 'C0')
-            linewidth = kwargs.get('linewidth', 1.)
+
             # Plot the grid lines
             if lines:
                 NN = self.r(self.gridN, 'N', 'N', 'M')
@@ -728,7 +730,7 @@ class TensorView(object):
                 X = np.r_[X1, X2, X3]
                 Y = np.r_[Y1, Y2, Y3]
                 Z = np.r_[Z1, Z2, Z3]
-                ax.plot(X, Y, color="C0", linestyle="-", zs=Z)
+                ax.plot(X, Y, color=color, linestyle="-", lw=linewidth, zs=Z)
             ax.set_xlabel('x1')
             ax.set_ylabel('x2')
             ax.set_zlabel('x3')

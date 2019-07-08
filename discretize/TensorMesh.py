@@ -91,18 +91,18 @@ class TensorMesh(
         fmt = "<table>\n"
         fmt += "  <tr>\n"
         fmt += "    <td style='font-weight: bold; font-size: 1.2em; text-align"
-        fmt += ": center;' colspan='3'>{}</td\n>".format(type(self).__name__)
+        fmt += ": center;' colspan='3'>{}</td>\n".format(type(self).__name__)
         fmt += "    <td style='font-size: 1.2em; text-align: center;'"
         fmt += "colspan='4'>{:,} cells</td>\n".format(self.nC)
         fmt += "  </tr>\n"
 
         fmt += "  <tr>\n"
-        fmt += "    <th></th\n>"
-        fmt += "    <th></th\n>"
-        fmt += "    <th colspan='2'"+style+">MESH EXTENT</th\n>"
-        fmt += "    <th colspan='2'"+style+">CELL WIDTH</th\n>"
-        fmt += "    <th"+style+">FACTOR</th\n>"
-        fmt += "  </tr\n>"
+        fmt += "    <th></th>\n"
+        fmt += "    <th></th>\n"
+        fmt += "    <th colspan='2'"+style+">MESH EXTENT</th>\n"
+        fmt += "    <th colspan='2'"+style+">CELL WIDTH</th>\n"
+        fmt += "    <th"+style+">FACTOR</th>\n"
+        fmt += "  </tr>\n"
 
         fmt += "  <tr>\n"
         fmt += "    <th"+style+">dir</th>\n"
