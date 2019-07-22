@@ -35,8 +35,9 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
     )
 
     # Instantiate the class
-    def __init__(self, n, x0=None, **kwargs):
-        self._n = n  # number of dimensions
+    def __init__(self, n=None, x0=None, **kwargs):
+        if n is not None:
+            self._n = n  # number of dimensions
 
         if x0 is None:
             self.x0 = np.zeros(len(self._n))
