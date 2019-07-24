@@ -1,5 +1,5 @@
 cython
-sphinx
+sphinx < 2.0
 sphinx_rtd_theme
 sphinx-gallery
 sphinxcontrib-apidoc
@@ -11,8 +11,10 @@ sympy
 wheel
 twine
 vtk
-vtki>=0.16.9
+pyvista>=0.20.1
 numpydoc
 nbsphinx
 coverage
 codecov
+omf
+matplotlib

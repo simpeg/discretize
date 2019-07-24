@@ -1,18 +1,26 @@
 from __future__ import print_function
 import numpy as np
 import warnings
-
 from six import integer_types
+
+
+from .utils import mkvc, ndgrid
+from .utils.codeutils import requires
+
+# matplotlib is a soft dependencies for discretize
 try:
+    import matplotlib
     import matplotlib.pyplot as plt
     from matplotlib.widgets import Slider
-    import matplotlib
     from mpl_toolkits.mplot3d import Axes3D
+    import matplotlib.colors as colors
+    import matplotlib.cm as cmx
 except ImportError:
-    print('Trouble importing matplotlib.')
+    matplotlib = False
 
 from .utils import mkvc, ndgrid
 
+@requires({'matplotlib': matplotlib})
 class TensorView(object):
     """Provides viewing functions for TensorMesh
 
@@ -608,6 +616,9 @@ class TensorView(object):
         else:
             if not isinstance(ax, matplotlib.axes.Axes):
                 raise AssertionError("ax must be an matplotlib.axes.Axes")
+        if lines:
+            color = kwargs.get('color', 'C0')
+            linewidth = kwargs.get('linewidth', 1.)
 
         if self.dim == 1:
             if nodes:
@@ -655,8 +666,7 @@ class TensorView(object):
                     marker="^", linestyle=""
                 )
 
-            color = kwargs.get('color', 'C0')
-            linewidth = kwargs.get('linewidth', 1.)
+
             # Plot the grid lines
             if lines:
                 NN = self.r(self.gridN, 'N', 'N', 'M')
@@ -723,7 +733,7 @@ class TensorView(object):
                 X = np.r_[X1, X2, X3]
                 Y = np.r_[Y1, Y2, Y3]
                 Z = np.r_[Z1, Z2, Z3]
-                ax.plot(X, Y, color="C0", linestyle="-", zs=Z)
+                ax.plot(X, Y, color=color, linestyle="-", lw=linewidth, zs=Z)
             ax.set_xlabel('x1')
             ax.set_ylabel('x2')
             ax.set_zlabel('x3')
@@ -737,8 +747,9 @@ class TensorView(object):
 
     def plot_3d_slicer(self, v, xslice=None, yslice=None, zslice=None,
                        vType='CC', view='real', axis='xy', transparent=None,
-                       clim=None, aspect='auto', grid=[2, 2, 1],
-                       pcolorOpts=None, fig=None):
+                       clim=None, xlim=None, ylim=None, zlim=None,
+                       aspect='auto', grid=[2, 2, 1], pcolorOpts=None,
+                       fig=None):
         """Plot slices of a 3D volume, interactively (scroll wheel).
 
         If called from a notebook, make sure to set
@@ -772,8 +783,10 @@ class TensorView(object):
             fig.clf()
 
         # Populate figure
-        tracker = Slicer(self, v, xslice, yslice, zslice, vType, view, axis,
-                         transparent, clim, aspect, grid, pcolorOpts)
+        tracker = Slicer(
+            self, v, xslice, yslice, zslice, vType, view, axis, transparent,
+            clim, xlim, ylim, zlim, aspect, grid, pcolorOpts
+        )
 
         # Connect figure to scrolling
         fig.canvas.mpl_connect('scroll_event', tracker.onscroll)
@@ -782,6 +795,7 @@ class TensorView(object):
         plt.show()
 
 
+@requires({'matplotlib': matplotlib})
 class CylView(object):
 
     def _plotCylTensorMesh(self, plotType, *args, **kwargs):
@@ -1012,6 +1026,7 @@ for reference, see: http://matplotlib.org/examples/pylab_examples/polar_demo.htm
         return self._plotCylTensorMesh('plotImage', *args, **kwargs)
 
 
+@requires({'matplotlib': matplotlib})
 class CurviView(object):
     """
     Provides viewing functions for CurvilinearMesh
@@ -1038,9 +1053,6 @@ class CurviView(object):
             M.plotGrid(showIt=True)
 
         """
-        import matplotlib.pyplot as plt
-        import matplotlib
-        from mpl_toolkits.mplot3d import Axes3D
 
         axOpts = {'projection': '3d'} if self.dim == 3 else {}
         if ax is None:
@@ -1128,12 +1140,6 @@ class CurviView(object):
         if self.dim == 3:
             raise NotImplementedError('This is not yet done!')
 
-        import matplotlib.pyplot as plt
-        import matplotlib
-        from mpl_toolkits.mplot3d import Axes3D
-        import matplotlib.colors as colors
-        import matplotlib.cm as cmx
-
         if ax is None:
             ax = plt.subplot(111)
 
@@ -1164,6 +1170,7 @@ class CurviView(object):
         return [scalarMap]
 
 
+@requires({'matplotlib': matplotlib})
 class Slicer(object):
     """Plot slices of a 3D volume, interactively (scroll wheel).
 
@@ -1217,6 +1224,9 @@ class Slicer(object):
     clim : None or list of [min, max]
         For pcolormesh (vmin, vmax).
 
+    xlim, ylim, zlim : None or list of [min, max]
+        Axis limits.
+
     aspect : 'auto', 'equal', or num
         Aspect ratio of subplots. Defaults to 'auto'.
 
@@ -1237,7 +1247,8 @@ class Slicer(object):
 
     def __init__(self, mesh, v, xslice=None, yslice=None, zslice=None,
                  vType='CC', view='real', axis='xy', transparent=None,
-                 clim=None, aspect='auto', grid=[2, 2, 1], pcolorOpts=None):
+                 clim=None, xlim=None, ylim=None, zlim=None, aspect='auto',
+                 grid=[2, 2, 1], pcolorOpts=None):
         """Initialize interactive figure."""
 
         # 0. Some checks, not very extensive
@@ -1342,8 +1353,16 @@ class Slicer(object):
                                     rowspan=grid[0], aspect=aspect1)
         if self.yx:
             self.ax1.set_ylabel('x')
+            if ylim is not None:
+                self.ax1.set_xlim([ylim[0], ylim[1]])
+            if xlim is not None:
+                self.ax1.set_ylim([xlim[0], xlim[1]])
         else:
             self.ax1.set_ylabel('y')
+            if xlim is not None:
+                self.ax1.set_xlim([xlim[0], xlim[1]])
+            if ylim is not None:
+                self.ax1.set_ylim([ylim[0], ylim[1]])
         self.ax1.xaxis.set_ticks_position('top')
         plt.setp(self.ax1.get_xticklabels(), visible=False)
 
@@ -1354,9 +1373,15 @@ class Slicer(object):
         self.ax2.yaxis.set_ticks_position('both')
         if self.yx:
             self.ax2.set_xlabel('y')
+            if ylim is not None:
+                self.ax2.set_xlim([ylim[0], ylim[1]])
         else:
             self.ax2.set_xlabel('x')
+            if xlim is not None:
+                self.ax2.set_xlim([xlim[0], xlim[1]])
         self.ax2.set_ylabel('z')
+        if zlim is not None:
+            self.ax2.set_ylim([zlim[0], zlim[1]])
 
         # Z-Y
         self.ax3 = plt.subplot2grid(figgrid, (0, grid[1]), colspan=grid[2],
@@ -1366,6 +1391,14 @@ class Slicer(object):
         self.ax3.xaxis.set_ticks_position('both')
         self.ax3.invert_xaxis()
         plt.setp(self.ax3.get_yticklabels(), visible=False)
+        if self.yx:
+            if xlim is not None:
+                self.ax3.set_ylim([xlim[0], xlim[1]])
+        else:
+            if ylim is not None:
+                self.ax3.set_ylim([ylim[0], ylim[1]])
+        if zlim is not None:
+            self.ax3.set_xlim([zlim[1], zlim[0]])
 
         # Cross-line properties
         # We have to lines, a thick white one, and in the middle a thin black

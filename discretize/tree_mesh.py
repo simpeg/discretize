@@ -115,55 +115,132 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         # Now can initialize cpp tree parent
         _TreeMesh.__init__(self, self.h, self.x0)
 
-    def __str__(self):
-        outStr = '  ---- {0!s}TreeMesh ----  '.format(
-            ('Oc' if self.dim == 3 else 'Quad')
-        )
+    def __repr__(self):
+        """Plain text representation."""
+        mesh_name = '{0!s}TreeMesh'.format(('Oc' if self.dim==3 else 'Quad'))
 
-        def printH(hx, outStr=''):
-            i = -1
-            while True:
-                i = i + 1
-                if i > hx.size:
-                    break
-                elif i == hx.size:
-                    break
-                h = hx[i]
-                n = 1
-                for j in range(i+1, hx.size):
-                    if hx[j] == h:
-                        n = n + 1
-                        i = i + 1
-                    else:
-                        break
-                if n == 1:
-                    outStr += ' {0:.2f}, '.format(h)
-                else:
-                    outStr += ' {0:d}*{1:.2f}, '.format(n, h)
-            return outStr[:-1]
+        top = "\n"+mesh_name+": {0:2.2f}% filled\n\n".format(self.fill*100)
 
-        if self.dim == 2:
-            outStr += '\n   x0: {0:.2f}'.format(self.x0[0])
-            outStr += '\n   y0: {0:.2f}'.format(self.x0[1])
-            outStr += printH(self.hx, outStr='\n   hx:')
-            outStr += printH(self.hy, outStr='\n   hy:')
-        elif self.dim == 3:
-            outStr += '\n   x0: {0:.2f}'.format(self.x0[0])
-            outStr += '\n   y0: {0:.2f}'.format(self.x0[1])
-            outStr += '\n   z0: {0:.2f}'.format(self.x0[2])
-            outStr += printH(self.hx, outStr='\n   hx:')
-            outStr += printH(self.hy, outStr='\n   hy:')
-            outStr += printH(self.hz, outStr='\n   hz:')
-        outStr += '\n  nC: {0:d}'.format(self.nC)
-        outStr += '\n  Fill: {0:2.2f}%'.format((self.fill*100))
-        return outStr
+        # Number of cells per level
+        level_count = self._count_cells_per_index()
+        non_zero_levels = np.nonzero(level_count)[0]
+        cell_display = ["Level : Number of cells"]
+        cell_display.append("-----------------------")
+        for level in non_zero_levels:
+            cell_display.append("{:^5} : {:^15}".format(level, level_count[level]))
+        cell_display.append("-----------------------")
+        cell_display.append("Total : {:^15}".format(self.nC))
+
+        extent_display =     ["            Mesh Extent       "]
+        extent_display.append("        min     ,     max     ")
+        extent_display.append("   ---------------------------")
+        dim_label = {0:'x',1:'y',2:'z'}
+        for dim in range(self.dim):
+            n_vector = getattr(self, 'vectorN'+dim_label[dim])
+            extent_display.append("{}: {:^13},{:^13}".format(dim_label[dim], n_vector[0], n_vector[-1]))
+
+        for i, line in enumerate(extent_display):
+            if i==len(cell_display):
+                cell_display.append(" "*(len(cell_display[0])-3-len(line)))
+            cell_display[i] += 3*" " + line
+
+        h_display =     ['     Cell Widths    ']
+        h_display.append("    min   ,   max   ")
+        h_display.append("-"*(len(h_display[0])))
+        h_gridded = self.h_gridded
+        mins = np.min(h_gridded,axis=0)
+        maxs = np.max(h_gridded,axis=0)
+        for dim in range(self.dim):
+            h_display.append("{:^10}, {:^10}".format(mins[dim], maxs[dim]))
+
+        for i, line in enumerate(h_display):
+            if i==len(cell_display):
+                cell_display.append(" "*len(cell_display[0]))
+            cell_display[i] += 3*" " + line
+
+        return top+"\n".join(cell_display)
+
+    def _repr_html_(self):
+        """html representation"""
+        mesh_name = '{0!s}TreeMesh'.format(('Oc' if self.dim==3 else 'Quad'))
+        level_count = self._count_cells_per_index()
+        non_zero_levels = np.nonzero(level_count)[0]
+        dim_label = {0:'x',1:'y',2:'z'}
+        h_gridded = self.h_gridded
+        mins = np.min(h_gridded,axis=0)
+        maxs = np.max(h_gridded,axis=0)
+
+        style = " style='padding: 5px 20px 5px 20px;'"
+        #Cell level table:
+        cel_tbl =  "<table>\n"
+        cel_tbl += "<tr>\n"
+        cel_tbl += "<th"+style+">Level</th>\n"
+        cel_tbl += "<th"+style+">Number of cells</th>\n"
+        cel_tbl += "</tr>\n"
+        for level in non_zero_levels:
+            cel_tbl += "<tr>\n"
+            cel_tbl += "<td"+style+">{}</td>\n".format(level)
+            cel_tbl += "<td"+style+">{}</td>\n".format(level_count[level])
+            cel_tbl += "</tr>\n"
+        cel_tbl += "<tr>\n"
+        cel_tbl += "<td style='font-weight: bold; padding: 5px 20px 5px 20px;'> Total </td>\n"
+        cel_tbl += "<td"+style+"> {} </td>\n".format(self.nC)
+        cel_tbl += "</tr>\n"
+        cel_tbl += "</table>\n"
+
+        det_tbl =  "<table>\n"
+        det_tbl += "<tr>\n"
+        det_tbl += "<th></th>\n"
+        det_tbl += "<th"+style+" colspan='2'>Mesh extent</th>\n"
+        det_tbl += "<th"+style+" colspan='2'>Cell widths</th>\n"
+        det_tbl += "</tr>\n"
+
+        det_tbl += "<tr>\n"
+        det_tbl += "<th></th>\n"
+        det_tbl += "<th"+style+">min</th>\n"
+        det_tbl += "<th"+style+">max</th>\n"
+        det_tbl += "<th"+style+">min</th>\n"
+        det_tbl += "<th"+style+">max</th>\n"
+        det_tbl += "</tr>\n"
+        for dim in range(self.dim):
+            n_vector = getattr(self, 'vectorN'+dim_label[dim])
+            det_tbl += "<tr>\n"
+            det_tbl += "<td"+style+">{}</td>\n".format(dim_label[dim])
+            det_tbl += "<td"+style+">{}</td>\n".format(n_vector[0])
+            det_tbl += "<td"+style+">{}</td>\n".format(n_vector[-1])
+            det_tbl += "<td"+style+">{}</td>\n".format(mins[dim])
+            det_tbl += "<td"+style+">{}</td>\n".format(maxs[dim])
+            det_tbl += "</tr>\n"
+        det_tbl += "</table>\n"
+
+        full_tbl =  "<table>\n"
+        full_tbl += "<tr>\n"
+        full_tbl += "<td style='font-weight: bold; font-size: 1.2em; text-align: center;'>{}</td>\n".format(mesh_name)
+        full_tbl += "<td style='font-size: 1.2em; text-align: center;' colspan='2'>{0:2.2f}% filled</td>\n".format(100*self.fill)
+        full_tbl += "</tr>\n"
+        full_tbl += "<tr>\n"
+
+        full_tbl += "<td>\n"
+        full_tbl += cel_tbl
+        full_tbl += "</td>\n"
+
+        full_tbl += "<td>\n"
+        full_tbl += det_tbl
+        full_tbl += "</td>\n"
+
+        full_tbl += "</tr>\n"
+        full_tbl += "</table>\n"
+
+        return full_tbl
 
     @property
     def vntF(self):
+        """Total number of hanging and non-hanging faces in a [nx,ny,nz] form"""
         return [self.ntFx, self.ntFy] + ([] if self.dim == 2 else [self.ntFz])
 
     @property
     def vntE(self):
+        """Total number of hanging and non-hanging edges in a [nx,ny,nz] form"""
         return [self.ntEx, self.ntEy] + ([] if self.dim == 2 else [self.ntEz])
 
     @property
@@ -244,7 +321,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
     @property
     def cellGrady(self):
         """
-        Cell centered Gradient operator in y-direction (Gradx)
+        Cell centered Gradient operator in y-direction (Grady)
         Grad = sp.vstack((Gradx, Grady, Gradz))
         """
         if getattr(self, '_cellGrady', None) is None:
@@ -273,6 +350,8 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         Cell centered Gradient operator in z-direction (Gradz)
         Grad = sp.vstack((Gradx, Grady, Gradz))
         """
+        if self.dim == 2:
+            raise TypeError("z derivative not defined in 2D")
         if getattr(self, '_cellGradz', None) is None:
 
             nFx = self.nFx
@@ -312,21 +391,98 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         return self._faceDivz
 
     def point2index(self, locs):
-        locs = utils.asArray_N_x_Dim(locs, self.dim)
+        """Finds cells that contain the given points.
+        Returns an array of index values of the cells that contain the given
+        points
 
-        inds = np.empty(locs.shape[0], dtype=np.int64)
-        for ind, loc in enumerate(locs):
-            inds[ind] = self._get_containing_cell_index(loc)
+        Parameters
+        ----------
+        locs: array_like of shape (N, dim)
+            points to search for the location of
+
+        Returns
+        -------
+        numpy.array of integers of length(N)
+            Cell indices that contain the points
+        """
+        locs = utils.asArray_N_x_Dim(locs, self.dim)
+        inds = self._get_containing_cell_indexes(locs)
         return inds
+
+    def cell_levels_by_index(self, indices):
+        """Fast function to return a list of levels for the given cell indices
+
+        Parameters
+        ----------
+        index: array_like of length (N)
+            Cell indexes to query
+
+        Returns
+        -------
+        numpy.array of length (N)
+            Levels for the cells.
+        """
+
+        return self._cell_levels_by_indexes(indices)
+
+
+    def getInterpolationMat(self, locs, locType, zerosOutside=False):
+        """ Produces interpolation matrix
+
+        Parameters
+        ----------
+        loc : numpy.ndarray
+            Location of points to interpolate to
+
+        locType: str
+            What to interpolate
+
+            locType can be::
+
+                'Ex'    -> x-component of field defined on edges
+                'Ey'    -> y-component of field defined on edges
+                'Ez'    -> z-component of field defined on edges
+                'Fx'    -> x-component of field defined on faces
+                'Fy'    -> y-component of field defined on faces
+                'Fz'    -> z-component of field defined on faces
+                'N'     -> scalar field defined on nodes
+                'CC'    -> scalar field defined on cell centers
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            M, the interpolation matrix
+
+        """
+        locs = utils.asArray_N_x_Dim(locs, self.dim)
+        if locType not in ['N', 'CC', "Ex", "Ey", "Ez", "Fx", "Fy", "Fz"]:
+            raise Exception('locType must be one of N, CC, Ex, Ey, Ez, Fx, Fy, or Fz')
+
+        if self.dim == 2 and locType in ['Ez', 'Fz']:
+            raise Exception('Unable to interpolate from Z edges/face in 2D')
+
+        locs = np.require(np.atleast_2d(locs), dtype=np.float64, requirements='C')
+
+        if locType == 'N':
+            Av = self._getNodeIntMat(locs, zerosOutside)
+        elif locType in ['Ex', 'Ey', 'Ez']:
+            Av = self._getEdgeIntMat(locs, zerosOutside, locType[1])
+        elif locType in ['Fx', 'Fy', 'Fz']:
+            Av = self._getFaceIntMat(locs, zerosOutside, locType[1])
+        elif locType in ['CC']:
+            Av = self._getCellIntMat(locs, zerosOutside)
+        return Av
 
     @property
     def permuteCC(self):
+        """Permutation matrix re-ordering of cells sorted by x, then y, then z"""
         # TODO: cache these?
         P = np.lexsort(self.gridCC.T) # sort by x, then y, then z
         return sp.identity(self.nC).tocsr()[P]
 
     @property
     def permuteF(self):
+        """Permutation matrix re-ordering of faces sorted by x, then y, then z"""
         # TODO: cache these?
         Px = np.lexsort(self.gridFx.T)
         Py = np.lexsort(self.gridFy.T)+self.nFx
@@ -339,6 +495,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
 
     @property
     def permuteE(self):
+        """Permutation matrix re-ordering of edges sorted by x, then y, then z"""
         # TODO: cache these?
         Px = np.lexsort(self.gridEx.T)
         Py = np.lexsort(self.gridEy.T) + self.nEx

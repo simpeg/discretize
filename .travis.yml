@@ -1,4 +1,5 @@
 # Configuration file for TravisCI
+dist: xenial # must use xenial for pyvista
 
 # We use miniconda for Python so don't need any Python specific tools
 language: generic
@@ -14,6 +15,8 @@ env:
     - CONDA_REQUIREMENTS="numpy scipy matplotlib cython pip"
     - PYPI_REQUIREMENTS=requirements.txt
     - PYPI_REQUIREMENTS_DEV=requirements_dev.txt
+    # Doctr deploy key for simpeg/discretize-docs
+    - secure: "JPcVPkWq1uzcgwM8U41LyxdWlA3LehTdGnU1NxZUd1y+GSZgn2s84ByJ1WZ8Dp4RJFjPLO7WX79qJkKRQUOVTs2teqTlvDkcMF6WM41k5u4N9aJLtIZLwZ8SrBoU6FAWge1CsXYfWE7SpILH9riYuawC6nOEwf5pdrTcoKLUdaaF0bHBbRZMXy3vk8UTF/2eDQa0cpMw1zJUryDrh+btpMvncbTqBtpQgAYPdjfbYr8EM+/b23dqMMUtM1KmebllWDtESzz+Pf/K2wOTweMlWVITHs5hywlGAGHAeusAKIRE8x1uB8U7abAM3iOEZ2WQqgquLvahpoiRFofmAHij1jpT1k45OM83D2skjDRuOg5b5zEHivsygfUtp2F2AAKRfHAtBxK664aFvR0l5YNKYqqJxR+ACpR/yhlWroMgeIX8srpCl/oT365sahWRb7wn/OI/f01S9Chn9x6fQXq7gYozAwC0RTD4Y9zpLHhnEiuTPbiLXCyLj3cexgxqAkk71NKhLce1KYjOyzuROQsT+1H91CMsmRDG34VHWdGXhVmucNG0JrQmzVaSiwhOig/4JxtHcj+qPFSHZ6O5QqdswcW+ukWyUohIQJC6quE27Yh+gKC7sujBTQkiyY/YO4MHK7q/LsB1n95BGZCftkT/bKitGsPgO/LFZmyl5ijVm+s="
 
 matrix:
   include:
@@ -90,16 +93,21 @@ matrix:
         - PYTHON=3.6
         - TEST=true
         - TEST_DIR="tests/docs"
+    # ... and delploy the docs on 3.7
     - name: "Python 3.7 - docs"
       os: linux
       env:
         - PYTHON=3.7
         - TEST=true
         - TEST_DIR="tests/docs"
+        - DEPLOY_DOCS=true
 
 before_install:
   - source ci/setup-miniconda.sh
   - conda list
+  # configure a headless display for pyvista
+  - git clone --depth 1 git://github.com/pyvista/gl-ci-helpers.git
+  - source ./gl-ci-helpers/travis/setup_headless_display.sh
 
 install:
   - pip install -e .
@@ -117,6 +125,17 @@ after_success:
       echo "Uploading coverage to Codecov";
       codecov;
     fi
+  - if [[ ("$DEPLOY_DOCS" == "true") && ($PYTHON == 3.7) && ($TRAVIS_REPO_SLUG == 'simpeg/discretize') && ($TRAVIS_BRANCH == 'master') && ($DOCS_TRIGGER == 'BANE_RULES')]]; then
+      pip install doctr ;
+      export MPLBACKEND="agg" ;
+      echo "Delpoying docs" ;
+      set -e ;
+      cd docs/ ;
+      make html ;
+      cd .. ;
+      doctr deploy --built-docs ./docs/_build/html/ --deploy-repo simpeg/discretize-docs ./en/master/ ;
+    fi
+
 
 deploy:
   # pypi release

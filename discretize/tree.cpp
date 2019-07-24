@@ -185,6 +185,7 @@ Cell::Cell(Node *pts[8], int_t ndim, int_t maxlevel, function func){
     int_t n_points = 1<<n_dim;
     for(int_t i = 0; i < n_points; ++i)
         points[i] = pts[i];
+    index = -1;
     level = 0;
     max_level = maxlevel;
     parent = NULL;
@@ -212,6 +213,7 @@ Cell::Cell(Node *pts[8], Cell *parent){
     int_t n_points = 1<<n_dim;
     for(int_t i = 0; i < n_points; ++i)
         points[i] = pts[i];
+    index = -1;
     level = parent->level + 1;
     max_level = parent->max_level;
     test_func = parent->test_func;
