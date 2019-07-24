@@ -84,6 +84,9 @@
 #      |           |         ^
 #      |___________|         |___> x
 #      0    e3     1
+
+import properties
+
 from .base import BaseTensorMesh
 from .InnerProducts import InnerProducts
 from .MeshIO import TreeMeshIO
@@ -101,7 +104,12 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
     _meshType = 'TREE'
 
     #inheriting stuff from BaseTensorMesh that isn't defined in _QuadTree
-    def __init__(self, h, x0=None, **kwargs):
+    def __init__(self, h=None, x0=None, **kwargs):
+        if 'h' in kwargs.keys():
+            h = kwargs.pop('h')
+        if 'x0' in kwargs.keys():
+            x0 = kwargs.pop('x0')
+        # print(h, x0)
         BaseTensorMesh.__init__(self, h, x0)#TODO:, **kwargs) # pass the kwargs for copy/paste
 
         nx = len(self.h[0])
@@ -230,6 +238,10 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         full_tbl += "</table>\n"
 
         return full_tbl
+
+    @properties.validator('x0')
+    def _x0_validator(self, change):
+        self._set_x0(change['value'])
 
     @property
     def vntF(self):

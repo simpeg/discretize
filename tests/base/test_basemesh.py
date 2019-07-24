@@ -106,6 +106,12 @@ class TestBaseMesh(unittest.TestCase):
         self.assertTrue(np.all(Yc == 2))
         self.assertTrue(np.all(Zc == 3))
 
+    def test_serialization(self):
+        self.mesh.x0 = np.r_[-1., -2., 1.]
+        mesh2 = BaseRectangularMesh.deserialize(self.mesh.serialize())
+        self.assertTrue(np.all(self.mesh.x0 == mesh2.x0))
+        self.assertTrue(np.all(self.mesh._n == mesh2._n))
+
 
 class TestMeshNumbers2D(unittest.TestCase):
 

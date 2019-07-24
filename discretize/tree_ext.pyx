@@ -445,13 +445,7 @@ cdef class _TreeMesh:
         """Number the cells, nodes, faces, and edges of the TreeMesh"""
         self.tree.number()
 
-    @property
-    def x0(self):
-        """Origin of the mesh"""
-        return np.array(self._x0)
-
-    @x0.setter
-    def x0(self, x0):
+    def _set_x0(self, x0):
         # On object creation, x0 attempts to be set to properties.utils.Sentinel, so guard against this
         # I believe this happens in the BaseMesh class
         if isinstance(x0, Sentinel):

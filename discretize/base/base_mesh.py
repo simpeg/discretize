@@ -29,9 +29,9 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
 
     x0 = properties.Array(
         "origin of the mesh (dim, )",
-        dtype=float,
+        dtype=(float, int),
         shape=('*',),
-        required=True
+        required=True,
     )
 
     # Instantiate the class
@@ -503,8 +503,8 @@ class BaseRectangularMesh(BaseMesh):
     """
 
 
-    def __init__(self, n, x0=None, **kwargs):
-        BaseMesh.__init__(self, n, x0=x0, **kwargs)
+    def __init__(self, n=None, x0=None, **kwargs):
+        BaseMesh.__init__(self, n=n, x0=x0, **kwargs)
 
     @property
     def nCx(self):
