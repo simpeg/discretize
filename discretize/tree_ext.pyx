@@ -12,7 +12,6 @@ import scipy.sparse as sp
 from scipy.spatial import Delaunay, cKDTree
 from six import integer_types
 import numpy as np
-from properties.utils import Sentinel
 
 cdef class TreeCell:
     """A Cell of the `TreeMesh`
@@ -446,10 +445,6 @@ cdef class _TreeMesh:
         self.tree.number()
 
     def _set_x0(self, x0):
-        # On object creation, x0 attempts to be set to properties.utils.Sentinel, so guard against this
-        # I believe this happens in the BaseMesh class
-        if isinstance(x0, Sentinel):
-            return # do nothing!!
         if not isinstance(x0, (list, tuple, np.ndarray)):
             raise ValueError('x0 must be a list, tuple or numpy array')
         self._x0 = np.asarray(x0, dtype=np.float64)
