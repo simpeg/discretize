@@ -121,6 +121,11 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         # Now can initialize cpp tree parent
         _TreeMesh.__init__(self, self.h, self.x0)
 
+        if 'cell_levels' in kwargs.keys() and 'cell_indexes' in kwargs.keys():
+            inds = kwargs.pop('cell_indexes')
+            levels = kwargs.pop('cell_levels')
+            self.__setstate__((inds, levels))
+
     def __repr__(self):
         """Plain text representation."""
         mesh_name = '{0!s}TreeMesh'.format(('Oc' if self.dim==3 else 'Quad'))
@@ -644,8 +649,17 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
             plt.show()
         return tuple(out)
 
-    def save(self, *args, **kwargs):
-        raise NotImplementedError()
+    def serialize(self):
+        serial = BaseTensorMesh.serialize(self)
+        inds, levels = self.__getstate__()
+        serial['cell_indexes'] = inds
+        serial['cell_levels'] = levels
+        return serial
+
+    @classmethod
+    def deserialize(cls, serial):
+        mesh = cls(**serial)
+        return mesh
 
     def load(self, *args, **kwargs):
         raise NotImplementedError()

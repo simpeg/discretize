@@ -114,6 +114,7 @@ class TestSimpleQuadTree(unittest.TestCase):
     def test_serialization(self):
         hx, hy = np.r_[1., 2, 3, 4], np.r_[5., 6, 7, 8]
         mesh1 = discretize.TreeMesh([hx, hy], levels=2, x0=np.r_[-1, -1])
+        mesh1.refine(2)
         mesh2 = discretize.TreeMesh.deserialize(mesh1.serialize())
         self.assertTrue(np.all(mesh1.x0 == mesh2.x0))
         self.assertTrue(np.all(mesh1._n == mesh2._n))
