@@ -84,7 +84,7 @@ class BaseTensorMesh(BaseMesh):
                     raise Exception(
                         "x0[{0:d}] must be a scalar or '0' to be zero, "
                         "'C' to center, or 'N' to be negative. The input value"
-                        "{} is invalid".format(i, x_i)
+                        "{1} is invalid".format(i, x_i)
                     )
 
         if 'n' in kwargs.keys():
