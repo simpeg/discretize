@@ -1,11 +1,11 @@
 from __future__ import print_function, division
 import numpy as np
 import sys
-if sys.version_info < (3,):
-    scalarTypes = (float, int, long, np.float64, np.int64, np.int32)
-else:
-    scalarTypes = (float, int, np.float64, np.int64, np.int32)
 
+
+scalarTypes = (float, int, np.float_, np.float64, np.int64, np.int32, np.number)
+if sys.version_info < (3,):
+    scalarTypes += (long, )
 
 def isScalar(f):
     if isinstance(f, scalarTypes):
