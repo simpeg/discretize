@@ -3,14 +3,14 @@ import numpy as np
 import sys
 
 
-scalarTypes = (float, int, np.number)
+scalarTypes = (complex, float, int, np.number)
 if sys.version_info < (3,):
     scalarTypes += (long, )
 
 def isScalar(f):
     if isinstance(f, scalarTypes):
         return True
-    elif isinstance(f, np.ndarray) and f.size == 1 and type(f[0]) in scalarTypes:
+    elif isinstance(f, np.ndarray) and f.size == 1 and isinstance(f[0], scalarTypes):
         return True
     return False
 

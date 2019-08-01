@@ -209,10 +209,12 @@ class TestSequenceFunctions(unittest.TestCase):
     def test_isScalar(self):
         self.assertTrue(isScalar(1.))
         self.assertTrue(isScalar(1))
+        self.assertTrue(isScalar(1j))
         if sys.version_info < (3, ):
             self.assertTrue(isScalar(long(1)))
         self.assertTrue(isScalar(np.r_[1.]))
         self.assertTrue(isScalar(np.r_[1]))
+        self.assertTrue(isScalar(np.r_[1j]))
 
     def test_asArray_N_x_Dim(self):
 
