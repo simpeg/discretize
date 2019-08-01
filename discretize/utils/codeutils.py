@@ -3,7 +3,7 @@ import numpy as np
 import sys
 
 
-scalarTypes = (float, int, np.float_, np.float64, np.int64, np.int32, np.number)
+scalarTypes = (float, int, np.number)
 if sys.version_info < (3,):
     scalarTypes += (long, )
 
