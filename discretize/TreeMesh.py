@@ -84,6 +84,9 @@
 #      |           |         ^
 #      |___________|         |___> x
 #      0    e3     1
+
+import properties
+
 from .base import BaseTensorMesh
 from .InnerProducts import InnerProducts
 from .MeshIO import TreeMeshIO
@@ -101,7 +104,12 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
     _meshType = 'TREE'
 
     #inheriting stuff from BaseTensorMesh that isn't defined in _QuadTree
-    def __init__(self, h, x0=None, **kwargs):
+    def __init__(self, h=None, x0=None, **kwargs):
+        if 'h' in kwargs.keys():
+            h = kwargs.pop('h')
+        if 'x0' in kwargs.keys():
+            x0 = kwargs.pop('x0')
+        # print(h, x0)
         BaseTensorMesh.__init__(self, h, x0)#TODO:, **kwargs) # pass the kwargs for copy/paste
 
         nx = len(self.h[0])
@@ -112,6 +120,11 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
             raise ValueError("length of cell width vectors must be a power of 2")
         # Now can initialize cpp tree parent
         _TreeMesh.__init__(self, self.h, self.x0)
+
+        if 'cell_levels' in kwargs.keys() and 'cell_indexes' in kwargs.keys():
+            inds = kwargs.pop('cell_indexes')
+            levels = kwargs.pop('cell_levels')
+            self.__setstate__((inds, levels))
 
     def __repr__(self):
         """Plain text representation."""
@@ -230,6 +243,10 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         full_tbl += "</table>\n"
 
         return full_tbl
+
+    @properties.validator('x0')
+    def _x0_validator(self, change):
+        self._set_x0(change['value'])
 
     @property
     def vntF(self):
@@ -632,8 +649,17 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
             plt.show()
         return tuple(out)
 
-    def save(self, *args, **kwargs):
-        raise NotImplementedError()
+    def serialize(self):
+        serial = BaseTensorMesh.serialize(self)
+        inds, levels = self.__getstate__()
+        serial['cell_indexes'] = inds
+        serial['cell_levels'] = levels
+        return serial
+
+    @classmethod
+    def deserialize(cls, serial):
+        mesh = cls(**serial)
+        return mesh
 
     def load(self, *args, **kwargs):
         raise NotImplementedError()

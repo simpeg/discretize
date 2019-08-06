@@ -29,14 +29,15 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
 
     x0 = properties.Array(
         "origin of the mesh (dim, )",
-        dtype=float,
+        dtype=(float, int),
         shape=('*',),
-        required=True
+        required=True,
     )
 
     # Instantiate the class
-    def __init__(self, n, x0=None, **kwargs):
-        self._n = n  # number of dimensions
+    def __init__(self, n=None, x0=None, **kwargs):
+        if n is not None:
+            self._n = n  # number of dimensions
 
         if x0 is None:
             self.x0 = np.zeros(len(self._n))
@@ -502,8 +503,8 @@ class BaseRectangularMesh(BaseMesh):
     """
 
 
-    def __init__(self, n, x0=None, **kwargs):
-        BaseMesh.__init__(self, n, x0=x0, **kwargs)
+    def __init__(self, n=None, x0=None, **kwargs):
+        BaseMesh.__init__(self, n=n, x0=x0, **kwargs)
 
     @property
     def nCx(self):
