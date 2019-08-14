@@ -1,8 +1,12 @@
-#cython: embedsignature=True
+# cython: embedsignature=True
+# cython: profile=True
+# cython: linetrace=True
+# distutils: define_macros=CYTHON_TRACE_NOGIL=1
 # from __future__ import division
 import numpy as np
 import cython
 cimport numpy as np
+import scipy.sparse as sp
 # from libcpp.vector cimport vector
 
 def _interp_point_1D(np.ndarray[np.float64_t, ndim=1] x, float xr_i):
@@ -74,7 +78,7 @@ def _interpmat1D(np.ndarray[np.float64_t, ndim=1] locs,
     cdef IIFF xs
     cdef int npts = locs.shape[0]
     cdef int i
-    
+
     cdef np.ndarray[np.int64_t,ndim=1] inds = np.empty(npts*2,dtype=np.int64)
     cdef np.ndarray[np.float64_t,ndim=1] vals = np.empty(npts*2,dtype=np.float64)
     for i in range(npts):
@@ -84,7 +88,7 @@ def _interpmat1D(np.ndarray[np.float64_t, ndim=1] locs,
         inds[2*i+1] = xs.i2
         vals[2*i  ] = xs.w1
         vals[2*i+1] = xs.w2
-    
+
     return inds,vals
 
 @cython.boundscheck(False)
@@ -118,7 +122,7 @@ def _interpmat2D(np.ndarray[np.float64_t, ndim=2] locs,
         vals[4*i+1] = xs.w1*ys.w2
         vals[4*i+2] = xs.w2*ys.w1
         vals[4*i+3] = xs.w2*ys.w2
-    
+
     return inds,vals
 
 @cython.boundscheck(False)
@@ -134,7 +138,7 @@ def _interpmat3D(np.ndarray[np.float64_t, ndim=2] locs,
     cdef IIFF xs,ys,zs
     cdef int npts = locs.shape[0]
     cdef int i
-    
+
     cdef np.ndarray[np.int64_t,ndim=2] inds = np.empty((npts*8,3),dtype=np.int64)
     cdef np.ndarray[np.float64_t,ndim=1] vals = np.empty(npts*8,dtype=np.float64)
     for i in range(npts):
@@ -177,5 +181,140 @@ def _interpmat3D(np.ndarray[np.float64_t, ndim=2] locs,
         vals[8*i+5] = xs.w1*ys.w2*zs.w2
         vals[8*i+6] = xs.w2*ys.w1*zs.w2
         vals[8*i+7] = xs.w2*ys.w2*zs.w2
-    
+
     return inds,vals
+
+@cython.boundscheck(False)
+def tensor_volume_averaging(mesh_in, mesh_out, values=None):
+    cdef np.int32_t[:] i1_in, i1_out, i2_in, i2_out, i3_in, i3_out
+    cdef np.float64_t[:] w1, w2, w3
+    w1 = np.array([1.0], dtype=np.float64)
+    w2 = np.array([1.0], dtype=np.float64)
+    w3 = np.array([1.0], dtype=np.float64)
+    i1_in = np.array([0], dtype=np.int32)
+    i1_out = np.array([0], dtype=np.int32)
+    i2_in = np.array([0], dtype=np.int32)
+    i2_out = np.array([0], dtype=np.int32)
+    i3_in = np.array([0], dtype=np.int32)
+    i3_out = np.array([0], dtype=np.int32)
+    cdef int dim = mesh_in.dim
+    w1, i1_in, i1_out = _volume_avg_weights(mesh_in.vectorNx, mesh_out.vectorNx)
+    if dim > 1:
+        w2, i2_in, i2_out = _volume_avg_weights(mesh_in.vectorNy, mesh_out.vectorNy)
+    if dim > 2:
+        w3, i3_in, i3_out = _volume_avg_weights(mesh_in.vectorNz, mesh_out.vectorNz)
+
+    cdef (np.int32_t, np.int32_t, np.int32_t) w_shape = (w1.shape[0], w2.shape[0], w3.shape[0])
+    cdef (np.int32_t, np.int32_t, np.int32_t) mesh_in_shape
+    cdef (np.int32_t, np.int32_t, np.int32_t) mesh_out_shape
+    if dim == 1:
+        mesh_in_shape = (mesh_in.nCx, 1, 1)
+        mesh_out_shape = (mesh_out.nCx, 1, 1)
+    elif dim == 2:
+        mesh_in_shape = (mesh_in.nCx, mesh_in.nCy, 1)
+        mesh_out_shape = (mesh_out.nCx, mesh_out.nCy, 1)
+    elif dim == 3:
+        mesh_in_shape = (*mesh_in.vnC, )
+        mesh_out_shape = (*mesh_out.vnC, )
+
+    cdef np.float64_t[::1, :, :] val_in
+    cdef np.float64_t[::1, :, :] val_out
+    cdef int i1, i2, i3, i1i, i2i, i3i, i1o, i2o, i3o
+    cdef np.float64_t w_1, w_12, w_32
+    cdef np.float64_t[::1, :, :] vol = mesh_out.vol.reshape(mesh_out_shape, order='F')
+
+    if values is not None:
+        # If given a values array, do the operation
+        val_in = values.reshape(mesh_in_shape, order='F').astype(np.float64)
+        v_o = np.zeros(mesh_out_shape, order='F')
+        val_out = v_o
+        for i3 in range(w_shape[2]):
+            i3i = i3_in[i3]
+            i3o = i3_out[i3]
+            w_3 = w3[i3]
+            for i2 in range(w_shape[1]):
+                i2i = i2_in[i2]
+                i2o = i2_out[i2]
+                w_32 = w_3*w2[i2]
+                for i1 in range(w_shape[0]):
+                    i1i = i1_in[i1]
+                    i1o = i1_out[i1]
+                    val_out[i1o, i2o, i3o] += w_32*w1[i1]*val_in[i1i, i2i, i3i]/vol[i1o, i2o, i3o]
+        return v_o.reshape(-1, order='F')
+
+    # Else, build and return a sparse matrix representing the operation
+    i_i = np.empty(w_shape, dtype=np.int32)
+    i_o = np.empty(w_shape, dtype=np.int32)
+    ws = np.empty(w_shape, dtype=np.int32)
+    cdef np.int32_t[:,:,:] i_in = i_i
+    cdef np.int32_t[:,:,:] i_out = i_o
+    cdef np.float64_t[:, :, :] w = ws
+    for i1 in range(w.shape[0]):
+        i1i = i1_in[i1]*mesh_in_shape[0]
+        i1o = i1_out[i1]*mesh_out_shape[0]
+        w_1 = w1[i1]
+        for i2 in range(w.shape[1]):
+            i2i = (i1i + i2_in[i2])*mesh_in_shape[1]
+            i2o = (i1o + i2_out[i2])*mesh_out_shape[1]
+            w_12 = w_1*w2[i2]
+            for i3 in range(w.shape[2]):
+                i3i = i3_in[i3]
+                i3o = i3_out[i3]
+                w[i1, i2, i3] = w_12*w3[i3]
+                i_in[i1, i2, i3] = i2i+i3i
+                i_out[i1, i2, i3] = i2o+i3o
+    ws = ws.reshape(-1)
+    i_i = i_i.reshape(-1)
+    i_o = i_o.reshape(-1)
+    A = sp.csr_matrix((ws.reshape(-1), (i_o, i_i)), shape=(mesh_out.nC, mesh_in.nC))
+    A = sp.diags(1.0/mesh_out.vol)*A
+    return A
+
+@cython.boundscheck(False)
+def _volume_avg_weights(np.float64_t[:] x1, np.float64_t[:] x2):
+    cdef int n1 = x1.shape[0]
+    cdef int n2 = x2.shape[0]
+    cdef np.float64_t[:] xs = np.empty(n1 + n2)
+    # Fill xs with uniques and truncate
+    cdef int i1, i2, i
+    i1 = i2 = i = 0
+    while i1<n1 or i2<n2:
+        if i1<n1 and i2<n2:
+            if x1[i1]<x2[i2]:
+                xs[i] = x1[i1]
+                i1 += 1
+            elif x1[i1]>x2[i2]:
+                xs[i] = x2[i2]
+                i2 += 1
+            else:
+                xs[i] = x1[i1]
+                i1 += 1
+                i2 += 1
+        elif i1<n1 and i2==n2:
+            xs[i] = x1[i1]
+            i1 += 1
+        elif i2<n2 and i1==n1:
+            xs[i] = x2[i2]
+            i2 += 1
+        i += 1
+    cdef int nh = i-1
+    cdef np.float64_t[:] hs = np.empty(nh)
+    cdef np.int32_t[:] ix1 = np.zeros(nh, dtype=np.int32)
+    cdef np.int32_t[:] ix2 = np.zeros(nh, dtype=np.int32)
+    cdef np.float64_t center
+
+    i1 = i2 = i = 0
+    for i in range(nh):
+        hs[i] = xs[i+1]-xs[i]
+        center = xs[i]+0.5*hs[i]
+        if center<x2[0]:
+            hs[i] = 0.0
+        elif center>x2[n2-1]:
+            hs[i] = 0.0
+        while i1<n1-1 and center>=x1[i1]:
+            i1 += 1
+        while i2<n2-1 and center>=x2[i2]:
+            i2 += 1
+        ix1[i] = min(max(i1-1, 0), n1-1)
+        ix2[i] = min(max(i2-1, 0), n2-1)
+    return hs, ix1, ix2
