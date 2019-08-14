@@ -17,7 +17,6 @@ except ImportError:
     matplotlib = False
 
 
-@requires({'matplotlib': matplotlib})
 class TensorView(object):
     """Provides viewing functions for TensorMesh
 
@@ -49,6 +48,7 @@ class TensorView(object):
     #         pltNum +=1
     #     if showIt: plt.show()
 
+    @requires({'matplotlib': matplotlib})
     def plotImage(
         self, v, vType='CC', grid=False, view='real',
         ax=None, clim=None, showIt=False,
@@ -202,6 +202,7 @@ class TensorView(object):
             plt.show()
         return ph
 
+    @requires({'matplotlib': matplotlib})
     def plotSlice(
         self, v, vType='CC',
         normal='Z', ind=None, grid=False, view='real',
@@ -369,6 +370,7 @@ class TensorView(object):
         ax.set_title('Slice {0:.0f}'.format(ind))
         return out
 
+    @requires({'matplotlib': matplotlib})
     def _plotImage2D(
         self, v, vType='CC', grid=False, view='real',
         ax=None, clim=None, showIt=False,
@@ -570,6 +572,7 @@ class TensorView(object):
             plt.show()
         return out
 
+    @requires({'matplotlib': matplotlib})
     def plotGrid(
         self, ax=None, nodes=False, faces=False, centers=False, edges=False,
         lines=True, showIt=False, **kwargs
@@ -742,6 +745,7 @@ class TensorView(object):
         return ax
 
 
+    @requires({'matplotlib': matplotlib})
     def plot_3d_slicer(self, v, xslice=None, yslice=None, zslice=None,
                        vType='CC', view='real', axis='xy', transparent=None,
                        clim=None, xlim=None, ylim=None, zlim=None,
@@ -792,9 +796,12 @@ class TensorView(object):
         plt.show()
 
 
-@requires({'matplotlib': matplotlib})
 class CylView(object):
 
+    def __init__(self):
+        pass
+
+    @requires({'matplotlib': matplotlib})
     def _plotCylTensorMesh(self, plotType, *args, **kwargs):
 
         if not self.isSymmetric:
@@ -891,6 +898,7 @@ class CylView(object):
 
         return out
 
+    @requires({'matplotlib': matplotlib})
     def plotGrid(self, *args, **kwargs):
         if self.isSymmetric:
             return self._plotCylTensorMesh('plotGrid', *args, **kwargs)
@@ -960,6 +968,7 @@ for reference, see: http://matplotlib.org/examples/pylab_examples/polar_demo.htm
 
         return ax
 
+    @requires({'matplotlib': matplotlib})
     def _plotGridThetaSlice(self, *args, **kwargs):
         if self.isSymmetric:
             return self.plotGrid(*args, **kwargs)
@@ -969,6 +978,7 @@ for reference, see: http://matplotlib.org/examples/pylab_examples/polar_demo.htm
         mesh2D = self.__class__(h=h2d, x0=self.x0)
         return mesh2D.plotGrid(*args, **kwargs)
 
+    @requires({'matplotlib': matplotlib})
     def _plotGridZSlice(self, *args, **kwargs):
         # https://github.com/matplotlib/matplotlib/issues/312
         ax = kwargs.get('ax', None)
@@ -1019,11 +1029,11 @@ for reference, see: http://matplotlib.org/examples/pylab_examples/polar_demo.htm
 
         return ax
 
+    @requires({'matplotlib': matplotlib})
     def plotImage(self, *args, **kwargs):
         return self._plotCylTensorMesh('plotImage', *args, **kwargs)
 
 
-@requires({'matplotlib': matplotlib})
 class CurviView(object):
     """
     Provides viewing functions for CurvilinearMesh
@@ -1034,6 +1044,7 @@ class CurviView(object):
     def __init__(self):
         pass
 
+    @requires({'matplotlib': matplotlib})
     def plotGrid(
         self, ax=None, nodes=False, faces=False, centers=False, edges=False,
         lines=True, showIt=False, **kwargs
@@ -1131,6 +1142,7 @@ class CurviView(object):
 
         return ax
 
+    @requires({'matplotlib': matplotlib})
     def plotImage(
         self, I, ax=None, showIt=False, grid=False, clim=None
     ):
