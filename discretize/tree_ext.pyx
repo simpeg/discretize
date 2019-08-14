@@ -13,6 +13,19 @@ from scipy.spatial import Delaunay, cKDTree
 from six import integer_types
 import numpy as np
 
+from discretize.utils.codeutils import requires
+# matplotlib is a soft dependencies for discretize
+try:
+    import matplotlib
+    import matplotlib.cm as cmx
+    import matplotlib.pyplot as plt
+    import matplotlib.colors as colors
+    from mpl_toolkits.mplot3d import Axes3D
+    from matplotlib.collections import PatchCollection
+except ImportError:
+    matplotlib = False
+
+
 cdef class TreeCell:
     """A Cell of the `TreeMesh`
 
@@ -3303,6 +3316,7 @@ cdef class _TreeMesh:
 
         return sp.csr_matrix((V, (I, J)), shape=(locs.shape[0],self.nC))
 
+    @requires({'matplotlib': matplotlib})
     def plotGrid(self,
         ax=None, nodes=False, faces=False, centers=False, edges=False,
         lines=True, cell_line=False,
@@ -3345,15 +3359,10 @@ cdef class _TreeMesh:
             Axes handle for the plot
 
         """
-        import matplotlib
         if ax is None:
-            import matplotlib.pyplot as plt
-            import matplotlib.colors as colors
-            import matplotlib.cm as cmx
             if(self._dim == 2):
                 ax = plt.subplot(111)
             else:
-                from mpl_toolkits.mplot3d import Axes3D
                 ax = plt.subplot(111, projection='3d')
         else:
             if not isinstance(ax, matplotlib.axes.Axes):
@@ -3504,6 +3513,7 @@ cdef class _TreeMesh:
 
         return ax
 
+    @requires({'matplotlib': matplotlib})
     def plotImage(self, v, vType='CC', grid=False, view='real',
                   ax=None, clim=None, showIt=False,
                   pcolorOpts=None,
@@ -3544,13 +3554,6 @@ cdef class _TreeMesh:
 
         if view == 'vec':
             raise NotImplementedError('Vector ploting is not supported on TreeMesh (yet)')
-
-        import matplotlib.pyplot as plt
-        import matplotlib
-        import matplotlib.colors as colors
-        import matplotlib.cm as cmx
-        from matplotlib.collections import PatchCollection
-
 
         if view in ['real', 'imag', 'abs']:
             v = getattr(np, view)(v) # e.g. np.real(v)

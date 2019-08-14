@@ -97,6 +97,15 @@ from scipy.spatial import Delaunay
 import scipy.sparse as sp
 from six import integer_types
 
+from discretize.utils.codeutils import requires
+# matplotlib is a soft dependencies for discretize
+try:
+    import matplotlib.pyplot as plt
+    import matplotlib
+except ImportError:
+    matplotlib = False
+
+
 class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
     """
     TreeMesh is a class for adaptive QuadTree (2D) and OcTree (3D) meshes.
@@ -521,6 +530,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
             P = np.r_[Px, Py, Pz]
         return sp.identity(self.nE).tocsr()[P]
 
+    @requires({'matplotlib': matplotlib})
     def plotSlice(
         self, v, vType='CC',
         normal='Z', ind=None, grid=False, view='real',
@@ -562,9 +572,6 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
 
         if not isinstance(grid, bool):
             raise TypeError('grid must be a boolean')
-
-        import matplotlib.pyplot as plt
-        import matplotlib
 
         normalInd = {'X': 0, 'Y': 1, 'Z': 2}[normal]
         antiNormalInd = {'X': [1, 2], 'Y': [0, 2], 'Z': [0, 1]}[normal]
