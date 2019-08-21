@@ -193,7 +193,7 @@ ax.set_title('Log of Cell Areas')
 # ----------
 #
 # Here we show how the same approach can be used to create and extract
-# properties from a 3D tensor mesh.
+# properties from a 3D tree mesh.
 #
 
 dx = 5    # minimum cell width (base mesh cell width) in x
