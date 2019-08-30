@@ -185,7 +185,8 @@ def _interpmat3D(np.ndarray[np.float64_t, ndim=2] locs,
     return inds,vals
 
 @cython.boundscheck(False)
-def tensor_volume_averaging(mesh_in, mesh_out, values=None):
+@cython.cdivision(True)
+def tensor_volume_averaging(mesh_in, mesh_out, values=None, output=None):
     cdef np.int32_t[:] i1_in, i1_out, i2_in, i2_out, i3_in, i3_out
     cdef np.float64_t[:] w1, w2, w3
     w1 = np.array([1.0], dtype=np.float64)
@@ -198,11 +199,14 @@ def tensor_volume_averaging(mesh_in, mesh_out, values=None):
     i3_in = np.array([0], dtype=np.int32)
     i3_out = np.array([0], dtype=np.int32)
     cdef int dim = mesh_in.dim
-    w1, i1_in, i1_out = _volume_avg_weights(mesh_in.vectorNx, mesh_out.vectorNx)
-    if dim > 1:
-        w2, i2_in, i2_out = _volume_avg_weights(mesh_in.vectorNy, mesh_out.vectorNy)
-    if dim > 2:
-        w3, i3_in, i3_out = _volume_avg_weights(mesh_in.vectorNz, mesh_out.vectorNz)
+    try:
+        w1, i1_in, i1_out = _volume_avg_weights(mesh_in.vectorNx, mesh_out.vectorNx)
+        if dim > 1:
+            w2, i2_in, i2_out = _volume_avg_weights(mesh_in.vectorNy, mesh_out.vectorNy)
+        if dim > 2:
+            w3, i3_in, i3_out = _volume_avg_weights(mesh_in.vectorNz, mesh_out.vectorNz)
+    except AttributeError:
+        raise TypeError('Both meshs must be a TensorMesh, not {} and {}'.format(type(mesh_in).__name__, type(mesh_out).__name__))
 
     cdef (np.int32_t, np.int32_t, np.int32_t) w_shape = (w1.shape[0], w2.shape[0], w3.shape[0])
     cdef (np.int32_t, np.int32_t, np.int32_t) mesh_in_shape
@@ -220,13 +224,17 @@ def tensor_volume_averaging(mesh_in, mesh_out, values=None):
     cdef np.float64_t[::1, :, :] val_in
     cdef np.float64_t[::1, :, :] val_out
     cdef int i1, i2, i3, i1i, i2i, i3i, i1o, i2o, i3o
-    cdef np.float64_t w_1, w_12, w_32
+    cdef np.float64_t w_3, w_32
     cdef np.float64_t[::1, :, :] vol = mesh_out.vol.reshape(mesh_out_shape, order='F')
 
     if values is not None:
         # If given a values array, do the operation
         val_in = values.reshape(mesh_in_shape, order='F').astype(np.float64)
-        v_o = np.zeros(mesh_out_shape, order='F')
+        if output is not None:
+            v_o = np.zeros(mesh_out_shape, order='F')
+        else:
+            v_o = output.reshape(mesh_out_shape, order='F')
+            v_o.fill(0)
         val_out = v_o
         for i3 in range(w_shape[2]):
             i3i = i3_in[i3]
@@ -243,31 +251,30 @@ def tensor_volume_averaging(mesh_in, mesh_out, values=None):
         return v_o.reshape(-1, order='F')
 
     # Else, build and return a sparse matrix representing the operation
-    i_i = np.empty(w_shape, dtype=np.int32)
-    i_o = np.empty(w_shape, dtype=np.int32)
-    ws = np.empty(w_shape, dtype=np.int32)
-    cdef np.int32_t[:,:,:] i_in = i_i
-    cdef np.int32_t[:,:,:] i_out = i_o
-    cdef np.float64_t[:, :, :] w = ws
-    for i1 in range(w.shape[0]):
-        i1i = i1_in[i1]*mesh_in_shape[0]
-        i1o = i1_out[i1]*mesh_out_shape[0]
-        w_1 = w1[i1]
+    i_i = np.empty(w_shape, dtype=np.int32, order='F')
+    i_o = np.empty(w_shape, dtype=np.int32, order='F')
+    ws = np.empty(w_shape, dtype=np.float64, order='F')
+    cdef np.int32_t[::1,:,:] i_in = i_i
+    cdef np.int32_t[::1,:,:] i_out = i_o
+    cdef np.float64_t[::1, :, :] w = ws
+    for i3 in range(w.shape[2]):
+        i3i = i3_in[i3]*mesh_in_shape[2]
+        i3o = i3_out[i3]*mesh_out_shape[2]
+        w_3 = w3[i3]
         for i2 in range(w.shape[1]):
-            i2i = (i1i + i2_in[i2])*mesh_in_shape[1]
-            i2o = (i1o + i2_out[i2])*mesh_out_shape[1]
-            w_12 = w_1*w2[i2]
-            for i3 in range(w.shape[2]):
-                i3i = i3_in[i3]
-                i3o = i3_out[i3]
-                w[i1, i2, i3] = w_12*w3[i3]
-                i_in[i1, i2, i3] = i2i+i3i
-                i_out[i1, i2, i3] = i2o+i3o
-    ws = ws.reshape(-1)
-    i_i = i_i.reshape(-1)
-    i_o = i_o.reshape(-1)
-    A = sp.csr_matrix((ws.reshape(-1), (i_o, i_i)), shape=(mesh_out.nC, mesh_in.nC))
-    A = sp.diags(1.0/mesh_out.vol)*A
+            i2i = (i3i + i2_in[i2])*mesh_in_shape[1]
+            i2o = (i3o + i2_out[i2])*mesh_out_shape[1]
+            w_32 = w_3*w2[i2]
+            for i1 in range(w.shape[0]):
+                i1i = i1_in[i1]
+                i1o = i1_out[i1]
+                w[i1, i2, i3] = w_32*w1[i1]/vol[i1o, i2o, i3o]
+                i_in[i1, i2, i3] = i2i+i1i
+                i_out[i1, i2, i3] = i2o+i1o
+    ws = ws.reshape(-1, order='F')
+    i_i = i_i.reshape(-1, order='F')
+    i_o = i_o.reshape(-1, order='F')
+    A = sp.csr_matrix((ws, (i_o, i_i)), shape=(mesh_out.nC, mesh_in.nC))
     return A
 
 @cython.boundscheck(False)
