@@ -502,3 +502,23 @@ class TreeMeshIO(object):
             for item in six.iteritems(models):
                 # Save the data
                 np.savetxt(item[0], item[1][ubc_order], fmt='%3.5e')
+
+    def writeModelUBC(mesh, fileName, model, directory=''):
+        """Writes a model associated with a TreeMesh
+        to a UBC-GIF format model file.
+
+        Input:
+        :param str fileName:  File to write to
+        or just its name if directory is specified
+        :param str directory: directory where the UBC GIF file lives
+        :param numpy.ndarray model: The model
+        """
+        if type(fileName) is list:
+            out = {}
+            for f, m in zip(fileName,model):
+                mesh.writeModelUBC(f,m)
+        else:
+            ubc_order = mesh._ubc_order
+            fname = os.path.join(directory, fileName)
+            m = model[ubc_order]
+            np.savetxt(fname, m)
