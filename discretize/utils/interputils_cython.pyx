@@ -216,15 +216,18 @@ def tensor_volume_averaging(mesh_in, mesh_out, values=None, output=None):
     cdef (np.int32_t, np.int32_t, np.int32_t) w_shape = (w1.shape[0], w2.shape[0], w3.shape[0])
     cdef (np.int32_t, np.int32_t, np.int32_t) mesh_in_shape
     cdef (np.int32_t, np.int32_t, np.int32_t) mesh_out_shape
+
+    nCv_in = [len(h) for h in mesh_in.h]
+    nCv_out = [len(h) for h in mesh_out.h]
     if dim == 1:
-        mesh_in_shape = (mesh_in.nCx, 1, 1)
-        mesh_out_shape = (mesh_out.nCx, 1, 1)
+        mesh_in_shape = (nCv_in[0], 1, 1)
+        mesh_out_shape = (nCv_out[0], 1, 1)
     elif dim == 2:
-        mesh_in_shape = (mesh_in.nCx, mesh_in.nCy, 1)
-        mesh_out_shape = (mesh_out.nCx, mesh_out.nCy, 1)
+        mesh_in_shape = (nCv_in[0], nCv_in[1], 1)
+        mesh_out_shape = (nCv_out[0], nCv_out[1], 1)
     elif dim == 3:
-        mesh_in_shape = (*mesh_in.vnC, )
-        mesh_out_shape = (*mesh_out.vnC, )
+        mesh_in_shape = (*nCv_in, )
+        mesh_out_shape = (*nCv_out, )
 
     cdef np.float64_t[::1, :, :] val_in
     cdef np.float64_t[::1, :, :] val_out
@@ -263,19 +266,19 @@ def tensor_volume_averaging(mesh_in, mesh_out, values=None, output=None):
     cdef np.int32_t[::1,:,:] i_out = i_o
     cdef np.float64_t[::1, :, :] w = ws
     for i3 in range(w.shape[2]):
-        i3i = i3_in[i3]*mesh_in_shape[2]
-        i3o = i3_out[i3]*mesh_out_shape[2]
+        i3i = i3_in[i3]
+        i3o = i3_out[i3]
         w_3 = w3[i3]
         for i2 in range(w.shape[1]):
-            i2i = (i3i + i2_in[i2])*mesh_in_shape[1]
-            i2o = (i3o + i2_out[i2])*mesh_out_shape[1]
+            i2i = i2_in[i2]
+            i2o = i2_out[i2]
             w_32 = w_3*w2[i2]
             for i1 in range(w.shape[0]):
                 i1i = i1_in[i1]
                 i1o = i1_out[i1]
                 w[i1, i2, i3] = w_32*w1[i1]/vol[i1o, i2o, i3o]
-                i_in[i1, i2, i3] = i2i+i1i
-                i_out[i1, i2, i3] = i2o+i1o
+                i_in[i1, i2, i3] = (i3i*mesh_in_shape[1] + i2i)*mesh_in_shape[0] + i1i
+                i_out[i1, i2, i3] = (i3o*mesh_out_shape[1] + i2o)*mesh_out_shape[0] + i1o
     ws = ws.reshape(-1, order='F')
     i_i = i_i.reshape(-1, order='F')
     i_o = i_o.reshape(-1, order='F')
