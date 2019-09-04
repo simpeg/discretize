@@ -187,6 +187,14 @@ def _interpmat3D(np.ndarray[np.float64_t, ndim=2] locs,
 @cython.boundscheck(False)
 @cython.cdivision(True)
 def tensor_volume_averaging(mesh_in, mesh_out, values=None, output=None):
+    try:
+        mesh_type_err = ((mesh_in._meshType is not 'TENSOR') or
+                         (mesh_out._meshType is not 'TENSOR'))
+    except AttributeError:
+        mesh_type_err = True
+    if mesh_type_err:
+        raise TypeError('Both meshs must be a TensorMesh, not {} and {}'.format(type(mesh_in).__name__, type(mesh_out).__name__))
+
     cdef np.int32_t[:] i1_in, i1_out, i2_in, i2_out, i3_in, i3_out
     cdef np.float64_t[:] w1, w2, w3
     w1 = np.array([1.0], dtype=np.float64)
@@ -199,14 +207,11 @@ def tensor_volume_averaging(mesh_in, mesh_out, values=None, output=None):
     i3_in = np.array([0], dtype=np.int32)
     i3_out = np.array([0], dtype=np.int32)
     cdef int dim = mesh_in.dim
-    try:
-        w1, i1_in, i1_out = _volume_avg_weights(mesh_in.vectorNx, mesh_out.vectorNx)
-        if dim > 1:
-            w2, i2_in, i2_out = _volume_avg_weights(mesh_in.vectorNy, mesh_out.vectorNy)
-        if dim > 2:
-            w3, i3_in, i3_out = _volume_avg_weights(mesh_in.vectorNz, mesh_out.vectorNz)
-    except AttributeError:
-        raise TypeError('Both meshs must be a TensorMesh, not {} and {}'.format(type(mesh_in).__name__, type(mesh_out).__name__))
+    w1, i1_in, i1_out = _volume_avg_weights(mesh_in.vectorNx, mesh_out.vectorNx)
+    if dim > 1:
+        w2, i2_in, i2_out = _volume_avg_weights(mesh_in.vectorNy, mesh_out.vectorNy)
+    if dim > 2:
+        w3, i3_in, i3_out = _volume_avg_weights(mesh_in.vectorNz, mesh_out.vectorNz)
 
     cdef (np.int32_t, np.int32_t, np.int32_t) w_shape = (w1.shape[0], w2.shape[0], w3.shape[0])
     cdef (np.int32_t, np.int32_t, np.int32_t) mesh_in_shape
@@ -230,7 +235,7 @@ def tensor_volume_averaging(mesh_in, mesh_out, values=None, output=None):
     if values is not None:
         # If given a values array, do the operation
         val_in = values.reshape(mesh_in_shape, order='F').astype(np.float64)
-        if output is not None:
+        if output is None:
             v_o = np.zeros(mesh_out_shape, order='F')
         else:
             v_o = output.reshape(mesh_out_shape, order='F')
