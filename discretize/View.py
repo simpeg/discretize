@@ -1322,7 +1322,7 @@ class Slicer(object):
             self.xind = np.argmin(np.abs(self.xc - xslice))
         else:
             self.xind = self.xc.size // 2
-        if xslice is not None:
+        if yslice is not None:
             self.yind = np.argmin(np.abs(self.yc - yslice))
         else:
             self.yind = self.yc.size // 2
