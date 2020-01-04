@@ -1346,6 +1346,10 @@ class Slicer(object):
         # Store min and max of all data
         if clim is None:
             clim = [np.nanmin(self.v), np.nanmax(self.v)]
+        # In the case of a homogeneous fullspace provide a small range to avoid
+        # problems with colorbar and the three subplots.
+        if clim[0] == clim[1]:
+            clim = [0.99*clim[0], 1.01*clim[1]]
         self.pc_props = {'vmin': clim[0], 'vmax': clim[1]}
 
         # 2. Start populating figure
