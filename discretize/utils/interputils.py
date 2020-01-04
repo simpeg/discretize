@@ -82,3 +82,15 @@ def interpmat(locs, x, y=None, z=None):
     Q = sp.csr_matrix((vals, (I, J)),
                       shape=(npts, np.prod(shape)))
     return Q
+
+def volume_average(mesh_in, mesh_out, values=None, output=None):
+    if mesh_in._meshType is 'TREE':
+        if values is not None:
+            values
+    try:
+        mesh_type_err = ((mesh_in._meshType is not 'TENSOR') or
+                         (mesh_out._meshType is not 'TENSOR'))
+    except AttributeError:
+        mesh_type_err = True
+    if mesh_type_err:
+        raise TypeError('Both meshs must be a TensorMesh, not {} and {}'.format(type(mesh_in).__name__, type(mesh_out).__name__))

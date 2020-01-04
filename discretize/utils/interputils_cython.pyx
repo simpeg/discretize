@@ -187,13 +187,6 @@ def _interpmat3D(np.ndarray[np.float64_t, ndim=2] locs,
 @cython.boundscheck(False)
 @cython.cdivision(True)
 def tensor_volume_averaging(mesh_in, mesh_out, values=None, output=None):
-    try:
-        mesh_type_err = ((mesh_in._meshType is not 'TENSOR') or
-                         (mesh_out._meshType is not 'TENSOR'))
-    except AttributeError:
-        mesh_type_err = True
-    if mesh_type_err:
-        raise TypeError('Both meshs must be a TensorMesh, not {} and {}'.format(type(mesh_in).__name__, type(mesh_out).__name__))
 
     cdef np.int32_t[:] i1_in, i1_out, i2_in, i2_out, i3_in, i3_out
     cdef np.float64_t[:] w1, w2, w3
