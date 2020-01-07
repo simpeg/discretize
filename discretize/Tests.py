@@ -365,7 +365,7 @@ def checkDerivative(fctn, x0, num=7, plotIt=True, dx=None, expectedOrder=2, tole
 
 
     @requires({'matplotlib': matplotlib})
-    def plot_it():
+    def plot_it(ax):
         if plotIt:
             if ax is None:
                 ax = plt.subplot(111)
@@ -384,7 +384,7 @@ def checkDerivative(fctn, x0, num=7, plotIt=True, dx=None, expectedOrder=2, tole
             plt.setp(leg.get_title(),fontsize=15)
             plt.show()
 
-    plot_it()
+    plot_it(ax)
 
     return passTest
 

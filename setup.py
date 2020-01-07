@@ -93,6 +93,7 @@ else:
     metadata['configuration'] = configuration
 
     # A Small hack to remove -std=c99 from c++ compiler options (if present)
+    # This should only be if numpy 1.18.0 is installed.
     from numpy.distutils.ccompiler import CCompiler_customize, CCompiler
     from numpy.distutils.ccompiler import replace_method
     _np_customize = CCompiler_customize
