@@ -73,7 +73,7 @@ if len(sys.argv) >= 2 and ('--help' in sys.argv[1:] or
             'clean')):
         # For these actions, NumPy is not required.
         #
-        # They are required to succeed without Numpy for example when
+        # They are required to succeed without Numpy, for example when
         # pip is used to install discretize when Numpy is not yet present in
         # the system.
         try:
