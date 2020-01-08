@@ -363,7 +363,6 @@ def checkDerivative(fctn, x0, num=7, plotIt=True, dx=None, expectedOrder=2, tole
         print("{0!s}\n{1!s} FAIL! {2!s}\n{3!s}".format('*'*57, '<'*25, '>'*25, '*'*57))
         print(sadness[np.random.randint(len(sadness))]+'\n')
 
-
     @requires({'matplotlib': matplotlib})
     def plot_it(ax):
         if plotIt:
@@ -381,7 +380,7 @@ def checkDerivative(fctn, x0, num=7, plotIt=True, dx=None, expectedOrder=2, tole
                 ['$\mathcal{O}(h)$', '$\mathcal{O}(h^2)$'], loc='best',
                 title="$f(x + h\Delta x) - f(x) - h g(x) \Delta x - \mathcal{O}(h^2) = 0$",
                 frameon=False)
-            plt.setp(leg.get_title(),fontsize=15)
+            plt.setp(leg.get_title(), fontsize=15)
             plt.show()
 
     plot_it(ax)
