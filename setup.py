@@ -5,20 +5,8 @@ from __future__ import print_function
 Discretization tools for finite volume and inverse problems.
 """
 
-from setuptools import find_packages
-
-try:
-    from numpy.distutils.core import setup
-except Exception:
-    raise Exception(
-        "Install requires numpy. "
-        "If you use conda, `conda install numpy` "
-        "or you can use pip, `pip install numpy`"
-    )
-
 import os
 import sys
-import numpy
 
 
 CLASSIFIERS = [
@@ -37,9 +25,6 @@ CLASSIFIERS = [
     'Natural Language :: English',
 ]
 
-with open("README.rst") as f:
-    LONG_DESCRIPTION = ''.join(f.readlines())
-
 
 def configuration(parent_package='', top_path=None):
     from numpy.distutils.misc_util import Configuration
@@ -54,16 +39,24 @@ def configuration(parent_package='', top_path=None):
 
     return config
 
-setup(
+
+with open("README.rst") as f:
+    LONG_DESCRIPTION = ''.join(f.readlines())
+
+build_requires = [
+    'numpy>=1.8',
+    'scipy>=0.13',
+    'cython>=0.2',
+    'pymatsolver>=0.1.2',
+    'properties',
+    'vectormath',
+    ]
+
+metadata = dict(
     name="discretize",
     version="0.4.10",
-    install_requires=[
-        'numpy>=1.8',
-        'scipy>=0.13',
-        'cython>=0.2',
-        'pymatsolver>=0.1.2',
-        'properties[math]',
-    ],
+    setup_requires=build_requires,
+    install_requires=build_requires,
     author="SimPEG developers",
     author_email="rowanc1@gmail.com",
     description="Discretization tools for finite volume and inverse problems",
@@ -74,7 +67,46 @@ setup(
     download_url="http://github.com/simpeg/discretize",
     classifiers=CLASSIFIERS,
     platforms=["Windows", "Linux", "Solaris", "Mac OS-X", "Unix"],
-    use_2to3=False,
-    setup_requires=['numpy'],
-    configuration=configuration
 )
+
+if len(sys.argv) >= 2 and ('--help' in sys.argv[1:] or
+        sys.argv[1] in ('--help-commands', 'egg_info', '--version',
+            'clean')):
+        # For these actions, NumPy is not required.
+        #
+        # They are required to succeed without Numpy, for example when
+        # pip is used to install discretize when Numpy is not yet present in
+        # the system.
+        try:
+            from setuptools import setup
+        except ImportError:
+            from distutils.core import setup
+else:
+    if (len(sys.argv) >= 2 and sys.argv[1] in ('bdist_wheel', 'bdist_egg')) or (
+                'develop' in sys.argv):
+        # bdist_wheel/bdist_egg needs setuptools
+        import setuptools
+
+    from numpy.distutils.core import setup
+
+    # Add the configuration to the setup dict when building
+    # after numpy is installed
+    metadata['configuration'] = configuration
+
+    # A Small hack to remove -std=c99 from c++ compiler options (if present)
+    # This should only be if numpy 1.18.0 is installed.
+    from numpy.distutils.ccompiler import CCompiler_customize, CCompiler
+    from numpy.distutils.ccompiler import replace_method
+    _np_customize = CCompiler_customize
+    def _simpeg_customize(self, dist, need_cxx=0):
+        _np_customize(self, dist, need_cxx)
+        if need_cxx:
+            # Remove -std=c99 option if present
+            try:
+                self.compiler_so.remove('-std=c99')
+            except (AttributeError, ValueError):
+                pass
+    replace_method(CCompiler, 'customize', _simpeg_customize)
+
+
+setup(**metadata)
