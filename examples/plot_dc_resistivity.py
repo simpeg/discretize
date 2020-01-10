@@ -47,14 +47,15 @@ def run(plotIt=True):
     # Step4: Making Figure
     fig, axes = plt.subplots(1, 2, figsize=(12*1.2, 4*1.2))
     vmin, vmax = phitM.min(), phitM.max()
+    
     dat = tM.plotImage(phitM, ax=axes[0], clim=(vmin, vmax), grid=True)
-    dat = rM.plotImage(phirM, ax=axes[1], clim=(vmin, vmax), grid=True)
     cb0 = plt.colorbar(dat[0], ax=axes[0])
-    cb1 = plt.colorbar(dat[0], ax=axes[1])
     cb0.set_label("Voltage (V)")
-    cb1.set_label("Voltage (V)")
-
     axes[0].set_title('TensorMesh')
+
+    dat = rM.plotImage(phirM, ax=axes[1], clim=(vmin, vmax), grid=True)
+    cb1 = plt.colorbar(dat[0], ax=axes[1])
+    cb1.set_label("Voltage (V)")
     axes[1].set_title('CurvilinearMesh')
 
 

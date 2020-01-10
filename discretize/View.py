@@ -13,6 +13,7 @@ try:
     from mpl_toolkits.mplot3d import Axes3D
     import matplotlib.colors as colors
     import matplotlib.cm as cmx
+    from matplotlib.collections import PatchCollection
 except ImportError:
     matplotlib = False
 
@@ -1144,33 +1145,87 @@ class CurviView(object):
 
     @requires({'matplotlib': matplotlib})
     def plotImage(
-        self, I, ax=None, showIt=False, grid=False, clim=None
+        self, v, vType='CC', grid=False, view='real',
+        ax=None, clim=None, showIt=False,
+        pcolorOpts=None,
+        gridOpts=None,
+        range_x=None, range_y=None
     ):
         if self.dim == 3:
             raise NotImplementedError('This is not yet done!')
+        if view == 'vec':
+            raise NotImplementedError(
+                'Vector ploting is not supported on CurvilinearMesh (yet)'
+                )
+        if view in ['real', 'imag', 'abs']:
+            v = getattr(np, view)(v)  # e.g. np.real(v)
+        if vType == 'CC':
+            I = v
+        elif vType == 'N':
+            I = self.aveN2CC*v
+        elif vType in ['Fx', 'Fy', 'Ex', 'Ey']:
+            aveOp = 'ave' + vType[0] + '2CCV'
+            ind_xy = {'x': 0, 'y': 1}[vType[1]]
+            I = (getattr(self, aveOp)*v).reshape(2, self.nC)[ind_xy]  # average to cell centers
 
         if ax is None:
             ax = plt.subplot(111)
+        if pcolorOpts is None:
+            pcolorOpts = {}
+        if 'cmap' in pcolorOpts:
+            cm = pcolorOpts['cmap']
+        else:
+            cm = plt.get_cmap()
+        if 'vmin' in pcolorOpts:
+            vmin = pcolorOpts['vmin']
+        else:
+            vmin = np.nanmin(I) if clim is None else clim[0]
+        if 'vmax' in pcolorOpts:
+            vmax = pcolorOpts['vmax']
+        else:
+            vmax = np.nanmax(I) if clim is None else clim[1]
+        if 'alpha' in pcolorOpts:
+            alpha = pcolorOpts['alpha']
+        else:
+            alpha = 1.0
+        if gridOpts is None:
+            gridOpts = {'color': 'k'}
+        if 'color' not in gridOpts:
+            gridOpts['color'] = 'k'
 
-        jet = cm = plt.get_cmap('jet')
-        cNorm  = colors.Normalize(
-            vmin=I.min() if clim is None else clim[0],
-            vmax=I.max() if clim is None else clim[1])
+        cNorm = colors.Normalize(vmin=vmin, vmax=vmax)
+        scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=cm)
 
-        scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
-        # ax.set_xlim((self.x0[0], self.h[0].sum()))
-        # ax.set_ylim((self.x0[1], self.h[1].sum()))
+        if 'edge_color' in pcolorOpts:
+            edge_color = pcolorOpts['edge_color']
+        else:
+            edge_color = gridOpts['color'] if grid else 'none'
+        if 'alpha' in gridOpts:
+            edge_alpha = gridOpts['alpha']
+        else:
+            edge_alpha = 1.0
+        if edge_color.lower() != 'none':
+            if isinstance(edge_color, str):
+                edge_color = colors.to_rgba(edge_color, edge_alpha)
+            else:
+                edge_color = colors.to_rgba_array(edge_color, edge_alpha)
 
         Nx = self.r(self.gridN[:, 0], 'N', 'N', 'M')
         Ny = self.r(self.gridN[:, 1], 'N', 'N', 'M')
-        cell = self.r(I, 'CC', 'CC', 'M')
+        cells = self.r(I, 'CC', 'CC', 'M').reshape(-1)
 
+        polys = []
+        facecolors = scalarMap.to_rgba(cells)
+        facecolors[:, -1] = alpha
         for ii in range(self.nCx):
+            i_s = [ii, ii+1, ii+1, ii]
             for jj in range(self.nCy):
-                I = [ii, ii+1, ii+1, ii]
-                J = [jj, jj, jj+1, jj+1]
-                ax.add_patch(plt.Polygon(np.c_[Nx[I, J], Ny[I, J]], facecolor=scalarMap.to_rgba(cell[ii, jj]), edgecolor='k' if grid else 'none'))
+                j_s = [jj, jj, jj+1, jj+1]
+                polys.append(plt.Polygon(np.c_[Nx[i_s, j_s], Ny[i_s, j_s]]))
 
+        pc = PatchCollection(polys, facecolor=facecolors, edgecolor=edge_color)
+        # Add collection to axes
+        ax.add_collection(pc)
         scalarMap._A = []  # http://stackoverflow.com/questions/8342549/matplotlib-add-colorbar-to-a-sequence-of-line-plots
         ax.set_xlabel('x')
         ax.set_ylabel('y')
