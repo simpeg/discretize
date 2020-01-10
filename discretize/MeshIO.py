@@ -1,15 +1,13 @@
 import os
 import json
-import properties
 import numpy as np
-import six
 
 from . import utils
 from .base import BaseMesh
 
 try:
     from .mixins import InterfaceTensorread_vtk
-except ImportError as err:
+except ImportError:
     InterfaceTensorread_vtk = object
 
 
@@ -158,7 +156,6 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         else:
             raise Exception('File format not recognized')
         return Tnsmsh
-
 
     def _readModelUBC_2D(mesh, fileName):
         """
@@ -376,9 +373,11 @@ class TensorMeshIO(InterfaceTensorread_vtk):
 
         if models is None:
             return
-        assert type(models) is dict, 'models must be a dict'
+        if not isinstance(models, dict):
+            raise TypeError('models must be a dict')
         for key in models:
-            assert type(key) is str, 'The dict key is a file name'
+            if not isinstance(key, str):
+                raise TypeError('The dict key must be a string representing the file name')
             mesh.writeModelUBC(key, models[key], directory=directory)
 
 
@@ -447,9 +446,9 @@ class TreeMeshIO(object):
                 out[f] = mesh.readModelUBC(f)
             return out
 
-        assert mesh.dim == 3
+        if mesh.dim != 3:
+            raise TypeError('Mesh must be 3D')
 
-        modList = []
         modArr = np.loadtxt(fileName)
 
         ubc_order = mesh._ubc_order
@@ -458,14 +457,15 @@ class TreeMeshIO(object):
         un_order = np.empty_like(ubc_order)
         un_order[ubc_order] = np.arange(len(ubc_order))
 
-        model = modArr[un_order].copy() # ensure a contiguous array
+        model = modArr[un_order].copy()  # ensure a contiguous array
         return model
 
-    def writeUBC(mesh, fileName, models=None):
+    def writeUBC(mesh, fileName, models=None, directory=''):
         """Write UBC ocTree mesh and model files from a
         octree mesh and model.
         :param string fileName: File to write to
         :param dict models: Models in a dict, where each key is the filename
+        :param str directory: directory where to save model(s)
         """
         uniform_hs = np.array([np.allclose(h, h[0]) for h in mesh.h])
         if np.any(~uniform_hs):
@@ -497,8 +497,30 @@ class TreeMeshIO(object):
         np.savetxt(fileName, np.c_[indArr, levels], fmt='%i', header=head, comments='')
 
         # Print the models
-        # Assign the model('s) to the object
-        if models is not None:
-            for item in six.iteritems(models):
-                # Save the data
-                np.savetxt(item[0], item[1][ubc_order], fmt='%3.5e')
+        if models is None:
+            return
+        if not isinstance(models, dict):
+            raise TypeError('models must be a dict')
+        for key in models:
+            if not isinstance(key, str):
+                raise TypeError('The dict key must be a string representing the file name')
+            mesh.writeModelUBC(key, models[key], directory=directory)
+
+    def writeModelUBC(mesh, fileName, model, directory=''):
+        """Writes a model associated with a TreeMesh
+        to a UBC-GIF format model file.
+
+        Input:
+        :param str fileName:  File to write to
+        or just its name if directory is specified
+        :param str directory: directory where the UBC GIF file lives
+        :param numpy.ndarray model: The model
+        """
+        if type(fileName) is list:
+            for f, m in zip(fileName, model):
+                mesh.writeModelUBC(f, m)
+        else:
+            ubc_order = mesh._ubc_order
+            fname = os.path.join(directory, fileName)
+            m = model[ubc_order]
+            np.savetxt(fname, m)

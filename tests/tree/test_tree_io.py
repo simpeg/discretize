@@ -39,6 +39,12 @@ class TestOcTreeMeshIO(unittest.TestCase):
         self.assertTrue(np.allclose(mesh.gridCC, meshUBC.gridCC))
         self.assertTrue(np.allclose(vec, vecUBC))
         self.assertTrue(np.allclose(np.array(mesh.h), np.array(meshUBC.h)))
+
+        # Write it again with another IO function
+        mesh.writeModelUBC(['arange.txt'], [vec])
+        vecUBC2 = mesh.readModelUBC('arange.txt')
+        self.assertTrue(np.allclose(vec, vecUBC2))
+        
         print('IO of UBC octree files is working')
         os.remove('temp.msh')
         os.remove('arange.txt')
