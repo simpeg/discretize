@@ -18,4 +18,4 @@ coverage
 codecov
 omf
 matplotlib
-pymatsolver
+pymatsolver>=0.1.2
