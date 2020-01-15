@@ -47,7 +47,6 @@ build_requires = [
     'numpy>=1.8',
     'scipy>=0.13',
     'cython>=0.2',
-    'pymatsolver>=0.1.2',
     'properties',
     'vectormath',
     ]
