@@ -306,23 +306,33 @@ def _volume_avg_weights(np.float64_t[:] x1, np.float64_t[:] x2):
             i2 += 1
         i += 1
     cdef int nh = i-1
-    cdef np.float64_t[:] hs = np.empty(nh)
-    cdef np.int32_t[:] ix1 = np.zeros(nh, dtype=np.int32)
-    cdef np.int32_t[:] ix2 = np.zeros(nh, dtype=np.int32)
+    hs = np.empty(nh)
+    ix1 = np.zeros(nh, dtype=np.int32)
+    ix2 = np.zeros(nh, dtype=np.int32)
+
+    cdef np.float64_t[:] _hs = hs
+    cdef np.int32_t[:] _ix1 = ix1
+    cdef np.int32_t[:] _ix2 = ix2
     cdef np.float64_t center
 
     i1 = i2 = i = 0
     for i in range(nh):
-        hs[i] = xs[i+1]-xs[i]
-        center = xs[i]+0.5*hs[i]
+        _hs[i] = xs[i+1]-xs[i]
+        center = xs[i]+0.5*_hs[i]
         if center<x2[0]:
-            hs[i] = 0.0
+            _hs[i] = 0.0
         elif center>x2[n2-1]:
-            hs[i] = 0.0
+            _hs[i] = 0.0
         while i1<n1-1 and center>=x1[i1]:
             i1 += 1
         while i2<n2-1 and center>=x2[i2]:
             i2 += 1
-        ix1[i] = min(max(i1-1, 0), n1-1)
-        ix2[i] = min(max(i2-1, 0), n2-1)
+        _ix1[i] = min(max(i1-1, 0), n1-1)
+        _ix2[i] = min(max(i2-1, 0), n2-1)
+
+    # remove zero values in weights, (and their position)
+    non_zero_inds = hs!=0.0
+    hs = hs[non_zero_inds]
+    ix1 = ix1[non_zero_inds]
+    ix2 = ix2[non_zero_inds]
     return hs, ix1, ix2

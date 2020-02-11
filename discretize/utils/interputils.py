@@ -9,6 +9,7 @@ try:
     _interpmat1D = pyx._interpmat1D
     _interpmat2D = pyx._interpmat2D
     _interpmat3D = pyx._interpmat3D
+    _vol_interp = pyx.tensor_volume_averaging
     _interpCython = True
 except ImportError as err:
     print(err)
@@ -84,9 +85,8 @@ def interpmat(locs, x, y=None, z=None):
     return Q
 
 def volume_average(mesh_in, mesh_out, values=None, output=None):
-    if mesh_in._meshType is 'TREE':
-        if values is not None:
-            values
+    if mesh_in._meshType=='TREE':
+        raise NotImplementedError('TreeMesh is not yet implemented')
     try:
         mesh_type_err = ((mesh_in._meshType is not 'TENSOR') or
                          (mesh_out._meshType is not 'TENSOR'))
@@ -94,3 +94,5 @@ def volume_average(mesh_in, mesh_out, values=None, output=None):
         mesh_type_err = True
     if mesh_type_err:
         raise TypeError('Both meshs must be a TensorMesh, not {} and {}'.format(type(mesh_in).__name__, type(mesh_out).__name__))
+
+    return _vol_interp(mesh_in, mesh_out, values, output)
