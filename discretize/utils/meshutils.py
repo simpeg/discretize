@@ -770,3 +770,81 @@ def refine_tree_xyz(
         )
 
     return mesh
+
+
+def surface2ind_topo(mesh, topo, grid_reference='N', method='linear'):
+    """
+    Get active indices from topography
+
+    Parameters
+    ----------
+
+    :param mesh: Mesh object on which to discretize topography
+    :param numpy.ndarray topo: [X,Y,Z] topographic data
+    :param str grid_reference: 'CC' or 'N'. Default is 'CC'.
+                        Discretize the topography
+                        on cells-center 'CC' or nodes 'N'
+    :param str method: 'nearest' or 'linear'. Default is 'nearest'.
+                       Interpolation method for the topographic data
+
+    Returns
+    -------
+
+    :param numpy.array actind: index vector for the active cells on the mesh
+                               below the topography
+    """
+
+    assert grid_reference in ["N", "CC"], "Value of grid_reference must be 'N' (nodal) or 'CC' (cell center)"
+
+    if mesh.dim > 1:
+
+        dim = mesh.dim - 1
+
+        if method == 'nearest':
+            z_interpolate = interpolate.NearestNDInterpolator(topo[:, :dim], topo[:, dim])
+        else:
+            if mesh.dim == 3:
+                tri2D = Delaunay(topo[:, :dim])
+                z_interpolate = interpolate.LinearNDInterpolator(tri2D, topo[:, dim])
+
+            else:
+                z_interpolate = interpolate.interp1d(topo[:, 0], topo[:, 1], bounds_error=False, fill_value=np.nan)
+
+        if grid_reference == 'CC':
+            locations = mesh.gridCC
+
+        elif grid_reference == 'N':
+
+            if mesh.dim == 3:
+                locations = np.vstack([
+                    mesh.gridCC + (np.c_[-1, 1, 1][:, None] * mesh.h_gridded / 2.).squeeze(),
+                    mesh.gridCC + (np.c_[-1, -1, 1][:, None] * mesh.h_gridded / 2.).squeeze(),
+                    mesh.gridCC + (np.c_[1, 1, 1][:, None] * mesh.h_gridded / 2.).squeeze(),
+                    mesh.gridCC + (np.c_[1, -1, 1][:, None] * mesh.h_gridded / 2.).squeeze()
+                ])
+
+            else:
+                locations = np.vstack([
+                    mesh.gridCC + (np.c_[-1, 1][:, None] * mesh.h_gridded / 2.).squeeze(),
+                    mesh.gridCC + (np.c_[1, 1][:, None] * mesh.h_gridded / 2.).squeeze(),
+                ])
+
+        z_topo = z_interpolate(locations[:, :dim]).squeeze()
+
+        ind_nan = np.isnan(z_topo)
+
+        if any(ind_nan):
+            tree = cKDTree(topo)
+            _, ind = tree.query(locations[ind_nan, :])
+            z_topo[ind_nan] = topo[ind, dim]
+
+        # Create a bool
+        actind = np.all(
+            (locations[:, dim] < z_topo).reshape((mesh.nC, -1), order='F'), axis=1
+        )
+
+    else:
+        raise NotImplementedError('surface2ind_topo not implemented' +
+                                  ' for 1D mesh')
+
+    return actind.ravel()
