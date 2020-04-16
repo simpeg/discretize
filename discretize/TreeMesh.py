@@ -537,6 +537,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         ax=None, clim=None, showIt=False,
         pcolorOpts=None, streamOpts=None, gridOpts=None,
         range_x=None, range_y=None,
+        rotated=False,
     ):
 
         if pcolorOpts is None:
@@ -638,14 +639,26 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         elif not isinstance(ax, matplotlib.axes.Axes):
             raise Exception("ax must be an matplotlib.axes.Axes")
 
-        out = temp_mesh.plotImage(
-            v2d, vType='CC',
-            grid=grid, view=view,
-            ax=ax, clim=clim, showIt=False,
-            pcolorOpts=pcolorOpts,
-            gridOpts=gridOpts,
-            range_x=range_x,
-            range_y=range_y)
+        if rotated:
+            temp_mesh = TreeMesh(h2d[::-1], x2d[::-1])
+            v2d = v2d[::-1]
+            out = temp_mesh.plotImage(
+                v2d, vType='CC',
+                grid=grid, view=view,
+                ax=ax, clim=clim, showIt=False,
+                pcolorOpts=pcolorOpts,
+                gridOpts=gridOpts,
+                range_x=range_y,
+                range_y=range_x)
+        else:
+            out = temp_mesh.plotImage(
+                v2d, vType='CC',
+                grid=grid, view=view,
+                ax=ax, clim=clim, showIt=False,
+                pcolorOpts=pcolorOpts,
+                gridOpts=gridOpts,
+                range_x=range_x,
+                range_y=range_y)
 
         ax.set_xlabel('y' if normal == 'X' else 'x')
         ax.set_ylabel('y' if normal == 'Z' else 'z')
