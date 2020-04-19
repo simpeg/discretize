@@ -529,7 +529,7 @@ class TestMeshUtils(unittest.TestCase):
         indtopoCC = active_from_xyz(mesh_tree, topo3D, grid_reference='CC', method='nearest')
         indtopoN = active_from_xyz(mesh_tree, topo3D, grid_reference='N', method='nearest')
 
-        assert indtopoCC.sum() == 6292
+        assert indtopoCC.sum() == 6299
         assert indtopoN.sum() == 4632
         # plt.figure()
         # axs = plt.subplot(1,2,1)
