@@ -445,8 +445,8 @@ class TestMeshUtils(unittest.TestCase):
         indtopoCC = active_from_xyz(mesh1D, topo1D, grid_reference='CC', method='nearest')
         indtopoN = active_from_xyz(mesh1D, topo1D, grid_reference='N', method='nearest')
 
-        assert indtopoCC.sum() == 3, "Error on calculated active cells for Mesh 1D CC"
-        assert indtopoN.sum() == 2, "Error on calculated active cells for Mesh 1D N"
+        assert indtopoCC.sum() == 3
+        assert indtopoN.sum() == 2
         #
         # plt.figure()
         # axs = plt.subplot()
@@ -465,8 +465,8 @@ class TestMeshUtils(unittest.TestCase):
         indtopoCC = active_from_xyz(mesh_tensor, topo2D, grid_reference='CC', method='nearest')
         indtopoN = active_from_xyz(mesh_tensor, topo2D, grid_reference='N', method='nearest')
 
-        assert indtopoCC.sum() == 434, "Error on calculated active cells for Mesh Tensor 2D CC"
-        assert indtopoN.sum() == 412, "Error on calculated active cells for Mesh Tensor 2D N"
+        assert indtopoCC.sum() == 434
+        assert indtopoN.sum() == 412
         # plt.figure()
         # ax1 = plt.subplot()
         # mesh_tensor.plotImage(indtopoCC, grid=True, ax=ax1)
@@ -484,8 +484,8 @@ class TestMeshUtils(unittest.TestCase):
         indtopoCC = active_from_xyz(mesh_tree, topo2D, grid_reference='CC', method='nearest')
         indtopoN = active_from_xyz(mesh_tree, topo2D, grid_reference='N', method='nearest')
 
-        assert indtopoCC.sum() == 167, "Error on calculated active cells for Mesh Tree 2D CC"
-        assert indtopoN.sum() == 119, "Error on calculated active cells for Mesh Tree 2D N"
+        assert indtopoCC.sum() == 167
+        assert indtopoN.sum() == 119
         # plt.figure()
         # ax1 = plt.subplot(1,2,1)
         # mesh_tree.plotImage(indtopoCC, grid=True, ax=ax1)
@@ -510,8 +510,8 @@ class TestMeshUtils(unittest.TestCase):
         indtopoCC = active_from_xyz(mesh_tensor, topo3D, grid_reference='CC', method='nearest')
         indtopoN = active_from_xyz(mesh_tensor, topo3D, grid_reference='N', method='nearest')
 
-        assert indtopoCC.sum() == 10496, "Error on calculated active cells for Mesh Tensor 3D CC"
-        assert indtopoN.sum() == 10084, "Error on calculated active cells for Mesh Tensor 3D N"
+        assert indtopoCC.sum() == 10496
+        assert indtopoN.sum() == 10084
         # plt.figure()
         # ax1 = plt.subplot()
         # mesh_tensor.plotSlice(indtopoCC+indtopoN, normal='Y', grid=True, ax=ax1)
@@ -529,8 +529,8 @@ class TestMeshUtils(unittest.TestCase):
         indtopoCC = active_from_xyz(mesh_tree, topo3D, grid_reference='CC', method='nearest')
         indtopoN = active_from_xyz(mesh_tree, topo3D, grid_reference='N', method='nearest')
 
-        assert indtopoCC.sum() == 6292, "Error on calculated active cells for Mesh Tree 3D CC"
-        assert indtopoN.sum() == 4632, "Error on calculated active cells for Mesh Tree 3D N"
+        assert indtopoCC.sum() == 6292
+        assert indtopoN.sum() == 4632
         # plt.figure()
         # axs = plt.subplot(1,2,1)
         # mesh_tree.plotSlice(indtopoCC, normal='Y', grid=True, ax=axs)
@@ -568,8 +568,8 @@ class TestMeshUtils(unittest.TestCase):
         indtopoCC = active_from_xyz(mesh_cyl, topo3D, grid_reference='CC', method='nearest')
         indtopoN = active_from_xyz(mesh_cyl, topo3D, grid_reference='N', method='nearest')
 
-        assert indtopoCC.sum() == 183, "Error on calculated active cells for Mesh Cyl 3D CC"
-        assert indtopoN.sum() == 171, "Error on calculated active cells for Mesh Cyl 3D N"
+        assert indtopoCC.sum() == 183
+        assert indtopoN.sum() == 171
         # plt.figure()
         # axs = plt.subplot(1,2,1)
         # mesh_cyl.plotImage(indtopoCC, grid=True, ax=axs)
