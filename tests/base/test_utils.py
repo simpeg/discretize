@@ -7,7 +7,7 @@ from discretize.utils import (
     inv2X2BlockDiagonal, inv3X3BlockDiagonal,
     invPropertyTensor, makePropertyTensor, indexCube,
     ind2sub, asArray_N_x_Dim, TensorType, Zero, Identity,
-    ExtractCoreMesh
+    ExtractCoreMesh, active_from_xyz, mesh_builder_xyz, refine_tree_xyz
 )
 from discretize.Tests import checkDerivative
 import discretize
@@ -424,6 +424,157 @@ class TestMeshUtils(unittest.TestCase):
         assert meshCore3d.vectorCCy.max() < xzlim3d[1, :].max()
         assert meshCore3d.vectorCCz.min() > xzlim3d[2, :].min()
         assert meshCore3d.vectorCCz.max() < xzlim3d[2, :].max()
+
+    def test_active_from_xyz(self):
+
+        # Create 3D topo
+        [xx, yy] = np.meshgrid(np.linspace(-200, 200, 50), np.linspace(-200, 200, 50))
+        b = 50
+        A = 50
+        zz = A * np.exp(-0.5 * ((xx / b) ** 2. + (yy / b) ** 2.))
+
+        h = [5., 5., 5.]
+
+        # Test 1D Mesh
+        topo1D = zz[25, :].ravel()
+        mesh1D = discretize.TensorMesh(
+            [np.ones(10) * 20],
+            x0='C'
+        )
+
+        indtopoCC = active_from_xyz(mesh1D, topo1D, grid_reference='CC', method='nearest')
+        indtopoN = active_from_xyz(mesh1D, topo1D, grid_reference='N', method='nearest')
+
+        assert indtopoCC.sum() == 3, "Error on calculated active cells for Mesh 1D CC"
+        assert indtopoN.sum() == 2, "Error on calculated active cells for Mesh 1D N"
+        #
+        # plt.figure()
+        # axs = plt.subplot()
+        # axs.step(mesh1D.gridCC, indtopoN)
+        # axs.step(mesh1D.gridCC, indtopoCC)
+
+        # Test 2D Tensor mesh
+        topo2D = np.c_[xx[25, :].ravel(), zz[25, :].ravel()]
+
+        mesh_tensor = discretize.TensorMesh([
+            [(h[0], 24)],
+            [(h[1], 20)]
+        ],
+            x0='CC')
+
+        indtopoCC = active_from_xyz(mesh_tensor, topo2D, grid_reference='CC', method='nearest')
+        indtopoN = active_from_xyz(mesh_tensor, topo2D, grid_reference='N', method='nearest')
+
+        assert indtopoCC.sum() == 434, "Error on calculated active cells for Mesh Tensor 2D CC"
+        assert indtopoN.sum() == 412, "Error on calculated active cells for Mesh Tensor 2D N"
+        # plt.figure()
+        # ax1 = plt.subplot()
+        # mesh_tensor.plotImage(indtopoCC, grid=True, ax=ax1)
+        # ax1.plot(topo2D[:, 0], topo2D[:, 1])
+
+        # Test 2D Tree mesh
+        mesh_tree = mesh_builder_xyz(topo2D, h[:2], mesh_type='TREE')
+        mesh_tree = refine_tree_xyz(
+            mesh_tree, topo2D,
+            method="surface",
+            octree_levels=[1],
+            octree_levels_padding=None,
+            finalize=True
+        )
+        indtopoCC = active_from_xyz(mesh_tree, topo2D, grid_reference='CC', method='nearest')
+        indtopoN = active_from_xyz(mesh_tree, topo2D, grid_reference='N', method='nearest')
+
+        assert indtopoCC.sum() == 167, "Error on calculated active cells for Mesh Tree 2D CC"
+        assert indtopoN.sum() == 119, "Error on calculated active cells for Mesh Tree 2D N"
+        # plt.figure()
+        # ax1 = plt.subplot(1,2,1)
+        # mesh_tree.plotImage(indtopoCC, grid=True, ax=ax1)
+        # ax1.plot(topo2D[:, 0], topo2D[:, 1])
+        # ax2 = plt.subplot(1,2,2)
+        # mesh_tree.plotImage(indtopoN, grid=True, ax=ax2)
+        # ax2.plot(topo2D[:, 0], topo2D[:, 1])
+
+        # assert len(np.where(indtopoCC)[0]) == 8729
+        # assert len(np.where(indtopoN)[0]) == 8212
+
+        # Test 3D Tensor meshes
+        topo3D = np.c_[xx.ravel(), yy.ravel(), zz.ravel()]
+
+        mesh_tensor = discretize.TensorMesh([
+            [(h[0], 24)],
+            [(h[1], 20)],
+            [(h[2], 30)]
+        ],
+            x0='CCC')
+
+        indtopoCC = active_from_xyz(mesh_tensor, topo3D, grid_reference='CC', method='nearest')
+        indtopoN = active_from_xyz(mesh_tensor, topo3D, grid_reference='N', method='nearest')
+
+        assert indtopoCC.sum() == 10496, "Error on calculated active cells for Mesh Tensor 3D CC"
+        assert indtopoN.sum() == 10084, "Error on calculated active cells for Mesh Tensor 3D N"
+        # plt.figure()
+        # ax1 = plt.subplot()
+        # mesh_tensor.plotSlice(indtopoCC+indtopoN, normal='Y', grid=True, ax=ax1)
+        # ax1.set_aspect('equal')
+
+        # Test 3D Tree mesh
+        mesh_tree = mesh_builder_xyz(topo3D, h, mesh_type='TREE')
+        mesh_tree = refine_tree_xyz(
+            mesh_tree, topo3D,
+            method="surface",
+            octree_levels=[1],
+            octree_levels_padding=None,
+            finalize=True
+        )
+        indtopoCC = active_from_xyz(mesh_tree, topo3D, grid_reference='CC', method='nearest')
+        indtopoN = active_from_xyz(mesh_tree, topo3D, grid_reference='N', method='nearest')
+
+        assert indtopoCC.sum() == 6292, "Error on calculated active cells for Mesh Tree 3D CC"
+        assert indtopoN.sum() == 4632, "Error on calculated active cells for Mesh Tree 3D N"
+        # plt.figure()
+        # axs = plt.subplot(1,2,1)
+        # mesh_tree.plotSlice(indtopoCC, normal='Y', grid=True, ax=axs)
+        # axs = plt.subplot(1,2,2)
+        # mesh_tree.plotSlice(indtopoN, normal='Y', grid=True, ax=axs)
+
+        # Test 3D CYL Mesh
+        ncr = 10  # number of mesh cells in r
+        ncz = 15  # number of mesh cells in z
+        dr = 15  # cell width r
+        dz = 10  # cell width z
+        npad_r = 4  # number of padding cells in r
+        npad_z = 4  # number of padding cells in z
+        exp_r = 1.25  # expansion rate of padding cells in r
+        exp_z = 1.25  # expansion rate of padding cells in z
+
+        hr = [(dr, ncr), (dr, npad_r, exp_r)]
+        hz = [(dz, npad_z, -exp_z), (dz, ncz), (dz, npad_z, exp_z)]
+
+        # A value of 1 is used to define the discretization in phi for this case.
+        mesh_cyl = discretize.CylMesh([hr, 1, hz], x0='00C')
+
+        # The bottom end of the vertical axis of rotational symmetry
+        x0 = mesh_cyl.x0
+
+        # The total number of cells
+        nC = mesh_cyl.nC
+
+        # An (nC, 3) array containing the cell-center locations
+        cc = mesh_cyl.gridCC
+
+        # Plot the cell volumes.
+        v = mesh_cyl.vol
+
+        indtopoCC = active_from_xyz(mesh_cyl, topo3D, grid_reference='CC', method='nearest')
+        indtopoN = active_from_xyz(mesh_cyl, topo3D, grid_reference='N', method='nearest')
+
+        assert indtopoCC.sum() == 183, "Error on calculated active cells for Mesh Cyl 3D CC"
+        assert indtopoN.sum() == 171, "Error on calculated active cells for Mesh Cyl 3D N"
+        # plt.figure()
+        # axs = plt.subplot(1,2,1)
+        # mesh_cyl.plotImage(indtopoCC, grid=True, ax=axs)
+        # axs = plt.subplot(1,2,2)
+        # mesh_cyl.plotImage(indtopoN, grid=True, ax=axs)
 
 
 if __name__ == '__main__':

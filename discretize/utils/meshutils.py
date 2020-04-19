@@ -773,79 +773,91 @@ def refine_tree_xyz(
     return mesh
 
 
-def surface2ind_topo(mesh, topo, grid_reference='N', method='linear'):
+def active_from_xyz(mesh, xyz, grid_reference='CC', method='linear'):
     """
-    Get active indices from topography
+    Get active cells from xyz points
 
     Parameters
     ----------
 
-    :param mesh: Mesh object on which to discretize topography
-    :param numpy.ndarray topo: [X,Y,Z] topographic data
-    :param str grid_reference: 'CC' or 'N'. Default is 'CC'.
-                        Discretize the topography
-                        on cells-center 'CC' or nodes 'N'
-    :param str method: 'nearest' or 'linear'. Default is 'nearest'.
-                       Interpolation method for the topographic data
+    :param mesh: discretize.mesh
+        Mesh object
+    :param xyz: numpy.ndarray
+        Points coordinates shape(*, mesh.dim).
+    :param grid_reference: str ['CC'] or 'N'.
+        Use cell coordinates from cells-center 'CC' or nodes 'N'.
+    :param method: str 'nearest' or ['linear'].
+        Interpolation method for the xyz points.
 
     Returns
     -------
 
-    :param numpy.array actind: index vector for the active cells on the mesh
-                               below the topography
+    :param active: numpy.array of bool
+        Vector for the active cells below xyz
     """
 
     assert grid_reference in ["N", "CC"], "Value of grid_reference must be 'N' (nodal) or 'CC' (cell center)"
 
-    if mesh.dim > 1:
+    dim = mesh.dim - 1
 
-        dim = mesh.dim - 1
-
-        if method == 'nearest':
-            z_interpolate = interpolate.NearestNDInterpolator(topo[:, :dim], topo[:, dim])
+    if mesh.dim == 3:
+        assert xyz.shape[1] == 3, "xyz locations of shape (*, 3) required for 3D mesh"
+        if method == 'linear':
+            tri2D = Delaunay(xyz[:, :2])
+            z_interpolate = interpolate.LinearNDInterpolator(tri2D, xyz[:, :2])
         else:
-            if mesh.dim == 3:
-                tri2D = Delaunay(topo[:, :dim])
-                z_interpolate = interpolate.LinearNDInterpolator(tri2D, topo[:, dim])
-
-            else:
-                z_interpolate = interpolate.interp1d(topo[:, 0], topo[:, 1], bounds_error=False, fill_value=np.nan)
-
-        if grid_reference == 'CC':
-            locations = mesh.gridCC
-
-        elif grid_reference == 'N':
-
-            if mesh.dim == 3:
-                locations = np.vstack([
-                    mesh.gridCC + (np.c_[-1, 1, 1][:, None] * mesh.h_gridded / 2.).squeeze(),
-                    mesh.gridCC + (np.c_[-1, -1, 1][:, None] * mesh.h_gridded / 2.).squeeze(),
-                    mesh.gridCC + (np.c_[1, 1, 1][:, None] * mesh.h_gridded / 2.).squeeze(),
-                    mesh.gridCC + (np.c_[1, -1, 1][:, None] * mesh.h_gridded / 2.).squeeze()
-                ])
-
-            else:
-                locations = np.vstack([
-                    mesh.gridCC + (np.c_[-1, 1][:, None] * mesh.h_gridded / 2.).squeeze(),
-                    mesh.gridCC + (np.c_[1, 1][:, None] * mesh.h_gridded / 2.).squeeze(),
-                ])
-
-        z_topo = z_interpolate(locations[:, :dim]).squeeze()
-
-        ind_nan = np.isnan(z_topo)
-
-        if any(ind_nan):
-            tree = cKDTree(topo)
-            _, ind = tree.query(locations[ind_nan, :])
-            z_topo[ind_nan] = topo[ind, dim]
-
-        # Create a bool
-        actind = np.all(
-            (locations[:, dim] < z_topo).reshape((mesh.nC, -1), order='F'), axis=1
+            z_interpolate = interpolate.NearestNDInterpolator(xyz[:, :2], xyz[:, 2])
+    elif mesh.dim == 2:
+        assert xyz.shape[1] == 2, "xyz locations of shape (*, 2) required for 2D mesh"
+        z_interpolate = interpolate.interp1d(
+            xyz[:, 0], xyz[:, 1], bounds_error=False, fill_value=np.nan, kind=method
         )
-
     else:
-        raise NotImplementedError('surface2ind_topo not implemented' +
-                                  ' for 1D mesh')
+        assert xyz.ndim == 1, "xyz locations of shape (*, ) required for 1D mesh"
 
-    return actind.ravel()
+    if grid_reference == 'CC':
+        locations = mesh.gridCC
+
+        if mesh.dim == 1:
+            active = np.zeros(mesh.nC, dtype='bool')
+            active[np.searchsorted(mesh.vectorCCx, xyz).max():] = True
+            return active
+
+    elif grid_reference == 'N':
+
+        if mesh.dim == 3:
+            locations = np.vstack([
+                mesh.gridCC + (np.c_[-1, 1, 1][:, None] * mesh.h_gridded / 2.).squeeze(),
+                mesh.gridCC + (np.c_[-1, -1, 1][:, None] * mesh.h_gridded / 2.).squeeze(),
+                mesh.gridCC + (np.c_[1, 1, 1][:, None] * mesh.h_gridded / 2.).squeeze(),
+                mesh.gridCC + (np.c_[1, -1, 1][:, None] * mesh.h_gridded / 2.).squeeze()
+            ])
+
+        elif mesh.dim == 2:
+            locations = np.vstack([
+                mesh.gridCC + (np.c_[-1, 1][:, None] * mesh.h_gridded / 2.).squeeze(),
+                mesh.gridCC + (np.c_[1, 1][:, None] * mesh.h_gridded / 2.).squeeze(),
+            ])
+
+        else:
+            active = np.zeros(mesh.nC, dtype='bool')
+            active[np.searchsorted(mesh.vectorNx, xyz).max():] = True
+
+            return active
+
+    # Interpolate z values on CC or N
+    z_xyz = z_interpolate(locations[:, :-1]).squeeze()
+
+    # Apply nearest neighbour if in extrapolation
+    ind_nan = np.isnan(z_xyz)
+    if any(ind_nan):
+        tree = cKDTree(xyz)
+        _, ind = tree.query(locations[ind_nan, :])
+        z_xyz[ind_nan] = xyz[ind, dim]
+
+    # Create an active bool of all True
+    active = np.all(
+        (locations[:, dim] < z_xyz).reshape((mesh.nC, -1), order='F'), axis=1
+    )
+
+    return active.ravel()
