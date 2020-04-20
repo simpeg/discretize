@@ -530,7 +530,7 @@ class TestMeshUtils(unittest.TestCase):
         indtopoN = active_from_xyz(mesh_tree, topo3D, grid_reference='N', method='nearest')
 
         assert indtopoCC.sum() == 6299
-        assert indtopoN.sum() == 4632
+        assert indtopoN.sum() == 4639
         # plt.figure()
         # axs = plt.subplot(1,2,1)
         # mesh_tree.plotSlice(indtopoCC, normal='Y', grid=True, ax=axs)
