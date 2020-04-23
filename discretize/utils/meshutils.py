@@ -804,7 +804,7 @@ def active_from_xyz(mesh, xyz, grid_reference='CC', method='linear'):
         assert xyz.shape[1] == 3, "xyz locations of shape (*, 3) required for 3D mesh"
         if method == 'linear':
             tri2D = Delaunay(xyz[:, :2])
-            z_interpolate = interpolate.LinearNDInterpolator(tri2D, xyz[:, :2])
+            z_interpolate = interpolate.LinearNDInterpolator(tri2D, xyz[:, 2])
         else:
             z_interpolate = interpolate.NearestNDInterpolator(xyz[:, :2], xyz[:, 2])
     elif mesh.dim == 2:
