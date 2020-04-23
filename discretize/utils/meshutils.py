@@ -755,10 +755,10 @@ def refine_tree_xyz(
 
             xyz = cell.center
 
-            for ii, (nC, bsw, tne) in enumerate(zip(octree_levels, BSW, TNE)):
+            for nC, bsw, tne in zip(octree_levels, BSW, TNE):
 
                 if np.all([xyz > bsw, xyz < tne]):
-                    return mesh.max_level-ii
+                    return mesh.max_level-nC
 
             return cell._level
 
