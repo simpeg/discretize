@@ -54,7 +54,7 @@ class TestRefineOcTree(unittest.TestCase):
         )
 
         mesh = meshutils.refine_tree_xyz(
-            mesh, xyz, octree_levels=[1], method='box', finalize=True
+            mesh, xyz, octree_levels=[0,1], method='box', finalize=True
         )
 
         # Volume of box
@@ -66,7 +66,7 @@ class TestRefineOcTree(unittest.TestCase):
                 mesh._cell_levels_by_indexes(range(mesh.nC)) == mesh.max_level
             ].sum()
         )/vol * 100
-
+        print(residual)
         self.assertTrue(residual < 0.5)
 
     def test_surface(self):
