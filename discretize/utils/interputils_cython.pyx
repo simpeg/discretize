@@ -284,7 +284,7 @@ def _volume_avg_weights(np.float64_t[:] x1, np.float64_t[:] x2):
     cdef int n2 = x2.shape[0]
     cdef np.float64_t[:] xs = np.empty(n1 + n2)
     # Fill xs with uniques and truncate
-    cdef int i1, i2, i
+    cdef int i1, i2, i, ii
     i1 = i2 = i = 0
     while i1<n1 or i2<n2:
         if i1<n1 and i2<n2:
@@ -307,32 +307,28 @@ def _volume_avg_weights(np.float64_t[:] x1, np.float64_t[:] x2):
         i += 1
     cdef int nh = i-1
     hs = np.empty(nh)
-    ix1 = np.zeros(nh, dtype=np.int32)
-    ix2 = np.zeros(nh, dtype=np.int32)
+    ix1 = np.empty(nh, dtype=np.int32)
+    ix2 = np.empty(nh, dtype=np.int32)
 
     cdef np.float64_t[:] _hs = hs
     cdef np.int32_t[:] _ix1 = ix1
     cdef np.int32_t[:] _ix2 = ix2
     cdef np.float64_t center
 
-    i1 = i2 = i = 0
+    i1 = i2 = 0
     for i in range(nh):
-        _hs[i] = xs[i+1]-xs[i]
-        center = xs[i]+0.5*_hs[i]
-        if center<x2[0]:
-            _hs[i] = 0.0
-        elif center>x2[n2-1]:
-            _hs[i] = 0.0
-        while i1<n1-1 and center>=x1[i1]:
-            i1 += 1
-        while i2<n2-1 and center>=x2[i2]:
-            i2 += 1
-        _ix1[i] = min(max(i1-1, 0), n1-1)
-        _ix2[i] = min(max(i2-1, 0), n2-1)
+        center = 0.5*(xs[i]+xs[i])
+        if x2[0] <= center and center <= x2[n2-1]:
+            _hs[ii] = xs[i+1]-xs[i]
+            while i1<n1-1 and center>=x1[i1]:
+                i1 += 1
+            while i2<n2-1 and center>=x2[i2]:
+                i2 += 1
+            _ix1[ii] = min(max(i1-1, 0), n1-1)
+            _ix2[ii] = min(max(i2-1, 0), n2-1)
+            ii += 1
 
-    # remove zero values in weights, (and their position)
-    non_zero_inds = hs!=0.0
-    hs = hs[non_zero_inds]
-    ix1 = ix1[non_zero_inds]
-    ix2 = ix2[non_zero_inds]
+    hs = hs[:ii]
+    ix1 = ix1[:ii]
+    ix2 = ix2[:ii]
     return hs, ix1, ix2
