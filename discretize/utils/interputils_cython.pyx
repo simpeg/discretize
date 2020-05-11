@@ -315,9 +315,9 @@ def _volume_avg_weights(np.float64_t[:] x1, np.float64_t[:] x2):
     cdef np.int32_t[:] _ix2 = ix2
     cdef np.float64_t center
 
-    i1 = i2 = 0
+    i1 = i2 = ii = 0
     for i in range(nh):
-        center = 0.5*(xs[i]+xs[i])
+        center = 0.5*(xs[i]+xs[i+1])
         if x2[0] <= center and center <= x2[n2-1]:
             _hs[ii] = xs[i+1]-xs[i]
             while i1<n1-1 and center>=x1[i1]:
