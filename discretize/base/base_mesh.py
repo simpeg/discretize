@@ -132,8 +132,8 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         int
             number of cells in the mesh
 
-        Example
-        -------
+        Examples
+        --------
         .. plot::
             :include-source:
 
@@ -155,8 +155,8 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         int
             number of nodes in the mesh
 
-        Example
-        -------
+        examples
+        --------
         .. plot::
             :include-source:
 

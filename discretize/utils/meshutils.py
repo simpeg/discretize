@@ -62,8 +62,8 @@ def random_model(shape, seed=None, anisotropy=None, its=100, bounds=None):
     numpy.ndarray
         M, the model
 
-    Example
-    -------
+    Examples
+    --------
 
     .. plot::
         :include-source:
@@ -326,8 +326,8 @@ def mesh_builder_xyz(
     discretize.BaseMesh
         Mesh of "mesh_type"
 
-    Example
-    -------
+    Examples
+    --------
     .. plot::
         :include-source:
 
@@ -774,13 +774,27 @@ def refine_tree_xyz(
 
 
 def active_from_xyz(mesh, xyz, grid_reference='CC', method='linear'):
-    """
-    Get active cells from xyz points
+    """Returns an active cell index array below a surface
+
+    Get active cells in the `mesh` that are below the surface create by
+    interpolating over the last dimension of the input points. This method will
+    uses scipy's interpolation routine to interpolate between input points. This
+    will use a nearest neighbour interpolation for cell values outside the convex
+    hull of points.
+
+    For `grid_reference='CC'`, this will check if the center of a given cell in
+    the mesh is below the interpolation surface to determine if that cell is
+    active.
+
+    For `grid_reference='N'`, this will check if **every** node of a given cell
+    in the mesh is below the interpolation surface.
+
+    For the
 
     Parameters
     ----------
 
-    mesh : BaseMesh
+    mesh : TensorMesh or TreeMesh
         Mesh object
     xyz : numpy.ndarray
         Points coordinates shape (*, mesh.dim).
@@ -795,6 +809,9 @@ def active_from_xyz(mesh, xyz, grid_reference='CC', method='linear'):
     active : numpy.ndarray
         1D mask array of `bool` for the active cells below xyz.
     """
+    if not isinstance(mesh, (discretize.TensorMesh, discretize.TreeMesh)):
+        raise TypeError("Mesh must be either TensorMesh or TreeMesh")
+
     if grid_reference not in ["N", "CC"]:
         raise ValueError("Value of grid_reference must be 'N' (nodal) or 'CC' (cell center)")
 

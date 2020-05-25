@@ -6,10 +6,8 @@ Installing
 Which Python?
 =============
 
-Currently, `discretize` will run on Python 2.7, 3.5, 3.6 and 3.7. We recommend that you
+Currently, `discretize` will run on 3.5, 3.6 and 3.7. We recommend that you
 use the latest version of Python available on `Anaconda <https://www.anaconda.com/download>`_.
-
-We will be `dropping support for Python 2.7 by 2020 <https://python3statement.org/>`.
 
 Installing Python
 -----------------
@@ -32,9 +30,10 @@ Dependencies
 - `scipy <https://docs.scipy.org/doc/scipy/reference>`_ 0.13 (or greater)
 - `matplotlib <https://matplotlib.org>`_ 1.3 (or greater)
 - `cython <https://cython.org/>`_ 0.20 (or greater)
-- `pymatsolver <https://pymatsolver.readthedocs.io/en/latest/>`_ 0.1.2 (or greater)
 - `properties[math] <http://propertiespy.readthedocs.io>`_
 
+We also recommend installing:
+- `pymatsolver <https://pymatsolver.readthedocs.io/en/latest/>`_ 0.1.2 (or greater)
 
 Installing discretize
 =====================
@@ -80,4 +79,4 @@ the discretize directory to your PYTHON_PATH.
 Testing your installation
 =========================
 
-Head over to the :ref:`examples` and download and run any of the notebooks or python scripts.
+Head over to the :ref:`sphx_glr_examples` and download and run any of the notebooks or python scripts.
