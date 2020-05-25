@@ -408,7 +408,7 @@ class TestMeshUtils(unittest.TestCase):
         self.assertEqual(meshCore2d.nC, np.count_nonzero(actind2d))
         self.assertGreater(meshCore2d.vectorCCx.min(), xzlim2d[0, :].min())
         self.assertLess(meshCore2d.vectorCCx.max(), xzlim2d[0, :].max())
-        self.assertGreate(meshCore2d.vectorCCy.min(), xzlim2d[1, :].min())
+        self.assertGreater(meshCore2d.vectorCCy.min(), xzlim2d[1, :].min())
         self.assertLess(meshCore2d.vectorCCy.max(), xzlim2d[1, :].max())
 
         # 3D Test on TensorMesh
