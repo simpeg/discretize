@@ -394,36 +394,36 @@ class TestMeshUtils(unittest.TestCase):
         xzlim1d = np.r_[[[0., 250.]]]
         actind1d, meshCore1d = ExtractCoreMesh(xzlim1d, meshtest1d)
 
-        assert len(actind1d) == meshtest1d.nC
-        assert meshCore1d.nC == np.count_nonzero(actind1d)
-        assert meshCore1d.vectorCCx.min() > xzlim1d[0, :].min()
-        assert meshCore1d.vectorCCx.max() < xzlim1d[0, :].max()
+        self.assertEqual(len(actind1d), meshtest1d.nC)
+        self.assertEqual(meshCore1d.nC, np.count_nonzero(actind1d))
+        self.assertGreater(meshCore1d.vectorCCx.min(), xzlim1d[0, :].min())
+        self.assertLess(meshCore1d.vectorCCx.max(), xzlim1d[0, :].max())
 
         # 2D Test on TensorMesh
         meshtest2d = discretize.TensorMesh([[(50., 10)], [(25., 10)]])
         xzlim2d = xyzlim = np.r_[[[0., 200.], [0., 200.]]]
         actind2d, meshCore2d = ExtractCoreMesh(xzlim2d, meshtest2d)
 
-        assert len(actind2d) == meshtest2d.nC
-        assert meshCore2d.nC == np.count_nonzero(actind2d)
-        assert meshCore2d.vectorCCx.min() > xzlim2d[0, :].min()
-        assert meshCore2d.vectorCCx.max() < xzlim2d[0, :].max()
-        assert meshCore2d.vectorCCy.min() > xzlim2d[1, :].min()
-        assert meshCore2d.vectorCCy.max() < xzlim2d[1, :].max()
+        self.assertEqual(len(actind2d), meshtest2d.nC)
+        self.assertEqual(meshCore2d.nC, np.count_nonzero(actind2d))
+        self.assertGreater(meshCore2d.vectorCCx.min(), xzlim2d[0, :].min())
+        self.assertLess(meshCore2d.vectorCCx.max(), xzlim2d[0, :].max())
+        self.assertGreate(meshCore2d.vectorCCy.min(), xzlim2d[1, :].min())
+        self.assertLess(meshCore2d.vectorCCy.max(), xzlim2d[1, :].max())
 
         # 3D Test on TensorMesh
         meshtest3d = discretize.TensorMesh([[(50., 10)], [(25., 10)], [(5., 40)]])
         xzlim3d = np.r_[[[0., 250.], [0., 200.], [0., 150]]]
         actind3d, meshCore3d = ExtractCoreMesh(xzlim3d, meshtest3d)
 
-        assert len(actind3d) == meshtest3d.nC
-        assert meshCore3d.nC == np.count_nonzero(actind3d)
-        assert meshCore3d.vectorCCx.min() > xzlim3d[0, :].min()
-        assert meshCore3d.vectorCCx.max() < xzlim3d[0, :].max()
-        assert meshCore3d.vectorCCy.min() > xzlim3d[1, :].min()
-        assert meshCore3d.vectorCCy.max() < xzlim3d[1, :].max()
-        assert meshCore3d.vectorCCz.min() > xzlim3d[2, :].min()
-        assert meshCore3d.vectorCCz.max() < xzlim3d[2, :].max()
+        self.assertEqual(len(actind3d), meshtest3d.nC)
+        self.assertEqual(meshCore3d.nC, np.count_nonzero(actind3d))
+        self.assertGreater(meshCore3d.vectorCCx.min(), xzlim3d[0, :].min())
+        self.assertLess(meshCore3d.vectorCCx.max(), xzlim3d[0, :].max())
+        self.assertGreater(meshCore3d.vectorCCy.min(), xzlim3d[1, :].min())
+        self.assertLess(meshCore3d.vectorCCy.max(), xzlim3d[1, :].max())
+        self.assertGreater(meshCore3d.vectorCCz.min(), xzlim3d[2, :].min())
+        self.assertLess(meshCore3d.vectorCCz.max(), xzlim3d[2, :].max())
 
     def test_active_from_xyz(self):
 
@@ -445,8 +445,8 @@ class TestMeshUtils(unittest.TestCase):
         indtopoCC = active_from_xyz(mesh1D, topo1D, grid_reference='CC', method='nearest')
         indtopoN = active_from_xyz(mesh1D, topo1D, grid_reference='N', method='nearest')
 
-        assert indtopoCC.sum() == 3
-        assert indtopoN.sum() == 2
+        self.assertEqual(indtopoCC.sum(), 3)
+        self.assertEqual(indtopoN.sum(), 2)
         #
         # plt.figure()
         # axs = plt.subplot()
@@ -465,8 +465,8 @@ class TestMeshUtils(unittest.TestCase):
         indtopoCC = active_from_xyz(mesh_tensor, topo2D, grid_reference='CC', method='nearest')
         indtopoN = active_from_xyz(mesh_tensor, topo2D, grid_reference='N', method='nearest')
 
-        assert indtopoCC.sum() == 434
-        assert indtopoN.sum() == 412
+        self.assertEqual(indtopoCC.sum(), 434)
+        self.assertEqual(indtopoN.sum(), 412)
         # plt.figure()
         # ax1 = plt.subplot()
         # mesh_tensor.plotImage(indtopoCC, grid=True, ax=ax1)
@@ -484,8 +484,8 @@ class TestMeshUtils(unittest.TestCase):
         indtopoCC = active_from_xyz(mesh_tree, topo2D, grid_reference='CC', method='nearest')
         indtopoN = active_from_xyz(mesh_tree, topo2D, grid_reference='N', method='nearest')
 
-        assert indtopoCC.sum() == 167
-        assert indtopoN.sum() == 119
+        self.assertEqual(indtopoCC.sum(), 167)
+        self.assertEqual(indtopoN.sum(), 119)
         # plt.figure()
         # ax1 = plt.subplot(1,2,1)
         # mesh_tree.plotImage(indtopoCC, grid=True, ax=ax1)
@@ -510,8 +510,8 @@ class TestMeshUtils(unittest.TestCase):
         indtopoCC = active_from_xyz(mesh_tensor, topo3D, grid_reference='CC', method='nearest')
         indtopoN = active_from_xyz(mesh_tensor, topo3D, grid_reference='N', method='nearest')
 
-        assert indtopoCC.sum() == 10496
-        assert indtopoN.sum() == 10084
+        self.assertEqual(indtopoCC.sum(), 10496)
+        self.assertEqual(indtopoN.sum(), 10084)
         # plt.figure()
         # ax1 = plt.subplot()
         # mesh_tensor.plotSlice(indtopoCC+indtopoN, normal='Y', grid=True, ax=ax1)
@@ -529,8 +529,8 @@ class TestMeshUtils(unittest.TestCase):
         indtopoCC = active_from_xyz(mesh_tree, topo3D, grid_reference='CC', method='nearest')
         indtopoN = active_from_xyz(mesh_tree, topo3D, grid_reference='N', method='nearest')
 
-        assert indtopoCC.sum() == 6299
-        assert indtopoN.sum() == 4639
+        self.assertEqual(indtopoCC.sum(), 6299)
+        self.assertEqual(indtopoN.sum(), 4639)
         # plt.figure()
         # axs = plt.subplot(1,2,1)
         # mesh_tree.plotSlice(indtopoCC, normal='Y', grid=True, ax=axs)
@@ -568,8 +568,8 @@ class TestMeshUtils(unittest.TestCase):
         indtopoCC = active_from_xyz(mesh_cyl, topo3D, grid_reference='CC', method='nearest')
         indtopoN = active_from_xyz(mesh_cyl, topo3D, grid_reference='N', method='nearest')
 
-        assert indtopoCC.sum() == 183
-        assert indtopoN.sum() == 171
+        self.assertEqual(indtopoCC.sum(), 183)
+        self.assertEqual(indtopoN.sum(), 171)
         # plt.figure()
         # axs = plt.subplot(1,2,1)
         # mesh_cyl.plotImage(indtopoCC, grid=True, ax=axs)
