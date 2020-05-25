@@ -795,7 +795,7 @@ def active_from_xyz(mesh, xyz, grid_reference='CC', method='linear'):
     active : numpy.ndarray
         1D mask array of `bool` for the active cells below xyz.
     """
-    if grid reference not in ["N", "CC"]:
+    if grid_reference not in ["N", "CC"]:
         raise ValueError("Value of grid_reference must be 'N' (nodal) or 'CC' (cell center)")
 
     dim = mesh.dim - 1
