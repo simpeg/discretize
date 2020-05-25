@@ -484,7 +484,7 @@ def refine_tree_xyz(
 
     Parameters
     ----------
-    mesh: BaseMesh
+    mesh: TreeMesh
         The TreeMesh object to be refined
     xyz: numpy.ndarray
         2D array of points
@@ -780,40 +780,43 @@ def active_from_xyz(mesh, xyz, grid_reference='CC', method='linear'):
     Parameters
     ----------
 
-    :param mesh: discretize.mesh
+    mesh : BaseMesh
         Mesh object
-    :param xyz: numpy.ndarray
-        Points coordinates shape(*, mesh.dim).
-    :param grid_reference: str ['CC'] or 'N'.
+    xyz : numpy.ndarray
+        Points coordinates shape (*, mesh.dim).
+    grid_reference : {'CC', 'N'}
         Use cell coordinates from cells-center 'CC' or nodes 'N'.
-    :param method: str 'nearest' or ['linear'].
+    method : {'linear', 'nearest'}
         Interpolation method for the xyz points.
 
     Returns
     -------
 
-    :param active: numpy.array of bool
-        Vector for the active cells below xyz
+    active : numpy.ndarray
+        1D mask array of `bool` for the active cells below xyz.
     """
-
-    assert grid_reference in ["N", "CC"], "Value of grid_reference must be 'N' (nodal) or 'CC' (cell center)"
+    if grid reference not in ["N", "CC"]:
+        raise ValueError("Value of grid_reference must be 'N' (nodal) or 'CC' (cell center)")
 
     dim = mesh.dim - 1
 
     if mesh.dim == 3:
-        assert xyz.shape[1] == 3, "xyz locations of shape (*, 3) required for 3D mesh"
+        if xyz.shape[1] != 3:
+            raise ValueError("xyz locations of shape (*, 3) required for 3D mesh")
         if method == 'linear':
             tri2D = Delaunay(xyz[:, :2])
             z_interpolate = interpolate.LinearNDInterpolator(tri2D, xyz[:, 2])
         else:
             z_interpolate = interpolate.NearestNDInterpolator(xyz[:, :2], xyz[:, 2])
     elif mesh.dim == 2:
-        assert xyz.shape[1] == 2, "xyz locations of shape (*, 2) required for 2D mesh"
+        if xyz.shape[1] != 2:
+            raise ValueError("xyz locations of shape (*, 2) required for 2D mesh")
         z_interpolate = interpolate.interp1d(
             xyz[:, 0], xyz[:, 1], bounds_error=False, fill_value=np.nan, kind=method
         )
     else:
-        assert xyz.ndim == 1, "xyz locations of shape (*, ) required for 1D mesh"
+        if xyz.ndim != 1:
+            raise ValueError("xyz locations of shape (*, ) required for 1D mesh")
 
     if grid_reference == 'CC':
         locations = mesh.gridCC
