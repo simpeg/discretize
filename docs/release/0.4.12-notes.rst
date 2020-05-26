@@ -17,16 +17,22 @@ when attempting to extend the padding vertically using ``method=surface``.
 We have update links as we are now using discourse over google groups as a means
 for users to ask for general help.
 
+We are removing ``pymatsolver`` from the list of explicit dependancies for ``discretize``.
+It is **highly** recommended, but it isn't actually required to run anything
+within the ``discretize`` package.
+
 Contributors
 ============
 
 * @domfournier/@fourndo
 * @jcapriot
 * @lheagy
+* @prisae
 
 Pull requests
 =============
 
-* `#198 <https://github.com/simpeg/discretize/pull/197>`__: Refine tree xyz
+* `#193 <https://github.com/simpeg/discretize/pull/193>`__: Remove pymatsolver
+* `#198 <https://github.com/simpeg/discretize/pull/198>`__: Refine tree xyz
 * `#201 <https://github.com/simpeg/discretize/pull/201>`__: Update README.rst
 * `#203 <https://github.com/simpeg/discretize/pull/203>`__: consolidating tests on travis
