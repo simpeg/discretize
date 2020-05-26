@@ -57,13 +57,13 @@ import numpy as np
 
 # from ..utils import cyl2cart
 
-import vtk
-import vtk.util.numpy_support as nps
-from vtk import VTK_VERSION
-from vtk import vtkXMLRectilinearGridWriter
-from vtk import vtkXMLUnstructuredGridWriter
-from vtk import vtkXMLStructuredGridWriter
-from vtk import vtkXMLRectilinearGridReader
+import vtk as _vtk
+import vtk.util.numpy_support as _nps
+from vtk import VTK_VERSION as _vtk_version
+from vtk import vtkXMLRectilinearGridWriter as _vtkRectWriter
+from vtk import vtkXMLUnstructuredGridWriter as _vtkUnstWriter
+from vtk import vtkXMLStructuredGridWriter as _vtkStrucWriter
+from vtk import vtkXMLRectilinearGridReader as _vtkRectReader
 
 import warnings
 
@@ -87,7 +87,7 @@ def assign_cell_data(vtkDS, models=None):
             # Convert numpy array
             if mod.shape[0] != nc:
                 raise RuntimeError('Number of model cells ({}) (first axis of model array) for "{}" does not match number of mesh cells ({}).'.format(mod.shape[0], name, nc))
-            vtkDoubleArr = nps.numpy_to_vtk(mod, deep=1)
+            vtkDoubleArr = _nps.numpy_to_vtk(mod, deep=1)
             vtkDoubleArr.SetName(name)
             vtkDS.GetCellData().AddArray(vtkDoubleArr)
     return vtkDS
@@ -187,32 +187,32 @@ class InterfaceVTK(object):
         ptsMat = np.vstack((mesh.gridN, mesh.gridhN))
 
         # Adjust if result was 2D (voxels are pixels in 2D):
-        VTK_CELL_TYPE = vtk.VTK_VOXEL
+        VTK_CELL_TYPE = _vtk.VTK_VOXEL
         if ptsMat.shape[1] == 2:
             # Add Z values of 0.0 if 2D
             ptsMat = np.c_[ptsMat, np.zeros(ptsMat.shape[0])]
-            VTK_CELL_TYPE = vtk.VTK_PIXEL
+            VTK_CELL_TYPE = _vtk.VTK_PIXEL
         if ptsMat.shape[1] != 3:
             raise RuntimeError('Points of the mesh are improperly defined.')
         # Rotate the points to the cartesian system
         ptsMat = np.dot(ptsMat, mesh.rotation_matrix)
         # Grab the points
-        vtkPts = vtk.vtkPoints()
-        vtkPts.SetData(nps.numpy_to_vtk(ptsMat, deep=True))
+        vtkPts = _vtk.vtkPoints()
+        vtkPts.SetData(_nps.numpy_to_vtk(ptsMat, deep=True))
         # Cells
         cellArray = [c for c in mesh]
         cellConn = np.array([cell.nodes for cell in cellArray])
         cellsMat = np.concatenate((np.ones((cellConn.shape[0], 1), dtype=int)*cellConn.shape[1], cellConn), axis=1).ravel()
-        cellsArr = vtk.vtkCellArray()
+        cellsArr = _vtk.vtkCellArray()
         cellsArr.SetNumberOfCells(cellConn.shape[0])
-        cellsArr.SetCells(cellConn.shape[0], nps.numpy_to_vtk(cellsMat, deep=True, array_type=vtk.VTK_ID_TYPE))
+        cellsArr.SetCells(cellConn.shape[0], _nps.numpy_to_vtk(cellsMat, deep=True, array_type=_vtk.VTK_ID_TYPE))
         # Make the object
-        output = vtk.vtkUnstructuredGrid()
+        output = _vtk.vtkUnstructuredGrid()
         output.SetPoints(vtkPts)
         output.SetCells(VTK_CELL_TYPE, cellsArr)
         # Add the level of refinement as a cell array
         cell_levels = np.array([cell._level for cell in cellArray])
-        refineLevelArr = nps.numpy_to_vtk(cell_levels, deep=1)
+        refineLevelArr = _nps.numpy_to_vtk(cell_levels, deep=1)
         refineLevelArr.SetName('octreeLevel')
         output.GetCellData().AddArray(refineLevelArr)
         ubc_order = mesh._ubc_order
@@ -220,7 +220,7 @@ class InterfaceVTK(object):
         # need the opposite operation
         un_order = np.empty_like(ubc_order)
         un_order[ubc_order] = np.arange(len(ubc_order))
-        order = nps.numpy_to_vtk(un_order)
+        order = _nps.numpy_to_vtk(un_order)
         order.SetName('index_cell_corner')
         output.GetCellData().AddArray(order)
         # Assign the model('s) to the object
@@ -237,14 +237,14 @@ class InterfaceVTK(object):
         if ptsMat.shape[1] != 3:
             raise RuntimeError('Points of the mesh are improperly defined.')
         # Convert the points
-        vtkPts = vtk.vtkPoints()
-        vtkPts.SetData(nps.numpy_to_vtk(ptsMat, deep=True))
+        vtkPts = _vtk.vtkPoints()
+        vtkPts.SetData(_nps.numpy_to_vtk(ptsMat, deep=True))
         # Uncover hidden dimension
         for i, d in enumerate(dims):
             if d is None:
                 dims[i] = 0
             dims[i] = dims[i] + 1
-        output = vtk.vtkStructuredGrid()
+        output = _vtk.vtkStructuredGrid()
         output.SetDimensions(dims[0], dims[1], dims[2]) # note this subtracts 1
         output.SetPoints(vtkPts)
         # Assign the model('s) to the object
@@ -298,11 +298,11 @@ class InterfaceVTK(object):
         if not mesh.reference_is_rotated:
             # Use rectilinear VTK grid.
             # Assign the spatial information.
-            output = vtk.vtkRectilinearGrid()
+            output = _vtk.vtkRectilinearGrid()
             output.SetDimensions(xD, yD, zD)
-            output.SetXCoordinates(nps.numpy_to_vtk(vX, deep=1))
-            output.SetYCoordinates(nps.numpy_to_vtk(vY, deep=1))
-            output.SetZCoordinates(nps.numpy_to_vtk(vZ, deep=1))
+            output.SetXCoordinates(_nps.numpy_to_vtk(vX, deep=1))
+            output.SetYCoordinates(_nps.numpy_to_vtk(vY, deep=1))
+            output.SetZCoordinates(_nps.numpy_to_vtk(vZ, deep=1))
             return assign_cell_data(output, models=models)
         # Use a structured grid where points are rotated to the cartesian system
         ptsMat = InterfaceVTK.__get_rotated_nodes(mesh)
@@ -406,7 +406,7 @@ class InterfaceVTK(object):
             directory where the UBC GIF file lives
 
         """
-        if not isinstance(vtkUnstructGrid, vtk.vtkUnstructuredGrid):
+        if not isinstance(vtkUnstructGrid, _vtk.vtkUnstructuredGrid):
             raise RuntimeError('`_save_unstructured_grid` can only handle `vtkUnstructuredGrid` objects. `%s` is not supported.' % vtkUnstructGrid.__class__)
         # Check the extension of the filename
         fname = os.path.join(directory, filename)
@@ -416,8 +416,8 @@ class InterfaceVTK(object):
         elif ext not in '.vtu':
             raise IOError('{:s} is an incorrect extension, has to be .vtu'.format(ext))
         # Make the writer
-        vtuWriteFilter = vtkXMLUnstructuredGridWriter()
-        if float(VTK_VERSION.split('.')[0]) >= 6:
+        vtuWriteFilter = _vtkUnstWriter()
+        if float(_vtk_version.split('.')[0]) >= 6:
             vtuWriteFilter.SetInputDataObject(vtkUnstructGrid)
         else:
             vtuWriteFilter.SetInput(vtkUnstructGrid)
@@ -440,7 +440,7 @@ class InterfaceVTK(object):
             directory where the UBC GIF file lives
 
         """
-        if not isinstance(vtkStructGrid, vtk.vtkStructuredGrid):
+        if not isinstance(vtkStructGrid, _vtk.vtkStructuredGrid):
             raise RuntimeError('`_save_structured_grid` can only handle `vtkStructuredGrid` objects. `{}` is not supported.'.format(vtkStructGrid.__class__))
         # Check the extension of the filename
         fname = os.path.join(directory, filename)
@@ -450,8 +450,8 @@ class InterfaceVTK(object):
         elif ext not in '.vts':
             raise IOError('{:s} is an incorrect extension, has to be .vts'.format(ext))
         # Make the writer
-        writer = vtkXMLStructuredGridWriter()
-        if float(VTK_VERSION.split('.')[0]) >= 6:
+        writer = _vtkStrucWriter()
+        if float(_vtk_version.split('.')[0]) >= 6:
             writer.SetInputDataObject(vtkStructGrid)
         else:
             writer.SetInput(vtkStructGrid)
@@ -474,7 +474,7 @@ class InterfaceVTK(object):
             directory where the UBC GIF file lives
 
         """
-        if not isinstance(vtkRectGrid, vtk.vtkRectilinearGrid):
+        if not isinstance(vtkRectGrid, _vtk.vtkRectilinearGrid):
             raise RuntimeError('`_save_rectilinear_grid` can only handle `vtkRectilinearGrid` objects. `{}` is not supported.'.format(vtkRectGrid.__class__))
         # Check the extension of the filename
         fname = os.path.join(directory, filename)
@@ -484,8 +484,8 @@ class InterfaceVTK(object):
         elif ext not in '.vtr':
             raise IOError('{:s} is an incorrect extension, has to be .vtr'.format(ext))
         # Write the file.
-        vtrWriteFilter = vtkXMLRectilinearGridWriter()
-        if float(VTK_VERSION.split('.')[0]) >= 6:
+        vtrWriteFilter = _vtkRectWriter()
+        if float(_vtk_version.split('.')[0]) >= 6:
             vtrWriteFilter.SetInputDataObject(vtkRectGrid)
         else:
             vtuWriteFilter.SetInput(vtuObj)
@@ -553,18 +553,18 @@ class InterfaceTensorread_vtk(object):
 
         """
         # Sort information
-        hx = np.abs(np.diff(nps.vtk_to_numpy(vtrGrid.GetXCoordinates())))
-        xR = nps.vtk_to_numpy(vtrGrid.GetXCoordinates())[0]
-        hy = np.abs(np.diff(nps.vtk_to_numpy(vtrGrid.GetYCoordinates())))
-        yR = nps.vtk_to_numpy(vtrGrid.GetYCoordinates())[0]
-        zD = np.diff(nps.vtk_to_numpy(vtrGrid.GetZCoordinates()))
+        hx = np.abs(np.diff(_nps.vtk_to_numpy(vtrGrid.GetXCoordinates())))
+        xR = _nps.vtk_to_numpy(vtrGrid.GetXCoordinates())[0]
+        hy = np.abs(np.diff(_nps.vtk_to_numpy(vtrGrid.GetYCoordinates())))
+        yR = _nps.vtk_to_numpy(vtrGrid.GetYCoordinates())[0]
+        zD = np.diff(_nps.vtk_to_numpy(vtrGrid.GetZCoordinates()))
         # Check the direction of hz
         if np.all(zD < 0):
             hz = np.abs(zD[::-1])
-            zR = nps.vtk_to_numpy(vtrGrid.GetZCoordinates())[-1]
+            zR = _nps.vtk_to_numpy(vtrGrid.GetZCoordinates())[-1]
         else:
             hz = np.abs(zD)
-            zR = nps.vtk_to_numpy(vtrGrid.GetZCoordinates())[0]
+            zR = _nps.vtk_to_numpy(vtrGrid.GetZCoordinates())[0]
         x0 = np.array([xR, yR, zR])
 
         # Make the object
@@ -575,11 +575,11 @@ class InterfaceTensorread_vtk(object):
         for i in np.arange(vtrGrid.GetCellData().GetNumberOfArrays()):
             modelName = vtrGrid.GetCellData().GetArrayName(i)
             if np.all(zD < 0):
-                modFlip = nps.vtk_to_numpy(vtrGrid.GetCellData().GetArray(i))
+                modFlip = _nps.vtk_to_numpy(vtrGrid.GetCellData().GetArray(i))
                 tM = tensMsh.r(modFlip, 'CC', 'CC', 'M')
                 modArr = tensMsh.r(tM[:, :, ::-1], 'CC', 'CC', 'V')
             else:
-                modArr = nps.vtk_to_numpy(vtrGrid.GetCellData().GetArray(i))
+                modArr = _nps.vtk_to_numpy(vtrGrid.GetCellData().GetArray(i))
             models[modelName] = modArr
 
         # Return the data
@@ -606,7 +606,7 @@ class InterfaceTensorread_vtk(object):
         """
         fname = os.path.join(directory, filename)
         # Read the file
-        vtrReader = vtkXMLRectilinearGridReader()
+        vtrReader = _vtkRectReader()
         vtrReader.SetFileName(fname)
         vtrReader.Update()
         vtrGrid = vtrReader.GetOutput()
