@@ -420,8 +420,8 @@ class DiffOperators(object):
         Function that sets the boundary conditions for cell-centred derivative
         operators.
 
-        Example
-        -------
+        Examples
+        --------
         ..code:: python
 
             # Neumann in all directions
@@ -682,8 +682,8 @@ class DiffOperators(object):
         """
         The weak form boundary condition projection matrices.
 
-        Example
-        -------
+        Examples
+        --------
 
         .. code:: python
 

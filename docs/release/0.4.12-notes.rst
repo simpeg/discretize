@@ -1,0 +1,26 @@
+.. currentmodule:: discretize
+
+===================================
+``discretize`` 0.4.12 Release Notes
+===================================
+
+This patch release is for a few small bugs and code speed improvements.
+
+There is now a fast function for return active cell indexes for ``TensorMesh``-s
+and ``TreeMesh``-s below a topography surface defined by scattered points,
+``discretize.utils.active_from_xyz``.
+
+There is also a bug fix of `#197 <https://github.com/simpeg/discretize/issues/197>`__
+for the ``discretize.utils.refine_tree_xyz`` helper function on QuadTree meshes
+when attempting to extend the padding vertically using ``method=surface``.
+
+Contributors
+============
+
+* @domfournier/@fourndo
+* @jcapriot
+
+Pull requests
+=============
+
+* `#198 <https://github.com/simpeg/discretize/issues/197>`__: Refine tree xyz

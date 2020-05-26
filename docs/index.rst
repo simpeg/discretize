@@ -34,3 +34,10 @@
 
     content/finite_volume
     content/inner_products
+
+.. toctree::
+    :maxdepth: 2
+    :hidden:
+    :caption: Meta Information
+
+    release/index
