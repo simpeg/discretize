@@ -57,6 +57,11 @@ Currently, discretize supports:
 
 Installing
 ^^^^^^^^^^
+**discretize** is on conda-forge
+
+.. code:: shell
+
+    conda install -c conda-forge discretize
 
 **discretize** is on pypi
 
@@ -114,4 +119,3 @@ http://simpeg.discourse.group/
 
 Chat:
 http://slack.simpeg.xyz/
-
