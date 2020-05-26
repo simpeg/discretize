@@ -62,8 +62,8 @@ def random_model(shape, seed=None, anisotropy=None, its=100, bounds=None):
     numpy.ndarray
         M, the model
 
-    Example
-    -------
+    Examples
+    --------
 
     .. plot::
         :include-source:
@@ -326,8 +326,8 @@ def mesh_builder_xyz(
     discretize.BaseMesh
         Mesh of "mesh_type"
 
-    Example
-    -------
+    Examples
+    --------
     .. plot::
         :include-source:
 
@@ -484,7 +484,7 @@ def refine_tree_xyz(
 
     Parameters
     ----------
-    mesh: BaseMesh
+    mesh: TreeMesh
         The TreeMesh object to be refined
     xyz: numpy.ndarray
         2D array of points
@@ -658,6 +658,7 @@ def refine_tree_xyz(
             r, ind = tree.query(newLoc)
 
             # Apply vertical padding for current octree level
+            dim = mesh.dim - 1
             zOffset = 0
             while zOffset < depth:
                 indIn = r < (max_distance + padWidth[ii])
@@ -665,7 +666,7 @@ def refine_tree_xyz(
                 if nnz > 0:
                     mesh.insert_cells(
                         np.c_[
-                                newLoc[indIn, :2],
+                                newLoc[indIn, :dim],
                                 newLoc[indIn, -1]-zOffset],
                         np.ones(nnz)*mesh.max_level-ii,
                         finalize=False
@@ -770,3 +771,148 @@ def refine_tree_xyz(
         )
 
     return mesh
+
+
+def active_from_xyz(mesh, xyz, grid_reference='CC', method='linear'):
+    """Returns an active cell index array below a surface
+
+    Get active cells in the `mesh` that are below the surface create by
+    interpolating over the last dimension of the input points. This method will
+    uses scipy's interpolation routine to interpolate between input points. This
+    will use a nearest neighbour interpolation for cell values outside the convex
+    hull of points.
+
+    For `grid_reference='CC'`, this will check if the center of a given cell in
+    the mesh is below the interpolation surface to determine if that cell is
+    active.
+
+    For `grid_reference='N'`, this will check if **every** node of a given cell
+    in the mesh is below the interpolation surface.
+
+    For the
+
+    Parameters
+    ----------
+
+    mesh : TensorMesh or TreeMesh or CylMesh
+        Mesh object, (if CylMesh: mesh must be symmetric).
+    xyz : numpy.ndarray
+        Points coordinates shape (*, mesh.dim).
+    grid_reference : {'CC', 'N'}
+        Use cell coordinates from cells-center 'CC' or nodes 'N'.
+    method : {'linear', 'nearest'}
+        Interpolation method for the xyz points.
+
+    Returns
+    -------
+
+    active : numpy.ndarray
+        1D mask array of `bool` for the active cells below xyz.
+
+    Examples
+    --------
+
+    .. plot::
+        :include-source:
+
+        import matplotlib.pyplot as plt
+        import numpy as np
+        from discretize import TensorMesh
+        from discretize.utils import active_from_xyz
+
+        mesh = TensorMesh([5, 5])
+        topo_func = lambda x: -3*(x-0.2)*(x-0.8)+.5
+        topo_points = np.linspace(0, 1)
+        topo_vals = topo_func(topo_points)
+
+        active_cc = active_from_xyz(mesh, np.c_[topo_points, topo_vals], grid_reference='CC')
+        ax = plt.subplot(121)
+        mesh.plotImage(active_cc, ax=ax)
+        mesh.plotGrid(centers=True, ax=ax)
+        ax.plot(np.linspace(0,1), topo_func(np.linspace(0,1)), color='C3')
+        ax.set_title("CC")
+
+        active_n = active_from_xyz(mesh, np.c_[topo_points, topo_vals], grid_reference='N')
+        ax = plt.subplot(122)
+        mesh.plotImage(active_n, ax=ax)
+        mesh.plotGrid(nodes=True, ax=ax)
+        ax.plot(np.linspace(0,1), topo_func(np.linspace(0,1)), color='C3')
+        ax.set_title("N")
+        plt.show()
+
+    """
+    if isinstance(mesh, discretize.CylMesh) and not mesh.isSymmetric:
+        raise NotImplementedError('Unsymmetric CylMesh is not yet supported')
+
+    if not isinstance(mesh, (discretize.TensorMesh, discretize.TreeMesh, discretize.CylMesh)):
+        raise TypeError("Mesh must be either TensorMesh, TreeMesh, or Symmetric CylMesh")
+
+    if grid_reference not in ["N", "CC"]:
+        raise ValueError("Value of grid_reference must be 'N' (nodal) or 'CC' (cell center)")
+
+    dim = mesh.dim - 1
+
+    if mesh.dim == 3:
+        if xyz.shape[1] != 3:
+            raise ValueError("xyz locations of shape (*, 3) required for 3D mesh")
+        if method == 'linear':
+            tri2D = Delaunay(xyz[:, :2])
+            z_interpolate = interpolate.LinearNDInterpolator(tri2D, xyz[:, 2])
+        else:
+            z_interpolate = interpolate.NearestNDInterpolator(xyz[:, :2], xyz[:, 2])
+    elif mesh.dim == 2:
+        if xyz.shape[1] != 2:
+            raise ValueError("xyz locations of shape (*, 2) required for 2D mesh")
+        z_interpolate = interpolate.interp1d(
+            xyz[:, 0], xyz[:, 1], bounds_error=False, fill_value=np.nan, kind=method
+        )
+    else:
+        if xyz.ndim != 1:
+            raise ValueError("xyz locations of shape (*, ) required for 1D mesh")
+
+    if grid_reference == 'CC':
+        locations = mesh.gridCC
+
+        if mesh.dim == 1:
+            active = np.zeros(mesh.nC, dtype='bool')
+            active[np.searchsorted(mesh.vectorCCx, xyz).max():] = True
+            return active
+
+    elif grid_reference == 'N':
+
+        if mesh.dim == 3:
+            locations = np.vstack([
+                mesh.gridCC + (np.c_[-1, 1, 1][:, None] * mesh.h_gridded / 2.).squeeze(),
+                mesh.gridCC + (np.c_[-1, -1, 1][:, None] * mesh.h_gridded / 2.).squeeze(),
+                mesh.gridCC + (np.c_[1, 1, 1][:, None] * mesh.h_gridded / 2.).squeeze(),
+                mesh.gridCC + (np.c_[1, -1, 1][:, None] * mesh.h_gridded / 2.).squeeze()
+            ])
+
+        elif mesh.dim == 2:
+            locations = np.vstack([
+                mesh.gridCC + (np.c_[-1, 1][:, None] * mesh.h_gridded / 2.).squeeze(),
+                mesh.gridCC + (np.c_[1, 1][:, None] * mesh.h_gridded / 2.).squeeze(),
+            ])
+
+        else:
+            active = np.zeros(mesh.nC, dtype='bool')
+            active[np.searchsorted(mesh.vectorNx, xyz).max():] = True
+
+            return active
+
+    # Interpolate z values on CC or N
+    z_xyz = z_interpolate(locations[:, :-1]).squeeze()
+
+    # Apply nearest neighbour if in extrapolation
+    ind_nan = np.isnan(z_xyz)
+    if any(ind_nan):
+        tree = cKDTree(xyz)
+        _, ind = tree.query(locations[ind_nan, :])
+        z_xyz[ind_nan] = xyz[ind, dim]
+
+    # Create an active bool of all True
+    active = np.all(
+        (locations[:, dim] < z_xyz).reshape((mesh.nC, -1), order='F'), axis=1
+    )
+
+    return active.ravel()
