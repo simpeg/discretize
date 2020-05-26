@@ -63,7 +63,7 @@ from vtk import VTK_VERSION as _vtk_version
 from vtk import vtkXMLRectilinearGridWriter as _vtkRectWriter
 from vtk import vtkXMLUnstructuredGridWriter as _vtkUnstWriter
 from vtk import vtkXMLStructuredGridWriter as _vtkStrucWriter
-from vtk import vtkXMLRectilinearGridReader as _vtkRectWriter
+from vtk import vtkXMLRectilinearGridReader as _vtkRectReader
 
 import warnings
 
@@ -606,7 +606,7 @@ class InterfaceTensorread_vtk(object):
         """
         fname = os.path.join(directory, filename)
         # Read the file
-        vtrReader = _vtkRectWriter()
+        vtrReader = _vtkRectReader()
         vtrReader.SetFileName(fname)
         vtrReader.Update()
         vtrGrid = vtrReader.GetOutput()
