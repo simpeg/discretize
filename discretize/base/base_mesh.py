@@ -155,7 +155,7 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         int
             number of nodes in the mesh
 
-        examples
+        Examples
         --------
         .. plot::
             :include-source:

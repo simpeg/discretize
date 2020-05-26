@@ -794,8 +794,8 @@ def active_from_xyz(mesh, xyz, grid_reference='CC', method='linear'):
     Parameters
     ----------
 
-    mesh : TensorMesh or TreeMesh
-        Mesh object
+    mesh : TensorMesh or TreeMesh or CylMesh
+        Mesh object, (if CylMesh: mesh must be symmetric).
     xyz : numpy.ndarray
         Points coordinates shape (*, mesh.dim).
     grid_reference : {'CC', 'N'}
@@ -841,11 +841,11 @@ def active_from_xyz(mesh, xyz, grid_reference='CC', method='linear'):
         plt.show()
 
     """
-    if isinstance(mesh, discretize.CylMesh):
-        raise NotImplementedError('CylMesh is not yet supported')
+    if isinstance(mesh, discretize.CylMesh) and not mesh.isSymmetric:
+        raise NotImplementedError('Unsymmetric CylMesh is not yet supported')
 
-    if not isinstance(mesh, (discretize.TensorMesh, discretize.TreeMesh)):
-        raise TypeError("Mesh must be either TensorMesh or TreeMesh")
+    if not isinstance(mesh, (discretize.TensorMesh, discretize.TreeMesh, discretize.CylMesh)):
+        raise TypeError("Mesh must be either TensorMesh, TreeMesh, or Symmetric CylMesh")
 
     if grid_reference not in ["N", "CC"]:
         raise ValueError("Value of grid_reference must be 'N' (nodal) or 'CC' (cell center)")

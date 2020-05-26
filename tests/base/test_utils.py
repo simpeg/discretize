@@ -7,7 +7,8 @@ from discretize.utils import (
     inv2X2BlockDiagonal, inv3X3BlockDiagonal,
     invPropertyTensor, makePropertyTensor, indexCube,
     ind2sub, asArray_N_x_Dim, TensorType, Zero, Identity,
-    ExtractCoreMesh, active_from_xyz, mesh_builder_xyz, refine_tree_xyz
+    ExtractCoreMesh, active_from_xyz, mesh_builder_xyz, refine_tree_xyz,
+    meshTensor
 )
 from discretize.Tests import checkDerivative
 import discretize
@@ -525,12 +526,18 @@ class TestMeshUtils(unittest.TestCase):
         # A value of 1 is used to define the discretization in phi for this case.
         mesh_cyl = discretize.CylMesh([hr, 1, hz], x0='00C')
 
-        with self.assertRaises(NotImplementedError):
-            indtopoCC = active_from_xyz(mesh_cyl, topo3D, grid_reference='CC', method='nearest')
-            indtopoN = active_from_xyz(mesh_cyl, topo3D, grid_reference='N', method='nearest')
+        indtopoCC = active_from_xyz(mesh_cyl, topo3D, grid_reference='CC', method='nearest')
+        indtopoN = active_from_xyz(mesh_cyl, topo3D, grid_reference='N', method='nearest')
 
-            self.assertEqual(indtopoCC.sum(), 183)
-            self.assertEqual(indtopoN.sum(), 171)
+        self.assertEqual(indtopoCC.sum(), 183)
+        self.assertEqual(indtopoN.sum(), 171)
+
+        htheta = meshTensor([(1., 4)])
+        htheta = htheta * 2*np.pi / htheta.sum()
+
+        mesh_cyl2 = discretize.CylMesh([hr, htheta, hz], x0='00C')
+        with self.assertRaises(NotImplementedError):
+            indtopoCC = active_from_xyz(mesh_cyl2, topo3D, grid_reference='CC', method='nearest')
 
         def gridIt(h): return [np.cumsum(np.r_[0, x]) for x in h]
 
