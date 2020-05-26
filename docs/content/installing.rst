@@ -38,6 +38,10 @@ We also recommend installing:
 Installing discretize
 =====================
 
+discretize is on conda-forge::
+
+    conda install -c conda-forge discretize
+
 discretize is on pypi::
 
     pip install discretize
