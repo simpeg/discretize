@@ -21,50 +21,18 @@ env:
 matrix:
   include:
     # test the base code on 3.6, 3.7
-    - name: "Python 3.6 - base"
+    - name: "Python 3.6 - base, cyl, tree"
       os: linux
       env:
         - PYTHON=3.6
         - TEST=true
-        - TEST_DIR="tests/base"
-    - name: "Python 3.7 - base"
+        - TEST_DIR="tests/base tests/cyl tests/tree"
+    - name: "Python 3.7 - base, cyl, tree"
       os: linux
       env:
         - PYTHON=3.7
         - TEST=true
-        - TEST_DIR="tests/base"
-
-    # test the cyl code on 3.6, 3.7
-    - name: "Python 3.6 - cyl"
-      os: linux
-      env:
-        - PYTHON=3.6
-        - TEST=true
-        - TEST_DIR="tests/cyl"
-    - name: "Python 3.7 - cyl"
-      os: linux
-      env:
-        - PYTHON=3.7
-        - TEST=true
-        - TEST_DIR="tests/cyl"
-
-    # test the cyl code on 3.6, 3.7
-    - name: "Python 3.6 - tree"
-      os: linux
-      env:
-        - PYTHON=3.6
-        - TEST=true
-        - TEST_DIR="tests/tree"
-        - DEPLOY_PYPI=true
-        - CONDA_INSTALL_EXTRA="twine"
-    - name: "Python 3.7 - tree"
-      os: linux
-      env:
-        - PYTHON=3.7
-        - TEST=true
-        - TEST_DIR="tests/tree"
-        - DEPLOY_PYPI=true
-        - CONDA_INSTALL_EXTRA="twine"
+        - TEST_DIR="tests/base tests/cyl tests/tree"
 
     # test the docs code on 3.6, 3.7
     - name: "Python 3.6 - docs"
