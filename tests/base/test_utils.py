@@ -447,11 +447,6 @@ class TestMeshUtils(unittest.TestCase):
 
         self.assertEqual(indtopoCC.sum(), 3)
         self.assertEqual(indtopoN.sum(), 2)
-        #
-        # plt.figure()
-        # axs = plt.subplot()
-        # axs.step(mesh1D.gridCC, indtopoN)
-        # axs.step(mesh1D.gridCC, indtopoCC)
 
         # Test 2D Tensor mesh
         topo2D = np.c_[xx[25, :].ravel(), zz[25, :].ravel()]
@@ -467,10 +462,6 @@ class TestMeshUtils(unittest.TestCase):
 
         self.assertEqual(indtopoCC.sum(), 434)
         self.assertEqual(indtopoN.sum(), 412)
-        # plt.figure()
-        # ax1 = plt.subplot()
-        # mesh_tensor.plotImage(indtopoCC, grid=True, ax=ax1)
-        # ax1.plot(topo2D[:, 0], topo2D[:, 1])
 
         # Test 2D Tree mesh
         mesh_tree = mesh_builder_xyz(topo2D, h[:2], mesh_type='TREE')
@@ -486,16 +477,6 @@ class TestMeshUtils(unittest.TestCase):
 
         self.assertEqual(indtopoCC.sum(), 167)
         self.assertEqual(indtopoN.sum(), 119)
-        # plt.figure()
-        # ax1 = plt.subplot(1,2,1)
-        # mesh_tree.plotImage(indtopoCC, grid=True, ax=ax1)
-        # ax1.plot(topo2D[:, 0], topo2D[:, 1])
-        # ax2 = plt.subplot(1,2,2)
-        # mesh_tree.plotImage(indtopoN, grid=True, ax=ax2)
-        # ax2.plot(topo2D[:, 0], topo2D[:, 1])
-
-        # assert len(np.where(indtopoCC)[0]) == 8729
-        # assert len(np.where(indtopoN)[0]) == 8212
 
         # Test 3D Tensor meshes
         topo3D = np.c_[xx.ravel(), yy.ravel(), zz.ravel()]
@@ -512,10 +493,6 @@ class TestMeshUtils(unittest.TestCase):
 
         self.assertEqual(indtopoCC.sum(), 10496)
         self.assertEqual(indtopoN.sum(), 10084)
-        # plt.figure()
-        # ax1 = plt.subplot()
-        # mesh_tensor.plotSlice(indtopoCC+indtopoN, normal='Y', grid=True, ax=ax1)
-        # ax1.set_aspect('equal')
 
         # Test 3D Tree mesh
         mesh_tree = mesh_builder_xyz(topo3D, h, mesh_type='TREE')
@@ -531,11 +508,6 @@ class TestMeshUtils(unittest.TestCase):
 
         self.assertEqual(indtopoCC.sum(), 6299)
         self.assertEqual(indtopoN.sum(), 4639)
-        # plt.figure()
-        # axs = plt.subplot(1,2,1)
-        # mesh_tree.plotSlice(indtopoCC, normal='Y', grid=True, ax=axs)
-        # axs = plt.subplot(1,2,2)
-        # mesh_tree.plotSlice(indtopoN, normal='Y', grid=True, ax=axs)
 
         # Test 3D CYL Mesh
         ncr = 10  # number of mesh cells in r
@@ -553,28 +525,20 @@ class TestMeshUtils(unittest.TestCase):
         # A value of 1 is used to define the discretization in phi for this case.
         mesh_cyl = discretize.CylMesh([hr, 1, hz], x0='00C')
 
-        # The bottom end of the vertical axis of rotational symmetry
-        x0 = mesh_cyl.x0
+        with self.assertRaises(NotImplementedError):
+            indtopoCC = active_from_xyz(mesh_cyl, topo3D, grid_reference='CC', method='nearest')
+            indtopoN = active_from_xyz(mesh_cyl, topo3D, grid_reference='N', method='nearest')
 
-        # The total number of cells
-        nC = mesh_cyl.nC
+            self.assertEqual(indtopoCC.sum(), 183)
+            self.assertEqual(indtopoN.sum(), 171)
 
-        # An (nC, 3) array containing the cell-center locations
-        cc = mesh_cyl.gridCC
+        def gridIt(h): return [np.cumsum(np.r_[0, x]) for x in h]
 
-        # Plot the cell volumes.
-        v = mesh_cyl.vol
+        X, Y = ndgrid(gridIt([[5.]*24, [5.]*20]), vector=False)
 
-        indtopoCC = active_from_xyz(mesh_cyl, topo3D, grid_reference='CC', method='nearest')
-        indtopoN = active_from_xyz(mesh_cyl, topo3D, grid_reference='N', method='nearest')
-
-        self.assertEqual(indtopoCC.sum(), 183)
-        self.assertEqual(indtopoN.sum(), 171)
-        # plt.figure()
-        # axs = plt.subplot(1,2,1)
-        # mesh_cyl.plotImage(indtopoCC, grid=True, ax=axs)
-        # axs = plt.subplot(1,2,2)
-        # mesh_cyl.plotImage(indtopoN, grid=True, ax=axs)
+        mesh_curvi = discretize.CurvilinearMesh([X, Y])
+        with self.assertRaises(TypeError):
+            indTopoCC = active_from_xyz(mesh_curvi, topo3D, grid_reference='CC', method='nearest')
 
 
 if __name__ == '__main__':

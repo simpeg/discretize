@@ -809,6 +809,9 @@ def active_from_xyz(mesh, xyz, grid_reference='CC', method='linear'):
     active : numpy.ndarray
         1D mask array of `bool` for the active cells below xyz.
     """
+    if isinstance(mesh, discretize.CylMesh):
+        raise NotImplementedError('CylMesh is not yet supported')
+
     if not isinstance(mesh, (discretize.TensorMesh, discretize.TreeMesh)):
         raise TypeError("Mesh must be either TensorMesh or TreeMesh")
 
