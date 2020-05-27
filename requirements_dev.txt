@@ -1,5 +1,5 @@
 cython
-sphinx < 2.0
+sphinx
 sphinx_rtd_theme
 sphinx-gallery
 sphinxcontrib-apidoc
