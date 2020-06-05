@@ -313,6 +313,8 @@ texinfo_documents = [
 import pyvista
 # Make sure off screen is set to true when building locally
 pyvista.OFF_SCREEN = True
+# necessary when building the sphinx gallery
+pyvista.BUILDING_GALLERY = True
 
 # Sphinx Gallery
 sphinx_gallery_conf = {
