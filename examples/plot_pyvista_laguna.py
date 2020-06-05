@@ -11,7 +11,7 @@ To run this example, you will need to `install pyvista <http://docs.pyvista.org/
 - contributed by `@banesullivan <https://github.com/banesullivan>`_
 
 Using the inversion result from the example notebook
-`plot_laguna_del_maule_inversion.ipynb <http://docs.simpeg.xyz/content/examples/04-grav/plot_laguna_del_maule_inversion.html#sphx-glr-content-examples-04-grav-plot-laguna-del-maule-inversion-py>`_
+`plot_laguna_del_maule_inversion.ipynb <http://docs.simpeg.xyz/content/examples/20-published/plot_laguna_del_maule_inversion.html>`_
 
 """
 # sphinx_gallery_thumbnail_number = 2
