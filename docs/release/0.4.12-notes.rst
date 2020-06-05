@@ -1,5 +1,7 @@
 .. currentmodule:: discretize
 
+.. _0.4.12_notes:
+
 ===================================
 ``discretize`` 0.4.12 Release Notes
 ===================================
@@ -36,3 +38,4 @@ Pull requests
 * `#198 <https://github.com/simpeg/discretize/pull/198>`__: Refine tree xyz
 * `#201 <https://github.com/simpeg/discretize/pull/201>`__: Update README.rst
 * `#203 <https://github.com/simpeg/discretize/pull/203>`__: consolidating tests on travis
+* `#205 <https://github.com/simpeg/discretize/pull/205>`__: Update requirements
