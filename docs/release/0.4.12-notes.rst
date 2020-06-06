@@ -50,3 +50,4 @@ Pull requests
 * `#203 <https://github.com/simpeg/discretize/pull/203>`__: consolidating tests on travis
 * `#205 <https://github.com/simpeg/discretize/pull/205>`__: Update requirements
 * `#206 <https://github.com/simpeg/discretize/pull/206>`__: Bug fix for 2D mesh read in.
+* `#207 <https://github.com/simpeg/discretize/pull/207>`__: update release notes
