@@ -117,7 +117,7 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         nl = np.array(line.split(), dtype=int)
         [z0, dz] = unpackdx(fopen, nl[0])
         # Flip z0 to be the bottom of the mesh for SimPEG
-        z0 = z0 - sum(dz)
+        z0 = -(z0 + sum(dz))
         dz = dz[::-1]
         # Make the mesh
         tensMsh = TensorMesh([dx, dz], x0=(x0, z0))
