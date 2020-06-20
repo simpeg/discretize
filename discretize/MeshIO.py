@@ -394,7 +394,7 @@ class TreeMeshIO(object):
         fileLines = np.genfromtxt(meshFile, dtype=str,
                                   delimiter='\n', comments='!')
         nCunderMesh = np.array(fileLines[0].split('!')[0].split(), dtype=int)
-        nCunderMesh = nCunderMesh[0:3]
+        nCunderMesh = nCunderMesh[:]
 
         tswCorn = np.array(
             fileLines[1].split('!')[0].split(),
@@ -408,27 +408,47 @@ class TreeMeshIO(object):
         indArr = np.genfromtxt((line.encode('utf8') for line in fileLines[4::]),
                                dtype=np.int)
 
-        h1, h2, h3 = [np.ones(nr)*sz for nr, sz in zip(nCunderMesh, smallCell)]
-        x0 = tswCorn - np.array([0, 0, np.sum(h3)])
-
-        ls = np.log2(nCunderMesh).astype(int)
-        if ls[0] == ls[1] and ls[1] == ls[2]:
-            max_level = ls[0]
+        dim = len(smallCell)
+        if dim == 2:
+            h1, h2 = [np.ones(nr)*sz for nr, sz in zip(nCunderMesh, smallCell)]
+            x0 = tswCorn - np.array([0, np.sum(h2)])
+            
+            ls = np.log2(nCunderMesh).astype(int)
+            if ls[0] == ls[1]:
+                max_level = ls[0]
+            else:
+                max_level = min(ls)+1
+            
+            mesh = TreeMesh([h1, h2], x0=x0)
+            levels = indArr[:, -1]
+            indArr = indArr[:, :-1]
+    
+            indArr -= 1  # shift by 1....
+            indArr = 2*indArr + levels[:, None]  # get cell center index
+            indArr[:, 1] = 2*nCunderMesh[1] - indArr[:, 1]  # switch direction of iz
+            levels = max_level-np.log2(levels)  # calculate level
+            
         else:
-            max_level = min(ls)+1
+            h1, h2, h3 = [np.ones(nr)*sz for nr, sz in zip(nCunderMesh, smallCell)]
+            x0 = tswCorn - np.array([0, 0, np.sum(h3)])
 
-        mesh = TreeMesh([h1, h2, h3], x0=x0)
+            ls = np.log2(nCunderMesh).astype(int)
+            if ls[0] == ls[1] and ls[1] == ls[2]:
+                max_level = ls[0]
+            else:
+                max_level = min(ls)+1
 
-        # Convert indArr to points in coordinates of underlying cpp tree
-        # indArr is ix, iy, iz(top-down) need it in ix, iy, iz (bottom-up)
+            # Convert indArr to points in coordinates of underlying cpp tree
+            # indArr is ix, iy, iz(top-down) need it in ix, iy, iz (bottom-up)
+            mesh = TreeMesh([h1, h2, h3], x0=x0)
+            levels = indArr[:, -1]
+            indArr = indArr[:, :-1]
+    
+            indArr -= 1  # shift by 1....
+            indArr = 2*indArr + levels[:, None]  # get cell center index
+            indArr[:, 2] = 2*nCunderMesh[2] - indArr[:, 2]  # switch direction of iz
+            levels = max_level-np.log2(levels)  # calculate level
 
-        levels = indArr[:, -1]
-        indArr = indArr[:, :-1]
-
-        indArr -= 1  # shift by 1....
-        indArr = 2*indArr + levels[:, None]  # get cell center index
-        indArr[:, 2] = 2*nCunderMesh[2] - indArr[:, 2]  # switch direction of iz
-        levels = max_level-np.log2(levels)  # calculate level
 
         mesh.__setstate__((indArr, levels))
         return mesh
@@ -445,9 +465,6 @@ class TreeMeshIO(object):
             for f in fileName:
                 out[f] = mesh.readModelUBC(f)
             return out
-
-        if mesh.dim != 3:
-            raise TypeError('Mesh must be 3D')
 
         modArr = np.loadtxt(fileName)
 
@@ -471,7 +488,12 @@ class TreeMeshIO(object):
         if np.any(~uniform_hs):
             raise Exception('UBC form does not support variable cell widths')
         nCunderMesh = np.array([h.size for h in mesh.h], dtype=np.int64)
-        tswCorn = mesh.x0 + np.array([0, 0, np.sum(mesh.h[2])])
+        
+        if mesh.dim == 2:
+            tswCorn = mesh.x0 + np.array([0, np.sum(mesh.h[1])])
+        else:
+            tswCorn = mesh.x0 + np.array([0, 0, np.sum(mesh.h[2])])
+            
         smallCell = np.array([h[0] for h in mesh.h])
         nrCells = mesh.nC
 
@@ -482,18 +504,33 @@ class TreeMeshIO(object):
         levels = levels[ubc_order]
 
         # Write the UBC octree mesh file
-        head = (
-            '{:.0f} {:.0f} {:.0f}\n'.format(
-                nCunderMesh[0], nCunderMesh[1], nCunderMesh[2]
-            ) +
-            '{:.4f} {:.4f} {:.4f}\n'.format(
-                tswCorn[0], tswCorn[1], tswCorn[2]
-            ) +
-            '{:.3f} {:.3f} {:.3f}\n'.format(
-                smallCell[0], smallCell[1], smallCell[2]
-            ) +
-            '{:.0f}'.format(nrCells)
-        )
+        if mesh.dim == 2:
+            head = (
+                '{:.0f} {:.0f} \n'.format(
+                    nCunderMesh[0], nCunderMesh[1]
+                ) +
+                '{:.4f} {:.4f} \n'.format(
+                    tswCorn[0], tswCorn[1]
+                ) +
+                '{:.3f} {:.3f} \n'.format(
+                    smallCell[0], smallCell[1]
+                ) +
+                '{:.0f}'.format(nrCells)
+            )
+
+        else:
+            head = (
+                '{:.0f} {:.0f} {:.0f}\n'.format(
+                    nCunderMesh[0], nCunderMesh[1], nCunderMesh[2]
+                ) +
+                '{:.4f} {:.4f} {:.4f}\n'.format(
+                    tswCorn[0], tswCorn[1], tswCorn[2]
+                ) +
+                '{:.3f} {:.3f} {:.3f}\n'.format(
+                    smallCell[0], smallCell[1], smallCell[2]
+                ) +
+                '{:.0f}'.format(nrCells)
+            )
         np.savetxt(fileName, np.c_[indArr, levels], fmt='%i', header=head, comments='')
 
         # Print the models
