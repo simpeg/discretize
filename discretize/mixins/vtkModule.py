@@ -49,7 +49,7 @@ and PVGeo_:
     * Topography Surface
     * `Inverted Model`: The model has been both sliced and thresholded for low values
 
-.. _`Laguna del Maule Bouguer Gravity`: http://docs.simpeg.xyz/content/examples/04-grav/plot_laguna_del_maule_inversion.html#sphx-glr-content-examples-04-grav-plot-laguna-del-maule-inversion-py
+.. _`Laguna del Maule Bouguer Gravity`: http://docs.simpeg.xyz/content/examples/20-published/plot_laguna_del_maule_inversion.html
 
 """
 import os
