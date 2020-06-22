@@ -179,19 +179,17 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         if not np.all([mesh.nCx, mesh.nCy] == dim):
             raise Exception('Dimension of the model and mesh mismatch')
 
-        # Make a list of the lines
-        model = [line.split() for line in obsfile[1:]]
-        # Address the case where lines are not split equally
-        model = [cellvalue for sublist in model[::-1] for cellvalue in sublist]
-        # Make the vector
-        model = utils.mkvc(np.array(model, dtype=float).T)
+        model = []
+        for line in obsfile[1:]:
+            model.extend([float(val) for val in line.split()])
+        model = np.asarray(model)
         if not len(model) == mesh.nC:
             raise Exception(
                 """Something is not right, expected size is {:d}
                 but unwrap vector is size {:d}""".format(mesh.nC, len(model))
             )
 
-        return model
+        return model.reshape(mesh.vnC, order='F')[:, ::-1].reshape(-1, order='F')
 
     def _readModelUBC_3D(mesh, fileName):
         """Read UBC 3DTensor mesh model and generate 3D Tensor mesh model
