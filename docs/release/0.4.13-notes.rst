@@ -6,4 +6,22 @@
 ``discretize`` 0.4.13 Release Notes
 ===================================
 
-Placeholder
+This release contains some bug fixes:
+
+First, we have squashed a few bugs related to serializing the TreeMesh to a json
+object. ``tree_mesh.save`` should now work. We have also added the ability to
+write out a 2D ``TreeMesh`` to a UBC-GIF-like format. There is no official QuadTree
+mesh from UBC-GIF however, so this just mimics the 3D format for a 2D mesh.
+
+
+Contributors
+============
+
+* @dccowan
+* @jcapriot
+
+
+Pull requests
+=============
+
+* `#208 <https://github.com/simpeg/discretize/pull/208>`__: Create IO for 2D Tree mesh in UBC-like format

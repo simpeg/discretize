@@ -1,0 +1,9 @@
+.. currentmodule:: discretize
+
+.. _0.4.14_notes:
+
+===================================
+``discretize`` 0.4.14 Release Notes
+===================================
+
+Placeholder
