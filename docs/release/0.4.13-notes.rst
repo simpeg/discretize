@@ -30,4 +30,6 @@ Contributors
 Pull requests
 =============
 
+* `#204 <https://github.com/simpeg/discretize/pull/204>`__: Remove restriction of sphinx < 2
 * `#208 <https://github.com/simpeg/discretize/pull/208>`__: Create IO for 2D Tree mesh in UBC-like format
+* `#209 <https://github.com/simpeg/discretize/pull/209>`__: small bug fix for 2D UBC TensorMesh model readin
