@@ -4,6 +4,7 @@ import unittest
 import os
 import discretize
 import pickle
+import json
 
 try:
     import vtk
@@ -124,6 +125,96 @@ class TestPickle(unittest.TestCase):
         self.assertTrue(np.allclose(mesh0.gridCC, mesh1.gridCC))
         self.assertTrue(np.allclose(np.array(mesh0.h), np.array(mesh1.h)))
         print('Pickling of 3D TreeMesh is working')
+
+class TestSerialize(unittest.TestCase):
+
+    def test_dic_serialize2D(self):
+        mesh0 = discretize.TreeMesh([8, 8])
+
+        def refine(cell):
+            xyz = cell.center
+            dist = ((xyz - 0.25)**2).sum()**0.5
+            if dist < 0.25:
+                return 3
+            return 2
+
+        mesh0.refine(refine)
+
+        mesh_dict = mesh0.serialize()
+        mesh1 = discretize.TreeMesh.deserialize(mesh_dict)
+
+        self.assertEqual(mesh0.nC, mesh1.nC)
+        self.assertEqual(mesh0.__str__(), mesh1.__str__())
+        self.assertTrue(np.allclose(mesh0.gridCC, mesh1.gridCC))
+        self.assertTrue(np.allclose(np.array(mesh0.h), np.array(mesh1.h)))
+        print('dic serialize 2D is working')
+
+    def test_save_load_json2D(self):
+        mesh0 = discretize.TreeMesh([8, 8])
+
+        def refine(cell):
+            xyz = cell.center
+            dist = ((xyz - 0.25)**2).sum()**0.5
+            if dist < 0.25:
+                return 3
+            return 2
+
+        mesh0.refine(refine)
+
+        mesh0.save('tree.json')
+        with open('tree.json', 'r') as outfile:
+            jsondict = json.load(outfile)
+        mesh1 = discretize.TreeMesh.deserialize(jsondict)
+
+        self.assertEqual(mesh0.nC, mesh1.nC)
+        self.assertEqual(mesh0.__str__(), mesh1.__str__())
+        self.assertTrue(np.allclose(mesh0.gridCC, mesh1.gridCC))
+        self.assertTrue(np.allclose(np.array(mesh0.h), np.array(mesh1.h)))
+        print('json serialize 2D is working')
+
+    def test_dic_serialize3D(self):
+        mesh0 = discretize.TreeMesh([8, 8, 8])
+
+        def refine(cell):
+            xyz = cell.center
+            dist = ((xyz - 0.25)**2).sum()**0.5
+            if dist < 0.25:
+                return 3
+            return 2
+
+        mesh0.refine(refine)
+
+        mesh_dict = mesh0.serialize()
+        mesh1 = discretize.TreeMesh.deserialize(mesh_dict)
+
+        self.assertEqual(mesh0.nC, mesh1.nC)
+        self.assertEqual(mesh0.__str__(), mesh1.__str__())
+        self.assertTrue(np.allclose(mesh0.gridCC, mesh1.gridCC))
+        self.assertTrue(np.allclose(np.array(mesh0.h), np.array(mesh1.h)))
+        print('dic serialize 3D is working')
+
+    def test_save_load_json3D(self):
+        mesh0 = discretize.TreeMesh([8, 8, 8])
+
+        def refine(cell):
+            xyz = cell.center
+            dist = ((xyz - 0.25)**2).sum()**0.5
+            if dist < 0.25:
+                return 3
+            return 2
+
+        mesh0.refine(refine)
+
+        mesh0.save('tree.json')
+        with open('tree.json', 'r') as outfile:
+            jsondict = json.load(outfile)
+        mesh1 = discretize.TreeMesh.deserialize(jsondict)
+
+        self.assertEqual(mesh0.nC, mesh1.nC)
+        self.assertEqual(mesh0.__str__(), mesh1.__str__())
+        self.assertTrue(np.allclose(mesh0.gridCC, mesh1.gridCC))
+        self.assertTrue(np.allclose(np.array(mesh0.h), np.array(mesh1.h)))
+        print('json serialize 3D is working')
 
 if __name__ == '__main__':
     unittest.main()
