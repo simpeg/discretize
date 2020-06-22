@@ -24,7 +24,7 @@ class TestOcTreeMeshIO(unittest.TestCase):
         mesh.insert_cells(cell_points, cell_levels)
         self.mesh = mesh
 
-    def test_UBCfiles(self):
+    def test_UBC3Dfiles(self):
 
         mesh = self.mesh
         # Make a vector
@@ -44,10 +44,34 @@ class TestOcTreeMeshIO(unittest.TestCase):
         mesh.writeModelUBC(['arange.txt'], [vec])
         vecUBC2 = mesh.readModelUBC('arange.txt')
         self.assertTrue(np.allclose(vec, vecUBC2))
-        
+
         print('IO of UBC octree files is working')
         os.remove('temp.msh')
         os.remove('arange.txt')
+
+    def test_UBC2Dfiles(self):
+        mesh0 = discretize.TreeMesh([8, 8])
+
+        def refine(cell):
+            xyz = cell.center
+            dist = ((xyz - 0.25)**2).sum()**0.5
+            if dist < 0.25:
+                return 3
+            return 2
+
+        mesh0.refine(refine)
+
+        mod0 = np.arange(mesh0.nC)
+        mesh0.writeUBC('tmp.msh', {'arange.txt': mod0})
+        mesh1 = discretize.TreeMesh.readUBC('tmp.msh')
+        mod1 = mesh1.readModelUBC('arange.txt')
+
+        self.assertEqual(mesh0.nC, mesh1.nC)
+        self.assertEqual(mesh0.__str__(), mesh1.__str__())
+        self.assertTrue(np.allclose(mesh0.gridCC, mesh1.gridCC))
+        self.assertTrue(np.allclose(np.array(mesh0.h), np.array(mesh1.h)))
+        self.assertTrue(np.allclose(mod0, mod1))
+        print('IO of UBC like 2D TreeMesh is working')
 
     if has_vtk:
         def test_VTUfiles(self):
