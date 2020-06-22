@@ -3658,6 +3658,8 @@ cdef class _TreeMesh:
 
     def __setstate__(self, state):
         indArr, levels = state
+        indArr = np.asarray(indArr)
+        levels = np.asarray(levels)
         xs = np.array(self._xs)
         ys = np.array(self._ys)
         if self._dim == 3:
@@ -3699,7 +3701,11 @@ cdef class _TreeMesh:
 
         levels = 1<<(max_level - levels)
 
-        indArr[:, 2] = (self._zs.shape[0]-1) - indArr[:, 2]
+        if self.dim == 2:
+            indArr[:, -1] = (self._ys.shape[0]-1) - indArr[:, -1]
+        else:
+            indArr[:, -1] = (self._zs.shape[0]-1) - indArr[:, -1]
+
         indArr = (indArr - levels[:, None])//2
         indArr += 1
 
@@ -3711,7 +3717,10 @@ cdef class _TreeMesh:
         if self.__ubc_order is not None:
             return self.__ubc_order
         indArr, _ = self._ubc_indArr
-        self.__ubc_order = np.lexsort((indArr[:, 0], indArr[:, 1], indArr[:, 2]))
+        if self.dim == 2:
+            self.__ubc_order = np.lexsort((indArr[:, 0], indArr[:, 1]))
+        else:
+            self.__ubc_order = np.lexsort((indArr[:, 0], indArr[:, 1], indArr[:, 2]))
         return self.__ubc_order
 
     def __dealloc__(self):

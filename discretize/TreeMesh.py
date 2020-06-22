@@ -659,20 +659,14 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
     def serialize(self):
         serial = BaseTensorMesh.serialize(self)
         inds, levels = self.__getstate__()
-        serial['cell_indexes'] = inds
-        serial['cell_levels'] = levels
+        serial['cell_indexes'] = inds.tolist()
+        serial['cell_levels'] = levels.tolist()
         return serial
 
     @classmethod
     def deserialize(cls, serial):
         mesh = cls(**serial)
         return mesh
-
-    def load(self, *args, **kwargs):
-        raise NotImplementedError()
-
-    def copy(self, *args, **kwargs):
-        raise NotImplementedError()
 
     def __reduce__(self):
         return TreeMesh, (self.h, self.x0), self.__getstate__()
