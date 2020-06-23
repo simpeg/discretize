@@ -13,15 +13,23 @@ object. ``tree_mesh.save`` should now work. We have also added the ability to
 write out a 2D ``TreeMesh`` to a UBC-GIF-like format. There is no official QuadTree
 mesh from UBC-GIF however, so this just mimics the 3D format for a 2D mesh.
 
+There was also a small bug in reading in a 2D UBC TensorMesh model when the values
+were split over multiple lines. We have altered the logic here so as to be
+independant of the structure of that file, as the values should always appear in a
+specific order.
+
 
 Contributors
 ============
 
 * @dccowan
 * @jcapriot
+* @prisae
 
 
 Pull requests
 =============
 
+* `#204 <https://github.com/simpeg/discretize/pull/204>`__: Remove restriction of sphinx < 2
 * `#208 <https://github.com/simpeg/discretize/pull/208>`__: Create IO for 2D Tree mesh in UBC-like format
+* `#209 <https://github.com/simpeg/discretize/pull/209>`__: small bug fix for 2D UBC TensorMesh model readin
