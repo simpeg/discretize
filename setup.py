@@ -56,7 +56,7 @@ install_requires = build_requires + [
 
 metadata = dict(
     name="discretize",
-    version="0.4.12",
+    version="0.4.13",
     setup_requires=build_requires,
     install_requires=install_requires,
     author="SimPEG developers",
