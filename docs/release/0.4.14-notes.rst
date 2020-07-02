@@ -6,4 +6,16 @@
 ``discretize`` 0.4.14 Release Notes
 ===================================
 
-Placeholder
+A small release adding the ability to specify the ``norm`` option for
+the ``pcolorOpts`` dictionary argument to ``TreeMesh.plotImage``.
+
+Contributors
+============
+
+* @jcapriot
+
+
+Pull requests
+=============
+
+* `#211 <https://github.com/simpeg/discretize/pull/211>`__: Add ability to handle "norm" keyword in pcolorOpts on the TreeMesh
