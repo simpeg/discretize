@@ -3592,8 +3592,10 @@ cdef class _TreeMesh:
         if 'color' not in gridOpts:
             gridOpts['color'] = 'k'
 
-        cNorm = colors.Normalize(
-            vmin=vmin, vmax=vmax)
+        if 'norm' in pcolorOpts:
+           cNorm = pcolorOpts['norm']
+        else:
+           cNorm = colors.Normalize(vmin=vmin, vmax=vmax)
 
         scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=cm)
 
