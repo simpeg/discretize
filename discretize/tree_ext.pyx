@@ -3523,7 +3523,7 @@ cdef class _TreeMesh:
                   pcolor_opts=None,
                   grid_opts=None,
                   range_x=None, range_y=None,
-                  **other_kwargs,
+                  **kwargs,
                   ):
         """ Plots an image of values defined on the TreeMesh
         If 3D, this function plots a default slice of the TreeMesh
@@ -3554,7 +3554,7 @@ cdef class _TreeMesh:
                            ax=ax, clim=clim, show_it=show_it,
                            pcolor_opts=pcolor_opts,
                            range_x=range_x, range_y=range_y,
-                           **other_kwargs)
+                           **kwargs)
 
         if view == 'vec':
             raise NotImplementedError('Vector ploting is not supported on TreeMesh (yet)')
@@ -3570,17 +3570,17 @@ cdef class _TreeMesh:
             ind_xy = {'x': 0, 'y': 1}[v_type[1]]
             I = (getattr(self, aveOp)*v).reshape(2, self.nC)[ind_xy] # average to cell centers
 
-        if "pcolorOpts" in other_kwargs:
-            pcolor_opts = other_kwargs["pcolorOpts"]
+        if "pcolorOpts" in kwargs:
+            pcolor_opts = kwargs["pcolorOpts"]
             warnings.warn("pcolorOpts has been deprecated, please use pcolor_opts", DeprecationWarning)
-        if "gridOpts" in other_kwargs:
-            grid_opts = other_kwargs["gridOpts"]
+        if "gridOpts" in kwargs:
+            grid_opts = kwargs["gridOpts"]
             warnings.warn("gridOpts has been deprecated, please use grid_opts", DeprecationWarning)
-        if "showIt" in other_kwargs:
-            show_it = other_kwargs["showIt"]
+        if "showIt" in kwargs:
+            show_it = kwargs["showIt"]
             warnings.warn("showIt has been deprecated, please use show_it", DeprecationWarning)
-        if "vType" in other_kwargs:
-            show_it = other_kwargs["vType"]
+        if "vType" in kwargs:
+            show_it = kwargs["vType"]
             warnings.warn("vType has been deprecated, please use v_type", DeprecationWarning)
 
         if ax is None:

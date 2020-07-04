@@ -58,7 +58,7 @@ class TensorView(object):
         grid_opts=None,
         numbering=True, annotation_color='w',
         range_x=None, range_y=None, sample_grid=None,
-        stream_threshold=None, **other_kwargs
+        stream_threshold=None, **kwargs
     ):
         """
         Mesh.plotImage(v)
@@ -99,23 +99,23 @@ class TensorView(object):
             M.plotImage(v, annotation_color='k', show_it=True)
 
         """
-        if "pcolorOpts" in other_kwargs:
-            pcolor_opts = other_kwargs["pcolorOpts"]
+        if "pcolorOpts" in kwargs:
+            pcolor_opts = kwargs["pcolorOpts"]
             warnings.warn("pcolorOpts has been deprecated, please use pcolor_opts", DeprecationWarning)
-        if "streamOpts" in other_kwargs:
-            stream_opts = other_kwargs["streamOpts"]
+        if "streamOpts" in kwargs:
+            stream_opts = kwargs["streamOpts"]
             warnings.warn("streamOpts has been deprecated, please use stream_opts", DeprecationWarning)
-        if "gridOpts" in other_kwargs:
-            grid_opts = other_kwargs["gridOpts"]
+        if "gridOpts" in kwargs:
+            grid_opts = kwargs["gridOpts"]
             warnings.warn("gridOpts has been deprecated, please use grid_opts", DeprecationWarning)
-        if "showIt" in other_kwargs:
-            show_it = other_kwargs["showIt"]
+        if "showIt" in kwargs:
+            show_it = kwargs["showIt"]
             warnings.warn("showIt has been deprecated, please use show_it", DeprecationWarning)
-        if "annotationColor" in other_kwargs:
-            show_it = other_kwargs["annotationColor"]
+        if "annotationColor" in kwargs:
+            show_it = kwargs["annotationColor"]
             warnings.warn("annotationColor has been deprecated, please use annotation_color", DeprecationWarning)
-        if "vType" in other_kwargs:
-            show_it = other_kwargs["vType"]
+        if "vType" in kwargs:
+            show_it = kwargs["vType"]
             warnings.warn("vType has been deprecated, please use v_type", DeprecationWarning)
 
         if pcolor_opts is None:
@@ -234,7 +234,7 @@ class TensorView(object):
         range_y=None,
         sample_grid=None,
         stream_threshold=None,
-        stream_thickness=None, **other_kwargs
+        stream_thickness=None, **kwargs
     ):
 
         """
@@ -258,20 +258,20 @@ class TensorView(object):
 
         """
         normal = normal.upper()
-        if "pcolorOpts" in other_kwargs:
-            pcolor_opts = other_kwargs["pcolorOpts"]
+        if "pcolorOpts" in kwargs:
+            pcolor_opts = kwargs["pcolorOpts"]
             warnings.warn("pcolorOpts has been deprecated, please use pcolor_opts", DeprecationWarning)
-        if "streamOpts" in other_kwargs:
-            stream_opts = other_kwargs["streamOpts"]
+        if "streamOpts" in kwargs:
+            stream_opts = kwargs["streamOpts"]
             warnings.warn("streamOpts has been deprecated, please use stream_opts", DeprecationWarning)
-        if "gridOpts" in other_kwargs:
-            grid_opts = other_kwargs["gridOpts"]
+        if "gridOpts" in kwargs:
+            grid_opts = kwargs["gridOpts"]
             warnings.warn("gridOpts has been deprecated, please use grid_opts", DeprecationWarning)
-        if "showIt" in other_kwargs:
-            show_it = other_kwargs["showIt"]
+        if "showIt" in kwargs:
+            show_it = kwargs["showIt"]
             warnings.warn("showIt has been deprecated, please use show_it", DeprecationWarning)
-        if "vType" in other_kwargs:
-            show_it = other_kwargs["vType"]
+        if "vType" in kwargs:
+            show_it = kwargs["vType"]
             warnings.warn("vType has been deprecated, please use v_type", DeprecationWarning)
 
         if pcolor_opts is None:
@@ -789,7 +789,7 @@ class TensorView(object):
                        v_type='CC', view='real', axis='xy', transparent=None,
                        clim=None, xlim=None, ylim=None, zlim=None,
                        aspect='auto', grid=[2, 2, 1], pcolor_opts=None,
-                       fig=None, **other_kwargs):
+                       fig=None, **kwargs):
         """Plot slices of a 3D volume, interactively (scroll wheel).
 
         If called from a notebook, make sure to set
@@ -822,8 +822,8 @@ class TensorView(object):
         else:
             fig.clf()
 
-        if "pcolorOpts" in other_kwargs:
-            pcolor_opts = other_kwargs["pcolorOpts"]
+        if "pcolorOpts" in kwargs:
+            pcolor_opts = kwargs["pcolorOpts"]
             warnings.warn("pcolorOpts has been deprecated, please use pcolor_opts", DeprecationWarning)
 
         # Populate figure
@@ -1194,19 +1194,19 @@ class CurviView(object):
         ax=None, clim=None, show_it=False,
         pcolor_opts=None,
         grid_opts=None,
-        range_x=None, range_y=None, **other_kwargs
+        range_x=None, range_y=None, **kwargs
     ):
-        if "pcolorOpts" in other_kwargs:
-            pcolor_opts = other_kwargs["pcolorOpts"]
+        if "pcolorOpts" in kwargs:
+            pcolor_opts = kwargs["pcolorOpts"]
             warnings.warn("pcolorOpts has been deprecated, please use pcolor_opts", DeprecationWarning)
-        if "gridOpts" in other_kwargs:
-            grid_opts = other_kwargs["gridOpts"]
+        if "gridOpts" in kwargs:
+            grid_opts = kwargs["gridOpts"]
             warnings.warn("gridOpts has been deprecated, please use grid_opts", DeprecationWarning)
-        if "showIt" in other_kwargs:
-            show_it = other_kwargs["showIt"]
+        if "showIt" in kwargs:
+            show_it = kwargs["showIt"]
             warnings.warn("showIt has been deprecated, please use show_it", DeprecationWarning)
-        if "vType" in other_kwargs:
-            show_it = other_kwargs["vType"]
+        if "vType" in kwargs:
+            show_it = kwargs["vType"]
             warnings.warn("vType has been deprecated, please use v_type", DeprecationWarning)
 
         if self.dim == 3:
@@ -1370,12 +1370,12 @@ class Slicer(object):
     def __init__(self, mesh, v, xslice=None, yslice=None, zslice=None,
                  v_type='CC', view='real', axis='xy', transparent=None,
                  clim=None, xlim=None, ylim=None, zlim=None, aspect='auto',
-                 grid=[2, 2, 1], pcolor_opts=None, **other_kwargs):
+                 grid=[2, 2, 1], pcolor_opts=None, **kwargs):
         """Initialize interactive figure."""
 
         # 0. Some checks, not very extensive
-        if "pcolorOpts" in other_kwargs:
-            pcolor_opts = other_kwargs["pcolorOpts"]
+        if "pcolorOpts" in kwargs:
+            pcolor_opts = kwargs["pcolorOpts"]
             warnings.warn("pcolorOpts has been deprecated, please use pcolor_opts", DeprecationWarning)
 
         # (a) Mesh dimensionality

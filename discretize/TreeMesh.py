@@ -537,22 +537,22 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         normal='Z', ind=None, grid=False, view='real',
         ax=None, clim=None, show_it=False,
         pcolor_opts=None, stream_opts=None, grid_opts=None,
-        range_x=None, range_y=None, **other_kwargs
+        range_x=None, range_y=None, **kwargs
     ):
-        if "pcolorOpts" in other_kwargs:
-            pcolor_opts = other_kwargs["pcolorOpts"]
+        if "pcolorOpts" in kwargs:
+            pcolor_opts = kwargs["pcolorOpts"]
             warnings.warn("pcolorOpts has been deprecated, please use pcolor_opts", DeprecationWarning)
-        if "streamOpts" in other_kwargs:
-            stream_opts = other_kwargs["streamOpts"]
+        if "streamOpts" in kwargs:
+            stream_opts = kwargs["streamOpts"]
             warnings.warn("streamOpts has been deprecated, please use stream_opts", DeprecationWarning)
-        if "gridOpts" in other_kwargs:
-            grid_opts = other_kwargs["gridOpts"]
+        if "gridOpts" in kwargs:
+            grid_opts = kwargs["gridOpts"]
             warnings.warn("gridOpts has been deprecated, please use grid_opts", DeprecationWarning)
-        if "showIt" in other_kwargs:
-            show_it = other_kwargs["showIt"]
+        if "showIt" in kwargs:
+            show_it = kwargs["showIt"]
             warnings.warn("showIt has been deprecated, please use show_it", DeprecationWarning)
-        if "vType" in other_kwargs:
-            show_it = other_kwargs["vType"]
+        if "vType" in kwargs:
+            show_it = kwargs["vType"]
             warnings.warn("vType has been deprecated, please use v_type", DeprecationWarning)
 
         if pcolor_opts is None:
