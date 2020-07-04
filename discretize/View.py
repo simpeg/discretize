@@ -29,7 +29,7 @@ class TensorView(object):
     # def components(self):
 
     #     plotAll = len(imageType) == 1
-    #     options = {"direction":direction, "numbering":numbering, "annotationColor":annotationColor, "show_it":False}
+    #     options = {"direction":direction, "numbering":numbering, "annotation_color":annotation_color, "show_it":False}
     #     fig = plt.figure(figNum)
     #     # Determine the subplot number: 131, 121
     #     numPlots = 130 if plotAll else len(imageType)//2*10+100
@@ -56,7 +56,7 @@ class TensorView(object):
         pcolor_opts=None,
         stream_opts=None,
         grid_opts=None,
-        numbering=True, annotationColor='w',
+        numbering=True, annotation_color='w',
         range_x=None, range_y=None, sample_grid=None,
         stream_threshold=None, **other_kwargs
     ):
@@ -78,7 +78,7 @@ class TensorView(object):
         3D Inputs:
 
         :param bool numbering: show numbering of slices, 3D only
-        :param str annotationColor: color of annotation, e.g. 'w', 'k', 'b'
+        :param str annotation_color: color of annotation, e.g. 'w', 'k', 'b'
 
         .. plot::
             :include-source:
@@ -96,7 +96,7 @@ class TensorView(object):
             import numpy as np
             M = discretize.TensorMesh([20, 20, 20])
             v = np.sin(M.gridCC[:, 0]*2*np.pi)*np.sin(M.gridCC[:, 1]*2*np.pi)*np.sin(M.gridCC[:, 2]*2*np.pi)
-            M.plotImage(v, annotationColor='k', show_it=True)
+            M.plotImage(v, annotation_color='k', show_it=True)
 
         """
         if "pcolorOpts" in other_kwargs:
@@ -111,6 +111,9 @@ class TensorView(object):
         if "showIt" in other_kwargs:
             show_it = other_kwargs["showIt"]
             warnings.warn("showIt has been deprecated, please use show_it", DeprecationWarning)
+        if "annotationColor" in other_kwargs:
+            show_it = other_kwargs["annotationColor"]
+            warnings.warn("annotationColor has been deprecated, please use annotation_color", DeprecationWarning)
 
         if pcolor_opts is None:
             pcolor_opts = {}
@@ -198,8 +201,8 @@ class TensorView(object):
             gxY = np.kron(np.ones((nX+1, 1)), np.array([0, sum(self.hy)*nY, np.nan])).ravel()
             gyX = np.kron(np.ones((nY+1, 1)), np.array([0, sum(self.hx)*nX, np.nan])).ravel()
             gyY = np.c_[gy, gy, gy+np.nan].ravel()
-            ax.plot(gxX, gxY, annotationColor+'-', linewidth=2)
-            ax.plot(gyX, gyY, annotationColor+'-', linewidth=2)
+            ax.plot(gxX, gxY, annotation_color+'-', linewidth=2)
+            ax.plot(gyX, gyY, annotation_color+'-', linewidth=2)
             ax.axis('tight')
 
             if numbering:
@@ -209,7 +212,7 @@ class TensorView(object):
                         iz = ix + iy*nX
                         if iz < self.nCz:
                             ax.text((ix+1)*(self.vectorNx[-1]-self.x0[0])-pad, (iy)*(self.vectorNy[-1]-self.x0[1])+pad,
-                                     '#{0:.0f}'.format(iz), color=annotationColor, verticalalignment='bottom', horizontalalignment='right', size='x-large')
+                                     '#{0:.0f}'.format(iz), color=annotation_color, verticalalignment='bottom', horizontalalignment='right', size='x-large')
 
         ax.set_title(vType)
         if show_it:
