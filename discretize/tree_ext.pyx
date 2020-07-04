@@ -3322,7 +3322,7 @@ cdef class _TreeMesh:
         lines=True, cell_line=False,
         faces_x=False, faces_y=False, faces_z=False,
         edges_x=False, edges_y=False, edges_z=False,
-        showIt=False, **kwargs):
+        show_it=False, **kwargs):
         """ Plot the nodel, cell-centered, and staggered grids for 2 and 3 dimensions
         Plots the mesh grid in either 2D or 3D of the TreeMesh
 
@@ -3346,7 +3346,7 @@ cdef class _TreeMesh:
             Plot the center points of the x, y, or z faces
         edges_x, edges_y, edges_z : bool, optional
             Plot the center points of the x, y, or z edges
-        showIt : bool, optional
+        show_it : bool, optional
             whether to call plt.show() within the codes
         color : Color or str, optional
             if lines=True, the color of the lines, defaults to first color.
@@ -3359,6 +3359,10 @@ cdef class _TreeMesh:
             Axes handle for the plot
 
         """
+        if "showIt" in kwargs:
+            show_it = kwargs["showIt"]
+            warnings.warn("showIt has been deprecated, please use show_it", DeprecationWarning)
+
         if ax is None:
             if(self._dim == 2):
                 ax = plt.subplot(111)
@@ -3508,14 +3512,14 @@ cdef class _TreeMesh:
             ax.set_zlabel('x3')
 
         ax.grid(True)
-        if showIt:
+        if show_it:
             plt.show()
 
         return ax
 
     @requires({'matplotlib': matplotlib})
     def plotImage(self, v, vType='CC', grid=False, view='real',
-                  ax=None, clim=None, showIt=False,
+                  ax=None, clim=None, show_it=False,
                   pcolor_opts=None,
                   grid_opts=None,
                   range_x=None, range_y=None,
@@ -3547,7 +3551,7 @@ cdef class _TreeMesh:
         """
         if self._dim == 3:
             self.plotSlice(v, vType=vType, grid=grid, view=view,
-                           ax=ax, clim=clim, showIt=showIt,
+                           ax=ax, clim=clim, show_it=show_it,
                            pcolor_opts=pcolor_opts,
                            range_x=range_x, range_y=range_y,
                            **other_kwargs)
@@ -3572,6 +3576,9 @@ cdef class _TreeMesh:
         if "gridOpts" in other_kwargs:
             grid_opts = other_kwargs["gridOpts"]
             warnings.warn("gridOpts has been deprecated, please use grid_opts", DeprecationWarning)
+        if "showIt" in other_kwargs:
+            show_it = other_kwargs["showIt"]
+            warnings.warn("showIt has been deprecated, please use show_it", DeprecationWarning)
 
         if ax is None:
             ax = plt.subplot(111)
@@ -3649,7 +3656,7 @@ cdef class _TreeMesh:
         else:
             ax.set_ylim(*self.vectorNy[[0, -1]])
 
-        if showIt:
+        if show_it:
             plt.show()
         return [scalarMap]
 

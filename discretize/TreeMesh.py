@@ -535,7 +535,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
     def plotSlice(
         self, v, vType='CC',
         normal='Z', ind=None, grid=False, view='real',
-        ax=None, clim=None, showIt=False,
+        ax=None, clim=None, show_it=False,
         pcolor_opts=None, stream_opts=None, grid_opts=None,
         range_x=None, range_y=None, **other_kwargs
     ):
@@ -548,6 +548,9 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         if "gridOpts" in other_kwargs:
             grid_opts = other_kwargs["gridOpts"]
             warnings.warn("gridOpts has been deprecated, please use grid_opts", DeprecationWarning)
+        if "showIt" in other_kwargs:
+            show_it = other_kwargs["showIt"]
+            warnings.warn("showIt has been deprecated, please use show_it", DeprecationWarning)
 
         if pcolor_opts is None:
             pcolor_opts = {}
@@ -651,7 +654,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         out = temp_mesh.plotImage(
             v2d, vType='CC',
             grid=grid, view=view,
-            ax=ax, clim=clim, showIt=False,
+            ax=ax, clim=clim, show_it=False,
             pcolor_opts=pcolor_opts,
             grid_opts=grid_opts,
             range_x=range_x,
@@ -662,7 +665,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         ax.set_title(
             'Slice {0:d}, {1!s} = {2:4.2f}'.format(ind, normal, slice_loc)
         )
-        if showIt:
+        if show_it:
             plt.show()
         return tuple(out)
 

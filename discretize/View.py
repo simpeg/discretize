@@ -29,7 +29,7 @@ class TensorView(object):
     # def components(self):
 
     #     plotAll = len(imageType) == 1
-    #     options = {"direction":direction, "numbering":numbering, "annotationColor":annotationColor, "showIt":False}
+    #     options = {"direction":direction, "numbering":numbering, "annotationColor":annotationColor, "show_it":False}
     #     fig = plt.figure(figNum)
     #     # Determine the subplot number: 131, 121
     #     numPlots = 130 if plotAll else len(imageType)//2*10+100
@@ -47,12 +47,12 @@ class TensorView(object):
     #         ax_z = plt.subplot(numPlots+pltNum)
     #         self.plotImage(fxyz[2], imageType='Fz', ax=ax_z, **options)
     #         pltNum +=1
-    #     if showIt: plt.show()
+    #     if show_it: plt.show()
 
     @requires({'matplotlib': matplotlib})
     def plotImage(
         self, v, vType='CC', grid=False, view='real',
-        ax=None, clim=None, showIt=False,
+        ax=None, clim=None, show_it=False,
         pcolor_opts=None,
         stream_opts=None,
         grid_opts=None,
@@ -73,7 +73,7 @@ class TensorView(object):
 
         :param str vType: type of vector ('CC', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez')
         :param matplotlib.axes.Axes ax: axis to plot to
-        :param bool showIt: call plt.show()
+        :param bool show_it: call plt.show()
 
         3D Inputs:
 
@@ -87,7 +87,7 @@ class TensorView(object):
             import numpy as np
             M = discretize.TensorMesh([20, 20])
             v = np.sin(M.gridCC[:, 0]*2*np.pi)*np.sin(M.gridCC[:, 1]*2*np.pi)
-            M.plotImage(v, showIt=True)
+            M.plotImage(v, show_it=True)
 
         .. plot::
             :include-source:
@@ -96,7 +96,7 @@ class TensorView(object):
             import numpy as np
             M = discretize.TensorMesh([20, 20, 20])
             v = np.sin(M.gridCC[:, 0]*2*np.pi)*np.sin(M.gridCC[:, 1]*2*np.pi)*np.sin(M.gridCC[:, 2]*2*np.pi)
-            M.plotImage(v, annotationColor='k', showIt=True)
+            M.plotImage(v, annotationColor='k', show_it=True)
 
         """
         if "pcolorOpts" in other_kwargs:
@@ -108,6 +108,9 @@ class TensorView(object):
         if "gridOpts" in other_kwargs:
             grid_opts = other_kwargs["gridOpts"]
             warnings.warn("gridOpts has been deprecated, please use grid_opts", DeprecationWarning)
+        if "showIt" in other_kwargs:
+            show_it = other_kwargs["showIt"]
+            warnings.warn("showIt has been deprecated, please use show_it", DeprecationWarning)
 
         if pcolor_opts is None:
             pcolor_opts = {}
@@ -138,7 +141,7 @@ class TensorView(object):
         elif self.dim == 2:
             return self._plotImage2D(
                 v, vType=vType, grid=grid, view=view,
-                ax=ax, clim=clim, showIt=showIt,
+                ax=ax, clim=clim, show_it=show_it,
                 pcolor_opts=pcolor_opts, stream_opts=stream_opts,
                 grid_opts=grid_opts, range_x=range_x, range_y=range_y,
                 sample_grid=sample_grid, stream_threshold=stream_threshold
@@ -209,7 +212,7 @@ class TensorView(object):
                                      '#{0:.0f}'.format(iz), color=annotationColor, verticalalignment='bottom', horizontalalignment='right', size='x-large')
 
         ax.set_title(vType)
-        if showIt:
+        if show_it:
             plt.show()
         return ph
 
@@ -217,7 +220,7 @@ class TensorView(object):
     def plotSlice(
         self, v, vType='CC',
         normal='Z', ind=None, grid=False, view='real',
-        ax=None, clim=None, showIt=False,
+        ax=None, clim=None, show_it=False,
         pcolor_opts=None,
         stream_opts=None,
         grid_opts=None,
@@ -245,7 +248,7 @@ class TensorView(object):
             q = discretize.utils.mkvc(q)
             A = M.faceDiv * M.cellGrad
             b = Solver(A) * (q)
-            M.plotSlice(M.cellGrad*b, 'F', view='vec', grid=True, showIt=True, pcolor_opts={'alpha':0.8})
+            M.plotSlice(M.cellGrad*b, 'F', view='vec', grid=True, show_it=True, pcolor_opts={'alpha':0.8})
 
         """
         normal = normal.upper()
@@ -258,6 +261,9 @@ class TensorView(object):
         if "gridOpts" in other_kwargs:
             grid_opts = other_kwargs["gridOpts"]
             warnings.warn("gridOpts has been deprecated, please use grid_opts", DeprecationWarning)
+        if "showIt" in other_kwargs:
+            show_it = other_kwargs["showIt"]
+            warnings.warn("showIt has been deprecated, please use show_it", DeprecationWarning)
 
         if pcolor_opts is None:
             pcolor_opts = {}
@@ -276,7 +282,7 @@ class TensorView(object):
                 out += [
                     self.plotSlice(
                         v, vType=vTypeI, normal=normal, ind=ind, grid=grid,
-                        view=view, ax=ax, clim=clim, showIt=False,
+                        view=view, ax=ax, clim=clim, show_it=False,
                         pcolor_opts=pcolor_opts, stream_opts=stream_opts,
                         grid_opts=grid_opts, stream_threshold=stream_threshold,
                         stream_thickness=stream_thickness
@@ -375,7 +381,7 @@ class TensorView(object):
         out = tM._plotImage2D(
             v2d, vType=('CCv' if view == 'vec' else 'CC'),
             grid=grid, view=view,
-            ax=ax, clim=clim, showIt=showIt,
+            ax=ax, clim=clim, show_it=show_it,
             pcolor_opts=pcolor_opts, stream_opts=stream_opts,
             grid_opts=grid_opts,
             range_x=range_x,
@@ -394,7 +400,7 @@ class TensorView(object):
     @requires({'matplotlib': matplotlib})
     def _plotImage2D(
         self, v, vType='CC', grid=False, view='real',
-        ax=None, clim=None, showIt=False,
+        ax=None, clim=None, show_it=False,
         pcolor_opts=None,
         stream_opts=None,
         grid_opts=None,
@@ -589,14 +595,14 @@ class TensorView(object):
         else:
             ax.set_ylim(*self.vectorNy[[0, -1]])
 
-        if showIt:
+        if show_it:
             plt.show()
         return out
 
     @requires({'matplotlib': matplotlib})
     def plotGrid(
         self, ax=None, nodes=False, faces=False, centers=False, edges=False,
-        lines=True, showIt=False, **kwargs
+        lines=True, show_it=False, **kwargs
     ):
         """Plot the nodal, cell-centered and staggered grids for 1,2 and 3 dimensions.
 
@@ -605,7 +611,7 @@ class TensorView(object):
         :param bool centers: plot centers
         :param bool edges: plot edges
         :param bool lines: plot lines connecting nodes
-        :param bool showIt: call plt.show()
+        :param bool show_it: call plt.show()
 
         .. plot::
            :include-source:
@@ -615,7 +621,7 @@ class TensorView(object):
            h1 = np.linspace(.1, .5, 3)
            h2 = np.linspace(.1, .5, 5)
            mesh = discretize.TensorMesh([h1, h2])
-           mesh.plotGrid(nodes=True, faces=True, centers=True, lines=True, showIt=True)
+           mesh.plotGrid(nodes=True, faces=True, centers=True, lines=True, show_it=True)
 
         .. plot::
            :include-source:
@@ -626,9 +632,12 @@ class TensorView(object):
            h2 = np.linspace(.1, .5, 5)
            h3 = np.linspace(.1, .5, 3)
            mesh = discretize.TensorMesh([h1, h2, h3])
-           mesh.plotGrid(nodes=True, faces=True, centers=True, lines=True, showIt=True)
+           mesh.plotGrid(nodes=True, faces=True, centers=True, lines=True, show_it=True)
 
         """
+        if "showIt" in kwargs:
+            show_it = kwargs["showIt"]
+            warnings.warn("showIt has been deprecated, please use show_it", DeprecationWarning)
 
         axOpts = {'projection': '3d'} if self.dim == 3 else {}
         if ax is None:
@@ -760,7 +769,7 @@ class TensorView(object):
             ax.set_zlabel('x3')
 
         ax.grid(True)
-        if showIt:
+        if show_it:
             plt.show()
 
         return ax
@@ -910,15 +919,15 @@ class CylView(object):
             fig = ax.figure
 
         # Don't show things in the TM.plotImage
-        showIt = kwargs.get('showIt', False)
-        kwargs['showIt'] = False
+        show_it = kwargs.get('show_it', False)
+        kwargs['show_it'] = False
 
         out = getattr(M, plotType)(*args, **kwargs)
 
         ax.set_xlabel('x')
         ax.set_ylabel('z')
 
-        if showIt:
+        if show_it:
             plt.show()
 
         return out
@@ -1072,7 +1081,7 @@ class CurviView(object):
     @requires({'matplotlib': matplotlib})
     def plotGrid(
         self, ax=None, nodes=False, faces=False, centers=False, edges=False,
-        lines=True, showIt=False, **kwargs
+        lines=True, show_it=False, **kwargs
     ):
         """Plot the nodal, cell-centered and staggered grids for 1, 2 and 3 dimensions.
 
@@ -1083,13 +1092,16 @@ class CurviView(object):
             import discretize
             X, Y = discretize.utils.exampleLrmGrid([3, 3], 'rotate')
             M = discretize.CurvilinearMesh([X, Y])
-            M.plotGrid(showIt=True)
+            M.plotGrid(show_it=True)
 
         """
 
         axOpts = {'projection': '3d'} if self.dim == 3 else {}
         if ax is None:
             ax = plt.subplot(111, **axOpts)
+        if "showIt" in kwargs:
+            show_it = kwargs["showIt"]
+            warnings.warn("showIt has been deprecated, please use show_it", DeprecationWarning)
 
         NN = self.r(self.gridN, 'N', 'N', 'M')
         if self.dim == 2:
@@ -1162,7 +1174,7 @@ class CurviView(object):
         ax.set_xlabel('x1')
         ax.set_ylabel('x2')
 
-        if showIt:
+        if show_it:
             plt.show()
 
         return ax
@@ -1170,7 +1182,7 @@ class CurviView(object):
     @requires({'matplotlib': matplotlib})
     def plotImage(
         self, v, vType='CC', grid=False, view='real',
-        ax=None, clim=None, showIt=False,
+        ax=None, clim=None, show_it=False,
         pcolor_opts=None,
         grid_opts=None,
         range_x=None, range_y=None, **other_kwargs
@@ -1181,6 +1193,9 @@ class CurviView(object):
         if "gridOpts" in other_kwargs:
             grid_opts = other_kwargs["gridOpts"]
             warnings.warn("gridOpts has been deprecated, please use grid_opts", DeprecationWarning)
+        if "showIt" in other_kwargs:
+            show_it = other_kwargs["showIt"]
+            warnings.warn("showIt has been deprecated, please use show_it", DeprecationWarning)
 
         if self.dim == 3:
             raise NotImplementedError('This is not yet done!')
@@ -1260,7 +1275,7 @@ class CurviView(object):
         scalarMap._A = []  # http://stackoverflow.com/questions/8342549/matplotlib-add-colorbar-to-a-sequence-of-line-plots
         ax.set_xlabel('x')
         ax.set_ylabel('y')
-        if showIt:
+        if show_it:
             plt.show()
         return [scalarMap]
 
