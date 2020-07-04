@@ -69,7 +69,7 @@ print(dataVec.shape)
 
 # Set streamline plotting options
 streamOpts = {'color':'w', 'density':2.0}
-pcolorOpts = {"cmap":"viridis"}
+pcolor_opts = {"cmap":"viridis"}
 
 dat = mesh.plotSlice(
     dataVec, ax=ax, normal='Z', ind=5, vType='CCv', view='vec',

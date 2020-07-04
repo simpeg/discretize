@@ -6,8 +6,14 @@
 ``discretize`` 0.4.14 Release Notes
 ===================================
 
+This release is renaming a few of the options to the plotting routines to more
+pep8 friendly names. The older name will still function, but throw a deprecation warning
+
+* ``pcolorOpts`` -> ``pcolor_opts``
+*
+
 A small release adding the ability to specify the ``norm`` option for
-the ``pcolorOpts`` dictionary argument to ``TreeMesh.plotImage``.
+the ``pcolor_opts`` dictionary argument to ``TreeMesh.plotImage``.
 
 Contributors
 ============
@@ -18,4 +24,4 @@ Contributors
 Pull requests
 =============
 
-* `#211 <https://github.com/simpeg/discretize/pull/211>`__: Add ability to handle "norm" keyword in pcolorOpts on the TreeMesh
+* `#211 <https://github.com/simpeg/discretize/pull/211>`__: Add ability to handle "norm" keyword in pcolor_opts on the TreeMesh

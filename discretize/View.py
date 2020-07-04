@@ -53,12 +53,12 @@ class TensorView(object):
     def plotImage(
         self, v, vType='CC', grid=False, view='real',
         ax=None, clim=None, showIt=False,
-        pcolorOpts=None,
+        pcolor_opts=None,
         streamOpts=None,
         gridOpts=None,
         numbering=True, annotationColor='w',
         range_x=None, range_y=None, sample_grid=None,
-        stream_threshold=None
+        stream_threshold=None, **other_kwargs
     ):
         """
         Mesh.plotImage(v)
@@ -99,8 +99,12 @@ class TensorView(object):
             M.plotImage(v, annotationColor='k', showIt=True)
 
         """
-        if pcolorOpts is None:
-            pcolorOpts = {}
+        if "pcolorOpts" in other_kwargs:
+            pcolor_opts = other_kwargs["pcolorOpts"]
+            warnings.warn("pcolorOpts has been deprecated, please use pcolor_opts", DeprecationWarning)
+
+        if pcolor_opts is None:
+            pcolor_opts = {}
         if streamOpts is None:
             streamOpts = {'color': 'k'}
         if gridOpts is None:
@@ -129,7 +133,7 @@ class TensorView(object):
             return self._plotImage2D(
                 v, vType=vType, grid=grid, view=view,
                 ax=ax, clim=clim, showIt=showIt,
-                pcolorOpts=pcolorOpts, streamOpts=streamOpts,
+                pcolor_opts=pcolor_opts, streamOpts=streamOpts,
                 gridOpts=gridOpts, range_x=range_x, range_y=range_y,
                 sample_grid=sample_grid, stream_threshold=stream_threshold
             )
@@ -208,14 +212,14 @@ class TensorView(object):
         self, v, vType='CC',
         normal='Z', ind=None, grid=False, view='real',
         ax=None, clim=None, showIt=False,
-        pcolorOpts=None,
+        pcolor_opts=None,
         streamOpts=None,
         gridOpts=None,
         range_x=None,
         range_y=None,
         sample_grid=None,
         stream_threshold=None,
-        stream_thickness=None
+        stream_thickness=None, **other_kwargs
     ):
 
         """
@@ -235,12 +239,15 @@ class TensorView(object):
             q = discretize.utils.mkvc(q)
             A = M.faceDiv * M.cellGrad
             b = Solver(A) * (q)
-            M.plotSlice(M.cellGrad*b, 'F', view='vec', grid=True, showIt=True, pcolorOpts={'alpha':0.8})
+            M.plotSlice(M.cellGrad*b, 'F', view='vec', grid=True, showIt=True, pcolor_opts={'alpha':0.8})
 
         """
         normal = normal.upper()
-        if pcolorOpts is None:
-            pcolorOpts = {}
+        if "pcolorOpts" in other_kwargs:
+            pcolor_opts = other_kwargs["pcolorOpts"]
+            warnings.warn("pcolorOpts has been deprecated, please use pcolor_opts", DeprecationWarning)
+        if pcolor_opts is None:
+            pcolor_opts = {}
         if streamOpts is None:
             streamOpts = {'color':'k'}
         if gridOpts is None:
@@ -257,7 +264,7 @@ class TensorView(object):
                     self.plotSlice(
                         v, vType=vTypeI, normal=normal, ind=ind, grid=grid,
                         view=view, ax=ax, clim=clim, showIt=False,
-                        pcolorOpts=pcolorOpts, streamOpts=streamOpts,
+                        pcolor_opts=pcolor_opts, streamOpts=streamOpts,
                         gridOpts=gridOpts, stream_threshold=stream_threshold,
                         stream_thickness=stream_thickness
                     )
@@ -356,7 +363,7 @@ class TensorView(object):
             v2d, vType=('CCv' if view == 'vec' else 'CC'),
             grid=grid, view=view,
             ax=ax, clim=clim, showIt=showIt,
-            pcolorOpts=pcolorOpts, streamOpts=streamOpts,
+            pcolor_opts=pcolor_opts, streamOpts=streamOpts,
             gridOpts=gridOpts,
             range_x=range_x,
             range_y=range_y,
@@ -375,7 +382,7 @@ class TensorView(object):
     def _plotImage2D(
         self, v, vType='CC', grid=False, view='real',
         ax=None, clim=None, showIt=False,
-        pcolorOpts=None,
+        pcolor_opts=None,
         streamOpts=None,
         gridOpts=None,
         range_x=None,
@@ -385,8 +392,8 @@ class TensorView(object):
         stream_thickness=None
     ):
 
-        if pcolorOpts is None:
-            pcolorOpts = {}
+        if pcolor_opts is None:
+            pcolor_opts = {}
         if streamOpts is None:
             streamOpts = {'color': 'k'}
         if gridOpts is None:
@@ -443,7 +450,7 @@ class TensorView(object):
             if clim is None:
                 clim = [v.min(), v.max()]
             v = np.ma.masked_where(np.isnan(v), v)
-            out += (ax.pcolormesh(self.vectorNx, self.vectorNy, v.T, vmin=clim[0], vmax=clim[1], **pcolorOpts), )
+            out += (ax.pcolormesh(self.vectorNx, self.vectorNy, v.T, vmin=clim[0], vmax=clim[1], **pcolor_opts), )
         elif view in ['vec']:
             # Matplotlib seems to not support irregular
             # spaced vectors at the moment. So we will
@@ -541,7 +548,7 @@ class TensorView(object):
             out += (
                 ax.pcolormesh(
                     x, y, np.sqrt(U**2+V**2).T, vmin=clim[0], vmax=clim[1],
-                    **pcolorOpts),
+                    **pcolor_opts),
             )
             out += (
                 ax.streamplot(
@@ -750,8 +757,8 @@ class TensorView(object):
     def plot_3d_slicer(self, v, xslice=None, yslice=None, zslice=None,
                        vType='CC', view='real', axis='xy', transparent=None,
                        clim=None, xlim=None, ylim=None, zlim=None,
-                       aspect='auto', grid=[2, 2, 1], pcolorOpts=None,
-                       fig=None):
+                       aspect='auto', grid=[2, 2, 1], pcolor_opts=None,
+                       fig=None, **other_kwargs):
         """Plot slices of a 3D volume, interactively (scroll wheel).
 
         If called from a notebook, make sure to set
@@ -784,10 +791,14 @@ class TensorView(object):
         else:
             fig.clf()
 
+        if "pcolorOpts" in other_kwargs:
+            pcolor_opts = other_kwargs["pcolorOpts"]
+            warnings.warn("pcolorOpts has been deprecated, please use pcolor_opts", DeprecationWarning)
+
         # Populate figure
         tracker = Slicer(
             self, v, xslice, yslice, zslice, vType, view, axis, transparent,
-            clim, xlim, ylim, zlim, aspect, grid, pcolorOpts
+            clim, xlim, ylim, zlim, aspect, grid, pcolor_opts
         )
 
         # Connect figure to scrolling
@@ -1147,10 +1158,14 @@ class CurviView(object):
     def plotImage(
         self, v, vType='CC', grid=False, view='real',
         ax=None, clim=None, showIt=False,
-        pcolorOpts=None,
+        pcolor_opts=None,
         gridOpts=None,
-        range_x=None, range_y=None
+        range_x=None, range_y=None, **other_kwargs
     ):
+        if "pcolorOpts" in other_kwargs:
+            pcolor_opts = other_kwargs["pcolorOpts"]
+            warnings.warn("pcolorOpts has been deprecated, please use pcolor_opts", DeprecationWarning)
+
         if self.dim == 3:
             raise NotImplementedError('This is not yet done!')
         if view == 'vec':
@@ -1170,22 +1185,22 @@ class CurviView(object):
 
         if ax is None:
             ax = plt.subplot(111)
-        if pcolorOpts is None:
-            pcolorOpts = {}
-        if 'cmap' in pcolorOpts:
-            cm = pcolorOpts['cmap']
+        if pcolor_opts is None:
+            pcolor_opts = {}
+        if 'cmap' in pcolor_opts:
+            cm = pcolor_opts['cmap']
         else:
             cm = plt.get_cmap()
-        if 'vmin' in pcolorOpts:
-            vmin = pcolorOpts['vmin']
+        if 'vmin' in pcolor_opts:
+            vmin = pcolor_opts['vmin']
         else:
             vmin = np.nanmin(I) if clim is None else clim[0]
-        if 'vmax' in pcolorOpts:
-            vmax = pcolorOpts['vmax']
+        if 'vmax' in pcolor_opts:
+            vmax = pcolor_opts['vmax']
         else:
             vmax = np.nanmax(I) if clim is None else clim[1]
-        if 'alpha' in pcolorOpts:
-            alpha = pcolorOpts['alpha']
+        if 'alpha' in pcolor_opts:
+            alpha = pcolor_opts['alpha']
         else:
             alpha = 1.0
         if gridOpts is None:
@@ -1196,8 +1211,8 @@ class CurviView(object):
         cNorm = colors.Normalize(vmin=vmin, vmax=vmax)
         scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=cm)
 
-        if 'edge_color' in pcolorOpts:
-            edge_color = pcolorOpts['edge_color']
+        if 'edge_color' in pcolor_opts:
+            edge_color = pcolor_opts['edge_color']
         else:
             edge_color = gridOpts['color'] if grid else 'none'
         if 'alpha' in gridOpts:
@@ -1304,7 +1319,7 @@ class Slicer(object):
     grid : list of 3 int
         Number of cells occupied by x, y, and z dimension on plt.subplot2grid.
 
-    pcolorOpts : dictionary
+    pcolor_opts : dictionary
         Passed to pcolormesh.
 
     """
@@ -1312,10 +1327,13 @@ class Slicer(object):
     def __init__(self, mesh, v, xslice=None, yslice=None, zslice=None,
                  vType='CC', view='real', axis='xy', transparent=None,
                  clim=None, xlim=None, ylim=None, zlim=None, aspect='auto',
-                 grid=[2, 2, 1], pcolorOpts=None):
+                 grid=[2, 2, 1], pcolor_opts=None, **other_kwargs):
         """Initialize interactive figure."""
 
         # 0. Some checks, not very extensive
+        if "pcolorOpts" in other_kwargs:
+            pcolor_opts = other_kwargs["pcolorOpts"]
+            warnings.warn("pcolorOpts has been deprecated, please use pcolor_opts", DeprecationWarning)
 
         # (a) Mesh dimensionality
         if mesh.dim != 3:
@@ -1475,9 +1493,9 @@ class Slicer(object):
         self.clpropsw = {'c': 'w', 'lw': 2, 'zorder': 10}
         self.clpropsk = {'c': 'k', 'lw': 1, 'zorder': 11}
 
-        # Add pcolorOpts
-        if pcolorOpts is not None:
-            self.pc_props.update(pcolorOpts)
+        # Add pcolor_opts
+        if pcolor_opts is not None:
+            self.pc_props.update(pcolor_opts)
 
         # Initial draw
         self.update_xy()

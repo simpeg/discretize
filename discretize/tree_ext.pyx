@@ -3516,7 +3516,7 @@ cdef class _TreeMesh:
     @requires({'matplotlib': matplotlib})
     def plotImage(self, v, vType='CC', grid=False, view='real',
                   ax=None, clim=None, showIt=False,
-                  pcolorOpts=None,
+                  pcolor_opts=None,
                   gridOpts=None,
                   range_x=None, range_y=None,
                   **other_kwargs,
@@ -3538,7 +3538,7 @@ cdef class _TreeMesh:
             The axes handle
         clim : array_like of length 2, or None, optional
             A pair of [min, max] for the Colorbar
-        pcolorOpts : dict, or None
+        pcolor_opts : dict, or None
             options to be passed on to pcolormesh
         gridOpt : dict, or None
             options for the plotting the grid
@@ -3548,7 +3548,7 @@ cdef class _TreeMesh:
         if self._dim == 3:
             self.plotSlice(v, vType=vType, grid=grid, view=view,
                            ax=ax, clim=clim, showIt=showIt,
-                           pcolorOpts=pcolorOpts,
+                           pcolor_opts=pcolor_opts,
                            range_x=range_x, range_y=range_y,
                            **other_kwargs)
 
@@ -3566,24 +3566,28 @@ cdef class _TreeMesh:
             ind_xy = {'x': 0, 'y': 1}[vType[1]]
             I = (getattr(self, aveOp)*v).reshape(2, self.nC)[ind_xy] # average to cell centers
 
+        if "pcolorOpts" in other_kwargs:
+            pcolor_opts = other_kwargs["pcolorOpts"]
+            warnings.warn("pcolorOpts has been deprecated, please use pcolor_opts", DeprecationWarning)
+
         if ax is None:
             ax = plt.subplot(111)
-        if pcolorOpts is None:
-            pcolorOpts = {}
-        if 'cmap' in pcolorOpts:
-            cm = pcolorOpts['cmap']
+        if pcolor_opts is None:
+            pcolor_opts = {}
+        if 'cmap' in pcolor_opts:
+            cm = pcolor_opts['cmap']
         else:
             cm = plt.get_cmap()
-        if 'vmin' in pcolorOpts:
-            vmin = pcolorOpts['vmin']
+        if 'vmin' in pcolor_opts:
+            vmin = pcolor_opts['vmin']
         else:
             vmin = np.nanmin(I) if clim is None else clim[0]
-        if 'vmax' in pcolorOpts:
-            vmax = pcolorOpts['vmax']
+        if 'vmax' in pcolor_opts:
+            vmax = pcolor_opts['vmax']
         else:
             vmax = np.nanmax(I) if clim is None else clim[1]
-        if 'alpha' in pcolorOpts:
-            alpha = pcolorOpts['alpha']
+        if 'alpha' in pcolor_opts:
+            alpha = pcolor_opts['alpha']
         else:
             alpha = 1.0
 
@@ -3592,15 +3596,15 @@ cdef class _TreeMesh:
         if 'color' not in gridOpts:
             gridOpts['color'] = 'k'
 
-        if 'norm' in pcolorOpts:
-           cNorm = pcolorOpts['norm']
+        if 'norm' in pcolor_opts:
+           cNorm = pcolor_opts['norm']
         else:
            cNorm = colors.Normalize(vmin=vmin, vmax=vmax)
 
         scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=cm)
 
-        if 'edge_color' in pcolorOpts:
-            edge_color = pcolorOpts['edge_color']
+        if 'edge_color' in pcolor_opts:
+            edge_color = pcolor_opts['edge_color']
         else:
             edge_color = gridOpts['color'] if grid else 'none'
         if 'alpha' in gridOpts:

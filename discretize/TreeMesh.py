@@ -96,6 +96,7 @@ import numpy as np
 from scipy.spatial import Delaunay
 import scipy.sparse as sp
 from six import integer_types
+import warnings
 
 from discretize.utils.codeutils import requires
 # matplotlib is a soft dependencies for discretize
@@ -535,12 +536,15 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         self, v, vType='CC',
         normal='Z', ind=None, grid=False, view='real',
         ax=None, clim=None, showIt=False,
-        pcolorOpts=None, streamOpts=None, gridOpts=None,
-        range_x=None, range_y=None,
+        pcolor_opts=None, streamOpts=None, gridOpts=None,
+        range_x=None, range_y=None, **other_kwargs
     ):
+        if "pcolorOpts" in other_kwargs:
+            pcolor_opts = other_kwargs["pcolorOpts"]
+            warnings.warn("pcolorOpts has been deprecated, please use pcolor_opts", DeprecationWarning)
 
-        if pcolorOpts is None:
-            pcolorOpts = {}
+        if pcolor_opts is None:
+            pcolor_opts = {}
         if streamOpts is None:
             streamOpts = {'color': 'k'}
         if gridOpts is None:
@@ -642,7 +646,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
             v2d, vType='CC',
             grid=grid, view=view,
             ax=ax, clim=clim, showIt=False,
-            pcolorOpts=pcolorOpts,
+            pcolor_opts=pcolor_opts,
             gridOpts=gridOpts,
             range_x=range_x,
             range_y=range_y)
