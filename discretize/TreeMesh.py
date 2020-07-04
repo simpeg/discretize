@@ -96,6 +96,7 @@ import numpy as np
 from scipy.spatial import Delaunay
 import scipy.sparse as sp
 from six import integer_types
+import warnings
 
 from discretize.utils.codeutils import requires
 # matplotlib is a soft dependencies for discretize
@@ -532,25 +533,40 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
 
     @requires({'matplotlib': matplotlib})
     def plotSlice(
-        self, v, vType='CC',
+        self, v, v_type='CC',
         normal='Z', ind=None, grid=False, view='real',
-        ax=None, clim=None, showIt=False,
-        pcolorOpts=None, streamOpts=None, gridOpts=None,
-        range_x=None, range_y=None,
+        ax=None, clim=None, show_it=False,
+        pcolor_opts=None, stream_opts=None, grid_opts=None,
+        range_x=None, range_y=None, **kwargs
     ):
+        if "pcolorOpts" in kwargs:
+            pcolor_opts = kwargs["pcolorOpts"]
+            warnings.warn("pcolorOpts has been deprecated, please use pcolor_opts", DeprecationWarning)
+        if "streamOpts" in kwargs:
+            stream_opts = kwargs["streamOpts"]
+            warnings.warn("streamOpts has been deprecated, please use stream_opts", DeprecationWarning)
+        if "gridOpts" in kwargs:
+            grid_opts = kwargs["gridOpts"]
+            warnings.warn("gridOpts has been deprecated, please use grid_opts", DeprecationWarning)
+        if "showIt" in kwargs:
+            show_it = kwargs["showIt"]
+            warnings.warn("showIt has been deprecated, please use show_it", DeprecationWarning)
+        if "vType" in kwargs:
+            show_it = kwargs["vType"]
+            warnings.warn("vType has been deprecated, please use v_type", DeprecationWarning)
 
-        if pcolorOpts is None:
-            pcolorOpts = {}
-        if streamOpts is None:
-            streamOpts = {'color': 'k'}
-        if gridOpts is None:
-            gridOpts = {'color': 'k', 'alpha': 0.5}
-        vTypeOpts = ['CC', 'N', 'F', 'E', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez']
+        if pcolor_opts is None:
+            pcolor_opts = {}
+        if stream_opts is None:
+            stream_opts = {'color': 'k'}
+        if grid_opts is None:
+            grid_opts = {'color': 'k', 'alpha': 0.5}
+        v_typeOpts = ['CC', 'N', 'F', 'E', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez']
         viewOpts = ['real', 'imag', 'abs']
         normalOpts = ['X', 'Y', 'Z']
-        if vType not in vTypeOpts:
+        if v_type not in v_typeOpts:
             raise ValueError(
-                "vType must be in ['{0!s}']".format("', '".join(vTypeOpts))
+                "v_type must be in ['{0!s}']".format("', '".join(v_typeOpts))
             )
         if self.dim == 2:
             raise NotImplementedError(
@@ -612,18 +628,18 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         tm_gridboost[:, normalInd] = slice_loc
 
         # interpolate values to self.gridCC if not 'CC'
-        if vType is not 'CC':
-            aveOp = 'ave' + vType + '2CC'
+        if v_type is not 'CC':
+            aveOp = 'ave' + v_type + '2CC'
             Av = getattr(self, aveOp)
             if v.size == Av.shape[1]:
                 v = Av*v
-            elif len(vType) == 2:
+            elif len(v_type) == 2:
                 # was one of Fx, Fy, Fz, Ex, Ey, Ez
                 # assuming v has all three components in these cases
-                vec_ind = {'x': 0, 'y': 1, 'z': 2}[vType[1]]
-                if vType[0] == 'E':
+                vec_ind = {'x': 0, 'y': 1, 'z': 2}[v_type[1]]
+                if v_type[0] == 'E':
                     i_s = np.cumsum([0, self.nEx, self.nEy, self.nEz])
-                elif vType[0] == 'F':
+                elif v_type[0] == 'F':
                     i_s = np.cumsum([0, self.nFx, self.nFy, self.nFz])
                 v = v[i_s[vec_ind]:i_s[vec_ind+1]]
                 v = Av*v
@@ -639,11 +655,11 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
             raise Exception("ax must be an matplotlib.axes.Axes")
 
         out = temp_mesh.plotImage(
-            v2d, vType='CC',
+            v2d, v_type='CC',
             grid=grid, view=view,
-            ax=ax, clim=clim, showIt=False,
-            pcolorOpts=pcolorOpts,
-            gridOpts=gridOpts,
+            ax=ax, clim=clim, show_it=False,
+            pcolor_opts=pcolor_opts,
+            grid_opts=grid_opts,
             range_x=range_x,
             range_y=range_y)
 
@@ -652,7 +668,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         ax.set_title(
             'Slice {0:d}, {1!s} = {2:4.2f}'.format(ind, normal, slice_loc)
         )
-        if showIt:
+        if show_it:
             plt.show()
         return tuple(out)
 

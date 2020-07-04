@@ -67,7 +67,7 @@ mesh = refine_tree_xyz(
 
 mesh.finalize()  # Must finalize tree mesh before use
 
-mesh.plotGrid(showIt=True)
+mesh.plotGrid(show_it=True)
 
 
 ###############################################

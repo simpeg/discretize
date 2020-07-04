@@ -140,7 +140,7 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
             import discretize
             import numpy as np
             mesh = discretize.TensorMesh([np.ones(n) for n in [2,3]])
-            mesh.plotGrid(centers=True, showIt=True)
+            mesh.plotGrid(centers=True, show_it=True)
 
             print(mesh.nC)
         """
@@ -163,7 +163,7 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
             import discretize
             import numpy as np
             mesh = discretize.TensorMesh([np.ones(n) for n in [2,3]])
-            mesh.plotGrid(nodes=True, showIt=True)
+            mesh.plotGrid(nodes=True, show_it=True)
 
             print(mesh.nN)
         """
@@ -222,7 +222,7 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
             import discretize
             import numpy as np
             M = discretize.TensorMesh([np.ones(n) for n in [2,3]])
-            M.plotGrid(edges=True, showIt=True)
+            M.plotGrid(edges=True, show_it=True)
         """
         return np.array(
             [x for x in [self.nEx, self.nEy, self.nEz] if x is not None],
@@ -284,7 +284,7 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
             import discretize
             import numpy as np
             M = discretize.TensorMesh([np.ones(n) for n in [2,3]])
-            M.plotGrid(faces=True, showIt=True)
+            M.plotGrid(faces=True, show_it=True)
         """
         return np.array(
             [x for x in [self.nFx, self.nFy, self.nFz] if x is not None],

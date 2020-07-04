@@ -120,27 +120,27 @@ beautify(
 )
 
 ###############################################################################
-# 1.4 Set `clim`, use `pcolorOpts` to show grid lines
+# 1.4 Set `clim`, use `pcolor_opts` to show grid lines
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 mesh.plot_3d_slicer(
-    Lpout, clim=[-0.4, 0.2], pcolorOpts={'edgecolor': 'k', 'linewidth': 0.1}
+    Lpout, clim=[-0.4, 0.2], pcolor_opts={'edgecolor': 'k', 'linewidth': 0.1}
 )
 beautify(
     "mesh.plot_3d_slicer(\nLpout, clim=[-0.4, 0.2], "
-    "pcolorOpts={'edgecolor': 'k', 'linewidth': 0.1})"
+    "pcolor_opts={'edgecolor': 'k', 'linewidth': 0.1})"
 )
 
 ###############################################################################
-# 1.5 Use `pcolorOpts` to set `SymLogNorm`, and another `cmap`
+# 1.5 Use `pcolor_opts` to set `SymLogNorm`, and another `cmap`
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 mesh.plot_3d_slicer(
-    Lpout, pcolorOpts={'norm': SymLogNorm(linthresh=0.01),'cmap': 'RdBu_r'}
+    Lpout, pcolor_opts={'norm': SymLogNorm(linthresh=0.01),'cmap': 'RdBu_r'}
 )
 beautify(
     "mesh.plot_3d_slicer(Lpout,"
-    "\npcolorOpts={'norm': SymLogNorm(linthresh=0.01),'cmap': 'RdBu_r'})`"
+    "\npcolor_opts={'norm': SymLogNorm(linthresh=0.01),'cmap': 'RdBu_r'})`"
 )
 
 ###############################################################################

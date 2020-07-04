@@ -235,8 +235,8 @@ ax = 9*[None]
 
 ax[0] = fig.add_subplot(332)
 mesh.plotImage(
-    u, ax=ax[0], vType='F', view='vec',
-    streamOpts={'color': 'w', 'density': 1.0},
+    u, ax=ax[0], v_type='F', view='vec',
+    stream_opts={'color': 'w', 'density': 1.0},
     clim=[0., 10.]
 )
 ax[0].set_title('Divergence free vector field')
@@ -261,7 +261,7 @@ for ii in range(300):
 
     if ii+1 in (1, 25, 50, 100, 200, 300):
         ax[n] = fig.add_subplot(3, 3, n+1)
-        mesh.plotImage(p, vType='CC', ax=ax[n], pcolorOpts={'cmap': 'gist_heat_r'})
+        mesh.plotImage(p, v_type='CC', ax=ax[n], pcolor_opts={'cmap': 'gist_heat_r'})
         title_str = 'p at t = ' + str((ii+1)*dt) + ' s'
         ax[n].set_title(title_str)
         n = n+1

@@ -11,7 +11,6 @@ env:
     - MASTER_BRANCH=master
     - TEST=false
     - TEST_DIR=""
-    - DEPLOY_PYPI=false
     - CONDA_REQUIREMENTS="numpy scipy matplotlib cython pip"
     - PYPI_REQUIREMENTS=requirements.txt
     - PYPI_REQUIREMENTS_DEV=requirements_dev.txt
@@ -49,6 +48,7 @@ matrix:
         - TEST=true
         - TEST_DIR="tests/docs"
         - DEPLOY_DOCS=true
+        - DEPLOY_PYPI=true
 
 before_install:
   - source ci/setup-miniconda.sh
