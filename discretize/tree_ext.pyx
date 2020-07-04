@@ -5,6 +5,7 @@ cimport numpy as np
 from libc.math cimport sqrt, abs, cbrt
 from libcpp.vector cimport vector
 from numpy.math cimport INFINITY
+import warnings
 
 from tree cimport int_t, Tree as c_Tree, PyWrapper, Node, Edge, Face, Cell as c_Cell
 
