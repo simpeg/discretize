@@ -51,7 +51,7 @@ class TensorView(object):
 
     @requires({'matplotlib': matplotlib})
     def plotImage(
-        self, v, vType='CC', grid=False, view='real',
+        self, v, v_type='CC', grid=False, view='real',
         ax=None, clim=None, show_it=False,
         pcolor_opts=None,
         stream_opts=None,
@@ -71,7 +71,7 @@ class TensorView(object):
 
         Optional Inputs:
 
-        :param str vType: type of vector ('CC', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez')
+        :param str v_type: type of vector ('CC', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez')
         :param matplotlib.axes.Axes ax: axis to plot to
         :param bool show_it: call plt.show()
 
@@ -114,6 +114,9 @@ class TensorView(object):
         if "annotationColor" in other_kwargs:
             show_it = other_kwargs["annotationColor"]
             warnings.warn("annotationColor has been deprecated, please use annotation_color", DeprecationWarning)
+        if "vType" in other_kwargs:
+            show_it = other_kwargs["vType"]
+            warnings.warn("vType has been deprecated, please use v_type", DeprecationWarning)
 
         if pcolor_opts is None:
             pcolor_opts = {}
@@ -131,11 +134,11 @@ class TensorView(object):
             fig = ax.figure
 
         if self.dim == 1:
-            if vType == 'CC':
+            if v_type == 'CC':
                 ph = ax.plot(
                     self.vectorCCx, v, linestyle="-", color="C1", marker="o"
                 )
-            elif vType == 'N':
+            elif v_type == 'N':
                 ph = ax.plot(
                     self.vectorNx, v, linestyle="-", color="C0", marker="s"
                 )
@@ -143,7 +146,7 @@ class TensorView(object):
             ax.axis('tight')
         elif self.dim == 2:
             return self._plotImage2D(
-                v, vType=vType, grid=grid, view=view,
+                v, v_type=v_type, grid=grid, view=view,
                 ax=ax, clim=clim, show_it=show_it,
                 pcolor_opts=pcolor_opts, stream_opts=stream_opts,
                 grid_opts=grid_opts, range_x=range_x, range_y=range_y,
@@ -151,18 +154,18 @@ class TensorView(object):
             )
         elif self.dim == 3:
             # get copy of image and average to cell-centers is necessary
-            if vType == 'CC':
+            if v_type == 'CC':
                 vc = v.reshape(self.vnC, order='F')
-            elif vType == 'N':
+            elif v_type == 'N':
                 vc = (self.aveN2CC*v).reshape(self.vnC, order='F')
-            elif vType in ['Fx', 'Fy', 'Fz', 'Ex', 'Ey', 'Ez']:
-                aveOp = 'ave' + vType[0] + '2CCV'
-                # n = getattr(self, 'vn'+vType[0])
-                # if 'x' in vType: v = np.r_[v, np.zeros(n[1]), np.zeros(n[2])]
-                # if 'y' in vType: v = np.r_[np.zeros(n[0]), v, np.zeros(n[2])]
-                # if 'z' in vType: v = np.r_[np.zeros(n[0]), np.zeros(n[1]), v]
+            elif v_type in ['Fx', 'Fy', 'Fz', 'Ex', 'Ey', 'Ez']:
+                aveOp = 'ave' + v_type[0] + '2CCV'
+                # n = getattr(self, 'vn'+v_type[0])
+                # if 'x' in v_type: v = np.r_[v, np.zeros(n[1]), np.zeros(n[2])]
+                # if 'y' in v_type: v = np.r_[np.zeros(n[0]), v, np.zeros(n[2])]
+                # if 'z' in v_type: v = np.r_[np.zeros(n[0]), np.zeros(n[1]), v]
                 v = getattr(self, aveOp)*v # average to cell centers
-                ind_xyz = {'x': 0, 'y': 1, 'z': 2}[vType[1]]
+                ind_xyz = {'x': 0, 'y': 1, 'z': 2}[v_type[1]]
                 vc = self.r(
                     v.reshape((self.nC, -1), order='F'), 'CC', 'CC', 'M'
                 )[ind_xyz]
@@ -214,14 +217,14 @@ class TensorView(object):
                             ax.text((ix+1)*(self.vectorNx[-1]-self.x0[0])-pad, (iy)*(self.vectorNy[-1]-self.x0[1])+pad,
                                      '#{0:.0f}'.format(iz), color=annotation_color, verticalalignment='bottom', horizontalalignment='right', size='x-large')
 
-        ax.set_title(vType)
+        ax.set_title(v_type)
         if show_it:
             plt.show()
         return ph
 
     @requires({'matplotlib': matplotlib})
     def plotSlice(
-        self, v, vType='CC',
+        self, v, v_type='CC',
         normal='Z', ind=None, grid=False, view='real',
         ax=None, clim=None, show_it=False,
         pcolor_opts=None,
@@ -267,6 +270,9 @@ class TensorView(object):
         if "showIt" in other_kwargs:
             show_it = other_kwargs["showIt"]
             warnings.warn("showIt has been deprecated, please use show_it", DeprecationWarning)
+        if "vType" in other_kwargs:
+            show_it = other_kwargs["vType"]
+            warnings.warn("vType has been deprecated, please use v_type", DeprecationWarning)
 
         if pcolor_opts is None:
             pcolor_opts = {}
@@ -274,17 +280,17 @@ class TensorView(object):
             stream_opts = {'color':'k'}
         if grid_opts is None:
             grid_opts = {'color':'k', 'alpha':0.5}
-        if type(vType) in [list, tuple]:
+        if type(v_type) in [list, tuple]:
             if ax is not None:
                 raise AssertionError(
                     "cannot specify an axis to plot on with this function."
                 )
-            fig, axs = plt.subplots(1, len(vType))
+            fig, axs = plt.subplots(1, len(v_type))
             out = []
-            for vTypeI, ax in zip(vType, axs):
+            for v_typeI, ax in zip(v_type, axs):
                 out += [
                     self.plotSlice(
-                        v, vType=vTypeI, normal=normal, ind=ind, grid=grid,
+                        v, v_type=v_typeI, normal=normal, ind=ind, grid=grid,
                         view=view, ax=ax, clim=clim, show_it=False,
                         pcolor_opts=pcolor_opts, stream_opts=stream_opts,
                         grid_opts=grid_opts, stream_threshold=stream_threshold,
@@ -294,12 +300,12 @@ class TensorView(object):
             return out
         viewOpts = ['real', 'imag', 'abs', 'vec']
         normalOpts = ['X', 'Y', 'Z']
-        vTypeOpts = ['CC', 'CCv', 'N', 'F', 'E', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez']
+        v_typeOpts = ['CC', 'CCv', 'N', 'F', 'E', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez']
 
         # Some user error checking
-        if vType not in vTypeOpts:
+        if v_type not in v_typeOpts:
             raise AssertionError(
-                "vType must be in ['{0!s}']".format("', '".join(vTypeOpts))
+                "v_type must be in ['{0!s}']".format("', '".join(v_typeOpts))
             )
         if not self.dim == 3:
             raise AssertionError(
@@ -335,19 +341,19 @@ class TensorView(object):
             return v
 
         def doSlice(v):
-            if vType == 'CC':
+            if v_type == 'CC':
                 return getIndSlice(self.r(v, 'CC', 'CC', 'M'))
-            elif vType == 'CCv':
+            elif v_type == 'CCv':
                 if view != 'vec':
                     raise AssertionError('Other types for CCv not supported')
             else:
                 # Now just deal with 'F' and 'E' (x, y, z, maybe...)
-                aveOp = 'ave' + vType + ('2CCV' if view == 'vec' else '2CC')
+                aveOp = 'ave' + v_type + ('2CCV' if view == 'vec' else '2CC')
                 Av = getattr(self, aveOp)
                 if v.size == Av.shape[1]:
                     v = Av * v
                 else:
-                    v = self.r(v, vType[0], vType) # get specific component
+                    v = self.r(v, v_type[0], v_type) # get specific component
                     v = Av * v
                 # we should now be averaged to cell centers (might be a vector)
             v = self.r(v.reshape((self.nC, -1), order='F'), 'CC', 'CC', 'M')
@@ -382,7 +388,7 @@ class TensorView(object):
                 raise AssertionError("ax must be an matplotlib.axes.Axes")
 
         out = tM._plotImage2D(
-            v2d, vType=('CCv' if view == 'vec' else 'CC'),
+            v2d, v_type=('CCv' if view == 'vec' else 'CC'),
             grid=grid, view=view,
             ax=ax, clim=clim, show_it=show_it,
             pcolor_opts=pcolor_opts, stream_opts=stream_opts,
@@ -402,7 +408,7 @@ class TensorView(object):
 
     @requires({'matplotlib': matplotlib})
     def _plotImage2D(
-        self, v, vType='CC', grid=False, view='real',
+        self, v, v_type='CC', grid=False, view='real',
         ax=None, clim=None, show_it=False,
         pcolor_opts=None,
         stream_opts=None,
@@ -420,19 +426,19 @@ class TensorView(object):
             stream_opts = {'color': 'k'}
         if grid_opts is None:
             grid_opts = {'color': 'k'}
-        vTypeOptsCC = ['N', 'CC', 'Fx', 'Fy', 'Ex', 'Ey']
-        vTypeOptsV = ['CCv', 'F', 'E']
-        vTypeOpts = vTypeOptsCC + vTypeOptsV
+        v_typeOptsCC = ['N', 'CC', 'Fx', 'Fy', 'Ex', 'Ey']
+        v_typeOptsV = ['CCv', 'F', 'E']
+        v_typeOpts = v_typeOptsCC + v_typeOptsV
         if view == 'vec':
-            if vType not in vTypeOptsV:
+            if v_type not in v_typeOptsV:
                 raise AssertionError(
-                    "vType must be in ['{0!s}'] when view='vec'".format(
-                        "', '".join(vTypeOptsV)
+                    "v_type must be in ['{0!s}'] when view='vec'".format(
+                        "', '".join(v_typeOptsV)
                     )
                 )
-        if vType not in vTypeOpts:
+        if v_type not in v_typeOpts:
             raise AssertionError(
-                "vType must be in ['{0!s}']".format("', '".join(vTypeOpts))
+                "v_type must be in ['{0!s}']".format("', '".join(v_typeOpts))
             )
 
         viewOpts = ['real', 'imag', 'abs', 'vec']
@@ -451,18 +457,18 @@ class TensorView(object):
                 )
 
         # Reshape to a cell centered variable
-        if vType == 'CC':
+        if v_type == 'CC':
             pass
-        elif vType == 'CCv':
+        elif v_type == 'CCv':
             if view != 'vec':
                 raise AssertionError('Other types for CCv not supported')
-        elif vType in ['F', 'E', 'N']:
-            aveOp = 'ave' + vType + ('2CCV' if view == 'vec' else '2CC')
+        elif v_type in ['F', 'E', 'N']:
+            aveOp = 'ave' + v_type + ('2CCV' if view == 'vec' else '2CC')
             v = getattr(self, aveOp)*v  # average to cell centers (might be a vector)
-        elif vType in ['Fx', 'Fy', 'Ex', 'Ey']:
-            aveOp = 'ave' + vType[0] + '2CCV'
+        elif v_type in ['Fx', 'Fy', 'Ex', 'Ey']:
+            aveOp = 'ave' + v_type[0] + '2CCV'
             v = getattr(self, aveOp)*v  # average to cell centers (might be a vector)
-            xORy = {'x': 0, 'y':1 }[vType[1]]
+            xORy = {'x': 0, 'y':1 }[v_type[1]]
             v = v.reshape((self.nC, -1), order='F')[:, xORy]
 
         out = ()
@@ -780,7 +786,7 @@ class TensorView(object):
 
     @requires({'matplotlib': matplotlib})
     def plot_3d_slicer(self, v, xslice=None, yslice=None, zslice=None,
-                       vType='CC', view='real', axis='xy', transparent=None,
+                       v_type='CC', view='real', axis='xy', transparent=None,
                        clim=None, xlim=None, ylim=None, zlim=None,
                        aspect='auto', grid=[2, 2, 1], pcolor_opts=None,
                        fig=None, **other_kwargs):
@@ -822,7 +828,7 @@ class TensorView(object):
 
         # Populate figure
         tracker = Slicer(
-            self, v, xslice, yslice, zslice, vType, view, axis, transparent,
+            self, v, xslice, yslice, zslice, v_type, view, axis, transparent,
             clim, xlim, ylim, zlim, aspect, grid, pcolor_opts
         )
 
@@ -851,21 +857,21 @@ class CylView(object):
         if len(args) > 0:
             val = args[0]
 
-        vType = kwargs.get('vType', None)
+        v_type = kwargs.get('v_type', None)
         mirror = kwargs.pop('mirror', None)
         mirror_data = kwargs.pop('mirror_data', None)
 
         if mirror_data is not None and mirror is None:
             mirror = True
 
-        if vType is not None:
-            if vType.upper() != 'CCV':
-                if vType.upper() == 'F':
+        if v_type is not None:
+            if v_type.upper() != 'CCV':
+                if v_type.upper() == 'F':
                     val = mkvc(self.aveF2CCV * val)
                     if mirror_data is not None:
                         mirror_data = mkvc(self.aveF2CCV * mirror_data)
-                    kwargs['vType'] = 'CCv'  # now the vector is cell centered
-                if vType.upper() == 'E':
+                    kwargs['v_type'] = 'CCv'  # now the vector is cell centered
+                if v_type.upper() == 'E':
                     val = mkvc(self.aveE2CCV * val)
                     if mirror_data is not None:
                         mirror_data = mkvc(self.aveE2CCV * mirror_data)
@@ -1184,7 +1190,7 @@ class CurviView(object):
 
     @requires({'matplotlib': matplotlib})
     def plotImage(
-        self, v, vType='CC', grid=False, view='real',
+        self, v, v_type='CC', grid=False, view='real',
         ax=None, clim=None, show_it=False,
         pcolor_opts=None,
         grid_opts=None,
@@ -1199,6 +1205,9 @@ class CurviView(object):
         if "showIt" in other_kwargs:
             show_it = other_kwargs["showIt"]
             warnings.warn("showIt has been deprecated, please use show_it", DeprecationWarning)
+        if "vType" in other_kwargs:
+            show_it = other_kwargs["vType"]
+            warnings.warn("vType has been deprecated, please use v_type", DeprecationWarning)
 
         if self.dim == 3:
             raise NotImplementedError('This is not yet done!')
@@ -1208,13 +1217,13 @@ class CurviView(object):
                 )
         if view in ['real', 'imag', 'abs']:
             v = getattr(np, view)(v)  # e.g. np.real(v)
-        if vType == 'CC':
+        if v_type == 'CC':
             I = v
-        elif vType == 'N':
+        elif v_type == 'N':
             I = self.aveN2CC*v
-        elif vType in ['Fx', 'Fy', 'Ex', 'Ey']:
-            aveOp = 'ave' + vType[0] + '2CCV'
-            ind_xy = {'x': 0, 'y': 1}[vType[1]]
+        elif v_type in ['Fx', 'Fy', 'Ex', 'Ey']:
+            aveOp = 'ave' + v_type[0] + '2CCV'
+            ind_xy = {'x': 0, 'y': 1}[v_type[1]]
             I = (getattr(self, aveOp)*v).reshape(2, self.nC)[ind_xy]  # average to cell centers
 
         if ax is None:
@@ -1315,7 +1324,7 @@ class Slicer(object):
         Initial slice locations (in meter);
         defaults to the middle of the volume.
 
-    vType: str
+    v_type: str
         Type of visualization. Default is 'CC'.
         One of ['CC', 'Fx', 'Fy', 'Fz', 'Ex', 'Ey', 'Ez'].
 
@@ -1359,7 +1368,7 @@ class Slicer(object):
     """
 
     def __init__(self, mesh, v, xslice=None, yslice=None, zslice=None,
-                 vType='CC', view='real', axis='xy', transparent=None,
+                 v_type='CC', view='real', axis='xy', transparent=None,
                  clim=None, xlim=None, ylim=None, zlim=None, aspect='auto',
                  grid=[2, 2, 1], pcolor_opts=None, **other_kwargs):
         """Initialize interactive figure."""
@@ -1375,20 +1384,20 @@ class Slicer(object):
             err += ' Mesh provided has {} dimension(s).'.format(mesh.dim)
             raise ValueError(err)
 
-        # (b) vType  # Not yet working for ['CCv']
-        vTypeOpts = ['CC', 'Fx', 'Fy', 'Fz', 'Ex', 'Ey', 'Ez']
-        if vType not in vTypeOpts:
-            err = "vType must be in ['{0!s}'].".format("', '".join(vTypeOpts))
-            err += " vType provided: '{0!s}'.".format(vType)
+        # (b) v_type  # Not yet working for ['CCv']
+        v_typeOpts = ['CC', 'Fx', 'Fy', 'Fz', 'Ex', 'Ey', 'Ez']
+        if v_type not in v_typeOpts:
+            err = "v_type must be in ['{0!s}'].".format("', '".join(v_typeOpts))
+            err += " v_type provided: '{0!s}'.".format(v_type)
             raise ValueError(err)
 
-        if vType != 'CC':
-            aveOp = 'ave' + vType + '2CC'
+        if v_type != 'CC':
+            aveOp = 'ave' + v_type + '2CC'
             Av = getattr(mesh, aveOp)
             if v.size == Av.shape[1]:
                 v = Av * v
             else:
-                v = mesh.r(v, vType[0], vType) # get specific component
+                v = mesh.r(v, v_type[0], v_type) # get specific component
                 v = Av * v
 
         # (c) vOpts  # Not yet working for 'vec'

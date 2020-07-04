@@ -3518,7 +3518,7 @@ cdef class _TreeMesh:
         return ax
 
     @requires({'matplotlib': matplotlib})
-    def plotImage(self, v, vType='CC', grid=False, view='real',
+    def plotImage(self, v, v_type='CC', grid=False, view='real',
                   ax=None, clim=None, show_it=False,
                   pcolor_opts=None,
                   grid_opts=None,
@@ -3532,7 +3532,7 @@ cdef class _TreeMesh:
         ----------
         v : array_like
             Array containing the values to plot
-        vType : str, optional
+        v_type : str, optional
             type of value in `v` one of 'CC', 'N', 'Fx', 'Fy', 'Fz', 'Ex', 'Ey', or 'Ez'
         grid : bool, optional
             plot the grid lines
@@ -3550,7 +3550,7 @@ cdef class _TreeMesh:
             pairs of [min, max] values for the x and y ranges
         """
         if self._dim == 3:
-            self.plotSlice(v, vType=vType, grid=grid, view=view,
+            self.plotSlice(v, v_type=v_type, grid=grid, view=view,
                            ax=ax, clim=clim, show_it=show_it,
                            pcolor_opts=pcolor_opts,
                            range_x=range_x, range_y=range_y,
@@ -3561,13 +3561,13 @@ cdef class _TreeMesh:
 
         if view in ['real', 'imag', 'abs']:
             v = getattr(np, view)(v) # e.g. np.real(v)
-        if vType == 'CC':
+        if v_type == 'CC':
             I = v
-        elif vType == 'N':
+        elif v_type == 'N':
             I = self.aveN2CC*v
-        elif vType in ['Fx', 'Fy', 'Ex', 'Ey']:
-            aveOp = 'ave' + vType[0] + '2CCV'
-            ind_xy = {'x': 0, 'y': 1}[vType[1]]
+        elif v_type in ['Fx', 'Fy', 'Ex', 'Ey']:
+            aveOp = 'ave' + v_type[0] + '2CCV'
+            ind_xy = {'x': 0, 'y': 1}[v_type[1]]
             I = (getattr(self, aveOp)*v).reshape(2, self.nC)[ind_xy] # average to cell centers
 
         if "pcolorOpts" in other_kwargs:
@@ -3579,6 +3579,9 @@ cdef class _TreeMesh:
         if "showIt" in other_kwargs:
             show_it = other_kwargs["showIt"]
             warnings.warn("showIt has been deprecated, please use show_it", DeprecationWarning)
+        if "vType" in other_kwargs:
+            show_it = other_kwargs["vType"]
+            warnings.warn("vType has been deprecated, please use v_type", DeprecationWarning)
 
         if ax is None:
             ax = plt.subplot(111)

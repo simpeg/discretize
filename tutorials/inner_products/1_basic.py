@@ -202,7 +202,7 @@ ipt = np.pi*sig**2
 # Plot the vector function
 fig = plt.figure(figsize=(5, 5))
 ax = fig.add_subplot(111)
-mesh.plotImage(v, ax=ax, vType='F', view='vec',
+mesh.plotImage(v, ax=ax, v_type='F', view='vec',
                stream_opts={'color': 'w', 'density': 1.0})
 ax.set_title('v at cell faces')
 

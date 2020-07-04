@@ -206,11 +206,11 @@ curl_w = CURL*w
 fig = plt.figure(figsize=(10, 5))
 
 ax1 = fig.add_subplot(121)
-mesh.plotImage(u, ax=ax1, vType='N')
+mesh.plotImage(u, ax=ax1, v_type='N')
 ax1.set_title('u at cell centers')
 
 ax2 = fig.add_subplot(122)
-mesh.plotImage(grad_u, ax=ax2, vType='E', view='vec',
+mesh.plotImage(grad_u, ax=ax2, v_type='E', view='vec',
                stream_opts={'color': 'w', 'density': 1.0})
 ax2.set_title('gradient of u on edges')
 
@@ -220,7 +220,7 @@ fig.show()
 fig = plt.figure(figsize=(10, 5))
 
 ax1 = fig.add_subplot(121)
-mesh.plotImage(v, ax=ax1, vType='F', view='vec',
+mesh.plotImage(v, ax=ax1, v_type='F', view='vec',
                stream_opts={'color': 'w', 'density': 1.0})
 ax1.set_title('v at cell faces')
 
@@ -234,7 +234,7 @@ fig.show()
 fig = plt.figure(figsize=(10, 5))
 
 ax1 = fig.add_subplot(121)
-mesh.plotImage(w, ax=ax1, vType='E', view='vec',
+mesh.plotImage(w, ax=ax1, v_type='E', view='vec',
                stream_opts={'color': 'w', 'density': 1.0})
 ax1.set_title('w at cell edges')
 
