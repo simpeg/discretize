@@ -55,7 +55,7 @@ class TensorView(object):
         ax=None, clim=None, showIt=False,
         pcolor_opts=None,
         stream_opts=None,
-        gridOpts=None,
+        grid_opts=None,
         numbering=True, annotationColor='w',
         range_x=None, range_y=None, sample_grid=None,
         stream_threshold=None, **other_kwargs
@@ -105,13 +105,16 @@ class TensorView(object):
         if "streamOpts" in other_kwargs:
             stream_opts = other_kwargs["streamOpts"]
             warnings.warn("streamOpts has been deprecated, please use stream_opts", DeprecationWarning)
+        if "gridOpts" in other_kwargs:
+            grid_opts = other_kwargs["gridOpts"]
+            warnings.warn("gridOpts has been deprecated, please use grid_opts", DeprecationWarning)
 
         if pcolor_opts is None:
             pcolor_opts = {}
         if stream_opts is None:
             stream_opts = {'color': 'k'}
-        if gridOpts is None:
-            gridOpts = {'color': 'k'}
+        if grid_opts is None:
+            grid_opts = {'color': 'k'}
 
         if ax is None:
             fig = plt.figure()
@@ -137,7 +140,7 @@ class TensorView(object):
                 v, vType=vType, grid=grid, view=view,
                 ax=ax, clim=clim, showIt=showIt,
                 pcolor_opts=pcolor_opts, stream_opts=stream_opts,
-                gridOpts=gridOpts, range_x=range_x, range_y=range_y,
+                grid_opts=grid_opts, range_x=range_x, range_y=range_y,
                 sample_grid=sample_grid, stream_threshold=stream_threshold
             )
         elif self.dim == 3:
@@ -217,7 +220,7 @@ class TensorView(object):
         ax=None, clim=None, showIt=False,
         pcolor_opts=None,
         stream_opts=None,
-        gridOpts=None,
+        grid_opts=None,
         range_x=None,
         range_y=None,
         sample_grid=None,
@@ -252,13 +255,16 @@ class TensorView(object):
         if "streamOpts" in other_kwargs:
             stream_opts = other_kwargs["streamOpts"]
             warnings.warn("streamOpts has been deprecated, please use stream_opts", DeprecationWarning)
+        if "gridOpts" in other_kwargs:
+            grid_opts = other_kwargs["gridOpts"]
+            warnings.warn("gridOpts has been deprecated, please use grid_opts", DeprecationWarning)
 
         if pcolor_opts is None:
             pcolor_opts = {}
         if stream_opts is None:
             stream_opts = {'color':'k'}
-        if gridOpts is None:
-            gridOpts = {'color':'k', 'alpha':0.5}
+        if grid_opts is None:
+            grid_opts = {'color':'k', 'alpha':0.5}
         if type(vType) in [list, tuple]:
             if ax is not None:
                 raise AssertionError(
@@ -272,7 +278,7 @@ class TensorView(object):
                         v, vType=vTypeI, normal=normal, ind=ind, grid=grid,
                         view=view, ax=ax, clim=clim, showIt=False,
                         pcolor_opts=pcolor_opts, stream_opts=stream_opts,
-                        gridOpts=gridOpts, stream_threshold=stream_threshold,
+                        grid_opts=grid_opts, stream_threshold=stream_threshold,
                         stream_thickness=stream_thickness
                     )
                 ]
@@ -371,7 +377,7 @@ class TensorView(object):
             grid=grid, view=view,
             ax=ax, clim=clim, showIt=showIt,
             pcolor_opts=pcolor_opts, stream_opts=stream_opts,
-            gridOpts=gridOpts,
+            grid_opts=grid_opts,
             range_x=range_x,
             range_y=range_y,
             sample_grid=sample_grid,
@@ -391,7 +397,7 @@ class TensorView(object):
         ax=None, clim=None, showIt=False,
         pcolor_opts=None,
         stream_opts=None,
-        gridOpts=None,
+        grid_opts=None,
         range_x=None,
         range_y=None,
         sample_grid=None,
@@ -403,8 +409,8 @@ class TensorView(object):
             pcolor_opts = {}
         if stream_opts is None:
             stream_opts = {'color': 'k'}
-        if gridOpts is None:
-            gridOpts = {'color': 'k'}
+        if grid_opts is None:
+            grid_opts = {'color': 'k'}
         vTypeOptsCC = ['N', 'CC', 'Fx', 'Fy', 'Ex', 'Ey']
         vTypeOptsV = ['CCv', 'F', 'E']
         vTypeOpts = vTypeOptsCC + vTypeOptsV
@@ -568,7 +574,7 @@ class TensorView(object):
             xYGrid = np.c_[self.vectorNy[0]*np.ones(self.nNx), self.vectorNy[-1]*np.ones(self.nNx), np.nan*np.ones(self.nNx)].flatten()
             yXGrid = np.c_[self.vectorNx[0]*np.ones(self.nNy), self.vectorNx[-1]*np.ones(self.nNy), np.nan*np.ones(self.nNy)].flatten()
             yYGrid = np.c_[self.vectorNy, self.vectorNy, np.nan*np.ones(self.nNy)].flatten()
-            out += (ax.plot(np.r_[xXGrid, yXGrid], np.r_[xYGrid, yYGrid], **gridOpts)[0], )
+            out += (ax.plot(np.r_[xXGrid, yXGrid], np.r_[xYGrid, yYGrid], **grid_opts)[0], )
 
         ax.set_xlabel('x')
         ax.set_ylabel('y')
@@ -1166,12 +1172,15 @@ class CurviView(object):
         self, v, vType='CC', grid=False, view='real',
         ax=None, clim=None, showIt=False,
         pcolor_opts=None,
-        gridOpts=None,
+        grid_opts=None,
         range_x=None, range_y=None, **other_kwargs
     ):
         if "pcolorOpts" in other_kwargs:
             pcolor_opts = other_kwargs["pcolorOpts"]
             warnings.warn("pcolorOpts has been deprecated, please use pcolor_opts", DeprecationWarning)
+        if "gridOpts" in other_kwargs:
+            grid_opts = other_kwargs["gridOpts"]
+            warnings.warn("gridOpts has been deprecated, please use grid_opts", DeprecationWarning)
 
         if self.dim == 3:
             raise NotImplementedError('This is not yet done!')
@@ -1210,10 +1219,10 @@ class CurviView(object):
             alpha = pcolor_opts['alpha']
         else:
             alpha = 1.0
-        if gridOpts is None:
-            gridOpts = {'color': 'k'}
-        if 'color' not in gridOpts:
-            gridOpts['color'] = 'k'
+        if grid_opts is None:
+            grid_opts = {'color': 'k'}
+        if 'color' not in grid_opts:
+            grid_opts['color'] = 'k'
 
         cNorm = colors.Normalize(vmin=vmin, vmax=vmax)
         scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=cm)
@@ -1221,9 +1230,9 @@ class CurviView(object):
         if 'edge_color' in pcolor_opts:
             edge_color = pcolor_opts['edge_color']
         else:
-            edge_color = gridOpts['color'] if grid else 'none'
-        if 'alpha' in gridOpts:
-            edge_alpha = gridOpts['alpha']
+            edge_color = grid_opts['color'] if grid else 'none'
+        if 'alpha' in grid_opts:
+            edge_alpha = grid_opts['alpha']
         else:
             edge_alpha = 1.0
         if edge_color.lower() != 'none':

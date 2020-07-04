@@ -11,6 +11,7 @@ pep8 friendly names. The older name will still function, but throw a deprecation
 
 * ``pcolorOpts`` -> ``pcolor_opts``
 * ``streamOpts`` -> ``stream_opts``
+* ``gridOpts`` -> ``grid_opts``
 
 A small release adding the ability to specify the ``norm`` option for
 the ``pcolor_opts`` dictionary argument to ``TreeMesh.plotImage``.

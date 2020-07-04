@@ -73,7 +73,7 @@ pcolor_opts = {"cmap":"viridis"}
 
 dat = mesh.plotSlice(
     dataVec, ax=ax, normal='Z', ind=5, vType='CCv', view='vec',
-    stream_opts=stream_opts, gridOpts={"color":"k", "alpha":0.1}, grid=True,
+    stream_opts=stream_opts, grid_opts={"color":"k", "alpha":0.1}, grid=True,
     clim=None, stream_thickness=3
 )
 

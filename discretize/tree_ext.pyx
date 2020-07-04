@@ -3517,7 +3517,7 @@ cdef class _TreeMesh:
     def plotImage(self, v, vType='CC', grid=False, view='real',
                   ax=None, clim=None, showIt=False,
                   pcolor_opts=None,
-                  gridOpts=None,
+                  grid_opts=None,
                   range_x=None, range_y=None,
                   **other_kwargs,
                   ):
@@ -3569,6 +3569,9 @@ cdef class _TreeMesh:
         if "pcolorOpts" in other_kwargs:
             pcolor_opts = other_kwargs["pcolorOpts"]
             warnings.warn("pcolorOpts has been deprecated, please use pcolor_opts", DeprecationWarning)
+        if "gridOpts" in other_kwargs:
+            grid_opts = other_kwargs["gridOpts"]
+            warnings.warn("gridOpts has been deprecated, please use grid_opts", DeprecationWarning)
 
         if ax is None:
             ax = plt.subplot(111)
@@ -3591,10 +3594,10 @@ cdef class _TreeMesh:
         else:
             alpha = 1.0
 
-        if gridOpts is None:
-            gridOpts = {'color':'k'}
-        if 'color' not in gridOpts:
-            gridOpts['color'] = 'k'
+        if grid_opts is None:
+            grid_opts = {'color':'k'}
+        if 'color' not in grid_opts:
+            grid_opts['color'] = 'k'
 
         if 'norm' in pcolor_opts:
            cNorm = pcolor_opts['norm']
@@ -3606,9 +3609,9 @@ cdef class _TreeMesh:
         if 'edge_color' in pcolor_opts:
             edge_color = pcolor_opts['edge_color']
         else:
-            edge_color = gridOpts['color'] if grid else 'none'
-        if 'alpha' in gridOpts:
-            edge_alpha = gridOpts['alpha']
+            edge_color = grid_opts['color'] if grid else 'none'
+        if 'alpha' in grid_opts:
+            edge_alpha = grid_opts['alpha']
         else:
             edge_alpha = 1.0
         if edge_color.lower() != 'none':
