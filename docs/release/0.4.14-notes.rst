@@ -10,7 +10,7 @@ This release is renaming a few of the options to the plotting routines to more
 pep8 friendly names. The older name will still function, but throw a deprecation warning
 
 * ``pcolorOpts`` -> ``pcolor_opts``
-*
+* ``streamOpts`` -> ``stream_opts``
 
 A small release adding the ability to specify the ``norm`` option for
 the ``pcolor_opts`` dictionary argument to ``TreeMesh.plotImage``.

@@ -236,7 +236,7 @@ ax = 9*[None]
 ax[0] = fig.add_subplot(332)
 mesh.plotImage(
     u, ax=ax[0], vType='F', view='vec',
-    streamOpts={'color': 'w', 'density': 1.0},
+    stream_opts={'color': 'w', 'density': 1.0},
     clim=[0., 10.]
 )
 ax[0].set_title('Divergence free vector field')

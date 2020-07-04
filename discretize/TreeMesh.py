@@ -536,17 +536,20 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         self, v, vType='CC',
         normal='Z', ind=None, grid=False, view='real',
         ax=None, clim=None, showIt=False,
-        pcolor_opts=None, streamOpts=None, gridOpts=None,
+        pcolor_opts=None, stream_opts=None, gridOpts=None,
         range_x=None, range_y=None, **other_kwargs
     ):
         if "pcolorOpts" in other_kwargs:
             pcolor_opts = other_kwargs["pcolorOpts"]
             warnings.warn("pcolorOpts has been deprecated, please use pcolor_opts", DeprecationWarning)
+        if "streamOpts" in other_kwargs:
+            stream_opts = other_kwargs["streamOpts"]
+            warnings.warn("streamOpts has been deprecated, please use stream_opts", DeprecationWarning)
 
         if pcolor_opts is None:
             pcolor_opts = {}
-        if streamOpts is None:
-            streamOpts = {'color': 'k'}
+        if stream_opts is None:
+            stream_opts = {'color': 'k'}
         if gridOpts is None:
             gridOpts = {'color': 'k', 'alpha': 0.5}
         vTypeOpts = ['CC', 'N', 'F', 'E', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez']

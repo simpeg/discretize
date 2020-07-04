@@ -54,7 +54,7 @@ class TensorView(object):
         self, v, vType='CC', grid=False, view='real',
         ax=None, clim=None, showIt=False,
         pcolor_opts=None,
-        streamOpts=None,
+        stream_opts=None,
         gridOpts=None,
         numbering=True, annotationColor='w',
         range_x=None, range_y=None, sample_grid=None,
@@ -102,11 +102,14 @@ class TensorView(object):
         if "pcolorOpts" in other_kwargs:
             pcolor_opts = other_kwargs["pcolorOpts"]
             warnings.warn("pcolorOpts has been deprecated, please use pcolor_opts", DeprecationWarning)
+        if "streamOpts" in other_kwargs:
+            stream_opts = other_kwargs["streamOpts"]
+            warnings.warn("streamOpts has been deprecated, please use stream_opts", DeprecationWarning)
 
         if pcolor_opts is None:
             pcolor_opts = {}
-        if streamOpts is None:
-            streamOpts = {'color': 'k'}
+        if stream_opts is None:
+            stream_opts = {'color': 'k'}
         if gridOpts is None:
             gridOpts = {'color': 'k'}
 
@@ -133,7 +136,7 @@ class TensorView(object):
             return self._plotImage2D(
                 v, vType=vType, grid=grid, view=view,
                 ax=ax, clim=clim, showIt=showIt,
-                pcolor_opts=pcolor_opts, streamOpts=streamOpts,
+                pcolor_opts=pcolor_opts, stream_opts=stream_opts,
                 gridOpts=gridOpts, range_x=range_x, range_y=range_y,
                 sample_grid=sample_grid, stream_threshold=stream_threshold
             )
@@ -213,7 +216,7 @@ class TensorView(object):
         normal='Z', ind=None, grid=False, view='real',
         ax=None, clim=None, showIt=False,
         pcolor_opts=None,
-        streamOpts=None,
+        stream_opts=None,
         gridOpts=None,
         range_x=None,
         range_y=None,
@@ -246,10 +249,14 @@ class TensorView(object):
         if "pcolorOpts" in other_kwargs:
             pcolor_opts = other_kwargs["pcolorOpts"]
             warnings.warn("pcolorOpts has been deprecated, please use pcolor_opts", DeprecationWarning)
+        if "streamOpts" in other_kwargs:
+            stream_opts = other_kwargs["streamOpts"]
+            warnings.warn("streamOpts has been deprecated, please use stream_opts", DeprecationWarning)
+
         if pcolor_opts is None:
             pcolor_opts = {}
-        if streamOpts is None:
-            streamOpts = {'color':'k'}
+        if stream_opts is None:
+            stream_opts = {'color':'k'}
         if gridOpts is None:
             gridOpts = {'color':'k', 'alpha':0.5}
         if type(vType) in [list, tuple]:
@@ -264,7 +271,7 @@ class TensorView(object):
                     self.plotSlice(
                         v, vType=vTypeI, normal=normal, ind=ind, grid=grid,
                         view=view, ax=ax, clim=clim, showIt=False,
-                        pcolor_opts=pcolor_opts, streamOpts=streamOpts,
+                        pcolor_opts=pcolor_opts, stream_opts=stream_opts,
                         gridOpts=gridOpts, stream_threshold=stream_threshold,
                         stream_thickness=stream_thickness
                     )
@@ -363,7 +370,7 @@ class TensorView(object):
             v2d, vType=('CCv' if view == 'vec' else 'CC'),
             grid=grid, view=view,
             ax=ax, clim=clim, showIt=showIt,
-            pcolor_opts=pcolor_opts, streamOpts=streamOpts,
+            pcolor_opts=pcolor_opts, stream_opts=stream_opts,
             gridOpts=gridOpts,
             range_x=range_x,
             range_y=range_y,
@@ -383,7 +390,7 @@ class TensorView(object):
         self, v, vType='CC', grid=False, view='real',
         ax=None, clim=None, showIt=False,
         pcolor_opts=None,
-        streamOpts=None,
+        stream_opts=None,
         gridOpts=None,
         range_x=None,
         range_y=None,
@@ -394,8 +401,8 @@ class TensorView(object):
 
         if pcolor_opts is None:
             pcolor_opts = {}
-        if streamOpts is None:
-            streamOpts = {'color': 'k'}
+        if stream_opts is None:
+            stream_opts = {'color': 'k'}
         if gridOpts is None:
             gridOpts = {'color': 'k'}
         vTypeOptsCC = ['N', 'CC', 'Fx', 'Fy', 'Ex', 'Ey']
@@ -541,8 +548,8 @@ class TensorView(object):
                 # Scale by user defined thickness factor
                 stream_thickness = scaleFact*norm_thickness
 
-                # Add linewidth to streamOpts
-                streamOpts.update({'linewidth':stream_thickness})
+                # Add linewidth to stream_opts
+                stream_opts.update({'linewidth':stream_thickness})
 
 
             out += (
@@ -552,7 +559,7 @@ class TensorView(object):
             )
             out += (
                 ax.streamplot(
-                    tMi.vectorCCx, tMi.vectorCCy, Ui.T, Vi.T, **streamOpts
+                    tMi.vectorCCx, tMi.vectorCCy, Ui.T, Vi.T, **stream_opts
                 ),
             )
 

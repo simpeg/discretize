@@ -143,5 +143,5 @@ ax2.set_title('Electric Potential')
 
 ax3 = fig.add_subplot(133)
 mesh.plotImage(E, ax=ax3, vType='F', view='vec',
-               streamOpts={'color': 'w', 'density': 1.0})
+               stream_opts={'color': 'w', 'density': 1.0})
 ax3.set_title('Electric Fields')

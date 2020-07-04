@@ -211,7 +211,7 @@ ax1.set_title('u at cell centers')
 
 ax2 = fig.add_subplot(122)
 mesh.plotImage(grad_u, ax=ax2, vType='E', view='vec',
-               streamOpts={'color': 'w', 'density': 1.0})
+               stream_opts={'color': 'w', 'density': 1.0})
 ax2.set_title('gradient of u on edges')
 
 fig.show()
@@ -221,7 +221,7 @@ fig = plt.figure(figsize=(10, 5))
 
 ax1 = fig.add_subplot(121)
 mesh.plotImage(v, ax=ax1, vType='F', view='vec',
-               streamOpts={'color': 'w', 'density': 1.0})
+               stream_opts={'color': 'w', 'density': 1.0})
 ax1.set_title('v at cell faces')
 
 ax2 = fig.add_subplot(122)
@@ -235,7 +235,7 @@ fig = plt.figure(figsize=(10, 5))
 
 ax1 = fig.add_subplot(121)
 mesh.plotImage(w, ax=ax1, vType='E', view='vec',
-               streamOpts={'color': 'w', 'density': 1.0})
+               stream_opts={'color': 'w', 'density': 1.0})
 ax1.set_title('w at cell edges')
 
 ax2 = fig.add_subplot(122)
