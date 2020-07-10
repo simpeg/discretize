@@ -10,7 +10,7 @@ stages:
   - job:
     displayName: Running Tests
     pool:
-      vmImage: 'ubuntu-latest' #, 'macOS-10.14', 'vs2017-win2016'
+      vmImage: 'ubuntu-latest'
     strategy:
       matrix:
         Python36:
