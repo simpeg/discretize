@@ -104,6 +104,7 @@ Mesh Utilities
     utils.random_model
     utils.mesh_builder_xyz
     utils.refine_tree_xyz
+    utils.active_from_xyz
 
 
 Matrix Utilities

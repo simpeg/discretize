@@ -6,6 +6,7 @@ from libc.math cimport sqrt, abs, cbrt
 from libc.stdlib cimport malloc, free
 from libcpp.vector cimport vector
 from numpy.math cimport INFINITY
+import warnings
 
 from tree cimport int_t, Tree as c_Tree, PyWrapper, Node, Edge, Face, Cell as c_Cell
 
@@ -3323,7 +3324,7 @@ cdef class _TreeMesh:
         lines=True, cell_line=False,
         faces_x=False, faces_y=False, faces_z=False,
         edges_x=False, edges_y=False, edges_z=False,
-        showIt=False, **kwargs):
+        show_it=False, **kwargs):
         """ Plot the nodel, cell-centered, and staggered grids for 2 and 3 dimensions
         Plots the mesh grid in either 2D or 3D of the TreeMesh
 
@@ -3347,7 +3348,7 @@ cdef class _TreeMesh:
             Plot the center points of the x, y, or z faces
         edges_x, edges_y, edges_z : bool, optional
             Plot the center points of the x, y, or z edges
-        showIt : bool, optional
+        show_it : bool, optional
             whether to call plt.show() within the codes
         color : Color or str, optional
             if lines=True, the color of the lines, defaults to first color.
@@ -3360,6 +3361,10 @@ cdef class _TreeMesh:
             Axes handle for the plot
 
         """
+        if "showIt" in kwargs:
+            show_it = kwargs["showIt"]
+            warnings.warn("showIt has been deprecated, please use show_it", DeprecationWarning)
+
         if ax is None:
             if(self._dim == 2):
                 ax = plt.subplot(111)
@@ -3509,18 +3514,18 @@ cdef class _TreeMesh:
             ax.set_zlabel('x3')
 
         ax.grid(True)
-        if showIt:
+        if show_it:
             plt.show()
 
         return ax
 
     @requires({'matplotlib': matplotlib})
-    def plotImage(self, v, vType='CC', grid=False, view='real',
-                  ax=None, clim=None, showIt=False,
-                  pcolorOpts=None,
-                  gridOpts=None,
+    def plotImage(self, v, v_type='CC', grid=False, view='real',
+                  ax=None, clim=None, show_it=False,
+                  pcolor_opts=None,
+                  grid_opts=None,
                   range_x=None, range_y=None,
-                  **other_kwargs,
+                  **kwargs,
                   ):
         """ Plots an image of values defined on the TreeMesh
         If 3D, this function plots a default slice of the TreeMesh
@@ -3529,7 +3534,7 @@ cdef class _TreeMesh:
         ----------
         v : array_like
             Array containing the values to plot
-        vType : str, optional
+        v_type : str, optional
             type of value in `v` one of 'CC', 'N', 'Fx', 'Fy', 'Fz', 'Ex', 'Ey', or 'Ez'
         grid : bool, optional
             plot the grid lines
@@ -3539,7 +3544,7 @@ cdef class _TreeMesh:
             The axes handle
         clim : array_like of length 2, or None, optional
             A pair of [min, max] for the Colorbar
-        pcolorOpts : dict, or None
+        pcolor_opts : dict, or None
             options to be passed on to pcolormesh
         gridOpt : dict, or None
             options for the plotting the grid
@@ -3547,63 +3552,78 @@ cdef class _TreeMesh:
             pairs of [min, max] values for the x and y ranges
         """
         if self._dim == 3:
-            self.plotSlice(v, vType=vType, grid=grid, view=view,
-                           ax=ax, clim=clim, showIt=showIt,
-                           pcolorOpts=pcolorOpts,
+            self.plotSlice(v, v_type=v_type, grid=grid, view=view,
+                           ax=ax, clim=clim, show_it=show_it,
+                           pcolor_opts=pcolor_opts,
                            range_x=range_x, range_y=range_y,
-                           **other_kwargs)
+                           **kwargs)
 
         if view == 'vec':
             raise NotImplementedError('Vector ploting is not supported on TreeMesh (yet)')
 
         if view in ['real', 'imag', 'abs']:
             v = getattr(np, view)(v) # e.g. np.real(v)
-        if vType == 'CC':
+        if v_type == 'CC':
             I = v
-        elif vType == 'N':
+        elif v_type == 'N':
             I = self.aveN2CC*v
-        elif vType in ['Fx', 'Fy', 'Ex', 'Ey']:
-            aveOp = 'ave' + vType[0] + '2CCV'
-            ind_xy = {'x': 0, 'y': 1}[vType[1]]
+        elif v_type in ['Fx', 'Fy', 'Ex', 'Ey']:
+            aveOp = 'ave' + v_type[0] + '2CCV'
+            ind_xy = {'x': 0, 'y': 1}[v_type[1]]
             I = (getattr(self, aveOp)*v).reshape(2, self.nC)[ind_xy] # average to cell centers
+
+        if "pcolorOpts" in kwargs:
+            pcolor_opts = kwargs["pcolorOpts"]
+            warnings.warn("pcolorOpts has been deprecated, please use pcolor_opts", DeprecationWarning)
+        if "gridOpts" in kwargs:
+            grid_opts = kwargs["gridOpts"]
+            warnings.warn("gridOpts has been deprecated, please use grid_opts", DeprecationWarning)
+        if "showIt" in kwargs:
+            show_it = kwargs["showIt"]
+            warnings.warn("showIt has been deprecated, please use show_it", DeprecationWarning)
+        if "vType" in kwargs:
+            show_it = kwargs["vType"]
+            warnings.warn("vType has been deprecated, please use v_type", DeprecationWarning)
 
         if ax is None:
             ax = plt.subplot(111)
-        if pcolorOpts is None:
-            pcolorOpts = {}
-        if 'cmap' in pcolorOpts:
-            cm = pcolorOpts['cmap']
+        if pcolor_opts is None:
+            pcolor_opts = {}
+        if 'cmap' in pcolor_opts:
+            cm = pcolor_opts['cmap']
         else:
             cm = plt.get_cmap()
-        if 'vmin' in pcolorOpts:
-            vmin = pcolorOpts['vmin']
+        if 'vmin' in pcolor_opts:
+            vmin = pcolor_opts['vmin']
         else:
             vmin = np.nanmin(I) if clim is None else clim[0]
-        if 'vmax' in pcolorOpts:
-            vmax = pcolorOpts['vmax']
+        if 'vmax' in pcolor_opts:
+            vmax = pcolor_opts['vmax']
         else:
             vmax = np.nanmax(I) if clim is None else clim[1]
-        if 'alpha' in pcolorOpts:
-            alpha = pcolorOpts['alpha']
+        if 'alpha' in pcolor_opts:
+            alpha = pcolor_opts['alpha']
         else:
             alpha = 1.0
 
-        if gridOpts is None:
-            gridOpts = {'color':'k'}
-        if 'color' not in gridOpts:
-            gridOpts['color'] = 'k'
+        if grid_opts is None:
+            grid_opts = {'color':'k'}
+        if 'color' not in grid_opts:
+            grid_opts['color'] = 'k'
 
-        cNorm = colors.Normalize(
-            vmin=vmin, vmax=vmax)
+        if 'norm' in pcolor_opts:
+           cNorm = pcolor_opts['norm']
+        else:
+           cNorm = colors.Normalize(vmin=vmin, vmax=vmax)
 
         scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=cm)
 
-        if 'edge_color' in pcolorOpts:
-            edge_color = pcolorOpts['edge_color']
+        if 'edge_color' in pcolor_opts:
+            edge_color = pcolor_opts['edge_color']
         else:
-            edge_color = gridOpts['color'] if grid else 'none'
-        if 'alpha' in gridOpts:
-            edge_alpha = gridOpts['alpha']
+            edge_color = grid_opts['color'] if grid else 'none'
+        if 'alpha' in grid_opts:
+            edge_alpha = grid_opts['alpha']
         else:
             edge_alpha = 1.0
         if edge_color.lower() != 'none':
@@ -3641,7 +3661,7 @@ cdef class _TreeMesh:
         else:
             ax.set_ylim(*self.vectorNy[[0, -1]])
 
-        if showIt:
+        if show_it:
             plt.show()
         return [scalarMap]
 
@@ -3659,6 +3679,8 @@ cdef class _TreeMesh:
 
     def __setstate__(self, state):
         indArr, levels = state
+        indArr = np.asarray(indArr)
+        levels = np.asarray(levels)
         xs = np.array(self._xs)
         ys = np.array(self._ys)
         if self._dim == 3:
@@ -3700,7 +3722,11 @@ cdef class _TreeMesh:
 
         levels = 1<<(max_level - levels)
 
-        indArr[:, 2] = (self._zs.shape[0]-1) - indArr[:, 2]
+        if self.dim == 2:
+            indArr[:, -1] = (self._ys.shape[0]-1) - indArr[:, -1]
+        else:
+            indArr[:, -1] = (self._zs.shape[0]-1) - indArr[:, -1]
+
         indArr = (indArr - levels[:, None])//2
         indArr += 1
 
@@ -3712,7 +3738,10 @@ cdef class _TreeMesh:
         if self.__ubc_order is not None:
             return self.__ubc_order
         indArr, _ = self._ubc_indArr
-        self.__ubc_order = np.lexsort((indArr[:, 0], indArr[:, 1], indArr[:, 2]))
+        if self.dim == 2:
+            self.__ubc_order = np.lexsort((indArr[:, 0], indArr[:, 1]))
+        else:
+            self.__ubc_order = np.lexsort((indArr[:, 0], indArr[:, 1], indArr[:, 2]))
         return self.__ubc_order
 
     def __dealloc__(self):

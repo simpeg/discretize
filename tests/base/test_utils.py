@@ -7,7 +7,8 @@ from discretize.utils import (
     inv2X2BlockDiagonal, inv3X3BlockDiagonal,
     invPropertyTensor, makePropertyTensor, indexCube,
     ind2sub, asArray_N_x_Dim, TensorType, Zero, Identity,
-    ExtractCoreMesh
+    ExtractCoreMesh, active_from_xyz, mesh_builder_xyz, refine_tree_xyz,
+    meshTensor
 )
 from discretize.Tests import checkDerivative
 import discretize
@@ -394,36 +395,157 @@ class TestMeshUtils(unittest.TestCase):
         xzlim1d = np.r_[[[0., 250.]]]
         actind1d, meshCore1d = ExtractCoreMesh(xzlim1d, meshtest1d)
 
-        assert len(actind1d) == meshtest1d.nC
-        assert meshCore1d.nC == np.count_nonzero(actind1d)
-        assert meshCore1d.vectorCCx.min() > xzlim1d[0, :].min()
-        assert meshCore1d.vectorCCx.max() < xzlim1d[0, :].max()
+        self.assertEqual(len(actind1d), meshtest1d.nC)
+        self.assertEqual(meshCore1d.nC, np.count_nonzero(actind1d))
+        self.assertGreater(meshCore1d.vectorCCx.min(), xzlim1d[0, :].min())
+        self.assertLess(meshCore1d.vectorCCx.max(), xzlim1d[0, :].max())
 
         # 2D Test on TensorMesh
         meshtest2d = discretize.TensorMesh([[(50., 10)], [(25., 10)]])
         xzlim2d = xyzlim = np.r_[[[0., 200.], [0., 200.]]]
         actind2d, meshCore2d = ExtractCoreMesh(xzlim2d, meshtest2d)
 
-        assert len(actind2d) == meshtest2d.nC
-        assert meshCore2d.nC == np.count_nonzero(actind2d)
-        assert meshCore2d.vectorCCx.min() > xzlim2d[0, :].min()
-        assert meshCore2d.vectorCCx.max() < xzlim2d[0, :].max()
-        assert meshCore2d.vectorCCy.min() > xzlim2d[1, :].min()
-        assert meshCore2d.vectorCCy.max() < xzlim2d[1, :].max()
+        self.assertEqual(len(actind2d), meshtest2d.nC)
+        self.assertEqual(meshCore2d.nC, np.count_nonzero(actind2d))
+        self.assertGreater(meshCore2d.vectorCCx.min(), xzlim2d[0, :].min())
+        self.assertLess(meshCore2d.vectorCCx.max(), xzlim2d[0, :].max())
+        self.assertGreater(meshCore2d.vectorCCy.min(), xzlim2d[1, :].min())
+        self.assertLess(meshCore2d.vectorCCy.max(), xzlim2d[1, :].max())
 
         # 3D Test on TensorMesh
         meshtest3d = discretize.TensorMesh([[(50., 10)], [(25., 10)], [(5., 40)]])
         xzlim3d = np.r_[[[0., 250.], [0., 200.], [0., 150]]]
         actind3d, meshCore3d = ExtractCoreMesh(xzlim3d, meshtest3d)
 
-        assert len(actind3d) == meshtest3d.nC
-        assert meshCore3d.nC == np.count_nonzero(actind3d)
-        assert meshCore3d.vectorCCx.min() > xzlim3d[0, :].min()
-        assert meshCore3d.vectorCCx.max() < xzlim3d[0, :].max()
-        assert meshCore3d.vectorCCy.min() > xzlim3d[1, :].min()
-        assert meshCore3d.vectorCCy.max() < xzlim3d[1, :].max()
-        assert meshCore3d.vectorCCz.min() > xzlim3d[2, :].min()
-        assert meshCore3d.vectorCCz.max() < xzlim3d[2, :].max()
+        self.assertEqual(len(actind3d), meshtest3d.nC)
+        self.assertEqual(meshCore3d.nC, np.count_nonzero(actind3d))
+        self.assertGreater(meshCore3d.vectorCCx.min(), xzlim3d[0, :].min())
+        self.assertLess(meshCore3d.vectorCCx.max(), xzlim3d[0, :].max())
+        self.assertGreater(meshCore3d.vectorCCy.min(), xzlim3d[1, :].min())
+        self.assertLess(meshCore3d.vectorCCy.max(), xzlim3d[1, :].max())
+        self.assertGreater(meshCore3d.vectorCCz.min(), xzlim3d[2, :].min())
+        self.assertLess(meshCore3d.vectorCCz.max(), xzlim3d[2, :].max())
+
+    def test_active_from_xyz(self):
+
+        # Create 3D topo
+        [xx, yy] = np.meshgrid(np.linspace(-200, 200, 50), np.linspace(-200, 200, 50))
+        b = 50
+        A = 50
+        zz = A * np.exp(-0.5 * ((xx / b) ** 2. + (yy / b) ** 2.))
+
+        h = [5., 5., 5.]
+
+        # Test 1D Mesh
+        topo1D = zz[25, :].ravel()
+        mesh1D = discretize.TensorMesh(
+            [np.ones(10) * 20],
+            x0='C'
+        )
+
+        indtopoCC = active_from_xyz(mesh1D, topo1D, grid_reference='CC', method='nearest')
+        indtopoN = active_from_xyz(mesh1D, topo1D, grid_reference='N', method='nearest')
+
+        self.assertEqual(indtopoCC.sum(), 3)
+        self.assertEqual(indtopoN.sum(), 2)
+
+        # Test 2D Tensor mesh
+        topo2D = np.c_[xx[25, :].ravel(), zz[25, :].ravel()]
+
+        mesh_tensor = discretize.TensorMesh([
+            [(h[0], 24)],
+            [(h[1], 20)]
+        ],
+            x0='CC')
+
+        indtopoCC = active_from_xyz(mesh_tensor, topo2D, grid_reference='CC', method='nearest')
+        indtopoN = active_from_xyz(mesh_tensor, topo2D, grid_reference='N', method='nearest')
+
+        self.assertEqual(indtopoCC.sum(), 434)
+        self.assertEqual(indtopoN.sum(), 412)
+
+        # Test 2D Tree mesh
+        mesh_tree = mesh_builder_xyz(topo2D, h[:2], mesh_type='TREE')
+        mesh_tree = refine_tree_xyz(
+            mesh_tree, topo2D,
+            method="surface",
+            octree_levels=[1],
+            octree_levels_padding=None,
+            finalize=True
+        )
+        indtopoCC = active_from_xyz(mesh_tree, topo2D, grid_reference='CC', method='nearest')
+        indtopoN = active_from_xyz(mesh_tree, topo2D, grid_reference='N', method='nearest')
+
+        self.assertEqual(indtopoCC.sum(), 167)
+        self.assertEqual(indtopoN.sum(), 119)
+
+        # Test 3D Tensor meshes
+        topo3D = np.c_[xx.ravel(), yy.ravel(), zz.ravel()]
+
+        mesh_tensor = discretize.TensorMesh([
+            [(h[0], 24)],
+            [(h[1], 20)],
+            [(h[2], 30)]
+        ],
+            x0='CCC')
+
+        indtopoCC = active_from_xyz(mesh_tensor, topo3D, grid_reference='CC', method='nearest')
+        indtopoN = active_from_xyz(mesh_tensor, topo3D, grid_reference='N', method='nearest')
+
+        self.assertEqual(indtopoCC.sum(), 10496)
+        self.assertEqual(indtopoN.sum(), 10084)
+
+        # Test 3D Tree mesh
+        mesh_tree = mesh_builder_xyz(topo3D, h, mesh_type='TREE')
+        mesh_tree = refine_tree_xyz(
+            mesh_tree, topo3D,
+            method="surface",
+            octree_levels=[1],
+            octree_levels_padding=None,
+            finalize=True
+        )
+        indtopoCC = active_from_xyz(mesh_tree, topo3D, grid_reference='CC', method='nearest')
+        indtopoN = active_from_xyz(mesh_tree, topo3D, grid_reference='N', method='nearest')
+
+        self.assertEqual(indtopoCC.sum(), 6299)
+        self.assertEqual(indtopoN.sum(), 4639)
+
+        # Test 3D CYL Mesh
+        ncr = 10  # number of mesh cells in r
+        ncz = 15  # number of mesh cells in z
+        dr = 15  # cell width r
+        dz = 10  # cell width z
+        npad_r = 4  # number of padding cells in r
+        npad_z = 4  # number of padding cells in z
+        exp_r = 1.25  # expansion rate of padding cells in r
+        exp_z = 1.25  # expansion rate of padding cells in z
+
+        hr = [(dr, ncr), (dr, npad_r, exp_r)]
+        hz = [(dz, npad_z, -exp_z), (dz, ncz), (dz, npad_z, exp_z)]
+
+        # A value of 1 is used to define the discretization in phi for this case.
+        mesh_cyl = discretize.CylMesh([hr, 1, hz], x0='00C')
+
+        indtopoCC = active_from_xyz(mesh_cyl, topo3D, grid_reference='CC', method='nearest')
+        indtopoN = active_from_xyz(mesh_cyl, topo3D, grid_reference='N', method='nearest')
+
+        self.assertEqual(indtopoCC.sum(), 183)
+        self.assertEqual(indtopoN.sum(), 171)
+
+        htheta = meshTensor([(1., 4)])
+        htheta = htheta * 2*np.pi / htheta.sum()
+
+        mesh_cyl2 = discretize.CylMesh([hr, htheta, hz], x0='00C')
+        with self.assertRaises(NotImplementedError):
+            indtopoCC = active_from_xyz(mesh_cyl2, topo3D, grid_reference='CC', method='nearest')
+
+        def gridIt(h): return [np.cumsum(np.r_[0, x]) for x in h]
+
+        X, Y = ndgrid(gridIt([[5.]*24, [5.]*20]), vector=False)
+
+        mesh_curvi = discretize.CurvilinearMesh([X, Y])
+        with self.assertRaises(TypeError):
+            indTopoCC = active_from_xyz(mesh_curvi, topo3D, grid_reference='CC', method='nearest')
 
 
 if __name__ == '__main__':

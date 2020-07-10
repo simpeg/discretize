@@ -29,7 +29,7 @@ class TensorView(object):
     # def components(self):
 
     #     plotAll = len(imageType) == 1
-    #     options = {"direction":direction, "numbering":numbering, "annotationColor":annotationColor, "showIt":False}
+    #     options = {"direction":direction, "numbering":numbering, "annotation_color":annotation_color, "show_it":False}
     #     fig = plt.figure(figNum)
     #     # Determine the subplot number: 131, 121
     #     numPlots = 130 if plotAll else len(imageType)//2*10+100
@@ -47,18 +47,18 @@ class TensorView(object):
     #         ax_z = plt.subplot(numPlots+pltNum)
     #         self.plotImage(fxyz[2], imageType='Fz', ax=ax_z, **options)
     #         pltNum +=1
-    #     if showIt: plt.show()
+    #     if show_it: plt.show()
 
     @requires({'matplotlib': matplotlib})
     def plotImage(
-        self, v, vType='CC', grid=False, view='real',
-        ax=None, clim=None, showIt=False,
-        pcolorOpts=None,
-        streamOpts=None,
-        gridOpts=None,
-        numbering=True, annotationColor='w',
+        self, v, v_type='CC', grid=False, view='real',
+        ax=None, clim=None, show_it=False,
+        pcolor_opts=None,
+        stream_opts=None,
+        grid_opts=None,
+        numbering=True, annotation_color='w',
         range_x=None, range_y=None, sample_grid=None,
-        stream_threshold=None
+        stream_threshold=None, **kwargs
     ):
         """
         Mesh.plotImage(v)
@@ -71,14 +71,14 @@ class TensorView(object):
 
         Optional Inputs:
 
-        :param str vType: type of vector ('CC', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez')
+        :param str v_type: type of vector ('CC', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez')
         :param matplotlib.axes.Axes ax: axis to plot to
-        :param bool showIt: call plt.show()
+        :param bool show_it: call plt.show()
 
         3D Inputs:
 
         :param bool numbering: show numbering of slices, 3D only
-        :param str annotationColor: color of annotation, e.g. 'w', 'k', 'b'
+        :param str annotation_color: color of annotation, e.g. 'w', 'k', 'b'
 
         .. plot::
             :include-source:
@@ -87,7 +87,7 @@ class TensorView(object):
             import numpy as np
             M = discretize.TensorMesh([20, 20])
             v = np.sin(M.gridCC[:, 0]*2*np.pi)*np.sin(M.gridCC[:, 1]*2*np.pi)
-            M.plotImage(v, showIt=True)
+            M.plotImage(v, show_it=True)
 
         .. plot::
             :include-source:
@@ -96,15 +96,34 @@ class TensorView(object):
             import numpy as np
             M = discretize.TensorMesh([20, 20, 20])
             v = np.sin(M.gridCC[:, 0]*2*np.pi)*np.sin(M.gridCC[:, 1]*2*np.pi)*np.sin(M.gridCC[:, 2]*2*np.pi)
-            M.plotImage(v, annotationColor='k', showIt=True)
+            M.plotImage(v, annotation_color='k', show_it=True)
 
         """
-        if pcolorOpts is None:
-            pcolorOpts = {}
-        if streamOpts is None:
-            streamOpts = {'color': 'k'}
-        if gridOpts is None:
-            gridOpts = {'color': 'k'}
+        if "pcolorOpts" in kwargs:
+            pcolor_opts = kwargs["pcolorOpts"]
+            warnings.warn("pcolorOpts has been deprecated, please use pcolor_opts", DeprecationWarning)
+        if "streamOpts" in kwargs:
+            stream_opts = kwargs["streamOpts"]
+            warnings.warn("streamOpts has been deprecated, please use stream_opts", DeprecationWarning)
+        if "gridOpts" in kwargs:
+            grid_opts = kwargs["gridOpts"]
+            warnings.warn("gridOpts has been deprecated, please use grid_opts", DeprecationWarning)
+        if "showIt" in kwargs:
+            show_it = kwargs["showIt"]
+            warnings.warn("showIt has been deprecated, please use show_it", DeprecationWarning)
+        if "annotationColor" in kwargs:
+            show_it = kwargs["annotationColor"]
+            warnings.warn("annotationColor has been deprecated, please use annotation_color", DeprecationWarning)
+        if "vType" in kwargs:
+            show_it = kwargs["vType"]
+            warnings.warn("vType has been deprecated, please use v_type", DeprecationWarning)
+
+        if pcolor_opts is None:
+            pcolor_opts = {}
+        if stream_opts is None:
+            stream_opts = {'color': 'k'}
+        if grid_opts is None:
+            grid_opts = {'color': 'k'}
 
         if ax is None:
             fig = plt.figure()
@@ -115,11 +134,11 @@ class TensorView(object):
             fig = ax.figure
 
         if self.dim == 1:
-            if vType == 'CC':
+            if v_type == 'CC':
                 ph = ax.plot(
                     self.vectorCCx, v, linestyle="-", color="C1", marker="o"
                 )
-            elif vType == 'N':
+            elif v_type == 'N':
                 ph = ax.plot(
                     self.vectorNx, v, linestyle="-", color="C0", marker="s"
                 )
@@ -127,26 +146,26 @@ class TensorView(object):
             ax.axis('tight')
         elif self.dim == 2:
             return self._plotImage2D(
-                v, vType=vType, grid=grid, view=view,
-                ax=ax, clim=clim, showIt=showIt,
-                pcolorOpts=pcolorOpts, streamOpts=streamOpts,
-                gridOpts=gridOpts, range_x=range_x, range_y=range_y,
+                v, v_type=v_type, grid=grid, view=view,
+                ax=ax, clim=clim, show_it=show_it,
+                pcolor_opts=pcolor_opts, stream_opts=stream_opts,
+                grid_opts=grid_opts, range_x=range_x, range_y=range_y,
                 sample_grid=sample_grid, stream_threshold=stream_threshold
             )
         elif self.dim == 3:
             # get copy of image and average to cell-centers is necessary
-            if vType == 'CC':
+            if v_type == 'CC':
                 vc = v.reshape(self.vnC, order='F')
-            elif vType == 'N':
+            elif v_type == 'N':
                 vc = (self.aveN2CC*v).reshape(self.vnC, order='F')
-            elif vType in ['Fx', 'Fy', 'Fz', 'Ex', 'Ey', 'Ez']:
-                aveOp = 'ave' + vType[0] + '2CCV'
-                # n = getattr(self, 'vn'+vType[0])
-                # if 'x' in vType: v = np.r_[v, np.zeros(n[1]), np.zeros(n[2])]
-                # if 'y' in vType: v = np.r_[np.zeros(n[0]), v, np.zeros(n[2])]
-                # if 'z' in vType: v = np.r_[np.zeros(n[0]), np.zeros(n[1]), v]
+            elif v_type in ['Fx', 'Fy', 'Fz', 'Ex', 'Ey', 'Ez']:
+                aveOp = 'ave' + v_type[0] + '2CCV'
+                # n = getattr(self, 'vn'+v_type[0])
+                # if 'x' in v_type: v = np.r_[v, np.zeros(n[1]), np.zeros(n[2])]
+                # if 'y' in v_type: v = np.r_[np.zeros(n[0]), v, np.zeros(n[2])]
+                # if 'z' in v_type: v = np.r_[np.zeros(n[0]), np.zeros(n[1]), v]
                 v = getattr(self, aveOp)*v # average to cell centers
-                ind_xyz = {'x': 0, 'y': 1, 'z': 2}[vType[1]]
+                ind_xyz = {'x': 0, 'y': 1, 'z': 2}[v_type[1]]
                 vc = self.r(
                     v.reshape((self.nC, -1), order='F'), 'CC', 'CC', 'M'
                 )[ind_xyz]
@@ -185,8 +204,8 @@ class TensorView(object):
             gxY = np.kron(np.ones((nX+1, 1)), np.array([0, sum(self.hy)*nY, np.nan])).ravel()
             gyX = np.kron(np.ones((nY+1, 1)), np.array([0, sum(self.hx)*nX, np.nan])).ravel()
             gyY = np.c_[gy, gy, gy+np.nan].ravel()
-            ax.plot(gxX, gxY, annotationColor+'-', linewidth=2)
-            ax.plot(gyX, gyY, annotationColor+'-', linewidth=2)
+            ax.plot(gxX, gxY, annotation_color+'-', linewidth=2)
+            ax.plot(gyX, gyY, annotation_color+'-', linewidth=2)
             ax.axis('tight')
 
             if numbering:
@@ -196,26 +215,26 @@ class TensorView(object):
                         iz = ix + iy*nX
                         if iz < self.nCz:
                             ax.text((ix+1)*(self.vectorNx[-1]-self.x0[0])-pad, (iy)*(self.vectorNy[-1]-self.x0[1])+pad,
-                                     '#{0:.0f}'.format(iz), color=annotationColor, verticalalignment='bottom', horizontalalignment='right', size='x-large')
+                                     '#{0:.0f}'.format(iz), color=annotation_color, verticalalignment='bottom', horizontalalignment='right', size='x-large')
 
-        ax.set_title(vType)
-        if showIt:
+        ax.set_title(v_type)
+        if show_it:
             plt.show()
         return ph
 
     @requires({'matplotlib': matplotlib})
     def plotSlice(
-        self, v, vType='CC',
+        self, v, v_type='CC',
         normal='Z', ind=None, grid=False, view='real',
-        ax=None, clim=None, showIt=False,
-        pcolorOpts=None,
-        streamOpts=None,
-        gridOpts=None,
+        ax=None, clim=None, show_it=False,
+        pcolor_opts=None,
+        stream_opts=None,
+        grid_opts=None,
         range_x=None,
         range_y=None,
         sample_grid=None,
         stream_threshold=None,
-        stream_thickness=None
+        stream_thickness=None, **kwargs
     ):
 
         """
@@ -235,42 +254,58 @@ class TensorView(object):
             q = discretize.utils.mkvc(q)
             A = M.faceDiv * M.cellGrad
             b = Solver(A) * (q)
-            M.plotSlice(M.cellGrad*b, 'F', view='vec', grid=True, showIt=True, pcolorOpts={'alpha':0.8})
+            M.plotSlice(M.cellGrad*b, 'F', view='vec', grid=True, show_it=True, pcolor_opts={'alpha':0.8})
 
         """
         normal = normal.upper()
-        if pcolorOpts is None:
-            pcolorOpts = {}
-        if streamOpts is None:
-            streamOpts = {'color':'k'}
-        if gridOpts is None:
-            gridOpts = {'color':'k', 'alpha':0.5}
-        if type(vType) in [list, tuple]:
+        if "pcolorOpts" in kwargs:
+            pcolor_opts = kwargs["pcolorOpts"]
+            warnings.warn("pcolorOpts has been deprecated, please use pcolor_opts", DeprecationWarning)
+        if "streamOpts" in kwargs:
+            stream_opts = kwargs["streamOpts"]
+            warnings.warn("streamOpts has been deprecated, please use stream_opts", DeprecationWarning)
+        if "gridOpts" in kwargs:
+            grid_opts = kwargs["gridOpts"]
+            warnings.warn("gridOpts has been deprecated, please use grid_opts", DeprecationWarning)
+        if "showIt" in kwargs:
+            show_it = kwargs["showIt"]
+            warnings.warn("showIt has been deprecated, please use show_it", DeprecationWarning)
+        if "vType" in kwargs:
+            show_it = kwargs["vType"]
+            warnings.warn("vType has been deprecated, please use v_type", DeprecationWarning)
+
+        if pcolor_opts is None:
+            pcolor_opts = {}
+        if stream_opts is None:
+            stream_opts = {'color':'k'}
+        if grid_opts is None:
+            grid_opts = {'color':'k', 'alpha':0.5}
+        if type(v_type) in [list, tuple]:
             if ax is not None:
                 raise AssertionError(
                     "cannot specify an axis to plot on with this function."
                 )
-            fig, axs = plt.subplots(1, len(vType))
+            fig, axs = plt.subplots(1, len(v_type))
             out = []
-            for vTypeI, ax in zip(vType, axs):
+            for v_typeI, ax in zip(v_type, axs):
                 out += [
                     self.plotSlice(
-                        v, vType=vTypeI, normal=normal, ind=ind, grid=grid,
-                        view=view, ax=ax, clim=clim, showIt=False,
-                        pcolorOpts=pcolorOpts, streamOpts=streamOpts,
-                        gridOpts=gridOpts, stream_threshold=stream_threshold,
+                        v, v_type=v_typeI, normal=normal, ind=ind, grid=grid,
+                        view=view, ax=ax, clim=clim, show_it=False,
+                        pcolor_opts=pcolor_opts, stream_opts=stream_opts,
+                        grid_opts=grid_opts, stream_threshold=stream_threshold,
                         stream_thickness=stream_thickness
                     )
                 ]
             return out
         viewOpts = ['real', 'imag', 'abs', 'vec']
         normalOpts = ['X', 'Y', 'Z']
-        vTypeOpts = ['CC', 'CCv', 'N', 'F', 'E', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez']
+        v_typeOpts = ['CC', 'CCv', 'N', 'F', 'E', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez']
 
         # Some user error checking
-        if vType not in vTypeOpts:
+        if v_type not in v_typeOpts:
             raise AssertionError(
-                "vType must be in ['{0!s}']".format("', '".join(vTypeOpts))
+                "v_type must be in ['{0!s}']".format("', '".join(v_typeOpts))
             )
         if not self.dim == 3:
             raise AssertionError(
@@ -306,19 +341,19 @@ class TensorView(object):
             return v
 
         def doSlice(v):
-            if vType == 'CC':
+            if v_type == 'CC':
                 return getIndSlice(self.r(v, 'CC', 'CC', 'M'))
-            elif vType == 'CCv':
+            elif v_type == 'CCv':
                 if view != 'vec':
                     raise AssertionError('Other types for CCv not supported')
             else:
                 # Now just deal with 'F' and 'E' (x, y, z, maybe...)
-                aveOp = 'ave' + vType + ('2CCV' if view == 'vec' else '2CC')
+                aveOp = 'ave' + v_type + ('2CCV' if view == 'vec' else '2CC')
                 Av = getattr(self, aveOp)
                 if v.size == Av.shape[1]:
                     v = Av * v
                 else:
-                    v = self.r(v, vType[0], vType) # get specific component
+                    v = self.r(v, v_type[0], v_type) # get specific component
                     v = Av * v
                 # we should now be averaged to cell centers (might be a vector)
             v = self.r(v.reshape((self.nC, -1), order='F'), 'CC', 'CC', 'M')
@@ -353,11 +388,11 @@ class TensorView(object):
                 raise AssertionError("ax must be an matplotlib.axes.Axes")
 
         out = tM._plotImage2D(
-            v2d, vType=('CCv' if view == 'vec' else 'CC'),
+            v2d, v_type=('CCv' if view == 'vec' else 'CC'),
             grid=grid, view=view,
-            ax=ax, clim=clim, showIt=showIt,
-            pcolorOpts=pcolorOpts, streamOpts=streamOpts,
-            gridOpts=gridOpts,
+            ax=ax, clim=clim, show_it=show_it,
+            pcolor_opts=pcolor_opts, stream_opts=stream_opts,
+            grid_opts=grid_opts,
             range_x=range_x,
             range_y=range_y,
             sample_grid=sample_grid,
@@ -373,11 +408,11 @@ class TensorView(object):
 
     @requires({'matplotlib': matplotlib})
     def _plotImage2D(
-        self, v, vType='CC', grid=False, view='real',
-        ax=None, clim=None, showIt=False,
-        pcolorOpts=None,
-        streamOpts=None,
-        gridOpts=None,
+        self, v, v_type='CC', grid=False, view='real',
+        ax=None, clim=None, show_it=False,
+        pcolor_opts=None,
+        stream_opts=None,
+        grid_opts=None,
         range_x=None,
         range_y=None,
         sample_grid=None,
@@ -385,25 +420,25 @@ class TensorView(object):
         stream_thickness=None
     ):
 
-        if pcolorOpts is None:
-            pcolorOpts = {}
-        if streamOpts is None:
-            streamOpts = {'color': 'k'}
-        if gridOpts is None:
-            gridOpts = {'color': 'k'}
-        vTypeOptsCC = ['N', 'CC', 'Fx', 'Fy', 'Ex', 'Ey']
-        vTypeOptsV = ['CCv', 'F', 'E']
-        vTypeOpts = vTypeOptsCC + vTypeOptsV
+        if pcolor_opts is None:
+            pcolor_opts = {}
+        if stream_opts is None:
+            stream_opts = {'color': 'k'}
+        if grid_opts is None:
+            grid_opts = {'color': 'k'}
+        v_typeOptsCC = ['N', 'CC', 'Fx', 'Fy', 'Ex', 'Ey']
+        v_typeOptsV = ['CCv', 'F', 'E']
+        v_typeOpts = v_typeOptsCC + v_typeOptsV
         if view == 'vec':
-            if vType not in vTypeOptsV:
+            if v_type not in v_typeOptsV:
                 raise AssertionError(
-                    "vType must be in ['{0!s}'] when view='vec'".format(
-                        "', '".join(vTypeOptsV)
+                    "v_type must be in ['{0!s}'] when view='vec'".format(
+                        "', '".join(v_typeOptsV)
                     )
                 )
-        if vType not in vTypeOpts:
+        if v_type not in v_typeOpts:
             raise AssertionError(
-                "vType must be in ['{0!s}']".format("', '".join(vTypeOpts))
+                "v_type must be in ['{0!s}']".format("', '".join(v_typeOpts))
             )
 
         viewOpts = ['real', 'imag', 'abs', 'vec']
@@ -422,18 +457,18 @@ class TensorView(object):
                 )
 
         # Reshape to a cell centered variable
-        if vType == 'CC':
+        if v_type == 'CC':
             pass
-        elif vType == 'CCv':
+        elif v_type == 'CCv':
             if view != 'vec':
                 raise AssertionError('Other types for CCv not supported')
-        elif vType in ['F', 'E', 'N']:
-            aveOp = 'ave' + vType + ('2CCV' if view == 'vec' else '2CC')
+        elif v_type in ['F', 'E', 'N']:
+            aveOp = 'ave' + v_type + ('2CCV' if view == 'vec' else '2CC')
             v = getattr(self, aveOp)*v  # average to cell centers (might be a vector)
-        elif vType in ['Fx', 'Fy', 'Ex', 'Ey']:
-            aveOp = 'ave' + vType[0] + '2CCV'
+        elif v_type in ['Fx', 'Fy', 'Ex', 'Ey']:
+            aveOp = 'ave' + v_type[0] + '2CCV'
             v = getattr(self, aveOp)*v  # average to cell centers (might be a vector)
-            xORy = {'x': 0, 'y':1 }[vType[1]]
+            xORy = {'x': 0, 'y':1 }[v_type[1]]
             v = v.reshape((self.nC, -1), order='F')[:, xORy]
 
         out = ()
@@ -443,7 +478,7 @@ class TensorView(object):
             if clim is None:
                 clim = [v.min(), v.max()]
             v = np.ma.masked_where(np.isnan(v), v)
-            out += (ax.pcolormesh(self.vectorNx, self.vectorNy, v.T, vmin=clim[0], vmax=clim[1], **pcolorOpts), )
+            out += (ax.pcolormesh(self.vectorNx, self.vectorNy, v.T, vmin=clim[0], vmax=clim[1], **pcolor_opts), )
         elif view in ['vec']:
             # Matplotlib seems to not support irregular
             # spaced vectors at the moment. So we will
@@ -534,18 +569,18 @@ class TensorView(object):
                 # Scale by user defined thickness factor
                 stream_thickness = scaleFact*norm_thickness
 
-                # Add linewidth to streamOpts
-                streamOpts.update({'linewidth':stream_thickness})
+                # Add linewidth to stream_opts
+                stream_opts.update({'linewidth':stream_thickness})
 
 
             out += (
                 ax.pcolormesh(
                     x, y, np.sqrt(U**2+V**2).T, vmin=clim[0], vmax=clim[1],
-                    **pcolorOpts),
+                    **pcolor_opts),
             )
             out += (
                 ax.streamplot(
-                    tMi.vectorCCx, tMi.vectorCCy, Ui.T, Vi.T, **streamOpts
+                    tMi.vectorCCx, tMi.vectorCCy, Ui.T, Vi.T, **stream_opts
                 ),
             )
 
@@ -554,7 +589,7 @@ class TensorView(object):
             xYGrid = np.c_[self.vectorNy[0]*np.ones(self.nNx), self.vectorNy[-1]*np.ones(self.nNx), np.nan*np.ones(self.nNx)].flatten()
             yXGrid = np.c_[self.vectorNx[0]*np.ones(self.nNy), self.vectorNx[-1]*np.ones(self.nNy), np.nan*np.ones(self.nNy)].flatten()
             yYGrid = np.c_[self.vectorNy, self.vectorNy, np.nan*np.ones(self.nNy)].flatten()
-            out += (ax.plot(np.r_[xXGrid, yXGrid], np.r_[xYGrid, yYGrid], **gridOpts)[0], )
+            out += (ax.plot(np.r_[xXGrid, yXGrid], np.r_[xYGrid, yYGrid], **grid_opts)[0], )
 
         ax.set_xlabel('x')
         ax.set_ylabel('y')
@@ -569,14 +604,14 @@ class TensorView(object):
         else:
             ax.set_ylim(*self.vectorNy[[0, -1]])
 
-        if showIt:
+        if show_it:
             plt.show()
         return out
 
     @requires({'matplotlib': matplotlib})
     def plotGrid(
         self, ax=None, nodes=False, faces=False, centers=False, edges=False,
-        lines=True, showIt=False, **kwargs
+        lines=True, show_it=False, **kwargs
     ):
         """Plot the nodal, cell-centered and staggered grids for 1,2 and 3 dimensions.
 
@@ -585,7 +620,7 @@ class TensorView(object):
         :param bool centers: plot centers
         :param bool edges: plot edges
         :param bool lines: plot lines connecting nodes
-        :param bool showIt: call plt.show()
+        :param bool show_it: call plt.show()
 
         .. plot::
            :include-source:
@@ -595,7 +630,7 @@ class TensorView(object):
            h1 = np.linspace(.1, .5, 3)
            h2 = np.linspace(.1, .5, 5)
            mesh = discretize.TensorMesh([h1, h2])
-           mesh.plotGrid(nodes=True, faces=True, centers=True, lines=True, showIt=True)
+           mesh.plotGrid(nodes=True, faces=True, centers=True, lines=True, show_it=True)
 
         .. plot::
            :include-source:
@@ -606,9 +641,12 @@ class TensorView(object):
            h2 = np.linspace(.1, .5, 5)
            h3 = np.linspace(.1, .5, 3)
            mesh = discretize.TensorMesh([h1, h2, h3])
-           mesh.plotGrid(nodes=True, faces=True, centers=True, lines=True, showIt=True)
+           mesh.plotGrid(nodes=True, faces=True, centers=True, lines=True, show_it=True)
 
         """
+        if "showIt" in kwargs:
+            show_it = kwargs["showIt"]
+            warnings.warn("showIt has been deprecated, please use show_it", DeprecationWarning)
 
         axOpts = {'projection': '3d'} if self.dim == 3 else {}
         if ax is None:
@@ -740,7 +778,7 @@ class TensorView(object):
             ax.set_zlabel('x3')
 
         ax.grid(True)
-        if showIt:
+        if show_it:
             plt.show()
 
         return ax
@@ -748,10 +786,10 @@ class TensorView(object):
 
     @requires({'matplotlib': matplotlib})
     def plot_3d_slicer(self, v, xslice=None, yslice=None, zslice=None,
-                       vType='CC', view='real', axis='xy', transparent=None,
+                       v_type='CC', view='real', axis='xy', transparent=None,
                        clim=None, xlim=None, ylim=None, zlim=None,
-                       aspect='auto', grid=[2, 2, 1], pcolorOpts=None,
-                       fig=None):
+                       aspect='auto', grid=[2, 2, 1], pcolor_opts=None,
+                       fig=None, **kwargs):
         """Plot slices of a 3D volume, interactively (scroll wheel).
 
         If called from a notebook, make sure to set
@@ -784,10 +822,14 @@ class TensorView(object):
         else:
             fig.clf()
 
+        if "pcolorOpts" in kwargs:
+            pcolor_opts = kwargs["pcolorOpts"]
+            warnings.warn("pcolorOpts has been deprecated, please use pcolor_opts", DeprecationWarning)
+
         # Populate figure
         tracker = Slicer(
-            self, v, xslice, yslice, zslice, vType, view, axis, transparent,
-            clim, xlim, ylim, zlim, aspect, grid, pcolorOpts
+            self, v, xslice, yslice, zslice, v_type, view, axis, transparent,
+            clim, xlim, ylim, zlim, aspect, grid, pcolor_opts
         )
 
         # Connect figure to scrolling
@@ -815,21 +857,21 @@ class CylView(object):
         if len(args) > 0:
             val = args[0]
 
-        vType = kwargs.get('vType', None)
+        v_type = kwargs.get('v_type', None)
         mirror = kwargs.pop('mirror', None)
         mirror_data = kwargs.pop('mirror_data', None)
 
         if mirror_data is not None and mirror is None:
             mirror = True
 
-        if vType is not None:
-            if vType.upper() != 'CCV':
-                if vType.upper() == 'F':
+        if v_type is not None:
+            if v_type.upper() != 'CCV':
+                if v_type.upper() == 'F':
                     val = mkvc(self.aveF2CCV * val)
                     if mirror_data is not None:
                         mirror_data = mkvc(self.aveF2CCV * mirror_data)
-                    kwargs['vType'] = 'CCv'  # now the vector is cell centered
-                if vType.upper() == 'E':
+                    kwargs['v_type'] = 'CCv'  # now the vector is cell centered
+                if v_type.upper() == 'E':
                     val = mkvc(self.aveE2CCV * val)
                     if mirror_data is not None:
                         mirror_data = mkvc(self.aveE2CCV * mirror_data)
@@ -886,15 +928,15 @@ class CylView(object):
             fig = ax.figure
 
         # Don't show things in the TM.plotImage
-        showIt = kwargs.get('showIt', False)
-        kwargs['showIt'] = False
+        show_it = kwargs.get('show_it', False)
+        kwargs['show_it'] = False
 
         out = getattr(M, plotType)(*args, **kwargs)
 
         ax.set_xlabel('x')
         ax.set_ylabel('z')
 
-        if showIt:
+        if show_it:
             plt.show()
 
         return out
@@ -1048,7 +1090,7 @@ class CurviView(object):
     @requires({'matplotlib': matplotlib})
     def plotGrid(
         self, ax=None, nodes=False, faces=False, centers=False, edges=False,
-        lines=True, showIt=False, **kwargs
+        lines=True, show_it=False, **kwargs
     ):
         """Plot the nodal, cell-centered and staggered grids for 1, 2 and 3 dimensions.
 
@@ -1059,13 +1101,16 @@ class CurviView(object):
             import discretize
             X, Y = discretize.utils.exampleLrmGrid([3, 3], 'rotate')
             M = discretize.CurvilinearMesh([X, Y])
-            M.plotGrid(showIt=True)
+            M.plotGrid(show_it=True)
 
         """
 
         axOpts = {'projection': '3d'} if self.dim == 3 else {}
         if ax is None:
             ax = plt.subplot(111, **axOpts)
+        if "showIt" in kwargs:
+            show_it = kwargs["showIt"]
+            warnings.warn("showIt has been deprecated, please use show_it", DeprecationWarning)
 
         NN = self.r(self.gridN, 'N', 'N', 'M')
         if self.dim == 2:
@@ -1138,19 +1183,32 @@ class CurviView(object):
         ax.set_xlabel('x1')
         ax.set_ylabel('x2')
 
-        if showIt:
+        if show_it:
             plt.show()
 
         return ax
 
     @requires({'matplotlib': matplotlib})
     def plotImage(
-        self, v, vType='CC', grid=False, view='real',
-        ax=None, clim=None, showIt=False,
-        pcolorOpts=None,
-        gridOpts=None,
-        range_x=None, range_y=None
+        self, v, v_type='CC', grid=False, view='real',
+        ax=None, clim=None, show_it=False,
+        pcolor_opts=None,
+        grid_opts=None,
+        range_x=None, range_y=None, **kwargs
     ):
+        if "pcolorOpts" in kwargs:
+            pcolor_opts = kwargs["pcolorOpts"]
+            warnings.warn("pcolorOpts has been deprecated, please use pcolor_opts", DeprecationWarning)
+        if "gridOpts" in kwargs:
+            grid_opts = kwargs["gridOpts"]
+            warnings.warn("gridOpts has been deprecated, please use grid_opts", DeprecationWarning)
+        if "showIt" in kwargs:
+            show_it = kwargs["showIt"]
+            warnings.warn("showIt has been deprecated, please use show_it", DeprecationWarning)
+        if "vType" in kwargs:
+            show_it = kwargs["vType"]
+            warnings.warn("vType has been deprecated, please use v_type", DeprecationWarning)
+
         if self.dim == 3:
             raise NotImplementedError('This is not yet done!')
         if view == 'vec':
@@ -1159,49 +1217,49 @@ class CurviView(object):
                 )
         if view in ['real', 'imag', 'abs']:
             v = getattr(np, view)(v)  # e.g. np.real(v)
-        if vType == 'CC':
+        if v_type == 'CC':
             I = v
-        elif vType == 'N':
+        elif v_type == 'N':
             I = self.aveN2CC*v
-        elif vType in ['Fx', 'Fy', 'Ex', 'Ey']:
-            aveOp = 'ave' + vType[0] + '2CCV'
-            ind_xy = {'x': 0, 'y': 1}[vType[1]]
+        elif v_type in ['Fx', 'Fy', 'Ex', 'Ey']:
+            aveOp = 'ave' + v_type[0] + '2CCV'
+            ind_xy = {'x': 0, 'y': 1}[v_type[1]]
             I = (getattr(self, aveOp)*v).reshape(2, self.nC)[ind_xy]  # average to cell centers
 
         if ax is None:
             ax = plt.subplot(111)
-        if pcolorOpts is None:
-            pcolorOpts = {}
-        if 'cmap' in pcolorOpts:
-            cm = pcolorOpts['cmap']
+        if pcolor_opts is None:
+            pcolor_opts = {}
+        if 'cmap' in pcolor_opts:
+            cm = pcolor_opts['cmap']
         else:
             cm = plt.get_cmap()
-        if 'vmin' in pcolorOpts:
-            vmin = pcolorOpts['vmin']
+        if 'vmin' in pcolor_opts:
+            vmin = pcolor_opts['vmin']
         else:
             vmin = np.nanmin(I) if clim is None else clim[0]
-        if 'vmax' in pcolorOpts:
-            vmax = pcolorOpts['vmax']
+        if 'vmax' in pcolor_opts:
+            vmax = pcolor_opts['vmax']
         else:
             vmax = np.nanmax(I) if clim is None else clim[1]
-        if 'alpha' in pcolorOpts:
-            alpha = pcolorOpts['alpha']
+        if 'alpha' in pcolor_opts:
+            alpha = pcolor_opts['alpha']
         else:
             alpha = 1.0
-        if gridOpts is None:
-            gridOpts = {'color': 'k'}
-        if 'color' not in gridOpts:
-            gridOpts['color'] = 'k'
+        if grid_opts is None:
+            grid_opts = {'color': 'k'}
+        if 'color' not in grid_opts:
+            grid_opts['color'] = 'k'
 
         cNorm = colors.Normalize(vmin=vmin, vmax=vmax)
         scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=cm)
 
-        if 'edge_color' in pcolorOpts:
-            edge_color = pcolorOpts['edge_color']
+        if 'edge_color' in pcolor_opts:
+            edge_color = pcolor_opts['edge_color']
         else:
-            edge_color = gridOpts['color'] if grid else 'none'
-        if 'alpha' in gridOpts:
-            edge_alpha = gridOpts['alpha']
+            edge_color = grid_opts['color'] if grid else 'none'
+        if 'alpha' in grid_opts:
+            edge_alpha = grid_opts['alpha']
         else:
             edge_alpha = 1.0
         if edge_color.lower() != 'none':
@@ -1229,7 +1287,7 @@ class CurviView(object):
         scalarMap._A = []  # http://stackoverflow.com/questions/8342549/matplotlib-add-colorbar-to-a-sequence-of-line-plots
         ax.set_xlabel('x')
         ax.set_ylabel('y')
-        if showIt:
+        if show_it:
             plt.show()
         return [scalarMap]
 
@@ -1266,7 +1324,7 @@ class Slicer(object):
         Initial slice locations (in meter);
         defaults to the middle of the volume.
 
-    vType: str
+    v_type: str
         Type of visualization. Default is 'CC'.
         One of ['CC', 'Fx', 'Fy', 'Fz', 'Ex', 'Ey', 'Ez'].
 
@@ -1304,18 +1362,21 @@ class Slicer(object):
     grid : list of 3 int
         Number of cells occupied by x, y, and z dimension on plt.subplot2grid.
 
-    pcolorOpts : dictionary
+    pcolor_opts : dictionary
         Passed to pcolormesh.
 
     """
 
     def __init__(self, mesh, v, xslice=None, yslice=None, zslice=None,
-                 vType='CC', view='real', axis='xy', transparent=None,
+                 v_type='CC', view='real', axis='xy', transparent=None,
                  clim=None, xlim=None, ylim=None, zlim=None, aspect='auto',
-                 grid=[2, 2, 1], pcolorOpts=None):
+                 grid=[2, 2, 1], pcolor_opts=None, **kwargs):
         """Initialize interactive figure."""
 
         # 0. Some checks, not very extensive
+        if "pcolorOpts" in kwargs:
+            pcolor_opts = kwargs["pcolorOpts"]
+            warnings.warn("pcolorOpts has been deprecated, please use pcolor_opts", DeprecationWarning)
 
         # (a) Mesh dimensionality
         if mesh.dim != 3:
@@ -1323,20 +1384,20 @@ class Slicer(object):
             err += ' Mesh provided has {} dimension(s).'.format(mesh.dim)
             raise ValueError(err)
 
-        # (b) vType  # Not yet working for ['CCv']
-        vTypeOpts = ['CC', 'Fx', 'Fy', 'Fz', 'Ex', 'Ey', 'Ez']
-        if vType not in vTypeOpts:
-            err = "vType must be in ['{0!s}'].".format("', '".join(vTypeOpts))
-            err += " vType provided: '{0!s}'.".format(vType)
+        # (b) v_type  # Not yet working for ['CCv']
+        v_typeOpts = ['CC', 'Fx', 'Fy', 'Fz', 'Ex', 'Ey', 'Ez']
+        if v_type not in v_typeOpts:
+            err = "v_type must be in ['{0!s}'].".format("', '".join(v_typeOpts))
+            err += " v_type provided: '{0!s}'.".format(v_type)
             raise ValueError(err)
 
-        if vType != 'CC':
-            aveOp = 'ave' + vType + '2CC'
+        if v_type != 'CC':
+            aveOp = 'ave' + v_type + '2CC'
             Av = getattr(mesh, aveOp)
             if v.size == Av.shape[1]:
                 v = Av * v
             else:
-                v = mesh.r(v, vType[0], vType) # get specific component
+                v = mesh.r(v, v_type[0], v_type) # get specific component
                 v = Av * v
 
         # (c) vOpts  # Not yet working for 'vec'
@@ -1475,9 +1536,9 @@ class Slicer(object):
         self.clpropsw = {'c': 'w', 'lw': 2, 'zorder': 10}
         self.clpropsk = {'c': 'k', 'lw': 1, 'zorder': 11}
 
-        # Add pcolorOpts
-        if pcolorOpts is not None:
-            self.pc_props.update(pcolorOpts)
+        # Add pcolor_opts
+        if pcolor_opts is not None:
+            self.pc_props.update(pcolor_opts)
 
         # Initial draw
         self.update_xy()
