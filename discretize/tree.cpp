@@ -571,6 +571,29 @@ Cell* Cell::containing_cell(double x, double y, double z){
     return children[ix + 2*iy + 4*iz]->containing_cell(x, y, z);
 };
 
+void Cell::find_overlapping_cells(int_vec_t& cells, double xm, double xp, double ym, double yp, double zm, double zp){
+    // If I do not overlap the cells
+    if (xm > points[3]->location[0] || xp < points[0]->location[0]){
+      return;
+    }
+
+    if (ym > points[3]->location[1] || yp < points[0]->location[1]){
+      return;
+    }
+
+    if (n_dim>2 && (zm > points[7]->location[2] || zp < points[0]->location[2])){
+      return;
+    }
+
+    if(this->is_leaf()){
+        cells.push_back(index);
+        return;
+    }
+    for(int_t i = 0; i < (1<<n_dim); ++i){
+        children[i]->find_overlapping_cells(cells, xm, xp, ym, yp, zm, zp);
+    }
+}
+
 Cell::~Cell(){
         if(is_leaf()){
             return;
@@ -1304,6 +1327,19 @@ Cell* Tree::containing_cell(double x, double y, double z){
     }
     return roots[iz][iy][ix]->containing_cell(x, y, z);
 }
+
+int_vec_t Tree::find_overlapping_cells(double xm, double xp, double ym, double yp, double zm, double zp){
+    int_vec_t overlaps;
+    for(int_t iz=0; iz<nz_roots; ++iz){
+        for(int_t iy=0; iy<ny_roots; ++iy){
+            for(int_t ix=0; ix<nx_roots; ++ix){
+                roots[iz][iy][ix]->find_overlapping_cells(overlaps, xm, xp, ym, yp, zm, zp);
+            }
+        }
+    }
+    return overlaps;
+  }
+
 
 void Tree::shift_cell_centers(double *shift){
     for(int_t iz=0; iz<nz_roots; ++iz)

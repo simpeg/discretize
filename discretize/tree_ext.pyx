@@ -3,6 +3,7 @@
 cimport cython
 cimport numpy as np
 from libc.math cimport sqrt, abs, cbrt
+from libc.stdlib cimport malloc, free
 from libcpp.vector cimport vector
 from numpy.math cimport INFINITY
 
@@ -3717,6 +3718,124 @@ cdef class _TreeMesh:
     def __dealloc__(self):
         del self.tree
         del self.wrapper
+
+    def _vol_avg_to_tree(self, _TreeMesh meshin, values=None, output=None):
+        # find overlapping cells
+        # cdef vector[vector[int_t]] all_overlaps
+        # cdef vector[*double] all_weights
+        cdef vector[int_t] *overlapping_cells
+        cdef double *weights
+        cdef double over_lap_vol
+        cdef double x1m, x1p, y1m, y1p, z1m, z1p
+        cdef double x2m, x2p, y2m, y2p, z2m, z2p
+        cdef double[:] x0 = meshin._x0
+        cdef double[:] xF
+        if self.dim == 2:
+            xF = np.array([meshin._xs[-1], meshin._ys[-1]])
+        else:
+            xF = np.array([meshin._xs[-1], meshin._ys[-1], meshin._zs[-1]])
+        cdef c_Cell * in_cell
+
+        cdef np.float64_t[:] vals
+        cdef np.float64_t[:] outs
+
+        cdef int_t build_mat = 1
+        if values is not None:
+            vals = values
+            if output is None:
+                output = np.empty(self.nC)
+            output[:] = 0
+            outs = output
+
+            build_mat = 0
+
+        cdef vector[int_t] inp_inds
+        cdef vector[int_t] out_inds
+        cdef vector[double] all_weights
+
+        for cell in self.tree.cells:
+            x1m = min(cell.points[0].location[0], xF[0])
+            y1m = min(cell.points[0].location[1], xF[1])
+
+            x1p = max(cell.points[3].location[0], x0[0])
+            y1p = max(cell.points[3].location[1], x0[1])
+            if self.dim==3:
+                z1m = min(cell.points[0].location[2], xF[2])
+                z1p = max(cell.points[7].location[2], x0[2])
+            overlapping_cell_inds = meshin.tree.find_overlapping_cells(x1m, x1p, y1m, y1p, z1m, z1p)
+            n_overlap = overlapping_cell_inds.size()
+            weights = <double *> malloc(n_overlap*sizeof(double))
+            i = 0
+            weight_sum = 0.0
+            for in_cell_ind in overlapping_cell_inds:
+                in_cell = meshin.tree.cells[in_cell_ind]
+                x2m = in_cell.points[0].location[0]
+                y2m = in_cell.points[0].location[1]
+                z2m = in_cell.points[0].location[2]
+                x2p = in_cell.points[3].location[0]
+                y2p = in_cell.points[3].location[1]
+                z2p = in_cell.points[7].location[2] if self.dim==3 else 0.0
+
+                if x1m == xF[0] or x1p == x0[0]:
+                    over_lap_vol = 1.0
+                else:
+                    over_lap_vol = min(x1p, x2p) - max(x1m, x2m)
+                if y1m == xF[1] or y1p == x0[1]:
+                    over_lap_vol *= 1.0
+                else:
+                    over_lap_vol *= min(y1p, y2p) - max(y1m, y2m)
+                if self.dim==3:
+                    if z1m == xF[2] or z1p == x0[2]:
+                        over_lap_vol *= 1.0
+                    else:
+                        over_lap_vol *= min(z1p, z2p) - max(z1m, z2m)
+
+                weights[i] = over_lap_vol
+                if build_mat and weights[i] != 0.0:
+                    out_inds.push_back(cell.index)
+                    inp_inds.push_back(in_cell_ind)
+
+                weight_sum += weights[i]
+                i += 1
+            for i in range(n_overlap):
+                weights[i] /= weight_sum
+                if build_mat and weights[i] != 0.0:
+                    all_weights.push_back(weights[i])
+
+            if not build_mat:
+                for i, in_cell_ind in enumerate(overlapping_cell_inds):
+                  outs[cell.index] += vals[in_cell_ind]*weights[i]
+
+            free(weights)
+            overlapping_cell_inds.clear()
+
+        if not build_mat:
+            return output
+        return sp.csr_matrix((all_weights, (out_inds, inp_inds)), shape=(self.nC, meshin.nC))
+
+    def _vol_avg_tens(self, tens_mesh, values=None, output=None):
+        pass
+
+    def get_overlapping_cells(self, rectangle):
+        cdef double xm, ym, zm, xp, yp, zp
+        cdef double[:] x0 = self._x0
+        cdef double[:] xF
+        if self.dim == 2:
+            xF = np.array([self._xs[-1], self._ys[-1]])
+        else:
+            xF = np.array([self._xs[-1], self._ys[-1], self._zs[-1]])
+        xm = min(rectangle[0], xF[0])
+        xp = max(rectangle[1], x0[0])
+        ym = min(rectangle[2], xF[1])
+        yp = max(rectangle[3], x0[1])
+        if self.dim==3:
+            zm = min(rectangle[4], xF[2])
+            zp = max(rectangle[5], x0[2])
+        else:
+            zm = 0.0
+            zp = 0.0
+        return self.tree.find_overlapping_cells(xm, xp, ym, yp, zm, zp)
+
 
 cdef inline double _clip01(double x) nogil:
     return min(1, max(x, 0))
