@@ -44,7 +44,7 @@ stages:
     steps:
 
     - script: echo '##vso[task.prependpath]$CONDA/bin'
-      condition: neq($(imageName), 'windows-latest')
+      condition: ne($(imageName), 'windows-latest')
       displayName: Add conda to PATH
 
     - powershell: Write-Host '##vso[task.prependpath]$env:CONDA\Scripts'
