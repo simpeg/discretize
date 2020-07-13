@@ -12,38 +12,43 @@ stages:
     strategy:
       matrix:
         linux-Python36:
-          imageName: "ubuntu-latest"
+          imageName: 'ubuntu-latest'
           python.version: '3.6'
         linux-Python37:
-          imageName: "ubuntu-latest"
+          imageName: 'ubuntu-latest'
           python.version: '3.7'
         linux-Python38:
-          imageName: "ubuntu-latest"
+          imageName: 'ubuntu-latest'
           python.version: '3.8'
         osx-Python36:
-          imageName: "macos-latest"
+          imageName: 'macos-latest'
           python.version: '3.6'
         osx-Python37:
-          imageName: "macos-latest"
+          imageName: 'macos-latest'
           python.version: '3.7'
         osx-Python38:
-          imageName: "macos-latest"
+          imageName: 'macos-latest'
           python.version: '3.8'
         win-Python36:
-          imageName: "windows-latest"
+          imageName: 'windows-latest'
           python.version: '3.6'
         win-Python37:
-          imageName: "windows-latest"
+          imageName: 'windows-latest'
           python.version: '3.7'
         win-Python38:
-          imageName: "windows-latest"
+          imageName: 'windows-latest'
           python.version: '3.8'
 
     pool:
       vmImage: $(imageName)
     steps:
 
-    - script: echo "##vso[task.prependpath]$CONDA/bin"
+    - script: echo '##vso[task.prependpath]$CONDA/bin'
+      condition: neq($(imageName), 'windows-latest')
+      displayName: Add conda to PATH
+
+    - powershell: Write-Host '##vso[task.prependpath]$env:CONDA\Scripts'
+      condition: eq($(imageName), 'windows-latest')
       displayName: Add conda to PATH
 
     - script: conda create --yes --quiet --name test
