@@ -15,6 +15,8 @@ from scipy.spatial import Delaunay, cKDTree
 from six import integer_types
 import numpy as np
 
+from .utils.interputils_cython cimport _bisect_left, _bisect_right
+
 from discretize.utils.codeutils import requires
 # matplotlib is a soft dependencies for discretize
 try:
@@ -3748,6 +3750,8 @@ cdef class _TreeMesh:
         del self.tree
         del self.wrapper
 
+    @cython.boundscheck(False)
+    @cython.cdivision(True)
     def _vol_avg_from_tree(self, _TreeMesh meshin, values=None, output=None):
         cdef vector[int_t] *overlapping_cells
         cdef double *weights
@@ -3762,8 +3766,8 @@ cdef class _TreeMesh:
             xF = np.array([meshin._xs[-1], meshin._ys[-1], meshin._zs[-1]])
         cdef c_Cell * in_cell
 
-        cdef np.float64_t[:] vals
-        cdef np.float64_t[:] outs
+        cdef np.float64_t[:] vals = np.array([])
+        cdef np.float64_t[:] outs = np.array([])
 
         cdef int_t build_mat = 1
         if values is not None:
@@ -3775,9 +3779,16 @@ cdef class _TreeMesh:
 
             build_mat = 0
 
-        cdef vector[int_t] inp_inds
-        cdef vector[int_t] out_inds
+        cdef vector[int_t] row_inds
+        cdef vector[int_t] indptr
         cdef vector[double] all_weights
+        cdef int_t nnz_counter = 0
+        cdef int_t nnz_row = 0
+        if build_mat:
+            indptr.push_back(0)
+        cdef int_t i, in_cell_ind
+        cdef int_t n_overlap
+        cdef double weight_sum
 
         for cell in self.tree.cells:
             x1m = min(cell.points[0].location[0], xF[0])
@@ -3785,7 +3796,7 @@ cdef class _TreeMesh:
 
             x1p = max(cell.points[3].location[0], x0[0])
             y1p = max(cell.points[3].location[1], x0[1])
-            if self.dim==3:
+            if self._dim==3:
                 z1m = min(cell.points[0].location[2], xF[2])
                 z1p = max(cell.points[7].location[2], x0[2])
             overlapping_cell_inds = meshin.tree.find_overlapping_cells(x1m, x1p, y1m, y1p, z1m, z1p)
@@ -3793,6 +3804,7 @@ cdef class _TreeMesh:
             weights = <double *> malloc(n_overlap*sizeof(double))
             i = 0
             weight_sum = 0.0
+            nnz_row = 0
             for in_cell_ind in overlapping_cell_inds:
                 in_cell = meshin.tree.cells[in_cell_ind]
                 x2m = in_cell.points[0].location[0]
@@ -3800,7 +3812,7 @@ cdef class _TreeMesh:
                 z2m = in_cell.points[0].location[2]
                 x2p = in_cell.points[3].location[0]
                 y2p = in_cell.points[3].location[1]
-                z2p = in_cell.points[7].location[2] if self.dim==3 else 0.0
+                z2p = in_cell.points[7].location[2] if self._dim==3 else 0.0
 
                 if x1m == xF[0] or x1p == x0[0]:
                     over_lap_vol = 1.0
@@ -3810,7 +3822,7 @@ cdef class _TreeMesh:
                     over_lap_vol *= 1.0
                 else:
                     over_lap_vol *= min(y1p, y2p) - max(y1m, y2m)
-                if self.dim==3:
+                if self._dim==3:
                     if z1m == xF[2] or z1p == x0[2]:
                         over_lap_vol *= 1.0
                     else:
@@ -3818,8 +3830,8 @@ cdef class _TreeMesh:
 
                 weights[i] = over_lap_vol
                 if build_mat and weights[i] != 0.0:
-                    out_inds.push_back(cell.index)
-                    inp_inds.push_back(in_cell_ind)
+                    nnz_row += 1
+                    row_inds.push_back(in_cell_ind)
 
                 weight_sum += weights[i]
                 i += 1
@@ -3829,16 +3841,21 @@ cdef class _TreeMesh:
                     all_weights.push_back(weights[i])
 
             if not build_mat:
-                for i, in_cell_ind in enumerate(overlapping_cell_inds):
-                  outs[cell.index] += vals[in_cell_ind]*weights[i]
+                for i in range(n_overlap):
+                    outs[cell.index] += vals[overlapping_cell_inds[i]]*weights[i]
+            else:
+                nnz_counter += nnz_row
+                indptr.push_back(nnz_counter)
 
             free(weights)
             overlapping_cell_inds.clear()
 
         if not build_mat:
             return output
-        return sp.csr_matrix((all_weights, (out_inds, inp_inds)), shape=(self.nC, meshin.nC))
+        return sp.csr_matrix((all_weights, row_inds, indptr), shape=(self.nC, meshin.nC))
 
+    @cython.boundscheck(False)
+    @cython.cdivision(True)
     def _vol_avg_to_tens(self, out_tens_mesh, values=None, output=None):
         cdef vector[int_t] *overlapping_cells
         cdef double *weights
@@ -3855,20 +3872,20 @@ cdef class _TreeMesh:
             xF = np.array([self._xs[-1], self._ys[-1], self._zs[-1]])
         cdef c_Cell * in_cell
 
-        cdef np.float64_t[:] vals
-        cdef np.float64_t[::1, :, :] outs
+        cdef np.float64_t[:] vals = np.array([])
+        cdef np.float64_t[::1, :, :] outs = np.array([[[]]])
 
-        cdef vector[int_t] inp_inds
-        cdef vector[int_t] out_inds
+        cdef vector[int_t] row_inds
+        cdef vector[int_t] indptr
         cdef vector[double] all_weights
+        cdef int_t nnz_row = 0
+        cdef int_t nnz_counter = 0
 
         cdef double[:] nodes_x = out_tens_mesh.vectorNx
         cdef double[:] nodes_y = out_tens_mesh.vectorNy
-        cdef double[:] nodes_z
-        if self.dim==3:
+        cdef double[:] nodes_z = np.array([0.0, 0.0])
+        if self._dim==3:
             nodes_z = out_tens_mesh.vectorNz
-        else:
-            nodes_z = np.array([0.0, 0.0])
         cdef int_t nx = len(nodes_x)-1
         cdef int_t ny = len(nodes_y)-1
         cdef int_t nz = len(nodes_z)-1
@@ -3884,9 +3901,13 @@ cdef class _TreeMesh:
             outs = output
 
             build_mat = 0
+        if build_mat:
+            indptr.push_back(0)
 
+        cdef int_t ix, iy, iz, in_cell_ind, i
+        cdef int_t n_overlap
+        cdef double weight_sum
         #for cell in self.tree.cells:
-        cdef int_t cell_ind = 0
         for iz in range(nz):
             z1m = min(nodes_z[iz], xF[2])
             z1p = max(nodes_z[iz+1], x0[2])
@@ -3901,6 +3922,7 @@ cdef class _TreeMesh:
                     weights = <double *> malloc(n_overlap*sizeof(double))
                     i = 0
                     weight_sum = 0.0
+                    nnz_row = 0
                     for in_cell_ind in overlapping_cell_inds:
                         in_cell = self.tree.cells[in_cell_ind]
                         x2m = in_cell.points[0].location[0]
@@ -3908,7 +3930,7 @@ cdef class _TreeMesh:
                         z2m = in_cell.points[0].location[2]
                         x2p = in_cell.points[3].location[0]
                         y2p = in_cell.points[3].location[1]
-                        z2p = in_cell.points[7].location[2] if self.dim==3 else 0.0
+                        z2p = in_cell.points[7].location[2] if self._dim==3 else 0.0
 
                         if x1m == xF[0] or x1p == x0[0]:
                             over_lap_vol = 1.0
@@ -3918,7 +3940,7 @@ cdef class _TreeMesh:
                             over_lap_vol *= 1.0
                         else:
                             over_lap_vol *= min(y1p, y2p) - max(y1m, y2m)
-                        if self.dim==3:
+                        if self._dim==3:
                             if z1m == xF[2] or z1p == x0[2]:
                                 over_lap_vol *= 1.0
                             else:
@@ -3926,9 +3948,8 @@ cdef class _TreeMesh:
 
                         weights[i] = over_lap_vol
                         if build_mat and weights[i] != 0.0:
-                            out_inds.push_back(cell_ind)
-                            inp_inds.push_back(in_cell_ind)
-
+                            nnz_row += 1
+                            row_inds.push_back(in_cell_ind)
                         weight_sum += weights[i]
                         i += 1
                     for i in range(n_overlap):
@@ -3937,19 +3958,166 @@ cdef class _TreeMesh:
                             all_weights.push_back(weights[i])
 
                     if not build_mat:
-                        for i, in_cell_ind in enumerate(overlapping_cell_inds):
-                          outs[ix, iy, iz] += vals[in_cell_ind]*weights[i]
+                        for i in range(n_overlap):
+                            outs[ix, iy, iz] += vals[overlapping_cell_inds[i]]*weights[i]
+                    else:
+                        nnz_counter += nnz_row
+                        indptr.push_back(nnz_counter)
 
                     free(weights)
                     overlapping_cell_inds.clear()
-                    cell_ind += 1
 
         if not build_mat:
             return output.reshape(-1, order='F')
-        return sp.csr_matrix((all_weights, (out_inds, inp_inds)), shape=(out_tens_mesh.nC, self.nC))
+        return sp.csr_matrix((all_weights, row_inds, indptr), shape=(out_tens_mesh.nC, self.nC))
 
+    @cython.boundscheck(False)
+    @cython.cdivision(True)
     def _vol_avg_from_tens(self, in_tens_mesh, values=None, output=None):
-        pass
+        cdef double *weights
+        cdef double over_lap_vol
+        cdef double x1m, x1p, y1m, y1p, z1m, z1p
+        cdef double x2m, x2p, y2m, y2p, z2m, z2p
+        cdef int_t ix, ix1, ix2, iy, iy1, iy2, iz, iz1, iz2
+        cdef double[:] x0 = in_tens_mesh.x0
+        cdef double[:] xF
+
+
+        cdef np.float64_t[:] nodes_x = in_tens_mesh.vectorNx
+        cdef np.float64_t[:] nodes_y = in_tens_mesh.vectorNy
+        cdef np.float64_t[:] nodes_z = np.array([0.0, 0.0])
+        if self._dim == 3:
+            nodes_z = in_tens_mesh.vectorNz
+        cdef int_t nx = len(nodes_x)-1
+        cdef int_t ny = len(nodes_y)-1
+        cdef int_t nz = len(nodes_z)-1
+
+        cdef double * dx
+        cdef double * dy
+        cdef double * dz
+
+        if self.dim == 2:
+            xF = np.array([nodes_x[-1], nodes_y[-1]])
+        else:
+            xF = np.array([nodes_x[-1], nodes_y[-1], nodes_z[-1]])
+
+        cdef np.float64_t[::1, :, :] vals = np.array([[[]]])
+        cdef np.float64_t[:] outs = np.array([])
+
+        cdef int_t build_mat = 1
+        if values is not None:
+            vals = values.reshape((nx, ny, nz), order='F')
+            if output is None:
+                output = np.empty(self.nC)
+            output[:] = 0
+            outs = output
+
+            build_mat = 0
+
+        cdef vector[int_t] row_inds
+        cdef vector[double] all_weights
+        cdef np.int64_t[:] indptr = np.zeros(self.nC+1, dtype=np.int64)
+        cdef int_t nnz_counter = 0
+        cdef int_t nnz_row = 0
+
+        cdef int_t nx_overlap, ny_overlap, nz_overlap, n_overlap
+        cdef int_t i
+        cdef double weight_sum
+        for cell in self.tree.cells:
+            x1m = min(cell.points[0].location[0], xF[0])
+            y1m = min(cell.points[0].location[1], xF[1])
+
+            x1p = max(cell.points[3].location[0], x0[0])
+            y1p = max(cell.points[3].location[1], x0[1])
+            if self._dim==3:
+                z1m = min(cell.points[0].location[2], xF[2])
+                z1p = max(cell.points[7].location[2], x0[2])
+            # then need to find overlapping cells of TensorMesh...
+            ix1 = max(_bisect_left(nodes_x, x1m) - 1, 0)
+            ix2 = min(_bisect_right(nodes_x, x1p), nx)
+            iy1 = max(_bisect_left(nodes_y, y1m) - 1, 0)
+            iy2 = min(_bisect_right(nodes_y, y1p), ny)
+            if self._dim==3:
+                iz1 = max(_bisect_left(nodes_z, z1m) - 1, 0)
+                iz2 = min(_bisect_right(nodes_z, z1p), nz)
+            else:
+                iz1 = 0
+                iz2 = 1
+            nx_overlap = ix2-ix1
+            ny_overlap = iy2-iy1
+            nz_overlap = iz2-iz1
+            n_overlap = nx_overlap*ny_overlap*nz_overlap
+            weights = <double *> malloc(n_overlap*sizeof(double))
+
+            dx = <double *> malloc(nx_overlap*sizeof(double))
+            for ix in range(ix1, ix2):
+                x2m = nodes_x[ix]
+                x2p = nodes_x[ix+1]
+                if x1m == xF[0] or x1p == x0[0]:
+                    dx[ix-ix1] = 1.0
+                else:
+                    dx[ix-ix1] = min(x1p, x2p) - max(x1m, x2m)
+
+            dy = <double *> malloc(ny_overlap*sizeof(double))
+            for iy in range(iy1, iy2):
+                y2m = nodes_y[iy]
+                y2p = nodes_y[iy+1]
+                if y1m == xF[1] or y1p == x0[1]:
+                    dy[iy-iy1] = 1.0
+                else:
+                    dy[iy-iy1] = min(y1p, y2p) - max(y1m, y2m)
+
+            dz = <double *> malloc(nz_overlap*sizeof(double))
+            for iz in range(iz1, iz2):
+                z2m = nodes_z[iz]
+                z2p = nodes_z[iz+1]
+                if self._dim==3:
+                    if z1m == xF[2] or z1p == x0[2]:
+                        dz[iz-iz1] = 1.0
+                    else:
+                        dz[iz-iz1] = min(z1p, z2p) - max(z1m, z2m)
+                else:
+                    dz[iz-iz1] = 1.0
+
+            i = 0
+            weight_sum = 0.0
+            nnz_row = 0
+            for iz in range(iz1, iz2):
+                for iy in range(iy1, iy2):
+                    for ix in range(ix1, ix2):
+                        in_cell_ind = ix + (iy + iz*ny)*nx
+                        weights[i] = dx[ix-ix1]*dy[iy-iy1]*dz[iz-iz1]
+                        if build_mat and weights[i] != 0.0:
+                            nnz_row += 1
+                            row_inds.push_back(in_cell_ind)
+
+                        weight_sum += weights[i]
+                        i += 1
+
+            for i in range(n_overlap):
+                weights[i] /= weight_sum
+                if build_mat and weights[i] != 0.0:
+                    all_weights.push_back(weights[i])
+
+            if not build_mat:
+                i = 0
+                for iz in range(iz1, iz2):
+                    for iy in range(iy1, iy2):
+                        for ix in range(ix1, ix2):
+                            outs[cell.index] += vals[ix, iy, iz]*weights[i]
+                            i += 1
+            else:
+                nnz_counter += nnz_row
+                indptr[cell.index+1] = nnz_counter
+
+            free(weights)
+            free(dx)
+            free(dy)
+            free(dz)
+
+        if not build_mat:
+            return output
+        return sp.csr_matrix((all_weights, row_inds, indptr), shape=(self.nC, in_tens_mesh.nC))
 
     def get_overlapping_cells(self, rectangle):
         cdef double xm, ym, zm, xp, yp, zp

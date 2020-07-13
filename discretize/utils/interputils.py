@@ -9,7 +9,7 @@ try:
     _interpmat1D = pyx._interpmat1D
     _interpmat2D = pyx._interpmat2D
     _interpmat3D = pyx._interpmat3D
-    _vol_interp = pyx.tensor_volume_averaging
+    _vol_interp = pyx._tensor_volume_averaging
     _interpCython = True
 except ImportError as err:
     print(err)
@@ -85,14 +85,37 @@ def interpmat(locs, x, y=None, z=None):
     return Q
 
 def volume_average(mesh_in, mesh_out, values=None, output=None):
-    if mesh_in._meshType=='TREE':
-        raise NotImplementedError('TreeMesh is not yet implemented')
     try:
-        mesh_type_err = ((mesh_in._meshType is not 'TENSOR') or
-                         (mesh_out._meshType is not 'TENSOR'))
-    except AttributeError:
-        mesh_type_err = True
-    if mesh_type_err:
-        raise TypeError('Both meshs must be a TensorMesh, not {} and {}'.format(type(mesh_in).__name__, type(mesh_out).__name__))
+        in_type = mesh_in._meshType
+        out_type = mesh_out._meshType
+    except ValueError:
+        raise TypeError("Both input and output mesh must be valid discetize meshes")
 
-    return _vol_interp(mesh_in, mesh_out, values, output)
+    valid_meshs = ['TENSOR', 'TREE']
+    if in_type not in valid_meshs or out_type not in valid_meshs:
+        raise NotImplementedError(f"Volume averaging is only implemented for TensorMesh and TreeMesh, "
+                                  f"not {type(mesh_in).__name__} and/or {type(mesh_out).__name__}")
+
+    if mesh_in.dim != mesh_out.dim:
+        raise ValueError("Both meshes must have the same dimension")
+
+    if values is not None and len(values) != mesh_in.nC:
+        raise ValueError("Input array does not have the same length as the number of cells in input mesh")
+    if output is not None and len(output) != mesh_out.nC:
+        raise ValueError("output array does not have the same length as the number of cells in output mesh")
+
+    if values is not None:
+        values = np.asarray(values, dtype=np.float64)
+
+    if in_type == 'TENSOR':
+        if out_type == 'TENSOR':
+            return _vol_interp(mesh_in, mesh_out, values, output)
+        elif out_type == 'TREE':
+            return mesh_out._vol_avg_from_tens(mesh_in, values, output)
+    elif in_type == 'TREE':
+        if out_type == 'TENSOR':
+            return mesh_in._vol_avg_to_tens(mesh_out, values, output)
+        elif out_type == 'TREE':
+            return mesh_in._vol_avg_to_tree(mesh_out, values, output)
+    else:
+        raise TypeError("Unsupported mesh types")
