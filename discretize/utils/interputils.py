@@ -88,7 +88,7 @@ def volume_average(mesh_in, mesh_out, values=None, output=None):
     try:
         in_type = mesh_in._meshType
         out_type = mesh_out._meshType
-    except ValueError:
+    except AttributeError:
         raise TypeError("Both input and output mesh must be valid discetize meshes")
 
     valid_meshs = ['TENSOR', 'TREE']
@@ -102,7 +102,7 @@ def volume_average(mesh_in, mesh_out, values=None, output=None):
     if values is not None and len(values) != mesh_in.nC:
         raise ValueError("Input array does not have the same length as the number of cells in input mesh")
     if output is not None and len(output) != mesh_out.nC:
-        raise ValueError("output array does not have the same length as the number of cells in output mesh")
+        raise ValueError("Output array does not have the same length as the number of cells in output mesh")
 
     if values is not None:
         values = np.asarray(values, dtype=np.float64)
@@ -116,6 +116,6 @@ def volume_average(mesh_in, mesh_out, values=None, output=None):
         if out_type == 'TENSOR':
             return mesh_in._vol_avg_to_tens(mesh_out, values, output)
         elif out_type == 'TREE':
-            return mesh_in._vol_avg_to_tree(mesh_out, values, output)
+            return mesh_out._vol_avg_from_tree(mesh_in, values, output)
     else:
         raise TypeError("Unsupported mesh types")
