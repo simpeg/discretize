@@ -17,28 +17,31 @@ jobs:
     displayName: Add conda to PATH
 
   - script: |
-      echo $(PATH)
       conda create --yes --quiet --name test python=$(python.version)
     displayName: Create Anaconda environment
 
   - script: |
       call activate test
-      conda install --yes --quiet -c conda-forge numpy scipy matplotlib cython vtk properties vectormath pyvista
+      conda env list
+      conda install --yes --quiet -c conda-forge numpy scipy matplotlib cython vtk properties vectormath pyvista pip
       pip install -r requirements_dev.txt
       pip install .
     displayName: Install requirements and build
 
   - script: |
       call activate test
+      conda env list
       pytest tests/base --cov-config .coveragerc --cov=discretize -v -s
     displayName: 'Testing Base'
 
   - script: |
       call activate test
+      conda env list
       pytest tests/cyl --cov-config .coveragerc --cov=discretize -v -s
     displayName: 'Testing Cylinder Mesh'
 
   - script: |
       call activate test
+      conda env list
       pytest tests/tree --cov-config .coveragerc --cov=discretize -v -s
     displayName: 'Testing TreeMesh'
