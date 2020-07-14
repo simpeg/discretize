@@ -43,9 +43,3 @@ jobs:
       set KMP_WARNINGS=0
       pytest tests/tree --cov-config .coveragerc --cov=discretize -v -s
     displayName: 'Testing TreeMesh'
-
-  - script: |
-      call activate test
-      set KMP_WARNINGS=0
-      pytest tests/docs --cov-config .coveragerc --cov=discretize -v -s
-    displayName: 'Testing examples, tutorials, and doc build'

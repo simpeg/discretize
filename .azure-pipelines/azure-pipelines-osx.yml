@@ -2,7 +2,7 @@ jobs:
 - job:
   displayName: Testing on Mac
   pool:
-    vmImage: macOS-10.14
+    vmImage: macOS-latest
   strategy:
     matrix:
       osx-Python36:
@@ -19,36 +19,35 @@ jobs:
   - script: sudo chown -R $USER $CONDA
     displayName: Take ownership of conda installation
 
-  - script: conda create --yes --quiet --name test python=$(python.version)
+  - script: |
+      conda init bash
+      conda create --yes --quiet --name test python=$(python.version)
+      export KMP_WARNINGS=0
     displayName: Create Anaconda environment
 
   - script: |
-      source activate test
+      conda activate test
       conda install --yes --quiet -c conda-forge numpy scipy matplotlib cython vtk properties vectormath pyvista
       pip install -r requirements_dev.txt
       pip install .
     displayName: Install requirements and build
 
   - script: |
-      source activate test
-      export KMP_WARNINGS=0
+      conda activate test
       pytest tests/base --cov-config .coveragerc --cov=discretize -v -s
     displayName: 'Testing Base'
 
   - script: |
-      source activate test
-      export KMP_WARNINGS=0
+      conda activate test
       pytest tests/cyl --cov-config .coveragerc --cov=discretize -v -s
     displayName: 'Testing Cylinder Mesh'
 
   - script: |
-      source activate test
-      export KMP_WARNINGS=0
+      conda activate test
       pytest tests/tree --cov-config .coveragerc --cov=discretize -v -s
     displayName: 'Testing TreeMesh'
 
   - script: |
-      source activate test
-      export KMP_WARNINGS=0
+      conda activate test
       pytest tests/docs --cov-config .coveragerc --cov=discretize -v -s
     displayName: 'Testing examples, tutorials, and doc build'
