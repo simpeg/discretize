@@ -3,10 +3,21 @@ trigger:
     include:
     - '*'
 
-
 stages:
 - stage: Testing
   jobs:
-      - template: ./.azure-pipelines/azure-pipelines-win.yml
-#    - template: ./.azure-pipelines/azure-pipelines-linux.yml
-#    - template: ./.azure-pipelines/azure-pipelines-osx.yml
+    - template: ./.azure-pipelines/azure-pipelines-linux.yml
+    - template: ./.azure-pipelines/azure-pipelines-osx.yml
+    - template: ./.azure-pipelines/azure-pipelines-win.yml
+
+- stage: Deploy
+  conditional: and(succeeded(), startsWith(variables['build.sourceBranch'], 'refs/tags/')))
+  jobs:
+    - job:
+      displayName: Trigger Deploy branch
+      pool:
+        vmImage: ubuntu-latest
+      steps:
+        - script: |
+            echo "Trigger Deploy"
+          displayName: Touching github

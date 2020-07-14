@@ -26,11 +26,6 @@ jobs:
     displayName: Install other requirements
 
   - script: |
-      git clone --depth 1 git://github.com/pyvista/gl-ci-helpers.git
-      powershell .\gl-ci-helpers\appveyor\install_opengl.ps1
-    displayName: Install opengl
-
-  - script: |
       call activate test
       pip install .
     displayName: Build
@@ -49,8 +44,3 @@ jobs:
       call activate test
       pytest tests/tree --cov-config .coveragerc --cov=discretize -v -s
     displayName: 'Testing TreeMesh'
-
-  - script: |
-      call activate test
-      pytest tests/docs --cov-config .coveragerc --cov=discretize -v -s
-    displayName: 'Testing examples, tutorials, and doc build'
