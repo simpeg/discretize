@@ -13,17 +13,13 @@ jobs:
         python.version: '3.8'
   steps:
 
-  - powershell: |
-      Write-Host '##vso[task.prependpath]$env:CONDA\Scripts'
-      echo $(PATH)
-    displayName: Add conda to PATH
+  - task: CondaEnvironment@0
+    inputs:
+      environmentName: 'test'
+      packageSpecs: 'python=$(python.version)'
 
   - script: |
-      echo $(PATH)
-      conda create --yes --quiet --name test python=$(python.version)
-    displayName: Create Anaconda environment
-
-  - script: |
+      conda env list
       call activate test
       conda install --yes --quiet -c conda-forge numpy scipy matplotlib cython vtk properties vectormath pyvista
       pip install -r requirements_dev.txt
