@@ -1,0 +1,52 @@
+jobs:
+- job:
+  displayName: Testing on Mac
+  pool:
+    vmImage: 'macos-latest'
+  strategy:
+    matrix:
+      osx-Python36:
+        python.version: '3.6'
+      osx-Python37:
+        python.version: '3.7'
+      osx-Python38:
+        python.version: '3.8'
+  steps:
+
+  - script: echo '##vso[task.prependpath]$CONDA/bin'
+    displayName: Add conda to PATH
+
+  - script: sudo chown -R $USER $CONDA
+    displayName: Take ownership of conda installation
+
+  - script: |
+      source activate test
+      conda install --yes --quiet --name test -c conda-forge python=$(python.version) numpy scipy matplotlib cython vtk
+      conda install --yes -c conda-forge properties vectormath pyvista
+      pip install -r requirements_dev.txt
+      pip install .
+    displayName: Install requirements and build
+
+  - script: |
+      source activate test
+      export KMP_WARNINGS=0
+      pytest tests/base --cov-config .coveragerc --cov=discretize -v -s
+    displayName: 'Testing Base'
+
+  - script: |
+      source activate test
+      export KMP_WARNINGS=0
+      pytest tests/cyl --cov-config .coveragerc --cov=discretize -v -s
+    displayName: 'Testing Cylinder Mesh'
+
+  - script: |
+      source activate test
+      export KMP_WARNINGS=0
+      pytest tests/tree --cov-config .coveragerc --cov=discretize -v -s
+    displayName: 'Testing TreeMesh'
+
+  - script: |
+      source activate test
+      export KMP_WARNINGS=0
+      pytest tests/docs --cov-config .coveragerc --cov=discretize -v -s
+    displayName: 'Testing examples, tutorials, and doc build'

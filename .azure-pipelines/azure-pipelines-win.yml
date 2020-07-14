@@ -1,0 +1,53 @@
+jobs:
+- job:
+  displayName: Testing on windows
+  pool:
+    vmImage: 'windows-latest'
+  strategy:
+    matrix:
+      win-Python36:
+        python.version: '3.6'
+      win-Python37:
+        python.version: '3.7'
+      win-Python38:
+        python.version: '3.8'
+  steps:
+
+  - powershell: Write-Host '##vso[task.prependpath]$env:CONDA\Scripts'
+    condition: eq($(imageName), 'windows-latest')
+    displayName: Add conda to PATH
+
+  - script: conda create --yes --quiet --name test
+    displayName: Create Anaconda environment
+
+  - script: |
+      source activate test
+      conda install --yes --quiet --name test -c conda-forge python=$(python.version) numpy scipy matplotlib cython vtk
+      conda install --yes -c conda-forge properties vectormath pyvista
+      pip install -r requirements_dev.txt
+      pip install .
+    displayName: Install requirements and build
+
+  - script: |
+      source activate test
+      export KMP_WARNINGS=0
+      pytest tests/base --cov-config .coveragerc --cov=discretize -v -s
+    displayName: 'Testing Base'
+
+  - script: |
+      source activate test
+      export KMP_WARNINGS=0
+      pytest tests/cyl --cov-config .coveragerc --cov=discretize -v -s
+    displayName: 'Testing Cylinder Mesh'
+
+  - script: |
+      source activate test
+      export KMP_WARNINGS=0
+      pytest tests/tree --cov-config .coveragerc --cov=discretize -v -s
+    displayName: 'Testing TreeMesh'
+
+  - script: |
+      source activate test
+      export KMP_WARNINGS=0
+      pytest tests/docs --cov-config .coveragerc --cov=discretize -v -s
+    displayName: 'Testing examples, tutorials, and doc build'
