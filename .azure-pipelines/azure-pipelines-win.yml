@@ -16,13 +16,12 @@ jobs:
   - powershell: Write-Host '##vso[task.prependpath]$env:CONDA\Scripts'
     displayName: Add conda to PATH
 
-  - script: conda create --yes --quiet --name test
+  - script: conda create --yes --quiet --name test python=$(python.version)
     displayName: Create Anaconda environment
 
   - script: |
       source activate test
-      conda install --yes --quiet --name test -c conda-forge python=$(python.version) numpy scipy matplotlib cython vtk
-      conda install --yes -c conda-forge properties vectormath pyvista
+      conda install --yes --quiet -c conda-forge numpy scipy matplotlib cython vtk properties vectormath pyvista
       pip install -r requirements_dev.txt
       pip install .
     displayName: Install requirements and build
