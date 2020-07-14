@@ -51,6 +51,6 @@ jobs:
     displayName: 'Testing TreeMesh'
 
   - script: |
-      conda activate test
+      call activate test
       pytest tests/docs --cov-config .coveragerc --cov=discretize -v -s
     displayName: 'Testing examples, tutorials, and doc build'
