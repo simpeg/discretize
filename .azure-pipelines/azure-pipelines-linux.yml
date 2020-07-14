@@ -55,5 +55,7 @@ jobs:
       eval "$(conda shell.bash hook)"
       conda activate test
       conda env list
+      git clone --depth 1 git://github.com/pyvista/gl-ci-helpers.git
+      source ./gl-ci-helpers/travis/setup_headless_display.sh
       pytest tests/docs --cov-config .coveragerc --cov=discretize -v -s
     displayName: 'Testing examples, tutorials, and doc build'
