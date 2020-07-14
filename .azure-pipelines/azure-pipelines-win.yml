@@ -26,6 +26,11 @@ jobs:
     displayName: Install other requirements
 
   - script: |
+      git clone --depth 1 git://github.com/pyvista/gl-ci-helpers.git
+      powershell .\gl-ci-helpers\appveyor\install_opengl.ps1
+    displayName: Install opengl
+
+  - script: |
       call activate test
       pip install .
     displayName: Build
@@ -39,11 +44,6 @@ jobs:
       call activate test
       pytest tests/cyl --cov-config .coveragerc --cov=discretize -v -s
     displayName: 'Testing Cylinder Mesh'
-
-  - script: |
-      git clone --depth 1 git://github.com/pyvista/gl-ci-helpers.git
-      powershell appveyor\install_opengl.ps1
-    displayName: Install opengl
 
   - script: |
       call activate test
