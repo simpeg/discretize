@@ -34,6 +34,7 @@ jobs:
     displayName: Active
 
   - script: |
+      conda activate test
       conda env list
       conda install --yes --quiet -c conda-forge numpy scipy matplotlib cython vtk properties vectormath pyvista
       pip install -r requirements_dev.txt
@@ -41,21 +42,25 @@ jobs:
     displayName: Install requirements and build
 
   - script: |
+      conda activate test
       conda env list
       pytest tests/base --cov-config .coveragerc --cov=discretize -v -s
     displayName: 'Testing Base'
 
   - script: |
       conda activate test
+      conda env list
       pytest tests/cyl --cov-config .coveragerc --cov=discretize -v -s
     displayName: 'Testing Cylinder Mesh'
 
   - script: |
       conda activate test
+      conda env list
       pytest tests/tree --cov-config .coveragerc --cov=discretize -v -s
     displayName: 'Testing TreeMesh'
 
   - script: |
       conda activate test
+      conda env list
       pytest tests/docs --cov-config .coveragerc --cov=discretize -v -s
     displayName: 'Testing examples, tutorials, and doc build'
