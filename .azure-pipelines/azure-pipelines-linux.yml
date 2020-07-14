@@ -1,3 +1,6 @@
+variables:
+  KMP_WARNINGS: 0
+
 jobs:
 - job:
   displayName: Testing on Ubuntu
@@ -17,34 +20,43 @@ jobs:
     displayName: Add conda to PATH
 
   - script: |
-      conda init bash
       conda create --yes --quiet --name test python=$(python.version)
-      export KMP_WARNINGS=0
+      conda env list
     displayName: Create Anaconda environment
 
   - script: |
+      eval "$(conda shell.bash hook)"
       conda activate test
+      conda env list
       conda install --yes --quiet -c conda-forge numpy scipy matplotlib cython vtk properties vectormath pyvista
       pip install -r requirements_dev.txt
       pip install .
     displayName: Install requirements and build
 
   - script: |
+      eval "$(conda shell.bash hook)"
       conda activate test
+      conda env list
       pytest tests/base --cov-config .coveragerc --cov=discretize -v -s
     displayName: 'Testing Base'
 
   - script: |
+      eval "$(conda shell.bash hook)"
       conda activate test
+      conda env list
       pytest tests/cyl --cov-config .coveragerc --cov=discretize -v -s
     displayName: 'Testing Cylinder Mesh'
 
   - script: |
+      eval "$(conda shell.bash hook)"
       conda activate test
+      conda env list
       pytest tests/tree --cov-config .coveragerc --cov=discretize -v -s
     displayName: 'Testing TreeMesh'
 
   - script: |
+      eval "$(conda shell.bash hook)"
       conda activate test
+      conda env list
       pytest tests/docs --cov-config .coveragerc --cov=discretize -v -s
     displayName: 'Testing examples, tutorials, and doc build'

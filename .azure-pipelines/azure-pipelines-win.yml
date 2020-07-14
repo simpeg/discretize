@@ -1,3 +1,6 @@
+variables:
+  KMP_WARNINGS: 0
+
 jobs:
 - job:
   displayName: Testing on windows
@@ -16,7 +19,9 @@ jobs:
   - powershell: Write-Host '##vso[task.prependpath]$env:CONDA\Scripts'
     displayName: Add conda to PATH
 
-  - script: conda create --yes --quiet --name test python=$(python.version)
+  - script: |
+      echo $(PATH)
+      conda create --yes --quiet --name test python=$(python.version)
     displayName: Create Anaconda environment
 
   - script: |
@@ -28,18 +33,15 @@ jobs:
 
   - script: |
       call activate test
-      set KMP_WARNINGS=0
       pytest tests/base --cov-config .coveragerc --cov=discretize -v -s
     displayName: 'Testing Base'
 
   - script: |
       call activate test
-      set KMP_WARNINGS=0
       pytest tests/cyl --cov-config .coveragerc --cov=discretize -v -s
     displayName: 'Testing Cylinder Mesh'
 
   - script: |
       call activate test
-      set KMP_WARNINGS=0
       pytest tests/tree --cov-config .coveragerc --cov=discretize -v -s
     displayName: 'Testing TreeMesh'

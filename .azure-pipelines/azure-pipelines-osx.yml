@@ -1,3 +1,6 @@
+variables:
+  KMP_WARNINGS: 0
+
 jobs:
 - job:
   displayName: Testing on Mac
@@ -21,7 +24,6 @@ jobs:
 
   - script: |
       conda create --yes --quiet --name test python=$(python.version)
-      export KMP_WARNINGS=0
       conda env list
     displayName: Create Anaconda environment
 
