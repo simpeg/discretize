@@ -20,26 +20,26 @@ jobs:
     displayName: Create Anaconda environment
 
   - script: |
-      source activate test
+      conda activate test
       conda install --yes --quiet -c conda-forge numpy scipy matplotlib cython vtk properties vectormath pyvista
       pip install -r requirements_dev.txt
       pip install .
     displayName: Install requirements and build
 
   - script: |
-      source activate test
+      conda activate test
       export KMP_WARNINGS=0
       pytest tests/base --cov-config .coveragerc --cov=discretize -v -s
     displayName: 'Testing Base'
 
   - script: |
-      source activate test
+      conda activate test
       export KMP_WARNINGS=0
       pytest tests/cyl --cov-config .coveragerc --cov=discretize -v -s
     displayName: 'Testing Cylinder Mesh'
 
   - script: |
-      source activate test
+      conda activate test
       export KMP_WARNINGS=0
       pytest tests/tree --cov-config .coveragerc --cov=discretize -v -s
     displayName: 'Testing TreeMesh'
