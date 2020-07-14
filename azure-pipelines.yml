@@ -18,11 +18,33 @@ stages:
       pool:
         vmImage: ubuntu-latest
       steps:
+
+        - script: echo '##vso[task.prependpath]$CONDA/bin'
+          displayName: Add conda to PATH
         - script: |
-            echo "Trigger Deploy"
-          displayName: Touching github
+            conda create --yes --quiet --name test python=$(python.version)
+            eval "$(conda shell.bash hook)"
+            conda activate test
+            conda env list
+            conda install --yes --quiet -c conda-forge numpy scipy matplotlib cython vtk properties vectormath pyvista
+            pip install -r requirements_dev.txt
+            pip install .
+            git clone --depth 1 git://github.com/pyvista/gl-ci-helpers.git
+          displayName: building and installing deps
+        - script: |
+            eval "$(conda shell.bash hook)"
+            conda activate test
+            source ./gl-ci-helpers/travis/setup_headless_display.sh
+            cd docs
+            make html
+          displayName: building documentation
+        - script: |
+            eval "$(conda shell.bash hook)"
+            conda activate test
+            python setup.py sdist
+          displayName: Deploy source
     - job:
-      displayName: Build Windows wheels
+      displayName: Wheels
       strategy:
         matrix:
           win-Python36:
@@ -41,5 +63,5 @@ stages:
           displayName: Create Anaconda environment
         - script: |
             call activate build
-            pip wheel --no-deps .
-          displayName: Build
+            python setup.py bdist_wheel
+          displayName: Build Wheel
