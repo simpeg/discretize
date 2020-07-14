@@ -31,7 +31,8 @@ stages:
             python.version: '3.7'
           win-Python38:
             python.version: '3.8'
-      pool: vs2017-win2016
+      pool:
+        vmImage: vs2017-win2016
       steps:
         - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
           displayName: Add conda to PATH
