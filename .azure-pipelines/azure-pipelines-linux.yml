@@ -40,7 +40,7 @@ jobs:
     displayName: 'Testing Cylinder Mesh'
 
   - script: |
-    source activate test
-    export KMP_WARNINGS=0
-    pytest tests/tree --cov-config .coveragerc --cov=discretize -v -s
-  displayName: 'Testing TreeMesh'
+      source activate test
+      export KMP_WARNINGS=0
+      pytest tests/tree --cov-config .coveragerc --cov=discretize -v -s
+    displayName: 'Testing TreeMesh'
