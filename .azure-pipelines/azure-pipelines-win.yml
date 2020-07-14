@@ -13,7 +13,7 @@ jobs:
         python.version: '3.8'
   steps:
 
-  - powershell: Write-Host '##vso[task.prependpath]$env:Miniconda\Scripts'
+  - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
     displayName: Add conda to PATH
 
   - script: |
