@@ -11,7 +11,7 @@ stages:
     - template: ./.azure-pipelines/azure-pipelines-win.yml
 
 - stage: Deploy
-  conditional: and(succeeded(), startsWith(variables['build.sourceBranch'], 'refs/tags/')))
+  condition: and(succeeded(), startsWith(variables['build.sourceBranch'], 'refs/tags/')))
   jobs:
     - job:
       displayName: Trigger Deploy branch
