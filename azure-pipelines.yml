@@ -4,20 +4,41 @@ trigger:
     - '*'
 
 stages:
-- stage: Testing
-  jobs:
-    - template: ./.azure-pipelines/azure-pipelines-linux.yml
-    - template: ./.azure-pipelines/azure-pipelines-osx.yml
-    - template: ./.azure-pipelines/azure-pipelines-win.yml
+#- stage: Testing
+  #jobs:
+    #- template: ./.azure-pipelines/azure-pipelines-linux.yml
+    #- template: ./.azure-pipelines/azure-pipelines-osx.yml
+    #- template: ./.azure-pipelines/azure-pipelines-win.yml
 
 - stage: Deploy
-  condition: and(succeeded(), startsWith(variables['build.sourceBranch'], 'refs/tags/'))
+  # condition: and(succeeded(), startsWith(variables['build.sourceBranch'], 'refs/tags/'))
   jobs:
     - job:
-      displayName: Trigger Deploy branch
+      displayName: Deploy Docs and source
       pool:
         vmImage: ubuntu-latest
       steps:
         - script: |
             echo "Trigger Deploy"
           displayName: Touching github
+    - job:
+      displayName: Build Windows wheels
+      strategy:
+        matrix:
+          win-Python36:
+            python.version: '3.6'
+          win-Python37:
+            python.version: '3.7'
+          win-Python38:
+            python.version: '3.8'
+      pool: vs2017-win2016
+      steps:
+        - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
+          displayName: Add conda to PATH
+        - script: |
+            conda create --yes --quiet --name build python=$(python.version) numpy cython
+          displayName: Create Anaconda environment
+        - script: |
+            call activate build
+            pip wheel --no-deps .
+          displayName: Build
