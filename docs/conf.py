@@ -113,6 +113,7 @@ linkcheck_ignore = [
     'http://docs.scipy.org/doc/numpy/reference/generated/numpy.array.html#numpy.array',
     'http://dx.doi.org/10.1016/j.cageo.2015.09.015',
     'http://slack.simpeg.xyz',
+    'https://github.com/simpeg/discretize*',
 ]
 
 linkcheck_retries = 3
