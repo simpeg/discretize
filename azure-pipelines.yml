@@ -32,6 +32,7 @@ stages:
           displayName: building and installing deps
         - script: |
             eval "$(conda shell.bash hook)"
+            echo $TWINE_USERNAME
             conda activate test
             source ./gl-ci-helpers/travis/setup_headless_display.sh
             cd docs
@@ -59,6 +60,7 @@ stages:
         - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
           displayName: Add conda to PATH
         - script: |
+            echo %TWINE_USERNAME%
             conda create --yes --quiet --name build python=$(python.version) numpy cython twine
           displayName: Create Anaconda environment
         - script: |
