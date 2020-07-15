@@ -21,10 +21,6 @@ stages:
         - script: echo '##vso[task.prependpath]$CONDA/bin'
           displayName: Add conda to PATH
         - script: |
-            export TWINE_USERNAME=$(twine.username)
-            echo "Echoing username"
-            echo "Twine username: $TWINE_USERNAME"
-            echo "Echoed"
             conda create --yes --quiet --name test python=$(python.version)
             eval "$(conda shell.bash hook)"
             conda activate test
@@ -43,9 +39,7 @@ stages:
           displayName: building documentation
         - script: |
             export TWINE_USERNAME=$(twine.username)
-            echo "Echoing username"
-            echo "Twine username: $TWINE_USERNAME"
-            echo "Echoed"
+            export TWINE_PASSWORD=$(twine.password)
             eval "$(conda shell.bash hook)"
             conda activate test
             python setup.py sdist
@@ -67,11 +61,6 @@ stages:
         - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
           displayName: Add conda to PATH
         - script: |
-            @echo on
-            set TWINE_USERNAME=$(twine.username)
-            echo "Echoing username"
-            echo %TWINE_USERNAME%
-            echo "Echoed"
             conda create --yes --quiet --name build python=$(python.version) numpy cython twine
           displayName: Create Anaconda environment
         - script: |
@@ -79,8 +68,8 @@ stages:
             python setup.py bdist_wheel
           displayName: Build Wheel
         - script: |
-            @echo on
-            echo %TWINE_USERNAME%
+            set TWINE_USERNAME=$(twine.username)
+            set TWINE_PASSWORD=$(twine.password)
             call activate build
             twine upload --repository testpypi dist/*
           displayName: Upload to PYPI
