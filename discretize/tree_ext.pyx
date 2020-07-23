@@ -3753,6 +3753,19 @@ cdef class _TreeMesh:
     @cython.boundscheck(False)
     @cython.cdivision(True)
     def _vol_avg_from_tree(self, _TreeMesh meshin, values=None, output=None):
+        # first check if they have the same tensor base, as it makes it a lot easier...
+        cdef int_t same_base = (
+          np.allclose(self.vectorNx, meshin.vectorNx)
+          and np.allclose(self.vectorNy, meshin.vectorNy)
+          and (self.ndim == 2 or np.allclose(self.vectorNz, meshin.vectorNz))
+        )
+        # easier path if they share the same base:
+        if same_base:
+            cell_inds = self._get_containing_cell_indexes(meshin.gridCC)
+            # volume contribution will be the difference of mesh levels?
+            for ind in cell_inds:
+                # add my contribution to the overlapping cell
+                # should be min(vol_in_cell/vol_out_cell, 1.0)
         cdef vector[int_t] *overlapping_cells
         cdef double *weights
         cdef double over_lap_vol
