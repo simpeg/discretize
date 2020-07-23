@@ -6,4 +6,15 @@
 ``discretize`` 0.4.15 Release Notes
 ===================================
 
-Placeholder
+This is a minor release to fix a small error in the deprecated vType argument
+
+Contributors
+============
+
+* @jcapriot
+
+
+Pull requests
+=============
+
+* `#213 <https://github.com/simpeg/discretize/pull/213>`__: Fix bug in deprecated vType
