@@ -1344,9 +1344,8 @@ class Slicer(object):
         the shown range.
 
     clim : None or list of [min, max]
-        For `pcolormesh` (`vmin`, `vmax`).
-
-        Note that this overrules `vmin`/`vmax` provided in `pcolor_opts`.
+        For `pcolormesh` (`vmin`, `vmax`). Note: if you use a `norm` (e.g.,
+        `LogNorm`) then `vmin`/`vmax` have to be provided in the norm.
 
     xlim, ylim, zlim : None or list of [min, max]
         Axis limits.
@@ -1366,12 +1365,6 @@ class Slicer(object):
 
     pcolor_opts : dictionary
         Passed to `pcolormesh`.
-
-        Note 1: `vmin`/`vmax` provided in `pcolor_opts` are overruled by the
-                `clim`.
-
-        Note 2: If a `norm` is provided, then `vmin` and `vmax` should be
-                defined in the norm.
 
     """
 
@@ -1492,10 +1485,6 @@ class Slicer(object):
             if clim[0] == clim[1]:
                 clim = [0.99*clim[0], 1.01*clim[1]]
 
-        # clim overrules any of them.
-        if 'norm' in self.pc_props:
-            self.pc_props['norm'].vmin = clim[0]
-            self.pc_props['norm'].vmax = clim[1]
         else:
             self.pc_props['vmin'] = clim[0]
             self.pc_props['vmax'] = clim[1]
