@@ -3757,15 +3757,28 @@ cdef class _TreeMesh:
         cdef int_t same_base = (
           np.allclose(self.vectorNx, meshin.vectorNx)
           and np.allclose(self.vectorNy, meshin.vectorNy)
-          and (self.ndim == 2 or np.allclose(self.vectorNz, meshin.vectorNz))
+          and (self.dim == 2 or np.allclose(self.vectorNz, meshin.vectorNz))
         )
-        # easier path if they share the same base:
-        if same_base:
-            cell_inds = self._get_containing_cell_indexes(meshin.gridCC)
-            # volume contribution will be the difference of mesh levels?
-            for ind in cell_inds:
-                # add my contribution to the overlapping cell
-                # should be min(vol_in_cell/vol_out_cell, 1.0)
+        cdef c_Cell * out_cell
+        cdef c_Cell * in_cell
+
+        cdef np.float64_t[:] vals = np.array([])
+        cdef np.float64_t[:] outs = np.array([])
+        cdef int_t build_mat = 1
+
+        if values is not None:
+            vals = values
+            if output is None:
+                output = np.empty(self.nC)
+            output[:] = 0
+            outs = output
+
+            build_mat = 0
+
+        cdef vector[int_t] row_inds, col_inds
+        cdef vector[int_t] indptr
+        cdef vector[double] all_weights
+
         cdef vector[int_t] *overlapping_cells
         cdef double *weights
         cdef double over_lap_vol
@@ -3777,24 +3790,7 @@ cdef class _TreeMesh:
             xF = np.array([meshin._xs[-1], meshin._ys[-1]])
         else:
             xF = np.array([meshin._xs[-1], meshin._ys[-1], meshin._zs[-1]])
-        cdef c_Cell * in_cell
 
-        cdef np.float64_t[:] vals = np.array([])
-        cdef np.float64_t[:] outs = np.array([])
-
-        cdef int_t build_mat = 1
-        if values is not None:
-            vals = values
-            if output is None:
-                output = np.empty(self.nC)
-            output[:] = 0
-            outs = output
-
-            build_mat = 0
-
-        cdef vector[int_t] row_inds
-        cdef vector[int_t] indptr
-        cdef vector[double] all_weights
         cdef int_t nnz_counter = 0
         cdef int_t nnz_row = 0
         if build_mat:
@@ -3802,6 +3798,67 @@ cdef class _TreeMesh:
         cdef int_t i, in_cell_ind
         cdef int_t n_overlap
         cdef double weight_sum
+        cdef double weight
+        cdef vector[int_t] out_visited
+        cdef int_t n_unvisited
+
+        # easier path if they share the same base:
+        if same_base:
+            if build_mat:
+                all_weights.resize(meshin.nC, 0.0)
+                row_inds.resize(meshin.nC, 0)
+            out_visited.resize(self.nC, 0)
+            for in_cell in meshin.tree.cells:
+                # for each input cell find containing output cell
+                out_cell = self.tree.containing_cell(
+                    in_cell.location[0],
+                    in_cell.location[1],
+                    in_cell.location[2]
+                )
+                # if containing output cell is lower level (larger) than input cell:
+                # contribution is related to difference of levels (aka ratio of volumes)
+                # else:
+                # contribution is 1.0
+                if out_cell.level < in_cell.level:
+                    out_visited[out_cell.index] = 1
+                    weight = in_cell.volume/out_cell.volume
+                    if not build_mat:
+                        outs[out_cell.index] += weight*vals[in_cell.index]
+                    else:
+                        all_weights[in_cell.index] = weight
+                        row_inds[in_cell.index] = out_cell.index
+
+            if build_mat:
+                P = sp.csr_matrix((all_weights, (row_inds, np.arange(meshin.nC))),
+                                  shape=(self.nC, meshin.nC))
+
+                n_unvisited = self.nC - np.sum(out_visited)
+                row_inds.resize(n_unvisited, 0)
+                col_inds.resize(n_unvisited, 0)
+            i = 0
+            # assign weights of 1 to unvisited output cells and find their containing cell
+            for out_cell in self.tree.cells:
+                if not out_visited[out_cell.index]:
+                    in_cell = meshin.tree.containing_cell(
+                        out_cell.location[0],
+                        out_cell.location[1],
+                        out_cell.location[2]
+                    )
+
+                    if not build_mat:
+                        outs[out_cell.index] = vals[in_cell.index]
+                    else:
+                        row_inds[i] = out_cell.index
+                        col_inds[i] = in_cell.index
+                        i += 1
+            if build_mat and n_unvisited > 0:
+                P += sp.csr_matrix(
+                    (np.ones(n_unvisited), (row_inds, col_inds)),
+                    shape=(self.nC, meshin.nC)
+                )
+            if not build_mat:
+                return output
+            return P
 
         for cell in self.tree.cells:
             x1m = min(cell.points[0].location[0], xF[0])
@@ -3877,6 +3934,28 @@ cdef class _TreeMesh:
         cdef double x2m, x2p, y2m, y2p, z2m, z2p
         cdef double[:] x0
         cdef double[:] xF
+
+        # first check if they have the same tensor base, as it makes it a lot easier...
+        cdef int_t same_base = (
+          np.allclose(self.vectorNx, out_tens_mesh.vectorNx)
+          and np.allclose(self.vectorNy, out_tens_mesh.vectorNy)
+          and (self.dim == 2 or np.allclose(self.vectorNz, out_tens_mesh.vectorNz))
+        )
+
+        if same_base:
+            in_cell_inds = self._get_containing_cell_indexes(out_tens_mesh.gridCC)
+            # Every cell input cell is gauranteed to be a lower level than the output tenser mesh
+            # therefore all weights a 1.0
+            if values is not None:
+                if output is None:
+                    output = np.empty(out_tens_mesh.nC)
+                output[:] = values[in_cell_inds]
+                return output
+            return sp.csr_matrix(
+                (np.ones(out_tens_mesh.nC), (np.arange(out_tens_mesh.nC), in_cell_inds)),
+                shape=(out_tens_mesh.nC, self.nC)
+            )
+
         if self.dim == 2:
             x0 = np.r_[self.x0, 0.0]
             xF = np.array([self._xs[-1], self._ys[-1], 0.0])
@@ -3920,6 +3999,7 @@ cdef class _TreeMesh:
         cdef int_t ix, iy, iz, in_cell_ind, i
         cdef int_t n_overlap
         cdef double weight_sum
+
         #for cell in self.tree.cells:
         for iz in range(nz):
             z1m = min(nodes_z[iz], xF[2])
@@ -3995,6 +4075,26 @@ cdef class _TreeMesh:
         cdef double[:] x0 = in_tens_mesh.x0
         cdef double[:] xF
 
+        # first check if they have the same tensor base, as it makes it a lot easier...
+        cdef int_t same_base = (
+          np.allclose(self.vectorNx, in_tens_mesh.vectorNx)
+          and np.allclose(self.vectorNy, in_tens_mesh.vectorNy)
+          and (self.dim == 2 or np.allclose(self.vectorNz, in_tens_mesh.vectorNz))
+        )
+
+        if same_base:
+            out_cell_inds = self._get_containing_cell_indexes(in_tens_mesh.gridCC)
+            ws = in_tens_mesh.vol/self.vol[out_cell_inds]
+            if values is not None:
+                if output is None:
+                    output = np.empty(self.nC)
+                output[:] = np.bincount(out_cell_inds, ws*values)
+                return output
+            return sp.csr_matrix(
+                (ws, (out_cell_inds, np.arange(in_tens_mesh.nC))),
+                shape=(self.nC, in_tens_mesh.nC)
+            )
+
 
         cdef np.float64_t[:] nodes_x = in_tens_mesh.vectorNx
         cdef np.float64_t[:] nodes_y = in_tens_mesh.vectorNy
@@ -4036,6 +4136,7 @@ cdef class _TreeMesh:
         cdef int_t nx_overlap, ny_overlap, nz_overlap, n_overlap
         cdef int_t i
         cdef double weight_sum
+
         for cell in self.tree.cells:
             x1m = min(cell.points[0].location[0], xF[0])
             y1m = min(cell.points[0].location[1], xF[1])
