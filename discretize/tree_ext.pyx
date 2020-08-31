@@ -3584,7 +3584,7 @@ cdef class _TreeMesh:
             show_it = kwargs["showIt"]
             warnings.warn("showIt has been deprecated, please use show_it", DeprecationWarning)
         if "vType" in kwargs:
-            show_it = kwargs["vType"]
+            v_type = kwargs["vType"]
             warnings.warn("vType has been deprecated, please use v_type", DeprecationWarning)
 
         if ax is None:

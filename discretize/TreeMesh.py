@@ -552,7 +552,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
             show_it = kwargs["showIt"]
             warnings.warn("showIt has been deprecated, please use show_it", DeprecationWarning)
         if "vType" in kwargs:
-            show_it = kwargs["vType"]
+            v_type = kwargs["vType"]
             warnings.warn("vType has been deprecated, please use v_type", DeprecationWarning)
 
         if pcolor_opts is None:

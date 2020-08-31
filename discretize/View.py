@@ -115,7 +115,7 @@ class TensorView(object):
             show_it = kwargs["annotationColor"]
             warnings.warn("annotationColor has been deprecated, please use annotation_color", DeprecationWarning)
         if "vType" in kwargs:
-            show_it = kwargs["vType"]
+            v_type = kwargs["vType"]
             warnings.warn("vType has been deprecated, please use v_type", DeprecationWarning)
 
         if pcolor_opts is None:
@@ -271,7 +271,7 @@ class TensorView(object):
             show_it = kwargs["showIt"]
             warnings.warn("showIt has been deprecated, please use show_it", DeprecationWarning)
         if "vType" in kwargs:
-            show_it = kwargs["vType"]
+            v_type = kwargs["vType"]
             warnings.warn("vType has been deprecated, please use v_type", DeprecationWarning)
 
         if pcolor_opts is None:
@@ -1206,7 +1206,7 @@ class CurviView(object):
             show_it = kwargs["showIt"]
             warnings.warn("showIt has been deprecated, please use show_it", DeprecationWarning)
         if "vType" in kwargs:
-            show_it = kwargs["vType"]
+            v_type = kwargs["vType"]
             warnings.warn("vType has been deprecated, please use v_type", DeprecationWarning)
 
         if self.dim == 3:
