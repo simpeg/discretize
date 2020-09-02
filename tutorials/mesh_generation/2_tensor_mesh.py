@@ -72,7 +72,7 @@ exp_x = 1.25  # expansion rate of padding cells in x
 exp_y = 1.25  # expansion rate of padding cells in y
 
 # Use a list of tuples to define cell widths in each direction. Each tuple
-# contains the cell with, number of cells and the expansion factor. A
+# contains the cell width, number of cells and the expansion factor. A
 # negative sign is used to indicate an interval where cells widths go
 # from largest to smallest.
 hx = [(dx, npad_x, -exp_x), (dx, ncx), (dx, npad_x, exp_x)]
