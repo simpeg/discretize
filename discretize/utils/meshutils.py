@@ -681,7 +681,7 @@ def refine_tree_xyz(
 
     elif method.lower() == 'box':
 
-        # Define the data extend [bottom SW, top NE]
+        # Define the data extent [bottom SW, top NE]
         bsw = np.min(xyz, axis=0)
         tne = np.max(xyz, axis=0)
 
