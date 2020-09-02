@@ -6,7 +6,7 @@ Installing
 Which Python?
 =============
 
-Currently, `discretize` will run on 3.5, 3.6 and 3.7. We recommend that you
+Currently, `discretize` will run on 3.6, 3.7, and 3.8. We recommend that you
 use the latest version of Python available on `Anaconda <https://www.anaconda.com/download>`_.
 
 Installing Python
