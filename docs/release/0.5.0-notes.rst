@@ -31,7 +31,7 @@ Contributors
 Pull requests
 =============
 
-* `#212 <https://github.com/simpeg/discretize/pull/213>`__: Volume average
-* `#216 <https://github.com/simpeg/discretize/pull/213>`__: Update 2_tensor_mesh.py
-* `#217 <https://github.com/simpeg/discretize/pull/213>`__: Fix Slicer matplotlib-warning.
-* `#213 <https://github.com/simpeg/discretize/pull/213>`__: 0.5.0 release notes and requirements update
+* `#212 <https://github.com/simpeg/discretize/pull/212>`__: Volume average
+* `#216 <https://github.com/simpeg/discretize/pull/216>`__: Update 2_tensor_mesh.py
+* `#217 <https://github.com/simpeg/discretize/pull/217>`__: Fix Slicer matplotlib-warning.
+* `#220 <https://github.com/simpeg/discretize/pull/220>`__: 0.5.0 release notes and requirements update
