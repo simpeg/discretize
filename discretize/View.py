@@ -1344,7 +1344,8 @@ class Slicer(object):
         the shown range.
 
     clim : None or list of [min, max]
-        For pcolormesh (vmin, vmax).
+        For `pcolormesh` (`vmin`, `vmax`). Note: if you use a `norm` (e.g.,
+        `LogNorm`) then `vmin`/`vmax` have to be provided in the norm.
 
     xlim, ylim, zlim : None or list of [min, max]
         Axis limits.
@@ -1363,7 +1364,7 @@ class Slicer(object):
         Number of cells occupied by x, y, and z dimension on plt.subplot2grid.
 
     pcolor_opts : dictionary
-        Passed to pcolormesh.
+        Passed to `pcolormesh`.
 
     """
 
@@ -1377,6 +1378,9 @@ class Slicer(object):
         if "pcolorOpts" in kwargs:
             pcolor_opts = kwargs["pcolorOpts"]
             warnings.warn("pcolorOpts has been deprecated, please use pcolor_opts", DeprecationWarning)
+
+        # Add pcolor_opts to self
+        self.pc_props = pcolor_opts if pcolor_opts is not None else {}
 
         # (a) Mesh dimensionality
         if mesh.dim != 3:
@@ -1459,14 +1463,31 @@ class Slicer(object):
         else:
             aspect3 = 1.0/aspect2
 
-        # Store min and max of all data
+        # Get color limits.
+
+        # Alternatively, look in pc_props.
+        vmin = self.pc_props.pop('vmin', None)
+        vmax = self.pc_props.pop('vmax', None)
+
+        # Check if there is a norm and if it has color limits.
+        if 'norm' in self.pc_props:
+            vmin = self.pc_props['norm'].vmin
+            vmax = self.pc_props['norm'].vmax
+
+        # If nowhere defined, get it from the data.
         if clim is None:
-            clim = [np.nanmin(self.v), np.nanmax(self.v)]
-        # In the case of a homogeneous fullspace provide a small range to avoid
-        # problems with colorbar and the three subplots.
-        if clim[0] == clim[1]:
-            clim = [0.99*clim[0], 1.01*clim[1]]
-        self.pc_props = {'vmin': clim[0], 'vmax': clim[1]}
+
+            clim = [np.nanmin(self.v) if vmin is None else vmin,
+                    np.nanmax(self.v) if vmax is None else vmax]
+
+            # In the case of a homogeneous fullspace provide a small range to
+            # avoid problems with colorbar and the three subplots.
+            if clim[0] == clim[1]:
+                clim = [0.99*clim[0], 1.01*clim[1]]
+
+        else:
+            self.pc_props['vmin'] = clim[0]
+            self.pc_props['vmax'] = clim[1]
 
         # 2. Start populating figure
 
@@ -1535,10 +1556,6 @@ class Slicer(object):
         # spots.
         self.clpropsw = {'c': 'w', 'lw': 2, 'zorder': 10}
         self.clpropsk = {'c': 'k', 'lw': 1, 'zorder': 11}
-
-        # Add pcolor_opts
-        if pcolor_opts is not None:
-            self.pc_props.update(pcolor_opts)
 
         # Initial draw
         self.update_xy()
