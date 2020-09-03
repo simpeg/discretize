@@ -1523,7 +1523,7 @@ class CylMesh(
         values = list(hang.values())
         entries = np.ones(len(values))
 
-        if asOnes and len(hang) > 0:
+        if not asOnes and len(hang) > 0:
             repeats = set(values)
             repeat_locs = [
                 (np.r_[values] == repeat).nonzero()[0]
