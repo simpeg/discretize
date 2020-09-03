@@ -21,4 +21,4 @@ Contributors
 Pull requests
 =============
 
-* `#223 <https://github.com/simpeg/discretize/pull/212>`__: Syntax and bug fixes
+* `#223 <https://github.com/simpeg/discretize/pull/223>`__: Syntax and bug fixes
