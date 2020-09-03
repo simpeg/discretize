@@ -628,7 +628,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         tm_gridboost[:, normalInd] = slice_loc
 
         # interpolate values to self.gridCC if not 'CC'
-        if v_type is not 'CC':
+        if v_type != 'CC':
             aveOp = 'ave' + v_type + '2CC'
             Av = getattr(self, aveOp)
             if v.size == Av.shape[1]:
