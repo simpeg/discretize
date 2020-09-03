@@ -9,11 +9,7 @@ import discretize
 from scipy.spatial import cKDTree, Delaunay
 from scipy import interpolate
 
-import sys
-if sys.version_info < (3,):
-    num_types = [int, long, float]
-else:
-    num_types = [int, float]
+num_types = [int, float]
 
 
 def exampleLrmGrid(nC, exType):

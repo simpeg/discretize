@@ -19,11 +19,6 @@ import numpy as np
 import tarfile
 import matplotlib.pyplot as plt
 from matplotlib.colors import SymLogNorm
-import sys
-
-if sys.version_info[0] < 3:
-    print("This example only runs on Python 3")
-    sys.exit(0)
 
 ###############################################################################
 # Download and load data
@@ -192,4 +187,3 @@ beautify(
 )
 
 plt.show()
-

@@ -1,6 +1,5 @@
-import urllib
+from urllib.request import urlretrieve
 import os
-import sys
 
 def download(
     url, folder='.', overwrite=False, verbose=True
@@ -36,12 +35,6 @@ def download(
         return os.path.sep.join(
             splitfullpath[:-1] + newnamesplit[:-1] + [newname]
         )
-
-    # grab the correct url retriever
-    if sys.version_info < (3,):
-        urlretrieve = urllib.urlretrieve
-    else:
-        urlretrieve = urllib.request.urlretrieve
 
     # ensure we are working with absolute paths and home directories dealt with
     folder = os.path.abspath(os.path.expanduser(folder))
