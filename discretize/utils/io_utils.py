@@ -60,14 +60,14 @@ def download(
     # check if the directory already exists
     for i, download in enumerate(downloadpath):
         if os.path.exists(download):
-            if overwrite is True:
-                if verbose is True:
+            if overwrite:
+                if verbose:
                     print("overwriting {}".format(download))
-            elif overwrite is False:
-                while os.path.exists is True:
+            else:
+                while os.path.exists:
                     download = rename_path(download)
 
-                if verbose is True:
+                if verbose:
                     print(
                         "file already exists, new file is called {}".format(
                             download

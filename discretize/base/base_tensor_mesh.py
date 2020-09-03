@@ -343,7 +343,7 @@ class BaseTensorMesh(BaseMesh):
 
         loc = utils.asArray_N_x_Dim(loc, self.dim)
 
-        if zerosOutside is False:
+        if not zerosOutside:
             assert np.all(self.isInside(loc)), "Points outside of mesh"
         else:
             indZeros = np.logical_not(self.isInside(loc))

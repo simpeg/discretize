@@ -121,7 +121,7 @@ class CylMesh(
         int
             Number of nodes in the x-direction
         """
-        # if self.isSymmetric is True:
+        # if self.isSymmetric:
         #     return self.nCx
         return self._ntNx
 
@@ -133,7 +133,7 @@ class CylMesh(
         int
             Number of total y nodes (prior to deflating)
         """
-        if self.isSymmetric is True:
+        if self.isSymmetric:
             return 1
         return self.nCy + 1
 
@@ -145,7 +145,7 @@ class CylMesh(
         int
             Number of nodes in the y-direction
         """
-        if self.isSymmetric is True:
+        if self.isSymmetric:
             return 0
         return self.nCy
 
@@ -336,7 +336,7 @@ class CylMesh(
         int
             Number of z-edges
         """
-        if self.isSymmetric is True:
+        if self.isSymmetric:
             return self.vnEz.prod()
         return (np.r_[self.nNx-1, self.nNy, self.nCz]).prod() + self.nCz
 
@@ -348,14 +348,14 @@ class CylMesh(
     @property
     def vectorCCy(self):
         """Cell-centered grid vector (1D) in the y direction."""
-        if self.isSymmetric is True:
+        if self.isSymmetric:
             return np.r_[0, self.hy[:-1]]
         return np.r_[0, self.hy[:-1].cumsum()] + self.hy*0.5
 
     @property
     def vectorNx(self):
         """Nodal grid vector (1D) in the x direction."""
-        if self.isSymmetric is True:
+        if self.isSymmetric:
             return self.hx.cumsum()
         return np.r_[0, self.hx].cumsum()
 
@@ -371,7 +371,7 @@ class CylMesh(
     @property
     def vectorNy(self):
         """Nodal grid vector (1D) in the y direction."""
-        # if self.isSymmetric is True:
+        # if self.isSymmetric:
         #     # There aren't really any nodes, but all the grids need
         #     # somewhere to live, why not zero?!
         #     return np.r_[0]
@@ -478,7 +478,7 @@ class CylMesh(
         numpy.ndarray
             vector of edge lengths :math:`(r, \\theta, z)`
         """
-        if self.isSymmetric is True:
+        if self.isSymmetric:
             return self.edgeEy
             # return 2*pi*self.gridN[:, 0]
         else:
@@ -536,7 +536,7 @@ class CylMesh(
             area of y-faces
         """
         if getattr(self, '_areaFy', None) is None:
-            if self.isSymmetric is True:
+            if self.isSymmetric:
                 raise Exception(
                     'There are no y-faces on the Cyl Symmetric mesh'
                 )
@@ -603,7 +603,7 @@ class CylMesh(
             face areas
         """
         # if getattr(self, '_area', None) is None:
-        if self.isSymmetric is True:
+        if self.isSymmetric:
             return np.r_[self.areaFx, self.areaFz]
         else:
             return np.r_[self.areaFx, self.areaFy, self.areaFz]
@@ -1024,7 +1024,7 @@ class CylMesh(
             grid locations of radial faces
         """
         if getattr(self, '_gridFx', None) is None:
-            if self.isSymmetric is True:
+            if self.isSymmetric:
                 return super(CylMesh, self).gridFx
             else:
                 self._gridFx = self._gridFxFull[~self._ishangingFx, :]
@@ -1049,7 +1049,7 @@ class CylMesh(
             grid locations of azimuthal faces
         """
         if getattr(self, '_gridEy', None) is None:
-            if self.isSymmetric is True:
+            if self.isSymmetric:
                 return self._gridEyFull
             else:
                 self._gridEy = self._gridEyFull[~self._ishangingEy, :]
@@ -1076,7 +1076,7 @@ class CylMesh(
             grid locations of radial faces
         """
         if getattr(self, '_gridEz', None) is None:
-            if self.isSymmetric is True:
+            if self.isSymmetric:
                 self._gridEz = None
             else:
                 self._gridEz = self._gridEzFull[~self._ishangingEz, :]
@@ -1095,7 +1095,7 @@ class CylMesh(
             # Compute faceDivergence operator on faces
             D1 = self.faceDivx
             D3 = self.faceDivz
-            if self.isSymmetric is True:
+            if self.isSymmetric:
                 D = sp.hstack((D1, D3), format="csr")
             elif self.nCy > 1:
                 D2 = self.faceDivy
@@ -1205,26 +1205,26 @@ class CylMesh(
 
     # @property
     # def _nodalGradStencilx(self):
-    #     if self.isSymmetric is True:
+    #     if self.isSymmetric:
     #         return None
     #     return kron3(speye(self.nNz), speye(self.nNy), ddx(self.nCx))
 
     # @property
     # def _nodalGradStencily(self):
-    #     if self.isSymmetric is True:
+    #     if self.isSymmetric:
     #         None
     #         # return kron3(speye(self.nNz), ddx(self.nCy), speye(self.nNx)) * self._deflationMatrix('Ey')
     #     return kron3(speye(self.nNz), ddx(self.nCy), speye(self.nNx))
 
     # @property
     # def _nodalGradStencilz(self):
-    #     if self.isSymmetric is True:
+    #     if self.isSymmetric:
     #         return None
     #     return kron3(ddx(self.nCz), speye(self.nNy), speye(self.nNx))
 
     # @property
     # def _nodalGradStencil(self):
-    #     if self.isSymmetric is True:
+    #     if self.isSymmetric:
     #         return None
     #     else:
     #         G = self._deflationMatrix('E').T * sp.vstack((
@@ -1237,7 +1237,7 @@ class CylMesh(
     @property
     def nodalGrad(self):
         """Construct gradient operator (nodes to edges)."""
-        if self.isSymmetric is True:
+        if self.isSymmetric:
             return None
         raise NotImplementedError('nodalGrad not yet implemented')
 
@@ -1260,7 +1260,7 @@ class CylMesh(
             A = self.area
             E = self.edge
 
-            if self.isSymmetric is True:
+            if self.isSymmetric:
                 # 1D Difference matricies
                 dr = sp.spdiags(
                     (np.ones((self.nCx+1, 1))*[-1, 1]).T, [-1, 0],
@@ -1358,7 +1358,7 @@ class CylMesh(
         if getattr(self, '_aveE2CC', None) is None:
             # The number of cell centers in each direction
             # n = self.vnC
-            if self.isSymmetric is True:
+            if self.isSymmetric:
                 self._aveE2CC = self.aveEy2CC
             else:
                 self._aveE2CC = 1./self.dim * sp.hstack(
@@ -1377,7 +1377,7 @@ class CylMesh(
         scipy.sparse.csr_matrix
             matrix that averages from edges to cell centered vectors
         """
-        if self.isSymmetric is True:
+        if self.isSymmetric:
             return self.aveE2CC
         else:
             if getattr(self, '_aveE2CCV', None) is None:
@@ -1445,7 +1445,7 @@ class CylMesh(
         """
         if getattr(self, '_aveF2CC', None) is None:
             n = self.vnC
-            if self.isSymmetric is True:
+            if self.isSymmetric:
                 self._aveF2CC = 0.5*(
                     sp.hstack((self.aveFx2CC, self.aveFz2CC), format="csr")
                 )
@@ -1470,7 +1470,7 @@ class CylMesh(
         """
         if getattr(self, '_aveF2CCV', None) is None:
             # n = self.vnC
-            if self.isSymmetric is True:
+            if self.isSymmetric:
                 self._aveF2CCV = sp.block_diag(
                     (self.aveFx2CC, self.aveFz2CC), format="csr"
                 )
@@ -1523,7 +1523,7 @@ class CylMesh(
         values = list(hang.values())
         entries = np.ones(len(values))
 
-        if asOnes is False and len(hang) > 0:
+        if asOnes and len(hang) > 0:
             repeats = set(values)
             repeat_locs = [
                 (np.r_[values] == repeat).nonzero()[0]

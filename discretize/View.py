@@ -877,7 +877,7 @@ class CylView(object):
                         mirror_data = mkvc(self.aveE2CCV * mirror_data)
                 args = (val,) + args[1:]
 
-        if mirror is True:
+        if mirror:
             # create a mirrored mesh
             hx = np.hstack([np.flipud(self.hx), self.hx])
             x00 = self.x0[0] - self.hx.sum()
