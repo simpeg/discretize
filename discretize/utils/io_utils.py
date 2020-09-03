@@ -57,7 +57,7 @@ def download(
                 if verbose:
                     print("overwriting {}".format(download))
             else:
-                while os.path.exists is True:
+                while os.path.exists(download):
                     download = rename_path(download)
 
                 if verbose:
