@@ -42,6 +42,28 @@ def cylindrical2cartesian(grid, vec=None):
 
     return np.vstack(newvec).T
 
+def cyl2cart(grid, vec=None):
+    """
+    Take a grid defined in cylindrical coordinates :math:`(r, \theta, z)` and
+    transform it to cartesian coordinates :math:`(x, y, z)`. If no vector is
+    provided, the grid is rotated to cartesian coordinates
+
+    **Required**
+    :param numpy.ndarray grid: :math:`(r, \theta, z)` grid locations in
+                               cylindrical coordinates
+
+    **Optional**
+    :param numpy.ndarray vec: vector defined on the :math:`(r, \theta, z)` grid
+                              to be rotated
+
+    **Returns**
+    :rtype: numpy.ndaray
+    :returns: vector, if provided, or grid defined in cartesian coordinates
+    """
+
+    return cylindrical2cartesian(grid, vec)
+
+
 def cartesian2cylindrical(grid, vec=None):
     """
     Take a grid defined in cartesial coordinates :math:`(x, y, z)` and
@@ -74,6 +96,25 @@ def cartesian2cylindrical(grid, vec=None):
         mkvc(vec[:, 2], 2)
     ])
 
+def cart2cyl(grid, vec=None):
+    """
+    Take a grid defined in cartesial coordinates :math:`(x, y, z)` and
+    transforms it to cylindrical coordinates :math:`(r, \theta, z)`.
+    If no vector is provided, the grid is rotated to cylindrical coordinates
+
+    **Required**
+    :param numpy.ndarray grid: :math:`(x, y, z)` grid locations in
+                               cylindrical coordinates
+
+    **Optional**
+    :param numpy.ndarray vec: vector defined on the :math:`(r, \theta, z)` grid
+                              to be rotated
+
+    **Returns**
+    :rtype: numpy.ndaray
+    :returns: vector, if provided, or grid defined in cylindrical coordinates
+    """
+    return cartesian2cylindrical(grid, vec)
 
 def rotation_matrix_from_normals(v0, v1, tol=1e-20):
     """

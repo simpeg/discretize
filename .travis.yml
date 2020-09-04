@@ -1,70 +1,98 @@
-language: python
-python:
-- 2.7
-- 3.6
-- "nightly"
-matrix:
-  allow_failures:
-    - python: "nightly"
+# Configuration file for TravisCI
+dist: xenial # must use xenial for pyvista
+
+# We use miniconda for Python so don't need any Python specific tools
+language: generic
 
 sudo: false
 
 env:
   global:
     - MASTER_BRANCH=master
-    - PYPI_PY=3.6  # deploy to pypi from python 3.6
-  matrix:
-    - TEST_DIR=tests/base
-    - TEST_DIR=tests/cyl
-    - TEST_DIR=tests/tree
-    - TEST_DIR=tests/docs
+    - TEST=false
+    - TEST_DIR=""
+    - CONDA_REQUIREMENTS="numpy scipy matplotlib cython pip"
+    - PYPI_REQUIREMENTS=requirements.txt
+    - PYPI_REQUIREMENTS_DEV=requirements_dev.txt
+    # Doctr deploy key for simpeg/discretize-docs
+    - secure: "JPcVPkWq1uzcgwM8U41LyxdWlA3LehTdGnU1NxZUd1y+GSZgn2s84ByJ1WZ8Dp4RJFjPLO7WX79qJkKRQUOVTs2teqTlvDkcMF6WM41k5u4N9aJLtIZLwZ8SrBoU6FAWge1CsXYfWE7SpILH9riYuawC6nOEwf5pdrTcoKLUdaaF0bHBbRZMXy3vk8UTF/2eDQa0cpMw1zJUryDrh+btpMvncbTqBtpQgAYPdjfbYr8EM+/b23dqMMUtM1KmebllWDtESzz+Pf/K2wOTweMlWVITHs5hywlGAGHAeusAKIRE8x1uB8U7abAM3iOEZ2WQqgquLvahpoiRFofmAHij1jpT1k45OM83D2skjDRuOg5b5zEHivsygfUtp2F2AAKRfHAtBxK664aFvR0l5YNKYqqJxR+ACpR/yhlWroMgeIX8srpCl/oT365sahWRb7wn/OI/f01S9Chn9x6fQXq7gYozAwC0RTD4Y9zpLHhnEiuTPbiLXCyLj3cexgxqAkk71NKhLce1KYjOyzuROQsT+1H91CMsmRDG34VHWdGXhVmucNG0JrQmzVaSiwhOig/4JxtHcj+qPFSHZ6O5QqdswcW+ukWyUohIQJC6quE27Yh+gKC7sujBTQkiyY/YO4MHK7q/LsB1n95BGZCftkT/bKitGsPgO/LFZmyl5ijVm+s="
+
+matrix:
+  include:
+    # test the base code on 3.6, 3.7
+    - name: "Python 3.6 - base, cyl, tree"
+      os: linux
+      env:
+        - PYTHON=3.6
+        - TEST=true
+        - TEST_DIR="tests/base tests/cyl tests/tree tests/docs"
+    - name: "Python 3.7 - base, cyl, tree"
+      os: linux
+      env:
+        - PYTHON=3.7
+        - TEST=true
+        - TEST_DIR="tests/base tests/cyl tests/tree"
+    - name: "Python 3.8 - base, cyl, tree"
+      os: linux
+      env:
+        - PYTHON=3.8
+        - TEST=true
+        - TEST_DIR="tests/base tests/cyl tests/tree tests/docs"
+
+    # ... and delploy the docs on 3.7
+    - name: "Python 3.7 - docs"
+      os: linux
+      env:
+        - PYTHON=3.7
+        - TEST=true
+        - TEST_DIR="tests/docs"
+        - DEPLOY_DOCS=true
+        - DEPLOY_PYPI=true
 
 before_install:
-  - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then
-      wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
-    else
-      wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-    fi
-  - chmod +x miniconda.sh
-  - ./miniconda.sh -b -p $HOME/miniconda
-  - export PATH=/home/travis/anaconda/bin:/home/travis/miniconda/bin:$PATH
-  - conda update --yes conda
+  - source ci/setup-miniconda.sh
+  - conda list
+  # configure a headless display for pyvista
+  - git clone --depth 1 git://github.com/pyvista/gl-ci-helpers.git
+  - source ./gl-ci-helpers/travis/setup_headless_display.sh
 
 install:
-  - conda install --quiet --yes pip python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib pillow cython ipython;
-  - conda install --quiet --yes -c menpo vtk
-  - pip install -r requirements_dev.txt
-  - python --version
-  - python setup.py install
+  - pip install -e .
   - make build
-  - export MPLBACKEND="agg"
 
 script:
-  - nosetests $TEST_DIR --with-cov --cov discretize --cov-config .coveragerc -v -s;
+  - if [ "$TEST" == "true" ]; then
+      export MPLBACKEND="agg" ;
+      echo "testing $TEST_DIR" ;
+      pytest $TEST_DIR --cov-config .coveragerc --cov=discretize -v -s ;
+    fi
 
 after_success:
-
-  - bash <(curl -s https://codecov.io/bash)
-
-  # early exit if not on a deplotment branch
-  - if ! [ "$TRAVIS_BRANCH" = "$MASTER_BRANCH" -o "$TRAVIS_TAG" = "true" ]; then
-      echo "Not deploying (because this is not a deployment branch)" ;
-      exit 0 ;
+  - if [ "$TEST" == "true" ]; then
+      echo "Uploading coverage to Codecov";
+      codecov;
     fi
-  - if ! [ $TRAVIS_PULL_REQUEST = "false" ] ; then
-      echo "Not deploying (because this is a pull request)" ;
-      exit 0 ;
+  - if [[ ("$DEPLOY_DOCS" == "true") && ($PYTHON == 3.7) && ($TRAVIS_REPO_SLUG == 'simpeg/discretize') && ($TRAVIS_BRANCH == 'master') && ($DOCS_TRIGGER == 'BANE_RULES')]]; then
+      pip install doctr ;
+      export MPLBACKEND="agg" ;
+      echo "Delpoying docs" ;
+      set -e ;
+      cd docs/ ;
+      make html ;
+      cd .. ;
+      doctr deploy --built-docs ./docs/_build/html/ --deploy-repo simpeg/discretize-docs ./en/master/ ;
     fi
-  - echo "Deploying"
 
-  # unpack credentials
-  - openssl aes-256-cbc -K $encrypted_5813a1339455_key -iv $encrypted_5813a1339455_iv -in credentials.tar.gz.enc -out credentials.tar.gz -d
-  - tar -xvzf credentials.tar.gz
 
-  # deploy to pypi
-  - mv credentials/.pypirc ~/.pypirc ;
-  - python setup.py sdist ;
-  - twine upload dist/* --skip-existing ;
+deploy:
+  # pypi release
+  - provider: script
+    script: sh ci/deploy-pypi.sh
+    skip_cleanup: true
+    on:
+      tags: true
+      condition: '$DEPLOY_PYPI == "true"'
 
 notifications:
   slack: simpeg:1KZq5giMtlJJ58TijIPgqf7n
+  email: false

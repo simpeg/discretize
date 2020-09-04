@@ -185,6 +185,7 @@ Cell::Cell(Node *pts[8], int_t ndim, int_t maxlevel, function func){
     int_t n_points = 1<<n_dim;
     for(int_t i = 0; i < n_points; ++i)
         points[i] = pts[i];
+    index = -1;
     level = 0;
     max_level = maxlevel;
     parent = NULL;
@@ -212,6 +213,7 @@ Cell::Cell(Node *pts[8], Cell *parent){
     int_t n_points = 1<<n_dim;
     for(int_t i = 0; i < n_points; ++i)
         points[i] = pts[i];
+    index = -1;
     level = parent->level + 1;
     max_level = parent->max_level;
     test_func = parent->test_func;
@@ -395,147 +397,159 @@ void Cell::divide(node_map_t& nodes, double* xs, double* ys, double* zs, bool fo
     }else if(force){
         do_splitting = true;
     }else{
-        int_t test_level = (*test_func)(this);
-        if(test_level > level){
-            do_splitting = true;
+        if(is_leaf()){
+            // Only need to call the function if I am a leaf...
+            int_t test_level = (*test_func)(this);
+            do_splitting = test_level > level;
         }
     }
-    if(!do_splitting){
-        return;
-    }
-    //If i haven't already been split...
-    if(children[0] == NULL){
-        spawn(nodes, children, xs, ys, zs);
+    if(do_splitting){
+        //If i haven't already been split...
+        if(is_leaf()){
+            spawn(nodes, children, xs, ys, zs);
 
-        //If I need to be split, and my neighbor is below my level
-        //Then it needs to be split
-        //-x,+x,-y,+y,-z,+z
-        if(balance){
-            for(int_t i = 0; i < 2*n_dim; ++i){
-                if(neighbors[i] != NULL && neighbors[i]->level < level){
-                    neighbors[i]->divide(nodes, xs, ys, zs, true);
+            //If I need to be split, and my neighbor is below my level
+            //Then it needs to be split
+            //-x,+x,-y,+y,-z,+z
+            if(balance){
+                for(int_t i = 0; i < 2*n_dim; ++i){
+                    if(neighbors[i] != NULL && neighbors[i]->level < level){
+                        neighbors[i]->divide(nodes, xs, ys, zs, true);
+                    }
                 }
             }
-        }
 
-        //Set children's neighbors (first do the easy ones)
-        // all of the children live next to each other
-        children[0]->set_neighbor(children[1], 1);
-        children[0]->set_neighbor(children[2], 3);
-        children[1]->set_neighbor(children[3], 3);
-        children[2]->set_neighbor(children[3], 1);
+            //Set children's neighbors (first do the easy ones)
+            // all of the children live next to each other
+            children[0]->set_neighbor(children[1], 1);
+            children[0]->set_neighbor(children[2], 3);
+            children[1]->set_neighbor(children[3], 3);
+            children[2]->set_neighbor(children[3], 1);
 
-        if(n_dim == 3){
-            children[4]->set_neighbor(children[5], 1);
-            children[4]->set_neighbor(children[6], 3);
-            children[5]->set_neighbor(children[7], 3);
-            children[6]->set_neighbor(children[7], 1);
+            if(n_dim == 3){
+                children[4]->set_neighbor(children[5], 1);
+                children[4]->set_neighbor(children[6], 3);
+                children[5]->set_neighbor(children[7], 3);
+                children[6]->set_neighbor(children[7], 1);
 
-            children[0]->set_neighbor(children[4], 5);
-            children[1]->set_neighbor(children[5], 5);
-            children[2]->set_neighbor(children[6], 5);
-            children[3]->set_neighbor(children[7], 5);
-        }
+                children[0]->set_neighbor(children[4], 5);
+                children[1]->set_neighbor(children[5], 5);
+                children[2]->set_neighbor(children[6], 5);
+                children[3]->set_neighbor(children[7], 5);
+            }
 
-        // -x direction
-        if(neighbors[0]!=NULL && !(neighbors[0]->is_leaf())){
-            children[0]->set_neighbor(neighbors[0]->children[1], 0);
-            children[2]->set_neighbor(neighbors[0]->children[3], 0);
-        }
-        else{
-            children[0]->set_neighbor(neighbors[0], 0);
-            children[2]->set_neighbor(neighbors[0], 0);
-        }
-        // +x direction
-        if(neighbors[1]!=NULL && !neighbors[1]->is_leaf()){
-            children[1]->set_neighbor(neighbors[1]->children[0], 1);
-            children[3]->set_neighbor(neighbors[1]->children[2], 1);
-        }else{
-            children[1]->set_neighbor(neighbors[1], 1);
-            children[3]->set_neighbor(neighbors[1], 1);
-        }
-        // -y direction
-        if(neighbors[2]!=NULL && !neighbors[2]->is_leaf()){
-            children[0]->set_neighbor(neighbors[2]->children[2], 2);
-            children[1]->set_neighbor(neighbors[2]->children[3], 2);
-        }else{
-            children[0]->set_neighbor(neighbors[2], 2);
-            children[1]->set_neighbor(neighbors[2], 2);
-        }
-        // +y direction
-        if(neighbors[3]!=NULL && !neighbors[3]->is_leaf()){
-            children[2]->set_neighbor(neighbors[3]->children[0], 3);
-            children[3]->set_neighbor(neighbors[3]->children[1], 3);
-        }else{
-            children[2]->set_neighbor(neighbors[3], 3);
-            children[3]->set_neighbor(neighbors[3], 3);
-        }
-        if(n_dim==3){
             // -x direction
             if(neighbors[0]!=NULL && !(neighbors[0]->is_leaf())){
-                children[4]->set_neighbor(neighbors[0]->children[5], 0);
-                children[6]->set_neighbor(neighbors[0]->children[7], 0);
+                children[0]->set_neighbor(neighbors[0]->children[1], 0);
+                children[2]->set_neighbor(neighbors[0]->children[3], 0);
             }
             else{
-                children[4]->set_neighbor(neighbors[0], 0);
-                children[6]->set_neighbor(neighbors[0], 0);
+                children[0]->set_neighbor(neighbors[0], 0);
+                children[2]->set_neighbor(neighbors[0], 0);
             }
             // +x direction
             if(neighbors[1]!=NULL && !neighbors[1]->is_leaf()){
-                children[5]->set_neighbor(neighbors[1]->children[4], 1);
-                children[7]->set_neighbor(neighbors[1]->children[6], 1);
+                children[1]->set_neighbor(neighbors[1]->children[0], 1);
+                children[3]->set_neighbor(neighbors[1]->children[2], 1);
             }else{
-                children[5]->set_neighbor(neighbors[1], 1);
-                children[7]->set_neighbor(neighbors[1], 1);
+                children[1]->set_neighbor(neighbors[1], 1);
+                children[3]->set_neighbor(neighbors[1], 1);
             }
             // -y direction
             if(neighbors[2]!=NULL && !neighbors[2]->is_leaf()){
-                children[4]->set_neighbor(neighbors[2]->children[6], 2);
-                children[5]->set_neighbor(neighbors[2]->children[7], 2);
+                children[0]->set_neighbor(neighbors[2]->children[2], 2);
+                children[1]->set_neighbor(neighbors[2]->children[3], 2);
             }else{
-                children[4]->set_neighbor(neighbors[2], 2);
-                children[5]->set_neighbor(neighbors[2], 2);
+                children[0]->set_neighbor(neighbors[2], 2);
+                children[1]->set_neighbor(neighbors[2], 2);
             }
             // +y direction
             if(neighbors[3]!=NULL && !neighbors[3]->is_leaf()){
-                children[6]->set_neighbor(neighbors[3]->children[4], 3);
-                children[7]->set_neighbor(neighbors[3]->children[5], 3);
+                children[2]->set_neighbor(neighbors[3]->children[0], 3);
+                children[3]->set_neighbor(neighbors[3]->children[1], 3);
             }else{
-                children[6]->set_neighbor(neighbors[3], 3);
-                children[7]->set_neighbor(neighbors[3], 3);
+                children[2]->set_neighbor(neighbors[3], 3);
+                children[3]->set_neighbor(neighbors[3], 3);
             }
-            // -z direction
-            if(neighbors[4]!=NULL && !neighbors[4]->is_leaf()){
-                children[0]->set_neighbor(neighbors[4]->children[4], 4);
-                children[1]->set_neighbor(neighbors[4]->children[5], 4);
-                children[2]->set_neighbor(neighbors[4]->children[6], 4);
-                children[3]->set_neighbor(neighbors[4]->children[7], 4);
-            }else{
-                children[0]->set_neighbor(neighbors[4], 4);
-                children[1]->set_neighbor(neighbors[4], 4);
-                children[2]->set_neighbor(neighbors[4], 4);
-                children[3]->set_neighbor(neighbors[4], 4);
-            }
-            // +z direction
-            if(neighbors[5]!=NULL && !neighbors[5]->is_leaf()){
-                children[4]->set_neighbor(neighbors[5]->children[0], 5);
-                children[5]->set_neighbor(neighbors[5]->children[1], 5);
-                children[6]->set_neighbor(neighbors[5]->children[2], 5);
-                children[7]->set_neighbor(neighbors[5]->children[3], 5);
-            }else{
-                children[4]->set_neighbor(neighbors[5], 5);
-                children[5]->set_neighbor(neighbors[5], 5);
-                children[6]->set_neighbor(neighbors[5], 5);
-                children[7]->set_neighbor(neighbors[5], 5);
+            if(n_dim==3){
+                // -x direction
+                if(neighbors[0]!=NULL && !(neighbors[0]->is_leaf())){
+                    children[4]->set_neighbor(neighbors[0]->children[5], 0);
+                    children[6]->set_neighbor(neighbors[0]->children[7], 0);
+                }
+                else{
+                    children[4]->set_neighbor(neighbors[0], 0);
+                    children[6]->set_neighbor(neighbors[0], 0);
+                }
+                // +x direction
+                if(neighbors[1]!=NULL && !neighbors[1]->is_leaf()){
+                    children[5]->set_neighbor(neighbors[1]->children[4], 1);
+                    children[7]->set_neighbor(neighbors[1]->children[6], 1);
+                }else{
+                    children[5]->set_neighbor(neighbors[1], 1);
+                    children[7]->set_neighbor(neighbors[1], 1);
+                }
+                // -y direction
+                if(neighbors[2]!=NULL && !neighbors[2]->is_leaf()){
+                    children[4]->set_neighbor(neighbors[2]->children[6], 2);
+                    children[5]->set_neighbor(neighbors[2]->children[7], 2);
+                }else{
+                    children[4]->set_neighbor(neighbors[2], 2);
+                    children[5]->set_neighbor(neighbors[2], 2);
+                }
+                // +y direction
+                if(neighbors[3]!=NULL && !neighbors[3]->is_leaf()){
+                    children[6]->set_neighbor(neighbors[3]->children[4], 3);
+                    children[7]->set_neighbor(neighbors[3]->children[5], 3);
+                }else{
+                    children[6]->set_neighbor(neighbors[3], 3);
+                    children[7]->set_neighbor(neighbors[3], 3);
+                }
+                // -z direction
+                if(neighbors[4]!=NULL && !neighbors[4]->is_leaf()){
+                    children[0]->set_neighbor(neighbors[4]->children[4], 4);
+                    children[1]->set_neighbor(neighbors[4]->children[5], 4);
+                    children[2]->set_neighbor(neighbors[4]->children[6], 4);
+                    children[3]->set_neighbor(neighbors[4]->children[7], 4);
+                }else{
+                    children[0]->set_neighbor(neighbors[4], 4);
+                    children[1]->set_neighbor(neighbors[4], 4);
+                    children[2]->set_neighbor(neighbors[4], 4);
+                    children[3]->set_neighbor(neighbors[4], 4);
+                }
+                // +z direction
+                if(neighbors[5]!=NULL && !neighbors[5]->is_leaf()){
+                    children[4]->set_neighbor(neighbors[5]->children[0], 5);
+                    children[5]->set_neighbor(neighbors[5]->children[1], 5);
+                    children[6]->set_neighbor(neighbors[5]->children[2], 5);
+                    children[7]->set_neighbor(neighbors[5]->children[3], 5);
+                }else{
+                    children[4]->set_neighbor(neighbors[5], 5);
+                    children[5]->set_neighbor(neighbors[5], 5);
+                    children[6]->set_neighbor(neighbors[5], 5);
+                    children[7]->set_neighbor(neighbors[5], 5);
+                }
             }
         }
     }
     if(!force){
-        for(int_t i = 0; i < (1<<n_dim); ++i){
-            children[i]->divide(nodes, xs, ys, zs);
+        if(!is_leaf()){
+            for(int_t i = 0; i < (1<<n_dim); ++i){
+                children[i]->divide(nodes, xs, ys, zs);
+            }
         }
     }
 };
+
+
+void Cell::set_test_function(function func){
+    test_func = func;
+    if(!is_leaf()){
+        for(int_t i = 0; i < (1<<n_dim); ++i){
+            children[i]->set_test_function(func);
+        }
+    }
+}
 
 void Cell::build_cell_vector(cell_vec_t& cells){
     if(this->is_leaf()){
@@ -556,6 +570,29 @@ Cell* Cell::containing_cell(double x, double y, double z){
     int iz = n_dim>2 && z>children[0]->points[7]->location[2];
     return children[ix + 2*iy + 4*iz]->containing_cell(x, y, z);
 };
+
+void Cell::find_overlapping_cells(int_vec_t& cells, double xm, double xp, double ym, double yp, double zm, double zp){
+    // If I do not overlap the cells
+    if (xm > points[3]->location[0] || xp < points[0]->location[0]){
+      return;
+    }
+
+    if (ym > points[3]->location[1] || yp < points[0]->location[1]){
+      return;
+    }
+
+    if (n_dim>2 && (zm > points[7]->location[2] || zp < points[0]->location[2])){
+      return;
+    }
+
+    if(this->is_leaf()){
+        cells.push_back(index);
+        return;
+    }
+    for(int_t i = 0; i < (1<<n_dim); ++i){
+        children[i]->find_overlapping_cells(cells, xm, xp, ym, yp, zm, zp);
+    }
+}
 
 Cell::~Cell(){
         if(is_leaf()){
@@ -723,7 +760,7 @@ void Tree::build_tree_from_function(function test_func){
     for(int_t iz=0; iz<nz_roots; ++iz)
         for(int_t iy=0; iy<ny_roots; ++iy)
             for(int_t ix=0; ix<nx_roots; ++ix)
-                roots[iz][iy][ix]->test_func = test_func;
+                roots[iz][iy][ix]->set_test_function(test_func);
     //Now we can divide
     for(int_t iz=0; iz<nz_roots; ++iz)
         for(int_t iy=0; iy<ny_roots; ++iy)
@@ -1290,6 +1327,19 @@ Cell* Tree::containing_cell(double x, double y, double z){
     }
     return roots[iz][iy][ix]->containing_cell(x, y, z);
 }
+
+int_vec_t Tree::find_overlapping_cells(double xm, double xp, double ym, double yp, double zm, double zp){
+    int_vec_t overlaps;
+    for(int_t iz=0; iz<nz_roots; ++iz){
+        for(int_t iy=0; iy<ny_roots; ++iy){
+            for(int_t ix=0; ix<nx_roots; ++ix){
+                roots[iz][iy][ix]->find_overlapping_cells(overlaps, xm, xp, ym, yp, zm, zp);
+            }
+        }
+    }
+    return overlaps;
+  }
+
 
 void Tree::shift_cell_centers(double *shift){
     for(int_t iz=0; iz<nz_roots; ++iz)

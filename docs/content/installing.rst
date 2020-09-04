@@ -1,35 +1,20 @@
 .. _api_installing:
 
-Getting Started
-***************
+Installing
+**********
 
-Dependencies
-============
+Which Python?
+=============
 
-- Python 2.7, 3.4 or 3.5
-- NumPy 1.8 (or greater)
-- SciPy 0.13 (or greater)
-- matplotlib 1.3 (or greater)
-- pymatsolver 0.1.2 (or greater)
-- Cython 0.20 (or greater)
-- properties[math]
-
-Development Dependencies
-------------------------
-- sphinx
-- sphinx_rtd_theme
-- sphinx-gallery
-- pillow
-- nose-cov
-- pylint
+Currently, `discretize` will run on 3.6, 3.7, and 3.8. We recommend that you
+use the latest version of Python available on `Anaconda <https://www.anaconda.com/download>`_.
 
 Installing Python
-=================
+-----------------
 
 Python is available on all major operating systems, but if you are getting started with python
 it is best to use a package manager such as
-`Continuum Anaconda <https://www.continuum.io/downloads>`_ or
-`Enthought Canopy <https://www.enthought.com/products/canopy/>`_.
+`Anaconda <https://www.anaconda.com/download>`_.
 You can download the package manager and use it to install the dependencies above.
 
 .. note::
@@ -38,17 +23,50 @@ You can download the package manager and use it to install the dependencies abov
         conda update conda
         conda update anaconda
 
+Dependencies
+============
+
+- `numpy <http://www.numpy.org>`_ 1.8 (or greater)
+- `scipy <https://docs.scipy.org/doc/scipy/reference>`_ 0.13 (or greater)
+- `matplotlib <https://matplotlib.org>`_ 1.3 (or greater)
+- `cython <https://cython.org/>`_ 0.20 (or greater)
+- `properties[math] <http://propertiespy.readthedocs.io>`_
+
+We also recommend installing:
+- `pymatsolver <https://pymatsolver.readthedocs.io/en/latest/>`_ 0.1.2 (or greater)
 
 Installing discretize
 =====================
 
-discretize is on pip::
+discretize is on conda-forge::
+
+    conda install -c conda-forge discretize
+
+discretize is on pypi::
 
     pip install discretize
+
+.. attention:: Windows users
+
+    If the pip install fails, please try installing the most recent version of
+    Visual Studio Community from https://visualstudio.microsoft.com/vs/community/
+
+    Within the **Python development** options, ensure that the following are included
+
+        - Cookiecutter template support
+        - Python web support
+        - Python 3 64-bit
+
+    .. image:: ../images/visual-studio-community.png
+        :align: center
+
 
 
 Installing from Source
 ----------------------
+
+If you are not a developer then pip is really the preferred way. However, if
+you are an active developer of discretize you might want to install if from source:
 
 First (you need git)::
 
@@ -56,51 +74,13 @@ First (you need git)::
 
 Second (from the root of the discretize repository)::
 
-    python setup.py build_ext --inline
+    python setup.py build_ext --inplace
 
 This builds the cython extensions. You will also need to add
 the discretize directory to your PYTHON_PATH.
 
-.. attention:: Windows users
 
-	A common error when installing the setup.py is:
-	``Missing linker, needs MSC v.1500 (Microsoft Visual C++ 2008) Runtime Library``
+Testing your installation
+=========================
 
-	The missing library can be found `here <https://www.microsoft.com/en-ca/download/details.aspx?id=29>`
-
-Useful Links
-============
-An enormous amount of information (including tutorials and examples) can be found on the official websites of the packages
-
-* `Python Website <https://www.python.org/>`_
-* `Numpy Website <http://www.numpy.org/>`_
-* `SciPy Website <http://www.scipy.org/>`_
-* `Matplotlib <http://matplotlib.org/>`_
-
-Python for scientific computing
--------------------------------
-
-* `Python for Scientists <https://sites.google.com/site/pythonforscientists/>`_ Links to commonly used packages, Matlab to Python comparison
-* `Python Wiki <http://wiki.python.org/moin/NumericAndScientific>`_ Lists packages and resources for scientific computing in Python
-
-Numpy and Matlab
-----------------
-
-* `NumPy for Matlab Users <https://docs.scipy.org/doc/numpy/user/numpy-for-matlab-users.html>`_
-* `Python vs Matlab <https://sites.google.com/site/pythonforscientists/python-vs-matlab>`_
-
-Lessons in Python
------------------
-
-* `Software Carpentry <http://swcarpentry.github.io/python-novice-inflammation/>`_
-* `Introduction to NumPy and Matplotlib <https://www.youtube.com/watch?v=3Fp1zn5ao2M>`_
-
-Editing Python
---------------
-
-There are numerous ways to edit and test Python (see `PythonWiki <http://wiki.python.org/moin/PythonEditors>`_ for an overview) and in our group at least the following options are being used:
-
-* `Sublime <http://www.sublimetext.com/>`_
-* `iPython Notebook <http://ipython.org/notebook.html>`_
-* `iPython <http://ipython.org/>`_
-* `Enthought Canopy <https://www.enthought.com/products/canopy/>`_
+Head over to the :ref:`sphx_glr_examples` and download and run any of the notebooks or python scripts.

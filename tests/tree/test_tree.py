@@ -4,7 +4,6 @@ import unittest
 import discretize
 
 TOL = 1e-8
-np.random.seed(12)
 
 
 class TestSimpleQuadTree(unittest.TestCase):
@@ -92,7 +91,7 @@ class TestSimpleQuadTree(unittest.TestCase):
         hx, hy = np.r_[1., 2, 3, 4], np.r_[5., 6, 7, 8]
         T = discretize.TreeMesh([hx, hy], levels=2)
         T.refine(lambda xc: 2)
-        # T.plotGrid(showIt=True)
+        # T.plotGrid(show_it=True)
         M = discretize.TensorMesh([hx, hy])
         self.assertEqual(M.nC, T.nC)
         self.assertEqual(M.nF, T.nF)
@@ -112,6 +111,19 @@ class TestSimpleQuadTree(unittest.TestCase):
 
         self.assertEqual((M.faceDiv - T.permuteCC*T.faceDiv*T.permuteF.T).nnz, 0)
 
+    def test_serialization(self):
+        hx, hy = np.r_[1., 2, 3, 4], np.r_[5., 6, 7, 8]
+        mesh1 = discretize.TreeMesh([hx, hy], levels=2, x0=np.r_[-1, -1])
+        mesh1.refine(2)
+        mesh2 = discretize.TreeMesh.deserialize(mesh1.serialize())
+        self.assertTrue(np.all(mesh1.x0 == mesh2.x0))
+        self.assertTrue(np.all(mesh1._n == mesh2._n))
+        self.assertTrue(np.all(mesh1.gridCC == mesh2.gridCC))
+
+        mesh1.x0 = np.r_[-2., 2]
+        mesh2 = discretize.TreeMesh.deserialize(mesh1.serialize())
+        self.assertTrue(np.all(mesh1.x0 == mesh2.x0))
+
 
 class TestOcTree(unittest.TestCase):
 
@@ -127,7 +139,7 @@ class TestOcTree(unittest.TestCase):
         levels = np.array([1, 2])
         M.insert_cells(points, levels)
         M.number()
-        # M.plotGrid(showIt=True)
+        # M.plotGrid(show_it=True)
         self.assertEqual(M.nhFx, 4)
         self.assertTrue(M.nFx, 19)
         self.assertTrue(M.nC, 15)
@@ -147,7 +159,7 @@ class TestOcTree(unittest.TestCase):
         hx, hy, hz = np.r_[1., 2, 3, 4], np.r_[5., 6, 7, 8], np.r_[9., 10, 11, 12]
         M = discretize.TreeMesh([hx, hy, hz], levels=2)
         M.refine(lambda xc: 2)
-        # M.plotGrid(showIt=True)
+        # M.plotGrid(show_it=True)
         Mr = discretize.TensorMesh([hx, hy, hz])
         self.assertEqual(M.nC, Mr.nC)
         self.assertEqual(M.nF, Mr.nF)
@@ -185,7 +197,7 @@ class TestOcTree(unittest.TestCase):
 
         M = discretize.TreeMesh([hx, hy, hz], levels=2)
         M.refine(lambda xc:2)
-        # M.plotGrid(showIt=True)
+        # M.plotGrid(show_it=True)
         Mr = discretize.TensorMesh([hx, hy, hz])
 
 
@@ -295,7 +307,7 @@ class Test3DInterpolation(unittest.TestCase):
 
         M = discretize.TreeMesh([16, 16, 16], levels=4)
         M.refine(function)
-        # M.plotGrid(showIt=True)
+        # M.plotGrid(show_it=True)
         self.M = M
 
     def test_Fx(self):

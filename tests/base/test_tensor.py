@@ -117,6 +117,14 @@ class BasicTensorMeshTests(unittest.TestCase):
         M = discretize.TensorMesh([[(10., 2)]])
         self.assertLess(np.abs(M.hx - np.r_[10., 10.]).sum(), TOL)
 
+    def test_serialization(self):
+        mesh = discretize.TensorMesh.deserialize(self.mesh2.serialize())
+        self.assertTrue(np.all(self.mesh2.x0 == mesh.x0))
+        self.assertTrue(np.all(self.mesh2._n == mesh._n))
+        self.assertTrue(np.all(self.mesh2.hx == mesh.hx))
+        self.assertTrue(np.all(self.mesh2.hy == mesh.hy))
+        self.assertTrue(np.all(self.mesh2.gridCC == mesh.gridCC))
+
 
 class TestPoissonEqn(discretize.Tests.OrderTest):
     name = "Poisson Equation"

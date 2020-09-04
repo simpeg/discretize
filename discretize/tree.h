@@ -30,6 +30,7 @@ typedef node_map_t::iterator node_it_type;
 typedef edge_map_t::iterator edge_it_type;
 typedef face_map_t::iterator face_it_type;
 typedef std::vector<Cell *> cell_vec_t;
+typedef std::vector<int_t> int_vec_t;
 
 class PyWrapper{
   public:
@@ -106,7 +107,8 @@ class Cell{
     Edge *edges[12];
     Face *faces[6];
 
-    int_t location_ind[3], index, key, level, max_level;
+    int_t location_ind[3], key, level, max_level;
+    long long int index; // non root parents will have a -1 value
     double location[3];
     double volume;
     function test_func;
@@ -120,7 +122,10 @@ class Cell{
     void spawn(node_map_t& nodes, Cell *kids[8], double* xs, double *ys, double *zs);
     void divide(node_map_t& nodes, double* xs, double* ys, double* zs, bool force=false, bool balance=true);
     void set_neighbor(Cell* other, int_t direction);
+    void set_test_function(function func);
     void build_cell_vector(cell_vec_t& cells);
+    void find_overlapping_cells(int_vec_t& cells, double xm, double xp, double ym, double yp, double zm, double zp);
+
 
     void insert_cell(node_map_t &nodes, double *new_center, int_t p_level, double* xs, double *ys, double *zs);
 
@@ -161,7 +166,7 @@ class Tree{
     void insert_cell(double *new_center, int_t p_level);
 
     Cell* containing_cell(double, double, double);
-
+    int_vec_t find_overlapping_cells(double xm, double xp, double ym, double yp, double zm, double zp);
     void shift_cell_centers(double *shift);
 };
 #endif

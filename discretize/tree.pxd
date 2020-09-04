@@ -58,7 +58,8 @@ cdef extern from "tree.h":
         Face *faces[6]
         int_t location_ind[3]
         double location[3]
-        int_t index, key, level, max_level
+        int_t key, level, max_level
+        long long int index
         double volume
         inline bool is_leaf()
 
@@ -89,4 +90,5 @@ cdef extern from "tree.h":
         void insert_cell(double *new_center, int_t p_level);
         void finalize_lists()
         Cell * containing_cell(double, double, double)
+        vector[int_t] find_overlapping_cells(double xm, double xp, double ym, double yp, double zm, double zp)
         void shift_cell_centers(double*)

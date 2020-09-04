@@ -37,13 +37,29 @@ nosetests.xml
 
 *.sublime-project
 *.sublime-workspace
-docs/_build/
-docs/warnings.txt
 .DS_Store
-docs/auto_examples
-docs/modules
 tree_ext.cpp
 interputils_cython.c
 
 # Jupyter
 *.ipynb
+
+# docs
+docs/_build/
+docs/warnings.txt
+docs/api/generated/*
+docs/examples
+docs/gallery/*
+docs/tutorials/*
+
+# Examples data
+/examples/Chile_GRAV_4_Miller
+/examples/*.tar.gz
+examples/Chile_GRAV_4_Miller
+examples/*.tar.gz
+
+# downloads for examples
+*.tar.gz
+*.dat
+*.dir
+*.bak

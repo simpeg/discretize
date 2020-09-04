@@ -21,8 +21,20 @@ discretize
     :target: https://www.codacy.com/app/lindseyheagy/discretize?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=simpeg/discretize&amp;utm_campaign=Badge_Grade
     :alt: codacy status
 
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.596411.svg
+   :target: https://doi.org/10.5281/zenodo.596411
 
-**discretize** - A python package for finite volume discretization. 
+.. image:: https://img.shields.io/discourse/users?server=http%3A%2F%2Fsimpeg.discourse.group%2F
+    :target: http://simpeg.discourse.group/
+
+.. image:: https://img.shields.io/badge/Slack-simpeg-4B0082.svg?logo=slack
+    :target: http://slack.simpeg.xyz
+
+.. image:: https://img.shields.io/badge/Youtube%20channel-GeoSci.xyz-FF0000.svg?logo=youtube
+    :target: https://www.youtube.com/channel/UCBrC4M8_S4GXhyHht7FyQqw
+
+
+**discretize** - A python package for finite volume discretization.
 
 The vision is to create a package for finite volume simulation with a
 focus on large scale inverse problems.
@@ -44,23 +56,28 @@ Currently, discretize supports:
 * Logically Rectangular Meshes (2D and 3D)
 
 Installing
-----------
+^^^^^^^^^^
+**discretize** is on conda-forge
+
+.. code:: shell
+
+    conda install -c conda-forge discretize
 
 **discretize** is on pypi
 
-.. code::
+.. code:: shell
 
     pip install discretize
-    
+
 To install from source
 
-.. code:: 
+.. code:: shell
 
     git clone https://github.com/simpeg/discretize.git
     python setup.py install
 
 Citing discretize
------------------
+^^^^^^^^^^^^^^^^^
 
 Please cite the SimPEG paper when using discretize in your work:
 
@@ -69,7 +86,7 @@ Please cite the SimPEG paper when using discretize in your work:
 
 **BibTex:**
 
-.. code::
+.. code:: Latex
 
     @article{cockett2015simpeg,
       title={SimPEG: An open source framework for simulation and gradient based parameter estimation in geophysical applications},
@@ -80,7 +97,7 @@ Please cite the SimPEG paper when using discretize in your work:
     }
 
 Links
------
+^^^^^
 
 Website:
 http://simpeg.xyz
@@ -98,8 +115,7 @@ Bugs & Issues:
 https://github.com/simpeg/discretize/issues
 
 Questions:
-https://groups.google.com/forum/#!forum/simpeg
+http://simpeg.discourse.group/
 
 Chat:
 http://slack.simpeg.xyz/
-

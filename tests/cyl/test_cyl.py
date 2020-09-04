@@ -298,6 +298,15 @@ class TestCyl2DMesh(unittest.TestCase):
         assert np.abs(mag[dist > 0.1].max() - 1) < TOL
         assert np.abs(mag[dist > 0.1].min() - 1) < TOL
 
+    def test_serialization(self):
+        mesh = discretize.CylMesh.deserialize(self.mesh.serialize())
+        self.assertTrue(np.all(self.mesh.x0 == mesh.x0))
+        self.assertTrue(np.all(self.mesh._n == mesh._n))
+        self.assertTrue(np.all(self.mesh.hx == mesh.hx))
+        self.assertTrue(np.all(self.mesh.hy == mesh.hy))
+        self.assertTrue(np.all(self.mesh.hz == mesh.hz))
+        self.assertTrue(np.all(self.mesh.gridCC == mesh.gridCC))
+
 
 MESHTYPES = ['uniformCylMesh']
 call2 = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 2])

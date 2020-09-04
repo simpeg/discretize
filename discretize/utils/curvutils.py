@@ -7,9 +7,9 @@ def volTetra(xyz, A, B, C, D):
     """
     Returns the volume for tetrahedras volume specified by the indexes A to D.
 
-    :param numpy.array xyz: X,Y,Z vertex vector
-    :param numpy.array A,B,C,D: vert index of the tetrahedra
-    :rtype: numpy.array
+    :param numpy.ndarray xyz: X,Y,Z vertex vector
+    :param numpy.ndarray A,B,C,D: vert index of the tetrahedra
+    :rtype: numpy.ndarray
     :return: V, volume of the tetrahedra
 
     Algorithm https://en.wikipedia.org/wiki/Tetrahedron#Volume

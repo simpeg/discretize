@@ -18,18 +18,40 @@ class CylMesh(
     BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView, DiffOperators
 ):
     """
-    CylMesh is a mesh class for cylindrical problems
+    CylMesh is a mesh class for cylindrical problems. It supports both
+    cylindrically symmetric and 3D cylindrical meshes that include an azimuthal
+    discretization.
 
-    .. note::
+    For a cylindrically symmetric mesh use :code:`h = [hx, 1, hz]`. For example:
 
-        for a cylindrically symmetric mesh use [hx, 1, hz]
+    .. plot::
+        :include-source:
 
-    ::
+        import discretize
+        from discretize import utils
 
         cs, nc, npad = 20., 30, 8
-        hx = utils.meshTensor([(cs,npad+10,-0.7), (cs,nc), (cs,npad,1.3)])
-        hz = utils.meshTensor([(cs,npad   ,-1.3), (cs,nc), (cs,npad,1.3)])
-        mesh = Mesh.CylMesh([hx,1,hz], [0.,0,-hz.sum()/2.])
+        hx = utils.meshTensor([(cs, npad+10, -0.7), (cs, nc), (cs, npad, 1.3)])
+        hz = utils.meshTensor([(cs, npad ,-1.3), (cs, nc), (cs, npad, 1.3)])
+        mesh = discretize.CylMesh([hx, 1, hz], x0=[0, 0, -hz.sum()/2])
+        mesh.plotGrid()
+
+    To create a 3D cylindrical mesh, we also include an azimuthal discretization
+
+    .. plot::
+        :include-source:
+
+        import discretize
+        from discretize import utils
+
+        cs, nc, npad = 20., 30, 8
+        nc_theta = 8
+        hx = utils.meshTensor([(cs, npad+10, -0.7), (cs, nc), (cs, npad, 1.3)])
+        hy = 2 * np.pi/nc_theta * np.ones(nc_theta)
+        hz = utils.meshTensor([(cs,npad, -1.3), (cs,nc), (cs, npad, 1.3)])
+        mesh = discretize.CylMesh([hx, hy, hz], x0=[0, 0, -hz.sum()/2])
+        mesh.plotGrid()
+
     """
 
     _meshType = 'CYL'
@@ -43,6 +65,7 @@ class CylMesh(
 
     def __init__(self, h=None, x0=None, **kwargs):
         super(CylMesh, self).__init__(h=h, x0=x0, **kwargs)
+        self.reference_system = 'cylindrical'
 
         if not np.abs(self.hy.sum() - 2*np.pi) < 1e-10:
             raise AssertionError("The 2nd dimension must sum to 2*pi")
@@ -71,18 +94,20 @@ class CylMesh(
         """
         Is the mesh cylindrically symmetric?
 
-        :rtype: bool
-        :return: True if the mesh is cylindrically symmetric, False otherwise
+        Returns
+        -------
+        bool
+            True if the mesh is cylindrically symmetric, False otherwise
         """
         return self.nCy == 1
 
     @property
     def _ntNx(self):
         """
-        Number of total x nodes (prior to deflating)
-
-        :rtype: int
-        :return: ntNx
+        Returns
+        -------
+        int
+            Number of total x nodes (prior to deflating)
         """
         if self.isSymmetric:
             return self.nCx
@@ -91,56 +116,56 @@ class CylMesh(
     @property
     def nNx(self):
         """
-        Number of nodes in the x-direction
-
-        :rtype: int
-        :return: nNx
+        Returns
+        -------
+        int
+            Number of nodes in the x-direction
         """
-        # if self.isSymmetric is True:
+        # if self.isSymmetric:
         #     return self.nCx
         return self._ntNx
 
     @property
     def _ntNy(self):
         """
-        Number of total y nodes (prior to deflating)
-
-        :rtype: int
-        :return: ntNy
+        Returns
+        -------
+        int
+            Number of total y nodes (prior to deflating)
         """
-        if self.isSymmetric is True:
+        if self.isSymmetric:
             return 1
         return self.nCy + 1
 
     @property
     def nNy(self):
         """
-        Number of nodes in the y-direction
-
-        :rtype: int
-        :return: nNy
+        Returns
+        -------
+        int
+            Number of nodes in the y-direction
         """
-        if self.isSymmetric is True:
+        if self.isSymmetric:
             return 0
         return self.nCy
 
     @property
     def _ntNz(self):
         """
-        Number of total z nodes (prior to deflating)
-
-        :rtype: int
-        :return: ntNz
+        Returns
+        -------
+        int
+            Number of total z nodes (prior to deflating)
         """
         return self.nNz
 
     @property
     def _ntN(self):
         """
-        Number of total nodes (prior to deflating)
-
-        :rtype: int
-        :return: ntN
+        Returns
+        -------
+        int
+            Number of total nodes (prior to deflating)
         """
         if self.isSymmetric:
             return 0
@@ -149,10 +174,10 @@ class CylMesh(
     @property
     def nN(self):
         """
-        Total number of nodes
-
-        :rtype: int
-        :return: nN
+        Returns
+        -------
+        int
+            Total number of nodes
         """
         if self.isSymmetric:
             return 0
@@ -184,10 +209,10 @@ class CylMesh(
     @property
     def vnFx(self):
         """
-        Number of x-faces in each direction
-
-        :rtype: numpy.array
-        :return: vnFx, (dim, )
+        Returns
+        -------
+        numpy.ndarray
+            Number of x-faces in each direction, (dim, )
         """
         return self.vnC
 
@@ -270,8 +295,10 @@ class CylMesh(
         """
         Number of y-edges in each direction
 
-        :rtype: numpy.array
-        :return: vnEy or None if dim < 2, (dim, )
+        Returns
+        -------
+        numpy.ndarray
+            vnEy or None if dim < 2, (dim, )
         """
         if self.isSymmetric:
             return np.r_[self.nNx, self.nCy, self.nNz]
@@ -294,22 +321,22 @@ class CylMesh(
     @property
     def vnEz(self):
         """
-        Number of z-edges in each direction
-
-        :rtype: numpy.array
-        :return: vnEz or None if nCy > 1, (dim, )
+        Returns
+        -------
+        numpy.ndarray
+            Number of z-edges in each direction or None if nCy > 1, (dim, )
         """
         return np.r_[self.nNx, self.nNy, self.nCz]
 
     @property
     def nEz(self):
         """
-        Number of z-edges
-
-        :rtype: int
-        :return: nEz
+        Returns
+        -------
+        int
+            Number of z-edges
         """
-        if self.isSymmetric is True:
+        if self.isSymmetric:
             return self.vnEz.prod()
         return (np.r_[self.nNx-1, self.nNy, self.nCz]).prod() + self.nCz
 
@@ -321,14 +348,14 @@ class CylMesh(
     @property
     def vectorCCy(self):
         """Cell-centered grid vector (1D) in the y direction."""
-        if self.isSymmetric is True:
+        if self.isSymmetric:
             return np.r_[0, self.hy[:-1]]
         return np.r_[0, self.hy[:-1].cumsum()] + self.hy*0.5
 
     @property
     def vectorNx(self):
         """Nodal grid vector (1D) in the x direction."""
-        if self.isSymmetric is True:
+        if self.isSymmetric:
             return self.hx.cumsum()
         return np.r_[0, self.hx].cumsum()
 
@@ -344,7 +371,7 @@ class CylMesh(
     @property
     def vectorNy(self):
         """Nodal grid vector (1D) in the y direction."""
-        # if self.isSymmetric is True:
+        # if self.isSymmetric:
         #     # There aren't really any nodes, but all the grids need
         #     # somewhere to live, why not zero?!
         #     return np.r_[0]
@@ -365,8 +392,10 @@ class CylMesh(
         x-edge lengths - these are the radial edges. Radial edges only exist
         for a 3D cyl mesh.
 
-        :rtype: numpy.ndarray
-        :return: vector of radial edge lengths
+        Returns
+        -------
+        numpy.ndarray
+            vector of radial edge lengths
         """
         if getattr(self, '_edgeEx', None) is None:
             self._edgeEx = self._edgeExFull[~self._ishangingEx]
@@ -388,10 +417,12 @@ class CylMesh(
     def edgeEy(self):
         """
         y-edge lengths - these are the azimuthal edges. Azimuthal edges exist
-        for all cylindrical meshes. These are arc-lengths (:math:`\theta r`)
+        for all cylindrical meshes. These are arc-lengths (:math:`\\theta r`)
 
-        :rtype: numpy.ndarray
-        :return: vector of the azimuthal edges
+        Returns
+        -------
+        numpy.ndarray
+            vector of the azimuthal edges
         """
         if getattr(self, '_edgeEy', None) is None:
             if self.isSymmetric:
@@ -416,8 +447,10 @@ class CylMesh(
         z-edge lengths - these are the vertical edges. Vertical edges only
         exist for a 3D cyl mesh.
 
-        :rtype: numpy.ndarray
-        :return: vector of the vertical edges
+        Returns
+        -------
+        numpy.ndarray
+            vector of the vertical edges
         """
         if getattr(self, '_edgeEz', None) is None:
 
@@ -440,10 +473,12 @@ class CylMesh(
         """
         Edge lengths
 
-        :rtype: numpy.ndarray
-        :return: vector of edge lengths :math:`(r, \theta, z)`
+        Returns
+        -------
+        numpy.ndarray
+            vector of edge lengths :math:`(r, \\theta, z)`
         """
-        if self.isSymmetric is True:
+        if self.isSymmetric:
             return self.edgeEy
             # return 2*pi*self.gridN[:, 0]
         else:
@@ -465,10 +500,12 @@ class CylMesh(
         cylindrical meshes
 
         .. math::
-            A_x = r \theta h_z
+            A_x = r \\theta h_z
 
-        :rtype: numpy.ndarray
-        :return: area of x-faces
+        Returns
+        -------
+        numpy.ndarray
+            area of x-faces
         """
         if getattr(self, '_areaFx', None) is None:
             if self.isSymmetric:
@@ -493,11 +530,13 @@ class CylMesh(
         .. math::
             A_y = h_x h_z
 
-        :rtype: numpy.ndarray
-        :return: area of y-faces
+        Returns
+        -------
+        numpy.ndarray
+            area of y-faces
         """
         if getattr(self, '_areaFy', None) is None:
-            if self.isSymmetric is True:
+            if self.isSymmetric:
                 raise Exception(
                     'There are no y-faces on the Cyl Symmetric mesh'
                 )
@@ -529,10 +568,12 @@ class CylMesh(
         Area of z-faces.
 
         .. math::
-            A_z = \\frac{\theta}{2} (r_2^2 - r_1^2)z
+            A_z = \\frac{\\theta}{2} (r_2^2 - r_1^2)z
 
-        :rtype: numpy.ndarray
-        :return: area of the z-faces
+        Returns
+        -------
+        numpy.ndarray
+            area of the z-faces
         """
         if getattr(self, '_areaFz', None) is None:
             if self.isSymmetric:
@@ -556,11 +597,13 @@ class CylMesh(
         For a 3D cyl mesh: [radial, azimuthal, vertical], while a cylindrically
         symmetric mesh doesn't have y-Faces, so it returns [radial, vertical]
 
-        :rtype: numpy.ndarray
-        :return: face areas
+        Returns
+        -------
+        numpy.ndarray
+            face areas
         """
         # if getattr(self, '_area', None) is None:
-        if self.isSymmetric is True:
+        if self.isSymmetric:
             return np.r_[self.areaFx, self.areaFz]
         else:
             return np.r_[self.areaFx, self.areaFy, self.areaFz]
@@ -570,8 +613,10 @@ class CylMesh(
         """
         Volume of each cell
 
-        :rtype: numpy.ndarray
-        :return: cell volumes
+        Returns
+        -------
+        numpy.ndarray
+            cell volumes
         """
         if getattr(self, '_vol', None) is None:
             if self.isSymmetric:
@@ -944,11 +989,13 @@ class CylMesh(
     @property
     def gridN(self):
         """
-        Nodal grid in cylindrical coordinates :math:`(r, \theta, z)`.
+        Nodal grid in cylindrical coordinates :math:`(r, \\theta, z)`.
         Nodes do not exist in a cylindrically symmetric mesh.
 
-        :rtype: numpy.ndarray
-        :return: grid locations of nodes
+        Returns
+        -------
+        numpy.ndarray
+            grid locations of nodes
         """
         if self.isSymmetric:
             self._gridN = self._gridNFull
@@ -969,13 +1016,15 @@ class CylMesh(
     def gridFx(self):
         """
         Grid of x-faces (radial-faces) in cylindrical coordinates
-        :math:`(r, \theta, z)`.
+        :math:`(r, \\theta, z)`.
 
-        :rtype: numpy.ndarray
-        :return: grid locations of radial faces
+        Returns
+        -------
+        numpy.ndarray
+            grid locations of radial faces
         """
         if getattr(self, '_gridFx', None) is None:
-            if self.isSymmetric is True:
+            if self.isSymmetric:
                 return super(CylMesh, self).gridFx
             else:
                 self._gridFx = self._gridFxFull[~self._ishangingFx, :]
@@ -992,13 +1041,15 @@ class CylMesh(
     def gridEy(self):
         """
         Grid of y-edges (azimuthal-faces) in cylindrical coordinates
-        :math:`(r, \theta, z)`.
+        :math:`(r, \\theta, z)`.
 
-        :rtype: numpy.ndarray
-        :return: grid locations of azimuthal faces
+        Returns
+        -------
+        numpy.ndarray
+            grid locations of azimuthal faces
         """
         if getattr(self, '_gridEy', None) is None:
-            if self.isSymmetric is True:
+            if self.isSymmetric:
                 return self._gridEyFull
             else:
                 self._gridEy = self._gridEyFull[~self._ishangingEy, :]
@@ -1017,13 +1068,15 @@ class CylMesh(
     def gridEz(self):
         """
         Grid of z-faces (vertical-faces) in cylindrical coordinates
-        :math:`(r, \theta, z)`.
+        :math:`(r, \\theta, z)`.
 
-        :rtype: numpy.ndarray
-        :return: grid locations of radial faces
+        Returns
+        -------
+        numpy.ndarray
+            grid locations of radial faces
         """
         if getattr(self, '_gridEz', None) is None:
-            if self.isSymmetric is True:
+            if self.isSymmetric:
                 self._gridEz = None
             else:
                 self._gridEz = self._gridEzFull[~self._ishangingEz, :]
@@ -1042,7 +1095,7 @@ class CylMesh(
             # Compute faceDivergence operator on faces
             D1 = self.faceDivx
             D3 = self.faceDivz
-            if self.isSymmetric is True:
+            if self.isSymmetric:
                 D = sp.hstack((D1, D3), format="csr")
             elif self.nCy > 1:
                 D2 = self.faceDivy
@@ -1152,26 +1205,26 @@ class CylMesh(
 
     # @property
     # def _nodalGradStencilx(self):
-    #     if self.isSymmetric is True:
+    #     if self.isSymmetric:
     #         return None
     #     return kron3(speye(self.nNz), speye(self.nNy), ddx(self.nCx))
 
     # @property
     # def _nodalGradStencily(self):
-    #     if self.isSymmetric is True:
+    #     if self.isSymmetric:
     #         None
     #         # return kron3(speye(self.nNz), ddx(self.nCy), speye(self.nNx)) * self._deflationMatrix('Ey')
     #     return kron3(speye(self.nNz), ddx(self.nCy), speye(self.nNx))
 
     # @property
     # def _nodalGradStencilz(self):
-    #     if self.isSymmetric is True:
+    #     if self.isSymmetric:
     #         return None
     #     return kron3(ddx(self.nCz), speye(self.nNy), speye(self.nNx))
 
     # @property
     # def _nodalGradStencil(self):
-    #     if self.isSymmetric is True:
+    #     if self.isSymmetric:
     #         return None
     #     else:
     #         G = self._deflationMatrix('E').T * sp.vstack((
@@ -1184,7 +1237,7 @@ class CylMesh(
     @property
     def nodalGrad(self):
         """Construct gradient operator (nodes to edges)."""
-        if self.isSymmetric is True:
+        if self.isSymmetric:
             return None
         raise NotImplementedError('nodalGrad not yet implemented')
 
@@ -1198,14 +1251,16 @@ class CylMesh(
         """
         The edgeCurl (edges to faces)
 
-        :rtype: scipy.sparse.csr_matrix
-        :return: edge curl operator
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            edge curl operator
         """
         if getattr(self, '_edgeCurl', None) is None:
             A = self.area
             E = self.edge
 
-            if self.isSymmetric is True:
+            if self.isSymmetric:
                 # 1D Difference matricies
                 dr = sp.spdiags(
                     (np.ones((self.nCx+1, 1))*[-1, 1]).T, [-1, 0],
@@ -1239,8 +1294,10 @@ class CylMesh(
         """
         averaging operator of x-edges (radial) to cell centers
 
-        :rtype: scipy.sparse.csr_matrix
-        :return: matrix that averages from x-edges to cell centers
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            matrix that averages from x-edges to cell centers
         """
         if self.isSymmetric:
             raise Exception('There are no x-edges on a cyl symmetric mesh')
@@ -1255,8 +1312,10 @@ class CylMesh(
         """
         averaging operator of y-edges (azimuthal) to cell centers
 
-        :rtype: scipy.sparse.csr_matrix
-        :return: matrix that averages from y-edges to cell centers
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            matrix that averages from y-edges to cell centers
         """
         if self.isSymmetric:
             avR = av(self.vnC[0])[:, 1:]
@@ -1273,8 +1332,10 @@ class CylMesh(
         """
         averaging operator of z-edges to cell centers
 
-        :rtype: scipy.sparse.csr_matrix
-        :return: matrix that averages from z-edges to cell centers
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            matrix that averages from z-edges to cell centers
         """
         if self.isSymmetric:
             raise Exception('There are no z-edges on a cyl symmetric mesh')
@@ -1289,13 +1350,15 @@ class CylMesh(
         """
         averaging operator of edges to cell centers
 
-        :rtype: scipy.sparse.csr_matrix
-        :return: matrix that averages from edges to cell centers
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            matrix that averages from edges to cell centers
         """
         if getattr(self, '_aveE2CC', None) is None:
             # The number of cell centers in each direction
             # n = self.vnC
-            if self.isSymmetric is True:
+            if self.isSymmetric:
                 self._aveE2CC = self.aveEy2CC
             else:
                 self._aveE2CC = 1./self.dim * sp.hstack(
@@ -1309,10 +1372,12 @@ class CylMesh(
         """
         averaging operator of edges to a cell centered vector
 
-        :rtype: scipy.sparse.csr_matrix
-        :return: matrix that averages from edges to cell centered vectors
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            matrix that averages from edges to cell centered vectors
         """
-        if self.isSymmetric is True:
+        if self.isSymmetric:
             return self.aveE2CC
         else:
             if getattr(self, '_aveE2CCV', None) is None:
@@ -1327,8 +1392,10 @@ class CylMesh(
         """
         averaging operator of x-faces (radial) to cell centers
 
-        :rtype: scipy.sparse.csr_matrix
-        :return: matrix that averages from x-faces to cell centers
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            matrix that averages from x-faces to cell centers
         """
         avR = av(self.vnC[0])[:, 1:]  # TODO: this should be handled by a deflation matrix
         return kron3(
@@ -1340,8 +1407,10 @@ class CylMesh(
         """
         averaging operator of y-faces (azimuthal) to cell centers
 
-        :rtype: scipy.sparse.csr_matrix
-        :return: matrix that averages from y-faces to cell centers
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            matrix that averages from y-faces to cell centers
         """
         return kron3(
             speye(self.vnC[2]), av(self.vnC[1]),
@@ -1353,8 +1422,10 @@ class CylMesh(
         """
         averaging operator of z-faces (vertical) to cell centers
 
-        :rtype: scipy.sparse.csr_matrix
-        :return: matrix that averages from z-faces to cell centers
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            matrix that averages from z-faces to cell centers
         """
 
         return kron3(
@@ -1367,12 +1438,14 @@ class CylMesh(
         """
         averaging operator of faces to cell centers
 
-        :rtype: scipy.sparse.csr_matrix
-        :return: matrix that averages from faces to cell centers
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            matrix that averages from faces to cell centers
         """
         if getattr(self, '_aveF2CC', None) is None:
             n = self.vnC
-            if self.isSymmetric is True:
+            if self.isSymmetric:
                 self._aveF2CC = 0.5*(
                     sp.hstack((self.aveFx2CC, self.aveFz2CC), format="csr")
                 )
@@ -1390,12 +1463,14 @@ class CylMesh(
         """
         averaging operator of x-faces (radial) to cell centered vectors
 
-        :rtype: scipy.sparse.csr_matrix
-        :return: matrix that averages from faces to cell centered vectors
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            matrix that averages from faces to cell centered vectors
         """
         if getattr(self, '_aveF2CCV', None) is None:
             # n = self.vnC
-            if self.isSymmetric is True:
+            if self.isSymmetric:
                 self._aveF2CCV = sp.block_diag(
                     (self.aveFx2CC, self.aveFz2CC), format="csr"
                 )
@@ -1448,7 +1523,7 @@ class CylMesh(
         values = list(hang.values())
         entries = np.ones(len(values))
 
-        if asOnes is False and len(hang) > 0:
+        if not asOnes and len(hang) > 0:
             repeats = set(values)
             repeat_locs = [
                 (np.r_[values] == repeat).nonzero()[0]
@@ -1480,12 +1555,13 @@ class CylMesh(
     def getInterpolationMat(self, loc, locType='CC', zerosOutside=False):
         """ Produces interpolation matrix
 
-        :param numpy.ndarray loc: Location of points to interpolate to
-        :param str locType: What to interpolate (see below)
-        :rtype: scipy.sparse.csr_matrix
-        :return: M, the interpolation matrix
+        Parameters
+        ----------
+        loc : numpy.ndarray
+            Location of points to interpolate to
 
-        locType can be::
+        locType : str
+            What to interpolate locType can be::
 
             'Ex'    -> x-component of field defined on edges
             'Ey'    -> y-component of field defined on edges
@@ -1498,6 +1574,12 @@ class CylMesh(
             'CCVx'  -> x-component of vector field defined on cell centers
             'CCVy'  -> y-component of vector field defined on cell centers
             'CCVz'  -> z-component of vector field defined on cell centers
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            M, the interpolation matrix
+
         """
         if self.isSymmetric and locType in ['Ex', 'Ez', 'Fy']:
             raise Exception(
@@ -1527,9 +1609,15 @@ class CylMesh(
         Takes a grid location ('CC', 'N', 'Ex', 'Ey', 'Ez', 'Fx', 'Fy', 'Fz')
         and returns that grid in cartesian coordinates
 
-        :param str locType: grid location
-        :rtype: numpy.ndarray
-        :return: cartesian coordinates for the cylindrical grid
+        Parameters
+        ----------
+        locType : str
+            grid location
+
+        Returns
+        -------
+        numpy.ndarray
+            cartesian coordinates for the cylindrical grid
         """
         grid = getattr(self, 'grid{}'.format(locType)).copy()
         if theta_shift is not None:
@@ -1541,9 +1629,21 @@ class CylMesh(
         Takes a cartesian mesh and returns a projection to translate onto
         the cartesian grid.
 
-        :param discretize.BaseMesh.BaseMesh Mrect: the mesh to interpolate on to
-        :param str locType: grid location ('CC', 'N', 'Ex', 'Ey', 'Ez', 'Fx', 'Fy', 'Fz')
-        :param str locTypeTo: grid location to interpolate to. If None, the same grid type as `locType` will be assumed
+        Parameters
+        ----------
+        Mrect : discretize.base.BaseMesh
+            the mesh to interpolate on to
+
+        locType : str
+            grid location ('CC', 'N', 'Ex', 'Ey', 'Ez', 'Fx', 'Fy', 'Fz')
+
+        locTypeTo : str
+            grid location to interpolate to. If None, the same grid type as `locType` will be assumed
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            M, the interpolation matrix
         """
 
         if not self.isSymmetric:

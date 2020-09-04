@@ -10,11 +10,13 @@ from .matutils import (
 from .codeutils import (isScalar, asArray_N_x_Dim)
 from .meshutils import (
     exampleLrmGrid, meshTensor, closestPoints, ExtractCoreMesh,
-    random_model
+    random_model, mesh_builder_xyz, refine_tree_xyz, active_from_xyz
 )
 from .curvutils import volTetra, faceInfo, indexCube
-from .interputils import interpmat
+from .interputils import interpmat, volume_average
 from .coordutils import (
     rotate_points_from_normals, rotation_matrix_from_normals,
     cylindrical2cartesian, cartesian2cylindrical
 )
+
+from .io_utils import download

@@ -133,7 +133,7 @@ class Test2D_InhomogeneousDirichlet(discretize.Tests.OrderTest):
         j = McI*(G*xc_ana + P*bc)
         q = D*j
 
-        # self.M.plotImage(j, 'FxFy', showIt=True)
+        # self.M.plotImage(j, 'FxFy', show_it=True)
 
         # Rearrange if we know q to solve for x
         A = D*McI*G

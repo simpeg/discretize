@@ -1,11 +1,14 @@
 import os
 import json
-import properties
 import numpy as np
-import six
 
 from . import utils
-from .BaseMesh import BaseMesh
+from .base import BaseMesh
+
+try:
+    from .mixins import InterfaceTensorread_vtk
+except ImportError:
+    InterfaceTensorread_vtk = object
 
 
 def load_mesh(filename):
@@ -24,7 +27,7 @@ def load_mesh(filename):
     return data
 
 
-class TensorMeshIO(object):
+class TensorMeshIO(InterfaceTensorread_vtk):
 
     @classmethod
     def _readUBC_3DMesh(TensorMesh, fileName):
@@ -114,7 +117,7 @@ class TensorMeshIO(object):
         nl = np.array(line.split(), dtype=int)
         [z0, dz] = unpackdx(fopen, nl[0])
         # Flip z0 to be the bottom of the mesh for SimPEG
-        z0 = z0 - sum(dz)
+        z0 = -(z0 + sum(dz))
         dz = dz[::-1]
         # Make the mesh
         tensMsh = TensorMesh([dx, dz], x0=(x0, z0))
@@ -154,165 +157,6 @@ class TensorMeshIO(object):
             raise Exception('File format not recognized')
         return Tnsmsh
 
-    @classmethod
-    def readVTK(TensorMesh, fileName, directory=''):
-        """Read VTK Rectilinear (vtr xml file) and return Tensor mesh and model
-
-        Input:
-        :param str fileName: path to the vtr model file to read or just its name if directory is specified
-        :param str directory: directory where the UBC GIF file lives
-
-        Output:
-        :rtype: tuple
-        :return: (TensorMesh, modelDictionary)
-        """
-        from vtk import vtkXMLRectilinearGridReader as vtrFileReader
-        from vtk.util.numpy_support import vtk_to_numpy
-
-        fname = os.path.join(directory, fileName)
-        # Read the file
-        vtrReader = vtrFileReader()
-        vtrReader.SetFileName(fname)
-        vtrReader.Update()
-        vtrGrid = vtrReader.GetOutput()
-        # Sort information
-        hx = np.abs(np.diff(vtk_to_numpy(vtrGrid.GetXCoordinates())))
-        xR = vtk_to_numpy(vtrGrid.GetXCoordinates())[0]
-        hy = np.abs(np.diff(vtk_to_numpy(vtrGrid.GetYCoordinates())))
-        yR = vtk_to_numpy(vtrGrid.GetYCoordinates())[0]
-        zD = np.diff(vtk_to_numpy(vtrGrid.GetZCoordinates()))
-        # Check the direction of hz
-        if np.all(zD < 0):
-            hz = np.abs(zD[::-1])
-            zR = vtk_to_numpy(vtrGrid.GetZCoordinates())[-1]
-        else:
-            hz = np.abs(zD)
-            zR = vtk_to_numpy(vtrGrid.GetZCoordinates())[0]
-        x0 = np.array([xR, yR, zR])
-
-        # Make the object
-        tensMsh = TensorMesh([hx, hy, hz], x0=x0)
-
-        # Grap the models
-        models = {}
-        for i in np.arange(vtrGrid.GetCellData().GetNumberOfArrays()):
-            modelName = vtrGrid.GetCellData().GetArrayName(i)
-            if np.all(zD < 0):
-                modFlip = vtk_to_numpy(vtrGrid.GetCellData().GetArray(i))
-                tM = tensMsh.r(modFlip, 'CC', 'CC', 'M')
-                modArr = tensMsh.r(tM[:, :, ::-1], 'CC', 'CC', 'V')
-            else:
-                modArr = vtk_to_numpy(vtrGrid.GetCellData().GetArray(i))
-            models[modelName] = modArr
-
-        # Return the data
-        return tensMsh, models
-
-    def writeVTK(mesh, fileName, models=None, directory=''):
-        """Makes and saves a VTK rectilinear file (vtr)
-        for a Tensor mesh and model.
-
-        Input:
-        :param str fileName:  path to the output vtk file or just its name if directory is specified
-        :param str directory: directory where the UBC GIF file lives
-        :param dict models: dictionary of numpy.array - Name('s) and array('s).
-        Match number of cells
-        """
-        from vtk import vtkRectilinearGrid as rectGrid, vtkXMLRectilinearGridWriter as rectWriter, VTK_VERSION
-        from vtk.util.numpy_support import numpy_to_vtk
-
-        fname = os.path.join(directory, fileName)
-        # Deal with dimensionalities
-        if mesh.dim >= 1:
-            vX = mesh.vectorNx
-            xD = mesh.nNx
-            yD, zD = 1, 1
-            vY, vZ = np.array([0, 0])
-        if mesh.dim >= 2:
-            vY = mesh.vectorNy
-            yD = mesh.nNy
-        if mesh.dim == 3:
-            vZ = mesh.vectorNz
-            zD = mesh.nNz
-        # Use rectilinear VTK grid.
-        # Assign the spatial information.
-        vtkObj = rectGrid()
-        vtkObj.SetDimensions(xD, yD, zD)
-        vtkObj.SetXCoordinates(numpy_to_vtk(vX, deep=1))
-        vtkObj.SetYCoordinates(numpy_to_vtk(vY, deep=1))
-        vtkObj.SetZCoordinates(numpy_to_vtk(vZ, deep=1))
-
-        # Assign the model('s) to the object
-        if models is not None:
-            for item in six.iteritems(models):
-                # Convert numpy array
-                vtkDoubleArr = numpy_to_vtk(item[1], deep=1)
-                vtkDoubleArr.SetName(item[0])
-                vtkObj.GetCellData().AddArray(vtkDoubleArr)
-            # Set the active scalar
-            vtkObj.GetCellData().SetActiveScalars(list(models.keys())[0])
-
-        # Check the extension of the fileName
-        ext = os.path.splitext(fname)[1]
-        if ext is '':
-            fname = fname + '.vtr'
-        elif ext not in '.vtr':
-            raise IOError('{:s} is an incorrect extension, has to be .vtr')
-        # Write the file.
-        vtrWriteFilter = rectWriter()
-        if float(VTK_VERSION.split('.')[0]) >= 6:
-            vtrWriteFilter.SetInputData(vtkObj)
-        else:
-            vtuWriteFilter.SetInput(vtuObj)
-        vtrWriteFilter.SetFileName(fname)
-        vtrWriteFilter.Update()
-
-    def _toVTRObj(mesh, models=None):
-        """
-        Makes and saves a VTK rectilinear file (vtr) for a
-        Tensor mesh and model.
-
-        Input:
-        :param str, path to the output vtk file
-        :param mesh, TensorMesh object - mesh to be transfer to VTK
-        :param models, dictionary of numpy.array - Name('s) and array('s). Match number of cells
-
-        """
-        # Import
-        from vtk import vtkRectilinearGrid as rectGrid, VTK_VERSION
-        from vtk.util.numpy_support import numpy_to_vtk
-
-        # Deal with dimensionalities
-        if mesh.dim >= 1:
-            vX = mesh.vectorNx
-            xD = mesh.nNx
-            yD, zD = 1, 1
-            vY, vZ = np.array([0, 0])
-        if mesh.dim >= 2:
-            vY = mesh.vectorNy
-            yD = mesh.nNy
-        if mesh.dim == 3:
-            vZ = mesh.vectorNz
-            zD = mesh.nNz
-        # Use rectilinear VTK grid.
-        # Assign the spatial information.
-        vtkObj = rectGrid()
-        vtkObj.SetDimensions(xD, yD, zD)
-        vtkObj.SetXCoordinates(numpy_to_vtk(vX, deep=1))
-        vtkObj.SetYCoordinates(numpy_to_vtk(vY, deep=1))
-        vtkObj.SetZCoordinates(numpy_to_vtk(vZ, deep=1))
-
-        # Assign the model('s) to the object
-        if models is not None:
-            for item in models.iteritems():
-                # Convert numpy array
-                vtkDoubleArr = numpy_to_vtk(item[1], deep=1)
-                vtkDoubleArr.SetName(item[0])
-                vtkObj.GetCellData().AddArray(vtkDoubleArr)
-            # Set the active scalar
-            vtkObj.GetCellData().SetActiveScalars(list(models.keys())[0])
-        return vtkObj
-
     def _readModelUBC_2D(mesh, fileName):
         """
         Read UBC GIF 2DTensor model and generate 2D Tensor model in simpeg
@@ -335,19 +179,17 @@ class TensorMeshIO(object):
         if not np.all([mesh.nCx, mesh.nCy] == dim):
             raise Exception('Dimension of the model and mesh mismatch')
 
-        # Make a list of the lines
-        model = [line.split() for line in obsfile[1:]]
-        # Address the case where lines are not split equally
-        model = [cellvalue for sublist in model[::-1] for cellvalue in sublist]
-        # Make the vector
-        model = utils.mkvc(np.array(model, dtype=float).T)
+        model = []
+        for line in obsfile[1:]:
+            model.extend([float(val) for val in line.split()])
+        model = np.asarray(model)
         if not len(model) == mesh.nC:
             raise Exception(
                 """Something is not right, expected size is {:d}
                 but unwrap vector is size {:d}""".format(mesh.nC, len(model))
             )
 
-        return model
+        return model.reshape(mesh.vnC, order='F')[:, ::-1].reshape(-1, order='F')
 
     def _readModelUBC_3D(mesh, fileName):
         """Read UBC 3DTensor mesh model and generate 3D Tensor mesh model
@@ -529,9 +371,11 @@ class TensorMeshIO(object):
 
         if models is None:
             return
-        assert type(models) is dict, 'models must be a dict'
+        if not isinstance(models, dict):
+            raise TypeError('models must be a dict')
         for key in models:
-            assert type(key) is str, 'The dict key is a file name'
+            if not isinstance(key, str):
+                raise TypeError('The dict key must be a string representing the file name')
             mesh.writeModelUBC(key, models[key], directory=directory)
 
 
@@ -548,8 +392,6 @@ class TreeMeshIO(object):
         fileLines = np.genfromtxt(meshFile, dtype=str,
                                   delimiter='\n', comments='!')
         nCunderMesh = np.array(fileLines[0].split('!')[0].split(), dtype=int)
-        nCunderMesh = nCunderMesh[0:3]
-
         tswCorn = np.array(
             fileLines[1].split('!')[0].split(),
             dtype=float
@@ -562,26 +404,24 @@ class TreeMeshIO(object):
         indArr = np.genfromtxt((line.encode('utf8') for line in fileLines[4::]),
                                dtype=np.int)
 
-        h1, h2, h3 = [np.ones(nr)*sz for nr, sz in zip(nCunderMesh, smallCell)]
-        x0 = tswCorn - np.array([0, 0, np.sum(h3)])
+        hs = [np.ones(nr)*sz for nr, sz in zip(nCunderMesh, smallCell)]
+        x0 = tswCorn
+        x0[-1] -= np.sum(hs[-1])
 
         ls = np.log2(nCunderMesh).astype(int)
-        if ls[0] == ls[1] and ls[1] == ls[2]:
+        # if all ls are equal
+        if min(ls) == max(ls):
             max_level = ls[0]
         else:
             max_level = min(ls)+1
 
-        mesh = TreeMesh([h1, h2, h3], x0=x0)
-
-        # Convert indArr to points in coordinates of underlying cpp tree
-        # indArr is ix, iy, iz(top-down) need it in ix, iy, iz (bottom-up)
-
+        mesh = TreeMesh(hs, x0=x0)
         levels = indArr[:, -1]
         indArr = indArr[:, :-1]
 
         indArr -= 1  # shift by 1....
         indArr = 2*indArr + levels[:, None]  # get cell center index
-        indArr[:, 2] = 2*nCunderMesh[2] - indArr[:, 2]  # switch direction of iz
+        indArr[:, -1] = 2*nCunderMesh[-1] - indArr[:, -1]  # switch direction of iz
         levels = max_level-np.log2(levels)  # calculate level
 
         mesh.__setstate__((indArr, levels))
@@ -600,9 +440,6 @@ class TreeMeshIO(object):
                 out[f] = mesh.readModelUBC(f)
             return out
 
-        assert mesh.dim == 3
-
-        modList = []
         modArr = np.loadtxt(fileName)
 
         ubc_order = mesh._ubc_order
@@ -611,20 +448,24 @@ class TreeMeshIO(object):
         un_order = np.empty_like(ubc_order)
         un_order[ubc_order] = np.arange(len(ubc_order))
 
-        model = modArr[un_order].copy() # ensure a contiguous array
+        model = modArr[un_order].copy()  # ensure a contiguous array
         return model
 
-    def writeUBC(mesh, fileName, models=None):
+    def writeUBC(mesh, fileName, models=None, directory=''):
         """Write UBC ocTree mesh and model files from a
         octree mesh and model.
         :param string fileName: File to write to
         :param dict models: Models in a dict, where each key is the filename
+        :param str directory: directory where to save model(s)
         """
         uniform_hs = np.array([np.allclose(h, h[0]) for h in mesh.h])
         if np.any(~uniform_hs):
             raise Exception('UBC form does not support variable cell widths')
         nCunderMesh = np.array([h.size for h in mesh.h], dtype=np.int64)
-        tswCorn = mesh.x0 + np.array([0, 0, np.sum(mesh.h[2])])
+
+        tswCorn = mesh.x0.copy()
+        tswCorn[-1] += np.sum(mesh.h[-1])
+
         smallCell = np.array([h[0] for h in mesh.h])
         nrCells = mesh.nC
 
@@ -635,72 +476,37 @@ class TreeMeshIO(object):
         levels = levels[ubc_order]
 
         # Write the UBC octree mesh file
-        head = (
-            '{:.0f} {:.0f} {:.0f}\n'.format(
-                nCunderMesh[0], nCunderMesh[1], nCunderMesh[2]
-            ) +
-            '{:.4f} {:.4f} {:.4f}\n'.format(
-                tswCorn[0], tswCorn[1], tswCorn[2]
-            ) +
-            '{:.3f} {:.3f} {:.3f}\n'.format(
-                smallCell[0], smallCell[1], smallCell[2]
-            ) +
-            '{:.0f}'.format(nrCells)
-        )
+        head = ' '.join([f"{int(n)}" for n in nCunderMesh])+" \n"
+        head += ' '.join([f"{v:.4f}" for v in tswCorn])+" \n"
+        head += ' '.join([f"{v:.3f}" for v in smallCell]) + " \n"
+        head += f"{int(nrCells)}"
         np.savetxt(fileName, np.c_[indArr, levels], fmt='%i', header=head, comments='')
 
         # Print the models
-        # Assign the model('s) to the object
-        if models is not None:
-            for item in six.iteritems(models):
-                # Save the data
-                np.savetxt(item[0], item[1][ubc_order], fmt='%3.5e')
+        if models is None:
+            return
+        if not isinstance(models, dict):
+            raise TypeError('models must be a dict')
+        for key in models:
+            if not isinstance(key, str):
+                raise TypeError('The dict key must be a string representing the file name')
+            mesh.writeModelUBC(key, models[key], directory=directory)
 
+    def writeModelUBC(mesh, fileName, model, directory=''):
+        """Writes a model associated with a TreeMesh
+        to a UBC-GIF format model file.
 
-    def writeVTK(self, fileName, models=None):
-        """Function to write a VTU file from a TreeMesh and model."""
-        import vtk
-        from vtk import vtkXMLUnstructuredGridWriter as Writer, VTK_VERSION
-        from vtk.util.numpy_support import numpy_to_vtk
-
-        # Make the data parts for the vtu object
-        # Points
-        ptsMat = np.vstack((self.gridN, self.gridhN))
-
-        vtkPts = vtk.vtkPoints()
-        vtkPts.SetData(numpy_to_vtk(ptsMat, deep=True))
-        # Cells
-        cellArray = [c for c in self]
-        cellConn = np.array([cell.nodes for cell in cellArray])
-
-        cellsMat = np.concatenate((np.ones((cellConn.shape[0], 1))*cellConn.shape[1], cellConn), axis=1).ravel()
-        cellsArr = vtk.vtkCellArray()
-        cellsArr.SetNumberOfCells(cellConn.shape[0])
-        cellsArr.SetCells(cellConn.shape[0], numpy_to_vtk(cellsMat, deep=True, array_type=vtk.VTK_ID_TYPE))
-
-        # Make the object
-        vtuObj = vtk.vtkUnstructuredGrid()
-        vtuObj.SetPoints(vtkPts)
-        vtuObj.SetCells(vtk.VTK_VOXEL, cellsArr)
-        # Add the level of refinement as a cell array
-        cell_levels = np.array([cell._level for cell in cellArray])
-        refineLevelArr = numpy_to_vtk(cell_levels, deep=1)
-        refineLevelArr.SetName('octreeLevel')
-        vtuObj.GetCellData().AddArray(refineLevelArr)
-        # Assign the model('s) to the object
-        if models is not None:
-            for item in six.iteritems(models):
-                # Convert numpy array
-                vtkDoubleArr = numpy_to_vtk(item[1], deep=1)
-                vtkDoubleArr.SetName(item[0])
-                vtuObj.GetCellData().AddArray(vtkDoubleArr)
-
-        # Make the writer
-        vtuWriteFilter = Writer()
-        if float(VTK_VERSION.split('.')[0]) >= 6:
-            vtuWriteFilter.SetInputData(vtuObj)
+        Input:
+        :param str fileName:  File to write to
+        or just its name if directory is specified
+        :param str directory: directory where the UBC GIF file lives
+        :param numpy.ndarray model: The model
+        """
+        if type(fileName) is list:
+            for f, m in zip(fileName, model):
+                mesh.writeModelUBC(f, m)
         else:
-            vtuWriteFilter.SetInput(vtuObj)
-        vtuWriteFilter.SetFileName(fileName)
-        # Write the file
-        vtuWriteFilter.Update()
+            ubc_order = mesh._ubc_order
+            fname = os.path.join(directory, fileName)
+            m = model[ubc_order]
+            np.savetxt(fname, m)

@@ -1,0 +1,37 @@
+.. currentmodule:: discretize
+
+.. _0.5.0_notes:
+
+===================================
+``discretize`` 0.5.0 Release Notes
+===================================
+
+This minor release has a few small bug fixes as well as a new volume averaging
+operator.
+
+The Volume Averaging operator has been implemented for arbitrary `TensorMesh`,
+`TreeMesh`, and combinations of them. It is defined as being a mass conserving
+operation. More details can be found in its documentation, :func:`discretize.utils.volume_average`.
+
+There are also some updates for the new deprecations in ``matplotlib`` to hopefully
+throw less deprecation warnings internally. There are still a few left which are
+on our radar to fix in the next patch.
+
+We are also dropping support for python 3.5 which will reach end-of-life within
+a few weeks.
+
+Contributors
+============
+
+* @jcapriot
+* @prisae
+* @bluetyson
+
+
+Pull requests
+=============
+
+* `#212 <https://github.com/simpeg/discretize/pull/212>`__: Volume average
+* `#216 <https://github.com/simpeg/discretize/pull/216>`__: Update 2_tensor_mesh.py
+* `#217 <https://github.com/simpeg/discretize/pull/217>`__: Fix Slicer matplotlib-warning.
+* `#220 <https://github.com/simpeg/discretize/pull/220>`__: 0.5.0 release notes and requirements update

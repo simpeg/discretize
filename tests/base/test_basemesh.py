@@ -1,6 +1,6 @@
 from __future__ import print_function
 import unittest
-from discretize.BaseMesh import BaseRectangularMesh
+from discretize.base import BaseRectangularMesh
 import numpy as np
 
 
@@ -106,6 +106,12 @@ class TestBaseMesh(unittest.TestCase):
         self.assertTrue(np.all(Yc == 2))
         self.assertTrue(np.all(Zc == 3))
 
+    def test_serialization(self):
+        self.mesh.x0 = np.r_[-1., -2., 1.]
+        mesh2 = BaseRectangularMesh.deserialize(self.mesh.serialize())
+        self.assertTrue(np.all(self.mesh.x0 == mesh2.x0))
+        self.assertTrue(np.all(self.mesh._n == mesh2._n))
+
 
 class TestMeshNumbers2D(unittest.TestCase):
 
@@ -156,7 +162,7 @@ class TestMeshNumbers2D(unittest.TestCase):
         tex, tey = self.mesh.r(e, 'E', 'E', 'V')
         self.assertTrue(np.all(tex == ex))
         self.assertTrue(np.all(tey == ey))
-        self.assertRaises(AssertionError,   self.mesh.r, e, 'E', 'Ez', 'V')
+        self.assertRaises(Exception,   self.mesh.r, e, 'E', 'Ez', 'V')
 
     def test_mesh_r_F_V(self):
         fx = np.ones(self.mesh.nFx)
@@ -169,7 +175,7 @@ class TestMeshNumbers2D(unittest.TestCase):
         tfx, tfy = self.mesh.r(f, 'F', 'F', 'V')
         self.assertTrue(np.all(tfx == fx))
         self.assertTrue(np.all(tfy == fy))
-        self.assertRaises(AssertionError,   self.mesh.r, f, 'F', 'Fz', 'V')
+        self.assertRaises(Exception,   self.mesh.r, f, 'F', 'Fz', 'V')
 
     def test_mesh_r_E_M(self):
         g = np.ones((np.prod(self.mesh.vnEx), 2))

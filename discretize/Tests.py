@@ -5,6 +5,7 @@ import scipy.sparse as sp
 from discretize.utils import mkvc, sdiag
 from discretize import utils
 from discretize import TensorMesh, CurvilinearMesh, CylMesh
+from discretize.utils.codeutils import requires
 
 try:
     from discretize.TreeMesh import TreeMesh as Tree
@@ -13,6 +14,13 @@ except ImportError as e:
 
 import unittest
 import inspect
+
+# matplotlib is a soft dependencies for discretize
+try:
+    import matplotlib
+    import matplotlib.pyplot as plt
+except ImportError:
+    matplotlib = False
 
 try:
     import getpass
@@ -126,7 +134,7 @@ def setupMesh(meshType, nC, nDim):
             return levels - 1
         mesh.refine(function)
         # mesh.number()
-        # mesh.plotGrid(showIt=True)
+        # mesh.plotGrid(show_it=True)
         max_h = max([np.max(hi) for hi in mesh.h])
     return mesh, max_h
 
@@ -283,10 +291,10 @@ def checkDerivative(fctn, x0, num=7, plotIt=True, dx=None, expectedOrder=2, tole
         x0 for a randomized search direction.
 
         :param callable fctn: function handle
-        :param numpy.array x0: point at which to check derivative
+        :param numpy.ndarray x0: point at which to check derivative
         :param int num: number of times to reduce step length, h
         :param bool plotIt: if you would like to plot
-        :param numpy.array dx: step direction
+        :param numpy.ndarray dx: step direction
         :param int expectedOrder: The order that you expect the derivative to yield.
         :param float tolerance: The tolerance on the expected order.
         :param float eps: What is zero?
@@ -355,20 +363,27 @@ def checkDerivative(fctn, x0, num=7, plotIt=True, dx=None, expectedOrder=2, tole
         print("{0!s}\n{1!s} FAIL! {2!s}\n{3!s}".format('*'*57, '<'*25, '>'*25, '*'*57))
         print(sadness[np.random.randint(len(sadness))]+'\n')
 
+    @requires({'matplotlib': matplotlib})
+    def plot_it(ax):
+        if plotIt:
+            if ax is None:
+                ax = plt.subplot(111)
+            ax.loglog(h, E0, 'b')
+            ax.loglog(h, E1, 'g--')
+            ax.set_title(
+                'Check Derivative - {0!s}'.format(('PASSED :)'
+                if passTest else 'FAILED :('))
+            )
+            ax.set_xlabel('h')
+            ax.set_ylabel('Error')
+            leg = ax.legend(
+                ['$\mathcal{O}(h)$', '$\mathcal{O}(h^2)$'], loc='best',
+                title="$f(x + h\Delta x) - f(x) - h g(x) \Delta x - \mathcal{O}(h^2) = 0$",
+                frameon=False)
+            plt.setp(leg.get_title(), fontsize=15)
+            plt.show()
 
-    if plotIt:
-        import matplotlib.pyplot as plt
-        ax = ax or plt.subplot(111)
-        ax.loglog(h, E0, 'b')
-        ax.loglog(h, E1, 'g--')
-        ax.set_title('Check Derivative - {0!s}'.format(('PASSED :)' if passTest else 'FAILED :(')))
-        ax.set_xlabel('h')
-        ax.set_ylabel('Error')
-        leg = ax.legend(['$\mathcal{O}(h)$', '$\mathcal{O}(h^2)$'], loc='best',
-            title="$f(x + h\Delta x) - f(x) - h g(x) \Delta x - \mathcal{O}(h^2) = 0$",
-            frameon=False)
-        plt.setp(leg.get_title(),fontsize=15)
-        plt.show()
+    plot_it(ax)
 
     return passTest
 

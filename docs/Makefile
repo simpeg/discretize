@@ -2,9 +2,9 @@
 #
 
 # You can set these variables from the command line.
-SPHINXOPTS    = -n -w warnings.txt
+SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
-PAPER         =
+SPHINXAUTOGEN = sphinx-autogen
 BUILDDIR      = _build
 
 # Internal variables.
@@ -14,12 +14,12 @@ ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 # the i18n builder cannot share the environment and doctrees with the others
 I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 
-.PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest gettext
+.PHONY: all api help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest gettext
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
+	@echo "  api        to build the api docs"
 	@echo "  html       to make standalone HTML files"
-	@echo "  dirhtml    to make HTML files named index.html in directories"
 	@echo "  singlehtml to make a single large HTML file"
 	@echo "  pickle     to make pickle files"
 	@echo "  json       to make JSON files"
@@ -38,10 +38,19 @@ help:
 	@echo "  linkcheck  to check all external links for integrity"
 	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
 
+all: html
+
+api:
+	@echo
+	@echo "Building API docs."
+	@echo
+	$(SPHINXAUTOGEN) -i -t _templates -o api/generated api/index.rst
 
 clean:
 	rm -rf $(BUILDDIR)/*
-	rm -rf auto_examples/
+	rm -rf api/generated
+	rm -rf gallery/
+	rm -rf tutorials/
 	rm -rf modules/generated/*
 
 html-noplot:
@@ -49,7 +58,7 @@ html-noplot:
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
-html:
+html: api
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
@@ -149,11 +158,10 @@ changes:
 	@echo
 	@echo "The overview file is in $(BUILDDIR)/changes."
 
-linkcheck:
+linkcheck: api
 	$(SPHINXBUILD) -b linkcheck $(ALLSPHINXOPTS) $(BUILDDIR)/linkcheck
 	@echo
-	@echo "Link check complete; look for any errors in the above output " \
-	      "or in $(BUILDDIR)/linkcheck/output.txt."
+	@echo "Link check complete; look for any errors in the above output or in $(BUILDDIR)/linkcheck/output.txt."
 
 doctest:
 	$(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) $(BUILDDIR)/doctest

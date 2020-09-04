@@ -14,9 +14,8 @@ cartE2 = lambda M, ex, ey: np.vstack((cart_row2(M.gridEx, ex, ey), cart_row2(M.g
 cartF3 = lambda M, fx, fy, fz: np.vstack((cart_row3(M.gridFx, fx, fy, fz), cart_row3(M.gridFy, fx, fy, fz), cart_row3(M.gridFz, fx, fy, fz)))
 cartE3 = lambda M, ex, ey, ez: np.vstack((cart_row3(M.gridEx, ex, ey, ez), cart_row3(M.gridEy, ex, ey, ez), cart_row3(M.gridEz, ex, ey, ez)))
 
-
-np.random.seed(90)
-
+# np.random.seed(None)
+# np.random.seed(7)
 
 class TestCellGrad2D(discretize.Tests.OrderTest):
     name = "Cell Gradient 2D, using cellGradx and cellGrady"
@@ -42,10 +41,12 @@ class TestCellGrad2D(discretize.Tests.OrderTest):
         return err
 
     def test_order(self):
+        np.random.seed(7)
         self.orderTest()
 
 
 class TestCellGrad3D(discretize.Tests.OrderTest):
+
     name = "Cell Gradient 3D, using cellGradx, cellGrady, and cellGradz"
     meshTypes = MESHTYPES
     meshDimension = 3
@@ -69,6 +70,7 @@ class TestCellGrad3D(discretize.Tests.OrderTest):
         return err
 
     def test_order(self):
+        np.random.seed(6)
         self.orderTest()
 
 
@@ -94,11 +96,12 @@ class TestFaceDivxy2D(discretize.Tests.OrderTest):
 
         err = np.linalg.norm((divF-divF_ana), np.inf)
 
-        # self.M.plotImage(divF-divF_ana, showIt=True)
+        # self.M.plotImage(divF-divF_ana, show_it=True)
 
         return err
 
     def test_order(self):
+        np.random.seed(4)
         self.orderTest()
 
 
@@ -123,6 +126,7 @@ class TestFaceDiv3D(discretize.Tests.OrderTest):
 
 
     def test_order(self):
+        np.random.seed(7)
         self.orderTest()
 
 
@@ -130,7 +134,7 @@ class TestFaceDivxyz3D(discretize.Tests.OrderTest):
     name = "Face Divergence 3D, Testing faceDivx, faceDivy, and faceDivz"
     meshTypes = MESHTYPES
     meshDimension = 3
-    meshSizes = [8, 16]
+    meshSizes = [8, 16, 32]
 
     def getError(self):
         #Test function
@@ -151,11 +155,12 @@ class TestFaceDivxyz3D(discretize.Tests.OrderTest):
 
         err = np.linalg.norm((divF-divF_ana), np.inf)
 
-        # self.M.plotImage(divF-divF_ana, showIt=True)
+        # self.M.plotImage(divF-divF_ana, show_it=True)
 
         return err
 
     def test_order(self):
+        np.random.seed(7)
         self.orderTest()
 
 
@@ -191,6 +196,7 @@ class TestCurl(discretize.Tests.OrderTest):
         return err
 
     def test_order(self):
+        np.random.seed(7)
         self.orderTest()
 
 
@@ -219,6 +225,7 @@ class TestNodalGrad(discretize.Tests.OrderTest):
         return err
 
     def test_order(self):
+        np.random.seed(7)
         self.orderTest()
 
 
@@ -247,6 +254,7 @@ class TestNodalGrad2D(discretize.Tests.OrderTest):
         return err
 
     def test_order(self):
+        np.random.seed(7)
         self.orderTest()
 
 

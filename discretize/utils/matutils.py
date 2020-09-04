@@ -494,7 +494,7 @@ class Identity(object):
     _positive = True
 
     def __init__(self, positive=True):
-        self._positive = positive is True
+        self._positive = positive
 
     def __pos__(self):
         return self
