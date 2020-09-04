@@ -1,0 +1,24 @@
+.. currentmodule:: discretize
+
+.. _0.5.1_notes:
+
+===================================
+``discretize`` 0.5.1 Release Notes
+===================================
+
+A small patch to fix a bug in the volume averaging operator when using
+meshes with different shaped bases, to address `#222 <https://github.com/simpeg/discretize/issues/222>`__.
+
+There are also a few deprecated syntax updates for comparisons with literals.
+`#221 <https://github.com/simpeg/discretize/issues/221>`__.
+
+Contributors
+============
+
+* @jcapriot
+
+
+Pull requests
+=============
+
+* `#223 <https://github.com/simpeg/discretize/pull/223>`__: Syntax and bug fixes

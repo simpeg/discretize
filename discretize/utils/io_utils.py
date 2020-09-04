@@ -1,6 +1,5 @@
-import urllib
+from urllib.request import urlretrieve
 import os
-import sys
 
 def download(
     url, folder='.', overwrite=False, verbose=True
@@ -37,12 +36,6 @@ def download(
             splitfullpath[:-1] + newnamesplit[:-1] + [newname]
         )
 
-    # grab the correct url retriever
-    if sys.version_info < (3,):
-        urlretrieve = urllib.urlretrieve
-    else:
-        urlretrieve = urllib.request.urlretrieve
-
     # ensure we are working with absolute paths and home directories dealt with
     folder = os.path.abspath(os.path.expanduser(folder))
 
@@ -60,14 +53,14 @@ def download(
     # check if the directory already exists
     for i, download in enumerate(downloadpath):
         if os.path.exists(download):
-            if overwrite is True:
-                if verbose is True:
+            if overwrite:
+                if verbose:
                     print("overwriting {}".format(download))
-            elif overwrite is False:
-                while os.path.exists is True:
+            else:
+                while os.path.exists(download):
                     download = rename_path(download)
 
-                if verbose is True:
+                if verbose:
                     print(
                         "file already exists, new file is called {}".format(
                             download

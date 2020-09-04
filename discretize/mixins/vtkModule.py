@@ -411,7 +411,7 @@ class InterfaceVTK(object):
         # Check the extension of the filename
         fname = os.path.join(directory, filename)
         ext = os.path.splitext(fname)[1]
-        if ext is '':
+        if ext == '':
             fname = fname + '.vtu'
         elif ext not in '.vtu':
             raise IOError('{:s} is an incorrect extension, has to be .vtu'.format(ext))
@@ -445,7 +445,7 @@ class InterfaceVTK(object):
         # Check the extension of the filename
         fname = os.path.join(directory, filename)
         ext = os.path.splitext(fname)[1]
-        if ext is '':
+        if ext == '':
             fname = fname + '.vts'
         elif ext not in '.vts':
             raise IOError('{:s} is an incorrect extension, has to be .vts'.format(ext))
@@ -479,7 +479,7 @@ class InterfaceVTK(object):
         # Check the extension of the filename
         fname = os.path.join(directory, filename)
         ext = os.path.splitext(fname)[1]
-        if ext is '':
+        if ext == '':
             fname = fname + '.vtr'
         elif ext not in '.vtr':
             raise IOError('{:s} is an incorrect extension, has to be .vtr'.format(ext))

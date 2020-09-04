@@ -11,7 +11,6 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys
 import os
 from datetime import datetime
 import discretize
@@ -354,15 +353,8 @@ sphinx_gallery_conf = {
     'doc_module': 'discretize',
     # 'reference_url': {'discretize': None},
 }
-# Do not run or scrape `pyvista` examples on Python 2 because sphinx gallery
-# doesn't support custom scrapers. But also, data was pickled in Python 3
-if sys.version_info[0] >= 3:
-    # Requires pyvista>=0.18.0 and Python 3
-    sphinx_gallery_conf["image_scrapers"] = (pyvista.Scraper(), 'matplotlib')
-else:
-    # Don't run pyvista examples at all on Python 2
-    # Primarily because data used for it was pickled in Python 3
-    sphinx_gallery_conf["filename_pattern"] = r"plot_(?!pyvista)\.py",
+sphinx_gallery_conf["image_scrapers"] = (pyvista.Scraper(), 'matplotlib')
+
 
 # Documents to append as an appendix to all manuals.
 #texinfo_appendices = []

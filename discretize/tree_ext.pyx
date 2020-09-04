@@ -3754,11 +3754,15 @@ cdef class _TreeMesh:
     @cython.cdivision(True)
     def _vol_avg_from_tree(self, _TreeMesh meshin, values=None, output=None):
         # first check if they have the same tensor base, as it makes it a lot easier...
-        cdef int_t same_base = (
-          np.allclose(self.vectorNx, meshin.vectorNx)
-          and np.allclose(self.vectorNy, meshin.vectorNy)
-          and (self.dim == 2 or np.allclose(self.vectorNz, meshin.vectorNz))
-        )
+        cdef int_t same_base
+        try:
+            same_base = (
+                np.allclose(self.vectorNx, meshin.vectorNx)
+                and np.allclose(self.vectorNy, meshin.vectorNy)
+                and (self.dim == 2 or np.allclose(self.vectorNz, meshin.vectorNz))
+            )
+        except ValueError:
+            same_base = False
         cdef c_Cell * out_cell
         cdef c_Cell * in_cell
 
@@ -3936,11 +3940,15 @@ cdef class _TreeMesh:
         cdef double[:] xF
 
         # first check if they have the same tensor base, as it makes it a lot easier...
-        cdef int_t same_base = (
-          np.allclose(self.vectorNx, out_tens_mesh.vectorNx)
-          and np.allclose(self.vectorNy, out_tens_mesh.vectorNy)
-          and (self.dim == 2 or np.allclose(self.vectorNz, out_tens_mesh.vectorNz))
-        )
+        cdef int_t same_base
+        try:
+            same_base = (
+                np.allclose(self.vectorNx, out_tens_mesh.vectorNx)
+                and np.allclose(self.vectorNy, out_tens_mesh.vectorNy)
+                and (self.dim == 2 or np.allclose(self.vectorNz, out_tens_mesh.vectorNz))
+            )
+        except ValueError:
+            same_base = False
 
         if same_base:
             in_cell_inds = self._get_containing_cell_indexes(out_tens_mesh.gridCC)
@@ -4076,11 +4084,16 @@ cdef class _TreeMesh:
         cdef double[:] xF
 
         # first check if they have the same tensor base, as it makes it a lot easier...
-        cdef int_t same_base = (
-          np.allclose(self.vectorNx, in_tens_mesh.vectorNx)
-          and np.allclose(self.vectorNy, in_tens_mesh.vectorNy)
-          and (self.dim == 2 or np.allclose(self.vectorNz, in_tens_mesh.vectorNz))
-        )
+        cdef int_t same_base
+        try:
+            same_base = (
+                np.allclose(self.vectorNx, in_tens_mesh.vectorNx)
+                and np.allclose(self.vectorNy, in_tens_mesh.vectorNy)
+                and (self.dim == 2 or np.allclose(self.vectorNz, in_tens_mesh.vectorNz))
+            )
+        except ValueError:
+            same_base = False
+
 
         if same_base:
             out_cell_inds = self._get_containing_cell_indexes(in_tens_mesh.gridCC)

@@ -404,7 +404,7 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         with open(f, 'w') as outfile:
             json.dump(self.serialize(), outfile)
 
-        if verbose is True:
+        if verbose:
             print('Saved {}'.format(f))
 
         return f

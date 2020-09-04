@@ -697,7 +697,7 @@ class DiffOperators(object):
             BC = [['neumann', 'dirichlet'], 'dirichlet', 'dirichlet']
         """
 
-        if discretization is not 'CC':
+        if discretization != 'CC':
             raise NotImplementedError(
                 'Boundary conditions only implemented'
                 'for CC discretization.'
@@ -797,7 +797,7 @@ class DiffOperators(object):
         when mixed boundary condition is used
         """
 
-        if discretization is not 'CC':
+        if discretization != 'CC':
             raise NotImplementedError('Boundary conditions only implemented'
                                       'for CC discretization.')
 
