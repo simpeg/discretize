@@ -1,5 +1,5 @@
 # distutils: language=c++
-# cython: embedsignature=True
+# cython: embedsignature=True, language_level=3
 cimport cython
 cimport numpy as np
 from libc.math cimport sqrt, abs, cbrt
@@ -15,7 +15,7 @@ from scipy.spatial import Delaunay, cKDTree
 from six import integer_types
 import numpy as np
 
-from ..utils._extensions.interputils_cython cimport _bisect_left, _bisect_right
+from .interputils_cython cimport _bisect_left, _bisect_right
 
 from discretize.utils import requires
 # matplotlib is a soft dependencies for discretize

@@ -4,7 +4,7 @@ import scipy.sparse as sp
 from .matrix_utils import mkvc, sub2ind
 
 try:
-    from ._extensions import interputils_cython as pyx
+    from .._extensions import interputils_cython as pyx
     _interp_point_1D = pyx._interp_point_1D
     _interpmat1D = pyx._interpmat1D
     _interpmat2D = pyx._interpmat2D

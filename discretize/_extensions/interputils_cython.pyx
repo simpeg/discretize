@@ -1,7 +1,4 @@
-# cython: embedsignature=True
-# cython: profile=True
-# cython: linetrace=True
-# distutils: define_macros=CYTHON_TRACE_NOGIL=1
+# cython: embedsignature=True, language_level=3
 # from __future__ import division
 import numpy as np
 import cython
