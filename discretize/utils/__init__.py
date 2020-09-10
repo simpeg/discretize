@@ -7,7 +7,7 @@ from .matrix_utils import (
     makePropertyTensor, invPropertyTensor, Zero,
     Identity
 )
-from .code_utils import (isScalar, asArray_N_x_Dim, requres)
+from .code_utils import (isScalar, asArray_N_x_Dim, requires)
 from .mesh_utils import (
     exampleLrmGrid, meshTensor, closestPoints, ExtractCoreMesh,
     random_model, mesh_builder_xyz, refine_tree_xyz, active_from_xyz
