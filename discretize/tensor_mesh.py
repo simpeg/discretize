@@ -3,11 +3,9 @@ import numpy as np
 
 from discretize import utils
 
-from .base import BaseRectangularMesh, BaseTensorMesh
-from .View import TensorView
-from .DiffOperators import DiffOperators
-from .InnerProducts import InnerProducts
-from .MeshIO import TensorMeshIO
+from .base import BaseRectangularMesh, BaseTensorMesh, DiffOperators, InnerProducts
+from .mixins.mpl_mod import TensorView
+from .base.mesh_io import TensorMeshIO
 
 
 class TensorMesh(

@@ -2,10 +2,11 @@ import numpy as np
 import scipy.ndimage as ndi
 import scipy.sparse as sp
 
-from .matutils import ndgrid
-from .codeutils import asArray_N_x_Dim
-from .codeutils import isScalar
-import discretize
+from .matrix_utils import ndgrid
+from .code_utils import asArray_N_x_Dim, isScalar
+from ..tensor_mesh import TensorMesh
+from ..tree_mesh import TreeMesh
+from ..cylinder_mesh import CylMesh
 from scipy.spatial import cKDTree, Delaunay
 from scipy import interpolate
 
@@ -136,7 +137,7 @@ def meshTensor(value):
         import discretize
         tx = [(10.0, 10, -1.3), (10.0, 40), (10.0, 10, 1.3)]
         ty = [(10.0, 10, -1.3), (10.0, 40)]
-        mesh = discretize.TensorMesh([tx, ty])
+        mesh = TensorMesh([tx, ty])
         mesh.plotGrid(show_it=True)
 
     """
@@ -225,7 +226,7 @@ def ExtractCoreMesh(xyzlim, mesh, mesh_type='tensor'):
 
         x0 = [xc[0]-hx[0]*0.5]
 
-        meshCore = discretize.TensorMesh([hx], x0=x0)
+        meshCore = TensorMesh([hx], x0=x0)
 
         actind = (mesh.gridCC > xmin) & (mesh.gridCC < xmax)
 
@@ -244,7 +245,7 @@ def ExtractCoreMesh(xyzlim, mesh, mesh_type='tensor'):
 
         x0 = [xc[0]-hx[0]*0.5, yc[0]-hy[0]*0.5]
 
-        meshCore = discretize.TensorMesh([hx, hy], x0=x0)
+        meshCore = TensorMesh([hx, hy], x0=x0)
 
         actind = (
             (mesh.gridCC[:, 0] > xmin) & (mesh.gridCC[:, 0] < xmax) &
@@ -270,7 +271,7 @@ def ExtractCoreMesh(xyzlim, mesh, mesh_type='tensor'):
 
         x0 = [xc[0]-hx[0]*0.5, yc[0]-hy[0]*0.5, zc[0]-hz[0]*0.5]
 
-        meshCore = discretize.TensorMesh([hx, hy, hz], x0=x0)
+        meshCore = TensorMesh([hx, hy, hz], x0=x0)
 
         actind = (
             (mesh.gridCC[:, 0] > xmin) & (mesh.gridCC[:, 0] < xmax) &
@@ -400,7 +401,7 @@ def mesh_builder_xyz(
             nC_x0 += [h_dim[-1][0][1]]
 
         # Create mesh
-        mesh = discretize.TensorMesh(h_dim)
+        mesh = TensorMesh(h_dim)
 
     elif mesh_type.lower() == 'tree':
 
@@ -419,7 +420,7 @@ def mesh_builder_xyz(
             h_dim += [np.ones(2**maxLevel) * h[ii]]
 
         # Define the mesh and origin
-        mesh = discretize.TreeMesh(h_dim)
+        mesh = TreeMesh(h_dim)
 
         for ii, cc in enumerate(nC):
             core = limits[ii][0] - limits[ii][1]
@@ -837,10 +838,10 @@ def active_from_xyz(mesh, xyz, grid_reference='CC', method='linear'):
         plt.show()
 
     """
-    if isinstance(mesh, discretize.CylMesh) and not mesh.isSymmetric:
+    if isinstance(mesh, CylMesh) and not mesh.isSymmetric:
         raise NotImplementedError('Unsymmetric CylMesh is not yet supported')
 
-    if not isinstance(mesh, (discretize.TensorMesh, discretize.TreeMesh, discretize.CylMesh)):
+    if not isinstance(mesh, (TensorMesh, TreeMesh, CylMesh)):
         raise TypeError("Mesh must be either TensorMesh, TreeMesh, or Symmetric CylMesh")
 
     if grid_reference not in ["N", "CC"]:

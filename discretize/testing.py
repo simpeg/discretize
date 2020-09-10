@@ -2,10 +2,9 @@ from __future__ import print_function
 import numpy as np
 import scipy.sparse as sp
 
-from discretize.utils import mkvc, sdiag
+from discretize.utils import mkvc, requires
 from discretize import utils
 from discretize import TensorMesh, CurvilinearMesh, CylMesh
-from discretize.utils.codeutils import requires
 
 try:
     from discretize.TreeMesh import TreeMesh as Tree

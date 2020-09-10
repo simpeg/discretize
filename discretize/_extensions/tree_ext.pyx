@@ -15,9 +15,9 @@ from scipy.spatial import Delaunay, cKDTree
 from six import integer_types
 import numpy as np
 
-from .utils.interputils_cython cimport _bisect_left, _bisect_right
+from ..utils._extensions.interputils_cython cimport _bisect_left, _bisect_right
 
-from discretize.utils.codeutils import requires
+from discretize.utils import requires
 # matplotlib is a soft dependencies for discretize
 try:
     import matplotlib

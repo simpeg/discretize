@@ -1,5 +1,5 @@
 from scipy import sparse as sp
-from discretize.utils import (
+from ..utils import (
     sub2ind, sdiag, invPropertyTensor, TensorType,
     makePropertyTensor, ndgrid, inv2X2BlockDiagonal,
     getSubArray, inv3X3BlockDiagonal, spzeros, sdInv

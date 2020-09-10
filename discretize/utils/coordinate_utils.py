@@ -1,5 +1,5 @@
 import numpy as np
-from .matutils import mkvc
+from .matrix_utils import mkvc
 
 
 def cyl2cart(grid, vec=None):

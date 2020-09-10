@@ -1,21 +1,15 @@
 from __future__ import print_function
 import numpy as np
 import warnings
-from discretize.utils import mkvc, ndgrid
-from discretize.utils.codeutils import requires
+from ..utils import mkvc, ndgrid, requires
 from six import integer_types
 
-# matplotlib is a soft dependencies for discretize
-try:
-    import matplotlib
-    import matplotlib.pyplot as plt
-    from matplotlib.widgets import Slider
-    from mpl_toolkits.mplot3d import Axes3D
-    import matplotlib.colors as colors
-    import matplotlib.cm as cmx
-    from matplotlib.collections import PatchCollection
-except ImportError:
-    matplotlib = False
+import matplotlib
+import matplotlib.pyplot as plt
+from matplotlib.widgets import Slider
+import matplotlib.colors as colors
+import matplotlib.cm as cmx
+from matplotlib.collections import PatchCollection
 
 
 class TensorView(object):

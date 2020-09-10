@@ -2,11 +2,11 @@ import os
 import json
 import numpy as np
 
-from . import utils
-from .base import BaseMesh
+from .. import utils
+from .base_mesh import BaseMesh
 
 try:
-    from .mixins import InterfaceTensorread_vtk
+    from ..mixins import InterfaceTensorread_vtk
 except ImportError:
     InterfaceTensorread_vtk = object
 

@@ -28,15 +28,15 @@ Meshes
 Numerical Operators
 -------------------
 
-.. automodule:: discretize.InnerProducts
+.. automodule:: discretize.base.InnerProducts
 
 .. currentmodule:: discretize
 
 .. autosummary::
     :toctree: generated
 
-    DiffOperators.DiffOperators
-    InnerProducts.InnerProducts
+    base.DiffOperators
+    base.InnerProducts
 
 
 Mesh IO
@@ -46,8 +46,8 @@ Mesh IO
     :toctree: generated
 
     load_mesh
-    MeshIO.TensorMeshIO
-    MeshIO.TreeMeshIO
+    base.mesh_io.TensorMeshIO
+    base.mesh_io.TreeMeshIO
 
 
 Visualization
@@ -56,11 +56,11 @@ Visualization
 .. autosummary::
     :toctree: generated
 
-    View.TensorView
-    View.CylView
-    View.CurviView
-    View.Slicer
-    mixins.vtkModule
+    mixins.mpl_mod.TensorView
+    mixins.mpl_mod.CylView
+    mixins.mpl_mod.CurviView
+    mixins.mpl_mod.Slicer
+    mixins.vtk_mod
 
 
 

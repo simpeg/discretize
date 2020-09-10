@@ -11,7 +11,7 @@ from pymatsolver import Solver, SolverCG
 MESHTYPES = ['uniformTensorMesh']
 
 
-class Test1D_InhomogeneousDirichlet(discretize.Tests.OrderTest):
+class Test1D_InhomogeneousDirichlet(discretize.testing.OrderTest):
     name = "1D - Dirichlet"
     meshTypes = MESHTYPES
     meshDimension = 1
@@ -92,7 +92,7 @@ class Test1D_InhomogeneousDirichlet(discretize.Tests.OrderTest):
         self.orderTest()
 
 
-class Test2D_InhomogeneousDirichlet(discretize.Tests.OrderTest):
+class Test2D_InhomogeneousDirichlet(discretize.testing.OrderTest):
     name = "2D - Dirichlet"
     meshTypes = MESHTYPES
     meshDimension = 2
@@ -173,7 +173,7 @@ class Test2D_InhomogeneousDirichlet(discretize.Tests.OrderTest):
         self.myTest = 'xcJ'
         self.orderTest()
 
-class Test1D_InhomogeneousNeumann(discretize.Tests.OrderTest):
+class Test1D_InhomogeneousNeumann(discretize.testing.OrderTest):
     name = "1D - Neumann"
     meshTypes = MESHTYPES
     meshDimension = 1
@@ -249,7 +249,7 @@ class Test1D_InhomogeneousNeumann(discretize.Tests.OrderTest):
         self.myTest = 'xcJ'
         self.orderTest()
 
-class Test2D_InhomogeneousNeumann(discretize.Tests.OrderTest):
+class Test2D_InhomogeneousNeumann(discretize.testing.OrderTest):
     name = "2D - Neumann"
     meshTypes = MESHTYPES
     meshDimension = 2
@@ -337,7 +337,7 @@ class Test2D_InhomogeneousNeumann(discretize.Tests.OrderTest):
         self.orderTest()
 
 
-class Test1D_InhomogeneousMixed(discretize.Tests.OrderTest):
+class Test1D_InhomogeneousMixed(discretize.testing.OrderTest):
     name = "1D - Mixed"
     meshTypes = MESHTYPES
     meshDimension = 1
@@ -415,7 +415,7 @@ class Test1D_InhomogeneousMixed(discretize.Tests.OrderTest):
         self.orderTest()
 
 
-class Test2D_InhomogeneousMixed(discretize.Tests.OrderTest):
+class Test2D_InhomogeneousMixed(discretize.testing.OrderTest):
     name = "2D - Mixed"
     meshTypes = MESHTYPES
     meshDimension = 2

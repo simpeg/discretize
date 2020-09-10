@@ -126,7 +126,7 @@ class BasicTensorMeshTests(unittest.TestCase):
         self.assertTrue(np.all(self.mesh2.gridCC == mesh.gridCC))
 
 
-class TestPoissonEqn(discretize.Tests.OrderTest):
+class TestPoissonEqn(discretize.testing.OrderTest):
     name = "Poisson Equation"
     meshSizes = [10, 16, 20]
 

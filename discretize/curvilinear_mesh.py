@@ -4,10 +4,8 @@ import properties
 from properties.math import TYPE_MAPPINGS
 
 from discretize import utils
-from .base import BaseRectangularMesh
-from discretize.DiffOperators import DiffOperators
-from discretize.InnerProducts import InnerProducts
-from discretize.View import CurviView
+from .base import BaseRectangularMesh, DiffOperators, InnerProducts
+from discretize.mixins.mpl_mod import CurviView
 
 
 # Some helper functions.

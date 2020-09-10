@@ -17,7 +17,7 @@ cartE3 = lambda M, ex, ey, ez: np.vstack((cart_row3(M.gridEx, ex, ey, ez), cart_
 # np.random.seed(None)
 # np.random.seed(7)
 
-class TestCellGrad2D(discretize.Tests.OrderTest):
+class TestCellGrad2D(discretize.testing.OrderTest):
     name = "Cell Gradient 2D, using cellGradx and cellGrady"
     meshTypes = MESHTYPES
     meshDimension = 2
@@ -45,7 +45,7 @@ class TestCellGrad2D(discretize.Tests.OrderTest):
         self.orderTest()
 
 
-class TestCellGrad3D(discretize.Tests.OrderTest):
+class TestCellGrad3D(discretize.testing.OrderTest):
 
     name = "Cell Gradient 3D, using cellGradx, cellGrady, and cellGradz"
     meshTypes = MESHTYPES
@@ -74,7 +74,7 @@ class TestCellGrad3D(discretize.Tests.OrderTest):
         self.orderTest()
 
 
-class TestFaceDivxy2D(discretize.Tests.OrderTest):
+class TestFaceDivxy2D(discretize.testing.OrderTest):
     name = "Face Divergence 2D, Testing faceDivx and faceDivy"
     meshTypes = MESHTYPES
     meshDimension = 2
@@ -105,7 +105,7 @@ class TestFaceDivxy2D(discretize.Tests.OrderTest):
         self.orderTest()
 
 
-class TestFaceDiv3D(discretize.Tests.OrderTest):
+class TestFaceDiv3D(discretize.testing.OrderTest):
     name = "Face Divergence 3D"
     meshTypes = MESHTYPES
     meshSizes = [8, 16, 32]
@@ -130,7 +130,7 @@ class TestFaceDiv3D(discretize.Tests.OrderTest):
         self.orderTest()
 
 
-class TestFaceDivxyz3D(discretize.Tests.OrderTest):
+class TestFaceDivxyz3D(discretize.testing.OrderTest):
     name = "Face Divergence 3D, Testing faceDivx, faceDivy, and faceDivz"
     meshTypes = MESHTYPES
     meshDimension = 3
@@ -164,7 +164,7 @@ class TestFaceDivxyz3D(discretize.Tests.OrderTest):
         self.orderTest()
 
 
-class TestCurl(discretize.Tests.OrderTest):
+class TestCurl(discretize.testing.OrderTest):
     name = "Curl"
     meshTypes = ['notatreeTree', 'uniformTree'] #, 'randomTree']#, 'uniformTree']
     meshSizes = [8, 16]#, 32]
@@ -200,7 +200,7 @@ class TestCurl(discretize.Tests.OrderTest):
         self.orderTest()
 
 
-class TestNodalGrad(discretize.Tests.OrderTest):
+class TestNodalGrad(discretize.testing.OrderTest):
     name = "Nodal Gradient"
     meshTypes = ['notatreeTree', 'uniformTree'] #['randomTree', 'uniformTree']
     meshSizes = [8, 16]#, 32]
@@ -229,7 +229,7 @@ class TestNodalGrad(discretize.Tests.OrderTest):
         self.orderTest()
 
 
-class TestNodalGrad2D(discretize.Tests.OrderTest):
+class TestNodalGrad2D(discretize.testing.OrderTest):
     name = "Nodal Gradient 2D"
     meshTypes = ['notatreeTree', 'uniformTree'] #['randomTree', 'uniformTree']
     meshSizes = [8, 16]#, 32]
@@ -259,7 +259,7 @@ class TestNodalGrad2D(discretize.Tests.OrderTest):
 
 
 
-class TestTreeInnerProducts(discretize.Tests.OrderTest):
+class TestTreeInnerProducts(discretize.testing.OrderTest):
     """Integrate an function over a unit cube domain using edgeInnerProducts and faceInnerProducts."""
 
     meshTypes = ['uniformTree', 'notatreeTree'] #['uniformTensorMesh', 'uniformCurv', 'rotateCurv']
@@ -406,7 +406,7 @@ class TestTreeInnerProducts(discretize.Tests.OrderTest):
         self.orderTest()
 
 
-class TestTreeInnerProducts2D(discretize.Tests.OrderTest):
+class TestTreeInnerProducts2D(discretize.testing.OrderTest):
     """Integrate an function over a unit cube domain using edgeInnerProducts and faceInnerProducts."""
 
     meshTypes = ['uniformTree']
@@ -546,7 +546,7 @@ class TestTreeInnerProducts2D(discretize.Tests.OrderTest):
         self.invProp = True
         self.orderTest()
 
-class TestTreeAveraging2D(discretize.Tests.OrderTest):
+class TestTreeAveraging2D(discretize.testing.OrderTest):
     """Integrate an function over a unit cube domain using edgeInnerProducts and faceInnerProducts."""
 
     meshTypes = ['notatreeTree', 'uniformTree']# 'randomTree']
@@ -628,7 +628,7 @@ class TestTreeAveraging2D(discretize.Tests.OrderTest):
         self.expectedOrders = 2
 
 
-class TestAveraging3D(discretize.Tests.OrderTest):
+class TestAveraging3D(discretize.testing.OrderTest):
     name = "Averaging 3D"
     meshTypes = ['notatreeTree', 'uniformTree']#, 'randomTree']
     meshDimension = 3

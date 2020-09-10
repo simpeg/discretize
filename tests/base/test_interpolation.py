@@ -23,7 +23,7 @@ cartE3 = lambda M, ex, ey, ez: np.vstack((cart_row3(M.gridEx, ex, ey, ez), cart_
 TOL = 1e-7
 
 
-class TestInterpolation1D(discretize.Tests.OrderTest):
+class TestInterpolation1D(discretize.testing.OrderTest):
     LOCS = np.random.rand(50)*0.6+0.2
     name = "Interpolation 1D"
     meshTypes = MESHTYPES
@@ -69,7 +69,7 @@ class TestOutliersInterp1D(unittest.TestCase):
         Q = M.getInterpolationMat(np.array([[-1], [0.126], [0.127]]), 'CC', zerosOutside=True)
         self.assertTrue(np.linalg.norm(Q*x - np.r_[0, 1.004, 1.008]) < TOL)
 
-class TestInterpolation2d(discretize.Tests.OrderTest):
+class TestInterpolation2d(discretize.testing.OrderTest):
     name = "Interpolation 2D"
     LOCS = np.random.rand(50, 2)*0.6+0.2
     meshTypes = MESHTYPES
@@ -152,7 +152,7 @@ class TestInterpolation2dCyl_Simple(unittest.TestCase):
         self.assertRaises(Exception, lambda:M.getInterpolationMat(locs, 'Ez'))
 
 
-class TestInterpolation2dCyl(discretize.Tests.OrderTest):
+class TestInterpolation2dCyl(discretize.testing.OrderTest):
     name = "Interpolation 2D"
     LOCS = np.c_[np.random.rand(4)*0.6+0.2, np.zeros(4), np.random.rand(4)*0.6+0.2]
     meshTypes = ['uniformCylMesh'] # MESHTYPES +
@@ -221,7 +221,7 @@ class TestInterpolation2dCyl(discretize.Tests.OrderTest):
         self.orderTest()
 
 
-class TestInterpolation3D(discretize.Tests.OrderTest):
+class TestInterpolation3D(discretize.testing.OrderTest):
     name = "Interpolation"
     LOCS = np.random.rand(50, 3)*0.6+0.2
     meshTypes = MESHTYPES

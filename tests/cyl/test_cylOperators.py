@@ -504,7 +504,7 @@ class MimeticProperties(unittest.TestCase):
 
     def test_DivCurl(self):
         for meshType in self.meshTypes:
-            mesh, _ = discretize.Tests.setupMesh(
+            mesh, _ = discretize.testing.setupMesh(
                 meshType, self.meshSize, self.meshDimension
             )
             v = np.random.rand(mesh.nE)
@@ -521,7 +521,7 @@ class MimeticProperties(unittest.TestCase):
     # # Nodal Grad has not been implemented yet
     # def test_CurlGrad(self):
     #     for meshType in self.meshTypes:
-    #         mesh, _ = discretize.Tests.setupMesh(
+    #         mesh, _ = discretize.testing.setupMesh(
     #             meshType, self.meshSize, self.meshDimension
     #         )
     #         v = np.random.rand(mesh.nN)

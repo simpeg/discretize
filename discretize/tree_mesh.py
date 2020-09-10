@@ -87,18 +87,16 @@
 
 import properties
 
-from .base import BaseTensorMesh
-from .InnerProducts import InnerProducts
-from .MeshIO import TreeMeshIO
+from .base import BaseTensorMesh, InnerProducts
+from .base.mesh_io import TreeMeshIO
 from . import utils
-from .tree_ext import _TreeMesh, TreeCell
+from ._extensions.tree_ext import _TreeMesh, TreeCell
 import numpy as np
-from scipy.spatial import Delaunay
 import scipy.sparse as sp
 from six import integer_types
 import warnings
 
-from discretize.utils.codeutils import requires
+from discretize.utils import requires
 # matplotlib is a soft dependencies for discretize
 try:
     import matplotlib.pyplot as plt

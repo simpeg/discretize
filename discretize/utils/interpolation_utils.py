@@ -1,10 +1,10 @@
 from __future__ import print_function
 import numpy as np
 import scipy.sparse as sp
-from .matutils import mkvc, sub2ind
+from .matrix_utils import mkvc, sub2ind
 
 try:
-    from . import interputils_cython as pyx
+    from ._extensions import interputils_cython as pyx
     _interp_point_1D = pyx._interp_point_1D
     _interpmat1D = pyx._interpmat1D
     _interpmat2D = pyx._interpmat2D
@@ -16,7 +16,7 @@ except ImportError as err:
     import os
     # Check if being called from non-standard location (i.e. a git repository)
     # is tree_ext.cpp here? will not be in the folder if installed to site-packages...
-    file_test = os.path.dirname(os.path.abspath(__file__))+"/interputils_cython.pyx"
+    file_test = os.path.dirname(os.path.abspath(__file__))+"/_extensions/interputils_cython.pyx"
     if os.path.isfile(file_test):
         # Then we are being run from a repository
         print(
