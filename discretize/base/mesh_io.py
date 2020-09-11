@@ -2,8 +2,8 @@ import os
 import json
 import numpy as np
 
-from .. import utils
-from .base_mesh import BaseMesh
+from ..utils import mkvc
+from . import BaseMesh
 
 try:
     from ..mixins import InterfaceTensorread_vtk
@@ -207,7 +207,7 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         model = np.reshape(model, (mesh.nCz, mesh.nCx, mesh.nCy), order='F')
         model = model[::-1, :, :]
         model = np.transpose(model, (1, 2, 0))
-        model = utils.mkvc(model)
+        model = mkvc(model)
         return model
 
     def readModelUBC(mesh, fileName, directory=''):
@@ -249,7 +249,7 @@ class TensorMeshIO(InterfaceTensorread_vtk):
             # Transpose the axes
             modelMatT = modelMat.transpose((2, 0, 1))
             # Flip z to positive down
-            modelMatTR = utils.mkvc(modelMatT[::-1, :, :])
+            modelMatTR = mkvc(modelMatT[::-1, :, :])
             np.savetxt(fname, modelMatTR.ravel())
 
         elif mesh.dim == 2:

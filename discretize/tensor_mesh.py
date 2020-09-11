@@ -1,11 +1,11 @@
 from __future__ import print_function
 import numpy as np
 
-from discretize import utils
 
 from .base import BaseRectangularMesh, BaseTensorMesh, DiffOperators, InnerProducts
 from .mixins.mpl_mod import TensorView
 from .base.mesh_io import TensorMeshIO
+from .utils import mkvc
 
 
 class TensorMesh(
@@ -135,14 +135,14 @@ class TensorMesh(
             vh = self.h
             # Compute cell volumes
             if self.dim == 1:
-                self._vol = utils.mkvc(vh[0])
+                self._vol = mkvc(vh[0])
             elif self.dim == 2:
                 # Cell sizes in each direction
-                self._vol = utils.mkvc(np.outer(vh[0], vh[1]))
+                self._vol = mkvc(np.outer(vh[0], vh[1]))
             elif self.dim == 3:
                 # Cell sizes in each direction
-                self._vol = utils.mkvc(
-                    np.outer(utils.mkvc(np.outer(vh[0], vh[1])), vh[2])
+                self._vol = mkvc(
+                    np.outer(mkvc(np.outer(vh[0], vh[1])), vh[2])
                 )
         return self._vol
 
@@ -163,9 +163,9 @@ class TensorMesh(
                 areaFx = np.outer(np.ones(n[0]+1), vh[1])
             elif self.dim == 3:
                 areaFx = np.outer(
-                    np.ones(n[0]+1), utils.mkvc(np.outer(vh[1], vh[2]))
+                    np.ones(n[0]+1), mkvc(np.outer(vh[1], vh[2]))
                 )
-            self._areaFx = utils.mkvc(areaFx)
+            self._areaFx = mkvc(areaFx)
         return self._areaFx
 
     @property
@@ -185,9 +185,9 @@ class TensorMesh(
                 areaFy = np.outer(vh[0], np.ones(n[1]+1))
             elif self.dim == 3:
                 areaFy = np.outer(
-                    vh[0], utils.mkvc(np.outer(np.ones(n[1]+1), vh[2]))
+                    vh[0], mkvc(np.outer(np.ones(n[1]+1), vh[2]))
                 )
-            self._areaFy = utils.mkvc(areaFy)
+            self._areaFy = mkvc(areaFy)
         return self._areaFy
 
     @property
@@ -207,9 +207,9 @@ class TensorMesh(
                 )
             elif self.dim == 3:
                 areaFz = np.outer(
-                    vh[0], utils.mkvc(np.outer(vh[1], np.ones(n[2]+1)))
+                    vh[0], mkvc(np.outer(vh[1], np.ones(n[2]+1)))
                 )
-            self._areaFz = utils.mkvc(areaFz)
+            self._areaFz = mkvc(areaFz)
         return self._areaFz
 
     @property
@@ -238,9 +238,9 @@ class TensorMesh(
             elif self.dim == 3:
                 edgeEx = np.outer(
                     vh[0],
-                    utils.mkvc(np.outer(np.ones(n[1]+1), np.ones(n[2]+1)))
+                    mkvc(np.outer(np.ones(n[1]+1), np.ones(n[2]+1)))
                 )
-            self._edgeEx = utils.mkvc(edgeEx)
+            self._edgeEx = mkvc(edgeEx)
         return self._edgeEx
 
     @property
@@ -259,9 +259,9 @@ class TensorMesh(
             elif self.dim == 3:
                 edgeEy = np.outer(
                     np.ones(n[0]+1),
-                    utils.mkvc(np.outer(vh[1], np.ones(n[2]+1)))
+                    mkvc(np.outer(vh[1], np.ones(n[2]+1)))
                 )
-            self._edgeEy = utils.mkvc(edgeEy)
+            self._edgeEy = mkvc(edgeEy)
         return self._edgeEy
 
     @property
@@ -280,9 +280,9 @@ class TensorMesh(
             elif self.dim == 3:
                 edgeEz = np.outer(
                     np.ones(n[0]+1),
-                    utils.mkvc(np.outer(np.ones(n[1]+1), vh[2]))
+                    mkvc(np.outer(np.ones(n[1]+1), vh[2]))
                 )
-            self._edgeEz = utils.mkvc(edgeEz)
+            self._edgeEz = mkvc(edgeEz)
         return self._edgeEz
 
     @property

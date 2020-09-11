@@ -1,11 +1,10 @@
 # from discretize.BaseMesh import BaseMesh
-from discretize.tensor_mesh import TensorMesh
-from discretize.cylinder_mesh import CylMesh
-from discretize.curvilinear_mesh import CurvilinearMesh
-from discretize import testing
-from discretize.base.mesh_io import load_mesh
+from .tensor_mesh import TensorMesh
+from .cylinder_mesh import CylMesh
+from .curvilinear_mesh import CurvilinearMesh
+from .base.mesh_io import load_mesh
 try:
-    from discretize.tree_mesh import TreeMesh
+    from .tree_mesh import TreeMesh
 except ImportError as err:
     print(err)
     import os
@@ -14,7 +13,7 @@ except ImportError as err:
     file_test = os.path.dirname(os.path.abspath(__file__))+"/_extensions/tree_ext.pyx"
     if os.path.isfile(file_test):
         # Then we are being run from a repository
-        print(
+        raise ImportError(
             """
             Unable to import TreeMesh.
 
@@ -26,6 +25,7 @@ except ImportError as err:
             to compile the cython code.
             """
             )
+from . import testing
 
 __version__   = '0.5.1'
 __author__    = 'SimPEG Team'

@@ -6,7 +6,7 @@ import scipy.sparse as sp
 from scipy.constants import pi
 
 from .utils import (
-    kron3, ndgrid, av, speye, ddx, sdiag, interpmat, spzeros, cyl2cart
+    kron3, ndgrid, av, speye, ddx, sdiag, spzeros, interpmat, cyl2cart
 )
 from .base import BaseTensorMesh, BaseRectangularMesh, InnerProducts, DiffOperators
 from .mixins.mpl_mod import CylView

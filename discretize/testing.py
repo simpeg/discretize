@@ -2,14 +2,10 @@ from __future__ import print_function
 import numpy as np
 import scipy.sparse as sp
 
-from discretize.utils import mkvc, requires
-from discretize import utils
-from discretize import TensorMesh, CurvilinearMesh, CylMesh
+from .utils import mkvc, exampleLrmGrid, requires
+from . import TensorMesh, CurvilinearMesh, CylMesh
 
-try:
-    from discretize.TreeMesh import TreeMesh as Tree
-except ImportError as e:
-    Tree = None
+from . import TreeMesh as Tree
 
 import unittest
 import inspect
@@ -97,10 +93,10 @@ def setupMesh(meshType, nC, nDim):
         if nDim == 1:
             raise Exception('Lom not supported for 1D')
         elif nDim == 2:
-            X, Y = utils.exampleLrmGrid([nC, nC], kwrd)
+            X, Y = exampleLrmGrid([nC, nC], kwrd)
             mesh = CurvilinearMesh([X, Y])
         elif nDim == 3:
-            X, Y, Z = utils.exampleLrmGrid([nC, nC, nC], kwrd)
+            X, Y, Z = exampleLrmGrid([nC, nC, nC], kwrd)
             mesh = CurvilinearMesh([X, Y, Z])
         max_h = 1./nC
 

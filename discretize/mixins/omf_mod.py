@@ -4,8 +4,6 @@ A class for converting ``discretize`` meshes to OMF objects
 
 import omf
 import numpy as np
-
-
 import discretize
 
 

@@ -1,7 +1,7 @@
 from __future__ import print_function
 import numpy as np
 import scipy.sparse as sp
-from .matrix_utils import mkvc, sub2ind
+from . import mkvc, sub2ind
 
 try:
     from .._extensions import interputils_cython as pyx

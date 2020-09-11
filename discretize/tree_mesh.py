@@ -89,14 +89,13 @@ import properties
 
 from .base import BaseTensorMesh, InnerProducts
 from .base.mesh_io import TreeMeshIO
-from . import utils
+from .utils import asArray_N_x_Dim, requires
 from ._extensions.tree_ext import _TreeMesh, TreeCell
 import numpy as np
 import scipy.sparse as sp
 from six import integer_types
 import warnings
 
-from discretize.utils import requires
 # matplotlib is a soft dependencies for discretize
 try:
     import matplotlib.pyplot as plt
@@ -428,7 +427,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         numpy.array of integers of length(N)
             Cell indices that contain the points
         """
-        locs = utils.asArray_N_x_Dim(locs, self.dim)
+        locs = asArray_N_x_Dim(locs, self.dim)
         inds = self._get_containing_cell_indexes(locs)
         return inds
 
@@ -477,7 +476,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
             M, the interpolation matrix
 
         """
-        locs = utils.asArray_N_x_Dim(locs, self.dim)
+        locs = asArray_N_x_Dim(locs, self.dim)
         if locType not in ['N', 'CC', "Ex", "Ey", "Ez", "Fx", "Fy", "Fz"]:
             raise Exception('locType must be one of N, CC, Ex, Ey, Ez, Fx, Fy, or Fz')
 

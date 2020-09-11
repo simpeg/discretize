@@ -2,13 +2,10 @@ import numpy as np
 import scipy.ndimage as ndi
 import scipy.sparse as sp
 
-from .matrix_utils import ndgrid
-from .code_utils import asArray_N_x_Dim, isScalar
-from ..tensor_mesh import TensorMesh
-from ..tree_mesh import TreeMesh
-from ..cylinder_mesh import CylMesh
+from . import ndgrid, asArray_N_x_Dim, isScalar
 from scipy.spatial import cKDTree, Delaunay
 from scipy import interpolate
+import discretize
 
 num_types = [int, float]
 
@@ -226,7 +223,7 @@ def ExtractCoreMesh(xyzlim, mesh, mesh_type='tensor'):
 
         x0 = [xc[0]-hx[0]*0.5]
 
-        meshCore = TensorMesh([hx], x0=x0)
+        meshCore = discretize.TensorMesh([hx], x0=x0)
 
         actind = (mesh.gridCC > xmin) & (mesh.gridCC < xmax)
 
@@ -245,7 +242,7 @@ def ExtractCoreMesh(xyzlim, mesh, mesh_type='tensor'):
 
         x0 = [xc[0]-hx[0]*0.5, yc[0]-hy[0]*0.5]
 
-        meshCore = TensorMesh([hx, hy], x0=x0)
+        meshCore = discretize.TensorMesh([hx, hy], x0=x0)
 
         actind = (
             (mesh.gridCC[:, 0] > xmin) & (mesh.gridCC[:, 0] < xmax) &
@@ -271,7 +268,7 @@ def ExtractCoreMesh(xyzlim, mesh, mesh_type='tensor'):
 
         x0 = [xc[0]-hx[0]*0.5, yc[0]-hy[0]*0.5, zc[0]-hz[0]*0.5]
 
-        meshCore = TensorMesh([hx, hy, hz], x0=x0)
+        meshCore = discretize.TensorMesh([hx, hy, hz], x0=x0)
 
         actind = (
             (mesh.gridCC[:, 0] > xmin) & (mesh.gridCC[:, 0] < xmax) &
@@ -401,7 +398,7 @@ def mesh_builder_xyz(
             nC_x0 += [h_dim[-1][0][1]]
 
         # Create mesh
-        mesh = TensorMesh(h_dim)
+        mesh = discretize.TensorMesh(h_dim)
 
     elif mesh_type.lower() == 'tree':
 
@@ -420,7 +417,7 @@ def mesh_builder_xyz(
             h_dim += [np.ones(2**maxLevel) * h[ii]]
 
         # Define the mesh and origin
-        mesh = TreeMesh(h_dim)
+        mesh = discretize.TreeMesh(h_dim)
 
         for ii, cc in enumerate(nC):
             core = limits[ii][0] - limits[ii][1]
@@ -481,7 +478,7 @@ def refine_tree_xyz(
 
     Parameters
     ----------
-    mesh: TreeMesh
+    mesh: discretize.TreeMesh
         The TreeMesh object to be refined
     xyz: numpy.ndarray
         2D array of points
@@ -791,7 +788,7 @@ def active_from_xyz(mesh, xyz, grid_reference='CC', method='linear'):
     Parameters
     ----------
 
-    mesh : TensorMesh or TreeMesh or CylMesh
+    mesh : discretize.TensorMesh or discretize.TreeMesh or discretize.CylMesh
         Mesh object, (if CylMesh: mesh must be symmetric).
     xyz : numpy.ndarray
         Points coordinates shape (*, mesh.dim).
@@ -838,11 +835,11 @@ def active_from_xyz(mesh, xyz, grid_reference='CC', method='linear'):
         plt.show()
 
     """
-    if isinstance(mesh, CylMesh) and not mesh.isSymmetric:
-        raise NotImplementedError('Unsymmetric CylMesh is not yet supported')
-
-    if not isinstance(mesh, (TensorMesh, TreeMesh, CylMesh)):
-        raise TypeError("Mesh must be either TensorMesh, TreeMesh, or Symmetric CylMesh")
+    try:
+        if not mesh.isSymmetric:
+            raise NotImplementedError('Unsymmetric CylMesh is not yet supported')
+    except AttributeError:
+        pass
 
     if grid_reference not in ["N", "CC"]:
         raise ValueError("Value of grid_reference must be 'N' (nodal) or 'CC' (cell center)")
@@ -868,6 +865,7 @@ def active_from_xyz(mesh, xyz, grid_reference='CC', method='linear'):
             raise ValueError("xyz locations of shape (*, ) required for 1D mesh")
 
     if grid_reference == 'CC':
+        # this should work for all 4 mesh types...
         locations = mesh.gridCC
 
         if mesh.dim == 1:
@@ -877,25 +875,44 @@ def active_from_xyz(mesh, xyz, grid_reference='CC', method='linear'):
 
     elif grid_reference == 'N':
 
-        if mesh.dim == 3:
-            locations = np.vstack([
-                mesh.gridCC + (np.c_[-1, 1, 1][:, None] * mesh.h_gridded / 2.).squeeze(),
-                mesh.gridCC + (np.c_[-1, -1, 1][:, None] * mesh.h_gridded / 2.).squeeze(),
-                mesh.gridCC + (np.c_[1, 1, 1][:, None] * mesh.h_gridded / 2.).squeeze(),
-                mesh.gridCC + (np.c_[1, -1, 1][:, None] * mesh.h_gridded / 2.).squeeze()
-            ])
+        try:
+            # try for Cyl, Tensor, and Tree operations
+            if mesh.dim == 3:
+                locations = np.vstack([
+                    mesh.gridCC + (np.c_[-1, 1, 1][:, None] * mesh.h_gridded / 2.).squeeze(),
+                    mesh.gridCC + (np.c_[-1, -1, 1][:, None] * mesh.h_gridded / 2.).squeeze(),
+                    mesh.gridCC + (np.c_[1, 1, 1][:, None] * mesh.h_gridded / 2.).squeeze(),
+                    mesh.gridCC + (np.c_[1, -1, 1][:, None] * mesh.h_gridded / 2.).squeeze()
+                ])
 
-        elif mesh.dim == 2:
-            locations = np.vstack([
-                mesh.gridCC + (np.c_[-1, 1][:, None] * mesh.h_gridded / 2.).squeeze(),
-                mesh.gridCC + (np.c_[1, 1][:, None] * mesh.h_gridded / 2.).squeeze(),
-            ])
+            elif mesh.dim == 2:
+                locations = np.vstack([
+                    mesh.gridCC + (np.c_[-1, 1][:, None] * mesh.h_gridded / 2.).squeeze(),
+                    mesh.gridCC + (np.c_[1, 1][:, None] * mesh.h_gridded / 2.).squeeze(),
+                ])
 
-        else:
-            active = np.zeros(mesh.nC, dtype='bool')
-            active[np.searchsorted(mesh.vectorNx, xyz).max():] = True
+            else:
+                active = np.zeros(mesh.nC, dtype='bool')
+                active[np.searchsorted(mesh.vectorNx, xyz).max():] = True
 
-            return active
+                return active
+        except AttributeError:
+            # Try for Curvilinear Mesh
+            gridN = mesh.gridN.reshape((*mesh.vnC, dim), order='F')
+            if mesh.dim == 3:
+                locations = np.vstack([
+                    gridN[:-1, :-1, 1:].reshape((-1, dim), order='F'),
+                    gridN[:-1, 1:, 1:].reshape((-1, dim), order='F'),
+                    gridN[1:, :-1, 1:].reshape((-1, dim), order='F'),
+                    gridN[1:, 1: 1:].reshape((-1, dim), order='F'),
+                ])
+            elif mesh.dim == 2:
+                locations = np.vstack([
+                    gridN[:-1, 1:].reshape((-1, dim), order='F'),
+                    gridN[1:, 1:].reshape((-1, dim), order='F'),
+                ])
+
+
 
     # Interpolate z values on CC or N
     z_xyz = z_interpolate(locations[:, :-1]).squeeze()

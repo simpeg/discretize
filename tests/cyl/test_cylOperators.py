@@ -5,7 +5,7 @@ import sympy
 from sympy.abc import r, t, z
 
 import discretize
-from discretize import Tests
+from discretize import testing
 
 np.random.seed(16)
 
@@ -37,7 +37,7 @@ cylE3 = lambda M, ex, ey, ez: np.vstack((
 ))
 
 
-# class TestCellGradx3D(Tests.OrderTest):
+# class TestCellGradx3D(testing.OrderTest):
 #     name = "CellGradx"
 #     MESHTYPES = MESHTYPES
 #     meshDimension = 3
@@ -63,7 +63,7 @@ cylE3 = lambda M, ex, ey, ez: np.vstack((
 #         self.orderTest()
 
 
-class TestFaceDiv3D(Tests.OrderTest):
+class TestFaceDiv3D(testing.OrderTest):
     name = "FaceDiv"
     meshTypes = MESHTYPES
     meshDimension = 3
@@ -95,7 +95,7 @@ class TestFaceDiv3D(Tests.OrderTest):
         self.orderTest()
 
 
-class TestEdgeCurl3D(Tests.OrderTest):
+class TestEdgeCurl3D(testing.OrderTest):
 
     name = "edgeCurl"
     meshTypes = MESHTYPES
@@ -199,7 +199,7 @@ class TestAverageSimple(unittest.TestCase):
         assert np.linalg.norm(aveF - aveF_ana) < 1e-10
 
 
-class TestAveF2CCV(Tests.OrderTest):
+class TestAveF2CCV(testing.OrderTest):
     name = "aveF2CCV"
     meshTypes = MESHTYPES
     meshSizes = [8, 16, 32, 64]
@@ -236,7 +236,7 @@ class TestAveF2CCV(Tests.OrderTest):
         self.orderTest()
 
 
-class TestAveF2CC(Tests.OrderTest):
+class TestAveF2CC(testing.OrderTest):
     name = "aveF2CC"
     meshTypes = MESHTYPES
     meshSizes = [8, 16, 32, 64]
@@ -314,7 +314,7 @@ class FaceInnerProductFctsIsotropic(object):
         return sig, np.r_[jr, jt, jz]
 
 
-class TestAveE2CCV(Tests.OrderTest):
+class TestAveE2CCV(testing.OrderTest):
     name = "aveE2CCV"
     meshTypes = MESHTYPES
     meshSizes = [8, 16, 32, 64]
@@ -350,7 +350,7 @@ class TestAveE2CCV(Tests.OrderTest):
         self.orderTest()
 
 
-class TestAveE2CC(Tests.OrderTest):
+class TestAveE2CC(testing.OrderTest):
     name = "aveE2CC"
     meshTypes = MESHTYPES
     meshSizes = [8, 16, 32, 64]
@@ -466,7 +466,7 @@ class TestCylInnerProducts_simple(unittest.TestCase):
         assert(np.abs(ans-numeric_ans) < TOL)
 
 
-class TestCylFaceInnerProducts_Order(Tests.OrderTest):
+class TestCylFaceInnerProducts_Order(testing.OrderTest):
 
     meshTypes = ['uniformCylMesh']
     meshDimension = 3
@@ -481,7 +481,7 @@ class TestCylFaceInnerProducts_Order(Tests.OrderTest):
         self.orderTest()
 
 
-class TestCylEdgeInnerProducts_Order(Tests.OrderTest):
+class TestCylEdgeInnerProducts_Order(testing.OrderTest):
 
     meshTypes = ['uniformCylMesh']
     meshDimension = 3

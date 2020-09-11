@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+from .code_utils import (isScalar, asArray_N_x_Dim, requires)
 from .matrix_utils import (
     mkvc, sdiag, sdInv, speye, kron3, spzeros, ddx, av,
     av_extrap, ndgrid, ind2sub, sub2ind, getSubArray,
@@ -7,10 +8,9 @@ from .matrix_utils import (
     makePropertyTensor, invPropertyTensor, Zero,
     Identity
 )
-from .code_utils import (isScalar, asArray_N_x_Dim, requires)
 from .mesh_utils import (
     exampleLrmGrid, meshTensor, closestPoints, ExtractCoreMesh,
-    random_model, mesh_builder_xyz, refine_tree_xyz, active_from_xyz
+    random_model, refine_tree_xyz, active_from_xyz, mesh_builder_xyz
 )
 from .curvilinear_utils import volTetra, faceInfo, indexCube
 from .interpolation_utils import interpmat, volume_average

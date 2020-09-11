@@ -1,7 +1,7 @@
 from __future__ import division
 import numpy as np
 import scipy.sparse as sp
-from .code_utils import isScalar
+from . import isScalar
 
 
 def mkvc(x, numDims=1):

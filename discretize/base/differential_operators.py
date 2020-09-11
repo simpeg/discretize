@@ -5,7 +5,6 @@ from six import string_types
 import warnings
 from ..utils import sdiag, speye, kron3, spzeros, ddx, av, av_extrap
 
-
 def checkBC(bc):
     """Checks if boundary condition 'bc' is valid.
 

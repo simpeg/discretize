@@ -6,8 +6,11 @@ import numpy as np
 import scipy.sparse as sp
 import properties
 
-from .base_mesh import BaseMesh
-from .. import utils
+from . import BaseMesh
+from ..utils import (
+    isScalar, asArray_N_x_Dim, meshTensor, mkvc, ndgrid, spzeros, sdiag, sdInv,
+    TensorType, interpmat
+)
 
 class BaseTensorMesh(BaseMesh):
     """
@@ -52,11 +55,11 @@ class BaseTensorMesh(BaseMesh):
         # build h
         h = list(range(len(h_in)))
         for i, h_i in enumerate(h_in):
-            if utils.isScalar(h_i) and type(h_i) is not np.ndarray:
+            if isScalar(h_i) and type(h_i) is not np.ndarray:
                 # This gives you something over the unit cube.
                 h_i = self._unitDimensions[i] * np.ones(int(h_i))/int(h_i)
             elif type(h_i) is list:
-                h_i = utils.meshTensor(h_i)
+                h_i = meshTensor(h_i)
             assert isinstance(h_i, np.ndarray), (
                 "h[{0:d}] is not a numpy array.".format(i)
             )
@@ -72,7 +75,7 @@ class BaseTensorMesh(BaseMesh):
             assert len(h) == len(x0_in), "Dimension mismatch. x0 != len(h)"
             for i in range(len(h)):
                 x_i, h_i = x0_in[i], h[i]
-                if utils.isScalar(x_i):
+                if isScalar(x_i):
                     x0[i] = x_i
                 elif x_i == '0':
                     x0[i] = 0.0
@@ -100,7 +103,7 @@ class BaseTensorMesh(BaseMesh):
         )
 
         # Ensure h contains 1D vectors
-        self.h = [utils.mkvc(x.astype(float)) for x in h]
+        self.h = [mkvc(x.astype(float)) for x in h]
 
     @property
     def hx(self):
@@ -229,7 +232,7 @@ class BaseTensorMesh(BaseMesh):
 
     def _getTensorGrid(self, key):
         if getattr(self, '_grid' + key, None) is None:
-            setattr(self, '_grid' + key, utils.ndgrid(self.getTensor(key)))
+            setattr(self, '_grid' + key, ndgrid(self.getTensor(key)))
         return getattr(self, '_grid' + key)
 
     def getTensor(self, key):
@@ -289,7 +292,7 @@ class BaseTensorMesh(BaseMesh):
         :rtype: numpy.ndarray
         :return: inside, numpy array of booleans
         """
-        pts = utils.asArray_N_x_Dim(pts, self.dim)
+        pts = asArray_N_x_Dim(pts, self.dim)
 
         tensors = self.getTensor(locType)
 
@@ -341,7 +344,7 @@ class BaseTensorMesh(BaseMesh):
 
         """
 
-        loc = utils.asArray_N_x_Dim(loc, self.dim)
+        loc = asArray_N_x_Dim(loc, self.dim)
 
         if not zerosOutside:
             assert np.all(self.isInside(loc)), "Points outside of mesh"
@@ -355,18 +358,18 @@ class BaseTensorMesh(BaseMesh):
             ind = {'x': 0, 'y': 1, 'z': 2}[locType[1]]
             assert self.dim >= ind, 'mesh is not high enough dimension.'
             nF_nE = self.vnF if 'F' in locType else self.vnE
-            components = [utils.spzeros(loc.shape[0], n) for n in nF_nE]
-            components[ind] = utils.interpmat(loc, *self.getTensor(locType))
+            components = [spzeros(loc.shape[0], n) for n in nF_nE]
+            components[ind] = interpmat(loc, *self.getTensor(locType))
             # remove any zero blocks (hstack complains)
             components = [comp for comp in components if comp.shape[1] > 0]
             Q = sp.hstack(components)
 
         elif locType in ['CC', 'N']:
-            Q = utils.interpmat(loc, *self.getTensor(locType))
+            Q = interpmat(loc, *self.getTensor(locType))
 
         elif locType in ['CCVx', 'CCVy', 'CCVz']:
-            Q = utils.interpmat(loc, *self.getTensor('CC'))
-            Z = utils.spzeros(loc.shape[0], self.nC)
+            Q = interpmat(loc, *self.getTensor('CC'))
+            Z = spzeros(loc.shape[0], self.nC)
             if locType == 'CCVx':
                 Q = sp.hstack([Q, Z, Z])
             elif locType == 'CCVy':
@@ -459,7 +462,7 @@ class BaseTensorMesh(BaseMesh):
         if invProp:
             prop = 1./prop
 
-        if utils.isScalar(prop):
+        if isScalar(prop):
             prop = prop*np.ones(self.nC)
 
         # number of elements we are averaging (equals dim for regular
@@ -473,8 +476,8 @@ class BaseTensorMesh(BaseMesh):
         # Isotropic? or anisotropic?
         if prop.size == self.nC:
             Av = getattr(self, 'ave'+projType+'2CC')
-            Vprop = self.vol * utils.mkvc(prop)
-            M = n_elements * utils.sdiag(Av.T * Vprop)
+            Vprop = self.vol * mkvc(prop)
+            M = n_elements * sdiag(Av.T * Vprop)
 
         elif prop.size == self.nC*self.dim:
             Av = getattr(self, 'ave'+projType+'2CCV')
@@ -487,13 +490,13 @@ class BaseTensorMesh(BaseMesh):
                 elif projType == 'F':
                     prop = prop[:, [0, 2]]
 
-            V = sp.kron(sp.identity(n_elements), utils.sdiag(self.vol))
-            M = utils.sdiag(Av.T * V * utils.mkvc(prop))
+            V = sp.kron(sp.identity(n_elements), sdiag(self.vol))
+            M = sdiag(Av.T * V * mkvc(prop))
         else:
             return None
 
         if invMat:
-            return utils.sdInv(M)
+            return sdInv(M)
         else:
             return M
 
@@ -526,7 +529,7 @@ class BaseTensorMesh(BaseMesh):
         assert projType in ['F', 'E'], ("projType must be 'F' for faces or 'E'"
                                         " for edges")
 
-        tensorType = utils.TensorType(self, prop)
+        tensorType = TensorType(self, prop)
 
         dMdprop = None
 
@@ -544,7 +547,7 @@ class BaseTensorMesh(BaseMesh):
 
         if tensorType == 0:  # isotropic, constant
             Av = getattr(self, 'ave'+projType+'2CC')
-            V = utils.sdiag(self.vol)
+            V = sdiag(self.vol)
             ones = sp.csr_matrix(
                 (np.ones(self.nC), (range(self.nC), np.zeros(self.nC))),
                 shape=(self.nC, 1)
@@ -553,36 +556,36 @@ class BaseTensorMesh(BaseMesh):
                 dMdprop = n_elements * Av.T * V * ones
             elif invMat and invProp:
                 dMdprop =  n_elements * (
-                    utils.sdiag(MI.diagonal()**2) * Av.T * V * ones *
-                    utils.sdiag(1./prop**2)
+                    sdiag(MI.diagonal()**2) * Av.T * V * ones *
+                    sdiag(1./prop**2)
                 )
             elif invProp:
-                dMdprop = n_elements * Av.T * V * utils.sdiag(- 1./prop**2)
+                dMdprop = n_elements * Av.T * V * sdiag(- 1./prop**2)
             elif invMat:
                 dMdprop = n_elements * (
-                    utils.sdiag(- MI.diagonal()**2) * Av.T * V
+                    sdiag(- MI.diagonal()**2) * Av.T * V
                 )
 
         elif tensorType == 1:  # isotropic, variable in space
             Av = getattr(self, 'ave'+projType+'2CC')
-            V = utils.sdiag(self.vol)
+            V = sdiag(self.vol)
             if not invMat and not invProp:
                 dMdprop = n_elements * Av.T * V
             elif invMat and invProp:
                 dMdprop =  n_elements * (
-                    utils.sdiag(MI.diagonal()**2) * Av.T * V *
-                    utils.sdiag(1./prop**2)
+                    sdiag(MI.diagonal()**2) * Av.T * V *
+                    sdiag(1./prop**2)
                 )
             elif invProp:
-                dMdprop = n_elements * Av.T * V * utils.sdiag(-1./prop**2)
+                dMdprop = n_elements * Av.T * V * sdiag(-1./prop**2)
             elif invMat:
                 dMdprop = n_elements * (
-                    utils.sdiag(- MI.diagonal()**2) * Av.T * V
+                    sdiag(- MI.diagonal()**2) * Av.T * V
                 )
 
         elif tensorType == 2: # anisotropic
             Av = getattr(self, 'ave'+projType+'2CCV')
-            V = sp.kron(sp.identity(self.dim), utils.sdiag(self.vol))
+            V = sp.kron(sp.identity(self.dim), sdiag(self.vol))
 
             if self._meshType == 'CYL':
                 Zero = sp.csr_matrix((self.nC, self.nC))
@@ -600,12 +603,12 @@ class BaseTensorMesh(BaseMesh):
             if not invMat and not invProp:
                 dMdprop = Av.T * P * V
             elif invMat and invProp:
-                dMdprop = (utils.sdiag(MI.diagonal()**2) * Av.T * P * V *
-                           utils.sdiag(1./prop**2))
+                dMdprop = (sdiag(MI.diagonal()**2) * Av.T * P * V *
+                           sdiag(1./prop**2))
             elif invProp:
-                dMdprop = Av.T * P * V * utils.sdiag(-1./prop**2)
+                dMdprop = Av.T * P * V * sdiag(-1./prop**2)
             elif invMat:
-                dMdprop = utils.sdiag(- MI.diagonal()**2) * Av.T * P * V
+                dMdprop = sdiag(- MI.diagonal()**2) * Av.T * P * V
 
         if dMdprop is not None:
             def innerProductDeriv(v=None):
@@ -616,7 +619,7 @@ class BaseTensorMesh(BaseMesh):
                         "Use: sdiag(u)*dMdprop", FutureWarning
                     )
                     return dMdprop
-                return utils.sdiag(v) * dMdprop
+                return sdiag(v) * dMdprop
             return innerProductDeriv
         else:
             return None

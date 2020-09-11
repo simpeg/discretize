@@ -1,6 +1,6 @@
 from __future__ import print_function
 import discretize
-from discretize import Tests
+from discretize import testing
 import numpy as np
 import sympy
 from sympy.abc import r, t, z
@@ -226,7 +226,7 @@ class TestCylInnerProducts_simple(unittest.TestCase):
         assert(np.abs(ans-numeric_ans) < TOL)
 
 
-class TestCylFaceInnerProducts_Order(Tests.OrderTest):
+class TestCylFaceInnerProducts_Order(testing.OrderTest):
 
     meshTypes = ['uniformCylMesh']
     meshDimension = 2
@@ -241,7 +241,7 @@ class TestCylFaceInnerProducts_Order(Tests.OrderTest):
         self.orderTest()
 
 
-class TestCylEdgeInnerProducts_Order(Tests.OrderTest):
+class TestCylEdgeInnerProducts_Order(testing.OrderTest):
 
     meshTypes = ['uniformCylMesh']
     meshDimension = 2
@@ -256,7 +256,7 @@ class TestCylEdgeInnerProducts_Order(Tests.OrderTest):
         self.orderTest()
 
 
-class TestCylFaceInnerProductsDiagAnisotropic_Order(Tests.OrderTest):
+class TestCylFaceInnerProductsDiagAnisotropic_Order(testing.OrderTest):
 
     meshTypes = ['uniformCylMesh']
     meshDimension = 2
@@ -271,7 +271,7 @@ class TestCylFaceInnerProductsDiagAnisotropic_Order(Tests.OrderTest):
         self.orderTest()
 
 
-class TestCylEdgeInnerProducts_Order(Tests.OrderTest):
+class TestCylEdgeInnerProducts_Order(testing.OrderTest):
 
     meshTypes = ['uniformCylMesh']
     meshDimension = 2
@@ -304,7 +304,7 @@ class TestCylInnerProducts_Deriv(unittest.TestCase):
             return MfSig*self.face_vec, MfSigDeriv(self.face_vec)
 
         print('Testing FaceInnerProduct Isotropic')
-        return self.assertTrue(Tests.checkDerivative(fun, self.x0, num=7,
+        return self.assertTrue(testing.checkDerivative(fun, self.x0, num=7,
                                tolerance=TOLD, plotIt=False))
 
     def test_FaceInnerProductIsotropicDerivInvProp(self):
@@ -316,7 +316,7 @@ class TestCylInnerProducts_Deriv(unittest.TestCase):
             return MfSig*self.face_vec, MfSigDeriv(self.face_vec)
 
         print('Testing FaceInnerProduct Isotropic InvProp')
-        return self.assertTrue(Tests.checkDerivative(fun, self.x0, num=7,
+        return self.assertTrue(testing.checkDerivative(fun, self.x0, num=7,
                                                      tolerance=TOLD,
                                                      plotIt=False))
 
@@ -329,7 +329,7 @@ class TestCylInnerProducts_Deriv(unittest.TestCase):
             return MfSig*self.face_vec, MfSigDeriv(self.face_vec)
 
         print('Testing FaceInnerProduct Isotropic InvMat')
-        return self.assertTrue(Tests.checkDerivative(fun, self.x0, num=7,
+        return self.assertTrue(testing.checkDerivative(fun, self.x0, num=7,
                                                      tolerance=TOLD,
                                                      plotIt=False))
 
@@ -344,7 +344,7 @@ class TestCylInnerProducts_Deriv(unittest.TestCase):
             return MfSig*self.face_vec, MfSigDeriv(self.face_vec)
 
         print('Testing FaceInnerProduct Isotropic InvProp InvMat')
-        return self.assertTrue(Tests.checkDerivative(fun, self.x0, num=7,
+        return self.assertTrue(testing.checkDerivative(fun, self.x0, num=7,
                                                      tolerance=TOLD,
                                                      plotIt=False))
 
@@ -356,7 +356,7 @@ class TestCylInnerProducts_Deriv(unittest.TestCase):
             return MeSig*self.edge_vec, MeSigDeriv(self.edge_vec)
 
         print('Testing EdgeInnerProduct Isotropic')
-        return self.assertTrue(Tests.checkDerivative(fun, self.x0, num=7,
+        return self.assertTrue(testing.checkDerivative(fun, self.x0, num=7,
                                                      tolerance=TOLD,
                                                      plotIt=False))
 
@@ -369,7 +369,7 @@ class TestCylInnerProducts_Deriv(unittest.TestCase):
             return MeSig*self.edge_vec, MeSigDeriv(self.edge_vec)
 
         print('Testing EdgeInnerProduct Isotropic InvProp')
-        return self.assertTrue(Tests.checkDerivative(fun, self.x0, num=7,
+        return self.assertTrue(testing.checkDerivative(fun, self.x0, num=7,
                                                      tolerance=TOLD,
                                                      plotIt=False))
 
@@ -382,7 +382,7 @@ class TestCylInnerProducts_Deriv(unittest.TestCase):
             return MeSig*self.edge_vec, MeSigDeriv(self.edge_vec)
 
         print('Testing EdgeInnerProduct Isotropic InvMat')
-        return self.assertTrue(Tests.checkDerivative(fun, self.x0, num=7,
+        return self.assertTrue(testing.checkDerivative(fun, self.x0, num=7,
                                                      tolerance=TOLD,
                                                      plotIt=False))
 
@@ -396,7 +396,7 @@ class TestCylInnerProducts_Deriv(unittest.TestCase):
             return MeSig*self.edge_vec, MeSigDeriv(self.edge_vec)
 
         print('Testing EdgeInnerProduct Isotropic InvProp InvMat')
-        return self.assertTrue(Tests.checkDerivative(fun, self.x0, num=7,
+        return self.assertTrue(testing.checkDerivative(fun, self.x0, num=7,
                                                      tolerance=TOLD,
                                                      plotIt=False))
 
@@ -429,7 +429,7 @@ class TestCylInnerProductsAnisotropic_Deriv(unittest.TestCase):
             return MfSig*self.face_vec ,  MfSigDeriv(self.face_vec) * P.T
 
         print('Testing FaceInnerProduct Anisotropic')
-        return self.assertTrue(Tests.checkDerivative(fun, self.x0, num=7,
+        return self.assertTrue(testing.checkDerivative(fun, self.x0, num=7,
                                tolerance=TOLD, plotIt=False))
 
     def test_FaceInnerProductAnisotropicDerivInvProp(self):
@@ -448,7 +448,7 @@ class TestCylInnerProductsAnisotropic_Deriv(unittest.TestCase):
             return MfSig*self.face_vec, MfSigDeriv(self.face_vec) * P.T
 
         print('Testing FaceInnerProduct Anisotropic InvProp')
-        return self.assertTrue(Tests.checkDerivative(fun, self.x0, num=7,
+        return self.assertTrue(testing.checkDerivative(fun, self.x0, num=7,
                                                      tolerance=TOLD,
                                                      plotIt=False))
 
@@ -467,7 +467,7 @@ class TestCylInnerProductsAnisotropic_Deriv(unittest.TestCase):
             return MfSig*self.face_vec, MfSigDeriv(self.face_vec) * P.T
 
         print('Testing FaceInnerProduct Anisotropic InvMat')
-        return self.assertTrue(Tests.checkDerivative(fun, self.x0, num=7,
+        return self.assertTrue(testing.checkDerivative(fun, self.x0, num=7,
                                                      tolerance=TOLD,
                                                      plotIt=False))
 
@@ -488,7 +488,7 @@ class TestCylInnerProductsAnisotropic_Deriv(unittest.TestCase):
             return MfSig*self.face_vec, MfSigDeriv(self.face_vec) * P.T
 
         print('Testing FaceInnerProduct Anisotropic InvProp InvMat')
-        return self.assertTrue(Tests.checkDerivative(fun, self.x0, num=7,
+        return self.assertTrue(testing.checkDerivative(fun, self.x0, num=7,
                                                      tolerance=TOLD,
                                                      plotIt=False))
 
@@ -507,7 +507,7 @@ class TestCylInnerProductsAnisotropic_Deriv(unittest.TestCase):
             return MeSig*self.edge_vec, MeSigDeriv(self.edge_vec) * P.T
 
         print('Testing EdgeInnerProduct Anisotropic')
-        return self.assertTrue(Tests.checkDerivative(fun, self.x0, num=7,
+        return self.assertTrue(testing.checkDerivative(fun, self.x0, num=7,
                                                      tolerance=TOLD,
                                                      plotIt=False))
 
@@ -526,7 +526,7 @@ class TestCylInnerProductsAnisotropic_Deriv(unittest.TestCase):
             return MeSig*self.edge_vec, MeSigDeriv(self.edge_vec) * P.T
 
         print('Testing EdgeInnerProduct Anisotropic InvProp')
-        return self.assertTrue(Tests.checkDerivative(fun, self.x0, num=7,
+        return self.assertTrue(testing.checkDerivative(fun, self.x0, num=7,
                                                      tolerance=TOLD,
                                                      plotIt=False))
 
@@ -545,7 +545,7 @@ class TestCylInnerProductsAnisotropic_Deriv(unittest.TestCase):
             return MeSig*self.edge_vec, MeSigDeriv(self.edge_vec) * P.T
 
         print('Testing EdgeInnerProduct Anisotropic InvMat')
-        return self.assertTrue(Tests.checkDerivative(fun, self.x0, num=7,
+        return self.assertTrue(testing.checkDerivative(fun, self.x0, num=7,
                                                      tolerance=TOLD,
                                                      plotIt=False))
 
@@ -566,7 +566,7 @@ class TestCylInnerProductsAnisotropic_Deriv(unittest.TestCase):
             return MeSig*self.edge_vec, MeSigDeriv(self.edge_vec) * P.T
 
         print('Testing EdgeInnerProduct Anisotropic InvProp InvMat')
-        return self.assertTrue(Tests.checkDerivative(fun, self.x0, num=7,
+        return self.assertTrue(testing.checkDerivative(fun, self.x0, num=7,
                                                      tolerance=TOLD,
                                                      plotIt=False))
 
