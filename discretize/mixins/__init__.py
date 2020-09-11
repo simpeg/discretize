@@ -8,13 +8,13 @@ provide extra functionality that different finite volume meshes can inherrit.
 AVAILABLE_MIXIN_CLASSES = []
 
 try:
-    from .vtkModule import InterfaceVTK, InterfaceTensorread_vtk
+    from .vtk_mod import InterfaceVTK, InterfaceTensorread_vtk
     AVAILABLE_MIXIN_CLASSES.append(InterfaceVTK)
 except ImportError as err:
     pass
 
 try:
-    from .omfModule import InterfaceOMF
+    from .omf_mod import InterfaceOMF
     AVAILABLE_MIXIN_CLASSES.append(InterfaceOMF)
 except ImportError as err:
     pass
