@@ -12,6 +12,7 @@ from discretize.utils import (
 )
 from discretize.testing import checkDerivative
 import discretize
+import matplotlib.pyplot as plt
 
 TOL = 1e-8
 
@@ -461,6 +462,17 @@ class TestMeshUtils(unittest.TestCase):
         self.assertEqual(indtopoCC.sum(), 434)
         self.assertEqual(indtopoN.sum(), 412)
 
+        # test 2D Curvilinear mesh
+        nodes_x = mesh_tensor.gridN[:, 0].reshape(mesh_tensor.vnN, order='F')
+        nodes_y = mesh_tensor.gridN[:, 1].reshape(mesh_tensor.vnN, order='F')
+        mesh_curvi = discretize.CurvilinearMesh([nodes_x, nodes_y])
+
+        indtopoCC = active_from_xyz(mesh_curvi, topo2D, grid_reference='CC', method='nearest')
+        indtopoN = active_from_xyz(mesh_curvi, topo2D, grid_reference='N', method='nearest')
+
+        self.assertEqual(indtopoCC.sum(), 434)
+        self.assertEqual(indtopoN.sum(), 412)
+
         # Test 2D Tree mesh
         mesh_tree = mesh_builder_xyz(topo2D, h[:2], mesh_type='TREE')
         mesh_tree = refine_tree_xyz(
@@ -488,6 +500,18 @@ class TestMeshUtils(unittest.TestCase):
 
         indtopoCC = active_from_xyz(mesh_tensor, topo3D, grid_reference='CC', method='nearest')
         indtopoN = active_from_xyz(mesh_tensor, topo3D, grid_reference='N', method='nearest')
+
+        self.assertEqual(indtopoCC.sum(), 10496)
+        self.assertEqual(indtopoN.sum(), 10084)
+
+        # test 3D Curvilinear mesh
+        nodes_x = mesh_tensor.gridN[:, 0].reshape(mesh_tensor.vnN, order='F')
+        nodes_y = mesh_tensor.gridN[:, 1].reshape(mesh_tensor.vnN, order='F')
+        nodes_z = mesh_tensor.gridN[:, 2].reshape(mesh_tensor.vnN, order='F')
+        mesh_curvi = discretize.CurvilinearMesh([nodes_x, nodes_y, nodes_z])
+
+        indtopoCC = active_from_xyz(mesh_curvi, topo3D, grid_reference='CC', method='nearest')
+        indtopoN = active_from_xyz(mesh_curvi, topo3D, grid_reference='N', method='nearest')
 
         self.assertEqual(indtopoCC.sum(), 10496)
         self.assertEqual(indtopoN.sum(), 10084)
@@ -535,15 +559,6 @@ class TestMeshUtils(unittest.TestCase):
         mesh_cyl2 = discretize.CylMesh([hr, htheta, hz], x0='00C')
         with self.assertRaises(NotImplementedError):
             indtopoCC = active_from_xyz(mesh_cyl2, topo3D, grid_reference='CC', method='nearest')
-
-        def gridIt(h): return [np.cumsum(np.r_[0, x]) for x in h]
-
-        X, Y = ndgrid(gridIt([[5.]*24, [5.]*20]), vector=False)
-
-        mesh_curvi = discretize.CurvilinearMesh([X, Y])
-        with self.assertRaises(TypeError):
-            indTopoCC = active_from_xyz(mesh_curvi, topo3D, grid_reference='CC', method='nearest')
-
 
 if __name__ == '__main__':
     unittest.main()

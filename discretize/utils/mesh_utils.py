@@ -898,20 +898,19 @@ def active_from_xyz(mesh, xyz, grid_reference='CC', method='linear'):
                 return active
         except AttributeError:
             # Try for Curvilinear Mesh
-            gridN = mesh.gridN.reshape((*mesh.vnC, dim), order='F')
+            gridN = mesh.gridN.reshape((*mesh.vnN, mesh.dim), order='F')
             if mesh.dim == 3:
                 locations = np.vstack([
-                    gridN[:-1, :-1, 1:].reshape((-1, dim), order='F'),
-                    gridN[:-1, 1:, 1:].reshape((-1, dim), order='F'),
-                    gridN[1:, :-1, 1:].reshape((-1, dim), order='F'),
-                    gridN[1:, 1: 1:].reshape((-1, dim), order='F'),
+                    gridN[:-1, 1:, 1:].reshape((-1, mesh.dim), order='F'),
+                    gridN[:-1, :-1, 1:].reshape((-1, mesh.dim), order='F'),
+                    gridN[1:, 1:, 1:].reshape((-1, mesh.dim), order='F'),
+                    gridN[1:, :-1, 1:].reshape((-1, mesh.dim), order='F'),
                 ])
             elif mesh.dim == 2:
                 locations = np.vstack([
-                    gridN[:-1, 1:].reshape((-1, dim), order='F'),
-                    gridN[1:, 1:].reshape((-1, dim), order='F'),
+                    gridN[:-1, 1:].reshape((-1, mesh.dim), order='F'),
+                    gridN[1:, 1:].reshape((-1, mesh.dim), order='F'),
                 ])
-
 
 
     # Interpolate z values on CC or N
