@@ -19,6 +19,11 @@ try:
 except ImportError as err:
     pass
 
+try:
+    from .mpl_mod import Slicer
+except ImportError as err:
+    pass
+
 
 # NOTE: this is what we need to use when Python 2 support is dropped
 #       This throws a syntax error on Python 2

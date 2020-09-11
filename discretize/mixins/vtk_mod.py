@@ -2,7 +2,7 @@
 This module provides a way for ``discretize`` meshes to be
 converted to VTK data objects (and back when possible) if the
 `VTK Python package`_ is available.
-The :class:`discretize.mixins.vtkModule.InterfaceVTK` class becomes inherrited
+The :class:`discretize.mixins.vtk_mod.InterfaceVTK` class becomes inherrited
 by all mesh objects and allows users to directly convert any given mesh by
 calling that mesh's ``to_vtk()`` method
 (note that this method will not be available if VTK is not available).

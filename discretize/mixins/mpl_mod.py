@@ -971,14 +971,14 @@ class CylView(object):
                     polarax = [a for a in ax if a.__class__.__name__ == 'PolarAxesSubplot']
                     if len(polarax) != 1:
                         warnings.warn("""
-No polar axes provided. Over-writing the axes. If you prefer to create your
-own, please use
+                            No polar axes provided. Over-writing the axes. If you prefer to create your
+                            own, please use
 
-    `ax = plt.subplot(121, projection='polar')`
+                                `ax = plt.subplot(121, projection='polar')`
 
-for reference, see: http://matplotlib.org/examples/pylab_examples/polar_demo.html
-                    https://github.com/matplotlib/matplotlib/issues/312
-                    """)
+                            for reference, see: http://matplotlib.org/examples/pylab_examples/polar_demo.html
+                                                https://github.com/matplotlib/matplotlib/issues/312
+                            """)
                         ax = None
 
                     else:
@@ -1023,12 +1023,12 @@ for reference, see: http://matplotlib.org/examples/pylab_examples/polar_demo.htm
             if ax.__class__.__name__ != "PolarAxesSubplot":
                 warnings.warn(
                     """
-Creating new axes with Polar projection. If you prefer to create your own, please use
+                    Creating new axes with Polar projection. If you prefer to create your own, please use
 
-    `ax = plt.subplot(121, projection='polar')`
+                        `ax = plt.subplot(121, projection='polar')`
 
-for reference, see: http://matplotlib.org/examples/pylab_examples/polar_demo.html
-                    https://github.com/matplotlib/matplotlib/issues/312
+                    for reference, see: http://matplotlib.org/examples/pylab_examples/polar_demo.html
+                                        https://github.com/matplotlib/matplotlib/issues/312
                     """
                 )
                 ax = plt.subplot(111, projection='polar')

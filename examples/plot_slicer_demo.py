@@ -13,7 +13,7 @@ In the notebook, you have to use :code:`%matplotlib notebook`.
 """
 
 # %matplotlib notebook
-import shelve
+import os
 import discretize
 import numpy as np
 import tarfile
@@ -28,15 +28,15 @@ from matplotlib.colors import SymLogNorm
 # get from running the laguna-del-maule inversion notebook.
 
 f = discretize.utils.download(
-    "https://storage.googleapis.com/simpeg/laguna_del_maule_slicer.tar.gz"
+    "https://storage.googleapis.com/simpeg/laguna_del_maule_slicer.tar.gz", overwrite=True
 )
 tar = tarfile.open(f, "r")
 tar.extractall()
 tar.close()
 
-with shelve.open('./laguna_del_maule_slicer/laguna_del_maule-result') as db:
-    mesh = db['mesh']
-    Lpout = db['Lpout']
+# Load the mesh and model
+mesh = discretize.load_mesh(os.path.join('laguna_del_maule_slicer','mesh.json'))
+Lpout = np.load(os.path.join('laguna_del_maule_slicer','Lpout.npy'))
 
 ###############################################################################
 # Case 1: Using the intrinsinc functionality
@@ -116,7 +116,7 @@ beautify(
 
 ###############################################################################
 # 1.4 Set `clim`, use `pcolor_opts` to show grid lines
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 mesh.plot_3d_slicer(
     Lpout, clim=[-0.4, 0.2], pcolor_opts={'edgecolor': 'k', 'linewidth': 0.1}
@@ -128,7 +128,7 @@ beautify(
 
 ###############################################################################
 # 1.5 Use `pcolor_opts` to set `SymLogNorm`, and another `cmap`
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 mesh.plot_3d_slicer(
     Lpout, pcolor_opts={'norm': SymLogNorm(linthresh=0.01),'cmap': 'RdBu_r'}
@@ -176,14 +176,14 @@ beautify("mesh.plot_3d_slicer(Lpout, transparent='slider')")
 fig = plt.figure()
 
 # Then you have to get the tracker from the Slicer
-tracker = discretize.View.Slicer(mesh, Lpout)
+tracker = discretize.mixins.Slicer(mesh, Lpout)
 
 # Finally you have to connect the tracker to the figure
 fig.canvas.mpl_connect('scroll_event', tracker.onscroll)
 
 # Run it through beautify
 beautify(
-    "'discretize.View.Slicer' together with\n'fig.canvas.mpl_connect'", fig
+    "'discretize.mixins.Slicer' together with\n'fig.canvas.mpl_connect'", fig
 )
 
 plt.show()

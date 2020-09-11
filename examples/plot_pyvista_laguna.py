@@ -16,9 +16,6 @@ Using the inversion result from the example notebook
 """
 # sphinx_gallery_thumbnail_number = 2
 import os
-import shutil
-import tarfile
-import shelve
 import tarfile
 import discretize
 import pyvista as pv
@@ -49,19 +46,15 @@ tar.close()
 
 # Download the inverted model
 f = discretize.utils.download(
-    "https://storage.googleapis.com/simpeg/laguna_del_maule_slicer.tar.gz"
+    "https://storage.googleapis.com/simpeg/laguna_del_maule_slicer.tar.gz", overwrite=True
 )
 tar = tarfile.open(f, "r")
 tar.extractall()
 tar.close()
 
-with shelve.open('./laguna_del_maule_slicer/laguna_del_maule-result') as db:
-    mesh = db['mesh']
-    Lpout = db['Lpout']
-
 # Load the mesh/data
-mesh = discretize.TensorMesh.copy(mesh)
-models = {'Lpout':Lpout}
+mesh = discretize.load_mesh(os.path.join('laguna_del_maule_slicer','mesh.json'))
+models = {'Lpout':np.load(os.path.join('laguna_del_maule_slicer','Lpout.npy'))}
 
 
 ###############################################################################

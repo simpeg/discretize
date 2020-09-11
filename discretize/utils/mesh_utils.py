@@ -134,7 +134,7 @@ def meshTensor(value):
         import discretize
         tx = [(10.0, 10, -1.3), (10.0, 40), (10.0, 10, 1.3)]
         ty = [(10.0, 10, -1.3), (10.0, 40)]
-        mesh = TensorMesh([tx, ty])
+        mesh = discretize.TensorMesh([tx, ty])
         mesh.plotGrid(show_it=True)
 
     """
@@ -331,7 +331,7 @@ def mesh_builder_xyz(
 
         xyLoc = np.random.randn(8,2)
 
-        mesh = discretize.utils.meshutils.mesh_builder_xyz(
+        mesh = discretize.utils.mesh_builder_xyz(
             xyLoc, [0.1, 0.1], depth_core=0.5,
             padding_distance=[[1,2], [1,0]],
             mesh_type='tensor',

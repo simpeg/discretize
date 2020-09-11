@@ -20,7 +20,7 @@ Meshes
     TensorMesh
     CylMesh
     TreeMesh
-    TreeMesh.TreeCell
+    tree_mesh.TreeCell
     CurvilinearMesh
 
 
@@ -70,10 +70,10 @@ Testing
 .. autosummary::
     :toctree: generated
 
-    Tests.OrderTest
-    Tests.checkDerivative
-    Tests.getQuadratic
-    Tests.Rosenbrock
+    testing.OrderTest
+    testing.checkDerivative
+    testing.getQuadratic
+    testing.Rosenbrock
 
 
 Utilities

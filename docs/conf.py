@@ -93,13 +93,13 @@ release = '0.5.1'
 # directories to ignore when looking for source files.
 exclude_patterns = ['_build']
 
-linkcheck_ignore = [
-    'http://math.lanl.gov/~mac/papers/numerics/HS99B.pdf',
-    'http://wiki.python.org/moin/NumericAndScientific',
-    'http://wiki.python.org/moin/PythonEditors',
-    'http://docs.scipy.org/doc/numpy/reference/generated/numpy.array.html#numpy.array',
-    'http://dx.doi.org/10.1016/j.cageo.2015.09.015',
-    'http://slack.simpeg.xyz',
+linkcheck_ignore = [r"https://github.com/simpeg/*",
+    #'http://math.lanl.gov/~mac/papers/numerics/HS99B.pdf',
+    #'http://wiki.python.org/moin/NumericAndScientific',
+    #'http://wiki.python.org/moin/PythonEditors',
+    #'http://docs.scipy.org/doc/numpy/reference/generated/numpy.array.html#numpy.array',
+    #'http://dx.doi.org/10.1016/j.cageo.2015.09.015',
+    #'http://slack.simpeg.xyz',
 ]
 
 linkcheck_retries = 3
@@ -387,9 +387,8 @@ autodoc_member_order = 'bysource'
 
 nitpick_ignore = [
     ('py:class', 'discretize.CurvilinearMesh.Array'),
-    ('py:class', 'discretize.mixins.vtkModule.InterfaceTensorread_vtk'),
+    ('py:class', 'discretize.mixins.vtk_mod.InterfaceTensorread_vtk'),
     ('py:class', 'callable'),
-    ('py:obj', 'vtk.vtkDataSet'),
 ]
 
 
