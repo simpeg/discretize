@@ -12,7 +12,7 @@ else:
 
 
 if has_omf:
-    from discretize.mixins.omfModule import unravel_data_array, ravel_data_array
+    from discretize.mixins.omf_mod import unravel_data_array, ravel_data_array
 
 
     class TestTensorMeshOMF(unittest.TestCase):
