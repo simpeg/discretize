@@ -1,5 +1,7 @@
 from __future__ import print_function, division
 import numpy as np
+import warnings
+import properties
 
 scalarTypes = (complex, float, int, np.number)
 
@@ -65,3 +67,91 @@ def requires(modules):
             return passer
 
     return decorated_function
+
+
+def deprecate_class(removal_version=None, new_location=None):
+    def decorator(cls):
+        my_name = cls.__name__
+        parent_name = cls.__bases__[0].__name__
+        message = f"{my_name} has been deprecated, please use {parent_name}."
+        if removal_version is not None:
+            message += f" It will be removed in version {removal_version} of discretize."
+        else:
+            message += " It will be removed in a future version of discretize."
+
+        # stash the original initialization of the class
+        cls._old__init__ = cls.__init__
+
+        def __init__(self, *args, **kwargs):
+            warnings.warn(message, FutureWarning)
+            self._old__init__(*args, **kwargs)
+
+        cls.__init__ = __init__
+        if new_location is not None:
+            parent_name = f"{new_location}.{parent_name}"
+        cls.__doc__ = f""" This class has been deprecated, see `{parent_name}` for documentation"""
+        return cls
+
+    return decorator
+
+
+def deprecate_module(old_name, new_name, removal_version=None):
+    message = f"The {old_name} module has been deprecated, please use {new_name}."
+    if removal_version is not None:
+        message += f" It will be removed in version {removal_version} of discretize"
+    else:
+        message += " It will be removed in a future version of discretize."
+    message += " Please update your code accordingly."
+    warnings.warn(message, FutureWarning)
+
+
+def deprecate_property(prop, old_name, new_name=None, removal_version=None):
+
+    if isinstance(prop, property):
+        if new_name is None:
+            new_name = prop.fget.__qualname__
+        cls_name = new_name.split(".")[0]
+        old_name = f"{cls_name}.{old_name}"
+    elif isinstance(prop, properties.GettableProperty):
+        if new_name is None:
+            new_name = prop.name
+        prop = prop.get_property()
+
+    message = f"{old_name} has been deprecated, please use {new_name}."
+    if removal_version is not None:
+        message += f" It will be removed in version {removal_version} of discretize."
+    else:
+        message += " It will be removed in a future version of discretize."
+
+    def get_dep(self):
+        warnings.warn(message, FutureWarning)
+        return prop.fget(self)
+
+    def set_dep(self, other):
+        warnings.warn(message, FutureWarning)
+        prop.fset(self, other)
+
+    doc = f"`{old_name}` has been deprecated. See `{new_name}` for documentation"
+
+    return property(get_dep, set_dep, prop.fdel, doc)
+
+
+def deprecate_method(method, old_name, removal_version=None):
+    new_name = method.__qualname__
+    split_name = new_name.split(".")
+    if len(split_name) > 1:
+        old_name = f"{split_name[0]}.{old_name}"
+
+    message = f"{old_name} has been deprecated, please use {new_name}."
+    if removal_version is not None:
+        message += f" It will be removed in version {removal_version} of discretize."
+    else:
+        message += " It will be removed in a future version of discretize."
+
+    def new_method(*args, **kwargs):
+        warnings.warn(message, FutureWarning)
+        return method(*args, **kwargs)
+
+    doc = f"`{old_name}` has been deprecated. See `{new_name}` for documentation"
+    new_method.__doc__ = doc
+    return new_method
