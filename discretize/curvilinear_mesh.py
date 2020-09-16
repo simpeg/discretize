@@ -3,7 +3,8 @@ import numpy as np
 import properties
 
 from .utils import mkvc, indexCube, faceInfo, volTetra
-from .base import BaseRectangularMesh, DiffOperators, InnerProducts
+from .base import BaseRectangularMesh
+from .operators import DiffOperators, InnerProducts
 from discretize.mixins.mpl_mod import CurviView
 
 

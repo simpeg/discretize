@@ -8,7 +8,8 @@ from scipy.constants import pi
 from .utils import (
     kron3, ndgrid, av, speye, ddx, sdiag, spzeros, interpmat, cyl2cart
 )
-from .base import BaseTensorMesh, BaseRectangularMesh, InnerProducts, DiffOperators
+from .base import BaseTensorMesh, BaseRectangularMesh
+from .operators import DiffOperators, InnerProducts
 from .mixins.mpl_mod import CylView
 
 

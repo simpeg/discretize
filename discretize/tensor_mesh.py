@@ -2,7 +2,8 @@ from __future__ import print_function
 import numpy as np
 
 
-from .base import BaseRectangularMesh, BaseTensorMesh, DiffOperators, InnerProducts
+from .base import BaseRectangularMesh, BaseTensorMesh
+from .operators import DiffOperators, InnerProducts
 from .mixins.mpl_mod import TensorView
 from .base.mesh_io import TensorMeshIO
 from .utils import mkvc

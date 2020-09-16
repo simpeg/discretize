@@ -87,7 +87,8 @@
 
 import properties
 
-from .base import BaseTensorMesh, InnerProducts
+from .base import BaseTensorMesh
+from .operators import InnerProducts
 from .base.mesh_io import TreeMeshIO
 from .utils import asArray_N_x_Dim, requires
 from ._extensions.tree_ext import _TreeMesh, TreeCell
