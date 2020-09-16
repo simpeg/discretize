@@ -155,3 +155,18 @@ def deprecate_method(method, old_name, removal_version=None):
     doc = f"`{old_name}` has been deprecated. See `{new_name}` for documentation"
     new_method.__doc__ = doc
     return new_method
+
+def shorthand_property(prop, new_prop, new_name=None):
+    if isinstance(prop, property):
+        if new_name is None:
+            new_name = prop.fget.__qualname__
+        cls_name = new_name.split(".")[0]
+        old_name = f"{cls_name}.{old_name}"
+    elif isinstance(prop, properties.GettableProperty):
+        if new_name is None:
+            new_name = prop.name
+        prop = prop.get_property()
+
+    doc = f"`{old_name}` is an alias to `{new_name}`."
+
+    return property(prop.fget, prop.fset, prop.fdel, doc)

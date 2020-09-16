@@ -8,8 +8,9 @@ import os
 import json
 
 from ..utils import mkvc
-from ..utils.code_utils import deprecate_property, deprecate_method
+from ..utils.code_utils import deprecate_property, deprecate_method, shorthand_property
 from ..mixins import InterfaceMixins
+import warnings
 
 
 class BaseMesh(properties.HasProperties, InterfaceMixins):
@@ -142,7 +143,7 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         >>> mesh.plotGrid(centers=True, show_it=True)
         >>> print(mesh.n_cells)
         """
-        return int(self._n.prod())
+        return int(np.prod(self._n))
 
     @property
     def n_nodes(self):
@@ -218,7 +219,7 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         >>> M = discretize.TensorMesh([np.ones(n) for n in [2,3]])
         >>> M.plotGrid(edges=True, show_it=True)
         """
-        return (x for x in [self.n_edges_x, self.n_edges_y, self.n_edges_z] if x is not None)
+        return tuple(x for x in [self.n_edges_x, self.n_edges_y, self.n_edges_z] if x is not None)
 
     @property
     def n_edges(self):
@@ -230,7 +231,12 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
             sum([n_edges_x, n_edges_y, n_edges_z])
 
         """
-        return int(self.vnE.sum())
+        n = self.n_edges_x
+        if self.dim > 1:
+            n += self.n_edges_y
+        if self.dim > 2:
+            n += self.n_edges_z
+        return n
 
     @property
     def n_faces_x(self):
@@ -283,7 +289,7 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         >>> M = discretize.TensorMesh([np.ones(n) for n in [2,3]])
         >>> M.plotGrid(faces=True, show_it=True)
         """
-        return (x for x in [self.n_faces_x, self.n_faces_y, self.n_faces_z] if x is not None)
+        return tuple(x for x in [self.n_faces_x, self.n_faces_y, self.n_faces_z] if x is not None)
 
     @property
     def n_faces(self):
@@ -295,7 +301,12 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
             sum([n_faces_x, n_faces_y, n_faces_z])
 
         """
-        return int(self.vnF.sum())
+        n = self.n_faces_x
+        if self.dim > 1:
+            n += self.n_faces_y
+        if self.dim > 2:
+            n += self.n_faces_z
+        return n
 
     @property
     def face_normals(self):
@@ -513,16 +524,16 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         return True
 
     # SHORTHAND
-    nC = n_cells
-    nN = n_nodes
-    nEx = n_edges_x
-    nEy = n_edges_y
-    nEz = n_edges_z
-    nE = n_edges
-    nFx = n_edges_x
-    nFy = n_edges_y
-    nFz = n_edges_z
-    nF = n_edges
+    nC = shorthand_property(n_cells, 'nC')
+    nN = shorthand_property(n_nodes, 'nN')
+    nEx = shorthand_property(n_edges_x, 'nEx')
+    nEy = shorthand_property(n_edges_y, 'nEy')
+    nEz = shorthand_property(n_edges_z, 'nEz')
+    nE = shorthand_property(n_edges, 'nE')
+    nFx = shorthand_property(n_faces_x, 'nFx')
+    nFy = shorthand_property(n_faces_y, 'nFy')
+    nFz = shorthand_property(n_faces_z, 'nFz')
+    nF = shorthand_property(n_faces, 'nF')
 
     # DEPRECATED
     normals = deprecate_property(face_normals, 'normals', removal_version='1.0.0')
@@ -542,88 +553,14 @@ class BaseRectangularMesh(BaseMesh):
         BaseMesh.__init__(self, n=n, x0=x0, **kwargs)
 
     @property
-    def nx_cells(self):
-        """Number of cells in the x direction
-
-        Returns
-        -------
-        int
-        """
-        return int(self._n[0])
-
-    @property
-    def ny_cells(self):
-        """Number of cells in the y direction
-
-        Returns
-        -------
-        int or None
-            None if dim < 2
-        """
-        if self.dim < 2:
-            return None
-        return int(self._n[1])
-
-    @property
-    def nz_cells(self):
-        """Number of cells in the z direction
-
-        Returns
-        -------
-        int or None
-            None if dim < 3
-        """
-        if self.dim < 3:
-            return None
-        return int(self._n[2])
-
-    @property
     def shape_cells(self):
         """The number of cells in each direction
 
         Returns
         -------
-        tuple of int
-            [nx_cells, ny_cells, nz_cells]
+        tuple of ints
         """
-        return (self.nx_cells, self.ny_cells, self.nz_cells] if x is not None)
-        )
-
-    @property
-    def nx_nodes(self):
-        """Number of nodes in the x-direction
-
-        Returns
-        -------
-        int
-        """
-        return self.nx_cells + 1
-
-    @property
-    def ny_nodes(self):
-        """Number of nodes in the y-direction
-
-        Returns
-        -------
-        int or None
-            None if dim < 2
-        """
-        if self.dim < 2:
-            return None
-        return self.ny_cells + 1
-
-    @property
-    def nz_nodes(self):
-        """Number of nodes in the z-direction
-
-        Returns
-        -------
-        int or None
-            None if dim < 3
-        """
-        if self.dim < 3:
-            return None
-        return self.nz_cells + 1
+        return tuple(self._n)
 
     @property
     def shape_nodes(self):
@@ -632,10 +569,8 @@ class BaseRectangularMesh(BaseMesh):
         Returns
         -------
         tuple of int
-            (nx_nodes, ny_nodes, nz_nodes)
         """
-        return
-            (x for x in [self.nx_nodes, self.ny_nodes, self.nz_nodes] if x is not None)
+        return tuple(x + 1 for x in self.shape_cells)
 
     @property
     def shape_edges_x(self):
@@ -646,7 +581,7 @@ class BaseRectangularMesh(BaseMesh):
         tuple of int
             (nx_cells, ny_nodes, nz_nodes)
         """
-        return (x for x in [self.nx_cells, self.ny_nodes, self.nz_nodes] if x is not None)
+        return tuple(x + y for x, y in zip(self.shape_cells, [0, 1, 1]))
 
     @property
     def shape_edges_y(self):
@@ -659,7 +594,7 @@ class BaseRectangularMesh(BaseMesh):
         """
         if self.dim < 2:
             return None
-        return (x for x in [self.nx_nodes, self.ny_cells, self.nz_nodes] if x is not None)
+        return tuple(x + y for x, y in zip(self.shape_cells, [1, 0, 1]))
 
     @property
     def shape_edges_z(self):
@@ -672,7 +607,7 @@ class BaseRectangularMesh(BaseMesh):
         """
         if self.dim < 3:
             return None
-        return (self.nx_nodes, self.ny_nodes, self.nz_cells)
+        return tuple(x + y for x, y in zip(self.shape_cells, [1, 1, 0]))
 
     @property
     def shape_faces_x(self):
@@ -683,7 +618,7 @@ class BaseRectangularMesh(BaseMesh):
         tuple of int
             (nx_nodes, ny_cells, nz_cells)
         """
-        return (x for x in [self.nx_nodes, self.ny_cells, self.nz_cells] if x is not None)
+        return tuple(x + y for x, y in zip(self.shape_cells, [1, 0, 0]))
 
     @property
     def shape_faces_y(self):
@@ -696,7 +631,7 @@ class BaseRectangularMesh(BaseMesh):
         """
         if self.dim < 2:
             return None
-        return (x for x in [self.nx_cells, self.ny_nodes, self.nz_cells] if x is not None)
+        return tuple(x + y for x, y in zip(self.shape_cells, [0, 1, 0]))
 
     @property
     def shape_faces_z(self):
@@ -709,120 +644,36 @@ class BaseRectangularMesh(BaseMesh):
         """
         if self.dim < 3:
             return None
-        return (self.nx_cells, self.ny_cells, self.nz_nodes)
-
-    # ##################################
-    # # Redo the numbering so they are dependent of the vector numbers
-    # ##################################
-    #
-    # @property
-    # def nC(self):
-    #     """Total number of cells
-    #
-    #     :rtype: int
-    #     :return: nC
-    #     """
-    #     return int(self.vnC.prod())
-    #
-    # @property
-    # def nN(self):
-    #     """Total number of nodes
-    #
-    #     :rtype: int
-    #     :return: nN
-    #     """
-    #     return int(self.vnN.prod())
-    #
-    # @property
-    # def n_edges_z(self):
-    #     """Number of x-edges
-    #
-    #     :rtype: int
-    #     :return: n_edges_z
-    #     """
-    #     return int(self.shape_edges_z.prod())
-    #
-    # @property
-    # def n_edges_y(self):
-    #     """Number of y-edges
-    #
-    #     :rtype: int
-    #     :return: n_edges_y
-    #     """
-    #     if self.dim < 2:
-    #         return
-    #     return int(self.shape_edges_y.prod())
-    #
-    # @property
-    # def n_edges_z(self):
-    #     """Number of z-edges
-    #
-    #     :rtype: int
-    #     :return: n_edges_z
-    #     """
-    #     if self.dim < 3:
-    #         return
-    #     return int(self.shape_edges_z.prod())
-    #
-    # @property
-    # def n_faces_x(self):
-    #     """Number of x-faces
-    #
-    #     :rtype: int
-    #     :return: n_faces_x
-    #     """
-    #     return int(self.shape_faces_x.prod())
-    #
-    # @property
-    # def n_faces_y(self):
-    #     """Number of y-faces
-    #
-    #     :rtype: int
-    #     :return: n_faces_y
-    #     """
-    #     if self.dim < 2:
-    #         return
-    #     return int(self.shape_faces_y.prod())
-    #
-    # @property
-    # def n_faces_z(self):
-    #     """Number of z-faces
-    #
-    #     :rtype: int
-    #     :return: n_faces_z
-    #     """
-    #     if self.dim < 3:
-    #         return
-    #     return int(self.shape_faces_z.prod())
+        return tuple(x + y for x, y in zip(self.shape_cells, [0, 0, 1]))
 
     def reshape(self, x, xType='CC', outType='CC', format='V'):
-        """`r` is a quick reshape command that will do the best it
+        """A quick reshape command that will do the best it
         can at giving you what you want.
 
         For example, you have a face variable, and you want the x
         component of it reshaped to a 3D matrix.
 
-        `r` can fulfil your dreams::
+        `reshape` can fulfil your dreams::
 
-            mesh.r(V, 'F', 'Fx', 'M')
-                   |   |     |    |
-                   |   |     |    {
-                   |   |     |      How: 'M' or ['V'] for a matrix
-                   |   |     |      (ndgrid style) or a vector (n x dim)
-                   |   |     |    }
-                   |   |     {
-                   |   |       What you want: ['CC'], 'N',
-                   |   |                       'F', 'Fx', 'Fy', 'Fz',
-                   |   |                       'E', 'Ex', 'Ey', or 'Ez'
-                   |   |     }
-                   |   {
-                   |     What is it: ['CC'], 'N',
-                   |                  'F', 'Fx', 'Fy', 'Fz',
-                   |                  'E', 'Ex', 'Ey', or 'Ez'
-                   |   }
-                   {
-                     The input: as a list or ndarray
-                   }
+            mesh.reshape(V, 'F', 'Fx', 'M')
+                         |   |     |    |
+                         |   |     |    {
+                         |   |     |      How: 'M' or ['V'] for a matrix
+                         |   |     |      (ndgrid style) or a vector (n x dim)
+                         |   |     |    }
+                         |   |     {
+                         |   |       What you want: ['CC'], 'N',
+                         |   |                       'F', 'Fx', 'Fy', 'Fz',
+                         |   |                       'E', 'Ex', 'Ey', or 'Ez'
+                         |   |     }
+                         |   {
+                         |     What is it: ['CC'], 'N',
+                         |                  'F', 'Fx', 'Fy', 'Fz',
+                         |                  'E', 'Ex', 'Ey', or 'Ez'
+                         |   }
+                         {
+                           The input: as a list or ndarray
+                         }
 
 
         For example::
@@ -969,20 +820,120 @@ class BaseRectangularMesh(BaseMesh):
             return switchKernal(x)
 
     # SHORTHAND
-    nCx = nx_cells
-    nCy = ny_cells
-    nCz = nz_cells
-    vnC = shape_cells
-    nNx = nx_nodes
-    nNy = ny_nodes
-    nNz = nz_nodes
-    vnN = shape_nodes
-    vnEx = shape_edges_x
-    vnEy = shape_edges_y
-    vnEz = shape_edges_z
-    vnFx = shape_faces_x
-    vnFy = shape_faces_y
-    vnFz = shape_faces_z
+    vnC = shorthand_property(shape_cells, 'vnC')
+    vnN = shorthand_property(shape_nodes, 'vnN')
+    vnEx = shorthand_property(shape_edges_x, 'vnEx')
+    vnEy = shorthand_property(shape_edges_y, 'vnEy')
+    vnEz = shorthand_property(shape_edges_z, 'vnEz')
+    vnFx = shorthand_property(shape_faces_x, 'vnFx')
+    vnFy = shorthand_property(shape_faces_y, 'vnFy')
+    vnFz = shorthand_property(shape_faces_z, 'vnFz')
 
     # DEPRECATED
-    r  = deprecate_method(reshape, 'r', removal_version="1.0.0")
+    @property
+    def nCx(self):
+        """Number of cells in the x direction
+
+        Returns
+        -------
+        int
+
+        .. deprecated:: 0.5.0
+          `nCx` will be removed in discretize 1.0.0, it is replaced by
+          `mesh.shape_cells[0]` to reduce namespace clutter.
+        """
+
+        warnings.warn("nCx has been deprecated, please access as mesh.shape_cells[0]", FutureWarning)
+        return self.shape_cells[0]
+
+    @property
+    def nCy(self):
+        """Number of cells in the y direction
+
+        Returns
+        -------
+        int or None
+            None if dim < 2
+
+        .. deprecated:: 0.5.0
+          `nCy` will be removed in discretize 1.0.0, it is replaced by
+          `mesh.shape_cells[1]` to reduce namespace clutter.
+        """
+
+        warnings.warn("nCy has been deprecated, please access as mesh.shape_cells[1]", FutureWarning)
+        if self.dim < 2:
+            return None
+        return self.shape_cells[1]
+
+    @property
+    def nCz(self):
+        """Number of cells in the z direction
+
+        Returns
+        -------
+        int or None
+            None if dim < 3
+
+        .. deprecated:: 0.5.0
+          `nCz` will be removed in discretize 1.0.0, it is replaced by
+          `mesh.shape_cells[2]` to reduce namespace clutter.
+        """
+
+        warnings.warn("nCz has been deprecated, please access as mesh.shape_cells[2]", FutureWarning)
+        if self.dim < 3:
+            return None
+        return self.shape_cells[2]
+
+    @property
+    def nNx(self):
+        """Number of nodes in the x-direction
+
+        Returns
+        -------
+        int
+
+        .. deprecated:: 0.5.0
+          `nNx` will be removed in discretize 1.0.0, it is replaced by
+          `mesh.shape_nodes[0]` to reduce namespace clutter.
+        """
+
+        warnings.warn("nNx has been deprecated, please access as mesh.shape_nodes[0]", FutureWarning)
+        return self.shape_nodes[0]
+
+    @property
+    def nNy(self):
+        """Number of nodes in the y-direction
+
+        Returns
+        -------
+        int or None
+            None if dim < 2
+
+        .. deprecated:: 0.5.0
+          `nNy` will be removed in discretize 1.0.0, it is replaced by
+          `mesh.shape_nodes[1]` to reduce namespace clutter.
+        """
+
+        warnings.warn("nNy has been deprecated, please access as mesh.shape_nodes[1]", FutureWarning)
+        if self.dim < 2:
+            return None
+        return self.shape_nodes[1]
+
+    @property
+    def nNz(self):
+        """Number of nodes in the z-direction
+
+        Returns
+        -------
+        int or None
+            None if dim < 3
+
+        .. deprecated:: 0.5.0
+          `nNz` will be removed in discretize 1.0.0, it is replaced by
+          `mesh.shape_nodes[2]` to reduce namespace clutter.
+        """
+
+        warnings.warn("nNz has been deprecated, please access as mesh.shape_nodes[2]", FutureWarning)
+        if self.dim < 3:
+            return None
+        return self.shape_nodes[2]
