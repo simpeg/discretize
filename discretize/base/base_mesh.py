@@ -830,6 +830,7 @@ class BaseRectangularMesh(BaseMesh):
     vnFz = shorthand_property(shape_faces_z, 'vnFz')
 
     # DEPRECATED
+    r = deprecate_method(reshape, 'r', removal_version="1.0.0")
     @property
     def nCx(self):
         """Number of cells in the x direction
