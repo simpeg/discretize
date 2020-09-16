@@ -156,7 +156,7 @@ def deprecate_method(method, old_name, removal_version=None):
     new_method.__doc__ = doc
     return new_method
 
-def shorthand_property(prop, new_prop, new_name=None):
+def shorthand_property(prop, old_name, new_name=None):
     if isinstance(prop, property):
         if new_name is None:
             new_name = prop.fget.__qualname__
