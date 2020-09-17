@@ -6,23 +6,24 @@ from .utils import mkvc, indexCube, faceInfo, volTetra
 from .base import BaseRectangularMesh
 from .operators import DiffOperators, InnerProducts
 from discretize.mixins.mpl_mod import CurviView
+from .utils.code_utils import deprecate_property
 
 
 # Some helper functions.
-def length2D(x):
+def _length2D(x):
     return (x[:, 0]**2 + x[:, 1]**2)**0.5
 
 
-def length3D(x):
+def _length3D(x):
     return (x[:, 0]**2 + x[:, 1]**2 + x[:, 2]**2)**0.5
 
 
-def normalize2D(x):
-    return x/np.kron(np.ones((1, 2)), mkvc(length2D(x), 2))
+def _normalize2D(x):
+    return x/np.kron(np.ones((1, 2)), mkvc(_length2D(x), 2))
 
 
-def normalize3D(x):
-    return x/np.kron(np.ones((1, 3)), mkvc(length3D(x), 2))
+def _normalize3D(x):
+    return x/np.kron(np.ones((1, 3)), mkvc(_length3D(x), 2))
 
 
 class CurvilinearMesh(
@@ -45,6 +46,16 @@ class CurvilinearMesh(
     _aliases = {
         **DiffOperators._aliases,
         **BaseRectangularMesh._aliases,
+        **{
+            'gridCC': 'grid_cell_centers',
+            'gridN': 'grid_nodes',
+            'gridFx': 'grid_faces_x',
+            'gridFy': 'grid_faces_y',
+            'gridFz': 'grid_faces_z',
+            'gridEx': 'grid_edges_x',
+            'gridEy': 'grid_edges_y',
+            'gridEz': 'grid_edges_z',
+        },
     }
 
     nodes = properties.List(
@@ -93,7 +104,7 @@ class CurvilinearMesh(
         )
 
     @property
-    def gridCC(self):
+    def grid_cell_centers(self):
         """
         Cell-centered grid
         """
@@ -104,7 +115,7 @@ class CurvilinearMesh(
         return self._gridCC
 
     @property
-    def gridN(self):
+    def grid_nodes(self):
         """
         Nodal grid.
         """
@@ -113,7 +124,7 @@ class CurvilinearMesh(
         return self._gridN
 
     @property
-    def gridFx(self):
+    def grid_faces_x(self):
         """
         Face staggered grid in the x direction.
         """
@@ -130,7 +141,7 @@ class CurvilinearMesh(
         return self._gridFx
 
     @property
-    def gridFy(self):
+    def grid_faces_y(self):
         """
         Face staggered grid in the y direction.
         """
@@ -147,7 +158,7 @@ class CurvilinearMesh(
         return self._gridFy
 
     @property
-    def gridFz(self):
+    def grid_faces_z(self):
         """
         Face staggered grid in the y direction.
         """
@@ -160,7 +171,7 @@ class CurvilinearMesh(
         return self._gridFz
 
     @property
-    def gridEx(self):
+    def grid_edges_x(self):
         """
         Edge staggered grid in the x direction.
         """
@@ -175,7 +186,7 @@ class CurvilinearMesh(
         return self._gridEx
 
     @property
-    def gridEy(self):
+    def grid_edges_y(self):
         """
         Edge staggered grid in the y direction.
         """
@@ -190,7 +201,7 @@ class CurvilinearMesh(
         return self._gridEy
 
     @property
-    def gridEz(self):
+    def grid_edges_z(self):
         """
         Edge staggered grid in the z direction.
         """
@@ -232,7 +243,7 @@ class CurvilinearMesh(
     #       node(i+1,j,k)      node(i+1,j+1,k)
 
     @property
-    def vol(self):
+    def cell_volumes(self):
         """
         Construct cell volumes of the 3D model as 1d array
         """
@@ -266,7 +277,7 @@ class CurvilinearMesh(
         return self._vol
 
     @property
-    def area(self):
+    def face_areas(self):
         """
         Area of the faces
         """
@@ -279,7 +290,7 @@ class CurvilinearMesh(
                                        self.nCy]))
                 edge1 = xy[B, :] - xy[A, :]
                 normal1 = np.c_[edge1[:, 1], -edge1[:, 0]]
-                area1 = length2D(edge1)
+                area1 = _length2D(edge1)
                 A, D = indexCube('AD', self.vnC+1, np.array([self.nCx,
                                        self.nNy]))
                 # Note that we are doing A-D to make sure the normal points the
@@ -288,9 +299,9 @@ class CurvilinearMesh(
                 # iff you do this.
                 edge2 = xy[A, :] - xy[D, :]
                 normal2 = np.c_[edge2[:, 1], -edge2[:, 0]]
-                area2 = length2D(edge2)
+                area2 = _length2D(edge2)
                 self._area = np.r_[mkvc(area1), mkvc(area2)]
-                self._normals = [normalize2D(normal1), normalize2D(normal2)]
+                self._normals = [_normalize2D(normal1), _normalize2D(normal2)]
 
             elif(self.dim == 3):
 
@@ -318,7 +329,7 @@ class CurvilinearMesh(
         return self._area
 
     @property
-    def normals(self):
+    def face_normals(self):
         """
         Face normals: calling this will average
         the computed normals so that there is one
@@ -334,7 +345,7 @@ class CurvilinearMesh(
         if getattr(self, '_normals', None) is None:
             self.area  # calling .area will create the face normals
         if self.dim == 2:
-            return normalize2D(np.r_[self._normals[0], self._normals[1]])
+            return _normalize2D(np.r_[self._normals[0], self._normals[1]])
         elif self.dim == 3:
             normal1 = (
                 self._normals[0][0] + self._normals[0][1] +
@@ -348,10 +359,10 @@ class CurvilinearMesh(
                 self._normals[2][0] + self._normals[2][1] +
                 self._normals[2][2] + self._normals[2][3]
             )/4
-            return normalize3D(np.r_[normal1, normal2, normal3])
+            return _normalize3D(np.r_[normal1, normal2, normal3])
 
     @property
-    def edge(self):
+    def edge_lengths(self):
         """Edge lengths"""
         if getattr(self, '_edge', None) is None:
             if(self.dim == 2):
@@ -362,8 +373,8 @@ class CurvilinearMesh(
                 A, B = indexCube('AB', self.vnC+1, np.array([self.nNx,
                                                                    self.nCy]))
                 edge2 = xy[B, :] - xy[A, :]
-                self._edge = np.r_[mkvc(length2D(edge1)),
-                                   mkvc(length2D(edge2))]
+                self._edge = np.r_[mkvc(_length2D(edge1)),
+                                   mkvc(_length2D(edge2))]
                 self._tangents = np.r_[edge1, edge2]/np.c_[self._edge,
                                                            self._edge]
             elif(self.dim == 3):
@@ -380,17 +391,24 @@ class CurvilinearMesh(
                                                                    self.nNy,
                                                                    self.nCz]))
                 edge3 = xyz[E, :] - xyz[A, :]
-                self._edge = np.r_[mkvc(length3D(edge1)),
-                                   mkvc(length3D(edge2)),
-                                   mkvc(length3D(edge3))]
+                self._edge = np.r_[mkvc(_length3D(edge1)),
+                                   mkvc(_length3D(edge2)),
+                                   mkvc(_length3D(edge3))]
                 self._tangents = (np.r_[edge1, edge2, edge3] /
                                   np.c_[self._edge, self._edge, self._edge])
             return self._edge
         return self._edge
 
     @property
-    def tangents(self):
+    def edge_tangents(self):
         """Edge tangents"""
         if getattr(self, '_tangents', None) is None:
             self.edge  # calling .edge will create the tangents
         return self._tangents
+
+    # DEPRECATIONS
+    vol = deprecate_property(cell_volumes, 'vol', removal_version="1.0.0")
+    area = deprecate_property(face_areas, 'area', removal_version="1.0.0")
+    length = deprecate_property(edge_lengths, 'length', removal_version="1.0.0")
+    # tangent already deprecated in BaseMesh
+    # normals already deprecated in BaseMesh
