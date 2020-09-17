@@ -5,7 +5,7 @@ from six import string_types
 import warnings
 from ..utils import sdiag, speye, kron3, spzeros, ddx, av, av_extrap
 
-def checkBC(bc):
+def _validate_bc(bc):
     """Checks if boundary condition 'bc' is valid.
 
     Each bc must be either 'dirichlet' or 'neumann'
@@ -13,19 +13,20 @@ def checkBC(bc):
     """
     if isinstance(bc, string_types):
         bc = [bc, bc]
-    assert isinstance(bc, list), 'bc must be a list'
-    assert len(bc) == 2, 'bc must have two elements'
+    if not isinstance(bc, list):
+        raise TypeError('bc must be a single string or list of strings')
+    if not len(bc) == 2:
+        raise TypeError('bc list must have two elements, one for each side')
 
     for bc_i in bc:
-        assert isinstance(bc_i, string_types), "each bc must be a string"
+        if not isinstance(bc_i, string_types):
+            raise TypeError("each bc must be a string")
         if bc_i not in ['dirichlet', 'neumann']:
-            raise AssertionError(
-                "each bc must be either, 'dirichlet' or 'neumann'"
-            )
+            raise ValueError("each bc must be either, 'dirichlet' or 'neumann'")
     return bc
 
 
-def ddxCellGrad(n, bc):
+def _ddxCellGrad(n, bc):
     """
     Create 1D derivative operator from cell-centers to nodes this means we
     go from n to n+1
