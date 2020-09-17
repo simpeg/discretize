@@ -55,6 +55,11 @@ class TensorMesh(
     """
 
     _meshType = 'TENSOR'
+    _aliases = {
+        **DiffOperators._aliases,
+        **BaseRectangularMesh._aliases,
+        **BaseTensorMesh._aliases,
+    }
 
     def __init__(self, h=None, x0=None, **kwargs):
         BaseTensorMesh.__init__(self, h=h, x0=x0, **kwargs)

@@ -55,6 +55,11 @@ class CylMesh(
 
     _meshType = 'CYL'
     _unitDimensions = [1, 2*np.pi, 1]
+    _aliases = {
+        **DiffOperators._aliases,
+        **BaseRectangularMesh._aliases,
+        **BaseTensorMesh._aliases,
+    }
 
     cartesianOrigin = properties.Array(
         "Cartesian origin of the mesh",

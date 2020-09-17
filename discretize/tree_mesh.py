@@ -110,6 +110,9 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
     TreeMesh is a class for adaptive QuadTree (2D) and OcTree (3D) meshes.
     """
     _meshType = 'TREE'
+    _aliases = {
+        **BaseTensorMesh._aliases,
+    }
 
     #inheriting stuff from BaseTensorMesh that isn't defined in _QuadTree
     def __init__(self, h=None, x0=None, **kwargs):

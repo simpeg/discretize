@@ -42,6 +42,10 @@ class CurvilinearMesh(
     """
 
     _meshType = 'Curv'
+    _aliases = {
+        **DiffOperators._aliases,
+        **BaseRectangularMesh._aliases,
+    }
 
     nodes = properties.List(
         "List of arrays describing the node locations",

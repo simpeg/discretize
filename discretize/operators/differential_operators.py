@@ -4,6 +4,7 @@ from scipy import sparse as sp
 from six import string_types
 import warnings
 from ..utils import sdiag, speye, kron3, spzeros, ddx, av, av_extrap
+from ..utils.code_utils import shorthand_property, deprecate_method, deprecate_property
 
 def _validate_bc(bc):
     """Checks if boundary condition 'bc' is valid.
@@ -55,7 +56,7 @@ def _ddxCellGrad(n, bc):
         grad = 0;  put a zero in.
 
     """
-    bc = checkBC(bc)
+    bc = _validate_bc(bc)
 
     D = sp.spdiags((np.ones((n+1, 1))*[-1, 1]).T, [-1, 0], n+1, n,
                    format="csr")
@@ -72,7 +73,7 @@ def _ddxCellGrad(n, bc):
     return D
 
 
-def ddxCellGradBC(n, bc):
+def _ddxCellGradBC(n, bc):
     """
     Create 1D derivative operator from cell-centers to nodes this means we
     go from n to n+1
@@ -104,7 +105,7 @@ def ddxCellGradBC(n, bc):
 
 
     """
-    bc = checkBC(bc)
+    bc = _validate_bc(bc)
 
     ij = (np.array([0, n]), np.array([0, 1]))
     vals = np.zeros(2)
@@ -127,6 +128,24 @@ class DiffOperators(object):
     """
     Class creates the differential operators that you need!
     """
+    _aliases = {
+        "aveF2CC": "average_face_to_cell",
+        "aveF2CCV": "average_face_to_cell_vector",
+        "aveFx2CC": "average_face_x_to_cell",
+        "aveFy2CC": "average_face_y_to_cell",
+        "aveFz2CC": "average_face_z_to_cell",
+        "aveCC2F": "average_cell_to_face",
+        "aveCCV2F": "average_cell_vector_to_face",
+        "aveE2CC": "average_edge_to_cell",
+        "aveE2CCV": "average_edge_to_cell_vector",
+        "aveEx2CC": "average_edge_x_to_cell",
+        "aveEy2CC": "average_edge_y_to_cell",
+        "aveEz2CC": "average_edge_z_to_cell",
+        "aveN2CC": "average_node_to_cell",
+        "aveN2E": "average_node_to_edge",
+        "aveN2F": "average_node_to_face",
+    }
+
     def __init__(self):
         raise Exception(
             'DiffOperators is a base class providing differential'
@@ -195,7 +214,7 @@ class DiffOperators(object):
         return D
 
     @property
-    def faceDiv(self):
+    def face_divergence(self):
         """
         Construct divergence operator (face-stg to cell-centres).
         """
@@ -209,7 +228,7 @@ class DiffOperators(object):
         return self._faceDiv
 
     @property
-    def faceDivx(self):
+    def face_x_divergence(self):
         """
         Construct divergence operator in the x component (face-stg to
         cell-centres).
@@ -220,7 +239,7 @@ class DiffOperators(object):
         return sdiag(1/V)*self._faceDivStencilx*sdiag(S)
 
     @property
-    def faceDivy(self):
+    def face_y_divergence(self):
         if(self.dim < 2):
             return None
         # Compute areas of cell faces & volumes
@@ -229,7 +248,7 @@ class DiffOperators(object):
         return sdiag(1/V)*self._faceDivStencily*sdiag(S)
 
     @property
-    def faceDivz(self):
+    def face_z_divergence(self):
         """
         Construct divergence operator in the z component (face-stg to
         cell-centers).
@@ -306,7 +325,7 @@ class DiffOperators(object):
         return G
 
     @property
-    def nodalGrad(self):
+    def nodal_gradient(self):
         """
         Construct gradient operator (nodes to edges).
         """
@@ -385,7 +404,7 @@ class DiffOperators(object):
         return Hz.T * self._nodalLaplacianStencilz * Hz
 
     @property
-    def nodalLaplacian(self):
+    def nodal_laplacian(self):
         """
         Construct laplacian operator (nodes to edges).
         """
@@ -415,7 +434,7 @@ class DiffOperators(object):
 
     _cellGradBC_list = 'neumann'
 
-    def setCellGradBC(self, BC):
+    def set_cell_gradient_BC(self, BC):
         """
         Function that sets the boundary conditions for cell-centred derivative
         operators.
@@ -455,14 +474,14 @@ class DiffOperators(object):
         # TODO: remove this hard-coding
         BC = ['neumann', 'neumann']
         if self.dim == 1:
-            G1 = ddxCellGrad(self.nCx, BC)
+            G1 = _ddxCellGrad(self.nCx, BC)
         elif self.dim == 2:
-            G1 = sp.kron(speye(self.nCy), ddxCellGrad(self.nCx, BC))
+            G1 = sp.kron(speye(self.nCy), _ddxCellGrad(self.nCx, BC))
         elif self.dim == 3:
             G1 = kron3(
                 speye(self.nCz),
                 speye(self.nCy),
-                ddxCellGrad(self.nCx, BC)
+                _ddxCellGrad(self.nCx, BC)
             )
         return G1
 
@@ -473,9 +492,9 @@ class DiffOperators(object):
         BC = ['neumann', 'neumann'] # TODO: remove this hard-coding
         n = self.vnC
         if(self.dim == 2):
-            G2 = sp.kron(ddxCellGrad(n[1], BC), speye(n[0]))
+            G2 = sp.kron(_ddxCellGrad(n[1], BC), speye(n[0]))
         elif self.dim == 3:
-            G2 = kron3(speye(n[2]), ddxCellGrad(n[1], BC), speye(n[0]))
+            G2 = kron3(speye(n[2]), _ddxCellGrad(n[1], BC), speye(n[0]))
         return G2
 
     @property
@@ -484,27 +503,27 @@ class DiffOperators(object):
             return None
         BC = ['neumann', 'neumann'] # TODO: remove this hard-coding
         n = self.vnC
-        G3 = kron3(ddxCellGrad(n[2], BC), speye(n[1]), speye(n[0]))
+        G3 = kron3(_ddxCellGrad(n[2], BC), speye(n[1]), speye(n[0]))
         return G3
 
     @property
     def _cellGradStencil(self):
         BC = self.setCellGradBC(self._cellGradBC_list)
         if self.dim == 1:
-            G = ddxCellGrad(self.nCx, BC[0])
+            G = _ddxCellGrad(self.nCx, BC[0])
         elif self.dim == 2:
-            G1 = sp.kron(speye(self.nCy), ddxCellGrad(self.nCx, BC[0]))
-            G2 = sp.kron(ddxCellGrad(self.nCy, BC[1]), speye(self.nCx))
+            G1 = sp.kron(speye(self.nCy), _ddxCellGrad(self.nCx, BC[0]))
+            G2 = sp.kron(_ddxCellGrad(self.nCy, BC[1]), speye(self.nCx))
             G = sp.vstack((G1, G2), format="csr")
         elif self.dim == 3:
-            G1 = kron3(speye(self.nCz), speye(self.nCy), ddxCellGrad(self.nCx, BC[0]))
-            G2 = kron3(speye(self.nCz), ddxCellGrad(self.nCy, BC[1]), speye(self.nCx))
-            G3 = kron3(ddxCellGrad(self.nCz, BC[2]), speye(self.nCy), speye(self.nCx))
+            G1 = kron3(speye(self.nCz), speye(self.nCy), _ddxCellGrad(self.nCx, BC[0]))
+            G2 = kron3(speye(self.nCz), _ddxCellGrad(self.nCy, BC[1]), speye(self.nCx))
+            G3 = kron3(_ddxCellGrad(self.nCz, BC[2]), speye(self.nCy), speye(self.nCx))
             G = sp.vstack((G1, G2, G3), format="csr")
         return G
 
     @property
-    def cellGrad(self):
+    def cell_gradient(self):
         """
         The cell centered Gradient, takes you to cell faces.
         """
@@ -516,7 +535,7 @@ class DiffOperators(object):
         return self._cellGrad
 
     @property
-    def cellGradBC(self):
+    def cell_gradient_BC(self):
         """
         The cell centered Gradient boundary condition matrix
         """
@@ -524,15 +543,15 @@ class DiffOperators(object):
             BC = self.setCellGradBC(self._cellGradBC_list)
             n = self.vnC
             if self.dim == 1:
-                G = ddxCellGradBC(n[0], BC[0])
+                G = _ddxCellGradBC(n[0], BC[0])
             elif self.dim == 2:
-                G1 = sp.kron(speye(n[1]), ddxCellGradBC(n[0], BC[0]))
-                G2 = sp.kron(ddxCellGradBC(n[1], BC[1]), speye(n[0]))
+                G1 = sp.kron(speye(n[1]), _ddxCellGradBC(n[0], BC[0]))
+                G2 = sp.kron(_ddxCellGradBC(n[1], BC[1]), speye(n[0]))
                 G = sp.block_diag((G1, G2), format="csr")
             elif self.dim == 3:
-                G1 = kron3(speye(n[2]), speye(n[1]), ddxCellGradBC(n[0], BC[0]))
-                G2 = kron3(speye(n[2]), ddxCellGradBC(n[1], BC[1]), speye(n[0]))
-                G3 = kron3(ddxCellGradBC(n[2], BC[2]), speye(n[1]), speye(n[0]))
+                G1 = kron3(speye(n[2]), speye(n[1]), _ddxCellGradBC(n[0], BC[0]))
+                G2 = kron3(speye(n[2]), _ddxCellGradBC(n[1], BC[1]), speye(n[0]))
+                G3 = kron3(_ddxCellGradBC(n[2], BC[2]), speye(n[1]), speye(n[0]))
                 G = sp.block_diag((G1, G2, G3), format="csr")
             # Compute areas of cell faces & volumes
             S = self.area
@@ -541,7 +560,7 @@ class DiffOperators(object):
         return self._cellGradBC
 
     @property
-    def cellGradx(self):
+    def cell_gradient_x(self):
         """
         Cell centered Gradient in the x dimension. Has neumann boundary
         conditions.
@@ -555,7 +574,7 @@ class DiffOperators(object):
         return self._cellGradx
 
     @property
-    def cellGrady(self):
+    def cell_gradient_y(self):
         if self.dim < 2:
             return None
         if getattr(self, '_cellGrady', None) is None:
@@ -567,7 +586,7 @@ class DiffOperators(object):
         return self._cellGrady
 
     @property
-    def cellGradz(self):
+    def cell_gradient_z(self):
         """
         Cell centered Gradient in the x dimension. Has neumann boundary
         conditions.
@@ -660,7 +679,7 @@ class DiffOperators(object):
             return C
 
     @property
-    def edgeCurl(self):
+    def edge_curl(self):
         """
         Construct the 3D curl operator.
         """
@@ -678,7 +697,7 @@ class DiffOperators(object):
 
         return self._edgeCurl
 
-    def getBCProjWF(self, BC, discretization='CC'):
+    def get_BC_projections(self, BC, discretization='CC'):
         """
         The weak form boundary condition projection matrices.
 
@@ -792,7 +811,7 @@ class DiffOperators(object):
 
         return Pbc, Pin, Pout
 
-    def getBCProjWF_simple(self, discretization='CC'):
+    def get_BC_projections_simple(self, discretization='CC'):
         """The weak form boundary condition projection matrices
         when mixed boundary condition is used
         """
@@ -864,7 +883,7 @@ class DiffOperators(object):
     ###########################################################################
 
     @property
-    def aveF2CC(self):
+    def average_face_to_cell(self):
         "Construct the averaging operator on cell faces to cell centers."
         if getattr(self, '_aveF2CC', None) is None:
             if self.dim == 1:
@@ -880,7 +899,7 @@ class DiffOperators(object):
         return self._aveF2CC
 
     @property
-    def aveF2CCV(self):
+    def average_face_to_cell_vector(self):
         "Construct the averaging operator on cell faces to cell centers."
         if getattr(self, '_aveF2CCV', None) is None:
             if self.dim == 1:
@@ -896,7 +915,7 @@ class DiffOperators(object):
         return self._aveF2CCV
 
     @property
-    def aveFx2CC(self):
+    def average_face_x_to_cell(self):
         """
         Construct the averaging operator on cell faces in the x direction to
         cell centers.
@@ -913,7 +932,7 @@ class DiffOperators(object):
         return self._aveFx2CC
 
     @property
-    def aveFy2CC(self):
+    def average_face_y_to_cell(self):
         """
         Construct the averaging operator on cell faces in the y direction to
         cell centers.
@@ -929,7 +948,7 @@ class DiffOperators(object):
         return self._aveFy2CC
 
     @property
-    def aveFz2CC(self):
+    def average_face_z_to_cell(self):
         """
         Construct the averaging operator on cell faces in the z direction to
         cell centers.
@@ -943,7 +962,7 @@ class DiffOperators(object):
         return self._aveFz2CC
 
     @property
-    def aveCC2F(self):
+    def average_cell_to_face(self):
         "Construct the averaging operator on cell centers to faces."
         if getattr(self, '_aveCC2F', None) is None:
             if self.dim == 1:
@@ -968,7 +987,7 @@ class DiffOperators(object):
         return self._aveCC2F
 
     @property
-    def aveCCV2F(self):
+    def average_cell_vector_to_face(self):
         """
         Construct the averaging operator on cell centers to
         faces as a vector.
@@ -998,7 +1017,7 @@ class DiffOperators(object):
         return self._aveCCV2F
 
     @property
-    def aveE2CC(self):
+    def average_edge_to_cell(self):
         "Construct the averaging operator on cell edges to cell centers."
         if getattr(self, '_aveE2CC', None) is None:
             if self.dim == 1:
@@ -1014,7 +1033,7 @@ class DiffOperators(object):
         return self._avE2CC
 
     @property
-    def aveE2CCV(self):
+    def average_edge_to_cell_vector(self):
         "Construct the averaging operator on cell edges to cell centers."
         if getattr(self, '_aveE2CCV', None) is None:
             if self.dim == 1:
@@ -1030,7 +1049,7 @@ class DiffOperators(object):
         return self._aveE2CCV
 
     @property
-    def aveEx2CC(self):
+    def average_edge_x_to_cell(self):
         """
         Construct the averaging operator on cell edges in the x direction to
         cell centers.
@@ -1047,7 +1066,7 @@ class DiffOperators(object):
         return self._aveEx2CC
 
     @property
-    def aveEy2CC(self):
+    def average_edge_y_to_cell(self):
         """
         Construct the averaging operator on cell edges in the y direction to
         cell centers.
@@ -1064,7 +1083,7 @@ class DiffOperators(object):
         return self._aveEy2CC
 
     @property
-    def aveEz2CC(self):
+    def average_edge_z_to_cell(self):
         """
         Construct the averaging operator on cell edges in the z direction to
         cell centers.
@@ -1079,7 +1098,7 @@ class DiffOperators(object):
         return self._aveEz2CC
 
     @property
-    def aveN2CC(self):
+    def average_node_to_cell(self):
         "Construct the averaging operator on cell nodes to cell centers."
         if getattr(self, '_aveN2CC', None) is None:
             # The number of cell centers in each direction
@@ -1126,7 +1145,7 @@ class DiffOperators(object):
         return aveN2Ez
 
     @property
-    def aveN2E(self):
+    def average_node_to_edge(self):
         """
         Construct the averaging operator on cell nodes to cell edges, keeping
         each dimension separate.
@@ -1174,7 +1193,7 @@ class DiffOperators(object):
         return aveN2Fz
 
     @property
-    def aveN2F(self):
+    def average_node_to_face(self):
         """
         Construct the averaging operator on cell nodes to cell faces, keeping
         each dimension separate.
@@ -1192,3 +1211,21 @@ class DiffOperators(object):
                     self._aveN2Fx, self._aveN2Fy, self._aveN2Fz
                 ), format="csr")
         return self._aveN2F
+
+    # DEPRECATED
+    cellGrad = deprecate_property(cell_gradient, 'cellGrad', removal_version="1.0.0")
+    cellGradBC = deprecate_property(cell_gradient_BC, 'cellGradBC', removal_version="1.0.0")
+    cellGradx = deprecate_property(cell_gradient_x, 'cellGradx', removal_version="1.0.0")
+    cellGrady = deprecate_property(cell_gradient_y, 'cellGrady', removal_version="1.0.0")
+    cellGradz = deprecate_property(cell_gradient_z, 'cellGradz', removal_version="1.0.0")
+    nodalGrad = deprecate_property(nodal_gradient, 'nodalGrad', removal_version="1.0.0")
+    nodalLaplacian = deprecate_property(nodal_laplacian, 'nodalLaplacian', removal_version="1.0.0")
+    faceDiv = deprecate_property(face_divergence, 'faceDiv', removal_version="1.0.0")
+    faceDivx = deprecate_property(face_x_divergence, 'faceDivx', removal_version="1.0.0")
+    faceDivy = deprecate_property(face_y_divergence, 'faceDivy', removal_version="1.0.0")
+    faceDivz = deprecate_property(face_z_divergence, 'faceDivz', removal_version="1.0.0")
+    edgeCurl = deprecate_property(edge_curl, 'edgeCurl', removal_version="1.0.0")
+
+    setCellGradBC = deprecate_method(set_cell_gradient_BC, 'setCellGradBC', removal_version="1.0.0")
+    getBCProjWF = deprecate_method(get_BC_projections, 'getBCProjWF', removal_version="1.0.0")
+    getBCProjWF_simple = deprecate_method(get_BC_projections_simple, 'getBCProjWF_simple', removal_version="1.0.0")
