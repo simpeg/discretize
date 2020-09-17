@@ -5,6 +5,7 @@ from ..utils import (
     getSubArray, inv3X3BlockDiagonal, spzeros, sdInv
 )
 import numpy as np
+from ..utils.code_utils import deprecate_method
 
 
 class InnerProducts(object):
@@ -18,7 +19,7 @@ class InnerProducts(object):
             'Mesh class.'
         )
 
-    def getFaceInnerProduct(self, prop=None, invProp=False, invMat=False, doFast=True):
+    def get_face_inner_product(self, prop=None, invProp=False, invMat=False, doFast=True):
         """Generate the face inner product matrix
 
         Parameters
@@ -44,7 +45,7 @@ class InnerProducts(object):
         """
         return self._getInnerProduct('F', prop=prop, invProp=invProp, invMat=invMat, doFast=doFast)
 
-    def getEdgeInnerProduct(self, prop=None, invProp=False, invMat=False, doFast=True):
+    def get_edge_inner_product(self, prop=None, invProp=False, invMat=False, doFast=True):
         """Generate the edge inner product matrix
 
         Parameters
@@ -171,8 +172,7 @@ class InnerProducts(object):
 
         return [V*proj(*locs[node][d-1]) for node in nodes]
 
-
-    def getFaceInnerProductDeriv(self, prop, doFast=True, invProp=False, invMat=False):
+    def get_face_inner_product_deriv(self, prop, doFast=True, invProp=False, invMat=False):
         """
         Parameters
         ----------
@@ -197,8 +197,7 @@ class InnerProducts(object):
         """
         return self._getInnerProductDeriv(prop, 'F', doFast=doFast, invProp=invProp, invMat=invMat)
 
-
-    def getEdgeInnerProductDeriv(self, prop, doFast=True, invProp=False, invMat=False):
+    def get_edge_inner_product_deriv(self, prop, doFast=True, invProp=False, invMat=False):
         """
         Parameters
         ----------
@@ -619,3 +618,9 @@ class InnerProducts(object):
 
             return PXXX
         return Pxxx
+
+    # DEPRECATED
+    getFaceInnerProduct = deprecate_method(get_face_inner_product, "getFaceInnerProduct", removal_version="1.0.0")
+    getEdgeInnerProduct = deprecate_method(get_edge_inner_product, "getEdgeInnerProduct", removal_version="1.0.0")
+    getFaceInnerProductDeriv = deprecate_method(get_face_inner_product_deriv, "getFaceInnerProductDeriv", removal_version="1.0.0")
+    getEdgeInnerProductDeriv = deprecate_method(get_edge_inner_product_deriv, "getEdgeInnerProductDeriv", removal_version="1.0.0")
