@@ -20,6 +20,18 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
     """
 
     _REGISTRY = {}
+    _aliases = {
+        'nC': 'n_cells',
+        'nN': 'n_nodes',
+        'nEx': 'n_edges_x',
+        'nEy': 'n_edges_y',
+        'nEz': 'n_edges_z',
+        'nE': 'n_edges',
+        'nFx': 'n_faces_x',
+        'nFy': 'n_faces_y',
+        'nFz': 'n_faces_z',
+        'nF': 'n_faces'
+    }
 
     # Properties
     _n = properties.Array(
@@ -47,6 +59,12 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
             self.x0 = x0
 
         super(BaseMesh, self).__init__(**kwargs)
+
+    def __getattr__(self, name):
+        if name == "_aliases":
+            raise AttributeError  # http://nedbatchelder.com/blog/201010/surprising_getattr_recursion.html
+        name = self._aliases.get(name, name)
+        return object.__getattribute__(self, name)
 
     # Validators
     @properties.validator('_n')
@@ -523,17 +541,17 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
             raise ValueError('Coordinate system ({}) unknown.'.format(self.reference_system))
         return True
 
-    # SHORTHAND
-    nC = shorthand_property(n_cells, 'nC')
-    nN = shorthand_property(n_nodes, 'nN')
-    nEx = shorthand_property(n_edges_x, 'nEx')
-    nEy = shorthand_property(n_edges_y, 'nEy')
-    nEz = shorthand_property(n_edges_z, 'nEz')
-    nE = shorthand_property(n_edges, 'nE')
-    nFx = shorthand_property(n_faces_x, 'nFx')
-    nFy = shorthand_property(n_faces_y, 'nFy')
-    nFz = shorthand_property(n_faces_z, 'nFz')
-    nF = shorthand_property(n_faces, 'nF')
+    # # SHORTHAND
+    # nC = shorthand_property(n_cells, 'nC')
+    # nN = shorthand_property(n_nodes, 'nN')
+    # nEx = shorthand_property(n_edges_x, 'nEx')
+    # nEy = shorthand_property(n_edges_y, 'nEy')
+    # nEz = shorthand_property(n_edges_z, 'nEz')
+    # nE = shorthand_property(n_edges, 'nE')
+    # nFx = shorthand_property(n_faces_x, 'nFx')
+    # nFy = shorthand_property(n_faces_y, 'nFy')
+    # nFz = shorthand_property(n_faces_z, 'nFz')
+    # nF = shorthand_property(n_faces, 'nF')
 
     # DEPRECATED
     normals = deprecate_property(face_normals, 'normals', removal_version='1.0.0')
@@ -547,6 +565,18 @@ class BaseRectangularMesh(BaseMesh):
     """
     BaseRectangularMesh
     """
+    _aliases = {
+        **BaseMesh._aliases, **{
+            'vnC': 'shape_cells',
+            'vnN': 'shape_nodes',
+            'vnEx': 'shape_edges_x',
+            'vnEy': 'shape_edges_y',
+            'vnEz': 'shape_edges_z',
+            'vnFx': 'shape_faces_x',
+            'vnFy': 'shape_faces_y',
+            'vnFz': 'shape_faces_z',
+        }
+    }
 
 
     def __init__(self, n=None, x0=None, **kwargs):
@@ -820,17 +850,18 @@ class BaseRectangularMesh(BaseMesh):
             return switchKernal(x)
 
     # SHORTHAND
-    vnC = shorthand_property(shape_cells, 'vnC')
-    vnN = shorthand_property(shape_nodes, 'vnN')
-    vnEx = shorthand_property(shape_edges_x, 'vnEx')
-    vnEy = shorthand_property(shape_edges_y, 'vnEy')
-    vnEz = shorthand_property(shape_edges_z, 'vnEz')
-    vnFx = shorthand_property(shape_faces_x, 'vnFx')
-    vnFy = shorthand_property(shape_faces_y, 'vnFy')
-    vnFz = shorthand_property(shape_faces_z, 'vnFz')
+    # vnC = shorthand_property(shape_cells, 'vnC')
+    # vnN = shorthand_property(shape_nodes, 'vnN')
+    # vnEx = shorthand_property(shape_edges_x, 'vnEx')
+    # vnEy = shorthand_property(shape_edges_y, 'vnEy')
+    # vnEz = shorthand_property(shape_edges_z, 'vnEz')
+    # vnFx = shorthand_property(shape_faces_x, 'vnFx')
+    # vnFy = shorthand_property(shape_faces_y, 'vnFy')
+    # vnFz = shorthand_property(shape_faces_z, 'vnFz')
 
     # DEPRECATED
     r = deprecate_method(reshape, 'r', removal_version="1.0.0")
+
     @property
     def nCx(self):
         """Number of cells in the x direction

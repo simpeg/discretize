@@ -1,2 +1,2 @@
-from .differential_operators import (checkBC, ddxCellGrad, ddxCellGradBC, DiffOperators)
+from .differential_operators import DiffOperators
 from .inner_products import InnerProducts
