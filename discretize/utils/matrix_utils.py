@@ -150,10 +150,10 @@ def ndgrid(*args, **kwargs):
         meshed = np.meshgrid(*xin, indexing='ij')
     except Exception:
         raise("All arguments must be array like", TypeError)
+
     if vector:
         return np.dstack([x.reshape(-1, order=order) for x in meshed])
-    else:
-        return meshed
+    return meshed
 
 
 def ind2sub(shape, inds):
