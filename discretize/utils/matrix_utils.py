@@ -137,7 +137,7 @@ def ndgrid(*args, **kwargs):
     vector = kwargs.pop('vector', True)
     order = kwargs.pop("order", "F")
     if not isinstance(vector, bool):
-        raise(TypeError("'vector' keyword must be a bool"))
+        raise TypeError("'vector' keyword must be a bool")
 
     # you can either pass a list [x1, x2, x3] or each seperately
     if type(args[0]) == list:
@@ -149,7 +149,7 @@ def ndgrid(*args, **kwargs):
     try:
         meshed = np.meshgrid(*xin, indexing='ij')
     except Exception:
-        raise("All arguments must be array like", TypeError)
+        raise TypeError("All arguments must be array like")
 
     if vector:
         return np.dstack([x.reshape(-1, order=order) for x in meshed])
