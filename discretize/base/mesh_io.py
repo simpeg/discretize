@@ -4,6 +4,8 @@ import numpy as np
 
 from ..utils import mkvc
 from . import BaseMesh
+from ..utils.code_utils import deprecate_method
+import warnings
 
 try:
     from ..mixins import InterfaceTensorread_vtk
@@ -127,7 +129,7 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         return tensMsh
 
     @classmethod
-    def readUBC(TensorMesh, fileName, directory=''):
+    def read_UBC(TensorMesh, fileName, directory=''):
         """Wrapper to Read UBC GIF 2D  and 3D tensor mesh and generate same dimension TensorMesh.
 
         Input:
@@ -210,7 +212,7 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         model = mkvc(model)
         return model
 
-    def readModelUBC(mesh, fileName, directory=''):
+    def read_model_UBC(mesh, fileName, directory=''):
         """Read UBC 2D or 3D Tensor mesh model
             and generate Tensor mesh model
 
@@ -232,7 +234,7 @@ class TensorMeshIO(InterfaceTensorread_vtk):
             raise Exception('mesh must be a Tensor Mesh 2D or 3D')
         return model
 
-    def writeModelUBC(mesh, fileName, model, directory=''):
+    def write_model_UBC(mesh, fileName, model, directory=''):
         """Writes a model associated with a TensorMesh
         to a UBC-GIF format model file.
 
@@ -352,7 +354,7 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         f.write(outStr)
         f.close()
 
-    def writeUBC(mesh, fileName, models=None, directory='', comment_lines=''):
+    def write_UBC(mesh, fileName, models=None, directory='', comment_lines=''):
         """Writes a TensorMesh to a UBC-GIF format mesh file.
 
         Input:
@@ -378,11 +380,25 @@ class TensorMeshIO(InterfaceTensorread_vtk):
                 raise TypeError('The dict key must be a string representing the file name')
             mesh.writeModelUBC(key, models[key], directory=directory)
 
+    # DEPRECATED
+    @classmethod
+    def readUBC(TensorMesh, fileName, directory=''):
+        warnings.warn(
+            'TensorMesh.readUBC has been deprecated and will be removed in'
+            'discretize 1.0.0. please use TensorMesh.read_UBC',
+            FutureWarning
+        )
+        return TensorMesh.read_UBC(fileName, directory)
+
+    readModelUBC = deprecate_method(read_model_UBC, 'readModelUBC', removal_version="1.0.0")
+    writeUBC = deprecate_method(write_UBC, 'writeUBC', removal_version="1.0.0")
+    writeModelUBC = deprecate_method(write_model_UBC, 'writeModelUBC', removal_version="1.0.0")
+
 
 class TreeMeshIO(object):
 
     @classmethod
-    def readUBC(TreeMesh, meshFile):
+    def read_UBC(TreeMesh, meshFile):
         """Read UBC 3D OcTree mesh file
         Input:
         :param str meshFile: path to the UBC GIF OcTree mesh file to read
@@ -427,7 +443,7 @@ class TreeMeshIO(object):
         mesh.__setstate__((indArr, levels))
         return mesh
 
-    def readModelUBC(mesh, fileName):
+    def read_model_UBC(mesh, fileName):
         """Read UBC OcTree model and get vector
         :param string fileName: path to the UBC GIF model file to read
         :rtype: numpy.ndarray
@@ -451,7 +467,7 @@ class TreeMeshIO(object):
         model = modArr[un_order].copy()  # ensure a contiguous array
         return model
 
-    def writeUBC(mesh, fileName, models=None, directory=''):
+    def write_UBC(mesh, fileName, models=None, directory=''):
         """Write UBC ocTree mesh and model files from a
         octree mesh and model.
         :param string fileName: File to write to
@@ -492,7 +508,7 @@ class TreeMeshIO(object):
                 raise TypeError('The dict key must be a string representing the file name')
             mesh.writeModelUBC(key, models[key], directory=directory)
 
-    def writeModelUBC(mesh, fileName, model, directory=''):
+    def write_model_UBC(mesh, fileName, model, directory=''):
         """Writes a model associated with a TreeMesh
         to a UBC-GIF format model file.
 
@@ -510,3 +526,17 @@ class TreeMeshIO(object):
             fname = os.path.join(directory, fileName)
             m = model[ubc_order]
             np.savetxt(fname, m)
+
+    # DEPRECATED
+    @classmethod
+    def readUBC(TensorMesh, fileName, directory=''):
+        warnings.warn(
+            'TensorMesh.readUBC has been deprecated and will be removed in'
+            'discretize 1.0.0. please use TensorMesh.read_UBC',
+            FutureWarning
+        )
+        return TensorMesh.read_UBC(fileName, directory)
+
+    readModelUBC = deprecate_method(read_model_UBC, 'readModelUBC', removal_version="1.0.0")
+    writeUBC = deprecate_method(write_UBC, 'writeUBC', removal_version="1.0.0")
+    writeModelUBC = deprecate_method(write_model_UBC, 'writeModelUBC', removal_version="1.0.0")
