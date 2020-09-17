@@ -11,6 +11,8 @@ from ..utils import (
     isScalar, asArray_N_x_Dim, meshTensor, mkvc, ndgrid, spzeros, sdiag, sdInv,
     TensorType, interpmat
 )
+from ..utils.code_utils import deprecate_method, deprecate_property
+import warnings
 
 class BaseTensorMesh(BaseMesh):
     """
@@ -106,67 +108,53 @@ class BaseTensorMesh(BaseMesh):
         self.h = [mkvc(x.astype(float)) for x in h]
 
     @property
-    def hx(self):
-        """Width of cells in the x direction"""
-        return self.h[0]
-
-    @property
-    def hy(self):
-        "Width of cells in the y direction"
-        return None if self.dim < 2 else self.h[1]
-
-    @property
-    def hz(self):
-        "Width of cells in the z direction"
-        return None if self.dim < 3 else self.h[2]
-
-    @property
-    def vectorNx(self):
+    def grid_nodes_x(self):
         """Nodal grid vector (1D) in the x direction."""
-        return np.r_[0., self.hx.cumsum()] + self.x0[0]
+        return np.r_[self.x0[0], self.h[0]].cumsum()
 
     @property
-    def vectorNy(self):
+    def grid_nodes_y(self):
         """Nodal grid vector (1D) in the y direction."""
         return (
-            None if self.dim < 2 else np.r_[0., self.hy.cumsum()] + self.x0[1]
+            None if self.dim < 2 else np.r_[self.x0[1], self.h[1]].cumsum()
         )
 
     @property
-    def vectorNz(self):
+    def grid_nodes_z(self):
         """Nodal grid vector (1D) in the z direction."""
         return (
-            None if self.dim < 3 else np.r_[0., self.hz.cumsum()] + self.x0[2]
+            None if self.dim < 3 else np.r_[self.x0[2], self.h[2]].cumsum()
         )
 
     @property
-    def vectorCCx(self):
+    def grid_cell_centers_x(self):
         """Cell-centered grid vector (1D) in the x direction."""
-        return np.r_[0, self.hx[:-1].cumsum()] + self.hx*0.5 + self.x0[0]
+        nodes = self.vector_nodes_x
+        return (nodes[1:]+nodes[:-1])/2
 
     @property
-    def vectorCCy(self):
+    def grid_cell_centers_y(self):
         """Cell-centered grid vector (1D) in the y direction."""
-        return (
-            None if self.dim < 2 else
-            np.r_[0, self.hy[:-1].cumsum()] + self.hy*0.5 + self.x0[1]
-        )
+        if self.dim < 2:
+            return None
+        nodes = self.vector_nodes_y
+        return (nodes[1:]+nodes[:-1])/2
 
     @property
-    def vectorCCz(self):
+    def grid_cell_centers_z(self):
         """Cell-centered grid vector (1D) in the z direction."""
-        return (
-            None if self.dim < 3 else
-            np.r_[0, self.hz[:-1].cumsum()] + self.hz*0.5 + self.x0[2]
-        )
+        if self.dim < 3:
+            return None
+        nodes = self.vector_nodes_z
+        return (nodes[1:]+nodes[:-1])/2
 
     @property
-    def gridCC(self):
+    def grid_cell_centers(self):
         """Cell-centered grid."""
         return self._getTensorGrid('CC')
 
     @property
-    def gridN(self):
+    def grid_nodes(self):
         """Nodal grid."""
         return self._getTensorGrid('N')
 
@@ -175,56 +163,45 @@ class BaseTensorMesh(BaseMesh):
         """
         Returns an (nC, dim) numpy array with the widths of all cells in order
         """
-
-        if self.dim == 1:
-            return np.reshape(self.h, (self.nC, 1))
-        elif self.dim == 2:
-            hx = np.kron(np.ones(self.nCy), self.h[0])
-            hy = np.kron(self.h[1], np.ones(self.nCx))
-            return np.c_[hx, hy]
-        elif self.dim == 3:
-            hx = np.kron(np.ones(self.nCy*self.nCz), self.h[0])
-            hy = np.kron(np.ones(self.nCz), np.kron(self.h[1], np.ones(self.nCx)))
-            hz = np.kron(self.h[2], np.ones(self.nCx*self.nCy))
-            return np.c_[hx, hy, hz]
+        return ndgrid(*self.h)
 
     @property
-    def gridFx(self):
+    def grid_faces_x(self):
         """Face staggered grid in the x direction."""
         if self.nFx == 0:
             return
         return self._getTensorGrid('Fx')
 
     @property
-    def gridFy(self):
+    def grid_faces_y(self):
         """Face staggered grid in the y direction."""
         if self.nFy == 0 or self.dim < 2:
             return
         return self._getTensorGrid('Fy')
 
     @property
-    def gridFz(self):
+    def grid_faces_z(self):
         """Face staggered grid in the z direction."""
         if self.nFz == 0 or self.dim < 3:
             return
         return self._getTensorGrid('Fz')
 
     @property
-    def gridEx(self):
+    def grid_edges_x(self):
         """Edge staggered grid in the x direction."""
         if self.nEx == 0:
             return
         return self._getTensorGrid('Ex')
 
     @property
-    def gridEy(self):
+    def grid_edges_y(self):
         """Edge staggered grid in the y direction."""
         if self.nEy == 0 or self.dim < 2:
             return
         return self._getTensorGrid('Ey')
 
     @property
-    def gridEz(self):
+    def grid_edges_z(self):
         """Edge staggered grid in the z direction."""
         if self.nEz == 0 or self.dim < 3:
             return
@@ -235,12 +212,11 @@ class BaseTensorMesh(BaseMesh):
             setattr(self, '_grid' + key, ndgrid(self.getTensor(key)))
         return getattr(self, '_grid' + key)
 
-    def getTensor(self, key):
+    def get_tensor(self, key):
         """ Returns a tensor list.
 
         Parameters
         ----------
-
         key : str
             Which tensor (see below)
 
@@ -257,7 +233,6 @@ class BaseTensorMesh(BaseMesh):
 
         Returns
         -------
-
         list
             list of the tensors that make up the mesh.
 
@@ -284,7 +259,7 @@ class BaseTensorMesh(BaseMesh):
 
     # --------------- Methods ---------------------
 
-    def isInside(self, pts, locType='N'):
+    def is_inside(self, pts, locType='N'):
         """
         Determines if a set of points are inside a mesh.
 
@@ -388,8 +363,8 @@ class BaseTensorMesh(BaseMesh):
 
         return Q.tocsr()
 
-    def getInterpolationMat(self, loc, locType='CC', zerosOutside=False):
-        """ Produces interpolation matrix
+    def get_interpolation_matrix(self, loc, locType='CC', zerosOutside=False):
+        """ Produces linear interpolation matrix
 
         Parameters
         ----------
@@ -623,3 +598,59 @@ class BaseTensorMesh(BaseMesh):
             return innerProductDeriv
         else:
             return None
+
+    # DEPRECATED
+    @property
+    def hx(self):
+        """Width of cells in the x direction
+
+        Returns
+        -------
+        numpy.ndarray
+
+        .. deprecated:: 0.5.0
+          `hx` will be removed in discretize 1.0.0 to reduce namespace clutter,
+          please use `mesh.h[0]`.
+        """
+        warnings.warn("hx has been deprecated, please access as mesh.h[0]", FutureWarning)
+        return self.h[0]
+
+    @property
+    def hy(self):
+        """Width of cells in the y direction
+
+        Returns
+        -------
+        numpy.ndarray or None
+
+        .. deprecated:: 0.5.0
+          `hy` will be removed in discretize 1.0.0 to reduce namespace clutter,
+          please use `mesh.h[1]`.
+        """
+        warnings.warn("hy has been deprecated, please access as mesh.h[1]", FutureWarning)
+        return None if self.dim < 2 else self.h[1]
+
+    @property
+    def hz(self):
+        """Width of cells in the z direction
+
+        Returns
+        -------
+        numpy.ndarray or None
+
+        .. deprecated:: 0.5.0
+          `hz` will be removed in discretize 1.0.0 to reduce namespace clutter,
+          please use `mesh.h[2]`.
+        """
+        warnings.warn("hz has been deprecated, please access as mesh.h[2]", FutureWarning)
+        return None if self.dim < 3 else self.h[2]
+
+    vectorNx = deprecate_property(grid_nodes_x, 'vectorNx', removal_version="1.0.0")
+    vectorNy = deprecate_property(grid_nodes_y, 'vectorNy', removal_version="1.0.0")
+    vectorNz = deprecate_property(grid_nodes_z, 'vectorNz', removal_version="1.0.0")
+    vectorCCx = deprecate_property(grid_cell_centers_x, 'vectorCCx', removal_version="1.0.0")
+    vectorCCy = deprecate_property(grid_cell_centers_y, 'vectorCCy', removal_version="1.0.0")
+    vectorCCz = deprecate_property(grid_cell_centers_z, 'vectorCCz', removal_version="1.0.0")
+    getInterpolationMat = deprecate_method(get_interpolation_matrix, 'getInterpolationMat', removal_version="1.0.0")
+    isInside = deprecate_method(is_inside, 'isInside', removal_version="1.0.0")
+    getTensor = deprecate_method(get_tensor, 'getTensor', removal_version="1.0.0")
