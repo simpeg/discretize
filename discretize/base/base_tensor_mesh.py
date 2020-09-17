@@ -28,6 +28,19 @@ class BaseTensorMesh(BaseMesh):
 
     """
     _meshType = 'BASETENSOR'
+    _aliases = {
+        **BaseMesh._aliases,
+        **{
+            'gridCC': 'grid_cell_centers',
+            'gridN': 'grid_nodes',
+            'gridFx': 'grid_faces_x',
+            'gridFy': 'grid_faces_y',
+            'gridFz': 'grid_faces_z',
+            'gridEx': 'grid_edges_x',
+            'gridEy': 'grid_edges_y',
+            'gridEz': 'grid_edges_z',
+        },
+    }
 
     _unitDimensions = [1, 1, 1]
 
