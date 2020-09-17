@@ -135,8 +135,9 @@ def ndgrid(*args, **kwargs):
 
     # Read the keyword arguments, and only accept a vector=True/False
     vector = kwargs.pop('vector', True)
-    assert type(vector) == bool, "'vector' keyword must be a bool"
-    assert len(kwargs) == 0, "Only 'vector' keyword accepted"
+    order = kwargs.pop("order", "F")
+    if not isinstance(vector, bool):
+        raise(TypeError("'vector' keyword must be a bool"))
 
     # you can either pass a list [x1, x2, x3] or each seperately
     if type(args[0]) == list:
@@ -145,28 +146,14 @@ def ndgrid(*args, **kwargs):
         xin = args
 
     # Each vector needs to be a numpy array
-    assert np.all(
-        [isinstance(x, np.ndarray) for x in xin]
-    ), "All vectors must be numpy arrays."
-
-    if len(xin) == 1:
-        return xin[0]
-    elif len(xin) == 2:
-        XY = np.broadcast_arrays(mkvc(xin[1], 1), mkvc(xin[0], 2))
-        if vector:
-            X2, X1 = [mkvc(x) for x in XY]
-            return np.c_[X1, X2]
-        else:
-            return XY[1], XY[0]
-    elif len(xin) == 3:
-        XYZ = np.broadcast_arrays(
-            mkvc(xin[2], 1), mkvc(xin[1], 2), mkvc(xin[0], 3)
-        )
-        if vector:
-            X3, X2, X1 = [mkvc(x) for x in XYZ]
-            return np.c_[X1, X2, X3]
-        else:
-            return XYZ[2], XYZ[1], XYZ[0]
+    try:
+        meshed = np.meshgrid(*xin, indexing='ij')
+    except Exception:
+        raise("All arguments must be array like", TypeError)
+    if vector:
+        return np.dstack([x.reshape(-1, order=order) for x in meshed])
+    else:
+        return meshed
 
 
 def ind2sub(shape, inds):
