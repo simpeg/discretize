@@ -4,7 +4,8 @@ from scipy import sparse as sp
 from six import string_types
 import warnings
 from ..utils import sdiag, speye, kron3, spzeros, ddx, av, av_extrap
-from ..utils.code_utils import shorthand_property, deprecate_method, deprecate_property
+from ..utils.code_utils import deprecate_method, deprecate_property
+
 
 def _validate_bc(bc):
     """Checks if boundary condition 'bc' is valid.
@@ -461,7 +462,7 @@ class DiffOperators(object):
             raise Exception("BC must be a str or a list.")
 
         for i, bc_i in enumerate(BC):
-            BC[i] = checkBC(bc_i)
+            BC[i] = _validate_bc(bc_i)
 
         # ensure we create a new gradient next time we call it
         self._cellGrad = None
@@ -730,10 +731,10 @@ class DiffOperators(object):
             raise Exception("BC must be a str or a list.")
 
         for i, bc_i in enumerate(BC):
-            BC[i] = checkBC(bc_i)
+            BC[i] = _validate_BC(bc_i)
 
         def projDirichlet(n, bc):
-            bc = checkBC(bc)
+            bc = _validate_BC(bc)
             ij = ([0, n], [0, 1])
             vals = [0, 0]
             if(bc[0] == 'dirichlet'):
@@ -743,7 +744,7 @@ class DiffOperators(object):
             return sp.csr_matrix((vals, ij), shape=(n+1, 2))
 
         def projNeumannIn(n, bc):
-            bc = checkBC(bc)
+            bc = _validate_BC(bc)
             P = sp.identity(n+1).tocsr()
             if(bc[0] == 'neumann'):
                 P = P[1:, :]
@@ -752,7 +753,7 @@ class DiffOperators(object):
             return P
 
         def projNeumannOut(n, bc):
-            bc = checkBC(bc)
+            bc = _validate_BC(bc)
             ij = ([0, 1], [0, n])
             vals = [0, 0]
             if(bc[0] == 'neumann'):
@@ -828,7 +829,7 @@ class DiffOperators(object):
             return sp.csr_matrix((vals, ij), shape=(n+1, 2))
 
         def projDirichlet(n, bc):
-            bc = checkBC(bc)
+            bc = _validate_BC(bc)
             ij = ([0, n], [0, 1])
             vals = [0, 0]
             if(bc[0] == 'dirichlet'):

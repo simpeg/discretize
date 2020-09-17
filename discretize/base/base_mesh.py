@@ -8,7 +8,7 @@ import os
 import json
 
 from ..utils import mkvc
-from ..utils.code_utils import deprecate_property, deprecate_method, shorthand_property
+from ..utils.code_utils import deprecate_property, deprecate_method
 from ..mixins import InterfaceMixins
 import warnings
 
