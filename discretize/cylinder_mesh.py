@@ -1689,6 +1689,15 @@ class CylindricalMesh(
         return Proj * Pc2r
 
     # DEPRECATIONS
+    vol = deprecate_property(cell_volumes, 'vol', removal_version="1.0.0")
+    area = deprecate_property(face_areas, 'area', removal_version="1.0.0")
+    areaFx = deprecate_property(face_areas, 'areaFx', removal_version="1.0.0")
+    areaFy = deprecate_property(face_areas, 'areaFy', removal_version="1.0.0")
+    areaFz = deprecate_property(face_areas, 'areaFz', removal_version="1.0.0")
+    edgeEx = deprecate_property(edge_lengths, 'edgeEx', removal_version="1.0.0")
+    edgeEy = deprecate_property(edge_lengths, 'edgeEy', removal_version="1.0.0")
+    edgeEz = deprecate_property(edge_lengths, 'edgeEz', removal_version="1.0.0")
+    edge = deprecate_property(edge_lengths, 'edge', removal_version="1.0.0")
     isSymmetric = deprecate_property(is_symmetric, 'isSymmetric', removal_version="1.0.0")
     getInterpolationMatCartMesh = deprecate_method(get_interpolation_matrix_cartesian_mesh, "getInterpolationMatCartMesh", removal_version="1.0.0")
 
