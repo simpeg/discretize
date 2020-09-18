@@ -108,21 +108,19 @@ class CylindricalMesh(
 
     @property
     def shape_nodes(self):
-        node_shape = self.shape_cells.copy()
+        vnC = self.shape_cells
         if self.is_symmetric:
-            node_shape[1] = 0
+            return (vnC[0], 0, vnC[2]+1)
         else:
-            node_shape[0] += 1
-        node_shape[2] += 1
-        return node_shape
+            return (vnC[0]+1, vnC[1], vnC[2]+1)
 
     @property
     def _vntN(self):
-        node_shape = self.shape_nodes.copy()
+        vnC = self.shape_cells
         if self.is_symmetric:
-            node_shape[1] = 1
+            return (vnC[0], 1, vnC[2]+1)
         else:
-            node_shape[1] += 1
+            return tuple(x + 1 for x in vnC)
         return node_shape
 
     @property
@@ -173,11 +171,8 @@ class CylindricalMesh(
         """
         vector number of total Fy (prior to deflating)
         """
-        # if self.is_symmetric:
-        #     return np.r_[0, 0, 0]
-        out = self.shape_cell.copy()
-        out[1] = self._vntN[1]
-        return out
+        vnC = self.shape_cell
+        return (vnC[0], self._vntN[1], vnC[2])
 
     @property
     def _ntFy(self):
@@ -233,9 +228,8 @@ class CylindricalMesh(
         """
         vector number of total Ey (prior to deflating)
         """
-        out = self._vntN.copy()
-        out[1] = self.shape_cells[1]
-        return out
+        _vntN = self._vntN
+        return (_vntN[0], self.shape_cells[1], _vntN[2])
 
     @property
     def _ntEy(self):
