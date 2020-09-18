@@ -142,7 +142,7 @@ class BaseTensorMesh(BaseMesh):
     @property
     def grid_cell_centers_x(self):
         """Cell-centered grid vector (1D) in the x direction."""
-        nodes = self.vector_nodes_x
+        nodes = self.grid_nodes_x
         return (nodes[1:]+nodes[:-1])/2
 
     @property
@@ -150,7 +150,7 @@ class BaseTensorMesh(BaseMesh):
         """Cell-centered grid vector (1D) in the y direction."""
         if self.dim < 2:
             return None
-        nodes = self.vector_nodes_y
+        nodes = self.grid_nodes_y
         return (nodes[1:]+nodes[:-1])/2
 
     @property
@@ -158,7 +158,7 @@ class BaseTensorMesh(BaseMesh):
         """Cell-centered grid vector (1D) in the z direction."""
         if self.dim < 3:
             return None
-        nodes = self.vector_nodes_z
+        nodes = self.grid_nodes_z
         return (nodes[1:]+nodes[:-1])/2
 
     @property
