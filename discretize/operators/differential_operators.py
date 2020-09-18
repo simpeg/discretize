@@ -7,7 +7,7 @@ from ..utils import sdiag, speye, kron3, spzeros, ddx, av, av_extrap
 from ..utils.code_utils import deprecate_method, deprecate_property
 
 
-def _validate_bc(bc):
+def _validate_BC(bc):
     """Checks if boundary condition 'bc' is valid.
 
     Each bc must be either 'dirichlet' or 'neumann'
@@ -57,7 +57,7 @@ def _ddxCellGrad(n, bc):
         grad = 0;  put a zero in.
 
     """
-    bc = _validate_bc(bc)
+    bc = _validate_BC(bc)
 
     D = sp.spdiags((np.ones((n+1, 1))*[-1, 1]).T, [-1, 0], n+1, n,
                    format="csr")
@@ -106,7 +106,7 @@ def _ddxCellGradBC(n, bc):
 
 
     """
-    bc = _validate_bc(bc)
+    bc = _validate_BC(bc)
 
     ij = (np.array([0, n]), np.array([0, 1]))
     vals = np.zeros(2)
@@ -462,7 +462,7 @@ class DiffOperators(object):
             raise Exception("BC must be a str or a list.")
 
         for i, bc_i in enumerate(BC):
-            BC[i] = _validate_bc(bc_i)
+            BC[i] = _validate_BC(bc_i)
 
         # ensure we create a new gradient next time we call it
         self._cellGrad = None

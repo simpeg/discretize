@@ -389,7 +389,7 @@ class CurvilinearMesh(
     def edge_tangents(self):
         """Edge tangents"""
         if getattr(self, '_tangents', None) is None:
-            self.edge  # calling .edge will create the tangents
+            self.edge_lengths  # calling .edge will create the tangents
         return self._tangents
 
     # DEPRECATIONS

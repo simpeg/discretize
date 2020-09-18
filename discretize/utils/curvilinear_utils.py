@@ -75,15 +75,19 @@ def indexCube(nodes, gridSize, n=None):
     """
 
     assert type(nodes) == str, "Nodes must be a str variable: e.g. 'ABCD'"
-    assert isinstance(gridSize, np.ndarray), "Number of nodes must be an ndarray"
+    # assert isinstance(gridSize, np.ndarray), "Number of nodes must be an ndarray"
     nodes = nodes.upper()
+    try:
+        dim = len(gridSize)
+        if n is None:
+            n = tuple(x - 1 for x in gridSize)
+    except TypeError:
+        return TypeError('gridSize must be iterable')
     # Make sure that we choose from the possible nodes.
-    possibleNodes = 'ABCD' if gridSize.size == 2 else 'ABCDEFGH'
+    possibleNodes = 'ABCD' if dim == 2 else 'ABCDEFGH'
     for node in nodes:
         assert node in possibleNodes, "Nodes must be chosen from: '{0!s}'".format(possibleNodes)
-    dim = gridSize.size
-    if n is None:
-        n = gridSize - 1
+
 
     if dim == 2:
         ij = ndgrid(np.arange(n[0]), np.arange(n[1]))

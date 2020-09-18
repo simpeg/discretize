@@ -396,5 +396,5 @@ class TensorMesh(
     edgeEy = deprecate_property(edge_y_lengths, 'edgeEy', removal_version="1.0.0")
     edgeEz = deprecate_property(edge_z_lengths, 'edgeEz', removal_version="1.0.0")
     edge = deprecate_property(edge_lengths, 'edge', removal_version="1.0.0")
-    faceBoundaryIndices = deprecate_property(face_boundary_indices, 'faceBoundaryIndices', removal_version="1.0.0")
-    cellBoundaryIndices = deprecate_property(cell_boundary_indices, 'cellBoundaryIndices', removal_version="1.0.0")
+    faceBoundaryInd = deprecate_property(face_boundary_indices, 'faceBoundaryInd', removal_version="1.0.0")
+    cellBoundaryInd = deprecate_property(cell_boundary_indices, 'cellBoundaryInd', removal_version="1.0.0")
