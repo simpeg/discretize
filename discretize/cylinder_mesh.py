@@ -11,7 +11,7 @@ from .utils import (
 from .base import BaseTensorMesh, BaseRectangularMesh
 from .operators import DiffOperators, InnerProducts
 from .mixins.mpl_mod import CylView
-from .utils.code_utils import deprecate_class
+from .utils.code_utils import deprecate_class, deprecate_property, deprecate_method
 
 
 class CylindricalMesh(
@@ -104,7 +104,7 @@ class CylindricalMesh(
         bool
             True if the mesh is cylindrically symmetric, False otherwise
         """
-        return self.nCy == 1
+        return self.shape_cells[0] == 1
 
     @property
     def shape_nodes(self):
@@ -126,52 +126,6 @@ class CylindricalMesh(
         return node_shape
 
     @property
-    def _ntNx(self):
-        """
-        Returns
-        -------
-        int
-            Number of total x nodes (prior to deflating)
-        """
-        if self.is_symmetric:
-            return self.nCx
-        return self.nCx + 1
-
-    @property
-    def _ntNy(self):
-        """
-        Returns
-        -------
-        int
-            Number of total y nodes (prior to deflating)
-        """
-        if self.is_symmetric:
-            return 1
-        return self.nCy + 1
-
-    @property
-    def _ntNz(self):
-        """
-        Returns
-        -------
-        int
-            Number of total z nodes (prior to deflating)
-        """
-        return self.nNz
-
-    @property
-    def _ntN(self):
-        """
-        Returns
-        -------
-        int
-            Number of total nodes (prior to deflating)
-        """
-        if self.is_symmetric:
-            return 0
-        return int(np.prod(self._shape_total_nodes))
-
-    @property
     def n_nodes(self):
         """
         Returns
@@ -188,8 +142,6 @@ class CylindricalMesh(
         """
         vector number of total Fx (prior to deflating)
         """
-        # if self.is_symmetric:
-        #     return np.r_[self._ntNx, 1, self.nCz]
         return self._vntN[:1] + self.cell_shape[1:]
 
     @property
@@ -246,8 +198,6 @@ class CylindricalMesh(
         """
         vector number of total Fz (prior to deflating)
         """
-        # if self.is_symmetric:
-        #     return np.r_[self.nCx, 1, self._ntNz]
         return self.shape_cells[:-1] + self._vntN[-1:]
 
     @property
@@ -1738,6 +1688,9 @@ class CylindricalMesh(
         Proj = sdiag(proj)
         return Proj * Pc2r
 
+    # DEPRECATIONS
+    isSymmetric = deprecate_property(is_symmetric, 'isSymmetric', removal_version="1.0.0")
+    getInterpolationMatCartMesh = deprecate_method(get_interpolation_matrix_cartesian_mesh, "getInterpolationMatCartMesh", removal_version="1.0.0")
 
 @deprecate_class(removal_version="1.0.0")
 class CylMesh(CylindricalMesh):
