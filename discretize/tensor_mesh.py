@@ -7,6 +7,7 @@ from .operators import DiffOperators, InnerProducts
 from .mixins.mpl_mod import TensorView
 from .base.mesh_io import TensorMeshIO
 from .utils import mkvc
+from .utils.code_utils import deprecate_property
 
 
 class TensorMesh(
@@ -135,7 +136,7 @@ class TensorMesh(
 
     # --------------- Geometries ---------------------
     @property
-    def vol(self):
+    def cell_volumes(self):
         """Construct cell volumes of the 3D model as 1d array."""
         if getattr(self, '_vol', None) is None:
             vh = self.h
@@ -153,7 +154,7 @@ class TensorMesh(
         return self._vol
 
     @property
-    def areaFx(self):
+    def face_x_areas(self):
         """
         Area of the x-faces
         """
@@ -175,7 +176,7 @@ class TensorMesh(
         return self._areaFx
 
     @property
-    def areaFy(self):
+    def face_y_areas(self):
         """
         Area of the y-faces
         """
@@ -197,7 +198,7 @@ class TensorMesh(
         return self._areaFy
 
     @property
-    def areaFz(self):
+    def face_z_areas(self):
         """
         Area of the z-faces
         """
@@ -219,7 +220,7 @@ class TensorMesh(
         return self._areaFz
 
     @property
-    def area(self):
+    def face_areas(self):
         """Construct face areas of the 3D model as 1d array."""
         if self.dim == 1:
             return self.areaFx
@@ -229,7 +230,7 @@ class TensorMesh(
             return np.r_[self.areaFx, self.areaFy, self.areaFz]
 
     @property
-    def edgeEx(self):
+    def edge_x_lengths(self):
         """x-edge lengths"""
         if getattr(self, '_edgeEx', None) is None:
             # Ensure that we are working with column vectors
@@ -250,7 +251,7 @@ class TensorMesh(
         return self._edgeEx
 
     @property
-    def edgeEy(self):
+    def edge_y_lengths(self):
         """y-edge lengths"""
         if getattr(self, '_edgeEy', None) is None:
             # Ensure that we are working with column vectors
@@ -271,7 +272,7 @@ class TensorMesh(
         return self._edgeEy
 
     @property
-    def edgeEz(self):
+    def edge_z_lengths(self):
         """z-edge lengths"""
         if getattr(self, '_edgeEz', None) is None:
             # Ensure that we are working with column vectors
@@ -292,7 +293,7 @@ class TensorMesh(
         return self._edgeEz
 
     @property
-    def edge(self):
+    def edge_lengths(self):
         """Construct edge legnths of the 3D model as 1d array."""
         if self.dim == 1:
             return self.edgeEx
@@ -303,7 +304,7 @@ class TensorMesh(
         return self._edge
 
     @property
-    def faceBoundaryInd(self):
+    def face_boundary_indices(self):
         """
         Find indices of boundary faces in each direction
         """
@@ -327,7 +328,7 @@ class TensorMesh(
             return indxd, indxu, indyd, indyu, indzd, indzu
 
     @property
-    def cellBoundaryInd(self):
+    def cell_boundary_indices(self):
         """
         Find indices of boundary faces in each direction
         """
@@ -384,3 +385,16 @@ class TensorMesh(
             attrs[name]['nC'] = getattr(self, 'nC'+name)
 
         return attrs
+
+    # DEPRECATIONS
+    vol = deprecate_property(cell_volumes, 'vol', removal_version="1.0.0")
+    areaFx = deprecate_property(face_x_areas, 'areaFx', removal_version="1.0.0")
+    areaFy = deprecate_property(face_y_areas, 'areaFy', removal_version="1.0.0")
+    areaFz = deprecate_property(face_z_areas, 'areaFz', removal_version="1.0.0")
+    area = deprecate_property(face_areas, 'area', removal_version="1.0.0")
+    edgeEx = deprecate_property(edge_x_lengths, 'edgeEx', removal_version="1.0.0")
+    edgeEy = deprecate_property(edge_y_lengths, 'edgeEy', removal_version="1.0.0")
+    edgeEz = deprecate_property(edge_z_lengths, 'edgeEz', removal_version="1.0.0")
+    edge = deprecate_property(edge_lengths, 'edge', removal_version="1.0.0")
+    faceBoundaryIndices = deprecate_property(face_boundary_indices, 'faceBoundaryIndices', removal_version="1.0.0")
+    cellBoundaryIndices = deprecate_property(cell_boundary_indices, 'cellBoundaryIndices', removal_version="1.0.0")
