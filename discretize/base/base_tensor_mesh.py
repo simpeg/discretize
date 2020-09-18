@@ -252,21 +252,21 @@ class BaseTensorMesh(BaseMesh):
         """
 
         if key == 'Fx':
-            ten = [self.vectorNx, self.vectorCCy, self.vectorCCz]
+            ten = [self.grid_nodes_x, self.grid_cell_centers_y, self.grid_cell_centers_z]
         elif key == 'Fy':
-            ten = [self.vectorCCx, self.vectorNy, self.vectorCCz]
+            ten = [self.grid_cell_centers_x, self.grid_nodes_y, self.grid_cell_centers_z]
         elif key == 'Fz':
-            ten = [self.vectorCCx, self.vectorCCy, self.vectorNz]
+            ten = [self.grid_cell_centers_x, self.grid_cell_centers_y, self.grid_nodes_z]
         elif key == 'Ex':
-            ten = [self.vectorCCx, self.vectorNy, self.vectorNz]
+            ten = [self.grid_cell_centers_x, self.grid_nodes_y, self.grid_nodes_z]
         elif key == 'Ey':
-            ten = [self.vectorNx, self.vectorCCy, self.vectorNz]
+            ten = [self.grid_nodes_x, self.grid_cell_centers_y, self.grid_nodes_z]
         elif key == 'Ez':
-            ten = [self.vectorNx, self.vectorNy, self.vectorCCz]
+            ten = [self.grid_nodes_x, self.grid_nodes_y, self.grid_cell_centers_z]
         elif key == 'CC':
-            ten = [self.vectorCCx, self.vectorCCy, self.vectorCCz]
+            ten = [self.grid_cell_centers_x, self.grid_cell_centers_y, self.grid_cell_centers_z]
         elif key == 'N':
-            ten = [self.vectorNx, self.vectorNy, self.vectorNz]
+            ten = [self.grid_nodes_x, self.grid_nodes_y, self.grid_nodes_z]
 
         return [t for t in ten if t is not None]
 
