@@ -1,6 +1,6 @@
 # from discretize.BaseMesh import BaseMesh
 from .tensor_mesh import TensorMesh
-from .cylinder_mesh import CylMesh
+from .cylinder_mesh import CylMesh, CylindricalMesh
 from .curvilinear_mesh import CurvilinearMesh
 from .base.mesh_io import load_mesh
 try:
