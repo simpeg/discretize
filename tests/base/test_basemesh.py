@@ -10,33 +10,33 @@ class TestBaseMesh(unittest.TestCase):
         self.mesh = BaseRectangularMesh([6, 2, 3])
 
     def test_meshDimensions(self):
-        self.assertTrue(self.mesh.dim, 3)
+        self.assertEqual(self.mesh.dim, 3)
 
     def test_mesh_nc(self):
-        self.assertTrue(self.mesh.nC == 36)
-        self.assertTrue(np.all(self.mesh.vnC == [6, 2, 3]))
+        self.assertEqual(self.mesh.nC, 36)
+        self.assertEqual(self.mesh.vnC, (6, 2, 3))
 
     def test_mesh_nc_xyz(self):
-        self.assertTrue(np.all(self.mesh.nCx == 6))
-        self.assertTrue(np.all(self.mesh.nCy == 2))
-        self.assertTrue(np.all(self.mesh.nCz == 3))
+        self.assertEqual(self.mesh.nCx, 6)
+        self.assertEqual(self.mesh.nCy, 2)
+        self.assertEqual(self.mesh.nCz, 3)
 
     def test_mesh_nf(self):
-        self.assertTrue(np.all(self.mesh.vnFx == [7, 2, 3]))
-        self.assertTrue(np.all(self.mesh.vnFy == [6, 3, 3]))
-        self.assertTrue(np.all(self.mesh.vnFz == [6, 2, 4]))
+        self.assertEqual(self.mesh.vnFx, (7, 2, 3))
+        self.assertEqual(self.mesh.vnFy, (6, 3, 3))
+        self.assertEqual(self.mesh.vnFz, (6, 2, 4))
 
     def test_mesh_ne(self):
-        self.assertTrue(np.all(self.mesh.vnEx == [6, 3, 4]))
-        self.assertTrue(np.all(self.mesh.vnEy == [7, 2, 4]))
-        self.assertTrue(np.all(self.mesh.vnEz == [7, 3, 3]))
+        self.assertEqual(self.mesh.vnEx, (6, 3, 4))
+        self.assertEqual(self.mesh.vnEy, (7, 2, 4))
+        self.assertEqual(self.mesh.vnEz, (7, 3, 3))
 
     def test_mesh_numbers(self):
-        self.assertTrue(self.mesh.nC == 36)
-        self.assertTrue(np.all(self.mesh.vnF == [42, 54, 48]))
-        self.assertTrue(np.all(self.mesh.vnE == [72, 56, 63]))
-        self.assertTrue(np.all(self.mesh.nF == np.sum([42, 54, 48])))
-        self.assertTrue(np.all(self.mesh.nE == np.sum([72, 56, 63])))
+        self.assertEqual(self.mesh.nC, 36)
+        self.assertEqual(self.mesh.vnF, (42, 54, 48))
+        self.assertEqual(self.mesh.vnE, (72, 56, 63))
+        self.assertEqual(self.mesh.nF, np.sum((42, 54, 48)))
+        self.assertEqual(self.mesh.nE, np.sum((72, 56, 63)))
 
     def test_mesh_r_E_V(self):
         ex = np.ones(self.mesh.nEx)
@@ -75,9 +75,9 @@ class TestBaseMesh(unittest.TestCase):
         g[:, 1] = 2
         g[:, 2] = 3
         Xex, Yex, Zex = self.mesh.r(g, 'Ex', 'Ex', 'M')
-        self.assertTrue(np.all(Xex.shape == self.mesh.vnEx))
-        self.assertTrue(np.all(Yex.shape == self.mesh.vnEx))
-        self.assertTrue(np.all(Zex.shape == self.mesh.vnEx))
+        self.assertEqual(Xex.shape, self.mesh.vnEx)
+        self.assertEqual(Yex.shape, self.mesh.vnEx)
+        self.assertEqual(Zex.shape, self.mesh.vnEx)
         self.assertTrue(np.all(Xex == 1))
         self.assertTrue(np.all(Yex == 2))
         self.assertTrue(np.all(Zex == 3))
@@ -87,9 +87,9 @@ class TestBaseMesh(unittest.TestCase):
         g[:, 1] = 2
         g[:, 2] = 3
         Xfx, Yfx, Zfx = self.mesh.r(g, 'Fx', 'Fx', 'M')
-        self.assertTrue(np.all(Xfx.shape == self.mesh.vnFx))
-        self.assertTrue(np.all(Yfx.shape == self.mesh.vnFx))
-        self.assertTrue(np.all(Zfx.shape == self.mesh.vnFx))
+        self.assertEqual(Xfx.shape, self.mesh.vnFx)
+        self.assertEqual(Yfx.shape, self.mesh.vnFx)
+        self.assertEqual(Zfx.shape, self.mesh.vnFx)
         self.assertTrue(np.all(Xfx == 1))
         self.assertTrue(np.all(Yfx == 2))
         self.assertTrue(np.all(Zfx == 3))
@@ -99,9 +99,9 @@ class TestBaseMesh(unittest.TestCase):
         g[:, 1] = 2
         g[:, 2] = 3
         Xc, Yc, Zc = self.mesh.r(g, 'CC', 'CC', 'M')
-        self.assertTrue(np.all(Xc.shape == self.mesh.vnC))
-        self.assertTrue(np.all(Yc.shape == self.mesh.vnC))
-        self.assertTrue(np.all(Zc.shape == self.mesh.vnC))
+        self.assertEqual(Xc.shape, self.mesh.vnC)
+        self.assertEqual(Yc.shape, self.mesh.vnC)
+        self.assertEqual(Zc.shape, self.mesh.vnC)
         self.assertTrue(np.all(Xc == 1))
         self.assertTrue(np.all(Yc == 2))
         self.assertTrue(np.all(Zc == 3))
@@ -122,34 +122,33 @@ class TestMeshNumbers2D(unittest.TestCase):
         self.assertTrue(self.mesh.dim, 2)
 
     def test_mesh_nc(self):
-        self.assertTrue(np.all(self.mesh.vnC == [6, 2]))
+        self.assertEqual(self.mesh.vnC, (6, 2))
 
     def test_mesh_nc_xyz(self):
-        self.assertTrue(np.all(self.mesh.nCx == 6))
-        self.assertTrue(np.all(self.mesh.nCy == 2))
+        self.assertEqual(self.mesh.nCx, 6)
+        self.assertEqual(self.mesh.nCy, 2)
         self.assertTrue(self.mesh.nCz is None)
 
     def test_mesh_nf(self):
-        self.assertTrue(np.all(self.mesh.vnFx == [7, 2]))
-        self.assertTrue(np.all(self.mesh.vnFy == [6, 3]))
+        self.assertEqual(self.mesh.vnFx, (7, 2))
+        self.assertEqual(self.mesh.vnFy, (6, 3))
         self.assertTrue(self.mesh.vnFz is None)
 
     def test_mesh_ne(self):
-        self.assertTrue(np.all(self.mesh.vnEx == [6, 3]))
-        self.assertTrue(np.all(self.mesh.vnEy == [7, 2]))
+        self.assertEqual(self.mesh.vnEx, (6, 3))
+        self.assertEqual(self.mesh.vnEy, (7, 2))
         self.assertTrue(self.mesh.vnEz is None)
 
     def test_mesh_numbers(self):
         c = self.mesh.nC == 12
-        self.assertTrue(np.all(self.mesh.vnF == [14, 18]))
-        self.assertTrue(np.all(self.mesh.nFx == 14))
-        self.assertTrue(np.all(self.mesh.nFy == 18))
-        self.assertTrue(np.all(self.mesh.nEx == 18))
-        self.assertTrue(np.all(self.mesh.nEy == 14))
-        self.assertTrue(np.all(self.mesh.vnE == [18, 14]))
-        self.assertTrue(np.all(self.mesh.vnE == [18, 14]))
-        self.assertTrue(np.all(self.mesh.nF == np.sum([14, 18])))
-        self.assertTrue(np.all(self.mesh.nE == np.sum([18, 14])))
+        self.assertEqual(self.mesh.vnF, (14, 18))
+        self.assertEqual(self.mesh.nFx, 14)
+        self.assertEqual(self.mesh.nFy, 18)
+        self.assertEqual(self.mesh.nEx, 18)
+        self.assertEqual(self.mesh.nEy, 14)
+        self.assertEqual(self.mesh.vnE, (18, 14))
+        self.assertEqual(self.mesh.nF, sum([14, 18]))
+        self.assertEqual(self.mesh.nE, sum([18, 14]))
 
     def test_mesh_r_E_V(self):
         ex = np.ones(self.mesh.nEx)
@@ -181,8 +180,8 @@ class TestMeshNumbers2D(unittest.TestCase):
         g = np.ones((np.prod(self.mesh.vnEx), 2))
         g[:, 1] = 2
         Xex, Yex = self.mesh.r(g, 'Ex', 'Ex', 'M')
-        self.assertTrue(np.all(Xex.shape == self.mesh.vnEx))
-        self.assertTrue(np.all(Yex.shape == self.mesh.vnEx))
+        self.assertEqual(Xex.shape, self.mesh.vnEx)
+        self.assertEqual(Yex.shape, self.mesh.vnEx)
         self.assertTrue(np.all(Xex == 1))
         self.assertTrue(np.all(Yex == 2))
 
@@ -190,8 +189,8 @@ class TestMeshNumbers2D(unittest.TestCase):
         g = np.ones((np.prod(self.mesh.vnFx), 2))
         g[:, 1] = 2
         Xfx, Yfx = self.mesh.r(g, 'Fx', 'Fx', 'M')
-        self.assertTrue(np.all(Xfx.shape == self.mesh.vnFx))
-        self.assertTrue(np.all(Yfx.shape == self.mesh.vnFx))
+        self.assertEqual(Xfx.shape, self.mesh.vnFx)
+        self.assertEqual(Yfx.shape, self.mesh.vnFx)
         self.assertTrue(np.all(Xfx == 1))
         self.assertTrue(np.all(Yfx == 2))
 
@@ -199,8 +198,8 @@ class TestMeshNumbers2D(unittest.TestCase):
         g = np.ones((self.mesh.nC, 2))
         g[:, 1] = 2
         Xc, Yc = self.mesh.r(g, 'CC', 'CC', 'M')
-        self.assertTrue(np.all(Xc.shape == self.mesh.vnC))
-        self.assertTrue(np.all(Yc.shape == self.mesh.vnC))
+        self.assertEqual(Xc.shape, self.mesh.vnC)
+        self.assertEqual(Yc.shape, self.mesh.vnC)
         self.assertTrue(np.all(Xc == 1))
         self.assertTrue(np.all(Yc == 2))
 
