@@ -152,7 +152,7 @@ def ndgrid(*args, **kwargs):
         raise TypeError("All arguments must be array like")
 
     if vector:
-        return np.dstack([x.reshape(-1, order=order) for x in meshed])
+        return np.column_stack([x.reshape(-1, order=order) for x in meshed])
     return meshed
 
 
