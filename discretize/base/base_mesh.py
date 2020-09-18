@@ -795,7 +795,7 @@ class BaseRectangularMesh(BaseMesh):
                 nn = np.r_[0, nn]
 
                 nx = [0, 0, 0]
-                nx[0] = self.shape_faces_x if xType == 'F' else self.shape_edges_z
+                nx[0] = self.shape_faces_x if xType == 'F' else self.shape_edges_x
                 nx[1] = self.shape_faces_y if xType == 'F' else self.shape_edges_y
                 nx[2] = self.shape_faces_z if xType == 'F' else self.shape_edges_z
 
@@ -818,13 +818,13 @@ class BaseRectangularMesh(BaseMesh):
                 # This will deal with partial components (x, y or z)
                 # lying on edges or faces
                 if 'x' in xType:
-                    nn = self.shape_faces_x if 'F' in xType else self.shape_edges_z
+                    nn = self.shape_faces_x if 'F' in xType else self.shape_edges_x
                 elif 'y' in xType:
                     nn = self.shape_faces_y if 'F' in xType else self.shape_edges_y
                 elif 'z' in xType:
                     nn = self.shape_faces_z if 'F' in xType else self.shape_edges_z
                 if xx.size != np.prod(nn):
-                    raise Exception('Vector is not the right size.')
+                    raise Exception(f'Vector is not the right size. Expected {np.prod(nn)}, got {xx.size}')
                 return outKernal(xx, nn)
 
         # Check if we are dealing with a vector quantity

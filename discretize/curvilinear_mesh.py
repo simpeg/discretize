@@ -250,7 +250,7 @@ class CurvilinearMesh(
 
         if getattr(self, '_vol', None) is None:
             if self.dim == 2:
-                A, B, C, D = indexCube('ABCD', self.vnC+1)
+                A, B, C, D = indexCube('ABCD', self.vnN)
                 normal, area = faceInfo(np.c_[self.gridN, np.zeros(
                                               (self.nN, 1))], A, B, C, D)
                 self._vol = area
@@ -258,8 +258,7 @@ class CurvilinearMesh(
                 # Each polyhedron can be decomposed into 5 tetrahedrons
                 # However, this presents a choice so we may as well divide in
                 # two ways and average.
-                A, B, C, D, E, F, G, H = indexCube('ABCDEFGH', self.vnC +
-                                                         1)
+                A, B, C, D, E, F, G, H = indexCube('ABCDEFGH', self.vnN)
 
                 vol1 = (volTetra(self.gridN, A, B, D, E) +  # cutted edge top
                         volTetra(self.gridN, B, E, F, G) +  # cutted edge top
@@ -286,13 +285,11 @@ class CurvilinearMesh(
             # Compute areas of cell faces
             if(self.dim == 2):
                 xy = self.gridN
-                A, B = indexCube('AB', self.vnC+1, np.array([self.nNx,
-                                       self.nCy]))
+                A, B = indexCube('AB', self.vnN, self.vnFx)
                 edge1 = xy[B, :] - xy[A, :]
                 normal1 = np.c_[edge1[:, 1], -edge1[:, 0]]
                 area1 = _length2D(edge1)
-                A, D = indexCube('AD', self.vnC+1, np.array([self.nCx,
-                                       self.nNy]))
+                A, D = indexCube('AD', self.vnN, self.vnFy)
                 # Note that we are doing A-D to make sure the normal points the
                 # right way.
                 # Think about it. Look at the picture. Normal points towards C
@@ -305,20 +302,17 @@ class CurvilinearMesh(
 
             elif(self.dim == 3):
 
-                A, E, F, B = indexCube('AEFB', self.vnC+1, np.array(
-                                             [self.nNx, self.nCy, self.nCz]))
+                A, E, F, B = indexCube('AEFB', self.vnN, self.vnFx)
                 normal1, area1 = faceInfo(self.gridN, A, E, F, B,
                                                 average=False,
                                                 normalizeNormals=False)
 
-                A, D, H, E = indexCube('ADHE', self.vnC+1, np.array(
-                                             [self.nCx, self.nNy, self.nCz]))
+                A, D, H, E = indexCube('ADHE', self.vnN, self.vnFy)
                 normal2, area2 = faceInfo(self.gridN, A, D, H, E,
                                                 average=False,
                                                 normalizeNormals=False)
 
-                A, B, C, D = indexCube('ABCD', self.vnC+1, np.array(
-                                             [self.nCx, self.nCy, self.nNz]))
+                A, B, C, D = indexCube('ABCD', self.vnN, self.vnFz)
                 normal3, area3 = faceInfo(self.gridN, A, B, C, D,
                                                 average=False,
                                                 normalizeNormals=False)
@@ -367,11 +361,9 @@ class CurvilinearMesh(
         if getattr(self, '_edge', None) is None:
             if(self.dim == 2):
                 xy = self.gridN
-                A, D = indexCube('AD', self.vnC+1, np.array([self.nCx,
-                                                                  self.nNy]))
+                A, D = indexCube('AD', self.vnN, self.vnEx)
                 edge1 = xy[D, :] - xy[A, :]
-                A, B = indexCube('AB', self.vnC+1, np.array([self.nNx,
-                                                                   self.nCy]))
+                A, B = indexCube('AB', self.vnN, self.vnEy)
                 edge2 = xy[B, :] - xy[A, :]
                 self._edge = np.r_[mkvc(_length2D(edge1)),
                                    mkvc(_length2D(edge2))]
@@ -379,17 +371,11 @@ class CurvilinearMesh(
                                                            self._edge]
             elif(self.dim == 3):
                 xyz = self.gridN
-                A, D = indexCube('AD', self.vnC+1, np.array([self.nCx,
-                                                                   self.nNy,
-                                                                   self.nNz]))
+                A, D = indexCube('AD', self.vnN, self.vnEx)
                 edge1 = xyz[D, :] - xyz[A, :]
-                A, B = indexCube('AB', self.vnC+1, np.array([self.nNx,
-                                                                   self.nCy,
-                                                                   self.nNz]))
+                A, B = indexCube('AB', self.vnN, self.vnEy)
                 edge2 = xyz[B, :] - xyz[A, :]
-                A, E = indexCube('AE', self.vnC+1, np.array([self.nNx,
-                                                                   self.nNy,
-                                                                   self.nCz]))
+                A, E = indexCube('AE', self.vnN, self.vnEz)
                 edge3 = xyz[E, :] - xyz[A, :]
                 self._edge = np.r_[mkvc(_length3D(edge1)),
                                    mkvc(_length3D(edge2)),
