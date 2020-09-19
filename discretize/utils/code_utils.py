@@ -104,18 +104,7 @@ def deprecate_module(old_name, new_name, removal_version=None):
     message += " Please update your code accordingly."
     warnings.warn(message, FutureWarning)
 
-
-def deprecate_property(prop, old_name, new_name=None, removal_version=None):
-
-    if isinstance(prop, property):
-        if new_name is None:
-            new_name = prop.fget.__qualname__
-        cls_name = new_name.split(".")[0]
-        old_name = f"{cls_name}.{old_name}"
-    elif isinstance(prop, properties.GettableProperty):
-        if new_name is None:
-            new_name = prop.name
-        prop = prop.get_property()
+def deprecate_property(new_name, old_name, removal_version=None):
 
     message = f"{old_name} has been deprecated, please use {new_name}."
     if removal_version is not None:
@@ -125,32 +114,27 @@ def deprecate_property(prop, old_name, new_name=None, removal_version=None):
 
     def get_dep(self):
         warnings.warn(message, FutureWarning)
-        return prop.fget(self)
+        return getattr(self, new_name)
 
     def set_dep(self, other):
         warnings.warn(message, FutureWarning)
-        prop.fset(self, other)
+        setattr(self, new_name, other)
 
     doc = f"`{old_name}` has been deprecated. See `{new_name}` for documentation"
 
-    return property(get_dep, set_dep, prop.fdel, doc)
+    return property(get_dep, set_dep, None, doc)
 
 
-def deprecate_method(method, old_name, removal_version=None):
-    new_name = method.__qualname__
-    split_name = new_name.split(".")
-    if len(split_name) > 1:
-        old_name = f"{split_name[0]}.{old_name}"
-
+def deprecate_method(new_name, old_name, removal_version=None):
     message = f"{old_name} has been deprecated, please use {new_name}."
     if removal_version is not None:
         message += f" It will be removed in version {removal_version} of discretize."
     else:
         message += " It will be removed in a future version of discretize."
 
-    def new_method(*args, **kwargs):
+    def new_method(self, *args, **kwargs):
         warnings.warn(message, FutureWarning)
-        return method(*args, **kwargs)
+        return getattr(self, new_name)(*args, **kwargs)
 
     doc = f"`{old_name}` has been deprecated. See `{new_name}` for documentation"
     new_method.__doc__ = doc

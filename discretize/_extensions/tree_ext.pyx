@@ -1411,7 +1411,6 @@ cdef class _TreeMesh:
                 raise Exception('Path not found')
         return cell_indexes
 
-
     @property
     def faceDiv(self):
         """

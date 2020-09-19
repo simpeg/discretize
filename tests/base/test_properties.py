@@ -20,10 +20,10 @@ def compare_meshes(test, mesh0, mesh1):
     test.assertEqual(mesh0.nN, mesh1.nN)
 
     if hasattr(mesh0, 'vnC'):
-        test.assertTrue((mesh0.vnC == mesh1.vnC).all())
-        test.assertTrue((mesh0.vnE == mesh1.vnE).all())
-        test.assertTrue((mesh0.vnF == mesh1.vnF).all())
-        test.assertTrue((mesh0.vnN == mesh1.vnN).all())
+        test.assertEqual(mesh0.vnC, mesh1.vnC)
+        test.assertEqual(mesh0.vnE, mesh1.vnE)
+        test.assertEqual(mesh0.vnF, mesh1.vnF)
+        test.assertEqual(mesh0.vnN, mesh1.vnN)
 
     test.assertTrue((mesh0.normals == mesh1.normals).all())
     test.assertTrue((mesh0.tangents == mesh1.tangents).all())

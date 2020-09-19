@@ -620,7 +620,7 @@ class InnerProducts(object):
         return Pxxx
 
     # DEPRECATED
-    getFaceInnerProduct = deprecate_method(get_face_inner_product, "getFaceInnerProduct", removal_version="1.0.0")
-    getEdgeInnerProduct = deprecate_method(get_edge_inner_product, "getEdgeInnerProduct", removal_version="1.0.0")
-    getFaceInnerProductDeriv = deprecate_method(get_face_inner_product_deriv, "getFaceInnerProductDeriv", removal_version="1.0.0")
-    getEdgeInnerProductDeriv = deprecate_method(get_edge_inner_product_deriv, "getEdgeInnerProductDeriv", removal_version="1.0.0")
+    getFaceInnerProduct = deprecate_method("get_face_inner_product", "getFaceInnerProduct", removal_version="1.0.0")
+    getEdgeInnerProduct = deprecate_method("get_edge_inner_product", "getEdgeInnerProduct", removal_version="1.0.0")
+    getFaceInnerProductDeriv = deprecate_method("get_face_inner_product_deriv", "getFaceInnerProductDeriv", removal_version="1.0.0")
+    getEdgeInnerProductDeriv = deprecate_method("get_edge_inner_product_deriv", "getEdgeInnerProductDeriv", removal_version="1.0.0")

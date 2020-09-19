@@ -393,8 +393,8 @@ class CurvilinearMesh(
         return self._tangents
 
     # DEPRECATIONS
-    vol = deprecate_property(cell_volumes, 'vol', removal_version="1.0.0")
-    area = deprecate_property(face_areas, 'area', removal_version="1.0.0")
-    edge = deprecate_property(edge_lengths, 'edge', removal_version="1.0.0")
+    vol = deprecate_property("cell_volumes", 'vol', removal_version="1.0.0")
+    area = deprecate_property("face_areas", 'area', removal_version="1.0.0")
+    edge = deprecate_property("edge_lengths", 'edge', removal_version="1.0.0")
     # tangent already deprecated in BaseMesh
     # normals already deprecated in BaseMesh

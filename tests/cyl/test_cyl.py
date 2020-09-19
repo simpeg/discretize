@@ -16,61 +16,61 @@ class TestCyl2DMesh(unittest.TestCase):
         self.mesh = discretize.CylMesh([hx, 1, hz], np.r_[0., 0., 0.])
 
     def test_dim(self):
-        self.assertTrue(self.mesh.dim == 3)
+        self.assertEqual(self.mesh.dim, 3)
 
     def test_nC(self):
-        self.assertTrue(self.mesh.nC == 6)
-        self.assertTrue(self.mesh.nCx == 3)
-        self.assertTrue(self.mesh.nCy == 1)
-        self.assertTrue(self.mesh.nCz == 2)
-        self.assertTrue(np.all(self.mesh.vnC == [3, 1, 2]))
+        self.assertEqual(self.mesh.nC, 6)
+        self.assertEqual(self.mesh.nCx, 3)
+        self.assertEqual(self.mesh.nCy, 1)
+        self.assertEqual(self.mesh.nCz, 2)
+        self.assertEqual(self.mesh.vnC, (3, 1, 2))
 
     def test_nN(self):
-        self.assertTrue(self.mesh.nN == 0)
-        self.assertTrue(self.mesh.nNx == 3)
-        self.assertTrue(self.mesh.nNy == 0)
-        self.assertTrue(self.mesh.nNz == 3)
-        self.assertTrue(np.all(self.mesh.vnN == [3, 0, 3]))
+        self.assertEqual(self.mesh.nN, 0)
+        self.assertEqual(self.mesh.nNx, 3)
+        self.assertEqual(self.mesh.nNy, 0)
+        self.assertEqual(self.mesh.nNz, 3)
+        self.assertEqual(self.mesh.vnN, (3, 0, 3))
 
     def test_nF(self):
-        self.assertTrue(self.mesh.nFx == 6)
-        self.assertTrue(np.all(self.mesh.vnFx == [3, 1, 2]))
-        self.assertTrue(self.mesh.nFy == 0)
-        self.assertTrue(np.all(self.mesh.vnFy == [3, 0, 2]))
-        self.assertTrue(self.mesh.nFz == 9)
-        self.assertTrue(np.all(self.mesh.vnFz == [3, 1, 3]))
-        self.assertTrue(self.mesh.nF == 15)
-        self.assertTrue(np.all(self.mesh.vnF == [6, 0, 9]))
+        self.assertEqual(self.mesh.nFx, 6)
+        self.assertEqual(self.mesh.vnFx, (3, 1, 2))
+        self.assertEqual(self.mesh.nFy, 0)
+        self.assertEqual(self.mesh.vnFy, (3, 0, 2))
+        self.assertEqual(self.mesh.nFz, 9)
+        self.assertEqual(self.mesh.vnFz, (3, 1, 3))
+        self.assertEqual(self.mesh.nF, 15)
+        self.assertEqual(self.mesh.vnF, (6, 0, 9))
 
     def test_nE(self):
-        self.assertTrue(self.mesh.nEx == 0)
-        self.assertTrue(np.all(self.mesh.vnEx == [3, 0, 3]))
-        self.assertTrue(self.mesh.nEy == 9)
-        self.assertTrue(np.all(self.mesh.vnEy == [3, 1, 3]))
-        self.assertTrue(self.mesh.nEz == 0)
-        self.assertTrue(np.all(self.mesh.vnEz == [3, 0, 2]))
-        self.assertTrue(self.mesh.nE == 9)
-        self.assertTrue(np.all(self.mesh.vnE == [0, 9, 0]))
+        self.assertEqual(self.mesh.nEx, 0)
+        self.assertEqual(self.mesh.vnEx, (3, 0, 3))
+        self.assertEqual(self.mesh.nEy, 9)
+        self.assertEqual(self.mesh.vnEy, (3, 1, 3))
+        self.assertEqual(self.mesh.nEz, 0)
+        self.assertEqual(self.mesh.vnEz, (3, 0, 2))
+        self.assertEqual(self.mesh.nE, 9)
+        self.assertEqual(self.mesh.vnE, (0, 9, 0))
 
     def test_vectorsCC(self):
         v = np.r_[0.5, 1.5, 2.25]
-        self.assertTrue(np.linalg.norm((v-self.mesh.vectorCCx)) == 0)
+        self.assertEqual(np.linalg.norm((v-self.mesh.vectorCCx)), 0)
         v = np.r_[0]
-        self.assertTrue(np.linalg.norm((v-self.mesh.vectorCCy)) == 0)
+        self.assertEqual(np.linalg.norm((v-self.mesh.vectorCCy)), 0)
         v = np.r_[1, 2.5]
-        self.assertTrue(np.linalg.norm((v-self.mesh.vectorCCz)) == 0)
+        self.assertEqual(np.linalg.norm((v-self.mesh.vectorCCz)), 0)
 
     def test_vectorsN(self):
         v = np.r_[1, 2, 2.5]
-        self.assertTrue(np.linalg.norm((v-self.mesh.vectorNx)) == 0)
+        self.assertEqual(np.linalg.norm((v-self.mesh.vectorNx)), 0)
         v = np.r_[0]
-        self.assertTrue(np.linalg.norm((v-self.mesh.vectorNy)) == 0)
+        self.assertEqual(np.linalg.norm((v-self.mesh.vectorNy)), 0)
         v = np.r_[0, 2, 3.]
-        self.assertTrue(np.linalg.norm((v-self.mesh.vectorNz)) == 0)
+        self.assertEqual(np.linalg.norm((v-self.mesh.vectorNz)), 0)
 
     def test_edge(self):
         edge = np.r_[1, 2, 2.5, 1, 2, 2.5, 1, 2, 2.5] * 2 * np.pi
-        self.assertTrue(np.linalg.norm((edge-self.mesh.edge)) == 0)
+        self.assertEqual(np.linalg.norm((edge-self.mesh.edge)), 0)
 
     def test_area(self):
         r = np.r_[0, 1, 2, 2.5]
@@ -79,31 +79,31 @@ class TestCyl2DMesh(unittest.TestCase):
         a = (r[1:]**2 - r[:-1]**2)*np.pi
         areaZ = np.r_[a, a, a]
         area = np.r_[areaX, areaZ]
-        self.assertTrue(np.linalg.norm((area-self.mesh.area)) == 0)
+        self.assertEqual(np.linalg.norm((area-self.mesh.area)), 0)
 
     def test_vol(self):
         r = np.r_[0, 1, 2, 2.5]
         a = (r[1:]**2 - r[:-1]**2)*np.pi
         vol = np.r_[2*a, a]
-        self.assertTrue(np.linalg.norm((vol-self.mesh.vol)) == 0)
+        self.assertEqual(np.linalg.norm((vol-self.mesh.vol)), 0)
 
     def test_vol_simple(self):
         mesh = discretize.CylMesh([1., 1., 1.])
-        self.assertTrue(mesh.vol == np.pi)
+        self.assertEqual(mesh.vol, np.pi)
 
         mesh = discretize.CylMesh([2., 1., 1.])
-        self.assertTrue(np.all(mesh.vol == np.pi*np.r_[0.5**2, 1 - 0.5**2]))
+        self.assertTrue(np.all(mesh.vol, np.pi*np.r_[0.5**2, 1 - 0.5**2]))
 
     def test_gridSizes(self):
-        self.assertTrue(self.mesh.gridCC.shape == (self.mesh.nC, 3))
-        self.assertTrue(self.mesh._gridNFull.shape == (9, 3))
+        self.assertEqual(self.mesh.gridCC.shape, (self.mesh.nC, 3))
+        self.assertEqual(self.mesh._gridNFull.shape, (9, 3))
 
-        self.assertTrue(self.mesh.gridFx.shape == (self.mesh.nFx, 3))
+        self.assertEqual(self.mesh.gridFx.shape, (self.mesh.nFx, 3))
         self.assertTrue(self.mesh.gridFy is None)
-        self.assertTrue(self.mesh.gridFz.shape == (self.mesh.nFz, 3))
+        self.assertEqual(self.mesh.gridFz.shape, (self.mesh.nFz, 3))
 
         self.assertTrue(self.mesh.gridEx is None)
-        self.assertTrue(self.mesh.gridEy.shape == (self.mesh.nEy, 3))
+        self.assertEqual(self.mesh.gridEy.shape, (self.mesh.nEy, 3))
         self.assertTrue(self.mesh.gridEz is None)
 
     def test_gridCC(self):
@@ -111,35 +111,35 @@ class TestCyl2DMesh(unittest.TestCase):
         y = np.zeros(6)
         z = np.r_[1, 1, 1, 2.5, 2.5, 2.5]
         G = np.c_[x, y, z]
-        self.assertTrue(np.linalg.norm((G-self.mesh.gridCC).ravel()) == 0)
+        self.assertEqual(np.linalg.norm((G-self.mesh.gridCC).ravel()), 0)
 
     def test_gridN(self):
         x = np.r_[ 1, 2, 2.5, 1, 2, 2.5, 1, 2, 2.5]
         y = np.zeros(9)
         z = np.r_[0, 0, 0, 2, 2, 2, 3, 3, 3]
         G = np.c_[x, y, z]
-        self.assertTrue(np.linalg.norm((G-self.mesh.gridN).ravel()) == 0)
+        self.assertEqual(np.linalg.norm((G-self.mesh.gridN).ravel()), 0)
 
     def test_gridFx(self):
         x = np.r_[1, 2, 2.5, 1, 2, 2.5]
         y = np.zeros(6)
         z = np.r_[1, 1, 1, 2.5, 2.5, 2.5]
         G = np.c_[x, y, z]
-        self.assertTrue(np.linalg.norm((G-self.mesh.gridFx).ravel()) == 0)
+        self.assertEqual(np.linalg.norm((G-self.mesh.gridFx).ravel()), 0)
 
     def test_gridFz(self):
         x = np.r_[0.5, 1.5, 2.25, 0.5, 1.5, 2.25, 0.5, 1.5, 2.25]
         y = np.zeros(9)
         z = np.r_[0, 0, 0, 2, 2, 2, 3, 3, 3.]
         G = np.c_[x, y, z]
-        self.assertTrue(np.linalg.norm((G-self.mesh.gridFz).ravel()) == 0)
+        self.assertEqual(np.linalg.norm((G-self.mesh.gridFz).ravel()), 0)
 
     def test_gridEy(self):
         x = np.r_[1, 2, 2.5, 1, 2, 2.5, 1, 2, 2.5]
         y = np.zeros(9)
         z = np.r_[0, 0, 0, 2, 2, 2, 3, 3, 3.]
         G = np.c_[x, y, z]
-        self.assertTrue(np.linalg.norm((G-self.mesh.gridEy).ravel()) == 0)
+        self.assertEqual(np.linalg.norm((G-self.mesh.gridEy).ravel()), 0)
 
     def test_lightOperators(self):
         self.assertTrue(self.mesh.nodalGrad is None)
@@ -602,56 +602,56 @@ class TestCyl3DMesh(unittest.TestCase):
         self.mesh = discretize.CylMesh([hx, hy, hz])
 
     def test_dim(self):
-        self.assertTrue(self.mesh.dim == 3)
+        self.assertEqual(self.mesh.dim, 3)
 
     def test_nC(self):
-        self.assertTrue(self.mesh.nCx == 3)
-        self.assertTrue(self.mesh.nCy == 2)
-        self.assertTrue(self.mesh.nCz == 2)
-        self.assertTrue(np.all(self.mesh.vnC == [3, 2, 2]))
+        self.assertEqual(self.mesh.nCx, 3)
+        self.assertEqual(self.mesh.nCy, 2)
+        self.assertEqual(self.mesh.nCz, 2)
+        self.assertEqual(self.mesh.vnC, (3, 2, 2))
 
     def test_nN(self):
-        self.assertTrue(self.mesh.nN == 21)
-        self.assertTrue(self.mesh.nNx == 4)
-        self.assertTrue(self.mesh.nNy == 2)
-        self.assertTrue(self.mesh.nNz == 3)
-        self.assertTrue(np.all(self.mesh.vnN == [4, 2, 3]))
+        self.assertEqual(self.mesh.nN, 21)
+        self.assertEqual(self.mesh.nNx, 4)
+        self.assertEqual(self.mesh.nNy, 2)
+        self.assertEqual(self.mesh.nNz, 3)
+        self.assertEqual(self.mesh.vnN, (4, 2, 3))
 
     def test_nF(self):
-        self.assertTrue(self.mesh.nFx == 12)
-        self.assertTrue(np.all(self.mesh.vnFx == [3, 2, 2]))
-        self.assertTrue(self.mesh.nFy == 12)
-        self.assertTrue(np.all(self.mesh.vnFy == [3, 2, 2]))
-        self.assertTrue(self.mesh.nFz == 18)
-        self.assertTrue(np.all(self.mesh.vnFz == [3, 2, 3]))
-        self.assertTrue(self.mesh.nF == 42)
-        self.assertTrue(np.all(self.mesh.vnF == [12, 12, 18]))
+        self.assertEqual(self.mesh.nFx, 12)
+        self.assertEqual(self.mesh.vnFx, (3, 2, 2))
+        self.assertEqual(self.mesh.nFy, 12)
+        self.assertEqual(self.mesh.vnFy, (3, 2, 2))
+        self.assertEqual(self.mesh.nFz, 18)
+        self.assertEqual(self.mesh.vnFz, (3, 2, 3))
+        self.assertEqual(self.mesh.nF, 42)
+        self.assertEqual(self.mesh.vnF, (12, 12, 18))
 
     def test_nE(self):
-        self.assertTrue(self.mesh.nEx == 18)
-        self.assertTrue(np.all(self.mesh.vnEx == [3, 2, 3]))
-        self.assertTrue(self.mesh.nEy == 18)
-        self.assertTrue(np.all(self.mesh.vnEy == [3, 2, 3]))
-        self.assertTrue(self.mesh.nEz == 12 + 2)
-        self.assertTrue(np.all(self.mesh.vnEz == [4, 2, 2]))
-        self.assertTrue(self.mesh.nE == 50)
-        self.assertTrue(np.all(self.mesh.vnE == [18, 18, 14]))
+        self.assertEqual(self.mesh.nEx, 18)
+        self.assertEqual(self.mesh.vnEx, (3, 2, 3))
+        self.assertEqual(self.mesh.nEy, 18)
+        self.assertEqual(self.mesh.vnEy, (3, 2, 3))
+        self.assertEqual(self.mesh.nEz, 12 + 2)
+        self.assertEqual(self.mesh.vnEz, (4, 2, 2))
+        self.assertEqual(self.mesh.nE, 50)
+        self.assertEqual(self.mesh.vnE, (18, 18, 14))
 
     def test_vectorsCC(self):
         v = np.r_[0.5, 1.5, 2.25]
-        self.assertTrue(np.linalg.norm((v-self.mesh.vectorCCx)) == 0)
+        self.assertEqual(np.linalg.norm((v-self.mesh.vectorCCx)), 0)
         v = np.r_[0, np.pi] + np.pi/2
-        self.assertTrue(np.linalg.norm((v-self.mesh.vectorCCy)) == 0)
+        self.assertEqual(np.linalg.norm((v-self.mesh.vectorCCy)), 0)
         v = np.r_[1, 2.5]
-        self.assertTrue(np.linalg.norm((v-self.mesh.vectorCCz)) == 0)
+        self.assertEqual(np.linalg.norm((v-self.mesh.vectorCCz)), 0)
 
     def test_vectorsN(self):
         v = np.r_[0, 1, 2, 2.5]
-        self.assertTrue(np.linalg.norm((v-self.mesh.vectorNx)) == 0)
+        self.assertEqual(np.linalg.norm((v-self.mesh.vectorNx)), 0)
         v = np.r_[0., np.pi]
-        self.assertTrue(np.linalg.norm((v-self.mesh.vectorNy)) == 0)
+        self.assertEqual(np.linalg.norm((v-self.mesh.vectorNy)), 0)
         v = np.r_[0, 2, 3]
-        self.assertTrue(np.linalg.norm((v-self.mesh.vectorNz)) == 0)
+        self.assertEqual(np.linalg.norm((v-self.mesh.vectorNz)), 0)
 
 
 if __name__ == '__main__':

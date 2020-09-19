@@ -72,16 +72,18 @@ class CylindricalMesh(
         super().__init__(h=h, x0=x0, **kwargs)
         self.reference_system = 'cylindrical'
 
-        if not np.abs(self.hy.sum() - 2*np.pi) < 1e-10:
+        if not np.abs(self.h[1].sum() - 2*np.pi) < 1e-10:
             raise AssertionError("The 2nd dimension must sum to 2*pi")
 
         if self.dim == 2:
             print('Warning, a disk mesh has not been tested thoroughly.')
 
-        if 'cartesianOrigin' in kwargs.keys():
-            self.cartesianOrigin = kwargs.pop('cartesianOrigin')
+        if 'cartesian_origin' in kwargs.keys():
+            self.cartesian_origin = kwargs.pop('cartesian_origin')
+        elif 'cartesianOrigin' in kwargs.keys():
+            self.cartesian_origin = kwargs.pop('cartesianOrigin')
         else:
-            self.cartesianOrigin = np.zeros(self.dim)
+            self.cartesian_origin = np.zeros(self.dim)
 
     @properties.validator('cartesian_origin')
     def check_cartesian_origin_shape(self, change):
@@ -89,7 +91,7 @@ class CylindricalMesh(
         if len(change['value']) != self.dim:
             raise Exception(
                 "Dimension mismatch. The mesh dimension is {}, and the "
-                "cartesianOrigin provided has length {}".format(
+                "cartesian_origin provided has length {}".format(
                     self.dim, len(change['value'])
                 )
             )
@@ -104,7 +106,7 @@ class CylindricalMesh(
         bool
             True if the mesh is cylindrically symmetric, False otherwise
         """
-        return self.shape_cells[0] == 1
+        return self.shape_cells[1] == 1
 
     @property
     def shape_nodes(self):
@@ -121,7 +123,6 @@ class CylindricalMesh(
             return (vnC[0], 1, vnC[2]+1)
         else:
             return tuple(x + 1 for x in vnC)
-        return node_shape
 
     @property
     def n_nodes(self):
@@ -133,14 +134,15 @@ class CylindricalMesh(
         """
         if self.is_symmetric:
             return 0
-        return (self.nNx - 1) * self.nNy * self.nNz + self.nNz
+        nx, ny, nz = self.shape_nodes
+        return (nx - 1) * ny * nz + nz
 
     @property
     def _vntFx(self):
         """
         vector number of total Fx (prior to deflating)
         """
-        return self._vntN[:1] + self.cell_shape[1:]
+        return self._vntN[:1] + self.shape_cells[1:]
 
     @property
     def _ntFx(self):
@@ -154,7 +156,7 @@ class CylindricalMesh(
         """
         Number of hanging Fx
         """
-        return int(np.prod(self.cell_shape[1:]))
+        return int(np.prod(self.shape_cells[1:]))
 
     @property
     def shape_faces_x(self):
@@ -164,15 +166,15 @@ class CylindricalMesh(
         numpy.ndarray
             Number of x-faces in each direction, (dim, )
         """
-        return self.cell_shape
+        return self.shape_cells
 
     @property
     def _vntFy(self):
         """
         vector number of total Fy (prior to deflating)
         """
-        vnC = self.shape_cell
-        return (vnC[0], self._vntN[1], vnC[2])
+        vnC = self.shape_cells
+        return (vnC[0], self._vntN[1]) + vnC[2:]
 
     @property
     def _ntFy(self):
@@ -248,17 +250,14 @@ class CylindricalMesh(
         tuple of ints
             vnEy or None if dim < 2, (dim, )
         """
-        return tuple(x + y for x, y in zip(self.cell_shape, [0, 0, 1]))
-        # if self.is_symmetric:
-        #     return np.r_[self.nNx, self.nCy, self.nNz]
-        # return np.r_[self.nNx - 1, self.nCy, self.nNz]
+        return tuple(x + y for x, y in zip(self.shape_cells, [0, 0, 1]))
 
     @property
     def _vntEz(self):
         """
         vector number of total Ez (prior to deflating)
         """
-        return self._vntN[:-1] + self.cell_shape[-1:]
+        return self._vntN[:-1] + self.shape_cells[-1:]
 
     @property
     def _ntEz(self):
@@ -275,7 +274,7 @@ class CylindricalMesh(
         tuple of ints
             Number of z-edges in each direction or None if nCy > 1, (dim, )
         """
-        return self.shape_nodes[:-1] + self.cell_shape[-1:]
+        return self.shape_nodes[:-1] + self.shape_cells[-1:]
 
     @property
     def n_edges_z(self):
@@ -286,10 +285,10 @@ class CylindricalMesh(
             Number of z-edges
         """
         z_shape = self.shape_edges_z
-        cell_shape = self.cell_shape
+        cell_shape = self.shape_cells
         if self.is_symmetric:
             return int(np.prod(z_shape))
-        return int(np.prod([cell_shape[0], z_shape[1], cell_shape[2]])) + cell_shape[2]
+        return int(np.prod([z_shape[0]-1, z_shape[1], cell_shape[2]])) + cell_shape[2]
 
     @property
     def grid_cell_centers_x(self):
@@ -1642,12 +1641,12 @@ class CylindricalMesh(
         # This is unit circle stuff, 0 to 2*pi, starting at x-axis, rotating
         # counter clockwise in an x-y slice
         theta = - np.arctan2(
-            grid[:, 0] - self.cartesianOrigin[0], grid[:, 1] -
-            self.cartesianOrigin[1]
+            grid[:, 0] - self.cartesian_origin[0], grid[:, 1] -
+            self.cartesian_origin[1]
         ) + np.pi/2
         theta[theta < 0] += np.pi*2.0
-        r = ((grid[:, 0] - self.cartesianOrigin[0])**2 + (grid[:, 1] -
-             self.cartesianOrigin[1])**2)**0.5
+        r = ((grid[:, 0] - self.cartesian_origin[0])**2 + (grid[:, 1] -
+             self.cartesian_origin[1])**2)**0.5
 
         if locType in ['CC', 'N', 'Fz', 'Ez']:
             G, proj = np.c_[r, theta, grid[:, 2]], np.ones(r.size)
@@ -1683,17 +1682,18 @@ class CylindricalMesh(
         return Proj * Pc2r
 
     # DEPRECATIONS
-    vol = deprecate_property(cell_volumes, 'vol', removal_version="1.0.0")
-    area = deprecate_property(face_areas, 'area', removal_version="1.0.0")
-    areaFx = deprecate_property(face_areas, 'areaFx', removal_version="1.0.0")
-    areaFy = deprecate_property(face_areas, 'areaFy', removal_version="1.0.0")
-    areaFz = deprecate_property(face_areas, 'areaFz', removal_version="1.0.0")
-    edgeEx = deprecate_property(edge_lengths, 'edgeEx', removal_version="1.0.0")
-    edgeEy = deprecate_property(edge_lengths, 'edgeEy', removal_version="1.0.0")
-    edgeEz = deprecate_property(edge_lengths, 'edgeEz', removal_version="1.0.0")
-    edge = deprecate_property(edge_lengths, 'edge', removal_version="1.0.0")
-    isSymmetric = deprecate_property(is_symmetric, 'isSymmetric', removal_version="1.0.0")
-    getInterpolationMatCartMesh = deprecate_method(get_interpolation_matrix_cartesian_mesh, "getInterpolationMatCartMesh", removal_version="1.0.0")
+    vol = deprecate_property("cell_volumes", 'vol', removal_version="1.0.0")
+    area = deprecate_property("face_areas", 'area', removal_version="1.0.0")
+    areaFx = deprecate_property("face_x_areas", 'areaFx', removal_version="1.0.0")
+    areaFy = deprecate_property("face_y_areas", 'areaFy', removal_version="1.0.0")
+    areaFz = deprecate_property("face_z_areas", 'areaFz', removal_version="1.0.0")
+    edgeEx = deprecate_property("edge_x_lengths", 'edgeEx', removal_version="1.0.0")
+    edgeEy = deprecate_property("edge_y_lengths", 'edgeEy', removal_version="1.0.0")
+    edgeEz = deprecate_property("edge_z_lengths", 'edgeEz', removal_version="1.0.0")
+    edge = deprecate_property("edge_lengths", 'edge', removal_version="1.0.0")
+    isSymmetric = deprecate_property("is_symmetric", 'isSymmetric', removal_version="1.0.0")
+    cartesianOrigin = deprecate_property("cartesian_origin", 'cartesianOrigin', removal_version="1.0.0")
+    getInterpolationMatCartMesh = deprecate_method("get_interpolation_matrix_cartesian_mesh", "getInterpolationMatCartMesh", removal_version="1.0.0")
 
 @deprecate_class(removal_version="1.0.0")
 class CylMesh(CylindricalMesh):

@@ -152,6 +152,10 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         int
             number of cells in the mesh
 
+        Notes
+        -----
+        Also accessible as `nC`.
+
         Examples
         --------
         >>> import discretize
@@ -172,6 +176,10 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         int
             number of nodes in the mesh
 
+        Notes
+        -----
+        Also accessible as `nN`.
+
         Examples
         --------
         >>> import discretize
@@ -191,6 +199,10 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         -------
         int
 
+        Notes
+        -----
+        Also accessible as `nEx`.
+
         """
         return int((self._n + np.r_[0, 1, 1][:self.dim]).prod())
 
@@ -201,6 +213,10 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         Returns
         -------
         int
+
+        Notes
+        -----
+        Also accessible as `nEy`.
 
         """
         if self.dim < 2:
@@ -214,6 +230,10 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         Returns
         -------
         int
+
+        Notes
+        -----
+        Also accessible as `nEz`.
 
         """
         if self.dim < 3:
@@ -248,6 +268,10 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         int
             sum([n_edges_x, n_edges_y, n_edges_z])
 
+        Notes
+        -----
+        Also accessible as `nE`.
+
         """
         n = self.n_edges_x
         if self.dim > 1:
@@ -263,6 +287,10 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         Returns
         -------
         int
+
+        Notes
+        -----
+        Also accessible as `nFx`.
         """
         return int((self._n + np.r_[1, 0, 0][:self.dim]).prod())
 
@@ -273,6 +301,10 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         Returns
         -------
         int
+
+        Notes
+        -----
+        Also accessible as `nFy`.
         """
         if self.dim < 2:
             return None
@@ -285,6 +317,10 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         Returns
         -------
         int
+
+        Notes
+        -----
+        Also accessible as `nFz`.
         """
         if self.dim < 3:
             return None
@@ -317,6 +353,10 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         -------
         int
             sum([n_faces_x, n_faces_y, n_faces_z])
+
+        Notes
+        -----
+        Also accessible as `nF`.
 
         """
         n = self.n_faces_x
@@ -554,10 +594,10 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
     # nF = shorthand_property(n_faces, 'nF')
 
     # DEPRECATED
-    normals = deprecate_property(face_normals, 'normals', removal_version='1.0.0')
-    tangents = deprecate_property(edge_tangents, 'tangents', removal_version='1.0.0')
-    projectEdgeVector = deprecate_method(project_edge_vector, 'projectEdgeVector', removal_version='1.0.0')
-    projectFaceVector = deprecate_method(project_face_vector, 'projectFaceVector', removal_version='1.0.0')
+    normals = deprecate_property("face_normals", 'normals', removal_version='1.0.0')
+    tangents = deprecate_property("edge_tangents", 'tangents', removal_version='1.0.0')
+    projectEdgeVector = deprecate_method("project_edge_vector", 'projectEdgeVector', removal_version='1.0.0')
+    projectFaceVector = deprecate_method("project_face_vector", 'projectFaceVector', removal_version='1.0.0')
 
 
 
@@ -589,6 +629,10 @@ class BaseRectangularMesh(BaseMesh):
         Returns
         -------
         tuple of ints
+
+        Notes
+        -----
+        Also accessible as `vnC`.
         """
         return tuple(self._n)
 
@@ -599,6 +643,10 @@ class BaseRectangularMesh(BaseMesh):
         Returns
         -------
         tuple of int
+
+        Notes
+        -----
+        Also accessible as `vnN`.
         """
         return tuple(x + 1 for x in self.shape_cells)
 
@@ -610,8 +658,12 @@ class BaseRectangularMesh(BaseMesh):
         -------
         tuple of int
             (nx_cells, ny_nodes, nz_nodes)
+
+        Notes
+        -----
+        Also accessible as `vnEx`.
         """
-        return tuple(x + y for x, y in zip(self.shape_cells, [0, 1, 1]))
+        return self.shape_cells[:1] + self.shape_nodes[1:]
 
     @property
     def shape_edges_y(self):
@@ -621,10 +673,16 @@ class BaseRectangularMesh(BaseMesh):
         -------
         tuple of int or None
             (nx_nodes, ny_cells, nz_nodes), None if dim < 2
+
+        Notes
+        -----
+        Also accessible as `vnEy`.
         """
         if self.dim < 2:
             return None
-        return tuple(x + y for x, y in zip(self.shape_cells, [1, 0, 1]))
+        sc = self.shape_cells
+        sn = self.shape_nodes
+        return (sn[0], sc[1]) + sn[2:]  # conditionally added if dim == 3!
 
     @property
     def shape_edges_z(self):
@@ -634,10 +692,14 @@ class BaseRectangularMesh(BaseMesh):
         -------
         tuple of int or None
             (nx_nodes, ny_nodes, nz_cells), None if dim < 3
+
+        Notes
+        -----
+        Also accessible as `vnEz`.
         """
         if self.dim < 3:
             return None
-        return tuple(x + y for x, y in zip(self.shape_cells, [1, 1, 0]))
+        return self.shape_nodes[:2] + self.shape_cells[2:]
 
     @property
     def shape_faces_x(self):
@@ -647,8 +709,12 @@ class BaseRectangularMesh(BaseMesh):
         -------
         tuple of int
             (nx_nodes, ny_cells, nz_cells)
+
+        Notes
+        -----
+        Also accessible as `vnFx`.
         """
-        return tuple(x + y for x, y in zip(self.shape_cells, [1, 0, 0]))
+        return self.shape_nodes[:1] + self.shape_cells[1:]
 
     @property
     def shape_faces_y(self):
@@ -658,10 +724,16 @@ class BaseRectangularMesh(BaseMesh):
         -------
         tuple of int or None
             (nx_cells, ny_nodes, nz_cells), None if dim < 2
+
+        Notes
+        -----
+        Also accessible as `vnFy`.
         """
         if self.dim < 2:
             return None
-        return tuple(x + y for x, y in zip(self.shape_cells, [0, 1, 0]))
+        sc = self.shape_cells
+        sn = self.shape_nodes
+        return (sc[0], sn[1]) + sc[2:]
 
     @property
     def shape_faces_z(self):
@@ -671,10 +743,59 @@ class BaseRectangularMesh(BaseMesh):
         -------
         tuple of int or None
             (nx_cells, ny_cells, nz_nodes), None if dim < 3
+
+        Notes
+        -----
+        Also accessible as `vnFz`.
         """
         if self.dim < 3:
             return None
-        return tuple(x + y for x, y in zip(self.shape_cells, [0, 0, 1]))
+        return self.shape_cells[:2] + self.shape_nodes[2:]
+
+    ##################################
+    # Redo the numbering so they are dependent of the shape tuples
+    # these should all inherit the parent's docstrings
+    ##################################
+
+    @property
+    def n_cells(self):
+        return int(np.prod(self.shape_cells))
+
+    @property
+    def n_nodes(self):
+        return int(np.prod(self.shape_nodes))
+
+    @property
+    def n_edges_x(self):
+        return int(np.prod(self.shape_edges_x))
+
+    @property
+    def n_edges_y(self):
+        if self.dim < 2:
+            return
+        return int(np.prod(self.shape_edges_y))
+
+    @property
+    def n_edges_z(self):
+        if self.dim < 3:
+            return
+        return int(np.prod(self.shape_edges_z))
+
+    @property
+    def n_faces_x(self):
+        return int(np.prod(self.shape_faces_x))
+
+    @property
+    def n_faces_y(self):
+        if self.dim < 2:
+            return
+        return int(np.prod(self.shape_faces_y))
+
+    @property
+    def n_faces_z(self):
+        if self.dim < 3:
+            return
+        return int(np.prod(self.shape_faces_z))
 
     def reshape(self, x, xType='CC', outType='CC', format='V'):
         """A quick reshape command that will do the best it
@@ -860,7 +981,7 @@ class BaseRectangularMesh(BaseMesh):
     # vnFz = shorthand_property(shape_faces_z, 'vnFz')
 
     # DEPRECATED
-    r = deprecate_method(reshape, 'r', removal_version="1.0.0")
+    r = deprecate_method("reshape", 'r', removal_version="1.0.0")
 
     @property
     def nCx(self):
