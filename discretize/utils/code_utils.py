@@ -104,19 +104,22 @@ def deprecate_module(old_name, new_name, removal_version=None):
     message += " Please update your code accordingly."
     warnings.warn(message, FutureWarning)
 
-def deprecate_property(new_name, old_name, removal_version=None):
 
-    message = f"{old_name} has been deprecated, please use {new_name}."
+def deprecate_property(new_name, old_name, removal_version=None):
     if removal_version is not None:
-        message += f" It will be removed in version {removal_version} of discretize."
+        tag = f" It will be removed in version {removal_version} of discretize."
     else:
-        message += " It will be removed in a future version of discretize."
+        tag = " It will be removed in a future version of discretize."
 
     def get_dep(self):
+        class_name = type(self).__name__
+        message = f"{class_name}.{old_name} has been deprecated, please use {class_name}.{new_name}." + tag
         warnings.warn(message, FutureWarning)
         return getattr(self, new_name)
 
     def set_dep(self, other):
+        class_name = type(self).__name__
+        message = f"{class_name}.{old_name} has been deprecated, please use {class_name}.{new_name}." + tag
         warnings.warn(message, FutureWarning)
         setattr(self, new_name, other)
 
@@ -126,14 +129,17 @@ def deprecate_property(new_name, old_name, removal_version=None):
 
 
 def deprecate_method(new_name, old_name, removal_version=None):
-    message = f"{old_name} has been deprecated, please use {new_name}."
     if removal_version is not None:
-        message += f" It will be removed in version {removal_version} of discretize."
+        tag = f" It will be removed in version {removal_version} of discretize."
     else:
-        message += " It will be removed in a future version of discretize."
+        tag = " It will be removed in a future version of discretize."
 
     def new_method(self, *args, **kwargs):
-        warnings.warn(message, FutureWarning)
+        class_name = type(self).__name__
+        warnings.warn(
+            f"{class_name}.{old_name} has been deprecated, please use {class_name}.{new_name}." + tag,
+            FutureWarning
+        )
         return getattr(self, new_name)(*args, **kwargs)
 
     doc = f"`{old_name}` has been deprecated. See `{new_name}` for documentation"
