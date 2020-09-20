@@ -33,7 +33,7 @@ class TestCyl3DGeometries(unittest.TestCase):
         )
         self.assertTrue(
             np.all(
-                area[self.mesh.vnF[:2].sum():] ==
+                area[sum(self.mesh.vnF[:2]):] ==
                 np.pi * self.mesh.hx**2 / self.mesh.nCy
             )
         )
@@ -46,19 +46,19 @@ class TestCyl3DGeometries(unittest.TestCase):
         )
         self.assertTrue(
             np.all(
-                self.mesh.edge[self.mesh.vnE[0]:self.mesh.vnE[:2].sum()] ==
+                self.mesh.edge[self.mesh.vnE[0]:sum(self.mesh.vnE[:2])] ==
                 np.kron(np.ones(self.mesh.nCz+1), self.mesh.hx*self.mesh.hy)
             )
         )
         self.assertTrue(
             np.all(
-                self.mesh.edge[self.mesh.vnE[0]:self.mesh.vnE[:2].sum()] ==
+                self.mesh.edge[self.mesh.vnE[0]:sum(self.mesh.vnE[:2])] ==
                 np.kron(np.ones(self.mesh.nCz+1), self.mesh.hx*self.mesh.hy)
             )
         )
         self.assertTrue(
             np.all(
-                self.mesh.edge[self.mesh.vnE[:2].sum():] ==
+                self.mesh.edge[sum(self.mesh.vnE[:2]):] ==
                 np.kron(self.mesh.hz, np.ones(self.mesh.nCy+1))
             )
         )
@@ -86,40 +86,40 @@ class Cyl3DGrid(unittest.TestCase):
         mesh = self.mesh
 
         # cell centers
-        self.assertTrue(mesh.nC == 8)
-        self.assertTrue(mesh.nCx == 2)
-        self.assertTrue(mesh.nCy == 4)
-        self.assertTrue(mesh.nCz == 1)
-        self.assertTrue((mesh.vnC == [2, 4, 1]).all())
+        self.assertEqual(mesh.nC, 8)
+        self.assertEqual(mesh.nCx, 2)
+        self.assertEqual(mesh.nCy, 4)
+        self.assertEqual(mesh.nCz, 1)
+        self.assertEqual(mesh.vnC, (2, 4, 1))
 
         # faces
-        self.assertTrue(mesh.nFx == 8)
-        self.assertTrue(mesh.nFy == 8)
-        self.assertTrue(mesh.nFz == 16)
-        self.assertTrue(mesh.nF == 32)
-        self.assertTrue((mesh.vnFx == [2, 4, 1]).all())
-        self.assertTrue((mesh.vnFy == [2, 4, 1]).all())
-        self.assertTrue((mesh.vnFz == [2, 4, 2]).all())
-        self.assertTrue((mesh.vnF == [8, 8, 16]).all())
+        self.assertEqual(mesh.nFx, 8)
+        self.assertEqual(mesh.nFy, 8)
+        self.assertEqual(mesh.nFz, 16)
+        self.assertEqual(mesh.nF, 32)
+        self.assertEqual(mesh.vnFx, (2, 4, 1))
+        self.assertEqual(mesh.vnFy, (2, 4, 1))
+        self.assertEqual(mesh.vnFz, (2, 4, 2))
+        self.assertEqual(mesh.vnF, (8, 8, 16))
 
         # edges
-        self.assertTrue(mesh.nEx == 16)
-        self.assertTrue(mesh.nEy == 16)
-        self.assertTrue(mesh.nEz == 9)  # there is an edge at the center
-        self.assertTrue(mesh.nE == 41)
-        self.assertTrue((mesh.vnEx == [2, 4, 2]).all())
-        self.assertTrue((mesh.vnEy == [2, 4, 2]).all())
-        self.assertTrue((mesh.vnEz == [3, 4, 1]).all())
-        self.assertTrue((mesh.vnE == [16, 16, 9]).all())
-        self.assertFalse(mesh.vnEz.prod() == mesh.nEz)  # periodic boundary condition
+        self.assertEqual(mesh.nEx, 16)
+        self.assertEqual(mesh.nEy, 16)
+        self.assertEqual(mesh.nEz, 9)  # there is an edge at the center
+        self.assertEqual(mesh.nE, 41)
+        self.assertEqual(mesh.vnEx, (2, 4, 2))
+        self.assertEqual(mesh.vnEy, (2, 4, 2))
+        self.assertEqual(mesh.vnEz, (3, 4, 1))
+        self.assertEqual(mesh.vnE, (16, 16, 9))
+        self.assertNotEqual(np.prod(mesh.vnEz), mesh.nEz)  # periodic boundary condition
 
         # nodes
-        self.assertTrue(mesh.nNx == 3)
-        self.assertTrue(mesh.nNy == 4)
-        self.assertTrue(mesh.nNz == 2)
-        self.assertTrue((mesh.vnN == [3, 4, 2]).all())
-        self.assertTrue(mesh.nN == 18)
-        self.assertFalse(mesh.nN == mesh.vnN.prod())  # periodic boundary condition
+        self.assertEqual(mesh.nNx, 3)
+        self.assertEqual(mesh.nNy, 4)
+        self.assertEqual(mesh.nNz, 2)
+        self.assertEqual(mesh.vnN, (3, 4, 2))
+        self.assertEqual(mesh.nN, 18)
+        self.assertNotEqual(mesh.nN, np.prod(mesh.vnN))  # periodic boundary condition
 
     def test_gridCC(self):
         mesh = self.mesh

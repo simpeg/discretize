@@ -92,7 +92,7 @@ class TestCyl2DMesh(unittest.TestCase):
         self.assertEqual(mesh.vol, np.pi)
 
         mesh = discretize.CylMesh([2., 1., 1.])
-        self.assertTrue(np.all(mesh.vol, np.pi*np.r_[0.5**2, 1 - 0.5**2]))
+        self.assertTrue(np.all(mesh.vol == np.pi*np.r_[0.5**2, 1 - 0.5**2]))
 
     def test_gridSizes(self):
         self.assertEqual(self.mesh.gridCC.shape, (self.mesh.nC, 3))
