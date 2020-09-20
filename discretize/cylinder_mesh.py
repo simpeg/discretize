@@ -1694,6 +1694,7 @@ class CylindricalMesh(
     isSymmetric = deprecate_property("is_symmetric", 'isSymmetric', removal_version="1.0.0")
     cartesianOrigin = deprecate_property("cartesian_origin", 'cartesianOrigin', removal_version="1.0.0")
     getInterpolationMatCartMesh = deprecate_method("get_interpolation_matrix_cartesian_mesh", "getInterpolationMatCartMesh", removal_version="1.0.0")
+    cartesianGrid = deprecate_method("cartesian_grid", "cartesianGrid", removal_version="1.0.0")
 
 @deprecate_class(removal_version="1.0.0")
 class CylMesh(CylindricalMesh):
