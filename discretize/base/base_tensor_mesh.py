@@ -457,7 +457,8 @@ class BaseTensorMesh(BaseMesh):
         # meshes, but for cyl, where we use symmetry, it is 1 for edge
         # variables and 2 for face variables)
         if self._meshType == 'CYL':
-            n_elements = np.sum(getattr(self, 'vn'+projType).nonzero())
+            shape = getattr(self, 'vn'+projType)
+            n_elements = sum([1 if x != 0 else 0 for x in shape])
         else:
             n_elements = self.dim
 
@@ -529,7 +530,8 @@ class BaseTensorMesh(BaseMesh):
         # meshes, but for cyl, where we use symmetry, it is 1 for edge
         # variables and 2 for face variables)
         if self._meshType == 'CYL':
-            n_elements = np.sum(getattr(self, 'vn'+projType).nonzero())
+            shape = getattr(self, 'vn'+projType)
+            n_elements = sum([1 if x != 0 else 0 for x in shape])
         else:
             n_elements = self.dim
 

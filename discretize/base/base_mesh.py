@@ -406,7 +406,7 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         """
         if self.dim == 2:
             tX = np.c_[
-                np.ones(self.n_edges_z), np.zeros(self.n_edges_z)
+                np.ones(self.n_edges_x), np.zeros(self.n_edges_x)
             ]
             tY = np.c_[
                 np.zeros(self.n_edges_y), np.ones(self.n_edges_y)
@@ -414,7 +414,7 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
             return np.r_[tX, tY]
         elif self.dim == 3:
             tX = np.c_[
-                np.ones(self.n_edges_z), np.zeros(self.n_edges_z), np.zeros(self.n_edges_z)
+                np.ones(self.n_edges_x), np.zeros(self.n_edges_x), np.zeros(self.n_edges_x)
             ]
             tY = np.c_[
                 np.zeros(self.n_edges_y), np.ones(self.n_edges_y), np.zeros(self.n_edges_y)
