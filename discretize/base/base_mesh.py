@@ -34,11 +34,17 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
     }
 
     # Properties
-    _n = properties.Array(
-        "number of cells in each direction (dim, )",
-        dtype=int,
+    _n = properties.Tuple(
+        "Tuple of number of cells in each direction (dim, )",
+        prop=properties.Integer(
+            "Number of cells along a particular direction",
+            cast=True,
+            min=1
+        ),
+        min_length=1,
+        max_length=3,
+        coerce=True,
         required=True,
-        shape=('*',)
     )
 
     x0 = properties.Array(
@@ -69,34 +75,16 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
     # Validators
     @properties.validator('_n')
     def _check_n_shape(self, change):
-        if not (
-            not isinstance(change['value'], properties.utils.Sentinel) and
-            change['value'] is not None
-        ):
-            raise Exception("Cannot delete n. Instead, create a new mesh")
-
-        change['value'] = np.array(change['value'], dtype=int).ravel()
-        if len(change['value']) > 3:
-            raise Exception(
-                "Dimensions of {}, which is higher than 3 are not "
-                "supported".format(change['value'])
-            )
-
-        if np.any(change['previous'] != properties.undefined):
-            # can't change dimension of the mesh
-            if len(change['previous']) != len(change['value']):
-                raise Exception(
-                    "Cannot change dimensionality of the mesh. Expected {} "
-                    "dimensions, got {} dimensions".format(
-                        len(change['previous']), len(change['value'])
-                    )
-                )
-
+        if change['previous'] != properties.undefined:
+            # _n can only be set once
+            if change['previous'] != change['value']:
+                raise AttributeError("Cannot change n. Instead, create a new mesh")
+        else:
             # check that if h has been set, sizes still agree
             if getattr(self, 'h', None) is not None and len(self.h) > 0:
                 for i in range(len(change['value'])):
                     if len(self.h[i]) != change['value'][i]:
-                        raise Exception(
+                        raise properties.ValidationError(
                             "Mismatched shape of n. Expected {}, len(h[{}]), got "
                             "{}".format(
                                 len(self.h[i]), i, change['value'][i]
@@ -111,7 +99,7 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
             ):
                 for i in range(len(change['value'])):
                     if self.nodes[0].shape[i]-1 != change['value'][i]:
-                        raise Exception(
+                        raise properties.ValidationError(
                             "Mismatched shape of n. Expected {}, len(nodes[{}]), "
                             "got {}".format(
                                 self.nodes[0].shape[i]-1, i, change['value'][i]
@@ -129,7 +117,7 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         if len(self._n) != len(change['value']):
             raise Exception(
                 "Dimension mismatch. x0 has length {} != len(n) which is "
-                "{}".format(len(x0), len(n))
+                "{}".format(len(self.x0), len(self._n))
             )
 
     @property
@@ -189,7 +177,7 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         >>> mesh.plotGrid(nodes=True, show_it=True)
         >>> print(mesh.n_nodes)
         """
-        return int((self._n+1).prod())
+        return int(np.prod(x + 1 for x in self._n))
 
     @property
     def n_edges_x(self):
@@ -204,7 +192,7 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         Also accessible as `nEx`.
 
         """
-        return int((self._n + np.r_[0, 1, 1][:self.dim]).prod())
+        return int(np.prod(x + y for x, y in zip(self._n, (0, 1, 1))))
 
     @property
     def n_edges_y(self):
@@ -221,7 +209,7 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         """
         if self.dim < 2:
             return None
-        return int((self._n + np.r_[1, 0, 1][:self.dim]).prod())
+        return int(np.prod(x + y for x, y in zip(self._n, (1, 0, 1))))
 
     @property
     def n_edges_z(self):
@@ -238,7 +226,7 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         """
         if self.dim < 3:
             return None
-        return int((self._n + np.r_[1, 1, 0][:self.dim]).prod())
+        return int(np.prod(x + y for x, y in zip(self._n, (1, 1, 0))))
 
     @property
     def vnE(self):
@@ -292,7 +280,7 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         -----
         Also accessible as `nFx`.
         """
-        return int((self._n + np.r_[1, 0, 0][:self.dim]).prod())
+        return int(np.prod(x + y for x, y in zip(self._n, (1, 0, 0))))
 
     @property
     def n_faces_y(self):
@@ -308,7 +296,7 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         """
         if self.dim < 2:
             return None
-        return int((self._n + np.r_[0, 1, 0][:self.dim]).prod())
+        return int(np.prod(x + y for x, y in zip(self._n, (0, 1, 0))))
 
     @property
     def n_faces_z(self):
@@ -324,7 +312,7 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         """
         if self.dim < 3:
             return None
-        return int((self._n + np.r_[0, 0, 1][:self.dim]).prod())
+        return int(np.prod(x + y for x, y in zip(self._n, (0, 0, 1))))
 
     @property
     def vnF(self):
@@ -902,7 +890,7 @@ class BaseRectangularMesh(BaseMesh):
         def switchKernal(xx):
             """Switches over the different options."""
             if xType in ['CC', 'N']:
-                nn = (self._n) if xType == 'CC' else (self._n+1)
+                nn = self.shape_cells if xType == 'CC' else self.shape_nodes
                 if xx.size != np.prod(nn):
                     raise Exception(
                         "Number of elements must not change."
