@@ -147,6 +147,8 @@ def ndgrid(*args, **kwargs):
 
     # Each vector needs to be a numpy array
     try:
+        if len(xin) == 1:
+            return np.array(xin[0])
         meshed = np.meshgrid(*xin, indexing='ij')
     except Exception:
         raise TypeError("All arguments must be array like")
