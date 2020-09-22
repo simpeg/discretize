@@ -478,7 +478,18 @@ class TensorView(object):
             if clim is None:
                 clim = [v.min(), v.max()]
             v = np.ma.masked_where(np.isnan(v), v)
-            out += (ax.pcolormesh(self.vectorNx, self.vectorNy, v.T, vmin=clim[0], vmax=clim[1], **pcolor_opts), )
+
+            if "norm" in pcolor_opts.keys():
+                norm = pcolor_opts["norm"]
+                norm.vmin = clim[0]
+                norm.vmax = clim[1]
+            else:
+                if "vmin" not in pcolor_opts.keys():
+                    pcolor_opts["vmin"] = clim[0]
+                if "vmax" not in pcolor_opts.keys():
+                    pcolor_opts["vmax"] = clim[1]
+
+            out += (ax.pcolormesh(self.vectorNx, self.vectorNy, v.T, **pcolor_opts), )
         elif view in ['vec']:
             # Matplotlib seems to not support irregular
             # spaced vectors at the moment. So we will
@@ -572,11 +583,19 @@ class TensorView(object):
                 # Add linewidth to stream_opts
                 stream_opts.update({'linewidth':stream_thickness})
 
+            if "norm" in pcolor_opts.keys():
+                norm = pcolor_opts["norm"]
+                norm.vmin = clim[0]
+                norm.vmax = clim[1]
+            else:
+                if "vmin" not in pcolor_opts.keys():
+                    pcolor_opts["vmin"] = clim[0]
+                if "vmax" not in pcolor_opts.keys():
+                    pcolor_opts["vmax"] = clim[1]
 
             out += (
                 ax.pcolormesh(
-                    x, y, np.sqrt(U**2+V**2).T, vmin=clim[0], vmax=clim[1],
-                    **pcolor_opts),
+                    x, y, np.sqrt(U**2+V**2).T, **pcolor_opts),
             )
             out += (
                 ax.streamplot(
