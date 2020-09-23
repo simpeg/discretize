@@ -222,11 +222,11 @@ class TensorMesh(
     def face_areas(self):
         """Construct face areas of the 3D model as 1d array."""
         if self.dim == 1:
-            return self.face_areasFx
+            return self.face_x_areas
         elif self.dim == 2:
-            return np.r_[self.face_areasFx, self.face_areasFy]
+            return np.r_[self.face_x_areas, self.face_y_areas]
         elif self.dim == 3:
-            return np.r_[self.face_areasFx, self.face_areasFy, self.face_areasFz]
+            return np.r_[self.face_x_areas, self.face_y_areas, self.face_z_areas]
 
     @property
     def edge_x_lengths(self):

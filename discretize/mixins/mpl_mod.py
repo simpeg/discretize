@@ -130,17 +130,17 @@ class InterfaceMPL(object):
             show_it = kwargs.pop("showIt")
             warnings.warn("showIt has been deprecated, please use show_it", FutureWarning)
 
-        axOpts = {'projection': '3d'} if self.dim == 3 else {}
-        if ax is None and mesh_type != 'cyl':
-            plt.figure()
-            ax = plt.subplot(111, **axOpts)
-        else:
+        if ax is not None:
             ax_test = ax
             if not isinstance(ax, (list, tuple, np.ndarray)):
                 ax_test = (ax, )
             for a in ax_test:
                 if not isinstance(a, matplotlib.axes.Axes):
                     raise TypeError("ax must be an matplotlib.axes.Axes")
+        elif mesh_type != 'cyl':
+            axOpts = {'projection': '3d'} if self.dim == 3 else {}
+            plt.figure()
+            ax = plt.subplot(111, **axOpts)
 
         rcParams = rc_params()
         if lines:
