@@ -2,7 +2,7 @@ import numpy as np
 import scipy.ndimage as ndi
 import scipy.sparse as sp
 
-from . import ndgrid, asArray_N_x_Dim, isScalar
+from . import ndgrid, as_array_n_by_dim, is_scalar
 from scipy.spatial import cKDTree, Delaunay
 from scipy import interpolate
 import discretize
@@ -108,7 +108,7 @@ def random_model(shape, seed=None, anisotropy=None, its=100, bounds=None):
 
 
 def mesh_tensor(value):
-    """**meshTensor** takes a list of numbers and tuples
+    """**mesh_tensor** takes a list of numbers and tuples
     that have the form::
 
         mT = [ float, (cellSize, numCell), (cellSize, numCell, factor) ]
@@ -140,11 +140,11 @@ def mesh_tensor(value):
 
     """
     if type(value) is not list:
-        raise Exception('meshTensor must be a list of scalars and tuples.')
+        raise Exception('mesh_tensor must be a list of scalars and tuples.')
 
     proposed = []
     for v in value:
-        if isScalar(v):
+        if is_scalar(v):
             proposed += [float(v)]
         elif type(v) is tuple and len(v) == 2:
             proposed += [float(v[0])]*int(v[1])
@@ -156,7 +156,7 @@ def mesh_tensor(value):
             if factor < 0: pad = pad[::-1]
             proposed += pad.tolist()
         else:
-            raise Exception('meshTensor must contain only scalars and len(2) or len(3) tuples.')
+            raise Exception('mesh_tensor must contain only scalars and len(2) or len(3) tuples.')
 
     return np.array(proposed)
 
@@ -180,7 +180,7 @@ def closest_points(mesh, pts, gridLoc='CC'):
 
     """
 
-    pts = asArray_N_x_Dim(pts, mesh.dim)
+    pts = as_array_n_by_dim(pts, mesh.dim)
     grid = getattr(mesh, 'grid' + gridLoc)
     nodeInds = np.empty(pts.shape[0], dtype=int)
 

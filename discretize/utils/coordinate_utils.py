@@ -108,7 +108,7 @@ def rotate_points_from_normals(XYZ, n0, n1, x0=np.r_[0., 0., 0.]):
         :return: rotation matrix which rotates the frame so that n0 is aligned with n1
     """
 
-    R = rotationMatrixFromNormals(n0, n1)
+    R = rotation_matrix_from_normals(n0, n1)
 
     assert XYZ.shape[1] == 3, "Grid XYZ should be 3 wide"
     assert len(x0) == 3, "x0 should have length 3"

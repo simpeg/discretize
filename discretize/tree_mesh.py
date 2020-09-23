@@ -90,7 +90,7 @@ import properties
 from .base import BaseTensorMesh
 from .operators import InnerProducts, DiffOperators
 from .base.mesh_io import TreeMeshIO
-from .utils import asArray_N_x_Dim, requires
+from .utils import as_array_n_by_dim, requires
 from ._extensions.tree_ext import _TreeMesh, TreeCell
 import numpy as np
 import scipy.sparse as sp
@@ -453,7 +453,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         numpy.array of integers of length(N)
             Cell indices that contain the points
         """
-        locs = asArray_N_x_Dim(locs, self.dim)
+        locs = as_array_n_by_dim(locs, self.dim)
         inds = self._get_containing_cell_indexes(locs)
         return inds
 
@@ -501,7 +501,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
             M, the interpolation matrix
 
         """
-        locs = asArray_N_x_Dim(locs, self.dim)
+        locs = as_array_n_by_dim(locs, self.dim)
         if locType not in ['N', 'CC', "Ex", "Ey", "Ez", "Fx", "Fy", "Fz"]:
             raise Exception('locType must be one of N, CC, Ex, Ey, Ez, Fx, Fy, or Fz')
 

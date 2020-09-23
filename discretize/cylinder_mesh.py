@@ -6,7 +6,7 @@ import scipy.sparse as sp
 from scipy.constants import pi
 
 from .utils import (
-    kron3, ndgrid, av, speye, ddx, sdiag, spzeros, interpmat, cyl2cart
+    kron3, ndgrid, av, speye, ddx, sdiag, spzeros, interpolation_matrix, cyl2cart
 )
 from .base import BaseTensorMesh, BaseRectangularMesh
 from .operators import DiffOperators, InnerProducts
@@ -30,8 +30,8 @@ class CylindricalMesh(
         from discretize import utils
 
         cs, nc, npad = 20., 30, 8
-        hx = utils.meshTensor([(cs, npad+10, -0.7), (cs, nc), (cs, npad, 1.3)])
-        hz = utils.meshTensor([(cs, npad ,-1.3), (cs, nc), (cs, npad, 1.3)])
+        hx = utils.mesh_tensor([(cs, npad+10, -0.7), (cs, nc), (cs, npad, 1.3)])
+        hz = utils.mesh_tensor([(cs, npad ,-1.3), (cs, nc), (cs, npad, 1.3)])
         mesh = discretize.CylMesh([hx, 1, hz], x0=[0, 0, -hz.sum()/2])
         mesh.plot_grid()
 
@@ -45,9 +45,9 @@ class CylindricalMesh(
 
         cs, nc, npad = 20., 30, 8
         nc_theta = 8
-        hx = utils.meshTensor([(cs, npad+10, -0.7), (cs, nc), (cs, npad, 1.3)])
+        hx = utils.mesh_tensor([(cs, npad+10, -0.7), (cs, nc), (cs, npad, 1.3)])
         hy = 2 * np.pi/nc_theta * np.ones(nc_theta)
-        hz = utils.meshTensor([(cs,npad, -1.3), (cs,nc), (cs, npad, 1.3)])
+        hz = utils.mesh_tensor([(cs,npad, -1.3), (cs,nc), (cs, npad, 1.3)])
         mesh = discretize.CylMesh([hx, hy, hz], x0=[0, 0, -hz.sum()/2])
         mesh.plot_grid()
 
@@ -1546,7 +1546,7 @@ class CylindricalMesh(
             )
 
         if locType in ['CCVx', 'CCVy', 'CCVz']:
-            Q = interpmat(loc, *self.get_tensor('CC'))
+            Q = interpolation_matrix(loc, *self.get_tensor('CC'))
             Z = spzeros(loc.shape[0], self.nC)
             if locType == 'CCVx':
                 Q = sp.hstack([Q, Z])

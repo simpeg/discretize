@@ -8,8 +8,8 @@ import properties
 
 from . import BaseMesh
 from ..utils import (
-    isScalar, asArray_N_x_Dim, meshTensor, mkvc, ndgrid, spzeros, sdiag, sdInv,
-    TensorType, interpmat
+    is_scalar, as_array_n_by_dim, mesh_tensor, mkvc, ndgrid, spzeros, sdiag, sdinv,
+    TensorType, interpolation_matrix
 )
 from ..utils.code_utils import deprecate_method, deprecate_property
 import warnings
@@ -70,11 +70,11 @@ class BaseTensorMesh(BaseMesh):
         # build h
         h = list(range(len(h_in)))
         for i, h_i in enumerate(h_in):
-            if isScalar(h_i) and type(h_i) is not np.ndarray:
+            if is_scalar(h_i) and type(h_i) is not np.ndarray:
                 # This gives you something over the unit cube.
                 h_i = self._unitDimensions[i] * np.ones(int(h_i))/int(h_i)
             elif type(h_i) is list:
-                h_i = meshTensor(h_i)
+                h_i = mesh_tensor(h_i)
             assert isinstance(h_i, np.ndarray), (
                 "h[{0:d}] is not a numpy array.".format(i)
             )
@@ -90,7 +90,7 @@ class BaseTensorMesh(BaseMesh):
             assert len(h) == len(x0_in), "Dimension mismatch. x0 != len(h)"
             for i in range(len(h)):
                 x_i, h_i = x0_in[i], h[i]
-                if isScalar(x_i):
+                if is_scalar(x_i):
                     x0[i] = x_i
                 elif x_i == '0':
                     x0[i] = 0.0
@@ -280,7 +280,7 @@ class BaseTensorMesh(BaseMesh):
         :rtype: numpy.ndarray
         :return: inside, numpy array of booleans
         """
-        pts = asArray_N_x_Dim(pts, self.dim)
+        pts = as_array_n_by_dim(pts, self.dim)
 
         tensors = self.get_tensor(locType)
 
@@ -332,7 +332,7 @@ class BaseTensorMesh(BaseMesh):
 
         """
 
-        loc = asArray_N_x_Dim(loc, self.dim)
+        loc = as_array_n_by_dim(loc, self.dim)
 
         if not zerosOutside:
             assert np.all(self.is_inside(loc)), "Points outside of mesh"
@@ -347,16 +347,16 @@ class BaseTensorMesh(BaseMesh):
             assert self.dim >= ind, 'mesh is not high enough dimension.'
             nF_nE = self.vnF if 'F' in locType else self.vnE
             components = [spzeros(loc.shape[0], n) for n in nF_nE]
-            components[ind] = interpmat(loc, *self.get_tensor(locType))
+            components[ind] = interpolation_matrix(loc, *self.get_tensor(locType))
             # remove any zero blocks (hstack complains)
             components = [comp for comp in components if comp.shape[1] > 0]
             Q = sp.hstack(components)
 
         elif locType in ['CC', 'N']:
-            Q = interpmat(loc, *self.get_tensor(locType))
+            Q = interpolation_matrix(loc, *self.get_tensor(locType))
 
         elif locType in ['CCVx', 'CCVy', 'CCVz']:
-            Q = interpmat(loc, *self.get_tensor('CC'))
+            Q = interpolation_matrix(loc, *self.get_tensor('CC'))
             Z = spzeros(loc.shape[0], self.nC)
             if locType == 'CCVx':
                 Q = sp.hstack([Q, Z, Z])
@@ -450,7 +450,7 @@ class BaseTensorMesh(BaseMesh):
         if invProp:
             prop = 1./prop
 
-        if isScalar(prop):
+        if is_scalar(prop):
             prop = prop*np.ones(self.nC)
 
         # number of elements we are averaging (equals dim for regular
@@ -485,7 +485,7 @@ class BaseTensorMesh(BaseMesh):
             return None
 
         if invMat:
-            return sdInv(M)
+            return sdinv(M)
         else:
             return M
 

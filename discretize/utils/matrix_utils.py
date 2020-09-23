@@ -1,7 +1,7 @@
 from __future__ import division
 import numpy as np
 import scipy.sparse as sp
-from . import isScalar
+from . import is_scalar
 from .code_utils import deprecate_function
 
 
@@ -185,7 +185,7 @@ def sub2ind(shape, subs):
 
 
 def get_subarray(A, ind):
-    """subArray"""
+    """subarray"""
     assert type(ind) == list, "ind must be a list of vectors"
     assert len(A.shape) == len(ind), (
         "ind must have the same length as the dimension of A"
@@ -196,13 +196,13 @@ def get_subarray(A, ind):
     elif len(A.shape) == 3:
         return A[ind[0], :, :][:, ind[1], :][:, :, ind[2]]
     else:
-        raise Exception("getSubArray does not support dimension asked.")
+        raise Exception("get_subarray does not support dimension asked.")
 
 
 def inverse_3x3_block_diagonal(
     a11, a12, a13, a21, a22, a23, a31, a32, a33, returnMatrix=True
 ):
-    """ B = inv3X3BlockDiagonal(a11, a12, a13, a21, a22, a23, a31, a32, a33)
+    """ B = inverse_3x3_block_diagonal(a11, a12, a13, a21, a22, a23, a31, a32, a33)
 
     inverts a stack of 3x3 matrices
 
@@ -253,7 +253,7 @@ def inverse_3x3_block_diagonal(
 
 
 def inverse_2x2_block_diagonal(a11, a12, a21, a22, returnMatrix=True):
-    """ B = inv2X2BlockDiagonal(a11, a12, a21, a22)
+    """ B = inverse_2x2_block_diagonal(a11, a12, a21, a22)
 
     Inverts a stack of 2x2 matrices by using the inversion formula
 
@@ -291,7 +291,7 @@ class TensorType(object):
         if tensor is None:  # default is ones
             self._tt = -1
             self._tts = 'none'
-        elif isScalar(tensor):
+        elif is_scalar(tensor):
             self._tt = 0
             self._tts = 'scalar'
         elif tensor.size == M.nC:
@@ -337,7 +337,7 @@ def make_property_tensor(M, tensor):
     if tensor is None:  # default is ones
         tensor = np.ones(M.nC)
 
-    if isScalar(tensor):
+    if is_scalar(tensor):
         tensor = tensor * np.ones(M.nC)
 
     propType = TensorType(M, tensor)
@@ -372,20 +372,20 @@ def inverse_property_tensor(M, tensor, returnMatrix=False):
 
     propType = TensorType(M, tensor)
 
-    if isScalar(tensor):
+    if is_scalar(tensor):
         T = 1./tensor
     elif propType < 3:  # Isotropic or Diagonal
         T = 1./mkvc(tensor)  # ensure it is a vector.
     elif M.dim == 2 and tensor.size == M.nC*3:  # Fully anisotropic, 2D
         tensor = tensor.reshape((M.nC, 3), order='F')
-        B = inv2X2BlockDiagonal(tensor[:, 0], tensor[:, 2],
+        B = inverse_2x2_block_diagonal(tensor[:, 0], tensor[:, 2],
                                 tensor[:, 2], tensor[:, 1],
                                 returnMatrix=False)
         b11, b12, b21, b22 = B
         T = np.r_[b11, b22, b12]
     elif M.dim == 3 and tensor.size == M.nC*6:  # Fully anisotropic, 3D
         tensor = tensor.reshape((M.nC, 6), order='F')
-        B = inv3X3BlockDiagonal(tensor[:, 0], tensor[:, 3], tensor[:, 4],
+        B = inverse_3x3_block_diagonal(tensor[:, 0], tensor[:, 3], tensor[:, 4],
                                 tensor[:, 3], tensor[:, 1], tensor[:, 5],
                                 tensor[:, 4], tensor[:, 5], tensor[:, 2],
                                 returnMatrix=False)
@@ -395,7 +395,7 @@ def inverse_property_tensor(M, tensor, returnMatrix=False):
         raise Exception('Unexpected shape of tensor')
 
     if returnMatrix:
-        return makePropertyTensor(M, T)
+        return make_property_tensor(M, T)
 
     return T
 

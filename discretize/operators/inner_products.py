@@ -1,8 +1,8 @@
 from scipy import sparse as sp
 from ..utils import (
-    sub2ind, sdiag, invPropertyTensor, TensorType,
-    makePropertyTensor, ndgrid, inv2X2BlockDiagonal,
-    getSubArray, inv3X3BlockDiagonal, spzeros, sdInv
+    sub2ind, sdiag, inverse_property_tensor, TensorType,
+    make_property_tensor, ndgrid, inverse_2x2_block_diagonal,
+    get_subarray, inverse_3x3_block_diagonal, spzeros, sdinv
 )
 import numpy as np
 from ..utils.code_utils import deprecate_method
@@ -110,16 +110,16 @@ class InnerProducts(object):
             return fast
 
         if invProp:
-            prop = invPropertyTensor(self, prop)
+            prop = inverse_property_tensor(self, prop)
 
         tensorType = TensorType(self, prop)
 
-        Mu = makePropertyTensor(self, prop)
+        Mu = make_property_tensor(self, prop)
         Ps = self._getInnerProductProjectionMatrices(projType, tensorType)
         A = np.sum([P.T * Mu * P for P in Ps])
 
         if invMat and tensorType < 3:
-            A = sdInv(A)
+            A = sdinv(A)
         elif invMat and tensorType == 3:
             raise Exception('Solver needed to invert A.')
 
@@ -466,8 +466,8 @@ class InnerProducts(object):
             PXX = sp.csr_matrix((np.ones(2*M.nC), (range(2*M.nC), IND)), shape=(2*M.nC, M.nF))
 
             if M._meshType == 'Curv':
-                I2x2 = inv2X2BlockDiagonal(getSubArray(fN1[0], [i + posFx, j]), getSubArray(fN1[1], [i + posFx, j]),
-                                           getSubArray(fN2[0], [i, j + posFy]), getSubArray(fN2[1], [i, j + posFy]))
+                I2x2 = inverse_2x2_block_diagonal(get_subarray(fN1[0], [i + posFx, j]), get_subarray(fN1[1], [i + posFx, j]),
+                                           get_subarray(fN2[0], [i, j + posFy]), get_subarray(fN2[1], [i, j + posFy]))
                 PXX = I2x2 * PXX
 
             return PXX
@@ -523,9 +523,9 @@ class InnerProducts(object):
             PXXX = sp.coo_matrix((np.ones(3*M.nC), (range(3*M.nC), IND)), shape=(3*M.nC, M.nF)).tocsr()
 
             if M._meshType == 'Curv':
-                I3x3 = inv3X3BlockDiagonal(getSubArray(fN1[0], [i + posX, j, k]), getSubArray(fN1[1], [i + posX, j, k]), getSubArray(fN1[2], [i + posX, j, k]),
-                                           getSubArray(fN2[0], [i, j + posY, k]), getSubArray(fN2[1], [i, j + posY, k]), getSubArray(fN2[2], [i, j + posY, k]),
-                                           getSubArray(fN3[0], [i, j, k + posZ]), getSubArray(fN3[1], [i, j, k + posZ]), getSubArray(fN3[2], [i, j, k + posZ]))
+                I3x3 = inverse_3x3_block_diagonal(get_subarray(fN1[0], [i + posX, j, k]), get_subarray(fN1[1], [i + posX, j, k]), get_subarray(fN1[2], [i + posX, j, k]),
+                                           get_subarray(fN2[0], [i, j + posY, k]), get_subarray(fN2[1], [i, j + posY, k]), get_subarray(fN2[2], [i, j + posY, k]),
+                                           get_subarray(fN3[0], [i, j, k + posZ]), get_subarray(fN3[1], [i, j, k + posZ]), get_subarray(fN3[2], [i, j, k + posZ]))
                 PXXX = I3x3 * PXXX
 
             return PXXX
@@ -567,8 +567,8 @@ class InnerProducts(object):
             PXX = sp.coo_matrix((np.ones(2*M.nC), (range(2*M.nC), IND)), shape=(2*M.nC, M.nE)).tocsr()
 
             if M._meshType == 'Curv':
-                I2x2 = inv2X2BlockDiagonal(getSubArray(eT1[0], [i, j + posX]), getSubArray(eT1[1], [i, j + posX]),
-                                           getSubArray(eT2[0], [i + posY, j]), getSubArray(eT2[1], [i + posY, j]))
+                I2x2 = inverse_2x2_block_diagonal(get_subarray(eT1[0], [i, j + posX]), get_subarray(eT1[1], [i, j + posX]),
+                                           get_subarray(eT2[0], [i + posY, j]), get_subarray(eT2[1], [i + posY, j]))
                 PXX = I2x2 * PXX
 
             return PXX
@@ -611,9 +611,9 @@ class InnerProducts(object):
             PXXX = sp.coo_matrix((np.ones(3*M.nC), (range(3*M.nC), IND)), shape=(3*M.nC, M.nE)).tocsr()
 
             if M._meshType == 'Curv':
-                I3x3 = inv3X3BlockDiagonal(getSubArray(eT1[0], [i, j + posX[0], k + posX[1]]), getSubArray(eT1[1], [i, j + posX[0], k + posX[1]]), getSubArray(eT1[2], [i, j + posX[0], k + posX[1]]),
-                                           getSubArray(eT2[0], [i + posY[0], j, k + posY[1]]), getSubArray(eT2[1], [i + posY[0], j, k + posY[1]]), getSubArray(eT2[2], [i + posY[0], j, k + posY[1]]),
-                                           getSubArray(eT3[0], [i + posZ[0], j + posZ[1], k]), getSubArray(eT3[1], [i + posZ[0], j + posZ[1], k]), getSubArray(eT3[2], [i + posZ[0], j + posZ[1], k]))
+                I3x3 = inverse_3x3_block_diagonal(get_subarray(eT1[0], [i, j + posX[0], k + posX[1]]), get_subarray(eT1[1], [i, j + posX[0], k + posX[1]]), get_subarray(eT1[2], [i, j + posX[0], k + posX[1]]),
+                                           get_subarray(eT2[0], [i + posY[0], j, k + posY[1]]), get_subarray(eT2[1], [i + posY[0], j, k + posY[1]]), get_subarray(eT2[2], [i + posY[0], j, k + posY[1]]),
+                                           get_subarray(eT3[0], [i + posZ[0], j + posZ[1], k]), get_subarray(eT3[1], [i + posZ[0], j + posZ[1], k]), get_subarray(eT3[2], [i + posZ[0], j + posZ[1], k]))
                 PXXX = I3x3 * PXXX
 
             return PXXX

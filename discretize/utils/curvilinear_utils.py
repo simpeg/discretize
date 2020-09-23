@@ -113,7 +113,7 @@ def index_cube(nodes, gridSize, n=None):
 
 def face_info(xyz, A, B, C, D, average=True, normalizeNormals=True):
     """
-    function [N] = faceInfo(y,A,B,C,D)
+    function [N] = face_info(y,A,B,C,D)
 
        Returns the averaged normal, area, and edge lengths for a given set of faces.
 

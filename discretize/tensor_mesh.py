@@ -33,7 +33,7 @@ class TensorMesh(
 
 
     Example of a padded tensor mesh using
-    :func:`discretize.utils.meshTensor`:
+    :func:`discretize.utils.mesh_tensor`:
 
     .. plot::
         :include-source:
