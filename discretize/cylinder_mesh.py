@@ -1134,7 +1134,7 @@ class CylindricalMesh(
 
     @property
     def cell_gradient_x(self):
-        raise NotImplementedError
+        raise NotImplementedError('Cell Grad is not yet implemented.')
         # if getattr(self, '_cellGradx', None) is None:
         #     G1 = super(CylMesh, self)._cellGradxStencil
         #     V = self._deflationMatrix('F', withHanging='True', asOnes='True')*self.aveCC2F*self.vol
@@ -1147,19 +1147,18 @@ class CylindricalMesh(
 
     @property
     def _cellGradyStencil(self):
-        raise NotImplementedError
+        raise NotImplementedError('Cell Grad is not yet implemented.')
 
     @property
     def _cellGradzStencil(self):
-        raise NotImplementedError
+        raise NotImplementedError('Cell Grad is not yet implemented.')
 
     @property
     def _cellGradStencil(self):
-        raise NotImplementedError
+        raise NotImplementedError('Cell Grad is not yet implemented.')
 
     @property
     def cell_gradient(self):
-        """The cell centered Gradient, takes you to cell faces."""
         raise NotImplementedError('Cell Grad is not yet implemented.')
 
     # @property
