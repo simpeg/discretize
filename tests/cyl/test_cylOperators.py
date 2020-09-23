@@ -5,7 +5,7 @@ import sympy
 from sympy.abc import r, t, z
 
 import discretize
-from discretize import testing
+from discretize import tests
 
 np.random.seed(16)
 
@@ -37,7 +37,7 @@ cylE3 = lambda M, ex, ey, ez: np.vstack((
 ))
 
 
-# class TestCellGradx3D(testing.OrderTest):
+# class TestCellGradx3D(tests.OrderTest):
 #     name = "CellGradx"
 #     MESHTYPES = MESHTYPES
 #     meshDimension = 3
@@ -63,7 +63,7 @@ cylE3 = lambda M, ex, ey, ez: np.vstack((
 #         self.orderTest()
 
 
-class TestFaceDiv3D(testing.OrderTest):
+class TestFaceDiv3D(tests.OrderTest):
     name = "FaceDiv"
     meshTypes = MESHTYPES
     meshDimension = 3
@@ -95,7 +95,7 @@ class TestFaceDiv3D(testing.OrderTest):
         self.orderTest()
 
 
-class TestEdgeCurl3D(testing.OrderTest):
+class TestEdgeCurl3D(tests.OrderTest):
 
     name = "edgeCurl"
     meshTypes = MESHTYPES
@@ -199,7 +199,7 @@ class TestAverageSimple(unittest.TestCase):
         assert np.linalg.norm(aveF - aveF_ana) < 1e-10
 
 
-class TestAveF2CCV(testing.OrderTest):
+class TestAveF2CCV(tests.OrderTest):
     name = "aveF2CCV"
     meshTypes = MESHTYPES
     meshSizes = [8, 16, 32, 64]
@@ -236,7 +236,7 @@ class TestAveF2CCV(testing.OrderTest):
         self.orderTest()
 
 
-class TestAveF2CC(testing.OrderTest):
+class TestAveF2CC(tests.OrderTest):
     name = "aveF2CC"
     meshTypes = MESHTYPES
     meshSizes = [8, 16, 32, 64]
@@ -314,7 +314,7 @@ class FaceInnerProductFctsIsotropic(object):
         return sig, np.r_[jr, jt, jz]
 
 
-class TestAveE2CCV(testing.OrderTest):
+class TestAveE2CCV(tests.OrderTest):
     name = "aveE2CCV"
     meshTypes = MESHTYPES
     meshSizes = [8, 16, 32, 64]
@@ -350,7 +350,7 @@ class TestAveE2CCV(testing.OrderTest):
         self.orderTest()
 
 
-class TestAveE2CC(testing.OrderTest):
+class TestAveE2CC(tests.OrderTest):
     name = "aveE2CC"
     meshTypes = MESHTYPES
     meshSizes = [8, 16, 32, 64]
@@ -466,7 +466,7 @@ class TestCylInnerProducts_simple(unittest.TestCase):
         assert(np.abs(ans-numeric_ans) < TOL)
 
 
-class TestCylFaceInnerProducts_Order(testing.OrderTest):
+class TestCylFaceInnerProducts_Order(tests.OrderTest):
 
     meshTypes = ['uniformCylMesh']
     meshDimension = 3
@@ -481,7 +481,7 @@ class TestCylFaceInnerProducts_Order(testing.OrderTest):
         self.orderTest()
 
 
-class TestCylEdgeInnerProducts_Order(testing.OrderTest):
+class TestCylEdgeInnerProducts_Order(tests.OrderTest):
 
     meshTypes = ['uniformCylMesh']
     meshDimension = 3
@@ -504,7 +504,7 @@ class MimeticProperties(unittest.TestCase):
 
     def test_DivCurl(self):
         for meshType in self.meshTypes:
-            mesh, _ = discretize.testing.setupMesh(
+            mesh, _ = discretize.tests.setupMesh(
                 meshType, self.meshSize, self.meshDimension
             )
             v = np.random.rand(mesh.nE)
@@ -521,7 +521,7 @@ class MimeticProperties(unittest.TestCase):
     # # Nodal Grad has not been implemented yet
     # def test_CurlGrad(self):
     #     for meshType in self.meshTypes:
-    #         mesh, _ = discretize.testing.setupMesh(
+    #         mesh, _ = discretize.tests.setupMesh(
     #             meshType, self.meshSize, self.meshDimension
     #         )
     #         v = np.random.rand(mesh.nN)

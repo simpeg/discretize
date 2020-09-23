@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 
 import discretize
-from discretize import testing, utils
+from discretize import tests, utils
 
 np.random.seed(13)
 
@@ -316,7 +316,7 @@ cyl_row3 = lambda g, xfun, yfun, zfun: np.c_[call3(xfun, g), call3(yfun, g), cal
 cylF2 = lambda M, fx, fy: np.vstack((cyl_row2(M.gridFx, fx, fy), cyl_row2(M.gridFz, fx, fy)))
 
 
-class TestFaceDiv2D(testing.OrderTest):
+class TestFaceDiv2D(tests.OrderTest):
     name = "FaceDiv"
     meshTypes = MESHTYPES
     meshDimension = 2
@@ -342,7 +342,7 @@ class TestFaceDiv2D(testing.OrderTest):
         self.orderTest()
 
 
-class TestEdgeCurl2D(testing.OrderTest):
+class TestEdgeCurl2D(tests.OrderTest):
     name = "EdgeCurl"
     meshTypes = MESHTYPES
     meshDimension = 2
@@ -443,7 +443,7 @@ class TestAveragingSimple(unittest.TestCase):
         )
 
 
-class TestAveE2CC(testing.OrderTest):
+class TestAveE2CC(tests.OrderTest):
     name = "aveE2CC"
     meshTypes = MESHTYPES
     meshDimension = 2
@@ -465,7 +465,7 @@ class TestAveE2CC(testing.OrderTest):
         self.orderTest()
 
 
-class TestAveE2CCV(testing.OrderTest):
+class TestAveE2CCV(tests.OrderTest):
     name = "aveE2CCV"
     meshTypes = MESHTYPES
     meshDimension = 2
@@ -487,7 +487,7 @@ class TestAveE2CCV(testing.OrderTest):
         self.orderTest()
 
 
-class TestAveF2CCV(testing.OrderTest):
+class TestAveF2CCV(tests.OrderTest):
     name = "aveF2CCV"
     meshTypes = MESHTYPES
     meshDimension = 2
@@ -515,7 +515,7 @@ class TestAveF2CCV(testing.OrderTest):
         self.orderTest()
 
 
-class TestAveF2CC(testing.OrderTest):
+class TestAveF2CC(tests.OrderTest):
     name = "aveF2CC"
     meshTypes = MESHTYPES
     meshDimension = 2
@@ -538,7 +538,7 @@ class TestAveF2CC(testing.OrderTest):
         self.orderTest()
 
 
-class TestInnerProducts2D(testing.OrderTest):
+class TestInnerProducts2D(tests.OrderTest):
     """Integrate an function over a unit cube domain using edgeInnerProducts and faceInnerProducts."""
 
     meshTypes = MESHTYPES

@@ -25,10 +25,10 @@ except ImportError as err:
             to compile the cython code.
             """
             )
-from . import testing
+from . import tests
 
 # DERECATED
-Tests = testing
+Tests = tests
 
 __version__   = '0.5.1'
 __author__    = 'SimPEG Team'

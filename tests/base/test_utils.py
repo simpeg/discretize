@@ -10,7 +10,7 @@ from discretize.utils import (
     ExtractCoreMesh, active_from_xyz, mesh_builder_xyz, refine_tree_xyz,
     meshTensor
 )
-from discretize.testing import checkDerivative
+from discretize.tests import checkDerivative
 import discretize
 import matplotlib.pyplot as plt
 
