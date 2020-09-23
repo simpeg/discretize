@@ -220,7 +220,7 @@ def extract_core_mesh(xyzlim, mesh, mesh_type='tensor'):
 
         xc = mesh.grid_cell_centers_x[xind]
 
-        hx = mesh.hx[xind]
+        hx = mesh.h[0][xind]
 
         x0 = [xc[0]-hx[0]*0.5]
 
@@ -238,8 +238,8 @@ def extract_core_mesh(xyzlim, mesh, mesh_type='tensor'):
         xc = mesh.grid_cell_centers_x[xind]
         yc = mesh.grid_cell_centers_y[yind]
 
-        hx = mesh.hx[xind]
-        hy = mesh.hy[yind]
+        hx = mesh.h[0][xind]
+        hy = mesh.h[1][yind]
 
         x0 = [xc[0]-hx[0]*0.5, yc[0]-hy[0]*0.5]
 
@@ -263,9 +263,9 @@ def extract_core_mesh(xyzlim, mesh, mesh_type='tensor'):
         yc = mesh.grid_cell_centers_y[yind]
         zc = mesh.grid_cell_centers_z[zind]
 
-        hx = mesh.hx[xind]
-        hy = mesh.hy[yind]
-        hz = mesh.hz[zind]
+        hx = mesh.h[0][xind]
+        hy = mesh.h[1][yind]
+        hz = mesh.h[2][zind]
 
         x0 = [xc[0]-hx[0]*0.5, yc[0]-hy[0]*0.5, zc[0]-hz[0]*0.5]
 
@@ -534,7 +534,7 @@ def refine_tree_xyz(
 
         # Compute the outer limits of each octree level
         rMax = np.cumsum(
-            mesh.hx.min() *
+            mesh.h[0].min() *
             np.asarray(octree_levels) *
             2**np.arange(len(octree_levels))
         )
@@ -561,7 +561,7 @@ def refine_tree_xyz(
 
         if mesh.dim == 2:
             rOut = np.abs(centroid[0]-xyz).max()
-            hz = mesh.hy.min()
+            hz = mesh.h[1].min()
         else:
             # Largest outer point distance
             rOut = np.linalg.norm(np.r_[
@@ -569,7 +569,7 @@ def refine_tree_xyz(
                 np.abs(centroid[1]-xyz[:, 1]).max()
                 ]
             )
-            hz = mesh.hz.min()
+            hz = mesh.h[2].min()
 
         # Compute maximum depth of refinement
         zmax = np.cumsum(
@@ -580,7 +580,7 @@ def refine_tree_xyz(
 
         # Compute maximum horizontal padding offset
         padWidth = np.cumsum(
-            mesh.hx.min() *
+            mesh.h[0].min() *
             np.asarray(octree_levels_padding) *
             2**np.arange(len(octree_levels_padding))
         )
@@ -592,13 +592,13 @@ def refine_tree_xyz(
         # Cycle through the Tree levels backward
         for ii in range(len(octree_levels)-1, -1, -1):
 
-            dx = mesh.hx.min() * 2**ii
+            dx = mesh.h[0].min() * 2**ii
 
             if mesh.dim == 3:
-                dy = mesh.hy.min() * 2**ii
-                dz = mesh.hz.min() * 2**ii
+                dy = mesh.h[1].min() * 2**ii
+                dz = mesh.h[2].min() * 2**ii
             else:
-                dz = mesh.hy.min() * 2**ii
+                dz = mesh.h[1].min() * 2**ii
 
             # Increase the horizontal extent of the surface
             if xyPad != padWidth[ii]:
@@ -680,12 +680,12 @@ def refine_tree_xyz(
         bsw = np.min(xyz, axis=0)
         tne = np.max(xyz, axis=0)
 
-        hx = mesh.hx.min()
+        hx = mesh.h[0].min()
 
         if mesh.dim == 2:
-            hz = mesh.hy.min()
+            hz = mesh.h[1].min()
         else:
-            hz = mesh.hz.min()
+            hz = mesh.h[2].min()
 
         # Pre-calculate max depth of each level
         zmax = np.cumsum(
@@ -696,7 +696,7 @@ def refine_tree_xyz(
         if mesh.dim == 2:
             # Pre-calculate outer extent of each level
             padWidth = np.cumsum(
-                    mesh.hx.min() *
+                    mesh.h[0].min() *
                     np.asarray(octree_levels_padding) *
                     2**np.arange(len(octree_levels_padding))
                 )
@@ -717,7 +717,7 @@ def refine_tree_xyz(
             ]
 
         else:
-            hy = mesh.hy.min()
+            hy = mesh.h[1].min()
 
             # Pre-calculate outer X extent of each level
             padWidth_x = np.cumsum(

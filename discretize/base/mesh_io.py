@@ -281,14 +281,14 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         s += '{0:d} {1:d} {2:d}\n'.format(*tuple(mesh.vnC))
         # Have to it in the same operation or use mesh.x0.copy(),
         # otherwise the mesh.x0 is updated.
-        origin = mesh.x0 + np.array([0, 0, mesh.hz.sum()])
+        origin = mesh.x0 + np.array([0, 0, mesh.h[2].sum()])
         origin.dtype = float
 
         nCx, nCy, nCz = mesh.shape_cells
         s += '{0:.6f} {1:.6f} {2:.6f}\n'.format(*tuple(origin))
-        s += ('%.6f '*nCx+'\n') % tuple(mesh.hx)
-        s += ('%.6f '*nCy+'\n') % tuple(mesh.hy)
-        s += ('%.6f '*nCz+'\n') % tuple(mesh.hz[::-1])
+        s += ('%.6f '*nCx+'\n') % tuple(mesh.h[0])
+        s += ('%.6f '*nCy+'\n') % tuple(mesh.h[1])
+        s += ('%.6f '*nCz+'\n') % tuple(mesh.h[2][::-1])
         f = open(fileName, 'w')
         f.write(s)
         f.close()

@@ -728,8 +728,8 @@ class InterfaceMPL(object):
                         C[ix*nCx:(ix+1)*nCx, iy*nCy:(iy+1)*nCy] = np.nan
 
             C = np.ma.masked_where(np.isnan(C), C)
-            xx = np.r_[0, np.cumsum(np.kron(np.ones((nX, 1)), self.hx).ravel())]
-            yy = np.r_[0, np.cumsum(np.kron(np.ones((nY, 1)), self.hy).ravel())]
+            xx = np.r_[0, np.cumsum(np.kron(np.ones((nX, 1)), self.h[0]).ravel())]
+            yy = np.r_[0, np.cumsum(np.kron(np.ones((nY, 1)), self.h[1]).ravel())]
             # Plot the mesh
 
             if clim is None:
@@ -740,15 +740,15 @@ class InterfaceMPL(object):
             gy =  np.arange(nY+1)*(self.grid_nodes_y[-1]-self.x0[1])
             # Repeat and seperate with NaN
             gxX = np.c_[gx, gx, gx+np.nan].ravel()
-            gxY = np.kron(np.ones((nX+1, 1)), np.array([0, sum(self.hy)*nY, np.nan])).ravel()
-            gyX = np.kron(np.ones((nY+1, 1)), np.array([0, sum(self.hx)*nX, np.nan])).ravel()
+            gxY = np.kron(np.ones((nX+1, 1)), np.array([0, sum(self.h[1])*nY, np.nan])).ravel()
+            gyX = np.kron(np.ones((nY+1, 1)), np.array([0, sum(self.h[0])*nX, np.nan])).ravel()
             gyY = np.c_[gy, gy, gy+np.nan].ravel()
             ax.plot(gxX, gxY, annotation_color+'-', linewidth=2)
             ax.plot(gyX, gyY, annotation_color+'-', linewidth=2)
             ax.axis('tight')
 
             if numbering:
-                pad = np.sum(self.hx)*0.04
+                pad = np.sum(self.h[0])*0.04
                 for iy in range(int(nY)):
                     for ix in range(int(nX)):
                         iz = ix + iy*nX
@@ -816,8 +816,8 @@ class InterfaceMPL(object):
                 hxmin = sample_grid[0]
                 hymin = sample_grid[1]
             else:
-                hxmin = self.hx.min()
-                hymin = self.hy.min()
+                hxmin = self.h[0].min()
+                hymin = self.h[1].min()
 
             if range_x is not None:
                 dx = (range_x[1] - range_x[0])
@@ -825,8 +825,8 @@ class InterfaceMPL(object):
                 hx = np.ones(nxi)*dx/nxi
                 x0_x = range_x[0]
             else:
-                nxi = int(self.hx.sum()/hxmin)
-                hx = np.ones(nxi)*self.hx.sum()/nxi
+                nxi = int(self.h[0].sum()/hxmin)
+                hx = np.ones(nxi)*self.h[0].sum()/nxi
                 x0_x = self.x0[0]
 
             if range_y is not None:
@@ -835,8 +835,8 @@ class InterfaceMPL(object):
                 hy = np.ones(nyi)*dy/nyi
                 x0_y = range_y[0]
             else:
-                nyi = int(self.hy.sum()/hymin)
-                hy = np.ones(nyi)*self.hy.sum()/nyi
+                nyi = int(self.h[1].sum()/hymin)
+                hy = np.ones(nyi)*self.h[1].sum()/nyi
                 x0_y = self.x0[1]
 
             U, V = self.reshape(v.reshape((self.nC, -1), order='F'), 'CC', 'CC', 'M')
@@ -986,13 +986,13 @@ class InterfaceMPL(object):
         h2d = []
         x2d = []
         if 'X' not in normal:
-            h2d.append(self.hx)
+            h2d.append(self.h[0])
             x2d.append(self.x0[0])
         if 'Y' not in normal:
-            h2d.append(self.hy)
+            h2d.append(self.h[1])
             x2d.append(self.x0[1])
         if 'Z' not in normal:
-            h2d.append(self.hz)
+            h2d.append(self.h[2])
             x2d.append(self.x0[2])
         tM = self.__class__(h=h2d, x0=x2d)  #: Temp Mesh
         v2d = doSlice(v)
@@ -1047,9 +1047,9 @@ class InterfaceMPL(object):
 
         if mirror:
             # create a mirrored mesh
-            hx = np.hstack([np.flipud(self.hx), self.hx])
-            x00 = self.x0[0] - self.hx.sum()
-            M = discretize.TensorMesh([hx, self.hz], x0=[x00, self.x0[2]])
+            hx = np.hstack([np.flipud(self.h[0]), self.h[0]])
+            x00 = self.x0[0] - self.h[0].sum()
+            M = discretize.TensorMesh([hx, self.h[2]], x0=[x00, self.x0[2]])
 
             if mirror_data is None:
                 mirror_data = val
@@ -1083,7 +1083,7 @@ class InterfaceMPL(object):
 
             args = (val,) + args[1:]
         else:
-            M = discretize.TensorMesh([self.hx, self.hz], x0=[self.x0[0], self.x0[2]])
+            M = discretize.TensorMesh([self.h[0], self.h[2]], x0=[self.x0[0], self.x0[2]])
 
         ax = kwargs.get('ax', None)
         if ax is None:
@@ -1180,7 +1180,7 @@ class InterfaceMPL(object):
 
     def __plotGridThetaSlice(self, *args, **kwargs):
         # make a cyl symmetric mesh
-        h2d = [self.hx, 1, self.hz]
+        h2d = [self.h[0], 1, self.h[2]]
         mesh2D = self.__class__(h=h2d, x0=self.x0)
         return mesh2D.plotGrid(*args, **kwargs)
 

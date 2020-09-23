@@ -378,7 +378,7 @@ class DiffOperators(object):
 
     @property
     def _nodalLaplacianx(self):
-        Hx = sdiag(1./self.hx)
+        Hx = sdiag(1./self.h[0])
         if self.dim == 2:
             Hx = sp.kron(speye(self.shape_nodes[1]), Hx)
         elif self.dim == 3:
@@ -387,7 +387,7 @@ class DiffOperators(object):
 
     @property
     def _nodalLaplaciany(self):
-        Hy = sdiag(1./self.hy)
+        Hy = sdiag(1./self.h[1])
         if self.dim == 1:
             return None
         elif self.dim == 2:
@@ -400,7 +400,7 @@ class DiffOperators(object):
     def _nodalLaplacianz(self):
         if self.dim == 1 or self.dim == 2:
             return None
-        Hz = sdiag(1./self.hz)
+        Hz = sdiag(1./self.h[2])
         Hz = kron3(Hz, speye(self.shape_nodes[1]), speye(self.shape_nodes[0]))
         return Hz.T * self._nodalLaplacianStencilz * Hz
 

@@ -78,7 +78,7 @@ def setupMesh(meshType, nC, nDim):
 
         if nDim == 2:
             mesh = CylMesh([h[0], 1, h[2]])
-            max_h = max([np.max(hi) for hi in [mesh.hx, mesh.hz]])
+            max_h = max([np.max(hi) for hi in [mesh.h[0], mesh.h[2]]])
         elif nDim == 3:
             mesh = CylMesh(h)
             max_h = max([np.max(hi) for hi in mesh.h])

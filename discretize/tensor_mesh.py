@@ -367,7 +367,7 @@ class TensorMesh(
             attrs[name]['max'] = np.nanmax(n_vector)
 
             # Get min/max cell width.
-            h_vector = getattr(self, 'h'+name)
+            h_vector = self.h[i]
             attrs[name]['h_min'] = np.nanmin(h_vector)
             attrs[name]['h_max'] = np.nanmax(h_vector)
 
@@ -381,7 +381,7 @@ class TensorMesh(
                 )
 
             # Add number of cells.
-            attrs[name]['nC'] = getattr(self, 'nC'+name)
+            attrs[name]['nC'] = self.shape_cells[i]
 
         return attrs
 
