@@ -240,10 +240,7 @@ class InterfaceVTK(object):
         vtkPts = _vtk.vtkPoints()
         vtkPts.SetData(_nps.numpy_to_vtk(ptsMat, deep=True))
         # Uncover hidden dimension
-        for i, d in enumerate(dims):
-            if d is None:
-                dims[i] = 0
-            dims[i] = dims[i] + 1
+        dims = tuple(0 if dim is None else dim+1 for dim in dims)
         output = _vtk.vtkStructuredGrid()
         output.SetDimensions(dims[0], dims[1], dims[2]) # note this subtracts 1
         output.SetPoints(vtkPts)
