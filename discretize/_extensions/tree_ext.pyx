@@ -1171,7 +1171,7 @@ cdef class _TreeMesh:
         """Returns a tuple of arrays of indexes for boundary faces in each direction
         xdown, xup, ydown, yup, zdown, zup
         """
-        cell_boundary_inds = self.cellBoundaryInd
+        cell_boundary_inds = self.cell_boundary_indices
         cdef np.int64_t[:] c_indxu, c_indxd, c_indyu, c_indyd, c_indzu, c_indzd
         cdef np.int64_t[:] f_indxu, f_indxd, f_indyu, f_indyd, f_indzu, f_indzd
         if self._dim == 2:
@@ -1242,7 +1242,7 @@ cdef class _TreeMesh:
             dir_str = direction
         cdef int_t dir_ind = {'xd':0, 'xu':1, 'yd':2, 'yu':3, 'zd':4, 'zu':5}[dir_str]
         if active_ind is None:
-            return self.cellBoundaryInd[dir_ind]
+            return self.cell_boundary_indices[dir_ind]
 
         active_ind = np.require(active_ind, dtype=np.int8, requirements='C')
         cdef np.int8_t[:] act = active_ind

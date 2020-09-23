@@ -837,7 +837,7 @@ def active_from_xyz(mesh, xyz, grid_reference='CC', method='linear'):
 
     """
     try:
-        if not mesh.isSymmetric:
+        if not mesh.is_symmetric:
             raise NotImplementedError('Unsymmetric CylMesh is not yet supported')
     except AttributeError:
         pass

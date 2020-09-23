@@ -332,7 +332,7 @@ class DiffOperators(object):
         """
         if getattr(self, '_nodalGrad', None) is None:
             G = self._nodalGradStencil
-            L = self.edge
+            L = self.edge_lengths
             self._nodalGrad = sdiag(1/L)*G
         return self._nodalGrad
 
@@ -684,7 +684,7 @@ class DiffOperators(object):
         """
         Construct the 3D curl operator.
         """
-        L = self.edge  # Compute lengths of cell edges
+        L = self.edge_lengths  # Compute lengths of cell edges
         S = self.face_areas # Compute areas of cell faces
 
         if getattr(self, '_edgeCurl', None) is None:
@@ -763,7 +763,7 @@ class DiffOperators(object):
             return sp.csr_matrix((vals, ij), shape=(2, n+1))
 
         n = self.vnC
-        indF = self.faceBoundaryInd
+        indF = self.face_boundary_indices
         if self.dim == 1:
             Pbc = projDirichlet(n[0], BC[0])
             indF = indF[0] | indF[1]
@@ -841,7 +841,7 @@ class DiffOperators(object):
         BC = [['dirichlet', 'dirichlet'], ['dirichlet', 'dirichlet'],
               ['dirichlet', 'dirichlet']]
         n = self.vnC
-        indF = self.faceBoundaryInd
+        indF = self.face_boundary_indices
 
         if self.dim == 1:
             Pbc = projDirichlet(n[0], BC[0])

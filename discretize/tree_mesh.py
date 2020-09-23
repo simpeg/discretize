@@ -313,7 +313,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         """
         if getattr(self, '_cellGrad', None) is None:
 
-            i_s = self.faceBoundaryInd
+            i_s = self.face_boundary_indices
 
             ix = np.ones(self.nFx)
             ix[i_s[0]] = 0.
@@ -350,7 +350,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         if getattr(self, '_cellGradx', None) is None:
 
             nFx = self.nFx
-            i_s = self.faceBoundaryInd
+            i_s = self.face_boundary_indices
 
             ix = np.ones(self.nFx)
             ix[i_s[0]] = 0.0
@@ -376,7 +376,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
 
             nFx = self.nFx
             nFy = self.nFy
-            i_s = self.faceBoundaryInd
+            i_s = self.face_boundary_indices
 
             iy = np.ones(self.nFy)
             iy[i_s[2]] = 0.
@@ -404,7 +404,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
 
             nFx = self.nFx
             nFy = self.nFy
-            i_s = self.faceBoundaryInd
+            i_s = self.face_boundary_indices
 
             iz = np.ones(self.nFz)
             iz[i_s[4]] = 0.

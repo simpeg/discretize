@@ -295,11 +295,11 @@ class TensorMesh(
     def edge_lengths(self):
         """Construct edge legnths of the 3D model as 1d array."""
         if self.dim == 1:
-            return self.edgeEx
+            return self.edge_x_lengths
         elif self.dim == 2:
-            return np.r_[self.edgeEx, self.edgeEy]
+            return np.r_[self.edge_x_lengths, self.edge_y_lengths]
         elif(self.dim == 3):
-            return np.r_[self.edgeEx, self.edgeEy, self.edgeEz]
+            return np.r_[self.edge_x_lengths, self.edge_y_lengths, self.edge_z_lengths]
         return self._edge
 
     @property

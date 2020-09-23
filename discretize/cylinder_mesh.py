@@ -804,7 +804,7 @@ class CylindricalMesh(
         bool vector indicating if a z-edge is hanging or not
         """
         if getattr(self, '_ishangingEzBool', None) is None:
-            if self.isSymmetric:
+            if self.is_symmetric:
                 self._ishangingEzBool = np.ones(self._ntEz, dtype=bool)
             else:
                 nx, ny, nz = self._vntN
@@ -955,7 +955,7 @@ class CylindricalMesh(
         numpy.ndarray
             grid locations of nodes
         """
-        if self.isSymmetric:
+        if self.is_symmetric:
             self._gridN = self._gridNFull
         if getattr(self, '_gridN', None) is None:
             self._gridN = self._gridNFull[~self._ishangingN, :]
@@ -1124,7 +1124,7 @@ class CylindricalMesh(
     # def _cellGradxStencil(self):
     #     n = self.vnC
 
-    #     if self.isSymmetric:
+    #     if self.is_symmetric:
     #         G1 = sp.kron(speye(n[2]), ddxCellGrad(n[0], BC))
     #     else:
     #         G1 = self._deflationMatrix('Fx').T * kron3(
@@ -1163,26 +1163,26 @@ class CylindricalMesh(
 
     # @property
     # def _nodalGradStencilx(self):
-    #     if self.isSymmetric:
+    #     if self.is_symmetric:
     #         return None
     #     return kron3(speye(self.shape_nodes[2]), speye(self.shape_nodes[1]), ddx(self.shape_cells[0]))
 
     # @property
     # def _nodalGradStencily(self):
-    #     if self.isSymmetric:
+    #     if self.is_symmetric:
     #         None
     #         # return kron3(speye(self.shape_nodes[2]), ddx(self.shape_cells[1]), speye(self.shape_nodes[0])) * self._deflationMatrix('Ey')
     #     return kron3(speye(self.shape_nodes[2]), ddx(self.shape_cells[1]), speye(self.shape_nodes[0]))
 
     # @property
     # def _nodalGradStencilz(self):
-    #     if self.isSymmetric:
+    #     if self.is_symmetric:
     #         return None
     #     return kron3(ddx(self.shape_cells[2]), speye(self.shape_nodes[1]), speye(self.shape_nodes[0]))
 
     # @property
     # def _nodalGradStencil(self):
-    #     if self.isSymmetric:
+    #     if self.is_symmetric:
     #         return None
     #     else:
     #         G = self._deflationMatrix('E').T * sp.vstack((
@@ -1195,7 +1195,7 @@ class CylindricalMesh(
     @property
     def nodal_gradient(self):
         """Construct gradient operator (nodes to edges)."""
-        if self.isSymmetric:
+        if self.is_symmetric:
             return None
         raise NotImplementedError('nodalGrad not yet implemented')
 
@@ -1317,7 +1317,7 @@ class CylindricalMesh(
         if getattr(self, '_aveE2CC', None) is None:
             # The number of cell centers in each direction
             # n = self.vnC
-            if self.isSymmetric:
+            if self.is_symmetric:
                 self._aveE2CC = self.aveEy2CC
             else:
                 self._aveE2CC = 1./self.dim * sp.hstack(
@@ -1403,7 +1403,7 @@ class CylindricalMesh(
             matrix that averages from faces to cell centers
         """
         if getattr(self, '_aveF2CC', None) is None:
-            if self.isSymmetric:
+            if self.is_symmetric:
                 self._aveF2CC = 0.5*(
                     sp.hstack((self.aveFx2CC, self.aveFz2CC), format="csr")
                 )
@@ -1458,7 +1458,7 @@ class CylindricalMesh(
             return speye(self.nC)
 
         elif location in ['E', 'F']:
-            if self.isSymmetric:
+            if self.is_symmetric:
                 if location == 'E':
                     return self._deflationMatrix('Ey', asOnes=asOnes)
                 elif location == 'F':
@@ -1604,7 +1604,7 @@ class CylindricalMesh(
             M, the interpolation matrix
         """
 
-        if not self.isSymmetric:
+        if not self.is_symmetric:
             raise AssertionError(
                 "Currently we have not taken into account other projections "
                 "for more complicated CylMeshes"

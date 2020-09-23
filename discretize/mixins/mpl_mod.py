@@ -1018,7 +1018,7 @@ class InterfaceMPL(object):
 
     # CylindricalMesh plotting
     def __plotCylTensorMesh(self, plotType, *args, **kwargs):
-        if not self.isSymmetric:
+        if not self.is_symmetric:
             raise Exception('We have not yet implemented this type of view.')
         assert plotType in ['plotImage', 'plotGrid']
 
@@ -1110,7 +1110,7 @@ class InterfaceMPL(object):
         return out
 
     def __plot_grid_cyl(self, *args, **kwargs):
-        if self.isSymmetric:
+        if self.is_symmetric:
             return self.__plotCylTensorMesh('plotGrid', *args, **kwargs)
 
         # allow a slice to be provided for the mesh
