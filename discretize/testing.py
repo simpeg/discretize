@@ -4,6 +4,7 @@ import scipy.sparse as sp
 
 from .utils import mkvc, exampleLrmGrid, requires
 from . import TensorMesh, CurvilinearMesh, CylMesh
+from .utils.code_utils import deprecate_method, deprecate_function, deprecate_property
 
 from . import TreeMesh as Tree
 
@@ -44,37 +45,37 @@ sadness = [
 ]
 
 
-def setupMesh(meshType, nC, nDim):
+def setup_mesh(mesh_type, nC, nDim):
     """
     For a given number of cells nc, generate a TensorMesh with uniform
     cells with edge length h=1/nc.
     """
 
-    if 'TensorMesh' in meshType:
-        if 'uniform' in meshType:
+    if 'TensorMesh' in mesh_type:
+        if 'uniform' in mesh_type:
             h = [nC, nC, nC]
-        elif 'random' in meshType:
+        elif 'random' in mesh_type:
             h1 = np.random.rand(nC)*nC*0.5 + nC*0.5
             h2 = np.random.rand(nC)*nC*0.5 + nC*0.5
             h3 = np.random.rand(nC)*nC*0.5 + nC*0.5
             h = [hi/np.sum(hi) for hi in [h1, h2, h3]]  # normalize
         else:
-            raise Exception('Unexpected meshType')
+            raise Exception('Unexpected mesh_type')
 
         mesh = TensorMesh(h[:nDim])
         max_h = max([np.max(hi) for hi in mesh.h])
 
-    elif 'CylMesh' in meshType:
-        if 'uniform' in meshType:
+    elif 'CylMesh' in mesh_type:
+        if 'uniform' in mesh_type:
             h = [nC, nC, nC]
-        elif 'random' in meshType:
+        elif 'random' in mesh_type:
             h1 = np.random.rand(nC)*nC*0.5 + nC*0.5
             h2 = np.random.rand(nC)*nC*0.5 + nC*0.5
             h3 = np.random.rand(nC)*nC*0.5 + nC*0.5
             h = [hi/np.sum(hi) for hi in [h1, h2, h3]]  # normalize
             h[1] = h[1]*2*np.pi
         else:
-            raise Exception('Unexpected meshType')
+            raise Exception('Unexpected mesh_type')
 
         if nDim == 2:
             mesh = CylMesh([h[0], 1, h[2]])
@@ -83,13 +84,13 @@ def setupMesh(meshType, nC, nDim):
             mesh = CylMesh(h)
             max_h = max([np.max(hi) for hi in mesh.h])
 
-    elif 'Curv' in meshType:
-        if 'uniform' in meshType:
+    elif 'Curv' in mesh_type:
+        if 'uniform' in mesh_type:
             kwrd = 'rect'
-        elif 'rotate' in meshType:
+        elif 'rotate' in mesh_type:
             kwrd = 'rotate'
         else:
-            raise Exception('Unexpected meshType')
+            raise Exception('Unexpected mesh_type')
         if nDim == 1:
             raise Exception('Lom not supported for 1D')
         elif nDim == 2:
@@ -100,27 +101,27 @@ def setupMesh(meshType, nC, nDim):
             mesh = CurvilinearMesh([X, Y, Z])
         max_h = 1./nC
 
-    elif 'Tree' in meshType:
+    elif 'Tree' in mesh_type:
         if Tree is None:
             raise Exception(
                 "Tree Mesh not installed. Run 'python setup.py install'"
             )
         nC *= 2
-        if 'uniform' in meshType or 'notatree' in meshType:
+        if 'uniform' in mesh_type or 'notatree' in mesh_type:
             h = [nC, nC, nC]
-        elif 'random' in meshType:
+        elif 'random' in mesh_type:
             h1 = np.random.rand(nC)*nC*0.5 + nC*0.5
             h2 = np.random.rand(nC)*nC*0.5 + nC*0.5
             h3 = np.random.rand(nC)*nC*0.5 + nC*0.5
             h = [hi/np.sum(hi) for hi in [h1, h2, h3]]  # normalize
         else:
-            raise Exception('Unexpected meshType')
+            raise Exception('Unexpected mesh_type')
 
         levels = int(np.log(nC)/np.log(2))
         mesh = Tree(h[:nDim], levels=levels)
 
         def function(cell):
-            if 'notatree' in meshType:
+            if 'notatree' in mesh_type:
                 return levels - 1
             r = cell.center - 0.5
             dist = np.sqrt(r.dot(r))
@@ -192,23 +193,23 @@ class OrderTest(unittest.TestCase):
     """
 
     name = "Order Test"
-    expectedOrders = 2.  # This can be a list of orders, must be the same length as meshTypes
-    tolerance = 0.85     # This can also be a list, must be the same length as meshTypes
-    meshSizes = [4, 8, 16, 32]
-    meshTypes = ['uniformTensorMesh']
-    _meshType = meshTypes[0]
-    meshDimension = 3
+    expected_orders = 2.  # This can be a list of orders, must be the same length as mesh_types
+    tolerance = 0.85     # This can also be a list, must be the same length as mesh_types
+    mesh_sizes = [4, 8, 16, 32]
+    mesh_types = ['uniformTensorMesh']
+    _mesh_type = mesh_types[0]
+    mesh_dimension = 3
 
-    def setupMesh(self, nC):
-        mesh, max_h = setupMesh(self._meshType, nC, self.meshDimension)
+    def setup_mesh(self, nC):
+        mesh, max_h = setupMesh(self._mesh_type, nC, self.meshDimension)
         self.M = mesh
         return max_h
 
-    def getError(self):
+    def get_error(self):
         """For given h, generate A[h], f and A(f) and return norm of error."""
         return 1.
 
-    def orderTest(self):
+    def order_test(self):
         """
         For number of cells specified in meshSizes setup mesh, call getError
         and prints mesh size, error, ratio between current and previous error,
@@ -216,23 +217,23 @@ class OrderTest(unittest.TestCase):
 
 
         """
-        if not isinstance(self.meshTypes, list):
-            raise TypeError('meshTypes must be a list')
+        if not isinstance(self.mesh_types, list):
+            raise TypeError('mesh_types must be a list')
         if type(self.tolerance) is not list:
-            self.tolerance = np.ones(len(self.meshTypes))*self.tolerance
+            self.tolerance = np.ones(len(self.mesh_types))*self.tolerance
 
         # if we just provide one expected order, repeat it for each mesh type
         if type(self.expectedOrders) == float or type(self.expectedOrders) == int:
-            self.expectedOrders = [self.expectedOrders for i in self.meshTypes]
+            self.expectedOrders = [self.expectedOrders for i in self.mesh_types]
         if isinstance(self.expectedOrders, np.ndarray):
             self.expectedOrders = list(self.expectedOrders)
         assert type(self.expectedOrders) == list, 'expectedOrders must be a list'
-        assert len(self.expectedOrders) == len(self.meshTypes), 'expectedOrders must have the same length as the meshTypes'
+        assert len(self.expectedOrders) == len(self.mesh_types), 'expectedOrders must have the same length as the mesh_types'
 
-        for ii_meshType, meshType in enumerate(self.meshTypes):
-            self._meshType = meshType
-            self._tolerance = self.tolerance[ii_meshType]
-            self._expectedOrder = self.expectedOrders[ii_meshType]
+        for ii_mesh_type, mesh_type in enumerate(self.mesh_types):
+            self._mesh_type = mesh_type
+            self._tolerance = self.tolerance[ii_mesh_type]
+            self._expectedOrder = self.expectedOrders[ii_mesh_type]
 
             order = []
             err_old = 0.
@@ -242,7 +243,7 @@ class OrderTest(unittest.TestCase):
                 err = self.getError()
                 if ii == 0:
                     print('')
-                    print(self._meshType + ':  ' + self.name)
+                    print(self._mesh_type + ':  ' + self.name)
                     print('_____________________________________________')
                     print('   h  |    error    | e(i-1)/e(i) |  order')
                     print('~~~~~~|~~~~~~~~~~~~~|~~~~~~~~~~~~~|~~~~~~~~~~')
@@ -257,13 +258,21 @@ class OrderTest(unittest.TestCase):
             if passTest:
                 print(happiness[np.random.randint(len(happiness))])
             else:
-                print('Failed to pass test on ' + self._meshType + '.')
+                print('Failed to pass test on ' + self._mesh_type + '.')
                 print(sadness[np.random.randint(len(sadness))])
             print('')
             self.assertTrue(passTest)
 
+    expectedOrders = deprecate_property("expected_orders", "expectedOrders", removal_version="1.0.0")
+    meshSizes = deprecate_property("mesh_sizes", "meshSizes", removal_version="1.0.0")
+    meshTypes = deprecate_property("mesh_types", "meshTypes", removal_version="1.0.0")
+    meshDimension = deprecate_property("mesh_dimension", "meshDimension", removal_version="1.0.0")
+    setupMesh = deprecate_method("setup_mesh", "setupMesh", removal_version="1.0.0")
+    getError = deprecate_method("get_error", "getError", removal_version="1.0.0")
+    orderTest = deprecate_method("order_test", "orderTest", removal_version="1.0.0")
 
-def Rosenbrock(x, return_g=True, return_H=True):
+
+def rosenbrock(x, return_g=True, return_H=True):
     """Rosenbrock function for testing GaussNewton scheme"""
 
     f = 100*(x[1]-x[0]**2)**2+(1-x[0])**2
@@ -278,7 +287,7 @@ def Rosenbrock(x, return_g=True, return_H=True):
     return out if len(out) > 1 else out[0]
 
 
-def checkDerivative(fctn, x0, num=7, plotIt=True, dx=None, expectedOrder=2, tolerance=0.85, eps=1e-10, ax=None):
+def check_derivative(fctn, x0, num=7, plotIt=True, dx=None, expectedOrder=2, tolerance=0.85, eps=1e-10, ax=None):
     """
         Basic derivative check
 
@@ -383,7 +392,7 @@ def checkDerivative(fctn, x0, num=7, plotIt=True, dx=None, expectedOrder=2, tole
     return passTest
 
 
-def getQuadratic(A, b, c=0):
+def get_quadratic(A, b, c=0):
     """
         Given A, b and c, this returns a quadratic, Q
 
@@ -402,3 +411,10 @@ def getQuadratic(A, b, c=0):
             out += (H,)
         return out if len(out) > 1 else out[0]
     return Quadratic
+
+
+# DEPRECATIONS
+setupMesh = deprecate_function(setup_mesh, "setupMesh", removal_version="1.0.0")
+Rosenbrock = deprecate_function(rosenbrock, "Rosenbrock", removal_version="1.0.0")
+checkDerivative = deprecate_function(check_derivative, "checkDerivative", removal_version="1.0.0")
+getQuadratic = deprecate_function(get_quadratic, "getQuadratic", removal_version="1.0.0")
