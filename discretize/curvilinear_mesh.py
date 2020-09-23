@@ -5,7 +5,6 @@ import properties
 from .utils import mkvc, indexCube, faceInfo, volTetra
 from .base import BaseRectangularMesh
 from .operators import DiffOperators, InnerProducts
-from discretize.mixins.mpl_mod import CurviView
 from .utils.code_utils import deprecate_property
 
 
@@ -27,7 +26,7 @@ def _normalize3D(x):
 
 
 class CurvilinearMesh(
-    BaseRectangularMesh, DiffOperators, InnerProducts, CurviView
+    BaseRectangularMesh, DiffOperators, InnerProducts
 ):
     """CurvilinearMesh is a mesh class that deals with curvilinear meshes.
 

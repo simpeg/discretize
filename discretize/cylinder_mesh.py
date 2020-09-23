@@ -10,12 +10,11 @@ from .utils import (
 )
 from .base import BaseTensorMesh, BaseRectangularMesh
 from .operators import DiffOperators, InnerProducts
-from .mixins.mpl_mod import CylView
 from .utils.code_utils import deprecate_class, deprecate_property, deprecate_method
 
 
 class CylindricalMesh(
-    BaseTensorMesh, BaseRectangularMesh, InnerProducts, CylView, DiffOperators
+    BaseTensorMesh, BaseRectangularMesh, InnerProducts, DiffOperators
 ):
     """
     CylMesh is a mesh class for cylindrical problems. It supports both

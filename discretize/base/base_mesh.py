@@ -155,6 +155,10 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         """
         return int(np.prod(self._n))
 
+    def __len__(self):
+        """The number of cells on the mesh."""
+        return self.n_cells
+
     @property
     def n_nodes(self):
         """Total number of nodes

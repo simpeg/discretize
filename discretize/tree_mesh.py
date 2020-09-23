@@ -88,7 +88,7 @@
 import properties
 
 from .base import BaseTensorMesh
-from .operators import InnerProducts
+from .operators import InnerProducts, DiffOperators
 from .base.mesh_io import TreeMeshIO
 from .utils import asArray_N_x_Dim, requires
 from ._extensions.tree_ext import _TreeMesh, TreeCell
@@ -96,13 +96,7 @@ import numpy as np
 import scipy.sparse as sp
 from six import integer_types
 import warnings
-
-# matplotlib is a soft dependencies for discretize
-try:
-    import matplotlib.pyplot as plt
-    import matplotlib
-except ImportError:
-    matplotlib = False
+from .utils.code_utils import deprecate_property
 
 
 class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
@@ -112,6 +106,34 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
     _meshType = 'TREE'
     _aliases = {
         **BaseTensorMesh._aliases,
+        **DiffOperators._aliases,
+        **{
+            'ntN': 'n_total_nodes',
+            'ntEx': 'n_total_edges_x',
+            'ntEy': 'n_total_edges_y',
+            'ntEz': 'n_total_edges_z',
+            'ntE': 'n_total_edges',
+            'ntFx': 'n_total_faces_x',
+            'ntFy': 'n_total_faces_y',
+            'ntFz': 'n_total_faces_z',
+            'ntF': 'n_total_faces',
+            'nhN': 'n_hanging_nodes',
+            'nhEx': 'n_hanging_edges_x',
+            'nhEy': 'n_hanging_edges_y',
+            'nhEz': 'n_hanging_edges_z',
+            'nhE': 'n_hanging_edges',
+            'nhFx': 'n_hanging_faces_x',
+            'nhFy': 'n_hanging_faces_y',
+            'nhFz': 'n_hanging_faces_z',
+            'nhF': 'n_hanging_faces',
+            'gridhN': 'grid_hanging_nodes',
+            'gridhFx': 'grid_hanging_faces_x',
+            'gridhFy': 'grid_hanging_faces_y',
+            'gridhFz': 'grid_hanging_faces_z',
+            'gridhEx': 'grid_hanging_edges_x',
+            'gridhEy': 'grid_hanging_edges_y',
+            'gridhEz': 'grid_hanging_edges_z',
+        }
     }
 
     #inheriting stuff from BaseTensorMesh that isn't defined in _QuadTree
@@ -270,7 +292,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         return [self.ntEx, self.ntEy] + ([] if self.dim == 2 else [self.ntEz])
 
     @property
-    def cellGradStencil(self):
+    def cell_gradient_stencil(self):
         if getattr(self, '_cellGradStencil', None) is None:
 
             self._cellGradStencil = sp.vstack([
@@ -284,7 +306,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         return self._cellGradStencil
 
     @property
-    def cellGrad(self):
+    def cell_gradient(self):
         """
         Cell centered Gradient operator built off of the faceDiv operator.
         Grad =  - (Mf)^{-1} * Div * diag (volume)
@@ -320,7 +342,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         return self._cellGrad
 
     @property
-    def cellGradx(self):
+    def cell_gradient_x(self):
         """
         Cell centered Gradient operator in x-direction (Gradx)
         Grad = sp.vstack((Gradx, Grady, Gradz))
@@ -345,7 +367,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         return self._cellGradx
 
     @property
-    def cellGrady(self):
+    def cell_gradient_y(self):
         """
         Cell centered Gradient operator in y-direction (Grady)
         Grad = sp.vstack((Gradx, Grady, Gradz))
@@ -371,7 +393,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         return self._cellGrady
 
     @property
-    def cellGradz(self):
+    def cell_gradient_z(self):
         """
         Cell centered Gradient operator in z-direction (Gradz)
         Grad = sp.vstack((Gradx, Grady, Gradz))
@@ -399,19 +421,19 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         return self._cellGradz
 
     @property
-    def faceDivx(self):
+    def face_x_divergence(self):
         if getattr(self, '_faceDivx', None) is None:
             self._faceDivx = self.faceDiv[:, :self.nFx]
         return self._faceDivx
 
     @property
-    def faceDivy(self):
+    def face_y_divergence(self):
         if getattr(self, '_faceDivy', None) is None:
             self._faceDivy = self.faceDiv[:, self.nFx:self.nFx+self.nFy]
         return self._faceDivy
 
     @property
-    def faceDivz(self):
+    def face_z_divergence(self):
         if getattr(self, '_faceDivz', None) is None:
             self._faceDivz = self.faceDiv[:, self.nFx+self.nFy:]
         return self._faceDivz
@@ -451,8 +473,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
 
         return self._cell_levels_by_indexes(indices)
 
-
-    def getInterpolationMat(self, locs, locType, zerosOutside=False):
+    def get_interpolation_matrix(self, locs, locType, zerosOutside=False):
         """ Produces interpolation matrix
 
         Parameters
@@ -500,14 +521,14 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         return Av
 
     @property
-    def permuteCC(self):
+    def permute_cells(self):
         """Permutation matrix re-ordering of cells sorted by x, then y, then z"""
         # TODO: cache these?
         P = np.lexsort(self.gridCC.T) # sort by x, then y, then z
         return sp.identity(self.nC).tocsr()[P]
 
     @property
-    def permuteF(self):
+    def permute_faces(self):
         """Permutation matrix re-ordering of faces sorted by x, then y, then z"""
         # TODO: cache these?
         Px = np.lexsort(self.gridFx.T)
@@ -520,7 +541,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         return sp.identity(self.nF).tocsr()[P]
 
     @property
-    def permuteE(self):
+    def permute_edges(self):
         """Permutation matrix re-ordering of edges sorted by x, then y, then z"""
         # TODO: cache these?
         Px = np.lexsort(self.gridEx.T)
@@ -531,147 +552,6 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
             Pz = np.lexsort(self.gridEz.T) + (self.nEx+self.nEy)
             P = np.r_[Px, Py, Pz]
         return sp.identity(self.nE).tocsr()[P]
-
-    @requires({'matplotlib': matplotlib})
-    def plotSlice(
-        self, v, v_type='CC',
-        normal='Z', ind=None, grid=False, view='real',
-        ax=None, clim=None, show_it=False,
-        pcolor_opts=None, stream_opts=None, grid_opts=None,
-        range_x=None, range_y=None, **kwargs
-    ):
-        if "pcolorOpts" in kwargs:
-            pcolor_opts = kwargs["pcolorOpts"]
-            warnings.warn("pcolorOpts has been deprecated, please use pcolor_opts", DeprecationWarning)
-        if "streamOpts" in kwargs:
-            stream_opts = kwargs["streamOpts"]
-            warnings.warn("streamOpts has been deprecated, please use stream_opts", DeprecationWarning)
-        if "gridOpts" in kwargs:
-            grid_opts = kwargs["gridOpts"]
-            warnings.warn("gridOpts has been deprecated, please use grid_opts", DeprecationWarning)
-        if "showIt" in kwargs:
-            show_it = kwargs["showIt"]
-            warnings.warn("showIt has been deprecated, please use show_it", DeprecationWarning)
-        if "vType" in kwargs:
-            v_type = kwargs["vType"]
-            warnings.warn("vType has been deprecated, please use v_type", DeprecationWarning)
-
-        if pcolor_opts is None:
-            pcolor_opts = {}
-        if stream_opts is None:
-            stream_opts = {'color': 'k'}
-        if grid_opts is None:
-            grid_opts = {'color': 'k', 'alpha': 0.5}
-        v_typeOpts = ['CC', 'N', 'F', 'E', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez']
-        viewOpts = ['real', 'imag', 'abs']
-        normalOpts = ['X', 'Y', 'Z']
-        if v_type not in v_typeOpts:
-            raise ValueError(
-                "v_type must be in ['{0!s}']".format("', '".join(v_typeOpts))
-            )
-        if self.dim == 2:
-            raise NotImplementedError(
-                'Must be a 3D mesh. Use plotImage.'
-            )
-        if view == 'vec':
-            raise NotImplementedError(
-                'Vector view plotting is not implemented for TreeMesh (yet)'
-            )
-        if view not in viewOpts:
-            raise ValueError(
-                "view must be in ['{0!s}']".format("', '".join(viewOpts))
-            )
-        normal = normal.upper()
-        if normal not in normalOpts:
-            raise ValueError(
-                "normal must be in ['{0!s}']".format("', '".join(normalOpts))
-            )
-
-        if not isinstance(grid, bool):
-            raise TypeError('grid must be a boolean')
-
-        normalInd = {'X': 0, 'Y': 1, 'Z': 2}[normal]
-        antiNormalInd = {'X': [1, 2], 'Y': [0, 2], 'Z': [0, 1]}[normal]
-
-        h2d = (self.h[antiNormalInd[0]], self.h[antiNormalInd[1]])
-        x2d = (self.x0[antiNormalInd[0]], self.x0[antiNormalInd[1]])
-
-        #: Size of the sliced dimension
-        szSliceDim = len(self.h[normalInd])
-        if ind is None:
-            ind = int(szSliceDim//2)
-
-        cc_tensor = [None, None, None]
-        for i in range(3):
-            cc_tensor[i] = np.cumsum(np.r_[self.x0[i], self.h[i]])
-            cc_tensor[i] = (cc_tensor[i][1:] + cc_tensor[i][:-1])*0.5
-        slice_loc = cc_tensor[normalInd][ind]
-
-        if type(ind) not in integer_types:
-            raise ValueError('ind must be an integer')
-
-        # create a temporary TreeMesh with the slice through
-        temp_mesh = TreeMesh(h2d, x2d)
-        level_diff = self.max_level - temp_mesh.max_level
-
-        XS = [None, None, None]
-        XS[antiNormalInd[0]], XS[antiNormalInd[1]] = np.meshgrid(cc_tensor[antiNormalInd[0]],
-                                                                 cc_tensor[antiNormalInd[1]])
-        XS[normalInd] = np.ones_like(XS[antiNormalInd[0]])*slice_loc
-        loc_grid = np.c_[XS[0].reshape(-1), XS[1].reshape(-1), XS[2].reshape(-1)]
-        inds = np.unique(self._get_containing_cell_indexes(loc_grid))
-
-        grid2d = self.gridCC[inds][:, antiNormalInd]
-        levels = self._cell_levels_by_indexes(inds) - level_diff
-        temp_mesh.insert_cells(grid2d, levels)
-        tm_gridboost = np.empty((temp_mesh.nC, 3))
-        tm_gridboost[:, antiNormalInd] = temp_mesh.gridCC
-        tm_gridboost[:, normalInd] = slice_loc
-
-        # interpolate values to self.gridCC if not 'CC'
-        if v_type != 'CC':
-            aveOp = 'ave' + v_type + '2CC'
-            Av = getattr(self, aveOp)
-            if v.size == Av.shape[1]:
-                v = Av*v
-            elif len(v_type) == 2:
-                # was one of Fx, Fy, Fz, Ex, Ey, Ez
-                # assuming v has all three components in these cases
-                vec_ind = {'x': 0, 'y': 1, 'z': 2}[v_type[1]]
-                if v_type[0] == 'E':
-                    i_s = np.cumsum([0, self.nEx, self.nEy, self.nEz])
-                elif v_type[0] == 'F':
-                    i_s = np.cumsum([0, self.nFx, self.nFy, self.nFz])
-                v = v[i_s[vec_ind]:i_s[vec_ind+1]]
-                v = Av*v
-
-        # interpolate values from self.gridCC to grid2d
-        ind_3d_to_2d = self._get_containing_cell_indexes(tm_gridboost)
-        v2d = v[ind_3d_to_2d]
-
-        if ax is None:
-            plt.figure()
-            ax = plt.subplot(111)
-        elif not isinstance(ax, matplotlib.axes.Axes):
-            raise Exception("ax must be an matplotlib.axes.Axes")
-
-        out = temp_mesh.plotImage(
-            v2d, v_type='CC',
-            grid=grid, view=view,
-            ax=ax, clim=clim, show_it=False,
-            pcolor_opts=pcolor_opts,
-            grid_opts=grid_opts,
-            range_x=range_x,
-            range_y=range_y)
-
-        ax.set_xlabel('y' if normal == 'X' else 'x')
-        ax.set_ylabel('y' if normal == 'Z' else 'z')
-        ax.set_title(
-            'Slice {0:d}, {1!s} = {2:4.2f}'.format(ind, normal, slice_loc)
-        )
-        if show_it:
-            plt.show()
-        return tuple(out)
 
     def serialize(self):
         serial = BaseTensorMesh.serialize(self)
@@ -687,3 +567,31 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
 
     def __reduce__(self):
         return TreeMesh, (self.h, self.x0), self.__getstate__()
+
+    cellGrad = deprecate_property("cell_gradient", 'cellGrad', removal_version="1.0.0")
+    cellGradx = deprecate_property("cell_gradient_x", 'cellGradx', removal_version="1.0.0")
+    cellGrady = deprecate_property("cell_gradient_y", 'cellGrady', removal_version="1.0.0")
+    cellGradz = deprecate_property("cell_gradient_z", 'cellGradz', removal_version="1.0.0")
+    cellGradStencil = deprecate_property("cell_gradient_stencil", 'cellGradStencil', removal_version="1.0.0")
+    nodalGrad = deprecate_property("nodal_gradient", 'nodalGrad', removal_version="1.0.0")
+    nodalLaplacian = deprecate_property("nodal_laplacian", 'nodalLaplacian', removal_version="1.0.0")
+    faceDiv = deprecate_property("face_divergence", 'faceDiv', removal_version="1.0.0")
+    faceDivx = deprecate_property("face_x_divergence", 'faceDivx', removal_version="1.0.0")
+    faceDivy = deprecate_property("face_y_divergence", 'faceDivy', removal_version="1.0.0")
+    faceDivz = deprecate_property("face_z_divergence", 'faceDivz', removal_version="1.0.0")
+    edgeCurl = deprecate_property("edge_curl", 'edgeCurl', removal_version="1.0.0")
+    maxLevel = deprecate_property("max_used_level", 'maxLevel', removal_version="1.0.0")
+    vol = deprecate_property("cell_volumes", 'vol', removal_version="1.0.0")
+    areaFx = deprecate_property("face_x_areas", 'areaFx', removal_version="1.0.0")
+    areaFy = deprecate_property("face_y_areas", 'areaFy', removal_version="1.0.0")
+    areaFz = deprecate_property("face_z_areas", 'areaFz', removal_version="1.0.0")
+    area = deprecate_property("face_areas", 'area', removal_version="1.0.0")
+    edgeEx = deprecate_property("edge_x_lengths", 'edgeEx', removal_version="1.0.0")
+    edgeEy = deprecate_property("edge_y_lengths", 'edgeEy', removal_version="1.0.0")
+    edgeEz = deprecate_property("edge_z_lengths", 'edgeEz', removal_version="1.0.0")
+    edge = deprecate_property("edge_lengths", 'edge', removal_version="1.0.0")
+    permuteCC = deprecate_property("permute_cells", 'permuteCC', removal_version="1.0.0")
+    permuteF = deprecate_property("permute_faces", 'permuteF', removal_version="1.0.0")
+    permuteE = deprecate_property("permute_edges", 'permuteE', removal_version="1.0.0")
+    faceBoundaryInd = deprecate_property("face_boundary_indices", 'faceBoundaryInd', removal_version="1.0.0")
+    cellBoundaryInd = deprecate_property("cell_boundary_indices", 'cellBoundaryInd', removal_version="1.0.0")

@@ -4,14 +4,13 @@ import numpy as np
 
 from .base import BaseRectangularMesh, BaseTensorMesh
 from .operators import DiffOperators, InnerProducts
-from .mixins.mpl_mod import TensorView
 from .base.mesh_io import TensorMeshIO
 from .utils import mkvc
 from .utils.code_utils import deprecate_property
 
 
 class TensorMesh(
-    BaseTensorMesh, BaseRectangularMesh, TensorView, DiffOperators,
+    BaseTensorMesh, BaseRectangularMesh, DiffOperators,
     InnerProducts, TensorMeshIO
 ):
     """

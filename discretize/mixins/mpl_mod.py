@@ -9,214 +9,267 @@ import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
 import matplotlib.colors as colors
 import matplotlib.cm as cmx
-from matplotlib.collections import PatchCollection
+from matplotlib.collections import PolyCollection, LineCollection
+from matplotlib import rc_params
+from mpl_toolkits.mplot3d.art3d import Line3DCollection
+import matplotlib.transforms as mtransforms
+import discretize
 
+class InterfaceMPL(object):
+    """This class is used for simple ``discretize`` mesh plotting using matplotlib.
 
-class TensorView(object):
-    """Provides viewing functions for TensorMesh
-
-    This class is inherited by TensorMesh
+    This interface adds three methods to the meshes. ``plot_grid`` will plot the
+    grid points of each mesh in 2D and 3D. ``plot_image`` for 2D image ploting of
+    models. and ``plot_slice`` for plotting a 2D slice through a 3D mesh.
     """
-    def __init__(self):
-        pass
 
-    # def components(self):
+    def plotGrid(
+        self, ax=None, nodes=False, faces=False, centers=False, edges=False,
+        lines=True, show_it=False, **kwargs
+    ):
+        """Plot the nodal, cell-centered and staggered grids.
 
-    #     plotAll = len(imageType) == 1
-    #     options = {"direction":direction, "numbering":numbering, "annotation_color":annotation_color, "show_it":False}
-    #     fig = plt.figure(figNum)
-    #     # Determine the subplot number: 131, 121
-    #     numPlots = 130 if plotAll else len(imageType)//2*10+100
-    #     pltNum = 1
-    #     fxyz = self.r(I, 'F', 'F', 'M')
-    #     if plotAll or 'Fx' in imageType:
-    #         ax_x = plt.subplot(numPlots+pltNum)
-    #         self.plotImage(fxyz[0], imageType='Fx', ax=ax_x, **options)
-    #         pltNum +=1
-    #     if plotAll or 'Fy' in imageType:
-    #         ax_y = plt.subplot(numPlots+pltNum)
-    #         self.plotImage(fxyz[1], imageType='Fy', ax=ax_y, **options)
-    #         pltNum +=1
-    #     if plotAll or 'Fz' in imageType:
-    #         ax_z = plt.subplot(numPlots+pltNum)
-    #         self.plotImage(fxyz[2], imageType='Fz', ax=ax_z, **options)
-    #         pltNum +=1
-    #     if show_it: plt.show()
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes or None, optional
+            The axes to draw on. None produces a new Axes.
+        nodes, faces, centers, edges, lines : bool, optional
+            Whether to plot the corresponding item
+        show_it : bool, optional
+            whether to call plt.show()
+        color : Color or str, optional
+            If lines=True, the color of the lines, defaults to first color.
+        linewidth : float, optional
+            If lines=True, the linewidth for the lines.
+        edges_x, edges_y, edges_z, faces_x, faces_y, faces_z : bool, optional
+            When plotting a ``TreeMesh``, these are also options to plot the
+            individual component items.
+        cell_line : bool, optional
+            When plotting a ``TreeMesh``, you can also plot a line through the
+            cell centers in order.
+        slice : {'both', 'theta', 'z'}
+            When plotting a ``CylindricalMesh``, which dimension to slice over.
 
-    @requires({'matplotlib': matplotlib})
+        Returns
+        -------
+        matplotlib.axes.Axes
+            Axes handle for the plot
+
+        Examples
+        --------
+
+        Plotting a 2D TensorMesh grid
+        >>> from matplotlib import pyplot as plt
+        >>> import discretize
+        >>> import numpy as np
+        >>> h1 = np.linspace(.1, .5, 3)
+        >>> h2 = np.linspace(.1, .5, 5)
+        >>> mesh = discretize.TensorMesh([h1, h2])
+        >>> mesh.plotGrid(nodes=True, faces=True, centers=True, lines=True)
+        >>> plt.show()
+
+        Plotting a 3D TensorMesh grid
+        >>> from matplotlib import pyplot as plt
+        >>> import discretize
+        >>> import numpy as np
+        >>> h1 = np.linspace(.1, .5, 3)
+        >>> h2 = np.linspace(.1, .5, 5)
+        >>> h3 = np.linspace(.1, .5, 3)
+        >>> mesh = discretize.TensorMesh([h1, h2, h3])
+        >>> mesh.plotGrid(nodes=True, faces=True, centers=True, lines=True)
+        >>> plt.show()
+
+        Plotting a 2D CurvilinearMesh
+        >>> from matplotlib import pyplot as plt
+        >>> import discretize
+        >>> X, Y = discretize.utils.exampleLrmGrid([10, 10], 'rotate')
+        >>> M = discretize.CurvilinearMesh([X, Y])
+        >>> M.plotGrid()
+        >>> plt.show()
+
+        """
+        mesh_type = self._meshType.lower()
+        plotters = {
+            'tree' : self.__plot_grid_tree,
+            'tensor': self.__plot_grid_tensor,
+            'curv': self.__plot_grid_curv,
+            'cyl': self.__plot_grid_cyl,
+        }
+        try:
+            plotter = plotters[mesh_type]
+        except KeyError:
+            raise NotImplementedError('Mesh type `{}` does not have a plot_grid implementation.'.format(type(self).__name__))
+
+
+        if "showIt" in kwargs:
+            show_it = kwargs.pop("showIt")
+            warnings.warn("showIt has been deprecated, please use show_it", FutureWarning)
+
+        axOpts = {'projection': '3d'} if self.dim == 3 else {}
+        if ax is None and mesh_type is not 'cyl':
+            plt.figure()
+            ax = plt.subplot(111, **axOpts)
+        else:
+            if not isinstance(ax, matplotlib.axes.Axes):
+                raise TypeError("ax must be an matplotlib.axes.Axes")
+
+        rcParams = rc_params()
+        if lines:
+            kwargs['color'] = kwargs.get('color', rcParams['lines.color'])
+            kwargs['linewidth'] = kwargs.get('linewidth', rcParams['lines.linewidth'])
+
+        return plotter(
+            ax=ax, nodes=nodes, faces=faces, centers=centers, edges=edges,
+            lines=lines, show_it=show_it, **kwargs
+        )
+
     def plotImage(
         self, v, v_type='CC', grid=False, view='real',
         ax=None, clim=None, show_it=False,
         pcolor_opts=None,
         stream_opts=None,
         grid_opts=None,
-        numbering=True, annotation_color='w',
         range_x=None, range_y=None, sample_grid=None,
+        stream_thickness=None,
         stream_threshold=None, **kwargs
     ):
+        """ Plots fields on the given mesh.
+
+        Parameters
+        ----------
+        v : numpy.ndarray
+            values to plot
+        v_type : {'CC','CCV', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez'}
+            Where the values of v are defined.
+        view : {'real', 'imag', 'abs', 'vec'}
+            How to view the array.
+        ax : matplotlib.axes.Axes, optional
+            The axes to draw on. None produces a new Axes.
+        clim : tuple of float, optional
+            length 2 tuple of (vmin, vmax) for the color limits
+        range_x, range_y : tuple of float, optional
+            length 2 tuple of (min, max) for the bounds of the plot axes.
+        pcolor_opts : dict, optional
+            Arguments passed on to ``pcolormesh``
+        grid : bool, optional
+            Whether to plot the edges of the mesh cells.
+        grid_opts : dict, optional
+            If ``grid`` is true, arguments passed on to ``plot`` for grid
+        sample_grid : tuple of numpy.ndarray, optional
+            If ``view`` == 'vec', mesh cell widths (hx, hy) to interpolate onto for vector plotting
+        stream_opts : dict, optional
+            If ``view`` == 'vec', arguments passed on to ``streamplot``
+        stream_thickness : float, optional
+            If ``view`` == 'vec', linewidth for ``streamplot``
+        stream_threshold : float, optional
+            If ``view`` == 'vec', only plots vectors with magnitude above this threshold
+        show_it : bool, optional
+            Whether to call plt.show()
+        numbering : bool, optional
+            For 3D TensorMesh only, show the numbering of the slices
+        annotation_color : Color or str, optional
+            For 3D TensorMesh only, color of the annotation
+
+        Examples
+        --------
+        2D ``TensorMesh`` plotting
+
+        >>> from matplotlib import pyplot as plt
+        >>> import discretize
+        >>> import numpy as np
+        >>> M = discretize.TensorMesh([20, 20])
+        >>> v = np.sin(M.gridCC[:, 0]*2*np.pi)*np.sin(M.gridCC[:, 1]*2*np.pi)
+        >>> M.plotImage(v)
+        >>> plt.show()
+
+        3D ``TensorMesh`` plotting
+        >>> import discretize
+        >>> import numpy as np
+        >>> M = discretize.TensorMesh([20, 20, 20])
+        >>> v = np.sin(M.gridCC[:, 0]*2*np.pi)*np.sin(M.gridCC[:, 1]*2*np.pi)*np.sin(M.gridCC[:, 2]*2*np.pi)
+        >>> M.plotImage(v, annotation_color='k')
+        >>> plt.show()
         """
-        Mesh.plotImage(v)
+        mesh_type = self._meshType.lower()
+        plotters = {
+            'tree': self.__plot_image_tree,
+            'tensor': self.__plot_image_tensor,
+            'curv': self.__plot_image_curv,
+            'cyl': self.__plot_image_cyl,
+        }
+        try:
+            plotter = plotters[mesh_type]
+        except KeyError:
+            raise NotImplementedError('Mesh type `{}` does not have a plot_image implementation.'.format(type(self).__name__))
 
-        Plots scalar fields on the given mesh.
-
-        Input:
-
-        :param numpy.ndarray v: vector
-
-        Optional Inputs:
-
-        :param str v_type: type of vector ('CC', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez')
-        :param matplotlib.axes.Axes ax: axis to plot to
-        :param bool show_it: call plt.show()
-
-        3D Inputs:
-
-        :param bool numbering: show numbering of slices, 3D only
-        :param str annotation_color: color of annotation, e.g. 'w', 'k', 'b'
-
-        .. plot::
-            :include-source:
-
-            import discretize
-            import numpy as np
-            M = discretize.TensorMesh([20, 20])
-            v = np.sin(M.gridCC[:, 0]*2*np.pi)*np.sin(M.gridCC[:, 1]*2*np.pi)
-            M.plotImage(v, show_it=True)
-
-        .. plot::
-            :include-source:
-
-            import discretize
-            import numpy as np
-            M = discretize.TensorMesh([20, 20, 20])
-            v = np.sin(M.gridCC[:, 0]*2*np.pi)*np.sin(M.gridCC[:, 1]*2*np.pi)*np.sin(M.gridCC[:, 2]*2*np.pi)
-            M.plotImage(v, annotation_color='k', show_it=True)
-
-        """
         if "pcolorOpts" in kwargs:
-            pcolor_opts = kwargs["pcolorOpts"]
+            pcolor_opts = kwargs.pop("pcolorOpts")
             warnings.warn("pcolorOpts has been deprecated, please use pcolor_opts", DeprecationWarning)
         if "streamOpts" in kwargs:
-            stream_opts = kwargs["streamOpts"]
+            stream_opts = kwargs.pop("streamOpts")
             warnings.warn("streamOpts has been deprecated, please use stream_opts", DeprecationWarning)
         if "gridOpts" in kwargs:
-            grid_opts = kwargs["gridOpts"]
+            grid_opts = kwargs.pop("gridOpts")
             warnings.warn("gridOpts has been deprecated, please use grid_opts", DeprecationWarning)
         if "showIt" in kwargs:
-            show_it = kwargs["showIt"]
+            show_it = kwargs.pop("showIt")
             warnings.warn("showIt has been deprecated, please use show_it", DeprecationWarning)
         if "annotationColor" in kwargs:
-            show_it = kwargs["annotationColor"]
+            show_it = kwargs.pop("annotationColor")
             warnings.warn("annotationColor has been deprecated, please use annotation_color", DeprecationWarning)
         if "vType" in kwargs:
-            v_type = kwargs["vType"]
+            v_type = kwargs.pop("vType")
             warnings.warn("vType has been deprecated, please use v_type", DeprecationWarning)
 
+        # Some Error checking and common defaults
         if pcolor_opts is None:
             pcolor_opts = {}
         if stream_opts is None:
             stream_opts = {'color': 'k'}
         if grid_opts is None:
-            grid_opts = {'color': 'k'}
+            if grid:
+                grid_opts = {'color': 'k'}
+            else:
+                grid_opts = {}
+        v_typeOptsCC = ['N', 'CC', 'Fx', 'Fy', 'Ex', 'Ey']
+        v_typeOptsV = ['CCv', 'F', 'E']
+        v_typeOpts = v_typeOptsCC + v_typeOptsV
+        if view == 'vec':
+            if v_type not in v_typeOptsV:
+                raise ValueError(
+                    "v_type must be in ['{0!s}'] when view='vec'".format(
+                        "', '".join(v_typeOptsV)
+                    )
+                )
+        if v_type not in v_typeOpts:
+            raise ValueError(
+                "v_type must be in ['{0!s}']".format("', '".join(v_typeOpts))
+            )
+
+        viewOpts = ['real', 'imag', 'abs', 'vec']
+        if view not in viewOpts:
+            raise ValueError(
+                "view must be in ['{0!s}']".format("', '".join(viewOpts))
+            )
+
+        if (v.dtype == complex and view == 'vec'):
+            raise NotImplementedError('Can not plot a complex vector.')
 
         if ax is None:
             fig = plt.figure()
             ax = plt.subplot(111)
         else:
             if not isinstance(ax, matplotlib.axes.Axes):
-                raise AssertionError("ax must be an Axes!")
+                raise TypeError("ax must be an Axes!")
             fig = ax.figure
 
-        if self.dim == 1:
-            if v_type == 'CC':
-                ph = ax.plot(
-                    self.vectorCCx, v, linestyle="-", color="C1", marker="o"
-                )
-            elif v_type == 'N':
-                ph = ax.plot(
-                    self.vectorNx, v, linestyle="-", color="C0", marker="s"
-                )
-            ax.set_xlabel("x")
-            ax.axis('tight')
-        elif self.dim == 2:
-            return self._plotImage2D(
-                v, v_type=v_type, grid=grid, view=view,
-                ax=ax, clim=clim, show_it=show_it,
-                pcolor_opts=pcolor_opts, stream_opts=stream_opts,
-                grid_opts=grid_opts, range_x=range_x, range_y=range_y,
-                sample_grid=sample_grid, stream_threshold=stream_threshold
-            )
-        elif self.dim == 3:
-            # get copy of image and average to cell-centers is necessary
-            if v_type == 'CC':
-                vc = v.reshape(self.vnC, order='F')
-            elif v_type == 'N':
-                vc = (self.aveN2CC*v).reshape(self.vnC, order='F')
-            elif v_type in ['Fx', 'Fy', 'Fz', 'Ex', 'Ey', 'Ez']:
-                aveOp = 'ave' + v_type[0] + '2CCV'
-                # n = getattr(self, 'vn'+v_type[0])
-                # if 'x' in v_type: v = np.r_[v, np.zeros(n[1]), np.zeros(n[2])]
-                # if 'y' in v_type: v = np.r_[np.zeros(n[0]), v, np.zeros(n[2])]
-                # if 'z' in v_type: v = np.r_[np.zeros(n[0]), np.zeros(n[1]), v]
-                v = getattr(self, aveOp)*v # average to cell centers
-                ind_xyz = {'x': 0, 'y': 1, 'z': 2}[v_type[1]]
-                vc = self.r(
-                    v.reshape((self.nC, -1), order='F'), 'CC', 'CC', 'M'
-                )[ind_xyz]
+        return plotter(v, v_type=v_type, view=view, ax=ax, clim=clim,
+            range_x=range_x, range_y=range_y, pcolor_opts=pcolor_opts, grid=grid,
+            grid_opts=grid_opts, sample_grid=sample_grid, stream_opts=stream_opts,
+            stream_threshold=stream_threshold, stream_thickness=stream_thickness,
+            **kwargs
+        )
 
-            # determine number oE slices in x and y dimension
-            nX = int(np.ceil(np.sqrt(self.nCz)))
-            nY = int(np.ceil(self.nCz/nX))
-
-            #  allocate space for montage
-            nCx = self.nCx
-            nCy = self.nCy
-
-            C = np.zeros((nX*nCx, nY*nCy))
-
-            for iy in range(int(nY)):
-                for ix in range(int(nX)):
-                    iz = ix + iy*nX
-                    if iz < self.nCz:
-                        C[ix*nCx:(ix+1)*nCx, iy*nCy:(iy+1)*nCy] = vc[:, :, iz]
-                    else:
-                        C[ix*nCx:(ix+1)*nCx, iy*nCy:(iy+1)*nCy] = np.nan
-
-            C = np.ma.masked_where(np.isnan(C), C)
-            xx = np.r_[0, np.cumsum(np.kron(np.ones((nX, 1)), self.hx).ravel())]
-            yy = np.r_[0, np.cumsum(np.kron(np.ones((nY, 1)), self.hy).ravel())]
-            # Plot the mesh
-
-            if clim is None:
-                clim = [C.min(), C.max()]
-            ph = ax.pcolormesh(xx, yy, C.T, vmin=clim[0], vmax=clim[1])
-            # Plot the lines
-            gx =  np.arange(nX+1)*(self.vectorNx[-1]-self.x0[0])
-            gy =  np.arange(nY+1)*(self.vectorNy[-1]-self.x0[1])
-            # Repeat and seperate with NaN
-            gxX = np.c_[gx, gx, gx+np.nan].ravel()
-            gxY = np.kron(np.ones((nX+1, 1)), np.array([0, sum(self.hy)*nY, np.nan])).ravel()
-            gyX = np.kron(np.ones((nY+1, 1)), np.array([0, sum(self.hx)*nX, np.nan])).ravel()
-            gyY = np.c_[gy, gy, gy+np.nan].ravel()
-            ax.plot(gxX, gxY, annotation_color+'-', linewidth=2)
-            ax.plot(gyX, gyY, annotation_color+'-', linewidth=2)
-            ax.axis('tight')
-
-            if numbering:
-                pad = np.sum(self.hx)*0.04
-                for iy in range(int(nY)):
-                    for ix in range(int(nX)):
-                        iz = ix + iy*nX
-                        if iz < self.nCz:
-                            ax.text((ix+1)*(self.vectorNx[-1]-self.x0[0])-pad, (iy)*(self.vectorNy[-1]-self.x0[1])+pad,
-                                     '#{0:.0f}'.format(iz), color=annotation_color, verticalalignment='bottom', horizontalalignment='right', size='x-large')
-
-        ax.set_title(v_type)
-        if show_it:
-            plt.show()
-        return ph
-
-    @requires({'matplotlib': matplotlib})
     def plotSlice(
         self, v, v_type='CC',
         normal='Z', ind=None, grid=False, view='real',
@@ -230,27 +283,81 @@ class TensorView(object):
         stream_threshold=None,
         stream_thickness=None, **kwargs
     ):
+        """ Plots slice of fields on the given 3D mesh.
 
+        Parameters
+        ----------
+        v : numpy.ndarray
+            values to plot
+        v_type : {'CC','CCV', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez'}, or tuple of these options
+            Where the values of v are defined.
+        normal : {'Z', 'X', 'Y'}
+            Normal direction of slicing plane.
+        ind : None, optional
+            index along dimension of slice. Defaults to the center index.
+        view : {'real', 'imag', 'abs', 'vec'}
+            How to view the array.
+        ax : matplotlib.axes.Axes, optional
+            The axes to draw on. None produces a new Axes. Must be None if ``v_type`` is a tuple.
+        clim : tuple of float, optional
+            length 2 tuple of (vmin, vmax) for the color limits
+        range_x, range_y : tuple of float, optional
+            length 2 tuple of (min, max) for the bounds of the plot axes.
+        pcolor_opts : dict, optional
+            Arguments passed on to ``pcolormesh``
+        grid : bool, optional
+            Whether to plot the edges of the mesh cells.
+        grid_opts : dict, optional
+            If ``grid`` is true, arguments passed on to ``plot`` for the edges
+        sample_grid : tuple of numpy.ndarray, optional
+            If ``view`` == 'vec', mesh cell widths (hx, hy) to interpolate onto for vector plotting
+        stream_opts : dict, optional
+            If ``view`` == 'vec', arguments passed on to ``streamplot``
+        stream_thickness : float, optional
+            If ``view`` == 'vec', linewidth for ``streamplot``
+        stream_threshold : float, optional
+            If ``view`` == 'vec', only plots vectors with magnitude above this threshold
+        show_it : bool, optional
+            Whether to call plt.show()
+
+        Examples
+        --------
+        Plot a slice of a 3D ``TensorMesh`` solution to a Laplace's equaiton.
+
+        First build the mesh:
+        >>> from matplotlib import pyplot as plt
+        >>> import discretize
+        >>> from pymatsolver import Solver
+        >>> import numpy as np
+        >>> hx = [(5, 2, -1.3), (2, 4), (5, 2, 1.3)]
+        >>> hy = [(2, 2, -1.3), (2, 6), (2, 2, 1.3)]
+        >>> hz = [(2, 2, -1.3), (2, 6), (2, 2, 1.3)]
+        >>> M = discretize.TensorMesh([hx, hy, hz])
+
+        then build the necessary parts of the PDE:
+        >>> q = np.zeros(M.vnC)
+        >>> q[[4, 4], [4, 4], [2, 6]]=[-1, 1]
+        >>> q = discretize.utils.mkvc(q)
+        >>> A = M.faceDiv * M.cellGrad
+        >>> b = Solver(A) * (q)
+
+        and finaly, plot the vector values of the result, which are defined on faces
+
+        >>> M.plotSlice(M.cellGrad*b, 'F', view='vec', grid=True, pcolor_opts={'alpha':0.8})
+        >>> plt.show()
         """
-        Plots a slice of a 3D mesh.
+        mesh_type = self._meshType.lower()
+        plotters = {
+            'tree': self.__plot_slice_tree,
+            'tensor': self.__plot_slice_tensor,
+            # 'curv': self.__plot_slice_curv,
+            # 'cyl': self.__plot_slice_cyl,
+        }
+        try:
+            plotter = plotters[mesh_type]
+        except KeyError:
+            raise NotImplementedError('Mesh type `{}` does not have a plot_slice implementation.'.format(type(self).__name__))
 
-        .. plot::
-
-            import discretize
-            from pymatsolver import Solver
-            import numpy as np
-            hx = [(5, 2, -1.3), (2, 4), (5, 2, 1.3)]
-            hy = [(2, 2, -1.3), (2, 6), (2, 2, 1.3)]
-            hz = [(2, 2, -1.3), (2, 6), (2, 2, 1.3)]
-            M = discretize.TensorMesh([hx, hy, hz])
-            q = np.zeros(M.vnC)
-            q[[4, 4], [4, 4], [2, 6]]=[-1, 1]
-            q = discretize.utils.mkvc(q)
-            A = M.faceDiv * M.cellGrad
-            b = Solver(A) * (q)
-            M.plotSlice(M.cellGrad*b, 'F', view='vec', grid=True, show_it=True, pcolor_opts={'alpha':0.8})
-
-        """
         normal = normal.upper()
         if "pcolorOpts" in kwargs:
             pcolor_opts = kwargs["pcolorOpts"]
@@ -267,16 +374,18 @@ class TensorView(object):
         if "vType" in kwargs:
             v_type = kwargs["vType"]
             warnings.warn("vType has been deprecated, please use v_type", DeprecationWarning)
-
         if pcolor_opts is None:
             pcolor_opts = {}
         if stream_opts is None:
             stream_opts = {'color':'k'}
         if grid_opts is None:
-            grid_opts = {'color':'k', 'alpha':0.5}
+            if grid:
+                grid_opts = {'color':'k'}
+            else:
+                grid_opts = {}
         if type(v_type) in [list, tuple]:
             if ax is not None:
-                raise AssertionError(
+                raise TypeError(
                     "cannot specify an axis to plot on with this function."
                 )
             fig, axs = plt.subplots(1, len(v_type))
@@ -298,147 +407,30 @@ class TensorView(object):
 
         # Some user error checking
         if v_type not in v_typeOpts:
-            raise AssertionError(
+            raise ValueError(
                 "v_type must be in ['{0!s}']".format("', '".join(v_typeOpts))
             )
         if not self.dim == 3:
-            raise AssertionError(
+            raise TypeError(
                 'Must be a 3D mesh. Use plotImage.'
             )
         if view not in viewOpts:
-            raise AssertionError(
+            raise ValueError(
                 "view must be in ['{0!s}']".format("', '".join(viewOpts))
             )
         if normal not in normalOpts:
-            raise AssertionError(
+            raise ValueError(
                 "normal must be in ['{0!s}']".format("', '".join(normalOpts))
             )
         if not isinstance(grid, bool):
-            raise AssertionError('grid must be a boolean')
-
-        szSliceDim = getattr(self, 'nC'+normal.lower()) #: Size of the sliced dimension
-        if ind is None: ind = int(szSliceDim/2)
-        if type(ind) not in integer_types:
-            raise AssertionError('ind must be an integer')
+            raise TypeError('grid must be a boolean')
 
         if (v.dtype == complex and view == 'vec'):
-            raise AssertionError('Can not plot a complex vector.')
-        # The slicing and plotting code!!
+            raise NotImplementedError('Can not plot a complex vector.')
 
-        def getIndSlice(v):
-            if normal == 'X':
-                v = v[ind, :, :]
-            elif normal == 'Y':
-                v = v[:, ind, :]
-            elif normal == 'Z':
-                v = v[:, :, ind]
-            return v
-
-        def doSlice(v):
-            if v_type == 'CC':
-                return getIndSlice(self.r(v, 'CC', 'CC', 'M'))
-            elif v_type == 'CCv':
-                if view != 'vec':
-                    raise AssertionError('Other types for CCv not supported')
-            else:
-                # Now just deal with 'F' and 'E' (x, y, z, maybe...)
-                aveOp = 'ave' + v_type + ('2CCV' if view == 'vec' else '2CC')
-                Av = getattr(self, aveOp)
-                if v.size == Av.shape[1]:
-                    v = Av * v
-                else:
-                    v = self.r(v, v_type[0], v_type) # get specific component
-                    v = Av * v
-                # we should now be averaged to cell centers (might be a vector)
-            v = self.r(v.reshape((self.nC, -1), order='F'), 'CC', 'CC', 'M')
-            if view == 'vec':
-                outSlice = []
-                if 'X' not in normal: outSlice.append(getIndSlice(v[0]))
-                if 'Y' not in normal: outSlice.append(getIndSlice(v[1]))
-                if 'Z' not in normal: outSlice.append(getIndSlice(v[2]))
-                return np.r_[mkvc(outSlice[0]), mkvc(outSlice[1])]
-            else:
-                return getIndSlice(self.r(v, 'CC', 'CC', 'M'))
-
-        h2d = []
-        x2d = []
-        if 'X' not in normal:
-            h2d.append(self.hx)
-            x2d.append(self.x0[0])
-        if 'Y' not in normal:
-            h2d.append(self.hy)
-            x2d.append(self.x0[1])
-        if 'Z' not in normal:
-            h2d.append(self.hz)
-            x2d.append(self.x0[2])
-        tM = self.__class__(h=h2d, x0=x2d)  #: Temp Mesh
-        v2d = doSlice(v)
-
-        if ax is None:
-            plt.figure()
-            ax = plt.subplot(111)
-        else:
-            if not isinstance(ax, matplotlib.axes.Axes):
-                raise AssertionError("ax must be an matplotlib.axes.Axes")
-
-        out = tM._plotImage2D(
-            v2d, v_type=('CCv' if view == 'vec' else 'CC'),
-            grid=grid, view=view,
-            ax=ax, clim=clim, show_it=show_it,
-            pcolor_opts=pcolor_opts, stream_opts=stream_opts,
-            grid_opts=grid_opts,
-            range_x=range_x,
-            range_y=range_y,
-            sample_grid=sample_grid,
-            stream_threshold=stream_threshold,
-            stream_thickness=stream_thickness
-
-        )
-
-        ax.set_xlabel('y' if normal == 'X' else 'x')
-        ax.set_ylabel('y' if normal == 'Z' else 'z')
-        ax.set_title('Slice {0:.0f}'.format(ind))
-        return out
-
-    @requires({'matplotlib': matplotlib})
-    def _plotImage2D(
-        self, v, v_type='CC', grid=False, view='real',
-        ax=None, clim=None, show_it=False,
-        pcolor_opts=None,
-        stream_opts=None,
-        grid_opts=None,
-        range_x=None,
-        range_y=None,
-        sample_grid=None,
-        stream_threshold=None,
-        stream_thickness=None
-    ):
-
-        if pcolor_opts is None:
-            pcolor_opts = {}
-        if stream_opts is None:
-            stream_opts = {'color': 'k'}
-        if grid_opts is None:
-            grid_opts = {'color': 'k'}
-        v_typeOptsCC = ['N', 'CC', 'Fx', 'Fy', 'Ex', 'Ey']
-        v_typeOptsV = ['CCv', 'F', 'E']
-        v_typeOpts = v_typeOptsCC + v_typeOptsV
-        if view == 'vec':
-            if v_type not in v_typeOptsV:
-                raise AssertionError(
-                    "v_type must be in ['{0!s}'] when view='vec'".format(
-                        "', '".join(v_typeOptsV)
-                    )
-                )
-        if v_type not in v_typeOpts:
-            raise AssertionError(
-                "v_type must be in ['{0!s}']".format("', '".join(v_typeOpts))
-            )
-
-        viewOpts = ['real', 'imag', 'abs', 'vec']
-        if view not in viewOpts:
-            raise AssertionError(
-                "view must be in ['{0!s}']".format("', '".join(viewOpts))
+        if self.dim == 2:
+            raise NotImplementedError(
+                'Must be a 3D mesh. Use plotImage.'
             )
 
         if ax is None:
@@ -446,212 +438,76 @@ class TensorView(object):
             ax = plt.subplot(111)
         else:
             if not isinstance(ax, matplotlib.axes.Axes):
-                raise AssertionError(
-                    "ax must be an matplotlib.axes.Axes"
-                )
+                raise TypeError("ax must be an matplotlib.axes.Axes")
 
-        # Reshape to a cell centered variable
-        if v_type == 'CC':
-            pass
-        elif v_type == 'CCv':
-            if view != 'vec':
-                raise AssertionError('Other types for CCv not supported')
-        elif v_type in ['F', 'E', 'N']:
-            aveOp = 'ave' + v_type + ('2CCV' if view == 'vec' else '2CC')
-            v = getattr(self, aveOp)*v  # average to cell centers (might be a vector)
-        elif v_type in ['Fx', 'Fy', 'Ex', 'Ey']:
-            aveOp = 'ave' + v_type[0] + '2CCV'
-            v = getattr(self, aveOp)*v  # average to cell centers (might be a vector)
-            xORy = {'x': 0, 'y':1 }[v_type[1]]
-            v = v.reshape((self.nC, -1), order='F')[:, xORy]
+        return plotter(v, v_type=v_type, normal=normal, ind=ind,
+            grid=grid, view=view, ax=ax, clim=clim, show_it=show_it,
+            pcolor_opts=pcolor_opts, stream_opts=stream_opts, grid_opts=grid_opts,
+            range_x=range_x, range_y=range_y, sample_grid=sample_grid,
+            stream_threshold=stream_threshold, stream_thickness=stream_thickness,
+            **kwargs)
 
-        out = ()
-        if view in ['real', 'imag', 'abs']:
-            v = self.r(v, 'CC', 'CC', 'M')
-            v = getattr(np, view)(v) # e.g. np.real(v)
-            if clim is None:
-                clim = [v.min(), v.max()]
-            v = np.ma.masked_where(np.isnan(v), v)
-            out += (ax.pcolormesh(self.vectorNx, self.vectorNy, v.T, vmin=clim[0], vmax=clim[1], **pcolor_opts), )
-        elif view in ['vec']:
-            # Matplotlib seems to not support irregular
-            # spaced vectors at the moment. So we will
-            # Interpolate down to a regular mesh at the
-            # smallest mesh size in this 2D slice.
-            if sample_grid is not None:
-                hxmin = sample_grid[0]
-                hymin = sample_grid[1]
-            else:
-                hxmin = self.hx.min()
-                hymin = self.hy.min()
+    def plot_3d_slicer(self, v, xslice=None, yslice=None, zslice=None,
+                       v_type='CC', view='real', axis='xy', transparent=None,
+                       clim=None, xlim=None, ylim=None, zlim=None,
+                       aspect='auto', grid=[2, 2, 1], pcolor_opts=None,
+                       fig=None, **kwargs):
+        """Plot slices of a 3D volume, interactively (scroll wheel).
 
-            if range_x is not None:
-                dx = (range_x[1] - range_x[0])
-                nxi = int(dx/hxmin)
-                hx = np.ones(nxi)*dx/nxi
-                x0_x = range_x[0]
-            else:
-                nxi = int(self.hx.sum()/hxmin)
-                hx = np.ones(nxi)*self.hx.sum()/nxi
-                x0_x = self.x0[0]
+        If called from a notebook, make sure to set
 
-            if range_y is not None:
-                dy = (range_y[1] - range_y[0])
-                nyi = int(dy/hymin)
-                hy = np.ones(nyi)*dy/nyi
-                x0_y = range_y[0]
-            else:
-                nyi = int(self.hy.sum()/hymin)
-                hy = np.ones(nyi)*self.hy.sum()/nyi
-                x0_y = self.x0[1]
+            %matplotlib notebook
 
-            U, V = self.r(v.reshape((self.nC, -1), order='F'), 'CC', 'CC', 'M')
-            if clim is None:
-                uv = np.sqrt(U**2 + V**2)
-                clim = [uv.min(), uv.max()]
+        See the class `discretize.View.Slicer` for more information.
 
-            tMi = self.__class__(h=[hx, hy], x0=np.r_[x0_x, x0_y])
-            P = self.getInterpolationMat(tMi.gridCC, 'CC', zerosOutside=True)
+        It returns nothing. However, if you need the different figure handles
+        you can get it via
 
-            Ui = tMi.r(P*mkvc(U), 'CC', 'CC', 'M')
-            Vi = tMi.r(P*mkvc(V), 'CC', 'CC', 'M')
-            # End Interpolation
+          `fig = plt.gcf()`
 
-            x = self.vectorNx
-            y = self.vectorNy
+        and subsequently its children via
 
-            ind_CCx = np.ones(self.vnC, dtype=bool)
-            ind_CCy = np.ones(self.vnC, dtype=bool)
-            if range_x is not None:
-                x = tMi.vectorNx
+          `fig.get_children()`
 
-            if range_y is not None:
-                y = tMi.vectorNy
+        and recursively deeper, e.g.,
 
-            if range_x is not None or range_y is not None:  # use interpolated values
-                U = Ui
-                V = Vi
+          `fig.get_children()[0].get_children()`.
 
-            if stream_threshold is not None:
-                mask_me = np.sqrt(Ui**2 + Vi**2) <= stream_threshold
-                Ui = np.ma.masked_where(mask_me, Ui)
-                Vi = np.ma.masked_where(mask_me, Vi)
-
-
-            if stream_thickness is not None:
-                scaleFact = np.copy(stream_thickness)
-
-                # Calculate vector amplitude
-                vecAmp = np.sqrt(U**2 + V**2).T
-
-                # Form bounds to knockout the top and bottom 10%
-                vecAmp_sort = np.sort(vecAmp.ravel())
-                nVecAmp = vecAmp.size
-                tenPercInd = int(np.ceil(0.1*nVecAmp))
-                lowerBound = vecAmp_sort[tenPercInd]
-                upperBound = vecAmp_sort[-tenPercInd]
-
-                lowInds = np.where(vecAmp < lowerBound)
-                vecAmp[lowInds] = lowerBound
-
-                highInds = np.where(vecAmp > upperBound)
-                vecAmp[highInds] = upperBound
-
-                # Normalize amplitudes 0-1
-                norm_thickness = vecAmp/vecAmp.max()
-
-                # Scale by user defined thickness factor
-                stream_thickness = scaleFact*norm_thickness
-
-                # Add linewidth to stream_opts
-                stream_opts.update({'linewidth':stream_thickness})
-
-
-            out += (
-                ax.pcolormesh(
-                    x, y, np.sqrt(U**2+V**2).T, vmin=clim[0], vmax=clim[1],
-                    **pcolor_opts),
-            )
-            out += (
-                ax.streamplot(
-                    tMi.vectorCCx, tMi.vectorCCy, Ui.T, Vi.T, **stream_opts
-                ),
-            )
-
-        if grid:
-            xXGrid = np.c_[self.vectorNx, self.vectorNx, np.nan*np.ones(self.nNx)].flatten()
-            xYGrid = np.c_[self.vectorNy[0]*np.ones(self.nNx), self.vectorNy[-1]*np.ones(self.nNx), np.nan*np.ones(self.nNx)].flatten()
-            yXGrid = np.c_[self.vectorNx[0]*np.ones(self.nNy), self.vectorNx[-1]*np.ones(self.nNy), np.nan*np.ones(self.nNy)].flatten()
-            yYGrid = np.c_[self.vectorNy, self.vectorNy, np.nan*np.ones(self.nNy)].flatten()
-            out += (ax.plot(np.r_[xXGrid, yXGrid], np.r_[xYGrid, yYGrid], **grid_opts)[0], )
-
-        ax.set_xlabel('x')
-        ax.set_ylabel('y')
-
-        if range_x is not None:
-            ax.set_xlim(*range_x)
-        else:
-            ax.set_xlim(*self.vectorNx[[0, -1]])
-
-        if range_y is not None:
-            ax.set_ylim(*range_y)
-        else:
-            ax.set_ylim(*self.vectorNy[[0, -1]])
-
-        if show_it:
-            plt.show()
-        return out
-
-    @requires({'matplotlib': matplotlib})
-    def plotGrid(
-        self, ax=None, nodes=False, faces=False, centers=False, edges=False,
-        lines=True, show_it=False, **kwargs
-    ):
-        """Plot the nodal, cell-centered and staggered grids for 1,2 and 3 dimensions.
-
-        :param bool nodes: plot nodes
-        :param bool faces: plot faces
-        :param bool centers: plot centers
-        :param bool edges: plot edges
-        :param bool lines: plot lines connecting nodes
-        :param bool show_it: call plt.show()
-
-        .. plot::
-           :include-source:
-
-           import discretize
-           import numpy as np
-           h1 = np.linspace(.1, .5, 3)
-           h2 = np.linspace(.1, .5, 5)
-           mesh = discretize.TensorMesh([h1, h2])
-           mesh.plotGrid(nodes=True, faces=True, centers=True, lines=True, show_it=True)
-
-        .. plot::
-           :include-source:
-
-           import discretize
-           import numpy as np
-           h1 = np.linspace(.1, .5, 3)
-           h2 = np.linspace(.1, .5, 5)
-           h3 = np.linspace(.1, .5, 3)
-           mesh = discretize.TensorMesh([h1, h2, h3])
-           mesh.plotGrid(nodes=True, faces=True, centers=True, lines=True, show_it=True)
+        One can also provide an existing figure instance, which can be useful
+        for interactive widgets in Notebooks. The provided figure is cleared
+        first.
 
         """
-        if "showIt" in kwargs:
-            show_it = kwargs["showIt"]
-            warnings.warn("showIt has been deprecated, please use show_it", DeprecationWarning)
-
-        axOpts = {'projection': '3d'} if self.dim == 3 else {}
-        if ax is None:
-            plt.figure()
-            ax = plt.subplot(111, **axOpts)
+        mesh_type = self._meshType.lower()
+        if mesh_type != 'tensor':
+            raise NotImplementedError("plot_3d_slicer has only been implemented for a TensorMesh")
+        # Initiate figure
+        if fig is None:
+            fig = plt.figure()
         else:
-            if not isinstance(ax, matplotlib.axes.Axes):
-                raise AssertionError("ax must be an matplotlib.axes.Axes")
-        if lines:
-            color = kwargs.get('color', 'C0')
-            linewidth = kwargs.get('linewidth', 1.)
+            fig.clf()
+
+        if "pcolorOpts" in kwargs:
+            pcolor_opts = kwargs["pcolorOpts"]
+            warnings.warn("pcolorOpts has been deprecated, please use pcolor_opts", DeprecationWarning)
+
+        # Populate figure
+        tracker = Slicer(
+            self, v, xslice, yslice, zslice, v_type, view, axis, transparent,
+            clim, xlim, ylim, zlim, aspect, grid, pcolor_opts
+        )
+
+        # Connect figure to scrolling
+        fig.canvas.mpl_connect('scroll_event', tracker.onscroll)
+
+        # Show figure
+        plt.show()
+
+    # TensorMesh plotting
+    def __plot_grid_tensor(
+        self, ax=None, nodes=False, faces=False, centers=False, edges=False,
+        lines=True, show_it=False, color='C0', linewidth=1.0, **kwargs
+    ):
 
         if self.dim == 1:
             if nodes:
@@ -777,76 +633,366 @@ class TensorView(object):
 
         return ax
 
+    def __plot_image_tensor(
+        self, v, v_type='CC', grid=False, view='real',
+        ax=None, clim=None, show_it=False,
+        pcolor_opts=None,
+        stream_opts=None,
+        grid_opts=None,
+        numbering=True, annotation_color='w',
+        range_x=None, range_y=None, sample_grid=None,
+        stream_threshold=None, **kwargs
+    ):
 
-    @requires({'matplotlib': matplotlib})
-    def plot_3d_slicer(self, v, xslice=None, yslice=None, zslice=None,
-                       v_type='CC', view='real', axis='xy', transparent=None,
-                       clim=None, xlim=None, ylim=None, zlim=None,
-                       aspect='auto', grid=[2, 2, 1], pcolor_opts=None,
-                       fig=None, **kwargs):
-        """Plot slices of a 3D volume, interactively (scroll wheel).
+        if self.dim == 1:
+            if v_type == 'CC':
+                ph = ax.plot(
+                    self.vectorCCx, v, linestyle="-", color="C1", marker="o"
+                )
+            elif v_type == 'N':
+                ph = ax.plot(
+                    self.vectorNx, v, linestyle="-", color="C0", marker="s"
+                )
+            ax.set_xlabel("x")
+            ax.axis('tight')
+        elif self.dim == 2:
+            return self.__plot_image_tensor2D(
+                v, v_type=v_type, grid=grid, view=view,
+                ax=ax, clim=clim, show_it=show_it,
+                pcolor_opts=pcolor_opts, stream_opts=stream_opts,
+                grid_opts=grid_opts, range_x=range_x, range_y=range_y,
+                sample_grid=sample_grid, stream_threshold=stream_threshold
+            )
+        elif self.dim == 3:
+            # get copy of image and average to cell-centers is necessary
+            if v_type == 'CC':
+                vc = v.reshape(self.vnC, order='F')
+            elif v_type == 'N':
+                vc = (self.aveN2CC*v).reshape(self.vnC, order='F')
+            elif v_type in ['Fx', 'Fy', 'Fz', 'Ex', 'Ey', 'Ez']:
+                aveOp = 'ave' + v_type[0] + '2CCV'
+                # n = getattr(self, 'vn'+v_type[0])
+                # if 'x' in v_type: v = np.r_[v, np.zeros(n[1]), np.zeros(n[2])]
+                # if 'y' in v_type: v = np.r_[np.zeros(n[0]), v, np.zeros(n[2])]
+                # if 'z' in v_type: v = np.r_[np.zeros(n[0]), np.zeros(n[1]), v]
+                v = getattr(self, aveOp)*v # average to cell centers
+                ind_xyz = {'x': 0, 'y': 1, 'z': 2}[v_type[1]]
+                vc = self.r(
+                    v.reshape((self.nC, -1), order='F'), 'CC', 'CC', 'M'
+                )[ind_xyz]
 
-        If called from a notebook, make sure to set
+            # determine number oE slices in x and y dimension
+            nX = int(np.ceil(np.sqrt(self.nCz)))
+            nY = int(np.ceil(self.nCz/nX))
 
-            %matplotlib notebook
+            #  allocate space for montage
+            nCx = self.nCx
+            nCy = self.nCy
 
-        See the class `discretize.View.Slicer` for more information.
+            C = np.zeros((nX*nCx, nY*nCy))
 
-        It returns nothing. However, if you need the different figure handles
-        you can get it via
+            for iy in range(int(nY)):
+                for ix in range(int(nX)):
+                    iz = ix + iy*nX
+                    if iz < self.nCz:
+                        C[ix*nCx:(ix+1)*nCx, iy*nCy:(iy+1)*nCy] = vc[:, :, iz]
+                    else:
+                        C[ix*nCx:(ix+1)*nCx, iy*nCy:(iy+1)*nCy] = np.nan
 
-          `fig = plt.gcf()`
+            C = np.ma.masked_where(np.isnan(C), C)
+            xx = np.r_[0, np.cumsum(np.kron(np.ones((nX, 1)), self.hx).ravel())]
+            yy = np.r_[0, np.cumsum(np.kron(np.ones((nY, 1)), self.hy).ravel())]
+            # Plot the mesh
 
-        and subsequently its children via
+            if clim is None:
+                clim = [C.min(), C.max()]
+            ph = ax.pcolormesh(xx, yy, C.T, vmin=clim[0], vmax=clim[1])
+            # Plot the lines
+            gx =  np.arange(nX+1)*(self.vectorNx[-1]-self.x0[0])
+            gy =  np.arange(nY+1)*(self.vectorNy[-1]-self.x0[1])
+            # Repeat and seperate with NaN
+            gxX = np.c_[gx, gx, gx+np.nan].ravel()
+            gxY = np.kron(np.ones((nX+1, 1)), np.array([0, sum(self.hy)*nY, np.nan])).ravel()
+            gyX = np.kron(np.ones((nY+1, 1)), np.array([0, sum(self.hx)*nX, np.nan])).ravel()
+            gyY = np.c_[gy, gy, gy+np.nan].ravel()
+            ax.plot(gxX, gxY, annotation_color+'-', linewidth=2)
+            ax.plot(gyX, gyY, annotation_color+'-', linewidth=2)
+            ax.axis('tight')
 
-          `fig.get_children()`
+            if numbering:
+                pad = np.sum(self.hx)*0.04
+                for iy in range(int(nY)):
+                    for ix in range(int(nX)):
+                        iz = ix + iy*nX
+                        if iz < self.nCz:
+                            ax.text((ix+1)*(self.vectorNx[-1]-self.x0[0])-pad, (iy)*(self.vectorNy[-1]-self.x0[1])+pad,
+                                     '#{0:.0f}'.format(iz), color=annotation_color, verticalalignment='bottom', horizontalalignment='right', size='x-large')
 
-        and recursively deeper, e.g.,
+        ax.set_title(v_type)
+        if show_it:
+            plt.show()
+        return ph
 
-          `fig.get_children()[0].get_children()`.
+    def __plot_image_tensor2D(
+        self, v, v_type='CC', grid=False, view='real',
+        ax=None, clim=None, show_it=False,
+        pcolor_opts=None,
+        stream_opts=None,
+        grid_opts=None,
+        range_x=None,
+        range_y=None,
+        sample_grid=None,
+        stream_threshold=None,
+        stream_thickness=None
+    ):
+        """Common function for plotting an image of a TensorMesh"""
 
-        One can also provide an existing figure instance, which can be useful
-        for interactive widgets in Notebooks. The provided figure is cleared
-        first.
-
-        """
-        # Initiate figure
-        if fig is None:
-            fig = plt.figure()
+        if ax is None:
+            plt.figure()
+            ax = plt.subplot(111)
         else:
-            fig.clf()
+            if not isinstance(ax, matplotlib.axes.Axes):
+                raise AssertionError(
+                    "ax must be an matplotlib.axes.Axes"
+                )
 
-        if "pcolorOpts" in kwargs:
-            pcolor_opts = kwargs["pcolorOpts"]
-            warnings.warn("pcolorOpts has been deprecated, please use pcolor_opts", DeprecationWarning)
+        # Reshape to a cell centered variable
+        if v_type == 'CC':
+            pass
+        elif v_type == 'CCv':
+            if view != 'vec':
+                raise AssertionError('Other types for CCv not supported')
+        elif v_type in ['F', 'E', 'N']:
+            aveOp = 'ave' + v_type + ('2CCV' if view == 'vec' else '2CC')
+            v = getattr(self, aveOp)*v  # average to cell centers (might be a vector)
+        elif v_type in ['Fx', 'Fy', 'Ex', 'Ey']:
+            aveOp = 'ave' + v_type[0] + '2CCV'
+            v = getattr(self, aveOp)*v  # average to cell centers (might be a vector)
+            xORy = {'x': 0, 'y':1 }[v_type[1]]
+            v = v.reshape((self.nC, -1), order='F')[:, xORy]
 
-        # Populate figure
-        tracker = Slicer(
-            self, v, xslice, yslice, zslice, v_type, view, axis, transparent,
-            clim, xlim, ylim, zlim, aspect, grid, pcolor_opts
+        out = ()
+        if view in ['real', 'imag', 'abs']:
+            v = self.r(v, 'CC', 'CC', 'M')
+            v = getattr(np, view)(v) # e.g. np.real(v)
+            if clim is None:
+                clim = [v.min(), v.max()]
+            v = np.ma.masked_where(np.isnan(v), v)
+            out += (ax.pcolormesh(self.vectorNx, self.vectorNy, v.T, vmin=clim[0], vmax=clim[1], **{**pcolor_opts, **grid_opts}), )
+        elif view in ['vec']:
+            # Matplotlib seems to not support irregular
+            # spaced vectors at the moment. So we will
+            # Interpolate down to a regular mesh at the
+            # smallest mesh size in this 2D slice.
+            if sample_grid is not None:
+                hxmin = sample_grid[0]
+                hymin = sample_grid[1]
+            else:
+                hxmin = self.hx.min()
+                hymin = self.hy.min()
+
+            if range_x is not None:
+                dx = (range_x[1] - range_x[0])
+                nxi = int(dx/hxmin)
+                hx = np.ones(nxi)*dx/nxi
+                x0_x = range_x[0]
+            else:
+                nxi = int(self.hx.sum()/hxmin)
+                hx = np.ones(nxi)*self.hx.sum()/nxi
+                x0_x = self.x0[0]
+
+            if range_y is not None:
+                dy = (range_y[1] - range_y[0])
+                nyi = int(dy/hymin)
+                hy = np.ones(nyi)*dy/nyi
+                x0_y = range_y[0]
+            else:
+                nyi = int(self.hy.sum()/hymin)
+                hy = np.ones(nyi)*self.hy.sum()/nyi
+                x0_y = self.x0[1]
+
+            U, V = self.r(v.reshape((self.nC, -1), order='F'), 'CC', 'CC', 'M')
+            if clim is None:
+                uv = np.sqrt(U**2 + V**2)
+                clim = [uv.min(), uv.max()]
+
+            tMi = self.__class__(h=[hx, hy], x0=np.r_[x0_x, x0_y])
+            P = self.getInterpolationMat(tMi.gridCC, 'CC', zerosOutside=True)
+
+            Ui = tMi.r(P*mkvc(U), 'CC', 'CC', 'M')
+            Vi = tMi.r(P*mkvc(V), 'CC', 'CC', 'M')
+            # End Interpolation
+
+            x = self.vectorNx
+            y = self.vectorNy
+
+            ind_CCx = np.ones(self.vnC, dtype=bool)
+            ind_CCy = np.ones(self.vnC, dtype=bool)
+            if range_x is not None:
+                x = tMi.vectorNx
+
+            if range_y is not None:
+                y = tMi.vectorNy
+
+            if range_x is not None or range_y is not None:  # use interpolated values
+                U = Ui
+                V = Vi
+
+            if stream_threshold is not None:
+                mask_me = np.sqrt(Ui**2 + Vi**2) <= stream_threshold
+                Ui = np.ma.masked_where(mask_me, Ui)
+                Vi = np.ma.masked_where(mask_me, Vi)
+
+
+            if stream_thickness is not None:
+                scaleFact = np.copy(stream_thickness)
+
+                # Calculate vector amplitude
+                vecAmp = np.sqrt(U**2 + V**2).T
+
+                # Form bounds to knockout the top and bottom 10%
+                vecAmp_sort = np.sort(vecAmp.ravel())
+                nVecAmp = vecAmp.size
+                tenPercInd = int(np.ceil(0.1*nVecAmp))
+                lowerBound = vecAmp_sort[tenPercInd]
+                upperBound = vecAmp_sort[-tenPercInd]
+
+                lowInds = np.where(vecAmp < lowerBound)
+                vecAmp[lowInds] = lowerBound
+
+                highInds = np.where(vecAmp > upperBound)
+                vecAmp[highInds] = upperBound
+
+                # Normalize amplitudes 0-1
+                norm_thickness = vecAmp/vecAmp.max()
+
+                # Scale by user defined thickness factor
+                stream_thickness = scaleFact*norm_thickness
+
+                # Add linewidth to stream_opts
+                stream_opts.update({'linewidth':stream_thickness})
+
+
+            out += (
+                ax.pcolormesh(
+                    x, y, np.sqrt(U**2+V**2).T, vmin=clim[0], vmax=clim[1],
+                    **{**pcolor_opts, **grid_opts}),
+            )
+            out += (
+                ax.streamplot(
+                    tMi.vectorCCx, tMi.vectorCCy, Ui.T, Vi.T, **stream_opts
+                ),
+            )
+
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
+
+        if range_x is not None:
+            ax.set_xlim(*range_x)
+        else:
+            ax.set_xlim(*self.vectorNx[[0, -1]])
+
+        if range_y is not None:
+            ax.set_ylim(*range_y)
+        else:
+            ax.set_ylim(*self.vectorNy[[0, -1]])
+
+        if show_it:
+            plt.show()
+        return out
+
+    def __plot_slice_tensor(
+        self, v, v_type='CC',
+        normal='z', ind=None, grid=False, view='real',
+        ax=None, clim=None, show_it=False,
+        pcolor_opts=None,
+        stream_opts=None,
+        grid_opts=None,
+        range_x=None,
+        range_y=None,
+        sample_grid=None,
+        stream_threshold=None,
+        stream_thickness=None, **kwargs
+    ):
+        dim_ind = {'X':0, 'Y':1, 'Z':2}[normal]
+        szSliceDim = self.shape_cells[dim_ind] #: Size of the sliced dimension
+        if ind is None: ind = int(szSliceDim/2)
+        if type(ind) not in integer_types:
+            raise TypeError('ind must be an integer')
+
+        def getIndSlice(v):
+            if normal == 'X':
+                v = v[ind, :, :]
+            elif normal == 'Y':
+                v = v[:, ind, :]
+            elif normal == 'Z':
+                v = v[:, :, ind]
+            return v
+
+        def doSlice(v):
+            if v_type == 'CC':
+                return getIndSlice(self.r(v, 'CC', 'CC', 'M'))
+            elif v_type == 'CCv':
+                if view != 'vec':
+                    raise AssertionError('Other types for CCv not supported')
+            else:
+                # Now just deal with 'F' and 'E' (x, y, z, maybe...)
+                aveOp = 'ave' + v_type + ('2CCV' if view == 'vec' else '2CC')
+                Av = getattr(self, aveOp)
+                if v.size == Av.shape[1]:
+                    v = Av * v
+                else:
+                    v = self.r(v, v_type[0], v_type) # get specific component
+                    v = Av * v
+                # we should now be averaged to cell centers (might be a vector)
+            v = self.r(v.reshape((self.nC, -1), order='F'), 'CC', 'CC', 'M')
+            if view == 'vec':
+                outSlice = []
+                if 'X' not in normal: outSlice.append(getIndSlice(v[0]))
+                if 'Y' not in normal: outSlice.append(getIndSlice(v[1]))
+                if 'Z' not in normal: outSlice.append(getIndSlice(v[2]))
+                return np.r_[mkvc(outSlice[0]), mkvc(outSlice[1])]
+            else:
+                return getIndSlice(self.r(v, 'CC', 'CC', 'M'))
+
+        h2d = []
+        x2d = []
+        if 'X' not in normal:
+            h2d.append(self.hx)
+            x2d.append(self.x0[0])
+        if 'Y' not in normal:
+            h2d.append(self.hy)
+            x2d.append(self.x0[1])
+        if 'Z' not in normal:
+            h2d.append(self.hz)
+            x2d.append(self.x0[2])
+        tM = self.__class__(h=h2d, x0=x2d)  #: Temp Mesh
+        v2d = doSlice(v)
+
+        out = tM.__plot_image_tensor2D(
+            v2d, v_type=('CCv' if view == 'vec' else 'CC'),
+            grid=grid, view=view,
+            ax=ax, clim=clim, show_it=show_it,
+            pcolor_opts=pcolor_opts, stream_opts=stream_opts,
+            grid_opts=grid_opts,
+            range_x=range_x,
+            range_y=range_y,
+            sample_grid=sample_grid,
+            stream_threshold=stream_threshold,
+            stream_thickness=stream_thickness
+
         )
 
-        # Connect figure to scrolling
-        fig.canvas.mpl_connect('scroll_event', tracker.onscroll)
+        ax.set_xlabel('y' if normal == 'X' else 'x')
+        ax.set_ylabel('y' if normal == 'Z' else 'z')
+        ax.set_title('Slice {0:.0f}'.format(ind))
+        return out
 
-        # Show figure
-        plt.show()
-
-
-class CylView(object):
-
-    def __init__(self):
-        pass
-
-    @requires({'matplotlib': matplotlib})
-    def _plotCylTensorMesh(self, plotType, *args, **kwargs):
-
+    # CylindricalMesh plotting
+    def __plotCylTensorMesh(self, plotType, *args, **kwargs):
         if not self.isSymmetric:
             raise Exception('We have not yet implemented this type of view.')
         assert plotType in ['plotImage', 'plotGrid']
-        # Hackity Hack:
-        # Just create a TM and use its view.
-        from discretize import TensorMesh
 
         if len(args) > 0:
             val = args[0]
@@ -875,7 +1021,7 @@ class CylView(object):
             # create a mirrored mesh
             hx = np.hstack([np.flipud(self.hx), self.hx])
             x00 = self.x0[0] - self.hx.sum()
-            M = TensorMesh([hx, self.hz], x0=[x00, self.x0[2]])
+            M = discretize.TensorMesh([hx, self.hz], x0=[x00, self.x0[2]])
 
             if mirror_data is None:
                 mirror_data = val
@@ -909,7 +1055,7 @@ class CylView(object):
 
             args = (val,) + args[1:]
         else:
-            M = TensorMesh([self.hx, self.hz], x0=[self.x0[0], self.x0[2]])
+            M = discretize.TensorMesh([self.hx, self.hz], x0=[self.x0[0], self.x0[2]])
 
         ax = kwargs.get('ax', None)
         if ax is None:
@@ -935,17 +1081,16 @@ class CylView(object):
 
         return out
 
-    @requires({'matplotlib': matplotlib})
-    def plotGrid(self, *args, **kwargs):
+    def __plot_grid_cyl(self, *args, **kwargs):
         if self.isSymmetric:
-            return self._plotCylTensorMesh('plotGrid', *args, **kwargs)
+            return self.__plotCylTensorMesh('plotGrid', *args, **kwargs)
 
         # allow a slice to be provided for the mesh
         slc = kwargs.pop('slice', None)
         if isinstance(slc, str):
             slc = slc.lower()
         if slc not in ['theta', 'z', 'both', None]:
-            raise AssertionError(
+            raise ValueError(
                 "slice must be either 'theta','z', or 'both' not {}".format(
                     slc
                 )
@@ -953,9 +1098,9 @@ class CylView(object):
 
         # if slc is None, provide slices in both the theta and z directions
         if slc == 'theta':
-            return self._plotGridThetaSlice(*args, **kwargs)
+            return self.__plotGridThetaSlice(*args, **kwargs)
         elif slc == 'z':
-            return self._plotGridZSlice(*args, **kwargs)
+            return self.__plotGridZSlice(*args, **kwargs)
         else:
             ax = kwargs.pop('ax', None)
             if ax is not None:
@@ -999,24 +1144,19 @@ class CylView(object):
             kwargscart['ax'] = cartax
 
             ax = []
-            ax.append(self._plotGridZSlice(*args, **kwargspolar))
-            ax.append(self._plotGridThetaSlice(*args, **kwargscart))
+            ax.append(self.__plotGridZSlice(*args, **kwargspolar))
+            ax.append(self.__plotGridThetaSlice(*args, **kwargscart))
             plt.tight_layout()
 
         return ax
 
-    @requires({'matplotlib': matplotlib})
-    def _plotGridThetaSlice(self, *args, **kwargs):
-        if self.isSymmetric:
-            return self.plotGrid(*args, **kwargs)
-
+    def __plotGridThetaSlice(self, *args, **kwargs):
         # make a cyl symmetric mesh
         h2d = [self.hx, 1, self.hz]
         mesh2D = self.__class__(h=h2d, x0=self.x0)
         return mesh2D.plotGrid(*args, **kwargs)
 
-    @requires({'matplotlib': matplotlib})
-    def _plotGridZSlice(self, *args, **kwargs):
+    def __plotGridZSlice(self, *args, **kwargs):
         # https://github.com/matplotlib/matplotlib/issues/312
         ax = kwargs.get('ax', None)
         if ax is not None:
@@ -1066,49 +1206,16 @@ class CylView(object):
 
         return ax
 
-    @requires({'matplotlib': matplotlib})
-    def plotImage(self, *args, **kwargs):
-        return self._plotCylTensorMesh('plotImage', *args, **kwargs)
+    def __plot_image_cyl(self, *args, **kwargs):
+        return self.__plotCylTensorMesh('plotImage', *args, **kwargs)
 
-
-class CurviView(object):
-    """
-    Provides viewing functions for CurvilinearMesh
-
-    This class is inherited by CurvilinearMesh
-
-    """
-    def __init__(self):
-        pass
-
-    @requires({'matplotlib': matplotlib})
-    def plotGrid(
+    # CurvilinearMesh plotting:
+    def __plot_grid_curv(
         self, ax=None, nodes=False, faces=False, centers=False, edges=False,
-        lines=True, show_it=False, **kwargs
+        lines=True, show_it=False, color='C0', linewidth=1.0, **kwargs,
     ):
-        """Plot the nodal, cell-centered and staggered grids for 1, 2 and 3 dimensions.
-
-
-        .. plot::
-            :include-source:
-
-            import discretize
-            X, Y = discretize.utils.exampleLrmGrid([3, 3], 'rotate')
-            M = discretize.CurvilinearMesh([X, Y])
-            M.plotGrid(show_it=True)
-
-        """
-
-        axOpts = {'projection': '3d'} if self.dim == 3 else {}
-        if ax is None:
-            ax = plt.subplot(111, **axOpts)
-        if "showIt" in kwargs:
-            show_it = kwargs["showIt"]
-            warnings.warn("showIt has been deprecated, please use show_it", DeprecationWarning)
-
         NN = self.r(self.gridN, 'N', 'N', 'M')
         if self.dim == 2:
-
             if lines:
                 X1 = np.c_[mkvc(NN[0][:-1, :]), mkvc(NN[0][1:, :]), mkvc(NN[0][:-1, :])*np.nan].flatten()
                 Y1 = np.c_[mkvc(NN[1][:-1, :]), mkvc(NN[1][1:, :]), mkvc(NN[1][:-1, :])*np.nan].flatten()
@@ -1119,40 +1226,7 @@ class CurviView(object):
                 X = np.r_[X1, X2]
                 Y = np.r_[Y1, Y2]
 
-                ax.plot(X, Y, color="C0", linestyle="-", **kwargs)
-            if centers:
-                ax.plot(
-                    self.gridCC[:, 0], self.gridCC[:, 1], color="C1",
-                    linestyle="", marker="o", **kwargs
-                )
-
-            # Nx = self.r(self.normals, 'F', 'Fx', 'V')
-            # Ny = self.r(self.normals, 'F', 'Fy', 'V')
-            # Tx = self.r(self.tangents, 'E', 'Ex', 'V')
-            # Ty = self.r(self.tangents, 'E', 'Ey', 'V')
-
-            # ax.plot(self.gridN[:, 0], self.gridN[:, 1], 'bo')
-
-            # nX = np.c_[self.gridFx[:, 0], self.gridFx[:, 0] + Nx[0]*length, self.gridFx[:, 0]*np.nan].flatten()
-            # nY = np.c_[self.gridFx[:, 1], self.gridFx[:, 1] + Nx[1]*length, self.gridFx[:, 1]*np.nan].flatten()
-            # ax.plot(self.gridFx[:, 0], self.gridFx[:, 1], 'rs')
-            # ax.plot(nX, nY, 'r-')
-
-            # nX = np.c_[self.gridFy[:, 0], self.gridFy[:, 0] + Ny[0]*length, self.gridFy[:, 0]*np.nan].flatten()
-            # nY = np.c_[self.gridFy[:, 1], self.gridFy[:, 1] + Ny[1]*length, self.gridFy[:, 1]*np.nan].flatten()
-            # #ax.plot(self.gridFy[:, 0], self.gridFy[:, 1], 'gs')
-            # ax.plot(nX, nY, 'g-')
-
-            # tX = np.c_[self.gridEx[:, 0], self.gridEx[:, 0] + Tx[0]*length, self.gridEx[:, 0]*np.nan].flatten()
-            # tY = np.c_[self.gridEx[:, 1], self.gridEx[:, 1] + Tx[1]*length, self.gridEx[:, 1]*np.nan].flatten()
-            # ax.plot(self.gridEx[:, 0], self.gridEx[:, 1], 'r^')
-            # ax.plot(tX, tY, 'r-')
-
-            # nX = np.c_[self.gridEy[:, 0], self.gridEy[:, 0] + Ty[0]*length, self.gridEy[:, 0]*np.nan].flatten()
-            # nY = np.c_[self.gridEy[:, 1], self.gridEy[:, 1] + Ty[1]*length, self.gridEy[:, 1]*np.nan].flatten()
-            # #ax.plot(self.gridEy[:, 0], self.gridEy[:, 1], 'g^')
-            # ax.plot(nX, nY, 'g-')
-
+                ax.plot(X, Y, color=color, linewidth=linewidth, linestyle="-", **kwargs)
         elif self.dim == 3:
             X1 = np.c_[mkvc(NN[0][:-1, :, :]), mkvc(NN[0][1:, :, :]), mkvc(NN[0][:-1, :, :])*np.nan].flatten()
             Y1 = np.c_[mkvc(NN[1][:-1, :, :]), mkvc(NN[1][1:, :, :]), mkvc(NN[1][:-1, :, :])*np.nan].flatten()
@@ -1170,8 +1244,23 @@ class CurviView(object):
             Y = np.r_[Y1, Y2, Y3]
             Z = np.r_[Z1, Z2, Z3]
 
-            ax.plot(X, Y, 'C0', zs=Z, **kwargs)
+            ax.plot(X, Y, Z, color=color, linewidth=linewidth, linestyle="-", **kwargs)
             ax.set_zlabel('x3')
+
+        if nodes:
+            ax.plot(*self.gridN.T, color=color, linestyle="", marker="s")
+        if centers:
+            ax.plot(*self.gridCC.T, color="C1", linestyle="", marker="o")
+        if faces:
+            ax.plot(*self.gridFx.T, color="C2", marker=">", linestyle="")
+            ax.plot(*self.gridFy.T, color="C2", marker="<", linestyle="")
+            if self.dim == 3:
+                ax.plot(*self.gridFz.T, color="C2", marker="^", linestyle="")
+        if edges:
+            ax.plot(*self.gridEx.T, color="C3", marker=">", linestyle="")
+            ax.plot(*self.gridEy.T, color="C3", marker="<", linestyle="")
+            if self.dim == 3:
+                ax.plot(*self.gridEz.T, color="C3", marker="^", linestyle="")
 
         ax.grid(True)
         ax.set_xlabel('x1')
@@ -1182,27 +1271,13 @@ class CurviView(object):
 
         return ax
 
-    @requires({'matplotlib': matplotlib})
-    def plotImage(
+    def __plot_image_curv(
         self, v, v_type='CC', grid=False, view='real',
         ax=None, clim=None, show_it=False,
         pcolor_opts=None,
         grid_opts=None,
         range_x=None, range_y=None, **kwargs
     ):
-        if "pcolorOpts" in kwargs:
-            pcolor_opts = kwargs["pcolorOpts"]
-            warnings.warn("pcolorOpts has been deprecated, please use pcolor_opts", DeprecationWarning)
-        if "gridOpts" in kwargs:
-            grid_opts = kwargs["gridOpts"]
-            warnings.warn("gridOpts has been deprecated, please use grid_opts", DeprecationWarning)
-        if "showIt" in kwargs:
-            show_it = kwargs["showIt"]
-            warnings.warn("showIt has been deprecated, please use show_it", DeprecationWarning)
-        if "vType" in kwargs:
-            v_type = kwargs["vType"]
-            warnings.warn("vType has been deprecated, please use v_type", DeprecationWarning)
-
         if self.dim == 3:
             raise NotImplementedError('This is not yet done!')
         if view == 'vec':
@@ -1219,74 +1294,288 @@ class CurviView(object):
             aveOp = 'ave' + v_type[0] + '2CCV'
             ind_xy = {'x': 0, 'y': 1}[v_type[1]]
             I = (getattr(self, aveOp)*v).reshape(2, self.nC)[ind_xy]  # average to cell centers
+        I = np.ma.masked_where(np.isnan(I), I)
+        if clim is None:
+            clim = [v.min(), v.max()]
+        X, Y = (x.T for x in self.nodes)
+        out = ax.pcolormesh(X, Y, I.reshape(self.vnC[::-1]), antialiased=True, vmin=clim[0], vmax=clim[1],
+            **pcolor_opts, **grid_opts)
 
-        if ax is None:
-            ax = plt.subplot(111)
-        if pcolor_opts is None:
-            pcolor_opts = {}
-        if 'cmap' in pcolor_opts:
-            cm = pcolor_opts['cmap']
-        else:
-            cm = plt.get_cmap()
-        if 'vmin' in pcolor_opts:
-            vmin = pcolor_opts['vmin']
-        else:
-            vmin = np.nanmin(I) if clim is None else clim[0]
-        if 'vmax' in pcolor_opts:
-            vmax = pcolor_opts['vmax']
-        else:
-            vmax = np.nanmax(I) if clim is None else clim[1]
-        if 'alpha' in pcolor_opts:
-            alpha = pcolor_opts['alpha']
-        else:
-            alpha = 1.0
-        if grid_opts is None:
-            grid_opts = {'color': 'k'}
-        if 'color' not in grid_opts:
-            grid_opts['color'] = 'k'
-
-        cNorm = colors.Normalize(vmin=vmin, vmax=vmax)
-        scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=cm)
-
-        if 'edge_color' in pcolor_opts:
-            edge_color = pcolor_opts['edge_color']
-        else:
-            edge_color = grid_opts['color'] if grid else 'none'
-        if 'alpha' in grid_opts:
-            edge_alpha = grid_opts['alpha']
-        else:
-            edge_alpha = 1.0
-        if edge_color.lower() != 'none':
-            if isinstance(edge_color, str):
-                edge_color = colors.to_rgba(edge_color, edge_alpha)
-            else:
-                edge_color = colors.to_rgba_array(edge_color, edge_alpha)
-
-        Nx = self.r(self.gridN[:, 0], 'N', 'N', 'M')
-        Ny = self.r(self.gridN[:, 1], 'N', 'N', 'M')
-        cells = self.r(I, 'CC', 'CC', 'M').reshape(-1)
-
-        polys = []
-        facecolors = scalarMap.to_rgba(cells)
-        facecolors[:, -1] = alpha
-        for ii in range(self.nCx):
-            i_s = [ii, ii+1, ii+1, ii]
-            for jj in range(self.nCy):
-                j_s = [jj, jj, jj+1, jj+1]
-                polys.append(plt.Polygon(np.c_[Nx[i_s, j_s], Ny[i_s, j_s]]))
-
-        pc = PatchCollection(polys, facecolor=facecolors, edgecolor=edge_color)
-        # Add collection to axes
-        ax.add_collection(pc)
-        scalarMap._A = []  # http://stackoverflow.com/questions/8342549/matplotlib-add-colorbar-to-a-sequence-of-line-plots
         ax.set_xlabel('x')
         ax.set_ylabel('y')
         if show_it:
             plt.show()
-        return [scalarMap]
+        return out
+
+    def __plot_grid_tree(
+        self, ax=None, nodes=False, faces=False, centers=False, edges=False,
+        lines=True, cell_line=False, faces_x=False, faces_y=False, faces_z=False,
+        edges_x=False, edges_y=False, edges_z=False, show_it=False, **kwargs
+    ):
+        if faces:
+            faces_x = faces_y = True
+            if self.dim==3:
+                faces_z = True
+        if edges:
+            edges_x = edges_y = True
+            if self.dim==3:
+                edges_z = True
+        if lines or nodes:
+            grid_n_full = np.r_[self.grid_nodes, self.grid_hanging_nodes]
+        if nodes:
+            ax.plot(
+                *grid_n_full.T, color="C0", marker='s', linestyle="")
+            # Hanging Nodes
+            ax.plot(*self.gridhN.T, color="C0", marker='s', linestyle="",
+                    markersize=10, markerfacecolor='none', markeredgecolor='C0')
+        if centers:
+            ax.plot(*self.grid_cell_centers.T, color="C1", marker="o", linestyle="")
+        if cell_line:
+            ax.plot(*self.grid_cell_centers.T, color="C1", linestyle=":")
+            ax.plot(
+                self.grid_cell_centers[[0,-1],0], self.grid_cell_centers[[0,-1],1],
+                color="C1", marker='o', linestyle="")
+
+        y_mark = "<" if self.dim==3 else "^"
+
+        if faces_x:
+            ax.plot(*np.r_[self.grid_faces_x, self.grid_hanging_faces_x].T,
+                    color="C2", marker=">", linestyle="")
+            # Hanging Faces x
+            ax.plot(*self.grid_hanging_faces_x.T, color="C2", marker='s', linestyle="",
+                    markersize=10, markerfacecolor='none', markeredgecolor='C2')
+        if faces_y:
+            ax.plot(*np.r_[self.grid_faces_y, self.grid_hanging_faces_y].T,
+                    color="C2", marker=y_mark, linestyle="")
+            # Hanging Faces y
+            ax.plot(*self.grid_hanging_faces_y.T, color="C2", marker='s', linestyle="",
+                    markersize=10, markerfacecolor='none', markeredgecolor='C2')
+        if faces_z:
+            ax.plot(*np.r_[self.grid_faces_z, self.grid_hanging_faces_z].T,
+                    color="C2", marker="^", linestyle="")
+            # Hangin Faces z
+            ax.plot(*self.grid_hanging_faces_z.T, color="C2", marker='s', linestyle="",
+                    markersize=10, markerfacecolor='none', markeredgecolor='C2')
+        if edges_x:
+            ax.plot(*np.r_[self.grid_edges_x, self.grid_hanging_edges_x].T,
+                    color="C3", marker=">", linestyle="")
+            # Hanging Edges x
+            ax.plot(*self.grid_hanging_edges_x.T, color="C3", marker='s', linestyle="",
+                    markersize=10, markerfacecolor='none', markeredgecolor='C3')
+        if edges_y:
+            ax.plot(*np.r_[self.grid_edges_y, self.grid_hanging_edges_y].T,
+                    color="C3", marker=y_mark, linestyle="")
+            # Hanging Edges y
+            ax.plot(*self.grid_hanging_edges_y.T, color="C3", marker='s', linestyle="",
+                    markersize=10, markerfacecolor='none', markeredgecolor='C3')
+        if edges_z:
+            ax.plot(*np.r_[self.grid_edges_z, self.grid_hanging_edges_z].T,
+                    color="C3", marker="^", linestyle="")
+            # Hanging Edges z
+            ax.plot(*self.grid_hanging_edges_z.T, color="C3", marker='s', linestyle="",
+                    markersize=10, markerfacecolor='none', markeredgecolor='C3')
+
+        if lines:
+            edge_nodes = self.edge_nodes
+            lines = np.r_[grid_n_full[edge_nodes[0]], grid_n_full[edge_nodes[1]]]
+            if self.dim == 2:
+                line_segments = LineCollection(lines, **kwargs)
+            else:
+                lines = np.r_[lines, grid_n_full[edge_nodes[2]]]
+                line_segments = Line3DCollection(lines, **kwargs)
+            ax.add_collection(line_segments)
+            ax.autoscale()
+
+        ax.set_xlabel('x1')
+        ax.set_ylabel('x2')
+        if self.dim == 3:
+            ax.set_zlabel('x3')
+
+        ax.grid(True)
+        if show_it:
+            plt.show()
+
+        return ax
+
+    def __plot_image_tree(
+        self, v, v_type='CC', grid=False, view='real',
+        ax=None, clim=None, show_it=False,
+        pcolor_opts=None,
+        grid_opts=None,
+        range_x=None, range_y=None,
+        **kwargs,
+    ):
+        if self.dim == 3:
+            raise NotImplementedError('plotImage is not implemented for 3D TreeMesh, please use plotSlice')
+
+        if view == 'vec':
+            raise NotImplementedError('Vector ploting is not supported on TreeMesh (yet)')
+
+        if view in ['real', 'imag', 'abs']:
+            v = getattr(np, view)(v) # e.g. np.real(v)
+        if v_type == 'CC':
+            I = v
+        elif v_type == 'N':
+            I = self.aveN2CC*v
+        elif v_type in ['Fx', 'Fy', 'Ex', 'Ey']:
+            aveOp = 'ave' + v_type[0] + '2CCV'
+            ind_xy = {'x': 0, 'y': 1}[v_type[1]]
+            I = (getattr(self, aveOp)*v).reshape(2, self.n_cells)[ind_xy] # average to cell centers
+
+        # pcolormesh call signature
+        # def pcolormesh(self, *args, alpha=None, norm=None, cmap=None, vmin=None,
+        #            vmax=None, shading='flat', antialiased=False, **kwargs):
+        alpha = pcolor_opts.pop('alpha', None)
+        norm = pcolor_opts.pop('norm', None)
+        cmap = pcolor_opts.pop('cmap', None)
+        if clim is None:
+            vmin = pcolor_opts.pop('vmin', None)
+            vmax = pcolor_opts.pop('vmax', None)
+        else:
+            vmin = pcolor_opts.pop('vmin', clim[0])
+            vmax = pcolor_opts.pop('vmin', clim[1])
+        shading = pcolor_opts.pop('shading', 'flat')
+        antialiased = pcolor_opts.pop('antialiased', False)
+
+        node_grid = np.r_[self.grid_nodes, self.grid_hanging_nodes]
+        cell_nodes = self.cell_nodes[:, (0, 1, 3, 2)]
+        cell_verts = node_grid[cell_nodes]
+
+        # Below taken from pcolormesh source code with QuadMesh exchanged to PolyCollection
+        collection = PolyCollection(cell_verts, antialiased=antialiased,
+                                    **{**pcolor_opts, **grid_opts})
+        collection.set_alpha(alpha)
+        collection.set_array(I)
+        if norm is not None and not isinstance(norm, mcolors.Normalize):
+            raise ValueError(
+                "'norm' must be an instance of 'mcolors.Normalize'")
+        collection.set_cmap(cmap)
+        collection.set_norm(norm)
+        collection.set_clim(vmin, vmax)
+        collection.autoscale_None()
+
+        # Transform from native to data coordinates?
+        t = collection._transform
+        if (not isinstance(t, mtransforms.Transform) and
+            hasattr(t, '_as_mpl_transform')):
+            t = t._as_mpl_transform(ax.axes)
+
+        if t and any(t.contains_branch_seperately(ax.transData)):
+            trans_to_data = t - ax.transData
+            coords = trans_to_data.transform(coords)
+
+        ax.add_collection(collection, autolim=False)
+
+        if range_x is not None:
+            minx, maxx = range_x
+        else:
+            minx, maxx = self.grid_nodes_x[[0, -1]]
+
+        if range_y is not None:
+            miny, maxy = range_x
+        else:
+            miny, maxy = self.grid_nodes_y[[0, -1]]
+
+        collection.sticky_edges.x[:] = [minx, maxx]
+        collection.sticky_edges.y[:] = [miny, maxy]
+        corners = (minx, miny), (maxx, maxy)
+        ax.update_datalim(corners)
+        ax.autoscale_view()
+
+        if show_it:
+            plt.show()
+
+        return (collection, )
+
+    def __plot_slice_tree(
+        self, v, v_type='CC',
+        normal='Z', ind=None, grid=False, view='real',
+        ax=None, clim=None, show_it=False,
+        pcolor_opts=None, stream_opts=None, grid_opts=None,
+        range_x=None, range_y=None, **kwargs
+    ):
+        if view == 'vec':
+            raise NotImplementedError(
+                'Vector view plotting is not implemented for TreeMesh (yet)'
+            )
+        normalInd = {'X': 0, 'Y': 1, 'Z': 2}[normal]
+        antiNormalInd = {'X': [1, 2], 'Y': [0, 2], 'Z': [0, 1]}[normal]
+
+        h2d = (self.h[antiNormalInd[0]], self.h[antiNormalInd[1]])
+        x2d = (self.x0[antiNormalInd[0]], self.x0[antiNormalInd[1]])
+
+        #: Size of the sliced dimension
+        szSliceDim = len(self.h[normalInd])
+        if ind is None:
+            ind = int(szSliceDim//2)
+
+        cc_tensor = [None, None, None]
+        for i in range(3):
+            cc_tensor[i] = np.cumsum(np.r_[self.x0[i], self.h[i]])
+            cc_tensor[i] = (cc_tensor[i][1:] + cc_tensor[i][:-1])*0.5
+        slice_loc = cc_tensor[normalInd][ind]
+
+        if type(ind) not in integer_types:
+            raise ValueError('ind must be an integer')
+
+        # create a temporary TreeMesh with the slice through
+        temp_mesh = discretize.TreeMesh(h2d, x2d)
+        level_diff = self.max_level - temp_mesh.max_level
+
+        XS = [None, None, None]
+        XS[antiNormalInd[0]], XS[antiNormalInd[1]] = np.meshgrid(cc_tensor[antiNormalInd[0]],
+                                                                 cc_tensor[antiNormalInd[1]])
+        XS[normalInd] = np.ones_like(XS[antiNormalInd[0]])*slice_loc
+        loc_grid = np.c_[XS[0].reshape(-1), XS[1].reshape(-1), XS[2].reshape(-1)]
+        inds = np.unique(self._get_containing_cell_indexes(loc_grid))
+
+        grid2d = self.gridCC[inds][:, antiNormalInd]
+        levels = self._cell_levels_by_indexes(inds) - level_diff
+        temp_mesh.insert_cells(grid2d, levels)
+        tm_gridboost = np.empty((temp_mesh.nC, 3))
+        tm_gridboost[:, antiNormalInd] = temp_mesh.gridCC
+        tm_gridboost[:, normalInd] = slice_loc
+
+        # interpolate values to self.gridCC if not 'CC'
+        if v_type != 'CC':
+            aveOp = 'ave' + v_type + '2CC'
+            Av = getattr(self, aveOp)
+            if v.size == Av.shape[1]:
+                v = Av*v
+            elif len(v_type) == 2:
+                # was one of Fx, Fy, Fz, Ex, Ey, Ez
+                # assuming v has all three components in these cases
+                vec_ind = {'x': 0, 'y': 1, 'z': 2}[v_type[1]]
+                if v_type[0] == 'E':
+                    i_s = np.cumsum([0, self.nEx, self.nEy, self.nEz])
+                elif v_type[0] == 'F':
+                    i_s = np.cumsum([0, self.nFx, self.nFy, self.nFz])
+                v = v[i_s[vec_ind]:i_s[vec_ind+1]]
+                v = Av*v
+
+        # interpolate values from self.gridCC to grid2d
+        ind_3d_to_2d = self._get_containing_cell_indexes(tm_gridboost)
+        v2d = v[ind_3d_to_2d]
+
+        out = temp_mesh.plotImage(
+            v2d, v_type='CC',
+            grid=grid, view=view,
+            ax=ax, clim=clim, show_it=False,
+            pcolor_opts=pcolor_opts,
+            grid_opts=grid_opts,
+            range_x=range_x,
+            range_y=range_y)
+
+        ax.set_xlabel('y' if normal == 'X' else 'x')
+        ax.set_ylabel('y' if normal == 'Z' else 'z')
+        ax.set_title(
+            'Slice {0:d}, {1!s} = {2:4.2f}'.format(ind, normal, slice_loc)
+        )
+        if show_it:
+            plt.show()
+        return (out, )
 
 
-@requires({'matplotlib': matplotlib})
 class Slicer(object):
     """Plot slices of a 3D volume, interactively (scroll wheel).
 
