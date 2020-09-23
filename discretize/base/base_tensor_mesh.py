@@ -222,7 +222,7 @@ class BaseTensorMesh(BaseMesh):
 
     def _getTensorGrid(self, key):
         if getattr(self, '_grid' + key, None) is None:
-            setattr(self, '_grid' + key, ndgrid(self.getTensor(key)))
+            setattr(self, '_grid' + key, ndgrid(self.get_tensor(key)))
         return getattr(self, '_grid' + key)
 
     def get_tensor(self, key):
@@ -282,7 +282,7 @@ class BaseTensorMesh(BaseMesh):
         """
         pts = asArray_N_x_Dim(pts, self.dim)
 
-        tensors = self.getTensor(locType)
+        tensors = self.get_tensor(locType)
 
         if locType == 'N' and self._meshType == 'CYL':
             # NOTE: for a CYL mesh we add a node to check if we are inside in
@@ -335,11 +335,11 @@ class BaseTensorMesh(BaseMesh):
         loc = asArray_N_x_Dim(loc, self.dim)
 
         if not zerosOutside:
-            assert np.all(self.isInside(loc)), "Points outside of mesh"
+            assert np.all(self.is_inside(loc)), "Points outside of mesh"
         else:
-            indZeros = np.logical_not(self.isInside(loc))
+            indZeros = np.logical_not(self.is_inside(loc))
             loc[indZeros, :] = np.array([
-                v.mean() for v in self.getTensor('CC')
+                v.mean() for v in self.get_tensor('CC')
             ])
 
         if locType in ['Fx', 'Fy', 'Fz', 'Ex', 'Ey', 'Ez']:
@@ -347,16 +347,16 @@ class BaseTensorMesh(BaseMesh):
             assert self.dim >= ind, 'mesh is not high enough dimension.'
             nF_nE = self.vnF if 'F' in locType else self.vnE
             components = [spzeros(loc.shape[0], n) for n in nF_nE]
-            components[ind] = interpmat(loc, *self.getTensor(locType))
+            components[ind] = interpmat(loc, *self.get_tensor(locType))
             # remove any zero blocks (hstack complains)
             components = [comp for comp in components if comp.shape[1] > 0]
             Q = sp.hstack(components)
 
         elif locType in ['CC', 'N']:
-            Q = interpmat(loc, *self.getTensor(locType))
+            Q = interpmat(loc, *self.get_tensor(locType))
 
         elif locType in ['CCVx', 'CCVy', 'CCVz']:
-            Q = interpmat(loc, *self.getTensor('CC'))
+            Q = interpmat(loc, *self.get_tensor('CC'))
             Z = spzeros(loc.shape[0], self.nC)
             if locType == 'CCVx':
                 Q = sp.hstack([Q, Z, Z])

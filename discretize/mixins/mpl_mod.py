@@ -845,7 +845,7 @@ class InterfaceMPL(object):
                 clim = [uv.min(), uv.max()]
 
             tMi = self.__class__(h=[hx, hy], x0=np.r_[x0_x, x0_y])
-            P = self.getInterpolationMat(tMi.gridCC, 'CC', zerosOutside=True)
+            P = self.get_interpolation_matrix(tMi.gridCC, 'CC', zerosOutside=True)
 
             Ui = tMi.reshape(P*mkvc(U), 'CC', 'CC', 'M')
             Vi = tMi.reshape(P*mkvc(V), 'CC', 'CC', 'M')
