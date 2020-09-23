@@ -223,7 +223,7 @@ class DiffOperators(object):
             # Get the stencil of +1, -1's
             D = self._faceDivStencil
             # Compute areas of cell faces & volumes
-            S = self.area
+            S = self.face_areas
             V = self.cell_volumes
             self._faceDiv = sdiag(1/V)*D*sdiag(S)
         return self._faceDiv
@@ -235,7 +235,7 @@ class DiffOperators(object):
         cell-centres).
         """
         # Compute areas of cell faces & volumes
-        S = self.reshape(self.area, 'F', 'Fx', 'V')
+        S = self.reshape(self.face_areas, 'F', 'Fx', 'V')
         V = self.cell_volumes
         return sdiag(1/V)*self._faceDivStencilx*sdiag(S)
 
@@ -244,7 +244,7 @@ class DiffOperators(object):
         if(self.dim < 2):
             return None
         # Compute areas of cell faces & volumes
-        S = self.reshape(self.area, 'F', 'Fy', 'V')
+        S = self.reshape(self.face_areas, 'F', 'Fy', 'V')
         V = self.cell_volumes
         return sdiag(1/V)*self._faceDivStencily*sdiag(S)
 
@@ -257,7 +257,7 @@ class DiffOperators(object):
         if(self.dim < 3):
             return None
         # Compute areas of cell faces & volumes
-        S = self.reshape(self.area, 'F', 'Fz', 'V')
+        S = self.reshape(self.face_areas, 'F', 'Fz', 'V')
         V = self.cell_volumes
         return sdiag(1/V)*self._faceDivStencilz*sdiag(S)
 
@@ -530,7 +530,7 @@ class DiffOperators(object):
         """
         if getattr(self, '_cellGrad', None) is None:
             G = self._cellGradStencil
-            S = self.area  # Compute areas of cell faces & volumes
+            S = self.face_areas  # Compute areas of cell faces & volumes
             V = self.aveCC2F*self.cell_volumes  # Average volume between adjacent cells
             self._cellGrad = sdiag(S/V)*G
         return self._cellGrad
@@ -555,7 +555,7 @@ class DiffOperators(object):
                 G3 = kron3(_ddxCellGradBC(n[2], BC[2]), speye(n[1]), speye(n[0]))
                 G = sp.block_diag((G1, G2, G3), format="csr")
             # Compute areas of cell faces & volumes
-            S = self.area
+            S = self.face_areas
             V = self.aveCC2F*self.cell_volumes  # Average volume between adjacent cells
             self._cellGradBC = sdiag(S/V)*G
         return self._cellGradBC
@@ -570,7 +570,7 @@ class DiffOperators(object):
             G1 = self._cellGradxStencil
             # Compute areas of cell faces & volumes
             V = self.aveCC2F*self.cell_volumes
-            L = self.reshape(self.area/V, 'F', 'Fx', 'V')
+            L = self.reshape(self.face_areas/V, 'F', 'Fx', 'V')
             self._cellGradx = sdiag(L)*G1
         return self._cellGradx
 
@@ -582,7 +582,7 @@ class DiffOperators(object):
             G2 = self._cellGradyStencil
             # Compute areas of cell faces & volumes
             V = self.aveCC2F*self.cell_volumes
-            L = self.reshape(self.area/V, 'F', 'Fy', 'V')
+            L = self.reshape(self.face_areas/V, 'F', 'Fy', 'V')
             self._cellGrady = sdiag(L)*G2
         return self._cellGrady
 
@@ -598,7 +598,7 @@ class DiffOperators(object):
             G3 = self._cellGradzStencil
             # Compute areas of cell faces & volumes
             V = self.aveCC2F*self.cell_volumes
-            L = self.reshape(self.area/V, 'F', 'Fz', 'V')
+            L = self.reshape(self.face_areas/V, 'F', 'Fz', 'V')
             self._cellGradz = sdiag(L)*G3
         return self._cellGradz
 
@@ -685,7 +685,7 @@ class DiffOperators(object):
         Construct the 3D curl operator.
         """
         L = self.edge  # Compute lengths of cell edges
-        S = self.area # Compute areas of cell faces
+        S = self.face_areas # Compute areas of cell faces
 
         if getattr(self, '_edgeCurl', None) is None:
 
@@ -767,7 +767,7 @@ class DiffOperators(object):
         if self.dim == 1:
             Pbc = projDirichlet(n[0], BC[0])
             indF = indF[0] | indF[1]
-            Pbc = Pbc*sdiag(self.area[indF])
+            Pbc = Pbc*sdiag(self.face_areas[indF])
 
             Pin = projNeumannIn(n[0], BC[0])
 
@@ -778,7 +778,7 @@ class DiffOperators(object):
             Pbc2 = sp.kron(projDirichlet(n[1], BC[1]), speye(n[0]))
             Pbc = sp.block_diag((Pbc1, Pbc2), format="csr")
             indF = np.r_[(indF[0] | indF[1]), (indF[2] | indF[3])]
-            Pbc = Pbc*sdiag(self.area[indF])
+            Pbc = Pbc*sdiag(self.face_areas[indF])
 
             P1 = sp.kron(speye(n[1]), projNeumannIn(n[0], BC[0]))
             P2 = sp.kron(projNeumannIn(n[1], BC[1]), speye(n[0]))
@@ -798,7 +798,7 @@ class DiffOperators(object):
                 (indF[2] | indF[3]),
                 (indF[4] | indF[5])
             ]
-            Pbc = Pbc*sdiag(self.area[indF])
+            Pbc = Pbc*sdiag(self.face_areas[indF])
 
             P1 = kron3(speye(n[2]), speye(n[1]), projNeumannIn(n[0], BC[0]))
             P2 = kron3(speye(n[2]), projNeumannIn(n[1], BC[1]), speye(n[0]))
@@ -847,7 +847,7 @@ class DiffOperators(object):
             Pbc = projDirichlet(n[0], BC[0])
             B = projBC(n[0])
             indF = indF[0] | indF[1]
-            Pbc = Pbc*sdiag(self.area[indF])
+            Pbc = Pbc*sdiag(self.face_areas[indF])
 
         elif self.dim == 2:
             Pbc1 = sp.kron(speye(n[1]), projDirichlet(n[0], BC[0]))
@@ -857,7 +857,7 @@ class DiffOperators(object):
             B2 = sp.kron(projBC(n[1]), speye(n[0]))
             B = sp.block_diag((B1, B2), format="csr")
             indF = np.r_[(indF[0] | indF[1]), (indF[2] | indF[3])]
-            Pbc = Pbc*sdiag(self.area[indF])
+            Pbc = Pbc*sdiag(self.face_areas[indF])
 
         elif self.dim == 3:
             Pbc1 = kron3(speye(n[2]), speye(n[1]), projDirichlet(n[0], BC[0]))
@@ -873,7 +873,7 @@ class DiffOperators(object):
                 (indF[2] | indF[3]),
                 (indF[4] | indF[5])
             ]
-            Pbc = Pbc*sdiag(self.area[indF])
+            Pbc = Pbc*sdiag(self.face_areas[indF])
 
         return Pbc, B.T
 

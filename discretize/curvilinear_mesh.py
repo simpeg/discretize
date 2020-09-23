@@ -336,7 +336,7 @@ class CurvilinearMesh(
         """
 
         if getattr(self, '_normals', None) is None:
-            self.area  # calling .area will create the face normals
+            self.face_areas  # calling .face_areas will create the face normals
         if self.dim == 2:
             return _normalize2D(np.r_[self._normals[0], self._normals[1]])
         elif self.dim == 3:

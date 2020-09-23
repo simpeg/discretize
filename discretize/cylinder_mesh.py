@@ -1099,7 +1099,7 @@ class CylindricalMesh(
         """
         if getattr(self, '_faceDivy', None) is None:
             D2 = super()._faceDivStencily
-            S = self._areaFyFull  # self.reshape(self.area, 'F', 'Fy', 'V')
+            S = self._areaFyFull  # self.reshape(self.face_areas, 'F', 'Fy', 'V')
             V = self.cell_volumes
             self._faceDivy = (
                 sdiag(1/V)*D2*sdiag(S) *
@@ -1138,7 +1138,7 @@ class CylindricalMesh(
         # if getattr(self, '_cellGradx', None) is None:
         #     G1 = super(CylMesh, self)._cellGradxStencil
         #     V = self._deflationMatrix('F', withHanging='True', asOnes='True')*self.aveCC2F*self.cell_volumes
-        #     A = self.area
+        #     A = self.face_areas
         #     L = (A/V)[:self._ntFx]
         #     # L = self.reshape(L, 'F', 'Fx', 'V')
         #     # L = A[:self.nFx] / V
