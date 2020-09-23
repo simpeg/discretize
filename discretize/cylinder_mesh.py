@@ -593,8 +593,8 @@ class CylindricalMesh(
     #          hang_x = np.zeros(self._ntNx, dtype=bool)
     #          hang_x[0] = True
     #          ishangingFxBool = np.kron(
-    #              np.ones(self.nCz, dtype=bool),  # 1 * 0 == 0
-    #              np.kron(np.ones(self.nCy, dtype=bool), hang_x)
+    #              np.ones(self.shape_cells[2], dtype=bool),  # 1 * 0 == 0
+    #              np.kron(np.ones(self.shape_cells[1], dtype=bool), hang_x)
     #          )
     #          return self._ishangingFxBool
     #
@@ -1099,7 +1099,7 @@ class CylindricalMesh(
         """
         if getattr(self, '_faceDivy', None) is None:
             D2 = super()._faceDivStencily
-            S = self._areaFyFull  # self.r(self.area, 'F', 'Fy', 'V')
+            S = self._areaFyFull  # self.reshape(self.area, 'F', 'Fy', 'V')
             V = self.cell_volumes
             self._faceDivy = (
                 sdiag(1/V)*D2*sdiag(S) *
@@ -1140,7 +1140,7 @@ class CylindricalMesh(
         #     V = self._deflationMatrix('F', withHanging='True', asOnes='True')*self.aveCC2F*self.vol
         #     A = self.area
         #     L = (A/V)[:self._ntFx]
-        #     # L = self.r(L, 'F', 'Fx', 'V')
+        #     # L = self.reshape(L, 'F', 'Fx', 'V')
         #     # L = A[:self.nFx] / V
         #     self._cellGradx = self._deflationMatrix('Fx')*sdiag(L)*G1
         # return self._cellGradx
@@ -1165,20 +1165,20 @@ class CylindricalMesh(
     # def _nodalGradStencilx(self):
     #     if self.isSymmetric:
     #         return None
-    #     return kron3(speye(self.nNz), speye(self.nNy), ddx(self.nCx))
+    #     return kron3(speye(self.nNz), speye(self.nNy), ddx(self.shape_cells[0]))
 
     # @property
     # def _nodalGradStencily(self):
     #     if self.isSymmetric:
     #         None
-    #         # return kron3(speye(self.nNz), ddx(self.nCy), speye(self.nNx)) * self._deflationMatrix('Ey')
-    #     return kron3(speye(self.nNz), ddx(self.nCy), speye(self.nNx))
+    #         # return kron3(speye(self.nNz), ddx(self.shape_cells[1]), speye(self.nNx)) * self._deflationMatrix('Ey')
+    #     return kron3(speye(self.nNz), ddx(self.shape_cells[1]), speye(self.nNx))
 
     # @property
     # def _nodalGradStencilz(self):
     #     if self.isSymmetric:
     #         return None
-    #     return kron3(ddx(self.nCz), speye(self.nNy), speye(self.nNx))
+    #     return kron3(ddx(self.shape_cells[2]), speye(self.nNy), speye(self.nNx))
 
     # @property
     # def _nodalGradStencil(self):

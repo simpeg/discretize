@@ -36,5 +36,3 @@ from .coordinate_utils import (
 from .coordinate_utils import (rotationMatrixFromNormals, rotatePointsFromNormals)
 
 from .io_utils import download
-
-# DEPRECATIONS

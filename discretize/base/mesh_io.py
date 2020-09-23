@@ -177,8 +177,8 @@ class TensorMeshIO(InterfaceTensorread_vtk):
             dtype=np.str, comments='!'
         )
 
-        dim = np.array(obsfile[0].split(), dtype=int)
-        if not np.all([mesh.nCx, mesh.nCy] == dim):
+        dim = tuple(np.array(obsfile[0].split(), dtype=int))
+        if mesh.shape_cells != dim:
             raise Exception('Dimension of the model and mesh mismatch')
 
         model = []
@@ -206,7 +206,8 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         f = open(fileName, 'r')
         model = np.array(list(map(float, f.readlines())))
         f.close()
-        model = np.reshape(model, (mesh.nCz, mesh.nCx, mesh.nCy), order='F')
+        nCx, nCy, nCz = mesh.shape_cells
+        model = np.reshape(model, (nCz, nCx, nCy), order='F')
         model = model[::-1, :, :]
         model = np.transpose(model, (1, 2, 0))
         model = mkvc(model)
@@ -247,7 +248,7 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         fname = os.path.join(directory, fileName)
         if mesh.dim == 3:
             # Reshape model to a matrix
-            modelMat = mesh.r(model, 'CC', 'CC', 'M')
+            modelMat = mesh.reshape(model, 'CC', 'CC', 'M')
             # Transpose the axes
             modelMatT = modelMat.transpose((2, 0, 1))
             # Flip z to positive down
@@ -255,9 +256,9 @@ class TensorMeshIO(InterfaceTensorread_vtk):
             np.savetxt(fname, modelMatTR.ravel())
 
         elif mesh.dim == 2:
-            modelMat = mesh.r(model, 'CC', 'CC', 'M').T[::-1]
+            modelMat = mesh.reshape(model, 'CC', 'CC', 'M').T[::-1]
             f = open(fname, 'w')
-            f.write('{:d} {:d}\n'.format(mesh.nCx, mesh.nCy))
+            f.write('{:d} {:d}\n'.format(*mesh.shape_cells))
             f.close()
             f = open(fname, 'ab')
             np.savetxt(f, modelMat)
@@ -283,10 +284,11 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         origin = mesh.x0 + np.array([0, 0, mesh.hz.sum()])
         origin.dtype = float
 
+        nCx, nCy, nCz = mesh.shape_cells
         s += '{0:.6f} {1:.6f} {2:.6f}\n'.format(*tuple(origin))
-        s += ('%.6f '*mesh.nCx+'\n') % tuple(mesh.hx)
-        s += ('%.6f '*mesh.nCy+'\n') % tuple(mesh.hy)
-        s += ('%.6f '*mesh.nCz+'\n') % tuple(mesh.hz[::-1])
+        s += ('%.6f '*nCx+'\n') % tuple(mesh.hx)
+        s += ('%.6f '*nCy+'\n') % tuple(mesh.hy)
+        s += ('%.6f '*nCz+'\n') % tuple(mesh.hz[::-1])
         f = open(fileName, 'w')
         f.write(s)
         f.close()

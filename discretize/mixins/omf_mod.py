@@ -79,7 +79,7 @@ class InterfaceOMF(object):
         omfmesh.data = []
         for name, arr in models.items():
             data = omf.ScalarData(name=name,
-                                  array=ravel_data_array(arr, mesh.nCx, mesh.nCy, mesh.nCz),
+                                  array=ravel_data_array(arr, *mesh.shape_cells),
                                   location='cells')
             omfmesh.data.append(data)
         # Validate to make sure a proper OMF object is returned to the user
@@ -141,7 +141,7 @@ class InterfaceOMF(object):
         data_dict = {}
         for data in element.data:
             # NOTE: this is agnostic about data location - i.e. nodes vs cells
-            data_dict[data.name] = unravel_data_array(np.array(data.array), mesh.nCx, mesh.nCy, mesh.nCz)
+            data_dict[data.name] = unravel_data_array(np.array(data.array), *mesh.shape_cells)
 
         # Return TensorMesh and data dictionary
         return mesh, data_dict

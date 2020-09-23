@@ -306,9 +306,8 @@ class InterfaceVTK(object):
             return assign_cell_data(output, models=models)
         # Use a structured grid where points are rotated to the cartesian system
         ptsMat = InterfaceVTK.__get_rotated_nodes(mesh)
-        dims = [mesh.nCx, mesh.nCy, mesh.nCz]
         # Assign the model('s) to the object
-        return InterfaceVTK.__create_structured_grid(ptsMat, dims, models=models)
+        return InterfaceVTK.__create_structured_grid(ptsMat, mesh.shape_cells, models=models)
 
 
     def __curvilinear_mesh_to_vtk(mesh, models=None):
@@ -327,8 +326,7 @@ class InterfaceVTK(object):
 
         """
         ptsMat = InterfaceVTK.__get_rotated_nodes(mesh)
-        dims = [mesh.nCx, mesh.nCy, mesh.nCz]
-        return InterfaceVTK.__create_structured_grid(ptsMat, dims, models=models)
+        return InterfaceVTK.__create_structured_grid(ptsMat, mesh.shape_cells, models=models)
 
 
     def __cyl_mesh_to_vtk(mesh, models=None):
@@ -337,8 +335,7 @@ class InterfaceVTK(object):
         """
         # # Points
         # ptsMat = cyl2cart(mesh.gridN)
-        # dims = [mesh.nCx, mesh.nCy, mesh.nCz]
-        # return InterfaceVTK.__create_structured_grid(ptsMat, dims, models=models)
+        # return InterfaceVTK.__create_structured_grid(ptsMat, mesh.shape_cells, models=models)
         raise NotImplementedError('`CylMesh`s are not currently supported for VTK conversion.')
 
 
@@ -576,8 +573,8 @@ class InterfaceTensorread_vtk(object):
             modelName = vtrGrid.GetCellData().GetArrayName(i)
             if np.all(zD < 0):
                 modFlip = _nps.vtk_to_numpy(vtrGrid.GetCellData().GetArray(i))
-                tM = tensMsh.r(modFlip, 'CC', 'CC', 'M')
-                modArr = tensMsh.r(tM[:, :, ::-1], 'CC', 'CC', 'V')
+                tM = tensMsh.reshape(modFlip, 'CC', 'CC', 'M')
+                modArr = tensMsh.reshape(tM[:, :, ::-1], 'CC', 'CC', 'V')
             else:
                 modArr = _nps.vtk_to_numpy(vtrGrid.GetCellData().GetArray(i))
             models[modelName] = modArr

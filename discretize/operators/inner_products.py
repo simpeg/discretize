@@ -393,7 +393,7 @@ class InnerProducts(object):
 
     def _getFacePx(M):
         """Returns a function for creating projection matrices"""
-        ii = np.arange(M.nCx)
+        ii = np.arange(M.shape_cells[0])
 
         def Px(xFace):
             """
@@ -435,14 +435,14 @@ class InnerProducts(object):
                            | 0, 0, 1, 0 |
 
         """
-        i, j = np.arange(M.nCx), np.arange(M.nCy)
+        i, j = np.arange(M.shape_cells[0]), np.arange(M.shape_cells[1])
 
         iijj = ndgrid(i, j)
         ii, jj = iijj[:, 0], iijj[:, 1]
 
         if M._meshType == 'Curv':
-            fN1 = M.r(M.normals, 'F', 'Fx', 'M')
-            fN2 = M.r(M.normals, 'F', 'Fy', 'M')
+            fN1 = M.reshape(M.face_normals, 'F', 'Fx', 'M')
+            fN2 = M.reshape(M.face_normals, 'F', 'Fy', 'M')
 
         def Pxx(xFace, yFace):
             """
@@ -483,15 +483,15 @@ class InnerProducts(object):
         These are centered around a single nodes.
         """
 
-        i, j, k = np.arange(M.nCx), np.arange(M.nCy), np.arange(M.nCz)
+        i, j, k = np.arange(M.shape_cells[0]), np.arange(M.shape_cells[1]), np.arange(M.shape_cells[2])
 
         iijjkk = ndgrid(i, j, k)
         ii, jj, kk = iijjkk[:, 0], iijjkk[:, 1], iijjkk[:, 2]
 
         if M._meshType == 'Curv':
-            fN1 = M.r(M.normals, 'F', 'Fx', 'M')
-            fN2 = M.r(M.normals, 'F', 'Fy', 'M')
-            fN3 = M.r(M.normals, 'F', 'Fz', 'M')
+            fN1 = M.reshape(M.face_normals, 'F', 'Fx', 'M')
+            fN2 = M.reshape(M.face_normals, 'F', 'Fy', 'M')
+            fN3 = M.reshape(M.face_normals, 'F', 'Fz', 'M')
 
         def Pxxx(xFace, yFace, zFace):
             """
@@ -539,14 +539,14 @@ class InnerProducts(object):
         return Px
 
     def _getEdgePxx(M):
-        i, j = np.arange(M.nCx), np.arange(M.nCy)
+        i, j = np.arange(M.shape_cells[0]), np.arange(M.shape_cells[1])
 
         iijj = ndgrid(i, j)
         ii, jj = iijj[:, 0], iijj[:, 1]
 
         if M._meshType == 'Curv':
-            eT1 = M.r(M.tangents, 'E', 'Ex', 'M')
-            eT2 = M.r(M.tangents, 'E', 'Ey', 'M')
+            eT1 = M.reshape(M.edge_tangents, 'E', 'Ex', 'M')
+            eT2 = M.reshape(M.edge_tangents, 'E', 'Ey', 'M')
 
         def Pxx(xEdge, yEdge):
             """
@@ -575,15 +575,15 @@ class InnerProducts(object):
         return Pxx
 
     def _getEdgePxxx(M):
-        i, j, k = np.arange(M.nCx), np.arange(M.nCy), np.arange(M.nCz)
+        i, j, k = np.arange(M.shape_cells[0]), np.arange(M.shape_cells[1]), np.arange(M.shape_cells[2])
 
         iijjkk = ndgrid(i, j, k)
         ii, jj, kk = iijjkk[:, 0], iijjkk[:, 1], iijjkk[:, 2]
 
         if M._meshType == 'Curv':
-            eT1 = M.r(M.tangents, 'E', 'Ex', 'M')
-            eT2 = M.r(M.tangents, 'E', 'Ey', 'M')
-            eT3 = M.r(M.tangents, 'E', 'Ez', 'M')
+            eT1 = M.reshape(M.edge_tangents, 'E', 'Ex', 'M')
+            eT2 = M.reshape(M.edge_tangents, 'E', 'Ey', 'M')
+            eT3 = M.reshape(M.edge_tangents, 'E', 'Ez', 'M')
 
         def Pxxx(xEdge, yEdge, zEdge):
             """

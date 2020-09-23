@@ -441,7 +441,7 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
             fV.shape[1] == self.dim
         ):
             raise Exception('fV must be an ndarray of shape (n_faces x dim)')
-        return np.sum(fV*self.normals, 1)
+        return np.sum(fV*self.face_normals, 1)
 
     def project_edge_vector(self, eV):
         """Project vectors onto the edges of the mesh

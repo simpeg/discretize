@@ -129,7 +129,7 @@ class CurvilinearMesh(
         """
 
         if getattr(self, '_gridFx', None) is None:
-            N = self.r(self.gridN, 'N', 'N', 'M')
+            N = self.reshape(self.gridN, 'N', 'N', 'M')
             if self.dim == 2:
                 XY = [mkvc(0.5 * (n[:, :-1] + n[:, 1:])) for n in N]
                 self._gridFx = np.c_[XY[0], XY[1]]
@@ -146,7 +146,7 @@ class CurvilinearMesh(
         """
 
         if getattr(self, '_gridFy', None) is None:
-            N = self.r(self.gridN, 'N', 'N', 'M')
+            N = self.reshape(self.gridN, 'N', 'N', 'M')
             if self.dim == 2:
                 XY = [mkvc(0.5 * (n[:-1, :] + n[1:, :])) for n in N]
                 self._gridFy = np.c_[XY[0], XY[1]]
@@ -163,7 +163,7 @@ class CurvilinearMesh(
         """
 
         if getattr(self, '_gridFz', None) is None:
-            N = self.r(self.gridN, 'N', 'N', 'M')
+            N = self.reshape(self.gridN, 'N', 'N', 'M')
             XYZ = [mkvc(0.25 * (n[:-1, :-1, :] + n[:-1, 1:, :] +
                    n[1:, :-1, :] + n[1:, 1:, :])) for n in N]
             self._gridFz = np.c_[XYZ[0], XYZ[1], XYZ[2]]
@@ -175,7 +175,7 @@ class CurvilinearMesh(
         Edge staggered grid in the x direction.
         """
         if getattr(self, '_gridEx', None) is None:
-            N = self.r(self.gridN, 'N', 'N', 'M')
+            N = self.reshape(self.gridN, 'N', 'N', 'M')
             if self.dim == 2:
                 XY = [mkvc(0.5 * (n[:-1, :] + n[1:, :])) for n in N]
                 self._gridEx = np.c_[XY[0], XY[1]]
@@ -190,7 +190,7 @@ class CurvilinearMesh(
         Edge staggered grid in the y direction.
         """
         if getattr(self, '_gridEy', None) is None:
-            N = self.r(self.gridN, 'N', 'N', 'M')
+            N = self.reshape(self.gridN, 'N', 'N', 'M')
             if self.dim == 2:
                 XY = [mkvc(0.5 * (n[:, :-1] + n[:, 1:])) for n in N]
                 self._gridEy = np.c_[XY[0], XY[1]]
@@ -205,7 +205,7 @@ class CurvilinearMesh(
         Edge staggered grid in the z direction.
         """
         if getattr(self, '_gridEz', None) is None and self.dim == 3:
-            N = self.r(self.gridN, 'N', 'N', 'M')
+            N = self.reshape(self.gridN, 'N', 'N', 'M')
             XYZ = [mkvc(0.5 * (n[:, :, :-1] + n[:, :, 1:])) for n in N]
             self._gridEz = np.c_[XYZ[0], XYZ[1], XYZ[2]]
         return self._gridEz
@@ -332,7 +332,7 @@ class CurvilinearMesh(
 
         To reshape the normals into a matrix and get the y component::
 
-            NyX, NyY, NyZ = M.r(M.normals, 'F', 'Fy', 'M')
+            NyX, NyY, NyZ = M.reshape(M.face_normals, 'F', 'Fy', 'M')
         """
 
         if getattr(self, '_normals', None) is None:

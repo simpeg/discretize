@@ -586,11 +586,12 @@ class InterfaceMPL(object):
 
             # Plot the grid lines
             if lines:
-                NN = self.r(self.gridN, 'N', 'N', 'M')
-                X1 = np.c_[mkvc(NN[0][0, :]), mkvc(NN[0][self.nCx, :]), mkvc(NN[0][0, :])*np.nan].flatten()
-                Y1 = np.c_[mkvc(NN[1][0, :]), mkvc(NN[1][self.nCx, :]), mkvc(NN[1][0, :])*np.nan].flatten()
-                X2 = np.c_[mkvc(NN[0][:, 0]), mkvc(NN[0][:, self.nCy]), mkvc(NN[0][:, 0])*np.nan].flatten()
-                Y2 = np.c_[mkvc(NN[1][:, 0]), mkvc(NN[1][:, self.nCy]), mkvc(NN[1][:, 0])*np.nan].flatten()
+                NN = self.reshape(self.gridN, 'N', 'N', 'M')
+                nCx, nCy = self.shape_cells
+                X1 = np.c_[mkvc(NN[0][0, :]), mkvc(NN[0][nCx, :]), mkvc(NN[0][0, :])*np.nan].flatten()
+                Y1 = np.c_[mkvc(NN[1][0, :]), mkvc(NN[1][nCx, :]), mkvc(NN[1][0, :])*np.nan].flatten()
+                X2 = np.c_[mkvc(NN[0][:, 0]), mkvc(NN[0][:, nCy]), mkvc(NN[0][:, 0])*np.nan].flatten()
+                Y2 = np.c_[mkvc(NN[1][:, 0]), mkvc(NN[1][:, nCy]), mkvc(NN[1][:, 0])*np.nan].flatten()
                 X = np.r_[X1, X2]
                 Y = np.r_[Y1, Y2]
                 ax.plot(X, Y, color=color, linestyle="-", lw=linewidth)
@@ -637,16 +638,17 @@ class InterfaceMPL(object):
 
             # Plot the grid lines
             if lines:
-                NN = self.r(self.gridN, 'N', 'N', 'M')
-                X1 = np.c_[mkvc(NN[0][0, :, :]), mkvc(NN[0][self.nCx, :, :]), mkvc(NN[0][0, :, :])*np.nan].flatten()
-                Y1 = np.c_[mkvc(NN[1][0, :, :]), mkvc(NN[1][self.nCx, :, :]), mkvc(NN[1][0, :, :])*np.nan].flatten()
-                Z1 = np.c_[mkvc(NN[2][0, :, :]), mkvc(NN[2][self.nCx, :, :]), mkvc(NN[2][0, :, :])*np.nan].flatten()
-                X2 = np.c_[mkvc(NN[0][:, 0, :]), mkvc(NN[0][:, self.nCy, :]), mkvc(NN[0][:, 0, :])*np.nan].flatten()
-                Y2 = np.c_[mkvc(NN[1][:, 0, :]), mkvc(NN[1][:, self.nCy, :]), mkvc(NN[1][:, 0, :])*np.nan].flatten()
-                Z2 = np.c_[mkvc(NN[2][:, 0, :]), mkvc(NN[2][:, self.nCy, :]), mkvc(NN[2][:, 0, :])*np.nan].flatten()
-                X3 = np.c_[mkvc(NN[0][:, :, 0]), mkvc(NN[0][:, :, self.nCz]), mkvc(NN[0][:, :, 0])*np.nan].flatten()
-                Y3 = np.c_[mkvc(NN[1][:, :, 0]), mkvc(NN[1][:, :, self.nCz]), mkvc(NN[1][:, :, 0])*np.nan].flatten()
-                Z3 = np.c_[mkvc(NN[2][:, :, 0]), mkvc(NN[2][:, :, self.nCz]), mkvc(NN[2][:, :, 0])*np.nan].flatten()
+                nCx, nCy, nCz = self.shape_cells
+                NN = self.reshape(self.gridN, 'N', 'N', 'M')
+                X1 = np.c_[mkvc(NN[0][0, :, :]), mkvc(NN[0][nCx, :, :]), mkvc(NN[0][0, :, :])*np.nan].flatten()
+                Y1 = np.c_[mkvc(NN[1][0, :, :]), mkvc(NN[1][nCx, :, :]), mkvc(NN[1][0, :, :])*np.nan].flatten()
+                Z1 = np.c_[mkvc(NN[2][0, :, :]), mkvc(NN[2][nCx, :, :]), mkvc(NN[2][0, :, :])*np.nan].flatten()
+                X2 = np.c_[mkvc(NN[0][:, 0, :]), mkvc(NN[0][:, nCy, :]), mkvc(NN[0][:, 0, :])*np.nan].flatten()
+                Y2 = np.c_[mkvc(NN[1][:, 0, :]), mkvc(NN[1][:, nCy, :]), mkvc(NN[1][:, 0, :])*np.nan].flatten()
+                Z2 = np.c_[mkvc(NN[2][:, 0, :]), mkvc(NN[2][:, nCy, :]), mkvc(NN[2][:, 0, :])*np.nan].flatten()
+                X3 = np.c_[mkvc(NN[0][:, :, 0]), mkvc(NN[0][:, :, nCz]), mkvc(NN[0][:, :, 0])*np.nan].flatten()
+                Y3 = np.c_[mkvc(NN[1][:, :, 0]), mkvc(NN[1][:, :, nCz]), mkvc(NN[1][:, :, 0])*np.nan].flatten()
+                Z3 = np.c_[mkvc(NN[2][:, :, 0]), mkvc(NN[2][:, :, nCz]), mkvc(NN[2][:, :, 0])*np.nan].flatten()
                 X = np.r_[X1, X2, X3]
                 Y = np.r_[Y1, Y2, Y3]
                 Z = np.r_[Z1, Z2, Z3]
@@ -705,24 +707,22 @@ class InterfaceMPL(object):
                 # if 'z' in v_type: v = np.r_[np.zeros(n[0]), np.zeros(n[1]), v]
                 v = getattr(self, aveOp)*v # average to cell centers
                 ind_xyz = {'x': 0, 'y': 1, 'z': 2}[v_type[1]]
-                vc = self.r(
+                vc = self.reshape(
                     v.reshape((self.nC, -1), order='F'), 'CC', 'CC', 'M'
                 )[ind_xyz]
 
+            nCx, nCy, nCz = self.shape_cells
             # determine number oE slices in x and y dimension
-            nX = int(np.ceil(np.sqrt(self.nCz)))
-            nY = int(np.ceil(self.nCz/nX))
+            nX = int(np.ceil(np.sqrt(nCz)))
+            nY = int(np.ceil(nCz/nX))
 
             #  allocate space for montage
-            nCx = self.nCx
-            nCy = self.nCy
-
             C = np.zeros((nX*nCx, nY*nCy))
 
             for iy in range(int(nY)):
                 for ix in range(int(nX)):
                     iz = ix + iy*nX
-                    if iz < self.nCz:
+                    if iz < nCz:
                         C[ix*nCx:(ix+1)*nCx, iy*nCy:(iy+1)*nCy] = vc[:, :, iz]
                     else:
                         C[ix*nCx:(ix+1)*nCx, iy*nCy:(iy+1)*nCy] = np.nan
@@ -752,7 +752,7 @@ class InterfaceMPL(object):
                 for iy in range(int(nY)):
                     for ix in range(int(nX)):
                         iz = ix + iy*nX
-                        if iz < self.nCz:
+                        if iz < nCz:
                             ax.text((ix+1)*(self.vectorNx[-1]-self.x0[0])-pad, (iy)*(self.vectorNy[-1]-self.x0[1])+pad,
                                      '#{0:.0f}'.format(iz), color=annotation_color, verticalalignment='bottom', horizontalalignment='right', size='x-large')
 
@@ -801,7 +801,7 @@ class InterfaceMPL(object):
 
         out = ()
         if view in ['real', 'imag', 'abs']:
-            v = self.r(v, 'CC', 'CC', 'M')
+            v = self.reshape(v, 'CC', 'CC', 'M')
             v = getattr(np, view)(v) # e.g. np.real(v)
             if clim is None:
                 clim = [v.min(), v.max()]
@@ -839,7 +839,7 @@ class InterfaceMPL(object):
                 hy = np.ones(nyi)*self.hy.sum()/nyi
                 x0_y = self.x0[1]
 
-            U, V = self.r(v.reshape((self.nC, -1), order='F'), 'CC', 'CC', 'M')
+            U, V = self.reshape(v.reshape((self.nC, -1), order='F'), 'CC', 'CC', 'M')
             if clim is None:
                 uv = np.sqrt(U**2 + V**2)
                 clim = [uv.min(), uv.max()]
@@ -847,8 +847,8 @@ class InterfaceMPL(object):
             tMi = self.__class__(h=[hx, hy], x0=np.r_[x0_x, x0_y])
             P = self.getInterpolationMat(tMi.gridCC, 'CC', zerosOutside=True)
 
-            Ui = tMi.r(P*mkvc(U), 'CC', 'CC', 'M')
-            Vi = tMi.r(P*mkvc(V), 'CC', 'CC', 'M')
+            Ui = tMi.reshape(P*mkvc(U), 'CC', 'CC', 'M')
+            Vi = tMi.reshape(P*mkvc(V), 'CC', 'CC', 'M')
             # End Interpolation
 
             x = self.vectorNx
@@ -959,7 +959,7 @@ class InterfaceMPL(object):
 
         def doSlice(v):
             if v_type == 'CC':
-                return getIndSlice(self.r(v, 'CC', 'CC', 'M'))
+                return getIndSlice(self.reshape(v, 'CC', 'CC', 'M'))
             elif v_type == 'CCv':
                 if view != 'vec':
                     raise AssertionError('Other types for CCv not supported')
@@ -970,10 +970,10 @@ class InterfaceMPL(object):
                 if v.size == Av.shape[1]:
                     v = Av * v
                 else:
-                    v = self.r(v, v_type[0], v_type) # get specific component
+                    v = self.reshape(v, v_type[0], v_type) # get specific component
                     v = Av * v
                 # we should now be averaged to cell centers (might be a vector)
-            v = self.r(v.reshape((self.nC, -1), order='F'), 'CC', 'CC', 'M')
+            v = self.reshape(v.reshape((self.nC, -1), order='F'), 'CC', 'CC', 'M')
             if view == 'vec':
                 outSlice = []
                 if 'X' not in normal: outSlice.append(getIndSlice(v[0]))
@@ -981,7 +981,7 @@ class InterfaceMPL(object):
                 if 'Z' not in normal: outSlice.append(getIndSlice(v[2]))
                 return np.r_[mkvc(outSlice[0]), mkvc(outSlice[1])]
             else:
-                return getIndSlice(self.r(v, 'CC', 'CC', 'M'))
+                return getIndSlice(self.reshape(v, 'CC', 'CC', 'M'))
 
         h2d = []
         x2d = []
@@ -1209,12 +1209,12 @@ class InterfaceMPL(object):
         NN = [NN[:, :, 0], NN[:, :, 1]]
         X1 = np.c_[
             mkvc(NN[0][0, :]),
-            mkvc(NN[0][self.nCx, :]),
+            mkvc(NN[0][self.shape_cells[0], :]),
             mkvc(NN[0][0, :])*np.nan
         ].flatten()
         Y1 = np.c_[
             mkvc(NN[1][0, :]),
-            mkvc(NN[1][self.nCx, :]),
+            mkvc(NN[1][self.shape_cells[0], :]),
             mkvc(NN[1][0, :])*np.nan
         ].flatten()
 
@@ -1242,7 +1242,7 @@ class InterfaceMPL(object):
         self, ax=None, nodes=False, faces=False, centers=False, edges=False,
         lines=True, show_it=False, color='C0', linewidth=1.0, **kwargs,
     ):
-        NN = self.r(self.gridN, 'N', 'N', 'M')
+        NN = self.reshape(self.gridN, 'N', 'N', 'M')
         if self.dim == 2:
             if lines:
                 X1 = np.c_[mkvc(NN[0][:-1, :]), mkvc(NN[0][1:, :]), mkvc(NN[0][:-1, :])*np.nan].flatten()
@@ -1716,7 +1716,7 @@ class Slicer(object):
             if v.size == Av.shape[1]:
                 v = Av * v
             else:
-                v = mesh.r(v, v_type[0], v_type) # get specific component
+                v = mesh.reshape(v, v_type[0], v_type) # get specific component
                 v = Av * v
 
         # (c) vOpts  # Not yet working for 'vec'
@@ -1737,7 +1737,7 @@ class Slicer(object):
         # 1. Store relevant data
 
         # Store data in self as (nx, ny, nz)
-        self.v = mesh.r(v.reshape((mesh.nC, -1), order='F'), 'CC', 'CC', 'M')
+        self.v = mesh.reshape(v.reshape((mesh.nC, -1), order='F'), 'CC', 'CC', 'M')
         self.v = np.ma.masked_where(np.isnan(self.v), self.v)
 
         # Store relevant information from mesh in self
