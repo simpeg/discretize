@@ -6,6 +6,7 @@ from . import ndgrid, asArray_N_x_Dim, isScalar
 from scipy.spatial import cKDTree, Delaunay
 from scipy import interpolate
 import discretize
+from .code_utils import deprecate_function
 
 num_types = [int, float]
 

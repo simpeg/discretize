@@ -88,6 +88,30 @@ class InterfaceMPL(object):
         >>> M.plotGrid()
         >>> plt.show()
 
+        Plotting a 3D CurvilinearMesh
+        >>> from matplotlib import pyplot as plt
+        >>> import discretize
+        >>> X, Y, Z = discretize.utils.exampleLrmGrid([5, 5, 5], 'rotate')
+        >>> M = discretize.CurvilinearMesh([X, Y, Z])
+        >>> M.plotGrid()
+        >>> plt.show()
+
+        Plotting a 2D TreeMesh
+        >>> from matplotlib import pyplot as plt
+        >>> import discretize
+        >>> M = discretize.TreeMesh([32, 32])
+        >>> M.insert_cells([[0.25, 0.25]], [4])
+        >>> M.plotGrid()
+        >>> plt.show()
+
+        Plotting a 3D TreeMesh
+        >>> from matplotlib import pyplot as plt
+        >>> import discretize
+        >>> M = discretize.TreeMesh([32, 32, 32])
+        >>> M.insert_cells([[0.3, 0.75, 0.22]], [4])
+        >>> M.plotGrid()
+        >>> plt.show()
+
         """
         mesh_type = self._meshType.lower()
         plotters = {
@@ -107,12 +131,15 @@ class InterfaceMPL(object):
             warnings.warn("showIt has been deprecated, please use show_it", FutureWarning)
 
         axOpts = {'projection': '3d'} if self.dim == 3 else {}
-        if ax is None and mesh_type is not 'cyl':
+        if ax is None and mesh_type != 'cyl':
             plt.figure()
             ax = plt.subplot(111, **axOpts)
         else:
-            if not isinstance(ax, matplotlib.axes.Axes):
-                raise TypeError("ax must be an matplotlib.axes.Axes")
+            if not isinstance(ax, (list, tuple)):
+                ax_test = (ax, )
+            for a in ax_test:
+                if not isinstance(ax, matplotlib.axes.Axes):
+                    raise TypeError("ax must be an matplotlib.axes.Axes")
 
         rcParams = rc_params()
         if lines:
