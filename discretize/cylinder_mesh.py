@@ -1165,20 +1165,20 @@ class CylindricalMesh(
     # def _nodalGradStencilx(self):
     #     if self.isSymmetric:
     #         return None
-    #     return kron3(speye(self.nNz), speye(self.nNy), ddx(self.shape_cells[0]))
+    #     return kron3(speye(self.shape_nodes[2]), speye(self.shape_nodes[1]), ddx(self.shape_cells[0]))
 
     # @property
     # def _nodalGradStencily(self):
     #     if self.isSymmetric:
     #         None
-    #         # return kron3(speye(self.nNz), ddx(self.shape_cells[1]), speye(self.nNx)) * self._deflationMatrix('Ey')
-    #     return kron3(speye(self.nNz), ddx(self.shape_cells[1]), speye(self.nNx))
+    #         # return kron3(speye(self.shape_nodes[2]), ddx(self.shape_cells[1]), speye(self.shape_nodes[0])) * self._deflationMatrix('Ey')
+    #     return kron3(speye(self.shape_nodes[2]), ddx(self.shape_cells[1]), speye(self.shape_nodes[0]))
 
     # @property
     # def _nodalGradStencilz(self):
     #     if self.isSymmetric:
     #         return None
-    #     return kron3(ddx(self.shape_cells[2]), speye(self.nNy), speye(self.nNx))
+    #     return kron3(ddx(self.shape_cells[2]), speye(self.shape_nodes[1]), speye(self.shape_nodes[0]))
 
     # @property
     # def _nodalGradStencil(self):

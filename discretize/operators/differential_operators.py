@@ -275,9 +275,9 @@ class DiffOperators(object):
         if self.dim == 1:
             Gx = ddx(self.shape_cells[0])
         elif self.dim == 2:
-            Gx = sp.kron(speye(self.nNy), ddx(self.shape_cells[0]))
+            Gx = sp.kron(speye(self.shape_nodes[1]), ddx(self.shape_cells[0]))
         elif self.dim == 3:
-            Gx = kron3(speye(self.nNz), speye(self.nNy), ddx(self.shape_cells[0]))
+            Gx = kron3(speye(self.shape_nodes[2]), speye(self.shape_nodes[1]), ddx(self.shape_cells[0]))
         return Gx
 
     @property
@@ -288,9 +288,9 @@ class DiffOperators(object):
         if self.dim == 1:
             return None
         elif self.dim == 2:
-            Gy = sp.kron(ddx(self.shape_cells[1]), speye(self.nNx))
+            Gy = sp.kron(ddx(self.shape_cells[1]), speye(self.shape_nodes[0]))
         elif self.dim == 3:
-            Gy = kron3(speye(self.nNz), ddx(self.shape_cells[1]), speye(self.nNx))
+            Gy = kron3(speye(self.shape_nodes[2]), ddx(self.shape_cells[1]), speye(self.shape_nodes[0]))
         return Gy
 
     @property
@@ -301,7 +301,7 @@ class DiffOperators(object):
         if self.dim == 1 or self.dim == 2:
             return None
         else:
-            Gz = kron3(ddx(self.shape_cells[2]), speye(self.nNy), speye(self.nNx))
+            Gz = kron3(ddx(self.shape_cells[2]), speye(self.shape_nodes[1]), speye(self.shape_nodes[0]))
         return Gz
 
     @property
@@ -344,9 +344,9 @@ class DiffOperators(object):
         Lx = - Dx.T * Dx
 
         if self.dim == 2:
-            Lx = sp.kron(speye(self.nNy), Lx)
+            Lx = sp.kron(speye(self.shape_nodes[1]), Lx)
         elif self.dim == 3:
-            Lx = kron3(speye(self.nNz), speye(self.nNy), Lx)
+            Lx = kron3(speye(self.shape_nodes[2]), speye(self.shape_nodes[1]), Lx)
         return Lx
 
     @property
@@ -360,9 +360,9 @@ class DiffOperators(object):
         Ly = - Dy.T * Dy
 
         if self.dim == 2:
-            Ly = sp.kron(Ly, speye(self.nNx))
+            Ly = sp.kron(Ly, speye(self.shape_nodes[0]))
         elif self.dim == 3:
-            Ly = kron3(speye(self.nNz), Ly, speye(self.nNx))
+            Ly = kron3(speye(self.shape_nodes[2]), Ly, speye(self.shape_nodes[0]))
         return Ly
 
     @property
@@ -374,15 +374,15 @@ class DiffOperators(object):
 
         Dz = ddx(self.shape_cells[2])
         Lz = - Dz.T * Dz
-        return kron3(Lz, speye(self.nNy), speye(self.nNx))
+        return kron3(Lz, speye(self.shape_nodes[1]), speye(self.shape_nodes[0]))
 
     @property
     def _nodalLaplacianx(self):
         Hx = sdiag(1./self.hx)
         if self.dim == 2:
-            Hx = sp.kron(speye(self.nNy), Hx)
+            Hx = sp.kron(speye(self.shape_nodes[1]), Hx)
         elif self.dim == 3:
-            Hx = kron3(speye(self.nNz), speye(self.nNy), Hx)
+            Hx = kron3(speye(self.shape_nodes[2]), speye(self.shape_nodes[1]), Hx)
         return Hx.T * self._nodalGradStencilx * Hx
 
     @property
@@ -391,9 +391,9 @@ class DiffOperators(object):
         if self.dim == 1:
             return None
         elif self.dim == 2:
-            Hy = sp.kron(Hy, speye(self.nNx))
+            Hy = sp.kron(Hy, speye(self.shape_nodes[0]))
         elif self.dim == 3:
-            Hy = kron3(speye(self.nNz), Hy, speye(self.nNx))
+            Hy = kron3(speye(self.shape_nodes[2]), Hy, speye(self.shape_nodes[0]))
         return Hy.T * self._nodalGradStencily * Hy
 
     @property
@@ -401,7 +401,7 @@ class DiffOperators(object):
         if self.dim == 1 or self.dim == 2:
             return None
         Hz = sdiag(1./self.hz)
-        Hz = kron3(Hz, speye(self.nNy), speye(self.nNx))
+        Hz = kron3(Hz, speye(self.shape_nodes[1]), speye(self.shape_nodes[0]))
         return Hz.T * self._nodalLaplacianStencilz * Hz
 
     @property
@@ -1119,9 +1119,9 @@ class DiffOperators(object):
         if self.dim == 1:
             aveN2Ex = av(self.shape_cells[0])
         elif self.dim == 2:
-            aveN2Ex = sp.kron(speye(self.nNy), av(self.shape_cells[0]))
+            aveN2Ex = sp.kron(speye(self.shape_nodes[1]), av(self.shape_cells[0]))
         elif self.dim == 3:
-            aveN2Ex = kron3(speye(self.nNz), speye(self.nNy), av(self.shape_cells[0]))
+            aveN2Ex = kron3(speye(self.shape_nodes[2]), speye(self.shape_nodes[1]), av(self.shape_cells[0]))
         return aveN2Ex
 
     @property
@@ -1132,9 +1132,9 @@ class DiffOperators(object):
         if self.dim == 1:
             return None
         elif self.dim == 2:
-            aveN2Ey = sp.kron(av(self.shape_cells[1]), speye(self.nNx))
+            aveN2Ey = sp.kron(av(self.shape_cells[1]), speye(self.shape_nodes[0]))
         elif self.dim == 3:
-            aveN2Ey = kron3(speye(self.nNz), av(self.shape_cells[1]), speye(self.nNx))
+            aveN2Ey = kron3(speye(self.shape_nodes[2]), av(self.shape_cells[1]), speye(self.shape_nodes[0]))
         return aveN2Ey
 
     @property
@@ -1142,7 +1142,7 @@ class DiffOperators(object):
         if self.dim == 1 or self.dim == 2:
             return None
         elif self.dim == 3:
-            aveN2Ez = kron3(av(self.shape_cells[2]), speye(self.nNy), speye(self.nNx))
+            aveN2Ez = kron3(av(self.shape_cells[2]), speye(self.shape_nodes[1]), speye(self.shape_nodes[0]))
         return aveN2Ez
 
     @property
@@ -1170,9 +1170,9 @@ class DiffOperators(object):
         if self.dim == 1:
             aveN2Fx = av(self.shape_cells[0])
         elif self.dim == 2:
-            aveN2Fx = sp.kron(av(self.shape_cells[1]), speye(self.nNx))
+            aveN2Fx = sp.kron(av(self.shape_cells[1]), speye(self.shape_nodes[0]))
         elif self.dim == 3:
-            aveN2Fx = kron3(av(self.shape_cells[2]), av(self.shape_cells[1]), speye(self.nNx))
+            aveN2Fx = kron3(av(self.shape_cells[2]), av(self.shape_cells[1]), speye(self.shape_nodes[0]))
         return aveN2Fx
 
     @property
@@ -1180,9 +1180,9 @@ class DiffOperators(object):
         if self.dim == 1:
             return None
         elif self.dim == 2:
-            aveN2Fy = sp.kron(speye(self.nNy), av(self.shape_cells[0]))
+            aveN2Fy = sp.kron(speye(self.shape_nodes[1]), av(self.shape_cells[0]))
         elif self.dim == 3:
-            aveN2Fy = kron3(av(self.shape_cells[2]), speye(self.nNy), av(self.shape_cells[0]))
+            aveN2Fy = kron3(av(self.shape_cells[2]), speye(self.shape_nodes[1]), av(self.shape_cells[0]))
         return aveN2Fy
 
     @property
@@ -1190,7 +1190,7 @@ class DiffOperators(object):
         if self.dim == 1 or self.dim == 2:
             return None
         else:
-            aveN2Fz = kron3(speye(self.nNz), av(self.shape_cells[1]), av(self.shape_cells[0]))
+            aveN2Fz = kron3(speye(self.shape_nodes[2]), av(self.shape_cells[1]), av(self.shape_cells[0]))
         return aveN2Fz
 
     @property
