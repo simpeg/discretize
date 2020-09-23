@@ -64,6 +64,7 @@ class InterfaceMPL(object):
         --------
 
         Plotting a 2D TensorMesh grid
+
         >>> from matplotlib import pyplot as plt
         >>> import discretize
         >>> import numpy as np
@@ -74,6 +75,7 @@ class InterfaceMPL(object):
         >>> plt.show()
 
         Plotting a 3D TensorMesh grid
+
         >>> from matplotlib import pyplot as plt
         >>> import discretize
         >>> import numpy as np
@@ -85,6 +87,7 @@ class InterfaceMPL(object):
         >>> plt.show()
 
         Plotting a 2D CurvilinearMesh
+
         >>> from matplotlib import pyplot as plt
         >>> import discretize
         >>> X, Y = discretize.utils.exampleLrmGrid([10, 10], 'rotate')
@@ -93,6 +96,7 @@ class InterfaceMPL(object):
         >>> plt.show()
 
         Plotting a 3D CurvilinearMesh
+
         >>> from matplotlib import pyplot as plt
         >>> import discretize
         >>> X, Y, Z = discretize.utils.exampleLrmGrid([5, 5, 5], 'rotate')
@@ -101,6 +105,7 @@ class InterfaceMPL(object):
         >>> plt.show()
 
         Plotting a 2D TreeMesh
+
         >>> from matplotlib import pyplot as plt
         >>> import discretize
         >>> M = discretize.TreeMesh([32, 32])
@@ -109,13 +114,13 @@ class InterfaceMPL(object):
         >>> plt.show()
 
         Plotting a 3D TreeMesh
+
         >>> from matplotlib import pyplot as plt
         >>> import discretize
         >>> M = discretize.TreeMesh([32, 32, 32])
         >>> M.insert_cells([[0.3, 0.75, 0.22]], [4])
         >>> M.plot_grid()
         >>> plt.show()
-
         """
         mesh_type = self._meshType.lower()
         plotters = {
@@ -216,6 +221,7 @@ class InterfaceMPL(object):
         >>> plt.show()
 
         3D ``TensorMesh`` plotting
+
         >>> import discretize
         >>> import numpy as np
         >>> M = discretize.TensorMesh([20, 20, 20])
@@ -358,6 +364,7 @@ class InterfaceMPL(object):
         Plot a slice of a 3D ``TensorMesh`` solution to a Laplace's equaiton.
 
         First build the mesh:
+
         >>> from matplotlib import pyplot as plt
         >>> import discretize
         >>> from pymatsolver import Solver
@@ -368,6 +375,7 @@ class InterfaceMPL(object):
         >>> M = discretize.TensorMesh([hx, hy, hz])
 
         then build the necessary parts of the PDE:
+
         >>> q = np.zeros(M.vnC)
         >>> q[[4, 4], [4, 4], [2, 6]]=[-1, 1]
         >>> q = discretize.utils.mkvc(q)
