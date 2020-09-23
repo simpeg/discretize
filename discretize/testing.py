@@ -2,7 +2,7 @@ from __future__ import print_function
 import numpy as np
 import scipy.sparse as sp
 
-from .utils import mkvc, exampleLrmGrid, requires
+from .utils import mkvc, example_curvilinear_grid, requires
 from . import TensorMesh, CurvilinearMesh, CylindricalMesh
 from .utils.code_utils import deprecate_method, deprecate_function, deprecate_property
 
@@ -65,7 +65,7 @@ def setup_mesh(mesh_type, nC, nDim):
         mesh = TensorMesh(h[:nDim])
         max_h = max([np.max(hi) for hi in mesh.h])
 
-    elif 'CylindricalMesh' in mesh_type:
+    elif 'CylindricalMesh' in mesh_type or 'CylMesh' in mesh_type:
         if 'uniform' in mesh_type:
             h = [nC, nC, nC]
         elif 'random' in mesh_type:
@@ -94,10 +94,10 @@ def setup_mesh(mesh_type, nC, nDim):
         if nDim == 1:
             raise Exception('Lom not supported for 1D')
         elif nDim == 2:
-            X, Y = exampleLrmGrid([nC, nC], kwrd)
+            X, Y = example_curvilinear_grid([nC, nC], kwrd)
             mesh = CurvilinearMesh([X, Y])
         elif nDim == 3:
-            X, Y, Z = exampleLrmGrid([nC, nC, nC], kwrd)
+            X, Y, Z = example_curvilinear_grid([nC, nC, nC], kwrd)
             mesh = CurvilinearMesh([X, Y, Z])
         max_h = 1./nC
 
@@ -193,23 +193,23 @@ class OrderTest(unittest.TestCase):
     """
 
     name = "Order Test"
-    expected_orders = 2.  # This can be a list of orders, must be the same length as mesh_types
-    tolerance = 0.85     # This can also be a list, must be the same length as mesh_types
-    mesh_sizes = [4, 8, 16, 32]
-    mesh_types = ['uniformTensorMesh']
-    _mesh_type = mesh_types[0]
-    mesh_dimension = 3
+    expectedOrders = 2.  # This can be a list of orders, must be the same length as meshTypes
+    tolerance = 0.85     # This can also be a list, must be the same length as meshTypes
+    meshSizes = [4, 8, 16, 32]
+    meshTypes = ['uniformTensorMesh']
+    _meshType = meshTypes[0]
+    meshDimension = 3
 
-    def setup_mesh(self, nC):
-        mesh, max_h = setupMesh(self._mesh_type, nC, self.mesh_dimension)
+    def setupMesh(self, nC):
+        mesh, max_h = setupMesh(self._meshType, nC, self.meshDimension)
         self.M = mesh
         return max_h
 
-    def get_error(self):
+    def getError(self):
         """For given h, generate A[h], f and A(f) and return norm of error."""
         return 1.
 
-    def order_test(self):
+    def orderTest(self):
         """
         For number of cells specified in meshSizes setup mesh, call getError
         and prints mesh size, error, ratio between current and previous error,
@@ -217,36 +217,36 @@ class OrderTest(unittest.TestCase):
 
 
         """
-        if not isinstance(self.mesh_types, list):
-            raise TypeError('mesh_types must be a list')
+        if not isinstance(self.meshTypes, list):
+            raise TypeError('meshTypes must be a list')
         if type(self.tolerance) is not list:
-            self.tolerance = np.ones(len(self.mesh_types))*self.tolerance
+            self.tolerance = np.ones(len(self.meshTypes))*self.tolerance
 
         # if we just provide one expected order, repeat it for each mesh type
-        if type(self.expected_orders) == float or type(self.expected_orders) == int:
-            self.expected_orders = [self.expected_orders for i in self.mesh_types]
+        if type(self.expectedOrders) == float or type(self.expectedOrders) == int:
+            self.expectedOrders = [self.expectedOrders for i in self.meshTypes]
         try:
-            self.expected_orders = list(self.expected_orders)
+            self.expectedOrders = list(self.expectedOrders)
         except TypeError:
-            raise TypeError("expected_orders must be array like")
-        if len(self.expected_orders) != len(self.mesh_types):
-            raise ValueError('expectedOrders must have the same length as the mesh_types')
+            raise TypeError("expectedOrders must be array like")
+        if len(self.expectedOrders) != len(self.meshTypes):
+            raise ValueError('expectedOrders must have the same length as the meshTypes')
 
-        for ii_mesh_type, mesh_type in enumerate(self.mesh_types):
-            self._mesh_type = mesh_type
-            self._tolerance = self.tolerance[ii_mesh_type]
-            self._expectedOrder = self.expected_orders[ii_mesh_type]
+        for ii_meshType, mesh_type in enumerate(self.meshTypes):
+            self._meshType = mesh_type
+            self._tolerance = self.tolerance[ii_meshType]
+            self._expectedOrder = self.expectedOrders[ii_meshType]
 
             order = []
             err_old = 0.
             max_h_old = 0.
-            for ii, nc in enumerate(self.mesh_sizes):
+            for ii, nc in enumerate(self.meshSizes):
                 # Leave these as setupMesh and getError for deprecated classes that might have extended these two methods
                 max_h = self.setupMesh(nc)
                 err = self.getError()
                 if ii == 0:
                     print('')
-                    print(self._mesh_type + ':  ' + self.name)
+                    print(self._meshType + ':  ' + self.name)
                     print('_____________________________________________')
                     print('   h  |    error    | e(i-1)/e(i) |  order')
                     print('~~~~~~|~~~~~~~~~~~~~|~~~~~~~~~~~~~|~~~~~~~~~~')
@@ -261,19 +261,19 @@ class OrderTest(unittest.TestCase):
             if passTest:
                 print(happiness[np.random.randint(len(happiness))])
             else:
-                print('Failed to pass test on ' + self._mesh_type + '.')
+                print('Failed to pass test on ' + self._meshType + '.')
                 print(sadness[np.random.randint(len(sadness))])
             print('')
             self.assertGreater(np.mean(np.array(order)), self._tolerance*self._expectedOrder)
 
-    expectedOrders = deprecate_property("expected_orders", "expectedOrders", removal_version="1.0.0")
-    meshSizes = deprecate_property("mesh_sizes", "meshSizes", removal_version="1.0.0")
-    meshTypes = deprecate_property("mesh_types", "meshTypes", removal_version="1.0.0")
-    meshDimension = deprecate_property("mesh_dimension", "meshDimension", removal_version="1.0.0")
-    setupMesh = deprecate_method("setup_mesh", "setupMesh", removal_version="1.0.0")
-    getError = deprecate_method("get_error", "getError", removal_version="1.0.0")
-    orderTest = deprecate_method("order_test", "orderTest", removal_version="1.0.0")
-    _meshType = deprecate_property("_mesh_type", "_meshType", removal_version="1.0.0")
+    # expectedOrders = deprecate_property("expectedOrders", "expectedOrders", removal_version="1.0.0")
+    # meshSizes = deprecate_property("meshSizes", "meshSizes", removal_version="1.0.0")
+    # meshTypes = deprecate_property("meshTypes", "meshTypes", removal_version="1.0.0")
+    # meshDimension = deprecate_property("meshDimension", "meshDimension", removal_version="1.0.0")
+    # setupMesh = deprecate_method("setupMesh", "setupMesh", removal_version="1.0.0")
+    # getError = deprecate_method("getError", "getError", removal_version="1.0.0")
+    # orderTest = deprecate_method("orderTest", "orderTest", removal_version="1.0.0")
+    # _meshType = deprecate_property("_meshType", "_meshType", removal_version="1.0.0")
 
 
 def rosenbrock(x, return_g=True, return_H=True):
