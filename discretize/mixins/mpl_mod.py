@@ -138,7 +138,7 @@ class InterfaceMPL(object):
             if not isinstance(ax, (list, tuple)):
                 ax_test = (ax, )
             for a in ax_test:
-                if not isinstance(ax, matplotlib.axes.Axes):
+                if not isinstance(a, matplotlib.axes.Axes):
                     raise TypeError("ax must be an matplotlib.axes.Axes")
 
         rcParams = rc_params()
