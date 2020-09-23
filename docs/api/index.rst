@@ -18,7 +18,7 @@ Meshes
     :toctree: generated
 
     TensorMesh
-    CylMesh
+    CylindricalMesh
     TreeMesh
     tree_mesh.TreeCell
     CurvilinearMesh
@@ -28,15 +28,15 @@ Meshes
 Numerical Operators
 -------------------
 
-.. automodule:: discretize.base.InnerProducts
+.. automodule:: discretize.operators.InnerProducts
 
 .. currentmodule:: discretize
 
 .. autosummary::
     :toctree: generated
 
-    base.DiffOperators
-    base.InnerProducts
+    operators.DiffOperators
+    operators.InnerProducts
 
 
 Mesh IO
@@ -56,11 +56,9 @@ Visualization
 .. autosummary::
     :toctree: generated
 
-    mixins.mpl_mod.TensorView
-    mixins.mpl_mod.CylView
-    mixins.mpl_mod.CurviView
+    mixins.mpl_mod.InterfaceMPL
     mixins.mpl_mod.Slicer
-    mixins.vtk_mod
+    mixins.vtk_mod.InterfaceVTK
 
 
 

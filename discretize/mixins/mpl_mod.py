@@ -56,6 +56,10 @@ class InterfaceMPL(object):
         matplotlib.axes.Axes
             Axes handle for the plot
 
+        Notes
+        -----
+        Excess arguments are passed on to `plot`
+
         Examples
         --------
 

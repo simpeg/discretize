@@ -19,7 +19,7 @@ Here we demonstrate:
     - How to construct and apply numerical differential operators
     - Mapping and dimensions
     - Applications for the transpose
-    
+
 
 """
 
@@ -265,7 +265,7 @@ fig = plt.figure(figsize=(10, 10))
 
 ax1 = fig.add_subplot(211)
 
-mesh.plotGrid(cells=True, nodes=False, ax=ax1)
+mesh.plotGrid(centers=True, nodes=False, ax=ax1)
 ax1.axis('off')
 ax1.set_title('Simple QuadTree Mesh')
 ax1.set_xlim([-1, 17])
