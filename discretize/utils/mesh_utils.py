@@ -216,9 +216,9 @@ def extract_core_mesh(xyzlim, mesh, mesh_type='tensor'):
         xyzlim = xyzlim.flatten()
         xmin, xmax = xyzlim[0], xyzlim[1]
 
-        xind = np.logical_and(mesh.vectorCCx > xmin, mesh.vectorCCx < xmax)
+        xind = np.logical_and(mesh.grid_cell_centers_x > xmin, mesh.grid_cell_centers_x < xmax)
 
-        xc = mesh.vectorCCx[xind]
+        xc = mesh.grid_cell_centers_x[xind]
 
         hx = mesh.hx[xind]
 
@@ -232,11 +232,11 @@ def extract_core_mesh(xyzlim, mesh, mesh_type='tensor'):
         xmin, xmax = xyzlim[0, 0], xyzlim[0, 1]
         ymin, ymax = xyzlim[1, 0], xyzlim[1, 1]
 
-        xind = np.logical_and(mesh.vectorCCx > xmin, mesh.vectorCCx < xmax)
-        yind = np.logical_and(mesh.vectorCCy > ymin, mesh.vectorCCy < ymax)
+        xind = np.logical_and(mesh.grid_cell_centers_x > xmin, mesh.grid_cell_centers_x < xmax)
+        yind = np.logical_and(mesh.grid_cell_centers_y > ymin, mesh.grid_cell_centers_y < ymax)
 
-        xc = mesh.vectorCCx[xind]
-        yc = mesh.vectorCCy[yind]
+        xc = mesh.grid_cell_centers_x[xind]
+        yc = mesh.grid_cell_centers_y[yind]
 
         hx = mesh.hx[xind]
         hy = mesh.hy[yind]
@@ -255,13 +255,13 @@ def extract_core_mesh(xyzlim, mesh, mesh_type='tensor'):
         ymin, ymax = xyzlim[1, 0], xyzlim[1, 1]
         zmin, zmax = xyzlim[2, 0], xyzlim[2, 1]
 
-        xind = np.logical_and(mesh.vectorCCx > xmin, mesh.vectorCCx < xmax)
-        yind = np.logical_and(mesh.vectorCCy > ymin, mesh.vectorCCy < ymax)
-        zind = np.logical_and(mesh.vectorCCz > zmin, mesh.vectorCCz < zmax)
+        xind = np.logical_and(mesh.grid_cell_centers_x > xmin, mesh.grid_cell_centers_x < xmax)
+        yind = np.logical_and(mesh.grid_cell_centers_y > ymin, mesh.grid_cell_centers_y < ymax)
+        zind = np.logical_and(mesh.grid_cell_centers_z > zmin, mesh.grid_cell_centers_z < zmax)
 
-        xc = mesh.vectorCCx[xind]
-        yc = mesh.vectorCCy[yind]
-        zc = mesh.vectorCCz[zind]
+        xc = mesh.grid_cell_centers_x[xind]
+        yc = mesh.grid_cell_centers_y[yind]
+        zc = mesh.grid_cell_centers_z[zind]
 
         hx = mesh.hx[xind]
         hy = mesh.hy[yind]
@@ -441,14 +441,14 @@ def mesh_builder_xyz(
 
             cc_base = getattr(
                     base_mesh,
-                    "vectorCC{orientation}".format(
+                    "grid_cell_centers_{orientation}".format(
                             orientation=axis[dim]
                         )
             )
 
             cc_local = getattr(
                     mesh,
-                    "vectorCC{orientation}".format(
+                    "grid_cell_centers_{orientation}".format(
                             orientation=axis[dim]
                         )
             )
@@ -871,7 +871,7 @@ def active_from_xyz(mesh, xyz, grid_reference='CC', method='linear'):
 
         if mesh.dim == 1:
             active = np.zeros(mesh.nC, dtype='bool')
-            active[np.searchsorted(mesh.vectorCCx, xyz).max():] = True
+            active[np.searchsorted(mesh.grid_cell_centers_x, xyz).max():] = True
             return active
 
     elif grid_reference == 'N':

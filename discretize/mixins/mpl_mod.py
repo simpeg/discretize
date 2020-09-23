@@ -677,7 +677,7 @@ class InterfaceMPL(object):
         if self.dim == 1:
             if v_type == 'CC':
                 ph = ax.plot(
-                    self.vectorCCx, v, linestyle="-", color="C1", marker="o"
+                    self.grid_cell_centers_x, v, linestyle="-", color="C1", marker="o"
                 )
             elif v_type == 'N':
                 ph = ax.plot(
@@ -908,7 +908,7 @@ class InterfaceMPL(object):
             )
             out += (
                 ax.streamplot(
-                    tMi.vectorCCx, tMi.vectorCCy, Ui.T, Vi.T, **stream_opts
+                    tMi.grid_cell_centers_x, tMi.grid_cell_centers_y, Ui.T, Vi.T, **stream_opts
                 ),
             )
 
@@ -1744,9 +1744,9 @@ class Slicer(object):
         self.x = mesh.grid_nodes_x    # x-node locations
         self.y = mesh.grid_nodes_y    # y-node locations
         self.z = mesh.grid_nodes_z    # z-node locations
-        self.xc = mesh.vectorCCx  # x-cell center locations
-        self.yc = mesh.vectorCCy  # y-cell center locations
-        self.zc = mesh.vectorCCz  # z-cell center locations
+        self.xc = mesh.grid_cell_centers_x  # x-cell center locations
+        self.yc = mesh.grid_cell_centers_y  # y-cell center locations
+        self.zc = mesh.grid_cell_centers_z  # z-cell center locations
 
         # Axis: Default ('xy'): horizontal axis is x, vertical axis is y.
         # Reversed otherwise.

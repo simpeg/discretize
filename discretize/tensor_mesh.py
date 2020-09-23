@@ -362,7 +362,7 @@ class TensorMesh(
             attrs[name] = {}
 
             # Get min/max node.
-            n_vector = getattr(self, 'vectorN'+name)
+            n_vector = getattr(self, 'grid_nodes_'+name)
             attrs[name]['min'] = np.nanmin(n_vector)
             attrs[name]['max'] = np.nanmax(n_vector)
 
