@@ -177,7 +177,7 @@ class OrderTest(unittest.TestCase):
                 Af = np.concatenate((Fx, Fy, Fz))
 
                 # Generate DIV matrix
-                Ah = self.M.edgeCurl
+                Ah = self.M.edge_curl
 
                 curlE = Ah*E
                 err = np.linalg.norm((Ah*f -Af), np.inf)

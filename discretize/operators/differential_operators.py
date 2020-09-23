@@ -509,7 +509,7 @@ class DiffOperators(object):
 
     @property
     def _cellGradStencil(self):
-        BC = self.setCellGradBC(self._cellGradBC_list)
+        BC = self.set_cell_gradient_BC(self._cellGradBC_list)
         if self.dim == 1:
             G = _ddxCellGrad(self.shape_cells[0], BC[0])
         elif self.dim == 2:
@@ -541,7 +541,7 @@ class DiffOperators(object):
         The cell centered Gradient boundary condition matrix
         """
         if getattr(self, '_cellGradBC', None) is None:
-            BC = self.setCellGradBC(self._cellGradBC_list)
+            BC = self.set_cell_gradient_BC(self._cellGradBC_list)
             n = self.vnC
             if self.dim == 1:
                 G = _ddxCellGradBC(n[0], BC[0])

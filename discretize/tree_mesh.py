@@ -337,7 +337,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
                 Pafz = sp.diags(iz)
                 Pi = sp.block_diag([Pafx, Pafy, Pafz])
 
-            self._cellGrad = -Pi * MfI * self.faceDiv.T * sp.diags(self.vol)
+            self._cellGrad = -Pi * MfI * self.face_divergence.T * sp.diags(self.vol)
 
         return self._cellGrad
 
@@ -361,7 +361,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
             MfIx = sp.diags(MfI.diagonal()[:nFx])
 
             self._cellGradx = (
-                -Pafx * MfIx * self.faceDivx.T * sp.diags(self.vol)
+                -Pafx * MfIx * self.face_x_divergence.T * sp.diags(self.vol)
             )
 
         return self._cellGradx
@@ -387,7 +387,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
             MfIy = sp.diags(MfI.diagonal()[nFx:nFx+nFy])
 
             self._cellGrady = (
-                -Pafy * MfIy * self.faceDivy.T * sp.diags(self.vol)
+                -Pafy * MfIy * self.face_y_divergence.T * sp.diags(self.vol)
             )
 
         return self._cellGrady
@@ -415,7 +415,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
             MfIz = sp.diags(MfI.diagonal()[nFx+nFy:])
 
             self._cellGradz = (
-                -Pafz * MfIz * self.faceDivz.T * sp.diags(self.vol)
+                -Pafz * MfIz * self.face_z_divergence.T * sp.diags(self.vol)
             )
 
         return self._cellGradz
@@ -423,19 +423,19 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
     @property
     def face_x_divergence(self):
         if getattr(self, '_faceDivx', None) is None:
-            self._faceDivx = self.faceDiv[:, :self.nFx]
+            self._faceDivx = self.face_divergence[:, :self.nFx]
         return self._faceDivx
 
     @property
     def face_y_divergence(self):
         if getattr(self, '_faceDivy', None) is None:
-            self._faceDivy = self.faceDiv[:, self.nFx:self.nFx+self.nFy]
+            self._faceDivy = self.face_divergence[:, self.nFx:self.nFx+self.nFy]
         return self._faceDivy
 
     @property
     def face_z_divergence(self):
         if getattr(self, '_faceDivz', None) is None:
-            self._faceDivz = self.faceDiv[:, self.nFx+self.nFy:]
+            self._faceDivz = self.face_divergence[:, self.nFx+self.nFy:]
         return self._faceDivz
 
     def point2index(self, locs):

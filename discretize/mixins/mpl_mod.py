@@ -366,12 +366,12 @@ class InterfaceMPL(object):
         >>> q = np.zeros(M.vnC)
         >>> q[[4, 4], [4, 4], [2, 6]]=[-1, 1]
         >>> q = discretize.utils.mkvc(q)
-        >>> A = M.faceDiv * M.cellGrad
+        >>> A = M.face_divergence * M.cell_gradient
         >>> b = Solver(A) * (q)
 
         and finaly, plot the vector values of the result, which are defined on faces
 
-        >>> M.plot_slice(M.cellGrad*b, 'F', view='vec', grid=True, pcolor_opts={'alpha':0.8})
+        >>> M.plot_slice(M.cell_gradient*b, 'F', view='vec', grid=True, pcolor_opts={'alpha':0.8})
         >>> plt.show()
         """
         mesh_type = self._meshType.lower()
