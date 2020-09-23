@@ -135,7 +135,7 @@ class InterfaceMPL(object):
             plt.figure()
             ax = plt.subplot(111, **axOpts)
         else:
-            if not isinstance(ax, (list, tuple)):
+            if not isinstance(ax, (list, tuple, np.ndarray)):
                 ax_test = (ax, )
             for a in ax_test:
                 if not isinstance(a, matplotlib.axes.Axes):
