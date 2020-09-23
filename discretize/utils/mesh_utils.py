@@ -894,7 +894,7 @@ def active_from_xyz(mesh, xyz, grid_reference='CC', method='linear'):
 
             else:
                 active = np.zeros(mesh.nC, dtype='bool')
-                active[np.searchsorted(mesh.vectorNx, xyz).max():] = True
+                active[np.searchsorted(mesh.grid_nodes_x, xyz).max():] = True
 
                 return active
         except AttributeError:

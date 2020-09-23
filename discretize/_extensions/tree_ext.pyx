@@ -3462,9 +3462,9 @@ cdef class _TreeMesh:
         cdef int_t same_base
         try:
             same_base = (
-                np.allclose(self.vectorNx, meshin.vectorNx)
-                and np.allclose(self.vectorNy, meshin.vectorNy)
-                and (self.dim == 2 or np.allclose(self.vectorNz, meshin.vectorNz))
+                np.allclose(self.grid_nodes_x, meshin.grid_nodes_x)
+                and np.allclose(self.grid_nodes_y, meshin.grid_nodes_y)
+                and (self.dim == 2 or np.allclose(self.grid_nodes_z, meshin.grid_nodes_z))
             )
         except ValueError:
             same_base = False
@@ -3648,9 +3648,9 @@ cdef class _TreeMesh:
         cdef int_t same_base
         try:
             same_base = (
-                np.allclose(self.vectorNx, out_tens_mesh.vectorNx)
-                and np.allclose(self.vectorNy, out_tens_mesh.vectorNy)
-                and (self.dim == 2 or np.allclose(self.vectorNz, out_tens_mesh.vectorNz))
+                np.allclose(self.grid_nodes_x, out_tens_mesh.grid_nodes_x)
+                and np.allclose(self.grid_nodes_y, out_tens_mesh.grid_nodes_y)
+                and (self.dim == 2 or np.allclose(self.grid_nodes_z, out_tens_mesh.grid_nodes_z))
             )
         except ValueError:
             same_base = False
@@ -3686,11 +3686,11 @@ cdef class _TreeMesh:
         cdef int_t nnz_row = 0
         cdef int_t nnz_counter = 0
 
-        cdef double[:] nodes_x = out_tens_mesh.vectorNx
-        cdef double[:] nodes_y = out_tens_mesh.vectorNy
+        cdef double[:] nodes_x = out_tens_mesh.grid_nodes_x
+        cdef double[:] nodes_y = out_tens_mesh.grid_nodes_y
         cdef double[:] nodes_z = np.array([0.0, 0.0])
         if self._dim==3:
-            nodes_z = out_tens_mesh.vectorNz
+            nodes_z = out_tens_mesh.grid_nodes_z
         cdef int_t nx = len(nodes_x)-1
         cdef int_t ny = len(nodes_y)-1
         cdef int_t nz = len(nodes_z)-1
@@ -3792,9 +3792,9 @@ cdef class _TreeMesh:
         cdef int_t same_base
         try:
             same_base = (
-                np.allclose(self.vectorNx, in_tens_mesh.vectorNx)
-                and np.allclose(self.vectorNy, in_tens_mesh.vectorNy)
-                and (self.dim == 2 or np.allclose(self.vectorNz, in_tens_mesh.vectorNz))
+                np.allclose(self.grid_nodes_x, in_tens_mesh.grid_nodes_x)
+                and np.allclose(self.grid_nodes_y, in_tens_mesh.grid_nodes_y)
+                and (self.dim == 2 or np.allclose(self.grid_nodes_z, in_tens_mesh.grid_nodes_z))
             )
         except ValueError:
             same_base = False
@@ -3814,11 +3814,11 @@ cdef class _TreeMesh:
             )
 
 
-        cdef np.float64_t[:] nodes_x = in_tens_mesh.vectorNx
-        cdef np.float64_t[:] nodes_y = in_tens_mesh.vectorNy
+        cdef np.float64_t[:] nodes_x = in_tens_mesh.grid_nodes_x
+        cdef np.float64_t[:] nodes_y = in_tens_mesh.grid_nodes_y
         cdef np.float64_t[:] nodes_z = np.array([0.0, 0.0])
         if self._dim == 3:
-            nodes_z = in_tens_mesh.vectorNz
+            nodes_z = in_tens_mesh.grid_nodes_z
         cdef int_t nx = len(nodes_x)-1
         cdef int_t ny = len(nodes_y)-1
         cdef int_t nz = len(nodes_z)-1
