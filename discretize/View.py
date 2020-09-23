@@ -1464,30 +1464,39 @@ class Slicer(object):
             aspect3 = 1.0/aspect2
 
         # Get color limits.
+        # Currently there are three different ways, which is probably not good.
+        # Priority: pcolor_opts['norm'] > pcolor_opts > clim.
 
-        # Alternatively, look in pc_props.
+        # First, look in pc_props, remove it from there.
         vmin = self.pc_props.pop('vmin', None)
         vmax = self.pc_props.pop('vmax', None)
 
-        # Check if there is a norm and if it has color limits.
+        # Overwrite with norm if exists and has limits.
         if 'norm' in self.pc_props:
-            vmin = self.pc_props['norm'].vmin
-            vmax = self.pc_props['norm'].vmax
+            if self.pc_props['norm'].vmin is not None:
+                vmin = self.pc_props['norm'].vmin
+            if self.pc_props['norm'].vmax is not None:
+                vmax = self.pc_props['norm'].vmax
 
-        # If nowhere defined, get it from the data.
-        if clim is None:
+        # Get it from clim or, finally, from data.
+        if vmin is None:
+            vmin = np.nanmin(self.v) if clim is None else clim[0]
+        if vmax is None:
+            vmax = np.nanmax(self.v) if clim is None else clim[1]
 
-            clim = [np.nanmin(self.v) if vmin is None else vmin,
-                    np.nanmax(self.v) if vmax is None else vmax]
+        # In the case of a homogeneous fullspace provide a small range to avoid
+        # problems with colorbar and the three subplots.
+        if vmin == vmax:
+            vmin *= 0.99
+            vmax *= 1.01
 
-            # In the case of a homogeneous fullspace provide a small range to
-            # avoid problems with colorbar and the three subplots.
-            if clim[0] == clim[1]:
-                clim = [0.99*clim[0], 1.01*clim[1]]
-
+        # Store back to appropriate location.
+        if 'norm' in self.pc_props:
+            self.pc_props['norm'].vmin = vmin
+            self.pc_props['norm'].vmax = vmax
         else:
-            self.pc_props['vmin'] = clim[0]
-            self.pc_props['vmax'] = clim[1]
+            self.pc_props['vmin'] = vmin
+            self.pc_props['vmax'] = vmax
 
         # 2. Start populating figure
 
@@ -1572,8 +1581,8 @@ class Slicer(object):
             self.ax_smax = plt.axes([0.7, 0.15, 0.15, 0.03])
 
             # Limits slightly below/above actual limits, clips otherwise
-            self.smin = Slider(self.ax_smin, 'Min', *clim, valinit=clim[0])
-            self.smax = Slider(self.ax_smax, 'Max', *clim, valinit=clim[1])
+            self.smin = Slider(self.ax_smin, 'Min', [vmin, vmax], valinit=vmin)
+            self.smax = Slider(self.ax_smax, 'Max', [vmin, vmax], valinit=vmax)
 
             def update(val):
                 self.v.mask = False  # Re-set
