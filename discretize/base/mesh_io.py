@@ -380,7 +380,7 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         for key in models:
             if not isinstance(key, str):
                 raise TypeError('The dict key must be a string representing the file name')
-            mesh.writeModelUBC(key, models[key], directory=directory)
+            mesh.write_model_UBC(key, models[key], directory=directory)
 
     # DEPRECATED
     @classmethod
@@ -456,7 +456,7 @@ class TreeMeshIO(object):
         if type(fileName) is list:
             out = {}
             for f in fileName:
-                out[f] = mesh.readModelUBC(f)
+                out[f] = mesh.read_model_UBC(f)
             return out
 
         modArr = np.loadtxt(fileName)
@@ -509,7 +509,7 @@ class TreeMeshIO(object):
         for key in models:
             if not isinstance(key, str):
                 raise TypeError('The dict key must be a string representing the file name')
-            mesh.writeModelUBC(key, models[key], directory=directory)
+            mesh.write_model_UBC(key, models[key], directory=directory)
 
     def write_model_UBC(mesh, fileName, model, directory=''):
         """Writes a model associated with a TreeMesh
@@ -523,7 +523,7 @@ class TreeMeshIO(object):
         """
         if type(fileName) is list:
             for f, m in zip(fileName, model):
-                mesh.writeModelUBC(f, m)
+                mesh.write_model_UBC(f, m)
         else:
             ubc_order = mesh._ubc_order
             fname = os.path.join(directory, fileName)
