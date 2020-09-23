@@ -2,6 +2,7 @@ from __future__ import print_function
 import numpy as np
 import warnings
 from ..utils import mkvc, ndgrid, requires
+from ..utils.code_utils import deprecate_method
 from six import integer_types
 
 import matplotlib
@@ -23,7 +24,7 @@ class InterfaceMPL(object):
     models. and ``plot_slice`` for plotting a 2D slice through a 3D mesh.
     """
 
-    def plotGrid(
+    def plot_grid(
         self, ax=None, nodes=False, faces=False, centers=False, edges=False,
         lines=True, show_it=False, **kwargs
     ):
@@ -123,7 +124,7 @@ class InterfaceMPL(object):
             lines=lines, show_it=show_it, **kwargs
         )
 
-    def plotImage(
+    def plot_image(
         self, v, v_type='CC', grid=False, view='real',
         ax=None, clim=None, show_it=False,
         pcolor_opts=None,
@@ -270,7 +271,7 @@ class InterfaceMPL(object):
             **kwargs
         )
 
-    def plotSlice(
+    def plot_slice(
         self, v, v_type='CC',
         normal='Z', ind=None, grid=False, view='real',
         ax=None, clim=None, show_it=False,
@@ -1574,6 +1575,10 @@ class InterfaceMPL(object):
         if show_it:
             plt.show()
         return (out, )
+
+    plotGrid = deprecate_method('plot_grid', 'plotGrid', removal_version="1.0.0")
+    plotImage = deprecate_method('plot_image', 'plotImage', removal_version="1.0.0")
+    plotSlice = deprecate_method('plot_slice', 'plotSlice', removal_version="1.0.0")
 
 
 class Slicer(object):
