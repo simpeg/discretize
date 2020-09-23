@@ -136,7 +136,7 @@ def mesh_tensor(value):
         tx = [(10.0, 10, -1.3), (10.0, 40), (10.0, 10, 1.3)]
         ty = [(10.0, 10, -1.3), (10.0, 40)]
         mesh = discretize.TensorMesh([tx, ty])
-        mesh.plotGrid(show_it=True)
+        mesh.plot_grid(show_it=True)
 
     """
     if type(value) is not list:
@@ -340,7 +340,7 @@ def mesh_builder_xyz(
 
 
         axs = plt.subplot()
-        mesh.plotImage(mesh.vol, grid=True, ax=axs)
+        mesh.plot_image(mesh.vol, grid=True, ax=axs)
         axs.scatter(xyLoc[:,0], xyLoc[:,1], 15, c='w', zorder=3)
         axs.set_aspect('equal')
         plt.show()
@@ -822,15 +822,15 @@ def active_from_xyz(mesh, xyz, grid_reference='CC', method='linear'):
 
         active_cc = active_from_xyz(mesh, np.c_[topo_points, topo_vals], grid_reference='CC')
         ax = plt.subplot(121)
-        mesh.plotImage(active_cc, ax=ax)
-        mesh.plotGrid(centers=True, ax=ax)
+        mesh.plot_image(active_cc, ax=ax)
+        mesh.plot_grid(centers=True, ax=ax)
         ax.plot(np.linspace(0,1), topo_func(np.linspace(0,1)), color='C3')
         ax.set_title("CC")
 
         active_n = active_from_xyz(mesh, np.c_[topo_points, topo_vals], grid_reference='N')
         ax = plt.subplot(122)
-        mesh.plotImage(active_n, ax=ax)
-        mesh.plotGrid(nodes=True, ax=ax)
+        mesh.plot_image(active_n, ax=ax)
+        mesh.plot_grid(nodes=True, ax=ax)
         ax.plot(np.linspace(0,1), topo_func(np.linspace(0,1)), color='C3')
         ax.set_title("N")
         plt.show()

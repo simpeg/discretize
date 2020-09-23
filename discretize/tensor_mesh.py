@@ -29,7 +29,7 @@ class TensorMesh(
         hz = np.array([1, 1, 1, 1])
 
         mesh = discretize.TensorMesh([hx, hy, hz])
-        mesh.plotGrid()
+        mesh.plot_grid()
 
 
     Example of a padded tensor mesh using
@@ -43,7 +43,7 @@ class TensorMesh(
             [(10, 10, -1.3), (10, 40), (10, 10, 1.3)],
             [(10, 10, -1.3), (10, 20)]
         ])
-        mesh.plotGrid()
+        mesh.plot_grid()
 
     For a quick tensor mesh on a (10x12x15) unit cube
 

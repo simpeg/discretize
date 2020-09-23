@@ -66,7 +66,7 @@ class InterfaceMPL(object):
         >>> h1 = np.linspace(.1, .5, 3)
         >>> h2 = np.linspace(.1, .5, 5)
         >>> mesh = discretize.TensorMesh([h1, h2])
-        >>> mesh.plotGrid(nodes=True, faces=True, centers=True, lines=True)
+        >>> mesh.plot_grid(nodes=True, faces=True, centers=True, lines=True)
         >>> plt.show()
 
         Plotting a 3D TensorMesh grid
@@ -77,7 +77,7 @@ class InterfaceMPL(object):
         >>> h2 = np.linspace(.1, .5, 5)
         >>> h3 = np.linspace(.1, .5, 3)
         >>> mesh = discretize.TensorMesh([h1, h2, h3])
-        >>> mesh.plotGrid(nodes=True, faces=True, centers=True, lines=True)
+        >>> mesh.plot_grid(nodes=True, faces=True, centers=True, lines=True)
         >>> plt.show()
 
         Plotting a 2D CurvilinearMesh
@@ -85,7 +85,7 @@ class InterfaceMPL(object):
         >>> import discretize
         >>> X, Y = discretize.utils.exampleLrmGrid([10, 10], 'rotate')
         >>> M = discretize.CurvilinearMesh([X, Y])
-        >>> M.plotGrid()
+        >>> M.plot_grid()
         >>> plt.show()
 
         Plotting a 3D CurvilinearMesh
@@ -93,7 +93,7 @@ class InterfaceMPL(object):
         >>> import discretize
         >>> X, Y, Z = discretize.utils.exampleLrmGrid([5, 5, 5], 'rotate')
         >>> M = discretize.CurvilinearMesh([X, Y, Z])
-        >>> M.plotGrid()
+        >>> M.plot_grid()
         >>> plt.show()
 
         Plotting a 2D TreeMesh
@@ -101,7 +101,7 @@ class InterfaceMPL(object):
         >>> import discretize
         >>> M = discretize.TreeMesh([32, 32])
         >>> M.insert_cells([[0.25, 0.25]], [4])
-        >>> M.plotGrid()
+        >>> M.plot_grid()
         >>> plt.show()
 
         Plotting a 3D TreeMesh
@@ -109,7 +109,7 @@ class InterfaceMPL(object):
         >>> import discretize
         >>> M = discretize.TreeMesh([32, 32, 32])
         >>> M.insert_cells([[0.3, 0.75, 0.22]], [4])
-        >>> M.plotGrid()
+        >>> M.plot_grid()
         >>> plt.show()
 
         """
@@ -207,7 +207,7 @@ class InterfaceMPL(object):
         >>> import numpy as np
         >>> M = discretize.TensorMesh([20, 20])
         >>> v = np.sin(M.gridCC[:, 0]*2*np.pi)*np.sin(M.gridCC[:, 1]*2*np.pi)
-        >>> M.plotImage(v)
+        >>> M.plot_image(v)
         >>> plt.show()
 
         3D ``TensorMesh`` plotting
@@ -215,7 +215,7 @@ class InterfaceMPL(object):
         >>> import numpy as np
         >>> M = discretize.TensorMesh([20, 20, 20])
         >>> v = np.sin(M.gridCC[:, 0]*2*np.pi)*np.sin(M.gridCC[:, 1]*2*np.pi)*np.sin(M.gridCC[:, 2]*2*np.pi)
-        >>> M.plotImage(v, annotation_color='k')
+        >>> M.plot_image(v, annotation_color='k')
         >>> plt.show()
         """
         mesh_type = self._meshType.lower()
@@ -371,7 +371,7 @@ class InterfaceMPL(object):
 
         and finaly, plot the vector values of the result, which are defined on faces
 
-        >>> M.plotSlice(M.cellGrad*b, 'F', view='vec', grid=True, pcolor_opts={'alpha':0.8})
+        >>> M.plot_slice(M.cellGrad*b, 'F', view='vec', grid=True, pcolor_opts={'alpha':0.8})
         >>> plt.show()
         """
         mesh_type = self._meshType.lower()
@@ -420,7 +420,7 @@ class InterfaceMPL(object):
             out = []
             for v_typeI, ax in zip(v_type, axs):
                 out += [
-                    self.plotSlice(
+                    self.plot_slice(
                         v, v_type=v_typeI, normal=normal, ind=ind, grid=grid,
                         view=view, ax=ax, clim=clim, show_it=False,
                         pcolor_opts=pcolor_opts, stream_opts=stream_opts,
@@ -1095,7 +1095,7 @@ class InterfaceMPL(object):
                 raise AssertionError("ax must be an matplotlib.axes.Axes")
             fig = ax.figure
 
-        # Don't show things in the TM.plotImage
+        # Don't show things in the TM.plot_image
         show_it = kwargs.get('show_it', False)
         kwargs['show_it'] = False
 
@@ -1182,7 +1182,7 @@ class InterfaceMPL(object):
         # make a cyl symmetric mesh
         h2d = [self.h[0], 1, self.h[2]]
         mesh2D = self.__class__(h=h2d, x0=self.x0)
-        return mesh2D.plotGrid(*args, **kwargs)
+        return mesh2D.plot_grid(*args, **kwargs)
 
     def __plotGridZSlice(self, *args, **kwargs):
         # https://github.com/matplotlib/matplotlib/issues/312
@@ -1585,7 +1585,7 @@ class InterfaceMPL(object):
         ind_3d_to_2d = self._get_containing_cell_indexes(tm_gridboost)
         v2d = v[ind_3d_to_2d]
 
-        out = temp_mesh.plotImage(
+        out = temp_mesh.plot_image(
             v2d, v_type='CC',
             grid=grid, view=view,
             ax=ax, clim=clim, show_it=False,

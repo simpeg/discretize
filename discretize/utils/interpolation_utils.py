@@ -149,9 +149,9 @@ def volume_average(mesh_in, mesh_out, values=None, output=None):
     >>> import matplotlib.pyplot as plt
     >>> plt.figure()
     >>> ax1 = plt.subplot(121)
-    >>> mesh_in.plotImage(model1, ax=ax1)
+    >>> mesh_in.plot_image(model1, ax=ax1)
     >>> ax2 = plt.subplot(122)
-    >>> mesh_out.plotImage(model2, ax=ax2)
+    >>> mesh_out.plot_image(model2, ax=ax2)
     >>> plt.show()
 
     """

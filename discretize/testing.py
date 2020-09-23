@@ -129,7 +129,7 @@ def setupMesh(meshType, nC, nDim):
             return levels - 1
         mesh.refine(function)
         # mesh.number()
-        # mesh.plotGrid(show_it=True)
+        # mesh.plot_grid(show_it=True)
         max_h = max([np.max(hi) for hi in mesh.h])
     return mesh, max_h
 
