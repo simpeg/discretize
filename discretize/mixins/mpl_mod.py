@@ -1334,7 +1334,7 @@ class InterfaceMPL(object):
         ax.set_ylabel('y')
         if show_it:
             plt.show()
-        return out
+        return (out, )
 
     def __plot_grid_tree(
         self, ax=None, nodes=False, faces=False, centers=False, edges=False,
@@ -1602,7 +1602,7 @@ class InterfaceMPL(object):
         )
         if show_it:
             plt.show()
-        return (out, )
+        return out
 
     plotGrid = deprecate_method('plot_grid', 'plotGrid', removal_version="1.0.0")
     plotImage = deprecate_method('plot_image', 'plotImage', removal_version="1.0.0")
