@@ -398,14 +398,15 @@ class TensorMeshIO(InterfaceTensorread_vtk):
 class TreeMeshIO(object):
 
     @classmethod
-    def read_UBC(TreeMesh, meshFile):
+    def read_UBC(TreeMesh, meshFile, directory=''):
         """Read UBC 3D OcTree mesh file
         Input:
         :param str meshFile: path to the UBC GIF OcTree mesh file to read
         :rtype: discretize.TreeMesh
         :return: The octree mesh
         """
-        fileLines = np.genfromtxt(meshFile, dtype=str,
+        fname = os.path.join(directory, meshFile)
+        fileLines = np.genfromtxt(fname, dtype=str,
                                   delimiter='\n', comments='!')
         nCunderMesh = np.array(fileLines[0].split('!')[0].split(), dtype=int)
         tswCorn = np.array(
@@ -529,13 +530,13 @@ class TreeMeshIO(object):
 
     # DEPRECATED
     @classmethod
-    def readUBC(TensorMesh, fileName, directory=''):
+    def readUBC(TreeMesh, fileName, directory=''):
         warnings.warn(
             'TensorMesh.readUBC has been deprecated and will be removed in'
             'discretize 1.0.0. please use TensorMesh.read_UBC',
             FutureWarning
         )
-        return TensorMesh.read_UBC(fileName, directory)
+        return TreeMesh.read_UBC(fileName, directory)
 
     readModelUBC = deprecate_method("read_model_UBC", 'readModelUBC', removal_version="1.0.0")
     writeUBC = deprecate_method("write_UBC", 'writeUBC', removal_version="1.0.0")
