@@ -1137,7 +1137,7 @@ class CylindricalMesh(
         raise NotImplementedError('Cell Grad is not yet implemented.')
         # if getattr(self, '_cellGradx', None) is None:
         #     G1 = super(CylMesh, self)._cellGradxStencil
-        #     V = self._deflationMatrix('F', withHanging='True', asOnes='True')*self.aveCC2F*self.vol
+        #     V = self._deflationMatrix('F', withHanging='True', asOnes='True')*self.aveCC2F*self.cell_volumes
         #     A = self.area
         #     L = (A/V)[:self._ntFx]
         #     # L = self.reshape(L, 'F', 'Fx', 'V')

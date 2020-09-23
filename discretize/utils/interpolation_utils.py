@@ -92,7 +92,7 @@ def volume_average(mesh_in, mesh_out, values=None, output=None):
     This volume averaging function looks for overlapping cells in each mesh,
     and weights the output values by the partial volume ratio of the overlapping
     input cells. The volume average operation should result in an output such that
-    ``np.sum(mesh_in.vol*values)`` = ``np.sum(mesh_out.vol*output)``, when the input
+    ``np.sum(mesh_in.cell_volumes*values)`` = ``np.sum(mesh_out.cell_volumes*output)``, when the input
     and output meshes have the exact same extent. When the output mesh extent goes
     beyond the input mesh, it is assumed to have constant values in that direction.
     When the output mesh extent is smaller than the input mesh, only the overlapping

@@ -140,7 +140,7 @@ class InnerProducts(object):
 
         d = self.dim
         # We will multiply by sqrt on each side to keep symmetry
-        V = sp.kron(sp.identity(d), sdiag(np.sqrt((2**(-d))*self.vol)))
+        V = sp.kron(sp.identity(d), sdiag(np.sqrt((2**(-d))*self.cell_volumes)))
 
         nodes = ['000', '100', '010', '110', '001', '101', '011',  '111'][:2**d]
 

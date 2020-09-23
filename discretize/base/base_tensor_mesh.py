@@ -465,7 +465,7 @@ class BaseTensorMesh(BaseMesh):
         # Isotropic? or anisotropic?
         if prop.size == self.nC:
             Av = getattr(self, 'ave'+projType+'2CC')
-            Vprop = self.vol * mkvc(prop)
+            Vprop = self.cell_volumes * mkvc(prop)
             M = n_elements * sdiag(Av.T * Vprop)
 
         elif prop.size == self.nC*self.dim:
@@ -479,7 +479,7 @@ class BaseTensorMesh(BaseMesh):
                 elif projType == 'F':
                     prop = prop[:, [0, 2]]
 
-            V = sp.kron(sp.identity(n_elements), sdiag(self.vol))
+            V = sp.kron(sp.identity(n_elements), sdiag(self.cell_volumes))
             M = sdiag(Av.T * V * mkvc(prop))
         else:
             return None
@@ -537,7 +537,7 @@ class BaseTensorMesh(BaseMesh):
 
         if tensorType == 0:  # isotropic, constant
             Av = getattr(self, 'ave'+projType+'2CC')
-            V = sdiag(self.vol)
+            V = sdiag(self.cell_volumes)
             ones = sp.csr_matrix(
                 (np.ones(self.nC), (range(self.nC), np.zeros(self.nC))),
                 shape=(self.nC, 1)
@@ -558,7 +558,7 @@ class BaseTensorMesh(BaseMesh):
 
         elif tensorType == 1:  # isotropic, variable in space
             Av = getattr(self, 'ave'+projType+'2CC')
-            V = sdiag(self.vol)
+            V = sdiag(self.cell_volumes)
             if not invMat and not invProp:
                 dMdprop = n_elements * Av.T * V
             elif invMat and invProp:
@@ -575,7 +575,7 @@ class BaseTensorMesh(BaseMesh):
 
         elif tensorType == 2: # anisotropic
             Av = getattr(self, 'ave'+projType+'2CCV')
-            V = sp.kron(sp.identity(self.dim), sdiag(self.vol))
+            V = sp.kron(sp.identity(self.dim), sdiag(self.cell_volumes))
 
             if self._meshType == 'CYL':
                 Zero = sp.csr_matrix((self.nC, self.nC))

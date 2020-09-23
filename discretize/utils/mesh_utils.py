@@ -340,7 +340,7 @@ def mesh_builder_xyz(
 
 
         axs = plt.subplot()
-        mesh.plot_image(mesh.vol, grid=True, ax=axs)
+        mesh.plot_image(mesh.cell_volumes, grid=True, ax=axs)
         axs.scatter(xyLoc[:,0], xyLoc[:,1], 15, c='w', zorder=3)
         axs.set_aspect('equal')
         plt.show()

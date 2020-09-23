@@ -224,7 +224,7 @@ class DiffOperators(object):
             D = self._faceDivStencil
             # Compute areas of cell faces & volumes
             S = self.area
-            V = self.vol
+            V = self.cell_volumes
             self._faceDiv = sdiag(1/V)*D*sdiag(S)
         return self._faceDiv
 
@@ -236,7 +236,7 @@ class DiffOperators(object):
         """
         # Compute areas of cell faces & volumes
         S = self.reshape(self.area, 'F', 'Fx', 'V')
-        V = self.vol
+        V = self.cell_volumes
         return sdiag(1/V)*self._faceDivStencilx*sdiag(S)
 
     @property
@@ -245,7 +245,7 @@ class DiffOperators(object):
             return None
         # Compute areas of cell faces & volumes
         S = self.reshape(self.area, 'F', 'Fy', 'V')
-        V = self.vol
+        V = self.cell_volumes
         return sdiag(1/V)*self._faceDivStencily*sdiag(S)
 
     @property
@@ -258,7 +258,7 @@ class DiffOperators(object):
             return None
         # Compute areas of cell faces & volumes
         S = self.reshape(self.area, 'F', 'Fz', 'V')
-        V = self.vol
+        V = self.cell_volumes
         return sdiag(1/V)*self._faceDivStencilz*sdiag(S)
 
     ###########################################################################
@@ -531,7 +531,7 @@ class DiffOperators(object):
         if getattr(self, '_cellGrad', None) is None:
             G = self._cellGradStencil
             S = self.area  # Compute areas of cell faces & volumes
-            V = self.aveCC2F*self.vol  # Average volume between adjacent cells
+            V = self.aveCC2F*self.cell_volumes  # Average volume between adjacent cells
             self._cellGrad = sdiag(S/V)*G
         return self._cellGrad
 
@@ -556,7 +556,7 @@ class DiffOperators(object):
                 G = sp.block_diag((G1, G2, G3), format="csr")
             # Compute areas of cell faces & volumes
             S = self.area
-            V = self.aveCC2F*self.vol  # Average volume between adjacent cells
+            V = self.aveCC2F*self.cell_volumes  # Average volume between adjacent cells
             self._cellGradBC = sdiag(S/V)*G
         return self._cellGradBC
 
@@ -569,7 +569,7 @@ class DiffOperators(object):
         if getattr(self, '_cellGradx', None) is None:
             G1 = self._cellGradxStencil
             # Compute areas of cell faces & volumes
-            V = self.aveCC2F*self.vol
+            V = self.aveCC2F*self.cell_volumes
             L = self.reshape(self.area/V, 'F', 'Fx', 'V')
             self._cellGradx = sdiag(L)*G1
         return self._cellGradx
@@ -581,7 +581,7 @@ class DiffOperators(object):
         if getattr(self, '_cellGrady', None) is None:
             G2 = self._cellGradyStencil
             # Compute areas of cell faces & volumes
-            V = self.aveCC2F*self.vol
+            V = self.aveCC2F*self.cell_volumes
             L = self.reshape(self.area/V, 'F', 'Fy', 'V')
             self._cellGrady = sdiag(L)*G2
         return self._cellGrady
@@ -597,7 +597,7 @@ class DiffOperators(object):
         if getattr(self, '_cellGradz', None) is None:
             G3 = self._cellGradzStencil
             # Compute areas of cell faces & volumes
-            V = self.aveCC2F*self.vol
+            V = self.aveCC2F*self.cell_volumes
             L = self.reshape(self.area/V, 'F', 'Fz', 'V')
             self._cellGradz = sdiag(L)*G3
         return self._cellGradz

@@ -223,7 +223,7 @@ def _tensor_volume_averaging(mesh_in, mesh_out, values=None, output=None):
     cdef np.float64_t[::1, :, :] val_out
     cdef int i1, i2, i3, i1i, i2i, i3i, i1o, i2o, i3o
     cdef np.float64_t w_3, w_32
-    cdef np.float64_t[::1, :, :] vol = mesh_out.vol.reshape(mesh_out_shape, order='F')
+    cdef np.float64_t[::1, :, :] vol = mesh_out.cell_volumes.reshape(mesh_out_shape, order='F')
 
     if values is not None:
         # If given a values array, do the operation
