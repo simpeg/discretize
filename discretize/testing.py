@@ -241,8 +241,9 @@ class OrderTest(unittest.TestCase):
             err_old = 0.
             max_h_old = 0.
             for ii, nc in enumerate(self.mesh_sizes):
-                max_h = self.setup_mesh(nc)
-                err = self.get_error()
+                # Leave these as setupMesh and getError for deprecated classes that might have extended these two methods
+                max_h = self.setupMesh(nc)
+                err = self.getError()
                 if ii == 0:
                     print('')
                     print(self._mesh_type + ':  ' + self.name)
