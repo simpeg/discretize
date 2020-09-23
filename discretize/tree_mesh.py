@@ -325,7 +325,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
             iy[i_s[3]] = 0.
             Pafy = sp.diags(iy)
 
-            MfI = self.getFaceInnerProduct(invMat=True)
+            MfI = self.get_face_inner_product(invMat=True)
 
             if self.dim == 2:
                 Pi = sp.block_diag([Pafx, Pafy])
@@ -357,7 +357,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
             ix[i_s[1]] = 0.0
             Pafx = sp.diags(ix)
 
-            MfI = self.getFaceInnerProduct(invMat=True)
+            MfI = self.get_face_inner_product(invMat=True)
             MfIx = sp.diags(MfI.diagonal()[:nFx])
 
             self._cellGradx = (
@@ -383,7 +383,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
             iy[i_s[3]] = 0.
             Pafy = sp.diags(iy)
 
-            MfI = self.getFaceInnerProduct(invMat=True)
+            MfI = self.get_face_inner_product(invMat=True)
             MfIy = sp.diags(MfI.diagonal()[nFx:nFx+nFy])
 
             self._cellGrady = (
@@ -411,7 +411,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
             iz[i_s[5]] = 0.
             Pafz = sp.diags(iz)
 
-            MfI = self.getFaceInnerProduct(invMat=True)
+            MfI = self.get_face_inner_product(invMat=True)
             MfIz = sp.diags(MfI.diagonal()[nFx+nFy:])
 
             self._cellGradz = (
