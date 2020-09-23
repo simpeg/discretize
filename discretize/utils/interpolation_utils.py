@@ -2,6 +2,7 @@ from __future__ import print_function
 import numpy as np
 import scipy.sparse as sp
 from . import mkvc, sub2ind
+from .code_utils import deprecate_function
 
 try:
     from .._extensions import interputils_cython as pyx
@@ -34,7 +35,7 @@ except ImportError as err:
     _interpCython = False
 
 
-def interpmat(locs, x, y=None, z=None):
+def interpolation_matrix(locs, x, y=None, z=None):
     """Local interpolation computed for each receiver point in turn
 
     :param numpy.ndarray loc: Location of points to interpolate to
@@ -83,6 +84,7 @@ def interpmat(locs, x, y=None, z=None):
     Q = sp.csr_matrix((vals, (I, J)),
                       shape=(npts, np.prod(shape)))
     return Q
+
 
 def volume_average(mesh_in, mesh_out, values=None, output=None):
     """Volume averaging interpolation between meshes.
@@ -189,3 +191,6 @@ def volume_average(mesh_in, mesh_out, values=None, output=None):
             return mesh_out._vol_avg_from_tree(mesh_in, values, output)
     else:
         raise TypeError("Unsupported mesh types")
+
+
+interpmat = deprecate_function(interpolation_matrix, 'interpmat', removal_version="1.0.0")

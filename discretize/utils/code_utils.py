@@ -1,19 +1,18 @@
 from __future__ import print_function, division
 import numpy as np
 import warnings
-import properties
 
-scalarTypes = (complex, float, int, np.number)
+SCALARTYPES = (complex, float, int, np.number)
 
-def isScalar(f):
-    if isinstance(f, scalarTypes):
+def is_scalar(f):
+    if isinstance(f, SCALARTYPES):
         return True
-    elif isinstance(f, np.ndarray) and f.size == 1 and isinstance(f[0], scalarTypes):
+    elif isinstance(f, np.ndarray) and f.size == 1 and isinstance(f[0], SCALARTYPES):
         return True
     return False
 
 
-def asArray_N_x_Dim(pts, dim):
+def as_array_n_by_dim(pts, dim):
         if type(pts) == list:
             pts = np.array(pts)
         assert isinstance(pts, np.ndarray), "pts must be a numpy array"
@@ -146,17 +145,24 @@ def deprecate_method(new_name, old_name, removal_version=None):
     new_method.__doc__ = doc
     return new_method
 
-def shorthand_property(prop, old_name, new_name=None):
-    if isinstance(prop, property):
-        if new_name is None:
-            new_name = prop.fget.__qualname__
-        cls_name = new_name.split(".")[0]
-        old_name = f"{cls_name}.{old_name}"
-    elif isinstance(prop, properties.GettableProperty):
-        if new_name is None:
-            new_name = prop.name
-        prop = prop.get_property()
 
-    doc = f"`{old_name}` is an alias to `{new_name}`."
+def deprecate_function(new_function, old_name, removal_version=None):
+    new_name = new_function.__name__
+    if removal_version is not None:
+        tag = f" It will be removed in version {removal_version} of discretize."
+    else:
+        tag = " It will be removed in a future version of discretize."
+    def dep_function(*args, **kwargs):
+        warnings.warn(
+            f"{old_name} has been deprecated, please use {new_name}." + tag,
+            FutureWarning
+        )
+        return new_function(*args, **kwargs)
 
-    return property(prop.fget, prop.fset, prop.fdel, doc)
+    doc = f"`{old_name}` has been deprecated. See `{new_name}` for documentation"
+    dep_function.__doc__ = doc
+    return dep_function
+
+# DEPRECATIONS
+isScalar = deprecate_function(is_scalar, 'isScalar', removal_version="1.0.0")
+asArray_N_x_Dim = deprecate_function(as_array_n_by_dim, 'asArray_N_x_Dim', removal_version="1.0.0")

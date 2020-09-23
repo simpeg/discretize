@@ -1,5 +1,6 @@
 import numpy as np
 from .matrix_utils import mkvc
+from .code_utils import deprecate_function
 
 
 def cyl2cart(grid, vec=None):
@@ -29,6 +30,7 @@ def cyl2cart(grid, vec=None):
 
     return np.vstack(newvec).T
 
+
 def cart2cyl(grid, vec=None):
     """
     Take a grid defined in cartesian coordinates and transform it to cyl
@@ -49,7 +51,7 @@ def cart2cyl(grid, vec=None):
     ])
 
 
-def rotationMatrixFromNormals(v0, v1, tol=1e-20):
+def rotation_matrix_from_normals(v0, v1, tol=1e-20):
     """
     Performs the minimum number of rotations to define a rotation from the
     direction indicated by the vector n0 to the direction indicated by n1.
@@ -95,7 +97,7 @@ def rotationMatrixFromNormals(v0, v1, tol=1e-20):
     return np.eye(3, dtype=float) + sinT*ux + (1.-cosT)*(ux.dot(ux))
 
 
-def rotatePointsFromNormals(XYZ, n0, n1, x0=np.r_[0., 0., 0.]):
+def rotate_points_from_normals(XYZ, n0, n1, x0=np.r_[0., 0., 0.]):
     """
         rotates a grid so that the vector n0 is aligned with the vector n1
 
@@ -114,3 +116,7 @@ def rotatePointsFromNormals(XYZ, n0, n1, x0=np.r_[0., 0., 0.]):
     X0 = np.ones([XYZ.shape[0], 1])*mkvc(x0)
 
     return (XYZ - X0).dot(R.T) + X0 # equivalent to (R*(XYZ - X0)).T + X0
+
+
+rotationMatrixFromNormals = deprecate_function(rotation_matrix_from_normals, "rotationMatrixFromNormals", removal_version="1.0.0")
+rotatePointsFromNormals = deprecate_function(rotate_points_from_normals, "rotatePointsFromNormals", removal_version="1.0.0")

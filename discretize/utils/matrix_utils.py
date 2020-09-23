@@ -2,6 +2,7 @@ from __future__ import division
 import numpy as np
 import scipy.sparse as sp
 from . import isScalar
+from .code_utils import deprecate_function
 
 
 def mkvc(x, numDims=1):
@@ -48,7 +49,7 @@ def sdiag(h):
     return sp.spdiags(mkvc(h), 0, h.size, h.size, format="csr")
 
 
-def sdInv(M):
+def sdinv(M):
     "Inverse of a sparse diagonal matrix"
     return sdiag(1.0 / M.diagonal())
 
@@ -183,7 +184,7 @@ def sub2ind(shape, subs):
     return mkvc(inds)
 
 
-def getSubArray(A, ind):
+def get_subarray(A, ind):
     """subArray"""
     assert type(ind) == list, "ind must be a list of vectors"
     assert len(A.shape) == len(ind), (
@@ -198,7 +199,7 @@ def getSubArray(A, ind):
         raise Exception("getSubArray does not support dimension asked.")
 
 
-def inv3X3BlockDiagonal(
+def inverse_3x3_block_diagonal(
     a11, a12, a13, a21, a22, a23, a31, a32, a33, returnMatrix=True
 ):
     """ B = inv3X3BlockDiagonal(a11, a12, a13, a21, a22, a23, a31, a32, a33)
@@ -251,7 +252,7 @@ def inv3X3BlockDiagonal(
                       sp.hstack((sdiag(b31), sdiag(b32),  sdiag(b33)))))
 
 
-def inv2X2BlockDiagonal(a11, a12, a21, a22, returnMatrix=True):
+def inverse_2x2_block_diagonal(a11, a12, a21, a22, returnMatrix=True):
     """ B = inv2X2BlockDiagonal(a11, a12, a21, a22)
 
     Inverts a stack of 2x2 matrices by using the inversion formula
@@ -332,7 +333,7 @@ class TensorType(object):
         return self._tt > v
 
 
-def makePropertyTensor(M, tensor):
+def make_property_tensor(M, tensor):
     if tensor is None:  # default is ones
         tensor = np.ones(M.nC)
 
@@ -367,7 +368,7 @@ def makePropertyTensor(M, tensor):
     return Sigma
 
 
-def invPropertyTensor(M, tensor, returnMatrix=False):
+def inverse_property_tensor(M, tensor, returnMatrix=False):
 
     propType = TensorType(M, tensor)
 
@@ -560,3 +561,11 @@ class Identity(object):
 
     def transpose(self):
         return self
+
+
+sdInv = deprecate_function(sdinv, 'sdInv', removal_version="1.0.0")
+getSubArray = deprecate_function(get_subarray, 'getSubArray', removal_version="1.0.0")
+inv3X3BlockDiagonal = deprecate_function(inverse_3x3_block_diagonal, 'inv3X3BlockDiagonal', removal_version="1.0.0")
+inv2X2BlockDiagonal = deprecate_function(inverse_2x2_block_diagonal, 'inv2X2BlockDiagonal', removal_version="1.0.0")
+makePropertyTensor = deprecate_function(make_property_tensor, 'makePropertyTensor', removal_version="1.0.0")
+invPropertyTensor = deprecate_function(inverse_property_tensor, 'invPropertyTensor', removal_version="1.0.0")

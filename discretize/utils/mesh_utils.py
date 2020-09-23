@@ -10,7 +10,7 @@ import discretize
 num_types = [int, float]
 
 
-def exampleLrmGrid(nC, exType):
+def example_curvilinear_grid(nC, exType):
     assert type(nC) == list, "nC must be a list containing the number of nodes"
     assert len(nC) == 2 or len(nC) == 3, "nC must either two or three dimensions"
     exType = exType.lower()
@@ -106,7 +106,7 @@ def random_model(shape, seed=None, anisotropy=None, its=100, bounds=None):
     return mi
 
 
-def meshTensor(value):
+def mesh_tensor(value):
     """**meshTensor** takes a list of numbers and tuples
     that have the form::
 
@@ -160,7 +160,7 @@ def meshTensor(value):
     return np.array(proposed)
 
 
-def closestPoints(mesh, pts, gridLoc='CC'):
+def closest_points(mesh, pts, gridLoc='CC'):
     """Move a list of points to the closest points on a grid.
 
     Parameters
@@ -192,7 +192,7 @@ def closestPoints(mesh, pts, gridLoc='CC'):
     return nodeInds
 
 
-def ExtractCoreMesh(xyzlim, mesh, mesh_type='tensor'):
+def extract_core_mesh(xyzlim, mesh, mesh_type='tensor'):
     """
     Extracts Core Mesh from Global mesh
 
@@ -929,3 +929,9 @@ def active_from_xyz(mesh, xyz, grid_reference='CC', method='linear'):
     )
 
     return active.ravel()
+
+
+exampleLrmGrid = deprecate_function(example_curvilinear_grid, 'exampleLrmGrid', removal_version="1.0.0")
+meshTensor = deprecate_function(mesh_tensor, 'meshTensor', removal_version="1.0.0")
+closestPoints = deprecate_function(closest_points, 'closestPoints', removal_version="1.0.0")
+ExtractCoreMesh = deprecate_function(extract_core_mesh, 'ExtractCoreMesh', removal_version="1.0.0")

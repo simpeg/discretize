@@ -1,9 +1,9 @@
 import numpy as np
-from scipy import sparse as sp
-from . import mkvc, ndgrid, sub2ind, sdiag
+from . import mkvc, ndgrid, sub2ind
+from .code_utils import deprecate_function
 
 
-def volTetra(xyz, A, B, C, D):
+def volume_tetrahedron(xyz, A, B, C, D):
     """
     Returns the volume for tetrahedras volume specified by the indexes A to D.
 
@@ -30,7 +30,7 @@ def volTetra(xyz, A, B, C, D):
     return V/6
 
 
-def indexCube(nodes, gridSize, n=None):
+def index_cube(nodes, gridSize, n=None):
     """
     Returns the index of nodes on the mesh.
 
@@ -111,7 +111,7 @@ def indexCube(nodes, gridSize, n=None):
     return out
 
 
-def faceInfo(xyz, A, B, C, D, average=True, normalizeNormals=True):
+def face_info(xyz, A, B, C, D, average=True, normalizeNormals=True):
     """
     function [N] = faceInfo(y,A,B,C,D)
 
@@ -190,3 +190,8 @@ def faceInfo(xyz, A, B, C, D, average=True, normalizeNormals=True):
     area = (length(nA)+length(nB)+length(nC)+length(nD))/4
 
     return N, area
+
+
+volTetra = deprecate_function(volume_tetrahedron, 'volTetra', removal_version="1.0.0")
+indexCube = deprecate_function(index_cube, 'indexCube', removal_version="1.0.0")
+faceInfo = deprecate_function(face_info, 'faceInfo', removal_version="1.0.0")
