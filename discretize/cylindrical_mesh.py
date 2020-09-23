@@ -17,7 +17,7 @@ class CylindricalMesh(
     BaseTensorMesh, BaseRectangularMesh, InnerProducts, DiffOperators
 ):
     """
-    CylMesh is a mesh class for cylindrical problems. It supports both
+    CylindricalMesh is a mesh class for cylindrical problems. It supports both
     cylindrically symmetric and 3D cylindrical meshes that include an azimuthal
     discretization.
 
@@ -32,7 +32,7 @@ class CylindricalMesh(
         cs, nc, npad = 20., 30, 8
         hx = utils.mesh_tensor([(cs, npad+10, -0.7), (cs, nc), (cs, npad, 1.3)])
         hz = utils.mesh_tensor([(cs, npad ,-1.3), (cs, nc), (cs, npad, 1.3)])
-        mesh = discretize.CylMesh([hx, 1, hz], x0=[0, 0, -hz.sum()/2])
+        mesh = discretize.CylindricalMesh([hx, 1, hz], x0=[0, 0, -hz.sum()/2])
         mesh.plot_grid()
 
     To create a 3D cylindrical mesh, we also include an azimuthal discretization
@@ -48,7 +48,7 @@ class CylindricalMesh(
         hx = utils.mesh_tensor([(cs, npad+10, -0.7), (cs, nc), (cs, npad, 1.3)])
         hy = 2 * np.pi/nc_theta * np.ones(nc_theta)
         hz = utils.mesh_tensor([(cs,npad, -1.3), (cs,nc), (cs, npad, 1.3)])
-        mesh = discretize.CylMesh([hx, hy, hz], x0=[0, 0, -hz.sum()/2])
+        mesh = discretize.CylindricalMesh([hx, hy, hz], x0=[0, 0, -hz.sum()/2])
         mesh.plot_grid()
 
     """
@@ -1136,7 +1136,7 @@ class CylindricalMesh(
     def cell_gradient_x(self):
         raise NotImplementedError('Cell Grad is not yet implemented.')
         # if getattr(self, '_cellGradx', None) is None:
-        #     G1 = super(CylMesh, self)._cellGradxStencil
+        #     G1 = super(CylindricalMesh, self)._cellGradxStencil
         #     V = self._deflationMatrix('F', withHanging='True', asOnes='True')*self.aveCC2F*self.cell_volumes
         #     A = self.face_areas
         #     L = (A/V)[:self._ntFx]
@@ -1541,7 +1541,7 @@ class CylindricalMesh(
         """
         if self.is_symmetric and locType in ['Ex', 'Ez', 'Fy']:
             raise Exception(
-                "Symmetric CylMesh does not support {0!s} interpolation, "
+                "Symmetric CylindricalMesh does not support {0!s} interpolation, "
                 "as this variable does not exist.".format(locType)
             )
 
@@ -1607,7 +1607,7 @@ class CylindricalMesh(
         if not self.is_symmetric:
             raise AssertionError(
                 "Currently we have not taken into account other projections "
-                "for more complicated CylMeshes"
+                "for more complicated CylindricalMeshes"
             )
 
         if locTypeTo is None:

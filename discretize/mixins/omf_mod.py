@@ -115,7 +115,7 @@ class InterfaceOMF(object):
             # TODO: 'tree' : InterfaceOMF._tree_mesh_to_omf,
             'tensor' : InterfaceOMF._tensor_mesh_to_omf,
             # TODO: 'curv' : InterfaceOMF._curvilinear_mesh_to_omf,
-            # TODO: 'CylMesh' : InterfaceOMF._cyl_mesh_to_omf,
+            # TODO: 'CylindricalMesh' : InterfaceOMF._cyl_mesh_to_omf,
             }
         key = mesh._meshType.lower()
         try:

@@ -789,8 +789,8 @@ def active_from_xyz(mesh, xyz, grid_reference='CC', method='linear'):
     Parameters
     ----------
 
-    mesh : discretize.TensorMesh or discretize.TreeMesh or discretize.CylMesh
-        Mesh object, (if CylMesh: mesh must be symmetric).
+    mesh : discretize.TensorMesh or discretize.TreeMesh or discretize.CylindricalMesh
+        Mesh object, (if CylindricalMesh: mesh must be symmetric).
     xyz : numpy.ndarray
         Points coordinates shape (*, mesh.dim).
     grid_reference : {'CC', 'N'}
@@ -838,7 +838,7 @@ def active_from_xyz(mesh, xyz, grid_reference='CC', method='linear'):
     """
     try:
         if not mesh.is_symmetric:
-            raise NotImplementedError('Unsymmetric CylMesh is not yet supported')
+            raise NotImplementedError('Unsymmetric CylindricalMesh is not yet supported')
     except AttributeError:
         pass
 

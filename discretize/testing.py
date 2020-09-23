@@ -3,7 +3,7 @@ import numpy as np
 import scipy.sparse as sp
 
 from .utils import mkvc, exampleLrmGrid, requires
-from . import TensorMesh, CurvilinearMesh, CylMesh
+from . import TensorMesh, CurvilinearMesh, CylindricalMesh
 from .utils.code_utils import deprecate_method, deprecate_function, deprecate_property
 
 from . import TreeMesh as Tree
@@ -65,7 +65,7 @@ def setup_mesh(mesh_type, nC, nDim):
         mesh = TensorMesh(h[:nDim])
         max_h = max([np.max(hi) for hi in mesh.h])
 
-    elif 'CylMesh' in mesh_type:
+    elif 'CylindricalMesh' in mesh_type:
         if 'uniform' in mesh_type:
             h = [nC, nC, nC]
         elif 'random' in mesh_type:
@@ -78,10 +78,10 @@ def setup_mesh(mesh_type, nC, nDim):
             raise Exception('Unexpected mesh_type')
 
         if nDim == 2:
-            mesh = CylMesh([h[0], 1, h[2]])
+            mesh = CylindricalMesh([h[0], 1, h[2]])
             max_h = max([np.max(hi) for hi in [mesh.h[0], mesh.h[2]]])
         elif nDim == 3:
-            mesh = CylMesh(h)
+            mesh = CylindricalMesh(h)
             max_h = max([np.max(hi) for hi in mesh.h])
 
     elif 'Curv' in mesh_type:
@@ -201,7 +201,7 @@ class OrderTest(unittest.TestCase):
     mesh_dimension = 3
 
     def setup_mesh(self, nC):
-        mesh, max_h = setupMesh(self._mesh_type, nC, self.meshDimension)
+        mesh, max_h = setupMesh(self._mesh_type, nC, self.mesh_dimension)
         self.M = mesh
         return max_h
 
@@ -223,24 +223,26 @@ class OrderTest(unittest.TestCase):
             self.tolerance = np.ones(len(self.mesh_types))*self.tolerance
 
         # if we just provide one expected order, repeat it for each mesh type
-        if type(self.expectedOrders) == float or type(self.expectedOrders) == int:
-            self.expectedOrders = [self.expectedOrders for i in self.mesh_types]
-        if isinstance(self.expectedOrders, np.ndarray):
-            self.expectedOrders = list(self.expectedOrders)
-        assert type(self.expectedOrders) == list, 'expectedOrders must be a list'
-        assert len(self.expectedOrders) == len(self.mesh_types), 'expectedOrders must have the same length as the mesh_types'
+        if type(self.expected_orders) == float or type(self.expected_orders) == int:
+            self.expected_orders = [self.expected_orders for i in self.mesh_types]
+        try:
+            self.expected_orders = list(self.expected_orders)
+        except TypeError:
+            raise TypeError("expected_orders must be array like")
+        if len(self.expected_orders) != len(self.mesh_types):
+            raise ValueError('expectedOrders must have the same length as the mesh_types')
 
         for ii_mesh_type, mesh_type in enumerate(self.mesh_types):
             self._mesh_type = mesh_type
             self._tolerance = self.tolerance[ii_mesh_type]
-            self._expectedOrder = self.expectedOrders[ii_mesh_type]
+            self._expectedOrder = self.expected_orders[ii_mesh_type]
 
             order = []
             err_old = 0.
             max_h_old = 0.
-            for ii, nc in enumerate(self.meshSizes):
-                max_h = self.setupMesh(nc)
-                err = self.getError()
+            for ii, nc in enumerate(self.mesh_sizes):
+                max_h = self.setup_mesh(nc)
+                err = self.get_error()
                 if ii == 0:
                     print('')
                     print(self._mesh_type + ':  ' + self.name)
@@ -261,7 +263,7 @@ class OrderTest(unittest.TestCase):
                 print('Failed to pass test on ' + self._mesh_type + '.')
                 print(sadness[np.random.randint(len(sadness))])
             print('')
-            self.assertTrue(passTest)
+            self.assertGreater(np.mean(np.array(order)), self._tolerance*self._expectedOrder)
 
     expectedOrders = deprecate_property("expected_orders", "expectedOrders", removal_version="1.0.0")
     meshSizes = deprecate_property("mesh_sizes", "meshSizes", removal_version="1.0.0")
@@ -270,6 +272,7 @@ class OrderTest(unittest.TestCase):
     setupMesh = deprecate_method("setup_mesh", "setupMesh", removal_version="1.0.0")
     getError = deprecate_method("get_error", "getError", removal_version="1.0.0")
     orderTest = deprecate_method("order_test", "orderTest", removal_version="1.0.0")
+    _meshType = deprecate_property("_mesh_type", "_meshType", removal_version="1.0.0")
 
 
 def rosenbrock(x, return_g=True, return_H=True):

@@ -101,7 +101,7 @@ class InterfaceVTK(object):
     methods are available to any mesh object!
 
     ``CurvilinearMesh``, ``TreeMesh``, and ``TensorMesh`` are all currently
-    implemented. The ``CylMesh`` is not implemeted and will raise and excpetion.
+    implemented. The ``CylindricalMesh`` is not implemeted and will raise and excpetion.
     The following is an example of how to use the VTK interface to construct
     VTK data objects or write VTK files.
 
@@ -333,7 +333,7 @@ class InterfaceVTK(object):
         # # Points
         # ptsMat = cyl2cart(mesh.gridN)
         # return InterfaceVTK.__create_structured_grid(ptsMat, mesh.shape_cells, models=models)
-        raise NotImplementedError('`CylMesh`s are not currently supported for VTK conversion.')
+        raise NotImplementedError('`CylindricalMesh`s are not currently supported for VTK conversion.')
 
 
     def to_vtk(mesh, models=None):
@@ -352,7 +352,7 @@ class InterfaceVTK(object):
             'tree' : InterfaceVTK.__tree_mesh_to_vtk,
             'tensor' : InterfaceVTK.__tensor_mesh_to_vtk,
             'curv' : InterfaceVTK.__curvilinear_mesh_to_vtk,
-            #TODO: 'CylMesh' : InterfaceVTK.__cyl_mesh_to_vtk,
+            #TODO: 'CylindricalMesh' : InterfaceVTK.__cyl_mesh_to_vtk,
             }
         key = mesh._meshType.lower()
         try:
