@@ -42,6 +42,14 @@ class InterfaceMPL(object):
             If lines=True, the color of the lines, defaults to first color.
         linewidth : float, optional
             If lines=True, the linewidth for the lines.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            Axes handle for the plot
+
+        Other Parameters
+        ----------------
         edges_x, edges_y, edges_z, faces_x, faces_y, faces_z : bool, optional
             When plotting a ``TreeMesh``, these are also options to plot the
             individual component items.
@@ -50,11 +58,6 @@ class InterfaceMPL(object):
             cell centers in order.
         slice : {'both', 'theta', 'z'}
             When plotting a ``CylindricalMesh``, which dimension to slice over.
-
-        Returns
-        -------
-        matplotlib.axes.Axes
-            Axes handle for the plot
 
         Notes
         -----
