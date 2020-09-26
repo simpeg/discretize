@@ -15,7 +15,8 @@ from .mesh_utils import (
 from .curvilinear_utils import volume_tetrahedron, face_info, index_cube
 from .interpolation_utils import interpolation_matrix, volume_average
 from .coordinate_utils import (
-    rotate_points_from_normals, rotation_matrix_from_normals, cyl2cart, cart2cyl
+    rotate_points_from_normals, rotation_matrix_from_normals, cyl2cart, cart2cyl,
+    cylindrical_to_cartesian, cartesian_to_cylindrical
     # rotate_vec_cyl2cart
 )
 

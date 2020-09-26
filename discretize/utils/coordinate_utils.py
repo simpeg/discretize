@@ -3,7 +3,7 @@ from .matrix_utils import mkvc
 from .code_utils import deprecate_function
 
 
-def cyl2cart(grid, vec=None):
+def cylindrical_to_cartesian(grid, vec=None):
     """
     Take a grid defined in cylindrical coordinates :math:`(r, \theta, z)` and
     transform it to cartesian coordinates.
@@ -31,7 +31,12 @@ def cyl2cart(grid, vec=None):
     return np.vstack(newvec).T
 
 
-def cart2cyl(grid, vec=None):
+def cyl2cart(grid, vec=None):
+    """An alias for cylindrical_to_cartesian"""
+    return cylindrical_to_cartesian(grid, vec)
+
+
+def cartesian_to_cylindrical(grid, vec=None):
     """
     Take a grid defined in cartesian coordinates and transform it to cyl
     coordinates
@@ -49,6 +54,11 @@ def cart2cyl(grid, vec=None):
         mkvc(-np.sin(theta)*vec[:, 0] + np.cos(theta)*vec[:, 1], 2),
         mkvc(vec[:, 2], 2)
     ])
+
+
+def cart2cyl(grid, vec=None):
+    """An alias for cartesian_to_cylindrical"""
+    return cylindrical_to_cartesian(grid, vec)
 
 
 def rotation_matrix_from_normals(v0, v1, tol=1e-20):
