@@ -45,7 +45,7 @@ class BaseTensorMesh(BaseMesh):
     _unitDimensions = [1, 1, 1]
 
     # properties
-    h = properties.List(
+    h = properties.tuple(
         "h is a list containing the cell widths of the tensor mesh in each "
         "dimension.",
         properties.Array(
@@ -53,7 +53,10 @@ class BaseTensorMesh(BaseMesh):
             dtype=float,
             shape=("*",),
         ),
-        max_length=3
+        min_length=1,
+        max_length=3,
+        coerce=True,
+        required=True,
     )
 
     def __init__(self, h=None, x0=None, **kwargs):
@@ -272,7 +275,7 @@ class BaseTensorMesh(BaseMesh):
 
     # --------------- Methods ---------------------
 
-    def is_inside(self, pts, locType='N'):
+    def is_inside(self, pts, loc_type='N', **kwargs):
         """
         Determines if a set of points are inside a mesh.
 
@@ -280,11 +283,18 @@ class BaseTensorMesh(BaseMesh):
         :rtype: numpy.ndarray
         :return: inside, numpy array of booleans
         """
+        if 'locType' in kwargs:
+            warnings.warn(
+                'The locType keyword argument has been deprecated, please use loc_type. '
+                'This will be removed in discretize 1.0.0',
+                FutureWarning
+            )
+            loc_type = kwargs['locType']
         pts = as_array_n_by_dim(pts, self.dim)
 
-        tensors = self.get_tensor(locType)
+        tensors = self.get_tensor(loc_type)
 
-        if locType == 'N' and self._meshType == 'CYL':
+        if loc_type == 'N' and self._meshType == 'CYL':
             # NOTE: for a CYL mesh we add a node to check if we are inside in
             # the radial direction!
             tensors[0] = np.r_[0., tensors[0]]
@@ -300,7 +310,7 @@ class BaseTensorMesh(BaseMesh):
             )
         return inside
 
-    def _getInterpolationMat(self, loc, locType='CC', zerosOutside=False):
+    def _getInterpolationMat(self, loc, loc_type='CC', zeros_outside=False):
         """ Produces interpolation matrix
 
         Parameters
@@ -308,10 +318,10 @@ class BaseTensorMesh(BaseMesh):
         loc : numpy.ndarray
             Location of points to interpolate to
 
-        locType: stc
+        loc_type: stc
             What to interpolate
 
-            locType can be::
+            loc_type can be::
 
                 'Ex'    -> x-component of field defined on edges
                 'Ey'    -> y-component of field defined on edges
@@ -334,7 +344,7 @@ class BaseTensorMesh(BaseMesh):
 
         loc = as_array_n_by_dim(loc, self.dim)
 
-        if not zerosOutside:
+        if not zeros_outside:
             assert np.all(self.is_inside(loc)), "Points outside of mesh"
         else:
             indZeros = np.logical_not(self.is_inside(loc))
@@ -342,41 +352,41 @@ class BaseTensorMesh(BaseMesh):
                 v.mean() for v in self.get_tensor('CC')
             ])
 
-        if locType in ['Fx', 'Fy', 'Fz', 'Ex', 'Ey', 'Ez']:
-            ind = {'x': 0, 'y': 1, 'z': 2}[locType[1]]
+        if loc_type in ['Fx', 'Fy', 'Fz', 'Ex', 'Ey', 'Ez']:
+            ind = {'x': 0, 'y': 1, 'z': 2}[loc_type[1]]
             assert self.dim >= ind, 'mesh is not high enough dimension.'
-            nF_nE = self.vnF if 'F' in locType else self.vnE
+            nF_nE = self.vnF if 'F' in loc_type else self.vnE
             components = [spzeros(loc.shape[0], n) for n in nF_nE]
-            components[ind] = interpolation_matrix(loc, *self.get_tensor(locType))
+            components[ind] = interpolation_matrix(loc, *self.get_tensor(loc_type))
             # remove any zero blocks (hstack complains)
             components = [comp for comp in components if comp.shape[1] > 0]
             Q = sp.hstack(components)
 
-        elif locType in ['CC', 'N']:
-            Q = interpolation_matrix(loc, *self.get_tensor(locType))
+        elif loc_type in ['CC', 'N']:
+            Q = interpolation_matrix(loc, *self.get_tensor(loc_type))
 
-        elif locType in ['CCVx', 'CCVy', 'CCVz']:
+        elif loc_type in ['CCVx', 'CCVy', 'CCVz']:
             Q = interpolation_matrix(loc, *self.get_tensor('CC'))
             Z = spzeros(loc.shape[0], self.nC)
-            if locType == 'CCVx':
+            if loc_type == 'CCVx':
                 Q = sp.hstack([Q, Z, Z])
-            elif locType == 'CCVy':
+            elif loc_type == 'CCVy':
                 Q = sp.hstack([Z, Q, Z])
-            elif locType == 'CCVz':
+            elif loc_type == 'CCVz':
                 Q = sp.hstack([Z, Z, Q])
 
         else:
             raise NotImplementedError(
-                'getInterpolationMat: locType==' + locType +
+                'getInterpolationMat: loc_type==' + loc_type +
                 ' and mesh.dim==' + str(self.dim)
             )
 
-        if zerosOutside:
+        if zeros_outside:
             Q[indZeros, :] = 0
 
         return Q.tocsr()
 
-    def get_interpolation_matrix(self, loc, locType='CC', zerosOutside=False):
+    def get_interpolation_matrix(self, loc, loc_type='CC', zeros_outside=False, **kwargs):
         """ Produces linear interpolation matrix
 
         Parameters
@@ -384,10 +394,10 @@ class BaseTensorMesh(BaseMesh):
         loc : numpy.ndarray
             Location of points to interpolate to
 
-        locType : str
+        loc_type : str
             What to interpolate (see below)
 
-            locType can be::
+            loc_type can be::
 
                 'Ex'    -> x-component of field defined on edges
                 'Ey'    -> y-component of field defined on edges
@@ -408,10 +418,24 @@ class BaseTensorMesh(BaseMesh):
             M, the interpolation matrix
 
         """
-        return self._getInterpolationMat(loc, locType, zerosOutside)
+        if 'locType' in kwargs:
+            warnings.warn(
+                'The locType keyword argument has been deprecated, please use loc_type. '
+                'This will be removed in discretize 1.0.0',
+                FutureWarning
+            )
+            loc_type = kwargs['locType']
+        if 'zerosOutside' in kwargs:
+            warnings.warn(
+                'The zerosOutside keyword argument has been deprecated, please use loc_type. '
+                'This will be removed in discretize 1.0.0',
+                FutureWarning
+            )
+            zeros_outside = kwargs['zerosOutside']
+        return self._getInterpolationMat(loc, loc_type, zeros_outside)
 
     def _fastInnerProduct(
-        self, projType, prop=None, invProp=False, invMat=False
+        self, proj_type, prop=None, inv_prop=False, inv_mat=False
     ):
         """ Fast version of getFaceInnerProduct.
             This does not handle the case of a full tensor prop.
@@ -422,16 +446,16 @@ class BaseTensorMesh(BaseMesh):
         prop : numpy.array
             material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
 
-        projType : str
+        proj_type : str
             'E' or 'F'
 
         returnP : bool
             returns the projection matrices
 
-        invProp : bool
+        inv_prop : bool
             inverts the material property
 
-        invMat : bool
+        inv_mat : bool
             inverts the matrix
 
         Returns
@@ -440,14 +464,14 @@ class BaseTensorMesh(BaseMesh):
             M, the inner product matrix (nF, nF)
 
         """
-        assert projType in ['F', 'E'], (
-            "projType must be 'F' for faces or 'E' for edges"
+        assert proj_type in ['F', 'E'], (
+            "proj_type must be 'F' for faces or 'E' for edges"
         )
 
         if prop is None:
             prop = np.ones(self.nC)
 
-        if invProp:
+        if inv_prop:
             prop = 1./prop
 
         if is_scalar(prop):
@@ -457,26 +481,26 @@ class BaseTensorMesh(BaseMesh):
         # meshes, but for cyl, where we use symmetry, it is 1 for edge
         # variables and 2 for face variables)
         if self._meshType == 'CYL':
-            shape = getattr(self, 'vn'+projType)
+            shape = getattr(self, 'vn'+proj_type)
             n_elements = sum([1 if x != 0 else 0 for x in shape])
         else:
             n_elements = self.dim
 
         # Isotropic? or anisotropic?
         if prop.size == self.nC:
-            Av = getattr(self, 'ave'+projType+'2CC')
+            Av = getattr(self, 'ave'+proj_type+'2CC')
             Vprop = self.cell_volumes * mkvc(prop)
             M = n_elements * sdiag(Av.T * Vprop)
 
         elif prop.size == self.nC*self.dim:
-            Av = getattr(self, 'ave'+projType+'2CCV')
+            Av = getattr(self, 'ave'+proj_type+'2CCV')
 
             # if cyl, then only certain components are relevant due to symmetry
             # for faces, x, z matters, for edges, y (which is theta) matters
             if self._meshType == 'CYL':
-                if projType == 'E':
+                if proj_type == 'E':
                     prop = prop[:, 1]  # this is the action of a projection mat
-                elif projType == 'F':
+                elif proj_type == 'F':
                     prop = prop[:, [0, 2]]
 
             V = sp.kron(sp.identity(n_elements), sdiag(self.cell_volumes))
@@ -484,28 +508,28 @@ class BaseTensorMesh(BaseMesh):
         else:
             return None
 
-        if invMat:
+        if inv_mat:
             return sdinv(M)
         else:
             return M
 
-    def _fastInnerProductDeriv(self, projType, prop, invProp=False,
-                               invMat=False):
+    def _fastInnerProductDeriv(self, proj_type, prop, inv_prop=False,
+                               inv_mat=False):
         """
 
         Parameters
         ----------
 
-        projType : str
+        proj_type : str
             'E' or 'F'
 
         tensorType : TensorType
             type of the tensor
 
-        invProp : bool
+        inv_prop : bool
             inverts the material property
 
-        invMat : bool
+        inv_mat : bool
             inverts the matrix
 
 
@@ -515,89 +539,89 @@ class BaseTensorMesh(BaseMesh):
             dMdmu, the derivative of the inner product matrix
 
         """
-        assert projType in ['F', 'E'], ("projType must be 'F' for faces or 'E'"
+        assert proj_type in ['F', 'E'], ("proj_type must be 'F' for faces or 'E'"
                                         " for edges")
 
         tensorType = TensorType(self, prop)
 
         dMdprop = None
 
-        if invMat or invProp:
-            MI = self._fastInnerProduct(projType, prop, invProp=invProp,
-                                        invMat=invMat)
+        if inv_mat or inv_prop:
+            MI = self._fastInnerProduct(proj_type, prop, inv_prop=inv_prop,
+                                        inv_mat=inv_mat)
 
         # number of elements we are averaging (equals dim for regular
         # meshes, but for cyl, where we use symmetry, it is 1 for edge
         # variables and 2 for face variables)
         if self._meshType == 'CYL':
-            shape = getattr(self, 'vn'+projType)
+            shape = getattr(self, 'vn'+proj_type)
             n_elements = sum([1 if x != 0 else 0 for x in shape])
         else:
             n_elements = self.dim
 
         if tensorType == 0:  # isotropic, constant
-            Av = getattr(self, 'ave'+projType+'2CC')
+            Av = getattr(self, 'ave'+proj_type+'2CC')
             V = sdiag(self.cell_volumes)
             ones = sp.csr_matrix(
                 (np.ones(self.nC), (range(self.nC), np.zeros(self.nC))),
                 shape=(self.nC, 1)
             )
-            if not invMat and not invProp:
+            if not inv_mat and not inv_prop:
                 dMdprop = n_elements * Av.T * V * ones
-            elif invMat and invProp:
+            elif inv_mat and inv_prop:
                 dMdprop =  n_elements * (
                     sdiag(MI.diagonal()**2) * Av.T * V * ones *
                     sdiag(1./prop**2)
                 )
-            elif invProp:
+            elif inv_prop:
                 dMdprop = n_elements * Av.T * V * sdiag(- 1./prop**2)
-            elif invMat:
+            elif inv_mat:
                 dMdprop = n_elements * (
                     sdiag(- MI.diagonal()**2) * Av.T * V
                 )
 
         elif tensorType == 1:  # isotropic, variable in space
-            Av = getattr(self, 'ave'+projType+'2CC')
+            Av = getattr(self, 'ave'+proj_type+'2CC')
             V = sdiag(self.cell_volumes)
-            if not invMat and not invProp:
+            if not inv_mat and not inv_prop:
                 dMdprop = n_elements * Av.T * V
-            elif invMat and invProp:
+            elif inv_mat and inv_prop:
                 dMdprop =  n_elements * (
                     sdiag(MI.diagonal()**2) * Av.T * V *
                     sdiag(1./prop**2)
                 )
-            elif invProp:
+            elif inv_prop:
                 dMdprop = n_elements * Av.T * V * sdiag(-1./prop**2)
-            elif invMat:
+            elif inv_mat:
                 dMdprop = n_elements * (
                     sdiag(- MI.diagonal()**2) * Av.T * V
                 )
 
         elif tensorType == 2: # anisotropic
-            Av = getattr(self, 'ave'+projType+'2CCV')
+            Av = getattr(self, 'ave'+proj_type+'2CCV')
             V = sp.kron(sp.identity(self.dim), sdiag(self.cell_volumes))
 
             if self._meshType == 'CYL':
                 Zero = sp.csr_matrix((self.nC, self.nC))
                 Eye = sp.eye(self.nC)
-                if projType == 'E':
+                if proj_type == 'E':
                     P = sp.hstack([Zero, Eye, Zero])
                     # print(P.todense())
-                elif projType == 'F':
+                elif proj_type == 'F':
                     P = sp.vstack([sp.hstack([Eye, Zero, Zero]),
                                    sp.hstack([Zero, Zero, Eye])])
                     # print(P.todense())
             else:
                 P = sp.eye(self.nC*self.dim)
 
-            if not invMat and not invProp:
+            if not inv_mat and not inv_prop:
                 dMdprop = Av.T * P * V
-            elif invMat and invProp:
+            elif inv_mat and inv_prop:
                 dMdprop = (sdiag(MI.diagonal()**2) * Av.T * P * V *
                            sdiag(1./prop**2))
-            elif invProp:
+            elif inv_prop:
                 dMdprop = Av.T * P * V * sdiag(-1./prop**2)
-            elif invMat:
+            elif inv_mat:
                 dMdprop = sdiag(- MI.diagonal()**2) * Av.T * P * V
 
         if dMdprop is not None:

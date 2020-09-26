@@ -88,6 +88,7 @@ cdef class TreeCell:
             edges[4].index, edges[5].index, edges[6].index, edges[7].index,
             edges[8].index, edges[9].index, edges[10].index, edges[11].index,
         ]
+
     @property
     def faces(self):
         """indexes of this cell's faces
@@ -212,6 +213,7 @@ cdef class TreeCell:
             return tuple((self._cell.location_ind[0], self._cell.location_ind[1]))
         return tuple((self._cell.location_ind[0], self._cell.location_ind[1],
                       self._cell.location_ind[2]))
+
     @property
     def _level(self):
         return self._cell.level

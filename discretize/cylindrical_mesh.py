@@ -11,6 +11,7 @@ from .utils import (
 from .base import BaseTensorMesh, BaseRectangularMesh
 from .operators import DiffOperators, InnerProducts
 from .utils.code_utils import deprecate_class, deprecate_property, deprecate_method
+import warnings
 
 
 class CylindricalMesh(
@@ -1085,7 +1086,7 @@ class CylindricalMesh(
                 self._faceDivx = (
                     self._faceDivx *
                     self._deflationMatrix(
-                        'Fx', asOnes=True
+                        'Fx', as_ones=True
                     ).T
                 )
 
@@ -1103,7 +1104,7 @@ class CylindricalMesh(
             V = self.cell_volumes
             self._faceDivy = (
                 sdiag(1/V)*D2*sdiag(S) *
-                self._deflationMatrix('Fy', asOnes=True).T
+                self._deflationMatrix('Fy', as_ones=True).T
             )
         return self._faceDivy
 
@@ -1137,7 +1138,7 @@ class CylindricalMesh(
         raise NotImplementedError('Cell Grad is not yet implemented.')
         # if getattr(self, '_cellGradx', None) is None:
         #     G1 = super(CylindricalMesh, self)._cellGradxStencil
-        #     V = self._deflationMatrix('F', withHanging='True', asOnes='True')*self.aveCC2F*self.cell_volumes
+        #     V = self._deflationMatrix('F', withHanging='True', as_ones='True')*self.aveCC2F*self.cell_volumes
         #     A = self.face_areas
         #     L = (A/V)[:self._ntFx]
         #     # L = self.reshape(L, 'F', 'Fx', 'V')
@@ -1240,10 +1241,10 @@ class CylindricalMesh(
             else:
                 self._edgeCurl = (
                     sdiag(1/self.face_areas) *
-                    self._deflationMatrix('F', asOnes=False) *
+                    self._deflationMatrix('F', as_ones=False) *
                     self._edgeCurlStencil *
                     sdiag(self._edgeFull) *
-                    self._deflationMatrix('E', asOnes=True).T
+                    self._deflationMatrix('E', as_ones=True).T
                 )
 
         return self._edgeCurl
@@ -1264,7 +1265,7 @@ class CylindricalMesh(
             av(self.shape_cells[2]),
             av(self.shape_cells[1]),
             speye(self.shape_cells[0])
-        ) * self._deflationMatrix('Ex', asOnes=True).T
+        ) * self._deflationMatrix('Ex', as_ones=True).T
 
     @property
     def average_edge_y_to_cell(self):
@@ -1284,7 +1285,7 @@ class CylindricalMesh(
                 av(self.shape_cells[2]),
                 speye(self.shape_cells[1]),
                 av(self.shape_cells[0])
-            )*self._deflationMatrix('Ey', asOnes=True).T
+            )*self._deflationMatrix('Ey', as_ones=True).T
 
     @property
     def average_edge_z_to_cell(self):
@@ -1302,7 +1303,7 @@ class CylindricalMesh(
             speye(self.shape_cells[2]),
             av(self.shape_cells[1]),
             av(self.shape_cells[0])
-        ) * self._deflationMatrix('Ez', asOnes=True).T
+        ) * self._deflationMatrix('Ez', as_ones=True).T
 
     @property
     def average_edge_to_cell(self):
@@ -1374,7 +1375,7 @@ class CylindricalMesh(
         return kron3(
             speye(self.vnC[2]), av(self.vnC[1]),
             speye(self.vnC[0])
-        ) * self._deflationMatrix('Fy', asOnes=True).T
+        ) * self._deflationMatrix('Fy', as_ones=True).T
 
     @property
     def average_face_z_to_cell(self):
@@ -1443,7 +1444,7 @@ class CylindricalMesh(
     # Deflation Matrices
     ####################################################
 
-    def _deflationMatrix(self, location, asOnes=False):
+    def _deflationMatrix(self, location, as_ones=False):
         """
         construct the deflation matrix to remove hanging edges / faces / nodes
         from the operators
@@ -1460,14 +1461,14 @@ class CylindricalMesh(
         elif location in ['E', 'F']:
             if self.is_symmetric:
                 if location == 'E':
-                    return self._deflationMatrix('Ey', asOnes=asOnes)
+                    return self._deflationMatrix('Ey', as_ones=as_ones)
                 elif location == 'F':
                     return sp.block_diag([
-                        self._deflationMatrix(location+coord, asOnes=asOnes)
+                        self._deflationMatrix(location+coord, as_ones=as_ones)
                         for coord in ['x', 'z']
                     ])
             return sp.block_diag([
-                self._deflationMatrix(location+coord, asOnes=asOnes)
+                self._deflationMatrix(location+coord, as_ones=as_ones)
                 for coord in ['x', 'y', 'z']
             ])
 
@@ -1481,7 +1482,7 @@ class CylindricalMesh(
         values = list(hang.values())
         entries = np.ones(len(values))
 
-        if not asOnes and len(hang) > 0:
+        if not as_ones and len(hang) > 0:
             repeats = set(values)
             repeat_locs = [
                 (np.r_[values] == repeat).nonzero()[0]
@@ -1501,7 +1502,7 @@ class CylindricalMesh(
 
         R = R[nothanging, :]
 
-        if not asOnes:
+        if not as_ones:
             R = sdiag(1./R.sum(1)) * R
 
         return R
@@ -1510,7 +1511,7 @@ class CylindricalMesh(
     # Interpolation
     ####################################################
 
-    def get_interpolation_matrix(self, loc, locType='CC', zerosOutside=False):
+    def get_interpolation_matrix(self, loc, loc_type='CC', zeros_outside=False, **kwargs):
         """ Produces interpolation matrix
 
         Parameters
@@ -1518,8 +1519,8 @@ class CylindricalMesh(
         loc : numpy.ndarray
             Location of points to interpolate to
 
-        locType : str
-            What to interpolate locType can be::
+        loc_type : str
+            What to interpolate loc_type can be::
 
             'Ex'    -> x-component of field defined on edges
             'Ey'    -> y-component of field defined on edges
@@ -1539,50 +1540,78 @@ class CylindricalMesh(
             M, the interpolation matrix
 
         """
-        if self.is_symmetric and locType in ['Ex', 'Ez', 'Fy']:
+        if 'locType' in kwargs:
+            warnings.warn(
+                'The locType keyword argument has been deprecated, please use loc_type. '
+                'This will be removed in discretize 1.0.0',
+                FutureWarning
+            )
+            loc_type = kwargs['locType']
+        if 'zerosOutside' in kwargs:
+            warnings.warn(
+                'The zerosOutside keyword argument has been deprecated, please use loc_type. '
+                'This will be removed in discretize 1.0.0',
+                FutureWarning
+            )
+            zeros_outside = kwargs['zerosOutside']
+
+        if self.is_symmetric and loc_type in ['Ex', 'Ez', 'Fy']:
             raise Exception(
                 "Symmetric CylindricalMesh does not support {0!s} interpolation, "
-                "as this variable does not exist.".format(locType)
+                "as this variable does not exist.".format(loc_type)
             )
 
-        if locType in ['CCVx', 'CCVy', 'CCVz']:
+        if loc_type in ['CCVx', 'CCVy', 'CCVz']:
             Q = interpolation_matrix(loc, *self.get_tensor('CC'))
             Z = spzeros(loc.shape[0], self.nC)
-            if locType == 'CCVx':
+            if loc_type == 'CCVx':
                 Q = sp.hstack([Q, Z])
-            elif locType == 'CCVy':
+            elif loc_type == 'CCVy':
                 Q = sp.hstack([Q])
-            elif locType == 'CCVz':
+            elif loc_type == 'CCVz':
                 Q = sp.hstack([Z, Q])
 
-            if zerosOutside:
+            if zeros_outside:
+                indZeros = np.logical_not(self.is_inside(loc))
+                loc[indZeros, :] = np.array([
+                    v.mean() for v in self.get_tensor('CC')
+                ])
                 Q[indZeros, :] = 0
 
             return Q.tocsr()
 
-        return self._getInterpolationMat(loc, locType, zerosOutside)
+        return self._getInterpolationMat(loc, loc_type, zeros_outside)
 
-    def cartesian_grid(self, locType='CC', theta_shift=None):
+    def cartesian_grid(self, loc_type='CC', theta_shift=None, **kwargs):
         """
         Takes a grid location ('CC', 'N', 'Ex', 'Ey', 'Ez', 'Fx', 'Fy', 'Fz')
         and returns that grid in cartesian coordinates
 
         Parameters
         ----------
-        locType : str
+        loc_type : {'CC', 'N', 'Ex', 'Ey', 'Ez', 'Fx', 'Fy', 'Fz'}
             grid location
+        theta_shift : float, optional
+            shift for theta
 
         Returns
         -------
         numpy.ndarray
             cartesian coordinates for the cylindrical grid
         """
-        grid = getattr(self, 'grid{}'.format(locType)).copy()
+        if 'locType' in kwargs:
+            warnings.warn(
+                'The locType keyword argument has been deprecated, please use loc_type. '
+                'This will be removed in discretize 1.0.0',
+                FutureWarning
+            )
+            loc_type = kwargs['locType']
+        grid = getattr(self, 'grid{}'.format(loc_type)).copy()
         if theta_shift is not None:
             grid[:, 1] = grid[:, 1] - theta_shift
         return cyl2cart(grid)  # TODO: account for cartesian origin
 
-    def get_interpolation_matrix_cartesian_mesh(self, Mrect, locType='CC', locTypeTo=None):
+    def get_interpolation_matrix_cartesian_mesh(self, Mrect, loc_type='CC', loc_type_to=None, **kwargs):
         """
         Takes a cartesian mesh and returns a projection to translate onto
         the cartesian grid.
@@ -1591,18 +1620,30 @@ class CylindricalMesh(
         ----------
         Mrect : discretize.base.BaseMesh
             the mesh to interpolate on to
-
-        locType : str
-            grid location ('CC', 'N', 'Ex', 'Ey', 'Ez', 'Fx', 'Fy', 'Fz')
-
-        locTypeTo : str
-            grid location to interpolate to. If None, the same grid type as `locType` will be assumed
+        loc_type : {'CC', 'N', 'Ex', 'Ey', 'Ez', 'Fx', 'Fy', 'Fz'}
+            grid location
+        loc_type_to : {'CC', 'N', 'Ex', 'Ey', 'Ez', 'Fx', 'Fy', 'Fz'}, or None, optional
+            grid location to interpolate to. If None, the same grid type as `loc_type` will be assumed
 
         Returns
         -------
         scipy.sparse.csr_matrix
             M, the interpolation matrix
         """
+        if 'locType' in kwargs:
+            warnings.warn(
+                'The locType keyword argument has been deprecated, please use loc_type. '
+                'This will be removed in discretize 1.0.0',
+                FutureWarning
+            )
+            loc_type = kwargs['locType']
+        if 'locTypeTo' in kwargs:
+            warnings.warn(
+                'The locTypeTo keyword argument has been deprecated, please use loc_type_to. '
+                'This will be removed in discretize 1.0.0',
+                FutureWarning
+            )
+            loc_type_to = kwargs['locTypeTo']
 
         if not self.is_symmetric:
             raise AssertionError(
@@ -1610,32 +1651,32 @@ class CylindricalMesh(
                 "for more complicated CylindricalMeshes"
             )
 
-        if locTypeTo is None:
-            locTypeTo = locType
+        if loc_type_to is None:
+            loc_type_to = loc_type
 
-        if locType == 'F':
+        if loc_type == 'F':
             # do this three times for each component
             X = self.get_interpolation_matrix_cartesian_mesh(
-                Mrect, locType='Fx', locTypeTo=locTypeTo+'x'
+                Mrect, loc_type='Fx', loc_type_to=loc_type_to+'x'
             )
             Y = self.get_interpolation_matrix_cartesian_mesh(
-                Mrect, locType='Fy', locTypeTo=locTypeTo+'y'
+                Mrect, loc_type='Fy', loc_type_to=loc_type_to+'y'
             )
             Z = self.get_interpolation_matrix_cartesian_mesh(
-                Mrect, locType='Fz', locTypeTo=locTypeTo+'z'
+                Mrect, loc_type='Fz', loc_type_to=loc_type_to+'z'
             )
             return sp.vstack((X, Y, Z))
-        if locType == 'E':
+        if loc_type == 'E':
             X = self.get_interpolation_matrix_cartesian_mesh(
-                Mrect, locType='Ex', locTypeTo=locTypeTo+'x'
+                Mrect, loc_type='Ex', loc_type_to=loc_type_to+'x'
             )
             Y = self.get_interpolation_matrix_cartesian_mesh(
-                Mrect, locType='Ey', locTypeTo=locTypeTo+'y'
+                Mrect, loc_type='Ey', loc_type_to=loc_type_to+'y'
             )
-            Z = spzeros(getattr(Mrect, 'n' + locTypeTo + 'z'), self.nE)
+            Z = spzeros(getattr(Mrect, 'n' + loc_type_to + 'z'), self.nE)
             return sp.vstack((X, Y, Z))
 
-        grid = getattr(Mrect, 'grid' + locTypeTo)
+        grid = getattr(Mrect, 'grid' + loc_type_to)
         # This is unit circle stuff, 0 to 2*pi, starting at x-axis, rotating
         # counter clockwise in an x-y slice
         theta = - np.arctan2(
@@ -1646,7 +1687,7 @@ class CylindricalMesh(
         r = ((grid[:, 0] - self.cartesian_origin[0])**2 + (grid[:, 1] -
              self.cartesian_origin[1])**2)**0.5
 
-        if locType in ['CC', 'N', 'Fz', 'Ez']:
+        if loc_type in ['CC', 'N', 'Fz', 'Ez']:
             G, proj = np.c_[r, theta, grid[:, 2]], np.ones(r.size)
         else:
             dotMe = {
@@ -1656,20 +1697,20 @@ class CylindricalMesh(
                 'Ex': Mrect.edge_tangents[:Mrect.nEx, :],
                 'Ey': Mrect.edge_tangents[Mrect.nEx:(Mrect.nEx+Mrect.nEy), :],
                 'Ez': Mrect.edge_tangents[-Mrect.nEz:, :],
-            }[locTypeTo]
-            if 'F' in locType:
+            }[loc_type_to]
+            if 'F' in loc_type:
                 normals = np.c_[
                     np.cos(theta), np.sin(theta), np.zeros(theta.size)
                 ]
                 proj = (normals * dotMe).sum(axis=1)
-            if 'E' in locType:
+            if 'E' in loc_type:
                 tangents = np.c_[
                     -np.sin(theta), np.cos(theta), np.zeros(theta.size)
                 ]
                 proj = (tangents * dotMe).sum(axis=1)
             G = np.c_[r, theta, grid[:, 2]]
 
-        interpType = locType
+        interpType = loc_type
         if interpType == 'Fy':
             interpType = 'Fx'
         elif interpType == 'Ex':

@@ -547,7 +547,6 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         """
         return np.array([self.axis_u, self.axis_v, self.axis_w])
 
-
     reference_system = properties.String(
         'The type of coordinate reference frame. Can take on the values ' +
         'cartesian, cylindrical, or spherical. Abbreviations of these are allowed.',
@@ -572,18 +571,6 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         if self.reference_system not in choices:
             raise ValueError('Coordinate system ({}) unknown.'.format(self.reference_system))
         return True
-
-    # # SHORTHAND
-    # nC = shorthand_property(n_cells, 'nC')
-    # nN = shorthand_property(n_nodes, 'nN')
-    # nEx = shorthand_property(n_edges_x, 'nEx')
-    # nEy = shorthand_property(n_edges_y, 'nEy')
-    # nEz = shorthand_property(n_edges_z, 'nEz')
-    # nE = shorthand_property(n_edges, 'nE')
-    # nFx = shorthand_property(n_faces_x, 'nFx')
-    # nFy = shorthand_property(n_faces_y, 'nFy')
-    # nFz = shorthand_property(n_faces_z, 'nFz')
-    # nF = shorthand_property(n_faces, 'nF')
 
     # DEPRECATED
     normals = deprecate_property("face_normals", 'normals', removal_version='1.0.0')
@@ -789,7 +776,7 @@ class BaseRectangularMesh(BaseMesh):
             return
         return int(np.prod(self.shape_faces_z))
 
-    def reshape(self, x, xType='CC', outType='CC', format='V'):
+    def reshape(self, x, x_type='CC', out_type='CC', format='V', **kwargs):
         """A quick reshape command that will do the best it
         can at giving you what you want.
 
@@ -830,6 +817,20 @@ class BaseRectangularMesh(BaseMesh):
             # Separates each component of the edgeVector into 3 vectors
             eX, eY, eZ = r(edgeVector, 'E', 'E', 'V')
         """
+        if 'xType' in kwargs:
+            warnings.warn(
+                'The xType keyword argument has been deprecated, please use x_type. '
+                'This will be removed in discretize 1.0.0',
+                FutureWarning
+            )
+            x_type = kwargs['xType']
+        if 'outType' in kwargs:
+            warnings.warn(
+                'The outType keyword argument has been deprecated, please use out_type. '
+                'This will be removed in discretize 1.0.0',
+                FutureWarning
+            )
+            out_type = kwargs['outType']
 
         allowed_xType = [
             'CC', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez'
@@ -838,23 +839,23 @@ class BaseRectangularMesh(BaseMesh):
             isinstance(x, list) or isinstance(x, np.ndarray)
         ):
             raise Exception("x must be either a list or a ndarray")
-        if xType not in allowed_xType:
-            raise Exception (
-                "xType must be either "
+        if x_type not in allowed_xType:
+            raise Exception(
+                "x_type must be either "
                 "'CC', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', or 'Ez'"
             )
-        if outType not in allowed_xType:
+        if out_type not in allowed_xType:
             raise Exception(
-                "outType must be either "
+                "out_type must be either "
                 "'CC', 'N', 'F', Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', or 'Ez'"
             )
         if format not in ['M', 'V']:
             raise Exception("format must be either 'M' or 'V'")
-        if outType[:len(xType)] != xType:
+        if out_type[:len(x_type)] != x_type:
             raise Exception(
                 "You cannot change types when reshaping."
             )
-        if xType not in outType:
+        if x_type not in out_type:
             raise Exception("You cannot change type of components.")
 
         if isinstance(x, list):
@@ -879,9 +880,9 @@ class BaseRectangularMesh(BaseMesh):
 
         x = x[:]  # make a copy.
         xTypeIsFExyz = (
-            len(xType) > 1 and
-            xType[0] in ['F', 'E'] and
-            xType[1] in ['x', 'y', 'z']
+            len(x_type) > 1 and
+            x_type[0] in ['F', 'E'] and
+            x_type[1] in ['x', 'y', 'z']
         )
 
         def outKernal(xx, nn):
@@ -893,31 +894,31 @@ class BaseRectangularMesh(BaseMesh):
 
         def switchKernal(xx):
             """Switches over the different options."""
-            if xType in ['CC', 'N']:
-                nn = self.shape_cells if xType == 'CC' else self.shape_nodes
+            if x_type in ['CC', 'N']:
+                nn = self.shape_cells if x_type == 'CC' else self.shape_nodes
                 if xx.size != np.prod(nn):
                     raise Exception(
                         "Number of elements must not change."
                     )
                 return outKernal(xx, nn)
-            elif xType in ['F', 'E']:
+            elif x_type in ['F', 'E']:
                 # This will only deal with components of fields,
                 # not full 'F' or 'E'
                 xx = mkvc(xx)  # unwrap it in case it is a matrix
-                nn = self.vnF if xType == 'F' else self.vnE
+                nn = self.vnF if x_type == 'F' else self.vnE
                 nn = np.r_[0, nn]
 
                 nx = [0, 0, 0]
-                nx[0] = self.shape_faces_x if xType == 'F' else self.shape_edges_x
-                nx[1] = self.shape_faces_y if xType == 'F' else self.shape_edges_y
-                nx[2] = self.shape_faces_z if xType == 'F' else self.shape_edges_z
+                nx[0] = self.shape_faces_x if x_type == 'F' else self.shape_edges_x
+                nx[1] = self.shape_faces_y if x_type == 'F' else self.shape_edges_y
+                nx[2] = self.shape_faces_z if x_type == 'F' else self.shape_edges_z
 
                 for dim, dimName in enumerate(['x', 'y', 'z']):
-                    if dimName in outType:
+                    if dimName in out_type:
                         if self.dim <= dim:
                             raise Exception(
                                 "Dimensions of mesh not great enough for "
-                                "{}{}".format(xType, dimName)
+                                "{}{}".format(x_type, dimName)
                             )
                         if xx.size != np.sum(nn):
                             raise Exception(
@@ -930,11 +931,11 @@ class BaseRectangularMesh(BaseMesh):
             elif xTypeIsFExyz:
                 # This will deal with partial components (x, y or z)
                 # lying on edges or faces
-                if 'x' in xType:
+                if 'x' in x_type:
                     nn = self.shape_faces_x if 'F' in xType else self.shape_edges_x
-                elif 'y' in xType:
+                elif 'y' in x_type:
                     nn = self.shape_faces_y if 'F' in xType else self.shape_edges_y
-                elif 'z' in xType:
+                elif 'z' in x_type:
                     nn = self.shape_faces_z if 'F' in xType else self.shape_edges_z
                 if xx.size != np.prod(nn):
                     raise Exception(f'Vector is not the right size. Expected {np.prod(nn)}, got {xx.size}')
@@ -943,15 +944,15 @@ class BaseRectangularMesh(BaseMesh):
         # Check if we are dealing with a vector quantity
         isVectorQuantity = len(x.shape) == 2 and x.shape[1] == self.dim
 
-        if outType in ['F', 'E']:
+        if out_type in ['F', 'E']:
             if isVectorQuantity:
                 raise Exception(
                     'Not sure what to do with a vector vector quantity..'
                 )
-            outTypeCopy = outType
+            outTypeCopy = out_type
             out = ()
             for ii, dirName in enumerate(['x', 'y', 'z'][:self.dim]):
-                outType = outTypeCopy + dirName
+                out_type = outTypeCopy + dirName
                 out += (switchKernal(x),)
             return out
         elif isVectorQuantity:
@@ -961,16 +962,6 @@ class BaseRectangularMesh(BaseMesh):
             return out
         else:
             return switchKernal(x)
-
-    # SHORTHAND
-    # vnC = shorthand_property(shape_cells, 'vnC')
-    # vnN = shorthand_property(shape_nodes, 'vnN')
-    # vnEx = shorthand_property(shape_edges_x, 'vnEx')
-    # vnEy = shorthand_property(shape_edges_y, 'vnEy')
-    # vnEz = shorthand_property(shape_edges_z, 'vnEz')
-    # vnFx = shorthand_property(shape_faces_x, 'vnFx')
-    # vnFy = shorthand_property(shape_faces_y, 'vnFy')
-    # vnFz = shorthand_property(shape_faces_z, 'vnFz')
 
     # DEPRECATED
     r = deprecate_method("reshape", 'r', removal_version="1.0.0")
