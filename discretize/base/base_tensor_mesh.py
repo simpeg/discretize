@@ -45,7 +45,7 @@ class BaseTensorMesh(BaseMesh):
     _unitDimensions = [1, 1, 1]
 
     # properties
-    h = properties.tuple(
+    h = properties.Tuple(
         "h is a list containing the cell widths of the tensor mesh in each "
         "dimension.",
         properties.Array(
