@@ -1,6 +1,7 @@
 import numpy as np
 from . import mkvc, ndgrid, sub2ind
 from .code_utils import deprecate_function
+import warnings
 
 
 def volume_tetrahedron(xyz, A, B, C, D):
@@ -30,14 +31,14 @@ def volume_tetrahedron(xyz, A, B, C, D):
     return V/6
 
 
-def index_cube(nodes, gridSize, n=None):
+def index_cube(nodes, grid_size, n=None):
     """
     Returns the index of nodes on the mesh.
 
 
     Input:
        nodes     - string of which nodes to return. e.g. 'ABCD'
-       gridSize  - size of the nodal grid
+       grid_size  - size of the nodal grid
        n         - number of nodes each i,j,k direction: [ni,nj,nk]
 
 
@@ -75,14 +76,14 @@ def index_cube(nodes, gridSize, n=None):
     """
 
     assert type(nodes) == str, "Nodes must be a str variable: e.g. 'ABCD'"
-    # assert isinstance(gridSize, np.ndarray), "Number of nodes must be an ndarray"
+    # assert isinstance(grid_size, np.ndarray), "Number of nodes must be an ndarray"
     nodes = nodes.upper()
     try:
-        dim = len(gridSize)
+        dim = len(grid_size)
         if n is None:
-            n = tuple(x - 1 for x in gridSize)
+            n = tuple(x - 1 for x in grid_size)
     except TypeError:
-        return TypeError('gridSize must be iterable')
+        return TypeError('grid_size must be iterable')
     # Make sure that we choose from the possible nodes.
     possibleNodes = 'ABCD' if dim == 2 else 'ABCDEFGH'
     for node in nodes:
@@ -104,14 +105,14 @@ def index_cube(nodes, gridSize, n=None):
     for node in nodes:
         shift = nodeMap[node]
         if dim == 2:
-            out += (sub2ind(gridSize, np.c_[i+shift[0], j+shift[1]]).flatten(), )
+            out += (sub2ind(grid_size, np.c_[i+shift[0], j+shift[1]]).flatten(), )
         elif dim == 3:
-            out += (sub2ind(gridSize, np.c_[i+shift[0], j+shift[1], k+shift[2]]).flatten(), )
+            out += (sub2ind(grid_size, np.c_[i+shift[0], j+shift[1], k+shift[2]]).flatten(), )
 
     return out
 
 
-def face_info(xyz, A, B, C, D, average=True, normalizeNormals=True):
+def face_info(xyz, A, B, C, D, average=True, normalize_normals=True, **kwargs):
     """
     function [N] = face_info(y,A,B,C,D)
 
@@ -139,8 +140,15 @@ def face_info(xyz, A, B, C, D, average=True, normalizeNormals=True):
     Last modified on: 2013/07/26
 
     """
+    if 'normalizeNormals' in kwargs:
+        warnings.warn(
+            'The normalizeNormals keyword argument has been deprecated, please use normalize_normals. '
+            'This will be removed in discretize 1.0.0',
+            FutureWarning
+        )
+        normalize_normals = kwargs['normalizeNormals']
     assert type(average) is bool, 'average must be a boolean'
-    assert type(normalizeNormals) is bool, 'normalizeNormals must be a boolean'
+    assert type(normalize_normals) is bool, 'normalize_normals must be a boolean'
     # compute normal that is pointing away from you.
     #
     #    A -------A-B------- B
@@ -174,7 +182,7 @@ def face_info(xyz, A, B, C, D, average=True, normalizeNormals=True):
         # normalize
         N = normalize(N)
     else:
-        if normalizeNormals:
+        if normalize_normals:
             N = [normalize(nA), normalize(nB), normalize(nC), normalize(nD)]
         else:
             N = [nA, nB, nC, nD]

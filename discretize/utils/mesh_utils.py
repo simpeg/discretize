@@ -7,6 +7,7 @@ from scipy.spatial import cKDTree, Delaunay
 from scipy import interpolate
 import discretize
 from .code_utils import deprecate_function
+import warnings
 
 num_types = [int, float]
 
@@ -161,7 +162,7 @@ def mesh_tensor(value):
     return np.array(proposed)
 
 
-def closest_points(mesh, pts, gridLoc='CC'):
+def closest_points(mesh, pts, grid_loc='CC', **kwargs):
     """Move a list of points to the closest points on a grid.
 
     Parameters
@@ -170,18 +171,24 @@ def closest_points(mesh, pts, gridLoc='CC'):
         The mesh
     pts: numpy.ndarray
         Points to move
-    gridLoc: str
-        ['CC', 'N', 'Fx', 'Fy', 'Fz', 'Ex', 'Ex', 'Ey', 'Ez']
+    grid_loc: {'CC', 'N', 'Fx', 'Fy', 'Fz', 'Ex', 'Ex', 'Ey', 'Ez'}
+        Which grid to move points to.
 
     Returns
     -------
     numpy.ndarray
         nodeInds
-
     """
+    if 'gridLoc' in kwargs:
+        warnings.warn(
+            'The gridLoc keyword argument has been deprecated, please use grid_loc. '
+            'This will be removed in discretize 1.0.0',
+            FutureWarning
+        )
+        grid_loc = kwargs['gridLoc']
 
     pts = as_array_n_by_dim(pts, mesh.dim)
-    grid = getattr(mesh, 'grid' + gridLoc)
+    grid = getattr(mesh, 'grid' + grid_loc)
     nodeInds = np.empty(pts.shape[0], dtype=int)
 
     for i, pt in enumerate(pts):
@@ -203,6 +210,8 @@ def extract_core_mesh(xyzlim, mesh, mesh_type='tensor'):
         2D array [ndim x 2]
     mesh: BaseMesh
         The mesh
+    mesh_type : str, optional
+        Unused currently
 
     Returns
     -------

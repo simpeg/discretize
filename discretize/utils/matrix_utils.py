@@ -3,9 +3,10 @@ import numpy as np
 import scipy.sparse as sp
 from . import is_scalar
 from .code_utils import deprecate_function
+import warnings
 
 
-def mkvc(x, numDims=1):
+def mkvc(x, n_dims=1, **kwargs):
     """Creates a vector with the number of dimension specified
 
     e.g.::
@@ -22,6 +23,13 @@ def mkvc(x, numDims=1):
             > (3, 1, 1)
 
     """
+    if 'numDims' in kwargs:
+        warnings.warn(
+            'The numDims keyword argument has been deprecated, please use n_dims. '
+            'This will be removed in discretize 1.0.0',
+            FutureWarning
+        )
+        n_dims = kwargs['numDims']
     if type(x) == np.matrix:
         x = np.array(x)
 
@@ -33,11 +41,11 @@ def mkvc(x, numDims=1):
 
     assert isinstance(x, np.ndarray), "Vector must be a numpy array"
 
-    if numDims == 1:
+    if n_dims == 1:
         return x.flatten(order='F')
-    elif numDims == 2:
+    elif n_dims == 2:
         return x.flatten(order='F')[:, np.newaxis]
-    elif numDims == 3:
+    elif n_dims == 3:
         return x.flatten(order='F')[:, np.newaxis, np.newaxis]
 
 
@@ -200,7 +208,7 @@ def get_subarray(A, ind):
 
 
 def inverse_3x3_block_diagonal(
-    a11, a12, a13, a21, a22, a23, a31, a32, a33, returnMatrix=True
+    a11, a12, a13, a21, a22, a23, a31, a32, a33, return_matrix=True, **kwargs
 ):
     """ B = inverse_3x3_block_diagonal(a11, a12, a13, a21, a22, a23, a31, a32, a33)
 
@@ -212,6 +220,13 @@ def inverse_3x3_block_diagonal(
     Output:
      B   - inverse
     """
+    if 'returnMatrix' in kwargs:
+        warnings.warn(
+            'The returnMatrix keyword argument has been deprecated, please use return_matrix. '
+            'This will be removed in discretize 1.0.0',
+            FutureWarning
+        )
+        return_matrix = kwargs['returnMatrix']
 
     a11 = mkvc(a11)
     a12 = mkvc(a12)
@@ -244,7 +259,7 @@ def inverse_3x3_block_diagonal(
     b32 = +(a31*a12 - a11*a32)/detA
     b33 = -(a21*a12 - a11*a22)/detA
 
-    if not returnMatrix:
+    if not return_matrix:
         return b11, b12, b13, b21, b22, b23, b31, b32, b33
 
     return sp.vstack((sp.hstack((sdiag(b11), sdiag(b12),  sdiag(b13))),
@@ -252,7 +267,7 @@ def inverse_3x3_block_diagonal(
                       sp.hstack((sdiag(b31), sdiag(b32),  sdiag(b33)))))
 
 
-def inverse_2x2_block_diagonal(a11, a12, a21, a22, returnMatrix=True):
+def inverse_2x2_block_diagonal(a11, a12, a21, a22, return_matrix=True, **kwargs):
     """ B = inverse_2x2_block_diagonal(a11, a12, a21, a22)
 
     Inverts a stack of 2x2 matrices by using the inversion formula
@@ -265,6 +280,13 @@ def inverse_2x2_block_diagonal(a11, a12, a21, a22, returnMatrix=True):
     Output:
     B   - inverse
     """
+    if 'returnMatrix' in kwargs:
+        warnings.warn(
+            'The returnMatrix keyword argument has been deprecated, please use return_matrix. '
+            'This will be removed in discretize 1.0.0',
+            FutureWarning
+        )
+        return_matrix = kwargs['returnMatrix']
 
     a11 = mkvc(a11)
     a12 = mkvc(a12)
@@ -279,7 +301,7 @@ def inverse_2x2_block_diagonal(a11, a12, a21, a22, returnMatrix=True):
     b21 = -detAinv*a21
     b22 = +detAinv*a11
 
-    if not returnMatrix:
+    if not return_matrix:
         return b11, b12, b21, b22
 
     return sp.vstack((sp.hstack((sdiag(b11), sdiag(b12))),
@@ -368,7 +390,14 @@ def make_property_tensor(M, tensor):
     return Sigma
 
 
-def inverse_property_tensor(M, tensor, returnMatrix=False):
+def inverse_property_tensor(M, tensor, return_matrix=False, **kwargs):
+    if 'returnMatrix' in kwargs:
+        warnings.warn(
+            'The returnMatrix keyword argument has been deprecated, please use return_matrix. '
+            'This will be removed in discretize 1.0.0',
+            FutureWarning
+        )
+        return_matrix = kwargs['returnMatrix']
 
     propType = TensorType(M, tensor)
 
@@ -380,7 +409,7 @@ def inverse_property_tensor(M, tensor, returnMatrix=False):
         tensor = tensor.reshape((M.nC, 3), order='F')
         B = inverse_2x2_block_diagonal(tensor[:, 0], tensor[:, 2],
                                 tensor[:, 2], tensor[:, 1],
-                                returnMatrix=False)
+                                return_matrix=False)
         b11, b12, b21, b22 = B
         T = np.r_[b11, b22, b12]
     elif M.dim == 3 and tensor.size == M.nC*6:  # Fully anisotropic, 3D
@@ -388,13 +417,13 @@ def inverse_property_tensor(M, tensor, returnMatrix=False):
         B = inverse_3x3_block_diagonal(tensor[:, 0], tensor[:, 3], tensor[:, 4],
                                 tensor[:, 3], tensor[:, 1], tensor[:, 5],
                                 tensor[:, 4], tensor[:, 5], tensor[:, 2],
-                                returnMatrix=False)
+                                return_matrix=False)
         b11, b12, b13, b21, b22, b23, b31, b32, b33 = B
         T = np.r_[b11, b22, b33, b12, b13, b23]
     else:
         raise Exception('Unexpected shape of tensor')
 
-    if returnMatrix:
+    if return_matrix:
         return make_property_tensor(M, T)
 
     return T
