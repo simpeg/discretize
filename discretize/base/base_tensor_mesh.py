@@ -6,12 +6,12 @@ import numpy as np
 import scipy.sparse as sp
 import properties
 
-from dicretize.base.base_mesh import BaseMesh
-from dicretize.utils import (
+from discretize.base.base_mesh import BaseMesh
+from discretize.utils import (
     is_scalar, as_array_n_by_dim, mesh_tensor, mkvc, ndgrid, spzeros, sdiag, sdinv,
     TensorType, interpolation_matrix
 )
-from dicretize.utils.code_utils import deprecate_method, deprecate_property
+from discretize.utils.code_utils import deprecate_method, deprecate_property
 import warnings
 
 class BaseTensorMesh(BaseMesh):
