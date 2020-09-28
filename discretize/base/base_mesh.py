@@ -832,19 +832,19 @@ class BaseRectangularMesh(BaseMesh):
             )
             out_type = kwargs['outType']
 
-        allowed_xType = [
+        allowed_x_type = [
             'CC', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez'
         ]
         if not (
             isinstance(x, list) or isinstance(x, np.ndarray)
         ):
             raise Exception("x must be either a list or a ndarray")
-        if x_type not in allowed_xType:
+        if x_type not in allowed_x_type:
             raise Exception(
                 "x_type must be either "
                 "'CC', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', or 'Ez'"
             )
-        if out_type not in allowed_xType:
+        if out_type not in allowed_x_type:
             raise Exception(
                 "out_type must be either "
                 "'CC', 'N', 'F', Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', or 'Ez'"
@@ -879,7 +879,7 @@ class BaseRectangularMesh(BaseMesh):
             raise Exception("x must be a numpy array")
 
         x = x[:]  # make a copy.
-        xTypeIsFExyz = (
+        x_type_is_FE_xyz = (
             len(x_type) > 1 and
             x_type[0] in ['F', 'E'] and
             x_type[1] in ['x', 'y', 'z']
@@ -928,15 +928,15 @@ class BaseRectangularMesh(BaseMesh):
                         end = np.sum(nn[:dim+2])
                         return outKernal(xx[start:end], nx[dim])
 
-            elif xTypeIsFExyz:
+            elif x_type_is_FE_xyz:
                 # This will deal with partial components (x, y or z)
                 # lying on edges or faces
                 if 'x' in x_type:
-                    nn = self.shape_faces_x if 'F' in xType else self.shape_edges_x
+                    nn = self.shape_faces_x if 'F' in x_type else self.shape_edges_x
                 elif 'y' in x_type:
-                    nn = self.shape_faces_y if 'F' in xType else self.shape_edges_y
+                    nn = self.shape_faces_y if 'F' in x_type else self.shape_edges_y
                 elif 'z' in x_type:
-                    nn = self.shape_faces_z if 'F' in xType else self.shape_edges_z
+                    nn = self.shape_faces_z if 'F' in x_type else self.shape_edges_z
                 if xx.size != np.prod(nn):
                     raise Exception(f'Vector is not the right size. Expected {np.prod(nn)}, got {xx.size}')
                 return outKernal(xx, nn)
