@@ -11,7 +11,7 @@ from tree cimport int_t, Tree as c_Tree, PyWrapper, Node, Edge, Face, Cell as c_
 import scipy.sparse as sp
 from six import integer_types
 import numpy as np
-from .interputils_cython cimport _bisect_left, _bisect_right
+from discretize._extensions.interputils_cython cimport _bisect_left, _bisect_right
 
 
 cdef class TreeCell:
