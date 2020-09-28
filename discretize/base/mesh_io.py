@@ -2,9 +2,9 @@ import os
 import json
 import numpy as np
 
-from ..utils import mkvc
-from . import BaseMesh
-from ..utils.code_utils import deprecate_method
+from dicretize.utils import mkvc
+from dicretize.base.base_mesh import BaseMesh
+from discretize.utils.code_utils import deprecate_method
 import warnings
 
 try:

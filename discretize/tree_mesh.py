@@ -87,16 +87,15 @@
 
 import properties
 
-from .base import BaseTensorMesh
-from .operators import InnerProducts, DiffOperators
-from .base.mesh_io import TreeMeshIO
-from .utils import as_array_n_by_dim, requires
-from ._extensions.tree_ext import _TreeMesh, TreeCell
+from discretize.base import BaseTensorMesh
+from discretize.operators import InnerProducts, DiffOperators
+from discretize.base.mesh_io import TreeMeshIO
+from discretize.utils import as_array_n_by_dim
+from discretize._extensions.tree_ext import _TreeMesh, TreeCell
 import numpy as np
 import scipy.sparse as sp
-from six import integer_types
 import warnings
-from .utils.code_utils import deprecate_property
+from discretize.utils.code_utils import deprecate_property
 
 
 class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):

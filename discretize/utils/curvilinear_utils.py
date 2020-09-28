@@ -1,6 +1,6 @@
 import numpy as np
-from . import mkvc, ndgrid, sub2ind
-from .code_utils import deprecate_function
+from discretize.utils.matrix_utils import mkvc, ndgrid, sub2ind
+from discretize.utils.code_utils import deprecate_function
 import warnings
 
 

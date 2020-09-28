@@ -3,8 +3,8 @@ import numpy as np
 from scipy import sparse as sp
 from six import string_types
 import warnings
-from ..utils import sdiag, speye, kron3, spzeros, ddx, av, av_extrap
-from ..utils.code_utils import deprecate_method, deprecate_property
+from discretize.utils import sdiag, speye, kron3, spzeros, ddx, av, av_extrap
+from discretize.utils.code_utils import deprecate_method, deprecate_property
 
 
 def _validate_BC(bc):

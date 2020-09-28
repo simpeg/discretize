@@ -1,10 +1,9 @@
-# from discretize.BaseMesh import BaseMesh
-from .tensor_mesh import TensorMesh
-from .cylindrical_mesh import CylMesh, CylindricalMesh
-from .curvilinear_mesh import CurvilinearMesh
-from .base.mesh_io import load_mesh
+from discretize.tensor_mesh import TensorMesh
+from discretize.cylindrical_mesh import CylMesh, CylindricalMesh
+from discretize.curvilinear_mesh import CurvilinearMesh
+from discretize.base.mesh_io import load_mesh
 try:
-    from .tree_mesh import TreeMesh
+    from discretize.tree_mesh import TreeMesh
 except ImportError as err:
     print(err)
     import os
@@ -25,7 +24,7 @@ except ImportError as err:
             to compile the cython code.
             """
             )
-from . import tests
+from discretize import tests
 
 # DERECATED
 Tests = tests

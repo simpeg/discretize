@@ -1,11 +1,11 @@
 from scipy import sparse as sp
-from ..utils import (
+from discretize.utils import (
     sub2ind, sdiag, inverse_property_tensor, TensorType,
     make_property_tensor, ndgrid, inverse_2x2_block_diagonal,
     get_subarray, inverse_3x3_block_diagonal, spzeros, sdinv
 )
 import numpy as np
-from ..utils.code_utils import deprecate_method
+from discretize.utils.code_utils import deprecate_method
 import warnings
 
 

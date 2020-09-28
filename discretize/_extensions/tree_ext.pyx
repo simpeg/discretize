@@ -2,21 +2,16 @@
 # cython: embedsignature=True, language_level=3
 cimport cython
 cimport numpy as np
-from libc.math cimport sqrt, abs, cbrt
 from libc.stdlib cimport malloc, free
 from libcpp.vector cimport vector
 from numpy.math cimport INFINITY
-import warnings
 
 from tree cimport int_t, Tree as c_Tree, PyWrapper, Node, Edge, Face, Cell as c_Cell
 
 import scipy.sparse as sp
-from scipy.spatial import Delaunay, cKDTree
 from six import integer_types
 import numpy as np
-from .interputils_cython cimport _bisect_left, _bisect_right
-
-from discretize.utils import requires
+from dicretize._extensions.interputils_cython cimport _bisect_left, _bisect_right
 
 
 cdef class TreeCell:

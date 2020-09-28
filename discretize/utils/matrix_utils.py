@@ -1,8 +1,7 @@
 from __future__ import division
 import numpy as np
 import scipy.sparse as sp
-from . import is_scalar
-from .code_utils import deprecate_function
+from discretize.utils.code_utils import is_scalar,  deprecate_function
 import warnings
 
 

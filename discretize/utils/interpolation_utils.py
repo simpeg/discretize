@@ -1,11 +1,11 @@
 from __future__ import print_function
 import numpy as np
 import scipy.sparse as sp
-from . import mkvc, sub2ind
-from .code_utils import deprecate_function
+from discretize.utils.matrix_utils import mkvc, sub2ind
+from discretize.utils.code_utils import deprecate_function
 
 try:
-    from .._extensions import interputils_cython as pyx
+    from discretize._extensions import interputils_cython as pyx
     _interp_point_1D = pyx._interp_point_1D
     _interpmat1D = pyx._interpmat1D
     _interpmat2D = pyx._interpmat2D

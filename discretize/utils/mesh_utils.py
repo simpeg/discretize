@@ -2,11 +2,12 @@ import numpy as np
 import scipy.ndimage as ndi
 import scipy.sparse as sp
 
-from . import ndgrid, as_array_n_by_dim, is_scalar
+from discretize.utils.matrix_utils import ndgrid
+from discretize.utils.code_utils import as_array_n_by_dim, is_scalar
 from scipy.spatial import cKDTree, Delaunay
 from scipy import interpolate
 import discretize
-from .code_utils import deprecate_function
+from discretize.utils.code_utils import deprecate_function
 import warnings
 
 num_types = [int, float]

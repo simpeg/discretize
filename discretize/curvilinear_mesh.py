@@ -2,10 +2,10 @@ from __future__ import print_function
 import numpy as np
 import properties
 
-from .utils import mkvc, index_cube, face_info, volume_tetrahedron
-from .base import BaseRectangularMesh
-from .operators import DiffOperators, InnerProducts
-from .utils.code_utils import deprecate_property
+from discretize.utils import mkvc, index_cube, face_info, volume_tetrahedron
+from discretize.base import BaseRectangularMesh
+from discretize.operators import DiffOperators, InnerProducts
+from discretize.utils.code_utils import deprecate_property
 
 
 # Some helper functions.

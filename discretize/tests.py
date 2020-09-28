@@ -2,9 +2,11 @@ from __future__ import print_function
 import numpy as np
 import scipy.sparse as sp
 
-from .utils import mkvc, example_curvilinear_grid, requires
-from . import TensorMesh, CurvilinearMesh, CylindricalMesh
-from .utils.code_utils import deprecate_method, deprecate_function, deprecate_property
+from discretize.utils import mkvc, example_curvilinear_grid, requires
+from discretize.tensor_mesh import TensorMesh
+from discretize.curvilinear_mesh import CurvilinearMesh
+from discretize.cylindrical_mesh import CylindricalMesh
+from discretize.utils.code_utils import deprecate_function
 
 from . import TreeMesh as Tree
 

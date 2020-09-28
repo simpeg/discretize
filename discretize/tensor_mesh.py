@@ -2,11 +2,11 @@ from __future__ import print_function
 import numpy as np
 
 
-from .base import BaseRectangularMesh, BaseTensorMesh
-from .operators import DiffOperators, InnerProducts
-from .base.mesh_io import TensorMeshIO
-from .utils import mkvc
-from .utils.code_utils import deprecate_property
+from discretize.base import BaseRectangularMesh, BaseTensorMesh
+from discretize.operators import DiffOperators, InnerProducts
+from discretize.base.mesh_io import TensorMeshIO
+from discretize.utils import mkvc
+from discretize.utils.code_utils import deprecate_property
 
 
 class TensorMesh(

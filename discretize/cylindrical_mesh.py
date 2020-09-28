@@ -5,12 +5,12 @@ import properties
 import scipy.sparse as sp
 from scipy.constants import pi
 
-from .utils import (
+from discretize.utils import (
     kron3, ndgrid, av, speye, ddx, sdiag, spzeros, interpolation_matrix, cyl2cart
 )
-from .base import BaseTensorMesh, BaseRectangularMesh
-from .operators import DiffOperators, InnerProducts
-from .utils.code_utils import deprecate_class, deprecate_property, deprecate_method
+from discretize.base import BaseTensorMesh, BaseRectangularMesh
+from discretize.operators import DiffOperators, InnerProducts
+from discretize.utils.code_utils import deprecate_class, deprecate_property, deprecate_method
 import warnings
 
 

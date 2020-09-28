@@ -1,15 +1,13 @@
 from __future__ import print_function
 import numpy as np
 import warnings
-from ..utils import mkvc, ndgrid, requires
-from ..utils.code_utils import deprecate_method
+from discretize.utils import mkvc, ndgrid
+from discretize.utils.code_utils import deprecate_method
 from six import integer_types
 
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
-import matplotlib.colors as colors
-import matplotlib.cm as cmx
 from matplotlib.collections import PolyCollection, LineCollection
 from matplotlib import rc_params
 from mpl_toolkits.mplot3d.art3d import Line3DCollection

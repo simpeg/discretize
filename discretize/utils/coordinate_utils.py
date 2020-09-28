@@ -1,6 +1,6 @@
 import numpy as np
-from .matrix_utils import mkvc
-from .code_utils import deprecate_function
+from discretize.utils.matrix_utils import mkvc
+from discretize.utils.code_utils import deprecate_function
 
 
 def cylindrical_to_cartesian(grid, vec=None):
