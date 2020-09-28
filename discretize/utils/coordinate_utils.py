@@ -11,14 +11,16 @@ def cylindrical_to_cartesian(grid, vec=None):
     grid = np.atleast_2d(grid)
 
     if vec is None:
-        return np.hstack([
-            mkvc(grid[:, 0]*np.cos(grid[:, 1]), 2),
-            mkvc(grid[:, 0]*np.sin(grid[:, 1]), 2),
-            mkvc(grid[:, 2], 2)
-        ])
+        return np.hstack(
+            [
+                mkvc(grid[:, 0] * np.cos(grid[:, 1]), 2),
+                mkvc(grid[:, 0] * np.sin(grid[:, 1]), 2),
+                mkvc(grid[:, 2], 2),
+            ]
+        )
 
     if len(vec.shape) == 1 or vec.shape[1] == 1:
-        vec = vec.reshape(grid.shape, order='F')
+        vec = vec.reshape(grid.shape, order="F")
 
     x = vec[:, 0] * np.cos(grid[:, 1]) - vec[:, 1] * np.sin(grid[:, 1])
     y = vec[:, 0] * np.sin(grid[:, 1]) + vec[:, 1] * np.cos(grid[:, 1])
@@ -49,11 +51,13 @@ def cartesian_to_cylindrical(grid, vec=None):
 
     theta = np.arctan2(grid[:, 1], grid[:, 0])
 
-    return np.hstack([
-        mkvc(np.cos(theta)*vec[:, 0] + np.sin(theta)*vec[:, 1], 2),
-        mkvc(-np.sin(theta)*vec[:, 0] + np.cos(theta)*vec[:, 1], 2),
-        mkvc(vec[:, 2], 2)
-    ])
+    return np.hstack(
+        [
+            mkvc(np.cos(theta) * vec[:, 0] + np.sin(theta) * vec[:, 1], 2),
+            mkvc(-np.sin(theta) * vec[:, 0] + np.cos(theta) * vec[:, 1], 2),
+            mkvc(vec[:, 2], 2),
+        ]
+    )
 
 
 def cart2cyl(grid, vec=None):
@@ -80,8 +84,8 @@ def rotation_matrix_from_normals(v0, v1, tol=1e-20):
     assert len(v1) == 3, "Length of n1 should be 3"
 
     # ensure both are true normals
-    n0 = v0*1./np.linalg.norm(v0)
-    n1 = v1*1./np.linalg.norm(v1)
+    n0 = v0 * 1.0 / np.linalg.norm(v0)
+    n1 = v1 * 1.0 / np.linalg.norm(v1)
 
     n0dotn1 = n0.dot(n1)
 
@@ -91,31 +95,32 @@ def rotation_matrix_from_normals(v0, v1, tol=1e-20):
     if np.linalg.norm(rotAx) < tol:
         return np.eye(3, dtype=float)
 
-    rotAx *= 1./np.linalg.norm(rotAx)
+    rotAx *= 1.0 / np.linalg.norm(rotAx)
 
-    cosT = n0dotn1/(np.linalg.norm(n0)*np.linalg.norm(n1))
-    sinT = np.sqrt(1.-n0dotn1**2)
+    cosT = n0dotn1 / (np.linalg.norm(n0) * np.linalg.norm(n1))
+    sinT = np.sqrt(1.0 - n0dotn1 ** 2)
 
     ux = np.array(
         [
-            [0., -rotAx[2], rotAx[1]],
-            [rotAx[2], 0., -rotAx[0]],
-            [-rotAx[1], rotAx[0], 0.]
-        ], dtype=float
+            [0.0, -rotAx[2], rotAx[1]],
+            [rotAx[2], 0.0, -rotAx[0]],
+            [-rotAx[1], rotAx[0], 0.0],
+        ],
+        dtype=float,
     )
 
-    return np.eye(3, dtype=float) + sinT*ux + (1.-cosT)*(ux.dot(ux))
+    return np.eye(3, dtype=float) + sinT * ux + (1.0 - cosT) * (ux.dot(ux))
 
 
-def rotate_points_from_normals(XYZ, n0, n1, x0=np.r_[0., 0., 0.]):
+def rotate_points_from_normals(XYZ, n0, n1, x0=np.r_[0.0, 0.0, 0.0]):
     """
-        rotates a grid so that the vector n0 is aligned with the vector n1
+    rotates a grid so that the vector n0 is aligned with the vector n1
 
-        :param numpy.array n0: vector of length 3, should have norm 1
-        :param numpy.array n1: vector of length 3, should have norm 1
-        :param numpy.array x0: vector of length 3, point about which we perform the rotation
-        :rtype: numpy.array, 3x3
-        :return: rotation matrix which rotates the frame so that n0 is aligned with n1
+    :param numpy.array n0: vector of length 3, should have norm 1
+    :param numpy.array n1: vector of length 3, should have norm 1
+    :param numpy.array x0: vector of length 3, point about which we perform the rotation
+    :rtype: numpy.array, 3x3
+    :return: rotation matrix which rotates the frame so that n0 is aligned with n1
     """
 
     R = rotation_matrix_from_normals(n0, n1)
@@ -123,10 +128,14 @@ def rotate_points_from_normals(XYZ, n0, n1, x0=np.r_[0., 0., 0.]):
     assert XYZ.shape[1] == 3, "Grid XYZ should be 3 wide"
     assert len(x0) == 3, "x0 should have length 3"
 
-    X0 = np.ones([XYZ.shape[0], 1])*mkvc(x0)
+    X0 = np.ones([XYZ.shape[0], 1]) * mkvc(x0)
 
-    return (XYZ - X0).dot(R.T) + X0 # equivalent to (R*(XYZ - X0)).T + X0
+    return (XYZ - X0).dot(R.T) + X0  # equivalent to (R*(XYZ - X0)).T + X0
 
 
-rotationMatrixFromNormals = deprecate_function(rotation_matrix_from_normals, "rotationMatrixFromNormals", removal_version="1.0.0")
-rotatePointsFromNormals = deprecate_function(rotate_points_from_normals, "rotatePointsFromNormals", removal_version="1.0.0")
+rotationMatrixFromNormals = deprecate_function(
+    rotation_matrix_from_normals, "rotationMatrixFromNormals", removal_version="1.0.0"
+)
+rotatePointsFromNormals = deprecate_function(
+    rotate_points_from_normals, "rotatePointsFromNormals", removal_version="1.0.0"
+)

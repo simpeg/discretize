@@ -9,12 +9,14 @@ AVAILABLE_MIXIN_CLASSES = []
 
 try:
     from .vtk_mod import InterfaceVTK, InterfaceTensorread_vtk
+
     AVAILABLE_MIXIN_CLASSES.append(InterfaceVTK)
 except ImportError as err:
     pass
 
 try:
     from .omf_mod import InterfaceOMF
+
     AVAILABLE_MIXIN_CLASSES.append(InterfaceOMF)
 except ImportError as err:
     pass
@@ -23,6 +25,7 @@ except ImportError as err:
 # plot commands
 try:
     from .mpl_mod import Slicer, InterfaceMPL
+
     AVAILABLE_MIXIN_CLASSES.append(InterfaceMPL)
 except ImportError as err:
     pass
@@ -32,4 +35,5 @@ class InterfaceMixins(*AVAILABLE_MIXIN_CLASSES):
     """This class handles all the avaialble mixins that can be inherrited
     directly onto ``discretize.BaseMesh``
     """
+
     pass

@@ -18,22 +18,32 @@ def example_curvilinear_grid(nC, exType):
     assert len(nC) == 2 or len(nC) == 3, "nC must either two or three dimensions"
     exType = exType.lower()
 
-    possibleTypes = ['rect', 'rotate']
+    possibleTypes = ["rect", "rotate"]
     assert exType in possibleTypes, "Not a possible example type."
 
-    if exType == 'rect':
-        return list(ndgrid([np.cumsum(np.r_[0, np.ones(nx)/nx]) for nx in nC], vector=False))
-    elif exType == 'rotate':
+    if exType == "rect":
+        return list(
+            ndgrid([np.cumsum(np.r_[0, np.ones(nx) / nx]) for nx in nC], vector=False)
+        )
+    elif exType == "rotate":
         if len(nC) == 2:
-            X, Y = ndgrid([np.cumsum(np.r_[0, np.ones(nx)/nx]) for nx in nC], vector=False)
-            amt = 0.5-np.sqrt((X - 0.5)**2 + (Y - 0.5)**2)
+            X, Y = ndgrid(
+                [np.cumsum(np.r_[0, np.ones(nx) / nx]) for nx in nC], vector=False
+            )
+            amt = 0.5 - np.sqrt((X - 0.5) ** 2 + (Y - 0.5) ** 2)
             amt[amt < 0] = 0
-            return [X + (-(Y - 0.5))*amt, Y + (+(X - 0.5))*amt]
+            return [X + (-(Y - 0.5)) * amt, Y + (+(X - 0.5)) * amt]
         elif len(nC) == 3:
-            X, Y, Z = ndgrid([np.cumsum(np.r_[0, np.ones(nx)/nx]) for nx in nC], vector=False)
-            amt = 0.5-np.sqrt((X - 0.5)**2 + (Y - 0.5)**2 + (Z - 0.5)**2)
+            X, Y, Z = ndgrid(
+                [np.cumsum(np.r_[0, np.ones(nx) / nx]) for nx in nC], vector=False
+            )
+            amt = 0.5 - np.sqrt((X - 0.5) ** 2 + (Y - 0.5) ** 2 + (Z - 0.5) ** 2)
             amt[amt < 0] = 0
-            return [X + (-(Y - 0.5))*amt, Y + (-(Z - 0.5))*amt, Z + (-(X - 0.5))*amt]
+            return [
+                X + (-(Y - 0.5)) * amt,
+                Y + (-(Z - 0.5)) * amt,
+                Z + (-(X - 0.5)) * amt,
+            ]
 
 
 def random_model(shape, seed=None, anisotropy=None, its=100, bounds=None):
@@ -78,33 +88,35 @@ def random_model(shape, seed=None, anisotropy=None, its=100, bounds=None):
 
     if seed is None:
         seed = np.random.randint(1e3)
-        print('Using a seed of: ', seed)
+        print("Using a seed of: ", seed)
 
     if type(shape) in num_types:
-        shape = (shape, ) # make it a tuple for consistency
+        shape = (shape,)  # make it a tuple for consistency
 
     np.random.seed(seed)
     mr = np.random.rand(*shape)
     if anisotropy is None:
         if len(shape) == 1:
-            smth = np.array([1, 10., 1], dtype=float)
+            smth = np.array([1, 10.0, 1], dtype=float)
         elif len(shape) == 2:
             smth = np.array([[1, 7, 1], [2, 10, 2], [1, 7, 1]], dtype=float)
         elif len(shape) == 3:
             kernal = np.array([1, 4, 1], dtype=float).reshape((1, 3))
-            smth = np.array(sp.kron(sp.kron(kernal, kernal.T).todense()[:], kernal).todense()).reshape((3, 3, 3))
+            smth = np.array(
+                sp.kron(sp.kron(kernal, kernal.T).todense()[:], kernal).todense()
+            ).reshape((3, 3, 3))
     else:
-        assert len(anisotropy.shape) is len(shape), 'Anisotropy must be the same shape.'
+        assert len(anisotropy.shape) is len(shape), "Anisotropy must be the same shape."
         smth = np.array(anisotropy, dtype=float)
 
-    smth = smth/smth.sum() # normalize
+    smth = smth / smth.sum()  # normalize
     mi = mr
     for i in range(its):
         mi = ndi.convolve(mi, smth)
 
     # scale the model to live between the bounds.
-    mi = (mi - mi.min())/(mi.max()-mi.min()) # scaled between 0 and 1
-    mi = mi*(bounds[1]-bounds[0])+bounds[0]
+    mi = (mi - mi.min()) / (mi.max() - mi.min())  # scaled between 0 and 1
+    mi = mi * (bounds[1] - bounds[0]) + bounds[0]
 
     return mi
 
@@ -142,28 +154,31 @@ def mesh_tensor(value):
 
     """
     if type(value) is not list:
-        raise Exception('mesh_tensor must be a list of scalars and tuples.')
+        raise Exception("mesh_tensor must be a list of scalars and tuples.")
 
     proposed = []
     for v in value:
         if is_scalar(v):
             proposed += [float(v)]
         elif type(v) is tuple and len(v) == 2:
-            proposed += [float(v[0])]*int(v[1])
+            proposed += [float(v[0])] * int(v[1])
         elif type(v) is tuple and len(v) == 3:
             start = float(v[0])
             num = int(v[1])
             factor = float(v[2])
-            pad = ((np.ones(num)*np.abs(factor))**(np.arange(num)+1))*start
-            if factor < 0: pad = pad[::-1]
+            pad = ((np.ones(num) * np.abs(factor)) ** (np.arange(num) + 1)) * start
+            if factor < 0:
+                pad = pad[::-1]
             proposed += pad.tolist()
         else:
-            raise Exception('mesh_tensor must contain only scalars and len(2) or len(3) tuples.')
+            raise Exception(
+                "mesh_tensor must contain only scalars and len(2) or len(3) tuples."
+            )
 
     return np.array(proposed)
 
 
-def closest_points(mesh, pts, grid_loc='CC', **kwargs):
+def closest_points(mesh, pts, grid_loc="CC", **kwargs):
     """Move a list of points to the closest points on a grid.
 
     Parameters
@@ -180,28 +195,30 @@ def closest_points(mesh, pts, grid_loc='CC', **kwargs):
     numpy.ndarray
         nodeInds
     """
-    if 'gridLoc' in kwargs:
+    if "gridLoc" in kwargs:
         warnings.warn(
-            'The gridLoc keyword argument has been deprecated, please use grid_loc. '
-            'This will be removed in discretize 1.0.0',
-            FutureWarning
+            "The gridLoc keyword argument has been deprecated, please use grid_loc. "
+            "This will be removed in discretize 1.0.0",
+            FutureWarning,
         )
-        grid_loc = kwargs['gridLoc']
+        grid_loc = kwargs["gridLoc"]
 
     pts = as_array_n_by_dim(pts, mesh.dim)
-    grid = getattr(mesh, 'grid' + grid_loc)
+    grid = getattr(mesh, "grid" + grid_loc)
     nodeInds = np.empty(pts.shape[0], dtype=int)
 
     for i, pt in enumerate(pts):
         if mesh.dim == 1:
-            nodeInds[i] = ((pt - grid)**2).argmin()
+            nodeInds[i] = ((pt - grid) ** 2).argmin()
         else:
-            nodeInds[i] = ((np.tile(pt, (grid.shape[0], 1)) - grid)**2).sum(axis=1).argmin()
+            nodeInds[i] = (
+                ((np.tile(pt, (grid.shape[0], 1)) - grid) ** 2).sum(axis=1).argmin()
+            )
 
     return nodeInds
 
 
-def extract_core_mesh(xyzlim, mesh, mesh_type='tensor'):
+def extract_core_mesh(xyzlim, mesh, mesh_type="tensor"):
     """
     Extracts Core Mesh from Global mesh
 
@@ -226,13 +243,15 @@ def extract_core_mesh(xyzlim, mesh, mesh_type='tensor'):
         xyzlim = xyzlim.flatten()
         xmin, xmax = xyzlim[0], xyzlim[1]
 
-        xind = np.logical_and(mesh.grid_cell_centers_x > xmin, mesh.grid_cell_centers_x < xmax)
+        xind = np.logical_and(
+            mesh.grid_cell_centers_x > xmin, mesh.grid_cell_centers_x < xmax
+        )
 
         xc = mesh.grid_cell_centers_x[xind]
 
         hx = mesh.h[0][xind]
 
-        x0 = [xc[0]-hx[0]*0.5]
+        x0 = [xc[0] - hx[0] * 0.5]
 
         meshCore = discretize.TensorMesh([hx], x0=x0)
 
@@ -242,8 +261,12 @@ def extract_core_mesh(xyzlim, mesh, mesh_type='tensor'):
         xmin, xmax = xyzlim[0, 0], xyzlim[0, 1]
         ymin, ymax = xyzlim[1, 0], xyzlim[1, 1]
 
-        xind = np.logical_and(mesh.grid_cell_centers_x > xmin, mesh.grid_cell_centers_x < xmax)
-        yind = np.logical_and(mesh.grid_cell_centers_y > ymin, mesh.grid_cell_centers_y < ymax)
+        xind = np.logical_and(
+            mesh.grid_cell_centers_x > xmin, mesh.grid_cell_centers_x < xmax
+        )
+        yind = np.logical_and(
+            mesh.grid_cell_centers_y > ymin, mesh.grid_cell_centers_y < ymax
+        )
 
         xc = mesh.grid_cell_centers_x[xind]
         yc = mesh.grid_cell_centers_y[yind]
@@ -251,13 +274,15 @@ def extract_core_mesh(xyzlim, mesh, mesh_type='tensor'):
         hx = mesh.h[0][xind]
         hy = mesh.h[1][yind]
 
-        x0 = [xc[0]-hx[0]*0.5, yc[0]-hy[0]*0.5]
+        x0 = [xc[0] - hx[0] * 0.5, yc[0] - hy[0] * 0.5]
 
         meshCore = discretize.TensorMesh([hx, hy], x0=x0)
 
         actind = (
-            (mesh.gridCC[:, 0] > xmin) & (mesh.gridCC[:, 0] < xmax) &
-            (mesh.gridCC[:, 1] > ymin) & (mesh.gridCC[:, 1] < ymax)
+            (mesh.gridCC[:, 0] > xmin)
+            & (mesh.gridCC[:, 0] < xmax)
+            & (mesh.gridCC[:, 1] > ymin)
+            & (mesh.gridCC[:, 1] < ymax)
         )
 
     elif mesh.dim == 3:
@@ -265,9 +290,15 @@ def extract_core_mesh(xyzlim, mesh, mesh_type='tensor'):
         ymin, ymax = xyzlim[1, 0], xyzlim[1, 1]
         zmin, zmax = xyzlim[2, 0], xyzlim[2, 1]
 
-        xind = np.logical_and(mesh.grid_cell_centers_x > xmin, mesh.grid_cell_centers_x < xmax)
-        yind = np.logical_and(mesh.grid_cell_centers_y > ymin, mesh.grid_cell_centers_y < ymax)
-        zind = np.logical_and(mesh.grid_cell_centers_z > zmin, mesh.grid_cell_centers_z < zmax)
+        xind = np.logical_and(
+            mesh.grid_cell_centers_x > xmin, mesh.grid_cell_centers_x < xmax
+        )
+        yind = np.logical_and(
+            mesh.grid_cell_centers_y > ymin, mesh.grid_cell_centers_y < ymax
+        )
+        zind = np.logical_and(
+            mesh.grid_cell_centers_z > zmin, mesh.grid_cell_centers_z < zmax
+        )
 
         xc = mesh.grid_cell_centers_x[xind]
         yc = mesh.grid_cell_centers_y[yind]
@@ -277,14 +308,17 @@ def extract_core_mesh(xyzlim, mesh, mesh_type='tensor'):
         hy = mesh.h[1][yind]
         hz = mesh.h[2][zind]
 
-        x0 = [xc[0]-hx[0]*0.5, yc[0]-hy[0]*0.5, zc[0]-hz[0]*0.5]
+        x0 = [xc[0] - hx[0] * 0.5, yc[0] - hy[0] * 0.5, zc[0] - hz[0] * 0.5]
 
         meshCore = discretize.TensorMesh([hx, hy, hz], x0=x0)
 
         actind = (
-            (mesh.gridCC[:, 0] > xmin) & (mesh.gridCC[:, 0] < xmax) &
-            (mesh.gridCC[:, 1] > ymin) & (mesh.gridCC[:, 1] < ymax) &
-            (mesh.gridCC[:, 2] > zmin) & (mesh.gridCC[:, 2] < zmax)
+            (mesh.gridCC[:, 0] > xmin)
+            & (mesh.gridCC[:, 0] < xmax)
+            & (mesh.gridCC[:, 1] > ymin)
+            & (mesh.gridCC[:, 1] < ymax)
+            & (mesh.gridCC[:, 2] > zmin)
+            & (mesh.gridCC[:, 2] < zmax)
         )
 
     else:
@@ -294,12 +328,13 @@ def extract_core_mesh(xyzlim, mesh, mesh_type='tensor'):
 
 
 def mesh_builder_xyz(
-    xyz, h,
+    xyz,
+    h,
     padding_distance=[[0, 0], [0, 0], [0, 0]],
     base_mesh=None,
     depth_core=None,
     expansion_factor=1.3,
-    mesh_type='tensor'
+    mesh_type="tensor",
 ):
     """
     Function to quickly generate a Tensor or Tree mesh
@@ -356,10 +391,8 @@ def mesh_builder_xyz(
         plt.show()
 
     """
-    if mesh_type.lower() not in ['tensor', 'tree']:
-        raise ValueError(
-            'Revise mesh_type. Only TENSOR | TREE mesh are implemented'
-        )
+    if mesh_type.lower() not in ["tensor", "tree"]:
+        raise ValueError("Revise mesh_type. Only TENSOR | TREE mesh are implemented")
 
     # Get extent of points
     limits = []
@@ -376,7 +409,7 @@ def mesh_builder_xyz(
         nC[-1] += int(depth_core / h[-1])
         limits[-1][1] -= depth_core
 
-    if mesh_type.lower() == 'tensor':
+    if mesh_type.lower() == "tensor":
 
         # Figure out padding cells from distance
         def expand(dx, pad):
@@ -384,7 +417,7 @@ def mesh_builder_xyz(
             nc = 0
             while length < pad:
                 nc += 1
-                length = np.sum(dx * expansion_factor**(np.asarray(range(nc))+1))
+                length = np.sum(dx * expansion_factor ** (np.asarray(range(nc)) + 1))
 
             return nc
 
@@ -392,40 +425,38 @@ def mesh_builder_xyz(
         h_dim = []
         nC_x0 = []
         for dim in range(xyz.shape[1]):
-            h_dim += [[
-                (
-                    h[dim],
-                    expand(h[dim], padding_distance[dim][0]),
-                    -expansion_factor
-                ),
-                (h[dim], nC[dim]),
-                (
-                    h[dim],
-                    expand(h[dim], padding_distance[dim][1]),
-                    expansion_factor
-                )
-            ]]
+            h_dim += [
+                [
+                    (
+                        h[dim],
+                        expand(h[dim], padding_distance[dim][0]),
+                        -expansion_factor,
+                    ),
+                    (h[dim], nC[dim]),
+                    (
+                        h[dim],
+                        expand(h[dim], padding_distance[dim][1]),
+                        expansion_factor,
+                    ),
+                ]
+            ]
 
             nC_x0 += [h_dim[-1][0][1]]
 
         # Create mesh
         mesh = discretize.TensorMesh(h_dim)
 
-    elif mesh_type.lower() == 'tree':
+    elif mesh_type.lower() == "tree":
 
         # Figure out full extent required from input
         h_dim = []
         nC_x0 = []
         for ii, cc in enumerate(nC):
-            extent = (
-                limits[ii][0] -
-                limits[ii][1] +
-                np.sum(padding_distance[ii])
-            )
+            extent = limits[ii][0] - limits[ii][1] + np.sum(padding_distance[ii])
 
             # Number of cells at the small octree level
             maxLevel = int(np.log2(extent / h[ii])) + 1
-            h_dim += [np.ones(2**maxLevel) * h[ii]]
+            h_dim += [np.ones(2 ** maxLevel) * h[ii]]
 
         # Define the mesh and origin
         mesh = discretize.TreeMesh(h_dim)
@@ -436,11 +467,10 @@ def mesh_builder_xyz(
 
             nC_x0 += [int(np.ceil((mesh.h[ii].sum() - core) / h[ii] / 2))]
 
-
     # Set origin
     x0 = []
     for ii, hi in enumerate(mesh.h):
-        x0 += [limits[ii][1] - np.sum(hi[:nC_x0[ii]])]
+        x0 += [limits[ii][1] - np.sum(hi[: nC_x0[ii]])]
 
     mesh.x0 = np.hstack(x0)
 
@@ -450,22 +480,17 @@ def mesh_builder_xyz(
         for dim in range(base_mesh.dim):
 
             cc_base = getattr(
-                    base_mesh,
-                    "grid_cell_centers_{orientation}".format(
-                            orientation=axis[dim]
-                        )
+                base_mesh,
+                "grid_cell_centers_{orientation}".format(orientation=axis[dim]),
             )
 
             cc_local = getattr(
-                    mesh,
-                    "grid_cell_centers_{orientation}".format(
-                            orientation=axis[dim]
-                        )
+                mesh, "grid_cell_centers_{orientation}".format(orientation=axis[dim])
             )
 
             shift = (
-                cc_base[np.max([np.searchsorted(cc_base, center[dim])-1, 0])] -
-                cc_local[np.max([np.searchsorted(cc_local, center[dim])-1, 0])]
+                cc_base[np.max([np.searchsorted(cc_base, center[dim]) - 1, 0])]
+                - cc_local[np.max([np.searchsorted(cc_local, center[dim]) - 1, 0])]
             )
 
             x0[dim] += shift
@@ -476,13 +501,14 @@ def mesh_builder_xyz(
 
 
 def refine_tree_xyz(
-    mesh, xyz,
+    mesh,
+    xyz,
     method="radial",
     octree_levels=[1, 1, 1],
     octree_levels_padding=None,
     finalize=False,
     min_level=0,
-    max_distance=np.inf
+    max_distance=np.inf,
 ):
     """
     Refine a TreeMesh based on xyz point locations
@@ -532,8 +558,8 @@ def refine_tree_xyz(
     # Prime the refinement against large cells
     mesh.insert_cells(
         xyz,
-        [mesh.max_level - np.nonzero(octree_levels)[0][0]]*xyz.shape[0],
-        finalize=False
+        [mesh.max_level - np.nonzero(octree_levels)[0][0]] * xyz.shape[0],
+        finalize=False,
     )
 
     # Trigger different refine methods
@@ -544,9 +570,9 @@ def refine_tree_xyz(
 
         # Compute the outer limits of each octree level
         rMax = np.cumsum(
-            mesh.h[0].min() *
-            np.asarray(octree_levels) *
-            2**np.arange(len(octree_levels))
+            mesh.h[0].min()
+            * np.asarray(octree_levels)
+            * 2 ** np.arange(len(octree_levels))
         )
 
         # Radial function
@@ -558,41 +584,40 @@ def refine_tree_xyz(
 
                 if r < rMax[ii]:
 
-                    return mesh.max_level-ii
+                    return mesh.max_level - ii
 
             return min_level
 
         mesh.refine(inBall, finalize=finalize)
 
-    elif method.lower() == 'surface':
+    elif method.lower() == "surface":
 
         # Compute centroid
         centroid = np.mean(xyz, axis=0)
 
         if mesh.dim == 2:
-            rOut = np.abs(centroid[0]-xyz).max()
+            rOut = np.abs(centroid[0] - xyz).max()
             hz = mesh.h[1].min()
         else:
             # Largest outer point distance
-            rOut = np.linalg.norm(np.r_[
-                np.abs(centroid[0]-xyz[:, 0]).max(),
-                np.abs(centroid[1]-xyz[:, 1]).max()
+            rOut = np.linalg.norm(
+                np.r_[
+                    np.abs(centroid[0] - xyz[:, 0]).max(),
+                    np.abs(centroid[1] - xyz[:, 1]).max(),
                 ]
             )
             hz = mesh.h[2].min()
 
         # Compute maximum depth of refinement
         zmax = np.cumsum(
-            hz *
-            np.asarray(octree_levels) *
-            2**np.arange(len(octree_levels))
+            hz * np.asarray(octree_levels) * 2 ** np.arange(len(octree_levels))
         )
 
         # Compute maximum horizontal padding offset
         padWidth = np.cumsum(
-            mesh.h[0].min() *
-            np.asarray(octree_levels_padding) *
-            2**np.arange(len(octree_levels_padding))
+            mesh.h[0].min()
+            * np.asarray(octree_levels_padding)
+            * 2 ** np.arange(len(octree_levels_padding))
         )
 
         # Increment the vertical offset
@@ -600,15 +625,15 @@ def refine_tree_xyz(
         xyPad = -1
         depth = zmax[-1]
         # Cycle through the Tree levels backward
-        for ii in range(len(octree_levels)-1, -1, -1):
+        for ii in range(len(octree_levels) - 1, -1, -1):
 
-            dx = mesh.h[0].min() * 2**ii
+            dx = mesh.h[0].min() * 2 ** ii
 
             if mesh.dim == 3:
-                dy = mesh.h[1].min() * 2**ii
-                dz = mesh.h[2].min() * 2**ii
+                dy = mesh.h[1].min() * 2 ** ii
+                dz = mesh.h[2].min() * 2 ** ii
             else:
-                dz = mesh.h[1].min() * 2**ii
+                dz = mesh.h[1].min() * 2 ** ii
 
             # Increase the horizontal extent of the surface
             if xyPad != padWidth[ii]:
@@ -616,30 +641,28 @@ def refine_tree_xyz(
 
                 # Calculate expansion for padding XY cells
                 expansion_factor = (rOut + xyPad) / rOut
-                xLoc = (xyz - centroid)*expansion_factor + centroid
+                xLoc = (xyz - centroid) * expansion_factor + centroid
 
                 if mesh.dim == 3:
                     # Create a new triangulated surface
                     tri2D = Delaunay(xLoc[:, :2])
                     F = interpolate.LinearNDInterpolator(tri2D, xLoc[:, 2])
                 else:
-                    F = interpolate.interp1d(xLoc[:, 0], xLoc[:, 1], fill_value='extrapolate')
+                    F = interpolate.interp1d(
+                        xLoc[:, 0], xLoc[:, 1], fill_value="extrapolate"
+                    )
 
             limx = np.r_[xLoc[:, 0].max(), xLoc[:, 0].min()]
-            nCx = int(np.ceil((limx[0]-limx[1]) / dx))
+            nCx = int(np.ceil((limx[0] - limx[1]) / dx))
 
             if mesh.dim == 3:
                 limy = np.r_[xLoc[:, 1].max(), xLoc[:, 1].min()]
-                nCy = int(np.ceil((limy[0]-limy[1]) / dy))
+                nCy = int(np.ceil((limy[0] - limy[1]) / dy))
 
                 # Create a grid at the octree level in xy
                 CCx, CCy = np.meshgrid(
-                    np.linspace(
-                        limx[1], limx[0], nCx
-                        ),
-                    np.linspace(
-                        limy[1], limy[0], nCy
-                        )
+                    np.linspace(limx[1], limx[0], nCx),
+                    np.linspace(limy[1], limy[0], nCy),
                 )
 
                 xy = np.c_[CCx.reshape(-1), CCy.reshape(-1)]
@@ -648,10 +671,8 @@ def refine_tree_xyz(
                 indexTri = tri2D.find_simplex(xy)
 
             else:
-                xy = np.linspace(
-                        limx[1], limx[0], nCx
-                        )
-                indexTri = np.ones_like(xy, dtype='bool')
+                xy = np.linspace(limx[1], limx[0], nCx)
+                indexTri = np.ones_like(xy, dtype="bool")
 
             # Interpolate the elevation linearly
             z = F(xy[indexTri != -1])
@@ -670,11 +691,9 @@ def refine_tree_xyz(
                 nnz = int(np.sum(indIn))
                 if nnz > 0:
                     mesh.insert_cells(
-                        np.c_[
-                                newLoc[indIn, :dim],
-                                newLoc[indIn, -1]-zOffset],
-                        np.ones(nnz)*mesh.max_level-ii,
-                        finalize=False
+                        np.c_[newLoc[indIn, :dim], newLoc[indIn, -1] - zOffset],
+                        np.ones(nnz) * mesh.max_level - ii,
+                        finalize=False,
                     )
 
                 zOffset += dz
@@ -684,7 +703,7 @@ def refine_tree_xyz(
         if finalize:
             mesh.finalize()
 
-    elif method.lower() == 'box':
+    elif method.lower() == "box":
 
         # Define the data extent [bottom SW, top NE]
         bsw = np.min(xyz, axis=0)
@@ -699,23 +718,22 @@ def refine_tree_xyz(
 
         # Pre-calculate max depth of each level
         zmax = np.cumsum(
-            hz * np.asarray(octree_levels) *
-            2**np.arange(len(octree_levels))
+            hz * np.asarray(octree_levels) * 2 ** np.arange(len(octree_levels))
         )
 
         if mesh.dim == 2:
             # Pre-calculate outer extent of each level
             padWidth = np.cumsum(
-                    mesh.h[0].min() *
-                    np.asarray(octree_levels_padding) *
-                    2**np.arange(len(octree_levels_padding))
-                )
+                mesh.h[0].min()
+                * np.asarray(octree_levels_padding)
+                * 2 ** np.arange(len(octree_levels_padding))
+            )
 
             # Make a list of outer limits
             BSW = [
                 bsw - np.r_[padWidth[ii], zmax[ii]]
                 for ii, (octZ, octXY) in enumerate(
-                        zip(octree_levels, octree_levels_padding)
+                    zip(octree_levels, octree_levels_padding)
                 )
             ]
 
@@ -731,21 +749,23 @@ def refine_tree_xyz(
 
             # Pre-calculate outer X extent of each level
             padWidth_x = np.cumsum(
-                    hx * np.asarray(octree_levels_padding) *
-                    2**np.arange(len(octree_levels_padding))
-                )
+                hx
+                * np.asarray(octree_levels_padding)
+                * 2 ** np.arange(len(octree_levels_padding))
+            )
 
             # Pre-calculate outer Y extent of each level
             padWidth_y = np.cumsum(
-                    hy * np.asarray(octree_levels_padding) *
-                    2**np.arange(len(octree_levels_padding))
-                )
+                hy
+                * np.asarray(octree_levels_padding)
+                * 2 ** np.arange(len(octree_levels_padding))
+            )
 
             # Make a list of outer limits
             BSW = [
                 bsw - np.r_[padWidth_x[ii], padWidth_y[ii], zmax[ii]]
                 for ii, (octZ, octXY) in enumerate(
-                        zip(octree_levels, octree_levels_padding)
+                    zip(octree_levels, octree_levels_padding)
                 )
             ]
 
@@ -763,7 +783,7 @@ def refine_tree_xyz(
             for ii, (nC, bsw, tne) in enumerate(zip(octree_levels, BSW, TNE)):
 
                 if np.all([xyz > bsw, xyz < tne]):
-                    return mesh.max_level-ii
+                    return mesh.max_level - ii
 
             return cell._level
 
@@ -771,14 +791,13 @@ def refine_tree_xyz(
 
     else:
         raise NotImplementedError(
-            "Only method= 'radial', 'surface'"
-            " or 'box' have been implemented"
+            "Only method= 'radial', 'surface'" " or 'box' have been implemented"
         )
 
     return mesh
 
 
-def active_from_xyz(mesh, xyz, grid_reference='CC', method='linear'):
+def active_from_xyz(mesh, xyz, grid_reference="CC", method="linear"):
     """Returns an active cell index array below a surface
 
     Get active cells in the `mesh` that are below the surface create by
@@ -848,19 +867,23 @@ def active_from_xyz(mesh, xyz, grid_reference='CC', method='linear'):
     """
     try:
         if not mesh.is_symmetric:
-            raise NotImplementedError('Unsymmetric CylindricalMesh is not yet supported')
+            raise NotImplementedError(
+                "Unsymmetric CylindricalMesh is not yet supported"
+            )
     except AttributeError:
         pass
 
     if grid_reference not in ["N", "CC"]:
-        raise ValueError("Value of grid_reference must be 'N' (nodal) or 'CC' (cell center)")
+        raise ValueError(
+            "Value of grid_reference must be 'N' (nodal) or 'CC' (cell center)"
+        )
 
     dim = mesh.dim - 1
 
     if mesh.dim == 3:
         if xyz.shape[1] != 3:
             raise ValueError("xyz locations of shape (*, 3) required for 3D mesh")
-        if method == 'linear':
+        if method == "linear":
             tri2D = Delaunay(xyz[:, :2])
             z_interpolate = interpolate.LinearNDInterpolator(tri2D, xyz[:, 2])
         else:
@@ -875,54 +898,67 @@ def active_from_xyz(mesh, xyz, grid_reference='CC', method='linear'):
         if xyz.ndim != 1:
             raise ValueError("xyz locations of shape (*, ) required for 1D mesh")
 
-    if grid_reference == 'CC':
+    if grid_reference == "CC":
         # this should work for all 4 mesh types...
         locations = mesh.gridCC
 
         if mesh.dim == 1:
-            active = np.zeros(mesh.nC, dtype='bool')
-            active[np.searchsorted(mesh.grid_cell_centers_x, xyz).max():] = True
+            active = np.zeros(mesh.nC, dtype="bool")
+            active[np.searchsorted(mesh.grid_cell_centers_x, xyz).max() :] = True
             return active
 
-    elif grid_reference == 'N':
+    elif grid_reference == "N":
 
         try:
             # try for Cyl, Tensor, and Tree operations
             if mesh.dim == 3:
-                locations = np.vstack([
-                    mesh.gridCC + (np.c_[-1, 1, 1][:, None] * mesh.h_gridded / 2.).squeeze(),
-                    mesh.gridCC + (np.c_[-1, -1, 1][:, None] * mesh.h_gridded / 2.).squeeze(),
-                    mesh.gridCC + (np.c_[1, 1, 1][:, None] * mesh.h_gridded / 2.).squeeze(),
-                    mesh.gridCC + (np.c_[1, -1, 1][:, None] * mesh.h_gridded / 2.).squeeze()
-                ])
+                locations = np.vstack(
+                    [
+                        mesh.gridCC
+                        + (np.c_[-1, 1, 1][:, None] * mesh.h_gridded / 2.0).squeeze(),
+                        mesh.gridCC
+                        + (np.c_[-1, -1, 1][:, None] * mesh.h_gridded / 2.0).squeeze(),
+                        mesh.gridCC
+                        + (np.c_[1, 1, 1][:, None] * mesh.h_gridded / 2.0).squeeze(),
+                        mesh.gridCC
+                        + (np.c_[1, -1, 1][:, None] * mesh.h_gridded / 2.0).squeeze(),
+                    ]
+                )
 
             elif mesh.dim == 2:
-                locations = np.vstack([
-                    mesh.gridCC + (np.c_[-1, 1][:, None] * mesh.h_gridded / 2.).squeeze(),
-                    mesh.gridCC + (np.c_[1, 1][:, None] * mesh.h_gridded / 2.).squeeze(),
-                ])
+                locations = np.vstack(
+                    [
+                        mesh.gridCC
+                        + (np.c_[-1, 1][:, None] * mesh.h_gridded / 2.0).squeeze(),
+                        mesh.gridCC
+                        + (np.c_[1, 1][:, None] * mesh.h_gridded / 2.0).squeeze(),
+                    ]
+                )
 
             else:
-                active = np.zeros(mesh.nC, dtype='bool')
-                active[np.searchsorted(mesh.grid_nodes_x, xyz).max():] = True
+                active = np.zeros(mesh.nC, dtype="bool")
+                active[np.searchsorted(mesh.grid_nodes_x, xyz).max() :] = True
 
                 return active
         except AttributeError:
             # Try for Curvilinear Mesh
-            gridN = mesh.gridN.reshape((*mesh.vnN, mesh.dim), order='F')
+            gridN = mesh.gridN.reshape((*mesh.vnN, mesh.dim), order="F")
             if mesh.dim == 3:
-                locations = np.vstack([
-                    gridN[:-1, 1:, 1:].reshape((-1, mesh.dim), order='F'),
-                    gridN[:-1, :-1, 1:].reshape((-1, mesh.dim), order='F'),
-                    gridN[1:, 1:, 1:].reshape((-1, mesh.dim), order='F'),
-                    gridN[1:, :-1, 1:].reshape((-1, mesh.dim), order='F'),
-                ])
+                locations = np.vstack(
+                    [
+                        gridN[:-1, 1:, 1:].reshape((-1, mesh.dim), order="F"),
+                        gridN[:-1, :-1, 1:].reshape((-1, mesh.dim), order="F"),
+                        gridN[1:, 1:, 1:].reshape((-1, mesh.dim), order="F"),
+                        gridN[1:, :-1, 1:].reshape((-1, mesh.dim), order="F"),
+                    ]
+                )
             elif mesh.dim == 2:
-                locations = np.vstack([
-                    gridN[:-1, 1:].reshape((-1, mesh.dim), order='F'),
-                    gridN[1:, 1:].reshape((-1, mesh.dim), order='F'),
-                ])
-
+                locations = np.vstack(
+                    [
+                        gridN[:-1, 1:].reshape((-1, mesh.dim), order="F"),
+                        gridN[1:, 1:].reshape((-1, mesh.dim), order="F"),
+                    ]
+                )
 
     # Interpolate z values on CC or N
     z_xyz = z_interpolate(locations[:, :-1]).squeeze()
@@ -936,13 +972,19 @@ def active_from_xyz(mesh, xyz, grid_reference='CC', method='linear'):
 
     # Create an active bool of all True
     active = np.all(
-        (locations[:, dim] < z_xyz).reshape((mesh.nC, -1), order='F'), axis=1
+        (locations[:, dim] < z_xyz).reshape((mesh.nC, -1), order="F"), axis=1
     )
 
     return active.ravel()
 
 
-exampleLrmGrid = deprecate_function(example_curvilinear_grid, 'exampleLrmGrid', removal_version="1.0.0")
-meshTensor = deprecate_function(mesh_tensor, 'meshTensor', removal_version="1.0.0")
-closestPoints = deprecate_function(closest_points, 'closestPoints', removal_version="1.0.0")
-ExtractCoreMesh = deprecate_function(extract_core_mesh, 'ExtractCoreMesh', removal_version="1.0.0")
+exampleLrmGrid = deprecate_function(
+    example_curvilinear_grid, "exampleLrmGrid", removal_version="1.0.0"
+)
+meshTensor = deprecate_function(mesh_tensor, "meshTensor", removal_version="1.0.0")
+closestPoints = deprecate_function(
+    closest_points, "closestPoints", removal_version="1.0.0"
+)
+ExtractCoreMesh = deprecate_function(
+    extract_core_mesh, "ExtractCoreMesh", removal_version="1.0.0"
+)

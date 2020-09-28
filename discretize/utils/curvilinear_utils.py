@@ -27,8 +27,12 @@ def volume_tetrahedron(xyz, A, B, C, D):
     BD = xyz[B, :] - xyz[D, :]
     CD = xyz[C, :] - xyz[D, :]
 
-    V = (BD[:, 0]*CD[:, 1] - BD[:, 1]*CD[:, 0])*AD[:, 2] - (BD[:, 0]*CD[:, 2] - BD[:, 2]*CD[:, 0])*AD[:, 1] + (BD[:, 1]*CD[:, 2] - BD[:, 2]*CD[:, 1])*AD[:, 0]
-    return V/6
+    V = (
+        (BD[:, 0] * CD[:, 1] - BD[:, 1] * CD[:, 0]) * AD[:, 2]
+        - (BD[:, 0] * CD[:, 2] - BD[:, 2] * CD[:, 0]) * AD[:, 1]
+        + (BD[:, 1] * CD[:, 2] - BD[:, 2] * CD[:, 1]) * AD[:, 0]
+    )
+    return V / 6
 
 
 def index_cube(nodes, grid_size, n=None):
@@ -83,12 +87,13 @@ def index_cube(nodes, grid_size, n=None):
         if n is None:
             n = tuple(x - 1 for x in grid_size)
     except TypeError:
-        return TypeError('grid_size must be iterable')
+        return TypeError("grid_size must be iterable")
     # Make sure that we choose from the possible nodes.
-    possibleNodes = 'ABCD' if dim == 2 else 'ABCDEFGH'
+    possibleNodes = "ABCD" if dim == 2 else "ABCDEFGH"
     for node in nodes:
-        assert node in possibleNodes, "Nodes must be chosen from: '{0!s}'".format(possibleNodes)
-
+        assert node in possibleNodes, "Nodes must be chosen from: '{0!s}'".format(
+            possibleNodes
+        )
 
     if dim == 2:
         ij = ndgrid(np.arange(n[0]), np.arange(n[1]))
@@ -97,17 +102,29 @@ def index_cube(nodes, grid_size, n=None):
         ijk = ndgrid(np.arange(n[0]), np.arange(n[1]), np.arange(n[2]))
         i, j, k = ijk[:, 0], ijk[:, 1], ijk[:, 2]
     else:
-        raise Exception('Only 2 and 3 dimensions supported.')
+        raise Exception("Only 2 and 3 dimensions supported.")
 
-    nodeMap = {'A': [0, 0, 0], 'B': [0, 1, 0], 'C': [1, 1, 0], 'D': [1, 0, 0],
-               'E': [0, 0, 1], 'F': [0, 1, 1], 'G': [1, 1, 1], 'H': [1, 0, 1]}
+    nodeMap = {
+        "A": [0, 0, 0],
+        "B": [0, 1, 0],
+        "C": [1, 1, 0],
+        "D": [1, 0, 0],
+        "E": [0, 0, 1],
+        "F": [0, 1, 1],
+        "G": [1, 1, 1],
+        "H": [1, 0, 1],
+    }
     out = ()
     for node in nodes:
         shift = nodeMap[node]
         if dim == 2:
-            out += (sub2ind(grid_size, np.c_[i+shift[0], j+shift[1]]).flatten(), )
+            out += (sub2ind(grid_size, np.c_[i + shift[0], j + shift[1]]).flatten(),)
         elif dim == 3:
-            out += (sub2ind(grid_size, np.c_[i+shift[0], j+shift[1], k+shift[2]]).flatten(), )
+            out += (
+                sub2ind(
+                    grid_size, np.c_[i + shift[0], j + shift[1], k + shift[2]]
+                ).flatten(),
+            )
 
     return out
 
@@ -140,15 +157,15 @@ def face_info(xyz, A, B, C, D, average=True, normalize_normals=True, **kwargs):
     Last modified on: 2013/07/26
 
     """
-    if 'normalizeNormals' in kwargs:
+    if "normalizeNormals" in kwargs:
         warnings.warn(
-            'The normalizeNormals keyword argument has been deprecated, please use normalize_normals. '
-            'This will be removed in discretize 1.0.0',
-            FutureWarning
+            "The normalizeNormals keyword argument has been deprecated, please use normalize_normals. "
+            "This will be removed in discretize 1.0.0",
+            FutureWarning,
         )
-        normalize_normals = kwargs['normalizeNormals']
-    assert type(average) is bool, 'average must be a boolean'
-    assert type(normalize_normals) is bool, 'normalize_normals must be a boolean'
+        normalize_normals = kwargs["normalizeNormals"]
+    assert type(average) is bool, "average must be a boolean"
+    assert type(normalize_normals) is bool, "normalize_normals must be a boolean"
     # compute normal that is pointing away from you.
     #
     #    A -------A-B------- B
@@ -165,20 +182,22 @@ def face_info(xyz, A, B, C, D, average=True, normalize_normals=True, **kwargs):
     DA = xyz[A, :] - xyz[D, :]
 
     def cross(X, Y):
-        return np.c_[X[:, 1]*Y[:, 2] - X[:, 2]*Y[:, 1],
-                     X[:, 2]*Y[:, 0] - X[:, 0]*Y[:, 2],
-                     X[:, 0]*Y[:, 1] - X[:, 1]*Y[:, 0]]
+        return np.c_[
+            X[:, 1] * Y[:, 2] - X[:, 2] * Y[:, 1],
+            X[:, 2] * Y[:, 0] - X[:, 0] * Y[:, 2],
+            X[:, 0] * Y[:, 1] - X[:, 1] * Y[:, 0],
+        ]
 
     nA = cross(AB, DA)
     nB = cross(BC, AB)
     nC = cross(CD, BC)
     nD = cross(DA, CD)
 
-    length = lambda x: np.sqrt(x[:, 0]**2 + x[:, 1]**2 + x[:, 2]**2)
-    normalize = lambda x: x/np.kron(np.ones((1, x.shape[1])), mkvc(length(x), 2))
+    length = lambda x: np.sqrt(x[:, 0] ** 2 + x[:, 1] ** 2 + x[:, 2] ** 2)
+    normalize = lambda x: x / np.kron(np.ones((1, x.shape[1])), mkvc(length(x), 2))
     if average:
         # average the normals at each vertex.
-        N = (nA + nB + nC + nD)/4  # this is intrinsically weighted by area
+        N = (nA + nB + nC + nD) / 4  # this is intrinsically weighted by area
         # normalize
         N = normalize(N)
     else:
@@ -195,11 +214,11 @@ def face_info(xyz, A, B, C, D, average=True, normalize_normals=True, **kwargs):
     # So also could be viewed as the average parallelogram.
     #
     # TODO: This does not compute correctly for concave quadrilaterals
-    area = (length(nA)+length(nB)+length(nC)+length(nD))/4
+    area = (length(nA) + length(nB) + length(nC) + length(nD)) / 4
 
     return N, area
 
 
-volTetra = deprecate_function(volume_tetrahedron, 'volTetra', removal_version="1.0.0")
-indexCube = deprecate_function(index_cube, 'indexCube', removal_version="1.0.0")
-faceInfo = deprecate_function(face_info, 'faceInfo', removal_version="1.0.0")
+volTetra = deprecate_function(volume_tetrahedron, "volTetra", removal_version="1.0.0")
+indexCube = deprecate_function(index_cube, "indexCube", removal_version="1.0.0")
+faceInfo = deprecate_function(face_info, "faceInfo", removal_version="1.0.0")

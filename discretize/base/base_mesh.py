@@ -21,25 +21,23 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
 
     _REGISTRY = {}
     _aliases = {
-        'nC': 'n_cells',
-        'nN': 'n_nodes',
-        'nEx': 'n_edges_x',
-        'nEy': 'n_edges_y',
-        'nEz': 'n_edges_z',
-        'nE': 'n_edges',
-        'nFx': 'n_faces_x',
-        'nFy': 'n_faces_y',
-        'nFz': 'n_faces_z',
-        'nF': 'n_faces'
+        "nC": "n_cells",
+        "nN": "n_nodes",
+        "nEx": "n_edges_x",
+        "nEy": "n_edges_y",
+        "nEz": "n_edges_z",
+        "nE": "n_edges",
+        "nFx": "n_faces_x",
+        "nFy": "n_faces_y",
+        "nFz": "n_faces_z",
+        "nF": "n_faces",
     }
 
     # Properties
     _n = properties.Tuple(
         "Tuple of number of cells in each direction (dim, )",
         prop=properties.Integer(
-            "Number of cells along a particular direction",
-            cast=True,
-            min=1
+            "Number of cells along a particular direction", cast=True, min=1
         ),
         min_length=1,
         max_length=3,
@@ -50,7 +48,7 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
     x0 = properties.Array(
         "origin of the mesh (dim, )",
         dtype=(float, int),
-        shape=('*',),
+        shape=("*",),
         required=True,
     )
 
@@ -73,48 +71,43 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         return object.__getattribute__(self, name)
 
     # Validators
-    @properties.validator('_n')
+    @properties.validator("_n")
     def _check_n_shape(self, change):
-        if change['previous'] != properties.undefined:
+        if change["previous"] != properties.undefined:
             # _n can only be set once
-            if change['previous'] != change['value']:
+            if change["previous"] != change["value"]:
                 raise AttributeError("Cannot change n. Instead, create a new mesh")
         else:
             # check that if h has been set, sizes still agree
-            if getattr(self, 'h', None) is not None and len(self.h) > 0:
-                for i in range(len(change['value'])):
-                    if len(self.h[i]) != change['value'][i]:
+            if getattr(self, "h", None) is not None and len(self.h) > 0:
+                for i in range(len(change["value"])):
+                    if len(self.h[i]) != change["value"][i]:
                         raise properties.ValidationError(
                             "Mismatched shape of n. Expected {}, len(h[{}]), got "
-                            "{}".format(
-                                len(self.h[i]), i, change['value'][i]
-                            )
+                            "{}".format(len(self.h[i]), i, change["value"][i])
                         )
 
             # check that if nodes have been set for curvi mesh, sizes still
             # agree
-            if (
-                getattr(self, 'nodes', None) is not None and
-                len(self.nodes) > 0
-            ):
-                for i in range(len(change['value'])):
-                    if self.nodes[0].shape[i]-1 != change['value'][i]:
+            if getattr(self, "nodes", None) is not None and len(self.nodes) > 0:
+                for i in range(len(change["value"])):
+                    if self.nodes[0].shape[i] - 1 != change["value"][i]:
                         raise properties.ValidationError(
                             "Mismatched shape of n. Expected {}, len(nodes[{}]), "
                             "got {}".format(
-                                self.nodes[0].shape[i]-1, i, change['value'][i]
+                                self.nodes[0].shape[i] - 1, i, change["value"][i]
                             )
                         )
 
-    @properties.validator('x0')
+    @properties.validator("x0")
     def _check_x0(self, change):
         if not (
-            not isinstance(change['value'], properties.utils.Sentinel) and
-            change['value'] is not None
+            not isinstance(change["value"], properties.utils.Sentinel)
+            and change["value"] is not None
         ):
             raise Exception("n must be set prior to setting x0")
 
-        if len(self._n) != len(change['value']):
+        if len(self._n) != len(change["value"]):
             raise Exception(
                 "Dimension mismatch. x0 has length {} != len(n) which is "
                 "{}".format(len(self.x0), len(self._n))
@@ -249,7 +242,9 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         >>> M = discretize.TensorMesh([np.ones(n) for n in [2,3]])
         >>> M.plot_grid(edges=True, show_it=True)
         """
-        return tuple(x for x in [self.n_edges_x, self.n_edges_y, self.n_edges_z] if x is not None)
+        return tuple(
+            x for x in [self.n_edges_x, self.n_edges_y, self.n_edges_z] if x is not None
+        )
 
     @property
     def n_edges(self):
@@ -335,7 +330,9 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         >>> M = discretize.TensorMesh([np.ones(n) for n in [2,3]])
         >>> M.plot_grid(faces=True, show_it=True)
         """
-        return tuple(x for x in [self.n_faces_x, self.n_faces_y, self.n_faces_z] if x is not None)
+        return tuple(
+            x for x in [self.n_faces_x, self.n_faces_y, self.n_faces_z] if x is not None
+        )
 
     @property
     def n_faces(self):
@@ -368,22 +365,24 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
             normals, (n_faces, dim)
         """
         if self.dim == 2:
-            nX = np.c_[
-                np.ones(self.n_faces_x), np.zeros(self.n_faces_x)
-            ]
-            nY = np.c_[
-                np.zeros(self.n_faces_y), np.ones(self.n_faces_y)
-            ]
+            nX = np.c_[np.ones(self.n_faces_x), np.zeros(self.n_faces_x)]
+            nY = np.c_[np.zeros(self.n_faces_y), np.ones(self.n_faces_y)]
             return np.r_[nX, nY]
         elif self.dim == 3:
             nX = np.c_[
-                np.ones(self.n_faces_x), np.zeros(self.n_faces_x), np.zeros(self.n_faces_x)
+                np.ones(self.n_faces_x),
+                np.zeros(self.n_faces_x),
+                np.zeros(self.n_faces_x),
             ]
             nY = np.c_[
-                np.zeros(self.n_faces_y), np.ones(self.n_faces_y), np.zeros(self.n_faces_y)
+                np.zeros(self.n_faces_y),
+                np.ones(self.n_faces_y),
+                np.zeros(self.n_faces_y),
             ]
             nZ = np.c_[
-                np.zeros(self.n_faces_z), np.zeros(self.n_faces_z), np.ones(self.n_faces_z)
+                np.zeros(self.n_faces_z),
+                np.zeros(self.n_faces_z),
+                np.ones(self.n_faces_z),
             ]
             return np.r_[nX, nY, nZ]
 
@@ -397,27 +396,29 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
             normals, (n_edges, dim)
         """
         if self.dim == 2:
-            tX = np.c_[
-                np.ones(self.n_edges_x), np.zeros(self.n_edges_x)
-            ]
-            tY = np.c_[
-                np.zeros(self.n_edges_y), np.ones(self.n_edges_y)
-            ]
+            tX = np.c_[np.ones(self.n_edges_x), np.zeros(self.n_edges_x)]
+            tY = np.c_[np.zeros(self.n_edges_y), np.ones(self.n_edges_y)]
             return np.r_[tX, tY]
         elif self.dim == 3:
             tX = np.c_[
-                np.ones(self.n_edges_x), np.zeros(self.n_edges_x), np.zeros(self.n_edges_x)
+                np.ones(self.n_edges_x),
+                np.zeros(self.n_edges_x),
+                np.zeros(self.n_edges_x),
             ]
             tY = np.c_[
-                np.zeros(self.n_edges_y), np.ones(self.n_edges_y), np.zeros(self.n_edges_y)
+                np.zeros(self.n_edges_y),
+                np.ones(self.n_edges_y),
+                np.zeros(self.n_edges_y),
             ]
             tZ = np.c_[
-                np.zeros(self.n_edges_z), np.zeros(self.n_edges_z), np.ones(self.n_edges_z)
+                np.zeros(self.n_edges_z),
+                np.zeros(self.n_edges_z),
+                np.ones(self.n_edges_z),
             ]
             return np.r_[tX, tY, tZ]
 
     def project_face_vector(self, fV):
-        """ Project vectors onto the faces of the mesh.
+        """Project vectors onto the faces of the mesh.
 
         Given a vector, fV, in cartesian coordinates, this will project
         it onto the mesh using the normals
@@ -434,14 +435,14 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
 
         """
         if not isinstance(fV, np.ndarray):
-            raise Exception('fV must be an ndarray')
+            raise Exception("fV must be an ndarray")
         if not (
-            len(fV.shape) == 2 and
-            fV.shape[0] == self.n_faces and
-            fV.shape[1] == self.dim
+            len(fV.shape) == 2
+            and fV.shape[0] == self.n_faces
+            and fV.shape[1] == self.dim
         ):
-            raise Exception('fV must be an ndarray of shape (n_faces x dim)')
-        return np.sum(fV*self.face_normals, 1)
+            raise Exception("fV must be an ndarray of shape (n_faces x dim)")
+        return np.sum(fV * self.face_normals, 1)
 
     def project_edge_vector(self, eV):
         """Project vectors onto the edges of the mesh
@@ -461,16 +462,16 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
 
         """
         if not isinstance(eV, np.ndarray):
-            raise Exception('eV must be an ndarray')
+            raise Exception("eV must be an ndarray")
         if not (
-            len(eV.shape) == 2 and
-            eV.shape[0] == self.n_edges and
-            eV.shape[1] == self.dim
+            len(eV.shape) == 2
+            and eV.shape[0] == self.n_edges
+            and eV.shape[1] == self.dim
         ):
-            raise Exception('eV must be an ndarray of shape (nE x dim)')
-        return np.sum(eV*self.edge_tangents, 1)
+            raise Exception("eV must be an ndarray of shape (nE x dim)")
+        return np.sum(eV * self.edge_tangents, 1)
 
-    def save(self, filename='mesh.json', verbose=False):
+    def save(self, filename="mesh.json", verbose=False):
         """
         Save the mesh to json
         :param str file: filename for saving the casing properties
@@ -478,11 +479,11 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         """
 
         f = os.path.abspath(filename)  # make sure we are working with abs path
-        with open(f, 'w') as outfile:
+        with open(f, "w") as outfile:
             json.dump(self.serialize(), outfile)
 
         if verbose:
-            print('Saved {}'.format(f))
+            print("Saved {}".format(f))
 
         return f
 
@@ -493,28 +494,30 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         return properties.copy(self)
 
     axis_u = properties.Vector3(
-        'Vector orientation of u-direction. For more details see the docs for the :attr:`~discretize.base.BaseMesh.rotation_matrix` property.',
-        default='X',
-        length=1
+        "Vector orientation of u-direction. For more details see the docs for the :attr:`~discretize.base.BaseMesh.rotation_matrix` property.",
+        default="X",
+        length=1,
     )
     axis_v = properties.Vector3(
-        'Vector orientation of v-direction. For more details see the docs for the :attr:`~discretize.base.BaseMesh.rotation_matrix` property.',
-        default='Y',
-        length=1
+        "Vector orientation of v-direction. For more details see the docs for the :attr:`~discretize.base.BaseMesh.rotation_matrix` property.",
+        default="Y",
+        length=1,
     )
     axis_w = properties.Vector3(
-        'Vector orientation of w-direction. For more details see the docs for the :attr:`~discretize.base.BaseMesh.rotation_matrix` property.',
-        default='Z',
-        length=1
+        "Vector orientation of w-direction. For more details see the docs for the :attr:`~discretize.base.BaseMesh.rotation_matrix` property.",
+        default="Z",
+        length=1,
     )
 
     @properties.validator
     def _validate_orientation(self):
         """Check if axes are orthogonal"""
-        if not (np.abs(self.axis_u.dot(self.axis_v) < 1e-6) and
-                np.abs(self.axis_v.dot(self.axis_w) < 1e-6) and
-                np.abs(self.axis_w.dot(self.axis_u) < 1e-6)):
-            raise ValueError('axis_u, axis_v, and axis_w must be orthogonal')
+        if not (
+            np.abs(self.axis_u.dot(self.axis_v) < 1e-6)
+            and np.abs(self.axis_v.dot(self.axis_w) < 1e-6)
+            and np.abs(self.axis_w.dot(self.axis_u) < 1e-6)
+        ):
+            raise ValueError("axis_u, axis_v, and axis_w must be orthogonal")
         return True
 
     @property
@@ -522,9 +525,11 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         """True if the axes are rotated from the traditional <X,Y,Z> system
         with vectors of :math:`(1,0,0)`, :math:`(0,1,0)`, and :math:`(0,0,1)`
         """
-        if (    np.allclose(self.axis_u, (1, 0, 0)) and
-                np.allclose(self.axis_v, (0, 1, 0)) and
-                np.allclose(self.axis_w, (0, 0, 1)) ):
+        if (
+            np.allclose(self.axis_u, (1, 0, 0))
+            and np.allclose(self.axis_v, (0, 1, 0))
+            and np.allclose(self.axis_w, (0, 0, 1))
+        ):
             return False
         return True
 
@@ -548,55 +553,61 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         return np.array([self.axis_u, self.axis_v, self.axis_w])
 
     reference_system = properties.String(
-        'The type of coordinate reference frame. Can take on the values ' +
-        'cartesian, cylindrical, or spherical. Abbreviations of these are allowed.',
-        default='cartesian',
-        change_case='lower',
+        "The type of coordinate reference frame. Can take on the values "
+        + "cartesian, cylindrical, or spherical. Abbreviations of these are allowed.",
+        default="cartesian",
+        change_case="lower",
     )
 
     @properties.validator
     def _validate_reference_system(self):
         """Check if the reference system is of a known type."""
-        choices = ['cartesian', 'cylindrical', 'spherical']
+        choices = ["cartesian", "cylindrical", "spherical"]
         # Here are a few abbreviations that users can harnes
         abrevs = {
-            'car': choices[0],
-            'cart': choices[0],
-            'cy': choices[1],
-            'cyl': choices[1],
-            'sph': choices[2],
+            "car": choices[0],
+            "cart": choices[0],
+            "cy": choices[1],
+            "cyl": choices[1],
+            "sph": choices[2],
         }
         # Get the name and fix it if it is abbreviated
         self.reference_system = abrevs.get(self.reference_system, self.reference_system)
         if self.reference_system not in choices:
-            raise ValueError('Coordinate system ({}) unknown.'.format(self.reference_system))
+            raise ValueError(
+                "Coordinate system ({}) unknown.".format(self.reference_system)
+            )
         return True
 
     # DEPRECATED
-    normals = deprecate_property("face_normals", 'normals', removal_version='1.0.0')
-    tangents = deprecate_property("edge_tangents", 'tangents', removal_version='1.0.0')
-    projectEdgeVector = deprecate_method("project_edge_vector", 'projectEdgeVector', removal_version='1.0.0')
-    projectFaceVector = deprecate_method("project_face_vector", 'projectFaceVector', removal_version='1.0.0')
-
+    normals = deprecate_property("face_normals", "normals", removal_version="1.0.0")
+    tangents = deprecate_property("edge_tangents", "tangents", removal_version="1.0.0")
+    projectEdgeVector = deprecate_method(
+        "project_edge_vector", "projectEdgeVector", removal_version="1.0.0"
+    )
+    projectFaceVector = deprecate_method(
+        "project_face_vector", "projectFaceVector", removal_version="1.0.0"
+    )
 
 
 class BaseRectangularMesh(BaseMesh):
     """
     BaseRectangularMesh
     """
-    _aliases = {
-        **BaseMesh._aliases, **{
-            'vnC': 'shape_cells',
-            'vnN': 'shape_nodes',
-            'vnEx': 'shape_edges_x',
-            'vnEy': 'shape_edges_y',
-            'vnEz': 'shape_edges_z',
-            'vnFx': 'shape_faces_x',
-            'vnFy': 'shape_faces_y',
-            'vnFz': 'shape_faces_z',
-        }
-    }
 
+    _aliases = {
+        **BaseMesh._aliases,
+        **{
+            "vnC": "shape_cells",
+            "vnN": "shape_nodes",
+            "vnEx": "shape_edges_x",
+            "vnEy": "shape_edges_y",
+            "vnEz": "shape_edges_z",
+            "vnFx": "shape_faces_x",
+            "vnFy": "shape_faces_y",
+            "vnFz": "shape_faces_z",
+        },
+    }
 
     def __init__(self, n=None, x0=None, **kwargs):
         BaseMesh.__init__(self, n=n, x0=x0, **kwargs)
@@ -776,7 +787,7 @@ class BaseRectangularMesh(BaseMesh):
             return
         return int(np.prod(self.shape_faces_z))
 
-    def reshape(self, x, x_type='CC', out_type='CC', format='V', **kwargs):
+    def reshape(self, x, x_type="CC", out_type="CC", format="V", **kwargs):
         """A quick reshape command that will do the best it
         can at giving you what you want.
 
@@ -817,27 +828,23 @@ class BaseRectangularMesh(BaseMesh):
             # Separates each component of the edgeVector into 3 vectors
             eX, eY, eZ = r(edgeVector, 'E', 'E', 'V')
         """
-        if 'xType' in kwargs:
+        if "xType" in kwargs:
             warnings.warn(
-                'The xType keyword argument has been deprecated, please use x_type. '
-                'This will be removed in discretize 1.0.0',
-                FutureWarning
+                "The xType keyword argument has been deprecated, please use x_type. "
+                "This will be removed in discretize 1.0.0",
+                FutureWarning,
             )
-            x_type = kwargs['xType']
-        if 'outType' in kwargs:
+            x_type = kwargs["xType"]
+        if "outType" in kwargs:
             warnings.warn(
-                'The outType keyword argument has been deprecated, please use out_type. '
-                'This will be removed in discretize 1.0.0',
-                FutureWarning
+                "The outType keyword argument has been deprecated, please use out_type. "
+                "This will be removed in discretize 1.0.0",
+                FutureWarning,
             )
-            out_type = kwargs['outType']
+            out_type = kwargs["outType"]
 
-        allowed_x_type = [
-            'CC', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez'
-        ]
-        if not (
-            isinstance(x, list) or isinstance(x, np.ndarray)
-        ):
+        allowed_x_type = ["CC", "N", "F", "Fx", "Fy", "Fz", "E", "Ex", "Ey", "Ez"]
+        if not (isinstance(x, list) or isinstance(x, np.ndarray)):
             raise Exception("x must be either a list or a ndarray")
         if x_type not in allowed_x_type:
             raise Exception(
@@ -849,25 +856,19 @@ class BaseRectangularMesh(BaseMesh):
                 "out_type must be either "
                 "'CC', 'N', 'F', Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', or 'Ez'"
             )
-        if format not in ['M', 'V']:
+        if format not in ["M", "V"]:
             raise Exception("format must be either 'M' or 'V'")
-        if out_type[:len(x_type)] != x_type:
-            raise Exception(
-                "You cannot change types when reshaping."
-            )
+        if out_type[: len(x_type)] != x_type:
+            raise Exception("You cannot change types when reshaping.")
         if x_type not in out_type:
             raise Exception("You cannot change type of components.")
 
         if isinstance(x, list):
             for i, xi in enumerate(x):
                 if not isinstance(x, np.ndarray):
-                    raise Exception(
-                        "x[{0:d}] must be a numpy array".format(i)
-                    )
+                    raise Exception("x[{0:d}] must be a numpy array".format(i))
                 if xi.size != x[0].size:
-                    raise Exception(
-                        "Number of elements in list must not change."
-                    )
+                    raise Exception("Number of elements in list must not change.")
 
             x_array = np.ones((x.size, len(x)))
             # Unwrap it and put it in a np array
@@ -880,40 +881,36 @@ class BaseRectangularMesh(BaseMesh):
 
         x = x[:]  # make a copy.
         x_type_is_FE_xyz = (
-            len(x_type) > 1 and
-            x_type[0] in ['F', 'E'] and
-            x_type[1] in ['x', 'y', 'z']
+            len(x_type) > 1 and x_type[0] in ["F", "E"] and x_type[1] in ["x", "y", "z"]
         )
 
         def outKernal(xx, nn):
             """Returns xx as either a matrix (shape == nn) or a vector."""
-            if format == 'M':
-                return xx.reshape(nn, order='F')
-            elif format == 'V':
+            if format == "M":
+                return xx.reshape(nn, order="F")
+            elif format == "V":
                 return mkvc(xx)
 
         def switchKernal(xx):
             """Switches over the different options."""
-            if x_type in ['CC', 'N']:
-                nn = self.shape_cells if x_type == 'CC' else self.shape_nodes
+            if x_type in ["CC", "N"]:
+                nn = self.shape_cells if x_type == "CC" else self.shape_nodes
                 if xx.size != np.prod(nn):
-                    raise Exception(
-                        "Number of elements must not change."
-                    )
+                    raise Exception("Number of elements must not change.")
                 return outKernal(xx, nn)
-            elif x_type in ['F', 'E']:
+            elif x_type in ["F", "E"]:
                 # This will only deal with components of fields,
                 # not full 'F' or 'E'
                 xx = mkvc(xx)  # unwrap it in case it is a matrix
-                nn = self.vnF if x_type == 'F' else self.vnE
+                nn = self.vnF if x_type == "F" else self.vnE
                 nn = np.r_[0, nn]
 
                 nx = [0, 0, 0]
-                nx[0] = self.shape_faces_x if x_type == 'F' else self.shape_edges_x
-                nx[1] = self.shape_faces_y if x_type == 'F' else self.shape_edges_y
-                nx[2] = self.shape_faces_z if x_type == 'F' else self.shape_edges_z
+                nx[0] = self.shape_faces_x if x_type == "F" else self.shape_edges_x
+                nx[1] = self.shape_faces_y if x_type == "F" else self.shape_edges_y
+                nx[2] = self.shape_faces_z if x_type == "F" else self.shape_edges_z
 
-                for dim, dimName in enumerate(['x', 'y', 'z']):
+                for dim, dimName in enumerate(["x", "y", "z"]):
                     if dimName in out_type:
                         if self.dim <= dim:
                             raise Exception(
@@ -921,37 +918,35 @@ class BaseRectangularMesh(BaseMesh):
                                 "{}{}".format(x_type, dimName)
                             )
                         if xx.size != np.sum(nn):
-                            raise Exception(
-                                "Vector is not the right size."
-                            )
-                        start = np.sum(nn[:dim+1])
-                        end = np.sum(nn[:dim+2])
+                            raise Exception("Vector is not the right size.")
+                        start = np.sum(nn[: dim + 1])
+                        end = np.sum(nn[: dim + 2])
                         return outKernal(xx[start:end], nx[dim])
 
             elif x_type_is_FE_xyz:
                 # This will deal with partial components (x, y or z)
                 # lying on edges or faces
-                if 'x' in x_type:
-                    nn = self.shape_faces_x if 'F' in x_type else self.shape_edges_x
-                elif 'y' in x_type:
-                    nn = self.shape_faces_y if 'F' in x_type else self.shape_edges_y
-                elif 'z' in x_type:
-                    nn = self.shape_faces_z if 'F' in x_type else self.shape_edges_z
+                if "x" in x_type:
+                    nn = self.shape_faces_x if "F" in x_type else self.shape_edges_x
+                elif "y" in x_type:
+                    nn = self.shape_faces_y if "F" in x_type else self.shape_edges_y
+                elif "z" in x_type:
+                    nn = self.shape_faces_z if "F" in x_type else self.shape_edges_z
                 if xx.size != np.prod(nn):
-                    raise Exception(f'Vector is not the right size. Expected {np.prod(nn)}, got {xx.size}')
+                    raise Exception(
+                        f"Vector is not the right size. Expected {np.prod(nn)}, got {xx.size}"
+                    )
                 return outKernal(xx, nn)
 
         # Check if we are dealing with a vector quantity
         isVectorQuantity = len(x.shape) == 2 and x.shape[1] == self.dim
 
-        if out_type in ['F', 'E']:
+        if out_type in ["F", "E"]:
             if isVectorQuantity:
-                raise Exception(
-                    'Not sure what to do with a vector vector quantity..'
-                )
+                raise Exception("Not sure what to do with a vector vector quantity..")
             outTypeCopy = out_type
             out = ()
-            for ii, dirName in enumerate(['x', 'y', 'z'][:self.dim]):
+            for ii, dirName in enumerate(["x", "y", "z"][: self.dim]):
                 out_type = outTypeCopy + dirName
                 out += (switchKernal(x),)
             return out
@@ -964,7 +959,7 @@ class BaseRectangularMesh(BaseMesh):
             return switchKernal(x)
 
     # DEPRECATED
-    r = deprecate_method("reshape", 'r', removal_version="1.0.0")
+    r = deprecate_method("reshape", "r", removal_version="1.0.0")
 
     @property
     def nCx(self):
@@ -979,7 +974,10 @@ class BaseRectangularMesh(BaseMesh):
           `mesh.shape_cells[0]` to reduce namespace clutter.
         """
 
-        warnings.warn("nCx has been deprecated, please access as mesh.shape_cells[0]", FutureWarning)
+        warnings.warn(
+            "nCx has been deprecated, please access as mesh.shape_cells[0]",
+            FutureWarning,
+        )
         return self.shape_cells[0]
 
     @property
@@ -996,7 +994,10 @@ class BaseRectangularMesh(BaseMesh):
           `mesh.shape_cells[1]` to reduce namespace clutter.
         """
 
-        warnings.warn("nCy has been deprecated, please access as mesh.shape_cells[1]", FutureWarning)
+        warnings.warn(
+            "nCy has been deprecated, please access as mesh.shape_cells[1]",
+            FutureWarning,
+        )
         if self.dim < 2:
             return None
         return self.shape_cells[1]
@@ -1015,7 +1016,10 @@ class BaseRectangularMesh(BaseMesh):
           `mesh.shape_cells[2]` to reduce namespace clutter.
         """
 
-        warnings.warn("nCz has been deprecated, please access as mesh.shape_cells[2]", FutureWarning)
+        warnings.warn(
+            "nCz has been deprecated, please access as mesh.shape_cells[2]",
+            FutureWarning,
+        )
         if self.dim < 3:
             return None
         return self.shape_cells[2]
@@ -1033,7 +1037,10 @@ class BaseRectangularMesh(BaseMesh):
           `mesh.shape_nodes[0]` to reduce namespace clutter.
         """
 
-        warnings.warn("nNx has been deprecated, please access as mesh.shape_nodes[0]", FutureWarning)
+        warnings.warn(
+            "nNx has been deprecated, please access as mesh.shape_nodes[0]",
+            FutureWarning,
+        )
         return self.shape_nodes[0]
 
     @property
@@ -1050,7 +1057,10 @@ class BaseRectangularMesh(BaseMesh):
           `mesh.shape_nodes[1]` to reduce namespace clutter.
         """
 
-        warnings.warn("nNy has been deprecated, please access as mesh.shape_nodes[1]", FutureWarning)
+        warnings.warn(
+            "nNy has been deprecated, please access as mesh.shape_nodes[1]",
+            FutureWarning,
+        )
         if self.dim < 2:
             return None
         return self.shape_nodes[1]
@@ -1069,7 +1079,10 @@ class BaseRectangularMesh(BaseMesh):
           `mesh.shape_nodes[2]` to reduce namespace clutter.
         """
 
-        warnings.warn("nNz has been deprecated, please access as mesh.shape_nodes[2]", FutureWarning)
+        warnings.warn(
+            "nNz has been deprecated, please access as mesh.shape_nodes[2]",
+            FutureWarning,
+        )
         if self.dim < 3:
             return None
         return self.shape_nodes[2]

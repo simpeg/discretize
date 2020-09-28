@@ -86,12 +86,15 @@ def assign_cell_data(vtkDS, models=None):
         for name, mod in models.items():
             # Convert numpy array
             if mod.shape[0] != nc:
-                raise RuntimeError('Number of model cells ({}) (first axis of model array) for "{}" does not match number of mesh cells ({}).'.format(mod.shape[0], name, nc))
+                raise RuntimeError(
+                    'Number of model cells ({}) (first axis of model array) for "{}" does not match number of mesh cells ({}).'.format(
+                        mod.shape[0], name, nc
+                    )
+                )
             vtkDoubleArr = _nps.numpy_to_vtk(mod, deep=1)
             vtkDoubleArr.SetName(name)
             vtkDS.GetCellData().AddArray(vtkDoubleArr)
     return vtkDS
-
 
 
 class InterfaceVTK(object):
@@ -193,7 +196,7 @@ class InterfaceVTK(object):
             ptsMat = np.c_[ptsMat, np.zeros(ptsMat.shape[0])]
             VTK_CELL_TYPE = _vtk.VTK_PIXEL
         if ptsMat.shape[1] != 3:
-            raise RuntimeError('Points of the mesh are improperly defined.')
+            raise RuntimeError("Points of the mesh are improperly defined.")
         # Rotate the points to the cartesian system
         ptsMat = np.dot(ptsMat, mesh.rotation_matrix)
         # Grab the points
@@ -202,10 +205,16 @@ class InterfaceVTK(object):
         # Cells
         cellArray = [c for c in mesh]
         cellConn = np.array([cell.nodes for cell in cellArray])
-        cellsMat = np.concatenate((np.ones((cellConn.shape[0], 1), dtype=int)*cellConn.shape[1], cellConn), axis=1).ravel()
+        cellsMat = np.concatenate(
+            (np.ones((cellConn.shape[0], 1), dtype=int) * cellConn.shape[1], cellConn),
+            axis=1,
+        ).ravel()
         cellsArr = _vtk.vtkCellArray()
         cellsArr.SetNumberOfCells(cellConn.shape[0])
-        cellsArr.SetCells(cellConn.shape[0], _nps.numpy_to_vtk(cellsMat, deep=True, array_type=_vtk.VTK_ID_TYPE))
+        cellsArr.SetCells(
+            cellConn.shape[0],
+            _nps.numpy_to_vtk(cellsMat, deep=True, array_type=_vtk.VTK_ID_TYPE),
+        )
         # Make the object
         output = _vtk.vtkUnstructuredGrid()
         output.SetPoints(vtkPts)
@@ -213,7 +222,7 @@ class InterfaceVTK(object):
         # Add the level of refinement as a cell array
         cell_levels = np.array([cell._level for cell in cellArray])
         refineLevelArr = _nps.numpy_to_vtk(cell_levels, deep=1)
-        refineLevelArr.SetName('octreeLevel')
+        refineLevelArr.SetName("octreeLevel")
         output.GetCellData().AddArray(refineLevelArr)
         ubc_order = mesh._ubc_order
         # order_ubc will re-order from treemesh ordering to UBC ordering
@@ -221,7 +230,7 @@ class InterfaceVTK(object):
         un_order = np.empty_like(ubc_order)
         un_order[ubc_order] = np.arange(len(ubc_order))
         order = _nps.numpy_to_vtk(un_order)
-        order.SetName('index_cell_corner')
+        order.SetName("index_cell_corner")
         output.GetCellData().AddArray(order)
         # Assign the model('s) to the object
         return assign_cell_data(output, models=models)
@@ -235,14 +244,14 @@ class InterfaceVTK(object):
             nullDim = dims.index(None)
             ptsMat = np.insert(ptsMat, nullDim, np.zeros(ptsMat.shape[0]), axis=1)
         if ptsMat.shape[1] != 3:
-            raise RuntimeError('Points of the mesh are improperly defined.')
+            raise RuntimeError("Points of the mesh are improperly defined.")
         # Convert the points
         vtkPts = _vtk.vtkPoints()
         vtkPts.SetData(_nps.numpy_to_vtk(ptsMat, deep=True))
         # Uncover hidden dimension
-        dims = tuple(0 if dim is None else dim+1 for dim in dims)
+        dims = tuple(0 if dim is None else dim + 1 for dim in dims)
         output = _vtk.vtkStructuredGrid()
-        output.SetDimensions(dims[0], dims[1], dims[2]) # note this subtracts 1
+        output.SetDimensions(dims[0], dims[1], dims[2])  # note this subtracts 1
         output.SetPoints(vtkPts)
         # Assign the model('s) to the object
         return assign_cell_data(output, models=models)
@@ -256,7 +265,7 @@ class InterfaceVTK(object):
             nodes = np.c_[mesh.gridN, np.zeros((mesh.nN, 1))]
         # Now garuntee nodes are correct
         if nodes.shape != (mesh.nN, 3):
-            raise RuntimeError('Nodes of the grid are improperly defined.')
+            raise RuntimeError("Nodes of the grid are improperly defined.")
         # Rotate the points based on the axis orientations
         mesh._validate_orientation()
         return np.dot(nodes, mesh.rotation_matrix)
@@ -304,8 +313,9 @@ class InterfaceVTK(object):
         # Use a structured grid where points are rotated to the cartesian system
         ptsMat = InterfaceVTK.__get_rotated_nodes(mesh)
         # Assign the model('s) to the object
-        return InterfaceVTK.__create_structured_grid(ptsMat, mesh.shape_cells, models=models)
-
+        return InterfaceVTK.__create_structured_grid(
+            ptsMat, mesh.shape_cells, models=models
+        )
 
     def __curvilinear_mesh_to_vtk(mesh, models=None):
         """
@@ -323,8 +333,9 @@ class InterfaceVTK(object):
 
         """
         ptsMat = InterfaceVTK.__get_rotated_nodes(mesh)
-        return InterfaceVTK.__create_structured_grid(ptsMat, mesh.shape_cells, models=models)
-
+        return InterfaceVTK.__create_structured_grid(
+            ptsMat, mesh.shape_cells, models=models
+        )
 
     def __cyl_mesh_to_vtk(mesh, models=None):
         """This treats the CylindricalMesh defined in cylindrical coordinates
@@ -333,8 +344,9 @@ class InterfaceVTK(object):
         # # Points
         # ptsMat = cyl2cart(mesh.gridN)
         # return InterfaceVTK.__create_structured_grid(ptsMat, mesh.shape_cells, models=models)
-        raise NotImplementedError('`CylindricalMesh`s are not currently supported for VTK conversion.')
-
+        raise NotImplementedError(
+            "`CylindricalMesh`s are not currently supported for VTK conversion."
+        )
 
     def to_vtk(mesh, models=None):
         """Convert this mesh object to it's proper VTK or ``pyvista`` data
@@ -349,23 +361,30 @@ class InterfaceVTK(object):
         """
         # TODO: mesh.validate()
         converters = {
-            'tree' : InterfaceVTK.__tree_mesh_to_vtk,
-            'tensor' : InterfaceVTK.__tensor_mesh_to_vtk,
-            'curv' : InterfaceVTK.__curvilinear_mesh_to_vtk,
-            #TODO: 'CylindricalMesh' : InterfaceVTK.__cyl_mesh_to_vtk,
-            }
+            "tree": InterfaceVTK.__tree_mesh_to_vtk,
+            "tensor": InterfaceVTK.__tensor_mesh_to_vtk,
+            "curv": InterfaceVTK.__curvilinear_mesh_to_vtk,
+            # TODO: 'CylindricalMesh' : InterfaceVTK.__cyl_mesh_to_vtk,
+        }
         key = mesh._meshType.lower()
         try:
             convert = converters[key]
         except KeyError:
-            raise RuntimeError('Mesh type `{}` is not currently supported for VTK conversion.'.format(key))
+            raise RuntimeError(
+                "Mesh type `{}` is not currently supported for VTK conversion.".format(
+                    key
+                )
+            )
         # Convert the data object then attempt a wrapping with `pyvista`
         cvtd = convert(mesh, models=models)
         try:
             import pyvista
+
             cvtd = pyvista.wrap(cvtd)
         except ImportError:
-            warnings.warn('For easier use of VTK objects, you should install `pyvista` (the VTK interface): pip install pyvista')
+            warnings.warn(
+                "For easier use of VTK objects, you should install `pyvista` (the VTK interface): pip install pyvista"
+            )
         return cvtd
 
     def toVTK(mesh, models=None):
@@ -381,12 +400,12 @@ class InterfaceVTK(object):
         """
         warnings.warn(
             "Deprecation Warning: `toVTK` is deprecated, use `to_vtk` instead",
-            category=FutureWarning
+            category=FutureWarning,
         )
         return InterfaceVTK.to_vtk(mesh, models=models)
 
     @staticmethod
-    def _save_unstructured_grid(filename, vtkUnstructGrid, directory=''):
+    def _save_unstructured_grid(filename, vtkUnstructGrid, directory=""):
         """Saves a VTK unstructured grid file (vtu) for an already generated
         :class:`pyvista.UnstructuredGrid` object.
 
@@ -401,17 +420,20 @@ class InterfaceVTK(object):
 
         """
         if not isinstance(vtkUnstructGrid, _vtk.vtkUnstructuredGrid):
-            raise RuntimeError('`_save_unstructured_grid` can only handle `vtkUnstructuredGrid` objects. `%s` is not supported.' % vtkUnstructGrid.__class__)
+            raise RuntimeError(
+                "`_save_unstructured_grid` can only handle `vtkUnstructuredGrid` objects. `%s` is not supported."
+                % vtkUnstructGrid.__class__
+            )
         # Check the extension of the filename
         fname = os.path.join(directory, filename)
         ext = os.path.splitext(fname)[1]
-        if ext == '':
-            fname = fname + '.vtu'
-        elif ext not in '.vtu':
-            raise IOError('{:s} is an incorrect extension, has to be .vtu'.format(ext))
+        if ext == "":
+            fname = fname + ".vtu"
+        elif ext not in ".vtu":
+            raise IOError("{:s} is an incorrect extension, has to be .vtu".format(ext))
         # Make the writer
         vtuWriteFilter = _vtkUnstWriter()
-        if float(_vtk_version.split('.')[0]) >= 6:
+        if float(_vtk_version.split(".")[0]) >= 6:
             vtuWriteFilter.SetInputDataObject(vtkUnstructGrid)
         else:
             vtuWriteFilter.SetInput(vtkUnstructGrid)
@@ -420,7 +442,7 @@ class InterfaceVTK(object):
         vtuWriteFilter.Update()
 
     @staticmethod
-    def _save_structured_grid(filename, vtkStructGrid, directory=''):
+    def _save_structured_grid(filename, vtkStructGrid, directory=""):
         """Saves a VTK structured grid file (vtk) for an already generated
         :class:`pyvista.StructuredGrid` object.
 
@@ -435,17 +457,21 @@ class InterfaceVTK(object):
 
         """
         if not isinstance(vtkStructGrid, _vtk.vtkStructuredGrid):
-            raise RuntimeError('`_save_structured_grid` can only handle `vtkStructuredGrid` objects. `{}` is not supported.'.format(vtkStructGrid.__class__))
+            raise RuntimeError(
+                "`_save_structured_grid` can only handle `vtkStructuredGrid` objects. `{}` is not supported.".format(
+                    vtkStructGrid.__class__
+                )
+            )
         # Check the extension of the filename
         fname = os.path.join(directory, filename)
         ext = os.path.splitext(fname)[1]
-        if ext == '':
-            fname = fname + '.vts'
-        elif ext not in '.vts':
-            raise IOError('{:s} is an incorrect extension, has to be .vts'.format(ext))
+        if ext == "":
+            fname = fname + ".vts"
+        elif ext not in ".vts":
+            raise IOError("{:s} is an incorrect extension, has to be .vts".format(ext))
         # Make the writer
         writer = _vtkStrucWriter()
-        if float(_vtk_version.split('.')[0]) >= 6:
+        if float(_vtk_version.split(".")[0]) >= 6:
             writer.SetInputDataObject(vtkStructGrid)
         else:
             writer.SetInput(vtkStructGrid)
@@ -454,7 +480,7 @@ class InterfaceVTK(object):
         writer.Update()
 
     @staticmethod
-    def _save_rectilinear_grid(filename, vtkRectGrid, directory=''):
+    def _save_rectilinear_grid(filename, vtkRectGrid, directory=""):
         """Saves a VTK rectilinear file (vtr) ffor an already generated
         :class:`pyvista.RectilinearGrid` object.
 
@@ -469,24 +495,28 @@ class InterfaceVTK(object):
 
         """
         if not isinstance(vtkRectGrid, _vtk.vtkRectilinearGrid):
-            raise RuntimeError('`_save_rectilinear_grid` can only handle `vtkRectilinearGrid` objects. `{}` is not supported.'.format(vtkRectGrid.__class__))
+            raise RuntimeError(
+                "`_save_rectilinear_grid` can only handle `vtkRectilinearGrid` objects. `{}` is not supported.".format(
+                    vtkRectGrid.__class__
+                )
+            )
         # Check the extension of the filename
         fname = os.path.join(directory, filename)
         ext = os.path.splitext(fname)[1]
-        if ext == '':
-            fname = fname + '.vtr'
-        elif ext not in '.vtr':
-            raise IOError('{:s} is an incorrect extension, has to be .vtr'.format(ext))
+        if ext == "":
+            fname = fname + ".vtr"
+        elif ext not in ".vtr":
+            raise IOError("{:s} is an incorrect extension, has to be .vtr".format(ext))
         # Write the file.
         vtrWriteFilter = _vtkRectWriter()
-        if float(_vtk_version.split('.')[0]) >= 6:
+        if float(_vtk_version.split(".")[0]) >= 6:
             vtrWriteFilter.SetInputDataObject(vtkRectGrid)
         else:
             vtuWriteFilter.SetInput(vtuObj)
         vtrWriteFilter.SetFileName(fname)
         vtrWriteFilter.Update()
 
-    def writeVTK(mesh, filename, models=None, directory=''):
+    def writeVTK(mesh, filename, models=None, directory=""):
         """Makes and saves a VTK object from this mesh and given models
 
         Parameters
@@ -505,18 +535,18 @@ class InterfaceVTK(object):
         """
         vtkObj = InterfaceVTK.to_vtk(mesh, models=models)
         writers = {
-            'vtkUnstructuredGrid' : InterfaceVTK._save_unstructured_grid,
-            'vtkRectilinearGrid' : InterfaceVTK._save_rectilinear_grid,
-            'vtkStructuredGrid' : InterfaceVTK._save_structured_grid,
-            }
+            "vtkUnstructuredGrid": InterfaceVTK._save_unstructured_grid,
+            "vtkRectilinearGrid": InterfaceVTK._save_rectilinear_grid,
+            "vtkStructuredGrid": InterfaceVTK._save_structured_grid,
+        }
         key = vtkObj.GetClassName()
         try:
             write = writers[key]
         except:
-            raise RuntimeError('VTK data type `%s` is not currently supported.' % key)
+            raise RuntimeError("VTK data type `%s` is not currently supported." % key)
         return write(filename, vtkObj, directory=directory)
 
-    def write_vtk(mesh, filename, models=None, directory=''):
+    def write_vtk(mesh, filename, models=None, directory=""):
         """Makes and saves a VTK object from this mesh and given models
 
         Parameters
@@ -570,8 +600,8 @@ class InterfaceTensorread_vtk(object):
             modelName = vtrGrid.GetCellData().GetArrayName(i)
             if np.all(zD < 0):
                 modFlip = _nps.vtk_to_numpy(vtrGrid.GetCellData().GetArray(i))
-                tM = tensMsh.reshape(modFlip, 'CC', 'CC', 'M')
-                modArr = tensMsh.reshape(tM[:, :, ::-1], 'CC', 'CC', 'V')
+                tM = tensMsh.reshape(modFlip, "CC", "CC", "M")
+                modArr = tensMsh.reshape(tM[:, :, ::-1], "CC", "CC", "V")
             else:
                 modArr = _nps.vtk_to_numpy(vtrGrid.GetCellData().GetArray(i))
             models[modelName] = modArr
@@ -580,7 +610,7 @@ class InterfaceTensorread_vtk(object):
         return tensMsh, models
 
     @classmethod
-    def read_vtk(TensorMesh, filename, directory=''):
+    def read_vtk(TensorMesh, filename, directory=""):
         """Read VTK Rectilinear (vtr xml file) and return Tensor mesh and model
 
         Parameters
@@ -606,9 +636,8 @@ class InterfaceTensorread_vtk(object):
         vtrGrid = vtrReader.GetOutput()
         return TensorMesh.vtk_to_tensor_mesh(vtrGrid)
 
-
     @classmethod
-    def readVTK(TensorMesh, filename, directory=''):
+    def readVTK(TensorMesh, filename, directory=""):
         """Read VTK Rectilinear (vtr xml file) and return Tensor mesh and model
 
         Parameters
@@ -628,6 +657,8 @@ class InterfaceTensorread_vtk(object):
         """
         warnings.warn(
             "Deprecation Warning: `readVTK` is deprecated, use `read_vtk` instead",
-            category=FutureWarning
+            category=FutureWarning,
         )
-        return InterfaceTensorread_vtk.read_vtk(TensorMesh, filename, directory=directory)
+        return InterfaceTensorread_vtk.read_vtk(
+            TensorMesh, filename, directory=directory
+        )

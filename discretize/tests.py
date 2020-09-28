@@ -22,28 +22,41 @@ except ImportError:
 
 try:
     import getpass
+
     name = getpass.getuser()[0].upper() + getpass.getuser()[1:]
 except Exception as e:
-    name = 'You'
+    name = "You"
 
 happiness = [
-    'The test be workin!', 'You get a gold star!', 'Yay passed!',
-    'Happy little convergence test!', 'That was easy!',
-    'Testing is important.', 'You are awesome.', 'Go Test Go!',
-    'Once upon a time, a happy little test passed.',
-    'And then everyone was happy.','Not just a pretty face '+name,
-    'You deserve a pat on the back!', 'Well done '+name+'!',
-    'Awesome, '+name+', just awesome.'
+    "The test be workin!",
+    "You get a gold star!",
+    "Yay passed!",
+    "Happy little convergence test!",
+    "That was easy!",
+    "Testing is important.",
+    "You are awesome.",
+    "Go Test Go!",
+    "Once upon a time, a happy little test passed.",
+    "And then everyone was happy.",
+    "Not just a pretty face " + name,
+    "You deserve a pat on the back!",
+    "Well done " + name + "!",
+    "Awesome, " + name + ", just awesome.",
 ]
 sadness = [
-    'No gold star for you.', 'Try again soon.',
-    'Thankfully,  persistence is a great substitute for talent.',
-    'It might be easier to call this a feature...', 'Coffee break?',
-    'Boooooooo  :(',  'Testing is important. Do it again.',
+    "No gold star for you.",
+    "Try again soon.",
+    "Thankfully,  persistence is a great substitute for talent.",
+    "It might be easier to call this a feature...",
+    "Coffee break?",
+    "Boooooooo  :(",
+    "Testing is important. Do it again.",
     "Did you put your clever trousers on today?",
-    'Just think about a dancing dinosaur and life will get better!',
-    'You had so much promise '+name+', oh well...', name.upper()+' ERROR!',
-    'Get on it '+name+'!', 'You break it, you fix it.'
+    "Just think about a dancing dinosaur and life will get better!",
+    "You had so much promise " + name + ", oh well...",
+    name.upper() + " ERROR!",
+    "Get on it " + name + "!",
+    "You break it, you fix it.",
 ]
 
 
@@ -53,31 +66,31 @@ def setup_mesh(mesh_type, nC, nDim):
     cells with edge length h=1/nc.
     """
 
-    if 'TensorMesh' in mesh_type:
-        if 'uniform' in mesh_type:
+    if "TensorMesh" in mesh_type:
+        if "uniform" in mesh_type:
             h = [nC, nC, nC]
-        elif 'random' in mesh_type:
-            h1 = np.random.rand(nC)*nC*0.5 + nC*0.5
-            h2 = np.random.rand(nC)*nC*0.5 + nC*0.5
-            h3 = np.random.rand(nC)*nC*0.5 + nC*0.5
-            h = [hi/np.sum(hi) for hi in [h1, h2, h3]]  # normalize
+        elif "random" in mesh_type:
+            h1 = np.random.rand(nC) * nC * 0.5 + nC * 0.5
+            h2 = np.random.rand(nC) * nC * 0.5 + nC * 0.5
+            h3 = np.random.rand(nC) * nC * 0.5 + nC * 0.5
+            h = [hi / np.sum(hi) for hi in [h1, h2, h3]]  # normalize
         else:
-            raise Exception('Unexpected mesh_type')
+            raise Exception("Unexpected mesh_type")
 
         mesh = TensorMesh(h[:nDim])
         max_h = max([np.max(hi) for hi in mesh.h])
 
-    elif 'CylindricalMesh' in mesh_type or 'CylMesh' in mesh_type:
-        if 'uniform' in mesh_type:
+    elif "CylindricalMesh" in mesh_type or "CylMesh" in mesh_type:
+        if "uniform" in mesh_type:
             h = [nC, nC, nC]
-        elif 'random' in mesh_type:
-            h1 = np.random.rand(nC)*nC*0.5 + nC*0.5
-            h2 = np.random.rand(nC)*nC*0.5 + nC*0.5
-            h3 = np.random.rand(nC)*nC*0.5 + nC*0.5
-            h = [hi/np.sum(hi) for hi in [h1, h2, h3]]  # normalize
-            h[1] = h[1]*2*np.pi
+        elif "random" in mesh_type:
+            h1 = np.random.rand(nC) * nC * 0.5 + nC * 0.5
+            h2 = np.random.rand(nC) * nC * 0.5 + nC * 0.5
+            h3 = np.random.rand(nC) * nC * 0.5 + nC * 0.5
+            h = [hi / np.sum(hi) for hi in [h1, h2, h3]]  # normalize
+            h[1] = h[1] * 2 * np.pi
         else:
-            raise Exception('Unexpected mesh_type')
+            raise Exception("Unexpected mesh_type")
 
         if nDim == 2:
             mesh = CylindricalMesh([h[0], 1, h[2]])
@@ -86,50 +99,49 @@ def setup_mesh(mesh_type, nC, nDim):
             mesh = CylindricalMesh(h)
             max_h = max([np.max(hi) for hi in mesh.h])
 
-    elif 'Curv' in mesh_type:
-        if 'uniform' in mesh_type:
-            kwrd = 'rect'
-        elif 'rotate' in mesh_type:
-            kwrd = 'rotate'
+    elif "Curv" in mesh_type:
+        if "uniform" in mesh_type:
+            kwrd = "rect"
+        elif "rotate" in mesh_type:
+            kwrd = "rotate"
         else:
-            raise Exception('Unexpected mesh_type')
+            raise Exception("Unexpected mesh_type")
         if nDim == 1:
-            raise Exception('Lom not supported for 1D')
+            raise Exception("Lom not supported for 1D")
         elif nDim == 2:
             X, Y = example_curvilinear_grid([nC, nC], kwrd)
             mesh = CurvilinearMesh([X, Y])
         elif nDim == 3:
             X, Y, Z = example_curvilinear_grid([nC, nC, nC], kwrd)
             mesh = CurvilinearMesh([X, Y, Z])
-        max_h = 1./nC
+        max_h = 1.0 / nC
 
-    elif 'Tree' in mesh_type:
+    elif "Tree" in mesh_type:
         if Tree is None:
-            raise Exception(
-                "Tree Mesh not installed. Run 'python setup.py install'"
-            )
+            raise Exception("Tree Mesh not installed. Run 'python setup.py install'")
         nC *= 2
-        if 'uniform' in mesh_type or 'notatree' in mesh_type:
+        if "uniform" in mesh_type or "notatree" in mesh_type:
             h = [nC, nC, nC]
-        elif 'random' in mesh_type:
-            h1 = np.random.rand(nC)*nC*0.5 + nC*0.5
-            h2 = np.random.rand(nC)*nC*0.5 + nC*0.5
-            h3 = np.random.rand(nC)*nC*0.5 + nC*0.5
-            h = [hi/np.sum(hi) for hi in [h1, h2, h3]]  # normalize
+        elif "random" in mesh_type:
+            h1 = np.random.rand(nC) * nC * 0.5 + nC * 0.5
+            h2 = np.random.rand(nC) * nC * 0.5 + nC * 0.5
+            h3 = np.random.rand(nC) * nC * 0.5 + nC * 0.5
+            h = [hi / np.sum(hi) for hi in [h1, h2, h3]]  # normalize
         else:
-            raise Exception('Unexpected mesh_type')
+            raise Exception("Unexpected mesh_type")
 
-        levels = int(np.log(nC)/np.log(2))
+        levels = int(np.log(nC) / np.log(2))
         mesh = Tree(h[:nDim], levels=levels)
 
         def function(cell):
-            if 'notatree' in mesh_type:
+            if "notatree" in mesh_type:
                 return levels - 1
             r = cell.center - 0.5
             dist = np.sqrt(r.dot(r))
             if dist < 0.2:
                 return levels
             return levels - 1
+
         mesh.refine(function)
         # mesh.number()
         # mesh.plot_grid(show_it=True)
@@ -195,10 +207,12 @@ class OrderTest(unittest.TestCase):
     """
 
     name = "Order Test"
-    expectedOrders = 2.  # This can be a list of orders, must be the same length as meshTypes
-    tolerance = 0.85     # This can also be a list, must be the same length as meshTypes
+    expectedOrders = (
+        2.0  # This can be a list of orders, must be the same length as meshTypes
+    )
+    tolerance = 0.85  # This can also be a list, must be the same length as meshTypes
     meshSizes = [4, 8, 16, 32]
-    meshTypes = ['uniformTensorMesh']
+    meshTypes = ["uniformTensorMesh"]
     _meshType = meshTypes[0]
     meshDimension = 3
 
@@ -209,7 +223,7 @@ class OrderTest(unittest.TestCase):
 
     def getError(self):
         """For given h, generate A[h], f and A(f) and return norm of error."""
-        return 1.
+        return 1.0
 
     def orderTest(self):
         """
@@ -220,9 +234,9 @@ class OrderTest(unittest.TestCase):
 
         """
         if not isinstance(self.meshTypes, list):
-            raise TypeError('meshTypes must be a list')
+            raise TypeError("meshTypes must be a list")
         if type(self.tolerance) is not list:
-            self.tolerance = np.ones(len(self.meshTypes))*self.tolerance
+            self.tolerance = np.ones(len(self.meshTypes)) * self.tolerance
 
         # if we just provide one expected order, repeat it for each mesh type
         if type(self.expectedOrders) == float or type(self.expectedOrders) == int:
@@ -232,7 +246,9 @@ class OrderTest(unittest.TestCase):
         except TypeError:
             raise TypeError("expectedOrders must be array like")
         if len(self.expectedOrders) != len(self.meshTypes):
-            raise ValueError('expectedOrders must have the same length as the meshTypes')
+            raise ValueError(
+                "expectedOrders must have the same length as the meshTypes"
+            )
 
         for ii_meshType, mesh_type in enumerate(self.meshTypes):
             self._meshType = mesh_type
@@ -240,33 +256,39 @@ class OrderTest(unittest.TestCase):
             self._expectedOrder = self.expectedOrders[ii_meshType]
 
             order = []
-            err_old = 0.
-            max_h_old = 0.
+            err_old = 0.0
+            max_h_old = 0.0
             for ii, nc in enumerate(self.meshSizes):
                 # Leave these as setupMesh and getError for deprecated classes that might have extended these two methods
                 max_h = self.setupMesh(nc)
                 err = self.getError()
                 if ii == 0:
-                    print('')
-                    print(self._meshType + ':  ' + self.name)
-                    print('_____________________________________________')
-                    print('   h  |    error    | e(i-1)/e(i) |  order')
-                    print('~~~~~~|~~~~~~~~~~~~~|~~~~~~~~~~~~~|~~~~~~~~~~')
-                    print('{0:4d}  |  {1:8.2e}   |'.format(nc, err))
+                    print("")
+                    print(self._meshType + ":  " + self.name)
+                    print("_____________________________________________")
+                    print("   h  |    error    | e(i-1)/e(i) |  order")
+                    print("~~~~~~|~~~~~~~~~~~~~|~~~~~~~~~~~~~|~~~~~~~~~~")
+                    print("{0:4d}  |  {1:8.2e}   |".format(nc, err))
                 else:
-                    order.append(np.log(err/err_old)/np.log(max_h/max_h_old))
-                    print('{0:4d}  |  {1:8.2e}   |   {2:6.4f}    |  {3:6.4f}'.format(nc, err, err_old/err, order[-1]))
+                    order.append(np.log(err / err_old) / np.log(max_h / max_h_old))
+                    print(
+                        "{0:4d}  |  {1:8.2e}   |   {2:6.4f}    |  {3:6.4f}".format(
+                            nc, err, err_old / err, order[-1]
+                        )
+                    )
                 err_old = err
                 max_h_old = max_h
-            print('---------------------------------------------')
-            passTest = np.mean(np.array(order)) > self._tolerance*self._expectedOrder
+            print("---------------------------------------------")
+            passTest = np.mean(np.array(order)) > self._tolerance * self._expectedOrder
             if passTest:
                 print(happiness[np.random.randint(len(happiness))])
             else:
-                print('Failed to pass test on ' + self._meshType + '.')
+                print("Failed to pass test on " + self._meshType + ".")
                 print(sadness[np.random.randint(len(sadness))])
-            print('')
-            self.assertGreater(np.mean(np.array(order)), self._tolerance*self._expectedOrder)
+            print("")
+            self.assertGreater(
+                np.mean(np.array(order)), self._tolerance * self._expectedOrder
+            )
 
     # expectedOrders = deprecate_property("expectedOrders", "expectedOrders", removal_version="1.0.0")
     # meshSizes = deprecate_property("meshSizes", "meshSizes", removal_version="1.0.0")
@@ -281,9 +303,15 @@ class OrderTest(unittest.TestCase):
 def rosenbrock(x, return_g=True, return_H=True):
     """Rosenbrock function for testing GaussNewton scheme"""
 
-    f = 100*(x[1]-x[0]**2)**2+(1-x[0])**2
-    g = np.array([2*(200*x[0]**3-200*x[0]*x[1]+x[0]-1), 200*(x[1]-x[0]**2)])
-    H = sp.csr_matrix(np.array([[-400*x[1]+1200*x[0]**2+2, -400*x[0]], [-400*x[0], 200]]))
+    f = 100 * (x[1] - x[0] ** 2) ** 2 + (1 - x[0]) ** 2
+    g = np.array(
+        [2 * (200 * x[0] ** 3 - 200 * x[0] * x[1] + x[0] - 1), 200 * (x[1] - x[0] ** 2)]
+    )
+    H = sp.csr_matrix(
+        np.array(
+            [[-400 * x[1] + 1200 * x[0] ** 2 + 2, -400 * x[0]], [-400 * x[0], 200]]
+        )
+    )
 
     out = (f,)
     if return_g:
@@ -293,38 +321,50 @@ def rosenbrock(x, return_g=True, return_H=True):
     return out if len(out) > 1 else out[0]
 
 
-def check_derivative(fctn, x0, num=7, plotIt=True, dx=None, expectedOrder=2, tolerance=0.85, eps=1e-10, ax=None):
+def check_derivative(
+    fctn,
+    x0,
+    num=7,
+    plotIt=True,
+    dx=None,
+    expectedOrder=2,
+    tolerance=0.85,
+    eps=1e-10,
+    ax=None,
+):
     """
-        Basic derivative check
+    Basic derivative check
 
-        Compares error decay of 0th and 1st order Taylor approximation at point
-        x0 for a randomized search direction.
+    Compares error decay of 0th and 1st order Taylor approximation at point
+    x0 for a randomized search direction.
 
-        :param callable fctn: function handle
-        :param numpy.ndarray x0: point at which to check derivative
-        :param int num: number of times to reduce step length, h
-        :param bool plotIt: if you would like to plot
-        :param numpy.ndarray dx: step direction
-        :param int expectedOrder: The order that you expect the derivative to yield.
-        :param float tolerance: The tolerance on the expected order.
-        :param float eps: What is zero?
-        :rtype: bool
-        :return: did you pass the test?!
+    :param callable fctn: function handle
+    :param numpy.ndarray x0: point at which to check derivative
+    :param int num: number of times to reduce step length, h
+    :param bool plotIt: if you would like to plot
+    :param numpy.ndarray dx: step direction
+    :param int expectedOrder: The order that you expect the derivative to yield.
+    :param float tolerance: The tolerance on the expected order.
+    :param float eps: What is zero?
+    :rtype: bool
+    :return: did you pass the test?!
 
 
-        .. plot::
-            :include-source:
+    .. plot::
+        :include-source:
 
-            from discretize import testing, utils
-            import numpy as np
+        from discretize import testing, utils
+        import numpy as np
 
-            def simplePass(x):
-                return np.sin(x), utils.sdiag(np.cos(x))
-            testing.checkDerivative(simplePass, np.random.randn(5))
+        def simplePass(x):
+            return np.sin(x), utils.sdiag(np.cos(x))
+        testing.checkDerivative(simplePass, np.random.randn(5))
     """
 
-    print("{0!s} checkDerivative {1!s}".format('='*20, '='*20))
-    print("iter    h         |ft-f0|   |ft-f0-h*J0*dx|  Order\n{0!s}".format(('-'*57)))
+    print("{0!s} checkDerivative {1!s}".format("=" * 20, "=" * 20))
+    print(
+        "iter    h         |ft-f0|   |ft-f0-h*J0*dx|  Order\n{0!s}".format(("-" * 57))
+    )
 
     f0, J0 = fctn(x0)
 
@@ -333,7 +373,7 @@ def check_derivative(fctn, x0, num=7, plotIt=True, dx=None, expectedOrder=2, tol
     if dx is None:
         dx = np.random.randn(len(x0))
 
-    h  = np.logspace(-1, -num, num)
+    h = np.logspace(-1, -num, num)
     E0 = np.ones(h.shape)
     E1 = np.ones(h.shape)
 
@@ -343,53 +383,64 @@ def check_derivative(fctn, x0, num=7, plotIt=True, dx=None, expectedOrder=2, tol
 
     for i in range(num):
         # Evaluate at test point
-        ft, Jt = fctn( x0 + h[i]*dx )
+        ft, Jt = fctn(x0 + h[i] * dx)
         # 0th order Taylor
-        E0[i] = l2norm( ft - f0 )
+        E0[i] = l2norm(ft - f0)
         # 1st order Taylor
         if inspect.isfunction(J0):
-            E1[i] = l2norm( ft - f0 - h[i]*J0(dx) )
+            E1[i] = l2norm(ft - f0 - h[i] * J0(dx))
         else:
             # We assume it is a numpy.ndarray
-            E1[i] = l2norm( ft - f0 - h[i]*J0.dot(dx) )
+            E1[i] = l2norm(ft - f0 - h[i] * J0.dot(dx))
 
-        order0 = np.log10(E0[:-1]/E0[1:])
-        order1 = np.log10(E1[:-1]/E1[1:])
-        print(" {0:d}   {1:1.2e}    {2:1.3e}     {3:1.3e}      {4:1.3f}".format(i, h[i], E0[i], E1[i], np.nan if i == 0 else order1[i-1]))
+        order0 = np.log10(E0[:-1] / E0[1:])
+        order1 = np.log10(E1[:-1] / E1[1:])
+        print(
+            " {0:d}   {1:1.2e}    {2:1.3e}     {3:1.3e}      {4:1.3f}".format(
+                i, h[i], E0[i], E1[i], np.nan if i == 0 else order1[i - 1]
+            )
+        )
 
     # Ensure we are about precision
     order0 = order0[E0[1:] > eps]
     order1 = order1[E1[1:] > eps]
-    belowTol = (order1.size == 0 and order0.size >= 0)
+    belowTol = order1.size == 0 and order0.size >= 0
     # Make sure we get the correct order
     correctOrder = order1.size > 0 and np.mean(order1) > tolerance * expectedOrder
 
     passTest = belowTol or correctOrder
 
     if passTest:
-        print("{0!s} PASS! {1!s}".format('='*25, '='*25))
-        print(happiness[np.random.randint(len(happiness))]+'\n')
+        print("{0!s} PASS! {1!s}".format("=" * 25, "=" * 25))
+        print(happiness[np.random.randint(len(happiness))] + "\n")
     else:
-        print("{0!s}\n{1!s} FAIL! {2!s}\n{3!s}".format('*'*57, '<'*25, '>'*25, '*'*57))
-        print(sadness[np.random.randint(len(sadness))]+'\n')
+        print(
+            "{0!s}\n{1!s} FAIL! {2!s}\n{3!s}".format(
+                "*" * 57, "<" * 25, ">" * 25, "*" * 57
+            )
+        )
+        print(sadness[np.random.randint(len(sadness))] + "\n")
 
-    @requires({'matplotlib': matplotlib})
+    @requires({"matplotlib": matplotlib})
     def plot_it(ax):
         if plotIt:
             if ax is None:
                 ax = plt.subplot(111)
-            ax.loglog(h, E0, 'b')
-            ax.loglog(h, E1, 'g--')
+            ax.loglog(h, E0, "b")
+            ax.loglog(h, E1, "g--")
             ax.set_title(
-                'Check Derivative - {0!s}'.format(('PASSED :)'
-                if passTest else 'FAILED :('))
+                "Check Derivative - {0!s}".format(
+                    ("PASSED :)" if passTest else "FAILED :(")
+                )
             )
-            ax.set_xlabel('h')
-            ax.set_ylabel('Error')
+            ax.set_xlabel("h")
+            ax.set_ylabel("Error")
             leg = ax.legend(
-                ['$\mathcal{O}(h)$', '$\mathcal{O}(h^2)$'], loc='best',
+                ["$\mathcal{O}(h)$", "$\mathcal{O}(h^2)$"],
+                loc="best",
                 title="$f(x + h\Delta x) - f(x) - h g(x) \Delta x - \mathcal{O}(h^2) = 0$",
-                frameon=False)
+                frameon=False,
+            )
             plt.setp(leg.get_title(), fontsize=15)
             plt.show()
 
@@ -400,14 +451,15 @@ def check_derivative(fctn, x0, num=7, plotIt=True, dx=None, expectedOrder=2, tol
 
 def get_quadratic(A, b, c=0):
     """
-        Given A, b and c, this returns a quadratic, Q
+    Given A, b and c, this returns a quadratic, Q
 
-        .. math::
+    .. math::
 
-            \mathbf{Q( x ) = 0.5 x A x + b x} + c
+        \mathbf{Q( x ) = 0.5 x A x + b x} + c
     """
+
     def Quadratic(x, return_g=True, return_H=True):
-        f = 0.5 * x.dot( A.dot(x)) + b.dot( x ) + c
+        f = 0.5 * x.dot(A.dot(x)) + b.dot(x) + c
         out = (f,)
         if return_g:
             g = A.dot(x) + b
@@ -416,11 +468,16 @@ def get_quadratic(A, b, c=0):
             H = A
             out += (H,)
         return out if len(out) > 1 else out[0]
+
     return Quadratic
 
 
 # DEPRECATIONS
 setupMesh = deprecate_function(setup_mesh, "setupMesh", removal_version="1.0.0")
 Rosenbrock = deprecate_function(rosenbrock, "Rosenbrock", removal_version="1.0.0")
-checkDerivative = deprecate_function(check_derivative, "checkDerivative", removal_version="1.0.0")
-getQuadratic = deprecate_function(get_quadratic, "getQuadratic", removal_version="1.0.0")
+checkDerivative = deprecate_function(
+    check_derivative, "checkDerivative", removal_version="1.0.0"
+)
+getQuadratic = deprecate_function(
+    get_quadratic, "getQuadratic", removal_version="1.0.0"
+)

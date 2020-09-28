@@ -7,19 +7,22 @@ import discretize
 def compare_meshes(test, mesh0, mesh1):
 
     # check some basic properties
-    test.assertEqual(mesh0.nC, mesh1.nC, msg=(
-        'Number of cells not the same, {} != {}'.format(mesh0.nC, mesh1.nC)
-    ))
+    test.assertEqual(
+        mesh0.nC,
+        mesh1.nC,
+        msg=("Number of cells not the same, {} != {}".format(mesh0.nC, mesh1.nC)),
+    )
 
-    test.assertTrue((mesh0.x0 == mesh1.x0).all(), msg=(
-        'x0 different. {} != {}'.format(mesh0.x0, mesh1.x0)
-    ))
+    test.assertTrue(
+        (mesh0.x0 == mesh1.x0).all(),
+        msg=("x0 different. {} != {}".format(mesh0.x0, mesh1.x0)),
+    )
 
     test.assertEqual(mesh0.nE, mesh1.nE)
     test.assertEqual(mesh0.nF, mesh1.nF)
     test.assertEqual(mesh0.nN, mesh1.nN)
 
-    if hasattr(mesh0, 'vnC'):
+    if hasattr(mesh0, "vnC"):
         test.assertEqual(mesh0.vnC, mesh1.vnC)
         test.assertEqual(mesh0.vnE, mesh1.vnE)
         test.assertEqual(mesh0.vnF, mesh1.vnF)
@@ -28,11 +31,11 @@ def compare_meshes(test, mesh0, mesh1):
     test.assertTrue((mesh0.normals == mesh1.normals).all())
     test.assertTrue((mesh0.tangents == mesh1.tangents).all())
 
-    if hasattr(mesh0, 'h'):
+    if hasattr(mesh0, "h"):
         for i in range(len(mesh0.h)):
-            test.assertTrue((mesh0.h[i] == mesh1.h[i]).all(), (
-                'mesh h[{}] different'.format(i)
-            ))
+            test.assertTrue(
+                (mesh0.h[i] == mesh1.h[i]).all(), ("mesh h[{}] different".format(i))
+            )
 
     # check edges, faces, volumes
     test.assertTrue((mesh0.edge == mesh1.edge).all())
@@ -44,7 +47,7 @@ def compare_meshes(test, mesh0, mesh1):
     #    test.assertTrue(mesh0._cells == mesh1._cells)
 
     # curvi-specific
-    if hasattr(mesh0, 'nodes'):
+    if hasattr(mesh0, "nodes"):
         for i in range(len(mesh0.nodes)):
             test.assertTrue((mesh0.nodes[i] == mesh1.nodes[i]).all())
 
@@ -58,7 +61,7 @@ class TensorTest(unittest.TestCase):
         self.mesh = discretize.TensorMesh(self.n, x0=self.x0)
 
     def test_save_load(self):
-        print('\nTesting save / load of Tensor Mesh ...')
+        print("\nTesting save / load of Tensor Mesh ...")
         mesh0 = self.mesh
         f = mesh0.save()
         mesh1 = discretize.load_mesh(f)
@@ -66,7 +69,7 @@ class TensorTest(unittest.TestCase):
         os.remove(f)
 
     def test_copy(self):
-        print('\nTesting copy of Tensor Mesh ...')
+        print("\nTesting copy of Tensor Mesh ...")
         mesh0 = self.mesh
         mesh1 = mesh0.copy()
         compare_meshes(self, mesh0, mesh1)
@@ -89,10 +92,10 @@ class CylTest(unittest.TestCase):
     n = [4, 1, 9]
 
     def setUp(self):
-        self.mesh = discretize.CylMesh(self.n, x0='00C')
+        self.mesh = discretize.CylMesh(self.n, x0="00C")
 
     def test_save_load(self):
-        print('\nTesting save / load of Cyl Mesh ...')
+        print("\nTesting save / load of Cyl Mesh ...")
         mesh0 = self.mesh
         f = mesh0.save()
         mesh1 = discretize.load_mesh(f)
@@ -100,10 +103,11 @@ class CylTest(unittest.TestCase):
         os.remove(f)
 
     def test_copy(self):
-        print('\nTesting copy of Cyl Mesh ...')
+        print("\nTesting copy of Cyl Mesh ...")
         mesh0 = self.mesh
         mesh1 = mesh0.copy()
         compare_meshes(self, mesh0, mesh1)
+
 
 """
 class TreeTest(unittest.TestCase):
@@ -148,19 +152,19 @@ class TreeTest(unittest.TestCase):
 
 
 class CurviTest(unittest.TestCase):
-
     def setUp(self):
         a = np.array([1, 1, 1])
         b = np.array([1, 2])
         c = np.array([1, 4])
 
-        def gridIt(h): return [np.cumsum(np.r_[0, x]) for x in h]
+        def gridIt(h):
+            return [np.cumsum(np.r_[0, x]) for x in h]
 
         X, Y, Z = discretize.utils.ndgrid(gridIt([a, b, c]), vector=False)
         self.mesh = discretize.CurvilinearMesh([X, Y, Z])
 
     def test_save_load(self):
-        print('\nTesting save / load of Curvi Mesh ...')
+        print("\nTesting save / load of Curvi Mesh ...")
         mesh0 = self.mesh
         f = mesh0.save()
         mesh1 = discretize.load_mesh(f)
@@ -168,7 +172,7 @@ class CurviTest(unittest.TestCase):
         os.remove(f)
 
     def test_copy(self):
-        print('\nTesting copy of Curvi Mesh ...')
+        print("\nTesting copy of Curvi Mesh ...")
         mesh0 = self.mesh
         mesh1 = mesh0.copy()
         compare_meshes(self, mesh0, mesh1)
@@ -182,5 +186,5 @@ class CurviTest(unittest.TestCase):
             self.mesh._n = [6, 5, 9]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

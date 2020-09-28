@@ -6,6 +6,7 @@ from discretize.utils.code_utils import deprecate_function
 
 try:
     from discretize._extensions import interputils_cython as pyx
+
     _interp_point_1D = pyx._interp_point_1D
     _interpmat1D = pyx._interpmat1D
     _interpmat2D = pyx._interpmat2D
@@ -15,9 +16,13 @@ try:
 except ImportError as err:
     print(err)
     import os
+
     # Check if being called from non-standard location (i.e. a git repository)
     # is tree_ext.cpp here? will not be in the folder if installed to site-packages...
-    file_test = os.path.dirname(os.path.abspath(__file__))+"/_extensions/interputils_cython.pyx"
+    file_test = (
+        os.path.dirname(os.path.abspath(__file__))
+        + "/_extensions/interputils_cython.pyx"
+    )
     if os.path.isfile(file_test):
         # Then we are being run from a repository
         print(
@@ -31,7 +36,7 @@ except ImportError as err:
 
             to build the cython code.
             """
-            )
+        )
     _interpCython = False
 
 
@@ -79,10 +84,9 @@ def interpolation_matrix(locs, x, y=None, z=None):
         shape = [x.size, y.size, z.size]
         inds, vals = _interpmat3D(locs, x, y, z)
 
-    I = np.repeat(range(npts), 2**len(shape))
+    I = np.repeat(range(npts), 2 ** len(shape))
     J = sub2ind(shape, inds)
-    Q = sp.csr_matrix((vals, (I, J)),
-                      shape=(npts, np.prod(shape)))
+    Q = sp.csr_matrix((vals, (I, J)), shape=(npts, np.prod(shape)))
     return Q
 
 
@@ -161,36 +165,44 @@ def volume_average(mesh_in, mesh_out, values=None, output=None):
     except AttributeError:
         raise TypeError("Both input and output mesh must be valid discetize meshes")
 
-    valid_meshs = ['TENSOR', 'TREE']
+    valid_meshs = ["TENSOR", "TREE"]
     if in_type not in valid_meshs or out_type not in valid_meshs:
-        raise NotImplementedError(f"Volume averaging is only implemented for TensorMesh and TreeMesh, "
-                                  f"not {type(mesh_in).__name__} and/or {type(mesh_out).__name__}")
+        raise NotImplementedError(
+            f"Volume averaging is only implemented for TensorMesh and TreeMesh, "
+            f"not {type(mesh_in).__name__} and/or {type(mesh_out).__name__}"
+        )
 
     if mesh_in.dim != mesh_out.dim:
         raise ValueError("Both meshes must have the same dimension")
 
     if values is not None and len(values) != mesh_in.nC:
-        raise ValueError("Input array does not have the same length as the number of cells in input mesh")
+        raise ValueError(
+            "Input array does not have the same length as the number of cells in input mesh"
+        )
     if output is not None and len(output) != mesh_out.nC:
-        raise ValueError("Output array does not have the same length as the number of cells in output mesh")
+        raise ValueError(
+            "Output array does not have the same length as the number of cells in output mesh"
+        )
 
     if values is not None:
         values = np.asarray(values, dtype=np.float64)
     if output is not None:
         output = np.asarray(output, dtype=np.float64)
 
-    if in_type == 'TENSOR':
-        if out_type == 'TENSOR':
+    if in_type == "TENSOR":
+        if out_type == "TENSOR":
             return _vol_interp(mesh_in, mesh_out, values, output)
-        elif out_type == 'TREE':
+        elif out_type == "TREE":
             return mesh_out._vol_avg_from_tens(mesh_in, values, output)
-    elif in_type == 'TREE':
-        if out_type == 'TENSOR':
+    elif in_type == "TREE":
+        if out_type == "TENSOR":
             return mesh_in._vol_avg_to_tens(mesh_out, values, output)
-        elif out_type == 'TREE':
+        elif out_type == "TREE":
             return mesh_out._vol_avg_from_tree(mesh_in, values, output)
     else:
         raise TypeError("Unsupported mesh types")
 
 
-interpmat = deprecate_function(interpolation_matrix, 'interpmat', removal_version="1.0.0")
+interpmat = deprecate_function(
+    interpolation_matrix, "interpmat", removal_version="1.0.0"
+)

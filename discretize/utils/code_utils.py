@@ -4,6 +4,7 @@ import warnings
 
 SCALARTYPES = (complex, float, int, np.number)
 
+
 def is_scalar(f):
     if isinstance(f, SCALARTYPES):
         return True
@@ -13,18 +14,22 @@ def is_scalar(f):
 
 
 def as_array_n_by_dim(pts, dim):
-        if type(pts) == list:
-            pts = np.array(pts)
-        assert isinstance(pts, np.ndarray), "pts must be a numpy array"
+    if type(pts) == list:
+        pts = np.array(pts)
+    assert isinstance(pts, np.ndarray), "pts must be a numpy array"
 
-        if dim > 1:
-            pts = np.atleast_2d(pts)
-        elif len(pts.shape) == 1:
-            pts = pts[:, np.newaxis]
+    if dim > 1:
+        pts = np.atleast_2d(pts)
+    elif len(pts.shape) == 1:
+        pts = pts[:, np.newaxis]
 
-        assert pts.shape[1] == dim, "pts must be a column vector of shape (nPts, {0:d}) not ({1:d}, {2:d})".format(*((dim,)+pts.shape))
+    assert (
+        pts.shape[1] == dim
+    ), "pts must be a column vector of shape (nPts, {0:d}) not ({1:d}, {2:d})".format(
+        *((dim,) + pts.shape)
+    )
 
-        return pts
+    return pts
 
 
 def requires(modules):
@@ -60,9 +65,11 @@ def requires(modules):
         if not missing:
             return function
         else:
+
             def passer(*args, **kwargs):
-                print(('Missing dependencies: {d}.'.format(d=missing)))
-                print(('Not running `{}`.'.format(function.__name__)))
+                print(("Missing dependencies: {d}.".format(d=missing)))
+                print(("Not running `{}`.".format(function.__name__)))
+
             return passer
 
     return decorated_function
@@ -74,7 +81,9 @@ def deprecate_class(removal_version=None, new_location=None):
         parent_name = cls.__bases__[0].__name__
         message = f"{my_name} has been deprecated, please use {parent_name}."
         if removal_version is not None:
-            message += f" It will be removed in version {removal_version} of discretize."
+            message += (
+                f" It will be removed in version {removal_version} of discretize."
+            )
         else:
             message += " It will be removed in a future version of discretize."
 
@@ -112,13 +121,19 @@ def deprecate_property(new_name, old_name, removal_version=None):
 
     def get_dep(self):
         class_name = type(self).__name__
-        message = f"{class_name}.{old_name} has been deprecated, please use {class_name}.{new_name}." + tag
+        message = (
+            f"{class_name}.{old_name} has been deprecated, please use {class_name}.{new_name}."
+            + tag
+        )
         warnings.warn(message, FutureWarning)
         return getattr(self, new_name)
 
     def set_dep(self, other):
         class_name = type(self).__name__
-        message = f"{class_name}.{old_name} has been deprecated, please use {class_name}.{new_name}." + tag
+        message = (
+            f"{class_name}.{old_name} has been deprecated, please use {class_name}.{new_name}."
+            + tag
+        )
         warnings.warn(message, FutureWarning)
         setattr(self, new_name, other)
 
@@ -136,8 +151,9 @@ def deprecate_method(new_name, old_name, removal_version=None):
     def new_method(self, *args, **kwargs):
         class_name = type(self).__name__
         warnings.warn(
-            f"{class_name}.{old_name} has been deprecated, please use {class_name}.{new_name}." + tag,
-            FutureWarning
+            f"{class_name}.{old_name} has been deprecated, please use {class_name}.{new_name}."
+            + tag,
+            FutureWarning,
         )
         return getattr(self, new_name)(*args, **kwargs)
 
@@ -152,10 +168,11 @@ def deprecate_function(new_function, old_name, removal_version=None):
         tag = f" It will be removed in version {removal_version} of discretize."
     else:
         tag = " It will be removed in a future version of discretize."
+
     def dep_function(*args, **kwargs):
         warnings.warn(
             f"{old_name} has been deprecated, please use {new_name}." + tag,
-            FutureWarning
+            FutureWarning,
         )
         return new_function(*args, **kwargs)
 
@@ -163,6 +180,9 @@ def deprecate_function(new_function, old_name, removal_version=None):
     dep_function.__doc__ = doc
     return dep_function
 
+
 # DEPRECATIONS
-isScalar = deprecate_function(is_scalar, 'isScalar', removal_version="1.0.0")
-asArray_N_x_Dim = deprecate_function(as_array_n_by_dim, 'asArray_N_x_Dim', removal_version="1.0.0")
+isScalar = deprecate_function(is_scalar, "isScalar", removal_version="1.0.0")
+asArray_N_x_Dim = deprecate_function(
+    as_array_n_by_dim, "asArray_N_x_Dim", removal_version="1.0.0"
+)

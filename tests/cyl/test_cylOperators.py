@@ -15,26 +15,30 @@ TOL = 1e-1
 # ----------------------------- Test Operators ------------------------------ #
 
 
-MESHTYPES = ['uniformCylMesh', 'randomCylMesh']
+MESHTYPES = ["uniformCylMesh", "randomCylMesh"]
 call2 = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 2])
 call3 = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1], xyz[:, 2])
 cyl_row2 = lambda g, xfun, yfun: np.c_[call2(xfun, g), call2(yfun, g)]
 cyl_row3 = lambda g, xfun, yfun, zfun: np.c_[
     call3(xfun, g), call3(yfun, g), call3(zfun, g)
 ]
-cylF2 = lambda M, fx, fy: np.vstack((
-    cyl_row2(M.gridFx, fx, fy), cyl_row2(M.gridFz, fx, fy)
-))
-cylF3 = lambda M, fx, fy, fz: np.vstack((
-    cyl_row3(M.gridFx, fx, fy, fz),
-    cyl_row3(M.gridFy, fx, fy, fz),
-    cyl_row3(M.gridFz, fx, fy, fz)
-))
-cylE3 = lambda M, ex, ey, ez: np.vstack((
-    cyl_row3(M.gridEx, ex, ey, ez),
-    cyl_row3(M.gridEy, ex, ey, ez),
-    cyl_row3(M.gridEz, ex, ey, ez)
-))
+cylF2 = lambda M, fx, fy: np.vstack(
+    (cyl_row2(M.gridFx, fx, fy), cyl_row2(M.gridFz, fx, fy))
+)
+cylF3 = lambda M, fx, fy, fz: np.vstack(
+    (
+        cyl_row3(M.gridFx, fx, fy, fz),
+        cyl_row3(M.gridFy, fx, fy, fz),
+        cyl_row3(M.gridFz, fx, fy, fz),
+    )
+)
+cylE3 = lambda M, ex, ey, ez: np.vstack(
+    (
+        cyl_row3(M.gridEx, ex, ey, ez),
+        cyl_row3(M.gridEy, ex, ey, ez),
+        cyl_row3(M.gridEz, ex, ey, ez),
+    )
+)
 
 
 # class TestCellGradx3D(tests.OrderTest):
@@ -71,14 +75,14 @@ class TestFaceDiv3D(tests.OrderTest):
 
     def getError(self):
 
-        funR = lambda r, t, z: np.sin(2.*np.pi*r)
-        funT = lambda r, t, z: r*np.exp(-r)*np.sin(t) #* np.sin(2.*np.pi*r)
-        funZ = lambda r, t, z: np.sin(2.*np.pi*z)
+        funR = lambda r, t, z: np.sin(2.0 * np.pi * r)
+        funT = lambda r, t, z: r * np.exp(-r) * np.sin(t)  # * np.sin(2.*np.pi*r)
+        funZ = lambda r, t, z: np.sin(2.0 * np.pi * z)
 
         sol = lambda r, t, z: (
-            (2*np.pi*r*np.cos(2*np.pi*r) + np.sin(2*np.pi*r))/r +
-            np.exp(-r)*np.cos(t) +
-            2*np.pi*np.cos(2*np.pi*z)
+            (2 * np.pi * r * np.cos(2 * np.pi * r) + np.sin(2 * np.pi * r)) / r
+            + np.exp(-r) * np.cos(t)
+            + 2 * np.pi * np.cos(2 * np.pi * z)
         )
 
         Fc = cylF3(self.M, funR, funT, funZ)
@@ -88,7 +92,7 @@ class TestFaceDiv3D(tests.OrderTest):
         divF = self.M.faceDiv.dot(F)
         divF_ana = call3(sol, self.M.gridCC)
 
-        err = np.linalg.norm((divF-divF_ana), np.inf)
+        err = np.linalg.norm((divF - divF_ana), np.inf)
         return err
 
     def test_order(self):
@@ -108,23 +112,36 @@ class TestEdgeCurl3D(tests.OrderTest):
         # need to pick functions that make sense at the axis of symmetry
         # careful that r, theta contributions make sense at axis of symmetry
 
-        funR = lambda r, t, z: np.sin(2*np.pi*z) * np.sin(np.pi*r) * np.sin(t)
-        funT = lambda r, t, z: np.cos(np.pi*z) * np.sin(np.pi*r) * np.sin(t)
-        funZ = lambda r, t, z: np.sin(np.pi*r) * np.sin(t)
+        funR = lambda r, t, z: np.sin(2 * np.pi * z) * np.sin(np.pi * r) * np.sin(t)
+        funT = lambda r, t, z: np.cos(np.pi * z) * np.sin(np.pi * r) * np.sin(t)
+        funZ = lambda r, t, z: np.sin(np.pi * r) * np.sin(t)
 
-        derivR_t = lambda r, t, z: np.sin(2*np.pi*z) * np.sin(np.pi*r) * np.cos(t)
-        derivR_z = lambda r, t, z: 2*np.pi * np.cos(2*np.pi*z) * np.sin(np.pi*r) * np.sin(t)
+        derivR_t = lambda r, t, z: np.sin(2 * np.pi * z) * np.sin(np.pi * r) * np.cos(t)
+        derivR_z = (
+            lambda r, t, z: 2
+            * np.pi
+            * np.cos(2 * np.pi * z)
+            * np.sin(np.pi * r)
+            * np.sin(t)
+        )
 
-        derivT_r = lambda r, t, z: np.pi * np.cos(np.pi*z) * np.cos(np.pi*r) * np.sin(t)
-        derivT_z = lambda r, t, z: -np.pi * np.sin(np.pi*z) * np.sin(np.pi*r) * np.sin(t)
+        derivT_r = (
+            lambda r, t, z: np.pi * np.cos(np.pi * z) * np.cos(np.pi * r) * np.sin(t)
+        )
+        derivT_z = (
+            lambda r, t, z: -np.pi * np.sin(np.pi * z) * np.sin(np.pi * r) * np.sin(t)
+        )
 
-        derivZ_r = lambda r, t, z: np.pi*np.cos(np.pi*r) * np.sin(t)
-        derivZ_t = lambda r, t, z: np.sin(np.pi*r) * np.cos(t)
+        derivZ_r = lambda r, t, z: np.pi * np.cos(np.pi * r) * np.sin(t)
+        derivZ_t = lambda r, t, z: np.sin(np.pi * r) * np.cos(t)
 
-        sol_r = lambda r, t, z: 1./r * derivZ_t(r, t, z) - derivT_z(r, t, z)
+        sol_r = lambda r, t, z: 1.0 / r * derivZ_t(r, t, z) - derivT_z(r, t, z)
         sol_t = lambda r, t, z: derivR_z(r, t, z) - derivZ_r(r, t, z)
-        sol_z = lambda r, t, z: 1./r * ( r * derivT_r(r, t, z) + funT(r, t, z) - derivR_t(r, t, z))
-
+        sol_z = (
+            lambda r, t, z: 1.0
+            / r
+            * (r * derivT_r(r, t, z) + funT(r, t, z) - derivR_t(r, t, z))
+        )
 
         Ec = cylE3(self.M, funR, funT, funZ)
         E = self.M.projectEdgeVector(Ec)
@@ -133,7 +150,7 @@ class TestEdgeCurl3D(tests.OrderTest):
         Fc = cylF3(self.M, sol_r, sol_t, sol_z)
         curlE_ana = self.M.projectFaceVector(Fc)
 
-        err = np.linalg.norm((curlE_num-curlE_ana), np.inf)
+        err = np.linalg.norm((curlE_num - curlE_ana), np.inf)
         return err
 
     def test_order(self):
@@ -141,7 +158,6 @@ class TestEdgeCurl3D(tests.OrderTest):
 
 
 class TestAverageSimple(unittest.TestCase):
-
     def setUp(self):
         n = 10
         hx = np.random.rand(n)
@@ -188,7 +204,7 @@ class TestAverageSimple(unittest.TestCase):
             self.mesh.gridCC[:, 0], self.mesh.gridCC[:, 1], self.mesh.gridCC[:, 2]
         )
         aveF_anaT = funT(
-         self.mesh.gridCC[:, 0], self.mesh.gridCC[:, 1], self.mesh.gridCC[:, 2]
+            self.mesh.gridCC[:, 0], self.mesh.gridCC[:, 1], self.mesh.gridCC[:, 2]
         )
         aveF_anaZ = funZ(
             self.mesh.gridCC[:, 0], self.mesh.gridCC[:, 1], self.mesh.gridCC[:, 2]
@@ -208,28 +224,22 @@ class TestAveF2CCV(tests.OrderTest):
 
     def getError(self):
 
-        funR = lambda r, t, z: np.sin(2*np.pi*z) * np.sin(np.pi*r) * np.sin(t)
-        funT = lambda r, t, z: np.sin(np.pi*z) * np.sin(np.pi*r) * np.sin(2*t)
-        funZ = lambda r, t, z: np.sin(np.pi*z) * np.sin(2*np.pi*r) * np.sin(t)
+        funR = lambda r, t, z: np.sin(2 * np.pi * z) * np.sin(np.pi * r) * np.sin(t)
+        funT = lambda r, t, z: np.sin(np.pi * z) * np.sin(np.pi * r) * np.sin(2 * t)
+        funZ = lambda r, t, z: np.sin(np.pi * z) * np.sin(2 * np.pi * r) * np.sin(t)
 
         Fc = cylF3(self.M, funR, funT, funZ)
         F = self.M.projectFaceVector(Fc)
 
         aveF = self.M.aveF2CCV * F
 
-        aveF_anaR = funR(
-            self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2]
-        )
-        aveF_anaT = funT(
-            self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2]
-        )
-        aveF_anaZ = funZ(
-            self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2]
-        )
+        aveF_anaR = funR(self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2])
+        aveF_anaT = funT(self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2])
+        aveF_anaZ = funZ(self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2])
 
         aveF_ana = np.hstack([aveF_anaR, aveF_anaT, aveF_anaZ])
 
-        err = np.linalg.norm((aveF[:self.M.vnF[0]]-aveF_anaR), np.inf)
+        err = np.linalg.norm((aveF[: self.M.vnF[0]] - aveF_anaR), np.inf)
         return err
 
     def test_order(self):
@@ -245,17 +255,15 @@ class TestAveF2CC(tests.OrderTest):
 
     def getError(self):
 
-        fun = lambda r, t, z: np.sin(np.pi*z) * np.sin(np.pi*r) * np.sin(t)
+        fun = lambda r, t, z: np.sin(np.pi * z) * np.sin(np.pi * r) * np.sin(t)
 
         Fc = cylF3(self.M, fun, fun, fun)
         F = self.M.projectFaceVector(Fc)
 
         aveF = self.M.aveF2CC * F
-        aveF_ana = fun(
-            self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2]
-        )
+        aveF_ana = fun(self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2])
 
-        err = np.linalg.norm((aveF-aveF_ana), np.inf)
+        err = np.linalg.norm((aveF - aveF_ana), np.inf)
         return err
 
     def test_order(self):
@@ -263,47 +271,49 @@ class TestAveF2CC(tests.OrderTest):
 
 
 class FaceInnerProductFctsIsotropic(object):
-
     def fcts(self):
 
-        j = sympy.Matrix([
-            r**2 * sympy.sin(t) * z,
-            r * sympy.sin(t) * z,
-            r * sympy.sin(t) * z**2,
-        ])
+        j = sympy.Matrix(
+            [
+                r ** 2 * sympy.sin(t) * z,
+                r * sympy.sin(t) * z,
+                r * sympy.sin(t) * z ** 2,
+            ]
+        )
 
         # Create an isotropic sigma vector
-        Sig = sympy.Matrix([
-            [1120/(69*sympy.pi)*(r*z)**2 * sympy.sin(t)**2, 0, 0],
-            [0, 1120/(69*sympy.pi)*(r*z)**2 * sympy.sin(t)**2, 0],
-            [0, 0, 1120/(69*sympy.pi)*(r*z)**2 * sympy.sin(t)**2]
-        ])
+        Sig = sympy.Matrix(
+            [
+                [1120 / (69 * sympy.pi) * (r * z) ** 2 * sympy.sin(t) ** 2, 0, 0],
+                [0, 1120 / (69 * sympy.pi) * (r * z) ** 2 * sympy.sin(t) ** 2, 0],
+                [0, 0, 1120 / (69 * sympy.pi) * (r * z) ** 2 * sympy.sin(t) ** 2],
+            ]
+        )
 
         return j, Sig
 
     def sol(self):
         # Do the inner product! - we are in cyl coordinates!
         j, Sig = self.fcts()
-        jTSj = j.T*Sig*j
+        jTSj = j.T * Sig * j
         # we are integrating in cyl coordinates
         ans = sympy.integrate(
-            sympy.integrate(
-                sympy.integrate(r * jTSj, (r, 0, 1)),
-                (t, 0, 2*sympy.pi)
-            ),
-            (z, 0, 1)
-        )[0] # The `[0]` is to make it a number rather than a matrix
+            sympy.integrate(sympy.integrate(r * jTSj, (r, 0, 1)), (t, 0, 2 * sympy.pi)),
+            (z, 0, 1),
+        )[
+            0
+        ]  # The `[0]` is to make it a number rather than a matrix
 
         return ans
 
     def vectors(self, mesh):
         j, Sig = self.fcts()
 
-        f_jr = sympy.lambdify((r, t, z), j[0], 'numpy')
-        f_jt = sympy.lambdify((r, t, z), j[1], 'numpy')
-        f_jz = sympy.lambdify((r, t, z), j[2], 'numpy')
+        f_jr = sympy.lambdify((r, t, z), j[0], "numpy")
+        f_jt = sympy.lambdify((r, t, z), j[1], "numpy")
+        f_jz = sympy.lambdify((r, t, z), j[2], "numpy")
 
-        f_sig = sympy.lambdify((r, t, z), Sig[0], 'numpy')
+        f_sig = sympy.lambdify((r, t, z), Sig[0], "numpy")
 
         jr = f_jr(mesh.gridFx[:, 0], mesh.gridFx[:, 1], mesh.gridFx[:, 2])
         jt = f_jt(mesh.gridFy[:, 0], mesh.gridFy[:, 1], mesh.gridFy[:, 2])
@@ -322,28 +332,22 @@ class TestAveE2CCV(tests.OrderTest):
 
     def getError(self):
 
-        funR = lambda r, t, z: np.sin(np.pi*z) * np.sin(np.pi*r) * np.sin(t)
-        funT = lambda r, t, z: np.sin(np.pi*z) * np.sin(np.pi*r) * np.sin(t)
-        funZ = lambda r, t, z: np.sin(np.pi*z) * np.sin(np.pi*r) * np.sin(t)
+        funR = lambda r, t, z: np.sin(np.pi * z) * np.sin(np.pi * r) * np.sin(t)
+        funT = lambda r, t, z: np.sin(np.pi * z) * np.sin(np.pi * r) * np.sin(t)
+        funZ = lambda r, t, z: np.sin(np.pi * z) * np.sin(np.pi * r) * np.sin(t)
 
         Ec = cylE3(self.M, funR, funT, funZ)
         E = self.M.projectEdgeVector(Ec)
 
         aveE = self.M.aveE2CCV * E
 
-        aveE_anaR = funR(
-            self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2]
-        )
-        aveE_anaT = funT(
-            self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2]
-        )
-        aveE_anaZ = funZ(
-            self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2]
-        )
+        aveE_anaR = funR(self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2])
+        aveE_anaT = funT(self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2])
+        aveE_anaZ = funZ(self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2])
 
         aveE_ana = np.hstack([aveE_anaR, aveE_anaT, aveE_anaZ])
 
-        err = np.linalg.norm((aveE-aveE_ana), np.inf)
+        err = np.linalg.norm((aveE - aveE_ana), np.inf)
         return err
 
     def test_order(self):
@@ -358,17 +362,15 @@ class TestAveE2CC(tests.OrderTest):
 
     def getError(self):
 
-        fun = lambda r, t, z: np.sin(np.pi*z) * np.sin(np.pi*r) * np.sin(t)
+        fun = lambda r, t, z: np.sin(np.pi * z) * np.sin(np.pi * r) * np.sin(t)
 
         Ec = cylE3(self.M, fun, fun, fun)
         E = self.M.projectEdgeVector(Ec)
 
         aveE = self.M.aveE2CC * E
-        aveE_ana = fun(
-            self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2]
-        )
+        aveE_ana = fun(self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2])
 
-        err = np.linalg.norm((aveE-aveE_ana), np.inf)
+        err = np.linalg.norm((aveE - aveE_ana), np.inf)
         return err
 
     def test_order(self):
@@ -377,42 +379,46 @@ class TestAveE2CC(tests.OrderTest):
 
 class EdgeInnerProductFctsIsotropic(object):
     def fcts(self):
-        h = sympy.Matrix([
-            r**2 * sympy.sin(t) * z,
-            r * sympy.sin(t) * z,
-            r * sympy.sin(t) * z**2,
-        ])
+        h = sympy.Matrix(
+            [
+                r ** 2 * sympy.sin(t) * z,
+                r * sympy.sin(t) * z,
+                r * sympy.sin(t) * z ** 2,
+            ]
+        )
 
         # Create an isotropic sigma vector
-        Sig = sympy.Matrix([
-            [1120/(69*sympy.pi)*(r*z)**2 * sympy.sin(t)**2, 0, 0],
-            [0, 1120/(69*sympy.pi)*(r*z)**2 * sympy.sin(t)**2, 0],
-            [0, 0, 1120/(69*sympy.pi)*(r*z)**2 * sympy.sin(t)**2]
-        ])
+        Sig = sympy.Matrix(
+            [
+                [1120 / (69 * sympy.pi) * (r * z) ** 2 * sympy.sin(t) ** 2, 0, 0],
+                [0, 1120 / (69 * sympy.pi) * (r * z) ** 2 * sympy.sin(t) ** 2, 0],
+                [0, 0, 1120 / (69 * sympy.pi) * (r * z) ** 2 * sympy.sin(t) ** 2],
+            ]
+        )
 
         return h, Sig
 
     def sol(self):
         h, Sig = self.fcts()
 
-        hTSh = h.T*Sig*h
-        ans  = sympy.integrate(
-            sympy.integrate(
-                sympy.integrate(r * hTSh, (r, 0, 1)),
-                (t, 0, 2*sympy.pi)),
-            (z, 0, 1)
-        )[0] # The `[0]` is to make it a scalar
+        hTSh = h.T * Sig * h
+        ans = sympy.integrate(
+            sympy.integrate(sympy.integrate(r * hTSh, (r, 0, 1)), (t, 0, 2 * sympy.pi)),
+            (z, 0, 1),
+        )[
+            0
+        ]  # The `[0]` is to make it a scalar
 
         return ans
 
     def vectors(self, mesh):
         h, Sig = self.fcts()
 
-        f_hr = sympy.lambdify((r, t, z), h[0], 'numpy')
-        f_ht = sympy.lambdify((r, t, z), h[1], 'numpy')
-        f_hz = sympy.lambdify((r, t, z), h[2], 'numpy')
+        f_hr = sympy.lambdify((r, t, z), h[0], "numpy")
+        f_ht = sympy.lambdify((r, t, z), h[1], "numpy")
+        f_hz = sympy.lambdify((r, t, z), h[2], "numpy")
 
-        f_sig = sympy.lambdify((r, t, z), Sig[0], 'numpy')
+        f_sig = sympy.lambdify((r, t, z), Sig[0], "numpy")
 
         hr = f_hr(mesh.gridEx[:, 0], mesh.gridEx[:, 1], mesh.gridEx[:, 2])
         ht = f_ht(mesh.gridEy[:, 0], mesh.gridEy[:, 1], mesh.gridEy[:, 2])
@@ -424,9 +430,8 @@ class EdgeInnerProductFctsIsotropic(object):
 
 
 class TestCylInnerProducts_simple(unittest.TestCase):
-
     def setUp(self):
-        n = 100.
+        n = 100.0
         self.mesh = discretize.CylMesh([n, n, n])
 
     def test_FaceInnerProductIsotropic(self):
@@ -440,12 +445,14 @@ class TestCylInnerProducts_simple(unittest.TestCase):
 
         ans = fcts.sol()
 
-        print('------ Testing Face Inner Product-----------')
-        print(' Analytic: {analytic}, Numeric: {numeric}, '
-              'ratio (num/ana): {ratio}'.format(
-               analytic=ans, numeric=numeric_ans,
-               ratio=float(numeric_ans)/ans))
-        assert(np.abs(ans-numeric_ans) < TOL)
+        print("------ Testing Face Inner Product-----------")
+        print(
+            " Analytic: {analytic}, Numeric: {numeric}, "
+            "ratio (num/ana): {ratio}".format(
+                analytic=ans, numeric=numeric_ans, ratio=float(numeric_ans) / ans
+            )
+        )
+        assert np.abs(ans - numeric_ans) < TOL
 
     def test_EdgeInnerProduct(self):
         # Here we will make up some j vectors that vary in space
@@ -458,17 +465,19 @@ class TestCylInnerProducts_simple(unittest.TestCase):
 
         ans = fcts.sol()
 
-        print('------ Testing Edge Inner Product-----------')
-        print(' Analytic: {analytic}, Numeric: {numeric}, '
-              'ratio (num/ana): {ratio}'.format(
-               analytic=ans, numeric=numeric_ans,
-               ratio=float(numeric_ans)/ans))
-        assert(np.abs(ans-numeric_ans) < TOL)
+        print("------ Testing Edge Inner Product-----------")
+        print(
+            " Analytic: {analytic}, Numeric: {numeric}, "
+            "ratio (num/ana): {ratio}".format(
+                analytic=ans, numeric=numeric_ans, ratio=float(numeric_ans) / ans
+            )
+        )
+        assert np.abs(ans - numeric_ans) < TOL
 
 
 class TestCylFaceInnerProducts_Order(tests.OrderTest):
 
-    meshTypes = ['uniformCylMesh']
+    meshTypes = ["uniformCylMesh"]
     meshDimension = 3
 
     def getError(self):
@@ -483,7 +492,7 @@ class TestCylFaceInnerProducts_Order(tests.OrderTest):
 
 class TestCylEdgeInnerProducts_Order(tests.OrderTest):
 
-    meshTypes = ['uniformCylMesh']
+    meshTypes = ["uniformCylMesh"]
     meshDimension = 3
 
     def getError(self):
@@ -510,12 +519,10 @@ class MimeticProperties(unittest.TestCase):
             v = np.random.rand(mesh.nE)
             divcurlv = mesh.faceDiv * (mesh.edgeCurl * v)
             rel_err = np.linalg.norm(divcurlv) / np.linalg.norm(v)
-            passed = rel_err  < self.tol
+            passed = rel_err < self.tol
             print(
                 "Testing Div * Curl on {} : |Div Curl v| / |v| = {} "
-                "... {}".format(
-                    meshType, rel_err, 'FAIL' if not passed else 'ok'
-                )
+                "... {}".format(meshType, rel_err, "FAIL" if not passed else "ok")
             )
 
     # # Nodal Grad has not been implemented yet
@@ -536,5 +543,5 @@ class MimeticProperties(unittest.TestCase):
     #         )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

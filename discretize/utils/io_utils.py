@@ -1,9 +1,8 @@
 from urllib.request import urlretrieve
 import os
 
-def download(
-    url, folder='.', overwrite=False, verbose=True
-):
+
+def download(url, folder=".", overwrite=False, verbose=True):
     """
     Function to download all files stored in a cloud directory
 
@@ -18,11 +17,11 @@ def download(
 
         # grab just the filename
         fname = splitfullpath[-1]
-        fnamesplit = fname.split('.')
+        fnamesplit = fname.split(".")
         newname = fnamesplit[0]
 
         # check if we have already re-numbered
-        newnamesplit = newname.split('(')
+        newnamesplit = newname.split("(")
 
         # add (num) to the end of the filename
         if len(newnamesplit) == 1:
@@ -31,10 +30,8 @@ def download(
             num = int(newnamesplit[-1][:-1])
             num += 1
 
-        newname = '{}({}).{}'.format(newnamesplit[0], num, fnamesplit[-1])
-        return os.path.sep.join(
-            splitfullpath[:-1] + newnamesplit[:-1] + [newname]
-        )
+        newname = "{}({}).{}".format(newnamesplit[0], num, fnamesplit[-1])
+        return os.path.sep.join(splitfullpath[:-1] + newnamesplit[:-1] + [newname])
 
     # ensure we are working with absolute paths and home directories dealt with
     folder = os.path.abspath(os.path.expanduser(folder))
@@ -44,9 +41,9 @@ def download(
         os.makedirs(folder)
 
     if isinstance(url, str):
-        filenames = [url.split('/')[-1]]
+        filenames = [url.split("/")[-1]]
     elif isinstance(url, list):
-        filenames = [u.split('/')[-1] for u in url]
+        filenames = [u.split("/")[-1] for u in url]
 
     downloadpath = [os.path.sep.join([folder, f]) for f in filenames]
 
@@ -61,11 +58,7 @@ def download(
                     download = rename_path(download)
 
                 if verbose:
-                    print(
-                        "file already exists, new file is called {}".format(
-                            download
-                        )
-                    )
+                    print("file already exists, new file is called {}".format(download))
                 downloadpath[i] = download
 
     # download files
