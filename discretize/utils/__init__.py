@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 from discretize.utils.code_utils import is_scalar, as_array_n_by_dim, requires
 from discretize.utils.matrix_utils import (
     mkvc,

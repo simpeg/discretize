@@ -1,4 +1,3 @@
-from __future__ import print_function
 import numpy as np
 import warnings
 from discretize.utils import mkvc, ndgrid

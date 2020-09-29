@@ -42,7 +42,6 @@ as the time increases.
 .. http://www.ctcms.nist.gov/fipy/examples/cahnHilliard/generated/examples.cahnHilliard.mesh2DCoupled.html
 
 """
-from __future__ import print_function
 import discretize
 from pymatsolver import Solver
 import numpy as np

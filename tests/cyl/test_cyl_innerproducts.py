@@ -1,4 +1,3 @@
-from __future__ import print_function
 import discretize
 from discretize import tests
 import numpy as np

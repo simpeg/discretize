@@ -1,4 +1,3 @@
-from __future__ import print_function
 import numpy as np
 import unittest
 from discretize.utils import mesh_builder_xyz, refine_tree_xyz

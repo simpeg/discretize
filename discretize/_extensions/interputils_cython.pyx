@@ -1,10 +1,8 @@
 # cython: embedsignature=True, language_level=3
-# from __future__ import division
 import numpy as np
 import cython
 cimport numpy as np
 import scipy.sparse as sp
-# from libcpp.vector cimport vector
 
 def _interp_point_1D(np.ndarray[np.float64_t, ndim=1] x, float xr_i):
     """

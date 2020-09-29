@@ -1,4 +1,3 @@
-from __future__ import print_function
 import numpy as np
 import scipy.sparse as sp
 from discretize.utils.matrix_utils import mkvc, sub2ind
