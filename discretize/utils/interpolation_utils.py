@@ -112,13 +112,13 @@ def volume_average(mesh_in, mesh_out, values=None, output=None):
 
     Parameters
     ----------
-    mesh_in: TensorMesh or TreeMesh
+    mesh_in : TensorMesh or TreeMesh
         Input mesh (the mesh you are interpolating from)
-    mesh_out: TensorMesh or TreeMesh
+    mesh_out : TensorMesh or TreeMesh
         Output mesh (the mesh you are interpolating to)
-    values: numpy.ndarray, optional
+    values : numpy.ndarray, optional
         Array with values defined at the cells of ``mesh_in``
-    output: numpy.ndarray, optional
+    output : numpy.ndarray, optional
         Output array to be overwritten of length ``mesh_out.nC`` and type ``np.float64``
 
     Returns
