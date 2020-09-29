@@ -297,12 +297,6 @@ class InterfaceMPL(object):
             warnings.warn(
                 "showIt has been deprecated, please use show_it", DeprecationWarning
             )
-        if "annotationColor" in kwargs:
-            annotation_color = kwargs.pop("annotationColor")
-            warnings.warn(
-                "annotationColor has been deprecated, please use annotation_color",
-                DeprecationWarning,
-            )
         if "vType" in kwargs:
             v_type = kwargs.pop("vType")
             warnings.warn(
@@ -366,7 +360,6 @@ class InterfaceMPL(object):
             stream_opts=stream_opts,
             stream_threshold=stream_threshold,
             stream_thickness=stream_thickness,
-            annotation_color=annotation_color,
             **kwargs,
         )
         if show_it():
@@ -944,6 +937,13 @@ class InterfaceMPL(object):
         stream_threshold=None,
         **kwargs,
     ):
+
+        if "annotationColor" in kwargs:
+            annotation_color = kwargs.pop("annotationColor")
+            warnings.warn(
+                "annotationColor has been deprecated, please use annotation_color",
+                DeprecationWarning,
+            )
 
         if self.dim == 1:
             if v_type == "CC":
