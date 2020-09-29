@@ -2,7 +2,6 @@ import numpy as np
 import warnings
 from discretize.utils import mkvc, ndgrid
 from discretize.utils.code_utils import deprecate_method
-from six import integer_types
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -1243,8 +1242,8 @@ class InterfaceMPL(object):
         dim_ind = {"X": 0, "Y": 1, "Z": 2}[normal]
         szSliceDim = self.shape_cells[dim_ind]  #: Size of the sliced dimension
         if ind is None:
-            ind = int(szSliceDim / 2)
-        if type(ind) not in integer_types:
+            ind = szSliceDim // 2
+        if not isinstance(ind, int):
             raise TypeError("ind must be an integer")
 
         def getIndSlice(v):

@@ -9,7 +9,6 @@ from numpy.math cimport INFINITY
 from tree cimport int_t, Tree as c_Tree, PyWrapper, Node, Edge, Face, Cell as c_Cell
 
 import scipy.sparse as sp
-from six import integer_types
 import numpy as np
 from discretize._extensions.interputils_cython cimport _bisect_left, _bisect_right
 
@@ -383,7 +382,7 @@ cdef class _TreeMesh:
         --------
         discretize.TreeMesh.TreeCell : a description of the TreeCell object
         """
-        if type(function) in integer_types:
+        if isinstance(function, int):
             level = function
             function = lambda cell: level
 

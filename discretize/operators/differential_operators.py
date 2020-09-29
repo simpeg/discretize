@@ -1,6 +1,5 @@
 import numpy as np
 from scipy import sparse as sp
-from six import string_types
 import warnings
 from discretize.utils import sdiag, speye, kron3, spzeros, ddx, av, av_extrap
 from discretize.utils.code_utils import deprecate_method, deprecate_property
@@ -12,7 +11,7 @@ def _validate_BC(bc):
     Each bc must be either 'dirichlet' or 'neumann'
 
     """
-    if isinstance(bc, string_types):
+    if isinstance(bc, str):
         bc = [bc, bc]
     if not isinstance(bc, list):
         raise TypeError("bc must be a single string or list of strings")
@@ -20,7 +19,7 @@ def _validate_BC(bc):
         raise TypeError("bc list must have two elements, one for each side")
 
     for bc_i in bc:
-        if not isinstance(bc_i, string_types):
+        if not isinstance(bc_i, str):
             raise TypeError("each bc must be a string")
         if bc_i not in ["dirichlet", "neumann"]:
             raise ValueError("each bc must be either, 'dirichlet' or 'neumann'")
@@ -472,7 +471,7 @@ class DiffOperators(object):
             BC = [['neumann', 'dirichlet'], 'dirichlet', 'dirichlet']
         """
 
-        if isinstance(BC, string_types):
+        if isinstance(BC, str):
             BC = [BC] * self.dim
         if isinstance(BC, list):
             assert len(BC) == self.dim, "BC list must be the size of your mesh"
@@ -765,7 +764,7 @@ class DiffOperators(object):
                 "Boundary conditions only implemented" "for CC discretization."
             )
 
-        if isinstance(BC, string_types):
+        if isinstance(BC, str):
             BC = [BC for _ in self.vnC]  # Repeat the str self.dim times
         elif isinstance(BC, list):
             assert len(BC) == self.dim, "BC list must be the size of your mesh"
