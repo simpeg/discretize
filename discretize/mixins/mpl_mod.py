@@ -362,7 +362,7 @@ class InterfaceMPL(object):
             stream_thickness=stream_thickness,
             **kwargs,
         )
-        if show_it():
+        if show_it:
             plt.show()
         return out
 
