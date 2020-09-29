@@ -1938,7 +1938,11 @@ class InterfaceMPL(object):
         collection.set_array(I)
         collection.set_cmap(cmap)
         collection.set_norm(norm)
-        collection._scale_norm(norm, vmin, vmax)
+        try:
+            collection._scale_norm(norm, vmin, vmax)
+        except AttributeError:
+            collection.set_clim(vmin, vmax)
+            collection.autoscale_None()
 
         ax.grid(False)
 
