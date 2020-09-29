@@ -3402,7 +3402,7 @@ cdef class _TreeMesh:
         if isinstance(key, slice):
             # Get the start, stop, and step from the slice
             return [self[ii] for ii in range(*key.indices(len(self)))]
-        elif isinstance(key, (*integer_types, np.integer)):
+        elif isinstance(key, (int, np.integer)):
             if key < 0:  # Handle negative indices
                 key += len(self)
             if key >= len(self):

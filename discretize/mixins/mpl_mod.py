@@ -1993,7 +1993,7 @@ class InterfaceMPL(object):
         #: Size of the sliced dimension
         szSliceDim = len(self.h[normalInd])
         if ind is None:
-            ind = int(szSliceDim // 2)
+            ind = szSliceDim // 2
 
         cc_tensor = [None, None, None]
         for i in range(3):
@@ -2001,7 +2001,7 @@ class InterfaceMPL(object):
             cc_tensor[i] = (cc_tensor[i][1:] + cc_tensor[i][:-1]) * 0.5
         slice_loc = cc_tensor[normalInd][ind]
 
-        if type(ind) not in integer_types:
+        if not isinstance(ind, int):
             raise ValueError("ind must be an integer")
 
         # create a temporary TreeMesh with the slice through
@@ -2257,10 +2257,12 @@ class Slicer(object):
 
         # set color limits if clim is None (and norm doesn't have vmin, vmax).
         if clim is None:
-            vmin = self.pc_props["norm"].vmin
+            if "norm" in self.pc_props:
+                vmin = self.pc_props["norm"].vmin
+                vmax = self.pc_props["norm"].vmax
+            else:
+                vmin = vmax = None
             vmin = np.nanmin(self.v) if vmin is None else vmin
-
-            vmax = self.pc_props["norm"].vmax
             vmax = np.nanmax(self.v) if vmax is None else vmin
 
             # In the case of a homogeneous fullspace provide a small range to
