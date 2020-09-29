@@ -11,7 +11,6 @@ from matplotlib.widgets import Slider
 from matplotlib.collections import PolyCollection, LineCollection
 from matplotlib import rc_params
 from mpl_toolkits.mplot3d.art3d import Line3DCollection
-import matplotlib.transforms as mtransforms
 import discretize
 
 
@@ -170,16 +169,18 @@ class InterfaceMPL(object):
             kwargs["color"] = kwargs.get("color", rcParams["lines.color"])
             kwargs["linewidth"] = kwargs.get("linewidth", rcParams["lines.linewidth"])
 
-        return plotter(
+        out =  plotter(
             ax=ax,
             nodes=nodes,
             faces=faces,
             centers=centers,
             edges=edges,
             lines=lines,
-            show_it=show_it,
             **kwargs,
         )
+        if show_it:
+            plt.show()
+        return out
 
     def plot_image(
         self,
@@ -297,7 +298,7 @@ class InterfaceMPL(object):
                 "showIt has been deprecated, please use show_it", DeprecationWarning
             )
         if "annotationColor" in kwargs:
-            show_it = kwargs.pop("annotationColor")
+            annotation_color = kwargs.pop("annotationColor")
             warnings.warn(
                 "annotationColor has been deprecated, please use annotation_color",
                 DeprecationWarning,
@@ -347,13 +348,15 @@ class InterfaceMPL(object):
             if not isinstance(ax, matplotlib.axes.Axes):
                 raise TypeError("ax must be an Axes!")
             fig = ax.figure
+        if clim is not None:
+            pcolor_opts['vmin'] = clim[0]
+            pcolor_opts['vmax'] = clim[1]
 
-        return plotter(
+        out = plotter(
             v,
             v_type=v_type,
             view=view,
             ax=ax,
-            clim=clim,
             range_x=range_x,
             range_y=range_y,
             pcolor_opts=pcolor_opts,
@@ -363,8 +366,12 @@ class InterfaceMPL(object):
             stream_opts=stream_opts,
             stream_threshold=stream_threshold,
             stream_thickness=stream_thickness,
+            annotation_color=annotation_color,
             **kwargs,
         )
+        if show_it():
+            plt.show()
+        return out
 
     def plot_slice(
         self,
@@ -576,7 +583,11 @@ class InterfaceMPL(object):
             if not isinstance(ax, matplotlib.axes.Axes):
                 raise TypeError("ax must be an matplotlib.axes.Axes")
 
-        return plotter(
+        if clim is not None:
+            pcolor_opts['vmin'] = clim[0]
+            pcolor_opts['vmax'] = clim[1]
+
+        out = plotter(
             v,
             v_type=v_type,
             normal=normal,
@@ -584,8 +595,6 @@ class InterfaceMPL(object):
             grid=grid,
             view=view,
             ax=ax,
-            clim=clim,
-            show_it=show_it,
             pcolor_opts=pcolor_opts,
             stream_opts=stream_opts,
             grid_opts=grid_opts,
@@ -596,6 +605,9 @@ class InterfaceMPL(object):
             stream_thickness=stream_thickness,
             **kwargs,
         )
+        if show_it:
+            plt.show()
+        return out
 
     def plot_3d_slicer(
         self,
@@ -696,7 +708,6 @@ class InterfaceMPL(object):
         centers=False,
         edges=False,
         lines=True,
-        show_it=False,
         color="C0",
         linewidth=1.0,
         **kwargs,
@@ -912,8 +923,6 @@ class InterfaceMPL(object):
             ax.set_zlabel("x3")
 
         ax.grid(True)
-        if show_it:
-            plt.show()
 
         return ax
 
@@ -924,8 +933,6 @@ class InterfaceMPL(object):
         grid=False,
         view="real",
         ax=None,
-        clim=None,
-        show_it=False,
         pcolor_opts=None,
         stream_opts=None,
         grid_opts=None,
@@ -956,8 +963,6 @@ class InterfaceMPL(object):
                 grid=grid,
                 view=view,
                 ax=ax,
-                clim=clim,
-                show_it=show_it,
                 pcolor_opts=pcolor_opts,
                 stream_opts=stream_opts,
                 grid_opts=grid_opts,
@@ -1007,9 +1012,7 @@ class InterfaceMPL(object):
             yy = np.r_[0, np.cumsum(np.kron(np.ones((nY, 1)), self.h[1]).ravel())]
             # Plot the mesh
 
-            if clim is None:
-                clim = [C.min(), C.max()]
-            ph = ax.pcolormesh(xx, yy, C.T, vmin=clim[0], vmax=clim[1])
+            ph = ax.pcolormesh(xx, yy, C.T, **pcolor_opts)
             # Plot the lines
             gx = np.arange(nX + 1) * (self.grid_nodes_x[-1] - self.x0[0])
             gy = np.arange(nY + 1) * (self.grid_nodes_y[-1] - self.x0[1])
@@ -1043,8 +1046,6 @@ class InterfaceMPL(object):
                             )
 
         ax.set_title(v_type)
-        if show_it:
-            plt.show()
         return ph
 
     def __plot_image_tensor2D(
@@ -1054,8 +1055,6 @@ class InterfaceMPL(object):
         grid=False,
         view="real",
         ax=None,
-        clim=None,
-        show_it=False,
         pcolor_opts=None,
         stream_opts=None,
         grid_opts=None,
@@ -1093,16 +1092,12 @@ class InterfaceMPL(object):
         if view in ["real", "imag", "abs"]:
             v = self.reshape(v, "CC", "CC", "M")
             v = getattr(np, view)(v)  # e.g. np.real(v)
-            if clim is None:
-                clim = [v.min(), v.max()]
             v = np.ma.masked_where(np.isnan(v), v)
             out += (
                 ax.pcolormesh(
                     self.grid_nodes_x,
                     self.grid_nodes_y,
                     v.T,
-                    vmin=clim[0],
-                    vmax=clim[1],
                     **{**pcolor_opts, **grid_opts},
                 ),
             )
@@ -1139,9 +1134,6 @@ class InterfaceMPL(object):
                 x0_y = self.x0[1]
 
             U, V = self.reshape(v.reshape((self.nC, -1), order="F"), "CC", "CC", "M")
-            if clim is None:
-                uv = np.sqrt(U ** 2 + V ** 2)
-                clim = [uv.min(), uv.max()]
 
             tMi = self.__class__(h=[hx, hy], x0=np.r_[x0_x, x0_y])
             P = self.get_interpolation_matrix(tMi.gridCC, "CC", zerosOutside=True)
@@ -1203,8 +1195,6 @@ class InterfaceMPL(object):
                     x,
                     y,
                     np.sqrt(U ** 2 + V ** 2).T,
-                    vmin=clim[0],
-                    vmax=clim[1],
                     **{**pcolor_opts, **grid_opts},
                 ),
             )
@@ -1230,9 +1220,6 @@ class InterfaceMPL(object):
             ax.set_ylim(*range_y)
         else:
             ax.set_ylim(*self.grid_nodes_y[[0, -1]])
-
-        if show_it:
-            plt.show()
         return out
 
     def __plot_slice_tensor(
@@ -1244,8 +1231,6 @@ class InterfaceMPL(object):
         grid=False,
         view="real",
         ax=None,
-        clim=None,
-        show_it=False,
         pcolor_opts=None,
         stream_opts=None,
         grid_opts=None,
@@ -1321,8 +1306,6 @@ class InterfaceMPL(object):
             grid=grid,
             view=view,
             ax=ax,
-            clim=clim,
-            show_it=show_it,
             pcolor_opts=pcolor_opts,
             stream_opts=stream_opts,
             grid_opts=grid_opts,
@@ -1342,7 +1325,7 @@ class InterfaceMPL(object):
     def __plotCylTensorMesh(self, plotType, *args, **kwargs):
         if not self.is_symmetric:
             raise Exception("We have not yet implemented this type of view.")
-        assert plotType in ["plotImage", "plotGrid"]
+        assert plotType in ["plot_image", "plot_grid"]
 
         if len(args) > 0:
             val = args[0]
@@ -1415,23 +1398,16 @@ class InterfaceMPL(object):
                 raise AssertionError("ax must be an matplotlib.axes.Axes")
             fig = ax.figure
 
-        # Don't show things in the TM.plot_image
-        show_it = kwargs.get("show_it", False)
-        kwargs["show_it"] = False
-
         out = getattr(M, plotType)(*args, **kwargs)
 
         ax.set_xlabel("x")
         ax.set_ylabel("z")
 
-        if show_it:
-            plt.show()
-
         return out
 
     def __plot_grid_cyl(self, *args, **kwargs):
         if self.is_symmetric:
-            return self.__plotCylTensorMesh("plotGrid", *args, **kwargs)
+            return self.__plotCylTensorMesh("plot_grid", *args, **kwargs)
 
         # allow a slice to be provided for the mesh
         slc = kwargs.pop("slice", None)
@@ -1560,7 +1536,7 @@ class InterfaceMPL(object):
         return ax
 
     def __plot_image_cyl(self, *args, **kwargs):
-        return self.__plotCylTensorMesh("plotImage", *args, **kwargs)
+        return self.__plotCylTensorMesh("plot_image", *args, **kwargs)
 
     # CurvilinearMesh plotting:
     def __plot_grid_curv(
@@ -1571,7 +1547,6 @@ class InterfaceMPL(object):
         centers=False,
         edges=False,
         lines=True,
-        show_it=False,
         color="C0",
         linewidth=1.0,
         **kwargs,
@@ -1680,9 +1655,6 @@ class InterfaceMPL(object):
         ax.set_xlabel("x1")
         ax.set_ylabel("x2")
 
-        if show_it:
-            plt.show()
-
         return ax
 
     def __plot_image_curv(
@@ -1692,8 +1664,6 @@ class InterfaceMPL(object):
         grid=False,
         view="real",
         ax=None,
-        clim=None,
-        show_it=False,
         pcolor_opts=None,
         grid_opts=None,
         range_x=None,
@@ -1719,24 +1689,18 @@ class InterfaceMPL(object):
                 ind_xy
             ]  # average to cell centers
         I = np.ma.masked_where(np.isnan(I), I)
-        if clim is None:
-            clim = [v.min(), v.max()]
         X, Y = (x.T for x in self.nodes)
         out = ax.pcolormesh(
             X,
             Y,
             I.reshape(self.vnC[::-1]),
             antialiased=True,
-            vmin=clim[0],
-            vmax=clim[1],
             **pcolor_opts,
             **grid_opts,
         )
 
         ax.set_xlabel("x")
         ax.set_ylabel("y")
-        if show_it:
-            plt.show()
         return (out,)
 
     def __plot_grid_tree(
@@ -1754,7 +1718,6 @@ class InterfaceMPL(object):
         edges_x=False,
         edges_y=False,
         edges_z=False,
-        show_it=False,
         **kwargs,
     ):
         if faces:
@@ -1913,8 +1876,6 @@ class InterfaceMPL(object):
             ax.set_zlabel("x3")
 
         ax.grid(True)
-        if show_it:
-            plt.show()
 
         return ax
 
@@ -1925,8 +1886,6 @@ class InterfaceMPL(object):
         grid=False,
         view="real",
         ax=None,
-        clim=None,
-        show_it=False,
         pcolor_opts=None,
         grid_opts=None,
         range_x=None,
@@ -1962,12 +1921,8 @@ class InterfaceMPL(object):
         alpha = pcolor_opts.pop("alpha", None)
         norm = pcolor_opts.pop("norm", None)
         cmap = pcolor_opts.pop("cmap", None)
-        if clim is None:
-            vmin = pcolor_opts.pop("vmin", None)
-            vmax = pcolor_opts.pop("vmax", None)
-        else:
-            vmin = pcolor_opts.pop("vmin", clim[0])
-            vmax = pcolor_opts.pop("vmin", clim[1])
+        vmin = pcolor_opts.pop("vmin", None)
+        vmax = pcolor_opts.pop("vmax", None)
         shading = pcolor_opts.pop("shading", "flat")
         antialiased = pcolor_opts.pop("antialiased", False)
 
@@ -1981,21 +1936,11 @@ class InterfaceMPL(object):
         )
         collection.set_alpha(alpha)
         collection.set_array(I)
-        if norm is not None and not isinstance(norm, mcolors.Normalize):
-            raise ValueError("'norm' must be an instance of 'mcolors.Normalize'")
         collection.set_cmap(cmap)
         collection.set_norm(norm)
-        collection.set_clim(vmin, vmax)
-        collection.autoscale_None()
+        collection._scale_norm(norm, vmin, vmax)
 
-        # Transform from native to data coordinates?
-        t = collection._transform
-        if not isinstance(t, mtransforms.Transform) and hasattr(t, "_as_mpl_transform"):
-            t = t._as_mpl_transform(ax.axes)
-
-        if t and any(t.contains_branch_seperately(ax.transData)):
-            trans_to_data = t - ax.transData
-            coords = trans_to_data.transform(coords)
+        ax.grid(False)
 
         ax.add_collection(collection, autolim=False)
 
@@ -2013,10 +1958,7 @@ class InterfaceMPL(object):
         collection.sticky_edges.y[:] = [miny, maxy]
         corners = (minx, miny), (maxx, maxy)
         ax.update_datalim(corners)
-        ax.autoscale_view()
-
-        if show_it:
-            plt.show()
+        ax._request_autoscale_view()
 
         return (collection,)
 
@@ -2029,8 +1971,6 @@ class InterfaceMPL(object):
         grid=False,
         view="real",
         ax=None,
-        clim=None,
-        show_it=False,
         pcolor_opts=None,
         stream_opts=None,
         grid_opts=None,
@@ -2108,8 +2048,6 @@ class InterfaceMPL(object):
             grid=grid,
             view=view,
             ax=ax,
-            clim=clim,
-            show_it=False,
             pcolor_opts=pcolor_opts,
             grid_opts=grid_opts,
             range_x=range_x,
@@ -2119,8 +2057,6 @@ class InterfaceMPL(object):
         ax.set_xlabel("y" if normal == "X" else "x")
         ax.set_ylabel("y" if normal == "Z" else "z")
         ax.set_title("Slice {0:d}, {1!s} = {2:4.2f}".format(ind, normal, slice_loc))
-        if show_it:
-            plt.show()
         return out
 
     plotGrid = deprecate_method("plot_grid", "plotGrid", removal_version="1.0.0")
@@ -2317,33 +2253,26 @@ class Slicer(object):
         else:
             aspect3 = 1.0 / aspect2
 
-        # Get color limits.
-
-        # Alternatively, look in pc_props.
-        vmin = self.pc_props.pop("vmin", None)
-        vmax = self.pc_props.pop("vmax", None)
-
-        # Check if there is a norm and if it has color limits.
-        if "norm" in self.pc_props:
-            vmin = self.pc_props["norm"].vmin
-            vmax = self.pc_props["norm"].vmax
-
-        # If nowhere defined, get it from the data.
+        # set color limits if clim is None (and norm doesn't have vmin, vmax).
         if clim is None:
+            vmin = self.pc_props["norm"].vmin
+            vmin = np.nanmin(self.v) if vmin is None else vmin
 
-            clim = [
-                np.nanmin(self.v) if vmin is None else vmin,
-                np.nanmax(self.v) if vmax is None else vmax,
-            ]
+            vmax = self.pc_props["norm"].vmax
+            vmax = np.nanmax(self.v) if vmax is None else vmin
 
             # In the case of a homogeneous fullspace provide a small range to
             # avoid problems with colorbar and the three subplots.
-            if clim[0] == clim[1]:
-                clim = [0.99 * clim[0], 1.01 * clim[1]]
-
-        else:
-            self.pc_props["vmin"] = clim[0]
-            self.pc_props["vmax"] = clim[1]
+            if vmin == vmax:
+                vmin *= 0.99
+                vmax *= 1.01
+            if "norm" in self.pc_props:
+                self.pc_props["norm"].vmin = vmin
+                self.pc_props["norm"].vmax = vmax
+            else:
+                self.pc_props['vmin'] = vmin
+                self.pc_props['vmax'] = vmax
+            clim = (vmin, vmax)
 
         # 2. Start populating figure
 
