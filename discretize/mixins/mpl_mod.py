@@ -2262,21 +2262,22 @@ class Slicer(object):
                 vmax = self.pc_props["norm"].vmax
             else:
                 vmin = vmax = None
-            vmin = np.nanmin(self.v) if vmin is None else vmin
-            vmax = np.nanmax(self.v) if vmax is None else vmin
-
+            clim = [
+                np.nanmin(self.v) if vmin is None else vmin,
+                np.nanmax(self.v) if vmax is None else vmax
+            ]
             # In the case of a homogeneous fullspace provide a small range to
             # avoid problems with colorbar and the three subplots.
-            if vmin == vmax:
-                vmin *= 0.99
-                vmax *= 1.01
-            if "norm" in self.pc_props:
-                self.pc_props["norm"].vmin = vmin
-                self.pc_props["norm"].vmax = vmax
-            else:
-                self.pc_props['vmin'] = vmin
-                self.pc_props['vmax'] = vmax
-            clim = (vmin, vmax)
+            if clim[0] == clim[1]:
+                clim[0] *= 0.99
+                clim[1] *= 1.01
+        else:
+            self.pc_props['vmin'] = clim[0]
+            self.pc_props['vmax'] = clim[1]
+
+        if "norm" in self.pc_props:
+            self.pc_props["norm"].vmin = clim[0]
+            self.pc_props["norm"].vmax = clim[1]
 
         # 2. Start populating figure
 
