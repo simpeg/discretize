@@ -121,8 +121,8 @@ def random_model(shape, seed=None, anisotropy=None, its=100, bounds=None):
     return mi
 
 
-def mesh_tensor(value):
-    """**mesh_tensor** takes a list of numbers and tuples
+def unpack_widths(value):
+    """**unpack_widths** takes a list of numbers and tuples
     that have the form::
 
         mT = [ float, (cellSize, numCell), (cellSize, numCell, factor) ]
@@ -154,7 +154,7 @@ def mesh_tensor(value):
 
     """
     if type(value) is not list:
-        raise Exception("mesh_tensor must be a list of scalars and tuples.")
+        raise Exception("unpack_widths must be a list of scalars and tuples.")
 
     proposed = []
     for v in value:
@@ -172,7 +172,7 @@ def mesh_tensor(value):
             proposed += pad.tolist()
         else:
             raise Exception(
-                "mesh_tensor must contain only scalars and len(2) or len(3) tuples."
+                "unpack_widths must contain only scalars and len(2) or len(3) tuples."
             )
 
     return np.array(proposed)
@@ -981,7 +981,7 @@ def active_from_xyz(mesh, xyz, grid_reference="CC", method="linear"):
 exampleLrmGrid = deprecate_function(
     example_curvilinear_grid, "exampleLrmGrid", removal_version="1.0.0"
 )
-meshTensor = deprecate_function(mesh_tensor, "meshTensor", removal_version="1.0.0")
+meshTensor = deprecate_function(unpack_widths, "meshTensor", removal_version="1.0.0")
 closestPoints = deprecate_function(
     closest_points, "closestPoints", removal_version="1.0.0"
 )

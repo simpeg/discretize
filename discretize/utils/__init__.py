@@ -23,7 +23,7 @@ from discretize.utils.matrix_utils import (
 )
 from discretize.utils.mesh_utils import (
     example_curvilinear_grid,
-    mesh_tensor,
+    unpack_widths,
     closest_points,
     extract_core_mesh,
     random_model,

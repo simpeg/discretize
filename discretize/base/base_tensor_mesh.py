@@ -10,7 +10,7 @@ from discretize.base.base_mesh import BaseMesh
 from discretize.utils import (
     is_scalar,
     as_array_n_by_dim,
-    mesh_tensor,
+    unpack_widths,
     mkvc,
     ndgrid,
     spzeros,
@@ -91,7 +91,7 @@ class BaseTensorMesh(BaseMesh):
                 # This gives you something over the unit cube.
                 h_i = self._unitDimensions[i] * np.ones(int(h_i)) / int(h_i)
             elif type(h_i) is list:
-                h_i = mesh_tensor(h_i)
+                h_i = unpack_widths(h_i)
             assert isinstance(h_i, np.ndarray), "h[{0:d}] is not a numpy array.".format(
                 i
             )
