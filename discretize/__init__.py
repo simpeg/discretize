@@ -28,9 +28,6 @@ except ImportError as err:
         )
 from discretize import tests
 
-# DERECATED
-Tests = tests
-
 __version__ = "0.5.1"
 __author__ = "SimPEG Team"
 __license__ = "MIT"
