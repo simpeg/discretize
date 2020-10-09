@@ -68,10 +68,10 @@ Testing
 .. autosummary::
     :toctree: generated
 
-    testing.OrderTest
-    testing.checkDerivative
-    testing.getQuadratic
-    testing.Rosenbrock
+    tests.OrderTest
+    tests.checkDerivative
+    tests.getQuadratic
+    tests.Rosenbrock
 
 
 Utilities
