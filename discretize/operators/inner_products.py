@@ -191,7 +191,7 @@ class InnerProducts(object):
                 FutureWarning,
             )
             do_fast = kwargs["doFast"]
-        if proj_type not in ["F", "E",]:
+        if proj_type not in ["F", "E"]:
             raise TypeError("proj_type must be 'F' for faces or 'E' for edges")
 
         fast = None

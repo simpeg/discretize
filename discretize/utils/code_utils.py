@@ -23,10 +23,12 @@ def as_array_n_by_dim(pts, dim):
     elif len(pts.shape) == 1:
         pts = pts[:, np.newaxis]
 
-    if (pts.shape[1] != dim):
-        raise ValueError("pts must be a column vector of shape (nPts, {0:d}) not ({1:d}, {2:d})".format(
-            *((dim,) + pts.shape))
-    )
+    if pts.shape[1] != dim:
+        raise ValueError(
+            "pts must be a column vector of shape (nPts, {0:d}) not ({1:d}, {2:d})".format(
+                *((dim,) + pts.shape)
+            )
+        )
 
     return pts
 

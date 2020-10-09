@@ -167,7 +167,7 @@ class InterfaceMPL(object):
             kwargs["color"] = kwargs.get("color", rcParams["lines.color"])
             kwargs["linewidth"] = kwargs.get("linewidth", rcParams["lines.linewidth"])
 
-        out =  plotter(
+        out = plotter(
             ax=ax,
             nodes=nodes,
             faces=faces,
@@ -341,8 +341,8 @@ class InterfaceMPL(object):
                 raise TypeError("ax must be an Axes!")
             fig = ax.figure
         if clim is not None:
-            pcolor_opts['vmin'] = clim[0]
-            pcolor_opts['vmax'] = clim[1]
+            pcolor_opts["vmin"] = clim[0]
+            pcolor_opts["vmax"] = clim[1]
 
         out = plotter(
             v,
@@ -575,8 +575,8 @@ class InterfaceMPL(object):
                 raise TypeError("ax must be an matplotlib.axes.Axes")
 
         if clim is not None:
-            pcolor_opts['vmin'] = clim[0]
-            pcolor_opts['vmax'] = clim[1]
+            pcolor_opts["vmin"] = clim[0]
+            pcolor_opts["vmax"] = clim[1]
 
         out = plotter(
             v,
@@ -1044,7 +1044,7 @@ class InterfaceMPL(object):
                             )
 
         ax.set_title(v_type)
-        return (ph, )
+        return (ph,)
 
     def __plot_image_tensor2D(
         self,
@@ -2265,7 +2265,7 @@ class Slicer(object):
                 vmin = vmax = None
             clim = [
                 np.nanmin(self.v) if vmin is None else vmin,
-                np.nanmax(self.v) if vmax is None else vmax
+                np.nanmax(self.v) if vmax is None else vmax,
             ]
             # In the case of a homogeneous fullspace provide a small range to
             # avoid problems with colorbar and the three subplots.
@@ -2273,8 +2273,8 @@ class Slicer(object):
                 clim[0] *= 0.99
                 clim[1] *= 1.01
         else:
-            self.pc_props['vmin'] = clim[0]
-            self.pc_props['vmax'] = clim[1]
+            self.pc_props["vmin"] = clim[0]
+            self.pc_props["vmax"] = clim[1]
 
         # ensure vmin/vmax of the norm is consistent with clim
         if "norm" in self.pc_props:

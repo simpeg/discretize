@@ -174,7 +174,9 @@ def sub2ind(shape, subs):
     if len(subs.shape) == 1:
         subs = subs[np.newaxis, :]
     if subs.shape[1] != len(shape):
-        raise ValueError("Indexing must be done as a column vectors. e.g. [[3,6],[6,2],...]")
+        raise ValueError(
+            "Indexing must be done as a column vectors. e.g. [[3,6],[6,2],...]"
+        )
     inds = np.ravel_multi_index(subs.T, shape, order="F")
     return mkvc(inds)
 

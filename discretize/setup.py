@@ -8,7 +8,7 @@ def configuration(parent_package="", top_path=None):
     config.add_subpackage("mixins")
     config.add_subpackage("utils")
     config.add_subpackage("_extensions")
-    #deprecated
+    # deprecated
     config.add_subpackage("Tests")
 
     return config

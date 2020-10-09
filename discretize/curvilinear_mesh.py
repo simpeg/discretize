@@ -73,8 +73,9 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
             if np.any(n != np.array(self.nodes[0].shape) - 1):
                 raise ValueError(
                     "Unexpected n-values. {} was provided, {} was expected".format(
-                    n, np.array(self.nodes[0].shape) - 1
-                ))
+                        n, np.array(self.nodes[0].shape) - 1
+                    )
+                )
         else:
             n = np.array(self.nodes[0].shape) - 1
 

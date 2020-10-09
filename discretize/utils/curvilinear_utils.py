@@ -92,9 +92,7 @@ def index_cube(nodes, grid_size, n=None):
     possibleNodes = "ABCD" if dim == 2 else "ABCDEFGH"
     for node in nodes:
         if node not in possibleNodes:
-            raise ValueError("Nodes must be chosen from: '{0!s}'".format(
-            possibleNodes
-        ))
+            raise ValueError("Nodes must be chosen from: '{0!s}'".format(possibleNodes))
 
     if dim == 2:
         ij = ndgrid(np.arange(n[0]), np.arange(n[1]))

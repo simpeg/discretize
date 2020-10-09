@@ -76,10 +76,11 @@ class BaseTensorMesh(BaseMesh):
 
         # Sanity Checks
         if not isinstance(h_in, (list, tuple)):
-            raise TypeError("h_in must be a list, not {}".format(type(h_in))
-        )
+            raise TypeError("h_in must be a list, not {}".format(type(h_in)))
         if len(h_in) not in [1, 2, 3]:
-            raise ValueError("h_in must be of dimension 1, 2, or 3 not {}".format(len(h_in)))
+            raise ValueError(
+                "h_in must be of dimension 1, 2, or 3 not {}".format(len(h_in))
+            )
 
         # build h
         h = list(range(len(h_in)))
@@ -485,7 +486,7 @@ class BaseTensorMesh(BaseMesh):
             M, the inner product matrix (nF, nF)
 
         """
-        if proj_type not in ["F","E"]:
+        if proj_type not in ["F", "E"]:
             raise ValueError("proj_type must be 'F' for faces or 'E' for edges")
 
         if prop is None:
@@ -559,7 +560,7 @@ class BaseTensorMesh(BaseMesh):
 
         """
 
-        if proj_type not in ["F","E"]:
+        if proj_type not in ["F", "E"]:
             raise ValueError("proj_type must be 'F' for faces or 'E' for edges")
 
         tensorType = TensorType(self, prop)
