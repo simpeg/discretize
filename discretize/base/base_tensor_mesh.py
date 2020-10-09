@@ -75,34 +75,32 @@ class BaseTensorMesh(BaseMesh):
         x0_in = x0
 
         # Sanity Checks
-        assert type(h_in) in [list, tuple], "h_in must be a list, not {}".format(
-            type(h_in)
+        if not isinstance(h_in, (list, tuple)):
+            raise TypeError("h_in must be a list, not {}".format(type(h_in))
         )
-        assert len(h_in) in [
-            1,
-            2,
-            3,
-        ], "h_in must be of dimension 1, 2, or 3 not {}".format(len(h_in))
+        if len(h_in) not in [1, 2, 3]:
+            raise ValueError("h_in must be of dimension 1, 2, or 3 not {}".format(len(h_in)))
 
         # build h
         h = list(range(len(h_in)))
         for i, h_i in enumerate(h_in):
-            if is_scalar(h_i) and type(h_i) is not np.ndarray:
+            if is_scalar(h_i) and not isinstance(h_i, np.ndarray):
                 # This gives you something over the unit cube.
                 h_i = self._unitDimensions[i] * np.ones(int(h_i)) / int(h_i)
-            elif type(h_i) is list:
+            elif isinstance(h_i, (list, tuple)):
                 h_i = unpack_widths(h_i)
-            assert isinstance(h_i, np.ndarray), "h[{0:d}] is not a numpy array.".format(
-                i
-            )
-            assert len(h_i.shape) == 1, "h[{0:d}] must be a 1D numpy array.".format(i)
+            if not isinstance(h_i, np.ndarray):
+                raise TypeError("h[{0:d}] is not a numpy array.".format(i))
+            if len(h_i.shape) != 1:
+                raise ValueError("h[{0:d}] must be a 1D numpy array.".format(i))
             h[i] = h_i[:]  # make a copy.
 
         # Origin of the mesh
         x0 = np.zeros(len(h))
 
         if x0_in is not None:
-            assert len(h) == len(x0_in), "Dimension mismatch. x0 != len(h)"
+            if len(h) != len(x0_in):
+                raise ValueError("Dimension mismatch. x0 != len(h)")
             for i in range(len(h)):
                 x_i, h_i = x0_in[i], h[i]
                 if is_scalar(x_i):
@@ -122,9 +120,8 @@ class BaseTensorMesh(BaseMesh):
 
         if "n" in kwargs.keys():
             n = kwargs.pop("n")
-            assert (
-                n == np.array([x.size for x in h])
-            ).all(), "Dimension mismatch. The provided n doesn't "
+            if np.any(n != np.array([x.size for x in h])):
+                raise ValueError("Dimension mismatch. The provided n doesn't h")
         else:
             n = np.array([x.size for x in h])
 
@@ -367,14 +364,16 @@ class BaseTensorMesh(BaseMesh):
         loc = as_array_n_by_dim(loc, self.dim)
 
         if not zeros_outside:
-            assert np.all(self.is_inside(loc)), "Points outside of mesh"
+            if not np.all(self.is_inside(loc)):
+                raise ValueError("Points outside of mesh")
         else:
             indZeros = np.logical_not(self.is_inside(loc))
             loc[indZeros, :] = np.array([v.mean() for v in self.get_tensor("CC")])
 
         if loc_type in ["Fx", "Fy", "Fz", "Ex", "Ey", "Ez"]:
             ind = {"x": 0, "y": 1, "z": 2}[loc_type[1]]
-            assert self.dim >= ind, "mesh is not high enough dimension."
+            if self.dim < ind:
+                raise ValueError("mesh is not high enough dimension.")
             nF_nE = self.vnF if "F" in loc_type else self.vnE
             components = [spzeros(loc.shape[0], n) for n in nF_nE]
             components[ind] = interpolation_matrix(loc, *self.get_tensor(loc_type))
@@ -486,10 +485,8 @@ class BaseTensorMesh(BaseMesh):
             M, the inner product matrix (nF, nF)
 
         """
-        assert proj_type in [
-            "F",
-            "E",
-        ], "proj_type must be 'F' for faces or 'E' for edges"
+        if proj_type not in ["F","E"]:
+            raise ValueError("proj_type must be 'F' for faces or 'E' for edges")
 
         if prop is None:
             prop = np.ones(self.nC)
@@ -561,9 +558,9 @@ class BaseTensorMesh(BaseMesh):
             dMdmu, the derivative of the inner product matrix
 
         """
-        assert proj_type in ["F", "E"], (
-            "proj_type must be 'F' for faces or 'E'" " for edges"
-        )
+
+        if proj_type not in ["F","E"]:
+            raise ValueError("proj_type must be 'F' for faces or 'E' for edges")
 
         tensorType = TensorType(self, prop)
 

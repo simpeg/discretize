@@ -37,7 +37,8 @@ def mkvc(x, n_dims=1, **kwargs):
     if isinstance(x, Zero):
         return x
 
-    assert isinstance(x, np.ndarray), "Vector must be a numpy array"
+    if not isinstance(x, np.ndarray):
+        raise TypeError("Vector must be a numpy array")
 
     if n_dims == 1:
         return x.flatten(order="F")
@@ -159,9 +160,8 @@ def ind2sub(shape, inds):
     """From the given shape, returns the subscripts of the given index"""
     if type(inds) is not np.ndarray:
         inds = np.array(inds)
-    assert (
-        len(inds.shape) == 1
-    ), "Indexing must be done as a 1D row vector, e.g. [3,6,6,...]"
+    if len(inds.shape) != 1:
+        raise ValueError("Indexing must be done as a 1D row vector, e.g. [3,6,6,...]")
     return np.unravel_index(inds, shape, order="F")
 
 
@@ -173,19 +173,18 @@ def sub2ind(shape, subs):
         subs = np.array(subs)
     if len(subs.shape) == 1:
         subs = subs[np.newaxis, :]
-    assert subs.shape[1] == len(
-        shape
-    ), "Indexing must be done as a column vectors. e.g. [[3,6],[6,2],...]"
+    if subs.shape[1] != len(shape):
+        raise ValueError("Indexing must be done as a column vectors. e.g. [[3,6],[6,2],...]")
     inds = np.ravel_multi_index(subs.T, shape, order="F")
     return mkvc(inds)
 
 
 def get_subarray(A, ind):
     """subarray"""
-    assert type(ind) == list, "ind must be a list of vectors"
-    assert len(A.shape) == len(
-        ind
-    ), "ind must have the same length as the dimension of A"
+    if not isinstance(ind, list):
+        raise TypeError("ind must be a list of vectors")
+    if len(A.shape) != len(ind):
+        raise ValueError("ind must have the same length as the dimension of A")
 
     if len(A.shape) == 2:
         return A[ind[0], :][:, ind[1]]

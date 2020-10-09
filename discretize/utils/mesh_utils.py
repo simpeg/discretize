@@ -14,12 +14,15 @@ num_types = [int, float]
 
 
 def example_curvilinear_grid(nC, exType):
-    assert type(nC) == list, "nC must be a list containing the number of nodes"
-    assert len(nC) == 2 or len(nC) == 3, "nC must either two or three dimensions"
+    if not isinstance(nC, list):
+        raise TypeError("nC must be a list containing the number of nodes")
+    if len(nC) != 2 and len(nC) != 3:
+        raise ValueError("nC must either two or three dimensions")
     exType = exType.lower()
 
     possibleTypes = ["rect", "rotate"]
-    assert exType in possibleTypes, "Not a possible example type."
+    if exType not in possibleTypes:
+        raise TypeError("Not a possible example type.")
 
     if exType == "rect":
         return list(
@@ -106,7 +109,8 @@ def random_model(shape, seed=None, anisotropy=None, its=100, bounds=None):
                 sp.kron(sp.kron(kernal, kernal.T).todense()[:], kernal).todense()
             ).reshape((3, 3, 3))
     else:
-        assert len(anisotropy.shape) is len(shape), "Anisotropy must be the same shape."
+        if len(anisotropy.shape) != len(shape):
+            raise ValueError("Anisotropy must be the same shape.")
         smth = np.array(anisotropy, dtype=float)
 
     smth = smth / smth.sum()  # normalize

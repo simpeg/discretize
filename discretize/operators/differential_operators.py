@@ -474,9 +474,10 @@ class DiffOperators(object):
         if isinstance(BC, str):
             BC = [BC] * self.dim
         if isinstance(BC, list):
-            assert len(BC) == self.dim, "BC list must be the size of your mesh"
+            if len(BC) != self.dim:
+                raise ValueError("BC list must be the size of your mesh")
         else:
-            raise Exception("BC must be a str or a list.")
+            raise TypeError("BC must be a str or a list.")
 
         for i, bc_i in enumerate(BC):
             BC[i] = _validate_BC(bc_i)
@@ -682,7 +683,8 @@ class DiffOperators(object):
 
     @property
     def _edgeCurlStencil(self):
-        assert self.dim > 1, "Edge Curl only programed for 2 or 3D."
+        if self.dim <= 1:
+            raise NotImplementedError("Edge Curl only programed for 2 or 3D.")
 
         # Compute divergence operator on faces
         if self.dim == 2:
@@ -731,7 +733,8 @@ class DiffOperators(object):
 
         if getattr(self, "_edgeCurl", None) is None:
 
-            assert self.dim > 1, "Edge Curl only programed for 2 or 3D."
+            if self.dim <= 1:
+                raise NotImplementedError("Edge Curl only programed for 2 or 3D.")
 
             if self.dim == 2:
                 self._edgeCurl = self._edgeCurlStencil * sdiag(1 / S)
@@ -767,9 +770,10 @@ class DiffOperators(object):
         if isinstance(BC, str):
             BC = [BC for _ in self.vnC]  # Repeat the str self.dim times
         elif isinstance(BC, list):
-            assert len(BC) == self.dim, "BC list must be the size of your mesh"
+            if len(BC) != self.dim:
+                raise ValueError("BC list must be the size of your mesh")
         else:
-            raise Exception("BC must be a str or a list.")
+            raise TypeError("BC must be a str or a list.")
 
         for i, bc_i in enumerate(BC):
             BC[i] = _validate_BC(bc_i)

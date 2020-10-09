@@ -79,8 +79,8 @@ def index_cube(nodes, grid_size, n=None):
 
     """
 
-    assert type(nodes) == str, "Nodes must be a str variable: e.g. 'ABCD'"
-    # assert isinstance(grid_size, np.ndarray), "Number of nodes must be an ndarray"
+    if not isinstance(nodes, str):
+        raise TypeError("Nodes must be a str variable: e.g. 'ABCD'")
     nodes = nodes.upper()
     try:
         dim = len(grid_size)
@@ -91,9 +91,10 @@ def index_cube(nodes, grid_size, n=None):
     # Make sure that we choose from the possible nodes.
     possibleNodes = "ABCD" if dim == 2 else "ABCDEFGH"
     for node in nodes:
-        assert node in possibleNodes, "Nodes must be chosen from: '{0!s}'".format(
+        if node not in possibleNodes:
+            raise ValueError("Nodes must be chosen from: '{0!s}'".format(
             possibleNodes
-        )
+        ))
 
     if dim == 2:
         ij = ndgrid(np.arange(n[0]), np.arange(n[1]))
@@ -164,8 +165,10 @@ def face_info(xyz, A, B, C, D, average=True, normalize_normals=True, **kwargs):
             FutureWarning,
         )
         normalize_normals = kwargs["normalizeNormals"]
-    assert type(average) is bool, "average must be a boolean"
-    assert type(normalize_normals) is bool, "normalize_normals must be a boolean"
+    if not isinstance(average, bool):
+        raise TypeError("average must be a boolean")
+    if not isinstance(normalize_normals, bool):
+        raise TypeError("normalize_normals must be a boolean")
     # compute normal that is pointing away from you.
     #
     #    A -------A-B------- B

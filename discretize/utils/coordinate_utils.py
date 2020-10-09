@@ -80,8 +80,10 @@ def rotation_matrix_from_normals(v0, v1, tol=1e-20):
     """
 
     # ensure both n0, n1 are vectors of length 1
-    assert len(v0) == 3, "Length of n0 should be 3"
-    assert len(v1) == 3, "Length of n1 should be 3"
+    if len(v0) != 3:
+        raise ValueError("Length of n0 should be 3")
+    if len(v1) != 3:
+        raise ValueError("Length of n1 should be 3")
 
     # ensure both are true normals
     n0 = v0 * 1.0 / np.linalg.norm(v0)
@@ -125,8 +127,10 @@ def rotate_points_from_normals(XYZ, n0, n1, x0=np.r_[0.0, 0.0, 0.0]):
 
     R = rotation_matrix_from_normals(n0, n1)
 
-    assert XYZ.shape[1] == 3, "Grid XYZ should be 3 wide"
-    assert len(x0) == 3, "x0 should have length 3"
+    if XYZ.shape[1] != 3:
+        raise ValueError("Grid XYZ should be 3 wide")
+    if len(x0) != 3:
+        raise ValueError("x0 should have length 3")
 
     X0 = np.ones([XYZ.shape[0], 1]) * mkvc(x0)
 

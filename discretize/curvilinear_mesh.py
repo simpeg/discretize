@@ -70,11 +70,11 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
 
         if "_n" in kwargs.keys():
             n = kwargs.pop("_n")
-            assert (
-                n == np.array(self.nodes[0].shape) - 1
-            ).all(), "Unexpected n-values. {} was provided, {} was expected".format(
-                n, np.array(self.nodes[0].shape) - 1
-            )
+            if np.any(n != np.array(self.nodes[0].shape) - 1):
+                raise ValueError(
+                    "Unexpected n-values. {} was provided, {} was expected".format(
+                    n, np.array(self.nodes[0].shape) - 1
+                ))
         else:
             n = np.array(self.nodes[0].shape) - 1
 
@@ -87,17 +87,18 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
 
     @properties.validator("nodes")
     def _check_nodes(self, change):
-        assert len(change["value"]) > 1, "len(node) must be greater than 1"
+        if len(change["value"]) <= 1:
+            raise ValueError("len(node) must be greater than 1")
 
         for i, change["value"][i] in enumerate(change["value"]):
-            assert change["value"][i].shape == change["value"][0].shape, (
-                "change['value'][{0:d}] is not the same shape as "
-                "change['value'][0]".format(i)
-            )
+            if change["value"][i].shape != change["value"][0].shape:
+                raise ValueError(
+                    "change['value'][{0:d}] is not the same shape as "
+                    "change['value'][0]".format(i)
+                )
 
-        assert len(change["value"][0].shape) == len(
-            change["value"]
-        ), "Dimension mismatch"
+        if len(change["value"][0].shape) != len(change["value"]):
+            raise ValueError("Dimension mismatch")
 
     @property
     def grid_cell_centers(self):

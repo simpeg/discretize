@@ -191,10 +191,8 @@ class InnerProducts(object):
                 FutureWarning,
             )
             do_fast = kwargs["doFast"]
-        assert proj_type in [
-            "F",
-            "E",
-        ], "proj_type must be 'F' for faces or 'E' for edges"
+        if proj_type not in ["F", "E",]:
+            raise TypeError("proj_type must be 'F' for faces or 'E' for edges")
 
         fast = None
         if hasattr(self, "_fastInnerProduct") and do_fast:
@@ -230,13 +228,10 @@ class InnerProducts(object):
         tensorType : TensorType
             type of the tensor: TensorType(mesh, sigma)
         """
-        assert isinstance(
-            tensorType, TensorType
-        ), "tensorType must be an instance of TensorType."
-        assert proj_type in [
-            "F",
-            "E",
-        ], "proj_type must be 'F' for faces or 'E' for edges"
+        if not isinstance(tensorType, TensorType):
+            raise TypeError("tensorType must be an instance of TensorType.")
+        if proj_type not in ["F", "E"]:
+            raise TypeError("proj_type must be 'F' for faces or 'E' for edges")
 
         d = self.dim
         # We will multiply by sqrt on each side to keep symmetry
@@ -444,10 +439,9 @@ class InnerProducts(object):
             dMdm, the derivative of the inner product matrix (n, nC*nA)
 
         """
-        assert proj_type in [
-            "F",
-            "E",
-        ], "proj_type must be 'F' for faces or 'E' for edges"
+        if proj_type not in ["F", "E"]:
+            raise TypeError("proj_type must be 'F' for faces or 'E' for edges")
+
         n = getattr(self, "n" + proj_type)
 
         if tensorType == -1:
@@ -718,7 +712,8 @@ class InnerProducts(object):
         """Returns a function for creating projection matrices"""
 
         def Px(xEdge):
-            assert xEdge == "eX0", "xEdge = {0!s}, not eX0".format(xEdge)
+            if xEdge != "eX0":
+                raise TypeError("xEdge = {0!s}, not eX0".format(xEdge))
             return sp.identity(M.nC)
 
         return Px

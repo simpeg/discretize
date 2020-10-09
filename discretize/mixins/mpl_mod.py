@@ -1322,8 +1322,9 @@ class InterfaceMPL(object):
     # CylindricalMesh plotting
     def __plotCylTensorMesh(self, plotType, *args, **kwargs):
         if not self.is_symmetric:
-            raise Exception("We have not yet implemented this type of view.")
-        assert plotType in ["plot_image", "plot_grid"]
+            raise NotImplementedError("We have not yet implemented this type of view.")
+        if plotType not in ["plot_image", "plot_grid"]:
+            raise TypeError("plotType must be either 'plot_grid' or 'plot_image'.")
 
         if len(args) > 0:
             val = args[0]
