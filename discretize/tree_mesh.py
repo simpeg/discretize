@@ -185,7 +185,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         extent_display.append("   ---------------------------")
         dim_label = {0: "x", 1: "y", 2: "z"}
         for dim in range(self.dim):
-            n_vector = getattr(self, "vectorN" + dim_label[dim])
+            n_vector = getattr(self, "grid_nodes_" + dim_label[dim])
             extent_display.append(
                 "{}: {:^13},{:^13}".format(dim_label[dim], n_vector[0], n_vector[-1])
             )
@@ -256,7 +256,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         det_tbl += "<th" + style + ">max</th>\n"
         det_tbl += "</tr>\n"
         for dim in range(self.dim):
-            n_vector = getattr(self, "vectorN" + dim_label[dim])
+            n_vector = getattr(self, "grid_nodes_" + dim_label[dim])
             det_tbl += "<tr>\n"
             det_tbl += "<td" + style + ">{}</td>\n".format(dim_label[dim])
             det_tbl += "<td" + style + ">{}</td>\n".format(n_vector[0])
