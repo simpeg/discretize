@@ -242,6 +242,11 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         >>> M = discretize.TensorMesh([np.ones(n) for n in [2,3]])
         >>> M.plot_grid(edges=True, show_it=True)
         """
+        warnings.warn(
+            "The vnE property will be removed in version 1.0.0 of discretize. "
+            "please access the n_edges_x, n_edges_y, n_edges_z directly if needed.",
+            FutureWarning,
+        )
         return tuple(
             x for x in [self.n_edges_x, self.n_edges_y, self.n_edges_z] if x is not None
         )
@@ -330,6 +335,11 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         >>> M = discretize.TensorMesh([np.ones(n) for n in [2,3]])
         >>> M.plot_grid(faces=True, show_it=True)
         """
+        warnings.warn(
+            "The vnF property will be removed in version 1.0.0 of discretize. "
+            "please access the n_faces_x, n_faces_y, n_faces_z directly if needed.",
+            FutureWarning,
+        )
         return tuple(
             x for x in [self.n_faces_x, self.n_faces_y, self.n_faces_z] if x is not None
         )
@@ -902,7 +912,10 @@ class BaseRectangularMesh(BaseMesh):
                 # This will only deal with components of fields,
                 # not full 'F' or 'E'
                 xx = mkvc(xx)  # unwrap it in case it is a matrix
-                nn = self.vnF if x_type == "F" else self.vnE
+                if x_type == "F":
+                    nn = (self.nFx, self.nFy, self.nFz)[:self.dim]
+                else:
+                    nn = (self.nEx, self.nEy, self.nEz)[:self.dim]
                 nn = np.r_[0, nn]
 
                 nx = [0, 0, 0]
