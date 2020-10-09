@@ -183,6 +183,8 @@ class BaseTensorMesh(BaseMesh):
         """
         Returns an (nC, dim) numpy array with the widths of all cells in order
         """
+        if self.dim == 1:
+            return self.h[0][:, None]
         return ndgrid(*self.h)
 
     @property
