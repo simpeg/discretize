@@ -95,6 +95,7 @@ Interpolation Operations
 .. autosummary::
     :toctree: generated
 
+    utils.interpolation_matrix
     utils.interpmat
     utils.volume_average
 
@@ -143,16 +144,20 @@ Matrix Utilities
     utils.Identity
 
 
-Mathematical Operations
-***********************
+Coordinate Utilities
+********************
 
 .. autosummary::
     :toctree: generated
 
-    utils.rotatePointsFromNormals
-    utils.rotationMatrixFromNormals
+    utils.cylindrical_to_cartesian
     utils.cyl2cart
+    utils.cartesian_to_cylindrical
     utils.cart2cyl
+    utils.rotate_points_from_normals
+    utils.rotatePointsFromNormals
+    utils.rotation_matrix_from_normals
+    utils.rotationMatrixFromNormals
     utils.isScalar
     utils.asArray_N_x_Dim
 

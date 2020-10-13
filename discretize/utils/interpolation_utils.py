@@ -40,30 +40,94 @@ except ImportError as err:
 
 
 def interpolation_matrix(locs, x, y=None, z=None):
-    """Local interpolation computed for each receiver point in turn
+    """Generate the sparse linear interpolation matrix from a tensor to a set of locations.
+    
+    This function generates a sparse matrix for interpolating tensor quantities to a set of
+    specified locations. It uses nD linear interpolation. The user may generate the interpolation
+    matrix for tensor quantities that live on 1D, 2D or 3D meshes. This functionality is
+    frequently used to interpolate quantites from cell centers or nodes to specified locations.
+    
+    Parameters
+    ----------
+    locs: numpy.ndarray
+        A numpy array [n, nD] containing the locations for the interpolated values. Here *n* is
+        the number of locations and *nD* is the dimension (1, 2 or 3)
+    x: numpy.ndarray
+        Vector defining the cell center or node locations of the tensor along the x-axis
+    y: numpy.ndarray, optional
+        Vector defining the cell center or node locations of the tensor mesh along the y-axis
+    z: numpy.ndarray, optional
+        Vector defining the cell center or node locations of the tensor mesh along the z-axis
 
-    :param numpy.ndarray loc: Location of points to interpolate to
-    :param numpy.ndarray x: Tensor of 1st dimension of grid.
-    :param numpy.ndarray y: Tensor of 2nd dimension of grid. None by default.
-    :param numpy.ndarray z: Tensor of 3rd dimension of grid. None by default.
-    :rtype: scipy.sparse.csr_matrix
-    :return: Interpolation matrix
+    Returns
+    -------
+    scipy.sparse.csr_matrix
+        A sparse matrix which interpolates the tensor quantity on cell centers or nodes to
+        the set of specified locations. Where *n* is the number of specified locations and
+        *m* is the number of tensor quantities, the output array is [n, m].
 
-    .. plot::
+    Examples
+    --------
 
-        import discretize
-        import numpy as np
-        import matplotlib.pyplot as plt
-        locs = np.random.rand(50)*0.8+0.1
-        x = np.linspace(0, 1, 7)
-        dense = np.linspace(0, 1, 200)
-        fun = lambda x: np.cos(2*np.pi*x)
-        Q = discretize.utils.interpolation_matrix(locs, x)
-        plt.plot(x, fun(x), 'bs-')
-        plt.plot(dense, fun(dense), 'y:')
-        plt.plot(locs, Q*fun(x), 'mo')
-        plt.plot(locs, fun(locs), 'rx')
-        plt.show()
+    Here is a 1D example where a function evaluated on a regularly spaced grid
+    is interpolated to a set of random locations. To compare the accuracy, the
+    function is evaluated at the set of random locations
+
+    >>> from discretize.utils import interpolation_matrix
+    >>> from discretize import TensorMesh
+    >>> import numpy as np
+    >>> import matplotlib.pyplot as plt
+    >>> 
+    >>> locs = np.random.rand(50)*0.8+0.1
+    >>> x = np.linspace(0, 1, 7)
+    >>> dense = np.linspace(0, 1, 200)
+    >>> fun = lambda x: np.cos(2*np.pi*x)
+    >>> Q = interpolation_matrix(locs, x)
+    >>> plt.plot(x, fun(x), 'bs-')
+    >>> plt.plot(dense, fun(dense), 'y:')
+    >>> plt.plot(locs, Q*fun(x), 'mo')
+    >>> plt.plot(locs, fun(locs), 'rx')
+    >>> plt.show()
+
+
+    Here, demonstrate a similar example on a 2D mesh using a Gaussian distribution.
+
+    >>> from discretize.utils import interpolation_matrix
+    >>> from discretize import TensorMesh
+    >>> import numpy as np
+    >>> import matplotlib.pyplot as plt
+    >>> 
+    >>> hx = np.ones(10)
+    >>> hy = np.ones(10)
+    >>> mesh = TensorMesh([hx, hy], x0='CC')
+    >>> 
+    >>> def fun(x, y):
+    >>>     return np.exp(-(x**2 + y**2)/2**2)
+    >>>
+    >>> nodes = mesh.grid_nodes
+    >>> val_nodes = fun(nodes[:, 0], nodes[:, 1])
+    >>> 
+    >>> centers = mesh.grid_cell_centers
+    >>> val_centers = fun(centers[:, 0], centers[:, 1])
+    >>> 
+    >>> A = interpolation_matrix(
+    >>>     centers, mesh.grid_nodes_x, mesh.grid_nodes_y
+    >>> )
+    >>> val_interp = A.dot(val_nodes)
+    >>> 
+    >>> fig = plt.figure(figsize=(11,3.3))
+    >>> clim = (0., 1.)
+    >>> ax1 = fig.add_subplot(131)
+    >>> ax2 = fig.add_subplot(132)
+    >>> ax3 = fig.add_subplot(133)
+    >>> mesh.plot_image(val_centers, ax=ax1, clim=clim)
+    >>> mesh.plot_image(val_interp, ax=ax2, clim=clim)
+    >>> mesh.plot_image(val_centers-val_interp, ax=ax3, clim=clim)
+    >>> ax1.set_title('Analytic at Centers')
+    >>> ax2.set_title('Interpolated from Nodes')
+    >>> ax3.set_title('Relative Error')
+    >>> plt.show()
+    
 
     """
 

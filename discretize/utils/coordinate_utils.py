@@ -5,8 +5,24 @@ from discretize.utils.code_utils import deprecate_function
 
 def cylindrical_to_cartesian(grid, vec=None):
     """
-    Take a grid defined in cylindrical coordinates :math:`(r, \theta, z)` and
-    transform it to cartesian coordinates.
+    Transform a grid or a vector from cylindrical coordinates :math:`(r, \\theta, z)` to
+    Cartesian coordinates :math:`(x, y, z)`.
+
+    Parameters
+    ----------
+    grid: numpy.ndarray
+        Location points [n x 3] defined in cylindrical coordinates :math:`(r, \\theta, z)`.
+    vec: numpy.ndarray, optional
+        Vector for each cell defined in cylindrical coordinates as either an [n x 3] array
+        or as a vector of length [3n] organized :math:`(r, \\theta, z)`.
+
+    Returns
+    -------
+    numpy.ndarray
+        If input parameter `vec` is unused, the function returns xyz locations as an [n x 3]
+        numpy array. Otherwise, the vector defined in Cartesian coordinates is returned
+        as an [n x 3] numpy array.
+
     """
     grid = np.atleast_2d(grid)
 
@@ -40,8 +56,25 @@ def cyl2cart(grid, vec=None):
 
 def cartesian_to_cylindrical(grid, vec=None):
     """
-    Take a grid defined in cartesian coordinates and transform it to cyl
-    coordinates
+    Transform a grid or a vector from Cartesian coordinates :math:`(x, y, z)` to
+    cylindrical coordinates :math:`(r, \\theta, z)`.
+    
+
+    Parameters
+    ----------
+    grid: numpy.ndarray
+        Location points [n x 3] defined in Cartesian coordinates :math:`(x, y, z)`.
+    vec: numpy.ndarray, optional
+        Vector for each cell defined in Cartesian coordinates as either an [n x 3] array
+        or as a vector of length [3n] organized :math:`(x, y, z)`.
+
+    Returns
+    -------
+    numpy.ndarray
+        If input parameter `vec` is unused, the function returns :math:`(r, \\theta, z)` locations as
+        an [n x 3] numpy array. Otherwise, the vector defined in cylindrical coordinates
+        is returned as an [n x 3] numpy array.
+
     """
     if vec is None:
         vec = grid
@@ -67,16 +100,28 @@ def cart2cyl(grid, vec=None):
 
 def rotation_matrix_from_normals(v0, v1, tol=1e-20):
     """
-    Performs the minimum number of rotations to define a rotation from the
-    direction indicated by the vector n0 to the direction indicated by n1.
-    The axis of rotation is n0 x n1
+    Generate a 3x3 rotation matrix defining the rotation from vector
+    v0 to v1.
+
+    This function uses Rodrigues' rotation formula to generate the rotation
+    matrix A going from vector v0 to vector v1. Thus A*v0=v1. See
     https://en.wikipedia.org/wiki/Rodrigues%27_rotation_formula
 
-    :param numpy.array v0: vector of length 3
-    :param numpy.array v1: vector of length 3
-    :param tol = 1e-20: tolerance. If the norm of the cross product between the two vectors is below this, no rotation is performed
-    :rtype: numpy.array, 3x3
-    :return: rotation matrix which rotates the frame so that n0 is aligned with n1
+    Parameters
+    ----------
+    v0: numpy.ndarray
+        Vector of length 3
+    v1: numpy.ndarray
+        Vector of length 3
+    tol: float, optional
+        Numerical tolerance. Default = 1e-20
+
+    Returns
+    -------
+    numpy.ndarray
+        A 3 x 3 numpy array representing the rotation matrix from v0 to v1
+    
+    
     """
 
     # ensure both n0, n1 are vectors of length 1
@@ -114,27 +159,53 @@ def rotation_matrix_from_normals(v0, v1, tol=1e-20):
     return np.eye(3, dtype=float) + sinT * ux + (1.0 - cosT) * (ux.dot(ux))
 
 
-def rotate_points_from_normals(XYZ, n0, n1, x0=np.r_[0.0, 0.0, 0.0]):
+def rotate_points_from_normals(xyz, v0, v1, x0=np.r_[0.0, 0.0, 0.0]):
     """
-    rotates a grid so that the vector n0 is aligned with the vector n1
+    Rotate a set of xyz locations about a specified point.
 
-    :param numpy.array n0: vector of length 3, should have norm 1
-    :param numpy.array n1: vector of length 3, should have norm 1
-    :param numpy.array x0: vector of length 3, point about which we perform the rotation
-    :rtype: numpy.array, 3x3
-    :return: rotation matrix which rotates the frame so that n0 is aligned with n1
+    Rotate a grid of Cartesian points about a location x0 according to the
+    rotation defined from vector v0 to v1.
+
+    Let :math:`\\mathbf{x}` represent an input xyz location, let :math:`\\mathbf{x_0}` be
+    the origin of rotation, and let :math:`\\mathbf{R}` denote the rotation matrix from
+    vector v0 to v1. Where :math:`\\mathbf{x'}` is the new xyz location, this function
+    outputs the following operation for all input locations:
+    
+    .. math::
+        \\mathbf{x'} = \\mathbf{R (x - x_0)} + \\mathbf{x_0}
+
+
+    Parameters
+    ----------
+    xyz: numpy.ndarray
+        An n x 3 numpy array of xyz locations
+    v0: numpy.ndarray
+        Vector of length 3
+    v1: numpy.ndarray
+        Vector of length 3
+    x0: numpy.ndarray, optional
+        Vector of length 3 denoting the origin of rotation. Default is (0,0,0).
+
+    Returns
+    -------
+    numpy.ndarray
+        An n x 3 numpy array containing the rotated xyz locations.
+
+
     """
 
-    R = rotation_matrix_from_normals(n0, n1)
+    # Compute rotation matrix between v0 and v1
+    R = rotation_matrix_from_normals(v0, v1)
 
-    if XYZ.shape[1] != 3:
-        raise ValueError("Grid XYZ should be 3 wide")
+    if xyz.shape[1] != 3:
+        raise ValueError("Grid of xyz points should be n x 3")
     if len(x0) != 3:
         raise ValueError("x0 should have length 3")
 
-    X0 = np.ones([XYZ.shape[0], 1]) * mkvc(x0)
+    # Define origin
+    X0 = np.ones([xyz.shape[0], 1]) * mkvc(x0)
 
-    return (XYZ - X0).dot(R.T) + X0  # equivalent to (R*(XYZ - X0)).T + X0
+    return (xyz - X0).dot(R.T) + X0  # equivalent to (R*(xyz - X0)).T + X0
 
 
 rotationMatrixFromNormals = deprecate_function(
