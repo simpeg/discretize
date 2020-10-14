@@ -34,11 +34,14 @@ def mkvc(x, n_dims=1, **kwargs):
     >>> import numpy as np
     >>> 
     >>> a = np.random.rand(3, 2)
-    >>> print('Original array:\n', a)
+    >>> print('Original array:')
+    >>> print(a)
     >>> 
     >>> v = mkvc(a)
-    >>> print('\nVector with n_dim = 1:\n', v, '\n')
+    >>> print('Vector with n_dim = 1:')
+    >>> print(v)
     >>> 
+    >>> print('Higher dimensions:')
     >>> for ii in range(1, 4):
     >>>     temp = mkvc(a, ii)
     >>>     print('Shape of output with n_dim =', ii, ': ', np.shape(temp))
@@ -152,6 +155,7 @@ def ndgrid(*args, **kwargs):
         ordering if memory is contigious and C-like otherwise. Default = 'F'.
         See numpy.reshape for more on this argument.
     
+
     Returns
     -------
     numpy.ndarray or list of numpy.array
@@ -159,25 +163,30 @@ def ndgrid(*args, **kwargs):
         returned as a numpy array of shape [n, ndim]. If *vector=False*,
         the gridded *x*, *y*, (and *z*) are returned as a list of vectors.
     
+
     Examples
     --------
-    Here we generate a 2D grid and return it as a single numpy array.
-    
-    >>> from discretize.utils import *
+
+    >>> from discretize.utils import ndgrid
     >>> import numpy as np
     >>> 
     >>> x = np.array([1, 2, 3])
     >>> y = np.array([2, 4])
     >>> 
     >>> xy = ndgrid([x, y])
-    >>> print('Gridded x,y locations with F ordering:\n', xy)
+    >>> print('Gridded x,y locations with F ordering:')
+    >>> print(xy)
     >>> 
     >>> xy = ndgrid([x, y], order='C')
-    >>> print('\nGridded x,y locations with C ordering:\n', xy)
+    >>> print('Gridded x,y locations with C ordering:')
+    >>> print(xy)
     >>> 
     >>> xy = ndgrid(x, y, vector=False)
-    >>> print('\nX location tensor:\n', xy[0])
-    >>> print('\nY location tensor:\n', xy[1])
+    >>> print('X location tensor:')
+    >>> print(xy[0])
+    >>> print('Y location tensor:')
+    >>> print(xy[1])
+
 
     """
 

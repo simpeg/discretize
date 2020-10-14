@@ -148,7 +148,13 @@ def rotation_matrix_from_normals(v0, v1, tol=1e-20):
     v0 to v1.
 
     This function uses Rodrigues' rotation formula to generate the rotation
-    matrix A going from vector v0 to vector v1. Thus A*v0=v1. See
+    matrix :math:`\\mathbf{A}` going from vector :math:`\\mathbf{v_0}` to
+    vector :math:`\\mathbf{v_1}`. Thus:
+
+    .. math::
+        \\mathbf{Av_0} = \\mathbf{v_1}
+
+    For detailed desciption of the algorithm, see
     https://en.wikipedia.org/wiki/Rodrigues%27_rotation_formula
 
     Parameters

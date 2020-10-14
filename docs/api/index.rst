@@ -113,7 +113,11 @@ Mesh Utilities
     utils.mesh_builder_xyz
     utils.refine_tree_xyz
     utils.active_from_xyz
+    utils.example_curvilinear_grid
     utils.exampleLrmGrid
+    utils.meshTensor
+    utils.ExtractCoreMesh
+
 
 
 Matrix Utilities
@@ -151,15 +155,13 @@ Coordinate Utilities
     :toctree: generated
 
     utils.cylindrical_to_cartesian
-    utils.cyl2cart
     utils.cartesian_to_cylindrical
-    utils.cart2cyl
     utils.rotate_points_from_normals
-    utils.rotatePointsFromNormals
     utils.rotation_matrix_from_normals
+    utils.cyl2cart
+    utils.cart2cyl
+    utils.rotatePointsFromNormals
     utils.rotationMatrixFromNormals
-    utils.isScalar
-    utils.asArray_N_x_Dim
 
 
 
@@ -170,10 +172,10 @@ Curvilinear Mesh Utilities
     :toctree: generated
 
     utils.volume_tetrahedron
-    utils.volTetra
     utils.index_cube
-    utils.indexCube
     utils.face_info
+    utils.volTetra
+    utils.indexCube
     utils.faceInfo
 
 

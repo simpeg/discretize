@@ -832,71 +832,61 @@ def refine_tree_xyz(
 
 
 def active_from_xyz(mesh, xyz, grid_reference="CC", method="linear"):
-    """Returns an active cell index array below a surface
+    """
+    Returns a boolean array indicating which cells are below the surface (active cells)
 
-    Get active cells in the `mesh` that are below the surface create by
+    Get active cells in the `mesh` (i.e. below the surface) by
     interpolating over the last dimension of the input points. This method will
     uses scipy's interpolation routine to interpolate between input points. This
     will use a nearest neighbour interpolation for cell values outside the convex
     hull of points.
 
-    For `grid_reference='CC'`, this will check if the center of a given cell in
-    the mesh is below the interpolation surface to determine if that cell is
-    active.
-
-    For `grid_reference='N'`, this will check if **every** node of a given cell
-    in the mesh is below the interpolation surface.
-
-    For the
-
     Parameters
     ----------
-
     mesh : discretize.TensorMesh or discretize.TreeMesh or discretize.CylindricalMesh
         Mesh object, (if CylindricalMesh: mesh must be symmetric).
     xyz : numpy.ndarray
-        Points coordinates shape (*, mesh.dim).
+        Points defining the surface topography (*, mesh.dim).
     grid_reference : {'CC', 'N'}
-        Use cell coordinates from cells-center 'CC' or nodes 'N'.
+        If 'CC' is used, cells are active if their centers are below the surface.
+        If 'N' is used, cells are active if they lie entirely below the surface.
     method : {'linear', 'nearest'}
-        Interpolation method for the xyz points.
+        Interpolation method for locations between the xyz points.
 
     Returns
     -------
-
-    active : numpy.ndarray
+    numpy.ndarray
         1D mask array of `bool` for the active cells below xyz.
 
     Examples
     --------
+    Here we define the active cells below a parabola. We demonstrate the differences
+    that appear when using the 'CC' and 'N' options for *reference_grid*.
 
-    .. plot::
-        :include-source:
-
-        import matplotlib.pyplot as plt
-        import numpy as np
-        from discretize import TensorMesh
-        from discretize.utils import active_from_xyz
-
-        mesh = TensorMesh([5, 5])
-        topo_func = lambda x: -3*(x-0.2)*(x-0.8)+.5
-        topo_points = np.linspace(0, 1)
-        topo_vals = topo_func(topo_points)
-
-        active_cc = active_from_xyz(mesh, np.c_[topo_points, topo_vals], grid_reference='CC')
-        ax = plt.subplot(121)
-        mesh.plot_image(active_cc, ax=ax)
-        mesh.plot_grid(centers=True, ax=ax)
-        ax.plot(np.linspace(0,1), topo_func(np.linspace(0,1)), color='C3')
-        ax.set_title("CC")
-
-        active_n = active_from_xyz(mesh, np.c_[topo_points, topo_vals], grid_reference='N')
-        ax = plt.subplot(122)
-        mesh.plot_image(active_n, ax=ax)
-        mesh.plot_grid(nodes=True, ax=ax)
-        ax.plot(np.linspace(0,1), topo_func(np.linspace(0,1)), color='C3')
-        ax.set_title("N")
-        plt.show()
+    >>> import matplotlib.pyplot as plt
+    >>> import numpy as np
+    >>> from discretize import TensorMesh
+    >>> from discretize.utils import active_from_xyz
+    >>> 
+    >>> mesh = TensorMesh([5, 5])
+    >>> topo_func = lambda x: -3*(x-0.2)*(x-0.8)+.5
+    >>> topo_points = np.linspace(0, 1)
+    >>> topo_vals = topo_func(topo_points)
+    >>> 
+    >>> active_cc = active_from_xyz(mesh, np.c_[topo_points, topo_vals], grid_reference='CC')
+    >>> ax = plt.subplot(121)
+    >>> mesh.plot_image(active_cc, ax=ax)
+    >>> mesh.plot_grid(centers=True, ax=ax)
+    >>> ax.plot(np.linspace(0,1), topo_func(np.linspace(0,1)), color='C3')
+    >>> ax.set_title("CC")
+    >>> 
+    >>> active_n = active_from_xyz(mesh, np.c_[topo_points, topo_vals], grid_reference='N')
+    >>> ax = plt.subplot(122)
+    >>> mesh.plot_image(active_n, ax=ax)
+    >>> mesh.plot_grid(nodes=True, ax=ax)
+    >>> ax.plot(np.linspace(0,1), topo_func(np.linspace(0,1)), color='C3')
+    >>> ax.set_title("N")
+    >>> plt.show()
 
     """
     try:
