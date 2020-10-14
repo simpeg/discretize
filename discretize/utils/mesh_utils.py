@@ -30,7 +30,7 @@ def random_model(shape, seed=None, anisotropy=None, its=100, bounds=None):
     its: int
         number of smoothing iterations
     bounds: list
-        bounds on the model, len(list) == 2
+        Lower and upper bounds on the model. Has the form [lower_bound, upper_bound]
 
     Returns
     -------
@@ -104,7 +104,7 @@ def unpack_widths(value):
 
     Parameters
     ----------
-    value: list of float and/or tuple
+    value: list of floats and/or tuples
         The list of floats and/or tuples that are to be unpacked
 
     Returns
@@ -163,23 +163,57 @@ def unpack_widths(value):
     return np.array(proposed)
 
 
-def closest_points(mesh, pts, grid_loc="CC", **kwargs):
+def closest_points_index(mesh, pts, grid_loc="CC", **kwargs):
     """
-    Move a list of points to the closest points on a grid.
+    Find the indicies for the nearest cell center, node, face or edge for a set of points.
 
     Parameters
     ----------
-    mesh: BaseMesh
-        The mesh
+    mesh: discretize.BaseMesh
+        An instance of *discretize.BaseMesh*
     pts: numpy.ndarray
-        Points to move
-    grid_loc: {'CC', 'N', 'Fx', 'Fy', 'Fz', 'Ex', 'Ex', 'Ey', 'Ez'}
-        Which grid to move points to.
+        Points being moved
+    grid_loc: str
+        Grid on which points are being moved to. Choose from the list
+        of {'CC', 'N', 'Fx', 'Fy', 'Fz', 'Ex', 'Ex', 'Ey', 'Ez'}.
 
     Returns
     -------
     numpy.ndarray
-        nodeInds
+        Array containing the indicies for the closest respective
+        cell center, node, face or edge.
+
+    Examples
+    --------
+
+    Here we define a set of random (x, y) locations and find the closest
+    cell centers and nodes on a mesh.
+
+    >>> from discretize import TensorMesh
+    >>> from discretize.utils import closest_points
+    >>> import numpy as np
+    >>> import matplotlib.pyplot as plt
+    >>> 
+    >>> h = 2*np.ones(5)
+    >>> mesh = TensorMesh([h, h], x0='00')
+    >>> 
+    >>> # Random locations, grid cell centers and grid nodes
+    >>> xy_random = np.random.uniform(0, 10, size=(4,2))
+    >>> xy_centers = mesh.grid_cell_centers
+    >>> xy_nodes = mesh.grid_nodes
+    >>> 
+    >>> # Find indicies of closest cell centers and nodes
+    >>> ind_centers = closest_points(mesh, xy_random, 'CC')
+    >>> ind_nodes = closest_points(mesh, xy_random, 'N')
+    >>> 
+    >>> # Plot closest cell centers and nodes
+    >>> fig = plt.figure(figsize=(5, 5))
+    >>> ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
+    >>> mesh.plot_grid(ax=ax)
+    >>> ax.scatter(xy_random[:, 0], xy_random[:, 1], 50, 'k')
+    >>> ax.scatter(xy_centers[ind_centers, 0], xy_centers[ind_centers, 1], 50, 'r')
+    >>> ax.scatter(xy_nodes[ind_nodes, 0], xy_nodes[ind_nodes, 1], 50, 'b')
+
     """
     if "gridLoc" in kwargs:
         warnings.warn(
@@ -206,23 +240,24 @@ def closest_points(mesh, pts, grid_loc="CC", **kwargs):
 
 def extract_core_mesh(xyzlim, mesh, mesh_type="tensor"):
     """
-    Extracts Core Mesh from Global mesh
+    Extracts the core mesh from a global mesh.
 
     Parameters
     ----------
     xyzlim: numpy.ndarray
         2D array [ndim x 2]
-    mesh: BaseMesh
+    mesh: discretize.BaseMesh
         The mesh
     mesh_type : str, optional
         Unused currently
 
     Returns
     -------
-    tuple
-        This function ouputs::
-            - actind: corresponding boolean index from global to core
-            - meshcore: core sdiscretize mesh
+    tuple: (*active_index*, *core_mesh*)
+        **active_index** is a boolean array that maps from the global the mesh
+        to core mesh. **core_mesh** is a *discretize.BaseMesh* object representing
+        the core mesh.
+
     """
 
     if mesh.dim == 1:
@@ -323,19 +358,21 @@ def mesh_builder_xyz(
     mesh_type="tensor",
 ):
     """
-    Function to quickly generate a Tensor or Tree mesh
-    given a cloud of xyz points, finest core cell size
-    and padding distance.
-    If a base_mesh is provided, the core cells will be centered
-    on the underlaying mesh to reduce interpolation errors.
-    The core extent is set by the bounding box of the xyz location.
+    Quickly generate a tensor or tree mesh using a cloud of points.
+
+    For a cloud of (x,y[,z]) locations and specified minimum cell widths
+    (hx,hy,[hz]), this function creates a tensor or a tree mesh.
+    The lateral extent of the core region is determine by the cloud of points.
+    Other properties of the mesh can be defined automatically or by the user.
+    If a *discretize.BaseMesh* is provided, the core cells will be centered
+    on the underlying mesh to reduce interpolation errors.
 
     Parameters
     ----------
     xyz: numpy.ndarray
         Location points [n x dim]
     h: list
-        Cell size for the core mesh [1 x ndim]
+        Cell size(s) for the core mesh [1 x ndim]
     padding_distance: list
         Padding distances [[W,E], [N,S], [Down,Up]]
     base_mesh: discretize.BaseMesh
@@ -345,12 +382,12 @@ def mesh_builder_xyz(
     expansion_factor: float
         Expension factor for padding cells [1.3]
     mesh_type: str
-        Specify output mesh type: ["TENSOR"] or "TREE"
+        Specify output mesh type. Choose from {'tensor", "tree"}
 
     Returns
     --------
     discretize.BaseMesh
-        Mesh of "mesh_type"
+        Mesh of *mesh_type*
 
     Examples
     --------
@@ -494,14 +531,14 @@ def refine_tree_xyz(
     max_distance=np.inf,
 ):
     """
-    Refine a TreeMesh based on xyz point locations
+    Refine a discretize.TreeMesh based on xyz point locations
 
     Parameters
     ----------
     mesh: discretize.TreeMesh
         The TreeMesh object to be refined
     xyz: numpy.ndarray
-        2D array of points
+        2D array of points (n, dim)
     method: str
         Method used to refine the mesh based on xyz locations
 
@@ -843,20 +880,20 @@ def active_from_xyz(mesh, xyz, grid_reference="CC", method="linear"):
 
     Parameters
     ----------
-    mesh : discretize.TensorMesh or discretize.TreeMesh or discretize.CylindricalMesh
+    mesh: discretize.TensorMesh or discretize.TreeMesh or discretize.CylindricalMesh
         Mesh object, (if CylindricalMesh: mesh must be symmetric).
-    xyz : numpy.ndarray
+    xyz: numpy.ndarray
         Points defining the surface topography (*, mesh.dim).
-    grid_reference : {'CC', 'N'}
+    grid_reference: str {'CC', 'N'}
         If 'CC' is used, cells are active if their centers are below the surface.
         If 'N' is used, cells are active if they lie entirely below the surface.
-    method : {'linear', 'nearest'}
+    method: str {'linear', 'nearest'}
         Interpolation method for locations between the xyz points.
 
     Returns
     -------
     numpy.ndarray
-        1D mask array of `bool` for the active cells below xyz.
+        1D mask array of *bool* for the active cells below xyz.
 
     Examples
     --------
@@ -1049,4 +1086,7 @@ closestPoints = deprecate_function(
 )
 ExtractCoreMesh = deprecate_function(
     extract_core_mesh, "ExtractCoreMesh", removal_version="1.0.0"
+)
+closest_points = deprecate_function(
+    closest_points_index, "closest_points", removal_version="1.0.0"
 )

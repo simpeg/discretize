@@ -5,7 +5,7 @@ SCALARTYPES = (complex, float, int, np.number)
 
 
 def is_scalar(f):
-    """True if the input is an integer, float or complex number."""
+    """True if the input is: integer, float or complex number."""
 
     if isinstance(f, SCALARTYPES):
         return True

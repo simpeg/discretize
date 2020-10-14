@@ -7,7 +7,7 @@ import warnings
 def mkvc(x, n_dims=1, **kwargs):
     """Creates a vector with specified dimensionality.
 
-    This function converts numpy.ndarray to a vector. In general,
+    This function converts a numpy.ndarray to a vector. In general,
     the output vector has a dimension of 1. However, the dimensionality
     can be specified if the user intends to carry out a dot product with
     a higher order array.

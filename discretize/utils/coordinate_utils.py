@@ -13,15 +13,15 @@ def cylindrical_to_cartesian(grid, vec=None):
     grid: numpy.ndarray
         Location points [n x 3] defined in cylindrical coordinates :math:`(r, \\theta, z)`.
     vec: numpy.ndarray, optional
-        Vector for each cell defined in cylindrical coordinates as either an [n x 3] array
-        or as a vector of length [3n] organized :math:`(r, \\theta, z)`.
+        Vector for each cell defined in cylindrical coordinates as either an (n, 3) array
+        or as a vector of length (3n,) organized :math:`r, \\theta, z`.
 
     Returns
     -------
     numpy.ndarray
-        If input parameter `vec` is unused, the function returns xyz locations as an [n x 3]
-        numpy array. Otherwise, the vector defined in Cartesian coordinates is returned
-        as an [n x 3] numpy array.
+        If input parameter *vec* is unused, the function returns xyz locations as an 
+        numpy array of shape (n, 3). Otherwise, the vector defined in Cartesian
+        coordinates is returned as a numpy array of shape (3n,).
 
     Examples
     --------
@@ -92,9 +92,9 @@ def cartesian_to_cylindrical(grid, vec=None):
     Returns
     -------
     numpy.ndarray
-        If input parameter `vec` is unused, the function returns :math:`(r, \\theta, z)` locations as
-        an [n x 3] numpy array. Otherwise, the vector defined in cylindrical coordinates
-        is returned as an [n x 3] numpy array.
+        If input parameter *vec* is unused, the function returns :math:`(r, \\theta, z)` locations as
+        an numpy array of shape (n, 3). Otherwise, the vector defined in cylindrical coordinates
+        is returned as an numpy array of shape (3n,).
 
     Examples
     --------
@@ -174,7 +174,7 @@ def rotation_matrix_from_normals(v0, v1, tol=1e-20):
     
     """
 
-    # ensure both n0, n1 are vectors of length 1
+    # ensure both v0, v1 are vectors of length 1
     if len(v0) != 3:
         raise ValueError("Length of n0 should be 3")
     if len(v1) != 3:
