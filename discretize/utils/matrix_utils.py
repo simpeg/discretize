@@ -5,20 +5,44 @@ import warnings
 
 
 def mkvc(x, n_dims=1, **kwargs):
-    """Creates a vector with the number of dimension specified
+    """Creates a vector with specified dimensionality.
 
-    e.g.::
+    This function converts numpy.ndarray to a vector. In general,
+    the output vector has a dimension of 1. However, the dimensionality
+    can be specified if the user intends to carry out a dot product with
+    a higher order array.
 
-        a = np.array([1, 2, 3])
+    Parameters
+    ----------
+    x: numpy.ndarray
+        An nD array that will be reorganized and output as a vector
+    n_dims: int
+        The dimension of the output vector.
 
-        mkvc(a, 1).shape
-            > (3, )
+    Returns
+    -------
+    numpy.ndarray
+        The output vector
 
-        mkvc(a, 2).shape
-            > (3, 1)
+    Examples
+    --------
 
-        mkvc(a, 3).shape
-            > (3, 1, 1)
+    Here, we reorganize a simple 2D array as a vector and demonstrate the
+    impact of the *n_dim* argument.
+
+    >>> from discretize.utils import mkvc
+    >>> import numpy as np
+    >>> 
+    >>> a = np.random.rand(3, 2)
+    >>> print('Original array:\n', a)
+    >>> 
+    >>> v = mkvc(a)
+    >>> print('\nVector with n_dim = 1:\n', v, '\n')
+    >>> 
+    >>> for ii in range(1, 4):
+    >>>     temp = mkvc(a, ii)
+    >>>     print('Shape of output with n_dim =', ii, ': ', np.shape(temp))
+
 
     """
     if "numDims" in kwargs:
@@ -49,7 +73,7 @@ def mkvc(x, n_dims=1, **kwargs):
 
 
 def sdiag(h):
-    """Sparse diagonal matrix"""
+    """Generate sparse diagonal matrix from vector containing diagonal elements"""
     if isinstance(h, Zero):
         return Zero()
 
@@ -57,12 +81,12 @@ def sdiag(h):
 
 
 def sdinv(M):
-    "Inverse of a sparse diagonal matrix"
+    """Return inverse of a sparse diagonal matrix"""
     return sdiag(1.0 / M.diagonal())
 
 
 def speye(n):
-    """Sparse identity"""
+    """Generate sparse identity matrix"""
     return sp.identity(n, format="csr")
 
 
@@ -72,7 +96,7 @@ def kron3(A, B, C):
 
 
 def spzeros(n1, n2):
-    """a sparse matrix of zeros"""
+    """Generate sparse matrix of zeros"""
     return sp.dia_matrix((n1, n2))
 
 
@@ -97,37 +121,63 @@ def av_extrap(n):
 
 
 def ndgrid(*args, **kwargs):
-    """
-    Form tensorial grid for 1, 2, or 3 dimensions.
+    """Generate gridded locations for 1D, 2D, or 3D tensors.
 
-    Returns as column vectors by default.
+    For 1D, 2D, or 3D tensors, this function takes the unique positions defining
+    a tensor along each of its axis and returns the gridded locations.
+    For 2D and 3D meshes, the user may treat the unique *x*, *y* (and *z*)
+    positions a successive positional arguments or as a single argument using
+    a list [*x*, *y*, (*z*)].
 
-    To return as matrix input:
+    For outputs, let *dim* be the number of dimension (1, 2 or 3) and let *n* be
+    the total number of gridded locations. The gridded *x*, *y* (and *z*) locations
+    can be return as a single numpy array of shape [n, ndim]. The user can also
+    return the gridded *x*, *y* (and *z*) locations as a list of length *ndim*.
+    The list contains entries contain the *x*, *y* (and *z*) locations as tensors.
+    See examples.
 
-        ndgrid(..., vector=False)
-
-    The inputs can be a list or separate arguments.
-
-    e.g.::
-
-        a = np.array([1, 2, 3])
-        b = np.array([1, 2])
-
-        XY = ndgrid(a, b)
-            > [[1 1]
-               [2 1]
-               [3 1]
-               [1 2]
-               [2 2]
-               [3 2]]
-
-        X, Y = ndgrid(a, b, vector=False)
-            > X = [[1 1]
-                   [2 2]
-                   [3 3]]
-            > Y = [[1 2]
-                   [1 2]
-                   [1 2]]
+    Parameters
+    ----------
+    args: numpy.ndarray or a list of numpy.ndarray
+        Positions along each axis of the tensor. The user can define these as
+        successive positional arguments *x*, *y*, (and *z*) or as a single argument
+        using a list [*x*, *y*, (*z*)].
+    vector: Bool, optional kwarg
+        If *True*, the output is a numpy array of dimension [n, ndim]. If *False*,
+        the gridded x, y (and z) locations are returned as separate ndarrays in a list.
+        Default is *True*.
+    order: String, optional kwarg
+        Define ordering using one of the following options {'C', 'F', 'A'}.
+        'C' is C-like ordering. 'F' is Fortran-like ordering. 'A' is Fortran
+        ordering if memory is contigious and C-like otherwise. Default = 'F'.
+        See numpy.reshape for more on this argument.
+    
+    Returns
+    -------
+    numpy.ndarray or list of numpy.array
+        If *vector=True* the gridded *x*, *y*, (and *z*) locations are
+        returned as a numpy array of shape [n, ndim]. If *vector=False*,
+        the gridded *x*, *y*, (and *z*) are returned as a list of vectors.
+    
+    Examples
+    --------
+    Here we generate a 2D grid and return it as a single numpy array.
+    
+    >>> from discretize.utils import *
+    >>> import numpy as np
+    >>> 
+    >>> x = np.array([1, 2, 3])
+    >>> y = np.array([2, 4])
+    >>> 
+    >>> xy = ndgrid([x, y])
+    >>> print('Gridded x,y locations with F ordering:\n', xy)
+    >>> 
+    >>> xy = ndgrid([x, y], order='C')
+    >>> print('\nGridded x,y locations with C ordering:\n', xy)
+    >>> 
+    >>> xy = ndgrid(x, y, vector=False)
+    >>> print('\nX location tensor:\n', xy[0])
+    >>> print('\nY location tensor:\n', xy[1])
 
     """
 

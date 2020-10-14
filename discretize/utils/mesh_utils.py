@@ -13,41 +13,6 @@ import warnings
 num_types = [int, float]
 
 
-def example_curvilinear_grid(nC, exType):
-    if not isinstance(nC, list):
-        raise TypeError("nC must be a list containing the number of nodes")
-    if len(nC) != 2 and len(nC) != 3:
-        raise ValueError("nC must either two or three dimensions")
-    exType = exType.lower()
-
-    possibleTypes = ["rect", "rotate"]
-    if exType not in possibleTypes:
-        raise TypeError("Not a possible example type.")
-
-    if exType == "rect":
-        return list(
-            ndgrid([np.cumsum(np.r_[0, np.ones(nx) / nx]) for nx in nC], vector=False)
-        )
-    elif exType == "rotate":
-        if len(nC) == 2:
-            X, Y = ndgrid(
-                [np.cumsum(np.r_[0, np.ones(nx) / nx]) for nx in nC], vector=False
-            )
-            amt = 0.5 - np.sqrt((X - 0.5) ** 2 + (Y - 0.5) ** 2)
-            amt[amt < 0] = 0
-            return [X + (-(Y - 0.5)) * amt, Y + (+(X - 0.5)) * amt]
-        elif len(nC) == 3:
-            X, Y, Z = ndgrid(
-                [np.cumsum(np.r_[0, np.ones(nx) / nx]) for nx in nC], vector=False
-            )
-            amt = 0.5 - np.sqrt((X - 0.5) ** 2 + (Y - 0.5) ** 2 + (Z - 0.5) ** 2)
-            amt[amt < 0] = 0
-            return [
-                X + (-(Y - 0.5)) * amt,
-                Y + (-(Z - 0.5)) * amt,
-                Z + (-(X - 0.5)) * amt,
-            ]
-
 
 def random_model(shape, seed=None, anisotropy=None, its=100, bounds=None):
     """
@@ -75,14 +40,11 @@ def random_model(shape, seed=None, anisotropy=None, its=100, bounds=None):
     Examples
     --------
 
-    .. plot::
-        :include-source:
-
-        import matplotlib.pyplot as plt
-        import discretize
-        plt.colorbar(plt.imshow(discretize.utils.random_model((50, 50), bounds=[-4, 0])))
-        plt.title('A very cool, yet completely random model.')
-        plt.show()
+    >>> import matplotlib.pyplot as plt
+    >>> import discretize
+    >>> plt.colorbar(plt.imshow(discretize.utils.random_model((50, 50), bounds=[-4, 0])))
+    >>> plt.title('A very cool, yet completely random model.')
+    >>> plt.show()
 
 
     """
@@ -126,35 +88,54 @@ def random_model(shape, seed=None, anisotropy=None, its=100, bounds=None):
 
 
 def unpack_widths(value):
-    """**unpack_widths** takes a list of numbers and tuples
-    that have the form::
+    """
+    Unpack a condensed representation of cell widths or time steps.
 
-        mT = [ float, (cellSize, numCell), (cellSize, numCell, factor) ]
+    For a list of numbers, if the same value is repeat or expanded by a constant
+    factor, it may be represented in a condensed form using list of floats
+    and/or tuples. **unpack_widths** takes a list of floats and/or tuples in
+    condensed form, e.g.:
 
-    For example, a time domain mesh code needs
-    many time steps at one time::
+        [ float, (cellSize, numCell), (cellSize, numCell, factor) ]
 
-        [(1e-5, 30), (1e-4, 30), 1e-3]
+    and expands the representation to a list containing all widths in order. That is:
 
-    Means take 30 steps at 1e-5 and then 30 more at 1e-4,
-    and then one step of 1e-3.
+        [ w1, w2, w3, ..., wn ]
 
-    Tensor meshes can also be created by increase factors::
+    Parameters
+    ----------
+    value: list of float and/or tuple
+        The list of floats and/or tuples that are to be unpacked
 
-        [(10.0, 5, -1.3), (10.0, 50), (10.0, 5, 1.3)]
+    Returns
+    -------
+    list
+        The unpacked list with all widths in order
 
-    When there is a third number in the tuple, it
-    refers to the increase factor, if this number
-    is negative this section of the tensor is flipped right-to-left.
 
-    .. plot::
-        :include-source:
+    Examples
+    --------
 
-        import discretize
-        tx = [(10.0, 10, -1.3), (10.0, 40), (10.0, 10, 1.3)]
-        ty = [(10.0, 10, -1.3), (10.0, 40)]
-        mesh = discretize.TensorMesh([tx, ty])
-        mesh.plot_grid(show_it=True)
+    Time stepping for time-domain codes can be represented in condensed form, e.g.:
+
+        [ (1e-5, 10), (1e-4, 4), 1e-3 ]
+
+    The above means to take 10 steps at a step width of 1e-5 s and then
+    4 more at 1e-4 s, and then one step of 1e-3 s. When unpacked, the output is
+    of length 15 and is given by:
+
+        [1e-5, ..., 1e-5, 1e-4, 1e-4, 1e-4, 1e-4, 1e-3]
+
+    Each axis of a tensor mesh can also be defined as a condensed list of floats
+    and/or tuples. When a third number is defined in any tuple, the width value
+    is successively expanded by that factor, e.g.:
+
+        [ 6., 8., (10.0, 3), (8.0, 4, 2.) ]
+
+    If we unpacked this, we would obtain:
+
+        [ 6., 8., 10., 10., 10., 8., 16., 32., 64. ]
+
 
     """
     if type(value) is not list:
@@ -183,7 +164,8 @@ def unpack_widths(value):
 
 
 def closest_points(mesh, pts, grid_loc="CC", **kwargs):
-    """Move a list of points to the closest points on a grid.
+    """
+    Move a list of points to the closest points on a grid.
 
     Parameters
     ----------
@@ -372,27 +354,24 @@ def mesh_builder_xyz(
 
     Examples
     --------
-    .. plot::
-        :include-source:
 
-        import discretize
-        import matplotlib.pyplot as plt
-        import numpy as np
-
-        xyLoc = np.random.randn(8,2)
-
-        mesh = discretize.utils.mesh_builder_xyz(
-            xyLoc, [0.1, 0.1], depth_core=0.5,
-            padding_distance=[[1,2], [1,0]],
-            mesh_type='tensor',
-        )
-
-
-        axs = plt.subplot()
-        mesh.plot_image(mesh.cell_volumes, grid=True, ax=axs)
-        axs.scatter(xyLoc[:,0], xyLoc[:,1], 15, c='w', zorder=3)
-        axs.set_aspect('equal')
-        plt.show()
+    >>> import discretize
+    >>> import matplotlib.pyplot as plt
+    >>> import numpy as np
+    >>> 
+    >>> xyLoc = np.random.randn(8,2)
+    >>> 
+    >>> mesh = discretize.utils.mesh_builder_xyz(
+    >>>     xyLoc, [0.1, 0.1], depth_core=0.5,
+    >>>     padding_distance=[[1,2], [1,0]],
+    >>>     mesh_type='tensor',
+    >>> )
+    >>> 
+    >>> axs = plt.subplot()
+    >>> mesh.plot_image(mesh.cell_volumes, grid=True, ax=axs)
+    >>> axs.scatter(xyLoc[:,0], xyLoc[:,1], 15, c='w', zorder=3)
+    >>> axs.set_aspect('equal')
+    >>> plt.show()
 
     """
     if mesh_type.lower() not in ["tensor", "tree"]:
@@ -545,7 +524,58 @@ def refine_tree_xyz(
     Returns
     --------
     discretize.TreeMesh
-        mesh
+        Tree mesh
+    
+    Examples
+    --------
+
+    Here we use the **refine_tree_xyz** function refine a tree mesh
+    within a specified region and using a cluster of points.
+
+    >>> from discretize import TreeMesh
+    >>> from discretize.utils import mkvc, refine_tree_xyz
+    >>> import matplotlib.pyplot as plt
+    >>> import numpy as np
+    >>> 
+    >>> dx = 5  # minimum cell width (base mesh cell width) in x
+    >>> dy = 5  # minimum cell width (base mesh cell width) in y
+    >>> 
+    >>> x_length = 300.0  # domain width in x
+    >>> y_length = 300.0  # domain width in y
+    >>> 
+    >>> # Compute number of base mesh cells required in x and y
+    >>> nbcx = 2 ** int(np.round(np.log(x_length / dx) / np.log(2.0)))
+    >>> nbcy = 2 ** int(np.round(np.log(y_length / dy) / np.log(2.0)))
+    >>> 
+    >>> # Define the base mesh
+    >>> hx = [(dx, nbcx)]
+    >>> hy = [(dy, nbcy)]
+    >>> mesh = TreeMesh([hx, hy], x0="CC")
+    >>> 
+    >>> # Refine surface topography
+    >>> xx = mesh.vectorNx
+    >>> yy = -3 * np.exp((xx ** 2) / 100 ** 2) + 50.0
+    >>> pts = np.c_[mkvc(xx), mkvc(yy)]
+    >>> mesh = refine_tree_xyz(
+    >>>     mesh, pts, octree_levels=[2, 2], method="surface", finalize=False
+    >>> )
+    >>> 
+    >>> # Refine mesh near points
+    >>> xx = np.array([0.0, 10.0, 0.0, -10.0])
+    >>> yy = np.array([-20.0, -10.0, 0.0, -10])
+    >>> pts = np.c_[mkvc(xx), mkvc(yy)]
+    >>> mesh = refine_tree_xyz(mesh, pts, octree_levels=[2, 2], method="radial", finalize=False)
+    >>> 
+    >>> mesh.finalize()
+    >>> 
+    >>> fig = plt.figure(figsize=(6, 6))
+    >>> ax = fig.add_subplot(111)
+    >>> mesh.plotGrid(ax=ax)
+    >>> ax.set_xbound(mesh.x0[0], mesh.x0[0] + np.sum(mesh.hx))
+    >>> ax.set_ybound(mesh.x0[1], mesh.x0[1] + np.sum(mesh.hy))
+    >>> ax.set_title("QuadTree Mesh")
+    >>> plt.show()
+
 
     """
 
@@ -980,6 +1010,44 @@ def active_from_xyz(mesh, xyz, grid_reference="CC", method="linear"):
     )
 
     return active.ravel()
+
+
+def example_curvilinear_grid(nC, exType):
+    if not isinstance(nC, list):
+        raise TypeError("nC must be a list containing the number of nodes")
+    if len(nC) != 2 and len(nC) != 3:
+        raise ValueError("nC must either two or three dimensions")
+    exType = exType.lower()
+
+    possibleTypes = ["rect", "rotate"]
+    if exType not in possibleTypes:
+        raise TypeError("Not a possible example type.")
+
+    if exType == "rect":
+        return list(
+            ndgrid([np.cumsum(np.r_[0, np.ones(nx) / nx]) for nx in nC], vector=False)
+        )
+    elif exType == "rotate":
+        if len(nC) == 2:
+            X, Y = ndgrid(
+                [np.cumsum(np.r_[0, np.ones(nx) / nx]) for nx in nC], vector=False
+            )
+            amt = 0.5 - np.sqrt((X - 0.5) ** 2 + (Y - 0.5) ** 2)
+            amt[amt < 0] = 0
+            return [X + (-(Y - 0.5)) * amt, Y + (+(X - 0.5)) * amt]
+        elif len(nC) == 3:
+            X, Y, Z = ndgrid(
+                [np.cumsum(np.r_[0, np.ones(nx) / nx]) for nx in nC], vector=False
+            )
+            amt = 0.5 - np.sqrt((X - 0.5) ** 2 + (Y - 0.5) ** 2 + (Z - 0.5) ** 2)
+            amt[amt < 0] = 0
+            return [
+                X + (-(Y - 0.5)) * amt,
+                Y + (-(Z - 0.5)) * amt,
+                Z + (-(X - 0.5)) * amt,
+            ]
+
+
 
 
 exampleLrmGrid = deprecate_function(

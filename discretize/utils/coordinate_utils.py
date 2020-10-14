@@ -23,6 +23,27 @@ def cylindrical_to_cartesian(grid, vec=None):
         numpy array. Otherwise, the vector defined in Cartesian coordinates is returned
         as an [n x 3] numpy array.
 
+    Examples
+    --------
+
+    Here, we convert a series of vectors in 3D space from cylindrical coordinates
+    to Cartesian coordinates.
+
+    >>> from discretize.utils import cylindrical_to_cartesian
+    >>> import numpy as np
+    >>> 
+    >>> r = np.ones(9)
+    >>> phi = (np.pi/4)*np.linspace(0, 8, 9)
+    >>> z = np.linspace(-4., 4., 9)
+    >>> 
+    >>> u = np.c_[r, phi, z]
+    >>> print('Locations in cylindrical coordinates')
+    >>> print(u)
+    >>> 
+    >>> v = cylindrical_to_cartesian(u)
+    >>> print('Locations in Cartesian coordinates')
+    >>> print(v)
+
     """
     grid = np.atleast_2d(grid)
 
@@ -74,6 +95,29 @@ def cartesian_to_cylindrical(grid, vec=None):
         If input parameter `vec` is unused, the function returns :math:`(r, \\theta, z)` locations as
         an [n x 3] numpy array. Otherwise, the vector defined in cylindrical coordinates
         is returned as an [n x 3] numpy array.
+
+    Examples
+    --------
+
+    Here, we convert a series of vectors in 3D space from Cartesian coordinates
+    to cylindrical coordinates.
+
+    >>> from discretize.utils import cartesian_to_cylindrical
+    >>> import numpy as np
+    >>> 
+    >>> r = np.ones(9)
+    >>> phi = (np.pi/4)*np.linspace(0, 8, 9)
+    >>> z = np.linspace(-4., 4., 9)
+    >>> 
+    >>> x = r*np.cos(phi)
+    >>> y = r*np.sin(phi)
+    >>> u = np.c_[x, y, z]
+    >>> print('Locations in Cartesian coordinates')
+    >>> print(u)
+    >>> 
+    >>> v = cartesian_to_cylindrical(u)
+    >>> print('Locations in cylindrical coordinates')
+    >>> print(v)
 
     """
     if vec is None:

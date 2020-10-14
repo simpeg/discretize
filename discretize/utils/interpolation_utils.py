@@ -40,11 +40,12 @@ except ImportError as err:
 
 
 def interpolation_matrix(locs, x, y=None, z=None):
-    """Generate the sparse linear interpolation matrix from a tensor to a set of locations.
+    """
+    Generate interpolation matrix which maps a tensor quantity to a set of locations.
     
     This function generates a sparse matrix for interpolating tensor quantities to a set of
     specified locations. It uses nD linear interpolation. The user may generate the interpolation
-    matrix for tensor quantities that live on 1D, 2D or 3D meshes. This functionality is
+    matrix for tensor quantities that live on 1D, 2D or 3D tensors. This functionality is
     frequently used to interpolate quantites from cell centers or nodes to specified locations.
     
     Parameters
@@ -83,6 +84,7 @@ def interpolation_matrix(locs, x, y=None, z=None):
     >>> dense = np.linspace(0, 1, 200)
     >>> fun = lambda x: np.cos(2*np.pi*x)
     >>> Q = interpolation_matrix(locs, x)
+    >>> 
     >>> plt.plot(x, fun(x), 'bs-')
     >>> plt.plot(dense, fun(dense), 'y:')
     >>> plt.plot(locs, Q*fun(x), 'mo')
@@ -90,7 +92,9 @@ def interpolation_matrix(locs, x, y=None, z=None):
     >>> plt.show()
 
 
-    Here, demonstrate a similar example on a 2D mesh using a Gaussian distribution.
+    Here, demonstrate a similar example on a 2D mesh using a 2D Gaussian distribution.
+    We interpolate the Gaussian from the nodes to cell centers and examine the relative
+    error.
 
     >>> from discretize.utils import interpolation_matrix
     >>> from discretize import TensorMesh

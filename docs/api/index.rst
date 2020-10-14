@@ -106,14 +106,14 @@ Mesh Utilities
 .. autosummary::
     :toctree: generated
 
-    utils.exampleLrmGrid
-    utils.meshTensor
-    utils.closestPoints
-    utils.ExtractCoreMesh
     utils.random_model
+    utils.unpack_widths
+    utils.closest_points
+    utils.extract_core_mesh
     utils.mesh_builder_xyz
     utils.refine_tree_xyz
     utils.active_from_xyz
+    utils.exampleLrmGrid
 
 
 Matrix Utilities
@@ -169,9 +169,12 @@ Curvilinear Mesh Utilities
 .. autosummary::
     :toctree: generated
 
+    utils.volume_tetrahedron
     utils.volTetra
-    utils.faceInfo
+    utils.index_cube
     utils.indexCube
+    utils.face_info
+    utils.faceInfo
 
 
 

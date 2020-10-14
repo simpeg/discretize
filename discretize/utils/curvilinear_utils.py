@@ -5,21 +5,36 @@ import warnings
 
 
 def volume_tetrahedron(xyz, A, B, C, D):
-    """
-    Returns the volume for tetrahedras volume specified by the indexes A to D.
+    """Returns the tetrahedron volumes for a specified set of verticies.
 
-    :param numpy.ndarray xyz: X,Y,Z vertex vector
-    :param numpy.ndarray A,B,C,D: vert index of the tetrahedra
-    :rtype: numpy.ndarray
-    :return: V, volume of the tetrahedra
-
-    Algorithm https://en.wikipedia.org/wiki/Tetrahedron#Volume
+    Let *xyz* be an [n, 3] array denoting a set of vertex locations.
+    Any 4 vertex locations **a, b, c** and **d** can be used to define a tetrahedron.
+    For the set of tetrahedra whose verticies are indexed in vectors
+    *A, B, C* and *D*, this function returns the corresponding volumes.
+    See algorithm: https://en.wikipedia.org/wiki/Tetrahedron#Volume
 
     .. math::
+       vol = {1 \\over 6} \\big | ( \\mathbf{a - d} ) \\cdot
+       ( ( \\mathbf{b - d} ) \\times ( \\mathbf{c - d} ) ) \\big |
 
-       V = {1 \over 3} A  h
+    Parameters
+    ----------
+    xyz: numpy.ndarray
+        [n, 3] array containing the x,y,z locations for all verticies
+    A: numpy.ndarray
+        Vector containing the indicies for the **a** vertex locations
+    B: numpy.ndarray
+        Vector containing the indicies for the **b** vertex locations
+    C: numpy.ndarray
+        Vector containing the indicies for the **c** vertex locations
+    D: numpy.ndarray
+        Vector containing the indicies for the **d** vertex locations
 
-       V = {1 \over 6} | ( a - d ) \cdot ( ( b - d )  ( c - d ) ) |
+    Returns
+    -------
+    numpy.ndarray
+        Volumes of the tetrahedra
+
 
     """
 

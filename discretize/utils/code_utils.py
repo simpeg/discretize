@@ -5,6 +5,8 @@ SCALARTYPES = (complex, float, int, np.number)
 
 
 def is_scalar(f):
+    """True if the input is an integer, float or complex number."""
+
     if isinstance(f, SCALARTYPES):
         return True
     elif isinstance(f, np.ndarray) and f.size == 1 and isinstance(f[0], SCALARTYPES):
@@ -13,6 +15,7 @@ def is_scalar(f):
 
 
 def as_array_n_by_dim(pts, dim):
+    """Verifies if an array is of a specified dimension"""
     if type(pts) == list:
         pts = np.array(pts)
     if not isinstance(pts, np.ndarray):

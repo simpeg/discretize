@@ -4,12 +4,24 @@ import os
 
 def download(url, folder=".", overwrite=False, verbose=True):
     """
-    Function to download all files stored in a cloud directory
+    Download file(s) stored in a cloud directory.
 
-    :param str url: url or list of urls for the file(s) to be downloaded
-    :param str folder: folder to where the directory is created and files downloaded (default is the current directory)
-    :param bool overwrite: overwrite if a file with the specified name already exists
-    :param bool verbose: print out progress
+    Parameters
+    ----------
+    url: String or list of strings
+        Url or list of urls for the file(s) being downloaded
+    folder: String
+        Local folder where downloaded files are to be stored
+    overwrite: Bool
+        Overwrite files if they have the same name as newly downloaded files
+    verbose: Bool
+        Print progress when downloading multiple files
+
+    Returns
+    -------
+    os.path or a list of os.path
+        The path or a list of path for all downloaded files
+
     """
 
     def rename_path(downloadpath):
