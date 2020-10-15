@@ -1082,7 +1082,7 @@ exampleLrmGrid = deprecate_function(
 )
 meshTensor = deprecate_function(unpack_widths, "meshTensor", removal_version="1.0.0")
 closestPoints = deprecate_function(
-    closest_points, "closestPoints", removal_version="1.0.0"
+    closest_points_index, "closestPoints", removal_version="1.0.0"
 )
 ExtractCoreMesh = deprecate_function(
     extract_core_mesh, "ExtractCoreMesh", removal_version="1.0.0"

@@ -108,7 +108,7 @@ Mesh Utilities
 
     utils.random_model
     utils.unpack_widths
-    utils.closest_points
+    utils.closest_points_index
     utils.extract_core_mesh
     utils.mesh_builder_xyz
     utils.refine_tree_xyz
@@ -139,8 +139,8 @@ Matrix Utilities
     utils.ind2sub
     utils.sub2ind
     utils.getSubArray
-    utils.inv3X3BlockDiagonal
-    utils.inv2X2BlockDiagonal
+    utils.inverse_3x3_block_diagonal
+    utils.inverse_2x2_block_diagonal
     utils.TensorType
     utils.makePropertyTensor
     utils.invPropertyTensor

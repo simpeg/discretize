@@ -24,7 +24,7 @@ from discretize.utils.matrix_utils import (
 from discretize.utils.mesh_utils import (
     example_curvilinear_grid,
     unpack_widths,
-    closest_points,
+    closest_points_index,
     extract_core_mesh,
     random_model,
     refine_tree_xyz,

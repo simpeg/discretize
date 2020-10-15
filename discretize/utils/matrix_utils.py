@@ -76,7 +76,7 @@ def mkvc(x, n_dims=1, **kwargs):
 
 
 def sdiag(h):
-    """Generate sparse diagonal matrix from vector containing diagonal elements"""
+    """Generate sparse diagonal matrix from a vector"""
     if isinstance(h, Zero):
         return Zero()
 
@@ -89,17 +89,17 @@ def sdinv(M):
 
 
 def speye(n):
-    """Generate sparse identity matrix"""
+    """Generate sparse identity matrix, shape=(n, n)"""
     return sp.identity(n, format="csr")
 
 
 def kron3(A, B, C):
-    """Three kron prods"""
+    """Compute kronecker products between 3 sparse matricies"""
     return sp.kron(sp.kron(A, B), C, format="csr")
 
 
 def spzeros(n1, n2):
-    """Generate sparse matrix of zeros"""
+    """Generate sparse matrix of zeros, shape=(n1, n2)"""
     return sp.dia_matrix((n1, n2))
 
 
@@ -145,11 +145,11 @@ def ndgrid(*args, **kwargs):
         Positions along each axis of the tensor. The user can define these as
         successive positional arguments *x*, *y*, (and *z*) or as a single argument
         using a list [*x*, *y*, (*z*)].
-    vector: Bool, optional kwarg
+    vector: bool, optional kwargs
         If *True*, the output is a numpy array of dimension [n, ndim]. If *False*,
         the gridded x, y (and z) locations are returned as separate ndarrays in a list.
         Default is *True*.
-    order: String, optional kwarg
+    order: str, optional kwargs
         Define ordering using one of the following options {'C', 'F', 'A'}.
         'C' is C-like ordering. 'F' is Fortran-like ordering. 'A' is Fortran
         ordering if memory is contigious and C-like otherwise. Default = 'F'.
@@ -258,15 +258,126 @@ def get_subarray(A, ind):
 def inverse_3x3_block_diagonal(
     a11, a12, a13, a21, a22, a23, a31, a32, a33, return_matrix=True, **kwargs
 ):
-    """B = inverse_3x3_block_diagonal(a11, a12, a13, a21, a22, a23, a31, a32, a33)
+    """Invert a set of 3x3 matricies from vectors containing their elements.
 
-    inverts a stack of 3x3 matrices
+    The elements of a 3x3 matrix *A* are given by:
 
-    Input:
-     A   - a11, a12, a13, a21, a22, a23, a31, a32, a33
+    .. math::
+        A = \\begin{bmatrix}
+        a_{11} & a_{12} & a_{13} \n
+        a_{21} & a_{22} & a_{23} \n
+        a_{31} & a_{32} & a_{33}
+        \\end{bmatrix}
 
-    Output:
-     B   - inverse
+    For a set of 3x3 matricies, the elements may be stored in a set of 9 distinct vectors
+    :math:`\\mathbf{a_{11}}`, :math:`\\mathbf{a_{12}}`, ..., :math:`\\mathbf{a_{33}}`.
+    
+    For each matrix, **inverse_3x3_block_diagonal** ouputs the vectors containing the
+    elements of each matrix' inverse; i.e.
+    :math:`\\mathbf{b_{11}}`, :math:`\\mathbf{b_{12}}`, ..., :math:`\\mathbf{b_{33}}`
+    where:
+
+    .. math::
+        B = A^{-1} = \\begin{bmatrix}
+        b_{11} & b_{12} & b_{13} \n
+        b_{21} & b_{22} & b_{23} \n
+        b_{31} & b_{32} & b_{33}
+        \\end{bmatrix}
+
+    For special applications, we may want to output the elements of the inverses
+    of the matricies as a 3x3 block matrix of the form:
+
+    .. math::
+        M = \\begin{bmatrix}
+        D_{11} & D_{12} & D_{13} \n
+        D_{21} & D_{22} & D_{23} \n
+        D_{31} & D_{32} & D_{33} 
+        \\end{bmatrix}
+
+    where :math:`D_{ij}` is a diagonal matrix whose non-zero elements
+    are defined by vector :math:`\\mathbf{b_{ij}}`. Where *n* is the
+    number of matricies, the block matrix is sparse with dimensions
+    (3n, 3n).
+
+
+    Parameters
+    ----------
+    aij: numpy.ndarray
+        All arguments a11, a12, ..., a33 are vectors which contain the
+        corresponding element for all 3x3 matricies
+    return_matrix: bool, optional
+
+        - **True (default)**: Returns the sparse block 3x3 matrix *M*.
+        - **False:** Returns the vectors containing the elements of each matrix' inverse.
+
+
+    Returns
+    -------
+    sparse.coo.coo_matrix or list of numpy.ndarray
+        If *return_matrix = False*, the function will return vectors
+        *b11, b12, b13, b21, b22, b23, b31, b32, b33*.
+        If *return_matrix = True*, the function will return the
+        block matrix *M*
+
+    Examples
+    --------
+
+    Here, we define four 3x3 matricies and reorganize their elements into 
+    9 vectors a11, a12, ..., a33. We then examine the outputs of the
+    function **inverse_3x3_block_diagonal** when the argument
+    *return_matrix* is set to both *True* and *False*.
+
+    >>> from discretize.utils import inverse_3x3_block_diagonal
+    >>> import numpy as np
+    >>> import scipy as sp
+    >>> import matplotlib.pyplot as plt
+    >>> 
+    >>> # Define four 3x3 matricies
+    >>> A1 = np.random.uniform(1, 10, (3, 3))
+    >>> A2 = np.random.uniform(1, 10, (3, 3))
+    >>> A3 = np.random.uniform(1, 10, (3, 3))
+    >>> A4 = np.random.uniform(1, 10, (3, 3))
+    >>> 
+    >>> # Organize elements in vectors a11 to a33
+    >>> v = []
+    >>> for ii in range(0, 3):
+    >>>     for jj in range(0, 3):
+    >>>         v.append(
+    >>>             np.c_[A1[ii, jj], A2[ii, jj], A3[ii, jj], A4[ii, jj]]
+    >>>         )
+    >>> 
+    >>> a11, a12, a13, a21, a22, a23, a31, a32, a33 = v
+    >>> 
+    >>> # Return the elements of their inverse and validate
+    >>> b11, b12, b13, b21, b22, b23, b31, b32, b33 = inverse_3x3_block_diagonal(
+    >>>     a11, a12, a13, a21, a22, a23, a31, a32, a33, return_matrix=False
+    >>> )
+    >>> 
+    >>> B = []
+    >>> for ii in range(0, 4):
+    >>>     B.append(
+    >>>         np.r_[
+    >>>             np.c_[b11[ii], b12[ii], b13[ii]],
+    >>>             np.c_[b21[ii], b22[ii], b23[ii]],
+    >>>             np.c_[b31[ii], b32[ii], b33[ii]],
+    >>>         ]
+    >>>     )
+    >>>     
+    >>> B1, B2, B3, B4 = B
+    >>> 
+    >>> print('Inverse of A1 using numpy.linalg.inv')
+    >>> print(np.linalg.inv(A1))
+    >>> print('B1 constructed from vectors b11 to b33')
+    >>> print(B1)
+    >>> 
+    >>> # Plot the sparse block matrix containing elements of the inverses
+    >>> M = inverse_3x3_block_diagonal(
+    >>>     a11, a12, a13, a21, a22, a23, a31, a32, a33
+    >>> )
+    >>> 
+    >>> plt.spy(M)
+
+
     """
     if "returnMatrix" in kwargs:
         warnings.warn(
@@ -320,17 +431,122 @@ def inverse_3x3_block_diagonal(
 
 
 def inverse_2x2_block_diagonal(a11, a12, a21, a22, return_matrix=True, **kwargs):
-    """B = inverse_2x2_block_diagonal(a11, a12, a21, a22)
+    """
+    Invert a set of 2x2 matricies from vectors containing their elements.
 
-    Inverts a stack of 2x2 matrices by using the inversion formula
+    The elements of a 2x2 matrix *A* are given by:
 
-    inv(A) = (1/det(A)) * cof(A)^T
+    .. math::
+        A = \\begin{bmatrix}
+        a_{11} & a_{12} \n
+        a_{21} & a_{22}
+        \\end{bmatrix}
 
-    Input:
-    A   - a11, a12, a21, a22
+    For a set of 2x2 matricies, the elements may be stored in a set of 4 distinct vectors
+    :math:`\\mathbf{a_{11}}`, :math:`\\mathbf{a_{12}}`, :math:`\\mathbf{a_{21}}` and
+    :math:`\\mathbf{a_{22}}`.
+    
+    For each matrix, **inverse_2x2_block_diagonal** ouputs the vectors containing the
+    elements of each matrix' inverse; i.e.
+    :math:`\\mathbf{b_{11}}`, :math:`\\mathbf{b_{12}}`, :math:`\\mathbf{b_{21}}` and
+    :math:`\\mathbf{b_{22}}` where:
 
-    Output:
-    B   - inverse
+    .. math::
+        B = A^{-1} = \\begin{bmatrix}
+        b_{11} & b_{12} \n
+        b_{21} & b_{22}
+        \\end{bmatrix}
+
+    For special applications, we may want to output the elements of the inverses
+    of the matricies as a 2x2 block matrix of the form:
+
+    .. math::
+        M = \\begin{bmatrix}
+        D_{11} & D_{12} \n
+        D_{21} & D_{22} 
+        \\end{bmatrix}
+
+    where :math:`D_{ij}` is a diagonal matrix whose non-zero elements
+    are defined by vector :math:`\\mathbf{b_{ij}}`. Where *n* is the
+    number of matricies, the block matrix is sparse with dimensions
+    (2n, 2n).
+
+
+    Parameters
+    ----------
+    aij: numpy.ndarray
+        All arguments a11, a12, a21, a22 are vectors which contain the
+        corresponding element for all 2x2 matricies
+    return_matrix: bool, optional
+
+        - **True (default)**: Returns the sparse block 2x2 matrix *M*.
+        - **False:** Returns the vectors containing the elements of each matrix' inverse.
+
+
+    Returns
+    -------
+    sparse.coo.coo_matrix or list of numpy.ndarray
+        If *return_matrix = False*, the function will return vectors
+        *b11, b12, b21, b22*.
+        If *return_matrix = True*, the function will return the
+        block matrix *M*
+
+    Examples
+    --------
+
+    Here, we define four 2x2 matricies and reorganize their elements into 
+    4 vectors a11, a12, a21 and a22. We then examine the outputs of the
+    function **inverse_2x2_block_diagonal** when the argument
+    *return_matrix* is set to both *True* and *False*.
+
+    >>> from discretize.utils import inverse_2x2_block_diagonal
+    >>> import numpy as np
+    >>> import scipy as sp
+    >>> import matplotlib.pyplot as plt
+    >>> 
+    >>> # Define four 3x3 matricies
+    >>> A1 = np.random.uniform(1, 10, (2, 2))
+    >>> A2 = np.random.uniform(1, 10, (2, 2))
+    >>> A3 = np.random.uniform(1, 10, (2, 2))
+    >>> A4 = np.random.uniform(1, 10, (2, 2))
+    >>> 
+    >>> # Organize elements in vectors
+    >>> v = []
+    >>> for ii in range(0, 2):
+    >>>     for jj in range(0, 2):
+    >>>         v.append(
+    >>>             np.c_[A1[ii, jj], A2[ii, jj], A3[ii, jj], A4[ii, jj]]
+    >>>         )
+    >>> 
+    >>> a11, a12, a21, a22 = v
+    >>> 
+    >>> # Return the elements of their inverse and validate
+    >>> b11, b12, b21, b22 = inverse_2x2_block_diagonal(
+    >>>     a11, a12, a21, a22, return_matrix=False
+    >>> )
+    >>> 
+    >>> B = []
+    >>> for ii in range(0, 4):
+    >>>     B.append(
+    >>>         np.r_[
+    >>>             np.c_[b11[ii], b12[ii]],
+    >>>             np.c_[b21[ii], b22[ii]]
+    >>>         ]
+    >>>     )
+    >>>     
+    >>> B1, B2, B3, B4 = B
+    >>> 
+    >>> print('Inverse of A1 using numpy.linalg.inv')
+    >>> print(np.linalg.inv(A1))
+    >>> print('B1 constructed from vectors b11 to b33')
+    >>> print(B1)
+    >>> 
+    >>> # Plot the sparse block matrix containing elements of the inverses
+    >>> M = inverse_2x2_block_diagonal(
+    >>>     a11, a12, a21, a22
+    >>> )
+    >>> 
+    >>> plt.spy(M)
     """
     if "returnMatrix" in kwargs:
         warnings.warn(
