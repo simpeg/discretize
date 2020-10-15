@@ -378,9 +378,9 @@ class BaseTensorMesh(BaseMesh):
             if self.dim < ind:
                 raise ValueError("mesh is not high enough dimension.")
             if "F" in loc_type:
-                items = (self.nFx, self.nFy, self.nFz)[:self.dim]
+                items = (self.nFx, self.nFy, self.nFz)[: self.dim]
             else:
-                items = (self.nEx, self.nEy, self.nEz)[:self.dim]
+                items = (self.nEx, self.nEy, self.nEz)[: self.dim]
             components = [spzeros(loc.shape[0], n) for n in items]
             components[ind] = interpolation_matrix(loc, *self.get_tensor(loc_type))
             # remove any zero blocks (hstack complains)

@@ -913,9 +913,9 @@ class BaseRectangularMesh(BaseMesh):
                 # not full 'F' or 'E'
                 xx = mkvc(xx)  # unwrap it in case it is a matrix
                 if x_type == "F":
-                    nn = (self.nFx, self.nFy, self.nFz)[:self.dim]
+                    nn = (self.nFx, self.nFy, self.nFz)[: self.dim]
                 else:
-                    nn = (self.nEx, self.nEy, self.nEz)[:self.dim]
+                    nn = (self.nEx, self.nEy, self.nEz)[: self.dim]
                 nn = np.r_[0, nn]
 
                 nx = [0, 0, 0]
