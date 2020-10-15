@@ -10,18 +10,22 @@ def cylindrical_to_cartesian(grid, vec=None):
 
     Parameters
     ----------
-    grid: numpy.ndarray
-        Location points [n x 3] defined in cylindrical coordinates :math:`(r, \\theta, z)`.
-    vec: numpy.ndarray, optional
-        Vector for each cell defined in cylindrical coordinates as either an (n, 3) array
-        or as a vector of length (3n,) organized :math:`r, \\theta, z`.
+    grid : numpy.ndarray
+        Location points defined in cylindrical coordinates :math:`(r, \\theta, z)`. Array
+        has shape (n, 3)
+    vec : numpy.ndarray, optional
+        Vector defined in cylindrical coordinates as either:
+
+        - An array of shape (n, 3) whose columns are organized [ :math:`r, \\theta, z` ]
+        - A vector of length (3n,) organized :math:`r, \\theta, z`
 
     Returns
     -------
     numpy.ndarray
-        If input parameter *vec* is unused, the function returns xyz locations as an 
+        If input parameter **vec** is *None*, the function returns xyz locations as a 
         numpy array of shape (n, 3). Otherwise, the vector defined in Cartesian
-        coordinates is returned as a numpy array of shape (3n,).
+        coordinates is returned as a numpy array of shape (3n,) organized
+        :math:`x, y, z`
 
     Examples
     --------
@@ -83,18 +87,22 @@ def cartesian_to_cylindrical(grid, vec=None):
 
     Parameters
     ----------
-    grid: numpy.ndarray
-        Location points [n x 3] defined in Cartesian coordinates :math:`(x, y, z)`.
-    vec: numpy.ndarray, optional
-        Vector for each cell defined in Cartesian coordinates as either an [n x 3] array
-        or as a vector of length [3n] organized :math:`(x, y, z)`.
+    grid : numpy.ndarray
+        Location points defined in Cartesian coordinates :math:`(x, y z)`. Array
+        has shape (n, 3)
+    vec : numpy.ndarray, optional
+        Vector defined in Cartesian coordinates as either:
+
+        - An array of shape (n, 3) whose columns are organized [ :math:`x, y, z` ]
+        - A vector of length (3n,) organized :math:`x, y, z`
 
     Returns
     -------
     numpy.ndarray
-        If input parameter *vec* is unused, the function returns :math:`(r, \\theta, z)` locations as
-        an numpy array of shape (n, 3). Otherwise, the vector defined in cylindrical coordinates
-        is returned as an numpy array of shape (3n,).
+        If input parameter **vec** is *None*, the function returns :math:`(r, \\theta, z)`
+        locations as a numpy array of shape (n, 3). Otherwise, the vector defined in
+        cylindrical coordinates is returned as a numpy array of shape (3n,) organized
+        :math:`r, \\theta, z`
 
     Examples
     --------
@@ -144,8 +152,7 @@ def cart2cyl(grid, vec=None):
 
 def rotation_matrix_from_normals(v0, v1, tol=1e-20):
     """
-    Generate a 3x3 rotation matrix defining the rotation from vector
-    v0 to v1.
+    Generate a 3x3 rotation matrix defining the rotation from vector v0 to v1.
 
     This function uses Rodrigues' rotation formula to generate the rotation
     matrix :math:`\\mathbf{A}` going from vector :math:`\\mathbf{v_0}` to
@@ -159,17 +166,17 @@ def rotation_matrix_from_normals(v0, v1, tol=1e-20):
 
     Parameters
     ----------
-    v0: numpy.ndarray
+    v0 : numpy.ndarray
         Vector of length 3
-    v1: numpy.ndarray
+    v1 : numpy.ndarray
         Vector of length 3
-    tol: float, optional
+    tol : float, optional
         Numerical tolerance. Default = 1e-20
 
     Returns
     -------
     numpy.ndarray
-        A 3 x 3 numpy array representing the rotation matrix from v0 to v1
+        A 3x3 numpy array representing the rotation matrix from v0 to v1
     
     
     """
@@ -227,19 +234,19 @@ def rotate_points_from_normals(xyz, v0, v1, x0=np.r_[0.0, 0.0, 0.0]):
 
     Parameters
     ----------
-    xyz: numpy.ndarray
-        An n x 3 numpy array of xyz locations
-    v0: numpy.ndarray
+    xyz : numpy.ndarray
+        A numpy array (*, 3) of xyz locations
+    v0 : numpy.ndarray
         Vector of length 3
-    v1: numpy.ndarray
+    v1 : numpy.ndarray
         Vector of length 3
-    x0: numpy.ndarray, optional
+    x0 : numpy.ndarray, optional
         Vector of length 3 denoting the origin of rotation. Default is (0,0,0).
 
     Returns
     -------
     numpy.ndarray
-        An n x 3 numpy array containing the rotated xyz locations.
+        A numpy array of shape (*, 3) containing the rotated xyz locations.
 
 
     """

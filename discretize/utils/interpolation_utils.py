@@ -50,22 +50,22 @@ def interpolation_matrix(locs, x, y=None, z=None):
     
     Parameters
     ----------
-    locs: numpy.ndarray
-        A numpy array [n, nD] containing the locations for the interpolated values. Here *n* is
-        the number of locations and *nD* is the dimension (1, 2 or 3)
-    x: numpy.ndarray
+    locs : numpy.ndarray
+        A numpy array (n, dim) containing the locations for the interpolated values. Here *n* is
+        the number of locations and *dim* is the dimension (1, 2 or 3)
+    x : numpy.ndarray
         Vector defining the cell center or node locations of the tensor along the x-axis
-    y: numpy.ndarray, optional
-        Vector defining the cell center or node locations of the tensor mesh along the y-axis
-    z: numpy.ndarray, optional
-        Vector defining the cell center or node locations of the tensor mesh along the z-axis
+    y : numpy.ndarray, optional
+        Vector defining the cell center or node locations of the tensor along the y-axis
+    z : numpy.ndarray, optional
+        Vector defining the cell center or node locations of the tensor along the z-axis
 
     Returns
     -------
     scipy.sparse.csr_matrix
         A sparse matrix which interpolates the tensor quantity on cell centers or nodes to
         the set of specified locations. Where *n* is the number of specified locations and
-        *m* is the number of tensor quantities, the output array is [n, m].
+        *m* is the number of tensor quantities, the output array has shape (n, m).
 
     Examples
     --------

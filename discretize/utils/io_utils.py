@@ -8,13 +8,13 @@ def download(url, folder=".", overwrite=False, verbose=True):
 
     Parameters
     ----------
-    url: str or list of str
+    url : str or list of str
         url or list of urls for the file(s) being downloaded
-    folder: str
+    folder : str
         Local folder where downloaded files are to be stored
-    overwrite: bool
+    overwrite : bool, optional
         Overwrite files if they have the same name as newly downloaded files
-    verbose: bool
+    verbose : bool, optional
         Print progress when downloading multiple files
 
     Returns

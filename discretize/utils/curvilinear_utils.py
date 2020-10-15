@@ -7,8 +7,8 @@ import warnings
 def volume_tetrahedron(xyz, A, B, C, D):
     """Returns the tetrahedron volumes for a specified set of verticies.
 
-    Let *xyz* be an [n, 3] array denoting a set of vertex locations.
-    Any 4 vertex locations **a, b, c** and **d** can be used to define a tetrahedron.
+    Let *xyz* be an (n, 3) array denoting a set of vertex locations.
+    Any 4 vertex locations *a, b, c* and *d* can be used to define a tetrahedron.
     For the set of tetrahedra whose verticies are indexed in vectors
     *A, B, C* and *D*, this function returns the corresponding volumes.
     See algorithm: https://en.wikipedia.org/wiki/Tetrahedron#Volume
@@ -19,22 +19,68 @@ def volume_tetrahedron(xyz, A, B, C, D):
 
     Parameters
     ----------
-    xyz: numpy.ndarray
-        [n, 3] array containing the x,y,z locations for all verticies
-    A: numpy.ndarray
+    xyz : numpy.ndarray
+        (n, 3) array containing the x,y,z locations for all verticies
+    A : numpy.ndarray
         Vector containing the indicies for the **a** vertex locations
-    B: numpy.ndarray
+    B : numpy.ndarray
         Vector containing the indicies for the **b** vertex locations
-    C: numpy.ndarray
+    C : numpy.ndarray
         Vector containing the indicies for the **c** vertex locations
-    D: numpy.ndarray
+    D : numpy.ndarray
         Vector containing the indicies for the **d** vertex locations
 
     Returns
     -------
     numpy.ndarray
-        Volumes of the tetrahedra
+        Volumes of the tetrahedra whose vertices are indexes in
+        *A, B, C* and *D*.
 
+
+    Examples
+    --------
+
+    Here we define a small 3D tensor mesh. 4 nodes are chosen to
+    be the verticies of a tetrahedron. We compute the volume of this
+    tetrahedron. Note that xyz locations for the verticies can be
+    scattered and do not require regular spacing.
+
+    >>> from discretize.utils import volume_tetrahedron
+    >>> from discretize import TensorMesh
+    >>> import numpy as np
+    >>> import matplotlib.pyplot as plt
+    >>> import matplotlib as mpl
+    >>> 
+    >>> mpl.rcParams.update({"font.size": 14})
+    >>> 
+    >>> # Corners of a uniform cube
+    >>> h = [1, 1]
+    >>> mesh = TensorMesh([h, h, h])
+    >>> xyz = mesh.grid_nodes
+    >>> 
+    >>> # Indicies
+    >>> A = np.array([0])
+    >>> B = np.array([6])
+    >>> C = np.array([8])
+    >>> D = np.array([24])
+    >>> 
+    >>> # Compute volume for all tetrahedra and extract first one
+    >>> vol = volume_tetrahedron(xyz, A, B, C, D)
+    >>> vol = vol[0]
+    >>> 
+    >>> # Plot
+    >>> fig = plt.figure(figsize=(7, 7))
+    >>> ax = fig.gca(projection='3d')
+    >>> 
+    >>> mesh.plot_grid(ax=ax)
+    >>> 
+    >>> k = [0, 6, 8, 0, 24, 6, 24, 8]
+    >>> xyz_tetra = xyz[k, :]
+    >>> ax.plot(xyz_tetra[:, 0], xyz_tetra[:, 1], xyz_tetra[:, 2], 'r')
+    >>> 
+    >>> ax.text(-0.6, 0., 2.8, 'Volume of the tetrahedron: {:g} $m^3$'.format(vol))
+    >>> 
+    >>> plt.show()
 
     """
 
@@ -47,7 +93,7 @@ def volume_tetrahedron(xyz, A, B, C, D):
         - (BD[:, 0] * CD[:, 2] - BD[:, 2] * CD[:, 0]) * AD[:, 1]
         + (BD[:, 1] * CD[:, 2] - BD[:, 2] * CD[:, 1]) * AD[:, 0]
     )
-    return V / 6
+    return np.abs(V / 6)
 
 
 def index_cube(nodes, grid_size, n=None):

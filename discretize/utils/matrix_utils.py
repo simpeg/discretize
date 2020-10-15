@@ -14,9 +14,9 @@ def mkvc(x, n_dims=1, **kwargs):
 
     Parameters
     ----------
-    x: numpy.ndarray
+    x : numpy.ndarray
         An nD array that will be reorganized and output as a vector
-    n_dims: int
+    n_dims : int
         The dimension of the output vector.
 
     Returns
@@ -104,19 +104,64 @@ def spzeros(n1, n2):
 
 
 def ddx(n):
-    """Define 1D derivatives, inner, this means we go from n+1 to n"""
+    """
+    Define 1D difference (derivative) operator from nodes to centers; i.e. n+1 --> n
+
+    For n cells, the 1D difference (derivative) operator is sparse, has
+    dimensions (n, n+1) and takes the form:
+
+    .. math::
+        \\begin{bmatrix}
+        -1 & \\; 1 & & & \n
+        & -1 & \\; 1 & & \n
+        & & \\ddots & \\ddots & \n
+        & & & -1 & \\; 1 \\;
+        \\end{bmatrix}
+
+    """
     return sp.spdiags((np.ones((n + 1, 1)) * [-1, 1]).T, [0, 1], n, n + 1, format="csr")
 
 
 def av(n):
-    """Define 1D averaging operator from nodes to cell-centers."""
+    """
+    Define 1D averaging operator from nodes to cell-centers; i.e. n+1 --> n
+
+    For n cells, the 1D averaging operator is sparse, has
+    dimensions (n, n+1) and takes the form:
+
+    .. math::
+        \\begin{bmatrix}
+        1/2 & 1/2 & & & \n
+        & 1/2 & 1/2 & & \n
+        & & \\ddots & \\ddots & \n
+        & & & 1/2 & 1/2 \\;
+        \\end{bmatrix}
+
+    """
     return sp.spdiags(
         (0.5 * np.ones((n + 1, 1)) * [1, 1]).T, [0, 1], n, n + 1, format="csr"
     )
 
 
 def av_extrap(n):
-    """Define 1D averaging operator from cell-centers to nodes."""
+    """
+    Define 1D averaging operator from cell-centers to nodes; i.e. n --> n+1
+    
+    For n cells, the 1D averaging operator from cell centers to nodes
+    is sparse and has dimensions (n+1, n). Values at the outmost nodes are
+    taken from the nearest cell center. Thus the operator takes the form:
+
+    .. math::
+        \\begin{bmatrix}
+        1 & & & & \n
+        1/2 & 1/2 & & & \n
+        & 1/2 & 1/2 & & & \n
+        & & \\ddots & \\ddots & \n
+        & & & 1/2 & 1/2 \n
+        & & & & 1 \\;
+        \\end{bmatrix}
+
+    """
     Av = sp.spdiags(
         (0.5 * np.ones((n, 1)) * [1, 1]).T, [-1, 0], n + 1, n, format="csr"
     ) + sp.csr_matrix(([0.5, 0.5], ([0, n], [0, n - 1])), shape=(n + 1, n))
@@ -141,15 +186,15 @@ def ndgrid(*args, **kwargs):
 
     Parameters
     ----------
-    args: numpy.ndarray or a list of numpy.ndarray
+    args : numpy.ndarray or a list of numpy.ndarray
         Positions along each axis of the tensor. The user can define these as
         successive positional arguments *x*, *y*, (and *z*) or as a single argument
         using a list [*x*, *y*, (*z*)].
-    vector: bool, optional kwargs
+    vector : bool, optional kwargs
         If *True*, the output is a numpy array of dimension [n, ndim]. If *False*,
         the gridded x, y (and z) locations are returned as separate ndarrays in a list.
         Default is *True*.
-    order: str, optional kwargs
+    order : str, optional kwargs
         Define ordering using one of the following options {'C', 'F', 'A'}.
         'C' is C-like ordering. 'F' is Fortran-like ordering. 'A' is Fortran
         ordering if memory is contigious and C-like otherwise. Default = 'F'.
@@ -302,12 +347,12 @@ def inverse_3x3_block_diagonal(
 
     Parameters
     ----------
-    aij: numpy.ndarray
+    aij : numpy.ndarray
         All arguments a11, a12, ..., a33 are vectors which contain the
         corresponding element for all 3x3 matricies
-    return_matrix: bool, optional
+    return_matrix : bool, optional
 
-        - **True (default)**: Returns the sparse block 3x3 matrix *M*.
+        - **True**: Returns the sparse block 3x3 matrix *M*.
         - **False:** Returns the vectors containing the elements of each matrix' inverse.
 
 
@@ -474,12 +519,12 @@ def inverse_2x2_block_diagonal(a11, a12, a21, a22, return_matrix=True, **kwargs)
 
     Parameters
     ----------
-    aij: numpy.ndarray
+    aij : numpy.ndarray
         All arguments a11, a12, a21, a22 are vectors which contain the
         corresponding element for all 2x2 matricies
-    return_matrix: bool, optional
+    return_matrix : bool, optional
 
-        - **True (default)**: Returns the sparse block 2x2 matrix *M*.
+        - **True:** Returns the sparse block 2x2 matrix *M*.
         - **False:** Returns the vectors containing the elements of each matrix' inverse.
 
 

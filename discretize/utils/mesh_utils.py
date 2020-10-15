@@ -21,21 +21,21 @@ def random_model(shape, seed=None, anisotropy=None, its=100, bounds=None):
 
     Parameters
     ----------
-    shape: tuple
+    shape : tuple
         shape of the model.
-    seed: int
-        pick which model to produce, prints the seed if you don't choose.
-    anisotropy: numpy.ndarray
-        this is the (3 x n) blurring kernel that is used.
-    its: int
+    seed : int
+        pick which model to produce, prints the seed if you don't choose
+    anisotropy : numpy.ndarray
+        this is the (3 x n) blurring kernel that is used
+    its : int
         number of smoothing iterations
-    bounds: list
-        Lower and upper bounds on the model. Has the form [lower_bound, upper_bound]
+    bounds : list
+        Lower and upper bounds on the model. Has the form [lower_bound, upper_bound].
 
     Returns
     -------
     numpy.ndarray
-        M, the model
+        A random renerated model whose shape was specified by the input parameter **shape**
 
     Examples
     --------
@@ -104,7 +104,7 @@ def unpack_widths(value):
 
     Parameters
     ----------
-    value: list of floats and/or tuples
+    value : list of floats and/or tuples
         The list of floats and/or tuples that are to be unpacked
 
     Returns
@@ -169,19 +169,19 @@ def closest_points_index(mesh, pts, grid_loc="CC", **kwargs):
 
     Parameters
     ----------
-    mesh: discretize.BaseMesh
+    mesh : discretize.BaseMesh
         An instance of *discretize.BaseMesh*
-    pts: numpy.ndarray
-        Points being moved
-    grid_loc: str
-        Grid on which points are being moved to. Choose from the list
-        of {'CC', 'N', 'Fx', 'Fy', 'Fz', 'Ex', 'Ex', 'Ey', 'Ez'}.
+    pts : numpy.ndarray
+        Points being moved. Has shape (n, dim)
+    grid_loc : str
+        Specifies the grid on which points are being moved to. Choose one
+        of {'CC', 'N', 'Fx', 'Fy', 'Fz', 'Ex', 'Ex', 'Ey', 'Ez'}
 
     Returns
     -------
     numpy.ndarray
-        Array containing the indicies for the closest respective
-        cell center, node, face or edge.
+        Vector of length *n* containing the indicies for the closest
+        respective cell center, node, face or edge.
 
     Examples
     --------
@@ -244,16 +244,18 @@ def extract_core_mesh(xyzlim, mesh, mesh_type="tensor"):
 
     Parameters
     ----------
-    xyzlim: numpy.ndarray
-        2D array [ndim x 2]
-    mesh: discretize.BaseMesh
+    xyzlim : numpy.ndarray
+        2D array defining the x, y and z cutoffs for the core mesh region. Each
+        row contains the minimum and maximum limit for the x, y and z axis, respectively.
+        Thus the array has shape (ndim, 2)
+    mesh : discretize.BaseMesh
         The mesh
     mesh_type : str, optional
         Unused currently
 
     Returns
     -------
-    tuple: (*active_index*, *core_mesh*)
+    tuple: (**active_index**, **core_mesh**)
         **active_index** is a boolean array that maps from the global the mesh
         to core mesh. **core_mesh** is a *discretize.BaseMesh* object representing
         the core mesh.
@@ -369,25 +371,25 @@ def mesh_builder_xyz(
 
     Parameters
     ----------
-    xyz: numpy.ndarray
+    xyz : numpy.ndarray
         Location points [n x dim]
-    h: list
+    h : list
         Cell size(s) for the core mesh [1 x ndim]
-    padding_distance: list
+    padding_distance : list
         Padding distances [[W,E], [N,S], [Down,Up]]
-    base_mesh: discretize.BaseMesh
+    base_mesh : discretize.BaseMesh
         discretize mesh used to center the core mesh
-    depth_core: float
+    depth_core : float
         Depth of core mesh below xyz
-    expansion_factor: float
-        Expension factor for padding cells [1.3]
-    mesh_type: str
+    expansion_factor : float
+        Expansion factor for padding cells
+    mesh_type : str
         Specify output mesh type. Choose from {'tensor", "tree"}
 
     Returns
     --------
     discretize.BaseMesh
-        Mesh of *mesh_type*
+        Mesh of type specified by **mesh_type**
 
     Examples
     --------
@@ -535,28 +537,30 @@ def refine_tree_xyz(
 
     Parameters
     ----------
-    mesh: discretize.TreeMesh
-        The TreeMesh object to be refined
-    xyz: numpy.ndarray
+    mesh : discretize.TreeMesh
+        The tree mesh object to be refined
+    xyz : numpy.ndarray
         2D array of points (n, dim)
-    method: str
-        Method used to refine the mesh based on xyz locations
+    method : str
+        Method used to refine the mesh based on xyz locations. Choose from
+        {'radial', 'surface', 'box'}.
 
         - "radial": Based on radial distance xyz and cell centers
         - "surface": Along triangulated surface repeated vertically
         - "box": Inside limits defined by outer xyz locations
 
-    octree_levels: list
+    octree_levels : list
         Minimum number of cells around points in each k octree level
         [N(k), N(k-1), ...]
-    octree_levels_padding: list
+    octree_levels_padding : list
         Padding cells added to the outer limits of the data each octree levels
         used for method= "surface" and "box" [N(k), N(k-1), ...].
-    finalize: bool
-        True | [False]    Finalize the TreeMesh
-    max_distance: float
+    finalize : bool
+        Finalize the tree mesh {True, False}. (*Default = False*)
+        }
+    max_distance : float
         Maximum refinement distance from xyz locations.
-        Used for method="surface" to reduce interpolation distance.
+        Used for method="surface" to reduce interpolation distance
 
     Returns
     --------
@@ -880,14 +884,17 @@ def active_from_xyz(mesh, xyz, grid_reference="CC", method="linear"):
 
     Parameters
     ----------
-    mesh: discretize.TensorMesh or discretize.TreeMesh or discretize.CylindricalMesh
+    mesh : discretize.TensorMesh or discretize.TreeMesh or discretize.CylindricalMesh
         Mesh object, (if CylindricalMesh: mesh must be symmetric).
-    xyz: numpy.ndarray
+    xyz : numpy.ndarray
         Points defining the surface topography (*, mesh.dim).
-    grid_reference: str {'CC', 'N'}
-        If 'CC' is used, cells are active if their centers are below the surface.
-        If 'N' is used, cells are active if they lie entirely below the surface.
-    method: str {'linear', 'nearest'}
+    grid_reference : str {'CC', 'N'}
+        Define where the cell is defined relative to surface. Choose between {'CC','N'}
+
+        - If 'CC' is used, cells are active if their centers are below the surface.
+        - If 'N' is used, cells are active if they lie entirely below the surface.
+    
+    method : str {'linear', 'nearest'}
         Interpolation method for locations between the xyz points.
 
     Returns
