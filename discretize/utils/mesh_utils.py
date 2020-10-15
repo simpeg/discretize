@@ -182,7 +182,7 @@ def unpack_widths(value):
     return np.array(proposed)
 
 
-def closest_points(mesh, pts, grid_loc="CC", **kwargs):
+def closest_points_index(mesh, pts, grid_loc="CC", **kwargs):
     """Move a list of points to the closest points on a grid.
 
     Parameters
@@ -987,7 +987,7 @@ exampleLrmGrid = deprecate_function(
 )
 meshTensor = deprecate_function(unpack_widths, "meshTensor", removal_version="1.0.0")
 closestPoints = deprecate_function(
-    closest_points, "closestPoints", removal_version="1.0.0"
+    closest_points_index, "closestPoints", removal_version="1.0.0"
 )
 ExtractCoreMesh = deprecate_function(
     extract_core_mesh, "ExtractCoreMesh", removal_version="1.0.0"

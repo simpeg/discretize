@@ -24,7 +24,6 @@ Meshes
     tree_mesh.TreeCell
 
 
-
 Numerical Operators
 -------------------
 
@@ -107,7 +106,7 @@ Mesh Utilities
 
     utils.example_curvilinear_grid
     utils.unpack_widths
-    utils.closest_points
+    utils.closest_points_index
     utils.extract_core_mesh
     utils.random_model
     utils.mesh_builder_xyz
