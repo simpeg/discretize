@@ -19,16 +19,15 @@ Meshes
 
     TensorMesh
     CylindricalMesh
+    CurvilinearMesh
     TreeMesh
     tree_mesh.TreeCell
-    CurvilinearMesh
-
 
 
 Numerical Operators
 -------------------
 
-.. automodule:: discretize.operators.InnerProducts
+.. automodule:: discretize.operators
 
 .. currentmodule:: discretize
 
@@ -69,9 +68,9 @@ Testing
     :toctree: generated
 
     tests.OrderTest
-    tests.checkDerivative
-    tests.getQuadratic
-    tests.Rosenbrock
+    tests.check_derivative
+    tests.get_quadratic
+    tests.rosenbrock
 
 
 Utilities
@@ -96,7 +95,6 @@ Interpolation Operations
     :toctree: generated
 
     utils.interpolation_matrix
-    utils.interpmat
     utils.volume_average
 
 
@@ -114,9 +112,6 @@ Mesh Utilities
     utils.refine_tree_xyz
     utils.active_from_xyz
     utils.example_curvilinear_grid
-    utils.exampleLrmGrid
-    utils.meshTensor
-    utils.ExtractCoreMesh
 
 
 
@@ -128,7 +123,7 @@ Matrix Utilities
 
     utils.mkvc
     utils.sdiag
-    utils.sdInv
+    utils.sdinv
     utils.speye
     utils.kron3
     utils.spzeros
@@ -138,12 +133,12 @@ Matrix Utilities
     utils.ndgrid
     utils.ind2sub
     utils.sub2ind
-    utils.getSubArray
+    utils.get_subarray
     utils.inverse_3x3_block_diagonal
     utils.inverse_2x2_block_diagonal
+    utils.make_property_tensor
+    utils.inverse_property_tensor
     utils.TensorType
-    utils.makePropertyTensor
-    utils.invPropertyTensor
     utils.Zero
     utils.Identity
 
@@ -172,11 +167,8 @@ Curvilinear Mesh Utilities
     :toctree: generated
 
     utils.volume_tetrahedron
-    utils.index_cube
     utils.face_info
-    utils.volTetra
-    utils.indexCube
-    utils.faceInfo
+    utils.index_cube
 
 
 
