@@ -100,23 +100,5 @@ else:
     # after numpy is installed
     metadata["configuration"] = configuration
 
-    # A Small hack to remove -std=c99 from c++ compiler options (if present)
-    # This should only be if numpy 1.18.0 is installed.
-    from numpy.distutils.ccompiler import CCompiler_customize, CCompiler
-    from numpy.distutils.ccompiler import replace_method
-
-    _np_customize = CCompiler_customize
-
-    def _simpeg_customize(self, dist, need_cxx=0):
-        _np_customize(self, dist, need_cxx)
-        if need_cxx:
-            # Remove -std=c99 option if present
-            try:
-                self.compiler_so.remove("-std=c99")
-            except (AttributeError, ValueError):
-                pass
-
-    replace_method(CCompiler, "customize", _simpeg_customize)
-
 
 setup(**metadata)
