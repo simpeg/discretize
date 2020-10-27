@@ -31,29 +31,12 @@ jobs:
   - script: |
       eval "$(conda shell.bash hook)"
       conda activate test
-      pytest tests/base --cov-config .coveragerc --cov=discretize -v -s
+      ./.ci/setup_headless_display.sh
+      pytest tests/base tests/cyl tests/tree tests/docs --cov-config .coveragerc --cov=discretize -v -s
     displayName: 'Testing Base'
 
   - script: |
       eval "$(conda shell.bash hook)"
       conda activate test
-      pytest tests/cyl --cov-config .coveragerc --cov=discretize -v -s
-    displayName: 'Testing Cylinder Mesh'
-
-  - script: |
-      eval "$(conda shell.bash hook)"
-      conda activate test
-      pytest tests/tree --cov-config .coveragerc --cov=discretize -v -s
-    displayName: 'Testing TreeMesh'
-
-  - script: |
-      eval "$(conda shell.bash hook)"
-      conda activate test
-      ./.ci/setup_headless_display.sh
-      pytest tests/docs --cov-config .coveragerc --cov=discretize -v -s
-    displayName: 'Testing examples, tutorials, and doc build'
-
-  - script: |
-      eval "$(conda shell.bash hook)"
-      conda activate test
       codecov
+    displayName: Upload Coverage

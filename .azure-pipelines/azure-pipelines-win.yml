@@ -32,15 +32,5 @@ jobs:
 
   - script: |
       call activate test
-      pytest tests/base --cov-config .coveragerc --cov=discretize -v -s
-    displayName: 'Testing Base'
-
-  - script: |
-      call activate test
-      pytest tests/cyl --cov-config .coveragerc --cov=discretize -v -s
-    displayName: 'Testing Cylinder Mesh'
-
-  - script: |
-      call activate test
-      pytest tests/tree --cov-config .coveragerc --cov=discretize -v -s
-    displayName: 'Testing TreeMesh'
+      pytest tests/base tests/cyl tests/tree -v -s
+    displayName: 'Running Tests'
