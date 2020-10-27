@@ -25,21 +25,20 @@ matrix:
       env:
         - PYTHON=3.6
         - TEST=true
-        - TEST_DIR="tests/base tests/cyl tests/tree"
+        - TEST_DIR="tests/base tests/cyl tests/tree tests/docs"
     - name: "Python 3.7 - base, cyl, tree"
       os: linux
       env:
         - PYTHON=3.7
         - TEST=true
         - TEST_DIR="tests/base tests/cyl tests/tree"
-
-    # test the docs code on 3.6, 3.7
-    - name: "Python 3.6 - docs"
+    - name: "Python 3.8 - base, cyl, tree"
       os: linux
       env:
-        - PYTHON=3.6
+        - PYTHON=3.8
         - TEST=true
-        - TEST_DIR="tests/docs"
+        - TEST_DIR="tests/base tests/cyl tests/tree tests/docs"
+
     # ... and delploy the docs on 3.7
     - name: "Python 3.7 - docs"
       os: linux

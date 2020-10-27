@@ -8,46 +8,32 @@ provide extra functionality that different finite volume meshes can inherrit.
 AVAILABLE_MIXIN_CLASSES = []
 
 try:
-    from .vtkModule import InterfaceVTK, InterfaceTensorread_vtk
+    from .vtk_mod import InterfaceVTK, InterfaceTensorread_vtk
+
     AVAILABLE_MIXIN_CLASSES.append(InterfaceVTK)
 except ImportError as err:
     pass
 
 try:
-    from .omfModule import InterfaceOMF
+    from .omf_mod import InterfaceOMF
+
     AVAILABLE_MIXIN_CLASSES.append(InterfaceOMF)
 except ImportError as err:
     pass
 
+# keep this one last in defaults in case anything else wants to overwrite
+# plot commands
+try:
+    from .mpl_mod import Slicer, InterfaceMPL
 
-# NOTE: this is what we need to use when Python 2 support is dropped
-#       This throws a syntax error on Python 2
+    AVAILABLE_MIXIN_CLASSES.append(InterfaceMPL)
+except ImportError as err:
+    pass
+
 # # Python 3 friendly
-# class InterfaceMixins(*AVAILABLE_MIXIN_CLASSES):
-#     """This class handles all the avaialble mixins that can be inherrited
-#     directly onto ``discretize.BaseMesh``
-#     """
-#     pass
+class InterfaceMixins(*AVAILABLE_MIXIN_CLASSES):
+    """This class handles all the avaialble mixins that can be inherrited
+    directly onto ``discretize.BaseMesh``
+    """
 
-# Python 2 is tedious
-# NOTE: this will have to be updated anytime a mixin is added
-# NOTE: this should be deleted when Python 2 support is dropped
-if len(AVAILABLE_MIXIN_CLASSES) == 0:
-    class InterfaceMixins():
-        """This class handles all the avaialble mixins that can be inherrited
-        directly onto ``discretize.BaseMesh``
-        """
-        pass
-elif len(AVAILABLE_MIXIN_CLASSES) == 1:
-    class InterfaceMixins(AVAILABLE_MIXIN_CLASSES[0]):
-        """This class handles all the avaialble mixins that can be inherrited
-        directly onto ``discretize.BaseMesh``
-        """
-        pass
-elif len(AVAILABLE_MIXIN_CLASSES) == 2:
-    class InterfaceMixins(AVAILABLE_MIXIN_CLASSES[0],
-                          AVAILABLE_MIXIN_CLASSES[1]):
-        """This class handles all the avaialble mixins that can be inherrited
-        directly onto ``discretize.BaseMesh``
-        """
-        pass
+    pass

@@ -19,7 +19,7 @@ def run(plotIt=True):
 
     def refine(cell):
         xyz = cell.center
-        dist = ((xyz - [0.25, 0.25])**2).sum()**0.5
+        dist = ((xyz - [0.25, 0.25]) ** 2).sum() ** 0.5
         if dist < 0.25:
             return 3
         return 2
@@ -27,15 +27,18 @@ def run(plotIt=True):
     M.refine(refine)
     if plotIt:
         M.plotGrid(nodes=True, centers=True, faces_x=True)
-        plt.legend((
-            'Grid',
-            'Cell Centers',
-            'Nodes',
-            'Hanging Nodes',
-            'X faces',
-            'Hanging X faces'
-        ))
+        plt.legend(
+            (
+                "Grid",
+                "Cell Centers",
+                "Nodes",
+                "Hanging Nodes",
+                "X faces",
+                "Hanging X faces",
+            )
+        )
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     run()
     plt.show()

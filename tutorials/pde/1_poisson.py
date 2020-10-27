@@ -106,18 +106,18 @@ from discretize.utils import sdiag
 
 # Create a tensor mesh
 h = np.ones(75)
-mesh = TensorMesh([h, h], 'CC')
+mesh = TensorMesh([h, h], "CC")
 
 # Create system
 DIV = mesh.faceDiv  # Faces to cell centers divergence
 Mf_inv = mesh.getFaceInnerProduct(invMat=True)
 Mc = sdiag(mesh.vol)
-A = Mc*DIV*Mf_inv*DIV.T*Mc
+A = Mc * DIV * Mf_inv * DIV.T * Mc
 
 # Define RHS (charge distributions at cell centers)
 xycc = mesh.gridCC
 kneg = (xycc[:, 0] == -10) & (xycc[:, 1] == 0)  # -ve charge distr. at (-10, 0)
-kpos = (xycc[:, 0] == 10) & (xycc[:, 1] == 0)   # +ve charge distr. at (10, 0)
+kpos = (xycc[:, 0] == 10) & (xycc[:, 1] == 0)  # +ve charge distr. at (10, 0)
 
 rho = np.zeros(mesh.nC)
 rho[kneg] = -1
@@ -125,23 +125,24 @@ rho[kpos] = 1
 
 # LU factorization and solve
 AinvM = SolverLU(A)
-phi = AinvM*rho
+phi = AinvM * rho
 
 # Compute electric fields
-E = Mf_inv*DIV.T*Mc*phi
+E = Mf_inv * DIV.T * Mc * phi
 
 # Plotting
 fig = plt.figure(figsize=(14, 4))
 
 ax1 = fig.add_subplot(131)
-mesh.plotImage(rho, v_type='CC', ax=ax1)
-ax1.set_title('Charge Density')
+mesh.plotImage(rho, v_type="CC", ax=ax1)
+ax1.set_title("Charge Density")
 
 ax2 = fig.add_subplot(132)
-mesh.plotImage(phi, v_type='CC', ax=ax2)
-ax2.set_title('Electric Potential')
+mesh.plotImage(phi, v_type="CC", ax=ax2)
+ax2.set_title("Electric Potential")
 
 ax3 = fig.add_subplot(133)
-mesh.plotImage(E, ax=ax3, v_type='F', view='vec',
-               stream_opts={'color': 'w', 'density': 1.0})
-ax3.set_title('Electric Fields')
+mesh.plotImage(
+    E, ax=ax3, v_type="F", view="vec", stream_opts={"color": "w", "density": 1.0}
+)
+ax3.set_title("Electric Fields")

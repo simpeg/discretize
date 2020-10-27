@@ -178,78 +178,74 @@ from discretize.utils import sdiag, mkvc
 
 # Create a tensor mesh
 h = np.ones(75)
-mesh = TensorMesh([h, h], 'CC')
+mesh = TensorMesh([h, h], "CC")
 
 # Define a divergence free vector field on faces
 faces_x = mesh.gridFx
 faces_y = mesh.gridFy
 
-r_x = np.sqrt(np.sum(faces_x**2, axis=1))
-r_y = np.sqrt(np.sum(faces_y**2, axis=1))
+r_x = np.sqrt(np.sum(faces_x ** 2, axis=1))
+r_y = np.sqrt(np.sum(faces_y ** 2, axis=1))
 
-ux = 0.5*(-faces_x[:, 1]/r_x) * (1 + np.tanh(0.15*(28. - r_x)))
-uy = 0.5*(faces_y[:, 0]/r_y) * (1 + np.tanh(0.15*(28. - r_y)))
+ux = 0.5 * (-faces_x[:, 1] / r_x) * (1 + np.tanh(0.15 * (28.0 - r_x)))
+uy = 0.5 * (faces_y[:, 0] / r_y) * (1 + np.tanh(0.15 * (28.0 - r_y)))
 
-u = 10.*np.r_[ux, uy]  # Maximum velocity is 10 m/s
+u = 10.0 * np.r_[ux, uy]  # Maximum velocity is 10 m/s
 
 # Define vector q where s0 = 1 in our analytic source term
 xycc = mesh.gridCC
-k = (xycc[:, 0]==0) & (xycc[:, 1]==-15)   # source at (0, -15)
+k = (xycc[:, 0] == 0) & (xycc[:, 1] == -15)  # source at (0, -15)
 
 q = np.zeros(mesh.nC)
 q[k] = 1
 
 # Define diffusivity within each cell
-a = mkvc(8.*np.ones(mesh.nC))
+a = mkvc(8.0 * np.ones(mesh.nC))
 
 # Define the matrix M
-Afc = mesh.dim*mesh.aveF2CC  # modified averaging operator to sum dot product
+Afc = mesh.dim * mesh.aveF2CC  # modified averaging operator to sum dot product
 Mf_inv = mesh.getFaceInnerProduct(invMat=True)
 Mc = sdiag(mesh.vol)
-Mc_inv = sdiag(1/mesh.vol)
+Mc_inv = sdiag(1 / mesh.vol)
 Mf_alpha_inv = mesh.getFaceInnerProduct(a, invProp=True, invMat=True)
 
-mesh.setCellGradBC(['neumann', 'neumann'])  # Set Neumann BC
+mesh.setCellGradBC(["neumann", "neumann"])  # Set Neumann BC
 G = mesh.cellGrad
 D = mesh.faceDiv
 
-M = - D*Mf_alpha_inv*G*Mc + Afc*sdiag(u)*Mf_inv*G*Mc
+M = -D * Mf_alpha_inv * G * Mc + Afc * sdiag(u) * Mf_inv * G * Mc
 
 
 # Set time stepping, initial conditions and final matricies
-dt = 0.02              # Step width
+dt = 0.02  # Step width
 p = np.zeros(mesh.nC)  # Initial conditions p(t=0)=0
 
 I = sdiag(np.ones(mesh.nC))  # Identity matrix
-B = I + dt*M
-s = Mc_inv*q
+B = I + dt * M
+s = Mc_inv * q
 
 Binv = SolverLU(B)
 
 
-
-
 # Plot the vector field
 fig = plt.figure(figsize=(15, 15))
-ax = 9*[None]
+ax = 9 * [None]
 
 ax[0] = fig.add_subplot(332)
 mesh.plotImage(
-    u, ax=ax[0], v_type='F', view='vec',
-    stream_opts={'color': 'w', 'density': 1.0},
-    clim=[0., 10.]
+    u,
+    ax=ax[0],
+    v_type="F",
+    view="vec",
+    stream_opts={"color": "w", "density": 1.0},
+    clim=[0.0, 10.0],
 )
-ax[0].set_title('Divergence free vector field')
+ax[0].set_title("Divergence free vector field")
 
 ax[1] = fig.add_subplot(333)
-ax[1].set_aspect(10, anchor='W')
-cbar = mpl.colorbar.ColorbarBase(
-    ax[1], orientation='vertical'
-)
-cbar.set_label(
-    'Velocity (m/s)',
-    rotation=270, labelpad=5
-)
+ax[1].set_aspect(10, anchor="W")
+cbar = mpl.colorbar.ColorbarBase(ax[1], orientation="vertical")
+cbar.set_label("Velocity (m/s)", rotation=270, labelpad=5)
 
 # Perform backward Euler and plot
 
@@ -257,11 +253,11 @@ n = 3
 
 for ii in range(300):
 
-    p = Binv*(p + s)
+    p = Binv * (p + s)
 
-    if ii+1 in (1, 25, 50, 100, 200, 300):
-        ax[n] = fig.add_subplot(3, 3, n+1)
-        mesh.plotImage(p, v_type='CC', ax=ax[n], pcolor_opts={'cmap': 'gist_heat_r'})
-        title_str = 'p at t = ' + str((ii+1)*dt) + ' s'
+    if ii + 1 in (1, 25, 50, 100, 200, 300):
+        ax[n] = fig.add_subplot(3, 3, n + 1)
+        mesh.plotImage(p, v_type="CC", ax=ax[n], pcolor_opts={"cmap": "gist_heat_r"})
+        title_str = "p at t = " + str((ii + 1) * dt) + " s"
         ax[n].set_title(title_str)
-        n = n+1
+        n = n + 1

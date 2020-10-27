@@ -80,23 +80,23 @@ mesh = TensorMesh([h, h, h])
 
 # Items required to perform u.T*(Me*Gn*phi)
 Me = mesh.getEdgeInnerProduct()  # Basic inner product matrix (edges)
-Gn = mesh.nodalGrad              # Nodes to edges gradient
+Gn = mesh.nodalGrad  # Nodes to edges gradient
 
 # Items required to perform u.T*(Mf*Gc*phi)
 Mf = mesh.getFaceInnerProduct()  # Basic inner product matrix (faces)
-mesh.setCellGradBC(['neumann', 'dirichlet', 'neumann'])  # Set boundary conditions
-Gc = mesh.cellGrad               # Cells to faces gradient
+mesh.setCellGradBC(["neumann", "dirichlet", "neumann"])  # Set boundary conditions
+Gc = mesh.cellGrad  # Cells to faces gradient
 
 # Plot Sparse Representation
 fig = plt.figure(figsize=(5, 6))
 
 ax1 = fig.add_subplot(121)
-ax1.spy(Me*Gn, markersize=0.5)
-ax1.set_title('Me*Gn')
+ax1.spy(Me * Gn, markersize=0.5)
+ax1.set_title("Me*Gn")
 
 ax2 = fig.add_subplot(122)
-ax2.spy(Mf*Gc, markersize=0.5)
-ax2.set_title('Mf*Gc')
+ax2.spy(Mf * Gc, markersize=0.5)
+ax2.set_title("Mf*Gc")
 
 #####################################################
 # Divergence
@@ -111,28 +111,28 @@ ax2.set_title('Mf*Gc')
 # The divergence defines a measure of the flux leaving/entering a volume. As a
 # result, it is natural for :math:`\vec{v}` to be a flux defined on cell faces.
 # The face divergence operator (:math:`\mathbf{D}`) maps from cell faces to
-# cell centers, therefore # we should define :math:`\psi` at cell centers. The 
+# cell centers, therefore # we should define :math:`\psi` at cell centers. The
 # inner product is ultimately computed using an inner product matrix
 # (:math:`\mathbf{M_f}`) for quantities living on cell faces, e.g.:
 #
 # .. math::
 #    (\psi , \nabla \cdot \vec{v}) \approx \mathbf{\psi^T} \textrm{diag} (\mathbf{vol} ) \mathbf{D v}
 #
-    
+
 # Make basic mesh
 h = np.ones(10)
 mesh = TensorMesh([h, h, h])
 
 # Items required to perform psi.T*(Mc*D*v)
-Mc = sdiag(mesh.vol)             # Basic inner product matrix (centers)
-D = mesh.faceDiv                 # Faces to centers divergence
+Mc = sdiag(mesh.vol)  # Basic inner product matrix (centers)
+D = mesh.faceDiv  # Faces to centers divergence
 
 # Plot sparse representation
 fig = plt.figure(figsize=(8, 5))
 
 ax1 = fig.add_subplot(111)
-ax1.spy(Mc*D, markersize=0.5)
-ax1.set_title('Mc*D', pad=20)
+ax1.spy(Mc * D, markersize=0.5)
+ax1.set_title("Mc*D", pad=20)
 
 #####################################################
 # Curl
@@ -146,7 +146,7 @@ ax1.set_title('Mc*D', pad=20)
 #
 # **Inner Product at Faces:**
 #
-# Let :math:`\vec{u}` denote a flux and let :math:`\vec{v}` denote a field. 
+# Let :math:`\vec{u}` denote a flux and let :math:`\vec{v}` denote a field.
 # In this case, it is natural for the flux :math:`\vec{u}` to live on cell
 # faces and for the field :math:`\vec{v}` to live on cell edges. The discrete
 # curl operator (:math:`\mathbf{C_e}`) in this case naturally maps from cell
@@ -159,7 +159,7 @@ ax1.set_title('Mc*D', pad=20)
 #
 # **Inner Product at Edges:**
 #
-# Now let :math:`\vec{u}` denote a field and let :math:`\vec{v}` denote a flux. 
+# Now let :math:`\vec{u}` denote a field and let :math:`\vec{v}` denote a flux.
 # Now it is natural for the :math:`\vec{u}` to live on cell edges
 # and for :math:`\vec{v}` to live on cell faces. We would like to compute the
 # inner product using an inner product matrix (:math:`\mathbf{M_e}`) for
@@ -178,28 +178,28 @@ mesh = TensorMesh([h, h, h])
 
 # Items required to perform u.T*(Mf*Ce*v)
 Mf = mesh.getFaceInnerProduct()  # Basic inner product matrix (faces)
-Ce = mesh.edgeCurl               # Edges to faces curl
+Ce = mesh.edgeCurl  # Edges to faces curl
 
 # Items required to perform u.T*(Me*Cf*v)
 Me = mesh.getEdgeInnerProduct()  # Basic inner product matrix (edges)
-Cf = mesh.edgeCurl.T             # Faces to edges curl (assumes Dirichlet)
-    
+Cf = mesh.edgeCurl.T  # Faces to edges curl (assumes Dirichlet)
+
 # Plot Sparse Representation
 fig = plt.figure(figsize=(9, 5))
 
 ax1 = fig.add_subplot(121)
-ax1.spy(Mf*Ce, markersize=0.5)
-ax1.set_title('Mf*Ce', pad=10)
+ax1.spy(Mf * Ce, markersize=0.5)
+ax1.set_title("Mf*Ce", pad=10)
 
 ax2 = fig.add_subplot(122)
-ax2.spy(Me*Cf, markersize=0.5)
-ax2.set_title('Me*Cf', pad=10)
+ax2.spy(Me * Cf, markersize=0.5)
+ax2.set_title("Me*Cf", pad=10)
 
 
 ###########################################################
 # Scalar Laplacian
 # ----------------
-# 
+#
 # Where :math:`\psi` and :math:`\phi` are scalar quantities, and the scalar
 # Laplacian :math:`\Delta^2 = \nabla \cdot \nabla`, we would like to
 # approximate the following inner product:
@@ -213,7 +213,7 @@ ax2.set_title('Me*Cf', pad=10)
 # .. math::
 #     \int_{\partial \Omega} \mathbf{n} \cdot ( \psi \nabla \phi ) \, da
 #     - \int_\Omega (\nabla \psi ) \cdot (\nabla \phi ) \, dv
-# 
+#
 # In this case, the surface integral can be eliminated if we can assume a
 # Neumann condition of :math:`\partial \phi/\partial n = 0` on the boundary.
 #
@@ -238,7 +238,7 @@ ax2.set_title('Me*Cf', pad=10)
 # .. math::
 #     (\psi , \nabla \cdot \nabla \phi) \approx \mathbf{\psi G_c^T M_f G_c \phi}
 #
-# 
+#
 
 # Make basic mesh
 h = np.ones(10)
@@ -246,20 +246,20 @@ mesh = TensorMesh([h, h, h])
 
 # Items required to perform psi.T*(Gn.T*Me*Gn*phi)
 Me = mesh.getEdgeInnerProduct()  # Basic inner product matrix (edges)
-Gn = mesh.nodalGrad              # Nodes to edges gradient
+Gn = mesh.nodalGrad  # Nodes to edges gradient
 
 # Items required to perform psi.T*(Gc.T*Mf*Gc*phi)
 Mf = mesh.getFaceInnerProduct()  # Basic inner product matrix (faces)
-mesh.setCellGradBC(['dirichlet','dirichlet','dirichlet'])
-Gc = mesh.cellGrad            # Centers to faces gradient
+mesh.setCellGradBC(["dirichlet", "dirichlet", "dirichlet"])
+Gc = mesh.cellGrad  # Centers to faces gradient
 
 # Plot Sparse Representation
 fig = plt.figure(figsize=(9, 4))
 
 ax1 = fig.add_subplot(121)
-ax1.spy(Gn.T*Me*Gn, markersize=0.5)
-ax1.set_title('Gn.T*Me*Gn', pad=5)
+ax1.spy(Gn.T * Me * Gn, markersize=0.5)
+ax1.set_title("Gn.T*Me*Gn", pad=5)
 
 ax2 = fig.add_subplot(122)
-ax2.spy(Gc.T*Mf*Gc, markersize=0.5)
-ax2.set_title('Gc.T*Mf*Gc', pad=5)
+ax2.spy(Gc.T * Mf * Gc, markersize=0.5)
+ax2.set_title("Gc.T*Mf*Gc", pad=5)

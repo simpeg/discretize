@@ -4,8 +4,6 @@ A class for converting ``discretize`` meshes to OMF objects
 
 import omf
 import numpy as np
-
-
 import discretize
 
 
@@ -14,7 +12,7 @@ def ravel_data_array(arr, nx, ny, nz):
     specification from ``discretize``/UBC formats
     """
     dim = (nz, ny, nx)
-    return np.reshape(arr, dim, order='C').ravel(order='F')
+    return np.reshape(arr, dim, order="C").ravel(order="F")
 
 
 def unravel_data_array(arr, nx, ny, nz):
@@ -22,12 +20,10 @@ def unravel_data_array(arr, nx, ny, nz):
     ``discretize``/UBC formats - the is the inverse of ``ravel_data_array``
     """
     dim = (nz, ny, nx)
-    return np.reshape(arr, dim, order='F').ravel(order='C')
+    return np.reshape(arr, dim, order="F").ravel(order="C")
 
 
 class InterfaceOMF(object):
-
-
     def _tensor_mesh_to_omf(mesh, models=None):
         """
         Constructs an :class:`omf.VolumeElement` object of this tensor mesh and
@@ -50,15 +46,29 @@ class InterfaceOMF(object):
         # Set tensors
         tensors = mesh.h
         if len(tensors) < 1:
-            raise RuntimeError("Your mesh is empty... fill it out before converting to OMF")
+            raise RuntimeError(
+                "Your mesh is empty... fill it out before converting to OMF"
+            )
         elif len(tensors) == 1:
             geometry.tensor_u = tensors[0]
-            geometry.tensor_v = np.array([0.0,])
-            geometry.tensor_w = np.array([0.0,])
+            geometry.tensor_v = np.array(
+                [
+                    0.0,
+                ]
+            )
+            geometry.tensor_w = np.array(
+                [
+                    0.0,
+                ]
+            )
         elif len(tensors) == 2:
             geometry.tensor_u = tensors[0]
             geometry.tensor_v = tensors[1]
-            geometry.tensor_w = np.array([0.0,])
+            geometry.tensor_w = np.array(
+                [
+                    0.0,
+                ]
+            )
         elif len(tensors) == 3:
             geometry.tensor_u = tensors[0]
             geometry.tensor_v = tensors[1]
@@ -75,31 +85,29 @@ class InterfaceOMF(object):
         geometry.validate()
         # Make the volume elemet (the OMF object)
         omfmesh = omf.VolumeElement(
-                geometry=geometry,
-            )
+            geometry=geometry,
+        )
         # Add model data arrays onto the cells of the mesh
         omfmesh.data = []
         for name, arr in models.items():
-            data = omf.ScalarData(name=name,
-                                  array=ravel_data_array(arr, mesh.nCx, mesh.nCy, mesh.nCz),
-                                  location='cells')
+            data = omf.ScalarData(
+                name=name,
+                array=ravel_data_array(arr, *mesh.shape_cells),
+                location="cells",
+            )
             omfmesh.data.append(data)
         # Validate to make sure a proper OMF object is returned to the user
         omfmesh.validate()
         return omfmesh
 
-
     def _tree_mesh_to_omf(mesh, models=None):
-        raise NotImplementedError('Not possible until OMF v2 is released.')
-
+        raise NotImplementedError("Not possible until OMF v2 is released.")
 
     def _curvilinear_mesh_to_omf(mesh, models=None):
-        raise NotImplementedError('Not currently possible.')
-
+        raise NotImplementedError("Not currently possible.")
 
     def _cyl_mesh_to_omf(mesh, models=None):
-        raise NotImplementedError('Not currently possible.')
-
+        raise NotImplementedError("Not currently possible.")
 
     def to_omf(mesh, models=None):
         """Convert this mesh object to it's proper ``omf`` data object with
@@ -115,23 +123,25 @@ class InterfaceOMF(object):
         # TODO: mesh.validate()
         converters = {
             # TODO: 'tree' : InterfaceOMF._tree_mesh_to_omf,
-            'tensor' : InterfaceOMF._tensor_mesh_to_omf,
+            "tensor": InterfaceOMF._tensor_mesh_to_omf,
             # TODO: 'curv' : InterfaceOMF._curvilinear_mesh_to_omf,
-            # TODO: 'CylMesh' : InterfaceOMF._cyl_mesh_to_omf,
-            }
+            # TODO: 'CylindricalMesh' : InterfaceOMF._cyl_mesh_to_omf,
+        }
         key = mesh._meshType.lower()
         try:
             convert = converters[key]
         except KeyError:
-            raise RuntimeError('Mesh type `{}` is not currently supported for OMF conversion.'.format(key))
+            raise RuntimeError(
+                "Mesh type `{}` is not currently supported for OMF conversion.".format(
+                    key
+                )
+            )
         # Convert the data object
         return convert(mesh, models=models)
 
-
     @staticmethod
     def _omf_volume_to_tensor(element):
-        """Convert an :class:`omf.VolumeElement` to :class:`discretize.TensorMesh`
-        """
+        """Convert an :class:`omf.VolumeElement` to :class:`discretize.TensorMesh`"""
         geometry = element.geometry
         h = [geometry.tensor_u, geometry.tensor_v, geometry.tensor_w]
         mesh = discretize.TensorMesh(h)
@@ -143,11 +153,12 @@ class InterfaceOMF(object):
         data_dict = {}
         for data in element.data:
             # NOTE: this is agnostic about data location - i.e. nodes vs cells
-            data_dict[data.name] = unravel_data_array(np.array(data.array), mesh.nCx, mesh.nCy, mesh.nCz)
+            data_dict[data.name] = unravel_data_array(
+                np.array(data.array), *mesh.shape_cells
+            )
 
         # Return TensorMesh and data dictionary
         return mesh, data_dict
-
 
     @staticmethod
     def from_omf(element):
@@ -157,12 +168,14 @@ class InterfaceOMF(object):
         """
         element.validate()
         converters = {
-            omf.VolumeElement.__name__ : InterfaceOMF._omf_volume_to_tensor,
-            }
+            omf.VolumeElement.__name__: InterfaceOMF._omf_volume_to_tensor,
+        }
         key = element.__class__.__name__
         try:
             convert = converters[key]
         except KeyError:
-            raise RuntimeError('OMF type `{}` is not currently supported for conversion.'.format(key))
+            raise RuntimeError(
+                "OMF type `{}` is not currently supported for conversion.".format(key)
+            )
         # Convert the data object
         return convert(element)

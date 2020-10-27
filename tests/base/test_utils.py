@@ -1,45 +1,59 @@
-from __future__ import print_function
 import unittest
 import numpy as np
 import scipy.sparse as sp
 from discretize.utils import (
-    sdiag, sub2ind, ndgrid, mkvc, isScalar,
-    inv2X2BlockDiagonal, inv3X3BlockDiagonal,
-    invPropertyTensor, makePropertyTensor, indexCube,
-    ind2sub, asArray_N_x_Dim, TensorType, Zero, Identity,
-    ExtractCoreMesh, active_from_xyz, mesh_builder_xyz, refine_tree_xyz,
-    meshTensor
+    sdiag,
+    sub2ind,
+    ndgrid,
+    mkvc,
+    isScalar,
+    inv2X2BlockDiagonal,
+    inv3X3BlockDiagonal,
+    invPropertyTensor,
+    makePropertyTensor,
+    indexCube,
+    ind2sub,
+    asArray_N_x_Dim,
+    TensorType,
+    Zero,
+    Identity,
+    ExtractCoreMesh,
+    active_from_xyz,
+    mesh_builder_xyz,
+    refine_tree_xyz,
+    meshTensor,
 )
-from discretize.Tests import checkDerivative
+from discretize.tests import checkDerivative
 import discretize
-import sys
+import matplotlib.pyplot as plt
 
 TOL = 1e-8
 
 
 class TestCheckDerivative(unittest.TestCase):
-
     def test_simplePass(self):
         def simplePass(x):
             return np.sin(x), sdiag(np.cos(x))
+
         passed = checkDerivative(simplePass, np.random.randn(5), plotIt=False)
         self.assertTrue(passed, True)
 
     def test_simpleFunction(self):
         def simpleFunction(x):
-            return np.sin(x), lambda xi: sdiag(np.cos(x))*xi
+            return np.sin(x), lambda xi: sdiag(np.cos(x)) * xi
+
         passed = checkDerivative(simpleFunction, np.random.randn(5), plotIt=False)
         self.assertTrue(passed, True)
 
     def test_simpleFail(self):
         def simpleFail(x):
             return np.sin(x), -sdiag(np.cos(x))
+
         passed = checkDerivative(simpleFail, np.random.randn(5), plotIt=False)
         self.assertTrue(not passed, True)
 
 
 class TestSequenceFunctions(unittest.TestCase):
-
     def setUp(self):
         self.a = np.array([1, 2, 3])
         self.b = np.array([1, 2])
@@ -47,7 +61,7 @@ class TestSequenceFunctions(unittest.TestCase):
 
     def test_mkvc1(self):
         x = mkvc(self.a)
-        self.assertTrue(x.shape, (3, ))
+        self.assertTrue(x.shape, (3,))
 
     def test_mkvc2(self):
         x = mkvc(self.a, 2)
@@ -69,9 +83,15 @@ class TestSequenceFunctions(unittest.TestCase):
     def test_ndgrid_3D(self):
         XYZ = ndgrid([self.a, self.b, self.c])
 
-        X1_test = np.array([1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3])
-        X2_test = np.array([1, 1, 1, 2, 2, 2, 1, 1, 1, 2, 2, 2, 1, 1, 1, 2, 2, 2, 1, 1, 1, 2, 2, 2])
-        X3_test = np.array([1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4])
+        X1_test = np.array(
+            [1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3]
+        )
+        X2_test = np.array(
+            [1, 1, 1, 2, 2, 2, 1, 1, 1, 2, 2, 2, 1, 1, 1, 2, 2, 2, 1, 1, 1, 2, 2, 2]
+        )
+        X3_test = np.array(
+            [1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4]
+        )
 
         self.assertTrue(np.all(XYZ[:, 0] == X1_test))
         self.assertTrue(np.all(XYZ[:, 1] == X2_test))
@@ -84,7 +104,9 @@ class TestSequenceFunctions(unittest.TestCase):
         self.assertTrue(np.all(sub2ind(x.shape, [0, 1]) == [5]))
         self.assertTrue(np.all(sub2ind(x.shape, [4, 1]) == [9]))
         self.assertTrue(np.all(sub2ind(x.shape, [[4, 1]]) == [9]))
-        self.assertTrue(np.all(sub2ind(x.shape, [[0, 0], [4, 0], [0, 1], [4, 1]]) == [0, 4, 5, 9]))
+        self.assertTrue(
+            np.all(sub2ind(x.shape, [[0, 0], [4, 0], [0, 1], [4, 1]]) == [0, 4, 5, 9])
+        )
 
     def test_ind2sub(self):
         x = np.ones((5, 2))
@@ -93,41 +115,65 @@ class TestSequenceFunctions(unittest.TestCase):
 
     def test_indexCube_2D(self):
         nN = np.array([3, 3])
-        self.assertTrue(np.all(indexCube('A', nN) == np.array([0, 1, 3, 4])))
-        self.assertTrue(np.all(indexCube('B', nN) == np.array([3, 4, 6, 7])))
-        self.assertTrue(np.all(indexCube('C', nN) == np.array([4, 5, 7, 8])))
-        self.assertTrue(np.all(indexCube('D', nN) == np.array([1, 2, 4, 5])))
+        self.assertTrue(np.all(indexCube("A", nN) == np.array([0, 1, 3, 4])))
+        self.assertTrue(np.all(indexCube("B", nN) == np.array([3, 4, 6, 7])))
+        self.assertTrue(np.all(indexCube("C", nN) == np.array([4, 5, 7, 8])))
+        self.assertTrue(np.all(indexCube("D", nN) == np.array([1, 2, 4, 5])))
 
     def test_indexCube_3D(self):
         nN = np.array([3, 3, 3])
-        self.assertTrue(np.all(indexCube('A', nN) == np.array([0, 1, 3, 4, 9, 10, 12, 13])))
-        self.assertTrue(np.all(indexCube('B', nN) == np.array([3, 4, 6, 7, 12, 13, 15, 16])))
-        self.assertTrue(np.all(indexCube('C', nN) == np.array([4, 5, 7, 8, 13, 14, 16, 17])))
-        self.assertTrue(np.all(indexCube('D', nN) == np.array([1, 2, 4, 5, 10, 11, 13, 14])))
-        self.assertTrue(np.all(indexCube('E', nN) == np.array([9, 10, 12, 13, 18, 19, 21, 22])))
-        self.assertTrue(np.all(indexCube('F', nN) == np.array([12, 13, 15, 16, 21, 22, 24, 25])))
-        self.assertTrue(np.all(indexCube('G', nN) == np.array([13, 14, 16, 17, 22, 23, 25, 26])))
-        self.assertTrue(np.all(indexCube('H', nN) == np.array([10, 11, 13, 14, 19, 20, 22, 23])))
+        self.assertTrue(
+            np.all(indexCube("A", nN) == np.array([0, 1, 3, 4, 9, 10, 12, 13]))
+        )
+        self.assertTrue(
+            np.all(indexCube("B", nN) == np.array([3, 4, 6, 7, 12, 13, 15, 16]))
+        )
+        self.assertTrue(
+            np.all(indexCube("C", nN) == np.array([4, 5, 7, 8, 13, 14, 16, 17]))
+        )
+        self.assertTrue(
+            np.all(indexCube("D", nN) == np.array([1, 2, 4, 5, 10, 11, 13, 14]))
+        )
+        self.assertTrue(
+            np.all(indexCube("E", nN) == np.array([9, 10, 12, 13, 18, 19, 21, 22]))
+        )
+        self.assertTrue(
+            np.all(indexCube("F", nN) == np.array([12, 13, 15, 16, 21, 22, 24, 25]))
+        )
+        self.assertTrue(
+            np.all(indexCube("G", nN) == np.array([13, 14, 16, 17, 22, 23, 25, 26]))
+        )
+        self.assertTrue(
+            np.all(indexCube("H", nN) == np.array([10, 11, 13, 14, 19, 20, 22, 23]))
+        )
 
     def test_invXXXBlockDiagonal(self):
         a = [np.random.rand(5, 1) for i in range(4)]
 
         B = inv2X2BlockDiagonal(*a)
 
-        A = sp.vstack((sp.hstack((sdiag(a[0]), sdiag(a[1]))),
-                       sp.hstack((sdiag(a[2]), sdiag(a[3])))))
+        A = sp.vstack(
+            (
+                sp.hstack((sdiag(a[0]), sdiag(a[1]))),
+                sp.hstack((sdiag(a[2]), sdiag(a[3]))),
+            )
+        )
 
-        Z2 = B*A - sp.identity(10)
+        Z2 = B * A - sp.identity(10)
         self.assertTrue(np.linalg.norm(Z2.todense().ravel(), 2) < TOL)
 
         a = [np.random.rand(5, 1) for i in range(9)]
         B = inv3X3BlockDiagonal(*a)
 
-        A = sp.vstack((sp.hstack((sdiag(a[0]), sdiag(a[1]),  sdiag(a[2]))),
-                       sp.hstack((sdiag(a[3]), sdiag(a[4]),  sdiag(a[5]))),
-                       sp.hstack((sdiag(a[6]), sdiag(a[7]),  sdiag(a[8])))))
+        A = sp.vstack(
+            (
+                sp.hstack((sdiag(a[0]), sdiag(a[1]), sdiag(a[2]))),
+                sp.hstack((sdiag(a[3]), sdiag(a[4]), sdiag(a[5]))),
+                sp.hstack((sdiag(a[6]), sdiag(a[7]), sdiag(a[8]))),
+            )
+        )
 
-        Z3 = B*A - sp.identity(15)
+        Z3 = B * A - sp.identity(15)
 
         self.assertTrue(np.linalg.norm(Z3.todense().ravel(), 2) < TOL)
 
@@ -146,9 +192,9 @@ class TestSequenceFunctions(unittest.TestCase):
             B1 = makePropertyTensor(M, b)
             B2 = invPropertyTensor(M, prop, returnMatrix=True)
 
-            Z = B1*A - sp.identity(M.nC*2)
+            Z = B1 * A - sp.identity(M.nC * 2)
             self.assertTrue(np.linalg.norm(Z.todense().ravel(), 2) < TOL)
-            Z = B2*A - sp.identity(M.nC*2)
+            Z = B2 * A - sp.identity(M.nC * 2)
             self.assertTrue(np.linalg.norm(Z.todense().ravel(), 2) < TOL)
 
     def test_TensorType2D(self):
@@ -202,18 +248,16 @@ class TestSequenceFunctions(unittest.TestCase):
             B1 = makePropertyTensor(M, b)
             B2 = invPropertyTensor(M, prop, returnMatrix=True)
 
-            Z = B1*A - sp.identity(M.nC*3)
+            Z = B1 * A - sp.identity(M.nC * 3)
             self.assertTrue(np.linalg.norm(Z.todense().ravel(), 2) < TOL)
-            Z = B2*A - sp.identity(M.nC*3)
+            Z = B2 * A - sp.identity(M.nC * 3)
             self.assertTrue(np.linalg.norm(Z.todense().ravel(), 2) < TOL)
 
     def test_isScalar(self):
-        self.assertTrue(isScalar(1.))
+        self.assertTrue(isScalar(1.0))
         self.assertTrue(isScalar(1))
         self.assertTrue(isScalar(1j))
-        if sys.version_info < (3, ):
-            self.assertTrue(isScalar(long(1)))
-        self.assertTrue(isScalar(np.r_[1.]))
+        self.assertTrue(isScalar(np.r_[1.0]))
         self.assertTrue(isScalar(np.r_[1]))
         self.assertTrue(isScalar(np.r_[1j]))
 
@@ -229,7 +273,7 @@ class TestSequenceFunctions(unittest.TestCase):
         self.assertTrue(np.all(true == listArray))
         self.assertTrue(true.shape == listArray.shape)
 
-        listArray = asArray_N_x_Dim(np.array([[1, 2, 3.]]), 3)
+        listArray = asArray_N_x_Dim(np.array([[1, 2, 3.0]]), 3)
         self.assertTrue(np.all(true == listArray))
         self.assertTrue(true.shape == listArray.shape)
 
@@ -241,7 +285,6 @@ class TestSequenceFunctions(unittest.TestCase):
 
 
 class TestZero(unittest.TestCase):
-
     def test_zero(self):
         z = Zero()
         assert z == 0
@@ -255,9 +298,9 @@ class TestZero(unittest.TestCase):
         assert z + 3 + z == 3
         assert z - 3 == -3
         assert z - 3 - z == -3
-        assert 3*z == 0
-        assert z*3 == 0
-        assert z/3 == 0
+        assert 3 * z == 0
+        assert z * 3 == 0
+        assert z / 3 == 0
 
         a = 1
         a += z
@@ -265,17 +308,17 @@ class TestZero(unittest.TestCase):
         a = 1
         a += z
         assert a == 1
-        self.assertRaises(ZeroDivisionError, lambda: 3/z)
+        self.assertRaises(ZeroDivisionError, lambda: 3 / z)
 
         assert mkvc(z) == 0
-        assert sdiag(z)*a == 0
+        assert sdiag(z) * a == 0
         assert z.T == 0
         assert z.transpose() == 0
 
     def test_mat_zero(self):
         z = Zero()
         S = sdiag(np.r_[2, 3])
-        assert S*z == 0
+        assert S * z == 0
 
     def test_numpy_multiply(self):
         z = Zero()
@@ -301,14 +344,14 @@ class TestZero(unittest.TestCase):
         assert o <= -1
         assert not (o > -1)
         assert o >= -1
-        assert -1.*(-o)*o == -o
+        assert -1.0 * (-o) * o == -o
         o = Identity()
         assert +o == o
         assert -o == -o
-        assert o*3 == 3
-        assert -o*3 == -3
-        assert -o*o == -1
-        assert -o*o*-o == 1
+        assert o * 3 == 3
+        assert -o * 3 == -3
+        assert -o * o == -1
+        assert -o * o * -o == 1
         assert -o + 3 == 2
         assert 3 + -o == 2
 
@@ -317,12 +360,12 @@ class TestZero(unittest.TestCase):
         assert 3 - -o == 4
         assert 3 - o == 2
 
-        assert o//2 == 0
-        assert o/2. == 0.5
-        assert -o//2 == -1
-        assert -o/2. == -0.5
-        assert 2/o == 2
-        assert 2/-o == -2
+        assert o // 2 == 0
+        assert o / 2.0 == 0.5
+        assert -o // 2 == -1
+        assert -o / 2.0 == -0.5
+        assert 2 / o == 2
+        assert 2 / -o == -2
 
         assert o.T == 1
         assert o.transpose() == 1
@@ -339,16 +382,16 @@ class TestZero(unittest.TestCase):
         check(o * S, [[2, 0], [0, 3]])
         check(S * -o, [[-2, 0], [0, -3]])
         check(-o * S, [[-2, 0], [0, -3]])
-        check(S/o, [[2, 0], [0, 3]])
-        check(S/-o, [[-2, 0], [0, -3]])
-        self.assertRaises(NotImplementedError, lambda: o/S)
+        check(S / o, [[2, 0], [0, 3]])
+        check(S / -o, [[-2, 0], [0, -3]])
+        self.assertRaises(NotImplementedError, lambda: o / S)
 
         check(S + o, [[3, 0], [0, 4]])
         check(o + S, [[3, 0], [0, 4]])
         check(S - o, [[1, 0], [0, 2]])
 
-        check(S + - o, [[1, 0], [0, 2]])
-        check(- o + S, [[1, 0], [0, 2]])
+        check(S + -o, [[1, 0], [0, 2]])
+        check(-o + S, [[1, 0], [0, 2]])
 
     def test_mat_shape(self):
         o = Identity()
@@ -363,36 +406,35 @@ class TestZero(unittest.TestCase):
 
     def test_numpy_one(self):
         o = Identity()
-        n = np.r_[2., 3]
+        n = np.r_[2.0, 3]
 
-        assert np.all(n+1 == n+o)
-        assert np.all(1+n == o+n)
-        assert np.all(n-1 == n-o)
-        assert np.all(1-n == o-n)
-        assert np.all(n/1 == n/o)
-        assert np.all(n/-1 == n/-o)
-        assert np.all(1/n == o/n)
-        assert np.all(-1/n == -o/n)
-        assert np.all(n*1 == n*o)
-        assert np.all(n*-1 == n*-o)
-        assert np.all(1*n == o*n)
-        assert np.all(-1*n == -o*n)
+        assert np.all(n + 1 == n + o)
+        assert np.all(1 + n == o + n)
+        assert np.all(n - 1 == n - o)
+        assert np.all(1 - n == o - n)
+        assert np.all(n / 1 == n / o)
+        assert np.all(n / -1 == n / -o)
+        assert np.all(1 / n == o / n)
+        assert np.all(-1 / n == -o / n)
+        assert np.all(n * 1 == n * o)
+        assert np.all(n * -1 == n * -o)
+        assert np.all(1 * n == o * n)
+        assert np.all(-1 * n == -o * n)
 
     def test_both(self):
         z = Zero()
         o = Identity()
-        assert o*z == 0
-        assert o*z + o == 1
-        assert o-z == 1
+        assert o * z == 0
+        assert o * z + o == 1
+        assert o - z == 1
 
 
 class TestMeshUtils(unittest.TestCase):
-
     def test_ExtractCoreMesh(self):
 
         # 1D Test on TensorMesh
-        meshtest1d = discretize.TensorMesh([[(50., 10)]])
-        xzlim1d = np.r_[[[0., 250.]]]
+        meshtest1d = discretize.TensorMesh([[(50.0, 10)]])
+        xzlim1d = np.r_[[[0.0, 250.0]]]
         actind1d, meshCore1d = ExtractCoreMesh(xzlim1d, meshtest1d)
 
         self.assertEqual(len(actind1d), meshtest1d.nC)
@@ -401,8 +443,8 @@ class TestMeshUtils(unittest.TestCase):
         self.assertLess(meshCore1d.vectorCCx.max(), xzlim1d[0, :].max())
 
         # 2D Test on TensorMesh
-        meshtest2d = discretize.TensorMesh([[(50., 10)], [(25., 10)]])
-        xzlim2d = xyzlim = np.r_[[[0., 200.], [0., 200.]]]
+        meshtest2d = discretize.TensorMesh([[(50.0, 10)], [(25.0, 10)]])
+        xzlim2d = xyzlim = np.r_[[[0.0, 200.0], [0.0, 200.0]]]
         actind2d, meshCore2d = ExtractCoreMesh(xzlim2d, meshtest2d)
 
         self.assertEqual(len(actind2d), meshtest2d.nC)
@@ -413,8 +455,8 @@ class TestMeshUtils(unittest.TestCase):
         self.assertLess(meshCore2d.vectorCCy.max(), xzlim2d[1, :].max())
 
         # 3D Test on TensorMesh
-        meshtest3d = discretize.TensorMesh([[(50., 10)], [(25., 10)], [(5., 40)]])
-        xzlim3d = np.r_[[[0., 250.], [0., 200.], [0., 150]]]
+        meshtest3d = discretize.TensorMesh([[(50.0, 10)], [(25.0, 10)], [(5.0, 40)]])
+        xzlim3d = np.r_[[[0.0, 250.0], [0.0, 200.0], [0.0, 150]]]
         actind3d, meshCore3d = ExtractCoreMesh(xzlim3d, meshtest3d)
 
         self.assertEqual(len(actind3d), meshtest3d.nC)
@@ -432,19 +474,18 @@ class TestMeshUtils(unittest.TestCase):
         [xx, yy] = np.meshgrid(np.linspace(-200, 200, 50), np.linspace(-200, 200, 50))
         b = 50
         A = 50
-        zz = A * np.exp(-0.5 * ((xx / b) ** 2. + (yy / b) ** 2.))
+        zz = A * np.exp(-0.5 * ((xx / b) ** 2.0 + (yy / b) ** 2.0))
 
-        h = [5., 5., 5.]
+        h = [5.0, 5.0, 5.0]
 
         # Test 1D Mesh
         topo1D = zz[25, :].ravel()
-        mesh1D = discretize.TensorMesh(
-            [np.ones(10) * 20],
-            x0='C'
-        )
+        mesh1D = discretize.TensorMesh([np.ones(10) * 20], x0="C")
 
-        indtopoCC = active_from_xyz(mesh1D, topo1D, grid_reference='CC', method='nearest')
-        indtopoN = active_from_xyz(mesh1D, topo1D, grid_reference='N', method='nearest')
+        indtopoCC = active_from_xyz(
+            mesh1D, topo1D, grid_reference="CC", method="nearest"
+        )
+        indtopoN = active_from_xyz(mesh1D, topo1D, grid_reference="N", method="nearest")
 
         self.assertEqual(indtopoCC.sum(), 3)
         self.assertEqual(indtopoN.sum(), 2)
@@ -452,29 +493,49 @@ class TestMeshUtils(unittest.TestCase):
         # Test 2D Tensor mesh
         topo2D = np.c_[xx[25, :].ravel(), zz[25, :].ravel()]
 
-        mesh_tensor = discretize.TensorMesh([
-            [(h[0], 24)],
-            [(h[1], 20)]
-        ],
-            x0='CC')
+        mesh_tensor = discretize.TensorMesh([[(h[0], 24)], [(h[1], 20)]], x0="CC")
 
-        indtopoCC = active_from_xyz(mesh_tensor, topo2D, grid_reference='CC', method='nearest')
-        indtopoN = active_from_xyz(mesh_tensor, topo2D, grid_reference='N', method='nearest')
+        indtopoCC = active_from_xyz(
+            mesh_tensor, topo2D, grid_reference="CC", method="nearest"
+        )
+        indtopoN = active_from_xyz(
+            mesh_tensor, topo2D, grid_reference="N", method="nearest"
+        )
+
+        self.assertEqual(indtopoCC.sum(), 434)
+        self.assertEqual(indtopoN.sum(), 412)
+
+        # test 2D Curvilinear mesh
+        nodes_x = mesh_tensor.gridN[:, 0].reshape(mesh_tensor.vnN, order="F")
+        nodes_y = mesh_tensor.gridN[:, 1].reshape(mesh_tensor.vnN, order="F")
+        mesh_curvi = discretize.CurvilinearMesh([nodes_x, nodes_y])
+
+        indtopoCC = active_from_xyz(
+            mesh_curvi, topo2D, grid_reference="CC", method="nearest"
+        )
+        indtopoN = active_from_xyz(
+            mesh_curvi, topo2D, grid_reference="N", method="nearest"
+        )
 
         self.assertEqual(indtopoCC.sum(), 434)
         self.assertEqual(indtopoN.sum(), 412)
 
         # Test 2D Tree mesh
-        mesh_tree = mesh_builder_xyz(topo2D, h[:2], mesh_type='TREE')
+        mesh_tree = mesh_builder_xyz(topo2D, h[:2], mesh_type="TREE")
         mesh_tree = refine_tree_xyz(
-            mesh_tree, topo2D,
+            mesh_tree,
+            topo2D,
             method="surface",
             octree_levels=[1],
             octree_levels_padding=None,
-            finalize=True
+            finalize=True,
         )
-        indtopoCC = active_from_xyz(mesh_tree, topo2D, grid_reference='CC', method='nearest')
-        indtopoN = active_from_xyz(mesh_tree, topo2D, grid_reference='N', method='nearest')
+        indtopoCC = active_from_xyz(
+            mesh_tree, topo2D, grid_reference="CC", method="nearest"
+        )
+        indtopoN = active_from_xyz(
+            mesh_tree, topo2D, grid_reference="N", method="nearest"
+        )
 
         self.assertEqual(indtopoCC.sum(), 167)
         self.assertEqual(indtopoN.sum(), 119)
@@ -482,30 +543,52 @@ class TestMeshUtils(unittest.TestCase):
         # Test 3D Tensor meshes
         topo3D = np.c_[xx.ravel(), yy.ravel(), zz.ravel()]
 
-        mesh_tensor = discretize.TensorMesh([
-            [(h[0], 24)],
-            [(h[1], 20)],
-            [(h[2], 30)]
-        ],
-            x0='CCC')
+        mesh_tensor = discretize.TensorMesh(
+            [[(h[0], 24)], [(h[1], 20)], [(h[2], 30)]], x0="CCC"
+        )
 
-        indtopoCC = active_from_xyz(mesh_tensor, topo3D, grid_reference='CC', method='nearest')
-        indtopoN = active_from_xyz(mesh_tensor, topo3D, grid_reference='N', method='nearest')
+        indtopoCC = active_from_xyz(
+            mesh_tensor, topo3D, grid_reference="CC", method="nearest"
+        )
+        indtopoN = active_from_xyz(
+            mesh_tensor, topo3D, grid_reference="N", method="nearest"
+        )
+
+        self.assertEqual(indtopoCC.sum(), 10496)
+        self.assertEqual(indtopoN.sum(), 10084)
+
+        # test 3D Curvilinear mesh
+        nodes_x = mesh_tensor.gridN[:, 0].reshape(mesh_tensor.vnN, order="F")
+        nodes_y = mesh_tensor.gridN[:, 1].reshape(mesh_tensor.vnN, order="F")
+        nodes_z = mesh_tensor.gridN[:, 2].reshape(mesh_tensor.vnN, order="F")
+        mesh_curvi = discretize.CurvilinearMesh([nodes_x, nodes_y, nodes_z])
+
+        indtopoCC = active_from_xyz(
+            mesh_curvi, topo3D, grid_reference="CC", method="nearest"
+        )
+        indtopoN = active_from_xyz(
+            mesh_curvi, topo3D, grid_reference="N", method="nearest"
+        )
 
         self.assertEqual(indtopoCC.sum(), 10496)
         self.assertEqual(indtopoN.sum(), 10084)
 
         # Test 3D Tree mesh
-        mesh_tree = mesh_builder_xyz(topo3D, h, mesh_type='TREE')
+        mesh_tree = mesh_builder_xyz(topo3D, h, mesh_type="TREE")
         mesh_tree = refine_tree_xyz(
-            mesh_tree, topo3D,
+            mesh_tree,
+            topo3D,
             method="surface",
             octree_levels=[1],
             octree_levels_padding=None,
-            finalize=True
+            finalize=True,
         )
-        indtopoCC = active_from_xyz(mesh_tree, topo3D, grid_reference='CC', method='nearest')
-        indtopoN = active_from_xyz(mesh_tree, topo3D, grid_reference='N', method='nearest')
+        indtopoCC = active_from_xyz(
+            mesh_tree, topo3D, grid_reference="CC", method="nearest"
+        )
+        indtopoN = active_from_xyz(
+            mesh_tree, topo3D, grid_reference="N", method="nearest"
+        )
 
         self.assertEqual(indtopoCC.sum(), 6299)
         self.assertEqual(indtopoN.sum(), 4639)
@@ -524,29 +607,27 @@ class TestMeshUtils(unittest.TestCase):
         hz = [(dz, npad_z, -exp_z), (dz, ncz), (dz, npad_z, exp_z)]
 
         # A value of 1 is used to define the discretization in phi for this case.
-        mesh_cyl = discretize.CylMesh([hr, 1, hz], x0='00C')
+        mesh_cyl = discretize.CylMesh([hr, 1, hz], x0="00C")
 
-        indtopoCC = active_from_xyz(mesh_cyl, topo3D, grid_reference='CC', method='nearest')
-        indtopoN = active_from_xyz(mesh_cyl, topo3D, grid_reference='N', method='nearest')
+        indtopoCC = active_from_xyz(
+            mesh_cyl, topo3D, grid_reference="CC", method="nearest"
+        )
+        indtopoN = active_from_xyz(
+            mesh_cyl, topo3D, grid_reference="N", method="nearest"
+        )
 
         self.assertEqual(indtopoCC.sum(), 183)
         self.assertEqual(indtopoN.sum(), 171)
 
-        htheta = meshTensor([(1., 4)])
-        htheta = htheta * 2*np.pi / htheta.sum()
+        htheta = meshTensor([(1.0, 4)])
+        htheta = htheta * 2 * np.pi / htheta.sum()
 
-        mesh_cyl2 = discretize.CylMesh([hr, htheta, hz], x0='00C')
+        mesh_cyl2 = discretize.CylMesh([hr, htheta, hz], x0="00C")
         with self.assertRaises(NotImplementedError):
-            indtopoCC = active_from_xyz(mesh_cyl2, topo3D, grid_reference='CC', method='nearest')
-
-        def gridIt(h): return [np.cumsum(np.r_[0, x]) for x in h]
-
-        X, Y = ndgrid(gridIt([[5.]*24, [5.]*20]), vector=False)
-
-        mesh_curvi = discretize.CurvilinearMesh([X, Y])
-        with self.assertRaises(TypeError):
-            indTopoCC = active_from_xyz(mesh_curvi, topo3D, grid_reference='CC', method='nearest')
+            indtopoCC = active_from_xyz(
+                mesh_cyl2, topo3D, grid_reference="CC", method="nearest"
+            )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
