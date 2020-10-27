@@ -18,7 +18,6 @@ jobs:
 
   - script: |
       conda create --yes --quiet --name test python=$(python.version)
-      conda env list
     displayName: Create Anaconda environment
 
   - script: |
@@ -50,8 +49,7 @@ jobs:
   - script: |
       eval "$(conda shell.bash hook)"
       conda activate test
-      git clone --depth 1 git://github.com/pyvista/gl-ci-helpers.git
-      ./ci/setup_headless_display.sh
+      ./.ci/setup_headless_display.sh
       pytest tests/docs --cov-config .coveragerc --cov=discretize -v -s
     displayName: 'Testing examples, tutorials, and doc build'
 
