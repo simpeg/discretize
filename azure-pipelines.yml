@@ -28,14 +28,16 @@ stages:
             conda install --yes --quiet -c conda-forge numpy scipy matplotlib cython vtk properties vectormath pyvista
             pip install -r requirements_dev.txt
             pip install .
-            git clone --depth 1 git://github.com/pyvista/gl-ci-helpers.git
           displayName: building and installing deps
         - script: |
             eval "$(conda shell.bash hook)"
             conda activate test
-            source ./gl-ci-helpers/travis/setup_headless_display.sh
+            .ci/setup_headless_display.sh
             cd docs
             make html
+            cd ..
+            pip install doctr
+            doctr deploy --built-docs ./docs/_build/html/ --deploy-repo simpeg/discretize-docs ./en/master/
           displayName: building documentation
         - script: |
             export TWINE_USERNAME=$(twine.username)
