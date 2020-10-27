@@ -4,14 +4,14 @@ trigger:
     - '*'
 
 stages:
-#- stage: Testing
-  #jobs:
-    #- template: ./.azure-pipelines/azure-pipelines-linux.yml
-    #- template: ./.azure-pipelines/azure-pipelines-osx.yml
-    #- template: ./.azure-pipelines/azure-pipelines-win.yml
+- stage: Testing
+  jobs:
+    - template: ./.azure-pipelines/azure-pipelines-linux.yml
+    - template: ./.azure-pipelines/azure-pipelines-osx.yml
+    - template: ./.azure-pipelines/azure-pipelines-win.yml
 
 - stage: Deploy
-  # condition: and(succeeded(), startsWith(variables['build.sourceBranch'], 'refs/tags/'))
+  condition: and(succeeded(), startsWith(variables['build.sourceBranch'], 'refs/tags/'))
   jobs:
     - job:
       displayName: Deploy Docs and source
