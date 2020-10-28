@@ -1,6 +1,6 @@
 jobs:
 - job:
-  displayName: Testing on Ubuntu
+  displayName: Ubuntu
   pool:
     vmImage: ubuntu-latest
   variables:

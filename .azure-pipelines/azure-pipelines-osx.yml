@@ -1,6 +1,6 @@
 jobs:
 - job:
-  displayName: Testing on Mac
+  displayName: Mac
   pool:
     vmImage: macOS-latest
   strategy:
