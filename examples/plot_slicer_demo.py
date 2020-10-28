@@ -7,7 +7,7 @@ The example demonstrates the `plot_3d_slicer`
 - contributed by `@prisae <https://github.com/prisae>`_
 
 Using the inversion result from the example notebook
-`plot_laguna_del_maule_inversion.ipynb <http://docs.simpeg.xyz/content/examples/04-grav/plot_laguna_del_maule_inversion.html#sphx-glr-content-examples-04-grav-plot-laguna-del-maule-inversion-py>`_
+`plot_laguna_del_maule_inversion.ipynb <http://docs.simpeg.xyz/content/examples/20-published/plot_laguna_del_maule_inversion.html>`_
 
 In the notebook, you have to use :code:`%matplotlib notebook`.
 """
@@ -19,11 +19,6 @@ import numpy as np
 import tarfile
 import matplotlib.pyplot as plt
 from matplotlib.colors import SymLogNorm
-import sys
-
-if sys.version_info[0] < 3:
-    print("This example only runs on Python 3")
-    sys.exit(0)
 
 ###############################################################################
 # Download and load data
@@ -120,27 +115,27 @@ beautify(
 )
 
 ###############################################################################
-# 1.4 Set `clim`, use `pcolorOpts` to show grid lines
+# 1.4 Set `clim`, use `pcolor_opts` to show grid lines
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 mesh.plot_3d_slicer(
-    Lpout, clim=[-0.4, 0.2], pcolorOpts={'edgecolor': 'k', 'linewidth': 0.1}
+    Lpout, clim=[-0.4, 0.2], pcolor_opts={'edgecolor': 'k', 'linewidth': 0.1}
 )
 beautify(
     "mesh.plot_3d_slicer(\nLpout, clim=[-0.4, 0.2], "
-    "pcolorOpts={'edgecolor': 'k', 'linewidth': 0.1})"
+    "pcolor_opts={'edgecolor': 'k', 'linewidth': 0.1})"
 )
 
 ###############################################################################
-# 1.5 Use `pcolorOpts` to set `SymLogNorm`, and another `cmap`
+# 1.5 Use `pcolor_opts` to set `SymLogNorm`, and another `cmap`
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 mesh.plot_3d_slicer(
-    Lpout, pcolorOpts={'norm': SymLogNorm(linthresh=0.01),'cmap': 'RdBu_r'}
+    Lpout, pcolor_opts={'norm': SymLogNorm(linthresh=0.01),'cmap': 'RdBu_r'}
 )
 beautify(
     "mesh.plot_3d_slicer(Lpout,"
-    "\npcolorOpts={'norm': SymLogNorm(linthresh=0.01),'cmap': 'RdBu_r'})`"
+    "\npcolor_opts={'norm': SymLogNorm(linthresh=0.01),'cmap': 'RdBu_r'})`"
 )
 
 ###############################################################################
@@ -192,4 +187,3 @@ beautify(
 )
 
 plt.show()
-

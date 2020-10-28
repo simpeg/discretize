@@ -117,7 +117,7 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         nl = np.array(line.split(), dtype=int)
         [z0, dz] = unpackdx(fopen, nl[0])
         # Flip z0 to be the bottom of the mesh for SimPEG
-        z0 = z0 - sum(dz)
+        z0 = -(z0 + sum(dz))
         dz = dz[::-1]
         # Make the mesh
         tensMsh = TensorMesh([dx, dz], x0=(x0, z0))
@@ -179,19 +179,17 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         if not np.all([mesh.nCx, mesh.nCy] == dim):
             raise Exception('Dimension of the model and mesh mismatch')
 
-        # Make a list of the lines
-        model = [line.split() for line in obsfile[1:]]
-        # Address the case where lines are not split equally
-        model = [cellvalue for sublist in model[::-1] for cellvalue in sublist]
-        # Make the vector
-        model = utils.mkvc(np.array(model, dtype=float).T)
+        model = []
+        for line in obsfile[1:]:
+            model.extend([float(val) for val in line.split()])
+        model = np.asarray(model)
         if not len(model) == mesh.nC:
             raise Exception(
                 """Something is not right, expected size is {:d}
                 but unwrap vector is size {:d}""".format(mesh.nC, len(model))
             )
 
-        return model
+        return model.reshape(mesh.vnC, order='F')[:, ::-1].reshape(-1, order='F')
 
     def _readModelUBC_3D(mesh, fileName):
         """Read UBC 3DTensor mesh model and generate 3D Tensor mesh model
@@ -394,8 +392,6 @@ class TreeMeshIO(object):
         fileLines = np.genfromtxt(meshFile, dtype=str,
                                   delimiter='\n', comments='!')
         nCunderMesh = np.array(fileLines[0].split('!')[0].split(), dtype=int)
-        nCunderMesh = nCunderMesh[0:3]
-
         tswCorn = np.array(
             fileLines[1].split('!')[0].split(),
             dtype=float
@@ -408,26 +404,24 @@ class TreeMeshIO(object):
         indArr = np.genfromtxt((line.encode('utf8') for line in fileLines[4::]),
                                dtype=np.int)
 
-        h1, h2, h3 = [np.ones(nr)*sz for nr, sz in zip(nCunderMesh, smallCell)]
-        x0 = tswCorn - np.array([0, 0, np.sum(h3)])
+        hs = [np.ones(nr)*sz for nr, sz in zip(nCunderMesh, smallCell)]
+        x0 = tswCorn
+        x0[-1] -= np.sum(hs[-1])
 
         ls = np.log2(nCunderMesh).astype(int)
-        if ls[0] == ls[1] and ls[1] == ls[2]:
+        # if all ls are equal
+        if min(ls) == max(ls):
             max_level = ls[0]
         else:
             max_level = min(ls)+1
 
-        mesh = TreeMesh([h1, h2, h3], x0=x0)
-
-        # Convert indArr to points in coordinates of underlying cpp tree
-        # indArr is ix, iy, iz(top-down) need it in ix, iy, iz (bottom-up)
-
+        mesh = TreeMesh(hs, x0=x0)
         levels = indArr[:, -1]
         indArr = indArr[:, :-1]
 
         indArr -= 1  # shift by 1....
         indArr = 2*indArr + levels[:, None]  # get cell center index
-        indArr[:, 2] = 2*nCunderMesh[2] - indArr[:, 2]  # switch direction of iz
+        indArr[:, -1] = 2*nCunderMesh[-1] - indArr[:, -1]  # switch direction of iz
         levels = max_level-np.log2(levels)  # calculate level
 
         mesh.__setstate__((indArr, levels))
@@ -445,9 +439,6 @@ class TreeMeshIO(object):
             for f in fileName:
                 out[f] = mesh.readModelUBC(f)
             return out
-
-        if mesh.dim != 3:
-            raise TypeError('Mesh must be 3D')
 
         modArr = np.loadtxt(fileName)
 
@@ -471,7 +462,10 @@ class TreeMeshIO(object):
         if np.any(~uniform_hs):
             raise Exception('UBC form does not support variable cell widths')
         nCunderMesh = np.array([h.size for h in mesh.h], dtype=np.int64)
-        tswCorn = mesh.x0 + np.array([0, 0, np.sum(mesh.h[2])])
+
+        tswCorn = mesh.x0.copy()
+        tswCorn[-1] += np.sum(mesh.h[-1])
+
         smallCell = np.array([h[0] for h in mesh.h])
         nrCells = mesh.nC
 
@@ -482,18 +476,10 @@ class TreeMeshIO(object):
         levels = levels[ubc_order]
 
         # Write the UBC octree mesh file
-        head = (
-            '{:.0f} {:.0f} {:.0f}\n'.format(
-                nCunderMesh[0], nCunderMesh[1], nCunderMesh[2]
-            ) +
-            '{:.4f} {:.4f} {:.4f}\n'.format(
-                tswCorn[0], tswCorn[1], tswCorn[2]
-            ) +
-            '{:.3f} {:.3f} {:.3f}\n'.format(
-                smallCell[0], smallCell[1], smallCell[2]
-            ) +
-            '{:.0f}'.format(nrCells)
-        )
+        head = ' '.join([f"{int(n)}" for n in nCunderMesh])+" \n"
+        head += ' '.join([f"{v:.4f}" for v in tswCorn])+" \n"
+        head += ' '.join([f"{v:.3f}" for v in smallCell]) + " \n"
+        head += f"{int(nrCells)}"
         np.savetxt(fileName, np.c_[indArr, levels], fmt='%i', header=head, comments='')
 
         # Print the models

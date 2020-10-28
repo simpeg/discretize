@@ -571,7 +571,7 @@ class MimeticProperties(unittest.TestCase):
             print(
                 "Testing Div * Curl on {} : |Div Curl v| / |v| = {} "
                 "... {}".format(
-                    meshType, rel_err, 'FAIL' if passed is False else 'ok'
+                    meshType, rel_err, 'FAIL' if not passed else 'ok'
                 )
             )
 
@@ -588,7 +588,7 @@ class MimeticProperties(unittest.TestCase):
             print(
                 "Testing Curl * Grad on {} : |Curl Grad v| / |v|= {} "
                 "... {}".format(
-                    meshType, rel_err, 'FAIL' if passed is False else 'ok'
+                    meshType, rel_err, 'FAIL' if not passed else 'ok'
                 )
             )
 

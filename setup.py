@@ -45,18 +45,21 @@ with open("README.rst") as f:
 
 build_requires = [
     'numpy>=1.8',
-    'scipy>=0.13',
     'cython>=0.2',
-    'pymatsolver>=0.1.2',
+    ]
+
+install_requires = build_requires + [
+    'scipy>=0.13',
     'properties',
     'vectormath',
-    ]
+]
 
 metadata = dict(
     name="discretize",
-    version="0.4.11",
+    version="0.5.1",
+    python_requires='>=3.6',
     setup_requires=build_requires,
-    install_requires=build_requires,
+    install_requires=install_requires,
     author="SimPEG developers",
     author_email="rowanc1@gmail.com",
     description="Discretization tools for finite volume and inverse problems",

@@ -91,6 +91,16 @@ General Utilities
 
     utils.download
 
+Interpolation Operations
+************************
+
+.. autosummary::
+    :toctree: generated
+
+    utils.interpmat
+    utils.volume_average
+
+
 Mesh Utilities
 **************
 

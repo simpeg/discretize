@@ -91,7 +91,7 @@ class TestSimpleQuadTree(unittest.TestCase):
         hx, hy = np.r_[1., 2, 3, 4], np.r_[5., 6, 7, 8]
         T = discretize.TreeMesh([hx, hy], levels=2)
         T.refine(lambda xc: 2)
-        # T.plotGrid(showIt=True)
+        # T.plotGrid(show_it=True)
         M = discretize.TensorMesh([hx, hy])
         self.assertEqual(M.nC, T.nC)
         self.assertEqual(M.nF, T.nF)
@@ -139,7 +139,7 @@ class TestOcTree(unittest.TestCase):
         levels = np.array([1, 2])
         M.insert_cells(points, levels)
         M.number()
-        # M.plotGrid(showIt=True)
+        # M.plotGrid(show_it=True)
         self.assertEqual(M.nhFx, 4)
         self.assertTrue(M.nFx, 19)
         self.assertTrue(M.nC, 15)
@@ -159,7 +159,7 @@ class TestOcTree(unittest.TestCase):
         hx, hy, hz = np.r_[1., 2, 3, 4], np.r_[5., 6, 7, 8], np.r_[9., 10, 11, 12]
         M = discretize.TreeMesh([hx, hy, hz], levels=2)
         M.refine(lambda xc: 2)
-        # M.plotGrid(showIt=True)
+        # M.plotGrid(show_it=True)
         Mr = discretize.TensorMesh([hx, hy, hz])
         self.assertEqual(M.nC, Mr.nC)
         self.assertEqual(M.nF, Mr.nF)
@@ -197,7 +197,7 @@ class TestOcTree(unittest.TestCase):
 
         M = discretize.TreeMesh([hx, hy, hz], levels=2)
         M.refine(lambda xc:2)
-        # M.plotGrid(showIt=True)
+        # M.plotGrid(show_it=True)
         Mr = discretize.TensorMesh([hx, hy, hz])
 
 
@@ -307,7 +307,7 @@ class Test3DInterpolation(unittest.TestCase):
 
         M = discretize.TreeMesh([16, 16, 16], levels=4)
         M.refine(function)
-        # M.plotGrid(showIt=True)
+        # M.plotGrid(show_it=True)
         self.M = M
 
     def test_Fx(self):

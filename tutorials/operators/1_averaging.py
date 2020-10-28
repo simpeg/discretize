@@ -173,17 +173,17 @@ ax1.set_title('Variable at cell centers')
 
 # Apply cell centers to faces averaging
 ax2 = fig.add_subplot(222)
-mesh.plotImage(A2*v, ax=ax2, vType='F')
+mesh.plotImage(A2*v, ax=ax2, v_type='F')
 ax2.set_title('Cell centers to faces')
 
 # Use the transpose to go from cell centers to nodes
 ax3 = fig.add_subplot(223)
-mesh.plotImage(A3.T*v, ax=ax3, vType='N')
+mesh.plotImage(A3.T*v, ax=ax3, v_type='N')
 ax3.set_title('Cell centers to nodes using transpose')
 
 # Use the transpose to go from cell centers to faces
 ax4 = fig.add_subplot(224)
-mesh.plotImage(A4.T*v, ax=ax4, vType='F')
+mesh.plotImage(A4.T*v, ax=ax4, v_type='F')
 ax4.set_title('Cell centers to faces using transpose')
 
 fig.show()

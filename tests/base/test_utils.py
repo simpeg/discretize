@@ -12,7 +12,6 @@ from discretize.utils import (
 )
 from discretize.Tests import checkDerivative
 import discretize
-import sys
 
 TOL = 1e-8
 
@@ -211,8 +210,6 @@ class TestSequenceFunctions(unittest.TestCase):
         self.assertTrue(isScalar(1.))
         self.assertTrue(isScalar(1))
         self.assertTrue(isScalar(1j))
-        if sys.version_info < (3, ):
-            self.assertTrue(isScalar(long(1)))
         self.assertTrue(isScalar(np.r_[1.]))
         self.assertTrue(isScalar(np.r_[1]))
         self.assertTrue(isScalar(np.r_[1j]))

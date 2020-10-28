@@ -13,7 +13,7 @@ from .meshutils import (
     random_model, mesh_builder_xyz, refine_tree_xyz, active_from_xyz
 )
 from .curvutils import volTetra, faceInfo, indexCube
-from .interputils import interpmat
+from .interputils import interpmat, volume_average
 from .coordutils import (
     rotatePointsFromNormals, rotationMatrixFromNormals, cyl2cart, cart2cyl
     # rotate_vec_cyl2cart

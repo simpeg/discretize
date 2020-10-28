@@ -96,7 +96,7 @@ class TestFaceDivxy2D(discretize.Tests.OrderTest):
 
         err = np.linalg.norm((divF-divF_ana), np.inf)
 
-        # self.M.plotImage(divF-divF_ana, showIt=True)
+        # self.M.plotImage(divF-divF_ana, show_it=True)
 
         return err
 
@@ -155,7 +155,7 @@ class TestFaceDivxyz3D(discretize.Tests.OrderTest):
 
         err = np.linalg.norm((divF-divF_ana), np.inf)
 
-        # self.M.plotImage(divF-divF_ana, showIt=True)
+        # self.M.plotImage(divF-divF_ana, show_it=True)
 
         return err
 

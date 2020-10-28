@@ -1,10 +1,12 @@
 # distutils: language=c++
-#cython: embedsignature=True
+# cython: embedsignature=True
 cimport cython
 cimport numpy as np
 from libc.math cimport sqrt, abs, cbrt
+from libc.stdlib cimport malloc, free
 from libcpp.vector cimport vector
 from numpy.math cimport INFINITY
+import warnings
 
 from tree cimport int_t, Tree as c_Tree, PyWrapper, Node, Edge, Face, Cell as c_Cell
 
@@ -12,6 +14,8 @@ import scipy.sparse as sp
 from scipy.spatial import Delaunay, cKDTree
 from six import integer_types
 import numpy as np
+
+from .utils.interputils_cython cimport _bisect_left, _bisect_right
 
 from discretize.utils.codeutils import requires
 # matplotlib is a soft dependencies for discretize
@@ -3322,7 +3326,7 @@ cdef class _TreeMesh:
         lines=True, cell_line=False,
         faces_x=False, faces_y=False, faces_z=False,
         edges_x=False, edges_y=False, edges_z=False,
-        showIt=False, **kwargs):
+        show_it=False, **kwargs):
         """ Plot the nodel, cell-centered, and staggered grids for 2 and 3 dimensions
         Plots the mesh grid in either 2D or 3D of the TreeMesh
 
@@ -3346,7 +3350,7 @@ cdef class _TreeMesh:
             Plot the center points of the x, y, or z faces
         edges_x, edges_y, edges_z : bool, optional
             Plot the center points of the x, y, or z edges
-        showIt : bool, optional
+        show_it : bool, optional
             whether to call plt.show() within the codes
         color : Color or str, optional
             if lines=True, the color of the lines, defaults to first color.
@@ -3359,6 +3363,10 @@ cdef class _TreeMesh:
             Axes handle for the plot
 
         """
+        if "showIt" in kwargs:
+            show_it = kwargs["showIt"]
+            warnings.warn("showIt has been deprecated, please use show_it", DeprecationWarning)
+
         if ax is None:
             if(self._dim == 2):
                 ax = plt.subplot(111)
@@ -3508,18 +3516,18 @@ cdef class _TreeMesh:
             ax.set_zlabel('x3')
 
         ax.grid(True)
-        if showIt:
+        if show_it:
             plt.show()
 
         return ax
 
     @requires({'matplotlib': matplotlib})
-    def plotImage(self, v, vType='CC', grid=False, view='real',
-                  ax=None, clim=None, showIt=False,
-                  pcolorOpts=None,
-                  gridOpts=None,
+    def plotImage(self, v, v_type='CC', grid=False, view='real',
+                  ax=None, clim=None, show_it=False,
+                  pcolor_opts=None,
+                  grid_opts=None,
                   range_x=None, range_y=None,
-                  **other_kwargs,
+                  **kwargs,
                   ):
         """ Plots an image of values defined on the TreeMesh
         If 3D, this function plots a default slice of the TreeMesh
@@ -3528,7 +3536,7 @@ cdef class _TreeMesh:
         ----------
         v : array_like
             Array containing the values to plot
-        vType : str, optional
+        v_type : str, optional
             type of value in `v` one of 'CC', 'N', 'Fx', 'Fy', 'Fz', 'Ex', 'Ey', or 'Ez'
         grid : bool, optional
             plot the grid lines
@@ -3538,7 +3546,7 @@ cdef class _TreeMesh:
             The axes handle
         clim : array_like of length 2, or None, optional
             A pair of [min, max] for the Colorbar
-        pcolorOpts : dict, or None
+        pcolor_opts : dict, or None
             options to be passed on to pcolormesh
         gridOpt : dict, or None
             options for the plotting the grid
@@ -3546,63 +3554,78 @@ cdef class _TreeMesh:
             pairs of [min, max] values for the x and y ranges
         """
         if self._dim == 3:
-            self.plotSlice(v, vType=vType, grid=grid, view=view,
-                           ax=ax, clim=clim, showIt=showIt,
-                           pcolorOpts=pcolorOpts,
+            self.plotSlice(v, v_type=v_type, grid=grid, view=view,
+                           ax=ax, clim=clim, show_it=show_it,
+                           pcolor_opts=pcolor_opts,
                            range_x=range_x, range_y=range_y,
-                           **other_kwargs)
+                           **kwargs)
 
         if view == 'vec':
             raise NotImplementedError('Vector ploting is not supported on TreeMesh (yet)')
 
         if view in ['real', 'imag', 'abs']:
             v = getattr(np, view)(v) # e.g. np.real(v)
-        if vType == 'CC':
+        if v_type == 'CC':
             I = v
-        elif vType == 'N':
+        elif v_type == 'N':
             I = self.aveN2CC*v
-        elif vType in ['Fx', 'Fy', 'Ex', 'Ey']:
-            aveOp = 'ave' + vType[0] + '2CCV'
-            ind_xy = {'x': 0, 'y': 1}[vType[1]]
+        elif v_type in ['Fx', 'Fy', 'Ex', 'Ey']:
+            aveOp = 'ave' + v_type[0] + '2CCV'
+            ind_xy = {'x': 0, 'y': 1}[v_type[1]]
             I = (getattr(self, aveOp)*v).reshape(2, self.nC)[ind_xy] # average to cell centers
+
+        if "pcolorOpts" in kwargs:
+            pcolor_opts = kwargs["pcolorOpts"]
+            warnings.warn("pcolorOpts has been deprecated, please use pcolor_opts", DeprecationWarning)
+        if "gridOpts" in kwargs:
+            grid_opts = kwargs["gridOpts"]
+            warnings.warn("gridOpts has been deprecated, please use grid_opts", DeprecationWarning)
+        if "showIt" in kwargs:
+            show_it = kwargs["showIt"]
+            warnings.warn("showIt has been deprecated, please use show_it", DeprecationWarning)
+        if "vType" in kwargs:
+            v_type = kwargs["vType"]
+            warnings.warn("vType has been deprecated, please use v_type", DeprecationWarning)
 
         if ax is None:
             ax = plt.subplot(111)
-        if pcolorOpts is None:
-            pcolorOpts = {}
-        if 'cmap' in pcolorOpts:
-            cm = pcolorOpts['cmap']
+        if pcolor_opts is None:
+            pcolor_opts = {}
+        if 'cmap' in pcolor_opts:
+            cm = pcolor_opts['cmap']
         else:
             cm = plt.get_cmap()
-        if 'vmin' in pcolorOpts:
-            vmin = pcolorOpts['vmin']
+        if 'vmin' in pcolor_opts:
+            vmin = pcolor_opts['vmin']
         else:
             vmin = np.nanmin(I) if clim is None else clim[0]
-        if 'vmax' in pcolorOpts:
-            vmax = pcolorOpts['vmax']
+        if 'vmax' in pcolor_opts:
+            vmax = pcolor_opts['vmax']
         else:
             vmax = np.nanmax(I) if clim is None else clim[1]
-        if 'alpha' in pcolorOpts:
-            alpha = pcolorOpts['alpha']
+        if 'alpha' in pcolor_opts:
+            alpha = pcolor_opts['alpha']
         else:
             alpha = 1.0
 
-        if gridOpts is None:
-            gridOpts = {'color':'k'}
-        if 'color' not in gridOpts:
-            gridOpts['color'] = 'k'
+        if grid_opts is None:
+            grid_opts = {'color':'k'}
+        if 'color' not in grid_opts:
+            grid_opts['color'] = 'k'
 
-        cNorm = colors.Normalize(
-            vmin=vmin, vmax=vmax)
+        if 'norm' in pcolor_opts:
+           cNorm = pcolor_opts['norm']
+        else:
+           cNorm = colors.Normalize(vmin=vmin, vmax=vmax)
 
         scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=cm)
 
-        if 'edge_color' in pcolorOpts:
-            edge_color = pcolorOpts['edge_color']
+        if 'edge_color' in pcolor_opts:
+            edge_color = pcolor_opts['edge_color']
         else:
-            edge_color = gridOpts['color'] if grid else 'none'
-        if 'alpha' in gridOpts:
-            edge_alpha = gridOpts['alpha']
+            edge_color = grid_opts['color'] if grid else 'none'
+        if 'alpha' in grid_opts:
+            edge_alpha = grid_opts['alpha']
         else:
             edge_alpha = 1.0
         if edge_color.lower() != 'none':
@@ -3640,7 +3663,7 @@ cdef class _TreeMesh:
         else:
             ax.set_ylim(*self.vectorNy[[0, -1]])
 
-        if showIt:
+        if show_it:
             plt.show()
         return [scalarMap]
 
@@ -3658,6 +3681,8 @@ cdef class _TreeMesh:
 
     def __setstate__(self, state):
         indArr, levels = state
+        indArr = np.asarray(indArr)
+        levels = np.asarray(levels)
         xs = np.array(self._xs)
         ys = np.array(self._ys)
         if self._dim == 3:
@@ -3699,7 +3724,11 @@ cdef class _TreeMesh:
 
         levels = 1<<(max_level - levels)
 
-        indArr[:, 2] = (self._zs.shape[0]-1) - indArr[:, 2]
+        if self.dim == 2:
+            indArr[:, -1] = (self._ys.shape[0]-1) - indArr[:, -1]
+        else:
+            indArr[:, -1] = (self._zs.shape[0]-1) - indArr[:, -1]
+
         indArr = (indArr - levels[:, None])//2
         indArr += 1
 
@@ -3711,12 +3740,532 @@ cdef class _TreeMesh:
         if self.__ubc_order is not None:
             return self.__ubc_order
         indArr, _ = self._ubc_indArr
-        self.__ubc_order = np.lexsort((indArr[:, 0], indArr[:, 1], indArr[:, 2]))
+        if self.dim == 2:
+            self.__ubc_order = np.lexsort((indArr[:, 0], indArr[:, 1]))
+        else:
+            self.__ubc_order = np.lexsort((indArr[:, 0], indArr[:, 1], indArr[:, 2]))
         return self.__ubc_order
 
     def __dealloc__(self):
         del self.tree
         del self.wrapper
+
+    @cython.boundscheck(False)
+    @cython.cdivision(True)
+    def _vol_avg_from_tree(self, _TreeMesh meshin, values=None, output=None):
+        # first check if they have the same tensor base, as it makes it a lot easier...
+        cdef int_t same_base
+        try:
+            same_base = (
+                np.allclose(self.vectorNx, meshin.vectorNx)
+                and np.allclose(self.vectorNy, meshin.vectorNy)
+                and (self.dim == 2 or np.allclose(self.vectorNz, meshin.vectorNz))
+            )
+        except ValueError:
+            same_base = False
+        cdef c_Cell * out_cell
+        cdef c_Cell * in_cell
+
+        cdef np.float64_t[:] vals = np.array([])
+        cdef np.float64_t[:] outs = np.array([])
+        cdef int_t build_mat = 1
+
+        if values is not None:
+            vals = values
+            if output is None:
+                output = np.empty(self.nC)
+            output[:] = 0
+            outs = output
+
+            build_mat = 0
+
+        cdef vector[int_t] row_inds, col_inds
+        cdef vector[int_t] indptr
+        cdef vector[double] all_weights
+
+        cdef vector[int_t] *overlapping_cells
+        cdef double *weights
+        cdef double over_lap_vol
+        cdef double x1m, x1p, y1m, y1p, z1m, z1p
+        cdef double x2m, x2p, y2m, y2p, z2m, z2p
+        cdef double[:] x0 = meshin._x0
+        cdef double[:] xF
+        if self.dim == 2:
+            xF = np.array([meshin._xs[-1], meshin._ys[-1]])
+        else:
+            xF = np.array([meshin._xs[-1], meshin._ys[-1], meshin._zs[-1]])
+
+        cdef int_t nnz_counter = 0
+        cdef int_t nnz_row = 0
+        if build_mat:
+            indptr.push_back(0)
+        cdef int_t i, in_cell_ind
+        cdef int_t n_overlap
+        cdef double weight_sum
+        cdef double weight
+        cdef vector[int_t] out_visited
+        cdef int_t n_unvisited
+
+        # easier path if they share the same base:
+        if same_base:
+            if build_mat:
+                all_weights.resize(meshin.nC, 0.0)
+                row_inds.resize(meshin.nC, 0)
+            out_visited.resize(self.nC, 0)
+            for in_cell in meshin.tree.cells:
+                # for each input cell find containing output cell
+                out_cell = self.tree.containing_cell(
+                    in_cell.location[0],
+                    in_cell.location[1],
+                    in_cell.location[2]
+                )
+                # if containing output cell is lower level (larger) than input cell:
+                # contribution is related to difference of levels (aka ratio of volumes)
+                # else:
+                # contribution is 1.0
+                if out_cell.level < in_cell.level:
+                    out_visited[out_cell.index] = 1
+                    weight = in_cell.volume/out_cell.volume
+                    if not build_mat:
+                        outs[out_cell.index] += weight*vals[in_cell.index]
+                    else:
+                        all_weights[in_cell.index] = weight
+                        row_inds[in_cell.index] = out_cell.index
+
+            if build_mat:
+                P = sp.csr_matrix((all_weights, (row_inds, np.arange(meshin.nC))),
+                                  shape=(self.nC, meshin.nC))
+
+                n_unvisited = self.nC - np.sum(out_visited)
+                row_inds.resize(n_unvisited, 0)
+                col_inds.resize(n_unvisited, 0)
+            i = 0
+            # assign weights of 1 to unvisited output cells and find their containing cell
+            for out_cell in self.tree.cells:
+                if not out_visited[out_cell.index]:
+                    in_cell = meshin.tree.containing_cell(
+                        out_cell.location[0],
+                        out_cell.location[1],
+                        out_cell.location[2]
+                    )
+
+                    if not build_mat:
+                        outs[out_cell.index] = vals[in_cell.index]
+                    else:
+                        row_inds[i] = out_cell.index
+                        col_inds[i] = in_cell.index
+                        i += 1
+            if build_mat and n_unvisited > 0:
+                P += sp.csr_matrix(
+                    (np.ones(n_unvisited), (row_inds, col_inds)),
+                    shape=(self.nC, meshin.nC)
+                )
+            if not build_mat:
+                return output
+            return P
+
+        for cell in self.tree.cells:
+            x1m = min(cell.points[0].location[0], xF[0])
+            y1m = min(cell.points[0].location[1], xF[1])
+
+            x1p = max(cell.points[3].location[0], x0[0])
+            y1p = max(cell.points[3].location[1], x0[1])
+            if self._dim==3:
+                z1m = min(cell.points[0].location[2], xF[2])
+                z1p = max(cell.points[7].location[2], x0[2])
+            overlapping_cell_inds = meshin.tree.find_overlapping_cells(x1m, x1p, y1m, y1p, z1m, z1p)
+            n_overlap = overlapping_cell_inds.size()
+            weights = <double *> malloc(n_overlap*sizeof(double))
+            i = 0
+            weight_sum = 0.0
+            nnz_row = 0
+            for in_cell_ind in overlapping_cell_inds:
+                in_cell = meshin.tree.cells[in_cell_ind]
+                x2m = in_cell.points[0].location[0]
+                y2m = in_cell.points[0].location[1]
+                z2m = in_cell.points[0].location[2]
+                x2p = in_cell.points[3].location[0]
+                y2p = in_cell.points[3].location[1]
+                z2p = in_cell.points[7].location[2] if self._dim==3 else 0.0
+
+                if x1m == xF[0] or x1p == x0[0]:
+                    over_lap_vol = 1.0
+                else:
+                    over_lap_vol = min(x1p, x2p) - max(x1m, x2m)
+                if y1m == xF[1] or y1p == x0[1]:
+                    over_lap_vol *= 1.0
+                else:
+                    over_lap_vol *= min(y1p, y2p) - max(y1m, y2m)
+                if self._dim==3:
+                    if z1m == xF[2] or z1p == x0[2]:
+                        over_lap_vol *= 1.0
+                    else:
+                        over_lap_vol *= min(z1p, z2p) - max(z1m, z2m)
+
+                weights[i] = over_lap_vol
+                if build_mat and weights[i] != 0.0:
+                    nnz_row += 1
+                    row_inds.push_back(in_cell_ind)
+
+                weight_sum += weights[i]
+                i += 1
+            for i in range(n_overlap):
+                weights[i] /= weight_sum
+                if build_mat and weights[i] != 0.0:
+                    all_weights.push_back(weights[i])
+
+            if not build_mat:
+                for i in range(n_overlap):
+                    outs[cell.index] += vals[overlapping_cell_inds[i]]*weights[i]
+            else:
+                nnz_counter += nnz_row
+                indptr.push_back(nnz_counter)
+
+            free(weights)
+            overlapping_cell_inds.clear()
+
+        if not build_mat:
+            return output
+        return sp.csr_matrix((all_weights, row_inds, indptr), shape=(self.nC, meshin.nC))
+
+    @cython.boundscheck(False)
+    @cython.cdivision(True)
+    def _vol_avg_to_tens(self, out_tens_mesh, values=None, output=None):
+        cdef vector[int_t] *overlapping_cells
+        cdef double *weights
+        cdef double over_lap_vol
+        cdef double x1m, x1p, y1m, y1p, z1m, z1p
+        cdef double x2m, x2p, y2m, y2p, z2m, z2p
+        cdef double[:] x0
+        cdef double[:] xF
+
+        # first check if they have the same tensor base, as it makes it a lot easier...
+        cdef int_t same_base
+        try:
+            same_base = (
+                np.allclose(self.vectorNx, out_tens_mesh.vectorNx)
+                and np.allclose(self.vectorNy, out_tens_mesh.vectorNy)
+                and (self.dim == 2 or np.allclose(self.vectorNz, out_tens_mesh.vectorNz))
+            )
+        except ValueError:
+            same_base = False
+
+        if same_base:
+            in_cell_inds = self._get_containing_cell_indexes(out_tens_mesh.gridCC)
+            # Every cell input cell is gauranteed to be a lower level than the output tenser mesh
+            # therefore all weights a 1.0
+            if values is not None:
+                if output is None:
+                    output = np.empty(out_tens_mesh.nC)
+                output[:] = values[in_cell_inds]
+                return output
+            return sp.csr_matrix(
+                (np.ones(out_tens_mesh.nC), (np.arange(out_tens_mesh.nC), in_cell_inds)),
+                shape=(out_tens_mesh.nC, self.nC)
+            )
+
+        if self.dim == 2:
+            x0 = np.r_[self.x0, 0.0]
+            xF = np.array([self._xs[-1], self._ys[-1], 0.0])
+        else:
+            x0 = self._x0
+            xF = np.array([self._xs[-1], self._ys[-1], self._zs[-1]])
+        cdef c_Cell * in_cell
+
+        cdef np.float64_t[:] vals = np.array([])
+        cdef np.float64_t[::1, :, :] outs = np.array([[[]]])
+
+        cdef vector[int_t] row_inds
+        cdef vector[int_t] indptr
+        cdef vector[double] all_weights
+        cdef int_t nnz_row = 0
+        cdef int_t nnz_counter = 0
+
+        cdef double[:] nodes_x = out_tens_mesh.vectorNx
+        cdef double[:] nodes_y = out_tens_mesh.vectorNy
+        cdef double[:] nodes_z = np.array([0.0, 0.0])
+        if self._dim==3:
+            nodes_z = out_tens_mesh.vectorNz
+        cdef int_t nx = len(nodes_x)-1
+        cdef int_t ny = len(nodes_y)-1
+        cdef int_t nz = len(nodes_z)-1
+
+        cdef int_t build_mat = 1
+        if values is not None:
+            vals = values
+            if output is None:
+                output = np.empty((nx, ny, nz), order='F')
+            else:
+                output = output.reshape((nx, ny, nz), order='F')
+            output[:] = 0
+            outs = output
+
+            build_mat = 0
+        if build_mat:
+            indptr.push_back(0)
+
+        cdef int_t ix, iy, iz, in_cell_ind, i
+        cdef int_t n_overlap
+        cdef double weight_sum
+
+        #for cell in self.tree.cells:
+        for iz in range(nz):
+            z1m = min(nodes_z[iz], xF[2])
+            z1p = max(nodes_z[iz+1], x0[2])
+            for iy in range(ny):
+                y1m = min(nodes_y[iy], xF[1])
+                y1p = max(nodes_y[iy+1], x0[1])
+                for ix in range(nx):
+                    x1m = min(nodes_x[ix], xF[0])
+                    x1p = max(nodes_x[ix+1], x0[0])
+                    overlapping_cell_inds = self.tree.find_overlapping_cells(x1m, x1p, y1m, y1p, z1m, z1p)
+                    n_overlap = overlapping_cell_inds.size()
+                    weights = <double *> malloc(n_overlap*sizeof(double))
+                    i = 0
+                    weight_sum = 0.0
+                    nnz_row = 0
+                    for in_cell_ind in overlapping_cell_inds:
+                        in_cell = self.tree.cells[in_cell_ind]
+                        x2m = in_cell.points[0].location[0]
+                        y2m = in_cell.points[0].location[1]
+                        z2m = in_cell.points[0].location[2]
+                        x2p = in_cell.points[3].location[0]
+                        y2p = in_cell.points[3].location[1]
+                        z2p = in_cell.points[7].location[2] if self._dim==3 else 0.0
+
+                        if x1m == xF[0] or x1p == x0[0]:
+                            over_lap_vol = 1.0
+                        else:
+                            over_lap_vol = min(x1p, x2p) - max(x1m, x2m)
+                        if y1m == xF[1] or y1p == x0[1]:
+                            over_lap_vol *= 1.0
+                        else:
+                            over_lap_vol *= min(y1p, y2p) - max(y1m, y2m)
+                        if self._dim==3:
+                            if z1m == xF[2] or z1p == x0[2]:
+                                over_lap_vol *= 1.0
+                            else:
+                                over_lap_vol *= min(z1p, z2p) - max(z1m, z2m)
+
+                        weights[i] = over_lap_vol
+                        if build_mat and weights[i] != 0.0:
+                            nnz_row += 1
+                            row_inds.push_back(in_cell_ind)
+                        weight_sum += weights[i]
+                        i += 1
+                    for i in range(n_overlap):
+                        weights[i] /= weight_sum
+                        if build_mat and weights[i] != 0.0:
+                            all_weights.push_back(weights[i])
+
+                    if not build_mat:
+                        for i in range(n_overlap):
+                            outs[ix, iy, iz] += vals[overlapping_cell_inds[i]]*weights[i]
+                    else:
+                        nnz_counter += nnz_row
+                        indptr.push_back(nnz_counter)
+
+                    free(weights)
+                    overlapping_cell_inds.clear()
+
+        if not build_mat:
+            return output.reshape(-1, order='F')
+        return sp.csr_matrix((all_weights, row_inds, indptr), shape=(out_tens_mesh.nC, self.nC))
+
+    @cython.boundscheck(False)
+    @cython.cdivision(True)
+    def _vol_avg_from_tens(self, in_tens_mesh, values=None, output=None):
+        cdef double *weights
+        cdef double over_lap_vol
+        cdef double x1m, x1p, y1m, y1p, z1m, z1p
+        cdef double x2m, x2p, y2m, y2p, z2m, z2p
+        cdef int_t ix, ix1, ix2, iy, iy1, iy2, iz, iz1, iz2
+        cdef double[:] x0 = in_tens_mesh.x0
+        cdef double[:] xF
+
+        # first check if they have the same tensor base, as it makes it a lot easier...
+        cdef int_t same_base
+        try:
+            same_base = (
+                np.allclose(self.vectorNx, in_tens_mesh.vectorNx)
+                and np.allclose(self.vectorNy, in_tens_mesh.vectorNy)
+                and (self.dim == 2 or np.allclose(self.vectorNz, in_tens_mesh.vectorNz))
+            )
+        except ValueError:
+            same_base = False
+
+
+        if same_base:
+            out_cell_inds = self._get_containing_cell_indexes(in_tens_mesh.gridCC)
+            ws = in_tens_mesh.vol/self.vol[out_cell_inds]
+            if values is not None:
+                if output is None:
+                    output = np.empty(self.nC)
+                output[:] = np.bincount(out_cell_inds, ws*values)
+                return output
+            return sp.csr_matrix(
+                (ws, (out_cell_inds, np.arange(in_tens_mesh.nC))),
+                shape=(self.nC, in_tens_mesh.nC)
+            )
+
+
+        cdef np.float64_t[:] nodes_x = in_tens_mesh.vectorNx
+        cdef np.float64_t[:] nodes_y = in_tens_mesh.vectorNy
+        cdef np.float64_t[:] nodes_z = np.array([0.0, 0.0])
+        if self._dim == 3:
+            nodes_z = in_tens_mesh.vectorNz
+        cdef int_t nx = len(nodes_x)-1
+        cdef int_t ny = len(nodes_y)-1
+        cdef int_t nz = len(nodes_z)-1
+
+        cdef double * dx
+        cdef double * dy
+        cdef double * dz
+
+        if self.dim == 2:
+            xF = np.array([nodes_x[-1], nodes_y[-1]])
+        else:
+            xF = np.array([nodes_x[-1], nodes_y[-1], nodes_z[-1]])
+
+        cdef np.float64_t[::1, :, :] vals = np.array([[[]]])
+        cdef np.float64_t[:] outs = np.array([])
+
+        cdef int_t build_mat = 1
+        if values is not None:
+            vals = values.reshape((nx, ny, nz), order='F')
+            if output is None:
+                output = np.empty(self.nC)
+            output[:] = 0
+            outs = output
+
+            build_mat = 0
+
+        cdef vector[int_t] row_inds
+        cdef vector[double] all_weights
+        cdef np.int64_t[:] indptr = np.zeros(self.nC+1, dtype=np.int64)
+        cdef int_t nnz_counter = 0
+        cdef int_t nnz_row = 0
+
+        cdef int_t nx_overlap, ny_overlap, nz_overlap, n_overlap
+        cdef int_t i
+        cdef double weight_sum
+
+        for cell in self.tree.cells:
+            x1m = min(cell.points[0].location[0], xF[0])
+            y1m = min(cell.points[0].location[1], xF[1])
+
+            x1p = max(cell.points[3].location[0], x0[0])
+            y1p = max(cell.points[3].location[1], x0[1])
+            if self._dim==3:
+                z1m = min(cell.points[0].location[2], xF[2])
+                z1p = max(cell.points[7].location[2], x0[2])
+            # then need to find overlapping cells of TensorMesh...
+            ix1 = max(_bisect_left(nodes_x, x1m) - 1, 0)
+            ix2 = min(_bisect_right(nodes_x, x1p), nx)
+            iy1 = max(_bisect_left(nodes_y, y1m) - 1, 0)
+            iy2 = min(_bisect_right(nodes_y, y1p), ny)
+            if self._dim==3:
+                iz1 = max(_bisect_left(nodes_z, z1m) - 1, 0)
+                iz2 = min(_bisect_right(nodes_z, z1p), nz)
+            else:
+                iz1 = 0
+                iz2 = 1
+            nx_overlap = ix2-ix1
+            ny_overlap = iy2-iy1
+            nz_overlap = iz2-iz1
+            n_overlap = nx_overlap*ny_overlap*nz_overlap
+            weights = <double *> malloc(n_overlap*sizeof(double))
+
+            dx = <double *> malloc(nx_overlap*sizeof(double))
+            for ix in range(ix1, ix2):
+                x2m = nodes_x[ix]
+                x2p = nodes_x[ix+1]
+                if x1m == xF[0] or x1p == x0[0]:
+                    dx[ix-ix1] = 1.0
+                else:
+                    dx[ix-ix1] = min(x1p, x2p) - max(x1m, x2m)
+
+            dy = <double *> malloc(ny_overlap*sizeof(double))
+            for iy in range(iy1, iy2):
+                y2m = nodes_y[iy]
+                y2p = nodes_y[iy+1]
+                if y1m == xF[1] or y1p == x0[1]:
+                    dy[iy-iy1] = 1.0
+                else:
+                    dy[iy-iy1] = min(y1p, y2p) - max(y1m, y2m)
+
+            dz = <double *> malloc(nz_overlap*sizeof(double))
+            for iz in range(iz1, iz2):
+                z2m = nodes_z[iz]
+                z2p = nodes_z[iz+1]
+                if self._dim==3:
+                    if z1m == xF[2] or z1p == x0[2]:
+                        dz[iz-iz1] = 1.0
+                    else:
+                        dz[iz-iz1] = min(z1p, z2p) - max(z1m, z2m)
+                else:
+                    dz[iz-iz1] = 1.0
+
+            i = 0
+            weight_sum = 0.0
+            nnz_row = 0
+            for iz in range(iz1, iz2):
+                for iy in range(iy1, iy2):
+                    for ix in range(ix1, ix2):
+                        in_cell_ind = ix + (iy + iz*ny)*nx
+                        weights[i] = dx[ix-ix1]*dy[iy-iy1]*dz[iz-iz1]
+                        if build_mat and weights[i] != 0.0:
+                            nnz_row += 1
+                            row_inds.push_back(in_cell_ind)
+
+                        weight_sum += weights[i]
+                        i += 1
+
+            for i in range(n_overlap):
+                weights[i] /= weight_sum
+                if build_mat and weights[i] != 0.0:
+                    all_weights.push_back(weights[i])
+
+            if not build_mat:
+                i = 0
+                for iz in range(iz1, iz2):
+                    for iy in range(iy1, iy2):
+                        for ix in range(ix1, ix2):
+                            outs[cell.index] += vals[ix, iy, iz]*weights[i]
+                            i += 1
+            else:
+                nnz_counter += nnz_row
+                indptr[cell.index+1] = nnz_counter
+
+            free(weights)
+            free(dx)
+            free(dy)
+            free(dz)
+
+        if not build_mat:
+            return output
+        return sp.csr_matrix((all_weights, row_inds, indptr), shape=(self.nC, in_tens_mesh.nC))
+
+    def get_overlapping_cells(self, rectangle):
+        cdef double xm, ym, zm, xp, yp, zp
+        cdef double[:] x0 = self._x0
+        cdef double[:] xF
+        if self.dim == 2:
+            xF = np.array([self._xs[-1], self._ys[-1]])
+        else:
+            xF = np.array([self._xs[-1], self._ys[-1], self._zs[-1]])
+        xm = min(rectangle[0], xF[0])
+        xp = max(rectangle[1], x0[0])
+        ym = min(rectangle[2], xF[1])
+        yp = max(rectangle[3], x0[1])
+        if self.dim==3:
+            zm = min(rectangle[4], xF[2])
+            zp = max(rectangle[5], x0[2])
+        else:
+            zm = 0.0
+            zp = 0.0
+        return self.tree.find_overlapping_cells(xm, xp, ym, yp, zm, zp)
+
 
 cdef inline double _clip01(double x) nogil:
     return min(1, max(x, 0))

@@ -37,7 +37,7 @@ def run(plotIt=True):
     )
     sigma[sphere_ind] = sig_sphere  # sphere
 
-    if plotIt is False:
+    if not plotIt:
         return
 
     # Plot a cross section through the mesh
