@@ -16,14 +16,14 @@ pr:
     - '*no-ci*'
 
 stages:
-# - stage: Testing
-#   jobs:
-#     - template: ./.azure-pipelines/azure-pipelines-linux.yml
-#     - template: ./.azure-pipelines/azure-pipelines-osx.yml
-#     - template: ./.azure-pipelines/azure-pipelines-win.yml
+- stage: Testing
+  jobs:
+    - template: ./.azure-pipelines/azure-pipelines-linux.yml
+    - template: ./.azure-pipelines/azure-pipelines-osx.yml
+    - template: ./.azure-pipelines/azure-pipelines-win.yml
 
 - stage: Deploy
-#  condition: and(succeeded(), startsWith(variables['build.sourceBranch'], 'refs/tags/'))
+  condition: and(succeeded(), startsWith(variables['build.sourceBranch'], 'refs/tags/'))
   jobs:
     - job:
       displayName: Deploy Docs and source
@@ -69,44 +69,45 @@ stages:
             rm -rf en/master/*
             cp -r $BUILD_SOURCESDIRECTORY/docs/_build/html/* en/master/
             touch .nojekyll
+            echo "discretize.simpeg.xyz" >> CNAME
             git add .
             git commit -am "Azure CI commit ref $(Build.SourceVersion)"
-#            git push
+            git push
           displayName: Push documentation to discretize-docs
           env:
             GH_TOKEN: $(gh.token)
-    #     - script: |
-    #         eval "$(conda shell.bash hook)"
-    #         conda activate test
-    #         python setup.py sdist
-    #         twine upload --skip-existing dist/*
-    #       displayName: Deploy source
-    #       env:
-    #         TWINE_USERNAME: $(twine.username)
-    #         TWINE_PASSWORD: $(twine.password)
-    #
-    # - job:
-    #   displayName: Windows Wheels
-    #   strategy:
-    #     matrix:
-    #       win-Python36:
-    #         python.version: '3.6'
-    #       win-Python37:
-    #         python.version: '3.7'
-    #       win-Python38:
-    #         python.version: '3.8'
-    #   pool:
-    #     vmImage: vs2017-win2016
-    #   steps:
-    #     - task: UsePythonVersion@0
-    #       inputs:
-    #         versionSpec: '$(python.version)'
-    #     - script: pip install numpy cython twine wheel
-    #       displayName: Install build dependencies
-    #     - script: python setup.py bdist_wheel
-    #       displayName: Build Wheel
-    #     - script: twine upload --skip-existing dist/*
-    #       displayName: Upload to PYPI
-    #       env:
-    #         TWINE_USERNAME: $(twine.username)
-    #         TWINE_PASSWORD: $(twine.password)
+        - script: |
+            eval "$(conda shell.bash hook)"
+            conda activate test
+            python setup.py sdist
+            twine upload --skip-existing dist/*
+          displayName: Deploy source
+          env:
+            TWINE_USERNAME: $(twine.username)
+            TWINE_PASSWORD: $(twine.password)
+
+    - job:
+      displayName: Windows Wheels
+      strategy:
+        matrix:
+          win-Python36:
+            python.version: '3.6'
+          win-Python37:
+            python.version: '3.7'
+          win-Python38:
+            python.version: '3.8'
+      pool:
+        vmImage: vs2017-win2016
+      steps:
+        - task: UsePythonVersion@0
+          inputs:
+            versionSpec: '$(python.version)'
+        - script: pip install numpy cython twine wheel
+          displayName: Install build dependencies
+        - script: python setup.py bdist_wheel
+          displayName: Build Wheel
+        - script: twine upload --skip-existing dist/*
+          displayName: Upload to PYPI
+          env:
+            TWINE_USERNAME: $(twine.username)
+            TWINE_PASSWORD: $(twine.password)
