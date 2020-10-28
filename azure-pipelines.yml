@@ -2,6 +2,18 @@ trigger:
   branches:
     include:
     - '*'
+    exclude:
+    - '*no-ci*'
+  tags:
+    include:
+    - '*'
+
+pr:
+  branches:
+    include:
+    - '*'
+    exclude:
+    - '*no-ci*'
 
 stages:
 # - stage: Testing
@@ -11,7 +23,7 @@ stages:
 #     - template: ./.azure-pipelines/azure-pipelines-win.yml
 
 - stage: Deploy
-#  condition: and(succeeded(), startsWith(variables['build.sourceBranch'], 'refs/tags/'))
+  condition: and(succeeded(), startsWith(variables['build.sourceBranch'], 'refs/tags/'))
   jobs:
     - job:
       displayName: Deploy Docs and source
@@ -48,7 +60,7 @@ stages:
             eval "$(conda shell.bash hook)"
             conda activate test
             python setup.py sdist
-            twine upload --skip-existing --repository testpypi dist/*
+            twine upload --skip-existing dist/*
           displayName: Deploy source
     - job:
       displayName: Windows Wheels
@@ -74,5 +86,5 @@ stages:
             set TWINE_USERNAME=$(twine.username)
             set TWINE_PASSWORD=$(twine.password)
             call activate build
-            twine upload --skip-existing --repository testpypi dist/*
+            twine upload --skip-existing dist/*
           displayName: Upload to PYPI
