@@ -52,7 +52,7 @@ stages:
             cd docs
             make html
             cd ..
-#            doctr deploy --built-docs ./docs/_build/html/ --deploy-repo simpeg/discretize-docs ./en/master/
+            doctr deploy --built-docs ./docs/_build/html/ --deploy-repo simpeg/discretize-docs ./en/master/
           displayName: building documentation
         - script: |
             export TWINE_USERNAME=$(twine.username)
