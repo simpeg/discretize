@@ -352,12 +352,12 @@ def check_derivative(
     .. plot::
         :include-source:
 
-        from discretize import testing, utils
+        from discretize import tests, utils
         import numpy as np
 
         def simplePass(x):
             return np.sin(x), utils.sdiag(np.cos(x))
-        testing.checkDerivative(simplePass, np.random.randn(5))
+        tests.checkDerivative(simplePass, np.random.randn(5))
     """
 
     print("{0!s} checkDerivative {1!s}".format("=" * 20, "=" * 20))

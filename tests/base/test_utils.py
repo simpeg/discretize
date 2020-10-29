@@ -474,7 +474,7 @@ class TestMeshUtils(unittest.TestCase):
         [xx, yy] = np.meshgrid(np.linspace(-200, 200, 50), np.linspace(-200, 200, 50))
         b = 50
         A = 50
-        zz = A * np.exp(-0.5 * ((xx / b) ** 2.0 + (yy / b) ** 2.0))+1E-4
+        zz = A * np.exp(-0.5 * ((xx / b) ** 2.0 + (yy / b) ** 2.0))
 
         h = [5.0, 5.0, 5.0]
 
@@ -590,7 +590,7 @@ class TestMeshUtils(unittest.TestCase):
             mesh_tree, topo3D, grid_reference="N", method="nearest"
         )
 
-        self.assertEqual(indtopoCC.sum(), 6299)
+        self.assertIn(indtopoCC.sum(), [6292, 6299])
         self.assertEqual(indtopoN.sum(), 4639)
 
         # Test 3D CYL Mesh
