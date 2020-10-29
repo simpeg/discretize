@@ -474,7 +474,7 @@ class TestMeshUtils(unittest.TestCase):
         [xx, yy] = np.meshgrid(np.linspace(-200, 200, 50), np.linspace(-200, 200, 50))
         b = 50
         A = 50
-        zz = A * np.exp(-0.5 * ((xx / b) ** 2.0 + (yy / b) ** 2.0))
+        zz = A * np.exp(-0.5 * ((xx / b) ** 2.0 + (yy / b) ** 2.0))+1E-4
 
         h = [5.0, 5.0, 5.0]
 
