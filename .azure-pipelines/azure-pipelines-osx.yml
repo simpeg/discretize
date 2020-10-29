@@ -29,7 +29,7 @@ jobs:
       conda install --yes --quiet -c conda-forge numpy scipy matplotlib cython vtk properties vectormath pyvista pymatsolver
       conda install --yes --quiet -c conda-forge pytest
       pip install -r requirements_dev.txt
-      pip install .
+      pip install -e .
     displayName: Install requirements and build
 
   - script: |

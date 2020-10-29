@@ -27,7 +27,7 @@ jobs:
 
   - script: |
       call activate test
-      pip install .
+      pip install -e .
     displayName: Build
 
   - script: |

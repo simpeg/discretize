@@ -30,7 +30,7 @@ jobs:
       conda install --yes --quiet -c conda-forge pytest pytest-cov
       pip install -r requirements_dev.txt
       pip install pytest-azurepipelines
-      pip install .
+      pip install -e .
     displayName: Install requirements and build
 
   - script: |
