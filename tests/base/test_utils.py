@@ -591,7 +591,7 @@ class TestMeshUtils(unittest.TestCase):
         )
 
         self.assertIn(indtopoCC.sum(), [6292, 6299])
-        self.assertEqual(indtopoN.sum(), 4639)
+        self.assertIn(indtopoN.sum(), [4632, 4639])
 
         # Test 3D CYL Mesh
         ncr = 10  # number of mesh cells in r
