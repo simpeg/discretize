@@ -33,4 +33,4 @@ jobs:
   - script: |
       call activate test
       pytest tests/base tests/cyl tests/tree -v -s
-    displayName: 'Running Tests'
+    displayName: 'Running tests'

@@ -37,8 +37,8 @@ jobs:
       eval "$(conda shell.bash hook)"
       conda activate test
       .ci/setup_headless_display.sh
-      pytest tests/base tests/cyl tests/tree tests/docs  -v -s --cov-config=.coveragerc --cov=discretize --cov-report=xml --cov-report=html
-    displayName: 'Testing Base with coverage'
+      pytest tests  -v -s --cov-config=.coveragerc --cov=discretize --cov-report=xml --cov-report=html
+    displayName: 'Testing with coverage'
 
   - script: |
       bash <(curl -s https://codecov.io/bash)
