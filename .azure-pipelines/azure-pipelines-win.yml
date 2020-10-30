@@ -23,6 +23,7 @@ jobs:
   - script: |
       call activate test
       pip install -r requirements_dev.txt
+      pip install pytest-azurepipelines
     displayName: Install other requirements
 
   - script: |
