@@ -39,6 +39,10 @@ Finally, we have removed assert errors in favor of throwing the proper exception
 when checking inputs. We have removed all references to ``__future__`` and ``six``
 to clean up and drop python 2 compatibility.
 
+.. note::
+
+	Testing now uses Azure CI. The new hub can be found at https://dev.azure.com/simpeg/
+
 Changes
 =======
 This is a full list of the aliases and deprecations for this ``discretize`` release.
