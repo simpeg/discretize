@@ -51,6 +51,7 @@ Aliases
 -------
 On ``discretize.base.BaseMesh``:
 
+* ``origin=x0``
 * ``n_cells=nC``
 * ``n_nodes=nN``
 * ``n_edges=nE``
