@@ -454,15 +454,15 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
             raise Exception("face_vector must be an ndarray of shape (n_faces x dim)")
         return np.sum(face_vector * self.face_normals, 1)
 
-    def project_edge_vector(self, eV):
+    def project_edge_vector(self, edge_vector):
         """Project vectors onto the edges of the mesh
 
-        Given a vector, eV, in cartesian coordinates, this will project
+        Given a vector, edge_vector, in cartesian coordinates, this will project
         it onto the mesh using the tangents
 
         Parameters
         ----------
-        eV : numpy.ndarray
+        edge_vector : numpy.ndarray
             edge vector with shape (n_edges, dim)
 
         Returns
@@ -471,15 +471,15 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
             projected edge vector, (n_edges, )
 
         """
-        if not isinstance(eV, np.ndarray):
-            raise Exception("eV must be an ndarray")
+        if not isinstance(edge_vector, np.ndarray):
+            raise Exception("edge_vector must be an ndarray")
         if not (
-            len(eV.shape) == 2
-            and eV.shape[0] == self.n_edges
-            and eV.shape[1] == self.dim
+            len(edge_vector.shape) == 2
+            and edge_vector.shape[0] == self.n_edges
+            and edge_vector.shape[1] == self.dim
         ):
-            raise Exception("eV must be an ndarray of shape (nE x dim)")
-        return np.sum(eV * self.edge_tangents, 1)
+            raise Exception("edge_vector must be an ndarray of shape (nE x dim)")
+        return np.sum(edge_vector * self.edge_tangents, 1)
 
     def save(self, filename="mesh.json", verbose=False):
         """
