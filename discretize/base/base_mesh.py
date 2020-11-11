@@ -120,18 +120,19 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         Returns
         -------
         int
-            dimension of the mesh
+            dimension of the mesh (1, 2, or 3).
         """
         return len(self._n)
 
     @property
     def n_cells(self):
-        """Total number of cells in the mesh.
+        """
+        Total number of cells in the mesh.
 
         Returns
         -------
         int
-            number of cells in the mesh
+            Number of cells in the mesh
 
         Notes
         -----
@@ -154,12 +155,12 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
 
     @property
     def n_nodes(self):
-        """Total number of nodes
+        """Total number of nodes in the mesh
 
         Returns
         -------
         int
-            number of nodes in the mesh
+            Number of nodes in the mesh
 
         Notes
         -----
@@ -178,7 +179,15 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
 
     @property
     def n_edges_x(self):
-        """Number of x-edges
+        """
+        Number of x-edges
+
+        Number of edges in the mesh aligned in the x-direction.
+        For tensor meshes of increasing dimension, the number of x-edges
+        is equal to:
+            - *1D:* n_cells_x
+            - *2D:* (n_cells_x) X (n_nodes_y)
+            - *3D:* (n_cells_y) X (n_nodes_y) X (n_nodes_z)
 
         Returns
         -------
@@ -193,7 +202,15 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
 
     @property
     def n_edges_y(self):
-        """Number of y-edges
+        """
+        Number of y-edges
+
+        Number of edges in the mesh aligned in the y-direction.
+        For tensor meshes of increasing dimension, the number of y-edges
+        is equal to:
+            - *1D:* None
+            - *2D:* (n_nodes_x) X (n_cells_y)
+            - *3D:* (n_nodes_x) X (n_cells_y) X (n_nodes_z)
 
         Returns
         -------
@@ -210,7 +227,15 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
 
     @property
     def n_edges_z(self):
-        """Number of z-edges
+        """
+        Number of z-edges
+
+        Number of edges in the mesh aligned in the z-direction.
+        For tensor meshes of increasing dimension, the number of z-edges
+        is equal to:
+            - *1D:* None
+            - *2D:* None
+            - *3D:* (n_nodes_x) X (n_nodes_y) X (n_cells_z)
 
         Returns
         -------
@@ -227,7 +252,10 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
 
     @property
     def vnE(self):
-        """The number of edges in each direction
+        """
+        The number of edges in each direction
+
+        Returns a tuple containing the number of edges in each direction.
 
         Returns
         -------
@@ -274,7 +302,15 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
 
     @property
     def n_faces_x(self):
-        """Number of x-faces
+        """
+        Number of x-faces
+
+        Number of faces in the mesh whose surfaces are normal to the
+        x-direction. For tensor meshes of increasing dimension, the number
+        of x-faces is equal to:
+            - *1D:* n_nodes_x
+            - *2D:* (n_nodes_x) X (n_cells_y)
+            - *3D:* (n_nodes_x) X (n_cells_y) X (n_cells_z)
 
         Returns
         -------
@@ -288,7 +324,15 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
 
     @property
     def n_faces_y(self):
-        """Number of y-faces
+        """
+        Number of y-faces
+
+        Number of faces in the mesh whose surfaces are normal to the
+        y-direction. For tensor meshes of increasing dimension, the number
+        of x-faces is equal to:
+            - *1D:* None
+            - *2D:* (n_cells_x) X (n_nodes_y)
+            - *3D:* (n_cells_x) X (n_nodes_y) X (n_cells_z)
 
         Returns
         -------
@@ -304,7 +348,15 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
 
     @property
     def n_faces_z(self):
-        """Number of z-faces
+        """
+        Number of z-faces
+
+        Number of faces in the mesh whose surfaces are normal to the
+        z-direction. For tensor meshes of increasing dimension, the number
+        of x-faces is equal to:
+            - *1D:* None
+            - *2D:* None
+            - *3D:* (n_cells_x) X (n_cells_y) X (n_nodes_z)
 
         Returns
         -------
@@ -369,6 +421,10 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
     def face_normals(self):
         """Face Normals
 
+        Returns a numpy array containing the unit vectors normal to
+        all mesh faces. The ordering of the array is x_face_normals,
+        then y_face_normals (, then z_face_normals).
+
         Returns
         -------
         numpy.ndarray
@@ -398,7 +454,12 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
 
     @property
     def edge_tangents(self):
-        """Edge Tangents
+        """
+        Edge Tangents
+
+        Returns a numpy array containing the unit vectors parallel to
+        all mesh edges. The ordering of the array is x_edge_tanjents,
+        then y_edge_tanjents (, then z_edge_tanjents).
 
         Returns
         -------
@@ -428,15 +489,18 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
             return np.r_[tX, tY, tZ]
 
     def project_face_vector(self, fV):
-        """Project vectors onto the faces of the mesh.
+        """
+        Project vectors onto the faces of the mesh.
 
-        Given a vector, fV, in cartesian coordinates, this will project
-        it onto the mesh using the normals
+        Consider a vector *fV* in Cartesian coordinates defined
+        at the locations of the mesh faces. This method will project
+        the vector onto mesh faces using the normal vector for each
+        face.
 
         Parameters
         ----------
         fV : numpy.ndarray
-            face vector with shape (n_faces, dim)
+            Vector with shape (n_faces, dim)
 
         Returns
         -------
@@ -455,10 +519,13 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         return np.sum(fV * self.face_normals, 1)
 
     def project_edge_vector(self, eV):
-        """Project vectors onto the edges of the mesh
+        """
+        Project vectors onto the edges of the mesh.
 
-        Given a vector, eV, in cartesian coordinates, this will project
-        it onto the mesh using the tangents
+        Consider a vector *eV* in Cartesian coordinates defined
+        at the locations of the mesh edges. This method will project
+        the vector onto mesh edges using the tanjent vector for each
+        edge.
 
         Parameters
         ----------
@@ -483,9 +550,14 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
 
     def save(self, filename="mesh.json", verbose=False):
         """
-        Save the mesh to json
-        :param str file: filename for saving the casing properties
-        :param str directory: working directory for saving the file
+        Save the mesh to json file
+        
+        Parameters
+        ----------
+        filename : str file
+            filename for saving the casing properties
+        verbose : bool (default=False)
+            Print file path of saved file
         """
 
         f = os.path.abspath(filename)  # make sure we are working with abs path
@@ -545,20 +617,49 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
 
     @property
     def rotation_matrix(self):
-        """Builds a rotation matrix to transform coordinates from their coordinate
-        system into a conventional cartesian system. This is built off of the
-        three `axis_u`, `axis_v`, and `axis_w` properties; these mapping
-        coordinates use the letters U, V, and W (the three letters preceding X,
-        Y, and Z in the alphabet) to define the projection of the X, Y, and Z
-        durections. These UVW vectors describe the placement and transformation
-        of the mesh's coordinate sytem assuming at most 3 directions.
+        """
+        Rotation matrix from arbitrary orthogonal coordinate system (u,v,w) to Cartesian (x,y,z)
+
+        Builds a rotation matrix to transform from an arbitrary orthogonal
+        coordinate system (u,v,w) to a conventional Cartesian coordinate
+        system (x,y,z). To utilize this property, you must first set the
+        mesh properties: `axis_u`, `axis_v`, and `axis_w` properties. These
+        properties define the axes of the arbitrary coordinate system.
 
         Why would you want to use these UVW mapping vectors the this
-        `rotation_matrix` property? They allow us to define the realationship
+        `rotation_matrix` property? They allow us to define the relationship
         between local and global coordinate systems and provide a tool for
         switching between the two while still maintaing the connectivity of the
         mesh's cells. For a visual example of this, please see the figure in the
         docs for the :class:`~discretize.mixins.vtk_mod.InterfaceVTK`.
+
+        Returns
+        -------
+        np.ndarray (3, 3)
+            A 3x3 rotation matrix from (u,v,w) coordinates to (x,y,z)
+
+        Examples
+        --------
+        Here the coordinate system is defined as u=Northeast, v=Northwest and
+        w=Up. For a location (u,v,w), we use the rotation matrix to determine
+        the location in (x,y,z).
+
+        >>> from discretize import TensorMesh
+        >>> import numpy as np
+        >>> 
+        >>> # Define uniform mesh and (u,v,w) axes
+        >>> h = np.ones(3)
+        >>> mesh = TensorMesh([h, h, h])
+        >>> mesh.axis_u = [1, 1, 0]
+        >>> mesh.axis_v = [-1, 1, 0]
+        >>> mesh.axis_w = [0, 0, 1]
+        >>> 
+        >>> # Convert uvw to xyz
+        >>> uvw = np.array([1,0,0])  # Along Northeast
+        >>> A = mesh.rotation_matrix
+        >>> xyz = np.dot(A, uvw)
+        >>> print(xyz)
+
         """
         return np.array([self.axis_u, self.axis_v, self.axis_w])
 
@@ -624,11 +725,12 @@ class BaseRectangularMesh(BaseMesh):
 
     @property
     def shape_cells(self):
-        """The number of cells in each direction
+        """
+        The number of cells in each direction
 
         Returns
         -------
-        tuple of ints
+        tuple of int (dim,)
 
         Notes
         -----
@@ -638,11 +740,12 @@ class BaseRectangularMesh(BaseMesh):
 
     @property
     def shape_nodes(self):
-        """Number of nodes in each direction
+        """
+        Number of nodes in each direction
 
         Returns
         -------
-        tuple of int
+        tuple of int (dim,)
 
         Notes
         -----

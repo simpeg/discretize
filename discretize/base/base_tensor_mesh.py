@@ -133,28 +133,83 @@ class BaseTensorMesh(BaseMesh):
 
     @property
     def grid_nodes_x(self):
-        """Nodal grid vector (1D) in the x direction."""
+        """
+        Return the x-coordinate of the node locations along the x direction
+
+        For 1D, 2D or 3D tensor meshes, this property returns a 1D vector
+        containing the x-coordinate values of the nodes along the x direction.
+        The length of the vector is equal to mesh.shape_nodes[0].
+        
+        Returns
+        -------
+        np.ndarray (nNx,)
+
+        """
         return np.r_[self.x0[0], self.h[0]].cumsum()
 
     @property
     def grid_nodes_y(self):
-        """Nodal grid vector (1D) in the y direction."""
+        """
+        Return the y-coordinate of the node locations along the y direction
+
+        For 2D or 3D tensor meshes, this property returns a 1D vector
+        containing the y-coordinate values of the nodes along the y direction.
+        The length of the vector is equal to mesh.shape_nodes[1].
+        
+        Returns
+        -------
+        np.ndarray (nNy,)
+
+        """
         return None if self.dim < 2 else np.r_[self.x0[1], self.h[1]].cumsum()
 
     @property
     def grid_nodes_z(self):
-        """Nodal grid vector (1D) in the z direction."""
+        """
+        Return the z-coordinate of the node locations along the z direction
+
+        For 3D tensor meshes, this property returns a 1D vector
+        containing the z-coordinate values of the nodes along the z direction.
+        The length of the vector is equal to mesh.mesh.shape_nodes[1].
+        
+        Returns
+        -------
+        np.ndarray (nNz,)
+
+        """
         return None if self.dim < 3 else np.r_[self.x0[2], self.h[2]].cumsum()
 
     @property
     def grid_cell_centers_x(self):
-        """Cell-centered grid vector (1D) in the x direction."""
+        """
+        Return the x-coordinate of the cell center locations along the x direction
+
+        For 1D, 2D or 3D tensor meshes, this property returns a 1D vector
+        containing the x-coordinate values of the cell centers along the x direction.
+        The length of the vector is equal to mesh.shape_centers[0].
+        
+        Returns
+        -------
+        np.ndarray (nCx,)
+
+        """
         nodes = self.grid_nodes_x
         return (nodes[1:] + nodes[:-1]) / 2
 
     @property
     def grid_cell_centers_y(self):
-        """Cell-centered grid vector (1D) in the y direction."""
+        """
+        Return the y-coordinate of the cell center locations along the y direction
+
+        For 2D or 3D tensor meshes, this property returns a 1D vector
+        containing the y-coordinate values of the cell centers along the y direction.
+        The length of the vector is equal to mesh.shape_centers[1].
+        
+        Returns
+        -------
+        np.ndarray (nCy,)
+
+        """
         if self.dim < 2:
             return None
         nodes = self.grid_nodes_y
@@ -162,7 +217,18 @@ class BaseTensorMesh(BaseMesh):
 
     @property
     def grid_cell_centers_z(self):
-        """Cell-centered grid vector (1D) in the z direction."""
+        """
+        Return the z-coordinate of the cell center locations along the z direction
+
+        For 3D tensor meshes, this property returns a 1D vector
+        containing the z-coordinate values of the cell centers along the z direction.
+        The length of the vector is equal to mesh.shape_centers[2].
+        
+        Returns
+        -------
+        np.ndarray (nCz,)
+
+        """
         if self.dim < 3:
             return None
         nodes = self.grid_nodes_z
@@ -170,18 +236,100 @@ class BaseTensorMesh(BaseMesh):
 
     @property
     def grid_cell_centers(self):
-        """Cell-centered grid."""
+        """
+        Return cell center locations
+
+        For 1D, 2D or 3D tensor meshes, this property returns a numpy array
+        containing the cell center locations. The bottom-front-leftmost cell is the first
+        cell. The cells are ordered along the x, then y, then z directions.
+        
+        Returns
+        -------
+        np.ndarray (nC, dim)
+            The shape of the output array is the number of cells by the dimension.
+        
+        Examples
+        --------
+        The following is a 1D example.
+
+        >>> from discretize import TensorMesh
+        >>> hx = np.ones(5)
+        >>> mesh = TensorMesh([hx], '0')
+        >>> print(mesh.grid_cell_centers)
+
+        The following is a 3D example.
+
+        >>> from discretize import TensorMesh
+        >>> hx, hy, hz = np.ones(2), 2*np.ones(2), 3*np.ones(2)
+        >>> mesh = TensorMesh([hx, hy, hz], '000')
+        >>> print(mesh.grid_cell_centers)
+
+        """
         return self._getTensorGrid("CC")
 
     @property
     def grid_nodes(self):
-        """Nodal grid."""
+        """
+        Return mesh node locations
+
+        For 1D, 2D or 3D tensor meshes, this property returns a numpy array
+        containing the node locations. The bottom-front-leftmost node is the first
+        node. The nodes are ordered along the x, then y, then z directions.
+        
+        Returns
+        -------
+        np.ndarray (nN, dim)
+            The shape of the output array is the number of nodes by the dimension.
+        
+        Examples
+        --------
+        The following is a 1D example.
+
+        >>> from discretize import TensorMesh
+        >>> hx = np.ones(5)
+        >>> mesh = TensorMesh([hx], '0')
+        >>> print(mesh.grid_nodes)
+
+        The following is a 3D example.
+
+        >>> from discretize import TensorMesh
+        >>> hx, hy, hz = np.ones(2), 2*np.ones(2), 3*np.ones(2)
+        >>> mesh = TensorMesh([hx, hy, hz], '000')
+        >>> print(mesh.grid_nodes)
+
+        """
         return self._getTensorGrid("N")
 
     @property
     def h_gridded(self):
         """
-        Returns an (nC, dim) numpy array with the widths of all cells in order
+        Return the cell dimensions of cells.
+
+        For 1D, 2D or 3D tensor meshes, this property returns a numpy array
+        containing cell dimensions. The bottom-front-leftmost cell is the first
+        cell. The cell are ordered along the x, then y, then z directions.
+        
+        Returns
+        -------
+        np.ndarray (nC, dim)
+            The shape of the output array is the number of cells by the dimension.
+        
+        Examples
+        --------
+        The following is a 1D example.
+
+        >>> from discretize import TensorMesh
+        >>> hx = np.ones(5)
+        >>> mesh = TensorMesh([hx])
+        >>> print(mesh.h_gridded)
+
+        The following is a 3D example.
+
+        >>> from discretize import TensorMesh
+        >>> hx, hy, hz = np.ones(2), 2*np.ones(2), 3*np.ones(2)
+        >>> mesh = TensorMesh([hx, hy, hz])
+        >>> print(mesh.h_gridded)
+
         """
         if self.dim == 1:
             return self.h[0][:, None]
@@ -301,9 +449,20 @@ class BaseTensorMesh(BaseMesh):
         """
         Determines if a set of points are inside a mesh.
 
-        :param numpy.ndarray pts: Location of points to test
-        :rtype: numpy.ndarray
-        :return: inside, numpy array of booleans
+        Parameters
+        ----------
+        pts : np.ndarray (n_pts, dim)
+            Locations of input points
+        loc_type : str
+            Use *N* to determine points lying within the cluster of mesh
+            nodes. Use *CC* to determine points lying within the cluster
+            of mesh cell centers.
+
+        Returns
+        -------
+        np.ndarray of bool (n_pts,)
+            Boolean array identifying points which lie within the mesh
+
         """
         if "locType" in kwargs:
             warnings.warn(
@@ -333,7 +492,8 @@ class BaseTensorMesh(BaseMesh):
         return inside
 
     def _getInterpolationMat(self, loc, loc_type="CC", zeros_outside=False):
-        """Produces interpolation matrix
+        """
+        Produces interpolation matrix
 
         Parameters
         ----------
@@ -416,7 +576,11 @@ class BaseTensorMesh(BaseMesh):
     def get_interpolation_matrix(
         self, loc, loc_type="CC", zeros_outside=False, **kwargs
     ):
-        """Produces linear interpolation matrix
+        """
+        Produces linear interpolation matrix
+
+        Produces a linear interpolation matrix from tensor locations
+        (nodes, cell-centers, faces, etc...) to arbitrary locations.
 
         Parameters
         ----------
