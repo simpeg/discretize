@@ -54,7 +54,7 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
         },
     }
 
-    nodes = properties.List(
+    node_list = properties.List(
         "List of arrays describing the node locations",
         prop=properties.Array(
             "node locations in an n-dimensional array",
@@ -64,29 +64,31 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
         max_length=3,
     )
 
-    def __init__(self, nodes=None, **kwargs):
+    def __init__(self, node_list=None, **kwargs):
 
-        self.nodes = nodes
+        if 'nodes' in kwargs:
+            node_list = kwargs.pop('nodes')
+        self.node_list = node_list
 
         if "_n" in kwargs.keys():
             n = kwargs.pop("_n")
-            if np.any(n != np.array(self.nodes[0].shape) - 1):
+            if np.any(n != np.array(self.node_list[0].shape) - 1):
                 raise ValueError(
                     "Unexpected n-values. {} was provided, {} was expected".format(
-                        n, np.array(self.nodes[0].shape) - 1
+                        n, np.array(self.node_list[0].shape) - 1
                     )
                 )
         else:
-            n = np.array(self.nodes[0].shape) - 1
+            n = np.array(self.node_list[0].shape) - 1
 
         BaseRectangularMesh.__init__(self, n, **kwargs)
 
         # Save nodes to private variable _nodes as vectors
-        self._nodes = np.ones((self.nodes[0].size, self.dim))
-        for i, node_i in enumerate(self.nodes):
+        self._nodes = np.ones((self.node_list[0].size, self.dim))
+        for i, node_i in enumerate(self.node_list):
             self._nodes[:, i] = mkvc(node_i.astype(float))
 
-    @properties.validator("nodes")
+    @properties.validator("node_list")
     def _check_nodes(self, change):
         if len(change["value"]) <= 1:
             raise ValueError("len(node) must be greater than 1")

@@ -170,6 +170,9 @@ On ``discretize.TensorMesh``, ``discretize.TreeMesh``:
 * ``faceBoundaryInd`` → ``face_boundary_indices``
 * ``cellBoundaryInd`` → ``cell_boundary_indices``
 
+On ``discretize.CurvilinearMesh``:
+* The ``nodes`` property is now ``node_list`` to avoid the name clash with the ``nodes`` location property
+
 On ``discretize.CylindricalMesh``:
 
 * ``isSymmetric`` → ``is_symmetric``
