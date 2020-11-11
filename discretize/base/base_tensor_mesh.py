@@ -69,10 +69,12 @@ class BaseTensorMesh(BaseMesh):
         required=True,
     )
 
-    def __init__(self, h=None, x0=None, **kwargs):
+    def __init__(self, h=None, origin=None, **kwargs):
 
         h_in = h
-        x0_in = x0
+        if "x0" in kwargs:
+            origin = kwargs.pop('x0')
+        origin_in = origin
 
         # Sanity Checks
         if not isinstance(h_in, (list, tuple)):
@@ -97,24 +99,24 @@ class BaseTensorMesh(BaseMesh):
             h[i] = h_i[:]  # make a copy.
 
         # Origin of the mesh
-        x0 = np.zeros(len(h))
+        origin = np.zeros(len(h))
 
-        if x0_in is not None:
-            if len(h) != len(x0_in):
-                raise ValueError("Dimension mismatch. x0 != len(h)")
+        if origin_in is not None:
+            if len(h) != len(origin_in):
+                raise ValueError("Dimension mismatch. origin != len(h)")
             for i in range(len(h)):
-                x_i, h_i = x0_in[i], h[i]
+                x_i, h_i = origin_in[i], h[i]
                 if is_scalar(x_i):
-                    x0[i] = x_i
+                    origin[i] = x_i
                 elif x_i == "0":
-                    x0[i] = 0.0
+                    origin[i] = 0.0
                 elif x_i == "C":
-                    x0[i] = -h_i.sum() * 0.5
+                    origin[i] = -h_i.sum() * 0.5
                 elif x_i == "N":
-                    x0[i] = -h_i.sum()
+                    origin[i] = -h_i.sum()
                 else:
                     raise Exception(
-                        "x0[{0:d}] must be a scalar or '0' to be zero, "
+                        "origin[{0:d}] must be a scalar or '0' to be zero, "
                         "'C' to center, or 'N' to be negative. The input value"
                         " {1} {2} is invalid".format(i, x_i, type(x_i))
                     )
@@ -126,7 +128,7 @@ class BaseTensorMesh(BaseMesh):
         else:
             n = np.array([x.size for x in h])
 
-        super(BaseTensorMesh, self).__init__(n, x0=x0, **kwargs)
+        super(BaseTensorMesh, self).__init__(n, origin=origin, **kwargs)
 
         # Ensure h contains 1D vectors
         self.h = [mkvc(x.astype(float)) for x in h]
@@ -134,17 +136,17 @@ class BaseTensorMesh(BaseMesh):
     @property
     def nodes_x(self):
         """Nodal grid vector (1D) in the x direction."""
-        return np.r_[self.x0[0], self.h[0]].cumsum()
+        return np.r_[self.origin[0], self.h[0]].cumsum()
 
     @property
     def nodes_y(self):
         """Nodal grid vector (1D) in the y direction."""
-        return None if self.dim < 2 else np.r_[self.x0[1], self.h[1]].cumsum()
+        return None if self.dim < 2 else np.r_[self.origin[1], self.h[1]].cumsum()
 
     @property
     def nodes_z(self):
         """Nodal grid vector (1D) in the z direction."""
-        return None if self.dim < 3 else np.r_[self.x0[2], self.h[2]].cumsum()
+        return None if self.dim < 3 else np.r_[self.origin[2], self.h[2]].cumsum()
 
     @property
     def cell_centers_x(self):

@@ -255,9 +255,9 @@ def extract_core_mesh(xyzlim, mesh, mesh_type="tensor"):
 
         hx = mesh.h[0][xind]
 
-        x0 = [xc[0] - hx[0] * 0.5]
+        origin = [xc[0] - hx[0] * 0.5]
 
-        meshCore = discretize.TensorMesh([hx], x0=x0)
+        meshCore = discretize.TensorMesh([hx], origin=origin)
 
         actind = (mesh.gridCC > xmin) & (mesh.gridCC < xmax)
 
@@ -278,9 +278,9 @@ def extract_core_mesh(xyzlim, mesh, mesh_type="tensor"):
         hx = mesh.h[0][xind]
         hy = mesh.h[1][yind]
 
-        x0 = [xc[0] - hx[0] * 0.5, yc[0] - hy[0] * 0.5]
+        origin = [xc[0] - hx[0] * 0.5, yc[0] - hy[0] * 0.5]
 
-        meshCore = discretize.TensorMesh([hx, hy], x0=x0)
+        meshCore = discretize.TensorMesh([hx, hy], origin=origin)
 
         actind = (
             (mesh.gridCC[:, 0] > xmin)
@@ -312,9 +312,9 @@ def extract_core_mesh(xyzlim, mesh, mesh_type="tensor"):
         hy = mesh.h[1][yind]
         hz = mesh.h[2][zind]
 
-        x0 = [xc[0] - hx[0] * 0.5, yc[0] - hy[0] * 0.5, zc[0] - hz[0] * 0.5]
+        origin = [xc[0] - hx[0] * 0.5, yc[0] - hy[0] * 0.5, zc[0] - hz[0] * 0.5]
 
-        meshCore = discretize.TensorMesh([hx, hy, hz], x0=x0)
+        meshCore = discretize.TensorMesh([hx, hy, hz], origin=origin)
 
         actind = (
             (mesh.gridCC[:, 0] > xmin)
@@ -427,7 +427,7 @@ def mesh_builder_xyz(
 
         # Define h along each dimension
         h_dim = []
-        nC_x0 = []
+        nC_origin = []
         for dim in range(xyz.shape[1]):
             h_dim += [
                 [
@@ -445,7 +445,7 @@ def mesh_builder_xyz(
                 ]
             ]
 
-            nC_x0 += [h_dim[-1][0][1]]
+            nC_origin += [h_dim[-1][0][1]]
 
         # Create mesh
         mesh = discretize.TensorMesh(h_dim)
@@ -454,7 +454,7 @@ def mesh_builder_xyz(
 
         # Figure out full extent required from input
         h_dim = []
-        nC_x0 = []
+        nC_origin = []
         for ii, cc in enumerate(nC):
             extent = limits[ii][0] - limits[ii][1] + np.sum(padding_distance[ii])
 
@@ -469,14 +469,14 @@ def mesh_builder_xyz(
             core = limits[ii][0] - limits[ii][1]
             pad2 = int(np.log2(padding_distance[ii][0] / h[ii] + 1))
 
-            nC_x0 += [int(np.ceil((mesh.h[ii].sum() - core) / h[ii] / 2))]
+            nC_origin += [int(np.ceil((mesh.h[ii].sum() - core) / h[ii] / 2))]
 
     # Set origin
-    x0 = []
+    origin = []
     for ii, hi in enumerate(mesh.h):
-        x0 += [limits[ii][1] - np.sum(hi[: nC_x0[ii]])]
+        origin += [limits[ii][1] - np.sum(hi[: nC_origin[ii]])]
 
-    mesh.x0 = np.hstack(x0)
+    mesh.origin = np.hstack(origin)
 
     # Shift mesh if global mesh is used based on closest to centroid
     axis = ["x", "y", "z"]
@@ -497,9 +497,9 @@ def mesh_builder_xyz(
                 - cc_local[np.max([np.searchsorted(cc_local, center[dim]) - 1, 0])]
             )
 
-            x0[dim] += shift
+            origin[dim] += shift
 
-            mesh.x0 = np.hstack(x0)
+            mesh.origin = np.hstack(origin)
 
     return mesh
 

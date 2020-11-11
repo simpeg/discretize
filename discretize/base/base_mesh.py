@@ -45,7 +45,7 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         required=True,
     )
 
-    x0 = properties.Array(
+    origin = properties.Array(
         "origin of the mesh (dim, )",
         dtype=(float, int),
         shape=("*",),
@@ -53,14 +53,16 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
     )
 
     # Instantiate the class
-    def __init__(self, n=None, x0=None, **kwargs):
+    def __init__(self, n=None, origin=None, **kwargs):
         if n is not None:
             self._n = n  # number of dimensions
 
-        if x0 is None:
-            self.x0 = np.zeros(len(self._n))
+        if "x0" in kwargs:
+            origin = kwargs.pop('x0')
+        if origin is None:
+            self.origin = np.zeros(len(self._n))
         else:
-            self.x0 = x0
+            self.origin = origin
 
         super(BaseMesh, self).__init__(**kwargs)
 
@@ -69,6 +71,14 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
             raise AttributeError  # http://nedbatchelder.com/blog/201010/surprising_getattr_recursion.html
         name = self._aliases.get(name, name)
         return object.__getattribute__(self, name)
+
+    @property
+    def x0(self):
+        return self.origin
+
+    @x0.setter
+    def x0(self, val):
+        self.origin = val
 
     # Validators
     @properties.validator("_n")
@@ -99,18 +109,18 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
                             )
                         )
 
-    @properties.validator("x0")
-    def _check_x0(self, change):
+    @properties.validator("origin")
+    def _check_origin(self, change):
         if not (
             not isinstance(change["value"], properties.utils.Sentinel)
             and change["value"] is not None
         ):
-            raise Exception("n must be set prior to setting x0")
+            raise Exception("n must be set prior to setting origin")
 
         if len(self._n) != len(change["value"]):
             raise Exception(
-                "Dimension mismatch. x0 has length {} != len(n) which is "
-                "{}".format(len(self.x0), len(self._n))
+                "Dimension mismatch. origin has length {} != len(n) which is "
+                "{}".format(len(self.origin), len(self._n))
             )
 
     @property
@@ -627,8 +637,8 @@ class BaseRectangularMesh(BaseMesh):
         },
     }
 
-    def __init__(self, n=None, x0=None, **kwargs):
-        BaseMesh.__init__(self, n=n, x0=x0, **kwargs)
+    def __init__(self, n=None, origin=None, **kwargs):
+        BaseMesh.__init__(self, n=n, origin=origin, **kwargs)
 
     @property
     def shape_cells(self):

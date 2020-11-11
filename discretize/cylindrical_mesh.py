@@ -43,7 +43,7 @@ class CylindricalMesh(
         cs, nc, npad = 20., 30, 8
         hx = utils.unpack_widths([(cs, npad+10, -0.7), (cs, nc), (cs, npad, 1.3)])
         hz = utils.unpack_widths([(cs, npad ,-1.3), (cs, nc), (cs, npad, 1.3)])
-        mesh = discretize.CylindricalMesh([hx, 1, hz], x0=[0, 0, -hz.sum()/2])
+        mesh = discretize.CylindricalMesh([hx, 1, hz], origin=[0, 0, -hz.sum()/2])
         mesh.plot_grid()
 
     To create a 3D cylindrical mesh, we also include an azimuthal discretization
@@ -59,7 +59,7 @@ class CylindricalMesh(
         hx = utils.unpack_widths([(cs, npad+10, -0.7), (cs, nc), (cs, npad, 1.3)])
         hy = 2 * np.pi/nc_theta * np.ones(nc_theta)
         hz = utils.unpack_widths([(cs,npad, -1.3), (cs,nc), (cs, npad, 1.3)])
-        mesh = discretize.CylindricalMesh([hx, hy, hz], x0=[0, 0, -hz.sum()/2])
+        mesh = discretize.CylindricalMesh([hx, hy, hz], origin=[0, 0, -hz.sum()/2])
         mesh.plot_grid()
 
     """
@@ -76,8 +76,8 @@ class CylindricalMesh(
         "Cartesian origin of the mesh", dtype=float, shape=("*",)
     )
 
-    def __init__(self, h=None, x0=None, **kwargs):
-        super().__init__(h=h, x0=x0, **kwargs)
+    def __init__(self, h=None, origin=None, **kwargs):
+        super().__init__(h=h, origin=origin, **kwargs)
         self.reference_system = "cylindrical"
 
         if not np.abs(self.h[1].sum() - 2 * np.pi) < 1e-10:
@@ -1667,12 +1667,12 @@ class CylindricalMesh(
             G, proj = np.c_[r, theta, grid[:, 2]], np.ones(r.size)
         else:
             dotMe = {
-                "Fx": Mrect.face_normals[: Mrect.nFx, :],
-                "Fy": Mrect.face_normals[Mrect.nFx : (Mrect.nFx + Mrect.nFy), :],
-                "Fz": Mrect.face_normals[-Mrect.nFz :, :],
+                "Fx": Mrect.face_normals[:Mrect.nFx, :],
+                "Fy": Mrect.face_normals[Mrect.nFx:(Mrect.nFx + Mrect.nFy), :],
+                "Fz": Mrect.face_normals[-Mrect.nFz:, :],
                 "Ex": Mrect.edge_tangents[: Mrect.nEx, :],
-                "Ey": Mrect.edge_tangents[Mrect.nEx : (Mrect.nEx + Mrect.nEy), :],
-                "Ez": Mrect.edge_tangents[-Mrect.nEz :, :],
+                "Ey": Mrect.edge_tangents[Mrect.nEx: (Mrect.nEx + Mrect.nEy), :],
+                "Ez": Mrect.edge_tangents[-Mrect.nEz:, :],
             }[location_type_to]
             if "F" in location_type:
                 normals = np.c_[np.cos(theta), np.sin(theta), np.zeros(theta.size)]

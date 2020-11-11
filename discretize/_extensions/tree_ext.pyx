@@ -24,22 +24,22 @@ cdef class TreeCell:
 
     Notes
     -----
-    When called as part of the `refine` function, only the x0, center, and h
+    When called as part of the `refine` function, only the origin, center, and h
     properties are valid.
     """
-    cdef double _x, _y, _z, _x0, _y0, _z0, _wx, _wy, _wz
+    cdef double _x, _y, _z, _origin, _y0, _z0, _wx, _wy, _wz
     cdef int_t _dim
     cdef c_Cell* _cell
     cdef void _set(self, c_Cell* cell):
         self._cell = cell
         self._dim = cell.n_dim
         self._x = cell.location[0]
-        self._x0 = cell.points[0].location[0]
+        self._origin = cell.points[0].location[0]
 
         self._y = cell.location[1]
         self._y0 = cell.points[0].location[1]
 
-        self._wx = cell.points[3].location[0] - self._x0
+        self._wx = cell.points[3].location[0] - self._origin
         self._wy = cell.points[3].location[1] - self._y0
         if(self._dim > 2):
             self._z = cell.location[2]
@@ -110,10 +110,14 @@ cdef class TreeCell:
         return np.array([self._x, self._y, self._z])
 
     @property
-    def x0(self):
+    def origin(self):
         """numpy.array of length dim"""
-        if self._dim == 2: return np.array([self._x0, self._y0])
-        return np.array([self._x0, self._y0, self._z0])
+        if self._dim == 2: return np.array([self._origin, self._y0])
+        return np.array([self._origin, self._y0, self._z0])
+
+    @property
+    def x0(self):
+        return self.origin
 
     @property
     def h(self):
@@ -227,7 +231,7 @@ cdef class _TreeMesh:
     cdef int _finalized
 
     cdef double[:] _xs, _ys, _zs
-    cdef double[:] _x0
+    cdef double[:] _origin
 
     cdef object _gridCC, _gridN, _gridhN
     cdef object _gridEx, _gridEy, _gridEz, _gridhEx, _gridhEy, _gridhEz
@@ -249,20 +253,20 @@ cdef class _TreeMesh:
         self.wrapper = new PyWrapper()
         self.tree = new c_Tree()
 
-    def __init__(self, h, x0):
+    def __init__(self, h, origin):
         nx2 = 2*len(h[0])
         ny2 = 2*len(h[1])
-        self._dim = len(x0)
-        self._x0 = x0
+        self._dim = len(origin)
+        self._origin = origin
 
         xs = np.empty(nx2 + 1, dtype=float)
-        xs[::2] = np.cumsum(np.r_[x0[0], h[0]])
+        xs[::2] = np.cumsum(np.r_[origin[0], h[0]])
         xs[1::2] = (xs[:-1:2] + xs[2::2])/2
         self._xs = xs
         self.ls[0] = int(np.log2(len(h[0])))
 
         ys = np.empty(ny2 + 1, dtype=float)
-        ys[::2] = np.cumsum(np.r_[x0[1],h[1]])
+        ys[::2] = np.cumsum(np.r_[origin[1],h[1]])
         ys[1::2] = (ys[:-1:2] + ys[2::2])/2
         self._ys = ys
         self.ls[1] = int(np.log2(len(h[1])))
@@ -271,7 +275,7 @@ cdef class _TreeMesh:
             nz2 = 2*len(h[2])
 
             zs = np.empty(nz2 + 1, dtype=float)
-            zs[::2] = np.cumsum(np.r_[x0[2],h[2]])
+            zs[::2] = np.cumsum(np.r_[origin[2],h[2]])
             zs[1::2] = (zs[:-1:2] + zs[2::2])/2
             self._zs = zs
             self.ls[2] = int(np.log2(len(h[2])))
@@ -371,8 +375,7 @@ cdef class _TreeMesh:
         >>> mesh.refine(func)
         >>> mesh
         ---- QuadTreeMesh ----
-         x0: 0.00
-         y0: 0.00
+         origin: 0.00, 0.00
          hx: 32*0.03,
          hy: 32*0.03,
         n_cells: 352
@@ -414,8 +417,7 @@ cdef class _TreeMesh:
         >>> mesh.insert_cells([0.5, 0.5], mesh.max_level)
         >>> print(mesh)
         ---- QuadTreeMesh ----
-         x0: 0.00
-         y0: 0.00
+         origin: 0.00, 0.00
          hx: 32*0.03,
          hy: 32*0.03,
         n_cells: 40
@@ -446,11 +448,11 @@ cdef class _TreeMesh:
         """Number the cells, nodes, faces, and edges of the TreeMesh"""
         self.tree.number()
 
-    def _set_x0(self, x0):
-        if not isinstance(x0, (list, tuple, np.ndarray)):
-            raise ValueError('x0 must be a list, tuple or numpy array')
-        self._x0 = np.asarray(x0, dtype=np.float64)
-        cdef int_t dim = self._x0.shape[0]
+    def _set_origin(self, origin):
+        if not isinstance(origin, (list, tuple, np.ndarray)):
+            raise ValueError('origin must be a list, tuple or numpy array')
+        self._origin = np.asarray(origin, dtype=np.float64)
+        cdef int_t dim = self._origin.shape[0]
         cdef double[:] shift
         #cdef c_Cell *cell
         cdef Node *node
@@ -459,10 +461,10 @@ cdef class _TreeMesh:
         if self.tree.n_dim > 0: # Will only happen if __init__ has been called
             shift = np.empty(dim, dtype=np.float64)
 
-            shift[0] = self._x0[0] - self._xs[0]
-            shift[1] = self._x0[1] - self._ys[0]
+            shift[0] = self._origin[0] - self._xs[0]
+            shift[1] = self._origin[1] - self._ys[0]
             if dim == 3:
-                shift[2] = self._x0[2] - self._zs[0]
+                shift[2] = self._origin[2] - self._zs[0]
 
             for i in range(self._xs.shape[0]):
                 self._xs[i] += shift[0]
@@ -3489,7 +3491,7 @@ cdef class _TreeMesh:
         cdef double over_lap_vol
         cdef double x1m, x1p, y1m, y1p, z1m, z1p
         cdef double x2m, x2p, y2m, y2p, z2m, z2p
-        cdef double[:] x0 = meshin._x0
+        cdef double[:] origin = meshin._origin
         cdef double[:] xF
         if self.dim == 2:
             xF = np.array([meshin._xs[-1], meshin._ys[-1]])
@@ -3569,11 +3571,11 @@ cdef class _TreeMesh:
             x1m = min(cell.points[0].location[0], xF[0])
             y1m = min(cell.points[0].location[1], xF[1])
 
-            x1p = max(cell.points[3].location[0], x0[0])
-            y1p = max(cell.points[3].location[1], x0[1])
+            x1p = max(cell.points[3].location[0], origin[0])
+            y1p = max(cell.points[3].location[1], origin[1])
             if self._dim==3:
                 z1m = min(cell.points[0].location[2], xF[2])
-                z1p = max(cell.points[7].location[2], x0[2])
+                z1p = max(cell.points[7].location[2], origin[2])
             overlapping_cell_inds = meshin.tree.find_overlapping_cells(x1m, x1p, y1m, y1p, z1m, z1p)
             n_overlap = overlapping_cell_inds.size()
             weights = <double *> malloc(n_overlap*sizeof(double))
@@ -3589,16 +3591,16 @@ cdef class _TreeMesh:
                 y2p = in_cell.points[3].location[1]
                 z2p = in_cell.points[7].location[2] if self._dim==3 else 0.0
 
-                if x1m == xF[0] or x1p == x0[0]:
+                if x1m == xF[0] or x1p == origin[0]:
                     over_lap_vol = 1.0
                 else:
                     over_lap_vol = min(x1p, x2p) - max(x1m, x2m)
-                if y1m == xF[1] or y1p == x0[1]:
+                if y1m == xF[1] or y1p == origin[1]:
                     over_lap_vol *= 1.0
                 else:
                     over_lap_vol *= min(y1p, y2p) - max(y1m, y2m)
                 if self._dim==3:
-                    if z1m == xF[2] or z1p == x0[2]:
+                    if z1m == xF[2] or z1p == origin[2]:
                         over_lap_vol *= 1.0
                     else:
                         over_lap_vol *= min(z1p, z2p) - max(z1m, z2m)
@@ -3637,7 +3639,7 @@ cdef class _TreeMesh:
         cdef double over_lap_vol
         cdef double x1m, x1p, y1m, y1p, z1m, z1p
         cdef double x2m, x2p, y2m, y2p, z2m, z2p
-        cdef double[:] x0
+        cdef double[:] origin
         cdef double[:] xF
 
         # first check if they have the same tensor base, as it makes it a lot easier...
@@ -3666,10 +3668,10 @@ cdef class _TreeMesh:
             )
 
         if self.dim == 2:
-            x0 = np.r_[self.x0, 0.0]
+            origin = np.r_[self.origin, 0.0]
             xF = np.array([self._xs[-1], self._ys[-1], 0.0])
         else:
-            x0 = self._x0
+            origin = self._origin
             xF = np.array([self._xs[-1], self._ys[-1], self._zs[-1]])
         cdef c_Cell * in_cell
 
@@ -3712,13 +3714,13 @@ cdef class _TreeMesh:
         #for cell in self.tree.cells:
         for iz in range(nz):
             z1m = min(nodes_z[iz], xF[2])
-            z1p = max(nodes_z[iz+1], x0[2])
+            z1p = max(nodes_z[iz+1], origin[2])
             for iy in range(ny):
                 y1m = min(nodes_y[iy], xF[1])
-                y1p = max(nodes_y[iy+1], x0[1])
+                y1p = max(nodes_y[iy+1], origin[1])
                 for ix in range(nx):
                     x1m = min(nodes_x[ix], xF[0])
-                    x1p = max(nodes_x[ix+1], x0[0])
+                    x1p = max(nodes_x[ix+1], origin[0])
                     overlapping_cell_inds = self.tree.find_overlapping_cells(x1m, x1p, y1m, y1p, z1m, z1p)
                     n_overlap = overlapping_cell_inds.size()
                     weights = <double *> malloc(n_overlap*sizeof(double))
@@ -3734,16 +3736,16 @@ cdef class _TreeMesh:
                         y2p = in_cell.points[3].location[1]
                         z2p = in_cell.points[7].location[2] if self._dim==3 else 0.0
 
-                        if x1m == xF[0] or x1p == x0[0]:
+                        if x1m == xF[0] or x1p == origin[0]:
                             over_lap_vol = 1.0
                         else:
                             over_lap_vol = min(x1p, x2p) - max(x1m, x2m)
-                        if y1m == xF[1] or y1p == x0[1]:
+                        if y1m == xF[1] or y1p == origin[1]:
                             over_lap_vol *= 1.0
                         else:
                             over_lap_vol *= min(y1p, y2p) - max(y1m, y2m)
                         if self._dim==3:
-                            if z1m == xF[2] or z1p == x0[2]:
+                            if z1m == xF[2] or z1p == origin[2]:
                                 over_lap_vol *= 1.0
                             else:
                                 over_lap_vol *= min(z1p, z2p) - max(z1m, z2m)
@@ -3781,7 +3783,7 @@ cdef class _TreeMesh:
         cdef double x1m, x1p, y1m, y1p, z1m, z1p
         cdef double x2m, x2p, y2m, y2p, z2m, z2p
         cdef int_t ix, ix1, ix2, iy, iy1, iy2, iz, iz1, iz2
-        cdef double[:] x0 = in_tens_mesh.x0
+        cdef double[:] origin = in_tens_mesh.origin
         cdef double[:] xF
 
         # first check if they have the same tensor base, as it makes it a lot easier...
@@ -3855,11 +3857,11 @@ cdef class _TreeMesh:
             x1m = min(cell.points[0].location[0], xF[0])
             y1m = min(cell.points[0].location[1], xF[1])
 
-            x1p = max(cell.points[3].location[0], x0[0])
-            y1p = max(cell.points[3].location[1], x0[1])
+            x1p = max(cell.points[3].location[0], origin[0])
+            y1p = max(cell.points[3].location[1], origin[1])
             if self._dim==3:
                 z1m = min(cell.points[0].location[2], xF[2])
-                z1p = max(cell.points[7].location[2], x0[2])
+                z1p = max(cell.points[7].location[2], origin[2])
             # then need to find overlapping cells of TensorMesh...
             ix1 = max(_bisect_left(nodes_x, x1m) - 1, 0)
             ix2 = min(_bisect_right(nodes_x, x1p), nx)
@@ -3881,7 +3883,7 @@ cdef class _TreeMesh:
             for ix in range(ix1, ix2):
                 x2m = nodes_x[ix]
                 x2p = nodes_x[ix+1]
-                if x1m == xF[0] or x1p == x0[0]:
+                if x1m == xF[0] or x1p == origin[0]:
                     dx[ix-ix1] = 1.0
                 else:
                     dx[ix-ix1] = min(x1p, x2p) - max(x1m, x2m)
@@ -3890,7 +3892,7 @@ cdef class _TreeMesh:
             for iy in range(iy1, iy2):
                 y2m = nodes_y[iy]
                 y2p = nodes_y[iy+1]
-                if y1m == xF[1] or y1p == x0[1]:
+                if y1m == xF[1] or y1p == origin[1]:
                     dy[iy-iy1] = 1.0
                 else:
                     dy[iy-iy1] = min(y1p, y2p) - max(y1m, y2m)
@@ -3900,7 +3902,7 @@ cdef class _TreeMesh:
                 z2m = nodes_z[iz]
                 z2p = nodes_z[iz+1]
                 if self._dim==3:
-                    if z1m == xF[2] or z1p == x0[2]:
+                    if z1m == xF[2] or z1p == origin[2]:
                         dz[iz-iz1] = 1.0
                     else:
                         dz[iz-iz1] = min(z1p, z2p) - max(z1m, z2m)
@@ -3949,19 +3951,19 @@ cdef class _TreeMesh:
 
     def get_overlapping_cells(self, rectangle):
         cdef double xm, ym, zm, xp, yp, zp
-        cdef double[:] x0 = self._x0
+        cdef double[:] origin = self._origin
         cdef double[:] xF
         if self.dim == 2:
             xF = np.array([self._xs[-1], self._ys[-1]])
         else:
             xF = np.array([self._xs[-1], self._ys[-1], self._zs[-1]])
         xm = min(rectangle[0], xF[0])
-        xp = max(rectangle[1], x0[0])
+        xp = max(rectangle[1], origin[0])
         ym = min(rectangle[2], xF[1])
-        yp = max(rectangle[3], x0[1])
+        yp = max(rectangle[3], origin[1])
         if self.dim==3:
             zm = min(rectangle[4], xF[2])
-            zp = max(rectangle[5], x0[2])
+            zp = max(rectangle[5], origin[2])
         else:
             zm = 0.0
             zp = 0.0

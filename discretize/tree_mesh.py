@@ -137,14 +137,11 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
     }
 
     # inheriting stuff from BaseTensorMesh that isn't defined in _QuadTree
-    def __init__(self, h=None, x0=None, **kwargs):
-        if "h" in kwargs.keys():
-            h = kwargs.pop("h")
-        if "x0" in kwargs.keys():
-            x0 = kwargs.pop("x0")
-        # print(h, x0)
+    def __init__(self, h=None, origin=None, **kwargs):
+        if "x0" in kwargs:
+            origin = kwargs.pop("x0")
         BaseTensorMesh.__init__(
-            self, h, x0
+            self, h, origin
         )  # TODO:, **kwargs) # pass the kwargs for copy/paste
 
         nx = len(self.h[0])
@@ -157,7 +154,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         if not (is_pow2(nx) and is_pow2(ny) and is_pow2(nz)):
             raise ValueError("length of cell width vectors must be a power of 2")
         # Now can initialize cpp tree parent
-        _TreeMesh.__init__(self, self.h, self.x0)
+        _TreeMesh.__init__(self, self.h, self.origin)
 
         if "cell_levels" in kwargs.keys() and "cell_indexes" in kwargs.keys():
             inds = kwargs.pop("cell_indexes")
@@ -290,9 +287,9 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
 
         return full_tbl
 
-    @properties.validator("x0")
-    def _x0_validator(self, change):
-        self._set_x0(change["value"])
+    @properties.validator("origin")
+    def _origin_validator(self, change):
+        self._set_origin(change["value"])
 
     @property
     def vntF(self):
@@ -597,7 +594,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         return mesh
 
     def __reduce__(self):
-        return TreeMesh, (self.h, self.x0), self.__getstate__()
+        return TreeMesh, (self.h, self.origin), self.__getstate__()
 
     cellGrad = deprecate_property("cell_gradient", "cellGrad", removal_version="1.0.0")
     cellGradx = deprecate_property(

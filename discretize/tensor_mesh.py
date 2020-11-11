@@ -59,8 +59,8 @@ class TensorMesh(
         **BaseTensorMesh._aliases,
     }
 
-    def __init__(self, h=None, x0=None, **kwargs):
-        BaseTensorMesh.__init__(self, h=h, x0=x0, **kwargs)
+    def __init__(self, h=None, origin=None, **kwargs):
+        BaseTensorMesh.__init__(self, h=h, origin=origin, **kwargs)
 
     def __repr__(self):
         """Plain text representation."""

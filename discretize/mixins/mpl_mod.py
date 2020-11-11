@@ -1012,8 +1012,8 @@ class InterfaceMPL(object):
 
             ph = ax.pcolormesh(xx, yy, C.T, **pcolor_opts)
             # Plot the lines
-            gx = np.arange(nX + 1) * (self.nodes_x[-1] - self.x0[0])
-            gy = np.arange(nY + 1) * (self.nodes_y[-1] - self.x0[1])
+            gx = np.arange(nX + 1) * (self.nodes_x[-1] - self.origin[0])
+            gy = np.arange(nY + 1) * (self.nodes_y[-1] - self.origin[1])
             # Repeat and seperate with NaN
             gxX = np.c_[gx, gx, gx + np.nan].ravel()
             gxY = np.kron(
@@ -1034,8 +1034,8 @@ class InterfaceMPL(object):
                         iz = ix + iy * nX
                         if iz < nCz:
                             ax.text(
-                                (ix + 1) * (self.nodes_x[-1] - self.x0[0]) - pad,
-                                (iy) * (self.nodes_y[-1] - self.x0[1]) + pad,
+                                (ix + 1) * (self.nodes_x[-1] - self.origin[0]) - pad,
+                                (iy) * (self.nodes_y[-1] - self.origin[1]) + pad,
                                 "#{0:.0f}".format(iz),
                                 color=annotation_color,
                                 verticalalignment="bottom",
@@ -1115,25 +1115,25 @@ class InterfaceMPL(object):
                 dx = range_x[1] - range_x[0]
                 nxi = int(dx / hxmin)
                 hx = np.ones(nxi) * dx / nxi
-                x0_x = range_x[0]
+                origin_x = range_x[0]
             else:
                 nxi = int(self.h[0].sum() / hxmin)
                 hx = np.ones(nxi) * self.h[0].sum() / nxi
-                x0_x = self.x0[0]
+                origin_x = self.origin[0]
 
             if range_y is not None:
                 dy = range_y[1] - range_y[0]
                 nyi = int(dy / hymin)
                 hy = np.ones(nyi) * dy / nyi
-                x0_y = range_y[0]
+                origin_y = range_y[0]
             else:
                 nyi = int(self.h[1].sum() / hymin)
                 hy = np.ones(nyi) * self.h[1].sum() / nyi
-                x0_y = self.x0[1]
+                origin_y = self.origin[1]
 
             U, V = self.reshape(v.reshape((self.nC, -1), order="F"), "CC", "CC", "M")
 
-            tMi = self.__class__(h=[hx, hy], x0=np.r_[x0_x, x0_y])
+            tMi = self.__class__(h=[hx, hy], origin=np.r_[origin_x, origin_y])
             P = self.get_interpolation_matrix(tMi.gridCC, "CC", zerosOutside=True)
 
             Ui = tMi.reshape(P * mkvc(U), "CC", "CC", "M")
@@ -1143,8 +1143,6 @@ class InterfaceMPL(object):
             x = self.nodes_x
             y = self.nodes_y
 
-            ind_CCx = np.ones(self.vnC, dtype=bool)
-            ind_CCy = np.ones(self.vnC, dtype=bool)
             if range_x is not None:
                 x = tMi.nodes_x
 
@@ -1288,14 +1286,14 @@ class InterfaceMPL(object):
         x2d = []
         if "X" not in normal:
             h2d.append(self.h[0])
-            x2d.append(self.x0[0])
+            x2d.append(self.origin[0])
         if "Y" not in normal:
             h2d.append(self.h[1])
-            x2d.append(self.x0[1])
+            x2d.append(self.origin[1])
         if "Z" not in normal:
             h2d.append(self.h[2])
-            x2d.append(self.x0[2])
-        tM = self.__class__(h=h2d, x0=x2d)  #: Temp Mesh
+            x2d.append(self.origin[2])
+        tM = self.__class__(h=h2d, origin=x2d)  #: Temp Mesh
         v2d = doSlice(v)
 
         out = tM.__plot_image_tensor2D(
@@ -1352,8 +1350,8 @@ class InterfaceMPL(object):
         if mirror:
             # create a mirrored mesh
             hx = np.hstack([np.flipud(self.h[0]), self.h[0]])
-            x00 = self.x0[0] - self.h[0].sum()
-            M = discretize.TensorMesh([hx, self.h[2]], x0=[x00, self.x0[2]])
+            origin0 = self.origin[0] - self.h[0].sum()
+            M = discretize.TensorMesh([hx, self.h[2]], origin=[origin0, self.origin[2]])
 
             if mirror_data is None:
                 mirror_data = val
@@ -1384,7 +1382,7 @@ class InterfaceMPL(object):
             args = (val,) + args[1:]
         else:
             M = discretize.TensorMesh(
-                [self.h[0], self.h[2]], x0=[self.x0[0], self.x0[2]]
+                [self.h[0], self.h[2]], origin=[self.origin[0], self.origin[2]]
             )
 
         ax = kwargs.get("ax", None)
@@ -1478,7 +1476,7 @@ class InterfaceMPL(object):
     def __plotGridThetaSlice(self, *args, **kwargs):
         # make a cyl symmetric mesh
         h2d = [self.h[0], 1, self.h[2]]
-        mesh2D = self.__class__(h=h2d, x0=self.x0)
+        mesh2D = self.__class__(h=h2d, origin=self.origin)
         return mesh2D.plot_grid(*args, **kwargs)
 
     def __plotGridZSlice(self, *args, **kwargs):
@@ -1989,7 +1987,7 @@ class InterfaceMPL(object):
         antiNormalInd = {"X": [1, 2], "Y": [0, 2], "Z": [0, 1]}[normal]
 
         h2d = (self.h[antiNormalInd[0]], self.h[antiNormalInd[1]])
-        x2d = (self.x0[antiNormalInd[0]], self.x0[antiNormalInd[1]])
+        x2d = (self.origin[antiNormalInd[0]], self.origin[antiNormalInd[1]])
 
         #: Size of the sliced dimension
         szSliceDim = len(self.h[normalInd])
@@ -1998,7 +1996,7 @@ class InterfaceMPL(object):
 
         cc_tensor = [None, None, None]
         for i in range(3):
-            cc_tensor[i] = np.cumsum(np.r_[self.x0[i], self.h[i]])
+            cc_tensor[i] = np.cumsum(np.r_[self.origin[i], self.h[i]])
             cc_tensor[i] = (cc_tensor[i][1:] + cc_tensor[i][:-1]) * 0.5
         slice_loc = cc_tensor[normalInd][ind]
 

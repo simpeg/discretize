@@ -589,10 +589,10 @@ class InterfaceTensorread_vtk(object):
         else:
             hz = np.abs(zD)
             zR = _nps.vtk_to_numpy(vtrGrid.GetZCoordinates())[0]
-        x0 = np.array([xR, yR, zR])
+        origin = np.array([xR, yR, zR])
 
         # Make the object
-        tensMsh = TensorMesh([hx, hy, hz], x0=x0)
+        tensMsh = TensorMesh([hx, hy, hz], origin=origin)
 
         # Grap the models
         models = {}

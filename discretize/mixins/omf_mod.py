@@ -80,7 +80,7 @@ class InterfaceOMF(object):
         geometry.axis_v = mesh.axis_v
         geometry.axis_w = mesh.axis_w
         # Set the origin
-        geometry.origin = mesh.x0
+        geometry.x0 = mesh.origin
         # Make sure the geometry is built correctly
         geometry.validate()
         # Make the volume elemet (the OMF object)
@@ -148,7 +148,7 @@ class InterfaceOMF(object):
         mesh.axis_u = geometry.axis_u
         mesh.axis_v = geometry.axis_v
         mesh.axis_w = geometry.axis_w
-        mesh.x0 = geometry.origin
+        mesh.origin = geometry.x0
 
         data_dict = {}
         for data in element.data:
