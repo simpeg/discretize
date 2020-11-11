@@ -197,17 +197,17 @@ class InnerProducts(object):
         fast = None
         if hasattr(self, "_fastInnerProduct") and do_fast:
             fast = self._fastInnerProduct(
-                projection_type, prop=prop, inverse_property=inverse_property, inverse_matrix=inverse_matrix
+                projection_type, model=model, inverse_property=inverse_property, inverse_matrix=inverse_matrix
             )
         if fast is not None:
             return fast
 
         if inverse_property:
-            prop = inverse_property_tensor(self, prop)
+            model = inverse_property_tensor(self, model)
 
-        tensorType = TensorType(self, prop)
+        tensorType = TensorType(self, model)
 
-        Mu = make_property_tensor(self, prop)
+        Mu = make_property_tensor(self, model)
         Ps = self._getInnerProductProjectionMatrices(projection_type, tensorType)
         A = np.sum([P.T * Mu * P for P in Ps])
 
@@ -268,12 +268,12 @@ class InnerProducts(object):
         return [V * proj(*locs[node][d - 1]) for node in nodes]
 
     def get_face_inner_product_deriv(
-        self, prop, do_fast=True, inverse_property=False, inverse_matrix=False, **kwargs
+        self, model, do_fast=True, inverse_property=False, inverse_matrix=False, **kwargs
     ):
         """
         Parameters
         ----------
-        prop : numpy.ndarray
+        model : numpy.ndarray
             material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
 
         do_fast :
@@ -314,16 +314,16 @@ class InnerProducts(object):
             )
             do_fast = kwargs["doFast"]
         return self._getInnerProductDeriv(
-            prop, "F", do_fast=do_fast, inverse_property=inverse_property, inverse_matrix=inverse_matrix
+            model, "F", do_fast=do_fast, inverse_property=inverse_property, inverse_matrix=inverse_matrix
         )
 
     def get_edge_inner_product_deriv(
-        self, prop, do_fast=True, inverse_property=False, inverse_matrix=False, **kwargs
+        self, model, do_fast=True, inverse_property=False, inverse_matrix=False, **kwargs
     ):
         """
         Parameters
         ----------
-        prop : numpy.ndarray
+        model : numpy.ndarray
             material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
 
         do_fast : bool
@@ -364,16 +364,16 @@ class InnerProducts(object):
             )
             do_fast = kwargs["doFast"]
         return self._getInnerProductDeriv(
-            prop, "E", do_fast=do_fast, inverse_property=inverse_property, inverse_matrix=inverse_matrix
+            model, "E", do_fast=do_fast, inverse_property=inverse_property, inverse_matrix=inverse_matrix
         )
 
     def _getInnerProductDeriv(
-        self, prop, projection_type, do_fast=True, inverse_property=False, inverse_matrix=False
+        self, model, projection_type, do_fast=True, inverse_property=False, inverse_matrix=False
     ):
         """
         Parameters
         ----------
-        prop : numpy.ndarray
+        model : numpy.ndarray
             material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
 
         projection_type : str
@@ -398,7 +398,7 @@ class InnerProducts(object):
         fast = None
         if hasattr(self, "_fastInnerProductDeriv") and do_fast:
             fast = self._fastInnerProductDeriv(
-                projection_type, prop, inverse_property=inverse_property, inverse_matrix=inverse_matrix
+                projection_type, model, inverse_property=inverse_property, inverse_matrix=inverse_matrix
             )
         if fast is not None:
             return fast
@@ -408,7 +408,7 @@ class InnerProducts(object):
                 "inverting the property or the matrix is not yet implemented for this mesh/tensorType. You should write it!"
             )
 
-        tensorType = TensorType(self, prop)
+        tensorType = TensorType(self, model)
         P = self._getInnerProductProjectionMatrices(projection_type, tensorType=tensorType)
 
         def innerProductDeriv(v):
@@ -420,7 +420,7 @@ class InnerProducts(object):
         """
         Parameters
         ----------
-        prop : numpy.ndarray
+        model : numpy.ndarray
             material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
 
         v : numpy.ndarray
