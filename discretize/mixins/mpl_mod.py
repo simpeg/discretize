@@ -946,7 +946,7 @@ class InterfaceMPL(object):
         if self.dim == 1:
             if v_type == "CC":
                 ph = ax.plot(
-                    self.grid_cell_centers_x, v, linestyle="-", color="C1", marker="o"
+                    self.cell_centers_x, v, linestyle="-", color="C1", marker="o"
                 )
             elif v_type == "N":
                 ph = ax.plot(
@@ -1198,8 +1198,8 @@ class InterfaceMPL(object):
             )
             out += (
                 ax.streamplot(
-                    tMi.grid_cell_centers_x,
-                    tMi.grid_cell_centers_y,
+                    tMi.cell_centers_x,
+                    tMi.cell_centers_y,
                     Ui.T,
                     Vi.T,
                     **stream_opts,
@@ -1742,12 +1742,12 @@ class InterfaceMPL(object):
                 markeredgecolor="C0",
             )
         if centers:
-            ax.plot(*self.grid_cell_centers.T, color="C1", marker="o", linestyle="")
+            ax.plot(*self.cell_centers.T, color="C1", marker="o", linestyle="")
         if cell_line:
-            ax.plot(*self.grid_cell_centers.T, color="C1", linestyle=":")
+            ax.plot(*self.cell_centers.T, color="C1", linestyle=":")
             ax.plot(
-                self.grid_cell_centers[[0, -1], 0],
-                self.grid_cell_centers[[0, -1], 1],
+                self.cell_centers[[0, -1], 0],
+                self.cell_centers[[0, -1], 1],
                 color="C1",
                 marker="o",
                 linestyle="",
@@ -2222,9 +2222,9 @@ class Slicer(object):
         self.x = mesh.grid_nodes_x  # x-node locations
         self.y = mesh.grid_nodes_y  # y-node locations
         self.z = mesh.grid_nodes_z  # z-node locations
-        self.xc = mesh.grid_cell_centers_x  # x-cell center locations
-        self.yc = mesh.grid_cell_centers_y  # y-cell center locations
-        self.zc = mesh.grid_cell_centers_z  # z-cell center locations
+        self.xc = mesh.cell_centers_x  # x-cell center locations
+        self.yc = mesh.cell_centers_y  # y-cell center locations
+        self.zc = mesh.cell_centers_z  # z-cell center locations
 
         # Axis: Default ('xy'): horizontal axis is x, vertical axis is y.
         # Reversed otherwise.

@@ -41,7 +41,7 @@ class BaseTensorMesh(BaseMesh):
     _aliases = {
         **BaseMesh._aliases,
         **{
-            "gridCC": "grid_cell_centers",
+            "gridCC": "cell_centers",
             "gridN": "grid_nodes",
             "gridFx": "grid_faces_x",
             "gridFy": "grid_faces_y",
@@ -147,13 +147,13 @@ class BaseTensorMesh(BaseMesh):
         return None if self.dim < 3 else np.r_[self.x0[2], self.h[2]].cumsum()
 
     @property
-    def grid_cell_centers_x(self):
+    def cell_centers_x(self):
         """Cell-centered grid vector (1D) in the x direction."""
         nodes = self.grid_nodes_x
         return (nodes[1:] + nodes[:-1]) / 2
 
     @property
-    def grid_cell_centers_y(self):
+    def cell_centers_y(self):
         """Cell-centered grid vector (1D) in the y direction."""
         if self.dim < 2:
             return None
@@ -161,7 +161,7 @@ class BaseTensorMesh(BaseMesh):
         return (nodes[1:] + nodes[:-1]) / 2
 
     @property
-    def grid_cell_centers_z(self):
+    def cell_centers_z(self):
         """Cell-centered grid vector (1D) in the z direction."""
         if self.dim < 3:
             return None
@@ -169,7 +169,7 @@ class BaseTensorMesh(BaseMesh):
         return (nodes[1:] + nodes[:-1]) / 2
 
     @property
-    def grid_cell_centers(self):
+    def cell_centers(self):
         """Cell-centered grid."""
         return self._getTensorGrid("CC")
 
@@ -263,32 +263,32 @@ class BaseTensorMesh(BaseMesh):
         if key == "Fx":
             ten = [
                 self.grid_nodes_x,
-                self.grid_cell_centers_y,
-                self.grid_cell_centers_z,
+                self.cell_centers_y,
+                self.cell_centers_z,
             ]
         elif key == "Fy":
             ten = [
-                self.grid_cell_centers_x,
+                self.cell_centers_x,
                 self.grid_nodes_y,
-                self.grid_cell_centers_z,
+                self.cell_centers_z,
             ]
         elif key == "Fz":
             ten = [
-                self.grid_cell_centers_x,
-                self.grid_cell_centers_y,
+                self.cell_centers_x,
+                self.cell_centers_y,
                 self.grid_nodes_z,
             ]
         elif key == "Ex":
-            ten = [self.grid_cell_centers_x, self.grid_nodes_y, self.grid_nodes_z]
+            ten = [self.cell_centers_x, self.grid_nodes_y, self.grid_nodes_z]
         elif key == "Ey":
-            ten = [self.grid_nodes_x, self.grid_cell_centers_y, self.grid_nodes_z]
+            ten = [self.grid_nodes_x, self.cell_centers_y, self.grid_nodes_z]
         elif key == "Ez":
-            ten = [self.grid_nodes_x, self.grid_nodes_y, self.grid_cell_centers_z]
+            ten = [self.grid_nodes_x, self.grid_nodes_y, self.cell_centers_z]
         elif key == "CC":
             ten = [
-                self.grid_cell_centers_x,
-                self.grid_cell_centers_y,
-                self.grid_cell_centers_z,
+                self.cell_centers_x,
+                self.cell_centers_y,
+                self.cell_centers_z,
             ]
         elif key == "N":
             ten = [self.grid_nodes_x, self.grid_nodes_y, self.grid_nodes_z]
@@ -720,13 +720,13 @@ class BaseTensorMesh(BaseMesh):
     vectorNy = deprecate_property("grid_nodes_y", "vectorNy", removal_version="1.0.0")
     vectorNz = deprecate_property("grid_nodes_z", "vectorNz", removal_version="1.0.0")
     vectorCCx = deprecate_property(
-        "grid_cell_centers_x", "vectorCCx", removal_version="1.0.0"
+        "cell_centers_x", "vectorCCx", removal_version="1.0.0"
     )
     vectorCCy = deprecate_property(
-        "grid_cell_centers_y", "vectorCCy", removal_version="1.0.0"
+        "cell_centers_y", "vectorCCy", removal_version="1.0.0"
     )
     vectorCCz = deprecate_property(
-        "grid_cell_centers_z", "vectorCCz", removal_version="1.0.0"
+        "cell_centers_z", "vectorCCz", removal_version="1.0.0"
     )
     getInterpolationMat = deprecate_method(
         "get_interpolation_matrix", "getInterpolationMat", removal_version="1.0.0"

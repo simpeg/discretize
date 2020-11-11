@@ -703,7 +703,7 @@ cdef class _TreeMesh:
         return self.tree.hanging_faces_z.size()
 
     @property
-    def grid_cell_centers(self):
+    def cell_centers(self):
         """
         Returns a numpy arrayof shape (n_cells, dim) with the center locations of all cells
         in order.
@@ -952,7 +952,7 @@ cdef class _TreeMesh:
         Returns a numpy array of shape (n_faces_z, dim) with the centers of all
         non-hanging faces along the third dimension in order.
         """
-        if(self._dim == 2): return self.grid_cell_centers
+        if(self._dim == 2): return self.cell_centers
 
         cdef np.float64_t[:, :] gridFz
         cdef Face *face
@@ -3652,7 +3652,7 @@ cdef class _TreeMesh:
             same_base = False
 
         if same_base:
-            in_cell_inds = self._get_containing_cell_indexes(out_tens_mesh.grid_cell_centers)
+            in_cell_inds = self._get_containing_cell_indexes(out_tens_mesh.cell_centers)
             # Every cell input cell is gauranteed to be a lower level than the output tenser mesh
             # therefore all weights a 1.0
             if values is not None:
@@ -3797,7 +3797,7 @@ cdef class _TreeMesh:
 
 
         if same_base:
-            out_cell_inds = self._get_containing_cell_indexes(in_tens_mesh.grid_cell_centers)
+            out_cell_inds = self._get_containing_cell_indexes(in_tens_mesh.cell_centers)
             ws = in_tens_mesh.cell_volumes/self.cell_volumes[out_cell_inds]
             if values is not None:
                 if output is None:

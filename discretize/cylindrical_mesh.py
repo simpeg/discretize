@@ -299,12 +299,12 @@ class CylindricalMesh(
         return int(np.prod([z_shape[0] - 1, z_shape[1], cell_shape[2]])) + cell_shape[2]
 
     @property
-    def grid_cell_centers_x(self):
+    def cell_centers_x(self):
         """Cell-centered grid vector (1D) in the x direction."""
         return np.r_[0, self.h[0][:-1].cumsum()] + self.h[0] * 0.5
 
     @property
-    def grid_cell_centers_y(self):
+    def cell_centers_y(self):
         """Cell-centered grid vector (1D) in the y direction."""
         if self.is_symmetric:
             return np.r_[0, self.h[1][:-1]]
@@ -934,7 +934,7 @@ class CylindricalMesh(
         Full Fx grid (including hanging faces)
         """
         return ndgrid(
-            [self.grid_nodes_x, self.grid_cell_centers_y, self.grid_cell_centers_z]
+            [self.grid_nodes_x, self.cell_centers_y, self.cell_centers_z]
         )
 
     @property
@@ -985,7 +985,7 @@ class CylindricalMesh(
         """
         Full z-edge grid (including hanging edges)
         """
-        return ndgrid([self.grid_nodes_x, self._vectorNyFull, self.grid_cell_centers_z])
+        return ndgrid([self.grid_nodes_x, self._vectorNyFull, self.cell_centers_z])
 
     @property
     def grid_edges_z(self):

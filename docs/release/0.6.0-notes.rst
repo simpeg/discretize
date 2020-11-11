@@ -67,7 +67,7 @@ On ``discretize.base.BaseRectangularMesh``:
 
 On ``discretize.base.BaseTensorMesh``:
 
-* ``grid_cell_centers=gridCC``
+* ``cell_centers=gridCC``
 * ``grid_nodes=gridN``
 * ``grid_edges_x=gridEx``, ``grid_edges_y=gridEy``, ``grid_edges_z=gridEz``
 * ``grid_faces_x=gridFx``, ``grid_faces_y=gridFy``, ``grid_faces_z=gridFz``
@@ -115,7 +115,7 @@ On  ``discretize.base.BaseRectangularMesh``:
 On ``discretize.base.BaseTensorMesh``:
 
 * ``vectorNx`` → ``grid_nodes_x``, ``vectorNy`` → ``grid_nodes_y``, ``vectorNz`` → ``grid_nodes_z``
-* ``vectorCCx`` → ``grid_cell_centers_x``, ``vectorCCy`` → ``grid_cell_centers_y``, ``vectorCCz`` → ``grid_cell_centers_z``
+* ``vectorCCx`` → ``cell_centers_x``, ``vectorCCy`` → ``cell_centers_y``, ``vectorCCz`` → ``cell_centers_z``
 * ``getInterpolationMat`` → ``get_interpolation_matrix``
 * ``isInside`` → ``is_inside``
 * ``getTensor`` → ``get_tensor``

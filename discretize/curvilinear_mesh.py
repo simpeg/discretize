@@ -43,7 +43,7 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
         **DiffOperators._aliases,
         **BaseRectangularMesh._aliases,
         **{
-            "gridCC": "grid_cell_centers",
+            "gridCC": "cell_centers",
             "gridN": "grid_nodes",
             "gridFx": "grid_faces_x",
             "gridFy": "grid_faces_y",
@@ -102,7 +102,7 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
             raise ValueError("Dimension mismatch")
 
     @property
-    def grid_cell_centers(self):
+    def cell_centers(self):
         """
         Cell-centered grid
         """
