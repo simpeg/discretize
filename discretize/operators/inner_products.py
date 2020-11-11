@@ -30,7 +30,7 @@ class InnerProducts(object):
         )
 
     def get_face_inner_product(
-        self, prop=None, inv_prop=False, inv_mat=False, do_fast=True, **kwargs
+        self, prop=None, inverse_property=False, inv_mat=False, do_fast=True, **kwargs
     ):
         """Generate the face inner product matrix
 
@@ -39,7 +39,7 @@ class InnerProducts(object):
         prop : numpy.ndarray
             material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
 
-        inv_prop : bool
+        inverse_property : bool
             inverts the material property
 
         inv_mat : bool
@@ -57,11 +57,11 @@ class InnerProducts(object):
         """
         if "invProp" in kwargs:
             warnings.warn(
-                "The invProp keyword argument has been deprecated, please use inv_prop. "
+                "The invProp keyword argument has been deprecated, please use inverse_property. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
             )
-            inv_prop = kwargs["invProp"]
+            inverse_property = kwargs["invProp"]
         if "invMat" in kwargs:
             warnings.warn(
                 "The invMat keyword argument has been deprecated, please use inv_mat. "
@@ -78,11 +78,11 @@ class InnerProducts(object):
             do_fast = kwargs["doFast"]
 
         return self._getInnerProduct(
-            "F", prop=prop, inv_prop=inv_prop, inv_mat=inv_mat, do_fast=do_fast
+            "F", prop=prop, inverse_property=inverse_property, inv_mat=inv_mat, do_fast=do_fast
         )
 
     def get_edge_inner_product(
-        self, prop=None, inv_prop=False, inv_mat=False, do_fast=True, **kwargs
+        self, prop=None, inverse_property=False, inv_mat=False, do_fast=True, **kwargs
     ):
         """Generate the edge inner product matrix
 
@@ -92,7 +92,7 @@ class InnerProducts(object):
         prop : numpy.ndarray
             material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
 
-        inv_prop : bool
+        inverse_property : bool
             inverts the material property
 
         inv_mat : bool
@@ -110,11 +110,11 @@ class InnerProducts(object):
         """
         if "invProp" in kwargs:
             warnings.warn(
-                "The invProp keyword argument has been deprecated, please use inv_prop. "
+                "The invProp keyword argument has been deprecated, please use inverse_property. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
             )
-            inv_prop = kwargs["invProp"]
+            inverse_property = kwargs["invProp"]
         if "invMat" in kwargs:
             warnings.warn(
                 "The invMat keyword argument has been deprecated, please use inv_mat. "
@@ -130,14 +130,14 @@ class InnerProducts(object):
             )
             do_fast = kwargs["doFast"]
         return self._getInnerProduct(
-            "E", prop=prop, inv_prop=inv_prop, inv_mat=inv_mat, do_fast=do_fast
+            "E", prop=prop, inverse_property=inverse_property, inv_mat=inv_mat, do_fast=do_fast
         )
 
     def _getInnerProduct(
         self,
         projection_type,
         prop=None,
-        inv_prop=False,
+        inverse_property=False,
         inv_mat=False,
         do_fast=True,
         **kwargs
@@ -153,7 +153,7 @@ class InnerProducts(object):
         numpy.ndarray : prop
             material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
 
-        bool : inv_prop
+        bool : inverse_property
             inverts the material property
 
         bool : inv_mat
@@ -172,11 +172,11 @@ class InnerProducts(object):
         """
         if "invProp" in kwargs:
             warnings.warn(
-                "The invProp keyword argument has been deprecated, please use inv_prop. "
+                "The invProp keyword argument has been deprecated, please use inverse_property. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
             )
-            inv_prop = kwargs["invProp"]
+            inverse_property = kwargs["invProp"]
         if "invMat" in kwargs:
             warnings.warn(
                 "The invMat keyword argument has been deprecated, please use inv_mat. "
@@ -197,12 +197,12 @@ class InnerProducts(object):
         fast = None
         if hasattr(self, "_fastInnerProduct") and do_fast:
             fast = self._fastInnerProduct(
-                projection_type, prop=prop, inv_prop=inv_prop, inv_mat=inv_mat
+                projection_type, prop=prop, inverse_property=inverse_property, inv_mat=inv_mat
             )
         if fast is not None:
             return fast
 
-        if inv_prop:
+        if inverse_property:
             prop = inverse_property_tensor(self, prop)
 
         tensorType = TensorType(self, prop)
@@ -268,7 +268,7 @@ class InnerProducts(object):
         return [V * proj(*locs[node][d - 1]) for node in nodes]
 
     def get_face_inner_product_deriv(
-        self, prop, do_fast=True, inv_prop=False, inv_mat=False, **kwargs
+        self, prop, do_fast=True, inverse_property=False, inv_mat=False, **kwargs
     ):
         """
         Parameters
@@ -279,7 +279,7 @@ class InnerProducts(object):
         do_fast :
             bool  do a faster implementation if available.
 
-        inv_prop : bool
+        inverse_property : bool
             inverts the material property
 
         inv_mat : bool
@@ -294,11 +294,11 @@ class InnerProducts(object):
         """
         if "invProp" in kwargs:
             warnings.warn(
-                "The invProp keyword argument has been deprecated, please use inv_prop. "
+                "The invProp keyword argument has been deprecated, please use inverse_property. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
             )
-            inv_prop = kwargs["invProp"]
+            inverse_property = kwargs["invProp"]
         if "invMat" in kwargs:
             warnings.warn(
                 "The invMat keyword argument has been deprecated, please use inv_mat. "
@@ -314,11 +314,11 @@ class InnerProducts(object):
             )
             do_fast = kwargs["doFast"]
         return self._getInnerProductDeriv(
-            prop, "F", do_fast=do_fast, inv_prop=inv_prop, inv_mat=inv_mat
+            prop, "F", do_fast=do_fast, inverse_property=inverse_property, inv_mat=inv_mat
         )
 
     def get_edge_inner_product_deriv(
-        self, prop, do_fast=True, inv_prop=False, inv_mat=False, **kwargs
+        self, prop, do_fast=True, inverse_property=False, inv_mat=False, **kwargs
     ):
         """
         Parameters
@@ -329,7 +329,7 @@ class InnerProducts(object):
         do_fast : bool
             do a faster implementation if available.
 
-        inv_prop : bool
+        inverse_property : bool
             inverts the material property
 
         inv_mat : bool
@@ -344,11 +344,11 @@ class InnerProducts(object):
         """
         if "invProp" in kwargs:
             warnings.warn(
-                "The invProp keyword argument has been deprecated, please use inv_prop. "
+                "The invProp keyword argument has been deprecated, please use inverse_property. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
             )
-            inv_prop = kwargs["invProp"]
+            inverse_property = kwargs["invProp"]
         if "invMat" in kwargs:
             warnings.warn(
                 "The invMat keyword argument has been deprecated, please use inv_mat. "
@@ -364,11 +364,11 @@ class InnerProducts(object):
             )
             do_fast = kwargs["doFast"]
         return self._getInnerProductDeriv(
-            prop, "E", do_fast=do_fast, inv_prop=inv_prop, inv_mat=inv_mat
+            prop, "E", do_fast=do_fast, inverse_property=inverse_property, inv_mat=inv_mat
         )
 
     def _getInnerProductDeriv(
-        self, prop, projection_type, do_fast=True, inv_prop=False, inv_mat=False
+        self, prop, projection_type, do_fast=True, inverse_property=False, inv_mat=False
     ):
         """
         Parameters
@@ -382,7 +382,7 @@ class InnerProducts(object):
         do_fast : bool
             do a faster implementation if available.
 
-        inv_prop : bool
+        inverse_property : bool
             inverts the material property
 
         inv_mat : bool
@@ -398,12 +398,12 @@ class InnerProducts(object):
         fast = None
         if hasattr(self, "_fastInnerProductDeriv") and do_fast:
             fast = self._fastInnerProductDeriv(
-                projection_type, prop, inv_prop=inv_prop, inv_mat=inv_mat
+                projection_type, prop, inverse_property=inverse_property, inv_mat=inv_mat
             )
         if fast is not None:
             return fast
 
-        if inv_prop or inv_mat:
+        if inverse_property or inv_mat:
             raise NotImplementedError(
                 "inverting the property or the matrix is not yet implemented for this mesh/tensorType. You should write it!"
             )

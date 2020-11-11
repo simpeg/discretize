@@ -463,7 +463,7 @@ class BaseTensorMesh(BaseMesh):
             zeros_outside = kwargs["zerosOutside"]
         return self._getInterpolationMat(loc, location_type, zeros_outside)
 
-    def _fastInnerProduct(self, projection_type, prop=None, inv_prop=False, inv_mat=False):
+    def _fastInnerProduct(self, projection_type, prop=None, inverse_property=False, inv_mat=False):
         """Fast version of getFaceInnerProduct.
             This does not handle the case of a full tensor prop.
 
@@ -479,7 +479,7 @@ class BaseTensorMesh(BaseMesh):
         returnP : bool
             returns the projection matrices
 
-        inv_prop : bool
+        inverse_property : bool
             inverts the material property
 
         inv_mat : bool
@@ -497,7 +497,7 @@ class BaseTensorMesh(BaseMesh):
         if prop is None:
             prop = np.ones(self.nC)
 
-        if inv_prop:
+        if inverse_property:
             prop = 1.0 / prop
 
         if is_scalar(prop):
@@ -539,7 +539,7 @@ class BaseTensorMesh(BaseMesh):
         else:
             return M
 
-    def _fastInnerProductDeriv(self, projection_type, prop, inv_prop=False, inv_mat=False):
+    def _fastInnerProductDeriv(self, projection_type, prop, inverse_property=False, inv_mat=False):
         """
 
         Parameters
@@ -551,7 +551,7 @@ class BaseTensorMesh(BaseMesh):
         tensorType : TensorType
             type of the tensor
 
-        inv_prop : bool
+        inverse_property : bool
             inverts the material property
 
         inv_mat : bool
@@ -572,9 +572,9 @@ class BaseTensorMesh(BaseMesh):
 
         dMdprop = None
 
-        if inv_mat or inv_prop:
+        if inv_mat or inverse_property:
             MI = self._fastInnerProduct(
-                projection_type, prop, inv_prop=inv_prop, inv_mat=inv_mat
+                projection_type, prop, inverse_property=inverse_property, inv_mat=inv_mat
             )
 
         # number of elements we are averaging (equals dim for regular
@@ -593,13 +593,13 @@ class BaseTensorMesh(BaseMesh):
                 (np.ones(self.nC), (range(self.nC), np.zeros(self.nC))),
                 shape=(self.nC, 1),
             )
-            if not inv_mat and not inv_prop:
+            if not inv_mat and not inverse_property:
                 dMdprop = n_elements * Av.T * V * ones
-            elif inv_mat and inv_prop:
+            elif inv_mat and inverse_property:
                 dMdprop = n_elements * (
                     sdiag(MI.diagonal() ** 2) * Av.T * V * ones * sdiag(1.0 / prop ** 2)
                 )
-            elif inv_prop:
+            elif inverse_property:
                 dMdprop = n_elements * Av.T * V * sdiag(-1.0 / prop ** 2)
             elif inv_mat:
                 dMdprop = n_elements * (sdiag(-MI.diagonal() ** 2) * Av.T * V)
@@ -607,13 +607,13 @@ class BaseTensorMesh(BaseMesh):
         elif tensorType == 1:  # isotropic, variable in space
             Av = getattr(self, "ave" + projection_type + "2CC")
             V = sdiag(self.cell_volumes)
-            if not inv_mat and not inv_prop:
+            if not inv_mat and not inverse_property:
                 dMdprop = n_elements * Av.T * V
-            elif inv_mat and inv_prop:
+            elif inv_mat and inverse_property:
                 dMdprop = n_elements * (
                     sdiag(MI.diagonal() ** 2) * Av.T * V * sdiag(1.0 / prop ** 2)
                 )
-            elif inv_prop:
+            elif inverse_property:
                 dMdprop = n_elements * Av.T * V * sdiag(-1.0 / prop ** 2)
             elif inv_mat:
                 dMdprop = n_elements * (sdiag(-MI.diagonal() ** 2) * Av.T * V)
@@ -636,13 +636,13 @@ class BaseTensorMesh(BaseMesh):
             else:
                 P = sp.eye(self.nC * self.dim)
 
-            if not inv_mat and not inv_prop:
+            if not inv_mat and not inverse_property:
                 dMdprop = Av.T * P * V
-            elif inv_mat and inv_prop:
+            elif inv_mat and inverse_property:
                 dMdprop = (
                     sdiag(MI.diagonal() ** 2) * Av.T * P * V * sdiag(1.0 / prop ** 2)
                 )
-            elif inv_prop:
+            elif inverse_property:
                 dMdprop = Av.T * P * V * sdiag(-1.0 / prop ** 2)
             elif inv_mat:
                 dMdprop = sdiag(-MI.diagonal() ** 2) * Av.T * P * V
