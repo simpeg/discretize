@@ -782,7 +782,7 @@ cdef class _TreeMesh:
         return self._h_gridded
 
     @property
-    def grid_edges_x(self):
+    def edges_x(self):
         """
         Returns a numpy array of shape (n_edges_x, dim) with the centers of all
         non-hanging edges along the first dimension in order.
@@ -822,7 +822,7 @@ cdef class _TreeMesh:
         return self._gridhEx
 
     @property
-    def grid_edges_y(self):
+    def edges_y(self):
         """
         Returns a numpy array of shape (n_edges_y, dim) with the centers of all
         non-hanging edges along the second dimension in order.
@@ -862,7 +862,7 @@ cdef class _TreeMesh:
         return self._gridhEy
 
     @property
-    def grid_edges_z(self):
+    def edges_z(self):
         """
         Returns a numpy array of shape (n_edges_z, dim) with the centers of all
         non-hanging edges along the third dimension in order.
@@ -907,7 +907,7 @@ cdef class _TreeMesh:
         Returns a numpy array of shape (n_faces_x, dim) with the centers of all
         non-hanging faces along the first dimension in order.
         """
-        if(self._dim == 2): return self.grid_edges_y
+        if(self._dim == 2): return self.edges_y
 
         cdef np.float64_t[:, :] gridFx
         cdef Face *face
@@ -930,7 +930,7 @@ cdef class _TreeMesh:
         Returns a numpy array of shape (n_faces_y, dim) with the centers of all
         non-hanging faces along the second dimension in order.
         """
-        if(self._dim == 2): return self.grid_edges_x
+        if(self._dim == 2): return self.edges_x
         cdef np.float64_t[:, :] gridFy
         cdef Face *face
         cdef np.int64_t ii, ind, dim

@@ -48,9 +48,9 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
             "gridFx": "grid_faces_x",
             "gridFy": "grid_faces_y",
             "gridFz": "grid_faces_z",
-            "gridEx": "grid_edges_x",
-            "gridEy": "grid_edges_y",
-            "gridEz": "grid_edges_z",
+            "gridEx": "edges_x",
+            "gridEy": "edges_y",
+            "gridEz": "edges_z",
         },
     }
 
@@ -194,7 +194,7 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
         return self._gridFz
 
     @property
-    def grid_edges_x(self):
+    def edges_x(self):
         """
         Edge staggered grid in the x direction.
         """
@@ -209,7 +209,7 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
         return self._gridEx
 
     @property
-    def grid_edges_y(self):
+    def edges_y(self):
         """
         Edge staggered grid in the y direction.
         """
@@ -224,7 +224,7 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
         return self._gridEy
 
     @property
-    def grid_edges_z(self):
+    def edges_z(self):
         """
         Edge staggered grid in the z direction.
         """

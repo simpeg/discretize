@@ -69,7 +69,7 @@ On ``discretize.base.BaseTensorMesh``:
 
 * ``cell_centers=gridCC``
 * ``nodes=gridN``
-* ``grid_edges_x=gridEx``, ``grid_edges_y=gridEy``, ``grid_edges_z=gridEz``
+* ``edges_x=gridEx``, ``edges_y=gridEy``, ``edges_z=gridEz``
 * ``grid_faces_x=gridFx``, ``grid_faces_y=gridFy``, ``grid_faces_z=gridFz``
 
 On ``discretize.operators.DiffOperators``:

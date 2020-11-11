@@ -960,10 +960,10 @@ class CylindricalMesh(
         """
         Full grid of y-edges (including eliminated edges)
         """
-        return super().grid_edges_y
+        return super().edges_y
 
     @property
-    def grid_edges_y(self):
+    def edges_y(self):
         """
         Grid of y-edges (azimuthal-faces) in cylindrical coordinates
         :math:`(r, \\theta, z)`.
@@ -988,7 +988,7 @@ class CylindricalMesh(
         return ndgrid([self.nodes_x, self._vectorNyFull, self.cell_centers_z])
 
     @property
-    def grid_edges_z(self):
+    def edges_z(self):
         """
         Grid of z-faces (vertical-faces) in cylindrical coordinates
         :math:`(r, \\theta, z)`.

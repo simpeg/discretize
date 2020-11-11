@@ -1808,7 +1808,7 @@ class InterfaceMPL(object):
             )
         if edges_x:
             ax.plot(
-                *np.r_[self.grid_edges_x, self.grid_hanging_edges_x].T,
+                *np.r_[self.edges_x, self.grid_hanging_edges_x].T,
                 color="C3",
                 marker=">",
                 linestyle="",
@@ -1825,7 +1825,7 @@ class InterfaceMPL(object):
             )
         if edges_y:
             ax.plot(
-                *np.r_[self.grid_edges_y, self.grid_hanging_edges_y].T,
+                *np.r_[self.edges_y, self.grid_hanging_edges_y].T,
                 color="C3",
                 marker=y_mark,
                 linestyle="",
@@ -1842,7 +1842,7 @@ class InterfaceMPL(object):
             )
         if edges_z:
             ax.plot(
-                *np.r_[self.grid_edges_z, self.grid_hanging_edges_z].T,
+                *np.r_[self.edges_z, self.grid_hanging_edges_z].T,
                 color="C3",
                 marker="^",
                 linestyle="",
