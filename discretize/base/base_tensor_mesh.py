@@ -463,7 +463,7 @@ class BaseTensorMesh(BaseMesh):
             zeros_outside = kwargs["zerosOutside"]
         return self._getInterpolationMat(loc, location_type, zeros_outside)
 
-    def _fastInnerProduct(self, proj_type, prop=None, inv_prop=False, inv_mat=False):
+    def _fastInnerProduct(self, projection_type, prop=None, inv_prop=False, inv_mat=False):
         """Fast version of getFaceInnerProduct.
             This does not handle the case of a full tensor prop.
 
@@ -473,7 +473,7 @@ class BaseTensorMesh(BaseMesh):
         prop : numpy.array
             material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
 
-        proj_type : str
+        projection_type : str
             'E' or 'F'
 
         returnP : bool
@@ -491,8 +491,8 @@ class BaseTensorMesh(BaseMesh):
             M, the inner product matrix (nF, nF)
 
         """
-        if proj_type not in ["F", "E"]:
-            raise ValueError("proj_type must be 'F' for faces or 'E' for edges")
+        if projection_type not in ["F", "E"]:
+            raise ValueError("projection_type must be 'F' for faces or 'E' for edges")
 
         if prop is None:
             prop = np.ones(self.nC)
@@ -507,26 +507,26 @@ class BaseTensorMesh(BaseMesh):
         # meshes, but for cyl, where we use symmetry, it is 1 for edge
         # variables and 2 for face variables)
         if self._meshType == "CYL":
-            shape = getattr(self, "vn" + proj_type)
+            shape = getattr(self, "vn" + projection_type)
             n_elements = sum([1 if x != 0 else 0 for x in shape])
         else:
             n_elements = self.dim
 
         # Isotropic? or anisotropic?
         if prop.size == self.nC:
-            Av = getattr(self, "ave" + proj_type + "2CC")
+            Av = getattr(self, "ave" + projection_type + "2CC")
             Vprop = self.cell_volumes * mkvc(prop)
             M = n_elements * sdiag(Av.T * Vprop)
 
         elif prop.size == self.nC * self.dim:
-            Av = getattr(self, "ave" + proj_type + "2CCV")
+            Av = getattr(self, "ave" + projection_type + "2CCV")
 
             # if cyl, then only certain components are relevant due to symmetry
             # for faces, x, z matters, for edges, y (which is theta) matters
             if self._meshType == "CYL":
-                if proj_type == "E":
+                if projection_type == "E":
                     prop = prop[:, 1]  # this is the action of a projection mat
-                elif proj_type == "F":
+                elif projection_type == "F":
                     prop = prop[:, [0, 2]]
 
             V = sp.kron(sp.identity(n_elements), sdiag(self.cell_volumes))
@@ -539,13 +539,13 @@ class BaseTensorMesh(BaseMesh):
         else:
             return M
 
-    def _fastInnerProductDeriv(self, proj_type, prop, inv_prop=False, inv_mat=False):
+    def _fastInnerProductDeriv(self, projection_type, prop, inv_prop=False, inv_mat=False):
         """
 
         Parameters
         ----------
 
-        proj_type : str
+        projection_type : str
             'E' or 'F'
 
         tensorType : TensorType
@@ -565,8 +565,8 @@ class BaseTensorMesh(BaseMesh):
 
         """
 
-        if proj_type not in ["F", "E"]:
-            raise ValueError("proj_type must be 'F' for faces or 'E' for edges")
+        if projection_type not in ["F", "E"]:
+            raise ValueError("projection_type must be 'F' for faces or 'E' for edges")
 
         tensorType = TensorType(self, prop)
 
@@ -574,20 +574,20 @@ class BaseTensorMesh(BaseMesh):
 
         if inv_mat or inv_prop:
             MI = self._fastInnerProduct(
-                proj_type, prop, inv_prop=inv_prop, inv_mat=inv_mat
+                projection_type, prop, inv_prop=inv_prop, inv_mat=inv_mat
             )
 
         # number of elements we are averaging (equals dim for regular
         # meshes, but for cyl, where we use symmetry, it is 1 for edge
         # variables and 2 for face variables)
         if self._meshType == "CYL":
-            shape = getattr(self, "vn" + proj_type)
+            shape = getattr(self, "vn" + projection_type)
             n_elements = sum([1 if x != 0 else 0 for x in shape])
         else:
             n_elements = self.dim
 
         if tensorType == 0:  # isotropic, constant
-            Av = getattr(self, "ave" + proj_type + "2CC")
+            Av = getattr(self, "ave" + projection_type + "2CC")
             V = sdiag(self.cell_volumes)
             ones = sp.csr_matrix(
                 (np.ones(self.nC), (range(self.nC), np.zeros(self.nC))),
@@ -605,7 +605,7 @@ class BaseTensorMesh(BaseMesh):
                 dMdprop = n_elements * (sdiag(-MI.diagonal() ** 2) * Av.T * V)
 
         elif tensorType == 1:  # isotropic, variable in space
-            Av = getattr(self, "ave" + proj_type + "2CC")
+            Av = getattr(self, "ave" + projection_type + "2CC")
             V = sdiag(self.cell_volumes)
             if not inv_mat and not inv_prop:
                 dMdprop = n_elements * Av.T * V
@@ -619,16 +619,16 @@ class BaseTensorMesh(BaseMesh):
                 dMdprop = n_elements * (sdiag(-MI.diagonal() ** 2) * Av.T * V)
 
         elif tensorType == 2:  # anisotropic
-            Av = getattr(self, "ave" + proj_type + "2CCV")
+            Av = getattr(self, "ave" + projection_type + "2CCV")
             V = sp.kron(sp.identity(self.dim), sdiag(self.cell_volumes))
 
             if self._meshType == "CYL":
                 Zero = sp.csr_matrix((self.nC, self.nC))
                 Eye = sp.eye(self.nC)
-                if proj_type == "E":
+                if projection_type == "E":
                     P = sp.hstack([Zero, Eye, Zero])
                     # print(P.todense())
-                elif proj_type == "F":
+                elif projection_type == "F":
                     P = sp.vstack(
                         [sp.hstack([Eye, Zero, Zero]), sp.hstack([Zero, Zero, Eye])]
                     )

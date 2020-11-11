@@ -135,7 +135,7 @@ class InnerProducts(object):
 
     def _getInnerProduct(
         self,
-        proj_type,
+        projection_type,
         prop=None,
         inv_prop=False,
         inv_mat=False,
@@ -147,7 +147,7 @@ class InnerProducts(object):
         Parameters
         ----------
 
-        str : proj_type
+        str : projection_type
             'F' for faces 'E' for edges
 
         numpy.ndarray : prop
@@ -191,13 +191,13 @@ class InnerProducts(object):
                 FutureWarning,
             )
             do_fast = kwargs["doFast"]
-        if proj_type not in ["F", "E"]:
-            raise TypeError("proj_type must be 'F' for faces or 'E' for edges")
+        if projection_type not in ["F", "E"]:
+            raise TypeError("projection_type must be 'F' for faces or 'E' for edges")
 
         fast = None
         if hasattr(self, "_fastInnerProduct") and do_fast:
             fast = self._fastInnerProduct(
-                proj_type, prop=prop, inv_prop=inv_prop, inv_mat=inv_mat
+                projection_type, prop=prop, inv_prop=inv_prop, inv_mat=inv_mat
             )
         if fast is not None:
             return fast
@@ -208,7 +208,7 @@ class InnerProducts(object):
         tensorType = TensorType(self, prop)
 
         Mu = make_property_tensor(self, prop)
-        Ps = self._getInnerProductProjectionMatrices(proj_type, tensorType)
+        Ps = self._getInnerProductProjectionMatrices(projection_type, tensorType)
         A = np.sum([P.T * Mu * P for P in Ps])
 
         if inv_mat and tensorType < 3:
@@ -218,11 +218,11 @@ class InnerProducts(object):
 
         return A
 
-    def _getInnerProductProjectionMatrices(self, proj_type, tensorType):
+    def _getInnerProductProjectionMatrices(self, projection_type, tensorType):
         """
         Parameters
         ----------
-        proj_type : str
+        projection_type : str
             'F' for faces 'E' for edges
 
         tensorType : TensorType
@@ -230,8 +230,8 @@ class InnerProducts(object):
         """
         if not isinstance(tensorType, TensorType):
             raise TypeError("tensorType must be an instance of TensorType.")
-        if proj_type not in ["F", "E"]:
-            raise TypeError("proj_type must be 'F' for faces or 'E' for edges")
+        if projection_type not in ["F", "E"]:
+            raise TypeError("projection_type must be 'F' for faces or 'E' for edges")
 
         d = self.dim
         # We will multiply by sqrt on each side to keep symmetry
@@ -239,7 +239,7 @@ class InnerProducts(object):
 
         nodes = ["000", "100", "010", "110", "001", "101", "011", "111"][: 2 ** d]
 
-        if proj_type == "F":
+        if projection_type == "F":
             locs = {
                 "000": [("fXm",), ("fXm", "fYm"), ("fXm", "fYm", "fZm")],
                 "100": [("fXp",), ("fXp", "fYm"), ("fXp", "fYm", "fZm")],
@@ -252,7 +252,7 @@ class InnerProducts(object):
             }
             proj = getattr(self, "_getFaceP" + ("x" * d))()
 
-        elif proj_type == "E":
+        elif projection_type == "E":
             locs = {
                 "000": [("eX0",), ("eX0", "eY0"), ("eX0", "eY0", "eZ0")],
                 "100": [("eX0",), ("eX0", "eY1"), ("eX0", "eY1", "eZ1")],
@@ -368,7 +368,7 @@ class InnerProducts(object):
         )
 
     def _getInnerProductDeriv(
-        self, prop, proj_type, do_fast=True, inv_prop=False, inv_mat=False
+        self, prop, projection_type, do_fast=True, inv_prop=False, inv_mat=False
     ):
         """
         Parameters
@@ -376,7 +376,7 @@ class InnerProducts(object):
         prop : numpy.ndarray
             material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
 
-        proj_type : str
+        projection_type : str
             'F' for faces 'E' for edges
 
         do_fast : bool
@@ -398,7 +398,7 @@ class InnerProducts(object):
         fast = None
         if hasattr(self, "_fastInnerProductDeriv") and do_fast:
             fast = self._fastInnerProductDeriv(
-                proj_type, prop, inv_prop=inv_prop, inv_mat=inv_mat
+                projection_type, prop, inv_prop=inv_prop, inv_mat=inv_mat
             )
         if fast is not None:
             return fast
@@ -409,14 +409,14 @@ class InnerProducts(object):
             )
 
         tensorType = TensorType(self, prop)
-        P = self._getInnerProductProjectionMatrices(proj_type, tensorType=tensorType)
+        P = self._getInnerProductProjectionMatrices(projection_type, tensorType=tensorType)
 
         def innerProductDeriv(v):
-            return self._getInnerProductDerivFunction(tensorType, P, proj_type, v)
+            return self._getInnerProductDerivFunction(tensorType, P, projection_type, v)
 
         return innerProductDeriv
 
-    def _getInnerProductDerivFunction(self, tensorType, P, proj_type, v):
+    def _getInnerProductDerivFunction(self, tensorType, P, projection_type, v):
         """
         Parameters
         ----------
@@ -429,7 +429,7 @@ class InnerProducts(object):
         P : list
             list of projection matrices
 
-        proj_type : str
+        projection_type : str
             'F' for faces 'E' for edges
 
 
@@ -439,10 +439,10 @@ class InnerProducts(object):
             dMdm, the derivative of the inner product matrix (n, nC*nA)
 
         """
-        if proj_type not in ["F", "E"]:
-            raise TypeError("proj_type must be 'F' for faces or 'E' for edges")
+        if projection_type not in ["F", "E"]:
+            raise TypeError("projection_type must be 'F' for faces or 'E' for edges")
 
-        n = getattr(self, "n" + proj_type)
+        n = getattr(self, "n" + projection_type)
 
         if tensorType == -1:
             return None
