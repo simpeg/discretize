@@ -1520,7 +1520,7 @@ class CylindricalMesh(
             location_type = kwargs["locType"]
         if "zerosOutside" in kwargs:
             warnings.warn(
-                "The zerosOutside keyword argument has been deprecated, please use location_type. "
+                "The zerosOutside keyword argument has been deprecated, please use zeros_outside. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
             )
