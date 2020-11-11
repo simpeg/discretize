@@ -599,6 +599,30 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
             )
         return True
 
+    def _parse_location_type(self, location_type):
+        if len(location_type) == 0:
+            return location_type
+        elif location_type[0] == "F":
+            if len(location_type) > 1:
+                return "faces_"+ location_type[-1]
+            else:
+                return "faces"
+        elif location_type[0] == "E":
+            if len(location_type) > 1:
+                return "edges_" + location_type[-1]
+            else:
+                return "edges"
+        elif location_type[0] == "N":
+            return "nodes"
+        elif location_type[0] == "C":
+            if len(location_type) > 2:
+                return "cell_centers_" + location_type[-1]
+            else:
+                return "cell_centers"
+        else:
+            return location_type
+
+
     # DEPRECATED
     normals = deprecate_property("face_normals", "normals", removal_version="1.0.0")
     tangents = deprecate_property("edge_tangents", "tangents", removal_version="1.0.0")

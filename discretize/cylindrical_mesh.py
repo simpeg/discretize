@@ -1481,7 +1481,7 @@ class CylindricalMesh(
     ####################################################
 
     def get_interpolation_matrix(
-        self, loc, location_type="CC", zeros_outside=False, **kwargs
+        self, loc, location_type="cell_centers", zeros_outside=False, **kwargs
     ):
         """Produces interpolation matrix
 
@@ -1493,17 +1493,17 @@ class CylindricalMesh(
         location_type : str
             What to interpolate location_type can be::
 
-            'Ex'    -> x-component of field defined on edges
-            'Ey'    -> y-component of field defined on edges
-            'Ez'    -> z-component of field defined on edges
-            'Fx'    -> x-component of field defined on faces
-            'Fy'    -> y-component of field defined on faces
-            'Fz'    -> z-component of field defined on faces
-            'N'     -> scalar field defined on nodes
-            'CC'    -> scalar field defined on cell centers
-            'CCVx'  -> x-component of vector field defined on cell centers
-            'CCVy'  -> y-component of vector field defined on cell centers
-            'CCVz'  -> z-component of vector field defined on cell centers
+            'Ex', 'edges_x'           -> x-component of field defined on x edges
+            'Ey', 'edges_y'           -> y-component of field defined on y edges
+            'Ez', 'edges_z'           -> z-component of field defined on z edges
+            'Fx', 'faces_x'           -> x-component of field defined on x faces
+            'Fy', 'faces_y'           -> y-component of field defined on y faces
+            'Fz', 'faces_z'           -> z-component of field defined on z faces
+            'N', 'nodes'              -> scalar field defined on nodes
+            'CC', 'cell_centers'      -> scalar field defined on cell centers
+            'CCVx', 'cell_centers_x'  -> x-component of vector field defined on cell centers
+            'CCVy', 'cell_centers_y'  -> y-component of vector field defined on cell centers
+            'CCVz', 'cell_centers_z'  -> z-component of vector field defined on cell centers
 
         Returns
         -------
@@ -1526,20 +1526,22 @@ class CylindricalMesh(
             )
             zeros_outside = kwargs["zerosOutside"]
 
-        if self.is_symmetric and location_type in ["Ex", "Ez", "Fy"]:
+        location_type = self._parse_location_type(location_type)
+
+        if self.is_symmetric and location_type in ["edges_x", "edges_z", "faces_y"]:
             raise Exception(
                 "Symmetric CylindricalMesh does not support {0!s} interpolation, "
                 "as this variable does not exist.".format(location_type)
             )
 
-        if location_type in ["CCVx", "CCVy", "CCVz"]:
-            Q = interpolation_matrix(loc, *self.get_tensor("CC"))
+        if location_type in ["cell_centers_x", "cell_centers_y", "cell_centers_z"]:
+            Q = interpolation_matrix(loc, *self.get_tensor("cell_centers"))
             Z = spzeros(loc.shape[0], self.nC)
-            if location_type == "CCVx":
+            if location_type[-1] == "x":
                 Q = sp.hstack([Q, Z])
-            elif location_type == "CCVy":
+            elif location_type[-1] == "y":
                 Q = sp.hstack([Q])
-            elif location_type == "CCVz":
+            elif location_type[-1] == "z":
                 Q = sp.hstack([Z, Q])
 
             if zeros_outside:
@@ -1551,7 +1553,7 @@ class CylindricalMesh(
 
         return self._getInterpolationMat(loc, location_type, zeros_outside)
 
-    def cartesian_grid(self, location_type="CC", theta_shift=None, **kwargs):
+    def cartesian_grid(self, location_type="cell_centers", theta_shift=None, **kwargs):
         """
         Takes a grid location ('CC', 'N', 'Ex', 'Ey', 'Ez', 'Fx', 'Fy', 'Fz')
         and returns that grid in cartesian coordinates
@@ -1575,7 +1577,10 @@ class CylindricalMesh(
                 FutureWarning,
             )
             location_type = kwargs["locType"]
-        grid = getattr(self, "grid{}".format(location_type)).copy()
+        try:
+            grid = getattr(self, location_type).copy()
+        except AttributeError:
+            grid = getattr(self, f"grid{location_type}").copy()
         if theta_shift is not None:
             grid[:, 1] = grid[:, 1] - theta_shift
         return cyl2cart(grid)  # TODO: account for cartesian origin
@@ -1616,6 +1621,8 @@ class CylindricalMesh(
             )
             location_type_to = kwargs["locTypeTo"]
 
+        location_type = self._parse_location_type(location_type)
+
         if not self.is_symmetric:
             raise AssertionError(
                 "Currently we have not taken into account other projections "
@@ -1624,30 +1631,31 @@ class CylindricalMesh(
 
         if location_type_to is None:
             location_type_to = location_type
+        location_type_to = self._parse_location_type(location_type_to)
 
-        if location_type == "F":
+        if location_type == "faces":
             # do this three times for each component
             X = self.get_interpolation_matrix_cartesian_mesh(
-                Mrect, location_type="Fx", location_type_to=location_type_to + "x"
+                Mrect, location_type="faces_x", location_type_to=location_type_to + "_x"
             )
             Y = self.get_interpolation_matrix_cartesian_mesh(
-                Mrect, location_type="Fy", location_type_to=location_type_to + "y"
+                Mrect, location_type="faces_y", location_type_to=location_type_to + "_y"
             )
             Z = self.get_interpolation_matrix_cartesian_mesh(
-                Mrect, location_type="Fz", location_type_to=location_type_to + "z"
+                Mrect, location_type="faces_z", location_type_to=location_type_to + "_z"
             )
             return sp.vstack((X, Y, Z))
-        if location_type == "E":
+        if location_type == "edges":
             X = self.get_interpolation_matrix_cartesian_mesh(
-                Mrect, location_type="Ex", location_type_to=location_type_to + "x"
+                Mrect, location_type="edges_x", location_type_to=location_type_to + "_x"
             )
             Y = self.get_interpolation_matrix_cartesian_mesh(
-                Mrect, location_type="Ey", location_type_to=location_type_to + "y"
+                Mrect, location_type="edges_y", location_type_to=location_type_to + "_y"
             )
-            Z = spzeros(getattr(Mrect, "n" + location_type_to + "z"), self.nE)
+            Z = spzeros(getattr(Mrect, "n_" + location_type_to + "_z"), self.n_edges)
             return sp.vstack((X, Y, Z))
 
-        grid = getattr(Mrect, "grid" + location_type_to)
+        grid = getattr(Mrect, location_type_to)
         # This is unit circle stuff, 0 to 2*pi, starting at x-axis, rotating
         # counter clockwise in an x-y slice
         theta = (
@@ -1663,32 +1671,32 @@ class CylindricalMesh(
             + (grid[:, 1] - self.cartesian_origin[1]) ** 2
         ) ** 0.5
 
-        if location_type in ["CC", "N", "Fz", "Ez"]:
+        if location_type in ["cell_centers", "nodes", "faces_z", "edges_z"]:
             G, proj = np.c_[r, theta, grid[:, 2]], np.ones(r.size)
         else:
             dotMe = {
-                "Fx": Mrect.face_normals[:Mrect.nFx, :],
-                "Fy": Mrect.face_normals[Mrect.nFx:(Mrect.nFx + Mrect.nFy), :],
-                "Fz": Mrect.face_normals[-Mrect.nFz:, :],
-                "Ex": Mrect.edge_tangents[: Mrect.nEx, :],
-                "Ey": Mrect.edge_tangents[Mrect.nEx: (Mrect.nEx + Mrect.nEy), :],
-                "Ez": Mrect.edge_tangents[-Mrect.nEz:, :],
+                "faces_x": Mrect.face_normals[:Mrect.nFx, :],
+                "faces_y": Mrect.face_normals[Mrect.nFx:(Mrect.nFx + Mrect.nFy), :],
+                "faces_z": Mrect.face_normals[-Mrect.nFz:, :],
+                "edges_x": Mrect.edge_tangents[: Mrect.nEx, :],
+                "edges_y": Mrect.edge_tangents[Mrect.nEx: (Mrect.nEx + Mrect.nEy), :],
+                "edges_z": Mrect.edge_tangents[-Mrect.nEz:, :],
             }[location_type_to]
-            if "F" in location_type:
+            if "f" in location_type:
                 normals = np.c_[np.cos(theta), np.sin(theta), np.zeros(theta.size)]
                 proj = (normals * dotMe).sum(axis=1)
-            if "E" in location_type:
+            if "e" in location_type:
                 tangents = np.c_[-np.sin(theta), np.cos(theta), np.zeros(theta.size)]
                 proj = (tangents * dotMe).sum(axis=1)
             G = np.c_[r, theta, grid[:, 2]]
 
-        interpType = location_type
-        if interpType == "Fy":
-            interpType = "Fx"
-        elif interpType == "Ex":
-            interpType = "Ey"
+        interp_type = location_type
+        if interp_type == "faces_y":
+            interp_type = "faces_x"
+        elif interp_type == "edges_x":
+            interp_type = "edges_y"
 
-        Pc2r = self.get_interpolation_matrix(G, interpType)
+        Pc2r = self.get_interpolation_matrix(G, interp_type)
         Proj = sdiag(proj)
         return Proj * Pc2r
 

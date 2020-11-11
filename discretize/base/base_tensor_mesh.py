@@ -173,12 +173,12 @@ class BaseTensorMesh(BaseMesh):
     @property
     def cell_centers(self):
         """Cell-centered grid."""
-        return self._getTensorGrid("CC")
+        return self._getTensorGrid("cell_centers")
 
     @property
     def nodes(self):
         """Nodal grid."""
-        return self._getTensorGrid("N")
+        return self._getTensorGrid("nodes")
 
     @property
     def h_gridded(self):
@@ -194,47 +194,47 @@ class BaseTensorMesh(BaseMesh):
         """Face staggered grid in the x direction."""
         if self.nFx == 0:
             return
-        return self._getTensorGrid("Fx")
+        return self._getTensorGrid("faces_x")
 
     @property
     def faces_y(self):
         """Face staggered grid in the y direction."""
         if self.nFy == 0 or self.dim < 2:
             return
-        return self._getTensorGrid("Fy")
+        return self._getTensorGrid("faces_y")
 
     @property
     def faces_z(self):
         """Face staggered grid in the z direction."""
         if self.nFz == 0 or self.dim < 3:
             return
-        return self._getTensorGrid("Fz")
+        return self._getTensorGrid("faces_z")
 
     @property
     def edges_x(self):
         """Edge staggered grid in the x direction."""
         if self.nEx == 0:
             return
-        return self._getTensorGrid("Ex")
+        return self._getTensorGrid("edges_x")
 
     @property
     def edges_y(self):
         """Edge staggered grid in the y direction."""
         if self.nEy == 0 or self.dim < 2:
             return
-        return self._getTensorGrid("Ey")
+        return self._getTensorGrid("edges_y")
 
     @property
     def edges_z(self):
         """Edge staggered grid in the z direction."""
         if self.nEz == 0 or self.dim < 3:
             return
-        return self._getTensorGrid("Ez")
+        return self._getTensorGrid("edges_z")
 
     def _getTensorGrid(self, key):
-        if getattr(self, "_grid" + key, None) is None:
-            setattr(self, "_grid" + key, ndgrid(self.get_tensor(key)))
-        return getattr(self, "_grid" + key)
+        if getattr(self, "_" + key, None) is None:
+            setattr(self, "_" + key, ndgrid(self.get_tensor(key)))
+        return getattr(self, "_" + key)
 
     def get_tensor(self, key):
         """Returns a tensor list.
@@ -246,14 +246,14 @@ class BaseTensorMesh(BaseMesh):
 
             key can be::
 
-                'CC'    -> scalar field defined on cell centers
-                'N'     -> scalar field defined on nodes
-                'Fx'    -> x-component of field defined on faces
-                'Fy'    -> y-component of field defined on faces
-                'Fz'    -> z-component of field defined on faces
-                'Ex'    -> x-component of field defined on edges
-                'Ey'    -> y-component of field defined on edges
-                'Ez'    -> z-component of field defined on edges
+                'CC', 'cell_centers' -> location of cell centers
+                'N', 'nodes'         -> location of nodes
+                'Fx', 'faces_x'      -> location of faces with an x normal
+                'Fy', 'faces_y'      -> location of faces with an y normal
+                'Fz', 'faces_z'      -> location of faces with an z normal
+                'Ex', 'edges_x'      -> location of edges with an x tangent
+                'Ey', 'edges_y'      -> location of edges with an y tangent
+                'Ez', 'edges_z'      -> location of edges with an z tangent
 
         Returns
         -------
@@ -261,45 +261,48 @@ class BaseTensorMesh(BaseMesh):
             list of the tensors that make up the mesh.
 
         """
+        key = self._parse_location_type(key)
 
-        if key == "Fx":
+        if key == "faces_x":
             ten = [
                 self.nodes_x,
                 self.cell_centers_y,
                 self.cell_centers_z,
             ]
-        elif key == "Fy":
+        elif key == "faces_y":
             ten = [
                 self.cell_centers_x,
                 self.nodes_y,
                 self.cell_centers_z,
             ]
-        elif key == "Fz":
+        elif key == "faces_z":
             ten = [
                 self.cell_centers_x,
                 self.cell_centers_y,
                 self.nodes_z,
             ]
-        elif key == "Ex":
+        elif key == "edges_x":
             ten = [self.cell_centers_x, self.nodes_y, self.nodes_z]
-        elif key == "Ey":
+        elif key == "edges_y":
             ten = [self.nodes_x, self.cell_centers_y, self.nodes_z]
-        elif key == "Ez":
+        elif key == "edges_z":
             ten = [self.nodes_x, self.nodes_y, self.cell_centers_z]
-        elif key == "CC":
+        elif key == "cell_centers":
             ten = [
                 self.cell_centers_x,
                 self.cell_centers_y,
                 self.cell_centers_z,
             ]
-        elif key == "N":
+        elif key == "nodes":
             ten = [self.nodes_x, self.nodes_y, self.nodes_z]
+        else:
+            raise KeyError(r"Unrecognized key {key}")
 
         return [t for t in ten if t is not None]
 
     # --------------- Methods ---------------------
 
-    def is_inside(self, pts, location_type="N", **kwargs):
+    def is_inside(self, pts, location_type="nodes", **kwargs):
         """
         Determines if a set of points are inside a mesh.
 
@@ -318,7 +321,7 @@ class BaseTensorMesh(BaseMesh):
 
         tensors = self.get_tensor(location_type)
 
-        if location_type == "N" and self._meshType == "CYL":
+        if location_type[0].lower() == "n" and self._meshType == "CYL":
             # NOTE: for a CYL mesh we add a node to check if we are inside in
             # the radial direction!
             tensors[0] = np.r_[0.0, tensors[0]]
@@ -334,7 +337,7 @@ class BaseTensorMesh(BaseMesh):
             )
         return inside
 
-    def _getInterpolationMat(self, loc, location_type="CC", zeros_outside=False):
+    def _getInterpolationMat(self, loc, location_type="cell_centers", zeros_outside=False):
         """Produces interpolation matrix
 
         Parameters
@@ -347,17 +350,17 @@ class BaseTensorMesh(BaseMesh):
 
             location_type can be::
 
-                'Ex'    -> x-component of field defined on edges
-                'Ey'    -> y-component of field defined on edges
-                'Ez'    -> z-component of field defined on edges
-                'Fx'    -> x-component of field defined on faces
-                'Fy'    -> y-component of field defined on faces
-                'Fz'    -> z-component of field defined on faces
-                'N'     -> scalar field defined on nodes
-                'CC'    -> scalar field defined on cell centers
-                'CCVx'  -> x-component of vector field defined on cell centers
-                'CCVy'  -> y-component of vector field defined on cell centers
-                'CCVz'  -> z-component of vector field defined on cell centers
+                'Ex', 'edges_x'           -> x-component of field defined on x edges
+                'Ey', 'edges_y'           -> y-component of field defined on y edges
+                'Ez', 'edges_z'           -> z-component of field defined on z edges
+                'Fx', 'faces_x'           -> x-component of field defined on x faces
+                'Fy', 'faces_y'           -> y-component of field defined on y faces
+                'Fz', 'faces_z'           -> z-component of field defined on z faces
+                'N', 'nodes'              -> scalar field defined on nodes
+                'CC', 'cell_centers'      -> scalar field defined on cell centers
+                'CCVx', 'cell_centers_x'  -> x-component of vector field defined on cell centers
+                'CCVy', 'cell_centers_y'  -> y-component of vector field defined on cell centers
+                'CCVz', 'cell_centers_z'  -> z-component of vector field defined on cell centers
 
         Returns
         -------
@@ -375,11 +378,13 @@ class BaseTensorMesh(BaseMesh):
             indZeros = np.logical_not(self.is_inside(loc))
             loc[indZeros, :] = np.array([v.mean() for v in self.get_tensor("CC")])
 
-        if location_type in ["Fx", "Fy", "Fz", "Ex", "Ey", "Ez"]:
-            ind = {"x": 0, "y": 1, "z": 2}[location_type[1]]
+        location_type = self._parse_location_type(location_type)
+
+        if location_type in ["faces_x", "faces_y", "faces_z", "edges_x", "edges_y", "edges_z"]:
+            ind = {"x": 0, "y": 1, "z": 2}[location_type[-1]]
             if self.dim < ind:
                 raise ValueError("mesh is not high enough dimension.")
-            if "F" in location_type:
+            if "f" in location_type.lower():
                 items = (self.nFx, self.nFy, self.nFz)[: self.dim]
             else:
                 items = (self.nEx, self.nEy, self.nEz)[: self.dim]
@@ -389,17 +394,17 @@ class BaseTensorMesh(BaseMesh):
             components = [comp for comp in components if comp.shape[1] > 0]
             Q = sp.hstack(components)
 
-        elif location_type in ["CC", "N"]:
+        elif location_type in ["cell_centers", "nodes"]:
             Q = interpolation_matrix(loc, *self.get_tensor(location_type))
 
-        elif location_type in ["CCVx", "CCVy", "CCVz"]:
+        elif location_type in ["cell_centers_x", "cell_centers_y", "cell_centers_z"]:
             Q = interpolation_matrix(loc, *self.get_tensor("CC"))
             Z = spzeros(loc.shape[0], self.nC)
-            if location_type == "CCVx":
+            if location_type[-1] == "x":
                 Q = sp.hstack([Q, Z, Z])
-            elif location_type == "CCVy":
+            elif location_type[-1] == "y":
                 Q = sp.hstack([Z, Q, Z])
-            elif location_type == "CCVz":
+            elif location_type[-1] == "z":
                 Q = sp.hstack([Z, Z, Q])
 
         else:
@@ -416,7 +421,7 @@ class BaseTensorMesh(BaseMesh):
         return Q.tocsr()
 
     def get_interpolation_matrix(
-        self, loc, location_type="CC", zeros_outside=False, **kwargs
+        self, loc, location_type="cell_centers", zeros_outside=False, **kwargs
     ):
         """Produces linear interpolation matrix
 
@@ -430,17 +435,17 @@ class BaseTensorMesh(BaseMesh):
 
             location_type can be::
 
-                'Ex'    -> x-component of field defined on edges
-                'Ey'    -> y-component of field defined on edges
-                'Ez'    -> z-component of field defined on edges
-                'Fx'    -> x-component of field defined on faces
-                'Fy'    -> y-component of field defined on faces
-                'Fz'    -> z-component of field defined on faces
-                'N'     -> scalar field defined on nodes
-                'CC'    -> scalar field defined on cell centers
-                'CCVx'  -> x-component of vector field defined on cell centers
-                'CCVy'  -> y-component of vector field defined on cell centers
-                'CCVz'  -> z-component of vector field defined on cell centers
+                'Ex', 'edges_x'           -> x-component of field defined on x edges
+                'Ey', 'edges_y'           -> y-component of field defined on y edges
+                'Ez', 'edges_z'           -> z-component of field defined on z edges
+                'Fx', 'faces_x'           -> x-component of field defined on x faces
+                'Fy', 'faces_y'           -> y-component of field defined on y faces
+                'Fz', 'faces_z'           -> z-component of field defined on z faces
+                'N', 'nodes'              -> scalar field defined on nodes
+                'CC', 'cell_centers'      -> scalar field defined on cell centers
+                'CCVx', 'cell_centers_x'  -> x-component of vector field defined on cell centers
+                'CCVy', 'cell_centers_y'  -> y-component of vector field defined on cell centers
+                'CCVz', 'cell_centers_z'  -> z-component of vector field defined on cell centers
 
         Returns
         -------
@@ -476,7 +481,7 @@ class BaseTensorMesh(BaseMesh):
             material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
 
         projection_type : str
-            'E' or 'F'
+            'edges' or 'faces'
 
         returnP : bool
             returns the projection matrices
@@ -493,6 +498,7 @@ class BaseTensorMesh(BaseMesh):
             M, the inner product matrix (nF, nF)
 
         """
+        projection_type = projection_type[0].upper()
         if projection_type not in ["F", "E"]:
             raise ValueError("projection_type must be 'F' for faces or 'E' for edges")
 
@@ -567,6 +573,7 @@ class BaseTensorMesh(BaseMesh):
 
         """
 
+        projection_type = projection_type[0].upper()
         if projection_type not in ["F", "E"]:
             raise ValueError("projection_type must be 'F' for faces or 'E' for edges")
 
