@@ -427,15 +427,15 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
             ]
             return np.r_[tX, tY, tZ]
 
-    def project_face_vector(self, fV):
+    def project_face_vector(self, face_vector):
         """Project vectors onto the faces of the mesh.
 
-        Given a vector, fV, in cartesian coordinates, this will project
+        Given a vector, face_vector, in cartesian coordinates, this will project
         it onto the mesh using the normals
 
         Parameters
         ----------
-        fV : numpy.ndarray
+        face_vector : numpy.ndarray
             face vector with shape (n_faces, dim)
 
         Returns
@@ -444,15 +444,15 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
             projected face vector, (n_faces, )
 
         """
-        if not isinstance(fV, np.ndarray):
-            raise Exception("fV must be an ndarray")
+        if not isinstance(face_vector, np.ndarray):
+            raise Exception("face_vector must be an ndarray")
         if not (
-            len(fV.shape) == 2
-            and fV.shape[0] == self.n_faces
-            and fV.shape[1] == self.dim
+            len(face_vector.shape) == 2
+            and face_vector.shape[0] == self.n_faces
+            and face_vector.shape[1] == self.dim
         ):
-            raise Exception("fV must be an ndarray of shape (n_faces x dim)")
-        return np.sum(fV * self.face_normals, 1)
+            raise Exception("face_vector must be an ndarray of shape (n_faces x dim)")
+        return np.sum(face_vector * self.face_normals, 1)
 
     def project_edge_vector(self, eV):
         """Project vectors onto the edges of the mesh
