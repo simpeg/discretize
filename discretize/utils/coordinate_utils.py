@@ -114,13 +114,13 @@ def rotation_matrix_from_normals(v0, v1, tol=1e-20):
     return np.eye(3, dtype=float) + sinT * ux + (1.0 - cosT) * (ux.dot(ux))
 
 
-def rotate_points_from_normals(XYZ, n0, n1, origin=np.r_[0.0, 0.0, 0.0]):
+def rotate_points_from_normals(XYZ, n0, n1, x0=np.r_[0.0, 0.0, 0.0]):
     """
     rotates a grid so that the vector n0 is aligned with the vector n1
 
     :param numpy.array n0: vector of length 3, should have norm 1
     :param numpy.array n1: vector of length 3, should have norm 1
-    :param numpy.array origin: vector of length 3, point about which we perform the rotation
+    :param numpy.array x0: vector of length 3, point about which we perform the rotation
     :rtype: numpy.array, 3x3
     :return: rotation matrix which rotates the frame so that n0 is aligned with n1
     """
@@ -129,10 +129,10 @@ def rotate_points_from_normals(XYZ, n0, n1, origin=np.r_[0.0, 0.0, 0.0]):
 
     if XYZ.shape[1] != 3:
         raise ValueError("Grid XYZ should be 3 wide")
-    if len(origin) != 3:
-        raise ValueError("origin should have length 3")
+    if len(x0) != 3:
+        raise ValueError("x0 should have length 3")
 
-    X0 = np.ones([XYZ.shape[0], 1]) * mkvc(origin)
+    X0 = np.ones([XYZ.shape[0], 1]) * mkvc(x0)
 
     return (XYZ - X0).dot(R.T) + X0  # equivalent to (R*(XYZ - X0)).T + X0
 
