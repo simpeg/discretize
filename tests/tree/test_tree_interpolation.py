@@ -43,7 +43,7 @@ class TestInterpolation2d(discretize.tests.OrderTest):
 
     name = "Interpolation 2D"
     # LOCS = np.random.rand(50, 2)*0.6+0.2
-    # loc_type = 'Ex'
+    # location_type = 'Ex'
     X, Y = np.mgrid[0:1:250j, 0:1:250j]
     LOCS = np.c_[X.reshape(-1), Y.reshape(-1)]
     # LOCS = np.c_[np.ones(100)*0.51, np.linspace(0.3, 0.7, 100)]

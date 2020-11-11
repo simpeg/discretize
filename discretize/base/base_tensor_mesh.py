@@ -297,7 +297,7 @@ class BaseTensorMesh(BaseMesh):
 
     # --------------- Methods ---------------------
 
-    def is_inside(self, pts, loc_type="N", **kwargs):
+    def is_inside(self, pts, location_type="N", **kwargs):
         """
         Determines if a set of points are inside a mesh.
 
@@ -307,16 +307,16 @@ class BaseTensorMesh(BaseMesh):
         """
         if "locType" in kwargs:
             warnings.warn(
-                "The locType keyword argument has been deprecated, please use loc_type. "
+                "The locType keyword argument has been deprecated, please use location_type. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
             )
-            loc_type = kwargs["locType"]
+            location_type = kwargs["locType"]
         pts = as_array_n_by_dim(pts, self.dim)
 
-        tensors = self.get_tensor(loc_type)
+        tensors = self.get_tensor(location_type)
 
-        if loc_type == "N" and self._meshType == "CYL":
+        if location_type == "N" and self._meshType == "CYL":
             # NOTE: for a CYL mesh we add a node to check if we are inside in
             # the radial direction!
             tensors[0] = np.r_[0.0, tensors[0]]
@@ -332,7 +332,7 @@ class BaseTensorMesh(BaseMesh):
             )
         return inside
 
-    def _getInterpolationMat(self, loc, loc_type="CC", zeros_outside=False):
+    def _getInterpolationMat(self, loc, location_type="CC", zeros_outside=False):
         """Produces interpolation matrix
 
         Parameters
@@ -340,10 +340,10 @@ class BaseTensorMesh(BaseMesh):
         loc : numpy.ndarray
             Location of points to interpolate to
 
-        loc_type: stc
+        location_type: stc
             What to interpolate
 
-            loc_type can be::
+            location_type can be::
 
                 'Ex'    -> x-component of field defined on edges
                 'Ey'    -> y-component of field defined on edges
@@ -373,37 +373,37 @@ class BaseTensorMesh(BaseMesh):
             indZeros = np.logical_not(self.is_inside(loc))
             loc[indZeros, :] = np.array([v.mean() for v in self.get_tensor("CC")])
 
-        if loc_type in ["Fx", "Fy", "Fz", "Ex", "Ey", "Ez"]:
-            ind = {"x": 0, "y": 1, "z": 2}[loc_type[1]]
+        if location_type in ["Fx", "Fy", "Fz", "Ex", "Ey", "Ez"]:
+            ind = {"x": 0, "y": 1, "z": 2}[location_type[1]]
             if self.dim < ind:
                 raise ValueError("mesh is not high enough dimension.")
-            if "F" in loc_type:
+            if "F" in location_type:
                 items = (self.nFx, self.nFy, self.nFz)[: self.dim]
             else:
                 items = (self.nEx, self.nEy, self.nEz)[: self.dim]
             components = [spzeros(loc.shape[0], n) for n in items]
-            components[ind] = interpolation_matrix(loc, *self.get_tensor(loc_type))
+            components[ind] = interpolation_matrix(loc, *self.get_tensor(location_type))
             # remove any zero blocks (hstack complains)
             components = [comp for comp in components if comp.shape[1] > 0]
             Q = sp.hstack(components)
 
-        elif loc_type in ["CC", "N"]:
-            Q = interpolation_matrix(loc, *self.get_tensor(loc_type))
+        elif location_type in ["CC", "N"]:
+            Q = interpolation_matrix(loc, *self.get_tensor(location_type))
 
-        elif loc_type in ["CCVx", "CCVy", "CCVz"]:
+        elif location_type in ["CCVx", "CCVy", "CCVz"]:
             Q = interpolation_matrix(loc, *self.get_tensor("CC"))
             Z = spzeros(loc.shape[0], self.nC)
-            if loc_type == "CCVx":
+            if location_type == "CCVx":
                 Q = sp.hstack([Q, Z, Z])
-            elif loc_type == "CCVy":
+            elif location_type == "CCVy":
                 Q = sp.hstack([Z, Q, Z])
-            elif loc_type == "CCVz":
+            elif location_type == "CCVz":
                 Q = sp.hstack([Z, Z, Q])
 
         else:
             raise NotImplementedError(
-                "getInterpolationMat: loc_type=="
-                + loc_type
+                "getInterpolationMat: location_type=="
+                + location_type
                 + " and mesh.dim=="
                 + str(self.dim)
             )
@@ -414,7 +414,7 @@ class BaseTensorMesh(BaseMesh):
         return Q.tocsr()
 
     def get_interpolation_matrix(
-        self, loc, loc_type="CC", zeros_outside=False, **kwargs
+        self, loc, location_type="CC", zeros_outside=False, **kwargs
     ):
         """Produces linear interpolation matrix
 
@@ -423,10 +423,10 @@ class BaseTensorMesh(BaseMesh):
         loc : numpy.ndarray
             Location of points to interpolate to
 
-        loc_type : str
+        location_type : str
             What to interpolate (see below)
 
-            loc_type can be::
+            location_type can be::
 
                 'Ex'    -> x-component of field defined on edges
                 'Ey'    -> y-component of field defined on edges
@@ -449,19 +449,19 @@ class BaseTensorMesh(BaseMesh):
         """
         if "locType" in kwargs:
             warnings.warn(
-                "The locType keyword argument has been deprecated, please use loc_type. "
+                "The locType keyword argument has been deprecated, please use location_type. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
             )
-            loc_type = kwargs["locType"]
+            location_type = kwargs["locType"]
         if "zerosOutside" in kwargs:
             warnings.warn(
-                "The zerosOutside keyword argument has been deprecated, please use loc_type. "
+                "The zerosOutside keyword argument has been deprecated, please use location_type. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
             )
             zeros_outside = kwargs["zerosOutside"]
-        return self._getInterpolationMat(loc, loc_type, zeros_outside)
+        return self._getInterpolationMat(loc, location_type, zeros_outside)
 
     def _fastInnerProduct(self, proj_type, prop=None, inv_prop=False, inv_mat=False):
         """Fast version of getFaceInnerProduct.

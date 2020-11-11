@@ -489,7 +489,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         return self._cell_levels_by_indexes(indices)
 
     def get_interpolation_matrix(
-        self, locs, loc_type="CC", zeros_outside=False, **kwargs
+        self, locs, location_type="CC", zeros_outside=False, **kwargs
     ):
         """Produces interpolation matrix
 
@@ -498,10 +498,10 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         loc : numpy.ndarray
             Location of points to interpolate to
 
-        loc_type: str
+        location_type: str
             What to interpolate
 
-            loc_type can be::
+            location_type can be::
 
                 'Ex'    -> x-component of field defined on edges
                 'Ey'    -> y-component of field defined on edges
@@ -520,34 +520,34 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         """
         if "locType" in kwargs:
             warnings.warn(
-                "The locType keyword argument has been deprecated, please use loc_type. "
+                "The locType keyword argument has been deprecated, please use location_type. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
             )
-            loc_type = kwargs["locType"]
+            location_type = kwargs["locType"]
         if "zerosOutside" in kwargs:
             warnings.warn(
-                "The zerosOutside keyword argument has been deprecated, please use loc_type. "
+                "The zerosOutside keyword argument has been deprecated, please use location_type. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
             )
             zeros_outside = kwargs["zerosOutside"]
         locs = as_array_n_by_dim(locs, self.dim)
-        if loc_type not in ["N", "CC", "Ex", "Ey", "Ez", "Fx", "Fy", "Fz"]:
-            raise Exception("loc_type must be one of N, CC, Ex, Ey, Ez, Fx, Fy, or Fz")
+        if location_type not in ["N", "CC", "Ex", "Ey", "Ez", "Fx", "Fy", "Fz"]:
+            raise Exception("location_type must be one of N, CC, Ex, Ey, Ez, Fx, Fy, or Fz")
 
-        if self.dim == 2 and loc_type in ["Ez", "Fz"]:
+        if self.dim == 2 and location_type in ["Ez", "Fz"]:
             raise Exception("Unable to interpolate from Z edges/face in 2D")
 
         locs = np.require(np.atleast_2d(locs), dtype=np.float64, requirements="C")
 
-        if loc_type == "N":
+        if location_type == "N":
             Av = self._getNodeIntMat(locs, zeros_outside)
-        elif loc_type in ["Ex", "Ey", "Ez"]:
-            Av = self._getEdgeIntMat(locs, zeros_outside, loc_type[1])
-        elif loc_type in ["Fx", "Fy", "Fz"]:
-            Av = self._getFaceIntMat(locs, zeros_outside, loc_type[1])
-        elif loc_type in ["CC"]:
+        elif location_type in ["Ex", "Ey", "Ez"]:
+            Av = self._getEdgeIntMat(locs, zeros_outside, location_type[1])
+        elif location_type in ["Fx", "Fy", "Fz"]:
+            Av = self._getFaceIntMat(locs, zeros_outside, location_type[1])
+        elif location_type in ["CC"]:
             Av = self._getCellIntMat(locs, zeros_outside)
         return Av
 

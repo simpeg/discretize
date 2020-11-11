@@ -1481,7 +1481,7 @@ class CylindricalMesh(
     ####################################################
 
     def get_interpolation_matrix(
-        self, loc, loc_type="CC", zeros_outside=False, **kwargs
+        self, loc, location_type="CC", zeros_outside=False, **kwargs
     ):
         """Produces interpolation matrix
 
@@ -1490,8 +1490,8 @@ class CylindricalMesh(
         loc : numpy.ndarray
             Location of points to interpolate to
 
-        loc_type : str
-            What to interpolate loc_type can be::
+        location_type : str
+            What to interpolate location_type can be::
 
             'Ex'    -> x-component of field defined on edges
             'Ey'    -> y-component of field defined on edges
@@ -1513,33 +1513,33 @@ class CylindricalMesh(
         """
         if "locType" in kwargs:
             warnings.warn(
-                "The locType keyword argument has been deprecated, please use loc_type. "
+                "The locType keyword argument has been deprecated, please use location_type. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
             )
-            loc_type = kwargs["locType"]
+            location_type = kwargs["locType"]
         if "zerosOutside" in kwargs:
             warnings.warn(
-                "The zerosOutside keyword argument has been deprecated, please use loc_type. "
+                "The zerosOutside keyword argument has been deprecated, please use location_type. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
             )
             zeros_outside = kwargs["zerosOutside"]
 
-        if self.is_symmetric and loc_type in ["Ex", "Ez", "Fy"]:
+        if self.is_symmetric and location_type in ["Ex", "Ez", "Fy"]:
             raise Exception(
                 "Symmetric CylindricalMesh does not support {0!s} interpolation, "
-                "as this variable does not exist.".format(loc_type)
+                "as this variable does not exist.".format(location_type)
             )
 
-        if loc_type in ["CCVx", "CCVy", "CCVz"]:
+        if location_type in ["CCVx", "CCVy", "CCVz"]:
             Q = interpolation_matrix(loc, *self.get_tensor("CC"))
             Z = spzeros(loc.shape[0], self.nC)
-            if loc_type == "CCVx":
+            if location_type == "CCVx":
                 Q = sp.hstack([Q, Z])
-            elif loc_type == "CCVy":
+            elif location_type == "CCVy":
                 Q = sp.hstack([Q])
-            elif loc_type == "CCVz":
+            elif location_type == "CCVz":
                 Q = sp.hstack([Z, Q])
 
             if zeros_outside:
@@ -1549,16 +1549,16 @@ class CylindricalMesh(
 
             return Q.tocsr()
 
-        return self._getInterpolationMat(loc, loc_type, zeros_outside)
+        return self._getInterpolationMat(loc, location_type, zeros_outside)
 
-    def cartesian_grid(self, loc_type="CC", theta_shift=None, **kwargs):
+    def cartesian_grid(self, location_type="CC", theta_shift=None, **kwargs):
         """
         Takes a grid location ('CC', 'N', 'Ex', 'Ey', 'Ez', 'Fx', 'Fy', 'Fz')
         and returns that grid in cartesian coordinates
 
         Parameters
         ----------
-        loc_type : {'CC', 'N', 'Ex', 'Ey', 'Ez', 'Fx', 'Fy', 'Fz'}
+        location_type : {'CC', 'N', 'Ex', 'Ey', 'Ez', 'Fx', 'Fy', 'Fz'}
             grid location
         theta_shift : float, optional
             shift for theta
@@ -1570,18 +1570,18 @@ class CylindricalMesh(
         """
         if "locType" in kwargs:
             warnings.warn(
-                "The locType keyword argument has been deprecated, please use loc_type. "
+                "The locType keyword argument has been deprecated, please use location_type. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
             )
-            loc_type = kwargs["locType"]
-        grid = getattr(self, "grid{}".format(loc_type)).copy()
+            location_type = kwargs["locType"]
+        grid = getattr(self, "grid{}".format(location_type)).copy()
         if theta_shift is not None:
             grid[:, 1] = grid[:, 1] - theta_shift
         return cyl2cart(grid)  # TODO: account for cartesian origin
 
     def get_interpolation_matrix_cartesian_mesh(
-        self, Mrect, loc_type="CC", loc_type_to=None, **kwargs
+        self, Mrect, location_type="CC", location_type_to=None, **kwargs
     ):
         """
         Takes a cartesian mesh and returns a projection to translate onto
@@ -1591,10 +1591,10 @@ class CylindricalMesh(
         ----------
         Mrect : discretize.base.BaseMesh
             the mesh to interpolate on to
-        loc_type : {'CC', 'N', 'Ex', 'Ey', 'Ez', 'Fx', 'Fy', 'Fz'}
+        location_type : {'CC', 'N', 'Ex', 'Ey', 'Ez', 'Fx', 'Fy', 'Fz'}
             grid location
-        loc_type_to : {'CC', 'N', 'Ex', 'Ey', 'Ez', 'Fx', 'Fy', 'Fz'}, or None, optional
-            grid location to interpolate to. If None, the same grid type as `loc_type` will be assumed
+        location_type_to : {'CC', 'N', 'Ex', 'Ey', 'Ez', 'Fx', 'Fy', 'Fz'}, or None, optional
+            grid location to interpolate to. If None, the same grid type as `location_type` will be assumed
 
         Returns
         -------
@@ -1603,18 +1603,18 @@ class CylindricalMesh(
         """
         if "locType" in kwargs:
             warnings.warn(
-                "The locType keyword argument has been deprecated, please use loc_type. "
+                "The locType keyword argument has been deprecated, please use location_type. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
             )
-            loc_type = kwargs["locType"]
+            location_type = kwargs["locType"]
         if "locTypeTo" in kwargs:
             warnings.warn(
-                "The locTypeTo keyword argument has been deprecated, please use loc_type_to. "
+                "The locTypeTo keyword argument has been deprecated, please use location_type_to. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
             )
-            loc_type_to = kwargs["locTypeTo"]
+            location_type_to = kwargs["locTypeTo"]
 
         if not self.is_symmetric:
             raise AssertionError(
@@ -1622,32 +1622,32 @@ class CylindricalMesh(
                 "for more complicated CylindricalMeshes"
             )
 
-        if loc_type_to is None:
-            loc_type_to = loc_type
+        if location_type_to is None:
+            location_type_to = location_type
 
-        if loc_type == "F":
+        if location_type == "F":
             # do this three times for each component
             X = self.get_interpolation_matrix_cartesian_mesh(
-                Mrect, loc_type="Fx", loc_type_to=loc_type_to + "x"
+                Mrect, location_type="Fx", location_type_to=location_type_to + "x"
             )
             Y = self.get_interpolation_matrix_cartesian_mesh(
-                Mrect, loc_type="Fy", loc_type_to=loc_type_to + "y"
+                Mrect, location_type="Fy", location_type_to=location_type_to + "y"
             )
             Z = self.get_interpolation_matrix_cartesian_mesh(
-                Mrect, loc_type="Fz", loc_type_to=loc_type_to + "z"
+                Mrect, location_type="Fz", location_type_to=location_type_to + "z"
             )
             return sp.vstack((X, Y, Z))
-        if loc_type == "E":
+        if location_type == "E":
             X = self.get_interpolation_matrix_cartesian_mesh(
-                Mrect, loc_type="Ex", loc_type_to=loc_type_to + "x"
+                Mrect, location_type="Ex", location_type_to=location_type_to + "x"
             )
             Y = self.get_interpolation_matrix_cartesian_mesh(
-                Mrect, loc_type="Ey", loc_type_to=loc_type_to + "y"
+                Mrect, location_type="Ey", location_type_to=location_type_to + "y"
             )
-            Z = spzeros(getattr(Mrect, "n" + loc_type_to + "z"), self.nE)
+            Z = spzeros(getattr(Mrect, "n" + location_type_to + "z"), self.nE)
             return sp.vstack((X, Y, Z))
 
-        grid = getattr(Mrect, "grid" + loc_type_to)
+        grid = getattr(Mrect, "grid" + location_type_to)
         # This is unit circle stuff, 0 to 2*pi, starting at x-axis, rotating
         # counter clockwise in an x-y slice
         theta = (
@@ -1663,7 +1663,7 @@ class CylindricalMesh(
             + (grid[:, 1] - self.cartesian_origin[1]) ** 2
         ) ** 0.5
 
-        if loc_type in ["CC", "N", "Fz", "Ez"]:
+        if location_type in ["CC", "N", "Fz", "Ez"]:
             G, proj = np.c_[r, theta, grid[:, 2]], np.ones(r.size)
         else:
             dotMe = {
@@ -1673,16 +1673,16 @@ class CylindricalMesh(
                 "Ex": Mrect.edge_tangents[: Mrect.nEx, :],
                 "Ey": Mrect.edge_tangents[Mrect.nEx : (Mrect.nEx + Mrect.nEy), :],
                 "Ez": Mrect.edge_tangents[-Mrect.nEz :, :],
-            }[loc_type_to]
-            if "F" in loc_type:
+            }[location_type_to]
+            if "F" in location_type:
                 normals = np.c_[np.cos(theta), np.sin(theta), np.zeros(theta.size)]
                 proj = (normals * dotMe).sum(axis=1)
-            if "E" in loc_type:
+            if "E" in location_type:
                 tangents = np.c_[-np.sin(theta), np.cos(theta), np.zeros(theta.size)]
                 proj = (tangents * dotMe).sum(axis=1)
             G = np.c_[r, theta, grid[:, 2]]
 
-        interpType = loc_type
+        interpType = location_type
         if interpType == "Fy":
             interpType = "Fx"
         elif interpType == "Ex":
