@@ -15,7 +15,7 @@ def download(url, folder=".", overwrite=False, verbose=True):
     def rename_path(downloadpath):
         splitfullpath = downloadpath.split(os.path.sep)
 
-        # grab just the filename
+        # grab just the file name
         fname = splitfullpath[-1]
         fnamesplit = fname.split(".")
         newname = fnamesplit[0]
@@ -23,7 +23,7 @@ def download(url, folder=".", overwrite=False, verbose=True):
         # check if we have already re-numbered
         newnamesplit = newname.split("(")
 
-        # add (num) to the end of the filename
+        # add (num) to the end of the file name
         if len(newnamesplit) == 1:
             num = 1
         else:
