@@ -522,10 +522,11 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
     @properties.validator
     def _validate_orientation(self):
         """Check if axes are orthogonal"""
+        tol = 1E-6
         if not (
-            np.abs(self.axis_u.dot(self.axis_v) < 1e-6)
-            and np.abs(self.axis_v.dot(self.axis_w) < 1e-6)
-            and np.abs(self.axis_w.dot(self.axis_u) < 1e-6)
+            np.abs(self.axis_u.dot(self.axis_v) < tol)
+            and np.abs(self.axis_v.dot(self.axis_w) < tol)
+            and np.abs(self.axis_w.dot(self.axis_u) < tol)
         ):
             raise ValueError("axis_u, axis_v, and axis_w must be orthogonal")
         return True
