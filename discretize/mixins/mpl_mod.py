@@ -1757,7 +1757,7 @@ class InterfaceMPL(object):
 
         if faces_x:
             ax.plot(
-                *np.r_[self.grid_faces_x, self.grid_hanging_faces_x].T,
+                *np.r_[self.faces_x, self.grid_hanging_faces_x].T,
                 color="C2",
                 marker=">",
                 linestyle="",
@@ -1774,7 +1774,7 @@ class InterfaceMPL(object):
             )
         if faces_y:
             ax.plot(
-                *np.r_[self.grid_faces_y, self.grid_hanging_faces_y].T,
+                *np.r_[self.faces_y, self.grid_hanging_faces_y].T,
                 color="C2",
                 marker=y_mark,
                 linestyle="",
@@ -1791,7 +1791,7 @@ class InterfaceMPL(object):
             )
         if faces_z:
             ax.plot(
-                *np.r_[self.grid_faces_z, self.grid_hanging_faces_z].T,
+                *np.r_[self.faces_z, self.grid_hanging_faces_z].T,
                 color="C2",
                 marker="^",
                 linestyle="",

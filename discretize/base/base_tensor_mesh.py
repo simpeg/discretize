@@ -43,9 +43,9 @@ class BaseTensorMesh(BaseMesh):
         **{
             "gridCC": "cell_centers",
             "gridN": "nodes",
-            "gridFx": "grid_faces_x",
-            "gridFy": "grid_faces_y",
-            "gridFz": "grid_faces_z",
+            "gridFx": "faces_x",
+            "gridFy": "faces_y",
+            "gridFz": "faces_z",
             "gridEx": "edges_x",
             "gridEy": "edges_y",
             "gridEz": "edges_z",
@@ -188,21 +188,21 @@ class BaseTensorMesh(BaseMesh):
         return ndgrid(*self.h)
 
     @property
-    def grid_faces_x(self):
+    def faces_x(self):
         """Face staggered grid in the x direction."""
         if self.nFx == 0:
             return
         return self._getTensorGrid("Fx")
 
     @property
-    def grid_faces_y(self):
+    def faces_y(self):
         """Face staggered grid in the y direction."""
         if self.nFy == 0 or self.dim < 2:
             return
         return self._getTensorGrid("Fy")
 
     @property
-    def grid_faces_z(self):
+    def faces_z(self):
         """Face staggered grid in the z direction."""
         if self.nFz == 0 or self.dim < 3:
             return

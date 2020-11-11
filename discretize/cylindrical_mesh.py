@@ -938,7 +938,7 @@ class CylindricalMesh(
         )
 
     @property
-    def grid_faces_x(self):
+    def faces_x(self):
         """
         Grid of x-faces (radial-faces) in cylindrical coordinates
         :math:`(r, \\theta, z)`.
@@ -950,7 +950,7 @@ class CylindricalMesh(
         """
         if getattr(self, "_gridFx", None) is None:
             if self.is_symmetric:
-                return super().grid_faces_x
+                return super().faces_x
             else:
                 self._gridFx = self._gridFxFull[~self._ishangingFx, :]
         return self._gridFx

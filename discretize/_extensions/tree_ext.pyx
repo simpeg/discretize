@@ -902,7 +902,7 @@ cdef class _TreeMesh:
         return self._gridhEz
 
     @property
-    def grid_faces_x(self):
+    def faces_x(self):
         """
         Returns a numpy array of shape (n_faces_x, dim) with the centers of all
         non-hanging faces along the first dimension in order.
@@ -925,7 +925,7 @@ cdef class _TreeMesh:
         return self._gridFx
 
     @property
-    def grid_faces_y(self):
+    def faces_y(self):
         """
         Returns a numpy array of shape (n_faces_y, dim) with the centers of all
         non-hanging faces along the second dimension in order.
@@ -947,7 +947,7 @@ cdef class _TreeMesh:
         return self._gridFy
 
     @property
-    def grid_faces_z(self):
+    def faces_z(self):
         """
         Returns a numpy array of shape (n_faces_z, dim) with the centers of all
         non-hanging faces along the third dimension in order.
