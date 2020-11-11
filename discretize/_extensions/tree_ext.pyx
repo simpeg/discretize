@@ -721,7 +721,7 @@ cdef class _TreeMesh:
         return self._gridCC
 
     @property
-    def grid_nodes(self):
+    def nodes(self):
         """
         Returns a numpy array of shape (n_nodes, dim) with the locations of all
         non-hanging nodes in order.
@@ -3458,9 +3458,9 @@ cdef class _TreeMesh:
         cdef int_t same_base
         try:
             same_base = (
-                np.allclose(self.grid_nodes_x, meshin.grid_nodes_x)
-                and np.allclose(self.grid_nodes_y, meshin.grid_nodes_y)
-                and (self.dim == 2 or np.allclose(self.grid_nodes_z, meshin.grid_nodes_z))
+                np.allclose(self.nodes_x, meshin.nodes_x)
+                and np.allclose(self.nodes_y, meshin.nodes_y)
+                and (self.dim == 2 or np.allclose(self.nodes_z, meshin.nodes_z))
             )
         except ValueError:
             same_base = False
@@ -3644,9 +3644,9 @@ cdef class _TreeMesh:
         cdef int_t same_base
         try:
             same_base = (
-                np.allclose(self.grid_nodes_x, out_tens_mesh.grid_nodes_x)
-                and np.allclose(self.grid_nodes_y, out_tens_mesh.grid_nodes_y)
-                and (self.dim == 2 or np.allclose(self.grid_nodes_z, out_tens_mesh.grid_nodes_z))
+                np.allclose(self.nodes_x, out_tens_mesh.nodes_x)
+                and np.allclose(self.nodes_y, out_tens_mesh.nodes_y)
+                and (self.dim == 2 or np.allclose(self.nodes_z, out_tens_mesh.nodes_z))
             )
         except ValueError:
             same_base = False
@@ -3682,11 +3682,11 @@ cdef class _TreeMesh:
         cdef int_t nnz_row = 0
         cdef int_t nnz_counter = 0
 
-        cdef double[:] nodes_x = out_tens_mesh.grid_nodes_x
-        cdef double[:] nodes_y = out_tens_mesh.grid_nodes_y
+        cdef double[:] nodes_x = out_tens_mesh.nodes_x
+        cdef double[:] nodes_y = out_tens_mesh.nodes_y
         cdef double[:] nodes_z = np.array([0.0, 0.0])
         if self._dim==3:
-            nodes_z = out_tens_mesh.grid_nodes_z
+            nodes_z = out_tens_mesh.nodes_z
         cdef int_t nx = len(nodes_x)-1
         cdef int_t ny = len(nodes_y)-1
         cdef int_t nz = len(nodes_z)-1
@@ -3788,9 +3788,9 @@ cdef class _TreeMesh:
         cdef int_t same_base
         try:
             same_base = (
-                np.allclose(self.grid_nodes_x, in_tens_mesh.grid_nodes_x)
-                and np.allclose(self.grid_nodes_y, in_tens_mesh.grid_nodes_y)
-                and (self.dim == 2 or np.allclose(self.grid_nodes_z, in_tens_mesh.grid_nodes_z))
+                np.allclose(self.nodes_x, in_tens_mesh.nodes_x)
+                and np.allclose(self.nodes_y, in_tens_mesh.nodes_y)
+                and (self.dim == 2 or np.allclose(self.nodes_z, in_tens_mesh.nodes_z))
             )
         except ValueError:
             same_base = False
@@ -3810,11 +3810,11 @@ cdef class _TreeMesh:
             )
 
 
-        cdef np.float64_t[:] nodes_x = in_tens_mesh.grid_nodes_x
-        cdef np.float64_t[:] nodes_y = in_tens_mesh.grid_nodes_y
+        cdef np.float64_t[:] nodes_x = in_tens_mesh.nodes_x
+        cdef np.float64_t[:] nodes_y = in_tens_mesh.nodes_y
         cdef np.float64_t[:] nodes_z = np.array([0.0, 0.0])
         if self._dim == 3:
-            nodes_z = in_tens_mesh.grid_nodes_z
+            nodes_z = in_tens_mesh.nodes_z
         cdef int_t nx = len(nodes_x)-1
         cdef int_t ny = len(nodes_y)-1
         cdef int_t nz = len(nodes_z)-1

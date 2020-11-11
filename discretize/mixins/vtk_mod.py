@@ -290,15 +290,15 @@ class InterfaceVTK(object):
         """
         # Deal with dimensionalities
         if mesh.dim >= 1:
-            vX = mesh.grid_nodes_x
+            vX = mesh.nodes_x
             xD = len(vX)
             yD, zD = 1, 1
             vY, vZ = np.array([0, 0])
         if mesh.dim >= 2:
-            vY = mesh.grid_nodes_y
+            vY = mesh.nodes_y
             yD = len(vY)
         if mesh.dim == 3:
-            vZ = mesh.grid_nodes_z
+            vZ = mesh.nodes_z
             zD = len(vZ)
         # If axis orientations are standard then use a vtkRectilinearGrid
         if not mesh.reference_is_rotated:

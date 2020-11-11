@@ -195,11 +195,11 @@ def _tensor_volume_averaging(mesh_in, mesh_out, values=None, output=None):
     i3_in = np.array([0], dtype=np.int32)
     i3_out = np.array([0], dtype=np.int32)
     cdef int dim = mesh_in.dim
-    w1, i1_in, i1_out = _volume_avg_weights(mesh_in.grid_nodes_x, mesh_out.grid_nodes_x)
+    w1, i1_in, i1_out = _volume_avg_weights(mesh_in.nodes_x, mesh_out.nodes_x)
     if dim > 1:
-        w2, i2_in, i2_out = _volume_avg_weights(mesh_in.grid_nodes_y, mesh_out.grid_nodes_y)
+        w2, i2_in, i2_out = _volume_avg_weights(mesh_in.nodes_y, mesh_out.nodes_y)
     if dim > 2:
-        w3, i3_in, i3_out = _volume_avg_weights(mesh_in.grid_nodes_z, mesh_out.grid_nodes_z)
+        w3, i3_in, i3_out = _volume_avg_weights(mesh_in.nodes_z, mesh_out.nodes_z)
 
     cdef (np.int32_t, np.int32_t, np.int32_t) w_shape = (w1.shape[0], w2.shape[0], w3.shape[0])
     cdef (np.int32_t, np.int32_t, np.int32_t) mesh_in_shape

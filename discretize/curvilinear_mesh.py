@@ -44,7 +44,7 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
         **BaseRectangularMesh._aliases,
         **{
             "gridCC": "cell_centers",
-            "gridN": "grid_nodes",
+            "gridN": "nodes",
             "gridFx": "grid_faces_x",
             "gridFy": "grid_faces_y",
             "gridFz": "grid_faces_z",
@@ -113,7 +113,7 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
         return self._gridCC
 
     @property
-    def grid_nodes(self):
+    def nodes(self):
         """
         Nodal grid.
         """

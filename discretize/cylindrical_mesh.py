@@ -311,7 +311,7 @@ class CylindricalMesh(
         return np.r_[0, self.h[1][:-1].cumsum()] + self.h[1] * 0.5
 
     @property
-    def grid_nodes_x(self):
+    def nodes_x(self):
         """Nodal grid vector (1D) in the x direction."""
         if self.is_symmetric:
             return self.h[0].cumsum()
@@ -327,7 +327,7 @@ class CylindricalMesh(
         return np.r_[0, self.h[1].cumsum()]
 
     @property
-    def grid_nodes_y(self):
+    def nodes_y(self):
         """Nodal grid vector (1D) in the y direction."""
         # if self.is_symmetric:
         #     # There aren't really any nodes, but all the grids need
@@ -364,8 +364,8 @@ class CylindricalMesh(
         full vector of y-edge lengths (prior to deflating)
         """
         if self.is_symmetric:
-            return 2 * pi * self.grid_nodes[:, 0]
-        return np.kron(np.ones(self._vntN[2]), np.kron(self.h[1], self.grid_nodes_x))
+            return 2 * pi * self.nodes[:, 0]
+        return np.kron(np.ones(self._vntN[2]), np.kron(self.h[1], self.nodes_x))
 
     @property
     def edge_y_lengths(self):
@@ -440,8 +440,8 @@ class CylindricalMesh(
         area of x-faces prior to deflation
         """
         if self.is_symmetric:
-            return np.kron(self.h[2], 2 * pi * self.grid_nodes_x)
-        return np.kron(self.h[2], np.kron(self.h[1], self.grid_nodes_x))
+            return np.kron(self.h[2], 2 * pi * self.nodes_x)
+        return np.kron(self.h[2], np.kron(self.h[1], self.nodes_x))
 
     @property
     def face_x_areas(self):
@@ -498,14 +498,14 @@ class CylindricalMesh(
         """
         if self.is_symmetric:
             return np.kron(
-                np.ones_like(self.grid_nodes_z),
-                pi * (self.grid_nodes_x ** 2 - np.r_[0, self.grid_nodes_x[:-1]] ** 2),
+                np.ones_like(self.nodes_z),
+                pi * (self.nodes_x ** 2 - np.r_[0, self.nodes_x[:-1]] ** 2),
             )
         return np.kron(
             np.ones(self._vntN[2]),
             np.kron(
                 self.h[1],
-                0.5 * (self.grid_nodes_x[1:] ** 2 - self.grid_nodes_x[:-1] ** 2),
+                0.5 * (self.nodes_x[1:] ** 2 - self.nodes_x[:-1] ** 2),
             ),
         )
 
@@ -568,7 +568,7 @@ class CylindricalMesh(
         if getattr(self, "_vol", None) is None:
             if self.is_symmetric:
                 az = pi * (
-                    self.grid_nodes_x ** 2 - np.r_[0, self.grid_nodes_x[:-1]] ** 2
+                    self.nodes_x ** 2 - np.r_[0, self.nodes_x[:-1]] ** 2
                 )
                 self._vol = np.kron(self.h[2], az)
             else:
@@ -577,7 +577,7 @@ class CylindricalMesh(
                     np.kron(
                         self.h[1],
                         0.5
-                        * (self.grid_nodes_x[1:] ** 2 - self.grid_nodes_x[:-1] ** 2),
+                        * (self.nodes_x[1:] ** 2 - self.nodes_x[:-1] ** 2),
                     ),
                 )
         return self._vol
@@ -909,10 +909,10 @@ class CylindricalMesh(
         """
         Full Nodal grid (including hanging nodes)
         """
-        return ndgrid([self.grid_nodes_x, self._vectorNyFull, self.grid_nodes_z])
+        return ndgrid([self.nodes_x, self._vectorNyFull, self.nodes_z])
 
     @property
-    def grid_nodes(self):
+    def nodes(self):
         """
         Nodal grid in cylindrical coordinates :math:`(r, \\theta, z)`.
         Nodes do not exist in a cylindrically symmetric mesh.
@@ -934,7 +934,7 @@ class CylindricalMesh(
         Full Fx grid (including hanging faces)
         """
         return ndgrid(
-            [self.grid_nodes_x, self.cell_centers_y, self.cell_centers_z]
+            [self.nodes_x, self.cell_centers_y, self.cell_centers_z]
         )
 
     @property
@@ -985,7 +985,7 @@ class CylindricalMesh(
         """
         Full z-edge grid (including hanging edges)
         """
-        return ndgrid([self.grid_nodes_x, self._vectorNyFull, self.cell_centers_z])
+        return ndgrid([self.nodes_x, self._vectorNyFull, self.cell_centers_z])
 
     @property
     def grid_edges_z(self):

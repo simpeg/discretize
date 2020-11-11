@@ -341,8 +341,8 @@ class TensorMeshIO(InterfaceTensorread_vtk):
             return outStr
 
         # Grab face coordinates
-        fx = mesh.grid_nodes_x
-        fz = -mesh.grid_nodes_y[::-1]
+        fx = mesh.nodes_x
+        fz = -mesh.nodes_y[::-1]
 
         # Create the string
         outStr = comment_lines

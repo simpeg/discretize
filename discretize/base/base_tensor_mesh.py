@@ -42,7 +42,7 @@ class BaseTensorMesh(BaseMesh):
         **BaseMesh._aliases,
         **{
             "gridCC": "cell_centers",
-            "gridN": "grid_nodes",
+            "gridN": "nodes",
             "gridFx": "grid_faces_x",
             "gridFy": "grid_faces_y",
             "gridFz": "grid_faces_z",
@@ -132,24 +132,24 @@ class BaseTensorMesh(BaseMesh):
         self.h = [mkvc(x.astype(float)) for x in h]
 
     @property
-    def grid_nodes_x(self):
+    def nodes_x(self):
         """Nodal grid vector (1D) in the x direction."""
         return np.r_[self.x0[0], self.h[0]].cumsum()
 
     @property
-    def grid_nodes_y(self):
+    def nodes_y(self):
         """Nodal grid vector (1D) in the y direction."""
         return None if self.dim < 2 else np.r_[self.x0[1], self.h[1]].cumsum()
 
     @property
-    def grid_nodes_z(self):
+    def nodes_z(self):
         """Nodal grid vector (1D) in the z direction."""
         return None if self.dim < 3 else np.r_[self.x0[2], self.h[2]].cumsum()
 
     @property
     def cell_centers_x(self):
         """Cell-centered grid vector (1D) in the x direction."""
-        nodes = self.grid_nodes_x
+        nodes = self.nodes_x
         return (nodes[1:] + nodes[:-1]) / 2
 
     @property
@@ -157,7 +157,7 @@ class BaseTensorMesh(BaseMesh):
         """Cell-centered grid vector (1D) in the y direction."""
         if self.dim < 2:
             return None
-        nodes = self.grid_nodes_y
+        nodes = self.nodes_y
         return (nodes[1:] + nodes[:-1]) / 2
 
     @property
@@ -165,7 +165,7 @@ class BaseTensorMesh(BaseMesh):
         """Cell-centered grid vector (1D) in the z direction."""
         if self.dim < 3:
             return None
-        nodes = self.grid_nodes_z
+        nodes = self.nodes_z
         return (nodes[1:] + nodes[:-1]) / 2
 
     @property
@@ -174,7 +174,7 @@ class BaseTensorMesh(BaseMesh):
         return self._getTensorGrid("CC")
 
     @property
-    def grid_nodes(self):
+    def nodes(self):
         """Nodal grid."""
         return self._getTensorGrid("N")
 
@@ -262,28 +262,28 @@ class BaseTensorMesh(BaseMesh):
 
         if key == "Fx":
             ten = [
-                self.grid_nodes_x,
+                self.nodes_x,
                 self.cell_centers_y,
                 self.cell_centers_z,
             ]
         elif key == "Fy":
             ten = [
                 self.cell_centers_x,
-                self.grid_nodes_y,
+                self.nodes_y,
                 self.cell_centers_z,
             ]
         elif key == "Fz":
             ten = [
                 self.cell_centers_x,
                 self.cell_centers_y,
-                self.grid_nodes_z,
+                self.nodes_z,
             ]
         elif key == "Ex":
-            ten = [self.cell_centers_x, self.grid_nodes_y, self.grid_nodes_z]
+            ten = [self.cell_centers_x, self.nodes_y, self.nodes_z]
         elif key == "Ey":
-            ten = [self.grid_nodes_x, self.cell_centers_y, self.grid_nodes_z]
+            ten = [self.nodes_x, self.cell_centers_y, self.nodes_z]
         elif key == "Ez":
-            ten = [self.grid_nodes_x, self.grid_nodes_y, self.cell_centers_z]
+            ten = [self.nodes_x, self.nodes_y, self.cell_centers_z]
         elif key == "CC":
             ten = [
                 self.cell_centers_x,
@@ -291,7 +291,7 @@ class BaseTensorMesh(BaseMesh):
                 self.cell_centers_z,
             ]
         elif key == "N":
-            ten = [self.grid_nodes_x, self.grid_nodes_y, self.grid_nodes_z]
+            ten = [self.nodes_x, self.nodes_y, self.nodes_z]
 
         return [t for t in ten if t is not None]
 
@@ -716,9 +716,9 @@ class BaseTensorMesh(BaseMesh):
         )
         return None if self.dim < 3 else self.h[2]
 
-    vectorNx = deprecate_property("grid_nodes_x", "vectorNx", removal_version="1.0.0")
-    vectorNy = deprecate_property("grid_nodes_y", "vectorNy", removal_version="1.0.0")
-    vectorNz = deprecate_property("grid_nodes_z", "vectorNz", removal_version="1.0.0")
+    vectorNx = deprecate_property("nodes_x", "vectorNx", removal_version="1.0.0")
+    vectorNy = deprecate_property("nodes_y", "vectorNy", removal_version="1.0.0")
+    vectorNz = deprecate_property("nodes_z", "vectorNz", removal_version="1.0.0")
     vectorCCx = deprecate_property(
         "cell_centers_x", "vectorCCx", removal_version="1.0.0"
     )
