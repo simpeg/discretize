@@ -742,7 +742,7 @@ cdef class _TreeMesh:
         return self._gridN
 
     @property
-    def grid_hanging_nodes(self):
+    def hanging_nodes(self):
         """
         Returns a numpy array of shape (n_nodes, dim) with the locations of all
         hanging nodes in order.
@@ -803,7 +803,7 @@ cdef class _TreeMesh:
         return self._gridEx
 
     @property
-    def grid_hanging_edges_x(self):
+    def hanging_edges_x(self):
         """
         Returns a numpy array of shape (n_hanging_edges_x, dim) with the centers of all
         hanging edges along the first dimension in order.
@@ -843,7 +843,7 @@ cdef class _TreeMesh:
         return self._gridEy
 
     @property
-    def grid_hanging_edges_y(self):
+    def hanging_edges_y(self):
         """
         Returns a numpy array of shape (n_hanging_edges_y, dim) with the centers of all
         hanging edges along the second dimension in order.
@@ -883,7 +883,7 @@ cdef class _TreeMesh:
         return self._gridEz
 
     @property
-    def grid_hanging_edges_z(self):
+    def hanging_edges_z(self):
         """
         Returns a numpy array of shape (n_hanging_edges_z, dim) with the centers of all
         hanging edges along the third dimension in order.
@@ -970,12 +970,12 @@ cdef class _TreeMesh:
         return self._gridFz
 
     @property
-    def grid_hanging_faces_x(self):
+    def hanging_faces_x(self):
         """
         Returns a numpy array of shape (n_hanging_faces_x, dim) with the centers of all
         hanging faces along the first dimension in order.
         """
-        if(self._dim == 2): return self.grid_hanging_edges_y
+        if(self._dim == 2): return self.hanging_edges_y
 
         cdef np.float64_t[:, :] gridFx
         cdef Face *face
@@ -991,12 +991,12 @@ cdef class _TreeMesh:
         return self._gridhFx
 
     @property
-    def grid_hanging_faces_y(self):
+    def hanging_faces_y(self):
         """
         Returns a numpy array of shape (n_hanging_faces_y, dim) with the centers of all
         hanging faces along the second dimension in order.
         """
-        if(self._dim == 2): return self.grid_hanging_edges_x
+        if(self._dim == 2): return self.hanging_edges_x
 
         cdef np.float64_t[:, :] gridhFy
         cdef Face *face
@@ -1012,7 +1012,7 @@ cdef class _TreeMesh:
         return self._gridhFy
 
     @property
-    def grid_hanging_faces_z(self):
+    def hanging_faces_z(self):
         """
         Returns a numpy array of shape (n_hanging_faces_z, dim) with the centers of all
         hanging faces along the third dimension in order.

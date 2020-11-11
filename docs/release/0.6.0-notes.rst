@@ -84,7 +84,7 @@ On ``discretize.operators.DiffOperators``:
 On ``TreeMesh``:
 
 * Similar to above, all ``n_hanging_XXX=nhX``, and ``n_total_XXX=ntX``, for each ``node=N``, ``face_x,y,z=Fx,y,z``, and ``edge_x,y,z=Ex,y,z``
-* Also, similar to above: ``grid_hanging_XXX=gridhX``, for each hanging ``node=N``, ``face_x,y,z=Fx,y,z`` and ``edge_x,y,z=Ex,y,z``
+* Also, similar to above: ``hanging_XXX=gridhX``, for each hanging ``node=N``, ``face_x,y,z=Fx,y,z`` and ``edge_x,y,z=Ex,y,z``
 
 These aliases are consistent across all meshes that inherit from these classes:
 ``discretize.TensorMesh``, ``discretize.CurvilinearMesh``, ``discretize.CylindricalMesh``,

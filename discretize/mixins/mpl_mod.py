@@ -1728,7 +1728,7 @@ class InterfaceMPL(object):
             if self.dim == 3:
                 edges_z = True
         if lines or nodes:
-            grid_n_full = np.r_[self.nodes, self.grid_hanging_nodes]
+            grid_n_full = np.r_[self.nodes, self.hanging_nodes]
         if nodes:
             ax.plot(*grid_n_full.T, color="C0", marker="s", linestyle="")
             # Hanging Nodes
@@ -1757,14 +1757,14 @@ class InterfaceMPL(object):
 
         if faces_x:
             ax.plot(
-                *np.r_[self.faces_x, self.grid_hanging_faces_x].T,
+                *np.r_[self.faces_x, self.hanging_faces_x].T,
                 color="C2",
                 marker=">",
                 linestyle="",
             )
             # Hanging Faces x
             ax.plot(
-                *self.grid_hanging_faces_x.T,
+                *self.hanging_faces_x.T,
                 color="C2",
                 marker="s",
                 linestyle="",
@@ -1774,14 +1774,14 @@ class InterfaceMPL(object):
             )
         if faces_y:
             ax.plot(
-                *np.r_[self.faces_y, self.grid_hanging_faces_y].T,
+                *np.r_[self.faces_y, self.hanging_faces_y].T,
                 color="C2",
                 marker=y_mark,
                 linestyle="",
             )
             # Hanging Faces y
             ax.plot(
-                *self.grid_hanging_faces_y.T,
+                *self.hanging_faces_y.T,
                 color="C2",
                 marker="s",
                 linestyle="",
@@ -1791,14 +1791,14 @@ class InterfaceMPL(object):
             )
         if faces_z:
             ax.plot(
-                *np.r_[self.faces_z, self.grid_hanging_faces_z].T,
+                *np.r_[self.faces_z, self.hanging_faces_z].T,
                 color="C2",
                 marker="^",
                 linestyle="",
             )
             # Hangin Faces z
             ax.plot(
-                *self.grid_hanging_faces_z.T,
+                *self.hanging_faces_z.T,
                 color="C2",
                 marker="s",
                 linestyle="",
@@ -1808,14 +1808,14 @@ class InterfaceMPL(object):
             )
         if edges_x:
             ax.plot(
-                *np.r_[self.edges_x, self.grid_hanging_edges_x].T,
+                *np.r_[self.edges_x, self.hanging_edges_x].T,
                 color="C3",
                 marker=">",
                 linestyle="",
             )
             # Hanging Edges x
             ax.plot(
-                *self.grid_hanging_edges_x.T,
+                *self.hanging_edges_x.T,
                 color="C3",
                 marker="s",
                 linestyle="",
@@ -1825,14 +1825,14 @@ class InterfaceMPL(object):
             )
         if edges_y:
             ax.plot(
-                *np.r_[self.edges_y, self.grid_hanging_edges_y].T,
+                *np.r_[self.edges_y, self.hanging_edges_y].T,
                 color="C3",
                 marker=y_mark,
                 linestyle="",
             )
             # Hanging Edges y
             ax.plot(
-                *self.grid_hanging_edges_y.T,
+                *self.hanging_edges_y.T,
                 color="C3",
                 marker="s",
                 linestyle="",
@@ -1842,14 +1842,14 @@ class InterfaceMPL(object):
             )
         if edges_z:
             ax.plot(
-                *np.r_[self.edges_z, self.grid_hanging_edges_z].T,
+                *np.r_[self.edges_z, self.hanging_edges_z].T,
                 color="C3",
                 marker="^",
                 linestyle="",
             )
             # Hanging Edges z
             ax.plot(
-                *self.grid_hanging_edges_z.T,
+                *self.hanging_edges_z.T,
                 color="C3",
                 marker="s",
                 linestyle="",
@@ -1925,7 +1925,7 @@ class InterfaceMPL(object):
         shading = pcolor_opts.pop("shading", "flat")
         antialiased = pcolor_opts.pop("antialiased", False)
 
-        node_grid = np.r_[self.nodes, self.grid_hanging_nodes]
+        node_grid = np.r_[self.nodes, self.hanging_nodes]
         cell_nodes = self.cell_nodes[:, (0, 1, 3, 2)]
         cell_verts = node_grid[cell_nodes]
 
