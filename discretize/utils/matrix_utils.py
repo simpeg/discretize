@@ -498,6 +498,17 @@ class Zero(object):
     def transpose(self):
         return self
 
+    def __getitem__(self, key):
+        return self
+
+    @property
+    def ndim(self):
+        return None
+
+    @property
+    def shape(self):
+        return _inftup(None)
+
     @property
     def T(self):
         return self
@@ -580,12 +591,37 @@ class Identity(object):
         return 1 > v if self._positive else -1 > v
 
     @property
+    def ndim(self):
+        return None
+
+    @property
+    def shape(self):
+        return _inftup(None)
+
+    @property
     def T(self):
         return self
 
     def transpose(self):
         return self
 
+
+class _inftup(tuple):
+    """An infinitely long tuple of a value repeated infinitely"""
+
+    def __init__(self, val=None):
+        self._val = val
+
+    def  __getitem__(self, key):
+        if isinstance(key, slice):
+            return _inftup(self._val)
+        return self._val
+
+    def __len__(self):
+        return 0
+
+    def __repr__(self):
+        return f"({self._val}, {self._val}, ...)"
 
 sdInv = deprecate_function(sdinv, "sdInv", removal_version="1.0.0")
 getSubArray = deprecate_function(get_subarray, "getSubArray", removal_version="1.0.0")
