@@ -27,10 +27,12 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         "nEy": "n_edges_y",
         "nEz": "n_edges_z",
         "nE": "n_edges",
+        "vnE": "n_edges_per_direction",
         "nFx": "n_faces_x",
         "nFy": "n_faces_y",
         "nFz": "n_faces_z",
         "nF": "n_faces",
+        "vnF": "n_faces_per_direction",
     }
 
     # Properties
@@ -236,12 +238,12 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         return int(np.prod(x + y for x, y in zip(self._n, (1, 1, 0))))
 
     @property
-    def vnE(self):
+    def n_edges_per_direction(self):
         """The number of edges in each direction
 
         Returns
         -------
-        vnE : tuple
+        n_edges_per_direction : tuple
             [n_edges_x, n_edges_y, n_edges_z], (dim, )
 
         Examples
@@ -252,11 +254,6 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         >>> M = discretize.TensorMesh([np.ones(n) for n in [2,3]])
         >>> M.plot_grid(edges=True, show_it=True)
         """
-        warnings.warn(
-            "The vnE property will be removed in version 1.0.0 of discretize. "
-            "please access the n_edges_x, n_edges_y, n_edges_z directly if needed.",
-            FutureWarning,
-        )
         return tuple(
             x for x in [self.n_edges_x, self.n_edges_y, self.n_edges_z] if x is not None
         )
@@ -329,12 +326,12 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         return int(np.prod(x + y for x, y in zip(self._n, (0, 0, 1))))
 
     @property
-    def vnF(self):
+    def n_faces_per_direction(self):
         """The number of faces in each direction
 
         Returns
         -------
-        vnF : tuple
+        n_faces_per_direction : tuple
             [n_faces_x, n_faces_y, n_faces_z], (dim, )
 
         Examples
@@ -345,11 +342,6 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         >>> M = discretize.TensorMesh([np.ones(n) for n in [2,3]])
         >>> M.plot_grid(faces=True, show_it=True)
         """
-        warnings.warn(
-            "The vnF property will be removed in version 1.0.0 of discretize. "
-            "please access the n_faces_x, n_faces_y, n_faces_z directly if needed.",
-            FutureWarning,
-        )
         return tuple(
             x for x in [self.n_faces_x, self.n_faces_y, self.n_faces_z] if x is not None
         )

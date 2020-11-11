@@ -81,10 +81,10 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
 
         BaseRectangularMesh.__init__(self, n, **kwargs)
 
-        # Save nodes to private variable _gridN as vectors
-        self._gridN = np.ones((self.nodes[0].size, self.dim))
+        # Save nodes to private variable _nodes as vectors
+        self._nodes = np.ones((self.nodes[0].size, self.dim))
         for i, node_i in enumerate(self.nodes):
-            self._gridN[:, i] = mkvc(node_i.astype(float))
+            self._nodes[:, i] = mkvc(node_i.astype(float))
 
     @properties.validator("nodes")
     def _check_nodes(self, change):
@@ -106,20 +106,20 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
         """
         Cell-centered grid
         """
-        if getattr(self, "_gridCC", None) is None:
-            self._gridCC = np.concatenate(
+        if getattr(self, "_cell_centers", None) is None:
+            self._cell_centers = np.concatenate(
                 [self.aveN2CC * self.gridN[:, i] for i in range(self.dim)]
             ).reshape((-1, self.dim), order="F")
-        return self._gridCC
+        return self._cell_centers
 
     @property
     def nodes(self):
         """
         Nodal grid.
         """
-        if getattr(self, "_gridN", None) is None:
+        if getattr(self, "_nodes", None) is None:
             raise Exception("Someone deleted this. I blame you.")
-        return self._gridN
+        return self._nodes
 
     @property
     def faces_x(self):
@@ -127,11 +127,11 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
         Face staggered grid in the x direction.
         """
 
-        if getattr(self, "_gridFx", None) is None:
+        if getattr(self, "_faces_x", None) is None:
             N = self.reshape(self.gridN, "N", "N", "M")
             if self.dim == 2:
                 XY = [mkvc(0.5 * (n[:, :-1] + n[:, 1:])) for n in N]
-                self._gridFx = np.c_[XY[0], XY[1]]
+                self._faces_x = np.c_[XY[0], XY[1]]
             elif self.dim == 3:
                 XYZ = [
                     mkvc(
@@ -145,8 +145,8 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
                     )
                     for n in N
                 ]
-                self._gridFx = np.c_[XYZ[0], XYZ[1], XYZ[2]]
-        return self._gridFx
+                self._faces_x = np.c_[XYZ[0], XYZ[1], XYZ[2]]
+        return self._faces_x
 
     @property
     def faces_y(self):
@@ -154,11 +154,11 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
         Face staggered grid in the y direction.
         """
 
-        if getattr(self, "_gridFy", None) is None:
+        if getattr(self, "_faces_y", None) is None:
             N = self.reshape(self.gridN, "N", "N", "M")
             if self.dim == 2:
                 XY = [mkvc(0.5 * (n[:-1, :] + n[1:, :])) for n in N]
-                self._gridFy = np.c_[XY[0], XY[1]]
+                self._faces_y = np.c_[XY[0], XY[1]]
             elif self.dim == 3:
                 XYZ = [
                     mkvc(
@@ -172,8 +172,8 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
                     )
                     for n in N
                 ]
-                self._gridFy = np.c_[XYZ[0], XYZ[1], XYZ[2]]
-        return self._gridFy
+                self._faces_y = np.c_[XYZ[0], XYZ[1], XYZ[2]]
+        return self._faces_y
 
     @property
     def faces_z(self):
@@ -181,7 +181,7 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
         Face staggered grid in the y direction.
         """
 
-        if getattr(self, "_gridFz", None) is None:
+        if getattr(self, "_faces_z", None) is None:
             N = self.reshape(self.gridN, "N", "N", "M")
             XYZ = [
                 mkvc(
@@ -190,49 +190,49 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
                 )
                 for n in N
             ]
-            self._gridFz = np.c_[XYZ[0], XYZ[1], XYZ[2]]
-        return self._gridFz
+            self._faces_z = np.c_[XYZ[0], XYZ[1], XYZ[2]]
+        return self._faces_z
 
     @property
     def edges_x(self):
         """
         Edge staggered grid in the x direction.
         """
-        if getattr(self, "_gridEx", None) is None:
+        if getattr(self, "_edges_x", None) is None:
             N = self.reshape(self.gridN, "N", "N", "M")
             if self.dim == 2:
                 XY = [mkvc(0.5 * (n[:-1, :] + n[1:, :])) for n in N]
-                self._gridEx = np.c_[XY[0], XY[1]]
+                self._edges_x = np.c_[XY[0], XY[1]]
             elif self.dim == 3:
                 XYZ = [mkvc(0.5 * (n[:-1, :, :] + n[1:, :, :])) for n in N]
-                self._gridEx = np.c_[XYZ[0], XYZ[1], XYZ[2]]
-        return self._gridEx
+                self._edges_x = np.c_[XYZ[0], XYZ[1], XYZ[2]]
+        return self._edges_x
 
     @property
     def edges_y(self):
         """
         Edge staggered grid in the y direction.
         """
-        if getattr(self, "_gridEy", None) is None:
+        if getattr(self, "_edges_y", None) is None:
             N = self.reshape(self.gridN, "N", "N", "M")
             if self.dim == 2:
                 XY = [mkvc(0.5 * (n[:, :-1] + n[:, 1:])) for n in N]
-                self._gridEy = np.c_[XY[0], XY[1]]
+                self._edges_y = np.c_[XY[0], XY[1]]
             elif self.dim == 3:
                 XYZ = [mkvc(0.5 * (n[:, :-1, :] + n[:, 1:, :])) for n in N]
-                self._gridEy = np.c_[XYZ[0], XYZ[1], XYZ[2]]
-        return self._gridEy
+                self._edges_y = np.c_[XYZ[0], XYZ[1], XYZ[2]]
+        return self._edges_y
 
     @property
     def edges_z(self):
         """
         Edge staggered grid in the z direction.
         """
-        if getattr(self, "_gridEz", None) is None and self.dim == 3:
+        if getattr(self, "_edges_z", None) is None and self.dim == 3:
             N = self.reshape(self.gridN, "N", "N", "M")
             XYZ = [mkvc(0.5 * (n[:, :, :-1] + n[:, :, 1:])) for n in N]
-            self._gridEz = np.c_[XYZ[0], XYZ[1], XYZ[2]]
-        return self._gridEz
+            self._edges_z = np.c_[XYZ[0], XYZ[1], XYZ[2]]
+        return self._edges_z
 
     # --------------- Geometries ---------------------
     #
@@ -271,13 +271,13 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
         Construct cell volumes of the 3D model as 1d array
         """
 
-        if getattr(self, "_vol", None) is None:
+        if getattr(self, "_cell_volumes", None) is None:
             if self.dim == 2:
                 A, B, C, D = index_cube("ABCD", self.vnN)
                 normal, area = face_info(
                     np.c_[self.gridN, np.zeros((self.nN, 1))], A, B, C, D
                 )
-                self._vol = area
+                self._cell_volumes = area
             elif self.dim == 3:
                 # Each polyhedron can be decomposed into 5 tetrahedrons
                 # However, this presents a choice so we may as well divide in
@@ -300,8 +300,8 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
                     + volume_tetrahedron(self.gridN, C, G, H, F)  # cutted edge bottom
                 )  # cutted edge bottom
 
-                self._vol = (vol1 + vol2) / 2
-        return self._vol
+                self._cell_volumes = (vol1 + vol2) / 2
+        return self._cell_volumes
 
     @property
     def face_areas(self):
@@ -309,7 +309,7 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
         Area of the faces
         """
         if (
-            getattr(self, "_area", None) is None
+            getattr(self, "_face_areas", None) is None
             or getattr(self, "_normals", None) is None
         ):
             # Compute areas of cell faces
@@ -327,7 +327,7 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
                 edge2 = xy[A, :] - xy[D, :]
                 normal2 = np.c_[edge2[:, 1], -edge2[:, 0]]
                 area2 = _length2D(edge2)
-                self._area = np.r_[mkvc(area1), mkvc(area2)]
+                self._face_areas = np.r_[mkvc(area1), mkvc(area2)]
                 self._normals = [_normalize2D(normal1), _normalize2D(normal2)]
 
             elif self.dim == 3:
@@ -347,9 +347,9 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
                     self.gridN, A, B, C, D, average=False, normalizeNormals=False
                 )
 
-                self._area = np.r_[mkvc(area1), mkvc(area2), mkvc(area3)]
+                self._face_areas = np.r_[mkvc(area1), mkvc(area2), mkvc(area3)]
                 self._normals = [normal1, normal2, normal3]
-        return self._area
+        return self._face_areas
 
     @property
     def face_normals(self):
@@ -393,14 +393,14 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
     @property
     def edge_lengths(self):
         """Edge lengths"""
-        if getattr(self, "_edge", None) is None:
+        if getattr(self, "_edge_lengths", None) is None:
             if self.dim == 2:
                 xy = self.gridN
                 A, D = index_cube("AD", self.vnN, self.vnEx)
                 edge1 = xy[D, :] - xy[A, :]
                 A, B = index_cube("AB", self.vnN, self.vnEy)
                 edge2 = xy[B, :] - xy[A, :]
-                self._edge = np.r_[mkvc(_length2D(edge1)), mkvc(_length2D(edge2))]
+                self._edge_lengths = np.r_[mkvc(_length2D(edge1)), mkvc(_length2D(edge2))]
                 self._tangents = np.r_[edge1, edge2] / np.c_[self._edge, self._edge]
             elif self.dim == 3:
                 xyz = self.gridN
@@ -410,7 +410,7 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
                 edge2 = xyz[B, :] - xyz[A, :]
                 A, E = index_cube("AE", self.vnN, self.vnEz)
                 edge3 = xyz[E, :] - xyz[A, :]
-                self._edge = np.r_[
+                self._edge_lengths = np.r_[
                     mkvc(_length3D(edge1)),
                     mkvc(_length3D(edge2)),
                     mkvc(_length3D(edge3)),
@@ -419,14 +419,14 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
                     np.r_[edge1, edge2, edge3]
                     / np.c_[self._edge, self._edge, self._edge]
                 )
-            return self._edge
-        return self._edge
+            return self._edge_lengths
+        return self._edge_lengths
 
     @property
     def edge_tangents(self):
         """Edge tangents"""
         if getattr(self, "_tangents", None) is None:
-            self.edge_lengths  # calling .edge will create the tangents
+            self.edge_lengths  # calling .edge_lengths will create the tangents
         return self._tangents
 
     # DEPRECATIONS

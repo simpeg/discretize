@@ -225,14 +225,14 @@ class DiffOperators(object):
         """
         Construct divergence operator (face-stg to cell-centres).
         """
-        if getattr(self, "_faceDiv", None) is None:
+        if getattr(self, "_face_divergence", None) is None:
             # Get the stencil of +1, -1's
             D = self._faceDivStencil
             # Compute areas of cell faces & volumes
             S = self.face_areas
             V = self.cell_volumes
-            self._faceDiv = sdiag(1 / V) * D * sdiag(S)
-        return self._faceDiv
+            self._face_divergence = sdiag(1 / V) * D * sdiag(S)
+        return self._face_divergence
 
     @property
     def face_x_divergence(self):
@@ -350,11 +350,11 @@ class DiffOperators(object):
         """
         Construct gradient operator (nodes to edges).
         """
-        if getattr(self, "_nodalGrad", None) is None:
+        if getattr(self, "_nodal_gradient", None) is None:
             G = self._nodalGradStencil
             L = self.edge_lengths
-            self._nodalGrad = sdiag(1 / L) * G
-        return self._nodalGrad
+            self._nodal_gradient = sdiag(1 / L) * G
+        return self._nodal_gradient
 
     @property
     def _nodalLaplacianStencilx(self):
@@ -731,17 +731,17 @@ class DiffOperators(object):
         L = self.edge_lengths  # Compute lengths of cell edges
         S = self.face_areas  # Compute areas of cell faces
 
-        if getattr(self, "_edgeCurl", None) is None:
+        if getattr(self, "_edge_curl", None) is None:
 
             if self.dim <= 1:
                 raise NotImplementedError("Edge Curl only programed for 2 or 3D.")
 
             if self.dim == 2:
-                self._edgeCurl = self._edgeCurlStencil * sdiag(1 / S)
+                self._edge_curl = self._edgeCurlStencil * sdiag(1 / S)
             elif self.dim == 3:
-                self._edgeCurl = sdiag(1 / S) * (self._edgeCurlStencil * sdiag(L))
+                self._edge_curl = sdiag(1 / S) * (self._edgeCurlStencil * sdiag(L))
 
-        return self._edgeCurl
+        return self._edge_curl
 
     def get_BC_projections(self, BC, discretization="CC"):
         """
@@ -927,34 +927,34 @@ class DiffOperators(object):
     @property
     def average_face_to_cell(self):
         "Construct the averaging operator on cell faces to cell centers."
-        if getattr(self, "_aveF2CC", None) is None:
+        if getattr(self, "_average_face_to_cell", None) is None:
             if self.dim == 1:
-                self._aveF2CC = self.aveFx2CC
+                self._average_face_to_cell = self.aveFx2CC
             elif self.dim == 2:
-                self._aveF2CC = (0.5) * sp.hstack(
+                self._average_face_to_cell = (0.5) * sp.hstack(
                     (self.aveFx2CC, self.aveFy2CC), format="csr"
                 )
             elif self.dim == 3:
-                self._aveF2CC = (1.0 / 3.0) * sp.hstack(
+                self._average_face_to_cell = (1.0 / 3.0) * sp.hstack(
                     (self.aveFx2CC, self.aveFy2CC, self.aveFz2CC), format="csr"
                 )
-        return self._aveF2CC
+        return self._average_face_to_cell
 
     @property
     def average_face_to_cell_vector(self):
         "Construct the averaging operator on cell faces to cell centers."
-        if getattr(self, "_aveF2CCV", None) is None:
+        if getattr(self, "_average_face_to_cell_vector", None) is None:
             if self.dim == 1:
-                self._aveF2CCV = self.aveFx2CC
+                self._average_face_to_cell_vector = self.aveFx2CC
             elif self.dim == 2:
-                self._aveF2CCV = sp.block_diag(
+                self._average_face_to_cell_vector = sp.block_diag(
                     (self.aveFx2CC, self.aveFy2CC), format="csr"
                 )
             elif self.dim == 3:
-                self._aveF2CCV = sp.block_diag(
+                self._average_face_to_cell_vector = sp.block_diag(
                     (self.aveFx2CC, self.aveFy2CC, self.aveFz2CC), format="csr"
                 )
-        return self._aveF2CCV
+        return self._average_face_to_cell_vector
 
     @property
     def average_face_x_to_cell(self):
@@ -963,15 +963,15 @@ class DiffOperators(object):
         cell centers.
         """
 
-        if getattr(self, "_aveFx2CC", None) is None:
+        if getattr(self, "_average_face_x_to_cell", None) is None:
             n = self.vnC
             if self.dim == 1:
-                self._aveFx2CC = av(n[0])
+                self._average_face_x_to_cell = av(n[0])
             elif self.dim == 2:
-                self._aveFx2CC = sp.kron(speye(n[1]), av(n[0]))
+                self._average_face_x_to_cell = sp.kron(speye(n[1]), av(n[0]))
             elif self.dim == 3:
-                self._aveFx2CC = kron3(speye(n[2]), speye(n[1]), av(n[0]))
-        return self._aveFx2CC
+                self._average_face_x_to_cell = kron3(speye(n[2]), speye(n[1]), av(n[0]))
+        return self._average_face_x_to_cell
 
     @property
     def average_face_y_to_cell(self):
@@ -981,13 +981,13 @@ class DiffOperators(object):
         """
         if self.dim < 2:
             return None
-        if getattr(self, "_aveFy2CC", None) is None:
+        if getattr(self, "_average_face_y_to_cell", None) is None:
             n = self.vnC
             if self.dim == 2:
-                self._aveFy2CC = sp.kron(av(n[1]), speye(n[0]))
+                self._average_face_y_to_cell = sp.kron(av(n[1]), speye(n[0]))
             elif self.dim == 3:
-                self._aveFy2CC = kron3(speye(n[2]), av(n[1]), speye(n[0]))
-        return self._aveFy2CC
+                self._average_face_y_to_cell = kron3(speye(n[2]), av(n[1]), speye(n[0]))
+        return self._average_face_y_to_cell
 
     @property
     def average_face_z_to_cell(self):
@@ -997,20 +997,20 @@ class DiffOperators(object):
         """
         if self.dim < 3:
             return None
-        if getattr(self, "_aveFz2CC", None) is None:
+        if getattr(self, "_average_face_z_to_cell", None) is None:
             n = self.vnC
             if self.dim == 3:
-                self._aveFz2CC = kron3(av(n[2]), speye(n[1]), speye(n[0]))
-        return self._aveFz2CC
+                self._average_face_z_to_cell = kron3(av(n[2]), speye(n[1]), speye(n[0]))
+        return self._average_face_z_to_cell
 
     @property
     def average_cell_to_face(self):
         "Construct the averaging operator on cell centers to faces."
-        if getattr(self, "_aveCC2F", None) is None:
+        if getattr(self, "_average_cell_to_face", None) is None:
             if self.dim == 1:
-                self._aveCC2F = av_extrap(self.shape_cells[0])
+                self._average_cell_to_face = av_extrap(self.shape_cells[0])
             elif self.dim == 2:
-                self._aveCC2F = sp.vstack(
+                self._average_cell_to_face = sp.vstack(
                     (
                         sp.kron(
                             speye(self.shape_cells[1]), av_extrap(self.shape_cells[0])
@@ -1022,7 +1022,7 @@ class DiffOperators(object):
                     format="csr",
                 )
             elif self.dim == 3:
-                self._aveCC2F = sp.vstack(
+                self._average_cell_to_face = sp.vstack(
                     (
                         kron3(
                             speye(self.shape_cells[2]),
@@ -1042,7 +1042,7 @@ class DiffOperators(object):
                     ),
                     format="csr",
                 )
-        return self._aveCC2F
+        return self._average_cell_to_face
 
     @property
     def average_cell_vector_to_face(self):
@@ -1050,9 +1050,9 @@ class DiffOperators(object):
         Construct the averaging operator on cell centers to
         faces as a vector.
         """
-        if getattr(self, "_aveCCV2F", None) is None:
+        if getattr(self, "_average_cell_vector_to_face", None) is None:
             if self.dim == 1:
-                self._aveCCV2F = self.aveCC2F
+                self._average_cell_vector_to_face = self.aveCC2F
             elif self.dim == 2:
                 aveCCV2Fx = sp.kron(
                     speye(self.shape_cells[1]), av_extrap(self.shape_cells[0])
@@ -1060,7 +1060,7 @@ class DiffOperators(object):
                 aveCC2VFy = sp.kron(
                     av_extrap(self.shape_cells[1]), speye(self.shape_cells[0])
                 )
-                self._aveCCV2F = sp.block_diag((aveCCV2Fx, aveCC2VFy), format="csr")
+                self._average_cell_vector_to_face = sp.block_diag((aveCCV2Fx, aveCC2VFy), format="csr")
             elif self.dim == 3:
                 aveCCV2Fx = kron3(
                     speye(self.shape_cells[2]),
@@ -1077,15 +1077,15 @@ class DiffOperators(object):
                     speye(self.shape_cells[1]),
                     speye(self.shape_cells[0]),
                 )
-                self._aveCCV2F = sp.block_diag(
+                self._average_cell_vector_to_face = sp.block_diag(
                     (aveCCV2Fx, aveCC2VFy, aveCC2BFz), format="csr"
                 )
-        return self._aveCCV2F
+        return self._average_cell_vector_to_face
 
     @property
     def average_edge_to_cell(self):
         "Construct the averaging operator on cell edges to cell centers."
-        if getattr(self, "_aveE2CC", None) is None:
+        if getattr(self, "_average_edge_to_cell", None) is None:
             if self.dim == 1:
                 self._avE2CC = self.aveEx2CC
             elif self.dim == 2:
@@ -1101,18 +1101,18 @@ class DiffOperators(object):
     @property
     def average_edge_to_cell_vector(self):
         "Construct the averaging operator on cell edges to cell centers."
-        if getattr(self, "_aveE2CCV", None) is None:
+        if getattr(self, "_average_edge_to_cell_vector", None) is None:
             if self.dim == 1:
-                self._aveE2CCV = self.aveEx2CC
+                self._average_edge_to_cell_vector = self.aveEx2CC
             elif self.dim == 2:
-                self._aveE2CCV = sp.block_diag(
+                self._average_edge_to_cell_vector = sp.block_diag(
                     (self.aveEx2CC, self.aveEy2CC), format="csr"
                 )
             elif self.dim == 3:
-                self._aveE2CCV = sp.block_diag(
+                self._average_edge_to_cell_vector = sp.block_diag(
                     (self.aveEx2CC, self.aveEy2CC, self.aveEz2CC), format="csr"
                 )
-        return self._aveE2CCV
+        return self._average_edge_to_cell_vector
 
     @property
     def average_edge_x_to_cell(self):
@@ -1120,16 +1120,16 @@ class DiffOperators(object):
         Construct the averaging operator on cell edges in the x direction to
         cell centers.
         """
-        if getattr(self, "_aveEx2CC", None) is None:
+        if getattr(self, "_average_edge_x_to_cell", None) is None:
             # The number of cell centers in each direction
             n = self.vnC
             if self.dim == 1:
-                self._aveEx2CC = speye(n[0])
+                self._average_edge_x_to_cell = speye(n[0])
             elif self.dim == 2:
-                self._aveEx2CC = sp.kron(av(n[1]), speye(n[0]))
+                self._average_edge_x_to_cell = sp.kron(av(n[1]), speye(n[0]))
             elif self.dim == 3:
-                self._aveEx2CC = kron3(av(n[2]), av(n[1]), speye(n[0]))
-        return self._aveEx2CC
+                self._average_edge_x_to_cell = kron3(av(n[2]), av(n[1]), speye(n[0]))
+        return self._average_edge_x_to_cell
 
     @property
     def average_edge_y_to_cell(self):
@@ -1139,14 +1139,14 @@ class DiffOperators(object):
         """
         if self.dim < 2:
             return None
-        if getattr(self, "_aveEy2CC", None) is None:
+        if getattr(self, "_average_edge_y_to_cell", None) is None:
             # The number of cell centers in each direction
             n = self.vnC
             if self.dim == 2:
-                self._aveEy2CC = sp.kron(speye(n[1]), av(n[0]))
+                self._average_edge_y_to_cell = sp.kron(speye(n[1]), av(n[0]))
             elif self.dim == 3:
-                self._aveEy2CC = kron3(av(n[2]), speye(n[1]), av(n[0]))
-        return self._aveEy2CC
+                self._average_edge_y_to_cell = kron3(av(n[2]), speye(n[1]), av(n[0]))
+        return self._average_edge_y_to_cell
 
     @property
     def average_edge_z_to_cell(self):
@@ -1156,34 +1156,34 @@ class DiffOperators(object):
         """
         if self.dim < 3:
             return None
-        if getattr(self, "_aveEz2CC", None) is None:
+        if getattr(self, "_average_edge_z_to_cell", None) is None:
             # The number of cell centers in each direction
             n = self.vnC
             if self.dim == 3:
-                self._aveEz2CC = kron3(speye(n[2]), av(n[1]), av(n[0]))
-        return self._aveEz2CC
+                self._average_edge_z_to_cell = kron3(speye(n[2]), av(n[1]), av(n[0]))
+        return self._average_edge_z_to_cell
 
     @property
     def average_node_to_cell(self):
         "Construct the averaging operator on cell nodes to cell centers."
-        if getattr(self, "_aveN2CC", None) is None:
+        if getattr(self, "_average_node_to_cell", None) is None:
             # The number of cell centers in each direction
             if self.dim == 1:
-                self._aveN2CC = av(self.shape_cells[0])
+                self._average_node_to_cell = av(self.shape_cells[0])
             elif self.dim == 2:
-                self._aveN2CC = sp.kron(
+                self._average_node_to_cell = sp.kron(
                     av(self.shape_cells[1]), av(self.shape_cells[0])
                 ).tocsr()
             elif self.dim == 3:
-                self._aveN2CC = kron3(
+                self._average_node_to_cell = kron3(
                     av(self.shape_cells[2]),
                     av(self.shape_cells[1]),
                     av(self.shape_cells[0]),
                 ).tocsr()
-        return self._aveN2CC
+        return self._average_node_to_cell
 
     @property
-    def _aveN2Ex(self):
+    def _average_node_to_edge_x(self):
         """
         Averaging operator on cell nodes to x-edges
         """
@@ -1200,7 +1200,7 @@ class DiffOperators(object):
         return aveN2Ex
 
     @property
-    def _aveN2Ey(self):
+    def _average_node_to_edge_y(self):
         """
         Averaging operator on cell nodes to y-edges
         """
@@ -1217,7 +1217,7 @@ class DiffOperators(object):
         return aveN2Ey
 
     @property
-    def _aveN2Ez(self):
+    def _average_node_to_edge_z(self):
         if self.dim == 1 or self.dim == 2:
             return None
         elif self.dim == 3:
@@ -1234,20 +1234,20 @@ class DiffOperators(object):
         Construct the averaging operator on cell nodes to cell edges, keeping
         each dimension separate.
         """
-        if getattr(self, "_aveN2E", None) is None:
+        if getattr(self, "_average_node_to_edge", None) is None:
             # The number of cell centers in each direction
             if self.dim == 1:
-                self._aveN2E = self._aveN2Ex
+                self._average_node_to_edge = self._average_node_to_edge_x
             elif self.dim == 2:
-                self._aveN2E = sp.vstack((self._aveN2Ex, self._aveN2Ey), format="csr")
+                self._average_node_to_edge = sp.vstack((self._average_node_to_edge_x, self._average_node_to_edge_y), format="csr")
             elif self.dim == 3:
-                self._aveN2E = sp.vstack(
-                    (self._aveN2Ex, self._aveN2Ey, self._aveN2Ez), format="csr"
+                self._average_node_to_edge = sp.vstack(
+                    (self._average_node_to_edge_x, self._average_node_to_edge_y, self._average_node_to_edge_z), format="csr"
                 )
-        return self._aveN2E
+        return self._average_node_to_edge
 
     @property
-    def _aveN2Fx(self):
+    def _average_node_to_face_x(self):
         if self.dim == 1:
             aveN2Fx = av(self.shape_cells[0])
         elif self.dim == 2:
@@ -1261,7 +1261,7 @@ class DiffOperators(object):
         return aveN2Fx
 
     @property
-    def _aveN2Fy(self):
+    def _average_node_to_face_y(self):
         if self.dim == 1:
             return None
         elif self.dim == 2:
@@ -1275,7 +1275,7 @@ class DiffOperators(object):
         return aveN2Fy
 
     @property
-    def _aveN2Fz(self):
+    def _average_node_to_face_z(self):
         if self.dim == 1 or self.dim == 2:
             return None
         else:
@@ -1292,17 +1292,17 @@ class DiffOperators(object):
         Construct the averaging operator on cell nodes to cell faces, keeping
         each dimension separate.
         """
-        if getattr(self, "_aveN2F", None) is None:
+        if getattr(self, "_average_node_to_face", None) is None:
             # The number of cell centers in each direction
             if self.dim == 1:
-                self._aveN2F = self._aveN2Fx
+                self._average_node_to_face = self._average_node_to_face_x
             elif self.dim == 2:
-                self._aveN2F = sp.vstack((self._aveN2Fx, self._aveN2Fy), format="csr")
+                self._average_node_to_face = sp.vstack((self._average_node_to_face_x, self._average_node_to_face_y), format="csr")
             elif self.dim == 3:
-                self._aveN2F = sp.vstack(
-                    (self._aveN2Fx, self._aveN2Fy, self._aveN2Fz), format="csr"
+                self._average_node_to_face = sp.vstack(
+                    (self._average_node_to_face_x, self._average_node_to_face_y, self._average_node_to_face_z), format="csr"
                 )
-        return self._aveN2F
+        return self._average_node_to_face
 
     # DEPRECATED
     cellGrad = deprecate_property("cell_gradient", "cellGrad", removal_version="1.0.0")

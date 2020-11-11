@@ -434,21 +434,21 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
 
     @property
     def face_x_divergence(self):
-        if getattr(self, "_faceDivx", None) is None:
-            self._faceDivx = self.face_divergence[:, : self.nFx]
-        return self._faceDivx
+        if getattr(self, "_face_x_divergence", None) is None:
+            self._face_x_divergence = self.face_divergence[:, : self.nFx]
+        return self._face_x_divergence
 
     @property
     def face_y_divergence(self):
-        if getattr(self, "_faceDivy", None) is None:
-            self._faceDivy = self.face_divergence[:, self.nFx : self.nFx + self.nFy]
-        return self._faceDivy
+        if getattr(self, "_face_y_divergence", None) is None:
+            self._face_y_divergence = self.face_divergence[:, self.nFx : self.nFx + self.nFy]
+        return self._face_y_divergence
 
     @property
     def face_z_divergence(self):
-        if getattr(self, "_faceDivz", None) is None:
-            self._faceDivz = self.face_divergence[:, self.nFx + self.nFy :]
-        return self._faceDivz
+        if getattr(self, "_face_z_divergence", None) is None:
+            self._face_z_divergence = self.face_divergence[:, self.nFx + self.nFy :]
+        return self._face_z_divergence
 
     def point2index(self, locs):
         """Finds cells that contain the given points.
