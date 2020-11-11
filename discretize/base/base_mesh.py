@@ -481,14 +481,21 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
             raise Exception("edge_vector must be an ndarray of shape (nE x dim)")
         return np.sum(edge_vector * self.edge_tangents, 1)
 
-    def save(self, filename="mesh.json", verbose=False):
+    def save(self, file_name="mesh.json", verbose=False, **kwargs):
         """
         Save the mesh to json
-        :param str file: filename for saving the casing properties
+        :param str file: file_name for saving the casing properties
         :param str directory: working directory for saving the file
         """
 
-        f = os.path.abspath(filename)  # make sure we are working with abs path
+        if 'filename' in kwargs:
+            file_name = kwargs['filename']
+            warnings.warn(
+                "The filename keyword argument has been deprecated, please use file_name. "
+                "This will be removed in discretize 1.0.0",
+                FutureWarning,
+            )
+        f = os.path.abspath(file_name)  # make sure we are working with abs path
         with open(f, "w") as outfile:
             json.dump(self.serialize(), outfile)
 

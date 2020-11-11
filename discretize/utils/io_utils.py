@@ -41,11 +41,11 @@ def download(url, folder=".", overwrite=False, verbose=True):
         os.makedirs(folder)
 
     if isinstance(url, str):
-        filenames = [url.split("/")[-1]]
+        file_names = [url.split("/")[-1]]
     elif isinstance(url, list):
-        filenames = [u.split("/")[-1] for u in url]
+        file_names = [u.split("/")[-1] for u in url]
 
-    downloadpath = [os.path.sep.join([folder, f]) for f in filenames]
+    downloadpath = [os.path.sep.join([folder, f]) for f in file_names]
 
     # check if the directory already exists
     for i, download in enumerate(downloadpath):
