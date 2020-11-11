@@ -463,14 +463,14 @@ class BaseTensorMesh(BaseMesh):
             zeros_outside = kwargs["zerosOutside"]
         return self._getInterpolationMat(loc, location_type, zeros_outside)
 
-    def _fastInnerProduct(self, projection_type, prop=None, inverse_property=False, inverse_matrix=False):
+    def _fastInnerProduct(self, projection_type, model=None, inverse_property=False, inverse_matrix=False):
         """Fast version of getFaceInnerProduct.
-            This does not handle the case of a full tensor prop.
+            This does not handle the case of a full tensor property.
 
         Parameters
         ----------
 
-        prop : numpy.array
+        model : numpy.array
             material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
 
         projection_type : str
@@ -494,14 +494,14 @@ class BaseTensorMesh(BaseMesh):
         if projection_type not in ["F", "E"]:
             raise ValueError("projection_type must be 'F' for faces or 'E' for edges")
 
-        if prop is None:
-            prop = np.ones(self.nC)
+        if model is None:
+            property = np.ones(self.nC)
 
         if inverse_property:
-            prop = 1.0 / prop
+            model = 1.0 / model
 
-        if is_scalar(prop):
-            prop = prop * np.ones(self.nC)
+        if is_scalar(model):
+            model = model * np.ones(self.nC)
 
         # number of elements we are averaging (equals dim for regular
         # meshes, but for cyl, where we use symmetry, it is 1 for edge
@@ -513,24 +513,24 @@ class BaseTensorMesh(BaseMesh):
             n_elements = self.dim
 
         # Isotropic? or anisotropic?
-        if prop.size == self.nC:
+        if model.size == self.nC:
             Av = getattr(self, "ave" + projection_type + "2CC")
-            Vprop = self.cell_volumes * mkvc(prop)
+            Vprop = self.cell_volumes * mkvc(model)
             M = n_elements * sdiag(Av.T * Vprop)
 
-        elif prop.size == self.nC * self.dim:
+        elif model.size == self.nC * self.dim:
             Av = getattr(self, "ave" + projection_type + "2CCV")
 
             # if cyl, then only certain components are relevant due to symmetry
             # for faces, x, z matters, for edges, y (which is theta) matters
             if self._meshType == "CYL":
                 if projection_type == "E":
-                    prop = prop[:, 1]  # this is the action of a projection mat
+                    model = model[:, 1]  # this is the action of a projection mat
                 elif projection_type == "F":
-                    prop = prop[:, [0, 2]]
+                    model = model[:, [0, 2]]
 
             V = sp.kron(sp.identity(n_elements), sdiag(self.cell_volumes))
-            M = sdiag(Av.T * V * mkvc(prop))
+            M = sdiag(Av.T * V * mkvc(model))
         else:
             return None
 
@@ -539,7 +539,7 @@ class BaseTensorMesh(BaseMesh):
         else:
             return M
 
-    def _fastInnerProductDeriv(self, projection_type, prop, inverse_property=False, inverse_matrix=False):
+    def _fastInnerProductDeriv(self, projection_type, model, inverse_property=False, inverse_matrix=False):
         """
 
         Parameters
@@ -568,13 +568,13 @@ class BaseTensorMesh(BaseMesh):
         if projection_type not in ["F", "E"]:
             raise ValueError("projection_type must be 'F' for faces or 'E' for edges")
 
-        tensorType = TensorType(self, prop)
+        tensorType = TensorType(self, model)
 
         dMdprop = None
 
         if inverse_matrix or inverse_property:
             MI = self._fastInnerProduct(
-                projection_type, prop, inverse_property=inverse_property, inverse_matrix=inverse_matrix
+                projection_type, model, inverse_property=inverse_property, inverse_matrix=inverse_matrix
             )
 
         # number of elements we are averaging (equals dim for regular
@@ -597,10 +597,10 @@ class BaseTensorMesh(BaseMesh):
                 dMdprop = n_elements * Av.T * V * ones
             elif inverse_matrix and inverse_property:
                 dMdprop = n_elements * (
-                    sdiag(MI.diagonal() ** 2) * Av.T * V * ones * sdiag(1.0 / prop ** 2)
+                    sdiag(MI.diagonal() ** 2) * Av.T * V * ones * sdiag(1.0 / model ** 2)
                 )
             elif inverse_property:
-                dMdprop = n_elements * Av.T * V * sdiag(-1.0 / prop ** 2)
+                dMdprop = n_elements * Av.T * V * sdiag(-1.0 / model ** 2)
             elif inverse_matrix:
                 dMdprop = n_elements * (sdiag(-MI.diagonal() ** 2) * Av.T * V)
 
@@ -611,10 +611,10 @@ class BaseTensorMesh(BaseMesh):
                 dMdprop = n_elements * Av.T * V
             elif inverse_matrix and inverse_property:
                 dMdprop = n_elements * (
-                    sdiag(MI.diagonal() ** 2) * Av.T * V * sdiag(1.0 / prop ** 2)
+                    sdiag(MI.diagonal() ** 2) * Av.T * V * sdiag(1.0 / model ** 2)
                 )
             elif inverse_property:
-                dMdprop = n_elements * Av.T * V * sdiag(-1.0 / prop ** 2)
+                dMdprop = n_elements * Av.T * V * sdiag(-1.0 / model ** 2)
             elif inverse_matrix:
                 dMdprop = n_elements * (sdiag(-MI.diagonal() ** 2) * Av.T * V)
 
@@ -640,10 +640,10 @@ class BaseTensorMesh(BaseMesh):
                 dMdprop = Av.T * P * V
             elif inverse_matrix and inverse_property:
                 dMdprop = (
-                    sdiag(MI.diagonal() ** 2) * Av.T * P * V * sdiag(1.0 / prop ** 2)
+                    sdiag(MI.diagonal() ** 2) * Av.T * P * V * sdiag(1.0 / model ** 2)
                 )
             elif inverse_property:
-                dMdprop = Av.T * P * V * sdiag(-1.0 / prop ** 2)
+                dMdprop = Av.T * P * V * sdiag(-1.0 / model ** 2)
             elif inverse_matrix:
                 dMdprop = sdiag(-MI.diagonal() ** 2) * Av.T * P * V
 

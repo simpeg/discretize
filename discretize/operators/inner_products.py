@@ -30,13 +30,13 @@ class InnerProducts(object):
         )
 
     def get_face_inner_product(
-        self, prop=None, inverse_property=False, inverse_matrix=False, do_fast=True, **kwargs
+        self, model=None, inverse_property=False, inverse_matrix=False, do_fast=True, **kwargs
     ):
         """Generate the face inner product matrix
 
         Parameters
         ----------
-        prop : numpy.ndarray
+        model : numpy.ndarray
             material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
 
         inverse_property : bool
@@ -78,18 +78,18 @@ class InnerProducts(object):
             do_fast = kwargs["doFast"]
 
         return self._getInnerProduct(
-            "F", prop=prop, inverse_property=inverse_property, inverse_matrix=inverse_matrix, do_fast=do_fast
+            "F", model=model, inverse_property=inverse_property, inverse_matrix=inverse_matrix, do_fast=do_fast
         )
 
     def get_edge_inner_product(
-        self, prop=None, inverse_property=False, inverse_matrix=False, do_fast=True, **kwargs
+        self, model=None, inverse_property=False, inverse_matrix=False, do_fast=True, **kwargs
     ):
         """Generate the edge inner product matrix
 
         Parameters
         ----------
 
-        prop : numpy.ndarray
+        model : numpy.ndarray
             material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
 
         inverse_property : bool
@@ -130,13 +130,13 @@ class InnerProducts(object):
             )
             do_fast = kwargs["doFast"]
         return self._getInnerProduct(
-            "E", prop=prop, inverse_property=inverse_property, inverse_matrix=inverse_matrix, do_fast=do_fast
+            "E", model=model, inverse_property=inverse_property, inverse_matrix=inverse_matrix, do_fast=do_fast
         )
 
     def _getInnerProduct(
         self,
         projection_type,
-        prop=None,
+        model=None,
         inverse_property=False,
         inverse_matrix=False,
         do_fast=True,
@@ -150,7 +150,7 @@ class InnerProducts(object):
         str : projection_type
             'F' for faces 'E' for edges
 
-        numpy.ndarray : prop
+        numpy.ndarray : model
             material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
 
         bool : inverse_property
