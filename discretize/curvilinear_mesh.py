@@ -403,7 +403,7 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
                 A, B = index_cube("AB", self.vnN, self.vnEy)
                 edge2 = xy[B, :] - xy[A, :]
                 self._edge_lengths = np.r_[mkvc(_length2D(edge1)), mkvc(_length2D(edge2))]
-                self._edge_tangents = np.r_[edge1, edge2] / np.c_[self._edge, self._edge]
+                self._edge_tangents = np.r_[edge1, edge2] / np.c_[self._edge_lengths, self._edge_lengths]
             elif self.dim == 3:
                 xyz = self.gridN
                 A, D = index_cube("AD", self.vnN, self.vnEx)
@@ -419,9 +419,8 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
                 ]
                 self._edge_tangents = (
                     np.r_[edge1, edge2, edge3]
-                    / np.c_[self._edge, self._edge, self._edge]
+                    / np.c_[self._edge_lengths, self._edge_lengths, self._edge_lengths]
                 )
-            return self._edge_lengths
         return self._edge_lengths
 
     @property
