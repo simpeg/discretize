@@ -831,7 +831,7 @@ class BaseRectangularMesh(BaseMesh):
             return
         return int(np.prod(self.shape_faces_z))
 
-    def reshape(self, x, x_type="CC", out_type="CC", format="V", **kwargs):
+    def reshape(self, x, x_type="cell_centers", out_type="cell_centers", format="V", **kwargs):
         """A quick reshape command that will do the best it
         can at giving you what you want.
 
@@ -887,18 +887,19 @@ class BaseRectangularMesh(BaseMesh):
             )
             out_type = kwargs["outType"]
 
-        allowed_x_type = ["CC", "N", "F", "Fx", "Fy", "Fz", "E", "Ex", "Ey", "Ez"]
+        x_type = self._parse_location_type(x_type)
+        out_type = self._parse_location_type(out_type)
+
+        allowed_x_type = ["cell_centers", "nodes", "faces", "faces_x", "faces_y", "faces_z", "edges", "edges_x", "edges_y", "edges_z"]
         if not (isinstance(x, list) or isinstance(x, np.ndarray)):
             raise Exception("x must be either a list or a ndarray")
         if x_type not in allowed_x_type:
             raise Exception(
-                "x_type must be either "
-                "'CC', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', or 'Ez'"
+                "x_type must be either '" + "', '".join(allowed_x_type) + "'"
             )
         if out_type not in allowed_x_type:
             raise Exception(
-                "out_type must be either "
-                "'CC', 'N', 'F', Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', or 'Ez'"
+                "out_type must be either '" + "', '".join(allowed_x_type) + "'"
             )
         if format not in ["M", "V"]:
             raise Exception("format must be either 'M' or 'V'")
@@ -925,7 +926,7 @@ class BaseRectangularMesh(BaseMesh):
 
         x = x[:]  # make a copy.
         x_type_is_FE_xyz = (
-            len(x_type) > 1 and x_type[0] in ["F", "E"] and x_type[1] in ["x", "y", "z"]
+            len(x_type) > 1 and x_type[0] in ["f", "e"] and x_type[-1] in ["x", "y", "z"]
         )
 
         def outKernal(xx, nn):
@@ -937,32 +938,32 @@ class BaseRectangularMesh(BaseMesh):
 
         def switchKernal(xx):
             """Switches over the different options."""
-            if x_type in ["CC", "N"]:
-                nn = self.shape_cells if x_type == "CC" else self.shape_nodes
+            if x_type in ["cell_centers", "nodes"]:
+                nn = self.shape_cells if x_type == "cell_centers" else self.shape_nodes
                 if xx.size != np.prod(nn):
                     raise Exception("Number of elements must not change.")
                 return outKernal(xx, nn)
-            elif x_type in ["F", "E"]:
+            elif x_type in ["faces", "edges"]:
                 # This will only deal with components of fields,
                 # not full 'F' or 'E'
                 xx = mkvc(xx)  # unwrap it in case it is a matrix
-                if x_type == "F":
+                if x_type == "faces":
                     nn = (self.nFx, self.nFy, self.nFz)[: self.dim]
                 else:
                     nn = (self.nEx, self.nEy, self.nEz)[: self.dim]
                 nn = np.r_[0, nn]
 
                 nx = [0, 0, 0]
-                nx[0] = self.shape_faces_x if x_type == "F" else self.shape_edges_x
-                nx[1] = self.shape_faces_y if x_type == "F" else self.shape_edges_y
-                nx[2] = self.shape_faces_z if x_type == "F" else self.shape_edges_z
+                nx[0] = self.shape_faces_x if x_type == "faces" else self.shape_edges_x
+                nx[1] = self.shape_faces_y if x_type == "faces" else self.shape_edges_y
+                nx[2] = self.shape_faces_z if x_type == "faces" else self.shape_edges_z
 
                 for dim, dimName in enumerate(["x", "y", "z"]):
                     if dimName in out_type:
                         if self.dim <= dim:
                             raise Exception(
                                 "Dimensions of mesh not great enough for "
-                                "{}{}".format(x_type, dimName)
+                                "{}_{}".format(x_type, dimName)
                             )
                         if xx.size != np.sum(nn):
                             raise Exception("Vector is not the right size.")
@@ -974,11 +975,11 @@ class BaseRectangularMesh(BaseMesh):
                 # This will deal with partial components (x, y or z)
                 # lying on edges or faces
                 if "x" in x_type:
-                    nn = self.shape_faces_x if "F" in x_type else self.shape_edges_x
+                    nn = self.shape_faces_x if "f" in x_type else self.shape_edges_x
                 elif "y" in x_type:
-                    nn = self.shape_faces_y if "F" in x_type else self.shape_edges_y
+                    nn = self.shape_faces_y if "f" in x_type else self.shape_edges_y
                 elif "z" in x_type:
-                    nn = self.shape_faces_z if "F" in x_type else self.shape_edges_z
+                    nn = self.shape_faces_z if "f" in x_type else self.shape_edges_z
                 if xx.size != np.prod(nn):
                     raise Exception(
                         f"Vector is not the right size. Expected {np.prod(nn)}, got {xx.size}"
@@ -988,13 +989,13 @@ class BaseRectangularMesh(BaseMesh):
         # Check if we are dealing with a vector quantity
         isVectorQuantity = len(x.shape) == 2 and x.shape[1] == self.dim
 
-        if out_type in ["F", "E"]:
+        if out_type in ["faces", "edges"]:
             if isVectorQuantity:
                 raise Exception("Not sure what to do with a vector vector quantity..")
             outTypeCopy = out_type
             out = ()
             for ii, dirName in enumerate(["x", "y", "z"][: self.dim]):
-                out_type = outTypeCopy + dirName
+                out_type = outTypeCopy + "_" + dirName
                 out += (switchKernal(x),)
             return out
         elif isVectorQuantity:
