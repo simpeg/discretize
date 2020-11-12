@@ -403,7 +403,7 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
                 A, B = index_cube("AB", self.vnN, self.vnEy)
                 edge2 = xy[B, :] - xy[A, :]
                 self._edge_lengths = np.r_[mkvc(_length2D(edge1)), mkvc(_length2D(edge2))]
-                self._tangents = np.r_[edge1, edge2] / np.c_[self._edge, self._edge]
+                self._edge_tangents = np.r_[edge1, edge2] / np.c_[self._edge, self._edge]
             elif self.dim == 3:
                 xyz = self.gridN
                 A, D = index_cube("AD", self.vnN, self.vnEx)
@@ -417,7 +417,7 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
                     mkvc(_length3D(edge2)),
                     mkvc(_length3D(edge3)),
                 ]
-                self._tangents = (
+                self._edge_tangents = (
                     np.r_[edge1, edge2, edge3]
                     / np.c_[self._edge, self._edge, self._edge]
                 )
@@ -427,9 +427,9 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
     @property
     def edge_tangents(self):
         """Edge tangents"""
-        if getattr(self, "_tangents", None) is None:
+        if getattr(self, "_edge_tangents", None) is None:
             self.edge_lengths  # calling .edge_lengths will create the tangents
-        return self._tangents
+        return self._edge_tangents
 
     # DEPRECATIONS
     vol = deprecate_property("cell_volumes", "vol", removal_version="1.0.0")
