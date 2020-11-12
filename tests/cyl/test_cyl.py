@@ -94,7 +94,7 @@ class TestCyl2DMesh(unittest.TestCase):
 
     def test_gridSizes(self):
         self.assertEqual(self.mesh.gridCC.shape, (self.mesh.nC, 3))
-        self.assertEqual(self.mesh._gridNFull.shape, (9, 3))
+        self.assertEqual(self.mesh._nodes_full.shape, (9, 3))
 
         self.assertEqual(self.mesh.gridFx.shape, (self.mesh.nFx, 3))
         self.assertTrue(self.mesh.gridFy is None)

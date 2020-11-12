@@ -1686,7 +1686,7 @@ class InterfaceMPL(object):
                 ind_xy
             ]  # average to cell centers
         I = np.ma.masked_where(np.isnan(I), I)
-        X, Y = (x.T for x in self.nodes)
+        X, Y = (x.T for x in self.node_list)
         out = ax.pcolormesh(
             X,
             Y,

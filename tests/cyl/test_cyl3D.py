@@ -335,13 +335,13 @@ class Deflation(unittest.TestCase):
         mesh = discretize.CylMesh([2, 5, 3])
 
         hangingF = np.hstack(
-            [getattr(mesh, "_ishangingF{}".format(dim)) for dim in ["x", "y", "z"]]
+            [getattr(mesh, "_ishanging_faces_{}".format(dim)) for dim in ["x", "y", "z"]]
         )
-        self.assertTrue(np.all(mesh._areaFull[~hangingF] == mesh.area))
+        self.assertTrue(np.all(mesh._face_areas_full[~hangingF] == mesh.area))
         hangingE = np.hstack(
-            [getattr(mesh, "_ishangingE{}".format(dim)) for dim in ["x", "y", "z"]]
+            [getattr(mesh, "_ishanging_edges_{}".format(dim)) for dim in ["x", "y", "z"]]
         )
-        self.assertTrue(np.all(mesh._edgeFull[~hangingE] == mesh.edge))
+        self.assertTrue(np.all(mesh._edge_lengths_full[~hangingE] == mesh.edge))
 
 
 if __name__ == "__main__":

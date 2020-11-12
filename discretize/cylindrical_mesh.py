@@ -125,7 +125,7 @@ class CylindricalMesh(
             return (vnC[0] + 1, vnC[1], vnC[2] + 1)
 
     @property
-    def _vntN(self):
+    def _shape_total_nodes(self):
         vnC = self.shape_cells
         if self.is_symmetric:
             return (vnC[0], 1, vnC[2] + 1)
@@ -146,21 +146,21 @@ class CylindricalMesh(
         return (nx - 1) * ny * nz + nz
 
     @property
-    def _vntFx(self):
+    def _shape_total_faces_x(self):
         """
         vector number of total Fx (prior to deflating)
         """
-        return self._vntN[:1] + self.shape_cells[1:]
+        return self._shape_total_nodes[:1] + self.shape_cells[1:]
 
     @property
-    def _ntFx(self):
+    def _n_total_faces_x(self):
         """
         number of total Fx (prior to defplating)
         """
-        return int(np.prod(self._vntFx))
+        return int(np.prod(self._shape_total_faces_x))
 
     @property
-    def _nhFx(self):
+    def _n_hanging_faces_x(self):
         """
         Number of hanging Fx
         """
@@ -177,76 +177,76 @@ class CylindricalMesh(
         return self.shape_cells
 
     @property
-    def _vntFy(self):
+    def _shape_total_faces_y(self):
         """
         vector number of total Fy (prior to deflating)
         """
         vnC = self.shape_cells
-        return (vnC[0], self._vntN[1]) + vnC[2:]
+        return (vnC[0], self._shape_total_nodes[1]) + vnC[2:]
 
     @property
-    def _ntFy(self):
+    def _n_total_faces_y(self):
         """
         number of total Fy (prior to deflating)
         """
-        return int(np.prod(self._vntFy))
+        return int(np.prod(self._shape_total_faces_y))
 
     @property
-    def _nhFy(self):
+    def _n_hanging_faces_y(self):
         """
         number of hanging y-faces
         """
         return int(np.prod(self.shape_cells[::2]))
 
     @property
-    def _vntFz(self):
+    def _shape_total_faces_z(self):
         """
         vector number of total Fz (prior to deflating)
         """
-        return self.shape_cells[:-1] + self._vntN[-1:]
+        return self.shape_cells[:-1] + self._shape_total_nodes[-1:]
 
     @property
-    def _ntFz(self):
+    def _n_total_faces_z(self):
         """
         number of total Fz (prior to deflating)
         """
-        return int(np.prod(self._vntFz))
+        return int(np.prod(self._shape_total_faces_z))
 
     @property
-    def _nhFz(self):
+    def _n_hanging_faces_z(self):
         """
         number of hanging Fz
         """
         return int(np.prod(self.shape_cells[::2]))
 
     @property
-    def _vntEx(self):
+    def _shape_total_edges_x(self):
         """
         vector number of total Ex (prior to deflating)
         """
-        return self.shape_cells[:1] + self._vntN[1:]
+        return self.shape_cells[:1] + self._shape_total_nodes[1:]
 
     @property
-    def _ntEx(self):
+    def _n_total_edges_x(self):
         """
         number of total Ex (prior to deflating)
         """
-        return int(np.prod(self._vntEx))
+        return int(np.prod(self._shape_total_edges_x))
 
     @property
-    def _vntEy(self):
+    def _shape_total_edges_y(self):
         """
         vector number of total Ey (prior to deflating)
         """
-        _vntN = self._vntN
-        return (_vntN[0], self.shape_cells[1], _vntN[2])
+        _shape_total_nodes = self._shape_total_nodes
+        return (_shape_total_nodes[0], self.shape_cells[1], _shape_total_nodes[2])
 
     @property
-    def _ntEy(self):
+    def _n_total_edges_y(self):
         """
         number of total Ey (prior to deflating)
         """
-        return int(np.prod(self._vntEy))
+        return int(np.prod(self._shape_total_edges_y))
 
     @property
     def shape_edges_y(self):
@@ -261,18 +261,18 @@ class CylindricalMesh(
         return tuple(x + y for x, y in zip(self.shape_cells, [0, 0, 1]))
 
     @property
-    def _vntEz(self):
+    def _shape_total_edges_z(self):
         """
         vector number of total Ez (prior to deflating)
         """
-        return self._vntN[:-1] + self.shape_cells[-1:]
+        return self._shape_total_nodes[:-1] + self.shape_cells[-1:]
 
     @property
-    def _ntEz(self):
+    def _n_total_edges_z(self):
         """
         number of total Ez (prior to deflating)
         """
-        return int(np.prod(self._vntEz))
+        return int(np.prod(self._shape_total_edges_z))
 
     @property
     def shape_edges_z(self):
@@ -318,7 +318,7 @@ class CylindricalMesh(
         return np.r_[0, self.h[0]].cumsum()
 
     @property
-    def _vectorNyFull(self):
+    def _nodes_y_full(self):
         """
         full nodal y vector (prior to deflating)
         """
@@ -336,11 +336,11 @@ class CylindricalMesh(
         return np.r_[0, self.h[1][:-1].cumsum()]
 
     @property
-    def _edgeExFull(self):
+    def _edge_x_lengths_full(self):
         """
         full x-edge lengths (prior to deflating)
         """
-        nx, ny, nz = self._vntN
+        nx, ny, nz = self._shape_total_nodes
         return np.kron(np.ones(nz), np.kron(np.ones(ny), self.h[0]))
 
     @property
@@ -354,18 +354,18 @@ class CylindricalMesh(
         numpy.ndarray
             vector of radial edge lengths
         """
-        if getattr(self, "_edgeEx", None) is None:
-            self._edgeEx = self._edgeExFull[~self._ishangingEx]
-        return self._edgeEx
+        if getattr(self, "_edge_lengths_x", None) is None:
+            self._edge_lengths_x = self._edge_x_lengths_full[~self._ishanging_edges_x]
+        return self._edge_lengths_x
 
     @property
-    def _edgeEyFull(self):
+    def _edge_y_lengths_full(self):
         """
         full vector of y-edge lengths (prior to deflating)
         """
         if self.is_symmetric:
             return 2 * pi * self.nodes[:, 0]
-        return np.kron(np.ones(self._vntN[2]), np.kron(self.h[1], self.nodes_x))
+        return np.kron(np.ones(self._shape_total_nodes[2]), np.kron(self.h[1], self.nodes_x))
 
     @property
     def edge_y_lengths(self):
@@ -378,19 +378,19 @@ class CylindricalMesh(
         numpy.ndarray
             vector of the azimuthal edges
         """
-        if getattr(self, "_edgeEy", None) is None:
+        if getattr(self, "_edge_lengths_y", None) is None:
             if self.is_symmetric:
-                self._edgeEy = self._edgeEyFull
+                self._edge_lengths_y = self._edge_y_lengths_full
             else:
-                self._edgeEy = self._edgeEyFull[~self._ishangingEy]
-        return self._edgeEy
+                self._edge_lengths_y = self._edge_y_lengths_full[~self._ishanging_edges_y]
+        return self._edge_lengths_y
 
     @property
-    def _edgeEzFull(self):
+    def _edge_z_lengths_full(self):
         """
         full z-edge lengths (prior to deflation)
         """
-        nx, ny, nz = self._vntN
+        nx, ny, nz = self._shape_total_nodes
         return np.kron(self.h[2], np.kron(np.ones(ny), np.ones(nx)))
 
     @property
@@ -404,12 +404,12 @@ class CylindricalMesh(
         numpy.ndarray
             vector of the vertical edges
         """
-        if getattr(self, "_edgeEz", None) is None:
-            self._edgeEz = self._edgeEzFull[~self._ishangingEz]
-        return self._edgeEz
+        if getattr(self, "_edge_lengths_z", None) is None:
+            self._edge_lengths_z = self._edge_z_lengths_full[~self._ishanging_edges_z]
+        return self._edge_lengths_z
 
     @property
-    def _edgeFull(self):
+    def _edge_lengths_full(self):
         """
         full edge lengths [r-edges, theta-edgesm z-edges] (prior to
         deflation)
@@ -417,7 +417,7 @@ class CylindricalMesh(
         if self.is_symmetric:
             raise NotImplementedError
         else:
-            return np.r_[self._edgeExFull, self._edgeEyFull, self._edgeEzFull]
+            return np.r_[self._edge_x_lengths_full, self._edge_y_lengths_full, self._edge_z_lengths_full]
 
     @property
     def edge_lengths(self):
@@ -461,7 +461,7 @@ class CylindricalMesh(
             if self.is_symmetric:
                 self._face_x_areas = self._face_x_areas_full
             else:
-                self._face_x_areas = self._face_x_areas_full[~self._ishanging_face_x]
+                self._face_x_areas = self._face_x_areas_full[~self._ishanging_faces_x]
         return self._face_x_areas
 
     @property
@@ -469,7 +469,7 @@ class CylindricalMesh(
         """
         Area of y-faces (Azimuthal faces), prior to deflation.
         """
-        return np.kron(self.h[2], np.kron(np.ones(self._vntN[1]), self.h[0]))
+        return np.kron(self.h[2], np.kron(np.ones(self._shape_total_nodes[1]), self.h[0]))
 
     @property
     def face_y_areas(self):
@@ -488,7 +488,7 @@ class CylindricalMesh(
         if getattr(self, "_face_y_areas", None) is None:
             if self.is_symmetric:
                 raise Exception("There are no y-faces on the Cyl Symmetric mesh")
-            self._face_y_areas = self._face_y_areas_full[~self._ishanging_face_y]
+            self._face_y_areas = self._face_y_areas_full[~self._ishanging_faces_y]
         return self._face_y_areas
 
     @property
@@ -502,7 +502,7 @@ class CylindricalMesh(
                 pi * (self.nodes_x ** 2 - np.r_[0, self.nodes_x[:-1]] ** 2),
             )
         return np.kron(
-            np.ones(self._vntN[2]),
+            np.ones(self._shape_total_nodes[2]),
             np.kron(
                 self.h[1],
                 0.5 * (self.nodes_x[1:] ** 2 - self.nodes_x[:-1] ** 2),
@@ -526,11 +526,11 @@ class CylindricalMesh(
             if self.is_symmetric:
                 self._face_z_areas = self._face_z_areas_full
             else:
-                self._face_z_areas = self._face_z_areas_full[~self._ishanging_face_z]
+                self._face_z_areas = self._face_z_areas_full[~self._ishanging_faces_z]
         return self._face_z_areas
 
     @property
-    def _area_full(self):
+    def _face_areas_full(self):
         """
         Area of all faces (prior to delflation)
         """
@@ -598,14 +598,14 @@ class CylindricalMesh(
     #              np.ones(self.shape_cells[2], dtype=bool),  # 1 * 0 == 0
     #              np.kron(np.ones(self.shape_cells[1], dtype=bool), hang_x)
     #          )
-    #          return self._ishanging_face_x_bool
+    #          return self._ishanging_faces_x_bool
     #
     #
     #   This is equivalent to forming the 3D matrix and indexing the
     #   corresponding rows and columns (here, the hanging faces are all of
     #   the first x-faces along the axis of symmetry):
     #
-    #         hang_x = np.zeros(self._vntFx, dtype=bool)
+    #         hang_x = np.zeros(self._shape_total_faces_x, dtype=bool)
     #         hang_x[0, :, :] = True
     #         isHangingFx_bool = mkvc(hang_x)
     #
@@ -615,26 +615,26 @@ class CylindricalMesh(
     ###########################################################################
 
     @property
-    def _ishanging_face_x(self):
+    def _ishanging_faces_x(self):
         """
         bool vector indicating if an x-face is hanging or not
         """
-        if getattr(self, "_ishanging_face_x_bool", None) is None:
+        if getattr(self, "_ishanging_faces_x_bool", None) is None:
 
             # the following is equivalent to
-            #     hang_x = np.zeros(self._vntFx, dtype=bool)
+            #     hang_x = np.zeros(self._shape_total_faces_x, dtype=bool)
             #     hang_x[0, :, :] = True
             #     isHangingFx_bool = mkvc(hang_x)
             #
             # but krons of bools is more efficient
 
-            hang_x = np.zeros(self._vntN[0], dtype=bool)
+            hang_x = np.zeros(self._shape_total_nodes[0], dtype=bool)
             hang_x[0] = True
-            self._ishanging_face_x_bool = np.kron(
+            self._ishanging_faces_x_bool = np.kron(
                 np.ones(self.shape_cells[2], dtype=bool),  # 1 * 0 == 0
                 np.kron(np.ones(self.shape_cells[1], dtype=bool), hang_x),
             )
-        return self._ishanging_face_x_bool
+        return self._ishanging_faces_x_bool
 
     @property
     def _hanging_faces_x(self):
@@ -644,24 +644,24 @@ class CylindricalMesh(
         """
         if getattr(self, "_hanging_faces_x_dict", None) is None:
             self._hanging_faces_x_dict = dict(
-                zip(np.nonzero(self._ishanging_face_x)[0].tolist(), [None] * self._nhFx)
+                zip(np.nonzero(self._ishanging_faces_x)[0].tolist(), [None] * self._n_hanging_faces_x)
             )
         return self._hanging_faces_x_dict
 
     @property
-    def _ishanging_face_y(self):
+    def _ishanging_faces_y(self):
         """
         bool vector indicating if a y-face is hanging or not
         """
 
-        if getattr(self, "_ishanging_face_y_bool", None) is None:
-            hang_y = np.zeros(self._vntN[1], dtype=bool)
+        if getattr(self, "_ishanging_faces_y_bool", None) is None:
+            hang_y = np.zeros(self._shape_total_nodes[1], dtype=bool)
             hang_y[-1] = True
-            self._ishanging_face_y_bool = np.kron(
+            self._ishanging_faces_y_bool = np.kron(
                 np.ones(self.shape_cells[2], dtype=bool),
                 np.kron(hang_y, np.ones(self.shape_cells[0], dtype=bool)),
             )
-        return self._ishanging_face_y_bool
+        return self._ishanging_faces_y_bool
 
     @property
     def _hanging_faces_y(self):
@@ -670,7 +670,7 @@ class CylindricalMesh(
         of indices that the eliminated faces map to (if applicable)
         """
         if getattr(self, "_hanging_faces_y_dict", None) is None:
-            deflate_y = np.zeros(self._vntN[1], dtype=bool)
+            deflate_y = np.zeros(self._shape_total_nodes[1], dtype=bool)
             deflate_y[0] = True
             deflateFy = np.nonzero(
                 np.kron(
@@ -679,18 +679,18 @@ class CylindricalMesh(
                 )
             )[0].tolist()
             self._hanging_faces_y_dict = dict(
-                zip(np.nonzero(self._ishanging_face_y)[0].tolist(), deflateFy)
+                zip(np.nonzero(self._ishanging_faces_y)[0].tolist(), deflateFy)
             )
         return self._hanging_faces_y_dict
 
     @property
-    def _ishanging_face_z(self):
+    def _ishanging_faces_z(self):
         """
         bool vector indicating if a z-face is hanging or not
         """
-        if getattr(self, "_ishanging_face_z_bool", None) is None:
-            self._ishanging_face_z_bool = np.zeros(self._ntFz, dtype=bool)
-        return self._ishanging_face_z_bool
+        if getattr(self, "_ishanging_faces_z_bool", None) is None:
+            self._ishanging_faces_z_bool = np.zeros(self._n_total_faces_z, dtype=bool)
+        return self._ishanging_faces_z_bool
 
     @property
     def _hanging_faces_z(self):
@@ -701,19 +701,19 @@ class CylindricalMesh(
         return {}
 
     @property
-    def _ishangingEx(self):
+    def _ishanging_edges_x(self):
         """
         bool vector indicating if a x-edge is hanging or not
         """
-        if getattr(self, "_ishangingEx_bool", None) is None:
-            nx, ny, nz = self._vntN
+        if getattr(self, "_ishanging_edges_x_bool", None) is None:
+            nx, ny, nz = self._shape_total_nodes
             hang_y = np.zeros(ny, dtype=bool)
             hang_y[-1] = True
-            self._ishangingEx_bool = np.kron(
+            self._ishanging_edges_x_bool = np.kron(
                 np.ones(nz, dtype=bool),
                 np.kron(hang_y, np.ones(self.shape_cells[0], dtype=bool)),
             )
-        return self._ishangingEx_bool
+        return self._ishanging_edges_x_bool
 
     @property
     def _hanging_edges_x(self):
@@ -722,7 +722,7 @@ class CylindricalMesh(
         of indices that the eliminated faces map to (if applicable)
         """
         if getattr(self, "_hanging_edges_x_dict", None) is None:
-            nx, ny, nz = self._vntN
+            nx, ny, nz = self._shape_total_nodes
             deflate_y = np.zeros(ny, dtype=bool)
             deflate_y[0] = True
             deflateEx = np.nonzero(
@@ -732,24 +732,24 @@ class CylindricalMesh(
                 )
             )[0].tolist()
             self._hanging_edges_x_dict = dict(
-                zip(np.nonzero(self._ishangingEx)[0].tolist(), deflateEx)
+                zip(np.nonzero(self._ishanging_edges_x)[0].tolist(), deflateEx)
             )
         return self._hanging_edges_x_dict
 
     @property
-    def _ishangingEy(self):
+    def _ishanging_edges_y(self):
         """
         bool vector indicating if a y-edge is hanging or not
         """
-        if getattr(self, "_ishangingEy_bool", None) is None:
-            nx, ny, nz = self._vntN
+        if getattr(self, "_ishanging_edges_y_bool", None) is None:
+            nx, ny, nz = self._shape_total_nodes
             hang_x = np.zeros(nx, dtype=bool)
             hang_x[0] = True
-            self._ishangingEy_bool = np.kron(
+            self._ishanging_edges_y_bool = np.kron(
                 np.ones(nz, dtype=bool),
                 np.kron(np.ones(self.shape_cells[1], dtype=bool), hang_x),
             )
-        return self._ishangingEy_bool
+        return self._ishanging_edges_y_bool
 
     @property
     def _hanging_edges_y(self):
@@ -760,39 +760,39 @@ class CylindricalMesh(
         if getattr(self, "_hanging_edges_y_dict", None) is None:
             self._hanging_edges_y_dict = dict(
                 zip(
-                    np.nonzero(self._ishangingEy)[0].tolist(),
-                    [None] * len(self._ishangingEy_bool),
+                    np.nonzero(self._ishanging_edges_y)[0].tolist(),
+                    [None] * len(self._ishanging_edges_y_bool),
                 )
             )
         return self._hanging_edges_y_dict
 
     @property
-    def _axis_of_symmetry_Ez(self):
+    def _axis_of_symmetry_edges_z(self):
         """
         bool vector indicating if a z-edge is along the axis of symmetry or not
         """
-        if getattr(self, "_axis_of_symmetry_Ez_bool", None) is None:
-            nx, ny, nz = self._vntN
+        if getattr(self, "_axis_of_symmetry_edges_z_bool", None) is None:
+            nx, ny, nz = self._shape_total_nodes
             axis_x = np.zeros(nx, dtype=bool)
             axis_x[0] = True
 
             axis_y = np.zeros(ny, dtype=bool)
             axis_y[0] = True
-            self._axis_of_symmetry_Ez_bool = np.kron(
+            self._axis_of_symmetry_edges_z_bool = np.kron(
                 np.ones(self.shape_cells[2], dtype=bool), np.kron(axis_y, axis_x)
             )
-        return self._axis_of_symmetry_Ez_bool
+        return self._axis_of_symmetry_edges_z_bool
 
     @property
-    def _ishangingEz(self):
+    def _ishanging_edges_z(self):
         """
         bool vector indicating if a z-edge is hanging or not
         """
-        if getattr(self, "_ishangingEz_bool", None) is None:
+        if getattr(self, "_ishanging_edges_z_bool", None) is None:
             if self.is_symmetric:
-                self._ishangingEz_bool = np.ones(self._ntEz, dtype=bool)
+                self._ishanging_edges_z_bool = np.ones(self._n_total_edges_z, dtype=bool)
             else:
-                nx, ny, nz = self._vntN
+                nx, ny, nz = self._shape_total_nodes
                 hang_x = np.zeros(nx, dtype=bool)
                 hang_x[0] = True
 
@@ -808,9 +808,9 @@ class CylindricalMesh(
                     ),
                 )
 
-                self._ishangingEz_bool = hangingEz & ~self._axis_of_symmetry_Ez
+                self._ishanging_edges_z_bool = hangingEz & ~self._axis_of_symmetry_edges_z
 
-        return self._ishangingEz_bool
+        return self._ishanging_edges_z_bool
 
     @property
     def _hanging_edges_z(self):
@@ -819,7 +819,7 @@ class CylindricalMesh(
         of indices that the eliminated faces map to (if applicable)
         """
         if getattr(self, "_hanging_edges_z_dict", None) is None:
-            nx, ny, nz = self._vntN
+            nx, ny, nz = self._shape_total_nodes
             # deflate
             deflateEz = np.hstack(
                 [
@@ -830,7 +830,7 @@ class CylindricalMesh(
                     for i in range(self.shape_cells[2])
                 ]
             )
-            deflate = zip(np.nonzero(self._ishangingEz)[0].tolist(), deflateEz)
+            deflate = zip(np.nonzero(self._ishanging_edges_z)[0].tolist(), deflateEz)
 
             self._hanging_edges_z_dict = dict(deflate)
         return self._hanging_edges_z_dict
@@ -841,7 +841,7 @@ class CylindricalMesh(
         bool vector indicating if a node is along the axis of symmetry or not
         """
         if getattr(self, "_axis_of_symmetry_nodes_bool", None) is None:
-            nx, ny, nz = self._vntN
+            nx, ny, nz = self._shape_total_nodes
             axis_x = np.zeros(nx, dtype=bool)
             axis_x[0] = True
 
@@ -853,12 +853,12 @@ class CylindricalMesh(
         return self._axis_of_symmetry_nodes_bool
 
     @property
-    def _ishanging_node(self):
+    def _ishanging_nodes(self):
         """
         bool vector indicating if a node is hanging or not
         """
-        if getattr(self, "_ishanging_node_bool", None) is None:
-            nx, ny, nz = self._vntN
+        if getattr(self, "_ishanging_nodes_bool", None) is None:
+            nx, ny, nz = self._shape_total_nodes
             hang_x = np.zeros(nx, dtype=bool)
             hang_x[0] = True
 
@@ -873,9 +873,9 @@ class CylindricalMesh(
                 ),
             )
 
-            self._ishanging_node_bool = hangingN & ~self._axis_of_symmetry_nodes
+            self._ishanging_nodes_bool = hangingN & ~self._axis_of_symmetry_nodes
 
-        return self._ishanging_node_bool
+        return self._ishanging_nodes_bool
 
     @property
     def _hanging_nodes(self):
@@ -884,7 +884,7 @@ class CylindricalMesh(
         of indices that the eliminated faces map to (if applicable)
         """
         if getattr(self, "_hanging_nodes_dict", None) is None:
-            nx, ny, nz = self._vntN
+            nx, ny, nz = self._shape_total_nodes
             # go by layer
             deflateN = np.hstack(
                 [
@@ -896,7 +896,7 @@ class CylindricalMesh(
                 ]
             ).tolist()
             self._hanging_nodes_dict = dict(
-                zip(np.nonzero(self._ishanging_node)[0].tolist(), deflateN)
+                zip(np.nonzero(self._ishanging_nodes)[0].tolist(), deflateN)
             )
         return self._hanging_nodes_dict
 
@@ -909,7 +909,7 @@ class CylindricalMesh(
         """
         Full Nodal grid (including hanging nodes)
         """
-        return ndgrid([self.nodes_x, self._vectorNyFull, self.nodes_z])
+        return ndgrid([self.nodes_x, self._nodes_y_full, self.nodes_z])
 
     @property
     def nodes(self):
@@ -925,7 +925,7 @@ class CylindricalMesh(
         if self.is_symmetric:
             self._nodes = self._nodes_full
         if getattr(self, "_nodes", None) is None:
-            self._nodes = self._nodes_full[~self._ishanging_node, :]
+            self._nodes = self._nodes_full[~self._ishanging_nodes, :]
         return self._nodes
 
     @property
@@ -952,11 +952,11 @@ class CylindricalMesh(
             if self.is_symmetric:
                 return super().faces_x
             else:
-                self._faces_x = self._faces_x_full[~self._ishanging_face_x, :]
+                self._faces_x = self._faces_x_full[~self._ishanging_faces_x, :]
         return self._faces_x
 
     @property
-    def _edges_yFull(self):
+    def _edges_y_full(self):
         """
         Full grid of y-edges (including eliminated edges)
         """
@@ -975,17 +975,17 @@ class CylindricalMesh(
         """
         if getattr(self, "_edges_y", None) is None:
             if self.is_symmetric:
-                return self._edges_yFull
+                return self._edges_y_full
             else:
-                self._edges_y = self._edges_yFull[~self._ishangingEy, :]
+                self._edges_y = self._edges_y_full[~self._ishanging_edges_y, :]
         return self._edges_y
 
     @property
-    def _edges_zFull(self):
+    def _edges_z_full(self):
         """
         Full z-edge grid (including hanging edges)
         """
-        return ndgrid([self.nodes_x, self._vectorNyFull, self.cell_centers_z])
+        return ndgrid([self.nodes_x, self._nodes_y_full, self.cell_centers_z])
 
     @property
     def edges_z(self):
@@ -1002,7 +1002,7 @@ class CylindricalMesh(
             if self.is_symmetric:
                 self._edges_z = None
             else:
-                self._edges_z = self._edges_zFull[~self._ishangingEz, :]
+                self._edges_z = self._edges_z_full[~self._ishanging_edges_z, :]
         return self._edges_z
 
     ####################################################
@@ -1045,7 +1045,7 @@ class CylindricalMesh(
 
             if not self.is_symmetric:
                 self._face_x_divergence = (
-                    self._face_x_divergence * self._deflationMatrix("Fx", as_ones=True).T
+                    self._face_x_divergence * self._deflation_matrix("Fx", as_ones=True).T
                 )
 
         return self._face_x_divergence
@@ -1064,7 +1064,7 @@ class CylindricalMesh(
                 sdiag(1 / V)
                 * D2
                 * sdiag(S)
-                * self._deflationMatrix("Fy", as_ones=True).T
+                * self._deflation_matrix("Fy", as_ones=True).T
             )
         return self._face_y_divergence
 
@@ -1088,7 +1088,7 @@ class CylindricalMesh(
     #     if self.is_symmetric:
     #         G1 = sp.kron(speye(n[2]), ddxCellGrad(n[0], BC))
     #     else:
-    #         G1 = self._deflationMatrix('Fx').T * kron3(
+    #         G1 = self._deflation_matrix('Fx').T * kron3(
     #             speye(n[2]), speye(n[1]), ddxCellGrad(n[0], BC)
     #         )
     #     return G1
@@ -1098,12 +1098,12 @@ class CylindricalMesh(
         raise NotImplementedError("Cell Grad is not yet implemented.")
         # if getattr(self, '_cellGradx', None) is None:
         #     G1 = super(CylindricalMesh, self)._cellGradxStencil
-        #     V = self._deflationMatrix('F', withHanging='True', as_ones='True')*self.aveCC2F*self.cell_volumes
+        #     V = self._deflation_matrix('F', withHanging='True', as_ones='True')*self.aveCC2F*self.cell_volumes
         #     A = self.face_areas
-        #     L = (A/V)[:self._ntFx]
+        #     L = (A/V)[:self._n_total_faces_x]
         #     # L = self.reshape(L, 'F', 'Fx', 'V')
         #     # L = A[:self.nFx] / V
-        #     self._cellGradx = self._deflationMatrix('Fx')*sdiag(L)*G1
+        #     self._cellGradx = self._deflation_matrix('Fx')*sdiag(L)*G1
         # return self._cellGradx
 
     @property
@@ -1132,7 +1132,7 @@ class CylindricalMesh(
     # def _nodalGradStencily(self):
     #     if self.is_symmetric:
     #         None
-    #         # return kron3(speye(self.shape_nodes[2]), ddx(self.shape_cells[1]), speye(self.shape_nodes[0])) * self._deflationMatrix('Ey')
+    #         # return kron3(speye(self.shape_nodes[2]), ddx(self.shape_cells[1]), speye(self.shape_nodes[0])) * self._deflation_matrix('Ey')
     #     return kron3(speye(self.shape_nodes[2]), ddx(self.shape_cells[1]), speye(self.shape_nodes[0]))
 
     # @property
@@ -1146,11 +1146,11 @@ class CylindricalMesh(
     #     if self.is_symmetric:
     #         return None
     #     else:
-    #         G = self._deflationMatrix('E').T * sp.vstack((
+    #         G = self._deflation_matrix('E').T * sp.vstack((
     #             self._nodalGradStencilx,
     #             self._nodalGradStencily,
     #             self._nodalGradStencilz
-    #         ), format="csr") * self._deflationMatrix('N')
+    #         ), format="csr") * self._deflation_matrix('N')
     #     return G
 
     @property
@@ -1201,10 +1201,10 @@ class CylindricalMesh(
             else:
                 self._edge_curl = (
                     sdiag(1 / self.face_areas)
-                    * self._deflationMatrix("F", as_ones=False)
+                    * self._deflation_matrix("F", as_ones=False)
                     * self._edgeCurlStencil
-                    * sdiag(self._edgeFull)
-                    * self._deflationMatrix("E", as_ones=True).T
+                    * sdiag(self._edge_lengths_full)
+                    * self._deflation_matrix("E", as_ones=True).T
                 )
 
         return self._edge_curl
@@ -1227,7 +1227,7 @@ class CylindricalMesh(
                 av(self.shape_cells[1]),
                 speye(self.shape_cells[0]),
             )
-            * self._deflationMatrix("Ex", as_ones=True).T
+            * self._deflation_matrix("Ex", as_ones=True).T
         )
 
     @property
@@ -1250,7 +1250,7 @@ class CylindricalMesh(
                     speye(self.shape_cells[1]),
                     av(self.shape_cells[0]),
                 )
-                * self._deflationMatrix("Ey", as_ones=True).T
+                * self._deflation_matrix("Ey", as_ones=True).T
             )
 
     @property
@@ -1271,7 +1271,7 @@ class CylindricalMesh(
                 av(self.shape_cells[1]),
                 av(self.shape_cells[0]),
             )
-            * self._deflationMatrix("Ez", as_ones=True).T
+            * self._deflation_matrix("Ez", as_ones=True).T
         )
 
     @property
@@ -1345,7 +1345,7 @@ class CylindricalMesh(
         """
         return (
             kron3(speye(self.vnC[2]), av(self.vnC[1]), speye(self.vnC[0]))
-            * self._deflationMatrix("Fy", as_ones=True).T
+            * self._deflation_matrix("Fy", as_ones=True).T
         )
 
     @property
@@ -1414,39 +1414,40 @@ class CylindricalMesh(
     # Deflation Matrices
     ####################################################
 
-    def _deflationMatrix(self, location, as_ones=False):
+    def _deflation_matrix(self, location, as_ones=False):
         """
         construct the deflation matrix to remove hanging edges / faces / nodes
         from the operators
         """
-        if location not in ["N", "F", "Fx", "Fy", "Fz", "E", "Ex", "Ey", "Ez", "CC"]:
+        location = self._parse_location_type(location)
+        if location not in ["nodes", "faces", "faces_x", "faces_y", "faces_z", "edges", "edges_x", "edges_y", "edges_z", "cell_centers"]:
             raise AssertionError(
                 "Location must be a grid location, not {}".format(location)
             )
-        if location == "CC":
+        if location == "cell_centers":
             return speye(self.nC)
 
-        elif location in ["E", "F"]:
+        elif location in ["edges", "faces"]:
             if self.is_symmetric:
-                if location == "E":
-                    return self._deflationMatrix("Ey", as_ones=as_ones)
-                elif location == "F":
+                if location == "edges":
+                    return self._deflation_matrix("edges_y", as_ones=as_ones)
+                elif location == "faces":
                     return sp.block_diag(
                         [
-                            self._deflationMatrix(location + coord, as_ones=as_ones)
-                            for coord in ["x", "z"]
+                            self._deflation_matrix(location + coord, as_ones=as_ones)
+                            for coord in ["_x", "_z"]
                         ]
                     )
             return sp.block_diag(
                 [
-                    self._deflationMatrix(location + coord, as_ones=as_ones)
-                    for coord in ["x", "y", "z"]
+                    self._deflation_matrix(location + coord, as_ones=as_ones)
+                    for coord in ["_x", "_y", "_z"]
                 ]
             )
 
-        R = speye(getattr(self, "_nt{}".format(location)))
-        hanging_dict = getattr(self, "_hanging{}".format(location))
-        nothanging = ~getattr(self, "_ishanging{}".format(location))
+        R = speye(getattr(self, "_n_total_{}".format(location)))
+        hanging_dict = getattr(self, "_hanging_{}".format(location))
+        nothanging = ~getattr(self, "_ishanging_{}".format(location))
 
         # remove eliminated edges / faces (eg. Fx just doesn't exist)
         hang = {k: v for k, v in hanging_dict.items() if v is not None}
@@ -1463,8 +1464,8 @@ class CylindricalMesh(
         Hang = sp.csr_matrix(
             (entries, (values, list(hang.keys()))),
             shape=(
-                getattr(self, "_nt{}".format(location)),
-                getattr(self, "_nt{}".format(location)),
+                getattr(self, "_n_total_{}".format(location)),
+                getattr(self, "_n_total_{}".format(location)),
             ),
         )
         R = R + Hang
@@ -1586,7 +1587,7 @@ class CylindricalMesh(
         return cyl2cart(grid)  # TODO: account for cartesian origin
 
     def get_interpolation_matrix_cartesian_mesh(
-        self, Mrect, location_type="CC", location_type_to=None, **kwargs
+        self, Mrect, location_type="cell_centers", location_type_to=None, **kwargs
     ):
         """
         Takes a cartesian mesh and returns a projection to translate onto
@@ -1633,6 +1634,7 @@ class CylindricalMesh(
             location_type_to = location_type
         location_type_to = self._parse_location_type(location_type_to)
 
+        print(location_type, location_type_to)
         if location_type == "faces":
             # do this three times for each component
             X = self.get_interpolation_matrix_cartesian_mesh(
@@ -1682,10 +1684,10 @@ class CylindricalMesh(
                 "edges_y": Mrect.edge_tangents[Mrect.nEx: (Mrect.nEx + Mrect.nEy), :],
                 "edges_z": Mrect.edge_tangents[-Mrect.nEz:, :],
             }[location_type_to]
-            if "f" in location_type:
+            if "faces" in location_type:
                 normals = np.c_[np.cos(theta), np.sin(theta), np.zeros(theta.size)]
                 proj = (normals * dotMe).sum(axis=1)
-            if "e" in location_type:
+            elif "edges" in location_type:
                 tangents = np.c_[-np.sin(theta), np.cos(theta), np.zeros(theta.size)]
                 proj = (tangents * dotMe).sum(axis=1)
             G = np.c_[r, theta, grid[:, 2]]
