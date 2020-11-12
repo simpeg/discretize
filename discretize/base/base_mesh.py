@@ -101,13 +101,13 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
 
             # check that if nodes have been set for curvi mesh, sizes still
             # agree
-            if getattr(self, "nodes", None) is not None and len(self.nodes) > 0:
+            if getattr(self, "node_list", None) is not None and len(self.node_list) > 0:
                 for i in range(len(change["value"])):
-                    if self.nodes[0].shape[i] - 1 != change["value"][i]:
+                    if self.node_list[0].shape[i] - 1 != change["value"][i]:
                         raise properties.ValidationError(
-                            "Mismatched shape of n. Expected {}, len(nodes[{}]), "
+                            "Mismatched shape of n. Expected {}, len(node_list[{}]), "
                             "got {}".format(
-                                self.nodes[0].shape[i] - 1, i, change["value"][i]
+                                self.node_list[0].shape[i] - 1, i, change["value"][i]
                             )
                         )
 
