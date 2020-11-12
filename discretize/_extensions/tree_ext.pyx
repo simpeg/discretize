@@ -27,19 +27,19 @@ cdef class TreeCell:
     When called as part of the `refine` function, only the origin, center, and h
     properties are valid.
     """
-    cdef double _x, _y, _z, _origin, _y0, _z0, _wx, _wy, _wz
+    cdef double _x, _y, _z, _x0, _y0, _z0, _wx, _wy, _wz
     cdef int_t _dim
     cdef c_Cell* _cell
     cdef void _set(self, c_Cell* cell):
         self._cell = cell
         self._dim = cell.n_dim
         self._x = cell.location[0]
-        self._origin = cell.points[0].location[0]
+        self._x0 = cell.points[0].location[0]
 
         self._y = cell.location[1]
         self._y0 = cell.points[0].location[1]
 
-        self._wx = cell.points[3].location[0] - self._origin
+        self._wx = cell.points[3].location[0] - self._x0
         self._wy = cell.points[3].location[1] - self._y0
         if(self._dim > 2):
             self._z = cell.location[2]
@@ -112,8 +112,8 @@ cdef class TreeCell:
     @property
     def origin(self):
         """numpy.array of length dim"""
-        if self._dim == 2: return np.array([self._origin, self._y0])
-        return np.array([self._origin, self._y0, self._z0])
+        if self._dim == 2: return np.array([self._x0, self._y0])
+        return np.array([self._x0, self._y0, self._z0])
 
     @property
     def x0(self):
