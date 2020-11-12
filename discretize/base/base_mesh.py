@@ -246,6 +246,10 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         n_edges_per_direction : tuple
             [n_edges_x, n_edges_y, n_edges_z], (dim, )
 
+        Notes
+        -----
+        Also accessible as `vnE`.
+
         Examples
         --------
         >>> import discretize
@@ -333,6 +337,10 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         -------
         n_faces_per_direction : tuple
             [n_faces_x, n_faces_y, n_faces_z], (dim, )
+
+        Notes
+        -----
+        Also accessible as `vnF`.
 
         Examples
         --------
