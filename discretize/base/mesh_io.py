@@ -281,7 +281,6 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         # Have to it in the same operation or use mesh.origin.copy(),
         # otherwise the mesh.origin is updated.
         origin = mesh.origin + np.array([0, 0, mesh.h[2].sum()])
-        origin.dtype = float
 
         nCx, nCy, nCz = mesh.shape_cells
         s += "{0:.6f} {1:.6f} {2:.6f}\n".format(*tuple(origin))
@@ -307,7 +306,7 @@ class TensorMeshIO(InterfaceTensorread_vtk):
             # Init
             i = 0
             origin = True
-            origin = fx[i]
+            x0 = fx[i]
             f = fx[i]
             number_segment = 0
             auxStr = ""
@@ -330,7 +329,7 @@ class TensorMeshIO(InterfaceTensorread_vtk):
 
                 number_segment += 1
                 if origin:
-                    auxStr += "{:.10f} {:.10f} {:d} \n".format(origin, f, n)
+                    auxStr += "{:.10f} {:.10f} {:d} \n".format(x0, f, n)
                     origin = False
                 else:
                     auxStr += "{:.10f} {:d} \n".format(f, n)
