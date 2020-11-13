@@ -82,6 +82,12 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
     def x0(self, val):
         self.origin = val
 
+    @classmethod
+    def deserialize(cls, value, **kwargs):
+        if "x0" in value:
+            value["origin"] = value.pop("x0")
+        return super().deserialize(value, **kwargs)
+
     # Validators
     @properties.validator("_n")
     def _check_n_shape(self, change):

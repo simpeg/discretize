@@ -103,6 +103,12 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
         if len(change["value"][0].shape) != len(change["value"]):
             raise ValueError("Dimension mismatch")
 
+    @classmethod
+    def deserialize(cls, value, **kwargs):
+        if "nodes" in value:
+            value["node_list"] = value.pop("nodes")
+        return super().deserialize(value, **kwargs)
+
     @property
     def cell_centers(self):
         """
