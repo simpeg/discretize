@@ -87,6 +87,7 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
         self._nodes = np.ones((self.node_list[0].size, self.dim))
         for i, node_i in enumerate(self.node_list):
             self._nodes[:, i] = mkvc(node_i.astype(float))
+        self.origin = self.nodes.min(axis=0)
 
     @properties.validator("node_list")
     def _check_nodes(self, change):
