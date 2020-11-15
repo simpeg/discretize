@@ -12,43 +12,12 @@ class TensorMesh(
     BaseTensorMesh, BaseRectangularMesh, DiffOperators, InnerProducts, TensorMeshIO
 ):
     """
-    TensorMesh is a mesh class that deals with tensor product meshes.
+    Class for tensor meshes.
 
-    Any Mesh that has a constant width along the entire axis
-    such that it can defined by a single width vector, called 'h'.
-
-    .. plot::
-        :include-source:
-
-        import discretize
-
-        hx = np.array([1, 1, 1])
-        hy = np.array([1, 2])
-        hz = np.array([1, 1, 1, 1])
-
-        mesh = discretize.TensorMesh([hx, hy, hz])
-        mesh.plot_grid()
-
-
-    Example of a padded tensor mesh using
-    :func:`discretize.utils.unpack_widths`:
-
-    .. plot::
-        :include-source:
-
-        import discretize
-        mesh = discretize.TensorMesh([
-            [(10, 10, -1.3), (10, 40), (10, 10, 1.3)],
-            [(10, 10, -1.3), (10, 20)]
-        ])
-        mesh.plot_grid()
-
-    For a quick tensor mesh on a (10x12x15) unit cube
-
-    .. code:: python
-
-        import discretize
-        mesh = discretize.TensorMesh([10, 12, 15])
+    Tensor meshes are numerical grids whose cell centers, nodes, faces, edges, widths,
+    volumes, etc... can be directly expressed as tensor products. The axes defining
+    coordinates of the mesh are orthogonal. And cell properties along one axis do
+    not vary with respect to the position along any other axis.
 
     """
 
@@ -134,7 +103,21 @@ class TensorMesh(
     # --------------- Geometries ---------------------
     @property
     def cell_volumes(self):
-        """Construct cell volumes of the 3D model as 1d array."""
+        """
+        Return cell volumes
+
+        Calling this property will compute and return the volumes of the tensor
+        mesh cells.
+
+        Returns
+        -------
+        np.ndarray (n_cells,)
+            The quantity returned depends on the dimensions of the mesh:
+                - *1D:* Returns the cell widths
+                - *2D:* Returns the cell areas
+                - *3D:* Returns the cell volumes
+        
+        """
         if getattr(self, "_vol", None) is None:
             vh = self.h
             # Compute cell volumes
