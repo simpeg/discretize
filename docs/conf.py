@@ -55,7 +55,7 @@ numpydoc_class_members_toctree = False
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
 
-# The suffix of source filenames.
+# The suffix of source file names.
 source_suffix = ".rst"
 
 # The encoding of source files.

@@ -27,10 +27,12 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         "nEy": "n_edges_y",
         "nEz": "n_edges_z",
         "nE": "n_edges",
+        "vnE": "n_edges_per_direction",
         "nFx": "n_faces_x",
         "nFy": "n_faces_y",
         "nFz": "n_faces_z",
         "nF": "n_faces",
+        "vnF": "n_faces_per_direction",
     }
 
     # Properties
@@ -45,7 +47,7 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         required=True,
     )
 
-    x0 = properties.Array(
+    origin = properties.Array(
         "origin of the mesh (dim, )",
         dtype=(float, int),
         shape=("*",),
@@ -53,14 +55,16 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
     )
 
     # Instantiate the class
-    def __init__(self, n=None, x0=None, **kwargs):
+    def __init__(self, n=None, origin=None, **kwargs):
         if n is not None:
             self._n = n  # number of dimensions
 
-        if x0 is None:
-            self.x0 = np.zeros(len(self._n))
+        if "x0" in kwargs:
+            origin = kwargs.pop('x0')
+        if origin is None:
+            self.origin = np.zeros(len(self._n))
         else:
-            self.x0 = x0
+            self.origin = origin
 
         super(BaseMesh, self).__init__(**kwargs)
 
@@ -69,6 +73,20 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
             raise AttributeError  # http://nedbatchelder.com/blog/201010/surprising_getattr_recursion.html
         name = self._aliases.get(name, name)
         return object.__getattribute__(self, name)
+
+    @property
+    def x0(self):
+        return self.origin
+
+    @x0.setter
+    def x0(self, val):
+        self.origin = val
+
+    @classmethod
+    def deserialize(cls, value, **kwargs):
+        if "x0" in value:
+            value["origin"] = value.pop("x0")
+        return super().deserialize(value, **kwargs)
 
     # Validators
     @properties.validator("_n")
@@ -89,28 +107,28 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
 
             # check that if nodes have been set for curvi mesh, sizes still
             # agree
-            if getattr(self, "nodes", None) is not None and len(self.nodes) > 0:
+            if getattr(self, "node_list", None) is not None and len(self.node_list) > 0:
                 for i in range(len(change["value"])):
-                    if self.nodes[0].shape[i] - 1 != change["value"][i]:
+                    if self.node_list[0].shape[i] - 1 != change["value"][i]:
                         raise properties.ValidationError(
-                            "Mismatched shape of n. Expected {}, len(nodes[{}]), "
+                            "Mismatched shape of n. Expected {}, len(node_list[{}]), "
                             "got {}".format(
-                                self.nodes[0].shape[i] - 1, i, change["value"][i]
+                                self.node_list[0].shape[i] - 1, i, change["value"][i]
                             )
                         )
 
-    @properties.validator("x0")
-    def _check_x0(self, change):
+    @properties.validator("origin")
+    def _check_origin(self, change):
         if not (
             not isinstance(change["value"], properties.utils.Sentinel)
             and change["value"] is not None
         ):
-            raise Exception("n must be set prior to setting x0")
+            raise Exception("n must be set prior to setting origin")
 
         if len(self._n) != len(change["value"]):
             raise Exception(
-                "Dimension mismatch. x0 has length {} != len(n) which is "
-                "{}".format(len(self.x0), len(self._n))
+                "Dimension mismatch. origin has length {} != len(n) which is "
+                "{}".format(len(self.origin), len(self._n))
             )
 
     @property
@@ -251,7 +269,7 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         return int(np.prod(x + y for x, y in zip(self._n, (1, 1, 0))))
 
     @property
-    def vnE(self):
+    def n_edges_per_direction(self)(self):
         """
         The number of edges in each direction
 
@@ -259,8 +277,12 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
 
         Returns
         -------
-        vnE : tuple
+        n_edges_per_direction : tuple
             [n_edges_x, n_edges_y, n_edges_z], (dim, )
+
+        Notes
+        -----
+        Also accessible as `vnE`.
 
         Examples
         --------
@@ -270,11 +292,6 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         >>> M = discretize.TensorMesh([np.ones(n) for n in [2,3]])
         >>> M.plot_grid(edges=True, show_it=True)
         """
-        warnings.warn(
-            "The vnE property will be removed in version 1.0.0 of discretize. "
-            "please access the n_edges_x, n_edges_y, n_edges_z directly if needed.",
-            FutureWarning,
-        )
         return tuple(
             x for x in [self.n_edges_x, self.n_edges_y, self.n_edges_z] if x is not None
         )
@@ -371,13 +388,17 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         return int(np.prod(x + y for x, y in zip(self._n, (0, 0, 1))))
 
     @property
-    def vnF(self):
+    def n_faces_per_direction(self):
         """The number of faces in each direction
 
         Returns
         -------
-        vnF : tuple
+        n_faces_per_direction : tuple
             [n_faces_x, n_faces_y, n_faces_z], (dim, )
+
+        Notes
+        -----
+        Also accessible as `vnF`.
 
         Examples
         --------
@@ -387,11 +408,6 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         >>> M = discretize.TensorMesh([np.ones(n) for n in [2,3]])
         >>> M.plot_grid(faces=True, show_it=True)
         """
-        warnings.warn(
-            "The vnF property will be removed in version 1.0.0 of discretize. "
-            "please access the n_faces_x, n_faces_y, n_faces_z directly if needed.",
-            FutureWarning,
-        )
         return tuple(
             x for x in [self.n_faces_x, self.n_faces_y, self.n_faces_z] if x is not None
         )
@@ -488,7 +504,7 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
             ]
             return np.r_[tX, tY, tZ]
 
-    def project_face_vector(self, fV):
+    def project_face_vector(self, face_vector):
         """
         Project vectors onto the faces of the mesh.
 
@@ -499,7 +515,7 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
 
         Parameters
         ----------
-        fV : numpy.ndarray
+        face_vector : numpy.ndarray
             Vector with shape (n_faces, dim)
 
         Returns
@@ -508,17 +524,17 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
             projected face vector, (n_faces, )
 
         """
-        if not isinstance(fV, np.ndarray):
-            raise Exception("fV must be an ndarray")
+        if not isinstance(face_vector, np.ndarray):
+            raise Exception("face_vector must be an ndarray")
         if not (
-            len(fV.shape) == 2
-            and fV.shape[0] == self.n_faces
-            and fV.shape[1] == self.dim
+            len(face_vector.shape) == 2
+            and face_vector.shape[0] == self.n_faces
+            and face_vector.shape[1] == self.dim
         ):
-            raise Exception("fV must be an ndarray of shape (n_faces x dim)")
-        return np.sum(fV * self.face_normals, 1)
+            raise Exception("face_vector must be an ndarray of shape (n_faces x dim)")
+        return np.sum(face_vector * self.face_normals, 1)
 
-    def project_edge_vector(self, eV):
+    def project_edge_vector(self, edge_vector):
         """
         Project vectors onto the edges of the mesh.
 
@@ -529,7 +545,7 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
 
         Parameters
         ----------
-        eV : numpy.ndarray
+        edge_vector : numpy.ndarray
             edge vector with shape (n_edges, dim)
 
         Returns
@@ -538,17 +554,17 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
             projected edge vector, (n_edges, )
 
         """
-        if not isinstance(eV, np.ndarray):
-            raise Exception("eV must be an ndarray")
+        if not isinstance(edge_vector, np.ndarray):
+            raise Exception("edge_vector must be an ndarray")
         if not (
-            len(eV.shape) == 2
-            and eV.shape[0] == self.n_edges
-            and eV.shape[1] == self.dim
+            len(edge_vector.shape) == 2
+            and edge_vector.shape[0] == self.n_edges
+            and edge_vector.shape[1] == self.dim
         ):
-            raise Exception("eV must be an ndarray of shape (nE x dim)")
-        return np.sum(eV * self.edge_tangents, 1)
+            raise Exception("edge_vector must be an ndarray of shape (nE x dim)")
+        return np.sum(edge_vector * self.edge_tangents, 1)
 
-    def save(self, filename="mesh.json", verbose=False):
+    def save(self, file_name="mesh.json", verbose=False, **kwargs):
         """
         Save the mesh to json file
         
@@ -560,7 +576,14 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
             Print file path of saved file
         """
 
-        f = os.path.abspath(filename)  # make sure we are working with abs path
+        if 'filename' in kwargs:
+            file_name = kwargs['filename']
+            warnings.warn(
+                "The filename keyword argument has been deprecated, please use file_name. "
+                "This will be removed in discretize 1.0.0",
+                FutureWarning,
+            )
+        f = os.path.abspath(file_name)  # make sure we are working with abs path
         with open(f, "w") as outfile:
             json.dump(self.serialize(), outfile)
 
@@ -594,10 +617,11 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
     @properties.validator
     def _validate_orientation(self):
         """Check if axes are orthogonal"""
+        tol = 1E-6
         if not (
-            np.abs(self.axis_u.dot(self.axis_v) < 1e-6)
-            and np.abs(self.axis_v.dot(self.axis_w) < 1e-6)
-            and np.abs(self.axis_w.dot(self.axis_u) < 1e-6)
+            np.abs(self.axis_u.dot(self.axis_v) < tol)
+            and np.abs(self.axis_v.dot(self.axis_w) < tol)
+            and np.abs(self.axis_w.dot(self.axis_u) < tol)
         ):
             raise ValueError("axis_u, axis_v, and axis_w must be orthogonal")
         return True
@@ -690,6 +714,30 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
             )
         return True
 
+    def _parse_location_type(self, location_type):
+        if len(location_type) == 0:
+            return location_type
+        elif location_type[0] == "F":
+            if len(location_type) > 1:
+                return "faces_"+ location_type[-1]
+            else:
+                return "faces"
+        elif location_type[0] == "E":
+            if len(location_type) > 1:
+                return "edges_" + location_type[-1]
+            else:
+                return "edges"
+        elif location_type[0] == "N":
+            return "nodes"
+        elif location_type[0] == "C":
+            if len(location_type) > 2:
+                return "cell_centers_" + location_type[-1]
+            else:
+                return "cell_centers"
+        else:
+            return location_type
+
+
     # DEPRECATED
     normals = deprecate_property("face_normals", "normals", removal_version="1.0.0")
     tangents = deprecate_property("edge_tangents", "tangents", removal_version="1.0.0")
@@ -720,8 +768,8 @@ class BaseRectangularMesh(BaseMesh):
         },
     }
 
-    def __init__(self, n=None, x0=None, **kwargs):
-        BaseMesh.__init__(self, n=n, x0=x0, **kwargs)
+    def __init__(self, n=None, origin=None, **kwargs):
+        BaseMesh.__init__(self, n=n, origin=origin, **kwargs)
 
     @property
     def shape_cells(self):
@@ -900,7 +948,7 @@ class BaseRectangularMesh(BaseMesh):
             return
         return int(np.prod(self.shape_faces_z))
 
-    def reshape(self, x, x_type="CC", out_type="CC", format="V", **kwargs):
+    def reshape(self, x, x_type="cell_centers", out_type="cell_centers", format="V", **kwargs):
         """A quick reshape command that will do the best it
         can at giving you what you want.
 
@@ -956,18 +1004,19 @@ class BaseRectangularMesh(BaseMesh):
             )
             out_type = kwargs["outType"]
 
-        allowed_x_type = ["CC", "N", "F", "Fx", "Fy", "Fz", "E", "Ex", "Ey", "Ez"]
+        x_type = self._parse_location_type(x_type)
+        out_type = self._parse_location_type(out_type)
+
+        allowed_x_type = ["cell_centers", "nodes", "faces", "faces_x", "faces_y", "faces_z", "edges", "edges_x", "edges_y", "edges_z"]
         if not (isinstance(x, list) or isinstance(x, np.ndarray)):
             raise Exception("x must be either a list or a ndarray")
         if x_type not in allowed_x_type:
             raise Exception(
-                "x_type must be either "
-                "'CC', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', or 'Ez'"
+                "x_type must be either '" + "', '".join(allowed_x_type) + "'"
             )
         if out_type not in allowed_x_type:
             raise Exception(
-                "out_type must be either "
-                "'CC', 'N', 'F', Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', or 'Ez'"
+                "out_type must be either '" + "', '".join(allowed_x_type) + "'"
             )
         if format not in ["M", "V"]:
             raise Exception("format must be either 'M' or 'V'")
@@ -994,7 +1043,7 @@ class BaseRectangularMesh(BaseMesh):
 
         x = x[:]  # make a copy.
         x_type_is_FE_xyz = (
-            len(x_type) > 1 and x_type[0] in ["F", "E"] and x_type[1] in ["x", "y", "z"]
+            len(x_type) > 1 and x_type[0] in ["f", "e"] and x_type[-1] in ["x", "y", "z"]
         )
 
         def outKernal(xx, nn):
@@ -1006,32 +1055,32 @@ class BaseRectangularMesh(BaseMesh):
 
         def switchKernal(xx):
             """Switches over the different options."""
-            if x_type in ["CC", "N"]:
-                nn = self.shape_cells if x_type == "CC" else self.shape_nodes
+            if x_type in ["cell_centers", "nodes"]:
+                nn = self.shape_cells if x_type == "cell_centers" else self.shape_nodes
                 if xx.size != np.prod(nn):
                     raise Exception("Number of elements must not change.")
                 return outKernal(xx, nn)
-            elif x_type in ["F", "E"]:
+            elif x_type in ["faces", "edges"]:
                 # This will only deal with components of fields,
                 # not full 'F' or 'E'
                 xx = mkvc(xx)  # unwrap it in case it is a matrix
-                if x_type == "F":
+                if x_type == "faces":
                     nn = (self.nFx, self.nFy, self.nFz)[: self.dim]
                 else:
                     nn = (self.nEx, self.nEy, self.nEz)[: self.dim]
                 nn = np.r_[0, nn]
 
                 nx = [0, 0, 0]
-                nx[0] = self.shape_faces_x if x_type == "F" else self.shape_edges_x
-                nx[1] = self.shape_faces_y if x_type == "F" else self.shape_edges_y
-                nx[2] = self.shape_faces_z if x_type == "F" else self.shape_edges_z
+                nx[0] = self.shape_faces_x if x_type == "faces" else self.shape_edges_x
+                nx[1] = self.shape_faces_y if x_type == "faces" else self.shape_edges_y
+                nx[2] = self.shape_faces_z if x_type == "faces" else self.shape_edges_z
 
                 for dim, dimName in enumerate(["x", "y", "z"]):
                     if dimName in out_type:
                         if self.dim <= dim:
                             raise Exception(
                                 "Dimensions of mesh not great enough for "
-                                "{}{}".format(x_type, dimName)
+                                "{}_{}".format(x_type, dimName)
                             )
                         if xx.size != np.sum(nn):
                             raise Exception("Vector is not the right size.")
@@ -1043,11 +1092,11 @@ class BaseRectangularMesh(BaseMesh):
                 # This will deal with partial components (x, y or z)
                 # lying on edges or faces
                 if "x" in x_type:
-                    nn = self.shape_faces_x if "F" in x_type else self.shape_edges_x
+                    nn = self.shape_faces_x if "f" in x_type else self.shape_edges_x
                 elif "y" in x_type:
-                    nn = self.shape_faces_y if "F" in x_type else self.shape_edges_y
+                    nn = self.shape_faces_y if "f" in x_type else self.shape_edges_y
                 elif "z" in x_type:
-                    nn = self.shape_faces_z if "F" in x_type else self.shape_edges_z
+                    nn = self.shape_faces_z if "f" in x_type else self.shape_edges_z
                 if xx.size != np.prod(nn):
                     raise Exception(
                         f"Vector is not the right size. Expected {np.prod(nn)}, got {xx.size}"
@@ -1057,13 +1106,13 @@ class BaseRectangularMesh(BaseMesh):
         # Check if we are dealing with a vector quantity
         isVectorQuantity = len(x.shape) == 2 and x.shape[1] == self.dim
 
-        if out_type in ["F", "E"]:
+        if out_type in ["faces", "edges"]:
             if isVectorQuantity:
                 raise Exception("Not sure what to do with a vector vector quantity..")
             outTypeCopy = out_type
             out = ()
             for ii, dirName in enumerate(["x", "y", "z"][: self.dim]):
-                out_type = outTypeCopy + dirName
+                out_type = outTypeCopy + "_" + dirName
                 out += (switchKernal(x),)
             return out
         elif isVectorQuantity:

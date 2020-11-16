@@ -946,11 +946,11 @@ class InterfaceMPL(object):
         if self.dim == 1:
             if v_type == "CC":
                 ph = ax.plot(
-                    self.grid_cell_centers_x, v, linestyle="-", color="C1", marker="o"
+                    self.cell_centers_x, v, linestyle="-", color="C1", marker="o"
                 )
             elif v_type == "N":
                 ph = ax.plot(
-                    self.grid_nodes_x, v, linestyle="-", color="C0", marker="s"
+                    self.nodes_x, v, linestyle="-", color="C0", marker="s"
                 )
             ax.set_xlabel("x")
             ax.axis("tight")
@@ -1012,8 +1012,8 @@ class InterfaceMPL(object):
 
             ph = ax.pcolormesh(xx, yy, C.T, **pcolor_opts)
             # Plot the lines
-            gx = np.arange(nX + 1) * (self.grid_nodes_x[-1] - self.x0[0])
-            gy = np.arange(nY + 1) * (self.grid_nodes_y[-1] - self.x0[1])
+            gx = np.arange(nX + 1) * (self.nodes_x[-1] - self.origin[0])
+            gy = np.arange(nY + 1) * (self.nodes_y[-1] - self.origin[1])
             # Repeat and seperate with NaN
             gxX = np.c_[gx, gx, gx + np.nan].ravel()
             gxY = np.kron(
@@ -1034,8 +1034,8 @@ class InterfaceMPL(object):
                         iz = ix + iy * nX
                         if iz < nCz:
                             ax.text(
-                                (ix + 1) * (self.grid_nodes_x[-1] - self.x0[0]) - pad,
-                                (iy) * (self.grid_nodes_y[-1] - self.x0[1]) + pad,
+                                (ix + 1) * (self.nodes_x[-1] - self.origin[0]) - pad,
+                                (iy) * (self.nodes_y[-1] - self.origin[1]) + pad,
                                 "#{0:.0f}".format(iz),
                                 color=annotation_color,
                                 verticalalignment="bottom",
@@ -1093,8 +1093,8 @@ class InterfaceMPL(object):
             v = np.ma.masked_where(np.isnan(v), v)
             out += (
                 ax.pcolormesh(
-                    self.grid_nodes_x,
-                    self.grid_nodes_y,
+                    self.nodes_x,
+                    self.nodes_y,
                     v.T,
                     **{**pcolor_opts, **grid_opts},
                 ),
@@ -1115,41 +1115,39 @@ class InterfaceMPL(object):
                 dx = range_x[1] - range_x[0]
                 nxi = int(dx / hxmin)
                 hx = np.ones(nxi) * dx / nxi
-                x0_x = range_x[0]
+                origin_x = range_x[0]
             else:
                 nxi = int(self.h[0].sum() / hxmin)
                 hx = np.ones(nxi) * self.h[0].sum() / nxi
-                x0_x = self.x0[0]
+                origin_x = self.origin[0]
 
             if range_y is not None:
                 dy = range_y[1] - range_y[0]
                 nyi = int(dy / hymin)
                 hy = np.ones(nyi) * dy / nyi
-                x0_y = range_y[0]
+                origin_y = range_y[0]
             else:
                 nyi = int(self.h[1].sum() / hymin)
                 hy = np.ones(nyi) * self.h[1].sum() / nyi
-                x0_y = self.x0[1]
+                origin_y = self.origin[1]
 
             U, V = self.reshape(v.reshape((self.nC, -1), order="F"), "CC", "CC", "M")
 
-            tMi = self.__class__(h=[hx, hy], x0=np.r_[x0_x, x0_y])
+            tMi = self.__class__(h=[hx, hy], origin=np.r_[origin_x, origin_y])
             P = self.get_interpolation_matrix(tMi.gridCC, "CC", zerosOutside=True)
 
             Ui = tMi.reshape(P * mkvc(U), "CC", "CC", "M")
             Vi = tMi.reshape(P * mkvc(V), "CC", "CC", "M")
             # End Interpolation
 
-            x = self.grid_nodes_x
-            y = self.grid_nodes_y
+            x = self.nodes_x
+            y = self.nodes_y
 
-            ind_CCx = np.ones(self.vnC, dtype=bool)
-            ind_CCy = np.ones(self.vnC, dtype=bool)
             if range_x is not None:
-                x = tMi.grid_nodes_x
+                x = tMi.nodes_x
 
             if range_y is not None:
-                y = tMi.grid_nodes_y
+                y = tMi.nodes_y
 
             if range_x is not None or range_y is not None:  # use interpolated values
                 U = Ui
@@ -1198,8 +1196,8 @@ class InterfaceMPL(object):
             )
             out += (
                 ax.streamplot(
-                    tMi.grid_cell_centers_x,
-                    tMi.grid_cell_centers_y,
+                    tMi.cell_centers_x,
+                    tMi.cell_centers_y,
                     Ui.T,
                     Vi.T,
                     **stream_opts,
@@ -1212,12 +1210,12 @@ class InterfaceMPL(object):
         if range_x is not None:
             ax.set_xlim(*range_x)
         else:
-            ax.set_xlim(*self.grid_nodes_x[[0, -1]])
+            ax.set_xlim(*self.nodes_x[[0, -1]])
 
         if range_y is not None:
             ax.set_ylim(*range_y)
         else:
-            ax.set_ylim(*self.grid_nodes_y[[0, -1]])
+            ax.set_ylim(*self.nodes_y[[0, -1]])
         return out
 
     def __plot_slice_tensor(
@@ -1288,14 +1286,14 @@ class InterfaceMPL(object):
         x2d = []
         if "X" not in normal:
             h2d.append(self.h[0])
-            x2d.append(self.x0[0])
+            x2d.append(self.origin[0])
         if "Y" not in normal:
             h2d.append(self.h[1])
-            x2d.append(self.x0[1])
+            x2d.append(self.origin[1])
         if "Z" not in normal:
             h2d.append(self.h[2])
-            x2d.append(self.x0[2])
-        tM = self.__class__(h=h2d, x0=x2d)  #: Temp Mesh
+            x2d.append(self.origin[2])
+        tM = self.__class__(h=h2d, origin=x2d)  #: Temp Mesh
         v2d = doSlice(v)
 
         out = tM.__plot_image_tensor2D(
@@ -1352,8 +1350,8 @@ class InterfaceMPL(object):
         if mirror:
             # create a mirrored mesh
             hx = np.hstack([np.flipud(self.h[0]), self.h[0]])
-            x00 = self.x0[0] - self.h[0].sum()
-            M = discretize.TensorMesh([hx, self.h[2]], x0=[x00, self.x0[2]])
+            origin0 = self.origin[0] - self.h[0].sum()
+            M = discretize.TensorMesh([hx, self.h[2]], origin=[origin0, self.origin[2]])
 
             if mirror_data is None:
                 mirror_data = val
@@ -1384,7 +1382,7 @@ class InterfaceMPL(object):
             args = (val,) + args[1:]
         else:
             M = discretize.TensorMesh(
-                [self.h[0], self.h[2]], x0=[self.x0[0], self.x0[2]]
+                [self.h[0], self.h[2]], origin=[self.origin[0], self.origin[2]]
             )
 
         ax = kwargs.get("ax", None)
@@ -1478,7 +1476,7 @@ class InterfaceMPL(object):
     def __plotGridThetaSlice(self, *args, **kwargs):
         # make a cyl symmetric mesh
         h2d = [self.h[0], 1, self.h[2]]
-        mesh2D = self.__class__(h=h2d, x0=self.x0)
+        mesh2D = self.__class__(h=h2d, origin=self.origin)
         return mesh2D.plot_grid(*args, **kwargs)
 
     def __plotGridZSlice(self, *args, **kwargs):
@@ -1501,7 +1499,7 @@ class InterfaceMPL(object):
             ax = plt.subplot(111, projection="polar")
 
         # radial lines
-        NN = ndgrid(self.grid_nodes_x, self.grid_nodes_y, np.r_[0])[:, :2]
+        NN = ndgrid(self.nodes_x, self.nodes_y, np.r_[0])[:, :2]
         NN = NN.reshape((self.vnN[0], self.vnN[1], 2), order="F")
         NN = [NN[:, :, 0], NN[:, :, 1]]
         X1 = np.c_[
@@ -1529,7 +1527,7 @@ class InterfaceMPL(object):
                 color=color,
                 lw=linewidth,
             )
-            for r in self.grid_nodes_x
+            for r in self.nodes_x
         ]
 
         return ax
@@ -1688,7 +1686,7 @@ class InterfaceMPL(object):
                 ind_xy
             ]  # average to cell centers
         I = np.ma.masked_where(np.isnan(I), I)
-        X, Y = (x.T for x in self.nodes)
+        X, Y = (x.T for x in self.node_list)
         out = ax.pcolormesh(
             X,
             Y,
@@ -1728,7 +1726,7 @@ class InterfaceMPL(object):
             if self.dim == 3:
                 edges_z = True
         if lines or nodes:
-            grid_n_full = np.r_[self.grid_nodes, self.grid_hanging_nodes]
+            grid_n_full = np.r_[self.nodes, self.hanging_nodes]
         if nodes:
             ax.plot(*grid_n_full.T, color="C0", marker="s", linestyle="")
             # Hanging Nodes
@@ -1742,12 +1740,12 @@ class InterfaceMPL(object):
                 markeredgecolor="C0",
             )
         if centers:
-            ax.plot(*self.grid_cell_centers.T, color="C1", marker="o", linestyle="")
+            ax.plot(*self.cell_centers.T, color="C1", marker="o", linestyle="")
         if cell_line:
-            ax.plot(*self.grid_cell_centers.T, color="C1", linestyle=":")
+            ax.plot(*self.cell_centers.T, color="C1", linestyle=":")
             ax.plot(
-                self.grid_cell_centers[[0, -1], 0],
-                self.grid_cell_centers[[0, -1], 1],
+                self.cell_centers[[0, -1], 0],
+                self.cell_centers[[0, -1], 1],
                 color="C1",
                 marker="o",
                 linestyle="",
@@ -1757,14 +1755,14 @@ class InterfaceMPL(object):
 
         if faces_x:
             ax.plot(
-                *np.r_[self.grid_faces_x, self.grid_hanging_faces_x].T,
+                *np.r_[self.faces_x, self.hanging_faces_x].T,
                 color="C2",
                 marker=">",
                 linestyle="",
             )
             # Hanging Faces x
             ax.plot(
-                *self.grid_hanging_faces_x.T,
+                *self.hanging_faces_x.T,
                 color="C2",
                 marker="s",
                 linestyle="",
@@ -1774,14 +1772,14 @@ class InterfaceMPL(object):
             )
         if faces_y:
             ax.plot(
-                *np.r_[self.grid_faces_y, self.grid_hanging_faces_y].T,
+                *np.r_[self.faces_y, self.hanging_faces_y].T,
                 color="C2",
                 marker=y_mark,
                 linestyle="",
             )
             # Hanging Faces y
             ax.plot(
-                *self.grid_hanging_faces_y.T,
+                *self.hanging_faces_y.T,
                 color="C2",
                 marker="s",
                 linestyle="",
@@ -1791,14 +1789,14 @@ class InterfaceMPL(object):
             )
         if faces_z:
             ax.plot(
-                *np.r_[self.grid_faces_z, self.grid_hanging_faces_z].T,
+                *np.r_[self.faces_z, self.hanging_faces_z].T,
                 color="C2",
                 marker="^",
                 linestyle="",
             )
             # Hangin Faces z
             ax.plot(
-                *self.grid_hanging_faces_z.T,
+                *self.hanging_faces_z.T,
                 color="C2",
                 marker="s",
                 linestyle="",
@@ -1808,14 +1806,14 @@ class InterfaceMPL(object):
             )
         if edges_x:
             ax.plot(
-                *np.r_[self.grid_edges_x, self.grid_hanging_edges_x].T,
+                *np.r_[self.edges_x, self.hanging_edges_x].T,
                 color="C3",
                 marker=">",
                 linestyle="",
             )
             # Hanging Edges x
             ax.plot(
-                *self.grid_hanging_edges_x.T,
+                *self.hanging_edges_x.T,
                 color="C3",
                 marker="s",
                 linestyle="",
@@ -1825,14 +1823,14 @@ class InterfaceMPL(object):
             )
         if edges_y:
             ax.plot(
-                *np.r_[self.grid_edges_y, self.grid_hanging_edges_y].T,
+                *np.r_[self.edges_y, self.hanging_edges_y].T,
                 color="C3",
                 marker=y_mark,
                 linestyle="",
             )
             # Hanging Edges y
             ax.plot(
-                *self.grid_hanging_edges_y.T,
+                *self.hanging_edges_y.T,
                 color="C3",
                 marker="s",
                 linestyle="",
@@ -1842,14 +1840,14 @@ class InterfaceMPL(object):
             )
         if edges_z:
             ax.plot(
-                *np.r_[self.grid_edges_z, self.grid_hanging_edges_z].T,
+                *np.r_[self.edges_z, self.hanging_edges_z].T,
                 color="C3",
                 marker="^",
                 linestyle="",
             )
             # Hanging Edges z
             ax.plot(
-                *self.grid_hanging_edges_z.T,
+                *self.hanging_edges_z.T,
                 color="C3",
                 marker="s",
                 linestyle="",
@@ -1925,7 +1923,7 @@ class InterfaceMPL(object):
         shading = pcolor_opts.pop("shading", "flat")
         antialiased = pcolor_opts.pop("antialiased", False)
 
-        node_grid = np.r_[self.grid_nodes, self.grid_hanging_nodes]
+        node_grid = np.r_[self.nodes, self.hanging_nodes]
         cell_nodes = self.cell_nodes[:, (0, 1, 3, 2)]
         cell_verts = node_grid[cell_nodes]
 
@@ -1950,12 +1948,12 @@ class InterfaceMPL(object):
         if range_x is not None:
             minx, maxx = range_x
         else:
-            minx, maxx = self.grid_nodes_x[[0, -1]]
+            minx, maxx = self.nodes_x[[0, -1]]
 
         if range_y is not None:
             miny, maxy = range_x
         else:
-            miny, maxy = self.grid_nodes_y[[0, -1]]
+            miny, maxy = self.nodes_y[[0, -1]]
 
         collection.sticky_edges.x[:] = [minx, maxx]
         collection.sticky_edges.y[:] = [miny, maxy]
@@ -1989,7 +1987,7 @@ class InterfaceMPL(object):
         antiNormalInd = {"X": [1, 2], "Y": [0, 2], "Z": [0, 1]}[normal]
 
         h2d = (self.h[antiNormalInd[0]], self.h[antiNormalInd[1]])
-        x2d = (self.x0[antiNormalInd[0]], self.x0[antiNormalInd[1]])
+        x2d = (self.origin[antiNormalInd[0]], self.origin[antiNormalInd[1]])
 
         #: Size of the sliced dimension
         szSliceDim = len(self.h[normalInd])
@@ -1998,7 +1996,7 @@ class InterfaceMPL(object):
 
         cc_tensor = [None, None, None]
         for i in range(3):
-            cc_tensor[i] = np.cumsum(np.r_[self.x0[i], self.h[i]])
+            cc_tensor[i] = np.cumsum(np.r_[self.origin[i], self.h[i]])
             cc_tensor[i] = (cc_tensor[i][1:] + cc_tensor[i][:-1]) * 0.5
         slice_loc = cc_tensor[normalInd][ind]
 
@@ -2219,12 +2217,12 @@ class Slicer(object):
         self.v = np.ma.masked_where(np.isnan(self.v), self.v)
 
         # Store relevant information from mesh in self
-        self.x = mesh.grid_nodes_x  # x-node locations
-        self.y = mesh.grid_nodes_y  # y-node locations
-        self.z = mesh.grid_nodes_z  # z-node locations
-        self.xc = mesh.grid_cell_centers_x  # x-cell center locations
-        self.yc = mesh.grid_cell_centers_y  # y-cell center locations
-        self.zc = mesh.grid_cell_centers_z  # z-cell center locations
+        self.x = mesh.nodes_x  # x-node locations
+        self.y = mesh.nodes_y  # y-node locations
+        self.z = mesh.nodes_z  # z-node locations
+        self.xc = mesh.cell_centers_x  # x-cell center locations
+        self.yc = mesh.cell_centers_y  # y-cell center locations
+        self.zc = mesh.cell_centers_z  # z-cell center locations
 
         # Axis: Default ('xy'): horizontal axis is x, vertical axis is y.
         # Reversed otherwise.

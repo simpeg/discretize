@@ -24,7 +24,7 @@ cdef class TreeCell:
 
     Notes
     -----
-    When called as part of the `refine` function, only the x0, center, and h
+    When called as part of the `refine` function, only the origin, center, and h
     properties are valid.
     """
     cdef double _x, _y, _z, _x0, _y0, _z0, _wx, _wy, _wz
@@ -110,10 +110,14 @@ cdef class TreeCell:
         return np.array([self._x, self._y, self._z])
 
     @property
-    def x0(self):
+    def origin(self):
         """numpy.array of length dim"""
         if self._dim == 2: return np.array([self._x0, self._y0])
         return np.array([self._x0, self._y0, self._z0])
+
+    @property
+    def x0(self):
+        return self.origin
 
     @property
     def h(self):
@@ -227,21 +231,21 @@ cdef class _TreeMesh:
     cdef int _finalized
 
     cdef double[:] _xs, _ys, _zs
-    cdef double[:] _x0
+    cdef double[:] _origin
 
-    cdef object _gridCC, _gridN, _gridhN
-    cdef object _gridEx, _gridEy, _gridEz, _gridhEx, _gridhEy, _gridhEz
-    cdef object _gridFx, _gridFy, _gridFz, _gridhFx, _gridhFy, _gridhFz
+    cdef object _cell_centers, _nodes, _hanging_nodes
+    cdef object _edges_x, _edges_y, _edges_z, _hanging_edges_x, _hanging_edges_y, _hanging_edges_z
+    cdef object _faces_x, _faces_y, _faces_z, _hanging_faces_x, _hanging_faces_y, _hanging_faces_z
 
     cdef object _h_gridded
-    cdef object _vol, _area, _edge
-    cdef object _aveFx2CC, _aveFy2CC, _aveFz2CC, _aveF2CC, _aveF2CCV,
-    cdef object _aveN2CC, _aveN2E, _aveN2Ex, _aveN2Ey, _aveN2Ez
-    cdef object _aveN2F, _aveN2Fx, _aveN2Fy, _aveN2Fz
-    cdef object _aveEx2CC, _aveEy2CC, _aveEz2CC,_aveE2CC,_aveE2CCV
-    cdef object _aveCC2F, _aveCCV2F, _aveCC2Fx, _aveCC2Fy, _aveCC2Fz
-    cdef object _faceDiv
-    cdef object _edgeCurl, _nodalGrad
+    cdef object _cell_volumes, _face_areas, _edge_lengths
+    cdef object _average_face_x_to_cell, _average_face_y_to_cell, _average_face_z_to_cell, _average_face_to_cell, _average_face_to_cell_vector,
+    cdef object _average_node_to_cell, _average_node_to_edge, _average_node_to_edge_x, _average_node_to_edge_y, _average_node_to_edge_z
+    cdef object _average_node_to_face, _average_node_to_face_x, _average_node_to_face_y, _average_node_to_face_z
+    cdef object _average_edge_x_to_cell, _average_edge_y_to_cell, _average_edge_z_to_cell, _average_edge_to_cell, _average_edge_to_cell_vector
+    cdef object _average_cell_to_face, _average_cell_vector_to_face, _average_cell_to_face_x, _average_cell_to_face_y, _average_cell_to_face_z
+    cdef object _face_divergence
+    cdef object _edge_curl, _nodal_gradient
 
     cdef object __ubc_order, __ubc_indArr
 
@@ -249,20 +253,20 @@ cdef class _TreeMesh:
         self.wrapper = new PyWrapper()
         self.tree = new c_Tree()
 
-    def __init__(self, h, x0):
+    def __init__(self, h, origin):
         nx2 = 2*len(h[0])
         ny2 = 2*len(h[1])
-        self._dim = len(x0)
-        self._x0 = x0
+        self._dim = len(origin)
+        self._origin = origin
 
         xs = np.empty(nx2 + 1, dtype=float)
-        xs[::2] = np.cumsum(np.r_[x0[0], h[0]])
+        xs[::2] = np.cumsum(np.r_[origin[0], h[0]])
         xs[1::2] = (xs[:-1:2] + xs[2::2])/2
         self._xs = xs
         self.ls[0] = int(np.log2(len(h[0])))
 
         ys = np.empty(ny2 + 1, dtype=float)
-        ys[::2] = np.cumsum(np.r_[x0[1],h[1]])
+        ys[::2] = np.cumsum(np.r_[origin[1],h[1]])
         ys[1::2] = (ys[:-1:2] + ys[2::2])/2
         self._ys = ys
         self.ls[1] = int(np.log2(len(h[1])))
@@ -271,7 +275,7 @@ cdef class _TreeMesh:
             nz2 = 2*len(h[2])
 
             zs = np.empty(nz2 + 1, dtype=float)
-            zs[::2] = np.cumsum(np.r_[x0[2],h[2]])
+            zs[::2] = np.cumsum(np.r_[origin[2],h[2]])
             zs[1::2] = (zs[:-1:2] + zs[2::2])/2
             self._zs = zs
             self.ls[2] = int(np.log2(len(h[2])))
@@ -287,59 +291,59 @@ cdef class _TreeMesh:
         self._clear_cache()
 
     def _clear_cache(self):
-        self._gridCC = None
-        self._gridN = None
-        self._gridhN = None
+        self._cell_centers = None
+        self._nodes = None
+        self._hanging_nodes = None
         self._h_gridded = None
 
-        self._gridEx = None
-        self._gridEy = None
-        self._gridEz = None
-        self._gridhEx = None
-        self._gridhEy = None
-        self._gridhEz = None
+        self._edges_x = None
+        self._edges_y = None
+        self._edges_z = None
+        self._hanging_edges_x = None
+        self._hanging_edges_y = None
+        self._hanging_edges_z = None
 
-        self._gridFx = None
-        self._gridFy = None
-        self._gridFz = None
-        self._gridhFx = None
-        self._gridhFy = None
-        self._gridhFz = None
+        self._faces_x = None
+        self._faces_y = None
+        self._faces_z = None
+        self._hanging_faces_x = None
+        self._hanging_faces_y = None
+        self._hanging_faces_z = None
 
-        self._vol = None
-        self._area = None
-        self._edge = None
+        self._cell_volumes = None
+        self._face_areas = None
+        self._edge_lengths = None
 
-        self._aveCC2F = None
-        self._aveCC2Fx = None
-        self._aveCC2Fy = None
-        self._aveCC2Fz = None
+        self._average_cell_to_face = None
+        self._average_cell_to_face_x = None
+        self._average_cell_to_face_y = None
+        self._average_cell_to_face_z = None
 
-        self._aveFx2CC = None
-        self._aveFy2CC = None
-        self._aveFz2CC = None
-        self._aveF2CC = None
-        self._aveF2CCV = None
+        self._average_face_x_to_cell = None
+        self._average_face_y_to_cell = None
+        self._average_face_z_to_cell = None
+        self._average_face_to_cell = None
+        self._average_face_to_cell_vector = None
 
-        self._aveEx2CC = None
-        self._aveEy2CC = None
-        self._aveEz2CC = None
-        self._aveE2CC = None
-        self._aveE2CCV = None
+        self._average_edge_x_to_cell = None
+        self._average_edge_y_to_cell = None
+        self._average_edge_z_to_cell = None
+        self._average_edge_to_cell = None
+        self._average_edge_to_cell_vector = None
 
-        self._aveN2CC = None
-        self._aveN2E = None
-        self._aveN2F = None
-        self._aveN2Ex = None
-        self._aveN2Ey = None
-        self._aveN2Ez = None
-        self._aveN2Fx = None
-        self._aveN2Fy = None
-        self._aveN2Fz = None
+        self._average_node_to_cell = None
+        self._average_node_to_edge = None
+        self._average_node_to_face = None
+        self._average_node_to_edge_x = None
+        self._average_node_to_edge_y = None
+        self._average_node_to_edge_z = None
+        self._average_node_to_face_x = None
+        self._average_node_to_face_y = None
+        self._average_node_to_face_z = None
 
-        self._faceDiv = None
-        self._nodalGrad = None
-        self._edgeCurl = None
+        self._face_divergence = None
+        self._nodal_gradient = None
+        self._edge_curl = None
 
         self.__ubc_order = None
         self.__ubc_indArr = None
@@ -371,8 +375,7 @@ cdef class _TreeMesh:
         >>> mesh.refine(func)
         >>> mesh
         ---- QuadTreeMesh ----
-         x0: 0.00
-         y0: 0.00
+         origin: 0.00, 0.00
          hx: 32*0.03,
          hy: 32*0.03,
         n_cells: 352
@@ -414,8 +417,7 @@ cdef class _TreeMesh:
         >>> mesh.insert_cells([0.5, 0.5], mesh.max_level)
         >>> print(mesh)
         ---- QuadTreeMesh ----
-         x0: 0.00
-         y0: 0.00
+         origin: 0.00, 0.00
          hx: 32*0.03,
          hy: 32*0.03,
         n_cells: 40
@@ -446,11 +448,11 @@ cdef class _TreeMesh:
         """Number the cells, nodes, faces, and edges of the TreeMesh"""
         self.tree.number()
 
-    def _set_x0(self, x0):
-        if not isinstance(x0, (list, tuple, np.ndarray)):
-            raise ValueError('x0 must be a list, tuple or numpy array')
-        self._x0 = np.asarray(x0, dtype=np.float64)
-        cdef int_t dim = self._x0.shape[0]
+    def _set_origin(self, origin):
+        if not isinstance(origin, (list, tuple, np.ndarray)):
+            raise ValueError('origin must be a list, tuple or numpy array')
+        self._origin = np.asarray(origin, dtype=np.float64)
+        cdef int_t dim = self._origin.shape[0]
         cdef double[:] shift
         #cdef c_Cell *cell
         cdef Node *node
@@ -459,10 +461,10 @@ cdef class _TreeMesh:
         if self.tree.n_dim > 0: # Will only happen if __init__ has been called
             shift = np.empty(dim, dtype=np.float64)
 
-            shift[0] = self._x0[0] - self._xs[0]
-            shift[1] = self._x0[1] - self._ys[0]
+            shift[0] = self._origin[0] - self._xs[0]
+            shift[1] = self._origin[1] - self._ys[0]
             if dim == 3:
-                shift[2] = self._x0[2] - self._zs[0]
+                shift[2] = self._origin[2] - self._zs[0]
 
             for i in range(self._xs.shape[0]):
                 self._xs[i] += shift[0]
@@ -511,21 +513,21 @@ cdef class _TreeMesh:
                     for i in range(dim):
                         face.location[i] += shift[i]
             #clear out all cached grids
-            self._gridCC = None
-            self._gridN = None
-            self._gridhN = None
-            self._gridEx = None
-            self._gridhEx = None
-            self._gridEy = None
-            self._gridhEy = None
-            self._gridEz = None
-            self._gridhEz = None
-            self._gridFx = None
-            self._gridhFx = None
-            self._gridFy = None
-            self._gridhFy = None
-            self._gridFz = None
-            self._gridhFz = None
+            self._cell_centers = None
+            self._nodes = None
+            self._hanging_nodes = None
+            self._edges_x = None
+            self._hanging_edges_x = None
+            self._edges_y = None
+            self._hanging_edges_y = None
+            self._edges_z = None
+            self._hanging_edges_z = None
+            self._faces_x = None
+            self._hanging_faces_x = None
+            self._faces_y = None
+            self._hanging_faces_y = None
+            self._faces_z = None
+            self._hanging_faces_z = None
 
     @property
     def fill(self):
@@ -703,25 +705,25 @@ cdef class _TreeMesh:
         return self.tree.hanging_faces_z.size()
 
     @property
-    def grid_cell_centers(self):
+    def cell_centers(self):
         """
         Returns a numpy arrayof shape (n_cells, dim) with the center locations of all cells
         in order.
         """
         cdef np.float64_t[:, :] gridCC
         cdef np.int64_t ii, ind, dim
-        if self._gridCC is None:
+        if self._cell_centers is None:
             dim = self._dim
-            self._gridCC = np.empty((self.n_cells, self._dim), dtype=np.float64)
-            gridCC = self._gridCC
+            self._cell_centers = np.empty((self.n_cells, self._dim), dtype=np.float64)
+            gridCC = self._cell_centers
             for cell in self.tree.cells:
                 ind = cell.index
                 for ii in range(dim):
                     gridCC[ind, ii] = cell.location[ii]
-        return self._gridCC
+        return self._cell_centers
 
     @property
-    def grid_nodes(self):
+    def nodes(self):
         """
         Returns a numpy array of shape (n_nodes, dim) with the locations of all
         non-hanging nodes in order.
@@ -729,20 +731,20 @@ cdef class _TreeMesh:
         cdef np.float64_t[:, :] gridN
         cdef Node *node
         cdef np.int64_t ii, ind, dim
-        if self._gridN is None:
+        if self._nodes is None:
             dim = self._dim
-            self._gridN = np.empty((self.n_nodes, dim) ,dtype=np.float64)
-            gridN = self._gridN
+            self._nodes = np.empty((self.n_nodes, dim) ,dtype=np.float64)
+            gridN = self._nodes
             for it in self.tree.nodes:
                 node = it.second
                 if not node.hanging:
                     ind = node.index
                     for ii in range(dim):
                         gridN[ind, ii] = node.location[ii]
-        return self._gridN
+        return self._nodes
 
     @property
-    def grid_hanging_nodes(self):
+    def hanging_nodes(self):
         """
         Returns a numpy array of shape (n_nodes, dim) with the locations of all
         hanging nodes in order.
@@ -750,15 +752,15 @@ cdef class _TreeMesh:
         cdef np.float64_t[:, :] gridN
         cdef Node *node
         cdef np.int64_t ii, ind, dim
-        if self._gridhN is None:
+        if self._hanging_nodes is None:
             dim = self._dim
-            self._gridhN = np.empty((self.n_hanging_nodes, dim), dtype=np.float64)
-            gridhN = self._gridhN
+            self._hanging_nodes = np.empty((self.n_hanging_nodes, dim), dtype=np.float64)
+            gridhN = self._hanging_nodes
             for node in self.tree.hanging_nodes:
                 ind = node.index-self.n_nodes
                 for ii in range(dim):
                     gridhN[ind, ii] = node.location[ii]
-        return self._gridhN
+        return self._hanging_nodes
 
     @property
     def h_gridded(self):
@@ -782,7 +784,7 @@ cdef class _TreeMesh:
         return self._h_gridded
 
     @property
-    def grid_edges_x(self):
+    def edges_x(self):
         """
         Returns a numpy array of shape (n_edges_x, dim) with the centers of all
         non-hanging edges along the first dimension in order.
@@ -790,20 +792,20 @@ cdef class _TreeMesh:
         cdef np.float64_t[:, :] gridEx
         cdef Edge *edge
         cdef np.int64_t ii, ind, dim
-        if self._gridEx is None:
+        if self._edges_x is None:
             dim = self._dim
-            self._gridEx = np.empty((self.n_edges_x, dim), dtype=np.float64)
-            gridEx = self._gridEx
+            self._edges_x = np.empty((self.n_edges_x, dim), dtype=np.float64)
+            gridEx = self._edges_x
             for it in self.tree.edges_x:
                 edge = it.second
                 if not edge.hanging:
                     ind = edge.index
                     for ii in range(dim):
                         gridEx[ind, ii] = edge.location[ii]
-        return self._gridEx
+        return self._edges_x
 
     @property
-    def grid_hanging_edges_x(self):
+    def hanging_edges_x(self):
         """
         Returns a numpy array of shape (n_hanging_edges_x, dim) with the centers of all
         hanging edges along the first dimension in order.
@@ -811,18 +813,18 @@ cdef class _TreeMesh:
         cdef np.float64_t[:, :] gridhEx
         cdef Edge *edge
         cdef np.int64_t ii, ind, dim
-        if self._gridhEx is None:
+        if self._hanging_edges_x is None:
             dim = self._dim
-            self._gridhEx = np.empty((self.n_hanging_edges_x, dim), dtype=np.float64)
-            gridhEx = self._gridhEx
+            self._hanging_edges_x = np.empty((self.n_hanging_edges_x, dim), dtype=np.float64)
+            gridhEx = self._hanging_edges_x
             for edge in self.tree.hanging_edges_x:
                 ind = edge.index-self.n_edges_x
                 for ii in range(dim):
                     gridhEx[ind, ii] = edge.location[ii]
-        return self._gridhEx
+        return self._hanging_edges_x
 
     @property
-    def grid_edges_y(self):
+    def edges_y(self):
         """
         Returns a numpy array of shape (n_edges_y, dim) with the centers of all
         non-hanging edges along the second dimension in order.
@@ -830,20 +832,20 @@ cdef class _TreeMesh:
         cdef np.float64_t[:, :] gridEy
         cdef Edge *edge
         cdef np.int64_t ii, ind, dim
-        if self._gridEy is None:
+        if self._edges_y is None:
             dim = self._dim
-            self._gridEy = np.empty((self.n_edges_y, dim), dtype=np.float64)
-            gridEy = self._gridEy
+            self._edges_y = np.empty((self.n_edges_y, dim), dtype=np.float64)
+            gridEy = self._edges_y
             for it in self.tree.edges_y:
                 edge = it.second
                 if not edge.hanging:
                     ind = edge.index
                     for ii in range(dim):
                         gridEy[ind, ii] = edge.location[ii]
-        return self._gridEy
+        return self._edges_y
 
     @property
-    def grid_hanging_edges_y(self):
+    def hanging_edges_y(self):
         """
         Returns a numpy array of shape (n_hanging_edges_y, dim) with the centers of all
         hanging edges along the second dimension in order.
@@ -851,18 +853,18 @@ cdef class _TreeMesh:
         cdef np.float64_t[:, :] gridhEy
         cdef Edge *edge
         cdef np.int64_t ii, ind, dim
-        if self._gridhEy is None:
+        if self._hanging_edges_y is None:
             dim = self._dim
-            self._gridhEy = np.empty((self.n_hanging_edges_y, dim), dtype=np.float64)
-            gridhEy = self._gridhEy
+            self._hanging_edges_y = np.empty((self.n_hanging_edges_y, dim), dtype=np.float64)
+            gridhEy = self._hanging_edges_y
             for edge in self.tree.hanging_edges_y:
                 ind = edge.index-self.n_edges_y
                 for ii in range(dim):
                     gridhEy[ind, ii] = edge.location[ii]
-        return self._gridhEy
+        return self._hanging_edges_y
 
     @property
-    def grid_edges_z(self):
+    def edges_z(self):
         """
         Returns a numpy array of shape (n_edges_z, dim) with the centers of all
         non-hanging edges along the third dimension in order.
@@ -870,20 +872,20 @@ cdef class _TreeMesh:
         cdef np.float64_t[:, :] gridEz
         cdef Edge *edge
         cdef np.int64_t ii, ind, dim
-        if self._gridEz is None:
+        if self._edges_z is None:
             dim = self._dim
-            self._gridEz = np.empty((self.n_edges_z, dim), dtype=np.float64)
-            gridEz = self._gridEz
+            self._edges_z = np.empty((self.n_edges_z, dim), dtype=np.float64)
+            gridEz = self._edges_z
             for it in self.tree.edges_z:
                 edge = it.second
                 if not edge.hanging:
                     ind = edge.index
                     for ii in range(dim):
                         gridEz[ind, ii] = edge.location[ii]
-        return self._gridEz
+        return self._edges_z
 
     @property
-    def grid_hanging_edges_z(self):
+    def hanging_edges_z(self):
         """
         Returns a numpy array of shape (n_hanging_edges_z, dim) with the centers of all
         hanging edges along the third dimension in order.
@@ -891,128 +893,128 @@ cdef class _TreeMesh:
         cdef np.float64_t[:, :] gridhEz
         cdef Edge *edge
         cdef np.int64_t ii, ind, dim
-        if self._gridhEz is None:
+        if self._hanging_edges_z is None:
             dim = self._dim
-            self._gridhEz = np.empty((self.n_hanging_edges_z, dim), dtype=np.float64)
-            gridhEz = self._gridhEz
+            self._hanging_edges_z = np.empty((self.n_hanging_edges_z, dim), dtype=np.float64)
+            gridhEz = self._hanging_edges_z
             for edge in self.tree.hanging_edges_z:
                 ind = edge.index-self.n_edges_z
                 for ii in range(dim):
                     gridhEz[ind, ii] = edge.location[ii]
-        return self._gridhEz
+        return self._hanging_edges_z
 
     @property
-    def grid_faces_x(self):
+    def faces_x(self):
         """
         Returns a numpy array of shape (n_faces_x, dim) with the centers of all
         non-hanging faces along the first dimension in order.
         """
-        if(self._dim == 2): return self.grid_edges_y
+        if(self._dim == 2): return self.edges_y
 
         cdef np.float64_t[:, :] gridFx
         cdef Face *face
         cdef np.int64_t ii, ind, dim
-        if self._gridFx is None:
+        if self._faces_x is None:
             dim = self._dim
-            self._gridFx = np.empty((self.n_faces_x, dim), dtype=np.float64)
-            gridFx = self._gridFx
+            self._faces_x = np.empty((self.n_faces_x, dim), dtype=np.float64)
+            gridFx = self._faces_x
             for it in self.tree.faces_x:
                 face = it.second
                 if not face.hanging:
                     ind = face.index
                     for ii in range(dim):
                         gridFx[ind, ii] = face.location[ii]
-        return self._gridFx
+        return self._faces_x
 
     @property
-    def grid_faces_y(self):
+    def faces_y(self):
         """
         Returns a numpy array of shape (n_faces_y, dim) with the centers of all
         non-hanging faces along the second dimension in order.
         """
-        if(self._dim == 2): return self.grid_edges_x
+        if(self._dim == 2): return self.edges_x
         cdef np.float64_t[:, :] gridFy
         cdef Face *face
         cdef np.int64_t ii, ind, dim
-        if self._gridFy is None:
+        if self._faces_y is None:
             dim = self._dim
-            self._gridFy = np.empty((self.n_faces_y, dim), dtype=np.float64)
-            gridFy = self._gridFy
+            self._faces_y = np.empty((self.n_faces_y, dim), dtype=np.float64)
+            gridFy = self._faces_y
             for it in self.tree.faces_y:
                 face = it.second
                 if not face.hanging:
                     ind = face.index
                     for ii in range(dim):
                         gridFy[ind, ii] = face.location[ii]
-        return self._gridFy
+        return self._faces_y
 
     @property
-    def grid_faces_z(self):
+    def faces_z(self):
         """
         Returns a numpy array of shape (n_faces_z, dim) with the centers of all
         non-hanging faces along the third dimension in order.
         """
-        if(self._dim == 2): return self.grid_cell_centers
+        if(self._dim == 2): return self.cell_centers
 
         cdef np.float64_t[:, :] gridFz
         cdef Face *face
         cdef np.int64_t ii, ind, dim
-        if self._gridFz is None:
+        if self._faces_z is None:
             dim = self._dim
-            self._gridFz = np.empty((self.n_faces_z, dim), dtype=np.float64)
-            gridFz = self._gridFz
+            self._faces_z = np.empty((self.n_faces_z, dim), dtype=np.float64)
+            gridFz = self._faces_z
             for it in self.tree.faces_z:
                 face = it.second
                 if not face.hanging:
                     ind = face.index
                     for ii in range(dim):
                         gridFz[ind, ii] = face.location[ii]
-        return self._gridFz
+        return self._faces_z
 
     @property
-    def grid_hanging_faces_x(self):
+    def hanging_faces_x(self):
         """
         Returns a numpy array of shape (n_hanging_faces_x, dim) with the centers of all
         hanging faces along the first dimension in order.
         """
-        if(self._dim == 2): return self.grid_hanging_edges_y
+        if(self._dim == 2): return self.hanging_edges_y
 
         cdef np.float64_t[:, :] gridFx
         cdef Face *face
         cdef np.int64_t ii, ind, dim
-        if self._gridhFx is None:
+        if self._hanging_faces_x is None:
             dim = self._dim
-            self._gridhFx = np.empty((self.n_hanging_faces_x, dim), dtype=np.float64)
-            gridhFx = self._gridhFx
+            self._hanging_faces_x = np.empty((self.n_hanging_faces_x, dim), dtype=np.float64)
+            gridhFx = self._hanging_faces_x
             for face in self.tree.hanging_faces_x:
                 ind = face.index-self.n_faces_x
                 for ii in range(dim):
                     gridhFx[ind, ii] = face.location[ii]
-        return self._gridhFx
+        return self._hanging_faces_x
 
     @property
-    def grid_hanging_faces_y(self):
+    def hanging_faces_y(self):
         """
         Returns a numpy array of shape (n_hanging_faces_y, dim) with the centers of all
         hanging faces along the second dimension in order.
         """
-        if(self._dim == 2): return self.grid_hanging_edges_x
+        if(self._dim == 2): return self.hanging_edges_x
 
         cdef np.float64_t[:, :] gridhFy
         cdef Face *face
         cdef np.int64_t ii, ind, dim
-        if self._gridhFy is None:
+        if self._hanging_faces_y is None:
             dim = self._dim
-            self._gridhFy = np.empty((self.n_hanging_faces_y, dim), dtype=np.float64)
-            gridhFy = self._gridhFy
+            self._hanging_faces_y = np.empty((self.n_hanging_faces_y, dim), dtype=np.float64)
+            gridhFy = self._hanging_faces_y
             for face in self.tree.hanging_faces_y:
                 ind = face.index-self.n_faces_y
                 for ii in range(dim):
                     gridhFy[ind, ii] = face.location[ii]
-        return self._gridhFy
+        return self._hanging_faces_y
 
     @property
-    def grid_hanging_faces_z(self):
+    def hanging_faces_z(self):
         """
         Returns a numpy array of shape (n_hanging_faces_z, dim) with the centers of all
         hanging faces along the third dimension in order.
@@ -1022,15 +1024,15 @@ cdef class _TreeMesh:
         cdef np.float64_t[:, :] gridhFz
         cdef Face *face
         cdef np.int64_t ii, ind, dim
-        if self._gridhFz is None:
+        if self._hanging_faces_z is None:
             dim = self._dim
-            self._gridhFz = np.empty((self.n_hanging_faces_z, dim), dtype=np.float64)
-            gridhFz = self._gridhFz
+            self._hanging_faces_z = np.empty((self.n_hanging_faces_z, dim), dtype=np.float64)
+            gridhFz = self._hanging_faces_z
             for face in self.tree.hanging_faces_z:
                 ind = face.index-self.n_faces_z
                 for ii in range(dim):
                     gridhFz[ind, ii] = face.location[ii]
-        return self._gridhFz
+        return self._hanging_faces_z
 
     @property
     def cell_volumes(self):
@@ -1039,12 +1041,12 @@ cdef class _TreeMesh:
         cells in order.
         """
         cdef np.float64_t[:] vol
-        if self._vol is None:
-            self._vol = np.empty(self.n_cells, dtype=np.float64)
-            vol = self._vol
+        if self._cell_volumes is None:
+            self._cell_volumes = np.empty(self.n_cells, dtype=np.float64)
+            vol = self._cell_volumes
             for cell in self.tree.cells:
                 vol[cell.index] = cell.volume
-        return self._vol
+        return self._cell_volumes
 
     @property
     def face_areas(self):
@@ -1052,14 +1054,14 @@ cdef class _TreeMesh:
         Returns a numpy array of length n_faces with the area (length in 2D) of all
         faces ordered by x, then y, then z.
         """
-        if self._dim == 2 and self._area is None:
-            self._area = np.r_[self.edge_lengths[self.n_edges_x:], self.edge_lengths[:self.n_edges_x]]
+        if self._dim == 2 and self._face_areas is None:
+            self._face_areas = np.r_[self.edge_lengths[self.n_edges_x:], self.edge_lengths[:self.n_edges_x]]
         cdef np.float64_t[:] area
         cdef int_t ind, offset = 0
         cdef Face *face
-        if self._area is None:
-            self._area = np.empty(self.n_faces, dtype=np.float64)
-            area = self._area
+        if self._face_areas is None:
+            self._face_areas = np.empty(self.n_faces, dtype=np.float64)
+            area = self._face_areas
 
             for it in self.tree.faces_x:
                 face = it.second
@@ -1077,7 +1079,7 @@ cdef class _TreeMesh:
                 face = it.second
                 if face.hanging: continue
                 area[face.index + offset] = face.area
-        return self._area
+        return self._face_areas
 
     @property
     def edge_lengths(self):
@@ -1088,9 +1090,9 @@ cdef class _TreeMesh:
         cdef np.float64_t[:] edge_l
         cdef Edge *edge
         cdef int_t ind, offset
-        if self._edge is None:
-            self._edge = np.empty(self.n_edges, dtype=np.float64)
-            edge_l = self._edge
+        if self._edge_lengths is None:
+            self._edge_lengths = np.empty(self.n_edges, dtype=np.float64)
+            edge_l = self._edge_lengths
 
             for it in self.tree.edges_x:
                 edge = it.second
@@ -1109,7 +1111,7 @@ cdef class _TreeMesh:
                     edge = it.second
                     if edge.hanging: continue
                     edge_l[edge.index + offset] = edge.length
-        return self._edge
+        return self._edge_lengths
 
     @property
     def cell_boundary_indices(self):
@@ -1401,19 +1403,19 @@ cdef class _TreeMesh:
         """
         Construct divergence operator (face-stg to cell-centres).
         """
-        if self._faceDiv is not None:
-            return self._faceDiv
+        if self._face_divergence is not None:
+            return self._face_divergence
         if self._dim == 2:
-            D = self._faceDiv2D() # Because it uses edges instead of faces
+            D = self._face_divergence_2D() # Because it uses edges instead of faces
         else:
-            D = self._faceDiv3D()
+            D = self._face_divergence_3D()
         R = self._deflate_faces()
-        self._faceDiv = D*R
-        return self._faceDiv
+        self._face_divergence = D*R
+        return self._face_divergence
 
     @cython.cdivision(True)
     @cython.boundscheck(False)
-    def _faceDiv2D(self):
+    def _face_divergence_2D(self):
         cdef np.int64_t[:] I = np.empty(self.n_cells*4, dtype=np.int64)
         cdef np.int64_t[:] J = np.empty(self.n_cells*4, dtype=np.int64)
         cdef np.float64_t[:] V = np.empty(self.n_cells*4, dtype=np.float64)
@@ -1441,7 +1443,7 @@ cdef class _TreeMesh:
 
     @cython.cdivision(True)
     @cython.boundscheck(False)
-    def _faceDiv3D(self):
+    def _face_divergence_3D(self):
         cdef:
             np.int64_t[:] I = np.empty(self.n_cells*6, dtype=np.int64)
             np.int64_t[:] J = np.empty(self.n_cells*6, dtype=np.int64)
@@ -1483,8 +1485,8 @@ cdef class _TreeMesh:
         """
         Construct the 3D curl operator.
         """
-        if self._edgeCurl is not None:
-            return self._edgeCurl
+        if self._edge_curl is not None:
+            return self._edge_curl
         cdef:
             int_t dim = self._dim
             np.int64_t[:] I = np.empty(4*self.n_faces, dtype=np.int64)
@@ -1551,8 +1553,8 @@ cdef class _TreeMesh:
 
         C = sp.csr_matrix((V, (I, J)),shape=(self.n_faces, self.n_total_edges))
         R = self._deflate_edges()
-        self._edgeCurl = C*R
-        return self._edgeCurl
+        self._edge_curl = C*R
+        return self._edge_curl
 
     @property
     @cython.cdivision(True)
@@ -1561,8 +1563,8 @@ cdef class _TreeMesh:
         """
         Construct gradient operator (nodes to edges).
         """
-        if self._nodalGrad is not None:
-            return self._nodalGrad
+        if self._nodal_gradient is not None:
+            return self._nodal_gradient
         cdef:
             int_t dim = self._dim
             np.int64_t[:] I = np.empty(2*self.n_edges, dtype=np.int64)
@@ -1614,15 +1616,15 @@ cdef class _TreeMesh:
 
         Rn = self._deflate_nodes()
         G = sp.csr_matrix((V, (I, J)), shape=(self.n_edges, self.n_total_nodes))
-        self._nodalGrad = G*Rn
-        return self._nodalGrad
+        self._nodal_gradient = G*Rn
+        return self._nodal_gradient
 
     @property
     def nodal_laplacian(self):
         raise NotImplementedError('Nodal Laplacian has not been implemented for TreeMesh')
 
     @cython.boundscheck(False)
-    def _aveCC2FxStencil(self):
+    def _average_cell_to_face_xStencil(self):
         cdef np.int64_t[:] I = np.zeros(2*self.n_total_faces_x, dtype=np.int64)
         cdef np.int64_t[:] J = np.zeros(2*self.n_total_faces_x, dtype=np.int64)
         cdef np.float64_t[:] V = np.zeros(2*self.n_total_faces_x, dtype=np.float64)
@@ -1673,7 +1675,7 @@ cdef class _TreeMesh:
         return sp.csr_matrix((V, (I,J)), shape=(self.n_total_faces_x, self.n_cells))
 
     @cython.boundscheck(False)
-    def _aveCC2FyStencil(self):
+    def _average_cell_to_face_yStencil(self):
         cdef np.int64_t[:] I = np.zeros(2*self.n_total_faces_y, dtype=np.int64)
         cdef np.int64_t[:] J = np.zeros(2*self.n_total_faces_y, dtype=np.int64)
         cdef np.float64_t[:] V = np.zeros(2*self.n_total_faces_y, dtype=np.float64)
@@ -1723,7 +1725,7 @@ cdef class _TreeMesh:
         return sp.csr_matrix((V, (I,J)), shape=(self.n_total_faces_y, self.n_cells))
 
     @cython.boundscheck(False)
-    def _aveCC2FzStencil(self):
+    def _average_cell_to_face_zStencil(self):
         cdef np.int64_t[:] I = np.zeros(2*self.n_total_faces_z, dtype=np.int64)
         cdef np.int64_t[:] J = np.zeros(2*self.n_total_faces_z, dtype=np.int64)
         cdef np.float64_t[:] V = np.zeros(2*self.n_total_faces_z, dtype=np.float64)
@@ -2144,8 +2146,8 @@ cdef class _TreeMesh:
         Construct the averaging operator on cell edges in the x direction to
         cell centers.
         """
-        if self._aveEx2CC is not None:
-            return self._aveEx2CC
+        if self._average_edge_x_to_cell is not None:
+            return self._average_edge_x_to_cell
         cdef np.int64_t[:] I,J
         cdef np.float64_t[:] V
         cdef np.int64_t ind, ii, n_epc
@@ -2164,8 +2166,8 @@ cdef class _TreeMesh:
                 V[ind*n_epc + ii] = scale
 
         Rex = self._deflate_edges_x()
-        self._aveEx2CC = sp.csr_matrix((V, (I, J)))*Rex
-        return self._aveEx2CC
+        self._average_edge_x_to_cell = sp.csr_matrix((V, (I, J)))*Rex
+        return self._average_edge_x_to_cell
 
     @property
     @cython.boundscheck(False)
@@ -2174,8 +2176,8 @@ cdef class _TreeMesh:
         Construct the averaging operator on cell edges in the y direction to
         cell centers.
         """
-        if self._aveEy2CC is not None:
-            return self._aveEy2CC
+        if self._average_edge_y_to_cell is not None:
+            return self._average_edge_y_to_cell
         cdef np.int64_t[:] I,J
         cdef np.float64_t[:] V
         cdef np.int64_t ind, ii, n_epc
@@ -2194,8 +2196,8 @@ cdef class _TreeMesh:
                 V[ind*n_epc + ii] = scale
 
         Rey = self._deflate_edges_y()
-        self._aveEy2CC = sp.csr_matrix((V, (I, J)))*Rey
-        return self._aveEy2CC
+        self._average_edge_y_to_cell = sp.csr_matrix((V, (I, J)))*Rey
+        return self._average_edge_y_to_cell
 
     @property
     @cython.boundscheck(False)
@@ -2204,8 +2206,8 @@ cdef class _TreeMesh:
         Construct the averaging operator on cell edges in the z direction to
         cell centers.
         """
-        if self._aveEz2CC is not None:
-            return self._aveEz2CC
+        if self._average_edge_z_to_cell is not None:
+            return self._average_edge_z_to_cell
         if self._dim == 2:
             raise Exception('There are no z-edges in 2D')
         cdef np.int64_t[:] I,J
@@ -2226,28 +2228,28 @@ cdef class _TreeMesh:
                 V[ind*n_epc + ii] = scale
 
         Rez = self._deflate_edges_z()
-        self._aveEz2CC = sp.csr_matrix((V, (I, J)))*Rez
-        return self._aveEz2CC
+        self._average_edge_z_to_cell = sp.csr_matrix((V, (I, J)))*Rez
+        return self._average_edge_z_to_cell
 
     @property
     def average_edge_to_cell(self):
         "Construct the averaging operator on cell edges to cell centers."
-        if self._aveE2CC is None:
+        if self._average_edge_to_cell is None:
             stacks = [self.average_edge_x_to_cell, self.average_edge_y_to_cell]
             if self._dim == 3:
                 stacks += [self.average_edge_z_to_cell]
-            self._aveE2CC = 1.0/self._dim * sp.hstack(stacks).tocsr()
-        return self._aveE2CC
+            self._average_edge_to_cell = 1.0/self._dim * sp.hstack(stacks).tocsr()
+        return self._average_edge_to_cell
 
     @property
     def average_edge_to_cell_vector(self):
         "Construct the averaging operator on cell edges to cell centers."
-        if self._aveE2CCV is None:
+        if self._average_edge_to_cell_vector is None:
             stacks = [self.average_edge_x_to_cell, self.average_edge_y_to_cell]
             if self._dim == 3:
                 stacks += [self.average_edge_z_to_cell]
-            self._aveE2CCV = sp.block_diag(stacks).tocsr()
-        return self._aveE2CCV
+            self._average_edge_to_cell_vector = sp.block_diag(stacks).tocsr()
+        return self._average_edge_to_cell_vector
 
     @property
     @cython.boundscheck(False)
@@ -2256,8 +2258,8 @@ cdef class _TreeMesh:
         Construct the averaging operator on cell faces in the x direction to
         cell centers.
         """
-        if self._aveFx2CC is not None:
-            return self._aveFx2CC
+        if self._average_face_x_to_cell is not None:
+            return self._average_face_x_to_cell
         if self._dim == 2:
             return self.average_edge_y_to_cell
 
@@ -2280,8 +2282,8 @@ cdef class _TreeMesh:
             V[ii*2 : ii*2 + 2] = 0.5
 
         Rfx = self._deflate_faces_x()
-        self._aveFx2CC = sp.csr_matrix((V, (I, J)))*Rfx
-        return self._aveFx2CC
+        self._average_face_x_to_cell = sp.csr_matrix((V, (I, J)))*Rfx
+        return self._average_face_x_to_cell
 
     @property
     @cython.boundscheck(False)
@@ -2290,8 +2292,8 @@ cdef class _TreeMesh:
         Construct the averaging operator on cell faces in the y direction to
         cell centers.
         """
-        if self._aveFy2CC is not None:
-            return self._aveFy2CC
+        if self._average_face_y_to_cell is not None:
+            return self._average_face_y_to_cell
         if self._dim == 2:
             return self.average_edge_x_to_cell
 
@@ -2314,8 +2316,8 @@ cdef class _TreeMesh:
             V[ii*2 : ii*2 + 2] = 0.5
 
         Rfy = self._deflate_faces_y()
-        self._aveFy2CC = sp.csr_matrix((V, (I, J)))*Rfy
-        return self._aveFy2CC
+        self._average_face_y_to_cell = sp.csr_matrix((V, (I, J)))*Rfy
+        return self._average_face_y_to_cell
 
     @property
     @cython.boundscheck(False)
@@ -2324,8 +2326,8 @@ cdef class _TreeMesh:
         Construct the averaging operator on cell faces in the z direction to
         cell centers.
         """
-        if self._aveFz2CC is not None:
-            return self._aveFz2CC
+        if self._average_face_z_to_cell is not None:
+            return self._average_face_z_to_cell
         if self._dim == 2:
             raise Exception('There are no z-faces in 2D')
         cdef np.int64_t[:] I,J
@@ -2347,28 +2349,28 @@ cdef class _TreeMesh:
             V[ii*2 : ii*2 + 2] = 0.5
 
         Rfy = self._deflate_faces_z()
-        self._aveFz2CC = sp.csr_matrix((V, (I, J)))*Rfy
-        return self._aveFz2CC
+        self._average_face_z_to_cell = sp.csr_matrix((V, (I, J)))*Rfy
+        return self._average_face_z_to_cell
 
     @property
     def average_face_to_cell(self):
         "Construct the averaging operator on cell faces to cell centers."
-        if self._aveF2CC is None:
+        if self._average_face_to_cell is None:
             stacks = [self.average_face_x_to_cell, self.aveFy2CC]
             if self._dim == 3:
                 stacks += [self.average_face_z_to_cell]
-            self._aveF2CC = 1./self._dim*sp.hstack(stacks).tocsr()
-        return self._aveF2CC
+            self._average_face_to_cell = 1./self._dim*sp.hstack(stacks).tocsr()
+        return self._average_face_to_cell
 
     @property
     def average_face_to_cell_vector(self):
         "Construct the averaging operator on cell faces to cell centers."
-        if self._aveF2CCV is None:
+        if self._average_face_to_cell_vector is None:
             stacks = [self.average_face_x_to_cell, self.aveFy2CC]
             if self._dim == 3:
                 stacks += [self.average_face_z_to_cell]
-            self._aveF2CCV = sp.block_diag(stacks).tocsr()
-        return self._aveF2CCV
+            self._average_face_to_cell_vector = sp.block_diag(stacks).tocsr()
+        return self._average_face_to_cell_vector
 
     @property
     @cython.boundscheck(False)
@@ -2378,7 +2380,7 @@ cdef class _TreeMesh:
         cdef np.float64_t[:] V
         cdef np.int64_t ii, id, n_ppc
         cdef double scale
-        if self._aveN2CC is None:
+        if self._average_node_to_cell is None:
             n_ppc = 1<<self._dim
             scale = 1.0/n_ppc
             I = np.empty(self.n_cells*n_ppc, dtype=np.int64)
@@ -2393,16 +2395,16 @@ cdef class _TreeMesh:
                     V[ii*n_ppc + id] = scale
 
             Rn = self._deflate_nodes()
-            self._aveN2CC = sp.csr_matrix((V, (I, J)), shape=(self.n_cells, self.n_total_nodes))*Rn
-        return self._aveN2CC
+            self._average_node_to_cell = sp.csr_matrix((V, (I, J)), shape=(self.n_cells, self.n_total_nodes))*Rn
+        return self._average_node_to_cell
 
     @property
     def average_node_to_edge_x(self):
         """
         Averaging operator on cell nodes to x-edges
         """
-        if self._aveN2Ex is not None:
-            return self._aveN2Ex
+        if self._average_node_to_edge_x is not None:
+            return self._average_node_to_edge_x
         cdef np.int64_t[:] I, J
         cdef np.float64_t[:] V
         cdef np.int64_t ii, id
@@ -2421,16 +2423,16 @@ cdef class _TreeMesh:
                 V[ii*2 + id] = 0.5
 
         Rn = self._deflate_nodes()
-        self._aveN2Ex = sp.csr_matrix((V, (I, J)), shape=(self.n_edges_x, self.n_total_nodes))*Rn
-        return self._aveN2Ex
+        self._average_node_to_edge_x = sp.csr_matrix((V, (I, J)), shape=(self.n_edges_x, self.n_total_nodes))*Rn
+        return self._average_node_to_edge_x
 
     @property
     def average_node_to_edge_y(self):
         """
         Averaging operator on cell nodes to y-edges
         """
-        if self._aveN2Ey is not None:
-            return self._aveN2Ey
+        if self._average_node_to_edge_y is not None:
+            return self._average_node_to_edge_y
         cdef np.int64_t[:] I, J
         cdef np.float64_t[:] V
         cdef np.int64_t ii, id
@@ -2449,8 +2451,8 @@ cdef class _TreeMesh:
                 V[ii*2 + id] = 0.5
 
         Rn = self._deflate_nodes()
-        self._aveN2Ey = sp.csr_matrix((V, (I, J)), shape=(self.n_edges_y, self.n_total_nodes))*Rn
-        return self._aveN2Ey
+        self._average_node_to_edge_y = sp.csr_matrix((V, (I, J)), shape=(self.n_edges_y, self.n_total_nodes))*Rn
+        return self._average_node_to_edge_y
 
     @property
     def average_node_to_edge_z(self):
@@ -2459,8 +2461,8 @@ cdef class _TreeMesh:
         """
         if self._dim == 2:
             raise Exception('TreeMesh has no z-edges in 2D')
-        if self._aveN2Ez is not None:
-            return self._aveN2Ez
+        if self._average_node_to_edge_z is not None:
+            return self._average_node_to_edge_z
         cdef np.int64_t[:] I, J
         cdef np.float64_t[:] V
         cdef np.int64_t ii, id
@@ -2479,8 +2481,8 @@ cdef class _TreeMesh:
                 V[ii*2 + id] = 0.5
 
         Rn = self._deflate_nodes()
-        self._aveN2Ez = sp.csr_matrix((V, (I, J)), shape=(self.n_edges_z, self.n_total_nodes))*Rn
-        return self._aveN2Ez
+        self._average_node_to_edge_z = sp.csr_matrix((V, (I, J)), shape=(self.n_edges_z, self.n_total_nodes))*Rn
+        return self._average_node_to_edge_z
 
     @property
     def average_node_to_edge(self):
@@ -2488,14 +2490,14 @@ cdef class _TreeMesh:
         Construct the averaging operator on cell nodes to cell edges, keeping
         each dimension separate.
         """
-        if self._aveN2E is not None:
-            return self._aveN2E
+        if self._average_node_to_edge is not None:
+            return self._average_node_to_edge
 
         stacks = [self.average_node_to_edge_x, self.average_node_to_edge_y]
         if self._dim == 3:
             stacks += [self.average_node_to_edge_z]
-        self._aveN2E = sp.vstack(stacks).tocsr()
-        return self._aveN2E
+        self._average_node_to_edge = sp.vstack(stacks).tocsr()
+        return self._average_node_to_edge
 
     @property
     def average_node_to_face_x(self):
@@ -2504,8 +2506,8 @@ cdef class _TreeMesh:
         """
         if self._dim == 2:
             return self.average_node_to_edge_y
-        if self._aveN2Fx is not None:
-            return self._aveN2Fx
+        if self._average_node_to_face_x is not None:
+            return self._average_node_to_face_x
         cdef np.int64_t[:] I, J
         cdef np.float64_t[:] V
         cdef np.int64_t ii, id
@@ -2524,8 +2526,8 @@ cdef class _TreeMesh:
                 V[ii*4 + id] = 0.25
 
         Rn = self._deflate_nodes()
-        self._aveN2Fx = sp.csr_matrix((V, (I, J)), shape=(self.n_faces_x, self.n_total_nodes))*Rn
-        return self._aveN2Fx
+        self._average_node_to_face_x = sp.csr_matrix((V, (I, J)), shape=(self.n_faces_x, self.n_total_nodes))*Rn
+        return self._average_node_to_face_x
 
     @property
     def average_node_to_face_y(self):
@@ -2534,8 +2536,8 @@ cdef class _TreeMesh:
         """
         if self._dim == 2:
             return self.average_node_to_edge_x
-        if self._aveN2Fy is not None:
-            return self._aveN2Fy
+        if self._average_node_to_face_y is not None:
+            return self._average_node_to_face_y
         cdef np.int64_t[:] I, J
         cdef np.float64_t[:] V
         cdef np.int64_t ii, id
@@ -2555,8 +2557,8 @@ cdef class _TreeMesh:
                 V[ii*4 + id] = 0.25
 
         Rn = self._deflate_nodes()
-        self._aveN2Fy = sp.csr_matrix((V, (I, J)), shape=(self.n_faces_y, self.n_total_nodes))*Rn
-        return self._aveN2Fy
+        self._average_node_to_face_y = sp.csr_matrix((V, (I, J)), shape=(self.n_faces_y, self.n_total_nodes))*Rn
+        return self._average_node_to_face_y
 
     @property
     def average_node_to_face_z(self):
@@ -2568,8 +2570,8 @@ cdef class _TreeMesh:
         cdef np.int64_t[:] I, J
         cdef np.float64_t[:] V
         cdef np.int64_t ii, id,
-        if self._aveN2Fz is not None:
-            return self._aveN2Fz
+        if self._average_node_to_face_z is not None:
+            return self._average_node_to_face_z
 
         I = np.empty(self.n_faces_z*4, dtype=np.int64)
         J = np.empty(self.n_faces_z*4, dtype=np.int64)
@@ -2586,8 +2588,8 @@ cdef class _TreeMesh:
                 V[ii*4 + id] = 0.25
 
         Rn = self._deflate_nodes()
-        self._aveN2Fz = sp.csr_matrix((V, (I, J)), shape=(self.n_faces_z, self.n_total_nodes))*Rn
-        return self._aveN2Fz
+        self._average_node_to_face_z = sp.csr_matrix((V, (I, J)), shape=(self.n_faces_z, self.n_total_nodes))*Rn
+        return self._average_node_to_face_z
 
     @property
     def average_node_to_face(self):
@@ -2595,44 +2597,44 @@ cdef class _TreeMesh:
         Construct the averaging operator on cell nodes to cell edges, keeping
         each dimension separate.
         """
-        if self._aveN2F is not None:
-            return self._aveN2F
+        if self._average_node_to_face is not None:
+            return self._average_node_to_face
 
         stacks = [self.average_node_to_face_x, self.average_node_to_face_y]
         if self._dim == 3:
             stacks += [self.average_node_to_face_z]
-        self._aveN2F = sp.vstack(stacks).tocsr()
-        return self._aveN2F
+        self._average_node_to_face = sp.vstack(stacks).tocsr()
+        return self._average_node_to_face
 
     @property
     def average_cell_to_face(self):
         "Construct the averaging operator on cell centers to cell faces."
-        if self._aveCC2F is not None:
-            return self._aveCC2F
+        if self._average_cell_to_face is not None:
+            return self._average_cell_to_face
         stacks = [self.average_cell_to_face_x, self.average_cell_to_face_y]
         if self._dim == 3:
             stacks.append(self.average_cell_to_face_z)
 
-        self._aveCC2F = sp.vstack(stacks).tocsr()
-        return self._aveCC2F
+        self._average_cell_to_face = sp.vstack(stacks).tocsr()
+        return self._average_cell_to_face
 
     @property
     def average_cell_vector_to_face(self):
         "Construct the averaging operator on cell centers to cell faces."
-        if self._aveCCV2F is not None:
-            return self._aveCCV2F
+        if self._average_cell_vector_to_face is not None:
+            return self._average_cell_vector_to_face
         stacks = [self.average_cell_to_face_x, self.average_cell_to_face_y]
         if self._dim == 3:
             stacks.append(self.average_cell_to_face_z)
 
-        self._aveCCV2F = sp.block_diag(stacks).tocsr()
-        return self._aveCCV2F
+        self._average_cell_vector_to_face = sp.block_diag(stacks).tocsr()
+        return self._average_cell_vector_to_face
 
     @property
     def average_cell_to_face_x(self):
         "Construct the averaging operator on cell centers to cell x-faces."
-        if self._aveCC2Fx is not None:
-            return self._aveCC2Fx
+        if self._average_cell_to_face_x is not None:
+            return self._average_cell_to_face_x
         cdef np.int64_t[:] I = np.zeros(2*self.n_total_faces_x, dtype=np.int64)
         cdef np.int64_t[:] J = np.zeros(2*self.n_total_faces_x, dtype=np.int64)
         cdef np.float64_t[:] V = np.zeros(2*self.n_total_faces_x, dtype=np.float64)
@@ -2730,14 +2732,14 @@ cdef class _TreeMesh:
                         V[2*ind    ] = w/children_per_parent
                         V[2*ind + 1] = (1.0-w)/children_per_parent
 
-        self._aveCC2Fx = sp.csr_matrix((V, (I, J)), shape=(self.n_faces_x, self.n_cells))
-        return self._aveCC2Fx
+        self._average_cell_to_face_x = sp.csr_matrix((V, (I, J)), shape=(self.n_faces_x, self.n_cells))
+        return self._average_cell_to_face_x
 
     @property
     def average_cell_to_face_y(self):
         "Construct the averaging operator on cell centers to cell y-faces."
-        if self._aveCC2Fy is not None:
-            return self._aveCC2Fy
+        if self._average_cell_to_face_y is not None:
+            return self._average_cell_to_face_y
         cdef np.int64_t[:] I = np.zeros(2*self.n_total_faces_y, dtype=np.int64)
         cdef np.int64_t[:] J = np.zeros(2*self.n_total_faces_y, dtype=np.int64)
         cdef np.float64_t[:] V = np.zeros(2*self.n_total_faces_y, dtype=np.float64)
@@ -2835,16 +2837,16 @@ cdef class _TreeMesh:
                         V[2*ind    ] = w/children_per_parent
                         V[2*ind + 1] = (1.0-w)/children_per_parent
 
-        self._aveCC2Fy = sp.csr_matrix((V, (I,J)), shape=(self.n_faces_y, self.n_cells))
-        return self._aveCC2Fy
+        self._average_cell_to_face_y = sp.csr_matrix((V, (I,J)), shape=(self.n_faces_y, self.n_cells))
+        return self._average_cell_to_face_y
 
     @property
     def average_cell_to_face_z(self):
         "Construct the averaging operator on cell centers to cell z-faces."
         if self.dim == 2:
             raise Exception('TreeMesh has no z-faces in 2D')
-        if self._aveCC2Fz is not None:
-            return self._aveCC2Fz
+        if self._average_cell_to_face_z is not None:
+            return self._average_cell_to_face_z
         cdef np.int64_t[:] I = np.zeros(2*self.n_total_faces_z, dtype=np.int64)
         cdef np.int64_t[:] J = np.zeros(2*self.n_total_faces_z, dtype=np.int64)
         cdef np.float64_t[:] V = np.zeros(2*self.n_total_faces_z, dtype=np.float64)
@@ -2911,8 +2913,8 @@ cdef class _TreeMesh:
                     V[2*ind    ] = w/children_per_parent
                     V[2*ind + 1] = (1.0-w)/children_per_parent
 
-        self._aveCC2Fz = sp.csr_matrix((V, (I,J)), shape=(self.n_faces_z, self.n_cells))
-        return self._aveCC2Fz
+        self._average_cell_to_face_z = sp.csr_matrix((V, (I,J)), shape=(self.n_faces_z, self.n_cells))
+        return self._average_cell_to_face_z
 
     def _get_containing_cell_index(self, loc):
         cdef double x, y, z
@@ -3458,9 +3460,9 @@ cdef class _TreeMesh:
         cdef int_t same_base
         try:
             same_base = (
-                np.allclose(self.grid_nodes_x, meshin.grid_nodes_x)
-                and np.allclose(self.grid_nodes_y, meshin.grid_nodes_y)
-                and (self.dim == 2 or np.allclose(self.grid_nodes_z, meshin.grid_nodes_z))
+                np.allclose(self.nodes_x, meshin.nodes_x)
+                and np.allclose(self.nodes_y, meshin.nodes_y)
+                and (self.dim == 2 or np.allclose(self.nodes_z, meshin.nodes_z))
             )
         except ValueError:
             same_base = False
@@ -3489,7 +3491,7 @@ cdef class _TreeMesh:
         cdef double over_lap_vol
         cdef double x1m, x1p, y1m, y1p, z1m, z1p
         cdef double x2m, x2p, y2m, y2p, z2m, z2p
-        cdef double[:] x0 = meshin._x0
+        cdef double[:] origin = meshin._origin
         cdef double[:] xF
         if self.dim == 2:
             xF = np.array([meshin._xs[-1], meshin._ys[-1]])
@@ -3569,11 +3571,11 @@ cdef class _TreeMesh:
             x1m = min(cell.points[0].location[0], xF[0])
             y1m = min(cell.points[0].location[1], xF[1])
 
-            x1p = max(cell.points[3].location[0], x0[0])
-            y1p = max(cell.points[3].location[1], x0[1])
+            x1p = max(cell.points[3].location[0], origin[0])
+            y1p = max(cell.points[3].location[1], origin[1])
             if self._dim==3:
                 z1m = min(cell.points[0].location[2], xF[2])
-                z1p = max(cell.points[7].location[2], x0[2])
+                z1p = max(cell.points[7].location[2], origin[2])
             overlapping_cell_inds = meshin.tree.find_overlapping_cells(x1m, x1p, y1m, y1p, z1m, z1p)
             n_overlap = overlapping_cell_inds.size()
             weights = <double *> malloc(n_overlap*sizeof(double))
@@ -3589,16 +3591,16 @@ cdef class _TreeMesh:
                 y2p = in_cell.points[3].location[1]
                 z2p = in_cell.points[7].location[2] if self._dim==3 else 0.0
 
-                if x1m == xF[0] or x1p == x0[0]:
+                if x1m == xF[0] or x1p == origin[0]:
                     over_lap_vol = 1.0
                 else:
                     over_lap_vol = min(x1p, x2p) - max(x1m, x2m)
-                if y1m == xF[1] or y1p == x0[1]:
+                if y1m == xF[1] or y1p == origin[1]:
                     over_lap_vol *= 1.0
                 else:
                     over_lap_vol *= min(y1p, y2p) - max(y1m, y2m)
                 if self._dim==3:
-                    if z1m == xF[2] or z1p == x0[2]:
+                    if z1m == xF[2] or z1p == origin[2]:
                         over_lap_vol *= 1.0
                     else:
                         over_lap_vol *= min(z1p, z2p) - max(z1m, z2m)
@@ -3637,22 +3639,22 @@ cdef class _TreeMesh:
         cdef double over_lap_vol
         cdef double x1m, x1p, y1m, y1p, z1m, z1p
         cdef double x2m, x2p, y2m, y2p, z2m, z2p
-        cdef double[:] x0
+        cdef double[:] origin
         cdef double[:] xF
 
         # first check if they have the same tensor base, as it makes it a lot easier...
         cdef int_t same_base
         try:
             same_base = (
-                np.allclose(self.grid_nodes_x, out_tens_mesh.grid_nodes_x)
-                and np.allclose(self.grid_nodes_y, out_tens_mesh.grid_nodes_y)
-                and (self.dim == 2 or np.allclose(self.grid_nodes_z, out_tens_mesh.grid_nodes_z))
+                np.allclose(self.nodes_x, out_tens_mesh.nodes_x)
+                and np.allclose(self.nodes_y, out_tens_mesh.nodes_y)
+                and (self.dim == 2 or np.allclose(self.nodes_z, out_tens_mesh.nodes_z))
             )
         except ValueError:
             same_base = False
 
         if same_base:
-            in_cell_inds = self._get_containing_cell_indexes(out_tens_mesh.grid_cell_centers)
+            in_cell_inds = self._get_containing_cell_indexes(out_tens_mesh.cell_centers)
             # Every cell input cell is gauranteed to be a lower level than the output tenser mesh
             # therefore all weights a 1.0
             if values is not None:
@@ -3666,10 +3668,10 @@ cdef class _TreeMesh:
             )
 
         if self.dim == 2:
-            x0 = np.r_[self.x0, 0.0]
+            origin = np.r_[self.origin, 0.0]
             xF = np.array([self._xs[-1], self._ys[-1], 0.0])
         else:
-            x0 = self._x0
+            origin = self._origin
             xF = np.array([self._xs[-1], self._ys[-1], self._zs[-1]])
         cdef c_Cell * in_cell
 
@@ -3682,11 +3684,11 @@ cdef class _TreeMesh:
         cdef int_t nnz_row = 0
         cdef int_t nnz_counter = 0
 
-        cdef double[:] nodes_x = out_tens_mesh.grid_nodes_x
-        cdef double[:] nodes_y = out_tens_mesh.grid_nodes_y
+        cdef double[:] nodes_x = out_tens_mesh.nodes_x
+        cdef double[:] nodes_y = out_tens_mesh.nodes_y
         cdef double[:] nodes_z = np.array([0.0, 0.0])
         if self._dim==3:
-            nodes_z = out_tens_mesh.grid_nodes_z
+            nodes_z = out_tens_mesh.nodes_z
         cdef int_t nx = len(nodes_x)-1
         cdef int_t ny = len(nodes_y)-1
         cdef int_t nz = len(nodes_z)-1
@@ -3712,13 +3714,13 @@ cdef class _TreeMesh:
         #for cell in self.tree.cells:
         for iz in range(nz):
             z1m = min(nodes_z[iz], xF[2])
-            z1p = max(nodes_z[iz+1], x0[2])
+            z1p = max(nodes_z[iz+1], origin[2])
             for iy in range(ny):
                 y1m = min(nodes_y[iy], xF[1])
-                y1p = max(nodes_y[iy+1], x0[1])
+                y1p = max(nodes_y[iy+1], origin[1])
                 for ix in range(nx):
                     x1m = min(nodes_x[ix], xF[0])
-                    x1p = max(nodes_x[ix+1], x0[0])
+                    x1p = max(nodes_x[ix+1], origin[0])
                     overlapping_cell_inds = self.tree.find_overlapping_cells(x1m, x1p, y1m, y1p, z1m, z1p)
                     n_overlap = overlapping_cell_inds.size()
                     weights = <double *> malloc(n_overlap*sizeof(double))
@@ -3734,16 +3736,16 @@ cdef class _TreeMesh:
                         y2p = in_cell.points[3].location[1]
                         z2p = in_cell.points[7].location[2] if self._dim==3 else 0.0
 
-                        if x1m == xF[0] or x1p == x0[0]:
+                        if x1m == xF[0] or x1p == origin[0]:
                             over_lap_vol = 1.0
                         else:
                             over_lap_vol = min(x1p, x2p) - max(x1m, x2m)
-                        if y1m == xF[1] or y1p == x0[1]:
+                        if y1m == xF[1] or y1p == origin[1]:
                             over_lap_vol *= 1.0
                         else:
                             over_lap_vol *= min(y1p, y2p) - max(y1m, y2m)
                         if self._dim==3:
-                            if z1m == xF[2] or z1p == x0[2]:
+                            if z1m == xF[2] or z1p == origin[2]:
                                 over_lap_vol *= 1.0
                             else:
                                 over_lap_vol *= min(z1p, z2p) - max(z1m, z2m)
@@ -3781,23 +3783,23 @@ cdef class _TreeMesh:
         cdef double x1m, x1p, y1m, y1p, z1m, z1p
         cdef double x2m, x2p, y2m, y2p, z2m, z2p
         cdef int_t ix, ix1, ix2, iy, iy1, iy2, iz, iz1, iz2
-        cdef double[:] x0 = in_tens_mesh.x0
+        cdef double[:] origin = in_tens_mesh.origin
         cdef double[:] xF
 
         # first check if they have the same tensor base, as it makes it a lot easier...
         cdef int_t same_base
         try:
             same_base = (
-                np.allclose(self.grid_nodes_x, in_tens_mesh.grid_nodes_x)
-                and np.allclose(self.grid_nodes_y, in_tens_mesh.grid_nodes_y)
-                and (self.dim == 2 or np.allclose(self.grid_nodes_z, in_tens_mesh.grid_nodes_z))
+                np.allclose(self.nodes_x, in_tens_mesh.nodes_x)
+                and np.allclose(self.nodes_y, in_tens_mesh.nodes_y)
+                and (self.dim == 2 or np.allclose(self.nodes_z, in_tens_mesh.nodes_z))
             )
         except ValueError:
             same_base = False
 
 
         if same_base:
-            out_cell_inds = self._get_containing_cell_indexes(in_tens_mesh.grid_cell_centers)
+            out_cell_inds = self._get_containing_cell_indexes(in_tens_mesh.cell_centers)
             ws = in_tens_mesh.cell_volumes/self.cell_volumes[out_cell_inds]
             if values is not None:
                 if output is None:
@@ -3810,11 +3812,11 @@ cdef class _TreeMesh:
             )
 
 
-        cdef np.float64_t[:] nodes_x = in_tens_mesh.grid_nodes_x
-        cdef np.float64_t[:] nodes_y = in_tens_mesh.grid_nodes_y
+        cdef np.float64_t[:] nodes_x = in_tens_mesh.nodes_x
+        cdef np.float64_t[:] nodes_y = in_tens_mesh.nodes_y
         cdef np.float64_t[:] nodes_z = np.array([0.0, 0.0])
         if self._dim == 3:
-            nodes_z = in_tens_mesh.grid_nodes_z
+            nodes_z = in_tens_mesh.nodes_z
         cdef int_t nx = len(nodes_x)-1
         cdef int_t ny = len(nodes_y)-1
         cdef int_t nz = len(nodes_z)-1
@@ -3855,11 +3857,11 @@ cdef class _TreeMesh:
             x1m = min(cell.points[0].location[0], xF[0])
             y1m = min(cell.points[0].location[1], xF[1])
 
-            x1p = max(cell.points[3].location[0], x0[0])
-            y1p = max(cell.points[3].location[1], x0[1])
+            x1p = max(cell.points[3].location[0], origin[0])
+            y1p = max(cell.points[3].location[1], origin[1])
             if self._dim==3:
                 z1m = min(cell.points[0].location[2], xF[2])
-                z1p = max(cell.points[7].location[2], x0[2])
+                z1p = max(cell.points[7].location[2], origin[2])
             # then need to find overlapping cells of TensorMesh...
             ix1 = max(_bisect_left(nodes_x, x1m) - 1, 0)
             ix2 = min(_bisect_right(nodes_x, x1p), nx)
@@ -3881,7 +3883,7 @@ cdef class _TreeMesh:
             for ix in range(ix1, ix2):
                 x2m = nodes_x[ix]
                 x2p = nodes_x[ix+1]
-                if x1m == xF[0] or x1p == x0[0]:
+                if x1m == xF[0] or x1p == origin[0]:
                     dx[ix-ix1] = 1.0
                 else:
                     dx[ix-ix1] = min(x1p, x2p) - max(x1m, x2m)
@@ -3890,7 +3892,7 @@ cdef class _TreeMesh:
             for iy in range(iy1, iy2):
                 y2m = nodes_y[iy]
                 y2p = nodes_y[iy+1]
-                if y1m == xF[1] or y1p == x0[1]:
+                if y1m == xF[1] or y1p == origin[1]:
                     dy[iy-iy1] = 1.0
                 else:
                     dy[iy-iy1] = min(y1p, y2p) - max(y1m, y2m)
@@ -3900,7 +3902,7 @@ cdef class _TreeMesh:
                 z2m = nodes_z[iz]
                 z2p = nodes_z[iz+1]
                 if self._dim==3:
-                    if z1m == xF[2] or z1p == x0[2]:
+                    if z1m == xF[2] or z1p == origin[2]:
                         dz[iz-iz1] = 1.0
                     else:
                         dz[iz-iz1] = min(z1p, z2p) - max(z1m, z2m)
@@ -3949,19 +3951,19 @@ cdef class _TreeMesh:
 
     def get_overlapping_cells(self, rectangle):
         cdef double xm, ym, zm, xp, yp, zp
-        cdef double[:] x0 = self._x0
+        cdef double[:] origin = self._origin
         cdef double[:] xF
         if self.dim == 2:
             xF = np.array([self._xs[-1], self._ys[-1]])
         else:
             xF = np.array([self._xs[-1], self._ys[-1], self._zs[-1]])
         xm = min(rectangle[0], xF[0])
-        xp = max(rectangle[1], x0[0])
+        xp = max(rectangle[1], origin[0])
         ym = min(rectangle[2], xF[1])
-        yp = max(rectangle[3], x0[1])
+        yp = max(rectangle[3], origin[1])
         if self.dim==3:
             zm = min(rectangle[4], xF[2])
-            zp = max(rectangle[5], x0[2])
+            zp = max(rectangle[5], origin[2])
         else:
             zm = 0.0
             zp = 0.0

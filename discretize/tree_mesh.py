@@ -126,25 +126,22 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
             "nhFy": "n_hanging_faces_y",
             "nhFz": "n_hanging_faces_z",
             "nhF": "n_hanging_faces",
-            "gridhN": "grid_hanging_nodes",
-            "gridhFx": "grid_hanging_faces_x",
-            "gridhFy": "grid_hanging_faces_y",
-            "gridhFz": "grid_hanging_faces_z",
-            "gridhEx": "grid_hanging_edges_x",
-            "gridhEy": "grid_hanging_edges_y",
-            "gridhEz": "grid_hanging_edges_z",
+            "gridhN": "hanging_nodes",
+            "gridhFx": "hanging_faces_x",
+            "gridhFy": "hanging_faces_y",
+            "gridhFz": "hanging_faces_z",
+            "gridhEx": "hanging_edges_x",
+            "gridhEy": "hanging_edges_y",
+            "gridhEz": "hanging_edges_z",
         },
     }
 
     # inheriting stuff from BaseTensorMesh that isn't defined in _QuadTree
-    def __init__(self, h=None, x0=None, **kwargs):
-        if "h" in kwargs.keys():
-            h = kwargs.pop("h")
-        if "x0" in kwargs.keys():
-            x0 = kwargs.pop("x0")
-        # print(h, x0)
+    def __init__(self, h=None, origin=None, **kwargs):
+        if "x0" in kwargs:
+            origin = kwargs.pop("x0")
         BaseTensorMesh.__init__(
-            self, h, x0
+            self, h, origin
         )  # TODO:, **kwargs) # pass the kwargs for copy/paste
 
         nx = len(self.h[0])
@@ -157,7 +154,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         if not (is_pow2(nx) and is_pow2(ny) and is_pow2(nz)):
             raise ValueError("length of cell width vectors must be a power of 2")
         # Now can initialize cpp tree parent
-        _TreeMesh.__init__(self, self.h, self.x0)
+        _TreeMesh.__init__(self, self.h, self.origin)
 
         if "cell_levels" in kwargs.keys() and "cell_indexes" in kwargs.keys():
             inds = kwargs.pop("cell_indexes")
@@ -185,7 +182,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         extent_display.append("   ---------------------------")
         dim_label = {0: "x", 1: "y", 2: "z"}
         for dim in range(self.dim):
-            n_vector = getattr(self, "grid_nodes_" + dim_label[dim])
+            n_vector = getattr(self, "nodes_" + dim_label[dim])
             extent_display.append(
                 "{}: {:^13},{:^13}".format(dim_label[dim], n_vector[0], n_vector[-1])
             )
@@ -256,7 +253,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         det_tbl += "<th" + style + ">max</th>\n"
         det_tbl += "</tr>\n"
         for dim in range(self.dim):
-            n_vector = getattr(self, "grid_nodes_" + dim_label[dim])
+            n_vector = getattr(self, "nodes_" + dim_label[dim])
             det_tbl += "<tr>\n"
             det_tbl += "<td" + style + ">{}</td>\n".format(dim_label[dim])
             det_tbl += "<td" + style + ">{}</td>\n".format(n_vector[0])
@@ -290,9 +287,9 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
 
         return full_tbl
 
-    @properties.validator("x0")
-    def _x0_validator(self, change):
-        self._set_x0(change["value"])
+    @properties.validator("origin")
+    def _origin_validator(self, change):
+        self._set_origin(change["value"])
 
     @property
     def vntF(self):
@@ -437,21 +434,21 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
 
     @property
     def face_x_divergence(self):
-        if getattr(self, "_faceDivx", None) is None:
-            self._faceDivx = self.face_divergence[:, : self.nFx]
-        return self._faceDivx
+        if getattr(self, "_face_x_divergence", None) is None:
+            self._face_x_divergence = self.face_divergence[:, : self.nFx]
+        return self._face_x_divergence
 
     @property
     def face_y_divergence(self):
-        if getattr(self, "_faceDivy", None) is None:
-            self._faceDivy = self.face_divergence[:, self.nFx : self.nFx + self.nFy]
-        return self._faceDivy
+        if getattr(self, "_face_y_divergence", None) is None:
+            self._face_y_divergence = self.face_divergence[:, self.nFx : self.nFx + self.nFy]
+        return self._face_y_divergence
 
     @property
     def face_z_divergence(self):
-        if getattr(self, "_faceDivz", None) is None:
-            self._faceDivz = self.face_divergence[:, self.nFx + self.nFy :]
-        return self._faceDivz
+        if getattr(self, "_face_z_divergence", None) is None:
+            self._face_z_divergence = self.face_divergence[:, self.nFx + self.nFy :]
+        return self._face_z_divergence
 
     def point2index(self, locs):
         """Finds cells that contain the given points.
@@ -489,7 +486,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         return self._cell_levels_by_indexes(indices)
 
     def get_interpolation_matrix(
-        self, locs, loc_type="CC", zeros_outside=False, **kwargs
+        self, locs, location_type="CC", zeros_outside=False, **kwargs
     ):
         """Produces interpolation matrix
 
@@ -498,10 +495,10 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         loc : numpy.ndarray
             Location of points to interpolate to
 
-        loc_type: str
+        location_type: str
             What to interpolate
 
-            loc_type can be::
+            location_type can be::
 
                 'Ex'    -> x-component of field defined on edges
                 'Ey'    -> y-component of field defined on edges
@@ -520,34 +517,34 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         """
         if "locType" in kwargs:
             warnings.warn(
-                "The locType keyword argument has been deprecated, please use loc_type. "
+                "The locType keyword argument has been deprecated, please use location_type. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
             )
-            loc_type = kwargs["locType"]
+            location_type = kwargs["locType"]
         if "zerosOutside" in kwargs:
             warnings.warn(
-                "The zerosOutside keyword argument has been deprecated, please use loc_type. "
+                "The zerosOutside keyword argument has been deprecated, please use zeros_outside. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
             )
             zeros_outside = kwargs["zerosOutside"]
         locs = as_array_n_by_dim(locs, self.dim)
-        if loc_type not in ["N", "CC", "Ex", "Ey", "Ez", "Fx", "Fy", "Fz"]:
-            raise Exception("loc_type must be one of N, CC, Ex, Ey, Ez, Fx, Fy, or Fz")
+        if location_type not in ["N", "CC", "Ex", "Ey", "Ez", "Fx", "Fy", "Fz"]:
+            raise Exception("location_type must be one of N, CC, Ex, Ey, Ez, Fx, Fy, or Fz")
 
-        if self.dim == 2 and loc_type in ["Ez", "Fz"]:
+        if self.dim == 2 and location_type in ["Ez", "Fz"]:
             raise Exception("Unable to interpolate from Z edges/face in 2D")
 
         locs = np.require(np.atleast_2d(locs), dtype=np.float64, requirements="C")
 
-        if loc_type == "N":
+        if location_type == "N":
             Av = self._getNodeIntMat(locs, zeros_outside)
-        elif loc_type in ["Ex", "Ey", "Ez"]:
-            Av = self._getEdgeIntMat(locs, zeros_outside, loc_type[1])
-        elif loc_type in ["Fx", "Fy", "Fz"]:
-            Av = self._getFaceIntMat(locs, zeros_outside, loc_type[1])
-        elif loc_type in ["CC"]:
+        elif location_type in ["Ex", "Ey", "Ez"]:
+            Av = self._getEdgeIntMat(locs, zeros_outside, location_type[1])
+        elif location_type in ["Fx", "Fy", "Fz"]:
+            Av = self._getFaceIntMat(locs, zeros_outside, location_type[1])
+        elif location_type in ["CC"]:
             Av = self._getCellIntMat(locs, zeros_outside)
         return Av
 
@@ -597,7 +594,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         return mesh
 
     def __reduce__(self):
-        return TreeMesh, (self.h, self.x0), self.__getstate__()
+        return TreeMesh, (self.h, self.origin), self.__getstate__()
 
     cellGrad = deprecate_property("cell_gradient", "cellGrad", removal_version="1.0.0")
     cellGradx = deprecate_property(

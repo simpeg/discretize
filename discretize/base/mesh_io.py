@@ -59,7 +59,7 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         # Fist line is the size of the model
         sizeM = np.array(msh[0].split(), dtype=float)
         # Second line is the South-West-Top corner coordinates.
-        x0 = np.array(msh[1].split(), dtype=float)
+        origin = np.array(msh[1].split(), dtype=float)
         # Read the cell sizes
         h1 = readCellLine(msh[2])
         h2 = readCellLine(msh[3])
@@ -67,9 +67,9 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         # Invert the indexing of the vector to start from the bottom.
         h3 = h3temp[::-1]
         # Adjust the reference point to the bottom south west corner
-        x0[2] = x0[2] - np.sum(h3)
+        origin[2] = origin[2] - np.sum(h3)
         # Make the mesh
-        tensMsh = TensorMesh([h1, h2, h3], x0=x0)
+        tensMsh = TensorMesh([h1, h2, h3], origin=origin)
         return tensMsh
 
     @classmethod
@@ -123,7 +123,7 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         z0 = -(z0 + sum(dz))
         dz = dz[::-1]
         # Make the mesh
-        tensMsh = TensorMesh([dx, dz], x0=(x0, z0))
+        tensMsh = TensorMesh([dx, dz], origin=(x0, z0))
 
         fopen.close()
 
@@ -278,10 +278,9 @@ class TensorMeshIO(InterfaceTensorread_vtk):
 
         s = comment_lines
         s += "{0:d} {1:d} {2:d}\n".format(*tuple(mesh.vnC))
-        # Have to it in the same operation or use mesh.x0.copy(),
-        # otherwise the mesh.x0 is updated.
-        origin = mesh.x0 + np.array([0, 0, mesh.h[2].sum()])
-        origin.dtype = float
+        # Have to it in the same operation or use mesh.origin.copy(),
+        # otherwise the mesh.origin is updated.
+        origin = mesh.origin + np.array([0, 0, mesh.h[2].sum()])
 
         nCx, nCy, nCz = mesh.shape_cells
         s += "{0:.6f} {1:.6f} {2:.6f}\n".format(*tuple(origin))
@@ -341,8 +340,8 @@ class TensorMeshIO(InterfaceTensorread_vtk):
             return outStr
 
         # Grab face coordinates
-        fx = mesh.grid_nodes_x
-        fz = -mesh.grid_nodes_y[::-1]
+        fx = mesh.nodes_x
+        fz = -mesh.nodes_y[::-1]
 
         # Create the string
         outStr = comment_lines
@@ -422,8 +421,8 @@ class TreeMeshIO(object):
         )
 
         hs = [np.ones(nr) * sz for nr, sz in zip(nCunderMesh, smallCell)]
-        x0 = tswCorn
-        x0[-1] -= np.sum(hs[-1])
+        origin = tswCorn
+        origin[-1] -= np.sum(hs[-1])
 
         ls = np.log2(nCunderMesh).astype(int)
         # if all ls are equal
@@ -432,7 +431,7 @@ class TreeMeshIO(object):
         else:
             max_level = min(ls) + 1
 
-        mesh = TreeMesh(hs, x0=x0)
+        mesh = TreeMesh(hs, origin=origin)
         levels = indArr[:, -1]
         indArr = indArr[:, :-1]
 
@@ -480,7 +479,7 @@ class TreeMeshIO(object):
             raise Exception("UBC form does not support variable cell widths")
         nCunderMesh = np.array([h.size for h in mesh.h], dtype=np.int64)
 
-        tswCorn = mesh.x0.copy()
+        tswCorn = mesh.origin.copy()
         tswCorn[-1] += np.sum(mesh.h[-1])
 
         smallCell = np.array([h[0] for h in mesh.h])

@@ -30,19 +30,19 @@ class InnerProducts(object):
         )
 
     def get_face_inner_product(
-        self, prop=None, inv_prop=False, inv_mat=False, do_fast=True, **kwargs
+        self, model=None, invert_model=False, invert_matrix=False, do_fast=True, **kwargs
     ):
         """Generate the face inner product matrix
 
         Parameters
         ----------
-        prop : numpy.ndarray
+        model : numpy.ndarray
             material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
 
-        inv_prop : bool
+        invert_model : bool
             inverts the material property
 
-        inv_mat : bool
+        invert_matrix : bool
             inverts the matrix
 
         do_fast : bool
@@ -57,18 +57,18 @@ class InnerProducts(object):
         """
         if "invProp" in kwargs:
             warnings.warn(
-                "The invProp keyword argument has been deprecated, please use inv_prop. "
+                "The invProp keyword argument has been deprecated, please use invert_model. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
             )
-            inv_prop = kwargs["invProp"]
+            invert_model = kwargs["invProp"]
         if "invMat" in kwargs:
             warnings.warn(
-                "The invMat keyword argument has been deprecated, please use inv_mat. "
+                "The invMat keyword argument has been deprecated, please use invert_matrix. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
             )
-            inv_mat = kwargs["invMat"]
+            invert_matrix = kwargs["invMat"]
         if "doFast" in kwargs:
             warnings.warn(
                 "The doFast keyword argument has been deprecated, please use do_fast. "
@@ -78,24 +78,24 @@ class InnerProducts(object):
             do_fast = kwargs["doFast"]
 
         return self._getInnerProduct(
-            "F", prop=prop, inv_prop=inv_prop, inv_mat=inv_mat, do_fast=do_fast
+            "F", model=model, invert_model=invert_model, invert_matrix=invert_matrix, do_fast=do_fast
         )
 
     def get_edge_inner_product(
-        self, prop=None, inv_prop=False, inv_mat=False, do_fast=True, **kwargs
+        self, model=None, invert_model=False, invert_matrix=False, do_fast=True, **kwargs
     ):
         """Generate the edge inner product matrix
 
         Parameters
         ----------
 
-        prop : numpy.ndarray
+        model : numpy.ndarray
             material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
 
-        inv_prop : bool
+        invert_model : bool
             inverts the material property
 
-        inv_mat : bool
+        invert_matrix : bool
             inverts the matrix
 
         do_fast : bool
@@ -110,18 +110,18 @@ class InnerProducts(object):
         """
         if "invProp" in kwargs:
             warnings.warn(
-                "The invProp keyword argument has been deprecated, please use inv_prop. "
+                "The invProp keyword argument has been deprecated, please use invert_model. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
             )
-            inv_prop = kwargs["invProp"]
+            invert_model = kwargs["invProp"]
         if "invMat" in kwargs:
             warnings.warn(
-                "The invMat keyword argument has been deprecated, please use inv_mat. "
+                "The invMat keyword argument has been deprecated, please use invert_matrix. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
             )
-            inv_mat = kwargs["invMat"]
+            invert_matrix = kwargs["invMat"]
         if "doFast" in kwargs:
             warnings.warn(
                 "The doFast keyword argument has been deprecated, please use do_fast. "
@@ -130,15 +130,15 @@ class InnerProducts(object):
             )
             do_fast = kwargs["doFast"]
         return self._getInnerProduct(
-            "E", prop=prop, inv_prop=inv_prop, inv_mat=inv_mat, do_fast=do_fast
+            "E", model=model, invert_model=invert_model, invert_matrix=invert_matrix, do_fast=do_fast
         )
 
     def _getInnerProduct(
         self,
-        proj_type,
-        prop=None,
-        inv_prop=False,
-        inv_mat=False,
+        projection_type,
+        model=None,
+        invert_model=False,
+        invert_matrix=False,
         do_fast=True,
         **kwargs
     ):
@@ -147,16 +147,16 @@ class InnerProducts(object):
         Parameters
         ----------
 
-        str : proj_type
+        str : projection_type
             'F' for faces 'E' for edges
 
-        numpy.ndarray : prop
+        numpy.ndarray : model
             material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
 
-        bool : inv_prop
+        bool : invert_model
             inverts the material property
 
-        bool : inv_mat
+        bool : invert_matrix
             inverts the matrix
 
         bool : do_fast
@@ -172,18 +172,18 @@ class InnerProducts(object):
         """
         if "invProp" in kwargs:
             warnings.warn(
-                "The invProp keyword argument has been deprecated, please use inv_prop. "
+                "The invProp keyword argument has been deprecated, please use invert_model. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
             )
-            inv_prop = kwargs["invProp"]
+            invert_model = kwargs["invProp"]
         if "invMat" in kwargs:
             warnings.warn(
-                "The invMat keyword argument has been deprecated, please use inv_mat. "
+                "The invMat keyword argument has been deprecated, please use invert_matrix. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
             )
-            inv_mat = kwargs["invMat"]
+            invert_matrix = kwargs["invMat"]
         if "doFast" in kwargs:
             warnings.warn(
                 "The doFast keyword argument has been deprecated, please use do_fast. "
@@ -191,38 +191,38 @@ class InnerProducts(object):
                 FutureWarning,
             )
             do_fast = kwargs["doFast"]
-        if proj_type not in ["F", "E"]:
-            raise TypeError("proj_type must be 'F' for faces or 'E' for edges")
+        if projection_type not in ["F", "E"]:
+            raise TypeError("projection_type must be 'F' for faces or 'E' for edges")
 
         fast = None
         if hasattr(self, "_fastInnerProduct") and do_fast:
             fast = self._fastInnerProduct(
-                proj_type, prop=prop, inv_prop=inv_prop, inv_mat=inv_mat
+                projection_type, model=model, invert_model=invert_model, invert_matrix=invert_matrix
             )
         if fast is not None:
             return fast
 
-        if inv_prop:
-            prop = inverse_property_tensor(self, prop)
+        if invert_model:
+            model = inverse_property_tensor(self, model)
 
-        tensorType = TensorType(self, prop)
+        tensorType = TensorType(self, model)
 
-        Mu = make_property_tensor(self, prop)
-        Ps = self._getInnerProductProjectionMatrices(proj_type, tensorType)
+        Mu = make_property_tensor(self, model)
+        Ps = self._getInnerProductProjectionMatrices(projection_type, tensorType)
         A = np.sum([P.T * Mu * P for P in Ps])
 
-        if inv_mat and tensorType < 3:
+        if invert_matrix and tensorType < 3:
             A = sdinv(A)
-        elif inv_mat and tensorType == 3:
+        elif invert_matrix and tensorType == 3:
             raise Exception("Solver needed to invert A.")
 
         return A
 
-    def _getInnerProductProjectionMatrices(self, proj_type, tensorType):
+    def _getInnerProductProjectionMatrices(self, projection_type, tensorType):
         """
         Parameters
         ----------
-        proj_type : str
+        projection_type : str
             'F' for faces 'E' for edges
 
         tensorType : TensorType
@@ -230,8 +230,8 @@ class InnerProducts(object):
         """
         if not isinstance(tensorType, TensorType):
             raise TypeError("tensorType must be an instance of TensorType.")
-        if proj_type not in ["F", "E"]:
-            raise TypeError("proj_type must be 'F' for faces or 'E' for edges")
+        if projection_type not in ["F", "E"]:
+            raise TypeError("projection_type must be 'F' for faces or 'E' for edges")
 
         d = self.dim
         # We will multiply by sqrt on each side to keep symmetry
@@ -239,7 +239,7 @@ class InnerProducts(object):
 
         nodes = ["000", "100", "010", "110", "001", "101", "011", "111"][: 2 ** d]
 
-        if proj_type == "F":
+        if projection_type == "F":
             locs = {
                 "000": [("fXm",), ("fXm", "fYm"), ("fXm", "fYm", "fZm")],
                 "100": [("fXp",), ("fXp", "fYm"), ("fXp", "fYm", "fZm")],
@@ -252,7 +252,7 @@ class InnerProducts(object):
             }
             proj = getattr(self, "_getFaceP" + ("x" * d))()
 
-        elif proj_type == "E":
+        elif projection_type == "E":
             locs = {
                 "000": [("eX0",), ("eX0", "eY0"), ("eX0", "eY0", "eZ0")],
                 "100": [("eX0",), ("eX0", "eY1"), ("eX0", "eY1", "eZ1")],
@@ -268,21 +268,21 @@ class InnerProducts(object):
         return [V * proj(*locs[node][d - 1]) for node in nodes]
 
     def get_face_inner_product_deriv(
-        self, prop, do_fast=True, inv_prop=False, inv_mat=False, **kwargs
+        self, model, do_fast=True, invert_model=False, invert_matrix=False, **kwargs
     ):
         """
         Parameters
         ----------
-        prop : numpy.ndarray
+        model : numpy.ndarray
             material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
 
         do_fast :
             bool  do a faster implementation if available.
 
-        inv_prop : bool
+        invert_model : bool
             inverts the material property
 
-        inv_mat : bool
+        invert_matrix : bool
             inverts the matrix
 
         Returns
@@ -294,18 +294,18 @@ class InnerProducts(object):
         """
         if "invProp" in kwargs:
             warnings.warn(
-                "The invProp keyword argument has been deprecated, please use inv_prop. "
+                "The invProp keyword argument has been deprecated, please use invert_model. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
             )
-            inv_prop = kwargs["invProp"]
+            invert_model = kwargs["invProp"]
         if "invMat" in kwargs:
             warnings.warn(
-                "The invMat keyword argument has been deprecated, please use inv_mat. "
+                "The invMat keyword argument has been deprecated, please use invert_matrix. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
             )
-            inv_mat = kwargs["invMat"]
+            invert_matrix = kwargs["invMat"]
         if "doFast" in kwargs:
             warnings.warn(
                 "The doFast keyword argument has been deprecated, please use do_fast. "
@@ -314,25 +314,25 @@ class InnerProducts(object):
             )
             do_fast = kwargs["doFast"]
         return self._getInnerProductDeriv(
-            prop, "F", do_fast=do_fast, inv_prop=inv_prop, inv_mat=inv_mat
+            model, "F", do_fast=do_fast, invert_model=invert_model, invert_matrix=invert_matrix
         )
 
     def get_edge_inner_product_deriv(
-        self, prop, do_fast=True, inv_prop=False, inv_mat=False, **kwargs
+        self, model, do_fast=True, invert_model=False, invert_matrix=False, **kwargs
     ):
         """
         Parameters
         ----------
-        prop : numpy.ndarray
+        model : numpy.ndarray
             material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
 
         do_fast : bool
             do a faster implementation if available.
 
-        inv_prop : bool
+        invert_model : bool
             inverts the material property
 
-        inv_mat : bool
+        invert_matrix : bool
             inverts the matrix
 
 
@@ -344,18 +344,18 @@ class InnerProducts(object):
         """
         if "invProp" in kwargs:
             warnings.warn(
-                "The invProp keyword argument has been deprecated, please use inv_prop. "
+                "The invProp keyword argument has been deprecated, please use invert_model. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
             )
-            inv_prop = kwargs["invProp"]
+            invert_model = kwargs["invProp"]
         if "invMat" in kwargs:
             warnings.warn(
-                "The invMat keyword argument has been deprecated, please use inv_mat. "
+                "The invMat keyword argument has been deprecated, please use invert_matrix. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
             )
-            inv_mat = kwargs["invMat"]
+            invert_matrix = kwargs["invMat"]
         if "doFast" in kwargs:
             warnings.warn(
                 "The doFast keyword argument has been deprecated, please use do_fast. "
@@ -364,28 +364,28 @@ class InnerProducts(object):
             )
             do_fast = kwargs["doFast"]
         return self._getInnerProductDeriv(
-            prop, "E", do_fast=do_fast, inv_prop=inv_prop, inv_mat=inv_mat
+            model, "E", do_fast=do_fast, invert_model=invert_model, invert_matrix=invert_matrix
         )
 
     def _getInnerProductDeriv(
-        self, prop, proj_type, do_fast=True, inv_prop=False, inv_mat=False
+        self, model, projection_type, do_fast=True, invert_model=False, invert_matrix=False
     ):
         """
         Parameters
         ----------
-        prop : numpy.ndarray
+        model : numpy.ndarray
             material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
 
-        proj_type : str
+        projection_type : str
             'F' for faces 'E' for edges
 
         do_fast : bool
             do a faster implementation if available.
 
-        inv_prop : bool
+        invert_model : bool
             inverts the material property
 
-        inv_mat : bool
+        invert_matrix : bool
             inverts the matrix
 
 
@@ -398,29 +398,29 @@ class InnerProducts(object):
         fast = None
         if hasattr(self, "_fastInnerProductDeriv") and do_fast:
             fast = self._fastInnerProductDeriv(
-                proj_type, prop, inv_prop=inv_prop, inv_mat=inv_mat
+                projection_type, model, invert_model=invert_model, invert_matrix=invert_matrix
             )
         if fast is not None:
             return fast
 
-        if inv_prop or inv_mat:
+        if invert_model or invert_matrix:
             raise NotImplementedError(
                 "inverting the property or the matrix is not yet implemented for this mesh/tensorType. You should write it!"
             )
 
-        tensorType = TensorType(self, prop)
-        P = self._getInnerProductProjectionMatrices(proj_type, tensorType=tensorType)
+        tensorType = TensorType(self, model)
+        P = self._getInnerProductProjectionMatrices(projection_type, tensorType=tensorType)
 
         def innerProductDeriv(v):
-            return self._getInnerProductDerivFunction(tensorType, P, proj_type, v)
+            return self._getInnerProductDerivFunction(tensorType, P, projection_type, v)
 
         return innerProductDeriv
 
-    def _getInnerProductDerivFunction(self, tensorType, P, proj_type, v):
+    def _getInnerProductDerivFunction(self, tensorType, P, projection_type, v):
         """
         Parameters
         ----------
-        prop : numpy.ndarray
+        model : numpy.ndarray
             material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
 
         v : numpy.ndarray
@@ -429,7 +429,7 @@ class InnerProducts(object):
         P : list
             list of projection matrices
 
-        proj_type : str
+        projection_type : str
             'F' for faces 'E' for edges
 
 
@@ -439,10 +439,10 @@ class InnerProducts(object):
             dMdm, the derivative of the inner product matrix (n, nC*nA)
 
         """
-        if proj_type not in ["F", "E"]:
-            raise TypeError("proj_type must be 'F' for faces or 'E' for edges")
+        if projection_type not in ["F", "E"]:
+            raise TypeError("projection_type must be 'F' for faces or 'E' for edges")
 
-        n = getattr(self, "n" + proj_type)
+        n = getattr(self, "n" + projection_type)
 
         if tensorType == -1:
             return None

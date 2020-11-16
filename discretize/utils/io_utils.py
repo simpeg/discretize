@@ -27,7 +27,7 @@ def download(url, folder=".", overwrite=False, verbose=True):
     def rename_path(downloadpath):
         splitfullpath = downloadpath.split(os.path.sep)
 
-        # grab just the filename
+        # grab just the file name
         fname = splitfullpath[-1]
         fnamesplit = fname.split(".")
         newname = fnamesplit[0]
@@ -35,7 +35,7 @@ def download(url, folder=".", overwrite=False, verbose=True):
         # check if we have already re-numbered
         newnamesplit = newname.split("(")
 
-        # add (num) to the end of the filename
+        # add (num) to the end of the file name
         if len(newnamesplit) == 1:
             num = 1
         else:
@@ -53,11 +53,11 @@ def download(url, folder=".", overwrite=False, verbose=True):
         os.makedirs(folder)
 
     if isinstance(url, str):
-        filenames = [url.split("/")[-1]]
+        file_names = [url.split("/")[-1]]
     elif isinstance(url, list):
-        filenames = [u.split("/")[-1] for u in url]
+        file_names = [u.split("/")[-1] for u in url]
 
-    downloadpath = [os.path.sep.join([folder, f]) for f in filenames]
+    downloadpath = [os.path.sep.join([folder, f]) for f in file_names]
 
     # check if the directory already exists
     for i, download in enumerate(downloadpath):

@@ -290,15 +290,15 @@ class InterfaceVTK(object):
         """
         # Deal with dimensionalities
         if mesh.dim >= 1:
-            vX = mesh.grid_nodes_x
+            vX = mesh.nodes_x
             xD = len(vX)
             yD, zD = 1, 1
             vY, vZ = np.array([0, 0])
         if mesh.dim >= 2:
-            vY = mesh.grid_nodes_y
+            vY = mesh.nodes_y
             yD = len(vY)
         if mesh.dim == 3:
-            vZ = mesh.grid_nodes_z
+            vZ = mesh.nodes_z
             zD = len(vZ)
         # If axis orientations are standard then use a vtkRectilinearGrid
         if not mesh.reference_is_rotated:
@@ -405,14 +405,14 @@ class InterfaceVTK(object):
         return InterfaceVTK.to_vtk(mesh, models=models)
 
     @staticmethod
-    def _save_unstructured_grid(filename, vtkUnstructGrid, directory=""):
+    def _save_unstructured_grid(file_name, vtkUnstructGrid, directory=""):
         """Saves a VTK unstructured grid file (vtu) for an already generated
         :class:`pyvista.UnstructuredGrid` object.
 
         Parameters
         ----------
 
-        filename : str
+        file_name : str
             path to the output vtk file or just its name if directory is specified
 
         directory : str
@@ -424,8 +424,8 @@ class InterfaceVTK(object):
                 "`_save_unstructured_grid` can only handle `vtkUnstructuredGrid` objects. `%s` is not supported."
                 % vtkUnstructGrid.__class__
             )
-        # Check the extension of the filename
-        fname = os.path.join(directory, filename)
+        # Check the extension of the file_name
+        fname = os.path.join(directory, file_name)
         ext = os.path.splitext(fname)[1]
         if ext == "":
             fname = fname + ".vtu"
@@ -442,14 +442,14 @@ class InterfaceVTK(object):
         vtuWriteFilter.Update()
 
     @staticmethod
-    def _save_structured_grid(filename, vtkStructGrid, directory=""):
+    def _save_structured_grid(file_name, vtkStructGrid, directory=""):
         """Saves a VTK structured grid file (vtk) for an already generated
         :class:`pyvista.StructuredGrid` object.
 
         Parameters
         ----------
 
-        filename : str
+        file_name : str
             path to the output vtk file or just its name if directory is specified
 
         directory : str
@@ -462,8 +462,8 @@ class InterfaceVTK(object):
                     vtkStructGrid.__class__
                 )
             )
-        # Check the extension of the filename
-        fname = os.path.join(directory, filename)
+        # Check the extension of the file_name
+        fname = os.path.join(directory, file_name)
         ext = os.path.splitext(fname)[1]
         if ext == "":
             fname = fname + ".vts"
@@ -480,14 +480,14 @@ class InterfaceVTK(object):
         writer.Update()
 
     @staticmethod
-    def _save_rectilinear_grid(filename, vtkRectGrid, directory=""):
+    def _save_rectilinear_grid(file_name, vtkRectGrid, directory=""):
         """Saves a VTK rectilinear file (vtr) ffor an already generated
         :class:`pyvista.RectilinearGrid` object.
 
         Parameters
         ----------
 
-        filename : str
+        file_name : str
             path to the output vtk file or just its name if directory is specified
 
         directory : str
@@ -500,8 +500,8 @@ class InterfaceVTK(object):
                     vtkRectGrid.__class__
                 )
             )
-        # Check the extension of the filename
-        fname = os.path.join(directory, filename)
+        # Check the extension of the file_name
+        fname = os.path.join(directory, file_name)
         ext = os.path.splitext(fname)[1]
         if ext == "":
             fname = fname + ".vtr"
@@ -516,13 +516,13 @@ class InterfaceVTK(object):
         vtrWriteFilter.SetFileName(fname)
         vtrWriteFilter.Update()
 
-    def writeVTK(mesh, filename, models=None, directory=""):
+    def writeVTK(mesh, file_name, models=None, directory=""):
         """Makes and saves a VTK object from this mesh and given models
 
         Parameters
         ----------
 
-        filename : str
+        file_name : str
             path to the output vtk file or just its name if directory is specified
 
         models : dict
@@ -544,15 +544,15 @@ class InterfaceVTK(object):
             write = writers[key]
         except:
             raise RuntimeError("VTK data type `%s` is not currently supported." % key)
-        return write(filename, vtkObj, directory=directory)
+        return write(file_name, vtkObj, directory=directory)
 
-    def write_vtk(mesh, filename, models=None, directory=""):
+    def write_vtk(mesh, file_name, models=None, directory=""):
         """Makes and saves a VTK object from this mesh and given models
 
         Parameters
         ----------
 
-        filename : str
+        file_name : str
             path to the output vtk file or just its name if directory is specified
 
         models : dict
@@ -563,7 +563,7 @@ class InterfaceVTK(object):
 
 
         """
-        return InterfaceVTK.writeVTK(mesh, filename, models=models, directory=directory)
+        return InterfaceVTK.writeVTK(mesh, file_name, models=models, directory=directory)
 
 
 class InterfaceTensorread_vtk(object):
@@ -589,10 +589,10 @@ class InterfaceTensorread_vtk(object):
         else:
             hz = np.abs(zD)
             zR = _nps.vtk_to_numpy(vtrGrid.GetZCoordinates())[0]
-        x0 = np.array([xR, yR, zR])
+        origin = np.array([xR, yR, zR])
 
         # Make the object
-        tensMsh = TensorMesh([hx, hy, hz], x0=x0)
+        tensMsh = TensorMesh([hx, hy, hz], origin=origin)
 
         # Grap the models
         models = {}
@@ -610,13 +610,13 @@ class InterfaceTensorread_vtk(object):
         return tensMsh, models
 
     @classmethod
-    def read_vtk(TensorMesh, filename, directory=""):
+    def read_vtk(TensorMesh, file_name, directory=""):
         """Read VTK Rectilinear (vtr xml file) and return Tensor mesh and model
 
         Parameters
         ----------
 
-        filename : str
+        file_name : str
             path to the vtr model file to read or just its name if directory is specified
 
         directory : str
@@ -628,7 +628,7 @@ class InterfaceTensorread_vtk(object):
         tuple
             (TensorMesh, modelDictionary)
         """
-        fname = os.path.join(directory, filename)
+        fname = os.path.join(directory, file_name)
         # Read the file
         vtrReader = _vtkRectReader()
         vtrReader.SetFileName(fname)
@@ -637,13 +637,13 @@ class InterfaceTensorread_vtk(object):
         return TensorMesh.vtk_to_tensor_mesh(vtrGrid)
 
     @classmethod
-    def readVTK(TensorMesh, filename, directory=""):
+    def readVTK(TensorMesh, file_name, directory=""):
         """Read VTK Rectilinear (vtr xml file) and return Tensor mesh and model
 
         Parameters
         ----------
 
-        filename : str
+        file_name : str
             path to the vtr model file to read or just its name if directory is specified
 
         directory : str
@@ -660,5 +660,5 @@ class InterfaceTensorread_vtk(object):
             category=FutureWarning,
         )
         return InterfaceTensorread_vtk.read_vtk(
-            TensorMesh, filename, directory=directory
+            TensorMesh, file_name, directory=directory
         )

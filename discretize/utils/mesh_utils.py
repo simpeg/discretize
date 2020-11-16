@@ -267,16 +267,16 @@ def extract_core_mesh(xyzlim, mesh, mesh_type="tensor"):
         xmin, xmax = xyzlim[0], xyzlim[1]
 
         xind = np.logical_and(
-            mesh.grid_cell_centers_x > xmin, mesh.grid_cell_centers_x < xmax
+            mesh.cell_centers_x > xmin, mesh.cell_centers_x < xmax
         )
 
-        xc = mesh.grid_cell_centers_x[xind]
+        xc = mesh.cell_centers_x[xind]
 
         hx = mesh.h[0][xind]
 
-        x0 = [xc[0] - hx[0] * 0.5]
+        origin = [xc[0] - hx[0] * 0.5]
 
-        meshCore = discretize.TensorMesh([hx], x0=x0)
+        meshCore = discretize.TensorMesh([hx], origin=origin)
 
         actind = (mesh.gridCC > xmin) & (mesh.gridCC < xmax)
 
@@ -285,21 +285,21 @@ def extract_core_mesh(xyzlim, mesh, mesh_type="tensor"):
         ymin, ymax = xyzlim[1, 0], xyzlim[1, 1]
 
         xind = np.logical_and(
-            mesh.grid_cell_centers_x > xmin, mesh.grid_cell_centers_x < xmax
+            mesh.cell_centers_x > xmin, mesh.cell_centers_x < xmax
         )
         yind = np.logical_and(
-            mesh.grid_cell_centers_y > ymin, mesh.grid_cell_centers_y < ymax
+            mesh.cell_centers_y > ymin, mesh.cell_centers_y < ymax
         )
 
-        xc = mesh.grid_cell_centers_x[xind]
-        yc = mesh.grid_cell_centers_y[yind]
+        xc = mesh.cell_centers_x[xind]
+        yc = mesh.cell_centers_y[yind]
 
         hx = mesh.h[0][xind]
         hy = mesh.h[1][yind]
 
-        x0 = [xc[0] - hx[0] * 0.5, yc[0] - hy[0] * 0.5]
+        origin = [xc[0] - hx[0] * 0.5, yc[0] - hy[0] * 0.5]
 
-        meshCore = discretize.TensorMesh([hx, hy], x0=x0)
+        meshCore = discretize.TensorMesh([hx, hy], origin=origin)
 
         actind = (
             (mesh.gridCC[:, 0] > xmin)
@@ -314,26 +314,26 @@ def extract_core_mesh(xyzlim, mesh, mesh_type="tensor"):
         zmin, zmax = xyzlim[2, 0], xyzlim[2, 1]
 
         xind = np.logical_and(
-            mesh.grid_cell_centers_x > xmin, mesh.grid_cell_centers_x < xmax
+            mesh.cell_centers_x > xmin, mesh.cell_centers_x < xmax
         )
         yind = np.logical_and(
-            mesh.grid_cell_centers_y > ymin, mesh.grid_cell_centers_y < ymax
+            mesh.cell_centers_y > ymin, mesh.cell_centers_y < ymax
         )
         zind = np.logical_and(
-            mesh.grid_cell_centers_z > zmin, mesh.grid_cell_centers_z < zmax
+            mesh.cell_centers_z > zmin, mesh.cell_centers_z < zmax
         )
 
-        xc = mesh.grid_cell_centers_x[xind]
-        yc = mesh.grid_cell_centers_y[yind]
-        zc = mesh.grid_cell_centers_z[zind]
+        xc = mesh.cell_centers_x[xind]
+        yc = mesh.cell_centers_y[yind]
+        zc = mesh.cell_centers_z[zind]
 
         hx = mesh.h[0][xind]
         hy = mesh.h[1][yind]
         hz = mesh.h[2][zind]
 
-        x0 = [xc[0] - hx[0] * 0.5, yc[0] - hy[0] * 0.5, zc[0] - hz[0] * 0.5]
+        origin = [xc[0] - hx[0] * 0.5, yc[0] - hy[0] * 0.5, zc[0] - hz[0] * 0.5]
 
-        meshCore = discretize.TensorMesh([hx, hy, hz], x0=x0)
+        meshCore = discretize.TensorMesh([hx, hy, hz], origin=origin)
 
         actind = (
             (mesh.gridCC[:, 0] > xmin)
@@ -445,7 +445,7 @@ def mesh_builder_xyz(
 
         # Define h along each dimension
         h_dim = []
-        nC_x0 = []
+        nC_origin = []
         for dim in range(xyz.shape[1]):
             h_dim += [
                 [
@@ -463,7 +463,7 @@ def mesh_builder_xyz(
                 ]
             ]
 
-            nC_x0 += [h_dim[-1][0][1]]
+            nC_origin += [h_dim[-1][0][1]]
 
         # Create mesh
         mesh = discretize.TensorMesh(h_dim)
@@ -472,7 +472,7 @@ def mesh_builder_xyz(
 
         # Figure out full extent required from input
         h_dim = []
-        nC_x0 = []
+        nC_origin = []
         for ii, cc in enumerate(nC):
             extent = limits[ii][0] - limits[ii][1] + np.sum(padding_distance[ii])
 
@@ -487,14 +487,14 @@ def mesh_builder_xyz(
             core = limits[ii][0] - limits[ii][1]
             pad2 = int(np.log2(padding_distance[ii][0] / h[ii] + 1))
 
-            nC_x0 += [int(np.ceil((mesh.h[ii].sum() - core) / h[ii] / 2))]
+            nC_origin += [int(np.ceil((mesh.h[ii].sum() - core) / h[ii] / 2))]
 
     # Set origin
-    x0 = []
+    origin = []
     for ii, hi in enumerate(mesh.h):
-        x0 += [limits[ii][1] - np.sum(hi[: nC_x0[ii]])]
+        origin += [limits[ii][1] - np.sum(hi[: nC_origin[ii]])]
 
-    mesh.x0 = np.hstack(x0)
+    mesh.origin = np.hstack(origin)
 
     # Shift mesh if global mesh is used based on closest to centroid
     axis = ["x", "y", "z"]
@@ -503,11 +503,11 @@ def mesh_builder_xyz(
 
             cc_base = getattr(
                 base_mesh,
-                "grid_cell_centers_{orientation}".format(orientation=axis[dim]),
+                "cell_centers_{orientation}".format(orientation=axis[dim]),
             )
 
             cc_local = getattr(
-                mesh, "grid_cell_centers_{orientation}".format(orientation=axis[dim])
+                mesh, "cell_centers_{orientation}".format(orientation=axis[dim])
             )
 
             shift = (
@@ -515,9 +515,9 @@ def mesh_builder_xyz(
                 - cc_local[np.max([np.searchsorted(cc_local, center[dim]) - 1, 0])]
             )
 
-            x0[dim] += shift
+            origin[dim] += shift
 
-            mesh.x0 = np.hstack(x0)
+            mesh.origin = np.hstack(origin)
 
     return mesh
 
@@ -972,7 +972,7 @@ def active_from_xyz(mesh, xyz, grid_reference="CC", method="linear"):
 
         if mesh.dim == 1:
             active = np.zeros(mesh.nC, dtype="bool")
-            active[np.searchsorted(mesh.grid_cell_centers_x, xyz).max() :] = True
+            active[np.searchsorted(mesh.cell_centers_x, xyz).max() :] = True
             return active
 
     elif grid_reference == "N":
@@ -1005,7 +1005,7 @@ def active_from_xyz(mesh, xyz, grid_reference="CC", method="linear"):
 
             else:
                 active = np.zeros(mesh.nC, dtype="bool")
-                active[np.searchsorted(mesh.grid_nodes_x, xyz).max() :] = True
+                active[np.searchsorted(mesh.nodes_x, xyz).max() :] = True
 
                 return active
         except AttributeError:

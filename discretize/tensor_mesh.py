@@ -28,8 +28,8 @@ class TensorMesh(
         **BaseTensorMesh._aliases,
     }
 
-    def __init__(self, h=None, x0=None, **kwargs):
-        BaseTensorMesh.__init__(self, h=h, x0=x0, **kwargs)
+    def __init__(self, h=None, origin=None, **kwargs):
+        BaseTensorMesh.__init__(self, h=h, origin=origin, **kwargs)
 
     def __repr__(self):
         """Plain text representation."""
@@ -118,25 +118,25 @@ class TensorMesh(
                 - *3D:* Returns the cell volumes
         
         """
-        if getattr(self, "_vol", None) is None:
+        if getattr(self, "_cell_volumes", None) is None:
             vh = self.h
             # Compute cell volumes
             if self.dim == 1:
-                self._vol = mkvc(vh[0])
+                self._cell_volumes = mkvc(vh[0])
             elif self.dim == 2:
                 # Cell sizes in each direction
-                self._vol = mkvc(np.outer(vh[0], vh[1]))
+                self._cell_volumes = mkvc(np.outer(vh[0], vh[1]))
             elif self.dim == 3:
                 # Cell sizes in each direction
-                self._vol = mkvc(np.outer(mkvc(np.outer(vh[0], vh[1])), vh[2]))
-        return self._vol
+                self._cell_volumes = mkvc(np.outer(mkvc(np.outer(vh[0], vh[1])), vh[2]))
+        return self._cell_volumes
 
     @property
     def face_x_areas(self):
         """
         Area of the x-faces
         """
-        if getattr(self, "_areaFx", None) is None:
+        if getattr(self, "_face_x_areas", None) is None:
             # Ensure that we are working with column vectors
             vh = self.h
             # The number of cell centers in each direction
@@ -148,15 +148,15 @@ class TensorMesh(
                 areaFx = np.outer(np.ones(n[0] + 1), vh[1])
             elif self.dim == 3:
                 areaFx = np.outer(np.ones(n[0] + 1), mkvc(np.outer(vh[1], vh[2])))
-            self._areaFx = mkvc(areaFx)
-        return self._areaFx
+            self._face_x_areas = mkvc(areaFx)
+        return self._face_x_areas
 
     @property
     def face_y_areas(self):
         """
         Area of the y-faces
         """
-        if getattr(self, "_areaFy", None) is None:
+        if getattr(self, "_face_y_areas", None) is None:
             # Ensure that we are working with column vectors
             vh = self.h
             # The number of cell centers in each direction
@@ -168,15 +168,15 @@ class TensorMesh(
                 areaFy = np.outer(vh[0], np.ones(n[1] + 1))
             elif self.dim == 3:
                 areaFy = np.outer(vh[0], mkvc(np.outer(np.ones(n[1] + 1), vh[2])))
-            self._areaFy = mkvc(areaFy)
-        return self._areaFy
+            self._face_y_areas = mkvc(areaFy)
+        return self._face_y_areas
 
     @property
     def face_z_areas(self):
         """
         Area of the z-faces
         """
-        if getattr(self, "_areaFz", None) is None:
+        if getattr(self, "_face_z_areas", None) is None:
             # Ensure that we are working with column vectors
             vh = self.h
             # The number of cell centers in each direction
@@ -186,8 +186,8 @@ class TensorMesh(
                 raise Exception("{}D meshes do not have z-Faces".format(self.dim))
             elif self.dim == 3:
                 areaFz = np.outer(vh[0], mkvc(np.outer(vh[1], np.ones(n[2] + 1))))
-            self._areaFz = mkvc(areaFz)
-        return self._areaFz
+            self._face_z_areas = mkvc(areaFz)
+        return self._face_z_areas
 
     @property
     def face_areas(self):
@@ -202,7 +202,7 @@ class TensorMesh(
     @property
     def edge_x_lengths(self):
         """x-edge lengths"""
-        if getattr(self, "_edgeEx", None) is None:
+        if getattr(self, "_edge_x_lengths", None) is None:
             # Ensure that we are working with column vectors
             vh = self.h
             # The number of cell centers in each direction
@@ -216,13 +216,13 @@ class TensorMesh(
                 edgeEx = np.outer(
                     vh[0], mkvc(np.outer(np.ones(n[1] + 1), np.ones(n[2] + 1)))
                 )
-            self._edgeEx = mkvc(edgeEx)
-        return self._edgeEx
+            self._edge_x_lengths = mkvc(edgeEx)
+        return self._edge_x_lengths
 
     @property
     def edge_y_lengths(self):
         """y-edge lengths"""
-        if getattr(self, "_edgeEy", None) is None:
+        if getattr(self, "_edge_y_lengths", None) is None:
             # Ensure that we are working with column vectors
             vh = self.h
             # The number of cell centers in each direction
@@ -236,13 +236,13 @@ class TensorMesh(
                 edgeEy = np.outer(
                     np.ones(n[0] + 1), mkvc(np.outer(vh[1], np.ones(n[2] + 1)))
                 )
-            self._edgeEy = mkvc(edgeEy)
-        return self._edgeEy
+            self._edge_y_lengths = mkvc(edgeEy)
+        return self._edge_y_lengths
 
     @property
     def edge_z_lengths(self):
         """z-edge lengths"""
-        if getattr(self, "_edgeEz", None) is None:
+        if getattr(self, "_edge_z_lengths", None) is None:
             # Ensure that we are working with column vectors
             vh = self.h
             # The number of cell centers in each direction
@@ -254,8 +254,8 @@ class TensorMesh(
                 edgeEz = np.outer(
                     np.ones(n[0] + 1), mkvc(np.outer(np.ones(n[1] + 1), vh[2]))
                 )
-            self._edgeEz = mkvc(edgeEz)
-        return self._edgeEz
+            self._edge_z_lengths = mkvc(edgeEz)
+        return self._edge_z_lengths
 
     @property
     def edge_lengths(self):
@@ -328,7 +328,7 @@ class TensorMesh(
             attrs[name] = {}
 
             # Get min/max node.
-            n_vector = getattr(self, "grid_nodes_" + name)
+            n_vector = getattr(self, "nodes_" + name)
             attrs[name]["min"] = np.nanmin(n_vector)
             attrs[name]["max"] = np.nanmax(n_vector)
 

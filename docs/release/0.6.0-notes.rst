@@ -51,12 +51,14 @@ Aliases
 -------
 On ``discretize.base.BaseMesh``:
 
+* ``origin=x0``
 * ``n_cells=nC``
 * ``n_nodes=nN``
 * ``n_edges=nE``
 * ``n_faces=nF``
 * ``n_edges_x=nEx``, ``n_edges_y=nEy``, ``n_edges_z=nEz``
 * ``n_faces_x=nFx``, ``n_faces_y=nFy``, ``n_faces_z=nFz``
+* ``n_edges_per_direction=vnE``, ``n_faces_per_direction=vnF``
 
 On ``discretize.base.BaseRectangularMesh``:
 
@@ -67,10 +69,10 @@ On ``discretize.base.BaseRectangularMesh``:
 
 On ``discretize.base.BaseTensorMesh``:
 
-* ``grid_cell_centers=gridCC``
-* ``grid_nodes=gridN``
-* ``grid_edges_x=gridEx``, ``grid_edges_y=gridEy``, ``grid_edges_z=gridEz``
-* ``grid_faces_x=gridFx``, ``grid_faces_y=gridFy``, ``grid_faces_z=gridFz``
+* ``cell_centers=gridCC``
+* ``nodes=gridN``
+* ``edges_x=gridEx``, ``edges_y=gridEy``, ``edges_z=gridEz``
+* ``faces_x=gridFx``, ``faces_y=gridFy``, ``faces_z=gridFz``
 
 On ``discretize.operators.DiffOperators``:
 
@@ -84,7 +86,7 @@ On ``discretize.operators.DiffOperators``:
 On ``TreeMesh``:
 
 * Similar to above, all ``n_hanging_XXX=nhX``, and ``n_total_XXX=ntX``, for each ``node=N``, ``face_x,y,z=Fx,y,z``, and ``edge_x,y,z=Ex,y,z``
-* Also, similar to above: ``grid_hanging_XXX=gridhX``, for each hanging ``node=N``, ``face_x,y,z=Fx,y,z`` and ``edge_x,y,z=Ex,y,z``
+* Also, similar to above: ``hanging_XXX=gridhX``, for each hanging ``node=N``, ``face_x,y,z=Fx,y,z`` and ``edge_x,y,z=Ex,y,z``
 
 These aliases are consistent across all meshes that inherit from these classes:
 ``discretize.TensorMesh``, ``discretize.CurvilinearMesh``, ``discretize.CylindricalMesh``,
@@ -114,8 +116,8 @@ On  ``discretize.base.BaseRectangularMesh``:
 
 On ``discretize.base.BaseTensorMesh``:
 
-* ``vectorNx`` → ``grid_nodes_x``, ``vectorNy`` → ``grid_nodes_y``, ``vectorNz`` → ``grid_nodes_z``
-* ``vectorCCx`` → ``grid_cell_centers_x``, ``vectorCCy`` → ``grid_cell_centers_y``, ``vectorCCz`` → ``grid_cell_centers_z``
+* ``vectorNx`` → ``nodes_x``, ``vectorNy`` → ``nodes_y``, ``vectorNz`` → ``nodes_z``
+* ``vectorCCx`` → ``cell_centers_x``, ``vectorCCy`` → ``cell_centers_y``, ``vectorCCz`` → ``cell_centers_z``
 * ``getInterpolationMat`` → ``get_interpolation_matrix``
 * ``isInside`` → ``is_inside``
 * ``getTensor`` → ``get_tensor``
@@ -168,6 +170,9 @@ On ``discretize.TensorMesh``, ``discretize.TreeMesh``:
 
 * ``faceBoundaryInd`` → ``face_boundary_indices``
 * ``cellBoundaryInd`` → ``cell_boundary_indices``
+
+On ``discretize.CurvilinearMesh``:
+* The ``nodes`` property is now ``node_list`` to avoid the name clash with the ``nodes`` location property
 
 On ``discretize.CylindricalMesh``:
 
