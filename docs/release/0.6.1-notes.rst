@@ -13,7 +13,7 @@ These properties are now publicly accessible.
 * ``_aveCC2FyStencil`` → ``average_cell_to_total_face_y``
 * ``_aveCC2FzStencil`` → ``average_cell_to_total_face_z``
 
-On other methods, we have promoted the ```_cellGradStencil`` to publicly accessible as:
+In addition, we have promoted the cell gradient stencils to publicly accessible as:
 
 * ``_cellGradStencil`` → ``stencil_cell_gradient``
 * ``_cellGradxStencil`` → ``stencil_cell_gradient_x``
@@ -31,4 +31,4 @@ Contributors
 Pull requests
 =============
 
-* `#227 <https://github.com/simpeg/discretize/pull/227>`__: Restructure.
+* `#229 <https://github.com/simpeg/discretize/pull/229>`__: Quick Patch for stencil matrices.
