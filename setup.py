@@ -58,7 +58,7 @@ install_requires = build_requires + [
 
 metadata = dict(
     name="discretize",
-    version="0.5.1",
+    version="0.6.0",
     python_requires=">=3.6",
     setup_requires=build_requires,
     install_requires=install_requires,
