@@ -302,18 +302,18 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         return [self.ntEx, self.ntEy] + ([] if self.dim == 2 else [self.ntEz])
 
     @property
-    def cell_gradient_stencil(self):
-        if getattr(self, "_cellGradStencil", None) is None:
+    def stencil_cell_gradient(self):
+        if getattr(self, "_stencil_cell_gradient", None) is None:
 
-            self._cellGradStencil = sp.vstack(
-                [self._cellGradxStencil, self._cellGradyStencil]
+            self._stencil_cell_gradient = sp.vstack(
+                [self.stencil_cell_gradient_x, self.stencil_cell_gradient_y]
             )
             if self.dim == 3:
-                self._cellGradStencil = sp.vstack(
-                    [self._cellGradStencil, self._cellGradzStencil]
+                self._stencil_cell_gradient = sp.vstack(
+                    [self._stencil_cell_gradient, self.stencil_cell_gradient_z]
                 )
 
-        return self._cellGradStencil
+        return self._stencil_cell_gradient
 
     @property
     def cell_gradient(self):
@@ -321,7 +321,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         Cell centered Gradient operator built off of the faceDiv operator.
         Grad =  - (Mf)^{-1} * Div * diag (volume)
         """
-        if getattr(self, "_cellGrad", None) is None:
+        if getattr(self, "_cell_gradient", None) is None:
 
             i_s = self.face_boundary_indices
 
@@ -347,11 +347,11 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
                 Pafz = sp.diags(iz)
                 Pi = sp.block_diag([Pafx, Pafy, Pafz])
 
-            self._cellGrad = (
+            self._cell_gradient = (
                 -Pi * MfI * self.face_divergence.T * sp.diags(self.cell_volumes)
             )
 
-        return self._cellGrad
+        return self._cell_gradient
 
     @property
     def cell_gradient_x(self):
@@ -359,7 +359,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         Cell centered Gradient operator in x-direction (Gradx)
         Grad = sp.vstack((Gradx, Grady, Gradz))
         """
-        if getattr(self, "_cellGradx", None) is None:
+        if getattr(self, "_cell_gradient_x", None) is None:
 
             nFx = self.nFx
             i_s = self.face_boundary_indices
@@ -372,11 +372,11 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
             MfI = self.get_face_inner_product(invMat=True)
             MfIx = sp.diags(MfI.diagonal()[:nFx])
 
-            self._cellGradx = (
+            self._cell_gradient_x = (
                 -Pafx * MfIx * self.face_x_divergence.T * sp.diags(self.cell_volumes)
             )
 
-        return self._cellGradx
+        return self._cell_gradient_x
 
     @property
     def cell_gradient_y(self):
@@ -384,7 +384,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         Cell centered Gradient operator in y-direction (Grady)
         Grad = sp.vstack((Gradx, Grady, Gradz))
         """
-        if getattr(self, "_cellGrady", None) is None:
+        if getattr(self, "_cell_gradient_y", None) is None:
 
             nFx = self.nFx
             nFy = self.nFy
@@ -398,11 +398,11 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
             MfI = self.get_face_inner_product(invMat=True)
             MfIy = sp.diags(MfI.diagonal()[nFx : nFx + nFy])
 
-            self._cellGrady = (
+            self._cell_gradient_y = (
                 -Pafy * MfIy * self.face_y_divergence.T * sp.diags(self.cell_volumes)
             )
 
-        return self._cellGrady
+        return self._cell_gradient_y
 
     @property
     def cell_gradient_z(self):
@@ -412,7 +412,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         """
         if self.dim == 2:
             raise TypeError("z derivative not defined in 2D")
-        if getattr(self, "_cellGradz", None) is None:
+        if getattr(self, "_cell_gradient_z", None) is None:
 
             nFx = self.nFx
             nFy = self.nFy
@@ -426,11 +426,11 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
             MfI = self.get_face_inner_product(invMat=True)
             MfIz = sp.diags(MfI.diagonal()[nFx + nFy :])
 
-            self._cellGradz = (
+            self._cell_gradient_z = (
                 -Pafz * MfIz * self.face_z_divergence.T * sp.diags(self.cell_volumes)
             )
 
-        return self._cellGradz
+        return self._cell_gradient_z
 
     @property
     def face_x_divergence(self):
@@ -646,4 +646,13 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
     )
     cellBoundaryInd = deprecate_property(
         "cell_boundary_indices", "cellBoundaryInd", removal_version="1.0.0"
+    )
+    _aveCC2FxStencil = deprecate_property(
+        "average_cell_to_total_face_x", "_aveCC2FxStencil", removal_version="1.0.0"
+    )
+    _aveCC2FyStencil = deprecate_property(
+        "average_cell_to_total_face_y", "_aveCC2FyStencil", removal_version="1.0.0"
+    )
+    _aveCC2FzStencil = deprecate_property(
+        "average_cell_to_total_face_z", "_aveCC2FzStencil", removal_version="1.0.0"
     )

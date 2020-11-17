@@ -158,7 +158,7 @@ class DiffOperators(object):
     #                                                                         #
     ###########################################################################
     @property
-    def _faceDivStencilx(self):
+    def _face_x_divergence_stencil(self):
         """
         Face divergence operator in the x-direction (x-faces to cell centers)
         """
@@ -175,7 +175,7 @@ class DiffOperators(object):
         return Dx
 
     @property
-    def _faceDivStencily(self):
+    def _face_y_divergence_stencil(self):
         """
         Face divergence operator in the y-direction (y-faces to cell centers)
         """
@@ -192,7 +192,7 @@ class DiffOperators(object):
         return Dy
 
     @property
-    def _faceDivStencilz(self):
+    def _face_z_divergence_stencil(self):
         """
         Face divergence operator in the z-direction (z-faces to cell centers)
         """
@@ -207,15 +207,15 @@ class DiffOperators(object):
         return Dz
 
     @property
-    def _faceDivStencil(self):
+    def _face_divergence_stencil(self):
         # Compute faceDivergence stencil on faces
         if self.dim == 1:
-            D = self._faceDivStencilx
+            D = self._face_x_divergence_stencil
         elif self.dim == 2:
-            D = sp.hstack((self._faceDivStencilx, self._faceDivStencily), format="csr")
+            D = sp.hstack((self._face_x_divergence_stencil, self._face_y_divergence_stencil), format="csr")
         elif self.dim == 3:
             D = sp.hstack(
-                (self._faceDivStencilx, self._faceDivStencily, self._faceDivStencilz),
+                (self._face_x_divergence_stencil, self._face_y_divergence_stencil, self._face_z_divergence_stencil),
                 format="csr",
             )
         return D
@@ -227,7 +227,7 @@ class DiffOperators(object):
         """
         if getattr(self, "_face_divergence", None) is None:
             # Get the stencil of +1, -1's
-            D = self._faceDivStencil
+            D = self._face_divergence_stencil
             # Compute areas of cell faces & volumes
             S = self.face_areas
             V = self.cell_volumes
@@ -243,7 +243,7 @@ class DiffOperators(object):
         # Compute areas of cell faces & volumes
         S = self.reshape(self.face_areas, "F", "Fx", "V")
         V = self.cell_volumes
-        return sdiag(1 / V) * self._faceDivStencilx * sdiag(S)
+        return sdiag(1 / V) * self._face_x_divergence_stencil * sdiag(S)
 
     @property
     def face_y_divergence(self):
@@ -252,7 +252,7 @@ class DiffOperators(object):
         # Compute areas of cell faces & volumes
         S = self.reshape(self.face_areas, "F", "Fy", "V")
         V = self.cell_volumes
-        return sdiag(1 / V) * self._faceDivStencily * sdiag(S)
+        return sdiag(1 / V) * self._face_y_divergence_stencil * sdiag(S)
 
     @property
     def face_z_divergence(self):
@@ -265,7 +265,7 @@ class DiffOperators(object):
         # Compute areas of cell faces & volumes
         S = self.reshape(self.face_areas, "F", "Fz", "V")
         V = self.cell_volumes
-        return sdiag(1 / V) * self._faceDivStencilz * sdiag(S)
+        return sdiag(1 / V) * self._face_z_divergence_stencil * sdiag(S)
 
     ###########################################################################
     #                                                                         #
@@ -274,7 +274,7 @@ class DiffOperators(object):
     ###########################################################################
 
     @property
-    def _nodalGradStencilx(self):
+    def _nodal_gradient_x_stencil(self):
         """
         Stencil for the nodal grad in the x-direction (nodes to x-edges)
         """
@@ -291,7 +291,7 @@ class DiffOperators(object):
         return Gx
 
     @property
-    def _nodalGradStencily(self):
+    def _nodal_gradient_y_stencil(self):
         """
         Stencil for the nodal grad in the y-direction (nodes to y-edges)
         """
@@ -308,7 +308,7 @@ class DiffOperators(object):
         return Gy
 
     @property
-    def _nodalGradStencilz(self):
+    def _nodal_gradient_z_stencil(self):
         """
         Stencil for the nodal grad in the z-direction (nodes to z- edges)
         """
@@ -323,23 +323,23 @@ class DiffOperators(object):
         return Gz
 
     @property
-    def _nodalGradStencil(self):
+    def _nodal_gradient_stencil(self):
         """
         Stencil for the nodal grad
         """
         # Compute divergence operator on faces
         if self.dim == 1:
-            G = self._nodalGradStencilx
+            G = self._nodal_gradient_x_stencil
         elif self.dim == 2:
             G = sp.vstack(
-                (self._nodalGradStencilx, self._nodalGradStencily), format="csr"
+                (self._nodal_gradient_x_stencil, self._nodal_gradient_y_stencil), format="csr"
             )
         elif self.dim == 3:
             G = sp.vstack(
                 (
-                    self._nodalGradStencilx,
-                    self._nodalGradStencily,
-                    self._nodalGradStencilz,
+                    self._nodal_gradient_x_stencil,
+                    self._nodal_gradient_y_stencil,
+                    self._nodal_gradient_z_stencil,
                 ),
                 format="csr",
             )
@@ -351,13 +351,13 @@ class DiffOperators(object):
         Construct gradient operator (nodes to edges).
         """
         if getattr(self, "_nodal_gradient", None) is None:
-            G = self._nodalGradStencil
+            G = self._nodal_gradient_stencil
             L = self.edge_lengths
             self._nodal_gradient = sdiag(1 / L) * G
         return self._nodal_gradient
 
     @property
-    def _nodalLaplacianStencilx(self):
+    def _nodal_laplacian_x_stencil(self):
         warnings.warn("Laplacian has not been tested rigorously.")
 
         Dx = ddx(self.shape_cells[0])
@@ -370,7 +370,7 @@ class DiffOperators(object):
         return Lx
 
     @property
-    def _nodalLaplacianStencily(self):
+    def _nodal_laplacian_y_stencil(self):
         warnings.warn("Laplacian has not been tested rigorously.")
 
         if self.dim == 1:
@@ -386,7 +386,7 @@ class DiffOperators(object):
         return Ly
 
     @property
-    def _nodalLaplacianStencilz(self):
+    def _nodal_laplacian_z_stencil(self):
         warnings.warn("Laplacian has not been tested rigorously.")
 
         if self.dim == 1 or self.dim == 2:
@@ -397,16 +397,16 @@ class DiffOperators(object):
         return kron3(Lz, speye(self.shape_nodes[1]), speye(self.shape_nodes[0]))
 
     @property
-    def _nodalLaplacianx(self):
+    def _nodal_laplacian_x(self):
         Hx = sdiag(1.0 / self.h[0])
         if self.dim == 2:
             Hx = sp.kron(speye(self.shape_nodes[1]), Hx)
         elif self.dim == 3:
             Hx = kron3(speye(self.shape_nodes[2]), speye(self.shape_nodes[1]), Hx)
-        return Hx.T * self._nodalGradStencilx * Hx
+        return Hx.T * self._nodal_gradient_x_stencil * Hx
 
     @property
-    def _nodalLaplaciany(self):
+    def _nodal_laplacian_y(self):
         Hy = sdiag(1.0 / self.h[1])
         if self.dim == 1:
             return None
@@ -414,35 +414,35 @@ class DiffOperators(object):
             Hy = sp.kron(Hy, speye(self.shape_nodes[0]))
         elif self.dim == 3:
             Hy = kron3(speye(self.shape_nodes[2]), Hy, speye(self.shape_nodes[0]))
-        return Hy.T * self._nodalGradStencily * Hy
+        return Hy.T * self._nodal_gradient_y_stencil * Hy
 
     @property
-    def _nodalLaplacianz(self):
+    def _nodal_laplacian_z(self):
         if self.dim == 1 or self.dim == 2:
             return None
         Hz = sdiag(1.0 / self.h[2])
         Hz = kron3(Hz, speye(self.shape_nodes[1]), speye(self.shape_nodes[0]))
-        return Hz.T * self._nodalLaplacianStencilz * Hz
+        return Hz.T * self._nodal_laplacian_z_stencil * Hz
 
     @property
     def nodal_laplacian(self):
         """
         Construct laplacian operator (nodes to edges).
         """
-        if getattr(self, "_nodalLaplacian", None) is None:
+        if getattr(self, "_nodal_laplacian", None) is None:
             warnings.warn("Laplacian has not been tested rigorously.")
             # Compute divergence operator on faces
             if self.dim == 1:
-                self._nodalLaplacian = self._nodalLaplacianx
+                self._nodal_laplacian = self._nodal_laplacian_x
             elif self.dim == 2:
-                self._nodalLaplacian = self._nodalLaplacianx + self._nodalLaplaciany
+                self._nodal_laplacian = self._nodal_laplacian_x + self._nodal_laplacian_y
             elif self.dim == 3:
-                self._nodalLaplacian = (
-                    self._nodalLaplacianx
-                    + self._nodalLaplaciany
-                    + self._nodalLaplacianz
+                self._nodal_laplacian = (
+                    self._nodal_laplacian_x
+                    + self._nodal_laplacian_y
+                    + self._nodal_laplacian_z
                 )
-        return self._nodalLaplacian
+        return self._nodal_laplacian
 
     ###########################################################################
     #                                                                         #
@@ -450,7 +450,7 @@ class DiffOperators(object):
     #                                                                         #
     ###########################################################################
 
-    _cellGradBC_list = "neumann"
+    _cell_gradient_BC_list = "neumann"
 
     def set_cell_gradient_BC(self, BC):
         """
@@ -483,13 +483,13 @@ class DiffOperators(object):
             BC[i] = _validate_BC(bc_i)
 
         # ensure we create a new gradient next time we call it
-        self._cellGrad = None
-        self._cellGradBC = None
-        self._cellGradBC_list = BC
+        self._cell_gradient = None
+        self._cell_gradient_BC = None
+        self._cell_gradient_BC_list = BC
         return BC
 
     @property
-    def _cellGradxStencil(self):
+    def stencil_cell_gradient_x(self):
         # TODO: remove this hard-coding
         BC = ["neumann", "neumann"]
         if self.dim == 1:
@@ -507,7 +507,7 @@ class DiffOperators(object):
         return G1
 
     @property
-    def _cellGradyStencil(self):
+    def stencil_cell_gradient_y(self):
         if self.dim < 2:
             return None
         BC = ["neumann", "neumann"]  # TODO: remove this hard-coding
@@ -519,7 +519,7 @@ class DiffOperators(object):
         return G2
 
     @property
-    def _cellGradzStencil(self):
+    def stencil_cell_gradient_z(self):
         if self.dim < 3:
             return None
         BC = ["neumann", "neumann"]  # TODO: remove this hard-coding
@@ -528,8 +528,8 @@ class DiffOperators(object):
         return G3
 
     @property
-    def _cellGradStencil(self):
-        BC = self.set_cell_gradient_BC(self._cellGradBC_list)
+    def stencil_cell_gradient(self):
+        BC = self.set_cell_gradient_BC(self._cell_gradient_BC_list)
         if self.dim == 1:
             G = _ddxCellGrad(self.shape_cells[0], BC[0])
         elif self.dim == 2:
@@ -564,22 +564,22 @@ class DiffOperators(object):
         """
         The cell centered Gradient, takes you to cell faces.
         """
-        if getattr(self, "_cellGrad", None) is None:
-            G = self._cellGradStencil
+        if getattr(self, "_cell_gradient", None) is None:
+            G = self.stencil_cell_gradient
             S = self.face_areas  # Compute areas of cell faces & volumes
             V = (
                 self.aveCC2F * self.cell_volumes
             )  # Average volume between adjacent cells
-            self._cellGrad = sdiag(S / V) * G
-        return self._cellGrad
+            self._cell_gradient = sdiag(S / V) * G
+        return self._cell_gradient
 
     @property
     def cell_gradient_BC(self):
         """
         The cell centered Gradient boundary condition matrix
         """
-        if getattr(self, "_cellGradBC", None) is None:
-            BC = self.set_cell_gradient_BC(self._cellGradBC_list)
+        if getattr(self, "_cell_gradient_BC", None) is None:
+            BC = self.set_cell_gradient_BC(self._cell_gradient_BC_list)
             n = self.vnC
             if self.dim == 1:
                 G = _ddxCellGradBC(n[0], BC[0])
@@ -597,8 +597,8 @@ class DiffOperators(object):
             V = (
                 self.aveCC2F * self.cell_volumes
             )  # Average volume between adjacent cells
-            self._cellGradBC = sdiag(S / V) * G
-        return self._cellGradBC
+            self._cell_gradient_BC = sdiag(S / V) * G
+        return self._cell_gradient_BC
 
     @property
     def cell_gradient_x(self):
@@ -606,25 +606,25 @@ class DiffOperators(object):
         Cell centered Gradient in the x dimension. Has neumann boundary
         conditions.
         """
-        if getattr(self, "_cellGradx", None) is None:
-            G1 = self._cellGradxStencil
+        if getattr(self, "_cell_gradient_x", None) is None:
+            G1 = self.stencil_cell_gradient_x
             # Compute areas of cell faces & volumes
             V = self.aveCC2F * self.cell_volumes
             L = self.reshape(self.face_areas / V, "F", "Fx", "V")
-            self._cellGradx = sdiag(L) * G1
-        return self._cellGradx
+            self._cell_gradient_x = sdiag(L) * G1
+        return self._cell_gradient_x
 
     @property
     def cell_gradient_y(self):
         if self.dim < 2:
             return None
-        if getattr(self, "_cellGrady", None) is None:
-            G2 = self._cellGradyStencil
+        if getattr(self, "_cell_gradient_y", None) is None:
+            G2 = self.stencil_cell_gradient_y
             # Compute areas of cell faces & volumes
             V = self.aveCC2F * self.cell_volumes
             L = self.reshape(self.face_areas / V, "F", "Fy", "V")
-            self._cellGrady = sdiag(L) * G2
-        return self._cellGrady
+            self._cell_gradient_y = sdiag(L) * G2
+        return self._cell_gradient_y
 
     @property
     def cell_gradient_z(self):
@@ -634,13 +634,13 @@ class DiffOperators(object):
         """
         if self.dim < 3:
             return None
-        if getattr(self, "_cellGradz", None) is None:
-            G3 = self._cellGradzStencil
+        if getattr(self, "_cell_gradient_z", None) is None:
+            G3 = self.stencil_cell_gradient_z
             # Compute areas of cell faces & volumes
             V = self.aveCC2F * self.cell_volumes
             L = self.reshape(self.face_areas / V, "F", "Fz", "V")
-            self._cellGradz = sdiag(L) * G3
-        return self._cellGradz
+            self._cell_gradient_z = sdiag(L) * G3
+        return self._cell_gradient_z
 
     ###########################################################################
     #                                                                         #
@@ -649,7 +649,7 @@ class DiffOperators(object):
     ###########################################################################
 
     @property
-    def _edgeCurlStencilx(self):
+    def _edge_x_curl_stencil(self):
         n = self.vnC  # The number of cell centers in each direction
 
         D32 = kron3(ddx(n[2]), speye(n[1]), speye(n[0] + 1))
@@ -660,7 +660,7 @@ class DiffOperators(object):
         return sp.hstack((O1, -D32, D23))
 
     @property
-    def _edgeCurlStencily(self):
+    def _edge_y_curl_stencil(self):
         n = self.vnC  # The number of cell centers in each direction
 
         D31 = kron3(ddx(n[2]), speye(n[1] + 1), speye(n[0]))
@@ -671,7 +671,7 @@ class DiffOperators(object):
         return sp.hstack((D31, O2, -D13))
 
     @property
-    def _edgeCurlStencilz(self):
+    def _edge_z_curl_stencil(self):
         n = self.vnC  # The number of cell centers in each direction
 
         D21 = kron3(speye(n[2] + 1), ddx(n[1]), speye(n[0]))
@@ -682,7 +682,7 @@ class DiffOperators(object):
         return sp.hstack((-D21, D12, O3))
 
     @property
-    def _edgeCurlStencil(self):
+    def _edge_curl_stencil(self):
         if self.dim <= 1:
             raise NotImplementedError("Edge Curl only programed for 2 or 3D.")
 
@@ -714,9 +714,9 @@ class DiffOperators(object):
 
             C = sp.vstack(
                 (
-                    self._edgeCurlStencilx,
-                    self._edgeCurlStencily,
-                    self._edgeCurlStencilz,
+                    self._edge_x_curl_stencil,
+                    self._edge_y_curl_stencil,
+                    self._edge_z_curl_stencil,
                 ),
                 format="csr",
             )
@@ -737,9 +737,9 @@ class DiffOperators(object):
                 raise NotImplementedError("Edge Curl only programed for 2 or 3D.")
 
             if self.dim == 2:
-                self._edge_curl = self._edgeCurlStencil * sdiag(1 / S)
+                self._edge_curl = self._edge_curl_stencil * sdiag(1 / S)
             elif self.dim == 3:
-                self._edge_curl = sdiag(1 / S) * (self._edgeCurlStencil * sdiag(L))
+                self._edge_curl = sdiag(1 / S) * (self._edge_curl_stencil * sdiag(L))
 
         return self._edge_curl
 
@@ -1335,6 +1335,10 @@ class DiffOperators(object):
         "face_z_divergence", "faceDivz", removal_version="1.0.0"
     )
     edgeCurl = deprecate_property("edge_curl", "edgeCurl", removal_version="1.0.0")
+    _cellGradStencil = deprecate_property("stencil_cell_gradient", "_cellGradStencil", removal_version="1.0.0")
+    _cellGradxStencil = deprecate_property("stencil_cell_gradient_x", "_cellGradxStencil", removal_version="1.0.0")
+    _cellGradyStencil = deprecate_property("stencil_cell_gradient_y", "_cellGradyStencil", removal_version="1.0.0")
+    _cellGradzStencil = deprecate_property("stencil_cell_gradient_z", "_cellGradzStencil", removal_version="1.0.0")
 
     setCellGradBC = deprecate_method(
         "set_cell_gradient_BC", "setCellGradBC", removal_version="1.0.0"
