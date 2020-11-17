@@ -9,9 +9,9 @@ discretize
     :target: https://github.com/simpeg/discretize/blob/master/LICENSE
     :alt: MIT license
 
-.. image:: https://api.travis-ci.org/simpeg/discretize.svg?branch=master
-    :target: https://travis-ci.org/simpeg/discretize
-    :alt: Travis CI build status
+.. image:: https://dev.azure.com/simpeg/discretize/_apis/build/status/simpeg.discretize?branchName=master
+    :target: https://dev.azure.com/simpeg/discretize/_build/latest?definitionId=1&branchName=master
+    :alt: Azure pipelines build status
 
 .. image:: https://codecov.io/gh/simpeg/discretize/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/simpeg/discretize
