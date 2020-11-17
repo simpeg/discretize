@@ -42,7 +42,6 @@ as the time increases.
 .. http://www.ctcms.nist.gov/fipy/examples/cahnHilliard/generated/examples.cahnHilliard.mesh2DCoupled.html
 
 """
-from __future__ import print_function
 import discretize
 from pymatsolver import Solver
 import numpy as np
@@ -69,15 +68,15 @@ def run(plotIt=True, n=60):
     M = discretize.TensorMesh([h, h])
 
     # Constants
-    D = a = epsilon = 1.
+    D = a = epsilon = 1.0
     I = discretize.utils.speye(M.nC)
 
     # Operators
     A = D * M.faceDiv * M.cellGrad
-    L = epsilon**2 * M.faceDiv * M.cellGrad
+    L = epsilon ** 2 * M.faceDiv * M.cellGrad
 
     duration = 75
-    elapsed = 0.
+    elapsed = 0.0
     dexp = -5
     phi = np.random.normal(loc=0.5, scale=0.01, size=M.nC)
     ii, jj = 0, 0
@@ -88,12 +87,12 @@ def run(plotIt=True, n=60):
         elapsed += dt
         dexp += 0.05
 
-        dfdphi = a**2 * 2 * phi * (1 - phi) * (1 - 2 * phi)
-        d2fdphi2 = discretize.utils.sdiag(a**2 * 2 * (1 - 6 * phi * (1 - phi)))
+        dfdphi = a ** 2 * 2 * phi * (1 - phi) * (1 - 2 * phi)
+        d2fdphi2 = discretize.utils.sdiag(a ** 2 * 2 * (1 - 6 * phi * (1 - phi)))
 
-        MAT = (dt*A*d2fdphi2 - I - dt*A*L)
-        rhs = (dt*A*d2fdphi2 - I)*phi - dt*A*dfdphi
-        phi = Solver(MAT)*rhs
+        MAT = dt * A * d2fdphi2 - I - dt * A * L
+        rhs = (dt * A * d2fdphi2 - I) * phi - dt * A * dfdphi
+        phi = Solver(MAT) * rhs
 
         if elapsed > capture[jj]:
             PHIS += [(elapsed, phi.copy())]
@@ -105,12 +104,13 @@ def run(plotIt=True, n=60):
     if plotIt:
         fig, axes = plt.subplots(2, 4, figsize=(14, 6))
         axes = np.array(axes).flatten().tolist()
-        for ii, ax in zip(np.linspace(0, len(PHIS)-1, len(axes)), axes):
+        for ii, ax in zip(np.linspace(0, len(PHIS) - 1, len(axes)), axes):
             ii = int(ii)
             M.plotImage(PHIS[ii][1], ax=ax)
-            ax.axis('off')
-            ax.set_title('Elapsed Time: {0:4.1f}'.format(PHIS[ii][0]))
+            ax.axis("off")
+            ax.set_title("Elapsed Time: {0:4.1f}".format(PHIS[ii][0]))
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     run()
     plt.show()

@@ -1,4 +1,3 @@
-from __future__ import print_function
 import numpy as np
 import unittest
 import discretize
@@ -12,13 +11,12 @@ else:
 
 
 if has_vtk:
-    class TestTreeMeshVTK(unittest.TestCase):
 
+    class TestTreeMeshVTK(unittest.TestCase):
         def setUp(self):
             h = np.ones(16)
-            mesh = discretize.TreeMesh([h, 2*h, 3*h])
-            cell_points = np.array([[0.5, 0.5, 0.5],
-                                    [0.5, 2.5, 0.5]])
+            mesh = discretize.TreeMesh([h, 2 * h, 3 * h])
+            cell_points = np.array([[0.5, 0.5, 0.5], [0.5, 2.5, 0.5]])
             cell_levels = np.array([4, 4])
             mesh.insert_cells(cell_points, cell_levels)
             self.mesh = mesh
@@ -26,14 +24,16 @@ if has_vtk:
         def test_VTK_object_conversion(self):
             mesh = self.mesh
             vec = np.arange(mesh.nC)
-            models = {'arange': vec}
+            models = {"arange": vec}
 
             vtkObj = mesh.to_vtk(models)
 
             self.assertEqual(mesh.nC, vtkObj.GetNumberOfCells())
             # TODO: this is actually different?: self.assertEqual(mesh.nN, vtkObj.GetNumberOfPoints())
             # Remember that the tree vtk conversion adds two arrays
-            self.assertEqual(len(models.keys())+2, vtkObj.GetCellData().GetNumberOfArrays())
+            self.assertEqual(
+                len(models.keys()) + 2, vtkObj.GetCellData().GetNumberOfArrays()
+            )
             bnds = vtkObj.GetBounds()
             self.assertEqual(mesh.x0[0], bnds[0])
             self.assertEqual(mesh.x0[1], bnds[2])
@@ -42,10 +42,9 @@ if has_vtk:
             names = list(models.keys())
             for name in names:
                 arr = nps.vtk_to_numpy(vtkObj.GetCellData().GetArray(name))
-                arr = arr.flatten(order='F')
+                arr = arr.flatten(order="F")
                 self.assertTrue(np.allclose(models[name], arr))
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

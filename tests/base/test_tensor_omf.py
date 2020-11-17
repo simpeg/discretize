@@ -1,4 +1,3 @@
-from __future__ import print_function
 import numpy as np
 import unittest
 import discretize
@@ -12,20 +11,18 @@ else:
 
 
 if has_omf:
-    from discretize.mixins.omfModule import unravel_data_array, ravel_data_array
-
+    from discretize.mixins.omf_mod import unravel_data_array, ravel_data_array
 
     class TestTensorMeshOMF(unittest.TestCase):
-
         def setUp(self):
             h = np.ones(16)
-            mesh = discretize.TensorMesh([h, 2*h, 3*h])
+            mesh = discretize.TensorMesh([h, 2 * h, 3 * h])
             self.mesh = mesh
 
         def test_to_omf(self):
             mesh = self.mesh
             vec = np.arange(mesh.nC)
-            models = {'arange': vec}
+            models = {"arange": vec}
 
             omf_element = mesh.to_omf(models)
             geom = omf_element.geometry
@@ -47,29 +44,30 @@ if has_omf:
                 name = list(models.keys())[i]
                 scalar_data = omf_element.data[i]
                 self.assertEqual(name, scalar_data.name)
-                arr = unravel_data_array(np.array(scalar_data.array), mesh.nCx, mesh.nCy, mesh.nCz)
+                arr = unravel_data_array(
+                    np.array(scalar_data.array), mesh.nCx, mesh.nCy, mesh.nCz
+                )
                 self.assertTrue(np.allclose(models[name], arr))
-
 
         def test_from_omf(self):
             omf_element = omf.VolumeElement(
-                name='vol_ir',
+                name="vol_ir",
                 geometry=omf.VolumeGridGeometry(
-                    axis_u=[1,1,0],
-                    axis_v=[0,0,1],
-                    axis_w=[ 1, -1,  0],
+                    axis_u=[1, 1, 0],
+                    axis_v=[0, 0, 1],
+                    axis_w=[1, -1, 0],
                     tensor_u=np.ones(10).astype(float),
                     tensor_v=np.ones(15).astype(float),
                     tensor_w=np.ones(20).astype(float),
-                    origin=[10., 10., -10]
+                    origin=[10.0, 10.0, -10],
                 ),
                 data=[
                     omf.ScalarData(
-                        name='Random Data',
-                        location='cells',
-                        array=np.random.rand(10, 15, 20).flatten()
+                        name="Random Data",
+                        location="cells",
+                        array=np.random.rand(10, 15, 20).flatten(),
                     )
-                ]
+                ],
             )
 
             # Make a discretize mesh
@@ -93,11 +91,14 @@ if has_omf:
                 name = list(models.keys())[i]
                 scalar_data = omf_element.data[i]
                 self.assertEqual(name, scalar_data.name)
-                arr = ravel_data_array(models[name], len(geom.tensor_u), len(geom.tensor_v), len(geom.tensor_w))
+                arr = ravel_data_array(
+                    models[name],
+                    len(geom.tensor_u),
+                    len(geom.tensor_v),
+                    len(geom.tensor_w),
+                )
                 self.assertTrue(np.allclose(np.array(scalar_data.array), arr))
 
 
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

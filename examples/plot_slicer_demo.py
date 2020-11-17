@@ -13,7 +13,7 @@ In the notebook, you have to use :code:`%matplotlib notebook`.
 """
 
 # %matplotlib notebook
-import shelve
+import os
 import discretize
 import numpy as np
 import tarfile
@@ -28,15 +28,16 @@ from matplotlib.colors import SymLogNorm
 # get from running the laguna-del-maule inversion notebook.
 
 f = discretize.utils.download(
-    "https://storage.googleapis.com/simpeg/laguna_del_maule_slicer.tar.gz"
+    "https://storage.googleapis.com/simpeg/laguna_del_maule_slicer.tar.gz",
+    overwrite=True,
 )
 tar = tarfile.open(f, "r")
 tar.extractall()
 tar.close()
 
-with shelve.open('./laguna_del_maule_slicer/laguna_del_maule-result') as db:
-    mesh = db['mesh']
-    Lpout = db['Lpout']
+# Load the mesh and model
+mesh = discretize.load_mesh(os.path.join("laguna_del_maule_slicer", "mesh.json"))
+Lpout = np.load(os.path.join("laguna_del_maule_slicer", "Lpout.npy"))
 
 ###############################################################################
 # Case 1: Using the intrinsinc functionality
@@ -54,6 +55,7 @@ mesh.plot_3d_slicer(Lpout)
 # Depending on your data the default option might look a bit odd. The look
 # of the figure can be improved by getting its handle and adjust it.
 
+
 def beautify(title, fig=None):
     """Beautify the 3D Slicer result."""
 
@@ -65,7 +67,7 @@ def beautify(title, fig=None):
     axs = fig.get_children()
 
     # Set figure title
-    fig.suptitle(title, y=.95, va='center')
+    fig.suptitle(title, y=0.95, va="center")
 
     # Adjust the y-labels on the first subplot (XY)
     plt.setp(axs[1].yaxis.get_majorticklabels(), rotation=90)
@@ -73,23 +75,23 @@ def beautify(title, fig=None):
         label.set_visible(False)
     for label in axs[1].yaxis.get_ticklabels()[::3]:
         label.set_visible(True)
-    axs[1].set_ylabel('Northing (m)')
+    axs[1].set_ylabel("Northing (m)")
 
     # Adjust x- and y-labels on the second subplot (XZ)
     axs[2].set_xticks([357500, 362500, 367500])
-    axs[2].set_xlabel('Easting (m)')
+    axs[2].set_xlabel("Easting (m)")
 
     plt.setp(axs[2].yaxis.get_majorticklabels(), rotation=90)
     axs[2].set_yticks([2500, 0, -2500, -5000])
-    axs[2].set_yticklabels(['$2.5$', '0.0', '-2.5', '-5.0'])
-    axs[2].set_ylabel('Elevation (km)')
+    axs[2].set_yticklabels(["$2.5$", "0.0", "-2.5", "-5.0"])
+    axs[2].set_ylabel("Elevation (km)")
 
     # Adjust x-labels on the third subplot (ZY)
     axs[3].set_xticks([2500, 0, -2500, -5000])
-    axs[3].set_xticklabels(['', '0.0', '-2.5', '-5.0'])
+    axs[3].set_xticklabels(["", "0.0", "-2.5", "-5.0"])
 
     # Adjust colorbar
-    axs[4].set_ylabel('Density (g/cc$^3$)')
+    axs[4].set_ylabel("Density (g/cc$^3$)")
 
     # Ensure sufficient margins so nothing is clipped
     plt.subplots_adjust(bottom=0.1, top=0.9, left=0.1, right=0.9)
@@ -98,7 +100,7 @@ def beautify(title, fig=None):
 ###############################################################################
 #
 mesh.plot_3d_slicer(Lpout)
-beautify('mesh.plot_3d_slicer(Lpout)')
+beautify("mesh.plot_3d_slicer(Lpout)")
 
 ###############################################################################
 # 1.3 Set `xslice`, `yslice`, and `zslice`; transparent region
@@ -110,16 +112,16 @@ beautify('mesh.plot_3d_slicer(Lpout)')
 
 mesh.plot_3d_slicer(Lpout, 370000, 6002500, -2500, transparent=[[-0.02, 0.1]])
 beautify(
-    'mesh.plot_3d_slicer('
-    '\nLpout, 370000, 6002500, -2500, transparent=[[-0.02, 0.1]])'
+    "mesh.plot_3d_slicer("
+    "\nLpout, 370000, 6002500, -2500, transparent=[[-0.02, 0.1]])"
 )
 
 ###############################################################################
 # 1.4 Set `clim`, use `pcolor_opts` to show grid lines
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 mesh.plot_3d_slicer(
-    Lpout, clim=[-0.4, 0.2], pcolor_opts={'edgecolor': 'k', 'linewidth': 0.1}
+    Lpout, clim=[-0.4, 0.2], pcolor_opts={"edgecolor": "k", "linewidth": 0.1}
 )
 beautify(
     "mesh.plot_3d_slicer(\nLpout, clim=[-0.4, 0.2], "
@@ -128,10 +130,10 @@ beautify(
 
 ###############################################################################
 # 1.5 Use `pcolor_opts` to set `SymLogNorm`, and another `cmap`
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 mesh.plot_3d_slicer(
-    Lpout, pcolor_opts={'norm': SymLogNorm(linthresh=0.01),'cmap': 'RdBu_r'}
+    Lpout, pcolor_opts={"norm": SymLogNorm(linthresh=0.01), "cmap": "RdBu_r"}
 )
 beautify(
     "mesh.plot_3d_slicer(Lpout,"
@@ -152,7 +154,7 @@ beautify(
 # if :code:`aspect` is anything else than :code:`auto`. However, if you zoom
 # then it won't help. Expect the unexpected.
 
-mesh.plot_3d_slicer(Lpout, aspect=['equal', 1.5], grid=[4, 4, 3])
+mesh.plot_3d_slicer(Lpout, aspect=["equal", 1.5], grid=[4, 4, 3])
 beautify("mesh.plot_3d_slicer(Lpout, aspect=['equal', 1.5], grid=[4, 4, 3])")
 
 ###############################################################################
@@ -162,7 +164,7 @@ beautify("mesh.plot_3d_slicer(Lpout, aspect=['equal', 1.5], grid=[4, 4, 3])")
 # Setting the transparent-parameter to 'slider' will create interactive sliders
 # to change which range of values of the data is visible.
 
-mesh.plot_3d_slicer(Lpout, transparent='slider')
+mesh.plot_3d_slicer(Lpout, transparent="slider")
 beautify("mesh.plot_3d_slicer(Lpout, transparent='slider')")
 
 
@@ -176,14 +178,12 @@ beautify("mesh.plot_3d_slicer(Lpout, transparent='slider')")
 fig = plt.figure()
 
 # Then you have to get the tracker from the Slicer
-tracker = discretize.View.Slicer(mesh, Lpout)
+tracker = discretize.mixins.Slicer(mesh, Lpout)
 
 # Finally you have to connect the tracker to the figure
-fig.canvas.mpl_connect('scroll_event', tracker.onscroll)
+fig.canvas.mpl_connect("scroll_event", tracker.onscroll)
 
 # Run it through beautify
-beautify(
-    "'discretize.View.Slicer' together with\n'fig.canvas.mpl_connect'", fig
-)
+beautify("'discretize.mixins.Slicer' together with\n'fig.canvas.mpl_connect'", fig)
 
 plt.show()

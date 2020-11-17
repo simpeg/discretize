@@ -37,27 +37,28 @@ tree_mesh = discretize.TreeMesh([ncx, ncy])
 
 
 def refine(cell):
-    if np.sqrt(((np.r_[cell.center]-0.5)**2).sum()) < 0.2:
+    if np.sqrt(((np.r_[cell.center] - 0.5) ** 2).sum()) < 0.2:
         return 4
     return 2
+
 
 tree_mesh.refine(refine)
 
 # create a curvilinear mesh
 curvi_mesh = discretize.CurvilinearMesh(
-    discretize.utils.exampleLrmGrid([ncx, ncy], 'rotate')
+    discretize.utils.exampleLrmGrid([ncx, ncy], "rotate")
 )
 
 # Plot
 fig, axes = plt.subplots(1, 3, figsize=(14.5, 4))
 tensor_mesh.plotGrid(ax=axes[0])
-axes[0].set_title('TensorMesh')
+axes[0].set_title("TensorMesh")
 
 tree_mesh.plotGrid(ax=axes[1])
-axes[1].set_title('TreeMesh')
+axes[1].set_title("TreeMesh")
 
 curvi_mesh.plotGrid(ax=axes[2])
-axes[2].set_title('CurvilinearMesh')
+axes[2].set_title("CurvilinearMesh")
 
 ###############################################################################
 # Variable Locations and Terminology
@@ -81,16 +82,16 @@ tensor_mesh2 = discretize.TensorMesh([hx, hy])
 # Plot
 fig, axes2 = plt.subplots(1, 3, figsize=(14.5, 5))
 tensor_mesh2.plotGrid(ax=axes2[0], nodes=True, centers=True)
-axes2[0].legend(('Nodes', 'Centers'))
-axes2[0].set_title('Nodes and cell centers')
+axes2[0].legend(("Nodes", "Centers"))
+axes2[0].set_title("Nodes and cell centers")
 
 tensor_mesh2.plotGrid(ax=axes2[1], edges=True)
-axes2[1].legend(('X-edges', 'Y-edges'))
-axes2[1].set_title('Cell edges')
+axes2[1].legend(("X-edges", "Y-edges"))
+axes2[1].set_title("Cell edges")
 
 tensor_mesh2.plotGrid(ax=axes2[2], faces=True)
-axes2[2].legend(('X-faces', 'Y-faces'))
-axes2[2].set_title('Cell faces')
+axes2[2].legend(("X-faces", "Y-faces"))
+axes2[2].set_title("Cell faces")
 
 ###############################################################################
 # Note that we define X-edges as being edges that lie parallel to the x-axis.

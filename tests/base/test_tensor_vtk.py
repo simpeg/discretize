@@ -1,4 +1,3 @@
-from __future__ import print_function
 import numpy as np
 import unittest
 import discretize
@@ -12,23 +11,25 @@ else:
 
 
 if has_vtk:
-    class TestTensorMeshVTK(unittest.TestCase):
 
+    class TestTensorMeshVTK(unittest.TestCase):
         def setUp(self):
             h = np.ones(16)
-            mesh = discretize.TensorMesh([h, 2*h, 3*h])
+            mesh = discretize.TensorMesh([h, 2 * h, 3 * h])
             self.mesh = mesh
 
         def test_VTK_object_conversion(self):
             mesh = self.mesh
             vec = np.arange(mesh.nC)
-            models = {'arange': vec}
+            models = {"arange": vec}
 
             vtkObj = mesh.to_vtk(models)
 
             self.assertEqual(mesh.nC, vtkObj.GetNumberOfCells())
             self.assertEqual(mesh.nN, vtkObj.GetNumberOfPoints())
-            self.assertEqual(len(models.keys()), vtkObj.GetCellData().GetNumberOfArrays())
+            self.assertEqual(
+                len(models.keys()), vtkObj.GetCellData().GetNumberOfArrays()
+            )
             bnds = vtkObj.GetBounds()
             self.assertEqual(mesh.x0[0], bnds[0])
             self.assertEqual(mesh.x0[1], bnds[2])
@@ -38,10 +39,9 @@ if has_vtk:
                 name = list(models.keys())[i]
                 self.assertEqual(name, vtkObj.GetCellData().GetArrayName(i))
                 arr = nps.vtk_to_numpy(vtkObj.GetCellData().GetArray(i))
-                arr = arr.flatten(order='F')
+                arr = arr.flatten(order="F")
                 self.assertTrue(np.allclose(models[name], arr))
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
