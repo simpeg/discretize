@@ -1624,7 +1624,8 @@ cdef class _TreeMesh:
         raise NotImplementedError('Nodal Laplacian has not been implemented for TreeMesh')
 
     @cython.boundscheck(False)
-    def _average_cell_to_face_xStencil(self):
+    def average_cell_to_total_face_x(self):
+        """Average matrix for cell center to total (including hanging) x faces"""
         cdef np.int64_t[:] I = np.zeros(2*self.n_total_faces_x, dtype=np.int64)
         cdef np.int64_t[:] J = np.zeros(2*self.n_total_faces_x, dtype=np.int64)
         cdef np.float64_t[:] V = np.zeros(2*self.n_total_faces_x, dtype=np.float64)
@@ -1675,7 +1676,8 @@ cdef class _TreeMesh:
         return sp.csr_matrix((V, (I,J)), shape=(self.n_total_faces_x, self.n_cells))
 
     @cython.boundscheck(False)
-    def _average_cell_to_face_yStencil(self):
+    def average_cell_to_total_face_y(self):
+        """Average matrix for cell center to total (including hanging) y faces"""
         cdef np.int64_t[:] I = np.zeros(2*self.n_total_faces_y, dtype=np.int64)
         cdef np.int64_t[:] J = np.zeros(2*self.n_total_faces_y, dtype=np.int64)
         cdef np.float64_t[:] V = np.zeros(2*self.n_total_faces_y, dtype=np.float64)
@@ -1725,7 +1727,8 @@ cdef class _TreeMesh:
         return sp.csr_matrix((V, (I,J)), shape=(self.n_total_faces_y, self.n_cells))
 
     @cython.boundscheck(False)
-    def _average_cell_to_face_zStencil(self):
+    def average_cell_to_total_face_z(self):
+        """Average matrix for cell center to total (including hanging) z faces"""
         cdef np.int64_t[:] I = np.zeros(2*self.n_total_faces_z, dtype=np.int64)
         cdef np.int64_t[:] J = np.zeros(2*self.n_total_faces_z, dtype=np.int64)
         cdef np.float64_t[:] V = np.zeros(2*self.n_total_faces_z, dtype=np.float64)
@@ -1757,9 +1760,10 @@ cdef class _TreeMesh:
 
     @property
     @cython.boundscheck(False)
-    def _cellGradxStencil(self):
-        if getattr(self, '_cellGradxStencilMat', None) is not None:
-            return self._cellGradxStencilMat
+    def stencil_cell_gradient_x(self):
+        """Cell gradient stencil matrix to total (including hanging) x faces"""
+        if getattr(self, '_stencil_cell_gradient_x', None) is not None:
+            return self._stencil_cell_gradient_x
         cdef np.int64_t[:] I = np.zeros(2*self.n_total_faces_x, dtype=np.int64)
         cdef np.int64_t[:] J = np.zeros(2*self.n_total_faces_x, dtype=np.int64)
         cdef np.float64_t[:] V = np.zeros(2*self.n_total_faces_x, dtype=np.float64)
@@ -1807,16 +1811,17 @@ cdef class _TreeMesh:
                         V[2*ind    ] = -1.0
                         V[2*ind + 1] =  1.0
 
-        self._cellGradxStencilMat = (
+        self._stencil_cell_gradient_x = (
             sp.csr_matrix((V, (I,J)), shape=(self.n_total_faces_x, self.n_cells))
         )
-        return self._cellGradxStencilMat
+        return self._stencil_cell_gradient_x
 
     @property
     @cython.boundscheck(False)
-    def _cellGradyStencil(self):
-        if getattr(self, '_cellGradyStencilMat', None) is not None:
-            return self._cellGradyStencilMat
+    def stencil_cell_gradient_y(self):
+        """Cell gradient stencil matrix to total (including hanging) y faces"""
+        if getattr(self, '_stencil_cell_gradient_y', None) is not None:
+            return self._stencil_cell_gradient_y
 
         cdef np.int64_t[:] I = np.zeros(2*self.n_total_faces_y, dtype=np.int64)
         cdef np.int64_t[:] J = np.zeros(2*self.n_total_faces_y, dtype=np.int64)
@@ -1865,16 +1870,17 @@ cdef class _TreeMesh:
                         V[2*ind    ] = -1.0
                         V[2*ind + 1] = 1.0
 
-        self._cellGradyStencilMat = (
+        self._stencil_cell_gradient_y = (
             sp.csr_matrix((V, (I,J)), shape=(self.n_total_faces_y, self.n_cells))
         )
-        return self._cellGradyStencilMat
+        return self._stencil_cell_gradient_y
 
     @property
     @cython.boundscheck(False)
-    def _cellGradzStencil(self):
-        if getattr(self, '_cellGradzStencilMat', None) is not None:
-            return self._cellGradzStencilMat
+    def stencil_cell_gradient_z(self):
+        """Cell gradient stencil matrix to total (including hanging) z faces"""
+        if getattr(self, '_stencil_cell_gradient_z', None) is not None:
+            return self._stencil_cell_gradient_z
 
         cdef np.int64_t[:] I = np.zeros(2*self.n_total_faces_z, dtype=np.int64)
         cdef np.int64_t[:] J = np.zeros(2*self.n_total_faces_z, dtype=np.int64)
@@ -1903,10 +1909,10 @@ cdef class _TreeMesh:
                     V[2*ind    ] = -1.0
                     V[2*ind + 1] =  1.0
 
-        self._cellGradzStencilMat = (
+        self._stencil_cell_gradient_z = (
             sp.csr_matrix((V, (I,J)), shape=(self.n_total_faces_z, self.n_cells))
         )
-        return self._cellGradzStencilMat
+        return self._stencil_cell_gradient_z
 
     @cython.boundscheck(False)
     def _deflate_edges_x(self):

@@ -1,0 +1,34 @@
+.. currentmodule:: discretize
+
+.. _0.6.1_notes:
+
+===================================
+``discretize`` 0.6.1 Release Notes
+===================================
+
+This patch release adds deprecation for 3 of the hidden properties on the TreeMesh.
+These properties are now publicly accessible.
+
+* ``_aveCC2FxStencil`` → ``average_cell_to_total_face_x``
+* ``_aveCC2FyStencil`` → ``average_cell_to_total_face_y``
+* ``_aveCC2FzStencil`` → ``average_cell_to_total_face_z``
+
+In addition, we have promoted the cell gradient stencils to publicly accessible as:
+
+* ``_cellGradStencil`` → ``stencil_cell_gradient``
+* ``_cellGradxStencil`` → ``stencil_cell_gradient_x``
+* ``_cellGradyStencil`` → ``stencil_cell_gradient_y``
+* ``_cellGradzStencil`` → ``stencil_cell_gradient_z``
+
+We continue to discourage against accessing hidden variables as there is no guarantee
+that their name will stay the same.
+
+Contributors
+============
+
+* @jcapriot
+
+Pull requests
+=============
+
+* `#229 <https://github.com/simpeg/discretize/pull/229>`__: Quick Patch for stencil matrices.

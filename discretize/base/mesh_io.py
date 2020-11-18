@@ -419,6 +419,7 @@ class TreeMeshIO(object):
         indArr = np.genfromtxt(
             (line.encode("utf8") for line in fileLines[4::]), dtype=np.int
         )
+        nCunderMesh = nCunderMesh[:len(tswCorn)]  # remove information related to core
 
         hs = [np.ones(nr) * sz for nr, sz in zip(nCunderMesh, smallCell)]
         origin = tswCorn
