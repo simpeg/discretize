@@ -1,5 +1,48 @@
+.. _inner_products:
+
 Inner Products
 **************
+
+Inner products provide the building blocks for discretizing and solving PDEs with the
+finite volume method. For scalar quantities :math:`\psi` and :math:`\phi`, the inner
+product is given by:
+
+.. math::
+    (\psi , \phi ) = \int_\Omega \psi \, \phi \, dv
+
+And for two vector quantities :math:`\vec{u}` and :math:`\vec{v}`, the inner product is
+given by:
+
+.. math::
+    (\vec{u}, \vec{v}) = \int_\Omega \vec{u} \cdot \vec{v} \, dv
+
+.. To implement the finite volume method, we:
+
+..     1. take the inner product between each differential equation and a test function
+..     2. re-express the inner product using the weak formulation by applying the divergence theorem when necessary
+..     3. formulate a discrete approximation to each inner product which respects the boundary conditions on our variables
+
+When implementing the finite volume method, we construct discrete approximations to inner products.
+The approximations to inner products are combined and simplified to form a linear system in terms
+of an unknown variable, then solved. The approximation to each inner product depends on the quantities
+and differential operators present in the inner product. Here, we demonstrate how to formulate the
+discrete approximation for several classes of inner products.
+
+**Contents:**
+
+.. toctree::
+    :maxdepth: 1
+
+    inner_products_basic
+    inner_products_constitutive
+
+
+
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+
+
 
 By using the weak formulation of many of the PDEs in geophysical applications,
 we can rapidly develop discretizations. Much of this work, however, needs a
@@ -18,8 +61,13 @@ where a and b are either scalars or vectors.
     for meshes and cannot run on its own.
 
 
-Example problem for DC resistivity
-----------------------------------
+
+
+
+
+
+
+**Example problem for DC resistivity**
 
 We will start with the formulation of the Direct Current (DC) resistivity
 problem in geophysics.
@@ -151,143 +199,143 @@ matrices look a bit different because we have 12 edges in 3D instead of just 6
 faces. The interface to the code is exactly the same.
 
 
-Defining Tensor Properties
---------------------------
+.. Defining Tensor Properties
+.. --------------------------
 
-**For 3D:**
+.. **For 3D:**
 
-Depending on the number of columns (either 1, 3, or 6) of mu, the material
-property is interpreted as follows:
+.. Depending on the number of columns (either 1, 3, or 6) of mu, the material
+.. property is interpreted as follows:
 
-.. math::
+.. .. math::
 
-    \vec{\mu} = \left[\begin{matrix} \mu_{1} & 0 & 0 \\ 0 & \mu_{1} & 0 \\ 0 & 0 & \mu_{1}  \end{matrix}\right]
+..     \vec{\mu} = \left[\begin{matrix} \mu_{1} & 0 & 0 \\ 0 & \mu_{1} & 0 \\ 0 & 0 & \mu_{1}  \end{matrix}\right]
 
-    \vec{\mu} = \left[\begin{matrix} \mu_{1} & 0 & 0 \\ 0 & \mu_{2} & 0 \\ 0 & 0 & \mu_{3}  \end{matrix}\right]
+..     \vec{\mu} = \left[\begin{matrix} \mu_{1} & 0 & 0 \\ 0 & \mu_{2} & 0 \\ 0 & 0 & \mu_{3}  \end{matrix}\right]
 
-    \vec{\mu} = \left[\begin{matrix} \mu_{1} & \mu_{4} & \mu_{5} \\ \mu_{4} & \mu_{2} & \mu_{6} \\ \mu_{5} & \mu_{6} & \mu_{3}  \end{matrix}\right]
+..     \vec{\mu} = \left[\begin{matrix} \mu_{1} & \mu_{4} & \mu_{5} \\ \mu_{4} & \mu_{2} & \mu_{6} \\ \mu_{5} & \mu_{6} & \mu_{3}  \end{matrix}\right]
 
-**For 2D:**
+.. **For 2D:**
 
- Depending on the number of columns (either 1, 2, or 3) of mu, the material property is interpreted as follows:
+..  Depending on the number of columns (either 1, 2, or 3) of mu, the material property is interpreted as follows:
 
-.. math::
-    \vec{\mu} = \left[\begin{matrix} \mu_{1} & 0 \\ 0 & \mu_{1} \end{matrix}\right]
+.. .. math::
+..     \vec{\mu} = \left[\begin{matrix} \mu_{1} & 0 \\ 0 & \mu_{1} \end{matrix}\right]
 
-    \vec{\mu} = \left[\begin{matrix} \mu_{1} & 0 \\ 0 & \mu_{2} \end{matrix}\right]
+..     \vec{\mu} = \left[\begin{matrix} \mu_{1} & 0 \\ 0 & \mu_{2} \end{matrix}\right]
 
-    \vec{\mu} = \left[\begin{matrix} \mu_{1} & \mu_{3} \\ \mu_{3} & \mu_{2} \end{matrix}\right]
-
-
-Structure of Matrices
----------------------
-
-Both the isotropic, and anisotropic material properties result in a diagonal mass matrix.
-Which is nice and easy to invert if necessary, however, in the fully anisotropic case which is not aligned with the grid, the matrix is not diagonal. This can be seen for a 3D mesh in the figure below.
-
-.. plot::
-
-    import discretize
-    import numpy as np
-    import matplotlib.pyplot as plt
-    mesh = discretize.TensorMesh([10,50,3])
-    m1 = np.random.rand(mesh.nC)
-    m2 = np.random.rand(mesh.nC,3)
-    m3 = np.random.rand(mesh.nC,6)
-    M = list(range(3))
-    M[0] = mesh.getFaceInnerProduct(m1)
-    M[1] = mesh.getFaceInnerProduct(m2)
-    M[2] = mesh.getFaceInnerProduct(m3)
-    plt.figure(figsize=(13,5))
-    for i, lab in enumerate(['Isotropic','Anisotropic','Tensor']):
-        plt.subplot(131 + i)
-        plt.spy(M[i],ms=0.5,color='k')
-        plt.tick_params(axis='both',which='both',labeltop='off',labelleft='off')
-        plt.title(lab + ' Material Property')
-    plt.show()
+..     \vec{\mu} = \left[\begin{matrix} \mu_{1} & \mu_{3} \\ \mu_{3} & \mu_{2} \end{matrix}\right]
 
 
-Taking Derivatives
-------------------
+.. Structure of Matrices
+.. ---------------------
 
-We will take the derivative of the fully anisotropic tensor for a 3D mesh, the
-other cases are easier and will not be discussed here. Let us start with one
-part of the sum which makes up :math:`\mathbf{M}^f_\Sigma` and take the
-derivative when this is multiplied by some vector :math:`\mathbf{v}`:
+.. Both the isotropic, and anisotropic material properties result in a diagonal mass matrix.
+.. Which is nice and easy to invert if necessary, however, in the fully anisotropic case which is not aligned with the grid, the matrix is not diagonal. This can be seen for a 3D mesh in the figure below.
 
-.. math::
+.. .. plot::
 
-    \mathbf{P}^\top \boldsymbol{\Sigma} \mathbf{Pv}
+..     import discretize
+..     import numpy as np
+..     import matplotlib.pyplot as plt
+..     mesh = discretize.TensorMesh([10,50,3])
+..     m1 = np.random.rand(mesh.nC)
+..     m2 = np.random.rand(mesh.nC,3)
+..     m3 = np.random.rand(mesh.nC,6)
+..     M = list(range(3))
+..     M[0] = mesh.getFaceInnerProduct(m1)
+..     M[1] = mesh.getFaceInnerProduct(m2)
+..     M[2] = mesh.getFaceInnerProduct(m3)
+..     plt.figure(figsize=(13,5))
+..     for i, lab in enumerate(['Isotropic','Anisotropic','Tensor']):
+..         plt.subplot(131 + i)
+..         plt.spy(M[i],ms=0.5,color='k')
+..         plt.tick_params(axis='both',which='both',labeltop='off',labelleft='off')
+..         plt.title(lab + ' Material Property')
+..     plt.show()
 
-Here we will let :math:`\mathbf{Pv} = \mathbf{y}` and :math:`\mathbf{y}` will have the form:
 
-.. math::
+.. Taking Derivatives
+.. ------------------
 
-    \mathbf{y} = \mathbf{Pv} =
-    \left[
-        \begin{matrix}
-            \mathbf{y}_1\\
-            \mathbf{y}_2\\
-            \mathbf{y}_3\\
-        \end{matrix}
-    \right]
+.. We will take the derivative of the fully anisotropic tensor for a 3D mesh, the
+.. other cases are easier and will not be discussed here. Let us start with one
+.. part of the sum which makes up :math:`\mathbf{M}^f_\Sigma` and take the
+.. derivative when this is multiplied by some vector :math:`\mathbf{v}`:
 
-.. math::
+.. .. math::
 
-    \mathbf{P}^\top\Sigma\mathbf{y} =
-    \mathbf{P}^\top
-    \left[\begin{matrix}
-        \boldsymbol{\sigma}_{1} & \boldsymbol{\sigma}_{4} & \boldsymbol{\sigma}_{5} \\
-        \boldsymbol{\sigma}_{4} & \boldsymbol{\sigma}_{2} & \boldsymbol{\sigma}_{6} \\
-        \boldsymbol{\sigma}_{5} & \boldsymbol{\sigma}_{6} & \boldsymbol{\sigma}_{3}
-    \end{matrix}\right]
-    \left[
-        \begin{matrix}
-            \mathbf{y}_1\\
-            \mathbf{y}_2\\
-            \mathbf{y}_3\\
-        \end{matrix}
-    \right]
-    =
-    \mathbf{P}^\top
-    \left[
-        \begin{matrix}
-            \boldsymbol{\sigma}_{1}\circ \mathbf{y}_1 + \boldsymbol{\sigma}_{4}\circ \mathbf{y}_2 + \boldsymbol{\sigma}_{5}\circ \mathbf{y}_3\\
-            \boldsymbol{\sigma}_{4}\circ \mathbf{y}_1 + \boldsymbol{\sigma}_{2}\circ \mathbf{y}_2 + \boldsymbol{\sigma}_{6}\circ \mathbf{y}_3\\
-            \boldsymbol{\sigma}_{5}\circ \mathbf{y}_1 + \boldsymbol{\sigma}_{6}\circ \mathbf{y}_2 + \boldsymbol{\sigma}_{3}\circ \mathbf{y}_3\\
-        \end{matrix}
-    \right]
+..     \mathbf{P}^\top \boldsymbol{\Sigma} \mathbf{Pv}
 
-Now it is easy to take the derivative with respect to any one of the
-parameters, for example,
-:math:`\frac{\partial}{\partial\boldsymbol{\sigma}_1}`
+.. Here we will let :math:`\mathbf{Pv} = \mathbf{y}` and :math:`\mathbf{y}` will have the form:
 
-.. math::
-    \frac{\partial}{\partial \boldsymbol{\sigma}_1}\left(\mathbf{P}^\top\Sigma\mathbf{y}\right)
-    =
-    \mathbf{P}^\top
-    \left[
-        \begin{matrix}
-            \text{diag}(\mathbf{y}_1)\\
-            0\\
-            0\\
-        \end{matrix}
-    \right]
+.. .. math::
 
-Whereas :math:`\frac{\partial}{\partial\boldsymbol{\sigma}_4}`, for
-example, is:
+..     \mathbf{y} = \mathbf{Pv} =
+..     \left[
+..         \begin{matrix}
+..             \mathbf{y}_1\\
+..             \mathbf{y}_2\\
+..             \mathbf{y}_3\\
+..         \end{matrix}
+..     \right]
 
-.. math::
-    \frac{\partial}{\partial \boldsymbol{\sigma}_4}\left(\mathbf{P}^\top\Sigma\mathbf{y}\right)
-    =
-    \mathbf{P}^\top
-    \left[
-        \begin{matrix}
-            \text{diag}(\mathbf{y}_2)\\
-            \text{diag}(\mathbf{y}_1)\\
-            0\\
-        \end{matrix}
-    \right]
+.. .. math::
 
-These are computed for each of the 8 projections, horizontally concatenated,
-and returned.
+..     \mathbf{P}^\top\Sigma\mathbf{y} =
+..     \mathbf{P}^\top
+..     \left[\begin{matrix}
+..         \boldsymbol{\sigma}_{1} & \boldsymbol{\sigma}_{4} & \boldsymbol{\sigma}_{5} \\
+..         \boldsymbol{\sigma}_{4} & \boldsymbol{\sigma}_{2} & \boldsymbol{\sigma}_{6} \\
+..         \boldsymbol{\sigma}_{5} & \boldsymbol{\sigma}_{6} & \boldsymbol{\sigma}_{3}
+..     \end{matrix}\right]
+..     \left[
+..         \begin{matrix}
+..             \mathbf{y}_1\\
+..             \mathbf{y}_2\\
+..             \mathbf{y}_3\\
+..         \end{matrix}
+..     \right]
+..     =
+..     \mathbf{P}^\top
+..     \left[
+..         \begin{matrix}
+..             \boldsymbol{\sigma}_{1}\circ \mathbf{y}_1 + \boldsymbol{\sigma}_{4}\circ \mathbf{y}_2 + \boldsymbol{\sigma}_{5}\circ \mathbf{y}_3\\
+..             \boldsymbol{\sigma}_{4}\circ \mathbf{y}_1 + \boldsymbol{\sigma}_{2}\circ \mathbf{y}_2 + \boldsymbol{\sigma}_{6}\circ \mathbf{y}_3\\
+..             \boldsymbol{\sigma}_{5}\circ \mathbf{y}_1 + \boldsymbol{\sigma}_{6}\circ \mathbf{y}_2 + \boldsymbol{\sigma}_{3}\circ \mathbf{y}_3\\
+..         \end{matrix}
+..     \right]
+
+.. Now it is easy to take the derivative with respect to any one of the
+.. parameters, for example,
+.. :math:`\frac{\partial}{\partial\boldsymbol{\sigma}_1}`
+
+.. .. math::
+..     \frac{\partial}{\partial \boldsymbol{\sigma}_1}\left(\mathbf{P}^\top\Sigma\mathbf{y}\right)
+..     =
+..     \mathbf{P}^\top
+..     \left[
+..         \begin{matrix}
+..             \text{diag}(\mathbf{y}_1)\\
+..             0\\
+..             0\\
+..         \end{matrix}
+..     \right]
+
+.. Whereas :math:`\frac{\partial}{\partial\boldsymbol{\sigma}_4}`, for
+.. example, is:
+
+.. .. math::
+..     \frac{\partial}{\partial \boldsymbol{\sigma}_4}\left(\mathbf{P}^\top\Sigma\mathbf{y}\right)
+..     =
+..     \mathbf{P}^\top
+..     \left[
+..         \begin{matrix}
+..             \text{diag}(\mathbf{y}_2)\\
+..             \text{diag}(\mathbf{y}_1)\\
+..             0\\
+..         \end{matrix}
+..     \right]
+
+.. These are computed for each of the 8 projections, horizontally concatenated,
+.. and returned.

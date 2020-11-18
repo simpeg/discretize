@@ -1,0 +1,282 @@
+.. _inner_products_basic:
+
+Basic Inner Products
+********************
+
+Summary
+-------
+
+Inner products between two scalar or vector quantities represents the most
+basic class of inner products. For scalar quantities :math:`\psi` and :math:`\phi`,
+we will show how the inner product is approximation by:
+
+.. math::
+    (\psi , \phi ) = \int_\Omega \psi \, \phi \, dv \approx \mathbf{\psi^T \, M \, \phi}
+    :label: inner_product_basic_scalar
+
+And for vector quantities :math:`\vec{u}` and :math:`\vec{w}`, the
+inner product is approximated by:
+
+.. math::
+    (\vec{u}, \vec{w}) = \int_\Omega \vec{u} \cdot \vec{w} \, dv \approx \mathbf{u^T \, M \, w}
+    :label: inner_product_basic_vector
+
+where :math:`\mathbf{M}` in either equation represents an
+*inner-product matrix*. :math:`\mathbf{\psi}`, :math:`\mathbf{\phi}`,
+:math:`\mathbf{u}` and :math:`\mathbf{w}` are discrete variables that live
+on the mesh. It is important to note a few things about the
+inner-product matrix in this case:
+
+    1. It depends on the dimensions and discretization of the mesh
+    2. It depends on where the discrete variables live; e.g. edges, faces, nodes, centers
+
+For this simple class of inner products, the form of the inner product matricies for
+discrete quantities living on various parts of the mesh are shown below:
+
+.. math::
+    \textrm{Centers:} \; \mathbf{M_c} &= \textrm{diag} (\mathbf{v} ) \\
+    \textrm{Nodes:} \; \mathbf{M_n} &= \frac{1}{2^{2k}} \mathbf{P_n^T } \textrm{diag} (\mathbf{v} ) \mathbf{P_n} \\
+    \textrm{Faces:} \; \mathbf{M_f} &= \frac{1}{4} \mathbf{P_f^T } \textrm{diag} (\mathbf{I_k \otimes v} ) \mathbf{P_f} \\
+    \textrm{Edges:} \; \mathbf{M_e} &= \frac{1}{4^{k-1}} \mathbf{P_e^T } \textrm{diag} (\mathbf{I_k \otimes v}) \mathbf{P_e}
+
+where :math:`k = 1,2,3`, :math:`\mathbf{I_k}` is the identity matrix and
+:math:`\otimes` is the kronecker product. :math:`\mathbf{P}` are projection
+matricies that map quantities from one part of the cell (nodes, faces, edges)
+to cell centers.
+
+
+Scalars at Cell Centers
+-----------------------
+
+We want to approximate the inner product of two scalar quantities :math:`\psi` and :math:`\phi`
+where the discrete quantities :math:`\mathbf{\psi}` and :math:`\mathbf{\phi}` are defined
+to live at cell centers. Assuming we know the values of :math:`\psi` and :math:`\phi` at cell centers,
+our goal is to construct the inner product matrix :math:`\mathbf{M}` in the expression below: 
+
+.. math::
+    (\psi , \phi ) = \int_\Omega \psi \, \phi \, dv \approx \mathbf{\psi^T \, M \, \phi}
+
+A simple approximation for the inner product is obtained by summing the product of
+:math:`\psi` at cell centers, :math:`\phi` at cell centers and the cell volumes (:math:`\mathbf{v}`)
+over all cells:
+
+.. math::
+     (\psi , \phi ) \approx \sum_i^{nc} \psi_i \phi_i v_i
+
+Expressing the sum in terms of linear equations, we obtain:
+
+.. math::
+     (\psi , \phi ) = \int_\Omega \psi \, \phi \, dv  \approx \mathbf{\psi^T \, M_c \, \phi}
+
+where the mass matrix for cell centered quantities is just a diagonal matrix containing
+the cell volumes, i.e.:
+
+.. math::
+    \mathbf{M_c} = diag(\mathbf{v})
+
+
+.. note:: To see a validation of the discrete approximation, see our tutorials section (link)
+
+
+Scalars at Nodes
+----------------
+
+We want to approximate the inner product of two scalar quantities :math:`\psi` and :math:`\phi`
+where the discrete quantities :math:`\mathbf{\psi}` and :math:`\mathbf{\phi}` are defined
+to live on cell nodes. Assuming we know the values of :math:`\psi` and :math:`\phi` at the nodes,
+our goal is to construct the inner product matrix :math:`\mathbf{M}` in the expression below: 
+
+.. math::
+    (\psi , \phi ) = \int_\Omega \psi \, \phi \, dv \approx \mathbf{\psi^T \, M \, \phi}
+    :label: inner_product_basic_nodes
+
+Whereas :math:`\mathbf{\psi}` and :math:`\mathbf{\phi}` are defined
+to live on cell nodes, it makes more sense for the cell volumes to be defined to live
+at cell centers. This makes evaluating the inner product more complicated as
+discrete quantities do not live at the same place.
+
+For each cell, the contribution towards the inner product is approximated by
+taking the average of the quantity defined at each nodes and multiplying it
+by the cell volume, i.e.:
+
+.. math::
+     (\psi , \phi ) \approx \sum_i^{nc} \tilde{\psi}_i \tilde{\phi}_i v_i
+     :label: inner_product_basic_nodes_sum
+
+where :math:`\tilde{\psi}_i` and :math:`\tilde{\phi}_i` are just the average value of the quantities
+at the nodes of the cell. Where each cell has *N=4* nodes for 2D problems and each cell has *N=8* nodes for
+3D problems:
+
+.. math::
+    \begin{align}
+    \tilde{\psi}_i = \frac{1}{N} \sum_k^N \tilde{\psi}_i^{(k)} \\
+    \tilde{\phi}_i = \frac{1}{N} \sum_k^N \tilde{\phi}_i^{(k)}
+    \end{align}
+
+We want to express the sum in equation :eq:`inner_product_basic_nodes_sum` in the form described by
+equation :eq:`inner_product_basic_nodes`. To accomlish this, we construct a sparse matrix
+:math:`\mathbf{P_n}` which projects quantities at the nodes to their corresponding cell centers.
+
+Our final approximation for the inner product is therefore:
+
+.. math::
+     (\psi , \phi ) = \int_\Omega \psi \, \phi \, dv  \approx \mathbf{\psi^T \, M_n \, \phi}
+
+where the mass matrix for nodal quantities has the form:
+
+.. math::
+    \mathbf{M_n} = \frac{1}{2^{2k}} \mathbf{P_n^T } \textrm{diag} (\mathbf{v} ) \mathbf{P_n}
+
+and :math:`k=1,2,3` refers to the dimension (1D, 2D or 3D). The term containing :math:`k` is responsible for
+averaging once nodal values have been projected to cell centers.
+
+.. note:: To see a validation of the discrete approximation, see our tutorials section (link)
+
+
+Vectors on Cell Faces
+---------------------
+
+For the mimetic finite volume approach, fluxes are generally defined on cell faces;
+as it allows cells to share faces while preserving natural boundary conditions.
+
+We want to approximate the inner product of two vector quantities :math:`\vec{u}` and :math:`\vec{w}`
+where the discrete quantities :math:`\mathbf{u}` and :math:`\mathbf{w}` are defined
+to live on cell faces. Assuming we know the values of :math:`\vec{u}` and :math:`\vec{w}` on the faces,
+our goal is to construct the inner product matrix :math:`\mathbf{M}` in the expression below: 
+
+.. math::
+    (\vec{u}, \vec{w}) = \int_\Omega \vec{u} \cdot \vec{w} \, dv \approx \mathbf{u^T \, M \, w}
+    :label: inner_product_basic_faces
+
+We must respect the dot product. For vectors defined on cell faces, we discretize such that the
+x-component of the vectors live on the x-faces, the y-component lives y-faces and the z-component
+lives on the z-faces. For a single cell, this is illustrated in 2D and 3D below.
+
+.. image:: ../images/face_discretization.png
+    :align: center
+    :width: 500
+
+
+As we can see there are 2 faces for each component. Therefore, we need to project each component of the
+vector from its faces to the cell centers and take their averages separately. For a single cell with volume :math:`v_i`,
+the contribution towards the inner product is:
+
+.. math::
+    \begin{align}
+    \mathbf{In \; 2D:} \; \int_{\Omega_i} \vec{u} \cdot \vec{w} \, dv \approx & \;\; \frac{v_i}{4} \Big ( u_x^{(f1)} + u_x^{(f2)} \Big ) \Big ( w_x^{(f1)} + w_x^{(f2)} \Big ) \\
+    & + \frac{v_i}{4} \Big ( u_y^{(f1)} + u_y^{(f2)} \Big ) \Big ( w_y^{(f1)} + w_y^{(f2)} \Big ) \\
+    & \\
+    \mathbf{In \; 3D:} \; \int_{\Omega_i} \vec{u} \cdot \vec{w} \, dv \approx & \;\; \frac{v_i}{4} \Big ( u_x^{(f1)} + u_x^{(f2)} \Big ) \Big ( w_x^{(f1)} + w_x^{(f2)} \Big ) \\
+    & + \frac{v_i}{4} \Big ( u_y^{(f1)} + u_y^{(f2)} \Big ) \Big ( w_y^{(f1)} + w_y^{(f2)} \Big ) \\
+    & + \frac{v_i}{4} \Big ( u_z^{(f1)} + u_z^{(f2)} \Big ) \Big ( w_z^{(f1)} + w_z^{(f2)} \Big )
+    \end{align}
+    :label: inner_product_basic_faces_1
+
+where superscripts :math:`(f1)` and :math:`(f2)` denote face 1 and face 2, respectively.
+Using the contribution for each cell described in expression :eq:`inner_product_basic_faces_1`,
+we want to approximate the inner product in the form described by
+equation :eq:`inner_product_basic_faces`. To accomlish this, we construct a sparse matrix
+:math:`\mathbf{P_f}` which projects quantities on the x, y and z faces separately to the
+the cell centers.
+
+For discretize vectors :math:`\mathbf{u}` and :math:`\mathbf{w}` whose x, y (and z) components
+are organized on cell faces as follows:
+
+.. math::
+    \mathbf{u} = \begin{bmatrix} \mathbf{u_x} \\ \mathbf{u_y} \\ \mathbf{u_y} \\ \end{bmatrix}
+    \;\;\;\; \textrm{and} \;\;\;\;
+    \mathbf{w} = \begin{bmatrix} \mathbf{w_x} \\ \mathbf{w_y} \\ \mathbf{w_y} \\ \end{bmatrix}
+
+the approximation to the inner product is given by:
+
+.. math::
+     (\vec{u}, \vec{w}) = \int_\Omega \vec{u} \cdot \vec{w} \, dv \approx \mathbf{\mathbf{u} \, M_f \, \mathbf{w}}
+
+where the mass matrix for face quantities has the form:
+
+.. math::
+    \mathbf{M_f} = \frac{1}{4} \mathbf{P_f^T } \textrm{diag} (\mathbf{I_k \otimes v} ) \mathbf{P_f}
+
+and :math:`k=1,2,3` refers to the dimension (1D, 2D or 3D). :math:`\mathbf{I_k}` is the identity matrix and
+:math:`\otimes` is the kronecker product.
+
+.. note:: To see a validation of the discrete approximation, see our tutorials section (link)
+
+
+
+Vectors on Cell Edges
+---------------------
+
+For the mimetic finite volume approach, fields are generally defined on cell edges;
+as it allows cells to share edges while preserving natural boundary conditions.
+We want to approximate the inner product of two vector quantities :math:`\vec{u}` and :math:`\vec{w}`
+where the discrete quantities :math:`\mathbf{u}` and :math:`\mathbf{w}` are defined
+to live at cell edges. Assuming we know the values of :math:`\vec{u}` and :math:`\vec{w}` at the edges,
+our goal is to construct the inner product matrix :math:`\mathbf{M}` in the expression below: 
+
+.. math::
+    (\vec{u}, \vec{w}) = \int_\Omega \vec{u} \cdot \vec{w} \, dv \approx \mathbf{u^T \, M \, w}
+    :label: inner_product_basic_edges
+
+We must respect the dot product. For vectors defined on cell edges, we discretize such that the
+x-component of the vectors live on the x-edges, the y-component lives y-edges and the z-component
+lives on the z-edges. This is illustrated in 2D and 3D below.
+
+.. image:: ../images/edge_discretization.png
+    :align: center
+    :width: 500
+
+
+As we can see there are 2 edges for each component in 2D and 4 edges for each component in 3D.
+Therefore, we need to project each component of the
+vector from its edges to the cell centers and take their averages separately. For a single cell with volume :math:`v_i`,
+the contribution towards the inner product is:
+
+.. math::
+    \begin{align}
+    \mathbf{In \; 2D:} \; \int_{\Omega_i} \vec{u} \cdot \vec{w} \, dv \approx & \;\; \frac{v_i}{4} \Big ( u_x^{(e1)} + u_x^{(e2)} \Big ) \Big ( w_x^{(e1)} + w_x^{(e2)} \Big ) \\
+    & + \frac{v_i}{4} \Big ( u_y^{(e1)} + u_y^{(e2)} \Big ) \Big ( w_y^{(e1)} + w_y^{(e2)} \Big ) \\
+    & \\
+    \mathbf{In \; 3D:} \; \int_{\Omega_i} \vec{u} \cdot \vec{w} \, dv \approx & \;\; \frac{v_i}{16} \Bigg ( \sum_{ei=1}^4 u_x^{(ei)} \Bigg ) \Bigg ( \sum_{ei=1}^4 w_x^{(ei)} \Bigg ) \\
+    & + \frac{v_i}{16} \Bigg ( \sum_{ei=1}^4 u_y^{(ei)} \Bigg ) \Bigg ( \sum_{ei=1}^4 w_y^{(ei)} \Bigg ) \\
+    & + \frac{v_i}{16} \Bigg ( \sum_{ei=1}^4 u_z^{(ei)} \Bigg ) \Bigg ( \sum_{ei=1}^4 w_z^{(ei)} \Bigg )
+    \end{align}
+    :label: inner_product_basic_edges_1
+
+where superscripts :math:`(e1)` and :math:`(e2)` denote eges 1 and edges 2, respectively.
+Using the contribution for each cell described in expression :eq:`inner_product_basic_edges_1`,
+we want to approximate the inner product in the form described by
+equation :eq:`inner_product_basic_edges`. To accomlish this, we construct a sparse matrix
+:math:`\mathbf{P_e}` which projects quantities on the x, y and z edges separately to the
+the cell centers.
+
+For discretize vectors :math:`\mathbf{u}` and :math:`\mathbf{w}` whose x, y (and z) components
+are organized on cell edges as follows:
+
+.. math::
+    \mathbf{u} = \begin{bmatrix} \mathbf{u_x} \\ \mathbf{u_y} \\ \mathbf{u_y} \\ \end{bmatrix}
+    \;\;\;\; \textrm{and} \;\;\;\;
+    \mathbf{w} = \begin{bmatrix} \mathbf{w_x} \\ \mathbf{w_y} \\ \mathbf{w_y} \\ \end{bmatrix}
+
+the approximation to the inner product is given by:
+
+.. math::
+     (\vec{u}, \vec{w}) = \int_\Omega \vec{u} \cdot \vec{w} \, dv \approx \mathbf{\mathbf{u} \, M_e \, \mathbf{w}}
+
+where the mass matrix for face quantities has the form:
+
+.. math::
+    \mathbf{M_e} = \frac{1}{4^{k-1}} \mathbf{P_e^T } \textrm{diag} (\mathbf{I_k \otimes v}) \mathbf{P_e}
+
+and :math:`k=1,2,3` refers to the dimension (1D, 2D or 3D). :math:`\mathbf{I_k}` is the identity matrix and
+:math:`\otimes` is the kronecker product.
+
+.. note:: To see a validation of the discrete approximation, see our tutorials section (link)
+
+
+
+
+
+
+
+
