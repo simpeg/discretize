@@ -1,0 +1,459 @@
+.. _inner_products_anisotropic:
+
+Anisotropic Constitutive Relationships
+**************************************
+
+Summary
+-------
+
+A constitutive relationship quantifies the response of a material to an external stimulus.
+Examples include Ohm's law and Hooke's law. For practical applications of the finite volume method,
+we may need to take the inner product of expressions containing constitutive relationships.
+
+Let :math:`\vec{v}` and :math:`\vec{w}` be two physically related quantities.
+If their relationship is anisotropic (defined by a tensor :math:`\Sigma`), the constitutive relation is of the form:
+
+.. math::
+    \vec{v} = \Sigma \vec{w} \;\;\;\;\; \textrm{where} \;\;\;\;\;
+    \Sigma = \begin{bmatrix} \sigma_{1} & \sigma_{4} & \sigma_{5} \\
+    \sigma_{4} & \sigma_{2} & \sigma_{6} \\
+    \sigma_{5} & \sigma_{6} & \sigma_{3} \end{bmatrix}
+    :label: inner_product_anisotropic
+
+Here we show that for anisotropic constitutive relationships, the inner
+product between a vector :math:`\vec{u}` and the right-hand side of
+equation :eq:`inner_product_anisotropic` is approximated by:
+
+.. math::
+    (\vec{u}, \Sigma \vec{w} ) = \int_\Omega \vec{u} \cdot \Sigma \vec{w} \, dv \approx \boldsymbol{u^T M w}
+
+where :math:`\boldsymbol{M}` represents an *inner-product matrix*, and vectors
+:math:`\mathbf{u}` and :math:`\mathbf{w}` are discrete variables that live
+on the mesh. It is important to note a few things about the
+inner-product matrix in this case:
+
+    1. It depends on the dimensions and discretization of the mesh
+    2. It depends on where the discrete variables live; e.g. edges, faces, nodes, centers
+    3. It depends on the spacial variation of the tensor property :math:`\Sigma`
+
+For this class of inner products, the corresponding form of the inner product matricies for
+discrete quantities living on various parts of the mesh are shown below. We let:
+
+    - :math:`k = 1,2,3` represent the dimension (1D, 2D or 3D)
+    - :math:`\mathbf{e_k}` is a vector of 1s of length :math:`k`
+    - :math:`\odot` is the Hadamard product
+    - :math:`\otimes` is the kronecker product
+    - :math:`\mathbf{P}` are projection matricies that map quantities from one part of the cell (nodes, faces, edges) to cell centers
+    - :math:`\mathbf{v}` is a vector that stores all of the volumes of the cells
+
+**Diagonal Anisotropic:**
+
+For the diagonal anisotropic case, the tensor characterzing the material properties
+has the form
+
+.. math::
+    \Sigma = \begin{bmatrix} \sigma_{x} & 0 & 0 \\
+    0 & \sigma_{y} & 0 \\
+    0 & 0 & \sigma_{z} \end{bmatrix}
+
+The resulting inner products have form.
+
+.. math::
+    \textrm{Vectors on faces:} \; \mathbf{M_{\Sigma f}} &= \frac{1}{4} \mathbf{P_f^T } \textrm{diag} \boldsymbol{\big ( (e_k \otimes v) \odot \sigma \big )} \mathbf{P_f} \\
+    \textrm{Vectors on edges:} \; \mathbf{M_{\Sigma e}} &= \frac{1}{4^{k-1}} \mathbf{P_e^T } \textrm{diag} \boldsymbol{\big ( (e_k \otimes v) \odot \sigma \big )} \mathbf{P_e}
+
+where :math:`\boldsymbol{\sigma}` organizes :math:`\sigma_x`, :math:`\sigma_y` and :math:`\sigma_z` within a vector:
+
+.. math::
+    \boldsymbol{\sigma} = \begin{bmatrix} \boldsymbol{\sigma_x} \\ \boldsymbol{\sigma_y} \\ \boldsymbol{\sigma_z} \\ \end{bmatrix}
+
+
+**Fully Anisotropic:**
+
+For a fully anisotropic case, the tensor characterizing the material properties
+has the form:
+
+.. math::
+    \Sigma = \begin{bmatrix} \sigma_{1} & \sigma_{4} & \sigma_{5} \\
+    \sigma_{4} & \sigma_{2} & \sigma_{6} \\
+    \sigma_{5} & \sigma_{6} & \sigma_{3} \end{bmatrix}
+
+
+
+
+Diagonally Anisotropic Case
+---------------------------
+
+Vectors on Cell Faces
+^^^^^^^^^^^^^^^^^^^^^
+
+We want to approximate the inner product between a vector quantity :math:`\vec{u}` and the product of
+:math:`\Sigma` and :math:`\vec{w}`. Here, we discretize such that :math:`\mathbf{u}` and :math:`\mathbf{w}` are defined
+to live on cess faces. Our goal is to construct the inner product matrix :math:`\mathbf{M}` in the expression below: 
+
+.. math::
+    (\vec{u}, \Sigma \vec{w}) = \int_\Omega \vec{u} \cdot \Sigma \vec{w} \, dv \approx \mathbf{u^T \, M \, e}
+    :label: inner_product_anisotropic_faces
+
+where
+
+.. math::
+    \Sigma = \begin{bmatrix} \sigma_{x} & 0 & 0 \\
+    0 & \sigma_{y} & 0 \\
+    0 & 0 & \sigma_{z} \end{bmatrix}
+
+We must respect the dot product and the tensor. For vectors defined on cell faces, we discretize such that the
+x-component of the vectors live on the x-faces, the y-component lives y-faces and the z-component
+lives on the z-faces. For a single cell, this is illustrated in 2D and 3D below. By decomposing the
+domain into a set of finite cells, we assume the tensor properties are spacial invariant within each cell.
+
+.. image:: ../images/face_discretization.png
+    :align: center
+    :width: 600
+
+As we can see there are 2 faces for each component. Therefore, we need to project each component of the
+vector from its faces to the cell centers and take their averages separately. We must also recognize that
+x-components are only multiplied by :math:`\sigma_x`, y_components by :math:`\sigma_y` and z-components
+by :math:`\sigma_z`.
+
+For a single cell with volume :math:`v^{(i)}` and tensor properties defined by
+:math:`\sigma_x^{(i)}`, :math:`\sigma_y^{(i)}`, :math:`\sigma_z^{(i)}`
+the contribution towards the inner product is:
+
+.. math::
+    \begin{align}
+    \mathbf{In \; 2D:} \; \int_{\Omega_i} \vec{u} \cdot \vec{w} \, dv \approx & \;\; 
+    \frac{v^{(i)} \sigma_x^{(i)}}{4} \Big ( u_x^{(1)} + u_x^{(2)} \Big ) \Big ( w_x^{(1)} + w_x^{(2)} \Big ) \\
+    & + \frac{v^{(i)} \sigma_y^{(i)}}{4} \Big ( u_y^{(1)} + u_y^{(2)} \Big ) \Big ( w_y^{(1)} + w_y^{(2)} \Big ) \\
+    & \\
+    \mathbf{In \; 3D:} \; \int_{\Omega_i} \vec{u} \cdot \vec{w} \, dv \approx & \;\;
+    \frac{v^{(i)} \sigma_x^{(i)}}{4} \Big ( u_x^{(1)} + u_x^{(2)} \Big ) \Big ( w_x^{(1)} + w_x^{(2)} \Big ) \\
+    & + \frac{v^{(i)} \sigma_y^{(i)}}{4} \Big ( u_y^{(1)} + u_y^{(2)} \Big ) \Big ( w_y^{(1)} + w_y^{(2)} \Big ) \\
+    & + \frac{v^{(i)} \sigma_z^{(i)}}{4} \Big ( u_z^{(1)} + u_z^{(2)} \Big ) \Big ( w_z^{(1)} + w_z^{(2)} \Big )
+    \end{align}
+    :label: inner_product_anisotropic_faces_1
+
+where superscripts :math:`(1)` and :math:`(2)` denote face 1 and face 2, respectively.
+Using the contribution for each cell described in expression :eq:`inner_product_anisotropic_faces_1`,
+we want to approximate the inner product in the form described by
+equation :eq:`inner_product_anisotropic_faces`. To accomlish this, we construct a sparse matrix
+:math:`\mathbf{P_f}` which projects quantities on the x, y and z faces separately to the
+the cell centers.
+
+For discretize vectors :math:`\mathbf{u}` and :math:`\mathbf{w}` whose x, y (and z) components
+are organized on cell faces as follows:
+
+.. math::
+    \mathbf{u} = \begin{bmatrix} \mathbf{u_x} \\ \mathbf{u_y} \\ \mathbf{u_y} \\ \end{bmatrix}
+    \;\;\;\; \textrm{and} \;\;\;\;
+    \mathbf{w} = \begin{bmatrix} \mathbf{w_x} \\ \mathbf{w_y} \\ \mathbf{w_y} \\ \end{bmatrix}
+
+the approximation to the inner product is given by:
+
+.. math::
+     (\vec{u}, \Sigma \vec{w}) = \int_\Omega \vec{u} \cdot \Sigma \vec{w} \, dv \approx \boldsymbol{\mathbf{u} \, M_{\sigma f}} \, \mathbf{w}
+
+where the mass matrix has the form:
+
+.. math::
+    \mathbf{M_{\Sigma f}} = \frac{1}{4} \mathbf{P_f^T } \textrm{diag} \boldsymbol{\big ( (e_k \otimes v) \odot \sigma \big )} \mathbf{P_f}
+
+:math:`\boldsymbol{\sigma}` organizes :math:`\sigma_x`, :math:`\sigma_y` and :math:`\sigma_z` within a vector:
+
+.. math::
+    \boldsymbol{\sigma} = \begin{bmatrix} \boldsymbol{\sigma_x} \\ \boldsymbol{\sigma_y} \\ \boldsymbol{\sigma_z} \\ \end{bmatrix}
+
+and
+
+    - :math:`k = 1,2,3` represent the dimension (1D, 2D or 3D)
+    - :math:`\mathbf{e_k}` is a vector of 1s of length :math:`k`
+    - :math:`\odot` is the Hadamard product
+    - :math:`\otimes` is the kronecker product
+    - :math:`\mathbf{P}` are projection matricies that map quantities from one part of the cell (nodes, faces, edges) to cell centers
+    - :math:`\mathbf{v}` is a vector that stores all of the volumes of the cells
+    - :math:`\boldsymbol{\sigma}` is a vector that stores the tensor property values for the cells
+
+
+.. note:: To see a validation of the discrete approximation, see our tutorials section (link)
+
+
+
+
+Vectors on Cell Edges
+^^^^^^^^^^^^^^^^^^^^^
+
+We want to approximate the inner product between a vector quantity :math:`\vec{u}` and the product of
+:math:`\Sigma` and :math:`\vec{w}`. Here, we discretize such that :math:`\mathbf{u}` and :math:`\mathbf{w}` are defined
+to live at cell edges. Our goal is to construct the inner product matrix :math:`\mathbf{M}` in the expression below: 
+
+.. math::
+    (\vec{u}, \Sigma \vec{w}) = \int_\Omega \vec{u} \cdot \Sigma \vec{w} \, dv \approx \mathbf{u^T \, M \, w}
+    :label: inner_product_anisotropic_edges
+
+.. math::
+    \Sigma = \begin{bmatrix} \sigma_{x} & 0 & 0 \\
+    0 & \sigma_{y} & 0 \\
+    0 & 0 & \sigma_{z} \end{bmatrix}
+
+We must respect the dot product and the tensor. For vectors defined on cell edges, we discretize such that the
+x-component of the vectors live on the x-edges, the y-component lives y-edges and the z-component
+lives on the z-edges. This is illustrated in 2D and 3D below. By decomposing the
+domain into a set of finite cells, we assume the tensor properties are spacial invariant within each cell.
+
+.. image:: ../images/edge_discretization.png
+    :align: center
+    :width: 600
+
+As we can see there are 2 edges for each component in 2D and 4 edges for each component in 3D.
+Therefore, we need to project each component of the
+vector from its edges to the cell centers and take their averages separately.
+We must also recognize that
+x-components are only multiplied by :math:`\sigma_x`, y_components by :math:`\sigma_y` and z-components
+by :math:`\sigma_z`.
+
+For a single cell with volume :math:`v^{(i)}` and tensor properties defined by
+:math:`\sigma_x^{(i)}`, :math:`\sigma_y^{(i)}`, :math:`\sigma_z^{(i)}`
+the contribution towards the inner product is:
+
+.. math::
+    \begin{align}
+    \mathbf{In \; 2D:} \; \int_{\Omega_i} \vec{u} \cdot \vec{w} \, dv \approx & \;\;
+    \frac{v^{(i)} \sigma_x^{(i)}}{4} \Big ( u_x^{(1)} + u_x^{(2)} \Big ) \Big ( w_x^{(1)} + w_x^{(2)} \Big ) \\
+    & + \frac{v^{(i)} \sigma_y^{(i)}}{4} \Big ( u_y^{(1)} + u_y^{(2)} \Big ) \Big ( w_y^{(1)} + w_y^{(2)} \Big ) \\
+    & \\
+    \mathbf{In \; 3D:} \; \int_{\Omega_i} \vec{u} \cdot \vec{w} \, dv \approx & \;\;
+    \frac{v^{(i)} \sigma_x^{(i)}}{16} \Bigg ( \sum_{n=1}^4 u_x^{(n)} \Bigg ) \Bigg ( \sum_{n=1}^4 w_x^{(n)} \Bigg ) \\
+    & + \frac{v^{(i)} \sigma_y^{(i)}}{16} \Bigg ( \sum_{n=1}^4 u_y^{(n)} \Bigg ) \Bigg ( \sum_{n=1}^4 w_y^{(n)} \Bigg ) \\
+    & + \frac{v^{(i)} \sigma_z^{(i)}}{16} \Bigg ( \sum_{n=1}^4 u_z^{(n)} \Bigg ) \Bigg ( \sum_{n=1}^4 w_z^{(n)} \Bigg )
+    \end{align}
+    :label: inner_product_anisotropic_edges_1
+
+where the superscript :math:`(n)` denotes a particular edge.
+Using the contribution for each cell described in expression :eq:`inner_product_anisotropic_edges_1`,
+we want to approximate the inner product in the form described by
+equation :eq:`inner_product_anisotropic_edges`. To accomlish this, we construct a sparse matrix
+:math:`\mathbf{P_e}` which projects quantities on the x, y and z edges separately to the
+the cell centers.
+
+For discretize vectors :math:`\mathbf{u}` and :math:`\mathbf{w}` whose x, y (and z) components
+are organized on cell edges as follows:
+
+.. math::
+    \mathbf{u} = \begin{bmatrix} \mathbf{u_x} \\ \mathbf{u_y} \\ \mathbf{u_y} \\ \end{bmatrix}
+    \;\;\;\; \textrm{and} \;\;\;\;
+    \mathbf{w} = \begin{bmatrix} \mathbf{w_x} \\ \mathbf{w_y} \\ \mathbf{w_y} \\ \end{bmatrix}
+
+the approximation to the inner product is given by:
+
+.. math::
+     (\vec{u}, \Sigma \vec{w}) = \int_\Omega \vec{u} \cdot \vec{w} \, dv \approx \boldsymbol{\mathbf{u} \, M_{\sigma e} \, \mathbf{w}}
+
+where the mass matrix for face quantities has the form:
+
+.. math::
+    \mathbf{M_{\Sigma e}} = \frac{1}{4^{k-1}} \mathbf{P_e^T } \textrm{diag} \boldsymbol{\big ( (e_k \otimes v) \odot \sigma \big )} \mathbf{P_e}
+
+where :math:`\boldsymbol{\sigma}` organizes :math:`\sigma_x`, :math:`\sigma_y` and :math:`\sigma_z` within a vector:
+
+.. math::
+    \boldsymbol{\sigma} = \begin{bmatrix} \boldsymbol{\sigma_x} \\ \boldsymbol{\sigma_y} \\ \boldsymbol{\sigma_z} \\ \end{bmatrix}
+and
+
+    - :math:`k = 1,2,3` represent the dimension (1D, 2D or 3D)
+    - :math:`\mathbf{e_k}` is a vector of 1s of length :math:`k`
+    - :math:`\odot` is the Hadamard product
+    - :math:`\otimes` is the kronecker product
+    - :math:`\mathbf{P}` are projection matricies that map quantities from one part of the cell (nodes, faces, edges) to cell centers
+    - :math:`\mathbf{v}` is a vector that stores all of the volumes of the cells
+    - :math:`\boldsymbol{\sigma}` is a vector that stores the tensor property values for the cells
+
+.. note:: To see a validation of the discrete approximation, see our tutorials section (link)
+
+
+
+Fully Anisotropic Case
+----------------------
+
+Vectors on Cell Faces
+^^^^^^^^^^^^^^^^^^^^^
+
+We want to approximate the inner product between a vector quantity :math:`\vec{u}` and the product of
+:math:`\Sigma` and :math:`\vec{w}`. Here, we discretize such that :math:`\mathbf{u}` and :math:`\mathbf{w}` are defined
+to live on cess faces. Our goal is to construct the inner product matrix :math:`\mathbf{M}` in the expression below: 
+
+.. math::
+    (\vec{u}, \Sigma \vec{w}) = \int_\Omega \vec{u} \cdot \Sigma \vec{w} \, dv \approx \mathbf{u^T \, M \, e}
+    :label: inner_product_anisotropic_faces
+
+where
+
+.. math::
+    \Sigma = \begin{bmatrix} \sigma_{1} & \sigma_{4} & \sigma_{5} \\
+    \sigma_{4} & \sigma_{2} & \sigma_{6} \\
+    \sigma_{5} & \sigma_{6} & \sigma_{3} \end{bmatrix}
+
+We must respect the dot product and the tensor. For vectors defined on cell faces, we discretize such that the
+x-component of the vectors live on the x-faces, the y-component lives y-faces and the z-component
+lives on the z-faces. For a single cell, this is illustrated in 2D and 3D below. By decomposing the
+domain into a set of finite cells, we assume the tensor properties are spacial invariant within each cell.
+
+.. image:: ../images/face_discretization.png
+    :align: center
+    :width: 600
+
+As we can see there are 2 faces for each component. Therefore, we need to project each component of the
+vector from its faces to the cell centers and take their averages separately. We must also recognize that
+x-components are only multiplied by :math:`\sigma_x`, y_components by :math:`\sigma_y` and z-components
+by :math:`\sigma_z`.
+
+For a single cell with volume :math:`v^{(i)}` and tensor properties defined by
+:math:`\sigma_x^{(i)}`, :math:`\sigma_y^{(i)}`, :math:`\sigma_z^{(i)}`
+the contribution towards the inner product is:
+
+.. math::
+    \begin{align}
+    \mathbf{In \; 2D:} \; \int_{\Omega_i} \vec{u} \cdot \vec{w} \, dv \approx & \;\; 
+    \frac{v^{(i)} \sigma_x^{(i)}}{4} \Big ( u_x^{(1)} + u_x^{(2)} \Big ) \Big ( w_x^{(1)} + w_x^{(2)} \Big ) \\
+    & + \frac{v^{(i)} \sigma_y^{(i)}}{4} \Big ( u_y^{(1)} + u_y^{(2)} \Big ) \Big ( w_y^{(1)} + w_y^{(2)} \Big ) \\
+    & \\
+    \mathbf{In \; 3D:} \; \int_{\Omega_i} \vec{u} \cdot \vec{w} \, dv \approx & \;\;
+    \frac{v^{(i)} \sigma_x^{(i)}}{4} \Big ( u_x^{(1)} + u_x^{(2)} \Big ) \Big ( w_x^{(1)} + w_x^{(2)} \Big ) \\
+    & + \frac{v^{(i)} \sigma_y^{(i)}}{4} \Big ( u_y^{(1)} + u_y^{(2)} \Big ) \Big ( w_y^{(1)} + w_y^{(2)} \Big ) \\
+    & + \frac{v^{(i)} \sigma_z^{(i)}}{4} \Big ( u_z^{(1)} + u_z^{(2)} \Big ) \Big ( w_z^{(1)} + w_z^{(2)} \Big )
+    \end{align}
+    :label: inner_product_anisotropic_faces_1
+
+where superscripts :math:`(1)` and :math:`(2)` denote face 1 and face 2, respectively.
+Using the contribution for each cell described in expression :eq:`inner_product_anisotropic_faces_1`,
+we want to approximate the inner product in the form described by
+equation :eq:`inner_product_anisotropic_faces`. To accomlish this, we construct a sparse matrix
+:math:`\mathbf{P_f}` which projects quantities on the x, y and z faces separately to the
+the cell centers.
+
+For discretize vectors :math:`\mathbf{u}` and :math:`\mathbf{w}` whose x, y (and z) components
+are organized on cell faces as follows:
+
+.. math::
+    \mathbf{u} = \begin{bmatrix} \mathbf{u_x} \\ \mathbf{u_y} \\ \mathbf{u_y} \\ \end{bmatrix}
+    \;\;\;\; \textrm{and} \;\;\;\;
+    \mathbf{w} = \begin{bmatrix} \mathbf{w_x} \\ \mathbf{w_y} \\ \mathbf{w_y} \\ \end{bmatrix}
+
+the approximation to the inner product is given by:
+
+.. math::
+     (\vec{u}, \Sigma \vec{w}) = \int_\Omega \vec{u} \cdot \Sigma \vec{w} \, dv \approx \boldsymbol{\mathbf{u} \, M_{\sigma f}} \, \mathbf{w}
+
+where the mass matrix has the form:
+
+.. math::
+    \mathbf{M_{\sigma f}} = \frac{1}{4} \mathbf{P_f^T } \textrm{diag} \boldsymbol{\big ( (e_k \otimes v) \odot \sigma \big )} \mathbf{P_f}
+
+:math:`\boldsymbol{\sigma}` organizes :math:`\sigma_x`, :math:`\sigma_y` and :math:`\sigma_z` within a vector:
+
+.. math::
+    \boldsymbol{\sigma} = \begin{bmatrix} \boldsymbol{\sigma_x} \\ \boldsymbol{\sigma_y} \\ \boldsymbol{\sigma_z} \\ \end{bmatrix}
+
+and
+
+    - :math:`k = 1,2,3` represent the dimension (1D, 2D or 3D)
+    - :math:`\mathbf{e_k}` is a vector of 1s of length :math:`k`
+    - :math:`\odot` is the Hadamard product
+    - :math:`\otimes` is the kronecker product
+    - :math:`\mathbf{P}` are projection matricies that map quantities from one part of the cell (nodes, faces, edges) to cell centers
+    - :math:`\mathbf{v}` is a vector that stores all of the volumes of the cells
+    - :math:`\boldsymbol{\sigma}` is a vector that stores the tensor property values for the cells
+
+
+.. note:: To see a validation of the discrete approximation, see our tutorials section (link)
+
+
+
+
+Vectors on Cell Edges
+^^^^^^^^^^^^^^^^^^^^^
+
+We want to approximate the inner product between a vector quantity :math:`\vec{u}` and the product of
+:math:`\Sigma` and :math:`\vec{w}`. Here, we discretize such that :math:`\mathbf{u}` and :math:`\mathbf{w}` are defined
+to live at cell edges. Our goal is to construct the inner product matrix :math:`\mathbf{M}` in the expression below: 
+
+.. math::
+    (\vec{u}, \Sigma \vec{w}) = \int_\Omega \vec{u} \cdot \Sigma \vec{w} \, dv \approx \mathbf{u^T \, M \, w}
+    :label: inner_product_anisotropic_edges
+
+where
+
+.. math::
+    \Sigma = \begin{bmatrix} \sigma_{1} & \sigma_{4} & \sigma_{5} \\
+    \sigma_{4} & \sigma_{2} & \sigma_{6} \\
+    \sigma_{5} & \sigma_{6} & \sigma_{3} \end{bmatrix}
+
+We must respect the dot product and the tensor. For vectors defined on cell edges, we discretize such that the
+x-component of the vectors live on the x-edges, the y-component lives y-edges and the z-component
+lives on the z-edges. This is illustrated in 2D and 3D below. By decomposing the
+domain into a set of finite cells, we assume the tensor properties are spacial invariant within each cell.
+
+.. image:: ../images/edge_discretization.png
+    :align: center
+    :width: 600
+
+As we can see there are 2 edges for each component in 2D and 4 edges for each component in 3D.
+Therefore, we need to project each component of the vector from its edges to the cell centers and take their averages separately.
+Since the tensor is symmetric, it has 3 independent components in 2D and 6 independent components in 3D.
+Using this, we can reduce the size of the computation.
+
+For a single cell with volume :math:`v^{(i)}` and tensor properties defined by
+:math:`\sigma_n^{(i)}` for :math:`n=1,2,3,4,5,6` the contribution towards the inner product is:
+
+.. math::
+    \begin{align}
+    \mathbf{In \; 2D:} \; \int_{\Omega_i} \vec{u} \cdot \vec{w} \, dv \approx & \;\;
+    \frac{v^{(i)} \sigma_x^{(i)}}{4} \Big ( u_x^{(1)} + u_x^{(2)} \Big ) \Big ( w_x^{(1)} + w_x^{(2)} \Big ) \\
+    & + \frac{v^{(i)} \sigma_y^{(i)}}{4} \Big ( u_y^{(1)} + u_y^{(2)} \Big ) \Big ( w_y^{(1)} + w_y^{(2)} \Big ) \\
+    & \\
+    \mathbf{In \; 3D:} \; \int_{\Omega_i} \vec{u} \cdot \vec{w} \, dv \approx & \;\;
+    \frac{v^{(i)} \sigma_x^{(i)}}{16} \Bigg ( \sum_{n=1}^4 u_x^{(n)} \Bigg ) \Bigg ( \sum_{n=1}^4 w_x^{(n)} \Bigg ) \\
+    & + \frac{v^{(i)} \sigma_y^{(i)}}{16} \Bigg ( \sum_{n=1}^4 u_y^{(n)} \Bigg ) \Bigg ( \sum_{n=1}^4 w_y^{(n)} \Bigg ) \\
+    & + \frac{v^{(i)} \sigma_z^{(i)}}{16} \Bigg ( \sum_{n=1}^4 u_z^{(n)} \Bigg ) \Bigg ( \sum_{n=1}^4 w_z^{(n)} \Bigg )
+    \end{align}
+    :label: inner_product_anisotropic_edges_1
+
+where the superscript :math:`(n)` denotes a particular edge.
+Using the contribution for each cell described in expression :eq:`inner_product_anisotropic_edges_1`,
+we want to approximate the inner product in the form described by
+equation :eq:`inner_product_anisotropic_edges`. To accomlish this, we construct a sparse matrix
+:math:`\mathbf{P_e}` which projects quantities on the x, y and z edges separately to the
+the cell centers.
+
+For discretize vectors :math:`\mathbf{u}` and :math:`\mathbf{w}` whose x, y (and z) components
+are organized on cell edges as follows:
+
+.. math::
+    \mathbf{u} = \begin{bmatrix} \mathbf{u_x} \\ \mathbf{u_y} \\ \mathbf{u_y} \\ \end{bmatrix}
+    \;\;\;\; \textrm{and} \;\;\;\;
+    \mathbf{w} = \begin{bmatrix} \mathbf{w_x} \\ \mathbf{w_y} \\ \mathbf{w_y} \\ \end{bmatrix}
+
+the approximation to the inner product is given by:
+
+.. math::
+     (\vec{u}, \Sigma \vec{w}) = \int_\Omega \vec{u} \cdot \vec{w} \, dv \approx \boldsymbol{\mathbf{u} \, M_{\sigma e} \, \mathbf{w}}
+
+where the mass matrix for face quantities has the form:
+
+.. math::
+    \mathbf{M_{\sigma e}} = \frac{1}{4^{k-1}} \mathbf{P_e^T } \textrm{diag} \boldsymbol{\big ( (e_k \otimes v) \odot \sigma \big )} \mathbf{P_e}
+
+where :math:`\boldsymbol{\sigma}` organizes :math:`\sigma_x`, :math:`\sigma_y` and :math:`\sigma_z` within a vector:
+
+.. math::
+    \boldsymbol{\sigma} = \begin{bmatrix} \boldsymbol{\sigma_x} \\ \boldsymbol{\sigma_y} \\ \boldsymbol{\sigma_z} \\ \end{bmatrix}
+and
+
+    - :math:`k = 1,2,3` represent the dimension (1D, 2D or 3D)
+    - :math:`\mathbf{e_k}` is a vector of 1s of length :math:`k`
+    - :math:`\odot` is the Hadamard product
+    - :math:`\otimes` is the kronecker product
+    - :math:`\mathbf{P}` are projection matricies that map quantities from one part of the cell (nodes, faces, edges) to cell centers
+    - :math:`\mathbf{v}` is a vector that stores all of the volumes of the cells
+    - :math:`\boldsymbol{\sigma}` is a vector that stores the tensor property values for the cells
+
+.. note:: To see a validation of the discrete approximation, see our tutorials section (link)

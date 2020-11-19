@@ -34,7 +34,8 @@ discrete approximation for several classes of inner products.
     :maxdepth: 1
 
     inner_products_basic
-    inner_products_constitutive
+    inner_products_isotropic
+    inner_products_anisotropic
 
 
 

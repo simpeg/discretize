@@ -36,16 +36,16 @@ discrete quantities living on various parts of the mesh are shown below:
 .. math::
     \textrm{Scalars at centers:} \; \mathbf{M_c} &= \textrm{diag} (\mathbf{v} ) \\
     \textrm{Scalars at nodes:} \; \mathbf{M_n} &= \frac{1}{2^{2k}} \mathbf{P_n^T } \textrm{diag} (\mathbf{v} ) \mathbf{P_n} \\
-    \textrm{Vectors on faces:} \; \mathbf{M_f} &= \frac{1}{4} \mathbf{P_f^T } \textrm{diag} (\mathbf{I_k \otimes v} ) \mathbf{P_f} \\
-    \textrm{Vectors on edges:} \; \mathbf{M_e} &= \frac{1}{4^{k-1}} \mathbf{P_e^T } \textrm{diag} (\mathbf{I_k \otimes v}) \mathbf{P_e}
+    \textrm{Vectors on faces:} \; \mathbf{M_f} &= \frac{1}{4} \mathbf{P_f^T } \textrm{diag} (\mathbf{e_k \otimes v} ) \mathbf{P_f} \\
+    \textrm{Vectors on edges:} \; \mathbf{M_e} &= \frac{1}{4^{k-1}} \mathbf{P_e^T } \textrm{diag} (\mathbf{e_k \otimes v}) \mathbf{P_e}
 
-where :math:`k = 1,2,3` represents the dimension (1D, 2D or 3D),
-:math:`\mathbf{I_k}` is the identity matrix of dimension :math:`k\times k`,
-and :math:`\otimes` is the kronecker product. :math:`\mathbf{P}` are projection
-matricies that map quantities from one part of the cell (nodes, faces, edges)
-to cell centers. The volumes of all cells in the mesh are store in a vector :math:`\mathbf{v}`.
-The term containing :math:`k` is responsible for averaging
-once quantities are mapped to cell centers.
+where
+
+    - :math:`k = 1,2,3` represent the dimension (1D, 2D or 3D)
+    - :math:`\mathbf{e_k}` is a vector of 1s of length :math:`k`
+    - :math:`\otimes` is the kronecker product
+    - :math:`\mathbf{P}` are projection matricies that map quantities from one part of the cell (nodes, faces, edges) to cell centers
+    - :math:`\mathbf{v}` is a vector that stores all of the volumes of the cells
 
 
 Scalars at Cell Centers
@@ -147,9 +147,11 @@ where the mass matrix for nodal quantities has the form:
 .. math::
     \mathbf{M_n} = \frac{1}{2^{2k}} \mathbf{P_n^T } \textrm{diag} (\mathbf{v} ) \mathbf{P_n}
 
-and :math:`k=1,2,3` refers to the dimension (1D, 2D or 3D). The term containing :math:`k` is responsible for
-averaging once nodal values have been projected to cell centers. The cell volumes are stored in
-a vector :math:`\mathbf{v}`.
+where
+
+    - :math:`k = 1,2,3` represent the dimension (1D, 2D or 3D)
+    - :math:`\mathbf{P_n}` is a projection matrix that maps quantities from nodes to cell centers
+    - :math:`\mathbf{v}` is a vector that stores all of the volumes of the cells
 
 .. note:: To see a validation of the discrete approximation, see our tutorials section (link)
 
@@ -216,11 +218,15 @@ the approximation to the inner product is given by:
 where the mass matrix for face quantities has the form:
 
 .. math::
-    \mathbf{M_f} = \frac{1}{4} \mathbf{P_f^T } \textrm{diag} (\mathbf{I_k \otimes v} ) \mathbf{P_f}
+    \mathbf{M_f} = \frac{1}{4} \mathbf{P_f^T } \textrm{diag} (\mathbf{e_k \otimes v} ) \mathbf{P_f}
 
-and :math:`k=1,2,3` refers to the dimension (1D, 2D or 3D). :math:`\mathbf{I_k}` is the identity matrix and
-:math:`\otimes` is the kronecker product. Cell volumes are store in a vector :math:`\mathbf{v}`. The term containing :math:`k` is responsible for
-averaging once values have been projected to cell centers
+and
+
+    - :math:`k = 1,2,3` represents the dimension (1D, 2D or 3D)
+    - :math:`\mathbf{e_k}` is a vector of 1s of length :math:`k`
+    - :math:`\otimes` is the kronecker product
+    - :math:`\mathbf{P_f}` is the projection matrix that maps quantities from faces to cell centers
+    - :math:`\mathbf{v}` is a vector that stores all of the volumes of the cells
 
 .. note:: To see a validation of the discrete approximation, see our tutorials section (link)
 
@@ -288,12 +294,15 @@ the approximation to the inner product is given by:
 where the mass matrix for face quantities has the form:
 
 .. math::
-    \mathbf{M_e} = \frac{1}{4^{k-1}} \mathbf{P_e^T } \textrm{diag} (\mathbf{I_k \otimes v}) \mathbf{P_e}
+    \mathbf{M_e} = \frac{1}{4^{k-1}} \mathbf{P_e^T } \textrm{diag} (\mathbf{e_k \otimes v}) \mathbf{P_e}
 
-and :math:`k=1,2,3` refers to the dimension (1D, 2D or 3D). :math:`\mathbf{I_k}` is the identity matrix and
-:math:`\otimes` is the kronecker product. Cell volumes are store in a vector :math:`\mathbf{v}`.
-The term containing :math:`k` is responsible for
-averaging once values have been projected to cell centers
+and
+
+    - :math:`k = 1,2,3` represents the dimension (1D, 2D or 3D)
+    - :math:`\mathbf{e_k}` is a vector of 1s of length :math:`k`
+    - :math:`\otimes` is the kronecker product
+    - :math:`\mathbf{P_e}` is the projection matrix that maps quantities from edges to cell centers
+    - :math:`\mathbf{v}` is a vector that stores all of the volumes of the cells
 
 .. note:: To see a validation of the discrete approximation, see our tutorials section (link)
 
