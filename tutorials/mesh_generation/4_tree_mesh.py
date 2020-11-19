@@ -95,7 +95,7 @@ nbcy = 2 ** int(np.round(np.log(y_length / dy) / np.log(2.0)))
 # Define the base mesh
 hx = [(dx, nbcx)]
 hy = [(dy, nbcy)]
-mesh = TreeMesh([hx, hy], x0="CC")
+mesh = TreeMesh([hx, hy], origin="CC")
 
 # Refine surface topography
 xx = mesh.vectorNx
@@ -117,8 +117,8 @@ mesh.finalize()
 fig = plt.figure(figsize=(6, 6))
 ax = fig.add_subplot(111)
 mesh.plotGrid(ax=ax)
-ax.set_xbound(mesh.x0[0], mesh.x0[0] + np.sum(mesh.hx))
-ax.set_ybound(mesh.x0[1], mesh.x0[1] + np.sum(mesh.hy))
+ax.set_xbound(mesh.origin[0], mesh.origin[0] + np.sum(mesh.hx))
+ax.set_ybound(mesh.origin[1], mesh.origin[1] + np.sum(mesh.hy))
 ax.set_title("QuadTree Mesh")
 
 ####################################################
@@ -142,7 +142,7 @@ nbcy = 2 ** int(np.round(np.log(y_length / dy) / np.log(2.0)))
 # Define the base mesh
 hx = [(dx, nbcx)]
 hy = [(dy, nbcy)]
-mesh = TreeMesh([hx, hy], x0="CC")
+mesh = TreeMesh([hx, hy], origin="CC")
 
 # Refine surface topography
 xx = mesh.vectorNx
@@ -161,7 +161,7 @@ mesh = refine_tree_xyz(mesh, pts, octree_levels=[2, 2], method="radial", finaliz
 mesh.finalize()
 
 # The bottom west corner
-x0 = mesh.x0
+origin = mesh.origin
 
 # The total number of cells
 nC = mesh.nC
@@ -178,8 +178,8 @@ s = mesh.vol
 fig = plt.figure(figsize=(6, 6))
 ax = fig.add_subplot(111)
 mesh.plotImage(np.log10(s), grid=True, ax=ax)
-ax.set_xbound(mesh.x0[0], mesh.x0[0] + np.sum(mesh.hx))
-ax.set_ybound(mesh.x0[1], mesh.x0[1] + np.sum(mesh.hy))
+ax.set_xbound(mesh.origin[0], mesh.origin[0] + np.sum(mesh.hx))
+ax.set_ybound(mesh.origin[1], mesh.origin[1] + np.sum(mesh.hy))
 ax.set_title("Log of Cell Areas")
 
 ###############################################
@@ -207,7 +207,7 @@ nbcz = 2 ** int(np.round(np.log(z_length / dz) / np.log(2.0)))
 hx = [(dx, nbcx)]
 hy = [(dy, nbcy)]
 hz = [(dz, nbcz)]
-mesh = TreeMesh([hx, hy, hz], x0="CCC")
+mesh = TreeMesh([hx, hy, hz], origin="CCC")
 
 # Refine surface topography
 [xx, yy] = np.meshgrid(mesh.vectorNx, mesh.vectorNy)
@@ -226,7 +226,7 @@ mesh = refine_tree_xyz(mesh, xyz, octree_levels=[2, 2], method="box", finalize=F
 mesh.finalize()
 
 # The bottom west corner
-x0 = mesh.x0
+origin = mesh.origin
 
 # The total number of cells
 nC = mesh.nC

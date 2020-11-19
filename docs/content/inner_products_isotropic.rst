@@ -51,6 +51,8 @@ where
     - :math:`\mathbf{v}` is a vector that stores all of the volumes of the cells
     - :math:`\boldsymbol{\sigma}` is a vector containing the physical property values for the cells
 
+.. note:: To construct the inner product matrix and/or approximate inner products of this type, see the :ref:`tutorial on inner products with constitutive relationships <sphx_glr_tutorials_inner_products_2_physical_properties.py>`
+
 
 Vectors on Cell Faces
 ---------------------
@@ -124,7 +126,7 @@ and
     - :math:`\boldsymbol{\sigma}` is a vector containing the physical property values for the cells
 
 
-.. note:: To see a validation of the discrete approximation, see our tutorials section (link)
+.. note:: To construct the inner product matrix and/or approximate inner products of this type, see the :ref:`tutorial on inner products with constitutive relationships <sphx_glr_tutorials_inner_products_2_physical_properties.py>`
 
 
 Vectors on Cell Edges
@@ -198,5 +200,5 @@ and
     - :math:`\mathbf{v}` is a vector that stores all of the volumes of the cells
     - :math:`\boldsymbol{\sigma}` is a vector containing the physical property values for the cells
 
-.. note:: To see a validation of the discrete approximation, see our tutorials section (link)
+.. note:: To construct the inner product matrix and/or approximate inner products of this type, see the :ref:`tutorial on inner products with constitutive relationships <sphx_glr_tutorials_inner_products_2_physical_properties.py>`
 

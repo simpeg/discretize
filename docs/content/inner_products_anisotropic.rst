@@ -46,6 +46,8 @@ discrete quantities living on various parts of the mesh are shown below. We let:
     - :math:`\mathbf{P}` are projection matricies that map quantities from one part of the cell (nodes, faces, edges) to cell centers
     - :math:`\mathbf{v}` is a vector that stores all of the volumes of the cells
 
+.. note:: To construct the inner product matrix and/or approximate inner products of this type, see the :ref:`tutorial on inner products with constitutive relationships <sphx_glr_tutorials_inner_products_2_physical_properties.py>`
+
 **Diagonal Anisotropic:**
 
 For the diagonal anisotropic case, the tensor characterzing the material properties
@@ -77,8 +79,6 @@ has the form:
     \Sigma = \begin{bmatrix} \sigma_{1} & \sigma_{4} & \sigma_{5} \\
     \sigma_{4} & \sigma_{2} & \sigma_{6} \\
     \sigma_{5} & \sigma_{6} & \sigma_{3} \end{bmatrix}
-
-
 
 
 Diagonally Anisotropic Case
@@ -113,7 +113,7 @@ domain into a set of finite cells, we assume the tensor properties are spacial i
 
 As we can see there are 2 faces for each component. Therefore, we need to project each component of the
 vector from its faces to the cell centers and take their averages separately. We must also recognize that
-x-components are only multiplied by :math:`\sigma_x`, y_components by :math:`\sigma_y` and z-components
+x-components are only multiplied by :math:`\sigma_x`, y-components by :math:`\sigma_y` and z-components
 by :math:`\sigma_z`.
 
 For a single cell with volume :math:`v^{(i)}` and tensor properties defined by
@@ -208,7 +208,7 @@ As we can see there are 2 edges for each component in 2D and 4 edges for each co
 Therefore, we need to project each component of the
 vector from its edges to the cell centers and take their averages separately.
 We must also recognize that
-x-components are only multiplied by :math:`\sigma_x`, y_components by :math:`\sigma_y` and z-components
+x-components are only multiplied by :math:`\sigma_x`, y-components by :math:`\sigma_y` and z-components
 by :math:`\sigma_z`.
 
 For a single cell with volume :math:`v^{(i)}` and tensor properties defined by
@@ -267,9 +267,7 @@ and
     - :math:`\mathbf{v}` is a vector that stores all of the volumes of the cells
     - :math:`\boldsymbol{\sigma}` is a vector that stores the tensor property values for the cells
 
-.. note:: To see a validation of the discrete approximation, see our tutorials section (link)
-
-
+.. note:: To construct the inner product matrix and/or approximate inner products of this type, see the :ref:`tutorial on inner products with constitutive relationships <sphx_glr_tutorials_inner_products_2_physical_properties.py>`
 
 Fully Anisotropic Case
 ----------------------
@@ -303,7 +301,7 @@ domain into a set of finite cells, we assume the tensor properties are spacial i
 
 As we can see there are 2 faces for each component. Therefore, we need to project each component of the
 vector from its faces to the cell centers and take their averages separately. We must also recognize that
-x-components are only multiplied by :math:`\sigma_x`, y_components by :math:`\sigma_y` and z-components
+x-components are only multiplied by :math:`\sigma_x`, y-components by :math:`\sigma_y` and z-components
 by :math:`\sigma_z`.
 
 For a single cell with volume :math:`v^{(i)}` and tensor properties defined by

@@ -24,6 +24,8 @@ we are interested in approximating the following inner products:
     (\vec{u}, \nabla \times \vec{w} ) &= \int_\Omega \vec{u} \cdot (\nabla \times \vec{w} ) \, dv
     \end{align}
 
+.. note:: To construct differential operators and/or approximate inner products of this type, see the :ref:`tutorial on inner products with differential operators <sphx_glr_tutorials_inner_products_3_calculus.py>`
+
 **Gradient:**
 
 For the inner product between a vector (:math:`\vec{u}`) and the gradient of a scalar (:math:`\phi`),
