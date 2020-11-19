@@ -16,11 +16,11 @@ inner product is given by:
     (\\psi , \\phi ) = \\int_\\Omega \\psi \\, \\phi \\, dv
 
 
-And for vector quantities :math:`\\vec{u}` and :math:`\\vec{v}`, the
+And for vector quantities :math:`\\vec{u}` and :math:`\\vec{w}`, the
 inner product is given by:
 
 .. math::
-    (\\vec{u}, \\vec{v}) = \\int_\\Omega \\vec{u} \\cdot \\vec{v} \\, dv
+    (\\vec{u}, \\vec{w}) = \\int_\\Omega \\vec{u} \\cdot \\vec{w} \\, dv
 
 
 In discretized form, we can approximate the aforementioned inner-products as:
@@ -32,12 +32,12 @@ In discretized form, we can approximate the aforementioned inner-products as:
 and
 
 .. math::
-    (\\vec{u}, \\vec{v}) \\approx \\mathbf{u^T \\, M \\, v}
+    (\\vec{u}, \\vec{w}) \\approx \\mathbf{u^T \\, M \\, w}
 
 
 where :math:`\\mathbf{M}` in either equation represents an
 *inner-product matrix*. :math:`\\mathbf{\\psi}`, :math:`\\mathbf{\\phi}`,
-:math:`\\mathbf{u}` and :math:`\\mathbf{v}` are discrete variables that live
+:math:`\\mathbf{u}` and :math:`\\mathbf{w}` are discrete variables that live
 on the mesh. It is important to note a few things about the
 inner-product matrix in this case:
 
@@ -50,13 +50,16 @@ discrete quantities living on various parts of the mesh have the form:
 .. math::
     \\textrm{Centers:} \\; \\mathbf{M_c} &= \\textrm{diag} (\\mathbf{v} ) \n
     \\textrm{Nodes:} \\; \\mathbf{M_n} &= \\frac{1}{2^{2k}} \\mathbf{P_n^T } \\textrm{diag} (\\mathbf{v} ) \\mathbf{P_n} \n
-    \\textrm{Faces:} \\; \\mathbf{M_f} &= \\frac{1}{4} \\mathbf{P_f^T } \\textrm{diag} (\\mathbf{I_k \\otimes v} ) \\mathbf{P_f} \n
-    \\textrm{Edges:} \\; \\mathbf{M_e} &= \\frac{1}{4^{k-1}} \\mathbf{P_e^T } \\textrm{diag} (\\mathbf{I_k \\otimes v}) \\mathbf{P_e}
+    \\textrm{Faces:} \\; \\mathbf{M_f} &= \\frac{1}{4} \\mathbf{P_f^T } \\textrm{diag} (\\mathbf{e_k \\otimes v} ) \\mathbf{P_f} \n
+    \\textrm{Edges:} \\; \\mathbf{M_e} &= \\frac{1}{4^{k-1}} \\mathbf{P_e^T } \\textrm{diag} (\\mathbf{e_k \\otimes v}) \\mathbf{P_e}
 
-where :math:`k = 1,2,3`, :math:`\\mathbf{I_k}` is the identity matrix and
-:math:`\\otimes` is the kronecker product. :math:`\\mathbf{P}` are projection
-matricies that map quantities from one part of the cell (nodes, faces, edges)
-to cell centers.
+where
+
+    - :math:`k = 1,2,3` is the dimension (1D, 2D or 3D)
+    - :math:`\\mathbf{e_k}` is a vector of 1s of length :math:`k`
+    - :math:`\\otimes` is the kronecker product
+    - :math:`\\mathbf{P}` are projection matricies that map quantities from one part of the cell (nodes, faces, edges) to cell centers
+    - :math:`\\mathbf{v}` is a vector that contains the cell volumes
 
 
 """
@@ -149,13 +152,13 @@ print("Cell-centered approx.:", ipc)
 # will define a 2D vector quantity:
 #
 # .. math::
-#     \vec{v}(x,y) = \Bigg [ \frac{-y}{r} \hat{x} + \frac{x}{r} \hat{y} \Bigg ]
+#     \vec{u}(x,y) = \Bigg [ \frac{-y}{r} \hat{x} + \frac{x}{r} \hat{y} \Bigg ]
 #     \, e^{-\frac{x^2+y^2}{2\sigma^2}}
 #
 # We will then evaluate the following inner product:
 #
 # .. math::
-#     (\vec{v}, \vec{v}) = \int_\Omega \vec{v} \cdot \vec{v} \, da
+#     (\vec{u}, \vec{u}) = \int_\Omega \vec{u} \cdot \vec{u} \, da
 #     = 2 \pi \sigma^2
 #
 # using inner-product matricies. Next we compare the numerical evaluation
@@ -185,33 +188,33 @@ mesh = TensorMesh([h, h], "CC")
 sig = 1.5
 
 # Evaluate inner-product using edge-defined discrete variables
-vx = fcn_x(mesh.gridEx, sig)
-vy = fcn_y(mesh.gridEy, sig)
-v = np.r_[vx, vy]
+ux = fcn_x(mesh.gridEx, sig)
+uy = fcn_y(mesh.gridEy, sig)
+u = np.r_[ux, uy]
 
 Me = mesh.getEdgeInnerProduct()  # Edge inner product matrix
 
-ipe = np.dot(v, Me * v)
+ipe = np.dot(u, Me * u)
 
 # Evaluate inner-product using face-defined discrete variables
-vx = fcn_x(mesh.gridFx, sig)
-vy = fcn_y(mesh.gridFy, sig)
-v = np.r_[vx, vy]
+ux = fcn_x(mesh.gridFx, sig)
+uy = fcn_y(mesh.gridFy, sig)
+u = np.r_[ux, uy]
 
 Mf = mesh.getFaceInnerProduct()  # Edge inner product matrix
 
-ipf = np.dot(v, Mf * v)
+ipf = np.dot(u, Mf * u)
 
-# The analytic solution of (v, v)
+# The analytic solution of (u, u)
 ipt = np.pi * sig ** 2
 
 # Plot the vector function
 fig = plt.figure(figsize=(5, 5))
 ax = fig.add_subplot(111)
 mesh.plotImage(
-    v, ax=ax, v_type="F", view="vec", stream_opts={"color": "w", "density": 1.0}
+    u, ax=ax, v_type="F", view="vec", stream_opts={"color": "w", "density": 1.0}
 )
-ax.set_title("v at cell faces")
+ax.set_title("u at cell faces")
 
 fig.show()
 
@@ -232,7 +235,7 @@ print("Face variable approx.:", ipf)
 # L2-norm for each:
 #
 # .. math::
-#     \| \mathbf{v - M^{-1} M v} \|^2
+#     \| \mathbf{u - M^{-1} M u} \|^2
 #
 #
 
@@ -245,10 +248,6 @@ mesh = TensorMesh([h, h], "CC")
 Mc = sdiag(mesh.vol)
 Mc_inv = sdiag(1 / mesh.vol)
 
-# Nodes for scalar quantities  (*functionality pending*)
-# Mn = mesh.getNodalInnerProduct()
-# Mn_inv = mesh.getNodalInnerProduct(invMat=True)
-
 # Edges for vector quantities
 Me = mesh.getEdgeInnerProduct()
 Me_inv = mesh.getEdgeInnerProduct(invMat=True)
@@ -259,19 +258,16 @@ Mf_inv = mesh.getFaceInnerProduct(invMat=True)
 
 # Generate some random vectors
 phi_c = np.random.rand(mesh.nC)
-phi_n = np.random.rand(mesh.nN)
 vec_e = np.random.rand(mesh.nE)
 vec_f = np.random.rand(mesh.nF)
 
 # Generate some random vectors
 norm_c = np.linalg.norm(phi_c - Mc_inv.dot(Mc.dot(phi_c)))
-# norm_n = np.linalg.norm(phi_n - Mn_inv*Mn*phi_n)
 norm_e = np.linalg.norm(vec_e - Me_inv * Me * vec_e)
 norm_f = np.linalg.norm(vec_f - Mf_inv * Mf * vec_f)
 
 # Verify accuracy
 print("ACCURACY")
 print("Norm for centers:", norm_c)
-# print('Norm for nodes:  ', norm_n)
 print("Norm for edges:  ", norm_e)
 print("Norm for faces:  ", norm_f)

@@ -5,13 +5,13 @@ Differential Operators
 
 When solving PDEs using the finite volume approach, inner products may
 contain differential operators. Where :math:`\\psi` and :math:`\\phi` are
-scalar quantities, and :math:`\\vec{u}` and :math:`\\vec{v}` are vector
+scalar quantities, and :math:`\\vec{u}` and :math:`\\vec{w}` are vector
 quantities, we may need to derive a discrete approximation for the following
 inner products:
 
     1. :math:`(\\vec{u} , \\nabla \\phi)`
-    2. :math:`(\\psi , \\nabla \\cdot \\vec{v})`
-    3. :math:`(\\vec{u} , \\nabla \\times \\vec{v})`
+    2. :math:`(\\psi , \\nabla \\cdot \\vec{w})`
+    3. :math:`(\\vec{u} , \\nabla \\times \\vec{w})`
     4. :math:`(\\psi, \\Delta^2 \\phi)`
 
 In this section, we demonstrate how to go from the inner product to the
@@ -102,21 +102,21 @@ ax2.set_title("Mf*Gc")
 # Divergence
 # ----------
 #
-# Where :math:`\psi` is a scalar quantity and :math:`\vec{v}` is a vector
+# Where :math:`\psi` is a scalar quantity and :math:`\vec{w}` is a vector
 # quantity, we would like to evaluate the following inner product:
 #
 # .. math::
-#     (\psi , \nabla \cdot \vec{v}) = \int_\Omega \psi \nabla \cdot \vec{v} \, dv
+#     (\psi , \nabla \cdot \vec{w}) = \int_\Omega \psi \nabla \cdot \vec{w} \, dv
 #
 # The divergence defines a measure of the flux leaving/entering a volume. As a
-# result, it is natural for :math:`\vec{v}` to be a flux defined on cell faces.
+# result, it is natural for :math:`\vec{w}` to be a flux defined on cell faces.
 # The face divergence operator (:math:`\mathbf{D}`) maps from cell faces to
-# cell centers, therefore # we should define :math:`\psi` at cell centers. The
+# cell centers, therefore we should define :math:`\psi` at cell centers. The
 # inner product is ultimately computed using an inner product matrix
-# (:math:`\mathbf{M_f}`) for quantities living on cell faces, e.g.:
+# (:math:`\mathbf{M_c}`) for quantities living on cell faces, thus:
 #
 # .. math::
-#    (\psi , \nabla \cdot \vec{v}) \approx \mathbf{\psi^T} \textrm{diag} (\mathbf{vol} ) \mathbf{D v}
+#    (\psi , \nabla \cdot \vec{w}) \approx \boldsymbol{\psi^T M_c D w}
 #
 
 # Make basic mesh
@@ -138,30 +138,30 @@ ax1.set_title("Mc*D", pad=20)
 # Curl
 # ----
 #
-# Where :math:`\vec{u}` and :math:`\vec{v}` are vector quantities, we would
+# Where :math:`\vec{u}` and :math:`\vec{w}` are vector quantities, we would
 # like to evaluate the following inner product:
 #
 # .. math::
-#     (\vec{u} , \nabla \times \vec{v}) = \int_\Omega \vec{u} \nabla \times \vec{v} \, dv
+#     (\vec{u} , \nabla \times \vec{w}) = \int_\Omega \vec{u} \nabla \times \vec{w} \, dv
 #
 # **Inner Product at Faces:**
 #
-# Let :math:`\vec{u}` denote a flux and let :math:`\vec{v}` denote a field.
+# Let :math:`\vec{u}` denote a flux and let :math:`\vec{w}` denote a field.
 # In this case, it is natural for the flux :math:`\vec{u}` to live on cell
-# faces and for the field :math:`\vec{v}` to live on cell edges. The discrete
+# faces and for the field :math:`\vec{w}` to live on cell edges. The discrete
 # curl operator (:math:`\mathbf{C_e}`) in this case naturally maps from cell
 # edges to cell faces without the need to define boundary conditions. The
 # inner product can be approxiated using an inner product matrix
 # (:math:`\mathbf{M_f}`) for quantities living on cell faces, e.g.:
 #
 # .. math::
-#     (\vec{u} , \nabla \times \vec{v}) \approx \mathbf{u^T M_f C_e v}
+#     (\vec{u} , \nabla \times \vec{w}) \approx \mathbf{u^T M_f C_e w}
 #
 # **Inner Product at Edges:**
 #
-# Now let :math:`\vec{u}` denote a field and let :math:`\vec{v}` denote a flux.
+# Now let :math:`\vec{u}` denote a field and let :math:`\vec{w}` denote a flux.
 # Now it is natural for the :math:`\vec{u}` to live on cell edges
-# and for :math:`\vec{v}` to live on cell faces. We would like to compute the
+# and for :math:`\vec{w}` to live on cell faces. We would like to compute the
 # inner product using an inner product matrix (:math:`\mathbf{M_e}`) for
 # quantities living on cell edges. However, this requires a discrete curl
 # operator (:math:`\mathbf{C_f}`) that maps from cell faces
@@ -169,7 +169,7 @@ ax1.set_title("Mc*D", pad=20)
 # If done successfully:
 #
 # .. math::
-#     (\vec{u} , \nabla \times \vec{v}) \approx \mathbf{u^T M_e C_f v}
+#     (\vec{u} , \nabla \times \vec{w}) \approx \mathbf{u^T M_e C_f v}
 #
 
 # Make basic mesh

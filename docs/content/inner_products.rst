@@ -36,6 +36,7 @@ discrete approximation for several classes of inner products.
     inner_products_basic
     inner_products_isotropic
     inner_products_anisotropic
+    inner_products_differential
 
 
 
