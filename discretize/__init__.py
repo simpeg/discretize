@@ -28,7 +28,7 @@ except ImportError as err:
         )
 from discretize import tests
 
-__version__ = "0.6.0"
+__version__ = "0.6.1"
 __author__ = "SimPEG Team"
 __license__ = "MIT"
 __copyright__ = "2013, SimPEG Developers, http://simpeg.xyz"

@@ -1037,7 +1037,7 @@ class CylindricalMesh(
                 ncx, ncy, ncz = self.shape_cells
                 D1 = kron3(speye(ncz), speye(ncy), ddx(ncx)[:, 1:])
             else:
-                D1 = super()._faceDivStencilx
+                D1 = super()._face_x_divergence_stencil
 
             S = self._face_x_areas_full
             V = self.cell_volumes
@@ -1057,7 +1057,7 @@ class CylindricalMesh(
         (faces to cell-centres).
         """
         if getattr(self, "_face_y_divergence", None) is None:
-            D2 = super()._faceDivStencily
+            D2 = super()._face_y_divergence_stencil
             S = self._face_y_areas_full  # self.reshape(self.face_areas, 'F', 'Fy', 'V')
             V = self.cell_volumes
             self._face_y_divergence = (
@@ -1075,14 +1075,14 @@ class CylindricalMesh(
         (faces to cell-centres).
         """
         if getattr(self, "_face_z_divergence", None) is None:
-            D3 = super()._faceDivStencilz
+            D3 = super()._face_z_divergence_stencil
             S = self._face_z_areas_full
             V = self.cell_volumes
             self._face_z_divergence = sdiag(1 / V) * D3 * sdiag(S)
         return self._face_z_divergence
 
     # @property
-    # def _cellGradxStencil(self):
+    # def stencil_cell_gradient_x(self):
     #     n = self.vnC
 
     #     if self.is_symmetric:
@@ -1097,7 +1097,7 @@ class CylindricalMesh(
     def cell_gradient_x(self):
         raise NotImplementedError("Cell Grad is not yet implemented.")
         # if getattr(self, '_cellGradx', None) is None:
-        #     G1 = super(CylindricalMesh, self)._cellGradxStencil
+        #     G1 = super(CylindricalMesh, self).stencil_cell_gradient_x
         #     V = self._deflation_matrix('F', withHanging='True', as_ones='True')*self.aveCC2F*self.cell_volumes
         #     A = self.face_areas
         #     L = (A/V)[:self._n_total_faces_x]
@@ -1107,15 +1107,15 @@ class CylindricalMesh(
         # return self._cellGradx
 
     @property
-    def _cellGradyStencil(self):
+    def stencil_cell_gradient_y(self):
         raise NotImplementedError("Cell Grad is not yet implemented.")
 
     @property
-    def _cellGradzStencil(self):
+    def stencil_cell_gradient_z(self):
         raise NotImplementedError("Cell Grad is not yet implemented.")
 
     @property
-    def _cellGradStencil(self):
+    def stencil_cell_gradient(self):
         raise NotImplementedError("Cell Grad is not yet implemented.")
 
     @property
@@ -1123,33 +1123,33 @@ class CylindricalMesh(
         raise NotImplementedError("Cell Grad is not yet implemented.")
 
     # @property
-    # def _nodalGradStencilx(self):
+    # def _nodal_gradient_x_stencil(self):
     #     if self.is_symmetric:
     #         return None
     #     return kron3(speye(self.shape_nodes[2]), speye(self.shape_nodes[1]), ddx(self.shape_cells[0]))
 
     # @property
-    # def _nodalGradStencily(self):
+    # def _nodal_gradient_y_stencil(self):
     #     if self.is_symmetric:
     #         None
     #         # return kron3(speye(self.shape_nodes[2]), ddx(self.shape_cells[1]), speye(self.shape_nodes[0])) * self._deflation_matrix('Ey')
     #     return kron3(speye(self.shape_nodes[2]), ddx(self.shape_cells[1]), speye(self.shape_nodes[0]))
 
     # @property
-    # def _nodalGradStencilz(self):
+    # def _nodal_gradient_z_stencil(self):
     #     if self.is_symmetric:
     #         return None
     #     return kron3(ddx(self.shape_cells[2]), speye(self.shape_nodes[1]), speye(self.shape_nodes[0]))
 
     # @property
-    # def _nodalGradStencil(self):
+    # def _nodal_gradient_stencil(self):
     #     if self.is_symmetric:
     #         return None
     #     else:
     #         G = self._deflation_matrix('E').T * sp.vstack((
-    #             self._nodalGradStencilx,
-    #             self._nodalGradStencily,
-    #             self._nodalGradStencilz
+    #             self._nodal_gradient_x_stencil,
+    #             self._nodal_gradient_y_stencil,
+    #             self._nodal_gradient_z_stencil
     #         ), format="csr") * self._deflation_matrix('N')
     #     return G
 
@@ -1202,7 +1202,7 @@ class CylindricalMesh(
                 self._edge_curl = (
                     sdiag(1 / self.face_areas)
                     * self._deflation_matrix("F", as_ones=False)
-                    * self._edgeCurlStencil
+                    * self._edge_curl_stencil
                     * sdiag(self._edge_lengths_full)
                     * self._deflation_matrix("E", as_ones=True).T
                 )
