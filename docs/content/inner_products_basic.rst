@@ -11,19 +11,19 @@ basic class of inner products. For scalar quantities :math:`\psi` and :math:`\ph
 we will show that a disrete approximation to the inner product is given by:
 
 .. math::
-    (\psi , \phi ) = \int_\Omega \psi \, \phi \, dv \approx \boldsymbol{\psi^T \, M \, \phi}
+    (\psi , \phi ) = \int_\Omega \psi \, \phi \, dv \approx \boldsymbol{\psi^T M \, \phi}
     :label: inner_product_basic_scalar
 
 And for vector quantities :math:`\vec{u}` and :math:`\vec{w}`, a discrete approximation
 to the inner product is given by:
 
 .. math::
-    (\vec{u}, \vec{w}) = \int_\Omega \vec{u} \cdot \vec{w} \, dv \approx \mathbf{u^T \, M \, w}
+    (\vec{u}, \vec{w}) = \int_\Omega \vec{u} \cdot \vec{w} \, dv \approx \boldsymbol{u^T M \, w}
     :label: inner_product_basic_vector
 
-where :math:`\mathbf{M}` in either equation represents an
+where :math:`\boldsymbol{M}` in either equation represents an
 *inner-product matrix*, and :math:`\boldsymbol{\psi}`, :math:`\boldsymbol{\phi}`,
-:math:`\mathbf{u}` and :math:`\mathbf{w}` are discrete variables that live
+:math:`\boldsymbol{u}` and :math:`\boldsymbol{w}` are discrete variables that live
 on the mesh. It is important to note a few things about the
 inner-product matrix in this case:
 
@@ -34,18 +34,18 @@ For this simple class of inner products, the corresponding form of the inner pro
 discrete quantities living on various parts of the mesh are shown below:
 
 .. math::
-    \textrm{Scalars at centers:} \; \mathbf{M_c} &= \textrm{diag} (\mathbf{v} ) \\
-    \textrm{Scalars at nodes:} \; \mathbf{M_n} &= \frac{1}{2^{2k}} \mathbf{P_n^T } \textrm{diag} (\mathbf{v} ) \mathbf{P_n} \\
-    \textrm{Vectors on faces:} \; \mathbf{M_f} &= \frac{1}{4} \mathbf{P_f^T } \textrm{diag} (\mathbf{e_k \otimes v} ) \mathbf{P_f} \\
-    \textrm{Vectors on edges:} \; \mathbf{M_e} &= \frac{1}{4^{k-1}} \mathbf{P_e^T } \textrm{diag} (\mathbf{e_k \otimes v}) \mathbf{P_e}
+    \textrm{Scalars at centers:} \; \boldsymbol{M_c} &= \textrm{diag} (\boldsymbol{v} ) \\
+    \textrm{Scalars at nodes:} \; \boldsymbol{M_n} &= \frac{1}{2^{2k}} \boldsymbol{P_n^T } \textrm{diag} (\boldsymbol{v} ) \boldsymbol{P_n} \\
+    \textrm{Vectors on faces:} \; \boldsymbol{M_f} &= \frac{1}{4} \boldsymbol{P_f^T } \textrm{diag} (\boldsymbol{e_k \otimes v} ) \boldsymbol{P_f} \\
+    \textrm{Vectors on edges:} \; \boldsymbol{M_e} &= \frac{1}{4^{k-1}} \boldsymbol{P_e^T } \textrm{diag} (\boldsymbol{e_k \otimes v}) \boldsymbol{P_e}
 
 where
 
     - :math:`k = 1,2,3` represent the dimension (1D, 2D or 3D)
-    - :math:`\mathbf{e_k}` is a vector of 1s of length :math:`k`
+    - :math:`\boldsymbol{e_k}` is a vector of 1s of length :math:`k`
     - :math:`\otimes` is the kronecker product
-    - :math:`\mathbf{P}` are projection matricies that map quantities from one part of the cell (nodes, faces, edges) to cell centers
-    - :math:`\mathbf{v}` is a vector that stores all of the volumes of the cells
+    - :math:`\boldsymbol{P_n}`, :math:`\boldsymbol{P_f}` and :math:`\boldsymbol{P_e}` are projection matricies that map quantities from nodes, faces and edges to cell centers, respectively
+    - :math:`\boldsymbol{v}` is a vector that stores all of the volumes of the cells
 
 .. note:: To construct the inner product matrix and/or approximate inner products of this type, see the :ref:`tutorial on basic inner products <sphx_glr_tutorials_inner_products_1_basic.py>`
 
@@ -56,10 +56,10 @@ Scalars at Cell Centers
 We want to approximate the inner product of two scalar quantities :math:`\psi` and :math:`\phi`
 where the discrete quantities :math:`\boldsymbol{\psi}` and :math:`\boldsymbol{\phi}` are defined
 to live at cell centers. Assuming we know the values of :math:`\psi` and :math:`\phi` at cell centers,
-our goal is to construct the inner product matrix :math:`\mathbf{M}` such that: 
+our goal is to construct the inner product matrix :math:`\boldsymbol{M}` such that: 
 
 .. math::
-    (\psi , \phi ) = \int_\Omega \psi \, \phi \, dv \approx \mathbf{\psi^T \, M \, \phi}
+    (\psi , \phi ) = \int_\Omega \psi \, \phi \, dv \approx \boldsymbol{\psi^T M \, \phi}
 
 
 .. image:: ../images/center_discretization.png
@@ -68,7 +68,7 @@ our goal is to construct the inner product matrix :math:`\mathbf{M}` such that:
 
 
 For a single cell (see above), the contribution towards the inner product is obtained by multiplying
-:math:`\psi` and :math:`\phi` at the cell centers (represented by :math:`\psi_i and \phi_i`)
+:math:`\psi` and :math:`\phi` at the cell centers (represented by :math:`\psi_i` and :math:`\phi_i`)
 by the cell's volume (:math:`v_i`), i.e.:
 
 .. math::
@@ -83,13 +83,13 @@ approximation over all cells. Where :math:`nc` refers to the number of cells in 
 Expressing the sum in terms of linear equations, we obtain:
 
 .. math::
-     (\psi , \phi ) = \int_\Omega \psi \, \phi \, dv  \approx \mathbf{\psi^T \, M_c \, \phi}
+     (\psi , \phi ) = \int_\Omega \psi \, \phi \, dv  \approx \boldsymbol{\psi^T \, M_c \, \phi}
 
 where the mass matrix for cell centered quantities is just a diagonal matrix containing
-the cell volumes (:math:`\mathbf{v}`), i.e.:
+the cell volumes (:math:`\boldsymbol{v}`), i.e.:
 
 .. math::
-    \mathbf{M_c} = diag(\mathbf{v})
+    \boldsymbol{M_c} = diag(\boldsymbol{v})
 
 
 .. note:: To construct the inner product matrix and/or approximate inner products of this type, see the :ref:`tutorial on basic inner products <sphx_glr_tutorials_inner_products_1_basic.py>`
@@ -101,10 +101,10 @@ Scalars at Nodes
 We want to approximate the inner product of two scalar quantities :math:`\psi` and :math:`\phi`
 where the discrete quantities :math:`\boldsymbol{\psi}` and :math:`\boldsymbol{\phi}` are defined
 to live on cell nodes. Assuming we know the values of :math:`\psi` and :math:`\phi` at the nodes,
-our goal is to construct the inner product matrix :math:`\mathbf{M}` such that: 
+our goal is to construct the inner product matrix :math:`\boldsymbol{M}` such that: 
 
 .. math::
-    (\psi , \phi ) = \int_\Omega \psi \, \phi \, dv \approx \mathbf{\psi^T \, M \, \phi}
+    (\psi , \phi ) = \int_\Omega \psi \, \phi \, dv \approx \boldsymbol{\psi^T M \, \phi}
     :label: inner_product_basic_nodes
 
 Whereas :math:`\boldsymbol{\psi}` and :math:`\boldsymbol{\phi}` are defined
@@ -128,7 +128,7 @@ Thus:
     \Bigg ( \phi_i^{(n1)} \! + \phi_i^{(n2)} \! + \phi_i^{(n3)} \! + \phi_i^{(n4)} \Bigg ) \\
     & \\
     \mathbf{In \; 3D:} \; \int_{\Omega_i} \psi \, \phi \, dv \approx & \;\; 
-    \frac{v_i}{16} \Bigg ( \sum_{n=1}^8 \psi_i^{(n)} \Bigg ) \Bigg ( \sum_{n=1}^8 \psi_i^{(n)} \Bigg )
+    \frac{v_i}{64} \Bigg ( \sum_{n=1}^8 \psi_i^{(n)} \Bigg ) \Bigg ( \sum_{n=1}^8 \psi_i^{(n)} \Bigg )
     \end{align}
     :label: inner_product_basic_nodes_1
 
@@ -136,24 +136,24 @@ where the superscript :math:`(n)` is used to point to a specific node.
 Using the contribution for each cell described in expression :eq:`inner_product_basic_nodes_1`,
 we want to approximate the inner product in the form described by
 equation :eq:`inner_product_basic_nodes`. To accomlish this, we construct a sparse matrix
-:math:`\mathbf{P_n}` which projects quantities on the nodes to the
+:math:`\boldsymbol{P_n}` which projects quantities on the nodes to the
 the cell centers.
 
 Our final approximation for the inner product is therefore:
 
 .. math::
-     (\psi , \phi ) = \int_\Omega \psi \, \phi \, dv  \approx \mathbf{\psi^T \, M_n \, \phi}
+     (\psi , \phi ) = \int_\Omega \psi \, \phi \, dv  \approx \boldsymbol{\psi^T \, M_n \, \phi}
 
 where the mass matrix for nodal quantities has the form:
 
 .. math::
-    \mathbf{M_n} = \frac{1}{2^{2k}} \mathbf{P_n^T } \textrm{diag} (\mathbf{v} ) \mathbf{P_n}
+    \boldsymbol{M_n} = \frac{1}{2^{2k}} \boldsymbol{P_n^T } \textrm{diag} (\boldsymbol{v} ) \boldsymbol{P_n}
 
 where
 
     - :math:`k = 1,2,3` represent the dimension (1D, 2D or 3D)
-    - :math:`\mathbf{P_n}` is a projection matrix that maps quantities from nodes to cell centers
-    - :math:`\mathbf{v}` is a vector that stores all of the volumes of the cells
+    - :math:`\boldsymbol{P_n}` is a projection matrix that maps quantities from nodes to cell centers
+    - :math:`\boldsymbol{v}` is a vector that stores all of the volumes of the cells
 
 .. note:: To construct the inner product matrix and/or approximate inner products of this type, see the :ref:`tutorial on basic inner products <sphx_glr_tutorials_inner_products_1_basic.py>`
 
@@ -165,12 +165,12 @@ For the mimetic finite volume approach, fluxes are generally defined on cell fac
 as it allows cells to share faces while preserving natural boundary conditions.
 
 We want to approximate the inner product of two vector quantities :math:`\vec{u}` and :math:`\vec{w}`
-where the discrete quantities :math:`\mathbf{u}` and :math:`\mathbf{w}` are defined
+where the discrete quantities :math:`\boldsymbol{u}` and :math:`\boldsymbol{w}` are defined
 to live on cell faces. Assuming we know the values of :math:`\vec{u}` and :math:`\vec{w}` on the faces,
-our goal is to construct the inner product matrix :math:`\mathbf{M}` in the expression below: 
+our goal is to construct the inner product matrix :math:`\boldsymbol{M}` in the expression below: 
 
 .. math::
-    (\vec{u}, \vec{w}) = \int_\Omega \vec{u} \cdot \vec{w} \, dv \approx \mathbf{u^T \, M \, w}
+    (\vec{u}, \vec{w}) = \int_\Omega \vec{u} \cdot \vec{w} \, dv \approx \boldsymbol{u^T M \, w}
     :label: inner_product_basic_faces
 
 We must respect the dot product. For vectors defined on cell faces, we discretize such that the
@@ -201,34 +201,34 @@ where superscripts :math:`(1)` and :math:`(2)` denote face 1 and face 2, respect
 Using the contribution for each cell described in expression :eq:`inner_product_basic_faces_1`,
 we want to approximate the inner product in the form described by
 equation :eq:`inner_product_basic_faces`. To accomlish this, we construct a sparse matrix
-:math:`\mathbf{P_f}` which projects quantities on the x, y and z faces separately to the
+:math:`\boldsymbol{P_f}` which projects quantities on the x, y and z faces separately to the
 the cell centers.
 
-For discretize vectors :math:`\mathbf{u}` and :math:`\mathbf{w}` whose x, y (and z) components
+For discretize vectors :math:`\boldsymbol{u}` and :math:`\boldsymbol{w}` whose x, y (and z) components
 are organized on cell faces as follows:
 
 .. math::
-    \mathbf{u} = \begin{bmatrix} \mathbf{u_x} \\ \mathbf{u_y} \\ \mathbf{u_y} \\ \end{bmatrix}
+    \boldsymbol{u} = \begin{bmatrix} \boldsymbol{u_x} \\ \boldsymbol{u_y} \\ \boldsymbol{u_y} \\ \end{bmatrix}
     \;\;\;\; \textrm{and} \;\;\;\;
-    \mathbf{w} = \begin{bmatrix} \mathbf{w_x} \\ \mathbf{w_y} \\ \mathbf{w_y} \\ \end{bmatrix}
+    \boldsymbol{w} = \begin{bmatrix} \boldsymbol{w_x} \\ \boldsymbol{w_y} \\ \boldsymbol{w_y} \\ \end{bmatrix}
 
 the approximation to the inner product is given by:
 
 .. math::
-     (\vec{u}, \vec{w}) = \int_\Omega \vec{u} \cdot \vec{w} \, dv \approx \mathbf{\mathbf{u} \, M_f \, \mathbf{w}}
+     (\vec{u}, \vec{w}) = \int_\Omega \vec{u} \cdot \vec{w} \, dv \approx \boldsymbol{\boldsymbol{u} M_f \, \boldsymbol{w}}
 
 where the mass matrix for face quantities has the form:
 
 .. math::
-    \mathbf{M_f} = \frac{1}{4} \mathbf{P_f^T } \textrm{diag} (\mathbf{e_k \otimes v} ) \mathbf{P_f}
+    \boldsymbol{M_f} = \frac{1}{4} \boldsymbol{P_f^T } \textrm{diag} (\boldsymbol{e_k \otimes v} ) \boldsymbol{P_f}
 
 and
 
     - :math:`k = 1,2,3` represents the dimension (1D, 2D or 3D)
-    - :math:`\mathbf{e_k}` is a vector of 1s of length :math:`k`
+    - :math:`\boldsymbol{e_k}` is a vector of 1s of length :math:`k`
     - :math:`\otimes` is the kronecker product
-    - :math:`\mathbf{P_f}` is the projection matrix that maps quantities from faces to cell centers
-    - :math:`\mathbf{v}` is a vector that stores all of the volumes of the cells
+    - :math:`\boldsymbol{P_f}` is the projection matrix that maps quantities from faces to cell centers
+    - :math:`\boldsymbol{v}` is a vector that stores all of the volumes of the cells
 
 .. note:: To construct the inner product matrix and/or approximate inner products of this type, see the :ref:`tutorial on basic inner products <sphx_glr_tutorials_inner_products_1_basic.py>`
 
@@ -239,12 +239,12 @@ Vectors on Cell Edges
 For the mimetic finite volume approach, fields are generally defined on cell edges;
 as it allows cells to share edges while preserving natural boundary conditions.
 We want to approximate the inner product of two vector quantities :math:`\vec{u}` and :math:`\vec{w}`
-where the discrete quantities :math:`\mathbf{u}` and :math:`\mathbf{w}` are defined
+where the discrete quantities :math:`\boldsymbol{u}` and :math:`\boldsymbol{w}` are defined
 to live at cell edges. Assuming we know the values of :math:`\vec{u}` and :math:`\vec{w}` at the edges,
-our goal is to construct the inner product matrix :math:`\mathbf{M}` in the expression below: 
+our goal is to construct the inner product matrix :math:`\boldsymbol{M}` in the expression below: 
 
 .. math::
-    (\vec{u}, \vec{w}) = \int_\Omega \vec{u} \cdot \vec{w} \, dv \approx \mathbf{u^T \, M \, w}
+    (\vec{u}, \vec{w}) = \int_\Omega \vec{u} \cdot \vec{w} \, dv \approx \boldsymbol{u^T \, M \, w}
     :label: inner_product_basic_edges
 
 We must respect the dot product. For vectors defined on cell edges, we discretize such that the
@@ -276,34 +276,34 @@ where the superscript :math:`(n)` denotes a particular edge.
 Using the contribution for each cell described in expression :eq:`inner_product_basic_edges_1`,
 we want to approximate the inner product in the form described by
 equation :eq:`inner_product_basic_edges`. To accomlish this, we construct a sparse matrix
-:math:`\mathbf{P_e}` which projects quantities on the x, y and z edges separately to the
+:math:`\boldsymbol{P_e}` which projects quantities on the x, y and z edges separately to the
 the cell centers.
 
-For discretize vectors :math:`\mathbf{u}` and :math:`\mathbf{w}` whose x, y (and z) components
+For discretize vectors :math:`\boldsymbol{u}` and :math:`\boldsymbol{w}` whose x, y (and z) components
 are organized on cell edges as follows:
 
 .. math::
-    \mathbf{u} = \begin{bmatrix} \mathbf{u_x} \\ \mathbf{u_y} \\ \mathbf{u_y} \\ \end{bmatrix}
+    \boldsymbol{u} = \begin{bmatrix} \boldsymbol{u_x} \\ \boldsymbol{u_y} \\ \boldsymbol{u_y} \\ \end{bmatrix}
     \;\;\;\; \textrm{and} \;\;\;\;
-    \mathbf{w} = \begin{bmatrix} \mathbf{w_x} \\ \mathbf{w_y} \\ \mathbf{w_y} \\ \end{bmatrix}
+    \boldsymbol{w} = \begin{bmatrix} \boldsymbol{w_x} \\ \boldsymbol{w_y} \\ \boldsymbol{w_y} \\ \end{bmatrix}
 
 the approximation to the inner product is given by:
 
 .. math::
-     (\vec{u}, \vec{w}) = \int_\Omega \vec{u} \cdot \vec{w} \, dv \approx \mathbf{\mathbf{u} \, M_e \, \mathbf{w}}
+     (\vec{u}, \vec{w}) = \int_\Omega \vec{u} \cdot \vec{w} \, dv \approx \boldsymbol{\boldsymbol{u} \, M_e \, \boldsymbol{w}}
 
 where the mass matrix for face quantities has the form:
 
 .. math::
-    \mathbf{M_e} = \frac{1}{4^{k-1}} \mathbf{P_e^T } \textrm{diag} (\mathbf{e_k \otimes v}) \mathbf{P_e}
+    \boldsymbol{M_e} = \frac{1}{4^{k-1}} \boldsymbol{P_e^T } \textrm{diag} (\boldsymbol{e_k \otimes v}) \boldsymbol{P_e}
 
 and
 
     - :math:`k = 1,2,3` represents the dimension (1D, 2D or 3D)
-    - :math:`\mathbf{e_k}` is a vector of 1s of length :math:`k`
+    - :math:`\boldsymbol{e_k}` is a vector of 1s of length :math:`k`
     - :math:`\otimes` is the kronecker product
-    - :math:`\mathbf{P_e}` is the projection matrix that maps quantities from edges to cell centers
-    - :math:`\mathbf{v}` is a vector that stores all of the volumes of the cells
+    - :math:`\boldsymbol{P_e}` is the projection matrix that maps quantities from edges to cell centers
+    - :math:`\boldsymbol{v}` is a vector that stores all of the volumes of the cells
 
 .. note:: To construct the inner product matrix and/or approximate inner products of this type, see the :ref:`tutorial on basic inner products <sphx_glr_tutorials_inner_products_1_basic.py>`
 

@@ -29,72 +29,66 @@ we are interested in approximating the following inner products:
 **Gradient:**
 
 For the inner product between a vector (:math:`\vec{u}`) and the gradient of a scalar (:math:`\phi`),
-there are two options. Either:
-
-    (1) :math:`\boldsymbol{\phi}` is defined on the nodes and :math:`\boldsymbol{u}` is defined on cell edges, or
-    (2) :math:`\boldsymbol{\phi}` is defined at cell centers and :math:`\boldsymbol{u}` is defined on cell faces
-
-For each case, the approximation to the inner product is given by:
+there are two options for where the variables should live. For :math:`\boldsymbol{\phi}` defined on the nodes
+and :math:`\boldsymbol{u}` defined on cell edges:
 
 .. math::
-    \begin{align}
-    \textrm{Case 1:} \; (\vec{u}, \nabla \phi ) &\approx \boldsymbol{u^T M_e G_n \, \phi + B.C.} \\
-    \textrm{Case 2:} \; (\vec{u}, \nabla \phi ) &\approx - \boldsymbol{u^T D^T M_c \, \phi + B.C.}
-    \end{align}
+    \int_\Omega \vec{u} \cdot \nabla \phi \, dv \approx \boldsymbol{u^T M_e G_n \, \phi + B.C}
+
+And for :math:`\boldsymbol{\phi}` defined at cell centers and :math:`\boldsymbol{u}` defined on cell faces:
+
+.. math::
+    \int_\Omega \vec{u} \cdot \nabla \phi \, dv \approx - \boldsymbol{u^T D^T M_c \, \phi + B.C.}
 
 where
 
-    - :math:`\mathbf{G_n}` is a discrete gradient operator that maps from nodes to edges
-    - :math:`\mathbf{D}` is a discrete divergence operator whose transpose acts as a gradient operator from faces to cell centers
-    - :math:`\mathbf{M_c}` is the :ref:`basic inner product matrix for vectors at cell centers <inner_products_basic>`
-    - :math:`\mathbf{M_e}` is the :ref:`basic inner product matrix for vectors at edges <inner_products_basic>`
-    - :math:`\mathbf{BC}` represents an additional contribution accounting for the boundary conditions
+    - :math:`\boldsymbol{G_n}` is a discrete gradient operator that maps from nodes to edges
+    - :math:`\boldsymbol{D}` is a discrete divergence operator whose transpose acts as a gradient operator from faces to cell centers
+    - :math:`\boldsymbol{M_c}` is the :ref:`basic inner product matrix for vectors at cell centers <inner_products_basic>`
+    - :math:`\boldsymbol{M_e}` is the :ref:`basic inner product matrix for vectors at edges <inner_products_basic>`
+    - :math:`\boldsymbol{BC}` represents an additional contribution accounting for the boundary conditions
 
 **Divergence:**
 
 For the inner product between a scalar (:math:`\psi`) and the divergence of a vector (:math:`\vec{w}`),
-there are two options. Either:
-
-    (1) :math:`\boldsymbol{\psi}` is defined at cell centers :math:`\boldsymbol{w}` is defined on cell faces
-    (2) :math:`\boldsymbol{\psi}` is defined on the nodes and :math:`\boldsymbol{w}` is defined on cell edges, or
-
-For each case, the approximation to the inner product is given by:
+there are two options for where the variables should live. For :math:`\boldsymbol{\psi}` defined at cell centers
+and :math:`\boldsymbol{w}` defined on cell faces:
 
 .. math::
-    \begin{align}
-    \textrm{Case 1:} \; (\psi, \nabla \cdot \vec{w} ) &\approx \boldsymbol{\psi^T M_c D \, w + B.C.} \\
-    \textrm{Case 2:} \; (\psi, \nabla \cdot \vec{w} ) &\approx - \boldsymbol{\psi^T G_n^T M_e \, w + B.C.}
-    \end{align}
+    \int_\Omega \psi \; (\nabla \cdot \vec{w}) \, dv \approx \boldsymbol{\psi^T M_c D \, w + B.C.}
+
+And for :math:`\boldsymbol{\psi}` defined on the nodes and :math:`\boldsymbol{w}` defined on cell edges:
+
+.. math::
+    \int_\Omega \psi \; (\nabla \cdot \vec{w}) \, dv \approx - \boldsymbol{\psi^T G_n^T M_e \, w + B.C.}
 
 where
 
-    - :math:`\mathbf{D}` is a discrete divergence operator from faces to cell centers
-    - :math:`\mathbf{G_n}` is a discrete gradient operator whose transpose acts as a divergence operator from edges to nodes
-    - :math:`\mathbf{M_c}` is the :ref:`basic inner product matrix for vectors at cell centers <inner_products_basic>`
-    - :math:`\mathbf{M_e}` is the :ref:`basic inner product matrix for vectors at edges <inner_products_basic>`
-    - :math:`\mathbf{BC}` represents an additional contribution accounting for the boundary conditions
+    - :math:`\boldsymbol{D}` is a discrete divergence operator from faces to cell centers
+    - :math:`\boldsymbol{G_n}` is a discrete gradient operator whose transpose acts as a divergence operator from edges to nodes
+    - :math:`\boldsymbol{M_c}` is the :ref:`basic inner product matrix for vectors at cell centers <inner_products_basic>`
+    - :math:`\boldsymbol{M_e}` is the :ref:`basic inner product matrix for vectors at edges <inner_products_basic>`
+    - :math:`\boldsymbol{BC}` represents an additional contribution accounting for the boundary conditions
 
 **Curl:**
 
 For the inner product between a vector (:math:`\vec{u}`) and the curl of another vector (:math:`\vec{w}`),
-there are two options. Either:
-
-    (1) :math:`\boldsymbol{u}` is defined on the faces and :math:`\boldsymbol{w}` is defined on cell edges, or
-    (2) :math:`\boldsymbol{u}` is defined on the edges :math:`\boldsymbol{w}` is defined on cell faces
-
-For each case, the approximation to the inner product is given by:
+there are two options for where the variables should live. For :math:`\boldsymbol{u}` defined on the faces
+and :math:`\boldsymbol{w}` defined on cell edges:
 
 .. math::
-    \begin{align}
-    \textrm{Case 1:} \; (\vec{u}, \nabla \times \vec{w} ) &\approx \boldsymbol{u^T M_f C \, w + B.C.} \\
-    \textrm{Case 2:} \; (\vec{u}, \nabla \times \vec{w} ) &\approx \boldsymbol{u^T C^T M_f \, w + B.C.}
-    \end{align}
+    \int_\Omega \vec{u} \cdot (\nabla \times \vec{w} ) \, dv \approx \boldsymbol{u^T M_f C \, w + B.C.}
+
+And for :math:`\boldsymbol{u}` defined on the edges and :math:`\boldsymbol{w}` defined on cell faces:
+
+.. math::
+    \int_\Omega \vec{u} \cdot (\nabla \times \vec{w} ) \, dv \approx \boldsymbol{u^T C^T \! M_f \, w + B.C.}
 
 where
 
-    - :math:`\mathbf{C}` is a discrete curl operator from edges to faces, whose transpose acts as a gradient operator from faces to edges 
-    - :math:`\mathbf{M_f}` is the :ref:`basic inner product matrix for vectors on cell faces <inner_products_basic>`
-    - :math:`\mathbf{BC}` represents an additional contribution accounting for the boundary conditions
+    - :math:`\boldsymbol{C}` is a discrete curl operator from edges to faces, whose transpose acts as a curl operator from faces to edges 
+    - :math:`\boldsymbol{M_f}` is the :ref:`basic inner product matrix for vectors on cell faces <inner_products_basic>`
+    - :math:`\boldsymbol{BC}` represents an additional contribution accounting for the boundary conditions
 
 Vector and the Gradient of a Scalar
 -----------------------------------

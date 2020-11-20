@@ -26,7 +26,7 @@ equation :eq:`inner_product_isotropic` is approximated by:
     (\vec{u}, \sigma \vec{w} ) = \int_\Omega \vec{u} \cdot \sigma \vec{w} \, dv \approx \boldsymbol{u^T M w}
 
 where :math:`\boldsymbol{M}` represents an *inner-product matrix*, and vectors
-:math:`\mathbf{u}` and :math:`\mathbf{w}` are discrete variables that live
+:math:`\boldsymbol{u}` and :math:`\boldsymbol{w}` are discrete variables that live
 on the mesh. It is important to note a few things about the
 inner-product matrix in this case:
 
@@ -34,21 +34,21 @@ inner-product matrix in this case:
     2. It depends on where the discrete variables live; e.g. edges, faces
     3. It depends on the spacial variation of the material property :math:`\sigma`
 
-For this class of inner products, the corresponding form of the inner product matricies for
-discrete quantities living on various parts of the mesh are given by
+For this class of inner products, the corresponding inner product matricies for
+discrete quantities living on various parts of the mesh are given by:
 
 .. math::
-    \textrm{Vectors on faces:} \; \mathbf{M_{\sigma f}} &= \frac{1}{4} \mathbf{P_f^T } \textrm{diag} \boldsymbol{\big ( e_k \otimes (v \odot \sigma ) \big )} \mathbf{P_f} \\
-    \textrm{Vectors on edges:} \; \mathbf{M_{\sigma e}} &= \frac{1}{4^{k-1}} \mathbf{P_e^T } \textrm{diag} \boldsymbol{\big ( e_k \otimes (v \odot \sigma) \big )} \mathbf{P_e}
+    \textrm{Vectors on faces:} \; \boldsymbol{M_{\sigma f}} &= \frac{1}{4} \boldsymbol{P_f^T } \textrm{diag} \boldsymbol{\big ( e_k \otimes (v \odot \sigma ) \big )} \boldsymbol{P_f} \\
+    \textrm{Vectors on edges:} \; \boldsymbol{M_{\sigma e}} &= \frac{1}{4^{k-1}} \boldsymbol{P_e^T } \textrm{diag} \boldsymbol{\big ( e_k \otimes (v \odot \sigma) \big )} \boldsymbol{P_e}
 
 where
 
     - :math:`k = 1,2,3` represent the dimension (1D, 2D or 3D)
-    - :math:`\mathbf{e_k}` is a vector of 1s of length :math:`k`
+    - :math:`\boldsymbol{e_k}` is a vector of 1s of length :math:`k`
     - :math:`\odot` is the Hadamard product
     - :math:`\otimes` is the kronecker product
-    - :math:`\mathbf{P}` are projection matricies that map quantities from one part of the cell (faces, edges) to cell centers
-    - :math:`\mathbf{v}` is a vector that stores all of the volumes of the cells
+    - :math:`\boldsymbol{P_f}` and :math:`\boldsymbol{P_e}` are projection matricies that map quantities from faces and edges to cell centers, respectively
+    - :math:`\boldsymbol{v}` is a vector that stores all of the volumes of the cells
     - :math:`\boldsymbol{\sigma}` is a vector containing the physical property values for the cells
 
 .. note:: To construct the inner product matrix and/or approximate inner products of this type, see the :ref:`tutorial on inner products with constitutive relationships <sphx_glr_tutorials_inner_products_2_physical_properties.py>`
@@ -58,11 +58,11 @@ Vectors on Cell Faces
 ---------------------
 
 We want to approximate the inner product between a vector quantity :math:`\vec{u}` and the product of
-:math:`\sigma` and :math:`\vec{w}`. Here, we discretize such that :math:`\mathbf{u}` and :math:`\mathbf{w}` are defined
-to live on cess faces. Our goal is to construct the inner product matrix :math:`\mathbf{M}` in the expression below: 
+:math:`\sigma` and :math:`\vec{w}`. Here, we discretize such that :math:`\boldsymbol{u}` and :math:`\boldsymbol{w}` are defined
+to live on cess faces. Our goal is to construct the inner product matrix :math:`\boldsymbol{M}` in the expression below: 
 
 .. math::
-    (\vec{u}, \sigma \vec{w}) = \int_\Omega \vec{u} \cdot \sigma \vec{w} \, dv \approx \mathbf{u^T \, M \, w}
+    (\vec{u}, \sigma \vec{w}) = \int_\Omega \vec{u} \cdot \sigma \vec{w} \, dv \approx \boldsymbol{u^T M \, w}
     :label: inner_product_isotropic_faces
 
 We must respect the dot product. For vectors defined on cell faces, we discretize such that the
@@ -94,35 +94,35 @@ where superscripts :math:`(1)` and :math:`(2)` denote face 1 and face 2, respect
 Using the contribution for each cell described in expression :eq:`inner_product_isotropic_faces_1`,
 we want to approximate the inner product in the form described by
 equation :eq:`inner_product_isotropic_faces`. To accomlish this, we construct a sparse matrix
-:math:`\mathbf{P_f}` which projects quantities on the x, y and z faces separately to the
+:math:`\boldsymbol{P_f}` which projects quantities on the x, y and z faces separately to the
 the cell centers.
 
-For discretize vectors :math:`\mathbf{u}` and :math:`\mathbf{w}` whose x, y (and z) components
+For discretize vectors :math:`\boldsymbol{u}` and :math:`\boldsymbol{w}` whose x, y (and z) components
 are organized on cell faces as follows:
 
 .. math::
-    \mathbf{u} = \begin{bmatrix} \mathbf{u_x} \\ \mathbf{u_y} \\ \mathbf{u_y} \\ \end{bmatrix}
+    \boldsymbol{u} = \begin{bmatrix} \boldsymbol{u_x} \\ \boldsymbol{u_y} \\ \boldsymbol{u_y} \\ \end{bmatrix}
     \;\;\;\; \textrm{and} \;\;\;\;
-    \mathbf{w} = \begin{bmatrix} \mathbf{e_x} \\ \mathbf{e_y} \\ \mathbf{e_y} \\ \end{bmatrix}
+    \boldsymbol{w} = \begin{bmatrix} \boldsymbol{e_x} \\ \boldsymbol{e_y} \\ \boldsymbol{e_y} \\ \end{bmatrix}
 
 the approximation to the inner product is given by:
 
 .. math::
-     (\vec{u}, \sigma \vec{w}) = \int_\Omega \vec{u} \cdot \sigma \vec{w} \, dv \approx \boldsymbol{\mathbf{u} \, M_{\sigma f}} \, \mathbf{w}
+     (\vec{u}, \sigma \vec{w}) = \int_\Omega \vec{u} \cdot \sigma \vec{w} \, dv \approx \boldsymbol{\boldsymbol{u} M_{\sigma f}} \, \boldsymbol{w}
 
 where the mass matrix has the form:
 
 .. math::
-    \mathbf{M_{\sigma f}} = \frac{1}{4} \mathbf{P_f^T } \textrm{diag} \boldsymbol{\big ( e_k \otimes (v \odot \sigma ) \big )} \mathbf{P_f}
+    \boldsymbol{M_{\sigma f}} = \frac{1}{4} \boldsymbol{P_f^T } \textrm{diag} \boldsymbol{\big ( e_k \otimes (v \odot \sigma ) \big )} \boldsymbol{P_f}
 
 and
 
     - :math:`k = 1,2,3` represent the dimension (1D, 2D or 3D)
-    - :math:`\mathbf{e_k}` is a vector of 1s of length :math:`k`
+    - :math:`\boldsymbol{e_k}` is a vector of 1s of length :math:`k`
     - :math:`\odot` is the Hadamard product
     - :math:`\otimes` is the kronecker product
-    - :math:`\mathbf{P}` are projection matricies that map quantities from one part of the cell (nodes, faces, edges) to cell centers
-    - :math:`\mathbf{v}` is a vector that stores all of the volumes of the cells
+    - :math:`\boldsymbol{P_f}` is a projection matrix that maps from faces to cell centers
+    - :math:`\boldsymbol{v}` is a vector that stores all of the volumes of the cells
     - :math:`\boldsymbol{\sigma}` is a vector containing the physical property values for the cells
 
 
@@ -133,11 +133,11 @@ Vectors on Cell Edges
 ---------------------
 
 We want to approximate the inner product between a vector quantity :math:`\vec{u}` and the product of
-:math:`\sigma` and :math:`\vec{w}`. Here, we discretize such that :math:`\mathbf{u}` and :math:`\mathbf{w}` are defined
-to live at cell edges. Our goal is to construct the inner product matrix :math:`\mathbf{M}` in the expression below: 
+:math:`\sigma` and :math:`\vec{w}`. Here, we discretize such that :math:`\boldsymbol{u}` and :math:`\boldsymbol{w}` are defined
+to live at cell edges. Our goal is to construct the inner product matrix :math:`\boldsymbol{M}` in the expression below: 
 
 .. math::
-    (\vec{u}, \sigma \vec{w}) = \int_\Omega \vec{u} \cdot \sigma \vec{w} \, dv \approx \mathbf{u^T \, M \, w}
+    (\vec{u}, \sigma \vec{w}) = \int_\Omega \vec{u} \cdot \sigma \vec{w} \, dv \approx \boldsymbol{u^T M \, w}
     :label: inner_product_isotropic_edges
 
 We must respect the dot product. For vectors defined on cell edges, we discretize such that the
@@ -169,35 +169,35 @@ where the superscript :math:`(n)` denotes a particular edge.
 Using the contribution for each cell described in expression :eq:`inner_product_isotropic_edges_1`,
 we want to approximate the inner product in the form described by
 equation :eq:`inner_product_isotropic_edges`. To accomlish this, we construct a sparse matrix
-:math:`\mathbf{P_e}` which projects quantities on the x, y and z edges separately to the
+:math:`\boldsymbol{P_e}` which projects quantities on the x, y and z edges separately to the
 the cell centers.
 
-For discretize vectors :math:`\mathbf{u}` and :math:`\mathbf{w}` whose x, y (and z) components
+For discretize vectors :math:`\boldsymbol{u}` and :math:`\boldsymbol{w}` whose x, y (and z) components
 are organized on cell edges as follows:
 
 .. math::
-    \mathbf{u} = \begin{bmatrix} \mathbf{u_x} \\ \mathbf{u_y} \\ \mathbf{u_y} \\ \end{bmatrix}
+    \boldsymbol{u} = \begin{bmatrix} \boldsymbol{u_x} \\ \boldsymbol{u_y} \\ \boldsymbol{u_y} \\ \end{bmatrix}
     \;\;\;\; \textrm{and} \;\;\;\;
-    \mathbf{w} = \begin{bmatrix} \mathbf{e_x} \\ \mathbf{e_y} \\ \mathbf{e_y} \\ \end{bmatrix}
+    \boldsymbol{w} = \begin{bmatrix} \boldsymbol{e_x} \\ \boldsymbol{e_y} \\ \boldsymbol{e_y} \\ \end{bmatrix}
 
 the approximation to the inner product is given by:
 
 .. math::
-     (\vec{u}, \vec{w}) = \int_\Omega \vec{u} \cdot \vec{w} \, dv \approx \mathbf{\mathbf{u} \, M_e \, \mathbf{w}}
+     (\vec{u}, \vec{w}) = \int_\Omega \vec{u} \cdot \vec{w} \, dv \approx \boldsymbol{\boldsymbol{u} M_e \, \boldsymbol{w}}
 
 where the mass matrix for face quantities has the form:
 
 .. math::
-    \mathbf{M_{\sigma e}} = \frac{1}{4^{k-1}} \mathbf{P_e^T } \textrm{diag} \boldsymbol{\big ( e_k \otimes (v \odot \sigma) \big )} \mathbf{P_e}
+    \boldsymbol{M_{\sigma e}} = \frac{1}{4^{k-1}} \boldsymbol{P_e^T } \textrm{diag} \boldsymbol{\big ( e_k \otimes (v \odot \sigma) \big )} \boldsymbol{P_e}
 
 and
 
     - :math:`k = 1,2,3` represent the dimension (1D, 2D or 3D)
-    - :math:`\mathbf{e_k}` is a vector of 1s of length :math:`k`
+    - :math:`\boldsymbol{e_k}` is a vector of 1s of length :math:`k`
     - :math:`\odot` is the Hadamard product
     - :math:`\otimes` is the kronecker product
-    - :math:`\mathbf{P}` are projection matricies that map quantities from one part of the cell (nodes, faces, edges) to cell centers
-    - :math:`\mathbf{v}` is a vector that stores all of the volumes of the cells
+    - :math:`\boldsymbol{P_e}` is a projection matrix that maps from edges to cell centers
+    - :math:`\boldsymbol{v}` is a vector that stores all of the volumes of the cells
     - :math:`\boldsymbol{\sigma}` is a vector containing the physical property values for the cells
 
 .. note:: To construct the inner product matrix and/or approximate inner products of this type, see the :ref:`tutorial on inner products with constitutive relationships <sphx_glr_tutorials_inner_products_2_physical_properties.py>`
