@@ -33,6 +33,7 @@
     :caption: Theory
 
     content/finite_volume
+    content/differential_operators
     content/inner_products
 
 .. toctree::
