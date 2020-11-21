@@ -6,9 +6,9 @@ Discrete Differential Operators
 Here, we provide the background theory for how discrete differential operators are formed. 
 For geophysical problems, the relationship between two physical quantities may include one of several differential operators:
 
-    - **Divergence:** :math:`\nabla \cdot \vec{u} = \frac{\partial u_x}{\partial x} + \frac{\partial u_y}{\partial y} + \frac{\partial u_y}{\partial y}`
-    - **Gradient:** :math:`\nabla \phi = \frac{\partial \phi}{\partial x}\hat{x} + \frac{\partial \phi}{\partial y}\hat{y} + \frac{\partial \phi}{\partial z}\hat{z}`
-    - **Curl:** :math:`\nabla \times \vec{u} = \Big ( \frac{\partial u_y}{\partial z} - \frac{\partial u_z}{\partial y} \Big )\hat{x} - \Big ( \frac{\partial u_x}{\partial z} - \frac{\partial u_z}{\partial x} \Big )\hat{y} + \Big ( \frac{\partial u_x}{\partial y} - \frac{\partial u_y}{\partial x} \Big )\hat{z}`
+    - **Divergence:** :math:`\nabla \cdot \vec{u} = \dfrac{\partial u_x}{\partial x} + \dfrac{\partial u_y}{\partial y} + \dfrac{\partial u_y}{\partial y}`
+    - **Gradient:** :math:`\nabla \phi = \dfrac{\partial \phi}{\partial x}\hat{x} + \dfrac{\partial \phi}{\partial y}\hat{y} + \dfrac{\partial \phi}{\partial z}\hat{z}`
+    - **Curl:** :math:`\nabla \times \vec{u} = \Bigg ( \dfrac{\partial u_y}{\partial z} - \dfrac{\partial u_z}{\partial y} \Bigg )\hat{x} - \Bigg ( \dfrac{\partial u_x}{\partial z} - \dfrac{\partial u_z}{\partial x} \Bigg )\hat{y} + \Bigg ( \dfrac{\partial u_x}{\partial y} - \dfrac{\partial u_y}{\partial x} \Bigg )\hat{z}`
 
 When implementing the finite volume method, continuous variables are discretized to live at the cell centers, nodes, edges or faces of a mesh.
 Thus for each differential operator, we need a discrete approximation that acts on the discrete variables living on the mesh.
@@ -27,6 +27,7 @@ the gradient, divergence and curl can be computed for discrete variables.
     :width: 300
 
 
+.. note:: To construct discrete differential operators and apply them in a set of examples, see our :ref:`tutorial for differential operators <sphx_glr_tutorials_operators_2_differential.py>`
 
 
 
@@ -65,7 +66,7 @@ for the components of :math:`\boldsymbol{u}` to live on the faces. If :math:`u_x
 derivative with respect to :math:`x` lives at the cell center. And if :math:`u_y` lives on y faces its discrete
 derivative with respect to :math:`y` lives at the cell center. Likewise for :math:`u_z`. Thus to approximate the
 divergence of :math:`\vec{u}` at the cell center, we simply need to sum the discrete derivatives of :math:`u_x`, :math:`u_y`
-and :math:`u_z` living on the faces. Where :math:`h_x`, :math:`h_y` and :math:`h_z` represent the dimension of the cell along the x, y and
+and :math:`u_z` that are defined at the cell center. Where :math:`h_x`, :math:`h_y` and :math:`h_z` represent the dimension of the cell along the x, y and
 z directions, respectively:
 
 .. math::
@@ -84,6 +85,23 @@ z directions, respectively:
     \end{align}
 
 
+Ultimately we are trying to approximate the divergence at the center of every cell in a mesh.
+Adjacent cells share faces. If the components :math:`u_x`, :math:`u_y` and :math:`u_z` are
+continuous across their respective faces, then :math:`\boldsymbol{\phi}` and :math:`\boldsymbol{u}`
+can be related by a sparse matrix-vector product:
+
+.. math::
+    \boldsymbol{\phi} = \boldsymbol{D \, u}
+
+where :math:`\boldsymbol{D}` is the divergence matrix from faces to cell centers,
+:math:`\boldsymbol{\phi}` is a vector containing the discrete approximations of :math:`\phi` at all cell centers,
+and :math:`\boldsymbol{u}` stores the components of :math:`\vec{u}` on cell faces as a vector of the form:
+
+.. math::
+    \boldsymbol{u} = \begin{bmatrix} \boldsymbol{u_x} \\ \boldsymbol{u_y} \\ \boldsymbol{u_z} \end{bmatrix}
+
+
+.. note:: To construct discrete differential operators and apply them in a set of examples, see our :ref:`tutorial for differential operators <sphx_glr_tutorials_operators_2_differential.py>`
 
 
 Gradient
@@ -107,9 +125,9 @@ denote positions along the x, y and z axes, respectively.
 As we will see, it makes the most sense for :math:`\boldsymbol{\phi}` to live at the cell nodes and
 for the components of :math:`\boldsymbol{u}` to live on corresponding edges. If :math:`\phi` lives on the nodes, then:
 
-    - the partial derivative :math:`\frac{\partial \phi}{\partial x}\hat{x}` lives on x edges,
-    - the partial derivative :math:`\frac{\partial \phi}{\partial y}\hat{y}` lives on y edges, and
-    - the partial derivative :math:`\frac{\partial \phi}{\partial z}\hat{z}` lives on z edges
+    - the partial derivative :math:`\dfrac{\partial \phi}{\partial x}\hat{x}` lives on x edges,
+    - the partial derivative :math:`\dfrac{\partial \phi}{\partial y}\hat{y}` lives on y edges, and
+    - the partial derivative :math:`\dfrac{\partial \phi}{\partial z}\hat{z}` lives on z edges
 
 Thus to approximate the gradient of :math:`\phi`, 
 we simply need to take discrete derivatives of :math:`\phi` with respect to :math:`x`, :math:`y` and :math:`z`,
@@ -140,8 +158,22 @@ for each vector component is given below:
     \end{align}
 
 
+Ultimately we are trying to approximate the vector components of the gradient at all edges of a mesh.
+Adjacent cells share nodes. If :math:`\phi` is continuous at the nodes, then :math:`\boldsymbol{\phi}` and :math:`\boldsymbol{u}`
+can be related by a sparse matrix-vector product:
+
+.. math::
+    \boldsymbol{u} = \boldsymbol{G_n \, \phi}
+
+where :math:`\boldsymbol{G_n}` is the gradient matrix that maps from nodes to edges,
+:math:`\boldsymbol{\phi}` is a vector containing :math:`\phi` at all nodes,
+and :math:`\boldsymbol{u}` stores the components of :math:`\vec{u}` on cell edges as a vector of the form:
+
+.. math::
+    \boldsymbol{u} = \begin{bmatrix} \boldsymbol{u_x} \\ \boldsymbol{u_y} \\ \boldsymbol{u_z} \end{bmatrix}
 
 
+.. note:: To construct discrete differential operators and apply them in a set of examples, see our :ref:`tutorial for differential operators <sphx_glr_tutorials_operators_2_differential.py>`
 
 
 Curl
@@ -158,8 +190,6 @@ our goal is to use discrete differentiation to approximate the vector components
 We begin by considering a single 3D cell. We let the indices :math:`i`, :math:`j` and :math:`k` 
 denote positions along the x, y and z axes, respectively.
 
-
-
 .. image:: ../images/curl_discretization.png
     :align: center
     :width: 800
@@ -169,25 +199,44 @@ As we will see, it makes the most sense for the vector components of :math:`\bol
 for the vector components of :math:`\boldsymbol{w}` to live the faces. In this case, we need to approximate:
 
 
-    - the partial derivatives :math:`\frac{\partial u_y}{\partial z}` and :math:`\frac{\partial u_z}{\partial y}` to compute :math:`w_x`,
-    - the partial derivatives :math:`\frac{\partial u_x}{\partial z}` and :math:`\frac{\partial u_z}{\partial x}` to compute :math:`w_y`, and
-    - the partial derivatives :math:`\frac{\partial u_x}{\partial y}` and :math:`\frac{\partial u_y}{\partial x}` to compute :math:`w_z`
+    - the partial derivatives :math:`\dfrac{\partial u_y}{\partial z}` and :math:`\dfrac{\partial u_z}{\partial y}` to compute :math:`w_x`,
+    - the partial derivatives :math:`\dfrac{\partial u_x}{\partial z}` and :math:`\dfrac{\partial u_z}{\partial x}` to compute :math:`w_y`, and
+    - the partial derivatives :math:`\dfrac{\partial u_x}{\partial y}` and :math:`\dfrac{\partial u_y}{\partial x}` to compute :math:`w_z`
 
-**In 3D**, the value of :math:`\phi` at 8 node locations is used to approximate the vector components of the
-gradient at 12 edges locations (4 x-edges, 4 y-edges and 4 z-edges). An example of the approximation
-for each vector component is given below:
+**In 3D**, discrete values at 12 edge locations (4 x-edges, 4 y-edges and 4 z-edges) are used to
+approximate the vector components of the curl at 6 face locations (2 x-faces, 2-faces and 2 z-faces).
+An example of the approximation for each vector component is given below:
 
 .. math::
     \begin{align}
-    w_x \Big ( i,j+\frac{1}{2},k+\frac{1}{2} \Big ) \approx \; &
-    \Bigg( \frac{u_y (i,j+\frac{1}{2},k+1) - u_y (i,j+\frac{1}{2},k)}{h_z} \Bigg )
-    - \Bigg( \frac{u_z (i,j+1,k+\frac{1}{2}) - u_z (i,j,k+\frac{1}{2})}{h_y} \Bigg ) \\
+    w_x \Big ( i,j \! +\!\!\frac{1}{2},k \! +\!\!\frac{1}{2} \Big ) \!\approx\! \; &
+    \!\Bigg ( \! \frac{u_y (i,j \! +\!\!\frac{1}{2},k \! +\!\!1)  \! -\! u_y (i,j \! +\!\!\frac{1}{2},k)}{h_z} \Bigg) \!
+    \! -\! \!\Bigg ( \! \frac{u_z (i,j \! +\!\!1,k \! +\!\!\frac{1}{2})  \! -\! u_z (i,j,k \! +\!\!\frac{1}{2})}{h_y} \Bigg) \! \\
     & \\
-    w_y \Big ( i+\frac{1}{2},j,k+\frac{1}{2} \Big ) \approx \; &
-    - \Bigg( \frac{u_x (i+\frac{1}{2},j,k+1) - u_x (i+\frac{1}{2},j,k)}{h_z} \Bigg )
-    + \Bigg( \frac{u_z (i+1,j,k+\frac{1}{2}) - u_z (i,j,k+\frac{1}{2})}{h_x} \Bigg ) \\
+    w_y \Big ( i \! +\!\!\frac{1}{2},j,k \! +\!\!\frac{1}{2} \Big ) \!\approx\! \; &
+    \!\Bigg ( \! \frac{u_z (i \! +\!\!1,j,k \! +\!\!\frac{1}{2})  \! -\! u_z (i,j,k \! +\!\!\frac{1}{2})}{h_x} \Bigg) \! 
+    \! -\! \!\Bigg ( \! \frac{u_x (i \! +\!\!\frac{1}{2},j,k \! +\!\!1)  \! -\! u_x (i \! +\!\!\frac{1}{2},j,k)}{h_z} \Bigg) \\
     & \\
-    w_z \Big ( i+\frac{1}{2},j+\frac{1}{2},k \Big ) \approx \; &
-    \Bigg( \frac{u_x (i+\frac{1}{2},j+1,k) - u_x (i+\frac{1}{2},j,k)}{h_y} \Bigg )
-    - \Bigg( \frac{u_y (i+1,j+\frac{1}{2},k) - u_y (i,j+\frac{1}{2},k)}{h_z} \Bigg )
+    w_z \Big ( i \! +\!\!\frac{1}{2},j \! +\!\!\frac{1}{2},k \Big ) \!\approx\! \; &
+    \!\Bigg ( \! \frac{u_x (i \! +\!\!\frac{1}{2},j \! +\!\!1,k)  \! -\! u_x (i \! +\!\!\frac{1}{2},j,k)}{h_y} \Bigg) \!
+    \! -\! \!\Bigg ( \! \frac{u_y (i \! +\!\!1,j \! +\!\!\frac{1}{2},k)  \! -\! u_y (i,j \! +\!\!\frac{1}{2},k)}{h_x} \Bigg )
     \end{align}
+
+
+Ultimately we are trying to approximate the curl on all the faces within a mesh.
+Adjacent cells share edges. If the components :math:`u_x`, :math:`u_y` and :math:`u_z` are
+continuous across at the edges, then :math:`\boldsymbol{u}` and :math:`\boldsymbol{w}`
+can be related by a sparse matrix-vector product:
+
+.. math::
+    \boldsymbol{w} = \boldsymbol{C \, u}
+
+where :math:`\boldsymbol{C}` is the curl matrix from edges to faces,
+:math:`\boldsymbol{u}` is a vector that stores the components of :math:`\vec{u}` on cell edges,
+and :math:`\boldsymbol{w}` is a vector that stores the components of :math:`\vec{w}` on cell faces such that:
+
+.. math::
+    \boldsymbol{u} = \begin{bmatrix} \boldsymbol{u_x} \\ \boldsymbol{u_y} \\ \boldsymbol{u_z} \end{bmatrix}
+    \;\;\;\; \textrm{and} \;\;\;\; \begin{bmatrix} \boldsymbol{w_x} \\ \boldsymbol{w_y} \\ \boldsymbol{w_z} \end{bmatrix}
+
+.. note:: To construct discrete differential operators and apply them in a set of examples, see our :ref:`tutorial for differential operators <sphx_glr_tutorials_operators_2_differential.py>`
