@@ -3,8 +3,8 @@
 Intoduction to Finite Volume
 ****************************
 
-What is the Finite Volume Method?
----------------------------------
+What Finite Volume?
+-------------------
 
 The finite volume method is a method for numerically solving partial differential
 equations. Implementation of the finite volume method requires the discretization
@@ -30,11 +30,12 @@ Examples
 --------
 
 Below are several examples of the final linear system obtained using the finite volume approach.
-A comprehensive derivation of the final result is not provided here. It in instead parsed into
-a set of theory sections which include:
+A comprehensive derivation of the final result is not provided here. Instead, the necessary
+background theory is parsed into several section, including:
 
-	- :ref:`discrete differential operators <differential_operators>`
+	- :ref:`discretizing differential operators <differential_operators>`
 	- :ref:`inner products <inner_products>`
+	- finite volume full examples
 
 Direct Current Resistivity
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -56,13 +57,12 @@ If we choose to define the discrete representation of the electric potential on 
 the solution for the electric potentials after applying the finite volume approach is given by:
 
 .. math::
-	\boldsymbol{[G^T M_{\sigma e} G ]} \boldsymbol{\phi} = \mathbf{q_s}
+	\boldsymbol{[G^T \! M_{\sigma e} G ]} \boldsymbol{\phi} = \mathbf{q_s}
 
-where :math:`\boldsymbol{G^T M_{\sigma e} G }` is a sparse matrix and
+where :math:`\boldsymbol{G^T \! M_{\sigma e} G }` is a sparse matrix and
 
 	- :math:`\boldsymbol{\phi}` is the discrete approximation to the electric potentials on the nodes
 	- :math:`\boldsymbol{G}` is a discrete gradient operator
-	- :math:`\boldsymbol{G^T}` is the transpose of :math:`\boldsymbol{G}` but acts as a divergence operator
 	- :math:`\boldsymbol{M_{\sigma e}}` is the mass matrix
 	- :math:`\boldsymbol{q_s}` is the discrete representation of the source term on the nodes
 
@@ -95,16 +95,16 @@ The solution for the electric potentials after applying the finite volume approa
 
 .. math::
 	\begin{align}
-	\boldsymbol{C^T M_{\mu f} \, b } - \boldsymbol{M_{\sigma e} \, e} = \mathbf{j_s} \\
+	\boldsymbol{C^T \! M_{\mu f} \, b } - \boldsymbol{M_{\sigma e} \, e} = \mathbf{j_s} \\
 	\mathbf{C \, e} = -i \omega \mathbf{b}
 	\end{align}
 
 which can be combined to form a single linear system:
 
 .. math::
-	\boldsymbol{[C^T M_{\mu f} C } + i\omega \boldsymbol{M_{\sigma e}]} \mathbf{e} = -i \omega \mathbf{j_s}
+	\boldsymbol{[C^T \! M_{\mu f} C } + i\omega \boldsymbol{M_{\sigma e}]} \mathbf{e} = -i \omega \mathbf{j_s}
 
-where :math:`\boldsymbol{C^T M_{\mu f} C } + i\omega \boldsymbol{M_{\sigma e}}` is a sparse matrix and
+where :math:`\boldsymbol{C^T \! M_{\mu f} C } + i\omega \boldsymbol{M_{\sigma e}}` is a sparse matrix and
 
 	- :math:`\boldsymbol{e}` is the discrete approximation to the electric field on edges
 	- :math:`\boldsymbol{b}` is the discrete approximation to the magnetic flux density on faces

@@ -16,12 +16,6 @@ given by:
 .. math::
     (\vec{u}, \vec{v}) = \int_\Omega \vec{u} \cdot \vec{v} \, dv
 
-.. To implement the finite volume method, we:
-
-..     1. take the inner product between each differential equation and a test function
-..     2. re-express the inner product using the weak formulation by applying the divergence theorem when necessary
-..     3. formulate a discrete approximation to each inner product which respects the boundary conditions on our variables
-
 When implementing the finite volume method, we construct discrete approximations to inner products.
 The approximations to inner products are combined and simplified to form a linear system in terms
 of an unknown variable, then solved. The approximation to each inner product depends on the quantities
