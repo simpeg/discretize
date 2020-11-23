@@ -147,7 +147,7 @@ class InterfaceMPL(object):
         if "showIt" in kwargs:
             show_it = kwargs.pop("showIt")
             warnings.warn(
-                "showIt has been deprecated, please use show_it", FutureWarning
+                "showIt has been deprecated, please use show_it", DeprecationWarning
             )
 
         if ax is not None:
