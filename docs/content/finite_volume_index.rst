@@ -6,11 +6,9 @@ Intoduction to Finite Volume
 What Finite Volume?
 -------------------
 
-The finite volume method is a method for numerically solving partial differential
-equations. Implementation of the finite volume method requires the discretization
-of continuous functions, resulting in discrete approximations. The discrete
-approximations are typically organized on a numerical grid (or mesh),
-which defines the domain, its boundaries, and the locations of discrete quantities.
+The finite volume method is a method for numerically approximating the solution to partial differential equations.
+Implementation of the finite volume method requires the discretization of continuous functions and variables.
+Discrete representations of functions and variables are organized on a numerical grid (or mesh).
 The final product of the approach is a linear system of equations :math:`\boldsymbol{A \phi=q}`
 that can be solved to compute the discrete approximation of a desired quantity.
 
@@ -18,10 +16,10 @@ that can be solved to compute the discrete approximation of a desired quantity.
    :width: 700
    :align: center
 
-In SimPEG, we have implemented a staggered mimetic finite volume approach (`Hyman and
-Shashkov, 1999 <https://cnls.lanl.gov/~shashkov/papers/maxjcp.pdf>`_). This
-approach requires the definitions of variables at either cell-centers, nodes,
-faces, or edges. This method is different from finite difference methods,
+In *discretize*, we use a staggered mimetic finite volume approach (`Hyman and
+Shashkov, 1999 <https://cnls.lanl.gov/~shashkov/papers/maxjcp.pdf>`_).
+This approach requires the definitions of variables at either cell-centers, nodes, faces, or edges.
+This method is different from finite difference methods,
 as the final linear system is constructed by approximating the inner products between
 test functions and partial differential equations.
 
@@ -33,8 +31,9 @@ Below are several examples of the final linear system obtained using the finite 
 A comprehensive derivation of the final result is not provided here. Instead, the necessary
 background theory is parsed into several section, including:
 
-	- :ref:`discretizing differential operators <differential_operators>`
-	- :ref:`inner products <inner_products>`
+	- :ref:`meshes <meshes_index>`
+	- :ref:`interpolation, averaging and differential operators <operators_index>`
+	- :ref:`inner products <inner_products_index>`
 	- finite volume full examples
 
 Direct Current Resistivity

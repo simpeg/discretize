@@ -62,7 +62,7 @@ our goal is to construct the inner product matrix :math:`\boldsymbol{M}` such th
     (\psi , \phi ) = \int_\Omega \psi \, \phi \, dv \approx \boldsymbol{\psi^T M \, \phi}
 
 
-.. image:: ../images/center_discretization.png
+.. image:: ../../images/center_discretization.png
     :align: center
     :width: 600
 
@@ -112,7 +112,7 @@ to live on cell nodes, it makes more sense for cell volumes to be considered a p
 which lives at cell centers. This makes evaluating the inner product more complicated as
 discrete quantities do not live at the same place.
 
-.. image:: ../images/node_discretization.png
+.. image:: ../../images/node_discretization.png
     :align: center
     :width: 600
 
@@ -177,7 +177,7 @@ We must respect the dot product. For vectors defined on cell faces, we discretiz
 x-component of the vectors live on the x-faces, the y-component lives y-faces and the z-component
 lives on the z-faces. For a single cell, this is illustrated in 2D and 3D below.
 
-.. image:: ../images/face_discretization.png
+.. image:: ../../images/face_discretization.png
     :align: center
     :width: 600
 
@@ -251,7 +251,7 @@ We must respect the dot product. For vectors defined on cell edges, we discretiz
 x-component of the vectors live on the x-edges, the y-component lives y-edges and the z-component
 lives on the z-edges. This is illustrated in 2D and 3D below.
 
-.. image:: ../images/edge_discretization.png
+.. image:: ../../images/edge_discretization.png
     :align: center
     :width: 600
 

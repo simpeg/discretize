@@ -70,7 +70,7 @@ x-component of the vectors live on the x-faces, the y-component lives y-faces an
 lives on the z-faces. For a single cell, this is illustrated in 2D and 3D below. By decomposing the
 domain into a set of finite cells, we assume the physical properties are spacial invariant within each cell.
 
-.. image:: ../images/face_discretization.png
+.. image:: ../../images/face_discretization.png
     :align: center
     :width: 600
 
@@ -145,7 +145,7 @@ x-component of the vectors live on the x-edges, the y-component lives y-edges an
 lives on the z-edges. This is illustrated in 2D and 3D below. By decomposing the
 domain into a set of finite cells, we assume the material properties are spacial invariant within each cell.
 
-.. image:: ../images/edge_discretization.png
+.. image:: ../../images/edge_discretization.png
     :align: center
     :width: 600
 

@@ -32,9 +32,10 @@
     :hidden:
     :caption: Theory
 
-    content/finite_volume
-    content/differential_operators
-    content/inner_products
+    content/finite_volume_index
+    content/theory/meshes
+    content/theory/operators_index
+    content/theory/inner_products_index
 
 .. toctree::
     :maxdepth: 2

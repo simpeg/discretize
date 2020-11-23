@@ -1,7 +1,7 @@
-.. _differential_operators:
+.. _operators_differential:
 
-Discrete Differential Operators
-*******************************
+Differential Operators
+**********************
 
 Here, we provide the background theory for how discrete differential operators are formed. 
 For geophysical problems, the relationship between two physical quantities may include one of several differential operators:
@@ -22,7 +22,7 @@ within the interval :math:`[x-h/2, \; x+h/2]`, then the derivative of the functi
 where the approximation becomes increasingly accurate as :math:`h \rightarrow 0`. In subsequent sections, we will show how
 the gradient, divergence and curl can be computed for discrete variables.
 
-.. image:: ../images/approximate_derivative.png
+.. image:: ../../images/approximate_derivative.png
     :align: center
     :width: 300
 
@@ -45,7 +45,7 @@ our goal is to use discrete differentiation to approximate the values of :math:`
 We begin by considering a single cell (2D or 3D). We let the indices :math:`i`, :math:`j` and :math:`k` 
 denote positions along the x, y and z axes, respectively.
 
-.. image:: ../images/divergence_discretization.png
+.. image:: ../../images/divergence_discretization.png
     :align: center
     :width: 600
 
@@ -118,7 +118,7 @@ our goal is to use discrete differentiation to approximate the vector components
 We begin by considering a single cell (2D or 3D). We let the indices :math:`i`, :math:`j` and :math:`k` 
 denote positions along the x, y and z axes, respectively.
 
-.. image:: ../images/gradient_discretization.png
+.. image:: ../../images/gradient_discretization.png
     :align: center
     :width: 600
 
@@ -190,7 +190,7 @@ our goal is to use discrete differentiation to approximate the vector components
 We begin by considering a single 3D cell. We let the indices :math:`i`, :math:`j` and :math:`k` 
 denote positions along the x, y and z axes, respectively.
 
-.. image:: ../images/curl_discretization.png
+.. image:: ../../images/curl_discretization.png
     :align: center
     :width: 800
 
