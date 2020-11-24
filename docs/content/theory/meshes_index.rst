@@ -49,9 +49,9 @@ Shashkov, 1999 <https://cnls.lanl.gov/~shashkov/papers/maxjcp.pdf>`_).
 This approach requires the definitions of variables at either cell-centers, nodes, faces, or edges.
 Below, we illustrate the valid locations for discrete quantities for a single cell where:
 
-	- **Nodes** represent location of intersection between grid lines defining the mesh.
+	- **Nodes** represent locations of intersection between grid lines defining the mesh.
 	- **X, Y and Z edges** are edges whose tangent lines are parallel to the X, Y and Z axis, respectively.
-	- **X, Y and Z faces** are faces which are normal to the X, Y and Z axis, respectively.
+	- **X, Y and Z faces** are faces which are normal to orientation of the X, Y and Z axis, respectively.
 
 
 .. image:: ../../images/cell_locations.png

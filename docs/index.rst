@@ -33,7 +33,7 @@
     :caption: Theory
 
     content/finite_volume_index
-    content/theory/meshes
+    content/theory/meshes_index
     content/theory/operators_index
     content/theory/inner_products_index
     content/theory/derivation_examples_index

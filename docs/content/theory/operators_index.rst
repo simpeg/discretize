@@ -3,11 +3,25 @@
 Operators
 *********
 
-To approximate numerical solutions to partial differential equations using the *discretize* package,
-we must be able to construct discrete approximations to the following types of mathematical operators:
+To approximate numerical solutions to partial differential equations using the finite volume method,
+we must be able to construct discrete approximations to the following mathematical operators:
 
+    - Interpolation
     - Averaging
     - Differential (gradient, divergence, curl)
+
+Let any one of the aforementioned operations be defined as a mapping such that :math:`w = \mathbb{M}[u]`.
+Where :math:`\boldsymbol{u}` is a vector containing the discrete representation of :math:`u` on the mesh,
+and :math:`\boldsymbol{w}` is a vector containing the discrete represention of :math:`w` on the mesh,
+we can approximate the mapping as:  
+
+.. math::
+	\boldsymbol{w} \approx \boldsymbol{M \, u}
+
+where :math:`\boldsymbol{M}` is a sparse matrix. Thus for each operator, the mapping is approximated by
+constructing a sparse matrix and performing a matrix-vector product. Subsequent sections are devoted to
+the general formation of these matrices.
+
 
 **Contents:**
 
