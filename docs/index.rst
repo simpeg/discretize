@@ -36,6 +36,7 @@
     content/theory/meshes
     content/theory/operators_index
     content/theory/inner_products_index
+    content/theory/derivation_examples_index
 
 .. toctree::
     :maxdepth: 2

@@ -27,7 +27,7 @@ the gradient, divergence and curl can be computed for discrete variables.
     :width: 300
 
 
-.. note:: To construct discrete differential operators and apply them in a set of examples, see our :ref:`tutorial for differential operators <sphx_glr_tutorials_operators_2_differential.py>`
+.. important:: To construct and apply differential operators to discrete quantities, see our* :ref:`tutorial for differential operators <sphx_glr_tutorials_operators_2_differential.py>`
 
 
 
@@ -101,9 +101,6 @@ and :math:`\boldsymbol{u}` stores the components of :math:`\vec{u}` on cell face
     \boldsymbol{u} = \begin{bmatrix} \boldsymbol{u_x} \\ \boldsymbol{u_y} \\ \boldsymbol{u_z} \end{bmatrix}
 
 
-.. note:: To construct discrete differential operators and apply them in a set of examples, see our :ref:`tutorial for differential operators <sphx_glr_tutorials_operators_2_differential.py>`
-
-
 Gradient
 --------
 
@@ -173,9 +170,6 @@ and :math:`\boldsymbol{u}` stores the components of :math:`\vec{u}` on cell edge
     \boldsymbol{u} = \begin{bmatrix} \boldsymbol{u_x} \\ \boldsymbol{u_y} \\ \boldsymbol{u_z} \end{bmatrix}
 
 
-.. note:: To construct discrete differential operators and apply them in a set of examples, see our :ref:`tutorial for differential operators <sphx_glr_tutorials_operators_2_differential.py>`
-
-
 Curl
 ----
 
@@ -239,4 +233,3 @@ and :math:`\boldsymbol{w}` is a vector that stores the components of :math:`\vec
     \boldsymbol{u} = \begin{bmatrix} \boldsymbol{u_x} \\ \boldsymbol{u_y} \\ \boldsymbol{u_z} \end{bmatrix}
     \;\;\;\; \textrm{and} \;\;\;\; \begin{bmatrix} \boldsymbol{w_x} \\ \boldsymbol{w_y} \\ \boldsymbol{w_z} \end{bmatrix}
 
-.. note:: To construct discrete differential operators and apply them in a set of examples, see our :ref:`tutorial for differential operators <sphx_glr_tutorials_operators_2_differential.py>`

@@ -47,7 +47,7 @@ where
     - :math:`\boldsymbol{P_n}`, :math:`\boldsymbol{P_f}` and :math:`\boldsymbol{P_e}` are projection matricies that map quantities from nodes, faces and edges to cell centers, respectively
     - :math:`\boldsymbol{v}` is a vector that stores all of the volumes of the cells
 
-.. note:: To construct the inner product matrix and/or approximate inner products of this type, see the :ref:`tutorial on basic inner products <sphx_glr_tutorials_inner_products_1_basic.py>`
+.. important:: To construct the inner product matrix and/or approximate inner products of this type, see the :ref:`tutorial on basic inner products <sphx_glr_tutorials_inner_products_1_basic.py>`
 
 
 Scalars at Cell Centers
@@ -90,9 +90,6 @@ the cell volumes (:math:`\boldsymbol{v}`), i.e.:
 
 .. math::
     \boldsymbol{M_c} = diag(\boldsymbol{v})
-
-
-.. note:: To construct the inner product matrix and/or approximate inner products of this type, see the :ref:`tutorial on basic inner products <sphx_glr_tutorials_inner_products_1_basic.py>`
 
 
 Scalars at Nodes
@@ -154,8 +151,6 @@ where
     - :math:`k = 1,2,3` represent the dimension (1D, 2D or 3D)
     - :math:`\boldsymbol{P_n}` is a projection matrix that maps quantities from nodes to cell centers
     - :math:`\boldsymbol{v}` is a vector that stores all of the volumes of the cells
-
-.. note:: To construct the inner product matrix and/or approximate inner products of this type, see the :ref:`tutorial on basic inner products <sphx_glr_tutorials_inner_products_1_basic.py>`
 
 
 Vectors on Cell Faces
@@ -230,8 +225,6 @@ and
     - :math:`\boldsymbol{P_f}` is the projection matrix that maps quantities from faces to cell centers
     - :math:`\boldsymbol{v}` is a vector that stores all of the volumes of the cells
 
-.. note:: To construct the inner product matrix and/or approximate inner products of this type, see the :ref:`tutorial on basic inner products <sphx_glr_tutorials_inner_products_1_basic.py>`
-
 
 Vectors on Cell Edges
 ---------------------
@@ -304,13 +297,4 @@ and
     - :math:`\otimes` is the kronecker product
     - :math:`\boldsymbol{P_e}` is the projection matrix that maps quantities from edges to cell centers
     - :math:`\boldsymbol{v}` is a vector that stores all of the volumes of the cells
-
-.. note:: To construct the inner product matrix and/or approximate inner products of this type, see the :ref:`tutorial on basic inner products <sphx_glr_tutorials_inner_products_1_basic.py>`
-
-
-
-
-
-
-
 

@@ -3,8 +3,8 @@
 Intoduction to Finite Volume
 ****************************
 
-What Finite Volume?
--------------------
+What is Finite Volume?
+----------------------
 
 The finite volume method is a method for numerically approximating the solution to partial differential equations.
 Implementation of the finite volume method requires the discretization of continuous functions and variables.
@@ -23,18 +23,28 @@ This method is different from finite difference methods,
 as the final linear system is constructed by approximating the inner products between
 test functions and partial differential equations.
 
+**Contents:**
+
+	- :ref:`Meshes <meshes_index>`
+	- :ref:`Averaging and Differential Operators <operators_index>`
+	- :ref:`Inner Products <inner_products_index>`
+	- :ref:`Discretizing PDEs Derivation Examples <derivation_examples_index>`
+
+**Tutorials and Examples Gallery:**
+
+  - :ref:`Mesh Generation <sphx_glr_tutorials_mesh_generation>`
+  - :ref:`Interpolation, Averaging and Differential Operators <sphx_glr_tutorials_operators>`
+  - :ref:`Inner Products <sphx_glr_tutorials_inner_products>`
+  - :ref:`Discretizing PDEs Derivation Examples <sphx_glr_tutorials_pde>`
+  - :ref:`Examples Gallery <sphx_glr_examples>`
+
 
 Examples
 --------
 
 Below are several examples of the final linear system obtained using the finite volume approach.
-A comprehensive derivation of the final result is not provided here. Instead, the necessary
-background theory is parsed into several section, including:
-
-	- :ref:`meshes <meshes_index>`
-	- :ref:`interpolation, averaging and differential operators <operators_index>`
-	- :ref:`inner products <inner_products_index>`
-	- finite volume full examples
+A comprehensive derivation of the final result is not provided here. The full derivations are
+provide in the :ref:`discretizing PDEs derivation examples <derivation_examples_index>` theory section.
 
 Direct Current Resistivity
 ^^^^^^^^^^^^^^^^^^^^^^^^^^

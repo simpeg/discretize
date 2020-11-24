@@ -3,8 +3,6 @@
 Anisotropic Constitutive Relationships
 **************************************
 
-.. note:: To construct the inner product matrix and/or approximate inner products of this type, see the :ref:`tutorial on inner products with constitutive relationships <sphx_glr_tutorials_inner_products_2_physical_properties.py>`
-
 Summary
 -------
 
@@ -51,6 +49,8 @@ inner-product matrix in this case:
 
 For this class of inner products, the corresponding form of the inner product matricies for
 discrete quantities living on various parts of the mesh are shown below.
+
+.. important:: To construct the inner product matrix and/or approximate inner products of this type, see the :ref:`tutorial on inner products with constitutive relationships <sphx_glr_tutorials_inner_products_2_physical_properties.py>`
 
 **Diagonal Anisotropic:**
 
@@ -213,10 +213,6 @@ and
     - :math:`\boldsymbol{v}` is a vector that stores all of the volumes of the cells
     - :math:`\boldsymbol{P_f}` is a projection matrix that maps quantities from faces to cell centers
 
-
-.. note:: To see a validation of the discrete approximation, see our tutorials section (link)
-
-
 Vectors on Cell Edges
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -298,8 +294,6 @@ and
     - :math:`\otimes` is the kronecker product
     - :math:`\boldsymbol{v}` is a vector that stores all of the volumes of the cells
     - :math:`\boldsymbol{P_e}` is a projection matrix that maps quantities from edges to cell centers
-
-.. note:: To construct the inner product matrix and/or approximate inner products of this type, see the :ref:`tutorial on inner products with constitutive relationships <sphx_glr_tutorials_inner_products_2_physical_properties.py>`
 
 Fully Anisotropic Case
 ----------------------
