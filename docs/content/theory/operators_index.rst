@@ -28,6 +28,7 @@ the general formation of these matrices.
 .. toctree::
     :maxdepth: 1
 
+    operators_interpolation
     operators_averaging
     operators_differential
 
