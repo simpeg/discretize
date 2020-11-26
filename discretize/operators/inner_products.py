@@ -59,21 +59,21 @@ class InnerProducts(object):
             warnings.warn(
                 "The invProp keyword argument has been deprecated, please use invert_model. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
+                DeprecationWarning,
             )
             invert_model = kwargs["invProp"]
         if "invMat" in kwargs:
             warnings.warn(
                 "The invMat keyword argument has been deprecated, please use invert_matrix. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
+                DeprecationWarning,
             )
             invert_matrix = kwargs["invMat"]
         if "doFast" in kwargs:
             warnings.warn(
                 "The doFast keyword argument has been deprecated, please use do_fast. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
+                DeprecationWarning,
             )
             do_fast = kwargs["doFast"]
 
@@ -112,21 +112,21 @@ class InnerProducts(object):
             warnings.warn(
                 "The invProp keyword argument has been deprecated, please use invert_model. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
+                DeprecationWarning,
             )
             invert_model = kwargs["invProp"]
         if "invMat" in kwargs:
             warnings.warn(
                 "The invMat keyword argument has been deprecated, please use invert_matrix. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
+                DeprecationWarning,
             )
             invert_matrix = kwargs["invMat"]
         if "doFast" in kwargs:
             warnings.warn(
                 "The doFast keyword argument has been deprecated, please use do_fast. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
+                DeprecationWarning,
             )
             do_fast = kwargs["doFast"]
         return self._getInnerProduct(
@@ -174,21 +174,21 @@ class InnerProducts(object):
             warnings.warn(
                 "The invProp keyword argument has been deprecated, please use invert_model. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
+                DeprecationWarning,
             )
             invert_model = kwargs["invProp"]
         if "invMat" in kwargs:
             warnings.warn(
                 "The invMat keyword argument has been deprecated, please use invert_matrix. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
+                DeprecationWarning,
             )
             invert_matrix = kwargs["invMat"]
         if "doFast" in kwargs:
             warnings.warn(
                 "The doFast keyword argument has been deprecated, please use do_fast. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
+                DeprecationWarning,
             )
             do_fast = kwargs["doFast"]
         if projection_type not in ["F", "E"]:
@@ -296,21 +296,21 @@ class InnerProducts(object):
             warnings.warn(
                 "The invProp keyword argument has been deprecated, please use invert_model. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
+                DeprecationWarning,
             )
             invert_model = kwargs["invProp"]
         if "invMat" in kwargs:
             warnings.warn(
                 "The invMat keyword argument has been deprecated, please use invert_matrix. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
+                DeprecationWarning,
             )
             invert_matrix = kwargs["invMat"]
         if "doFast" in kwargs:
             warnings.warn(
                 "The doFast keyword argument has been deprecated, please use do_fast. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
+                DeprecationWarning,
             )
             do_fast = kwargs["doFast"]
         return self._getInnerProductDeriv(
@@ -346,21 +346,21 @@ class InnerProducts(object):
             warnings.warn(
                 "The invProp keyword argument has been deprecated, please use invert_model. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
+                DeprecationWarning,
             )
             invert_model = kwargs["invProp"]
         if "invMat" in kwargs:
             warnings.warn(
                 "The invMat keyword argument has been deprecated, please use invert_matrix. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
+                DeprecationWarning,
             )
             invert_matrix = kwargs["invMat"]
         if "doFast" in kwargs:
             warnings.warn(
                 "The doFast keyword argument has been deprecated, please use do_fast. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
+                DeprecationWarning,
             )
             do_fast = kwargs["doFast"]
         return self._getInnerProductDeriv(

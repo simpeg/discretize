@@ -92,7 +92,7 @@ def deprecate_class(removal_version=None, new_location=None):
         cls._old__init__ = cls.__init__
 
         def __init__(self, *args, **kwargs):
-            warnings.warn(message, FutureWarning)
+            warnings.warn(message, DeprecationWarning)
             self._old__init__(*args, **kwargs)
 
         cls.__init__ = __init__
@@ -111,7 +111,7 @@ def deprecate_module(old_name, new_name, removal_version=None):
     else:
         message += " It will be removed in a future version of discretize."
     message += " Please update your code accordingly."
-    warnings.warn(message, FutureWarning)
+    warnings.warn(message, DeprecationWarning)
 
 
 def deprecate_property(new_name, old_name, removal_version=None):
@@ -126,7 +126,7 @@ def deprecate_property(new_name, old_name, removal_version=None):
             f"{class_name}.{old_name} has been deprecated, please use {class_name}.{new_name}."
             + tag
         )
-        warnings.warn(message, FutureWarning)
+        warnings.warn(message, DeprecationWarning)
         return getattr(self, new_name)
 
     def set_dep(self, other):
@@ -135,7 +135,7 @@ def deprecate_property(new_name, old_name, removal_version=None):
             f"{class_name}.{old_name} has been deprecated, please use {class_name}.{new_name}."
             + tag
         )
-        warnings.warn(message, FutureWarning)
+        warnings.warn(message, DeprecationWarning)
         setattr(self, new_name, other)
 
     doc = f"`{old_name}` has been deprecated. See `{new_name}` for documentation"
@@ -154,7 +154,7 @@ def deprecate_method(new_name, old_name, removal_version=None):
         warnings.warn(
             f"{class_name}.{old_name} has been deprecated, please use {class_name}.{new_name}."
             + tag,
-            FutureWarning,
+            DeprecationWarning,
         )
         return getattr(self, new_name)(*args, **kwargs)
 
@@ -173,7 +173,7 @@ def deprecate_function(new_function, old_name, removal_version=None):
     def dep_function(*args, **kwargs):
         warnings.warn(
             f"{old_name} has been deprecated, please use {new_name}." + tag,
-            FutureWarning,
+            DeprecationWarning,
         )
         return new_function(*args, **kwargs)
 
