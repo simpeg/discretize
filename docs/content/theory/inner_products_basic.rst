@@ -64,11 +64,11 @@ our goal is to construct the inner product matrix :math:`\boldsymbol{M}` such th
 
 .. image:: ../../images/center_discretization.png
     :align: center
-    :width: 600
+    :width: 400
 
 
 For a single cell (see above), the contribution towards the inner product is obtained by multiplying
-:math:`\psi` and :math:`\phi` at the cell centers (represented by :math:`\psi_i` and :math:`\phi_i`)
+:math:`\psi` and :math:`\phi` at the cell center (represented by :math:`\psi_i` and :math:`\phi_i`)
 by the cell's volume (:math:`v_i`), i.e.:
 
 .. math::
@@ -78,12 +78,12 @@ Therefore a simple approximation to the inner product is obtained by summing the
 approximation over all cells. Where :math:`nc` refers to the number of cells in the mesh:
 
 .. math::
-     \int_\Omega \psi \, \phi \, dv = \approx \sum_i^{nc} \psi_i \phi_i v_i
+     \int_\Omega \psi \, \phi \, dv \approx \sum_i^{nc} \psi_i \phi_i v_i
 
 Expressing the sum in terms of linear equations, we obtain:
 
 .. math::
-     (\psi , \phi ) = \int_\Omega \psi \, \phi \, dv  \approx \boldsymbol{\psi^T \, M_c \, \phi}
+     (\psi , \phi ) = \int_\Omega \psi \, \phi \, dv  \approx \boldsymbol{\psi^T M_c \, \phi}
 
 where the mass matrix for cell centered quantities is just a diagonal matrix containing
 the cell volumes (:math:`\boldsymbol{v}`), i.e.:
@@ -139,14 +139,14 @@ the cell centers.
 Our final approximation for the inner product is therefore:
 
 .. math::
-     (\psi , \phi ) = \int_\Omega \psi \, \phi \, dv  \approx \boldsymbol{\psi^T \, M_n \, \phi}
+     (\psi , \phi ) = \int_\Omega \psi \, \phi \, dv  \approx \boldsymbol{\psi^T M_n \, \phi}
 
 where the mass matrix for nodal quantities has the form:
 
 .. math::
     \boldsymbol{M_n} = \frac{1}{2^{2k}} \boldsymbol{P_n^T } \textrm{diag} (\boldsymbol{v} ) \boldsymbol{P_n}
 
-where
+and
 
     - :math:`k = 1,2,3` represent the dimension (1D, 2D or 3D)
     - :math:`\boldsymbol{P_n}` is a projection matrix that maps quantities from nodes to cell centers
@@ -210,7 +210,7 @@ are organized on cell faces as follows:
 the approximation to the inner product is given by:
 
 .. math::
-     (\vec{u}, \vec{w}) = \int_\Omega \vec{u} \cdot \vec{w} \, dv \approx \boldsymbol{\boldsymbol{u} M_f \, \boldsymbol{w}}
+     (\vec{u}, \vec{w}) = \int_\Omega \vec{u} \cdot \vec{w} \, dv \approx \boldsymbol{u^T M_f \, w}
 
 where the mass matrix for face quantities has the form:
 
@@ -237,7 +237,7 @@ to live at cell edges. Assuming we know the values of :math:`\vec{u}` and :math:
 our goal is to construct the inner product matrix :math:`\boldsymbol{M}` in the expression below: 
 
 .. math::
-    (\vec{u}, \vec{w}) = \int_\Omega \vec{u} \cdot \vec{w} \, dv \approx \boldsymbol{u^T \, M \, w}
+    (\vec{u}, \vec{w}) = \int_\Omega \vec{u} \cdot \vec{w} \, dv \approx \boldsymbol{u^T M \, w}
     :label: inner_product_basic_edges
 
 We must respect the dot product. For vectors defined on cell edges, we discretize such that the
@@ -283,7 +283,7 @@ are organized on cell edges as follows:
 the approximation to the inner product is given by:
 
 .. math::
-     (\vec{u}, \vec{w}) = \int_\Omega \vec{u} \cdot \vec{w} \, dv \approx \boldsymbol{\boldsymbol{u} \, M_e \, \boldsymbol{w}}
+     (\vec{u}, \vec{w}) = \int_\Omega \vec{u} \cdot \vec{w} \, dv \approx \boldsymbol{\u^T M_e \, w}
 
 where the mass matrix for face quantities has the form:
 

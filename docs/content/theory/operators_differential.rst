@@ -30,6 +30,7 @@ the gradient, divergence and curl can be computed for discrete variables.
 .. important:: To construct and apply differential operators to discrete quantities, see our :ref:`tutorial for differential operators <sphx_glr_tutorials_operators_2_differential.py>`
 
 
+.. _operators_differential_divergence:
 
 Divergence
 ----------
@@ -100,6 +101,7 @@ and :math:`\boldsymbol{u}` stores the components of :math:`\vec{u}` on cell face
 .. math::
     \boldsymbol{u} = \begin{bmatrix} \boldsymbol{u_x} \\ \boldsymbol{u_y} \\ \boldsymbol{u_z} \end{bmatrix}
 
+.. _operators_differential_gradient:
 
 Gradient
 --------
@@ -169,6 +171,7 @@ and :math:`\boldsymbol{u}` stores the components of :math:`\vec{u}` on cell edge
 .. math::
     \boldsymbol{u} = \begin{bmatrix} \boldsymbol{u_x} \\ \boldsymbol{u_y} \\ \boldsymbol{u_z} \end{bmatrix}
 
+.. _operators_differential_curl:
 
 Curl
 ----
