@@ -1,0 +1,21 @@
+.. currentmodule:: discretize
+
+.. _0.6.1_notes:
+
+===================================
+``discretize`` 0.6.2 Release Notes
+===================================
+
+This patch release changes ``FutureWarning`` to ``DeprecationWarning`` to temporarily
+hide them from end users. Our current plan is to switch them back to ``FutureWarning`` on
+the next minor release. We encourage developers to update their code prior to this.
+
+Contributors
+============
+
+* @jcapriot
+
+Pull requests
+=============
+
+* `#231 <https://github.com/simpeg/discretize/pull/231>`__: Deprecate warnings
