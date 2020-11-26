@@ -27,7 +27,7 @@ the gradient, divergence and curl can be computed for discrete variables.
     :width: 300
 
 
-.. important:: To construct and apply differential operators to discrete quantities, see our* :ref:`tutorial for differential operators <sphx_glr_tutorials_operators_2_differential.py>`
+.. important:: To construct and apply differential operators to discrete quantities, see our :ref:`tutorial for differential operators <sphx_glr_tutorials_operators_2_differential.py>`
 
 
 
@@ -54,16 +54,16 @@ denote positions along the x, y and z axes, respectively.
 +-------------+-------------------------------------------------+-----------------------------------------------------+
 | **center**  | :math:`(i,j)`                                   | :math:`(i,j,k)`                                     |
 +-------------+-------------------------------------------------+-----------------------------------------------------+
-| **x faces** | :math:`(i-\frac{1}{2},j)\;\; (i+\frac{1}{2},j)` | :math:`(i-\frac{1}{2},j,k)\;\; (i+\frac{1}{2},j,k)` |
+| **x-faces** | :math:`(i-\frac{1}{2},j)\;\; (i+\frac{1}{2},j)` | :math:`(i-\frac{1}{2},j,k)\;\; (i+\frac{1}{2},j,k)` |
 +-------------+-------------------------------------------------+-----------------------------------------------------+
-| **y faces** | :math:`(i,j-\frac{1}{2})\;\; (i,j+\frac{1}{2})` | :math:`(i,j-\frac{1}{2},k)\;\; (i,j+\frac{1}{2},k)` |
+| **y-faces** | :math:`(i,j-\frac{1}{2})\;\; (i,j+\frac{1}{2})` | :math:`(i,j-\frac{1}{2},k)\;\; (i,j+\frac{1}{2},k)` |
 +-------------+-------------------------------------------------+-----------------------------------------------------+
-| **z faces** | N/A                                             | :math:`(i,j,k-\frac{1}{2})\;\; (i,j,k+\frac{1}{2})` |
+| **z-faces** | N/A                                             | :math:`(i,j,k-\frac{1}{2})\;\; (i,j,k+\frac{1}{2})` |
 +-------------+-------------------------------------------------+-----------------------------------------------------+
 
 As we will see, it makes the most sense for :math:`\boldsymbol{\phi}` to live at the cell centers and
-for the components of :math:`\boldsymbol{u}` to live on the faces. If :math:`u_x` lives on x faces, then its discrete
-derivative with respect to :math:`x` lives at the cell center. And if :math:`u_y` lives on y faces its discrete
+for the components of :math:`\boldsymbol{u}` to live on the faces. If :math:`u_x` lives on x-faces, then its discrete
+derivative with respect to :math:`x` lives at the cell center. And if :math:`u_y` lives on y-faces its discrete
 derivative with respect to :math:`y` lives at the cell center. Likewise for :math:`u_z`. Thus to approximate the
 divergence of :math:`\vec{u}` at the cell center, we simply need to sum the discrete derivatives of :math:`u_x`, :math:`u_y`
 and :math:`u_z` that are defined at the cell center. Where :math:`h_x`, :math:`h_y` and :math:`h_z` represent the dimension of the cell along the x, y and
@@ -122,9 +122,9 @@ denote positions along the x, y and z axes, respectively.
 As we will see, it makes the most sense for :math:`\boldsymbol{\phi}` to live at the cell nodes and
 for the components of :math:`\boldsymbol{u}` to live on corresponding edges. If :math:`\phi` lives on the nodes, then:
 
-    - the partial derivative :math:`\dfrac{\partial \phi}{\partial x}\hat{x}` lives on x edges,
-    - the partial derivative :math:`\dfrac{\partial \phi}{\partial y}\hat{y}` lives on y edges, and
-    - the partial derivative :math:`\dfrac{\partial \phi}{\partial z}\hat{z}` lives on z edges
+    - the partial derivative :math:`\dfrac{\partial \phi}{\partial x}\hat{x}` lives on x-edges,
+    - the partial derivative :math:`\dfrac{\partial \phi}{\partial y}\hat{y}` lives on y-edges, and
+    - the partial derivative :math:`\dfrac{\partial \phi}{\partial z}\hat{z}` lives on z-edges
 
 Thus to approximate the gradient of :math:`\phi`, 
 we simply need to take discrete derivatives of :math:`\phi` with respect to :math:`x`, :math:`y` and :math:`z`,

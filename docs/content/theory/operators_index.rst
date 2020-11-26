@@ -4,7 +4,7 @@ Operators
 *********
 
 To approximate numerical solutions to partial differential equations using the finite volume method,
-we must be able to construct discrete approximations to the following mathematical operators:
+we must be able to construct discrete approximations to the following mathematical operations:
 
     - Interpolation
     - Averaging

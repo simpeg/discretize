@@ -3,17 +3,21 @@
 Interpolation
 *************
 
-Here, we provide the background theory for how discrete interpolation matricies are formed.
-Interpolation is required when a discrete quantity is known on the mesh (centers, nodes, edges or faces), but we would like to estimate its
-value at a point within the continuous domain. 
+Interpolation is required when a discrete quantity is known on the mesh (centers, nodes, edges or faces),
+but we would like to estimate its value at locations within the continuous domain.
+Here, we discuss how a sparse matrix :math:`\boldsymbol{P}` can be formed which interpolates the discrete values to
+a set of locations in continuous space. Where :math:`\boldsymbol{u}` is vector that stores
+the values of a discrete quantity on the mesh (centers, nodes, faces or edges) and
+:math:`\boldsymbol{w}` is a vector containing the interpolated quantity at a set of locations,
+we look to construct an interpolation matrix such that:
+
+.. math::
+	\boldsymbol{w} = \boldsymbol{P \, u}
 
 Presently there is an extensive set of interpolation methods (e.g. polynomial, spline, piecewise constant).
 One of the most effective and widely used interpolation methods is linear interpolation.
 The *discretize* package primarily uses linear interpolation because 1) it is very fast, and 2) higher order
 interpolation methods require the construction of matricies which are less sparse.
-Here, we discuss how a sparse matrix can be formed which interpolates the discrete values to
-a set of points in continuous space.
-
 The formulation for linear interpolation is adequately presented on Wikipedia, see:
 
 	- `Linear Interpolation (1D) <https://en.wikipedia.org/wiki/Linear_interpolation>`__
@@ -24,9 +28,9 @@ The formulation for linear interpolation is adequately presented on Wikipedia, s
 Interpolation Matrix in 1D
 ==========================
 
-Let us define a 1D mesh that contains 8 cells of arbitrary width;
-the mesh is shown in the figure below. The width of each cell is
-given by :math:`h_i`. The location of each node is given by :math:`x_i`.
+Let us define a 1D mesh that contains 8 cells of arbitrary width.
+The mesh is illustrated in the figure below. The width of each cell is
+defined as :math:`h_i`. The location of each node is defined as :math:`x_i`.
 
 .. image:: ../../images/interpolation_1d.png
     :align: center
@@ -73,13 +77,13 @@ Where :math:`\boldsymbol{u^*}` is a vector containing the approximations of :mat
 locations:
 
 .. math::
-	(\boldsymbol{u^*}) \approx \boldsymbol{P\, u} \;\;\;\;\;\; \textrm{where} \;\;\;\;\;\;
+	\boldsymbol{u^*} \approx \boldsymbol{P\, u} \;\;\;\;\;\; \textrm{where} \;\;\;\;\;\;
 	\boldsymbol{P} = \begin{bmatrix} \cdots \;\; \boldsymbol{p_0} \;\; \cdots \\
 	\cdots \;\; \boldsymbol{p_1} \;\; \cdots \\ \vdots \\
 	\cdots \, \boldsymbol{p_{M-1}} \, \cdots \end{bmatrix}
 	:label: operators_averaging_interpolation_matrix
 
-where :math:`\boldsymbol{P}` is a sparse matrix whose rows contain a maximum of 2 non-zero elements.
+:math:`\boldsymbol{P}` is a sparse matrix whose rows contain a maximum of 2 non-zero elements.
 The size of :math:`\boldsymbol{P}` is the number of locations by the number of nodes.
 For seven locations (:math:`x^* = 3,1,9,2,5,2,8`) and our mesh (9 nodes),
 the non-zero elements of the interpolation matrix are illustrated below.
