@@ -519,14 +519,14 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
             warnings.warn(
                 "The locType keyword argument has been deprecated, please use location_type. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
+                DeprecationWarning,
             )
             location_type = kwargs["locType"]
         if "zerosOutside" in kwargs:
             warnings.warn(
                 "The zerosOutside keyword argument has been deprecated, please use zeros_outside. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
+                DeprecationWarning,
             )
             zeros_outside = kwargs["zerosOutside"]
         locs = as_array_n_by_dim(locs, self.dim)

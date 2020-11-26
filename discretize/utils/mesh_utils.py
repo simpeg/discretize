@@ -203,7 +203,7 @@ def closest_points_index(mesh, pts, grid_loc="CC", **kwargs):
         warnings.warn(
             "The gridLoc keyword argument has been deprecated, please use grid_loc. "
             "This will be removed in discretize 1.0.0",
-            FutureWarning,
+            DeprecationWarning,
         )
         grid_loc = kwargs["gridLoc"]
 

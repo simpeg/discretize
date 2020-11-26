@@ -25,7 +25,7 @@ def mkvc(x, n_dims=1, **kwargs):
         warnings.warn(
             "The numDims keyword argument has been deprecated, please use n_dims. "
             "This will be removed in discretize 1.0.0",
-            FutureWarning,
+            DeprecationWarning,
         )
         n_dims = kwargs["numDims"]
     if type(x) == np.matrix:
@@ -213,7 +213,7 @@ def inverse_3x3_block_diagonal(
         warnings.warn(
             "The returnMatrix keyword argument has been deprecated, please use return_matrix. "
             "This will be removed in discretize 1.0.0",
-            FutureWarning,
+            DeprecationWarning,
         )
         return_matrix = kwargs["returnMatrix"]
 
@@ -277,7 +277,7 @@ def inverse_2x2_block_diagonal(a11, a12, a21, a22, return_matrix=True, **kwargs)
         warnings.warn(
             "The returnMatrix keyword argument has been deprecated, please use return_matrix. "
             "This will be removed in discretize 1.0.0",
-            FutureWarning,
+            DeprecationWarning,
         )
         return_matrix = kwargs["returnMatrix"]
 
@@ -385,7 +385,7 @@ def inverse_property_tensor(M, tensor, return_matrix=False, **kwargs):
         warnings.warn(
             "The returnMatrix keyword argument has been deprecated, please use return_matrix. "
             "This will be removed in discretize 1.0.0",
-            FutureWarning,
+            DeprecationWarning,
         )
         return_matrix = kwargs["returnMatrix"]
 
