@@ -15,9 +15,7 @@ we look to constructs an averaging matrix :math:`\boldsymbol{A}` such that:
 	\bar{\boldsymbol{u}} = A \, \boldsymbol{u}
 	:label: operators_averaging_general
 
-**Tutorials:** 
-
-    - :ref:`tutorial for constructing and applying averaging operators <sphx_glr_tutorials_operators_1_averaging.py>`
+**Tutorial:** :ref:`tutorial for constructing and applying averaging operators <sphx_glr_tutorials_operators_1_averaging.py>`
 
 
 Averaging Matrices in 1D
@@ -29,9 +27,11 @@ Nodes to Cell Centers
 Let us define a 1D mesh where cell center and node locations are defined according to the figure below.
 The widths of the cells are given by :math:`\Delta x_i`.
 
-.. image:: ../../images/averaging_1d.png
+.. figure:: ../../images/averaging_1d.png
     :align: center
     :width: 600
+
+    A 1D tensor mesh denoting the node and cell center locations.
 
 If :math:`u(x)` is a scalar function whose values are known at the nodes
 and :math:`\bar{u}_i` is the average value at the center of cell :math:`i`,
@@ -122,9 +122,11 @@ For a 2D mesh, the value of the function at 4 locations is needed to average fro
 Let us define a 2D mesh where cell center locations :math:`(x_i, y_j)` are represented using indices :math:`(i,j)`.
 The widths of the cells in :math:`x` and :math:`y` are given by :math:`\Delta x_i` and :math:`\Delta y_j`, respectively.
 
-.. image:: ../../images/averaging_2d.png
+.. figure:: ../../images/averaging_2d.png
     :align: center
     :width: 300
+
+    A 2D tensor mesh which shows the indexing for node and cell center locations.
 
 If :math:`u(x,y)` is a scalar function whose values are known at the nodes
 and :math:`\bar{u} (i,j)` is the average at the center of cell :math:`i,j`,
@@ -197,9 +199,11 @@ Faces to Cell Centers
 Let us define a 2D mesh where cell center locations :math:`(x_i, y_j)` are represented using indices :math:`(i,j)`.
 The widths of the cells in :math:`x` and :math:`y` are given by :math:`\Delta x_i` and :math:`\Delta y_j`, respectively.
 
-.. image:: ../../images/averaging_2d_faces.png
+.. figure:: ../../images/averaging_2d_faces.png
     :align: center
     :width: 350
+
+    A 2D tensor mesh which shows the indexing for face and cell center locations.
 
 If :math:`u(x,y)` is a scalar quantity whose values are known on the faces.
 and :math:`\bar{u}(i,j)` is the average at the center of cell :math:`i,j`,
@@ -259,9 +263,11 @@ Edges to Cell Centers
 Let us define a 2D mesh where cell center locations :math:`(x_i, y_j)` are represented using indices :math:`(i,j)`.
 The widths of the cells in :math:`x` and :math:`y` are given by :math:`\Delta x_i` and :math:`\Delta y_j`, respectively.
 
-.. image:: ../../images/averaging_2d_edges.png
+.. figure:: ../../images/averaging_2d_edges.png
     :align: center
     :width: 350
+
+    A 2D tensor mesh which shows the indexing for edge and cell center locations.
 
 If :math:`u(x,y)` is a scalar quantity whose values are known on the edges.
 and :math:`\bar{u}(i,j)` is the average at the center of cell :math:`i,j`,
@@ -329,9 +335,11 @@ to cell centers and the y-faces are used to average the y-component to cell cent
 Let us define a 2D mesh where cell center locations :math:`(x_i, y_j)` are represented using indices :math:`(i,j)`.
 The widths of the cells in :math:`x` and :math:`y` are given by :math:`\Delta x_i` and :math:`\Delta y_j`, respectively.
 
-.. image:: ../../images/averaging_2d_faces.png
+.. figure:: ../../images/averaging_2d_faces.png
     :align: center
     :width: 350
+
+    A 2D tensor mesh which shows the indexing for face and cell center locations.
 
 Where :math:`\bar{u}_x (i,j)` is the average x-component at the center of cell :math:`i,j`:
 
@@ -379,9 +387,11 @@ to cell centers and the y-edges are used to average the y-component to cell cent
 Let us define a 2D mesh where cell center locations :math:`(x_i, y_j)` are represented using indices :math:`(i,j)`.
 The widths of the cells in :math:`x` and :math:`y` are given by :math:`\Delta x_i` and :math:`\Delta y_j`, respectively.
 
-.. image:: ../../images/averaging_2d_edges.png
+.. figure:: ../../images/averaging_2d_edges.png
     :align: center
     :width: 350
+
+    A 2D tensor mesh which shows the indexing for edge and cell center locations.
 
 Where :math:`\bar{u}_x (i,j)` is the average x-component at the center of cell :math:`i,j`:
 

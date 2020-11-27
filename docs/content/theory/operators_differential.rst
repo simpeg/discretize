@@ -13,7 +13,7 @@ For geophysical problems, the relationship between two physical quantities may i
 When implementing the finite volume method, continuous variables are discretized to live at the cell centers, nodes, edges or faces of a mesh.
 Thus for each differential operator, we need a discrete approximation that acts on the discrete variables living on the mesh.
 
-Our approximations are derived using finite differentiation (figure below). So long as a function :math:`f(x)` is sufficiently smooth
+Our approximations are derived using numerical differentiation (figure below). So long as a function :math:`f(x)` is sufficiently smooth
 within the interval :math:`[x-h/2, \; x+h/2]`, then the derivative of the function at :math:`x` is approximated by:
 
 .. math::
@@ -22,12 +22,14 @@ within the interval :math:`[x-h/2, \; x+h/2]`, then the derivative of the functi
 where the approximation becomes increasingly accurate as :math:`h \rightarrow 0`. In subsequent sections, we will show how
 the gradient, divergence and curl can be computed for discrete variables.
 
-.. image:: ../../images/approximate_derivative.png
+.. figure:: ../../images/approximate_derivative.png
     :align: center
     :width: 300
 
+    Approximating the derivative of :math:`f(x)` using numerical differentiation.
 
-.. important:: To construct and apply differential operators to discrete quantities, see our :ref:`tutorial for differential operators <sphx_glr_tutorials_operators_2_differential.py>`
+
+**Tutorial:** :ref:`tutorial for constructing and applying differential operators <sphx_glr_tutorials_operators_2_differential.py>`
 
 
 .. _operators_differential_divergence:
@@ -46,9 +48,11 @@ our goal is to use discrete differentiation to approximate the values of :math:`
 We begin by considering a single cell (2D or 3D). We let the indices :math:`i`, :math:`j` and :math:`k` 
 denote positions along the x, y and z axes, respectively.
 
-.. image:: ../../images/divergence_discretization.png
+.. figure:: ../../images/divergence_discretization.png
     :align: center
     :width: 600
+
+    Discretization for approximating the divergence at the center of a single 2D cell (left) and 3D cell (right).
 
 +-------------+-------------------------------------------------+-----------------------------------------------------+
 |             |                    **2D**                       |                       **3D**                        |
@@ -117,9 +121,11 @@ our goal is to use discrete differentiation to approximate the vector components
 We begin by considering a single cell (2D or 3D). We let the indices :math:`i`, :math:`j` and :math:`k` 
 denote positions along the x, y and z axes, respectively.
 
-.. image:: ../../images/gradient_discretization.png
+.. figure:: ../../images/gradient_discretization.png
     :align: center
     :width: 600
+
+    Discretization for approximating the gradient on the edges of a single 2D cell (left) and 3D cell (right).
 
 As we will see, it makes the most sense for :math:`\boldsymbol{\phi}` to live at the cell nodes and
 for the components of :math:`\boldsymbol{u}` to live on corresponding edges. If :math:`\phi` lives on the nodes, then:
@@ -162,9 +168,9 @@ Adjacent cells share nodes. If :math:`\phi` is continuous at the nodes, then :ma
 can be related by a sparse matrix-vector product:
 
 .. math::
-    \boldsymbol{u} = \boldsymbol{G_n \, \phi}
+    \boldsymbol{u} = \boldsymbol{G \, \phi}
 
-where :math:`\boldsymbol{G_n}` is the gradient matrix that maps from nodes to edges,
+where :math:`\boldsymbol{G}` is the gradient matrix that maps from nodes to edges,
 :math:`\boldsymbol{\phi}` is a vector containing :math:`\phi` at all nodes,
 and :math:`\boldsymbol{u}` stores the components of :math:`\vec{u}` on cell edges as a vector of the form:
 
@@ -187,9 +193,11 @@ our goal is to use discrete differentiation to approximate the vector components
 We begin by considering a single 3D cell. We let the indices :math:`i`, :math:`j` and :math:`k` 
 denote positions along the x, y and z axes, respectively.
 
-.. image:: ../../images/curl_discretization.png
+.. figure:: ../../images/curl_discretization.png
     :align: center
     :width: 800
+
+    Discretization for approximating the x, y and z components of the curl on the respective faces of a 3D cell.
 
 
 As we will see, it makes the most sense for the vector components of :math:`\boldsymbol{u}` to live on the edges

@@ -50,7 +50,7 @@ inner-product matrix in this case:
 For this class of inner products, the corresponding form of the inner product matricies for
 discrete quantities living on various parts of the mesh are shown below.
 
-.. important:: To construct the inner product matrix and/or approximate inner products of this type, see the :ref:`tutorial on inner products with constitutive relationships <sphx_glr_tutorials_inner_products_2_physical_properties.py>`
+**Tutorial:** To construct the inner product matrix and/or approximate inner products of this type, see the :ref:`tutorial on inner products with constitutive relationships <sphx_glr_tutorials_inner_products_2_physical_properties.py>`
 
 **Diagonal Anisotropic:**
 
@@ -150,7 +150,7 @@ x-component of the vectors live on the x-faces, the y-component lives y-faces an
 lives on the z-faces. For a single cell, this is illustrated in 2D and 3D below. By decomposing the
 domain into a set of finite cells, we assume the tensor properties are spacial invariant within each cell.
 
-.. image:: ../../images/face_discretization.png
+.. figure:: ../../images/face_discretization.png
     :align: center
     :width: 600
 
@@ -230,7 +230,7 @@ x-component of the vectors live on the x-edges, the y-component lives y-edges an
 lives on the z-edges. This is illustrated in 2D and 3D below. By decomposing the
 domain into a set of finite cells, we assume the tensor properties are spacial invariant within each cell.
 
-.. image:: ../../images/edge_discretization.png
+.. figure:: ../../images/edge_discretization.png
     :align: center
     :width: 600
 
@@ -315,7 +315,7 @@ x-component of the vectors live on the x-faces, the y-component lives y-faces an
 lives on the z-faces. For a single cell, this is illustrated in 2D and 3D below. By decomposing the
 domain into a set of finite cells, we assume the tensor properties are spacial invariant within each cell.
 
-.. image:: ../../images/face_discretization.png
+.. figure:: ../../images/face_discretization.png
     :align: center
     :width: 600
 
@@ -400,7 +400,7 @@ x-component of the vectors live on the x-edges, the y-component lives y-edges an
 lives on the z-edges. This is illustrated in 2D and 3D below. By decomposing the
 domain into a set of finite cells, we assume the tensor properties are spacial invariant within each cell.
 
-.. image:: ../../images/edge_discretization.png
+.. figure:: ../../images/edge_discretization.png
     :align: center
     :width: 600
 

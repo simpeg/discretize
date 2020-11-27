@@ -52,8 +52,9 @@ where
     - :math:`\boldsymbol{\sigma}` is a vector containing the physical property values for the cells
 
 
-.. important:: To construct the inner product matrix and/or approximate inner products of this type, see the :ref:`tutorial on inner products with constitutive relationships <sphx_glr_tutorials_inner_products_2_physical_properties.py>`
+**Tutorial:** To construct the inner product matrix and/or approximate inner products of this type, see the :ref:`tutorial on inner products with constitutive relationships <sphx_glr_tutorials_inner_products_2_physical_properties.py>`
 
+.. _inner_products_isotropic_faces:
 
 Vectors on Cell Faces
 ---------------------
@@ -71,7 +72,7 @@ x-component of the vectors live on the x-faces, the y-component lives y-faces an
 lives on the z-faces. For a single cell, this is illustrated in 2D and 3D below. By decomposing the
 domain into a set of finite cells, we assume the physical properties are spacial invariant within each cell.
 
-.. image:: ../../images/face_discretization.png
+.. figure:: ../../images/face_discretization.png
     :align: center
     :width: 600
 
@@ -126,6 +127,7 @@ and
     - :math:`\boldsymbol{v}` is a vector that stores all of the volumes of the cells
     - :math:`\boldsymbol{\sigma}` is a vector containing the physical property values for the cells
 
+.. _inner_products_isotropic_edges:
 
 Vectors on Cell Edges
 ---------------------
@@ -143,7 +145,7 @@ x-component of the vectors live on the x-edges, the y-component lives y-edges an
 lives on the z-edges. This is illustrated in 2D and 3D below. By decomposing the
 domain into a set of finite cells, we assume the material properties are spacial invariant within each cell.
 
-.. image:: ../../images/edge_discretization.png
+.. figure:: ../../images/edge_discretization.png
     :align: center
     :width: 600
 
@@ -197,3 +199,9 @@ and
     - :math:`\boldsymbol{P_e}` is a projection matrix that maps from edges to cell centers
     - :math:`\boldsymbol{v}` is a vector that stores all of the volumes of the cells
     - :math:`\boldsymbol{\sigma}` is a vector containing the physical property values for the cells
+
+.. _inner_products_isotropic_reciprocal:
+
+
+Reciprocal Properties
+---------------------

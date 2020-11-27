@@ -34,7 +34,7 @@ discrete approximation for several classes of inner products.
 
 **Tutorials:**
 
-  - :ref:`Basic Inner Products <sphx_glr_tutorials_inner_products_1_basic.py>`
-  - :ref:`Inner Products with Constitutive Relationships <sphx_glr_tutorials_inner_products_2_physical_properties.py>`
-  - :ref:`Inner Products with Differential Operators <sphx_glr_tutorials_inner_products_3_calculus.py>`
-  - :ref:`Advanced Inner Product Examples <sphx_glr_tutorials_inner_products_4_advanced.py>`
+- :ref:`Basic Inner Products <sphx_glr_tutorials_inner_products_1_basic.py>`
+- :ref:`Inner Products with Constitutive Relationships <sphx_glr_tutorials_inner_products_2_physical_properties.py>`
+- :ref:`Inner Products with Differential Operators <sphx_glr_tutorials_inner_products_3_calculus.py>`
+- :ref:`Advanced Inner Product Examples <sphx_glr_tutorials_inner_products_4_advanced.py>`

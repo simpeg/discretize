@@ -32,9 +32,12 @@ Let us define a 1D mesh that contains 8 cells of arbitrary width.
 The mesh is illustrated in the figure below. The width of each cell is
 defined as :math:`h_i`. The location of each node is defined as :math:`x_i`.
 
-.. image:: ../../images/interpolation_1d.png
+.. figure:: ../../images/interpolation_1d.png
     :align: center
     :width: 600
+    :name: operators_interpolation_1d
+
+    Tensor mesh in 1D.
 
 Now let :math:`u(x)` be a function whose values are known at the nodes;
 i.e. :math:`u_i = u(x_i)`.
@@ -88,7 +91,7 @@ The size of :math:`\boldsymbol{P}` is the number of locations by the number of n
 For seven locations (:math:`x^* = 3,1,9,2,5,2,8`) and our mesh (9 nodes),
 the non-zero elements of the interpolation matrix are illustrated below.
 
-.. image:: ../../images/interpolation_1d_sparse.png
+.. figure:: ../../images/interpolation_1d_sparse.png
     :align: center
     :width: 250
 
@@ -115,9 +118,11 @@ Interpolation Matrix in 2D and 3D
 In 1D, the location of the interpolated quantity lies between 2 nodes or cell centers.
 In 2D however, the location of the interpolated quantity lies within 4 nodes or cell centers.
 
-.. image:: ../../images/interpolation_2d.png
+.. figure:: ../../images/interpolation_2d.png
     :align: center
     :width: 300
+
+    A tensor mesh in 2D denoting interpolation from nodes (blue) and cell centers (red).
 
 Let :math:`(x^*, y^*)` be within a cell whose nodes are located at
 :math:`(x_1, y_1)`, :math:`(x_2, y_1)`, :math:`(x_1, y_2)` and :math:`(x_2, y_2)`.
@@ -163,6 +168,8 @@ be used in the interpolation. Thus:
 	u(x^*, y^*, z^*) \approx \sum_{k=0}^7 a_k u_k
 
 This creates an interpolation matrix :math:`\boldsymbol{P}` with 8 non-zero entries per row.
+To learn how to compute the value of the coefficients :math:`a_k`,
+see `trilinear interpolation (3D) <https://en.wikipedia.org/wiki/Trilinear_interpolation>`__
 
 Interpolation of Vectors
 ========================
@@ -171,9 +178,11 @@ Scalar quantities are discretized to live at nodes or cell centers, whereas the
 components of vectors are discretized to live on their respective faces or edges;
 see :ref:`where quantities live <meshes_index_quantities>`. 
 
-.. image:: ../../images/interpolation_2d_vectors.png
+.. figure:: ../../images/interpolation_2d_vectors.png
     :align: center
     :width: 600
+
+    A tensor mesh in 2D denoting interpolation from faces (left) and edges (right).
 
 Let :math:`\vec{u} (x,y)` be a 2D vector function that is known on the faces of the mesh;
 that is, :math:`u_x` lives on the x-faces and :math:`u_y` lives on the y-faces. 

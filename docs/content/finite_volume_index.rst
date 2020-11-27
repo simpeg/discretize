@@ -16,6 +16,8 @@ that can be solved to compute the discrete approximation of a desired quantity.
    :width: 700
    :align: center
 
+   Conceptual illustrating for solving PDEs with the finite volume method.
+
 In *discretize*, we use a staggered mimetic finite volume approach (`Hyman and
 Shashkov, 1999 <https://cnls.lanl.gov/~shashkov/papers/maxjcp.pdf>`_).
 This approach requires the definitions of variables at either cell-centers, nodes, faces, or edges.
@@ -71,8 +73,8 @@ the solution for the electric potentials after applying the finite volume approa
 where :math:`\boldsymbol{G^T \! M_{\sigma e} G }` is a sparse matrix and
 
 	- :math:`\boldsymbol{\phi}` is the discrete approximation to the electric potentials on the nodes
-	- :math:`\boldsymbol{G}` is a discrete gradient operator
-	- :math:`\boldsymbol{M_{\sigma e}}` is the mass matrix
+	- :math:`\boldsymbol{G}` is the :ref:`discrete gradient operator <operators_differential_gradient>`
+	- :math:`\boldsymbol{M_{\sigma e}}` is the :ref:`mass matrix for electrical conductivity <inner_products_isotropic_edges>`
 	- :math:`\boldsymbol{q_s}` is the discrete representation of the source term on the nodes
 
 
@@ -117,8 +119,8 @@ where :math:`\boldsymbol{C^T \! M_{\mu f} C } + i\omega \boldsymbol{M_{\sigma e}
 
 	- :math:`\boldsymbol{e}` is the discrete approximation to the electric field on edges
 	- :math:`\boldsymbol{b}` is the discrete approximation to the magnetic flux density on faces
-	- :math:`\boldsymbol{C}` is a discrete curl operator from edges to faces
-	- :math:`\boldsymbol{M_{\sigma e}}` is the mass matrix for electrical conductivity
-	- :math:`\boldsymbol{M_{\mu f}}` is the mass matrix for inverse of the magnetic permeability
+	- :math:`\boldsymbol{C}` is the :ref:`discrete curl operator <operators_differential_curl>`
+	- :math:`\boldsymbol{M_{\sigma e}}` is the :ref:`mass matrix for electrical conductivity <inner_products_isotropic_edges>`
+	- :math:`\boldsymbol{M_{\mu f}}` is the :ref:`mass matrix for the inverse of the magnetic permeability <inner_products_isotropic_reciprocal>`
 	- :math:`\boldsymbol{j_s}` is the discrete representation of the source term on the edges
 

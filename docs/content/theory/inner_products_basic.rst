@@ -47,7 +47,7 @@ where
     - :math:`\boldsymbol{P_n}`, :math:`\boldsymbol{P_f}` and :math:`\boldsymbol{P_e}` are projection matricies that map quantities from nodes, faces and edges to cell centers, respectively
     - :math:`\boldsymbol{v}` is a vector that stores all of the volumes of the cells
 
-.. important:: To construct the inner product matrix and/or approximate inner products of this type, see the :ref:`tutorial on basic inner products <sphx_glr_tutorials_inner_products_1_basic.py>`
+**Tutorial:** To construct the inner product matrix and/or approximate inner products of this type, see the :ref:`tutorial on basic inner products <sphx_glr_tutorials_inner_products_1_basic.py>`
 
 
 Scalars at Cell Centers
@@ -62,9 +62,11 @@ our goal is to construct the inner product matrix :math:`\boldsymbol{M}` such th
     (\psi , \phi ) = \int_\Omega \psi \, \phi \, dv \approx \boldsymbol{\psi^T M \, \phi}
 
 
-.. image:: ../../images/center_discretization.png
+.. figure:: ../../images/center_discretization.png
     :align: center
     :width: 400
+
+    A single 2D cell (left) and a single 3D cell (right).
 
 
 For a single cell (see above), the contribution towards the inner product is obtained by multiplying
@@ -109,9 +111,11 @@ to live on cell nodes, it makes more sense for cell volumes to be considered a p
 which lives at cell centers. This makes evaluating the inner product more complicated as
 discrete quantities do not live at the same place.
 
-.. image:: ../../images/node_discretization.png
+.. figure:: ../../images/node_discretization.png
     :align: center
     :width: 600
+
+    Illustration for approximating the inner product for nodal quantities.
 
 For a single cell :math:`i`, the contribution towards the inner product is approximated by
 mapping the values at the nodes to cell centers, taking the average, then multiplying
@@ -172,9 +176,11 @@ We must respect the dot product. For vectors defined on cell faces, we discretiz
 x-component of the vectors live on the x-faces, the y-component lives y-faces and the z-component
 lives on the z-faces. For a single cell, this is illustrated in 2D and 3D below.
 
-.. image:: ../../images/face_discretization.png
+.. figure:: ../../images/face_discretization.png
     :align: center
     :width: 600
+
+    Illustration for approximating the inner product for vector quantities living on faces.
 
 
 As we can see there are 2 faces for each component. Therefore, we need to project each component of the
@@ -244,9 +250,11 @@ We must respect the dot product. For vectors defined on cell edges, we discretiz
 x-component of the vectors live on the x-edges, the y-component lives y-edges and the z-component
 lives on the z-edges. This is illustrated in 2D and 3D below.
 
-.. image:: ../../images/edge_discretization.png
+.. figure:: ../../images/edge_discretization.png
     :align: center
     :width: 600
+
+    Illustration for approximating the inner product for vector quantities living on edges.
 
 
 As we can see there are 2 edges for each component in 2D and 4 edges for each component in 3D.
