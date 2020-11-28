@@ -1,0 +1,236 @@
+.. currentmodule:: discretize
+
+.. _0.6.0_notes:
+
+===================================
+``discretize`` 0.6.0 Release Notes
+===================================
+
+This minor release is intended to bring consistent pep8 style naming across all
+of discretize's classes and functions.
+
+There are two major types of renaming, aliases and deprecations. We have chosen
+to move to more descriptive property names for classes, generally.
+For example, ``mesh.area`` is deprecated and now is ``mesh.face_area``. Also
+properties like ``mesh.vnC`` are now officially ``mesh.shape_cells`` due to the
+more descriptive name, but can also be accessed as ``mesh.vnC`` to speed up some
+code writing for users. We have included a full list of aliases and deprecations
+below. In PR `#227 <https://github.com/simpeg/discretize/pull/227>`__ we have detailed
+our reasonings behind individual name choices.
+
+The other big change that will likely cause previous code to break is that all of
+these ``mesh.shape_*`` type properties are now explicitly ``tuple``-s, making
+them immutable. These properties could previously be modified which would result
+in undefined and unsafe behavoir. A side effect of this, is that any code that
+relied on these properties being ``numpy.ndarray``-s, will break. This is
+intentional.
+
+There's a few internal changes as well, to reorganize the file structure. importing
+items in ``discretize.utils`` from their individual module files is not recommended
+and might result in future broken code. Please only import these items from the
+``discretize.utils`` module.
+
+We have also separated the ``matplotlib`` plotting code into a separate module:
+``discretize.utils.mixins.mpl_mod``. At the same time we have further improved
+the plotting speed of ``discretize.TreeMesh`` and ``discretize.CurvilinearMesh``.
+This also allows all of these functions to have a unified calling convention.
+
+Finally, we have removed assert errors in favor of throwing the proper exception
+when checking inputs. We have removed all references to ``__future__`` and ``six``
+to clean up and drop python 2 compatibility.
+
+.. note::
+
+	Testing now uses Azure CI. The new hub can be found at https://dev.azure.com/simpeg/
+
+Changes
+=======
+This is a full list of the aliases and deprecations for this ``discretize`` release.
+
+Aliases
+-------
+On ``discretize.base.BaseMesh``:
+
+* ``origin=x0``
+* ``n_cells=nC``
+* ``n_nodes=nN``
+* ``n_edges=nE``
+* ``n_faces=nF``
+* ``n_edges_x=nEx``, ``n_edges_y=nEy``, ``n_edges_z=nEz``
+* ``n_faces_x=nFx``, ``n_faces_y=nFy``, ``n_faces_z=nFz``
+* ``n_edges_per_direction=vnE``, ``n_faces_per_direction=vnF``
+
+On ``discretize.base.BaseRectangularMesh``:
+
+* ``shape_cells=vnC``
+* ``shape_nodes=vnN``
+* ``shape_edges_x=vnEx``, ``shape_edges_y=vnEy``, ``shape_edges_z=vnEz``
+* ``shape_faces_x=vnFx``, ``shape_faces_y=vnFy``, ``shape_faces_z=vnFz``
+
+On ``discretize.base.BaseTensorMesh``:
+
+* ``cell_centers=gridCC``
+* ``nodes=gridN``
+* ``edges_x=gridEx``, ``edges_y=gridEy``, ``edges_z=gridEz``
+* ``faces_x=gridFx``, ``faces_y=gridFy``, ``faces_z=gridFz``
+
+On ``discretize.operators.DiffOperators``:
+
+* ``average_face_to_cell=aveF2CC``, ``average_face_to_cell_vector=aveF2CCV``
+* ``average_face_x_to_cell=aveFx2CC``, ``average_face_y_to_cell=aveFy2CC``, ``average_face_z_to_cell=aveFz2CC``
+* ``average_cell_to_face=aveCC2F``, ``average_cell_vector_to_face=aveCCV2F``
+* ``average_edge_to_cell=aveE2CC``, ``average_edge_to_cell_vector=aveE2CCV``
+* ``average_edge_x_to_cell=aveEx2CC``, ``average_edge_y_to_cell=aveEy2CC``, ``average_edge_z_to_cell=aveEz2CC``
+* ``average_node_to_cell=aveN2CC``, ``average_node_to_edge=aveN2E``, ``average_node_to_face=aveN2F``
+
+On ``TreeMesh``:
+
+* Similar to above, all ``n_hanging_XXX=nhX``, and ``n_total_XXX=ntX``, for each ``node=N``, ``face_x,y,z=Fx,y,z``, and ``edge_x,y,z=Ex,y,z``
+* Also, similar to above: ``hanging_XXX=gridhX``, for each hanging ``node=N``, ``face_x,y,z=Fx,y,z`` and ``edge_x,y,z=Ex,y,z``
+
+These aliases are consistent across all meshes that inherit from these classes:
+``discretize.TensorMesh``, ``discretize.CurvilinearMesh``, ``discretize.CylindricalMesh``,
+and ``discretize.TreeMesh``.
+
+Deprecations
+------------
+These deprecations will give ``FutureWarning`` when called indicating that they
+will be removed in version 1.0.0 of ``discretize``.
+
+Base Classes
+************
+
+On ``discretize.base.BaseMesh``:
+
+* ``normals`` → ``face_normals``
+* ``tangents`` → ``edge_tangents``
+* ``projectEdgeVector`` → ``project_edge_vector``
+* ``projectFaceVector`` → ``project_face_vector``
+
+On  ``discretize.base.BaseRectangularMesh``:
+
+* ``r`` → ``reshape``
+* ``nCx`` → ``shape_cells[0]``, ``nCy`` → ``shape_cells[1]``, ``nCz`` → ``shape_cells[2]``
+* ``nNx`` → ``shape_nodes[0]``, ``nNy`` → ``shape_nodes[1]``, ``nNz`` → ``shape_nodes[2]``
+* ``hx``→``h[0]``, ``hy`` → ``h[1]``, ``hz``→ ``h[2]``
+
+On ``discretize.base.BaseTensorMesh``:
+
+* ``vectorNx`` → ``nodes_x``, ``vectorNy`` → ``nodes_y``, ``vectorNz`` → ``nodes_z``
+* ``vectorCCx`` → ``cell_centers_x``, ``vectorCCy`` → ``cell_centers_y``, ``vectorCCz`` → ``cell_centers_z``
+* ``getInterpolationMat`` → ``get_interpolation_matrix``
+* ``isInside`` → ``is_inside``
+* ``getTensor`` → ``get_tensor``
+
+On ``discretize.base.MeshIO``:
+
+* ``readUBC`` → ``read_UBC``
+* ``readModelUBC`` → ``read_model_UBC``
+* ``writeUBC`` → ``write_UBC``
+* ``writeModelUBC`` → ``write_model_UBC``
+
+On ``discretize.operators.DiffOperators``:
+
+* ``cellGrad`` → ``cell_gradient``
+* ``cellGradBC`` → ``cell_gradient_BC``
+* ``cellGradx`` → ``cell_gradient_x``, ``cellGrady`` → ``cell_gradient_y``, ``cellGradz`` → ``cell_gradient_z``
+* ``nodalGrad`` → ``nodal_gradient``
+* ``nodalLaplacian`` → ``nodal_laplacian``
+* ``faceDiv`` → ``face_divergence``
+* ``faceDivx`` → ``face_x_divergence``, ``faceDivy`` → ``face_y_divergence``, ``faceDivz`` →``face_z_divergence``
+* ``edgeCurl`` → ``edge_curl``
+* ``setCellGradBC`` → ``set_cell_gradient_BC``
+* ``getBCProjWF`` → ``get_BC_projections``
+* ``getBCProjWF_simple`` → ``get_BC_projections_simple``
+
+On ``discretize.operators.InnerProducts``:
+
+* ``getFaceInnerProduct`` → ``get_face_inner_product``
+* ``getEdgeInnerProduct`` → ``get_edge_inner_product``
+* ``getFaceInnerProductDeriv`` → ``get_face_inner_product_deriv``
+* ``getEdgeInnerProductDeriv`` → ``get_edge_inner_product_deriv``
+
+Main Meshes
+***********
+
+``CylMesh`` → ``CylindricalMesh``
+
+On ``discretize.TensorMesh``, ``discretize.CylindricalMesh``, ``discretize.TreeMesh``, ``discretize.CurvilinearMesh``:
+
+* ``vol`` → ``cell_volumes``
+* ``area`` → ``face_areas``
+* ``edge`` → ``edge_lengths``
+
+On ``discretize.TensorMesh``, ``discretize.CylindricalMesh``, ``discretize.TreeMesh``:
+
+*  ``areaFx`` → ``face_x_areas``, ``areaFy`` → ``face_y_areas``, ``areaFz`` →``face_z_areas``
+*  ``edgeEx`` → ``edge_x_lengths``, ``edgeEy`` → ``edge_y_lengths``, ``edgeEz`` →``edge_z_lengths``
+
+On ``discretize.TensorMesh``, ``discretize.TreeMesh``:
+
+* ``faceBoundaryInd`` → ``face_boundary_indices``
+* ``cellBoundaryInd`` → ``cell_boundary_indices``
+
+On ``discretize.CurvilinearMesh``:
+* The ``nodes`` property is now ``node_list`` to avoid the name clash with the ``nodes`` location property
+
+On ``discretize.CylindricalMesh``:
+
+* ``isSymmetric`` → ``is_symmetric``
+* ``cartesianOrigin`` → ``cartesian_origin``
+* ``getInterpolationMatCartMesh`` → ``get_interpolation_matrix_cartesian_mesh``
+* ``cartesianGrid`` → ``cartesian_grid``
+
+On ``discretize.TreeMesh``:
+
+* ``maxLevel`` → ``max_used_level``
+* ``permuteCC`` → ``permute_cells``
+* ``permuteF`` → ``permute_faces``
+* ``permuteE`` → ``permute_edges``
+
+And for plotting with ``matplotlib``:
+
+* ``plotGrid`` → ``plot_grid``
+* ``plotImage`` → ``plot_image``
+* ``plotSlice`` → ``plot_slice``
+
+
+Utilities deprecations
+**********************
+Deprecations inside ``discretize.utils``:
+
+* ``isScalar`` → ``is_scalar``
+* ``asArray_N_x_Dim`` → ``as_array_n_by_dim``
+* ``sdInv`` → ``sdinv``
+* ``getSubArray`` → ``get_subarray``
+* ``inv3X3BlockDiagonal`` → ``inverse_3x3_block_diagonal``
+* ``inv2X2BlockDiagonal`` → ``inverse_2x2_block_diagonal``
+* ``makePropertyTensor`` → ``make_property_tensor``
+* ``invPropertyTensor`` → ``inverse_property_tensor``
+* ``exampleLrmGrid`` → ``example_curvilinear_grid``
+* ``meshTensor`` → ``unpack_widths``
+* ``closestPoints`` → ``closest_points_index``
+* ``ExtractCoreMesh`` → ``extract_core_mesh``
+* ``volTetra`` → ``volume_tetrahedron``
+* ``indexCube`` → ``index_cube``
+* ``faceInfo`` → ``face_info``
+* ``interpmat`` → ``interpolation_matrix``
+* ``rotationMatrixFromNormals`` → ``rotate_points_from_normals``
+* ``rotatePointsFromNormals`` → ``rotation_matrix_from_normals``
+
+Contributors
+============
+
+* @jcapriot
+
+With reviews from:
+
+* @prisae
+* @lheagy
+
+Also, input on function names were given by many of the ``discretize`` developers.
+
+Pull requests
+=============
+
+* `#227 <https://github.com/simpeg/discretize/pull/227>`__: Restructure.

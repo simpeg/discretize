@@ -1,2 +1,2 @@
-from .base_mesh import BaseMesh, BaseRectangularMesh
-from .base_tensor_mesh import BaseTensorMesh
+from discretize.base.base_mesh import BaseMesh, BaseRectangularMesh
+from discretize.base.base_tensor_mesh import BaseTensorMesh

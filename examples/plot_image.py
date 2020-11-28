@@ -17,19 +17,24 @@ def run(plotIt=True):
 
     def function(cell):
         if (
-            cell.center[0] < 0.75 and cell.center[0] > 0.25 and
-            cell.center[1] < 0.75 and cell.center[1] > 0.25
+            cell.center[0] < 0.75
+            and cell.center[0] > 0.25
+            and cell.center[1] < 0.75
+            and cell.center[1] > 0.25
         ):
             return 5
         if (
-            cell.center[0] < 0.9 and cell.center[0] > 0.1 and
-            cell.center[1] < 0.9 and cell.center[1] > 0.1
+            cell.center[0] < 0.9
+            and cell.center[0] > 0.1
+            and cell.center[1] < 0.9
+            and cell.center[1] > 0.1
         ):
             return 4
         return 3
+
     O.refine(function)
 
-    P = M.getInterpolationMat(O.gridCC, 'CC')
+    P = M.getInterpolationMat(O.gridCC, "CC")
 
     ov = P * v
 
@@ -41,14 +46,14 @@ def run(plotIt=True):
     out = M.plotImage(v, grid=True, ax=axes[0])
     cb = plt.colorbar(out[0], ax=axes[0])
     cb.set_label("Random Field")
-    axes[0].set_title('TensorMesh')
+    axes[0].set_title("TensorMesh")
 
     out = O.plotImage(ov, grid=True, ax=axes[1], clim=[0, 1])
     cb = plt.colorbar(out[0], ax=axes[1])
     cb.set_label("Random Field")
-    axes[1].set_title('TreeMesh')
+    axes[1].set_title("TreeMesh")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     run()
     plt.show()

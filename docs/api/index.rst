@@ -18,25 +18,24 @@ Meshes
     :toctree: generated
 
     TensorMesh
-    CylMesh
-    TreeMesh
-    TreeMesh.TreeCell
+    CylindricalMesh
     CurvilinearMesh
-
+    TreeMesh
+    tree_mesh.TreeCell
 
 
 Numerical Operators
 -------------------
 
-.. automodule:: discretize.InnerProducts
+.. automodule:: discretize.operators
 
 .. currentmodule:: discretize
 
 .. autosummary::
     :toctree: generated
 
-    DiffOperators.DiffOperators
-    InnerProducts.InnerProducts
+    operators.DiffOperators
+    operators.InnerProducts
 
 
 Mesh IO
@@ -46,8 +45,8 @@ Mesh IO
     :toctree: generated
 
     load_mesh
-    MeshIO.TensorMeshIO
-    MeshIO.TreeMeshIO
+    base.mesh_io.TensorMeshIO
+    base.mesh_io.TreeMeshIO
 
 
 Visualization
@@ -56,11 +55,9 @@ Visualization
 .. autosummary::
     :toctree: generated
 
-    View.TensorView
-    View.CylView
-    View.CurviView
-    View.Slicer
-    mixins.vtkModule
+    mixins.mpl_mod.InterfaceMPL
+    mixins.mpl_mod.Slicer
+    mixins.vtk_mod.InterfaceVTK
 
 
 
@@ -70,10 +67,10 @@ Testing
 .. autosummary::
     :toctree: generated
 
-    Tests.OrderTest
-    Tests.checkDerivative
-    Tests.getQuadratic
-    Tests.Rosenbrock
+    tests.OrderTest
+    tests.check_derivative
+    tests.get_quadratic
+    tests.rosenbrock
 
 
 Utilities
@@ -97,7 +94,7 @@ Interpolation Operations
 .. autosummary::
     :toctree: generated
 
-    utils.interpmat
+    utils.interpolation_matrix
     utils.volume_average
 
 
@@ -107,10 +104,10 @@ Mesh Utilities
 .. autosummary::
     :toctree: generated
 
-    utils.exampleLrmGrid
-    utils.meshTensor
-    utils.closestPoints
-    utils.ExtractCoreMesh
+    utils.example_curvilinear_grid
+    utils.unpack_widths
+    utils.closest_points_index
+    utils.extract_core_mesh
     utils.random_model
     utils.mesh_builder_xyz
     utils.refine_tree_xyz
@@ -125,7 +122,7 @@ Matrix Utilities
 
     utils.mkvc
     utils.sdiag
-    utils.sdInv
+    utils.sdinv
     utils.speye
     utils.kron3
     utils.spzeros
@@ -135,12 +132,12 @@ Matrix Utilities
     utils.ndgrid
     utils.ind2sub
     utils.sub2ind
-    utils.getSubArray
-    utils.inv3X3BlockDiagonal
-    utils.inv2X2BlockDiagonal
+    utils.get_subarray
+    utils.inverse_3x3_block_diagonal
+    utils.inverse_2x2_block_diagonal
+    utils.make_property_tensor
+    utils.inverse_property_tensor
     utils.TensorType
-    utils.makePropertyTensor
-    utils.invPropertyTensor
     utils.Zero
     utils.Identity
 
@@ -151,12 +148,14 @@ Mathematical Operations
 .. autosummary::
     :toctree: generated
 
-    utils.rotatePointsFromNormals
-    utils.rotationMatrixFromNormals
+    utils.rotate_points_from_normals
+    utils.rotation_matrix_from_normals
+    utils.cylindrical_to_cartesian
+    utils.cartesian_to_cylindrical
+    utils.is_scalar
+    utils.as_array_n_by_dim
     utils.cyl2cart
     utils.cart2cyl
-    utils.isScalar
-    utils.asArray_N_x_Dim
 
 
 
@@ -166,9 +165,9 @@ Curvilinear Mesh Utilities
 .. autosummary::
     :toctree: generated
 
-    utils.volTetra
-    utils.faceInfo
-    utils.indexCube
+    utils.volume_tetrahedron
+    utils.face_info
+    utils.index_cube
 
 
 

@@ -4,11 +4,10 @@ import os
 
 
 class Doc_Test(unittest.TestCase):
-
     @property
     def path_to_docs(self):
-        dirname, filename = os.path.split(os.path.abspath(__file__))
-        return dirname.split(os.path.sep)[:-2] + ['docs']
+        dirname, file_name = os.path.split(os.path.abspath(__file__))
+        return dirname.split(os.path.sep)[:-2] + ["docs"]
 
     def test_html(self):
         wd = os.getcwd()
@@ -27,5 +26,6 @@ class Doc_Test(unittest.TestCase):
         self.assertTrue(response.returncode == 0)
         os.chdir(wd)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

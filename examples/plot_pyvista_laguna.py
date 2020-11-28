@@ -16,18 +16,15 @@ Using the inversion result from the example notebook
 """
 # sphinx_gallery_thumbnail_number = 2
 import os
-import shutil
-import tarfile
-import shelve
 import tarfile
 import discretize
 import pyvista as pv
 import numpy as np
 
 # Set a documentation friendly plotting theme
-pv.set_plot_theme('document')
+pv.set_plot_theme("document")
 
-print('PyVista Version: {}'.format(pv.__version__))
+print("PyVista Version: {}".format(pv.__version__))
 
 ###############################################################################
 # Download and load data
@@ -49,19 +46,16 @@ tar.close()
 
 # Download the inverted model
 f = discretize.utils.download(
-    "https://storage.googleapis.com/simpeg/laguna_del_maule_slicer.tar.gz"
+    "https://storage.googleapis.com/simpeg/laguna_del_maule_slicer.tar.gz",
+    overwrite=True,
 )
 tar = tarfile.open(f, "r")
 tar.extractall()
 tar.close()
 
-with shelve.open('./laguna_del_maule_slicer/laguna_del_maule-result') as db:
-    mesh = db['mesh']
-    Lpout = db['Lpout']
-
 # Load the mesh/data
-mesh = discretize.TensorMesh.copy(mesh)
-models = {'Lpout':Lpout}
+mesh = discretize.load_mesh(os.path.join("laguna_del_maule_slicer", "mesh.json"))
+models = {"Lpout": np.load(os.path.join("laguna_del_maule_slicer", "Lpout.npy"))}
 
 
 ###############################################################################
@@ -77,28 +71,29 @@ dataset = mesh.to_vtk(models)
 ###############################################################################
 
 # Load topography points from text file as XYZ numpy array
-topo_pts = np.loadtxt('Chile_GRAV_4_Miller/LdM_topo.topo', skiprows=1)
+topo_pts = np.loadtxt("Chile_GRAV_4_Miller/LdM_topo.topo", skiprows=1)
 # Create the topography points and apply an elevation filter
 topo = pv.PolyData(topo_pts).delaunay_2d().elevation()
 
 ###############################################################################
 
 # Load the gravity data from text file as XYZ+attributes numpy array
-grav_data = np.loadtxt('Chile_GRAV_4_Miller/LdM_grav_obs.grv', skiprows=1)
-print('gravity file shape: ', grav_data.shape)
+grav_data = np.loadtxt("Chile_GRAV_4_Miller/LdM_grav_obs.grv", skiprows=1)
+print("gravity file shape: ", grav_data.shape)
 # Use the points to create PolyData
-grav = pv.PolyData(grav_data[:,0:3])
+grav = pv.PolyData(grav_data[:, 0:3])
 # Add the data arrays
-grav.point_arrays['comp-1'] = grav_data[:,3]
-grav.point_arrays['comp-2'] = grav_data[:,4]
+grav.point_arrays["comp-1"] = grav_data[:, 3]
+grav.point_arrays["comp-2"] = grav_data[:, 4]
 
 ###############################################################################
 # Plot the topographic surface and the gravity data
 
 p = pv.Plotter()
-p.add_mesh(topo, color='grey')
-p.add_mesh(grav, stitle='Observed Gravtiy Data', point_size=15,
-           render_points_as_spheres=True)
+p.add_mesh(topo, color="grey")
+p.add_mesh(
+    grav, stitle="Observed Gravtiy Data", point_size=15, render_points_as_spheres=True
+)
 # Use a non-phot-realistic shading technique to show topographic relief
 p.enable_eye_dome_lighting()
 p.show(window_size=[1024, 768])
@@ -113,7 +108,7 @@ p.show(window_size=[1024, 768])
 # Create display parameters for inverted model
 dparams = dict(
     show_edges=False,
-    cmap='bwr',
+    cmap="bwr",
     clim=[-0.6, 0.6],
 )
 
@@ -130,19 +125,23 @@ p = pv.Plotter()
 p.show_grid()
 
 # Add spatially referenced data to the scene
-p.add_mesh(dataset_t.slice('x'), **dparams)
-p.add_mesh(dataset_t.slice('y'), **dparams)
+p.add_mesh(dataset_t.slice("x"), **dparams)
+p.add_mesh(dataset_t.slice("y"), **dparams)
 p.add_mesh(threshed, **dparams)
-p.add_mesh(topo, opacity=0.75, color='grey',
-           #cmap='gist_earth', clim=[1.7e+03, 3.104e+03],
-           )
-p.add_mesh(grav, cmap='viridis', point_size=15,
-           render_points_as_spheres=True)
+p.add_mesh(
+    topo,
+    opacity=0.75,
+    color="grey",
+    # cmap='gist_earth', clim=[1.7e+03, 3.104e+03],
+)
+p.add_mesh(grav, cmap="viridis", point_size=15, render_points_as_spheres=True)
 
 # Here is a nice camera position we manually found:
-cpos = [(395020.7332989303, 6039949.0452080015, 20387.583125699253),
-        (364528.3152860675, 6008839.363092581, -3776.318305935185),
-        (-0.3423732500124074, -0.34364514928896667, 0.8744647328772646)]
+cpos = [
+    (395020.7332989303, 6039949.0452080015, 20387.583125699253),
+    (364528.3152860675, 6008839.363092581, -3776.318305935185),
+    (-0.3423732500124074, -0.34364514928896667, 0.8744647328772646),
+]
 p.camera_position = cpos
 
 

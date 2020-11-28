@@ -1,13 +1,8 @@
-# cython: embedsignature=True
-# cython: profile=True
-# cython: linetrace=True
-# distutils: define_macros=CYTHON_TRACE_NOGIL=1
-# from __future__ import division
+# cython: embedsignature=True, language_level=3
 import numpy as np
 import cython
 cimport numpy as np
 import scipy.sparse as sp
-# from libcpp.vector cimport vector
 
 def _interp_point_1D(np.ndarray[np.float64_t, ndim=1] x, float xr_i):
     """
@@ -200,11 +195,11 @@ def _tensor_volume_averaging(mesh_in, mesh_out, values=None, output=None):
     i3_in = np.array([0], dtype=np.int32)
     i3_out = np.array([0], dtype=np.int32)
     cdef int dim = mesh_in.dim
-    w1, i1_in, i1_out = _volume_avg_weights(mesh_in.vectorNx, mesh_out.vectorNx)
+    w1, i1_in, i1_out = _volume_avg_weights(mesh_in.nodes_x, mesh_out.nodes_x)
     if dim > 1:
-        w2, i2_in, i2_out = _volume_avg_weights(mesh_in.vectorNy, mesh_out.vectorNy)
+        w2, i2_in, i2_out = _volume_avg_weights(mesh_in.nodes_y, mesh_out.nodes_y)
     if dim > 2:
-        w3, i3_in, i3_out = _volume_avg_weights(mesh_in.vectorNz, mesh_out.vectorNz)
+        w3, i3_in, i3_out = _volume_avg_weights(mesh_in.nodes_z, mesh_out.nodes_z)
 
     cdef (np.int32_t, np.int32_t, np.int32_t) w_shape = (w1.shape[0], w2.shape[0], w3.shape[0])
     cdef (np.int32_t, np.int32_t, np.int32_t) mesh_in_shape
@@ -226,7 +221,7 @@ def _tensor_volume_averaging(mesh_in, mesh_out, values=None, output=None):
     cdef np.float64_t[::1, :, :] val_out
     cdef int i1, i2, i3, i1i, i2i, i3i, i1o, i2o, i3o
     cdef np.float64_t w_3, w_32
-    cdef np.float64_t[::1, :, :] vol = mesh_out.vol.reshape(mesh_out_shape, order='F')
+    cdef np.float64_t[::1, :, :] vol = mesh_out.cell_volumes.reshape(mesh_out_shape, order='F')
 
     if values is not None:
         # If given a values array, do the operation

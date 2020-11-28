@@ -104,11 +104,12 @@ import numpy as np
 # Define the Gaussian function
 def fcn_gaussian(x, mu, sig):
 
-    return (1/np.sqrt(2*np.pi*sig**2))*np.exp(-0.5*(x-mu)**2/sig**2)
+    return (1 / np.sqrt(2 * np.pi * sig ** 2)) * np.exp(-0.5 * (x - mu) ** 2 / sig ** 2)
+
 
 # Create a tensor mesh that is sufficiently large
-h = 0.1*np.ones(100)
-mesh = TensorMesh([h], 'C')
+h = 0.1 * np.ones(100)
+mesh = TensorMesh([h], "C")
 
 # Define center point and standard deviation
 mu = 0
@@ -123,19 +124,19 @@ Mc = sdiag(mesh.vol)  # cell-centered
 # Mn = mesh.getNodalInnerProduct()  # on nodes (*functionality pending*)
 
 # Compute the inner product
-ipt = 1/(2*sig*np.sqrt(np.pi))  # true value of (f, f)
-ipc = np.dot(phi_c, (Mc*phi_c))
+ipt = 1 / (2 * sig * np.sqrt(np.pi))  # true value of (f, f)
+ipc = np.dot(phi_c, (Mc * phi_c))
 # ipn = np.dot(phi_n, (Mn*phi_n)) (*functionality pending*)
 
 fig = plt.figure(figsize=(5, 5))
 ax = fig.add_subplot(111)
 ax.plot(mesh.gridCC, phi_c)
-ax.set_title('phi at cell centers')
+ax.set_title("phi at cell centers")
 
 # Verify accuracy
-print('ACCURACY')
-print('Analytic solution:    ', ipt)
-print('Cell-centered approx.:', ipc)
+print("ACCURACY")
+print("Analytic solution:    ", ipt)
+print("Cell-centered approx.:", ipc)
 # print('Nodal approx.:        ', ipn)
 
 
@@ -165,15 +166,20 @@ print('Cell-centered approx.:', ipc)
 
 # Define components of the function
 def fcn_x(xy, sig):
-    return (-xy[:, 1]/np.sqrt(np.sum(xy**2, axis=1)))*np.exp(-0.5*np.sum(xy**2, axis=1)/sig**2)
+    return (-xy[:, 1] / np.sqrt(np.sum(xy ** 2, axis=1))) * np.exp(
+        -0.5 * np.sum(xy ** 2, axis=1) / sig ** 2
+    )
 
 
 def fcn_y(xy, sig):
-    return (xy[:, 0]/np.sqrt(np.sum(xy**2, axis=1)))*np.exp(-0.5*np.sum(xy**2, axis=1)/sig**2)
+    return (xy[:, 0] / np.sqrt(np.sum(xy ** 2, axis=1))) * np.exp(
+        -0.5 * np.sum(xy ** 2, axis=1) / sig ** 2
+    )
+
 
 # Create a tensor mesh that is sufficiently large
-h = 0.1*np.ones(100)
-mesh = TensorMesh([h, h], 'CC')
+h = 0.1 * np.ones(100)
+mesh = TensorMesh([h, h], "CC")
 
 # Define center point and standard deviation
 sig = 1.5
@@ -185,7 +191,7 @@ v = np.r_[vx, vy]
 
 Me = mesh.getEdgeInnerProduct()  # Edge inner product matrix
 
-ipe = np.dot(v, Me*v)
+ipe = np.dot(v, Me * v)
 
 # Evaluate inner-product using face-defined discrete variables
 vx = fcn_x(mesh.gridFx, sig)
@@ -194,25 +200,26 @@ v = np.r_[vx, vy]
 
 Mf = mesh.getFaceInnerProduct()  # Edge inner product matrix
 
-ipf = np.dot(v, Mf*v)
+ipf = np.dot(v, Mf * v)
 
 # The analytic solution of (v, v)
-ipt = np.pi*sig**2
+ipt = np.pi * sig ** 2
 
 # Plot the vector function
 fig = plt.figure(figsize=(5, 5))
 ax = fig.add_subplot(111)
-mesh.plotImage(v, ax=ax, v_type='F', view='vec',
-               stream_opts={'color': 'w', 'density': 1.0})
-ax.set_title('v at cell faces')
+mesh.plotImage(
+    v, ax=ax, v_type="F", view="vec", stream_opts={"color": "w", "density": 1.0}
+)
+ax.set_title("v at cell faces")
 
 fig.show()
 
 # Verify accuracy
-print('ACCURACY')
-print('Analytic solution:    ', ipt)
-print('Edge variable approx.:', ipe)
-print('Face variable approx.:', ipf)
+print("ACCURACY")
+print("Analytic solution:    ", ipt)
+print("Edge variable approx.:", ipe)
+print("Face variable approx.:", ipf)
 
 ##############################################
 # Inverse of Inner Product Matricies
@@ -231,12 +238,12 @@ print('Face variable approx.:', ipf)
 
 
 # Create a tensor mesh
-h = 0.1*np.ones(100)
-mesh = TensorMesh([h, h], 'CC')
+h = 0.1 * np.ones(100)
+mesh = TensorMesh([h, h], "CC")
 
 # Cell centered for scalar quantities
 Mc = sdiag(mesh.vol)
-Mc_inv = sdiag(1/mesh.vol)
+Mc_inv = sdiag(1 / mesh.vol)
 
 # Nodes for scalar quantities  (*functionality pending*)
 # Mn = mesh.getNodalInnerProduct()
@@ -259,12 +266,12 @@ vec_f = np.random.rand(mesh.nF)
 # Generate some random vectors
 norm_c = np.linalg.norm(phi_c - Mc_inv.dot(Mc.dot(phi_c)))
 # norm_n = np.linalg.norm(phi_n - Mn_inv*Mn*phi_n)
-norm_e = np.linalg.norm(vec_e - Me_inv*Me*vec_e)
-norm_f = np.linalg.norm(vec_f - Mf_inv*Mf*vec_f)
+norm_e = np.linalg.norm(vec_e - Me_inv * Me * vec_e)
+norm_f = np.linalg.norm(vec_f - Mf_inv * Mf * vec_f)
 
 # Verify accuracy
-print('ACCURACY')
-print('Norm for centers:', norm_c)
+print("ACCURACY")
+print("Norm for centers:", norm_c)
 # print('Norm for nodes:  ', norm_n)
-print('Norm for edges:  ', norm_e)
-print('Norm for faces:  ', norm_f)
+print("Norm for edges:  ", norm_e)
+print("Norm for faces:  ", norm_f)

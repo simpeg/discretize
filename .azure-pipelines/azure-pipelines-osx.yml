@@ -1,0 +1,40 @@
+jobs:
+- job:
+  displayName: Mac
+  pool:
+    vmImage: macOS-latest
+  strategy:
+    matrix:
+      osx-Python36:
+        python.version: '3.6'
+      osx-Python37:
+        python.version: '3.7'
+      osx-Python38:
+        python.version: '3.8'
+  steps:
+
+  - script: echo '##vso[task.prependpath]$CONDA/bin'
+    displayName: Add conda to PATH
+
+  - script: sudo chown -R $USER $CONDA
+    displayName: Take ownership of conda installation
+
+  - script: |
+      conda create --yes --quiet --name test python=$(python.version)
+    displayName: Create Anaconda environment
+
+  - script: |
+      eval "$(conda shell.bash hook)"
+      conda activate test
+      conda install --yes --quiet -c conda-forge numpy scipy matplotlib">=3.0.0" cython vtk properties vectormath pyvista pymatsolver
+      conda install --yes --quiet -c conda-forge pytest
+      pip install -r requirements_dev.txt
+      pip install pytest-azurepipelines
+      pip install -e .
+    displayName: Install requirements and build
+
+  - script: |
+      eval "$(conda shell.bash hook)"
+      conda activate test
+      pytest tests -v -s
+    displayName: 'Running Tests'

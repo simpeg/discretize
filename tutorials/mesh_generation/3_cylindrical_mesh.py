@@ -39,22 +39,22 @@ import numpy as np
 #
 #    1. *phi* is in radians
 #    2. The sum of values in the numpy array for *phi* cannot exceed :math:`2\pi`
-#    
+#
 #
 
-ncr = 10     # number of mesh cells in r
-ncp = 8      # number of mesh cells in phi
-ncz = 15     # number of mesh cells in z
-dr = 15      # cell width r
-dz = 10      # cell width z
+ncr = 10  # number of mesh cells in r
+ncp = 8  # number of mesh cells in phi
+ncz = 15  # number of mesh cells in z
+dr = 15  # cell width r
+dz = 10  # cell width z
 
-hr = dr*np.ones(ncr)
-hp = (2*np.pi/ncp)*np.ones(ncp)
-hz = dz*np.ones(ncz)
+hr = dr * np.ones(ncr)
+hp = (2 * np.pi / ncp) * np.ones(ncp)
+hz = dz * np.ones(ncz)
 
-x0 = 0.
-y0 = 0.
-z0 = -150.
+x0 = 0.0
+y0 = 0.0
+z0 = -150.0
 
 mesh = CylMesh([hr, hp, hz], x0=[x0, y0, z0])
 
@@ -72,16 +72,16 @@ mesh.plotGrid()
 # We then show some properties that can be extracted from cylindrical meshes.
 #
 
-ncr = 10              # number of mesh cells in r
-ncp = 8               # number of mesh cells in phi
-ncz = 15              # number of mesh cells in z
-dr = 15               # cell width r
-dp = 2*np.pi/ncp      # cell width phi
-dz = 10               # cell width z
-npad_r = 4            # number of padding cells in r
-npad_z = 4            # number of padding cells in z
-exp_r = 1.25          # expansion rate of padding cells in r
-exp_z = 1.25          # expansion rate of padding cells in z
+ncr = 10  # number of mesh cells in r
+ncp = 8  # number of mesh cells in phi
+ncz = 15  # number of mesh cells in z
+dr = 15  # cell width r
+dp = 2 * np.pi / ncp  # cell width phi
+dz = 10  # cell width z
+npad_r = 4  # number of padding cells in r
+npad_z = 4  # number of padding cells in z
+exp_r = 1.25  # expansion rate of padding cells in r
+exp_z = 1.25  # expansion rate of padding cells in z
 
 # Use a list of tuples to define cell widths in each direction. Each tuple
 # contains the cell with, number of cells and the expansion factor (+ve/-ve).
@@ -90,16 +90,16 @@ hp = [(dp, ncp)]
 hz = [(dz, npad_z, -exp_z), (dz, ncz), (dz, npad_z, exp_z)]
 
 # We can use flags 'C', '0' and 'N' to define the xyz position of the mesh.
-mesh = CylMesh([hr, hp, hz], x0='00C')
+mesh = CylMesh([hr, hp, hz], x0="00C")
 
 # We can apply the plotGrid method and change the axis properties
 ax = mesh.plotGrid()
-ax[0].set_title('Discretization in phi')
+ax[0].set_title("Discretization in phi")
 
-ax[1].set_title('Discretization in r and z')
-ax[1].set_xlabel('r')
-ax[1].set_xbound(mesh.x0[0], mesh.x0[0]+np.sum(mesh.hx))
-ax[1].set_ybound(mesh.x0[2], mesh.x0[2]+np.sum(mesh.hz))
+ax[1].set_title("Discretization in r and z")
+ax[1].set_xlabel("r")
+ax[1].set_xbound(mesh.x0[0], mesh.x0[0] + np.sum(mesh.hx))
+ax[1].set_ybound(mesh.x0[2], mesh.x0[2] + np.sum(mesh.hz))
 
 # The bottom end of the vertical axis of rotational symmetry
 x0 = mesh.x0
@@ -130,20 +130,20 @@ v = mesh.vol
 # direction.
 #
 
-ncr = 10              # number of mesh cells in r
-ncz = 15              # number of mesh cells in z
-dr = 15               # cell width r
-dz = 10               # cell width z
-npad_r = 4            # number of padding cells in r
-npad_z = 4            # number of padding cells in z
-exp_r = 1.25          # expansion rate of padding cells in r
-exp_z = 1.25          # expansion rate of padding cells in z
+ncr = 10  # number of mesh cells in r
+ncz = 15  # number of mesh cells in z
+dr = 15  # cell width r
+dz = 10  # cell width z
+npad_r = 4  # number of padding cells in r
+npad_z = 4  # number of padding cells in z
+exp_r = 1.25  # expansion rate of padding cells in r
+exp_z = 1.25  # expansion rate of padding cells in z
 
 hr = [(dr, ncr), (dr, npad_r, exp_r)]
 hz = [(dz, npad_z, -exp_z), (dz, ncz), (dz, npad_z, exp_z)]
 
 # A value of 1 is used to define the discretization in phi for this case.
-mesh = CylMesh([hr, 1, hz], x0='00C')
+mesh = CylMesh([hr, 1, hz], x0="00C")
 
 # The bottom end of the vertical axis of rotational symmetry
 x0 = mesh.x0
@@ -160,10 +160,10 @@ v = mesh.vol
 fig = plt.figure(figsize=(6, 4))
 ax = fig.add_subplot(111)
 mesh.plotImage(np.log10(v), grid=True, ax=ax)
-ax.set_xlabel('r')
-ax.set_xbound(mesh.x0[0], mesh.x0[0]+np.sum(mesh.hx))
-ax.set_ybound(mesh.x0[2], mesh.x0[2]+np.sum(mesh.hz))
-ax.set_title('Cell Log-Volumes')
+ax.set_xlabel("r")
+ax.set_xbound(mesh.x0[0], mesh.x0[0] + np.sum(mesh.hx))
+ax.set_ybound(mesh.x0[2], mesh.x0[2] + np.sum(mesh.hz))
+ax.set_title("Cell Log-Volumes")
 
 ##############################################################################
 # Notice that we do not plot the discretization in phi as it is irrelevant.

@@ -49,21 +49,19 @@ import numpy as np
 # rate of cell width increase outside the box.
 #
 
-dh = 5    # minimum cell width (base mesh cell width)
+dh = 5  # minimum cell width (base mesh cell width)
 nbc = 64  # number of base mesh cells in x
 
 # Define base mesh (domain and finest discretization)
-h = dh*np.ones(nbc)
+h = dh * np.ones(nbc)
 mesh = TreeMesh([h, h])
 
 # Define corner points for rectangular box
-xp, yp = np.meshgrid([120., 240.], [80., 160.])
+xp, yp = np.meshgrid([120.0, 240.0], [80.0, 160.0])
 xy = np.c_[mkvc(xp), mkvc(yp)]  # mkvc creates vectors
 
 # Discretize to finest cell size within rectangular box
-mesh = refine_tree_xyz(
-    mesh, xy, octree_levels=[2, 2], method='box', finalize=False
-    )
+mesh = refine_tree_xyz(mesh, xy, octree_levels=[2, 2], method="box", finalize=False)
 
 mesh.finalize()  # Must finalize tree mesh before use
 
@@ -84,36 +82,34 @@ mesh.plotGrid(show_it=True)
 # refining.
 #
 
-dx = 5    # minimum cell width (base mesh cell width) in x
-dy = 5    # minimum cell width (base mesh cell width) in y
+dx = 5  # minimum cell width (base mesh cell width) in x
+dy = 5  # minimum cell width (base mesh cell width) in y
 
-x_length = 300.    # domain width in x
-y_length = 300.    # domain width in y
+x_length = 300.0  # domain width in x
+y_length = 300.0  # domain width in y
 
 # Compute number of base mesh cells required in x and y
-nbcx = 2**int(np.round(np.log(x_length/dx)/np.log(2.)))
-nbcy = 2**int(np.round(np.log(y_length/dy)/np.log(2.)))
+nbcx = 2 ** int(np.round(np.log(x_length / dx) / np.log(2.0)))
+nbcy = 2 ** int(np.round(np.log(y_length / dy) / np.log(2.0)))
 
 # Define the base mesh
 hx = [(dx, nbcx)]
 hy = [(dy, nbcy)]
-mesh = TreeMesh([hx, hy], x0='CC')
+mesh = TreeMesh([hx, hy], x0="CC")
 
 # Refine surface topography
 xx = mesh.vectorNx
-yy = -3*np.exp((xx**2) / 100**2) + 50.
+yy = -3 * np.exp((xx ** 2) / 100 ** 2) + 50.0
 pts = np.c_[mkvc(xx), mkvc(yy)]
 mesh = refine_tree_xyz(
-    mesh, pts, octree_levels=[2, 2], method='surface', finalize=False
-    )
+    mesh, pts, octree_levels=[2, 2], method="surface", finalize=False
+)
 
 # Refine mesh near points
-xx = np.array([0., 10., 0., -10.])
-yy = np.array([-20., -10., 0., -10])
+xx = np.array([0.0, 10.0, 0.0, -10.0])
+yy = np.array([-20.0, -10.0, 0.0, -10])
 pts = np.c_[mkvc(xx), mkvc(yy)]
-mesh = refine_tree_xyz(
-    mesh, pts, octree_levels=[2, 2], method='radial', finalize=False
-    )
+mesh = refine_tree_xyz(mesh, pts, octree_levels=[2, 2], method="radial", finalize=False)
 
 mesh.finalize()
 
@@ -121,9 +117,9 @@ mesh.finalize()
 fig = plt.figure(figsize=(6, 6))
 ax = fig.add_subplot(111)
 mesh.plotGrid(ax=ax)
-ax.set_xbound(mesh.x0[0], mesh.x0[0]+np.sum(mesh.hx))
-ax.set_ybound(mesh.x0[1], mesh.x0[1]+np.sum(mesh.hy))
-ax.set_title('QuadTree Mesh')
+ax.set_xbound(mesh.x0[0], mesh.x0[0] + np.sum(mesh.hx))
+ax.set_ybound(mesh.x0[1], mesh.x0[1] + np.sum(mesh.hy))
+ax.set_title("QuadTree Mesh")
 
 ####################################################
 # Extracting Mesh Properties
@@ -133,36 +129,34 @@ ax.set_title('QuadTree Mesh')
 # we show some properties that can be extracted from a QuadTree mesh.
 #
 
-dx = 5    # minimum cell width (base mesh cell width) in x
-dy = 5    # minimum cell width (base mesh cell width) in y
+dx = 5  # minimum cell width (base mesh cell width) in x
+dy = 5  # minimum cell width (base mesh cell width) in y
 
-x_length = 300.    # domain width in x
-y_length = 300.     # domain width in y
+x_length = 300.0  # domain width in x
+y_length = 300.0  # domain width in y
 
 # Compute number of base mesh cells required in x and y
-nbcx = 2**int(np.round(np.log(x_length/dx)/np.log(2.)))
-nbcy = 2**int(np.round(np.log(y_length/dy)/np.log(2.)))
+nbcx = 2 ** int(np.round(np.log(x_length / dx) / np.log(2.0)))
+nbcy = 2 ** int(np.round(np.log(y_length / dy) / np.log(2.0)))
 
 # Define the base mesh
 hx = [(dx, nbcx)]
 hy = [(dy, nbcy)]
-mesh = TreeMesh([hx, hy], x0='CC')
+mesh = TreeMesh([hx, hy], x0="CC")
 
 # Refine surface topography
 xx = mesh.vectorNx
-yy = -3*np.exp((xx**2) / 100**2) + 50.
+yy = -3 * np.exp((xx ** 2) / 100 ** 2) + 50.0
 pts = np.c_[mkvc(xx), mkvc(yy)]
 mesh = refine_tree_xyz(
-    mesh, pts, octree_levels=[2, 2], method='surface', finalize=False
-    )
+    mesh, pts, octree_levels=[2, 2], method="surface", finalize=False
+)
 
 # Refine near points
-xx = np.array([0., 10., 0., -10.])
-yy = np.array([-20., -10., 0., -10])
+xx = np.array([0.0, 10.0, 0.0, -10.0])
+yy = np.array([-20.0, -10.0, 0.0, -10])
 pts = np.c_[mkvc(xx), mkvc(yy)]
-mesh = refine_tree_xyz(
-    mesh, pts, octree_levels=[2, 2], method='radial', finalize=False
-    )
+mesh = refine_tree_xyz(mesh, pts, octree_levels=[2, 2], method="radial", finalize=False)
 
 mesh.finalize()
 
@@ -184,9 +178,9 @@ s = mesh.vol
 fig = plt.figure(figsize=(6, 6))
 ax = fig.add_subplot(111)
 mesh.plotImage(np.log10(s), grid=True, ax=ax)
-ax.set_xbound(mesh.x0[0], mesh.x0[0]+np.sum(mesh.hx))
-ax.set_ybound(mesh.x0[1], mesh.x0[1]+np.sum(mesh.hy))
-ax.set_title('Log of Cell Areas')
+ax.set_xbound(mesh.x0[0], mesh.x0[0] + np.sum(mesh.hx))
+ax.set_ybound(mesh.x0[1], mesh.x0[1] + np.sum(mesh.hy))
+ax.set_title("Log of Cell Areas")
 
 ###############################################
 # 3D Example
@@ -196,40 +190,38 @@ ax.set_title('Log of Cell Areas')
 # properties from a 3D tree mesh.
 #
 
-dx = 5    # minimum cell width (base mesh cell width) in x
-dy = 5    # minimum cell width (base mesh cell width) in y
-dz = 5    # minimum cell width (base mesh cell width) in z
+dx = 5  # minimum cell width (base mesh cell width) in x
+dy = 5  # minimum cell width (base mesh cell width) in y
+dz = 5  # minimum cell width (base mesh cell width) in z
 
-x_length = 300.     # domain width in x
-y_length = 300.     # domain width in y
-z_length = 300.     # domain width in y
+x_length = 300.0  # domain width in x
+y_length = 300.0  # domain width in y
+z_length = 300.0  # domain width in y
 
 # Compute number of base mesh cells required in x and y
-nbcx = 2**int(np.round(np.log(x_length/dx)/np.log(2.)))
-nbcy = 2**int(np.round(np.log(y_length/dy)/np.log(2.)))
-nbcz = 2**int(np.round(np.log(z_length/dz)/np.log(2.)))
+nbcx = 2 ** int(np.round(np.log(x_length / dx) / np.log(2.0)))
+nbcy = 2 ** int(np.round(np.log(y_length / dy) / np.log(2.0)))
+nbcz = 2 ** int(np.round(np.log(z_length / dz) / np.log(2.0)))
 
 # Define the base mesh
 hx = [(dx, nbcx)]
 hy = [(dy, nbcy)]
 hz = [(dz, nbcz)]
-mesh = TreeMesh([hx, hy, hz], x0='CCC')
+mesh = TreeMesh([hx, hy, hz], x0="CCC")
 
 # Refine surface topography
 [xx, yy] = np.meshgrid(mesh.vectorNx, mesh.vectorNy)
-zz = -3*np.exp((xx**2 + yy**2) / 100**2) + 50.
+zz = -3 * np.exp((xx ** 2 + yy ** 2) / 100 ** 2) + 50.0
 pts = np.c_[mkvc(xx), mkvc(yy), mkvc(zz)]
 mesh = refine_tree_xyz(
-    mesh, pts, octree_levels=[2, 2], method='surface', finalize=False
-    )
+    mesh, pts, octree_levels=[2, 2], method="surface", finalize=False
+)
 
 # Refine box
-xp, yp, zp = np.meshgrid([-40., 40.], [-40., 40.], [-60., 0.])
+xp, yp, zp = np.meshgrid([-40.0, 40.0], [-40.0, 40.0], [-60.0, 0.0])
 xyz = np.c_[mkvc(xp), mkvc(yp), mkvc(zp)]
 
-mesh = refine_tree_xyz(
-    mesh, xyz, octree_levels=[2, 2], method='box', finalize=False
-    )
+mesh = refine_tree_xyz(mesh, xyz, octree_levels=[2, 2], method="box", finalize=False)
 
 mesh.finalize()
 
@@ -250,5 +242,5 @@ v = mesh.vol
 
 fig = plt.figure(figsize=(6, 6))
 ax = fig.add_subplot(111)
-mesh.plotSlice(np.log10(v), normal='Y', ax=ax, ind=int(mesh.hy.size/2), grid=True)
-ax.set_title('Cell Log-Volumes at Y = 0 m')
+mesh.plotSlice(np.log10(v), normal="Y", ax=ax, ind=int(mesh.hy.size / 2), grid=True)
+ax.set_title("Cell Log-Volumes at Y = 0 m")
