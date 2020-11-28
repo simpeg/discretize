@@ -4,7 +4,6 @@ Base class for tensor-product style meshes
 
 import numpy as np
 import scipy.sparse as sp
-import properties
 
 from discretize.base.base_mesh import BaseMesh
 from discretize.utils import (
@@ -68,6 +67,7 @@ class BaseTensorMesh(BaseMesh):
         coerce=True,
         required=True,
     )
+    _required_props = ['h', 'origin']
 
     def __init__(self, h=None, origin=None, **kwargs):
 

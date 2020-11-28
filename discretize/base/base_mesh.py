@@ -3,7 +3,6 @@ Base classes for all discretize meshes
 """
 
 import numpy as np
-import properties
 import os
 import json
 
@@ -13,7 +12,7 @@ from discretize.mixins import InterfaceMixins
 import warnings
 
 
-class BaseMesh(properties.HasProperties, InterfaceMixins):
+class BaseMesh(InterfaceMixins):
     """
     BaseMesh does all the counting you don't want to do.
     BaseMesh should be inherited by meshes with a regular structure.
@@ -53,9 +52,11 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         shape=("*",),
         required=True,
     )
+    _items = ['n', 'origin', 'axis_u', 'axis_v', 'axis_w']
 
     # Instantiate the class
     def __init__(self, n=None, origin=None, **kwargs):
+        self.origin = origin
         if n is not None:
             self._n = n  # number of dimensions
 
@@ -67,12 +68,41 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
             self.origin = origin
 
         super(BaseMesh, self).__init__(**kwargs)
+        self._uid = uid
 
     def __getattr__(self, name):
         if name == "_aliases":
             raise AttributeError  # http://nedbatchelder.com/blog/201010/surprising_getattr_recursion.html
         name = self._aliases.get(name, name)
         return object.__getattribute__(self, name)
+
+    @property
+    def origin(self):
+        """ Origin of the mesh
+        """
+        return self._origin
+
+    @origin.setter
+    def origin(self, value):
+        # ensure the value is a numpy array
+        value = np.asarray(value, dtype=np.float64)
+        value = np.atleast_1d(value)
+        self._origin = value
+
+    def to_dict(self):
+        out = {}
+        for item in self._items:
+            thing = getattr(self, item, None)
+            if thing is not None:
+                out[item] = thing
+        return out
+
+    def serialize(self):
+        return self.to_dict()
+
+    @classmethod
+    def deserialize(cls, items):
+        return cls(**items)
 
     @property
     def x0(self):
