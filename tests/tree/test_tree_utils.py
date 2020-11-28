@@ -33,7 +33,7 @@ class TestRefineOcTree(unittest.TestCase):
         residual = (
             np.abs(
                 vol
-                - mesh.vol[
+                - mesh.cell_volumes[
                     mesh._cell_levels_by_indexes(range(mesh.nC)) == mesh.max_level
                 ].sum()
             )
@@ -68,15 +68,14 @@ class TestRefineOcTree(unittest.TestCase):
         residual = (
             np.abs(
                 vol
-                - mesh.vol[
+                - mesh.cell_volumes[
                     mesh._cell_levels_by_indexes(range(mesh.nC)) == mesh.max_level-1
                 ].sum()
             )
             / vol
             * 100
         )
-
-        self.assertTrue(residual < 0.5)
+        self.assertTrue(residual < 2.)
 
     def test_surface(self):
         dx = 0.1
@@ -106,7 +105,7 @@ class TestRefineOcTree(unittest.TestCase):
         residual = (
             np.abs(
                 vol
-                - mesh.vol[
+                - mesh.cell_volumes[
                     mesh._cell_levels_by_indexes(range(mesh.nC)) == mesh.max_level
                 ].sum()
                 / 2
