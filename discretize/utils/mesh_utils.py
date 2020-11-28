@@ -735,16 +735,16 @@ def refine_tree_xyz(
 
             # Make a list of outer limits
             BSW = [
-                bsw - np.r_[padWidth[ii], zmax[ii]]
-                for ii, (octZ, octXY) in enumerate(
-                    zip(octree_levels, octree_levels_padding)
+                bsw * (octZ > 0) - np.r_[padWidth[ii], zmax[ii]]
+                for ii, octZ in enumerate(
+                    octree_levels
                 )
             ]
 
             TNE = [
-                tne + np.r_[padWidth[ii], zmax[ii]]
-                for ii, (octZ, octXY) in enumerate(
-                    zip(octree_levels, octree_levels_padding)
+                tne * (octZ > 0) + np.r_[padWidth[ii], zmax[ii]]
+                for ii, octZ in enumerate(
+                    octree_levels
                 )
             ]
 
@@ -767,16 +767,16 @@ def refine_tree_xyz(
 
             # Make a list of outer limits
             BSW = [
-                bsw - np.r_[padWidth_x[ii], padWidth_y[ii], zmax[ii]]
-                for ii, (octZ, octXY) in enumerate(
-                    zip(octree_levels, octree_levels_padding)
+                bsw * (octZ > 0) - np.r_[padWidth_x[ii], padWidth_y[ii], zmax[ii]]
+                for ii, octZ in enumerate(
+                    octree_levels
                 )
             ]
 
             TNE = [
-                tne + np.r_[padWidth_x[ii], padWidth_y[ii], zmax[ii]]
-                for ii, (octZ, octXY) in enumerate(
-                    zip(octree_levels, octree_levels_padding)
+                tne * (octZ > 0) + np.r_[padWidth_x[ii], padWidth_y[ii], zmax[ii]]
+                for ii, octZ in enumerate(
+                    octree_levels
                 )
             ]
 
@@ -784,10 +784,10 @@ def refine_tree_xyz(
 
             xyz = cell.center
 
-            for nC, bsw, tne in zip(octree_levels, BSW, TNE):
+            for ii, (bsw, tne) in enumerate(zip(BSW, TNE)):
 
                 if np.all([xyz > bsw, xyz < tne]):
-                    return mesh.max_level - nC
+                    return mesh.max_level - ii
 
             return cell._level
 
