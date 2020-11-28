@@ -59,7 +59,7 @@ class TestRefineOcTree(unittest.TestCase):
         )
 
         mesh = refine_tree_xyz(
-            mesh, xyz, octree_levels=[0,1], method="box", finalize=True
+            mesh, xyz, octree_levels=[0, 1], method="box", finalize=True
         )
 
         # Volume of box
