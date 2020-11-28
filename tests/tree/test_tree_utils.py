@@ -69,7 +69,7 @@ class TestRefineOcTree(unittest.TestCase):
             np.abs(
                 vol
                 - mesh.vol[
-                    mesh._cell_levels_by_indexes(range(mesh.nC)) == mesh.max_level
+                    mesh._cell_levels_by_indexes(range(mesh.nC)) == mesh.max_level-1
                 ].sum()
             )
             / vol
