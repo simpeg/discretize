@@ -1,89 +1,57 @@
 """
-Gauss' Law of Electrostatics
-============================
+Poisson Equation with Zero Neumann Boundary Condition
+=====================================================
 
 Here we use the discretize package to solve for the electric potential
 (:math:`\phi`) and electric fields (:math:`\mathbf{e}`) in 2D that result from
-a static charge distribution. Starting with Gauss' law and Faraday's law:
+a static charge distribution. Provided the electric permittiviy is uniform
+within the domain, the physics are represented by a Poisson equation.
+The solution can easily be adapted to solve the same problem in 3D.
+In the theory section of the discretie website we provided a
+:ref:`derivation for the final numerical solution <derivation_examples_electrostatics>`.
+
+Starting with Gauss' law and Faraday's law:
     
 .. math::
     &\\nabla \\cdot \mathbf{E} = \\frac{\\rho}{\\epsilon_0} \n
     &\\nabla \\times \mathbf{E} = \\mathbf{0} \;\;\; \Rightarrow \;\;\; \\mathbf{E} = -\\nabla \\phi \n
-    &\\textrm{s.t.} \;\;\; \phi \Big |_{\partial \Omega} = 0
+    &\\textrm{s.t.} \;\;\; \\hat{n} \\cdot \\vec{e} \Big |_{\partial \Omega} =
+    -\\frac{\\partial \\phi}{\\partial n} \Big |_{\partial \Omega} = 0
     
-where :math:`\\sigma` is the charge density and :math:`\\epsilon_0` is the
+where :math:`\\rho` is the charge density and :math:`\\epsilon_0` is the
 permittivity of free space. We will consider the case where there is both a
 positive and a negative charge of equal magnitude within our domain. Thus:
 
 .. math::
     \\rho = \\rho_0 \\big [ \\delta ( \\mathbf{r_+}) - \\delta (\\mathbf{r_-} ) \\big ]
 
-To solve this problem numerically, we use the weak formulation; that is, we
-take the inner product of each equation with an appropriate test function.
-Where :math:`\\psi` is a scalar test function and :math:`\\mathbf{f}` is a
-vector test function:
 
-.. math::
-    \\int_\\Omega \\psi (\\nabla \\cdot \\mathbf{E}) dV = \\frac{1}{\\epsilon_0} \\int_\\Omega \\psi \\rho dV \n
-    \\int_\\Omega \\mathbf{f \\cdot E} \\, dV = - \\int_\\Omega \\mathbf{f} \\cdot (\\nabla \\phi ) dV
-
-
-In the case of Gauss' law, we have a volume integral containing the Dirac delta
-function, thus:
-
-.. math::
-    \\int_\\Omega \\psi (\\nabla \\cdot \\mathbf{E}) dV = \\frac{1}{\\epsilon_0} \\psi \\, q
-
-where :math:`q` represents an integrated charge density. By applying the finite
-volume approach to this expression we obtain:
-
-.. math::
-    \\mathbf{\\psi^T M_c D e} = \\frac{1}{\\epsilon_0} \\mathbf{\\psi^T q}
-
-where :math:`\mathbf{q}` denotes the total enclosed charge for each cell. Thus
-:math:`\mathbf{q_i}=\\rho_0` for the cell containing the positive charge and
-:math:`\mathbf{q_i}=-\\rho_0` for the cell containing the negative charge. It
-is zero for every other cell.
-
-:math:`\mathbf{\psi}` and :math:`\mathbf{q}` live at cell centers and
-:math:`\mathbf{e}` lives on cell faces. :math:`\mathbf{D}` is the discrete
-divergence operator. :math:`\\mathbf{M_c}` is an inner product matrix for cell
-centered quantities.
-
-For the second weak form equation, we make use of the divergence theorem as
-follows:
-
-.. math::
-    \\int_\\Omega \\mathbf{f \\cdot E} \\, dV &= - \\int_\\Omega \\mathbf{f} \\cdot (\\nabla \\phi ) dV \n
-    & = - \\frac{1}{\\epsilon_0} \\int_\\Omega \\nabla \\cdot (\\mathbf{f} \\phi ) dV + \\frac{1}{\\epsilon_0} \\int_\\Omega ( \\nabla \\cdot \\mathbf{f} ) \\phi \\, dV \n
-    & = - \\frac{1}{\\epsilon_0} \\int_{\\partial \\Omega} \\mathbf{n} \\cdot (\\mathbf{f} \\phi ) da + \\frac{1}{\\epsilon_0} \\int_\\Omega ( \\nabla \\cdot \\mathbf{f} ) \\phi \\, dV \n
-    & = 0 + \\frac{1}{\\epsilon_0} \\int_\\Omega ( \\nabla \\cdot \\mathbf{f} ) \\phi \\, dV
-
-where the surface integral is zero due to the boundary conditions we imposed.
-Evaluating this expression according to the finite volume approach we obtain:
-
-.. math::
-    \\mathbf{f^T M_f e} = \\mathbf{f^T D^T M_c \\phi}
-
-where :math:`\\mathbf{f}` lives on cell faces and :math:`\\mathbf{M_f}` is the
-inner product matrix for quantities that live on cell faces. By canceling terms
-and combining the set of discrete equations we obtain:
-
-.. math::
-    \\big [ \\mathbf{M_c D M_f^{-1} D^T M_c} \\big ] \\mathbf{\\phi} = \\frac{1}{\epsilon_0} \mathbf{q}
-
-from which we can solve for :math:`\mathbf{\phi}`. The electric field can be
-obtained by computing:
-
-.. math::
-    \mathbf{e} = \\mathbf{M_f^{-1} D^T M_c \\phi}
+For :math:`\\phi` defined on the nodes, the numerical solution is obtained by
+solving the following linear system:
     
+.. math::
+    \\boldsymbol{G^T M_e G \\, \\phi} = \\frac{1}{\\epsilon_0} \\boldsymbol{q}
+
+And for :math:`\\phi` discretized at cell centers, the numerical solution is
+obtained by solving:
+
+.. math::
+    \\boldsymbol{M_c D M_f^{-1} (D^T M_c - B) \\phi} = \\frac{1}{\\epsilon_0} \\boldsymbol{q}
+
+where
+
+    - :math:`\\boldsymbol{G}` is the discrete gradient operator
+    - :math:`\\boldsymbol{D}` is the discrete divergence operator
+    - :math:`\\boldsymbol{M_c}` is the inner product matrix for cell centered quantities
+    - :math:`\\boldsymbol{M_e}` is the inner product matrix for edge quantities
+    - :math:`\\boldsymbol{M_f}` is the inner product matrix for face quantities
+    - :math:`\\boldsymbol{B}` is a sparse matrix that implements the boundary condition
+    - :math:`\\boldsymbol{q}` is a discrete representation of the source term
 
 
 """
 
 ###############################################
-#
 # Import Packages
 # ---------------
 #
@@ -97,27 +65,91 @@ import matplotlib.pyplot as plt
 import numpy as np
 from discretize.utils import sdiag
 
+from SimPEG.electromagnetics.static.resistivity.boundary_utils import getxBCyBC_CC
 
 ###############################################
+# Electric Potential Defined on the Nodes
+# ---------------------------------------
 #
-# Solving the Problem
-# -------------------
+# Here, we solve the problem for the nodal discretization
+# of the electric potential.
 #
 
 # Create a tensor mesh
-h = np.ones(75)
+h = np.ones(100)
 mesh = TensorMesh([h, h], "CC")
 
-# Create system
-DIV = mesh.faceDiv  # Faces to cell centers divergence
-Mf_inv = mesh.getFaceInnerProduct(invMat=True)
-Mc = sdiag(mesh.vol)
-A = Mc * DIV * Mf_inv * DIV.T * Mc
+# Define discrete operators
+G = mesh.nodal_gradient                        # gradient operator
+Me = mesh.get_edge_inner_product()             # edge inner product matrix
 
-# Define RHS (charge distributions at cell centers)
+# Define linear system and remove null space
+A = G.T * Me * G
+A[0,0] = 1.
+A[0, 1:] = 0
+
+# Define RHS (total charge on each node)
+xyn = mesh.nodes
+kneg = (xyn[:, 0] == -10) & (xyn[:, 1] == 0)   # -ve charge at (-10, 0)
+kpos = (xyn[:, 0] == 10) & (xyn[:, 1] == 0)    # +ve charge at (10, 0)
+
+rho = np.zeros(mesh.n_nodes)
+rho[kneg] = -1
+rho[kpos] = 1
+
+# LU factorization and solve
+AinvM = SolverLU(A)
+phi = AinvM * rho
+
+# Compute electric fields
+E = - G * phi
+
+# Plotting
+fig = plt.figure(figsize=(14, 4))
+
+ax1 = fig.add_subplot(131)
+mesh.plotImage(rho, v_type="N", ax=ax1)
+ax1.set_title("Charge Density")
+
+ax2 = fig.add_subplot(132)
+mesh.plotImage(phi, v_type="N", ax=ax2)
+ax2.set_title("Electric Potential")
+
+ax3 = fig.add_subplot(133)
+mesh.plotImage(
+    E, ax=ax3, v_type="E", view="vec", stream_opts={"color": "w", "density": 1.0}
+)
+ax3.set_title("Electric Fields")
+
+
+###############################################
+# Electric Potential at Cell Centers
+# ----------------------------------
+# Here, we solve the problem for the cell centered discretization
+# of the electric potential.
+#
+
+# Create a tensor mesh
+h = 2*np.ones(51)
+mesh = TensorMesh([h, h], "CC")
+
+# Define discrete operators
+DIV = mesh.faceDiv                                  # discrete divergence operator
+Mc = sdiag(mesh.vol)                                # cell center inner product matrix
+Mf_inv = mesh.get_face_inner_product(invMat=True)   # inverse of face inner product matrix
+
+# Implement boundary conditions
+P_BC, P = mesh.get_BC_projections_simple()          # basic projection matrices
+Acf = mesh.average_cell_to_face                     # average cell centers to faces
+B = P_BC * P * Acf                                  # create the boundary condition matrix
+
+# Define linear system
+A = Mc * DIV * Mf_inv * (DIV.T * Mc - B)
+
+# Define RHS (total charge at cell centers)
 xycc = mesh.gridCC
-kneg = (xycc[:, 0] == -10) & (xycc[:, 1] == 0)  # -ve charge distr. at (-10, 0)
-kpos = (xycc[:, 0] == 10) & (xycc[:, 1] == 0)  # +ve charge distr. at (10, 0)
+kneg = (xycc[:, 0] == -10) & (xycc[:, 1] == 0)      # -ve charge at (-10, 0)
+kpos = (xycc[:, 0] == 10) & (xycc[:, 1] == 0)       # +ve charge at (10, 0)
 
 rho = np.zeros(mesh.nC)
 rho[kneg] = -1
@@ -128,7 +160,7 @@ AinvM = SolverLU(A)
 phi = AinvM * rho
 
 # Compute electric fields
-E = Mf_inv * DIV.T * Mc * phi
+E = Mf_inv * (DIV.T * Mc - B) * phi
 
 # Plotting
 fig = plt.figure(figsize=(14, 4))
@@ -146,3 +178,7 @@ mesh.plotImage(
     E, ax=ax3, v_type="F", view="vec", stream_opts={"color": "w", "density": 1.0}
 )
 ax3.set_title("Electric Fields")
+
+
+
+

@@ -144,16 +144,16 @@ and apply the divergence theorem to equation :eq:`inner_products_differential_gr
 Where boundary conditions are implemented in the surface integral. The approximate to the inner product is given by:
 
 .. math::
-    \int_\Omega \vec{u} \cdot \nabla \phi \, dv \approx - \boldsymbol{u^T D^T M_c \, \phi + u^T b}
+    \int_\Omega \vec{u} \cdot \nabla \phi \, dv \approx - \boldsymbol{u^T D^T M_c \, \phi + u^T B \, \phi}
 
 where
 
     - :math:`\boldsymbol{D}` is the :ref:`discrete divergence operator <operators_differential_divergence>`
     - :math:`\boldsymbol{M_c}` is the :ref:`basic inner product matrix for vectors at cell centers <inner_products_basic>`
-    - :math:`\boldsymbol{b}` represents an additional term that must be constructed to impose boundary conditions correctly on :math:`\phi`
+    - :math:`\boldsymbol{B}` is a sparse matrix that imposes boundary conditions correctly on :math:`\phi`
 
 When formulating the approximation to the inner product in this way, the natural boundary condition is a Dirichlet condition such that :math:`\phi = 0` on the boundary.
-In this case, the added boundary condition term :math:`\boldsymbol{b} = \boldsymbol{0}`.
+In this case, the added boundary condition term is zero.
 
 
 Scalar and the Divergence of a Vector
@@ -208,16 +208,16 @@ and apply the divergence theorem to equation :eq:`inner_products_differential_gr
 Where boundary conditions are implemented in the surface integral. The approximate to the inner product is given by:
 
 .. math::
-    \int_\Omega \psi \; (\nabla \cdot \vec{w}) \, dv \approx - \boldsymbol{\psi^T G_n^T M_e \, w + \psi^T b}
+    \int_\Omega \psi \; (\nabla \cdot \vec{w}) \, dv \approx - \boldsymbol{\psi^T G_n^T M_e \, w + \psi^T B \, w}
 
 where
 
     - :math:`\boldsymbol{G_n}` is the :ref:`discrete gradient operator <operators_differential_divergence>`
     - :math:`\boldsymbol{M_e}` is the :ref:`basic inner product matrix for vectors at the edges <inner_products_basic>`
-    - :math:`\boldsymbol{b}` represents an additional term that must be constructed to impose boundary conditions correctly on :math:`\vec{w}`
+    - :math:`\boldsymbol{B}` is a sparse matrix that imposes boundary conditions correctly on :math:`\vec{w}`
 
 When formulating the approximation to the inner product in this way, the natural boundary condition is for :math:`\hat{n} \cdot \vec{w} = 0` on the boundary.
-In this case, the added boundary condition term :math:`\boldsymbol{b} = \boldsymbol{0}`.
+In this case, the added boundary condition term is zero.
 
 
 
@@ -273,13 +273,13 @@ and apply the divergence theorem to equation :eq:`inner_products_differential_cu
 Where boundary conditions are implemented in the surface integral. The approximate to the inner product is given by:
 
 .. math::
-    \int_\Omega \vec{u} \cdot (\nabla \times \vec{w}) \, dv \approx \boldsymbol{u^T C^T M_f \, w + u^T b}
+    \int_\Omega \vec{u} \cdot (\nabla \times \vec{w}) \, dv \approx \boldsymbol{u^T C^T M_f \, w + u^T B \, w}
 
 where
 
     - :math:`\boldsymbol{C}` is the :ref:`discrete curl operator <operators_differential_curl>` 
     - :math:`\boldsymbol{M_f}` is the :ref:`basic inner product matrix for vectors on faces <inner_products_basic>`
-    - :math:`\boldsymbol{b}` represents an additional term that must be constructed to impose boundary conditions correctly on :math:`\vec{w}`
+    - :math:`\boldsymbol{B}` is a sparse matrix that imposes boundary conditions correctly on :math:`\vec{w}`
 
 When formulating the approximation to the inner product in this way, the natural boundary condition is for :math:`\hat{n} \times \vec{w} = 0` on the boundary.
-In this case, the added boundary condition term :math:`\boldsymbol{b} = \boldsymbol{0}`.
+In this case, the added boundary condition term is zero.
