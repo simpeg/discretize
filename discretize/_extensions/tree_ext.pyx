@@ -393,7 +393,84 @@ cdef class _TreeMesh:
         cdef void * func_ptr = <void *> function
         self.wrapper.set(func_ptr, _evaluate_func)
         #Then tell c++ to build the tree
-        self.tree.build_tree_from_function(self.wrapper)
+        self.tree.refine_function(self.wrapper)
+        if finalize:
+            self.finalize()
+
+    def refine_ball(self, points, radii, levels, finalize=True):
+        """Refines the TreeMesh around points with the given radii
+
+        Refines the TreeMesh by determining if a cell intersects the given ball(s)
+        to the prescribed level(s).
+
+        Parameters
+        ----------
+        points : array_like with shape (N, dim)
+            The centers of the balls
+        radii : array_like with shape (N)
+            The radii of the balls
+        levels : array_like of integers with shape (N)
+            The level to refine intersecting cells to
+        finalize : bool, optional
+            Whether to finalize after refining
+        """
+        points = np.require(np.atleast_2d(points), dtype=np.float64,
+                            requirements='C')
+        if points.shape[1] != self.dim:
+            raise ValueError(f"points array must be (N, {self.dim})")
+        cdef double[:, :] cs = points
+        cdef double[:] rs = np.require(np.atleast_1d(radii), dtype=np.float64,
+                                       requirements='C')
+        if points.shape[0] != rs.shape[0]:
+            raise ValueError("radii length must match the points array's first dimension")
+        cdef int[:] ls = np.require(np.atleast_1d(levels), dtype=np.int32,
+                                    requirements='C')
+        if points.shape[0] != ls.shape[0]:
+            raise ValueError("level length must match the points array's first dimension")
+
+        cdef int_t i
+        for i in range(ls.shape[0]):
+            self.tree.refine_ball(&cs[i, 0], rs[i], ls[i])
+        if finalize:
+            self.finalize()
+
+    def refine_box(self, x0s, x1s, levels, finalize=True):
+        """Refines the TreeMesh within the axis aligned boxes to the desired level
+
+        Refines the TreeMesh by determining if a cell intersects the given axis aligned
+        box(es) to the prescribed level(s).
+
+        Parameters
+        ----------
+        x0s : array_like with shape (N, dim)
+            The minimum location of the boxes
+        x1s : array_like with shape (N, dim)
+            The maximum location of the boxes
+        levels : array_like of integers with shape (N)
+            The level to refine intersecting cells to
+        finalize : bool, optional
+            Whether to finalize after refining
+        """
+        x0s = np.require(np.atleast_2d(x0s), dtype=np.float64,
+                            requirements='C')
+        if x0s.shape[1] != self.dim:
+            raise ValueError(f"x0s array must be (N, {self.dim})")
+        x1s = np.require(np.atleast_2d(x1s), dtype=np.float64,
+                            requirements='C')
+        if x1s.shape[1] != self.dim:
+            raise ValueError(f"x1s array must be (N, {self.dim})")
+        if x1s.shape[0] != x0s.shape[0]:
+            raise ValueError(f"x0s and x1s must have the same length")
+        cdef double[:, :] x0 = x0s
+        cdef double[:, :] x1 = x1s
+        cdef int[:] ls = np.require(np.atleast_1d(levels), dtype=np.int32,
+                                    requirements='C')
+        if x0.shape[0] != ls.shape[0]:
+            raise ValueError("level length must match the points array's first dimension")
+
+        cdef int_t i
+        for i in range(ls.shape[0]):
+            self.tree.refine_box(&x0[i, 0], &x1[i, 0], ls[i])
         if finalize:
             self.finalize()
 
