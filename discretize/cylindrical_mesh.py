@@ -1,5 +1,4 @@
 import numpy as np
-import properties
 import scipy.sparse as sp
 from scipy.constants import pi
 
@@ -72,13 +71,13 @@ class CylindricalMesh(
         **BaseTensorMesh._aliases,
     }
 
-    cartesian_origin = properties.Array(
-        "Cartesian origin of the mesh", dtype=float, shape=("*",)
-    )
+    _items = BaseTensorMesh._items | {"cartesian_origin"}
 
-    def __init__(self, h=None, origin=None, **kwargs):
-        super().__init__(h=h, origin=origin, **kwargs)
-        self.reference_system = "cylindrical"
+    def __init__(self, h, origin=None, cartesian_origin=None, **kwargs):
+        kwargs.pop('reference_system', None)  # reference system must be cylindrical
+        if "cartesianOrigin" in kwargs.keys():
+            cartesian_origin = kwargs.pop("cartesianOrigin")
+        super().__init__(h=h, origin=origin, reference_system="cylindrical", **kwargs)
 
         if not np.abs(self.h[1].sum() - 2 * np.pi) < 1e-10:
             raise AssertionError("The 2nd dimension must sum to 2*pi")
@@ -86,23 +85,25 @@ class CylindricalMesh(
         if self.dim == 2:
             print("Warning, a disk mesh has not been tested thoroughly.")
 
-        if "cartesian_origin" in kwargs.keys():
-            self.cartesian_origin = kwargs.pop("cartesian_origin")
-        elif "cartesianOrigin" in kwargs.keys():
-            self.cartesian_origin = kwargs.pop("cartesianOrigin")
-        else:
-            self.cartesian_origin = np.zeros(self.dim)
+        if cartesian_origin is None:
+            cartesian_origin = np.zeros(self.dim)
+        self.cartesian_origin = cartesian_origin
 
-    @properties.validator("cartesian_origin")
-    def check_cartesian_origin_shape(self, change):
-        change["value"] = np.array(change["value"], dtype=float).ravel()
-        if len(change["value"]) != self.dim:
-            raise Exception(
-                "Dimension mismatch. The mesh dimension is {}, and the "
-                "cartesian_origin provided has length {}".format(
-                    self.dim, len(change["value"])
-                )
+    @property
+    def cartesian_origin(self):
+        "Cartesian origin of the mesh"
+        return self._cartesian_origin
+
+    @cartesian_origin.setter
+    def cartesian_origin(self, value):
+        # ensure the value is a numpy array
+        value = np.asarray(value, dtype=np.float64)
+        value = np.atleast_1d(value)
+        if len(value) != self.dim:
+            raise ValueError(
+                f"cartesian origin and shape must be the same length, got {len(value)} and {len(self.dim)}"
             )
+        self._cartesian_origin = value
 
     @property
     def is_symmetric(self):

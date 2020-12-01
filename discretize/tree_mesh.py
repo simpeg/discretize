@@ -135,6 +135,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
             "gridhEz": "hanging_edges_z",
         },
     }
+    _items = {'h', 'origin', 'cell_state'}
 
     # inheriting stuff from BaseTensorMesh that isn't defined in _QuadTree
     def __init__(self, h=None, origin=None, **kwargs):
@@ -142,24 +143,28 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
             origin = kwargs.pop("x0")
         BaseTensorMesh.__init__(
             self, h, origin
-        )  # TODO:, **kwargs) # pass the kwargs for copy/paste
-
-        nx = len(self.h[0])
-        ny = len(self.h[1])
-        nz = len(self.h[2]) if self.dim == 3 else 2
-
+        )
         def is_pow2(num):
             return ((num & (num - 1)) == 0) and num != 0
+        for n in self.shape_cells:
+            if not is_pow2(n):
+                raise ValueError("length of cell width vectors must be a power of 2")
 
-        if not (is_pow2(nx) and is_pow2(ny) and is_pow2(nz)):
-            raise ValueError("length of cell width vectors must be a power of 2")
         # Now can initialize cpp tree parent
         _TreeMesh.__init__(self, self.h, self.origin)
 
-        if "cell_levels" in kwargs.keys() and "cell_indexes" in kwargs.keys():
-            inds = kwargs.pop("cell_indexes")
-            levels = kwargs.pop("cell_levels")
-            self.__setstate__((inds, levels))
+        cell_state = kwargs.pop("cell_state", None)
+        cell_indexes = kwargs.pop("cell_indexes", None)
+        cell_levels = kwargs.pop("cell_levels", None)
+        if cell_state is None:
+            if cell_indexes is not None and cell_levels is not None:
+                cell_state = {}
+                cell_state["indexes"] = cell_indexes
+                cell_state["levels"] = cell_levels
+        if cell_state is not None:
+            indexes = cell_state["indexes"]
+            levels = cell_state["levels"]
+            self.__setstate__((indexes, levels))
 
     def __repr__(self):
         """Plain text representation."""
@@ -581,17 +586,10 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
             P = np.r_[Px, Py, Pz]
         return sp.identity(self.nE).tocsr()[P]
 
-    def serialize(self):
-        serial = BaseTensorMesh.serialize(self)
-        inds, levels = self.__getstate__()
-        serial["cell_indexes"] = inds.tolist()
-        serial["cell_levels"] = levels.tolist()
-        return serial
-
-    @classmethod
-    def deserialize(cls, serial):
-        mesh = cls(**serial)
-        return mesh
+    @property
+    def cell_state(self):
+        indexes, levels = self.__getstate__()
+        return {'indexes': indexes.tolist(), 'levels': levels.tolist()}
 
     def __reduce__(self):
         return TreeMesh, (self.h, self.origin), self.__getstate__()

@@ -52,41 +52,22 @@ class BaseTensorMesh(BaseMesh):
     }
 
     _unitDimensions = [1, 1, 1]
+    _items = {'h'} | BaseMesh._items
 
-    # properties
-    h = properties.Tuple(
-        "h is a list containing the cell widths of the tensor mesh in each "
-        "dimension.",
-        properties.Array(
-            "widths of the tensor mesh in a single dimension",
-            dtype=float,
-            shape=("*",),
-        ),
-        min_length=1,
-        max_length=3,
-        coerce=True,
-        required=True,
-    )
-    _required_props = ['h', 'origin']
-
-    def __init__(self, h=None, origin=None, **kwargs):
-
-        h_in = h
+    def __init__(self, h, origin=None, **kwargs):
         if "x0" in kwargs:
             origin = kwargs.pop('x0')
-        origin_in = origin
 
-        # Sanity Checks
-        if not isinstance(h_in, (list, tuple)):
-            raise TypeError("h_in must be a list, not {}".format(type(h_in)))
-        if len(h_in) not in [1, 2, 3]:
+        try:
+            h = list(h)  # ensure value is a list (and make a copy)
+        except TypeError:
+            raise TypeError("h must be an iterable object, not {}".format(type(h)))
+        if len(g) == 0 or len(h) > 3:
             raise ValueError(
-                "h_in must be of dimension 1, 2, or 3 not {}".format(len(h_in))
+                "h must be of dimension 1, 2, or 3 not {}".format(len(h))
             )
-
-        # build h
-        h = list(range(len(h_in)))
-        for i, h_i in enumerate(h_in):
+        # expand value
+        for i, h_i in enumerate(h):
             if is_scalar(h_i) and not isinstance(h_i, np.ndarray):
                 # This gives you something over the unit cube.
                 h_i = self._unitDimensions[i] * np.ones(int(h_i)) / int(h_i)
@@ -97,41 +78,35 @@ class BaseTensorMesh(BaseMesh):
             if len(h_i.shape) != 1:
                 raise ValueError("h[{0:d}] must be a 1D numpy array.".format(i))
             h[i] = h_i[:]  # make a copy.
+        self._h = h
 
-        # Origin of the mesh
-        origin = np.zeros(len(h))
+        shape_cells = tuple([len(h_i) for h_i in h])
+        super().__init__(shape_cells, **kwargs)  # do not pass origin here
+        self.origin = origin
 
-        if origin_in is not None:
-            if len(h) != len(origin_in):
-                raise ValueError("Dimension mismatch. origin != len(h)")
-            for i in range(len(h)):
-                x_i, h_i = origin_in[i], h[i]
-                if is_scalar(x_i):
-                    origin[i] = x_i
-                elif x_i == "0":
-                    origin[i] = 0.0
-                elif x_i == "C":
-                    origin[i] = -h_i.sum() * 0.5
-                elif x_i == "N":
-                    origin[i] = -h_i.sum()
-                else:
-                    raise Exception(
-                        "origin[{0:d}] must be a scalar or '0' to be zero, "
-                        "'C' to center, or 'N' to be negative. The input value"
-                        " {1} {2} is invalid".format(i, x_i, type(x_i))
-                    )
+    @property
+    def h(self):
+        return self._h
 
-        if "n" in kwargs.keys():
-            n = kwargs.pop("n")
-            if np.any(n != np.array([x.size for x in h])):
-                raise ValueError("Dimension mismatch. The provided n doesn't h")
-        else:
-            n = np.array([x.size for x in h])
+    @BaseMesh.origin.setter
+    def origin(self, value):
+        # ensure value is a 1D array at all times
+        try:
+            value = list(value)
+        except:
+            raise TypeError(
+                "origin must be iterable"
+            )
+        if len(value) != self.dim:
+            raise ValueError("Dimension mismatch. len(origin) != len(h)")
+        for i, (val, h_i) in enumerate(zip(value, self.h)):
+            if val == "C":
+                value[i] = -h_i.sum() * 0.5
+            elif val == "N":
+                value[i] = -h_i.sum()
+        value = np.asarray(value, dtype=np.float64)
+        self._origin = value
 
-        super(BaseTensorMesh, self).__init__(n, origin=origin, **kwargs)
-
-        # Ensure h contains 1D vectors
-        self.h = [mkvc(x.astype(float)) for x in h]
 
     @property
     def nodes_x(self):

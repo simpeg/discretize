@@ -1,5 +1,4 @@
 import numpy as np
-import properties
 
 from discretize.utils import mkvc, index_cube, face_info, volume_tetrahedron
 from discretize.base import BaseRectangularMesh
@@ -53,56 +52,38 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
             "gridEz": "edges_z",
         },
     }
+    _items = {'node_list'}
 
-    node_list = properties.List(
-        "List of arrays describing the node locations",
-        prop=properties.Array(
-            "node locations in an n-dimensional array",
-            shape={("*", "*"), ("*", "*", "*")},
-        ),
-        min_length=2,
-        max_length=3,
-    )
-
-    def __init__(self, node_list=None, **kwargs):
+    def __init__(self, node_list, **kwargs):
 
         if 'nodes' in kwargs:
             node_list = kwargs.pop('nodes')
+
+        node_list = list(np.asarray(item, dtype=np.float64) for item in node_list)
+        # check shapes of each node array match
+        dim = len(node_list)
+        if dim not in [2, 3]:
+            raise ValueError(f"Only supports 2 and 3 dimensional meshes, saw a node_list of length {dim}")
+        for i, nodes in enumerate(node_list):
+            if len(nodes.shape != dim):
+                raise ValueError(f"Unexpected shape of item in node list, expect array with {dim} dimensions, got {len(nodes.shape)}")
+            if node_list[0].shape != nodes.shape:
+                raise ValueError(f"The shape of nodes are not consistent, saw {node_list[0].shape} and {nodes.shape}")
         self.node_list = node_list
 
-        if "_n" in kwargs.keys():
-            n = kwargs.pop("_n")
-            if np.any(n != np.array(self.node_list[0].shape) - 1):
-                raise ValueError(
-                    "Unexpected n-values. {} was provided, {} was expected".format(
-                        n, np.array(self.node_list[0].shape) - 1
-                    )
-                )
-        else:
-            n = np.array(self.node_list[0].shape) - 1
-
-        BaseRectangularMesh.__init__(self, n, **kwargs)
-
         # Save nodes to private variable _nodes as vectors
-        self._nodes = np.ones((self.node_list[0].size, self.dim))
-        for i, node_i in enumerate(self.node_list):
-            self._nodes[:, i] = mkvc(node_i.astype(float))
-        self.origin = self.nodes.min(axis=0)
+        self._nodes = np.ones((self.node_list[0].size, dim))
+        for i, nodes in enumerate(self.node_list):
+            self._nodes[:, i] = mkvc(nodes)
 
-    @properties.validator("node_list")
-    def _check_nodes(self, change):
-        if len(change["value"]) <= 1:
-            raise ValueError("len(node) must be greater than 1")
+        shape_cells = (n - 1 for n in self.node_list[0].shape)
 
-        for i, change["value"][i] in enumerate(change["value"]):
-            if change["value"][i].shape != change["value"][0].shape:
-                raise ValueError(
-                    "change['value'][{0:d}] is not the same shape as "
-                    "change['value'][0]".format(i)
-                )
+        # absorb the rest of kwargs, and do not pass to super
+        super().__init__(shape_cells, origin=self.nodes[0])
 
-        if len(change["value"][0].shape) != len(change["value"]):
-            raise ValueError("Dimension mismatch")
+    @property
+    def node_list(self):
+        return self._node_list
 
     @classmethod
     def deserialize(cls, value, **kwargs):

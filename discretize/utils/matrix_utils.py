@@ -456,6 +456,12 @@ class Zero(object):
     def __rmul__(self, v):
         return self
 
+    def __matmul__(self, v):
+        return self
+
+    def __rmatmul__(self, v):
+        return self
+
     def __div__(self, v):
         return self
 
@@ -548,6 +554,12 @@ class Identity(object):
         return v if self._positive else -v
 
     def __rmul__(self, v):
+        return v if self._positive else -v
+
+    def __matmul__(self, v):
+        return v if self._positive else -v
+
+    def __rmatmul__(self, v):
         return v if self._positive else -v
 
     def __div__(self, v):

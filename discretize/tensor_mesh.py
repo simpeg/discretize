@@ -59,9 +59,6 @@ class TensorMesh(
         **BaseTensorMesh._aliases,
     }
 
-    def __init__(self, h=None, origin=None, **kwargs):
-        BaseTensorMesh.__init__(self, h=h, origin=origin, **kwargs)
-
     def __repr__(self):
         """Plain text representation."""
         fmt = "\n  {}: {:,} cells\n\n".format(type(self).__name__, self.nC)
