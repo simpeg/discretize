@@ -205,3 +205,34 @@ and
 
 Reciprocal Properties
 ---------------------
+
+Let :math:`\vec{v}` and :math:`\vec{w}` be two physically related quantities.
+If their relationship is isotropic and defined by the reciprocal of a physical property (defined by a constant :math:`\rho`),
+then the constitutive relation is given by:
+
+.. math::
+    \vec{v} = \rho^{-1} \vec{w}
+    :label: inner_product_isotropic_reciprocal
+
+Because the relationship between :math:`\vec{v}` and :math:`\vec{w}` is a constant,
+the derivation of the inner-product matrix at edges and faces is effectively the same.
+For this case, the corresponding inner product matricies for
+discrete quantities living on various parts of the mesh are given by:
+
+.. math::
+    \textrm{Vectors on faces:} \; \boldsymbol{M_{\rho f}} &= \frac{1}{4} \boldsymbol{P_f^T } \textrm{diag} \boldsymbol{\big ( e_k \otimes (v \odot \rho^{-1} ) \big )} \boldsymbol{P_f} \\
+    \textrm{Vectors on edges:} \; \boldsymbol{M_{\rho e}} &= \frac{1}{4^{k-1}} \boldsymbol{P_e^T } \textrm{diag} \boldsymbol{\big ( e_k \otimes (v \odot \rho^{-1}) \big )} \boldsymbol{P_e}
+
+where
+
+    - :math:`k = 1,2,3` represent the dimension (1D, 2D or 3D)
+    - :math:`\boldsymbol{e_k}` is a vector of 1s of length :math:`k`
+    - :math:`\odot` is the Hadamard product
+    - :math:`\otimes` is the kronecker product
+    - :math:`\boldsymbol{P_f}` and :math:`\boldsymbol{P_e}` are projection matricies that map quantities from faces and edges to cell centers, respectively
+    - :math:`\boldsymbol{v}` is a vector that stores all of the volumes of the cells
+    - :math:`\boldsymbol{\rho^{-1}}` is a vector containing the reciprocal of :math:`\rho` for all cells
+
+
+**Tutorial:** To construct the inner product matrix and/or approximate inner products of this type, see the :ref:`tutorial on inner products with constitutive relationships <sphx_glr_tutorials_inner_products_2_physical_properties.py>`
+

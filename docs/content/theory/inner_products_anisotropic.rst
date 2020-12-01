@@ -467,4 +467,107 @@ and
     - :math:`\boldsymbol{P_e}` is a projection matrix that maps quantities from edges to cell centers
     - :math:`\boldsymbol{Q_u}` is a sparse replication matrix that augments a vector of the form :math:`[\boldsymbol{u_x}, \; \boldsymbol{u_y}, \; \boldsymbol{u_z}]^T` to create a vector of the form :math:`[\boldsymbol{u_x}, \; \boldsymbol{u_y}, \; \boldsymbol{u_z}, \; \boldsymbol{u_x}, \; \boldsymbol{u_y}, \; \boldsymbol{u_z}, \; \boldsymbol{u_x}, \; \boldsymbol{u_y}, \; \boldsymbol{u_z} ]^T`
     - :math:`\boldsymbol{Q_w}` is a sparse replication matrix that augments a vector of the form :math:`[\boldsymbol{u_x}, \; \boldsymbol{u_y}, \; \boldsymbol{u_z}]^T` to create a vector of the form :math:`[\boldsymbol{u_x}, \; \boldsymbol{u_x}, \; \boldsymbol{u_x}, \; \boldsymbol{u_y}, \; \boldsymbol{u_y}, \; \boldsymbol{u_y}, \; \boldsymbol{u_z}, \; \boldsymbol{u_z} \; \boldsymbol{u_z} ]^T`
-    
+
+
+.. _inner_products_anisotropic_reciprocal:
+
+Reciprocal Properties
+---------------------
+
+Let :math:`\vec{v}` and :math:`\vec{w}` be two physically related quantities.
+If their relationship is anisotropic and defined in terms of the reciprocal of a property (defined by a tensor :math:`\Gamma`), the constitutive relation is of the form:
+
+.. math::
+    \vec{v} = \Gamma \vec{w}
+    :label: inner_product_anisotropic_reciprocal
+
+where
+
+.. math::
+    \mathbf{In \; 2D:} \; 
+    \Gamma = \begin{bmatrix} \rho^{-1}_{xx} & \rho^{-1}_{xy} \\
+    \rho^{-1}_{yx} & \rho^{-1}_{yy} \end{bmatrix}
+    \;\;\;\;\;\;\;\; \mathbf{In \; 3D:} \; 
+    \Sigma = \begin{bmatrix} \rho^{-1}_{xx} & \rho^{-1}_{xy} & \rho^{-1}_{xz} \\
+    \rho^{-1}_{yx} & \rho^{-1}_{yy} & \rho^{-1}_{yz} \\
+    \rho^{-1}_{zx} & \rho^{-1}_{zy} & \rho^{-1}_{zz} \end{bmatrix}
+
+Note that for real materials, the tensor is symmetric and has 6 independent variables
+(i.e. :math:`\rho_{pq}=\rho_{qp}` for :math:`p,q=x,y,z`).
+
+**Diagonal Anisotropic:**
+
+For the diagonal anisotropic case, the tensor characterzing the material properties
+has the form:
+
+.. math::
+    \mathbf{In \; 2D:} \; 
+    \Gamma = \begin{bmatrix} \rho^{-1}_{x} & 0 \\
+    0 & \rho^{-1}_{y} \end{bmatrix}
+    \;\;\;\;\;\;\;\; \mathbf{In \; 3D:} \; 
+    \Sigma = \begin{bmatrix} \rho^{-1}_{x} & 0 & 0 \\
+    0 & \rho^{-1}_{y} & 0 \\
+    0 & 0 & \rho^{-1}_{z} \end{bmatrix}
+    :label: inner_product_tensor_diagonal_reciprocal
+
+
+The inner product matrix defined in expression :eq:`inner_product_anisotropic_general` is given by:
+
+.. math::
+    \textrm{Vectors on faces:} \; \boldsymbol{M_{\Gamma f}} &= \frac{1}{4} \boldsymbol{P_f^T } \textrm{diag} \boldsymbol{\big ( (e_k \otimes v) \odot \rho^{-1} \big )} \boldsymbol{P_f} \\
+    \textrm{Vectors on edges:} \; \boldsymbol{M_{\Gamma e}} &= \frac{1}{4^{k-1}} \boldsymbol{P_e^T } \textrm{diag} \boldsymbol{\big ( (e_k \otimes v) \odot \rho^{-1} \big )} \boldsymbol{P_e}
+
+where :math:`\boldsymbol{\rho^{-1}}` organizes vectors :math:`\boldsymbol{\rho^{-1}_x}`,
+:math:`\boldsymbol{\rho^{-1}_y}` and :math:`\boldsymbol{\rho^{-1}_z}` as:
+
+.. math::
+    \boldsymbol{\rho^{-1}} = \begin{bmatrix} \boldsymbol{\rho^{-1}_x} \\ \boldsymbol{\rho^{-1}_y} \\ \boldsymbol{\rho^{-1}_z} \\ \end{bmatrix}
+
+and
+
+    - :math:`k = 1,2,3` represent the dimension (1D, 2D or 3D)
+    - :math:`\boldsymbol{e_k}` is a vector of 1s of length :math:`k`
+    - :math:`\odot` is the Hadamard product
+    - :math:`\otimes` is the kronecker product
+    - :math:`\boldsymbol{v}` is a vector that stores all of the volumes of the cells
+    - :math:`\boldsymbol{P_f}` and :math:`\boldsymbol{P_e}` are projection matricies that map quantities from faces and edges to cell centers, respectively
+
+**Fully Anisotropic:**
+
+For a fully anisotropic case, the tensor characterizing the material properties
+has the form is given by:
+
+.. math::
+    \mathbf{In \; 2D:} \; 
+    \Gamma = \begin{bmatrix} \rho^{-1}_{xx} & \rho^{-1}_{xy} \\
+    \rho^{-1}_{yx} & \rho^{-1}_{yy} \end{bmatrix}
+    \;\;\;\;\;\;\;\; \mathbf{In \; 3D:} \; 
+    \Gamma = \begin{bmatrix} \rho^{-1}_{xx} & \rho^{-1}_{xy} & \rho^{-1}_{xz} \\
+    \rho^{-1}_{yx} & \rho^{-1}_{yy} & \rho^{-1}_{yz} \\
+    \rho^{-1}_{zx} & \rho^{-1}_{zy} & \rho^{-1}_{zz} \end{bmatrix}
+    :label: inner_product_tensor_reciprocal
+
+The inner product matrix defined in expression :eq:`inner_product_anisotropic_general` is given by:
+
+.. math::
+    \textrm{Vectors on faces:} \; \boldsymbol{M_{\Gamma f}} &= \frac{1}{4} \boldsymbol{P_f^T Q_u^T} \textrm{diag} \boldsymbol{\big ( (e_k \otimes v) \odot \rho^{-1} \big )} \boldsymbol{Q_w P_f} \\
+    \textrm{Vectors on edges:} \; \boldsymbol{M_{\Gamma e}} &= \frac{1}{4^{k-1}} \boldsymbol{P_e^T Q_u^T} \textrm{diag} \boldsymbol{\big ( (e_k \otimes v) \odot \rho^{-1} \big )} \boldsymbol{Q_w P_e}
+
+where :math:`\boldsymbol{\rho^{-1}}` is a large vector that organizes vectors :math:`\boldsymbol{\rho^{-1}_{pq}}` for :math:`p,q=x,y,z` as:
+
+.. math::
+    \boldsymbol{\Gamma} = \begin{bmatrix}
+    \boldsymbol{\rho^{-1}_{xx}} , \; \boldsymbol{\rho^{-1}_{xy}} , \; \boldsymbol{\rho^{-1}_{xz}} , \;
+    \boldsymbol{\rho^{-1}_{yx}} , \; \boldsymbol{\rho^{-1}_{yy}} , \; \boldsymbol{\rho^{-1}_{yz}} , \;
+    \boldsymbol{\rho^{-1}_{zx}} , \; \boldsymbol{\rho^{-1}_{zy}} , \; \boldsymbol{\rho^{-1}_{zz}} \end{bmatrix}^T
+
+and
+
+    - :math:`k = 1,2,3` represent the dimension (1D, 2D or 3D)
+    - :math:`\boldsymbol{e_k}` is a vector of 1s of length :math:`k`
+    - :math:`\odot` is the Hadamard product
+    - :math:`\otimes` is the kronecker product
+    - :math:`\boldsymbol{v}` is a vector that stores all of the volumes of the cells
+    - :math:`\boldsymbol{P_f}` and :math:`\boldsymbol{P_e}` are projection matricies that map quantities from faces and edges to cell centers, respectively
+    - :math:`\boldsymbol{Q_u}` is a sparse replication matrix that augments a vector of the form :math:`[\boldsymbol{u_x}, \; \boldsymbol{u_y}, \; \boldsymbol{u_z}]^T` to create a vector of the form :math:`[\boldsymbol{u_x}, \; \boldsymbol{u_y}, \; \boldsymbol{u_z}, \; \boldsymbol{u_x}, \; \boldsymbol{u_y}, \; \boldsymbol{u_z}, \; \boldsymbol{u_x}, \; \boldsymbol{u_y}, \; \boldsymbol{u_z} ]^T`
+    - :math:`\boldsymbol{Q_w}` is a sparse replication matrix that augments a vector of the form :math:`[\boldsymbol{u_x}, \; \boldsymbol{u_y}, \; \boldsymbol{u_z}]^T` to create a vector of the form :math:`[\boldsymbol{u_x}, \; \boldsymbol{u_x}, \; \boldsymbol{u_x}, \; \boldsymbol{u_y}, \; \boldsymbol{u_y}, \; \boldsymbol{u_y}, \; \boldsymbol{u_z}, \; \boldsymbol{u_z} \; \boldsymbol{u_z} ]^T`
