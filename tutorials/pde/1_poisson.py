@@ -8,7 +8,7 @@ a static charge distribution. Provided the electric permittiviy is uniform
 within the domain, the physics are represented by a Poisson equation.
 The solution can easily be adapted to solve the same problem in 3D.
 In the theory section of the discretie website we provided a
-:ref:`derivation for the final numerical solution <derivation_examples_electrostatics>`.
+:ref:`derivation for the final numerical solution <derivation_examples_poisson>`.
 
 Starting with Gauss' law and Faraday's law:
     
@@ -36,16 +36,17 @@ And for :math:`\\phi` discretized at cell centers, the numerical solution is
 obtained by solving:
 
 .. math::
-    \\boldsymbol{M_c D M_f^{-1} (D^T M_c - B) \\phi} = \\frac{1}{\\epsilon_0} \\boldsymbol{q}
+    - \\boldsymbol{M_c D M_f^{-1} \\tilde{G} \\, \\phi} = \\frac{1}{\\epsilon_0} \\boldsymbol{q}
 
 where
 
-    - :math:`\\boldsymbol{G}` is the discrete gradient operator
-    - :math:`\\boldsymbol{D}` is the discrete divergence operator
     - :math:`\\boldsymbol{M_c}` is the inner product matrix for cell centered quantities
     - :math:`\\boldsymbol{M_e}` is the inner product matrix for edge quantities
     - :math:`\\boldsymbol{M_f}` is the inner product matrix for face quantities
+    - :math:`\\boldsymbol{G}` is the discrete gradient operator
+    - :math:`\\boldsymbol{D}` is the discrete divergence operator
     - :math:`\\boldsymbol{B}` is a sparse matrix that implements the boundary condition
+    - :math:`\\boldsymbol{\\tilde{G}}=\\boldsymbol{-D^T M_c + B}` is the modified gradient operator
     - :math:`\\boldsymbol{q}` is a discrete representation of the source term
 
 
@@ -62,10 +63,11 @@ where
 from discretize import TensorMesh
 from pymatsolver import SolverLU
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import numpy as np
 from discretize.utils import sdiag
 
-from SimPEG.electromagnetics.static.resistivity.boundary_utils import getxBCyBC_CC
+mpl.rcParams.update({'font.size':14})
 
 ###############################################
 # Electric Potential Defined on the Nodes
@@ -105,7 +107,7 @@ phi = AinvM * rho
 E = - G * phi
 
 # Plotting
-fig = plt.figure(figsize=(14, 4))
+fig = plt.figure(figsize=(12, 4))
 
 ax1 = fig.add_subplot(131)
 mesh.plotImage(rho, v_type="N", ax=ax1)
@@ -121,6 +123,7 @@ mesh.plotImage(
 )
 ax3.set_title("Electric Fields")
 
+plt.tight_layout()
 
 ###############################################
 # Electric Potential at Cell Centers
@@ -138,15 +141,13 @@ DIV = mesh.faceDiv                                  # discrete divergence operat
 Mc = sdiag(mesh.vol)                                # cell center inner product matrix
 Mf_inv = mesh.get_face_inner_product(invMat=True)   # inverse of face inner product matrix
 
-# Implement boundary conditions
-P_BC, P = mesh.get_BC_projections_simple()          # basic projection matrices
-Acf = mesh.average_cell_to_face                     # average cell centers to faces
-B = P_BC * P * Acf                                  # create the boundary condition matrix
+mesh.set_cell_gradient_BC(['neumann','neumann'])    # Set zero Neumann condition on gradient
+G = mesh.cell_gradient                              # Modified gradient operator G = -D^T Mc + B
 
-# Define linear system
-A = Mc * DIV * Mf_inv * (DIV.T * Mc - B)
+# Define the linear system of equations
+A = - Mc * DIV * Mf_inv * G
 
-# Define RHS (total charge at cell centers)
+# Define RHS (total charge projected to nearest cell center)
 xycc = mesh.gridCC
 kneg = (xycc[:, 0] == -10) & (xycc[:, 1] == 0)      # -ve charge at (-10, 0)
 kpos = (xycc[:, 0] == 10) & (xycc[:, 1] == 0)       # +ve charge at (10, 0)
@@ -160,10 +161,10 @@ AinvM = SolverLU(A)
 phi = AinvM * rho
 
 # Compute electric fields
-E = Mf_inv * (DIV.T * Mc - B) * phi
+E = - Mf_inv * G * phi
 
 # Plotting
-fig = plt.figure(figsize=(14, 4))
+fig = plt.figure(figsize=(12, 4))
 
 ax1 = fig.add_subplot(131)
 mesh.plotImage(rho, v_type="CC", ax=ax1)
@@ -179,6 +180,6 @@ mesh.plotImage(
 )
 ax3.set_title("Electric Fields")
 
-
+plt.tight_layout()
 
 

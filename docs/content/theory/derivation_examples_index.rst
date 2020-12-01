@@ -17,4 +17,4 @@ Here, we provide examples of full derivations for discretizing PDEs with the fin
 **Tutorials:**
 
 - :ref:`Poisson Equation with Zero Neumann Boundary Condition <sphx_glr_tutorials_pde_1_poisson.py>`
-- :ref:`Advection-Diffusion Equation <sphx_glr_tutorials_pde_2_advection_diffusion.py>`
+- :ref:`Advection-Diffusion Equation with Zero Neumann Boundary Condition <sphx_glr_tutorials_pde_2_advection_diffusion.py>`

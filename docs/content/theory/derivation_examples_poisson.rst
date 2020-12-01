@@ -1,15 +1,16 @@
 .. _derivation_examples_electrostatics:
 
-Poisson Equation with Zero Neumann Boundary Conditions
-******************************************************
+Poisson Equation with Zero Neumann Boundary Condition
+*****************************************************
 
-Here we provide the derivation for solving the Poisson equation with Neumann boundary conditions using the finite volume method.
+Here we provide the derivation for solving the Poisson equation with zero Neumann boundary conditions using the finite volume method.
 Derivations are provided for discretization of the solution on both the nodes and at cell centers.
 Key lessons include:
 
+	- Differences between solving the problem on the nodes and the cell centers
 	- Basic discretization of point sources
 	- Choosing the right approach for natural boundary conditions
-	- Implementing the Neumann condition when the discrete boundary condition term is not zero
+	- Implementing the zero Neumann condition when the discrete boundary condition term is not zero
 
 For our example, we consider Gauss's law of electrostatics.
 Our goal is to compute the electric potential (:math:`\phi`) and electric fields (:math:`\boldsymbol{e}`) that result from
@@ -175,7 +176,7 @@ According to expression :eq:`derivation_examples_electrostatics_1`, :math:`\hat{
 To accurately compute the electric potentials at cell centers, we must implement the boundary conditions such that:
 
 .. math::
-	\boldsymbol{u^T M_f \, e} = \boldsymbol{u^T D^T M_c \, \phi} - \boldsymbol{u^T B \, \phi}
+	\boldsymbol{u^T M_f \, e} = \boldsymbol{u^T D^T M_c \, \phi} - \boldsymbol{u^T B \, \phi} = - \boldsymbol{\tilde{G} \, \phi}
 	:label: derivation_examples_electrostatics_12
 
 where
@@ -184,6 +185,7 @@ where
 	- :math:`\boldsymbol{M_f}` is the :ref:`inner product matrix at faces <inner_products_basic>`
 	- :math:`\boldsymbol{D}` is the :ref:`discrete divergence operator <inner_products_differential>`
 	- :math:`\boldsymbol{B}` is a sparse matrix that imposes the Neumann boundary condition
+	- :math:`\boldsymbol{\tilde{G}} = - \boldsymbol{D^T M_c} + \boldsymbol{B}` acts as a modified gradient operator with boundary conditions included
 
 **Discretized System:**
 
@@ -191,12 +193,12 @@ By combining the discrete representations from expressions :eq:`derivation_examp
 we obtain:
 
 .. math::
-	\boldsymbol{M_c D M_f^{-1} (D^T M_c - B) \phi} = \frac{1}{\epsilon_0} \boldsymbol{q}
+	- \boldsymbol{M_c D M_f^{-1} \tilde{G} \, \phi} = \frac{1}{\epsilon_0} \boldsymbol{q}
 	:label: derivation_examples_electrostatics_13
 
 Once the electric potential at cell centers has been computed, the electric field on the faces can be computed using expression :eq:`derivation_examples_electrostatics_12`:
 
 .. math::
-	\boldsymbol{e} = \boldsymbol{M_f^{-1} ( D^T M_c - B) \, \phi}
+	\boldsymbol{e} = - \boldsymbol{M_f^{-1} \tilde{G} \, \phi}
 
 
