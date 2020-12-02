@@ -558,41 +558,24 @@ def refine_tree_xyz(
 
     else:
         octree_levels_padding = np.zeros_like(octree_levels)
-
-    # Prime the refinement against large cells
-    mesh.insert_cells(
-        xyz,
-        [mesh.max_level - np.nonzero(octree_levels)[0][0]] * xyz.shape[0],
-        finalize=False,
-    )
+    octree_levels = np.asarray(octree_levels)
+    octree_levels_padding = np.asarray(octree_levels_padding)
 
     # Trigger different refine methods
     if method.lower() == "radial":
 
-        # Build a cKDTree for fast nearest lookup
-        tree = cKDTree(xyz)
-
         # Compute the outer limits of each octree level
         rMax = np.cumsum(
             mesh.h[0].min()
-            * np.asarray(octree_levels)
+            * octree_levels
             * 2 ** np.arange(len(octree_levels))
         )
-
-        # Radial function
-        def inBall(cell):
-            xyz = cell.center
-            r, ind = tree.query(xyz)
-
-            for ii, nC in enumerate(octree_levels):
-
-                if r < rMax[ii]:
-
-                    return mesh.max_level - ii
-
-            return min_level
-
-        mesh.refine(inBall, finalize=finalize)
+        rs = np.ones(xyz.shape[0])
+        level = np.ones(xyz.shape[0], dtype=np.int32)
+        for ii, nC in enumerate(octree_levels):
+            mesh.refine_ball(xyz, rs*rMax[ii], level*(mesh.max_level - ii), finalize=False)
+        if finalize:
+            mesh.finalize()
 
     elif method.lower() == "surface":
 
@@ -713,12 +696,8 @@ def refine_tree_xyz(
         bsw = np.min(xyz, axis=0)
         tne = np.max(xyz, axis=0)
 
-        hx = mesh.h[0].min()
-
-        if mesh.dim == 2:
-            hz = mesh.h[1].min()
-        else:
-            hz = mesh.h[2].min()
+        hs = np.r_[h.min() for h in mesh.h]
+        zmax = np.cumsum()
 
         # Pre-calculate max depth of each level
         zmax = np.cumsum(
@@ -780,18 +759,8 @@ def refine_tree_xyz(
                 )
             ]
 
-        def inBox(cell):
-
-            xyz = cell.center
-
-            for ii, (bsw, tne) in enumerate(zip(BSW, TNE)):
-
-                if np.all([xyz > bsw, xyz < tne]):
-                    return mesh.max_level - ii
-
-            return cell._level
-
-        mesh.refine(inBox, finalize=finalize)
+        levels = [mesh.max_level - ii for ii in range(len(BSW))]
+        mesh.refine_box(BSW, TNE, levels, finalize=finalize)
 
     else:
         raise NotImplementedError(
