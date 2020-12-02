@@ -597,13 +597,13 @@ def refine_tree_xyz(
 
         # Compute maximum depth of refinement
         zmax = np.cumsum(
-            hz * np.asarray(octree_levels) * 2 ** np.arange(len(octree_levels))
+            hz * octree_levels * 2 ** np.arange(len(octree_levels))
         )
 
         # Compute maximum horizontal padding offset
         padWidth = np.cumsum(
             mesh.h[0].min()
-            * np.asarray(octree_levels_padding)
+            * octree_levels_padding
             * 2 ** np.arange(len(octree_levels_padding))
         )
 
@@ -696,19 +696,20 @@ def refine_tree_xyz(
         bsw = np.min(xyz, axis=0)
         tne = np.max(xyz, axis=0)
 
-        hs = np.r_[h.min() for h in mesh.h]
-        zmax = np.cumsum()
+        hs = np.asarray([h.min() for h in mesh.h])
+        hx = hs[0]
+        hz = hs[-1]
 
         # Pre-calculate max depth of each level
         zmax = np.cumsum(
-            hz * np.asarray(octree_levels) * 2 ** np.arange(len(octree_levels))
+            hz * octree_levels * 2 ** np.arange(len(octree_levels))
         )
 
         if mesh.dim == 2:
             # Pre-calculate outer extent of each level
             padWidth = np.cumsum(
-                mesh.h[0].min()
-                * np.asarray(octree_levels_padding)
+                hx
+                * octree_levels_padding
                 * 2 ** np.arange(len(octree_levels_padding))
             )
 
@@ -728,19 +729,19 @@ def refine_tree_xyz(
             ]
 
         else:
-            hy = mesh.h[1].min()
+            hy = hs[1]
 
             # Pre-calculate outer X extent of each level
             padWidth_x = np.cumsum(
                 hx
-                * np.asarray(octree_levels_padding)
+                * octree_levels_padding
                 * 2 ** np.arange(len(octree_levels_padding))
             )
 
             # Pre-calculate outer Y extent of each level
             padWidth_y = np.cumsum(
                 hy
-                * np.asarray(octree_levels_padding)
+                * octree_levels_padding
                 * 2 ** np.arange(len(octree_levels_padding))
             )
 

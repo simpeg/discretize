@@ -390,12 +390,11 @@ void Cell::insert_cell(node_map_t& nodes, double *new_cell, int_t p_level, doubl
     }
 };
 
-void Cell::refine_ball(node_map_t& nodes, double* center, double r, int_t p_level, double *xs, double *ys, double* zs){
+void Cell::refine_ball(node_map_t& nodes, double* center, double r2, int_t p_level, double *xs, double *ys, double* zs, bool enclosed){
     // early exit if my level is higher than or equal to target
     if (level >= p_level or level == max_level){
         return;
     }
-    // and I intersect ball
     // check if I intersect the ball
     double xp = std::max(points[0]->location[0], std::min(center[0], points[3]->location[0]));
     double yp = std::max(points[0]->location[1], std::min(center[1], points[3]->location[1]));
@@ -410,23 +409,24 @@ void Cell::refine_ball(node_map_t& nodes, double* center, double r, int_t p_leve
     if (n_dim > 2){
         r2_test += (zp - center[2])*(zp - center[2]);
     }
-    if (r2_test < r*r){
-        // if I intersect cell, I will need to be divided (if I'm not already)
-        if(is_leaf()){
-            divide(nodes, xs, ys, zs, true);
-        }
-        // recurse into children
-        children[0]->refine_ball(nodes, center, r, p_level, xs, ys, zs);
-        children[1]->refine_ball(nodes, center, r, p_level, xs, ys, zs);
-        children[2]->refine_ball(nodes, center, r, p_level, xs, ys, zs);
-        children[3]->refine_ball(nodes, center, r, p_level, xs, ys, zs);
-        if (n_dim > 2){
-            children[4]->refine_ball(nodes, center, r, p_level, xs, ys, zs);
-            children[5]->refine_ball(nodes, center, r, p_level, xs, ys, zs);
-            children[6]->refine_ball(nodes, center, r, p_level, xs, ys, zs);
-            children[7]->refine_ball(nodes, center, r, p_level, xs, ys, zs);
-
-        }
+    if (r2_test >= r2){
+        // I do not intersect the ball
+        return;
+    }
+    // if I intersect cell, I will need to be divided (if I'm not already)
+    if(is_leaf()){
+        divide(nodes, xs, ys, zs, true);
+    }
+    // recurse into children
+    children[0]->refine_ball(nodes, center, r2, p_level, xs, ys, zs);
+    children[1]->refine_ball(nodes, center, r2, p_level, xs, ys, zs);
+    children[2]->refine_ball(nodes, center, r2, p_level, xs, ys, zs);
+    children[3]->refine_ball(nodes, center, r2, p_level, xs, ys, zs);
+    if (n_dim > 2){
+        children[4]->refine_ball(nodes, center, r2, p_level, xs, ys, zs);
+        children[5]->refine_ball(nodes, center, r2, p_level, xs, ys, zs);
+        children[6]->refine_ball(nodes, center, r2, p_level, xs, ys, zs);
+        children[7]->refine_ball(nodes, center, r2, p_level, xs, ys, zs);
     }
 }
 
@@ -861,10 +861,11 @@ void Tree::refine_box(double* x0, double* x1, int_t p_level){
 };
 
 void Tree::refine_ball(double* center, double r, int_t p_level){
+    double r2 = r*r;
     for(int_t iz=0; iz<nz_roots; ++iz)
         for(int_t iy=0; iy<ny_roots; ++iy)
             for(int_t ix=0; ix<nx_roots; ++ix)
-                roots[iz][iy][ix]->refine_ball(nodes, center, r, p_level, xs, ys, zs);
+                roots[iz][iy][ix]->refine_ball(nodes, center, r2, p_level, xs, ys, zs);
 };
 
 void Tree::finalize_lists(){
