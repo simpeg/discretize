@@ -1,3 +1,106 @@
+"""
+===========================================
+Utility functions (:mod:`discretize.utils`)
+===========================================
+.. currentmodule:: discretize.utils
+
+The ``utils`` package contains utilities for helping with common operations involving
+discrete meshes
+
+Utility Classes
+===============
+.. autosummary::
+  :toctree: generated/
+
+  TensorType
+  Zero
+  Identity
+
+Utility Functions
+=================
+
+Code utilities
+--------------
+.. autosummary::
+  :toctree: generated/
+
+  is_scalar
+  as_array_n_by_dim
+  requires
+
+Matrix utilities
+----------------
+.. autosummary::
+  :toctree: generated/
+
+  mkvc
+  sdiag
+  sdinv
+  speye
+  kron3
+  spzeros
+  ddx
+  av
+  av_extrap
+  ndgrid
+  ind2sub
+  sub2ind
+  get_subarray
+  inverse_3x3_block_diagonal
+  inverse_2x2_block_diagonal
+  make_property_tensor
+  inverse_property_tensor
+
+Mesh Utilities
+--------------
+.. autosummary::
+  :toctree: generated/
+
+  example_curvilinear_grid
+  unpack_widths
+  closest_points_index
+  extract_core_mesh
+  random_model
+  refine_tree_xyz
+  active_from_xyz
+  mesh_builder_xyz
+
+Interpolation Utilities
+-----------------------
+.. autosummary::
+  :toctree: generated/
+
+  interpolation_matrix
+  volume_average
+
+Coordinate Transform Utilities
+------------------------------
+.. autosummary::
+  :toctree: generated/
+
+  rotate_points_from_normals
+  rotation_matrix_from_normals
+  cylindrical_to_cartesian
+  cartesian_to_cylindrical
+
+IO utilities
+------------
+.. autosummary::
+  :toctree: generated/
+
+  load_mesh
+  download
+
+``CurvilinearMesh`` Utilities
+-----------------------------
+.. autosummary::
+  :toctree: generated/
+
+  volume_tetrahedron
+  face_info
+  index_cube
+"""
+
 from discretize.utils.code_utils import is_scalar, as_array_n_by_dim, requires
 from discretize.utils.matrix_utils import (
     mkvc,

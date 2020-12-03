@@ -1,6 +1,6 @@
 .. currentmodule:: discretize
 
-.. _0.6.1_notes:
+.. _0.6.2_notes:
 
 ===================================
 ``discretize`` 0.6.2 Release Notes

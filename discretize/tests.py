@@ -1,3 +1,29 @@
+"""
+===========================================
+Testing utilities (:mod:`discretize.tests`)
+===========================================
+.. currentmodule:: discretize.tests
+
+This module contains utilities for convergence testing
+
+Classes
+-------
+.. autosummary::
+  :toctree: generated/
+
+  OrderTest
+
+Functions
+---------
+.. autosummary::
+  :toctree: generated/
+
+  check_derivative
+  rosenbrock
+  get_quadratic
+
+"""
+
 import numpy as np
 import scipy.sparse as sp
 

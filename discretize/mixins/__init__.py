@@ -1,8 +1,26 @@
 """
+==================================
+Mixins (:mod:`discrretize.mixins`)
+==================================
+.. currentmodule:: discretize.mixins
+
 The ``mixins`` module provides a set of tools for interfacing ``discretize``
-with external libraries such as VTK and OMF. These modules are only imported if
-those external packages are available in the active Python environment and
+with external libraries such as VTK, OMF, and matplotlib. These modules are only
+imported if those external packages are available in the active Python environment and
 provide extra functionality that different finite volume meshes can inherrit.
+
+Contents
+========
+
+Mixin classes
+-------------
+.. autosummary::
+  :toctree: generated/
+
+  InterfaceMPL
+  InterfaceVTK
+  InterfaceOMF
+
 """
 
 AVAILABLE_MIXIN_CLASSES = []

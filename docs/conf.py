@@ -162,11 +162,20 @@ plot_rcparams = {
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 try:
-    import sphinx_rtd_theme
+    import pydata_sphinx_theme
 
-    html_theme = "sphinx_rtd_theme"
-    html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
-    pass
+    html_theme = "pydata_sphinx_theme"
+    #html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+
+    # If false, no module index is generated.
+    html_use_modindex = True
+
+    html_theme_options = {
+        "external_links": [],
+        "github_url": "https://github.com/simpeg/discretize",
+        "twitter_url": "https://twitter.com/simpegpy",
+    }
+    html_logo = "images/logo-block.ico"
 except Exception:
     html_theme = "default"
 
