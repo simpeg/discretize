@@ -65,11 +65,11 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
         if dim not in [2, 3]:
             raise ValueError(f"Only supports 2 and 3 dimensional meshes, saw a node_list of length {dim}")
         for i, nodes in enumerate(node_list):
-            if len(nodes.shape != dim):
+            if len(nodes.shape) != dim:
                 raise ValueError(f"Unexpected shape of item in node list, expect array with {dim} dimensions, got {len(nodes.shape)}")
             if node_list[0].shape != nodes.shape:
                 raise ValueError(f"The shape of nodes are not consistent, saw {node_list[0].shape} and {nodes.shape}")
-        self.node_list = node_list
+        self._node_list = node_list
 
         # Save nodes to private variable _nodes as vectors
         self._nodes = np.ones((self.node_list[0].size, dim))
@@ -424,3 +424,6 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
     edge = deprecate_property("edge_lengths", "edge", removal_version="1.0.0")
     # tangent already deprecated in BaseMesh
     # normals already deprecated in BaseMesh
+
+
+CurvilinearMesh.__module__ = 'discretize'

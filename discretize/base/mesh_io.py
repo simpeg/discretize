@@ -1,37 +1,14 @@
 import os
-import json
 import numpy as np
 
 from discretize.utils import mkvc
-from discretize.base.base_mesh import BaseMesh
 from discretize.utils.code_utils import deprecate_method
 import warnings
-import importlib
 
 try:
     from ..mixins import InterfaceTensorread_vtk
 except ImportError:
     InterfaceTensorread_vtk = object
-
-
-def load_mesh(file_name):
-    """
-    Open a json file and load the mesh into the target class
-
-    As long as there are no namespace conflicts, the target __class__
-    will be stored on the properties.HasProperties registry and may be
-    fetched from there.
-
-    :param str file_name: name of file to read in
-    """
-    with open(file_name, "r") as outfile:
-        jsondict = json.load(outfile)
-        module_name = jsondict.pop('__module__', 'discretize')  # default to loading from discretize
-        class_name = jsondict.pop('__class__')
-        mod = importlib.import_module(module_name)
-        cls = mod.getattr(class_name)
-        data = cls(**jsondict)
-    return data
 
 
 class TensorMeshIO(InterfaceTensorread_vtk):

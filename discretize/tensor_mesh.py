@@ -380,3 +380,6 @@ class TensorMesh(
     cellBoundaryInd = deprecate_property(
         "cell_boundary_indices", "cellBoundaryInd", removal_version="1.0.0"
     )
+
+
+TensorMesh.__module__ = 'discretize'

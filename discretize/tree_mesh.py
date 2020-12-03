@@ -293,7 +293,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
     @BaseTensorMesh.origin.setter
     def origin(self, value):
         # first use the BaseTensorMesh to set the origin to handle "0, C, N"
-        BaseTensorMesh.origin.fset(value)
+        BaseTensorMesh.origin.fset(self, value)
         # then update the TreeMesh with the hidden value
         self._set_origin(self._origin)
 
@@ -659,3 +659,6 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
     _cellGradxStencil = deprecate_property("stencil_cell_gradient_x", "_cellGradxStencil", removal_version="1.0.0")
     _cellGradyStencil = deprecate_property("stencil_cell_gradient_y", "_cellGradyStencil", removal_version="1.0.0")
     _cellGradzStencil = deprecate_property("stencil_cell_gradient_z", "_cellGradzStencil", removal_version="1.0.0")
+
+
+TreeMesh.__module__ = 'discretize'

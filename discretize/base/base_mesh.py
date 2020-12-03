@@ -662,6 +662,9 @@ class BaseMesh(InterfaceMixins):
         self.orientation[2] = value
 
 
+BaseMesh.__module__ = 'discretize.base'
+
+
 class BaseRectangularMesh(BaseMesh):
     """
     BaseRectangularMesh
@@ -1144,3 +1147,6 @@ class BaseRectangularMesh(BaseMesh):
         if self.dim < 3:
             return None
         return self.shape_nodes[2]
+
+
+BaseRectangularMesh.__module__ = 'discretize.base'

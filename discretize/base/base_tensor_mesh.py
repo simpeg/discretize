@@ -62,7 +62,7 @@ class BaseTensorMesh(BaseMesh):
             h = list(h)  # ensure value is a list (and make a copy)
         except TypeError:
             raise TypeError("h must be an iterable object, not {}".format(type(h)))
-        if len(g) == 0 or len(h) > 3:
+        if len(h) == 0 or len(h) > 3:
             raise ValueError(
                 "h must be of dimension 1, 2, or 3 not {}".format(len(h))
             )
@@ -83,7 +83,8 @@ class BaseTensorMesh(BaseMesh):
         shape_cells = tuple([len(h_i) for h_i in h])
         kwargs.pop("shape_cells", None)
         super().__init__(shape_cells, **kwargs)  # do not pass origin here
-        self.origin = origin
+        if origin is not None:
+            self.origin = origin
 
     @property
     def h(self):
@@ -718,3 +719,6 @@ class BaseTensorMesh(BaseMesh):
     )
     isInside = deprecate_method("is_inside", "isInside", removal_version="1.0.0")
     getTensor = deprecate_method("get_tensor", "getTensor", removal_version="1.0.0")
+
+
+BaseTensorMesh.__module__ = 'discretize.base'

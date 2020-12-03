@@ -1349,3 +1349,6 @@ class DiffOperators(object):
     getBCProjWF_simple = deprecate_method(
         "get_BC_projections_simple", "getBCProjWF_simple", removal_version="1.0.0"
     )
+
+
+DiffOperators.__module__ = 'discretize.operators'

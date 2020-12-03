@@ -1,5 +1,26 @@
 from urllib.request import urlretrieve
 import os
+import importlib
+import json
+
+def load_mesh(file_name):
+    """
+    Open a json file and load the mesh into the target class
+
+    As long as there are no namespace conflicts, the target __class__
+    will be stored on the properties.HasProperties registry and may be
+    fetched from there.
+
+    :param str file_name: name of file to read in
+    """
+    with open(file_name, "r") as outfile:
+        jsondict = json.load(outfile)
+        module_name = jsondict.pop('__module__', 'discretize')  # default to loading from discretize
+        class_name = jsondict.pop('__class__')
+        mod = importlib.import_module(module_name)
+        cls = mod.getattr(class_name)
+        data = cls(**jsondict)
+    return data
 
 
 def download(url, folder=".", overwrite=False, verbose=True):
