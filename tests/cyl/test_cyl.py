@@ -94,7 +94,7 @@ class TestCyl2DMesh(unittest.TestCase):
 
     def test_gridSizes(self):
         self.assertEqual(self.mesh.gridCC.shape, (self.mesh.nC, 3))
-        self.assertEqual(self.mesh._nodes_full.shape, (9, 3))
+        self.assertEqual(self.mesh.shape_cellsodes_full.shape, (9, 3))
 
         self.assertEqual(self.mesh.gridFx.shape, (self.mesh.nFx, 3))
         self.assertTrue(self.mesh.gridFy is None)
@@ -311,7 +311,7 @@ class TestCyl2DMesh(unittest.TestCase):
     def test_serialization(self):
         mesh = discretize.CylMesh.deserialize(self.mesh.serialize())
         self.assertTrue(np.all(self.mesh.x0 == mesh.x0))
-        self.assertTrue(np.all(self.mesh._n == mesh._n))
+        self.assertTrue(np.all(self.mesh.shape_cells == mesh.shape_cells))
         self.assertTrue(np.all(self.mesh.hx == mesh.hx))
         self.assertTrue(np.all(self.mesh.hy == mesh.hy))
         self.assertTrue(np.all(self.mesh.hz == mesh.hz))
