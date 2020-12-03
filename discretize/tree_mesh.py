@@ -85,8 +85,6 @@
 #      |___________|         |___> x
 #      0    e3     1
 
-import properties
-
 from discretize.base import BaseTensorMesh
 from discretize.operators import InnerProducts, DiffOperators
 from discretize.base.mesh_io import TreeMeshIO
@@ -292,9 +290,12 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
 
         return full_tbl
 
-    @properties.validator("origin")
-    def _origin_validator(self, change):
-        self._set_origin(change["value"])
+    @BaseTensorMesh.origin.setter
+    def origin(self, value):
+        # first use the BaseTensorMesh to set the origin to handle "0, C, N"
+        BaseTensorMesh.origin.fset(value)
+        # then update the TreeMesh with the hidden value
+        self._set_origin(self._origin)
 
     @property
     def vntF(self):

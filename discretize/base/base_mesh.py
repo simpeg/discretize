@@ -38,17 +38,16 @@ class BaseMesh(InterfaceMixins):
 
     # Instantiate the class
     def __init__(self, shape_cells, origin=None, orientation=None, reference_system=None, **kwargs):
-        self.origin = origin
         if "n" in kwargs:
             shape_cells = kwargs.pop("n")
         if "x0" in kwargs:
             origin = kwargs.pop('x0')
 
         shape_cells = tuple((int(val) for val in shape_cells))
-        self._shape = shape_cells
+        self._shape_cells = shape_cells
         # some default values
         if origin is None:
-            origin = np.zeros(len(self.dim))
+            origin = np.zeros(self.dim)
         self.origin = origin
 
         if orientation is None:
@@ -57,13 +56,12 @@ class BaseMesh(InterfaceMixins):
         if reference_system is None:
             reference_system = "cartesian"
         self.reference_system = reference_system
-        super().__init__(**kwargs)
 
     def __getattr__(self, name):
         if name == "_aliases":
-            raise AttributeError  # http://nedbatchelder.com/blog/201010/surprising_getattr_recursion.html
+            raise AttributeError
         name = self._aliases.get(name, name)
-        return object.__getattribute__(self, name)
+        return super().__getattribute__(name)
 
     @property
     def origin(self):
@@ -94,7 +92,7 @@ class BaseMesh(InterfaceMixins):
         -----
         Also accessible as `vnC`.
         """
-        return self._shape
+        return self._shape_cells
 
     @property
     def orientation(self):
@@ -103,7 +101,6 @@ class BaseMesh(InterfaceMixins):
     @orientation.setter
     def orientation(self, value):
         if isinstance(value, Identity):
-            self._hash = None
             self._orientation = np.identity(self.dim)
         else:
             R = np.atleast_2d(np.asarray(value, dtype=np.float64))
@@ -115,7 +112,6 @@ class BaseMesh(InterfaceMixins):
             # Check if matrix is orthogonal
             if not np.allclose(R @ R.T, np.identity(dim), rtol=1.e-5, atol=1E-6):
                 raise ValueError("Orientation matrix is not orthogonal")
-            self._hash = None
             self._orienation = R
 
     @property
@@ -142,27 +138,32 @@ class BaseMesh(InterfaceMixins):
             raise ValueError(
                 "Coordinate system ({}) unknown.".format(self.reference_system)
             )
-        self._hash = None
         self._reference_system = value
 
     def to_dict(self):
-        out = {}
+        cls = type(self)
+        out = {
+            '__module__': cls.__module__,
+            '__class__': cls.__name__,
+        }
         for item in self._items:
             thing = getattr(self, item, None)
             if thing is not None:
-                if isinstance(thing, np.array):
+                if isinstance(thing, np.ndarray):
                     thing = thing.tolist()
                 out[item] = thing
         return out
 
     def __eq__(self, other):
+        if type(self) != type(other):
+            return False
         return self.to_dict() == other.to_dict()
 
     def serialize(self):
         return self.to_dict()
 
     @classmethod
-    def deserialize(cls, items):
+    def deserialize(cls, items, **kwargs):
         return cls(**items)
 
     @property
@@ -182,7 +183,7 @@ class BaseMesh(InterfaceMixins):
         int
             dimension of the mesh
         """
-        return len(self._shape)
+        return len(self.shape_cells)
 
     @property
     def n_cells(self):
@@ -206,7 +207,7 @@ class BaseMesh(InterfaceMixins):
         >>> mesh.plot_grid(centers=True, show_it=True)
         >>> print(mesh.n_cells)
         """
-        return int(np.prod(self._shape))
+        return int(np.prod(self.shape_cells))
 
     def __len__(self):
         """The number of cells on the mesh."""
@@ -234,7 +235,7 @@ class BaseMesh(InterfaceMixins):
         >>> mesh.plot_grid(nodes=True, show_it=True)
         >>> print(mesh.n_nodes)
         """
-        return int(np.prod(x + 1 for x in self._shape))
+        return int(np.prod(x + 1 for x in self.shape_cells))
 
     @property
     def n_edges_x(self):
@@ -249,7 +250,7 @@ class BaseMesh(InterfaceMixins):
         Also accessible as `nEx`.
 
         """
-        return int(np.prod(x + y for x, y in zip(self._shape, (0, 1, 1))))
+        return int(np.prod(x + y for x, y in zip(self.shape_cells, (0, 1, 1))))
 
     @property
     def n_edges_y(self):
@@ -266,7 +267,7 @@ class BaseMesh(InterfaceMixins):
         """
         if self.dim < 2:
             return None
-        return int(np.prod(x + y for x, y in zip(self._shape, (1, 0, 1))))
+        return int(np.prod(x + y for x, y in zip(self.shape_cells, (1, 0, 1))))
 
     @property
     def n_edges_z(self):
@@ -283,7 +284,7 @@ class BaseMesh(InterfaceMixins):
         """
         if self.dim < 3:
             return None
-        return int(np.prod(x + y for x, y in zip(self._shape, (1, 1, 0))))
+        return int(np.prod(x + y for x, y in zip(self.shape_cells, (1, 1, 0))))
 
     @property
     def n_edges_per_direction(self):
@@ -343,7 +344,7 @@ class BaseMesh(InterfaceMixins):
         -----
         Also accessible as `nFx`.
         """
-        return int(np.prod(x + y for x, y in zip(self._shape, (1, 0, 0))))
+        return int(np.prod(x + y for x, y in zip(self.shape_cells, (1, 0, 0))))
 
     @property
     def n_faces_y(self):
@@ -359,7 +360,7 @@ class BaseMesh(InterfaceMixins):
         """
         if self.dim < 2:
             return None
-        return int(np.prod(x + y for x, y in zip(self._shape, (0, 1, 0))))
+        return int(np.prod(x + y for x, y in zip(self.shape_cells, (0, 1, 0))))
 
     @property
     def n_faces_z(self):
@@ -375,7 +376,7 @@ class BaseMesh(InterfaceMixins):
         """
         if self.dim < 3:
             return None
-        return int(np.prod(x + y for x, y in zip(self._shape, (0, 0, 1))))
+        return int(np.prod(x + y for x, y in zip(self.shape_cells, (0, 0, 1))))
 
     @property
     def n_faces_per_direction(self):
@@ -587,7 +588,7 @@ class BaseMesh(InterfaceMixins):
         of the mesh's coordinate sytem assuming at most 3 directions.
 
         Why would you want to use these UVW mapping vectors the this
-        `rotation_matrix` property? They allow us to define the realationship
+        `rotation_matrix` property? They allow us to define the relationship
         between local and global coordinate systems and provide a tool for
         switching between the two while still maintaing the connectivity of the
         mesh's cells. For a visual example of this, please see the figure in the
@@ -618,6 +619,10 @@ class BaseMesh(InterfaceMixins):
         else:
             return location_type
 
+    def validate(self):
+        """Every object will be valid upon initialization"""
+        return True
+
 
     # DEPRECATED
     normals = deprecate_property("face_normals", "normals", removal_version="1.0.0")
@@ -631,12 +636,8 @@ class BaseMesh(InterfaceMixins):
 
     @property
     def axis_u(self):
-    # Add deprecation notice
-    if self.orientation is None:
-        axis = np.zeros(self.dim)
-        axis[0] = 1.0
-        return axis
-    return self.orientation[0]
+        # Add deprecation notice
+        return self.orientation[0]
 
     @axis_u.setter
     def axis_u(self, value):
@@ -644,12 +645,8 @@ class BaseMesh(InterfaceMixins):
 
     @property
     def axis_v(self):
-    # Add deprecation notice
-    if self.orientation is None:
-        axis = np.zeros(self.dim)
-        axis[1] = 1.0
-        return axis
-    return self.orientation[1]
+        # Add deprecation notice
+        return self.orientation[1]
 
     @axis_v.setter
     def axis_v(self, value):
@@ -657,12 +654,8 @@ class BaseMesh(InterfaceMixins):
 
     @property
     def axis_w(self):
-    # Add deprecation notice
-    if self.orientation is None:
-        axis = np.zeros(self.dim)
-        axis[2] = 1.0
-        return axis
-    return self.orientation[2]
+        # Add deprecation notice
+        return self.orientation[2]
 
     @axis_w.setter
     def axis_w(self, value):
