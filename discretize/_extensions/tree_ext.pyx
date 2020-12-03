@@ -444,6 +444,10 @@ cdef class _TreeMesh:
             self.tree.number()
             self._finalized=True
 
+    @property
+    def finalized(self):
+        return self._finalized
+
     def number(self):
         """Number the cells, nodes, faces, and edges of the TreeMesh"""
         self.tree.number()

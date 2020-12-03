@@ -592,6 +592,9 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
         indexes, levels = self.__getstate__()
         return {'indexes': indexes.tolist(), 'levels': levels.tolist()}
 
+    def validate(self):
+        return self.finalized
+
     def __reduce__(self):
         return TreeMesh, (self.h, self.origin), self.__getstate__()
 
