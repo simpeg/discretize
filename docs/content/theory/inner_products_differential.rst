@@ -3,8 +3,8 @@
 Differential Operators
 **********************
 
-Summary
--------
+Introduction
+------------
 
 For practical applications of the finite volume method,
 we may need to take the inner product of expressions containing differential operators.
@@ -26,6 +26,9 @@ we are interested in approximating the following inner products:
 
 **Tutorial:** To construct differential operators and/or approximate inner products of this type, see the :ref:`tutorial on inner products with differential operators <sphx_glr_tutorials_inner_products_3_calculus.py>`
 
+
+.. _inner_products_differential_gradient:
+
 Gradient
 ^^^^^^^^
 
@@ -34,20 +37,23 @@ there are two options for where the variables should live. For :math:`\boldsymbo
 and :math:`\boldsymbol{u}` defined on cell edges:
 
 .. math::
-    \int_\Omega \vec{u} \cdot \nabla \phi \, dv \approx \boldsymbol{u^T M_e G_n \, \phi}
+    \int_\Omega \vec{u} \cdot \nabla \phi \, dv \approx \boldsymbol{u^T M_e G \, \phi}
 
 And for :math:`\boldsymbol{\phi}` defined at cell centers and :math:`\boldsymbol{u}` defined on cell faces:
 
 .. math::
-    \int_\Omega \vec{u} \cdot \nabla \phi \, dv \approx - \boldsymbol{u^T D^T M_c \, \phi + u^T b}
+    \int_\Omega \vec{u} \cdot \nabla \phi \, dv \approx - \boldsymbol{u^T D^T M_c \, \phi} + B.\! C.
 
 where
 
-    - :math:`\boldsymbol{G_n}` is a :ref:`discrete gradient operator <operators_differential_gradient>`
+    - :math:`\boldsymbol{G}` is a :ref:`discrete gradient operator <operators_differential_gradient>`
     - :math:`\boldsymbol{D}` is a :ref:`discrete divergence operator <operators_differential_divergence>`
     - :math:`\boldsymbol{M_c}` is the :ref:`basic inner product matrix for vectors at cell centers <inner_products_basic>`
     - :math:`\boldsymbol{M_e}` is the :ref:`basic inner product matrix for vectors at edges <inner_products_basic>`
-    - :math:`\boldsymbol{b}` represents an additional term that must be constructed to impose boundary conditions correctly on :math:`\phi`
+    - :math:`B.\! C.` represents an additional term that must be constructed to impose boundary conditions correctly on :math:`\phi`. It is zero when :math:`\phi = 0` on the boundary.
+
+
+.. _inner_products_differential_divergence:
 
 Divergence
 ^^^^^^^^^^
@@ -62,15 +68,18 @@ and :math:`\boldsymbol{w}` defined on cell faces:
 And for :math:`\boldsymbol{\psi}` defined on the nodes and :math:`\boldsymbol{w}` defined on cell edges:
 
 .. math::
-    \int_\Omega \psi \; (\nabla \cdot \vec{w}) \, dv \approx - \boldsymbol{\psi^T G_n^T M_e \, w + \psi^T b}
+    \int_\Omega \psi \; (\nabla \cdot \vec{w}) \, dv \approx - \boldsymbol{\psi^T G^T M_e \, w } + B.\! C.
 
 where
 
-    - :math:`\boldsymbol{G_n}` is a :ref:`discrete gradient operator <operators_differential_gradient>`
+    - :math:`\boldsymbol{G}` is a :ref:`discrete gradient operator <operators_differential_gradient>`
     - :math:`\boldsymbol{D}` is a :ref:`discrete divergence operator <operators_differential_divergence>`
     - :math:`\boldsymbol{M_c}` is the :ref:`basic inner product matrix for vectors at cell centers <inner_products_basic>`
     - :math:`\boldsymbol{M_e}` is the :ref:`basic inner product matrix for vectors at edges <inner_products_basic>`
-    - :math:`\boldsymbol{b}` represents an additional term that must be constructed to impose boundary conditions correctly on :math:`\vec{w}`
+    - :math:`B.\! C.` represents an additional term that must be constructed to impose boundary conditions correctly on :math:`\vec{w}`. It is zero when :math:`\hat{n} \cdot \vec{w} = 0` on the boundary.
+
+
+.. _inner_products_differential_curl:
 
 Curl
 ^^^^
@@ -85,13 +94,15 @@ and :math:`\boldsymbol{w}` defined on cell edges:
 And for :math:`\boldsymbol{u}` defined on the edges and :math:`\boldsymbol{w}` defined on cell faces:
 
 .. math::
-    \int_\Omega \vec{u} \cdot (\nabla \times \vec{w} ) \, dv \approx \boldsymbol{u^T C^T \! M_f \, w + u^T b}
+    \int_\Omega \vec{u} \cdot (\nabla \times \vec{w} ) \, dv \approx \boldsymbol{u^T C^T \! M_f \, w } + B.\! C.
 
 where
 
     - :math:`\boldsymbol{C}` is a :ref:`discrete curl operator <operators_differential_curl>`
     - :math:`\boldsymbol{M_f}` is the :ref:`basic inner product matrix for vectors on cell faces <inner_products_basic>`
-    - :math:`\boldsymbol{b}` represents an additional term that must be constructed to impose boundary conditions correctly on :math:`\vec{w}`
+    - :math:`B.\! C.` represents an additional term that must be constructed to impose boundary conditions correctly on :math:`\vec{w}`. It is zero when :math:`\hat{n} \times \vec{w} = 0` on the boundary.
+
+.. _inner_products_differential_gradient_full:
 
 Vector and the Gradient of a Scalar
 -----------------------------------
@@ -113,11 +124,11 @@ a discrete scalar quantity from nodes to edges, we can approximate the inner pro
 between two discrete quantities living on the edges. Thus:
 
 .. math::
-    \int_\Omega \vec{u} \cdot \nabla \phi \, dv \approx \boldsymbol{u^T M_e G_n \, \phi}
+    \int_\Omega \vec{u} \cdot \nabla \phi \, dv \approx \boldsymbol{u^T M_e G \, \phi}
 
 where
 
-    - :math:`\boldsymbol{G_n}` is the :ref:`discrete gradient operator <operators_differential_gradient>`
+    - :math:`\boldsymbol{G}` is the :ref:`discrete gradient operator <operators_differential_gradient>`
     - :math:`\boldsymbol{M_e}` is the :ref:`basic inner product matrix for vectors at edges <inner_products_basic>`
 
 
@@ -144,17 +155,18 @@ and apply the divergence theorem to equation :eq:`inner_products_differential_gr
 Where boundary conditions are implemented in the surface integral. The approximate to the inner product is given by:
 
 .. math::
-    \int_\Omega \vec{u} \cdot \nabla \phi \, dv \approx - \boldsymbol{u^T D^T M_c \, \phi + u^T B \, \phi}
+    \int_\Omega \vec{u} \cdot \nabla \phi \, dv \approx - \boldsymbol{u^T D^T M_c \, \phi} + B.\! C.
 
 where
 
     - :math:`\boldsymbol{D}` is the :ref:`discrete divergence operator <operators_differential_divergence>`
     - :math:`\boldsymbol{M_c}` is the :ref:`basic inner product matrix for vectors at cell centers <inner_products_basic>`
-    - :math:`\boldsymbol{B}` is a sparse matrix that imposes boundary conditions correctly on :math:`\phi`
+    - :math:`B.\! C.` represents an additional term that must be constructed to impose boundary conditions correctly on :math:`\phi`
 
 When formulating the approximation to the inner product in this way, the natural boundary condition is a Dirichlet condition such that :math:`\phi = 0` on the boundary.
 In this case, the added boundary condition term is zero.
 
+.. _inner_products_differential_divergence_full:
 
 Scalar and the Divergence of a Vector
 -------------------------------------
@@ -208,18 +220,18 @@ and apply the divergence theorem to equation :eq:`inner_products_differential_gr
 Where boundary conditions are implemented in the surface integral. The approximate to the inner product is given by:
 
 .. math::
-    \int_\Omega \psi \; (\nabla \cdot \vec{w}) \, dv \approx - \boldsymbol{\psi^T G_n^T M_e \, w + \psi^T B \, w}
+    \int_\Omega \psi \; (\nabla \cdot \vec{w}) \, dv \approx - \boldsymbol{\psi^T G^T M_e \, w} + B.\! C.
 
 where
 
-    - :math:`\boldsymbol{G_n}` is the :ref:`discrete gradient operator <operators_differential_divergence>`
+    - :math:`\boldsymbol{G}` is the :ref:`discrete gradient operator <operators_differential_divergence>`
     - :math:`\boldsymbol{M_e}` is the :ref:`basic inner product matrix for vectors at the edges <inner_products_basic>`
-    - :math:`\boldsymbol{B}` is a sparse matrix that imposes boundary conditions correctly on :math:`\vec{w}`
+    - :math:`B.\! C.` represents an additional term that must be constructed to impose boundary conditions correctly on :math:`\vec{w}`
 
 When formulating the approximation to the inner product in this way, the natural boundary condition is for :math:`\hat{n} \cdot \vec{w} = 0` on the boundary.
 In this case, the added boundary condition term is zero.
 
-
+.. _inner_products_differential_curl_full:
 
 Vector and the Curl of a Vector
 -------------------------------
@@ -273,13 +285,13 @@ and apply the divergence theorem to equation :eq:`inner_products_differential_cu
 Where boundary conditions are implemented in the surface integral. The approximate to the inner product is given by:
 
 .. math::
-    \int_\Omega \vec{u} \cdot (\nabla \times \vec{w}) \, dv \approx \boldsymbol{u^T C^T M_f \, w + u^T B \, w}
+    \int_\Omega \vec{u} \cdot (\nabla \times \vec{w}) \, dv \approx \boldsymbol{u^T C^T M_f \, w} + B.\! C.
 
 where
 
     - :math:`\boldsymbol{C}` is the :ref:`discrete curl operator <operators_differential_curl>` 
     - :math:`\boldsymbol{M_f}` is the :ref:`basic inner product matrix for vectors on faces <inner_products_basic>`
-    - :math:`\boldsymbol{B}` is a sparse matrix that imposes boundary conditions correctly on :math:`\vec{w}`
+    - :math:`B.\! C.` represents an additional term that must be constructed to impose boundary conditions correctly on :math:`\vec{w}`
 
 When formulating the approximation to the inner product in this way, the natural boundary condition is for :math:`\hat{n} \times \vec{w} = 0` on the boundary.
 In this case, the added boundary condition term is zero.

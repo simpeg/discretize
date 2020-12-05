@@ -1,4 +1,4 @@
-.. _derivation_examples_electrostatics:
+.. _derivation_examples_poisson:
 
 Poisson Equation with Zero Neumann Boundary Condition
 *****************************************************
