@@ -149,11 +149,17 @@ class BaseMesh(InterfaceMixins):
             '__class__': cls.__name__,
         }
         for item in self._items:
-            thing = getattr(self, item, None)
-            if thing is not None:
-                if isinstance(thing, np.ndarray):
-                    thing = thing.tolist()
-                out[item] = thing
+            attr = getattr(self, item, None)
+            if attr is not None:
+                # change to a list and make sure inner items are not numpy arrays
+                if isinstance(attr, np.ndarray):
+                    attr = attr.tolist()
+                if isinstance(attr, tuple):
+                    attr = list(attr)
+                    for i, thing in enumerate(attr):
+                        if isinstance(attr, np.ndarray):
+                            attr[i] = thing.tolist()
+                out[item] = attr
         return out
 
     def __eq__(self, other):
