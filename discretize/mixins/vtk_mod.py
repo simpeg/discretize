@@ -77,7 +77,7 @@ def assign_cell_data(vtkDS, models=None):
     vtkDS : pyvista.Common
         Any given VTK data object that has cell data
 
-    models : dict(numpy.ndarray)
+    models : dict of str:numpy.ndarray
         Name('s) and array('s). Match number of cells
 
     """
@@ -138,8 +138,6 @@ class InterfaceVTK(object):
        mesh.axis_u = (1,-1,0)
        mesh.axis_v = (-1,-1,0)
        mesh.axis_w = (0,0,1)
-       # Check that the referenc fram is valid
-       mesh._validate_orientation()
 
        # Yield the rotated vtkStructuredGrid
        dataset_r = mesh.to_vtk()
@@ -267,7 +265,6 @@ class InterfaceVTK(object):
         if nodes.shape != (mesh.nN, 3):
             raise RuntimeError("Nodes of the grid are improperly defined.")
         # Rotate the points based on the axis orientations
-        mesh._validate_orientation()
         return np.dot(nodes, mesh.rotation_matrix)
 
     def __tensor_mesh_to_vtk(mesh, models=None):

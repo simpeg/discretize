@@ -13,9 +13,46 @@ import warnings
 
 
 class BaseMesh(InterfaceMixins):
-    """
-    BaseMesh does all the counting you don't want to do.
-    BaseMesh should be inherited by meshes with a regular structure.
+    """Base Mesh for discretize
+
+    BaseMesh does all the counting you don't want to do. BaseMesh should be inherited
+    by meshes with a regular structure.
+
+    Parameters
+    ----------
+    shape_cells : array_like of int
+        number of cells for each dimension
+    origin : array_like of float, optional
+        origin of the bottom south west corner of the mesh, defaults to 0.
+    orientation : discretize.utils.Identity or array_like of float, optional
+        Orientation of the three major axes of the mesh, defaults to Identity.
+        If provided, this must be an orthogonal matrix.
+    reference_system : {'cartesian', 'cylindrical', 'spherical'}
+        Or a subset of short hands for these, {'car[t]', 'cy[l]', 'sph'}
+
+    Attributes
+    ----------
+    shape_cells
+    origin
+    orientation
+    reference_system
+    dim
+    n_cells
+    n_nodes
+    n_edges
+    n_edges_x
+    n_edges_y
+    n_edges_z
+    n_edges_per_direction
+    n_faces
+    n_faces_x
+    n_faces_y
+    n_faces_z
+    n_faces_per_direction
+    face_normals
+    edge_tangents
+    reference_is_rotated
+    rotation_matrix
     """
 
     _REGISTRY = {}
@@ -66,6 +103,15 @@ class BaseMesh(InterfaceMixins):
     @property
     def origin(self):
         """ Origin of the mesh
+
+        Returns
+        -------
+        numpy.ndarray
+            Array of floats defining the bottom south west origin of the mesh
+
+        Notes
+        -----
+        Also accessible as 'x0'
         """
         return self._origin
 
@@ -112,11 +158,14 @@ class BaseMesh(InterfaceMixins):
             # Check if matrix is orthogonal
             if not np.allclose(R @ R.T, np.identity(dim), rtol=1.e-5, atol=1E-6):
                 raise ValueError("Orientation matrix is not orthogonal")
-            self._orienation = R
+            self._orientation = R
 
     @property
     def reference_system(self):
-        "The type of coordinate reference frame. Can take on the values "
+        """ Coordinate reference system
+        The type of coordinate reference frame. Can take on the values
+        """
+
         return self._reference_system
 
     @reference_system.setter
@@ -147,11 +196,17 @@ class BaseMesh(InterfaceMixins):
             '__class__': cls.__name__,
         }
         for item in self._items:
-            thing = getattr(self, item, None)
-            if thing is not None:
-                if isinstance(thing, np.ndarray):
-                    thing = thing.tolist()
-                out[item] = thing
+            attr = getattr(self, item, None)
+            if attr is not None:
+                # change to a list and make sure inner items are not numpy arrays
+                if isinstance(attr, np.ndarray):
+                    attr = attr.tolist()
+                if isinstance(attr, tuple):
+                    attr = list(attr)
+                    for i, thing in enumerate(attr):
+                        if isinstance(attr, np.ndarray):
+                            attr[i] = thing.tolist()
+                out[item] = attr
         return out
 
     def __eq__(self, other):
@@ -168,6 +223,7 @@ class BaseMesh(InterfaceMixins):
 
     @property
     def x0(self):
+        """An alias for the origin"""
         return self.origin
 
     @x0.setter
@@ -575,7 +631,7 @@ class BaseMesh(InterfaceMixins):
         """True if the axes are rotated from the traditional <X,Y,Z> system
         with vectors of :math:`(1,0,0)`, :math:`(0,1,0)`, and :math:`(0,0,1)`
         """
-        return not np.allclose(self.orienation, np.identity(self.dim))
+        return not np.allclose(self.orientation, np.identity(self.dim))
 
     @property
     def rotation_matrix(self):

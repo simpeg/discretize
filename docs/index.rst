@@ -5,10 +5,8 @@
     :hidden:
     :titlesonly:
 
-    content/big_picture
-    content/installing
+    content/getting_started
     content/user_guide
     api/index
     content/theory
-    content/additional_resources
     release/index

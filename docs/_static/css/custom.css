@@ -1,0 +1,22 @@
+@import url(https://fonts.googleapis.com/css?family=Raleway);
+
+.navbar-light {
+    background: #acd6af!important;
+}
+.navbar-nav>.active>.nav-link {
+    color: #000000!important;
+}
+
+body{
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+h1{
+    font-family: "Raleway", Helvetica, Arial, sans-serif;
+}
+h2{
+    font-family: "Raleway", Helvetica, Arial, sans-serif;
+}
+.column > h3{
+    font-family: "Raleway", Helvetica, Arial, sans-serif;
+}
