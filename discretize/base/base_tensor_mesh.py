@@ -78,7 +78,7 @@ class BaseTensorMesh(BaseMesh):
             if len(h_i.shape) != 1:
                 raise ValueError("h[{0:d}] must be a 1D numpy array.".format(i))
             h[i] = h_i[:]  # make a copy.
-        self._h = h
+        self._h = tuple(h)
 
         shape_cells = tuple([len(h_i) for h_i in h])
         kwargs.pop("shape_cells", None)
