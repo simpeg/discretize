@@ -110,7 +110,9 @@ class BaseMesh(InterfaceMixins):
                     f"Orientation matrix must be square and of shape {(dim, dim)}, got {R.shape}"
                 )
             # Check if matrix is orthogonal
-            if not np.allclose(R @ R.T, np.identity(dim), rtol=1.e-5, atol=1E-6):
+            A = R @ R.T
+            A_diag = np.diag(A.diagonal())
+            if not np.allclose(A, A_diag, rtol=1.e-5, atol=1E-6):
                 raise ValueError("Orientation matrix is not orthogonal")
             self._orienation = R
 
