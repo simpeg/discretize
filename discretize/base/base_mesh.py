@@ -114,7 +114,7 @@ class BaseMesh(InterfaceMixins):
             A_diag = np.diag(A.diagonal())
             if not np.allclose(A, A_diag, rtol=1.e-5, atol=1E-6):
                 raise ValueError("Orientation matrix is not orthogonal")
-            self._orienation = R
+            self._orientation = R
 
     @property
     def reference_system(self):
@@ -583,7 +583,7 @@ class BaseMesh(InterfaceMixins):
         """True if the axes are rotated from the traditional <X,Y,Z> system
         with vectors of :math:`(1,0,0)`, :math:`(0,1,0)`, and :math:`(0,0,1)`
         """
-        return not np.allclose(self.orienation, np.identity(self.dim))
+        return not np.allclose(self.orientation, np.identity(self.dim))
 
     @property
     def rotation_matrix(self):
