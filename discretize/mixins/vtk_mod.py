@@ -135,13 +135,13 @@ class InterfaceVTK(object):
     .. code-block:: python
 
        # Defined a rotated reference frame
-       mesh.axis_u = (1,-1,0)
-       mesh.axis_v = (-1,-1,0)
-       mesh.axis_w = (0,0,1)
+       axis_u = (1,-1,0)
+       axis_v = (-1,-1,0)
+       axis_w = (0,0,1)
        mesh.orientation = np.array([
-           [1, -1, 0],
-           [-1, 1, 0],
-           [0, 0, 1]
+           axis_u,
+           axis_v,
+           axis_w
        ])
 
        # Yield the rotated vtkStructuredGrid
