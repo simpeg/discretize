@@ -18,7 +18,7 @@ def load_mesh(file_name):
         module_name = jsondict.pop('__module__', 'discretize')  # default to loading from discretize
         class_name = jsondict.pop('__class__')
         mod = importlib.import_module(module_name)
-        cls = mod.getattr(class_name)
+        cls = getattr(mod, class_name)
         data = cls(**jsondict)
     return data
 
