@@ -69,7 +69,7 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
                 raise ValueError(f"Unexpected shape of item in node list, expect array with {dim} dimensions, got {len(nodes.shape)}")
             if node_list[0].shape != nodes.shape:
                 raise ValueError(f"The shape of nodes are not consistent, saw {node_list[0].shape} and {nodes.shape}")
-        self._node_list = node_list
+        self._node_list = tuple(node_list)
 
         # Save nodes to private variable _nodes as vectors
         self._nodes = np.ones((self.node_list[0].size, dim))
