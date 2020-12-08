@@ -65,14 +65,14 @@ v_true = fun(x_interp)
 # Create interpolation matrix and apply. When creating the interpolation matrix,
 # we must define where the discrete quantity lives and where it is being
 # interpolated to.
-Q = mesh.get_interpolation_matrix(x_interp, 'N')
-v_interp = Q * v_nodes
+P = mesh.get_interpolation_matrix(x_interp, 'N')
+v_interp = P * v_nodes
 
 # Compare
 fig = plt.figure(figsize=(12, 4))
 ax1 = fig.add_axes([0.1, 0.05, 0.25, 0.8])
-ax1.spy(Q, markersize=5)
-ax1.set_title("Sparse representation of Q", pad=15)
+ax1.spy(P, markersize=5)
+ax1.set_title("Sparse representation of P", pad=15)
 
 k = np.argsort(x_interp)
 
@@ -131,8 +131,8 @@ v_true = fun(xp, yp)
 # we must define where the discrete quantity lives and where it is being
 # interpolated to.
 locations = np.c_[xp, yp]
-Q = mesh.get_interpolation_matrix(locations, 'CC')
-v_interp = Q * v_centers
+P = mesh.get_interpolation_matrix(locations, 'CC')
+v_interp = P * v_centers
 
 # Plot mesh and profile line
 fig = plt.figure(figsize=(14, 4.5))
@@ -207,11 +207,11 @@ u_faces = np.r_[ux_faces, uy_faces]
 # Interpolation matrices from edges and faces assume all vector components
 # are defined on their respective edges or faces. Thus an interpolation matrix
 # from x-edges will extract the x component values then interpolate to locations.
-Qx = mesh.get_interpolation_matrix(faces_x, "Ex")
-Qy = mesh.get_interpolation_matrix(faces_y, "Ey")
+Px = mesh.get_interpolation_matrix(faces_x, "Ex")
+Py = mesh.get_interpolation_matrix(faces_y, "Ey")
 
-ux_interp = Qx*u_edges
-uy_interp = Qy*u_edges
+ux_interp = Px*u_edges
+uy_interp = Py*u_edges
 u_interp = np.r_[ux_interp, uy_interp]
 
 # Plotting
