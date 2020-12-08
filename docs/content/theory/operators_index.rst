@@ -34,5 +34,6 @@ the general formation of these matrices.
 
 **Tutorials:**
 
+- :ref:`Interpolation Operators <sphx_glr_tutorials_operators_0_interpolation.py>`
 - :ref:`Averaging Operators <sphx_glr_tutorials_operators_1_averaging.py>`
 - :ref:`Differential Operators <sphx_glr_tutorials_operators_2_differential.py>`

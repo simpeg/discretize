@@ -28,7 +28,7 @@ test functions and partial differential equations.
 **Contents:**
 
 	- :ref:`Meshes <meshes_index>`
-	- :ref:`Averaging and Differential Operators <operators_index>`
+	- :ref:`Interpolation, Averaging and Differential Operators <operators_index>`
 	- :ref:`Inner Products <inner_products_index>`
 	- :ref:`Discretizing PDEs Derivation Examples <derivation_examples_index>`
 
