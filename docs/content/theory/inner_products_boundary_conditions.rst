@@ -29,7 +29,7 @@ the inner product is approximated by:
 where
 
     - :math:`\boldsymbol{D}` is a :ref:`discrete divergence operator <operators_differential_divergence>`
-    - :math:`\boldsymbol{M_c}` is the :ref:`basic inner product matrix for vectors at cell centers <inner_products_basic>`
+    - :math:`\boldsymbol{M_c}` is the :ref:`basic inner product matrix for quantities at cell centers <inner_products_basic>`
 
 .. note:: To see how equation :eq:`inner_products_boundary_conditions_1` was obtained, visit :ref:`inner products with gradients <inner_products_differential_gradient_full>`.
 
@@ -51,7 +51,7 @@ where
 
     - :math:`\boldsymbol{u^T}` is the discrete representation of :math:`\vec{u}` on the faces
     - :math:`\boldsymbol{\tilde{\phi}}` is a discrete vector on the faces which contains the values of :math:`\phi` approximated on boundary faces
-    - :math:`\boldsymbol{\tilde{a}}` is a vector defined on the faces of the mesh which stores the dot product between the surface area vector and the unit direction of :math:`\vec{u}`. That is, :math:`\boldsymbol{\tilde{a}} = \pm Area` for faces on the boundary and :math:`\boldsymbol{\tilde{a}}=0` for all other faces.
+    - :math:`\boldsymbol{\tilde{a}}` is a vector which stores the dot products between the surface area vectors of the boundary faces :math:`\vec{a}` and the unit direction :math:`\hat{u} = \frac{\vec{u}}{|\vec{u}|}`. That is, :math:`\boldsymbol{\tilde{a}} = \hat{u} \cdot \vec{a}` for faces on the boundary and :math:`\boldsymbol{\tilde{a}}=0` for all interior faces.
 
 Here, we describe how the vector :math:`\boldsymbol{\tilde{\phi}}` can be constructed to impose various boundary conditions.
     
@@ -233,7 +233,7 @@ where
 
     - :math:`\boldsymbol{\psi^T}` is the discrete representation of :math:`\psi` on the nodes
     - :math:`\boldsymbol{P_{nf}}` is sparse matrix that projects scalar quantities from nodes to faces
-    - :math:`\boldsymbol{\tilde{a}}` is a vector defined on the faces of the mesh which stores the dot product between the surface area vector and the unit direction of :math:`\vec{u}`. That is, :math:`\boldsymbol{\tilde{a}} = \pm Area` for faces on the boundary and :math:`\boldsymbol{\tilde{a}}=0` for all interior faces
+    - :math:`\boldsymbol{\tilde{a}}` is a vector which stores the dot products between the surface area vectors of the boundary faces :math:`\vec{a}` and the unit direction :math:`\hat{u} = \frac{\vec{u}}{|\vec{u}|}`. That is, :math:`\boldsymbol{\tilde{a}} = \hat{u} \cdot \vec{a}` for faces on the boundary and :math:`\boldsymbol{\tilde{a}}=0` for all interior faces.
     - :math:`\boldsymbol{\tilde{w}}` is a discrete vector which contains the x, y (and z) components of :math:`\vec{w}` approximated on boundary faces; i.e. :math:`\tilde{w}_x`, :math:`\tilde{w}_y` (and :math:`\tilde{w}_z`).
 
 Here, we describe how the vector :math:`\boldsymbol{\tilde{w}}` can be constructed to impose various boundary conditions.
@@ -426,6 +426,7 @@ where
     - :math:`\boldsymbol{B} = \boldsymbol{P_{nf}^T} \, diag(\boldsymbol{\tilde{a}}) \, \boldsymbol{\tilde{P}_{nf}} \, diag ( \boldsymbol{\tilde{c}} )  \boldsymbol{\tilde{P}_{en}}`
     - :math:`\boldsymbol{b} = \boldsymbol{P_{nf}^T} \, diag(\boldsymbol{\tilde{a}}) \, \boldsymbol{\tilde{P}_{nf}} \boldsymbol{\tilde{d}}`
 
+.. _inner_products_boundary_conditions_curl:
 
 Curl
 ----
@@ -436,25 +437,232 @@ the discrete representation :math:`\boldsymbol{w}` lives on the faces,
 the inner product is approximated by:
 
 .. math::
-    \int_\Omega \vec{u} \cdot (\nabla \times \vec{w}) \, dv \approx \boldsymbol{u^T C^T M_f \, w} + \oint_{\partial \Omega} \vec{u} \cdot (\hat{n} \times \vec{w}) \, da
+    \int_\Omega \vec{u} \cdot (\nabla \times \vec{w}) \, dv 
+    \approx \boldsymbol{u^T C^T M_f \, w} - \oint_{\partial \Omega} (\vec{u} \times \vec{w}) \cdot d\vec{a}
     :label: inner_products_boundary_conditions_3
 
 where
 
     - :math:`\boldsymbol{C}` is a :ref:`discrete curl operator <operators_differential_curl>`
     - :math:`\boldsymbol{M_f}` is the :ref:`basic inner product matrix for vectors on cell faces <inner_products_basic>`
-    
 
+
+.. figure:: ../../images/boundary_conditions_curl.png
+    :align: center
+    :width: 550
+
+    Figure 3: Quantities used to implement boundary conditions on the curl for an x-face.
+
+
+A discrete approximation to the surface integral in equation
+:eq:`inner_products_boundary_conditions_3` which imposes
+boundary conditions on :math:`\vec{w}` can be expressed as: 
+
+.. math::
+    \oint_{\partial \Omega} (\vec{u} \times \vec{w}) \cdot d\vec{a}
+    \approx \boldsymbol{u^T}
+    \begin{bmatrix} \boldsymbol{P_1} \\ \boldsymbol{P_2} \end{bmatrix}^T
+    \begin{bmatrix} \boldsymbol{\Lambda} & \boldsymbol{0} \\ \boldsymbol{0} & \boldsymbol{-\Lambda} \end{bmatrix}
+    \begin{bmatrix} \boldsymbol{P_1} & \boldsymbol{0} \\ \boldsymbol{0} & \boldsymbol{P_2} \end{bmatrix}
+    \boldsymbol{\tilde{w}}
+    :label: inner_products_boundary_conditions_3a
+
+where
+
+.. math::
+    \boldsymbol{P_1} =
+    \begin{bmatrix}
+    0 & P_{yx} & 0 \\ 0 & 0 & P_{zy} \\ P_{xz} & 0 & 0 
+    \end{bmatrix}
+    \textrm{,} \;\;
+    \boldsymbol{P_2} =
+    \begin{bmatrix}
+    0 & 0 & P_{zx} \\ P_{xy} & 0 & 0 \\ 0 & P_{yz} & 0 
+    \end{bmatrix}
+    \textrm{,} \;\;
+    \boldsymbol{\Lambda} = diag(\boldsymbol{\tilde{a}}) 
+    \;\; \textrm{and}\;\;
+    \boldsymbol{\tilde{w}} =
+    \begin{bmatrix}
+    \boldsymbol{\tilde{w}_{yx}} \\ \boldsymbol{\tilde{w}_{zy}} \\ \boldsymbol{\tilde{w}_{xz}} \\
+    \boldsymbol{\tilde{w}_{zx}} \\ \boldsymbol{\tilde{w}_{xy}} \\ \boldsymbol{\tilde{w}_{yz}}
+    \end{bmatrix}
+
+such that
+
+    - :math:`\boldsymbol{u}` is the discrete representation of :math:`\vec{u}` on edges
+    - :math:`P_{ij}` is sparse matrix that projects a quantity from :math:`i` edges to :math:`j` faces for :math:`i,j=x,y,z`
+    - :math:`\boldsymbol{\tilde{w}_{ij}}` is a vector that stores an approximation of component :math:`i` of :math:`\vec{w}` on :math:`j` edges for :math:`i,j=x,y,z`
+    - :math:`\boldsymbol{\tilde{a}}` is a vector which stores the dot products between the surface area vectors of the boundary faces :math:`\vec{a}` and the unit direction of :math:`\vec{u} \times \vec{w}`. That is, :math:`\boldsymbol{\tilde{a}} = \pm a` for faces on the boundary and :math:`\boldsymbol{\tilde{a}}=0` for all interior faces
+
+If we are able to construct matrices :math:`\boldsymbol{P_{ij}}` and :math:`\boldsymbol{\Lambda}`, we must turn our attention
+to constructing :math:`\boldsymbol{\tilde{w}}`.
 
 
 Dirichlet
 ^^^^^^^^^
 
+For a 3D mesh, examine a single boundary cell whose surface area vector points in the x-direction
+(:ref:`Figure 3 <inner_products_boundary_conditions_curl>`); i.e. :math:`\vec{a} = a\hat{x}`.
+When imposing Dirichlet conditions, we know the value of :math:`\vec{w}` on the boundary.
+For boundary face :math:`k` on the aforemention cell, the contribution towards the surface integral is given by:
+
+.. math::
+    \oint_{\partial \Omega_k} (\vec{u} \times \vec{w}) \, d\vec{a} = \int_{\partial \Omega_k} (u_y \tilde{w}_z - u_z \tilde{w}_y) \, da
+    :label: inner_products_boundary_conditions_3b
+
+where :math:`\tilde{w}_y` and :math:`\tilde{w}_z` are component values of :math:`\vec{w}` at the same edge
+locations as :math:`u_z` and :math:`u_y`, respectively. Thus for boundary face :math:`k`
+with surface area :math:`a_k`, the approximate contribution towards the surface integral
+denoted by equation :eq:`inner_products_boundary_conditions_3b` is:
+
+.. math::
+    \oint_{\partial \Omega_k} (\vec{u} \times \vec{w}) \cdot d\vec{a} = \frac{a_k}{4} \! & \bigg [ \!
+    \bigg ( \! u_y \big ( i, j\! +\! \tfrac{1}{2}, k \big ) \! +\! u_y \big ( i, j\! +\! \tfrac{1}{2}, k\! +\! 1 \big ) \! \bigg ) \!
+    \bigg ( \! \tilde{w}_z \big ( i, j\! +\! \tfrac{1}{2}, k \big ) \! +\! \tilde{w}_z \big ( i, j\! +\! \tfrac{1}{2}, k\! +\! 1 \big ) \! \bigg ) \\
+    -& \bigg ( \! u_z \big ( i, j, k\! +\! \tfrac{1}{2} \big ) \! +\! u_z \big ( i, j\! +\! 1, k\! +\! \tfrac{1}{2} \big ) \! \bigg ) \!
+    \bigg ( \! \tilde{w}_y \big ( i, j, k\! +\! \tfrac{1}{2} \big ) \! +\! \tilde{w}_y \big ( i, j\! +\! 1, k\! +\! \tfrac{1}{2} \big ) \! \bigg ) \! \Bigg ]
+    :label: inner_products_boundary_conditions_3c
+
+Assuming we have constructed matrices :math:`\boldsymbol{P_{ij}}` and :math:`\boldsymbol{\Lambda}`,
+we can construct a vector :math:`\boldsymbol{\tilde{w}}` such that values :math:`\vec{w}` on boundary edges are defined
+by the boundary condition and :math:`\vec{w}` on interior edges are set to zero.
+
 
 Neumann
 ^^^^^^^
 
+According to equation :eq:`inner_products_boundary_conditions_3a`, we need to construct a large edge vector
+:math:`\boldsymbol{\tilde{w}}` when the derivative normal to the surface is known.
+When imposing the Neuwmann condition, we know the value of :math:`\frac{\partial \vec{w}}{\partial n}` on the boundary.
+For a 3D mesh, examine a single boundary cell whose surface area vector points in the x-direction
+(:ref:`Figure 3 <inner_products_boundary_conditions_curl>`); i.e. :math:`\vec{a} = a\hat{x}`.
+
+Once again, we define a Taylor expansion to approximated the values of functions on the boundary.
+For :math:`w_z`, we define a Taylor expansion at position :math:`(i, j \! + \! \tfrac{1}{2},k)`.
+Solving the approximation :math:`\tilde{w}_z` on the boundary we obtain:
+
+.. math::
+    \tilde{w}_z (i, j \! + \! \tfrac{1}{2},k) = w_z (i \! - \! \tfrac{1}{2}, j \! + \! \tfrac{1}{2},k) - \frac{\partial w_z}{\partial n} \Delta s_x
+    :label: inner_products_boundary_conditions_3d
+
+where :math:`\Delta s_x` is the path from position :math:`(i, j \! + \! \tfrac{1}{2},k)`
+to position :math:`(i \! - \! \tfrac{1}{2}, j \! + \! \tfrac{1}{2},k)`.
+Similarly for :math:`w_y`:
+
+.. math::
+    \tilde{w}_y (i, j, k \! + \! \tfrac{1}{2}) = w_y (i \! - \! \tfrac{1}{2}, j, k \! + \! \tfrac{1}{2}) - \frac{\partial w_y}{\partial n} \Delta s_x
+    :label: inner_products_boundary_conditions_3e
+
+The same approach can be used to approximate the value of all required components on all boundary edges.
+Much like we did for the gradient and divergence operators, we can define the vector :math:`\boldsymbol{\tilde{w}}` in terms of a linear operation:
+
+.. math::
+    \boldsymbol{\tilde{w}} = \boldsymbol{\tilde{P} w + \tilde{b}}
+    :label: inner_products_boundary_conditions_3f
+
+where
+
+    - :math:`\boldsymbol{\tilde{P}}` maps the entries of :math:`\boldsymbol{w}` to the edges where they are needed
+    - :math:`\boldsymbol{\tilde{b}}` is :math:`-\frac{\partial w_k}{\partial n}` on boundary faces and 0 for interior faces
+
+To implement the result in equation :eq:`inner_products_boundary_conditions_3f` practically,
+we express equation :eq:`inner_products_boundary_conditions_3` in the case of
+Neumann boundary conditions as:
+
+.. math::
+    \int_\Omega \vec{u} \cdot (\nabla \times \vec{w}) \, dv 
+    \approx \boldsymbol{u^T (C^T M_f - B ) \, w - u^T b}
+    :label: inner_products_boundary_conditions_3g
+
+where
+
+.. math::
+    \boldsymbol{B} = \begin{bmatrix} \boldsymbol{P_1} \\ \boldsymbol{P_2} \end{bmatrix}^T
+    \begin{bmatrix} \boldsymbol{\Lambda} & \boldsymbol{0} \\ \boldsymbol{0} & \boldsymbol{-\Lambda} \end{bmatrix}
+    \begin{bmatrix} \boldsymbol{P_1} & \boldsymbol{0} \\ \boldsymbol{0} & \boldsymbol{P_2} \end{bmatrix}
+    \boldsymbol{\tilde{P}}
+
+
+and
+
+.. math::
+    \boldsymbol{b} = \begin{bmatrix} \boldsymbol{P_1} \\ \boldsymbol{P_2} \end{bmatrix}^T
+    \begin{bmatrix} \boldsymbol{\Lambda} & \boldsymbol{0} \\ \boldsymbol{0} & \boldsymbol{-\Lambda} \end{bmatrix}
+    \begin{bmatrix} \boldsymbol{P_1} & \boldsymbol{0} \\ \boldsymbol{0} & \boldsymbol{P_2} \end{bmatrix} \boldsymbol{\tilde{b}}
+
 
 Mixed
 ^^^^^
+
+Where :math:`\alpha`, :math:`\beta` and :math:`\gamma` are constants,
+the boundary conditions are defined by the following ordinary differential equation:
+
+.. math::
+    \alpha \phi + \beta \frac{\partial \phi}{\partial n} = \gamma
+    :label: inner_products_boundary_conditions_3h
+
+In this case, the Taylor expansions described in expressios :eq:`inner_products_boundary_conditions_3d`
+and :eq:`inner_products_boundary_conditions_3e` become:
+
+.. math::
+    \tilde{w}_z (i, j \! + \! \tfrac{1}{2},k) =
+    \Bigg ( \frac{\beta}{\beta - \alpha \Delta s_x} \Bigg ) w_z (i \! - \! \tfrac{1}{2}, j \! + \! \tfrac{1}{2},k)
+    - \Bigg ( \frac{\gamma \Delta s_x}{\beta - \alpha \Delta s_x} \Bigg )
+
+and
+
+.. math::
+    \tilde{w}_y (i, j,k \! + \! \tfrac{1}{2}) =
+    \Bigg ( \frac{\beta}{\beta - \alpha \Delta s_x} \Bigg ) w_y (i \! - \! \tfrac{1}{2}, j,k \! + \! \tfrac{1}{2})
+    - \Bigg ( \frac{\gamma \Delta s_x}{\beta - \alpha \Delta s_x} \Bigg )
+
+where the derivatives were approximated to first order using backward difference.
+Once again, the Taylor expansion can be used to approximate all required components of :math:`\vec{w}`
+at all necessary boundary edges.
+
+Similarly to how we defined :math:`\boldsymbol{\tilde{w}}` in :eq:`inner_products_boundary_conditions_3f`, we obtain:
+
+.. math::
+    \boldsymbol{\tilde{w}} = diag(\boldsymbol{\tilde{c}}) \boldsymbol{\tilde{P} w + \tilde{d}}
+    :label: inner_products_boundary_conditions_3i
+
+where
+
+.. math::
+    \boldsymbol{\tilde{c}} = \begin{cases} \frac{\beta}{\beta - \alpha \Delta s_k} \;\;\textrm{on boundary edges}\\ 0 \;\; \textrm{on all other edges} \end{cases}
+
+and
+
+.. math::
+    \boldsymbol{\tilde{d}} = \begin{cases} - \frac{\gamma \Delta s_k}{\beta - \alpha \Delta s_k} \;\;\textrm{on boundary edges}\\ 0 \;\; \textrm{on all other other edges} \end{cases}
+
+To implement the result in equation :eq:`inner_products_boundary_conditions_3i` practically,
+we express equation :eq:`inner_products_boundary_conditions_3` in the case of
+Neumann boundary conditions as:
+
+.. math::
+    \int_\Omega \vec{u} \cdot (\nabla \times \vec{w}) \, dv 
+    \approx \boldsymbol{u^T (C^T M_f - B ) \, w - u^T b}
+    :label: inner_products_boundary_conditions_3g
+
+where
+
+.. math::
+    \boldsymbol{B} = \begin{bmatrix} \boldsymbol{P_1} \\ \boldsymbol{P_2} \end{bmatrix}^T
+    \begin{bmatrix} \boldsymbol{\Lambda} & \boldsymbol{0} \\ \boldsymbol{0} & \boldsymbol{-\Lambda} \end{bmatrix}
+    \begin{bmatrix} \boldsymbol{P_1} & \boldsymbol{0} \\ \boldsymbol{0} & \boldsymbol{P_2} \end{bmatrix}
+    diag(\boldsymbol{\tilde{c}}) \boldsymbol{\tilde{P}}
+
+
+and
+
+.. math::
+    \boldsymbol{b} = \begin{bmatrix} \boldsymbol{P_1} \\ \boldsymbol{P_2} \end{bmatrix}^T
+    \begin{bmatrix} \boldsymbol{\Lambda} & \boldsymbol{0} \\ \boldsymbol{0} & \boldsymbol{-\Lambda} \end{bmatrix}
+    \begin{bmatrix} \boldsymbol{P_1} & \boldsymbol{0} \\ \boldsymbol{0} & \boldsymbol{P_2} \end{bmatrix} \boldsymbol{\tilde{d}}
+
+
+
+
 

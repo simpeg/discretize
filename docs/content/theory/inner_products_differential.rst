@@ -278,7 +278,7 @@ and apply the divergence theorem to equation :eq:`inner_products_differential_cu
     \begin{align}
     \int_\Omega \vec{u} \cdot (\nabla \times \vec{w}) \, dv &= \int_\Omega \vec{w} \cdot (\nabla \times \vec{u}) \, dv - \int_\Omega \nabla \cdot (\vec{u} \times \vec{w}) \, dv \\
     &= \int_\Omega \vec{w} \cdot (\nabla \times \vec{u}) \, dv - \oint_{\partial \Omega} \hat{n} \cdot (\vec{u} \times \vec{w}) \, da \\
-    &= \int_\Omega \vec{w} \cdot (\nabla \times \vec{u}) \, dv + \oint_{\partial \Omega} \vec{u} \cdot (\hat{n} \times \vec{w}) \, da
+    &= \int_\Omega \vec{w} \cdot (\nabla \times \vec{u}) \, dv - \oint_{\partial \Omega} (\vec{u} \times \vec{w}) \cdot d\vec{a}
     \end{align}
     :label: inner_products_differential_curl_edges
 

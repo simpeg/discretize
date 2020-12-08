@@ -12,7 +12,7 @@ Discrete representations of functions and variables are organized on a numerical
 The final product of the approach is a linear system of equations :math:`\boldsymbol{A \phi=q}`
 that can be solved to compute the discrete approximation of a desired quantity.
 
-.. image:: ../images/finitevolumeschematic.png
+.. figure:: ../images/finitevolumeschematic.png
    :width: 700
    :align: center
 
