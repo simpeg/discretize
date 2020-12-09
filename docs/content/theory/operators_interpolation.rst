@@ -24,7 +24,7 @@ The formulation for linear interpolation is adequately presented on Wikipedia, s
 	- `Bilinear Interpolation (2D) <https://en.wikipedia.org/wiki/Bilinear_interpolation>`__
 	- `Trilinear Interpolation (3D) <https://en.wikipedia.org/wiki/Trilinear_interpolation>`__
 
-**Tutorial:** :ref:`tutorial for constructing and applying interpolation operators <sphx_glr_tutorials_operators_2_differential.py>`
+**Tutorial:** :ref:`tutorial for constructing and applying interpolation operators <sphx_glr_tutorials_operators_0_interpolation.py>`
 
 Interpolation Matrix in 1D
 ==========================

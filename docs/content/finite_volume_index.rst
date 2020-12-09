@@ -122,5 +122,5 @@ where :math:`\boldsymbol{C^T \! M_{\mu f} C } + i\omega \boldsymbol{M_{\sigma e}
 	- :math:`\boldsymbol{C}` is the :ref:`discrete curl operator <operators_differential_curl>`
 	- :math:`\boldsymbol{M_{\sigma e}}` is the :ref:`mass matrix for electrical conductivity <inner_products_isotropic_edges>`
 	- :math:`\boldsymbol{M_{\mu f}}` is the :ref:`mass matrix for the inverse of the magnetic permeability <inner_products_isotropic_reciprocal>`
-	- :math:`\boldsymbol{j_s}` is the discrete representation of the source term on the edges
+	- :math:`\boldsymbol{j_s}` is the discrete representation of the source current density on the edges
 
