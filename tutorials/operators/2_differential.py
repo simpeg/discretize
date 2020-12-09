@@ -20,6 +20,7 @@ Here we demonstrate:
     - Mapping and dimensions
     - Applications for the transpose
 
+:ref:`See our theory section for differential operators <operators_differential>`
 
 """
 

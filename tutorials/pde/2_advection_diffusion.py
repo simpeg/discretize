@@ -17,11 +17,11 @@ the advection-diffusion equation with zero Neumann boundary conditions is given 
 
 where 
 
-	- :math:`p` is the unknown variable
+    - :math:`p` is the unknown variable
     - :math:`p_t` is its time derivative
     - :math:`\\alpha` defines the diffusivity within the domain
-	- :math:`\\vec{u}` is the velocity field
-	- :math:`s` is the source term
+    - :math:`\\vec{u}` is the velocity field
+    - :math:`s` is the source term
 
 We will consider the case where there is a single point source within our domain.
 Where :math:`s_0` is a constant, the source term is given by:
@@ -36,18 +36,18 @@ discretize in time. Where :math:`\\Delta t` is the step length, the system which
 must be solved at each time step :math:`k` is given by:
     
 .. math::
-	\\big [ \\boldsymbol{I} + \\Delta t \\, \\boldsymbol{M} \\big ] \\, \\boldsymbol{p}^{k+1} = \\boldsymbol{p}^k + \\Delta t \\, \\boldsymbol{s}
+    \\big [ \\boldsymbol{I} + \\Delta t \\, \\boldsymbol{M} \\big ] \\, \\boldsymbol{p}^{k+1} = \\boldsymbol{p}^k + \\Delta t \\, \\boldsymbol{s}
 
 where
 
 .. math::
-	\\boldsymbol{M} = - \\boldsymbol{D \\, M_\\alpha^{-1} \\tilde{G}} +  
-	c\\, \\boldsymbol{A_{fc}} diag(\\boldsymbol{u}) \\, \\boldsymbol{M_f^{-1} \\tilde{G}}
+    \\boldsymbol{M} = - \\boldsymbol{D \\, M_\\alpha^{-1} \\tilde{G}} +  
+    c\\, \\boldsymbol{A_{fc}} diag(\\boldsymbol{u}) \\, \\boldsymbol{M_f^{-1} \\tilde{G}}
 
 and
 
 .. math::
-	\\boldsymbol{s} = \\boldsymbol{M_c^{-1} \\, q}
+    \\boldsymbol{s} = \\boldsymbol{M_c^{-1} \\, q}
 
 Discrete operators are defined as follows:
     

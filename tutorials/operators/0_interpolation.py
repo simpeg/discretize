@@ -11,7 +11,8 @@ The focus of this tutorial is as follows:
     - How to construct and apply interpolation matrices in 1D, 2D and 3D
     - Interpolation on different mesh types
     - Interpolation of scalars and vectors
-    
+
+:ref:`See our theory section on interpolation operators <operators_interpolation>`
 
 """
 
