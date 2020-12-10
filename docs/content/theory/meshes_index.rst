@@ -44,8 +44,7 @@ Mesh types supported by the *discretize* package include:
 Where Quantities Live
 =====================
 
-In *discretize*, we use a staggered mimetic finite volume approach (`Hyman and
-Shashkov, 1999 <https://cnls.lanl.gov/~shashkov/papers/maxjcp.pdf>`_).
+In *discretize*, we use a staggered mimetic finite volume approach :cite:`haber2014,HymanShashkov1999`.
 This approach requires the definitions of variables at either cell-centers, nodes, faces, or edges.
 Below, we illustrate the valid locations for discrete quantities for a single cell where:
 

@@ -26,6 +26,7 @@
     :caption: Reference documentation
 
     api/index.rst
+    content/references
 
 .. toctree::
     :maxdepth: 2

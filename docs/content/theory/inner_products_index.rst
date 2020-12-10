@@ -4,7 +4,7 @@ Inner Products
 **************
 
 Inner products provide the building blocks for discretizing and solving PDEs with the
-finite volume method. For scalar quantities :math:`\psi` and :math:`\phi`, the inner
+finite volume method (:cite:`haber2014,HymanShashkov1999`). For scalar quantities :math:`\psi` and :math:`\phi`, the inner
 product is given by:
 
 .. math::

@@ -3,7 +3,7 @@
 Solving PDEs Examples
 *********************
 
-Here, we provide examples of full derivations for discretizing PDEs with the finite volume method.
+Here, we provide examples of full derivations for discretizing PDEs with the finite volume method (:cite:`haber2014,HymanShashkov1999`).
 
 
 **Contents:**

@@ -3,7 +3,8 @@
 Poisson Equation with Zero Neumann Boundary Condition
 *****************************************************
 
-Here we provide the derivation for solving the Poisson equation with zero Neumann boundary conditions using the finite volume method.
+Here we provide the derivation for solving the Poisson equation with zero Neumann boundary conditions using the
+finite volume method.
 Derivations are provided for discretization of the solution on both the nodes and at cell centers.
 Key lessons include:
 
@@ -21,7 +22,7 @@ a positive and a negative point charge separated by some distance.
 Setup
 -----
 
-Starting with Gauss's law and Faraday's law:
+Starting with Gauss's law and Faraday's law in the case of electrostatics (:cite:`griffiths1999`):
     
 .. math::
     &\nabla \cdot \vec{e} = \frac{\rho}{\epsilon_0} \\

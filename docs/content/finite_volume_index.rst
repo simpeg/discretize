@@ -18,8 +18,7 @@ that can be solved to compute the discrete approximation of a desired quantity.
 
    Conceptual illustrating for solving PDEs with the finite volume method.
 
-In *discretize*, we use a staggered mimetic finite volume approach (`Hyman and
-Shashkov, 1999 <https://cnls.lanl.gov/~shashkov/papers/maxjcp.pdf>`_).
+In *discretize*, we use a staggered mimetic finite volume approach (:cite:`haber2014,HymanShashkov1999`).
 This approach requires the definitions of variables at either cell-centers, nodes, faces, or edges.
 This method is different from finite difference methods,
 as the final linear system is constructed by approximating the inner products between

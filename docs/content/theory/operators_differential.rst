@@ -3,7 +3,8 @@
 Differential Operators
 **********************
 
-Here, we provide the background theory for how discrete differential operators are formed. 
+Here, we provide the background theory for how discrete differential operators are formed.
+We follow the approach discussed in :cite:`haber2014,HymanShashkov1999`.
 For geophysical problems, the relationship between two physical quantities may include one of several differential operators:
 
     - **Divergence:** :math:`\nabla \cdot \vec{u} = \dfrac{\partial u_x}{\partial x} + \dfrac{\partial u_y}{\partial y} + \dfrac{\partial u_y}{\partial y}`
