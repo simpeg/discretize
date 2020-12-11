@@ -109,10 +109,10 @@ class BaseMesh:
                 raise ValueError(
                     f"Orientation matrix must be square and of shape {(dim, dim)}, got {R.shape}"
                 )
+            # Ensure each row is unitary
+            R = R / np.linalg.norm(R, axis=1)[:, None]
             # Check if matrix is orthogonal
-            A = R @ R.T
-            A_diag = np.diag(A.diagonal())
-            if not np.allclose(A, A_diag, rtol=1.e-5, atol=1E-6):
+            if not np.allclose(R @ R.T, np.identity(self.dim), rtol=1.e-5, atol=1E-6):
                 raise ValueError("Orientation matrix is not orthogonal")
             self._orientation = R
 
@@ -649,29 +649,70 @@ class BaseMesh:
 
     @property
     def axis_u(self):
-        # Add deprecation notice
+        """
+        .. deprecated:: 0.7.0
+          `axis_u` will be removed in discretize 1.0.0, it is replaced by
+          `mesh.orientation` for better mesh orientation validation.
+        """
+        warnings.warn(
+            "The axis_u property is deprecated, please access as self.orientation[0]. "
+            "This will be removed in discretize 1.0.0.", DeprecationWarning
+        )
         return self.orientation[0]
 
     @axis_u.setter
     def axis_u(self, value):
+        warnings.warn(
+            "Setting the axis_u property is deprecated, and now unchecked, please "
+            "directly set the self.orientation property. This will be removed in "
+            "discretize 1.0.0.", DeprecationWarning
+        )
         self.orientation[0] = value
 
     @property
     def axis_v(self):
-        # Add deprecation notice
+        """
+        .. deprecated:: 0.7.0
+          `axis_v` will be removed in discretize 1.0.0, it is replaced by
+          `mesh.orientation` for better mesh orientation validation.
+        """
+        warnings.warn(
+            "The axis_v property is deprecated, please access as self.orientation[0]. "
+            "This will be removed in discretize 1.0.0.", DeprecationWarning
+        )
         return self.orientation[1]
 
     @axis_v.setter
     def axis_v(self, value):
+        warnings.warn(
+            "Setting the axis_v property is deprecated, and now unchecked, please "
+            "directly set the self.orientation property. This will be removed in "
+            "discretize 1.0.0.", DeprecationWarning
+        )
+        value = value/np.linalg.norm(value)
         self.orientation[1] = value
 
     @property
     def axis_w(self):
-        # Add deprecation notice
+        """
+        .. deprecated:: 0.7.0
+          `axis_w` will be removed in discretize 1.0.0, it is replaced by
+          `mesh.orientation` for better mesh orientation validation.
+        """
+        warnings.warn(
+            "The axis_w property is deprecated, please access as self.orientation[0]. "
+            "This will be removed in discretize 1.0.0.", DeprecationWarning
+        )
         return self.orientation[2]
 
     @axis_w.setter
     def axis_w(self, value):
+        warnings.warn(
+            "Setting the axis_v property is deprecated, and now unchecked, please "
+            "directly set the self.orientation property. This will be removed in "
+            "discretize 1.0.0.", DeprecationWarning
+        )
+        value = value/np.linalg.norm(value)
         self.orientation[2] = value
 
 
