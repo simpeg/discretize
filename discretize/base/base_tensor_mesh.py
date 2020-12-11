@@ -82,7 +82,7 @@ class BaseTensorMesh(BaseMesh):
 
         shape_cells = tuple([len(h_i) for h_i in h])
         kwargs.pop("shape_cells", None)
-        super().__init__(shape_cells, **kwargs)  # do not pass origin here
+        super().__init__(shape_cells=shape_cells, **kwargs)  # do not pass origin here
         if origin is not None:
             self.origin = origin
 

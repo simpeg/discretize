@@ -614,7 +614,7 @@ class BaseMesh:
             return location_type
         elif location_type[0] == "F":
             if len(location_type) > 1:
-                return "faces_"+ location_type[-1]
+                return "faces_" + location_type[-1]
             else:
                 return "faces"
         elif location_type[0] == "E":
