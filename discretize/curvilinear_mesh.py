@@ -3,8 +3,8 @@ import numpy as np
 from discretize.utils import mkvc, index_cube, face_info, volume_tetrahedron
 from discretize.base import BaseRectangularMesh
 from discretize.operators import DiffOperators, InnerProducts
+from discretize.mixins import InterfaceMixins
 from discretize.utils.code_utils import deprecate_property
-
 
 # Some helper functions.
 def _length2D(x):
@@ -23,7 +23,7 @@ def _normalize3D(x):
     return x / np.kron(np.ones((1, 3)), mkvc(_length3D(x), 2))
 
 
-class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
+class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts, InterfaceMixins):
     """CurvilinearMesh is a mesh class that deals with curvilinear meshes.
 
     Example of a curvilinear mesh:
@@ -69,7 +69,7 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
                 raise ValueError(f"Unexpected shape of item in node list, expect array with {dim} dimensions, got {len(nodes.shape)}")
             if node_list[0].shape != nodes.shape:
                 raise ValueError(f"The shape of nodes are not consistent, saw {node_list[0].shape} and {nodes.shape}")
-        self._node_list = node_list
+        self._node_list = tuple(node_list)
 
         # Save nodes to private variable _nodes as vectors
         self._nodes = np.ones((self.node_list[0].size, dim))

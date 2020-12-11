@@ -87,7 +87,7 @@
 
 from discretize.base import BaseTensorMesh
 from discretize.operators import InnerProducts, DiffOperators
-from discretize.base.mesh_io import TreeMeshIO
+from discretize.mixins import InterfaceMixins, TreeMeshIO
 from discretize.utils import as_array_n_by_dim
 from discretize._extensions.tree_ext import _TreeMesh, TreeCell
 import numpy as np
@@ -96,7 +96,7 @@ import warnings
 from discretize.utils.code_utils import deprecate_property
 
 
-class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
+class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO, InterfaceMixins):
     """
     TreeMesh is a class for adaptive QuadTree (2D) and OcTree (3D) meshes.
     """
@@ -139,17 +139,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
     def __init__(self, h=None, origin=None, **kwargs):
         if "x0" in kwargs:
             origin = kwargs.pop("x0")
-        BaseTensorMesh.__init__(
-            self, h, origin
-        )
-        def is_pow2(num):
-            return ((num & (num - 1)) == 0) and num != 0
-        for n in self.shape_cells:
-            if not is_pow2(n):
-                raise ValueError("length of cell width vectors must be a power of 2")
-
-        # Now can initialize cpp tree parent
-        _TreeMesh.__init__(self, self.h, self.origin)
+        super().__init__(h=h, origin=origin)
 
         cell_state = kwargs.pop("cell_state", None)
         cell_indexes = kwargs.pop("cell_indexes", None)
@@ -591,6 +581,9 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
     def cell_state(self):
         indexes, levels = self.__getstate__()
         return {'indexes': indexes.tolist(), 'levels': levels.tolist()}
+
+    def validate(self):
+        return self.finalized
 
     def __reduce__(self):
         return TreeMesh, (self.h, self.origin), self.__getstate__()

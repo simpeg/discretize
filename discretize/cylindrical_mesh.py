@@ -15,6 +15,7 @@ from discretize.utils import (
 )
 from discretize.base import BaseTensorMesh, BaseRectangularMesh
 from discretize.operators import DiffOperators, InnerProducts
+from discretize.mixins import InterfaceMixins
 from discretize.utils.code_utils import (
     deprecate_class,
     deprecate_property,
@@ -24,7 +25,7 @@ import warnings
 
 
 class CylindricalMesh(
-    BaseTensorMesh, BaseRectangularMesh, InnerProducts, DiffOperators
+    BaseTensorMesh, BaseRectangularMesh, InnerProducts, DiffOperators, InterfaceMixins
 ):
     """
     CylindricalMesh is a mesh class for cylindrical problems. It supports both
@@ -1635,7 +1636,6 @@ class CylindricalMesh(
             location_type_to = location_type
         location_type_to = self._parse_location_type(location_type_to)
 
-        print(location_type, location_type_to)
         if location_type == "faces":
             # do this three times for each component
             X = self.get_interpolation_matrix_cartesian_mesh(

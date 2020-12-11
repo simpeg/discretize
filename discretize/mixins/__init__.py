@@ -22,11 +22,12 @@ Mixin classes
   InterfaceOMF
 
 """
+from .mesh_io import TensorMeshIO, TreeMeshIO
 
 AVAILABLE_MIXIN_CLASSES = []
 
 try:
-    from .vtk_mod import InterfaceVTK, InterfaceTensorread_vtk
+    from .vtk_mod import InterfaceVTK
 
     AVAILABLE_MIXIN_CLASSES.append(InterfaceVTK)
 except ImportError as err:

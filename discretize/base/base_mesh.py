@@ -8,11 +8,10 @@ import json
 
 from discretize.utils import mkvc, Identity
 from discretize.utils.code_utils import deprecate_property, deprecate_method
-from discretize.mixins import InterfaceMixins
 import warnings
 
 
-class BaseMesh(InterfaceMixins):
+class BaseMesh:
     """Base Mesh for discretize
 
     BaseMesh does all the counting you don't want to do. BaseMesh should be inherited
@@ -93,6 +92,7 @@ class BaseMesh(InterfaceMixins):
         if reference_system is None:
             reference_system = "cartesian"
         self.reference_system = reference_system
+        super().__init__(**kwargs)
 
     def __getattr__(self, name):
         if name == "_aliases":
@@ -156,7 +156,9 @@ class BaseMesh(InterfaceMixins):
                     f"Orientation matrix must be square and of shape {(dim, dim)}, got {R.shape}"
                 )
             # Check if matrix is orthogonal
-            if not np.allclose(R @ R.T, np.identity(dim), rtol=1.e-5, atol=1E-6):
+            A = R @ R.T
+            A_diag = np.diag(A.diagonal())
+            if not np.allclose(A, A_diag, rtol=1.e-5, atol=1E-6):
                 raise ValueError("Orientation matrix is not orthogonal")
             self._orientation = R
 
@@ -201,10 +203,10 @@ class BaseMesh(InterfaceMixins):
                 # change to a list and make sure inner items are not numpy arrays
                 if isinstance(attr, np.ndarray):
                     attr = attr.tolist()
-                if isinstance(attr, tuple):
+                elif isinstance(attr, tuple):
                     attr = list(attr)
                     for i, thing in enumerate(attr):
-                        if isinstance(attr, np.ndarray):
+                        if isinstance(thing, np.ndarray):
                             attr[i] = thing.tolist()
                 out[item] = attr
         return out
@@ -219,6 +221,8 @@ class BaseMesh(InterfaceMixins):
 
     @classmethod
     def deserialize(cls, items, **kwargs):
+        items.pop('__module__', None)
+        items.pop('__class__', None)
         return cls(**items)
 
     @property
@@ -624,7 +628,10 @@ class BaseMesh(InterfaceMixins):
         Make a copy of the current mesh
         """
         cls = type(self)
-        return cls(**self.to_dict())
+        items = self.to_dict()
+        items.pop('__module__', None)
+        items.pop('__class__', None)
+        return cls(**items)
 
     @property
     def reference_is_rotated(self):
@@ -657,7 +664,7 @@ class BaseMesh(InterfaceMixins):
             return location_type
         elif location_type[0] == "F":
             if len(location_type) > 1:
-                return "faces_"+ location_type[-1]
+                return "faces_" + location_type[-1]
             else:
                 return "faces"
         elif location_type[0] == "E":

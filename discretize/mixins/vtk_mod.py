@@ -135,9 +135,14 @@ class InterfaceVTK(object):
     .. code-block:: python
 
        # Defined a rotated reference frame
-       mesh.axis_u = (1,-1,0)
-       mesh.axis_v = (-1,-1,0)
-       mesh.axis_w = (0,0,1)
+       axis_u = (1,-1,0)
+       axis_v = (-1,-1,0)
+       axis_w = (0,0,1)
+       mesh.orientation = np.array([
+           axis_u,
+           axis_v,
+           axis_w
+       ])
 
        # Yield the rotated vtkStructuredGrid
        dataset_r = mesh.to_vtk()
@@ -356,7 +361,6 @@ class InterfaceVTK(object):
             Name('s) and array('s). Match number of cells
 
         """
-        # TODO: mesh.validate()
         converters = {
             "tree": InterfaceVTK.__tree_mesh_to_vtk,
             "tensor": InterfaceVTK.__tensor_mesh_to_vtk,

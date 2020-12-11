@@ -3,13 +3,13 @@ import numpy as np
 
 from discretize.base import BaseRectangularMesh, BaseTensorMesh
 from discretize.operators import DiffOperators, InnerProducts
-from discretize.base.mesh_io import TensorMeshIO
+from discretize.mixins import InterfaceMixins, TensorMeshIO
 from discretize.utils import mkvc
 from discretize.utils.code_utils import deprecate_property
 
 
 class TensorMesh(
-    BaseTensorMesh, BaseRectangularMesh, DiffOperators, InnerProducts, TensorMeshIO
+    BaseTensorMesh, BaseRectangularMesh, DiffOperators, InnerProducts, TensorMeshIO, InterfaceMixins
 ):
     """
     TensorMesh is a mesh class that deals with tensor product meshes.
