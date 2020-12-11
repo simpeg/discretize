@@ -55,6 +55,7 @@ class BaseMesh:
         if reference_system is None:
             reference_system = "cartesian"
         self.reference_system = reference_system
+        super().__init__(**kwargs)
 
     def __getattr__(self, name):
         if name == "_aliases":
@@ -153,10 +154,10 @@ class BaseMesh:
                 # change to a list and make sure inner items are not numpy arrays
                 if isinstance(attr, np.ndarray):
                     attr = attr.tolist()
-                if isinstance(attr, tuple):
+                elif isinstance(attr, tuple):
                     attr = list(attr)
                     for i, thing in enumerate(attr):
-                        if isinstance(attr, np.ndarray):
+                        if isinstance(thing, np.ndarray):
                             attr[i] = thing.tolist()
                 out[item] = attr
         return out
@@ -171,6 +172,8 @@ class BaseMesh:
 
     @classmethod
     def deserialize(cls, items, **kwargs):
+        items.pop('__module__', None)
+        items.pop('__class__', None)
         return cls(**items)
 
     @property
@@ -575,7 +578,10 @@ class BaseMesh:
         Make a copy of the current mesh
         """
         cls = type(self)
-        return cls(**self.to_dict())
+        items = self.to_dict()
+        items.pop('__module__', None)
+        items.pop('__class__', None)
+        return cls(**items)
 
     @property
     def reference_is_rotated(self):

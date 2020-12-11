@@ -145,13 +145,6 @@ class DiffOperators(object):
         "aveN2F": "average_node_to_face",
     }
 
-    def __init__(self):
-        raise Exception(
-            "DiffOperators is a base class providing differential"
-            "operators on meshes and cannot run on its own."
-            "Inherit to your favorite Mesh class."
-        )
-
     ###########################################################################
     #                                                                         #
     #                             Face Divergence                             #
