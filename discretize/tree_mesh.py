@@ -87,7 +87,7 @@
 
 from discretize.base import BaseTensorMesh
 from discretize.operators import InnerProducts, DiffOperators
-from discretize.base.mesh_io import TreeMeshIO
+from discretize.mixins import InterfaceMixins, TreeMeshIO
 from discretize.utils import as_array_n_by_dim
 from discretize._extensions.tree_ext import _TreeMesh, TreeCell
 import numpy as np
@@ -96,7 +96,7 @@ import warnings
 from discretize.utils.code_utils import deprecate_property
 
 
-class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
+class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO, InterfaceMixins):
     """
     TreeMesh is a class for adaptive QuadTree (2D) and OcTree (3D) meshes.
     """

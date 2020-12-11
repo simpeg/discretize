@@ -6,7 +6,7 @@ from discretize.utils.code_utils import deprecate_method
 import warnings
 
 try:
-    from ..mixins import InterfaceTensorread_vtk
+    from discretize.mixins.vtk_mod import InterfaceTensorread_vtk
 except ImportError:
     InterfaceTensorread_vtk = object
 

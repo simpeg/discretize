@@ -8,11 +8,10 @@ import json
 
 from discretize.utils import mkvc, Identity
 from discretize.utils.code_utils import deprecate_property, deprecate_method
-from discretize.mixins import InterfaceMixins
 import warnings
 
 
-class BaseMesh(InterfaceMixins):
+class BaseMesh:
     """
     BaseMesh does all the counting you don't want to do.
     BaseMesh should be inherited by meshes with a regular structure.

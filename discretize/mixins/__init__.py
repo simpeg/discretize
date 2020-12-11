@@ -4,11 +4,12 @@ with external libraries such as VTK and OMF. These modules are only imported if
 those external packages are available in the active Python environment and
 provide extra functionality that different finite volume meshes can inherrit.
 """
+from .mesh_io import TensorMeshIO, TreeMeshIO
 
 AVAILABLE_MIXIN_CLASSES = []
 
 try:
-    from .vtk_mod import InterfaceVTK, InterfaceTensorread_vtk
+    from .vtk_mod import InterfaceVTK
 
     AVAILABLE_MIXIN_CLASSES.append(InterfaceVTK)
 except ImportError as err:
