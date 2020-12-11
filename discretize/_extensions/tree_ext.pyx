@@ -254,6 +254,15 @@ cdef class _TreeMesh:
         self.tree = new c_Tree()
 
     def __init__(self, h, origin):
+        super().__init__(h=h, origin=origin)
+        def is_pow2(num):
+            return ((num & (num - 1)) == 0) and num != 0
+        for n in self.shape_cells:
+            if not is_pow2(n):
+                raise ValueError("length of cell width vectors must be a power of 2")
+        h = self.h
+        origin = self.origin
+
         nx2 = 2*len(h[0])
         ny2 = 2*len(h[1])
         self._dim = len(origin)

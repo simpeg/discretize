@@ -139,17 +139,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO, InterfaceMi
     def __init__(self, h=None, origin=None, **kwargs):
         if "x0" in kwargs:
             origin = kwargs.pop("x0")
-        BaseTensorMesh.__init__(
-            self, h, origin
-        )
-        def is_pow2(num):
-            return ((num & (num - 1)) == 0) and num != 0
-        for n in self.shape_cells:
-            if not is_pow2(n):
-                raise ValueError("length of cell width vectors must be a power of 2")
-
-        # Now can initialize cpp tree parent
-        _TreeMesh.__init__(self, self.h, self.origin)
+        super().__init__(h=h, origin=origin)
 
         cell_state = kwargs.pop("cell_state", None)
         cell_indexes = kwargs.pop("cell_indexes", None)
