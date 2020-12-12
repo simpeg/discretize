@@ -183,9 +183,14 @@ class BaseMesh:
     @property
     def reference_system(self):
         """ Coordinate reference system
-        The type of coordinate reference frame. Can take on the values
-        """
 
+        The type of coordinate reference frame. Will be one of the values "cartesian",
+        "cylindrical", or "spherical".
+
+        Returns
+        -------
+        str
+        """
         return self._reference_system
 
     @reference_system.setter
@@ -210,6 +215,20 @@ class BaseMesh:
         self._reference_system = value
 
     def to_dict(self):
+        """Representation of the mesh's attributes as a dictionary
+
+        The dictionary representation of the mesh class necessary to reconstruct the
+        object. This is useful for serialization. All of the attributes returned in this
+        dictionary will be JSON serializable.
+
+        The mesh class is also stored in the dictionary as strings under the
+        `__module__` and `__class__` keys.
+
+        Returns
+        -------
+        dict
+            Dictionary of {attribute: value} for the attributes of this mesh
+        """
         cls = type(self)
         out = {
             '__module__': cls.__module__,
