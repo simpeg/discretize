@@ -102,16 +102,14 @@ class BaseMesh:
 
     @property
     def origin(self):
-        """ Origin of the mesh
+        """Base point for the mesh
+
+        For a cartesian mesh, this is the bottom southwest corner.
 
         Returns
         -------
-        numpy.ndarray
-            Array of floats defining the bottom south west origin of the mesh
-
-        Notes
-        -----
-        Also accessible as 'x0'
+        np.ndarray of float
+            origin with length mesh.dim
         """
         return self._origin
 
@@ -132,7 +130,7 @@ class BaseMesh:
 
         Returns
         -------
-        tuple of ints
+        tuple of int
 
         Notes
         -----
@@ -142,6 +140,26 @@ class BaseMesh:
 
     @property
     def orientation(self):
+        """Direction of the axes of the mesh.
+
+        A rotation matrix describing the orientation of the meshes axes. In a 3D
+        cartesian space mesh, this corresponds to the direction of the X, Y, and Z axes.
+
+        It can also be used to transform coordinates from their coordinate
+        system into a conventional cartesian system.
+
+        Why would you want to use these UVW mapping vectors in this
+        `orientation` property? They allow us to define the relationship
+        between local and global coordinate systems and provide a tool for
+        switching between the two while still maintaing the connectivity of the
+        mesh's cells. For a visual example of this, please see the figure in the
+        docs for the :class:`~discretize.mixins.vtk_mod.InterfaceVTK`.
+
+        Returns
+        -------
+        np.ndarray of float
+            square array of shape (mesh.dim, mesh.dim)
+        """
         return self._orientation
 
     @orientation.setter
@@ -642,21 +660,6 @@ class BaseMesh:
 
     @property
     def rotation_matrix(self):
-        """Builds a rotation matrix to transform coordinates from their coordinate
-        system into a conventional cartesian system. This is built off of the
-        three `axis_u`, `axis_v`, and `axis_w` properties; these mapping
-        coordinates use the letters U, V, and W (the three letters preceding X,
-        Y, and Z in the alphabet) to define the projection of the X, Y, and Z
-        durections. These UVW vectors describe the placement and transformation
-        of the mesh's coordinate sytem assuming at most 3 directions.
-
-        Why would you want to use these UVW mapping vectors the this
-        `rotation_matrix` property? They allow us to define the relationship
-        between local and global coordinate systems and provide a tool for
-        switching between the two while still maintaing the connectivity of the
-        mesh's cells. For a visual example of this, please see the figure in the
-        docs for the :class:`~discretize.mixins.vtk_mod.InterfaceVTK`.
-        """
         return self.orientation  # np.array([self.axis_u, self.axis_v, self.axis_w])
 
     def _parse_location_type(self, location_type):
@@ -683,7 +686,14 @@ class BaseMesh:
             return location_type
 
     def validate(self):
-        """Every object will be valid upon initialization"""
+        """Return the validation state of the mesh
+
+        This mesh is valid immediately upon initialization
+
+        Returns
+        -------
+        bool : True
+        """
         return True
 
 
