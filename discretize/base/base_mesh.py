@@ -227,7 +227,7 @@ class BaseMesh:
         Returns
         -------
         dict
-            Dictionary of {attribute: value} for the attributes of this mesh
+            Dictionary of {attribute: value} for the attributes of this mesh.
         """
         cls = type(self)
         out = {
@@ -254,17 +254,36 @@ class BaseMesh:
         return self.to_dict() == other.to_dict()
 
     def serialize(self):
+        """An alias for ``to_dict``
+
+        See Also
+        --------
+        to_dict
+        """
         return self.to_dict()
 
     @classmethod
     def deserialize(cls, items, **kwargs):
+        """Create this mesh from a dictionary of attributes
+
+        Parameters
+        ----------
+        items : dict
+            dictionary of {attribute : value} pairs that will be passed to this class's
+            initialization method as keyword arguments.
+        """
         items.pop('__module__', None)
         items.pop('__class__', None)
         return cls(**items)
 
     @property
     def x0(self):
-        """An alias for the origin"""
+        """An alias for the origin
+
+        See Also
+        --------
+        origin
+        """
         return self.origin
 
     @x0.setter
@@ -297,17 +316,21 @@ class BaseMesh:
 
         Examples
         --------
-        >>> import discretize
-        >>> import numpy as np
-        >>> import matplotlib.pyplot as plt
-        >>> mesh = discretize.TensorMesh([np.ones(n) for n in [2,3]])
-        >>> mesh.plot_grid(centers=True, show_it=True)
-        >>> print(mesh.n_cells)
+        >>> from discretize.base import BaseMesh
+        >>> mesh = BaseMesh((10, 10))
+        >>> mesh.n_cells
+        100
         """
         return int(np.prod(self.shape_cells))
 
     def __len__(self):
-        """The number of cells on the mesh."""
+        """The number of cells on the mesh.
+
+        See Also
+        --------
+        n_cells
+
+        """
         return self.n_cells
 
     @property
@@ -325,14 +348,12 @@ class BaseMesh:
 
         Examples
         --------
-        >>> import discretize
-        >>> import numpy as np
-        >>> import matplotlib.pyplot as plt
-        >>> mesh = discretize.TensorMesh([np.ones(n) for n in [2,3]])
-        >>> mesh.plot_grid(nodes=True, show_it=True)
-        >>> print(mesh.n_nodes)
+        >>> from discretize.base import BaseMesh
+        >>> mesh = BaseMesh((10, 10))
+        >>> mesh.n_nodes
+        121
         """
-        return int(np.prod(x + 1 for x in self.shape_cells))
+        return int(np.prod([x + 1 for x in self.shape_cells]))
 
     @property
     def n_edges_x(self):
@@ -347,7 +368,7 @@ class BaseMesh:
         Also accessible as `nEx`.
 
         """
-        return int(np.prod(x + y for x, y in zip(self.shape_cells, (0, 1, 1))))
+        return int(np.prod([x + y for x, y in zip(self.shape_cells, (0, 1, 1))]))
 
     @property
     def n_edges_y(self):
@@ -364,7 +385,7 @@ class BaseMesh:
         """
         if self.dim < 2:
             return None
-        return int(np.prod(x + y for x, y in zip(self.shape_cells, (1, 0, 1))))
+        return int(np.prod([x + y for x, y in zip(self.shape_cells, (1, 0, 1))]))
 
     @property
     def n_edges_z(self):
@@ -381,7 +402,7 @@ class BaseMesh:
         """
         if self.dim < 3:
             return None
-        return int(np.prod(x + y for x, y in zip(self.shape_cells, (1, 1, 0))))
+        return int(np.prod([x + y for x, y in zip(self.shape_cells, (1, 1, 0))]))
 
     @property
     def n_edges_per_direction(self):
@@ -441,7 +462,7 @@ class BaseMesh:
         -----
         Also accessible as `nFx`.
         """
-        return int(np.prod(x + y for x, y in zip(self.shape_cells, (1, 0, 0))))
+        return int(np.prod([x + y for x, y in zip(self.shape_cells, (1, 0, 0))]))
 
     @property
     def n_faces_y(self):
@@ -457,7 +478,7 @@ class BaseMesh:
         """
         if self.dim < 2:
             return None
-        return int(np.prod(x + y for x, y in zip(self.shape_cells, (0, 1, 0))))
+        return int(np.prod([x + y for x, y in zip(self.shape_cells, (0, 1, 0))]))
 
     @property
     def n_faces_z(self):
@@ -473,7 +494,7 @@ class BaseMesh:
         """
         if self.dim < 3:
             return None
-        return int(np.prod(x + y for x, y in zip(self.shape_cells, (0, 0, 1))))
+        return int(np.prod([x + y for x, y in zip(self.shape_cells, (0, 0, 1))]))
 
     @property
     def n_faces_per_direction(self):
@@ -523,12 +544,12 @@ class BaseMesh:
 
     @property
     def face_normals(self):
-        """Face Normals
+        """Vectors normal to the faces of the mesh
 
         Returns
         -------
-        numpy.ndarray
-            normals, (n_faces, dim)
+        numpy.ndarray of float
+            array of shape (mesh.n_faces, mesh.dim)
         """
         if self.dim == 2:
             nX = np.c_[np.ones(self.n_faces_x), np.zeros(self.n_faces_x)]
@@ -554,12 +575,12 @@ class BaseMesh:
 
     @property
     def edge_tangents(self):
-        """Edge Tangents
+        """Vectors tangent to the edges of the mesh
 
         Returns
         -------
-        numpy.ndarray
-            normals, (n_edges, dim)
+        numpy.ndarray of float
+            array of shape (mesh.n_edges, mesh.dim)
         """
         if self.dim == 2:
             tX = np.c_[np.ones(self.n_edges_x), np.zeros(self.n_edges_x)]
@@ -596,7 +617,7 @@ class BaseMesh:
 
         Returns
         -------
-        numpy.ndarray
+        numpy.ndarray of float
             projected face vector, (n_faces, )
 
         """
@@ -623,7 +644,7 @@ class BaseMesh:
 
         Returns
         -------
-        numpy.ndarray
+        numpy.ndarray of float
             projected edge vector, (n_edges, )
 
         """
@@ -638,10 +659,13 @@ class BaseMesh:
         return np.sum(edge_vector * self.edge_tangents, 1)
 
     def save(self, file_name="mesh.json", verbose=False, **kwargs):
-        """
-        Save the mesh to json
-        :param str file: file_name for saving the casing properties
-        :param str directory: working directory for saving the file
+        """Save the mesh to json
+
+        Parameters
+        ----------
+        file_name : str, optional
+            file_name for saving the mesh properties
+        verbose : bool, optional
         """
 
         if 'filename' in kwargs:
@@ -661,8 +685,12 @@ class BaseMesh:
         return f
 
     def copy(self):
-        """
-        Make a copy of the current mesh
+        """ Make a copy of the current mesh
+
+        Returns
+        -------
+        type(mesh)
+            A copy of this mesh.
         """
         cls = type(self)
         items = self.to_dict()
@@ -672,13 +700,24 @@ class BaseMesh:
 
     @property
     def reference_is_rotated(self):
-        """True if the axes are rotated from the traditional <X,Y,Z> system
-        with vectors of :math:`(1,0,0)`, :math:`(0,1,0)`, and :math:`(0,0,1)`
+        """Describes if this mesh is not aligned with traditional coordinate frame
+
+        Returns
+        -------
+        bool
+            True if the axes are rotated from the traditional <X,Y,Z> system
+            with vectors of :math:`(1,0,0)`, :math:`(0,1,0)`, and :math:`(0,0,1)`
         """
         return not np.allclose(self.orientation, np.identity(self.dim))
 
     @property
     def rotation_matrix(self):
+        """Aliase for self.orientation
+
+        See Also
+        --------
+        orientation
+        """
         return self.orientation  # np.array([self.axis_u, self.axis_v, self.axis_w])
 
     def _parse_location_type(self, location_type):
