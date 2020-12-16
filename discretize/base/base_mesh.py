@@ -157,10 +157,10 @@ class BaseMesh:
         for item in self._items:
             attr = getattr(self, item, None)
             if attr is not None:
-                # change to a list and make sure inner items are not numpy arrays
                 if isinstance(attr, np.ndarray):
                     attr = attr.tolist()
                 elif isinstance(attr, tuple):
+                    # change to a list and make sure inner items are not numpy arrays
                     attr = list(attr)
                     for i, thing in enumerate(attr):
                         if isinstance(thing, np.ndarray):
@@ -251,7 +251,7 @@ class BaseMesh:
         >>> mesh.plot_grid(nodes=True, show_it=True)
         >>> print(mesh.n_nodes)
         """
-        return int(np.prod(x + 1 for x in self.shape_cells))
+        return int(np.prod([x + 1 for x in self.shape_cells]))
 
     @property
     def n_edges_x(self):
@@ -266,7 +266,7 @@ class BaseMesh:
         Also accessible as `nEx`.
 
         """
-        return int(np.prod(x + y for x, y in zip(self.shape_cells, (0, 1, 1))))
+        return int(np.prod([x + y for x, y in zip(self.shape_cells, (0, 1, 1))]))
 
     @property
     def n_edges_y(self):
@@ -283,7 +283,7 @@ class BaseMesh:
         """
         if self.dim < 2:
             return None
-        return int(np.prod(x + y for x, y in zip(self.shape_cells, (1, 0, 1))))
+        return int(np.prod([x + y for x, y in zip(self.shape_cells, (1, 0, 1))]))
 
     @property
     def n_edges_z(self):
@@ -300,7 +300,7 @@ class BaseMesh:
         """
         if self.dim < 3:
             return None
-        return int(np.prod(x + y for x, y in zip(self.shape_cells, (1, 1, 0))))
+        return int(np.prod([x + y for x, y in zip(self.shape_cells, (1, 1, 0))]))
 
     @property
     def n_edges_per_direction(self):
@@ -360,7 +360,7 @@ class BaseMesh:
         -----
         Also accessible as `nFx`.
         """
-        return int(np.prod(x + y for x, y in zip(self.shape_cells, (1, 0, 0))))
+        return int(np.prod([x + y for x, y in zip(self.shape_cells, (1, 0, 0))]))
 
     @property
     def n_faces_y(self):
@@ -376,7 +376,7 @@ class BaseMesh:
         """
         if self.dim < 2:
             return None
-        return int(np.prod(x + y for x, y in zip(self.shape_cells, (0, 1, 0))))
+        return int(np.prod([x + y for x, y in zip(self.shape_cells, (0, 1, 0))]))
 
     @property
     def n_faces_z(self):
@@ -392,7 +392,7 @@ class BaseMesh:
         """
         if self.dim < 3:
             return None
-        return int(np.prod(x + y for x, y in zip(self.shape_cells, (0, 0, 1))))
+        return int(np.prod([x + y for x, y in zip(self.shape_cells, (0, 0, 1))]))
 
     @property
     def n_faces_per_direction(self):
@@ -659,6 +659,10 @@ class BaseMesh:
         .. deprecated:: 0.7.0
           `axis_u` will be removed in discretize 1.0.0, it is replaced by
           `mesh.orientation` for better mesh orientation validation.
+
+        See Also
+        --------
+        orientation
         """
         warnings.warn(
             "The axis_u property is deprecated, please access as self.orientation[0]. "
@@ -681,9 +685,13 @@ class BaseMesh:
         .. deprecated:: 0.7.0
           `axis_v` will be removed in discretize 1.0.0, it is replaced by
           `mesh.orientation` for better mesh orientation validation.
+
+        See Also
+        --------
+        orientation
         """
         warnings.warn(
-            "The axis_v property is deprecated, please access as self.orientation[0]. "
+            "The axis_v property is deprecated, please access as self.orientation[1]. "
             "This will be removed in discretize 1.0.0.", DeprecationWarning
         )
         return self.orientation[1]
@@ -704,9 +712,13 @@ class BaseMesh:
         .. deprecated:: 0.7.0
           `axis_w` will be removed in discretize 1.0.0, it is replaced by
           `mesh.orientation` for better mesh orientation validation.
+
+        See Also
+        --------
+        orientation
         """
         warnings.warn(
-            "The axis_w property is deprecated, please access as self.orientation[0]. "
+            "The axis_w property is deprecated, please access as self.orientation[2]. "
             "This will be removed in discretize 1.0.0.", DeprecationWarning
         )
         return self.orientation[2]
