@@ -111,7 +111,7 @@ class BaseMesh:
         else:
             R = np.atleast_2d(np.asarray(value, dtype=np.float64))
             dim = self.dim
-            if R.shape[0] != dim or R.shape[1] != dim:
+            if R.shape != (dim, dim):
                 raise ValueError(
                     f"Orientation matrix must be square and of shape {(dim, dim)}, got {R.shape}"
                 )
