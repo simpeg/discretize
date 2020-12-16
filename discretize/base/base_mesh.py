@@ -82,7 +82,7 @@ class BaseMesh:
         value = np.atleast_1d(value)
         if len(value) != self.dim:
             raise ValueError(
-                f"origin and shape must be the same length, got {len(value)} and {len(self.dim)}"
+                f"origin and shape must be the same length, got {len(value)} and {self.dim}"
             )
         self._origin = value
 
