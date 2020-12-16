@@ -78,6 +78,11 @@ class BaseMesh:
             shape_cells = kwargs.pop("n")
         if "x0" in kwargs:
             origin = kwargs.pop('x0')
+        axis_u = kwargs.pop("axis_u", None)
+        axis_v = kwargs.pop("axis_v", None)
+        axis_w = kwargs.pop("axis_w", None)
+        if axis_u is not None and axis_v is not None and axis_w is not None:
+            orientation = np.array([axis_u, axis_v, axis_w])
 
         shape_cells = tuple((int(val) for val in shape_cells))
         self._shape_cells = shape_cells
@@ -88,6 +93,7 @@ class BaseMesh:
 
         if orientation is None:
             orientation = Identity()
+
         self.orientation = orientation
         if reference_system is None:
             reference_system = "cartesian"
@@ -120,7 +126,7 @@ class BaseMesh:
         value = np.atleast_1d(value)
         if len(value) != self.dim:
             raise ValueError(
-                f"origin and shape must be the same length, got {len(value)} and {len(self.dim)}"
+                f"origin and shape must be the same length, got {len(value)} and {self.dim}"
             )
         self._origin = value
 
@@ -169,7 +175,7 @@ class BaseMesh:
         else:
             R = np.atleast_2d(np.asarray(value, dtype=np.float64))
             dim = self.dim
-            if R.shape[0] != dim or R.shape[1] != dim:
+            if R.shape != (dim, dim):
                 raise ValueError(
                     f"Orientation matrix must be square and of shape {(dim, dim)}, got {R.shape}"
                 )
@@ -237,10 +243,10 @@ class BaseMesh:
         for item in self._items:
             attr = getattr(self, item, None)
             if attr is not None:
-                # change to a list and make sure inner items are not numpy arrays
                 if isinstance(attr, np.ndarray):
                     attr = attr.tolist()
                 elif isinstance(attr, tuple):
+                    # change to a list and make sure inner items are not numpy arrays
                     attr = list(attr)
                     for i, thing in enumerate(attr):
                         if isinstance(thing, np.ndarray):
@@ -771,6 +777,10 @@ class BaseMesh:
         .. deprecated:: 0.7.0
           `axis_u` will be removed in discretize 1.0.0, it is replaced by
           `mesh.orientation` for better mesh orientation validation.
+
+        See Also
+        --------
+        orientation
         """
         warnings.warn(
             "The axis_u property is deprecated, please access as self.orientation[0]. "
@@ -793,9 +803,13 @@ class BaseMesh:
         .. deprecated:: 0.7.0
           `axis_v` will be removed in discretize 1.0.0, it is replaced by
           `mesh.orientation` for better mesh orientation validation.
+
+        See Also
+        --------
+        orientation
         """
         warnings.warn(
-            "The axis_v property is deprecated, please access as self.orientation[0]. "
+            "The axis_v property is deprecated, please access as self.orientation[1]. "
             "This will be removed in discretize 1.0.0.", DeprecationWarning
         )
         return self.orientation[1]
@@ -816,9 +830,13 @@ class BaseMesh:
         .. deprecated:: 0.7.0
           `axis_w` will be removed in discretize 1.0.0, it is replaced by
           `mesh.orientation` for better mesh orientation validation.
+
+        See Also
+        --------
+        orientation
         """
         warnings.warn(
-            "The axis_w property is deprecated, please access as self.orientation[0]. "
+            "The axis_w property is deprecated, please access as self.orientation[2]. "
             "This will be removed in discretize 1.0.0.", DeprecationWarning
         )
         return self.orientation[2]

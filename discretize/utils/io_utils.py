@@ -19,6 +19,8 @@ def load_mesh(file_name):
         class_name = jsondict.pop('__class__')
         mod = importlib.import_module(module_name)
         cls = getattr(mod, class_name)
+        if "_n" in jsondict:
+            jsondict["shape_cells"] = jsondict.pop("_n")  # need to catch this old _n property here
         data = cls(**jsondict)
     return data
 
