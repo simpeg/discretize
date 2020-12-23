@@ -190,6 +190,28 @@ class BaseTensorMesh(BaseMesh):
         return ndgrid(*self.h)
 
     @property
+    def boundary_h(self):
+        """Boundary cell widths that correspond to each boundary face
+
+        Returns
+        -------
+        np.ndarray of float
+            array of shape (mesh.n_boundary_faces,)
+        """
+        hx = np.array([self.h[0][0], self.h[0][-1]])
+        hy = []
+        hz = []
+        if self.dim > 1:
+            hx = np.tile(hx, self.shape_cells[1])
+            hy = np.repeat(np.r_[self.h[1][0], self.h[1][-1]], self.shape_cells[0])
+            hz = []
+        if self.dim > 2:
+            hx = np.tile(hx, self.shape_cells[2])
+            hy = np.tile(hy, self.shape_cells[2])
+            hz = np.repeate(np.r_[self.h[2][0], self.h[2][-1]], self.shape_cells[0]*self.shape_cells[1])
+        return np.r_[hx, hy, hz]
+
+    @property
     def faces_x(self):
         """Face staggered grid in the x direction."""
         if self.nFx == 0:
@@ -209,6 +231,50 @@ class BaseTensorMesh(BaseMesh):
         if self.nFz == 0 or self.dim < 3:
             return
         return self._getTensorGrid("faces_z")
+
+    @property
+    def boundary_faces(self):
+        """Boundary face locations
+
+        Returns
+        -------
+        np.ndarray of float
+            location array of shape (mesh.n_boundary_faces, dim)
+        """
+        dim = self.dim
+        if dim == 1:
+            return np.array((self.nodes_x[0], self.nodes_x[-1]))
+        if dim == 2:
+            fx = ndgrid(np.r_[self.nodes_x[0], self.nodes_x[-1]], self.cell_centers_y)
+            fy = ndgrid(self.cell_centers_x, np.r_[self.nodes_y[0], self.nodes_y[-1]])
+            return np.r_[fx, fy]
+        if dim == 3:
+            fx = ndgrid(np.r_[self.nodes_x[0], self.nodes_x[-1]], self.cell_centers_y, self.cell_centers_z)
+            fy = ndgrid(self.cell_centers_x, np.r_[self.nodes_y[0], self.nodes_y[-1]], self.cell_centers_z)
+            fz = ndgrid(self.cell_centers_x, self.cell_centers_y, np.r_[self.nodes_z[0], self.nodes_z[-1]])
+            return np.r_[fx, fy, fz]
+
+    @property
+    def boundary_face_outward_normals(self):
+        """Outward directed normal vectors for the boundary faces
+
+        Returns
+        -------
+        np.ndarray of float
+            Array of vectors of shape (mesh.n_boundary_faces, dim)
+        """
+        dim = self.dim
+        if dim == 1:
+            return np.array([-1, 1])
+        if dim == 2:
+            nx = ndgrid(np.r_[-1, 1], np.zeros(self.shape_cells[1]))
+            ny = ndgrid(np.zeros(self.shape_cells[0]), np.r_[-1, 1])
+            return np.r_[nx, ny]
+        if dim == 3:
+            nx = ndgrid(np.r_[-1, 1], np.zeros(self.shape_cells[1]), np.zeros(self.shape_cells[2]))
+            ny = ndgrid(np.zeros(self.shape_cells[0]), np.r_[-1, 1], np.zeros(self.shape_cells[2]))
+            nz = ndgrid(np.zeros(self.shape_cells[0]), np.zeros(self.shape_cells[1]), np.r_[-1, 1])
+            return np.r_[nx, ny, nz]
 
     @property
     def edges_x(self):

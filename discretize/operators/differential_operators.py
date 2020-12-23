@@ -573,6 +573,252 @@ class DiffOperators(object):
             self._cell_gradient = sdiag(S / V) * G
         return self._cell_gradient
 
+    def cell_gradient_robin(self, alpha=1, beta=0, gamma=0):
+        """Robin boundary condition gradient matrix parts
+
+        This function returns the necessary parts for the :meth: discretize.operators.DiffOperators.cell_gradient
+        operator to represent the Robin boundary conditions. The implementation assumes
+        a ghost cell that mirrors the boundary cells across the boundary faces, with a
+        piecewise linear approximation to the values at the ghost cell centers.
+
+        The parameters can either be defined as a constant applied to the entire boundary,
+        or as arrays that represent those values on the :meth: discretize.base.BaseTensorMesh.boundary_faces .
+
+        The returned arrays represent the proper boundary conditions on a solution ``u``
+        such that ``gradient = (cell_gradient + A)*u + b``. With the way the original
+        ``cell_gradient`` is constructed, ``A`` will be zero if ``alpha=0`` and ``b`` will
+        be zero if ``gamma=0``. Note that ``alpha`` and ``beta`` cannot both be zero at
+        any point.
+
+        The default values will produce a zero-dirichlet boundary condition.
+
+        Parameters
+        ----------
+        alpha, beta, gamma : scalar or array_like
+            Parameters for the Robin boundary condition.
+
+        Returns
+        -------
+        A : scipy.sparse.csr_matrix
+            Matrix to add to the cell_gradient
+        b : numpy.ndarray
+            Array to add to the result of the (cell_gradient + A) @ u.
+
+        Examples
+        --------
+        First create a simple :class:: discretize.TensorMesh, make a vector ``u`` and
+        grab the ``cell_gradient`` matrix. This matrix assumes a zero-neumann boundary
+        condition, so we have to modify it for any other condition.
+
+        >>> from discretize import TensorMesh
+        >>> import numpy as np
+        >>> mesh = TensorMesh([4, 4])
+        >>> u = np.sin(mesh.cell_centers[:, 0])*np.cos(mesh.cell_centers[:, 1])
+        >>> Grad = mesh.cell_gradient
+
+        A zero dirichlet condition:
+        >>> A, b = mesh.cell_gradient_robin(alpha=1.0, gamma=0.0)
+        >>> Gu = (Grad + A)@u + b
+        >>> A
+        <40x16 sparse matrix of type '<class 'numpy.float64'>'
+            with 16 stored elements in Compressed Sparse Row format>
+        >>> b
+        array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
+               0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
+               0., 0., 0., 0., 0., 0.])
+        >> Gu
+        array([ 0.98961584,  0.95885108,  0.8684696 ,  0.72409089, -6.09243898,
+                0.92808632,  0.89923436,  0.81447237,  0.67907043, -5.71364063,
+                0.80885289,  0.78370761,  0.70983519,  0.59182865, -4.97959578,
+                0.6393289 ,  0.61945371,  0.56106389,  0.46778984, -3.93594379,
+                0.98961584,  2.90731799,  4.64425719,  6.09243898, -0.03076476,
+               -0.09038148, -0.14437871, -0.18939917, -0.05961672, -0.17514347,
+               -0.27978065, -0.36702242, -0.08476199, -0.24901589, -0.39778718,
+               -0.521826  , -0.6393289 , -1.87823632, -3.00036411, -3.93594379])
+
+        Here b is a vector of zeros which would not have been necessary to add (as expected).
+
+        A constant dirichlet condition:
+        >>> A, b = mesh.cell_gradient_robin(alpha=1.0, gamma=2.0)
+        >>> Gu = (Grad + A)@u + b
+        >>> A
+        <40x16 sparse matrix of type '<class 'numpy.float64'>'
+        	with 16 stored elements in Compressed Sparse Row format>
+        >>> b
+        array([-16.,   0.,   0.,   0.,  16., -16.,   0.,   0.,   0.,  16., -16.,
+                 0.,   0.,   0.,  16., -16.,   0.,   0.,   0.,  16., -16., -16.,
+               -16., -16.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,
+                 0.,   0.,   0.,  16.,  16.,  16.,  16.])
+        >> Gu
+        array([-15.01038416,   0.95885108,   0.8684696 ,   0.72409089,
+                 9.90756102, -15.07191368,   0.89923436,   0.81447237,
+                 0.67907043,  10.28635937, -15.19114711,   0.78370761,
+                 0.70983519,   0.59182865,  11.02040422, -15.3606711 ,
+                 0.61945371,   0.56106389,   0.46778984,  12.06405621,
+               -15.01038416, -13.09268201, -11.35574281,  -9.90756102,
+                -0.03076476,  -0.09038148,  -0.14437871,  -0.18939917,
+                -0.05961672,  -0.17514347,  -0.27978065,  -0.36702242,
+                -0.08476199,  -0.24901589,  -0.39778718,  -0.521826  ,
+                15.3606711 ,  14.12176368,  12.99963589,  12.06405621])
+
+        In this case the vector ``b`` was not all zero (as expected)
+
+        A non-constant dirichlet condition:
+        >>> boundary_x, boundary_y = mesh.boundary_faces[:, 0], mesh.boundary_faces[:, 1]
+        >>> u_boundary = np.sin(boundary_x)*np.cos(boundary_y)
+        >>> A, b = mesh.cell_gradient_robin(alpha=1.0, gamma=u_boundary)
+        >>> Gu = (Grad + A)@u + b
+
+        A zero neumann condition:
+        >>> A, b = mesh.cell_gradient_robin(alpha=0.0, beta=1.0, gamma=0.0)
+        >>> A
+        <40x16 sparse matrix of type '<class 'numpy.float64'>'
+            with 0 stored elements in Compressed Sparse Row format>
+        >>> b
+        array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
+               0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
+               0., 0., 0., 0., 0., 0.])
+
+        The zero-nuemann case is the default for ``mesh.cell_gradient`` so we have all
+        zero valued items here!
+
+        A non-zero constant Neumann condition (the gradient normal to the boundary is a constant):
+        >>> A, b = mesh.cell_gradient_robin(alpha=0.0, beta=1.0, gamma=10.0)
+        >>> Gu = (Grad + A)@u + b
+        >>> A
+        <40x16 sparse matrix of type '<class 'numpy.float64'>'
+            with 0 stored elements in Compressed Sparse Row format>
+        >>> b
+        array([-10.,   0.,   0.,   0.,  10., -10.,   0.,   0.,   0.,  10., -10.,
+                 0.,   0.,   0.,  10., -10.,   0.,   0.,   0.,  10., -10., -10.,
+               -10., -10.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,   0.,
+                 0.,   0.,   0.,  10.,  10.,  10.,  10.])
+        >>> Gu
+        array([-10.        ,   0.95885108,   0.8684696 ,   0.72409089,
+                10.        , -10.        ,   0.89923436,   0.81447237,
+                 0.67907043,  10.        , -10.        ,   0.78370761,
+                 0.70983519,   0.59182865,  10.        , -10.        ,
+                 0.61945371,   0.56106389,   0.46778984,  10.        ,
+               -10.        , -10.        , -10.        , -10.        ,
+                -0.03076476,  -0.09038148,  -0.14437871,  -0.18939917,
+                -0.05961672,  -0.17514347,  -0.27978065,  -0.36702242,
+                -0.08476199,  -0.24901589,  -0.39778718,  -0.521826  ,
+                10.        ,  10.        ,  10.        ,  10.        ])
+
+        Here you can directly see the value ``10`` for the gradient has been inserted
+        (with the proper sign because our value was in the direction of the outward normals
+        to the boundary faces).
+
+        A non-zero variable Neumann condition:
+        >>> u_grad = np.c_[np.cos(boundary_x)*np.cos(boundary_y), -np.sin(boundary_x)*np.sin(boundary_y)]
+        >>> du_dn = np.sum(u_grad*mesh.boundary_face_outward_normals, axis=1)
+        >>> A, b = mesh.cell_gradient_robin(alpha=0.0, beta=1.0, gamma=du_dn)
+        >>> Gu = (Grad + A)@u + b
+        >>> A
+        <40x16 sparse matrix of type '<class 'numpy.float64'>'
+            with 0 stored elements in Compressed Sparse Row format>
+        >>> b
+        array([ 0.99219767,  0.        ,  0.        ,  0.        ,  0.53608669,
+                0.93050762,  0.        ,  0.        ,  0.        ,  0.50275541,
+                0.81096312,  0.        ,  0.        ,  0.        ,  0.43816524,
+                0.64099686,  0.        ,  0.        ,  0.        ,  0.34633208,
+                0.        ,  0.        ,  0.        ,  0.        ,  0.        ,
+                0.        ,  0.        ,  0.        ,  0.        ,  0.        ,
+                0.        ,  0.        ,  0.        ,  0.        ,  0.        ,
+                0.        , -0.10491017, -0.30820771, -0.49234238, -0.64586559])
+        >>> Gu
+        array([ 0.99219767,  0.95885108,  0.8684696 ,  0.72409089,  0.53608669,
+                0.93050762,  0.89923436,  0.81447237,  0.67907043,  0.50275541,
+                0.81096312,  0.78370761,  0.70983519,  0.59182865,  0.43816524,
+                0.64099686,  0.61945371,  0.56106389,  0.46778984,  0.34633208,
+                0.        ,  0.        ,  0.        ,  0.        , -0.03076476,
+               -0.09038148, -0.14437871, -0.18939917, -0.05961672, -0.17514347,
+               -0.27978065, -0.36702242, -0.08476199, -0.24901589, -0.39778718,
+               -0.521826  , -0.10491017, -0.30820771, -0.49234238, -0.64586559])
+
+        See Also
+        --------
+        cell_gradient
+        boundary_faces
+        boundary_face_outward_normals
+
+        Notes
+        -----
+        The Robin Boundary conditions are defined as:
+
+        .. math:: \alpha u + \beta \frac{\partial u}{\partial \hat{n}} = \gamma \textrm{ on } \partial\Omega
+        """
+        dim = self.dim
+
+        # get length between boundary cell_centers and ghost_cell_centers
+        h = self.boundary_h
+
+        # calculate a and b values
+        a = gamma/(alpha/2 + beta/h)
+        b = (alpha/2 - beta/h)/(alpha/2 + beta/h)
+
+        # matrix to hold (1 + b)/h for addition to gradient matrix
+        As = [
+            sp.csr_matrix(
+                ([1, 1], ([0, 1], [0, self.shape_cells[0]-1])),
+                shape=(2, self.shape_cells[0])
+            )
+        ]
+
+        # boundary faces to all faces (with appropriate signs for derivatives)
+        Ps = [
+            sp.csr_matrix(
+                ([1, -1], ([0, self.shape_faces_x[0]-1], [0, 1])),
+                shape=(self.shape_faces_x[0], 2)
+            )
+        ]
+        if dim > 1:
+            # tensor product up to 2dim
+            As[0] = sp.kron(sp.eye(self.shape_cells[1]), As[0])
+            As.append(
+                sp.csr_matrix(
+                    ([1, 1], ([0, 1], [0, self.shape_cells[1]-1])),
+                    shape=(2, self.shape_cells[1])
+                )
+            )
+            As[1] = sp.kron(As[1], sp.eye(self.shape_cells[0]))
+
+            Ps[0] = sp.kron(sp.eye(self.shape_cells[1]), Ps[0])
+            Ps.append(
+                sp.csr_matrix(
+                    ([1, -1], ([0, self.shape_faces_y[1]-1], [0, 1])),
+                    shape=(self.shape_faces_y[1], 2)
+                )
+            )
+            Ps[1] = sp.kron(Ps[1], sp.eye(self.shape_cells[0]))
+        if dim > 2:
+            # tensor product up to 3dim
+            As[0] = sp.kron(sp.eye(self.shape_cells[2]), As[0])
+            As[1] = sp.kron(sp.eye(self.shape_cells[2]), As[1])
+            As.append(
+                sp.csr_matrix(
+                    ([1, 1], ([0, 1], [0, self.shape_cells[2]-1])),
+                    shape=(2, self.shape_cells[2])
+                )
+            )
+            As[2] = sp.kron(As[2], sp.eye(self.shape_cells[0]*self.shape_cells[1]))
+
+            Ps[0] = sp.kron(sp.eye(self.shape_cells[2]), Ps[0])
+            Ps[1] = sp.kron(sp.eye(self.shape_cells[2]), Ps[1])
+            Ps.append(
+                sp.csr_matrix(
+                    ([1, -1], ([0, self.shape_faces_z[2]-1], [0, 1])),
+                    shape=(self.shape_faces_z[2], 2)
+                )
+            )
+            Ps[2] = sp.kron(Ps[2], sp.eye(self.shape_cells[0]*self.shape_cells[1]))
+        A = sp.vstack(As)
+        P = sp.block_diag(Ps)
+
+        A = P@(sp.diags((1+b)/h)@A)
+        b = -P@(a/h)
+        return A, b
+
     @property
     def cell_gradient_BC(self):
         """
