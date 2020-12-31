@@ -73,7 +73,7 @@ v_interp = P * v_nodes
 fig = plt.figure(figsize=(12, 4))
 ax1 = fig.add_axes([0.1, 0.05, 0.25, 0.8])
 ax1.spy(P, markersize=5)
-ax1.set_title("Sparse representation of P", pad=15)
+ax1.set_title("Spy plot for interpolation operator", pad=15)
 
 k = np.argsort(x_interp)
 
@@ -84,11 +84,12 @@ ax2.plot(
     x_interp[k], v_interp[k], "gv",
     x_interp[k], np.c_[v_true[k] - v_interp[k]], "ro",
 )
+ax2.set_ylim([-0.1, 1.5])
 ax2.set_title("Comparison plot")
 ax2.legend(
     (
     "original function", "true value at locations",
-    "interpolated from nodes", "relative error"
+    "interpolated from nodes", "error"
     ), loc="upper right"
 )
 
@@ -153,10 +154,11 @@ ax2.plot(
     d, v_interp, "bo",
     d, np.c_[v_true - v_interp], "ro",
 )
+ax2.set_ylim([-0.1, 1.3])
 ax2.set_title("Comparison plot")
 ax2.set_xlabel("Position along profile")
 ax2.legend((
-    "true value", "interpolated from centers", "relative error"
+    "true value", "interpolated from centers", "error"
 ))
 
 fig.show()
@@ -179,7 +181,8 @@ fig.show()
 h = np.ones(75)
 mesh = TensorMesh([h, h], "CC")
 
-# Define the x and y components of the vector function
+# Define the x and y components of the vector function.
+# In this case, the vector function is a circular vortex.
 def fun_x(xy):
     r = np.sqrt(np.sum(xy ** 2, axis=1))
     return 5. * (-xy[:, 1] / r) * (1 + np.tanh(0.15 * (28.0 - r)))
@@ -218,28 +221,29 @@ u_interp = np.r_[ux_interp, uy_interp]
 # Plotting
 fig = plt.figure(figsize=(14, 4))
 
-ax1 = fig.add_axes([0.1, 0.15, 0.22, 0.75])
+ax1 = fig.add_axes([0.05, 0.15, 0.22, 0.75])
 mesh.plotImage(
     u_faces, ax=ax1, v_type="F", view="vec",
     stream_opts={"color": "w", "density": 1.0}, clim=[0.0, 10.0],
 )
 ax1.set_title("True Vector on Faces")
 
-ax2 = fig.add_axes([0.4, 0.15, 0.22, 0.75])
+ax2 = fig.add_axes([0.35, 0.15, 0.22, 0.75])
 mesh.plotImage(
     u_interp, ax=ax2, v_type="F", view="vec",
     stream_opts={"color": "w", "density": 1.0}, clim=[0.0, 10.0],
 )
-ax2.set_yticks=([])
-ax2.set_ylabel=([])
 ax2.set_title("Interpolated from Edges to Faces")
 
-ax3 = fig.add_axes([0.7, 0.15, 0.22, 0.75])
+ax3 = fig.add_axes([0.65, 0.15, 0.22, 0.75])
 mesh.plotImage(
     u_faces-u_interp, ax=ax3, v_type="F", view="vec",
     stream_opts={"color": "w", "density": 1.0}, clim=[0.0, 10.0],
 )
-ax3.set_yticks=([])
-ax3.set_ylabel=([])
-ax3.set_title("Relative Error")
+ax3.set_title("Error")
 
+ax4 = fig.add_axes([0.92, 0.15, 0.025, 0.75])
+norm = mpl.colors.Normalize(vmin=0., vmax=10.)
+cbar = mpl.colorbar.ColorbarBase(
+    ax4, norm=norm, orientation="vertical"
+)
