@@ -370,6 +370,7 @@ class InterfaceMPL(object):
         v_type="CC",
         normal="Z",
         ind=None,
+        xyzslice=None,
         grid=False,
         view="real",
         ax=None,
@@ -397,6 +398,8 @@ class InterfaceMPL(object):
             Normal direction of slicing plane.
         ind : None, optional
             index along dimension of slice. Defaults to the center index.
+        xyzslice : None, optional
+            Value along dimension of slice. Defaults to the center of the mesh.
         view : {'real', 'imag', 'abs', 'vec'}
             How to view the array.
         ax : matplotlib.axes.Axes, optional
@@ -515,6 +518,7 @@ class InterfaceMPL(object):
                         v_type=v_typeI,
                         normal=normal,
                         ind=ind,
+                        xyzslice=xyzslice,
                         grid=grid,
                         view=view,
                         ax=ax,
@@ -528,6 +532,7 @@ class InterfaceMPL(object):
                     )
                 ]
             return out
+        
         viewOpts = ["real", "imag", "abs", "vec"]
         normalOpts = ["X", "Y", "Z"]
         v_typeOpts = [
@@ -566,6 +571,18 @@ class InterfaceMPL(object):
 
         if self.dim == 2:
             raise NotImplementedError("Must be a 3D mesh. Use plotImage.")
+
+        # xyzslice errors
+        if(ind is not None) and (xyzslice is not None):
+            raise Warning("Both ind and xyzslice are defined. Behavior undefined.")
+        # xyzslice implement
+        if(xyzslice is not None):
+            if normal == "X":
+                ind = int(np.argmin(np.abs(self.cell_centers_x - xyzslice)))
+            if normal == "Y":
+                ind = int(np.argmin(np.abs(self.cell_centers_y - xyzslice)))
+            if normal == "Z":
+                ind = int(np.argmin(np.abs(self.cell_centers_z - xyzslice)))
 
         if ax is None:
             plt.figure()
