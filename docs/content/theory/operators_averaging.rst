@@ -6,6 +6,8 @@ Averaging
 Here, we provide the background theory for how discrete averaging matricies are formed.
 Averaging matrices are required when quantities that live on different
 parts of the mesh need to be added, subtracted, multiplied or divided.
+Averaging matrices are built using the same principles that were discussed when forming :ref:`interpolation matrices <operators_interpolation>`;
+except the locations of the original quantity and the interpolated quantity are organized on a structured grid.
 
 Where :math:`\boldsymbol{u}` is a discrete representation of a vector living somewhere on the mesh (nodes, edges, faces),
 and :math:`\bar{\boldsymbol{u}}` is the vector containing the averages mapped to another part of the mesh,
@@ -156,7 +158,7 @@ can be used to construct a matrix :math:`A_y`. The averaging matrix in 2D is giv
 .. math::
 	\boldsymbol{A} = A_y \otimes A_x
 
-where :math:`\otimes` is the kronecker product. For a 3D tensor mesh, the averaging matrix
+where :math:`\otimes` is the `Kronecker product <https://en.wikipedia.org/wiki/Kronecker_product>`__. For a 3D tensor mesh, the averaging matrix
 from nodes to cell centers would be given by:
 
 .. math::

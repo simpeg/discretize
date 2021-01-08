@@ -216,16 +216,16 @@ An example of the approximation for each vector component is given below:
 .. math::
     \begin{align}
     w_x \Big ( i,j \! +\!\!\frac{1}{2},k \! +\!\!\frac{1}{2} \Big ) \!\approx\! \; &
-    \!\Bigg ( \! \frac{u_y (i,j \! +\!\!\frac{1}{2},k \! +\!\!1)  \! -\! u_y (i,j \! +\!\!\frac{1}{2},k)}{h_z} \Bigg) \!
-    \! -\! \!\Bigg ( \! \frac{u_z (i,j \! +\!\!1,k \! +\!\!\frac{1}{2})  \! -\! u_z (i,j,k \! +\!\!\frac{1}{2})}{h_y} \Bigg) \! \\
+    \!\Bigg ( \! \frac{u_z (i,j \! +\!\!1,k \! +\!\!\frac{1}{2})  \! -\! u_z (i,j,k \! +\!\!\frac{1}{2})}{h_y} \Bigg) \!
+    \! -\! \!\Bigg ( \! \frac{u_y (i,j \! +\!\!\frac{1}{2},k \! +\!\!1)  \! -\! u_y (i,j \! +\!\!\frac{1}{2},k)}{h_z} \Bigg) \! \\
     & \\
     w_y \Big ( i \! +\!\!\frac{1}{2},j,k \! +\!\!\frac{1}{2} \Big ) \!\approx\! \; &
-    \!\Bigg ( \! \frac{u_z (i \! +\!\!1,j,k \! +\!\!\frac{1}{2})  \! -\! u_z (i,j,k \! +\!\!\frac{1}{2})}{h_x} \Bigg) \! 
-    \! -\! \!\Bigg ( \! \frac{u_x (i \! +\!\!\frac{1}{2},j,k \! +\!\!1)  \! -\! u_x (i \! +\!\!\frac{1}{2},j,k)}{h_z} \Bigg) \\
+    \!\Bigg ( \! \frac{u_x (i \! +\!\!\frac{1}{2},j,k \! +\!\!1)  \! -\! u_x (i \! +\!\!\frac{1}{2},j,k)}{h_z} \Bigg)
+    \! -\! \!\Bigg ( \! \frac{u_z (i \! +\!\!1,j,k \! +\!\!\frac{1}{2})  \! -\! u_z (i,j,k \! +\!\!\frac{1}{2})}{h_x} \Bigg) \! \\
     & \\
     w_z \Big ( i \! +\!\!\frac{1}{2},j \! +\!\!\frac{1}{2},k \Big ) \!\approx\! \; &
-    \!\Bigg ( \! \frac{u_x (i \! +\!\!\frac{1}{2},j \! +\!\!1,k)  \! -\! u_x (i \! +\!\!\frac{1}{2},j,k)}{h_y} \Bigg) \!
-    \! -\! \!\Bigg ( \! \frac{u_y (i \! +\!\!1,j \! +\!\!\frac{1}{2},k)  \! -\! u_y (i,j \! +\!\!\frac{1}{2},k)}{h_x} \Bigg )
+    \!\Bigg ( \! \frac{u_y (i \! +\!\!1,j \! +\!\!\frac{1}{2},k)  \! -\! u_y (i,j \! +\!\!\frac{1}{2},k)}{h_x} \Bigg )
+    \! -\! \!\Bigg ( \! \frac{u_x (i \! +\!\!\frac{1}{2},j \! +\!\!1,k)  \! -\! u_x (i \! +\!\!\frac{1}{2},j,k)}{h_y} \Bigg) \!
     \end{align}
 
 

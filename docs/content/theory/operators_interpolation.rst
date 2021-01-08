@@ -89,7 +89,7 @@ locations:
 
 :math:`\boldsymbol{P}` is a sparse matrix whose rows contain a maximum of 2 non-zero elements.
 The size of :math:`\boldsymbol{P}` is the number of locations by the number of nodes.
-For seven locations (:math:`x^* = 3,1,9,2,5,2,8`) and our mesh (9 nodes),
+For seven locations (:math:`x^* = 3,1,9,2,5,2,10`) and our mesh (9 nodes),
 the non-zero elements of the interpolation matrix are illustrated below.
 
 .. figure:: ../../images/interpolation_1d_sparse.png
