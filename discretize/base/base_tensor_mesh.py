@@ -208,7 +208,7 @@ class BaseTensorMesh(BaseMesh):
         if self.dim > 2:
             hx = np.tile(hx, self.shape_cells[2])
             hy = np.tile(hy, self.shape_cells[2])
-            hz = np.repeate(np.r_[self.h[2][0], self.h[2][-1]], self.shape_cells[0]*self.shape_cells[1])
+            hz = np.repeat(np.r_[self.h[2][0], self.h[2][-1]], self.shape_cells[0]*self.shape_cells[1])
         return np.r_[hx, hy, hz]
 
     @property
