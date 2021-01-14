@@ -754,10 +754,10 @@ class DiffOperators(object):
         h = self.boundary_h
 
         # calculate a and b values
-        a = gamma/(alpha/2 + beta/h)
-        b = (alpha/2 - beta/h)/(alpha/2 + beta/h)
+        a = (alpha/2 - beta/h)/(alpha/2 + beta/h)
+        b = gamma/(alpha/2 + beta/h)
 
-        # matrix to hold (1 + b)/h for addition to gradient matrix
+        # matrix to hold (1 + a)/h for addition to gradient matrix
         As = [
             sp.csr_matrix(
                 ([1, 1], ([0, 1], [0, self.shape_cells[0]-1])),
@@ -812,11 +812,12 @@ class DiffOperators(object):
                 )
             )
             Ps[2] = sp.kron(Ps[2], sp.eye(self.shape_cells[0]*self.shape_cells[1]))
-        A = sp.vstack(As)
+        A = sp.diags((1 + a) / h) @ sp.vstack(As)
         P = sp.block_diag(Ps)
 
-        A = P@(sp.diags((1+b)/h)@A)
-        b = -P@(a/h)
+        A = P @ A
+        # the "negative" part of the discrete derivative
+        b = -P @ (b/h)
         return A, b
 
     def cell_gradient_robin_weak_form(self, alpha=1.0, beta=0.0, gamma=0.0):
@@ -948,10 +949,10 @@ class DiffOperators(object):
                 )
             )
             Ps[2] = sp.kron(Ps[2], sp.eye(self.shape_cells[0]*self.shape_cells[1]))
-        A = sp.vstack(As)
+        A = sp.diags(a) @ sp.vstack(As)
         P = sp.diags(self.face_areas) @ sp.block_diag(Ps)
 
-        A = P @ sp.diags(a) @ A
+        A = P @ A
         b = P @ b
         return A, b
 
