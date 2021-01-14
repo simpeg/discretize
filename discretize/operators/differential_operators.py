@@ -819,6 +819,142 @@ class DiffOperators(object):
         b = -P@(a/h)
         return A, b
 
+    def cell_gradient_robin_weak_form(self, alpha=1.0, beta=0.0, gamma=0.0):
+        """Robin boundary condition for the weak formulation of the cell gradient
+
+        This function returns the necessary parts for the weak form of the cell gradient
+        operator to represent the Robin boundary conditions.
+
+        The implementation assumes a ghost cell that mirrors the boundary cells across the boundary faces, with a
+        piecewise linear approximation to the values at the ghost cell centers.
+
+        The parameters can either be defined as a constant applied to the entire boundary,
+        or as arrays that represent those values on the :meth: discretize.base.BaseTensorMesh.boundary_faces .
+
+        The returned arrays represent the proper boundary conditions on a solution ``u``
+        such that the inner product of the gradient of ``u`` with a test function y would
+        be <``y, gradient*u``> ``= y.dot((-face_divergence.T*cell_volumes + A)*u + y.dot(b)``.
+
+        The default values will produce a zero-dirichlet boundary condition.
+
+        Parameters
+        ----------
+        alpha, beta, gamma : scalar or array_like
+            Parameters for the Robin boundary condition.
+
+        Returns
+        -------
+        A : scipy.sparse.csr_matrix
+            Matrix to add to (face_divergence.T * cell_volumes)
+        b : numpy.ndarray
+            Array to add to the result of the (face_divergence.T * cell_volumes + A) @ u.
+
+        Notes
+        -----
+        The weak form is obtained by multiplying the gradient by a (piecewise-constant)
+        test function, and integrating over the cell, i.e.
+
+        .. math:: \int_V \vec{y} \cdot \nabla u \partial V
+            :label: weak_form
+
+        This equation can be transformed to reduce the differentiability requirement on \phi
+        to be,
+
+        .. math:: -\int_V u (\nabla \codt \vec{y}) \partial V + \int_V \nabla \cdot (u \vec{y}) \partial V.
+            :label: transformed
+
+        The first term in equation :eq:transformed is constructed using the matrix
+        operators defined on this mesh as ``D`` = :meth: discretize.operators.DiffOperators.face_divergence and
+        ``V``, a diagonal matrix of :meth: discretize.base.BaseMesh.cell_volumes , as
+
+        ..math:: -(D*y)^T*V*u.
+
+        This function returns the necessary matrices to complete the transformation of
+        equation :eq:transformed. The second part of equation becomes,
+
+        ..math:: \int_V \nabla \cdot (\phi u) \partial V = \int_{\partial\Omega} \phi\vec{u}\cdot\hat{n} \partial a
+            :label: boundary_conditions
+
+        which is then approximated with the matrices returned here such that the full
+        form of the weak formulation in a discrete form would be.
+
+        ..math:: y^T(-D^T V + B)u + y^Tb
+        """
+        dim = self.dim
+
+        # get length between boundary cell_centers and ghost_cell_centers
+        h = self.boundary_h
+
+        # for the ghost point u_k = a*u_i + b where
+        a = (beta/h)/(alpha/2 + beta/h)
+        b = (gamma/2)/(alpha/2 + beta/h)
+
+        # matrix to put "a" on the correct cell faces
+        # for addition to -face_divergence*volume matrix
+        # A's go from all cells to boundary faces
+        As = [
+            sp.csr_matrix(
+                ([1, 1], ([0, 1], [0, self.shape_cells[0]-1])),
+                shape=(2, self.shape_cells[0])
+            )
+        ]
+
+        # boundary faces to all faces (with appropriate signs for faces)
+        # P is the (hat{y} dot vec{da}) part
+        # and then also maps from boundary faces to all faces
+        Ps = [
+            sp.csr_matrix(
+                ([-1, 1], ([0, self.shape_faces_x[0]-1], [0, 1])),
+                shape=(self.shape_faces_x[0], 2)
+            )
+        ]
+        if dim > 1:
+            # tensor product up to 2dim
+            As[0] = sp.kron(sp.eye(self.shape_cells[1]), As[0])
+            As.append(
+                sp.csr_matrix(
+                    ([1, 1], ([0, 1], [0, self.shape_cells[1]-1])),
+                    shape=(2, self.shape_cells[1])
+                )
+            )
+            As[1] = sp.kron(As[1], sp.eye(self.shape_cells[0]))
+
+            Ps[0] = sp.kron(sp.eye(self.shape_cells[1]), Ps[0])
+            Ps.append(
+                sp.csr_matrix(
+                    ([-1, 1], ([0, self.shape_faces_y[1]-1], [0, 1])),
+                    shape=(self.shape_faces_y[1], 2)
+                )
+            )
+            Ps[1] = sp.kron(Ps[1], sp.eye(self.shape_cells[0]))
+        if dim > 2:
+            # tensor product up to 3dim
+            As[0] = sp.kron(sp.eye(self.shape_cells[2]), As[0])
+            As[1] = sp.kron(sp.eye(self.shape_cells[2]), As[1])
+            As.append(
+                sp.csr_matrix(
+                    ([1, 1], ([0, 1], [0, self.shape_cells[2]-1])),
+                    shape=(2, self.shape_cells[2])
+                )
+            )
+            As[2] = sp.kron(As[2], sp.eye(self.shape_cells[0]*self.shape_cells[1]))
+
+            Ps[0] = sp.kron(sp.eye(self.shape_cells[2]), Ps[0])
+            Ps[1] = sp.kron(sp.eye(self.shape_cells[2]), Ps[1])
+            Ps.append(
+                sp.csr_matrix(
+                    ([-1, 1], ([0, self.shape_faces_z[2]-1], [0, 1])),
+                    shape=(self.shape_faces_z[2], 2)
+                )
+            )
+            Ps[2] = sp.kron(Ps[2], sp.eye(self.shape_cells[0]*self.shape_cells[1]))
+        A = sp.vstack(As)
+        P = sp.diags(self.face_areas) @ sp.block_diag(Ps)
+
+        A = P @ sp.diags(a) @ A
+        b = P @ b
+        return A, b
+
     @property
     def cell_gradient_BC(self):
         """
