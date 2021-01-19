@@ -1,18 +1,15 @@
 """
-Cylindrical meshes
+Cylindrical Meshes
 ==================
 
-Cylindrical meshes (:class:`~discretize.CylMesh`) are defined in terms of *r*
+Cylindrical meshes are useful when solving 3D differential equations
+that possess rotational symmetry. Cylindrical meshes are defined in terms of *r*
 (radial position), *z* (vertical position) and *phi* (azimuthal position).
-They are a child class of the tensor mesh class. Cylindrical meshes are useful
-in solving differential equations that possess rotational symmetry. Here we
-demonstrate:
+Here we demonstrate:
 
-    - How to create basic cylindrical meshes
-    - How to include padding cells
+    - How to construct cylindrical meshes
     - How to plot cylindrical meshes
-    - How to extract properties from meshes
-    - How to create cylindrical meshes to solve PDEs with rotational symmetry
+    - How to extract properties from cylindrical meshes
     
 
 """
@@ -21,8 +18,6 @@ demonstrate:
 #
 # Import Packages
 # ---------------
-#
-# Here we import the packages required for this tutorial.
 #
 
 from discretize import CylMesh
@@ -58,7 +53,7 @@ z0 = -150.0
 
 mesh = CylMesh([hr, hp, hz], x0=[x0, y0, z0])
 
-mesh.plotGrid()
+mesh.plot_grid()
 
 
 ###############################################
@@ -92,8 +87,8 @@ hz = [(dz, npad_z, -exp_z), (dz, ncz), (dz, npad_z, exp_z)]
 # We can use flags 'C', '0' and 'N' to define the xyz position of the mesh.
 mesh = CylMesh([hr, hp, hz], x0="00C")
 
-# We can apply the plotGrid method and change the axis properties
-ax = mesh.plotGrid()
+# We can apply the plot_grid method and change the axis properties
+ax = mesh.plot_grid()
 ax[0].set_title("Discretization in phi")
 
 ax[1].set_title("Discretization in r and z")
@@ -108,7 +103,7 @@ x0 = mesh.x0
 nC = mesh.nC
 
 # An (nC, 3) array containing the cell-center locations
-cc = mesh.gridCC
+cc = mesh.cell_centers
 
 # The cell volumes
 v = mesh.vol
@@ -152,7 +147,7 @@ x0 = mesh.x0
 nC = mesh.nC
 
 # An (nC, 3) array containing the cell-center locations
-cc = mesh.gridCC
+cc = mesh.cell_centers
 
 # Plot the cell volumes.
 v = mesh.vol

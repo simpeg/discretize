@@ -4,22 +4,21 @@ Tree Meshes
 
 Compared to tensor meshes, tree meshes are able to provide higher levels
 of discretization in certain regions while reducing the total number of
-cells. Tree meshes belong to the class (:class:`~discretize.TreeMesh`).
-Tree meshes can be defined in 2 or 3 dimensions. Here we demonstrate:
+cells. Tree meshes can be defined in 2 or 3 dimensions. Here we demonstrate:
 
-    - How to create basic tree meshes in 2D and 3D
+    - How to create tree meshes in 2D and 3D
     - Strategies for local mesh refinement
     - How to plot tree meshes
     - How to extract properties from tree meshes
 
-To create a tree mesh, we first define the base tensor mesh (a mesh
-comprised entirely of the smallest cells). Next we choose the level of
-discretization around certain points or within certain regions. When
-creating tree meshes, we must remember certain rules:
+To create a tree mesh, we first define the base tensor mesh (a uniform mesh
+comprised entirely of cells of the smallest size). Next we choose the level of
+discretization around certain points or within certain regions.
+When creating tree meshes, we must remember certain rules:
 
-    - The number of base mesh cells in x, y and z must all be powers of 2
-    - We cannot refine the mesh to create cells smaller than those defining the base mesh
-    - The range of cell sizes in the tree mesh depends on the number of base mesh cells in x, y and z
+    1. The number of base mesh cells in x, y and z must all be powers of 2
+    2. We cannot refine the mesh to create cells smaller than those defining the base mesh
+    3. The range of cell sizes in the tree mesh depends on the number of base mesh cells in x, y and z
     
 
 """
@@ -28,8 +27,6 @@ creating tree meshes, we must remember certain rules:
 #
 # Import Packages
 # ---------------
-#
-# Here we import the packages required for this tutorial.
 #
 
 from discretize import TreeMesh
@@ -65,7 +62,7 @@ mesh = refine_tree_xyz(mesh, xy, octree_levels=[2, 2], method="box", finalize=Fa
 
 mesh.finalize()  # Must finalize tree mesh before use
 
-mesh.plotGrid(show_it=True)
+mesh.plot_grid(show_it=True)
 
 
 ###############################################
@@ -113,10 +110,10 @@ mesh = refine_tree_xyz(mesh, pts, octree_levels=[2, 2], method="radial", finaliz
 
 mesh.finalize()
 
-# We can apply the plotGrid method and output to a specified axes object
+# We can apply the plot_grid method and output to a specified axes object
 fig = plt.figure(figsize=(6, 6))
 ax = fig.add_subplot(111)
-mesh.plotGrid(ax=ax)
+mesh.plot_grid(ax=ax)
 ax.set_xbound(mesh.origin[0], mesh.origin[0] + np.sum(mesh.hx))
 ax.set_ybound(mesh.origin[1], mesh.origin[1] + np.sum(mesh.hy))
 ax.set_title("QuadTree Mesh")
@@ -167,10 +164,10 @@ origin = mesh.origin
 nC = mesh.nC
 
 # An (nC, 2) array containing the cell-center locations
-cc = mesh.gridCC
+cc = mesh.cell_centers
 
 # A boolean array specifying which cells lie on the boundary
-bInd = mesh.cellBoundaryInd
+bInd = mesh.cell_boundary_indices
 
 # The cell areas (2D "volume")
 s = mesh.vol
@@ -232,10 +229,10 @@ origin = mesh.origin
 nC = mesh.nC
 
 # An (nC, 2) array containing the cell-center locations
-cc = mesh.gridCC
+cc = mesh.cell_centers
 
 # A boolean array specifying which cells lie on the boundary
-bInd = mesh.cellBoundaryInd
+bInd = mesh.cell_boundary_indices
 
 # Cell volumes
 v = mesh.vol

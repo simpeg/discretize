@@ -1,19 +1,7 @@
-Mesh Generation
-===============
+Meshes
+======
 
-`discretize` provides a numerical grid (or "mesh") on which to solve differential
-equations. Each mesh type has a similar API to make working with
-different meshes relatively simple. Within `discretize`, all meshes are
-classes that have properties like the number of cells `nC`, and methods,
-like `plotGrid`.
-
-To learn how to create meshes with `discretize`, we have provided a set
-of tutorials. These tutorials aim to teach the user:
-
-	- where discrete variables can live on meshes
-	- how to construct various types of meshes
-	- how to extract useful properties from mesh objects
-	- some aspects of plotting and meshes
-
-
-
+A mesh is a numerical grid on which discrete approximations of continuous functions and variables live.
+Meshes can be created to discretize and solve 1D, 2D or 3D problems.
+For a given system of partial differential equations, the mesh defines a discrete representation of the domain and its boundaries.
+Here, we provide a set of tutorials related to generating and understanding mesh types supported by the *discretize* package.
