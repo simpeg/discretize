@@ -1,11 +1,12 @@
-Solving PDEs
-============
+Solving PDEs with Discretize
+============================
 
 Here we show how the *discretize* package can be used to solve partial differential
-equations (PDE) numerically by employing the finite volume method. To solve a PDE
-numerically we must complete the following steps:
+equations (PDEs) numerically by employing the finite volume method. In each tutorial,
+we demonstrate the following steps for a given PDE:
 
-	1. Formulate the problem; e.g. the PDE and its boundary conditions
-	2. Apply the weak formulation by taking the inner product of each PDE with a test function
-	3. Formulate a discrete set of equations for the inner products according to the finite volume method
-	4. Use the discrete set of equations to solve for the unknown variable numerically
+	1. Formulating the problem; i.e. the PDE and its boundary conditions
+	2. Taking the inner product of each differential expression
+	3. Approximating the inner products as discrete expressions according to the finite volume method
+	4. Reducing the set of discrete expressions to a solvable linear system
+	5. Implementing the *discretize* package to construct the necessary mesh, operators, matrices, etc... and solve the system
