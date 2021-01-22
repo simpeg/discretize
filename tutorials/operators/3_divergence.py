@@ -11,11 +11,11 @@ For discretized quantities living on 2D or 3D meshes, sparse matricies can be us
 approximate the divergence operator. For each mesh type, the divergence
 operator is a property that is only constructed when called.
 
-Here we demonstrate:
+This tutorial focusses on:
 
-    - How to construct the divergence operator
-    - Applying the divergence operator to a discrete quantity
-    - Mapping and dimensions
+    - how to construct the divergence operator
+    - applying the divergence operator to a discrete quantity
+    - mapping and dimensions
 
 """
 
@@ -30,7 +30,7 @@ Here we demonstrate:
 #     \phi = \nabla \cdot \vec{u}
 # 
 # And let :math:`\boldsymbol{\phi}` and :math:`\boldsymbol{u}` be the discrete representations of :math:`\phi` and :math:`\vec{u}`
-# that live on the mesh (centers, nodes, edges or faces), respectively. Provided we know the discrete values :math:`\boldsymbol{u}`,
+# that live on the mesh. Provided we know the discrete values :math:`\boldsymbol{u}`,
 # our goal is to use discrete differentiation to approximate the values of :math:`\boldsymbol{\phi}`.
 # We begin by considering a single cell (2D or 3D). We let the indices :math:`i`, :math:`j` and :math:`k` 
 # denote positions along the x, y and z axes, respectively.

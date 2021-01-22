@@ -24,28 +24,38 @@ boundary conditions.
 #
 # For the inner product between a vector (:math:`\vec{u}`) and the
 # curl of another vector (:math:`\vec{w}`),
-# there are two options for where the variables should live. The first
-# option is to define :math:`\boldsymbol{u}` on the faces
-# and to define :math:`\boldsymbol{w}` on cell edges:
+# there are two options for where the variables should live.
+#
+# **For** :math:`\boldsymbol{u}` **on the faces and** :math:`\boldsymbol{w}` **on the edges:**
 # 
 # .. math::
 #     \int_\Omega \vec{u} \cdot (\nabla \times \vec{w} ) \, dv \approx \boldsymbol{u^T M_f C \, w}
 # 
-# The second option is to define :math:`\boldsymbol{u}` on the edges
-# and to define :math:`\boldsymbol{w}` on cell faces.
-# In this case, we use the identity
+# where
+# 
+#     - :math:`\boldsymbol{C}` is the discrete curl operator from edges to faces
+#     - :math:`\boldsymbol{M_f}` is the basic inner product matrix for vectors on cell faces
+# 
+# **For** :math:`\boldsymbol{u}` **on the edges and** :math:`\boldsymbol{w}` **on cell faces** ,
+# the curl would need to map from faces to edges. In this case, it is better to use the identity
 # :math:`\vec{u} \cdot (\nabla \times \vec{w}) = \vec{w} \cdot (\nabla \times \vec{u}) - \nabla \cdot (\vec{u} \times \vec{w})`
-# and apply the divergence theorem such that:
+# and to apply the divergence theorem such that:
 # 
 # .. math::
-#     \int_\Omega \vec{u} \cdot (\nabla \times \vec{w} ) \, dv = \int_\Omega \vec{w} \cdot (\nabla \times \vec{u} ) \, dv - \oint_{\partial \Omega} (\vec{u} \times \vec{w}) \cdot d\vec{a} \approx \boldsymbol{u^T C^T \! M_f \, w } + B.\! C.
+#     \int_\Omega \vec{u} \cdot (\nabla \times \vec{w} ) \, dv
+#     = \int_\Omega \vec{w} \cdot (\nabla \times \vec{u} ) \, dv - \oint_{\partial \Omega} (\vec{u} \times \vec{w}) \cdot d\vec{a}
+#     \approx \boldsymbol{u^T C^T \! M_f \, w } + \boldsymbol{u^T B \, w }
+#     = \boldsymbol{u^T \tilde{C} \, w }
 # 
 # where
 # 
-#     - :math:`\boldsymbol{C}` is a :ref:`discrete curl operator <operators_differential_curl>`
-#     - :math:`\boldsymbol{M_f}` is the :ref:`basic inner product matrix for vectors on cell faces <inner_products_basic>`
-#     - :math:`B.\! C.` represents an additional term that must be constructed to impose boundary conditions correctly on :math:`\vec{w}`. It is zero when :math:`\hat{n} \times \vec{w} = 0` on the boundary.
+#     - :math:`\boldsymbol{C}` is still the discrete curl operator from edges to faces
+#     - :math:`\boldsymbol{M_f}` is still the basic inner product matrix for vectors on cell faces
+#     - :math:`\boldsymbol{B}` is a sparse matrix which imposes boundary conditions on :math:`\vec{w}`
+#     - :math:`\boldsymbol{\tilde{C}} = \boldsymbol{C^T \! M_f + B}` acts as a modified curl operator with boundary conditions imposed
 # 
+# 
+# Note that :math:`\boldsymbol{u^T B \, w }=0` when :math:`\hat{n} \times \vec{w} = 0` on the boundary.
 # 
 
 ####################################################

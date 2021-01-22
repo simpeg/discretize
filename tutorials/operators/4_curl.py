@@ -11,11 +11,11 @@ For discretized quantities living on 2D or 3D meshes, sparse matricies can be us
 approximate the curl operator. For each mesh type, the curl
 operator is a property that is only constructed when called.
 
-Here we demonstrate:
+This tutorial focusses on:
 
-    - How to construct the curl operator
-    - Applying the curl operator to a discrete quantity
-    - Mapping and dimensions
+    - how to construct the curl operator
+    - applying the curl operator to a discrete quantity
+    - mapping and dimensions
 
 """
 
@@ -29,7 +29,7 @@ Here we demonstrate:
 #     \vec{w} = \nabla \times \vec{u}
 # 
 # And let :math:`\boldsymbol{u}` and :math:`\boldsymbol{w}` be the discrete representations of :math:`\vec{u}` and :math:`\vec{w}`
-# that live on the mesh (centers, nodes, edges or faces), respectively. Provided we know the discrete values :math:`\boldsymbol{u}`,
+# that live on the mesh. Provided we know the discrete values :math:`\boldsymbol{u}`,
 # our goal is to use discrete differentiation to approximate the vector components of :math:`\boldsymbol{w}`.
 # We begin by considering a single 3D cell. We let the indices :math:`i`, :math:`j` and :math:`k` 
 # denote positions along the x, y and z axes, respectively.
@@ -185,7 +185,7 @@ tree_mesh.finalize()
 tensor_curl = tensor_mesh.edge_curl  # 3D curl from edges to faces
 tree_curl = tree_mesh.edge_curl  # 3D curl from edges to faces
 
-fig = plt.figure(figsize=(9, 6))
+fig = plt.figure(figsize=(9, 4))
 
 ax1 = fig.add_axes([0.15, 0.05, 0.35, 0.85])
 ax1.spy(tensor_curl, markersize=0.5)

@@ -2,13 +2,13 @@
 Tensor Meshes
 =============
 
-Tensor meshes are the most basic class of meshes that can be created with discretize.
-In tensor meshes, the grid locations are organized according to tensor products
+Tensor meshes are the most basic class of meshes supported by the *discretize* package.
+For tensor meshes, the grid locations are organized according to tensor products.
 Tensor meshes can be defined in 1, 2 or 3 dimensions. Here we demonstrate:
 
-    - How to construct tensor meshes
-    - How to plot tensor meshes
-    - How to extract basic properties from tensor meshes
+    - how to construct tensor meshes
+    - how to plot tensor meshes
+    - how to extract basic properties from tensor meshes
     
 
 """
@@ -25,12 +25,12 @@ import numpy as np
 # sphinx_gallery_thumbnail_number = 3
 
 ###############################################
-# Basic Example
-# -------------
+# Basic 2D Example
+# ----------------
 #
 # The easiest way to define a tensor mesh is to define the cell widths in
-# x, y and z as 1D numpy arrays. And to provide the position of the bottom
-# southwest corner of the mesh. We demonstrate this here for a 2D mesh (thus
+# x, y and z as 1D numpy arrays, and to provide the position of the bottom
+# southwest corner of the mesh. Here we create a uniform 2D tensor mesh (thus
 # we do not need to consider the z-dimension).
 #
 

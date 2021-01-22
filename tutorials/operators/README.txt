@@ -10,5 +10,6 @@ we must be able to apply the following mathematical operations to discrete quant
     - Divergence
     - Curl
 
-The following tutorials demonstrate the basic construction and application of these operators.
+The following tutorials demonstrate the basic construction these operators and how to
+apply them to discrete quantities.
 

@@ -32,32 +32,39 @@ import matplotlib.pyplot as plt
 # Background Theory
 # -----------------
 #
-# For the inner product between a scalar (:math:`\psi`) and
-# the divergence of a vector (:math:`\vec{w}`),
+# For the inner product between a scalar (:math:`\psi`) and the divergence of a vector (:math:`\vec{w}`),
 # there are two options for where the variables should live.
-# The first option is to define :math:`\boldsymbol{\psi}` at cell centers
-# and define :math:`\boldsymbol{w}` on cell faces:
+# 
+# **For** :math:`\boldsymbol{\psi}` **at cell centers and** :math:`\boldsymbol{w}` **on cell faces:**
 # 
 # .. math::
 #     \int_\Omega \psi \; (\nabla \cdot \vec{w}) \, dv \approx \boldsymbol{\psi^T M_c D \, w}
 # 
-# The second option is to define :math:`\boldsymbol{\psi}` on
-# the nodes and to define :math:`\boldsymbol{w}` defined on cell edges.
-# To evaluate the inner product we use the identity
+# where
+# 
+#     - :math:`\boldsymbol{D}` is the discrete divergence operator from faces to cell centers
+#     - :math:`\boldsymbol{M_c}` is the basic inner product matrix for scalars at cell centers
+# 
+# **For** :math:`\boldsymbol{\psi}` **on the nodes and** :math:`\boldsymbol{w}` **on cell edges** ,
+# the divergence operator would have to map from edges to nodes. For boundary nodes, this would
+# require knowledge of :math:`\vec{w}` outside the boundary. To evaluate the inner product we use the identity
 # :math:`\psi \nabla \cdot \vec{w} = \nabla \cdot \psi\vec{w} - \vec{w} \cdot \nabla \psi`
 # and apply the divergence theorem such that:
 # 
 # .. math::
-#     \int_\Omega \psi \; (\nabla \cdot \vec{w}) \, dv = - \int_\Omega \vec{w} \cdot \nabla \psi \, dv + \oint_{\partial \Omega} \psi (\hat{n} \cdot \vec{w}) \, da \approx - \boldsymbol{\psi^T G^T M_e \, w } + B.\! C.
+#     \int_\Omega \psi \; (\nabla \cdot \vec{w}) \, dv =
+#     - \int_\Omega \vec{w} \cdot \nabla \psi \, dv + \oint_{\partial \Omega} \psi (\hat{n} \cdot \vec{w}) \, da
+#     \approx - \boldsymbol{\psi^T G^T M_e \, w } + \boldsymbol{\psi^T B \, w }
+#     = \boldsymbol{\psi^T \tilde{D} \, w }
 # 
 # where
 # 
-#     - :math:`\boldsymbol{G}` is a :ref:`discrete gradient operator <operators_differential_gradient>`
-#     - :math:`\boldsymbol{D}` is a :ref:`discrete divergence operator <operators_differential_divergence>`
-#     - :math:`\boldsymbol{M_c}` is the :ref:`basic inner product matrix for vectors at cell centers <inner_products_basic>`
-#     - :math:`\boldsymbol{M_e}` is the :ref:`basic inner product matrix for vectors at edges <inner_products_basic>`
-#     - :math:`B.\! C.` represents an additional term that must be constructed to impose boundary conditions correctly on :math:`\vec{w}`. It is zero when :math:`\hat{n} \cdot \vec{w} = 0` on the boundary.
+#     - :math:`\boldsymbol{G}` is the discrete gradient operator from nodes to edges
+#     - :math:`\boldsymbol{M_e}` is the basic inner product matrix for vectors on edges
+#     - :math:`\boldsymbol{B}` is a sparse matrix that imposes boundary conditions on :math:`\vec{w}`
+#     - :math:`\boldsymbol{\tilde{D}} = \boldsymbol{- G^T M_e + B}` acts as a modified divergence operator with boundary conditions imposed
 # 
+# Note that when :math:`\hat{n} \cdot \vec{w} = 0` on the boundary, the term containing :math:`\boldsymbol{B}` is zero.
 # 
 
 

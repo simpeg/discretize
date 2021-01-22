@@ -5,11 +5,11 @@ Interpolating and Averaging Scalar Quantities in 2D and 3D
 Interpolation is used when a discrete quantity is known on the mesh (centers, nodes, edges or faces),
 but we would like to estimate its value at locations within the continuous domain.
 For any mesh type, *discretize* allows the user to construct a sparse interpolation matrix
-by providing a set of desired locations for the function to be approximated.
+for a corresponding set of locations.
 
-In *discretize*, averaging matrices are constructed when a quantity living on
-some part of the mesh (centers, nodes, edges or faces) must be mapped to another.
-Averaging matrices are a property of each mesh and are constructed when called.
+In *discretize*, averaging matrices are constructed when a discrete quantity must be mapped
+between centers, nodes, edges or faces.
+Averaging matrices are a property of the mesh and are constructed when called.
 
 In this tutorial, we demonstrate:
 

@@ -1,18 +1,18 @@
 r"""
-Overview of Mesh Types
-======================
+Meshes Overview
+===============
 
-Here we provide a basic overview of the mesh types supported by *discretize*
-and define some useful terminology related to meshes.
-Detailed tutorials for the construction of each mesh type are covered in
+Here we provide a basic overview of the meshes supported by *discretize*
+and define some useful terminology.
+Detailed tutorials covering the construction and properties of each mesh type are found in
 separate tutorials.
 
 
 """
 
 ###############################################################################
-# Supported Mesh Types
-# --------------------
+# Meshes Supported by Discretize
+# ------------------------------
 # 
 # A multitude of mesh types are supported by the *discretize* package.
 # Each mesh type has its advantages and disadvantages when being considered to solve
@@ -39,13 +39,13 @@ separate tutorials.
 # 
 # The small volumes within the mesh are called *cells*.
 # In *discretize*, we use a staggered mimetic finite volume approach :cite:`haber2014,HymanShashkov1999`.
-# This approach requires the definitions of variables at either cell-centers, nodes, faces, or edges.
+# This approach requires discrete variables to live at cell-centers, nodes, faces, or edges.
 # Below, we illustrate the valid locations for discrete quantities for a single cell where:
 # 
-#   - **Center:** the location at the center of each cell.
-#   - **Nodes:** locations of intersection between grid lines defining the mesh.
-#   - **X, Y and Z edges:** edges whose tangent lines are parallel to the X, Y and Z axes, respectively.
-#   - **X, Y and Z faces:** faces which are normal to the orientation of the X, Y and Z axes, respectively.
+#   - **Centers:** center locations of each cell
+#   - **Nodes:** locations of intersection between grid lines defining the mesh
+#   - **X, Y and Z edges:** edges whose tangent lines are parallel to the X, Y and Z axes, respectively
+#   - **X, Y and Z faces:** faces which are normal to the orientation of the X, Y and Z axes, respectively
 # 
 # 
 # .. figure:: ../../images/cell_locations.png
@@ -55,7 +55,7 @@ separate tutorials.
 #     Locations of centers, nodes, faces and edges for 2D cells (left) and 3D cells (right).
 #
 # Below, we create a 2D tensor mesh and plot a visual representation of where discretized
-# quantities would live.
+# quantities are able to live.
 #
 
 import numpy as np

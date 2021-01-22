@@ -11,11 +11,11 @@ For discretized quantities living on 1D, 2D or 3D meshes, sparse matricies can b
 approximate the gradient operator. For each mesh type, the gradient
 operator is a property that is only constructed when called.
 
-Here we demonstrate:
+This tutorial focusses on:
 
-    - How to construct the gradient operator
-    - Applying the gradient operator to a discrete quantity
-    - Mapping and dimensions
+    - how to construct the gradient operator
+    - applying the gradient operator to a discrete quantity
+    - mapping and dimensions or the gradient operator
 
 """
 
@@ -29,7 +29,7 @@ Here we demonstrate:
 #     \vec{u} = \nabla \phi
 # 
 # And let :math:`\boldsymbol{\phi}` and :math:`\boldsymbol{u}` be the discrete representations of :math:`\phi` and :math:`\vec{u}`
-# that live on the mesh (centers, nodes, edges or faces), respectively. Provided we know the discrete values :math:`\boldsymbol{\phi}`,
+# that live on the mesh. Provided we know the discrete values :math:`\boldsymbol{\phi}`,
 # our goal is to use discrete differentiation to approximate the vector components of :math:`\boldsymbol{u}`.
 # We begin by considering a single cell (2D or 3D). We let the indices :math:`i`, :math:`j` and :math:`k` 
 # denote positions along the x, y and z axes, respectively.
@@ -102,7 +102,7 @@ from discretize.utils import mkvc, refine_tree_xyz
 import matplotlib.pyplot as plt
 import numpy as np
 
-# sphinx_gallery_thumbnail_number = 1
+# sphinx_gallery_thumbnail_number = 2
 
 
 #############################################
@@ -227,7 +227,7 @@ tensor_gradient = tensor_mesh.cell_gradient  # 2D gradient from centers to faces
 tree_gradient = tree_mesh.nodal_gradient  # 2D gradient from nodes to edges 
 
 # Plot gradient operators
-fig = plt.figure(figsize=(5, 5))
+fig = plt.figure(figsize=(7, 5))
 
 ax1 = fig.add_axes([0.15, 0.05, 0.30, 0.85])
 ax1.spy(tensor_gradient, markersize=0.5)

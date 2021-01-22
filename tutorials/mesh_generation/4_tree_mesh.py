@@ -2,16 +2,16 @@
 Tree Meshes
 ===========
 
-Compared to tensor meshes, tree meshes are able to provide higher levels
+Tree meshes are able to provide higher levels
 of discretization in certain regions while reducing the total number of
 cells. Tree meshes can be defined in 2 or 3 dimensions. Here we demonstrate:
 
-    - How to create tree meshes in 2D and 3D
-    - Strategies for local mesh refinement
-    - How to plot tree meshes
-    - How to extract properties from tree meshes
+    - how to create tree meshes in 2D and 3D
+    - strategies for local mesh refinement
+    - how to plot tree meshes
+    - how to extract properties from tree meshes
 
-To create a tree mesh, we first define the base tensor mesh (a uniform mesh
+To create a tree mesh, we first define the base tensor mesh (a uniform tensor mesh
 comprised entirely of cells of the smallest size). Next we choose the level of
 discretization around certain points or within certain regions.
 When creating tree meshes, we must remember certain rules:
@@ -24,7 +24,6 @@ When creating tree meshes, we must remember certain rules:
 """
 
 ###############################################
-#
 # Import Packages
 # ---------------
 #

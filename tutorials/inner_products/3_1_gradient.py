@@ -25,28 +25,37 @@ boundary conditions.
 # For the inner product between a vector :math:`\vec{u}` and
 # the gradient of a scalar :math:`\phi`,
 # there are two options for where the variables should live.
-# The first option is to define :math:`\boldsymbol{\phi}` on the nodes
-# and :math:`\boldsymbol{u}` on cell edges:
+# 
+# **For** :math:`\boldsymbol{\phi}` **on the nodes and** :math:`\boldsymbol{u}` **on cell edges:**
 # 
 # .. math::
 #     \int_\Omega \vec{u} \cdot \nabla \phi \, dv \approx \boldsymbol{u^T M_e G \, \phi}
 # 
-# The second option is to define :math:`\boldsymbol{\phi}` at cell centers
-# and :math:`\boldsymbol{u}` on cell faces. In this case, 
-# we use the identity :math:`\vec{u} \cdot \nabla \phi = \nabla \cdot \phi\vec{u} - \phi \nabla \cdot \vec{u}`
+# where
+# 
+#     - :math:`\boldsymbol{M_e}` is the basic inner product matrix for vectors at edges
+#     - :math:`\boldsymbol{G}` is the discrete gradient operator which maps from nodes to edges
+# 
+# **For** :math:`\boldsymbol{\phi}` **at cell centers and** :math:`\boldsymbol{u}` **on cell faces**,
+# the gradient operator would have to map from cell centers to faces. This would require knowledge
+# of :math:`\phi` outside the domain for boundary faces. In this case, we use the identity
+# :math:`\vec{u} \cdot \nabla \phi = \nabla \cdot \phi\vec{u} - \phi \nabla \cdot \vec{u}`
 # and apply the divergence theorem such that:
 # 
 # .. math::
-#     \int_\Omega \vec{u} \cdot \nabla \phi \, dv = - \int_\Omega \phi \nabla \cdot \vec{u} \, dv + \oint_{\partial \Omega} \phi \hat{n} \cdot \vec{u} \, da \approx - \boldsymbol{u^T D^T M_c \, \phi} + B.\! C.
+#     \int_\Omega \vec{u} \cdot \nabla \phi \, dv =
+#     - \int_\Omega \phi \nabla \cdot \vec{u} \, dv + \oint_{\partial \Omega} \phi \hat{n} \cdot \vec{u} \, da
+#     \approx - \boldsymbol{u^T D^T M_c \, \phi} + \boldsymbol{u^T B \, \phi}
+#     = \boldsymbol{u^T \tilde{G} \, \phi}
 # 
 # where
 # 
-#     - :math:`\boldsymbol{G}` is a :ref:`discrete gradient operator <operators_differential_gradient>`
-#     - :math:`\boldsymbol{D}` is a :ref:`discrete divergence operator <operators_differential_divergence>`
-#     - :math:`\boldsymbol{M_c}` is the :ref:`basic inner product matrix for vectors at cell centers <inner_products_basic>`
-#     - :math:`\boldsymbol{M_e}` is the :ref:`basic inner product matrix for vectors at edges <inner_products_basic>`
-#     - :math:`B.\! C.` represents an additional term that must be constructed to impose boundary conditions correctly on :math:`\phi`. It is zero when :math:`\phi = 0` on the boundary.
+#     - :math:`\boldsymbol{D}` is the discrete divergence operator from faces to cell centers
+#     - :math:`\boldsymbol{M_c}` is the basic inner product matrix for scalars at cell centers
+#     - :math:`\boldsymbol{B}` is a sparse matrix that imposes the boundary conditions on :math:`\phi`
+#     - :math:`\boldsymbol{\tilde{G}} = \boldsymbol{-D^T M_c + B}` acts as a modified gradient operator with boundary conditions imposed
 # 
+# Note that when :math:`\phi = 0` on the boundary, the term containing :math:`\boldsymbol{B}` is zero.
 # 
 
 

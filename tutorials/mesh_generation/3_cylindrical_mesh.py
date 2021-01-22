@@ -3,19 +3,18 @@ Cylindrical Meshes
 ==================
 
 Cylindrical meshes are useful when solving 3D differential equations
-that possess rotational symmetry. Cylindrical meshes are defined in terms of *r*
+that posess rotational symmetry. Cylindrical meshes are defined in terms of *r*
 (radial position), *z* (vertical position) and *phi* (azimuthal position).
 Here we demonstrate:
 
-    - How to construct cylindrical meshes
-    - How to plot cylindrical meshes
-    - How to extract properties from cylindrical meshes
+    - how to construct cylindrical meshes
+    - how to plot cylindrical meshes
+    - how to extract properties from cylindrical meshes
     
 
 """
 
 ###############################################
-#
 # Import Packages
 # ---------------
 #
@@ -29,8 +28,8 @@ import numpy as np
 # -------------
 #
 # The easiest way to define a cylindrical mesh is to define the cell widths in
-# *r*, *phi* and *z* as 1D numpy arrays. And to provide a Cartesian position
-# for the bottom of the vertical axis of symmetry of the mesh. Note that
+# *r*, *phi* and *z* as 1D numpy arrays, and to provide a Cartesian position
+# for the bottom of the vertical axis of symmetry of the mesh. Note that:
 #
 #    1. *phi* is in radians
 #    2. The sum of values in the numpy array for *phi* cannot exceed :math:`2\pi`
