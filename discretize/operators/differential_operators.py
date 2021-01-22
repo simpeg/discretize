@@ -755,7 +755,12 @@ class DiffOperators(object):
 
         # calculate a and b values
         a = alpha/(alpha*h/2 + beta)
-        b = gamma/(alpha*h/2 + beta)
+
+        gamma = np.asarray(gamma)
+        if gamma.ndim > 1:
+            b = gamma/(alpha*h/2 + beta)[:, None]
+        else:
+            b = gamma/(alpha*h/2 + beta)
 
         # matrix to hold "a" for addition to gradient matrix
         As = [
@@ -840,15 +845,20 @@ class DiffOperators(object):
 
         Parameters
         ----------
-        alpha, beta, gamma : scalar or array_like
-            Parameters for the Robin boundary condition.
+        alpha, beta : scalar or array_like
+            Parameters for the Robin boundary condition. array_like must be defined on
+            each boundary face.
+        gamma: scalar or array_like
+            right hand side boundary conditions. If this parameter is array like, it can
+            be fed either a (n_boundary_faces,) shape array or an (n_boundary_faces, n_rhs)
+            shape array if multiple systems have the same alpha and beta parameters.
 
         Returns
         -------
         A : scipy.sparse.csr_matrix
-            Matrix to add to (face_divergence.T * cell_volumes)
+            Matrix to add to (-face_divergence.T * cell_volumes)
         b : numpy.ndarray
-            Array to add to the result of the (face_divergence.T * cell_volumes + A) @ u.
+            Array to add to the result of the (-face_divergence.T * cell_volumes + A) @ u.
 
         Notes
         -----
@@ -888,7 +898,12 @@ class DiffOperators(object):
 
         # for the ghost point u_k = a*u_i + b where
         a = (beta/h)/(alpha/2 + beta/h)
-        b = (gamma/2)/(alpha/2 + beta/h)
+
+        gamma = np.asarray(gamma)
+        if gamma.ndim > 1:
+            b = (gamma/2)/(alpha/2 + beta/h)[:, None]
+        else:
+            b = (gamma/2)/(alpha/2 + beta/h)
 
         # matrix to put "a" on the correct cell faces
         # for addition to -face_divergence*volume matrix
