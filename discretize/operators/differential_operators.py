@@ -748,8 +748,6 @@ class DiffOperators(object):
 
         .. math:: \alpha u + \beta \frac{\partial u}{\partial \hat{n}} = \gamma \textrm{ on } \partial\Omega
         """
-        dim = self.dim
-
         # get length between boundary cell_centers and ghost_cell_centers
         h = self.boundary_h
 
@@ -762,67 +760,13 @@ class DiffOperators(object):
         else:
             b = gamma/(alpha*h/2 + beta)
 
-        # matrix to hold "a" for addition to gradient matrix
-        As = [
-            sp.csr_matrix(
-                ([1, 1], ([0, 1], [0, self.shape_cells[0]-1])),
-                shape=(2, self.shape_cells[0])
-            )
-        ]
+        A = self.average_cell_to_boundary_face
 
-        # boundary faces to all faces (with appropriate signs for derivatives)
-        Ps = [
-            sp.csr_matrix(
-                ([1, -1], ([0, self.shape_faces_x[0]-1], [0, 1])),
-                shape=(self.shape_faces_x[0], 2)
-            )
-        ]
-        if dim > 1:
-            # tensor product up to 2dim
-            As[0] = sp.kron(sp.eye(self.shape_cells[1]), As[0])
-            As.append(
-                sp.csr_matrix(
-                    ([1, 1], ([0, 1], [0, self.shape_cells[1]-1])),
-                    shape=(2, self.shape_cells[1])
-                )
-            )
-            As[1] = sp.kron(As[1], sp.eye(self.shape_cells[0]))
+        P = self.boundary_face_scalar_integral
+        A = sp.diags(a) @ self.average_cell_to_boundary_face
 
-            Ps[0] = sp.kron(sp.eye(self.shape_cells[1]), Ps[0])
-            Ps.append(
-                sp.csr_matrix(
-                    ([1, -1], ([0, self.shape_faces_y[1]-1], [0, 1])),
-                    shape=(self.shape_faces_y[1], 2)
-                )
-            )
-            Ps[1] = sp.kron(Ps[1], sp.eye(self.shape_cells[0]))
-        if dim > 2:
-            # tensor product up to 3dim
-            As[0] = sp.kron(sp.eye(self.shape_cells[2]), As[0])
-            As[1] = sp.kron(sp.eye(self.shape_cells[2]), As[1])
-            As.append(
-                sp.csr_matrix(
-                    ([1, 1], ([0, 1], [0, self.shape_cells[2]-1])),
-                    shape=(2, self.shape_cells[2])
-                )
-            )
-            As[2] = sp.kron(As[2], sp.eye(self.shape_cells[0]*self.shape_cells[1]))
-
-            Ps[0] = sp.kron(sp.eye(self.shape_cells[2]), Ps[0])
-            Ps[1] = sp.kron(sp.eye(self.shape_cells[2]), Ps[1])
-            Ps.append(
-                sp.csr_matrix(
-                    ([1, -1], ([0, self.shape_faces_z[2]-1], [0, 1])),
-                    shape=(self.shape_faces_z[2], 2)
-                )
-            )
-            Ps[2] = sp.kron(Ps[2], sp.eye(self.shape_cells[0]*self.shape_cells[1]))
-        A = sp.diags(a) @ sp.vstack(As)
-        P = sp.block_diag(Ps)
-
-        A = P @ A
-        # the "negative" part of the discrete derivative
-        b = -P @ b
+        A = -P @ A
+        b = P @ b
         return A, b
 
     def cell_gradient_robin_weak_form(self, alpha=1.0, beta=0.0, gamma=0.0):
@@ -881,7 +825,7 @@ class DiffOperators(object):
         ..math:: -(D*y)^T*V*u.
 
         This function returns the necessary matrices to complete the transformation of
-        equation :eq:transformed. The second part of equation becomes,
+        equation :eq:transformed. The second part of equation :eq:transformed becomes,
 
         ..math:: \int_V \nabla \cdot (\phi u) \partial V = \int_{\partial\Omega} \phi\vec{u}\cdot\hat{n} \partial a
             :label: boundary_conditions
@@ -891,8 +835,6 @@ class DiffOperators(object):
 
         ..math:: y^T(-D^T V + B)u + y^Tb
         """
-        dim = self.dim
-
         # get length between boundary cell_centers and ghost_cell_centers
         h = self.boundary_h
 
@@ -905,68 +847,8 @@ class DiffOperators(object):
         else:
             b = (gamma/2)/(alpha/2 + beta/h)
 
-        # matrix to put "a" on the correct cell faces
-        # for addition to -face_divergence*volume matrix
-        # A's go from all cells to boundary faces
-        As = [
-            sp.csr_matrix(
-                ([1, 1], ([0, 1], [0, self.shape_cells[0]-1])),
-                shape=(2, self.shape_cells[0])
-            )
-        ]
-
-        # boundary faces to all faces (with appropriate signs for faces)
-        # P is the (hat{y} dot vec{da}) part
-        # and then also maps from boundary faces to all faces
-        Ps = [
-            sp.csr_matrix(
-                ([-1, 1], ([0, self.shape_faces_x[0]-1], [0, 1])),
-                shape=(self.shape_faces_x[0], 2)
-            )
-        ]
-        if dim > 1:
-            # tensor product up to 2dim
-            As[0] = sp.kron(sp.eye(self.shape_cells[1]), As[0])
-            As.append(
-                sp.csr_matrix(
-                    ([1, 1], ([0, 1], [0, self.shape_cells[1]-1])),
-                    shape=(2, self.shape_cells[1])
-                )
-            )
-            As[1] = sp.kron(As[1], sp.eye(self.shape_cells[0]))
-
-            Ps[0] = sp.kron(sp.eye(self.shape_cells[1]), Ps[0])
-            Ps.append(
-                sp.csr_matrix(
-                    ([-1, 1], ([0, self.shape_faces_y[1]-1], [0, 1])),
-                    shape=(self.shape_faces_y[1], 2)
-                )
-            )
-            Ps[1] = sp.kron(Ps[1], sp.eye(self.shape_cells[0]))
-        if dim > 2:
-            # tensor product up to 3dim
-            As[0] = sp.kron(sp.eye(self.shape_cells[2]), As[0])
-            As[1] = sp.kron(sp.eye(self.shape_cells[2]), As[1])
-            As.append(
-                sp.csr_matrix(
-                    ([1, 1], ([0, 1], [0, self.shape_cells[2]-1])),
-                    shape=(2, self.shape_cells[2])
-                )
-            )
-            As[2] = sp.kron(As[2], sp.eye(self.shape_cells[0]*self.shape_cells[1]))
-
-            Ps[0] = sp.kron(sp.eye(self.shape_cells[2]), Ps[0])
-            Ps[1] = sp.kron(sp.eye(self.shape_cells[2]), Ps[1])
-            Ps.append(
-                sp.csr_matrix(
-                    ([-1, 1], ([0, self.shape_faces_z[2]-1], [0, 1])),
-                    shape=(self.shape_faces_z[2], 2)
-                )
-            )
-            Ps[2] = sp.kron(Ps[2], sp.eye(self.shape_cells[0]*self.shape_cells[1]))
-        A = sp.diags(a) @ sp.vstack(As)
-        P = sp.diags(self.face_areas) @ sp.block_diag(Ps)
-
+        P = self.boundary_face_scalar_integral
+        A = sp.diags(a) @ self.average_cell_to_boundary_face
         A = P @ A
         b = P @ b
         return A, b
@@ -1140,6 +1022,58 @@ class DiffOperators(object):
                 self._edge_curl = sdiag(1 / S) * (self._edge_curl_stencil * sdiag(L))
 
         return self._edge_curl
+
+    @property
+    def boundary_face_scalar_integral(self):
+        """Represents the operation of integrating a scalar function on the boundary
+
+        This matrix represents the boundary surface integral of a scalar function
+        multiplied with a finite volume test function on the mesh.
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            Sparse matrix of shape (n_faces, n_boundary_faces)
+
+        Notes
+        -----
+        The integral we are representing on the boundary of the mesh is
+
+        ..math:: \int_{\Omega} u\vec{w} \cdot \hat{n} \partial \Omega
+
+        In discrete form this is:
+
+        ..math:: w^T * P * u
+        where w is defined on all faces, and u is defined on boundary faces.
+        """
+        dim = self.dim
+        Ps = [
+            sp.csr_matrix(
+                ([-1, 1], ([0, self.shape_faces_x[0]-1], [0, 1])),
+                shape=(self.shape_faces_x[0], 2)
+            )
+        ]
+        if dim > 1:
+            Ps[0] = sp.kron(sp.eye(self.shape_cells[1]), Ps[0])
+            Ps.append(
+                sp.csr_matrix(
+                    ([-1, 1], ([0, self.shape_faces_y[1]-1], [0, 1])),
+                    shape=(self.shape_faces_y[1], 2)
+                )
+            )
+            Ps[1] = sp.kron(Ps[1], sp.eye(self.shape_cells[0]))
+        if dim > 2:
+            Ps[0] = sp.kron(sp.eye(self.shape_cells[2]), Ps[0])
+            Ps[1] = sp.kron(sp.eye(self.shape_cells[2]), Ps[1])
+            Ps.append(
+                sp.csr_matrix(
+                    ([-1, 1], ([0, self.shape_faces_z[2]-1], [0, 1])),
+                    shape=(self.shape_faces_z[2], 2)
+                )
+            )
+            Ps[2] = sp.kron(Ps[2], sp.eye(self.shape_cells[0]*self.shape_cells[1]))
+        P = sp.diags(self.face_areas) @ sp.block_diag(Ps)
+        return P
 
     def get_BC_projections(self, BC, discretization="CC"):
         """
@@ -1479,6 +1413,44 @@ class DiffOperators(object):
                     (aveCCV2Fx, aveCC2VFy, aveCC2BFz), format="csr"
                 )
         return self._average_cell_vector_to_face
+
+    @property
+    def average_cell_to_boundary_face(self):
+        """
+        Averages cell centered scalar values to boundary faces assuming constant values.
+        This essentially projects the cell values onto the boundary faces.
+        """
+        if getattr(self, "_average_cell_to_boundary_face", None) is None:
+            dim = self.dim
+            As = [
+                sp.csr_matrix(
+                    ([1, 1], ([0, 1], [0, self.shape_cells[0]-1])),
+                    shape=(2, self.shape_cells[0])
+                )
+            ]
+            if dim > 1:
+                # tensor product up to 2dim
+                As[0] = sp.kron(sp.eye(self.shape_cells[1]), As[0])
+                As.append(
+                    sp.csr_matrix(
+                        ([1, 1], ([0, 1], [0, self.shape_cells[1]-1])),
+                        shape=(2, self.shape_cells[1])
+                    )
+                )
+                As[1] = sp.kron(As[1], sp.eye(self.shape_cells[0]))
+            if dim > 2:
+                # tensor product up to 3dim
+                As[0] = sp.kron(sp.eye(self.shape_cells[2]), As[0])
+                As[1] = sp.kron(sp.eye(self.shape_cells[2]), As[1])
+                As.append(
+                    sp.csr_matrix(
+                        ([1, 1], ([0, 1], [0, self.shape_cells[2]-1])),
+                        shape=(2, self.shape_cells[2])
+                    )
+                )
+                As[2] = sp.kron(As[2], sp.eye(self.shape_cells[0]*self.shape_cells[1]))
+            self._average_cell_to_boundary_face = sp.vstack(As)
+        return self._average_cell_to_boundary_face
 
     @property
     def average_edge_to_cell(self):
