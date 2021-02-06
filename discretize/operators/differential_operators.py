@@ -1534,6 +1534,34 @@ class DiffOperators(object):
         return self._average_edge_z_to_cell
 
     @property
+    def average_edge_to_face(self):
+        if self.dim == 1:
+            return self.average_cell_to_face
+        elif self.dim == 2:
+            return sp.diags(
+                [1, 1],
+                [-self.n_faces_x, self.n_faces_y],
+                shape=(self.n_faces, self.n_edges)
+            )
+        n1, n2, n3 = self.shape_cells
+        ex_to_fy = kron3(av(n3), speye(n2+1) ,speye(n1))
+        ex_to_fz = kron3(speye(n3+1), av(n2), speye(n1))
+
+
+        ey_to_fx = kron3(av(n3), speye(n2), speye(n1+1))
+        ey_to_fz = kron3(speye(n3+1), speye(n2), av(n1))
+
+        ez_to_fx = kron3(speye(n3), av(n2), speye(n1+1))
+        ez_to_fy = kron3(speye(n3), speye(n2+1), av(n1))
+
+        e_to_f = 0.5 * sp.bmat([
+            [None, ey_to_fx, ez_to_fx],
+            [ex_to_fy, None, ez_to_fy],
+            [ex_to_fz, ey_to_fz, None]
+        ], format='csr')
+        return e_to_f
+
+    @property
     def average_node_to_cell(self):
         "Construct the averaging operator on cell nodes to cell centers."
         if getattr(self, "_average_node_to_cell", None) is None:
