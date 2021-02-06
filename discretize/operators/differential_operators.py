@@ -1070,6 +1070,56 @@ class DiffOperators(object):
         return A
 
     @property
+    def boundary_edge_vector_integral(self):
+        """Represents the operation of integrating a vector function on the boundary
+
+        This matrix represents the boundary surface integral of a vector function
+        multiplied with a finite volume test function on the mesh.
+
+        In 1D and 2D, the operation assumes that the right array contains only a single
+        component of the vector ``u``. In 3D, however, we must assume that ``u`` will
+        contain each of the three vector components, and it must be ordered as,
+        ``[edges_1_x, ... ,edge_N_x, edge_1_y, ..., edge_N_y, edge_1_z, ..., edge_N_z]``
+        , where ``N`` is the number of boundary edges.
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            Sparse matrix of shape (n_edges, n_boundary_edges) for 1D or 2D mesh,
+            (n_edges, 3*n_boundary_edges) for a 3D mesh.
+
+        Notes
+        -----
+        The integral we are representing on the boundary of the mesh is
+
+        ..math:: \int_{\Omega} \vec{w} \cdot (\vec{u} \times \hat{n}) \partial \Omega
+
+        In discrete form this is:
+
+        ..math:: w^T * P * u
+        where w is defined on all edges, and u is all three components defined on
+        boundary edges.
+        """
+        Pe = self.project_edge_to_boundary_edge
+        Pf = self.project_face_to_boundary_face
+        dA = self.boundary_face_outward_normals * (Pf @ self.face_areas)[:, None]
+        w = Pe @ self.edge_tangents
+
+        n_boundary_edges = len(w)
+
+        Av = Pf @ self.average_edge_to_face @ Pe.T
+
+        w_cross_n = np.cross(-w, Av.T @ dA)
+
+        if self.dim == 2:
+            return Pe.T @ sp.diags(w_cross_n, format='csr')
+        return Pe.T @ sp.diags(
+            (w_cross_n[:, 0], w_cross_n[:, 1], w_cross_n[:, 2]),
+            (0, n_boundary_edges, 2*n_boundary_edges),
+            shape=(n_boundary_edges, 3*n_boundary_edges)
+        )
+
+    @property
     def boundary_node_vector_integral(self):
         """Represents the operation of integrating a vector function dotted with the boundary normal
 
