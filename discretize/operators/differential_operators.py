@@ -1069,6 +1069,47 @@ class DiffOperators(object):
         A = sp.diags(self.face_areas) @ P.T @ sp.diags(w_h_dot_normal)
         return A
 
+    @property
+    def boundary_node_vector_integral(self):
+        """Represents the operation of integrating a vector function dotted with the boundary normal
+
+        This matrix represents the boundary surface integral of a vector function
+        dotted with the boundary normal and multiplied with a scalar finite volume
+        test function on the mesh.
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            Sparse matrix of shape (n_nodes, ndim * n_boundary_nodes).
+
+        Notes
+        -----
+        The integral we are representing on the boundary of the mesh is
+
+        ..math:: \int_{\Omega} (w \vec{u}) \cdot \hat{n} \partial \Omega
+
+        In discrete form this is:
+
+        ..math:: w^T * P * u
+        where w is defined on all nodes, and u is all three components defined on
+        boundary nodes.
+        """
+        if self.dim == 1:
+            return sp.csr_matrix(([-1, 1], ([0, self.n_nodes_x-1], [0, 1])), shape=(self.n_nodes_x, 2))
+        Pn = self.project_nodes_to_boundary_nodes
+        Pf = self.project_face_to_boundary_face
+        n_boundary_nodes = Pn.shape[0]
+
+        dA = self.boundary_face_outward_normals * (Pf @ self.face_areas)[:, None]
+
+        Av = Pf @ self.average_node_to_face @ Pn.T
+
+        u_dot_ds = Av.T @ dA
+        diags = u_dot_ds.T
+        offsets = n_boundary_nodes * np.arange(self.dim)
+
+        return Pn.T @ sp.diags(diags, offsets, shape=(n_boundary_nodes, self.dim*n_boundary_nodes))
+
     def get_BC_projections(self, BC, discretization="CC"):
         """
         The weak form boundary condition projection matrices.
