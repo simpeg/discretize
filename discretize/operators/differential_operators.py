@@ -748,28 +748,32 @@ class DiffOperators(object):
 
         .. math:: \alpha u + \beta \frac{\partial u}{\partial \hat{n}} = \gamma \textrm{ on } \partial\Omega
         """
-        # get length between boundary cell_centers and ghost_cell_centers
-        h = self.boundary_h
+        # get length between boundary cell_centers and boundary_faces
+        Pf = self.project_face_to_boundary_face
+        aveC2BF = Pf @ self.average_cell_to_face
+        if self.dim == 1:
+            h = np.abs(self.boundary_faces - aveC2BF @ self.cell_centers)
+        else:
+            h = np.linalg.norm(self.boundary_faces - aveC2BF @ self.cell_centers, axis=1)
 
         # calculate a and b values
-        a = alpha/(alpha*h/2 + beta)
+        a = alpha/(alpha*h + beta)
 
         gamma = np.asarray(gamma)
         if gamma.ndim > 1:
-            b = gamma/(alpha*h/2 + beta)[:, None]
+            b = gamma/(alpha*h + beta)[:, None]
         else:
-            b = gamma/(alpha*h/2 + beta)
+            b = gamma/(alpha*h + beta)
 
-        A = self.average_cell_to_boundary_face
+        Pf = self.project_face_to_boundary_face
+        M = self.boundary_face_scalar_integral
+        A = sp.diags(a) @ (Pf @ self.average_cell_to_face)
 
-        P = self.boundary_face_scalar_integral
-        A = sp.diags(a) @ self.average_cell_to_boundary_face
-
-        A = -P @ A
-        b = P @ b
+        A = -M @ A
+        b = M @ b
         return A, b
 
-    def cell_gradient_robin_weak_form(self, alpha=1.0, beta=0.0, gamma=0.0):
+    def cell_gradient_weak_form_robin(self, alpha=1.0, beta=0.0, gamma=0.0):
         """Robin boundary condition for the weak formulation of the cell gradient
 
         This function returns the necessary parts for the weak form of the cell gradient
@@ -835,22 +839,28 @@ class DiffOperators(object):
 
         ..math:: y^T(-D^T V + B)u + y^Tb
         """
-        # get length between boundary cell_centers and ghost_cell_centers
-        h = self.boundary_h
+        # get length between boundary cell_centers and boundary_faces
+        Pf = self.project_face_to_boundary_face
+        aveC2BF = Pf @ self.average_cell_to_face
+        if self.dim == 1:
+            h = np.abs(self.boundary_faces - aveC2BF @ self.cell_centers)
+        else:
+            h = np.linalg.norm(self.boundary_faces - aveC2BF @ self.cell_centers, axis=1)
 
         # for the ghost point u_k = a*u_i + b where
-        a = (beta/h)/(alpha/2 + beta/h)
+        a = (beta/h/(alpha + beta/h))
+        A = sp.diags(a) @ aveC2BF
 
         gamma = np.asarray(gamma)
         if gamma.ndim > 1:
-            b = (gamma/2)/(alpha/2 + beta/h)[:, None]
+            b = (gamma)/(alpha + beta/h)[:, None]
         else:
-            b = (gamma/2)/(alpha/2 + beta/h)
+            b = (gamma)/(alpha + beta/h)
 
-        P = self.boundary_face_scalar_integral
-        A = sp.diags(a) @ self.average_cell_to_boundary_face
-        A = P @ A
-        b = P @ b
+        # value at boundary = A*cells + b
+        M = self.boundary_face_scalar_integral
+        A = M @ A
+        b = M @ b
         return A, b
 
     @property
@@ -1046,34 +1056,18 @@ class DiffOperators(object):
         ..math:: w^T * P * u
         where w is defined on all faces, and u is defined on boundary faces.
         """
-        dim = self.dim
-        Ps = [
-            sp.csr_matrix(
-                ([-1, 1], ([0, self.shape_faces_x[0]-1], [0, 1])),
-                shape=(self.shape_faces_x[0], 2)
-            )
-        ]
-        if dim > 1:
-            Ps[0] = sp.kron(sp.eye(self.shape_cells[1]), Ps[0])
-            Ps.append(
-                sp.csr_matrix(
-                    ([-1, 1], ([0, self.shape_faces_y[1]-1], [0, 1])),
-                    shape=(self.shape_faces_y[1], 2)
-                )
-            )
-            Ps[1] = sp.kron(Ps[1], sp.eye(self.shape_cells[0]))
-        if dim > 2:
-            Ps[0] = sp.kron(sp.eye(self.shape_cells[2]), Ps[0])
-            Ps[1] = sp.kron(sp.eye(self.shape_cells[2]), Ps[1])
-            Ps.append(
-                sp.csr_matrix(
-                    ([-1, 1], ([0, self.shape_faces_z[2]-1], [0, 1])),
-                    shape=(self.shape_faces_z[2], 2)
-                )
-            )
-            Ps[2] = sp.kron(Ps[2], sp.eye(self.shape_cells[0]*self.shape_cells[1]))
-        P = sp.diags(self.face_areas) @ sp.block_diag(Ps)
-        return P
+        if self.dim == 1:
+            return sp.csr_matrix(([-1, 1], ([0, self.n_faces_x-1], [0, 1])), shape=(self.n_faces_x, 2))
+        P = self.project_face_to_boundary_face
+
+        # The below is generalizable to any mesh with face_normals
+        # and boundary_face_outward_normals
+        w_h_dot_normal = np.sum(
+            (P @ self.face_normals) * self.boundary_face_outward_normals,
+            axis=-1
+        )
+        A = sp.diags(self.face_areas) @ P.T @ sp.diags(w_h_dot_normal)
+        return A
 
     def get_BC_projections(self, BC, discretization="CC"):
         """
