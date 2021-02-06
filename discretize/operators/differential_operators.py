@@ -1674,6 +1674,71 @@ class DiffOperators(object):
                 )
         return self._average_node_to_face
 
+    @property
+    def project_face_to_boundary_face(self):
+        """ Projects values defined on all faces to the boundary faces
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            Projection matrix with shape (n_boundary_faces, n_faces)
+        """
+        # Simple matrix which projects the values of the faces onto the boundary faces
+        # Can also be used to "select" the boundary faces
+
+        # Create a matrix that projects all faces onto boundary faces
+        # The below should work for a regular structured mesh
+        is_b = make_boundary_bool(self.shape_faces_x, dir='x')
+        if self.dim > 1:
+            is_b = np.r_[is_b, make_boundary_bool(self.shape_faces_y, dir='y')]
+        if self.dim == 3:
+            is_b = np.r_[is_b, make_boundary_bool(self.shape_faces_z, dir='z')]
+        return sp.eye(self.n_faces, format='csr')[is_b]
+
+    @property
+    def project_edge_to_boundary_edge(self):
+        """Projects values defined on all edges to the boundary edges
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            Projection matrix with shape (n_boundary_edges, n_edges)
+        """
+        # Simple matrix which projects the values of the faces onto the boundary faces
+        # Can also be used to "select" the boundary faces
+
+        # Create a matrix that projects all edges onto boundary edges
+        # The below should work for a regular structured mesh
+        if self.dim == 1:
+            return None  # No edges are on the boundary in 1D
+
+        is_b = np.r_[
+            make_boundary_bool(self.shape_edges_x, dir='yz'),
+            make_boundary_bool(self.shape_edges_y, dir='xz')
+        ]
+        if self.dim == 3:
+            is_b = np.r_[is_b, make_boundary_bool(self.shape_edges_z, dir='xy')]
+        return sp.eye(self.n_edges, format='csr')[is_b]
+
+    @property
+    def project_node_to_boundary_node(self):
+        """Projects values defined on all edges to the boundary edges
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            Projection matrix with shape (n_boundary_nodes, n_nodes)
+        """
+        # Simple matrix which projects the values of the nodes onto the boundary nodes
+        # Can also be used to "select" the boundary nodes
+
+        # Create a matrix that projects all nodes onto boundary nodes
+        # The below should work for a regular structured mesh
+
+        is_b = make_boundary_bool(self.shape_nodes)
+        return sp.eye(self.n_nodes, format='csr')[is_b]
+
+
     # DEPRECATED
     cellGrad = deprecate_property("cell_gradient", "cellGrad", removal_version="1.0.0")
     cellGradBC = deprecate_property(
