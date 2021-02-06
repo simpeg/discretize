@@ -191,28 +191,6 @@ class BaseTensorMesh(BaseMesh):
         return ndgrid(*self.h)
 
     @property
-    def boundary_h(self):
-        """Boundary cell widths that correspond to each boundary face
-
-        Returns
-        -------
-        np.ndarray of float
-            array of shape (mesh.n_boundary_faces,)
-        """
-        hx = np.array([self.h[0][0], self.h[0][-1]])
-        hy = []
-        hz = []
-        if self.dim > 1:
-            hx = np.tile(hx, self.shape_cells[1])
-            hy = np.repeat(np.r_[self.h[1][0], self.h[1][-1]], self.shape_cells[0])
-            hz = []
-        if self.dim > 2:
-            hx = np.tile(hx, self.shape_cells[2])
-            hy = np.tile(hy, self.shape_cells[2])
-            hz = np.repeat(np.r_[self.h[2][0], self.h[2][-1]], self.shape_cells[0]*self.shape_cells[1])
-        return np.r_[hx, hy, hz]
-
-    @property
     def faces_x(self):
         """Face staggered grid in the x direction."""
         if self.nFx == 0:
