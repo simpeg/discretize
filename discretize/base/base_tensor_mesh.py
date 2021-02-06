@@ -18,6 +18,7 @@ from discretize.utils import (
     sdinv,
     TensorType,
     interpolation_matrix,
+    make_boundary_bool,
 )
 from discretize.utils.code_utils import deprecate_method, deprecate_property
 import warnings
@@ -243,16 +244,52 @@ class BaseTensorMesh(BaseMesh):
         """
         dim = self.dim
         if dim == 1:
-            return np.array((self.nodes_x[0], self.nodes_x[-1]))
+            return self.nodes_x[[0, -1]]
         if dim == 2:
-            fx = ndgrid(np.r_[self.nodes_x[0], self.nodes_x[-1]], self.cell_centers_y)
-            fy = ndgrid(self.cell_centers_x, np.r_[self.nodes_y[0], self.nodes_y[-1]])
+            fx = ndgrid(self.nodes_x[[0, -1]], self.cell_centers_y)
+            fy = ndgrid(self.cell_centers_x, self.nodes_y[[0, -1]])
             return np.r_[fx, fy]
         if dim == 3:
-            fx = ndgrid(np.r_[self.nodes_x[0], self.nodes_x[-1]], self.cell_centers_y, self.cell_centers_z)
-            fy = ndgrid(self.cell_centers_x, np.r_[self.nodes_y[0], self.nodes_y[-1]], self.cell_centers_z)
-            fz = ndgrid(self.cell_centers_x, self.cell_centers_y, np.r_[self.nodes_z[0], self.nodes_z[-1]])
+            fx = ndgrid(self.nodes_x[[0, -1]], self.cell_centers_y, self.cell_centers_z)
+            fy = ndgrid(self.cell_centers_x, self.nodes_y[[0, -1]], self.cell_centers_z)
+            fz = ndgrid(self.cell_centers_x, self.cell_centers_y, self.nodes_z[[0, -1]])
             return np.r_[fx, fy, fz]
+
+    @property
+    def boundary_edges(self):
+        """Boundary edge locations
+
+        Returns
+        -------
+        np.ndarray of float
+            location array of shape (mesh.n_boundary_edges, dim)
+        """
+        dim = self.dim
+        if dim == 1:
+            return self.nodes_x[[0, -1]]
+        if dim == 2:
+            ex = ndgrid(self.cell_centers_x, self.nodes_y[[0, -1]])
+            ey = ndgrid(self.nodes_x[[0, -1]], self.cell_centers_y)
+            return np.r_[ex, ey]
+        if dim == 3:
+            ex = self.edges_x[make_boundary_bool(self.shape_edges_x, dir='yz')]
+            ey = self.edges_y[make_boundary_bool(self.shape_edges_y, dir='xz')]
+            ez = self.edges_z[make_boundary_bool(self.shape_edges_z, dir='xy')]
+            return np.r_[ex, ey, ez]
+
+    @property
+    def boundary_nodes(self):
+        """Boundary node locations
+
+        Returns
+        -------
+        np.ndarray of float
+            location array of shape (mesh.n_boundary_nodes, dim)
+        """
+        dim = self.dim
+        if dim == 1:
+            return self.nodes_x[[0, -1]]
+        return self.nodes[make_boundary_bool(self.shape_nodes)]
 
     @property
     def boundary_face_outward_normals(self):

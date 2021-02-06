@@ -156,6 +156,20 @@ def ndgrid(*args, **kwargs):
     return meshed
 
 
+def make_boundary_bool(shape, dir='xyz'):
+    """From the given shape, return a boolean index array to identify the boundaries"""
+    is_b = np.zeros(shape, dtype=bool, order='F')
+    if 'x' in dir:
+        is_b[[0, -1]] = True
+    if len(shape) > 1:
+        if 'y' in dir:
+            is_b[:, [0, -1]] = True
+    if len(shape) > 2:
+        if 'z' in dir:
+            is_b[:, :, [0, -1]] = True
+    return is_b.reshape(-1, order='F')
+
+
 def ind2sub(shape, inds):
     """From the given shape, returns the subscripts of the given index"""
     if type(inds) is not np.ndarray:

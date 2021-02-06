@@ -10,6 +10,7 @@ from discretize.utils.matrix_utils import (
     av,
     av_extrap,
     ndgrid,
+    make_boundary_bool,
     ind2sub,
     sub2ind,
     get_subarray,
