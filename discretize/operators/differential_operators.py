@@ -1,7 +1,7 @@
 import numpy as np
 from scipy import sparse as sp
 import warnings
-from discretize.utils import sdiag, speye, kron3, spzeros, ddx, av, av_extrap
+from discretize.utils import sdiag, speye, kron3, spzeros, ddx, av, av_extrap, make_boundary_bool
 from discretize.utils.code_utils import deprecate_method, deprecate_property
 
 
@@ -1415,42 +1415,30 @@ class DiffOperators(object):
         return self._average_cell_vector_to_face
 
     @property
-    def average_cell_to_boundary_face(self):
-        """
-        Averages cell centered scalar values to boundary faces assuming constant values.
-        This essentially projects the cell values onto the boundary faces.
-        """
-        if getattr(self, "_average_cell_to_boundary_face", None) is None:
-            dim = self.dim
-            As = [
-                sp.csr_matrix(
-                    ([1, 1], ([0, 1], [0, self.shape_cells[0]-1])),
-                    shape=(2, self.shape_cells[0])
+    def average_cell_to_edge(self):
+        if getattr(self, "_average_cell_to_edge", None) is None:
+            n = self.shape_cells
+            if self.dim == 1:
+                avg = sp.eye(n[0])
+            elif self.dim == 2:
+                avg = sp.vstack(
+                    (
+                        sp.kron(av_extrap(n[1]), speye(n[0])),
+                        sp.kron(speye(n[1]), av_extrap(n[0])),
+                    ),
+                    format="csr",
                 )
-            ]
-            if dim > 1:
-                # tensor product up to 2dim
-                As[0] = sp.kron(sp.eye(self.shape_cells[1]), As[0])
-                As.append(
-                    sp.csr_matrix(
-                        ([1, 1], ([0, 1], [0, self.shape_cells[1]-1])),
-                        shape=(2, self.shape_cells[1])
-                    )
+            elif self.dim == 3:
+                avg = sp.vstack(
+                    (
+                        kron3(av_extrap(n[2]), av_extrap(n[1]), speye(n[0])),
+                        kron3(av_extrap(n[2]), speye(n[1]), av_extrap(n[0])),
+                        kron3(speye(n[2]), av_extrap(n[1]), av_extrap(n[0])),
+                    ),
+                    format="csr",
                 )
-                As[1] = sp.kron(As[1], sp.eye(self.shape_cells[0]))
-            if dim > 2:
-                # tensor product up to 3dim
-                As[0] = sp.kron(sp.eye(self.shape_cells[2]), As[0])
-                As[1] = sp.kron(sp.eye(self.shape_cells[2]), As[1])
-                As.append(
-                    sp.csr_matrix(
-                        ([1, 1], ([0, 1], [0, self.shape_cells[2]-1])),
-                        shape=(2, self.shape_cells[2])
-                    )
-                )
-                As[2] = sp.kron(As[2], sp.eye(self.shape_cells[0]*self.shape_cells[1]))
-            self._average_cell_to_boundary_face = sp.vstack(As)
-        return self._average_cell_to_boundary_face
+            self._average_cell_to_edge = avg
+        return self._average_cell_to_edge
 
     @property
     def average_edge_to_cell(self):
