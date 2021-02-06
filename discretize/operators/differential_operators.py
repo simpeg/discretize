@@ -1053,8 +1053,9 @@ class DiffOperators(object):
 
         In discrete form this is:
 
-        ..math:: w^T * P * u
-        where w is defined on all faces, and u is defined on boundary faces.
+        ..math:: w^T * P * u_b
+
+        where `w` is defined on all faces, and `u_b` is defined on boundary faces.
         """
         if self.dim == 1:
             return sp.csr_matrix(([-1, 1], ([0, self.n_faces_x-1], [0, 1])), shape=(self.n_faces_x, 2))
@@ -1096,8 +1097,9 @@ class DiffOperators(object):
 
         In discrete form this is:
 
-        ..math:: w^T * P * u
-        where w is defined on all edges, and u is all three components defined on
+        ..math:: w^T * P * u_b
+
+        where `w` is defined on all edges, and `u_b` is all three components defined on
         boundary edges.
         """
         Pe = self.project_edge_to_boundary_edge
@@ -1140,8 +1142,9 @@ class DiffOperators(object):
 
         In discrete form this is:
 
-        ..math:: w^T * P * u
-        where w is defined on all nodes, and u is all three components defined on
+        ..math:: w^T * P * u_b
+
+        where `w` is defined on all nodes, and `u_b` is all three components defined on
         boundary nodes.
         """
         if self.dim == 1:
