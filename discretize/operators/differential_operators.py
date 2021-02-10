@@ -861,6 +861,7 @@ class DiffOperators(object):
         M = self.boundary_face_scalar_integral
         A = M @ A
         b = M @ b
+
         return A, b
 
     @property
@@ -1061,8 +1062,6 @@ class DiffOperators(object):
             return sp.csr_matrix(([-1, 1], ([0, self.n_faces_x-1], [0, 1])), shape=(self.n_faces_x, 2))
         P = self.project_face_to_boundary_face
 
-        # The below is generalizable to any mesh with face_normals
-        # and boundary_face_outward_normals
         w_h_dot_normal = np.sum(
             (P @ self.face_normals) * self.boundary_face_outward_normals,
             axis=-1
@@ -1116,8 +1115,8 @@ class DiffOperators(object):
         if self.dim == 2:
             return Pe.T @ sp.diags(w_cross_n, format='csr')
         return Pe.T @ sp.diags(
-            (w_cross_n[:, 0], w_cross_n[:, 1], w_cross_n[:, 2]),
-            (0, n_boundary_edges, 2*n_boundary_edges),
+            w_cross_n.T,
+            n_boundary_edges*np.arange(3),
             shape=(n_boundary_edges, 3*n_boundary_edges)
         )
 
