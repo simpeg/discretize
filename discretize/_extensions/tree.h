@@ -127,7 +127,7 @@ class Cell{
     void find_overlapping_cells(int_vec_t& cells, double xm, double xp, double ym, double yp, double zm, double zp);
 
     void insert_cell(node_map_t &nodes, double *new_center, int_t p_level, double* xs, double *ys, double *zs);
-    void refine_ball(node_map_t& nodes, double* center, double r, int_t p_level, double *xs, double *ys, double* zs);
+    void refine_ball(node_map_t& nodes, double* center, double r2, int_t p_level, double *xs, double *ys, double* zs);
     void refine_box(node_map_t& nodes, double* x0, double* x1, int_t p_level, double *xs, double *ys, double* zs, bool enclosed=false);
 
     Cell* containing_cell(double, double, double);

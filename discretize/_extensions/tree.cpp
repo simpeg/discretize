@@ -390,7 +390,7 @@ void Cell::insert_cell(node_map_t& nodes, double *new_cell, int_t p_level, doubl
     }
 };
 
-void Cell::refine_ball(node_map_t& nodes, double* center, double r2, int_t p_level, double *xs, double *ys, double* zs, bool enclosed){
+void Cell::refine_ball(node_map_t& nodes, double* center, double r2, int_t p_level, double *xs, double *ys, double* zs){
     // early exit if my level is higher than or equal to target
     if (level >= p_level or level == max_level){
         return;
