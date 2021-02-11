@@ -573,7 +573,9 @@ def refine_tree_xyz(
         rs = np.ones(xyz.shape[0])
         level = np.ones(xyz.shape[0], dtype=np.int32)
         for ii, nC in enumerate(octree_levels):
-            mesh.refine_ball(xyz, rs*rMax[ii], level*(mesh.max_level - ii), finalize=False)
+            # skip "zero" sized balls
+            if rMax[ii] > 0:
+                mesh.refine_ball(xyz, rs*rMax[ii], level*(mesh.max_level - ii), finalize=False)
         if finalize:
             mesh.finalize()
 
@@ -761,6 +763,13 @@ def refine_tree_xyz(
             ]
 
         levels = [mesh.max_level - ii for ii in range(len(BSW))]
+
+        # Prune Zero sized boxes...
+        nonzeros = np.any(BSW != TNE, axis=1)
+        BSW = BSW[nonzeros]
+        TNE = TNE[nonzeros]
+        levels = levels[nonzeros]
+
         mesh.refine_box(BSW, TNE, levels, finalize=finalize)
 
     else:
