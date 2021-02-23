@@ -702,73 +702,40 @@ def refine_tree_xyz(
         hx = hs[0]
         hz = hs[-1]
 
-        # Pre-calculate max depth of each level
-        zmax = np.cumsum(
-            hz * octree_levels * 2 ** np.arange(len(octree_levels))
+        # Pre-calculate outer extent of each level
+        # x_pad
+        padWidth = np.cumsum(
+            hx
+            * octree_levels_padding
+            * 2 ** np.arange(len(octree_levels_padding))
         )
-
-        if mesh.dim == 2:
-            # Pre-calculate outer extent of each level
-            padWidth = np.cumsum(
-                hx
-                * octree_levels_padding
-                * 2 ** np.arange(len(octree_levels_padding))
-            )
-
-            # Make a list of outer limits
-            BSW = [
-                bsw * (octZ > 0) - np.r_[padWidth[ii], zmax[ii]]
-                for ii, octZ in enumerate(
-                    octree_levels
-                )
-            ]
-
-            TNE = [
-                tne * (octZ > 0) + np.r_[padWidth[ii], zmax[ii]]
-                for ii, octZ in enumerate(
-                    octree_levels
-                )
-            ]
-
-        else:
+        if mesh.dim == 3:
+            # y_pad
             hy = hs[1]
-
-            # Pre-calculate outer X extent of each level
-            padWidth_x = np.cumsum(
-                hx
-                * octree_levels_padding
-                * 2 ** np.arange(len(octree_levels_padding))
-            )
-
-            # Pre-calculate outer Y extent of each level
-            padWidth_y = np.cumsum(
-                hy
-                * octree_levels_padding
-                * 2 ** np.arange(len(octree_levels_padding))
-            )
-
-            # Make a list of outer limits
-            BSW = [
-                bsw * (octZ > 0) - np.r_[padWidth_x[ii], padWidth_y[ii], zmax[ii]]
-                for ii, octZ in enumerate(
-                    octree_levels
+            padWidth = np.c_[
+                padWidth,
+                np.cumsum(
+                    hy
+                    * octree_levels_padding
+                    * 2 ** np.arange(len(octree_levels_padding))
                 )
             ]
+        # Pre-calculate max depth of each level
+        padWidth = np.c_[
+            padWidth,
+            np.cumsum(
+                hz * octree_levels * 2 ** np.arange(len(octree_levels))
+            )
+        ]
 
-            TNE = [
-                tne * (octZ > 0) + np.r_[padWidth_x[ii], padWidth_y[ii], zmax[ii]]
-                for ii, octZ in enumerate(
-                    octree_levels
-                )
-            ]
-
-        levels = [mesh.max_level - ii for ii in range(len(BSW))]
-
-        # Prune Zero sized boxes...
-        nonzeros = np.any(BSW != TNE, axis=1)
-        BSW = BSW[nonzeros]
-        TNE = TNE[nonzeros]
-        levels = levels[nonzeros]
+        levels = []
+        BSW = []
+        TNE = []
+        for ii, octZ in enumerate(octree_levels):
+            if octZ > 0:
+                levels.append(mesh.max_level - ii)
+                BSW.append(bsw - padWidth[ii])
+                TNE.append(tne + padWidth[ii])
 
         mesh.refine_box(BSW, TNE, levels, finalize=finalize)
 

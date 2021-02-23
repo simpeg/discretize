@@ -41,7 +41,7 @@ class TestRefineOcTree(unittest.TestCase):
             * 100
         )
 
-        self.assertTrue(residual < 3)
+        self.assertLess(residual, 3)
 
     def test_box(self):
         dx = 0.25
@@ -75,7 +75,7 @@ class TestRefineOcTree(unittest.TestCase):
             / vol
             * 100
         )
-        self.assertTrue(residual < 2.)
+        self.assertLess(residual, 2.)
 
     def test_surface(self):
         dx = 0.1
@@ -114,7 +114,7 @@ class TestRefineOcTree(unittest.TestCase):
             * 100
         )
 
-        self.assertTrue(residual < 5)
+        self.assertLess(residual, 5)
 
     def test_errors(self):
         dx = 0.25
