@@ -842,6 +842,7 @@ class DiffOperators(object):
         # get length between boundary cell_centers and boundary_faces
         Pf = self.project_face_to_boundary_face
         aveC2BF = Pf @ self.average_cell_to_face
+        # distance from cell centers to ghost point on boundary faces
         if self.dim == 1:
             h = np.abs(self.boundary_faces - aveC2BF @ self.cell_centers)
         else:
@@ -1108,7 +1109,7 @@ class DiffOperators(object):
 
         n_boundary_edges = len(w)
 
-        Av = Pf @ self.average_edge_to_face @ Pe.T
+        Av = Pf @ self.average_edge_to_face_vector @ Pe.T
 
         w_cross_n = np.cross(-w, Av.T @ dA)
 
@@ -1148,7 +1149,7 @@ class DiffOperators(object):
         """
         if self.dim == 1:
             return sp.csr_matrix(([-1, 1], ([0, self.n_nodes_x-1], [0, 1])), shape=(self.n_nodes_x, 2))
-        Pn = self.project_nodes_to_boundary_nodes
+        Pn = self.project_node_to_boundary_node
         Pf = self.project_face_to_boundary_face
         n_boundary_nodes = Pn.shape[0]
 
@@ -1609,7 +1610,7 @@ class DiffOperators(object):
         return self._average_edge_z_to_cell
 
     @property
-    def average_edge_to_face(self):
+    def average_edge_to_face_vector(self):
         if self.dim == 1:
             return self.average_cell_to_face
         elif self.dim == 2:
@@ -1629,7 +1630,7 @@ class DiffOperators(object):
         ez_to_fx = kron3(speye(n3), av(n2), speye(n1+1))
         ez_to_fy = kron3(speye(n3), speye(n2+1), av(n1))
 
-        e_to_f = 0.5 * sp.bmat([
+        e_to_f = sp.bmat([
             [None, ey_to_fx, ez_to_fx],
             [ex_to_fy, None, ez_to_fy],
             [ex_to_fz, ey_to_fz, None]
