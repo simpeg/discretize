@@ -30,7 +30,7 @@ jobs:
       pip install -r requirements_dev.txt
       pip install -e .
     displayName: Install requirements and build
-    condition: neq(variables['python.version'], '3.8')
+    condition: ne(variables['python.version'], '3.8')
 
   - script: |
       eval "$(conda shell.bash hook)"
@@ -38,7 +38,7 @@ jobs:
       .ci/setup_headless_display.sh
       pytest tests  -v -s -W ignore::DeprecationWarning
     displayName: 'Testing'
-    condition: neq(variables['python.version'], '3.8')
+    condition: ne(variables['python.version'], '3.8')
 
   - script: |
       eval "$(conda shell.bash hook)"
