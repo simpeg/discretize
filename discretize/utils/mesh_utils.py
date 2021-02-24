@@ -707,7 +707,7 @@ def refine_tree_xyz(
         padWidth = np.cumsum(
             hx
             * octree_levels_padding
-            * 2 ** np.arange(len(octree_levels_padding))
+            * 2 ** np.arange(len(octree_levels))
         )
         if mesh.dim == 3:
             # y_pad
@@ -717,7 +717,7 @@ def refine_tree_xyz(
                 np.cumsum(
                     hy
                     * octree_levels_padding
-                    * 2 ** np.arange(len(octree_levels_padding))
+                    * 2 ** np.arange(len(octree_levels))
                 )
             ]
         # Pre-calculate max depth of each level

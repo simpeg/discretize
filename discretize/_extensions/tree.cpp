@@ -452,9 +452,9 @@ void Cell::refine_box(node_map_t& nodes, double* x0, double* x1, int_t p_level, 
 
         // check to see if I am completely enclosed (for faster subdivision of children)
         enclosed = (
-            points[0]->location[0] >= x0[0] && points[3]->location[0] <= x1[0] &&
-            points[0]->location[1] >= x0[1] && points[3]->location[1] <= x1[1] &&
-            (n_dim == 2 || (n_dim == 3 && points[0]->location[2] >= x0[2] && points[7]->location[2] <= x1[2]))
+            points[0]->location[0] > x0[0] && points[3]->location[0] < x1[0] &&
+            points[0]->location[1] > x0[1] && points[3]->location[1] < x1[1] &&
+            (n_dim == 2 || (n_dim == 3 && points[0]->location[2] > x0[2] && points[7]->location[2] < x1[2]))
         );
 
     }
