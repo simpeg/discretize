@@ -392,7 +392,7 @@ void Cell::insert_cell(node_map_t& nodes, double *new_cell, int_t p_level, doubl
 
 void Cell::refine_ball(node_map_t& nodes, double* center, double r2, int_t p_level, double *xs, double *ys, double* zs){
     // early exit if my level is higher than or equal to target
-    if (level >= p_level or level == max_level){
+    if (level >= p_level || level == max_level){
         return;
     }
     // check if I intersect the ball
@@ -432,7 +432,7 @@ void Cell::refine_ball(node_map_t& nodes, double* center, double r2, int_t p_lev
 
 void Cell::refine_box(node_map_t& nodes, double* x0, double* x1, int_t p_level, double *xs, double *ys, double* zs, bool enclosed){
     // early exit if my level is higher than target
-    if (level >= p_level or level == max_level){
+    if (level >= p_level || level == max_level){
         return;
     }
     if (!enclosed){
