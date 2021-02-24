@@ -693,7 +693,6 @@ def refine_tree_xyz(
             mesh.finalize()
 
     elif method.lower() == "box":
-
         # Define the data extent [bottom SW, top NE]
         bsw = np.min(xyz, axis=0)
         tne = np.max(xyz, axis=0)
@@ -724,7 +723,7 @@ def refine_tree_xyz(
         padWidth = np.c_[
             padWidth,
             np.cumsum(
-                hz * octree_levels * 2 ** np.arange(len(octree_levels))
+                hz * np.maximum(octree_levels-1, 0) * 2 ** np.arange(len(octree_levels))
             )
         ]
 

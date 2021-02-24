@@ -26,22 +26,20 @@ class TestRefineOcTree(unittest.TestCase):
             method="radial",
             finalize=True,
         )
+        cell_levels = mesh.cell_levels_by_index(np.arange(mesh.n_cells))
 
-        # Volume of sphere
-        vol = 4.0 * np.pi / 3.0 * rad ** 3.0
+        vol = 4.0 * np.pi / 3.0 * (rad+dx) ** 3.0
 
-        residual = (
-            np.abs(
-                vol
-                - mesh.cell_volumes[
-                    mesh._cell_levels_by_indexes(range(mesh.nC)) == mesh.max_level
-                ].sum()
-            )
-            / vol
-            * 100
-        )
+        vol_mesh = mesh.cell_volumes[cell_levels == mesh.max_level].sum()
 
-        self.assertLess(residual, 3)
+        self.assertLess(np.abs(vol - vol_mesh)/vol, 0.05)
+
+        levels, cells_per_level = np.unique(cell_levels, return_counts=True)
+
+        self.assertEqual(mesh.n_cells, 311858)
+        np.testing.assert_array_equal(levels, [3, 4, 5, 6, 7])
+        np.testing.assert_array_equal(cells_per_level, [232, 1176, 2671, 9435, 298344])
+
 
     def test_box(self):
         dx = 0.25
@@ -61,21 +59,17 @@ class TestRefineOcTree(unittest.TestCase):
         mesh = refine_tree_xyz(
             mesh, xyz, octree_levels=[0, 1], method="box", finalize=True
         )
+        cell_levels = mesh.cell_levels_by_index(np.arange(mesh.n_cells))
 
-        # Volume of box
-        vol = (2 * dl) ** 3
+        vol = (2*(dl+2*dx))**3  # 2*dx is cell size at second to highest level
+        vol_mesh = np.sum(mesh.cell_volumes[cell_levels == mesh.max_level - 1])
+        self.assertLess((vol-vol_mesh)/vol, 0.05)
 
-        residual = (
-            np.abs(
-                vol
-                - mesh.cell_volumes[
-                    mesh._cell_levels_by_indexes(range(mesh.nC)) == mesh.max_level-1
-                ].sum()
-            )
-            / vol
-            * 100
-        )
-        self.assertLess(residual, 2.)
+        levels, cells_per_level = np.unique(cell_levels, return_counts=True)
+
+        self.assertEqual(mesh.n_cells, 80221)
+        np.testing.assert_array_equal(levels, [3, 4, 5, 6])
+        np.testing.assert_array_equal(cells_per_level, [80, 1762, 4291, 74088])
 
     def test_surface(self):
         dx = 0.1
