@@ -452,6 +452,34 @@ class InterfaceMPL(object):
 
         >>> M.plot_slice(M.cell_gradient*b, 'F', view='vec', grid=True, pcolor_opts={'alpha':0.8})
         >>> plt.show()
+
+        We can use the ``slice_loc`` kwarg to tell ``plot_slice`` where to slice the mesh.
+        Let's create a mesh with a random model and plot slice of it.
+
+        >>> M = discretize.TensorMesh([32, 32, 32])
+        >>> v = discretize.utils.random_model(M.vnC, seed=789).reshape(-1, order='F')
+        >>> x_slice = 0.75
+        >>>
+        >>> out = M.plot_slice(v, normal='X', slice_loc=x_slice)
+        >>> cb = plt.colorbar(out[0], ax=axes[0])
+        >>> cb.set_label("Random Field")
+        >>> axes[0].set_title("x-normal slice")
+
+        This also works for TreeMesh. We create a mesh here that is refined within three
+        boxes, along with a base level of refinement.
+
+        >>> TM = discretize.TreeMesh([32, 32, 32])
+        >>> TM.refine(3, finalize=false)
+        >>> BSW = [[0.25, 0.25, 0.25], [0.15, 0.15, 0.15], [0.1, 0.1, 0,1]]
+        >>> TNE = [[0.75, 0.75, 0.75], [0.85, 0.85, 0.85], [0.9, 0.9, 0.9]]
+        >>> levels = [6, 5, 4]
+        >>> TM.refine_box(BSW, TNE, levels)
+        >>> v_TM = discretize.utils.volume_average(M, TM, v)
+        >>> out = M.plot_slice(v_TM, normal='X', slice_loc=x_slice)
+        >>> cb = plt.colorbar(out[0], ax=axes[0])
+        >>> cb.set_label("Random Field")
+        >>> axes[0].set_title("x-normal slice")
+
         """
         mesh_type = self._meshType.lower()
         plotters = {
@@ -532,7 +560,7 @@ class InterfaceMPL(object):
                     )
                 ]
             return out
-        
+
         viewOpts = ["real", "imag", "abs", "vec"]
         normalOpts = ["X", "Y", "Z"]
         v_typeOpts = [
