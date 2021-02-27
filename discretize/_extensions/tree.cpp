@@ -390,6 +390,91 @@ void Cell::insert_cell(node_map_t& nodes, double *new_cell, int_t p_level, doubl
     }
 };
 
+void Cell::refine_ball(node_map_t& nodes, double* center, double r2, int_t p_level, double *xs, double *ys, double* zs){
+    // early exit if my level is higher than or equal to target
+    if (level >= p_level || level == max_level){
+        return;
+    }
+    // check if I intersect the ball
+    double xp = std::max(points[0]->location[0], std::min(center[0], points[3]->location[0]));
+    double yp = std::max(points[0]->location[1], std::min(center[1], points[3]->location[1]));
+    double zp = 0.0;
+    if (n_dim > 2){
+        zp = std::max(points[0]->location[2], std::min(center[2], points[7]->location[2]));
+    }
+
+    // xp, yp, zp is closest point in the cell to the center of the circle
+    // check if that point is in the circle!
+    double r2_test = (xp - center[0])*(xp - center[0]) + (yp - center[1]) *(yp - center[1]);
+    if (n_dim > 2){
+        r2_test += (zp - center[2])*(zp - center[2]);
+    }
+    if (r2_test >= r2){
+        // I do not intersect the ball
+        return;
+    }
+    // if I intersect cell, I will need to be divided (if I'm not already)
+    if(is_leaf()){
+        divide(nodes, xs, ys, zs, true);
+    }
+    // recurse into children
+    children[0]->refine_ball(nodes, center, r2, p_level, xs, ys, zs);
+    children[1]->refine_ball(nodes, center, r2, p_level, xs, ys, zs);
+    children[2]->refine_ball(nodes, center, r2, p_level, xs, ys, zs);
+    children[3]->refine_ball(nodes, center, r2, p_level, xs, ys, zs);
+    if (n_dim > 2){
+        children[4]->refine_ball(nodes, center, r2, p_level, xs, ys, zs);
+        children[5]->refine_ball(nodes, center, r2, p_level, xs, ys, zs);
+        children[6]->refine_ball(nodes, center, r2, p_level, xs, ys, zs);
+        children[7]->refine_ball(nodes, center, r2, p_level, xs, ys, zs);
+    }
+}
+
+void Cell::refine_box(node_map_t& nodes, double* x0, double* x1, int_t p_level, double *xs, double *ys, double* zs, bool enclosed){
+    // early exit if my level is higher than target
+    if (level >= p_level || level == max_level){
+        return;
+    }
+    if (!enclosed){
+        // check if I overlap (not if an edge overlaps)
+        // If I do not overlap the cells then return
+        if (x0[0] >= points[3]->location[0] || x1[0] <= points[0]->location[0]){
+          return;
+        }
+
+        if (x0[1] >= points[3]->location[1] || x1[1] <= points[0]->location[1]){
+          return;
+        }
+
+        if (n_dim>2 && (x0[2] >= points[7]->location[2] || x1[2] <= points[0]->location[2])){
+          return;
+        }
+
+        // check to see if I am completely enclosed (for faster subdivision of children)
+        enclosed = (
+            points[0]->location[0] > x0[0] && points[3]->location[0] < x1[0] &&
+            points[0]->location[1] > x0[1] && points[3]->location[1] < x1[1] &&
+            (n_dim == 2 || (n_dim == 3 && points[0]->location[2] > x0[2] && points[7]->location[2] < x1[2]))
+        );
+
+    }
+    // Will only be here if I intersect the box
+    if(is_leaf()){
+        divide(nodes, xs, ys, zs, true);
+    }
+    // recurse into children
+    children[0]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed);
+    children[1]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed);
+    children[2]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed);
+    children[3]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed);
+    if (n_dim > 2){
+        children[4]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed);
+        children[5]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed);
+        children[6]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed);
+        children[7]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed);
+    }
+}
+
 void Cell::divide(node_map_t& nodes, double* xs, double* ys, double* zs, bool force, bool balance){
     bool do_splitting = false;
     if(level == max_level){
@@ -755,7 +840,7 @@ void Tree::insert_cell(double *new_center, int_t p_level){
     roots[iz][iy][ix]->insert_cell(nodes, new_center, p_level, xs, ys, zs);
 }
 
-void Tree::build_tree_from_function(function test_func){
+void Tree::refine_function(function test_func){
     //Must set the test_func of all of the roots before I can start dividing
     for(int_t iz=0; iz<nz_roots; ++iz)
         for(int_t iy=0; iy<ny_roots; ++iy)
@@ -766,6 +851,21 @@ void Tree::build_tree_from_function(function test_func){
         for(int_t iy=0; iy<ny_roots; ++iy)
             for(int_t ix=0; ix<nx_roots; ++ix)
                 roots[iz][iy][ix]->divide(nodes, xs, ys, zs);
+};
+
+void Tree::refine_box(double* x0, double* x1, int_t p_level){
+    for(int_t iz=0; iz<nz_roots; ++iz)
+        for(int_t iy=0; iy<ny_roots; ++iy)
+            for(int_t ix=0; ix<nx_roots; ++ix)
+                roots[iz][iy][ix]->refine_box(nodes, x0, x1, p_level, xs, ys, zs);
+};
+
+void Tree::refine_ball(double* center, double r, int_t p_level){
+    double r2 = r*r;
+    for(int_t iz=0; iz<nz_roots; ++iz)
+        for(int_t iy=0; iy<ny_roots; ++iy)
+            for(int_t ix=0; ix<nx_roots; ++ix)
+                roots[iz][iy][ix]->refine_ball(nodes, center, r2, p_level, xs, ys, zs);
 };
 
 void Tree::finalize_lists(){
