@@ -2006,7 +2006,7 @@ class InterfaceMPL(object):
             minx, maxx = self.nodes_x[[0, -1]]
 
         if range_y is not None:
-            miny, maxy = range_x
+            miny, maxy = range_y
         else:
             miny, maxy = self.nodes_y[[0, -1]]
 
