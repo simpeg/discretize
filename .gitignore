@@ -63,6 +63,3 @@ examples/*.tar.gz
 *.dat
 *.dir
 *.bak
-
-# Spyder
-.spyproject/
