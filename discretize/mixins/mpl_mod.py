@@ -370,6 +370,7 @@ class InterfaceMPL(object):
         v_type="CC",
         normal="Z",
         ind=None,
+        slice_loc=None,
         grid=False,
         view="real",
         ax=None,
@@ -397,6 +398,8 @@ class InterfaceMPL(object):
             Normal direction of slicing plane.
         ind : None, optional
             index along dimension of slice. Defaults to the center index.
+        slice_loc : None, optional
+            Value along dimension of slice. Defaults to the center of the mesh.
         view : {'real', 'imag', 'abs', 'vec'}
             How to view the array.
         ax : matplotlib.axes.Axes, optional
@@ -424,14 +427,13 @@ class InterfaceMPL(object):
 
         Examples
         --------
-        Plot a slice of a 3D ``TensorMesh`` solution to a Laplace's equaiton.
+        Plot a slice of a 3D `TensorMesh` solution to a Laplace's equaiton.
 
         First build the mesh:
 
         >>> from matplotlib import pyplot as plt
         >>> import discretize
         >>> from pymatsolver import Solver
-        >>> import numpy as np
         >>> hx = [(5, 2, -1.3), (2, 4), (5, 2, 1.3)]
         >>> hy = [(2, 2, -1.3), (2, 6), (2, 2, 1.3)]
         >>> hz = [(2, 2, -1.3), (2, 6), (2, 2, 1.3)]
@@ -449,6 +451,45 @@ class InterfaceMPL(object):
 
         >>> M.plot_slice(M.cell_gradient*b, 'F', view='vec', grid=True, pcolor_opts={'alpha':0.8})
         >>> plt.show()
+
+        We can use the `slice_loc kwarg to tell `plot_slice` where to slice the mesh.
+        Let's create a mesh with a random model and plot slice of it. The `slice_loc`
+        kwarg automatically determines the indices for slicing the mesh along a plane with
+        the given normal.
+
+        >>> M = discretize.TensorMesh([32, 32, 32])
+        >>> v = discretize.utils.random_model(M.vnC, seed=789).reshape(-1, order='F')
+        >>> x_slice, y_slice, z_slice = 0.75, 0.25, 0.9
+        >>> plt.figure(figsize=(7.5, 3))
+        >>> ax = plt.subplot(131)
+        >>> M.plot_slice(v, normal='X', slice_loc=x_slice, ax=ax)
+        >>> ax = plt.subplot(132)
+        >>> M.plot_slice(v, normal='Y', slice_loc=y_slice, ax=ax)
+        >>> ax = plt.subplot(133)
+        >>> M.plot_slice(v, normal='Z', slice_loc=z_slice, ax=ax)
+        >>> plt.tight_layout()
+        >>> plt.show()
+
+        This also works for `TreeMesh`. We create a mesh here that is refined within three
+        boxes, along with a base level of refinement.
+
+        >>> TM = discretize.TreeMesh([32, 32, 32])
+        >>> TM.refine(3, finalize=False)
+        >>> BSW = [[0.25, 0.25, 0.25], [0.15, 0.15, 0.15], [0.1, 0.1, 0.1]]
+        >>> TNE = [[0.75, 0.75, 0.75], [0.85, 0.85, 0.85], [0.9, 0.9, 0.9]]
+        >>> levels = [6, 5, 4]
+        >>> TM.refine_box(BSW, TNE, levels)
+        >>> v_TM = discretize.utils.volume_average(M, TM, v)
+        >>> plt.figure(figsize=(7.5, 3))
+        >>> ax = plt.subplot(131)
+        >>> TM.plot_slice(v_TM, normal='X', slice_loc=x_slice, ax=ax)
+        >>> ax = plt.subplot(132)
+        >>> TM.plot_slice(v_TM, normal='Y', slice_loc=y_slice, ax=ax)
+        >>> ax = plt.subplot(133)
+        >>> TM.plot_slice(v_TM, normal='Z', slice_loc=z_slice, ax=ax)
+        >>> plt.tight_layout()
+        >>> plt.show()
+
         """
         mesh_type = self._meshType.lower()
         plotters = {
@@ -515,6 +556,7 @@ class InterfaceMPL(object):
                         v_type=v_typeI,
                         normal=normal,
                         ind=ind,
+                        slice_loc=slice_loc,
                         grid=grid,
                         view=view,
                         ax=ax,
@@ -528,6 +570,7 @@ class InterfaceMPL(object):
                     )
                 ]
             return out
+
         viewOpts = ["real", "imag", "abs", "vec"]
         normalOpts = ["X", "Y", "Z"]
         v_typeOpts = [
@@ -566,6 +609,18 @@ class InterfaceMPL(object):
 
         if self.dim == 2:
             raise NotImplementedError("Must be a 3D mesh. Use plotImage.")
+
+        # slice_loc errors
+        if(ind is not None) and (slice_loc is not None):
+            raise Warning("Both ind and slice_loc are defined. Behavior undefined.")
+        # slice_loc implement
+        if(slice_loc is not None):
+            if normal == "X":
+                ind = int(np.argmin(np.abs(self.cell_centers_x - slice_loc)))
+            if normal == "Y":
+                ind = int(np.argmin(np.abs(self.cell_centers_y - slice_loc)))
+            if normal == "Z":
+                ind = int(np.argmin(np.abs(self.cell_centers_z - slice_loc)))
 
         if ax is None:
             plt.figure()
