@@ -1252,7 +1252,7 @@ cdef class _TreeMesh:
 
         boundary_faces = self.boudary_faces
         is_boundary = np.r_[is_boundary_x, is_boundary_y]
-        switchs = np.r_[is_bxm, is_bym]
+        switch = np.r_[is_bxm, is_bym]
 
         if self.dim > 2:
             z0, zF = self._zs[0], self._zs[-1]
@@ -1261,14 +1261,12 @@ cdef class _TreeMesh:
             is_boundary_z = is_bzm | (faces_z[:, 2] == zF)
 
             is_boundary = np.r_[is_boundary, is_boundary_z]
-            switchs = np.r_[switches, is_bzm]
+            switch = np.r_[switch, is_bzm]
 
 
         face_normals = self.face_normals.copy()
-        face_normals[switchs] *= -1
+        face_normals[switch] *= -1
         return face_normals[is_boundary]
-
-
 
     @property
     def cell_volumes(self):
