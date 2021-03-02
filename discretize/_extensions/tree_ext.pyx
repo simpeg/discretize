@@ -331,6 +331,7 @@ cdef class _TreeMesh:
         self._average_edge_z_to_cell = None
         self._average_edge_to_cell = None
         self._average_edge_to_cell_vector = None
+        self._average_edge_to_face_vector = None
 
         self._average_node_to_cell = None
         self._average_node_to_edge = None
@@ -1240,17 +1241,17 @@ cdef class _TreeMesh:
             boundary_faces = np.r_[boundary_faces, faces_z[is_boundary_z]]
         return boundary_faces
 
+    @property
     def boundary_face_outward_normals(self):
         faces_x = self.faces_x
         faces_y = self.faces_y
         x0, xF = self._xs[0], self._xs[-1]
         y0, yF = self._ys[0], self._ys[-1]
         is_bxm = faces_x[:, 0] == x0
-        is_boundary_x = is_bxm | faces_x[:, 0] == xF
+        is_boundary_x = is_bxm | (faces_x[:, 0] == xF)
         is_bym = faces_y[:, 1] == y0
         is_boundary_y = is_bym | (faces_y[:, 1] == yF)
 
-        boundary_faces = self.boudary_faces
         is_boundary = np.r_[is_boundary_x, is_boundary_y]
         switch = np.r_[is_bxm, is_bym]
 
@@ -3230,16 +3231,17 @@ cdef class _TreeMesh:
 
         x0, xF = self._xs[0], self._xs[-1]
         y0, yF = self._ys[0], self._ys[-1]
-        is_b = (
-            (faces_x[:, 0] == x0)
-            | (faces_x[:, 0] == xF)
-            | (faces_y[:, 1] == y0)
-            | (faces_y[:, 1] == yF)
-        )
+        is_b = np.r_[
+            (faces_x[:, 0] == x0) | (faces_x[:, 0] == xF),
+            (faces_y[:, 1] == y0) | (faces_y[:, 1] == yF)
+        ]
         if self.dim == 3:
             faces_z = self.faces_z
             z0, zF = self._zs[0], self._zs[-1]
-            is_b |= (faces_z[:, 2] == z0) | (faces_z[:, 2] == zF)
+            is_b = np.r_[
+                is_b,
+                (faces_z[:, 2] == z0) | (faces_z[:, 2] == zF)
+            ]
         return sp.eye(self.n_faces, format='csr')[is_b]
 
     @property
@@ -3249,28 +3251,27 @@ cdef class _TreeMesh:
 
         x0, xF = self._xs[0], self._xs[-1]
         y0, yF = self._ys[0], self._ys[-1]
-        is_b = (
-            (edges_x[:, 1] == y0)
-            | (edges_x[:, 1] == yF)
-            | (edges_y[:, 0] == x0)
-            | (edges_y[:, 0] == xF)
-        )
+        is_bx = (edges_x[:, 1] == y0) | (edges_x[:, 1] == yF)
+        is_by = (edges_y[:, 0] == x0) | (edges_y[:, 0] == xF)
         if self.dim == 3:
             z0, zF = self._zs[0], self._zs[-1]
             edges_z = self.edges_z
 
-            is_b |= (
-                (edges_x[:, 2] == z0)
-                | (edges_x[:, 2] == zF)
-                | (edges_y[:, 2] == z0)
-                | (edges_y[:, 2] == zF)
-                | (edges_z[:, 0] == x0)
+            is_bx |= (edges_x[:, 2] == z0) | (edges_x[:, 2] == zF)
+            is_by |= (edges_y[:, 2] == z0) | (edges_y[:, 2] == zF)
+
+            is_bz = (
+                (edges_z[:, 0] == x0)
                 | (edges_z[:, 0] == xF)
                 | (edges_z[:, 1] == y0)
                 | (edges_z[:, 1] == yF)
             )
+            is_b = np.r_[is_bx, is_by, is_bz]
+        else:
+            is_b = np.r_[is_bx, is_by]
         return sp.eye(self.n_edges, format='csr')[is_b]
 
+    @property
     def project_node_to_boundary_node(self):
         nodes = self.nodes
         x0, xF = self._xs[0], self._xs[-1]
