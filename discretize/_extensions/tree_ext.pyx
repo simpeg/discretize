@@ -902,6 +902,25 @@ cdef class _TreeMesh:
         return self._hanging_nodes
 
     @property
+    def boundary_nodes(self):
+        nodes = self.nodes
+        x0, xF = self._xs[0], self._xs[-1]
+        y0, yF = self._ys[0], self._ys[-1]
+        is_boundary = (
+            (nodes[:, 0] == x0)
+            | (nodes[:, 0] == xF)
+            | (nodes[:, 1] == y0)
+            | (nodes[:, 1] == yF)
+        )
+        if self.dim > 2:
+            z0, zF = self._zs[0], self._zs[-1]
+            is_boundary |= (
+                (nodes[:, 2] == z0)
+                | (nodes[:, 2] == zF)
+            )
+        return nodes[is_boundary]
+
+    @property
     def h_gridded(self):
         """
         Returns an (n_cells, dim) numpy array with the widths of all cells in order
@@ -1043,6 +1062,35 @@ cdef class _TreeMesh:
         return self._hanging_edges_z
 
     @property
+    def boundary_edges(self):
+        edges_x = self.edges_x
+        edges_y = self.edges_y
+        x0, xF = self._xs[0], self._xs[-1]
+        y0, yF = self._ys[0], self._ys[-1]
+        is_boundary_x = (edges_x[:, 1] == y0) | (edges_x[:, 1] == yF)
+        is_boundary_y = (edges_y[:, 0] == x0) | (edges_y[:, 0] == xF)
+
+        if self.dim > 2:
+            z0, zF = self._zs[0], self._zs[-1]
+            edges_z = self.edges_z
+
+            is_boundary_x |= (edges_x[:, 2] == z0) | (edges_x[:, 2] == zF)
+            is_boundary_y |= (edges_y[:, 2] == z0) | (edges_y[:, 2] == zF)
+            is_boundary_z = (
+                (edges_z[:, 0] == x0)
+                | (edges_z[:, 0] == xF)
+                | (edges_z[:, 1] == y0)
+                | (edges_z[:, 1] == yF)
+            )
+            return np.r_[
+                edges_x[is_boundary_x],
+                edges_y[is_boundary_y],
+                edges_z[is_boundary_z]
+            ]
+        else:
+            return np.r_[edges_x[is_boundary_x], edges_y[is_boundary_y]]
+
+    @property
     def faces_x(self):
         """
         Returns a numpy array of shape (n_faces_x, dim) with the centers of all
@@ -1172,6 +1220,55 @@ cdef class _TreeMesh:
                 for ii in range(dim):
                     gridhFz[ind, ii] = face.location[ii]
         return self._hanging_faces_z
+
+    @property
+    def boundary_faces(self):
+        faces_x = self.faces_x
+        faces_y = self.faces_y
+        x0, xF = self._xs[0], self._xs[-1]
+        y0, yF = self._ys[0], self._ys[-1]
+        is_boundary_x = (faces_x[:, 0] == x0) | (faces_x[:, 0] == xF)
+        is_boundary_y = (faces_y[:, 1] == y0) | (faces_y[:, 1] == yF)
+
+        boundary_faces = np.r_[faces_x[is_boundary_x], faces_y[is_boundary_y]]
+
+        if self.dim > 2:
+            z0, zF = self._zs[0], self._zs[-1]
+            faces_z = self.faces_z
+
+            is_boundary_z = (faces_z[:, 2] == z0) | (faces_z[:, 2] == zF)
+            boundary_faces = np.r_[boundary_faces, faces_z[is_boundary_z]]
+        return boundary_faces
+
+    def boundary_face_outward_normals(self):
+        faces_x = self.faces_x
+        faces_y = self.faces_y
+        x0, xF = self._xs[0], self._xs[-1]
+        y0, yF = self._ys[0], self._ys[-1]
+        is_bxm = faces_x[:, 0] == x0
+        is_boundary_x = is_bxm | faces_x[:, 0] == xF
+        is_bym = faces_y[:, 1] == y0
+        is_boundary_y = is_bym | (faces_y[:, 1] == yF)
+
+        boundary_faces = self.boudary_faces
+        is_boundary = np.r_[is_boundary_x, is_boundary_y]
+        switchs = np.r_[is_bxm, is_bym]
+
+        if self.dim > 2:
+            z0, zF = self._zs[0], self._zs[-1]
+            faces_z = self.faces_z
+            is_bzm = faces_z[:, 2] == z0
+            is_boundary_z = is_bzm | (faces_z[:, 2] == zF)
+
+            is_boundary = np.r_[is_boundary, is_boundary_z]
+            switchs = np.r_[switches, is_bzm]
+
+
+        face_normals = self.face_normals.copy()
+        face_normals[switchs] *= -1
+        return face_normals[is_boundary]
+
+
 
     @property
     def cell_volumes(self):
@@ -2397,6 +2494,73 @@ cdef class _TreeMesh:
         return self._average_edge_to_cell_vector
 
     @property
+    def average_edge_to_face_vector(self):
+        """
+        Construct the averaging operator on cell edges in the x direction to
+        cell faces.
+        """
+        if self.dim == 2:
+            return sp.diags(
+                [1, 1],
+                [-self.n_faces_x, self.n_faces_y],
+                shape=(self.n_faces, self.n_edges)
+            )
+
+        if self._average_edge_to_face_vector is not None:
+            return self._average_edge_to_face_vector
+        cdef:
+            int_t dim = self._dim
+            np.int64_t[:] I = np.empty(4*self.n_faces, dtype=np.int64)
+            np.int64_t[:] J = np.empty(4*self.n_faces, dtype=np.int64)
+            np.float64_t[:] V = np.full(4*self.n_faces, 0.5, dtype=np.float64)
+            Face *face
+            int_t ii
+            int_t face_offset_y = self.n_faces_x
+            int_t face_offset_z = self.n_faces_x + self.n_faces_y
+            int_t edge_offset_y = self.n_total_edges_x
+            int_t edge_offset_z = self.n_total_edges_x + self.n_total_edges_y
+            double area
+
+        for it in self.tree.faces_x:
+            face = it.second
+            if face.hanging:
+                continue
+            ii = face.index
+            I[4*ii : 4*ii + 4] = ii
+            J[4*ii    ] = face.edges[0].index + edge_offset_z
+            J[4*ii + 1] = face.edges[1].index + edge_offset_y
+            J[4*ii + 2] = face.edges[2].index + edge_offset_z
+            J[4*ii + 3] = face.edges[3].index + edge_offset_y
+
+        for it in self.tree.faces_y:
+            face = it.second
+            if face.hanging:
+                continue
+            ii = face.index + face_offset_y
+            I[4*ii : 4*ii + 4] = ii
+            J[4*ii    ] = face.edges[0].index + edge_offset_z
+            J[4*ii + 1] = face.edges[1].index
+            J[4*ii + 2] = face.edges[2].index + edge_offset_z
+            J[4*ii + 3] = face.edges[3].index
+
+        for it in self.tree.faces_z:
+            face = it.second
+            if face.hanging:
+                continue
+            ii = face.index + face_offset_z
+            I[4*ii : 4*ii + 4] = ii
+            J[4*ii    ] = face.edges[0].index + edge_offset_y
+            J[4*ii + 1] = face.edges[1].index
+            J[4*ii + 2] = face.edges[2].index + edge_offset_y
+            J[4*ii + 3] = face.edges[3].index
+
+        Av = sp.csr_matrix((V, (I, J)),shape=(self.n_faces, self.n_total_edges))
+        R = self._deflate_edges()
+
+        self._average_edge_to_face_vector = Av @ R
+        return self._average_edge_to_face_vector
+
+    @property
     @cython.boundscheck(False)
     def average_face_x_to_cell(self):
         """
@@ -3060,6 +3224,69 @@ cdef class _TreeMesh:
 
         self._average_cell_to_face_z = sp.csr_matrix((V, (I,J)), shape=(self.n_faces_z, self.n_cells))
         return self._average_cell_to_face_z
+
+    @property
+    def project_face_to_boundary_face(self):
+        faces_x = self.faces_x
+        faces_y = self.faces_y
+
+        x0, xF = self._xs[0], self._xs[-1]
+        y0, yF = self._ys[0], self._ys[-1]
+        is_b = (
+            (faces_x[:, 0] == x0)
+            | (faces_x[:, 0] == xF)
+            | (faces_y[:, 1] == y0)
+            | (faces_y[:, 1] == yF)
+        )
+        if self.dim == 3:
+            faces_z = self.faces_z
+            z0, zF = self._zs[0], self._zs[-1]
+            is_b |= (faces_z[:, 2] == z0) | (faces_z[:, 2] == zF)
+        return sp.eye(self.n_faces, format='csr')[is_b]
+
+    @property
+    def project_edge_to_boundary_edge(self):
+        edges_x = self.edges_x
+        edges_y = self.edges_y
+
+        x0, xF = self._xs[0], self._xs[-1]
+        y0, yF = self._ys[0], self._ys[-1]
+        is_b = (
+            (edges_x[:, 1] == y0)
+            | (edges_x[:, 1] == yF)
+            | (edges_y[:, 0] == x0)
+            | (edges_y[:, 0] == xF)
+        )
+        if self.dim == 3:
+            z0, zF = self._zs[0], self._zs[-1]
+            edges_z = self.edges_z
+
+            is_b |= (
+                (edges_x[:, 2] == z0)
+                | (edges_x[:, 2] == zF)
+                | (edges_y[:, 2] == z0)
+                | (edges_y[:, 2] == zF)
+                | (edges_z[:, 0] == x0)
+                | (edges_z[:, 0] == xF)
+                | (edges_z[:, 1] == y0)
+                | (edges_z[:, 1] == yF)
+            )
+        return sp.eye(self.n_edges, format='csr')[is_b]
+
+    def project_node_to_boundary_node(self):
+        nodes = self.nodes
+        x0, xF = self._xs[0], self._xs[-1]
+        y0, yF = self._ys[0], self._ys[-1]
+        is_b = (
+            (nodes[:, 0] == x0)
+            | (nodes[:, 0] == xF)
+            | (nodes[:, 1] == y0)
+            | (nodes[:, 1] == yF)
+        )
+        if self.dim > 2:
+            z0, zF = self._zs[0], self._zs[-1]
+            is_b |= (nodes[:, 2] == z0) | (nodes[:, 2] == zF)
+        return sp.eye(self.n_nodes, format='csr')[is_b]
 
     def _get_containing_cell_index(self, loc):
         cdef double x, y, z
