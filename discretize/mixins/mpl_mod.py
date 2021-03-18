@@ -1958,6 +1958,8 @@ class InterfaceMPL(object):
         elif v_type in ["F", "E", "N"]:
             aveOp = aveOp = "ave" + v_type + ("2CCV" if view == "vec" else "2CC")
             v = getattr(self, aveOp) * v
+            if view == "vec":
+                v = v.reshape((self.n_cells, 2), order='F')
         elif v_type in ["Fx", "Fy", "Ex", "Ey"]:
             aveOp = "ave" + v_type[0] + "2CCV"
             v = getattr(self, aveOp) * v
@@ -2033,13 +2035,6 @@ class InterfaceMPL(object):
             # make a copy so we can set some defaults without modifying the original
             quiver_opts = quiver_opts.copy()
             quiver_opts.setdefault("pivot", "mid")
-            quiver_opts.setdefault("scale_units", "inches")
-            quiver_opts.setdefault("scale", 1.0)
-            quiver_opts.setdefault("linewidths", 1.0)
-            quiver_opts.setdefault("edgecolors", 'k')
-            quiver_opts.setdefault("headaxislength", 0.1)
-            quiver_opts.setdefault("headwidth", 10)
-            quiver_opts.setdefault("headlength", 30)
 
             v = v.reshape(2, self.n_cells)
             qvr = ax.quiver(
@@ -2117,6 +2112,8 @@ class InterfaceMPL(object):
             Av = getattr(self, aveOp)
             if v.shape[0] == Av.shape[1]:
                 v = Av * v
+            if view == "vec":
+                v = v.reshape((self.n_cells, 3), order='F')
             elif len(v_type) == 2:
                 # was one of Fx, Fy, Fz, Ex, Ey, Ez
                 # assuming v has all three components in these cases
@@ -2162,13 +2159,6 @@ class InterfaceMPL(object):
             # make a copy so we can set some defaults without modifying the original
             quiver_opts = quiver_opts.copy()
             quiver_opts.setdefault("pivot", "mid")
-            quiver_opts.setdefault("scale_units", "inches")
-            quiver_opts.setdefault("scale", 1.0)
-            quiver_opts.setdefault("linewidths", 1.0)
-            quiver_opts.setdefault("edgecolors", 'k')
-            quiver_opts.setdefault("headaxislength", 0.1)
-            quiver_opts.setdefault("headwidth", 10)
-            quiver_opts.setdefault("headlength", 30)
             vecs = vecs[ind_3d_to_2d]
             qvr = ax.quiver(
                     temp_mesh.cell_centers[:, 0],
