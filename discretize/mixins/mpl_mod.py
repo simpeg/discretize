@@ -1942,34 +1942,40 @@ class InterfaceMPL(object):
         grid_opts=None,
         range_x=None,
         range_y=None,
+        quiver_opts=None,
         **kwargs,
     ):
         if self.dim == 3:
             raise NotImplementedError(
                 "plotImage is not implemented for 3D TreeMesh, please use plotSlice"
             )
-
-        if view == "vec":
-            raise NotImplementedError(
-                "Vector ploting is not supported on TreeMesh (yet)"
-            )
-
-        if view in ["real", "imag", "abs"]:
-            v = getattr(np, view)(v)  # e.g. np.real(v)
+        # reshape to cell_centered thing
         if v_type == "CC":
-            I = v
-        elif v_type == "N":
-            I = self.aveN2CC * v
+            pass
+        if v_type == "CCv":
+            if view != "vec":
+                raise ValueError("Other types for CCv not supported")
+        elif v_type in ["F", "E", "N"]:
+            aveOp = aveOp = "ave" + v_type + ("2CCV" if view == "vec" else "2CC")
+            v = getattr(self, aveOp) * v
         elif v_type in ["Fx", "Fy", "Ex", "Ey"]:
             aveOp = "ave" + v_type[0] + "2CCV"
+            v = getattr(self, aveOp) * v
             ind_xy = {"x": 0, "y": 1}[v_type[1]]
-            I = (getattr(self, aveOp) * v).reshape(2, self.n_cells)[
-                ind_xy
-            ]  # average to cell centers
+            v = v.reshape(2, self.n_cells)[ind_xy]
+
+        if view in ["real", "imag", "abs"]:
+            I = getattr(np, view)(v)  # e.g. np.real(v)
+        elif view == "vec":
+            I = np.linalg.norm(v, axis=1)
 
         # pcolormesh call signature
         # def pcolormesh(self, *args, alpha=None, norm=None, cmap=None, vmin=None,
         #            vmax=None, shading='flat', antialiased=False, **kwargs):
+
+        # make a shallow copy so we can pop items off for the pass to PolyCollection
+        pcolor_opts = pcolor_opts.copy()
+
         alpha = pcolor_opts.pop("alpha", None)
         norm = pcolor_opts.pop("norm", None)
         cmap = pcolor_opts.pop("cmap", None)
@@ -2016,7 +2022,32 @@ class InterfaceMPL(object):
         ax.update_datalim(corners)
         ax._request_autoscale_view()
 
-        return (collection,)
+        out = (collection, )
+
+        if view == "vec":
+            if quiver_opts is None:
+                quiver_opts = {}
+            # make a copy so we can set some defaults without modifying the original
+            quiver_opts = quiver_opts.copy()
+            quiver_opts.setdefault("pivot", "mid")
+            quiver_opts.setdefault("scale_units", "inches")
+            quiver_opts.setdefault("scale", 1.0)
+            quiver_opts.setdefault("linewidths", 1.0)
+            quiver_opts.setdefault("edgecolors", 'k')
+            quiver_opts.setdefault("headaxislength", 0.1)
+            quiver_opts.setdefault("headwidth", 10)
+            quiver_opts.setdefault("headlength", 30)
+
+            v = v.reshape(2, self.n_cells)
+            out += ax.quiver(
+                    self.cell_centers[:, 0],
+                    self.cell_centers[:, 1],
+                    v[0],
+                    v[1],
+                    **quiver_opts
+            )
+
+        return out
 
     def __plot_slice_tree(
         self,
@@ -2034,10 +2065,6 @@ class InterfaceMPL(object):
         range_y=None,
         **kwargs,
     ):
-        if view == "vec":
-            raise NotImplementedError(
-                "Vector view plotting is not implemented for TreeMesh (yet)"
-            )
         normalInd = {"X": 0, "Y": 1, "Z": 2}[normal]
         antiNormalInd = {"X": [1, 2], "Y": [0, 2], "Z": [0, 1]}[normal]
 
@@ -2080,8 +2107,13 @@ class InterfaceMPL(object):
         # interpolate values to self.gridCC if not 'CC'
         if v_type != "CC":
             aveOp = "ave" + v_type + "2CC"
+            if v_type == "CCv":
+                if view != "vec":
+                    raise ValueError("Other types for CCv not supported")
+            if view == "vec":
+                aveOp += "V"
             Av = getattr(self, aveOp)
-            if v.size == Av.shape[1]:
+            if v.shape[0] == Av.shape[1]:
                 v = Av * v
             elif len(v_type) == 2:
                 # was one of Fx, Fy, Fz, Ex, Ey, Ez
@@ -2093,6 +2125,8 @@ class InterfaceMPL(object):
                     i_s = np.cumsum([0, self.nFx, self.nFy, self.nFz])
                 v = v[i_s[vec_ind] : i_s[vec_ind + 1]]
                 v = Av * v
+        if view == "vec":
+            v = v[:, antiNormalInd]
 
         # interpolate values from self.gridCC to grid2d
         ind_3d_to_2d = self._get_containing_cell_indexes(tm_gridboost)
