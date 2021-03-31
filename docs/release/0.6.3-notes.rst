@@ -1,0 +1,40 @@
+.. currentmodule:: discretize
+
+.. _0.6.3_notes:
+
+===================================
+``discretize`` 0.6.3 Release Notes
+===================================
+
+This patch contains a bug-fix related to plotting on a :class:`TreeMesh`.
+It also contains a few additions which caused a minor functionality change in
+:func:`utils.refine_tree_xyz`.
+
+The first convenience is the addition of a `slice_loc` parameter to the
+:func:`mixins.mpl_mod.InterfaceMPL.plot_slice`. This allows for slightly more
+intuitive use over the old `ind` keyword, by allowing the user to directly specify the
+location parameter of the slice.
+
+The second addition, which caused the minor functionality change in `refine_tree_xyz`,
+is the addition of two specialized refine functions for the `TreeMesh`. We can now directly
+refine all cells that intersect a box (or list of boxes) with :func:`TreeMesh.refine_box`,
+and similarly we can refine all cells that intersect a ball (or list of balls) with
+:func:`TreeMesh.refine_ball`.
+
+
+Contributors
+============
+
+* @jcapriot
+* @ckohnke
+* @Rockpointgeo
+* @thast
+* @domfournier
+
+Pull requests
+=============
+
+* `#200 <https://github.com/simpeg/discretize/pull/200>`__: Refine tree xyz box
+* `#235 <https://github.com/simpeg/discretize/pull/235>`__: add xyzslice keyword to mesh.plot_slice
+* `#236 <https://github.com/simpeg/discretize/pull/236>`__: Correct the range_y in Tree plot_image
+* `#237 <https://github.com/simpeg/discretize/pull/235>`__: Tree refine c
