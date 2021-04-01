@@ -126,8 +126,9 @@ class Cell{
     void build_cell_vector(cell_vec_t& cells);
     void find_overlapping_cells(int_vec_t& cells, double xm, double xp, double ym, double yp, double zm, double zp);
 
-
     void insert_cell(node_map_t &nodes, double *new_center, int_t p_level, double* xs, double *ys, double *zs);
+    void refine_ball(node_map_t& nodes, double* center, double r2, int_t p_level, double *xs, double *ys, double* zs);
+    void refine_box(node_map_t& nodes, double* x0, double* x1, int_t p_level, double *xs, double *ys, double* zs, bool enclosed=false);
 
     Cell* containing_cell(double, double, double);
     void shift_centers(double * shift);
@@ -159,7 +160,9 @@ class Tree{
     void set_levels(int_t l_x, int_t l_y, int_t l_z);
     void set_xs(double *x , double *y, double *z);
     void initialize_roots();
-    void build_tree_from_function(function test_func);
+    void refine_function(function test_func);
+    void refine_ball(double *center, double r, int_t p_level);
+    void refine_box(double* x0, double* x1, int_t p_level);
     void number();
     void finalize_lists();
 

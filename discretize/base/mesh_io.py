@@ -388,7 +388,7 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         warnings.warn(
             "TensorMesh.readUBC has been deprecated and will be removed in"
             "discretize 1.0.0. please use TensorMesh.read_UBC",
-            FutureWarning,
+            DeprecationWarning,
         )
         return TensorMesh.read_UBC(file_name, directory)
 
@@ -419,6 +419,7 @@ class TreeMeshIO(object):
         indArr = np.genfromtxt(
             (line.encode("utf8") for line in fileLines[4::]), dtype=np.int
         )
+        nCunderMesh = nCunderMesh[:len(tswCorn)]  # remove information related to core
 
         hs = [np.ones(nr) * sz for nr, sz in zip(nCunderMesh, smallCell)]
         origin = tswCorn
@@ -535,7 +536,7 @@ class TreeMeshIO(object):
         warnings.warn(
             "TensorMesh.readUBC has been deprecated and will be removed in"
             "discretize 1.0.0. please use TensorMesh.read_UBC",
-            FutureWarning,
+            DeprecationWarning,
         )
         return TreeMesh.read_UBC(file_name, directory)
 

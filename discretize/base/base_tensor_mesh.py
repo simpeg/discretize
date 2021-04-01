@@ -473,7 +473,7 @@ class BaseTensorMesh(BaseMesh):
             warnings.warn(
                 "The locType keyword argument has been deprecated, please use location_type. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
+                DeprecationWarning,
             )
             location_type = kwargs["locType"]
         pts = as_array_n_by_dim(pts, self.dim)
@@ -622,14 +622,14 @@ class BaseTensorMesh(BaseMesh):
             warnings.warn(
                 "The locType keyword argument has been deprecated, please use location_type. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
+                DeprecationWarning,
             )
             location_type = kwargs["locType"]
         if "zerosOutside" in kwargs:
             warnings.warn(
                 "The zerosOutside keyword argument has been deprecated, please use zeros_outside. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
+                DeprecationWarning,
             )
             zeros_outside = kwargs["zerosOutside"]
         return self._getInterpolationMat(loc, location_type, zeros_outside)
@@ -828,7 +828,7 @@ class BaseTensorMesh(BaseMesh):
                         "Depreciation Warning: TensorMesh.innerProductDeriv."
                         " You should be supplying a vector. "
                         "Use: sdiag(u)*dMdprop",
-                        FutureWarning,
+                        DeprecationWarning,
                     )
                     return dMdprop
                 return sdiag(v) * dMdprop
@@ -851,7 +851,7 @@ class BaseTensorMesh(BaseMesh):
           please use `mesh.h[0]`.
         """
         warnings.warn(
-            "hx has been deprecated, please access as mesh.h[0]", FutureWarning
+            "hx has been deprecated, please access as mesh.h[0]", DeprecationWarning
         )
         return self.h[0]
 
@@ -868,7 +868,7 @@ class BaseTensorMesh(BaseMesh):
           please use `mesh.h[1]`.
         """
         warnings.warn(
-            "hy has been deprecated, please access as mesh.h[1]", FutureWarning
+            "hy has been deprecated, please access as mesh.h[1]", DeprecationWarning
         )
         return None if self.dim < 2 else self.h[1]
 
@@ -885,7 +885,7 @@ class BaseTensorMesh(BaseMesh):
           please use `mesh.h[2]`.
         """
         warnings.warn(
-            "hz has been deprecated, please access as mesh.h[2]", FutureWarning
+            "hz has been deprecated, please access as mesh.h[2]", DeprecationWarning
         )
         return None if self.dim < 3 else self.h[2]
 

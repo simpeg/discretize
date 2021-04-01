@@ -69,7 +69,6 @@ stages:
             rm -rf en/master/*
             cp -r $BUILD_SOURCESDIRECTORY/docs/_build/html/* en/master/
             touch .nojekyll
-            echo "discretize.simpeg.xyz" >> CNAME
             git add .
             git commit -am "Azure CI commit ref $(Build.SourceVersion)"
             git push

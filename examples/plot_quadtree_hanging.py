@@ -29,12 +29,12 @@ def run(plotIt=True):
         M.plotGrid(nodes=True, centers=True, faces_x=True)
         plt.legend(
             (
-                "Grid",
-                "Cell Centers",
                 "Nodes",
                 "Hanging Nodes",
+                "Cell Centers",
                 "X faces",
                 "Hanging X faces",
+                "Grid",
             )
         )
 

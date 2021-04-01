@@ -221,7 +221,7 @@ def face_info(xyz, A, B, C, D, average=True, normalize_normals=True, **kwargs):
         warnings.warn(
             "The normalizeNormals keyword argument has been deprecated, please use normalize_normals. "
             "This will be removed in discretize 1.0.0",
-            FutureWarning,
+            DeprecationWarning,
         )
         normalize_normals = kwargs["normalizeNormals"]
     if not isinstance(average, bool):

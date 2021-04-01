@@ -581,7 +581,7 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
             warnings.warn(
                 "The filename keyword argument has been deprecated, please use file_name. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
+                DeprecationWarning,
             )
         f = os.path.abspath(file_name)  # make sure we are working with abs path
         with open(f, "w") as outfile:
@@ -993,14 +993,14 @@ class BaseRectangularMesh(BaseMesh):
             warnings.warn(
                 "The xType keyword argument has been deprecated, please use x_type. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
+                DeprecationWarning,
             )
             x_type = kwargs["xType"]
         if "outType" in kwargs:
             warnings.warn(
                 "The outType keyword argument has been deprecated, please use out_type. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
+                DeprecationWarning,
             )
             out_type = kwargs["outType"]
 
@@ -1141,7 +1141,7 @@ class BaseRectangularMesh(BaseMesh):
 
         warnings.warn(
             "nCx has been deprecated, please access as mesh.shape_cells[0]",
-            FutureWarning,
+            DeprecationWarning,
         )
         return self.shape_cells[0]
 
@@ -1161,7 +1161,7 @@ class BaseRectangularMesh(BaseMesh):
 
         warnings.warn(
             "nCy has been deprecated, please access as mesh.shape_cells[1]",
-            FutureWarning,
+            DeprecationWarning,
         )
         if self.dim < 2:
             return None
@@ -1183,7 +1183,7 @@ class BaseRectangularMesh(BaseMesh):
 
         warnings.warn(
             "nCz has been deprecated, please access as mesh.shape_cells[2]",
-            FutureWarning,
+            DeprecationWarning,
         )
         if self.dim < 3:
             return None
@@ -1204,7 +1204,7 @@ class BaseRectangularMesh(BaseMesh):
 
         warnings.warn(
             "nNx has been deprecated, please access as mesh.shape_nodes[0]",
-            FutureWarning,
+            DeprecationWarning,
         )
         return self.shape_nodes[0]
 
@@ -1224,7 +1224,7 @@ class BaseRectangularMesh(BaseMesh):
 
         warnings.warn(
             "nNy has been deprecated, please access as mesh.shape_nodes[1]",
-            FutureWarning,
+            DeprecationWarning,
         )
         if self.dim < 2:
             return None
@@ -1246,7 +1246,7 @@ class BaseRectangularMesh(BaseMesh):
 
         warnings.warn(
             "nNz has been deprecated, please access as mesh.shape_nodes[2]",
-            FutureWarning,
+            DeprecationWarning,
         )
         if self.dim < 3:
             return None

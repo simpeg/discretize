@@ -1,5 +1,6 @@
 # distutils: language=c++
 # cython: embedsignature=True, language_level=3
+# cython: linetrace=True
 cimport cython
 cimport numpy as np
 from libc.stdlib cimport malloc, free
@@ -393,7 +394,145 @@ cdef class _TreeMesh:
         cdef void * func_ptr = <void *> function
         self.wrapper.set(func_ptr, _evaluate_func)
         #Then tell c++ to build the tree
-        self.tree.build_tree_from_function(self.wrapper)
+        self.tree.refine_function(self.wrapper)
+        if finalize:
+            self.finalize()
+
+    def refine_ball(self, points, radii, levels, finalize=True):
+        """Refines the TreeMesh around points with the given radii
+
+        Refines the TreeMesh by determining if a cell intersects the given ball(s)
+        to the prescribed level(s).
+
+        Parameters
+        ----------
+        points : array_like with shape (N, dim)
+            The centers of the balls
+        radii : array_like with shape (N)
+            The radii of the balls
+        levels : array_like of integers with shape (N)
+            The level to refine intersecting cells to
+        finalize : bool, optional
+            Whether to finalize after refining
+
+        Examples
+        --------
+        We create a simple mesh and refine the TreeMesh such that all cells that
+        intersect the spherical balls are at the given levels.
+
+        >>> import discretize
+        >>> import matplotlib.pyplot as plt
+        >>> import matplotlib.patches as patches
+        >>> tree_mesh = discretize.TreeMesh([32, 32])
+        >>> tree_mesh.max_level
+        5
+
+        Next we define the center and radius of the two spheres, as well as the level
+        we want to refine them to, and refine the mesh.
+
+        >>> centers = [[0.1, 0.3], [0.6, 0.8]]
+        >>> radii = [0.2, 0.3]
+        >>> levels = [4, 5]
+        >>> tree_mesh.refine_ball(centers, radii, levels)
+
+        Now lets look at the mesh, and overlay the balls on it to ensure it refined
+        where we wanted it to.
+
+        >>> ax = tree_mesh.plot_grid()
+        >>> circ = patches.Circle(centers[0], radii[0], facecolor='none', edgecolor='r', linewidth=3)
+        >>> ax.add_patch(circ)
+        >>> circ = patches.Circle(centers[1], radii[1], facecolor='none', edgecolor='k', linewidth=3)
+        >>> ax.add_patch(circ)
+        >>> plt.show()
+        """
+        points = np.require(np.atleast_2d(points), dtype=np.float64,
+                            requirements='C')
+        if points.shape[1] != self.dim:
+            raise ValueError(f"points array must be (N, {self.dim})")
+        cdef double[:, :] cs = points
+        cdef double[:] rs = np.require(np.atleast_1d(radii), dtype=np.float64,
+                                       requirements='C')
+        if points.shape[0] != rs.shape[0]:
+            raise ValueError("radii length must match the points array's first dimension")
+        cdef int[:] ls = np.require(np.atleast_1d(levels), dtype=np.int32,
+                                    requirements='C')
+        if points.shape[0] != ls.shape[0]:
+            raise ValueError("level length must match the points array's first dimension")
+
+        cdef int_t i
+        for i in range(ls.shape[0]):
+            self.tree.refine_ball(&cs[i, 0], rs[i], ls[i])
+        if finalize:
+            self.finalize()
+
+    def refine_box(self, x0s, x1s, levels, finalize=True):
+        """Refines the TreeMesh within the axis aligned boxes to the desired level
+
+        Refines the TreeMesh by determining if a cell intersects the given axis aligned
+        box(es) to the prescribed level(s).
+
+        Parameters
+        ----------
+        x0s : array_like with shape (N, dim)
+            The minimum location of the boxes
+        x1s : array_like with shape (N, dim)
+            The maximum location of the boxes
+        levels : array_like of integers with shape (N)
+            The level to refine intersecting cells to
+        finalize : bool, optional
+            Whether to finalize after refining
+
+        Examples
+        --------
+        We create a simple mesh and refine the TreeMesh such that all cells that
+        intersect the boxes are at the given levels.
+
+        >>> import discretize
+        >>> import matplotlib.pyplot as plt
+        >>> import matplotlib.patches as patches
+        >>> tree_mesh = discretize.TreeMesh([32, 32])
+        >>> tree_mesh.max_level
+        5
+
+        Next we define the origins and furthest corners of the two rectangles, as
+        well as the level we want to refine them to, and refine the mesh.
+
+        >>> x0s = [[0.1, 0.1], [0.8, 0.8]]
+        >>> x1s = [[0.3, 0.2], [0.9, 1.0]]
+        >>> levels = [4, 5]
+        >>> tree_mesh.refine_box(x0s, x1s, levels)
+
+        Now lets look at the mesh, and overlay the boxes on it to ensure it refined
+        where we wanted it to.
+
+        >>> ax = tree_mesh.plot_grid()
+        >>> rect = patches.Rectangle([0.1, 0.1], 0.2, 0.1, facecolor='none', edgecolor='r', linewidth=3)
+        >>> ax.add_patch(rect)
+        >>> rect = patches.Rectangle([0.8, 0.8], 0.1, 0.2, facecolor='none', edgecolor='k', linewidth=3)
+        >>> ax.add_patch(rect)
+        >>> plt.show()
+
+        """
+        x0s = np.require(np.atleast_2d(x0s), dtype=np.float64,
+                            requirements='C')
+        if x0s.shape[1] != self.dim:
+            raise ValueError(f"x0s array must be (N, {self.dim})")
+        x1s = np.require(np.atleast_2d(x1s), dtype=np.float64,
+                            requirements='C')
+        if x1s.shape[1] != self.dim:
+            raise ValueError(f"x1s array must be (N, {self.dim})")
+        if x1s.shape[0] != x0s.shape[0]:
+            raise ValueError(f"x0s and x1s must have the same length")
+        cdef double[:, :] x0 = x0s
+        cdef double[:, :] x1 = x1s
+        cdef int[:] ls = np.require(np.atleast_1d(levels), dtype=np.int32,
+                                    requirements='C')
+        if x0.shape[0] != ls.shape[0]:
+            raise ValueError("level length must match the points array's first dimension")
+
+        cdef int_t i
+        for i in range(ls.shape[0]):
+            self.tree.refine_box(&x0[i, 0], &x1[i, 0], ls[i])
         if finalize:
             self.finalize()
 
@@ -1624,7 +1763,8 @@ cdef class _TreeMesh:
         raise NotImplementedError('Nodal Laplacian has not been implemented for TreeMesh')
 
     @cython.boundscheck(False)
-    def _average_cell_to_face_xStencil(self):
+    def average_cell_to_total_face_x(self):
+        """Average matrix for cell center to total (including hanging) x faces"""
         cdef np.int64_t[:] I = np.zeros(2*self.n_total_faces_x, dtype=np.int64)
         cdef np.int64_t[:] J = np.zeros(2*self.n_total_faces_x, dtype=np.int64)
         cdef np.float64_t[:] V = np.zeros(2*self.n_total_faces_x, dtype=np.float64)
@@ -1675,7 +1815,8 @@ cdef class _TreeMesh:
         return sp.csr_matrix((V, (I,J)), shape=(self.n_total_faces_x, self.n_cells))
 
     @cython.boundscheck(False)
-    def _average_cell_to_face_yStencil(self):
+    def average_cell_to_total_face_y(self):
+        """Average matrix for cell center to total (including hanging) y faces"""
         cdef np.int64_t[:] I = np.zeros(2*self.n_total_faces_y, dtype=np.int64)
         cdef np.int64_t[:] J = np.zeros(2*self.n_total_faces_y, dtype=np.int64)
         cdef np.float64_t[:] V = np.zeros(2*self.n_total_faces_y, dtype=np.float64)
@@ -1725,7 +1866,8 @@ cdef class _TreeMesh:
         return sp.csr_matrix((V, (I,J)), shape=(self.n_total_faces_y, self.n_cells))
 
     @cython.boundscheck(False)
-    def _average_cell_to_face_zStencil(self):
+    def average_cell_to_total_face_z(self):
+        """Average matrix for cell center to total (including hanging) z faces"""
         cdef np.int64_t[:] I = np.zeros(2*self.n_total_faces_z, dtype=np.int64)
         cdef np.int64_t[:] J = np.zeros(2*self.n_total_faces_z, dtype=np.int64)
         cdef np.float64_t[:] V = np.zeros(2*self.n_total_faces_z, dtype=np.float64)
@@ -1757,9 +1899,10 @@ cdef class _TreeMesh:
 
     @property
     @cython.boundscheck(False)
-    def _cellGradxStencil(self):
-        if getattr(self, '_cellGradxStencilMat', None) is not None:
-            return self._cellGradxStencilMat
+    def stencil_cell_gradient_x(self):
+        """Cell gradient stencil matrix to total (including hanging) x faces"""
+        if getattr(self, '_stencil_cell_gradient_x', None) is not None:
+            return self._stencil_cell_gradient_x
         cdef np.int64_t[:] I = np.zeros(2*self.n_total_faces_x, dtype=np.int64)
         cdef np.int64_t[:] J = np.zeros(2*self.n_total_faces_x, dtype=np.int64)
         cdef np.float64_t[:] V = np.zeros(2*self.n_total_faces_x, dtype=np.float64)
@@ -1807,16 +1950,17 @@ cdef class _TreeMesh:
                         V[2*ind    ] = -1.0
                         V[2*ind + 1] =  1.0
 
-        self._cellGradxStencilMat = (
+        self._stencil_cell_gradient_x = (
             sp.csr_matrix((V, (I,J)), shape=(self.n_total_faces_x, self.n_cells))
         )
-        return self._cellGradxStencilMat
+        return self._stencil_cell_gradient_x
 
     @property
     @cython.boundscheck(False)
-    def _cellGradyStencil(self):
-        if getattr(self, '_cellGradyStencilMat', None) is not None:
-            return self._cellGradyStencilMat
+    def stencil_cell_gradient_y(self):
+        """Cell gradient stencil matrix to total (including hanging) y faces"""
+        if getattr(self, '_stencil_cell_gradient_y', None) is not None:
+            return self._stencil_cell_gradient_y
 
         cdef np.int64_t[:] I = np.zeros(2*self.n_total_faces_y, dtype=np.int64)
         cdef np.int64_t[:] J = np.zeros(2*self.n_total_faces_y, dtype=np.int64)
@@ -1865,16 +2009,17 @@ cdef class _TreeMesh:
                         V[2*ind    ] = -1.0
                         V[2*ind + 1] = 1.0
 
-        self._cellGradyStencilMat = (
+        self._stencil_cell_gradient_y = (
             sp.csr_matrix((V, (I,J)), shape=(self.n_total_faces_y, self.n_cells))
         )
-        return self._cellGradyStencilMat
+        return self._stencil_cell_gradient_y
 
     @property
     @cython.boundscheck(False)
-    def _cellGradzStencil(self):
-        if getattr(self, '_cellGradzStencilMat', None) is not None:
-            return self._cellGradzStencilMat
+    def stencil_cell_gradient_z(self):
+        """Cell gradient stencil matrix to total (including hanging) z faces"""
+        if getattr(self, '_stencil_cell_gradient_z', None) is not None:
+            return self._stencil_cell_gradient_z
 
         cdef np.int64_t[:] I = np.zeros(2*self.n_total_faces_z, dtype=np.int64)
         cdef np.int64_t[:] J = np.zeros(2*self.n_total_faces_z, dtype=np.int64)
@@ -1903,10 +2048,10 @@ cdef class _TreeMesh:
                     V[2*ind    ] = -1.0
                     V[2*ind + 1] =  1.0
 
-        self._cellGradzStencilMat = (
+        self._stencil_cell_gradient_z = (
             sp.csr_matrix((V, (I,J)), shape=(self.n_total_faces_z, self.n_cells))
         )
-        return self._cellGradzStencilMat
+        return self._stencil_cell_gradient_z
 
     @cython.boundscheck(False)
     def _deflate_edges_x(self):
