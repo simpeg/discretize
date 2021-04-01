@@ -145,13 +145,6 @@ class DiffOperators(object):
         "aveN2F": "average_node_to_face",
     }
 
-    def __init__(self):
-        raise Exception(
-            "DiffOperators is a base class providing differential"
-            "operators on meshes and cannot run on its own."
-            "Inherit to your favorite Mesh class."
-        )
-
     ###########################################################################
     #                                                                         #
     #                             Face Divergence                             #
@@ -1349,3 +1342,6 @@ class DiffOperators(object):
     getBCProjWF_simple = deprecate_method(
         "get_BC_projections_simple", "getBCProjWF_simple", removal_version="1.0.0"
     )
+
+
+DiffOperators.__module__ = 'discretize.operators'

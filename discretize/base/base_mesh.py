@@ -3,17 +3,15 @@ Base classes for all discretize meshes
 """
 
 import numpy as np
-import properties
 import os
 import json
 
-from discretize.utils import mkvc
+from discretize.utils import mkvc, Identity
 from discretize.utils.code_utils import deprecate_property, deprecate_method
-from discretize.mixins import InterfaceMixins
 import warnings
 
 
-class BaseMesh(properties.HasProperties, InterfaceMixins):
+class BaseMesh:
     """
     BaseMesh does all the counting you don't want to do.
     BaseMesh should be inherited by meshes with a regular structure.
@@ -33,46 +31,156 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         "nFz": "n_faces_z",
         "nF": "n_faces",
         "vnF": "n_faces_per_direction",
+        "vnC": "shape_cells"
     }
-
-    # Properties
-    _n = properties.Tuple(
-        "Tuple of number of cells in each direction (dim, )",
-        prop=properties.Integer(
-            "Number of cells along a particular direction", cast=True, min=1
-        ),
-        min_length=1,
-        max_length=3,
-        coerce=True,
-        required=True,
-    )
-
-    origin = properties.Array(
-        "origin of the mesh (dim, )",
-        dtype=(float, int),
-        shape=("*",),
-        required=True,
-    )
+    _items = {'shape_cells', 'origin', 'orientation', 'reference_system'}
 
     # Instantiate the class
-    def __init__(self, n=None, origin=None, **kwargs):
-        if n is not None:
-            self._n = n  # number of dimensions
-
+    def __init__(self, shape_cells, origin=None, orientation=None, reference_system=None, **kwargs):
+        if "n" in kwargs:
+            shape_cells = kwargs.pop("n")
         if "x0" in kwargs:
             origin = kwargs.pop('x0')
-        if origin is None:
-            self.origin = np.zeros(len(self._n))
-        else:
-            self.origin = origin
+        axis_u = kwargs.pop("axis_u", None)
+        axis_v = kwargs.pop("axis_v", None)
+        axis_w = kwargs.pop("axis_w", None)
+        if axis_u is not None and axis_v is not None and axis_w is not None:
+            orientation = np.array([axis_u, axis_v, axis_w])
 
-        super(BaseMesh, self).__init__(**kwargs)
+        shape_cells = tuple((int(val) for val in shape_cells))
+        self._shape_cells = shape_cells
+        # some default values
+        if origin is None:
+            origin = np.zeros(self.dim)
+        self.origin = origin
+
+        if orientation is None:
+            orientation = Identity()
+
+        self.orientation = orientation
+        if reference_system is None:
+            reference_system = "cartesian"
+        self.reference_system = reference_system
+        super().__init__(**kwargs)
 
     def __getattr__(self, name):
         if name == "_aliases":
-            raise AttributeError  # http://nedbatchelder.com/blog/201010/surprising_getattr_recursion.html
+            raise AttributeError
         name = self._aliases.get(name, name)
-        return object.__getattribute__(self, name)
+        return super().__getattribute__(name)
+
+    @property
+    def origin(self):
+        """ Origin of the mesh
+        """
+        return self._origin
+
+    @origin.setter
+    def origin(self, value):
+        # ensure the value is a numpy array
+        value = np.asarray(value, dtype=np.float64)
+        value = np.atleast_1d(value)
+        if len(value) != self.dim:
+            raise ValueError(
+                f"origin and shape must be the same length, got {len(value)} and {self.dim}"
+            )
+        self._origin = value
+
+    @property
+    def shape_cells(self):
+        """The number of cells in each direction
+
+        Returns
+        -------
+        tuple of ints
+
+        Notes
+        -----
+        Also accessible as `vnC`.
+        """
+        return self._shape_cells
+
+    @property
+    def orientation(self):
+        return self._orientation
+
+    @orientation.setter
+    def orientation(self, value):
+        if isinstance(value, Identity):
+            self._orientation = np.identity(self.dim)
+        else:
+            R = np.atleast_2d(np.asarray(value, dtype=np.float64))
+            dim = self.dim
+            if R.shape != (dim, dim):
+                raise ValueError(
+                    f"Orientation matrix must be square and of shape {(dim, dim)}, got {R.shape}"
+                )
+            # Ensure each row is unitary
+            R = R / np.linalg.norm(R, axis=1)[:, None]
+            # Check if matrix is orthogonal
+            if not np.allclose(R @ R.T, np.identity(self.dim), rtol=1.e-5, atol=1E-6):
+                raise ValueError("Orientation matrix is not orthogonal")
+            self._orientation = R
+
+    @property
+    def reference_system(self):
+        "The type of coordinate reference frame. Can take on the values "
+        return self._reference_system
+
+    @reference_system.setter
+    def reference_system(self, value):
+        """Check if the reference system is of a known type."""
+        choices = ["cartesian", "cylindrical", "spherical"]
+        # Here are a few abbreviations that users can harnes
+        abrevs = {
+            "car": choices[0],
+            "cart": choices[0],
+            "cy": choices[1],
+            "cyl": choices[1],
+            "sph": choices[2],
+        }
+        # Get the name and fix it if it is abbreviated
+        value = value.lower()
+        value = abrevs.get(value, value)
+        if value not in choices:
+            raise ValueError(
+                "Coordinate system ({}) unknown.".format(self.reference_system)
+            )
+        self._reference_system = value
+
+    def to_dict(self):
+        cls = type(self)
+        out = {
+            '__module__': cls.__module__,
+            '__class__': cls.__name__,
+        }
+        for item in self._items:
+            attr = getattr(self, item, None)
+            if attr is not None:
+                if isinstance(attr, np.ndarray):
+                    attr = attr.tolist()
+                elif isinstance(attr, tuple):
+                    # change to a list and make sure inner items are not numpy arrays
+                    attr = list(attr)
+                    for i, thing in enumerate(attr):
+                        if isinstance(thing, np.ndarray):
+                            attr[i] = thing.tolist()
+                out[item] = attr
+        return out
+
+    def __eq__(self, other):
+        if type(self) != type(other):
+            return False
+        return self.to_dict() == other.to_dict()
+
+    def serialize(self):
+        return self.to_dict()
+
+    @classmethod
+    def deserialize(cls, items, **kwargs):
+        items.pop('__module__', None)
+        items.pop('__class__', None)
+        return cls(**items)
 
     @property
     def x0(self):
@@ -82,55 +190,6 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
     def x0(self, val):
         self.origin = val
 
-    @classmethod
-    def deserialize(cls, value, **kwargs):
-        if "x0" in value:
-            value["origin"] = value.pop("x0")
-        return super().deserialize(value, **kwargs)
-
-    # Validators
-    @properties.validator("_n")
-    def _check_n_shape(self, change):
-        if change["previous"] != properties.undefined:
-            # _n can only be set once
-            if change["previous"] != change["value"]:
-                raise AttributeError("Cannot change n. Instead, create a new mesh")
-        else:
-            # check that if h has been set, sizes still agree
-            if getattr(self, "h", None) is not None and len(self.h) > 0:
-                for i in range(len(change["value"])):
-                    if len(self.h[i]) != change["value"][i]:
-                        raise properties.ValidationError(
-                            "Mismatched shape of n. Expected {}, len(h[{}]), got "
-                            "{}".format(len(self.h[i]), i, change["value"][i])
-                        )
-
-            # check that if nodes have been set for curvi mesh, sizes still
-            # agree
-            if getattr(self, "node_list", None) is not None and len(self.node_list) > 0:
-                for i in range(len(change["value"])):
-                    if self.node_list[0].shape[i] - 1 != change["value"][i]:
-                        raise properties.ValidationError(
-                            "Mismatched shape of n. Expected {}, len(node_list[{}]), "
-                            "got {}".format(
-                                self.node_list[0].shape[i] - 1, i, change["value"][i]
-                            )
-                        )
-
-    @properties.validator("origin")
-    def _check_origin(self, change):
-        if not (
-            not isinstance(change["value"], properties.utils.Sentinel)
-            and change["value"] is not None
-        ):
-            raise Exception("n must be set prior to setting origin")
-
-        if len(self._n) != len(change["value"]):
-            raise Exception(
-                "Dimension mismatch. origin has length {} != len(n) which is "
-                "{}".format(len(self.origin), len(self._n))
-            )
-
     @property
     def dim(self):
         """The dimension of the mesh (1, 2, or 3).
@@ -138,19 +197,18 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         Returns
         -------
         int
-            dimension of the mesh (1, 2, or 3).
+            dimension of the mesh
         """
-        return len(self._n)
+        return len(self.shape_cells)
 
     @property
     def n_cells(self):
-        """
-        Total number of cells in the mesh.
+        """Total number of cells in the mesh.
 
         Returns
         -------
         int
-            Number of cells in the mesh
+            number of cells in the mesh
 
         Notes
         -----
@@ -165,7 +223,7 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         >>> mesh.plot_grid(centers=True, show_it=True)
         >>> print(mesh.n_cells)
         """
-        return int(np.prod(self._n))
+        return int(np.prod(self.shape_cells))
 
     def __len__(self):
         """The number of cells on the mesh."""
@@ -173,12 +231,12 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
 
     @property
     def n_nodes(self):
-        """Total number of nodes in the mesh
+        """Total number of nodes
 
         Returns
         -------
         int
-            Number of nodes in the mesh
+            number of nodes in the mesh
 
         Notes
         -----
@@ -193,19 +251,11 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         >>> mesh.plot_grid(nodes=True, show_it=True)
         >>> print(mesh.n_nodes)
         """
-        return int(np.prod(x + 1 for x in self._n))
+        return int(np.prod([x + 1 for x in self.shape_cells]))
 
     @property
     def n_edges_x(self):
-        """
-        Number of x-edges
-
-        Number of edges in the mesh aligned in the x-direction.
-        For tensor meshes of increasing dimension, the number of x-edges
-        is equal to:
-            - *1D:* n_cells_x
-            - *2D:* (n_cells_x) X (n_nodes_y)
-            - *3D:* (n_cells_y) X (n_nodes_y) X (n_nodes_z)
+        """Number of x-edges
 
         Returns
         -------
@@ -216,19 +266,11 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         Also accessible as `nEx`.
 
         """
-        return int(np.prod(x + y for x, y in zip(self._n, (0, 1, 1))))
+        return int(np.prod([x + y for x, y in zip(self.shape_cells, (0, 1, 1))]))
 
     @property
     def n_edges_y(self):
-        """
-        Number of y-edges
-
-        Number of edges in the mesh aligned in the y-direction.
-        For tensor meshes of increasing dimension, the number of y-edges
-        is equal to:
-            - *1D:* None
-            - *2D:* (n_nodes_x) X (n_cells_y)
-            - *3D:* (n_nodes_x) X (n_cells_y) X (n_nodes_z)
+        """Number of y-edges
 
         Returns
         -------
@@ -241,19 +283,11 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         """
         if self.dim < 2:
             return None
-        return int(np.prod(x + y for x, y in zip(self._n, (1, 0, 1))))
+        return int(np.prod([x + y for x, y in zip(self.shape_cells, (1, 0, 1))]))
 
     @property
     def n_edges_z(self):
-        """
-        Number of z-edges
-
-        Number of edges in the mesh aligned in the z-direction.
-        For tensor meshes of increasing dimension, the number of z-edges
-        is equal to:
-            - *1D:* None
-            - *2D:* None
-            - *3D:* (n_nodes_x) X (n_nodes_y) X (n_cells_z)
+        """Number of z-edges
 
         Returns
         -------
@@ -266,14 +300,11 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         """
         if self.dim < 3:
             return None
-        return int(np.prod(x + y for x, y in zip(self._n, (1, 1, 0))))
+        return int(np.prod([x + y for x, y in zip(self.shape_cells, (1, 1, 0))]))
 
     @property
-    def n_edges_per_direction(self)(self):
-        """
-        The number of edges in each direction
-
-        Returns a tuple containing the number of edges in each direction.
+    def n_edges_per_direction(self):
+        """The number of edges in each direction
 
         Returns
         -------
@@ -319,15 +350,7 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
 
     @property
     def n_faces_x(self):
-        """
-        Number of x-faces
-
-        Number of faces in the mesh whose surfaces are normal to the
-        x-direction. For tensor meshes of increasing dimension, the number
-        of x-faces is equal to:
-            - *1D:* n_nodes_x
-            - *2D:* (n_nodes_x) X (n_cells_y)
-            - *3D:* (n_nodes_x) X (n_cells_y) X (n_cells_z)
+        """Number of x-faces
 
         Returns
         -------
@@ -337,19 +360,11 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         -----
         Also accessible as `nFx`.
         """
-        return int(np.prod(x + y for x, y in zip(self._n, (1, 0, 0))))
+        return int(np.prod([x + y for x, y in zip(self.shape_cells, (1, 0, 0))]))
 
     @property
     def n_faces_y(self):
-        """
-        Number of y-faces
-
-        Number of faces in the mesh whose surfaces are normal to the
-        y-direction. For tensor meshes of increasing dimension, the number
-        of x-faces is equal to:
-            - *1D:* None
-            - *2D:* (n_cells_x) X (n_nodes_y)
-            - *3D:* (n_cells_x) X (n_nodes_y) X (n_cells_z)
+        """Number of y-faces
 
         Returns
         -------
@@ -361,19 +376,11 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         """
         if self.dim < 2:
             return None
-        return int(np.prod(x + y for x, y in zip(self._n, (0, 1, 0))))
+        return int(np.prod([x + y for x, y in zip(self.shape_cells, (0, 1, 0))]))
 
     @property
     def n_faces_z(self):
-        """
-        Number of z-faces
-
-        Number of faces in the mesh whose surfaces are normal to the
-        z-direction. For tensor meshes of increasing dimension, the number
-        of x-faces is equal to:
-            - *1D:* None
-            - *2D:* None
-            - *3D:* (n_cells_x) X (n_cells_y) X (n_nodes_z)
+        """Number of z-faces
 
         Returns
         -------
@@ -385,7 +392,7 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         """
         if self.dim < 3:
             return None
-        return int(np.prod(x + y for x, y in zip(self._n, (0, 0, 1))))
+        return int(np.prod([x + y for x, y in zip(self.shape_cells, (0, 0, 1))]))
 
     @property
     def n_faces_per_direction(self):
@@ -437,10 +444,6 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
     def face_normals(self):
         """Face Normals
 
-        Returns a numpy array containing the unit vectors normal to
-        all mesh faces. The ordering of the array is x_face_normals,
-        then y_face_normals (, then z_face_normals).
-
         Returns
         -------
         numpy.ndarray
@@ -470,12 +473,7 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
 
     @property
     def edge_tangents(self):
-        """
-        Edge Tangents
-
-        Returns a numpy array containing the unit vectors parallel to
-        all mesh edges. The ordering of the array is x_edge_tanjents,
-        then y_edge_tanjents (, then z_edge_tanjents).
+        """Edge Tangents
 
         Returns
         -------
@@ -505,18 +503,15 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
             return np.r_[tX, tY, tZ]
 
     def project_face_vector(self, face_vector):
-        """
-        Project vectors onto the faces of the mesh.
+        """Project vectors onto the faces of the mesh.
 
-        Consider a vector *fV* in Cartesian coordinates defined
-        at the locations of the mesh faces. This method will project
-        the vector onto mesh faces using the normal vector for each
-        face.
+        Given a vector, face_vector, in cartesian coordinates, this will project
+        it onto the mesh using the normals
 
         Parameters
         ----------
         face_vector : numpy.ndarray
-            Vector with shape (n_faces, dim)
+            face vector with shape (n_faces, dim)
 
         Returns
         -------
@@ -535,13 +530,10 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         return np.sum(face_vector * self.face_normals, 1)
 
     def project_edge_vector(self, edge_vector):
-        """
-        Project vectors onto the edges of the mesh.
+        """Project vectors onto the edges of the mesh
 
-        Consider a vector *eV* in Cartesian coordinates defined
-        at the locations of the mesh edges. This method will project
-        the vector onto mesh edges using the tanjent vector for each
-        edge.
+        Given a vector, edge_vector, in cartesian coordinates, this will project
+        it onto the mesh using the tangents
 
         Parameters
         ----------
@@ -566,14 +558,9 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
 
     def save(self, file_name="mesh.json", verbose=False, **kwargs):
         """
-        Save the mesh to json file
-        
-        Parameters
-        ----------
-        filename : str file
-            filename for saving the casing properties
-        verbose : bool (default=False)
-            Print file path of saved file
+        Save the mesh to json
+        :param str file: file_name for saving the casing properties
+        :param str directory: working directory for saving the file
         """
 
         if 'filename' in kwargs:
@@ -585,7 +572,7 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
             )
         f = os.path.abspath(file_name)  # make sure we are working with abs path
         with open(f, "w") as outfile:
-            json.dump(self.serialize(), outfile)
+            json.dump(self.to_dict(), outfile)
 
         if verbose:
             print("Saved {}".format(f))
@@ -596,59 +583,28 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         """
         Make a copy of the current mesh
         """
-        return properties.copy(self)
-
-    axis_u = properties.Vector3(
-        "Vector orientation of u-direction. For more details see the docs for the :attr:`~discretize.base.BaseMesh.rotation_matrix` property.",
-        default="X",
-        length=1,
-    )
-    axis_v = properties.Vector3(
-        "Vector orientation of v-direction. For more details see the docs for the :attr:`~discretize.base.BaseMesh.rotation_matrix` property.",
-        default="Y",
-        length=1,
-    )
-    axis_w = properties.Vector3(
-        "Vector orientation of w-direction. For more details see the docs for the :attr:`~discretize.base.BaseMesh.rotation_matrix` property.",
-        default="Z",
-        length=1,
-    )
-
-    @properties.validator
-    def _validate_orientation(self):
-        """Check if axes are orthogonal"""
-        tol = 1E-6
-        if not (
-            np.abs(self.axis_u.dot(self.axis_v) < tol)
-            and np.abs(self.axis_v.dot(self.axis_w) < tol)
-            and np.abs(self.axis_w.dot(self.axis_u) < tol)
-        ):
-            raise ValueError("axis_u, axis_v, and axis_w must be orthogonal")
-        return True
+        cls = type(self)
+        items = self.to_dict()
+        items.pop('__module__', None)
+        items.pop('__class__', None)
+        return cls(**items)
 
     @property
     def reference_is_rotated(self):
         """True if the axes are rotated from the traditional <X,Y,Z> system
         with vectors of :math:`(1,0,0)`, :math:`(0,1,0)`, and :math:`(0,0,1)`
         """
-        if (
-            np.allclose(self.axis_u, (1, 0, 0))
-            and np.allclose(self.axis_v, (0, 1, 0))
-            and np.allclose(self.axis_w, (0, 0, 1))
-        ):
-            return False
-        return True
+        return not np.allclose(self.orientation, np.identity(self.dim))
 
     @property
     def rotation_matrix(self):
-        """
-        Rotation matrix from arbitrary orthogonal coordinate system (u,v,w) to Cartesian (x,y,z)
-
-        Builds a rotation matrix to transform from an arbitrary orthogonal
-        coordinate system (u,v,w) to a conventional Cartesian coordinate
-        system (x,y,z). To utilize this property, you must first set the
-        mesh properties: `axis_u`, `axis_v`, and `axis_w` properties. These
-        properties define the axes of the arbitrary coordinate system.
+        """Builds a rotation matrix to transform coordinates from their coordinate
+        system into a conventional cartesian system. This is built off of the
+        three `axis_u`, `axis_v`, and `axis_w` properties; these mapping
+        coordinates use the letters U, V, and W (the three letters preceding X,
+        Y, and Z in the alphabet) to define the projection of the X, Y, and Z
+        durections. These UVW vectors describe the placement and transformation
+        of the mesh's coordinate sytem assuming at most 3 directions.
 
         Why would you want to use these UVW mapping vectors the this
         `rotation_matrix` property? They allow us to define the relationship
@@ -656,70 +612,15 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         switching between the two while still maintaing the connectivity of the
         mesh's cells. For a visual example of this, please see the figure in the
         docs for the :class:`~discretize.mixins.vtk_mod.InterfaceVTK`.
-
-        Returns
-        -------
-        np.ndarray (3, 3)
-            A 3x3 rotation matrix from (u,v,w) coordinates to (x,y,z)
-
-        Examples
-        --------
-        Here the coordinate system is defined as u=Northeast, v=Northwest and
-        w=Up. For a location (u,v,w), we use the rotation matrix to determine
-        the location in (x,y,z).
-
-        >>> from discretize import TensorMesh
-        >>> import numpy as np
-        >>> 
-        >>> # Define uniform mesh and (u,v,w) axes
-        >>> h = np.ones(3)
-        >>> mesh = TensorMesh([h, h, h])
-        >>> mesh.axis_u = [1, 1, 0]
-        >>> mesh.axis_v = [-1, 1, 0]
-        >>> mesh.axis_w = [0, 0, 1]
-        >>> 
-        >>> # Convert uvw to xyz
-        >>> uvw = np.array([1,0,0])  # Along Northeast
-        >>> A = mesh.rotation_matrix
-        >>> xyz = np.dot(A, uvw)
-        >>> print(xyz)
-
         """
-        return np.array([self.axis_u, self.axis_v, self.axis_w])
-
-    reference_system = properties.String(
-        "The type of coordinate reference frame. Can take on the values "
-        + "cartesian, cylindrical, or spherical. Abbreviations of these are allowed.",
-        default="cartesian",
-        change_case="lower",
-    )
-
-    @properties.validator
-    def _validate_reference_system(self):
-        """Check if the reference system is of a known type."""
-        choices = ["cartesian", "cylindrical", "spherical"]
-        # Here are a few abbreviations that users can harnes
-        abrevs = {
-            "car": choices[0],
-            "cart": choices[0],
-            "cy": choices[1],
-            "cyl": choices[1],
-            "sph": choices[2],
-        }
-        # Get the name and fix it if it is abbreviated
-        self.reference_system = abrevs.get(self.reference_system, self.reference_system)
-        if self.reference_system not in choices:
-            raise ValueError(
-                "Coordinate system ({}) unknown.".format(self.reference_system)
-            )
-        return True
+        return self.orientation  # np.array([self.axis_u, self.axis_v, self.axis_w])
 
     def _parse_location_type(self, location_type):
         if len(location_type) == 0:
             return location_type
         elif location_type[0] == "F":
             if len(location_type) > 1:
-                return "faces_"+ location_type[-1]
+                return "faces_" + location_type[-1]
             else:
                 return "faces"
         elif location_type[0] == "E":
@@ -737,6 +638,10 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         else:
             return location_type
 
+    def validate(self):
+        """Every object will be valid upon initialization"""
+        return True
+
 
     # DEPRECATED
     normals = deprecate_property("face_normals", "normals", removal_version="1.0.0")
@@ -748,6 +653,89 @@ class BaseMesh(properties.HasProperties, InterfaceMixins):
         "project_face_vector", "projectFaceVector", removal_version="1.0.0"
     )
 
+    @property
+    def axis_u(self):
+        """
+        .. deprecated:: 0.7.0
+          `axis_u` will be removed in discretize 1.0.0, it is replaced by
+          `mesh.orientation` for better mesh orientation validation.
+
+        See Also
+        --------
+        orientation
+        """
+        warnings.warn(
+            "The axis_u property is deprecated, please access as self.orientation[0]. "
+            "This will be removed in discretize 1.0.0.", DeprecationWarning
+        )
+        return self.orientation[0]
+
+    @axis_u.setter
+    def axis_u(self, value):
+        warnings.warn(
+            "Setting the axis_u property is deprecated, and now unchecked, please "
+            "directly set the self.orientation property. This will be removed in "
+            "discretize 1.0.0.", DeprecationWarning
+        )
+        self.orientation[0] = value
+
+    @property
+    def axis_v(self):
+        """
+        .. deprecated:: 0.7.0
+          `axis_v` will be removed in discretize 1.0.0, it is replaced by
+          `mesh.orientation` for better mesh orientation validation.
+
+        See Also
+        --------
+        orientation
+        """
+        warnings.warn(
+            "The axis_v property is deprecated, please access as self.orientation[1]. "
+            "This will be removed in discretize 1.0.0.", DeprecationWarning
+        )
+        return self.orientation[1]
+
+    @axis_v.setter
+    def axis_v(self, value):
+        warnings.warn(
+            "Setting the axis_v property is deprecated, and now unchecked, please "
+            "directly set the self.orientation property. This will be removed in "
+            "discretize 1.0.0.", DeprecationWarning
+        )
+        value = value/np.linalg.norm(value)
+        self.orientation[1] = value
+
+    @property
+    def axis_w(self):
+        """
+        .. deprecated:: 0.7.0
+          `axis_w` will be removed in discretize 1.0.0, it is replaced by
+          `mesh.orientation` for better mesh orientation validation.
+
+        See Also
+        --------
+        orientation
+        """
+        warnings.warn(
+            "The axis_w property is deprecated, please access as self.orientation[2]. "
+            "This will be removed in discretize 1.0.0.", DeprecationWarning
+        )
+        return self.orientation[2]
+
+    @axis_w.setter
+    def axis_w(self, value):
+        warnings.warn(
+            "Setting the axis_v property is deprecated, and now unchecked, please "
+            "directly set the self.orientation property. This will be removed in "
+            "discretize 1.0.0.", DeprecationWarning
+        )
+        value = value/np.linalg.norm(value)
+        self.orientation[2] = value
+
+
+BaseMesh.__module__ = 'discretize.base'
+
 
 class BaseRectangularMesh(BaseMesh):
     """
@@ -757,7 +745,6 @@ class BaseRectangularMesh(BaseMesh):
     _aliases = {
         **BaseMesh._aliases,
         **{
-            "vnC": "shape_cells",
             "vnN": "shape_nodes",
             "vnEx": "shape_edges_x",
             "vnEy": "shape_edges_y",
@@ -768,32 +755,13 @@ class BaseRectangularMesh(BaseMesh):
         },
     }
 
-    def __init__(self, n=None, origin=None, **kwargs):
-        BaseMesh.__init__(self, n=n, origin=origin, **kwargs)
-
-    @property
-    def shape_cells(self):
-        """
-        The number of cells in each direction
-
-        Returns
-        -------
-        tuple of int (dim,)
-
-        Notes
-        -----
-        Also accessible as `vnC`.
-        """
-        return tuple(self._n)
-
     @property
     def shape_nodes(self):
-        """
-        Number of nodes in each direction
+        """Number of nodes in each direction
 
         Returns
         -------
-        tuple of int (dim,)
+        tuple of int
 
         Notes
         -----
@@ -1251,3 +1219,6 @@ class BaseRectangularMesh(BaseMesh):
         if self.dim < 3:
             return None
         return self.shape_nodes[2]
+
+
+BaseRectangularMesh.__module__ = 'discretize.base'

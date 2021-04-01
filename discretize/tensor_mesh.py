@@ -3,13 +3,13 @@ import numpy as np
 
 from discretize.base import BaseRectangularMesh, BaseTensorMesh
 from discretize.operators import DiffOperators, InnerProducts
-from discretize.base.mesh_io import TensorMeshIO
+from discretize.mixins import InterfaceMixins, TensorMeshIO
 from discretize.utils import mkvc
 from discretize.utils.code_utils import deprecate_property
 
 
 class TensorMesh(
-    BaseTensorMesh, BaseRectangularMesh, DiffOperators, InnerProducts, TensorMeshIO
+    BaseTensorMesh, BaseRectangularMesh, DiffOperators, InnerProducts, TensorMeshIO, InterfaceMixins
 ):
     """
     Class for tensor meshes.
@@ -27,9 +27,6 @@ class TensorMesh(
         **BaseRectangularMesh._aliases,
         **BaseTensorMesh._aliases,
     }
-
-    def __init__(self, h=None, origin=None, **kwargs):
-        BaseTensorMesh.__init__(self, h=h, origin=origin, **kwargs)
 
     def __repr__(self):
         """Plain text representation."""
@@ -366,3 +363,6 @@ class TensorMesh(
     cellBoundaryInd = deprecate_property(
         "cell_boundary_indices", "cellBoundaryInd", removal_version="1.0.0"
     )
+
+
+TensorMesh.__module__ = 'discretize'

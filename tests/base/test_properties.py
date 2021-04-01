@@ -76,15 +76,15 @@ class TensorTest(unittest.TestCase):
 
     def test_base_updates(self):
         with self.assertRaises(Exception):
-            self.mesh._n = None
+            self.mesh.shape_cells = None
 
         # check that if h has been set, we can't mess up n
         with self.assertRaises(Exception):
-            self.mesh._n = [6, 5, 9]
+            self.mesh.shape_cells = [6, 5, 9]
 
         # can't change dimensionality of a mesh
         with self.assertRaises(Exception):
-            self.mesh._n = [4, 5]
+            self.mesh.shape_cells = [4, 5]
 
 
 class CylTest(unittest.TestCase):
@@ -143,11 +143,11 @@ class TreeTest(unittest.TestCase):
 
     def test_base_updates(self):
         with self.assertRaises(Exception):
-            self.mesh._n = None
+            self.mesh.shape_cells = None
 
         # check that if h has been set, we can't mess up n
         with self.assertRaises(Exception):
-            self.mesh._n = [6, 5, 9]
+            self.mesh.shape_cells = [6, 5, 9]
 """
 
 
@@ -179,11 +179,11 @@ class CurviTest(unittest.TestCase):
 
     def test_base_updates(self):
         with self.assertRaises(Exception):
-            self.mesh._n = None
+            self.mesh.shape_cells = None
 
         # check that if h has been set, we can't mess up n
         with self.assertRaises(Exception):
-            self.mesh._n = [6, 5, 9]
+            self.mesh.shape_cells = [6, 5, 9]
 
 
 if __name__ == "__main__":

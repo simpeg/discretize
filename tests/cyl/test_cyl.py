@@ -311,7 +311,7 @@ class TestCyl2DMesh(unittest.TestCase):
     def test_serialization(self):
         mesh = discretize.CylMesh.deserialize(self.mesh.serialize())
         self.assertTrue(np.all(self.mesh.x0 == mesh.x0))
-        self.assertTrue(np.all(self.mesh._n == mesh._n))
+        self.assertTrue(np.all(self.mesh.shape_cells == mesh.shape_cells))
         self.assertTrue(np.all(self.mesh.hx == mesh.hx))
         self.assertTrue(np.all(self.mesh.hy == mesh.hy))
         self.assertTrue(np.all(self.mesh.hz == mesh.hz))

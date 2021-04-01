@@ -85,11 +85,9 @@
 #      |___________|         |___> x
 #      0    e3     1
 
-import properties
-
 from discretize.base import BaseTensorMesh
 from discretize.operators import InnerProducts, DiffOperators
-from discretize.base.mesh_io import TreeMeshIO
+from discretize.mixins import InterfaceMixins, TreeMeshIO
 from discretize.utils import as_array_n_by_dim
 from discretize._extensions.tree_ext import _TreeMesh, TreeCell
 import numpy as np
@@ -98,7 +96,7 @@ import warnings
 from discretize.utils.code_utils import deprecate_property
 
 
-class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
+class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO, InterfaceMixins):
     """
     TreeMesh is a class for adaptive QuadTree (2D) and OcTree (3D) meshes.
     """
@@ -135,31 +133,26 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
             "gridhEz": "hanging_edges_z",
         },
     }
+    _items = {'h', 'origin', 'cell_state'}
 
     # inheriting stuff from BaseTensorMesh that isn't defined in _QuadTree
     def __init__(self, h=None, origin=None, **kwargs):
         if "x0" in kwargs:
             origin = kwargs.pop("x0")
-        BaseTensorMesh.__init__(
-            self, h, origin
-        )  # TODO:, **kwargs) # pass the kwargs for copy/paste
+        super().__init__(h=h, origin=origin)
 
-        nx = len(self.h[0])
-        ny = len(self.h[1])
-        nz = len(self.h[2]) if self.dim == 3 else 2
-
-        def is_pow2(num):
-            return ((num & (num - 1)) == 0) and num != 0
-
-        if not (is_pow2(nx) and is_pow2(ny) and is_pow2(nz)):
-            raise ValueError("length of cell width vectors must be a power of 2")
-        # Now can initialize cpp tree parent
-        _TreeMesh.__init__(self, self.h, self.origin)
-
-        if "cell_levels" in kwargs.keys() and "cell_indexes" in kwargs.keys():
-            inds = kwargs.pop("cell_indexes")
-            levels = kwargs.pop("cell_levels")
-            self.__setstate__((inds, levels))
+        cell_state = kwargs.pop("cell_state", None)
+        cell_indexes = kwargs.pop("cell_indexes", None)
+        cell_levels = kwargs.pop("cell_levels", None)
+        if cell_state is None:
+            if cell_indexes is not None and cell_levels is not None:
+                cell_state = {}
+                cell_state["indexes"] = cell_indexes
+                cell_state["levels"] = cell_levels
+        if cell_state is not None:
+            indexes = cell_state["indexes"]
+            levels = cell_state["levels"]
+            self.__setstate__((indexes, levels))
 
     def __repr__(self):
         """Plain text representation."""
@@ -287,9 +280,12 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
 
         return full_tbl
 
-    @properties.validator("origin")
-    def _origin_validator(self, change):
-        self._set_origin(change["value"])
+    @BaseTensorMesh.origin.setter
+    def origin(self, value):
+        # first use the BaseTensorMesh to set the origin to handle "0, C, N"
+        BaseTensorMesh.origin.fset(self, value)
+        # then update the TreeMesh with the hidden value
+        self._set_origin(self._origin)
 
     @property
     def vntF(self):
@@ -581,17 +577,13 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
             P = np.r_[Px, Py, Pz]
         return sp.identity(self.nE).tocsr()[P]
 
-    def serialize(self):
-        serial = BaseTensorMesh.serialize(self)
-        inds, levels = self.__getstate__()
-        serial["cell_indexes"] = inds.tolist()
-        serial["cell_levels"] = levels.tolist()
-        return serial
+    @property
+    def cell_state(self):
+        indexes, levels = self.__getstate__()
+        return {'indexes': indexes.tolist(), 'levels': levels.tolist()}
 
-    @classmethod
-    def deserialize(cls, serial):
-        mesh = cls(**serial)
-        return mesh
+    def validate(self):
+        return self.finalized
 
     def __reduce__(self):
         return TreeMesh, (self.h, self.origin), self.__getstate__()
@@ -660,3 +652,6 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
     _cellGradxStencil = deprecate_property("stencil_cell_gradient_x", "_cellGradxStencil", removal_version="1.0.0")
     _cellGradyStencil = deprecate_property("stencil_cell_gradient_y", "_cellGradyStencil", removal_version="1.0.0")
     _cellGradzStencil = deprecate_property("stencil_cell_gradient_z", "_cellGradzStencil", removal_version="1.0.0")
+
+
+TreeMesh.__module__ = 'discretize'

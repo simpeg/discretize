@@ -115,7 +115,7 @@ class TestSimpleQuadTree(unittest.TestCase):
         mesh1.refine(2)
         mesh2 = discretize.TreeMesh.deserialize(mesh1.serialize())
         self.assertTrue(np.all(mesh1.x0 == mesh2.x0))
-        self.assertTrue(np.all(mesh1._n == mesh2._n))
+        self.assertTrue(np.all(mesh1.shape_cells == mesh2.shape_cells))
         self.assertTrue(np.all(mesh1.gridCC == mesh2.gridCC))
 
         mesh1.x0 = np.r_[-2.0, 2]

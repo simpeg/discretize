@@ -244,7 +244,7 @@ class BasicTensorMeshTests(unittest.TestCase):
     def test_serialization(self):
         mesh = discretize.TensorMesh.deserialize(self.mesh2.serialize())
         self.assertTrue(np.all(self.mesh2.x0 == mesh.x0))
-        self.assertTrue(np.all(self.mesh2._n == mesh._n))
+        self.assertTrue(np.all(self.mesh2.shape_cells == mesh.shape_cells))
         self.assertTrue(np.all(self.mesh2.hx == mesh.hx))
         self.assertTrue(np.all(self.mesh2.hy == mesh.hy))
         self.assertTrue(np.all(self.mesh2.gridCC == mesh.gridCC))

@@ -22,13 +22,6 @@ class InnerProducts(object):
     This mixIn creates the all the inner product matrices that you need!
     """
 
-    def __init__(self):
-        raise Exception(
-            "InnerProducts is a base class providing inner product matrices "
-            "for meshes and cannot run on its own. Inherit to your favorite "
-            "Mesh class."
-        )
-
     def get_face_inner_product(
         self, model=None, invert_model=False, invert_matrix=False, do_fast=True, **kwargs
     ):
@@ -864,3 +857,6 @@ class InnerProducts(object):
         "getEdgeInnerProductDeriv",
         removal_version="1.0.0",
     )
+
+
+InnerProducts.__module__ = 'discretize.operators'
