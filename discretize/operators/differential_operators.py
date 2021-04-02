@@ -124,7 +124,7 @@ def _ddxCellGradBC(n, bc):
 
 class DiffOperators(object):
     """
-    Class creates the differential operators that you need!
+    Class used for creating differential and averaging operators.
     """
 
     _aliases = {
@@ -153,7 +153,7 @@ class DiffOperators(object):
     @property
     def _face_x_divergence_stencil(self):
         """
-        Face divergence operator in the x-direction (x-faces to cell centers)
+        Stencil for face divergence operator in the x-direction (x-faces to cell centers)
         """
         if self.dim == 1:
             Dx = ddx(self.shape_cells[0])
@@ -170,7 +170,7 @@ class DiffOperators(object):
     @property
     def _face_y_divergence_stencil(self):
         """
-        Face divergence operator in the y-direction (y-faces to cell centers)
+        Stencil for face divergence operator in the y-direction (y-faces to cell centers)
         """
         if self.dim == 1:
             return None
@@ -187,7 +187,7 @@ class DiffOperators(object):
     @property
     def _face_z_divergence_stencil(self):
         """
-        Face divergence operator in the z-direction (z-faces to cell centers)
+        Stencil for face divergence operator in the z-direction (z-faces to cell centers)
         """
         if self.dim == 1 or self.dim == 2:
             return None
@@ -201,7 +201,9 @@ class DiffOperators(object):
 
     @property
     def _face_divergence_stencil(self):
-        # Compute faceDivergence stencil on faces
+        """
+        Full stencil for face divergence operator (faces to cell centers)
+        """
         if self.dim == 1:
             D = self._face_x_divergence_stencil
         elif self.dim == 2:
@@ -240,6 +242,10 @@ class DiffOperators(object):
 
     @property
     def face_y_divergence(self):
+        """
+        Construct divergence operator in the y component (face-stg to
+        cell-centres).
+        """
         if self.dim < 2:
             return None
         # Compute areas of cell faces & volumes
@@ -269,7 +275,7 @@ class DiffOperators(object):
     @property
     def _nodal_gradient_x_stencil(self):
         """
-        Stencil for the nodal grad in the x-direction (nodes to x-edges)
+        Stencil for the nodal gradient in the x-direction (nodes to x-edges)
         """
         if self.dim == 1:
             Gx = ddx(self.shape_cells[0])
@@ -286,7 +292,7 @@ class DiffOperators(object):
     @property
     def _nodal_gradient_y_stencil(self):
         """
-        Stencil for the nodal grad in the y-direction (nodes to y-edges)
+        Stencil for the nodal gradient in the y-direction (nodes to y-edges)
         """
         if self.dim == 1:
             return None
@@ -303,7 +309,7 @@ class DiffOperators(object):
     @property
     def _nodal_gradient_z_stencil(self):
         """
-        Stencil for the nodal grad in the z-direction (nodes to z- edges)
+        Stencil for the nodal gradient in the z-direction (nodes to z-edges)
         """
         if self.dim == 1 or self.dim == 2:
             return None
@@ -318,7 +324,7 @@ class DiffOperators(object):
     @property
     def _nodal_gradient_stencil(self):
         """
-        Stencil for the nodal grad
+        Full stencil for the nodal gradient (nodes to edges)
         """
         # Compute divergence operator on faces
         if self.dim == 1:
@@ -341,7 +347,7 @@ class DiffOperators(object):
     @property
     def nodal_gradient(self):
         """
-        Construct gradient operator (nodes to edges).
+        Construct nodal gradient operator (nodes to edges).
         """
         if getattr(self, "_nodal_gradient", None) is None:
             G = self._nodal_gradient_stencil
@@ -351,6 +357,9 @@ class DiffOperators(object):
 
     @property
     def _nodal_laplacian_x_stencil(self):
+        """
+        Stencil for the nodal Laplacian in the x-direction (nodes to nodes)
+        """
         warnings.warn("Laplacian has not been tested rigorously.")
 
         Dx = ddx(self.shape_cells[0])
@@ -364,6 +373,9 @@ class DiffOperators(object):
 
     @property
     def _nodal_laplacian_y_stencil(self):
+        """
+        Stencil for the nodal Laplacian in the y-direction (nodes to nodes)
+        """
         warnings.warn("Laplacian has not been tested rigorously.")
 
         if self.dim == 1:
@@ -380,6 +392,9 @@ class DiffOperators(object):
 
     @property
     def _nodal_laplacian_z_stencil(self):
+        """
+        Stencil for the nodal Laplacian in the z-direction (nodes to nodes)
+        """
         warnings.warn("Laplacian has not been tested rigorously.")
 
         if self.dim == 1 or self.dim == 2:
@@ -391,6 +406,9 @@ class DiffOperators(object):
 
     @property
     def _nodal_laplacian_x(self):
+        """
+        Construct the nodal Laplacian in the x-direction (nodes to nodes)
+        """
         Hx = sdiag(1.0 / self.h[0])
         if self.dim == 2:
             Hx = sp.kron(speye(self.shape_nodes[1]), Hx)
@@ -400,6 +418,9 @@ class DiffOperators(object):
 
     @property
     def _nodal_laplacian_y(self):
+        """
+        Construct the nodal Laplacian in the y-direction (nodes to nodes)
+        """
         Hy = sdiag(1.0 / self.h[1])
         if self.dim == 1:
             return None
@@ -411,6 +432,9 @@ class DiffOperators(object):
 
     @property
     def _nodal_laplacian_z(self):
+        """
+        Construct the nodal Laplacian in the z-direction (nodes to nodes)
+        """
         if self.dim == 1 or self.dim == 2:
             return None
         Hz = sdiag(1.0 / self.h[2])
@@ -420,7 +444,7 @@ class DiffOperators(object):
     @property
     def nodal_laplacian(self):
         """
-        Construct laplacian operator (nodes to edges).
+        Construct the nodal Laplacian operator (nodes to nodes).
         """
         if getattr(self, "_nodal_laplacian", None) is None:
             warnings.warn("Laplacian has not been tested rigorously.")
@@ -483,7 +507,9 @@ class DiffOperators(object):
 
     @property
     def stencil_cell_gradient_x(self):
-        # TODO: remove this hard-coding
+        """
+        Stencil for the cell gradient in the x-direction (centers to x-faces)
+        """
         BC = ["neumann", "neumann"]
         if self.dim == 1:
             G1 = _ddxCellGrad(self.shape_cells[0], BC)
@@ -501,6 +527,9 @@ class DiffOperators(object):
 
     @property
     def stencil_cell_gradient_y(self):
+        """
+        Stencil for the cell gradient in the y-direction (centers to y-faces)
+        """
         if self.dim < 2:
             return None
         BC = ["neumann", "neumann"]  # TODO: remove this hard-coding
@@ -513,6 +542,9 @@ class DiffOperators(object):
 
     @property
     def stencil_cell_gradient_z(self):
+        """
+        Stencil for the cell gradient in the z-direction (centers to z-faces)
+        """
         if self.dim < 3:
             return None
         BC = ["neumann", "neumann"]  # TODO: remove this hard-coding
@@ -522,6 +554,9 @@ class DiffOperators(object):
 
     @property
     def stencil_cell_gradient(self):
+        """
+        Full stencil for the cell gradient (centers to faces)
+        """
         BC = self.set_cell_gradient_BC(self._cell_gradient_BC_list)
         if self.dim == 1:
             G = _ddxCellGrad(self.shape_cells[0], BC[0])
@@ -555,7 +590,7 @@ class DiffOperators(object):
     @property
     def cell_gradient(self):
         """
-        The cell centered Gradient, takes you to cell faces.
+        Cell centered gradient operator (cell centers to faces)
         """
         if getattr(self, "_cell_gradient", None) is None:
             G = self.stencil_cell_gradient
@@ -569,7 +604,7 @@ class DiffOperators(object):
     @property
     def cell_gradient_BC(self):
         """
-        The cell centered Gradient boundary condition matrix
+        Boundary conditions matrix for the cell gradient operator
         """
         if getattr(self, "_cell_gradient_BC", None) is None:
             BC = self.set_cell_gradient_BC(self._cell_gradient_BC_list)
@@ -596,8 +631,7 @@ class DiffOperators(object):
     @property
     def cell_gradient_x(self):
         """
-        Cell centered Gradient in the x dimension. Has neumann boundary
-        conditions.
+        X-component of cell centered gradient operator assuming zero Neumann BC
         """
         if getattr(self, "_cell_gradient_x", None) is None:
             G1 = self.stencil_cell_gradient_x
@@ -609,6 +643,9 @@ class DiffOperators(object):
 
     @property
     def cell_gradient_y(self):
+        """
+        Y-component of cell centered gradient operator assuming zero Neumann BC
+        """
         if self.dim < 2:
             return None
         if getattr(self, "_cell_gradient_y", None) is None:
@@ -622,8 +659,7 @@ class DiffOperators(object):
     @property
     def cell_gradient_z(self):
         """
-        Cell centered Gradient in the x dimension. Has neumann boundary
-        conditions.
+        Z-component of cell centered gradient operator assuming zero Neumann BC
         """
         if self.dim < 3:
             return None
@@ -643,6 +679,9 @@ class DiffOperators(object):
 
     @property
     def _edge_x_curl_stencil(self):
+        """
+        Stencil for the edge curl operator in the x-direction.
+        """
         n = self.vnC  # The number of cell centers in each direction
 
         D32 = kron3(ddx(n[2]), speye(n[1]), speye(n[0] + 1))
@@ -654,6 +693,9 @@ class DiffOperators(object):
 
     @property
     def _edge_y_curl_stencil(self):
+        """
+        Stencil for the edge curl operator in the y-direction.
+        """
         n = self.vnC  # The number of cell centers in each direction
 
         D31 = kron3(ddx(n[2]), speye(n[1] + 1), speye(n[0]))
@@ -665,6 +707,9 @@ class DiffOperators(object):
 
     @property
     def _edge_z_curl_stencil(self):
+        """
+        Stencil for the edge curl operator in the z-direction.
+        """
         n = self.vnC  # The number of cell centers in each direction
 
         D21 = kron3(speye(n[2] + 1), ddx(n[1]), speye(n[0]))
@@ -676,6 +721,9 @@ class DiffOperators(object):
 
     @property
     def _edge_curl_stencil(self):
+        """
+        Full stencil for the edge curl operator.
+        """
         if self.dim <= 1:
             raise NotImplementedError("Edge Curl only programed for 2 or 3D.")
 
@@ -719,7 +767,7 @@ class DiffOperators(object):
     @property
     def edge_curl(self):
         """
-        Construct the 3D curl operator.
+        Edge curl operator (edges to faces).
         """
         L = self.edge_lengths  # Compute lengths of cell edges
         S = self.face_areas  # Compute areas of cell faces
@@ -919,7 +967,9 @@ class DiffOperators(object):
 
     @property
     def average_face_to_cell(self):
-        "Construct the averaging operator on cell faces to cell centers."
+        """
+        Averaging operator from faces to cell centers (scalar quantities).
+        """
         if getattr(self, "_average_face_to_cell", None) is None:
             if self.dim == 1:
                 self._average_face_to_cell = self.aveFx2CC
@@ -935,7 +985,9 @@ class DiffOperators(object):
 
     @property
     def average_face_to_cell_vector(self):
-        "Construct the averaging operator on cell faces to cell centers."
+        """
+        Averaging operator from faces to cell centers (vector quantities).
+        """
         if getattr(self, "_average_face_to_cell_vector", None) is None:
             if self.dim == 1:
                 self._average_face_to_cell_vector = self.aveFx2CC
@@ -952,8 +1004,7 @@ class DiffOperators(object):
     @property
     def average_face_x_to_cell(self):
         """
-        Construct the averaging operator on cell faces in the x direction to
-        cell centers.
+        Averaging operator from x-faces to cell centers (scalar quantities).
         """
 
         if getattr(self, "_average_face_x_to_cell", None) is None:
@@ -969,8 +1020,7 @@ class DiffOperators(object):
     @property
     def average_face_y_to_cell(self):
         """
-        Construct the averaging operator on cell faces in the y direction to
-        cell centers.
+        Averaging operator from y-faces to cell centers (scalar quantities).
         """
         if self.dim < 2:
             return None
@@ -985,8 +1035,7 @@ class DiffOperators(object):
     @property
     def average_face_z_to_cell(self):
         """
-        Construct the averaging operator on cell faces in the z direction to
-        cell centers.
+        Averaging operator from z-faces to cell centers (scalar quantities).
         """
         if self.dim < 3:
             return None
@@ -998,7 +1047,9 @@ class DiffOperators(object):
 
     @property
     def average_cell_to_face(self):
-        "Construct the averaging operator on cell centers to faces."
+        """
+        Averaging operator from cell centers to faces (scalar quantities).
+        """
         if getattr(self, "_average_cell_to_face", None) is None:
             if self.dim == 1:
                 self._average_cell_to_face = av_extrap(self.shape_cells[0])
@@ -1040,8 +1091,7 @@ class DiffOperators(object):
     @property
     def average_cell_vector_to_face(self):
         """
-        Construct the averaging operator on cell centers to
-        faces as a vector.
+        Averaging operator from cell centers to faces (vector quantities).
         """
         if getattr(self, "_average_cell_vector_to_face", None) is None:
             if self.dim == 1:
@@ -1077,7 +1127,9 @@ class DiffOperators(object):
 
     @property
     def average_edge_to_cell(self):
-        "Construct the averaging operator on cell edges to cell centers."
+        """
+        Averaging operator from edges to cell centers (scalar quantities).
+        """
         if getattr(self, "_average_edge_to_cell", None) is None:
             if self.dim == 1:
                 self._avE2CC = self.aveEx2CC
@@ -1093,7 +1145,9 @@ class DiffOperators(object):
 
     @property
     def average_edge_to_cell_vector(self):
-        "Construct the averaging operator on cell edges to cell centers."
+        """
+        Averaging operator from edges to cell centers (vector quantities).
+        """
         if getattr(self, "_average_edge_to_cell_vector", None) is None:
             if self.dim == 1:
                 self._average_edge_to_cell_vector = self.aveEx2CC
@@ -1110,8 +1164,7 @@ class DiffOperators(object):
     @property
     def average_edge_x_to_cell(self):
         """
-        Construct the averaging operator on cell edges in the x direction to
-        cell centers.
+        Averaging operator from x-edges to cell centers (scalar quantities).
         """
         if getattr(self, "_average_edge_x_to_cell", None) is None:
             # The number of cell centers in each direction
@@ -1127,8 +1180,7 @@ class DiffOperators(object):
     @property
     def average_edge_y_to_cell(self):
         """
-        Construct the averaging operator on cell edges in the y direction to
-        cell centers.
+        Averaging operator from y-edges to cell centers (scalar quantities).
         """
         if self.dim < 2:
             return None
@@ -1144,8 +1196,7 @@ class DiffOperators(object):
     @property
     def average_edge_z_to_cell(self):
         """
-        Construct the averaging operator on cell edges in the z direction to
-        cell centers.
+        Averaging operator from z-edges to cell centers (scalar quantities).
         """
         if self.dim < 3:
             return None
@@ -1158,7 +1209,9 @@ class DiffOperators(object):
 
     @property
     def average_node_to_cell(self):
-        "Construct the averaging operator on cell nodes to cell centers."
+        """
+        Averaging operator from nodes to cell centers (scalar quantities).
+        """
         if getattr(self, "_average_node_to_cell", None) is None:
             # The number of cell centers in each direction
             if self.dim == 1:
@@ -1211,6 +1264,9 @@ class DiffOperators(object):
 
     @property
     def _average_node_to_edge_z(self):
+        """
+        Averaging operator on cell nodes to z-edges
+        """
         if self.dim == 1 or self.dim == 2:
             return None
         elif self.dim == 3:

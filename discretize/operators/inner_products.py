@@ -18,7 +18,10 @@ import warnings
 
 
 class InnerProducts(object):
-    """This is a base for the discretize mesh classes.
+    """
+    Class used for creating inner product matrices.
+
+    This is a base for the discretize mesh classes.
     This mixIn creates the all the inner product matrices that you need!
     """
 

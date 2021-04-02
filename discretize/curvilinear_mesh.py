@@ -24,7 +24,10 @@ def _normalize3D(x):
 
 
 class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts, InterfaceMixins):
-    """CurvilinearMesh is a mesh class that deals with curvilinear meshes.
+    """
+    Class for curvilinear meshes.
+    
+    CurvilinearMesh is a mesh class that deals with curvilinear meshes.
 
     Example of a curvilinear mesh:
 

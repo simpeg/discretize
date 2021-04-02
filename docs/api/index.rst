@@ -9,8 +9,11 @@ API Reference
 .. currentmodule:: discretize
 
 
-Meshes
-------
+Mesh Classes
+------------
+
+Mesh classes supported in the *discretize* package.
+
 
 .. currentmodule:: discretize
 
@@ -21,11 +24,13 @@ Meshes
     CylindricalMesh
     CurvilinearMesh
     TreeMesh
-    tree_mesh.TreeCell
 
 
-Numerical Operators
--------------------
+Numerical Operator Classes
+--------------------------
+
+Classes used in the construction of differential operators, averaging operators and inner product matrices
+for all mesh types.
 
 .. automodule:: discretize.operators
 

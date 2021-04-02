@@ -28,6 +28,8 @@ class CylindricalMesh(
     BaseTensorMesh, BaseRectangularMesh, InnerProducts, DiffOperators, InterfaceMixins
 ):
     """
+    Class for cylindrical meshes.
+
     CylindricalMesh is a mesh class for cylindrical problems. It supports both
     cylindrically symmetric and 3D cylindrical meshes that include an azimuthal
     discretization.
