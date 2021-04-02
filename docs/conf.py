@@ -33,16 +33,15 @@ from sphinx_gallery.sorting import FileNameSortKey
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
     "sphinx.ext.autodoc",
+    "numpydoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.coverage",
     "sphinx.ext.doctest",
     "sphinx.ext.extlinks",
     "sphinx.ext.intersphinx",
     "sphinx.ext.mathjax",
-    "sphinx.ext.todo",
     "sphinx.ext.viewcode",
     "matplotlib.sphinxext.plot_directive",
-    "numpydoc",
     "nbsphinx",
     "sphinx_gallery.gen_gallery",
 ]
@@ -162,11 +161,36 @@ plot_rcparams = {
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 try:
-    import sphinx_rtd_theme
+    import pydata_sphinx_theme
 
-    html_theme = "sphinx_rtd_theme"
-    html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
-    pass
+    html_theme = "pydata_sphinx_theme"
+
+    # If false, no module index is generated.
+    html_use_modindex = True
+
+    html_theme_options = {
+        "external_links": [
+            {"name": "SimPEG", "url": "https://simpeg.xyz"},
+            {"name": "Contact", "url": "http://slack.simpeg.xyz"}
+        ],
+        "github_url": "https://github.com/simpeg/discretize",
+        "twitter_url": "https://twitter.com/simpegpy",
+        "use_edit_page_button": True,
+    }
+    html_logo = "images/logo-block.ico"
+
+    html_static_path = ['_static']
+
+    html_css_files = [
+        'css/custom.css',
+    ]
+
+    html_context = {
+        "github_user": "simpeg",
+        "github_repo": "discretize",
+        "github_version": "master",
+        "doc_path": "docs",
+    }
 except Exception:
     html_theme = "default"
 
@@ -197,7 +221,6 @@ html_favicon = "./images/logo-block.ico"
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = []
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
@@ -308,6 +331,7 @@ intersphinx_mapping = {
     "properties": ("https://propertiespy.readthedocs.io/en/latest/", None),
     "pyvista": ("http://docs.pyvista.org/", None),
 }
+numpydoc_xref_param_type = True
 
 
 # -- Options for Texinfo output -----------------------------------------------
@@ -370,31 +394,6 @@ sphinx_gallery_conf["image_scrapers"] = (pyvista.Scraper(), "matplotlib")
 
 # How to display URL addresses: 'footnote', 'no', or 'inline'.
 # texinfo_show_urls = 'footnote'
-
-html_context = {
-    "menu_links_name": "Getting connected",
-    "menu_links": [
-        (
-            '<i class="fa fa-external-link-square fa-fw"></i> SimPEG',
-            "https://simpeg.xyz",
-        ),
-        # ('<i class="fa fa-gavel fa-fw"></i> Code of Conduct', 'https://github.com/fatiando/verde/blob/master/CODE_OF_CONDUCT.md'),
-        ('<i class="fa fa-comment fa-fw"></i> Contact', "http://slack.simpeg.xyz"),
-        (
-            '<i class="fa fa-github fa-fw"></i> Source Code',
-            "https://github.com/simpeg/discretize",
-        ),
-    ],
-    # Custom variables to enable "Improve this page"" and "Download notebook"
-    # links
-    "doc_path": "doc",
-    "galleries": sphinx_gallery_conf["gallery_dirs"],
-    "gallery_dir": dict(
-        zip(sphinx_gallery_conf["gallery_dirs"], sphinx_gallery_conf["examples_dirs"])
-    ),
-    "github_repo": "simpeg/discretize",
-    "github_version": "master",
-}
 
 autodoc_member_order = "bysource"
 

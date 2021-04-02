@@ -161,7 +161,13 @@ def deprecate_method(new_name, old_name, removal_version=None):
         )
         return getattr(self, new_name)(*args, **kwargs)
 
-    doc = f"`{old_name}` has been deprecated. See `{new_name}` for documentation"
+    doc = f"""
+    `{old_name}` has been deprecated. See `{new_name}` for documentation
+
+    See Also
+    --------
+    {new_name}
+    """
     new_method.__doc__ = doc
     return new_method
 
@@ -180,7 +186,13 @@ def deprecate_function(new_function, old_name, removal_version=None):
         )
         return new_function(*args, **kwargs)
 
-    doc = f"`{old_name}` has been deprecated. See `{new_name}` for documentation"
+    doc = f"""
+    `{old_name}` has been deprecated. See `{new_name}` for documentation
+
+    See Also
+    --------
+    {new_name}
+    """
     dep_function.__doc__ = doc
     return dep_function
 

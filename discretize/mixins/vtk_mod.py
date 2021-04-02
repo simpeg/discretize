@@ -77,7 +77,7 @@ def assign_cell_data(vtkDS, models=None):
     vtkDS : pyvista.Common
         Any given VTK data object that has cell data
 
-    models : dict(numpy.ndarray)
+    models : dict of str:numpy.ndarray
         Name('s) and array('s). Match number of cells
 
     """

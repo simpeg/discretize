@@ -12,9 +12,46 @@ import warnings
 
 
 class BaseMesh:
-    """
-    BaseMesh does all the counting you don't want to do.
-    BaseMesh should be inherited by meshes with a regular structure.
+    """Base Mesh for discretize
+
+    BaseMesh does all the counting you don't want to do. BaseMesh should be inherited
+    by meshes with a regular structure.
+
+    Parameters
+    ----------
+    shape_cells : array_like of int
+        number of cells for each dimension
+    origin : array_like of float, optional
+        origin of the bottom south west corner of the mesh, defaults to 0.
+    orientation : discretize.utils.Identity or array_like of float, optional
+        Orientation of the three major axes of the mesh, defaults to Identity.
+        If provided, this must be an orthogonal matrix.
+    reference_system : {'cartesian', 'cylindrical', 'spherical'}
+        Or a subset of short hands for these, {'car[t]', 'cy[l]', 'sph'}
+
+    Attributes
+    ----------
+    shape_cells
+    origin
+    orientation
+    reference_system
+    dim
+    n_cells
+    n_nodes
+    n_edges
+    n_edges_x
+    n_edges_y
+    n_edges_z
+    n_edges_per_direction
+    n_faces
+    n_faces_x
+    n_faces_y
+    n_faces_z
+    n_faces_per_direction
+    face_normals
+    edge_tangents
+    reference_is_rotated
+    rotation_matrix
     """
 
     _REGISTRY = {}
@@ -71,7 +108,14 @@ class BaseMesh:
 
     @property
     def origin(self):
-        """ Origin of the mesh
+        """Base point for the mesh
+
+        For a cartesian mesh, this is the bottom southwest corner.
+
+        Returns
+        -------
+        np.ndarray of float
+            origin with length mesh.dim
         """
         return self._origin
 
@@ -92,7 +136,7 @@ class BaseMesh:
 
         Returns
         -------
-        tuple of ints
+        tuple of int
 
         Notes
         -----
@@ -102,6 +146,26 @@ class BaseMesh:
 
     @property
     def orientation(self):
+        """Direction of the axes of the mesh.
+
+        A rotation matrix describing the orientation of the meshes axes. In a 3D
+        cartesian space mesh, this corresponds to the direction of the X, Y, and Z axes.
+
+        It can also be used to transform coordinates from their coordinate
+        system into a conventional cartesian system.
+
+        Why would you want to use these UVW mapping vectors in this
+        `orientation` property? They allow us to define the relationship
+        between local and global coordinate systems and provide a tool for
+        switching between the two while still maintaing the connectivity of the
+        mesh's cells. For a visual example of this, please see the figure in the
+        docs for the :class:`~discretize.mixins.vtk_mod.InterfaceVTK`.
+
+        Returns
+        -------
+        np.ndarray of float
+            square array of shape (mesh.dim, mesh.dim)
+        """
         return self._orientation
 
     @orientation.setter
@@ -124,7 +188,15 @@ class BaseMesh:
 
     @property
     def reference_system(self):
-        "The type of coordinate reference frame. Can take on the values "
+        """ Coordinate reference system
+
+        The type of coordinate reference frame. Will be one of the values "cartesian",
+        "cylindrical", or "spherical".
+
+        Returns
+        -------
+        str
+        """
         return self._reference_system
 
     @reference_system.setter
@@ -149,6 +221,20 @@ class BaseMesh:
         self._reference_system = value
 
     def to_dict(self):
+        """Representation of the mesh's attributes as a dictionary
+
+        The dictionary representation of the mesh class necessary to reconstruct the
+        object. This is useful for serialization. All of the attributes returned in this
+        dictionary will be JSON serializable.
+
+        The mesh class is also stored in the dictionary as strings under the
+        `__module__` and `__class__` keys.
+
+        Returns
+        -------
+        dict
+            Dictionary of {attribute: value} for the attributes of this mesh.
+        """
         cls = type(self)
         out = {
             '__module__': cls.__module__,
@@ -174,16 +260,36 @@ class BaseMesh:
         return self.to_dict() == other.to_dict()
 
     def serialize(self):
+        """An alias for ``to_dict``
+
+        See Also
+        --------
+        to_dict
+        """
         return self.to_dict()
 
     @classmethod
     def deserialize(cls, items, **kwargs):
+        """Create this mesh from a dictionary of attributes
+
+        Parameters
+        ----------
+        items : dict
+            dictionary of {attribute : value} pairs that will be passed to this class's
+            initialization method as keyword arguments.
+        """
         items.pop('__module__', None)
         items.pop('__class__', None)
         return cls(**items)
 
     @property
     def x0(self):
+        """An alias for the origin
+
+        See Also
+        --------
+        origin
+        """
         return self.origin
 
     @x0.setter
@@ -216,17 +322,21 @@ class BaseMesh:
 
         Examples
         --------
-        >>> import discretize
-        >>> import numpy as np
-        >>> import matplotlib.pyplot as plt
-        >>> mesh = discretize.TensorMesh([np.ones(n) for n in [2,3]])
-        >>> mesh.plot_grid(centers=True, show_it=True)
-        >>> print(mesh.n_cells)
+        >>> from discretize.base import BaseMesh
+        >>> mesh = BaseMesh((10, 10))
+        >>> mesh.n_cells
+        100
         """
         return int(np.prod(self.shape_cells))
 
     def __len__(self):
-        """The number of cells on the mesh."""
+        """The number of cells on the mesh.
+
+        See Also
+        --------
+        n_cells
+
+        """
         return self.n_cells
 
     @property
@@ -244,12 +354,10 @@ class BaseMesh:
 
         Examples
         --------
-        >>> import discretize
-        >>> import numpy as np
-        >>> import matplotlib.pyplot as plt
-        >>> mesh = discretize.TensorMesh([np.ones(n) for n in [2,3]])
-        >>> mesh.plot_grid(nodes=True, show_it=True)
-        >>> print(mesh.n_nodes)
+        >>> from discretize.base import BaseMesh
+        >>> mesh = BaseMesh((10, 10))
+        >>> mesh.n_nodes
+        121
         """
         return int(np.prod([x + 1 for x in self.shape_cells]))
 
@@ -442,12 +550,12 @@ class BaseMesh:
 
     @property
     def face_normals(self):
-        """Face Normals
+        """Vectors normal to the faces of the mesh
 
         Returns
         -------
-        numpy.ndarray
-            normals, (n_faces, dim)
+        numpy.ndarray of float
+            array of shape (mesh.n_faces, mesh.dim)
         """
         if self.dim == 2:
             nX = np.c_[np.ones(self.n_faces_x), np.zeros(self.n_faces_x)]
@@ -473,12 +581,12 @@ class BaseMesh:
 
     @property
     def edge_tangents(self):
-        """Edge Tangents
+        """Vectors tangent to the edges of the mesh
 
         Returns
         -------
-        numpy.ndarray
-            normals, (n_edges, dim)
+        numpy.ndarray of float
+            array of shape (mesh.n_edges, mesh.dim)
         """
         if self.dim == 2:
             tX = np.c_[np.ones(self.n_edges_x), np.zeros(self.n_edges_x)]
@@ -515,7 +623,7 @@ class BaseMesh:
 
         Returns
         -------
-        numpy.ndarray
+        numpy.ndarray of float
             projected face vector, (n_faces, )
 
         """
@@ -542,7 +650,7 @@ class BaseMesh:
 
         Returns
         -------
-        numpy.ndarray
+        numpy.ndarray of float
             projected edge vector, (n_edges, )
 
         """
@@ -557,10 +665,13 @@ class BaseMesh:
         return np.sum(edge_vector * self.edge_tangents, 1)
 
     def save(self, file_name="mesh.json", verbose=False, **kwargs):
-        """
-        Save the mesh to json
-        :param str file: file_name for saving the casing properties
-        :param str directory: working directory for saving the file
+        """Save the mesh to json
+
+        Parameters
+        ----------
+        file_name : str, optional
+            file_name for saving the mesh properties
+        verbose : bool, optional
         """
 
         if 'filename' in kwargs:
@@ -580,8 +691,12 @@ class BaseMesh:
         return f
 
     def copy(self):
-        """
-        Make a copy of the current mesh
+        """ Make a copy of the current mesh
+
+        Returns
+        -------
+        type(mesh)
+            A copy of this mesh.
         """
         cls = type(self)
         items = self.to_dict()
@@ -591,27 +706,23 @@ class BaseMesh:
 
     @property
     def reference_is_rotated(self):
-        """True if the axes are rotated from the traditional <X,Y,Z> system
-        with vectors of :math:`(1,0,0)`, :math:`(0,1,0)`, and :math:`(0,0,1)`
+        """Describes if this mesh is not aligned with traditional coordinate frame
+
+        Returns
+        -------
+        bool
+            True if the axes are rotated from the traditional <X,Y,Z> system
+            with vectors of :math:`(1,0,0)`, :math:`(0,1,0)`, and :math:`(0,0,1)`
         """
         return not np.allclose(self.orientation, np.identity(self.dim))
 
     @property
     def rotation_matrix(self):
-        """Builds a rotation matrix to transform coordinates from their coordinate
-        system into a conventional cartesian system. This is built off of the
-        three `axis_u`, `axis_v`, and `axis_w` properties; these mapping
-        coordinates use the letters U, V, and W (the three letters preceding X,
-        Y, and Z in the alphabet) to define the projection of the X, Y, and Z
-        durections. These UVW vectors describe the placement and transformation
-        of the mesh's coordinate sytem assuming at most 3 directions.
+        """Aliase for self.orientation
 
-        Why would you want to use these UVW mapping vectors the this
-        `rotation_matrix` property? They allow us to define the relationship
-        between local and global coordinate systems and provide a tool for
-        switching between the two while still maintaing the connectivity of the
-        mesh's cells. For a visual example of this, please see the figure in the
-        docs for the :class:`~discretize.mixins.vtk_mod.InterfaceVTK`.
+        See Also
+        --------
+        orientation
         """
         return self.orientation  # np.array([self.axis_u, self.axis_v, self.axis_w])
 
@@ -639,7 +750,14 @@ class BaseMesh:
             return location_type
 
     def validate(self):
-        """Every object will be valid upon initialization"""
+        """Return the validation state of the mesh
+
+        This mesh is valid immediately upon initialization
+
+        Returns
+        -------
+        bool : True
+        """
         return True
 
 

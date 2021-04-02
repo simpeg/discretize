@@ -62,7 +62,7 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts, Interfa
         if 'nodes' in kwargs:
             node_list = kwargs.pop('nodes')
 
-        node_list = list(np.asarray(item, dtype=np.float64) for item in node_list)
+        node_list = tuple(np.asarray(item, dtype=np.float64) for item in node_list)
         # check shapes of each node array match
         dim = len(node_list)
         if dim not in [2, 3]:

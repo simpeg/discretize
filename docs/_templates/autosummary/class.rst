@@ -1,32 +1,40 @@
-{{ fullname | escape | underline }}
+{{ fullname }}
+{{ underline }}
 
 .. currentmodule:: {{ module }}
 
 .. autoclass:: {{ objname }}
-    :show-inheritance:
+
+  {% block methods %}
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      {% for item in all_methods %}
+         {%- if not item.startswith('_') or item in ['__call__', '__mul__', '__getitem__', '__len__'] %}
+         {{ name }}.{{ item }}
+         {%- endif -%}
+      {%- endfor %}
+      {% for item in inherited_members %}
+         {%- if item in ['__call__', '__mul__', '__getitem__', '__len__'] %}
+         {{ name }}.{{ item }}
+         {%- endif -%}
+      {%- endfor %}
+  {% endblock %}
+
+  {% block attributes %}
+  {% if attributes %}
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      {% for item in all_attributes %}
+         {%- if not item.startswith('_') %}
+         {{ name }}.{{ item }}
+         {%- endif -%}
+      {%- endfor %}
+  {% endif %}
+  {% endblock %}
 
 .. include:: backreferences/{{ fullname }}.examples
-
-.. raw:: html
-
-     <div style='clear:both'></div>
-
-Attributes
-^^^^^^^^^^
-
-{% for item in attributes %}
-.. autoattribute:: {{ objname }}.{{ item }}
-{% endfor %}
-
-
-Methods
-^^^^^^^
-
-{% for item in methods %}
-{% if item != '__init__' %}
-.. automethod:: {{ objname }}.{{ item }}
-{% endif %}
-{% endfor %}
 
 .. raw:: html
 
