@@ -84,7 +84,9 @@ cdef extern from "tree.h":
         void set_dimension(int_t)
         void set_levels(int_t, int_t, int_t)
         void set_xs(double*, double*, double*)
-        void build_tree_from_function(PyWrapper *)
+        void refine_function(PyWrapper *)
+        void refine_ball(double*, double, int_t)
+        void refine_box(double*, double*, int_t)
         void number()
         void initialize_roots()
         void insert_cell(double *new_center, int_t p_level);
