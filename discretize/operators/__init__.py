@@ -1,6 +1,6 @@
 """
 ================================================
-Discrete operators (:mod:`discretize.operators`)
+Discrete Operators (:mod:`discretize.operators`)
 ================================================
 .. currentmodule:: discretize.operators
 

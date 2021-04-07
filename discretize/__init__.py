@@ -17,8 +17,8 @@ Mesh Classes
   CurvilinearMesh
   TreeMesh
 
-Cells
-=====
+Tree Mesh Cells
+===============
 There is also a class specficialy for a cell on the TreeMesh. These cannot be created on
 there own, but are returned when directly indexing a mesh object.
 

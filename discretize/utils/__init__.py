@@ -1,7 +1,7 @@
 """
-===========================================
-Utility functions (:mod:`discretize.utils`)
-===========================================
+========================================================
+Utility Classes and Functions (:mod:`discretize.utils`)
+========================================================
 .. currentmodule:: discretize.utils
 
 The ``utils`` package contains utilities for helping with common operations involving
@@ -19,7 +19,7 @@ Utility Classes
 Utility Functions
 =================
 
-Code utilities
+Code Utilities
 --------------
 .. autosummary::
   :toctree: generated/
@@ -28,7 +28,33 @@ Code utilities
   as_array_n_by_dim
   requires
 
-Matrix utilities
+Coordinate Transform Utilities
+------------------------------
+.. autosummary::
+  :toctree: generated/
+
+  rotate_points_from_normals
+  rotation_matrix_from_normals
+  cylindrical_to_cartesian
+  cartesian_to_cylindrical
+
+Interpolation Utilities
+-----------------------
+.. autosummary::
+  :toctree: generated/
+
+  interpolation_matrix
+  volume_average
+
+IO utilities
+------------
+.. autosummary::
+  :toctree: generated/
+
+  load_mesh
+  download
+
+Matrix Utilities
 ----------------
 .. autosummary::
   :toctree: generated/
@@ -65,34 +91,8 @@ Mesh Utilities
   active_from_xyz
   mesh_builder_xyz
 
-Interpolation Utilities
------------------------
-.. autosummary::
-  :toctree: generated/
-
-  interpolation_matrix
-  volume_average
-
-Coordinate Transform Utilities
-------------------------------
-.. autosummary::
-  :toctree: generated/
-
-  rotate_points_from_normals
-  rotation_matrix_from_normals
-  cylindrical_to_cartesian
-  cartesian_to_cylindrical
-
-IO utilities
-------------
-.. autosummary::
-  :toctree: generated/
-
-  load_mesh
-  download
-
-``CurvilinearMesh`` Utilities
------------------------------
+Utilities for Curvilinear Meshes
+--------------------------------
 .. autosummary::
   :toctree: generated/
 

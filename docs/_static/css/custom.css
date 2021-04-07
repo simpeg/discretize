@@ -12,10 +12,13 @@ body{
 }
 
 h1{
-    font-family: "Raleway", Helvetica, Arial, sans-serif;
+    font-family: "Raleway", Helvetica, Arial, sans-serif; font-weight: bold;
 }
 h2{
-    font-family: "Raleway", Helvetica, Arial, sans-serif;
+    font-family: "Raleway", Helvetica, Arial, sans-serif; font-weight: bold;
+}
+h3{
+    font-family: "Raleway", Helvetica, Arial, sans-serif; font-weight: bold;
 }
 .column > h3{
     font-family: "Raleway", Helvetica, Arial, sans-serif;

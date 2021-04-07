@@ -1,6 +1,6 @@
 """
 ===========================================
-Testing utilities (:mod:`discretize.tests`)
+Testing Utilities (:mod:`discretize.tests`)
 ===========================================
 .. currentmodule:: discretize.tests
 
