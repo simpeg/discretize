@@ -1723,7 +1723,7 @@ class DiffOperators(object):
     @property
     def _average_node_to_face_x(self):
         if self.dim == 1:
-            aveN2Fx = av(self.shape_cells[0])
+            aveN2Fx = speye(self.shape_nodes[0])
         elif self.dim == 2:
             aveN2Fx = sp.kron(av(self.shape_cells[1]), speye(self.shape_nodes[0]))
         elif self.dim == 3:

@@ -43,8 +43,8 @@ class Test3DBoundaryIntegral(discretize.tests.OrderTest):
         "sphereCurv"
         ]
     meshDimension = 3
-    expectedOrders = [2, 1, 2, 2, 2, 1]
-    meshSizes = [4, 8, 16]
+    expectedOrders = [2, 1, 2, 2, 2, 0]
+    meshSizes = [4, 8, 16, 32]
 
     def getError(self):
         mesh = self.M
@@ -95,7 +95,6 @@ class Test3DBoundaryIntegral(discretize.tests.OrderTest):
                 true_val = -79/6
             else:
                 true_val = -64*np.pi/5
-        print(discrete_val, true_val)
 
         return np.abs(discrete_val - true_val)
 

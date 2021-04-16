@@ -300,11 +300,11 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
             Array of vectors of shape (mesh.n_boundary_faces, dim)
         """
         is_bxm = np.zeros(self.shape_faces_x, order='F', dtype=bool)
-        is_bxm[0, :, :] = True
+        is_bxm[0, :] = True
         is_bxm = is_bxm.reshape(-1, order='F')
 
         is_bym = np.zeros(self.shape_faces_y, order='F', dtype=bool)
-        is_bym[:, 0, :] = True
+        is_bym[:, 0] = True
         is_bym = is_bym.reshape(-1, order='F')
 
         is_b = np.r_[
