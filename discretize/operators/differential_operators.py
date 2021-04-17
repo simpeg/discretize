@@ -445,7 +445,7 @@ class DiffOperators(object):
         return self._nodal_laplacian
 
     def edge_divergence_weak_form_robin(self, alpha=0.0, beta=1.0, gamma=0.0):
-        """Robin boundary condition for the weak formulation of the edge divergence
+        r"""Robin boundary condition for the weak formulation of the edge divergence
 
         This function returns the necessary parts to form the full weak form of the
         edge divergence using the nodal gradient with appropriate boundary conditions.
@@ -478,29 +478,28 @@ class DiffOperators(object):
         The weak form is obtained by multiplying the divergence by a (piecewise-constant)
         test function, and integrating over the cell, i.e.
 
-        .. math:: \int_V y \cdot \nabla \cdot \vec{u} \partial V
+        .. math:: \int_V y \nabla \cdot \vec{u} \partial V
             :label: weak_form
 
         This equation can be transformed to reduce the differentiability requirement on
         :math:`\vec{u}` to be,
 
-        .. math:: -\int_V \vec{u} \cdot (\nabla y) \partial V + \int_{dV} y * \vec{u} \cdot \hat{n} \partial S.
+        .. math:: -\int_V \vec{u} \cdot (\nabla y) \partial V + \int_{dV} y \vec{u} \cdot \hat{n} \partial S.
             :label: transformed
 
         Furthermore, when applying these types of transformations, the unknown vector
         :math:`\vec{u}` is usually related to some scalar potential as:
 
-        ..math:: \vec{u} = \nabla \phi
+        .. math:: \vec{u} = \nabla \phi
             :label: gradient of potential
 
-        Thus the robin conditions returned by these matrices apply to the qunatity of
+        Thus the robin conditions returned by these matrices apply to the quantity of
         :math:`\phi`.
 
-        ..math::
+        .. math::
             \alpha \phi + \beta \nabla \phi \cdot \hat{n} = \gamma
 
             \alpha \phi + \beta \vec{u} \cdot \hat{n} = \gamma
-            :label: robin_condition
 
         The returned operators cannot be used to impose a Dirichlet condition on
         :math:`\phi`.
@@ -691,7 +690,7 @@ class DiffOperators(object):
         return self._cell_gradient
 
     def cell_gradient_weak_form_robin(self, alpha=1.0, beta=0.0, gamma=0.0):
-        """Robin boundary condition for the weak formulation of the cell gradient
+        r"""Robin boundary condition for the weak formulation of the cell gradient
 
         This function returns the necessary parts for the weak form of the cell gradient
         operator to represent the Robin boundary conditions.
@@ -700,7 +699,7 @@ class DiffOperators(object):
         piecewise linear approximation to the values at the ghost cell centers.
 
         The parameters can either be defined as a constant applied to the entire boundary,
-        or as arrays that represent those values on the :meth: discretize.base.BaseTensorMesh.boundary_faces .
+        or as arrays that represent those values on the :meth:`discretize.base.BaseTensorMesh.boundary_faces`.
 
         The returned arrays represent the proper boundary conditions on a solution ``u``
         such that the inner product of the gradient of ``u`` with a test function y would
@@ -728,6 +727,7 @@ class DiffOperators(object):
         Examples
         --------
         We first create a very simple 2D tensor mesh on the [0, 1] boundary:
+
         >>> import matplotlib.pyplot as plt
         >>> import scipy.sparse as sp
         >>> import discretize
@@ -735,6 +735,7 @@ class DiffOperators(object):
 
         Define the `alpha`, `beta`, and `gamma` parameters for a zero - Dirichlet
         condition on the boundary, this corresponds to setting:
+
         >>> alpha = 1.0
         >>> beta = 0.0
         >>> gamma = 0.0
@@ -742,6 +743,7 @@ class DiffOperators(object):
 
         We can then represent the operation of taking the weak form of the gradient of a
         function defined on cell centers with appropriate robin boundary conditions as:
+
         >>> V = sp.diags(mesh.cell_volumes)
         >>> D = mesh.face_divergence
         >>> phi = np.sin(np.pi * mesh.cell_centers[:, 0]) * np.sin(np.pi * mesh.cell_centers[:, 1])
@@ -762,22 +764,23 @@ class DiffOperators(object):
             :label: transformed
 
         The first term in equation :eq:transformed is constructed using the matrix
-        operators defined on this mesh as ``D`` = :meth: discretize.operators.DiffOperators.face_divergence and
-        ``V``, a diagonal matrix of :meth: discretize.base.BaseMesh.cell_volumes , as
+        operators defined on this mesh as ``D`` = :meth:`discretize.operators.DiffOperators.face_divergence` and
+        ``V``, a diagonal matrix of :meth:`discretize.base.BaseMesh.cell_volumes`, as
 
-        ..math:: -(D*y)^T*V*u.
+        .. math:: -(D*y)^T*V*u.
 
         This function returns the necessary matrices to complete the transformation of
         equation :eq:transformed. The second part of equation :eq:transformed becomes,
 
-        ..math:: \int_V \nabla \cdot (\phi u) \partial V = \int_{\partial\Omega} \phi\vec{u}\cdot\hat{n} \partial a
+        .. math:: \int_V \nabla \cdot (\phi u) \partial V = \int_{\partial\Omega} \phi\vec{u}\cdot\hat{n} \partial a
             :label: boundary_conditions
 
         which is then approximated with the matrices returned here such that the full
         form of the weak formulation in a discrete form would be.
 
-        ..math:: y^T(-D^T V + B)u + y^Tb
+        .. math:: y^T(-D^T V + B)u + y^Tb
         """
+
         # get length between boundary cell_centers and boundary_faces
         Pf = self.project_face_to_boundary_face
         aveC2BF = Pf @ self.average_cell_to_face
@@ -976,7 +979,7 @@ class DiffOperators(object):
 
     @property
     def boundary_face_scalar_integral(self):
-        """Represents the operation of integrating a scalar function on the boundary
+        r"""Represents the operation of integrating a scalar function on the boundary
 
         This matrix represents the boundary surface integral of a scalar function
         multiplied with a finite volume test function on the mesh.
@@ -990,11 +993,11 @@ class DiffOperators(object):
         -----
         The integral we are representing on the boundary of the mesh is
 
-        ..math:: \int_{\Omega} u\vec{w} \cdot \hat{n} \partial \Omega
+        .. math:: \int_{\Omega} u\vec{w} \cdot \hat{n} \partial \Omega
 
         In discrete form this is:
 
-        ..math:: w^T * P * u_b
+        .. math:: w^T * P * u_b
 
         where `w` is defined on all faces, and `u_b` is defined on boundary faces.
         """
@@ -1011,7 +1014,7 @@ class DiffOperators(object):
 
     @property
     def boundary_edge_vector_integral(self):
-        """Represents the operation of integrating a vector function on the boundary
+        r"""Represents the operation of integrating a vector function on the boundary
 
         This matrix represents the boundary surface integral of a vector function
         multiplied with a finite volume test function on the mesh.
@@ -1032,11 +1035,11 @@ class DiffOperators(object):
         -----
         The integral we are representing on the boundary of the mesh is
 
-        ..math:: \int_{\Omega} \vec{w} \cdot (\vec{u} \times \hat{n}) \partial \Omega
+        .. math:: \int_{\Omega} \vec{w} \cdot (\vec{u} \times \hat{n}) \partial \Omega
 
         In discrete form this is:
 
-        ..math:: w^T * P * u_b
+        .. math:: w^T * P * u_b
 
         where `w` is defined on all edges, and `u_b` is all three components defined on
         boundary edges.
@@ -1062,7 +1065,7 @@ class DiffOperators(object):
 
     @property
     def boundary_node_vector_integral(self):
-        """Represents the operation of integrating a vector function dotted with the boundary normal
+        r"""Represents the operation of integrating a vector function dotted with the boundary normal
 
         This matrix represents the boundary surface integral of a vector function
         dotted with the boundary normal and multiplied with a scalar finite volume
@@ -1077,11 +1080,11 @@ class DiffOperators(object):
         -----
         The integral we are representing on the boundary of the mesh is
 
-        ..math:: \int_{\Omega} (w \vec{u}) \cdot \hat{n} \partial \Omega
+        .. math:: \int_{\Omega} (w \vec{u}) \cdot \hat{n} \partial \Omega
 
         In discrete form this is:
 
-        ..math:: w^T * P * u_b
+        .. math:: w^T * P * u_b
 
         where `w` is defined on all nodes, and `u_b` is all three components defined on
         boundary nodes.
