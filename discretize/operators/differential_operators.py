@@ -444,6 +444,123 @@ class DiffOperators(object):
                 )
         return self._nodal_laplacian
 
+    def edge_divergence_weak_form_robin(self, alpha=0.0, beta=1.0, gamma=0.0):
+        """Robin boundary condition for the weak formulation of the edge divergence
+
+        This function returns the necessary parts to form the full weak form of the
+        edge divergence using the nodal gradient with appropriate boundary conditions.
+
+        The `alpha`, `beta`, and `gamma` parameters can be scalars, or arrays. If they
+        are arrays, they can either be the same length as the number of boundary faces,
+        or boundary nodes. If multiple parameters are arrays, they must all be the same
+        length.
+
+        `beta` can not be 0.
+
+        It is assumed here that quantity that is approximated on the boundary is the
+        gradient of another quantity. See the Notes section for explicit details.
+
+        Parameters
+        ----------
+        alpha, beta : scalar or array_like
+            Parameters for the Robin boundary condition. array_like must be defined on
+            either boundary faces or boundary nodes.
+        gamma: scalar or array_like
+            right hand side boundary conditions. If this parameter is array like, it can
+            be fed either a (n_boundary_XXX,) shape array or an (n_boundary_XXX, n_rhs)
+            shape array if multiple systems have the same alpha and beta parameters.
+
+        Notes
+        -----
+        For these returned operators, it is assumed that the quantity on the boundary is
+        related to the gradient of some other quantity.
+
+        The weak form is obtained by multiplying the divergence by a (piecewise-constant)
+        test function, and integrating over the cell, i.e.
+
+        .. math:: \int_V y \cdot \nabla \cdot \vec{u} \partial V
+            :label: weak_form
+
+        This equation can be transformed to reduce the differentiability requirement on
+        :math:`\vec{u}` to be,
+
+        .. math:: -\int_V \vec{u} \cdot (\nabla y) \partial V + \int_{dV} y * \vec{u} \cdot \hat{n} \partial S.
+            :label: transformed
+
+        Furthermore, when applying these types of transformations, the unknown vector
+        :math:`\vec{u}` is usually related to some scalar potential as:
+
+        ..math:: \vec{u} = \nabla \phi
+            :label: gradient of potential
+
+        Thus the robin conditions returned by these matrices apply to the qunatity of
+        :math:`\phi`.
+
+        ..math::
+            \alpha \phi + \beta \nabla \phi \cdot \hat{n} = \gamma
+
+            \alpha \phi + \beta \vec{u} \cdot \hat{n} = \gamma
+            :label: robin_condition
+
+        The returned operators cannot be used to impose a Dirichlet condition on
+        :math:`\phi`.
+
+        """
+        alpha = np.atleast_1d(alpha)
+        beta = np.atleast_1d(beta)
+        gamma = np.atleast_1d(gamma)
+
+        if np.any(beta == 0.0):
+            raise ValueError("beta cannot have a zero value")
+
+        Pbn = self.project_node_to_boundary_node
+        Pbf = self.project_face_to_boundary_face
+
+        n_boundary_faces = Pbf.shape[0]
+        n_boundary_nodes = Pbn.shape[0]
+
+        if len(alpha) == 1:
+            if len(beta) != 1:
+                alpha = np.full_like(beta, alpha[0])
+            elif len(gamma) != 1:
+                alpha = np.full_like(gamma, alpha[0])
+            else:
+                alpha = np.full(n_boundary_faces, alpha[0])
+        if len(beta) == 1:
+            if len(alpha) != 1:
+                beta = np.full_like(alpha, beta[0])
+            elif len(gamma) != 1:
+                beta = np.full_like(gamma, beta[0])
+            else:
+                beta = np.full(n_boundary_faces, beta[0])
+        if len(gamma) == 1:
+            if len(alpha) != 1:
+                gamma = np.full_like(alpha, gamma[0])
+            elif len(beta) != 1:
+                gamma = np.full_like(beta, gamma[0])
+            else:
+                gamma = np.full(n_boundary_faces, gamma[0])
+
+        if len(alpha) != len(beta) or len(beta) != len(gamma):
+            raise ValueError("alpha, beta, and gamma must have the same length")
+
+        if len(alpha) not in [n_boundary_faces, n_boundary_nodes]:
+            raise ValueError("The arrays must be of length n_boundary_faces or n_boundary_nodes")
+
+        AveN2F = self.average_node_to_face
+        boundary_areas = Pbf @ self.face_areas
+        AveBN2Bf = Pbf @ AveN2F @ Pbn.T
+
+        # at the boundary, we have that u dot n = (gamma - alpha * phi)/beta
+
+        if len(alpha == n_boundary_faces):
+            b = Pbn.T @ (AveBN2Bf.T @ (gamma/beta * boundary_areas))
+            B = sp.diags(Pbn.T @ (AveBN2Bf.T @ (-alpha/beta * boundary_areas)))
+        else:
+            b = Pbn.T @ (gamma/beta * (AveBN2Bf.T @ boundary_areas))
+            B = sp.diags(Pbn.T @ (-alpha/beta * (AveBN2Bf.T @ boundary_areas)))
+        return B, b
+
     ###########################################################################
     #                                                                         #
     #                                Cell Grad                                #
@@ -638,10 +755,10 @@ class DiffOperators(object):
         .. math:: \int_V \vec{y} \cdot \nabla u \partial V
             :label: weak_form
 
-        This equation can be transformed to reduce the differentiability requirement on \phi
+        This equation can be transformed to reduce the differentiability requirement on `u`
         to be,
 
-        .. math:: -\int_V u (\nabla \codt \vec{y}) \partial V + \int_V \nabla \cdot (u \vec{y}) \partial V.
+        .. math:: -\int_V u (\nabla \cdot \vec{y}) \partial V + \int_{dV} u \vec{y} \partial V.
             :label: transformed
 
         The first term in equation :eq:transformed is constructed using the matrix

@@ -445,20 +445,11 @@ class TestN1D_boundaries(discretize.tests.OrderTest):
 
         gamma = alpha * phi_bc + beta * j_bc * mesh.boundary_face_outward_normals
 
-        Pbn = mesh.project_node_to_boundary_node
-        Pbf = mesh.project_face_to_boundary_face
-        AveN2F = mesh.average_node_to_face
-
-        boundary_areas = Pbf @ mesh.face_areas  # 1.0 for 1D
-        AveBN2Bf = Pbf @ AveN2F @ Pbn.T
-
         Me = mesh.get_edge_inner_product()
         Mn = sp.diags(mesh.average_node_to_cell.T @ mesh.cell_volumes)
         G = mesh.nodal_gradient
 
-        # at the boundary, we have that j_dot_n = (gamma - alpha * phi)/beta
-        b_bc = Pbn.T @ (AveBN2Bf.T @ (gamma/beta * boundary_areas))
-        B_bc = sp.diags(Pbn.T @ (AveBN2Bf.T @ (-alpha/beta * boundary_areas)))
+        B_bc, b_bc = mesh.edge_divergence_weak_form_robin(alpha, beta, gamma)
 
         A = -G.T @ Me @ G + B_bc
         rhs = Mn @ q_ana - b_bc
@@ -550,15 +541,7 @@ class TestN2D_boundaries(discretize.tests.OrderTest):
             beta = 1.0
             gamma = alpha * phi_bc + beta * j_bc_dot_n
 
-            Pbn = mesh.project_node_to_boundary_node
-            Pbf = mesh.project_face_to_boundary_face
-            AveN2F = mesh.average_node_to_face
-            boundary_areas = Pbf @ mesh.face_areas
-            AveBN2Bf = Pbf @ AveN2F @ Pbn.T
-
-            # at the boundary, we have that j_dot_n = (gamma - alpha * phi)/beta
-            b_bc = Pbn.T @ (AveBN2Bf.T @ (gamma/beta * boundary_areas))
-            B_bc = sp.diags(Pbn.T @ (AveBN2Bf.T @ (-alpha/beta * boundary_areas)))
+            B_bc, b_bc = mesh.edge_divergence_weak_form_robin(alpha, beta, gamma)
 
         Me = mesh.get_edge_inner_product()
         Mn = sp.diags(mesh.average_node_to_cell.T @ mesh.cell_volumes)
@@ -664,15 +647,7 @@ class TestN3D_boundaries(discretize.tests.OrderTest):
             beta = 1.0
             gamma = alpha * phi_bc + beta * j_bc_dot_n
 
-            Pbn = mesh.project_node_to_boundary_node
-            Pbf = mesh.project_face_to_boundary_face
-            AveN2F = mesh.average_node_to_face
-            boundary_areas = Pbf @ mesh.face_areas
-            AveBN2Bf = Pbf @ AveN2F @ Pbn.T
-
-            # at the boundary, we have that j_dot_n = (gamma - alpha * phi)/beta
-            b_bc = Pbn.T @ (AveBN2Bf.T @ (gamma/beta * boundary_areas))
-            B_bc = sp.diags(Pbn.T @ (AveBN2Bf.T @ (-alpha/beta * boundary_areas)))
+            B_bc, b_bc = mesh.edge_divergence_weak_form_robin(alpha, beta, gamma)
 
         Me = mesh.get_edge_inner_product()
         Mn = sp.diags(mesh.average_node_to_cell.T @ mesh.cell_volumes)
