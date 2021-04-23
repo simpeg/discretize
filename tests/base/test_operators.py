@@ -400,6 +400,102 @@ class TestNodalGrad2D(discretize.tests.OrderTest):
         self.orderTest()
 
 
+class TestAveraging1D(discretize.tests.OrderTest):
+    name = "Averaging 1D"
+    meshTypes = ["uniformTensorMesh"]
+    meshDimension = 1
+    meshSizes = [16, 32, 64]
+
+    def getError(self):
+        num = self.getAve(self.M) * self.getHere(self.M)
+        err = np.linalg.norm((self.getThere(self.M) - num), np.inf)
+        return err
+
+    def test_orderN2CC(self):
+        self.name = "Averaging 1D: N2CC"
+        fun = lambda x: np.cos(x)
+        self.getHere = lambda M: fun(M.gridN)
+        self.getThere = lambda M: fun(M.gridCC)
+        self.getAve = lambda M: M.aveN2CC
+        self.orderTest()
+
+    def test_exactN2F(self):
+        self.name = "Averaging 1D: N2F"
+        fun = lambda x: np.cos(x)
+        M, _ = discretize.tests.setup_mesh('uniformTensorMesh', 32, 1)
+        v1 = M.aveN2F * fun(M.gridN)
+        v2 = fun(M.faces)
+        np.testing.assert_allclose(v1, v2)
+
+    def test_orderN2E(self):
+        self.name = "Averaging 1D: N2E"
+        fun = lambda x: np.cos(x)
+        self.getHere = lambda M: fun(M.gridN)
+        self.getThere = lambda M: fun(M.edges)
+        self.getAve = lambda M: M.aveN2E
+        self.orderTest()
+
+    def test_orderF2CC(self):
+        self.name = "Averaging 1D: F2CC"
+        fun = lambda x: np.cos(x)
+        self.getHere = lambda M: fun(M.faces)
+        self.getThere = lambda M: fun(M.gridCC)
+        self.getAve = lambda M: M.aveF2CC
+        self.orderTest()
+
+    def test_orderF2CCV(self):
+        self.name = "Averaging 1D: F2CCV"
+        fun = lambda x: np.cos(x)
+        self.getHere = lambda M: fun(M.faces)
+        self.getThere = lambda M: fun(M.cell_centers)
+        self.getAve = lambda M: M.aveF2CCV
+        self.orderTest()
+
+    def test_orderCC2F(self):
+        self.name = "Averaging 1D: CC2F"
+        fun = lambda x: np.cos(x)
+        self.getHere = lambda M: fun(M.gridCC)
+        self.getThere = lambda M: fun(M.faces)
+        self.getAve = lambda M: M.aveCC2F
+        self.expectedOrders = 1
+        self.orderTest()
+        self.expectedOrders = 2
+
+    def test_exactE2CC(self):
+        self.name = "Averaging 1D: E2CC"
+        fun = lambda x: np.cos(x)
+        M, _ = discretize.tests.setup_mesh('uniformTensorMesh', 32, 1)
+        v1 = M.aveE2CC @ fun(M.edges)
+        v2 = fun(M.gridCC)
+        np.testing.assert_allclose(v1, v2)
+
+    def test_exactE2CCV(self):
+        self.name = "Averaging 1D: E2CCV"
+        fun = lambda x: np.cos(x)
+        M, _ = discretize.tests.setup_mesh('uniformTensorMesh', 32, 1)
+        v1 = M.aveE2CCV @ fun(M.edges)
+        v2 = fun(M.gridCC)
+        np.testing.assert_allclose(v1, v2)
+
+    def test_exactCC2E(self):
+        self.name = "Averaging 1D: cell_centers_to_edges"
+        fun = lambda x: np.cos(x)
+        M, _ = discretize.tests.setup_mesh('uniformTensorMesh', 32, 1)
+        v1 = M.average_cell_to_edge @ fun(M.edges)
+        v2 = fun(M.gridCC)
+        np.testing.assert_allclose(v1, v2)
+
+    def test_orderCC2FV(self):
+        self.name = "Averaging 2D: CC2FV"
+        fun = lambda x: np.cos(x)
+        self.getHere = lambda M: fun(M.gridCC)
+        self.getThere = lambda M: fun(M.faces)
+        self.getAve = lambda M: M.aveCCV2F
+        self.expectedOrders = 1
+        self.orderTest()
+        self.expectedOrders = 2
+
+
 class TestAverating2DSimple(unittest.TestCase):
     def setUp(self):
         hx = np.random.rand(10)
@@ -495,6 +591,16 @@ class TestAveraging2D(discretize.tests.OrderTest):
         self.getThere = lambda M: np.r_[call2(funX, M.gridCC), call2(funY, M.gridCC)]
         self.getAve = lambda M: M.aveE2CCV
         self.orderTest()
+
+    def test_orderCC2E(self):
+        self.name = "Averaging 2D: cell_centers_to_edges"
+        fun = lambda x, y: (np.cos(x) + np.sin(y))
+        self.getHere = lambda M: call2(fun, M.gridCC)
+        self.getThere = lambda M: call2(fun, M.edges)
+        self.getAve = lambda M: M.average_cell_to_edge
+        self.expectedOrders = ORDERS / 2.0
+        self.orderTest()
+        self.expectedOrders = ORDERS
 
     def test_orderCC2FV(self):
         self.name = "Averaging 2D: CC2FV"
@@ -622,6 +728,16 @@ class TestAveraging3D(discretize.tests.OrderTest):
             call3(fun, M.gridFx), call3(fun, M.gridFy), call3(fun, M.gridFz)
         ]
         self.getAve = lambda M: M.aveCC2F
+        self.expectedOrders = ORDERS / 2.0
+        self.orderTest()
+        self.expectedOrders = ORDERS
+
+    def test_orderCC2E(self):
+        self.name = "Averaging 3D: CC2E"
+        fun = lambda x, y, z: (np.cos(x) + np.sin(y) + np.exp(z))
+        self.getHere = lambda M: call3(fun, M.gridCC)
+        self.getThere = lambda M: call3(fun, M.edges)
+        self.getAve = lambda M: M.average_cell_to_edge
         self.expectedOrders = ORDERS / 2.0
         self.orderTest()
         self.expectedOrders = ORDERS
