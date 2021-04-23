@@ -14,7 +14,7 @@ def u(*args):
 def v(*args):
     if len(args) == 2:
         x, y = args
-        return np.c_[x**2, 3*y**3]
+        return np.c_[2*x**2, 3*y**3]
     x, y, z = args
     return np.c_[2*x**2, 3*y**3, -4*z**2]
 
@@ -22,18 +22,114 @@ def v(*args):
 def w(*args):
     if len(args) == 2:
         x, y = args
-        return np.c_[(y-2)**2, (x+2)**2]
+        return np.c_[(y - 2)**2, (x + 2)**2]
     x, y, z = args
     return np.c_[(y-2)**2 + z**2, (x+2)**2 - (z-4)**2, y**2-x**2]
 
 # mesh will be on [0, 1] square
 
+# 2D
+# square vals:
+# int_V grad_u dot  dV = 12/5
+# int_V u div_v dV = 241/60
+# int_v curl_w dot v dV = -173/30
+
+# circle vals:
+# int_V grad_u dot  dV = 3*np.pi/2
+# int_V u div_v dV = 13*np.pi/8
+# int_v curl_w dot v dV = -43*np.pi/8
+
+# 3D square vals:
+
 # int_V grad_u dot v dV = -4/15
 # int_V u div_v dV = 27/20
 # int_v curl_w dot v dV = 17/6
 
+
+class Test2DBoundaryIntegral(discretize.tests.OrderTest):
+    name = "2D Boundary Integrals"
+    meshTypes = [
+        "uniformTensorMesh",
+        "uniformTree",
+        "uniformCurv",
+        "rotateCurv",
+        "sphereCurv"
+        ]
+    meshDimension = 2
+    expectedOrders = [2, 2, 2, 2, 1]
+    meshSizes = [4, 8, 16, 32, 64, 128]
+
+    def getError(self):
+        mesh = self.M
+        if self.myTest == "cell_grad":
+            # Functions:
+            u_cc = u(*mesh.cell_centers.T)
+            faces = np.r_[mesh.faces_x, mesh.faces_y]
+            v_f = mesh.project_face_vector(v(*faces.T))
+            u_bf = u(*mesh.boundary_faces.T)
+
+            D = mesh.face_divergence
+            M_c = sp.diags(mesh.cell_volumes)
+            M_bf = mesh.boundary_face_scalar_integral
+
+            discrete_val = -(v_f.T @ D.T) @ M_c @ u_cc + v_f.T @ (M_bf @ u_bf)
+            if "sphere" not in self._meshType:
+                true_val = 12/5
+            else:
+                true_val = 3*np.pi/2
+        elif self.myTest == "edge_div":
+            u_n = u(*mesh.nodes.T)
+            edges = np.r_[mesh.edges_x, mesh.edges_y]
+            v_e = mesh.project_edge_vector(v(*edges.T))
+            v_bn = v(*mesh.boundary_nodes.T).reshape(-1, order='F')
+
+            M_e = mesh.get_edge_inner_product()
+            G = mesh.nodal_gradient
+            M_bn = mesh.boundary_node_vector_integral
+
+            discrete_val = -(u_n.T @ G.T) @ M_e @ v_e + u_n.T @ (M_bn @ v_bn)
+            if "sphere" not in self._meshType:
+                true_val = 241/60
+            else:
+                true_val = 13*np.pi/8
+        elif self.myTest == "face_curl":
+            edges = np.r_[mesh.edges_x, mesh.edges_y]
+            w_e = mesh.project_edge_vector(w(*edges.T))
+            u_c = u(*mesh.cell_centers.T)
+            u_be = u(*mesh.boundary_edges.T)
+
+            M_c = sp.diags(mesh.cell_volumes)
+            Curl = mesh.edge_curl
+            M_be = mesh.boundary_edge_vector_integral
+
+            discrete_val = (w_e.T @ Curl.T) @ M_c @ u_c - w_e.T @ (M_be @ u_be)
+            if 'Curv' in self._meshType:
+                self._expectedOrder = -1.0
+            if "sphere" not in self._meshType:
+                true_val = -173/30
+            else:
+                true_val = -43*np.pi/8
+
+        return np.abs(discrete_val - true_val)
+
+    def test_orderWeakCellGradIntegral(self):
+        self.name = "2D - weak cell gradient integral w/boundary"
+        self.myTest = "cell_grad"
+        self.orderTest()
+
+    def test_orderWeakEdgeDivIntegral(self):
+        self.name = "2D - weak edge divergence integral w/boundary"
+        self.myTest = "edge_div"
+        self.orderTest()
+
+    def test_orderWeakFaceCurlIntegral(self):
+        self.name = "2D - weak face curl integral w/boundary"
+        self.myTest = "face_curl"
+        self.orderTest()
+
+
 class Test3DBoundaryIntegral(discretize.tests.OrderTest):
-    ame = "3D"
+    name = "3D Boundary Integrals"
     meshTypes = [
         "uniformTensorMesh",
         "randomTensorMesh",

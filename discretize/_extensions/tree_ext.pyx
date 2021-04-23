@@ -1724,50 +1724,52 @@ cdef class _TreeMesh:
             return self._edge_curl
         cdef:
             int_t dim = self._dim
-            np.int64_t[:] I = np.empty(4*self.n_faces, dtype=np.int64)
-            np.int64_t[:] J = np.empty(4*self.n_faces, dtype=np.int64)
-            np.float64_t[:] V = np.empty(4*self.n_faces, dtype=np.float64)
+            int_t n_faces = self.n_faces if dim==3 else self.n_cells
+            np.int64_t[:] I = np.empty(4*n_faces, dtype=np.int64)
+            np.int64_t[:] J = np.empty(4*n_faces, dtype=np.int64)
+            np.float64_t[:] V = np.empty(4*n_faces, dtype=np.float64)
             Face *face
             int_t ii
             int_t face_offset_y = self.n_faces_x
-            int_t face_offset_z = self.n_faces_x + self.n_faces_y
+            int_t face_offset_z = self.n_faces_x + self.n_faces_y if dim==3 else 0
             int_t edge_offset_y = self.n_total_edges_x
             int_t edge_offset_z = self.n_total_edges_x + self.n_total_edges_y
             double area
 
-        for it in self.tree.faces_x:
-            face = it.second
-            if face.hanging:
-                continue
-            ii = face.index
-            I[4*ii : 4*ii + 4] = ii
-            J[4*ii    ] = face.edges[0].index + edge_offset_z
-            J[4*ii + 1] = face.edges[1].index + edge_offset_y
-            J[4*ii + 2] = face.edges[2].index + edge_offset_z
-            J[4*ii + 3] = face.edges[3].index + edge_offset_y
+        if dim == 3:
+            for it in self.tree.faces_x:
+                face = it.second
+                if face.hanging:
+                    continue
+                ii = face.index
+                I[4*ii : 4*ii + 4] = ii
+                J[4*ii    ] = face.edges[0].index + edge_offset_z
+                J[4*ii + 1] = face.edges[1].index + edge_offset_y
+                J[4*ii + 2] = face.edges[2].index + edge_offset_z
+                J[4*ii + 3] = face.edges[3].index + edge_offset_y
 
-            area = face.area
-            V[4*ii    ] = -face.edges[0].length/area
-            V[4*ii + 1] = -face.edges[1].length/area
-            V[4*ii + 2] =  face.edges[2].length/area
-            V[4*ii + 3] =  face.edges[3].length/area
+                area = face.area
+                V[4*ii    ] = -face.edges[0].length/area
+                V[4*ii + 1] = -face.edges[1].length/area
+                V[4*ii + 2] =  face.edges[2].length/area
+                V[4*ii + 3] =  face.edges[3].length/area
 
-        for it in self.tree.faces_y:
-            face = it.second
-            if face.hanging:
-                continue
-            ii = face.index + face_offset_y
-            I[4*ii : 4*ii + 4] = ii
-            J[4*ii    ] = face.edges[0].index + edge_offset_z
-            J[4*ii + 1] = face.edges[1].index
-            J[4*ii + 2] = face.edges[2].index + edge_offset_z
-            J[4*ii + 3] = face.edges[3].index
+            for it in self.tree.faces_y:
+                face = it.second
+                if face.hanging:
+                    continue
+                ii = face.index + face_offset_y
+                I[4*ii : 4*ii + 4] = ii
+                J[4*ii    ] = face.edges[0].index + edge_offset_z
+                J[4*ii + 1] = face.edges[1].index
+                J[4*ii + 2] = face.edges[2].index + edge_offset_z
+                J[4*ii + 3] = face.edges[3].index
 
-            area = face.area
-            V[4*ii    ] =  face.edges[0].length/area
-            V[4*ii + 1] =  face.edges[1].length/area
-            V[4*ii + 2] = -face.edges[2].length/area
-            V[4*ii + 3] = -face.edges[3].length/area
+                area = face.area
+                V[4*ii    ] =  face.edges[0].length/area
+                V[4*ii + 1] =  face.edges[1].length/area
+                V[4*ii + 2] = -face.edges[2].length/area
+                V[4*ii + 3] = -face.edges[3].length/area
 
         for it in self.tree.faces_z:
             face = it.second
@@ -1786,7 +1788,7 @@ cdef class _TreeMesh:
             V[4*ii + 2] =  face.edges[2].length/area
             V[4*ii + 3] =  face.edges[3].length/area
 
-        C = sp.csr_matrix((V, (I, J)),shape=(self.n_faces, self.n_total_edges))
+        C = sp.csr_matrix((V, (I, J)),shape=(n_faces, self.n_total_edges))
         R = self._deflate_edges()
         self._edge_curl = C*R
         return self._edge_curl
