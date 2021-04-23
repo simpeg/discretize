@@ -167,7 +167,7 @@ class RobinOperatorTest(unittest.TestCase):
 class mesh1DTests(unittest.TestCase):
 
     def setUp(self):
-        self.mesh = discretize.tests.setup_mesh('uniformTensorMesh', 32, 1)
+        self.mesh, _ = discretize.tests.setup_mesh('uniformTensorMesh', 32, 1)
 
     def testItems(self):
         mesh = self.mesh
