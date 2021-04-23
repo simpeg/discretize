@@ -528,17 +528,9 @@ class DiffOperators(object):
         if len(beta) == 1:
             if len(alpha) != 1:
                 beta = np.full(len(alpha), beta[0])
-            elif len(gamma) != 1:
-                beta = np.full(len(gamma), beta[0])
-            else:
-                beta = np.full(n_boundary_faces, beta[0])
         if len(gamma) == 1:
             if len(alpha) != 1:
                 gamma = np.full(len(alpha), gamma[0])
-            elif len(beta) != 1:
-                gamma = np.full(len(beta), gamma[0])
-            else:
-                gamma = np.full(n_boundary_faces, gamma[0])
 
         if len(alpha) != len(beta) or len(beta) != len(gamma):
             raise ValueError("alpha, beta, and gamma must have the same length")
@@ -1095,7 +1087,7 @@ class DiffOperators(object):
         boundary nodes.
         """
         if self.dim == 1:
-            return sp.csr_matrix(([-1, 1], ([0, self.n_nodes_x-1], [0, 1])), shape=(self.n_nodes_x, 2))
+            return sp.csr_matrix(([-1, 1], ([0, self.shape_nodes[0]-1], [0, 1])), shape=(self.shape_nodes[0], 2))
         Pn = self.project_node_to_boundary_node
         Pf = self.project_face_to_boundary_face
         n_boundary_nodes = Pn.shape[0]

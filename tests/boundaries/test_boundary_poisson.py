@@ -431,8 +431,8 @@ class TestN1D_boundaries(discretize.tests.OrderTest):
         j_ana = j_fun(mesh.edges_x)
         q_ana = q_fun(mesh.nodes)
 
-        phi_bc = phi(mesh.boundary_faces)
-        j_bc = j_fun(mesh.boundary_faces)
+        phi_bc = phi(mesh.boundary_nodes)
+        j_bc = j_fun(mesh.boundary_nodes)
 
         # construct matrix with robin operator
         beta = 1.0

@@ -162,3 +162,15 @@ class RobinOperatorTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             # inconsistent input lengths
             mesh.edge_divergence_weak_form_robin(alpha_f, beta_n, gamma_n)
+
+
+class mesh1DTests(unittest.TestCase):
+
+    def setUp(self):
+        self.mesh = discretize.tests.setup_mesh('uniformTensorMesh', 32, 1)
+
+    def testItems(self):
+        mesh = self.mesh
+        np.testing.assert_equal(mesh.boundary_faces, mesh.boundary_nodes)
+
+        self.assertIs(mesh.boundary_edges, None)

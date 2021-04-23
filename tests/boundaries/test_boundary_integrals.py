@@ -4,6 +4,9 @@ import discretize
 
 
 def u(*args):
+    if len(args) == 1:
+        x = args[0]
+        return x**3
     if len(args) == 2:
         x, y = args
         return x**3 + y**2
@@ -12,6 +15,9 @@ def u(*args):
 
 
 def v(*args):
+    if len(args) == 1:
+        x = args[0]
+        return 2*x**2
     if len(args) == 2:
         x, y = args
         return np.c_[2*x**2, 3*y**3]
@@ -28,9 +34,13 @@ def w(*args):
 
 # mesh will be on [0, 1] square
 
+# 1D
+# int_V grad_u dot v dV = 6/5
+# int_V u dot div v dV = 4/5
+
 # 2D
 # square vals:
-# int_V grad_u dot  dV = 12/5
+# int_V grad_u dot v dV = 12/5
 # int_V u div_v dV = 241/60
 # int_v curl_w dot v dV = -173/30
 
@@ -44,6 +54,50 @@ def w(*args):
 # int_V grad_u dot v dV = -4/15
 # int_V u div_v dV = 27/20
 # int_v curl_w dot v dV = 17/6
+
+
+class Test1DBoundaryIntegral(discretize.tests.OrderTest):
+    name = "1D Boundary Integrals"
+    meshTypes = ["uniformTensorMesh"]
+    meshDimension = 1
+    expectedOrders = 2
+    meshSizes = [4, 8, 16, 32, 64, 128]
+
+    def getError(self):
+        mesh = self.M
+        if self.myTest == "cell_grad":
+            u_cc = u(mesh.cell_centers)
+            v_f = v(mesh.nodes)
+            u_bf = u(mesh.boundary_faces)
+
+            D = mesh.face_divergence
+            M_c = sp.diags(mesh.cell_volumes)
+            M_bf = mesh.boundary_face_scalar_integral
+
+            discrete_val = -(v_f.T @ D.T) @ M_c @ u_cc + v_f.T @ (M_bf @ u_bf)
+            true_val = 6/5
+        if self.myTest == "edge_div":
+            u_n = u(mesh.nodes)
+            v_e = v(mesh.edges)
+            v_bn = v(mesh.boundary_nodes).reshape(-1, order='F')
+
+            M_e = mesh.get_edge_inner_product()
+            G = mesh.nodal_gradient
+            M_bn = mesh.boundary_node_vector_integral
+
+            discrete_val = -(u_n.T @ G.T) @ M_e @ v_e + u_n.T @ (M_bn @ v_bn)
+            true_val = 4/5
+        return np.abs(discrete_val - true_val)
+
+    def test_orderWeakCellGradIntegral(self):
+        self.name = "1D - weak cell gradient integral w/boundary"
+        self.myTest = "cell_grad"
+        self.orderTest()
+
+    def test_orderWeakEdgeDivIntegral(self):
+        self.name = "1D - weak edge divergence integral w/boundary"
+        self.myTest = "edge_div"
+        self.orderTest()
 
 
 class Test2DBoundaryIntegral(discretize.tests.OrderTest):
