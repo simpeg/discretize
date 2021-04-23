@@ -174,3 +174,4 @@ class mesh1DTests(unittest.TestCase):
         np.testing.assert_equal(mesh.boundary_faces, mesh.boundary_nodes)
 
         self.assertIs(mesh.boundary_edges, None)
+        self.assertIs(mesh.project_edge_to_boundary_edge, None)
