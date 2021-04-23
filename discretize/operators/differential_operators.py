@@ -520,23 +520,23 @@ class DiffOperators(object):
 
         if len(alpha) == 1:
             if len(beta) != 1:
-                alpha = np.full_like(beta, alpha[0])
+                alpha = np.full(len(beta), alpha[0])
             elif len(gamma) != 1:
-                alpha = np.full_like(gamma, alpha[0])
+                alpha = np.full(len(gamma), alpha[0])
             else:
                 alpha = np.full(n_boundary_faces, alpha[0])
         if len(beta) == 1:
             if len(alpha) != 1:
-                beta = np.full_like(alpha, beta[0])
+                beta = np.full(len(alpha), beta[0])
             elif len(gamma) != 1:
-                beta = np.full_like(gamma, beta[0])
+                beta = np.full(len(gamma), beta[0])
             else:
                 beta = np.full(n_boundary_faces, beta[0])
         if len(gamma) == 1:
             if len(alpha) != 1:
-                gamma = np.full_like(alpha, gamma[0])
+                gamma = np.full(len(alpha), gamma[0])
             elif len(beta) != 1:
-                gamma = np.full_like(beta, gamma[0])
+                gamma = np.full(len(beta), gamma[0])
             else:
                 gamma = np.full(n_boundary_faces, gamma[0])
 
@@ -551,12 +551,17 @@ class DiffOperators(object):
         AveBN2Bf = Pbf @ AveN2F @ Pbn.T
 
         # at the boundary, we have that u dot n = (gamma - alpha * phi)/beta
-
-        if len(alpha == n_boundary_faces):
-            b = Pbn.T @ (AveBN2Bf.T @ (gamma/beta * boundary_areas))
+        if len(alpha) == n_boundary_faces:
+            if gamma.ndim == 2:
+                b = Pbn.T @ (AveBN2Bf.T @ (gamma/beta[:, None] * boundary_areas[:, None]))
+            else:
+                b = Pbn.T @ (AveBN2Bf.T @ (gamma/beta * boundary_areas))
             B = sp.diags(Pbn.T @ (AveBN2Bf.T @ (-alpha/beta * boundary_areas)))
         else:
-            b = Pbn.T @ (gamma/beta * (AveBN2Bf.T @ boundary_areas))
+            if gamma.ndim == 2:
+                b = Pbn.T @ (gamma/beta[:, None] * (AveBN2Bf.T @ boundary_areas)[:, None])
+            else:
+                b = Pbn.T @ (gamma/beta * (AveBN2Bf.T @ boundary_areas))
             B = sp.diags(Pbn.T @ (-alpha/beta * (AveBN2Bf.T @ boundary_areas)))
         return B, b
 
@@ -690,7 +695,7 @@ class DiffOperators(object):
         return self._cell_gradient
 
     def cell_gradient_weak_form_robin(self, alpha=1.0, beta=0.0, gamma=0.0):
-        r"""Robin boundary condition for the weak formulation of the cell gradient
+        """Robin boundary condition for the weak formulation of the cell gradient
 
         This function returns the necessary parts for the weak form of the cell gradient
         operator to represent the Robin boundary conditions.
