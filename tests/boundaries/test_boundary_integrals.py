@@ -64,8 +64,7 @@ class Test2DBoundaryIntegral(discretize.tests.OrderTest):
         if self.myTest == "cell_grad":
             # Functions:
             u_cc = u(*mesh.cell_centers.T)
-            faces = np.r_[mesh.faces_x, mesh.faces_y]
-            v_f = mesh.project_face_vector(v(*faces.T))
+            v_f = mesh.project_face_vector(v(*mesh.faces.T))
             u_bf = u(*mesh.boundary_faces.T)
 
             D = mesh.face_divergence
@@ -79,8 +78,7 @@ class Test2DBoundaryIntegral(discretize.tests.OrderTest):
                 true_val = 3*np.pi/2
         elif self.myTest == "edge_div":
             u_n = u(*mesh.nodes.T)
-            edges = np.r_[mesh.edges_x, mesh.edges_y]
-            v_e = mesh.project_edge_vector(v(*edges.T))
+            v_e = mesh.project_edge_vector(v(*mesh.edges.T))
             v_bn = v(*mesh.boundary_nodes.T).reshape(-1, order='F')
 
             M_e = mesh.get_edge_inner_product()
@@ -93,8 +91,7 @@ class Test2DBoundaryIntegral(discretize.tests.OrderTest):
             else:
                 true_val = 13*np.pi/8
         elif self.myTest == "face_curl":
-            edges = np.r_[mesh.edges_x, mesh.edges_y]
-            w_e = mesh.project_edge_vector(w(*edges.T))
+            w_e = mesh.project_edge_vector(w(*mesh.edges.T))
             u_c = u(*mesh.cell_centers.T)
             u_be = u(*mesh.boundary_edges.T)
 
@@ -147,8 +144,7 @@ class Test3DBoundaryIntegral(discretize.tests.OrderTest):
         if self.myTest == "cell_grad":
             # Functions:
             u_cc = u(*mesh.cell_centers.T)
-            faces = np.r_[mesh.faces_x, mesh.faces_y, mesh.faces_z]
-            v_f = mesh.project_face_vector(v(*faces.T))
+            v_f = mesh.project_face_vector(v(*mesh.faces.T))
             u_bf = u(*mesh.boundary_faces.T)
 
             D = mesh.face_divergence
@@ -162,8 +158,7 @@ class Test3DBoundaryIntegral(discretize.tests.OrderTest):
                 true_val = 48*np.pi/35
         elif self.myTest == "edge_div":
             u_n = u(*mesh.nodes.T)
-            edges = np.r_[mesh.edges_x, mesh.edges_y, mesh.edges_z]
-            v_e = mesh.project_edge_vector(v(*edges.T))
+            v_e = mesh.project_edge_vector(v(*mesh.edges.T))
             v_bn = v(*mesh.boundary_nodes.T).reshape(-1, order='F')
 
             M_e = mesh.get_edge_inner_product()
@@ -176,10 +171,8 @@ class Test3DBoundaryIntegral(discretize.tests.OrderTest):
             else:
                 true_val = 8*np.pi/5
         elif self.myTest == "face_curl":
-            faces = np.r_[mesh.faces_x, mesh.faces_y, mesh.faces_z]
-            edges = np.r_[mesh.edges_x, mesh.edges_y, mesh.edges_z]
-            w_f = mesh.project_face_vector(w(*faces.T))
-            v_e = mesh.project_edge_vector(v(*edges.T))
+            w_f = mesh.project_face_vector(w(*mesh.faces.T))
+            v_e = mesh.project_edge_vector(v(*mesh.edges.T))
             w_be = w(*mesh.boundary_edges.T).reshape(-1, order='F')
 
             M_f = mesh.get_face_inner_product()

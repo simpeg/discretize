@@ -203,6 +203,14 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
         return self._faces_z
 
     @property
+    def faces(self):
+        "Face grid"
+        faces = np.r_[self.faces_x, self.faces_y]
+        if self.dim > 2:
+            faces = np.r_[faces, self.faces_z]
+        return faces
+
+    @property
     def edges_x(self):
         """
         Edge staggered grid in the x direction.
@@ -242,6 +250,14 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
             XYZ = [mkvc(0.5 * (n[:, :, :-1] + n[:, :, 1:])) for n in N]
             self._edges_z = np.c_[XYZ[0], XYZ[1], XYZ[2]]
         return self._edges_z
+
+    @property
+    def edges(self):
+        "Edge grid"
+        edges = np.r_[self.edges_x, self.edges_y]
+        if self.dim > 2:
+            edges = np.r_[edges, self.edges_z]
+        return edges
 
     @property
     def boundary_nodes(self):

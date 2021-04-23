@@ -1,5 +1,4 @@
 import numpy as np
-import scipy.sparse as sp
 import discretize
 from discretize import utils
 from pymatsolver import Pardiso
@@ -75,13 +74,11 @@ class TestE3D_Inhomogeneous(discretize.tests.OrderTest):
             return 3 * e_fun(x)
 
         mesh = self.M
-        faces = np.r_[mesh.faces_x, mesh.faces_y, mesh.faces_z]
-        edges = np.r_[mesh.edges_x, mesh.edges_y, mesh.edges_z]
         C = mesh.edge_curl
 
         if 'Face' in self.myTest:
-            e_ana = mesh.project_face_vector(e_fun(faces))
-            q_ana = mesh.project_face_vector(q_fun(faces))
+            e_ana = mesh.project_face_vector(e_fun(mesh.faces))
+            q_ana = mesh.project_face_vector(q_fun(mesh.faces))
 
             e_bc = e_fun(mesh.boundary_edges).reshape(-1, order='F')
 
@@ -93,8 +90,8 @@ class TestE3D_Inhomogeneous(discretize.tests.OrderTest):
             A = Mf @ C @ MeI @ C.T @ Mf + Mf
             rhs = Mf @ q_ana + Mf @ C @ MeI @ M_be @ e_bc
         elif "Edge" in self.myTest:
-            e_ana = mesh.project_edge_vector(e_fun(edges))
-            q_ana = mesh.project_edge_vector(q_fun(edges))
+            e_ana = mesh.project_edge_vector(e_fun(mesh.edges))
+            q_ana = mesh.project_edge_vector(q_fun(mesh.edges))
 
             h_bc = h_fun(mesh.boundary_edges).reshape(-1, order='F')
 
