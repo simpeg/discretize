@@ -1932,32 +1932,37 @@ class InterfaceMPL(object):
         return ax
 
     def __plot_image_tree(
-        self,
-        v,
-        v_type="CC",
-        grid=False,
-        view="real",
-        ax=None,
-        pcolor_opts=None,
-        grid_opts=None,
-        range_x=None,
-        range_y=None,
-        **kwargs,
+            self,
+            v,
+            v_type="CC",
+            grid=False,
+            view="real",
+            ax=None,
+            pcolor_opts=None,
+            stream_opts=None,
+            grid_opts=None,
+            range_x=None,
+            range_y=None,
+            stream_threshold=None,
+            stream_thickness=None,
+            sample_grid=None,
+            **kwargs,
     ):
         if self.dim == 3:
             raise NotImplementedError(
                 "plotImage is not implemented for 3D TreeMesh, please use plotSlice"
             )
 
-        if view == "vec":
-            raise NotImplementedError(
-                "Vector ploting is not supported on TreeMesh (yet)"
-            )
-
         if view in ["real", "imag", "abs"]:
             v = getattr(np, view)(v)  # e.g. np.real(v)
         if v_type == "CC":
             I = v
+        elif v_type == "CCv":
+            if view != "vec":
+                raise AssertionError("Other types for CCv not supported")
+            U = v.reshape((self.nC, -1), order="F")
+            I = np.sqrt(np.sum(U ** 2, axis=1))
+
         elif v_type == "N":
             I = self.aveN2CC * v
         elif v_type in ["Fx", "Fy", "Ex", "Ey"]:
@@ -1966,6 +1971,11 @@ class InterfaceMPL(object):
             I = (getattr(self, aveOp) * v).reshape(2, self.n_cells)[
                 ind_xy
             ]  # average to cell centers
+
+        out = ()
+
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
 
         # pcolormesh call signature
         # def pcolormesh(self, *args, alpha=None, norm=None, cmap=None, vmin=None,
@@ -1997,8 +2007,9 @@ class InterfaceMPL(object):
             collection.autoscale_None()
 
         ax.grid(False)
-
-        ax.add_collection(collection, autolim=False)
+        out += (
+            ax.add_collection(collection, autolim=False),
+        )
 
         if range_x is not None:
             minx, maxx = range_x
@@ -2014,9 +2025,86 @@ class InterfaceMPL(object):
         collection.sticky_edges.y[:] = [miny, maxy]
         corners = (minx, miny), (maxx, maxy)
         ax.update_datalim(corners)
-        ax._request_autoscale_view()
+        ax.set_aspect('equal')
 
-        return (collection,)
+        if view in ["vec"]:
+            # Matplotlib seems to not support irregular
+            # spaced vectors at the moment. So we will
+            # Interpolate down to a regular mesh at the
+            # smallest mesh size in this 2D slice.
+            if sample_grid is not None:
+                hxmin = sample_grid[0]
+                hymin = sample_grid[1]
+            else:
+                hxmin = self.h[0].min()
+                hymin = self.h[1].min()
+
+            if range_x is not None:
+                dx = range_x[1] - range_x[0]
+                nxi = int(dx / hxmin)
+                hx = np.ones(nxi) * dx / nxi
+                origin_x = range_x[0]
+            else:
+                nxi = int(self.h[0].sum() / hxmin)
+                hx = np.ones(nxi) * self.h[0].sum() / nxi
+                origin_x = self.origin[0]
+
+            if range_y is not None:
+                dy = range_y[1] - range_y[0]
+                nyi = int(dy / hymin)
+                hy = np.ones(nyi) * dy / nyi
+                origin_y = range_y[0]
+            else:
+                nyi = int(self.h[1].sum() / hymin)
+                hy = np.ones(nyi) * self.h[1].sum() / nyi
+                origin_y = self.origin[1]
+
+            tMi = discretize.TensorMesh(h=[hx, hy], origin=np.r_[origin_x, origin_y])
+            P = self.get_interpolation_matrix(tMi.gridCC, "CC", zerosOutside=True)
+
+            Ui, Vi = np.asarray(tMi.reshape(P * U, "CC", "CC", "M"))
+            Ii = np.sqrt(Ui ** 2 + Vi ** 2)
+            if stream_threshold is not None:
+                mask_me = Ii <= stream_threshold
+                Ui = np.ma.masked_where(mask_me, Ui)
+                Vi = np.ma.masked_where(mask_me, Vi)
+            if stream_thickness is not None:
+                scaleFact = np.copy(stream_thickness)
+
+                # Form bounds to knockout the top and bottom 10%
+                vecAmp_sort = np.sort(Ii.ravel())
+                nVecAmp = Ii.size
+                tenPercInd = int(np.ceil(0.1 * nVecAmp))
+                lowerBound = vecAmp_sort[tenPercInd]
+                upperBound = vecAmp_sort[-tenPercInd]
+
+                lowInds = np.where(Ii < lowerBound)
+                Ii[lowInds] = lowerBound
+
+                highInds = np.where(Ii > upperBound)
+                Ii[highInds] = upperBound
+
+                # Normalize amplitudes 0-1
+                norm_thickness = Ii / Ii.max()
+
+                # Scale by user defined thickness factor
+                stream_thickness = scaleFact * norm_thickness
+
+                # Add linewidth to stream_opts
+                stream_opts.update({"linewidth": stream_thickness})
+
+            out += (
+                ax.streamplot(
+                    tMi.cell_centers_x,
+                    tMi.cell_centers_y,
+                    Ui.T,
+                    Vi.T,
+                    **stream_opts
+                ),
+            )
+
+        return out
+
 
     def __plot_slice_tree(
         self,
