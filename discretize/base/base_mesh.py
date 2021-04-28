@@ -169,7 +169,7 @@ class BaseMesh:
                 out[item] = attr
         return out
 
-    def __eq__(self, other):
+    def equals(self, other):
         if type(self) != type(other):
             return False
         for item in self._items:
@@ -198,26 +198,6 @@ class BaseMesh:
             if not is_equal:
                 return is_equal
         return is_equal
-
-    def __hash__(self):
-        if getattr(self, '__myhash', None) is None:
-            # This converts all _items into tuples,
-            # (essentially makes a copy of itself)
-            # so only do it once!
-            def totuple_or_str(a):
-                if isinstance(a, str):
-                    return a
-                try:
-                    return tuple(totuple_or_str(i) for i in a)
-                except TypeError:
-                    return a
-
-            items = tuple(
-                totuple_or_str(getattr(self, item, None)) for item in self._items
-            )
-
-            self.__myhash = hash(items)
-        return self.__myhash
 
     def serialize(self):
         return self.to_dict()
