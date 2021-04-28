@@ -585,6 +585,19 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO, InterfaceMi
     def validate(self):
         return self.finalized
 
+    def __eq__(self, other):
+        try:
+            if self.finalized and other.finalized:
+                return super().__eq__(other)
+        except Exception:
+            pass
+        return False
+
+    def __hash__(self):
+        if not self.finalized:
+            raise TypeError("Cannot hash unfinalized TreeMesh")
+        return super().__hash__()
+
     def __reduce__(self):
         return TreeMesh, (self.h, self.origin), self.__getstate__()
 
