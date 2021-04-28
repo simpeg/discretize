@@ -585,6 +585,14 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO, InterfaceMi
     def validate(self):
         return self.finalized
 
+    def equals(self, other):
+        try:
+            if self.finalized and other.finalized:
+                return super().equals(other)
+        except AttributeError:
+            pass
+        return False
+
     def __reduce__(self):
         return TreeMesh, (self.h, self.origin), self.__getstate__()
 

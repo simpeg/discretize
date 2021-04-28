@@ -98,6 +98,7 @@ class BaseMesh:
         if reference_system is None:
             reference_system = "cartesian"
         self.reference_system = reference_system
+        self.__myhash = None
         super().__init__(**kwargs)
 
     def __getattr__(self, name):
@@ -254,10 +255,35 @@ class BaseMesh:
                 out[item] = attr
         return out
 
-    def __eq__(self, other):
+    def equals(self, other):
         if type(self) != type(other):
             return False
-        return self.to_dict() == other.to_dict()
+        for item in self._items:
+            my_attr = getattr(self, item, None)
+            other_attr = getattr(other, item, None)
+            if isinstance(my_attr, np.ndarray):
+                is_equal = np.allclose(my_attr, other_attr, rtol=0, atol=0)
+            elif isinstance(my_attr, tuple):
+                is_equal = len(my_attr) == len(other_attr)
+                if is_equal:
+                    for thing1, thing2 in zip(my_attr, other_attr):
+                        if isinstance(thing1, np.ndarray):
+                            is_equal = np.allclose(thing1, thing2, rtol=0, atol=0)
+                        else:
+                            try:
+                                is_equal = thing1 == thing2
+                            except Exception:
+                                is_equal = False
+                    if not is_equal:
+                        return is_equal
+            else:
+                try:
+                    is_equal = my_attr == other_attr
+                except Exception:
+                    is_equal = False
+            if not is_equal:
+                return is_equal
+        return is_equal
 
     def serialize(self):
         """An alias for ``to_dict``
