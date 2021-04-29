@@ -61,7 +61,6 @@ class BaseMesh:
         if reference_system is None:
             reference_system = "cartesian"
         self.reference_system = reference_system
-        self.__myhash = None
         super().__init__(**kwargs)
 
     def __getattr__(self, name):
