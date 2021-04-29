@@ -20,7 +20,7 @@ def example_curvilinear_grid(nC, exType):
         raise ValueError("nC must either two or three dimensions")
     exType = exType.lower()
 
-    possibleTypes = ["rect", "rotate"]
+    possibleTypes = ["rect", "rotate", "sphere"]
     if exType not in possibleTypes:
         raise TypeError("Not a possible example type.")
 
@@ -28,6 +28,23 @@ def example_curvilinear_grid(nC, exType):
         return list(
             ndgrid([np.cumsum(np.r_[0, np.ones(nx) / nx]) for nx in nC], vector=False)
         )
+    elif exType == "sphere":
+        nodes = list(
+            ndgrid([np.cumsum(np.r_[0, np.ones(nx) / nx])-0.5 for nx in nC], vector=False)
+        )
+        nodes = np.stack(nodes, axis=-1)
+        nodes = 2 * nodes
+        # L_inf distance to center
+        r0 = np.linalg.norm(nodes, ord=np.inf, axis=-1)
+        # L2 distance to center
+        r2 = np.linalg.norm(nodes, axis=-1)
+        r0[r0==0.0] = 1.0
+        r2[r2==0.0] = 1.0
+        scale = r0/r2
+        nodes = nodes * scale[..., None]
+        nodes = np.transpose(nodes, (-1, *np.arange(len(nC))))
+        nodes = [node for node in nodes] # turn it into a list
+        return nodes
     elif exType == "rotate":
         if len(nC) == 2:
             X, Y = ndgrid(

@@ -1,6 +1,6 @@
 import numpy as np
 
-from discretize.utils import mkvc, index_cube, face_info, volume_tetrahedron
+from discretize.utils import mkvc, index_cube, face_info, volume_tetrahedron, make_boundary_bool
 from discretize.base import BaseRectangularMesh
 from discretize.operators import DiffOperators, InnerProducts
 from discretize.mixins import InterfaceMixins
@@ -184,6 +184,14 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts, Interfa
         return self._faces_z
 
     @property
+    def faces(self):
+        "Face grid"
+        faces = np.r_[self.faces_x, self.faces_y]
+        if self.dim > 2:
+            faces = np.r_[faces, self.faces_z]
+        return faces
+
+    @property
     def edges_x(self):
         """
         Edge staggered grid in the x direction.
@@ -223,6 +231,98 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts, Interfa
             XYZ = [mkvc(0.5 * (n[:, :, :-1] + n[:, :, 1:])) for n in N]
             self._edges_z = np.c_[XYZ[0], XYZ[1], XYZ[2]]
         return self._edges_z
+
+    @property
+    def edges(self):
+        "Edge grid"
+        edges = np.r_[self.edges_x, self.edges_y]
+        if self.dim > 2:
+            edges = np.r_[edges, self.edges_z]
+        return edges
+
+    @property
+    def boundary_nodes(self):
+        """Boundary node locations
+
+        Returns
+        -------
+        np.ndarray of float
+            location array of shape (mesh.n_boundary_nodes, dim)
+        """
+        return self.nodes[make_boundary_bool(self.shape_nodes)]
+
+    @property
+    def boundary_edges(self):
+        """Boundary edge locations
+
+        Returns
+        -------
+        np.ndarray of float
+            location array of shape (mesh.n_boundary_edges, dim)
+        """
+        if self.dim == 2:
+            ex = self.edges_x[make_boundary_bool(self.shape_edges_x, dir='y')]
+            ey = self.edges_y[make_boundary_bool(self.shape_edges_y, dir='x')]
+            return np.r_[ex, ey]
+        elif self.dim == 3:
+            ex = self.edges_x[make_boundary_bool(self.shape_edges_x, dir='yz')]
+            ey = self.edges_y[make_boundary_bool(self.shape_edges_y, dir='xz')]
+            ez = self.edges_z[make_boundary_bool(self.shape_edges_z, dir='xy')]
+            return np.r_[ex, ey, ez]
+
+    @property
+    def boundary_faces(self):
+        """Boundary face locations
+
+        Returns
+        -------
+        np.ndarray of float
+            location array of shape (mesh.n_boundary_faces, dim)
+        """
+        fx = self.faces_x[make_boundary_bool(self.shape_faces_x, dir='x')]
+        fy = self.faces_y[make_boundary_bool(self.shape_faces_y, dir='y')]
+        if self.dim == 2:
+            return np.r_[fx, fy]
+        elif self.dim == 3:
+            fz = self.faces_z[make_boundary_bool(self.shape_faces_z, dir='z')]
+            return np.r_[fx, fy, fz]
+
+    @property
+    def boundary_face_outward_normals(self):
+        """Outward directed normal vectors for the boundary faces
+
+        Returns
+        -------
+        np.ndarray of float
+            Array of vectors of shape (mesh.n_boundary_faces, dim)
+        """
+        is_bxm = np.zeros(self.shape_faces_x, order='F', dtype=bool)
+        is_bxm[0, :] = True
+        is_bxm = is_bxm.reshape(-1, order='F')
+
+        is_bym = np.zeros(self.shape_faces_y, order='F', dtype=bool)
+        is_bym[:, 0] = True
+        is_bym = is_bym.reshape(-1, order='F')
+
+        is_b = np.r_[
+            make_boundary_bool(self.shape_faces_x, dir='x'),
+            make_boundary_bool(self.shape_faces_y, dir='y')
+        ]
+        switch = np.r_[is_bxm, is_bym]
+        if self.dim == 3:
+            is_bzm = np.zeros(self.shape_faces_z, order='F', dtype=bool)
+            is_bzm[:, :, 0] = True
+            is_bzm = is_bzm.reshape(-1, order='F')
+
+            is_b = np.r_[
+                is_b,
+                make_boundary_bool(self.shape_faces_z, dir='z')
+            ]
+            switch = np.r_[switch, is_bzm]
+        face_normals = self.face_normals.copy()
+        face_normals[switch] *= -1
+        return face_normals[is_b]
+
 
     # --------------- Geometries ---------------------
     #

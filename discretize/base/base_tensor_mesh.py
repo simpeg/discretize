@@ -17,6 +17,7 @@ from discretize.utils import (
     sdinv,
     TensorType,
     interpolation_matrix,
+    make_boundary_bool,
 )
 from discretize.utils.code_utils import deprecate_method, deprecate_property
 import warnings
@@ -158,6 +159,20 @@ class BaseTensorMesh(BaseMesh):
         return self._getTensorGrid("nodes")
 
     @property
+    def boundary_nodes(self):
+        """Boundary node locations
+
+        Returns
+        -------
+        np.ndarray of float
+            location array of shape (mesh.n_boundary_nodes, dim)
+        """
+        dim = self.dim
+        if dim == 1:
+            return self.nodes_x[[0, -1]]
+        return self.nodes[make_boundary_bool(self.shape_nodes)]
+
+    @property
     def h_gridded(self):
         """
         Returns an (nC, dim) numpy array with the widths of all cells in order
@@ -188,6 +203,60 @@ class BaseTensorMesh(BaseMesh):
         return self._getTensorGrid("faces_z")
 
     @property
+    def faces(self):
+        "Face grid"
+        faces = self.faces_x
+        if self.dim > 1:
+            faces = np.r_[faces, self.faces_y]
+        if self.dim > 2:
+            faces = np.r_[faces, self.faces_z]
+        return faces
+
+    @property
+    def boundary_faces(self):
+        """Boundary face locations
+
+        Returns
+        -------
+        np.ndarray of float
+            location array of shape (mesh.n_boundary_faces, dim)
+        """
+        dim = self.dim
+        if dim == 1:
+            return self.nodes_x[[0, -1]]
+        if dim == 2:
+            fx = ndgrid(self.nodes_x[[0, -1]], self.cell_centers_y)
+            fy = ndgrid(self.cell_centers_x, self.nodes_y[[0, -1]])
+            return np.r_[fx, fy]
+        if dim == 3:
+            fx = ndgrid(self.nodes_x[[0, -1]], self.cell_centers_y, self.cell_centers_z)
+            fy = ndgrid(self.cell_centers_x, self.nodes_y[[0, -1]], self.cell_centers_z)
+            fz = ndgrid(self.cell_centers_x, self.cell_centers_y, self.nodes_z[[0, -1]])
+            return np.r_[fx, fy, fz]
+
+    @property
+    def boundary_face_outward_normals(self):
+        """Outward directed normal vectors for the boundary faces
+
+        Returns
+        -------
+        np.ndarray of float
+            Array of vectors of shape (mesh.n_boundary_faces, dim)
+        """
+        dim = self.dim
+        if dim == 1:
+            return np.array([-1, 1])
+        if dim == 2:
+            nx = ndgrid(np.r_[-1, 1], np.zeros(self.shape_cells[1]))
+            ny = ndgrid(np.zeros(self.shape_cells[0]), np.r_[-1, 1])
+            return np.r_[nx, ny]
+        if dim == 3:
+            nx = ndgrid(np.r_[-1, 1], np.zeros(self.shape_cells[1]), np.zeros(self.shape_cells[2]))
+            ny = ndgrid(np.zeros(self.shape_cells[0]), np.r_[-1, 1], np.zeros(self.shape_cells[2]))
+            nz = ndgrid(np.zeros(self.shape_cells[0]), np.zeros(self.shape_cells[1]), np.r_[-1, 1])
+            return np.r_[nx, ny, nz]
+
+    @property
     def edges_x(self):
         """Edge staggered grid in the x direction."""
         if self.nEx == 0:
@@ -207,6 +276,38 @@ class BaseTensorMesh(BaseMesh):
         if self.nEz == 0 or self.dim < 3:
             return
         return self._getTensorGrid("edges_z")
+
+    @property
+    def edges(self):
+        "Edge grid"
+        edges = self.edges_x
+        if self.dim > 1:
+            edges = np.r_[edges, self.edges_y]
+        if self.dim > 2:
+            edges = np.r_[edges, self.edges_z]
+        return edges
+
+    @property
+    def boundary_edges(self):
+        """Boundary edge locations
+
+        Returns
+        -------
+        np.ndarray of float
+            location array of shape (mesh.n_boundary_edges, dim)
+        """
+        dim = self.dim
+        if dim == 1:
+            return None  # no boundary edges in 1D
+        if dim == 2:
+            ex = ndgrid(self.cell_centers_x, self.nodes_y[[0, -1]])
+            ey = ndgrid(self.nodes_x[[0, -1]], self.cell_centers_y)
+            return np.r_[ex, ey]
+        if dim == 3:
+            ex = self.edges_x[make_boundary_bool(self.shape_edges_x, dir='yz')]
+            ey = self.edges_y[make_boundary_bool(self.shape_edges_y, dir='xz')]
+            ez = self.edges_z[make_boundary_bool(self.shape_edges_z, dir='xy')]
+            return np.r_[ex, ey, ez]
 
     def _getTensorGrid(self, key):
         if getattr(self, "_" + key, None) is None:
