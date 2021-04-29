@@ -1,7 +1,16 @@
 import numpy as np
 from scipy import sparse as sp
 import warnings
-from discretize.utils import sdiag, speye, kron3, spzeros, ddx, av, av_extrap, make_boundary_bool
+from discretize.utils import (
+    sdiag,
+    speye,
+    kron3,
+    spzeros,
+    ddx,
+    av,
+    av_extrap,
+    make_boundary_bool,
+)
 from discretize.utils.code_utils import deprecate_method, deprecate_property
 
 
@@ -205,10 +214,17 @@ class DiffOperators(object):
         if self.dim == 1:
             D = self._face_x_divergence_stencil
         elif self.dim == 2:
-            D = sp.hstack((self._face_x_divergence_stencil, self._face_y_divergence_stencil), format="csr")
+            D = sp.hstack(
+                (self._face_x_divergence_stencil, self._face_y_divergence_stencil),
+                format="csr",
+            )
         elif self.dim == 3:
             D = sp.hstack(
-                (self._face_x_divergence_stencil, self._face_y_divergence_stencil, self._face_z_divergence_stencil),
+                (
+                    self._face_x_divergence_stencil,
+                    self._face_y_divergence_stencil,
+                    self._face_z_divergence_stencil,
+                ),
                 format="csr",
             )
         return D
@@ -325,7 +341,8 @@ class DiffOperators(object):
             G = self._nodal_gradient_x_stencil
         elif self.dim == 2:
             G = sp.vstack(
-                (self._nodal_gradient_x_stencil, self._nodal_gradient_y_stencil), format="csr"
+                (self._nodal_gradient_x_stencil, self._nodal_gradient_y_stencil),
+                format="csr",
             )
         elif self.dim == 3:
             G = sp.vstack(
@@ -428,7 +445,9 @@ class DiffOperators(object):
             if self.dim == 1:
                 self._nodal_laplacian = self._nodal_laplacian_x
             elif self.dim == 2:
-                self._nodal_laplacian = self._nodal_laplacian_x + self._nodal_laplacian_y
+                self._nodal_laplacian = (
+                    self._nodal_laplacian_x + self._nodal_laplacian_y
+                )
             elif self.dim == 3:
                 self._nodal_laplacian = (
                     self._nodal_laplacian_x
@@ -529,7 +548,9 @@ class DiffOperators(object):
             raise ValueError("alpha, beta, and gamma must have the same length")
 
         if len(alpha) not in [n_boundary_faces, n_boundary_nodes]:
-            raise ValueError("The arrays must be of length n_boundary_faces or n_boundary_nodes")
+            raise ValueError(
+                "The arrays must be of length n_boundary_faces or n_boundary_nodes"
+            )
 
         AveN2F = self.average_node_to_face
         boundary_areas = Pbf @ self.face_areas
@@ -538,16 +559,20 @@ class DiffOperators(object):
         # at the boundary, we have that u dot n = (gamma - alpha * phi)/beta
         if len(alpha) == n_boundary_faces:
             if gamma.ndim == 2:
-                b = Pbn.T @ (AveBN2Bf.T @ (gamma/beta[:, None] * boundary_areas[:, None]))
+                b = Pbn.T @ (
+                    AveBN2Bf.T @ (gamma / beta[:, None] * boundary_areas[:, None])
+                )
             else:
-                b = Pbn.T @ (AveBN2Bf.T @ (gamma/beta * boundary_areas))
-            B = sp.diags(Pbn.T @ (AveBN2Bf.T @ (-alpha/beta * boundary_areas)))
+                b = Pbn.T @ (AveBN2Bf.T @ (gamma / beta * boundary_areas))
+            B = sp.diags(Pbn.T @ (AveBN2Bf.T @ (-alpha / beta * boundary_areas)))
         else:
             if gamma.ndim == 2:
-                b = Pbn.T @ (gamma/beta[:, None] * (AveBN2Bf.T @ boundary_areas)[:, None])
+                b = Pbn.T @ (
+                    gamma / beta[:, None] * (AveBN2Bf.T @ boundary_areas)[:, None]
+                )
             else:
-                b = Pbn.T @ (gamma/beta * (AveBN2Bf.T @ boundary_areas))
-            B = sp.diags(Pbn.T @ (-alpha/beta * (AveBN2Bf.T @ boundary_areas)))
+                b = Pbn.T @ (gamma / beta * (AveBN2Bf.T @ boundary_areas))
+            B = sp.diags(Pbn.T @ (-alpha / beta * (AveBN2Bf.T @ boundary_areas)))
         return B, b
 
     ###########################################################################
@@ -778,17 +803,19 @@ class DiffOperators(object):
         if self.dim == 1:
             h = np.abs(self.boundary_faces - aveC2BF @ self.cell_centers)
         else:
-            h = np.linalg.norm(self.boundary_faces - aveC2BF @ self.cell_centers, axis=1)
+            h = np.linalg.norm(
+                self.boundary_faces - aveC2BF @ self.cell_centers, axis=1
+            )
 
         # for the ghost point u_k = a*u_i + b where
-        a = (beta/h/(alpha + beta/h))
+        a = beta / h / (alpha + beta / h)
         A = sp.diags(a) @ aveC2BF
 
         gamma = np.asarray(gamma)
         if gamma.ndim > 1:
-            b = (gamma)/(alpha + beta/h)[:, None]
+            b = (gamma) / (alpha + beta / h)[:, None]
         else:
-            b = (gamma)/(alpha + beta/h)
+            b = (gamma) / (alpha + beta / h)
 
         # value at boundary = A*cells + b
         M = self.boundary_face_scalar_integral
@@ -992,12 +1019,13 @@ class DiffOperators(object):
         where `w` is defined on all faces, and `u_b` is defined on boundary faces.
         """
         if self.dim == 1:
-            return sp.csr_matrix(([-1, 1], ([0, self.n_faces_x-1], [0, 1])), shape=(self.n_faces_x, 2))
+            return sp.csr_matrix(
+                ([-1, 1], ([0, self.n_faces_x - 1], [0, 1])), shape=(self.n_faces_x, 2)
+            )
         P = self.project_face_to_boundary_face
 
         w_h_dot_normal = np.sum(
-            (P @ self.face_normals) * self.boundary_face_outward_normals,
-            axis=-1
+            (P @ self.face_normals) * self.boundary_face_outward_normals, axis=-1
         )
         A = sp.diags(self.face_areas) @ P.T @ sp.diags(w_h_dot_normal)
         return A
@@ -1046,11 +1074,11 @@ class DiffOperators(object):
         w_cross_n = np.cross(-w, Av.T @ dA)
 
         if self.dim == 2:
-            return Pe.T @ sp.diags(w_cross_n, format='csr')
+            return Pe.T @ sp.diags(w_cross_n, format="csr")
         return Pe.T @ sp.diags(
             w_cross_n.T,
-            n_boundary_edges*np.arange(3),
-            shape=(n_boundary_edges, 3*n_boundary_edges)
+            n_boundary_edges * np.arange(3),
+            shape=(n_boundary_edges, 3 * n_boundary_edges),
         )
 
     @property
@@ -1080,7 +1108,10 @@ class DiffOperators(object):
         boundary nodes.
         """
         if self.dim == 1:
-            return sp.csr_matrix(([-1, 1], ([0, self.shape_nodes[0]-1], [0, 1])), shape=(self.shape_nodes[0], 2))
+            return sp.csr_matrix(
+                ([-1, 1], ([0, self.shape_nodes[0] - 1], [0, 1])),
+                shape=(self.shape_nodes[0], 2),
+            )
         Pn = self.project_node_to_boundary_node
         Pf = self.project_face_to_boundary_face
         n_boundary_nodes = Pn.shape[0]
@@ -1093,7 +1124,9 @@ class DiffOperators(object):
         diags = u_dot_ds.T
         offsets = n_boundary_nodes * np.arange(self.dim)
 
-        return Pn.T @ sp.diags(diags, offsets, shape=(n_boundary_nodes, self.dim*n_boundary_nodes))
+        return Pn.T @ sp.diags(
+            diags, offsets, shape=(n_boundary_nodes, self.dim * n_boundary_nodes)
+        )
 
     def get_BC_projections(self, BC, discretization="CC"):
         """
@@ -1412,7 +1445,9 @@ class DiffOperators(object):
                 aveCC2VFy = sp.kron(
                     av_extrap(self.shape_cells[1]), speye(self.shape_cells[0])
                 )
-                self._average_cell_vector_to_face = sp.block_diag((aveCCV2Fx, aveCC2VFy), format="csr")
+                self._average_cell_vector_to_face = sp.block_diag(
+                    (aveCCV2Fx, aveCC2VFy), format="csr"
+                )
             elif self.dim == 3:
                 aveCCV2Fx = kron3(
                     speye(self.shape_cells[2]),
@@ -1549,24 +1584,26 @@ class DiffOperators(object):
             return sp.diags(
                 [1, 1],
                 [-self.n_faces_x, self.n_faces_y],
-                shape=(self.n_faces, self.n_edges)
+                shape=(self.n_faces, self.n_edges),
             )
         n1, n2, n3 = self.shape_cells
-        ex_to_fy = kron3(av(n3), speye(n2+1) ,speye(n1))
-        ex_to_fz = kron3(speye(n3+1), av(n2), speye(n1))
+        ex_to_fy = kron3(av(n3), speye(n2 + 1), speye(n1))
+        ex_to_fz = kron3(speye(n3 + 1), av(n2), speye(n1))
 
+        ey_to_fx = kron3(av(n3), speye(n2), speye(n1 + 1))
+        ey_to_fz = kron3(speye(n3 + 1), speye(n2), av(n1))
 
-        ey_to_fx = kron3(av(n3), speye(n2), speye(n1+1))
-        ey_to_fz = kron3(speye(n3+1), speye(n2), av(n1))
+        ez_to_fx = kron3(speye(n3), av(n2), speye(n1 + 1))
+        ez_to_fy = kron3(speye(n3), speye(n2 + 1), av(n1))
 
-        ez_to_fx = kron3(speye(n3), av(n2), speye(n1+1))
-        ez_to_fy = kron3(speye(n3), speye(n2+1), av(n1))
-
-        e_to_f = sp.bmat([
-            [None, ey_to_fx, ez_to_fx],
-            [ex_to_fy, None, ez_to_fy],
-            [ex_to_fz, ey_to_fz, None]
-        ], format='csr')
+        e_to_f = sp.bmat(
+            [
+                [None, ey_to_fx, ez_to_fx],
+                [ex_to_fy, None, ez_to_fy],
+                [ex_to_fz, ey_to_fz, None],
+            ],
+            format="csr",
+        )
         return e_to_f
 
     @property
@@ -1645,10 +1682,18 @@ class DiffOperators(object):
             if self.dim == 1:
                 self._average_node_to_edge = self._average_node_to_edge_x
             elif self.dim == 2:
-                self._average_node_to_edge = sp.vstack((self._average_node_to_edge_x, self._average_node_to_edge_y), format="csr")
+                self._average_node_to_edge = sp.vstack(
+                    (self._average_node_to_edge_x, self._average_node_to_edge_y),
+                    format="csr",
+                )
             elif self.dim == 3:
                 self._average_node_to_edge = sp.vstack(
-                    (self._average_node_to_edge_x, self._average_node_to_edge_y, self._average_node_to_edge_z), format="csr"
+                    (
+                        self._average_node_to_edge_x,
+                        self._average_node_to_edge_y,
+                        self._average_node_to_edge_z,
+                    ),
+                    format="csr",
                 )
         return self._average_node_to_edge
 
@@ -1703,16 +1748,24 @@ class DiffOperators(object):
             if self.dim == 1:
                 self._average_node_to_face = self._average_node_to_face_x
             elif self.dim == 2:
-                self._average_node_to_face = sp.vstack((self._average_node_to_face_x, self._average_node_to_face_y), format="csr")
+                self._average_node_to_face = sp.vstack(
+                    (self._average_node_to_face_x, self._average_node_to_face_y),
+                    format="csr",
+                )
             elif self.dim == 3:
                 self._average_node_to_face = sp.vstack(
-                    (self._average_node_to_face_x, self._average_node_to_face_y, self._average_node_to_face_z), format="csr"
+                    (
+                        self._average_node_to_face_x,
+                        self._average_node_to_face_y,
+                        self._average_node_to_face_z,
+                    ),
+                    format="csr",
                 )
         return self._average_node_to_face
 
     @property
     def project_face_to_boundary_face(self):
-        """ Projects values defined on all faces to the boundary faces
+        """Projects values defined on all faces to the boundary faces
 
         Returns
         -------
@@ -1724,12 +1777,12 @@ class DiffOperators(object):
 
         # Create a matrix that projects all faces onto boundary faces
         # The below should work for a regular structured mesh
-        is_b = make_boundary_bool(self.shape_faces_x, dir='x')
+        is_b = make_boundary_bool(self.shape_faces_x, dir="x")
         if self.dim > 1:
-            is_b = np.r_[is_b, make_boundary_bool(self.shape_faces_y, dir='y')]
+            is_b = np.r_[is_b, make_boundary_bool(self.shape_faces_y, dir="y")]
         if self.dim == 3:
-            is_b = np.r_[is_b, make_boundary_bool(self.shape_faces_z, dir='z')]
-        return sp.eye(self.n_faces, format='csr')[is_b]
+            is_b = np.r_[is_b, make_boundary_bool(self.shape_faces_z, dir="z")]
+        return sp.eye(self.n_faces, format="csr")[is_b]
 
     @property
     def project_edge_to_boundary_edge(self):
@@ -1749,12 +1802,12 @@ class DiffOperators(object):
             return None  # No edges are on the boundary in 1D
 
         is_b = np.r_[
-            make_boundary_bool(self.shape_edges_x, dir='yz'),
-            make_boundary_bool(self.shape_edges_y, dir='xz')
+            make_boundary_bool(self.shape_edges_x, dir="yz"),
+            make_boundary_bool(self.shape_edges_y, dir="xz"),
         ]
         if self.dim == 3:
-            is_b = np.r_[is_b, make_boundary_bool(self.shape_edges_z, dir='xy')]
-        return sp.eye(self.n_edges, format='csr')[is_b]
+            is_b = np.r_[is_b, make_boundary_bool(self.shape_edges_z, dir="xy")]
+        return sp.eye(self.n_edges, format="csr")[is_b]
 
     @property
     def project_node_to_boundary_node(self):
@@ -1772,8 +1825,7 @@ class DiffOperators(object):
         # The below should work for a regular structured mesh
 
         is_b = make_boundary_bool(self.shape_nodes)
-        return sp.eye(self.n_nodes, format='csr')[is_b]
-
+        return sp.eye(self.n_nodes, format="csr")[is_b]
 
     # DEPRECATED
     cellGrad = deprecate_property("cell_gradient", "cellGrad", removal_version="1.0.0")
@@ -1806,10 +1858,18 @@ class DiffOperators(object):
         "face_z_divergence", "faceDivz", removal_version="1.0.0"
     )
     edgeCurl = deprecate_property("edge_curl", "edgeCurl", removal_version="1.0.0")
-    _cellGradStencil = deprecate_property("stencil_cell_gradient", "_cellGradStencil", removal_version="1.0.0")
-    _cellGradxStencil = deprecate_property("stencil_cell_gradient_x", "_cellGradxStencil", removal_version="1.0.0")
-    _cellGradyStencil = deprecate_property("stencil_cell_gradient_y", "_cellGradyStencil", removal_version="1.0.0")
-    _cellGradzStencil = deprecate_property("stencil_cell_gradient_z", "_cellGradzStencil", removal_version="1.0.0")
+    _cellGradStencil = deprecate_property(
+        "stencil_cell_gradient", "_cellGradStencil", removal_version="1.0.0"
+    )
+    _cellGradxStencil = deprecate_property(
+        "stencil_cell_gradient_x", "_cellGradxStencil", removal_version="1.0.0"
+    )
+    _cellGradyStencil = deprecate_property(
+        "stencil_cell_gradient_y", "_cellGradyStencil", removal_version="1.0.0"
+    )
+    _cellGradzStencil = deprecate_property(
+        "stencil_cell_gradient_z", "_cellGradzStencil", removal_version="1.0.0"
+    )
 
     setCellGradBC = deprecate_method(
         "set_cell_gradient_BC", "setCellGradBC", removal_version="1.0.0"
@@ -1822,4 +1882,4 @@ class DiffOperators(object):
     )
 
 
-DiffOperators.__module__ = 'discretize.operators'
+DiffOperators.__module__ = "discretize.operators"

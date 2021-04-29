@@ -611,10 +611,10 @@ class InterfaceMPL(object):
             raise NotImplementedError("Must be a 3D mesh. Use plotImage.")
 
         # slice_loc errors
-        if(ind is not None) and (slice_loc is not None):
+        if (ind is not None) and (slice_loc is not None):
             raise Warning("Both ind and slice_loc are defined. Behavior undefined.")
         # slice_loc implement
-        if(slice_loc is not None):
+        if slice_loc is not None:
             if normal == "X":
                 ind = int(np.argmin(np.abs(self.cell_centers_x - slice_loc)))
             if normal == "Y":
@@ -1004,9 +1004,7 @@ class InterfaceMPL(object):
                     self.cell_centers_x, v, linestyle="-", color="C1", marker="o"
                 )
             elif v_type == "N":
-                ph = ax.plot(
-                    self.nodes_x, v, linestyle="-", color="C0", marker="s"
-                )
+                ph = ax.plot(self.nodes_x, v, linestyle="-", color="C0", marker="s")
             ax.set_xlabel("x")
             ax.axis("tight")
         elif self.dim == 2:
@@ -1959,7 +1957,7 @@ class InterfaceMPL(object):
             aveOp = aveOp = "ave" + v_type + ("2CCV" if view == "vec" else "2CC")
             v = getattr(self, aveOp) * v
             if view == "vec":
-                v = v.reshape((self.n_cells, 2), order='F')
+                v = v.reshape((self.n_cells, 2), order="F")
         elif v_type in ["Fx", "Fy", "Ex", "Ey"]:
             aveOp = "ave" + v_type[0] + "2CCV"
             v = getattr(self, aveOp) * v
@@ -2027,7 +2025,7 @@ class InterfaceMPL(object):
         ax.update_datalim(corners)
         ax._request_autoscale_view()
 
-        out = (collection, )
+        out = (collection,)
 
         if view == "vec":
             if quiver_opts is None:
@@ -2038,11 +2036,11 @@ class InterfaceMPL(object):
 
             v = v.reshape(2, self.n_cells)
             qvr = ax.quiver(
-                    self.cell_centers[:, 0],
-                    self.cell_centers[:, 1],
-                    v[0],
-                    v[1],
-                    **quiver_opts
+                self.cell_centers[:, 0],
+                self.cell_centers[:, 1],
+                v[0],
+                v[1],
+                **quiver_opts,
             )
             out = (collection, qvr)
 
@@ -2113,7 +2111,7 @@ class InterfaceMPL(object):
             if v.shape[0] == Av.shape[1]:
                 v = Av * v
             if view == "vec":
-                v = v.reshape((self.n_cells, 3), order='F')
+                v = v.reshape((self.n_cells, 3), order="F")
             elif len(v_type) == 2:
                 # was one of Fx, Fy, Fz, Ex, Ey, Ez
                 # assuming v has all three components in these cases
@@ -2161,13 +2159,13 @@ class InterfaceMPL(object):
             quiver_opts.setdefault("pivot", "mid")
             vecs = vecs[ind_3d_to_2d]
             qvr = ax.quiver(
-                    temp_mesh.cell_centers[:, 0],
-                    temp_mesh.cell_centers[:, 1],
-                    vecs[:, 0],
-                    vecs[:, 1],
-                    **quiver_opts
+                temp_mesh.cell_centers[:, 0],
+                temp_mesh.cell_centers[:, 1],
+                vecs[:, 0],
+                vecs[:, 1],
+                **quiver_opts,
             )
-            out = (qvr, )
+            out = (qvr,)
 
         return out
 
