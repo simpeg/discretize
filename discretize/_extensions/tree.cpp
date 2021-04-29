@@ -1163,9 +1163,18 @@ void Tree::finalize_lists(){
             e[3] = set_default_edge(edges_y, *p[1], *p[3]);
 
             Face *face = set_default_face(faces_z, *p[0], *p[1], *p[2], *p[3]);
+            cell->edges[0] = e[0]; // -x
+            cell->edges[1] = e[1]; // +x
+            cell->edges[2] = e[2]; // -y
+            cell->edges[3] = e[3]; // +y
+
+            // number these clockwise from x0,y0
+            face->edges[0] = e[2]; // -y
+            face->edges[1] = e[1]; // +x
+            face->edges[2] = e[3]; // +y
+            face->edges[3] = e[0]; // -x
+
             for(int_t i = 0; i < 4; ++i){
-                cell->edges[i] = e[i];
-                face->edges[i] = e[i];
                 e[i]->reference++;
             }
 
