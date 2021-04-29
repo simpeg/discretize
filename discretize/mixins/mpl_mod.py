@@ -1942,34 +1942,44 @@ class InterfaceMPL(object):
         grid_opts=None,
         range_x=None,
         range_y=None,
+        quiver_opts=None,
         **kwargs,
     ):
         if self.dim == 3:
             raise NotImplementedError(
                 "plotImage is not implemented for 3D TreeMesh, please use plotSlice"
             )
-
-        if view == "vec":
-            raise NotImplementedError(
-                "Vector ploting is not supported on TreeMesh (yet)"
-            )
-
-        if view in ["real", "imag", "abs"]:
-            v = getattr(np, view)(v)  # e.g. np.real(v)
+        # reshape to cell_centered thing
         if v_type == "CC":
-            I = v
-        elif v_type == "N":
-            I = self.aveN2CC * v
+            pass
+        if v_type == "CCv":
+            if view != "vec":
+                raise ValueError("Other types for CCv not supported")
+        elif v_type in ["F", "E", "N"]:
+            aveOp = aveOp = "ave" + v_type + ("2CCV" if view == "vec" else "2CC")
+            v = getattr(self, aveOp) * v
+            if view == "vec":
+                v = v.reshape((self.n_cells, 2), order='F')
         elif v_type in ["Fx", "Fy", "Ex", "Ey"]:
             aveOp = "ave" + v_type[0] + "2CCV"
+            v = getattr(self, aveOp) * v
             ind_xy = {"x": 0, "y": 1}[v_type[1]]
-            I = (getattr(self, aveOp) * v).reshape(2, self.n_cells)[
-                ind_xy
-            ]  # average to cell centers
+            v = v.reshape(2, self.n_cells)[ind_xy]
+
+        if view in ["real", "imag", "abs"]:
+            I = getattr(np, view)(v)  # e.g. np.real(v)
+        elif view == "vec":
+            I = np.linalg.norm(v, axis=1)
+
+        isnot_nans = ~np.isnan(I)
 
         # pcolormesh call signature
         # def pcolormesh(self, *args, alpha=None, norm=None, cmap=None, vmin=None,
         #            vmax=None, shading='flat', antialiased=False, **kwargs):
+
+        # make a shallow copy so we can pop items off for the pass to PolyCollection
+        pcolor_opts = pcolor_opts.copy()
+
         alpha = pcolor_opts.pop("alpha", None)
         norm = pcolor_opts.pop("norm", None)
         cmap = pcolor_opts.pop("cmap", None)
@@ -1980,6 +1990,7 @@ class InterfaceMPL(object):
 
         node_grid = np.r_[self.nodes, self.hanging_nodes]
         cell_nodes = self.cell_nodes[:, (0, 1, 3, 2)]
+        cell_nodes = cell_nodes[isnot_nans]
         cell_verts = node_grid[cell_nodes]
 
         # Below taken from pcolormesh source code with QuadMesh exchanged to PolyCollection
@@ -1987,7 +1998,7 @@ class InterfaceMPL(object):
             cell_verts, antialiased=antialiased, **{**pcolor_opts, **grid_opts}
         )
         collection.set_alpha(alpha)
-        collection.set_array(I)
+        collection.set_array(I[isnot_nans])
         collection.set_cmap(cmap)
         collection.set_norm(norm)
         try:
@@ -2016,7 +2027,26 @@ class InterfaceMPL(object):
         ax.update_datalim(corners)
         ax._request_autoscale_view()
 
-        return (collection,)
+        out = (collection, )
+
+        if view == "vec":
+            if quiver_opts is None:
+                quiver_opts = {}
+            # make a copy so we can set some defaults without modifying the original
+            quiver_opts = quiver_opts.copy()
+            quiver_opts.setdefault("pivot", "mid")
+
+            v = v.reshape(2, self.n_cells)
+            qvr = ax.quiver(
+                    self.cell_centers[:, 0],
+                    self.cell_centers[:, 1],
+                    v[0],
+                    v[1],
+                    **quiver_opts
+            )
+            out = (collection, qvr)
+
+        return out
 
     def __plot_slice_tree(
         self,
@@ -2032,12 +2062,9 @@ class InterfaceMPL(object):
         grid_opts=None,
         range_x=None,
         range_y=None,
+        quiver_opts=None,
         **kwargs,
     ):
-        if view == "vec":
-            raise NotImplementedError(
-                "Vector view plotting is not implemented for TreeMesh (yet)"
-            )
         normalInd = {"X": 0, "Y": 1, "Z": 2}[normal]
         antiNormalInd = {"X": [1, 2], "Y": [0, 2], "Z": [0, 1]}[normal]
 
@@ -2077,12 +2104,16 @@ class InterfaceMPL(object):
         tm_gridboost[:, antiNormalInd] = temp_mesh.gridCC
         tm_gridboost[:, normalInd] = slice_loc
 
-        # interpolate values to self.gridCC if not 'CC'
-        if v_type != "CC":
+        # interpolate values to self.gridCC if not "CC" or "CCv"
+        if v_type[:2] != "CC":
             aveOp = "ave" + v_type + "2CC"
+            if view == "vec":
+                aveOp += "V"
             Av = getattr(self, aveOp)
-            if v.size == Av.shape[1]:
+            if v.shape[0] == Av.shape[1]:
                 v = Av * v
+            if view == "vec":
+                v = v.reshape((self.n_cells, 3), order='F')
             elif len(v_type) == 2:
                 # was one of Fx, Fy, Fz, Ex, Ey, Ez
                 # assuming v has all three components in these cases
@@ -2093,6 +2124,14 @@ class InterfaceMPL(object):
                     i_s = np.cumsum([0, self.nFx, self.nFy, self.nFz])
                 v = v[i_s[vec_ind] : i_s[vec_ind + 1]]
                 v = Av * v
+        elif v_type == "CCv":
+            if view != "vec":
+                raise ValueError("Other types for CCv not supported")
+        slice_view = view
+        if view == "vec":
+            slice_view = "real"
+            vecs = v[:, antiNormalInd]
+            v = np.linalg.norm(v, axis=1)
 
         # interpolate values from self.gridCC to grid2d
         ind_3d_to_2d = self._get_containing_cell_indexes(tm_gridboost)
@@ -2102,7 +2141,7 @@ class InterfaceMPL(object):
             v2d,
             v_type="CC",
             grid=grid,
-            view=view,
+            view=slice_view,
             ax=ax,
             pcolor_opts=pcolor_opts,
             grid_opts=grid_opts,
@@ -2113,6 +2152,23 @@ class InterfaceMPL(object):
         ax.set_xlabel("y" if normal == "X" else "x")
         ax.set_ylabel("y" if normal == "Z" else "z")
         ax.set_title("Slice {0:d}, {1!s} = {2:4.2f}".format(ind, normal, slice_loc))
+
+        if view == "vec":
+            if quiver_opts is None:
+                quiver_opts = {}
+            # make a copy so we can set some defaults without modifying the original
+            quiver_opts = quiver_opts.copy()
+            quiver_opts.setdefault("pivot", "mid")
+            vecs = vecs[ind_3d_to_2d]
+            qvr = ax.quiver(
+                    temp_mesh.cell_centers[:, 0],
+                    temp_mesh.cell_centers[:, 1],
+                    vecs[:, 0],
+                    vecs[:, 1],
+                    **quiver_opts
+            )
+            out = (qvr, )
+
         return out
 
     plotGrid = deprecate_method("plot_grid", "plotGrid", removal_version="1.0.0")
