@@ -4,7 +4,6 @@ Base class for tensor-product style meshes
 
 import numpy as np
 import scipy.sparse as sp
-import properties
 
 from discretize.base.base_mesh import BaseMesh
 from discretize.utils import (
@@ -54,40 +53,20 @@ class BaseTensorMesh(BaseMesh):
     }
 
     _unitDimensions = [1, 1, 1]
+    _items = {"h"} | BaseMesh._items
 
-    # properties
-    h = properties.Tuple(
-        "h is a list containing the cell widths of the tensor mesh in each "
-        "dimension.",
-        properties.Array(
-            "widths of the tensor mesh in a single dimension",
-            dtype=float,
-            shape=("*",),
-        ),
-        min_length=1,
-        max_length=3,
-        coerce=True,
-        required=True,
-    )
-
-    def __init__(self, h=None, origin=None, **kwargs):
-
-        h_in = h
+    def __init__(self, h, origin=None, **kwargs):
         if "x0" in kwargs:
-            origin = kwargs.pop('x0')
-        origin_in = origin
+            origin = kwargs.pop("x0")
 
-        # Sanity Checks
-        if not isinstance(h_in, (list, tuple)):
-            raise TypeError("h_in must be a list, not {}".format(type(h_in)))
-        if len(h_in) not in [1, 2, 3]:
-            raise ValueError(
-                "h_in must be of dimension 1, 2, or 3 not {}".format(len(h_in))
-            )
-
-        # build h
-        h = list(range(len(h_in)))
-        for i, h_i in enumerate(h_in):
+        try:
+            h = list(h)  # ensure value is a list (and make a copy)
+        except TypeError:
+            raise TypeError("h must be an iterable object, not {}".format(type(h)))
+        if len(h) == 0 or len(h) > 3:
+            raise ValueError("h must be of dimension 1, 2, or 3 not {}".format(len(h)))
+        # expand value
+        for i, h_i in enumerate(h):
             if is_scalar(h_i) and not isinstance(h_i, np.ndarray):
                 # This gives you something over the unit cube.
                 h_i = self._unitDimensions[i] * np.ones(int(h_i)) / int(h_i)
@@ -98,41 +77,34 @@ class BaseTensorMesh(BaseMesh):
             if len(h_i.shape) != 1:
                 raise ValueError("h[{0:d}] must be a 1D numpy array.".format(i))
             h[i] = h_i[:]  # make a copy.
+        self._h = tuple(h)
 
-        # Origin of the mesh
-        origin = np.zeros(len(h))
+        shape_cells = tuple([len(h_i) for h_i in h])
+        kwargs.pop("shape_cells", None)
+        super().__init__(shape_cells=shape_cells, **kwargs)  # do not pass origin here
+        if origin is not None:
+            self.origin = origin
 
-        if origin_in is not None:
-            if len(h) != len(origin_in):
-                raise ValueError("Dimension mismatch. origin != len(h)")
-            for i in range(len(h)):
-                x_i, h_i = origin_in[i], h[i]
-                if is_scalar(x_i):
-                    origin[i] = x_i
-                elif x_i == "0":
-                    origin[i] = 0.0
-                elif x_i == "C":
-                    origin[i] = -h_i.sum() * 0.5
-                elif x_i == "N":
-                    origin[i] = -h_i.sum()
-                else:
-                    raise Exception(
-                        "origin[{0:d}] must be a scalar or '0' to be zero, "
-                        "'C' to center, or 'N' to be negative. The input value"
-                        " {1} {2} is invalid".format(i, x_i, type(x_i))
-                    )
+    @property
+    def h(self):
+        return self._h
 
-        if "n" in kwargs.keys():
-            n = kwargs.pop("n")
-            if np.any(n != np.array([x.size for x in h])):
-                raise ValueError("Dimension mismatch. The provided n doesn't h")
-        else:
-            n = np.array([x.size for x in h])
-
-        super(BaseTensorMesh, self).__init__(n, origin=origin, **kwargs)
-
-        # Ensure h contains 1D vectors
-        self.h = [mkvc(x.astype(float)) for x in h]
+    @BaseMesh.origin.setter
+    def origin(self, value):
+        # ensure value is a 1D array at all times
+        try:
+            value = list(value)
+        except:
+            raise TypeError("origin must be iterable")
+        if len(value) != self.dim:
+            raise ValueError("Dimension mismatch. len(origin) != len(h)")
+        for i, (val, h_i) in enumerate(zip(value, self.h)):
+            if val == "C":
+                value[i] = -h_i.sum() * 0.5
+            elif val == "N":
+                value[i] = -h_i.sum()
+        value = np.asarray(value, dtype=np.float64)
+        self._origin = value
 
     @property
     def nodes_x(self):
@@ -274,9 +246,21 @@ class BaseTensorMesh(BaseMesh):
             ny = ndgrid(np.zeros(self.shape_cells[0]), np.r_[-1, 1])
             return np.r_[nx, ny]
         if dim == 3:
-            nx = ndgrid(np.r_[-1, 1], np.zeros(self.shape_cells[1]), np.zeros(self.shape_cells[2]))
-            ny = ndgrid(np.zeros(self.shape_cells[0]), np.r_[-1, 1], np.zeros(self.shape_cells[2]))
-            nz = ndgrid(np.zeros(self.shape_cells[0]), np.zeros(self.shape_cells[1]), np.r_[-1, 1])
+            nx = ndgrid(
+                np.r_[-1, 1],
+                np.zeros(self.shape_cells[1]),
+                np.zeros(self.shape_cells[2]),
+            )
+            ny = ndgrid(
+                np.zeros(self.shape_cells[0]),
+                np.r_[-1, 1],
+                np.zeros(self.shape_cells[2]),
+            )
+            nz = ndgrid(
+                np.zeros(self.shape_cells[0]),
+                np.zeros(self.shape_cells[1]),
+                np.r_[-1, 1],
+            )
             return np.r_[nx, ny, nz]
 
     @property
@@ -327,9 +311,9 @@ class BaseTensorMesh(BaseMesh):
             ey = ndgrid(self.nodes_x[[0, -1]], self.cell_centers_y)
             return np.r_[ex, ey]
         if dim == 3:
-            ex = self.edges_x[make_boundary_bool(self.shape_edges_x, dir='yz')]
-            ey = self.edges_y[make_boundary_bool(self.shape_edges_y, dir='xz')]
-            ez = self.edges_z[make_boundary_bool(self.shape_edges_z, dir='xy')]
+            ex = self.edges_x[make_boundary_bool(self.shape_edges_x, dir="yz")]
+            ey = self.edges_y[make_boundary_bool(self.shape_edges_y, dir="xz")]
+            ez = self.edges_z[make_boundary_bool(self.shape_edges_z, dir="xy")]
             return np.r_[ex, ey, ez]
 
     def _getTensorGrid(self, key):
@@ -438,7 +422,9 @@ class BaseTensorMesh(BaseMesh):
             )
         return inside
 
-    def _getInterpolationMat(self, loc, location_type="cell_centers", zeros_outside=False):
+    def _getInterpolationMat(
+        self, loc, location_type="cell_centers", zeros_outside=False
+    ):
         """Produces interpolation matrix
 
         Parameters
@@ -481,7 +467,14 @@ class BaseTensorMesh(BaseMesh):
 
         location_type = self._parse_location_type(location_type)
 
-        if location_type in ["faces_x", "faces_y", "faces_z", "edges_x", "edges_y", "edges_z"]:
+        if location_type in [
+            "faces_x",
+            "faces_y",
+            "faces_z",
+            "edges_x",
+            "edges_y",
+            "edges_z",
+        ]:
             ind = {"x": 0, "y": 1, "z": 2}[location_type[-1]]
             if self.dim < ind:
                 raise ValueError("mesh is not high enough dimension.")
@@ -571,7 +564,9 @@ class BaseTensorMesh(BaseMesh):
             zeros_outside = kwargs["zerosOutside"]
         return self._getInterpolationMat(loc, location_type, zeros_outside)
 
-    def _fastInnerProduct(self, projection_type, model=None, invert_model=False, invert_matrix=False):
+    def _fastInnerProduct(
+        self, projection_type, model=None, invert_model=False, invert_matrix=False
+    ):
         """Fast version of getFaceInnerProduct.
             This does not handle the case of a full tensor property.
 
@@ -648,7 +643,9 @@ class BaseTensorMesh(BaseMesh):
         else:
             return M
 
-    def _fastInnerProductDeriv(self, projection_type, model, invert_model=False, invert_matrix=False):
+    def _fastInnerProductDeriv(
+        self, projection_type, model, invert_model=False, invert_matrix=False
+    ):
         """
 
         Parameters
@@ -684,7 +681,10 @@ class BaseTensorMesh(BaseMesh):
 
         if invert_matrix or invert_model:
             MI = self._fastInnerProduct(
-                projection_type, model, invert_model=invert_model, invert_matrix=invert_matrix
+                projection_type,
+                model,
+                invert_model=invert_model,
+                invert_matrix=invert_matrix,
             )
 
         # number of elements we are averaging (equals dim for regular
@@ -707,7 +707,11 @@ class BaseTensorMesh(BaseMesh):
                 dMdprop = n_elements * Av.T * V * ones
             elif invert_matrix and invert_model:
                 dMdprop = n_elements * (
-                    sdiag(MI.diagonal() ** 2) * Av.T * V * ones * sdiag(1.0 / model ** 2)
+                    sdiag(MI.diagonal() ** 2)
+                    * Av.T
+                    * V
+                    * ones
+                    * sdiag(1.0 / model ** 2)
                 )
             elif invert_model:
                 dMdprop = n_elements * Av.T * V * sdiag(-1.0 / model ** 2)
@@ -843,3 +847,6 @@ class BaseTensorMesh(BaseMesh):
     )
     isInside = deprecate_method("is_inside", "isInside", removal_version="1.0.0")
     getTensor = deprecate_method("get_tensor", "getTensor", removal_version="1.0.0")
+
+
+BaseTensorMesh.__module__ = "discretize.base"

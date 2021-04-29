@@ -135,11 +135,14 @@ class InterfaceVTK(object):
     .. code-block:: python
 
        # Defined a rotated reference frame
-       mesh.axis_u = (1,-1,0)
-       mesh.axis_v = (-1,-1,0)
-       mesh.axis_w = (0,0,1)
-       # Check that the referenc fram is valid
-       mesh._validate_orientation()
+       axis_u = (1,-1,0)
+       axis_v = (-1,-1,0)
+       axis_w = (0,0,1)
+       mesh.orientation = np.array([
+           axis_u,
+           axis_v,
+           axis_w
+       ])
 
        # Yield the rotated vtkStructuredGrid
        dataset_r = mesh.to_vtk()
@@ -267,7 +270,6 @@ class InterfaceVTK(object):
         if nodes.shape != (mesh.nN, 3):
             raise RuntimeError("Nodes of the grid are improperly defined.")
         # Rotate the points based on the axis orientations
-        mesh._validate_orientation()
         return np.dot(nodes, mesh.rotation_matrix)
 
     def __tensor_mesh_to_vtk(mesh, models=None):
@@ -359,7 +361,6 @@ class InterfaceVTK(object):
             Name('s) and array('s). Match number of cells
 
         """
-        # TODO: mesh.validate()
         converters = {
             "tree": InterfaceVTK.__tree_mesh_to_vtk,
             "tensor": InterfaceVTK.__tensor_mesh_to_vtk,
@@ -563,7 +564,9 @@ class InterfaceVTK(object):
 
 
         """
-        return InterfaceVTK.writeVTK(mesh, file_name, models=models, directory=directory)
+        return InterfaceVTK.writeVTK(
+            mesh, file_name, models=models, directory=directory
+        )
 
 
 class InterfaceTensorread_vtk(object):

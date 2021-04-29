@@ -1,5 +1,4 @@
 import numpy as np
-import properties
 import scipy.sparse as sp
 from scipy.constants import pi
 
@@ -16,6 +15,7 @@ from discretize.utils import (
 )
 from discretize.base import BaseTensorMesh, BaseRectangularMesh
 from discretize.operators import DiffOperators, InnerProducts
+from discretize.mixins import InterfaceMixins
 from discretize.utils.code_utils import (
     deprecate_class,
     deprecate_property,
@@ -25,7 +25,7 @@ import warnings
 
 
 class CylindricalMesh(
-    BaseTensorMesh, BaseRectangularMesh, InnerProducts, DiffOperators
+    BaseTensorMesh, BaseRectangularMesh, InnerProducts, DiffOperators, InterfaceMixins
 ):
     """
     CylindricalMesh is a mesh class for cylindrical problems. It supports both
@@ -72,13 +72,13 @@ class CylindricalMesh(
         **BaseTensorMesh._aliases,
     }
 
-    cartesian_origin = properties.Array(
-        "Cartesian origin of the mesh", dtype=float, shape=("*",)
-    )
+    _items = BaseTensorMesh._items | {"cartesian_origin"}
 
-    def __init__(self, h=None, origin=None, **kwargs):
-        super().__init__(h=h, origin=origin, **kwargs)
-        self.reference_system = "cylindrical"
+    def __init__(self, h, origin=None, cartesian_origin=None, **kwargs):
+        kwargs.pop("reference_system", None)  # reference system must be cylindrical
+        if "cartesianOrigin" in kwargs.keys():
+            cartesian_origin = kwargs.pop("cartesianOrigin")
+        super().__init__(h=h, origin=origin, reference_system="cylindrical", **kwargs)
 
         if not np.abs(self.h[1].sum() - 2 * np.pi) < 1e-10:
             raise AssertionError("The 2nd dimension must sum to 2*pi")
@@ -86,23 +86,25 @@ class CylindricalMesh(
         if self.dim == 2:
             print("Warning, a disk mesh has not been tested thoroughly.")
 
-        if "cartesian_origin" in kwargs.keys():
-            self.cartesian_origin = kwargs.pop("cartesian_origin")
-        elif "cartesianOrigin" in kwargs.keys():
-            self.cartesian_origin = kwargs.pop("cartesianOrigin")
-        else:
-            self.cartesian_origin = np.zeros(self.dim)
+        if cartesian_origin is None:
+            cartesian_origin = np.zeros(self.dim)
+        self.cartesian_origin = cartesian_origin
 
-    @properties.validator("cartesian_origin")
-    def check_cartesian_origin_shape(self, change):
-        change["value"] = np.array(change["value"], dtype=float).ravel()
-        if len(change["value"]) != self.dim:
-            raise Exception(
-                "Dimension mismatch. The mesh dimension is {}, and the "
-                "cartesian_origin provided has length {}".format(
-                    self.dim, len(change["value"])
-                )
+    @property
+    def cartesian_origin(self):
+        "Cartesian origin of the mesh"
+        return self._cartesian_origin
+
+    @cartesian_origin.setter
+    def cartesian_origin(self, value):
+        # ensure the value is a numpy array
+        value = np.asarray(value, dtype=np.float64)
+        value = np.atleast_1d(value)
+        if len(value) != self.dim:
+            raise ValueError(
+                f"cartesian origin and shape must be the same length, got {len(value)} and {len(self.dim)}"
             )
+        self._cartesian_origin = value
 
     @property
     def is_symmetric(self):
@@ -365,7 +367,9 @@ class CylindricalMesh(
         """
         if self.is_symmetric:
             return 2 * pi * self.nodes[:, 0]
-        return np.kron(np.ones(self._shape_total_nodes[2]), np.kron(self.h[1], self.nodes_x))
+        return np.kron(
+            np.ones(self._shape_total_nodes[2]), np.kron(self.h[1], self.nodes_x)
+        )
 
     @property
     def edge_y_lengths(self):
@@ -382,7 +386,9 @@ class CylindricalMesh(
             if self.is_symmetric:
                 self._edge_lengths_y = self._edge_y_lengths_full
             else:
-                self._edge_lengths_y = self._edge_y_lengths_full[~self._ishanging_edges_y]
+                self._edge_lengths_y = self._edge_y_lengths_full[
+                    ~self._ishanging_edges_y
+                ]
         return self._edge_lengths_y
 
     @property
@@ -417,7 +423,11 @@ class CylindricalMesh(
         if self.is_symmetric:
             raise NotImplementedError
         else:
-            return np.r_[self._edge_x_lengths_full, self._edge_y_lengths_full, self._edge_z_lengths_full]
+            return np.r_[
+                self._edge_x_lengths_full,
+                self._edge_y_lengths_full,
+                self._edge_z_lengths_full,
+            ]
 
     @property
     def edge_lengths(self):
@@ -469,7 +479,9 @@ class CylindricalMesh(
         """
         Area of y-faces (Azimuthal faces), prior to deflation.
         """
-        return np.kron(self.h[2], np.kron(np.ones(self._shape_total_nodes[1]), self.h[0]))
+        return np.kron(
+            self.h[2], np.kron(np.ones(self._shape_total_nodes[1]), self.h[0])
+        )
 
     @property
     def face_y_areas(self):
@@ -534,7 +546,9 @@ class CylindricalMesh(
         """
         Area of all faces (prior to delflation)
         """
-        return np.r_[self._face_x_areas_full, self._face_y_areas_full, self._face_z_areas_full]
+        return np.r_[
+            self._face_x_areas_full, self._face_y_areas_full, self._face_z_areas_full
+        ]
 
     @property
     def face_areas(self):
@@ -567,17 +581,14 @@ class CylindricalMesh(
         """
         if getattr(self, "_cell_volumes", None) is None:
             if self.is_symmetric:
-                az = pi * (
-                    self.nodes_x ** 2 - np.r_[0, self.nodes_x[:-1]] ** 2
-                )
+                az = pi * (self.nodes_x ** 2 - np.r_[0, self.nodes_x[:-1]] ** 2)
                 self._cell_volumes = np.kron(self.h[2], az)
             else:
                 self._cell_volumes = np.kron(
                     self.h[2],
                     np.kron(
                         self.h[1],
-                        0.5
-                        * (self.nodes_x[1:] ** 2 - self.nodes_x[:-1] ** 2),
+                        0.5 * (self.nodes_x[1:] ** 2 - self.nodes_x[:-1] ** 2),
                     ),
                 )
         return self._cell_volumes
@@ -644,7 +655,10 @@ class CylindricalMesh(
         """
         if getattr(self, "_hanging_faces_x_dict", None) is None:
             self._hanging_faces_x_dict = dict(
-                zip(np.nonzero(self._ishanging_faces_x)[0].tolist(), [None] * self._n_hanging_faces_x)
+                zip(
+                    np.nonzero(self._ishanging_faces_x)[0].tolist(),
+                    [None] * self._n_hanging_faces_x,
+                )
             )
         return self._hanging_faces_x_dict
 
@@ -790,7 +804,9 @@ class CylindricalMesh(
         """
         if getattr(self, "_ishanging_edges_z_bool", None) is None:
             if self.is_symmetric:
-                self._ishanging_edges_z_bool = np.ones(self._n_total_edges_z, dtype=bool)
+                self._ishanging_edges_z_bool = np.ones(
+                    self._n_total_edges_z, dtype=bool
+                )
             else:
                 nx, ny, nz = self._shape_total_nodes
                 hang_x = np.zeros(nx, dtype=bool)
@@ -808,7 +824,9 @@ class CylindricalMesh(
                     ),
                 )
 
-                self._ishanging_edges_z_bool = hangingEz & ~self._axis_of_symmetry_edges_z
+                self._ishanging_edges_z_bool = (
+                    hangingEz & ~self._axis_of_symmetry_edges_z
+                )
 
         return self._ishanging_edges_z_bool
 
@@ -933,9 +951,7 @@ class CylindricalMesh(
         """
         Full Fx grid (including hanging faces)
         """
-        return ndgrid(
-            [self.nodes_x, self.cell_centers_y, self.cell_centers_z]
-        )
+        return ndgrid([self.nodes_x, self.cell_centers_y, self.cell_centers_z])
 
     @property
     def faces_x(self):
@@ -1045,7 +1061,8 @@ class CylindricalMesh(
 
             if not self.is_symmetric:
                 self._face_x_divergence = (
-                    self._face_x_divergence * self._deflation_matrix("Fx", as_ones=True).T
+                    self._face_x_divergence
+                    * self._deflation_matrix("Fx", as_ones=True).T
                 )
 
         return self._face_x_divergence
@@ -1420,7 +1437,18 @@ class CylindricalMesh(
         from the operators
         """
         location = self._parse_location_type(location)
-        if location not in ["nodes", "faces", "faces_x", "faces_y", "faces_z", "edges", "edges_x", "edges_y", "edges_z", "cell_centers"]:
+        if location not in [
+            "nodes",
+            "faces",
+            "faces_x",
+            "faces_y",
+            "faces_z",
+            "edges",
+            "edges_x",
+            "edges_y",
+            "edges_z",
+            "cell_centers",
+        ]:
             raise AssertionError(
                 "Location must be a grid location, not {}".format(location)
             )
@@ -1634,7 +1662,6 @@ class CylindricalMesh(
             location_type_to = location_type
         location_type_to = self._parse_location_type(location_type_to)
 
-        print(location_type, location_type_to)
         if location_type == "faces":
             # do this three times for each component
             X = self.get_interpolation_matrix_cartesian_mesh(
@@ -1677,12 +1704,12 @@ class CylindricalMesh(
             G, proj = np.c_[r, theta, grid[:, 2]], np.ones(r.size)
         else:
             dotMe = {
-                "faces_x": Mrect.face_normals[:Mrect.nFx, :],
-                "faces_y": Mrect.face_normals[Mrect.nFx:(Mrect.nFx + Mrect.nFy), :],
-                "faces_z": Mrect.face_normals[-Mrect.nFz:, :],
+                "faces_x": Mrect.face_normals[: Mrect.nFx, :],
+                "faces_y": Mrect.face_normals[Mrect.nFx : (Mrect.nFx + Mrect.nFy), :],
+                "faces_z": Mrect.face_normals[-Mrect.nFz :, :],
                 "edges_x": Mrect.edge_tangents[: Mrect.nEx, :],
-                "edges_y": Mrect.edge_tangents[Mrect.nEx: (Mrect.nEx + Mrect.nEy), :],
-                "edges_z": Mrect.edge_tangents[-Mrect.nEz:, :],
+                "edges_y": Mrect.edge_tangents[Mrect.nEx : (Mrect.nEx + Mrect.nEy), :],
+                "edges_z": Mrect.edge_tangents[-Mrect.nEz :, :],
             }[location_type_to]
             if "faces" in location_type:
                 normals = np.c_[np.cos(theta), np.sin(theta), np.zeros(theta.size)]
@@ -1726,6 +1753,9 @@ class CylindricalMesh(
     cartesianGrid = deprecate_method(
         "cartesian_grid", "cartesianGrid", removal_version="1.0.0"
     )
+
+
+CylindricalMesh.__module__ = "discretize"
 
 
 @deprecate_class(removal_version="1.0.0")

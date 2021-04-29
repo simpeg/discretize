@@ -52,8 +52,6 @@ build_requires = [
 
 install_requires = build_requires + [
     "scipy>=0.13",
-    "properties",
-    "vectormath",
 ]
 
 metadata = dict(

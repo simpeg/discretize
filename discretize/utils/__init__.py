@@ -44,7 +44,7 @@ from discretize.utils.coordinate_utils import (
     # rotate_vec_cyl2cart
 )
 
-from discretize.utils.io_utils import download
+from discretize.utils.io_utils import download, load_mesh
 
 # DEPRECATIONS
 from discretize.utils.code_utils import isScalar, asArray_N_x_Dim

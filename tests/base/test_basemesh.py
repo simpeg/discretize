@@ -108,7 +108,7 @@ class TestBaseMesh(unittest.TestCase):
         self.mesh.x0 = np.r_[-1.0, -2.0, 1.0]
         mesh2 = BaseRectangularMesh.deserialize(self.mesh.serialize())
         self.assertTrue(np.all(self.mesh.x0 == mesh2.x0))
-        self.assertTrue(np.all(self.mesh._n == mesh2._n))
+        self.assertTrue(np.all(self.mesh.shape_cells == mesh2.shape_cells))
 
 
 class TestMeshNumbers2D(unittest.TestCase):

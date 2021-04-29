@@ -1,11 +1,16 @@
 import numpy as np
-import properties
 
-from discretize.utils import mkvc, index_cube, face_info, volume_tetrahedron, make_boundary_bool
+from discretize.utils import (
+    mkvc,
+    index_cube,
+    face_info,
+    volume_tetrahedron,
+    make_boundary_bool,
+)
 from discretize.base import BaseRectangularMesh
 from discretize.operators import DiffOperators, InnerProducts
+from discretize.mixins import InterfaceMixins
 from discretize.utils.code_utils import deprecate_property
-
 
 # Some helper functions.
 def _length2D(x):
@@ -24,7 +29,9 @@ def _normalize3D(x):
     return x / np.kron(np.ones((1, 3)), mkvc(_length3D(x), 2))
 
 
-class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
+class CurvilinearMesh(
+    BaseRectangularMesh, DiffOperators, InnerProducts, InterfaceMixins
+):
     """CurvilinearMesh is a mesh class that deals with curvilinear meshes.
 
     Example of a curvilinear mesh:
@@ -53,56 +60,44 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
             "gridEz": "edges_z",
         },
     }
+    _items = {"node_list"}
 
-    node_list = properties.List(
-        "List of arrays describing the node locations",
-        prop=properties.Array(
-            "node locations in an n-dimensional array",
-            shape={("*", "*"), ("*", "*", "*")},
-        ),
-        min_length=2,
-        max_length=3,
-    )
+    def __init__(self, node_list, **kwargs):
 
-    def __init__(self, node_list=None, **kwargs):
+        if "nodes" in kwargs:
+            node_list = kwargs.pop("nodes")
 
-        if 'nodes' in kwargs:
-            node_list = kwargs.pop('nodes')
-        self.node_list = node_list
-
-        if "_n" in kwargs.keys():
-            n = kwargs.pop("_n")
-            if np.any(n != np.array(self.node_list[0].shape) - 1):
+        node_list = list(np.asarray(item, dtype=np.float64) for item in node_list)
+        # check shapes of each node array match
+        dim = len(node_list)
+        if dim not in [2, 3]:
+            raise ValueError(
+                f"Only supports 2 and 3 dimensional meshes, saw a node_list of length {dim}"
+            )
+        for i, nodes in enumerate(node_list):
+            if len(nodes.shape) != dim:
                 raise ValueError(
-                    "Unexpected n-values. {} was provided, {} was expected".format(
-                        n, np.array(self.node_list[0].shape) - 1
-                    )
+                    f"Unexpected shape of item in node list, expect array with {dim} dimensions, got {len(nodes.shape)}"
                 )
-        else:
-            n = np.array(self.node_list[0].shape) - 1
-
-        BaseRectangularMesh.__init__(self, n, **kwargs)
+            if node_list[0].shape != nodes.shape:
+                raise ValueError(
+                    f"The shape of nodes are not consistent, saw {node_list[0].shape} and {nodes.shape}"
+                )
+        self._node_list = tuple(node_list)
 
         # Save nodes to private variable _nodes as vectors
-        self._nodes = np.ones((self.node_list[0].size, self.dim))
-        for i, node_i in enumerate(self.node_list):
-            self._nodes[:, i] = mkvc(node_i.astype(float))
-        self.origin = self.nodes.min(axis=0)
+        self._nodes = np.ones((self.node_list[0].size, dim))
+        for i, nodes in enumerate(self.node_list):
+            self._nodes[:, i] = mkvc(nodes)
 
-    @properties.validator("node_list")
-    def _check_nodes(self, change):
-        if len(change["value"]) <= 1:
-            raise ValueError("len(node) must be greater than 1")
+        shape_cells = (n - 1 for n in self.node_list[0].shape)
 
-        for i, change["value"][i] in enumerate(change["value"]):
-            if change["value"][i].shape != change["value"][0].shape:
-                raise ValueError(
-                    "change['value'][{0:d}] is not the same shape as "
-                    "change['value'][0]".format(i)
-                )
+        # absorb the rest of kwargs, and do not pass to super
+        super().__init__(shape_cells, origin=self.nodes[0])
 
-        if len(change["value"][0].shape) != len(change["value"]):
-            raise ValueError("Dimension mismatch")
+    @property
+    def node_list(self):
+        return self._node_list
 
     @classmethod
     def deserialize(cls, value, **kwargs):
@@ -280,13 +275,13 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
             location array of shape (mesh.n_boundary_edges, dim)
         """
         if self.dim == 2:
-            ex = self.edges_x[make_boundary_bool(self.shape_edges_x, dir='y')]
-            ey = self.edges_y[make_boundary_bool(self.shape_edges_y, dir='x')]
+            ex = self.edges_x[make_boundary_bool(self.shape_edges_x, dir="y")]
+            ey = self.edges_y[make_boundary_bool(self.shape_edges_y, dir="x")]
             return np.r_[ex, ey]
         elif self.dim == 3:
-            ex = self.edges_x[make_boundary_bool(self.shape_edges_x, dir='yz')]
-            ey = self.edges_y[make_boundary_bool(self.shape_edges_y, dir='xz')]
-            ez = self.edges_z[make_boundary_bool(self.shape_edges_z, dir='xy')]
+            ex = self.edges_x[make_boundary_bool(self.shape_edges_x, dir="yz")]
+            ey = self.edges_y[make_boundary_bool(self.shape_edges_y, dir="xz")]
+            ez = self.edges_z[make_boundary_bool(self.shape_edges_z, dir="xy")]
             return np.r_[ex, ey, ez]
 
     @property
@@ -298,12 +293,12 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
         np.ndarray of float
             location array of shape (mesh.n_boundary_faces, dim)
         """
-        fx = self.faces_x[make_boundary_bool(self.shape_faces_x, dir='x')]
-        fy = self.faces_y[make_boundary_bool(self.shape_faces_y, dir='y')]
+        fx = self.faces_x[make_boundary_bool(self.shape_faces_x, dir="x")]
+        fy = self.faces_y[make_boundary_bool(self.shape_faces_y, dir="y")]
         if self.dim == 2:
             return np.r_[fx, fy]
         elif self.dim == 3:
-            fz = self.faces_z[make_boundary_bool(self.shape_faces_z, dir='z')]
+            fz = self.faces_z[make_boundary_bool(self.shape_faces_z, dir="z")]
             return np.r_[fx, fy, fz]
 
     @property
@@ -315,33 +310,29 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
         np.ndarray of float
             Array of vectors of shape (mesh.n_boundary_faces, dim)
         """
-        is_bxm = np.zeros(self.shape_faces_x, order='F', dtype=bool)
+        is_bxm = np.zeros(self.shape_faces_x, order="F", dtype=bool)
         is_bxm[0, :] = True
-        is_bxm = is_bxm.reshape(-1, order='F')
+        is_bxm = is_bxm.reshape(-1, order="F")
 
-        is_bym = np.zeros(self.shape_faces_y, order='F', dtype=bool)
+        is_bym = np.zeros(self.shape_faces_y, order="F", dtype=bool)
         is_bym[:, 0] = True
-        is_bym = is_bym.reshape(-1, order='F')
+        is_bym = is_bym.reshape(-1, order="F")
 
         is_b = np.r_[
-            make_boundary_bool(self.shape_faces_x, dir='x'),
-            make_boundary_bool(self.shape_faces_y, dir='y')
+            make_boundary_bool(self.shape_faces_x, dir="x"),
+            make_boundary_bool(self.shape_faces_y, dir="y"),
         ]
         switch = np.r_[is_bxm, is_bym]
         if self.dim == 3:
-            is_bzm = np.zeros(self.shape_faces_z, order='F', dtype=bool)
+            is_bzm = np.zeros(self.shape_faces_z, order="F", dtype=bool)
             is_bzm[:, :, 0] = True
-            is_bzm = is_bzm.reshape(-1, order='F')
+            is_bzm = is_bzm.reshape(-1, order="F")
 
-            is_b = np.r_[
-                is_b,
-                make_boundary_bool(self.shape_faces_z, dir='z')
-            ]
+            is_b = np.r_[is_b, make_boundary_bool(self.shape_faces_z, dir="z")]
             switch = np.r_[switch, is_bzm]
         face_normals = self.face_normals.copy()
         face_normals[switch] *= -1
         return face_normals[is_b]
-
 
     # --------------- Geometries ---------------------
     #
@@ -509,8 +500,12 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
                 edge1 = xy[D, :] - xy[A, :]
                 A, B = index_cube("AB", self.vnN, self.vnEy)
                 edge2 = xy[B, :] - xy[A, :]
-                self._edge_lengths = np.r_[mkvc(_length2D(edge1)), mkvc(_length2D(edge2))]
-                self._edge_tangents = np.r_[edge1, edge2] / np.c_[self._edge_lengths, self._edge_lengths]
+                self._edge_lengths = np.r_[
+                    mkvc(_length2D(edge1)), mkvc(_length2D(edge2))
+                ]
+                self._edge_tangents = (
+                    np.r_[edge1, edge2] / np.c_[self._edge_lengths, self._edge_lengths]
+                )
             elif self.dim == 3:
                 xyz = self.gridN
                 A, D = index_cube("AD", self.vnN, self.vnEx)
@@ -543,3 +538,6 @@ class CurvilinearMesh(BaseRectangularMesh, DiffOperators, InnerProducts):
     edge = deprecate_property("edge_lengths", "edge", removal_version="1.0.0")
     # tangent already deprecated in BaseMesh
     # normals already deprecated in BaseMesh
+
+
+CurvilinearMesh.__module__ = "discretize"

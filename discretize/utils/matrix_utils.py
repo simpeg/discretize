@@ -156,18 +156,18 @@ def ndgrid(*args, **kwargs):
     return meshed
 
 
-def make_boundary_bool(shape, dir='xyz'):
+def make_boundary_bool(shape, dir="xyz"):
     """From the given shape, return a boolean index array to identify the boundaries"""
-    is_b = np.zeros(shape, dtype=bool, order='F')
-    if 'x' in dir:
+    is_b = np.zeros(shape, dtype=bool, order="F")
+    if "x" in dir:
         is_b[[0, -1]] = True
     if len(shape) > 1:
-        if 'y' in dir:
+        if "y" in dir:
             is_b[:, [0, -1]] = True
     if len(shape) > 2:
-        if 'z' in dir:
+        if "z" in dir:
             is_b[:, :, [0, -1]] = True
-    return is_b.reshape(-1, order='F')
+    return is_b.reshape(-1, order="F")
 
 
 def ind2sub(shape, inds):
@@ -470,6 +470,12 @@ class Zero(object):
     def __rmul__(self, v):
         return self
 
+    def __matmul__(self, v):
+        return self
+
+    def __rmatmul__(self, v):
+        return self
+
     def __div__(self, v):
         return self
 
@@ -564,6 +570,12 @@ class Identity(object):
     def __rmul__(self, v):
         return v if self._positive else -v
 
+    def __matmul__(self, v):
+        return v if self._positive else -v
+
+    def __rmatmul__(self, v):
+        return v if self._positive else -v
+
     def __div__(self, v):
         if sp.issparse(v):
             raise NotImplementedError("Sparse arrays not divisibile.")
@@ -626,7 +638,7 @@ class _inftup(tuple):
     def __init__(self, val=None):
         self._val = val
 
-    def  __getitem__(self, key):
+    def __getitem__(self, key):
         if isinstance(key, slice):
             return _inftup(self._val)
         return self._val
@@ -636,6 +648,7 @@ class _inftup(tuple):
 
     def __repr__(self):
         return f"({self._val}, {self._val}, ...)"
+
 
 sdInv = deprecate_function(sdinv, "sdInv", removal_version="1.0.0")
 getSubArray = deprecate_function(get_subarray, "getSubArray", removal_version="1.0.0")

@@ -1,7 +1,7 @@
 from discretize.tensor_mesh import TensorMesh
 from discretize.cylindrical_mesh import CylMesh, CylindricalMesh
 from discretize.curvilinear_mesh import CurvilinearMesh
-from discretize.base.mesh_io import load_mesh
+from discretize.utils.io_utils import load_mesh
 
 try:
     from discretize.tree_mesh import TreeMesh
