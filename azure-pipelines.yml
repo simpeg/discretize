@@ -66,8 +66,8 @@ stages:
             cd discretize-docs
             git gc --prune=now
             git remote prune origin
-            rm -rf en/master/*
-            cp -r $BUILD_SOURCESDIRECTORY/docs/_build/html/* en/master/
+            rm -rf en/main/*
+            cp -r $BUILD_SOURCESDIRECTORY/docs/_build/html/* en/main/
             touch .nojekyll
             git add .
             git commit -am "Azure CI commit ref $(Build.SourceVersion)"
