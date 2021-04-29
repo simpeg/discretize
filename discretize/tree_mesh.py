@@ -98,7 +98,7 @@ import warnings
 from discretize.utils.code_utils import deprecate_property
 
 
-class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO):
+class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, DiffOperators, TreeMeshIO):
     """
     TreeMesh is a class for adaptive QuadTree (2D) and OcTree (3D) meshes.
     """

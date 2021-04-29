@@ -1,7 +1,7 @@
 import numpy as np
 from scipy import sparse as sp
 import warnings
-from discretize.utils import sdiag, speye, kron3, spzeros, ddx, av, av_extrap
+from discretize.utils import sdiag, speye, kron3, spzeros, ddx, av, av_extrap, make_boundary_bool
 from discretize.utils.code_utils import deprecate_method, deprecate_property
 
 
@@ -444,6 +444,119 @@ class DiffOperators(object):
                 )
         return self._nodal_laplacian
 
+    def edge_divergence_weak_form_robin(self, alpha=0.0, beta=1.0, gamma=0.0):
+        r"""Robin boundary condition for the weak formulation of the edge divergence
+
+        This function returns the necessary parts to form the full weak form of the
+        edge divergence using the nodal gradient with appropriate boundary conditions.
+
+        The `alpha`, `beta`, and `gamma` parameters can be scalars, or arrays. If they
+        are arrays, they can either be the same length as the number of boundary faces,
+        or boundary nodes. If multiple parameters are arrays, they must all be the same
+        length.
+
+        `beta` can not be 0.
+
+        It is assumed here that quantity that is approximated on the boundary is the
+        gradient of another quantity. See the Notes section for explicit details.
+
+        Parameters
+        ----------
+        alpha, beta : scalar or array_like
+            Parameters for the Robin boundary condition. array_like must be defined on
+            either boundary faces or boundary nodes.
+        gamma: scalar or array_like
+            right hand side boundary conditions. If this parameter is array like, it can
+            be fed either a (n_boundary_XXX,) shape array or an (n_boundary_XXX, n_rhs)
+            shape array if multiple systems have the same alpha and beta parameters.
+
+        Notes
+        -----
+        For these returned operators, it is assumed that the quantity on the boundary is
+        related to the gradient of some other quantity.
+
+        The weak form is obtained by multiplying the divergence by a (piecewise-constant)
+        test function, and integrating over the cell, i.e.
+
+        .. math:: \int_V y \nabla \cdot \vec{u} \partial V
+            :label: weak_form
+
+        This equation can be transformed to reduce the differentiability requirement on
+        :math:`\vec{u}` to be,
+
+        .. math:: -\int_V \vec{u} \cdot (\nabla y) \partial V + \int_{dV} y \vec{u} \cdot \hat{n} \partial S.
+            :label: transformed
+
+        Furthermore, when applying these types of transformations, the unknown vector
+        :math:`\vec{u}` is usually related to some scalar potential as:
+
+        .. math:: \vec{u} = \nabla \phi
+            :label: gradient of potential
+
+        Thus the robin conditions returned by these matrices apply to the quantity of
+        :math:`\phi`.
+
+        .. math::
+            \alpha \phi + \beta \nabla \phi \cdot \hat{n} = \gamma
+
+            \alpha \phi + \beta \vec{u} \cdot \hat{n} = \gamma
+
+        The returned operators cannot be used to impose a Dirichlet condition on
+        :math:`\phi`.
+
+        """
+        alpha = np.atleast_1d(alpha)
+        beta = np.atleast_1d(beta)
+        gamma = np.atleast_1d(gamma)
+
+        if np.any(beta == 0.0):
+            raise ValueError("beta cannot have a zero value")
+
+        Pbn = self.project_node_to_boundary_node
+        Pbf = self.project_face_to_boundary_face
+
+        n_boundary_faces = Pbf.shape[0]
+        n_boundary_nodes = Pbn.shape[0]
+
+        if len(alpha) == 1:
+            if len(beta) != 1:
+                alpha = np.full(len(beta), alpha[0])
+            elif len(gamma) != 1:
+                alpha = np.full(len(gamma), alpha[0])
+            else:
+                alpha = np.full(n_boundary_faces, alpha[0])
+        if len(beta) == 1:
+            if len(alpha) != 1:
+                beta = np.full(len(alpha), beta[0])
+        if len(gamma) == 1:
+            if len(alpha) != 1:
+                gamma = np.full(len(alpha), gamma[0])
+
+        if len(alpha) != len(beta) or len(beta) != len(gamma):
+            raise ValueError("alpha, beta, and gamma must have the same length")
+
+        if len(alpha) not in [n_boundary_faces, n_boundary_nodes]:
+            raise ValueError("The arrays must be of length n_boundary_faces or n_boundary_nodes")
+
+        AveN2F = self.average_node_to_face
+        boundary_areas = Pbf @ self.face_areas
+        AveBN2Bf = Pbf @ AveN2F @ Pbn.T
+
+        # at the boundary, we have that u dot n = (gamma - alpha * phi)/beta
+        if len(alpha) == n_boundary_faces:
+            if gamma.ndim == 2:
+                b = Pbn.T @ (AveBN2Bf.T @ (gamma/beta[:, None] * boundary_areas[:, None]))
+            else:
+                b = Pbn.T @ (AveBN2Bf.T @ (gamma/beta * boundary_areas))
+            B = sp.diags(Pbn.T @ (AveBN2Bf.T @ (-alpha/beta * boundary_areas)))
+        else:
+            if gamma.ndim == 2:
+                b = Pbn.T @ (gamma/beta[:, None] * (AveBN2Bf.T @ boundary_areas)[:, None])
+            else:
+                b = Pbn.T @ (gamma/beta * (AveBN2Bf.T @ boundary_areas))
+            B = sp.diags(Pbn.T @ (-alpha/beta * (AveBN2Bf.T @ boundary_areas)))
+        return B, b
+
     ###########################################################################
     #                                                                         #
     #                                Cell Grad                                #
@@ -572,6 +685,124 @@ class DiffOperators(object):
             )  # Average volume between adjacent cells
             self._cell_gradient = sdiag(S / V) * G
         return self._cell_gradient
+
+    def cell_gradient_weak_form_robin(self, alpha=1.0, beta=0.0, gamma=0.0):
+        """Robin boundary condition for the weak formulation of the cell gradient
+
+        This function returns the necessary parts for the weak form of the cell gradient
+        operator to represent the Robin boundary conditions.
+
+        The implementation assumes a ghost cell that mirrors the boundary cells across the boundary faces, with a
+        piecewise linear approximation to the values at the ghost cell centers.
+
+        The parameters can either be defined as a constant applied to the entire boundary,
+        or as arrays that represent those values on the :meth:`discretize.base.BaseTensorMesh.boundary_faces`.
+
+        The returned arrays represent the proper boundary conditions on a solution ``u``
+        such that the inner product of the gradient of ``u`` with a test function y would
+        be <``y, gradient*u``> ``= y.dot((-face_divergence.T*cell_volumes + A)*u + y.dot(b)``.
+
+        The default values will produce a zero-dirichlet boundary condition.
+
+        Parameters
+        ----------
+        alpha, beta : scalar or array_like
+            Parameters for the Robin boundary condition. array_like must be defined on
+            each boundary face.
+        gamma: scalar or array_like
+            right hand side boundary conditions. If this parameter is array like, it can
+            be fed either a (n_boundary_faces,) shape array or an (n_boundary_faces, n_rhs)
+            shape array if multiple systems have the same alpha and beta parameters.
+
+        Returns
+        -------
+        A : scipy.sparse.csr_matrix
+            Matrix to add to (-face_divergence.T * cell_volumes)
+        b : numpy.ndarray
+            Array to add to the result of the (-face_divergence.T * cell_volumes + A) @ u.
+
+        Examples
+        --------
+        We first create a very simple 2D tensor mesh on the [0, 1] boundary:
+
+        >>> import matplotlib.pyplot as plt
+        >>> import scipy.sparse as sp
+        >>> import discretize
+        >>> mesh = discretize.TensorMesh([32, 32])
+
+        Define the `alpha`, `beta`, and `gamma` parameters for a zero - Dirichlet
+        condition on the boundary, this corresponds to setting:
+
+        >>> alpha = 1.0
+        >>> beta = 0.0
+        >>> gamma = 0.0
+        >>> A, b = mesh.cell_gradient_weak_form_robin(alpha, beta, gamma)
+
+        We can then represent the operation of taking the weak form of the gradient of a
+        function defined on cell centers with appropriate robin boundary conditions as:
+
+        >>> V = sp.diags(mesh.cell_volumes)
+        >>> D = mesh.face_divergence
+        >>> phi = np.sin(np.pi * mesh.cell_centers[:, 0]) * np.sin(np.pi * mesh.cell_centers[:, 1])
+        >>> phi_grad = (-D.T @ V + A) @ phi + b
+
+        Notes
+        -----
+        The weak form is obtained by multiplying the gradient by a (piecewise-constant)
+        test function, and integrating over the cell, i.e.
+
+        .. math:: \int_V \vec{y} \cdot \nabla u \partial V
+            :label: weak_form
+
+        This equation can be transformed to reduce the differentiability requirement on `u`
+        to be,
+
+        .. math:: -\int_V u (\nabla \cdot \vec{y}) \partial V + \int_{dV} u \vec{y} \partial V.
+            :label: transformed
+
+        The first term in equation :eq:transformed is constructed using the matrix
+        operators defined on this mesh as ``D`` = :meth:`discretize.operators.DiffOperators.face_divergence` and
+        ``V``, a diagonal matrix of :meth:`discretize.base.BaseMesh.cell_volumes`, as
+
+        .. math:: -(D*y)^T*V*u.
+
+        This function returns the necessary matrices to complete the transformation of
+        equation :eq:transformed. The second part of equation :eq:transformed becomes,
+
+        .. math:: \int_V \nabla \cdot (\phi u) \partial V = \int_{\partial\Omega} \phi\vec{u}\cdot\hat{n} \partial a
+            :label: boundary_conditions
+
+        which is then approximated with the matrices returned here such that the full
+        form of the weak formulation in a discrete form would be.
+
+        .. math:: y^T(-D^T V + B)u + y^Tb
+        """
+
+        # get length between boundary cell_centers and boundary_faces
+        Pf = self.project_face_to_boundary_face
+        aveC2BF = Pf @ self.average_cell_to_face
+        # distance from cell centers to ghost point on boundary faces
+        if self.dim == 1:
+            h = np.abs(self.boundary_faces - aveC2BF @ self.cell_centers)
+        else:
+            h = np.linalg.norm(self.boundary_faces - aveC2BF @ self.cell_centers, axis=1)
+
+        # for the ghost point u_k = a*u_i + b where
+        a = (beta/h/(alpha + beta/h))
+        A = sp.diags(a) @ aveC2BF
+
+        gamma = np.asarray(gamma)
+        if gamma.ndim > 1:
+            b = (gamma)/(alpha + beta/h)[:, None]
+        else:
+            b = (gamma)/(alpha + beta/h)
+
+        # value at boundary = A*cells + b
+        M = self.boundary_face_scalar_integral
+        A = M @ A
+        b = M @ b
+
+        return A, b
 
     @property
     def cell_gradient_BC(self):
@@ -742,6 +973,134 @@ class DiffOperators(object):
                 self._edge_curl = sdiag(1 / S) * (self._edge_curl_stencil * sdiag(L))
 
         return self._edge_curl
+
+    @property
+    def boundary_face_scalar_integral(self):
+        r"""Represents the operation of integrating a scalar function on the boundary
+
+        This matrix represents the boundary surface integral of a scalar function
+        multiplied with a finite volume test function on the mesh.
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            Sparse matrix of shape (n_faces, n_boundary_faces)
+
+        Notes
+        -----
+        The integral we are representing on the boundary of the mesh is
+
+        .. math:: \int_{\Omega} u\vec{w} \cdot \hat{n} \partial \Omega
+
+        In discrete form this is:
+
+        .. math:: w^T * P * u_b
+
+        where `w` is defined on all faces, and `u_b` is defined on boundary faces.
+        """
+        if self.dim == 1:
+            return sp.csr_matrix(([-1, 1], ([0, self.n_faces_x-1], [0, 1])), shape=(self.n_faces_x, 2))
+        P = self.project_face_to_boundary_face
+
+        w_h_dot_normal = np.sum(
+            (P @ self.face_normals) * self.boundary_face_outward_normals,
+            axis=-1
+        )
+        A = sp.diags(self.face_areas) @ P.T @ sp.diags(w_h_dot_normal)
+        return A
+
+    @property
+    def boundary_edge_vector_integral(self):
+        r"""Represents the operation of integrating a vector function on the boundary
+
+        This matrix represents the boundary surface integral of a vector function
+        multiplied with a finite volume test function on the mesh.
+
+        In 1D and 2D, the operation assumes that the right array contains only a single
+        component of the vector ``u``. In 3D, however, we must assume that ``u`` will
+        contain each of the three vector components, and it must be ordered as,
+        ``[edges_1_x, ... ,edge_N_x, edge_1_y, ..., edge_N_y, edge_1_z, ..., edge_N_z]``
+        , where ``N`` is the number of boundary edges.
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            Sparse matrix of shape (n_edges, n_boundary_edges) for 1D or 2D mesh,
+            (n_edges, 3*n_boundary_edges) for a 3D mesh.
+
+        Notes
+        -----
+        The integral we are representing on the boundary of the mesh is
+
+        .. math:: \int_{\Omega} \vec{w} \cdot (\vec{u} \times \hat{n}) \partial \Omega
+
+        In discrete form this is:
+
+        .. math:: w^T * P * u_b
+
+        where `w` is defined on all edges, and `u_b` is all three components defined on
+        boundary edges.
+        """
+        Pe = self.project_edge_to_boundary_edge
+        Pf = self.project_face_to_boundary_face
+        dA = self.boundary_face_outward_normals * (Pf @ self.face_areas)[:, None]
+        w = Pe @ self.edge_tangents
+
+        n_boundary_edges = len(w)
+
+        Av = Pf @ self.average_edge_to_face_vector @ Pe.T
+
+        w_cross_n = np.cross(-w, Av.T @ dA)
+
+        if self.dim == 2:
+            return Pe.T @ sp.diags(w_cross_n, format='csr')
+        return Pe.T @ sp.diags(
+            w_cross_n.T,
+            n_boundary_edges*np.arange(3),
+            shape=(n_boundary_edges, 3*n_boundary_edges)
+        )
+
+    @property
+    def boundary_node_vector_integral(self):
+        r"""Represents the operation of integrating a vector function dotted with the boundary normal
+
+        This matrix represents the boundary surface integral of a vector function
+        dotted with the boundary normal and multiplied with a scalar finite volume
+        test function on the mesh.
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            Sparse matrix of shape (n_nodes, ndim * n_boundary_nodes).
+
+        Notes
+        -----
+        The integral we are representing on the boundary of the mesh is
+
+        .. math:: \int_{\Omega} (w \vec{u}) \cdot \hat{n} \partial \Omega
+
+        In discrete form this is:
+
+        .. math:: w^T * P * u_b
+
+        where `w` is defined on all nodes, and `u_b` is all three components defined on
+        boundary nodes.
+        """
+        if self.dim == 1:
+            return sp.csr_matrix(([-1, 1], ([0, self.shape_nodes[0]-1], [0, 1])), shape=(self.shape_nodes[0], 2))
+        Pn = self.project_node_to_boundary_node
+        Pf = self.project_face_to_boundary_face
+        n_boundary_nodes = Pn.shape[0]
+
+        dA = self.boundary_face_outward_normals * (Pf @ self.face_areas)[:, None]
+
+        Av = Pf @ self.average_node_to_face @ Pn.T
+
+        u_dot_ds = Av.T @ dA
+        diags = u_dot_ds.T
+        offsets = n_boundary_nodes * np.arange(self.dim)
+
+        return Pn.T @ sp.diags(diags, offsets, shape=(n_boundary_nodes, self.dim*n_boundary_nodes))
 
     def get_BC_projections(self, BC, discretization="CC"):
         """
@@ -1083,6 +1442,32 @@ class DiffOperators(object):
         return self._average_cell_vector_to_face
 
     @property
+    def average_cell_to_edge(self):
+        if getattr(self, "_average_cell_to_edge", None) is None:
+            n = self.shape_cells
+            if self.dim == 1:
+                avg = sp.eye(n[0])
+            elif self.dim == 2:
+                avg = sp.vstack(
+                    (
+                        sp.kron(av_extrap(n[1]), speye(n[0])),
+                        sp.kron(speye(n[1]), av_extrap(n[0])),
+                    ),
+                    format="csr",
+                )
+            elif self.dim == 3:
+                avg = sp.vstack(
+                    (
+                        kron3(av_extrap(n[2]), av_extrap(n[1]), speye(n[0])),
+                        kron3(av_extrap(n[2]), speye(n[1]), av_extrap(n[0])),
+                        kron3(speye(n[2]), av_extrap(n[1]), av_extrap(n[0])),
+                    ),
+                    format="csr",
+                )
+            self._average_cell_to_edge = avg
+        return self._average_cell_to_edge
+
+    @property
     def average_edge_to_cell(self):
         "Construct the averaging operator on cell edges to cell centers."
         if getattr(self, "_average_edge_to_cell", None) is None:
@@ -1162,6 +1547,34 @@ class DiffOperators(object):
             if self.dim == 3:
                 self._average_edge_z_to_cell = kron3(speye(n[2]), av(n[1]), av(n[0]))
         return self._average_edge_z_to_cell
+
+    @property
+    def average_edge_to_face_vector(self):
+        if self.dim == 1:
+            return self.average_cell_to_face
+        elif self.dim == 2:
+            return sp.diags(
+                [1, 1],
+                [-self.n_faces_x, self.n_faces_y],
+                shape=(self.n_faces, self.n_edges)
+            )
+        n1, n2, n3 = self.shape_cells
+        ex_to_fy = kron3(av(n3), speye(n2+1) ,speye(n1))
+        ex_to_fz = kron3(speye(n3+1), av(n2), speye(n1))
+
+
+        ey_to_fx = kron3(av(n3), speye(n2), speye(n1+1))
+        ey_to_fz = kron3(speye(n3+1), speye(n2), av(n1))
+
+        ez_to_fx = kron3(speye(n3), av(n2), speye(n1+1))
+        ez_to_fy = kron3(speye(n3), speye(n2+1), av(n1))
+
+        e_to_f = sp.bmat([
+            [None, ey_to_fx, ez_to_fx],
+            [ex_to_fy, None, ez_to_fy],
+            [ex_to_fz, ey_to_fz, None]
+        ], format='csr')
+        return e_to_f
 
     @property
     def average_node_to_cell(self):
@@ -1249,7 +1662,7 @@ class DiffOperators(object):
     @property
     def _average_node_to_face_x(self):
         if self.dim == 1:
-            aveN2Fx = av(self.shape_cells[0])
+            aveN2Fx = speye(self.shape_nodes[0])
         elif self.dim == 2:
             aveN2Fx = sp.kron(av(self.shape_cells[1]), speye(self.shape_nodes[0]))
         elif self.dim == 3:
@@ -1303,6 +1716,71 @@ class DiffOperators(object):
                     (self._average_node_to_face_x, self._average_node_to_face_y, self._average_node_to_face_z), format="csr"
                 )
         return self._average_node_to_face
+
+    @property
+    def project_face_to_boundary_face(self):
+        """ Projects values defined on all faces to the boundary faces
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            Projection matrix with shape (n_boundary_faces, n_faces)
+        """
+        # Simple matrix which projects the values of the faces onto the boundary faces
+        # Can also be used to "select" the boundary faces
+
+        # Create a matrix that projects all faces onto boundary faces
+        # The below should work for a regular structured mesh
+        is_b = make_boundary_bool(self.shape_faces_x, dir='x')
+        if self.dim > 1:
+            is_b = np.r_[is_b, make_boundary_bool(self.shape_faces_y, dir='y')]
+        if self.dim == 3:
+            is_b = np.r_[is_b, make_boundary_bool(self.shape_faces_z, dir='z')]
+        return sp.eye(self.n_faces, format='csr')[is_b]
+
+    @property
+    def project_edge_to_boundary_edge(self):
+        """Projects values defined on all edges to the boundary edges
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            Projection matrix with shape (n_boundary_edges, n_edges)
+        """
+        # Simple matrix which projects the values of the faces onto the boundary faces
+        # Can also be used to "select" the boundary faces
+
+        # Create a matrix that projects all edges onto boundary edges
+        # The below should work for a regular structured mesh
+        if self.dim == 1:
+            return None  # No edges are on the boundary in 1D
+
+        is_b = np.r_[
+            make_boundary_bool(self.shape_edges_x, dir='yz'),
+            make_boundary_bool(self.shape_edges_y, dir='xz')
+        ]
+        if self.dim == 3:
+            is_b = np.r_[is_b, make_boundary_bool(self.shape_edges_z, dir='xy')]
+        return sp.eye(self.n_edges, format='csr')[is_b]
+
+    @property
+    def project_node_to_boundary_node(self):
+        """Projects values defined on all edges to the boundary edges
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            Projection matrix with shape (n_boundary_nodes, n_nodes)
+        """
+        # Simple matrix which projects the values of the nodes onto the boundary nodes
+        # Can also be used to "select" the boundary nodes
+
+        # Create a matrix that projects all nodes onto boundary nodes
+        # The below should work for a regular structured mesh
+
+        is_b = make_boundary_bool(self.shape_nodes)
+        return sp.eye(self.n_nodes, format='csr')[is_b]
+
 
     # DEPRECATED
     cellGrad = deprecate_property("cell_gradient", "cellGrad", removal_version="1.0.0")
