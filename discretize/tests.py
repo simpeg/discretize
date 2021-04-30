@@ -129,6 +129,8 @@ def setup_mesh(mesh_type, nC, nDim):
             kwrd = "rect"
         elif "rotate" in mesh_type:
             kwrd = "rotate"
+        elif "sphere" in mesh_type:
+            kwrd = "sphere"
         else:
             raise Exception("Unexpected mesh_type")
         if nDim == 1:

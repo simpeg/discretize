@@ -17,6 +17,7 @@ from discretize.utils import (
     sdinv,
     TensorType,
     interpolation_matrix,
+    make_boundary_bool,
 )
 from discretize.utils.code_utils import deprecate_method, deprecate_property
 import warnings
@@ -52,20 +53,18 @@ class BaseTensorMesh(BaseMesh):
     }
 
     _unitDimensions = [1, 1, 1]
-    _items = {'h'} | BaseMesh._items
+    _items = {"h"} | BaseMesh._items
 
     def __init__(self, h, origin=None, **kwargs):
         if "x0" in kwargs:
-            origin = kwargs.pop('x0')
+            origin = kwargs.pop("x0")
 
         try:
             h = list(h)  # ensure value is a list (and make a copy)
         except TypeError:
             raise TypeError("h must be an iterable object, not {}".format(type(h)))
         if len(h) == 0 or len(h) > 3:
-            raise ValueError(
-                "h must be of dimension 1, 2, or 3 not {}".format(len(h))
-            )
+            raise ValueError("h must be of dimension 1, 2, or 3 not {}".format(len(h)))
         # expand value
         for i, h_i in enumerate(h):
             if is_scalar(h_i) and not isinstance(h_i, np.ndarray):
@@ -96,9 +95,7 @@ class BaseTensorMesh(BaseMesh):
         try:
             value = list(value)
         except:
-            raise TypeError(
-                "origin must be iterable"
-            )
+            raise TypeError("origin must be iterable")
         if len(value) != self.dim:
             raise ValueError("Dimension mismatch. len(origin) != len(h)")
         for i, (val, h_i) in enumerate(zip(value, self.h)):
@@ -109,8 +106,7 @@ class BaseTensorMesh(BaseMesh):
         value = np.asarray(value, dtype=np.float64)
         self._origin = value
 
-
-    @ property
+    @property
     def nodes_x(self):
         """
         Return the x-coordinate of the node locations along the x direction
@@ -118,7 +114,7 @@ class BaseTensorMesh(BaseMesh):
         For 1D, 2D or 3D tensor meshes, this property returns a 1D vector
         containing the x-coordinate values of the nodes along the x direction.
         The length of the vector is equal to mesh.shape_nodes[0].
-        
+
         Returns
         -------
         np.ndarray (nNx,)
@@ -134,7 +130,7 @@ class BaseTensorMesh(BaseMesh):
         For 2D or 3D tensor meshes, this property returns a 1D vector
         containing the y-coordinate values of the nodes along the y direction.
         The length of the vector is equal to mesh.shape_nodes[1].
-        
+
         Returns
         -------
         np.ndarray (nNy,)
@@ -150,7 +146,7 @@ class BaseTensorMesh(BaseMesh):
         For 3D tensor meshes, this property returns a 1D vector
         containing the z-coordinate values of the nodes along the z direction.
         The length of the vector is equal to mesh.mesh.shape_nodes[1].
-        
+
         Returns
         -------
         np.ndarray (nNz,)
@@ -166,7 +162,7 @@ class BaseTensorMesh(BaseMesh):
         For 1D, 2D or 3D tensor meshes, this property returns a 1D vector
         containing the x-coordinate values of the cell centers along the x direction.
         The length of the vector is equal to mesh.shape_centers[0].
-        
+
         Returns
         -------
         np.ndarray (nCx,)
@@ -183,7 +179,7 @@ class BaseTensorMesh(BaseMesh):
         For 2D or 3D tensor meshes, this property returns a 1D vector
         containing the y-coordinate values of the cell centers along the y direction.
         The length of the vector is equal to mesh.shape_centers[1].
-        
+
         Returns
         -------
         np.ndarray (nCy,)
@@ -202,7 +198,7 @@ class BaseTensorMesh(BaseMesh):
         For 3D tensor meshes, this property returns a 1D vector
         containing the z-coordinate values of the cell centers along the z direction.
         The length of the vector is equal to mesh.shape_centers[2].
-        
+
         Returns
         -------
         np.ndarray (nCz,)
@@ -221,12 +217,12 @@ class BaseTensorMesh(BaseMesh):
         For 1D, 2D or 3D tensor meshes, this property returns a numpy array
         containing the cell center locations. The bottom-front-leftmost cell is the first
         cell. The cells are ordered along the x, then y, then z directions.
-        
+
         Returns
         -------
         np.ndarray (nC, dim)
             The shape of the output array is the number of cells by the dimension.
-        
+
         Examples
         --------
         The following is a 1D example.
@@ -254,12 +250,12 @@ class BaseTensorMesh(BaseMesh):
         For 1D, 2D or 3D tensor meshes, this property returns a numpy array
         containing the node locations. The bottom-front-leftmost node is the first
         node. The nodes are ordered along the x, then y, then z directions.
-        
+
         Returns
         -------
         np.ndarray (nN, dim)
             The shape of the output array is the number of nodes by the dimension.
-        
+
         Examples
         --------
         The following is a 1D example.
@@ -280,6 +276,20 @@ class BaseTensorMesh(BaseMesh):
         return self._getTensorGrid("nodes")
 
     @property
+    def boundary_nodes(self):
+        """Boundary node locations
+
+        Returns
+        -------
+        np.ndarray of float
+            location array of shape (mesh.n_boundary_nodes, dim)
+        """
+        dim = self.dim
+        if dim == 1:
+            return self.nodes_x[[0, -1]]
+        return self.nodes[make_boundary_bool(self.shape_nodes)]
+
+    @property
     def h_gridded(self):
         """
         Return the cell dimensions of cells.
@@ -287,12 +297,12 @@ class BaseTensorMesh(BaseMesh):
         For 1D, 2D or 3D tensor meshes, this property returns a numpy array
         containing cell dimensions. The bottom-front-leftmost cell is the first
         cell. The cell are ordered along the x, then y, then z directions.
-        
+
         Returns
         -------
         np.ndarray (nC, dim)
             The shape of the output array is the number of cells by the dimension.
-        
+
         Examples
         --------
         The following is a 1D example.
@@ -336,6 +346,72 @@ class BaseTensorMesh(BaseMesh):
         return self._getTensorGrid("faces_z")
 
     @property
+    def faces(self):
+        "Face grid"
+        faces = self.faces_x
+        if self.dim > 1:
+            faces = np.r_[faces, self.faces_y]
+        if self.dim > 2:
+            faces = np.r_[faces, self.faces_z]
+        return faces
+
+    @property
+    def boundary_faces(self):
+        """Boundary face locations
+
+        Returns
+        -------
+        np.ndarray of float
+            location array of shape (mesh.n_boundary_faces, dim)
+        """
+        dim = self.dim
+        if dim == 1:
+            return self.nodes_x[[0, -1]]
+        if dim == 2:
+            fx = ndgrid(self.nodes_x[[0, -1]], self.cell_centers_y)
+            fy = ndgrid(self.cell_centers_x, self.nodes_y[[0, -1]])
+            return np.r_[fx, fy]
+        if dim == 3:
+            fx = ndgrid(self.nodes_x[[0, -1]], self.cell_centers_y, self.cell_centers_z)
+            fy = ndgrid(self.cell_centers_x, self.nodes_y[[0, -1]], self.cell_centers_z)
+            fz = ndgrid(self.cell_centers_x, self.cell_centers_y, self.nodes_z[[0, -1]])
+            return np.r_[fx, fy, fz]
+
+    @property
+    def boundary_face_outward_normals(self):
+        """Outward directed normal vectors for the boundary faces
+
+        Returns
+        -------
+        np.ndarray of float
+            Array of vectors of shape (mesh.n_boundary_faces, dim)
+        """
+        dim = self.dim
+        if dim == 1:
+            return np.array([-1, 1])
+        if dim == 2:
+            nx = ndgrid(np.r_[-1, 1], np.zeros(self.shape_cells[1]))
+            ny = ndgrid(np.zeros(self.shape_cells[0]), np.r_[-1, 1])
+            return np.r_[nx, ny]
+        if dim == 3:
+            nx = ndgrid(
+                np.r_[-1, 1],
+                np.zeros(self.shape_cells[1]),
+                np.zeros(self.shape_cells[2]),
+            )
+            ny = ndgrid(
+                np.zeros(self.shape_cells[0]),
+                np.r_[-1, 1],
+                np.zeros(self.shape_cells[2]),
+            )
+            nz = ndgrid(
+                np.zeros(self.shape_cells[0]),
+                np.zeros(self.shape_cells[1]),
+                np.r_[-1, 1],
+            )
+            return np.r_[nx, ny, nz]
+
+    @property
     def edges_x(self):
         """Edge staggered grid in the x direction."""
         if self.nEx == 0:
@@ -355,6 +431,38 @@ class BaseTensorMesh(BaseMesh):
         if self.nEz == 0 or self.dim < 3:
             return
         return self._getTensorGrid("edges_z")
+
+    @property
+    def edges(self):
+        "Edge grid"
+        edges = self.edges_x
+        if self.dim > 1:
+            edges = np.r_[edges, self.edges_y]
+        if self.dim > 2:
+            edges = np.r_[edges, self.edges_z]
+        return edges
+
+    @property
+    def boundary_edges(self):
+        """Boundary edge locations
+
+        Returns
+        -------
+        np.ndarray of float
+            location array of shape (mesh.n_boundary_edges, dim)
+        """
+        dim = self.dim
+        if dim == 1:
+            return None  # no boundary edges in 1D
+        if dim == 2:
+            ex = ndgrid(self.cell_centers_x, self.nodes_y[[0, -1]])
+            ey = ndgrid(self.nodes_x[[0, -1]], self.cell_centers_y)
+            return np.r_[ex, ey]
+        if dim == 3:
+            ex = self.edges_x[make_boundary_bool(self.shape_edges_x, dir="yz")]
+            ey = self.edges_y[make_boundary_bool(self.shape_edges_y, dir="xz")]
+            ez = self.edges_z[make_boundary_bool(self.shape_edges_z, dir="xy")]
+            return np.r_[ex, ey, ez]
 
     def _getTensorGrid(self, key):
         if getattr(self, "_" + key, None) is None:
@@ -473,9 +581,10 @@ class BaseTensorMesh(BaseMesh):
             )
         return inside
 
-    def _getInterpolationMat(self, loc, location_type="cell_centers", zeros_outside=False):
-        """
-        Produces interpolation matrix
+    def _getInterpolationMat(
+        self, loc, location_type="cell_centers", zeros_outside=False
+    ):
+        """Produces interpolation matrix
 
         Parameters
         ----------
@@ -517,7 +626,14 @@ class BaseTensorMesh(BaseMesh):
 
         location_type = self._parse_location_type(location_type)
 
-        if location_type in ["faces_x", "faces_y", "faces_z", "edges_x", "edges_y", "edges_z"]:
+        if location_type in [
+            "faces_x",
+            "faces_y",
+            "faces_z",
+            "edges_x",
+            "edges_y",
+            "edges_z",
+        ]:
             ind = {"x": 0, "y": 1, "z": 2}[location_type[-1]]
             if self.dim < ind:
                 raise ValueError("mesh is not high enough dimension.")
@@ -611,7 +727,9 @@ class BaseTensorMesh(BaseMesh):
             zeros_outside = kwargs["zerosOutside"]
         return self._getInterpolationMat(loc, location_type, zeros_outside)
 
-    def _fastInnerProduct(self, projection_type, model=None, invert_model=False, invert_matrix=False):
+    def _fastInnerProduct(
+        self, projection_type, model=None, invert_model=False, invert_matrix=False
+    ):
         """Fast version of getFaceInnerProduct.
             This does not handle the case of a full tensor property.
 
@@ -688,7 +806,9 @@ class BaseTensorMesh(BaseMesh):
         else:
             return M
 
-    def _fastInnerProductDeriv(self, projection_type, model, invert_model=False, invert_matrix=False):
+    def _fastInnerProductDeriv(
+        self, projection_type, model, invert_model=False, invert_matrix=False
+    ):
         """
 
         Parameters
@@ -724,7 +844,10 @@ class BaseTensorMesh(BaseMesh):
 
         if invert_matrix or invert_model:
             MI = self._fastInnerProduct(
-                projection_type, model, invert_model=invert_model, invert_matrix=invert_matrix
+                projection_type,
+                model,
+                invert_model=invert_model,
+                invert_matrix=invert_matrix,
             )
 
         # number of elements we are averaging (equals dim for regular
@@ -747,7 +870,11 @@ class BaseTensorMesh(BaseMesh):
                 dMdprop = n_elements * Av.T * V * ones
             elif invert_matrix and invert_model:
                 dMdprop = n_elements * (
-                    sdiag(MI.diagonal() ** 2) * Av.T * V * ones * sdiag(1.0 / model ** 2)
+                    sdiag(MI.diagonal() ** 2)
+                    * Av.T
+                    * V
+                    * ones
+                    * sdiag(1.0 / model ** 2)
                 )
             elif invert_model:
                 dMdprop = n_elements * Av.T * V * sdiag(-1.0 / model ** 2)
@@ -885,4 +1012,4 @@ class BaseTensorMesh(BaseMesh):
     getTensor = deprecate_method("get_tensor", "getTensor", removal_version="1.0.0")
 
 
-BaseTensorMesh.__module__ = 'discretize.base'
+BaseTensorMesh.__module__ = "discretize.base"

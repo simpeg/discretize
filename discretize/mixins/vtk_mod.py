@@ -564,7 +564,9 @@ class InterfaceVTK(object):
 
 
         """
-        return InterfaceVTK.writeVTK(mesh, file_name, models=models, directory=directory)
+        return InterfaceVTK.writeVTK(
+            mesh, file_name, models=models, directory=directory
+        )
 
 
 class InterfaceTensorread_vtk(object):

@@ -9,7 +9,12 @@ from discretize.utils.code_utils import deprecate_property
 
 
 class TensorMesh(
-    BaseTensorMesh, BaseRectangularMesh, DiffOperators, InnerProducts, TensorMeshIO, InterfaceMixins
+    BaseTensorMesh,
+    BaseRectangularMesh,
+    DiffOperators,
+    InnerProducts,
+    TensorMeshIO,
+    InterfaceMixins,
 ):
     """
     Class for tensor meshes.
@@ -365,4 +370,4 @@ class TensorMesh(
     )
 
 
-TensorMesh.__module__ = 'discretize'
+TensorMesh.__module__ = "discretize"

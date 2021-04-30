@@ -13,6 +13,60 @@ import warnings
 num_types = [int, float]
 
 
+def example_curvilinear_grid(nC, exType):
+    if not isinstance(nC, list):
+        raise TypeError("nC must be a list containing the number of nodes")
+    if len(nC) != 2 and len(nC) != 3:
+        raise ValueError("nC must either two or three dimensions")
+    exType = exType.lower()
+
+    possibleTypes = ["rect", "rotate", "sphere"]
+    if exType not in possibleTypes:
+        raise TypeError("Not a possible example type.")
+
+    if exType == "rect":
+        return list(
+            ndgrid([np.cumsum(np.r_[0, np.ones(nx) / nx]) for nx in nC], vector=False)
+        )
+    elif exType == "sphere":
+        nodes = list(
+            ndgrid(
+                [np.cumsum(np.r_[0, np.ones(nx) / nx]) - 0.5 for nx in nC], vector=False
+            )
+        )
+        nodes = np.stack(nodes, axis=-1)
+        nodes = 2 * nodes
+        # L_inf distance to center
+        r0 = np.linalg.norm(nodes, ord=np.inf, axis=-1)
+        # L2 distance to center
+        r2 = np.linalg.norm(nodes, axis=-1)
+        r0[r0 == 0.0] = 1.0
+        r2[r2 == 0.0] = 1.0
+        scale = r0 / r2
+        nodes = nodes * scale[..., None]
+        nodes = np.transpose(nodes, (-1, *np.arange(len(nC))))
+        nodes = [node for node in nodes]  # turn it into a list
+        return nodes
+    elif exType == "rotate":
+        if len(nC) == 2:
+            X, Y = ndgrid(
+                [np.cumsum(np.r_[0, np.ones(nx) / nx]) for nx in nC], vector=False
+            )
+            amt = 0.5 - np.sqrt((X - 0.5) ** 2 + (Y - 0.5) ** 2)
+            amt[amt < 0] = 0
+            return [X + (-(Y - 0.5)) * amt, Y + (+(X - 0.5)) * amt]
+        elif len(nC) == 3:
+            X, Y, Z = ndgrid(
+                [np.cumsum(np.r_[0, np.ones(nx) / nx]) for nx in nC], vector=False
+            )
+            amt = 0.5 - np.sqrt((X - 0.5) ** 2 + (Y - 0.5) ** 2 + (Z - 0.5) ** 2)
+            amt[amt < 0] = 0
+            return [
+                X + (-(Y - 0.5)) * amt,
+                Y + (-(Z - 0.5)) * amt,
+                Z + (-(X - 0.5)) * amt,
+            ]
+
 
 def random_model(shape, seed=None, anisotropy=None, its=100, bounds=None):
     """
@@ -193,19 +247,19 @@ def closest_points_index(mesh, pts, grid_loc="CC", **kwargs):
     >>> from discretize.utils import closest_points
     >>> import numpy as np
     >>> import matplotlib.pyplot as plt
-    >>> 
+    >>>
     >>> h = 2*np.ones(5)
     >>> mesh = TensorMesh([h, h], x0='00')
-    >>> 
+    >>>
     >>> # Random locations, grid cell centers and grid nodes
     >>> xy_random = np.random.uniform(0, 10, size=(4,2))
     >>> xy_centers = mesh.grid_cell_centers
     >>> xy_nodes = mesh.grid_nodes
-    >>> 
+    >>>
     >>> # Find indicies of closest cell centers and nodes
     >>> ind_centers = closest_points(mesh, xy_random, 'CC')
     >>> ind_nodes = closest_points(mesh, xy_random, 'N')
-    >>> 
+    >>>
     >>> # Plot closest cell centers and nodes
     >>> fig = plt.figure(figsize=(5, 5))
     >>> ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
@@ -266,9 +320,7 @@ def extract_core_mesh(xyzlim, mesh, mesh_type="tensor"):
         xyzlim = xyzlim.flatten()
         xmin, xmax = xyzlim[0], xyzlim[1]
 
-        xind = np.logical_and(
-            mesh.cell_centers_x > xmin, mesh.cell_centers_x < xmax
-        )
+        xind = np.logical_and(mesh.cell_centers_x > xmin, mesh.cell_centers_x < xmax)
 
         xc = mesh.cell_centers_x[xind]
 
@@ -284,12 +336,8 @@ def extract_core_mesh(xyzlim, mesh, mesh_type="tensor"):
         xmin, xmax = xyzlim[0, 0], xyzlim[0, 1]
         ymin, ymax = xyzlim[1, 0], xyzlim[1, 1]
 
-        xind = np.logical_and(
-            mesh.cell_centers_x > xmin, mesh.cell_centers_x < xmax
-        )
-        yind = np.logical_and(
-            mesh.cell_centers_y > ymin, mesh.cell_centers_y < ymax
-        )
+        xind = np.logical_and(mesh.cell_centers_x > xmin, mesh.cell_centers_x < xmax)
+        yind = np.logical_and(mesh.cell_centers_y > ymin, mesh.cell_centers_y < ymax)
 
         xc = mesh.cell_centers_x[xind]
         yc = mesh.cell_centers_y[yind]
@@ -313,15 +361,9 @@ def extract_core_mesh(xyzlim, mesh, mesh_type="tensor"):
         ymin, ymax = xyzlim[1, 0], xyzlim[1, 1]
         zmin, zmax = xyzlim[2, 0], xyzlim[2, 1]
 
-        xind = np.logical_and(
-            mesh.cell_centers_x > xmin, mesh.cell_centers_x < xmax
-        )
-        yind = np.logical_and(
-            mesh.cell_centers_y > ymin, mesh.cell_centers_y < ymax
-        )
-        zind = np.logical_and(
-            mesh.cell_centers_z > zmin, mesh.cell_centers_z < zmax
-        )
+        xind = np.logical_and(mesh.cell_centers_x > xmin, mesh.cell_centers_x < xmax)
+        yind = np.logical_and(mesh.cell_centers_y > ymin, mesh.cell_centers_y < ymax)
+        zind = np.logical_and(mesh.cell_centers_z > zmin, mesh.cell_centers_z < zmax)
 
         xc = mesh.cell_centers_x[xind]
         yc = mesh.cell_centers_y[yind]
@@ -397,15 +439,15 @@ def mesh_builder_xyz(
     >>> import discretize
     >>> import matplotlib.pyplot as plt
     >>> import numpy as np
-    >>> 
+    >>>
     >>> xyLoc = np.random.randn(8,2)
-    >>> 
+    >>>
     >>> mesh = discretize.utils.mesh_builder_xyz(
     >>>     xyLoc, [0.1, 0.1], depth_core=0.5,
     >>>     padding_distance=[[1,2], [1,0]],
     >>>     mesh_type='tensor',
     >>> )
-    >>> 
+    >>>
     >>> axs = plt.subplot()
     >>> mesh.plot_image(mesh.cell_volumes, grid=True, ax=axs)
     >>> axs.scatter(xyLoc[:,0], xyLoc[:,1], 15, c='w', zorder=3)
@@ -566,7 +608,7 @@ def refine_tree_xyz(
     --------
     discretize.TreeMesh
         Tree mesh
-    
+
     Examples
     --------
 
@@ -577,22 +619,22 @@ def refine_tree_xyz(
     >>> from discretize.utils import mkvc, refine_tree_xyz
     >>> import matplotlib.pyplot as plt
     >>> import numpy as np
-    >>> 
+    >>>
     >>> dx = 5  # minimum cell width (base mesh cell width) in x
     >>> dy = 5  # minimum cell width (base mesh cell width) in y
-    >>> 
+    >>>
     >>> x_length = 300.0  # domain width in x
     >>> y_length = 300.0  # domain width in y
-    >>> 
+    >>>
     >>> # Compute number of base mesh cells required in x and y
     >>> nbcx = 2 ** int(np.round(np.log(x_length / dx) / np.log(2.0)))
     >>> nbcy = 2 ** int(np.round(np.log(y_length / dy) / np.log(2.0)))
-    >>> 
+    >>>
     >>> # Define the base mesh
     >>> hx = [(dx, nbcx)]
     >>> hy = [(dy, nbcy)]
     >>> mesh = TreeMesh([hx, hy], x0="CC")
-    >>> 
+    >>>
     >>> # Refine surface topography
     >>> xx = mesh.vectorNx
     >>> yy = -3 * np.exp((xx ** 2) / 100 ** 2) + 50.0
@@ -600,15 +642,15 @@ def refine_tree_xyz(
     >>> mesh = refine_tree_xyz(
     >>>     mesh, pts, octree_levels=[2, 2], method="surface", finalize=False
     >>> )
-    >>> 
+    >>>
     >>> # Refine mesh near points
     >>> xx = np.array([0.0, 10.0, 0.0, -10.0])
     >>> yy = np.array([-20.0, -10.0, 0.0, -10])
     >>> pts = np.c_[mkvc(xx), mkvc(yy)]
     >>> mesh = refine_tree_xyz(mesh, pts, octree_levels=[2, 2], method="radial", finalize=False)
-    >>> 
+    >>>
     >>> mesh.finalize()
-    >>> 
+    >>>
     >>> fig = plt.figure(figsize=(6, 6))
     >>> ax = fig.add_subplot(111)
     >>> mesh.plotGrid(ax=ax)
@@ -637,16 +679,16 @@ def refine_tree_xyz(
 
         # Compute the outer limits of each octree level
         rMax = np.cumsum(
-            mesh.h[0].min()
-            * octree_levels
-            * 2 ** np.arange(len(octree_levels))
+            mesh.h[0].min() * octree_levels * 2 ** np.arange(len(octree_levels))
         )
         rs = np.ones(xyz.shape[0])
         level = np.ones(xyz.shape[0], dtype=np.int32)
         for ii, nC in enumerate(octree_levels):
             # skip "zero" sized balls
             if rMax[ii] > 0:
-                mesh.refine_ball(xyz, rs*rMax[ii], level*(mesh.max_level - ii), finalize=False)
+                mesh.refine_ball(
+                    xyz, rs * rMax[ii], level * (mesh.max_level - ii), finalize=False
+                )
         if finalize:
             mesh.finalize()
 
@@ -669,9 +711,7 @@ def refine_tree_xyz(
             hz = mesh.h[2].min()
 
         # Compute maximum depth of refinement
-        zmax = np.cumsum(
-            hz * octree_levels * 2 ** np.arange(len(octree_levels))
-        )
+        zmax = np.cumsum(hz * octree_levels * 2 ** np.arange(len(octree_levels)))
 
         # Compute maximum horizontal padding offset
         padWidth = np.cumsum(
@@ -775,9 +815,7 @@ def refine_tree_xyz(
         # Pre-calculate outer extent of each level
         # x_pad
         padWidth = np.cumsum(
-            hx
-            * octree_levels_padding
-            * 2 ** np.arange(len(octree_levels))
+            hx * octree_levels_padding * 2 ** np.arange(len(octree_levels))
         )
         if mesh.dim == 3:
             # y_pad
@@ -785,17 +823,17 @@ def refine_tree_xyz(
             padWidth = np.c_[
                 padWidth,
                 np.cumsum(
-                    hy
-                    * octree_levels_padding
-                    * 2 ** np.arange(len(octree_levels))
-                )
+                    hy * octree_levels_padding * 2 ** np.arange(len(octree_levels))
+                ),
             ]
         # Pre-calculate max depth of each level
         padWidth = np.c_[
             padWidth,
             np.cumsum(
-                hz * np.maximum(octree_levels-1, 0) * 2 ** np.arange(len(octree_levels))
-            )
+                hz
+                * np.maximum(octree_levels - 1, 0)
+                * 2 ** np.arange(len(octree_levels))
+            ),
         ]
 
         levels = []
@@ -838,7 +876,7 @@ def active_from_xyz(mesh, xyz, grid_reference="CC", method="linear"):
 
         - If 'CC' is used, cells are active if their centers are below the surface.
         - If 'N' is used, cells are active if they lie entirely below the surface.
-    
+
     method : str {'linear', 'nearest'}
         Interpolation method for locations between the xyz points.
 
@@ -856,19 +894,19 @@ def active_from_xyz(mesh, xyz, grid_reference="CC", method="linear"):
     >>> import numpy as np
     >>> from discretize import TensorMesh
     >>> from discretize.utils import active_from_xyz
-    >>> 
+    >>>
     >>> mesh = TensorMesh([5, 5])
     >>> topo_func = lambda x: -3*(x-0.2)*(x-0.8)+.5
     >>> topo_points = np.linspace(0, 1)
     >>> topo_vals = topo_func(topo_points)
-    >>> 
+    >>>
     >>> active_cc = active_from_xyz(mesh, np.c_[topo_points, topo_vals], grid_reference='CC')
     >>> ax = plt.subplot(121)
     >>> mesh.plot_image(active_cc, ax=ax)
     >>> mesh.plot_grid(centers=True, ax=ax)
     >>> ax.plot(np.linspace(0,1), topo_func(np.linspace(0,1)), color='C3')
     >>> ax.set_title("CC")
-    >>> 
+    >>>
     >>> active_n = active_from_xyz(mesh, np.c_[topo_points, topo_vals], grid_reference='N')
     >>> ax = plt.subplot(122)
     >>> mesh.plot_image(active_n, ax=ax)

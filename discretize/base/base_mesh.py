@@ -68,16 +68,23 @@ class BaseMesh:
         "nFz": "n_faces_z",
         "nF": "n_faces",
         "vnF": "n_faces_per_direction",
-        "vnC": "shape_cells"
+        "vnC": "shape_cells",
     }
-    _items = {'shape_cells', 'origin', 'orientation', 'reference_system'}
+    _items = {"shape_cells", "origin", "orientation", "reference_system"}
 
     # Instantiate the class
-    def __init__(self, shape_cells, origin=None, orientation=None, reference_system=None, **kwargs):
+    def __init__(
+        self,
+        shape_cells,
+        origin=None,
+        orientation=None,
+        reference_system=None,
+        **kwargs,
+    ):
         if "n" in kwargs:
             shape_cells = kwargs.pop("n")
         if "x0" in kwargs:
-            origin = kwargs.pop('x0')
+            origin = kwargs.pop("x0")
         axis_u = kwargs.pop("axis_u", None)
         axis_v = kwargs.pop("axis_v", None)
         axis_w = kwargs.pop("axis_w", None)
@@ -98,7 +105,6 @@ class BaseMesh:
         if reference_system is None:
             reference_system = "cartesian"
         self.reference_system = reference_system
-        self.__myhash = None
         super().__init__(**kwargs)
 
     def __getattr__(self, name):
@@ -183,7 +189,7 @@ class BaseMesh:
             # Ensure each row is unitary
             R = R / np.linalg.norm(R, axis=1)[:, None]
             # Check if matrix is orthogonal
-            if not np.allclose(R @ R.T, np.identity(self.dim), rtol=1.e-5, atol=1E-6):
+            if not np.allclose(R @ R.T, np.identity(self.dim), rtol=1.0e-5, atol=1e-6):
                 raise ValueError("Orientation matrix is not orthogonal")
             self._orientation = R
 
@@ -238,8 +244,8 @@ class BaseMesh:
         """
         cls = type(self)
         out = {
-            '__module__': cls.__module__,
-            '__class__': cls.__name__,
+            "__module__": cls.__module__,
+            "__class__": cls.__name__,
         }
         for item in self._items:
             attr = getattr(self, item, None)
@@ -304,8 +310,8 @@ class BaseMesh:
             dictionary of {attribute : value} pairs that will be passed to this class's
             initialization method as keyword arguments.
         """
-        items.pop('__module__', None)
-        items.pop('__class__', None)
+        items.pop("__module__", None)
+        items.pop("__class__", None)
         return cls(**items)
 
     @property
@@ -700,8 +706,8 @@ class BaseMesh:
         verbose : bool, optional
         """
 
-        if 'filename' in kwargs:
-            file_name = kwargs['filename']
+        if "filename" in kwargs:
+            file_name = kwargs["filename"]
             warnings.warn(
                 "The filename keyword argument has been deprecated, please use file_name. "
                 "This will be removed in discretize 1.0.0",
@@ -726,8 +732,8 @@ class BaseMesh:
         """
         cls = type(self)
         items = self.to_dict()
-        items.pop('__module__', None)
-        items.pop('__class__', None)
+        items.pop("__module__", None)
+        items.pop("__class__", None)
         return cls(**items)
 
     @property
@@ -786,7 +792,6 @@ class BaseMesh:
         """
         return True
 
-
     # DEPRECATED
     normals = deprecate_property("face_normals", "normals", removal_version="1.0.0")
     tangents = deprecate_property("edge_tangents", "tangents", removal_version="1.0.0")
@@ -810,7 +815,8 @@ class BaseMesh:
         """
         warnings.warn(
             "The axis_u property is deprecated, please access as self.orientation[0]. "
-            "This will be removed in discretize 1.0.0.", DeprecationWarning
+            "This will be removed in discretize 1.0.0.",
+            DeprecationWarning,
         )
         return self.orientation[0]
 
@@ -819,7 +825,8 @@ class BaseMesh:
         warnings.warn(
             "Setting the axis_u property is deprecated, and now unchecked, please "
             "directly set the self.orientation property. This will be removed in "
-            "discretize 1.0.0.", DeprecationWarning
+            "discretize 1.0.0.",
+            DeprecationWarning,
         )
         self.orientation[0] = value
 
@@ -836,7 +843,8 @@ class BaseMesh:
         """
         warnings.warn(
             "The axis_v property is deprecated, please access as self.orientation[1]. "
-            "This will be removed in discretize 1.0.0.", DeprecationWarning
+            "This will be removed in discretize 1.0.0.",
+            DeprecationWarning,
         )
         return self.orientation[1]
 
@@ -845,9 +853,10 @@ class BaseMesh:
         warnings.warn(
             "Setting the axis_v property is deprecated, and now unchecked, please "
             "directly set the self.orientation property. This will be removed in "
-            "discretize 1.0.0.", DeprecationWarning
+            "discretize 1.0.0.",
+            DeprecationWarning,
         )
-        value = value/np.linalg.norm(value)
+        value = value / np.linalg.norm(value)
         self.orientation[1] = value
 
     @property
@@ -863,7 +872,8 @@ class BaseMesh:
         """
         warnings.warn(
             "The axis_w property is deprecated, please access as self.orientation[2]. "
-            "This will be removed in discretize 1.0.0.", DeprecationWarning
+            "This will be removed in discretize 1.0.0.",
+            DeprecationWarning,
         )
         return self.orientation[2]
 
@@ -872,13 +882,14 @@ class BaseMesh:
         warnings.warn(
             "Setting the axis_v property is deprecated, and now unchecked, please "
             "directly set the self.orientation property. This will be removed in "
-            "discretize 1.0.0.", DeprecationWarning
+            "discretize 1.0.0.",
+            DeprecationWarning,
         )
-        value = value/np.linalg.norm(value)
+        value = value / np.linalg.norm(value)
         self.orientation[2] = value
 
 
-BaseMesh.__module__ = 'discretize.base'
+BaseMesh.__module__ = "discretize.base"
 
 
 class BaseRectangularMesh(BaseMesh):
@@ -1060,7 +1071,9 @@ class BaseRectangularMesh(BaseMesh):
             return
         return int(np.prod(self.shape_faces_z))
 
-    def reshape(self, x, x_type="cell_centers", out_type="cell_centers", format="V", **kwargs):
+    def reshape(
+        self, x, x_type="cell_centers", out_type="cell_centers", format="V", **kwargs
+    ):
         """A quick reshape command that will do the best it
         can at giving you what you want.
 
@@ -1119,7 +1132,18 @@ class BaseRectangularMesh(BaseMesh):
         x_type = self._parse_location_type(x_type)
         out_type = self._parse_location_type(out_type)
 
-        allowed_x_type = ["cell_centers", "nodes", "faces", "faces_x", "faces_y", "faces_z", "edges", "edges_x", "edges_y", "edges_z"]
+        allowed_x_type = [
+            "cell_centers",
+            "nodes",
+            "faces",
+            "faces_x",
+            "faces_y",
+            "faces_z",
+            "edges",
+            "edges_x",
+            "edges_y",
+            "edges_z",
+        ]
         if not (isinstance(x, list) or isinstance(x, np.ndarray)):
             raise Exception("x must be either a list or a ndarray")
         if x_type not in allowed_x_type:
@@ -1155,7 +1179,9 @@ class BaseRectangularMesh(BaseMesh):
 
         x = x[:]  # make a copy.
         x_type_is_FE_xyz = (
-            len(x_type) > 1 and x_type[0] in ["f", "e"] and x_type[-1] in ["x", "y", "z"]
+            len(x_type) > 1
+            and x_type[0] in ["f", "e"]
+            and x_type[-1] in ["x", "y", "z"]
         )
 
         def outKernal(xx, nn):
@@ -1365,4 +1391,4 @@ class BaseRectangularMesh(BaseMesh):
         return self.shape_nodes[2]
 
 
-BaseRectangularMesh.__module__ = 'discretize.base'
+BaseRectangularMesh.__module__ = "discretize.base"
