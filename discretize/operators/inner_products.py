@@ -23,7 +23,12 @@ class InnerProducts(object):
     """
 
     def get_face_inner_product(
-        self, model=None, invert_model=False, invert_matrix=False, do_fast=True, **kwargs
+        self,
+        model=None,
+        invert_model=False,
+        invert_matrix=False,
+        do_fast=True,
+        **kwargs
     ):
         """Generate the face inner product matrix
 
@@ -71,11 +76,20 @@ class InnerProducts(object):
             do_fast = kwargs["doFast"]
 
         return self._getInnerProduct(
-            "F", model=model, invert_model=invert_model, invert_matrix=invert_matrix, do_fast=do_fast
+            "F",
+            model=model,
+            invert_model=invert_model,
+            invert_matrix=invert_matrix,
+            do_fast=do_fast,
         )
 
     def get_edge_inner_product(
-        self, model=None, invert_model=False, invert_matrix=False, do_fast=True, **kwargs
+        self,
+        model=None,
+        invert_model=False,
+        invert_matrix=False,
+        do_fast=True,
+        **kwargs
     ):
         """Generate the edge inner product matrix
 
@@ -123,7 +137,11 @@ class InnerProducts(object):
             )
             do_fast = kwargs["doFast"]
         return self._getInnerProduct(
-            "E", model=model, invert_model=invert_model, invert_matrix=invert_matrix, do_fast=do_fast
+            "E",
+            model=model,
+            invert_model=invert_model,
+            invert_matrix=invert_matrix,
+            do_fast=do_fast,
         )
 
     def _getInnerProduct(
@@ -190,7 +208,10 @@ class InnerProducts(object):
         fast = None
         if hasattr(self, "_fastInnerProduct") and do_fast:
             fast = self._fastInnerProduct(
-                projection_type, model=model, invert_model=invert_model, invert_matrix=invert_matrix
+                projection_type,
+                model=model,
+                invert_model=invert_model,
+                invert_matrix=invert_matrix,
             )
         if fast is not None:
             return fast
@@ -307,7 +328,11 @@ class InnerProducts(object):
             )
             do_fast = kwargs["doFast"]
         return self._getInnerProductDeriv(
-            model, "F", do_fast=do_fast, invert_model=invert_model, invert_matrix=invert_matrix
+            model,
+            "F",
+            do_fast=do_fast,
+            invert_model=invert_model,
+            invert_matrix=invert_matrix,
         )
 
     def get_edge_inner_product_deriv(
@@ -357,11 +382,20 @@ class InnerProducts(object):
             )
             do_fast = kwargs["doFast"]
         return self._getInnerProductDeriv(
-            model, "E", do_fast=do_fast, invert_model=invert_model, invert_matrix=invert_matrix
+            model,
+            "E",
+            do_fast=do_fast,
+            invert_model=invert_model,
+            invert_matrix=invert_matrix,
         )
 
     def _getInnerProductDeriv(
-        self, model, projection_type, do_fast=True, invert_model=False, invert_matrix=False
+        self,
+        model,
+        projection_type,
+        do_fast=True,
+        invert_model=False,
+        invert_matrix=False,
     ):
         """
         Parameters
@@ -391,7 +425,10 @@ class InnerProducts(object):
         fast = None
         if hasattr(self, "_fastInnerProductDeriv") and do_fast:
             fast = self._fastInnerProductDeriv(
-                projection_type, model, invert_model=invert_model, invert_matrix=invert_matrix
+                projection_type,
+                model,
+                invert_model=invert_model,
+                invert_matrix=invert_matrix,
             )
         if fast is not None:
             return fast
@@ -402,7 +439,9 @@ class InnerProducts(object):
             )
 
         tensorType = TensorType(self, model)
-        P = self._getInnerProductProjectionMatrices(projection_type, tensorType=tensorType)
+        P = self._getInnerProductProjectionMatrices(
+            projection_type, tensorType=tensorType
+        )
 
         def innerProductDeriv(v):
             return self._getInnerProductDerivFunction(tensorType, P, projection_type, v)
@@ -859,4 +898,4 @@ class InnerProducts(object):
     )
 
 
-InnerProducts.__module__ = 'discretize.operators'
+InnerProducts.__module__ = "discretize.operators"

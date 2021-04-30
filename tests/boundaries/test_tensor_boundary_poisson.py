@@ -42,7 +42,7 @@ class Test1D_InhomogeneousDirichlet(discretize.tests.OrderTest):
         G = -Pin.T * Pin * self.M.faceDiv.T * V
         D = self.M.faceDiv
         j = McI * (G * xc_ana + P * phi_bc)
-        q = V * D * Pin.T * Pin * j + V * D * Pout.T * j_bc
+        q = D * Pin.T * Pin * j + D * Pout.T * j_bc
 
         # Rearrange if we know q to solve for x
         A = V * D * Pin.T * Pin * McI * G
@@ -53,7 +53,7 @@ class Test1D_InhomogeneousDirichlet(discretize.tests.OrderTest):
         if self.myTest == "j":
             err = np.linalg.norm((j - j_ana), np.inf)
         elif self.myTest == "q":
-            err = np.linalg.norm((q - V * q_ana), np.inf)
+            err = np.linalg.norm((q - q_ana), np.inf)
         elif self.myTest == "xc":
             # TODO: fix the null space
             solver = SolverCG(A, maxiter=1000)

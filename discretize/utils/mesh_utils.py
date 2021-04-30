@@ -20,7 +20,7 @@ def example_curvilinear_grid(nC, exType):
         raise ValueError("nC must either two or three dimensions")
     exType = exType.lower()
 
-    possibleTypes = ["rect", "rotate"]
+    possibleTypes = ["rect", "rotate", "sphere"]
     if exType not in possibleTypes:
         raise TypeError("Not a possible example type.")
 
@@ -28,6 +28,25 @@ def example_curvilinear_grid(nC, exType):
         return list(
             ndgrid([np.cumsum(np.r_[0, np.ones(nx) / nx]) for nx in nC], vector=False)
         )
+    elif exType == "sphere":
+        nodes = list(
+            ndgrid(
+                [np.cumsum(np.r_[0, np.ones(nx) / nx]) - 0.5 for nx in nC], vector=False
+            )
+        )
+        nodes = np.stack(nodes, axis=-1)
+        nodes = 2 * nodes
+        # L_inf distance to center
+        r0 = np.linalg.norm(nodes, ord=np.inf, axis=-1)
+        # L2 distance to center
+        r2 = np.linalg.norm(nodes, axis=-1)
+        r0[r0 == 0.0] = 1.0
+        r2[r2 == 0.0] = 1.0
+        scale = r0 / r2
+        nodes = nodes * scale[..., None]
+        nodes = np.transpose(nodes, (-1, *np.arange(len(nC))))
+        nodes = [node for node in nodes]  # turn it into a list
+        return nodes
     elif exType == "rotate":
         if len(nC) == 2:
             X, Y = ndgrid(
@@ -247,9 +266,7 @@ def extract_core_mesh(xyzlim, mesh, mesh_type="tensor"):
         xyzlim = xyzlim.flatten()
         xmin, xmax = xyzlim[0], xyzlim[1]
 
-        xind = np.logical_and(
-            mesh.cell_centers_x > xmin, mesh.cell_centers_x < xmax
-        )
+        xind = np.logical_and(mesh.cell_centers_x > xmin, mesh.cell_centers_x < xmax)
 
         xc = mesh.cell_centers_x[xind]
 
@@ -265,12 +282,8 @@ def extract_core_mesh(xyzlim, mesh, mesh_type="tensor"):
         xmin, xmax = xyzlim[0, 0], xyzlim[0, 1]
         ymin, ymax = xyzlim[1, 0], xyzlim[1, 1]
 
-        xind = np.logical_and(
-            mesh.cell_centers_x > xmin, mesh.cell_centers_x < xmax
-        )
-        yind = np.logical_and(
-            mesh.cell_centers_y > ymin, mesh.cell_centers_y < ymax
-        )
+        xind = np.logical_and(mesh.cell_centers_x > xmin, mesh.cell_centers_x < xmax)
+        yind = np.logical_and(mesh.cell_centers_y > ymin, mesh.cell_centers_y < ymax)
 
         xc = mesh.cell_centers_x[xind]
         yc = mesh.cell_centers_y[yind]
@@ -294,15 +307,9 @@ def extract_core_mesh(xyzlim, mesh, mesh_type="tensor"):
         ymin, ymax = xyzlim[1, 0], xyzlim[1, 1]
         zmin, zmax = xyzlim[2, 0], xyzlim[2, 1]
 
-        xind = np.logical_and(
-            mesh.cell_centers_x > xmin, mesh.cell_centers_x < xmax
-        )
-        yind = np.logical_and(
-            mesh.cell_centers_y > ymin, mesh.cell_centers_y < ymax
-        )
-        zind = np.logical_and(
-            mesh.cell_centers_z > zmin, mesh.cell_centers_z < zmax
-        )
+        xind = np.logical_and(mesh.cell_centers_x > xmin, mesh.cell_centers_x < xmax)
+        yind = np.logical_and(mesh.cell_centers_y > ymin, mesh.cell_centers_y < ymax)
+        zind = np.logical_and(mesh.cell_centers_z > zmin, mesh.cell_centers_z < zmax)
 
         xc = mesh.cell_centers_x[xind]
         yc = mesh.cell_centers_y[yind]
@@ -566,16 +573,16 @@ def refine_tree_xyz(
 
         # Compute the outer limits of each octree level
         rMax = np.cumsum(
-            mesh.h[0].min()
-            * octree_levels
-            * 2 ** np.arange(len(octree_levels))
+            mesh.h[0].min() * octree_levels * 2 ** np.arange(len(octree_levels))
         )
         rs = np.ones(xyz.shape[0])
         level = np.ones(xyz.shape[0], dtype=np.int32)
         for ii, nC in enumerate(octree_levels):
             # skip "zero" sized balls
             if rMax[ii] > 0:
-                mesh.refine_ball(xyz, rs*rMax[ii], level*(mesh.max_level - ii), finalize=False)
+                mesh.refine_ball(
+                    xyz, rs * rMax[ii], level * (mesh.max_level - ii), finalize=False
+                )
         if finalize:
             mesh.finalize()
 
@@ -598,9 +605,7 @@ def refine_tree_xyz(
             hz = mesh.h[2].min()
 
         # Compute maximum depth of refinement
-        zmax = np.cumsum(
-            hz * octree_levels * 2 ** np.arange(len(octree_levels))
-        )
+        zmax = np.cumsum(hz * octree_levels * 2 ** np.arange(len(octree_levels)))
 
         # Compute maximum horizontal padding offset
         padWidth = np.cumsum(
@@ -704,9 +709,7 @@ def refine_tree_xyz(
         # Pre-calculate outer extent of each level
         # x_pad
         padWidth = np.cumsum(
-            hx
-            * octree_levels_padding
-            * 2 ** np.arange(len(octree_levels))
+            hx * octree_levels_padding * 2 ** np.arange(len(octree_levels))
         )
         if mesh.dim == 3:
             # y_pad
@@ -714,17 +717,17 @@ def refine_tree_xyz(
             padWidth = np.c_[
                 padWidth,
                 np.cumsum(
-                    hy
-                    * octree_levels_padding
-                    * 2 ** np.arange(len(octree_levels))
-                )
+                    hy * octree_levels_padding * 2 ** np.arange(len(octree_levels))
+                ),
             ]
         # Pre-calculate max depth of each level
         padWidth = np.c_[
             padWidth,
             np.cumsum(
-                hz * np.maximum(octree_levels-1, 0) * 2 ** np.arange(len(octree_levels))
-            )
+                hz
+                * np.maximum(octree_levels - 1, 0)
+                * 2 ** np.arange(len(octree_levels))
+            ),
         ]
 
         levels = []

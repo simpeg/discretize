@@ -96,7 +96,9 @@ import warnings
 from discretize.utils.code_utils import deprecate_property
 
 
-class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO, InterfaceMixins):
+class TreeMesh(
+    _TreeMesh, BaseTensorMesh, InnerProducts, DiffOperators, TreeMeshIO, InterfaceMixins
+):
     """
     TreeMesh is a class for adaptive QuadTree (2D) and OcTree (3D) meshes.
     """
@@ -133,7 +135,7 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO, InterfaceMi
             "gridhEz": "hanging_edges_z",
         },
     }
-    _items = {'h', 'origin', 'cell_state'}
+    _items = {"h", "origin", "cell_state"}
 
     # inheriting stuff from BaseTensorMesh that isn't defined in _QuadTree
     def __init__(self, h=None, origin=None, **kwargs):
@@ -437,7 +439,9 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO, InterfaceMi
     @property
     def face_y_divergence(self):
         if getattr(self, "_face_y_divergence", None) is None:
-            self._face_y_divergence = self.face_divergence[:, self.nFx : self.nFx + self.nFy]
+            self._face_y_divergence = self.face_divergence[
+                :, self.nFx : self.nFx + self.nFy
+            ]
         return self._face_y_divergence
 
     @property
@@ -527,7 +531,9 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO, InterfaceMi
             zeros_outside = kwargs["zerosOutside"]
         locs = as_array_n_by_dim(locs, self.dim)
         if location_type not in ["N", "CC", "Ex", "Ey", "Ez", "Fx", "Fy", "Fz"]:
-            raise Exception("location_type must be one of N, CC, Ex, Ey, Ez, Fx, Fy, or Fz")
+            raise Exception(
+                "location_type must be one of N, CC, Ex, Ey, Ez, Fx, Fy, or Fz"
+            )
 
         if self.dim == 2 and location_type in ["Ez", "Fz"]:
             raise Exception("Unable to interpolate from Z edges/face in 2D")
@@ -580,10 +586,18 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO, InterfaceMi
     @property
     def cell_state(self):
         indexes, levels = self.__getstate__()
-        return {'indexes': indexes.tolist(), 'levels': levels.tolist()}
+        return {"indexes": indexes.tolist(), "levels": levels.tolist()}
 
     def validate(self):
         return self.finalized
+
+    def equals(self, other):
+        try:
+            if self.finalized and other.finalized:
+                return super().equals(other)
+        except AttributeError:
+            pass
+        return False
 
     def __reduce__(self):
         return TreeMesh, (self.h, self.origin), self.__getstate__()
@@ -648,10 +662,18 @@ class TreeMesh(_TreeMesh, BaseTensorMesh, InnerProducts, TreeMeshIO, InterfaceMi
     _aveCC2FzStencil = deprecate_property(
         "average_cell_to_total_face_z", "_aveCC2FzStencil", removal_version="1.0.0"
     )
-    _cellGradStencil = deprecate_property("stencil_cell_gradient", "_cellGradStencil", removal_version="1.0.0")
-    _cellGradxStencil = deprecate_property("stencil_cell_gradient_x", "_cellGradxStencil", removal_version="1.0.0")
-    _cellGradyStencil = deprecate_property("stencil_cell_gradient_y", "_cellGradyStencil", removal_version="1.0.0")
-    _cellGradzStencil = deprecate_property("stencil_cell_gradient_z", "_cellGradzStencil", removal_version="1.0.0")
+    _cellGradStencil = deprecate_property(
+        "stencil_cell_gradient", "_cellGradStencil", removal_version="1.0.0"
+    )
+    _cellGradxStencil = deprecate_property(
+        "stencil_cell_gradient_x", "_cellGradxStencil", removal_version="1.0.0"
+    )
+    _cellGradyStencil = deprecate_property(
+        "stencil_cell_gradient_y", "_cellGradyStencil", removal_version="1.0.0"
+    )
+    _cellGradzStencil = deprecate_property(
+        "stencil_cell_gradient_z", "_cellGradzStencil", removal_version="1.0.0"
+    )
 
 
-TreeMesh.__module__ = 'discretize'
+TreeMesh.__module__ = "discretize"

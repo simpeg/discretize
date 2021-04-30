@@ -3,6 +3,7 @@ import os
 import importlib
 import json
 
+
 def load_mesh(file_name):
     """
     Open a json file and load the mesh into the target class
@@ -15,12 +16,16 @@ def load_mesh(file_name):
     """
     with open(file_name, "r") as outfile:
         jsondict = json.load(outfile)
-        module_name = jsondict.pop('__module__', 'discretize')  # default to loading from discretize
-        class_name = jsondict.pop('__class__')
+        module_name = jsondict.pop(
+            "__module__", "discretize"
+        )  # default to loading from discretize
+        class_name = jsondict.pop("__class__")
         mod = importlib.import_module(module_name)
         cls = getattr(mod, class_name)
         if "_n" in jsondict:
-            jsondict["shape_cells"] = jsondict.pop("_n")  # need to catch this old _n property here
+            jsondict["shape_cells"] = jsondict.pop(
+                "_n"
+            )  # need to catch this old _n property here
         data = cls(**jsondict)
     return data
 
