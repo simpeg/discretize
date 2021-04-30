@@ -1,0 +1,102 @@
+.. currentmodule:: discretize
+
+.. _0.7.0_notes:
+
+===================================
+``discretize`` 0.7.0 Release Notes
+===================================
+
+This Minor release has several new features, including support for boundary conditions,
+quiver vector plotting for :func:`TreeMesh.plot_slice`, and a rather large change in
+removing the ``properties`` requirement from ``discretize``.
+
+
+Removal of ``properties``
+-----------------------
+Starting with the largest change, we have made the decision to remove the properties
+backend of `discretize`. Our main motivation for this was to give ourselves more control
+over the documentation of classes. Our goal was to recreate the functionality without
+any adverse effects to our users, and have taken many steps to hopefully address any
+possible issues with the conversion. That being said, please raise an issue on the
+github page if you run into any unexpected issues.
+
+The next step here is to finalize the documentation..
+
+Boundary Conditions
+-------------------
+We have added an improved support for implementing boundary conditions for the finite
+volume formulation that underlies ``discretize`` on :class:`TreeMesh`, :class:`TensorMesh`
+, and :class:`CurvilinearMesh`.
+
+In general, ``discretize`` often makes use of the following two identities for the weak
+form of the finite volume:
+
+.. math::
+    \int_\Omega \nabla u \cdot \vec{v} dV = -\int_\Omega u \nabla \cdot \vec{v} dV
+    + \int_{\partial\Omega} u \vec{v}\cdot \hat{n} dA
+
+.. math::
+    \int_\Omega (\nabla \times \vec{w}) \cdot \vec{v} dV = \int_\Omega \vec{w} \cdot (\nabla \times \vec{v}) dV
+    - \int_{\partial\omega} (\vec{w} \times \hat{n}) \cdot \vec{v} dA
+
+Previously we focused on approximating the volume integrals in the above equations,
+however to implement boundary conditions, we use the boundary face integrals!
+
+As part of this, meshes now have a few new properties:
+
+* ``boundary_faces``
+* ``boundary_face_outward_normals``
+* ``boundary_edges``
+* ``boundary_nodes``
+* ``average_node_to_face``
+* ``average_edge_to_face_vector``
+* ``project_edge_to_boundary_edge``
+* ``project_face_to_boundary_face``
+* ``project_node_to_boundary_node``
+
+Together these are used in a few items that are correspond to the mass matrices,
+:func:`operators.InnerProducts.get_edge_inner_product` and
+:func:`operators.InnerProducts.get_face_inner_product`. These relate to the item that
+they are operating on, and return the necessary matrix to integrate that quantity on
+the default boundaries of the meshes.
+
+* ``boundary_face_scalar_integral``
+* ``boundary_node_vector_integral``
+* ``boundary_edge_vector_integral``
+
+You can investigate the source code of these functions to see how they are built if you
+need to design your own customized boundary.
+
+All together we have also implemented two helper operators that can be used to reproduce
+common types of boundary conditions for a few PDE's. These are based on Robin type
+conditions that can flexibly support multiple types of boundary conditions depending on
+the discrete value's locations.
+
+* :func:`operators.DiffOperators.cell_gradient_weak_form_robin`
+* :func:`operators.DiffOperators.edge_divergence_weak_form_robin`
+
+Future Work
+===========
+With the removal of ``properties`` we will be updating the documentation to be more
+explicit, but in the meantime this will make some items look less clear.
+We will also be pushing out some tutorials on how to use the boundary conditions
+to solve the boundary value PDE's. In the meantime though, you can look at the boundary
+condition test codes where we form a few PDE's for convergence tests.
+
+Contributors
+============
+
+* @jcapriot
+
+With reviews from:
+
+* @prisae
+* @domfournier/@fourndo
+* @lheagy
+
+Pull requests
+=============
+* `#232 <https://github.com/simpeg/discretize/pull/232>`__: Exorcise Properties
+* `#234 <https://github.com/simpeg/discretize/pull/234>`__: Boundary conditions
+* `#240 <https://github.com/simpeg/discretize/pull/240>`__: Tree quiver plot
+* `#241 <https://github.com/simpeg/discretize/pull/241>`__: Update azure-pipelines.yml
