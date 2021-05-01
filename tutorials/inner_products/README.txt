@@ -10,5 +10,7 @@ inner products on a numerical grid is to apply the midpoint rule;
 which is used by the *discretize* package.
 
 Here, we demonstrate how to approximate various classes of inner
-products numerically. If this is known, the user will be capable
-of properly discretizing any term in a problem specific PDE.
+products numerically. The inner products can be approximated in
+terms of a linear expression which contains an inner-product matrix.
+By learning how to formulate each class of inner products, the user will 
+have the building blocks to discretize and solve a problem-specific PDE.

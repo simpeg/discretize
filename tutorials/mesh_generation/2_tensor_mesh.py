@@ -1,15 +1,14 @@
 """
-Tensor meshes
+Tensor Meshes
 =============
 
-Tensor meshes are the most basic class of meshes that can be created with
-discretize. They belong to the class (:class:`~discretize.TensorMesh`).
+Tensor meshes are the most basic class of meshes supported by the *discretize* package.
+For tensor meshes, the grid locations are organized according to tensor products.
 Tensor meshes can be defined in 1, 2 or 3 dimensions. Here we demonstrate:
 
-    - How to create basic tensor meshes
-    - How to include padding cells
-    - How to plot tensor meshes
-    - How to extract properties from meshes
+    - how to construct tensor meshes
+    - how to plot tensor meshes
+    - how to extract basic properties from tensor meshes
     
 
 """
@@ -17,8 +16,6 @@ Tensor meshes can be defined in 1, 2 or 3 dimensions. Here we demonstrate:
 ###############################################
 # Import Packages
 # ---------------
-#
-# Here we import the packages required for this tutorial.
 #
 
 from discretize import TensorMesh
@@ -28,12 +25,12 @@ import numpy as np
 # sphinx_gallery_thumbnail_number = 3
 
 ###############################################
-# Basic Example
-# -------------
+# Basic 2D Example
+# ----------------
 #
 # The easiest way to define a tensor mesh is to define the cell widths in
-# x, y and z as 1D numpy arrays. And to provide the position of the bottom
-# southwest corner of the mesh. We demonstrate this here for a 2D mesh (thus
+# x, y and z as 1D numpy arrays, and to provide the position of the bottom
+# southwest corner of the mesh. Here we create a uniform 2D tensor mesh (thus
 # we do not need to consider the z-dimension).
 #
 
@@ -49,7 +46,7 @@ y0 = -150
 
 mesh = TensorMesh([hx, hy], x0=[x0, y0])
 
-mesh.plotGrid()
+mesh.plot_grid()
 
 
 ###############################################
@@ -82,10 +79,10 @@ hy = [(dy, npad_y, -exp_y), (dy, ncy), (dy, npad_y, exp_y)]
 # relative to the origin
 mesh = TensorMesh([hx, hy], x0="CN")
 
-# We can apply the plotGrid method and output to a specified axes object
+# We can apply the plot_grid method and output to a specified axes object
 fig = plt.figure(figsize=(6, 6))
 ax = fig.add_subplot(111)
-mesh.plotGrid(ax=ax)
+mesh.plot_grid(ax=ax)
 ax.set_xbound(mesh.x0[0], mesh.x0[0] + np.sum(mesh.hx))
 ax.set_ybound(mesh.x0[1], mesh.x0[1] + np.sum(mesh.hy))
 ax.set_title("Tensor Mesh")
@@ -119,10 +116,10 @@ x0 = mesh.x0
 nC = mesh.nC
 
 # An (nC, 2) array containing the cell-center locations
-cc = mesh.gridCC
+cc = mesh.cell_centers
 
 # A boolean array specifying which cells lie on the boundary
-bInd = mesh.cellBoundaryInd
+bInd = mesh.cell_boundary_indices
 
 # Plot the cell areas (2D "volume")
 s = mesh.vol
@@ -158,10 +155,10 @@ x0 = mesh.x0
 nC = mesh.nC
 
 # An (nC, 3) array containing the cell-center locations
-cc = mesh.gridCC
+cc = mesh.cell_centers
 
 # A boolean array specifying which cells lie on the boundary
-bInd = mesh.cellBoundaryInd
+bInd = mesh.cell_boundary_indices
 
 # The cell volumes
 v = mesh.vol

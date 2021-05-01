@@ -2,34 +2,30 @@
 Tree Meshes
 ===========
 
-Compared to tensor meshes, tree meshes are able to provide higher levels
+Tree meshes are able to provide higher levels
 of discretization in certain regions while reducing the total number of
-cells. Tree meshes belong to the class (:class:`~discretize.TreeMesh`).
-Tree meshes can be defined in 2 or 3 dimensions. Here we demonstrate:
+cells. Tree meshes can be defined in 2 or 3 dimensions. Here we demonstrate:
 
-    - How to create basic tree meshes in 2D and 3D
-    - Strategies for local mesh refinement
-    - How to plot tree meshes
-    - How to extract properties from tree meshes
+    - how to create tree meshes in 2D and 3D
+    - strategies for local mesh refinement
+    - how to plot tree meshes
+    - how to extract properties from tree meshes
 
-To create a tree mesh, we first define the base tensor mesh (a mesh
-comprised entirely of the smallest cells). Next we choose the level of
-discretization around certain points or within certain regions. When
-creating tree meshes, we must remember certain rules:
+To create a tree mesh, we first define the base tensor mesh (a uniform tensor mesh
+comprised entirely of cells of the smallest size). Next we choose the level of
+discretization around certain points or within certain regions.
+When creating tree meshes, we must remember certain rules:
 
-    - The number of base mesh cells in x, y and z must all be powers of 2
-    - We cannot refine the mesh to create cells smaller than those defining the base mesh
-    - The range of cell sizes in the tree mesh depends on the number of base mesh cells in x, y and z
+    1. The number of base mesh cells in x, y and z must all be powers of 2
+    2. We cannot refine the mesh to create cells smaller than those defining the base mesh
+    3. The range of cell sizes in the tree mesh depends on the number of base mesh cells in x, y and z
     
 
 """
 
 ###############################################
-#
 # Import Packages
 # ---------------
-#
-# Here we import the packages required for this tutorial.
 #
 
 from discretize import TreeMesh
@@ -65,7 +61,7 @@ mesh = refine_tree_xyz(mesh, xy, octree_levels=[2, 2], method="box", finalize=Fa
 
 mesh.finalize()  # Must finalize tree mesh before use
 
-mesh.plotGrid(show_it=True)
+mesh.plot_grid(show_it=True)
 
 
 ###############################################
@@ -95,7 +91,7 @@ nbcy = 2 ** int(np.round(np.log(y_length / dy) / np.log(2.0)))
 # Define the base mesh
 hx = [(dx, nbcx)]
 hy = [(dy, nbcy)]
-mesh = TreeMesh([hx, hy], x0="CC")
+mesh = TreeMesh([hx, hy], origin="CC")
 
 # Refine surface topography
 xx = mesh.vectorNx
@@ -113,12 +109,12 @@ mesh = refine_tree_xyz(mesh, pts, octree_levels=[2, 2], method="radial", finaliz
 
 mesh.finalize()
 
-# We can apply the plotGrid method and output to a specified axes object
+# We can apply the plot_grid method and output to a specified axes object
 fig = plt.figure(figsize=(6, 6))
 ax = fig.add_subplot(111)
-mesh.plotGrid(ax=ax)
-ax.set_xbound(mesh.x0[0], mesh.x0[0] + np.sum(mesh.hx))
-ax.set_ybound(mesh.x0[1], mesh.x0[1] + np.sum(mesh.hy))
+mesh.plot_grid(ax=ax)
+ax.set_xbound(mesh.origin[0], mesh.origin[0] + np.sum(mesh.hx))
+ax.set_ybound(mesh.origin[1], mesh.origin[1] + np.sum(mesh.hy))
 ax.set_title("QuadTree Mesh")
 
 ####################################################
@@ -142,7 +138,7 @@ nbcy = 2 ** int(np.round(np.log(y_length / dy) / np.log(2.0)))
 # Define the base mesh
 hx = [(dx, nbcx)]
 hy = [(dy, nbcy)]
-mesh = TreeMesh([hx, hy], x0="CC")
+mesh = TreeMesh([hx, hy], origin="CC")
 
 # Refine surface topography
 xx = mesh.vectorNx
@@ -161,16 +157,16 @@ mesh = refine_tree_xyz(mesh, pts, octree_levels=[2, 2], method="radial", finaliz
 mesh.finalize()
 
 # The bottom west corner
-x0 = mesh.x0
+origin = mesh.origin
 
 # The total number of cells
 nC = mesh.nC
 
 # An (nC, 2) array containing the cell-center locations
-cc = mesh.gridCC
+cc = mesh.cell_centers
 
 # A boolean array specifying which cells lie on the boundary
-bInd = mesh.cellBoundaryInd
+bInd = mesh.cell_boundary_indices
 
 # The cell areas (2D "volume")
 s = mesh.vol
@@ -178,8 +174,8 @@ s = mesh.vol
 fig = plt.figure(figsize=(6, 6))
 ax = fig.add_subplot(111)
 mesh.plotImage(np.log10(s), grid=True, ax=ax)
-ax.set_xbound(mesh.x0[0], mesh.x0[0] + np.sum(mesh.hx))
-ax.set_ybound(mesh.x0[1], mesh.x0[1] + np.sum(mesh.hy))
+ax.set_xbound(mesh.origin[0], mesh.origin[0] + np.sum(mesh.hx))
+ax.set_ybound(mesh.origin[1], mesh.origin[1] + np.sum(mesh.hy))
 ax.set_title("Log of Cell Areas")
 
 ###############################################
@@ -207,7 +203,7 @@ nbcz = 2 ** int(np.round(np.log(z_length / dz) / np.log(2.0)))
 hx = [(dx, nbcx)]
 hy = [(dy, nbcy)]
 hz = [(dz, nbcz)]
-mesh = TreeMesh([hx, hy, hz], x0="CCC")
+mesh = TreeMesh([hx, hy, hz], origin="CCC")
 
 # Refine surface topography
 [xx, yy] = np.meshgrid(mesh.vectorNx, mesh.vectorNy)
@@ -226,16 +222,16 @@ mesh = refine_tree_xyz(mesh, xyz, octree_levels=[2, 2], method="box", finalize=F
 mesh.finalize()
 
 # The bottom west corner
-x0 = mesh.x0
+origin = mesh.origin
 
 # The total number of cells
 nC = mesh.nC
 
 # An (nC, 2) array containing the cell-center locations
-cc = mesh.gridCC
+cc = mesh.cell_centers
 
 # A boolean array specifying which cells lie on the boundary
-bInd = mesh.cellBoundaryInd
+bInd = mesh.cell_boundary_indices
 
 # Cell volumes
 v = mesh.vol
