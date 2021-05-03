@@ -14,6 +14,21 @@ num_types = [int, float]
 
 
 def example_curvilinear_grid(nC, exType):
+    """Creates and returns the gridded node locations for a curvilinear mesh.
+
+    Parameters
+    ----------
+    nC : list of int
+        list of number of cells in each dimension. Must be length 2 or 3
+    exType : str
+        String specifying the style of curvilinear mesh. Must be one of {"rect", "rotate", "sphere"}
+
+    Returns
+    -------
+    numpy.ndarray
+        Gridded node locations for the curvilinear mesh.
+
+    """
     if not isinstance(nC, list):
         raise TypeError("nC must be a list containing the number of nodes")
     if len(nC) != 2 and len(nC) != 3:
@@ -69,8 +84,9 @@ def example_curvilinear_grid(nC, exType):
 
 
 def random_model(shape, seed=None, anisotropy=None, its=100, bounds=None):
-    """
-    Create a random model by convolving a kernel with a
+    """Create random model.
+
+    Creates a random model by convolving a kernel function with a
     uniformly distributed model.
 
     Parameters
@@ -142,8 +158,7 @@ def random_model(shape, seed=None, anisotropy=None, its=100, bounds=None):
 
 
 def unpack_widths(value):
-    """
-    Unpack a condensed representation of cell widths or time steps.
+    """Unpack a condensed representation of cell widths or time steps.
 
     For a list of numbers, if the same value is repeat or expanded by a constant
     factor, it may be represented in a condensed form using list of floats
@@ -218,8 +233,7 @@ def unpack_widths(value):
 
 
 def closest_points_index(mesh, pts, grid_loc="CC", **kwargs):
-    """
-    Find the indicies for the nearest cell center, node, face or edge for a set of points.
+    """Find the indicies for the nearest cell center, node, face or edge for a set of points.
 
     Parameters
     ----------
@@ -293,8 +307,7 @@ def closest_points_index(mesh, pts, grid_loc="CC", **kwargs):
 
 
 def extract_core_mesh(xyzlim, mesh, mesh_type="tensor"):
-    """
-    Extracts the core mesh from a global mesh.
+    """Extracts the core mesh from a global mesh.
 
     Parameters
     ----------
@@ -401,8 +414,7 @@ def mesh_builder_xyz(
     expansion_factor=1.3,
     mesh_type="tensor",
 ):
-    """
-    Quickly generate a tensor or tree mesh using a cloud of points.
+    """Generate a tensor or tree mesh using a cloud of points.
 
     For a cloud of (x,y[,z]) locations and specified minimum cell widths
     (hx,hy,[hz]), this function creates a tensor or a tree mesh.
@@ -574,8 +586,7 @@ def refine_tree_xyz(
     min_level=0,
     max_distance=np.inf,
 ):
-    """
-    Refine a discretize.TreeMesh based on xyz point locations
+    """Refine a discretize.TreeMesh based on xyz point locations
 
     Parameters
     ----------
@@ -856,8 +867,7 @@ def refine_tree_xyz(
 
 
 def active_from_xyz(mesh, xyz, grid_reference="CC", method="linear"):
-    """
-    Returns a boolean array indicating which cells are below the surface (active cells)
+    """Returns a boolean array indicating which cells are below the surface (active cells)
 
     Get active cells in the `mesh` (i.e. below the surface) by
     interpolating over the last dimension of the input points. This method will
@@ -1027,42 +1037,6 @@ def active_from_xyz(mesh, xyz, grid_reference="CC", method="linear"):
     )
 
     return active.ravel()
-
-
-def example_curvilinear_grid(nC, exType):
-    if not isinstance(nC, list):
-        raise TypeError("nC must be a list containing the number of nodes")
-    if len(nC) != 2 and len(nC) != 3:
-        raise ValueError("nC must either two or three dimensions")
-    exType = exType.lower()
-
-    possibleTypes = ["rect", "rotate"]
-    if exType not in possibleTypes:
-        raise TypeError("Not a possible example type.")
-
-    if exType == "rect":
-        return list(
-            ndgrid([np.cumsum(np.r_[0, np.ones(nx) / nx]) for nx in nC], vector=False)
-        )
-    elif exType == "rotate":
-        if len(nC) == 2:
-            X, Y = ndgrid(
-                [np.cumsum(np.r_[0, np.ones(nx) / nx]) for nx in nC], vector=False
-            )
-            amt = 0.5 - np.sqrt((X - 0.5) ** 2 + (Y - 0.5) ** 2)
-            amt[amt < 0] = 0
-            return [X + (-(Y - 0.5)) * amt, Y + (+(X - 0.5)) * amt]
-        elif len(nC) == 3:
-            X, Y, Z = ndgrid(
-                [np.cumsum(np.r_[0, np.ones(nx) / nx]) for nx in nC], vector=False
-            )
-            amt = 0.5 - np.sqrt((X - 0.5) ** 2 + (Y - 0.5) ** 2 + (Z - 0.5) ** 2)
-            amt[amt < 0] = 0
-            return [
-                X + (-(Y - 0.5)) * amt,
-                Y + (-(Z - 0.5)) * amt,
-                Z + (-(X - 0.5)) * amt,
-            ]
 
 
 
