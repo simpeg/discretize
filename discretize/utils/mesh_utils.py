@@ -327,7 +327,49 @@ def extract_core_mesh(xyzlim, mesh, mesh_type="tensor"):
         to core mesh. **core_mesh** is a *discretize.BaseMesh* object representing
         the core mesh.
 
+    Examples
+    --------
+
+    Here, we define a 2D tensor mesh that has both a core region and padding.
+    We use the function **extract_core_mesh** to return a mesh which contains
+    only the core region.
+
+    >>> from discretize.utils import extract_core_mesh
+    >>> from discretize import TensorMesh
+    >>> import numpy as np
+    >>> import matplotlib.pyplot as plt
+    >>> import matplotlib as mpl
+    >>> 
+    >>> mpl.rcParams.update({"font.size": 14})
+    >>> 
+    >>> # Corners of a uniform cube
+    >>> h = [(1., 5, -1.5), (1., 20), (1., 5, 1.5)]
+    >>> mesh = TensorMesh([h, h], origin='CC')
+    >>> 
+    >>> # Plot original mesh
+    >>> fig = plt.figure(figsize=(7, 7))
+    >>> ax = fig.add_subplot(111)
+    >>> mesh.plot_grid(ax=ax)
+    >>> ax.set_title('Original Tensor Mesh')
+    >>> plt.show()
+    >>> 
+    >>> # Set the limits for the cutoff of the core mesh (dim, 2)
+    >>> xlim = np.c_[-10., 10]
+    >>> ylim = np.c_[-10., 10]
+    >>> core_limits = np.r_[xlim, ylim]
+    >>> 
+    >>> # Extract indices of core mesh cells and the core mesh, then plot
+    >>> core_ind, core_mesh = extract_core_mesh(core_limits, mesh)
+    >>> fig = plt.figure(figsize=(4, 4))
+    >>> ax = fig.add_subplot(111)
+    >>> core_mesh.plot_grid(ax=ax)
+    >>> ax.set_title('Core Mesh')
+
+
     """
+
+    if not isinstance(mesh, discretize.TensorMesh):
+        raise Exception("Only implemented for class TensorMesh")
 
     if mesh.dim == 1:
         xyzlim = xyzlim.flatten()
@@ -343,7 +385,7 @@ def extract_core_mesh(xyzlim, mesh, mesh_type="tensor"):
 
         meshCore = discretize.TensorMesh([hx], origin=origin)
 
-        actind = (mesh.gridCC > xmin) & (mesh.gridCC < xmax)
+        actind = (mesh.cell_centers > xmin) & (mesh.cell_centers < xmax)
 
     elif mesh.dim == 2:
         xmin, xmax = xyzlim[0, 0], xyzlim[0, 1]
@@ -363,10 +405,10 @@ def extract_core_mesh(xyzlim, mesh, mesh_type="tensor"):
         meshCore = discretize.TensorMesh([hx, hy], origin=origin)
 
         actind = (
-            (mesh.gridCC[:, 0] > xmin)
-            & (mesh.gridCC[:, 0] < xmax)
-            & (mesh.gridCC[:, 1] > ymin)
-            & (mesh.gridCC[:, 1] < ymax)
+            (mesh.cell_centers[:, 0] > xmin)
+            & (mesh.cell_centers[:, 0] < xmax)
+            & (mesh.cell_centers[:, 1] > ymin)
+            & (mesh.cell_centers[:, 1] < ymax)
         )
 
     elif mesh.dim == 3:
@@ -391,12 +433,12 @@ def extract_core_mesh(xyzlim, mesh, mesh_type="tensor"):
         meshCore = discretize.TensorMesh([hx, hy, hz], origin=origin)
 
         actind = (
-            (mesh.gridCC[:, 0] > xmin)
-            & (mesh.gridCC[:, 0] < xmax)
-            & (mesh.gridCC[:, 1] > ymin)
-            & (mesh.gridCC[:, 1] < ymax)
-            & (mesh.gridCC[:, 2] > zmin)
-            & (mesh.gridCC[:, 2] < zmax)
+            (mesh.cell_centers[:, 0] > xmin)
+            & (mesh.cell_centers[:, 0] < xmax)
+            & (mesh.cell_centers[:, 1] > ymin)
+            & (mesh.cell_centers[:, 1] < ymax)
+            & (mesh.cell_centers[:, 2] > zmin)
+            & (mesh.cell_centers[:, 2] < zmax)
         )
 
     else:
@@ -961,7 +1003,7 @@ def active_from_xyz(mesh, xyz, grid_reference="CC", method="linear"):
 
     if grid_reference == "CC":
         # this should work for all 4 mesh types...
-        locations = mesh.gridCC
+        locations = mesh.cell_centers
 
         if mesh.dim == 1:
             active = np.zeros(mesh.nC, dtype="bool")
@@ -975,13 +1017,13 @@ def active_from_xyz(mesh, xyz, grid_reference="CC", method="linear"):
             if mesh.dim == 3:
                 locations = np.vstack(
                     [
-                        mesh.gridCC
+                        mesh.cell_centers
                         + (np.c_[-1, 1, 1][:, None] * mesh.h_gridded / 2.0).squeeze(),
-                        mesh.gridCC
+                        mesh.cell_centers
                         + (np.c_[-1, -1, 1][:, None] * mesh.h_gridded / 2.0).squeeze(),
-                        mesh.gridCC
+                        mesh.cell_centers
                         + (np.c_[1, 1, 1][:, None] * mesh.h_gridded / 2.0).squeeze(),
-                        mesh.gridCC
+                        mesh.cell_centers
                         + (np.c_[1, -1, 1][:, None] * mesh.h_gridded / 2.0).squeeze(),
                     ]
                 )
@@ -989,9 +1031,9 @@ def active_from_xyz(mesh, xyz, grid_reference="CC", method="linear"):
             elif mesh.dim == 2:
                 locations = np.vstack(
                     [
-                        mesh.gridCC
+                        mesh.cell_centers
                         + (np.c_[-1, 1][:, None] * mesh.h_gridded / 2.0).squeeze(),
-                        mesh.gridCC
+                        mesh.cell_centers
                         + (np.c_[1, 1][:, None] * mesh.h_gridded / 2.0).squeeze(),
                     ]
                 )

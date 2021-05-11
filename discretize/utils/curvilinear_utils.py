@@ -56,7 +56,7 @@ def volume_tetrahedron(xyz, A, B, C, D):
     >>> # Corners of a uniform cube
     >>> h = [1, 1]
     >>> mesh = TensorMesh([h, h, h])
-    >>> xyz = mesh.grid_nodes
+    >>> xyz = mesh.nodes
     >>> 
     >>> # Indicies
     >>> A = np.array([0])
@@ -78,7 +78,7 @@ def volume_tetrahedron(xyz, A, B, C, D):
     >>> xyz_tetra = xyz[k, :]
     >>> ax.plot(xyz_tetra[:, 0], xyz_tetra[:, 1], xyz_tetra[:, 2], 'r')
     >>> 
-    >>> ax.text(-0.6, 0., 2.8, 'Volume of the tetrahedron: {:g} $m^3$'.format(vol))
+    >>> ax.text(-0.25, 0., 3., 'Volume of the tetrahedron: {:g} $m^3$'.format(vol))
     >>> 
     >>> plt.show()
 
@@ -96,19 +96,10 @@ def volume_tetrahedron(xyz, A, B, C, D):
     return np.abs(V / 6)
 
 
-def index_cube(nodes, grid_size, n=None):
-    """
-    Returns the index of nodes on the mesh.
+def index_cube(nodes, grid_shape, n=None):
+    """Returns the index of nodes on a curvilinear mesh.
 
 
-    Input:
-       nodes     - string of which nodes to return. e.g. 'ABCD'
-       grid_size  - size of the nodal grid
-       n         - number of nodes each i,j,k direction: [ni,nj,nk]
-
-
-    Output:
-       index  - index in the order asked e.g. 'ABCD' --> (A,B,C,D)
 
     TWO DIMENSIONS::
 
@@ -138,17 +129,35 @@ def index_cube(nodes, grid_size, n=None):
            D -------------- C
       node(i+1,j,k)      node(i+1,j+1,k)
 
+    
+    Parameters
+    ----------
+    nodes : str
+        String specifying which nodes to return; e.g. 'ABCD'
+    grid_shape : list
+        Number of nodes along the i,j,k directions; e.g. [ni,nj,nk]
+    nc : list
+        Number of cells along the i,j,k directions; e.g. [nci,ncj,nck]
+
+
+    Returns
+    -------
+    index : tuple of numpy.array
+        Each entry of the tuple is a numpy array containing the indices of
+        the nodes specified by the *nodes* paramter in the order asked;
+        e.g. if *nodes* = 'ABCD', the tuple returned is ordered (A,B,C,D).
+
     """
 
     if not isinstance(nodes, str):
         raise TypeError("Nodes must be a str variable: e.g. 'ABCD'")
     nodes = nodes.upper()
     try:
-        dim = len(grid_size)
+        dim = len(grid_shape)
         if n is None:
-            n = tuple(x - 1 for x in grid_size)
+            n = tuple(x - 1 for x in grid_shape)
     except TypeError:
-        return TypeError("grid_size must be iterable")
+        return TypeError("grid_shape must be iterable")
     # Make sure that we choose from the possible nodes.
     possibleNodes = "ABCD" if dim == 2 else "ABCDEFGH"
     for node in nodes:
@@ -178,11 +187,11 @@ def index_cube(nodes, grid_size, n=None):
     for node in nodes:
         shift = nodeMap[node]
         if dim == 2:
-            out += (sub2ind(grid_size, np.c_[i + shift[0], j + shift[1]]).flatten(),)
+            out += (sub2ind(grid_shape, np.c_[i + shift[0], j + shift[1]]).flatten(),)
         elif dim == 3:
             out += (
                 sub2ind(
-                    grid_size, np.c_[i + shift[0], j + shift[1], k + shift[2]]
+                    grid_shape, np.c_[i + shift[0], j + shift[1], k + shift[2]]
                 ).flatten(),
             )
 
@@ -190,31 +199,160 @@ def index_cube(nodes, grid_size, n=None):
 
 
 def face_info(xyz, A, B, C, D, average=True, normalize_normals=True, **kwargs):
-    """
-    function [N] = face_info(y,A,B,C,D)
+    """Returns normal surface vector and area for a given set of faces.
 
-       Returns the averaged normal, area, and edge lengths for a given set of faces.
+    Let *xyz* be an (n, 3) array denoting a set of vertex locations.
+    Now let vertex locations *a, b, c* and *d* define a quadrilateral
+    (regular or irregular) in 2D or 3D space. For this quadrilateral,
+    we organize the vertices as follows:
 
-       If average option is FALSE then N is a cell array {nA,nB,nC,nD}
+    CELL VERTICES::
+      
+            a -------Vab------- b
+           /                   /
+          /                   /
+        Vda       (X)       Vbc
+        /                   /
+       /                   /
+      d -------Vcd------- c
+
+    where the normal vector *(X)* is pointing into the page. For a set
+    of quadrilaterals whose vertices are indexed in arrays *A, B, C* and *D* ,
+    this function returns the normal surface vector(s) and the area
+    for each quadrilateral.
+
+    At each vertex, there are 4 cross-products that can be used to compute the
+    vector normal the surface defined by the quadrilateral. In 3D space however,
+    the vertices indexed may not define a quadrilateral exactly and thus the normal vectors
+    computed at each vertex might not be identical. In this case, you may choose output
+    the normal vector at *a, b, c* and *d* or compute
+    the average normal surface vector as follows:
+
+    .. math::
+        \\bf{n} = \\frac{1}{4} \\big (
+        \\bf{v_{ab} \\times v_{da}} +
+        \\bf{v_{bc} \\times v_{ab}} +
+        \\bf{v_{cd} \\times v_{bc}} +
+        \\bf{v_{da} \\times v_{cd}} \\big )
 
 
-    Input:
-       xyz          - X,Y,Z vertex vector
-       A,B,C,D      - vert index of the face (counter clockwize)
+    For computing the surface area, we assume the vertices define a quadrilateral.
 
-    Options:
-       average      - [true]/false, toggles returning all normals or the average
+    Paramters
+    ---------
+    xyz :
+        (n, 3) array containing the x,y,z locations for all verticies
+    A : numpy.ndarray
+        Vector containing the indicies for the **a** vertex locations
+    B : numpy.ndarray
+        Vector containing the indicies for the **b** vertex locations
+    C : numpy.ndarray
+        Vector containing the indicies for the **c** vertex locations
+    D : numpy.ndarray
+        Vector containing the indicies for the **d** vertex locations
+    average : bool
+        If *True* (default), the function returns the average surface
+        normal vector for each surface. If *False* , the function will
+        return the normal vectors computed at the *A, B, C* and *D*
+        vertices in a cell array {nA,nB,nC,nD}.
+    normalize_normal : bool
+        If *True* (default), the function will normalize the surface normal
+        vectors. This is applied regardless of whether the *average* parameter
+        is set to *True* or *False*. If *False*, the vectors are not normalized.
 
-    Output:
-       N            - average face normal or {nA,nB,nC,nD} if average = false
-       area         - average face area
-       edgeLengths  - exact edge Lengths, 4 column vector [AB, BC, CD, DA]
+    Returns
+    -------
+    N : ndarray or cell array of ndarray
+        Normal vector(s) for each surface. If *average* = *True*, the function
+        returns an ndarray with the average surface normal vectos. If *average* = *False* ,
+        the function returns a cell array {nA,nB,nC,nD} containing the normal vectors
+        computed using each vertex of the surface.
+    area : numpy.ndarray
+        The surface areas.
 
-    see also testFaceNormal testFaceArea
+    Examples
+    --------
 
-    @author Rowan Cockett
+    Here we define a set of vertices for a tensor mesh. We then
+    index 4 vertices for an irregular quadrilateral. The
+    function *face_info* is used to compute the normal vector
+    and the surface area.
 
-    Last modified on: 2013/07/26
+    >>> from discretize.utils import face_info
+    >>> from discretize import TensorMesh
+    >>> import numpy as np
+    >>> import matplotlib.pyplot as plt
+    >>> import matplotlib as mpl
+    >>> 
+    >>> mpl.rcParams.update({"font.size": 14})
+    >>> 
+    >>> # Corners of a uniform cube
+    >>> h = [1, 1]
+    >>> mesh = TensorMesh([h, h, h])
+    >>> xyz = mesh.nodes
+    >>> 
+    >>> # Indicies
+    >>> A = np.array([0])
+    >>> B = np.array([4])
+    >>> C = np.array([26])
+    >>> D = np.array([18])
+    >>> 
+    >>> # Compute average surface normal vector (normalized)
+    >>> nvec, area = face_info(xyz, A, B, C, D)
+    >>> area = area[0]
+    >>> 
+    >>> # Plot
+    >>> fig = plt.figure(figsize=(7, 7))
+    >>> ax = fig.gca(projection='3d')
+    >>> 
+    >>> mesh.plot_grid(ax=ax)
+    >>> 
+    >>> k = [0, 4, 26, 18, 0]
+    >>> xyz_quad = xyz[k, :]
+    >>> ax.plot(xyz_quad[:, 0], xyz_quad[:, 1], xyz_quad[:, 2], 'r')
+    >>> 
+    >>> ax.text(-0.25, 0., 3., 'Area of the surface: {:g} $m^2$'.format(area))
+    >>> ax.text(-0.25, 0., 2.8, 'Normal vector: ({:.2f}, {:.2f}, {:.2f})'.format(
+    >>>     nvec[0, 0], nvec[0, 1], nvec[0, 2])
+    >>> )
+    >>> 
+    >>> plt.show()
+
+    In our second example, the vertices do are unable to define a flat
+    surface in 3D space. However, we will demonstrate the *face_info*
+    returns the average normal vector and an approximate surface area.
+
+    >>> # Corners of a uniform cube
+    >>> h = [1, 1]
+    >>> mesh = TensorMesh([h, h, h])
+    >>> xyz = mesh.nodes
+    >>> 
+    >>> # Indicies
+    >>> A = np.array([0])
+    >>> B = np.array([5])
+    >>> C = np.array([26])
+    >>> D = np.array([18])
+    >>> 
+    >>> # Compute average surface normal vector
+    >>> nvec, area = face_info(xyz, A, B, C, D)
+    >>> area = area[0]
+    >>> 
+    >>> # Plot
+    >>> fig = plt.figure(figsize=(7, 7))
+    >>> ax = fig.gca(projection='3d')
+    >>> 
+    >>> mesh.plot_grid(ax=ax)
+    >>> 
+    >>> k = [0, 5, 26, 18, 0]
+    >>> xyz_quad = xyz[k, :]
+    >>> ax.plot(xyz_quad[:, 0], xyz_quad[:, 1], xyz_quad[:, 2], 'g')
+    >>> 
+    >>> ax.text(-0.25, 0., 3., 'Area of the surface: {:g} $m^2$'.format(area))
+    >>> ax.text(-0.25, 0., 2.8, 'Average normal vector: ({:.2f}, {:.2f}, {:.2f})'.format(
+    >>>     nvec[0, 0], nvec[0, 1], nvec[0, 2])
+    >>> )
+    >>> 
+    >>> plt.show()
 
     """
     if "normalizeNormals" in kwargs:
@@ -228,15 +366,7 @@ def face_info(xyz, A, B, C, D, average=True, normalize_normals=True, **kwargs):
         raise TypeError("average must be a boolean")
     if not isinstance(normalize_normals, bool):
         raise TypeError("normalize_normals must be a boolean")
-    # compute normal that is pointing away from you.
-    #
-    #    A -------A-B------- B
-    #    |                   |
-    #    |                   |
-    #   D-A       (X)       B-C
-    #    |                   |
-    #    |                   |
-    #    D -------C-D------- C
+    
 
     AB = xyz[B, :] - xyz[A, :]
     BC = xyz[C, :] - xyz[B, :]
