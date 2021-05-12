@@ -217,8 +217,7 @@ def rotation_matrix_from_normals(v0, v1, tol=1e-20):
 
 
 def rotate_points_from_normals(xyz, v0, v1, x0=np.r_[0.0, 0.0, 0.0]):
-    """
-    Rotate a set of xyz locations about a specified point.
+    """Rotate a set of xyz locations about a specified point.
 
     Rotate a grid of Cartesian points about a location x0 according to the
     rotation defined from vector v0 to v1.

@@ -78,6 +78,7 @@ def interpolation_matrix(locs, x, y=None, z=None):
     >>> from discretize import TensorMesh
     >>> import numpy as np
     >>> import matplotlib.pyplot as plt
+    >>> np.random.seed(14)
     >>> 
     >>> locs = np.random.rand(50)*0.8+0.1
     >>> x = np.linspace(0, 1, 7)
@@ -85,10 +86,21 @@ def interpolation_matrix(locs, x, y=None, z=None):
     >>> fun = lambda x: np.cos(2*np.pi*x)
     >>> Q = interpolation_matrix(locs, x)
     >>> 
-    >>> plt.plot(x, fun(x), 'bs-')
-    >>> plt.plot(dense, fun(dense), 'y:')
-    >>> plt.plot(locs, Q*fun(x), 'mo')
-    >>> plt.plot(locs, fun(locs), 'rx')
+    >>> fig1 = plt.figure(figsize=(5, 3))
+    >>> ax = fig1.add_axes([0.05, 0.05, 0.9, 0.9])
+    >>> ax.plot(dense, fun(dense), 'k:', lw=3)
+    >>> ax.plot(x, fun(x), 'ks', markersize=8)
+    >>> ax.plot(locs, Q*fun(x), 'go', markersize=4)
+    >>> ax.plot(locs, fun(locs), 'rs', markersize=4)
+    >>> ax.legend(
+    >>>     [
+    >>>         'True Function',
+    >>>         'True (discrete loc.)',
+    >>>         'Interpolated (computed)',
+    >>>         'True (interp. loc.)'
+    >>>     ],
+    >>>     loc='upper center'
+    >>> )
     >>> plt.show()
 
 
@@ -96,29 +108,19 @@ def interpolation_matrix(locs, x, y=None, z=None):
     We interpolate the Gaussian from the nodes to cell centers and examine the relative
     error.
 
-    >>> from discretize.utils import interpolation_matrix
-    >>> from discretize import TensorMesh
-    >>> import numpy as np
-    >>> import matplotlib.pyplot as plt
-    >>> 
     >>> hx = np.ones(10)
     >>> hy = np.ones(10)
     >>> mesh = TensorMesh([hx, hy], x0='CC')
-    >>> 
     >>> def fun(x, y):
     >>>     return np.exp(-(x**2 + y**2)/2**2)
-    >>>
-    >>> nodes = mesh.grid_nodes
+    >>> nodes = mesh.nodes
     >>> val_nodes = fun(nodes[:, 0], nodes[:, 1])
-    >>> 
-    >>> centers = mesh.grid_cell_centers
+    >>> centers = mesh.cell_centers
     >>> val_centers = fun(centers[:, 0], centers[:, 1])
-    >>> 
     >>> A = interpolation_matrix(
-    >>>     centers, mesh.grid_nodes_x, mesh.grid_nodes_y
+    >>>     centers, mesh.nodes_x, mesh.nodes_y
     >>> )
     >>> val_interp = A.dot(val_nodes)
-    >>> 
     >>> fig = plt.figure(figsize=(11,3.3))
     >>> clim = (0., 1.)
     >>> ax1 = fig.add_subplot(131)
@@ -218,7 +220,7 @@ def volume_average(mesh_in, mesh_out, values=None, output=None):
     look like averaging each of those cells values
 
     >>> import matplotlib.pyplot as plt
-    >>> plt.figure()
+    >>> plt.figure(figsize=(6, 3))
     >>> ax1 = plt.subplot(121)
     >>> mesh_in.plot_image(model1, ax=ax1)
     >>> ax2 = plt.subplot(122)

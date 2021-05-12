@@ -5,7 +5,25 @@ SCALARTYPES = (complex, float, int, np.number)
 
 
 def is_scalar(f):
-    """True if the input is: integer, float or complex number."""
+    """Determine if the input argument is a scalar.
+
+    The function **is_scalar** returns *True* if the input is an integer,
+    float or complex number. The function returns *False* otherwise.
+
+    Parameters
+    ----------
+    f :
+        Any input quantity
+
+    Returns
+    -------
+    bool :
+
+        - *True* if the input argument is an integer, float or complex number
+        - *False* otherwise
+
+
+    """
 
     if isinstance(f, SCALARTYPES):
         return True
@@ -15,7 +33,27 @@ def is_scalar(f):
 
 
 def as_array_n_by_dim(pts, dim):
-    """Verifies if an array is of a specified dimension"""
+    """Verifies the dimensions of a 2D array.
+
+    The function **as_array_n_by_dim** will examine the numpy.ndarray
+    *pts* and determine if the number of columns is equal to *dim*.
+    If so, this function returns the input argument *pts*. Otherwise,
+    the function returns an error.
+
+    Parameters
+    ----------
+    pts : numpy.ndarray
+        A 2D numpy array
+    dim : int
+        The number of columns which *pts* should have
+    
+    Returns
+    -------
+    numpy.ndarray
+        Returns the input argument *pts* if the number of columns equals *dim*.
+    
+
+    """
     if type(pts) == list:
         pts = np.array(pts)
     if not isinstance(pts, np.ndarray):

@@ -5,14 +5,25 @@ import json
 
 
 def load_mesh(file_name):
-    """
-    Open a json file and load the mesh into the target class
+    """Load discretize mesh saved to json file.
 
-    As long as there are no namespace conflicts, the target __class__
-    will be stored on the properties.HasProperties registry and may be
-    fetched from there.
+    For a discretize mesh that has been converted to dictionary and
+    written to a json file, the function **load_mesh** loads the
+    json file and reconstructs the mesh object. As long as there are
+    no namespace conflicts, the target __class__ will be stored on
+    the properties.HasProperties registry and may be fetched from there.
 
-    :param str file_name: name of file to read in
+    Parameters
+    ----------
+    file_name : str
+        Name of the json file being read in. Contains all information required to reconstruct the mesh.
+
+    Returns
+    -------
+    discretize.BaseMesh
+        A discretize mesh defined by the class and parameters stored in the json file
+
+
     """
     with open(file_name, "r") as outfile:
         jsondict = json.load(outfile)

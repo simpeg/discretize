@@ -568,7 +568,48 @@ def sub2ind(shape, subs):
 
 
 def get_subarray(A, ind):
-    """subarray"""
+    """Extract a subarray
+
+    For a numpy.ndarray, the function **get_subarray** extracts a subset of
+    the array. The portion of the original array being extracted is defined
+    by providing the indices along each axis.
+
+    Parameters
+    ----------
+    A : numpy.ndarray
+        The original numpy array. Must be 1, 2 or 3 dimensions.
+    ind : list of numpy.ndarray
+        A list of numpy arrays containing the indices being extracted along each dimension. The length of the list must equal the dimensions of the input array.
+
+    Returns
+    -------
+    numpy.ndarray
+        The subarray extracted from the original array
+    
+    Examples
+    --------
+    Here we construct a random 3x3 numpy array and use **get_subarray** to extract
+    the first column.
+
+    >>> from discretize.utils import get_subarray
+    >>> import numpy as np
+    >>> np.random.seed(63)
+    >>> 
+    >>> # Define a random array for input
+    >>> A = np.random.rand(3, 3)
+    >>> 
+    >>> # Define the indexing along the columns and rows and create the indexing list
+    >>> ind_x = np.array([0, 1, 2], dtype=int)
+    >>> ind_y = np.array([0], dtype=int)
+    >>> ind = [ind_x, ind_y]
+    >>> 
+    >>> # Extract the first column of A
+    >>> Asub = get_subarray(A, ind)
+    >>> 
+    >>> print(A)
+    >>> print(Asub)
+
+    """
     if not isinstance(ind, list):
         raise TypeError("ind must be a list of vectors")
     if len(A.shape) != len(ind):
@@ -904,13 +945,13 @@ def inverse_2x2_block_diagonal(a11, a12, a21, a22, return_matrix=True, **kwargs)
 
 
 class TensorType(object):
-    r"""Class for determining tensor type.
+    r"""Class for determining property tensor type.
 
-    For a given *mesh*, *tensor* is a numpy.ndarray defining the constitutive
-    relationship between two vector quantities for each cell in the mesh.
-    The **TensorType** class examines the dimensions of *tensor* to
-    determine if it defines a scalar, isotropic, diagonal anisotropic or tensor
-    anisotropic constitutive relationship.
+    For a given *mesh*, the **TensorType** class examines the numpy.ndarray
+    *tensor* to determine whether *tensor* defines a scalar, isotropic,
+    diagonal anisotropic or full tensor anisotropic constitutive relationship
+    for each cell on the mesh. The general theory behind this functionality
+    is explained below.
 
     The relationship between a quantity and its response to external
     stimuli (e.g. Ohm's law) can be defined by a scalar quantity:
@@ -919,7 +960,7 @@ class TensorType(object):
         \vec{j} = \sigma \vec{e}
 
     Or in the case of anisotropy, the relationship is defined generally by
-    a tensor:
+    a symmetric tensor:
     
     .. math::
         \vec{j} = \Sigma \vec{e} \;\;\; where \;\;\;
@@ -929,18 +970,32 @@ class TensorType(object):
         \sigma_{5} & \sigma_{6} & \sigma_{3}
         \end{bmatrix}
 
-    where the tensor is symmetric and defined by 6 independent element
-    (3 independent elements in 2D). For a given *mesh*, the parameters
-    defined in the numpy.ndarray *tensor* belong to one of the following
-    classifications in discretize:
+    In 3D, the tensor is defined by 6 independent element (3 independent elements in 2D).
+    When using the input argument *tensor* to define the consitutive relationship
+    for every cell in the *mesh*, there are 4 classifications recognized by discretize:
 
         - **Scalar:** :math:`\vec{j} = \sigma \vec{e}`, where :math:`\sigma` a constant. Thus the input argument *tensor* is a float. 
         
-        - **Isotropic:** :math:`\vec{j} = \sigma \vec{e}`, where :math:`\sigma (r)` varies spatially. Thus the input argument *tensor* is a 1D array that provides a :math:`\sigma` value for every cell in the mesh.
+        - **Isotropic:** :math:`\vec{j} = \sigma \vec{e}`, where :math:`\sigma` varies spatially. Thus the input argument *tensor* is a 1D array that provides a :math:`\sigma` value for every cell in the mesh.
 
         - **Anisotropic:** :math:`\vec{j} = \Sigma \vec{e}`, where the off-diagonal elements are zero. That is, :math:`\Sigma` is diagonal. In this case, the input argument *tensor* defining the physical properties in each cell is a numpy.ndarray of shape (*nCells*, *dim*).
         
         - **Tensor:** :math:`\vec{j} = \Sigma \vec{e}`, where off-diagonal elements are non-zero and :math:`\Sigma` is a full tensor. In this case, the input argument *tensor* defining the physical properties in each cell is a numpy.ndarray of shape (*nCells*, *nParam*). In 2D, *nParam* = 3 and in 3D, *nParam* = 6.
+    
+    
+    Parameters
+    ----------
+
+    mesh : discretize.BaseTensorMesh
+        An instance of any of the mesh classes support in discretize; i.e. *TensorMesh*, *CylindricalMesh*, *TreeMesh* or *CurvilinearMesh*.
+    tensor : numpy.ndarray or a float
+        The shape of the input argument *tensor* must fall into one of these classifications:
+
+            - *Scalar:* A float is entered.
+            - *Isotropic:* A 1D numpy.ndarray with a property value for every cell.
+            - *Anisotropic:* A numpy.ndarray of shape (*nCell*, *dim*) where each row defines the diagonal-anisotropic property parameters for each cell. *nParam* = 2 for 2D meshes and *nParam* = 3 for 3D meshes.
+            - *Tensor:* A numpy.ndarray of shape (*nCell*, *nParam*) where each row defines the full anisotropic property parameters for each cell. *nParam* = 3 for 2D meshes and *nParam* = 6 for 3D meshes.
+
 
     """
 
@@ -1090,7 +1145,7 @@ def make_property_tensor(mesh, tensor):
     >>>     ax1[ii].imshow(
     >>>         M_list[ii].todense(), interpolation='none', cmap='binary', vmax=10.
     >>>     )
-    >>>     ax1[ii].set_title(case_list[ii], fontsize=20)
+    >>>     ax1[ii].set_title(case_list[ii], fontsize=24)
     >>> 
     >>> ax2 = fig.add_axes([0.92, 0.15, 0.01, 0.7])
     >>> norm = mpl.colors.Normalize(vmin=0., vmax=10.)
@@ -1177,7 +1232,7 @@ def inverse_property_tensor(mesh, tensor, return_matrix=False, **kwargs):
     ----------
     mesh : discretize.BaseMesh
        A mesh
-    tensor : numpy.ndarray or a float
+    tensor : numpy.ndarray or float
 
         - *Scalar:* A float is entered.
         - *Isotropic:* A 1D numpy.ndarray with a property value for every cell.
@@ -1185,14 +1240,16 @@ def inverse_property_tensor(mesh, tensor, return_matrix=False, **kwargs):
         - *Tensor:* A numpy.ndarray of shape (*nCell*, *nParam*) where each row defines the full anisotropic property parameters for each cell. *nParam* = 3 for 2D meshes and *nParam* = 6 for 3D meshes.
 
     return_matrix : bool (default=False)
-        If *True*, the function returns the inverse of the property tensor. If *False*, the function returns the non-zero elements of the inverse of the property tensor in a numpy.ndarray in the same order as the input argument *tensor*.
+    
+        - *True:* the function returns the inverse of the property tensor.
+        - *False:* the function returns the non-zero elements of the inverse of the property tensor in a numpy.ndarray in the same order as the input argument *tensor*.
 
     Returns
     -------
     numpy.ndarray or sparse.coo.coo_matrix
     
         - If *return_matrix* = *False*, the function outputs the parameters defining the inverse of the property tensor in a numpy.ndarray with the same dimensions as the input argument *tensor*
-        - *True:* the function outputs the inverse of the property tensor as a *sparse.coo.coo_matrix*.
+        - If *return_natrix* = *True*, the function outputs the inverse of the property tensor as a *sparse.coo.coo_matrix*.
 
 
     Examples
@@ -1245,7 +1302,7 @@ def inverse_property_tensor(mesh, tensor, return_matrix=False, **kwargs):
     >>>     ax1[ii].imshow(
     >>>         M_list[ii].todense(), interpolation='none', cmap='binary', vmax=10.
     >>>     )
-    >>>     ax1[ii].set_title('$M$ (' + case_list[ii] + ')', fontsize=20)
+    >>>     ax1[ii].set_title('$M$ (' + case_list[ii] + ')', fontsize=24)
     >>> 
     >>> cax1 = fig1.add_axes([0.92, 0.15, 0.01, 0.7])
     >>> norm1 = mpl.colors.Normalize(vmin=0., vmax=10.)
@@ -1261,7 +1318,7 @@ def inverse_property_tensor(mesh, tensor, return_matrix=False, **kwargs):
     >>>     ax2[ii].imshow(
     >>>         Minv_list[ii].todense(), interpolation='none', cmap='binary', vmax=1.
     >>>     )
-    >>>     ax2[ii].set_title('$M^{-1}$ (' + case_list[ii] + ')', fontsize=20)
+    >>>     ax2[ii].set_title('$M^{-1}$ (' + case_list[ii] + ')', fontsize=24)
     >>> 
     >>> cax2 = fig2.add_axes([0.92, 0.15, 0.01, 0.7])
     >>> norm2 = mpl.colors.Normalize(vmin=0., vmax=1.)
@@ -1318,6 +1375,12 @@ def inverse_property_tensor(mesh, tensor, return_matrix=False, **kwargs):
 
 
 class Zero(object):
+    """Carries out arithmetic operations between 0 and arbitrary quantities.
+
+    This class was designed to manage basic arithmetic operations between
+    0 and numpy.arrays of any shape.
+
+    """
 
     __numpy_ufunc__ = True
     __array_ufunc__ = None
@@ -1392,6 +1455,7 @@ class Zero(object):
         return 0 > v
 
     def transpose(self):
+        """Returns the transpose of the *Zero* class, i.e. itself"""
         return self
 
     def __getitem__(self, key):
@@ -1399,18 +1463,27 @@ class Zero(object):
 
     @property
     def ndim(self):
+        """Returns the dimension of *Zero* class, i.e. *None*"""
         return None
 
     @property
     def shape(self):
+        """Returns the shape *Zero* class, i.e. *None*"""
         return _inftup(None)
 
     @property
     def T(self):
+        """Returns the *Zero* class as an operator"""
         return self
 
 
 class Identity(object):
+    """Carries out arithmetic operations involving the identity.
+
+    This class was designed to manage basic arithmetic operations
+    between the identity matrix and numpy.arrays of any shape.
+
+    """
 
     __numpy_ufunc__ = True
     __array_ufunc__ = None
@@ -1494,17 +1567,21 @@ class Identity(object):
 
     @property
     def ndim(self):
+        """Returns the dimension of *Identity* class, i.e. *None*"""
         return None
 
     @property
     def shape(self):
+        """Returns the shape of *Identity* class, i.e. *None*"""
         return _inftup(None)
 
     @property
     def T(self):
+        """Returns the *Identity* class as an operator"""
         return self
 
     def transpose(self):
+        """Returns the transpose of the *Identity* class, i.e. itself"""
         return self
 
 

@@ -97,43 +97,47 @@ def volume_tetrahedron(xyz, A, B, C, D):
 
 
 def index_cube(nodes, grid_shape, n=None):
-    """Returns the index of nodes on a curvilinear mesh.
+    """Returns the index of nodes on a tensor (or curvilinear) mesh.
 
-
+    For 2D tensor meshes, each cell is defined by nodes
+    *A, B, C* and *D*. And for 3D tensor meshes, each cell
+    is defined by nodes *A* through *H* (see below). **index_cube**
+    outputs the indices for the specified node(s) for all
+    cells in the mesh.
 
     TWO DIMENSIONS::
 
-      node(i,j)          node(i,j+1)
-           A -------------- B
+      node(i,j+1)      node(i+i,j+1)
+           B -------------- C
            |                |
            |    cell(i,j)   |
            |        I       |
            |                |
-          D -------------- C
-      node(i+1,j)        node(i+1,j+1)
+           A -------------- D
+       node(i,j)        node(i+1,j)
 
 
     THREE DIMENSIONS::
 
-            node(i,j,k+1)       node(i,j+1,k+1)
-                E --------------- F
-               /|               / |
-              / |              /  |
-             /  |             /   |
-      node(i,j,k)         node(i,j+1,k)
-           A -------------- B     |
-           |    H ----------|---- G
-           |   /cell(i,j)   |   /
-           |  /     I       |  /
-           | /              | /
-           D -------------- C
-      node(i+1,j,k)      node(i+1,j+1,k)
+        node(i,j+1,k+1)    node(i+1,j+1,k+1)
+                F ---------------- G
+               /|                / |
+              / |               /  |
+             /  |              /   |
+     node(i,j,k+1)     node(i+1,j,k+1)
+           E --------------- H     |
+           |    B -----------|---- C
+           |   /cell(i,j,k)  |   /
+           |  /     I        |  /
+           | /               | /
+           A --------------- D
+      node(i,j,k)     node(i+1,j,k)
 
     
     Parameters
     ----------
     nodes : str
-        String specifying which nodes to return; e.g. 'ABCD'
+        String specifying which nodes to return. For 2D meshes, *nodes* must be a string containing the characters ABCD. For 3D meshes, *nodes* must be a string containing the characters ABCDEFGH. Note that order is preserved. E.g. if we want to return the C, D and A node indices in that particular order, we input *nodes* = 'CDA'.
     grid_shape : list
         Number of nodes along the i,j,k directions; e.g. [ni,nj,nk]
     nc : list
@@ -143,9 +147,39 @@ def index_cube(nodes, grid_shape, n=None):
     Returns
     -------
     index : tuple of numpy.array
-        Each entry of the tuple is a numpy array containing the indices of
-        the nodes specified by the *nodes* paramter in the order asked;
-        e.g. if *nodes* = 'ABCD', the tuple returned is ordered (A,B,C,D).
+        Each entry of the tuple is a 1D numpy array containing the indices of
+        the nodes specified in the input *nodes* in the order asked;
+        e.g. if *nodes* = 'DCBA', the tuple returned is ordered (D,C,B,A).
+
+    Examples
+    --------
+
+    Here, we construct a small 2D tensor mesh
+    (works for a curvilinear mesh as well) and use **index_cube**
+    to find the indices of the 'A' and 'C' nodes. We then
+    plot the mesh, as well as the 'A' and 'C' node locations.
+    
+    >>> from discretize import TensorMesh
+    >>> from discretize.utils import index_cube
+    >>> from matplotlib import pyplot as plt
+    >>> import numpy as np
+    >>> 
+    >>> # Create a simple tensor mesh
+    >>> n_cells = 5
+    >>> h = 2*np.ones(n_cells)
+    >>> mesh = TensorMesh([h, h], x0='00')
+    >>> 
+    >>> # Get indices of 'A' and 'C' nodes for all cells
+    >>> A, C = index_cube('AC', [n_cells+1, n_cells+1])
+    >>> 
+    >>> # Plot mesh and the locations of the A and C nodes
+    >>> fig1 = plt.figure(figsize=(5, 5))
+    >>> ax1 = fig1.add_axes([0.1, 0.1, 0.8, 0.8])
+    >>> mesh.plot_grid(ax=ax1)
+    >>> ax1.scatter(mesh.nodes[A, 0], mesh.nodes[A, 1], 100, 'r', marker='^')
+    >>> ax1.scatter(mesh.nodes[C, 0], mesh.nodes[C, 1], 100, 'g', marker='v')
+    >>> ax1.set_title('Mesh showing A and C nodes', fontsize=16)
+    >>> plt.show(fig1)
 
     """
 
