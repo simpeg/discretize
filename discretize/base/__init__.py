@@ -4,18 +4,14 @@ Base Mesh (:mod:`discretize.base`)
 ==================================
 .. currentmodule:: discretize.base
 
-The ``base`` package contains the fundamental classes for discretize meshes.
+The ``base`` sub-package houses the fundamental classes for all meshes in ``discretize``.
 
-Contents
-========
-
-Base mesh class
+Base Mesh Class
 ---------------
 .. autosummary::
   :toctree: generated/
 
   BaseMesh
-  BaseRectangularMesh
   BaseTensorMesh
 """
 

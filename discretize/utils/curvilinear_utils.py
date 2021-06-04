@@ -127,8 +127,8 @@ def index_cube(nodes, grid_shape, n=None):
      node(i,j,k+1)     node(i+1,j,k+1)
            E --------------- H     |
            |    B -----------|---- C
-           |   /cell(i,j,k)  |   /
-           |  /     I        |  /
+           |   / cell(i,j,k) |   /
+           |  /        I     |  /
            | /               | /
            A --------------- D
       node(i,j,k)     node(i+1,j,k)
@@ -178,7 +178,7 @@ def index_cube(nodes, grid_shape, n=None):
     >>> mesh.plot_grid(ax=ax1)
     >>> ax1.scatter(mesh.nodes[A, 0], mesh.nodes[A, 1], 100, 'r', marker='^')
     >>> ax1.scatter(mesh.nodes[C, 0], mesh.nodes[C, 1], 100, 'g', marker='v')
-    >>> ax1.set_title('Mesh showing A and C nodes', fontsize=16)
+    >>> ax1.set_title('A nodes (red) and C nodes (green)')
     >>> plt.show(fig1)
 
     """
@@ -272,8 +272,8 @@ def face_info(xyz, A, B, C, D, average=True, normalize_normals=True, **kwargs):
 
     For computing the surface area, we assume the vertices define a quadrilateral.
 
-    Paramters
-    ---------
+    Parameters
+    ----------
     xyz :
         (n, 3) array containing the x,y,z locations for all verticies
     A : numpy.ndarray

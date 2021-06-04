@@ -31,8 +31,13 @@ class CylindricalMesh(
     Class for cylindrical meshes.
 
     CylindricalMesh is a mesh class for cylindrical problems. It supports both
-    cylindrically symmetric and 3D cylindrical meshes that include an azimuthal
-    discretization.
+    cylindrically symmetric and 3D cylindrical meshes where the azimuthal
+    discretization is user-defined. In discretize, the coordinates for cylindrical
+    meshes are as follows:
+
+        - **x:** radial direction (:math:`r`)
+        - **y:** azimuthal direction (:math:`\\phi`)
+        - **z:** vertical direction (:math:`z`)
 
     For a cylindrically symmetric mesh use :code:`h = [hx, 1, hz]`. For example:
 
@@ -94,7 +99,18 @@ class CylindricalMesh(
 
     @property
     def cartesian_origin(self):
-        "Cartesian origin of the mesh"
+        """Cartesian origin of the mesh
+
+        Returns the origin or 'anchor point' of the cylindrical mesh
+        in Cartesian coordinates; i.e. [x0, y0, z0]. For cylindrical
+        meshes, the origin is the bottom of the z-axis which defines
+        the mesh's rotational symmetry.
+
+        Returns
+        -------
+        numpy.array
+            The Cartesian origin (or anchor point) of the mesh
+        """
         return self._cartesian_origin
 
     @cartesian_origin.setter
@@ -110,18 +126,43 @@ class CylindricalMesh(
 
     @property
     def is_symmetric(self):
-        """
-        Is the mesh cylindrically symmetric?
+        """Validates whether mesh is symmetric.
+
+        Symmetric cylindrical meshes have useful mathematical
+        properties that allow us to reduce the computational cost
+        of solving radially symmetric 3D problems.
+        When constructing cylindrical meshes in discretize, we almost
+        always use a flag of *1* when defining the discretization in
+        the azimuthal direction. By doing so, we define a mesh that is
+        symmetric. In this case, the *is_symmetric* returns a value of
+        *True* . If the discretization in the azimuthal direction was 
+        defined explicitly, the mesh would not be symmetric and
+        *is_symmetric* would return a value of *False* .
 
         Returns
         -------
         bool
-            True if the mesh is cylindrically symmetric, False otherwise
+            *True* if the mesh is symmetric, *False* otherwise
         """
         return self.shape_cells[1] == 1
 
     @property
     def shape_nodes(self):
+        """Returns the number of nodes along each axis
+
+        This property returns a tuple containing the number of nodes along
+        the :math:`x` (radial), :math:`y` (azimuthal) and :math:`z` (vertical)
+        directions, respectively.
+        In the case where the mesh is symmetric, the number of nodes
+        defining the discretization in the azimuthal direction is *0* ;
+        see :py:attr:`~.CylindricalMesh.is_symmetric`.
+
+        Returns
+        -------
+        tuple of int
+            Number of nodes in the :math:`x` (radial),
+            :math:`y` (azimuthal) and :math:`z` (vertical) directions, respectively.
+        """
         vnC = self.shape_cells
         if self.is_symmetric:
             return (vnC[0], 0, vnC[2] + 1)
@@ -138,11 +179,18 @@ class CylindricalMesh(
 
     @property
     def n_nodes(self):
-        """
+        """Returns total number of mesh nodes
+
+        For non-symmetric cylindrical meshes, this property returns
+        the total number of nodes. For symmetric meshes, this property
+        returns a value of 0; see :py:attr:`~.CylindricalMesh.is_symmetric`.
+        The symmetric mesh case is unique because the azimuthal position
+        of the nodes is undefined.
+
         Returns
         -------
         int
-            Total number of nodes
+            Total number of nodes for non-symmetric meshes, 0 for symmetric meshes
         """
         if self.is_symmetric:
             return 0
@@ -172,11 +220,18 @@ class CylindricalMesh(
 
     @property
     def shape_faces_x(self):
-        """
+        """Number of x-faces along each axis direction
+
+        This property returns the number of x-faces along the
+        :math:`x` (radial), :math:`y` (azimuthal) and :math:`z` (vertical)
+        directions, respectively. Note that for symmetric meshes, the number of x-faces along
+        the azimuthal direction is 1; see :py:attr:`~.CylindricalMesh.is_symmetric`.
+        
         Returns
         -------
-        numpy.ndarray
-            Number of x-faces in each direction, (dim, )
+        tuple of int
+            Number of x-faces along the :math:`x` (radial),
+            :math:`y` (azimuthal) and :math:`z` (vertical) directions, respectively.
         """
         return self.shape_cells
 
@@ -254,13 +309,18 @@ class CylindricalMesh(
 
     @property
     def shape_edges_y(self):
-        """
-        Number of y-edges in each direction
+        """Number of y-edges along each axis direction
 
+        This property returns the number of y-edges along the
+        :math:`x` (radial), :math:`y` (azimuthal) and :math:`z` (vertical)
+        directions, respectively. Note that for symmetric meshes, the number of y-edges along
+        the azimuthal direction is 1; see :py:attr:`~.CylindricalMesh.is_symmetric`.
+        
         Returns
         -------
-        tuple of ints
-            vnEy or None if dim < 2, (dim, )
+        tuple of int
+            Number of y-edges along the :math:`x` (radial),
+            :math:`y` (azimuthal) and :math:`z` (vertical) directions, respectively.
         """
         return tuple(x + y for x, y in zip(self.shape_cells, [0, 0, 1]))
 
@@ -280,21 +340,36 @@ class CylindricalMesh(
 
     @property
     def shape_edges_z(self):
-        """
+        """Number of z-edges along each axis direction
+
+        This property returns the number of z-edges along the
+        :math:`x` (radial), :math:`y` (azimuthal) and :math:`z` (vertical)
+        directions, respectively. Note that for symmetric meshes, the number of z-edges along
+        the azimuthal direction is 0; see :py:attr:`~.CylindricalMesh.is_symmetric`.
+        The symmetric mesh case is unique because the azimuthal position
+        of the z-edges is undefined.
+        
         Returns
         -------
-        tuple of ints
-            Number of z-edges in each direction or None if nCy > 1, (dim, )
+        tuple of int
+            Number of z-edges along the :math:`x` (radial),
+            :math:`y` (azimuthal) and :math:`z` (vertical) direction, respectively.
         """
         return self.shape_nodes[:-1] + self.shape_cells[-1:]
 
     @property
     def n_edges_z(self):
-        """
+        """Total number of z-edges in the mesh
+
+        This property returns the total number of z-edges for 
+        non-symmetric cyindrical meshes; see :py:attr:`~.CylindricalMesh.is_symmetric`.
+        If the mesh is symmetric, the property returns *0* because the azimuthal
+        position of the z-edges is undefined.
+
         Returns
         -------
         int
-            Number of z-edges
+            Number of z-edges for non-symmetric meshes and *0* for symmetric meshes
         """
         z_shape = self.shape_edges_z
         cell_shape = self.shape_cells
@@ -304,19 +379,52 @@ class CylindricalMesh(
 
     @property
     def cell_centers_x(self):
-        """Cell-centered grid vector (1D) in the x direction."""
+        """Returns the x-positions of cell centers along the x-direction
+
+        This property returns a 1D vector containing the x-position values
+        of the cell centers along the x-direction (radial). The length of the vector
+        is equal to the number of cells in the x-direction.
+
+        Returns
+        -------
+        numpy.array
+            x-positions of cell centers along the x-direction
+        """
         return np.r_[0, self.h[0][:-1].cumsum()] + self.h[0] * 0.5
 
     @property
     def cell_centers_y(self):
-        """Cell-centered grid vector (1D) in the y direction."""
+        """Returns the y-positions of cell centers along the y-direction (azimuthal)
+
+        This property returns a 1D vector containing the y-position values
+        of the cell centers along the y-direction (azimuthal). The length of the vector
+        is equal to the number of cells in the y-direction. If the mesh is symmetric,
+        this property returns a numpy array with a single entry of *0* ;
+        indicating all cell-centers have a y-position of 0.
+        see :py:attr:`~.CylindricalMesh.is_symmetric`.
+
+        Returns
+        -------
+        numpy.array
+            y-positions of cell centers along the y-direction
+        """
         if self.is_symmetric:
             return np.r_[0, self.h[1][:-1]]
         return np.r_[0, self.h[1][:-1].cumsum()] + self.h[1] * 0.5
 
     @property
     def nodes_x(self):
-        """Nodal grid vector (1D) in the x direction."""
+        """Returns the x-positions of nodes along the x-direction
+
+        This property returns a 1D vector containing the x-position values
+        of the nodes along the x-direction (radial). The length of the vector
+        is equal to the number of nodes in the x-direction.
+
+        Returns
+        -------
+        numpy.array
+            x-positions of nodes along the x-direction
+        """
         if self.is_symmetric:
             return self.h[0].cumsum()
         return np.r_[0, self.h[0]].cumsum()
@@ -332,11 +440,18 @@ class CylindricalMesh(
 
     @property
     def nodes_y(self):
-        """Nodal grid vector (1D) in the y direction."""
-        # if self.is_symmetric:
-        #     # There aren't really any nodes, but all the grids need
-        #     # somewhere to live, why not zero?!
-        #     return np.r_[0]
+        """Returns the y-positions of nodes along the y-direction (azimuthal)
+
+        This property returns a 1D vector containing the y-position values
+        of the nodes along the y-direction (azimuthal). If the mesh is symmetric,
+        this property returns a numpy array with a single entry of *0* ;
+        indicating all nodes have a y-position of 0. See :py:attr:`~.CylindricalMesh.is_symmetric`.
+
+        Returns
+        -------
+        numpy.array
+            y-positions of nodes along the y-direction
+        """
         return np.r_[0, self.h[1][:-1].cumsum()]
 
     @property
@@ -349,14 +464,18 @@ class CylindricalMesh(
 
     @property
     def edge_x_lengths(self):
-        """
-        x-edge lengths - these are the radial edges. Radial edges only exist
-        for a 3D cyl mesh.
+        """x-edge lengths for entire mesh
+
+        If the mesh is not symmetric, this property returns a 1D vector
+        containing the lengths of all x-edges in the mesh. If the mesh
+        is symmetric, this property returns an empty numpy array since
+        there are no x-edges;
+        see :py:attr:`~CylindricalMesh.is_symmetric`.
 
         Returns
         -------
         numpy.ndarray
-            vector of radial edge lengths
+            A 1D array containing the x-edge lengths for the entire mesh
         """
         if getattr(self, "_edge_lengths_x", None) is None:
             self._edge_lengths_x = self._edge_x_lengths_full[~self._ishanging_edges_x]
@@ -375,14 +494,20 @@ class CylindricalMesh(
 
     @property
     def edge_y_lengths(self):
-        """
-        y-edge lengths - these are the azimuthal edges. Azimuthal edges exist
-        for all cylindrical meshes. These are arc-lengths (:math:`\\theta r`)
+        """arc-lengths of y-edges for entire mesh
+
+        This property returns a 1D vector containing the arc-lengths
+        of all y-edges in the mesh. For a single y-edge at radial location
+        :math:`r` with azimuthal width :math:`\\Delta \\phi`, the arc-length
+        is given by:
+
+        .. math::
+            \\Delta y = r \\Delta \\phi
 
         Returns
         -------
         numpy.ndarray
-            vector of the azimuthal edges
+            A 1D array containing the y-edge arc-lengths for the entire mesh
         """
         if getattr(self, "_edge_lengths_y", None) is None:
             if self.is_symmetric:
@@ -403,14 +528,17 @@ class CylindricalMesh(
 
     @property
     def edge_z_lengths(self):
-        """
-        z-edge lengths - these are the vertical edges. Vertical edges only
-        exist for a 3D cyl mesh.
+        """z-edge lengths for entire mesh
+
+        If the mesh is not symmetric, this property returns a 1D vector
+        containing the lengths of all z-edges in the mesh. If the mesh
+        is symmetric, this property returns an empty numpy array
+        since there are no z-edges; see :py:attr:`~CylindricalMesh.is_symmetric`.
 
         Returns
         -------
         numpy.ndarray
-            vector of the vertical edges
+            A 1D array containing the z-edge lengths for the entire mesh
         """
         if getattr(self, "_edge_lengths_z", None) is None:
             self._edge_lengths_z = self._edge_z_lengths_full[~self._ishanging_edges_z]
@@ -433,13 +561,20 @@ class CylindricalMesh(
 
     @property
     def edge_lengths(self):
-        """
-        Edge lengths
+        """Lengths of all mesh edges
+
+        This property returns a 1D vector containing the lengths
+        of all edges in the mesh organized by x-edges, y-edges, then z-edges;
+        i.e. radial, azimuthal, then vertical. However if the mesh
+        is symmetric, there are no x or z-edges and calling the property
+        returns the y-edge lengths; see :py:attr:`~CylindricalMesh.is_symmetric`.
+        Note that y-edge lengths take curvature into account; see
+        :py:attr:`~.CylindricalMesh.edge_y_lengths`.
 
         Returns
         -------
         numpy.ndarray
-            vector of edge lengths :math:`(r, \\theta, z)`
+            Edge lengths of all mesh edges organized x (radial), y (azimuthal), then z (vertical)
         """
         if self.is_symmetric:
             return self.edge_y_lengths
@@ -457,17 +592,21 @@ class CylindricalMesh(
 
     @property
     def face_x_areas(self):
-        """
-        Area of the x-faces (radial faces). Radial faces exist on all
-        cylindrical meshes
+        """x-face areas for the entire mesh
 
+        This property returns a 1D vector containing the areas of the
+        x-faces of the mesh. The surface area takes into account curvature.
+        For a single x-face at radial location
+        :math:`r` with azimuthal width :math:`\\Delta \\phi` and vertical
+        width :math:`h_z`, the area is given by:
+        
         .. math::
-            A_x = r \\theta h_z
+            A_x = r \\Delta phi h_z
 
         Returns
         -------
         numpy.ndarray
-            area of x-faces
+            A 1D array containing the x-face areas for the entire mesh
         """
         if getattr(self, "_face_x_areas", None) is None:
             if self.is_symmetric:
@@ -487,17 +626,23 @@ class CylindricalMesh(
 
     @property
     def face_y_areas(self):
-        """
-        Area of y-faces (Azimuthal faces). Azimuthal faces exist only on 3D
-        cylindrical meshes.
+        """y-face areas for the entire mesh
 
+        This property returns a 1D vector containing the areas of the
+        y-faces of the mesh. For a single y-face with edge lengths
+        :math:`h_x` and :math:`h_z`, the area is given by:
+        
         .. math::
             A_y = h_x h_z
+
+        *Note that for symmetric meshes* , there are no y-faces and calling
+        this property will return an error.
 
         Returns
         -------
         numpy.ndarray
-            area of y-faces
+            A 1D array containing the y-face areas in the case of non-symmetric meshes.
+            Returns an error for symmetric meshes.
         """
         if getattr(self, "_face_y_areas", None) is None:
             if self.is_symmetric:
@@ -525,16 +670,20 @@ class CylindricalMesh(
 
     @property
     def face_z_areas(self):
-        """
-        Area of z-faces.
+        """z-face areas for the entire mesh
 
+        This property returns a 1D vector containing the areas of the
+        z-faces of the mesh. The surface area takes into account curvature.
+        For a single z-face at between :math:`r_1` and :math:`r_2`
+        with azimuthal width :math:`\\Delta \\phi`, the area is given by:
+        
         .. math::
-            A_z = \\frac{\\theta}{2} (r_2^2 - r_1^2)z
+            A_z = \\frac{\\Delta \\phi}{2} (r_2^2 - r_1^2)
 
         Returns
         -------
         numpy.ndarray
-            area of the z-faces
+            A 1D array containing the z-face areas for the entire mesh
         """
         if getattr(self, "_face_z_areas", None) is None:
             if self.is_symmetric:
@@ -554,16 +703,22 @@ class CylindricalMesh(
 
     @property
     def face_areas(self):
-        """
-        Face areas
+        """Face areas for the entire mesh
 
-        For a 3D cyl mesh: [radial, azimuthal, vertical], while a cylindrically
-        symmetric mesh doesn't have y-Faces, so it returns [radial, vertical]
+        This property returns a 1D vector containing the areas of all
+        mesh faces organized by x-faces, y-faces, then z-faces;
+        i.e. faces normal to the radial, azimuthal, then vertical direction.
+        Note that for symmetric meshes, there are no y-faces and calling the
+        property will return only the x and z-faces. To see how the face
+        areas corresponding to each component are computed, see
+        :py:attr:`~.CylindricalMesh.face_x_areas`,
+        :py:attr:`~.CylindricalMesh.face_y_areas` and
+        :py:attr:`~.CylindricalMesh.face_z_areas`.
 
         Returns
         -------
         numpy.ndarray
-            face areas
+            Areas of all faces in the mesh
         """
         # if getattr(self, '_area', None) is None:
         if self.is_symmetric:
@@ -573,13 +728,22 @@ class CylindricalMesh(
 
     @property
     def cell_volumes(self):
-        """
-        Volume of each cell
+        """Volumes of all mesh cells
+
+        This property returns a 1D vector containing the volumes of
+        all cells in the mesh. When computing the volume of each cell,
+        we take into account curvature. Thus a cell lying within
+        radial distance :math:`r_1` and :math:`r_2`, with height
+        :math:`h_z` and with azimuthal width :math:`\\Delta \\phi`,
+        the volume is given by:
+
+        .. math::
+            V = \\frac{\\Delta \\phi \\, h_z}{2} (r_2^2 - r_1^2)
 
         Returns
         -------
         numpy.ndarray
-            cell volumes
+            Volumes of all mesh cells
         """
         if getattr(self, "_cell_volumes", None) is None:
             if self.is_symmetric:

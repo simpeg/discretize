@@ -9,10 +9,7 @@ with external libraries such as VTK, OMF, and matplotlib. These modules are only
 imported if those external packages are available in the active Python environment and
 provide extra functionality that different finite volume meshes can inherrit.
 
-Contents
-========
-
-Mixin classes
+Mixin Classes
 -------------
 .. autosummary::
   :toctree: generated/

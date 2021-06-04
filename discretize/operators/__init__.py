@@ -7,10 +7,7 @@ Discrete Operators (:mod:`discretize.operators`)
 The ``operators`` package contains the classes discretize meshes with regular structure
 use to construct discrete versions of the differential operators.
 
-Contents
-========
-
-Operator classes
+Operator Classes
 ----------------
 .. autosummary::
   :toctree: generated/

@@ -4,7 +4,7 @@ Discretize Meshes (:mod:`discretize`)
 =====================================
 .. currentmodule:: discretize
 
-The discretize package contains four types of meshes for soliving partial differential
+The ``discretize`` package contains four types of meshes for soliving partial differential
 equations using the finite volume method.
 
 Mesh Classes
@@ -19,8 +19,9 @@ Mesh Classes
 
 Tree Mesh Cells
 ===============
-There is also a class specficialy for a cell on the TreeMesh. These cannot be created on
-there own, but are returned when directly indexing a mesh object.
+The :class:`~discretize.tree_mesh.TreeCell` class was designed specificialy to define the cells within tree meshes.
+Instances of :class:`~discretize.tree_mesh.TreeCell` are not meant to be created on there own.
+However, they can be returned directly by indexing a particular cell within a tree mesh.
 
 .. autosummary::
   :toctree: generated/

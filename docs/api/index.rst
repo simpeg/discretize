@@ -7,7 +7,9 @@ API Reference
 Meshes
 ======
 
-Mesh types supported by ``discretize``. ``TreeCell`` is an additional class used to define cells comprising a ``TreeMesh``.
+Meshes supported by the ``discretize`` package.
+The :class:`~discretize.tree_mesh.TreeCell` class is an additional class used to define cells comprising
+instances of the :class:`~discretize.TreeMesh` class.
 
 .. toctree::
   :maxdepth: 3
@@ -17,7 +19,8 @@ Mesh types supported by ``discretize``. ``TreeCell`` is an additional class used
 Mesh Building Blocks
 ====================
 
-Base classes for discretize meshes, classes for constructing discrete operators, and mixins for interfacing with external libraries.
+Base classes for ``discretize`` meshes, classes for constructing discrete operators,
+and mixins for interfacing with external libraries.
 
 .. toctree::
   :maxdepth: 2
@@ -39,7 +42,7 @@ Classes and functions for performing useful operations.
 Testing
 =======
 
-Classes and functions for testing the discretize package.
+Classes and functions for testing the ``discretize`` package.
 
 .. toctree::
   :maxdepth: 2
