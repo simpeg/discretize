@@ -228,17 +228,10 @@ def closest_points_index(mesh, pts, grid_loc="CC", **kwargs):
 
     pts = as_array_n_by_dim(pts, mesh.dim)
     grid = getattr(mesh, "grid" + grid_loc)
-    nodeInds = np.empty(pts.shape[0], dtype=int)
+    tree = cKDTree(grid)
+    _, ind = tree.query(pts)
 
-    for i, pt in enumerate(pts):
-        if mesh.dim == 1:
-            nodeInds[i] = ((pt - grid) ** 2).argmin()
-        else:
-            nodeInds[i] = (
-                ((np.tile(pt, (grid.shape[0], 1)) - grid) ** 2).sum(axis=1).argmin()
-            )
-
-    return nodeInds
+    return ind
 
 
 def extract_core_mesh(xyzlim, mesh, mesh_type="tensor"):
