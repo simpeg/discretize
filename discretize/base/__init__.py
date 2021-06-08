@@ -12,6 +12,7 @@ Base Mesh Class
   :toctree: generated/
 
   BaseMesh
+  BaseRectangularMesh
   BaseTensorMesh
 """
 

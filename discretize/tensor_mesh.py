@@ -24,6 +24,26 @@ class TensorMesh(
     coordinates of the mesh are orthogonal. And cell properties along one axis do
     not vary with respect to the position along any other axis.
 
+    An example of a 2D tensor mesh is shown here:
+
+    .. plot::
+        :include-source:
+
+        ncx = 10      # number of core mesh cells in x
+        ncy = 15      # number of core mesh cells in y
+        dx = 15       # base cell width x
+        dy = 10       # base cell width y
+        npad_x = 4    # number of padding cells in x
+        npad_y = 4    # number of padding cells in y
+        exp_x = 1.25  # expansion rate of padding cells in x
+        exp_y = 1.25  # expansion rate of padding cells in y
+        
+        hx = [(dx, npad_x, -exp_x), (dx, ncx), (dx, npad_x, exp_x)]
+        hy = [(dy, npad_y, -exp_y), (dy, ncy), (dy, npad_y, exp_y)]
+        
+        mesh = TensorMesh([hx, hy])
+        mesh.plot_grid()
+
     """
 
     _meshType = "TENSOR"

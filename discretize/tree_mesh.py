@@ -99,8 +99,38 @@ from discretize.utils.code_utils import deprecate_property
 class TreeMesh(
     _TreeMesh, BaseTensorMesh, InnerProducts, DiffOperators, TreeMeshIO, InterfaceMixins
 ):
-    """
-    Class for QuadTree (2D) and OcTree (3D) meshes.
+    """Class for QuadTree (2D) and OcTree (3D) meshes.
+
+    Tree meshes are numerical grids where the dimensions of each cell are powers of 2
+    larger than some base cell dimension. Unlike the :class:`~discretize.TensorMesh`
+    class, gridded locations and numerical operators for instances of ``TreeMesh``
+    cannot be simply constructed using tensor products. Furthermore, each cell
+    is an instance of ``TreeMesh`` is an instance of the
+    :class:`~discretize.tree_mesh.TensorTree` .
+
+    QuadTree mesh example:
+
+    .. plot::
+        :include-source:
+
+        dh = 5    # minimum cell width (base mesh cell width)
+        nbc = 64  # number of base mesh cells
+
+        # Define base mesh (domain and finest discretization)
+        h = dh * np.ones(nbc)
+        mesh = TreeMesh([h, h])
+
+        # Define corner points for rectangular box
+        xp, yp = np.meshgrid([120.0, 240.0], [80.0, 160.0])
+        xy = np.c_[mkvc(xp), mkvc(yp)]  # mkvc creates vectors
+
+        # Discretize to finest cell size within rectangular box
+        mesh = refine_tree_xyz(mesh, xy, octree_levels=[2, 2], method="box", finalize=False)
+
+        mesh.finalize()  # Must finalize tree mesh before use
+        mesh.plot_grid(show_it=True)
+
+    
     """
 
     _meshType = "TREE"

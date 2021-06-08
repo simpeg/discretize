@@ -15,7 +15,7 @@ class BaseMesh:
     """Base mesh class for the ``discretize`` package
 
     The ``BaseMesh`` class does all the basic counting and organizing
-    you don't want to do manually. ``BaseMesh`` is a class that should
+    you wouldn't want to do manually. ``BaseMesh`` is a class that should
     always be inherited by meshes with a regular structure; e.g.
     :class:`~discretize.TensorMesh`, :class:`~discretize.CylindricalMesh`,
     :class:`~discretize.TreeMesh` or :class:`~discretize.CurvilinearMesh`.
@@ -127,7 +127,7 @@ class BaseMesh:
         :class:`~discretize.TreeMesh`), *origin* is the
         bottom southwest corner. For a :class:`~discretize.CylindricalMesh`,
         *origin* is the bottom of the axis of rotational symmetry
-        for the mesh.
+        for the mesh (i.e. bottom of z-axis).
 
         Returns
         -------
@@ -160,7 +160,7 @@ class BaseMesh:
         Returns
         -------
         tuple of int
-            the number of cells in each direcion
+            the number of cells in each coordinate direcion
 
         Notes
         -----
@@ -179,17 +179,15 @@ class BaseMesh:
         be used to transform locations from a local coordinate
         system to a conventional Cartesian system.
 
-        Why would you want to use these UVW mapping vectors in this
-        `orientation` property? They allow us to define the relationship
-        between local and global coordinate systems and provide a tool for
-        switching between the two while still maintaing the connectivity of the
-        mesh's cells. For a visual example of this, please see the figure in the
-        docs for the :class:`~discretize.mixins.InterfaceVTK`.
-
         Returns
         -------
         np.ndarray of float
             square array of shape (mesh.dim, mesh.dim)
+
+        Examples
+        --------
+        For a visual example of this, please see the figure in the
+        docs for :class:`~discretize.mixins.InterfaceVTK`.
         """
         return self._orientation
 
@@ -283,7 +281,7 @@ class BaseMesh:
     def equals(self, other_mesh):
         """Compares current mesh with another mesh to determine if they are identical
 
-        This function compares all the properties of the current mesh to *other_mesh*
+        This method compares all the properties of the current mesh to *other_mesh*
         and determines if both meshes are identical. If so, this function returns
         a boolean value of *True* . Otherwise, the function returns *False* .
 
@@ -339,7 +337,7 @@ class BaseMesh:
         Parameters
         ----------
         cls : discretize.BaseMesh
-            The class for the mesh type you are constructing from the dictionary; i.e.
+            The class for the mesh type you are constructing from the dictionary; e.g.
             :class:`~discretize.TensorMesh`, :class:`~discretize.CylindricalMesh`,
             :class:`~discretize.TreeMesh` or :class:`~discretize.CurvilinearMesh`.
         items : dict
@@ -642,12 +640,20 @@ class BaseMesh:
 
     @property
     def face_normals(self):
-        """Vectors normal to the faces of the mesh
+        """Unit normal vectors for all mesh faces
+
+        The unit normal vector defines the direction that
+        is perpendicular to a surface. Calling
+        *face_normals* returns a numpy.ndarray containing
+        the unit normal vectors for all faces in the mesh.
+        For a 3D mesh, the array would have shape (n_faces, dim)
+        The rows of the output are organized by x-faces,
+        then y-faces, then z-faces vectors.
 
         Returns
         -------
-        numpy.ndarray of float
-            array of shape (mesh.n_faces, mesh.dim)
+        numpy.ndarray of float (n_faces, dim)
+            Unit normal vectors for all mesh faces
         """
         if self.dim == 2:
             nX = np.c_[np.ones(self.n_faces_x), np.zeros(self.n_faces_x)]
@@ -673,12 +679,20 @@ class BaseMesh:
 
     @property
     def edge_tangents(self):
-        """Vectors tangent to the edges of the mesh
+        """Unit tangent vectors for all mesh edges
+
+        For a given edge, the unit tangent vector defines the
+        path direction one would take if traveling along that edge.
+        Calling *edge_tangents* returns a numpy.ndarray containing
+        the unit tangent vectors for all edges in the mesh.
+        For a 3D mesh, the array would have shape (n_edges, dim)
+        The rows of the output are organized by x-edges,
+        then y-edges, then z-edges vectors.
 
         Returns
         -------
-        numpy.ndarray of float
-            array of shape (mesh.n_edges, mesh.dim)
+        numpy.ndarray of float (n_edges, dim)
+            Unit tangent vectors for all mesh edges
         """
         if self.dim == 2:
             tX = np.c_[np.ones(self.n_edges_x), np.zeros(self.n_edges_x)]
@@ -702,68 +716,79 @@ class BaseMesh:
             ]
             return np.r_[tX, tY, tZ]
 
-    def project_face_vector(self, face_vector):
+    def project_face_vector(self, face_vectors):
         """Project vectors onto the faces of the mesh.
 
-        Given a vector, face_vector, in cartesian coordinates, this will project
-        it onto the mesh using the normals
+        Consider a numpy array *face_vectors* whose rows provide
+        a vector for each face in the mesh. For each face,
+        *project_face_vector* computes the dot product between
+        a vector and the corresponding face's unit normal vector.
+        That is, *project_face_vector* projects the vectors
+        in *face_vectors* to the faces of the mesh.
 
         Parameters
         ----------
-        face_vector : numpy.ndarray
-            face vector with shape (n_faces, dim)
+        face_vectors : numpy.ndarray with shape (n_faces, dim)
+            a numpy array containing the vectors that will be projected to the mesh faces 
 
         Returns
         -------
-        numpy.ndarray of float
-            projected face vector, (n_faces, )
-
+        numpy.ndarray of float with shape (n_faces,)
+            Dot product between each vector and the unit normal vector of the corresponding face
         """
-        if not isinstance(face_vector, np.ndarray):
-            raise Exception("face_vector must be an ndarray")
+        if not isinstance(face_vectors, np.ndarray):
+            raise Exception("face_vectors must be an ndarray")
         if not (
-            len(face_vector.shape) == 2
-            and face_vector.shape[0] == self.n_faces
-            and face_vector.shape[1] == self.dim
+            len(face_vectors.shape) == 2
+            and face_vectors.shape[0] == self.n_faces
+            and face_vectors.shape[1] == self.dim
         ):
-            raise Exception("face_vector must be an ndarray of shape (n_faces x dim)")
-        return np.sum(face_vector * self.face_normals, 1)
+            raise Exception("face_vectors must be an ndarray of shape (n_faces, dim)")
+        return np.sum(face_vectors * self.face_normals, 1)
 
-    def project_edge_vector(self, edge_vector):
-        """Project vectors onto the edges of the mesh
+    def project_edge_vector(self, edge_vectors):
+        """Project vectors to the edges of the mesh.
 
-        Given a vector, edge_vector, in cartesian coordinates, this will project
-        it onto the mesh using the tangents
+        Consider a numpy array *edge_vectors* whose rows provide
+        a vector for each edge in the mesh. For each edge,
+        *project_edge_vector* computes the dot product between
+        a vector and the corresponding edge's unit tangent vector.
+        That is, *project_edge_vector* projects the vectors
+        in *edge_vectors* to the edges of the mesh.
 
         Parameters
         ----------
-        edge_vector : numpy.ndarray
-            edge vector with shape (n_edges, dim)
+        edge_vectors : numpy.ndarray with shape (n_edges, dim)
+            a numpy array containing the vectors that will be projected to the mesh edges
 
         Returns
         -------
-        numpy.ndarray of float
-            projected edge vector, (n_edges, )
-
+        numpy.ndarray of float with shape (n_edges,)
+            Dot product between each vector and the unit tangent vector of the corresponding edge
         """
-        if not isinstance(edge_vector, np.ndarray):
-            raise Exception("edge_vector must be an ndarray")
+        if not isinstance(edge_vectors, np.ndarray):
+            raise Exception("edge_vectors must be an ndarray")
         if not (
-            len(edge_vector.shape) == 2
-            and edge_vector.shape[0] == self.n_edges
-            and edge_vector.shape[1] == self.dim
+            len(edge_vectors.shape) == 2
+            and edge_vectors.shape[0] == self.n_edges
+            and edge_vectors.shape[1] == self.dim
         ):
-            raise Exception("edge_vector must be an ndarray of shape (nE x dim)")
-        return np.sum(edge_vector * self.edge_tangents, 1)
+            raise Exception("edge_vectors must be an ndarray of shape (nE, dim)")
+        return np.sum(edge_vectors * self.edge_tangents, 1)
 
     def save(self, file_name="mesh.json", verbose=False, **kwargs):
         """Save the mesh to json
 
+        This method is used to save a mesh by writing
+        its properties to a .json file. To load a mesh you have
+        previously saved, see :py:func:`~discretize.utils.load_mesh`.
+
         Parameters
         ----------
-        file_name : str, optional
-            file_name for saving the mesh properties
-        verbose : bool, optional
+        file_name : str (optional)
+            file name for saving the mesh properties
+        verbose : bool (optional)
+            If *True*, the path of the json file is printed
         """
 
         if "filename" in kwargs:
@@ -783,7 +808,7 @@ class BaseMesh:
         return f
 
     def copy(self):
-        """ Make a copy of the current mesh
+        """Make a copy of the current mesh
 
         Returns
         -------
@@ -798,23 +823,30 @@ class BaseMesh:
 
     @property
     def reference_is_rotated(self):
-        """Describes if this mesh is not aligned with traditional coordinate frame
+        """Indicates whether mesh uses standard coordinate axes
+
+        The standard basis vectors defining the x, y, and z axes of
+        a mesh are :math:`(1,0,0)`, :math:`(0,1,0)` and :math:`(0,0,1)`,
+        respectively. However, the :py:attr:`~BaseMesh.orientation` property
+        can be used to define rotated coordinate axes for our mesh.
+
+        The *reference_is_rotated* property determines
+        whether the mesh is using standard coordinate axes.
+        If the coordinate axes are standard, *mesh.orientation* is
+        the identity matrix and *reference_is_rotated* returns a value of *False*.
+        Otherwise, *reference_is_rotated* returns a value of *True*.
 
         Returns
         -------
         bool
-            True if the axes are rotated from the traditional <X,Y,Z> system
-            with vectors of :math:`(1,0,0)`, :math:`(0,1,0)`, and :math:`(0,0,1)`
+            *False* is the mesh uses the standard coordinate axes and *True* otherwise.
         """
         return not np.allclose(self.orientation, np.identity(self.dim))
 
     @property
     def rotation_matrix(self):
-        """Aliase for self.orientation
-
-        See Also
-        --------
-        orientation
+        """
+        Alias for :py:attr:`~.BaseMesh.orientation`
         """
         return self.orientation  # np.array([self.axis_u, self.axis_v, self.axis_w])
 
@@ -866,12 +898,8 @@ class BaseMesh:
     def axis_u(self):
         """
         .. deprecated:: 0.7.0
-          `axis_u` will be removed in discretize 1.0.0, it is replaced by
-          `mesh.orientation` for better mesh orientation validation.
-
-        See Also
-        --------
-        orientation
+          `axis_u` will be removed in discretize 1.0.0. This functionality was replaced
+          by the :py:attr`~.BaseMesh.orientation`.
         """
         warnings.warn(
             "The axis_u property is deprecated, please access as self.orientation[0]. "
@@ -894,12 +922,8 @@ class BaseMesh:
     def axis_v(self):
         """
         .. deprecated:: 0.7.0
-          `axis_v` will be removed in discretize 1.0.0, it is replaced by
-          `mesh.orientation` for better mesh orientation validation.
-
-        See Also
-        --------
-        orientation
+          `axis_v` will be removed in discretize 1.0.0. This functionality was replaced
+          by the :py:attr`~.BaseMesh.orientation`.
         """
         warnings.warn(
             "The axis_v property is deprecated, please access as self.orientation[1]. "
@@ -923,12 +947,8 @@ class BaseMesh:
     def axis_w(self):
         """
         .. deprecated:: 0.7.0
-          `axis_w` will be removed in discretize 1.0.0, it is replaced by
-          `mesh.orientation` for better mesh orientation validation.
-
-        See Also
-        --------
-        orientation
+          `axis_w` will be removed in discretize 1.0.0. This functionality was replaced
+          by the :py:attr`~.BaseMesh.orientation`.
         """
         warnings.warn(
             "The axis_w property is deprecated, please access as self.orientation[2]. "
@@ -954,7 +974,12 @@ BaseMesh.__module__ = "discretize.base"
 
 class BaseRectangularMesh(BaseMesh):
     """
-    BaseRectangularMesh
+    Base rectangular mesh class for the ``discretize`` package.
+
+    The ``BaseRectangularMesh`` class acts as an extension of the
+    :class:`~discretize.BaseMesh` class for meshes without hanging
+    nodes. It does all the basic counting and organizing you wouldn't
+    want to do manually.
     """
 
     _aliases = {
@@ -972,11 +997,16 @@ class BaseRectangularMesh(BaseMesh):
 
     @property
     def shape_nodes(self):
-        """Number of nodes in each direction
+        """Returns the number of nodes along each axis
+
+        This property returns a tuple containing the number of nodes along
+        each axis. The length of the tuple is equal to the dimension of the
+        mesh; i.e. 1D, 2D or 3D.
 
         Returns
         -------
         tuple of int
+            Number of nodes along each axis.
 
         Notes
         -----
