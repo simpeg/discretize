@@ -740,7 +740,7 @@ class DiffOperators(object):
         return self._cell_gradient
 
     def cell_gradient_weak_form_robin(self, alpha=1.0, beta=0.0, gamma=0.0):
-        """Robin boundary condition for the weak formulation of the cell gradient
+        r"""Robin boundary condition for the weak formulation of the cell gradient
 
         This function returns the necessary parts for the weak form of the cell gradient
         operator to represent the Robin boundary conditions.
