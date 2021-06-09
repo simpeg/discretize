@@ -82,7 +82,6 @@ Mesh Utilities
 .. autosummary::
   :toctree: generated/
 
-  example_curvilinear_grid
   unpack_widths
   closest_points_index
   extract_core_mesh
@@ -96,6 +95,7 @@ Utilities for Curvilinear Meshes
 .. autosummary::
   :toctree: generated/
 
+  example_curvilinear_grid
   volume_tetrahedron
   face_info
   index_cube
