@@ -101,7 +101,7 @@ def index_cube(nodes, grid_shape, n=None):
 
     For 2D tensor meshes, each cell is defined by nodes
     *A, B, C* and *D*. And for 3D tensor meshes, each cell
-    is defined by nodes *A* through *H* (see below). **index_cube**
+    is defined by nodes *A* through *H* (see below). *index_cube*
     outputs the indices for the specified node(s) for all
     cells in the mesh.
 
@@ -137,7 +137,12 @@ def index_cube(nodes, grid_shape, n=None):
     Parameters
     ----------
     nodes : str
-        String specifying which nodes to return. For 2D meshes, *nodes* must be a string containing the characters ABCD. For 3D meshes, *nodes* must be a string containing the characters ABCDEFGH. Note that order is preserved. E.g. if we want to return the C, D and A node indices in that particular order, we input *nodes* = 'CDA'.
+        String specifying which nodes to return. For 2D meshes,
+        *nodes* must be a string containing the characters ABCD.
+        For 3D meshes, *nodes* must be a string containing the
+        characters ABCDEFGH. Note that order is preserved.
+        E.g. if we want to return the C, D and A node indices in
+        that particular order, we input *nodes* = 'CDA'.
     grid_shape : list
         Number of nodes along the i,j,k directions; e.g. [ni,nj,nk]
     nc : list
@@ -155,7 +160,7 @@ def index_cube(nodes, grid_shape, n=None):
     --------
 
     Here, we construct a small 2D tensor mesh
-    (works for a curvilinear mesh as well) and use **index_cube**
+    (works for a curvilinear mesh as well) and use *index_cube*
     to find the indices of the 'A' and 'C' nodes. We then
     plot the mesh, as well as the 'A' and 'C' node locations.
     
@@ -274,7 +279,7 @@ def face_info(xyz, A, B, C, D, average=True, normalize_normals=True, **kwargs):
 
     Parameters
     ----------
-    xyz :
+    xyz : numpy.ndarray
         (n, 3) array containing the x,y,z locations for all verticies
     A : numpy.ndarray
         Vector containing the indicies for the **a** vertex locations
@@ -296,7 +301,7 @@ def face_info(xyz, A, B, C, D, average=True, normalize_normals=True, **kwargs):
 
     Returns
     -------
-    N : ndarray or cell array of ndarray
+    N : numpy.ndarray or list of numpy.ndarray
         Normal vector(s) for each surface. If *average* = *True*, the function
         returns an ndarray with the average surface normal vectos. If *average* = *False* ,
         the function returns a cell array {nA,nB,nC,nD} containing the normal vectors

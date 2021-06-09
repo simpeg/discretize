@@ -84,10 +84,15 @@ def example_curvilinear_grid(nC, exType):
 
 
 def random_model(shape, seed=None, anisotropy=None, its=100, bounds=None):
-    """Create random model.
+    """Create random tensor model.
 
-    Creates a random model by convolving a kernel function with a
-    uniformly distributed model.
+    Creates a random tensor model by convolving a kernel function with a
+    uniformly distributed model. The user specifies the number of cells
+    along the x, (y and z) directions with the input argument *shape* and
+    the function outputs a tensor model with the same shape. Afterwards,
+    the user may use the :py:func:`~discretize.utils.mkvc` function
+    to convert the tensor to a vector which can be plotting on a
+    corresponding tensor mesh.
 
     Parameters
     ----------
@@ -105,16 +110,30 @@ def random_model(shape, seed=None, anisotropy=None, its=100, bounds=None):
     Returns
     -------
     numpy.ndarray
-        A random renerated model whose shape was specified by the input parameter **shape**
+        A random renerated model whose shape was specified by the input parameter *shape*
 
     Examples
     --------
+    Here, we generate a random model for a 2D tensor mesh and plot.
 
+    >>> from discretize import TensorMesh
+    >>> from discretize.utils import random_model, mkvc
+    >>> import matplotlib as mpl
     >>> import matplotlib.pyplot as plt
-    >>> import discretize
-    >>> plt.colorbar(plt.imshow(discretize.utils.random_model((50, 50), bounds=[-4, 0])))
-    >>> plt.title('A very cool, yet completely random model.')
-    >>> plt.show()
+    >>> 
+    >>> h = [(1., 50)]
+    >>> vmin, vmax = 0., 1.
+    >>> mesh = TensorMesh([h, h])
+    >>> model = random_model(mesh.shape_cells, seed=4, bounds=[vmin, vmax])
+    >>> model = mkvc(model)
+    >>> 
+    >>> fig = plt.figure(figsize=(5, 4))
+    >>> ax1 = fig.add_axes([0.1, 0.1, 0.7, 0.8])
+    >>> ax2 = fig.add_axes([0.83, 0.1, 0.03, 0.8])
+    >>> mesh.plot_image(model, grid=False, ax=ax1)
+    >>> norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
+    >>> mpl.colorbar.ColorbarBase(ax2, norm=norm)
+    >>> ax1.set_title('Random Tensor Model')
 
 
     """
@@ -463,7 +482,8 @@ def mesh_builder_xyz(
     (hx,hy,[hz]), this function creates a tensor or a tree mesh.
     The lateral extent of the core region is determine by the cloud of points.
     Other properties of the mesh can be defined automatically or by the user.
-    If a *discretize.BaseMesh* is provided, the core cells will be centered
+    If *base_mesh* is an instance of :class:`~discretize.TensorMesh` or
+    :class:`~discretize.TreeMesh`, the core cells will be centered
     on the underlying mesh to reduce interpolation errors.
 
     Parameters
@@ -474,19 +494,19 @@ def mesh_builder_xyz(
         Cell size(s) for the core mesh [1 x ndim]
     padding_distance : list
         Padding distances [[W,E], [N,S], [Down,Up]]
-    base_mesh : discretize.BaseMesh
+    base_mesh : discretize.TensorMesh or discretize.TreeMesh
         discretize mesh used to center the core mesh
     depth_core : float
         Depth of core mesh below xyz
     expansion_factor : float
-        Expansion factor for padding cells
+        Expansion factor for padding cells. Ignored is *mesh_type* = *tree*
     mesh_type : str
         Specify output mesh type. Choose from {'tensor", "tree"}
 
     Returns
     --------
-    discretize.BaseMesh
-        Mesh of type specified by **mesh_type**
+    discretize.TensorMesh or discretize.TreeMesh
+        Mesh of type specified by *mesh_type*
 
     Examples
     --------
@@ -629,7 +649,13 @@ def refine_tree_xyz(
     min_level=0,
     max_distance=np.inf,
 ):
-    """Refine a discretize.TreeMesh based on xyz point locations
+    """Refine region of a :class:`~discretize.TreeMesh`
+
+    This function refines a tree mesh using one of several methods:
+
+        - "radial": Based on radial distance from a set of xy[z] locations
+        - "surface": Along triangulated surface repeated vertically
+        - "box": Inside limits defined by outer xy[z] locations
 
     Parameters
     ----------
@@ -653,10 +679,9 @@ def refine_tree_xyz(
         used for method= "surface" and "box" [N(k), N(k-1), ...].
     finalize : bool
         Finalize the tree mesh {True, False}. (*Default = False*)
-        }
     max_distance : float
-        Maximum refinement distance from xyz locations.
-        Used for method="surface" to reduce interpolation distance
+        Maximum refinement distance from xy[z] locations.
+        Used if *method* = "surface" to reduce interpolation distance
 
     Returns
     --------
@@ -910,20 +935,20 @@ def refine_tree_xyz(
 
 
 def active_from_xyz(mesh, xyz, grid_reference="CC", method="linear"):
-    """Returns a boolean array indicating which cells are below the surface (active cells)
+    """Return boolean array indicating which cells are below surface
 
-    Get active cells in the `mesh` (i.e. below the surface) by
-    interpolating over the last dimension of the input points. This method will
-    uses scipy's interpolation routine to interpolate between input points. This
-    will use a nearest neighbour interpolation for cell values outside the convex
-    hull of points.
+    For a set of locations defining a surface, **active_from_xyz** outputs a
+    boolean array indicating which mesh cells like below the surface points.
+    This method uses SciPy's interpolation routine to interpolate between
+    location points defining the surface. Nearest neighbour interpolation
+    is used for cells outside the convex hull of the surface points.
 
     Parameters
     ----------
     mesh : discretize.TensorMesh or discretize.TreeMesh or discretize.CylindricalMesh
-        Mesh object, (if CylindricalMesh: mesh must be symmetric).
+        Mesh object. If *mesh* is a cylindrical mesh, it must be symmetric
     xyz : numpy.ndarray
-        Points defining the surface topography (*, mesh.dim).
+        Points defining the surface topography (*, dim).
     grid_reference : str {'CC', 'N'}
         Define where the cell is defined relative to surface. Choose between {'CC','N'}
 
@@ -935,7 +960,7 @@ def active_from_xyz(mesh, xyz, grid_reference="CC", method="linear"):
 
     Returns
     -------
-    numpy.ndarray
+    numpy.ndarray of bool
         1D mask array of *bool* for the active cells below xyz.
 
     Examples

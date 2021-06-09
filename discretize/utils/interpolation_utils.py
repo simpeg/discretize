@@ -171,29 +171,29 @@ def volume_average(mesh_in, mesh_out, values=None, output=None):
     When the output mesh extent is smaller than the input mesh, only the overlapping
     extent of the input mesh contributes to the output.
 
-    This function operates in three different modes. If only ``mesh_in`` and
-    ``mesh_out`` are given, the returned value is a ``scipy.sparse.csr_matrix``
+    This function operates in three different modes. If only *mesh_in* and
+    *mesh_out* are given, the returned value is a ``scipy.sparse.csr_matrix``
     that represents this operation (so it could potentially be applied repeatedly).
-    If ``values`` is given, the volume averaging is performed right away (without
+    If *values* is given, the volume averaging is performed right away (without
     internally forming the matrix) and the returned value is the result of this.
-    If ``output`` is given as well, it will be filled with the values of the
+    If *output* is given as well, it will be filled with the values of the
     operation and then returned (assuming it has the correct ``dtype``).
 
     Parameters
     ----------
-    mesh_in : TensorMesh or TreeMesh
+    mesh_in : discretize.TensorMesh or discretize.TreeMesh
         Input mesh (the mesh you are interpolating from)
-    mesh_out : TensorMesh or TreeMesh
+    mesh_out : discretize.TensorMesh or discretize.TreeMesh
         Output mesh (the mesh you are interpolating to)
-    values : numpy.ndarray, optional
+    values : numpy.ndarray (optional)
         Array with values defined at the cells of ``mesh_in``
-    output : numpy.ndarray, optional
-        Output array to be overwritten of length ``mesh_out.nC`` and type ``np.float64``
+    output : numpy.ndarray (optional)
+        Output array to be overwritten of length *mesh_out.nC* and type ``np.float64``
 
     Returns
     -------
     scipy.sparse.csr_matrix or numpy.ndarray
-        If ``values`` is ``None``, the returned value is a matrix representing this operation,
+        If *values* = *None* , the returned value is a matrix representing this operation,
         otherwise it is a numpy.ndarray of the result of the operation.
 
     Examples

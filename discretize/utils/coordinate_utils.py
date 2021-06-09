@@ -22,7 +22,7 @@ def cylindrical_to_cartesian(grid, vec=None):
     Returns
     -------
     numpy.ndarray
-        If input parameter **vec** is *None*, the function returns xyz locations as a 
+        If input parameter *vec* = *None*, the function returns xyz locations as a 
         numpy array of shape (n, 3). Otherwise, the vector defined in Cartesian
         coordinates is returned as a numpy array of shape (3n,) organized
         :math:`x, y, z`
@@ -99,7 +99,7 @@ def cartesian_to_cylindrical(grid, vec=None):
     Returns
     -------
     numpy.ndarray
-        If input parameter **vec** is *None*, the function returns :math:`(r, \\theta, z)`
+        If input parameter *vec* = *None*, the function returns :math:`(r, \\theta, z)`
         locations as a numpy array of shape (n, 3). Otherwise, the vector defined in
         cylindrical coordinates is returned as a numpy array of shape (3n,) organized
         :math:`r, \\theta, z`
@@ -170,7 +170,7 @@ def rotation_matrix_from_normals(v0, v1, tol=1e-20):
         Vector of length 3
     v1 : numpy.ndarray
         Vector of length 3
-    tol : float, optional
+    tol : float (optional)
         Numerical tolerance. Default = 1e-20
 
     Returns

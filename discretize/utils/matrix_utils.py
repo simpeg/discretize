@@ -326,8 +326,8 @@ def ndgrid(*args, **kwargs):
     Returns
     -------
     numpy.ndarray or list of numpy.array
-        If *vector=True* the gridded *x*, *y*, (and *z*) locations are
-        returned as a numpy array of shape [n, ndim]. If *vector=False*,
+        If *vector* = *True* the gridded *x*, *y*, (and *z*) locations are
+        returned as a numpy array of shape [n, ndim]. If *vector* = *False*,
         the gridded *x*, *y*, (and *z*) are returned as a list of vectors.
     
 
