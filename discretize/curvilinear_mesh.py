@@ -32,20 +32,42 @@ def _normalize3D(x):
 class CurvilinearMesh(
     BaseRectangularMesh, DiffOperators, InnerProducts, InterfaceMixins
 ):
-    """
-    Class for curvilinear meshes.
+    """Curvilinear mesh class
 
-    CurvilinearMesh is a mesh class that deals with curvilinear meshes.
+    Curvilinear meshes are numerical grids whose cells are general
+    quadrilaterals (2D) or cuboid (3D); unlike tensor meshes
+    (see :class:`~discretize.TensorMesh`) whose cells are rectangles
+    or rectangular prisms. That being said, the combinatorial
+    structure (i.e. organization of mesh cells) of
+    curvilinear meshes is the same as tensor meshes.
 
-    Example of a curvilinear mesh:
+    Parameters
+    ----------
+    node_list : list of numpy.ndarray
+        List numpy arrays containing the gridded x, y (and z) node locations.
+
+            - For a 2D curvilinear mesh, *node_list* = [X, Y] where X and Y have shape (n_nodes_x, n_nodes_y)
+            - For a 3D curvilinear mesh, *node_list* = [X, Y, Z] where X, Y and Z have shape (n_nodes_x, n_nodes_y, n_nodes_z)
+
+
+    Examples
+    --------
+    Using the :py:func:`~discretize.utils.curvilinear_mesh_example` utility,
+    we provide an example of a curvilinear mesh.
 
     .. plot::
         :include-source:
 
-        import discretize
-        X, Y = discretize.utils.exampleLrmGrid([3,3],'rotate')
-        mesh = discretize.CurvilinearMesh([X, Y])
-        mesh.plot_grid(show_it=True)
+        from discretize import CurvilinearMesh
+        from discretize.utils import example_curvilinear_grid
+        import matplotlib.pyplot as plt
+        
+        x, y = example_curvilinear_grid([10, 10], "rotate")
+        curvilinear_mesh = CurvilinearMesh([x, y])
+        fig = plt.figure(figsize=(5,5))
+        ax = fig.add_subplot(111)
+        curvilinear_mesh.plot_grid(ax=ax, show_it=True)
+
     """
 
     _meshType = "Curv"
@@ -100,18 +122,48 @@ class CurvilinearMesh(
 
     @property
     def node_list(self):
+        """Returns the gridded x, y (and z) node locations used to create the mesh.
+
+        Returns
+        -------
+        list of numpy.ndarray
+            Gridded x, y (and z) node locations used to create the mesh.
+
+                - *2D:* return is a list [X, Y] where X and Y have shape (n_nodes_x, n_nodes_y)
+                - *3D:* return is a list [X, Y, Z] where X, Y and Z have shape (n_nodes_x, n_nodes_y, n_nodes_z)
+
+        """
         return self._node_list
 
     @classmethod
     def deserialize(cls, value, **kwargs):
+        """Create curvilinear mesh from a dictionary of attributes
+
+        Parameters
+        ----------
+        cls : discretize.CurvilinearMesh
+            The :class:`~discretize.CurvilinearMesh` class
+        items : dict
+            dictionary of {attribute : value} pairs that will be passed to this class's
+            initialization method as keyword arguments.
+        """
         if "nodes" in value:
             value["node_list"] = value.pop("nodes")
         return super().deserialize(value, **kwargs)
 
     @property
     def cell_centers(self):
-        """
-        Cell-centered grid
+        """Return cell center locations
+
+        For 2D or 3D curvilinear meshes, this property returns a numpy array
+        containing the cell center locations. The bottom-front-leftmost cell is the first
+        cell.
+
+        Returns
+        -------
+        np.ndarray (nC, dim)
+            The shape of the output array is the number of cells by the dimension.
+
         """
         if getattr(self, "_cell_centers", None) is None:
             self._cell_centers = np.concatenate(
@@ -122,7 +174,16 @@ class CurvilinearMesh(
     @property
     def nodes(self):
         """
-        Nodal grid.
+        Return mesh node locations
+
+        For 2D or 3D curvilinear meshes, this property returns a numpy array
+        containing the node locations. The bottom-front-leftmost node is the first
+        node.
+
+        Returns
+        -------
+        np.ndarray (nN, dim)
+            The shape of the output array is the number of nodes by the dimension.
         """
         if getattr(self, "_nodes", None) is None:
             raise Exception("Someone deleted this. I blame you.")

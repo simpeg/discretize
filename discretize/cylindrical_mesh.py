@@ -438,7 +438,7 @@ class CylindricalMesh(
 
     @property
     def nodes_x(self):
-        """Returns the x-positions of nodes along the x-direction
+        """Returns the x-positions of nodes along the x-direction (radial)
 
         This property returns a 1D vector containing the x-position values
         of the nodes along the x-direction (radial). The length of the vector

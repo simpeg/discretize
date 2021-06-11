@@ -153,7 +153,7 @@ class BaseMesh:
 
         For meshes of class :class:`~discretize.TensorMesh`,
         :class:`~discretize.CylindricalMesh` or :class:`~discretize.CurvilinearMesh`,
-        *shape_cells* returns the number of cells along each coordinate direction.
+        **shape_cells** returns the number of cells along each coordinate axis direction.
         For mesh of class :class:`~discretize.TreeMesh`, *shape_cells* returns
         the number of base mesh cells along each coordinate direction.
 
@@ -177,7 +177,8 @@ class BaseMesh:
         would define the x, y and z axes of the mesh relative to the Easting,
         Northing and elevation directions. The *orientation* property can
         be used to transform locations from a local coordinate
-        system to a conventional Cartesian system.
+        system to a conventional Cartesian system. By default, *orientation*
+        is an identity matrix of shape (mesh.dim, mesh.dim).
 
         Returns
         -------
@@ -899,7 +900,7 @@ class BaseMesh:
         """
         .. deprecated:: 0.7.0
           `axis_u` will be removed in discretize 1.0.0. This functionality was replaced
-          by the :py:attr`~.BaseMesh.orientation`.
+          by the :py:attr:`~.BaseMesh.orientation`.
         """
         warnings.warn(
             "The axis_u property is deprecated, please access as self.orientation[0]. "
@@ -923,7 +924,7 @@ class BaseMesh:
         """
         .. deprecated:: 0.7.0
           `axis_v` will be removed in discretize 1.0.0. This functionality was replaced
-          by the :py:attr`~.BaseMesh.orientation`.
+          by the :py:attr:`~.BaseMesh.orientation`.
         """
         warnings.warn(
             "The axis_v property is deprecated, please access as self.orientation[1]. "
@@ -948,7 +949,7 @@ class BaseMesh:
         """
         .. deprecated:: 0.7.0
           `axis_w` will be removed in discretize 1.0.0. This functionality was replaced
-          by the :py:attr`~.BaseMesh.orientation`.
+          by the :py:attr:`~.BaseMesh.orientation`.
         """
         warnings.warn(
             "The axis_w property is deprecated, please access as self.orientation[2]. "
@@ -978,8 +979,7 @@ class BaseRectangularMesh(BaseMesh):
 
     The ``BaseRectangularMesh`` class acts as an extension of the
     :class:`~discretize.BaseMesh` class for meshes without hanging
-    nodes. It does all the basic counting and organizing you wouldn't
-    want to do manually.
+    nodes.
     """
 
     _aliases = {
@@ -997,16 +997,16 @@ class BaseRectangularMesh(BaseMesh):
 
     @property
     def shape_nodes(self):
-        """Returns the number of nodes along each axis
+        """Returns the number of nodes along each axis direction
 
         This property returns a tuple containing the number of nodes along
-        each axis. The length of the tuple is equal to the dimension of the
-        mesh; i.e. 1D, 2D or 3D.
+        each axis direction. The length of the tuple is equal to the
+        dimension of the mesh; i.e. 1, 2 or 3.
 
         Returns
         -------
         tuple of int
-            Number of nodes along each axis.
+            Number of nodes along each axis direction
 
         Notes
         -----
@@ -1016,12 +1016,20 @@ class BaseRectangularMesh(BaseMesh):
 
     @property
     def shape_edges_x(self):
-        """Number of x-edges in each direction
+        """Number of x-edges along each axis direction
+
+        This property returns a tuple containing the number of x-edges
+        along each axis direction. The length of the tuple is equal to the
+        dimension of the mesh; i.e. 1, 2 or 3.
 
         Returns
         -------
-        tuple of int
-            (nx_cells, ny_nodes, nz_nodes)
+        int or tuple of int
+            Number of x-edges along each axis direction
+
+                - *1D mesh:* n_cells_x
+                - *2D mesh:* (n_cells_x, n_nodes_y)
+                - *3D mesh:* (n_cells_x, n_nodes_y, n_nodes_z)
 
         Notes
         -----
@@ -1031,12 +1039,20 @@ class BaseRectangularMesh(BaseMesh):
 
     @property
     def shape_edges_y(self):
-        """Number of y-edges in each direction
+        """Number of y-edges along each axis direction
+
+        This property returns a tuple containing the number of y-edges
+        along each axis direction. The length of the tuple is equal to the
+        dimension of the mesh; i.e. 1, 2 or 3.
 
         Returns
         -------
         tuple of int or None
-            (nx_nodes, ny_cells, nz_nodes), None if dim < 2
+            Number of y-edges along each axis direction
+
+                - *1D mesh: None*
+                - *2D mesh:* (n_nodes_x, n_cells_y)
+                - *3D mesh:* (n_nodes_x, n_cells_y, n_nodes_z)
 
         Notes
         -----
@@ -1050,12 +1066,20 @@ class BaseRectangularMesh(BaseMesh):
 
     @property
     def shape_edges_z(self):
-        """Number of z-edges in each direction
+        """Number of z-edges along each axis direction
+
+        This property returns a tuple containing the number of z-edges
+        along each axis direction. The length of the tuple is equal to the
+        dimension of the mesh; i.e. 1, 2 or 3.
 
         Returns
         -------
         tuple of int or None
-            (nx_nodes, ny_nodes, nz_cells), None if dim < 3
+            Number of z-edges along each axis direction.
+
+                - *1D mesh: None*
+                - *2D mesh: None*
+                - *3D mesh:* (n_nodes_x, n_nodes_y, n_cells_z)
 
         Notes
         -----
@@ -1067,12 +1091,20 @@ class BaseRectangularMesh(BaseMesh):
 
     @property
     def shape_faces_x(self):
-        """Number of x-faces in each direction
+        """Number of x-faces along each axis direction
+
+        This property returns a tuple containing the number of x-faces
+        along each axis direction. The length of the tuple is equal to the
+        dimension of the mesh; i.e. 1, 2 or 3.
 
         Returns
         -------
-        tuple of int
-            (nx_nodes, ny_cells, nz_cells)
+        int or tuple of int
+            Number of x-faces along each axis direction
+
+                - *1D mesh:* n_nodes_x
+                - *2D mesh:* (n_nodes_x, n_cells_y)
+                - *3D mesh:* (n_nodes_x, n_cells_y, n_cells_z)
 
         Notes
         -----
@@ -1082,12 +1114,20 @@ class BaseRectangularMesh(BaseMesh):
 
     @property
     def shape_faces_y(self):
-        """Number of y-faces in each direction
+        """Number of y-faces along each axis direction
+
+        This property returns a tuple containing the number of y-faces
+        along each axis direction. The length of the tuple is equal to the
+        dimension of the mesh; i.e. 1, 2 or 3.
 
         Returns
         -------
         tuple of int or None
-            (nx_cells, ny_nodes, nz_cells), None if dim < 2
+            Number of y-faces along each axis direction
+
+                - *1D mesh: None*
+                - *2D mesh:* (n_cells_x, n_nodes_y)
+                - *3D mesh:* (n_cells_x, n_nodes_y, n_cells_z)
 
         Notes
         -----
@@ -1101,12 +1141,20 @@ class BaseRectangularMesh(BaseMesh):
 
     @property
     def shape_faces_z(self):
-        """Number of z-faces in each direction
+        """Number of z-faces along each axis direction
+
+        This property returns a tuple containing the number of z-faces
+        along each axis direction. The length of the tuple is equal to the
+        dimension of the mesh; i.e. 1, 2 or 3.
 
         Returns
         -------
         tuple of int or None
-            (nx_cells, ny_cells, nz_nodes), None if dim < 3
+            Number of z-faces along each axis direction.
+
+                - *1D mesh: None*
+                - *2D mesh: None*
+                - *3D mesh:* (n_cells_x, n_cells_y, n_nodes_z)
 
         Notes
         -----
@@ -1164,45 +1212,69 @@ class BaseRectangularMesh(BaseMesh):
     def reshape(
         self, x, x_type="cell_centers", out_type="cell_centers", format="V", **kwargs
     ):
-        """A quick reshape command that will do the best it
-        can at giving you what you want.
+        """Reshape method for 
 
-        For example, you have a face variable, and you want the x
-        component of it reshaped to a 3D matrix.
+        **Reshape** is a quick command that will do its best to reshape discrete
+        quantities living on meshes than inherit the :class:`discretize.base_mesh.RectangularMesh`
+        class. For example, you may have a 1D array defining a vector on mesh faces, and you would
+        like to extract the x-component and reshaped it to a 3D matrix.
 
-        `reshape` can fulfil your dreams::
+        Parameters
+        ----------
+        x : numpy.ndarray or list or numpy.ndarray
+            The input quantity. Can be a vector (1D array), ndarray (tensor) or a list
+        x_type : str
+            Defines the locations on the mesh where input parameter *x* lives.
+            Choose from {'CC', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez'}
+        out_type : str
+            Defines the output quantity. Choice depends on your input for *x_type*.
 
-            mesh.reshape(V, 'F', 'Fx', 'M')
-                         |   |     |    |
-                         |   |     |    {
-                         |   |     |      How: 'M' or ['V'] for a matrix
-                         |   |     |      (ndgrid style) or a vector (n x dim)
-                         |   |     |    }
-                         |   |     {
-                         |   |       What you want: ['CC'], 'N',
-                         |   |                       'F', 'Fx', 'Fy', 'Fz',
-                         |   |                       'E', 'Ex', 'Ey', or 'Ez'
-                         |   |     }
-                         |   {
-                         |     What is it: ['CC'], 'N',
-                         |                  'F', 'Fx', 'Fy', 'Fz',
-                         |                  'E', 'Ex', 'Ey', or 'Ez'
-                         |   }
-                         {
-                           The input: as a list or ndarray
-                         }
+                - *x_type* = 'CC' ---> *out_type* = 'CC'
+                - *x_type* = 'N' ---> *out_type* = 'N'
+                - *x_type* = 'F' ---> *out_type* = {'F', 'Fx', 'Fy', 'Fz'}
+                - *x_type* = 'E' ---> *out_type* = {'E', 'Ex', 'Ey', 'Ez'}
+
+        format : str
+            The dimensions of quantity being returned
+
+                - *V:* return a vector (1D array) or a list of vectors
+                - *M:* return matrix (nD array) or a list of matrices
 
 
-        For example::
 
-            # Separates each component of the Ex grid into 3 matrices
-            Xex, Yex, Zex = r(mesh.gridEx, 'Ex', 'Ex', 'M')
+        # `reshape` can fulfil your dreams::
 
-            # Given an edge vector, return just the x edges as a vector
-            XedgeVector = r(edgeVector, 'E', 'Ex', 'V')
+        #     mesh.reshape(V, 'F', 'Fx', 'M')
+        #                  |   |     |    |
+        #                  |   |     |    {
+        #                  |   |     |      How: 'M' or ['V'] for a matrix
+        #                  |   |     |      (ndgrid style) or a vector (n x dim)
+        #                  |   |     |    }
+        #                  |   |     {
+        #                  |   |       What you want: ['CC'], 'N',
+        #                  |   |                       'F', 'Fx', 'Fy', 'Fz',
+        #                  |   |                       'E', 'Ex', 'Ey', or 'Ez'
+        #                  |   |     }
+        #                  |   {
+        #                  |     What is it: ['CC'], 'N',
+        #                  |                  'F', 'Fx', 'Fy', 'Fz',
+        #                  |                  'E', 'Ex', 'Ey', or 'Ez'
+        #                  |   }
+        #                  {
+        #                    The input: as a list or ndarray
+        #                  }
 
-            # Separates each component of the edgeVector into 3 vectors
-            eX, eY, eZ = r(edgeVector, 'E', 'E', 'V')
+
+        # For example::
+
+        #     # Separates each component of the Ex grid into 3 matrices
+        #     Xex, Yex, Zex = r(mesh.gridEx, 'Ex', 'Ex', 'M')
+
+        #     # Given an edge vector, return just the x edges as a vector
+        #     XedgeVector = r(edgeVector, 'E', 'Ex', 'V')
+
+        #     # Separates each component of the edgeVector into 3 vectors
+        #     eX, eY, eZ = r(edgeVector, 'E', 'E', 'V')
         """
         if "xType" in kwargs:
             warnings.warn(

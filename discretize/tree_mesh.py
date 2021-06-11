@@ -106,7 +106,7 @@ class TreeMesh(
     class, gridded locations and numerical operators for instances of ``TreeMesh``
     cannot be simply constructed using tensor products. Furthermore, each cell
     is an instance of ``TreeMesh`` is an instance of the
-    :class:`~discretize.tree_mesh.TensorTree` .
+    :class:`~discretize.tree_mesh.TreeCell` .
 
     QuadTree mesh example:
 

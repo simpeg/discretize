@@ -31,7 +31,7 @@ class BaseTensorMesh(BaseMesh):
     and cylindrical meshes defined by tensor-produts of vectors describing
     cell spacings.
 
-    Do not use this class directly, instead, inherit it if you plan to develop
+    Do not use this class directly! Instead, inherit it if you plan to develop
     a tensor-style mesh (e.g. a spherical mesh) or use the
     :meth:`discretize.TensorMesh` class to create a cartesian tensor mesh.
 
@@ -87,6 +87,25 @@ class BaseTensorMesh(BaseMesh):
 
     @property
     def h(self):
+        """Cell widths along each axis direction
+
+        The widths of the cells along each axis direction are returned
+        as a tuple of 1D arrays; e.g. (hx, hy, hz) for a 3D mesh.
+        The lengths of the 1D arrays in the tuple are given by
+        :py:attr:`~discretize.base.BaseMesh.shape_cells`. Ordering
+        begins at the bottom southwest corner. These are the
+        cell widths used when creating the mesh.
+
+        Returns
+        -------
+        tuple of numpy.array
+            Cell widths along each axis direction. This depends on the mesh class:
+
+                - :class:`~discretize.TensorMesh`: cell widths along the *x* , [*y* and *z* ] directions
+                - :class:`~discretize.CylindricalMesh`: cell widths along the *r*, :math:`\\phi` and *z* directions
+                - :class:`~discretize.TreeMesh`: cells widths of the *base tensor mesh* along the *x* , *y* [and *z* ] directions
+
+        """
         return self._h
 
     @BaseMesh.origin.setter
@@ -109,15 +128,16 @@ class BaseTensorMesh(BaseMesh):
     @property
     def nodes_x(self):
         """
-        Return the x-coordinate of the node locations along the x direction
+        Return x-coordinates of the nodes along the x-direction
 
         For 1D, 2D or 3D tensor meshes, this property returns a 1D vector
-        containing the x-coordinate values of the nodes along the x direction.
+        containing the x-coordinate values of the nodes along the x-direction.
         The length of the vector is equal to mesh.shape_nodes[0].
 
         Returns
         -------
-        np.ndarray (nNx,)
+        np.ndarray of float (n_nodes_x,)
+            A 1D array containing the x-coordinates of the nodes along the x-direction
 
         """
         return np.r_[self.origin[0], self.h[0]].cumsum()
@@ -125,15 +145,16 @@ class BaseTensorMesh(BaseMesh):
     @property
     def nodes_y(self):
         """
-        Return the y-coordinate of the node locations along the y direction
+        Return y-coordinates of the nodes along the y-direction
 
         For 2D or 3D tensor meshes, this property returns a 1D vector
-        containing the y-coordinate values of the nodes along the y direction.
+        containing the y-coordinate values of the nodes along the y-direction.
         The length of the vector is equal to mesh.shape_nodes[1].
 
         Returns
         -------
-        np.ndarray (nNy,)
+        np.ndarray of float (n_nodes_y,)
+            A 1D array containing the y-coordinates of the nodes along the y-direction
 
         """
         return None if self.dim < 2 else np.r_[self.origin[1], self.h[1]].cumsum()
@@ -141,15 +162,16 @@ class BaseTensorMesh(BaseMesh):
     @property
     def nodes_z(self):
         """
-        Return the z-coordinate of the node locations along the z direction
+        Return z-coordinates of the nodes along the z-direction
 
         For 3D tensor meshes, this property returns a 1D vector
-        containing the z-coordinate values of the nodes along the z direction.
+        containing the z-coordinate values of the nodes along the z-direction.
         The length of the vector is equal to mesh.mesh.shape_nodes[1].
 
         Returns
         -------
-        np.ndarray (nNz,)
+        np.ndarray of float (n_nodes_z,)
+            A 1D array containing the z-coordinates of the nodes along the z-direction
 
         """
         return None if self.dim < 3 else np.r_[self.origin[2], self.h[2]].cumsum()
@@ -157,15 +179,16 @@ class BaseTensorMesh(BaseMesh):
     @property
     def cell_centers_x(self):
         """
-        Return the x-coordinate of the cell center locations along the x direction
+        Return x-coordinates of the cell centers along the x-direction
 
         For 1D, 2D or 3D tensor meshes, this property returns a 1D vector
-        containing the x-coordinate values of the cell centers along the x direction.
+        containing the x-coordinate values of the cell centers along the x-direction.
         The length of the vector is equal to mesh.shape_centers[0].
 
         Returns
         -------
-        np.ndarray (nCx,)
+        np.ndarray of float (n_cells_x,)
+            A 1D array containing the x-coordinates of the cell centers along the x-direction
 
         """
         nodes = self.nodes_x
@@ -174,15 +197,16 @@ class BaseTensorMesh(BaseMesh):
     @property
     def cell_centers_y(self):
         """
-        Return the y-coordinate of the cell center locations along the y direction
+        Return y-coordinates of the cell centers along the y-direction
 
         For 2D or 3D tensor meshes, this property returns a 1D vector
-        containing the y-coordinate values of the cell centers along the y direction.
+        containing the y-coordinate values of the cell centers along the y-direction.
         The length of the vector is equal to mesh.shape_centers[1].
 
         Returns
         -------
-        np.ndarray (nCy,)
+        np.ndarray of float (n_cells_y,)
+            A 1D array containing the y-coordinates of the cell centers along the y-direction
 
         """
         if self.dim < 2:
@@ -193,15 +217,16 @@ class BaseTensorMesh(BaseMesh):
     @property
     def cell_centers_z(self):
         """
-        Return the z-coordinate of the cell center locations along the z direction
+        Return z-coordinates of the cell centers along the z-direction
 
         For 3D tensor meshes, this property returns a 1D vector
-        containing the z-coordinate values of the cell centers along the z direction.
+        containing the z-coordinate values of the cell centers along the z-direction.
         The length of the vector is equal to mesh.shape_centers[2].
 
         Returns
         -------
-        np.ndarray (nCz,)
+        np.ndarray of float (n_cells_z,)
+            A 1D array containing the z-coordinates of the cell centers along the z-direction
 
         """
         if self.dim < 3:
@@ -211,17 +236,17 @@ class BaseTensorMesh(BaseMesh):
 
     @property
     def cell_centers(self):
-        """
-        Return cell center locations
+        """Return gridded cell center locations
 
-        For 1D, 2D or 3D tensor meshes, this property returns a numpy array
-        containing the cell center locations. The bottom-front-leftmost cell is the first
-        cell. The cells are ordered along the x, then y, then z directions.
+        This property returns a numpy array of shape (n_cells, dim)
+        containing gridded cell center locations for all cells in the
+        mesh. The first row corresponds to the bottom-front-leftmost cell. 
+        The cells are ordered along the x, then y, then z directions.
 
         Returns
         -------
-        np.ndarray (nC, dim)
-            The shape of the output array is the number of cells by the dimension.
+        np.ndarray of float (n_cells, dim)
+            Gridded cell center locations
 
         Examples
         --------
@@ -244,17 +269,17 @@ class BaseTensorMesh(BaseMesh):
 
     @property
     def nodes(self):
-        """
-        Return mesh node locations
+        """Return gridded node locations
 
-        For 1D, 2D or 3D tensor meshes, this property returns a numpy array
-        containing the node locations. The bottom-front-leftmost node is the first
-        node. The nodes are ordered along the x, then y, then z directions.
+        This property returns a numpy array of shape (n_nodes, dim)
+        containing gridded node locations for all nodes in the
+        mesh. The first row corresponds to the bottom-front-leftmost node. 
+        The nodes are ordered along the x, then y, then z directions.
 
         Returns
         -------
-        np.ndarray (nN, dim)
-            The shape of the output array is the number of nodes by the dimension.
+        np.ndarray of float (n_nodes, dim)
+            Gridded node locations
 
         Examples
         --------
@@ -279,10 +304,15 @@ class BaseTensorMesh(BaseMesh):
     def boundary_nodes(self):
         """Boundary node locations
 
+        This property returns the locations of the nodes on
+        the boundary of the mesh as a numpy array. The shape
+        of the numpy array is the number of boundary nodes by
+        the dimension of the mesh.
+
         Returns
         -------
-        np.ndarray of float
-            location array of shape (mesh.n_boundary_nodes, dim)
+        np.ndarray of float (n_boundary_nodes, dim)
+            Boundary node locations 
         """
         dim = self.dim
         if dim == 1:
@@ -291,17 +321,17 @@ class BaseTensorMesh(BaseMesh):
 
     @property
     def h_gridded(self):
-        """
-        Return the cell dimensions of cells.
+        """Return dimensions of all mesh cells as staggered grid.
 
-        For 1D, 2D or 3D tensor meshes, this property returns a numpy array
-        containing cell dimensions. The bottom-front-leftmost cell is the first
-        cell. The cell are ordered along the x, then y, then z directions.
+        This property returns a numpy array of shape (n_cells, dim)
+        containing gridded x, (y and z) dimensions for all cells in the mesh.
+        The first row corresponds to the bottom-front-leftmost cell. 
+        The cells are ordered along the x, then y, then z directions.
 
         Returns
         -------
-        np.ndarray (nC, dim)
-            The shape of the output array is the number of cells by the dimension.
+        np.ndarray of float (n_cells, dim)
+            Dimensions of all mesh cells as staggered grid
 
         Examples
         --------
@@ -326,28 +356,75 @@ class BaseTensorMesh(BaseMesh):
 
     @property
     def faces_x(self):
-        """Face staggered grid in the x direction."""
+        """Gridded x-face locations
+
+        This property returns a numpy array of shape (n_faces_x, dim)
+        containing gridded locations for all x-faces in the
+        mesh. The first row corresponds to the bottom-front-leftmost x-face. 
+        The x-faces are ordered along the x, then y, then z directions.
+
+        Returns
+        -------
+        np.ndarray of float (n_faces_x, dim)
+            Gridded x-face locations
+        """
         if self.nFx == 0:
             return
         return self._getTensorGrid("faces_x")
 
     @property
     def faces_y(self):
-        """Face staggered grid in the y direction."""
+        """Gridded y-face locations
+
+        This property returns a numpy array of shape (n_faces_y, dim)
+        containing gridded locations for all y-faces in the
+        mesh. The first row corresponds to the bottom-front-leftmost y-face. 
+        The y-faces are ordered along the x, then y, then z directions.
+
+        Returns
+        -------
+        np.ndarray of float (n_faces_y, dim) or None
+            Gridded y-face locations for 2D and 3D mesh. Returns *None* for 1D meshes.
+        """
         if self.nFy == 0 or self.dim < 2:
             return
         return self._getTensorGrid("faces_y")
 
     @property
     def faces_z(self):
-        """Face staggered grid in the z direction."""
+        """Gridded z-face locations
+
+        This property returns a numpy array of shape (n_faces_z, dim)
+        containing gridded locations for all z-faces in the
+        mesh. The first row corresponds to the bottom-front-leftmost z-face. 
+        The z-faces are ordered along the x, then y, then z directions.
+
+        Returns
+        -------
+        np.ndarray of float (n_faces_z, dim) or None
+            Gridded z-face locations for 3D mesh. Returns *None* for 1D and 2D meshes.
+        """
         if self.nFz == 0 or self.dim < 3:
             return
         return self._getTensorGrid("faces_z")
 
     @property
     def faces(self):
-        "Face grid"
+        """Gridded face locations
+
+        This property returns a numpy array of shape (n_faces, dim)
+        containing gridded locations for all faces in the mesh.
+        The first row corresponds to the bottom-front-leftmost x-face.
+        The output array returns the x-faces, then the y-faces, then
+        the z-faces; i.e. *mesh.faces* is equivalent to *np.r_[mesh.faces_x, mesh.faces_y, mesh.face_z]* .
+        For each face type, the locations are ordered along the x, then y, then z directions.
+
+        Returns
+        -------
+        numpy.ndarray of float (n_faces, dim)
+            Gridded face locations
+
+        """
         faces = self.faces_x
         if self.dim > 1:
             faces = np.r_[faces, self.faces_y]
@@ -359,10 +436,15 @@ class BaseTensorMesh(BaseMesh):
     def boundary_faces(self):
         """Boundary face locations
 
+        This property returns the locations of the faces on
+        the boundary of the mesh as a numpy array. The shape
+        of the numpy array is the number of boundary faces by
+        the dimension of the mesh.
+
         Returns
         -------
-        np.ndarray of float
-            location array of shape (mesh.n_boundary_faces, dim)
+        np.ndarray of float (n_boundary_faces, dim)
+            Boundary faces locations 
         """
         dim = self.dim
         if dim == 1:
@@ -379,12 +461,17 @@ class BaseTensorMesh(BaseMesh):
 
     @property
     def boundary_face_outward_normals(self):
-        """Outward directed normal vectors for the boundary faces
+        """Outward normal vectors of boundary faces
+
+        This property returns the outward normal vectors of faces
+        the boundary of the mesh as a numpy array. The shape
+        of the numpy array is the number of boundary faces by
+        the dimension of the mesh.
 
         Returns
         -------
-        np.ndarray of float
-            Array of vectors of shape (mesh.n_boundary_faces, dim)
+        np.ndarray of float (n_boundary_faces, dim)
+            Outward normal vectors of boundary faces 
         """
         dim = self.dim
         if dim == 1:
@@ -413,28 +500,75 @@ class BaseTensorMesh(BaseMesh):
 
     @property
     def edges_x(self):
-        """Edge staggered grid in the x direction."""
+        """Gridded x-edge locations
+
+        This property returns a numpy array of shape (n_edges_x, dim)
+        containing gridded locations for all x-edges in the mesh.
+        The first row corresponds to the bottom-front-leftmost x-edge. 
+        The x-edges are ordered along the x, then y, then z directions.
+
+        Returns
+        -------
+        np.ndarray of float (n_edges_x, dim)
+            Gridded x-edge locations
+        """
         if self.nEx == 0:
             return
         return self._getTensorGrid("edges_x")
 
     @property
     def edges_y(self):
-        """Edge staggered grid in the y direction."""
+        """Gridded y-edge locations
+
+        This property returns a numpy array of shape (n_edges_y, dim)
+        containing gridded locations for all y-edges in the mesh.
+        The first row corresponds to the bottom-front-leftmost y-edge. 
+        The y-edges are ordered along the x, then y, then z directions.
+
+        Returns
+        -------
+        np.ndarray of float (n_edges_y, dim)
+            Gridded y-edge locations. Returns *None* for 1D meshes.
+        """
         if self.nEy == 0 or self.dim < 2:
             return
         return self._getTensorGrid("edges_y")
 
     @property
     def edges_z(self):
-        """Edge staggered grid in the z direction."""
+        """Gridded z-edge locations
+
+        This property returns a numpy array of shape (n_edges_z, dim)
+        containing gridded locations for all z-edges in the mesh.
+        The first row corresponds to the bottom-front-leftmost z-edge. 
+        The z-edges are ordered along the x, then y, then z directions.
+
+        Returns
+        -------
+        np.ndarray of float (n_edges_z, dim)
+            Gridded z-edge locations. Returns *None* for 1D and 2D meshes.
+        """
         if self.nEz == 0 or self.dim < 3:
             return
         return self._getTensorGrid("edges_z")
 
     @property
     def edges(self):
-        "Edge grid"
+        """Gridded edge locations
+
+        This property returns a numpy array of shape (n_edges, dim)
+        containing gridded locations for all edges in the mesh.
+        The first row corresponds to the bottom-front-leftmost x-edge.
+        The output array returns the x-edges, then the y-edges, then
+        the z-edges; i.e. *mesh.edges* is equivalent to *np.r_[mesh.edges_x, mesh.edges_y, mesh.edges_z]* .
+        For each edge type, the locations are ordered along the x, then y, then z directions.
+
+        Returns
+        -------
+        numpy.ndarray of float (n_edges, dim)
+            Gridded edge locations
+
+        """
         edges = self.edges_x
         if self.dim > 1:
             edges = np.r_[edges, self.edges_y]
@@ -446,10 +580,15 @@ class BaseTensorMesh(BaseMesh):
     def boundary_edges(self):
         """Boundary edge locations
 
+        This property returns the locations of the edges on
+        the boundary of the mesh as a numpy array. The shape
+        of the numpy array is the number of boundary edges by
+        the dimension of the mesh.
+
         Returns
         -------
-        np.ndarray of float
-            location array of shape (mesh.n_boundary_edges, dim)
+        np.ndarray of float (n_boundary_edges, dim)
+            Boundary edge locations 
         """
         dim = self.dim
         if dim == 1:
@@ -470,14 +609,19 @@ class BaseTensorMesh(BaseMesh):
         return getattr(self, "_" + key)
 
     def get_tensor(self, key):
-        """Returns a tensor list.
+        """Returns the base 1D arrays for a specified mesh tensor.
+
+        The cell-centers, nodes, x-faces, z-edges, etc... of a tensor mesh
+        can be constructed by applying tensor products to the set of base
+        1D arrays; i.e. (vx, vy, vz). These 1D arrays define the gridded
+        locations for the mesh tensor along each axis. For a given mesh tensor
+        (i.e. cell centers, nodes, x/y/z faces or x/y/z edges),
+        **get_tensor** returns a list containing the base 1D arrays.
 
         Parameters
         ----------
         key : str
-            Which tensor (see below)
-
-            key can be::
+            Specifies the tensor being returned. Please choose from::
 
                 'CC', 'cell_centers' -> location of cell centers
                 'N', 'nodes'         -> location of nodes
@@ -490,8 +634,8 @@ class BaseTensorMesh(BaseMesh):
 
         Returns
         -------
-        list
-            list of the tensors that make up the mesh.
+        list of 1D numpy.array
+            list of base 1D arrays for the tensor.
 
         """
         key = self._parse_location_type(key)
@@ -536,14 +680,16 @@ class BaseTensorMesh(BaseMesh):
     # --------------- Methods ---------------------
 
     def is_inside(self, pts, location_type="nodes", **kwargs):
-        """
-        Determines if a set of points are inside a mesh.
+        """Determine which points lie within the mesh
+
+        For an arbitrary set of points, **is_indside** returns a
+        boolean array identifying which points lie within the mesh.
 
         Parameters
         ----------
         pts : np.ndarray (n_pts, dim)
-            Locations of input points
-        loc_type : str
+            Locations of input points. Must have same dimension as the mesh.
+        location_type : str
             Use *N* to determine points lying within the cluster of mesh
             nodes. Use *CC* to determine points lying within the cluster
             of mesh cell centers.
@@ -676,21 +822,18 @@ class BaseTensorMesh(BaseMesh):
     def get_interpolation_matrix(
         self, loc, location_type="cell_centers", zeros_outside=False, **kwargs
     ):
-        """
-        Produces linear interpolation matrix
+        """Construct linear interpolation matrix from mesh
 
-        Produces a linear interpolation matrix from tensor locations
-        (nodes, cell-centers, faces, etc...) to arbitrary locations.
+        This method constructs a linear interpolation matrix from tensor locations
+        (nodes, cell-centers, faces, etc...) on the mesh to a set of arbitrary locations.
 
         Parameters
         ----------
-        loc : numpy.ndarray
-            Location of points to interpolate to
+        loc : numpy.ndarray (*, dim)
+            Location of points being to interpolate to. Must have same dimensions as the mesh.
 
         location_type : str
-            What to interpolate (see below)
-
-            location_type can be::
+            Tensor locations on the mesh being interpolated from. *location_type* must be one of::
 
                 'Ex', 'edges_x'           -> x-component of field defined on x edges
                 'Ey', 'edges_y'           -> y-component of field defined on y edges
@@ -704,11 +847,86 @@ class BaseTensorMesh(BaseMesh):
                 'CCVy', 'cell_centers_y'  -> y-component of vector field defined on cell centers
                 'CCVz', 'cell_centers_z'  -> z-component of vector field defined on cell centers
 
+        zeros_outside : bool (default = False )
+            If *False*, nearest neighbour is used to compute the interpolate value
+            at locations outside the mesh. If *True* , values at locations outside
+            the mesh will be zero.
+
         Returns
         -------
 
         scipy.sparse.csr_matrix
-            M, the interpolation matrix
+            A sparse matrix which interpolates the specified tensor quantity on mesh to
+            the set of specified locations.
+
+
+        Examples
+        --------
+
+        Here is a 1D example where a function evaluated on the nodes
+        is interpolated to a set of random locations. To compare the accuracy, the
+        function is evaluated at the set of random locations.
+
+        >>> from discretize import TensorMesh
+        >>> import numpy as np
+        >>> import matplotlib.pyplot as plt
+        >>> 
+        >>> np.random.seed(14)
+        >>> locs = np.random.rand(50)*0.8+0.1
+        >>> dense = np.linspace(0, 1, 200)
+        >>> fun = lambda x: np.cos(2*np.pi*x)
+        >>> 
+        >>> hx = 0.125 * np.ones(8)
+        >>> mesh1D = TensorMesh([hx])
+        >>> Q = mesh1D.get_interpolation_matrix(locs, 'nodes')
+        >>> 
+        >>> fig1 = plt.figure(figsize=(5, 3))
+        >>> ax = fig1.add_axes([0.05, 0.05, 0.9, 0.9])
+        >>> ax.plot(dense, fun(dense), 'k:', lw=3)
+        >>> ax.plot(mesh1D.nodes, fun(mesh1D.nodes), 'ks', markersize=8)
+        >>> ax.plot(locs, Q*fun(mesh1D.nodes), 'go', markersize=4)
+        >>> ax.plot(locs, fun(locs), 'rs', markersize=4)
+        >>> ax.legend(
+        >>>     [
+        >>>         'True Function',
+        >>>         'True (discrete loc.)',
+        >>>         'Interpolated (computed)',
+        >>>         'True (interp. loc.)'
+        >>>     ],
+        >>>     loc='upper center'
+        >>> )
+        >>> plt.show()
+
+        Here, demonstrate a similar example on a 2D mesh using a 2D Gaussian distribution.
+        We interpolate the Gaussian from the nodes to cell centers and examine the relative
+        error.
+
+        >>> hx = np.ones(10)
+        >>> hy = np.ones(10)
+        >>> mesh2D = TensorMesh([hx, hy], x0='CC')
+        >>> 
+        >>> def fun(x, y):
+        >>>     return np.exp(-(x**2 + y**2)/2**2)
+        >>> 
+        >>> nodes = mesh2D.nodes
+        >>> val_nodes = fun(nodes[:, 0], nodes[:, 1])
+        >>> centers = mesh2D.cell_centers
+        >>> val_centers = fun(centers[:, 0], centers[:, 1])
+        >>> 
+        >>> A = mesh2D.get_interpolation_matrix(centers, 'nodes')
+        >>> val_interp = A.dot(val_nodes)
+        >>> fig = plt.figure(figsize=(11,3.3))
+        >>> clim = (0., 1.)
+        >>> ax1 = fig.add_subplot(131)
+        >>> ax2 = fig.add_subplot(132)
+        >>> ax3 = fig.add_subplot(133)
+        >>> mesh2D.plot_image(val_centers, ax=ax1, clim=clim)
+        >>> mesh2D.plot_image(val_interp, ax=ax2, clim=clim)
+        >>> mesh2D.plot_image(val_centers-val_interp, ax=ax3, clim=clim)
+        >>> ax1.set_title('Analytic at Centers')
+        >>> ax2.set_title('Interpolated from Nodes')
+        >>> ax3.set_title('Relative Error')
+        >>> plt.show()
 
         """
         if "locType" in kwargs:

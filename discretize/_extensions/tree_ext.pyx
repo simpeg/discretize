@@ -106,13 +106,11 @@ cdef class TreeCell:
 
     @property
     def center(self):
-        """numpy.array of length dim"""
         if self._dim == 2: return np.array([self._x, self._y])
         return np.array([self._x, self._y, self._z])
 
     @property
     def origin(self):
-        """numpy.array of length dim"""
         if self._dim == 2: return np.array([self._x0, self._y0])
         return np.array([self._x0, self._y0, self._z0])
 
@@ -122,9 +120,6 @@ cdef class TreeCell:
 
     @property
     def h(self):
-        """ numpy.array of length dim
-        width of this cell
-        """
         if self._dim == 2: return np.array([self._wx, self._wy])
         return np.array([self._wx, self._wy, self._wz])
 

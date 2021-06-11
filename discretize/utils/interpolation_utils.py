@@ -72,7 +72,7 @@ def interpolation_matrix(locs, x, y=None, z=None):
 
     Here is a 1D example where a function evaluated on a regularly spaced grid
     is interpolated to a set of random locations. To compare the accuracy, the
-    function is evaluated at the set of random locations
+    function is evaluated at the set of random locations.
 
     >>> from discretize.utils import interpolation_matrix
     >>> from discretize import TensorMesh
@@ -87,7 +87,7 @@ def interpolation_matrix(locs, x, y=None, z=None):
     >>> Q = interpolation_matrix(locs, x)
     >>> 
     >>> fig1 = plt.figure(figsize=(5, 3))
-    >>> ax = fig1.add_axes([0.05, 0.05, 0.9, 0.9])
+    >>> ax = fig1.add_axes([0.1, 0.1, 0.8, 0.8])
     >>> ax.plot(dense, fun(dense), 'k:', lw=3)
     >>> ax.plot(x, fun(x), 'ks', markersize=8)
     >>> ax.plot(locs, Q*fun(x), 'go', markersize=4)

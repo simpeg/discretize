@@ -126,7 +126,6 @@ from discretize.utils.matrix_utils import (
     Identity,
 )
 from discretize.utils.mesh_utils import (
-    example_curvilinear_grid,
     unpack_widths,
     closest_points_index,
     extract_core_mesh,
@@ -135,7 +134,9 @@ from discretize.utils.mesh_utils import (
     active_from_xyz,
     mesh_builder_xyz,
 )
-from discretize.utils.curvilinear_utils import volume_tetrahedron, face_info, index_cube
+from discretize.utils.curvilinear_utils import (
+  example_curvilinear_grid, volume_tetrahedron, face_info, index_cube
+)
 from discretize.utils.interpolation_utils import interpolation_matrix, volume_average
 from discretize.utils.coordinate_utils import (
     rotate_points_from_normals,
@@ -160,12 +161,11 @@ from discretize.utils.matrix_utils import (
     invPropertyTensor,
 )
 from discretize.utils.mesh_utils import (
-    exampleLrmGrid,
     meshTensor,
     closestPoints,
     ExtractCoreMesh,
 )
-from discretize.utils.curvilinear_utils import volTetra, indexCube, faceInfo
+from discretize.utils.curvilinear_utils import exampleLrmGrid, volTetra, indexCube, faceInfo
 from discretize.utils.interpolation_utils import interpmat
 from discretize.utils.coordinate_utils import (
     rotationMatrixFromNormals,

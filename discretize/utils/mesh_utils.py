@@ -1039,9 +1039,6 @@ def active_from_xyz(mesh, xyz, grid_reference="CC", method="linear"):
 
 
 
-exampleLrmGrid = deprecate_function(
-    example_curvilinear_grid, "exampleLrmGrid", removal_version="1.0.0"
-)
 meshTensor = deprecate_function(unpack_widths, "meshTensor", removal_version="1.0.0")
 closestPoints = deprecate_function(
     closest_points_index, "closestPoints", removal_version="1.0.0"
