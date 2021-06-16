@@ -244,18 +244,18 @@ class TensorMesh(
 
     @property
     def face_areas(self):
-        """Returns the areas of all cell faces
+        """Returns the areas of all faces in the mesh
 
         Calling this property will compute and return the areas of all
-        mesh faces as a 1D numpy array.
+        faces as a 1D numpy array.
 
         Returns
         -------
         np.ndarray (n_faces,)
             The length of the quantity returned depends on the dimensions of the mesh:
                 - *1D:* returns the x-face areas
-                - *2D:* returns the x-face and y-face areas
-                - *3D:* returns the x, y and z-face areas
+                - *2D:* returns the x-face and y-face areas in order; i.e. y-edge and x-edge lengths, respectively
+                - *3D:* returns the x, y and z-face areas in order
         """
         if self.dim == 1:
             return self.face_x_areas
@@ -357,18 +357,18 @@ class TensorMesh(
 
     @property
     def edge_lengths(self):
-        """Returns the lengths of all cell edges
+        """Returns the lengths of all edges in the mesh
 
         Calling this property will compute and return the lengths of all
-        cell edges in the mesh.
+        edges in the mesh.
 
         Returns
         -------
         np.ndarray (n_edges,)
             The length of the quantity returned depends on the dimensions of the mesh:
                 - *1D:* returns the x-edge lengths
-                - *2D:* returns the x-edge and y-edge lengths
-                - *3D:* returns the x, y and z-edge lengths
+                - *2D:* returns the x-edge and y-edge lengths in order
+                - *3D:* returns the x, y and z-edge lengths in order
         """
         if self.dim == 1:
             return self.edge_x_lengths
@@ -457,8 +457,8 @@ class TensorMesh(
         """Returns the indices of the x, (y and z) boundary cells
 
         This property returns the indices of the cells on the x, (y and z)
-        boundaries, respectively. Note that each Cartesian direction will
-        have both a lower and upper boundary, and the property will
+        boundaries, respectively. Note that each axis direction will
+        have both a lower and upper boundary. The property will
         return the indices corresponding to the lower and upper
         boundaries separately.
 
@@ -479,8 +479,8 @@ class TensorMesh(
 
         Returns
         -------
-        list of numpy.array
-            The length of list returned depends on the dimension of the mesh.
+        list of numpy.array of bool
+            The length of list returned depends on the dimension of the mesh (= 2 x dim).
             And the length of each array containing the indices is equal to
             the number of cells in the mesh. For 1D, 2D and 3D
             tensor meshes, the returns take the following form:

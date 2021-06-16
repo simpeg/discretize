@@ -12,7 +12,8 @@ import warnings
 
 
 class BaseMesh:
-    """Base mesh class for the ``discretize`` package
+    """
+    Base mesh class for the ``discretize`` package
 
     The ``BaseMesh`` class does all the basic counting and organizing
     you wouldn't want to do manually. ``BaseMesh`` is a class that should
@@ -26,8 +27,8 @@ class BaseMesh:
         number of cells in each dimension
     origin : array_like of float (optional)
         origin of the bottom south west corner of the mesh, defaults to 0.
-    orientation : discretize.utils.Identity or array_like of float, optional
-        Orientation of the three major axes of the mesh, defaults to :class:`~discretize.utils.Identity`.
+    orientation : discretize.utils.Identity or array_like of float (optional)
+        Orientation of the three major axes of the mesh; defaults to :class:`~discretize.utils.Identity`.
         If provided, this must be an orthogonal matrix with the correct dimension.
     reference_system : str
         Must be one of {'cartesian', 'cylindrical', 'spherical'} or a shorthand;
@@ -35,11 +36,9 @@ class BaseMesh:
 
     Attributes
     ----------
-    shape_cells
-    origin
-    orientation
-    reference_system
     dim
+    edge_tangents
+    face_normals
     n_cells
     n_nodes
     n_edges
@@ -52,10 +51,24 @@ class BaseMesh:
     n_faces_y
     n_faces_z
     n_faces_per_direction
-    face_normals
-    edge_tangents
+    orientation
+    origin
     reference_is_rotated
+    reference_system
     rotation_matrix
+    shape_cells
+
+    Methods
+    -------
+    copy
+    deserialize
+    equals
+    project_edge_vector
+    project_face_vector
+    save
+    serialize
+    to_dict
+    validate
     """
 
     _REGISTRY = {}
@@ -164,13 +177,13 @@ class BaseMesh:
 
         Notes
         -----
-        Also accessible as the property `vnC`.
+        Property also accessible as using the shorthand **vnC**
         """
         return self._shape_cells
 
     @property
     def orientation(self):
-        """Direction of the axes of the mesh.
+        """Rotation matrix defining mesh axes relative to Cartesian
 
         This property returns a rotation matrix between the local coordinate
         axes of the mesh and the standard Cartesian axes. For a 3D mesh, this
@@ -219,7 +232,7 @@ class BaseMesh:
 
         Returns
         -------
-        str
+        str {'cartesian', 'cylindrical', 'spherical'}
             The coordinate system associated with the mesh.
         """
         return self._reference_system
@@ -370,7 +383,7 @@ class BaseMesh:
         Returns
         -------
         int
-            dimension of the mesh
+            Dimension of the mesh; i.e. 1, 2 or 3
         """
         return len(self.shape_cells)
 
@@ -381,11 +394,11 @@ class BaseMesh:
         Returns
         -------
         int
-            number of cells in the mesh
+            Number of cells in the mesh
 
         Notes
         -----
-        Also accessible as `nC`
+        Property also accessible as using the shorthand **nC**
         """
         return int(np.prod(self.shape_cells))
 
@@ -397,7 +410,7 @@ class BaseMesh:
         Returns
         -------
         int
-            number of cells in the mesh
+            Number of cells in the mesh
         """
         return self.n_cells
 
@@ -408,11 +421,11 @@ class BaseMesh:
         Returns
         -------
         int
-            number of nodes in the mesh
+            Number of nodes in the mesh
 
         Notes
         -----
-        Also accessible as `nN`
+        Property also accessible as using the shorthand **nN**
         """
         return int(np.prod([x + 1 for x in self.shape_cells]))
 
@@ -430,7 +443,7 @@ class BaseMesh:
 
         Notes
         -----
-        Also accessible as `nEx`.
+        Property also accessible as using the shorthand **nEx**
 
         """
         return int(np.prod([x + y for x, y in zip(self.shape_cells, (0, 1, 1))]))
@@ -449,7 +462,7 @@ class BaseMesh:
 
         Notes
         -----
-        Also accessible as `nEy`.
+        Property also accessible as using the shorthand **nEy**
 
         """
         if self.dim < 2:
@@ -470,7 +483,7 @@ class BaseMesh:
 
         Notes
         -----
-        Also accessible as `nEz`.
+        Property also accessible as using the shorthand **nEz**
 
         """
         if self.dim < 3:
@@ -490,11 +503,11 @@ class BaseMesh:
         Returns
         -------
         tuple of int of length (dim, )
-            number of edges in each direction
+            Number of edges in each direction
 
         Notes
         -----
-        Also accessible as `vnE`.
+        Property also accessible as using the shorthand **vnE**
 
         Examples
         --------
@@ -515,11 +528,11 @@ class BaseMesh:
         Returns
         -------
         int
-            total number of edges in the mesh
+            Total number of edges in the mesh
 
         Notes
         -----
-        Also accessible as `nE`.
+        Property also accessible as using the shorthand **nE**
 
         """
         n = self.n_edges_x
@@ -543,7 +556,7 @@ class BaseMesh:
 
         Notes
         -----
-        Also accessible as `nFx`.
+        Property also accessible as using the shorthand **nFx**
         """
         return int(np.prod([x + y for x, y in zip(self.shape_cells, (1, 0, 0))]))
 
@@ -561,7 +574,7 @@ class BaseMesh:
 
         Notes
         -----
-        Also accessible as `nFy`.
+        Property also accessible as using the shorthand **nFy**
         """
         if self.dim < 2:
             return None
@@ -581,7 +594,7 @@ class BaseMesh:
 
         Notes
         -----
-        Also accessible as `nFz`.
+        Property also accessible as using the shorthand **nFz**
         """
         if self.dim < 3:
             return None
@@ -604,7 +617,7 @@ class BaseMesh:
 
         Notes
         -----
-        Also accessible as `vnF`.
+        Property also accessible as using the shorthand **vnF**
 
         Examples
         --------
@@ -625,11 +638,11 @@ class BaseMesh:
         Returns
         -------
         int
-            total number of faces in the mesh
+            Total number of faces in the mesh
 
         Notes
         -----
-        Also accessible as `nF`.
+        Property also accessible as using the shorthand **nF**
 
         """
         n = self.n_faces_x
@@ -647,7 +660,7 @@ class BaseMesh:
         is perpendicular to a surface. Calling
         *face_normals* returns a numpy.ndarray containing
         the unit normal vectors for all faces in the mesh.
-        For a 3D mesh, the array would have shape (n_faces, dim)
+        For a 3D mesh, the array would have shape (n_faces, dim).
         The rows of the output are organized by x-faces,
         then y-faces, then z-faces vectors.
 
@@ -686,7 +699,7 @@ class BaseMesh:
         path direction one would take if traveling along that edge.
         Calling *edge_tangents* returns a numpy.ndarray containing
         the unit tangent vectors for all edges in the mesh.
-        For a 3D mesh, the array would have shape (n_edges, dim)
+        For a 3D mesh, the array would have shape (n_edges, dim).
         The rows of the output are organized by x-edges,
         then y-edges, then z-edges vectors.
 
@@ -730,7 +743,7 @@ class BaseMesh:
         Parameters
         ----------
         face_vectors : numpy.ndarray with shape (n_faces, dim)
-            a numpy array containing the vectors that will be projected to the mesh faces 
+            Numpy array containing the vectors that will be projected to the mesh faces 
 
         Returns
         -------
@@ -760,7 +773,7 @@ class BaseMesh:
         Parameters
         ----------
         edge_vectors : numpy.ndarray with shape (n_edges, dim)
-            a numpy array containing the vectors that will be projected to the mesh edges
+            Numpy array containing the vectors that will be projected to the mesh edges
 
         Returns
         -------
@@ -787,7 +800,7 @@ class BaseMesh:
         Parameters
         ----------
         file_name : str (optional)
-            file name for saving the mesh properties
+            File name for saving the mesh properties
         verbose : bool (optional)
             If *True*, the path of the json file is printed
         """
@@ -980,6 +993,50 @@ class BaseRectangularMesh(BaseMesh):
     The ``BaseRectangularMesh`` class acts as an extension of the
     :class:`~discretize.BaseMesh` class for meshes without hanging
     nodes.
+
+    Attributes
+    ----------
+    dim
+    edge_tangents
+    face_normals
+    n_cells
+    n_nodes
+    n_edges
+    n_edges_x
+    n_edges_y
+    n_edges_z
+    n_edges_per_direction
+    n_faces
+    n_faces_x
+    n_faces_y
+    n_faces_z
+    n_faces_per_direction
+    orientation
+    origin
+    reference_is_rotated
+    reference_system
+    rotation_matrix
+    shape_cells
+    shape_nodes
+    shape_edges_x
+    shape_edges_y
+    shape_edges_z
+    shape_faces_x
+    shape_faces_y
+    shape_faces_z
+
+    Methods
+    -------
+    copy
+    deserialize
+    equals
+    project_edge_vector
+    project_face_vector
+    reshape
+    save
+    serialize
+    to_dict
+    validate
     """
 
     _aliases = {
@@ -1010,7 +1067,7 @@ class BaseRectangularMesh(BaseMesh):
 
         Notes
         -----
-        Also accessible as `vnN`.
+        Property also accessible as using the shorthand **vnN**
         """
         return tuple(x + 1 for x in self.shape_cells)
 
@@ -1033,7 +1090,7 @@ class BaseRectangularMesh(BaseMesh):
 
         Notes
         -----
-        Also accessible as `vnEx`.
+        Property also accessible as using the shorthand **vnEx**
         """
         return self.shape_cells[:1] + self.shape_nodes[1:]
 
@@ -1056,7 +1113,7 @@ class BaseRectangularMesh(BaseMesh):
 
         Notes
         -----
-        Also accessible as `vnEy`.
+        Property also accessible as using the shorthand **vnEy**
         """
         if self.dim < 2:
             return None
@@ -1083,7 +1140,7 @@ class BaseRectangularMesh(BaseMesh):
 
         Notes
         -----
-        Also accessible as `vnEz`.
+        Property also accessible as using the shorthand **vnEz**
         """
         if self.dim < 3:
             return None
@@ -1108,7 +1165,7 @@ class BaseRectangularMesh(BaseMesh):
 
         Notes
         -----
-        Also accessible as `vnFx`.
+        Property also accessible as using the shorthand **vnFx**
         """
         return self.shape_nodes[:1] + self.shape_cells[1:]
 
@@ -1131,7 +1188,7 @@ class BaseRectangularMesh(BaseMesh):
 
         Notes
         -----
-        Also accessible as `vnFy`.
+        Property also accessible as using the shorthand **vnFy**
         """
         if self.dim < 2:
             return None
@@ -1158,7 +1215,7 @@ class BaseRectangularMesh(BaseMesh):
 
         Notes
         -----
-        Also accessible as `vnFz`.
+        Property also accessible as using the shorthand **vnFz**
         """
         if self.dim < 3:
             return None
@@ -1212,7 +1269,7 @@ class BaseRectangularMesh(BaseMesh):
     def reshape(
         self, x, x_type="cell_centers", out_type="cell_centers", format="V", **kwargs
     ):
-        """Reshape method for 
+        """General reshape method for tensor quantities
 
         **Reshape** is a quick command that will do its best to reshape discrete
         quantities living on meshes than inherit the :class:`discretize.base_mesh.RectangularMesh`
@@ -1240,41 +1297,6 @@ class BaseRectangularMesh(BaseMesh):
                 - *V:* return a vector (1D array) or a list of vectors
                 - *M:* return matrix (nD array) or a list of matrices
 
-
-
-        # `reshape` can fulfil your dreams::
-
-        #     mesh.reshape(V, 'F', 'Fx', 'M')
-        #                  |   |     |    |
-        #                  |   |     |    {
-        #                  |   |     |      How: 'M' or ['V'] for a matrix
-        #                  |   |     |      (ndgrid style) or a vector (n x dim)
-        #                  |   |     |    }
-        #                  |   |     {
-        #                  |   |       What you want: ['CC'], 'N',
-        #                  |   |                       'F', 'Fx', 'Fy', 'Fz',
-        #                  |   |                       'E', 'Ex', 'Ey', or 'Ez'
-        #                  |   |     }
-        #                  |   {
-        #                  |     What is it: ['CC'], 'N',
-        #                  |                  'F', 'Fx', 'Fy', 'Fz',
-        #                  |                  'E', 'Ex', 'Ey', or 'Ez'
-        #                  |   }
-        #                  {
-        #                    The input: as a list or ndarray
-        #                  }
-
-
-        # For example::
-
-        #     # Separates each component of the Ex grid into 3 matrices
-        #     Xex, Yex, Zex = r(mesh.gridEx, 'Ex', 'Ex', 'M')
-
-        #     # Given an edge vector, return just the x edges as a vector
-        #     XedgeVector = r(edgeVector, 'E', 'Ex', 'V')
-
-        #     # Separates each component of the edgeVector into 3 vectors
-        #     eX, eY, eZ = r(edgeVector, 'E', 'E', 'V')
         """
         if "xType" in kwargs:
             warnings.warn(

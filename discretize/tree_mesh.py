@@ -321,12 +321,34 @@ class TreeMesh(
 
     @property
     def vntF(self):
-        """Total number of hanging and non-hanging faces in a [nx,ny,nz] form"""
+        """
+        Vector number of total faces along each axis
+
+        This property returns the total number of hanging and
+        non-hanging faces along each axis direction. The returned
+        quantity is a list of integers of the form [nFx,nFy,nFz].
+
+        Returns
+        -------
+        list of int of length mesh.dim
+            Vector number of total faces along each axis
+        """
         return [self.ntFx, self.ntFy] + ([] if self.dim == 2 else [self.ntFz])
 
     @property
     def vntE(self):
-        """Total number of hanging and non-hanging edges in a [nx,ny,nz] form"""
+        """
+        Vector number of total edges along each axis
+
+        This property returns the total number of hanging and
+        non-hanging edges along each axis direction. The returned
+        quantity is a list of integers of the form [nEx,nEy,nEz].
+
+        Returns
+        -------
+        list of int of length mesh.dim
+            Vector number of total edges along each axis
+        """
         return [self.ntEx, self.ntEy] + ([] if self.dim == 2 else [self.ntEz])
 
     @property

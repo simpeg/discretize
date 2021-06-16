@@ -103,7 +103,7 @@ class BaseTensorMesh(BaseMesh):
 
                 - :class:`~discretize.TensorMesh`: cell widths along the *x* , [*y* and *z* ] directions
                 - :class:`~discretize.CylindricalMesh`: cell widths along the *r*, :math:`\\phi` and *z* directions
-                - :class:`~discretize.TreeMesh`: cells widths of the *base tensor mesh* along the *x* , *y* [and *z* ] directions
+                - :class:`~discretize.TreeMesh`: cells widths of the *underlying tensor mesh* along the *x* , *y* [and *z* ] directions
 
         """
         return self._h
@@ -130,14 +130,20 @@ class BaseTensorMesh(BaseMesh):
         """
         Return x-coordinates of the nodes along the x-direction
 
-        For 1D, 2D or 3D tensor meshes, this property returns a 1D vector
-        containing the x-coordinate values of the nodes along the x-direction.
-        The length of the vector is equal to mesh.shape_nodes[0].
+        For 1D, 2D and 3D meshes, this property returns a 1D vector
+        containing the x-coordinate values of the nodes along the
+        x-direction. For instances of :class:`~discretize.TensorMesh` or
+        :class:`~discretize.CylindricalMesh`, this is equivalent to
+        the node positions which define the tensor along the x-axis.
+        For instances of :class:`~discretize.TreeMesh` however, this property
+        returns the x-coordinate values of the nodes along the x-direction
+        for the underlying tensor mesh .
 
         Returns
         -------
         np.ndarray of float (n_nodes_x,)
-            A 1D array containing the x-coordinates of the nodes along the x-direction
+            A 1D array containing the x-coordinates of the nodes along
+            the x-direction.
 
         """
         return np.r_[self.origin[0], self.h[0]].cumsum()
@@ -147,14 +153,20 @@ class BaseTensorMesh(BaseMesh):
         """
         Return y-coordinates of the nodes along the y-direction
 
-        For 2D or 3D tensor meshes, this property returns a 1D vector
-        containing the y-coordinate values of the nodes along the y-direction.
-        The length of the vector is equal to mesh.shape_nodes[1].
+        For 2D and 3D meshes, this property returns a 1D vector
+        containing the y-coordinate values of the nodes along the
+        y-direction. For instances of :class:`~discretize.TensorMesh` or
+        :class:`~discretize.CylindricalMesh`, this is equivalent to
+        the node positions which define the tensor along the y-axis.
+        For instances of :class:`~discretize.TreeMesh` however, this property
+        returns the y-coordinate values of the nodes along the y-direction
+        for the underlying tensor mesh .
 
         Returns
         -------
-        np.ndarray of float (n_nodes_y,)
-            A 1D array containing the y-coordinates of the nodes along the y-direction
+        np.ndarray of float (n_nodes_y,) or None
+            A 1D array containing the y-coordinates of the nodes along
+            the y-direction. Returns *None* for 1D meshes.
 
         """
         return None if self.dim < 2 else np.r_[self.origin[1], self.h[1]].cumsum()
@@ -164,14 +176,20 @@ class BaseTensorMesh(BaseMesh):
         """
         Return z-coordinates of the nodes along the z-direction
 
-        For 3D tensor meshes, this property returns a 1D vector
-        containing the z-coordinate values of the nodes along the z-direction.
-        The length of the vector is equal to mesh.mesh.shape_nodes[1].
+        For 3D meshes, this property returns a 1D vector
+        containing the z-coordinate values of the nodes along the
+        z-direction. For instances of :class:`~discretize.TensorMesh` or
+        :class:`~discretize.CylindricalMesh`, this is equivalent to
+        the node positions which define the tensor along the z-axis.
+        For instances of :class:`~discretize.TreeMesh` however, this property
+        returns the z-coordinate values of the nodes along the z-direction
+        for the underlying tensor mesh .
 
         Returns
         -------
         np.ndarray of float (n_nodes_z,)
-            A 1D array containing the z-coordinates of the nodes along the z-direction
+            A 1D array containing the z-coordinates of the nodes along
+            the z-direction. Returns *None* for 1D and 2D meshes.
 
         """
         return None if self.dim < 3 else np.r_[self.origin[2], self.h[2]].cumsum()
@@ -181,14 +199,20 @@ class BaseTensorMesh(BaseMesh):
         """
         Return x-coordinates of the cell centers along the x-direction
 
-        For 1D, 2D or 3D tensor meshes, this property returns a 1D vector
-        containing the x-coordinate values of the cell centers along the x-direction.
-        The length of the vector is equal to mesh.shape_centers[0].
+        For 1D, 2D and 3D meshes, this property returns a 1D vector
+        containing the x-coordinate values of the cell centers along the
+        x-direction. For instances of :class:`~discretize.TensorMesh` or
+        :class:`~discretize.CylindricalMesh`, this is equivalent to
+        the cell center positions which define the tensor along the x-axis.
+        For instances of :class:`~discretize.TreeMesh` however, this property
+        returns the x-coordinate values of the cell centers along the x-direction
+        for the underlying tensor mesh .
 
         Returns
         -------
         np.ndarray of float (n_cells_x,)
-            A 1D array containing the x-coordinates of the cell centers along the x-direction
+            A 1D array containing the x-coordinates of the cell centers along
+            the x-direction.
 
         """
         nodes = self.nodes_x
@@ -199,14 +223,20 @@ class BaseTensorMesh(BaseMesh):
         """
         Return y-coordinates of the cell centers along the y-direction
 
-        For 2D or 3D tensor meshes, this property returns a 1D vector
-        containing the y-coordinate values of the cell centers along the y-direction.
-        The length of the vector is equal to mesh.shape_centers[1].
+        For 2D and 3D meshes, this property returns a 1D vector
+        containing the y-coordinate values of the cell centers along the
+        y-direction. For instances of :class:`~discretize.TensorMesh` or
+        :class:`~discretize.CylindricalMesh`, this is equivalent to
+        the cell center positions which define the tensor along the y-axis.
+        For instances of :class:`~discretize.TreeMesh` however, this property
+        returns the y-coordinate values of the cell centers along the y-direction
+        for the underlying tensor mesh .
 
         Returns
         -------
         np.ndarray of float (n_cells_y,)
-            A 1D array containing the y-coordinates of the cell centers along the y-direction
+            A 1D array containing the y-coordinates of the cell centers along
+            the y-direction. Returns *None* for 1D meshes.
 
         """
         if self.dim < 2:
@@ -219,14 +249,20 @@ class BaseTensorMesh(BaseMesh):
         """
         Return z-coordinates of the cell centers along the z-direction
 
-        For 3D tensor meshes, this property returns a 1D vector
-        containing the z-coordinate values of the cell centers along the z-direction.
-        The length of the vector is equal to mesh.shape_centers[2].
+        For 3D meshes, this property returns a 1D vector
+        containing the z-coordinate values of the cell centers along the
+        z-direction. For instances of :class:`~discretize.TensorMesh` or
+        :class:`~discretize.CylindricalMesh`, this is equivalent to
+        the cell center positions which define the tensor along the z-axis.
+        For instances of :class:`~discretize.TreeMesh` however, this property
+        returns the z-coordinate values of the cell centers along the z-direction
+        for the underlying tensor mesh .
 
         Returns
         -------
         np.ndarray of float (n_cells_z,)
-            A 1D array containing the z-coordinates of the cell centers along the z-direction
+            A 1D array containing the z-coordinates of the cell centers along
+            the z-direction. Returns *None* for 1D and 2D meshes.
 
         """
         if self.dim < 3:
