@@ -164,8 +164,8 @@ class TensorMesh(
         np.ndarray (n_faces_x,)
             The quantity returned depends on the dimensions of the mesh:
                 - *1D:* Numpy array of ones whose length is equal to the number of nodes
-                - *2D:* Areas of x-faces are equivalent to the lengths of y-edges
-                - *3D:* Returns areas of x-faces
+                - *2D:* Areas of x-faces (equivalent to the lengths of y-edges)
+                - *3D:* Areas of x-faces
         """
         if getattr(self, "_face_x_areas", None) is None:
             # Ensure that we are working with column vectors
@@ -195,8 +195,8 @@ class TensorMesh(
         np.ndarray (n_faces_y,)
             The quantity returned depends on the dimensions of the mesh:
                 - *1D:* N/A since 1D meshes do not have y-faces
-                - *2D:* Areas of y-faces are equivalent to the lengths of x-edges
-                - *3D:* Returns areas of y-faces
+                - *2D:* Areas of y-faces (equivalent to the lengths of x-edges)
+                - *3D:* Areas of y-faces
         """
         if getattr(self, "_face_y_areas", None) is None:
             # Ensure that we are working with column vectors
@@ -227,7 +227,7 @@ class TensorMesh(
             The quantity returned depends on the dimensions of the mesh:
                 - *1D:* N/A since 1D meshes do not have z-faces
                 - *2D:* N/A since 2D meshes do not have z-faces
-                - *3D:* Returns areas of z-faces
+                - *3D:* Areas of z-faces
         """
         if getattr(self, "_face_z_areas", None) is None:
             # Ensure that we are working with column vectors
@@ -247,7 +247,8 @@ class TensorMesh(
         """Returns the areas of all faces in the mesh
 
         Calling this property will compute and return the areas of all
-        faces as a 1D numpy array.
+        faces as a 1D numpy array. The returned quantity is ordered x-face
+        areas, then y-face areas, then z-face areas.
 
         Returns
         -------
@@ -360,7 +361,8 @@ class TensorMesh(
         """Returns the lengths of all edges in the mesh
 
         Calling this property will compute and return the lengths of all
-        edges in the mesh.
+        edges in the mesh. The returned quantity is ordered x-edge lengths,
+        then y-edge lengths, then z-edge lengths.
 
         Returns
         -------

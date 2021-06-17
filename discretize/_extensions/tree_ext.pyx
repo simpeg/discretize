@@ -1435,8 +1435,8 @@ cdef class _TreeMesh:
 
         This property returns a numpy array of shape 
         (n_boundary_edges, dim) containing the gridded locations
-        of the edges on the boundary of the mesh. This property
-        is equivalent to *np.r_[edges_x, edges_y, edges_z]* .
+        of the edges on the boundary of the mesh. The returned
+        quantity is organized *np.r_[edges_x, edges_y, edges_z]* .
 
         Returns
         -------
@@ -1643,8 +1643,8 @@ cdef class _TreeMesh:
 
         This property returns a numpy array of shape 
         (n_boundary_faces, dim) containing the gridded locations
-        of the faces on the boundary of the mesh. This property
-        is equivalent to *np.r_[faces_x, faces_y, faces_z]* .
+        of the faces on the boundary of the mesh. The returned
+        quantity is organized *np.r_[faces_x, faces_y, faces_z]* .
 
         Returns
         -------
