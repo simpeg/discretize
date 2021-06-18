@@ -27,13 +27,31 @@ class BaseTensorMesh(BaseMesh):
     """
     Base class for tensor-product style meshes
 
-    This class contains properites and methods that are common to cartesian
-    and cylindrical meshes defined by tensor-produts of vectors describing
-    cell spacings.
+    This class contains properites and methods that are common to Cartesian
+    and cylindrical meshes. That is, meshes whose cell centers, nodes, faces
+    and edges can be constructed with tensor-products of vectors.
 
-    Do not use this class directly! Instead, inherit it if you plan to develop
-    a tensor-style mesh (e.g. a spherical mesh) or use the
-    :meth:`discretize.TensorMesh` class to create a cartesian tensor mesh.
+    Do not use this class directly! Practical tensor meshes supported in
+    discretize will inherit this class; i.e. :class:`discretize.TensorMesh`
+    and :class:`discretize.CylindricalMesh`. Inherit this class if you plan
+    to develop a new tensor-style mesh class (e.g. a spherical mesh).
+
+    Parameters
+    ----------
+    h : list of numpy.array or list
+        Defines the cell widths along each axis. The length of the list is equal to the dimension
+        of the mesh (1, 2 or 3). For a 3D mesh, the list would have the form *[hx, hy, hz]* .
+        Along each axis, the user has 3 choices for defining the cells widths:
+            - the widths are defined as a 1D *numpy.array*
+            - the widths are defined as a *list* of *tuple* of the form *(dh, nc, [npad])* where *dh* is the cell width, *nc* is the number of cells, and *npad* (optional) is a padding factor denoting exponential increase/decrease in the cell width for each cell; e.g. *[(2., 10, -1.3), (2., 50), (2., 10, 1.3)]*
+            - the widths are defined as a mixed *list* of *tuples* and 1D *numpy arrays* .
+
+    origin : numpy.array (dim,) or str of length dim; optional
+        Define the origin or 'anchor point' of the mesh; i.e. the bottom-left-frontmost corner.
+        By default, the mesh is anchored such that its origin is at *[0, 0, 0]* . The user
+        may set the origin 2 ways which instantiating the tensor mesh:
+            - a numpy.array of shape (*dim* ,) which explicitly defines the x, (y, z) location of the origin.
+            - a str of length *dim* specifying whether the zero coordinate along each axis is the first node location ('0'), in the center ('C') or the last node location ('N').
 
     """
 

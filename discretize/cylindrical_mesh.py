@@ -39,7 +39,29 @@ class CylindricalMesh(
         - **y:** azimuthal direction (:math:`\\phi`)
         - **z:** vertical direction (:math:`z`)
 
+    
+    Parameters
+    ----------
+    h : list of numpy.array or list
+        Defines the cell widths along each axis. The length of the list is equal to the dimension
+        of the mesh (1, 2 or 3). For a 3D mesh, the list would have the form *[hr, hphi, hz]* .
+        Note that the sum of cell widths in the phi direction **must** equal :math:`2\\pi`.
+        You can also use a flat value of *hphi* = *1* to define a cylindrically symmetric mesh.
+        Along each axis, the user has 3 choices for defining the cells widths:
+            - the widths are defined in a 1D *numpy.array*
+            - the widths are defined as a *list* of *tuple* of the form *(dh, nc, [npad])* where *dh* is the cell width, *nc* is the number of cells, and *npad* (optional) is a padding factor denoting exponential increase/decrease in the cell width for each cell; e.g. *[(2., 10, -1.3), (2., 50), (2., 10, 1.3)]*
+            - the widths are defined as a mixed *list* of *tuple* and 1D *numpy.array* .
 
+    origin : numpy.array (dim,) or str of length dim; optional
+        Define the origin or 'anchor point' of the mesh; i.e. the bottom-left-frontmost corner.
+        By default, the mesh is anchored such that its origin is at [0, 0, 0]. The user
+        may set the origin 2 ways which instantiating the tensor mesh:
+            - a numpy.array of shape (dim,) which explicitly defines the x, (y, z) location of the origin.
+            - a str of length *dim* specifying whether the zero coordinate along each axis is the first node location ('0'), in the center ('C') or the last node location ('N'); see example.
+
+    
+    Examples
+    --------
     To create a general 3D cylindrical mesh, we discretize along the radial,
     azimuthal and vertical axis. For example:
 

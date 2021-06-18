@@ -107,11 +107,38 @@ class TreeMesh(
     cannot be simply constructed using tensor products. Furthermore, each cell
     is an instance of ``TreeMesh`` is an instance of the
     :class:`~discretize.tree_mesh.TreeCell` .
+    
+    Parameters
+    ----------
+    h : list of numpy.array or list containing a tuple
+        Defines the cell widths of the *underlying tensor mesh* along each axis.
+        The length of the list is equal to the dimension of the mesh (1, 2 or 3).
+        For a 3D mesh, the list would have the form *[hx, hy, hz]* .
+        The cell withs provided along each axis **must be uniform** and the number of cells
+        along each axis **must be a power of 2** . Along each axis, the user has 2 choices for
+        defining widths for the underlying tensor mesh:
+            - the widths are defined as a 1D *numpy.array*
+            - the widths are defined as a *list* containing a single *tuple* of the form (dh, nc), where *dh* is the cell width, *nc* is the number of cells.
 
-    QuadTree mesh example:
+    origin : numpy.array (dim,) or str of length dim; optional
+        Define the origin or 'anchor point' of the mesh; i.e. the bottom-left-frontmost corner.
+        By default, the mesh is anchored such that its origin is at [0, 0, 0]. The user
+        may set the origin 2 ways which instantiating the tensor mesh:
+            - a numpy.array of shape (dim,) which explicitly defines the x, (y, z) location of the origin.
+            - a str of length *dim* specifying whether the zero coordinate along each axis is the first node location ('0'), in the center ('C') or the last node location ('N'); see example.
+
+
+
+    Examples
+    --------
 
     .. plot::
         :include-source:
+
+        from discretize import TreeMesh
+        from discretize.utils import refine_tree_xyz, mkvc
+        import numpy as np
+        import matplotlib.pyplot as plt
 
         dh = 5    # minimum cell width (base mesh cell width)
         nbc = 64  # number of base mesh cells

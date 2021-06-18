@@ -168,7 +168,7 @@ class BaseMesh:
         :class:`~discretize.CylindricalMesh` or :class:`~discretize.CurvilinearMesh`,
         **shape_cells** returns the number of cells along each coordinate axis direction.
         For mesh of class :class:`~discretize.TreeMesh`, *shape_cells* returns
-        the number of base mesh cells along each coordinate direction.
+        the number of underlying tensor mesh cells along each coordinate direction.
 
         Returns
         -------

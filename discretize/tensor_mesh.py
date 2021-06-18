@@ -23,26 +23,54 @@ class TensorMesh(
     volumes, etc... can be directly expressed as tensor products. The axes defining
     coordinates of the mesh are orthogonal. And cell properties along one axis do
     not vary with respect to the position along any other axis.
+    
+    Parameters
+    ----------
+    h : list of numpy.array or list
+        Defines the cell widths along each axis. The length of the list is equal to the dimension
+        of the mesh (1, 2 or 3). For a 3D mesh, the list would have the form *[hx, hy, hz]* .
+        Along each axis, the user has 3 choices for defining the cells widths:
+            - the widths are defined as a 1D *numpy.array*
+            - the widths are defined as a *list* of *tuple* of the form *(dh, nc, [npad])* where *dh* is the cell width, *nc* is the number of cells, and *npad* (optional) is a padding factor denoting exponential increase/decrease in the cell width for each cell; e.g. *[(2., 10, -1.3), (2., 50), (2., 10, 1.3)]*
+            - the widths are defined as a mixed *list* of *tuples* and 1D *numpy arrays* .
 
-    An example of a 2D tensor mesh is shown here:
+    origin : numpy.array (dim,) or str of length dim; optional
+        Define the origin or 'anchor point' of the mesh; i.e. the bottom-left-frontmost corner.
+        By default, the mesh is anchored such that its origin is at *[0, 0, 0]* . The user
+        may set the origin 2 ways which instantiating the tensor mesh:
+            - a numpy.array of shape (*dim* ,) which explicitly defines the x, (y, z) location of the origin.
+            - a str of length *dim* specifying whether the zero coordinate along each axis is the first node location ('0'), in the center ('C') or the last node location ('N'); see example.
+
+
+
+    Examples
+    --------
+    An example of a 2D tensor mesh is shown below. Here we use a list of tuple to
+    define the discretization along the x-axis and a numpy array to define the
+    discretization along the y-axis. We also use a string argument to center the
+    x-axis about x = 0 and set the top of the mesh to y = 0.
 
     .. plot::
         :include-source:
 
+        from discretize import TensorMesh
+        import matplotlib.pyplot as plt
+
         ncx = 10      # number of core mesh cells in x
-        ncy = 15      # number of core mesh cells in y
-        dx = 15       # base cell width x
-        dy = 10       # base cell width y
-        npad_x = 4    # number of padding cells in x
-        npad_y = 4    # number of padding cells in y
+        dx = 5        # base cell width x
         exp_x = 1.25  # expansion rate of padding cells in x
-        exp_y = 1.25  # expansion rate of padding cells in y
+
+        ncy = 24      # total number of mesh cells in y
+        dy = 5        # base cell width y
         
         hx = [(dx, npad_x, -exp_x), (dx, ncx), (dx, npad_x, exp_x)]
-        hy = [(dy, npad_y, -exp_y), (dy, ncy), (dy, npad_y, exp_y)]
+        hy = dy * np.ones(ncy)
         
-        mesh = TensorMesh([hx, hy])
-        mesh.plot_grid()
+        mesh = TensorMesh([hx, hy], origin='CN')
+
+        fig = plt.figure(figsize=(5,5))
+        ax = fig.add_subplot(111)
+        mesh.plot_grid(ax=ax, show_it=True)
 
     """
 
