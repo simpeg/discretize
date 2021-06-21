@@ -579,13 +579,33 @@ def refine_tree_xyz(
     min_level=0,
     max_distance=np.inf,
 ):
-    """Refine region of a :class:`~discretize.TreeMesh`
+    """Refine region within a :class:`~discretize.TreeMesh`
 
-    This function refines a tree mesh using one of several methods:
+    This function refines the specified region of a tree mesh using
+    one of several methods. These are summarized below:
 
-        - "radial": Based on radial distance from a set of xy[z] locations
-        - "surface": Along triangulated surface repeated vertically
-        - "box": Inside limits defined by outer xy[z] locations
+    **radial:** refines based on radial distances from a set of xy[z] locations.
+    Consider a tree mesh whose smallest cell size has a width of *h* . And
+    *octree_levels = [nc1, nc2, nc3, ...]* . Within a distance of *nc1 x h*
+    from any of the points supplied, the smallest cell size is used. Within a distance of
+    *nc2 x (2h)* , the cells will have a width of *2h* . Within a distance of *nc3 x (4h)* ,
+    the cells will have a width of *4h* . Etc...
+    
+    **surface:** refines downward from a triangulated surface.
+    Consider a tree mesh whose smallest cell size has a width of *h*. And
+    *octree_levels = [nc1, nc2, nc3, ...]* . Within a downward distance of *nc1 x h*
+    from the topography (*xy[z]* ) supplied, the smallest cell size is used. The
+    topography is triangulated if the points supplied are coarser than the cell
+    size. No refinement is done above the topography. Within a vertical distance of
+    *nc2 x (2h)* , the cells will have a width of *2h* . Within a vertical distance
+    of *nc3 x (4h)* , the cells will have a width of *4h* . Etc...
+    
+    **box:** refines inside the convex hull defined by the xy[z] locations.
+    Consider a tree mesh whose smallest cell size has a width of *h*. And
+    *octree_levels = [nc1, nc2, nc3, ...]* . Within the convex hull defined by *xyz* ,
+    the smallest cell size is used. Within a distance of *nc2 x (2h)* from that convex
+    hull, the cells will have a width of *2h* . Within a distance of *nc3 x (4h)* ,
+    the cells will have a width of *4h* . Etc...
 
     Parameters
     ----------
@@ -597,18 +617,23 @@ def refine_tree_xyz(
         Method used to refine the mesh based on xyz locations. Choose from
         {'radial', 'surface', 'box'}.
 
-        - "radial": Based on radial distance xyz and cell centers
-        - "surface": Along triangulated surface repeated vertically
-        - "box": Inside limits defined by outer xyz locations
+        - *radial:* Based on radial distance xy[z] and cell centers
+        - *surface:* Refines downward from a triangulated surface
+        - *box:* Inside limits defined by outer xy[z] locations
 
-    octree_levels : list
-        Minimum number of cells around points in each k octree level
-        [N(k), N(k-1), ...]
-    octree_levels_padding : list
-        Padding cells added to the outer limits of the data each octree levels
-        used for method= "surface" and "box" [N(k), N(k-1), ...].
+    octree_levels : list of int
+        Minimum number of cells around points in each *k* octree level
+        starting from the smallest cells size; i.e. *[nc(k), nc(k-1), ...]* .
+        Note that you *can* set entries to 0; e.g. you don't want to discretize
+        using the smallest cell size.
+    octree_levels_padding : list of int
+        Padding cells added to extend the region of refinement at each level.
+        Used for *method = surface* and *box*. Has the form *[nc(k), nc(k-1), ...]*
     finalize : bool
         Finalize the tree mesh {True, False}. (*Default = False*)
+    min_level : int
+        Sets the largest cell size allowed in the mesh. The default is *0* ,
+        which allows the largest cell size to be used.
     max_distance : float
         Maximum refinement distance from xy[z] locations.
         Used if *method* = "surface" to reduce interpolation distance
@@ -622,7 +647,7 @@ def refine_tree_xyz(
     --------
 
     Here we use the **refine_tree_xyz** function refine a tree mesh
-    within a specified region and using a cluster of points.
+    based on topography as well as a cluster of points. 
 
     >>> from discretize import TreeMesh
     >>> from discretize.utils import mkvc, refine_tree_xyz
@@ -649,14 +674,14 @@ def refine_tree_xyz(
     >>> yy = -3 * np.exp((xx ** 2) / 100 ** 2) + 50.0
     >>> pts = np.c_[mkvc(xx), mkvc(yy)]
     >>> mesh = refine_tree_xyz(
-    >>>     mesh, pts, octree_levels=[2, 2], method="surface", finalize=False
+    >>>     mesh, pts, octree_levels=[2, 4], method="surface", finalize=False
     >>> )
     >>> 
     >>> # Refine mesh near points
-    >>> xx = np.array([0.0, 10.0, 0.0, -10.0])
-    >>> yy = np.array([-20.0, -10.0, 0.0, -10])
+    >>> xx = np.array([-10.0, 10.0, 10.0, -10.0])
+    >>> yy = np.array([-40.0, -40.0, -60.0, -60.0])
     >>> pts = np.c_[mkvc(xx), mkvc(yy)]
-    >>> mesh = refine_tree_xyz(mesh, pts, octree_levels=[2, 2], method="radial", finalize=False)
+    >>> mesh = refine_tree_xyz(mesh, pts, octree_levels=[4, 2], method="radial", finalize=False)
     >>> 
     >>> mesh.finalize()
     >>> 

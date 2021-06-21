@@ -233,8 +233,67 @@ class DiffOperators(object):
 
     @property
     def face_divergence(self):
-        """
-        Construct divergence operator (face-stg to cell-centres).
+        """Divergence operator (faces to cell-centres)
+
+        This property constructs the numerical divergence operator
+        that maps from faces to cell centers. Once constructed, it is
+        stored permanently as a property of the mesh. Where :math:`\\mathbf{w}`
+        is a discrete vector whose components live on the faces, and
+        :math:`\\mathbf{u}` is a discrete approximation of the divergence
+        of :math:`\\mathbf{w}` at cell centers, the divergence operator
+        :math:`\\mathbf{D}` is a sparse operator such that:
+
+        .. math::
+            \\mathbf{u} = \\mathbf{D \\, w}
+
+        The basic construction of the operator can be described as follows.
+        Let :math:`\\mathbf{v}` be a vector containing the cell volumes and
+        let :math:`\\mathbf{s}` be a vector containing the areas of all mesh
+        faces. Where :math:`\\mathbf{Q}` is the *stencil* for the divergence operator
+        (a matrix of -1, 0, 1), the divergence operator is constructed as follows:
+
+        .. math::
+            \\mathbf{D} = diag(\\mathbf{v}^{-1}) \\, \\mathbf{Q} \\, diag(\\mathbf{s})
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            The numerical divergence operator from faces to cell centers
+
+        Examples
+        --------
+
+        Below, we demonstrate the mapping and sparsity of the face divergence
+        for a 2D tensor mesh.
+
+        >>> from discretize import TensorMesh
+        >>> import matplotlib.pyplot as plt
+        >>> 
+        >>> mesh = TensorMesh([[(1, 6)], [(1, 3)]])
+        >>> fig = plt.figure(figsize=(10, 10))
+        >>> 
+        >>> ax1 = fig.add_subplot(211)
+        >>> mesh.plot_grid(centers=True, ax=ax1)
+        >>> ax1.axis("off")
+        >>> ax1.set_title("Mapping of Divergence Operator")
+        >>> 
+        >>> for ii, loc in zip(range(mesh.nC), mesh.gridCC):
+        >>>     ax1.text(loc[0] + 0.1, loc[1], "{0:d}".format(ii), color="r")
+        >>> 
+        >>> ax1.plot(mesh.gridFx[:, 0], mesh.gridFx[:, 1], "g>")
+        >>> for ii, loc in zip(range(mesh.nFx), mesh.gridFx):
+        >>>     ax1.text(loc[0] + 0.1, loc[1], "{0:d}".format(ii), color="g")
+        >>> 
+        >>> ax1.plot(mesh.gridFy[:, 0], mesh.gridFy[:, 1], "m^")
+        >>> for ii, loc in zip(range(mesh.nFy), mesh.gridFy):
+        >>>     ax1.text(loc[0] + 0.1, loc[1] + 0.1, "{0:d}".format((ii + mesh.nFx)), color="m")
+        >>> 
+        >>> ax2 = fig.add_subplot(212)
+        >>> ax2.spy(mesh.face_divergence)
+        >>> ax2.set_title("Sparsity of Face Divergence")
+        >>> ax2.set_ylabel("Cell Number")
+        >>> ax2.set_xlabel("Face Number")
+
         """
         if getattr(self, "_face_divergence", None) is None:
             # Get the stencil of +1, -1's
@@ -247,9 +306,8 @@ class DiffOperators(object):
 
     @property
     def face_x_divergence(self):
-        """
-        Construct divergence operator in the x component (face-stg to
-        cell-centres).
+        """X-component of divergence operator (x-faces to cell-centres)
+        
         """
         # Compute areas of cell faces & volumes
         S = self.reshape(self.face_areas, "F", "Fx", "V")

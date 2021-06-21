@@ -14,6 +14,8 @@ Mixin Classes
 .. autosummary::
   :toctree: generated/
 
+  TensorMeshIO
+  TreeMeshIO
   InterfaceMPL
   InterfaceVTK
   InterfaceOMF
