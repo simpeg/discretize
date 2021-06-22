@@ -42,17 +42,17 @@ class CylindricalMesh(
     
     Parameters
     ----------
-    h : list of numpy.ndarray or list
+    h : list of numpy.array_like (N,), list of tuple or list of list
         Defines the cell widths along each axis. The length of the list is equal to the dimension
         of the mesh (1, 2 or 3). For a 3D mesh, the list would have the form *[hr, hphi, hz]* .
         Note that the sum of cell widths in the phi direction **must** equal :math:`2\\pi`.
         You can also use a flat value of *hphi* = *1* to define a cylindrically symmetric mesh.
         Along each axis, the user has 3 choices for defining the cells widths:
-            - the widths are defined in a 1D :class:`numpy.ndarray`
-            - the widths are defined as a *list* of *tuple* of the form *(dh, nc, [npad])* where *dh* is the cell width, *nc* is the number of cells, and *npad* (optional) is a padding factor denoting exponential increase/decrease in the cell width for each cell; e.g. *[(2., 10, -1.3), (2., 50), (2., 10, 1.3)]*
-            - the widths are defined as a mixed *list* of *tuple* and 1D :class:`numpy.ndarray`.
+            - the widths are defined in a 1D :class:`numpy.array_like`
+            - the widths are defined as a :class:`list` of :class:`tuple` of the form *(dh, nc, [npad])* where *dh* is the cell width, *nc* is the number of cells, and *npad* (optional) is a padding factor denoting exponential increase/decrease in the cell width for each cell; e.g. *[(2., 10, -1.3), (2., 50), (2., 10, 1.3)]*
+            - the widths are defined as a mixed :class:`list` of :class:`tuple` and 1D :class:`numpy.array_like`.
 
-    origin : numpy.ndarray (dim,) or str of length dim; optional
+    origin : numpy.ndarray (dim,) or str of length dim (optional)
         Define the origin or 'anchor point' of the mesh; i.e. the bottom-left-frontmost corner.
         By default, the mesh is anchored such that its origin is at [0, 0, 0]. The user
         may set the origin 2 ways which instantiating the tensor mesh:
@@ -147,7 +147,7 @@ class CylindricalMesh(
 
         Returns
         -------
-        numpy.ndarray
+        numpy.ndarray (dim,)
             The Cartesian origin (or anchor point) of the mesh
         """
         return self._cartesian_origin
@@ -426,7 +426,7 @@ class CylindricalMesh(
 
         Returns
         -------
-        numpy.ndarray
+        numpy.ndarray (n_cells_x,)
             x-positions of cell centers along the x-direction
         """
         return np.r_[0, self.h[0][:-1].cumsum()] + self.h[0] * 0.5
@@ -444,7 +444,7 @@ class CylindricalMesh(
 
         Returns
         -------
-        numpy.ndarray
+        numpy.ndarray (n_cells_y)
             y-positions of cell centers along the y-direction
         """
         if self.is_symmetric:
@@ -461,7 +461,7 @@ class CylindricalMesh(
 
         Returns
         -------
-        numpy.ndarray
+        numpy.ndarray (n_nodes_x)
             x-positions of nodes along the x-direction
         """
         if self.is_symmetric:
@@ -488,7 +488,7 @@ class CylindricalMesh(
 
         Returns
         -------
-        numpy.ndarray
+        numpy.ndarray (n_nodes_y)
             y-positions of nodes along the y-direction
         """
         return np.r_[0, self.h[1][:-1].cumsum()]
@@ -513,7 +513,7 @@ class CylindricalMesh(
 
         Returns
         -------
-        numpy.ndarray
+        numpy.ndarray (n_edges_x,)
             A 1D array containing the x-edge lengths for the entire mesh
         """
         if getattr(self, "_edge_lengths_x", None) is None:
@@ -545,7 +545,7 @@ class CylindricalMesh(
 
         Returns
         -------
-        numpy.ndarray
+        numpy.ndarray (n_edges_y)
             A 1D array containing the y-edge arc-lengths for the entire mesh
         """
         if getattr(self, "_edge_lengths_y", None) is None:
@@ -576,7 +576,7 @@ class CylindricalMesh(
 
         Returns
         -------
-        numpy.ndarray
+        numpy.ndarray (n_edges_z,)
             A 1D array containing the z-edge lengths for the entire mesh
         """
         if getattr(self, "_edge_lengths_z", None) is None:
@@ -612,7 +612,7 @@ class CylindricalMesh(
 
         Returns
         -------
-        numpy.ndarray
+        numpy.ndarray (n_edges,)
             Edge lengths of all mesh edges organized x (radial), y (azimuthal), then z (vertical)
         """
         if self.is_symmetric:
@@ -644,7 +644,7 @@ class CylindricalMesh(
 
         Returns
         -------
-        numpy.ndarray
+        numpy.ndarray (n_faces_x,)
             A 1D array containing the x-face areas for the entire mesh
         """
         if getattr(self, "_face_x_areas", None) is None:
@@ -679,7 +679,7 @@ class CylindricalMesh(
 
         Returns
         -------
-        numpy.ndarray
+        numpy.ndarray (n_faces_y,)
             A 1D array containing the y-face areas in the case of non-symmetric meshes.
             Returns an error for symmetric meshes.
         """
@@ -721,7 +721,7 @@ class CylindricalMesh(
 
         Returns
         -------
-        numpy.ndarray
+        numpy.ndarray (n_faces_z,)
             A 1D array containing the z-face areas for the entire mesh
         """
         if getattr(self, "_face_z_areas", None) is None:
@@ -756,7 +756,7 @@ class CylindricalMesh(
 
         Returns
         -------
-        numpy.ndarray
+        numpy.ndarray (n_faces,)
             Areas of all faces in the mesh
         """
         # if getattr(self, '_area', None) is None:
@@ -781,7 +781,7 @@ class CylindricalMesh(
 
         Returns
         -------
-        numpy.ndarray
+        numpy.ndarray (n_cells,)
             Volumes of all mesh cells
         """
         if getattr(self, "_cell_volumes", None) is None:

@@ -43,8 +43,8 @@ class CurvilinearMesh(
 
     Parameters
     ----------
-    node_list : list of numpy.ndarray
-        List numpy arrays containing the gridded x, y (and z) node locations.
+    node_list : list of numpy.array_like
+        List :class:`numpy.array_like` containing the gridded x, y (and z) node locations.
 
             - For a 2D curvilinear mesh, *node_list* = [X, Y] where X and Y have shape (n_nodes_x, n_nodes_y)
             - For a 3D curvilinear mesh, *node_list* = [X, Y, Z] where X, Y and Z have shape (n_nodes_x, n_nodes_y, n_nodes_z)
@@ -158,7 +158,7 @@ class CurvilinearMesh(
 
         Returns
         -------
-        np.ndarray (n_cells, dim)
+        numpy.ndarray (n_cells, dim)
             The shape of the output array is the number of cells by the dimension.
 
         """
@@ -178,7 +178,7 @@ class CurvilinearMesh(
 
         Returns
         -------
-        np.ndarray (n_nodes, dim)
+        numpy.ndarray (n_nodes, dim)
             The shape of the output array is the number of nodes by the dimension.
         """
         if getattr(self, "_nodes", None) is None:
@@ -198,7 +198,7 @@ class CurvilinearMesh(
 
         Returns
         -------
-        np.ndarray of float (n_faces_x, dim)
+        numpy.ndarray of float (n_faces_x, dim)
             Gridded x-face locations (staggered grid)
 
         Examples
@@ -271,7 +271,7 @@ class CurvilinearMesh(
 
         Returns
         -------
-        np.ndarray of float (n_faces_y, dim)
+        numpy.ndarray of float (n_faces_y, dim)
             Gridded y-face locations (staggered grid)
 
         Examples
@@ -344,7 +344,7 @@ class CurvilinearMesh(
 
         Returns
         -------
-        np.ndarray of float (n_faces_z, dim)
+        numpy.ndarray of float (n_faces_z, dim)
             Gridded z-face locations (staggered grid)
         """
 
@@ -371,7 +371,7 @@ class CurvilinearMesh(
 
         Returns
         -------
-        np.ndarray of float (n_faces, dim)
+        numpy.ndarray of float (n_faces, dim)
             Gridded face locations (staggered grid)
 
         Examples
@@ -428,7 +428,7 @@ class CurvilinearMesh(
 
         Returns
         -------
-        np.ndarray of float (n_edges_x, dim)
+        numpy.ndarray of float (n_edges_x, dim)
             Gridded x-edge locations (staggered grid)
 
         Examples
@@ -488,7 +488,7 @@ class CurvilinearMesh(
 
         Returns
         -------
-        np.ndarray of float (n_edges_y, dim)
+        numpy.ndarray of float (n_edges_y, dim)
             Gridded y-edge locations (staggered grid)
 
         Examples
@@ -548,7 +548,7 @@ class CurvilinearMesh(
 
         Returns
         -------
-        np.ndarray of float (n_edges_z, dim)
+        numpy.ndarray of float (n_edges_z, dim)
             Gridded z-edge locations (staggered grid)
         """
         if getattr(self, "_edges_z", None) is None and self.dim == 3:
@@ -568,7 +568,7 @@ class CurvilinearMesh(
 
         Returns
         -------
-        np.ndarray of float (n_edges, dim)
+        numpy.ndarray of float (n_edges, dim)
             Gridded edge locations (staggered grid)
 
         Examples
@@ -622,7 +622,7 @@ class CurvilinearMesh(
 
         Returns
         -------
-        np.ndarray of float (n_boundary_nodes, dim)
+        numpy.ndarray of float (n_boundary_nodes, dim)
             Gridded boundary node locations
         """
         return self.nodes[make_boundary_bool(self.shape_nodes)]
@@ -638,7 +638,7 @@ class CurvilinearMesh(
 
         Returns
         -------
-        np.ndarray of float (n_boundary_edges, dim)
+        numpy.ndarray of float (n_boundary_edges, dim)
             Gridded boundary edge locations 
         """
         if self.dim == 2:
@@ -660,7 +660,7 @@ class CurvilinearMesh(
 
         Returns
         -------
-        np.ndarray of float (n_faces_x, dim)
+        numpy.ndarray of float (n_faces_x, dim)
             Gridded locations of all non-hanging x-faces
         """
         fx = self.faces_x[make_boundary_bool(self.shape_faces_x, dir="x")]
@@ -682,7 +682,7 @@ class CurvilinearMesh(
 
         Returns
         -------
-        np.ndarray of float (n_boundary_faces, dim)
+        numpy.ndarray of float (n_boundary_faces, dim)
             Outward normals of boundary faces
         """
         is_bxm = np.zeros(self.shape_faces_x, order="F", dtype=bool)
@@ -749,7 +749,7 @@ class CurvilinearMesh(
 
         Returns
         -------
-        np.ndarray (n_cells,)
+        numpy.ndarray (n_cells,)
             The quantity returned depends on the dimensions of the mesh:
                 - *2D:* Returns the cell areas
                 - *3D:* Returns the cell volumes
@@ -797,7 +797,7 @@ class CurvilinearMesh(
 
         Returns
         -------
-        np.ndarray (n_faces,)
+        numpy.ndarray (n_faces,)
             The length of the quantity returned depends on the dimensions of the mesh:
                 - *1D:* returns the x-face areas
                 - *2D:* returns the x-face and y-face areas in order; i.e. y-edge and x-edge lengths, respectively
@@ -898,7 +898,7 @@ class CurvilinearMesh(
 
         Returns
         -------
-        np.ndarray (n_edges,)
+        numpy.ndarray (n_edges,)
             The length of the quantity returned depends on the dimensions of the mesh:
                 - *1D:* returns the x-edge lengths
                 - *2D:* returns the x-edge and y-edge lengths in order

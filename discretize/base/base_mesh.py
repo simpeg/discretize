@@ -27,7 +27,7 @@ class BaseMesh:
         number of cells in each dimension
     origin : array_like of float (optional)
         origin of the bottom south west corner of the mesh, defaults to 0.
-    orientation : discretize.utils.Identity or array_like of float (optional)
+    orientation : discretize.utils.Identity or numpy.array_like of float (optional)
         Orientation of the three major axes of the mesh; defaults to :class:`~discretize.utils.Identity`.
         If provided, this must be an orthogonal matrix with the correct dimension.
     reference_system : str
@@ -144,7 +144,7 @@ class BaseMesh:
 
         Returns
         -------
-        np.ndarray of float
+        numpy.ndarray of float (dim,)
             origin location
         """
         return self._origin
@@ -172,7 +172,7 @@ class BaseMesh:
 
         Returns
         -------
-        tuple of int
+        tuple of int (dim,)
             the number of cells in each coordinate direcion
 
         Notes
@@ -195,8 +195,8 @@ class BaseMesh:
 
         Returns
         -------
-        np.ndarray of float
-            square array of shape (mesh.dim, mesh.dim)
+        numpy.ndarray of float (dim, dim)
+            Square rotation matrix defining orientation
 
         Examples
         --------

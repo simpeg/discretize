@@ -110,7 +110,7 @@ class TreeMesh(
     
     Parameters
     ----------
-    h : list of numpy.ndarray or list containing a tuple
+    h : list of numpy.ndarray or list of formatted tuple
         Defines the cell widths of the *underlying tensor mesh* along each axis.
         The length of the list is equal to the dimension of the mesh (1, 2 or 3).
         For a 3D mesh, the list would have the form *[hx, hy, hz]* .
@@ -355,7 +355,7 @@ class TreeMesh(
 
         Returns
         -------
-        list of int of length mesh.dim
+        list of int
             Vector number of total faces along each axis
         """
         return [self.ntFx, self.ntFy] + ([] if self.dim == 2 else [self.ntFz])
@@ -371,7 +371,7 @@ class TreeMesh(
 
         Returns
         -------
-        list of int of length mesh.dim
+        list of int
             Vector number of total edges along each axis
         """
         return [self.ntEx, self.ntEy] + ([] if self.dim == 2 else [self.ntEz])
@@ -534,12 +534,12 @@ class TreeMesh(
 
         Parameters
         ----------
-        locs: numpy.ndarray of shape (N, dim)
+        locs: numpy.array_like of shape (N, dim)
             points to search for the location of
 
         Returns
         -------
-        numpy.ndarray of integers of length(N)
+        numpy.array_like of int of length *N*
             Cell indices that contain the points
         """
         locs = as_array_n_by_dim(locs, self.dim)
@@ -551,12 +551,12 @@ class TreeMesh(
 
         Parameters
         ----------
-        index: numpy.ndarray of length (N)
+        index: numpy.ndarray of length *N*
             Cell indexes to query
 
         Returns
         -------
-        numpy.ndarray of length (N)
+        numpy.ndarray of length *N*
             Levels for the cells.
         """
 
@@ -569,7 +569,7 @@ class TreeMesh(
 
         Parameters
         ----------
-        loc : numpy.ndarray
+        loc : numpy.array_like (N, dim)
             Location of points to interpolate to
 
         location_type: str
@@ -589,7 +589,7 @@ class TreeMesh(
         Returns
         -------
         scipy.sparse.csr_matrix
-            M, the interpolation matrix
+            the interpolation matrix
 
         """
         if "locType" in kwargs:
