@@ -154,7 +154,7 @@ class TreeMesh(
     >>> 
     >>> mesh.finalize()  # Must finalize tree mesh before use
     >>> mesh.plot_grid(show_it=True)
-
+    
     
     """
 

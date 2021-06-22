@@ -55,6 +55,7 @@ class TensorMesh(
     >>> 
     >>> ncx = 10      # number of core mesh cells in x
     >>> dx = 5        # base cell width x
+    >>> npad_x = 3    # number of padding cells in x
     >>> exp_x = 1.25  # expansion rate of padding cells in x
     >>> 
     >>> ncy = 24      # total number of mesh cells in y
@@ -68,6 +69,7 @@ class TensorMesh(
     >>> fig = plt.figure(figsize=(5,5))
     >>> ax = fig.add_subplot(111)
     >>> mesh.plot_grid(ax=ax, show_it=True)
+
 
     """
 

@@ -32,7 +32,7 @@ def _normalize3D(x):
 class CurvilinearMesh(
     BaseRectangularMesh, DiffOperators, InnerProducts, InterfaceMixins
 ):
-    """Curvilinear mesh class
+    """Curvilinear mesh class.
 
     Curvilinear meshes are numerical grids whose cells are general
     quadrilaterals (2D) or cuboid (3D); unlike tensor meshes
@@ -64,6 +64,7 @@ class CurvilinearMesh(
     >>> fig = plt.figure(figsize=(5,5))
     >>> ax = fig.add_subplot(111)
     >>> curvilinear_mesh.plot_grid(ax=ax, show_it=True)
+
 
     """
 
