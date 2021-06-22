@@ -13,7 +13,7 @@ import discretize
 
 
 class InterfaceMPL(object):
-    """This class is used for simple ``discretize`` mesh plotting using matplotlib.
+    """Class for plotting ``discretize`` meshes with matplotlib.
 
     This interface adds three methods to the meshes. ``plot_grid`` will plot the
     grid points of each mesh in 2D and 3D. ``plot_image`` for 2D image ploting of

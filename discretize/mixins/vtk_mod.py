@@ -69,7 +69,7 @@ import warnings
 
 
 def assign_cell_data(vtkDS, models=None):
-    """Assign the model(s) to the VTK dataset as CellData
+    """Assign the model(s) to the VTK dataset as ``CellData``
 
     Parameters
     ----------
@@ -98,15 +98,27 @@ def assign_cell_data(vtkDS, models=None):
 
 
 class InterfaceVTK(object):
-    """This class is full of methods that enable ``discretize`` meshes to
-    be converted to VTK data objects (and back when possible). This is
-    inherritted by the :class:`discretize.BaseMesh.BaseMesh` class so all these
-    methods are available to any mesh object!
+    """Class enabling straight forward conversion between ``discretize``
+    meshes and their corresponding `VTK <https://vtk.org/doc/nightly/html/index.html>`__ or
+    `PyVista <https://docs.pyvista.org/>`__ data objects. Since ``InterfaceVTK``
+    is inherritted by the :class:`~discretize.base.BaseMesh` class, this
+    functionality can be called directly from any ``discretize`` mesh!
+    Currently this functionality is implemented for :class:`~discretize.CurvilinearMesh`,
+    :class:`~discretize.TreeMesh` and :class:`discretize.TensorMesh` classes; not
+    implemented for :class:`~discretize.CylindricalMesh`.
 
-    ``CurvilinearMesh``, ``TreeMesh``, and ``TensorMesh`` are all currently
-    implemented. The ``CylindricalMesh`` is not implemeted and will raise and excpetion.
-    The following is an example of how to use the VTK interface to construct
-    VTK data objects or write VTK files.
+    It should be noted that if your mesh is defined on a reference frame that is **not** the
+    traditional <X,Y,Z> system with vectors of :math:`(1,0,0)`, :math:`(0,1,0)`,
+    and :math:`(0,0,1)`, then the mesh in VTK will be rotated so that it is plotted
+    on the traditional reference frame; see examples below.
+
+    Examples
+    --------    
+    The following are examples which use the VTK interface to convert
+    discretize meshes to VTK data objects and write to VTK formatted files.
+    In the first example example, a tensor mesh whose axes lie on the
+    traditional reference frame is converted to a
+    :class:`pyvista.RectilinearGrid` object.
 
     .. code-block:: python
        :emphasize-lines: 8,11
@@ -124,13 +136,8 @@ class InterfaceVTK(object):
        # Save this mesh to a VTK file
        mesh.writeVTK('sample_mesh')
 
-    Note that if your mesh is defined on a reference frame that is not the
-    traditional <X,Y,Z> system with vectors of :math:`(1,0,0)`, :math:`(0,1,0)`,
-    and :math:`(0,0,1)`, then the mesh will be rotated to be on the traditional
-    reference frame. The previous example snippet provides a
-    :class:`pyvista.RectilinearGrid` object because that tensor mesh lies on the
-    traditional reference frame. If we alter the reference frame, then we yield
-    a :class:`pyvista.StructuredGrid` that is the same mesh rotated in space.
+    Here, the reference frame of the mesh is rotated. In this case, conversion
+    to VTK produces a :class:`pyvista.StructuredGrid` object. 
 
     .. code-block:: python
 
@@ -150,13 +157,13 @@ class InterfaceVTK(object):
        # or write it out to a VTK format
        mesh.writeVTK('sample_rotated')
 
-    The two above code snippets produce a :class:`pyvista.RectilinearGrid` and a
+    The two above code snippets produced a :class:`pyvista.RectilinearGrid` and a
     :class:`pyvista.StructuredGrid` respecitvely. To demonstarte the difference, we
-    have plotted the two datasets next to eachother where the first mesh is in
+    have plotted the two datasets next to each other where the first mesh is in
     green and its data axes are parrallel to the traditional cartesian reference
-    frame. The second, rotated mesh is shown in red and its data axii are
-    rotated from the traditional cartesian refence frame as specified by the
-    ``axis_u``, ``axis_v``, and ``axis_w`` properties.
+    frame. The second, rotated mesh is shown in red and its data axes are
+    rotated from the traditional Cartesian reference frame as specified by the
+    *orientation* property.
 
     .. code-block:: python
 
@@ -351,15 +358,26 @@ class InterfaceVTK(object):
         )
 
     def to_vtk(mesh, models=None):
-        """Convert this mesh object to it's proper VTK or ``pyvista`` data
-        object with the given model dictionary as the cell data of that dataset.
+        """Convert mesh (and models) to corresponding VTK or PyVista data object
+
+        This method converts a ``discretize`` mesh (and associated models) to its
+        corresponding `VTK <https://vtk.org/doc/nightly/html/index.html>`__ or
+        `PyVista <https://docs.pyvista.org/>`__ data object.
 
         Parameters
         ----------
+        mesh : ~discretize.base.BaseMesh
+            An instance of :class:`~discretize.CurvilinearMesh`,
+            :class:`~discretize.TreeMesh` or :class:`~discretize.TensorMesh`;
+            not implemented for :class:`~discretize.CylindricalMesh`.
+        models : dict (optional)
+            Models are supplied as a dictionary where the keys are the model
+            names. Each model is a 1D numpy.array of size (n_cells).
 
-        models : dict(numpy.ndarray)
-            Name('s) and array('s). Match number of cells
-
+        Returns
+        -------
+        pyvista.UnstructuredGrid, pyvista.RectilinearGrid or pyvista.StructuredGrid
+            The corresponding VTK or PyVista data object for the mesh and its models
         """
         converters = {
             "tree": InterfaceVTK.__tree_mesh_to_vtk,
@@ -389,16 +407,7 @@ class InterfaceVTK(object):
         return cvtd
 
     def toVTK(mesh, models=None):
-        """Convert this mesh object to it's proper VTK or ``pyvista`` data
-        object with the given model dictionary as the cell data of that dataset.
-
-        Parameters
-        ----------
-
-        models : dict(numpy.ndarray)
-            Name('s) and array('s). Match number of cells
-
-        """
+        """*toVTK* has been deprecated and replaced by *to_vtk*"""
         warnings.warn(
             "Deprecation Warning: `toVTK` is deprecated, use `to_vtk` instead",
             category=DeprecationWarning,
@@ -517,22 +526,33 @@ class InterfaceVTK(object):
         vtrWriteFilter.SetFileName(fname)
         vtrWriteFilter.Update()
 
-    def writeVTK(mesh, file_name, models=None, directory=""):
-        """Makes and saves a VTK object from this mesh and given models
+    def write_vtk(mesh, file_name, models=None, directory=""):
+        """Convert mesh (and models) to corresponding VTK or PyVista data object then writes to file
+
+        This method converts a ``discretize`` mesh (and associated models) to its
+        corresponding `VTK <https://vtk.org/doc/nightly/html/index.html>`__ or
+        `PyVista <https://docs.pyvista.org/>`__ data object, then writes to file.
+        The output structure will be one of: ``vtkUnstructuredGrid``,
+        ``vtkRectilinearGrid`` or ``vtkStructuredGrid``.
 
         Parameters
         ----------
-
-        file_name : str
-            path to the output vtk file or just its name if directory is specified
-
-        models : dict
-            dictionary of numpy.array - Name('s) and array('s). Match number of cells
-
+        mesh : ~discretize.base.BaseMesh
+            An instance of :class:`~discretize.CurvilinearMesh`,
+            :class:`~discretize.TreeMesh` or :class:`~discretize.TensorMesh`;
+            not implemented for :class:`~discretize.CylindricalMesh`.
+        file_name: str or file name
+            Full path for the output file or just its name if directory is specified
+        models : dict (optional)
+            Models are supplied as a dictionary where the keys are the model
+            names. Each model is a 1D numpy.array of size (n_cells).
         directory : str
-            directory where the UBC GIF file lives
+            output directory (optional)
 
-
+        Returns
+        -------
+        str
+            The output of Python's *write* function
         """
         vtkObj = InterfaceVTK.to_vtk(mesh, models=models)
         writers = {
@@ -547,36 +567,40 @@ class InterfaceVTK(object):
             raise RuntimeError("VTK data type `%s` is not currently supported." % key)
         return write(file_name, vtkObj, directory=directory)
 
-    def write_vtk(mesh, file_name, models=None, directory=""):
-        """Makes and saves a VTK object from this mesh and given models
-
-        Parameters
-        ----------
-
-        file_name : str
-            path to the output vtk file or just its name if directory is specified
-
-        models : dict
-            dictionary of numpy.array - Name('s) and array('s). Match number of cells
-
-        directory : str
-            directory where the UBC GIF file lives
-
-
-        """
-        return InterfaceVTK.writeVTK(
+    def writeVTK(mesh, file_name, models=None, directory=""):
+        """*writeVTK* has been deprecated and replaced by *write_vtk*"""
+        warnings.warn(
+            "Deprecation Warning: `writeVTK` is deprecated, use `write_vtk` instead",
+            category=DeprecationWarning,
+        )
+        return InterfaceVTK.write_vtk(
             mesh, file_name, models=models, directory=directory
         )
 
 
 class InterfaceTensorread_vtk(object):
-    """Provides a convienance method for reading VTK Rectilinear Grid files
-    as ``TensorMesh`` objects."""
+    """
+    This class provides convenient methods for converting VTK Rectilinear Grid
+    files/objects to :class:`~discretize.TensorMesh` objects.
+
+    """
 
     @classmethod
     def vtk_to_tensor_mesh(TensorMesh, vtrGrid):
-        """Converts a ``vtkRectilinearGrid`` or :class:`pyvista.RectilinearGrid`
-        to a :class:`discretize.TensorMesh` object.
+        """Convert ``vtkRectilinearGrid`` or :class:`~pyvista.RectilinearGrid` object
+        to a :class:`~discretize.TensorMesh` object.
+
+        Parameters
+        ----------
+        TensorMesh : discretize.TensorMesh
+            A discretize tensor mesh
+        vtrGrid : ``vtkRectilinearGrid`` or :class:`~pyvista.RectilinearGrid`
+            A VTK or PyVista rectilinear grid object
+
+        Returns
+        -------
+        discretize.TensorMesh
+            A discretize tensor mesh
 
         """
         # Sort information
@@ -614,22 +638,28 @@ class InterfaceTensorread_vtk(object):
 
     @classmethod
     def read_vtk(TensorMesh, file_name, directory=""):
-        """Read VTK Rectilinear (vtr xml file) and return Tensor mesh and model
+        """Read VTK rectilinear file (vtr or xml) and return a discretize tensor mesh (and models)
+
+        This method reads a VTK rectilinear file (vtr or xml format) and returns
+        a tuple containing the :class:`~discretize.TensorMesh` as well as a dictionary
+        containing any models. The keys in the model dictionary correspond to the file
+        names of the models.
 
         Parameters
         ----------
-
+        TensorMesh : the discretize.TensorMesh class
+            Called using the syntax *TensorMesh.read_vtk(file_name, directory)*
         file_name : str
-            path to the vtr model file to read or just its name if directory is specified
-
-        directory : str
-            directory where the UBC GIF file lives
-
+            full path to the VTK rectilinear file (vtr or xml) containing the mesh (and models)
+            or just the file name if the directory is specified.
+        directory : str (optional)
+            directory where the file lives
 
         Returns
         -------
-        tuple
-            (TensorMesh, modelDictionary)
+        tuple organized (discretize.TensorMesh, dict)
+            The fist entry of the tuple is a tensor mesh. The second entry is a dictionary
+            containing the models. The keys correspond to the names of the models.
         """
         fname = os.path.join(directory, file_name)
         # Read the file
@@ -641,23 +671,7 @@ class InterfaceTensorread_vtk(object):
 
     @classmethod
     def readVTK(TensorMesh, file_name, directory=""):
-        """Read VTK Rectilinear (vtr xml file) and return Tensor mesh and model
-
-        Parameters
-        ----------
-
-        file_name : str
-            path to the vtr model file to read or just its name if directory is specified
-
-        directory : str
-            directory where the UBC GIF file lives
-
-
-        Returns
-        -------
-        tuple
-            (TensorMesh, modelDictionary)
-        """
+        """*readVTK* has been deprecated and replaced by *read_vtk*"""
         warnings.warn(
             "Deprecation Warning: `readVTK` is deprecated, use `read_vtk` instead",
             category=DeprecationWarning,

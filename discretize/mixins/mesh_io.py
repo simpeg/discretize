@@ -20,17 +20,6 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         - Read/write tensor meshes to file
         - Read/write models defined on tensor meshes
 
-    Methods
-    -------
-    read_UBC
-    readUBC
-    write_UBC
-    writeUBC
-    read_model_UBC
-    readModelUBC
-    write_model_UBC
-    writeModelUBC
-
     """
     @classmethod
     def _readUBC_3DMesh(TensorMesh, file_name):
@@ -443,7 +432,7 @@ class TensorMeshIO(InterfaceTensorread_vtk):
     # DEPRECATED
     @classmethod
     def readUBC(TensorMesh, file_name, directory=""):
-        """*readUBC* has been deprecated. See *read_UBC* for documentation"""
+        """*readUBC* has been deprecated and replaced by *read_UBC*"""
         warnings.warn(
             "TensorMesh.readUBC has been deprecated and will be removed in"
             "discretize 1.0.0. please use TensorMesh.read_UBC",
@@ -468,17 +457,6 @@ class TreeMeshIO(object):
 
         - Read/write tree meshes to file
         - Read/write models defined on tree meshes
-
-    Methods
-    -------
-    read_UBC
-    readUBC
-    write_UBC
-    writeUBC
-    read_model_UBC
-    readModelUBC
-    write_model_UBC
-    writeModelUBC
 
     """
     @classmethod
@@ -647,7 +625,7 @@ class TreeMeshIO(object):
     # DEPRECATED
     @classmethod
     def readUBC(TreeMesh, file_name, directory=""):
-        """*readUBC* has been deprecated. See *read_UBC* for documentation"""
+        """*readUBC* has been deprecated and replaced by *read_UBC*"""
         warnings.warn(
             "TensorMesh.readUBC has been deprecated and will be removed in"
             "discretize 1.0.0. please use TensorMesh.read_UBC",
