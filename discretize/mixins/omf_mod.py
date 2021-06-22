@@ -27,7 +27,7 @@ def ravel_data_array(arr, nx, ny, nz):
 
     Returns
     -------
-    numpy.array (n_cells)
+    numpy.ndarray (n_cells)
         A flattened 1D array ordered according to the open mining format
 
     Examples
@@ -82,7 +82,7 @@ def unravel_data_array(arr, nx, ny, nz):
 
     Returns
     -------
-    numpy.array (n_cells)
+    numpy.ndarray (n_cells)
         A flattened 1D array ordered according to the discretize format
 
     """

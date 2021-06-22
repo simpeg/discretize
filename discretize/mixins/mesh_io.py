@@ -179,7 +179,7 @@ class TensorMeshIO(InterfaceTensorread_vtk):
 
         Returns
         -------
-        numpy.array of size (n_cells)
+        numpy.ndarray of size (n_cells)
             The model defined on the 2D tensor mesh
         """
 
@@ -217,7 +217,7 @@ class TensorMeshIO(InterfaceTensorread_vtk):
 
         Returns
         -------
-        numpy.array of size (n_cells)
+        numpy.ndarray of size (n_cells)
             The model defined on the 3D tensor mesh
         """
         f = open(file_name, "r")
@@ -245,7 +245,7 @@ class TensorMeshIO(InterfaceTensorread_vtk):
 
         Returns
         -------
-        numpy.array of size (n_cells)
+        numpy.ndarray of size (n_cells)
             The model defined on the mesh
         """
         fname = os.path.join(directory, file_name)
@@ -267,7 +267,7 @@ class TensorMeshIO(InterfaceTensorread_vtk):
             this class method is utilitized via the following syntax: *mesh.write_model_UBC(file_name, models, directory)*
         file_name : str or file name
             full path for the output mesh file or just its name if directory is specified
-        model : numpy.array (n_cells)
+        model : numpy.ndarray (n_cells)
             A 1D numpy array of size (n_cells)
         directory : str
             output directory (optional)
@@ -526,7 +526,7 @@ class TreeMeshIO(object):
 
         Returns
         -------
-        numpy.array of size (n_cells)
+        numpy.ndarray of size (n_cells)
             The model defined on the mesh
         """
 
@@ -608,7 +608,7 @@ class TreeMeshIO(object):
             this class method is utilitized via the following syntax: *mesh.write_model_UBC(file_name, models, directory)*
         file_name : str or file name
             full path for the output mesh file or just its name if directory is specified
-        model : numpy.array (n_cells)
+        model : numpy.ndarray (n_cells)
             A 1D numpy array of size (n_cells)
         directory : str
             output directory (optional)

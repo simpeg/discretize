@@ -55,18 +55,15 @@ class CurvilinearMesh(
     Using the :py:func:`~discretize.utils.curvilinear_mesh_example` utility,
     we provide an example of a curvilinear mesh.
 
-    .. plot::
-        :include-source:
-
-        from discretize import CurvilinearMesh
-        from discretize.utils import example_curvilinear_grid
-        import matplotlib.pyplot as plt
-        
-        x, y = example_curvilinear_grid([10, 10], "rotate")
-        curvilinear_mesh = CurvilinearMesh([x, y])
-        fig = plt.figure(figsize=(5,5))
-        ax = fig.add_subplot(111)
-        curvilinear_mesh.plot_grid(ax=ax, show_it=True)
+    >>> from discretize import CurvilinearMesh
+    >>> from discretize.utils import example_curvilinear_grid
+    >>> import matplotlib.pyplot as plt
+    >>> 
+    >>> x, y = example_curvilinear_grid([10, 10], "rotate")
+    >>> curvilinear_mesh = CurvilinearMesh([x, y])
+    >>> fig = plt.figure(figsize=(5,5))
+    >>> ax = fig.add_subplot(111)
+    >>> curvilinear_mesh.plot_grid(ax=ax, show_it=True)
 
     """
 

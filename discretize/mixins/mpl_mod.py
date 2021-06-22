@@ -15,9 +15,9 @@ import discretize
 class InterfaceMPL(object):
     """Class for plotting ``discretize`` meshes with matplotlib.
 
-    This interface adds three methods to the meshes. ``plot_grid`` will plot the
-    grid points of each mesh in 2D and 3D. ``plot_image`` for 2D image ploting of
-    models. and ``plot_slice`` for plotting a 2D slice through a 3D mesh.
+    This interface adds three methods to the meshes. **plot_grid** will plot the
+    grid points of each mesh in 2D and 3D. **plot_image** for 2D image ploting of
+    models. and **plot_slice** for plotting a 2D slice through a 3D mesh.
     """
 
     def plot_grid(
@@ -35,9 +35,9 @@ class InterfaceMPL(object):
 
         Parameters
         ----------
-        ax : matplotlib.axes.Axes or None, optional
-            The axes to draw on. None produces a new Axes.
-        nodes, faces, centers, edges, lines : bool, optional
+        ax : matplotlib.axes.Axes or None (optional)
+            The axes to draw on. *None* produces a new axes.
+        nodes, faces, centers, edges, lines : bool (optional)
             Whether to plot the corresponding item
         show_it : bool, optional
             whether to call plt.show()

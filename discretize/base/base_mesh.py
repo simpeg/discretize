@@ -23,7 +23,7 @@ class BaseMesh:
 
     Parameters
     ----------
-    shape_cells : array_like of int
+    shape_cells : numpy.array_like of int
         number of cells in each dimension
     origin : array_like of float (optional)
         origin of the bottom south west corner of the mesh, defaults to 0.

@@ -120,42 +120,37 @@ class InterfaceVTK(object):
     traditional reference frame is converted to a
     :class:`pyvista.RectilinearGrid` object.
 
-    .. code-block:: python
-       :emphasize-lines: 8,11
-
-       import discretize
-       import numpy as np
-       h1 = np.linspace(.1, .5, 3)
-       h2 = np.linspace(.1, .5, 5)
-       h3 = np.linspace(.1, .8, 3)
-       mesh = discretize.TensorMesh([h1, h2, h3])
-
-       # Get a VTK data object
-       dataset = mesh.to_vtk()
-
-       # Save this mesh to a VTK file
-       mesh.writeVTK('sample_mesh')
+    >>> import discretize
+    >>> import numpy as np
+    >>> h1 = np.linspace(.1, .5, 3)
+    >>> h2 = np.linspace(.1, .5, 5)
+    >>> h3 = np.linspace(.1, .8, 3)
+    >>> mesh = discretize.TensorMesh([h1, h2, h3])
+    >>> 
+    >>> # Get a VTK data object
+    >>> dataset = mesh.to_vtk()
+    >>> 
+    >>> # Save this mesh to a VTK file
+    >>> mesh.writeVTK('sample_mesh')
 
     Here, the reference frame of the mesh is rotated. In this case, conversion
     to VTK produces a :class:`pyvista.StructuredGrid` object. 
 
-    .. code-block:: python
-
-       # Defined a rotated reference frame
-       axis_u = (1,-1,0)
-       axis_v = (-1,-1,0)
-       axis_w = (0,0,1)
-       mesh.orientation = np.array([
-           axis_u,
-           axis_v,
-           axis_w
-       ])
-
-       # Yield the rotated vtkStructuredGrid
-       dataset_r = mesh.to_vtk()
-
-       # or write it out to a VTK format
-       mesh.writeVTK('sample_rotated')
+    >>> # Defined a rotated reference frame
+    >>> axis_u = (1,-1,0)
+    >>> axis_v = (-1,-1,0)
+    >>> axis_w = (0,0,1)
+    >>> mesh.orientation = np.array([
+    >>>    axis_u,
+    >>>    axis_v,
+    >>>    axis_w
+    >>> ])
+    >>> 
+    >>> # Yield the rotated vtkStructuredGrid
+    >>> dataset_r = mesh.to_vtk()
+    >>> 
+    >>> # or write it out to a VTK format
+    >>> mesh.writeVTK('sample_rotated')
 
     The two above code snippets produced a :class:`pyvista.RectilinearGrid` and a
     :class:`pyvista.StructuredGrid` respecitvely. To demonstarte the difference, we
@@ -165,16 +160,14 @@ class InterfaceVTK(object):
     rotated from the traditional Cartesian reference frame as specified by the
     *orientation* property.
 
-    .. code-block:: python
-
-        import pyvista
-        pyvista.set_plot_theme('document')
-
-        p = pyvista.BackgroundPlotter()
-        p.add_mesh(dataset, color='green', show_edges=True)
-        p.add_mesh(dataset_r, color='maroon', show_edges=True)
-        p.show_grid()
-        p.screenshot('vtk-rotated-example.png')
+    >>> import pyvista
+    >>> pyvista.set_plot_theme('document')
+    >>> 
+    >>> p = pyvista.BackgroundPlotter()
+    >>> p.add_mesh(dataset, color='green', show_edges=True)
+    >>> p.add_mesh(dataset_r, color='maroon', show_edges=True)
+    >>> p.show_grid()
+    >>> p.screenshot('vtk-rotated-example.png')
 
     .. image:: ../../images/vtk-rotated-example.png
 
@@ -372,7 +365,7 @@ class InterfaceVTK(object):
             not implemented for :class:`~discretize.CylindricalMesh`.
         models : dict (optional)
             Models are supplied as a dictionary where the keys are the model
-            names. Each model is a 1D numpy.array of size (n_cells).
+            names. Each model is a 1D :class:`numpy.ndarray` of size (n_cells).
 
         Returns
         -------
@@ -545,7 +538,7 @@ class InterfaceVTK(object):
             Full path for the output file or just its name if directory is specified
         models : dict (optional)
             Models are supplied as a dictionary where the keys are the model
-            names. Each model is a 1D numpy.array of size (n_cells).
+            names. Each model is a 1D :class:`numpy.ndarray` of size (n_cells).
         directory : str
             output directory (optional)
 

@@ -222,8 +222,8 @@ def index_cube(nodes, grid_shape, n=None):
 
     Returns
     -------
-    index : tuple of numpy.array
-        Each entry of the tuple is a 1D numpy array containing the indices of
+    index : tuple of numpy.ndarray
+        Each entry of the tuple is a 1D :class:`numpy.ndarray` containing the indices of
         the nodes specified in the input *nodes* in the order asked;
         e.g. if *nodes* = 'DCBA', the tuple returned is ordered (D,C,B,A).
 

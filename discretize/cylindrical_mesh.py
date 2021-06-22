@@ -42,21 +42,21 @@ class CylindricalMesh(
     
     Parameters
     ----------
-    h : list of numpy.array or list
+    h : list of numpy.ndarray or list
         Defines the cell widths along each axis. The length of the list is equal to the dimension
         of the mesh (1, 2 or 3). For a 3D mesh, the list would have the form *[hr, hphi, hz]* .
         Note that the sum of cell widths in the phi direction **must** equal :math:`2\\pi`.
         You can also use a flat value of *hphi* = *1* to define a cylindrically symmetric mesh.
         Along each axis, the user has 3 choices for defining the cells widths:
-            - the widths are defined in a 1D *numpy.array*
+            - the widths are defined in a 1D :class:`numpy.ndarray`
             - the widths are defined as a *list* of *tuple* of the form *(dh, nc, [npad])* where *dh* is the cell width, *nc* is the number of cells, and *npad* (optional) is a padding factor denoting exponential increase/decrease in the cell width for each cell; e.g. *[(2., 10, -1.3), (2., 50), (2., 10, 1.3)]*
-            - the widths are defined as a mixed *list* of *tuple* and 1D *numpy.array* .
+            - the widths are defined as a mixed *list* of *tuple* and 1D :class:`numpy.ndarray`.
 
-    origin : numpy.array (dim,) or str of length dim; optional
+    origin : numpy.ndarray (dim,) or str of length dim; optional
         Define the origin or 'anchor point' of the mesh; i.e. the bottom-left-frontmost corner.
         By default, the mesh is anchored such that its origin is at [0, 0, 0]. The user
         may set the origin 2 ways which instantiating the tensor mesh:
-            - a numpy.array of shape (dim,) which explicitly defines the x, (y, z) location of the origin.
+            - a :class:`numpy.ndarray` of shape (dim,) which explicitly defines the x, (y, z) location of the origin.
             - a str of length *dim* specifying whether the zero coordinate along each axis is the first node location ('0'), in the center ('C') or the last node location ('N'); see example.
 
     
@@ -65,25 +65,21 @@ class CylindricalMesh(
     To create a general 3D cylindrical mesh, we discretize along the radial,
     azimuthal and vertical axis. For example:
 
-    .. plot::
-        :include-source:
-
-        from discretize import CylMesh
-        import numpy as np
-
-        ncr = 10  # number of mesh cells in r
-        ncp = 8   # number of mesh cells in phi
-        ncz = 15  # number of mesh cells in z
-        dr = 15   # cell width r
-        dz = 10   # cell width z
-
-        hr = dr * np.ones(ncr)
-        hp = (2 * np.pi / ncp) * np.ones(ncp)
-        hz = dz * np.ones(ncz)
-
-        mesh1 = CylMesh([hr, hp, hz])
-        mesh1.plot_grid()
-
+    >>> from discretize import CylMesh
+    >>> import numpy as np
+    >>> 
+    >>> ncr = 10  # number of mesh cells in r
+    >>> ncp = 8   # number of mesh cells in phi
+    >>> ncz = 15  # number of mesh cells in z
+    >>> dr = 15   # cell width r
+    >>> dz = 10   # cell width z
+    >>> 
+    >>> hr = dr * np.ones(ncr)
+    >>> hp = (2 * np.pi / ncp) * np.ones(ncp)
+    >>> hz = dz * np.ones(ncz)
+    >>> 
+    >>> mesh1 = CylMesh([hr, hp, hz])
+    >>> mesh1.plot_grid()
 
 
     For a cylindrically symmetric mesh, the disretization along the
@@ -91,27 +87,24 @@ class CylindricalMesh(
     size of numerical systems given that the derivative along the
     azimuthal direction is 0. For example:
 
-    .. plot::
-        :include-source:
-
-        from discretize import CylMesh
-        import numpy as np
-
-        ncr = 10      # number of mesh cells in r
-        ncz = 15      # number of mesh cells in z
-        dr = 15       # cell width r
-        dz = 10       # cell width z
-        npad_r = 4    # number of padding cells in r
-        npad_z = 4    # number of padding cells in z
-        exp_r = 1.25  # expansion rate of padding cells in r
-        exp_z = 1.25  # expansion rate of padding cells in z
-
-        hr = [(dr, ncr), (dr, npad_r, exp_r)]
-        hz = [(dz, npad_z, -exp_z), (dz, ncz), (dz, npad_z, exp_z)]
-
-        # A value of 1 is used to define the discretization in phi for this case.
-        mesh2 = CylMesh([hr, 1, hz])
-        mesh2.plot_grid()
+    >>> from discretize import CylMesh
+    >>> import numpy as np
+    >>> 
+    >>> ncr = 10      # number of mesh cells in r
+    >>> ncz = 15      # number of mesh cells in z
+    >>> dr = 15       # cell width r
+    >>> dz = 10       # cell width z
+    >>> npad_r = 4    # number of padding cells in r
+    >>> npad_z = 4    # number of padding cells in z
+    >>> exp_r = 1.25  # expansion rate of padding cells in r
+    >>> exp_z = 1.25  # expansion rate of padding cells in z
+    >>> 
+    >>> hr = [(dr, ncr), (dr, npad_r, exp_r)]
+    >>> hz = [(dz, npad_z, -exp_z), (dz, ncz), (dz, npad_z, exp_z)]
+    >>> 
+    >>> # A value of 1 is used to define the discretization in phi for this case.
+    >>> mesh2 = CylMesh([hr, 1, hz])
+    >>> mesh2.plot_grid()
 
 
 
@@ -154,7 +147,7 @@ class CylindricalMesh(
 
         Returns
         -------
-        numpy.array
+        numpy.ndarray
             The Cartesian origin (or anchor point) of the mesh
         """
         return self._cartesian_origin
@@ -433,7 +426,7 @@ class CylindricalMesh(
 
         Returns
         -------
-        numpy.array
+        numpy.ndarray
             x-positions of cell centers along the x-direction
         """
         return np.r_[0, self.h[0][:-1].cumsum()] + self.h[0] * 0.5
@@ -451,7 +444,7 @@ class CylindricalMesh(
 
         Returns
         -------
-        numpy.array
+        numpy.ndarray
             y-positions of cell centers along the y-direction
         """
         if self.is_symmetric:
@@ -468,7 +461,7 @@ class CylindricalMesh(
 
         Returns
         -------
-        numpy.array
+        numpy.ndarray
             x-positions of nodes along the x-direction
         """
         if self.is_symmetric:
@@ -495,7 +488,7 @@ class CylindricalMesh(
 
         Returns
         -------
-        numpy.array
+        numpy.ndarray
             y-positions of nodes along the y-direction
         """
         return np.r_[0, self.h[1][:-1].cumsum()]

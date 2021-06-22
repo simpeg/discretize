@@ -7,7 +7,7 @@ import warnings
 def mkvc(x, n_dims=1, **kwargs):
     """Creates a vector with specified dimensionality.
 
-    This function converts a numpy.ndarray to a vector. In general,
+    This function converts a :class:`numpy.ndarray` to a vector. In general,
     the output vector has a dimension of 1. However, the dimensionality
     can be specified if the user intends to carry out a dot product with
     a higher order array.
@@ -325,7 +325,7 @@ def ndgrid(*args, **kwargs):
 
     Returns
     -------
-    numpy.ndarray or list of numpy.array
+    numpy.ndarray or list of numpy.ndarray
         If *vector* = *True* the gridded *x*, *y*, (and *z*) locations are
         returned as a numpy array of shape [n, ndim]. If *vector* = *False*,
         the gridded *x*, *y*, (and *z*) are returned as a list of vectors.
@@ -400,7 +400,7 @@ def make_boundary_bool(shape, dir="xyz"):
 
     Returns
     -------
-    numpy.array of bool
+    numpy.ndarray of bool
         Indices of boundary locations of the tensor for specified boundaries.
 
     Examples
@@ -454,12 +454,12 @@ def ind2sub(shape, inds):
     ----------
     shape : tuple of int
         Defines the shape of the tensor (1D, 2D or 3D).
-    inds : list or numpy.array of int
+    inds : list or numpy.ndarray of int
         The indices of the tensor elements whose subscripts you want returned.
 
     Returns
     -------
-    tuple of ndarray
+    tuple of numpy.ndarray
         Corresponding subscipts for the indices provided. The output is a
         tuple containing 1D integer arrays for the i, j and k subscripts, respectively.
         The size of the output tuple is equal to the dimension of the tensor grid
@@ -570,7 +570,7 @@ def sub2ind(shape, subs):
 def get_subarray(A, ind):
     """Extract a subarray
 
-    For a numpy.ndarray, the function **get_subarray** extracts a subset of
+    For a :class:`numpy.ndarray`, the function **get_subarray** extracts a subset of
     the array. The portion of the original array being extracted is defined
     by providing the indices along each axis.
 
@@ -947,7 +947,7 @@ def inverse_2x2_block_diagonal(a11, a12, a21, a22, return_matrix=True, **kwargs)
 class TensorType(object):
     r"""Class for determining property tensor type.
 
-    For a given *mesh*, the **TensorType** class examines the numpy.ndarray
+    For a given *mesh*, the **TensorType** class examines the :class:`numpy.ndarray`
     *tensor* to determine whether *tensor* defines a scalar, isotropic,
     diagonal anisotropic or full tensor anisotropic constitutive relationship
     for each cell on the mesh. The general theory behind this functionality
@@ -978,9 +978,9 @@ class TensorType(object):
         
         - **Isotropic:** :math:`\vec{j} = \sigma \vec{e}`, where :math:`\sigma` varies spatially. Thus the input argument *tensor* is a 1D array that provides a :math:`\sigma` value for every cell in the mesh.
 
-        - **Anisotropic:** :math:`\vec{j} = \Sigma \vec{e}`, where the off-diagonal elements are zero. That is, :math:`\Sigma` is diagonal. In this case, the input argument *tensor* defining the physical properties in each cell is a numpy.ndarray of shape (*nCells*, *dim*).
+        - **Anisotropic:** :math:`\vec{j} = \Sigma \vec{e}`, where the off-diagonal elements are zero. That is, :math:`\Sigma` is diagonal. In this case, the input argument *tensor* defining the physical properties in each cell is a :class:`numpy.ndarray` of shape (*nCells*, *dim*).
         
-        - **Tensor:** :math:`\vec{j} = \Sigma \vec{e}`, where off-diagonal elements are non-zero and :math:`\Sigma` is a full tensor. In this case, the input argument *tensor* defining the physical properties in each cell is a numpy.ndarray of shape (*nCells*, *nParam*). In 2D, *nParam* = 3 and in 3D, *nParam* = 6.
+        - **Tensor:** :math:`\vec{j} = \Sigma \vec{e}`, where off-diagonal elements are non-zero and :math:`\Sigma` is a full tensor. In this case, the input argument *tensor* defining the physical properties in each cell is a :class:`numpy.ndarray` of shape (*nCells*, *nParam*). In 2D, *nParam* = 3 and in 3D, *nParam* = 6.
     
     
     Parameters
@@ -1061,7 +1061,7 @@ def make_property_tensor(mesh, tensor):
         \sigma_{5} & \sigma_{6} & \sigma_{3}
         \end{bmatrix}
 
-    For a given *mesh*, the input parameter *tensor* is a numpy.ndarray
+    For a given *mesh*, the input parameter *tensor* is a :class:`numpy.ndarray`
     defining the constitutive relationship (e.g. Ohm's law) between two
     discrete vector quantities :math:`\boldsymbol{j}` and
     :math:`\boldsymbol{e}` living at cell centers. The function
@@ -1209,7 +1209,7 @@ def inverse_property_tensor(mesh, tensor, return_matrix=False, **kwargs):
         \sigma_{5} & \sigma_{6} & \sigma_{3}
         \end{bmatrix}
 
-    For a given *mesh*, the input parameter *tensor* is a numpy.ndarray
+    For a given *mesh*, the input parameter *tensor* is a :class:`numpy.ndarray`
     defining the constitutive relationship (e.g. Ohm's law) between two
     discrete vector quantities :math:`\boldsymbol{j}` and
     :math:`\boldsymbol{e}` living at cell centers. Where :math:`\boldsymbol{M}`
@@ -1378,7 +1378,7 @@ class Zero(object):
     """Carries out arithmetic operations between 0 and arbitrary quantities.
 
     This class was designed to manage basic arithmetic operations between
-    0 and numpy.arrays of any shape.
+    0 and :class:`numpy.ndarray` of any shape.
 
     """
 
@@ -1481,7 +1481,7 @@ class Identity(object):
     """Carries out arithmetic operations involving the identity.
 
     This class was designed to manage basic arithmetic operations
-    between the identity matrix and numpy.arrays of any shape.
+    between the identity matrix and :class:`numpy.ndarray` of any shape.
 
     """
 

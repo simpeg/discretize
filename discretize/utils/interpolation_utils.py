@@ -181,9 +181,9 @@ def volume_average(mesh_in, mesh_out, values=None, output=None):
 
     Parameters
     ----------
-    mesh_in : discretize.TensorMesh or discretize.TreeMesh
+    mesh_in : ~discretize.TensorMesh or ~discretize.TreeMesh
         Input mesh (the mesh you are interpolating from)
-    mesh_out : discretize.TensorMesh or discretize.TreeMesh
+    mesh_out : ~discretize.TensorMesh or ~discretize.TreeMesh
         Output mesh (the mesh you are interpolating to)
     values : numpy.ndarray (optional)
         Array with values defined at the cells of ``mesh_in``
@@ -194,7 +194,7 @@ def volume_average(mesh_in, mesh_out, values=None, output=None):
     -------
     scipy.sparse.csr_matrix or numpy.ndarray
         If *values* = *None* , the returned value is a matrix representing this operation,
-        otherwise it is a numpy.ndarray of the result of the operation.
+        otherwise it is a :class:`numpy.ndarray` of the result of the operation.
 
     Examples
     --------
