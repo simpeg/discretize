@@ -233,66 +233,99 @@ class DiffOperators(object):
 
     @property
     def face_divergence(self):
-        """Divergence operator (faces to cell-centres)
+        """Face divergence operator (faces to cell-centres)
 
-        This property constructs the numerical divergence operator
+        This property constructs the 2nd order numerical divergence operator
         that maps from faces to cell centers. Once constructed, it is
-        stored permanently as a property of the mesh. Where :math:`\\mathbf{w}`
-        is a discrete vector whose components live on the faces, and
-        :math:`\\mathbf{u}` is a discrete approximation of the divergence
-        of :math:`\\mathbf{w}` at cell centers, the divergence operator
-        :math:`\\mathbf{D}` is a sparse operator such that:
-
-        .. math::
-            \\mathbf{u} = \\mathbf{D \\, w}
-
-        The basic construction of the operator can be described as follows.
-        Let :math:`\\mathbf{v}` be a vector containing the cell volumes and
-        let :math:`\\mathbf{s}` be a vector containing the areas of all mesh
-        faces. Where :math:`\\mathbf{Q}` is the *stencil* for the divergence operator
-        (a matrix of -1, 0, 1), the divergence operator is constructed as follows:
-
-        .. math::
-            \\mathbf{D} = diag(\\mathbf{v}^{-1}) \\, \\mathbf{Q} \\, diag(\\mathbf{s})
+        stored permanently as a property of the mesh.
 
         Returns
         -------
-        scipy.sparse.csr_matrix
+        scipy.sparse.csr_matrix (n_cells, n_faces)
             The numerical divergence operator from faces to cell centers
+
+
+        Notes
+        -----
+
+        In continuous space, the divergence operator is defined as:
+
+        .. math::
+            \\phi = \\nabla \\cdot \\vec{u} = \\frac{\\partial u_x}{\\partial x} + \\frac{\\partial u_y}{\\partial y} + \\frac{\\partial u_z}{\\partial z}
+
+        Where :math:`\\mathbf{u}` is the discrete representation of the continuous variable
+        :math:`\\vec{u}` on cell faces and :math:`\\boldsymbol{\\phi}` is the discrete
+        representation of :math:`\\phi` at cell centers, **face_divergence** constructs a
+        discrete linear operator :math:`\\mathbf{D}` such that:
+
+        .. math::
+            \\boldsymbol{\\phi} = \\mathbf{D \\, u}
+
+        For each cell, the computation of the face divergence can be expressed
+        according to the integral form below. For cell :math:`i` whose corresponding
+        faces are indexed as a subset :math:`K` from the set of all mesh faces:
+
+        .. math::
+            \\phi_i = \\frac{1}{V_i} \\sum_{k \\in K} A_k \\, \\vec{u}_k \\cdot \\hat{n}_k
+
+        where :math:`V_i` is the volume of cell :math:`i`, :math:`A_k` is
+        the surface area of face *k*, :math:`\\vec{u}_k` is the value of
+        :math:`\\vec{u}` on face *k*, and :math:`\\hat{n}_k`
+        represents the outward normal vector of face *k* for cell *i*.
+        
 
         Examples
         --------
 
         Below, we demonstrate the mapping and sparsity of the face divergence
-        for a 2D tensor mesh.
+        for a 2D tensor mesh. Indices are provided to show the ordering of
+        the elements in discrete vectors :math:`\\mathbf{u}` and
+        :math:`\\boldsymbol{\\phi}`.
 
         >>> from discretize import TensorMesh
         >>> import matplotlib.pyplot as plt
+        >>> import matplotlib as mpl
+        >>> mpl.rcParams.update({'font.size': 14})
         >>> 
         >>> mesh = TensorMesh([[(1, 6)], [(1, 3)]])
         >>> fig = plt.figure(figsize=(10, 10))
-        >>> 
         >>> ax1 = fig.add_subplot(211)
-        >>> mesh.plot_grid(centers=True, ax=ax1)
-        >>> ax1.axis("off")
-        >>> ax1.set_title("Mapping of Divergence Operator")
+        >>> mesh.plot_grid(ax=ax1)
         >>> 
-        >>> for ii, loc in zip(range(mesh.nC), mesh.gridCC):
-        >>>     ax1.text(loc[0] + 0.1, loc[1], "{0:d}".format(ii), color="r")
+        >>> ax1.plot(
+        >>>     mesh.cell_centers[:, 0], mesh.cell_centers[:, 1], "ro", markersize=8
+        >>> )
+        >>> for ii, loc in zip(range(mesh.nC), mesh.cell_centers):
+        >>>     ax1.text(loc[0]+0.05, loc[1]+0.02, "{0:d}".format(ii), color="r")
+        >>> ax1.plot(
+        >>>     mesh.faces_x[:, 0], mesh.faces_x[:, 1], "g>", markersize=8
+        >>> )
+        >>> for ii, loc in zip(range(mesh.nFx), mesh.faces_x):
+        >>>     ax1.text(loc[0]+0.05, loc[1]+0.02, "{0:d}".format(ii), color="g")
+        >>> ax1.plot(
+        >>>     mesh.faces_y[:, 0], mesh.faces_y[:, 1], "g^", markersize=8
+        >>> )
+        >>> for ii, loc in zip(range(mesh.nFy), mesh.faces_y):
+        >>>     ax1.text(loc[0] + 0.05, loc[1] + 0.1, "{0:d}".format((ii + mesh.nFx)), color="g")
         >>> 
-        >>> ax1.plot(mesh.gridFx[:, 0], mesh.gridFx[:, 1], "g>")
-        >>> for ii, loc in zip(range(mesh.nFx), mesh.gridFx):
-        >>>     ax1.text(loc[0] + 0.1, loc[1], "{0:d}".format(ii), color="g")
-        >>> 
-        >>> ax1.plot(mesh.gridFy[:, 0], mesh.gridFy[:, 1], "m^")
-        >>> for ii, loc in zip(range(mesh.nFy), mesh.gridFy):
-        >>>     ax1.text(loc[0] + 0.1, loc[1] + 0.1, "{0:d}".format((ii + mesh.nFx)), color="m")
-        >>> 
+        >>> ax1.set_xticks([])
+        >>> ax1.set_yticks([])
+        >>> ax1.spines['bottom'].set_color('white')
+        >>> ax1.spines['top'].set_color('white')
+        >>> ax1.spines['left'].set_color('white')
+        >>> ax1.spines['right'].set_color('white')
+        >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
+        >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
+        >>> ax1.set_title("Mapping of Face Divergence", fontsize=14, pad=15)
+        >>> ax1.legend(
+        >>>     ['Mesh', '$\\mathbf{\\phi}$ (centers)', '$\\mathbf{u}$ (faces)'],
+        >>>     loc='upper right', fontsize=14
+        >>> )
         >>> ax2 = fig.add_subplot(212)
         >>> ax2.spy(mesh.face_divergence)
-        >>> ax2.set_title("Sparsity of Face Divergence")
-        >>> ax2.set_ylabel("Cell Number")
-        >>> ax2.set_xlabel("Face Number")
+        >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
+        >>> ax2.set_ylabel("Cell Number", fontsize=12)
+        >>> ax2.set_xlabel("Face Number", fontsize=12)
 
         """
         if getattr(self, "_face_divergence", None) is None:
@@ -306,7 +339,67 @@ class DiffOperators(object):
 
     @property
     def face_x_divergence(self):
-        """X-component of divergence operator (x-faces to cell-centres)
+        """X-derivative operator (x-faces to cell-centres)
+
+        This property constructs a 2nd order x-derivative operator which maps
+        from x-faces to cell centers. This operator can be applied to a discrete
+        scalar quantity gridded on x-face locations. For a discrete vector whose
+        x-component lives on x-faces, this operator can also be used to compute the
+        contribution of the x-component toward the divergence.
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix (n_cells, n_faces_x)
+            The numerical x-derivative operator from x-faces to cell centers
+
+        Examples
+        --------
+
+        Below, we demonstrate the mapping and sparsity of the operator
+        for a 2D tensor mesh. Indices are provided to show the ordering of
+        the elements in a discrete quantity :math:`\\mathbf{u_x}` that lives
+        on x-faces, and its x-derivative :math:`\\partial \\mathbf{u_x}/\\partial x`
+        at cell centers.
+
+        >>> from discretize import TensorMesh
+        >>> import matplotlib.pyplot as plt
+        >>> import matplotlib as mpl
+        >>> mpl.rcParams.update({'font.size': 14})
+        >>> 
+        >>> mesh = TensorMesh([[(1, 6)], [(1, 3)]])
+        >>> fig = plt.figure(figsize=(10, 10))
+        >>> ax1 = fig.add_subplot(211)
+        >>> mesh.plot_grid(ax=ax1)
+        >>> 
+        >>> ax1.plot(
+        >>>     mesh.faces_x[:, 0], mesh.faces_x[:, 1], "g>", markersize=8
+        >>> )
+        >>> for ii, loc in zip(range(mesh.nFx), mesh.faces_x):
+        >>>     ax1.text(loc[0]+0.05, loc[1]+0.02, "{0:d}".format(ii), color="g")
+        >>> ax1.plot(
+        >>>     mesh.cell_centers[:, 0], mesh.cell_centers[:, 1], "ro", markersize=8
+        >>> )
+        >>> for ii, loc in zip(range(mesh.nC), mesh.cell_centers):
+        >>>     ax1.text(loc[0]+0.05, loc[1]+0.02, "{0:d}".format(ii), color="r")
+        >>> 
+        >>> ax1.set_xticks([])
+        >>> ax1.set_yticks([])
+        >>> ax1.spines['bottom'].set_color('white')
+        >>> ax1.spines['top'].set_color('white')
+        >>> ax1.spines['left'].set_color('white')
+        >>> ax1.spines['right'].set_color('white')
+        >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
+        >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
+        >>> ax1.set_title("Mapping of Face-X Divergence", fontsize=14, pad=15)
+        >>> ax1.legend(
+        >>>     ['Mesh', '$\\mathbf{u_x}$ (x-faces)', '$\\partial \\mathbf{u_x}/\\partial x$ (centers)'],
+        >>>     loc='upper right', fontsize=14
+        >>> )
+        >>> ax2 = fig.add_subplot(212)
+        >>> ax2.spy(mesh.face_divergence)
+        >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
+        >>> ax2.set_ylabel("Cell Number", fontsize=12)
+        >>> ax2.set_xlabel("Face Number", fontsize=12)
         
         """
         # Compute areas of cell faces & volumes
@@ -316,9 +409,68 @@ class DiffOperators(object):
 
     @property
     def face_y_divergence(self):
-        """
-        Construct divergence operator in the y component (face-stg to
-        cell-centres).
+        """Y-derivative operator (y-faces to cell-centres)
+
+        This property constructs a 2nd order y-derivative operator which maps
+        from y-faces to cell centers. This operator can be applied to a discrete
+        scalar quantity gridded on y-face locations. For a discrete vector whose
+        y-component lives on y-faces, this operator can also be used to compute the
+        contribution of the y-component toward the divergence.
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix (n_cells, n_faces_y)
+            The numerical y-derivative operator from y-faces to cell centers
+
+        Examples
+        --------
+
+        Below, we demonstrate the mapping and sparsity of the operator
+        for a 2D tensor mesh. Indices are provided to show the ordering of
+        the elements in a discrete quantity :math:`\\mathbf{u_y}` that lives
+        on y-faces and its y-derivative :math:`\\partial \\mathbf{u_y}/\\partial y`
+        at cell centers.
+
+        >>> from discretize import TensorMesh
+        >>> import matplotlib.pyplot as plt
+        >>> import matplotlib as mpl
+        >>> mpl.rcParams.update({'font.size': 14})
+        >>> 
+        >>> mesh = TensorMesh([[(1, 6)], [(1, 3)]])
+        >>> fig = plt.figure(figsize=(10, 10))
+        >>> ax1 = fig.add_subplot(211)
+        >>> mesh.plot_grid(ax=ax1)
+        >>> 
+        >>> ax1.plot(
+        >>>     mesh.faces_y[:, 0], mesh.faces_y[:, 1], "g^", markersize=8
+        >>> )
+        >>> for ii, loc in zip(range(mesh.nFy), mesh.faces_y):
+        >>>     ax1.text(loc[0]+0.05, loc[1]+0.02, "{0:d}".format(ii), color="g")
+        >>> ax1.plot(
+        >>>     mesh.cell_centers[:, 0], mesh.cell_centers[:, 1], "ro", markersize=8
+        >>> )
+        >>> for ii, loc in zip(range(mesh.nC), mesh.cell_centers):
+        >>>     ax1.text(loc[0]+0.05, loc[1]+0.02, "{0:d}".format(ii), color="r")
+        >>> 
+        >>> ax1.set_xticks([])
+        >>> ax1.set_yticks([])
+        >>> ax1.spines['bottom'].set_color('white')
+        >>> ax1.spines['top'].set_color('white')
+        >>> ax1.spines['left'].set_color('white')
+        >>> ax1.spines['right'].set_color('white')
+        >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
+        >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
+        >>> ax1.set_title("Mapping of Face-Y Divergence", fontsize=14, pad=15)
+        >>> ax1.legend(
+        >>>     ['Mesh', '$\\mathbf{u_y}$ (y-faces)', '$\\partial_y \\mathbf{u_y}/\\partial y$ (centers)'],
+        >>>     loc='upper right', fontsize=14
+        >>> )
+        >>> ax2 = fig.add_subplot(212)
+        >>> ax2.spy(mesh.face_divergence)
+        >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
+        >>> ax2.set_ylabel("Cell Number", fontsize=12)
+        >>> ax2.set_xlabel("Face Number", fontsize=12)
+        
         """
         if self.dim < 2:
             return None
@@ -329,9 +481,79 @@ class DiffOperators(object):
 
     @property
     def face_z_divergence(self):
-        """
-        Construct divergence operator in the z component (face-stg to
-        cell-centers).
+        """Z-derivative operator (z-faces to cell-centres)
+
+        This property constructs a 2nd order z-derivative operator which maps
+        from z-faces to cell centers. This operator can be applied to a discrete
+        scalar quantity gridded on z-face locations. For a discrete vector whose
+        z-component lives on z-faces, this operator can also be used to compute the
+        contribution of the z-component toward the divergence.
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix (n_cells, n_faces_z)
+            The numerical z-derivative operator from z-faces to cell centers
+
+        Examples
+        --------
+
+        Below, we demonstrate the mapping and sparsity of the operator
+        for a 3D tensor mesh with one layer of cells in the vertical.
+        Indices are provided to show the ordering of
+        the elements in a discrete quantity :math:`\\mathbf{u_z}` that lives
+        on z-faces and its z-derivative :math:`\\partial \\mathbf{u_z}/\\partial z`
+        at cell centers.
+
+        >>> from discretize import TensorMesh
+        >>> import matplotlib.pyplot as plt
+        >>> import matplotlib as mpl
+        >>> mpl.rcParams.update({'font.size': 14})
+        >>> 
+        >>> mesh = TensorMesh([[(1, 3)], [(1, 2)], [(1, 2)]])
+        >>> 
+        >>> fig = plt.figure(figsize=(9, 12))
+        >>> 
+        >>> ax1 = fig.add_axes([0, 0.35, 1, 0.6], projection='3d', elev=10, azim=-82)
+        >>> mesh.plot_grid(ax=ax1)
+        >>> ax1.plot(
+        >>>     mesh.faces_z[:, 0], mesh.faces_z[:, 1], mesh.faces_z[:, 2], "g^", markersize=10
+        >>> )
+        >>> for ii, loc in zip(range(mesh.nFz), mesh.faces_z):
+        >>>     ax1.text(loc[0] + 0.05, loc[1] + 0.05, loc[2], "{0:d}".format(ii), color="g")
+        >>> 
+        >>> ax1.plot(
+        >>>    mesh.cell_centers[:, 0], mesh.cell_centers[:, 1], mesh.cell_centers[:, 2], "ro", markersize=10
+        >>> )
+        >>> for ii, loc in zip(range(mesh.nC), mesh.cell_centers):
+        >>>     ax1.text(loc[0] + 0.05, loc[1] + 0.05, loc[2], "{0:d}".format(ii), color="r")
+        >>> 
+        >>> ax1.legend(
+        >>>     ['Mesh', '$\\mathbf{u_z}$ (z-faces)', '$\\partial \\mathbf{u_z}/\\partial z$ (centers)'],
+        >>>     loc='upper right', fontsize=14
+        >>> )
+        >>> 
+        >>> # Manually make axis properties invisible
+        >>> ax1.set_xticks([])
+        >>> ax1.set_yticks([])
+        >>> ax1.set_zticks([])
+        >>> ax1.w_xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        >>> ax1.w_yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        >>> ax1.w_zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        >>> ax1.w_xaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
+        >>> ax1.w_yaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
+        >>> ax1.w_zaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
+        >>> ax1.set_xlabel('X', labelpad=-15, fontsize=16)
+        >>> ax1.set_ylabel('Y', labelpad=-20, fontsize=16)
+        >>> ax1.set_zlabel('Z', labelpad=-20, fontsize=16)
+        >>> ax1.set_title("Mapping of Face-Z Divergence", fontsize=16, pad=-15)
+        >>> 
+        >>> # Spy plot
+        >>> ax2 = fig.add_axes([0.05, 0.05, 0.9, 0.3])
+        >>> ax2.spy(mesh.face_x_divergence)
+        >>> ax2.set_title("Spy Plot", fontsize=16, pad=5)
+        >>> ax2.set_ylabel("Cell Number", fontsize=12)
+        >>> ax2.set_xlabel("Z-Face Number", fontsize=12)
+        
         """
         if self.dim < 3:
             return None
@@ -421,8 +643,99 @@ class DiffOperators(object):
 
     @property
     def nodal_gradient(self):
-        """
-        Construct nodal gradient operator (nodes to edges).
+        """Discrete gradient operator (nodes to edges)
+
+        This property constructs the 2nd order numerical gradient operator
+        that maps from nodes to edges. Once constructed, it is
+        stored permanently as a property of the mesh.
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix (n_edges, n_nodes)
+            The numerical gradient operator from nodes to edges
+
+
+        Notes
+        -----
+
+        In continuous space, the gradient operator is defined as:
+
+        .. math::
+            \\vec{u} = \\nabla \\phi = \\frac{\\partial \\phi}{\\partial x}\\hat{x}
+            + \\frac{\\partial \\phi}{\\partial y}\\hat{y}
+            + \\frac{\\partial \\phi}{\\partial z}\\hat{z}
+
+        Where :math:`\\boldsymbol{\\phi}` is the discrete representation of the continuous variable
+        :math:`\\phi` on the nodes and :math:`\\mathbf{u}` is the discrete
+        representation of :math:`\\vec{u}` on the edges, **nodal_gradient** constructs a
+        discrete linear operator :math:`\\mathbf{G}` such that:
+
+        .. math::
+            \\mathbf{u} = \\mathbf{G} \\, \\boldsymbol{\\phi}
+
+        The Cartesian components of :math:`\\vec{u}` are defined on their corresponding
+        edges (x, y or z) as follows; e.g. the x-component of the gradient is defined
+        on x-edges. For edge :math:`i` which defines a straight path
+        of length :math:`h_i` between adjacent nodes :math:`n_1` and :math:`n_2`:
+
+        .. math::
+            u_i = \\frac{\\phi_{n_2} - \\phi_{n_1}}{h_i}
+
+        Note that :math:`u_i \\in \\mathbf{u}` may correspond to a value on an
+        x, y or z edge. See the example below.
+
+        Examples
+        --------
+
+        Below, we demonstrate the mapping and sparsity of the nodal gradient
+        operator for a 2D tensor mesh. Indices are provided to show the ordering of
+        the elements in discrete vectors :math:`\\boldsymbol{\\phi}` and
+        :math:`\\mathbf{u}`.
+
+        >>> from discretize import TensorMesh
+        >>> import matplotlib.pyplot as plt
+        >>> import matplotlib as mpl
+        >>> mpl.rcParams.update({'font.size': 14})
+        >>> 
+        >>> mesh = TensorMesh([[(1, 3)], [(1, 6)]])
+        >>> fig = plt.figure(figsize=(12, 10))
+        >>> 
+        >>> ax1 = fig.add_subplot(121)
+        >>> mesh.plot_grid(ax=ax1)
+        >>> ax1.set_title("Mapping of Gradient Operator", fontsize=14, pad=15)
+        >>> 
+        >>> ax1.plot(mesh.nodes[:, 0], mesh.nodes[:, 1], "ro", markersize=8)
+        >>> for ii, loc in zip(range(mesh.nN), mesh.nodes):
+        >>>     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format(ii), color="r")
+        >>> 
+        >>> ax1.plot(mesh.edges_x[:, 0], mesh.edges_x[:, 1], "g>", markersize=8)
+        >>> for ii, loc in zip(range(mesh.nEx), mesh.edges_x):
+        >>>     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format(ii), color="g")
+        >>> 
+        >>> ax1.plot(mesh.edges_y[:, 0], mesh.edges_y[:, 1], "g^", markersize=8)
+        >>> for ii, loc in zip(range(mesh.nEy), mesh.edges_y):
+        >>>     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format((ii + mesh.nEx)), color="g")
+        >>>
+        >>> ax1.set_xticks([])
+        >>> ax1.set_yticks([])
+        >>> ax1.spines['bottom'].set_color('white')
+        >>> ax1.spines['top'].set_color('white')
+        >>> ax1.spines['left'].set_color('white')
+        >>> ax1.spines['right'].set_color('white')
+        >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
+        >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
+        >>>  
+        >>> ax1.legend(
+        >>>     ['Mesh', '$\\mathbf{\\phi}$ (nodes)', '$\\mathbf{u}$ (edges)'],
+        >>>     loc='upper right', fontsize=14
+        >>> )
+        >>> 
+        >>> ax2 = fig.add_subplot(122)
+        >>> ax2.spy(mesh.nodal_gradient)
+        >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
+        >>> ax2.set_ylabel("Edge Number", fontsize=12)
+        >>> ax2.set_xlabel("Node Number", fontsize=12)
+        
         """
         if getattr(self, "_nodal_gradient", None) is None:
             G = self._nodal_gradient_stencil
@@ -1082,8 +1395,147 @@ class DiffOperators(object):
 
     @property
     def edge_curl(self):
-        """
-        Edge curl operator (edges to faces).
+        r"""
+        Discrete curl operator (edges to faces)
+
+        This property constructs the 2nd order numerical curl operator
+        that maps from edges to faces. Once constructed, it is
+        stored permanently as a property of the mesh.
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix (n_edges, n_faces)
+            The numerical curl operator from edges to faces
+
+
+        Notes
+        -----
+
+        In continuous space, the curl operator is defined as:
+
+        .. math::
+            \vec{w} = \nabla \times \vec{u} =
+            \begin{vmatrix}
+            \hat{x} & \hat{y} & \hat{z} \\
+            \partial_x & \partial_y & \partial_z \\
+            u_x & u_y & u_z
+            \end{vmatrix}
+
+        Where :math:`\mathbf{u}` is the discrete representation of the continuous variable
+        :math:`\vec{u}` on cell edges and :math:`\mathbf{w}` is the discrete
+        representation of the curl on the faces, **edge_curl** constructs a
+        discrete linear operator :math:`\\mathbf{C}` such that:
+
+        .. math::
+            \mathbf{w} = \mathbf{C \, u}
+
+        The computation of the curl on mesh faces can be expressed
+        according to the integral form below. For face :math:`i` bordered by
+        a set of edges indexed by subset :math:`K`:
+
+        .. math::
+            w_i = \frac{1}{A_i} \sum_{k \in K} \vec{u}_k \cdot \vec{\ell}_k
+
+        where :math:`A_i` is the surface area of face *i*,
+        :math:`u_k` is the value of :math:`\vec{u}` on face *k*,
+        and \vec{\ell}_k is the path along edge *k*.
+        
+
+        Examples
+        --------
+
+        Below, we demonstrate the mapping and sparsity of the edge curl
+        for a 3D tensor mesh. We choose a the index for a single face,
+        and illustrate which edges are used to compute the curl on that
+        face.
+
+        >>> from discretize import TensorMesh
+        >>> from discretize.utils import mkvc
+        >>> import matplotlib.pyplot as plt
+        >>> import numpy as np
+        >>> import matplotlib as mpl
+        >>> import mpl_toolkits.mplot3d as mp3d
+        >>> mpl.rcParams.update({'font.size': 14})
+        >>> 
+        >>> mesh = TensorMesh([[(1, 2)], [(1, 2)], [(1, 2)]])
+        >>> 
+        >>> face_ind = 2  # Index of a face in the mesh (could be x, y or z)
+        >>> edge_ind = np.where(
+        >>>     np.sum((mesh.edges-mesh.faces[face_ind, :])**2, axis=1) <= 0.5 + 1e-6
+        >>> )[0]
+        >>> 
+        >>> face = mesh.faces[face_ind, :]
+        >>> face_norm = mesh.face_normals[face_ind, :]
+        >>> edges = mesh.edges[edge_ind, :]
+        >>> edge_tan = mesh.edge_tangents[edge_ind, :]
+        >>> node = np.min(edges, axis=0)
+        >>> 
+        >>> min_edges = np.min(edges, axis=0)
+        >>> max_edges = np.max(edges, axis=0)
+        >>> if face_norm[0] == 1:
+        >>>     k = (edges[:, 1] == min_edges[1]) | (edges[:, 2] == max_edges[2])
+        >>>     poly = node + np.c_[np.r_[0, 0, 0, 0], np.r_[0, 1, 1, 0], np.r_[0, 0, 1, 1]]
+        >>>     ds = [0.07, -0.07, -0.07]
+        >>> elif face_norm[1] == 1:
+        >>>     k = (edges[:, 0] == max_edges[0]) | (edges[:, 2] == min_edges[2])
+        >>>     poly = node + np.c_[np.r_[0, 1, 1, 0], np.r_[0, 0, 0, 0], np.r_[0, 0, 1, 1]]
+        >>>     ds = [0.07, -0.09, -0.07]
+        >>> elif face_norm[2] == 1:
+        >>>     k = (edges[:, 0] == min_edges[0]) | (edges[:, 1] == max_edges[1])
+        >>>     poly = node + np.c_[np.r_[0, 1, 1, 0], np.r_[0, 0, 1, 1], np.r_[0, 0, 0, 0]]
+        >>>     ds = [0.07, -0.09, -0.07]
+        >>> edge_tan[k, :] *= -1
+        >>> 
+        >>> fig = plt.figure(figsize=(10, 15))
+        >>> 
+        >>> ax1 = fig.add_axes([0, 0.35, 1, 0.6], projection='3d', elev=25, azim=-60)
+        >>> mesh.plot_grid(ax=ax1)
+        >>> ax1.plot(
+        >>>     mesh.edges[edge_ind, 0], mesh.edges[edge_ind, 1], mesh.edges[edge_ind, 2], "go", markersize=10
+        >>> )
+        >>> ax1.plot(
+        >>>     mesh.faces[face_ind, 0], mesh.faces[face_ind, 1], mesh.faces[face_ind, 2], "rs", markersize=10
+        >>> )
+        >>> poly = mp3d.art3d.Poly3DCollection(
+        >>>     [poly], alpha=0.1, facecolor='r', linewidth=None
+        >>> )
+        >>> ax1.add_collection(poly)
+        >>> ax1.quiver(
+        >>>     edges[:, 0], edges[:, 1], edges[:, 2],
+        >>>     0.5*edge_tan[:, 0], 0.5*edge_tan[:, 1], 0.5*edge_tan[:, 2],
+        >>>     edgecolor='g', pivot='middle', linewidth=4, arrow_length_ratio=0.25
+        >>> )
+        >>> 
+        >>> ax1.text(face[0]+ds[0], face[1]+ds[1], face[2]+ds[2], "{0:d}".format(face_ind), color="r")
+        >>> for ii, loc in zip(range(len(edge_ind)), edges):
+        >>>     ax1.text(loc[0]+ds[0], loc[1]+ds[1], loc[2]+ds[2], "{0:d}".format(edge_ind[ii]), color="g")
+        >>> 
+        >>> ax1.legend(
+        >>>     ['Mesh', '$\\mathbf{u}$ (edges)', '$\\mathbf{w}$ (face)'],
+        >>>     loc='upper right', fontsize=14
+        >>> )
+        >>> 
+        >>> # Manually make axis properties invisible
+        >>> ax1.set_xticks([])
+        >>> ax1.set_yticks([])
+        >>> ax1.set_zticks([])
+        >>> ax1.w_xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        >>> ax1.w_yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        >>> ax1.w_zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        >>> ax1.w_xaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
+        >>> ax1.w_yaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
+        >>> ax1.w_zaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
+        >>> ax1.set_xlabel('X', labelpad=-15, fontsize=16)
+        >>> ax1.set_ylabel('Y', labelpad=-20, fontsize=16)
+        >>> ax1.set_zlabel('Z', labelpad=-20, fontsize=16)
+        >>> ax1.set_title("Mapping for a Single Face", fontsize=16, pad=-15)
+        >>> 
+        >>> # Spy plot
+        >>> ax2 = fig.add_axes([0.05, 0.05, 0.9, 0.3])
+        >>> ax2.spy(mesh.edge_curl)
+        >>> ax2.set_title("Spy Plot", fontsize=16, pad=5)
+        >>> ax2.set_ylabel("Face Number", fontsize=12)
+        >>> ax2.set_xlabel("Edge Number", fontsize=12)
         """
         L = self.edge_lengths  # Compute lengths of cell edges
         S = self.face_areas  # Compute areas of cell faces
@@ -1417,8 +1869,81 @@ class DiffOperators(object):
 
     @property
     def average_face_to_cell(self):
-        """
-        Averaging operator from faces to cell centers (scalar quantities).
+        """Averaging operator from faces to cell centers (scalar quantities).
+
+        This property constructs the averaging operator that maps scalar
+        quantities from faces to cell centers. This averaging operator is
+        used when a discrete scalar quantity defined on mesh faces must be
+        projected to cell centers. Once constructed, the operator is
+        stored permanently as a property of the mesh.
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix (n_cells, n_faces)
+            The scalar averaging operator from faces to cell centers
+
+        Notes
+        -----
+
+        Let :math:`\\boldsymbol{\\phi_f}` be a discrete scalar quantity that
+        lives on mesh faces. **average_face_to_cell** constructs a discrete
+        linear operator :math:`\\mathbf{A_{fc}}` that projects
+        :math:`\\boldsymbol{\\phi_f}` to cell centers, i.e.:
+
+        .. math::
+            \\boldsymbol{\\phi_c} = \\mathbf{A_{fc}} \\, \\boldsymbol{\\phi_f}
+
+        where :math:`\\boldsymbol{\\phi_c}` is a discrete scalar quantity
+        defined at cell centers. For each cell, we are simply averaging
+        the values defined on its faces.
+
+        Examples
+        --------
+
+        Below, we demonstrate the mapping and sparsity of the averaging
+        operator for a 2D tensor mesh. Indices are provided to show the
+        ordering of the elements in discrete vectors :math:`\\boldsymbol{\\phi_f}` and
+        :math:`\\boldsymbol{\\phi_c}`.
+
+        >>> from discretize import TensorMesh
+        >>> import matplotlib.pyplot as plt
+        >>> import matplotlib as mpl
+        >>> mpl.rcParams.update({'font.size': 14})
+        >>> 
+        >>> mesh = TensorMesh([[(1, 6)], [(1, 3)]])
+        >>> fig = plt.figure(figsize=(10, 10))
+        >>> ax1 = fig.add_subplot(211)
+        >>> mesh.plot_grid(ax=ax1)
+        >>> 
+        >>> ax1.plot(
+        >>>     mesh.faces[:, 0], mesh.faces[:, 1], "go", markersize=7
+        >>> )
+        >>> for ii, loc in zip(range(mesh.nF), mesh.faces):
+        >>>     ax1.text(loc[0]+0.05, loc[1]+0.03, "{0:d}".format(ii), color="g")
+        >>> ax1.plot(
+        >>>     mesh.cell_centers[:, 0], mesh.cell_centers[:, 1], "ro", markersize=7
+        >>> )
+        >>> for ii, loc in zip(range(mesh.nC), mesh.cell_centers):
+        >>>     ax1.text(loc[0]+0.05, loc[1]+0.02, "{0:d}".format(ii), color="r")
+        >>> 
+        >>> ax1.set_xticks([])
+        >>> ax1.set_yticks([])
+        >>> ax1.spines['bottom'].set_color('white')
+        >>> ax1.spines['top'].set_color('white')
+        >>> ax1.spines['left'].set_color('white')
+        >>> ax1.spines['right'].set_color('white')
+        >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
+        >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
+        >>> ax1.set_title("Mapping of Averaging Operator (Scalar)", fontsize=14, pad=15)
+        >>> ax1.legend(
+        >>>     ['Mesh', '$\\mathbf{\\phi_f}$ (faces)', '$\\mathbf{\\phi_c}$ (centers)'],
+        >>>     loc='upper right', fontsize=14
+        >>> )
+        >>> ax2 = fig.add_subplot(212)
+        >>> ax2.spy(mesh.average_face_to_cell)
+        >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
+        >>> ax2.set_ylabel("Cell Number", fontsize=12)
+        >>> ax2.set_xlabel("Face Number", fontsize=12)
         """
         if getattr(self, "_average_face_to_cell", None) is None:
             if self.dim == 1:
@@ -1435,8 +1960,95 @@ class DiffOperators(object):
 
     @property
     def average_face_to_cell_vector(self):
-        """
-        Averaging operator from faces to cell centers (vector quantities).
+        """Averaging operator from faces to cell centers (vector quantities).
+
+        This property constructs the averaging operator that maps the Cartesian
+        components of vector quantities from faces to cell centers. This averaging
+        operators is used when a discrete vector quantity defined on mesh faces
+        must be approximated at cell centers. Once constructed, the operator is
+        stored permanently as a property of the mesh.
+
+        Be aware that the Cartesian components of the original vector
+        are defined on their respective faces; e.g. the x-component lives
+        on x-faces. However, the x, y and z components are being averaged
+        separately to cell centers.
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix (dim x n_cells, n_faces)
+            The vector averaging operator from faces to cell centers. Since we
+            are averaging a vector quantity to cell centers, the first dimension
+            is the mesh dimension times the number of cells.
+
+        Notes
+        -----
+
+        Let :math:`\\mathbf{u_f}` be the discrete representation of a vector
+        quantity whose Cartesian components are defined on their respective faces.
+        **average_face_to_cell_vector** constructs a discrete linear operator
+        :math:`\\mathbf{A_{fc}}` that projects each Cartesian component of
+        :math:`\\mathbf{u_f}` independently to cell centers, i.e.:
+
+        .. math::
+            \\mathbf{u_c} \\approx \\mathbf{A_{fc}} \\, \\mathbf{u_f}
+
+        where :math:`\\mathbf{u_c}` is a discrete vector quantity whose Cartesian
+        components are all defined at the cell centers. For each cell, and for
+        each Cartesian component, we are simply taking the average of the values
+        defined on the cell's corresponding faces and placing the result at
+        the cell's center.
+
+        Examples
+        --------
+
+        Below, we demonstrate the mapping and sparsity of the averaging
+        operator for vectors a 2D tensor mesh. We illustrate the location
+        and vector components which live on different gridded locations
+        on the mesh.
+
+        >>> from discretize import TensorMesh
+        >>> import matplotlib.pyplot as plt
+        >>> import numpy as np
+        >>> import matplotlib as mpl
+        >>> mpl.rcParams.update({'font.size': 14})
+        >>> 
+        >>> mesh = TensorMesh([[(1, 6)], [(1, 4)]])
+        >>> ds1 = mesh.face_normals
+        >>> ds2 = mesh.average_face_to_cell_vector * mesh.face_normals
+        >>> 
+        >>> fig = plt.figure(figsize=(8, 12))
+        >>> ax1 = fig.add_subplot(211)
+        >>> mesh.plot_grid(ax=ax1)
+        >>> 
+        >>> ax1.quiver(
+        >>>     mesh.faces[:, 0], mesh.faces[:, 1], ds1[:, 0], ds1[:, 1], facecolor='g', 
+        >>>     pivot='middle', width=0.005, headwidth=5, headlength=3, headaxislength=3, scale=16
+        >>> )
+        >>> 
+        >>> centers = np.tile(mesh.cell_centers, np.array([2, 1]))
+        >>> ax1.quiver(
+        >>>     centers[:, 0], centers[:, 1], ds2[:, 0], ds2[:, 1], facecolor='r', 
+        >>>     pivot='middle', width=0.005, headwidth=5, headlength=3, headaxislength=3, scale=16
+        >>> )
+        >>> 
+        >>> ax1.set_xticks([])
+        >>> ax1.set_yticks([])
+        >>> ax1.spines['bottom'].set_color('white')
+        >>> ax1.spines['top'].set_color('white')
+        >>> ax1.spines['left'].set_color('white')
+        >>> ax1.spines['right'].set_color('white')
+        >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
+        >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
+        >>> ax1.set_title("Mapping of Averaging Operator (Vectors)", fontsize=14, pad=15)
+        >>> ax1.legend(
+        >>>     ['Mesh', '$\\mathbf{u_f}$ (faces)', '$\\mathbf{u_c}$ (centers)'],
+        >>>     loc='upper right', fontsize=14
+        >>> )
+        >>> ax2 = fig.add_subplot(212)
+        >>> ax2.spy(mesh.average_face_to_cell_vector)
+        >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
+        >>> ax2.set_ylabel("Index in Resulting Vector", fontsize=12)
+        >>> ax2.set_xlabel("Face Number", fontsize=12)
         """
         if getattr(self, "_average_face_to_cell_vector", None) is None:
             if self.dim == 1:
@@ -1453,8 +2065,81 @@ class DiffOperators(object):
 
     @property
     def average_face_x_to_cell(self):
-        """
-        Averaging operator from x-faces to cell centers (scalar quantities).
+        """Averaging operator from x-faces to cell centers (scalar quantities).
+
+        This property constructs the averaging operator that maps scalar
+        quantities from x-faces to cell centers. This averaging operator is
+        used when a discrete scalar quantity defined on x-faces must be
+        projected to cell centers. Once constructed, the operator is
+        stored permanently as a property of the mesh.
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix (n_cells, n_faces_x)
+            The scalar averaging operator from x-faces to cell centers
+
+        Notes
+        -----
+
+        Let :math:`\\boldsymbol{\\phi_x}` be a discrete scalar quantity that
+        lives on the x-faces. **average_face_x_to_cell** constructs a discrete
+        linear operator :math:`\\mathbf{A_{fc}}` that projects
+        :math:`\\boldsymbol{\\phi_x}` to cell centers, i.e.:
+
+        .. math::
+            \\boldsymbol{\\phi_c} = \\mathbf{A_{fc}} \\, \\boldsymbol{\\phi_x}
+
+        where :math:`\\boldsymbol{\\phi_c}` is a discrete scalar quantity
+        defined at cell centers. For each cell, we are simply averaging
+        the values defined on its x-faces.
+
+        Examples
+        --------
+
+        Below, we demonstrate the mapping and sparsity of the averaging
+        operator for a 2D tensor mesh. Indices are provided to show the
+        ordering of the elements in discrete vectors
+        :math:`\\boldsymbol{\\phi_x}` and :math:`\\boldsymbol{\\phi_c}`.
+
+        >>> from discretize import TensorMesh
+        >>> import matplotlib.pyplot as plt
+        >>> import matplotlib as mpl
+        >>> mpl.rcParams.update({'font.size': 14})
+        >>> 
+        >>> mesh = TensorMesh([[(1, 6)], [(1, 3)]])
+        >>> fig = plt.figure(figsize=(10, 10))
+        >>> ax1 = fig.add_subplot(211)
+        >>> mesh.plot_grid(ax=ax1)
+        >>> 
+        >>> ax1.plot(
+        >>>     mesh.faces_x[:, 0], mesh.faces_x[:, 1], "go", markersize=7
+        >>> )
+        >>> for ii, loc in zip(range(mesh.nFx), mesh.faces_x):
+        >>>     ax1.text(loc[0]+0.05, loc[1]+0.03, "{0:d}".format(ii), color="g")
+        >>> ax1.plot(
+        >>>     mesh.cell_centers[:, 0], mesh.cell_centers[:, 1], "ro", markersize=7
+        >>> )
+        >>> for ii, loc in zip(range(mesh.nC), mesh.cell_centers):
+        >>>     ax1.text(loc[0]+0.05, loc[1]+0.02, "{0:d}".format(ii), color="r")
+        >>> 
+        >>> ax1.set_xticks([])
+        >>> ax1.set_yticks([])
+        >>> ax1.spines['bottom'].set_color('white')
+        >>> ax1.spines['top'].set_color('white')
+        >>> ax1.spines['left'].set_color('white')
+        >>> ax1.spines['right'].set_color('white')
+        >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
+        >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
+        >>> ax1.set_title("Mapping of Averaging Operator (Scalar)", fontsize=14, pad=15)
+        >>> ax1.legend(
+        >>>     ['Mesh', '$\\mathbf{\\phi_x}$ (x-faces)', '$\\mathbf{\\phi_c}$ (centers)'],
+        >>>     loc='upper right', fontsize=14
+        >>> )
+        >>> ax2 = fig.add_subplot(212)
+        >>> ax2.spy(mesh.average_face_x_to_cell)
+        >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
+        >>> ax2.set_ylabel("Cell Number", fontsize=12)
+        >>> ax2.set_xlabel("X-Face Number", fontsize=12)
         """
 
         if getattr(self, "_average_face_x_to_cell", None) is None:
@@ -1469,8 +2154,81 @@ class DiffOperators(object):
 
     @property
     def average_face_y_to_cell(self):
-        """
-        Averaging operator from y-faces to cell centers (scalar quantities).
+        """Averaging operator from y-faces to cell centers (scalar quantities).
+
+        This property constructs the averaging operator that maps scalar
+        quantities from y-faces to cell centers. This averaging operator is
+        used when a discrete scalar quantity defined on y-faces must be
+        projected to cell centers. Once constructed, the operator is
+        stored permanently as a property of the mesh.
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix (n_cells, n_faces_y)
+            The scalar averaging operator from y-faces to cell centers
+
+        Notes
+        -----
+
+        Let :math:`\\boldsymbol{\\phi_y}` be a discrete scalar quantity that
+        lives on the y-faces. **average_face_y_to_cell** constructs a discrete
+        linear operator :math:`\\mathbf{A_{fc}}` that projects
+        :math:`\\boldsymbol{\\phi_y}` to cell centers, i.e.:
+
+        .. math::
+            \\boldsymbol{\\phi_c} = \\mathbf{A_{fc}} \\, \\boldsymbol{\\phi_y}
+
+        where :math:`\\boldsymbol{\\phi_c}` is a discrete scalar quantity
+        defined at cell centers. For each cell, we are simply averaging
+        the values defined on its y-faces.
+
+        Examples
+        --------
+
+        Below, we demonstrate the mapping and sparsity of the averaging
+        operator for a 2D tensor mesh. Indices are provided to show the
+        ordering of the elements in discrete vectors
+        :math:`\\boldsymbol{\\phi_y}` and :math:`\\boldsymbol{\\phi_c}`.
+
+        >>> from discretize import TensorMesh
+        >>> import matplotlib.pyplot as plt
+        >>> import matplotlib as mpl
+        >>> mpl.rcParams.update({'font.size': 14})
+        >>> 
+        >>> mesh = TensorMesh([[(1, 6)], [(1, 3)]])
+        >>> fig = plt.figure(figsize=(10, 10))
+        >>> ax1 = fig.add_subplot(211)
+        >>> mesh.plot_grid(ax=ax1)
+        >>> 
+        >>> ax1.plot(
+        >>>     mesh.faces_y[:, 0], mesh.faces_y[:, 1], "go", markersize=7
+        >>> )
+        >>> for ii, loc in zip(range(mesh.nFy), mesh.faces_y):
+        >>>     ax1.text(loc[0]+0.05, loc[1]+0.03, "{0:d}".format(ii), color="g")
+        >>> ax1.plot(
+        >>>     mesh.cell_centers[:, 0], mesh.cell_centers[:, 1], "ro", markersize=7
+        >>> )
+        >>> for ii, loc in zip(range(mesh.nC), mesh.cell_centers):
+        >>>     ax1.text(loc[0]+0.05, loc[1]+0.02, "{0:d}".format(ii), color="r")
+        >>> 
+        >>> ax1.set_xticks([])
+        >>> ax1.set_yticks([])
+        >>> ax1.spines['bottom'].set_color('white')
+        >>> ax1.spines['top'].set_color('white')
+        >>> ax1.spines['left'].set_color('white')
+        >>> ax1.spines['right'].set_color('white')
+        >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
+        >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
+        >>> ax1.set_title("Mapping of Averaging Operator (Scalar)", fontsize=14, pad=15)
+        >>> ax1.legend(
+        >>>     ['Mesh', '$\\mathbf{\\phi_y}$ (y-faces)', '$\\mathbf{\\phi_c}$ (centers)'],
+        >>>     loc='upper right', fontsize=14
+        >>> )
+        >>> ax2 = fig.add_subplot(212)
+        >>> ax2.spy(mesh.average_face_y_to_cell)
+        >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
+        >>> ax2.set_ylabel("Cell Number", fontsize=12)
+        >>> ax2.set_xlabel("Y-Face Number", fontsize=12)
         """
         if self.dim < 2:
             return None
@@ -1484,8 +2242,86 @@ class DiffOperators(object):
 
     @property
     def average_face_z_to_cell(self):
-        """
-        Averaging operator from z-faces to cell centers (scalar quantities).
+        """Averaging operator from z-faces to cell centers (scalar quantities).
+
+        This property constructs the averaging operator that maps scalar
+        quantities from z-faces to cell centers. This averaging operator is
+        used when a discrete scalar quantity defined on z-faces must be
+        projected to cell centers. Once constructed, the operator is
+        stored permanently as a property of the mesh.
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix (n_cells, n_faces_z)
+            The scalar averaging operator from z-faces to cell centers
+
+        Notes
+        -----
+
+        Let :math:`\\boldsymbol{\\phi_z}` be a discrete scalar quantity that
+        lives on the z-faces. **average_face_z_to_cell** constructs a discrete
+        linear operator :math:`\\mathbf{A_{fc}}` that projects
+        :math:`\\boldsymbol{\\phi_z}` to cell centers, i.e.:
+
+        .. math::
+            \\boldsymbol{\\phi_c} = \\mathbf{A_{fc}} \\, \\boldsymbol{\\phi_z}
+
+        where :math:`\\boldsymbol{\\phi_c}` is a discrete scalar quantity
+        defined at cell centers. For each cell, we are simply averaging
+        the values defined on its z-faces.
+
+        Examples
+        --------
+
+        Below, we demonstrate the mapping and sparsity of the averaging
+        operator for a 2D tensor mesh. Indices are provided to show the
+        ordering of the elements in discrete vectors
+        :math:`\\boldsymbol{\\phi_z}` and :math:`\\boldsymbol{\\phi_c}`.
+
+        >>> from discretize import TensorMesh
+        >>> import matplotlib.pyplot as plt
+        >>> import matplotlib as mpl
+        >>> mpl.rcParams.update({'font.size': 14})
+        >>> 
+        >>> mesh = TensorMesh([[(1, 3)], [(1, 2)], [(1, 2)]])
+        >>> 
+        >>> fig = plt.figure(figsize=(9, 12))
+        >>> 
+        >>> ax1 = fig.add_axes([0, 0.35, 1, 0.6], projection='3d', elev=10, azim=-82)
+        >>> mesh.plot_grid(ax=ax1)
+        >>> ax1.plot(
+        >>>     mesh.faces_z[:, 0], mesh.faces_z[:, 1], mesh.faces_z[:, 2], "go", markersize=10
+        >>> )
+        >>> ax1.plot(
+        >>>    mesh.cell_centers[:, 0], mesh.cell_centers[:, 1], mesh.cell_centers[:, 2], "ro", markersize=10
+        >>> )
+        >>> 
+        >>> ax1.legend(
+        >>>     ['Mesh', '$\\mathbf{\\phi_z}$ (z-faces)', '$\\mathbf{\\phi_c}$ (centers)'],
+        >>>     loc='upper right', fontsize=14
+        >>> )
+        >>> 
+        >>> # Manually make axis properties invisible
+        >>> ax1.set_xticks([])
+        >>> ax1.set_yticks([])
+        >>> ax1.set_zticks([])
+        >>> ax1.w_xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        >>> ax1.w_yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        >>> ax1.w_zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        >>> ax1.w_xaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
+        >>> ax1.w_yaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
+        >>> ax1.w_zaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
+        >>> ax1.set_xlabel('X', labelpad=-15, fontsize=16)
+        >>> ax1.set_ylabel('Y', labelpad=-20, fontsize=16)
+        >>> ax1.set_zlabel('Z', labelpad=-20, fontsize=16)
+        >>> ax1.set_title("Mapping of Averaging Operator", fontsize=16, pad=-15)
+        >>> 
+        >>> # Spy plot
+        >>> ax2 = fig.add_axes([0.05, 0.05, 0.9, 0.3])
+        >>> ax2.spy(mesh.average_face_z_to_cell)
+        >>> ax2.set_title("Spy Plot", fontsize=16, pad=5)
+        >>> ax2.set_ylabel("Cell Number", fontsize=12)
+        >>> ax2.set_xlabel("Z-Face Number", fontsize=12)
         """
         if self.dim < 3:
             return None
@@ -1605,8 +2441,81 @@ class DiffOperators(object):
 
     @property
     def average_edge_to_cell(self):
-        """
-        Averaging operator from edges to cell centers (scalar quantities).
+        """Averaging operator from edges to cell centers (scalar quantities).
+
+        This property constructs the averaging operator that maps scalar
+        quantities from edges to cell centers. This averaging operator is
+        used when a discrete scalar quantity defined on mesh edges must be
+        projected to cell centers. Once constructed, the operator is
+        stored permanently as a property of the mesh.
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix (n_cells, n_edges)
+            The scalar averaging operator from edges to cell centers
+
+        Notes
+        -----
+
+        Let :math:`\\boldsymbol{\\phi_e}` be a discrete scalar quantity that
+        lives on mesh edges. **average_edge_to_cell** constructs a discrete
+        linear operator :math:`\\mathbf{A_{ec}}` that projects
+        :math:`\\boldsymbol{\\phi_e}` to cell centers, i.e.:
+
+        .. math::
+            \\boldsymbol{\\phi_c} = \\mathbf{A_{ec}} \\, \\boldsymbol{\\phi_e}
+
+        where :math:`\\boldsymbol{\\phi_c}` is a discrete scalar quantity
+        defined at cell centers. For each cell, we are simply averaging
+        the values defined on its faces.
+
+        Examples
+        --------
+
+        Below, we demonstrate the mapping and sparsity of the averaging
+        operator for a 2D tensor mesh. Indices are provided to show the
+        ordering of the elements in discrete vectors
+        :math:`\\boldsymbol{\\phi_e}` and :math:`\\boldsymbol{\\phi_c}`.
+
+        >>> from discretize import TensorMesh
+        >>> import matplotlib.pyplot as plt
+        >>> import matplotlib as mpl
+        >>> mpl.rcParams.update({'font.size': 14})
+        >>> 
+        >>> mesh = TensorMesh([[(1, 6)], [(1, 3)]])
+        >>> fig = plt.figure(figsize=(10, 10))
+        >>> ax1 = fig.add_subplot(211)
+        >>> mesh.plot_grid(ax=ax1)
+        >>> 
+        >>> ax1.plot(
+        >>>     mesh.edges[:, 0], mesh.edges[:, 1], "go", markersize=7
+        >>> )
+        >>> for ii, loc in zip(range(mesh.nE), mesh.edges):
+        >>>     ax1.text(loc[0]+0.05, loc[1]+0.03, "{0:d}".format(ii), color="g")
+        >>> ax1.plot(
+        >>>     mesh.cell_centers[:, 0], mesh.cell_centers[:, 1], "ro", markersize=7
+        >>> )
+        >>> for ii, loc in zip(range(mesh.nC), mesh.cell_centers):
+        >>>     ax1.text(loc[0]+0.05, loc[1]+0.02, "{0:d}".format(ii), color="r")
+        >>> 
+        >>> ax1.set_xticks([])
+        >>> ax1.set_yticks([])
+        >>> ax1.spines['bottom'].set_color('white')
+        >>> ax1.spines['top'].set_color('white')
+        >>> ax1.spines['left'].set_color('white')
+        >>> ax1.spines['right'].set_color('white')
+        >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
+        >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
+        >>> ax1.set_title("Mapping of Averaging Operator (Scalar)", fontsize=14, pad=15)
+        >>> ax1.legend(
+        >>>     ['Mesh', '$\\mathbf{\\phi_f}$ (edges)', '$\\mathbf{\\phi_c}$ (centers)'],
+        >>>     loc='upper right', fontsize=14
+        >>> )
+        >>> ax2 = fig.add_subplot(212)
+        >>> ax2.spy(mesh.average_edge_to_cell)
+        >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
+        >>> ax2.set_ylabel("Cell Number", fontsize=12)
+        >>> ax2.set_xlabel("Edge Number", fontsize=12)
         """
         if getattr(self, "_average_edge_to_cell", None) is None:
             if self.dim == 1:
@@ -1623,8 +2532,95 @@ class DiffOperators(object):
 
     @property
     def average_edge_to_cell_vector(self):
-        """
-        Averaging operator from edges to cell centers (vector quantities).
+        """Averaging operator from edges to cell centers (vector quantities).
+
+        This property constructs the averaging operator that maps the Cartesian
+        components of vector quantities from edges to cell centers. This averaging
+        operators is used when a discrete vector quantity defined on mesh edges
+        must be approximated at cell centers. Once constructed, the operator is
+        stored permanently as a property of the mesh.
+
+        Be aware that the Cartesian components of the original vector
+        are defined on their respective edges; e.g. the x-component lives
+        on x-edges. However, the x, y and z components are being averaged
+        separately to cell centers.
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix (dim x n_cells, n_edges)
+            The vector averaging operator from edges to cell centers. Since we
+            are averaging a vector quantity to cell centers, the first dimension
+            is the mesh dimension times the number of cells.
+
+        Notes
+        -----
+
+        Let :math:`\\mathbf{u_e}` be the discrete representation of a vector
+        quantity whose Cartesian components are defined on their respective edges.
+        **average_edge_to_cell_vector** constructs a discrete linear operator
+        :math:`\\mathbf{A_{ec}}` that projects each Cartesian component of
+        :math:`\\mathbf{u_e}` independently to cell centers, i.e.:
+
+        .. math::
+            \\mathbf{u_c} \\approx \\mathbf{A_{ec}} \\, \\mathbf{u_e}
+
+        where :math:`\\mathbf{u_c}` is a discrete vector quantity whose Cartesian
+        components are all defined at the cell centers. For each cell, and for
+        each Cartesian component, we are simply taking the average of the values
+        defined on the cell's corresponding edges and placing the result at
+        the cell's center.
+
+        Examples
+        --------
+
+        Below, we demonstrate the mapping and sparsity of the averaging
+        operator for vectors a 2D tensor mesh. We illustrate the location
+        and vector components which live on different gridded locations
+        on the mesh.
+
+        >>> from discretize import TensorMesh
+        >>> import matplotlib.pyplot as plt
+        >>> import numpy as np
+        >>> import matplotlib as mpl
+        >>> mpl.rcParams.update({'font.size': 14})
+        >>> 
+        >>> mesh = TensorMesh([[(1, 6)], [(1, 4)]])
+        >>> ds1 = mesh.edge_tangents
+        >>> ds2 = mesh.average_edge_to_cell_vector * mesh.edge_tangents
+        >>> 
+        >>> fig = plt.figure(figsize=(8, 12))
+        >>> ax1 = fig.add_subplot(211)
+        >>> mesh.plot_grid(ax=ax1)
+        >>> 
+        >>> ax1.quiver(
+        >>>     mesh.edges[:, 0], mesh.edges[:, 1], ds1[:, 0], ds1[:, 1], facecolor='g', 
+        >>>     pivot='middle', width=0.005, headwidth=5, headlength=3, headaxislength=3, scale=16
+        >>> )
+        >>> 
+        >>> centers = np.tile(mesh.cell_centers, np.array([2, 1]))
+        >>> ax1.quiver(
+        >>>     centers[:, 0], centers[:, 1], ds2[:, 0], ds2[:, 1], facecolor='r', 
+        >>>     pivot='middle', width=0.005, headwidth=5, headlength=3, headaxislength=3, scale=16
+        >>> )
+        >>> 
+        >>> ax1.set_xticks([])
+        >>> ax1.set_yticks([])
+        >>> ax1.spines['bottom'].set_color('white')
+        >>> ax1.spines['top'].set_color('white')
+        >>> ax1.spines['left'].set_color('white')
+        >>> ax1.spines['right'].set_color('white')
+        >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
+        >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
+        >>> ax1.set_title("Mapping of Averaging Operator (Vectors)", fontsize=14, pad=15)
+        >>> ax1.legend(
+        >>>     ['Mesh', '$\\mathbf{u_f}$ (edges)', '$\\mathbf{u_c}$ (centers)'],
+        >>>     loc='upper right', fontsize=14
+        >>> )
+        >>> ax2 = fig.add_subplot(212)
+        >>> ax2.spy(mesh.average_edge_to_cell_vector)
+        >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
+        >>> ax2.set_ylabel("Index in Resulting Vector", fontsize=12)
+        >>> ax2.set_xlabel("Edge Number", fontsize=12)
         """
         if getattr(self, "_average_edge_to_cell_vector", None) is None:
             if self.dim == 1:
@@ -1641,8 +2637,81 @@ class DiffOperators(object):
 
     @property
     def average_edge_x_to_cell(self):
-        """
-        Averaging operator from x-edges to cell centers (scalar quantities).
+        """Averaging operator from x-edges to cell centers (scalar quantities).
+
+        This property constructs the averaging operator that maps scalar
+        quantities from x-edges to cell centers. This averaging operator is
+        used when a discrete scalar quantity defined on x-edges must be
+        projected to cell centers. Once constructed, the operator is
+        stored permanently as a property of the mesh.
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix (n_cells, n_edges_x)
+            The scalar averaging operator from x-edges to cell centers
+
+        Notes
+        -----
+
+        Let :math:`\\boldsymbol{\\phi_x}` be a discrete scalar quantity that
+        lives on the x-edges. **average_edge_x_to_cell** constructs a discrete
+        linear operator :math:`\\mathbf{A_{ec}}` that projects
+        :math:`\\boldsymbol{\\phi_x}` to cell centers, i.e.:
+
+        .. math::
+            \\boldsymbol{\\phi_c} = \\mathbf{A_{ec}} \\, \\boldsymbol{\\phi_x}
+
+        where :math:`\\boldsymbol{\\phi_c}` is a discrete scalar quantity
+        defined at cell centers. For each cell, we are simply averaging
+        the values defined on its x-edges.
+
+        Examples
+        --------
+
+        Below, we demonstrate the mapping and sparsity of the averaging
+        operator for a 2D tensor mesh. Indices are provided to show the
+        ordering of the elements in discrete vectors
+        :math:`\\boldsymbol{\\phi_x}` and :math:`\\boldsymbol{\\phi_c}`.
+
+        >>> from discretize import TensorMesh
+        >>> import matplotlib.pyplot as plt
+        >>> import matplotlib as mpl
+        >>> mpl.rcParams.update({'font.size': 14})
+        >>> 
+        >>> mesh = TensorMesh([[(1, 6)], [(1, 3)]])
+        >>> fig = plt.figure(figsize=(10, 10))
+        >>> ax1 = fig.add_subplot(211)
+        >>> mesh.plot_grid(ax=ax1)
+        >>> 
+        >>> ax1.plot(
+        >>>     mesh.edges_x[:, 0], mesh.edges_x[:, 1], "go", markersize=7
+        >>> )
+        >>> for ii, loc in zip(range(mesh.nEx), mesh.edges_x):
+        >>>     ax1.text(loc[0]+0.05, loc[1]+0.03, "{0:d}".format(ii), color="g")
+        >>> ax1.plot(
+        >>>     mesh.cell_centers[:, 0], mesh.cell_centers[:, 1], "ro", markersize=7
+        >>> )
+        >>> for ii, loc in zip(range(mesh.nC), mesh.cell_centers):
+        >>>     ax1.text(loc[0]+0.05, loc[1]+0.02, "{0:d}".format(ii), color="r")
+        >>> 
+        >>> ax1.set_xticks([])
+        >>> ax1.set_yticks([])
+        >>> ax1.spines['bottom'].set_color('white')
+        >>> ax1.spines['top'].set_color('white')
+        >>> ax1.spines['left'].set_color('white')
+        >>> ax1.spines['right'].set_color('white')
+        >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
+        >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
+        >>> ax1.set_title("Mapping of Averaging Operator (Scalar)", fontsize=14, pad=15)
+        >>> ax1.legend(
+        >>>     ['Mesh', '$\\mathbf{\\phi_x}$ (x-edges)', '$\\mathbf{\\phi_c}$ (centers)'],
+        >>>     loc='upper right', fontsize=14
+        >>> )
+        >>> ax2 = fig.add_subplot(212)
+        >>> ax2.spy(mesh.average_edge_x_to_cell)
+        >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
+        >>> ax2.set_ylabel("Cell Number", fontsize=12)
+        >>> ax2.set_xlabel("X-Edge Number", fontsize=12)
         """
         if getattr(self, "_average_edge_x_to_cell", None) is None:
             # The number of cell centers in each direction
@@ -1657,8 +2726,81 @@ class DiffOperators(object):
 
     @property
     def average_edge_y_to_cell(self):
-        """
-        Averaging operator from y-edges to cell centers (scalar quantities).
+        """Averaging operator from y-edges to cell centers (scalar quantities).
+
+        This property constructs the averaging operator that maps scalar
+        quantities from y-edges to cell centers. This averaging operator is
+        used when a discrete scalar quantity defined on y-edges must be
+        projected to cell centers. Once constructed, the operator is
+        stored permanently as a property of the mesh.
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix (n_cells, n_edges_y)
+            The scalar averaging operator from y-edges to cell centers
+
+        Notes
+        -----
+
+        Let :math:`\\boldsymbol{\\phi_y}` be a discrete scalar quantity that
+        lives on the y-edges. **average_edge_y_to_cell** constructs a discrete
+        linear operator :math:`\\mathbf{A_{ec}}` that projects
+        :math:`\\boldsymbol{\\phi_y}` to cell centers, i.e.:
+
+        .. math::
+            \\boldsymbol{\\phi_c} = \\mathbf{A_{ec}} \\, \\boldsymbol{\\phi_y}
+
+        where :math:`\\boldsymbol{\\phi_c}` is a discrete scalar quantity
+        defined at cell centers. For each cell, we are simply averaging
+        the values defined on its y-edges.
+
+        Examples
+        --------
+
+        Below, we demonstrate the mapping and sparsity of the averaging
+        operator for a 2D tensor mesh. Indices are provided to show the
+        ordering of the elements in discrete vectors
+        :math:`\\boldsymbol{\\phi_y}` and :math:`\\boldsymbol{\\phi_c}`.
+
+        >>> from discretize import TensorMesh
+        >>> import matplotlib.pyplot as plt
+        >>> import matplotlib as mpl
+        >>> mpl.rcParams.update({'font.size': 14})
+        >>> 
+        >>> mesh = TensorMesh([[(1, 6)], [(1, 3)]])
+        >>> fig = plt.figure(figsize=(10, 10))
+        >>> ax1 = fig.add_subplot(211)
+        >>> mesh.plot_grid(ax=ax1)
+        >>> 
+        >>> ax1.plot(
+        >>>     mesh.edges_y[:, 0], mesh.edges_y[:, 1], "go", markersize=7
+        >>> )
+        >>> for ii, loc in zip(range(mesh.nEy), mesh.edges_y):
+        >>>     ax1.text(loc[0]+0.05, loc[1]+0.03, "{0:d}".format(ii), color="g")
+        >>> ax1.plot(
+        >>>     mesh.cell_centers[:, 0], mesh.cell_centers[:, 1], "ro", markersize=7
+        >>> )
+        >>> for ii, loc in zip(range(mesh.nC), mesh.cell_centers):
+        >>>     ax1.text(loc[0]+0.05, loc[1]+0.02, "{0:d}".format(ii), color="r")
+        >>> 
+        >>> ax1.set_xticks([])
+        >>> ax1.set_yticks([])
+        >>> ax1.spines['bottom'].set_color('white')
+        >>> ax1.spines['top'].set_color('white')
+        >>> ax1.spines['left'].set_color('white')
+        >>> ax1.spines['right'].set_color('white')
+        >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
+        >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
+        >>> ax1.set_title("Mapping of Averaging Operator (Scalar)", fontsize=14, pad=15)
+        >>> ax1.legend(
+        >>>     ['Mesh', '$\\mathbf{\\phi_y}$ (y-edges)', '$\\mathbf{\\phi_c}$ (centers)'],
+        >>>     loc='upper right', fontsize=14
+        >>> )
+        >>> ax2 = fig.add_subplot(212)
+        >>> ax2.spy(mesh.average_edge_y_to_cell)
+        >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
+        >>> ax2.set_ylabel("Cell Number", fontsize=12)
+        >>> ax2.set_xlabel("Y-Edge Number", fontsize=12)
         """
         if self.dim < 2:
             return None
@@ -1673,8 +2815,86 @@ class DiffOperators(object):
 
     @property
     def average_edge_z_to_cell(self):
-        """
-        Averaging operator from z-edges to cell centers (scalar quantities).
+        """Averaging operator from z-edges to cell centers (scalar quantities).
+
+        This property constructs the averaging operator that maps scalar
+        quantities from z-edges to cell centers. This averaging operator is
+        used when a discrete scalar quantity defined on z-edges must be
+        projected to cell centers. Once constructed, the operator is
+        stored permanently as a property of the mesh.
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix (n_cells, n_edges_z)
+            The scalar averaging operator from z-edges to cell centers
+
+        Notes
+        -----
+
+        Let :math:`\\boldsymbol{\\phi_z}` be a discrete scalar quantity that
+        lives on the z-edges. **average_edge_z_to_cell** constructs a discrete
+        linear operator :math:`\\mathbf{A_{ec}}` that projects
+        :math:`\\boldsymbol{\\phi_z}` to cell centers, i.e.:
+
+        .. math::
+            \\boldsymbol{\\phi_c} = \\mathbf{A_{ec}} \\, \\boldsymbol{\\phi_z}
+
+        where :math:`\\boldsymbol{\\phi_c}` is a discrete scalar quantity
+        defined at cell centers. For each cell, we are simply averaging
+        the values defined on its z-edges.
+
+        Examples
+        --------
+
+        Below, we demonstrate the mapping and sparsity of the averaging
+        operator for a 2D tensor mesh. Indices are provided to show the
+        ordering of the elements in discrete vectors
+        :math:`\\boldsymbol{\\phi_z}` and :math:`\\boldsymbol{\\phi_c}`.
+
+        >>> from discretize import TensorMesh
+        >>> import matplotlib.pyplot as plt
+        >>> import matplotlib as mpl
+        >>> mpl.rcParams.update({'font.size': 14})
+        >>> 
+        >>> mesh = TensorMesh([[(1, 3)], [(1, 2)], [(1, 2)]])
+        >>> 
+        >>> fig = plt.figure(figsize=(9, 12))
+        >>> 
+        >>> ax1 = fig.add_axes([0, 0.35, 1, 0.6], projection='3d', elev=10, azim=-82)
+        >>> mesh.plot_grid(ax=ax1)
+        >>> ax1.plot(
+        >>>     mesh.edges_z[:, 0], mesh.edges_z[:, 1], mesh.edges_z[:, 2], "go", markersize=10
+        >>> )
+        >>> ax1.plot(
+        >>>    mesh.cell_centers[:, 0], mesh.cell_centers[:, 1], mesh.cell_centers[:, 2], "ro", markersize=10
+        >>> )
+        >>> 
+        >>> ax1.legend(
+        >>>     ['Mesh', '$\\mathbf{\\phi_z}$ (z-edges)', '$\\mathbf{\\phi_c}$ (centers)'],
+        >>>     loc='upper right', fontsize=14
+        >>> )
+        >>> 
+        >>> # Manually make axis properties invisible
+        >>> ax1.set_xticks([])
+        >>> ax1.set_yticks([])
+        >>> ax1.set_zticks([])
+        >>> ax1.w_xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        >>> ax1.w_yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        >>> ax1.w_zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        >>> ax1.w_xaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
+        >>> ax1.w_yaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
+        >>> ax1.w_zaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
+        >>> ax1.set_xlabel('X', labelpad=-15, fontsize=16)
+        >>> ax1.set_ylabel('Y', labelpad=-20, fontsize=16)
+        >>> ax1.set_zlabel('Z', labelpad=-20, fontsize=16)
+        >>> ax1.set_title("Mapping of Averaging Operator", fontsize=16, pad=-15)
+        >>> 
+        >>> # Spy plot
+        >>> ax2 = fig.add_axes([0.05, 0.05, 0.9, 0.3])
+        >>> ax2.spy(mesh.average_edge_z_to_cell)
+        >>> ax2.set_title("Spy Plot", fontsize=16, pad=5)
+        >>> ax2.set_ylabel("Cell Number", fontsize=12)
+        >>> ax2.set_xlabel("Z-Edge Number", fontsize=12)
         """
         if self.dim < 3:
             return None
