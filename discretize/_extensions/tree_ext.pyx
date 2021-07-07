@@ -18,10 +18,8 @@ cdef class TreeCell:
     """A class for defining cell within instances of :class:`~discretize.TreeMesh`
 
     This cannot be created in python, it can only be accessed by indexing the
-    `TreeMesh` object.
-
-    This is also the object that is passed to the user defined refine function
-    when calling TreeMesh.refine(func).
+    `TreeMesh` object. This is also the object that is passed to the user
+    defined refine function when calling TreeMesh.refine(func).
 
     Notes
     -----
@@ -131,7 +129,7 @@ cdef class TreeCell:
 
     @property
     def origin(self):
-        """Origin location (i.e. anchor point) for the tree cell
+        """Origin location ('anchor point') for the tree cell
 
         This property returns the origin location (or 'anchor point') for the
         tree cell. The origin location is defined as the bottom-left-front
@@ -140,14 +138,14 @@ cdef class TreeCell:
         Returns
         -------
         numpy.array of length (dim)
-            Origin location (i.e. anchor point) for the tree cell
+            Origin location ('anchor point') for the tree cell
         """
         if self._dim == 2: return np.array([self._x0, self._y0])
         return np.array([self._x0, self._y0, self._z0])
 
     @property
     def x0(self):
-        """Origin location (i.e. anchor point) for the tree cell
+        """Origin location ('anchor point') for the tree cell
 
         This property returns the origin location (or 'anchor point') for the
         tree cell. The origin location is defined as the bottom-left-front
@@ -156,7 +154,7 @@ cdef class TreeCell:
         Returns
         -------
         numpy.array of length (dim)
-            Origin location (i.e. anchor point) for the tree cell
+            Origin location ('anchor point') for the tree cell
         """
         return self.origin
 
@@ -177,12 +175,12 @@ cdef class TreeCell:
 
     @property
     def dim(self):
-        """Dimension of the tree cell; i.e. 2 or 3
+        """Dimension of the tree cell; 1, 2 or 3
 
         Returns
         -------
         int
-            Dimension of the tree cell; i.e. 2 or 3
+            Dimension of the tree cell; 1, 2 or 3
         """
         return self._dim
 

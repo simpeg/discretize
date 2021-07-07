@@ -132,8 +132,16 @@ def _ddxCellGradBC(n, bc):
 
 
 class DiffOperators(object):
-    """
-    Class used for creating differential and averaging operators.
+    """Class used for creating differential and averaging operators.
+
+    ``DiffOperators`` is a class for managing the construction of
+    differential and averaging operators at the highest level.
+    The ``DiffOperator`` class is inherited by every ``discretize``
+    mesh class. In practice, differential and averaging operators are
+    not constructed by creating instances of ``DiffOperators``.
+    Instead, the operators are constructed (and sometimes stored)
+    when called as a property of the mesh.
+
     """
 
     _aliases = {
@@ -852,64 +860,76 @@ class DiffOperators(object):
         return self._nodal_laplacian
 
     def edge_divergence_weak_form_robin(self, alpha=0.0, beta=1.0, gamma=0.0):
-        r"""Robin boundary condition for the weak formulation of the edge divergence
+        r"""Robin conditions for edge divergence operator (edges to nodes)
 
-        This function returns the necessary parts to form the full weak form of the
-        edge divergence using the nodal gradient with appropriate boundary conditions.
+        When the discrete divergence operator maps from edges to nodes, we must
+        implement boundary conditions to evaluate inner products containing the
+        divergence operator according to the weak formulation; e.g.
+        :math:`\langle \psi , \nabla \cdot \vec{u} \rangle` . Where general
+        boundary conditions are defined on the normal component of :math:`\vec{u}`
+        according to the Robin condition:
 
-        The `alpha`, `beta`, and `gamma` parameters can be scalars, or arrays. If they
-        are arrays, they can either be the same length as the number of boundary faces,
-        or boundary nodes. If multiple parameters are arrays, they must all be the same
-        length.
+        .. math::
+            \alpha u_n + \beta \frac{\partial u_n}{\partial n} = \gamma
 
-        `beta` can not be 0.
-
-        It is assumed here that quantity that is approximated on the boundary is the
-        gradient of another quantity. See the Notes section for explicit details.
+        the user supplies values for :math:`\alpha`, :math:`\beta` and :math:`\gamma`
+        for all boundary nodes or boundary faces. For the values supplied,
+        **edge_divergence_weak_form_robin** returns the matrix :math:`\mathbf{B}`
+        and vector :math:`\mathbf{b}` required to evaluate inner products
+        containing the divergence. *See the notes section for a comprehensive
+        description.*
 
         Parameters
         ----------
-        alpha, beta : scalar or array_like
-            Parameters for the Robin boundary condition. array_like must be defined on
-            either boundary faces or boundary nodes.
+        alpha : scalar or array_like
+            Defines :math:`\alpha` for Robin boundary condition. Can be defined as a
+            scalar or array_like. If array_like, the length of the array must be equal
+            to the number of boundary faces or boundary nodes.
+        beta : scalar or array_like
+            Defines :math:`\beta` for Robin boundary condition. Can be defined as a
+            scalar or array_like. If array_like, must have the same length as *alpha*.
+            *beta* CANNOT be 0!
         gamma: scalar or array_like
-            right hand side boundary conditions. If this parameter is array like, it can
-            be fed either a (n_boundary_XXX,) shape array or an (n_boundary_XXX, n_rhs)
-            shape array if multiple systems have the same alpha and beta parameters.
+            Defines :math:`\gamma` for Robin boundary condition. If array like, *gamma*
+            can have shape (n_boundary_xxx,). Can also have shape (n_boundary_xxx, n_rhs)
+            if multiple systems have the same *alpha* and *beta* parameters.
+
+        Returns
+        -------
+        B : scipy.sparse.diags
+            A sparse diagonal matrix dependent on the values of *alpha*, *beta* and *gamma* supplied
+        b : array_like (n_nodes,)
+            A vector dependent on the values of *alpha*, *beta* and *gamma* supplied
 
         Notes
         -----
-        For these returned operators, it is assumed that the quantity on the boundary is
-        related to the gradient of some other quantity.
-
-        The weak form is obtained by multiplying the divergence by a (piecewise-constant)
-        test function, and integrating over the cell, i.e.
-
-        .. math:: \int_V y \nabla \cdot \vec{u} \partial V
-            :label: weak_form
-
-        This equation can be transformed to reduce the differentiability requirement on
-        :math:`\vec{u}` to be,
-
-        .. math:: -\int_V \vec{u} \cdot (\nabla y) \partial V + \int_{dV} y \vec{u} \cdot \hat{n} \partial S.
-            :label: transformed
-
-        Furthermore, when applying these types of transformations, the unknown vector
-        :math:`\vec{u}` is usually related to some scalar potential as:
-
-        .. math:: \vec{u} = \nabla \phi
-            :label: gradient of potential
-
-        Thus the robin conditions returned by these matrices apply to the quantity of
-        :math:`\phi`.
+        For the divergence of a vector :math:`\vec{u}`, the weak form is implemented by taking
+        the inner product with a piecewise-constant test function :math:`\psi` and integrating
+        over the domain:
 
         .. math::
-            \alpha \phi + \beta \nabla \phi \cdot \hat{n} = \gamma
+            \langle \psi , \nabla \cdot \vec{u} \rangle \; = \int_\Omega \psi \, (\nabla \cdot \vec{u}) \, dv
 
-            \alpha \phi + \beta \vec{u} \cdot \hat{n} = \gamma
+        For a divergence operator that maps from edges to nodes, the discrete representation
+        of :math:`\vec{u}` must live on the edges. To implement boundary conditions in this
+        case, we must use the divergence theorem to re-express the inner product as:
 
-        The returned operators cannot be used to impose a Dirichlet condition on
-        :math:`\phi`.
+        .. math::
+            \langle \psi , \nabla \cdot \vec{u} \rangle \; = - \int_V \vec{u} \cdot \nabla \psi \, dV
+            + \oint_{\partial \Omega} \psi \, (\hat{n} \cdot \vec{u}) \, da
+        
+        where the robin condition is applied to the normal component of :math:`\vec{u}` on the
+        boundary. The discrete approximation to the above expression is given by:
+
+        .. math::
+            \langle \psi , \nabla \cdot \vec{u} \rangle \; \approx - \boldsymbol{\psi^T \big ( G^T M_e - B \big ) u + \psi^T b}
+
+        where :math:`\mathbf{G}` is the :py:attr:`~discretize.operators.DiffOperators.nodal_gradient`
+        and :math:`\mathbf{M_e}` is the edge inner product matrix; constructed with
+        :py:meth:`~discretize.inner_products.InnerProducts.get_edge_inner_product`.
+        **edge_divergence_weak_form_robin** returns the matrix :math:`\mathbf{B}`
+        and vector :math:`\mathbf{b}` based on the parameters *alpha* , *beta*
+        and *gamma* provided.
 
         """
         alpha = np.atleast_1d(alpha)
@@ -1111,39 +1131,76 @@ class DiffOperators(object):
         return self._cell_gradient
 
     def cell_gradient_weak_form_robin(self, alpha=1.0, beta=0.0, gamma=0.0):
-        r"""Robin boundary condition for the weak formulation of the cell gradient
+        r"""Robin conditions for cell gradient operator (cell centers to faces)
 
-        This function returns the necessary parts for the weak form of the cell gradient
-        operator to represent the Robin boundary conditions.
+        When the discrete gradient operator maps from cell centers to faces, we must
+        implement boundary conditions to evaluate inner products containing the
+        gradient operator according to the weak formulation; e.g.
+        :math:`\langle \vec{u} , \nabla \phi \rangle` . Where general
+        boundary conditions are defined on :math:`\phi`
+        according to the Robin condition:
 
-        The implementation assumes a ghost cell that mirrors the boundary cells across the boundary faces, with a
-        piecewise linear approximation to the values at the ghost cell centers.
+        .. math::
+            \alpha \phi + \beta \frac{\partial \phi}{\partial n} = \gamma
 
-        The parameters can either be defined as a constant applied to the entire boundary,
-        or as arrays that represent those values on the :meth:`discretize.base.BaseTensorMesh.boundary_faces`.
-
-        The returned arrays represent the proper boundary conditions on a solution ``u``
-        such that the inner product of the gradient of ``u`` with a test function y would
-        be <``y, gradient*u``> ``= y.dot((-face_divergence.T*cell_volumes + A)*u + y.dot(b)``.
-
-        The default values will produce a zero-dirichlet boundary condition.
+        the user supplies values for :math:`\alpha`, :math:`\beta` and :math:`\gamma`
+        for all boundary faces. For the values supplied,
+        **cell_gradient_weak_form_robin** returns the matrix :math:`\mathbf{B}`
+        and vector :math:`\mathbf{b}` required to evaluate inner products
+        containing the gradient. *See the notes section for a comprehensive
+        description.*
 
         Parameters
         ----------
-        alpha, beta : scalar or array_like
-            Parameters for the Robin boundary condition. array_like must be defined on
-            each boundary face.
+        alpha : scalar or array_like
+            Defines :math:`\alpha` for Robin boundary condition. Can be defined as a
+            scalar or array_like. If array_like, the length of the array must be equal
+            to the number of boundary faces.
+        beta : scalar or array_like
+            Defines :math:`\beta` for Robin boundary condition. Can be defined as a
+            scalar or array_like. If array_like, must have the same length as *alpha*.
+            *beta* CANNOT be 0!
         gamma: scalar or array_like
-            right hand side boundary conditions. If this parameter is array like, it can
-            be fed either a (n_boundary_faces,) shape array or an (n_boundary_faces, n_rhs)
-            shape array if multiple systems have the same alpha and beta parameters.
+            Defines :math:`\gamma` for Robin boundary condition. If array like, *gamma*
+            can have shape (n_boundary_face,). Can also have shape (n_boundary_faces, n_rhs)
+            if multiple systems have the same *alpha* and *beta* parameters.
 
         Returns
         -------
-        A : scipy.sparse.csr_matrix
-            Matrix to add to (-face_divergence.T * cell_volumes)
-        b : numpy.ndarray
-            Array to add to the result of the (-face_divergence.T * cell_volumes + A) @ u.
+        B : scipy.sparse.diags
+            A sparse diagonal matrix dependent on the values of *alpha*, *beta* and *gamma* supplied
+        b : array_like (n_faces,)
+            A vector dependent on the values of *alpha*, *beta* and *gamma* supplied
+
+        Notes
+        -----
+        For the gradient of a scalar :math:`\phi`, the weak form is implemented by taking
+        the inner product with a piecewise-constant test function :math:`\vec{u}` and integrating
+        over the domain:
+
+        .. math::
+            \langle \vec{u} , \nabla \phi \rangle \; = \int_\Omega \vec{u} \cdot (\nabla \phi) \, dv
+
+        For a gradient operator that maps from cell centers to faces, the discrete representation
+        of :math:`\phi` must live at cell centers. To implement boundary conditions in this
+        case, we must use the divergence theorem to re-express the inner product as:
+
+        .. math::
+            \langle \vec{u} , \nabla \phi \rangle \; = - \int_V \phi \, (\nabla \cdot \vec{u} ) \, dV
+            + \oint_{\partial \Omega} \phi \hat{n} \cdot \vec{u} \, da
+        
+        where the robin condition is applied to :math:`\phi` on the
+        boundary. The discrete approximation to the above expression is given by:
+
+        .. math::
+            \langle \vec{u} , \nabla \phi \rangle \; \approx - \boldsymbol{u^T \big ( D^T M_f - B \big ) \phi + u^T b}
+
+        where :math:`\mathbf{D}` is the :py:attr:`~discretize.operators.DiffOperators.face_divergence`
+        and :math:`\mathbf{M_f}` is the face inner product matrix; constructed with
+        :py:meth:`~discretize.inner_products.InnerProducts.get_face_inner_product`.
+        **cell_gradient_weak_form_robin** returns the matrix :math:`\mathbf{B}`
+        and vector :math:`\mathbf{b}` based on the parameters *alpha* , *beta*
+        and *gamma* provided.
 
         Examples
         --------
@@ -1170,36 +1227,6 @@ class DiffOperators(object):
         >>> phi = np.sin(np.pi * mesh.cell_centers[:, 0]) * np.sin(np.pi * mesh.cell_centers[:, 1])
         >>> phi_grad = (-D.T @ V + A) @ phi + b
 
-        Notes
-        -----
-        The weak form is obtained by multiplying the gradient by a (piecewise-constant)
-        test function, and integrating over the cell, i.e.
-
-        .. math:: \int_V \vec{y} \cdot \nabla u \partial V
-            :label: weak_form
-
-        This equation can be transformed to reduce the differentiability requirement on `u`
-        to be,
-
-        .. math:: -\int_V u (\nabla \cdot \vec{y}) \partial V + \int_{dV} u \vec{y} \partial V.
-            :label: transformed
-
-        The first term in equation :eq:transformed is constructed using the matrix
-        operators defined on this mesh as ``D`` = :meth:`discretize.operators.DiffOperators.face_divergence` and
-        ``V``, a diagonal matrix of :meth:`discretize.base.BaseMesh.cell_volumes`, as
-
-        .. math:: -(D*y)^T*V*u.
-
-        This function returns the necessary matrices to complete the transformation of
-        equation :eq:transformed. The second part of equation :eq:transformed becomes,
-
-        .. math:: \int_V \nabla \cdot (\phi u) \partial V = \int_{\partial\Omega} \phi\vec{u}\cdot\hat{n} \partial a
-            :label: boundary_conditions
-
-        which is then approximated with the matrices returned here such that the full
-        form of the weak formulation in a discrete form would be.
-
-        .. math:: y^T(-D^T V + B)u + y^Tb
         """
 
         # get length between boundary cell_centers and boundary_faces
