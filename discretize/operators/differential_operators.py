@@ -259,7 +259,8 @@ class DiffOperators(object):
         In continuous space, the divergence operator is defined as:
 
         .. math::
-            \\phi = \\nabla \\cdot \\vec{u} = \\frac{\\partial u_x}{\\partial x} + \\frac{\\partial u_y}{\\partial y} + \\frac{\\partial u_z}{\\partial z}
+            \\phi = \\nabla \\cdot \\vec{u} = \\frac{\\partial u_x}{\\partial x}
+            + \\frac{\\partial u_y}{\\partial y} + \\frac{\\partial u_z}{\\partial z}
 
         Where :math:`\\mathbf{u}` is the discrete representation of the continuous variable
         :math:`\\vec{u}` on cell faces and :math:`\\boldsymbol{\\phi}` is the discrete
@@ -285,16 +286,62 @@ class DiffOperators(object):
         Examples
         --------
 
-        Below, we demonstrate the mapping and sparsity of the face divergence
-        for a 2D tensor mesh. Indices are provided to show the ordering of
-        the elements in discrete vectors :math:`\\mathbf{u}` and
-        :math:`\\boldsymbol{\\phi}`.
+        Below, we demonstrate how to apply the face divergence operator to
+        a discrete vector, the mapping of the face divergence operator and
+        its sparsity. Our example is carried out on a 2D mesh but it can
+        be done equivalently for a 3D mesh.
 
+        We start by importing the necessary packages and modules.
+        
         >>> from discretize import TensorMesh
+        >>> import numpy as np
         >>> import matplotlib.pyplot as plt
         >>> import matplotlib as mpl
-        >>> mpl.rcParams.update({'font.size': 14})
+
+        For a discrete vector quantity defined on the faces, we take the
+        divergence by constructing the divergence operator and multiplying
+        as a matrix-vector product.
+
+        >>> # Create a uniform grid
+        >>> h = np.ones(20)
+        >>> mesh = TensorMesh([h, h], "CC")
         >>> 
+        >>> # Create a discrete vector on mesh faces
+        >>> faces_x = mesh.faces_x
+        >>> faces_y = mesh.faces_y
+        >>> ux = (faces_x[:, 0] / np.sqrt(np.sum(faces_x ** 2, axis=1))) * np.exp(
+        >>>     -(faces_x[:, 0] ** 2 + faces_x[:, 1] ** 2) / 6 ** 2
+        >>> )
+        >>> uy = (faces_y[:, 1] / np.sqrt(np.sum(faces_y ** 2, axis=1))) * np.exp(
+        >>>     -(faces_y[:, 0] ** 2 + faces_y[:, 1] ** 2) / 6 ** 2
+        >>> )
+        >>> u = np.r_[ux, uy]
+        >>> 
+        >>> # Construct the divergence operator and apply to vector
+        >>> D = mesh.face_divergence
+        >>> div_u = D * u
+        >>> 
+        >>> # Plot
+        >>> fig = plt.figure(figsize=(13, 6))
+        >>> ax1 = fig.add_subplot(121)
+        >>> mesh.plot_image(
+        >>>     u, ax=ax1, v_type="F", view="vec", stream_opts={"color": "w", "density": 1.0}
+        >>> )
+        >>> ax1.set_title("Vector at cell faces", fontsize=14)
+        >>> ax2 = fig.add_subplot(122)
+        >>> mesh.plot_image(div_u, ax=ax2)
+        >>> ax2.set_yticks([])
+        >>> ax2.set_ylabel("")
+        >>> ax2.set_title("Divergence at cell centers", fontsize=14)
+        >>> fig.show()
+
+        The discrete divergence operator is a sparse matrix that maps
+        from faces to cell centers. To demonstrate this, we construct
+        a small 2D mesh. We then show the ordering of the elements in
+        the original discrete quantity :math:`\\mathbf{u}` and its
+        discrete divergence :math:`\\boldsymbol{\\phi}` as well as a
+        spy plot.
+
         >>> mesh = TensorMesh([[(1, 6)], [(1, 3)]])
         >>> fig = plt.figure(figsize=(10, 10))
         >>> ax1 = fig.add_subplot(211)
@@ -363,17 +410,53 @@ class DiffOperators(object):
         Examples
         --------
 
-        Below, we demonstrate the mapping and sparsity of the operator
-        for a 2D tensor mesh. Indices are provided to show the ordering of
-        the elements in a discrete quantity :math:`\\mathbf{u_x}` that lives
-        on x-faces, and its x-derivative :math:`\\partial \\mathbf{u_x}/\\partial x`
-        at cell centers.
+        Below, we demonstrate how to apply the face-x divergence operator,
+        the mapping of the face-x divergence operator and its sparsity.
+        Our example is carried out on a 2D mesh but it can
+        be done equivalently for a 3D mesh.
 
+        We start by importing the necessary packages and modules.
+        
         >>> from discretize import TensorMesh
+        >>> import numpy as np
         >>> import matplotlib.pyplot as plt
         >>> import matplotlib as mpl
-        >>> mpl.rcParams.update({'font.size': 14})
+
+        For a discrete scalar quantity :math:`\\mathbf{u_x}` defined on the
+        x-faces, we take the x-derivative by constructing the face-x divergence
+        operator and multiplying as a matrix-vector product.
+
+        >>> h = np.ones(40)
+        >>> mesh = TensorMesh([h, h], "CC")
         >>> 
+        >>> # Create a discrete quantity on x-faces
+        >>> faces_x = mesh.faces_x
+        >>> ux = np.exp(-(faces_x[:, 0] ** 2) / 8** 2)
+        >>> 
+        >>> # Construct the divergence operator and apply to vector
+        >>> Dx = mesh.face_x_divergence
+        >>> dudx = Dx * ux
+        >>> 
+        >>> # Plot
+        >>> fig = plt.figure(figsize=(13, 6))
+        >>> ax1 = fig.add_subplot(121)
+        >>> w = np.r_[ux, np.ones(mesh.nFy)]  # Need vector on all faces for image plot
+        >>> mesh.plot_image(w, ax=ax1, v_type="Fx")
+        >>> ax1.set_title("Scalar on x-faces", fontsize=14)
+        >>> ax2 = fig.add_subplot(122)
+        >>> mesh.plot_image(dudx, ax=ax2)
+        >>> ax2.set_yticks([])
+        >>> ax2.set_ylabel("")
+        >>> ax2.set_title("X-derivative at cell center", fontsize=14)
+        >>> fig.show()
+
+        The discrete x-face divergence operator is a sparse matrix that maps
+        from x-faces to cell centers. To demonstrate this, we construct
+        a small 2D mesh. We then show the ordering of the elements in
+        the original discrete quantity :math:`\\mathbf{u_x}` and its
+        x-derivative :math:`\\partial \\mathbf{u_x}/ \\partial x` as well as a
+        spy plot.
+
         >>> mesh = TensorMesh([[(1, 6)], [(1, 3)]])
         >>> fig = plt.figure(figsize=(10, 10))
         >>> ax1 = fig.add_subplot(211)
@@ -404,10 +487,10 @@ class DiffOperators(object):
         >>>     loc='upper right', fontsize=14
         >>> )
         >>> ax2 = fig.add_subplot(212)
-        >>> ax2.spy(mesh.face_divergence)
+        >>> ax2.spy(mesh.face_x_divergence)
         >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
         >>> ax2.set_ylabel("Cell Number", fontsize=12)
-        >>> ax2.set_xlabel("Face Number", fontsize=12)
+        >>> ax2.set_xlabel("X-Face Number", fontsize=12)
         
         """
         # Compute areas of cell faces & volumes
@@ -433,17 +516,53 @@ class DiffOperators(object):
         Examples
         --------
 
-        Below, we demonstrate the mapping and sparsity of the operator
-        for a 2D tensor mesh. Indices are provided to show the ordering of
-        the elements in a discrete quantity :math:`\\mathbf{u_y}` that lives
-        on y-faces and its y-derivative :math:`\\partial \\mathbf{u_y}/\\partial y`
-        at cell centers.
+        Below, we demonstrate how to apply the face-y divergence operator,
+        the mapping of the face-y divergence operator and its sparsity.
+        Our example is carried out on a 2D mesh but it can
+        be done equivalently for a 3D mesh.
 
+        We start by importing the necessary packages and modules.
+        
         >>> from discretize import TensorMesh
+        >>> import numpy as np
         >>> import matplotlib.pyplot as plt
         >>> import matplotlib as mpl
-        >>> mpl.rcParams.update({'font.size': 14})
+
+        For a discrete scalar quantity :math:`\\mathbf{u_y}` defined on the
+        y-faces, we take the y-derivative by constructing the face-y divergence
+        operator and multiplying as a matrix-vector product.
+
+        >>> h = np.ones(40)
+        >>> mesh = TensorMesh([h, h], "CC")
         >>> 
+        >>> # Create a discrete quantity on x-faces
+        >>> faces_y = mesh.faces_y
+        >>> uy = np.exp(-(faces_y[:, 1] ** 2) / 8** 2)
+        >>> 
+        >>> # Construct the divergence operator and apply to vector
+        >>> Dy = mesh.face_y_divergence
+        >>> dudy = Dy * uy
+        >>> 
+        >>> # Plot
+        >>> fig = plt.figure(figsize=(13, 6))
+        >>> ax1 = fig.add_subplot(121)
+        >>> w = np.r_[np.ones(mesh.nFx), uy]  # Need vector on all faces for image plot
+        >>> mesh.plot_image(w, ax=ax1, v_type="Fy")
+        >>> ax1.set_title("Scalar on y-faces", fontsize=14)
+        >>> ax2 = fig.add_subplot(122)
+        >>> mesh.plot_image(dudy, ax=ax2)
+        >>> ax2.set_yticks([])
+        >>> ax2.set_ylabel("")
+        >>> ax2.set_title("Y-derivative at cell center", fontsize=14)
+        >>> fig.show()
+
+        The discrete y-face divergence operator is a sparse matrix that maps
+        from y-faces to cell centers. To demonstrate this, we construct
+        a small 2D mesh. We then show the ordering of the elements in
+        the original discrete quantity :math:`\\mathbf{u_y}` and its
+        y-derivative :math:`\\partial \\mathbf{u_y}/ \\partial y` as well as a
+        spy plot.
+
         >>> mesh = TensorMesh([[(1, 6)], [(1, 3)]])
         >>> fig = plt.figure(figsize=(10, 10))
         >>> ax1 = fig.add_subplot(211)
@@ -474,10 +593,10 @@ class DiffOperators(object):
         >>>     loc='upper right', fontsize=14
         >>> )
         >>> ax2 = fig.add_subplot(212)
-        >>> ax2.spy(mesh.face_divergence)
+        >>> ax2.spy(mesh.face_y_divergence)
         >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
         >>> ax2.set_ylabel("Cell Number", fontsize=12)
-        >>> ax2.set_xlabel("Face Number", fontsize=12)
+        >>> ax2.set_xlabel("Y-Face Number", fontsize=12)
         
         """
         if self.dim < 2:
@@ -505,18 +624,52 @@ class DiffOperators(object):
         Examples
         --------
 
-        Below, we demonstrate the mapping and sparsity of the operator
-        for a 3D tensor mesh with one layer of cells in the vertical.
-        Indices are provided to show the ordering of
-        the elements in a discrete quantity :math:`\\mathbf{u_z}` that lives
-        on z-faces and its z-derivative :math:`\\partial \\mathbf{u_z}/\\partial z`
-        at cell centers.
+        Below, we demonstrate how to apply the face-z divergence operator,
+        the mapping of the face-z divergence operator and its sparsity.
+        Our example is carried out on a 3D mesh.
 
+        We start by importing the necessary packages and modules.
+        
         >>> from discretize import TensorMesh
+        >>> import numpy as np
         >>> import matplotlib.pyplot as plt
         >>> import matplotlib as mpl
-        >>> mpl.rcParams.update({'font.size': 14})
+
+        For a discrete scalar quantity :math:`\\mathbf{u_z}` defined on the
+        z-faces, we take the y-derivative by constructing the face-z divergence
+        operator and multiplying as a matrix-vector product.
+
+        >>> h = np.ones(40)
+        >>> mesh = TensorMesh([h, h, h], "CCC")
         >>> 
+        >>> # Create a discrete quantity on z-faces
+        >>> faces_z = mesh.faces_z
+        >>> uz = np.exp(-(faces_z[:, 1] ** 2) / 8** 2)
+        >>> 
+        >>> # Construct the divergence operator and apply to vector
+        >>> Dz = mesh.face_z_divergence
+        >>> dudz = Dz * uz
+        >>> 
+        >>> # Plot
+        >>> fig = plt.figure(figsize=(13, 6))
+        >>> ax1 = fig.add_subplot(121)
+        >>> w = np.r_[np.ones(mesh.nFx+mesh.nFz), uz]  # Need vector on all faces for image plot
+        >>> mesh.plot_slice(w, ax=ax1, v_type="Fz", normal='Y', ind=20)
+        >>> ax1.set_title("Scalar on z-faces (y-slice)", fontsize=14)
+        >>> ax2 = fig.add_subplot(122)
+        >>> mesh.plot_slice(dudz, ax=ax2, normal='Y', ind=20)
+        >>> ax2.set_yticks([])
+        >>> ax2.set_ylabel("")
+        >>> ax2.set_title("Z-derivative at cell center (y-slice)", fontsize=14)
+        >>> fig.show()
+
+        The discrete z-face divergence operator is a sparse matrix that maps
+        from z-faces to cell centers. To demonstrate this, we construct
+        a small 3D mesh. We then show the ordering of the elements in
+        the original discrete quantity :math:`\\mathbf{u_z}` and its
+        z-derivative :math:`\\partial \\mathbf{u_z}/ \\partial z` as well as a
+        spy plot.
+
         >>> mesh = TensorMesh([[(1, 3)], [(1, 2)], [(1, 2)]])
         >>> 
         >>> fig = plt.figure(figsize=(9, 12))
@@ -530,7 +683,8 @@ class DiffOperators(object):
         >>>     ax1.text(loc[0] + 0.05, loc[1] + 0.05, loc[2], "{0:d}".format(ii), color="g")
         >>> 
         >>> ax1.plot(
-        >>>    mesh.cell_centers[:, 0], mesh.cell_centers[:, 1], mesh.cell_centers[:, 2], "ro", markersize=10
+        >>>    mesh.cell_centers[:, 0], mesh.cell_centers[:, 1], mesh.cell_centers[:, 2],
+        >>>    "ro", markersize=10
         >>> )
         >>> for ii, loc in zip(range(mesh.nC), mesh.cell_centers):
         >>>     ax1.text(loc[0] + 0.05, loc[1] + 0.05, loc[2], "{0:d}".format(ii), color="r")
@@ -557,7 +711,7 @@ class DiffOperators(object):
         >>> 
         >>> # Spy plot
         >>> ax2 = fig.add_axes([0.05, 0.05, 0.9, 0.3])
-        >>> ax2.spy(mesh.face_x_divergence)
+        >>> ax2.spy(mesh.face_z_divergence)
         >>> ax2.set_title("Spy Plot", fontsize=16, pad=5)
         >>> ax2.set_ylabel("Cell Number", fontsize=12)
         >>> ax2.set_xlabel("Z-Face Number", fontsize=12)
@@ -695,16 +849,55 @@ class DiffOperators(object):
         Examples
         --------
 
-        Below, we demonstrate the mapping and sparsity of the nodal gradient
-        operator for a 2D tensor mesh. Indices are provided to show the ordering of
-        the elements in discrete vectors :math:`\\boldsymbol{\\phi}` and
-        :math:`\\mathbf{u}`.
+        Below, we demonstrate how to apply the nodal gradient operator to
+        a discrete scalar quantity, the mapping of the nodal gradient operator and
+        its sparsity. Our example is carried out on a 2D mesh but it can
+        be done equivalently for a 3D mesh.
 
+        We start by importing the necessary packages and modules.
+        
         >>> from discretize import TensorMesh
+        >>> import numpy as np
         >>> import matplotlib.pyplot as plt
         >>> import matplotlib as mpl
-        >>> mpl.rcParams.update({'font.size': 14})
+
+        For a discrete scalar quantity defined on the nodes, we take the
+        gradient by constructing the gradient operator and multiplying
+        as a matrix-vector product.
+
+        >>> # Create a uniform grid
+        >>> h = np.ones(20)
+        >>> mesh = TensorMesh([h, h], "CC")
         >>> 
+        >>> # Create a discrete scalar on nodes
+        >>> nodes = mesh.nodes
+        >>> phi = np.exp(-(nodes[:, 0] ** 2 + nodes[:, 1] ** 2) / 4 ** 2)
+        >>> 
+        >>> # Construct the divergence operator and apply to vector
+        >>> G = mesh.nodal_gradient
+        >>> grad_phi = G * phi
+        >>> 
+        >>> # Plot
+        >>> fig = plt.figure(figsize=(13, 6))
+        >>> ax1 = fig.add_subplot(121)
+        >>> mesh.plot_image(phi, ax=ax1)
+        >>> ax1.set_title("Scalar at nodes", fontsize=14)
+        >>> ax2 = fig.add_subplot(122)
+        >>> mesh.plot_image(
+        >>>     grad_phi, ax=ax2, v_type="E", view="vec",
+        >>>     stream_opts={"color": "w", "density": 1.0}
+        >>> )
+        >>> ax2.set_yticks([])
+        >>> ax2.set_ylabel("")
+        >>> ax2.set_title("Gradient at edges", fontsize=14)
+        >>> fig.show()
+
+        The nodal gradient operator is a sparse matrix that maps
+        from nodes to edges. To demonstrate this, we construct
+        a small 2D mesh. We then show the ordering of the elements in
+        the original discrete quantity :math:`\\boldsymbol{\\phi}` and its
+        discrete gradient as well as a spy plot.
+
         >>> mesh = TensorMesh([[(1, 3)], [(1, 6)]])
         >>> fig = plt.figure(figsize=(12, 10))
         >>> 
@@ -723,7 +916,7 @@ class DiffOperators(object):
         >>> ax1.plot(mesh.edges_y[:, 0], mesh.edges_y[:, 1], "g^", markersize=8)
         >>> for ii, loc in zip(range(mesh.nEy), mesh.edges_y):
         >>>     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format((ii + mesh.nEx)), color="g")
-        >>>
+        >>> 
         >>> ax1.set_xticks([])
         >>> ax1.set_yticks([])
         >>> ax1.spines['bottom'].set_color('white')
@@ -896,8 +1089,8 @@ class DiffOperators(object):
 
         Returns
         -------
-        B : scipy.sparse.diags
-            A sparse diagonal matrix dependent on the values of *alpha*, *beta* and *gamma* supplied
+        B : scipy.sparse.csr_matrix (n_nodes, n_edges)
+            A sparse matrix dependent on the values of *alpha*, *beta* and *gamma* supplied
         b : array_like (n_nodes,)
             A vector dependent on the values of *alpha*, *beta* and *gamma* supplied
 
@@ -930,6 +1123,42 @@ class DiffOperators(object):
         **edge_divergence_weak_form_robin** returns the matrix :math:`\mathbf{B}`
         and vector :math:`\mathbf{b}` based on the parameters *alpha* , *beta*
         and *gamma* provided.
+
+        Examples
+        --------
+        Here we construct all of the pieces require to evaluate the inner
+        product between :math:`\boldsymbol{\phi}` on the nodes and the divergence
+        of :math:`\mathbf{u}` on the edges given a specified set of
+        Robin boundary conditions. We begin by creating a small 2D tensor mesh:
+
+        >>> from discretize import TensorMesh
+        >>> import numpy as np
+        >>> import scipy.sparse as sp
+        >>> 
+        >>> h = np.ones(32)
+        >>> mesh = TensorMesh([h, h])
+
+        We then define `alpha`, `beta`, and `gamma` parameters for a zero Neuwmann
+        condition on the boundary faces. This corresponds to setting:
+
+        >>> alpha = 0.0
+        >>> beta = 1.0
+        >>> gamma = 0.0
+        
+        Next, we construct all of the necessary pieces required to take
+        the discrete inner product:
+
+        >>> B, b = mesh.edge_divergence_weak_form_robin(alpha, beta, gamma)
+        >>> Me = mesh.get_edge_inner_product()
+        >>> G = mesh.nodal_gradient
+        
+        In practice, these pieces are usually re-arranged when used to
+        solve PDEs with the finite volume method. However, if you wanted
+        to create a function which computes the inner product for any
+        :math:`\boldsymbol{\phi}` and :math:`\mathbf{u}`:
+
+        >>> def inner_product(phi, u):
+        >>>     return phi @ (-G.T @ Me + B) @ u + phi @ b
 
         """
         alpha = np.atleast_1d(alpha)
@@ -1155,11 +1384,10 @@ class DiffOperators(object):
         alpha : scalar or array_like
             Defines :math:`\alpha` for Robin boundary condition. Can be defined as a
             scalar or array_like. If array_like, the length of the array must be equal
-            to the number of boundary faces.
+            to the number of boundary faces. *alpha* CANNOT be 0!
         beta : scalar or array_like
             Defines :math:`\beta` for Robin boundary condition. Can be defined as a
             scalar or array_like. If array_like, must have the same length as *alpha*.
-            *beta* CANNOT be 0!
         gamma: scalar or array_like
             Defines :math:`\gamma` for Robin boundary condition. If array like, *gamma*
             can have shape (n_boundary_face,). Can also have shape (n_boundary_faces, n_rhs)
@@ -1167,8 +1395,8 @@ class DiffOperators(object):
 
         Returns
         -------
-        B : scipy.sparse.diags
-            A sparse diagonal matrix dependent on the values of *alpha*, *beta* and *gamma* supplied
+        B : scipy.sparse.csr_matrix (n_faces, n_cells)
+            A sparse matrix dependent on the values of *alpha*, *beta* and *gamma* supplied
         b : array_like (n_faces,)
             A vector dependent on the values of *alpha*, *beta* and *gamma* supplied
 
@@ -1193,39 +1421,50 @@ class DiffOperators(object):
         boundary. The discrete approximation to the above expression is given by:
 
         .. math::
-            \langle \vec{u} , \nabla \phi \rangle \; \approx - \boldsymbol{u^T \big ( D^T M_f - B \big ) \phi + u^T b}
+            \langle \vec{u} , \nabla \phi \rangle \; \approx - \boldsymbol{u^T \big ( D^T M_c - B \big ) \phi + u^T b}
 
         where :math:`\mathbf{D}` is the :py:attr:`~discretize.operators.DiffOperators.face_divergence`
-        and :math:`\mathbf{M_f}` is the face inner product matrix; constructed with
-        :py:meth:`~discretize.inner_products.InnerProducts.get_face_inner_product`.
+        and :math:`\mathbf{M_c}` is the cell center inner product matrix
+        (just a diagonal matrix comprised of the cell volumes).
         **cell_gradient_weak_form_robin** returns the matrix :math:`\mathbf{B}`
         and vector :math:`\mathbf{b}` based on the parameters *alpha* , *beta*
         and *gamma* provided.
 
         Examples
         --------
-        We first create a very simple 2D tensor mesh on the [0, 1] boundary:
+        Here we construct all of the pieces require to evaluate the inner
+        product between :math:`\mathbf{u}` on faces and the gradient of
+        :math:`\boldsymbol{\phi}` at cell centers given a specified set of
+        Robin boundary conditions. We begin by creating a small 2D tensor mesh:
 
-        >>> import matplotlib.pyplot as plt
+        >>> from discretize import TensorMesh
+        >>> import numpy as np
         >>> import scipy.sparse as sp
-        >>> import discretize
-        >>> mesh = discretize.TensorMesh([32, 32])
+        >>> 
+        >>> h = np.ones(32)
+        >>> mesh = TensorMesh([h, h])
 
-        Define the `alpha`, `beta`, and `gamma` parameters for a zero - Dirichlet
-        condition on the boundary, this corresponds to setting:
+        We then define `alpha`, `beta`, and `gamma` parameters for a zero Dirichlet
+        condition on the boundary faces. This corresponds to setting:
 
         >>> alpha = 1.0
         >>> beta = 0.0
         >>> gamma = 0.0
-        >>> A, b = mesh.cell_gradient_weak_form_robin(alpha, beta, gamma)
+        
+        Next, we construct all of the necessary pieces required to take
+        the discrete inner product:
 
-        We can then represent the operation of taking the weak form of the gradient of a
-        function defined on cell centers with appropriate robin boundary conditions as:
-
-        >>> V = sp.diags(mesh.cell_volumes)
+        >>> B, b = mesh.cell_gradient_weak_form_robin(alpha, beta, gamma)
+        >>> Mc = sp.diags(mesh.cell_volumes)
         >>> D = mesh.face_divergence
-        >>> phi = np.sin(np.pi * mesh.cell_centers[:, 0]) * np.sin(np.pi * mesh.cell_centers[:, 1])
-        >>> phi_grad = (-D.T @ V + A) @ phi + b
+        
+        In practice, these pieces are usually re-arranged when used to
+        solve PDEs with the finite volume method. However, if you wanted
+        to create a function which computes the inner product for any
+        :math:`\mathbf{u}` and :math:`\boldsymbol{\phi}`:
+
+        >>> def inner_product(u, phi):
+        >>>     return u @ (-D.T @ Mc + B) @ phi + u @ b
 
         """
 
