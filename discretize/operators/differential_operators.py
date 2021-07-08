@@ -244,8 +244,11 @@ class DiffOperators(object):
         """Face divergence operator (faces to cell-centres)
 
         This property constructs the 2nd order numerical divergence operator
-        that maps from faces to cell centers. Once constructed, it is
-        stored permanently as a property of the mesh.
+        that maps from faces to cell centers. The operator is a sparse matrix
+        that can be applied as a matrix-vector product to a discrete vector
+        that lives on mesh faces. Once constructed, the operator is
+        stored permanently as a property of the mesh. *See notes for additional
+        details.*
 
         Returns
         -------
@@ -265,10 +268,10 @@ class DiffOperators(object):
         Where :math:`\\mathbf{u}` is the discrete representation of the continuous variable
         :math:`\\vec{u}` on cell faces and :math:`\\boldsymbol{\\phi}` is the discrete
         representation of :math:`\\phi` at cell centers, **face_divergence** constructs a
-        discrete linear operator :math:`\\mathbf{D}` such that:
+        discrete linear operator :math:`\\mathbf{D_f}` such that:
 
         .. math::
-            \\boldsymbol{\\phi} = \\mathbf{D \\, u}
+            \\boldsymbol{\\phi} = \\mathbf{D_f \\, u}
 
         For each cell, the computation of the face divergence can be expressed
         according to the integral form below. For cell :math:`i` whose corresponding
@@ -318,8 +321,8 @@ class DiffOperators(object):
         >>> u = np.r_[ux, uy]
         >>> 
         >>> # Construct the divergence operator and apply to vector
-        >>> D = mesh.face_divergence
-        >>> div_u = D * u
+        >>> Df = mesh.face_divergence
+        >>> div_u = Df * u
         >>> 
         >>> # Plot
         >>> fig = plt.figure(figsize=(13, 6))
@@ -397,8 +400,9 @@ class DiffOperators(object):
         """X-derivative operator (x-faces to cell-centres)
 
         This property constructs a 2nd order x-derivative operator which maps
-        from x-faces to cell centers. This operator can be applied to a discrete
-        scalar quantity gridded on x-face locations. For a discrete vector whose
+        from x-faces to cell centers. The operator is a sparse matrix
+        that can be applied as a matrix-vector product to a discrete scalar
+        quantity that lives on x-faces. For a discrete vector whose
         x-component lives on x-faces, this operator can also be used to compute the
         contribution of the x-component toward the divergence.
 
@@ -433,9 +437,9 @@ class DiffOperators(object):
         >>> faces_x = mesh.faces_x
         >>> ux = np.exp(-(faces_x[:, 0] ** 2) / 8** 2)
         >>> 
-        >>> # Construct the divergence operator and apply to vector
-        >>> Dx = mesh.face_x_divergence
-        >>> dudx = Dx * ux
+        >>> # Construct the x-divergence operator and apply to vector
+        >>> Dfx = mesh.face_x_divergence
+        >>> dudx = Dfx * ux
         >>> 
         >>> # Plot
         >>> fig = plt.figure(figsize=(13, 6))
@@ -503,8 +507,9 @@ class DiffOperators(object):
         """Y-derivative operator (y-faces to cell-centres)
 
         This property constructs a 2nd order y-derivative operator which maps
-        from y-faces to cell centers. This operator can be applied to a discrete
-        scalar quantity gridded on y-face locations. For a discrete vector whose
+        from y-faces to cell centers. The operator is a sparse matrix
+        that can be applied as a matrix-vector product to a discrete scalar
+        quantity that lives on y-faces. For a discrete vector whose
         y-component lives on y-faces, this operator can also be used to compute the
         contribution of the y-component toward the divergence.
 
@@ -539,9 +544,9 @@ class DiffOperators(object):
         >>> faces_y = mesh.faces_y
         >>> uy = np.exp(-(faces_y[:, 1] ** 2) / 8** 2)
         >>> 
-        >>> # Construct the divergence operator and apply to vector
-        >>> Dy = mesh.face_y_divergence
-        >>> dudy = Dy * uy
+        >>> # Construct the y-divergence operator and apply to vector
+        >>> Dfy = mesh.face_y_divergence
+        >>> dudy = Dfy * uy
         >>> 
         >>> # Plot
         >>> fig = plt.figure(figsize=(13, 6))
@@ -611,8 +616,9 @@ class DiffOperators(object):
         """Z-derivative operator (z-faces to cell-centres)
 
         This property constructs a 2nd order z-derivative operator which maps
-        from z-faces to cell centers. This operator can be applied to a discrete
-        scalar quantity gridded on z-face locations. For a discrete vector whose
+        from z-faces to cell centers. The operator is a sparse matrix
+        that can be applied as a matrix-vector product to a discrete scalar
+        quantity that lives on z-faces. For a discrete vector whose
         z-component lives on z-faces, this operator can also be used to compute the
         contribution of the z-component toward the divergence.
 
@@ -646,9 +652,9 @@ class DiffOperators(object):
         >>> faces_z = mesh.faces_z
         >>> uz = np.exp(-(faces_z[:, 1] ** 2) / 8** 2)
         >>> 
-        >>> # Construct the divergence operator and apply to vector
-        >>> Dz = mesh.face_z_divergence
-        >>> dudz = Dz * uz
+        >>> # Construct the z-divergence operator and apply to vector
+        >>> Dfz = mesh.face_z_divergence
+        >>> dudz = Dfz * uz
         >>> 
         >>> # Plot
         >>> fig = plt.figure(figsize=(13, 6))
@@ -805,10 +811,12 @@ class DiffOperators(object):
 
     @property
     def nodal_gradient(self):
-        """Discrete gradient operator (nodes to edges)
+        """Discrete nodal gradient operator (nodes to edges)
 
         This property constructs the 2nd order numerical gradient operator
-        that maps from nodes to edges. Once constructed, it is
+        that maps from nodes to edges. The operator is a sparse matrix
+        that can be applied as a matrix-vector product to a discrete scalar
+        quantity that lives on the nodes. Once constructed, it is
         stored permanently as a property of the mesh.
 
         Returns
@@ -830,10 +838,10 @@ class DiffOperators(object):
         Where :math:`\\boldsymbol{\\phi}` is the discrete representation of the continuous variable
         :math:`\\phi` on the nodes and :math:`\\mathbf{u}` is the discrete
         representation of :math:`\\vec{u}` on the edges, **nodal_gradient** constructs a
-        discrete linear operator :math:`\\mathbf{G}` such that:
+        discrete linear operator :math:`\\mathbf{G_n}` such that:
 
         .. math::
-            \\mathbf{u} = \\mathbf{G} \\, \\boldsymbol{\\phi}
+            \\mathbf{u} = \\mathbf{G_n} \\, \\boldsymbol{\\phi}
 
         The Cartesian components of :math:`\\vec{u}` are defined on their corresponding
         edges (x, y or z) as follows; e.g. the x-component of the gradient is defined
@@ -873,9 +881,9 @@ class DiffOperators(object):
         >>> nodes = mesh.nodes
         >>> phi = np.exp(-(nodes[:, 0] ** 2 + nodes[:, 1] ** 2) / 4 ** 2)
         >>> 
-        >>> # Construct the divergence operator and apply to vector
-        >>> G = mesh.nodal_gradient
-        >>> grad_phi = G * phi
+        >>> # Construct the gradient operator and apply to vector
+        >>> Gn = mesh.nodal_gradient
+        >>> grad_phi = Gn * phi
         >>> 
         >>> # Plot
         >>> fig = plt.figure(figsize=(13, 6))
@@ -1032,8 +1040,119 @@ class DiffOperators(object):
 
     @property
     def nodal_laplacian(self):
-        """
-        Construct the nodal Laplacian operator (nodes to nodes).
+        """Discrete scalar Laplacian operator (nodes to nodes)
+
+        This property constructs the 2nd order numerical Laplacian operator
+        that maps from nodes to nodes. The operator is a sparse matrix
+        that can be applied as a matrix-vector product to a discrete scalar
+        quantity that lives on the nodes. The operator *assumes a zero Neuwmann
+        boundary condition for the discrete scalar quantity. Once constructed,
+        the operator is stored permanently as a property of the mesh.
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix (n_nodes, n_nodes)
+            The numerical Laplacian operator from nodes to nodes
+
+
+        Notes
+        -----
+
+        In continuous space, the scalar Laplacian operator is defined as:
+
+        .. math::
+            \\psi = \\nabla^2 \\phi = \\frac{\\partial^2 \\phi}{\\partial x^2}
+            + \\frac{\\partial^2 \\phi}{\\partial y^2}
+            + \\frac{\\partial^2 \\phi}{\\partial z^2}
+
+        Where :math:`\\boldsymbol{\\phi}` is the discrete representation of the continuous variable
+        :math:`\\phi` on the nodes, and :math:`\\boldsymbol{\\psi}` is the discrete representation
+        of its scalar Laplacian on the nodes, **nodal_laplacian** constructs a
+        discrete linear operator :math:`\\mathbf{L_n}` such that:
+
+        .. math::
+            \\boldsymbol{\\psi} = \\mathbf{L_n} \\, \\boldsymbol{\\phi}
+
+        Examples
+        --------
+
+        Below, we demonstrate how to apply the nodal Laplacian operator to
+        a discrete scalar quantity, the mapping of the nodal Laplacian operator and
+        its sparsity. Our example is carried out on a 2D mesh but it can
+        be done equivalently for a 3D mesh.
+
+        We start by importing the necessary packages and modules.
+        
+        >>> from discretize import TensorMesh
+        >>> import numpy as np
+        >>> import matplotlib.pyplot as plt
+        >>> import matplotlib as mpl
+
+        For a discrete scalar quantity defined on the nodes, we take the
+        Laplacian by constructing the operator and multiplying
+        as a matrix-vector product.
+
+        >>> # Create a uniform grid
+        >>> h = np.ones(20)
+        >>> mesh = TensorMesh([h, h], "CC")
+        >>> 
+        >>> # Create a discrete scalar on nodes. The scalar MUST
+        >>> # respect the zero Neuwmann boundary condition.
+        >>> nodes = mesh.nodes
+        >>> phi = np.exp(-(nodes[:, 0] ** 2 + nodes[:, 1] ** 2) / 4 ** 2)
+        >>> 
+        >>> # Construct the Laplacian operator and apply to vector
+        >>> Ln = mesh.nodal_laplacian
+        >>> laplacian_phi = Ln * phi
+        >>> 
+        >>> # Plot
+        >>> fig = plt.figure(figsize=(13, 6))
+        >>> ax1 = fig.add_subplot(121)
+        >>> mesh.plot_image(phi, ax=ax1)
+        >>> ax1.set_title("Scalar at nodes", fontsize=14)
+        >>> ax2 = fig.add_subplot(122)
+        >>> mesh.plot_image(laplacian_phi, ax=ax1)
+        >>> ax2.set_yticks([])
+        >>> ax2.set_ylabel("")
+        >>> ax2.set_title("Laplacian at nodes", fontsize=14)
+        >>> fig.show()
+
+        The nodal Laplacian operator is a sparse matrix that maps
+        from nodes to nodes. To demonstrate this, we construct
+        a small 2D mesh. We then show the ordering of the nodes
+        and a spy plot illustrating the sparsity of the operator.
+
+        >>> mesh = TensorMesh([[(1, 4)], [(1, 4)]])
+        >>> fig = plt.figure(figsize=(12, 6))
+        >>> 
+        >>> ax1 = fig.add_subplot(211)
+        >>> mesh.plot_grid(ax=ax1)
+        >>> ax1.set_title("Ordering of the Nodes", fontsize=14, pad=15)
+        >>> 
+        >>> ax1.plot(mesh.nodes[:, 0], mesh.nodes[:, 1], "ro", markersize=8)
+        >>> for ii, loc in zip(range(mesh.nN), mesh.nodes):
+        >>>     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format(ii), color="r")
+        >>> 
+        >>> ax1.set_xticks([])
+        >>> ax1.set_yticks([])
+        >>> ax1.spines['bottom'].set_color('white')
+        >>> ax1.spines['top'].set_color('white')
+        >>> ax1.spines['left'].set_color('white')
+        >>> ax1.spines['right'].set_color('white')
+        >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
+        >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
+        >>>  
+        >>> ax1.legend(
+        >>>     ['Mesh', '$\\mathbf{\\phi}$ (nodes)'],
+        >>>     loc='upper right', fontsize=14
+        >>> )
+        >>> 
+        >>> ax2 = fig.add_subplot(212)
+        >>> ax2.spy(mesh.nodal_laplacian)
+        >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
+        >>> ax2.set_ylabel("Node Number", fontsize=12)
+        >>> ax2.set_xlabel("Node Number", fontsize=12)
+        
         """
         if getattr(self, "_nodal_laplacian", None) is None:
             warnings.warn("Laplacian has not been tested rigorously.")
@@ -1055,22 +1174,29 @@ class DiffOperators(object):
     def edge_divergence_weak_form_robin(self, alpha=0.0, beta=1.0, gamma=0.0):
         r"""Robin conditions for edge divergence operator (edges to nodes)
 
-        When the discrete divergence operator maps from edges to nodes, we must
-        implement boundary conditions to evaluate inner products containing the
-        divergence operator according to the weak formulation; e.g.
-        :math:`\langle \psi , \nabla \cdot \vec{u} \rangle` . Where general
-        boundary conditions are defined on the normal component of :math:`\vec{u}`
-        according to the Robin condition:
+        This method returns the pieces required to impose Robin boundary conditions
+        for the discrete divergence operator that maps from edges to nodes.
+        These pieces are needed when constructing the discrete representation
+        of the inner product :math:`\langle \psi , \nabla \cdot \vec{u} \rangle`
+        according to the finite volume method. 
+        
+        To implement the boundary conditions, we assume
 
         .. math::
-            \alpha u_n + \beta \frac{\partial u_n}{\partial n} = \gamma
+            \vec{u} = \nabla \phi
 
-        the user supplies values for :math:`\alpha`, :math:`\beta` and :math:`\gamma`
-        for all boundary nodes or boundary faces. For the values supplied,
+        for some scalar function :math:`\phi`. Boundary conditions are imposed
+        on the scalar function according to the Robin condition:
+
+        .. math::
+            \alpha \phi + \beta \frac{\partial \phi}{\partial n} = \gamma
+
+        The user supplies values for :math:`\alpha`, :math:`\beta` and :math:`\gamma`
+        for all boundary nodes or faces. For the values supplied,
         **edge_divergence_weak_form_robin** returns the matrix :math:`\mathbf{B}`
-        and vector :math:`\mathbf{b}` required to evaluate inner products
-        containing the divergence. *See the notes section for a comprehensive
-        description.*
+        and vector :math:`\mathbf{b}` required for the discrete representation
+        of :math:`\langle \psi , \nabla \cdot \vec{u} \rangle`.
+        *See the notes section for a comprehensive description.*
 
         Parameters
         ----------
@@ -1078,10 +1204,10 @@ class DiffOperators(object):
             Defines :math:`\alpha` for Robin boundary condition. Can be defined as a
             scalar or array_like. If array_like, the length of the array must be equal
             to the number of boundary faces or boundary nodes.
+            *alpha* CANNOT be 0!
         beta : scalar or array_like
             Defines :math:`\beta` for Robin boundary condition. Can be defined as a
             scalar or array_like. If array_like, must have the same length as *alpha*.
-            *beta* CANNOT be 0!
         gamma: scalar or array_like
             Defines :math:`\gamma` for Robin boundary condition. If array like, *gamma*
             can have shape (n_boundary_xxx,). Can also have shape (n_boundary_xxx, n_rhs)
@@ -1089,7 +1215,7 @@ class DiffOperators(object):
 
         Returns
         -------
-        B : scipy.sparse.csr_matrix (n_nodes, n_edges)
+        B : scipy.sparse.dia_matrix (n_nodes, n_nodes)
             A sparse matrix dependent on the values of *alpha*, *beta* and *gamma* supplied
         b : array_like (n_nodes,)
             A vector dependent on the values of *alpha*, *beta* and *gamma* supplied
@@ -1103,33 +1229,46 @@ class DiffOperators(object):
         .. math::
             \langle \psi , \nabla \cdot \vec{u} \rangle \; = \int_\Omega \psi \, (\nabla \cdot \vec{u}) \, dv
 
-        For a divergence operator that maps from edges to nodes, the discrete representation
-        of :math:`\vec{u}` must live on the edges. To implement boundary conditions in this
+        For a discrete representation of the vector :math:`\vec{u}` that lives on mesh edges,
+        the divergence operator must map from edges to nodes. To implement boundary conditions in this
         case, we must use the divergence theorem to re-express the inner product as:
 
         .. math::
-            \langle \psi , \nabla \cdot \vec{u} \rangle \; = - \int_V \vec{u} \cdot \nabla \psi \, dV
+            \langle \psi , \nabla \cdot \vec{u} \rangle \, = - \int_V \vec{u} \cdot \nabla \psi \, dV
             + \oint_{\partial \Omega} \psi \, (\hat{n} \cdot \vec{u}) \, da
         
-        where the robin condition is applied to the normal component of :math:`\vec{u}` on the
-        boundary. The discrete approximation to the above expression is given by:
+        Assuming :math:`\vec{u} = \nabla \phi`, the above equation becomes:
 
         .. math::
-            \langle \psi , \nabla \cdot \vec{u} \rangle \; \approx - \boldsymbol{\psi^T \big ( G^T M_e - B \big ) u + \psi^T b}
+            \langle \psi , \nabla \cdot \vec{u} \rangle \, = - \int_V \nabla \phi \cdot \nabla \psi \, dV
+            + \oint_{\partial \Omega} \psi \, \frac{\partial \phi}{\partial n} \, da
 
-        where :math:`\mathbf{G}` is the :py:attr:`~discretize.operators.DiffOperators.nodal_gradient`
-        and :math:`\mathbf{M_e}` is the edge inner product matrix; constructed with
-        :py:meth:`~discretize.inner_products.InnerProducts.get_edge_inner_product`.
+        The discrete approximation to the above expression is given by:
+
+        .. math::
+            \langle \psi , \nabla \cdot \vec{u} \rangle \, 
+            \approx - \boldsymbol{\psi^T \big ( G_n^T M_e G_n - B \big ) \phi + \psi^T b}
+
+        where
+
+        .. math::
+            \boldsymbol{u} = \boldsymbol{G_n \, \phi}
+
+        :math:`\mathbf{G_n}` is the :py:attr:`~discretize.operators.DiffOperators.nodal_gradient`
+        and :math:`\mathbf{M_e}` is the edge inner product matrix
+        (see :py:attr:`~discretize.operators.InnerProducts.get_edge_inner_product`).
         **edge_divergence_weak_form_robin** returns the matrix :math:`\mathbf{B}`
         and vector :math:`\mathbf{b}` based on the parameters *alpha* , *beta*
         and *gamma* provided.
 
         Examples
         --------
-        Here we construct all of the pieces require to evaluate the inner
-        product between :math:`\boldsymbol{\phi}` on the nodes and the divergence
-        of :math:`\mathbf{u}` on the edges given a specified set of
-        Robin boundary conditions. We begin by creating a small 2D tensor mesh:
+        Here we construct all of the pieces required for the discrete
+        representation of :math:`\langle \psi , \nabla \cdot \vec{u} \rangle`
+        for specified Robin boundary conditions. We define
+        :math:`\mathbf{u}` on the edges, and :math:`\boldsymbol{\psi}`
+        and :math:`\boldsymbol{\psi}` on the nodes.
+        We begin by creating a small 2D tensor mesh:
 
         >>> from discretize import TensorMesh
         >>> import numpy as np
@@ -1150,15 +1289,17 @@ class DiffOperators(object):
 
         >>> B, b = mesh.edge_divergence_weak_form_robin(alpha, beta, gamma)
         >>> Me = mesh.get_edge_inner_product()
-        >>> G = mesh.nodal_gradient
+        >>> Gn = mesh.nodal_gradient
         
         In practice, these pieces are usually re-arranged when used to
-        solve PDEs with the finite volume method. However, if you wanted
-        to create a function which computes the inner product for any
-        :math:`\boldsymbol{\phi}` and :math:`\mathbf{u}`:
+        solve PDEs with the finite volume method. Because the boundary
+        conditions are applied to the scalar potential :math:`\phi`,
+        we create a function which computes the discrete inner product for any
+        :math:`\boldsymbol{\psi}` and :math:`\boldsymbol{\phi}` where
+        :math:`\mathbf{u} = \boldsymbol{G \, \phi}`:
 
-        >>> def inner_product(phi, u):
-        >>>     return phi @ (-G.T @ Me + B) @ u + phi @ b
+        >>> def inner_product(psi, phi):
+        >>>     return psi @ (-Gn.T @ Me @ Gn + B) @ phi + psi @ b
 
         """
         alpha = np.atleast_1d(alpha)
@@ -1228,22 +1369,58 @@ class DiffOperators(object):
     _cell_gradient_BC_list = "neumann"
 
     def set_cell_gradient_BC(self, BC):
-        """
-        Function that sets the boundary conditions for cell-centred derivative
-        operators.
+        """Set the zero Dirichlet/Neumann boundary conditions for cell-centred derivative operators.
+
+        This method is used to set zero Dirichlet and/or zero Neumann boundary
+        conditions for differential operators that act on cell-centered quantities.
+        The user may apply the same boundary conditions to all boundaries, or
+        define the boundary conditions of boundary face (x, y and z) separately.
+        The user may also apply boundary conditions to the lower and upper boundary
+        face separately.
+
+        Cell gradient boundary conditions are enforced when constructing
+        the following properties:
+
+            - :py:attr:`~discretize.operators.DiffOperators.cell_gradient`
+            - :py:attr:`~discretize.operators.DiffOperators.cell_gradient_x`
+            - :py:attr:`~discretize.operators.DiffOperators.cell_gradient_x`
+            - :py:attr:`~discretize.operators.DiffOperators.cell_gradient_x`
+            - :py:attr:`~discretize.operators.DiffOperators.stencil_cell_gradient`
+            - :py:attr:`~discretize.operators.DiffOperators.stencil_cell_gradient_x`
+            - :py:attr:`~discretize.operators.DiffOperators.stencil_cell_gradient_y`
+            - :py:attr:`~discretize.operators.DiffOperators.stencil_cell_gradient_z`
+
+        By default, the mesh assumes a zero Neumann boundary condition on the
+        entire boundary. To define robin boundary conditions, see
+        :py:attr:`~discretize.operators.DiffOperators.cell_gradient_weak_form_robin`.
+
+
+        Parameters
+        ----------
+        BC : str or list [dim,]
+            Define the boundary conditions using the string 'dirichlet' for zero
+            Dirichlet conditions and 'neumann' for zero Neumann conditions. See
+            *examples* for several implementations.
 
         Examples
         --------
-        ..code:: python
+        Here we demonstrate how to apply zero Dirichlet and/or Neumann boundary
+        conditions for cell-centers differential operators.
 
-            # Neumann in all directions
-            BC = 'neumann'
-
-            # 3D, Dirichlet in y Neumann else
-            BC = ['neumann', 'dirichlet', 'neumann']
-
-            # 3D, Neumann in x on bottom of domain,  Dirichlet else
-            BC = [['neumann', 'dirichlet'], 'dirichlet', 'dirichlet']
+        >>> from discretize import TensorMesh
+        >>> mesh = TensorMesh([[(1, 20)], [(1, 20)], [(1, 20)]])
+        >>> 
+        >>> # Neumann in all directions
+        >>> BC = 'neumann'
+        >>> mesh.set_cell_gradient_BC(BC)
+        >>> 
+        >>> # 3D mesh with Dirichlet on y boundaries and Neumann otherwise
+        >>> BC = ['neumann', 'dirichlet', 'neumann']
+        >>> mesh.set_cell_gradient_BC(BC)
+        >>> 
+        >>> # 3D with Neumann on the bottom x-boundary and Dirichlet otherwise
+        >>> BC = [['neumann', 'dirichlet'], 'dirichlet', 'dirichlet']
+        >>> mesh.set_cell_gradient_BC(BC)
         """
 
         if isinstance(BC, str):
@@ -1312,8 +1489,113 @@ class DiffOperators(object):
 
     @property
     def stencil_cell_gradient(self):
-        """
-        Full stencil for the cell gradient (centers to faces)
+        """Stencil for cell gradient (cell centers to faces)
+
+        This property constructs a differencing operator that acts on
+        cell centered quantities. The operator takes the difference between
+        the values at the centers of adjacent cells and places the result on
+        the face they share. The operator is a sparse matrix that can be
+        applied as a matrix-vector product to a discrete scalar
+        quantity that lives at cell centers. Once constructed, it is
+        stored as a property of the mesh.
+
+        By default, the operator assumes zero-Neumann boundary conditions
+        on the scalar quantity. Before calling **stencil_cell_gradient** however,
+        the user can set a mix of zero Dirichlet and zero Neumann boundary
+        conditions using :py:attr:`~discretize.operators.DiffOperators.set_cell_gradient_BC`.
+        When **stencil_cell_gradient** is called, the boundary conditions are
+        enforced for the differencing operator. *See notes*.
+
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix (n_faces, n_cells)
+            The stencil for the cell gradient
+
+        Examples
+        --------
+
+        Below, we demonstrate how to set boundary conditions for the cell gradient
+        stencil, construct the cell gradient stencil and apply it to a discrete
+        scalar quantity. The mapping of the cell gradient operator and
+        its sparsity is also illustrated. Our example is carried out on a 2D mesh but it can
+        be done equivalently for a 3D mesh.
+
+        We start by importing the necessary packages and modules.
+        
+        >>> from discretize import TensorMesh
+        >>> import numpy as np
+        >>> import matplotlib.pyplot as plt
+        >>> import matplotlib as mpl
+
+        We then construct a mesh and define a scalar function at cell
+        centers which is zero on the boundaries (zero Dirichlet).
+
+        >>> # Create a uniform grid
+        >>> h = np.ones(20)
+        >>> mesh = TensorMesh([h, h], "CC")
+        >>> 
+        >>> # Create a discrete scalar on nodes
+        >>> centers = mesh.cell_centers
+        >>> phi = np.exp(-(centers[:, 0] ** 2 + centers[:, 1] ** 2) / 4 ** 2)
+
+        Before constructing the gradient operator, we must define
+        zero Neumann boundary conditions. Once the operator is
+        created, the gradient is performed as a matrix-vector product.
+        
+        >>> # Define zero Dirichlet conditions (2D mesh)
+        >>> mesh.set_cell_gradient_BC(['dirichlet', 'dirichlet'])
+        >>> 
+        >>> # Construct the gradient operator and apply to vector
+        >>> Gs = mesh.stencil_cell_gradient
+        >>> diff_phi = Gs * phi
+
+        The cell gradient stencil is a sparse differencing matrix that maps
+        from cell centers to faces. To demonstrate this, we construct
+        a small 2D mesh. We then show the ordering of the elements 
+        and a spy plot.
+
+        >>> mesh = 
+        >>> mesh.set_cell_gradient_BC('dirichlet')
+        >>> 
+        >>> fig = plt.figure(figsize=(12, 10))
+        >>> 
+        >>> ax1 = fig.add_subplot(121)
+        >>> mesh.plot_grid(ax=ax1)
+        >>> ax1.set_title("Mapping of Stencil", fontsize=14, pad=15)
+        >>> 
+        >>> ax1.plot(mesh.cell_centers[:, 0], mesh.cell_centers[:, 1], "ro", markersize=8)
+        >>> for ii, loc in zip(range(mesh.nC), mesh.cell_centers):
+        >>>     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format(ii), color="r")
+        >>> 
+        >>> ax1.plot(mesh.faces_x[:, 0], mesh.faces_x[:, 1], "g^", markersize=8)
+        >>> for ii, loc in zip(range(mesh.nFx), mesh.faces_x):
+        >>>     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format(ii), color="g")
+        >>> 
+        >>> ax1.plot(mesh.faces_y[:, 0], mesh.faces_y[:, 1], "g>", markersize=8)
+        >>> for ii, loc in zip(range(mesh.nFy), mesh.faces_y):
+        >>>     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format((ii + mesh.nFx)), color="g")
+        >>> 
+        >>> ax1.set_xticks([])
+        >>> ax1.set_yticks([])
+        >>> ax1.spines['bottom'].set_color('white')
+        >>> ax1.spines['top'].set_color('white')
+        >>> ax1.spines['left'].set_color('white')
+        >>> ax1.spines['right'].set_color('white')
+        >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
+        >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
+        >>>  
+        >>> ax1.legend(
+        >>>     ['Mesh', '$\\mathbf{\\phi}$ (centers)', '$\\mathbf{Gs \\, u}$ (faces)'],
+        >>>     loc='upper right', fontsize=14
+        >>> )
+        >>> 
+        >>> ax2 = fig.add_subplot(122)
+        >>> ax2.spy(mesh.stencil_cell_gradient)
+        >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
+        >>> ax2.set_ylabel("Face Number", fontsize=12)
+        >>> ax2.set_xlabel("Cell Number", fontsize=12)
+        
         """
         BC = self.set_cell_gradient_BC(self._cell_gradient_BC_list)
         if self.dim == 1:
@@ -1347,8 +1629,151 @@ class DiffOperators(object):
 
     @property
     def cell_gradient(self):
-        """
-        Cell centered gradient operator (cell centers to faces)
+        """Discrete cell gradient operator (cell centers to faces)
+
+        This property constructs the 2nd order numerical gradient operator
+        that maps from cell centers to faces. The operator is a sparse matrix
+        that can be applied as a matrix-vector product to a discrete scalar
+        quantity that lives on the cell centers. Once constructed, it is
+        stored as a property of the mesh.
+
+        By default, the operator assumes zero-Neumann boundary conditions
+        on the scalar quantity. Before calling **cell_gradient** however,
+        the user can set a mix of zero Dirichlet and zero Neumann boundary
+        conditions using :py:attr:`~discretize.operators.DiffOperators.set_cell_gradient_BC`.
+        When **cell_gradient** is called, the boundary conditions are
+        enforced for the gradient operator. *See notes*.
+
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix (n_faces, n_cells)
+            The numerical gradient operator from cell centers to faces
+
+
+        Notes
+        -----
+
+        In continuous space, the gradient operator is defined as:
+
+        .. math::
+            \\vec{u} = \\nabla \\phi = \\frac{\\partial \\phi}{\\partial x}\\hat{x}
+            + \\frac{\\partial \\phi}{\\partial y}\\hat{y}
+            + \\frac{\\partial \\phi}{\\partial z}\\hat{z}
+
+        Where :math:`\\boldsymbol{\\phi}` is the discrete representation of the continuous variable
+        :math:`\\phi` at cell centers and :math:`\\mathbf{u}` is the discrete
+        representation of :math:`\\vec{u}` on the faces, **cell_gradient** constructs a
+        discrete linear operator :math:`\\mathbf{G_c}` such that:
+
+        .. math::
+            \\mathbf{u} = \\mathbf{G_c} \\, \\boldsymbol{\\phi}
+
+        Second order ghost points are used to enforce boundary conditions and map
+        appropriately to boundary faces. Along each axes direction, we are
+        effectively computing the derivative by taking the difference between the
+        values at adjacent cell centers and dividing by their distance.
+
+        Examples
+        --------
+
+        Below, we demonstrate how to set boundary conditions for the cell gradient
+        operator, construct the cell gradient operator and apply it to a discrete
+        scalar quantity. The mapping of the cell gradient operator and
+        its sparsity is also illustrated. Our example is carried out on a 2D mesh but it can
+        be done equivalently for a 3D mesh.
+
+        We start by importing the necessary packages and modules.
+        
+        >>> from discretize import TensorMesh
+        >>> import numpy as np
+        >>> import matplotlib.pyplot as plt
+        >>> import matplotlib as mpl
+
+        We then construct a mesh and define a scalar function at cell
+        centers which is zero on the boundaries (zero Dirichlet).
+
+        >>> # Create a uniform grid
+        >>> h = np.ones(20)
+        >>> mesh = TensorMesh([h, h], "CC")
+        >>> 
+        >>> # Create a discrete scalar on nodes
+        >>> centers = mesh.cell_centers
+        >>> phi = np.exp(-(centers[:, 0] ** 2 + centers[:, 1] ** 2) / 4 ** 2)
+
+        Before constructing the gradient operator, we must define
+        zero Dirichlet boundary conditions. Once the operator is
+        created, the gradient is performed as a matrix-vector product.
+        
+        >>> # Define zero Dirichlet conditions (2D mesh)
+        >>> mesh.set_cell_gradient_BC(['dirichlet', 'dirichlet'])
+        >>> 
+        >>> # Construct the gradient operator and apply to vector
+        >>> Gc = mesh.cell_gradient
+        >>> grad_phi = Gc * phi
+        >>> 
+        >>> # Plot
+        >>> fig = plt.figure(figsize=(13, 6))
+        >>> ax1 = fig.add_subplot(121)
+        >>> mesh.plot_image(phi, ax=ax1)
+        >>> ax1.set_title("Scalar at cell centers", fontsize=14)
+        >>> ax2 = fig.add_subplot(122)
+        >>> mesh.plot_image(
+        >>>     grad_phi, ax=ax2, v_type="F", view="vec",
+        >>>     stream_opts={"color": "w", "density": 1.0}
+        >>> )
+        >>> ax2.set_yticks([])
+        >>> ax2.set_ylabel("")
+        >>> ax2.set_title("Gradient at faces", fontsize=14)
+        >>> fig.show()
+
+        The cell gradient operator is a sparse matrix that maps
+        from cell centers to faces. To demonstrate this, we construct
+        a small 2D mesh. We then show the ordering of the elements in
+        the original discrete quantity :math:`\\boldsymbol{\\phi}` and its
+        discrete gradient as well as a spy plot.
+
+        >>> mesh = TensorMesh([[(1, 3)], [(1, 6)]])
+        >>> mesh.set_cell_gradient_BC('dirichlet')
+        >>> 
+        >>> fig = plt.figure(figsize=(12, 10))
+        >>> 
+        >>> ax1 = fig.add_subplot(121)
+        >>> mesh.plot_grid(ax=ax1)
+        >>> ax1.set_title("Mapping of Gradient Operator", fontsize=14, pad=15)
+        >>> 
+        >>> ax1.plot(mesh.cell_centers[:, 0], mesh.cell_centers[:, 1], "ro", markersize=8)
+        >>> for ii, loc in zip(range(mesh.nC), mesh.cell_centers):
+        >>>     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format(ii), color="r")
+        >>> 
+        >>> ax1.plot(mesh.faces_x[:, 0], mesh.faces_x[:, 1], "g^", markersize=8)
+        >>> for ii, loc in zip(range(mesh.nFx), mesh.faces_x):
+        >>>     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format(ii), color="g")
+        >>> 
+        >>> ax1.plot(mesh.faces_y[:, 0], mesh.faces_y[:, 1], "g>", markersize=8)
+        >>> for ii, loc in zip(range(mesh.nFy), mesh.faces_y):
+        >>>     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format((ii + mesh.nFx)), color="g")
+        >>> 
+        >>> ax1.set_xticks([])
+        >>> ax1.set_yticks([])
+        >>> ax1.spines['bottom'].set_color('white')
+        >>> ax1.spines['top'].set_color('white')
+        >>> ax1.spines['left'].set_color('white')
+        >>> ax1.spines['right'].set_color('white')
+        >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
+        >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
+        >>>  
+        >>> ax1.legend(
+        >>>     ['Mesh', '$\\mathbf{\\phi}$ (centers)', '$\\mathbf{u}$ (faces)'],
+        >>>     loc='upper right', fontsize=14
+        >>> )
+        >>> 
+        >>> ax2 = fig.add_subplot(122)
+        >>> ax2.spy(mesh.cell_gradient)
+        >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
+        >>> ax2.set_ylabel("Face Number", fontsize=12)
+        >>> ax2.set_xlabel("Cell Number", fontsize=12)
+        
         """
         if getattr(self, "_cell_gradient", None) is None:
             G = self.stencil_cell_gradient
@@ -1359,35 +1784,37 @@ class DiffOperators(object):
             self._cell_gradient = sdiag(S / V) * G
         return self._cell_gradient
 
-    def cell_gradient_weak_form_robin(self, alpha=1.0, beta=0.0, gamma=0.0):
+    def cell_gradient_weak_form_robin(self, alpha=0.0, beta=1.0, gamma=0.0):
         r"""Robin conditions for cell gradient operator (cell centers to faces)
 
-        When the discrete gradient operator maps from cell centers to faces, we must
-        implement boundary conditions to evaluate inner products containing the
-        gradient operator according to the weak formulation; e.g.
-        :math:`\langle \vec{u} , \nabla \phi \rangle` . Where general
-        boundary conditions are defined on :math:`\phi`
+        This method returns the pieces required to impose Robin boundary conditions
+        for the discrete gradient operator that maps from cell centers to faces.
+        These pieces are needed when constructing the discrete representation
+        of the inner product :math:`\langle \vec{u} , \nabla \phi \rangle`
+        according to the finite volume method. 
+
+        Where general boundary conditions are defined on :math:`\phi`
         according to the Robin condition:
 
         .. math::
             \alpha \phi + \beta \frac{\partial \phi}{\partial n} = \gamma
 
         the user supplies values for :math:`\alpha`, :math:`\beta` and :math:`\gamma`
-        for all boundary faces. For the values supplied,
-        **cell_gradient_weak_form_robin** returns the matrix :math:`\mathbf{B}`
-        and vector :math:`\mathbf{b}` required to evaluate inner products
-        containing the gradient. *See the notes section for a comprehensive
-        description.*
+        for all boundary faces. **cell_gradient_weak_form_robin** returns the matrix
+        :math:`\mathbf{B}` and vector :math:`\mathbf{b}` required for the discrete
+        representation of :math:`\langle \vec{u} , \nabla \phi \rangle`.
+        *See the notes section for a comprehensive description.*
 
         Parameters
         ----------
         alpha : scalar or array_like
             Defines :math:`\alpha` for Robin boundary condition. Can be defined as a
             scalar or array_like. If array_like, the length of the array must be equal
-            to the number of boundary faces. *alpha* CANNOT be 0!
+            to the number of boundary faces.
         beta : scalar or array_like
             Defines :math:`\beta` for Robin boundary condition. Can be defined as a
             scalar or array_like. If array_like, must have the same length as *alpha*.
+             *beta* CANNOT be 0!
         gamma: scalar or array_like
             Defines :math:`\gamma` for Robin boundary condition. If array like, *gamma*
             can have shape (n_boundary_face,). Can also have shape (n_boundary_faces, n_rhs)
@@ -1409,9 +1836,9 @@ class DiffOperators(object):
         .. math::
             \langle \vec{u} , \nabla \phi \rangle \; = \int_\Omega \vec{u} \cdot (\nabla \phi) \, dv
 
-        For a gradient operator that maps from cell centers to faces, the discrete representation
-        of :math:`\phi` must live at cell centers. To implement boundary conditions in this
-        case, we must use the divergence theorem to re-express the inner product as:
+        For a discrete representation of :math:`\phi` at cell centers, the gradient operator
+        maps from cell centers to faces. To implement the boundary conditions in this
+        case, we must use the divergence theorem and re-express the inner product as:
 
         .. math::
             \langle \vec{u} , \nabla \phi \rangle \; = - \int_V \phi \, (\nabla \cdot \vec{u} ) \, dV
@@ -1432,10 +1859,10 @@ class DiffOperators(object):
 
         Examples
         --------
-        Here we construct all of the pieces require to evaluate the inner
-        product between :math:`\mathbf{u}` on faces and the gradient of
-        :math:`\boldsymbol{\phi}` at cell centers given a specified set of
-        Robin boundary conditions. We begin by creating a small 2D tensor mesh:
+        Here we form all of pieces required to construct the discrete representation
+        of the inner product between :math:`\mathbf{u}` for specified Robin boundary
+        conditions. We define :math:`\boldsymbol{\phi}` at cell centers and
+        :math:`\mathbf{u}` on the faces. We begin by creating a small 2D tensor mesh:
 
         >>> from discretize import TensorMesh
         >>> import numpy as np
@@ -1456,15 +1883,15 @@ class DiffOperators(object):
 
         >>> B, b = mesh.cell_gradient_weak_form_robin(alpha, beta, gamma)
         >>> Mc = sp.diags(mesh.cell_volumes)
-        >>> D = mesh.face_divergence
+        >>> Df = mesh.face_divergence
         
         In practice, these pieces are usually re-arranged when used to
         solve PDEs with the finite volume method. However, if you wanted
-        to create a function which computes the inner product for any
+        to create a function which computes the discrete inner product for any
         :math:`\mathbf{u}` and :math:`\boldsymbol{\phi}`:
 
         >>> def inner_product(u, phi):
-        >>>     return u @ (-D.T @ Mc + B) @ phi + u @ b
+        >>>     return u @ (-Df.T @ Mc + B) @ phi + u @ b
 
         """
 
@@ -1501,6 +1928,9 @@ class DiffOperators(object):
         """
         Boundary conditions matrix for the cell gradient operator
         """
+
+        warnings.warn("cell_gradient_BC is deprecated and is not longer used. See cell_gradient")
+
         if getattr(self, "_cell_gradient_BC", None) is None:
             BC = self.set_cell_gradient_BC(self._cell_gradient_BC_list)
             n = self.vnC
