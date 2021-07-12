@@ -606,7 +606,7 @@ class DiffOperators(object):
         >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
         >>> ax1.set_title("Mapping of Face-Y Divergence", fontsize=14, pad=15)
         >>> ax1.legend(
-        >>>     ['Mesh', '$\\mathbf{\\phi}$ (y-faces)', '$\\partial_y \\mathbf{\\phi}/\\partial y$ (centers)'],
+        >>>     ['Mesh','$\\mathbf{\\phi}$ (y-faces)','$\\partial_y \\mathbf{\\phi}/\\partial y$ (centers)'],
         >>>     loc='upper right', fontsize=14
         >>> )
         >>> ax2 = fig.add_subplot(212)
@@ -667,7 +667,7 @@ class DiffOperators(object):
         >>> 
         >>> # Create a discrete quantity on z-faces
         >>> faces_z = mesh.faces_z
-        >>> phi = np.exp(-(faces_z[:, 1] ** 2) / 8** 2)
+        >>> phi = np.exp(-(faces_z[:, 2] ** 2) / 8** 2)
         >>> 
         >>> # Construct the z-divergence operator and apply to vector
         >>> Dz = mesh.face_z_divergence
@@ -713,7 +713,7 @@ class DiffOperators(object):
         >>>     ax1.text(loc[0] + 0.05, loc[1] + 0.05, loc[2], "{0:d}".format(ii), color="r")
         >>> 
         >>> ax1.legend(
-        >>>     ['Mesh', '$\\mathbf{\\phi}$ (z-faces)', '$\\partial \\mathbf{\\phi}/\\partial z$ (centers)'],
+        >>>     ['Mesh','$\\mathbf{\\phi}$ (z-faces)','$\\partial \\mathbf{\\phi}/\\partial z$ (centers)'],
         >>>     loc='upper right', fontsize=14
         >>> )
         >>> 
@@ -1070,7 +1070,7 @@ class DiffOperators(object):
 
             laplace_phi = Ln @ phi
 
-        The operator *assumes a zero Neuwmann boundary condition for the discrete
+        The operator *assumes a zero Neumann boundary condition for the discrete
         scalar quantity. Once constructed, the operator is stored permanently as
         a property of the mesh.
 
@@ -1097,85 +1097,87 @@ class DiffOperators(object):
         .. math::
             \\boldsymbol{\\psi} = \\mathbf{L_n} \\, \\boldsymbol{\\phi}
 
-        Examples
-        --------
+        # EXAMPLE INACTIVE BECAUSE OPERATOR IS BROKEN
+        # 
+        # Examples
+        # --------
 
-        Below, we demonstrate how to apply the nodal Laplacian operator to
-        a discrete scalar quantity, the mapping of the nodal Laplacian operator and
-        its sparsity. Our example is carried out on a 2D mesh but it can
-        be done equivalently for a 3D mesh.
+        # Below, we demonstrate how to apply the nodal Laplacian operator to
+        # a discrete scalar quantity, the mapping of the nodal Laplacian operator and
+        # its sparsity. Our example is carried out on a 2D mesh but it can
+        # be done equivalently for a 3D mesh.
 
-        We start by importing the necessary packages and modules.
+        # We start by importing the necessary packages and modules.
         
-        >>> from discretize import TensorMesh
-        >>> import numpy as np
-        >>> import matplotlib.pyplot as plt
-        >>> import matplotlib as mpl
+        # >>> from discretize import TensorMesh
+        # >>> import numpy as np
+        # >>> import matplotlib.pyplot as plt
+        # >>> import matplotlib as mpl
 
-        For a discrete scalar quantity defined on the nodes, we take the
-        Laplacian by constructing the operator and multiplying
-        as a matrix-vector product.
+        # For a discrete scalar quantity defined on the nodes, we take the
+        # Laplacian by constructing the operator and multiplying
+        # as a matrix-vector product.
 
-        >>> # Create a uniform grid
-        >>> h = np.ones(20)
-        >>> mesh = TensorMesh([h, h], "CC")
-        >>> 
-        >>> # Create a discrete scalar on nodes. The scalar MUST
-        >>> # respect the zero Neuwmann boundary condition.
-        >>> nodes = mesh.nodes
-        >>> phi = np.exp(-(nodes[:, 0] ** 2 + nodes[:, 1] ** 2) / 4 ** 2)
-        >>> 
-        >>> # Construct the Laplacian operator and apply to vector
-        >>> Ln = mesh.nodal_laplacian
-        >>> laplacian_phi = Ln @ phi
-        >>> 
-        >>> # Plot
-        >>> fig = plt.figure(figsize=(13, 6))
-        >>> ax1 = fig.add_subplot(121)
-        >>> mesh.plot_image(phi, ax=ax1)
-        >>> ax1.set_title("Scalar at nodes", fontsize=14)
-        >>> ax2 = fig.add_subplot(122)
-        >>> mesh.plot_image(laplacian_phi, ax=ax1)
-        >>> ax2.set_yticks([])
-        >>> ax2.set_ylabel("")
-        >>> ax2.set_title("Laplacian at nodes", fontsize=14)
-        >>> fig.show()
+        # >>> # Create a uniform grid
+        # >>> h = np.ones(20)
+        # >>> mesh = TensorMesh([h, h], "CC")
+        # >>> 
+        # >>> # Create a discrete scalar on nodes. The scalar MUST
+        # >>> # respect the zero Neumann boundary condition.
+        # >>> nodes = mesh.nodes
+        # >>> phi = np.exp(-(nodes[:, 0] ** 2 + nodes[:, 1] ** 2) / 4 ** 2)
+        # >>> 
+        # >>> # Construct the Laplacian operator and apply to vector
+        # >>> Ln = mesh.nodal_laplacian
+        # >>> laplacian_phi = Ln @ phi
+        # >>> 
+        # >>> # Plot
+        # >>> fig = plt.figure(figsize=(13, 6))
+        # >>> ax1 = fig.add_subplot(121)
+        # >>> mesh.plot_image(phi, ax=ax1)
+        # >>> ax1.set_title("Scalar at nodes", fontsize=14)
+        # >>> ax2 = fig.add_subplot(122)
+        # >>> mesh.plot_image(laplacian_phi, ax=ax1)
+        # >>> ax2.set_yticks([])
+        # >>> ax2.set_ylabel("")
+        # >>> ax2.set_title("Laplacian at nodes", fontsize=14)
+        # >>> fig.show()
 
-        The nodal Laplacian operator is a sparse matrix that maps
-        from nodes to nodes. To demonstrate this, we construct
-        a small 2D mesh. We then show the ordering of the nodes
-        and a spy plot illustrating the sparsity of the operator.
+        # The nodal Laplacian operator is a sparse matrix that maps
+        # from nodes to nodes. To demonstrate this, we construct
+        # a small 2D mesh. We then show the ordering of the nodes
+        # and a spy plot illustrating the sparsity of the operator.
 
-        >>> mesh = TensorMesh([[(1, 4)], [(1, 4)]])
-        >>> fig = plt.figure(figsize=(12, 6))
-        >>> 
-        >>> ax1 = fig.add_subplot(211)
-        >>> mesh.plot_grid(ax=ax1)
-        >>> ax1.set_title("Ordering of the Nodes", fontsize=14, pad=15)
-        >>> 
-        >>> ax1.plot(mesh.nodes[:, 0], mesh.nodes[:, 1], "ro", markersize=8)
-        >>> for ii, loc in zip(range(mesh.nN), mesh.nodes):
-        >>>     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format(ii), color="r")
-        >>> 
-        >>> ax1.set_xticks([])
-        >>> ax1.set_yticks([])
-        >>> ax1.spines['bottom'].set_color('white')
-        >>> ax1.spines['top'].set_color('white')
-        >>> ax1.spines['left'].set_color('white')
-        >>> ax1.spines['right'].set_color('white')
-        >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
-        >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
-        >>>  
-        >>> ax1.legend(
-        >>>     ['Mesh', '$\\mathbf{\\phi}$ (nodes)'],
-        >>>     loc='upper right', fontsize=14
-        >>> )
-        >>> 
-        >>> ax2 = fig.add_subplot(212)
-        >>> ax2.spy(mesh.nodal_laplacian)
-        >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
-        >>> ax2.set_ylabel("Node Index", fontsize=12)
-        >>> ax2.set_xlabel("Node Index", fontsize=12)
+        # >>> mesh = TensorMesh([[(1, 4)], [(1, 4)]])
+        # >>> fig = plt.figure(figsize=(12, 6))
+        # >>> 
+        # >>> ax1 = fig.add_subplot(211)
+        # >>> mesh.plot_grid(ax=ax1)
+        # >>> ax1.set_title("Ordering of the Nodes", fontsize=14, pad=15)
+        # >>> 
+        # >>> ax1.plot(mesh.nodes[:, 0], mesh.nodes[:, 1], "ro", markersize=8)
+        # >>> for ii, loc in zip(range(mesh.nN), mesh.nodes):
+        # >>>     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format(ii), color="r")
+        # >>> 
+        # >>> ax1.set_xticks([])
+        # >>> ax1.set_yticks([])
+        # >>> ax1.spines['bottom'].set_color('white')
+        # >>> ax1.spines['top'].set_color('white')
+        # >>> ax1.spines['left'].set_color('white')
+        # >>> ax1.spines['right'].set_color('white')
+        # >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
+        # >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
+        # >>>  
+        # >>> ax1.legend(
+        # >>>     ['Mesh', '$\\mathbf{\\phi}$ (nodes)'],
+        # >>>     loc='upper right', fontsize=14
+        # >>> )
+        # >>> 
+        # >>> ax2 = fig.add_subplot(212)
+        # >>> ax2.spy(mesh.nodal_laplacian)
+        # >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
+        # >>> ax2.set_ylabel("Node Index", fontsize=12)
+        # >>> ax2.set_xlabel("Node Index", fontsize=12)
         
         """
         if getattr(self, "_nodal_laplacian", None) is None:
@@ -1301,7 +1303,7 @@ class DiffOperators(object):
         >>> h = np.ones(32)
         >>> mesh = TensorMesh([h, h])
 
-        We then define `alpha`, `beta`, and `gamma` parameters for a zero Neuwmann
+        We then define `alpha`, `beta`, and `gamma` parameters for a zero Neumann
         condition on the boundary faces. This corresponds to setting:
 
         >>> alpha = 0.0
@@ -1408,8 +1410,8 @@ class DiffOperators(object):
 
             - :py:attr:`~discretize.operators.DiffOperators.cell_gradient`
             - :py:attr:`~discretize.operators.DiffOperators.cell_gradient_x`
-            - :py:attr:`~discretize.operators.DiffOperators.cell_gradient_x`
-            - :py:attr:`~discretize.operators.DiffOperators.cell_gradient_x`
+            - :py:attr:`~discretize.operators.DiffOperators.cell_gradient_y`
+            - :py:attr:`~discretize.operators.DiffOperators.cell_gradient_z`
             - :py:attr:`~discretize.operators.DiffOperators.stencil_cell_gradient`
             - :py:attr:`~discretize.operators.DiffOperators.stencil_cell_gradient_x`
             - :py:attr:`~discretize.operators.DiffOperators.stencil_cell_gradient_y`
@@ -2894,10 +2896,12 @@ class DiffOperators(object):
         >>> ax1 = fig.add_axes([0, 0.35, 1, 0.6], projection='3d', elev=25, azim=-60)
         >>> mesh.plot_grid(ax=ax1)
         >>> ax1.plot(
-        >>>     mesh.edges[edge_ind, 0], mesh.edges[edge_ind, 1], mesh.edges[edge_ind, 2], "go", markersize=10
+        >>>     mesh.edges[edge_ind, 0], mesh.edges[edge_ind, 1], mesh.edges[edge_ind, 2],
+        >>>     "go", markersize=10
         >>> )
         >>> ax1.plot(
-        >>>     mesh.faces[face_ind, 0], mesh.faces[face_ind, 1], mesh.faces[face_ind, 2], "rs", markersize=10
+        >>>     mesh.faces[face_ind, 0], mesh.faces[face_ind, 1], mesh.faces[face_ind, 2],
+        >>>     "rs", markersize=10
         >>> )
         >>> poly = mp3d.art3d.Poly3DCollection(
         >>>     [poly], alpha=0.1, facecolor='r', linewidth=None
