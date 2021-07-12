@@ -248,7 +248,7 @@ class DiffOperators(object):
         :math:`\\mathbf{D_f}` that can be applied as a matrix-vector product to
         a discrete vector :math:`\\mathbf{u}` that lives on mesh faces; i.e.::
 
-            div_u = Df * u
+            div_u = Df @ u
 
         Once constructed, the operator is stored permanently as a property of the mesh.
         *See notes for additional details.*
@@ -324,7 +324,7 @@ class DiffOperators(object):
         >>> 
         >>> # Construct the divergence operator and apply to vector
         >>> Df = mesh.face_divergence
-        >>> div_u = Df * u
+        >>> div_u = Df @ u
         >>> 
         >>> # Plot
         >>> fig = plt.figure(figsize=(13, 6))
@@ -407,7 +407,7 @@ class DiffOperators(object):
         to a discrete scalar quantity :math:`\\boldsymbol{\\phi}` that lives on
         x-faces; i.e.::
 
-            dphi_dx = Dx * phi
+            dphi_dx = Dx @ phi
 
         For a discrete vector whose x-component lives on x-faces, this operator
         can also be used to compute the contribution of the x-component toward
@@ -446,7 +446,7 @@ class DiffOperators(object):
         >>> 
         >>> # Construct the x-divergence operator and apply to vector
         >>> Dx = mesh.face_x_divergence
-        >>> dphi_dx = Dx * phi
+        >>> dphi_dx = Dx @ phi
         >>> 
         >>> # Plot
         >>> fig = plt.figure(figsize=(13, 6))
@@ -519,7 +519,7 @@ class DiffOperators(object):
         to a discrete scalar quantity :math:`\\boldsymbol{\\phi}` that lives on
         y-faces; i.e.::
 
-            dphi_dy = Dy * phi
+            dphi_dy = Dy @ phi
 
         For a discrete vector whose y-component lives on y-faces, this operator
         can also be used to compute the contribution of the y-component toward 
@@ -558,7 +558,7 @@ class DiffOperators(object):
         >>> 
         >>> # Construct the y-divergence operator and apply to vector
         >>> Dy = mesh.face_y_divergence
-        >>> dphi_dy = Dy * phi
+        >>> dphi_dy = Dy @ phi
         >>> 
         >>> # Plot
         >>> fig = plt.figure(figsize=(13, 6))
@@ -633,7 +633,7 @@ class DiffOperators(object):
         to a discrete scalar quantity :math:`\\boldsymbol{\\phi}` that lives on
         z-faces; i.e.::
 
-            dphi_dz = Dz * phi
+            dphi_dz = Dz @ phi
 
         For a discrete vector whose z-component lives on z-faces, this operator
         can also be used to compute the contribution of the z-component toward 
@@ -671,7 +671,7 @@ class DiffOperators(object):
         >>> 
         >>> # Construct the z-divergence operator and apply to vector
         >>> Dz = mesh.face_z_divergence
-        >>> dphi_dz = Dz * phi
+        >>> dphi_dz = Dz @ phi
         >>> 
         >>> # Plot
         >>> fig = plt.figure(figsize=(13, 6))
@@ -836,7 +836,7 @@ class DiffOperators(object):
         to a discrete scalar quantity :math:`\\boldsymbol{\\phi}` that
         lives on the nodes, i.e.::
 
-            grad_phi = Gn * phi
+            grad_phi = Gn @ phi
 
         Once constructed, the operator is stored permanently as a property of the mesh.
 
@@ -903,7 +903,7 @@ class DiffOperators(object):
         >>> 
         >>> # Construct the gradient operator and apply to vector
         >>> Gn = mesh.nodal_gradient
-        >>> grad_phi = Gn * phi
+        >>> grad_phi = Gn @ phi
         >>> 
         >>> # Plot
         >>> fig = plt.figure(figsize=(13, 6))
@@ -1068,7 +1068,7 @@ class DiffOperators(object):
         discrete scalar quantity :math:`\\boldsymbol{\\phi}` that lives on the
         nodes, i.e.::
 
-            laplace_phi = Ln * phi
+            laplace_phi = Ln @ phi
 
         The operator *assumes a zero Neuwmann boundary condition for the discrete
         scalar quantity. Once constructed, the operator is stored permanently as
@@ -1127,7 +1127,7 @@ class DiffOperators(object):
         >>> 
         >>> # Construct the Laplacian operator and apply to vector
         >>> Ln = mesh.nodal_laplacian
-        >>> laplacian_phi = Ln * phi
+        >>> laplacian_phi = Ln @ phi
         >>> 
         >>> # Plot
         >>> fig = plt.figure(figsize=(13, 6))
@@ -1477,7 +1477,7 @@ class DiffOperators(object):
         matrix :math:`\\mathbf{G_x}` that can be applied as a matrix-vector
         product to a cell centered quantity :math:`\\boldsymbol{\\phi}`, i.e.::
 
-            diff_phi_x = Gx * phi
+            diff_phi_x = Gx @ phi
 
         By default, the operator assumes zero-Neumann boundary conditions
         on the scalar quantity. Before calling **stencil_cell_gradient_x** however,
@@ -1530,7 +1530,7 @@ class DiffOperators(object):
         
         >>> mesh.set_cell_gradient_BC(['neumann', 'neumann'])
         >>> Gx = mesh.stencil_cell_gradient_x
-        >>> diff_phi_x = Gx * phi
+        >>> diff_phi_x = Gx @ phi
 
         Now we plot the original scalar, and the differencing taken along the
         x axes.
@@ -1619,7 +1619,7 @@ class DiffOperators(object):
         matrix :math:`\\mathbf{G_y}` that can be applied as a matrix-vector
         product to a cell centered quantity :math:`\\boldsymbol{\\phi}`, i.e.::
 
-            diff_phi_y = Gy * phi
+            diff_phi_y = Gy @ phi
 
         By default, the operator assumes zero-Neumann boundary conditions
         on the scalar quantity. Before calling **stencil_cell_gradient_y** however,
@@ -1672,7 +1672,7 @@ class DiffOperators(object):
         
         >>> mesh.set_cell_gradient_BC(['neumann', 'neumann'])
         >>> Gy = mesh.stencil_cell_gradient_y
-        >>> diff_phi_y = Gy * phi
+        >>> diff_phi_y = Gy @ phi
 
         Now we plot the original scalar, and the differencing taken along the
         y-axis.
@@ -1756,7 +1756,7 @@ class DiffOperators(object):
         matrix :math:`\\mathbf{G_z}` that can be applied as a matrix-vector
         product to a cell centered quantity :math:`\\boldsymbol{\\phi}`, i.e.::
 
-            diff_phi_z = Gz * phi
+            diff_phi_z = Gz @ phi
 
         By default, the operator assumes zero-Neumann boundary conditions
         on the scalar quantity. Before calling **stencil_cell_gradient_z** however,
@@ -1812,7 +1812,7 @@ class DiffOperators(object):
         
         >>> mesh.set_cell_gradient_BC(['neumann', 'neumann', 'neumann'])
         >>> Gz = mesh.stencil_cell_gradient_z
-        >>> diff_phi_z = Gz * phi
+        >>> diff_phi_z = Gz @ phi
 
         Now we plot the original scalar, and the differencing taken along the
         z-axis for a slice at y = 0.
@@ -1860,7 +1860,7 @@ class DiffOperators(object):
         matrix :math:`\\mathbf{G}` that can be applied as a matrix-vector
         product to a cell centered quantity :math:`\\boldsymbol{\\phi}`, i.e.::
 
-            diff_phi = G * phi
+            diff_phi = G @ phi
 
         By default, the operator assumes zero-Neumann boundary conditions
         on the scalar quantity. Before calling **stencil_cell_gradient** however,
@@ -1912,7 +1912,7 @@ class DiffOperators(object):
         
         >>> mesh.set_cell_gradient_BC(['neumann', 'neumann'])
         >>> G = mesh.stencil_cell_gradient
-        >>> diff_phi = G * phi
+        >>> diff_phi = G @ phi
 
         Now we plot the original scalar, and the differencing taken along the
         x and y axes.
@@ -2023,7 +2023,7 @@ class DiffOperators(object):
         to a discrete scalar quantity :math:`\\boldsymbol{\\phi}` that lives
         at the cell centers; i.e.::
 
-            grad_phi = Gc * phi
+            grad_phi = Gc @ phi
 
         By default, the operator assumes zero-Neumann boundary conditions
         on the scalar quantity. Before calling **cell_gradient** however,
@@ -2099,7 +2099,7 @@ class DiffOperators(object):
         >>> 
         >>> # Construct the gradient operator and apply to vector
         >>> Gc = mesh.cell_gradient
-        >>> grad_phi = Gc * phi
+        >>> grad_phi = Gc @ phi
         >>> 
         >>> # Plot
         >>> fig = plt.figure(figsize=(13, 6))
@@ -2352,7 +2352,7 @@ class DiffOperators(object):
         sparse matrix :math:`\\mathbf{G_x}` that can be applied as a matrix-vector
         product to a cell centered quantity :math:`\\boldsymbol{\\phi}`, i.e.::
 
-            grad_phi_x = Gx * phi
+            grad_phi_x = Gx @ phi
 
         By default, the operator assumes zero-Neumann boundary conditions
         on the scalar quantity. Before calling **cell_gradient_x** however,
@@ -2402,7 +2402,7 @@ class DiffOperators(object):
         
         >>> mesh.set_cell_gradient_BC(['neumann', 'neumann'])
         >>> Gx = mesh.stencil_cell_gradient_x
-        >>> grad_phi_x = Gx * phi
+        >>> grad_phi_x = Gx @ phi
 
         Now we plot the original scalar, and the x-derivative.
 
@@ -2481,7 +2481,7 @@ class DiffOperators(object):
         sparse matrix :math:`\\mathbf{G_y}` that can be applied as a matrix-vector
         product to a cell centered quantity :math:`\\boldsymbol{\\phi}`, i.e.::
 
-            grad_phi_y = Gy * phi
+            grad_phi_y = Gy @ phi
 
         By default, the operator assumes zero-Neumann boundary conditions
         on the scalar quantity. Before calling **cell_gradient_y** however,
@@ -2531,7 +2531,7 @@ class DiffOperators(object):
         
         >>> mesh.set_cell_gradient_BC(['neumann', 'neumann'])
         >>> Gy = mesh.cell_gradient_y
-        >>> grad_phi_y = Gy * phi
+        >>> grad_phi_y = Gy @ phi
 
         Now we plot the original scalar is y-derivative.
 
@@ -2612,7 +2612,7 @@ class DiffOperators(object):
         sparse matrix :math:`\\mathbf{G_z}` that can be applied as a matrix-vector
         product to a cell centered quantity :math:`\\boldsymbol{\\phi}`, i.e.::
 
-            grad_phi_z = Gz * phi
+            grad_phi_z = Gz @ phi
 
         By default, the operator assumes zero-Neumann boundary conditions
         on the scalar quantity. Before calling **cell_gradient_z** however,
@@ -2661,7 +2661,7 @@ class DiffOperators(object):
         
         >>> mesh.set_cell_gradient_BC(['neumann', 'neumann', 'neumann'])
         >>> Gz = mesh.cell_gradient_z
-        >>> grad_phi_z = Gz * phi
+        >>> grad_phi_z = Gz @ phi
 
         Now we plot the original scalar and the z-derivative for a slice at y = 0.
 
@@ -2801,7 +2801,7 @@ class DiffOperators(object):
         to a discrete vector quantity :math:`\\mathbf{u}` that lives
         on the edges; i.e.::
 
-            curl_u = Ce * u
+            curl_u = Ce @ u
 
         Once constructed, the operator is stored permanently as a property of the mesh.
 
@@ -2975,7 +2975,7 @@ class DiffOperators(object):
 
         In discrete form this is:
 
-        .. math:: w^T * P * u_b
+        .. math:: w^T * P @ u_b
 
         where `w` is defined on all faces, and `u_b` is defined on boundary faces.
         """
@@ -3018,7 +3018,7 @@ class DiffOperators(object):
 
         In discrete form this is:
 
-        .. math:: w^T * P * u_b
+        .. math:: w^T * P @ u_b
 
         where `w` is defined on all edges, and `u_b` is all three components defined on
         boundary edges.
@@ -3063,7 +3063,7 @@ class DiffOperators(object):
 
         In discrete form this is:
 
-        .. math:: w^T * P * u_b
+        .. math:: w^T * P @ u_b
 
         where `w` is defined on all nodes, and `u_b` is all three components defined on
         boundary nodes.
@@ -3301,7 +3301,7 @@ class DiffOperators(object):
         the values defined on its faces. The operation is implemented as a
         matrix vector product, i.e.::
 
-            phi_c = Afc * phi_f
+            phi_c = Afc @ phi_f
 
         Examples
         --------
@@ -3334,7 +3334,7 @@ class DiffOperators(object):
         >>> Afc = mesh.average_face_to_cell
         >>> 
         >>> # Apply averaging operator
-        >>> phi_c = Afc * phi_f
+        >>> phi_c = Afc @ phi_f
         >>> 
         >>> # Plot
         >>> fig = plt.figure(figsize=(11, 5))
@@ -3388,7 +3388,7 @@ class DiffOperators(object):
         separately to cell centers. The operation is implemented as a
         matrix vector product, i.e.::
 
-            u_c = Afc * u_f
+            u_c = Afc @ u_f
 
         Returns
         -------
@@ -3451,7 +3451,7 @@ class DiffOperators(object):
         >>> Afc = mesh.average_face_to_cell_vector
         >>> 
         >>> # Apply averaging operator
-        >>> u_c = Afc * u_f
+        >>> u_c = Afc @ u_f
         >>> 
         >>> # Plot
         >>> fig = plt.figure(figsize=(11, 5))
@@ -3520,7 +3520,7 @@ class DiffOperators(object):
         the values defined on its x-faces. The operation is implemented as a
         matrix vector product, i.e.::
 
-            phi_c = Axc * phi_x
+            phi_c = Axc @ phi_x
 
         Examples
         --------
@@ -3553,7 +3553,7 @@ class DiffOperators(object):
         >>> Axc = mesh.average_face_x_to_cell
         >>> 
         >>> # Apply averaging operator
-        >>> phi_c = Axc * phi_x
+        >>> phi_c = Axc @ phi_x
         >>> 
         >>> # Plot
         >>> fig = plt.figure(figsize=(11, 5))
@@ -3621,7 +3621,7 @@ class DiffOperators(object):
         the values defined on its y-faces. The operation is implemented as a
         matrix vector product, i.e.::
 
-            phi_c = Ayc * phi_y
+            phi_c = Ayc @ phi_y
 
         Examples
         --------
@@ -3654,7 +3654,7 @@ class DiffOperators(object):
         >>> Ayc = mesh.average_face_y_to_cell
         >>> 
         >>> # Apply averaging operator
-        >>> phi_c = Ayc * phi_y
+        >>> phi_c = Ayc @ phi_y
         >>> 
         >>> # Plot
         >>> fig = plt.figure(figsize=(11, 5))
@@ -3721,7 +3721,7 @@ class DiffOperators(object):
         the values defined on its z-faces. The operation is implemented as a
         matrix vector product, i.e.::
 
-            phi_c = Azc * phi_z
+            phi_c = Azc @ phi_z
 
         Examples
         --------
@@ -3756,7 +3756,7 @@ class DiffOperators(object):
         >>> Azc = mesh.average_face_z_to_cell
         >>> 
         >>> # Apply averaging operator
-        >>> phi_c = Azc * phi_z
+        >>> phi_c = Azc @ phi_z
         >>> 
         >>> # Plot
         >>> fig = plt.figure(figsize=(11, 5))
@@ -3829,7 +3829,7 @@ class DiffOperators(object):
         from the nearest cell center. Once the operator is construct, the averaging
         is implemented as a matrix vector product, i.e.::
 
-            phi_f = Acf * phi_c
+            phi_f = Acf @ phi_c
 
 
         Examples
@@ -3863,7 +3863,7 @@ class DiffOperators(object):
         >>> Acf = mesh.average_cell_to_face
         >>> 
         >>> # Apply averaging operator
-        >>> phi_f = Acf * phi_c
+        >>> phi_f = Acf @ phi_c
         >>> 
         >>> # Plot
         >>> fig = plt.figure(figsize=(11, 5))
@@ -3942,7 +3942,7 @@ class DiffOperators(object):
         faces; e.g. the x-component lives on x-faces. The operation is implemented as a
         matrix vector product, i.e.::
 
-            u_f = Acf * u_c
+            u_f = Acf @ u_c
 
         Returns
         -------
@@ -4012,7 +4012,7 @@ class DiffOperators(object):
         >>> Acf = mesh.average_cell_vector_to_face
         >>> 
         >>> # Apply averaging operator
-        >>> u_f = Acf * u_c
+        >>> u_f = Acf @ u_c
         >>> 
         >>> # Plot
         >>> fig = plt.figure(figsize=(11, 5))
@@ -4110,7 +4110,7 @@ class DiffOperators(object):
         from the nearest cell center. Once the operator is construct, the averaging
         is implemented as a matrix vector product, i.e.::
 
-            phi_e = Ace * phi_c
+            phi_e = Ace @ phi_c
 
 
         Examples
@@ -4144,7 +4144,7 @@ class DiffOperators(object):
         >>> Ace = mesh.average_cell_to_edge
         >>> 
         >>> # Apply averaging operator
-        >>> phi_e = Ace * phi_c
+        >>> phi_e = Ace @ phi_c
         >>> 
         >>> # Plot
         >>> fig = plt.figure(figsize=(11, 5))
@@ -4224,7 +4224,7 @@ class DiffOperators(object):
         the values defined on its edges. The operation is implemented as a
         matrix vector product, i.e.::
 
-            phi_c = Aec * phi_e
+            phi_c = Aec @ phi_e
 
         Examples
         --------
@@ -4257,7 +4257,7 @@ class DiffOperators(object):
         >>> Aec = mesh.average_edge_to_cell
         >>> 
         >>> # Apply averaging operator
-        >>> phi_c = Aec * phi_e
+        >>> phi_c = Aec @ phi_e
         >>> 
         >>> # Plot
         >>> fig = plt.figure(figsize=(11, 5))
@@ -4311,7 +4311,7 @@ class DiffOperators(object):
         separately to cell centers. The operation is implemented as a
         matrix vector product, i.e.::
 
-            u_c = Aec * u_e
+            u_c = Aec @ u_e
 
         Returns
         -------
@@ -4374,7 +4374,7 @@ class DiffOperators(object):
         >>> Aec = mesh.average_edge_to_cell_vector
         >>> 
         >>> # Apply averaging operator
-        >>> u_c = Aec * u_e
+        >>> u_c = Aec @ u_e
         >>> 
         >>> # Plot
         >>> fig = plt.figure(figsize=(11, 5))
@@ -4443,7 +4443,7 @@ class DiffOperators(object):
         the values defined on its x-edges. The operation is implemented as a
         matrix vector product, i.e.::
 
-            phi_c = Axc * phi_x
+            phi_c = Axc @ phi_x
 
         Examples
         --------
@@ -4476,7 +4476,7 @@ class DiffOperators(object):
         >>> Axc = mesh.average_edge_x_to_cell
         >>> 
         >>> # Apply averaging operator
-        >>> phi_c = Axc * phi_x
+        >>> phi_c = Axc @ phi_x
         >>> 
         >>> # Plot
         >>> fig = plt.figure(figsize=(11, 5))
@@ -4544,7 +4544,7 @@ class DiffOperators(object):
         the values defined on its y-edges. The operation is implemented as a
         matrix vector product, i.e.::
 
-            phi_c = Ayc * phi_y
+            phi_c = Ayc @ phi_y
 
         Examples
         --------
@@ -4577,7 +4577,7 @@ class DiffOperators(object):
         >>> Ayc = mesh.average_edge_y_to_cell
         >>> 
         >>> # Apply averaging operator
-        >>> phi_c = Ayc * phi_y
+        >>> phi_c = Ayc @ phi_y
         >>> 
         >>> # Plot
         >>> fig = plt.figure(figsize=(11, 5))
@@ -4645,7 +4645,7 @@ class DiffOperators(object):
         the values defined on its z-edges. The operation is implemented as a
         matrix vector product, i.e.::
 
-            phi_c = Azc * phi_z
+            phi_c = Azc @ phi_z
 
         Examples
         --------
@@ -4680,7 +4680,7 @@ class DiffOperators(object):
         >>> Azc = mesh.average_edge_z_to_cell
         >>> 
         >>> # Apply averaging operator
-        >>> phi_c = Azc * phi_z
+        >>> phi_c = Azc @ phi_z
         >>> 
         >>> # Plot
         >>> fig = plt.figure(figsize=(11, 5))
@@ -4725,7 +4725,7 @@ class DiffOperators(object):
         must be approximated at faces. The operation is implemented as a
         matrix vector product, i.e.::
 
-            u_f = Aef * u_e
+            u_f = Aef @ u_e
 
         Once constructed, the operator is stored permanently as a property of the mesh.
 
@@ -4786,7 +4786,7 @@ class DiffOperators(object):
         >>> Aef = mesh.average_edge_to_face_vector
         >>> 
         >>> # Apply averaging operator
-        >>> u_f = Aef * u_e
+        >>> u_f = Aef @ u_e
         >>> 
         >>> # Plot
         >>> fig = plt.figure(figsize=(11, 5))
@@ -4871,7 +4871,7 @@ class DiffOperators(object):
         the values defined on its nodes. The operation is implemented as a
         matrix vector product, i.e.::
 
-            phi_c = Anc * phi_n
+            phi_c = Anc @ phi_n
 
         Examples
         --------
@@ -4904,7 +4904,7 @@ class DiffOperators(object):
         >>> Anc = mesh.average_node_to_cell
         >>> 
         >>> # Apply averaging operator
-        >>> phi_c = Anc * phi_n
+        >>> phi_c = Anc @ phi_n
         >>> 
         >>> # Plot
         >>> fig = plt.figure(figsize=(11, 5))
@@ -5026,7 +5026,7 @@ class DiffOperators(object):
         the values defined on the nodes it connects. The operation is implemented as a
         matrix vector product, i.e.::
 
-            phi_e = Ane * phi_n
+            phi_e = Ane @ phi_n
 
         Examples
         --------
@@ -5059,7 +5059,7 @@ class DiffOperators(object):
         >>> Ane = mesh.average_node_to_edge
         >>> 
         >>> # Apply averaging operator
-        >>> phi_e = Ane * phi_n
+        >>> phi_e = Ane @ phi_n
         >>> 
         >>> # Plot
         >>> fig = plt.figure(figsize=(11, 5))
@@ -5176,7 +5176,7 @@ class DiffOperators(object):
         the nodes which outline the face. The operation is implemented as a
         matrix vector product, i.e.::
 
-            phi_f = Anf * phi_n
+            phi_f = Anf @ phi_n
 
         Examples
         --------
@@ -5209,7 +5209,7 @@ class DiffOperators(object):
         >>> Anf = mesh.average_node_to_face
         >>> 
         >>> # Apply averaging operator
-        >>> phi_f = Anf * phi_n
+        >>> phi_f = Anf @ phi_n
         >>> 
         >>> # Plot
         >>> fig = plt.figure(figsize=(11, 5))
@@ -5256,7 +5256,15 @@ class DiffOperators(object):
 
     @property
     def project_face_to_boundary_face(self):
-        """Projects values defined on all faces to the boundary faces
+        """Projection matrix from all faces to boundary faces.
+
+        Constructs and returns a matrix :math:`\\mathbf{P}` that projects from
+        all mesh faces to boundary faces. That is, for a discrete vector
+        :math:`\\mathbf{u}` that lives on the faces, the values on the boundary
+        faces :math:`\\mathbf{u_b}` can be extracted via the following
+        matrix-vector product::
+
+            ub = P @ u
 
         Returns
         -------
@@ -5277,7 +5285,15 @@ class DiffOperators(object):
 
     @property
     def project_edge_to_boundary_edge(self):
-        """Projects values defined on all edges to the boundary edges
+        """Projection matrix from all edges to boundary edges.
+
+        Constructs and returns a matrix :math:`\\mathbf{P}` that projects from
+        all mesh edges to boundary edges. That is, for a discrete vector
+        :math:`\\mathbf{u}` that lives on the edges, the values on the boundary
+        edges :math:`\\mathbf{u_b}` can be extracted via the following
+        matrix-vector product::
+
+            ub = P @ u
 
         Returns
         -------
@@ -5302,7 +5318,15 @@ class DiffOperators(object):
 
     @property
     def project_node_to_boundary_node(self):
-        """Projects values defined on all edges to the boundary edges
+        """Projection matrix from all nodes to boundary nodes.
+
+        Constructs and returns a matrix :math:`\\mathbf{P}` that projects from
+        all mesh nodes to boundary nodes. That is, for a discrete scalar
+        :math:`\\mathbf{u}` that lives on the nodes, the values on the boundary
+        nodes :math:`\\mathbf{u_b}` can be extracted via the following
+        matrix-vector product::
+
+            ub = P @ u
 
         Returns
         -------
