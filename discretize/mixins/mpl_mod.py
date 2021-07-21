@@ -15,9 +15,11 @@ import discretize
 class InterfaceMPL(object):
     """Class for plotting ``discretize`` meshes with matplotlib.
 
-    This interface adds three methods to the meshes. **plot_grid** will plot the
-    grid points of each mesh in 2D and 3D. **plot_image** for 2D image ploting of
-    models. and **plot_slice** for plotting a 2D slice through a 3D mesh.
+    This interface adds three plotting methods to all ``discretize`` meshes.
+    :py:attr:`~InterfaceMPL.plot_grid` will plot gridded points for 2D and 3D meshes.
+    :py:attr:`~InterfaceMPL.plot_image` is used for plotting models, scalars and vectors
+    defined on a given mesh. And :py:attr:`~InterfaceMPL.plot_slice` is used for plotting
+    models, scalars and vectors on a 2D slice through a 3D mesh.
     """
 
     def plot_grid(
@@ -31,7 +33,12 @@ class InterfaceMPL(object):
         show_it=False,
         **kwargs,
     ):
-        """Plot the nodal, cell-centered and staggered grids.
+        """Plot the grid for nodal, cell-centered and staggered grids.
+
+        For 2D and 3D meshes, this method plots the mesh grid. Additionally,
+        the user can choose to denote edge, face, node and cell center locations.
+        This function is built upon the ``matplotlib.pyplot.plot`` function
+        and will accept associated keyword arguments.
 
         Parameters
         ----------
@@ -42,9 +49,9 @@ class InterfaceMPL(object):
         show_it : bool, optional
             whether to call plt.show()
         color : Color or str, optional
-            If lines=True, the color of the lines, defaults to first color.
+            If lines=True, defines the color of the grid lines.
         linewidth : float, optional
-            If lines=True, the linewidth for the lines.
+            If lines=True, defines the thickness of the grid lines.
 
         Returns
         -------
@@ -199,18 +206,25 @@ class InterfaceMPL(object):
         stream_threshold=None,
         **kwargs,
     ):
-        """Plots fields on the given mesh.
+        """Plots quantities defined on a given mesh.
+
+        This method is primarily used to plot models, scalar quantities and vector
+        quantities defined on 2D meshes. For 3D :class:`discretize.TensorMesh` however,
+        this method will plot the quantity for every slice of the 3D mesh.
 
         Parameters
         ----------
         v : numpy.ndarray
-            values to plot
+            Gridded values being plotted. The length of the array depends on the quantity being
+            plotted; e.g. if the quantity is a scalar value defined on mesh nodes, the
+            length must be equal to the number of mesh nodes.
         v_type : {'CC','CCV', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez'}
-            Where the values of v are defined.
-        view : {'real', 'imag', 'abs', 'vec'}
-            How to view the array.
+            Defines the input parameter *v*.
+        view : {'real', 'imag', 'abs', 'vec'} (default='real')
+            For complex scalar quantities, options are included to image the real, imaginary or
+            absolute value. For vector quantities, *view* must be set to 'vec'.
         ax : matplotlib.axes.Axes, optional
-            The axes to draw on. None produces a new Axes.
+            The axes to draw on. *None* produces a new Axes.
         clim : tuple of float, optional
             length 2 tuple of (vmin, vmax) for the color limits
         range_x, range_y : tuple of float, optional
@@ -232,9 +246,9 @@ class InterfaceMPL(object):
         show_it : bool, optional
             Whether to call plt.show()
         numbering : bool, optional
-            For 3D TensorMesh only, show the numbering of the slices
+            For 3D :class:`~discretize.TensorMesh` only, show the numbering of the slices
         annotation_color : Color or str, optional
-            For 3D TensorMesh only, color of the annotation
+            For 3D :class:`~discretize.TensorMesh` only, color of the annotation
 
         Examples
         --------

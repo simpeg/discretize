@@ -1603,17 +1603,26 @@ class _inftup(tuple):
         return f"({self._val}, {self._val}, ...)"
 
 
+################################################
+#             DEPRECATED FUNCTIONS
+################################################
+
 sdInv = deprecate_function(sdinv, "sdInv", removal_version="1.0.0")
+
 getSubArray = deprecate_function(get_subarray, "getSubArray", removal_version="1.0.0")
+
 inv3X3BlockDiagonal = deprecate_function(
     inverse_3x3_block_diagonal, "inv3X3BlockDiagonal", removal_version="1.0.0"
 )
+
 inv2X2BlockDiagonal = deprecate_function(
     inverse_2x2_block_diagonal, "inv2X2BlockDiagonal", removal_version="1.0.0"
 )
+
 makePropertyTensor = deprecate_function(
     make_property_tensor, "makePropertyTensor", removal_version="1.0.0"
 )
+
 invPropertyTensor = deprecate_function(
     inverse_property_tensor, "invPropertyTensor", removal_version="1.0.0"
 )

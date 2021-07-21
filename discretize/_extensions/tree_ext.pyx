@@ -15,16 +15,37 @@ from discretize._extensions.interputils_cython cimport _bisect_left, _bisect_rig
 
 
 cdef class TreeCell:
-    """A class for defining cell within instances of :class:`~discretize.TreeMesh`
+    """A class for defining cells within instances of :class:`~discretize.TreeMesh`
 
     This cannot be created in python, it can only be accessed by indexing the
-    `TreeMesh` object. This is also the object that is passed to the user
-    defined refine function when calling TreeMesh.refine(func).
+    :class:`~discretize.TreeMesh` object. ``TreeCell`` is the object being passed
+    to the user defined refine function when calling the
+    :py:attr:`~discretize.TreeMesh.refine` method for a :class:`~discretize.TreeMesh`.
 
-    Notes
-    -----
-    When called as part of the `refine` function, only the origin, center, and h
-    properties are valid.
+    Examples
+    --------
+    Here, we define a basic :class:`~discretize.TreeMesh` whose refinement is defined
+    by a simple function handle. After we have finalized the mesh, we index a ``TreeCell``
+    from the mesh. Once indexed, the user may examine its properties (center location,
+    dimensions, index of its neighbors, etc...)
+
+    >>> from discretize import TreeMesh
+    >>> import numpy as np
+    >>> 
+    >>> mesh = TreeMesh([32,32])
+    >>> 
+    >>> # Refinement function
+    >>> def func(cell):
+    >>>     r = np.linalg.norm(cell.center-0.5)
+    >>>     return mesh.max_level if r<0.2 else mesh.max_level-2
+    >>> 
+    >>> mesh.refine(func)
+    >>> 
+    >>> mesh.plot_grid()
+    >>> 
+    >>> # Defining tree cell
+    >>> tree_cell_16 = mesh[16]
+
     """
     cdef double _x, _y, _z, _x0, _y0, _z0, _wx, _wy, _wz
     cdef int_t _dim
@@ -425,7 +446,7 @@ cdef class _TreeMesh:
 
         Refines the :class:`~discretize.TreeMesh` according to a user-defined function.
         The function is recursively called on each cell of the mesh. The user-defined
-        function **must** accept an object of type :class:`~discretize.TreeMesh.Cell`
+        function **must** accept an object of type :class:`~discretize.tree_mesh.TreeCell`
         and **must** return an integer-like object denoting the desired refinement
         level. Instead of a function, the user may also supply an integer defining
         the minimum refinement level for all cells.
@@ -435,6 +456,8 @@ cdef class _TreeMesh:
         function : callable | int
             a function defining the desired refinement level,
             or an integer to refine all cells to at least that level.
+            The input argument of the function **must** be an instance of
+            :class:`~discretize.tree_mesh.TreeCell`.
         finalize : bool, optional
             whether to finalize the mesh
 
@@ -442,15 +465,19 @@ cdef class _TreeMesh:
         --------
         Here, we define a QuadTree mesh with a domain width of 1 along
         the x and y axes. We then refine the mesh to its maximum level
-        at locations within a distance of 0.2 of point (0.5, 0.5).
+        at locations within a distance of 0.2 of point (0.5, 0.5). The
+        function accepts and instance of :class:`~discretize.tree_mesh.TreeCell`
+        and returns an integer value denoting its level of refinement.
 
         >>> from discretize import TreeMesh
         >>> mesh = TreeMesh([32,32])
+        >>> 
         >>> def func(cell):
         >>>     r = np.linalg.norm(cell.center-0.5)
-        >>>     return mesh.max_level if r<0.2  # else mesh.max_level-1
+        >>>     return mesh.max_level if r<0.2 else mesh.max_level-2
+        >>> 
         >>> mesh.refine(func)
-        >>> mesh
+        >>> mesh.plot_grid()
 
         """
         if isinstance(function, int):
@@ -493,8 +520,7 @@ cdef class _TreeMesh:
         >>> import matplotlib.pyplot as plt
         >>> import matplotlib.patches as patches
         >>> tree_mesh = discretize.TreeMesh([32, 32])
-        >>> tree_mesh.max_level
-        5
+        >>> tree_mesh.max_level  # would print max refinement level (=5)
 
         Next we define the center and radius of the two spheres, as well as the level
         we want to refine them to, and refine the mesh.
@@ -560,8 +586,7 @@ cdef class _TreeMesh:
         >>> import matplotlib.pyplot as plt
         >>> import matplotlib.patches as patches
         >>> tree_mesh = discretize.TreeMesh([32, 32])
-        >>> tree_mesh.max_level
-        5
+        >>> tree_mesh.max_level  # would print max refinement level (=5)
 
         Next we define the origins and furthest corners of the two rectangles, as
         well as the level we want to refine them to, and refine the mesh.

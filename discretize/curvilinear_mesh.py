@@ -52,7 +52,7 @@ class CurvilinearMesh(
 
     Examples
     --------
-    Using the :py:func:`~discretize.utils.curvilinear_mesh_example` utility,
+    Using the :py:func:`~discretize.utils.example_curvilinear_grid` utility,
     we provide an example of a curvilinear mesh.
 
     >>> from discretize import CurvilinearMesh
