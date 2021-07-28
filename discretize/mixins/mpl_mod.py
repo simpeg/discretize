@@ -42,9 +42,9 @@ class InterfaceMPL(object):
 
         Parameters
         ----------
-        ax : matplotlib.axes.Axes or None (optional)
+        ax : matplotlib.axes.Axes or None, optional
             The axes to draw on. *None* produces a new axes.
-        nodes, faces, centers, edges, lines : bool (optional)
+        nodes, faces, centers, edges, lines : bool, optional
             Whether to plot the corresponding item
         show_it : bool, optional
             whether to call plt.show()
@@ -220,7 +220,7 @@ class InterfaceMPL(object):
             length must be equal to the number of mesh nodes.
         v_type : {'CC','CCV', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez'}
             Defines the input parameter *v*.
-        view : {'real', 'imag', 'abs', 'vec'} (default='real')
+        view : {'real', 'imag', 'abs', 'vec'}
             For complex scalar quantities, options are included to image the real, imaginary or
             absolute value. For vector quantities, *view* must be set to 'vec'.
         ax : matplotlib.axes.Axes, optional
@@ -2195,6 +2195,48 @@ class Slicer(object):
 
         %matplotlib notebook
 
+
+    Parameters
+    ----------
+    v : (n_cells) numpy.ndarray
+        Data array
+    xslice, yslice, zslice : floats, optional
+        Initial slice locations (in meter);
+        defaults to the middle of the volume.
+    v_type: {'CC', 'Fx', 'Fy', 'Fz', 'Ex', 'Ey', 'Ez'}
+        Type of visualization.
+    view : {'real', 'imag', 'abs'}
+        Which component to show.
+    axis : {'xy', 'yx'}
+        'xy': horizontal axis is x, vertical axis is y. Reversed otherwise.
+    transparent : 'slider' or list of floats or pairs of floats, optional
+        Values to be removed. E.g. air, water.
+        If single value, only exact matches are removed. Pairs are treated as
+        ranges. E.g. [0.3, [1, 4], [-np.infty, -10]] removes all values equal
+        to 0.3, all values between 1 and 4, and all values smaller than -10.
+        If 'slider' is provided it will plot an interactive slider to choose
+        the shown range.
+    clim : None or list of [min, max]
+        For `pcolormesh` (`vmin`, `vmax`). Note: if you use a `norm` (e.g.,
+        `LogNorm`) then `vmin`/`vmax` have to be provided in the norm.
+    xlim, ylim, zlim : None or list of [min, max]
+        Axis limits.
+    aspect : 'auto', 'equal', or num
+        Aspect ratio of subplots. Defaults to 'auto'.
+
+        A list of two values can be provided. The first will be for the
+        XY-plot, the second for the XZ- and YZ-plots, e.g. ['equal', 2] to have
+        the vertical dimension exaggerated by a factor of 2.
+
+        WARNING: For anything else than 'auto', unexpected things might happen
+                 when zooming, and the subplot-arrangement won't look pretty.
+    grid : (3) list of int
+        Number of cells occupied by x, y, and z dimension on plt.subplot2grid.
+    pcolor_opts : dictionary
+        Passed to `pcolormesh`.
+
+    Examples
+    --------
     The straight forward usage for the Slicer is through, e.g., a
     `TensorMesh`-mesh, by accessing its `mesh.plot_3d_slicer`.
 
@@ -2208,58 +2250,6 @@ class Slicer(object):
     >>> # Finally you have to connect the tracker to the figure
     >>> fig.canvas.mpl_connect('scroll_event', tracker.onscroll)
     >>> plt.show()
-
-
-    **Parameters**
-
-    v : array
-        Data array of length self.nC.
-
-    xslice, yslice, zslice : floats, optional
-        Initial slice locations (in meter);
-        defaults to the middle of the volume.
-
-    v_type: str
-        Type of visualization. Default is 'CC'.
-        One of ['CC', 'Fx', 'Fy', 'Fz', 'Ex', 'Ey', 'Ez'].
-
-    view : str
-        Which component to show. Defaults to 'real'.
-        One of  ['real', 'imag', 'abs'].
-
-    axis : 'xy' (default) or 'yx'
-        'xy': horizontal axis is x, vertical axis is y. Reversed otherwise.
-
-    transparent : 'slider' or list of floats or pairs of floats, optional
-        Values to be removed. E.g. air, water.
-        If single value, only exact matches are removed. Pairs are treated as
-        ranges. E.g. [0.3, [1, 4], [-np.infty, -10]] removes all values equal
-        to 0.3, all values between 1 and 4, and all values smaller than -10.
-        If 'slider' is provided it will plot an interactive slider to choose
-        the shown range.
-
-    clim : None or list of [min, max]
-        For `pcolormesh` (`vmin`, `vmax`). Note: if you use a `norm` (e.g.,
-        `LogNorm`) then `vmin`/`vmax` have to be provided in the norm.
-
-    xlim, ylim, zlim : None or list of [min, max]
-        Axis limits.
-
-    aspect : 'auto', 'equal', or num
-        Aspect ratio of subplots. Defaults to 'auto'.
-
-        A list of two values can be provided. The first will be for the
-        XY-plot, the second for the XZ- and YZ-plots, e.g. ['equal', 2] to have
-        the vertical dimension exaggerated by a factor of 2.
-
-        WARNING: For anything else than 'auto', unexpected things might happen
-                 when zooming, and the subplot-arrangement won't look pretty.
-
-    grid : list of 3 int
-        Number of cells occupied by x, y, and z dimension on plt.subplot2grid.
-
-    pcolor_opts : dictionary
-        Passed to `pcolormesh`.
 
     """
 
@@ -2658,3 +2648,7 @@ class Slicer(object):
         for element in names:
             if hasattr(self, element):
                 getattr(self, element).remove()
+
+
+InterfaceMPL.__module__ = "discretize.mixins"
+Slicer.__module__ = "discretize.mixins"

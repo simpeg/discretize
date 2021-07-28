@@ -31,20 +31,20 @@ cdef class TreeCell:
 
     >>> from discretize import TreeMesh
     >>> import numpy as np
-    >>> 
+    >>>
     >>> mesh = TreeMesh([32,32])
-    >>> 
+    >>>
     >>> # Refinement function
     >>> def func(cell):
     >>>     r = np.linalg.norm(cell.center-0.5)
     >>>     return mesh.max_level if r<0.2 else mesh.max_level-2
-    >>> 
+    >>>
     >>> mesh.refine(func)
-    >>> 
-    >>> mesh.plot_grid()
-    >>> 
+    >>>
     >>> # Defining tree cell
-    >>> tree_cell_16 = mesh[16]
+    >>> tree_cell = mesh[16]
+    >>> tree_cell.origin
+    array([0.375, 0.25 ])
 
     """
     cdef double _x, _y, _z, _x0, _y0, _z0, _wx, _wy, _wz
@@ -142,7 +142,7 @@ cdef class TreeCell:
 
         Returns
         -------
-        numpy.array of length (dim)
+        (dim) numpy.ndarray
             Cell center location for the tree cell
         """
         if self._dim == 2: return np.array([self._x, self._y])
@@ -158,7 +158,7 @@ cdef class TreeCell:
 
         Returns
         -------
-        numpy.array of length (dim)
+        (dim) numpy.ndarray
             Origin location ('anchor point') for the tree cell
         """
         if self._dim == 2: return np.array([self._x0, self._y0])
@@ -174,7 +174,7 @@ cdef class TreeCell:
 
         Returns
         -------
-        numpy.array of length (dim)
+        (dim) numpy.ndarray
             Origin location ('anchor point') for the tree cell
         """
         return self.origin
@@ -188,7 +188,7 @@ cdef class TreeCell:
 
         Returns
         -------
-        numpy.array of length (dim)
+        (dim) numpy.ndarray
             Cell dimension along each axis direction
         """
         if self._dim == 2: return np.array([self._wx, self._wy])
@@ -218,7 +218,7 @@ cdef class TreeCell:
 
     @property
     def neighbors(self):
-        """Indexes for this cell's neighbors within its parent tree mesh
+        """Indices for this cell's neighbors within its parent tree mesh
 
         Returns a list containing the indexes for the cell's neighbors.
         The ordering of the neighboring cells (i.e. the list) is
@@ -227,12 +227,12 @@ cdef class TreeCell:
 
             - *ind >= 0:* the cell has a single neighbor in this direct and *ind* denotes its index
             - *ind = -1:* the neighbour in this direction lies outside the mesh
-            - *ind = [ind_1, ind_2]:* the cell shares a boarder with 2 cells in this direct. Occurs when level changes between adjacent cells. The result is a list containing the indices of both neighboring cells.
+            - *ind = [ind_1, ind_2, ...]:* When the level changes between cells it shares a boarder with more than 1 cell in this direction (2 if `dim==2`, 4 if `dim==3`).
 
         Returns
         -------
-        list of int or list
-            Indexes for this cell's neighbors within its parent tree mesh
+        list of int or (list of int)
+            Indices for this cell's neighbors within its parent tree mesh
         """
         neighbors = [-1]*self._dim*2
 
@@ -453,7 +453,7 @@ cdef class _TreeMesh:
 
         Parameters
         ----------
-        function : callable | int
+        function : callable or int
             a function defining the desired refinement level,
             or an integer to refine all cells to at least that level.
             The input argument of the function **must** be an instance of
@@ -470,14 +470,16 @@ cdef class _TreeMesh:
         and returns an integer value denoting its level of refinement.
 
         >>> from discretize import TreeMesh
+        >>> from matplotlib import pyplot
         >>> mesh = TreeMesh([32,32])
-        >>> 
+        >>>
         >>> def func(cell):
         >>>     r = np.linalg.norm(cell.center-0.5)
         >>>     return mesh.max_level if r<0.2 else mesh.max_level-2
-        >>> 
+        >>>
         >>> mesh.refine(func)
         >>> mesh.plot_grid()
+        >>> pyplot.show()
 
         """
         if isinstance(function, int):
@@ -495,18 +497,18 @@ cdef class _TreeMesh:
     def refine_ball(self, points, radii, levels, finalize=True):
         """Refine :class:`~discretize.TreeMesh` using radial distance (ball) and refinement level for a cluster of points.
 
-        For each point within a cluster of points, this method refines the tree mesh
+        For each point in the array `points`, this method refines the tree mesh
         based on the radial distance (ball) and refinement level supplied. The method
-        accomplishes this by determining which cells intersect ball(s) to the prescribed
-        level(s) of refinement.
+        accomplishes this by determining which cells intersect ball(s) and refining them
+        to the prescribed level(s) of refinement.
 
         Parameters
         ----------
-        points : array_like with shape (N, dim)
-            A cluster of points; i.e. the centers of the refinement balls
-        radii : array_like with shape (N)
+        points : (N, dim) array_like
+            The centers of the refinement balls
+        radii : (N) array_like
             A 1D array defining the radius for each ball
-        levels : array_like of integers with shape (N)
+        levels : (N) array_like of int
             A 1D array defining the maximum refinement level for each ball
         finalize : bool, optional
             Whether to finalize after refining
@@ -520,7 +522,8 @@ cdef class _TreeMesh:
         >>> import matplotlib.pyplot as plt
         >>> import matplotlib.patches as patches
         >>> tree_mesh = discretize.TreeMesh([32, 32])
-        >>> tree_mesh.max_level  # would print max refinement level (=5)
+        >>> tree_mesh.max_level
+        5
 
         Next we define the center and radius of the two spheres, as well as the level
         we want to refine them to, and refine the mesh.
@@ -568,11 +571,11 @@ cdef class _TreeMesh:
 
         Parameters
         ----------
-        x0s : array_like with shape (N, dim)
+        x0s : (N, dim) array_like
             The minimum location of the boxes
-        x1s : array_like with shape (N, dim)
+        x1s : (N, dim) array_like
             The maximum location of the boxes
-        levels : array_like of integers with shape (N)
+        levels : (N) array_like of int
             The level to refine intersecting cells to
         finalize : bool, optional
             Whether to finalize after refining
@@ -586,7 +589,8 @@ cdef class _TreeMesh:
         >>> import matplotlib.pyplot as plt
         >>> import matplotlib.patches as patches
         >>> tree_mesh = discretize.TreeMesh([32, 32])
-        >>> tree_mesh.max_level  # would print max refinement level (=5)
+        >>> tree_mesh.max_level
+        5
 
         Next we define the origins and furthest corners of the two rectangles, as
         well as the level we want to refine them to, and refine the mesh.
@@ -638,8 +642,8 @@ cdef class _TreeMesh:
 
         Parameters
         ----------
-        points : array_like with shape (N, dim)
-        levels : array_like of integers with shape (N)
+        points : (N, dim) array_like
+        levels : (N) array_like of int
         finalize : bool, optional
             Whether to finalize after inserting point(s)
 
@@ -649,12 +653,15 @@ cdef class _TreeMesh:
         >>> mesh = TreeMesh([32,32])
         >>> mesh.insert_cells([0.5, 0.5], mesh.max_level)
         >>> print(mesh)
-        ---- QuadTreeMesh ----
-         origin: 0.00, 0.00
-         hx: 32*0.03,
-         hy: 32*0.03,
-        n_cells: 40
-        Fill: 3.91%
+        QuadTreeMesh: 3.91%% filled
+        Level : Number of cells               Mesh Extent               Cell Widths
+        -----------------------           min     ,     max            min   ,   max
+          2   :       12             ---------------------------   --------------------
+          3   :       13          x:      0.0     ,     1.0         0.03125  ,    0.25
+          4   :       11          y:      0.0     ,     1.0         0.03125  ,    0.25
+          5   :        4
+        -----------------------
+        Total :       40
         """
         points = np.require(np.atleast_2d(points), dtype=np.float64,
                             requirements='C')
@@ -807,7 +814,7 @@ cdef class _TreeMesh:
     @property
     def max_used_level(self):
         """Maximum refinement level used
-        
+
         Returns the maximum refinement level used to construct the
         tree mesh. The maximum used level is equal or less than the
         maximum allowable level; see :py:attr:`.~TreeMesh.max_level`.
@@ -833,7 +840,7 @@ cdef class _TreeMesh:
         maximum allowable level of refinement :math:`k_{max}` is given by:
 
         .. math::
-            k_{max} = \\frac{log(N)}{log(2)}
+            k_{max} = \\log_2(N)
 
         Returns
         -------
@@ -1167,7 +1174,7 @@ cdef class _TreeMesh:
 
         Returns
         -------
-        np.ndarray of float (n_cells, dim)
+        (n_cells, dim) numpy.ndarray of float
             Gridded cell center locations
         """
         cdef np.float64_t[:, :] gridCC
@@ -1192,7 +1199,7 @@ cdef class _TreeMesh:
 
         Returns
         -------
-        np.ndarray of float (n_nodes, dim)
+        (n_nodes, dim) numpy.ndarray of float
             Gridded non-hanging node locations
         """
         cdef np.float64_t[:, :] gridN
@@ -1214,13 +1221,13 @@ cdef class _TreeMesh:
     def hanging_nodes(self):
         """Gridded hanging node locations
 
-        This property returns a numpy array of shape (n_nodes, dim)
+        This property returns a numpy array of shape (n_hanging_nodes, dim)
         containing gridded locations for all hanging nodes in the
         mesh.
 
         Returns
         -------
-        np.ndarray of float (n_nodes, dim)
+        (n_hanging_nodes, dim) numpy.ndarray of float
             Gridded hanging node locations
         """
         cdef np.float64_t[:, :] gridN
@@ -1240,14 +1247,14 @@ cdef class _TreeMesh:
     def boundary_nodes(self):
         """Gridded boundary node locations
 
-        This property returns a numpy array of shape 
+        This property returns a numpy array of shape
         (n_boundary_nodes, dim) containing the gridded locations
         of the nodes on the boundary of the mesh.
 
         Returns
         -------
-        np.ndarray of float (n_boundary_nodes, dim)
-            Gridded boundary node locations 
+        (n_boundary_nodes, dim) numpy.ndarray of float
+            Gridded boundary node locations
         """
         nodes = self.nodes
         x0, xF = self._xs[0], self._xs[-1]
@@ -1277,7 +1284,7 @@ cdef class _TreeMesh:
 
         Returns
         -------
-        np.ndarray of float (n_cells, dim)
+        (n_cells, dim) numpy.ndarray of float
             Gridded cell dimensions
         """
         if self._h_gridded is not None:
@@ -1305,7 +1312,7 @@ cdef class _TreeMesh:
 
         Returns
         -------
-        np.ndarray of float (n_edges_x, dim)
+        (n_edges_x, dim) numpy.ndarray of float
             Gridded locations of all non-hanging x-edges
         """
         cdef np.float64_t[:, :] gridEx
@@ -1327,12 +1334,12 @@ cdef class _TreeMesh:
     def hanging_edges_x(self):
         """Gridded locations of hanging x-edges
 
-        This property returns a numpy array of shape (n_edges_x, dim)
+        This property returns a numpy array of shape (n_hanging_edges_x, dim)
         containing gridded locations for all hanging x-edges.
 
         Returns
         -------
-        np.ndarray of float (n_edges_x, dim)
+        (n_hanging_edges_x, dim) numpy.ndarray of float
             Gridded locations of all hanging x-edges
         """
         cdef np.float64_t[:, :] gridhEx
@@ -1357,7 +1364,7 @@ cdef class _TreeMesh:
 
         Returns
         -------
-        np.ndarray of float (n_edges_y, dim)
+        (n_edges_y, dim) numpy.ndarray of float
             Gridded locations of all non-hanging y-edges
         """
         cdef np.float64_t[:, :] gridEy
@@ -1379,12 +1386,12 @@ cdef class _TreeMesh:
     def hanging_edges_y(self):
         """Gridded locations of hanging y-edges
 
-        This property returns a numpy array of shape (n_edges_y, dim)
+        This property returns a numpy array of shape (n_haning_edges_y, dim)
         containing gridded locations for all hanging y-edges.
 
         Returns
         -------
-        np.ndarray of float (n_edges_y, dim)
+        (n_haning_edges_y, dim) numpy.ndarray of float
             Gridded locations of all hanging y-edges
         """
         cdef np.float64_t[:, :] gridhEy
@@ -1409,7 +1416,7 @@ cdef class _TreeMesh:
 
         Returns
         -------
-        np.ndarray of float (n_edges_z, dim)
+        (n_edges_z, dim) numpy.ndarray of float
             Gridded locations of all non-hanging z-edges
         """
         cdef np.float64_t[:, :] gridEz
@@ -1431,12 +1438,12 @@ cdef class _TreeMesh:
     def hanging_edges_z(self):
         """Gridded locations of hanging z-edges
 
-        This property returns a numpy array of shape (n_edges_z, dim)
+        This property returns a numpy array of shape (n_hanging_edges_z, dim)
         containing gridded locations for all hanging z-edges.
 
         Returns
         -------
-        np.ndarray of float (n_edges_z, dim)
+        (n_hanging_edges_z, dim) numpy.ndarray of float
             Gridded locations of all hanging z-edges
         """
         cdef np.float64_t[:, :] gridhEz
@@ -1456,15 +1463,15 @@ cdef class _TreeMesh:
     def boundary_edges(self):
         """Gridded boundary edge locations
 
-        This property returns a numpy array of shape 
+        This property returns a numpy array of shape
         (n_boundary_edges, dim) containing the gridded locations
         of the edges on the boundary of the mesh. The returned
         quantity is organized *np.r_[edges_x, edges_y, edges_z]* .
 
         Returns
         -------
-        np.ndarray of float (n_boundary_edges, dim)
-            Gridded boundary edge locations 
+        (n_boundary_edges, dim) numpy.ndarray of float
+            Gridded boundary edge locations
         """
         edges_x = self.edges_x
         edges_y = self.edges_y
@@ -1502,7 +1509,7 @@ cdef class _TreeMesh:
 
         Returns
         -------
-        np.ndarray of float (n_faces_x, dim)
+        (n_faces_x, dim) numpy.ndarray of float
             Gridded locations of all non-hanging x-faces
         """
         if(self._dim == 2): return self.edges_y
@@ -1531,7 +1538,7 @@ cdef class _TreeMesh:
 
         Returns
         -------
-        np.ndarray of float (n_faces_y, dim)
+        (n_faces_y, dim) numpy.ndarray of float
             Gridded locations of all non-hanging y-faces
         """
         if(self._dim == 2): return self.edges_x
@@ -1559,7 +1566,7 @@ cdef class _TreeMesh:
 
         Returns
         -------
-        np.ndarray of float (n_faces_z, dim)
+        (n_faces_z, dim) numpy.ndarray of float
             Gridded locations of all non-hanging z-faces
         """
         if(self._dim == 2): return self.cell_centers
@@ -1583,12 +1590,12 @@ cdef class _TreeMesh:
     def hanging_faces_x(self):
         """Gridded locations of hanging x-faces
 
-        This property returns a numpy array of shape (n_faces_x, dim)
+        This property returns a numpy array of shape (n_hanging_faces_x, dim)
         containing gridded locations for all hanging x-faces.
 
         Returns
         -------
-        np.ndarray of float (n_faces_x, dim)
+        (n_hanging_faces_x, dim) numpy.ndarray of float
             Gridded locations of all hanging x-faces
         """
         if(self._dim == 2): return self.hanging_edges_y
@@ -1610,12 +1617,12 @@ cdef class _TreeMesh:
     def hanging_faces_y(self):
         """Gridded locations of hanging y-faces
 
-        This property returns a numpy array of shape (n_faces_y, dim)
+        This property returns a numpy array of shape (n_hanging_faces_y, dim)
         containing gridded locations for all hanging y-faces.
 
         Returns
         -------
-        np.ndarray of float (n_faces_y, dim)
+        (n_hanging_faces_y, dim) numpy.ndarray of float
             Gridded locations of all hanging y-faces
         """
         if(self._dim == 2): return self.hanging_edges_x
@@ -1637,12 +1644,12 @@ cdef class _TreeMesh:
     def hanging_faces_z(self):
         """Gridded locations of hanging z-faces
 
-        This property returns a numpy array of shape (n_faces_z, dim)
+        This property returns a numpy array of shape (n_hanging_faces_z, dim)
         containing gridded locations for all hanging z-faces.
 
         Returns
         -------
-        np.ndarray of float (n_faces_z, dim)
+        (n_hanging_faces_z, dim) numpy.ndarray of float
             Gridded locations of all hanging z-faces
         """
         if(self._dim == 2): return np.array([])
@@ -1664,15 +1671,15 @@ cdef class _TreeMesh:
     def boundary_faces(self):
         """Gridded boundary face locations
 
-        This property returns a numpy array of shape 
+        This property returns a numpy array of shape
         (n_boundary_faces, dim) containing the gridded locations
         of the faces on the boundary of the mesh. The returned
         quantity is organized *np.r_[faces_x, faces_y, faces_z]* .
 
         Returns
         -------
-        np.ndarray of float (n_boundary_faces, dim)
-            Gridded boundary face locations 
+        (n_boundary_faces, dim) numpy.ndarray of float
+            Gridded boundary face locations
         """
         faces_x = self.faces_x
         faces_y = self.faces_y
@@ -1697,12 +1704,12 @@ cdef class _TreeMesh:
 
         For all boundary faces in the mesh, this property returns
         the unit vectors denoting the outward normals to the boundary.
-        The returned quantity is a numpy array of shape 
+        The returned quantity is a numpy array of shape
         (n_boundary_faces, dim).
 
         Returns
         -------
-        np.ndarray of float (n_boundary_faces, dim)
+        (n_boundary_faces, dim) numpy.ndarray of float
             Outward normals of boundary faces
         """
         faces_x = self.faces_x
@@ -1740,11 +1747,11 @@ cdef class _TreeMesh:
 
         Returns
         -------
-        np.ndarray (n_cells,)
+        (n_cells) numpy.ndarray
             The quantity returned depends on the dimensions of the mesh:
                 - *2D:* Returns the cell areas
                 - *3D:* Returns the cell volumes
-        
+
         """
         cdef np.float64_t[:] vol
         if self._cell_volumes is None:
@@ -1763,7 +1770,7 @@ cdef class _TreeMesh:
 
         Returns
         -------
-        np.ndarray (n_faces,)
+        (n_faces) numpy.ndarray
             The length of the quantity returned depends on the dimensions of the mesh:
                 - *2D:* returns the x-face and y-face areas; i.e. y-edge and x-edge lengths, respectively
                 - *3D:* returns the x, y and z-face areas in order
@@ -1804,7 +1811,7 @@ cdef class _TreeMesh:
 
         Returns
         -------
-        np.ndarray (n_edges,)
+        numpy.ndarray (n_edges,)
             The length of the quantity returned depends on the dimensions of the mesh:
                 - *2D:* returns the x-edge and y-edge lengths in order
                 - *3D:* returns the x, y and z-edge lengths in order
@@ -1862,13 +1869,11 @@ cdef class _TreeMesh:
 
         Returns
         -------
-        list of numpy.array
-            The length of list returned depends on the dimension of the mesh (= 2 x dim).
-            And the length of each array in the list is equal to the number of cells
-            on that particular boundary. For 2D and 3D tree meshes,
-            the returns take the following form:
-                - *2D:* returns [ind_Bx1, ind_Bx2, ind_By1, ind_By2]
-                - *3D:* returns [ind_Bx1, ind_Bx2, ind_By1, ind_By2, ind_Bz1, ind_Bz2]
+        ind_bx1 ind_bx2, ind_by1, ind_by2 : numpy.ndarray of int
+            The length of each array in the list is equal to the number of faces
+            on that particular boundary.
+        ind_bz1, ind_bz2 : numpy.ndarray of int, optional
+            Returned if `dim` is 3.
 
         Examples
         --------
@@ -1879,16 +1884,17 @@ cdef class _TreeMesh:
         >>> from discretize.utils import refine_tree_xyz
         >>> import numpy as np
         >>> import matplotlib.pyplot as plt
-        >>> 
+
         >>> hx = np.ones(16)
         >>> hy = np.ones(16)
-        >>> 
         >>> mesh = TreeMesh([hx, hy])
-        >>> mesh = refine_tree_xyz(mesh, np.c_[4, 4], octree_levels=[1], method="radial")
-        >>> mesh.finalize()
-        >>> mesh.plot_grid()
-        >>> 
+        >>> mesh.refine_ball([4.0,4.0], [4.0], [4])
         >>> ind_Bx1, ind_Bx2, ind_By1, ind_By2 = mesh.cell_boundary_indices
+
+        >>> ax = plt.subplot(111)
+        >>> mesh.plot_grid(ax=ax)
+        >>> ax.scatter(*mesh.cell_centers[ind_Bx1].T)
+        >>> plt.show()
         """
         cdef np.int64_t[:] indxu, indxd, indyu, indyd, indzu, indzd
         indxu = np.empty(self.n_cells, dtype=np.int64)
@@ -1963,13 +1969,10 @@ cdef class _TreeMesh:
 
         Returns
         -------
-        list of numpy.array
-            The length of list returned depends on the dimension of the mesh (= 2 x dim).
-            And the length of each array in the list is equal to the number of faces
-            on that particular boundary. For 2D and 3D tree meshes,
-            the returns take the following form:
-                - *2D:* returns [ind_Bx1, ind_Bx2, ind_By1, ind_By2]
-                - *3D:* returns [ind_Bx1, ind_Bx2, ind_By1, ind_By2, ind_Bz1, ind_Bz2]
+        ind_bx1 ind_bx2, ind_by1, ind_by2 : numpy.ndarray of int
+            The length of each array in the list is equal to the number of faces
+            on that particular boundary.
+        ind_bz1, ind_bz2 : numpy.ndarray of int, optional
 
         Examples
         --------
@@ -1980,16 +1983,17 @@ cdef class _TreeMesh:
         >>> from discretize.utils import refine_tree_xyz
         >>> import numpy as np
         >>> import matplotlib.pyplot as plt
-        >>> 
+
         >>> hx = np.ones(16)
         >>> hy = np.ones(16)
-        >>> 
         >>> mesh = TreeMesh([hx, hy])
-        >>> mesh = refine_tree_xyz(mesh, np.c_[4, 4], octree_levels=[1], method="radial")
-        >>> mesh.finalize()
-        >>> mesh.plot_grid()
-        >>> 
+        >>> mesh.refine_ball([4.0,4.0], [4.0], [4])
         >>> ind_Bx1, ind_Bx2, ind_By1, ind_By2 = mesh.face_boundary_indices
+
+        >>> ax = plt.subplot(111)
+        >>> mesh.plot_grid(ax=ax)
+        >>> ax.scatter(*mesh.faces_x[ind_Bx1].T)
+        >>> plt.show()
         """
         cell_boundary_inds = self.cell_boundary_indices
         cdef np.int64_t[:] c_indxu, c_indxd, c_indyu, c_indyd, c_indzu, c_indzd
@@ -2046,12 +2050,12 @@ cdef class _TreeMesh:
         ----------
         active_ind : array_like of bool, optional
             If not None, then this must show which cells are active
-        direction: str, optional
-            must be one of ('zu', 'zd', 'xu', 'xd', 'yu', 'yd')
+        direction: {'zu', 'zd', 'xu', 'xd', 'yu', 'yd'}
+            The requested direction to return
 
         Returns
         -------
-        numpy.array
+        numpy.ndarray of int
             Array of indices for the boundary cells in the requested direction
         """
 
@@ -2110,13 +2114,13 @@ cdef class _TreeMesh:
 
         Parameters
         ----------
-        x0,x1 : array_like of length (dim)
+        x0,x1 : (dim) array_like
             Begining and ending point of the line segment.
 
         Returns
         -------
-        list of ints
-            Indexes for cells that contain the a line defined by the two input
+        list of int
+            Indices for cells that contain the a line defined by the two input
             points, ordered in the direction of the line.
         """
         cdef np.float64_t ax, ay, az, bx, by, bz

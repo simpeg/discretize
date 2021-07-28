@@ -23,52 +23,15 @@ class BaseMesh:
 
     Parameters
     ----------
-    shape_cells : numpy.array_like of int
+    shape_cells : array_like of int
         number of cells in each dimension
-    origin : array_like of float (optional)
+    origin : array_like of float, optional
         origin of the bottom south west corner of the mesh, defaults to 0.
-    orientation : discretize.utils.Identity or numpy.array_like of float (optional)
+    orientation : discretize.utils.Identity or array_like of float, optional
         Orientation of the three major axes of the mesh; defaults to :class:`~discretize.utils.Identity`.
         If provided, this must be an orthogonal matrix with the correct dimension.
-    reference_system : str
-        Must be one of {'cartesian', 'cylindrical', 'spherical'} or a shorthand;
-        e.g. {'car[t]', 'cy[l]', 'sph'}
-
-    Attributes
-    ----------
-    dim
-    edge_tangents
-    face_normals
-    n_cells
-    n_nodes
-    n_edges
-    n_edges_x
-    n_edges_y
-    n_edges_z
-    n_edges_per_direction
-    n_faces
-    n_faces_x
-    n_faces_y
-    n_faces_z
-    n_faces_per_direction
-    orientation
-    origin
-    reference_is_rotated
-    reference_system
-    rotation_matrix
-    shape_cells
-
-    Methods
-    -------
-    copy
-    deserialize
-    equals
-    project_edge_vector
-    project_face_vector
-    save
-    serialize
-    to_dict
-    validate
+    reference_system : {'cartesian', 'cylindrical', 'spherical'}
+        Can also be a shorthand version of these, e.g. {'car[t]', 'cy[l]', 'sph'}
     """
 
     _REGISTRY = {}
@@ -144,7 +107,7 @@ class BaseMesh:
 
         Returns
         -------
-        numpy.ndarray of float (dim,)
+        (dim) numpy.ndarray of float
             origin location
         """
         return self._origin
@@ -172,7 +135,7 @@ class BaseMesh:
 
         Returns
         -------
-        tuple of int (dim,)
+        (dim) tuple of int
             the number of cells in each coordinate direcion
 
         Notes
@@ -195,7 +158,7 @@ class BaseMesh:
 
         Returns
         -------
-        numpy.ndarray of float (dim, dim)
+        (dim, dim) numpy.ndarray of float
             Square rotation matrix defining orientation
 
         Examples
@@ -301,7 +264,7 @@ class BaseMesh:
 
         Parameters
         ----------
-        other_mesh : discretize.BaseMesh
+        other_mesh : discretize.base.BaseMesh
             An instance of any discretize mesh class.
 
         Returns
@@ -350,13 +313,11 @@ class BaseMesh:
 
         Parameters
         ----------
-        cls : discretize.BaseMesh
-            The class for the mesh type you are constructing from the dictionary; e.g.
-            :class:`~discretize.TensorMesh`, :class:`~discretize.CylindricalMesh`,
-            :class:`~discretize.TreeMesh` or :class:`~discretize.CurvilinearMesh`.
         items : dict
             dictionary of {attribute : value} pairs that will be passed to this class's
             initialization method as keyword arguments.
+        **kwargs
+            This is used to catch (and ignore) keyword arguments that used to be used.
         """
         items.pop("__module__", None)
         items.pop("__class__", None)
@@ -502,7 +463,7 @@ class BaseMesh:
 
         Returns
         -------
-        tuple of int of length (dim, )
+        (dim) tuple of int
             Number of edges in each direction
 
         Notes
@@ -515,7 +476,8 @@ class BaseMesh:
         >>> import matplotlib.pyplot as plt
         >>> import numpy as np
         >>> M = discretize.TensorMesh([np.ones(n) for n in [2,3]])
-        >>> M.plot_grid(edges=True, show_it=True)
+        >>> M.plot_grid(edges=True)
+        >>> plt.show()
         """
         return tuple(
             x for x in [self.n_edges_x, self.n_edges_y, self.n_edges_z] if x is not None
@@ -612,7 +574,7 @@ class BaseMesh:
 
         Returns
         -------
-        tuple of int of length (dim,)
+        (dim) tuple of int
             Number of faces in each axis direction
 
         Notes
@@ -625,7 +587,8 @@ class BaseMesh:
         >>> import numpy as np
         >>> import matplotlib.pyplot as plt
         >>> M = discretize.TensorMesh([np.ones(n) for n in [2,3]])
-        >>> M.plot_grid(faces=True, show_it=True)
+        >>> M.plot_grid(faces=True)
+        >>> plt.show()
         """
         return tuple(
             x for x in [self.n_faces_x, self.n_faces_y, self.n_faces_z] if x is not None
@@ -666,7 +629,7 @@ class BaseMesh:
 
         Returns
         -------
-        numpy.ndarray of float (n_faces, dim)
+        (n_faces, dim) numpy.ndarray of float
             Unit normal vectors for all mesh faces
         """
         if self.dim == 2:
@@ -705,7 +668,7 @@ class BaseMesh:
 
         Returns
         -------
-        numpy.ndarray of float (n_edges, dim)
+        (n_edges, dim) numpy.ndarray of float
             Unit tangent vectors for all mesh edges
         """
         if self.dim == 2:
@@ -742,12 +705,12 @@ class BaseMesh:
 
         Parameters
         ----------
-        face_vectors : numpy.ndarray with shape (n_faces, dim)
-            Numpy array containing the vectors that will be projected to the mesh faces 
+        face_vectors : (n_faces, dim) numpy.ndarray
+            Numpy array containing the vectors that will be projected to the mesh faces
 
         Returns
         -------
-        numpy.ndarray of float with shape (n_faces,)
+        (n_faces) numpy.ndarray of float
             Dot product between each vector and the unit normal vector of the corresponding face
         """
         if not isinstance(face_vectors, np.ndarray):
@@ -772,12 +735,12 @@ class BaseMesh:
 
         Parameters
         ----------
-        edge_vectors : numpy.ndarray with shape (n_edges, dim)
+        edge_vectors : (n_edges, dim) numpy.ndarray
             Numpy array containing the vectors that will be projected to the mesh edges
 
         Returns
         -------
-        numpy.ndarray of float with shape (n_edges,)
+        (n_edges) numpy.ndarray of float
             Dot product between each vector and the unit tangent vector of the corresponding edge
         """
         if not isinstance(edge_vectors, np.ndarray):
@@ -799,9 +762,9 @@ class BaseMesh:
 
         Parameters
         ----------
-        file_name : str (optional)
+        file_name : str, optional
             File name for saving the mesh properties
-        verbose : bool (optional)
+        verbose : bool, optional
             If *True*, the path of the json file is printed
         """
 
@@ -991,52 +954,7 @@ class BaseRectangularMesh(BaseMesh):
     Base rectangular mesh class for the ``discretize`` package.
 
     The ``BaseRectangularMesh`` class acts as an extension of the
-    :class:`~discretize.BaseMesh` class for meshes without hanging
-    nodes.
-
-    Attributes
-    ----------
-    dim
-    edge_tangents
-    face_normals
-    n_cells
-    n_nodes
-    n_edges
-    n_edges_x
-    n_edges_y
-    n_edges_z
-    n_edges_per_direction
-    n_faces
-    n_faces_x
-    n_faces_y
-    n_faces_z
-    n_faces_per_direction
-    orientation
-    origin
-    reference_is_rotated
-    reference_system
-    rotation_matrix
-    shape_cells
-    shape_nodes
-    shape_edges_x
-    shape_edges_y
-    shape_edges_z
-    shape_faces_x
-    shape_faces_y
-    shape_faces_z
-
-    Methods
-    -------
-    copy
-    deserialize
-    equals
-    project_edge_vector
-    project_face_vector
-    reshape
-    save
-    serialize
-    to_dict
-    validate
+    :class:`~discretize.BaseMesh` classes with a regular structure.
     """
 
     _aliases = {
@@ -1062,7 +980,7 @@ class BaseRectangularMesh(BaseMesh):
 
         Returns
         -------
-        tuple of int
+        (dim) tuple of int
             Number of nodes along each axis direction
 
         Notes
@@ -1081,12 +999,12 @@ class BaseRectangularMesh(BaseMesh):
 
         Returns
         -------
-        int or tuple of int
+        (dim) tuple of int
             Number of x-edges along each axis direction
 
-                - *1D mesh:* n_cells_x
-                - *2D mesh:* (n_cells_x, n_nodes_y)
-                - *3D mesh:* (n_cells_x, n_nodes_y, n_nodes_z)
+            - *1D mesh:* `(n_cells_x)`
+            - *2D mesh:* `(n_cells_x, n_nodes_y)`
+            - *3D mesh:* `(n_cells_x, n_nodes_y, n_nodes_z)`
 
         Notes
         -----
@@ -1099,17 +1017,16 @@ class BaseRectangularMesh(BaseMesh):
         """Number of y-edges along each axis direction
 
         This property returns a tuple containing the number of y-edges
-        along each axis direction. The length of the tuple is equal to the
-        dimension of the mesh; i.e. 1, 2 or 3.
+        along each axis direction. If `dim` is 1, there are no y-edges.
 
         Returns
         -------
-        tuple of int or None
+        None or (dim) tuple of int
             Number of y-edges along each axis direction
 
-                - *1D mesh: None*
-                - *2D mesh:* (n_nodes_x, n_cells_y)
-                - *3D mesh:* (n_nodes_x, n_cells_y, n_nodes_z)
+            - *1D mesh: None*
+            - *2D mesh:* `(n_nodes_x, n_cells_y)`
+            - *3D mesh:* `(n_nodes_x, n_cells_y, n_nodes_z)`
 
         Notes
         -----
@@ -1126,17 +1043,16 @@ class BaseRectangularMesh(BaseMesh):
         """Number of z-edges along each axis direction
 
         This property returns a tuple containing the number of z-edges
-        along each axis direction. The length of the tuple is equal to the
-        dimension of the mesh; i.e. 1, 2 or 3.
+        along each axis direction. There are only z-edges if `dim` is 3.
 
         Returns
         -------
-        tuple of int or None
+        None or (dim) tuple of int
             Number of z-edges along each axis direction.
 
-                - *1D mesh: None*
-                - *2D mesh: None*
-                - *3D mesh:* (n_nodes_x, n_nodes_y, n_cells_z)
+            - *1D mesh: None*
+            - *2D mesh: None*
+            - *3D mesh:* `(n_nodes_x, n_nodes_y, n_cells_z)`
 
         Notes
         -----
@@ -1151,17 +1067,16 @@ class BaseRectangularMesh(BaseMesh):
         """Number of x-faces along each axis direction
 
         This property returns a tuple containing the number of x-faces
-        along each axis direction. The length of the tuple is equal to the
-        dimension of the mesh; i.e. 1, 2 or 3.
+        along each axis direction.
 
         Returns
         -------
-        int or tuple of int
+        (dim) tuple of int
             Number of x-faces along each axis direction
 
-                - *1D mesh:* n_nodes_x
-                - *2D mesh:* (n_nodes_x, n_cells_y)
-                - *3D mesh:* (n_nodes_x, n_cells_y, n_cells_z)
+            - *1D mesh:* `(n_nodes_x)`
+            - *2D mesh:* `(n_nodes_x, n_cells_y)`
+            - *3D mesh:* `(n_nodes_x, n_cells_y, n_cells_z)`
 
         Notes
         -----
@@ -1174,17 +1089,16 @@ class BaseRectangularMesh(BaseMesh):
         """Number of y-faces along each axis direction
 
         This property returns a tuple containing the number of y-faces
-        along each axis direction. The length of the tuple is equal to the
-        dimension of the mesh; i.e. 1, 2 or 3.
+        along each axis direction. If `dim` is 1, there are no y-edges.
 
         Returns
         -------
-        tuple of int or None
+        None or (dim) tuple of int
             Number of y-faces along each axis direction
 
-                - *1D mesh: None*
-                - *2D mesh:* (n_cells_x, n_nodes_y)
-                - *3D mesh:* (n_cells_x, n_nodes_y, n_cells_z)
+            - *1D mesh: None*
+            - *2D mesh:* `(n_cells_x, n_nodes_y)`
+            - *3D mesh:* `(n_cells_x, n_nodes_y, n_cells_z)`
 
         Notes
         -----
@@ -1201,12 +1115,11 @@ class BaseRectangularMesh(BaseMesh):
         """Number of z-faces along each axis direction
 
         This property returns a tuple containing the number of z-faces
-        along each axis direction. The length of the tuple is equal to the
-        dimension of the mesh; i.e. 1, 2 or 3.
+        along each axis direction. There are only z-faces if `dim` is 3.
 
         Returns
         -------
-        tuple of int or None
+        None or (dim) tuple of int
             Number of z-faces along each axis direction.
 
                 - *1D mesh: None*
@@ -1278,19 +1191,17 @@ class BaseRectangularMesh(BaseMesh):
 
         Parameters
         ----------
-        x : numpy.ndarray or list or numpy.ndarray
-            The input quantity. Can be a vector (1D array), ndarray (tensor) or a list
-        x_type : str
+        x : numpy.ndarray or list of numpy.ndarray
+            The input quantity. , ndarray (tensor) or a list
+        x_type : {'CC', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez'}
             Defines the locations on the mesh where input parameter *x* lives.
-            Choose from {'CC', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez'}
         out_type : str
-            Defines the output quantity. Choice depends on your input for *x_type*.
+            Defines the output quantity. Choice depends on your input for *x_type*:
 
                 - *x_type* = 'CC' ---> *out_type* = 'CC'
                 - *x_type* = 'N' ---> *out_type* = 'N'
                 - *x_type* = 'F' ---> *out_type* = {'F', 'Fx', 'Fy', 'Fz'}
                 - *x_type* = 'E' ---> *out_type* = {'E', 'Ex', 'Ey', 'Ez'}
-
         format : str
             The dimensions of quantity being returned
 

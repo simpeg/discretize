@@ -534,12 +534,12 @@ class TreeMesh(
 
         Parameters
         ----------
-        locs: numpy.array_like of shape (N, dim)
+        locs: array_like of shape (N, dim)
             points to search for the location of
 
         Returns
         -------
-        numpy.array_like of int of length *N*
+        array_like of int of length *N*
             Cell indices that contain the points
         """
         locs = as_array_n_by_dim(locs, self.dim)
@@ -569,7 +569,7 @@ class TreeMesh(
 
         Parameters
         ----------
-        loc : numpy.array_like (N, dim)
+        loc : array_like (N, dim)
             Location of points to interpolate to
 
         location_type: str

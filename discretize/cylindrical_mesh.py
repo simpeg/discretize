@@ -42,15 +42,15 @@ class CylindricalMesh(
     
     Parameters
     ----------
-    h : list of numpy.array_like (N,), list of tuple or list of list
+    h : list of array_like (N,), list of tuple or list of list
         Defines the cell widths along each axis. The length of the list is equal to the dimension
         of the mesh (1, 2 or 3). For a 3D mesh, the list would have the form *[hr, hphi, hz]* .
         Note that the sum of cell widths in the phi direction **must** equal :math:`2\\pi`.
         You can also use a flat value of *hphi* = *1* to define a cylindrically symmetric mesh.
         Along each axis, the user has 3 choices for defining the cells widths:
-            - the widths are defined in a 1D :class:`numpy.array_like`
+            - the widths are defined in a 1D :class:`array_like`
             - the widths are defined as a :class:`list` of :class:`tuple` of the form *(dh, nc, [npad])* where *dh* is the cell width, *nc* is the number of cells, and *npad* (optional) is a padding factor denoting exponential increase/decrease in the cell width for each cell; e.g. *[(2., 10, -1.3), (2., 50), (2., 10, 1.3)]*
-            - the widths are defined as a mixed :class:`list` of :class:`tuple` and 1D :class:`numpy.array_like`.
+            - the widths are defined as a mixed :class:`list` of :class:`tuple` and 1D :class:`array_like`.
 
     origin : numpy.ndarray (dim,) or str of length dim (optional)
         Define the origin or 'anchor point' of the mesh; i.e. the bottom-left-frontmost corner.

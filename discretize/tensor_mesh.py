@@ -23,25 +23,38 @@ class TensorMesh(
     volumes, etc... can be directly expressed as tensor products. The axes defining
     coordinates of the mesh are orthogonal. And cell properties along one axis do
     not vary with respect to the position along any other axis.
-    
+
     Parameters
     ----------
-    h : list of numpy.array_like (N,), list of tuple or list of list
-        Defines the cell widths along each axis. The length of the list is equal to the dimension
-        of the mesh (1, 2 or 3). For a 3D mesh, the list would have the form *[hx, hy, hz]* .
+    h : (dim) iterable of int, numpy.ndarray, or tuple
+        Defines the cell widths along each axis. The length of the iterable object is
+        equal to the dimension of the mesh (1, 2 or 3). For a 3D mesh, the list would
+        have the form *[hx, hy, hz]* .
+
         Along each axis, the user has 3 choices for defining the cells widths:
-            - the widths are defined as a 1D :class:`numpy.array_like`
-            - the widths are defined as a :class:`list` of :class:`tuple` of the form *(dh, nc, [npad])* where *dh* is the cell width, *nc* is the number of cells, and *npad* (optional) is a padding factor denoting exponential increase/decrease in the cell width for each cell; e.g. *[(2., 10, -1.3), (2., 50), (2., 10, 1.3)]*
-            - the widths are defined as a mixed :class:`list` of :class:`tuples` and 1D :class:`numpy.array_like`
 
-    origin : numpy.ndarray (dim,) or str of length dim (optional)
-        Define the origin or 'anchor point' of the mesh; i.e. the bottom-left-frontmost corner.
-        By default, the mesh is anchored such that its origin is at *[0, 0, 0]* . The user
-        may set the origin 2 ways which instantiating the tensor mesh:
-            - a :class:`numpy.ndarray` of shape (dim,) which explicitly defines the x, (y, z) location of the origin.
-            - a str of length *dim* specifying whether the zero coordinate along each axis is the first node location ('0'), in the center ('C') or the last node location ('N'); see example.
+        - :class:`int` -> A unit interval is equally discretized into `N` cells.
+        - :class:`numpy.ndarray` -> The widths are explicity given for each cell
+        - the widths are defined as a :class:`list` of :class:`tuple` of the form *(dh, nc, [npad])*
+          where *dh* is the cell width, *nc* is the number of cells, and *npad* (optional)
+          is a padding factor denoting exponential increase/decrease in the cell width
+          for each cell; e.g. *[(2., 10, -1.3), (2., 50), (2., 10, 1.3)]*
 
+    origin : (dim) iterable, default: 0
+        Define the origin or 'anchor point' of the mesh; i.e. the bottom-left-frontmost
+        corner. By default, the mesh is anchored such that its origin is at *[0, 0, 0]* .
 
+        For each dimension (x, y or z), The user may set the origin 2 ways:
+
+        - a ``scalar_like`` which explicitly defines origin along that dimension.
+        - **{'0', 'C', 'N'}** a :class:`str` specifying whether the zero coordinate along
+          each axis is the first node location ('0'), in the center ('C') or the last
+          node location ('N') (see Examples).
+
+    See Also
+    --------
+    utils.unpack_widths :
+        The function used to expand a tuple to generate widths.
 
     Examples
     --------
@@ -52,23 +65,24 @@ class TensorMesh(
 
     >>> from discretize import TensorMesh
     >>> import matplotlib.pyplot as plt
-    >>> 
+    >>>
     >>> ncx = 10      # number of core mesh cells in x
     >>> dx = 5        # base cell width x
     >>> npad_x = 3    # number of padding cells in x
     >>> exp_x = 1.25  # expansion rate of padding cells in x
-    >>> 
+    >>>
     >>> ncy = 24      # total number of mesh cells in y
     >>> dy = 5        # base cell width y
-    >>> 
+    >>>
     >>> hx = [(dx, npad_x, -exp_x), (dx, ncx), (dx, npad_x, exp_x)]
     >>> hy = dy * np.ones(ncy)
-    >>> 
+    >>>
     >>> mesh = TensorMesh([hx, hy], origin='CN')
-    >>> 
+    >>>
     >>> fig = plt.figure(figsize=(5,5))
     >>> ax = fig.add_subplot(111)
-    >>> mesh.plot_grid(ax=ax, show_it=True)
+    >>> mesh.plot_grid(ax=ax)
+    >>> plt.show()
 
 
     """
@@ -164,7 +178,7 @@ class TensorMesh(
                 - *1D:* Returns the cell widths
                 - *2D:* Returns the cell areas
                 - *3D:* Returns the cell volumes
-        
+
         """
         if getattr(self, "_cell_volumes", None) is None:
             vh = self.h
@@ -453,13 +467,13 @@ class TensorMesh(
         >>> from discretize import TensorMesh
         >>> import numpy as np
         >>> import matplotlib.pyplot as plt
-        >>> 
+        >>>
         >>> hx = [1, 1, 1, 1]
         >>> hy = [2, 2, 2]
-        >>> 
+        >>>
         >>> mesh = TensorMesh([hx, hy])
         >>> mesh.plot_grid()
-        >>> 
+        >>>
         >>> ind_Bx1, ind_Bx2, ind_By1, ind_By2 = mesh.face_boundary_indices
         """
         if self.dim == 1:
@@ -526,13 +540,13 @@ class TensorMesh(
         >>> from discretize import TensorMesh
         >>> import numpy as np
         >>> import matplotlib.pyplot as plt
-        >>> 
+        >>>
         >>> hx = [1, 1, 1, 1]
         >>> hy = [2, 2, 2]
-        >>> 
+        >>>
         >>> mesh = TensorMesh([hx, hy])
         >>> mesh.plot_grid()
-        >>> 
+        >>>
         >>> ind_Bx1, ind_Bx2, ind_By1, ind_By2 = mesh.cell_boundary_indices
         """
         if self.dim == 1:

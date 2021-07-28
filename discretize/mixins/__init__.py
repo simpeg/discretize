@@ -1,13 +1,13 @@
 """
 ==================================
-Mixins (:mod:`discrretize.mixins`)
+Mixins (:mod:`discretize.mixins`)
 ==================================
 .. currentmodule:: discretize.mixins
 
 The ``mixins`` module provides a set of tools for interfacing ``discretize``
 with external libraries such as VTK, OMF, and matplotlib. These modules are only
 imported if those external packages are available in the active Python environment and
-provide extra functionality that different finite volume meshes can inherrit.
+provide extra functionality that different finite volume meshes can inherit.
 
 Mixin Classes
 -------------
@@ -20,6 +20,12 @@ Mixin Classes
   InterfaceVTK
   InterfaceOMF
 
+Other Optional Classes
+----------------------
+.. autosummary::
+  :toctree: generated/
+
+  Slicer
 """
 from .mesh_io import TensorMeshIO, TreeMeshIO
 

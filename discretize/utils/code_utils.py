@@ -35,21 +35,21 @@ def is_scalar(f):
 def as_array_n_by_dim(pts, dim):
     """Verifies the dimensions of a 2D array.
 
-    The function **as_array_n_by_dim** will examine the :class:`numpy.array_like`
+    The function **as_array_n_by_dim** will examine the :class:`array_like`
     *pts* and determine if the number of columns is equal to *dim*.
     If so, this function returns the input argument *pts*. Otherwise,
     the function returns an error.
 
     Parameters
     ----------
-    pts : numpy.array_like
+    pts : array_like
         A 2D numpy array
     dim : int
         The number of columns which *pts* should have
     
     Returns
     -------
-    numpy.array_like
+    array_like
         Returns the input argument *pts* if the number of columns equals *dim*.
     
 

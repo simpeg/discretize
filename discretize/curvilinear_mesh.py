@@ -43,8 +43,8 @@ class CurvilinearMesh(
 
     Parameters
     ----------
-    node_list : list of numpy.array_like
-        List :class:`numpy.array_like` containing the gridded x, y (and z) node locations.
+    node_list : list of array_like
+        List :class:`array_like` containing the gridded x, y (and z) node locations.
 
             - For a 2D curvilinear mesh, *node_list* = [X, Y] where X and Y have shape (n_nodes_x, n_nodes_y)
             - For a 3D curvilinear mesh, *node_list* = [X, Y, Z] where X, Y and Z have shape (n_nodes_x, n_nodes_y, n_nodes_z)

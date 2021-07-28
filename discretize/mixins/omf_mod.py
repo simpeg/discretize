@@ -38,17 +38,17 @@ def ravel_data_array(arr, nx, ny, nz):
 
     >>> from discretize import TensorMesh
     >>> import numpy as np
-    >>> 
+    >>>
     >>> hx = np.ones(4)
     >>> hy = 2*np.ones(3)
     >>> hz = 3*np.ones(2)
     >>> mesh = TensorMesh([hx, hy, hz])
-    >>> 
+    >>>
     >>> dim = (mesh.nCz, mesh.nCy, mesh.nCx)  # OMF orderting
     >>> xc = np.reshape(mesh.cell_centers[:, 0], dim, order="C").ravel(order="F")
     >>> yc = np.reshape(mesh.cell_centers[:, 1], dim, order="C").ravel(order="F")
     >>> zc = np.reshape(mesh.cell_centers[:, 2], dim, order="C").ravel(order="F")
-    >>> 
+    >>>
     >>> print('ORIGINAL ORDERING')
     >>> print(mesh.cell_centers)
     >>> print('OMF ORDERING')
@@ -94,7 +94,7 @@ class InterfaceOMF(object):
     """
     The ``InterfaceOMF`` class was designed for easy conversion between
     ``discretize`` objects and `open mining format <https://www.seequent.com/the-open-mining-format/>`__ (OMF) objects.
-    Examples include: meshes, models and data arrays. 
+    Examples include: meshes, models and data arrays.
     """
     def _tensor_mesh_to_omf(mesh, models=None):
         """
@@ -188,8 +188,12 @@ class InterfaceOMF(object):
         Parameters
         ----------
 
-        models : dict(numpy.ndarray)
-            Name('s) and array('s). Match number of cells
+        models : dict of [str, (n_cells) numpy.ndarray], optional
+            Name('s) and array('s).
+
+        Returns
+        -------
+        omf.VolumeElement
 
         """
         # TODO: mesh.validate()
@@ -237,6 +241,22 @@ class InterfaceOMF(object):
         """Convert an OMF element to it's proper ``discretize`` type.
         Automatically determines the output type. Returns both the mesh and a
         dictionary of model arrays.
+
+        Parameters
+        ----------
+        element : omf.VolumeElement
+            The open mining format volume element object
+
+        Returns
+        -------
+        mesh : discretize.TensorMesh
+            The returned mesh type will be appropriately based on the input `element`.
+        models : dict of [str, (n_cells) numpy.ndarray]
+            The models contained in `element`
+
+        Notes
+        -----
+        Currently only :class:discretize.TensorMesh is supported.
         """
         element.validate()
         converters = {
@@ -251,3 +271,5 @@ class InterfaceOMF(object):
             )
         # Convert the data object
         return convert(element)
+
+InterfaceOMF.__module__ = "discretize.mixins"
