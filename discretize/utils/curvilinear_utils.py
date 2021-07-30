@@ -12,14 +12,14 @@ def example_curvilinear_grid(nC, exType):
     ----------
     nC : list of int
         list of number of cells in each dimension. Must be length 2 or 3
-    exType : str
-        String specifying the style of curvilinear mesh. Must be one of {"rect", "rotate", "sphere"}
+    exType : {"rect", "rotate", "sphere"}
+        String specifying the style of example curvilinear mesh.
 
     Returns
     -------
     list of numpy.ndarray
-        List containing the gridded x, y (and z) node locations for the curvilinear mesh.
-
+        List containing the gridded x, y (and z) node locations for the
+        curvilinear mesh.
     """
     if not isinstance(nC, list):
         raise TypeError("nC must be a list containing the number of nodes")
@@ -90,27 +90,25 @@ def volume_tetrahedron(xyz, A, B, C, D):
 
     Parameters
     ----------
-    xyz : numpy.ndarray
-        (n, 3) array containing the x,y,z locations for all verticies
-    A : numpy.ndarray
+    xyz : (n_pts, 3) numpy.ndarray
+        x,y, and z locations for all verticies
+    A : (n_tetra) numpy.ndarray of int
         Vector containing the indicies for the **a** vertex locations
-    B : numpy.ndarray
+    B : (n_tetra) numpy.ndarray of int
         Vector containing the indicies for the **b** vertex locations
-    C : numpy.ndarray
+    C : (n_tetra) numpy.ndarray of int
         Vector containing the indicies for the **c** vertex locations
-    D : numpy.ndarray
+    D : (n_tetra) numpy.ndarray of int
         Vector containing the indicies for the **d** vertex locations
 
     Returns
     -------
-    numpy.ndarray
-        Volumes of the tetrahedra whose vertices are indexes in
+    (n_tetra) numpy.ndarray
+        Volumes of the tetrahedra whose vertices are indexed by
         *A, B, C* and *D*.
-
 
     Examples
     --------
-
     Here we define a small 3D tensor mesh. 4 nodes are chosen to
     be the verticies of a tetrahedron. We compute the volume of this
     tetrahedron. Note that xyz locations for the verticies can be
@@ -121,38 +119,36 @@ def volume_tetrahedron(xyz, A, B, C, D):
     >>> import numpy as np
     >>> import matplotlib.pyplot as plt
     >>> import matplotlib as mpl
-    >>> 
     >>> mpl.rcParams.update({"font.size": 14})
-    >>> 
-    >>> # Corners of a uniform cube
+
+    Define corners of a uniform cube
+
     >>> h = [1, 1]
     >>> mesh = TensorMesh([h, h, h])
     >>> xyz = mesh.nodes
-    >>> 
-    >>> # Indicies
+
+    Specify the indicies of the corner points
+
     >>> A = np.array([0])
     >>> B = np.array([6])
     >>> C = np.array([8])
     >>> D = np.array([24])
-    >>> 
-    >>> # Compute volume for all tetrahedra and extract first one
+
+    Compute volume for all tetrahedra and the extract first one
+
     >>> vol = volume_tetrahedron(xyz, A, B, C, D)
     >>> vol = vol[0]
-    >>> 
-    >>> # Plot
+    >>> vol
+    array([1.33333333])
+
     >>> fig = plt.figure(figsize=(7, 7))
     >>> ax = fig.gca(projection='3d')
-    >>> 
     >>> mesh.plot_grid(ax=ax)
-    >>> 
     >>> k = [0, 6, 8, 0, 24, 6, 24, 8]
     >>> xyz_tetra = xyz[k, :]
     >>> ax.plot(xyz_tetra[:, 0], xyz_tetra[:, 1], xyz_tetra[:, 2], 'r')
-    >>> 
     >>> ax.text(-0.25, 0., 3., 'Volume of the tetrahedron: {:g} $m^3$'.format(vol))
-    >>> 
     >>> plt.show()
-
     """
 
     AD = xyz[A, :] - xyz[D, :]
@@ -187,7 +183,6 @@ def index_cube(nodes, grid_shape, n=None):
            A -------------- D
        node(i,j)        node(i+1,j)
 
-
     THREE DIMENSIONS::
 
         node(i,j+1,k+1)    node(i+1,j+1,k+1)
@@ -204,21 +199,18 @@ def index_cube(nodes, grid_shape, n=None):
            A --------------- D
       node(i,j,k)     node(i+1,j,k)
 
-    
     Parameters
     ----------
     nodes : str
         String specifying which nodes to return. For 2D meshes,
-        *nodes* must be a string containing the characters ABCD.
-        For 3D meshes, *nodes* must be a string containing the
-        characters ABCDEFGH. Note that order is preserved.
-        E.g. if we want to return the C, D and A node indices in
+        *nodes* must be a string containing combinations of the characters 'A', 'B',
+        'C', or 'D'. For 3D meshes, *nodes* can also be 'E', 'F', 'G', or 'H'. Note that
+        order is preserved. E.g. if we want to return the C, D and A node indices in
         that particular order, we input *nodes* = 'CDA'.
-    grid_shape : list
+    grid_shape : list of int
         Number of nodes along the i,j,k directions; e.g. [ni,nj,nk]
-    nc : list
+    nc : list of int
         Number of cells along the i,j,k directions; e.g. [nci,ncj,nck]
-
 
     Returns
     -------
@@ -229,33 +221,35 @@ def index_cube(nodes, grid_shape, n=None):
 
     Examples
     --------
-
     Here, we construct a small 2D tensor mesh
     (works for a curvilinear mesh as well) and use *index_cube*
     to find the indices of the 'A' and 'C' nodes. We then
     plot the mesh, as well as the 'A' and 'C' node locations.
-    
+
     >>> from discretize import TensorMesh
     >>> from discretize.utils import index_cube
     >>> from matplotlib import pyplot as plt
     >>> import numpy as np
-    >>> 
-    >>> # Create a simple tensor mesh
+
+    Create a simple tensor mesh.
+
     >>> n_cells = 5
     >>> h = 2*np.ones(n_cells)
     >>> mesh = TensorMesh([h, h], x0='00')
-    >>> 
-    >>> # Get indices of 'A' and 'C' nodes for all cells
+
+    Get indices of 'A' and 'C' nodes for all cells.
+
     >>> A, C = index_cube('AC', [n_cells+1, n_cells+1])
-    >>> 
-    >>> # Plot mesh and the locations of the A and C nodes
+
+    Plot mesh and the locations of the A and C nodes
+
     >>> fig1 = plt.figure(figsize=(5, 5))
     >>> ax1 = fig1.add_axes([0.1, 0.1, 0.8, 0.8])
     >>> mesh.plot_grid(ax=ax1)
     >>> ax1.scatter(mesh.nodes[A, 0], mesh.nodes[A, 1], 100, 'r', marker='^')
     >>> ax1.scatter(mesh.nodes[C, 0], mesh.nodes[C, 1], 100, 'g', marker='v')
     >>> ax1.set_title('A nodes (red) and C nodes (green)')
-    >>> plt.show(fig1)
+    >>> plt.show()
 
     """
 
@@ -317,7 +311,7 @@ def face_info(xyz, A, B, C, D, average=True, normalize_normals=True, **kwargs):
     we organize the vertices as follows:
 
     CELL VERTICES::
-      
+
             a -------Vab------- b
            /                   /
           /                   /
@@ -350,39 +344,38 @@ def face_info(xyz, A, B, C, D, average=True, normalize_normals=True, **kwargs):
 
     Parameters
     ----------
-    xyz : numpy.ndarray
-        (n, 3) array containing the x,y,z locations for all verticies
-    A : numpy.ndarray
+    xyz : (n, 3) numpy.ndarray
+        The x,y, and z locations for all verticies
+    A : (n_face) numpy.ndarray
         Vector containing the indicies for the **a** vertex locations
-    B : numpy.ndarray
+    B : (n_face) numpy.ndarray
         Vector containing the indicies for the **b** vertex locations
-    C : numpy.ndarray
+    C : (n_face) numpy.ndarray
         Vector containing the indicies for the **c** vertex locations
-    D : numpy.ndarray
+    D : (n_face) numpy.ndarray
         Vector containing the indicies for the **d** vertex locations
-    average : bool
-        If *True* (default), the function returns the average surface
+    average : bool, optional
+        If *True*, the function returns the average surface
         normal vector for each surface. If *False* , the function will
         return the normal vectors computed at the *A, B, C* and *D*
         vertices in a cell array {nA,nB,nC,nD}.
-    normalize_normal : bool
-        If *True* (default), the function will normalize the surface normal
+    normalize_normal : bool, optional
+        If *True*, the function will normalize the surface normal
         vectors. This is applied regardless of whether the *average* parameter
         is set to *True* or *False*. If *False*, the vectors are not normalized.
 
     Returns
     -------
-    N : numpy.ndarray or list of numpy.ndarray
+    N : (n_face) numpy.ndarray or (4) list of (n_face) numpy.ndarray
         Normal vector(s) for each surface. If *average* = *True*, the function
         returns an ndarray with the average surface normal vectos. If *average* = *False* ,
         the function returns a cell array {nA,nB,nC,nD} containing the normal vectors
         computed using each vertex of the surface.
-    area : numpy.ndarray
+    area : (n_face) numpy.ndarray
         The surface areas.
 
     Examples
     --------
-
     Here we define a set of vertices for a tensor mesh. We then
     index 4 vertices for an irregular quadrilateral. The
     function *face_info* is used to compute the normal vector
@@ -393,77 +386,66 @@ def face_info(xyz, A, B, C, D, average=True, normalize_normals=True, **kwargs):
     >>> import numpy as np
     >>> import matplotlib.pyplot as plt
     >>> import matplotlib as mpl
-    >>> 
     >>> mpl.rcParams.update({"font.size": 14})
-    >>> 
-    >>> # Corners of a uniform cube
+
+    Define Corners of a uniform cube.
+
     >>> h = [1, 1]
     >>> mesh = TensorMesh([h, h, h])
     >>> xyz = mesh.nodes
-    >>> 
-    >>> # Indicies
+
+    Choose the face indices,
+
     >>> A = np.array([0])
     >>> B = np.array([4])
     >>> C = np.array([26])
     >>> D = np.array([18])
-    >>> 
-    >>> # Compute average surface normal vector (normalized)
+
+    Compute average surface normal vector (normalized),
+
     >>> nvec, area = face_info(xyz, A, B, C, D)
-    >>> area = area[0]
-    >>> 
-    >>> # Plot
+    >>> nvec, area
+    (array([[-0.70710678,  0.70710678,  0.        ]]), array([4.24264069]))
+
     >>> fig = plt.figure(figsize=(7, 7))
     >>> ax = fig.gca(projection='3d')
-    >>> 
     >>> mesh.plot_grid(ax=ax)
-    >>> 
     >>> k = [0, 4, 26, 18, 0]
     >>> xyz_quad = xyz[k, :]
     >>> ax.plot(xyz_quad[:, 0], xyz_quad[:, 1], xyz_quad[:, 2], 'r')
-    >>> 
-    >>> ax.text(-0.25, 0., 3., 'Area of the surface: {:g} $m^2$'.format(area))
+    >>> ax.text(-0.25, 0., 3., 'Area of the surface: {:g} $m^2$'.format(area[0]))
     >>> ax.text(-0.25, 0., 2.8, 'Normal vector: ({:.2f}, {:.2f}, {:.2f})'.format(
-    >>>     nvec[0, 0], nvec[0, 1], nvec[0, 2])
-    >>> )
-    >>> 
+    ...     nvec[0, 0], nvec[0, 1], nvec[0, 2])
+    ... )
     >>> plt.show()
 
-    In our second example, the vertices do are unable to define a flat
+    In our second example, the vertices are unable to define a flat
     surface in 3D space. However, we will demonstrate the *face_info*
     returns the average normal vector and an approximate surface area.
 
-    >>> # Corners of a uniform cube
-    >>> h = [1, 1]
-    >>> mesh = TensorMesh([h, h, h])
-    >>> xyz = mesh.nodes
-    >>> 
-    >>> # Indicies
+    Define the face indicies
     >>> A = np.array([0])
     >>> B = np.array([5])
     >>> C = np.array([26])
     >>> D = np.array([18])
-    >>> 
-    >>> # Compute average surface normal vector
+
+    Compute average surface normal vector
+
     >>> nvec, area = face_info(xyz, A, B, C, D)
-    >>> area = area[0]
-    >>> 
-    >>> # Plot
+    >>> nvec, area
+    (array([[-0.4472136 ,  0.89442719,  0.        ]]), array([2.23606798]))
+
     >>> fig = plt.figure(figsize=(7, 7))
     >>> ax = fig.gca(projection='3d')
-    >>> 
     >>> mesh.plot_grid(ax=ax)
-    >>> 
     >>> k = [0, 5, 26, 18, 0]
     >>> xyz_quad = xyz[k, :]
     >>> ax.plot(xyz_quad[:, 0], xyz_quad[:, 1], xyz_quad[:, 2], 'g')
-    >>> 
-    >>> ax.text(-0.25, 0., 3., 'Area of the surface: {:g} $m^2$'.format(area))
+    >>> ax.text(-0.25, 0., 3., 'Area of the surface: {:g} $m^2$'.format(area[0]))
     >>> ax.text(-0.25, 0., 2.8, 'Average normal vector: ({:.2f}, {:.2f}, {:.2f})'.format(
-    >>>     nvec[0, 0], nvec[0, 1], nvec[0, 2])
-    >>> )
-    >>> 
+    ...     nvec[0, 0], nvec[0, 1], nvec[0, 2])
+    ... )
     >>> plt.show()
-
     """
     if "normalizeNormals" in kwargs:
         warnings.warn(
@@ -476,7 +458,7 @@ def face_info(xyz, A, B, C, D, average=True, normalize_normals=True, **kwargs):
         raise TypeError("average must be a boolean")
     if not isinstance(normalize_normals, bool):
         raise TypeError("normalize_normals must be a boolean")
-    
+
 
     AB = xyz[B, :] - xyz[A, :]
     BC = xyz[C, :] - xyz[B, :]

@@ -3653,8 +3653,8 @@ class DiffOperators(object):
 
         >>> phi_z = np.zeros(mesh.nFz)
         >>> xyz = mesh.faces_z
-        >>> phi_z[(xy[:, 2] > 0)] = 25.0
-        >>> phi_z[(xy[:, 2] < -10.0) & (xy[:, 0] > -10.0) & (xy[:, 0] < 10.0)] = 50.0
+        >>> phi_z[(xyz[:, 2] > 0)] = 25.0
+        >>> phi_z[(xyz[:, 2] < -10.0) & (xyz[:, 0] > -10.0) & (xyz[:, 0] < 10.0)] = 50.0
 
         Next, we construct the averaging operator and apply it to
         the discrete scalar quantity to approximate the value at cell centers.
@@ -3668,7 +3668,7 @@ class DiffOperators(object):
 
         >>> fig = plt.figure(figsize=(11, 5))
         >>> ax1 = fig.add_subplot(121)
-        >>> v = np.r_[np.zero(mesh.nFx+mesh.nFy), phi_z]  # create vector for plotting
+        >>> v = np.r_[np.zeros(mesh.nFx+mesh.nFy), phi_z]  # create vector for plotting
         >>> mesh.plot_slic(v, ax=ax1, normal='Y', slice_loc=0, v_type="Fz")
         >>> ax1.set_title("Variable at z-faces", fontsize=16)
         >>> ax2 = fig.add_subplot(122)

@@ -53,15 +53,15 @@ class InnerProducts(object):
             Inner product matrices can be constructed for the following cases:
 
             - *None* : returns the basic inner product matrix
-            - *(n_cells)* :class:numpy.ndarray : returns inner product matrix for an
+            - *(n_cells)* :class:`numpy.ndarray` : returns inner product matrix for an
               isotropic model. The array contains a scalar physical property value for
               each cell.
-            - *(n_cells, dim)* :class:numpy.ndarray : returns inner product matrix for
+            - *(n_cells, dim)* :class:`numpy.ndarray` : returns inner product matrix for
               diagonal anisotropic case. Columns are ordered ``np.c_[σ_xx, σ_yy, σ_zz]``.
               This can also a be a 1D array with the same number of total elements in
               column major order.
-            - *(n_cells, 4)* :class:numpy.ndarray (``dim`` is 2) or
-              *(n_cells, 6)* :class:numpy.ndarray (``dim`` is 3) :
+            - *(n_cells, 3)* :class:`numpy.ndarray` (``dim`` is 2) or
+              *(n_cells, 6)* :class:`numpy.ndarray` (``dim`` is 3) :
               returns inner product matrix for full tensor properties case. Columns are
               ordered ``np.c_[σ_xx, σ_yy, σ_zz, σ_xy, σ_xz, σ_yz]`` This can also be a
               1D array with the same number of total elements in column major order.
@@ -125,11 +125,11 @@ class InnerProducts(object):
 
         >>> h = np.ones(2)
         >>> mesh = TensorMesh([h, h, h])
-        >>> Me = mesh.get_face_inner_product()
+        >>> Mf = mesh.get_face_inner_product()
 
         >>> fig = plt.figure(figsize=(6, 6))
         >>> ax = fig.add_subplot(111)
-        >>> ax.imshow(Me.todense())
+        >>> ax.imshow(Mf.todense())
         >>> ax.set_title('Basic Face Inner Product Matrix', fontsize=18)
         >>> plt.show()
 
@@ -256,17 +256,18 @@ class InnerProducts(object):
             Inner product matrices can be constructed for the following cases:
 
             - *None* : returns the basic inner product matrix
-            - *(n_cells)* :class:numpy.ndarray : returns inner product matrix for an isotropic
-              model. The array contains a scalar physical property value for each cell
-            - *(n_cells, dim)* :class:numpy.ndarray : returns inner product matrix for diagonal
-              anisotropic case. Columns are ordered ``np.c_[σ_xx, σ_yy, σ_zz]``. This can
-              also a be a 1D array with the same number of total elements in column
-              major order.
-            - *(n_cells, dim + 1)* :class:numpy.ndarray (`dim` is 2), *(n_cells, dim + 3)*
-              :class:numpy.ndarray (`dim` is 3) : returns inner product matrix for full tensor
-              properties case. Columns are ordered ``np.c_[σ_xx, σ_yy, σ_zz, σ_xy,
-              σ_xz, σ_yz]`` This can also a be a 1D array with the same number of total
-              elements in column major order.
+            - *(n_cells)* :class:`numpy.ndarray` : returns inner product matrix for an
+              isotropic model. The array contains a scalar physical property value for
+              each cell.
+            - *(n_cells, dim)* :class:`numpy.ndarray` : returns inner product matrix for
+              diagonal anisotropic case. Columns are ordered ``np.c_[σ_xx, σ_yy, σ_zz]``.
+              This can also a be a 1D array with the same number of total elements in
+              column major order.
+            - *(n_cells, 3)* :class:`numpy.ndarray` (``dim`` is 2) or
+              *(n_cells, 6)* :class:`numpy.ndarray` (``dim`` is 3) :
+              returns inner product matrix for full tensor properties case. Columns are
+              ordered ``np.c_[σ_xx, σ_yy, σ_zz, σ_xy, σ_xz, σ_yz]`` This can also be a
+              1D array with the same number of total elements in column major order.
 
         invert_model : bool, optional
             The inverse of *model* is used as the physical property.
@@ -285,31 +286,33 @@ class InnerProducts(object):
         -----
         For continuous vector quantities :math:`\vec{u}` and :math:`\vec{w}`
         whose discrete representations :math:`\mathbf{u}` and :math:`\mathbf{w}`
-        live on the edges, **get_edge_inner_product** constructs the inner product matrix
-        :math:`\mathbf{M_\ast}` (or its inverse :math:`\mathbf{M_\ast^{-1}}`) for the
-        following cases:
+        live on the edges, **get_edge_inner_product** constructs the inner product
+        matrix :math:`\mathbf{M_\ast}` (or its inverse :math:`\mathbf{M_\ast^{-1}}`) for
+        the following cases:
 
-        **Basic Inner Product:** the inner product between :math:`\vec{u}` and :math:`\vec{w}`
+        **Basic Inner Product:** the inner product between :math:`\vec{u}` and
+        :math:`\vec{w}`.
 
         .. math::
             \langle \vec{u}, \vec{w} \rangle = \mathbf{u^T \, M \, w}
 
-        **Isotropic Case:** the inner product between :math:`\vec{u}` and :math:`\sigma \vec{w}`
-        where :math:`\sigma` is a scalar function.
+        **Isotropic Case:** the inner product between :math:`\vec{u}` and
+        :math:`\sigma \vec{w}` where :math:`\sigma` is a scalar function.
 
         .. math::
             \langle \vec{u}, \sigma \vec{w} \rangle = \mathbf{u^T \, M_\sigma \, w}
 
-        **Tensor Case:** the inner product between :math:`\vec{u}` and :math:`\Sigma \vec{w}`
-        where :math:`\Sigma` is tensor function; :math:`\sigma_4 = \sigma_5 = \sigma_6 = 0`
-        for diagonal anisotropy.
+        **Tensor Case:** the inner product between :math:`\vec{u}` and
+        :math:`\Sigma \vec{w}` where :math:`\Sigma` is tensor function;
+        :math:`\sigma_{xy} = \sigma_{xz} = \sigma_{yz} = 0` for diagonal anisotropy.
 
         .. math::
-            \langle \vec{u}, \Sigma \vec{w} \rangle = \mathbf{u^T \, M_\Sigma \, w} \;\;\; \textrm{where} \;\;\;
+            \langle \vec{u}, \Sigma \vec{w} \rangle =
+            \mathbf{u^T \, M_\Sigma \, w} \;\;\; \textrm{where} \;\;\;
             \Sigma = \begin{bmatrix}
-            \sigma_1 & \sigma_4 & \sigma_5 \\
-            \sigma_4 & \sigma_2 & \sigma_6 \\
-            \sigma_5 & \sigma_6 & \sigma_3
+            \sigma_{xx} & \sigma_{xy} & \sigma_{xz} \\
+            \sigma_{xy} & \sigma_{yy} & \sigma_{yz} \\
+            \sigma_{xz} & \sigma_{yz} & \sigma_{zz}
             \end{bmatrix}
 
         Examples
@@ -323,12 +326,14 @@ class InnerProducts(object):
         >>> import matplotlib.pyplot as plt
         >>> import numpy as np
         >>> import matplotlib as mpl
+
         >>> h = np.ones(2)
         >>> mesh = TensorMesh([h, h, h])
+        >>> Me = mesh.get_edge_inner_product()
 
         >>> fig = plt.figure(figsize=(6, 6))
         >>> ax = fig.add_subplot(111)
-        >>> ax.imshow(mesh.get_edge_inner_product().todense())
+        >>> ax.imshow(Me.todense())
         >>> ax.set_title('Basic Edge Inner Product Matrix', fontsize=18)
         >>> plt.show()
 
@@ -337,36 +342,33 @@ class InnerProducts(object):
         the isotropic, diagonal anisotropic and full tensor cases,
         we show the physical property tensor for a single cell.
 
-        >>> # Define 4 constitutive parameters and define the tensor
-        >>> # for each cell for isotropic, diagonal and tensor cases.
+        Define 4 constitutive parameters and define the tensor
+        for each cell for isotropic, diagonal and tensor cases.
+
         >>> sig1, sig2, sig3, sig4, sig5, sig6 = 6, 5, 4, 3, 2, 1
-        >>>
-        >>> sig_tensor_1 = np.diag(sig1 * np.ones(3))
-        >>> sig_tensor_2 = np.diag(np.array([sig1, sig2, sig3]))
-        >>> sig_tensor_3 = np.diag(np.array([sig1, sig2, sig3]))
-        >>> sig_tensor_3[(0, 1), (1, 0)] = sig4
-        >>> sig_tensor_3[(0, 2), (2, 0)] = sig5
-        >>> sig_tensor_3[(1, 2), (2, 1)] = sig6
+        >>> sig_iso_tensor = sig1 * np.eye(3)
+        >>> sig_diag_tensor = np.diag(np.array([sig1, sig2, sig3]))
+        >>> sig_full_tensor = np.array([
+        ...     [sig1, sig4, sig5],
+        ...     [sig4, sig2, sig6],
+        ...     [sig5, sig6, sig3]
+        ... ])
 
         Then plot the matrix entries,
 
         >>> fig = plt.figure(figsize=(15, 5))
-        >>>
         >>> ax1 = fig.add_subplot(131)
-        >>> ax1.imshow(sig_tensor_1)
+        >>> ax1.imshow(sig_iso_tensor)
         >>> ax1.axis('off')
         >>> ax1.set_title("Tensor (isotropic)", fontsize=16)
-        >>>
         >>> ax2 = fig.add_subplot(132)
-        >>> ax2.imshow(sig_tensor_2)
+        >>> ax2.imshow(sig_diag_tensor)
         >>> ax2.axis('off')
         >>> ax2.set_title("Tensor (diagonal anisotropic)", fontsize=16)
-        >>>
         >>> ax3 = fig.add_subplot(133)
-        >>> ax3.imshow(sig_tensor_3)
+        >>> ax3.imshow(sig_full_tensor)
         >>> ax3.axis('off')
         >>> ax3.set_title("Tensor (full anisotropic)", fontsize=16)
-        >>>
         >>> plt.show()
 
         Here construct and image the edge inner product matrices for
@@ -374,36 +376,34 @@ class InnerProducts(object):
         Spy plots are used to demonstrate the sparsity of the inner
         product matrices.
 
+        Isotropic case:
+
         >>> v = np.ones(mesh.nC)
-        >>>
-        >>> # Isotropic case
         >>> sig = sig1 * v
         >>> M1 = mesh.get_edge_inner_product(sig)
-        >>>
-        >>> # Diagonal anisotropic
+
+        Diagonal anisotropic case:
+
         >>> sig = np.c_[sig1*v, sig2*v, sig3*v]
         >>> M2 = mesh.get_edge_inner_product(sig)
-        >>>
-        >>> # Full anisotropic
+
+        Full anisotropic
+
         >>> sig = np.tile(np.c_[sig1, sig2, sig3, sig4, sig5, sig6], (mesh.nC, 1))
         >>> M3 = mesh.get_edge_inner_product(sig)
 
         Then plot the sparse representation,
 
         >>> fig = plt.figure(figsize=(12, 4))
-        >>>
         >>> ax1 = fig.add_subplot(131)
         >>> ax1.spy(M1, ms=5)
         >>> ax1.set_title("M (isotropic)", fontsize=16)
-        >>>
         >>> ax2 = fig.add_subplot(132)
         >>> ax2.spy(M2, ms=5)
         >>> ax2.set_title("M (diagonal anisotropic)", fontsize=16)
-        >>>
         >>> ax3 = fig.add_subplot(133)
         >>> ax3.spy(M3, ms=5)
         >>> ax3.set_title("M (full anisotropic)", fontsize=16)
-        >>>
         >>> plt.show()
 
         """
@@ -599,16 +599,22 @@ class InnerProducts(object):
         ----------
         model : numpy.ndarray
             Parameters defining the material properties for every cell in the mesh.
-            Allows for the following cases:
+            Inner product matrices can be constructed for the following cases:
 
-                - *(n_cells) numpy.ndarray* : Isotropic case. *model* contains a scalar physical property value for each cell
-                - *(n_cells, dim) numpy.ndarray* : Diagonal anisotropic case. The columns of *model* are ordered np.c_[:math:`\sigma_1 , \sigma_2 , \sigma_3`] (see notes)
-                - *(n_cells, 2 * dim) numpy.ndarray* : Full tensor properties case. The columns *model* are ordered np.c_[:math:`\sigma_1 , \sigma_2 , \sigma_3, \sigma_4 , \sigma_5 , \sigma_6`] (see notes)
+            - *(n_cells)* :class:`numpy.ndarray` : Isotropic case. *model* contains a
+              scalar physical property value for each cell.
+            - *(n_cells, dim)* :class:`numpy.ndarray` : Diagonal anisotropic case.
+              Columns are ordered ``np.c_[σ_xx, σ_yy, σ_zz]``. This can also a be a 1D
+              array with the same number of total elements in column major order.
+            - *(n_cells, 3)* :class:`numpy.ndarray` (``dim`` is 2) or
+              *(n_cells, 6)* :class:`numpy.ndarray` (``dim`` is 3) : Full tensor properties case. Columns
+              are ordered ``np.c_[σ_xx, σ_yy, σ_zz, σ_xy, σ_xz, σ_yz]`` This can also be
+              a 1D array with the same number of total elements in column major order.
 
         invert_model : bool, optional
             The inverse of *model* is used as the physical property.
         invert_matrix : bool, optional
-            Returns the function handle for the inverse of the inner product matrix
+            Returns the inverse of the inner product matrix.
             The inverse not implemented for full tensor properties.
         do_fast : bool, optional
             Do a faster implementation (if available).
@@ -617,8 +623,8 @@ class InnerProducts(object):
         -------
         function
             The function handle :math:`\mathbf{F}(\mathbf{u})` which accepts a
-            numpy.array :math:`\mathbf{u}` of shape (n_faces,). Use of the function constructs a
-            ``scipy.sparse.csr_matrix`` with shape (n_faces, n_params).
+            (``n_faces``) :class:`numpy.ndarray` :math:`\mathbf{u}`. The function
+            returns a (``n_faces``, ``n_params``) :class:`scipy.sparse.csr_matrix`.
 
         Notes
         -----
@@ -635,36 +641,38 @@ class InnerProducts(object):
         These cases are summarized below.
 
         **Isotropic Case:** The physical property for each cell is defined by a scalar value.
-        Therefore :math:`\mathbf{m}` is a numpy.array of shape (n_cells,). The sparse matrix
-        output by computing :math:`\mathbf{F}(\mathbf{u})` has shape (n_faces, n_cells).
+        Therefore :math:`\mathbf{m}` is a (``n_cells``) :class:`numpy.ndarray`. The sparse matrix
+        output by computing :math:`\mathbf{F}(\mathbf{u})` has shape (``n_faces``, ``n_cells``).
 
         **Diagonal Anisotropic Case:** In this case, the physical properties for each cell are
         defined by a diagonal tensor
 
         .. math::
             \Sigma = \begin{bmatrix}
-            \sigma_1 & 0 & 0 \\
-            0 & \sigma_2 & 0 \\
-            0 & 0 & \sigma_3
+            \sigma_{xx} & 0 & 0 \\
+            0 & \sigma_{yy} & 0 \\
+            0 & 0 & \sigma_{zz}
             \end{bmatrix}
 
-        Thus there are *dim x n_cells* physical property parameters and :math:`\mathbf{m}` is
-        a numpy.array of shape (dim x n_cells,).  The sparse matrix
-        output by computing :math:`\mathbf{F}(\mathbf{u})` has shape (n_faces, dim x n_cells).
+        Thus there are ``dim * n_cells`` physical property parameters and :math:`\mathbf{m}` is
+        a (``dim * n_cells``) :class:`numpy.ndarray`.  The sparse matrix
+        output by computing :math:`\mathbf{F}(\mathbf{u})` has shape (``n_faces``, ``dim * n_cells``).
 
         **Full Tensor Case:** In this case, the physical properties for each cell are
         defined by a full tensor
 
         .. math::
             \Sigma = \begin{bmatrix}
-            \sigma_1 & \sigma_4 & \sigma_5 \\
-            \sigma_4 & \sigma_2 & \sigma_6 \\
-            \sigma_5 & \sigma_6 & \sigma_3
+            \sigma_{xx} & \sigma_{xy} & \sigma_{xz} \\
+            \sigma_{xy} & \sigma_{yy} & \sigma_{yz} \\
+            \sigma_{xz} & \sigma_{yz} & \sigma_{zz}
             \end{bmatrix}
 
-        Thus there are *2 x dim x n_cells* physical property parameters and :math:`\mathbf{m}` is
-        a numpy.array of shape (2 x dim x n_cells,). The sparse matrix
-        output by computing :math:`\mathbf{F}(\mathbf{u})` has shape (n_faces, 2 x dim x n_cells).
+        Thus there are ``6 * n_cells`` physical property parameters in 3 dimensions, or
+        ``3 * n_cells`` physical property parameters in 2 dimensions, and
+        :math:`\mathbf{m}` is a (``n_params``) :class:`numpy.ndarray`.
+        The sparse matrix output by computing :math:`\mathbf{F}(\mathbf{u})`
+        has shape (``n_faces``, ``n_params``).
 
         Examples
         --------
@@ -690,26 +698,24 @@ class InnerProducts(object):
 
         >>> m = np.random.rand(mesh.nC)  # physical property parameters
         >>> u = np.random.rand(mesh.nF)  # vector of shape (n_faces)
-        >>>
+        >>> Mf = mesh.get_face_inner_product(m)
         >>> F = mesh.get_face_inner_product_deriv(m)  # Function handle
         >>> dFdm_u = F(u)
 
         >>> fig = plt.figure(figsize=(15, 5))
         >>> ax1 = fig.add_axes([0.05, 0.05, 0.3, 0.85])
-        >>> ax1.spy(mesh.get_face_inner_product(m), ms=6)
+        >>> ax1.spy(Mf, ms=6)
         >>> ax1.set_title("Face Inner Product Matrix (Isotropic)", fontsize=14, pad=5)
         >>> ax1.set_xlabel("Face Index", fontsize=12)
         >>> ax1.set_ylabel("Face Index", fontsize=12)
-        >>>
         >>> ax2 = fig.add_axes([0.43, 0.05, 0.17, 0.8])
         >>> ax2.spy(dFdm_u, ms=6)
         >>> ax2.set_title(
-        >>>     "$u^T \, \dfrac{\partial M(m)}{\partial m}$ (Isotropic)",
-        >>>     fontsize=14, pad=5
-        >>> )
+        ...     "$u^T \, \dfrac{\partial M(m)}{\partial m}$ (Isotropic)",
+        ...     fontsize=14, pad=5
+        ... )
         >>> ax2.set_xlabel("Parameter Index", fontsize=12)
         >>> ax2.set_ylabel("Face Index", fontsize=12)
-        >>>
         >>> plt.show()
 
         For our second example, the physical properties on the mesh are fully
@@ -722,6 +728,7 @@ class InnerProducts(object):
 
         >>> m = np.random.rand(mesh.nC, 3)  # anisotropic physical property parameters
         >>> u = np.random.rand(mesh.nF)     # vector of shape (n_faces)
+        >>> Mf = mesh.get_face_inner_product(m)
         >>> F = mesh.get_face_inner_product_deriv(m)  # Function handle
         >>> dFdm_u = F(u)
 
@@ -729,21 +736,18 @@ class InnerProducts(object):
 
         >>> fig = plt.figure(figsize=(15, 5))
         >>> ax1 = fig.add_axes([0.05, 0.05, 0.3, 0.8])
-        >>> ax1.spy(mesh.get_face_inner_product(m), ms=6)
+        >>> ax1.spy(Mf, ms=6)
         >>> ax1.set_title("Face Inner Product (Full Tensor)", fontsize=14, pad=5)
         >>> ax1.set_xlabel("Face Index", fontsize=12)
         >>> ax1.set_ylabel("Face Index", fontsize=12)
-        >>>
-        >>>
         >>> ax2 = fig.add_axes([0.4, 0.05, 0.45, 0.85])
         >>> ax2.spy(dFdm_u, ms=6)
         >>> ax2.set_title(
-        >>>     "$u^T \, \dfrac{\partial M(m)}{\partial m} \;$ (Full Tensor)",
-        >>>     fontsize=14, pad=5
-        >>> )
+        ...     "$u^T \, \dfrac{\partial M(m)}{\partial m} \;$ (Full Tensor)",
+        ...     fontsize=14, pad=5
+        ... )
         >>> ax2.set_xlabel("Parameter Index", fontsize=12)
         >>> ax2.set_ylabel("Face Index", fontsize=12)
-        >>>
         >>> plt.show()
 
         """
@@ -805,14 +809,15 @@ class InnerProducts(object):
 
             Allows for the following cases:
 
-            - *(n_cells) numpy.ndarray* : Isotropic case. *model* contains a scalar
-              physical property value for each cell
-            - *(n_cells, dim) numpy.ndarray* : Diagonal anisotropic case. The columns
-              of *model* are ordered np.c_[sigma_xx , sigma_yy , sigma_zz`]
-              (see notes).
-            - *(n_cells, 2 * dim) numpy.ndarray* : Full tensor properties case.
-              The columns *model* are ordered np.c_[sigma_xx , sigma_yy ,
-              sigma_zz, sigma_xy , sigma_xz , sigma_zz`] (see notes)
+            - *(n_cells)* :class:`numpy.ndarray` : Isotropic case. *model* contains a
+              scalar physical property value for each cell.
+            - *(n_cells, dim)* :class:`numpy.ndarray` : Diagonal anisotropic case.
+              Columns are ordered ``np.c_[σ_xx, σ_yy, σ_zz]``. This can also a be a 1D
+              array with the same number of total elements in column major order.
+            - *(n_cells, 3)* :class:`numpy.ndarray` (``dim`` is 2) or
+              *(n_cells, 6)* :class:`numpy.ndarray` (``dim`` is 3) : Full tensor properties case. Columns
+              are ordered ``np.c_[σ_xx, σ_yy, σ_zz, σ_xy, σ_xz, σ_yz]`` This can also be
+              a 1D array with the same number of total elements in column major order.
 
         invert_model : bool, optional
             The inverse of *model* is used as the physical property.
@@ -826,8 +831,8 @@ class InnerProducts(object):
         -------
         function
             The function handle :math:`\mathbf{F}(\mathbf{u})` which accepts a
-            numpy.array :math:`\mathbf{u}` of shape (n_edges,). Use of the function constructs a
-            ``scipy.sparse.csr_matrix`` with shape (n_edges, n_params).
+            (``n_edges``) :class:`numpy.ndarray` :math:`\mathbf{u}`. The function
+            returns a (``n_edges``, ``n_params``) :class:`scipy.sparse.csr_matrix`.
 
         Notes
         -----
@@ -844,36 +849,37 @@ class InnerProducts(object):
         These cases are summarized below.
 
         **Isotropic Case:** The physical property for each cell is defined by a scalar value.
-        Therefore :math:`\mathbf{m}` is a numpy.array of shape (n_cells,). The sparse matrix
-        output by computing :math:`\mathbf{F}(\mathbf{u})` has shape (n_edges, n_cells).
+        Therefore :math:`\mathbf{m}` is a (``n_cells``) :class:`numpy.ndarray`. The sparse matrix
+        output by computing :math:`\mathbf{F}(\mathbf{u})` has shape (``n_edges``, ``n_cells``).
 
         **Diagonal Anisotropic Case:** In this case, the physical properties for each cell are
         defined by a diagonal tensor
 
         .. math::
             \Sigma = \begin{bmatrix}
-            \sigma_1 & 0 & 0 \\
-            0 & \sigma_2 & 0 \\
-            0 & 0 & \sigma_3
+            \sigma_{xx} & 0 & 0 \\
+            0 & \sigma_{yy} & 0 \\
+            0 & 0 & \sigma_{zz}
             \end{bmatrix}
 
-        Thus there are *dim x n_cells* physical property parameters and :math:`\mathbf{m}` is
-        a numpy.array of shape (dim x n_cells,).  The sparse matrix
-        output by computing :math:`\mathbf{F}(\mathbf{u})` has shape (n_edges, dim x n_cells).
+        Thus there are ``dim * n_cells`` physical property parameters and :math:`\mathbf{m}` is
+        a (``dim * n_cells``) :class:`numpy.ndarray`.  The sparse matrix
+        output by computing :math:`\mathbf{F}(\mathbf{u})` has shape (``n_edges``, ``dim * n_cells``).
 
         **Full Tensor Case:** In this case, the physical properties for each cell are
         defined by a full tensor
 
         .. math::
             \Sigma = \begin{bmatrix}
-            \sigma_1 & \sigma_4 & \sigma_5 \\
-            \sigma_4 & \sigma_2 & \sigma_6 \\
-            \sigma_5 & \sigma_6 & \sigma_3
+            \sigma_{xx} & \sigma_{xy} & \sigma_{xz} \\
+            \sigma_{xy} & \sigma_{yy} & \sigma_{yz} \\
+            \sigma_{xz} & \sigma_{yz} & \sigma_{zz}
             \end{bmatrix}
 
-        Thus there are *2 x dim x n_cells* physical property parameters and :math:`\mathbf{m}` is
-        a numpy.array of shape (2 x dim x n_cells,). The sparse matrix
-        output by computing :math:`\mathbf{F}(\mathbf{u})` has shape (n_edges, 2 x dim x n_cells).
+        Thus there are ``6 * n_cells`` physical property parameters in 3 dimensions, or
+        ``3 * n_cells`` physical property parameters in 2 dimensions, and :math:`\mathbf{m}` is
+        a (``n_params``) :class:`numpy.ndarray`. The sparse matrix
+        output by computing :math:`\mathbf{F}(\mathbf{u})` has shape (``n_edges``, ``n_params``).
 
         Examples
         --------
@@ -882,8 +888,8 @@ class InnerProducts(object):
         of each cell are defined a scalar value. We construct the edge inner product
         matrix and visualize it with a spy plot. We then use
         **get_edge_inner_product_deriv** to construct the function handle
-        :math:`\mathbf{F}(\mathbf{u})` and plot the evaluation
-        of this function on a spy plot.
+        :math:`\mathbf{F}(\mathbf{u})` and plot the evaluation of this function on a spy
+        plot.
 
         >>> from discretize import TensorMesh
         >>> import matplotlib.pyplot as plt
@@ -898,6 +904,7 @@ class InnerProducts(object):
 
         >>> m = np.random.rand(mesh.nC)  # physical property parameters
         >>> u = np.random.rand(mesh.nF)  # vector of shape (n_edges)
+        >>> Me = mesh.get_edge_inner_product(m)
         >>> F = mesh.get_edge_inner_product_deriv(m)  # Function handle
         >>> dFdm_u = F(u)
 
@@ -905,20 +912,18 @@ class InnerProducts(object):
 
         >>> fig = plt.figure(figsize=(15, 5))
         >>> ax1 = fig.add_axes([0.05, 0.05, 0.3, 0.8])
-        >>> ax1.spy(mesh.get_edge_inner_product(m), ms=6)
+        >>> ax1.spy(Me, ms=6)
         >>> ax1.set_title("Edge Inner Product Matrix (Isotropic)", fontsize=14, pad=5)
         >>> ax1.set_xlabel("Edge Index", fontsize=12)
         >>> ax1.set_ylabel("Edge Index", fontsize=12)
-        >>>
         >>> ax2 = fig.add_axes([0.43, 0.05, 0.17, 0.8])
         >>> ax2.spy(dFdm_u, ms=6)
         >>> ax2.set_title(
-        >>>     "$u^T \, \dfrac{\partial M(m)}{\partial m}$ (Isotropic)",
-        >>>     fontsize=14, pad=5
-        >>> )
+        ...     "$u^T \, \dfrac{\partial M(m)}{\partial m}$ (Isotropic)",
+        ...     fontsize=14, pad=5
+        ... )
         >>> ax2.set_xlabel("Parameter Index", fontsize=12)
         >>> ax2.set_ylabel("Edge Index", fontsize=12)
-        >>>
         >>> plt.show()
 
         For our second example, the physical properties on the mesh are fully
@@ -931,6 +936,7 @@ class InnerProducts(object):
 
         >>> m = np.random.rand(mesh.nC, 3)  # physical property parameters
         >>> u = np.random.rand(mesh.nF)     # vector of shape (n_edges)
+        >>> Me = mesh.get_edge_inner_product(m)
         >>> F = mesh.get_edge_inner_product_deriv(m)  # Function handle
         >>> dFdm_u = F(u)
 
@@ -938,22 +944,19 @@ class InnerProducts(object):
 
         >>> fig = plt.figure(figsize=(15, 5))
         >>> ax1 = fig.add_axes([0.05, 0.05, 0.3, 0.8])
-        >>> ax1.spy(mesh.get_edge_inner_product(m), ms=6)
+        >>> ax1.spy(Me, ms=6)
         >>> ax1.set_title("Edge Inner Product (Full Tensor)", fontsize=14, pad=5)
         >>> ax1.set_xlabel("Edge Index", fontsize=12)
         >>> ax1.set_ylabel("Edge Index", fontsize=12)
-        >>>
         >>> ax2 = fig.add_axes([0.4, 0.05, 0.45, 0.8])
         >>> ax2.spy(dFdm_u, ms=6)
         >>> ax2.set_title(
-        >>>     "$u^T \, \dfrac{\partial M(m)}{\partial m} \;$ (Full Tensor)",
-        >>>     fontsize=14, pad=5
-        >>> )
+        ...     "$u^T \, \dfrac{\partial M(m)}{\partial m} \;$ (Full Tensor)",
+        ...     fontsize=14, pad=5
+        ... )
         >>> ax2.set_xlabel("Parameter Index", fontsize=12)
         >>> ax2.set_ylabel("Edge Index", fontsize=12)
-        >>>
         >>> plt.show()
-
         """
         if "invProp" in kwargs:
             warnings.warn(

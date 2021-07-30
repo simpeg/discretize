@@ -9,22 +9,18 @@ def load_mesh(file_name):
 
     For a discretize mesh that has been converted to dictionary and
     written to a json file, the function **load_mesh** loads the
-    json file and reconstructs the mesh object. As long as there are
-    no namespace conflicts, the target __class__ will be stored on
-    the `properties.HasProperties <https://propertiespy.readthedocs.io/en/latest/content/hasproperties.html>`__
-    registry and may be fetched from there.
+    json file and reconstructs the mesh object.
 
     Parameters
     ----------
     file_name : str
-        Name of the json file being read in. Contains all information required to reconstruct the mesh.
+        Name of the json file being read in. Contains all information required to
+        reconstruct the mesh.
 
     Returns
     -------
     discretize.base.BaseMesh
         A discretize mesh defined by the class and parameters stored in the json file
-
-
     """
     with open(file_name, "r") as outfile:
         jsondict = json.load(outfile)
@@ -50,18 +46,17 @@ def download(url, folder=".", overwrite=False, verbose=True):
     ----------
     url : str or list of str
         url or list of urls for the file(s) being downloaded
-    folder : str
+    folder : str, optional
         Local folder where downloaded files are to be stored
     overwrite : bool, optional
         Overwrite files if they have the same name as newly downloaded files
-    verbose : bool (optional)
+    verbose : bool, optional
         Print progress when downloading multiple files
 
     Returns
     -------
     os.path or list of os.path
         The path or a list of paths for all downloaded files
-
     """
 
     def rename_path(downloadpath):

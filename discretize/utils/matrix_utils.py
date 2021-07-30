@@ -14,39 +14,45 @@ def mkvc(x, n_dims=1, **kwargs):
 
     Parameters
     ----------
-    x : numpy.ndarray
-        An nD array that will be reorganized and output as a vector
+    x : array_like
+        An array that will be reorganized and output as a vector. The input array
+        will be flattened on input in Fortran order.
     n_dims : int
-        The dimension of the output vector.
+        The dimension of the output vector. :data:`numpy.newaxis` are appened to the
+        output array until it has this many axes.
 
     Returns
     -------
     numpy.ndarray
-        The output vector
+        The output vector, with at least ``n_dims`` axes.
 
     Examples
     --------
-
     Here, we reorganize a simple 2D array as a vector and demonstrate the
     impact of the *n_dim* argument.
 
     >>> from discretize.utils import mkvc
     >>> import numpy as np
-    >>> 
+
     >>> a = np.random.rand(3, 2)
-    >>> print('Original array:')
-    >>> print(a)
-    >>> 
+    >>> a
+    array([[0.33534155, 0.25334363],
+           [0.07147884, 0.81080958],
+           [0.85892774, 0.74357806]])
+
     >>> v = mkvc(a)
-    >>> print('Vector with n_dim = 1:')
-    >>> print(v)
-    >>> 
-    >>> print('Higher dimensions:')
+    >>> v
+    array([0.33534155, 0.07147884, 0.85892774, 0.25334363, 0.81080958,
+           0.74357806])
+
+    In Higher dimensions:
+
     >>> for ii in range(1, 4):
-    >>>     temp = mkvc(a, ii)
-    >>>     print('Shape of output with n_dim =', ii, ': ', np.shape(temp))
-
-
+    ...     v = mkvc(a, ii)
+    ...     print('Shape of output with n_dim =', ii, ': ', v.shape)
+    Shape of output with n_dim = 1 :  (6,)
+    Shape of output with n_dim = 2 :  (6, 1)
+    Shape of output with n_dim = 3 :  (6, 1, 1)
     """
     if "numDims" in kwargs:
         warnings.warn(
@@ -84,25 +90,22 @@ def sdiag(v):
 
     Parameters
     ----------
-    v : numpy.ndarray
+    v : (n) numpy.ndarray or discretize.utils.Zero
         The vector defining the diagonal elements of the sparse matrix being constructed
 
     Returns
     -------
-    scipy.sparse.csr_matrix
+    (n, n) scipy.sparse.csr_matrix or discretize.utils.Zero
         The sparse diagonal matrix.
 
     Examples
     --------
-
     Use a 1D array of values to construct a sparse diagonal matrix.
 
     >>> from discretize.utils import sdiag
     >>> import numpy as np
-    >>> 
     >>> v = np.array([6., 3., 1., 8., 0., 5.])
     >>> M = sdiag(v)
-
     """
     if isinstance(v, Zero):
         return Zero()
@@ -119,20 +122,19 @@ def sdinv(M):
 
     Parameters
     ----------
-    M : scipy.sparse.csr_matrix
+    M : (n, n) scipy.sparse.csr_matrix
         A sparse diagonal matrix
 
     Returns
     -------
-    scipy.sparse.csr_matrix
+    (n, n) scipy.sparse.csr_matrix
         The inverse of the sparse diagonal matrix.
 
     Examples
     --------
-
     >>> from discretize.utils import sdiag, sdinv
     >>> import numpy as np
-    >>> 
+
     >>> v = np.array([6., 3., 1., 8., 0., 5.])
     >>> M = sdiag(v)
     >>> Minv = sdinv(M)
@@ -151,9 +153,8 @@ def speye(n):
 
     Returns
     -------
-    scipy.sparse.csr_matrix
+    (n, n) scipy.sparse.csr_matrix
         The sparse identity matrix.
-
     """
     return sp.identity(n, format="csr")
 
@@ -163,17 +164,16 @@ def kron3(A, B, C):
 
     Where :math:`\otimes` denotes the Kronecker product and *A, B* and *C* are
     sparse matrices, this function outputs :math:`(A \otimes B) \otimes C`.
-    
+
     Parameters
     ----------
-    A, B, C : scipy.sparse.xxx_matrix
+    A, B, C : scipy.sparse.spmatrix
         Sparse matrices.
 
     Returns
     -------
     scipy.sparse.csr_matrix
         Kroneker between the 3 sparse matrices.
-
     """
     return sp.kron(sp.kron(A, B), C, format="csr")
 
@@ -190,9 +190,8 @@ def spzeros(n1, n2):
 
     Returns
     -------
-    scipy.sparse.dia_matrix
+    (n1, n2) scipy.sparse.dia_matrix
         A sparse matrix of zeros.
-
     """
     return sp.dia_matrix((n1, n2))
 
@@ -218,9 +217,8 @@ def ddx(n):
 
     Returns
     -------
-    scipy.sparse.csr_matrix
+    (n, n + 1) scipy.sparse.csr_matrix
         The 1D difference operator from nodes to centers.
-
     """
     return sp.spdiags((np.ones((n + 1, 1)) * [-1, 1]).T, [0, 1], n, n + 1, format="csr")
 
@@ -246,7 +244,7 @@ def av(n):
 
     Returns
     -------
-    scipy.sparse.csr_matrix
+    (n, n + 1) scipy.sparse.csr_matrix
         The 1D averaging operator from nodes to centers.
 
     """
@@ -257,7 +255,7 @@ def av(n):
 
 def av_extrap(n):
     """Create 1D averaging operator from cell-centers to nodes.
-    
+
     For n cells, the 1D averaging operator from cell centers to nodes
     is sparse and has shape (n+1, n). Values at the outmost nodes are
     extrapolated from the nearest cell center value. Thus the operator
@@ -280,9 +278,8 @@ def av_extrap(n):
 
     Returns
     -------
-    scipy.sparse.csr_matrix
+    (n+1, n) scipy.sparse.csr_matrix
         The 1D averaging operator from cell-centers to nodes.
-
     """
     Av = sp.spdiags(
         (0.5 * np.ones((n, 1)) * [1, 1]).T, [-1, 0], n + 1, n, format="csr"
@@ -290,7 +287,7 @@ def av_extrap(n):
     return Av
 
 
-def ndgrid(*args, **kwargs):
+def ndgrid(*args, vector=True, order="F"):
     """Generate gridded locations for 1D, 2D, or 3D tensors.
 
     For 1D, 2D, or 3D tensors, this function takes the unique positions defining
@@ -308,20 +305,19 @@ def ndgrid(*args, **kwargs):
 
     Parameters
     ----------
-    args : numpy.ndarray or a list of numpy.ndarray
+    *args : (n, dim) numpy.ndarray or (dim) list of (n) numpy.ndarray
         Positions along each axis of the tensor. The user can define these as
         successive positional arguments *x*, *y*, (and *z*) or as a single argument
         using a list [*x*, *y*, (*z*)].
-    vector : bool, optional kwargs
+    vector : bool, optional
         If *True*, the output is a numpy array of dimension [n, ndim]. If *False*,
         the gridded x, y (and z) locations are returned as separate ndarrays in a list.
         Default is *True*.
-    order : str, optional kwargs
-        Define ordering using one of the following options {'C', 'F', 'A'}.
-        'C' is C-like ordering. 'F' is Fortran-like ordering. 'A' is Fortran
+    order : {'F', 'C', 'A'}
+        Define ordering using one of the following options:
+        'C' is C-like ordering, 'F' is Fortran-like ordering, 'A' is Fortran
         ordering if memory is contigious and C-like otherwise. Default = 'F'.
-        See numpy.reshape for more on this argument.
-    
+        See :func:`numpy.reshape` for more on this argument.
 
     Returns
     -------
@@ -329,37 +325,39 @@ def ndgrid(*args, **kwargs):
         If *vector* = *True* the gridded *x*, *y*, (and *z*) locations are
         returned as a numpy array of shape [n, ndim]. If *vector* = *False*,
         the gridded *x*, *y*, (and *z*) are returned as a list of vectors.
-    
 
     Examples
     --------
-
     >>> from discretize.utils import ndgrid
     >>> import numpy as np
-    >>> 
+
     >>> x = np.array([1, 2, 3])
     >>> y = np.array([2, 4])
-    >>> 
-    >>> xy = ndgrid([x, y])
-    >>> print('Gridded x,y locations with F ordering:')
-    >>> print(xy)
-    >>> 
-    >>> xy = ndgrid([x, y], order='C')
-    >>> print('Gridded x,y locations with C ordering:')
-    >>> print(xy)
-    >>> 
-    >>> xy = ndgrid(x, y, vector=False)
-    >>> print('X location tensor:')
-    >>> print(xy[0])
-    >>> print('Y location tensor:')
-    >>> print(xy[1])
+    >>> ndgrid([x, y])
+    array([[1, 2],
+           [2, 2],
+           [3, 2],
+           [1, 4],
+           [2, 4],
+           [3, 4]])
 
+    >>> ndgrid(x, y, order='C')
+    array([[1, 2],
+           [1, 4],
+           [2, 2],
+           [2, 4],
+           [3, 2],
+           [3, 4]])
 
+    >>> ndgrid(x, y, vector=False)
+    [array([[1, 1],
+           [2, 2],
+           [3, 3]]), array([[2, 4],
+           [2, 4],
+           [2, 4]])]
     """
 
     # Read the keyword arguments, and only accept a vector=True/False
-    vector = kwargs.pop("vector", True)
-    order = kwargs.pop("order", "F")
     if not isinstance(vector, bool):
         raise TypeError("'vector' keyword must be a bool")
 
@@ -391,7 +389,7 @@ def make_boundary_bool(shape, dir="xyz"):
 
     Parameters
     ----------
-    shape : tuple of int
+    shape : (dim) tuple of int
         Defines the shape of the tensor (1D, 2D or 3D).
     dir : str containing characters 'x', 'y' and/or 'z'
         Specify the boundaries whose indices you want returned; e.g. for a 3D
@@ -401,34 +399,46 @@ def make_boundary_bool(shape, dir="xyz"):
     Returns
     -------
     numpy.ndarray of bool
-        Indices of boundary locations of the tensor for specified boundaries.
+        Indices of boundary locations of the tensor for specified boundaries. The
+        returned order matches the order the items occur in the flattened ``ndgrid``
 
     Examples
     --------
-
     Here we construct a 3x3 tensor and find the indices of the boundary locations.
 
     >>> from discretize.utils.matrix_utils import ndgrid, make_boundary_bool
     >>> import numpy as np
-    >>> 
-    >>> # Define 3x3 tensor grid
+
+    Define a 3x3 tensor grid
+
     >>> x = np.array([1, 2, 3])
     >>> y = np.array([2, 4, 6])
-    >>> tensor_grid = ndgrid([x, y])
-    >>> print('TENSOR GRID:')
-    >>> print(tensor_grid)
-    >>> 
-    >>> # Find indices of boundary locations.
+    >>> tensor_grid = ndgrid(x, y)
+
+    Find indices of boundary locations.
+
     >>> shape = (len(x), len(y))
     >>> bool_ind = make_boundary_bool(shape)
-    >>> print('\nBOUNDARY LOCATIONS:')
-    >>> print(bool_ind)
-    >>> 
-    >>> # Find indices of locations on x boundaries
-    >>> bool_ind_x = make_boundary_bool(shape, 'x')
-    >>> print('X-BOUNDARY LOCATIONS:')
-    >>> print(bool_ind_x)
+    >>> tensor_grid[bool_ind]
+    array([[1, 2],
+           [2, 2],
+           [3, 2],
+           [1, 4],
+           [3, 4],
+           [1, 6],
+           [2, 6],
+           [3, 6]])
 
+    Find indices of locations of only the x boundaries,
+
+    >>> bool_ind_x = make_boundary_bool(shape, 'x')
+    >>> tensor_grid[bool_ind_x]
+    array([[1, 2],
+           [3, 2],
+           [1, 4],
+           [3, 4],
+           [1, 6],
+           [3, 6]])
     """
     is_b = np.zeros(shape, dtype=bool, order="F")
     if "x" in dir:
@@ -445,6 +455,9 @@ def make_boundary_bool(shape, dir="xyz"):
 def ind2sub(shape, inds):
     r"""Return subscripts of tensor grid elements from indices.
 
+    This function is a wrapper for :func:`numpy.unravel_index` with a hard-coded Fortran
+    order.
+
     Consider the :math:`n^{th}` element of a tensor grid with *N* elements.
     The position of this element in the tensor grid can also be defined by
     subscripts (i,j,k). For an array containing the indices for a set of
@@ -452,58 +465,30 @@ def ind2sub(shape, inds):
 
     Parameters
     ----------
-    shape : tuple of int
+    shape : (dim) tuple of int
         Defines the shape of the tensor (1D, 2D or 3D).
-    inds : list or numpy.ndarray of int
+    inds : array_like of int
         The indices of the tensor elements whose subscripts you want returned.
 
     Returns
     -------
-    tuple of numpy.ndarray
+    (dim) tuple of numpy.ndarray
         Corresponding subscipts for the indices provided. The output is a
         tuple containing 1D integer arrays for the i, j and k subscripts, respectively.
-        The size of the output tuple is equal to the dimension of the tensor grid
-        (1D, 2D or 3D).
+        The output array will match the shape of the **inds** input.
 
-    Examples
+    See Also
     --------
-
-    Here we construct a 3x3 tensor and return the subscripts for
-    a set of indices.
-
-    >>> from discretize.utils.matrix_utils import ndgrid, ind2sub
-    >>> import numpy as np
-    >>> 
-    >>> # Define 3x3 tensor grid
-    >>> x = np.array([1, 2, 3])
-    >>> y = np.array([2, 4, 6])
-    >>> tensor_grid = ndgrid([x, y])
-    >>> print('3x3 TENSOR GRID:')
-    >>> print(tensor_grid)
-    >>> 
-    >>> # Define indices of elements whose subscipts you want
-    >>> shape = (len(x), len(y))
-    >>> ind = np.array([0, 4, 7], dtype=int)
-    >>> print('\nINDICES:')
-    >>> print(ind)
-    >>> 
-    >>> # Return the subscipts
-    >>> I, J = ind2sub(shape, ind)
-    >>> print('\nSUBSCRIPTS (i,j):')
-    >>> for kk in range(0, len(ind)):
-    >>>     print('({}, {})'.format(I[kk], J[kk]))
-
-
+    numpy.unravel_index
     """
-    if type(inds) is not np.ndarray:
-        inds = np.array(inds)
-    if len(inds.shape) != 1:
-        raise ValueError("Indexing must be done as a 1D row vector, e.g. [3,6,6,...]")
     return np.unravel_index(inds, shape, order="F")
 
 
 def sub2ind(shape, subs):
     r"""Return indices of tensor grid elements from subscripts.
+
+    This function is a wrapper for :func:`numpy.ravel_multi_index` with a hard-coded
+    Fortran order, and a column order for the ``multi_index``
 
     Consider elements of a tensors grid whose positions are given by the
     subscripts (i,j,k). This function will return the corresponding indices
@@ -512,53 +497,36 @@ def sub2ind(shape, subs):
 
     Parameters
     ----------
-    shape : tuple of int
+    shape : (dim) tuple of int
         Defines the shape of the tensor (1D, 2D or 3D).
-    subs : ndarray of int
+    subs : (N, dim) array_like of int
         The subscripts of the tensor grid elements. Each rows defines the position
-        of a particular tensor element. The shape of of the array is (N, ndim). 
+        of a particular tensor element. The shape of of the array is (N, ndim).
 
     Returns
     -------
-    ndarray of int
+    numpy.ndarray of int
         The indices of the tensor grid elements defined by *subs*.
+
+    See Also
+    --------
+    numpy.ravel_multi_index
 
     Examples
     --------
+    He we recreate the examples from :func:`numpy.ravel_multi_index` to illustrate the
+    differences. The indices corresponding to each dimension are now columns in the
+    array (instead of rows), and it assumed to use a Fortran order.
 
-    Here we construct a 3x3 tensor and return the indices for
-    a set of subscripts.
-
-    >>> from discretize.utils.matrix_utils import ndgrid, ind2sub
     >>> import numpy as np
-    >>> 
-    >>> # Define 3x3 tensor grid
-    >>> x = np.array([1, 2, 3])
-    >>> y = np.array([2, 4, 6])
-    >>> tensor_grid = ndgrid([x, y])
-    >>> print('3x3 TENSOR GRID:')
-    >>> print(tensor_grid)
-    >>> 
-    >>> # Define subscripts (i,j)
-    >>> I = np.array([0, 1, 1], dtype=int)
-    >>> J = np.array([0, 1, 2], dtype=int)
-    >>> print('\nSUBSCRIPTS (i,j):')
-    >>> for kk in range(0, len(I)):
-    >>>     print('({}, {})'.format(I[kk], J[kk]))
-    >>> 
-    >>> # Find the corresponding indices
-    >>> shape = (len(x), len(y))
-    >>> ind = sub2ind(shape, np.c_[I, J])
-    >>> print('\nINDICES:')
-    >>> print(ind)
-
+    >>> from discretize.utils import sub2ind
+    >>> arr = np.array([[3, 4], [6, 5], [6, 1]])
+    >>> sub2ind((7, 6), arr)
+    array([31, 41, 13], dtype=int64)
     """
     if len(shape) == 1:
         return subs
-    if type(subs) is not np.ndarray:
-        subs = np.array(subs)
-    if len(subs.shape) == 1:
-        subs = subs[np.newaxis, :]
+    subs = np.atleast_2d(subs)
     if subs.shape[1] != len(shape):
         raise ValueError(
             "Indexing must be done as a column vectors. e.g. [[3,6],[6,2],...]"
@@ -578,14 +546,15 @@ def get_subarray(A, ind):
     ----------
     A : numpy.ndarray
         The original numpy array. Must be 1, 2 or 3 dimensions.
-    ind : list of numpy.ndarray
-        A list of numpy arrays containing the indices being extracted along each dimension. The length of the list must equal the dimensions of the input array.
+    ind : (dim) list of numpy.ndarray
+        A list of numpy arrays containing the indices being extracted along each
+        dimension. The length of the list must equal the dimensions of the input array.
 
     Returns
     -------
     numpy.ndarray
         The subarray extracted from the original array
-    
+
     Examples
     --------
     Here we construct a random 3x3 numpy array and use **get_subarray** to extract
@@ -593,22 +562,24 @@ def get_subarray(A, ind):
 
     >>> from discretize.utils import get_subarray
     >>> import numpy as np
-    >>> np.random.seed(63)
-    >>> 
-    >>> # Define a random array for input
     >>> A = np.random.rand(3, 3)
-    >>> 
-    >>> # Define the indexing along the columns and rows and create the indexing list
-    >>> ind_x = np.array([0, 1, 2], dtype=int)
-    >>> ind_y = np.array([0], dtype=int)
-    >>> ind = [ind_x, ind_y]
-    >>> 
-    >>> # Extract the first column of A
-    >>> Asub = get_subarray(A, ind)
-    >>> 
-    >>> print(A)
-    >>> print(Asub)
+    >>> A
+    array([[1.07969034e-04, 9.78613931e-01, 6.62123429e-01],
+           [8.80722877e-01, 7.61035691e-01, 7.42546796e-01],
+           [9.09488911e-01, 7.80626334e-01, 8.67663825e-01]])
 
+    Define the indexing along the columns and rows and create the indexing list
+
+    >>> ind_x = np.array([0, 1, 2])
+    >>> ind_y = np.array([0, 2])
+    >>> ind = [ind_x, ind_y]
+
+    Extract the first, and third column of A
+
+    >>> get_subarray(A, ind)
+    array([[1.07969034e-04, 6.62123429e-01],
+           [8.80722877e-01, 7.42546796e-01],
+           [9.09488911e-01, 8.67663825e-01]])
     """
     if not isinstance(ind, list):
         raise TypeError("ind must be a list of vectors")
@@ -628,6 +599,25 @@ def inverse_3x3_block_diagonal(
 ):
     """Invert a set of 3x3 matricies from vectors containing their elements.
 
+    Parameters
+    ----------
+    a11, a12, ..., a33 : (n_blocks) numpy.ndarray
+        Vectors which contain the
+        corresponding element for all 3x3 matricies
+    return_matrix : bool, optional
+
+        - **True**: Returns the sparse block 3x3 matrix *M* (default).
+        - **False:** Returns the vectors containing the elements of each matrix' inverse.
+
+    Returns
+    -------
+    (3 * n_blocks, 3 * n_blocks) scipy.sparse.coo_matrix or list of (n_blocks)
+        numpy.ndarray. If *return_matrix = False*, the function will return vectors
+        *b11, b12, b13, b21, b22, b23, b31, b32, b33*. If *return_matrix = True*, the
+        function will return the block matrix *M*.
+
+    Notes
+    -----
     The elements of a 3x3 matrix *A* are given by:
 
     .. math::
@@ -658,7 +648,7 @@ def inverse_3x3_block_diagonal(
         M = \\begin{bmatrix}
         D_{11} & D_{12} & D_{13} \n
         D_{21} & D_{22} & D_{23} \n
-        D_{31} & D_{32} & D_{33} 
+        D_{31} & D_{32} & D_{33}
         \\end{bmatrix}
 
     where :math:`D_{ij}` are diagonal matrices whose non-zero elements
@@ -666,30 +656,9 @@ def inverse_3x3_block_diagonal(
     number of matricies, the block matrix is sparse with dimensions
     (3n, 3n).
 
-
-    Parameters
-    ----------
-    aij : numpy.ndarray
-        All arguments a11, a12, ..., a33 are vectors which contain the
-        corresponding element for all 3x3 matricies
-    return_matrix : bool, optional
-
-        - **True**: Returns the sparse block 3x3 matrix *M* (default).
-        - **False:** Returns the vectors containing the elements of each matrix' inverse.
-
-
-    Returns
-    -------
-    sparse.coo.coo_matrix or list of numpy.ndarray
-        If *return_matrix = False*, the function will return vectors
-        *b11, b12, b13, b21, b22, b23, b31, b32, b33*.
-        If *return_matrix = True*, the function will return the
-        block matrix *M*.
-
     Examples
     --------
-
-    Here, we define four 3x3 matricies and reorganize their elements into 
+    Here, we define four 3x3 matricies and reorganize their elements into
     9 vectors a11, a12, ..., a33. We then examine the outputs of the
     function **inverse_3x3_block_diagonal** when the argument
     *return_matrix* is set to both *True* and *False*.
@@ -698,54 +667,41 @@ def inverse_3x3_block_diagonal(
     >>> import numpy as np
     >>> import scipy as sp
     >>> import matplotlib.pyplot as plt
-    >>> 
-    >>> # Define four 3x3 matricies
-    >>> np.random.seed(45)
+
+    Define four 3x3 matricies, and organize their elements into nine vectors
+
     >>> A1 = np.random.uniform(1, 10, (3, 3))
     >>> A2 = np.random.uniform(1, 10, (3, 3))
     >>> A3 = np.random.uniform(1, 10, (3, 3))
     >>> A4 = np.random.uniform(1, 10, (3, 3))
-    >>> 
-    >>> # Organize elements in vectors a11 to a33
-    >>> v = []
-    >>> for ii in range(0, 3):
-    >>>     for jj in range(0, 3):
-    >>>         v.append(
-    >>>             np.c_[A1[ii, jj], A2[ii, jj], A3[ii, jj], A4[ii, jj]]
-    >>>         )
-    >>> 
-    >>> a11, a12, a13, a21, a22, a23, a31, a32, a33 = v
-    >>> 
-    >>> # Return the elements of their inverse and validate
+    >>> [[a11, a12, a13], [a21, a22, a23], [a31, a32, a33]] = np.stack(
+    ...     [A1, A2, A3, A4], axis=-1
+    ... )
+
+    Return the elements of their inverse and validate
+
     >>> b11, b12, b13, b21, b22, b23, b31, b32, b33 = inverse_3x3_block_diagonal(
-    >>>     a11, a12, a13, a21, a22, a23, a31, a32, a33, return_matrix=False
-    >>> )
-    >>> 
-    >>> B = []
-    >>> for ii in range(0, 4):
-    >>>     B.append(
-    >>>         np.r_[
-    >>>             np.c_[b11[ii], b12[ii], b13[ii]],
-    >>>             np.c_[b21[ii], b22[ii], b23[ii]],
-    >>>             np.c_[b31[ii], b32[ii], b33[ii]],
-    >>>         ]
-    >>>     )
-    >>>     
-    >>> B1, B2, B3, B4 = B
-    >>> 
-    >>> print('Inverse of A1 using numpy.linalg.inv')
-    >>> print(np.linalg.inv(A1))
-    >>> print('B1 constructed from vectors b11 to b33')
-    >>> print(B1)
-    >>> 
-    >>> # Plot the sparse block matrix containing elements of the inverses
+    ...     a11, a12, a13, a21, a22, a23, a31, a32, a33, return_matrix=False
+    ... )
+    >>> Bs = np.stack([[b11, b12, b13],[b21, b22, b23],[b31, b32, b33]])
+    >>> B1, B2, B3, B4 = Bs.transpose((2, 0, 1))
+
+    >>> np.linalg.inv(A1)
+    array([[ 0.20941584,  0.18477151, -0.22637147],
+           [-0.06420656, -0.34949639,  0.29216461],
+           [-0.14226339,  0.11160555,  0.0907583 ]])
+    >>> B1
+    array([[ 0.20941584,  0.18477151, -0.22637147],
+           [-0.06420656, -0.34949639,  0.29216461],
+           [-0.14226339,  0.11160555,  0.0907583 ]])
+
+    We can also return this as a sparse matrix with block diagonal inverse
+
     >>> M = inverse_3x3_block_diagonal(
-    >>>     a11, a12, a13, a21, a22, a23, a31, a32, a33
-    >>> )
-    >>> 
+    ...     a11, a12, a13, a21, a22, a23, a31, a32, a33
+    ... )
     >>> plt.spy(M)
-
-
+    >>> plt.show()
     """
     if "returnMatrix" in kwargs:
         warnings.warn(
@@ -802,6 +758,26 @@ def inverse_2x2_block_diagonal(a11, a12, a21, a22, return_matrix=True, **kwargs)
     """
     Invert a set of 2x2 matricies from vectors containing their elements.
 
+    Parameters
+    ----------
+    a11, a12, a21, a22 : (n_blocks) numpy.ndarray
+        All arguments a11, a12, a21, a22 are vectors which contain the
+        corresponding element for all 2x2 matricies
+    return_matrix : bool, optional
+
+        - **True:** Returns the sparse block 2x2 matrix *M*.
+        - **False:** Returns the vectors containing the elements of each matrix' inverse.
+
+    Returns
+    -------
+    (2 * n_blocks, 2 * n_blocks) scipy.sparse.coo_matrix or list of (n_blocks) numpy.ndarray
+        If *return_matrix = False*, the function will return vectors
+        *b11, b12, b21, b22*.
+        If *return_matrix = True*, the function will return the
+        block matrix *M*
+
+    Notes
+    -----
     The elements of a 2x2 matrix *A* are given by:
 
     .. math::
@@ -830,7 +806,7 @@ def inverse_2x2_block_diagonal(a11, a12, a21, a22, return_matrix=True, **kwargs)
     .. math::
         M = \\begin{bmatrix}
         D_{11} & D_{12} \n
-        D_{21} & D_{22} 
+        D_{21} & D_{22}
         \\end{bmatrix}
 
     where :math:`D_{ij}` are diagonal matrices whose non-zero elements
@@ -838,82 +814,48 @@ def inverse_2x2_block_diagonal(a11, a12, a21, a22, return_matrix=True, **kwargs)
     number of matricies, the block matrix is sparse with dimensions
     (2n, 2n).
 
-
-    Parameters
-    ----------
-    aij : numpy.ndarray
-        All arguments a11, a12, a21, a22 are vectors which contain the
-        corresponding element for all 2x2 matricies
-    return_matrix : bool, optional
-
-        - **True:** Returns the sparse block 2x2 matrix *M*.
-        - **False:** Returns the vectors containing the elements of each matrix' inverse.
-
-
-    Returns
-    -------
-    sparse.coo.coo_matrix or list of numpy.ndarray
-        If *return_matrix = False*, the function will return vectors
-        *b11, b12, b21, b22*.
-        If *return_matrix = True*, the function will return the
-        block matrix *M*
-
     Examples
     --------
 
-    Here, we define four 2x2 matricies and reorganize their elements into 
+    Here, we define four 2x2 matricies and reorganize their elements into
     4 vectors a11, a12, a21 and a22. We then examine the outputs of the
     function **inverse_2x2_block_diagonal** when the argument
     *return_matrix* is set to both *True* and *False*.
 
     >>> from discretize.utils import inverse_2x2_block_diagonal
     >>> import numpy as np
-    >>> import scipy as sp
     >>> import matplotlib.pyplot as plt
-    >>> 
-    >>> # Define four 3x3 matricies
+
+    Define four 3x3 matricies, and organize their elements into four vectors
+
     >>> A1 = np.random.uniform(1, 10, (2, 2))
     >>> A2 = np.random.uniform(1, 10, (2, 2))
     >>> A3 = np.random.uniform(1, 10, (2, 2))
     >>> A4 = np.random.uniform(1, 10, (2, 2))
-    >>> 
-    >>> # Organize elements in vectors
-    >>> v = []
-    >>> for ii in range(0, 2):
-    >>>     for jj in range(0, 2):
-    >>>         v.append(
-    >>>             np.c_[A1[ii, jj], A2[ii, jj], A3[ii, jj], A4[ii, jj]]
-    >>>         )
-    >>> 
-    >>> a11, a12, a21, a22 = v
-    >>> 
-    >>> # Return the elements of their inverse and validate
+    >>> [[a11, a12], [a21, a22]] = np.stack([A1, A2, A3, A4], axis=-1)
+
+    Return the elements of their inverse and validate
+
     >>> b11, b12, b21, b22 = inverse_2x2_block_diagonal(
-    >>>     a11, a12, a21, a22, return_matrix=False
-    >>> )
-    >>> 
-    >>> B = []
-    >>> for ii in range(0, 4):
-    >>>     B.append(
-    >>>         np.r_[
-    >>>             np.c_[b11[ii], b12[ii]],
-    >>>             np.c_[b21[ii], b22[ii]]
-    >>>         ]
-    >>>     )
-    >>>     
-    >>> B1, B2, B3, B4 = B
-    >>> 
-    >>> print('Inverse of A1 using numpy.linalg.inv')
-    >>> print(np.linalg.inv(A1))
-    >>> print('B1 constructed from vectors b11 to b33')
-    >>> print(B1)
-    >>> 
-    >>> # Plot the sparse block matrix containing elements of the inverses
+    ...     a11, a12, a21, a22, return_matrix=False
+    ... )
+    >>> Bs = np.stack([[b11, b12],[b21, b22]])
+    >>> B1, B2, B3, B4 = Bs.transpose((2, 0, 1))
+
+    >>> np.linalg.inv(A1)
+    array([[ 0.34507439, -0.4831833 ],
+           [-0.24286626,  0.57531461]])
+    >>> B1
+    array([[ 0.34507439, -0.4831833 ],
+           [-0.24286626,  0.57531461]])
+
+    Plot the sparse block matrix containing elements of the inverses
+
     >>> M = inverse_2x2_block_diagonal(
-    >>>     a11, a12, a21, a22
-    >>> )
-    >>> 
+    ...     a11, a12, a21, a22
+    ... )
     >>> plt.spy(M)
+    >>> plt.show()
     """
     if "returnMatrix" in kwargs:
         warnings.warn(
@@ -953,6 +895,26 @@ class TensorType(object):
     for each cell on the mesh. The general theory behind this functionality
     is explained below.
 
+    Parameters
+    ----------
+    mesh : discretize.BaseTensorMesh
+        An instance of any of the mesh classes support in discretize; i.e. *TensorMesh*,
+        *CylindricalMesh*, *TreeMesh* or *CurvilinearMesh*.
+    tensor : numpy.ndarray or a float
+        The shape of the input argument *tensor* must fall into one of these
+        classifications:
+
+        - *Scalar:* A float is entered.
+        - *Isotropic:* A 1D numpy.ndarray with a property value for every cell.
+        - *Anisotropic:* A (*nCell*, *dim*) numpy.ndarray of shape where each row
+          defines the diagonal-anisotropic property parameters for each cell.
+          *nParam* = 2 for 2D meshes and *nParam* = 3 for 3D meshes.
+        - *Tensor:* A (*nCell*, *nParam*) numpy.ndarray where each row
+          defines the full anisotropic property parameters for each cell.
+          *nParam* = 3 for 2D meshes and *nParam* = 6 for 3D meshes.
+
+    Notes
+    -----
     The relationship between a quantity and its response to external
     stimuli (e.g. Ohm's law) can be defined by a scalar quantity:
 
@@ -961,42 +923,32 @@ class TensorType(object):
 
     Or in the case of anisotropy, the relationship is defined generally by
     a symmetric tensor:
-    
+
     .. math::
         \vec{j} = \Sigma \vec{e} \;\;\; where \;\;\;
         \Sigma = \begin{bmatrix}
-        \sigma_{1} & \sigma_{4} & \sigma_{5} \\
-        \sigma_{4} & \sigma_{2} & \sigma_{6} \\
-        \sigma_{5} & \sigma_{6} & \sigma_{3}
+        \sigma_{xx} & \sigma_{xy} & \sigma_{xz} \\
+        \sigma_{xy} & \sigma_{yy} & \sigma_{yz} \\
+        \sigma_{xz} & \sigma_{yz} & \sigma_{zz}
         \end{bmatrix}
 
-    In 3D, the tensor is defined by 6 independent element (3 independent elements in 2D).
-    When using the input argument *tensor* to define the consitutive relationship
+    In 3D, the tensor is defined by 6 independent element (3 independent elements in
+    2D). When using the input argument *tensor* to define the consitutive relationship
     for every cell in the *mesh*, there are 4 classifications recognized by discretize:
 
-        - **Scalar:** :math:`\vec{j} = \sigma \vec{e}`, where :math:`\sigma` a constant. Thus the input argument *tensor* is a float. 
-        
-        - **Isotropic:** :math:`\vec{j} = \sigma \vec{e}`, where :math:`\sigma` varies spatially. Thus the input argument *tensor* is a 1D array that provides a :math:`\sigma` value for every cell in the mesh.
-
-        - **Anisotropic:** :math:`\vec{j} = \Sigma \vec{e}`, where the off-diagonal elements are zero. That is, :math:`\Sigma` is diagonal. In this case, the input argument *tensor* defining the physical properties in each cell is a :class:`numpy.ndarray` of shape (*nCells*, *dim*).
-        
-        - **Tensor:** :math:`\vec{j} = \Sigma \vec{e}`, where off-diagonal elements are non-zero and :math:`\Sigma` is a full tensor. In this case, the input argument *tensor* defining the physical properties in each cell is a :class:`numpy.ndarray` of shape (*nCells*, *nParam*). In 2D, *nParam* = 3 and in 3D, *nParam* = 6.
-    
-    
-    Parameters
-    ----------
-
-    mesh : discretize.BaseTensorMesh
-        An instance of any of the mesh classes support in discretize; i.e. *TensorMesh*, *CylindricalMesh*, *TreeMesh* or *CurvilinearMesh*.
-    tensor : numpy.ndarray or a float
-        The shape of the input argument *tensor* must fall into one of these classifications:
-
-            - *Scalar:* A float is entered.
-            - *Isotropic:* A 1D numpy.ndarray with a property value for every cell.
-            - *Anisotropic:* A numpy.ndarray of shape (*nCell*, *dim*) where each row defines the diagonal-anisotropic property parameters for each cell. *nParam* = 2 for 2D meshes and *nParam* = 3 for 3D meshes.
-            - *Tensor:* A numpy.ndarray of shape (*nCell*, *nParam*) where each row defines the full anisotropic property parameters for each cell. *nParam* = 3 for 2D meshes and *nParam* = 6 for 3D meshes.
-
-
+    - **Scalar:** :math:`\vec{j} = \sigma \vec{e}`, where :math:`\sigma` a constant.
+      Thus the input argument *tensor* is a float.
+    - **Isotropic:** :math:`\vec{j} = \sigma \vec{e}`, where :math:`\sigma` varies
+      spatially. Thus the input argument *tensor* is a 1D array that provides a
+      :math:`\sigma` value for every cell in the mesh.
+    - **Anisotropic:** :math:`\vec{j} = \Sigma \vec{e}`, where the off-diagonal elements
+      are zero. That is, :math:`\Sigma` is diagonal. In this case, the input argument
+      *tensor* defining the physical properties in each cell is a :class:`numpy.ndarray`
+      of shape (*nCells*, *dim*).
+    - **Tensor:** :math:`\vec{j} = \Sigma \vec{e}`, where off-diagonal elements are
+      non-zero and :math:`\Sigma` is a full tensor. In this case, the input argument
+      *tensor* defining the physical properties in each cell is a :class:`numpy.ndarray`
+      of shape (*nCells*, *nParam*). In 2D, *nParam* = 3 and in 3D, *nParam* = 6.
     """
 
     def __init__(self, mesh, tensor):
@@ -1044,23 +996,6 @@ class TensorType(object):
 def make_property_tensor(mesh, tensor):
     r"""Construct the physical property tensor.
 
-    The relationship between a quantity and its response to external
-    stimuli (e.g. Ohm's law) in each cell can be defined by a scalar
-    function :math:`\sigma` in the isotropic case, or by a tensor
-    :math:`\Sigma` in the anisotropic case, i.e.:
-
-    .. math::
-        \vec{j} = \sigma \vec{e} \;\;\;\;\;\; \textrm{or} \;\;\;\;\;\; \vec{j} = \Sigma \vec{e}
-
-    where
-    
-    .. math::
-        \Sigma = \begin{bmatrix}
-        \sigma_{1} & \sigma_{4} & \sigma_{5} \\
-        \sigma_{4} & \sigma_{2} & \sigma_{6} \\
-        \sigma_{5} & \sigma_{6} & \sigma_{3}
-        \end{bmatrix}
-
     For a given *mesh*, the input parameter *tensor* is a :class:`numpy.ndarray`
     defining the constitutive relationship (e.g. Ohm's law) between two
     discrete vector quantities :math:`\boldsymbol{j}` and
@@ -1068,16 +1003,13 @@ def make_property_tensor(mesh, tensor):
     **make_property_tensor** constructs the property tensor
     :math:`\boldsymbol{M}` for the entire mesh such that:
 
-    .. math::
-        \boldsymbol{j} = \boldsymbol{M \, e}
+    >>> j = M @ e
 
     where the Cartesian components of the discrete vector for
     are organized according to:
 
-    .. math::
-        \begin{bmatrix} \boldsymbol{j_x} \\ \boldsymbol{j_y} \\ \boldsymbol{j_z} \end{bmatrix} \;\;\; \textrm{and} \;\;\;
-        \begin{bmatrix} \boldsymbol{e_x} \\ \boldsymbol{e_y} \\ \boldsymbol{e_z} \end{bmatrix}
-    
+    >>> e = np.r_[ex, ey, ez]
+    >>> j = np.r_[jx, jy, jz]
 
     Parameters
     ----------
@@ -1087,15 +1019,37 @@ def make_property_tensor(mesh, tensor):
 
         - *Scalar:* A float is entered.
         - *Isotropic:* A 1D numpy.ndarray with a property value for every cell.
-        - *Anisotropic:* A numpy.ndarray of shape (*nCell*, *dim*) where each row defines the diagonal-anisotropic property parameters for each cell. *nParam* = 2 for 2D meshes and *nParam* = 3 for 3D meshes.
-        - *Tensor:* A numpy.ndarray of shape (*nCell*, *nParam*) where each row defines the full anisotropic property parameters for each cell. *nParam* = 3 for 2D meshes and *nParam* = 6 for 3D meshes.
+        - *Anisotropic:* A (*nCell*, *dim*) numpy.ndarray where each row
+          defines the diagonal-anisotropic property parameters for each cell.
+          *nParam* = 2 for 2D meshes and *nParam* = 3 for 3D meshes.
+        - *Tensor:* A (*nCell*, *nParam*) numpy.ndarray where each row defines
+          the full anisotropic property parameters for each cell. *nParam* = 3 for 2D
+          meshes and *nParam* = 6 for 3D meshes.
 
     Returns
     -------
-    sparse.coo.coo_matrix
+    (dim * n_cells, dim * n_cells) scipy.sparse.coo_matrix
         The property tensor.
-    
-    
+
+    Notes
+    -----
+    The relationship between a quantity and its response to external
+    stimuli (e.g. Ohm's law) in each cell can be defined by a scalar
+    function :math:`\sigma` in the isotropic case, or by a tensor
+    :math:`\Sigma` in the anisotropic case, i.e.:
+
+    .. math::
+        \vec{j} = \sigma \vec{e} \;\;\;\;\;\; \textrm{or} \;\;\;\;\;\; \vec{j} = \Sigma \vec{e}
+
+    where
+
+    .. math::
+        \Sigma = \begin{bmatrix}
+        \sigma_{xx} & \sigma_{xy} & \sigma_{xz} \\
+        \sigma_{xy} & \sigma_{yy} & \sigma_{yz} \\
+        \sigma_{xz} & \sigma_{yz} & \sigma_{zz}
+        \end{bmatrix}
+
     Examples
     --------
 
@@ -1104,10 +1058,13 @@ def make_property_tensor(mesh, tensor):
     example, note the following:
 
         - The dimensions for all property tensors are the same
-        - All property tensors, except in the case of full anisotropy are diagonal sparse matrices
+        - All property tensors, except in the case of full anisotropy are diagonal
+          sparse matrices
         - For the scalar case, the non-zero elements are equal
-        - For the isotropic case, the non-zero elements repreat in order for the x, y (and z) components
-        - For the anisotropic case (diagonal anisotropy), the non-zero elements do not repeat
+        - For the isotropic case, the non-zero elements repreat in order for the x, y
+          (and z) components
+        - For the anisotropic case (diagonal anisotropy), the non-zero elements do not
+          repeat
         - For the tensor caes (full anisotropy), there are off-diagonal components
 
     >>> from discretize.utils import make_property_tensor
@@ -1115,45 +1072,44 @@ def make_property_tensor(mesh, tensor):
     >>> import numpy as np
     >>> import matplotlib.pyplot as plt
     >>> import matplotlib as mpl
-    >>> 
-    >>> np.random.seed(31)
-    >>> 
-    >>> # Define a 2D tensor mesh
+
+    Define a 2D tensor mesh
+
     >>> h = [1., 1., 1.]
     >>> mesh = TensorMesh([h, h], origin='00')
-    >>> 
-    >>> # Define a physical property for all cases (2D)
+
+    Define a physical property for all cases (2D)
+
     >>> sigma_scalar = 4.
     >>> sigma_isotropic = np.random.randint(1, 10, mesh.nC)
     >>> sigma_anisotropic = np.random.randint(1, 10, (mesh.nC, 2))
     >>> sigma_tensor = np.random.randint(1, 10, (mesh.nC, 3))
-    >>> 
-    >>> # Construct the property tensor in each case
+
+    Construct the property tensor in each case
+
     >>> M_scalar = make_property_tensor(mesh, sigma_scalar)
     >>> M_isotropic = make_property_tensor(mesh, sigma_isotropic)
     >>> M_anisotropic = make_property_tensor(mesh, sigma_anisotropic)
     >>> M_tensor = make_property_tensor(mesh, sigma_tensor)
-    >>> 
+
+    Plot the property tensors.
+
     >>> M_list = [M_scalar, M_isotropic, M_anisotropic, M_tensor]
     >>> case_list = ['Scalar', 'Isotropic', 'Anisotropic', 'Full Tensor']
     >>> ax1 = 4*[None]
-    >>> 
-    >>> # Plot the property tensors.
     >>> fig = plt.figure(figsize=(15, 4))
     >>> for ii in range(0, 4):
-    >>>     ax1[ii] = fig.add_axes([0.05+0.22*ii, 0.05, 0.18, 0.9])
-    >>>     ax1[ii].imshow(
-    >>>         M_list[ii].todense(), interpolation='none', cmap='binary', vmax=10.
-    >>>     )
-    >>>     ax1[ii].set_title(case_list[ii], fontsize=24)
-    >>> 
+    ...     ax1[ii] = fig.add_axes([0.05+0.22*ii, 0.05, 0.18, 0.9])
+    ...     ax1[ii].imshow(
+    ...         M_list[ii].todense(), interpolation='none', cmap='binary', vmax=10.
+    ...     )
+    ...     ax1[ii].set_title(case_list[ii], fontsize=24)
     >>> ax2 = fig.add_axes([0.92, 0.15, 0.01, 0.7])
     >>> norm = mpl.colors.Normalize(vmin=0., vmax=10.)
     >>> cbar = mpl.colorbar.ColorbarBase(
-    >>>     ax2, norm=norm, orientation="vertical", cmap=mpl.cm.binary
-    >>> )
-
-
+    ...     ax2, norm=norm, orientation="vertical", cmap=mpl.cm.binary
+    ... )
+    >>> plt.show()
     """
     if tensor is None:  # default is ones
         tensor = np.ones(mesh.nC)
@@ -1192,23 +1148,6 @@ def make_property_tensor(mesh, tensor):
 def inverse_property_tensor(mesh, tensor, return_matrix=False, **kwargs):
     r"""Construct the inverse of the physical property tensor.
 
-    The relationship between a quantity and its response to external
-    stimuli (e.g. Ohm's law) in each cell can be defined by the reciprocal
-    of a scalar :math:`\sigma` in the isotropic case, or by the inverse
-    of a tensor :math:`\Sigma` in the anisotropic case, i.e.:
-
-    .. math::
-        \vec{e} = \sigma^{-1} \vec{j} \;\;\;\;\;\; \textrm{or} \;\;\;\;\;\; \vec{e} = \Sigma^{-1} \vec{j}
-
-    where
-    
-    .. math::
-        \Sigma = \begin{bmatrix}
-        \sigma_{1} & \sigma_{4} & \sigma_{5} \\
-        \sigma_{4} & \sigma_{2} & \sigma_{6} \\
-        \sigma_{5} & \sigma_{6} & \sigma_{3}
-        \end{bmatrix}
-
     For a given *mesh*, the input parameter *tensor* is a :class:`numpy.ndarray`
     defining the constitutive relationship (e.g. Ohm's law) between two
     discrete vector quantities :math:`\boldsymbol{j}` and
@@ -1217,16 +1156,13 @@ def inverse_property_tensor(mesh, tensor, return_matrix=False, **kwargs):
     explicitly constructs the inverse of the physical
     property tensor :math:`\boldsymbol{M^{-1}}` for all cells such that:
 
-    .. math::
-        \boldsymbol{e} = \boldsymbol{M^{-1} \, j}
-    
+    >>> e = Mi @ j
+
     where the Cartesian components of the discrete vectors are
     organized according to:
 
-    .. math::
-        \begin{bmatrix} \boldsymbol{j_x} \\ \boldsymbol{j_y} \\ \boldsymbol{j_z} \end{bmatrix} \;\;\; \textrm{and} \;\;\;
-        \begin{bmatrix} \boldsymbol{e_x} \\ \boldsymbol{e_y} \\ \boldsymbol{e_z} \end{bmatrix}
-    
+    >>> j = np.r_[jx, jy, jz]
+    >>> e = np.r_[ex, ey, ez]
 
     Parameters
     ----------
@@ -1236,25 +1172,52 @@ def inverse_property_tensor(mesh, tensor, return_matrix=False, **kwargs):
 
         - *Scalar:* A float is entered.
         - *Isotropic:* A 1D numpy.ndarray with a property value for every cell.
-        - *Anisotropic:* A numpy.ndarray of shape (*nCell*, *dim*) where each row defines the diagonal-anisotropic property parameters for each cell. *nParam* = 2 for 2D meshes and *nParam* = 3 for 3D meshes.
-        - *Tensor:* A numpy.ndarray of shape (*nCell*, *nParam*) where each row defines the full anisotropic property parameters for each cell. *nParam* = 3 for 2D meshes and *nParam* = 6 for 3D meshes.
+        - *Anisotropic:* A (*nCell*, *dim*) numpy.ndarray where each row
+          defines the diagonal-anisotropic property parameters for each cell.
+          *nParam* = 2 for 2D meshes and *nParam* = 3 for 3D meshes.
+        - *Tensor:* A (*nCell*, *nParam*) numpy.ndarray where each row defines
+          the full anisotropic property parameters for each cell. *nParam* = 3 for 2D
+          meshes and *nParam* = 6 for 3D meshes.
 
-    return_matrix : bool (default=False)
-    
+    return_matrix : bool, optional
+
         - *True:* the function returns the inverse of the property tensor.
-        - *False:* the function returns the non-zero elements of the inverse of the property tensor in a numpy.ndarray in the same order as the input argument *tensor*.
+        - *False:* the function returns the non-zero elements of the inverse of the
+          property tensor in a numpy.ndarray in the same order as the input argument
+          *tensor*.
 
     Returns
     -------
-    numpy.ndarray or sparse.coo.coo_matrix
-    
-        - If *return_matrix* = *False*, the function outputs the parameters defining the inverse of the property tensor in a numpy.ndarray with the same dimensions as the input argument *tensor*
-        - If *return_natrix* = *True*, the function outputs the inverse of the property tensor as a *sparse.coo.coo_matrix*.
+    numpy.ndarray or scipy.sparse.coo_matrix
 
+        - If *return_matrix* = *False*, the function outputs the parameters defining the
+          inverse of the property tensor in a numpy.ndarray with the same dimensions as
+          the input argument *tensor*
+        - If *return_natrix* = *True*, the function outputs the inverse of the property
+          tensor as a *scipy.sparse.coo_matrix*.
+
+    Notes
+    -----
+    The relationship between a quantity and its response to external
+    stimuli (e.g. Ohm's law) in each cell can be defined by a scalar
+    function :math:`\sigma` in the isotropic case, or by a tensor
+    :math:`\Sigma` in the anisotropic case, i.e.:
+
+    .. math::
+        \vec{j} = \sigma \vec{e} \;\;\;\;\;\; \textrm{or} \;\;\;\;\;\;
+        \vec{j} = \Sigma \vec{e}
+
+    where
+
+    .. math::
+        \Sigma = \begin{bmatrix}
+        \sigma_{xx} & \sigma_{xy} & \sigma_{xz} \\
+        \sigma_{xy} & \sigma_{yy} & \sigma_{yz} \\
+        \sigma_{xz} & \sigma_{yz} & \sigma_{zz}
+        \end{bmatrix}
 
     Examples
     --------
-
     For the 4 classifications allowable (scalar, isotropic, anistropic and tensor),
     we construct the property tensor on a small 2D mesh. We then construct the
     inverse of the property tensor and compare.
@@ -1264,68 +1227,68 @@ def inverse_property_tensor(mesh, tensor, return_matrix=False, **kwargs):
     >>> import numpy as np
     >>> import matplotlib.pyplot as plt
     >>> import matplotlib as mpl
-    >>> 
-    >>> np.random.seed(31)
-    >>> 
+
     >>> # Define a 2D tensor mesh
     >>> h = [1., 1., 1.]
     >>> mesh = TensorMesh([h, h], origin='00')
-    >>> 
-    >>> # Define a physical property for all cases (2D)
+
+    Define a physical property for all cases (2D)
+
     >>> sigma_scalar = 4.
     >>> sigma_isotropic = np.random.randint(1, 10, mesh.nC)
     >>> sigma_anisotropic = np.random.randint(1, 10, (mesh.nC, 2))
     >>> sigma_tensor = np.random.randint(1, 10, (mesh.nC, 3))
-    >>> 
-    >>> # Construct the property tensor in each case
+
+    Construct the property tensor in each case
+
     >>> M_scalar = make_property_tensor(mesh, sigma_scalar)
     >>> M_isotropic = make_property_tensor(mesh, sigma_isotropic)
     >>> M_anisotropic = make_property_tensor(mesh, sigma_anisotropic)
     >>> M_tensor = make_property_tensor(mesh, sigma_tensor)
-    >>> 
-    >>> # Construct the inverse property tensor in each case
+
+    Construct the inverse property tensor in each case
+
     >>> Minv_scalar = inverse_property_tensor(mesh, sigma_scalar, return_matrix=True)
     >>> Minv_isotropic = inverse_property_tensor(mesh, sigma_isotropic, return_matrix=True)
     >>> Minv_anisotropic = inverse_property_tensor(mesh, sigma_anisotropic, return_matrix=True)
     >>> Minv_tensor = inverse_property_tensor(mesh, sigma_tensor, return_matrix=True)
-    >>> 
+
+    Plot the property tensors.
     >>> # Lists for plotting
     >>> M_list = [M_scalar, M_isotropic, M_anisotropic, M_tensor]
     >>> Minv_list = [Minv_scalar, Minv_isotropic, Minv_anisotropic, Minv_tensor]
     >>> case_list = ['Scalar', 'Isotropic', 'Anisotropic', 'Full Tensor']
-    >>> 
-    >>> # Plot the property tensors.
     >>> fig1 = plt.figure(figsize=(15, 4))
     >>> ax1 = 4*[None]
     >>> for ii in range(0, 4):
-    >>>     ax1[ii] = fig1.add_axes([0.05+0.22*ii, 0.05, 0.18, 0.9])
-    >>>     ax1[ii].imshow(
-    >>>         M_list[ii].todense(), interpolation='none', cmap='binary', vmax=10.
-    >>>     )
-    >>>     ax1[ii].set_title('$M$ (' + case_list[ii] + ')', fontsize=24)
-    >>> 
+    ...     ax1[ii] = fig1.add_axes([0.05+0.22*ii, 0.05, 0.18, 0.9])
+    ...     ax1[ii].imshow(
+    ...         M_list[ii].todense(), interpolation='none', cmap='binary', vmax=10.
+    ...     )
+    ...     ax1[ii].set_title('$M$ (' + case_list[ii] + ')', fontsize=24)
     >>> cax1 = fig1.add_axes([0.92, 0.15, 0.01, 0.7])
     >>> norm1 = mpl.colors.Normalize(vmin=0., vmax=10.)
     >>> cbar1 = mpl.colorbar.ColorbarBase(
-    >>>     cax1, norm=norm1, orientation="vertical", cmap=mpl.cm.binary
-    >>> )
-    >>> 
-    >>> # Plot the inverse property tensors.
+    ...     cax1, norm=norm1, orientation="vertical", cmap=mpl.cm.binary
+    ... )
+    >>> plt.show()
+
+    Plot the inverse property tensors.
+
     >>> fig2 = plt.figure(figsize=(15, 4))
     >>> ax2 = 4*[None]
     >>> for ii in range(0, 4):
-    >>>     ax2[ii] = fig2.add_axes([0.05+0.22*ii, 0.05, 0.18, 0.9])
-    >>>     ax2[ii].imshow(
-    >>>         Minv_list[ii].todense(), interpolation='none', cmap='binary', vmax=1.
-    >>>     )
-    >>>     ax2[ii].set_title('$M^{-1}$ (' + case_list[ii] + ')', fontsize=24)
-    >>> 
+    ...     ax2[ii] = fig2.add_axes([0.05+0.22*ii, 0.05, 0.18, 0.9])
+    ...     ax2[ii].imshow(
+    ...         Minv_list[ii].todense(), interpolation='none', cmap='binary', vmax=1.
+    ...     )
+    ...     ax2[ii].set_title('$M^{-1}$ (' + case_list[ii] + ')', fontsize=24)
     >>> cax2 = fig2.add_axes([0.92, 0.15, 0.01, 0.7])
     >>> norm2 = mpl.colors.Normalize(vmin=0., vmax=1.)
     >>> cbar2 = mpl.colorbar.ColorbarBase(
-    >>>     cax2, norm=norm2, orientation="vertical", cmap=mpl.cm.binary
-    >>> )
-
+    ...     cax2, norm=norm2, orientation="vertical", cmap=mpl.cm.binary
+    ... )
+    >>> plt.show()
     """
 
     if "returnMatrix" in kwargs:
@@ -1378,12 +1341,34 @@ class Zero(object):
     """Carries out arithmetic operations between 0 and arbitrary quantities.
 
     This class was designed to manage basic arithmetic operations between
-    0 and :class:`numpy.ndarray` of any shape.
+    0 and :class:`numpy.ndarray` of any shape. It is a short circuiting evaluation that
+    will return the expected values.
 
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from discretize.utils import Zero
+    >>> Z = Zero()
+    >>> Z
+    Zero
+    >>> x = np.arange(5)
+    >>> x + Z
+    array([0, 1, 2, 3, 4])
+    >>> Z - x
+    array([ 0, -1, -2, -3, -4])
+    >>> Z * x
+    Zero
+    >>> Z @ x
+    Zero
+    >>> Z[0]
+    Zero
     """
 
     __numpy_ufunc__ = True
     __array_ufunc__ = None
+
+    def __repr__(self):
+        return "Zero"
 
     def __add__(self, v):
         return v
@@ -1480,9 +1465,32 @@ class Zero(object):
 class Identity(object):
     """Carries out arithmetic operations involving the identity.
 
-    This class was designed to manage basic arithmetic operations
-    between the identity matrix and :class:`numpy.ndarray` of any shape.
+    This class was designed to manage basic arithmetic operations between the identity
+    matrix and :class:`numpy.ndarray` of any shape. It is a short circuiting evaluation
+    that will return the expected values.
 
+    Parameters
+    ----------
+    positive : bool, optional
+        Whether it is a positive (or negative) Identity matrix
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from discretize.utils import Identity, Zero
+    >>> Z = Zero()
+    >>> I = Identity()
+    >>> x = np.arange(5)
+    >>> x + I
+    array([1, 2, 3, 4, 5])
+    >>> I - x
+    array([ 1, 0, -1, -2, -3])
+    >>> I * x
+    array([0, 1, 2, 3, 4])
+    >>> I @ x
+    array([0, 1, 2, 3, 4])
+    >>> I @ Z
+    Zero
     """
 
     __numpy_ufunc__ = True
@@ -1492,6 +1500,12 @@ class Identity(object):
 
     def __init__(self, positive=True):
         self._positive = positive
+
+    def __repr__(self):
+        if self._positive:
+            return "I"
+        else:
+            return "-I"
 
     def __pos__(self):
         return self
