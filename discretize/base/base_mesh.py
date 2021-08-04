@@ -405,7 +405,6 @@ class BaseMesh:
         Notes
         -----
         Property also accessible as using the shorthand **nEx**
-
         """
         return int(np.prod([x + y for x, y in zip(self.shape_cells, (0, 1, 1))]))
 
@@ -424,7 +423,6 @@ class BaseMesh:
         Notes
         -----
         Property also accessible as using the shorthand **nEy**
-
         """
         if self.dim < 2:
             return None
@@ -445,7 +443,6 @@ class BaseMesh:
         Notes
         -----
         Property also accessible as using the shorthand **nEz**
-
         """
         if self.dim < 3:
             return None
@@ -495,7 +492,6 @@ class BaseMesh:
         Notes
         -----
         Property also accessible as using the shorthand **nE**
-
         """
         n = self.n_edges_x
         if self.dim > 1:
@@ -606,7 +602,6 @@ class BaseMesh:
         Notes
         -----
         Property also accessible as using the shorthand **nF**
-
         """
         n = self.n_faces_x
         if self.dim > 1:

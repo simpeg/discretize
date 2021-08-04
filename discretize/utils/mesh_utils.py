@@ -58,7 +58,7 @@ def random_model(shape, seed=None, anisotropy=None, its=100, bounds=None):
 
     >>> fig = plt.figure(figsize=(5, 4))
     >>> ax = plt.subplot(111)
-    >>> im, = mesh.plot_image(model, grid=False, ax=ax1, clim=[vmin, vmax])
+    >>> im, = mesh.plot_image(model, grid=False, ax=ax, clim=[vmin, vmax])
     >>> cbar = plt.colorbar(im)
     >>> ax.set_title('Random Tensor Model')
     >>> plt.show()

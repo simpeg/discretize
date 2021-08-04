@@ -46,7 +46,7 @@ class TensorMesh(
 
         For each dimension (x, y or z), The user may set the origin 2 ways:
 
-        - a ``scalar_like`` which explicitly defines origin along that dimension.
+        - a ``scalar`` which explicitly defines origin along that dimension.
         - **{'0', 'C', 'N'}** a :class:`str` specifying whether the zero coordinate along
           each axis is the first node location ('0'), in the center ('C') or the last
           node location ('N') (see Examples).
@@ -65,26 +65,22 @@ class TensorMesh(
 
     >>> from discretize import TensorMesh
     >>> import matplotlib.pyplot as plt
-    >>>
+
     >>> ncx = 10      # number of core mesh cells in x
     >>> dx = 5        # base cell width x
     >>> npad_x = 3    # number of padding cells in x
     >>> exp_x = 1.25  # expansion rate of padding cells in x
-    >>>
     >>> ncy = 24      # total number of mesh cells in y
     >>> dy = 5        # base cell width y
-    >>>
+
     >>> hx = [(dx, npad_x, -exp_x), (dx, ncx), (dx, npad_x, exp_x)]
     >>> hy = dy * np.ones(ncy)
-    >>>
     >>> mesh = TensorMesh([hx, hy], origin='CN')
-    >>>
+
     >>> fig = plt.figure(figsize=(5,5))
     >>> ax = fig.add_subplot(111)
     >>> mesh.plot_grid(ax=ax)
     >>> plt.show()
-
-
     """
 
     _meshType = "TENSOR"
@@ -173,11 +169,12 @@ class TensorMesh(
 
         Returns
         -------
-        np.ndarray (n_cells,)
+        (n_cells) numpy.ndarray
             The quantity returned depends on the dimensions of the mesh:
-                - *1D:* Returns the cell widths
-                - *2D:* Returns the cell areas
-                - *3D:* Returns the cell volumes
+
+            - *1D:* Returns the cell widths
+            - *2D:* Returns the cell areas
+            - *3D:* Returns the cell volumes
 
         """
         if getattr(self, "_cell_volumes", None) is None:
@@ -202,11 +199,12 @@ class TensorMesh(
 
         Returns
         -------
-        np.ndarray (n_faces_x,)
+        (n_faces_x) numpy.ndarray
             The quantity returned depends on the dimensions of the mesh:
-                - *1D:* Numpy array of ones whose length is equal to the number of nodes
-                - *2D:* Areas of x-faces (equivalent to the lengths of y-edges)
-                - *3D:* Areas of x-faces
+
+            - *1D:* Numpy array of ones whose length is equal to the number of nodes
+            - *2D:* Areas of x-faces (equivalent to the lengths of y-edges)
+            - *3D:* Areas of x-faces
         """
         if getattr(self, "_face_x_areas", None) is None:
             # Ensure that we are working with column vectors
@@ -233,11 +231,12 @@ class TensorMesh(
 
         Returns
         -------
-        np.ndarray (n_faces_y,)
+        (n_faces_y) numpy.ndarray
             The quantity returned depends on the dimensions of the mesh:
-                - *1D:* N/A since 1D meshes do not have y-faces
-                - *2D:* Areas of y-faces (equivalent to the lengths of x-edges)
-                - *3D:* Areas of y-faces
+
+            - *1D:* N/A since 1D meshes do not have y-faces
+            - *2D:* Areas of y-faces (equivalent to the lengths of x-edges)
+            - *3D:* Areas of y-faces
         """
         if getattr(self, "_face_y_areas", None) is None:
             # Ensure that we are working with column vectors
@@ -264,11 +263,12 @@ class TensorMesh(
 
         Returns
         -------
-        np.ndarray (n_faces_z,)
+        (n_faces_z) numpy.ndarray
             The quantity returned depends on the dimensions of the mesh:
-                - *1D:* N/A since 1D meshes do not have z-faces
-                - *2D:* N/A since 2D meshes do not have z-faces
-                - *3D:* Areas of z-faces
+
+            - *1D:* N/A since 1D meshes do not have z-faces
+            - *2D:* N/A since 2D meshes do not have z-faces
+            - *3D:* Areas of z-faces
         """
         if getattr(self, "_face_z_areas", None) is None:
             # Ensure that we are working with column vectors
@@ -293,11 +293,12 @@ class TensorMesh(
 
         Returns
         -------
-        np.ndarray (n_faces,)
+        (n_faces) numpy.ndarray
             The length of the quantity returned depends on the dimensions of the mesh:
-                - *1D:* returns the x-face areas
-                - *2D:* returns the x-face and y-face areas in order; i.e. y-edge and x-edge lengths, respectively
-                - *3D:* returns the x, y and z-face areas in order
+
+            - *1D:* returns the x-face areas
+            - *2D:* returns the x-face and y-face areas in order; i.e. y-edge and x-edge lengths, respectively
+            - *3D:* returns the x, y and z-face areas in order
         """
         if self.dim == 1:
             return self.face_x_areas
@@ -315,7 +316,7 @@ class TensorMesh(
 
         Returns
         -------
-        np.ndarray (n_edges_x,)
+        (n_edges_x) numpy.ndarray
             X-edge lengths
         """
         if getattr(self, "_edge_x_lengths", None) is None:
@@ -344,11 +345,12 @@ class TensorMesh(
 
         Returns
         -------
-        np.ndarray (n_edges_y,)
+        (n_edges_y) numpy.ndarray
             The quantity returned depends on the dimensions of the mesh:
-                - *1D:* N/A since 1D meshes do not have y-edges
-                - *2D:* Returns y-edge lengths
-                - *3D:* Returns y-edge lengths
+
+            - *1D:* N/A since 1D meshes do not have y-edges
+            - *2D:* Returns y-edge lengths
+            - *3D:* Returns y-edge lengths
         """
         if getattr(self, "_edge_y_lengths", None) is None:
             # Ensure that we are working with column vectors
@@ -376,11 +378,12 @@ class TensorMesh(
 
         Returns
         -------
-        np.ndarray (n_edges_z,)
+        (n_edges_z) numpy.ndarray
             The quantity returned depends on the dimensions of the mesh:
-                - *1D:* N/A since 1D meshes do not have z-edges
-                - *2D:* N/A since 2D meshes do not have z-edges
-                - *3D:* Returns z-edge lengths
+
+            - *1D:* N/A since 1D meshes do not have z-edges
+            - *2D:* N/A since 2D meshes do not have z-edges
+            - *3D:* Returns z-edge lengths
         """
         if getattr(self, "_edge_z_lengths", None) is None:
             # Ensure that we are working with column vectors
@@ -407,11 +410,12 @@ class TensorMesh(
 
         Returns
         -------
-        np.ndarray (n_edges,)
+        (n_edges) numpy.ndarray
             The length of the quantity returned depends on the dimensions of the mesh:
-                - *1D:* returns the x-edge lengths
-                - *2D:* returns the x-edge and y-edge lengths in order
-                - *3D:* returns the x, y and z-edge lengths in order
+
+            - *1D:* returns the x-edge lengths
+            - *2D:* returns the x-edge and y-edge lengths in order
+            - *3D:* returns the x, y and z-edge lengths in order
         """
         if self.dim == 1:
             return self.edge_x_lengths
@@ -449,14 +453,15 @@ class TensorMesh(
 
         Returns
         -------
-        list of numpy.ndarray
+        (dim * 2) list of numpy.ndarray of bool
             The length of list returned depends on the dimension of the mesh.
             And the length of each array containing the indices depends on the
             number of faces in each direction. For 1D, 2D and 3D
             tensor meshes, the returns take the following form:
-                - *1D:* returns [ind_Bx1, ind_Bx2]
-                - *2D:* returns [ind_Bx1, ind_Bx2, ind_By1, ind_By2]
-                - *3D:* returns [ind_Bx1, ind_Bx2, ind_By1, ind_By2, ind_Bz1, ind_Bz2]
+
+            - *1D:* returns [ind_Bx1, ind_Bx2]
+            - *2D:* returns [ind_Bx1, ind_Bx2, ind_By1, ind_By2]
+            - *3D:* returns [ind_Bx1, ind_Bx2, ind_By1, ind_By2, ind_Bz1, ind_Bz2]
 
         Examples
         --------
@@ -467,14 +472,16 @@ class TensorMesh(
         >>> from discretize import TensorMesh
         >>> import numpy as np
         >>> import matplotlib.pyplot as plt
-        >>>
+
         >>> hx = [1, 1, 1, 1]
         >>> hy = [2, 2, 2]
-        >>>
         >>> mesh = TensorMesh([hx, hy])
-        >>> mesh.plot_grid()
-        >>>
         >>> ind_Bx1, ind_Bx2, ind_By1, ind_By2 = mesh.face_boundary_indices
+
+        >>> ax = plt.subplot(111)
+        >>> mesh.plot_grid(ax=ax)
+        >>> ax.scatter(*mesh.faces_x[ind_Bx1].T)
+        >>> plt.show()
         """
         if self.dim == 1:
             indxd = self.gridFx == min(self.gridFx)
@@ -522,14 +529,15 @@ class TensorMesh(
 
         Returns
         -------
-        list of numpy.ndarray of bool
+        (2 * dim) list of numpy.ndarray of bool
             The length of list returned depends on the dimension of the mesh (= 2 x dim).
             And the length of each array containing the indices is equal to
             the number of cells in the mesh. For 1D, 2D and 3D
             tensor meshes, the returns take the following form:
-                - *1D:* returns [ind_Bx1, ind_Bx2]
-                - *2D:* returns [ind_Bx1, ind_Bx2, ind_By1, ind_By2]
-                - *3D:* returns [ind_Bx1, ind_Bx2, ind_By1, ind_By2, ind_Bz1, ind_Bz2]
+
+            - *1D:* returns [ind_Bx1, ind_Bx2]
+            - *2D:* returns [ind_Bx1, ind_Bx2, ind_By1, ind_By2]
+            - *3D:* returns [ind_Bx1, ind_Bx2, ind_By1, ind_By2, ind_Bz1, ind_Bz2]
 
         Examples
         --------
@@ -540,14 +548,16 @@ class TensorMesh(
         >>> from discretize import TensorMesh
         >>> import numpy as np
         >>> import matplotlib.pyplot as plt
-        >>>
+
         >>> hx = [1, 1, 1, 1]
         >>> hy = [2, 2, 2]
-        >>>
         >>> mesh = TensorMesh([hx, hy])
-        >>> mesh.plot_grid()
-        >>>
         >>> ind_Bx1, ind_Bx2, ind_By1, ind_By2 = mesh.cell_boundary_indices
+
+        >>> ax = plt.subplot(111)
+        >>> mesh.plot_grid(ax=ax)
+        >>> ax.scatter(*mesh.cell_centers[ind_Bx1].T)
+        >>> plt.show()
         """
         if self.dim == 1:
             indxd = self.gridCC == min(self.gridCC)

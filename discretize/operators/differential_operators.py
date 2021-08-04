@@ -1062,7 +1062,7 @@ class DiffOperators(object):
 
             laplace_phi = Ln @ phi
 
-        The operator *assumes a zero Neumann boundary condition for the discrete
+        The operator ``*`` assumes a zero Neumann boundary condition for the discrete
         scalar quantity. Once constructed, the operator is stored permanently as
         a property of the mesh.
 
@@ -2168,7 +2168,7 @@ class DiffOperators(object):
             to the number of boundary faces.
         beta : scalar or (n_boundary_faces) array_like
             Defines :math:`\beta` for Robin boundary condition. Can be defined as a
-            scalar or array_like. If array_like, must have the same length as *alpha*.
+            scalar or array_like. If array_like, must have the same length as *alpha* .
         gamma: scalar or (n_boundary_faces) array_like or (n_boundary_faces, n_rhs) array_like
             Defines :math:`\gamma` for Robin boundary condition. If array like, *gamma*
             can have shape (n_boundary_face,). Can also have shape (n_boundary_faces, n_rhs)
@@ -3669,7 +3669,7 @@ class DiffOperators(object):
         >>> fig = plt.figure(figsize=(11, 5))
         >>> ax1 = fig.add_subplot(121)
         >>> v = np.r_[np.zeros(mesh.nFx+mesh.nFy), phi_z]  # create vector for plotting
-        >>> mesh.plot_slic(v, ax=ax1, normal='Y', slice_loc=0, v_type="Fz")
+        >>> mesh.plot_slice(v, ax=ax1, normal='Y', slice_loc=0, v_type="Fz")
         >>> ax1.set_title("Variable at z-faces", fontsize=16)
         >>> ax2 = fig.add_subplot(122)
         >>> mesh.plot_image(phi_c, ax=ax2, normal='Y', slice_loc=0, v_type="CC")
@@ -3706,8 +3706,8 @@ class DiffOperators(object):
 
         Returns
         -------
-        (n_cells, n_faces) scipy.sparse.csr_matrix
-            The scalar averaging operator from faces to cell centers
+        (n_faces, n_cells) scipy.sparse.csr_matrix
+            The scalar averaging operator from cell centers to faces
 
         Notes
         -----
@@ -3733,7 +3733,6 @@ class DiffOperators(object):
         is implemented as a matrix vector product, i.e.::
 
             phi_f = Acf @ phi_c
-
 
         Examples
         --------
@@ -3998,7 +3997,6 @@ class DiffOperators(object):
         is implemented as a matrix vector product, i.e.::
 
             phi_e = Ace @ phi_c
-
 
         Examples
         --------

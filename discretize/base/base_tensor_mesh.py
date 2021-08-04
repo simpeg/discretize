@@ -53,11 +53,12 @@ class BaseTensorMesh(BaseMesh):
 
     origin : (dim) iterable, default: 0
         Define the origin or 'anchor point' of the mesh; i.e. the bottom-left-frontmost
-        corner. By default, the mesh is anchored such that its origin is at *[0, 0, 0]* .
+        corner. By default, the mesh is anchored such that its origin is at
+        ``[0, 0, 0]``.
 
         For each dimension (x, y or z), The user may set the origin 2 ways:
 
-        - a ``scalar_like`` which explicitly defines origin along that dimension.
+        - a ``scalar`` which explicitly defines origin along that dimension.
         - **{'0', 'C', 'N'}** a :class:`str` specifying whether the zero coordinate along
           each axis is the first node location ('0'), in the center ('C') or the last
           node location ('N').
@@ -243,7 +244,6 @@ class BaseTensorMesh(BaseMesh):
         (n_cells_x) numpy.ndarray of float
             A 1D array containing the x-coordinates of the cell centers along
             the x-direction.
-
         """
         nodes = self.nodes_x
         return (nodes[1:] + nodes[:-1]) / 2
@@ -306,8 +306,7 @@ class BaseTensorMesh(BaseMesh):
 
         This property returns a numpy array of shape (n_cells, dim)
         containing gridded cell center locations for all cells in the
-        mesh. The first row corresponds to the bottom-front-leftmost cell.
-        The cells are ordered along the x, then y, then z directions.
+        mesh. The cells are ordered along the x, then y, then z directions.
 
         Returns
         -------
@@ -347,8 +346,7 @@ class BaseTensorMesh(BaseMesh):
 
         This property returns a numpy array of shape (n_nodes, dim)
         containing gridded node locations for all nodes in the
-        mesh. The first row corresponds to the bottom-front-leftmost node.
-        The nodes are ordered along the x, then y, then z directions.
+        mesh. The nodes are ordered along the x, then y, then z directions.
 
         Returns
         -------
@@ -1003,17 +1001,16 @@ class BaseTensorMesh(BaseMesh):
         >>> hx = np.ones(10)
         >>> hy = np.ones(10)
         >>> mesh2D = TensorMesh([hx, hy], x0='CC')
-        >>>
         >>> def fun(x, y):
-        >>>     return np.exp(-(x**2 + y**2)/2**2)
-        >>>
+        ...     return np.exp(-(x**2 + y**2)/2**2)
+
         >>> nodes = mesh2D.nodes
         >>> val_nodes = fun(nodes[:, 0], nodes[:, 1])
         >>> centers = mesh2D.cell_centers
         >>> val_centers = fun(centers[:, 0], centers[:, 1])
-        >>>
         >>> A = mesh2D.get_interpolation_matrix(centers, 'nodes')
         >>> val_interp = A.dot(val_nodes)
+
         >>> fig = plt.figure(figsize=(11,3.3))
         >>> clim = (0., 1.)
         >>> ax1 = fig.add_subplot(131)
@@ -1068,8 +1065,8 @@ class BaseTensorMesh(BaseMesh):
 
         Returns
         -------
-        scipy.sparse.csr_matrix
-            M, the inner product matrix (nF, nF)
+        (n_faces, n_faces) scipy.sparse.csr_matrix
+            M, the inner product matrix
 
         """
         projection_type = projection_type[0].upper()
