@@ -327,8 +327,7 @@ intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
     "numpy": ("https://docs.scipy.org/doc/numpy/", None),
     "scipy": ("https://docs.scipy.org/doc/scipy/reference/", None),
-    "matplotlib": ("https://matplotlib.org/", None),
-    "properties": ("https://propertiespy.readthedocs.io/en/latest/", None),
+    "matplotlib": ("https://matplotlib.org/stable", None),
     "pyvista": ("http://docs.pyvista.org/", None),
 }
 numpydoc_xref_param_type = True
