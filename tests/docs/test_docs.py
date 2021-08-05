@@ -15,7 +15,7 @@ class Doc_Test(unittest.TestCase):
         os.chdir(os.path.sep.join(self.path_to_docs))
 
         if platform.system() != "Windows":
-            response = subprocess.run(["make", "html-noplot"])
+            response = subprocess.run(["make", "html"])
             self.assertTrue(response.returncode == 0)
         else:
             response = subprocess.call(["make", "html"], shell=True)
@@ -28,7 +28,7 @@ class Doc_Test(unittest.TestCase):
         os.chdir(os.path.sep.join(self.path_to_docs))
 
         if platform.system() != "Windows":
-            response = subprocess.run(["make", "linkcheck-noplot"])
+            response = subprocess.run(["make", "linkcheck"])
             self.assertTrue(response.returncode == 0)
         else:
             response = subprocess.call(["make", "linkcheck"], shell=True)
