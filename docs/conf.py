@@ -173,8 +173,33 @@ try:
             {"name": "SimPEG", "url": "https://simpeg.xyz"},
             {"name": "Contact", "url": "http://slack.simpeg.xyz"}
         ],
-        "github_url": "https://github.com/simpeg/discretize",
-        "twitter_url": "https://twitter.com/simpegpy",
+        "icon_links": [
+            {
+                "name": "GitHub",
+                "url": "https://github.com/simpeg/discretize",
+                "icon": "fab fa-github",
+            },
+            {
+                "name": "Slack",
+                "url": "http://slack.simpeg.xyz/",
+                "icon": "fab fa-slack",
+            },
+            {
+                "name": "Discourse",
+                "url": "https://simpeg.discourse.group/",
+                "icon": "fab fa-discourse",
+            },
+            {
+                "name": "Youtube",
+                "url": "https://www.youtube.com/c/geoscixyz",
+                "icon": "fab fa-youtube",
+            },
+            {
+                "name": "Twitter",
+                "url": "https://twitter.com/simpegpy",
+                "icon": "fab fa-twitter",
+            },
+        ],
         "use_edit_page_button": False,
     }
     html_logo = "images/logo-block.ico"

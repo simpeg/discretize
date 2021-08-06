@@ -179,7 +179,13 @@ def deprecate_property(new_name, old_name, removal_version=None):
         warnings.warn(message, DeprecationWarning)
         setattr(self, new_name, other)
 
-    doc = f"`{old_name}` has been deprecated. See `{new_name}` for documentation"
+    doc = f"""
+    `{old_name}` has been deprecated. See `{new_name}` for documentation.
+
+    See Also
+    --------
+    {new_name}
+    """
 
     return property(get_dep, set_dep, None, doc)
 
