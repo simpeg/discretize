@@ -4,6 +4,8 @@
 Getting Started
 ===============
 
+We've included some instructions on getting up and running with ``discretize``.
+
 .. toctree::
   :maxdepth: 2
 

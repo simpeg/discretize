@@ -3,6 +3,8 @@
 ==========
 User Guide
 ==========
+We've included some tutorials and gallery examples that will walk you through using
+discretize to solve your PDE.
 
 Tutorials
 ---------
