@@ -7,6 +7,11 @@
     color: #000000!important;
 }
 
+#navbar-icon-links i.fa, #navbar-icon-links i.fab,
+#navbar-icon-links i.far, #navbar-icon-links i.fas {
+    color: #000000;
+}
+
 body{
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
