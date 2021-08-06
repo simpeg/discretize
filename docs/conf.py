@@ -213,7 +213,7 @@ try:
     html_context = {
         "github_user": "simpeg",
         "github_repo": "discretize",
-        "github_version": "master",
+        "github_version": "main",
         "doc_path": "docs",
     }
 except Exception:
