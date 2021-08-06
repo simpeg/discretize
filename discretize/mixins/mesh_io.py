@@ -487,15 +487,17 @@ class TreeMeshIO(object):
 
         Parameters
         ----------
-        file_name : str or file name
-            full path to the UBC-GIF formatted model file or just its name if directory is specified
+        file_name : str or list of str
+            full path to the UBC-GIF formatted model file or
+            just its name if directory is specified. It can also be a list of file_names.
         directory : str
             directory where the UBC-GIF file lives (optional)
 
         Returns
         -------
-        (n_cells) numpy.ndarray
-            The model defined on the mesh
+        (n_cells) numpy.ndarray or dict of [str, (n_cells) numpy.ndarray]
+            The model defined on the mesh. If **file_name** is a ``dict``, it is a
+            dictionary of models indexed by the file names.
         """
 
         if type(file_name) is list:

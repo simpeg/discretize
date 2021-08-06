@@ -126,30 +126,33 @@ class InterfaceVTK(object):
     >>> h2 = np.linspace(.1, .5, 5)
     >>> h3 = np.linspace(.1, .8, 3)
     >>> mesh = discretize.TensorMesh([h1, h2, h3])
-    >>>
-    >>> # Get a VTK data object
+
+    Get a VTK data object
+
     >>> dataset = mesh.to_vtk()
-    >>>
-    >>> # Save this mesh to a VTK file
+
+    Save this mesh to a VTK file
+
     >>> mesh.writeVTK('sample_mesh')
 
     Here, the reference frame of the mesh is rotated. In this case, conversion
     to VTK produces a :class:`pyvista.StructuredGrid` object.
 
-    >>> # Defined a rotated reference frame
     >>> axis_u = (1,-1,0)
     >>> axis_v = (-1,-1,0)
     >>> axis_w = (0,0,1)
     >>> mesh.orientation = np.array([
-    >>>    axis_u,
-    >>>    axis_v,
-    >>>    axis_w
-    >>> ])
-    >>>
-    >>> # Yield the rotated vtkStructuredGrid
+    ...    axis_u,
+    ...    axis_v,
+    ...    axis_w
+    ... ])
+
+    Yield the rotated vtkStructuredGrid
+
     >>> dataset_r = mesh.to_vtk()
-    >>>
-    >>> # or write it out to a VTK format
+
+    or write it out to a VTK format
+
     >>> mesh.writeVTK('sample_rotated')
 
     The two above code snippets produced a :class:`pyvista.RectilinearGrid` and a
@@ -162,7 +165,7 @@ class InterfaceVTK(object):
 
     >>> import pyvista
     >>> pyvista.set_plot_theme('document')
-    >>>
+
     >>> p = pyvista.BackgroundPlotter()
     >>> p.add_mesh(dataset, color='green', show_edges=True)
     >>> p.add_mesh(dataset_r, color='maroon', show_edges=True)
@@ -410,13 +413,10 @@ class InterfaceVTK(object):
 
         Parameters
         ----------
-
         file_name : str
             path to the output vtk file or just its name if directory is specified
-
         directory : str
             directory where the UBC GIF file lives
-
         """
         if not isinstance(vtkUnstructGrid, _vtk.vtkUnstructuredGrid):
             raise RuntimeError(
@@ -447,13 +447,10 @@ class InterfaceVTK(object):
 
         Parameters
         ----------
-
         file_name : str
             path to the output vtk file or just its name if directory is specified
-
         directory : str
             directory where the UBC GIF file lives
-
         """
         if not isinstance(vtkStructGrid, _vtk.vtkStructuredGrid):
             raise RuntimeError(
@@ -485,13 +482,10 @@ class InterfaceVTK(object):
 
         Parameters
         ----------
-
         file_name : str
             path to the output vtk file or just its name if directory is specified
-
         directory : str
             directory where the UBC GIF file lives
-
         """
         if not isinstance(vtkRectGrid, _vtk.vtkRectilinearGrid):
             raise RuntimeError(
@@ -584,7 +578,6 @@ class InterfaceTensorread_vtk(object):
         -------
         discretize.TensorMesh
             A discretize tensor mesh
-
         """
         # Sort information
         hx = np.abs(np.diff(_nps.vtk_to_numpy(vtrGrid.GetXCoordinates())))
@@ -631,16 +624,18 @@ class InterfaceTensorread_vtk(object):
         Parameters
         ----------
         file_name : str
-            full path to the VTK rectilinear file (vtr or xml) containing the mesh (and models)
-            or just the file name if the directory is specified.
+            full path to the VTK rectilinear file (vtr or xml) containing the mesh (and
+            models) or just the file name if the directory is specified.
         directory : str, optional
             directory where the file lives
 
         Returns
         -------
-        tuple organized (discretize.TensorMesh, dict)
-            The fist entry of the tuple is a tensor mesh. The second entry is a dictionary
-            containing the models. The keys correspond to the names of the models.
+        mesh : discretize.TensorMesh
+            The tensor mesh object.
+        model_dict : dict of [str, (n_cells) numpy.ndarray]
+            A dictionary containing the models. The keys correspond to the names of the
+            models.
         """
         fname = os.path.join(directory, file_name)
         # Read the file
