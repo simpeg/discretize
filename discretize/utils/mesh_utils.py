@@ -118,7 +118,7 @@ def unpack_widths(value):
 
     Parameters
     ----------
-    value : list of floats and/or tuples
+    value : list of float and/or tuple
         The list of floats and/or tuples that are to be unpacked
 
     Returns

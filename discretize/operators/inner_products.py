@@ -1494,6 +1494,3 @@ class InnerProducts(object):
         "getEdgeInnerProductDeriv",
         removal_version="1.0.0",
     )
-
-
-InnerProducts.__module__ = "discretize.operators"

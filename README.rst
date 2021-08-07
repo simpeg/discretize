@@ -46,7 +46,7 @@ This package has the following features:
 * access to sparse matrix operators
 * access to derivatives to mesh variables
 
-.. image:: https://raw.githubusercontent.com/simpeg/figures/main/finitevolume/cell-anatomy-tensor.png
+.. image:: https://raw.githubusercontent.com/simpeg/figures/master/finitevolume/cell-anatomy-tensor.png
 
 Currently, discretize supports:
 

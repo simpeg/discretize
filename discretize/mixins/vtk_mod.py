@@ -655,7 +655,3 @@ class InterfaceTensorread_vtk(object):
         return InterfaceTensorread_vtk.read_vtk(
             TensorMesh, file_name, directory=directory
         )
-
-
-InterfaceVTK.__module__ = "discretize.mixins"
-InterfaceTensorread_vtk.__module__ = "discretize.mixins"

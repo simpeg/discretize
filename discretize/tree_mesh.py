@@ -769,6 +769,3 @@ class TreeMesh(
     _cellGradzStencil = deprecate_property(
         "stencil_cell_gradient_z", "_cellGradzStencil", removal_version="1.0.0"
     )
-
-
-TreeMesh.__module__ = "discretize"

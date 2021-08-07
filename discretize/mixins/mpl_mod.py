@@ -2200,7 +2200,7 @@ class Slicer(object):
     ----------
     v : (n_cells) numpy.ndarray
         Data array
-    xslice, yslice, zslice : floats, optional
+    xslice, yslice, zslice : float, optional
         Initial slice locations (in meter);
         defaults to the middle of the volume.
     v_type: {'CC', 'Fx', 'Fy', 'Fz', 'Ex', 'Ey', 'Ez'}
@@ -2209,7 +2209,7 @@ class Slicer(object):
         Which component to show.
     axis : {'xy', 'yx'}
         'xy': horizontal axis is x, vertical axis is y. Reversed otherwise.
-    transparent : 'slider' or list of floats or pairs of floats, optional
+    transparent : 'slider' or list of float or pairs of float, optional
         Values to be removed. E.g. air, water.
         If single value, only exact matches are removed. Pairs are treated as
         ranges. E.g. [0.3, [1, 4], [-np.infty, -10]] removes all values equal
@@ -2648,7 +2648,3 @@ class Slicer(object):
         for element in names:
             if hasattr(self, element):
                 getattr(self, element).remove()
-
-
-InterfaceMPL.__module__ = "discretize.mixins"
-Slicer.__module__ = "discretize.mixins"

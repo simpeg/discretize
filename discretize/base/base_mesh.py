@@ -941,9 +941,6 @@ class BaseMesh:
         self.orientation[2] = value
 
 
-BaseMesh.__module__ = "discretize.base"
-
-
 class BaseRectangularMesh(BaseMesh):
     """
     Base rectangular mesh class for the ``discretize`` package.
@@ -1479,6 +1476,3 @@ class BaseRectangularMesh(BaseMesh):
         if self.dim < 3:
             return None
         return self.shape_nodes[2]
-
-
-BaseRectangularMesh.__module__ = "discretize.base"

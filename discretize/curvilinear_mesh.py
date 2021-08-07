@@ -978,6 +978,3 @@ class CurvilinearMesh(
     edge = deprecate_property("edge_lengths", "edge", removal_version="1.0.0")
     # tangent already deprecated in BaseMesh
     # normals already deprecated in BaseMesh
-
-
-CurvilinearMesh.__module__ = "discretize"

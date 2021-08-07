@@ -239,7 +239,7 @@ class InterfaceOMF(object):
 
         Returns
         -------
-        omf.VolumeElement
+        omf.volume.VolumeElement
         """
         # TODO: mesh.validate()
         converters = {
@@ -289,7 +289,7 @@ class InterfaceOMF(object):
 
         Parameters
         ----------
-        element : omf.VolumeElement
+        element : omf.volume.VolumeElement
             The open mining format volume element object
 
         Returns
@@ -316,5 +316,3 @@ class InterfaceOMF(object):
             )
         # Convert the data object
         return convert(element)
-
-InterfaceOMF.__module__ = "discretize.mixins"

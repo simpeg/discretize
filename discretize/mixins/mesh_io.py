@@ -605,7 +605,3 @@ class TreeMeshIO(object):
     writeModelUBC = deprecate_method(
         "write_model_UBC", "writeModelUBC", removal_version="1.0.0"
     )
-
-
-TensorMeshIO.__module__ = "discretize.mixins"
-TreeMeshIO.__module__ = "discretize.mixins"

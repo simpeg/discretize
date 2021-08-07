@@ -1322,6 +1322,3 @@ class BaseTensorMesh(BaseMesh):
     )
     isInside = deprecate_method("is_inside", "isInside", removal_version="1.0.0")
     getTensor = deprecate_method("get_tensor", "getTensor", removal_version="1.0.0")
-
-
-BaseTensorMesh.__module__ = "discretize.base"

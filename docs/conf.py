@@ -12,10 +12,12 @@
 # serve to show the default.
 
 import os
+import sys
 from datetime import datetime
 import discretize
 import subprocess
 from sphinx_gallery.sorting import FileNameSortKey
+import shutil
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -40,7 +42,9 @@ extensions = [
     "sphinx.ext.extlinks",
     "sphinx.ext.intersphinx",
     "sphinx.ext.mathjax",
-    "sphinx.ext.viewcode",
+    "sphinx.ext.linkcode",
+    "sphinx.ext.inheritance_diagram",
+    "sphinx.ext.graphviz",
     "matplotlib.sphinxext.plot_directive",
     "nbsphinx",
     "sphinx_gallery.gen_gallery",
@@ -118,6 +122,59 @@ pygments_style = "sphinx"
 
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
+
+# source code links
+import inspect
+from os.path import relpath, dirname
+
+def linkcode_resolve(domain, info):
+    if domain != "py":
+        return None
+
+    modname = info["module"]
+    fullname = info["fullname"]
+
+    submod = sys.modules.get(modname)
+    if submod is None:
+        return None
+
+    obj = submod
+    for part in fullname.split("."):
+        try:
+            obj = getattr(obj, part)
+        except Exception:
+            return None
+
+    try:
+        unwrap = inspect.unwrap
+    except AttributeError:
+        pass
+    else:
+        obj = unwrap(obj)
+
+    try:
+        fn = inspect.getsourcefile(obj)
+    except Exception:
+        fn = None
+    if not fn:
+        return None
+
+    try:
+        source, lineno = inspect.getsourcelines(obj)
+    except Exception:
+        lineno = None
+
+    if lineno:
+        linespec = "#L%d-L%d" % (lineno, lineno + len(source) - 1)
+    else:
+        linespec = ""
+
+    try:
+        fn = relpath(fn, start=dirname(discretize.__file__))
+    except ValueError:
+        return None
+
+    return f"https://github.com/simpeg/discretize/blob/main/discretize/{fn}{linespec}"
 
 # API doc options
 apidoc_module_dir = "../discretize"
@@ -350,13 +407,17 @@ man_pages = [
 # Intersphinx
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
-    "numpy": ("https://docs.scipy.org/doc/numpy/", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
     "scipy": ("https://docs.scipy.org/doc/scipy/reference/", None),
     "matplotlib": ("https://matplotlib.org/stable", None),
-    "pyvista": ("http://docs.pyvista.org/", None),
+    "pyvista": ("https://docs.pyvista.org/", None),
+    "omf": ("https://omf.readthedocs.io/en/stable/", None)
 }
 numpydoc_xref_param_type = True
 
+numpydoc_xref_aliases = {
+    "discretize.base.base_mesh.BaseMesh": "discretize.base.BaseMesh",
+}
 
 # -- Options for Texinfo output -----------------------------------------------
 
@@ -419,6 +480,10 @@ sphinx_gallery_conf["image_scrapers"] = (pyvista.Scraper(), "matplotlib")
 # How to display URL addresses: 'footnote', 'no', or 'inline'.
 # texinfo_show_urls = 'footnote'
 
+graphviz_dot = shutil.which('dot')
+# this must be png, because links on SVG are broken
+graphviz_output_format = "png"
+
 autodoc_member_order = "bysource"
 
 nitpick_ignore = [
@@ -429,15 +494,15 @@ nitpick_ignore = [
 
 
 ## Build the API
-dirname, filename = os.path.split(os.path.abspath(__file__))
+directory_name, filename = os.path.split(os.path.abspath(__file__))
 subprocess.run(
     [
         "sphinx-autogen",
         "-i",
         "-t",
-        os.path.sep.join([dirname, "_templates"]),
+        os.path.sep.join([directory_name, "_templates"]),
         "-o",
-        os.path.sep.join([dirname, "api/generated"]),
-        os.path.sep.join([dirname, "api/index.rst"]),
+        os.path.sep.join([directory_name, "api/generated"]),
+        os.path.sep.join([directory_name, "api/index.rst"]),
     ]
 )

@@ -1894,9 +1894,6 @@ class CylindricalMesh(
     )
 
 
-CylindricalMesh.__module__ = "discretize"
-
-
 @deprecate_class(removal_version="1.0.0")
 class CylMesh(CylindricalMesh):
     pass
