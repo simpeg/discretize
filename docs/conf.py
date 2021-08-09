@@ -42,7 +42,6 @@ extensions = [
     "sphinx.ext.extlinks",
     "sphinx.ext.intersphinx",
     "sphinx.ext.mathjax",
-    "sphinx.ext.linkcode",
     "sphinx.ext.inheritance_diagram",
     "sphinx.ext.graphviz",
     "matplotlib.sphinxext.plot_directive",
@@ -124,65 +123,66 @@ pygments_style = "sphinx"
 # modindex_common_prefix = []
 
 # source code links
-import inspect
-from os.path import relpath, dirname
+link_github = True
+# You can add build old with link_github = False
 
-def linkcode_resolve(domain, info):
-    if domain != "py":
-        return None
+if link_github:
 
-    modname = info["module"]
-    fullname = info["fullname"]
+    import inspect
+    from os.path import relpath, dirname
 
-    submod = sys.modules.get(modname)
-    if submod is None:
-        return None
+    extensions.append('sphinx.ext.linkcode')
 
-    obj = submod
-    for part in fullname.split("."):
-        try:
-            obj = getattr(obj, part)
-        except Exception:
+    def linkcode_resolve(domain, info):
+        if domain != "py":
             return None
 
-    try:
-        unwrap = inspect.unwrap
-    except AttributeError:
-        pass
-    else:
-        obj = unwrap(obj)
+        modname = info["module"]
+        fullname = info["fullname"]
 
-    try:
-        fn = inspect.getsourcefile(obj)
-    except Exception:
-        fn = None
-    if not fn:
-        return None
+        submod = sys.modules.get(modname)
+        if submod is None:
+            return None
 
-    try:
-        source, lineno = inspect.getsourcelines(obj)
-    except Exception:
-        lineno = None
+        obj = submod
+        for part in fullname.split("."):
+            try:
+                obj = getattr(obj, part)
+            except Exception:
+                return None
 
-    if lineno:
-        linespec = "#L%d-L%d" % (lineno, lineno + len(source) - 1)
-    else:
-        linespec = ""
+        try:
+            unwrap = inspect.unwrap
+        except AttributeError:
+            pass
+        else:
+            obj = unwrap(obj)
 
-    try:
-        fn = relpath(fn, start=dirname(discretize.__file__))
-    except ValueError:
-        return None
+        try:
+            fn = inspect.getsourcefile(obj)
+        except Exception:
+            fn = None
+        if not fn:
+            return None
 
-    return f"https://github.com/simpeg/discretize/blob/main/discretize/{fn}{linespec}"
+        try:
+            source, lineno = inspect.getsourcelines(obj)
+        except Exception:
+            lineno = None
 
-# API doc options
-apidoc_module_dir = "../discretize"
-apidoc_output_dir = "api/generated"
-apidoc_toc_file = False
-apidoc_excluded_paths = []
-apidoc_separate_modules = True
-# apidoc_extra_args = ['-t _templates']
+        if lineno:
+            linespec = "#L%d-L%d" % (lineno, lineno + len(source) - 1)
+        else:
+            linespec = ""
+
+        try:
+            fn = relpath(fn, start=dirname(discretize.__file__))
+        except ValueError:
+            return None
+
+        return f"https://github.com/simpeg/discretize/blob/main/discretize/{fn}{linespec}"
+else:
+    extensions.append('sphinx.ext.viewcode')
 
 # Make numpydoc to generate plots for example sections
 numpydoc_use_plots = True
@@ -415,10 +415,6 @@ intersphinx_mapping = {
 }
 numpydoc_xref_param_type = True
 
-numpydoc_xref_aliases = {
-    "discretize.base.base_mesh.BaseMesh": "discretize.base.BaseMesh",
-}
-
 # -- Options for Texinfo output -----------------------------------------------
 
 # Grouping the document tree into Texinfo files. List of tuples
@@ -491,18 +487,3 @@ nitpick_ignore = [
     ("py:class", "discretize.mixins.vtk_mod.InterfaceTensorread_vtk"),
     ("py:class", "callable"),
 ]
-
-
-## Build the API
-directory_name, filename = os.path.split(os.path.abspath(__file__))
-subprocess.run(
-    [
-        "sphinx-autogen",
-        "-i",
-        "-t",
-        os.path.sep.join([directory_name, "_templates"]),
-        "-o",
-        os.path.sep.join([directory_name, "api/generated"]),
-        os.path.sep.join([directory_name, "api/index.rst"]),
-    ]
-)
