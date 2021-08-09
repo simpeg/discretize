@@ -5,6 +5,10 @@ discretize
     :target: https://pypi.python.org/pypi/discretize
     :alt: Latest PyPI version
 
+.. image:: https://anaconda.org/conda-forge/discretize/badges/version.svg
+    :target: https://anaconda.org/conda-forge/discretize
+    :alt: Latest conda-forge version
+
 .. image:: https://img.shields.io/github/license/simpeg/simpeg.svg
     :target: https://github.com/simpeg/discretize/blob/main/LICENSE
     :alt: MIT license
