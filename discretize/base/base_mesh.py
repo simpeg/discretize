@@ -946,7 +946,7 @@ class BaseRectangularMesh(BaseMesh):
     Base rectangular mesh class for the ``discretize`` package.
 
     The ``BaseRectangularMesh`` class acts as an extension of the
-    :class:`~discretize.BaseMesh` classes with a regular structure.
+    :class:`~discretize.base.BaseMesh` classes with a regular structure.
     """
 
     _aliases = {

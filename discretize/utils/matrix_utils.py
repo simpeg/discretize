@@ -897,7 +897,7 @@ class TensorType(object):
 
     Parameters
     ----------
-    mesh : discretize.BaseTensorMesh
+    mesh : discretize.base.BaseTensorMesh
         An instance of any of the mesh classes support in discretize; i.e. *TensorMesh*,
         *CylindricalMesh*, *TreeMesh* or *CurvilinearMesh*.
     tensor : numpy.ndarray or a float
@@ -1013,7 +1013,7 @@ def make_property_tensor(mesh, tensor):
 
     Parameters
     ----------
-    mesh : discretize.BaseMesh
+    mesh : discretize.base.BaseMesh
        A mesh
     tensor : numpy.ndarray or a float
 
@@ -1166,7 +1166,7 @@ def inverse_property_tensor(mesh, tensor, return_matrix=False, **kwargs):
 
     Parameters
     ----------
-    mesh : discretize.BaseMesh
+    mesh : discretize.base.BaseMesh
        A mesh
     tensor : numpy.ndarray or float
 

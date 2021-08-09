@@ -179,8 +179,8 @@ def closest_points_index(mesh, pts, grid_loc="CC", **kwargs):
 
     Parameters
     ----------
-    mesh : discretize.BaseMesh
-        An instance of *discretize.BaseMesh*
+    mesh : discretize.base.BaseMesh
+        An instance of *discretize.base.BaseMesh*
     pts : (n, dim) numpy.ndarray
         Points to query.
     grid_loc : {'CC', 'N', 'Fx', 'Fy', 'Fz', 'Ex', 'Ex', 'Ey', 'Ez'}
@@ -266,7 +266,7 @@ def extract_core_mesh(xyzlim, mesh, mesh_type="tensor"):
     -------
     tuple: (**active_index**, **core_mesh**)
         **active_index** is a boolean array that maps from the global the mesh
-        to core mesh. **core_mesh** is a *discretize.BaseMesh* object representing
+        to core mesh. **core_mesh** is a *discretize.base.BaseMesh* object representing
         the core mesh.
 
     Examples

@@ -57,7 +57,7 @@ except ImportError as err:
 # # Python 3 friendly
 class InterfaceMixins(*AVAILABLE_MIXIN_CLASSES):
     """This class handles all the avaialble mixins that can be inherrited
-    directly onto ``discretize.BaseMesh``
+    directly onto ``discretize.base.BaseMesh``
     """
 
     pass

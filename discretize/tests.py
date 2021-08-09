@@ -106,7 +106,7 @@ def setup_mesh(mesh_type, nC, nDim):
 
     Returns
     -------
-    discretize.BaseMesh
+    discretize.base.BaseMesh
         A discretize mesh of class specified by the input argument *mesh_type*
     """
 
