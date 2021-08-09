@@ -95,6 +95,8 @@ stages:
             python.version: '3.7'
           win-Python38:
             python.version: '3.8'
+          win-Python39:
+            python.version: '3.9'
       pool:
         vmImage: vs2017-win2016
       steps:
