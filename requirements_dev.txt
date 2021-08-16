@@ -3,6 +3,7 @@ sphinx
 sphinx_rtd_theme
 sphinx-gallery
 sphinxcontrib-apidoc
+pydata-sphinx-theme
 pillow
 pytest
 pytest-cov
