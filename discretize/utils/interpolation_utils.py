@@ -92,23 +92,26 @@ def interpolation_matrix(locs, x, y=None, z=None):
     >>> fun = lambda x: np.cos(2*np.pi*x)
     >>> Q = interpolation_matrix(locs, x)
 
-    >>> fig1 = plt.figure(figsize=(5, 3))
-    >>> ax = fig1.add_axes([0.1, 0.1, 0.8, 0.8])
-    >>> ax.plot(dense, fun(dense), 'k:', lw=3)
-    >>> ax.plot(x, fun(x), 'ks', markersize=8)
-    >>> ax.plot(locs, Q*fun(x), 'go', markersize=4)
-    >>> ax.plot(locs, fun(locs), 'rs', markersize=4)
-    >>> ax.legend(
-    ...     [
-    ...         'True Function',
-    ...         'True (discrete loc.)',
-    ...         'Interpolated (computed)',
-    ...         'True (interp. loc.)'
-    ...     ],
-    ...     loc='upper center'
-    ... )
-    >>> plt.show()
+    Plot original function and interpolation
 
+    .. collapse:: Expand to show scripting for plot
+
+        >>> fig1 = plt.figure(figsize=(5, 3))
+        >>> ax = fig1.add_axes([0.1, 0.1, 0.8, 0.8])
+        >>> ax.plot(dense, fun(dense), 'k:', lw=3)
+        >>> ax.plot(x, fun(x), 'ks', markersize=8)
+        >>> ax.plot(locs, Q*fun(x), 'go', markersize=4)
+        >>> ax.plot(locs, fun(locs), 'rs', markersize=4)
+        >>> ax.legend(
+        ...     [
+        ...         'True Function',
+        ...         'True (discrete loc.)',
+        ...         'Interpolated (computed)',
+        ...         'True (interp. loc.)'
+        ...     ],
+        ...     loc='upper center'
+        ... )
+        >>> plt.show()
 
     Here, demonstrate a similar example on a 2D mesh using a 2D Gaussian distribution.
     We interpolate the Gaussian from the nodes to cell centers and examine the relative
@@ -133,19 +136,21 @@ def interpolation_matrix(locs, x, y=None, z=None):
 
     Plot the interpolated values, along with the true values at cell centers,
 
-    >>> val_centers = fun(centers[:, 0], centers[:, 1])
-    >>> fig = plt.figure(figsize=(11,3.3))
-    >>> clim = (0., 1.)
-    >>> ax1 = fig.add_subplot(131)
-    >>> ax2 = fig.add_subplot(132)
-    >>> ax3 = fig.add_subplot(133)
-    >>> mesh.plot_image(val_centers, ax=ax1, clim=clim)
-    >>> mesh.plot_image(val_interp, ax=ax2, clim=clim)
-    >>> mesh.plot_image(val_centers-val_interp, ax=ax3, clim=clim)
-    >>> ax1.set_title('Analytic at Centers')
-    >>> ax2.set_title('Interpolated from Nodes')
-    >>> ax3.set_title('Relative Error')
-    >>> plt.show()
+    .. collapse:: Expand to show scripting for plot
+
+        >>> val_centers = fun(centers[:, 0], centers[:, 1])
+        >>> fig = plt.figure(figsize=(11,3.3))
+        >>> clim = (0., 1.)
+        >>> ax1 = fig.add_subplot(131)
+        >>> ax2 = fig.add_subplot(132)
+        >>> ax3 = fig.add_subplot(133)
+        >>> mesh.plot_image(val_centers, ax=ax1, clim=clim)
+        >>> mesh.plot_image(val_interp, ax=ax2, clim=clim)
+        >>> mesh.plot_image(val_centers-val_interp, ax=ax3, clim=clim)
+        >>> ax1.set_title('Analytic at Centers')
+        >>> ax2.set_title('Interpolated from Nodes')
+        >>> ax3.set_title('Relative Error')
+        >>> plt.show()
     """
 
     npts = locs.shape[0]

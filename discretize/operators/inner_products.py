@@ -152,20 +152,22 @@ class InnerProducts(object):
 
         Then plot matrix entries,
 
-        >>> fig = plt.figure(figsize=(15, 5))
-        >>> ax1 = fig.add_subplot(131)
-        >>> ax1.imshow(sig_iso_tensor)
-        >>> ax1.axis('off')
-        >>> ax1.set_title("Tensor (isotropic)", fontsize=16)
-        >>> ax2 = fig.add_subplot(132)
-        >>> ax2.imshow(sig_diag_tensor)
-        >>> ax2.axis('off')
-        >>> ax2.set_title("Tensor (diagonal anisotropic)", fontsize=16)
-        >>> ax3 = fig.add_subplot(133)
-        >>> ax3.imshow(sig_full_tensor)
-        >>> ax3.axis('off')
-        >>> ax3.set_title("Tensor (full anisotropic)", fontsize=16)
-        >>> plt.show()
+        .. collapse:: Expand to show scripting for plot
+
+            >>> fig = plt.figure(figsize=(15, 5))
+            >>> ax1 = fig.add_subplot(131)
+            >>> ax1.imshow(sig_iso_tensor)
+            >>> ax1.axis('off')
+            >>> ax1.set_title("Tensor (isotropic)", fontsize=16)
+            >>> ax2 = fig.add_subplot(132)
+            >>> ax2.imshow(sig_diag_tensor)
+            >>> ax2.axis('off')
+            >>> ax2.set_title("Tensor (diagonal anisotropic)", fontsize=16)
+            >>> ax3 = fig.add_subplot(133)
+            >>> ax3.imshow(sig_full_tensor)
+            >>> ax3.axis('off')
+            >>> ax3.set_title("Tensor (full anisotropic)", fontsize=16)
+            >>> plt.show()
 
         Here, construct and image the face inner product matrices for
         the isotropic, diagonal anisotropic and full tensor cases.
@@ -190,17 +192,19 @@ class InnerProducts(object):
 
         And then we can plot the sparse representation,
 
-        >>> fig = plt.figure(figsize=(12, 4))
-        >>> ax1 = fig.add_subplot(131)
-        >>> ax1.spy(M1, ms=5)
-        >>> ax1.set_title("M (isotropic)", fontsize=16)
-        >>> ax2 = fig.add_subplot(132)
-        >>> ax2.spy(M2, ms=5)
-        >>> ax2.set_title("M (diagonal anisotropic)", fontsize=16)
-        >>> ax3 = fig.add_subplot(133)
-        >>> ax3.spy(M3, ms=5)
-        >>> ax3.set_title("M (full anisotropic)", fontsize=16)
-        >>> plt.show()
+        .. collapse:: Expand to show scripting for plot
+
+            >>> fig = plt.figure(figsize=(12, 4))
+            >>> ax1 = fig.add_subplot(131)
+            >>> ax1.spy(M1, ms=5)
+            >>> ax1.set_title("M (isotropic)", fontsize=16)
+            >>> ax2 = fig.add_subplot(132)
+            >>> ax2.spy(M2, ms=5)
+            >>> ax2.set_title("M (diagonal anisotropic)", fontsize=16)
+            >>> ax3 = fig.add_subplot(133)
+            >>> ax3.spy(M3, ms=5)
+            >>> ax3.set_title("M (full anisotropic)", fontsize=16)
+            >>> plt.show()
         """
         if "invProp" in kwargs:
             warnings.warn(
@@ -356,20 +360,22 @@ class InnerProducts(object):
 
         Then plot the matrix entries,
 
-        >>> fig = plt.figure(figsize=(15, 5))
-        >>> ax1 = fig.add_subplot(131)
-        >>> ax1.imshow(sig_iso_tensor)
-        >>> ax1.axis('off')
-        >>> ax1.set_title("Tensor (isotropic)", fontsize=16)
-        >>> ax2 = fig.add_subplot(132)
-        >>> ax2.imshow(sig_diag_tensor)
-        >>> ax2.axis('off')
-        >>> ax2.set_title("Tensor (diagonal anisotropic)", fontsize=16)
-        >>> ax3 = fig.add_subplot(133)
-        >>> ax3.imshow(sig_full_tensor)
-        >>> ax3.axis('off')
-        >>> ax3.set_title("Tensor (full anisotropic)", fontsize=16)
-        >>> plt.show()
+        .. collapse:: Expand to show scripting for plot
+
+            >>> fig = plt.figure(figsize=(15, 5))
+            >>> ax1 = fig.add_subplot(131)
+            >>> ax1.imshow(sig_iso_tensor)
+            >>> ax1.axis('off')
+            >>> ax1.set_title("Tensor (isotropic)", fontsize=16)
+            >>> ax2 = fig.add_subplot(132)
+            >>> ax2.imshow(sig_diag_tensor)
+            >>> ax2.axis('off')
+            >>> ax2.set_title("Tensor (diagonal anisotropic)", fontsize=16)
+            >>> ax3 = fig.add_subplot(133)
+            >>> ax3.imshow(sig_full_tensor)
+            >>> ax3.axis('off')
+            >>> ax3.set_title("Tensor (full anisotropic)", fontsize=16)
+            >>> plt.show()
 
         Here construct and image the edge inner product matrices for
         the isotropic, diagonal anisotropic and full tensor cases.
@@ -394,17 +400,19 @@ class InnerProducts(object):
 
         Then plot the sparse representation,
 
-        >>> fig = plt.figure(figsize=(12, 4))
-        >>> ax1 = fig.add_subplot(131)
-        >>> ax1.spy(M1, ms=5)
-        >>> ax1.set_title("M (isotropic)", fontsize=16)
-        >>> ax2 = fig.add_subplot(132)
-        >>> ax2.spy(M2, ms=5)
-        >>> ax2.set_title("M (diagonal anisotropic)", fontsize=16)
-        >>> ax3 = fig.add_subplot(133)
-        >>> ax3.spy(M3, ms=5)
-        >>> ax3.set_title("M (full anisotropic)", fontsize=16)
-        >>> plt.show()
+        .. collapse:: Expand to show scripting for plot
+
+            >>> fig = plt.figure(figsize=(12, 4))
+            >>> ax1 = fig.add_subplot(131)
+            >>> ax1.spy(M1, ms=5)
+            >>> ax1.set_title("M (isotropic)", fontsize=16)
+            >>> ax2 = fig.add_subplot(132)
+            >>> ax2.spy(M2, ms=5)
+            >>> ax2.set_title("M (diagonal anisotropic)", fontsize=16)
+            >>> ax3 = fig.add_subplot(133)
+            >>> ax3.spy(M3, ms=5)
+            >>> ax3.set_title("M (full anisotropic)", fontsize=16)
+            >>> plt.show()
 
         """
         if "invProp" in kwargs:
@@ -702,21 +710,25 @@ class InnerProducts(object):
         >>> F = mesh.get_face_inner_product_deriv(m)  # Function handle
         >>> dFdm_u = F(u)
 
-        >>> fig = plt.figure(figsize=(15, 5))
-        >>> ax1 = fig.add_axes([0.05, 0.05, 0.3, 0.85])
-        >>> ax1.spy(Mf, ms=6)
-        >>> ax1.set_title("Face Inner Product Matrix (Isotropic)", fontsize=14, pad=5)
-        >>> ax1.set_xlabel("Face Index", fontsize=12)
-        >>> ax1.set_ylabel("Face Index", fontsize=12)
-        >>> ax2 = fig.add_axes([0.43, 0.05, 0.17, 0.8])
-        >>> ax2.spy(dFdm_u, ms=6)
-        >>> ax2.set_title(
-        ...     "$u^T \, \dfrac{\partial M(m)}{\partial m}$ (Isotropic)",
-        ...     fontsize=14, pad=5
-        ... )
-        >>> ax2.set_xlabel("Parameter Index", fontsize=12)
-        >>> ax2.set_ylabel("Face Index", fontsize=12)
-        >>> plt.show()
+        Spy plot for the inner product matrix and its derivative
+
+        .. collapse:: Expand to show scripting for plot
+
+            >>> fig = plt.figure(figsize=(15, 5))
+            >>> ax1 = fig.add_axes([0.05, 0.05, 0.3, 0.85])
+            >>> ax1.spy(Mf, ms=6)
+            >>> ax1.set_title("Face Inner Product Matrix (Isotropic)", fontsize=14, pad=5)
+            >>> ax1.set_xlabel("Face Index", fontsize=12)
+            >>> ax1.set_ylabel("Face Index", fontsize=12)
+            >>> ax2 = fig.add_axes([0.43, 0.05, 0.17, 0.8])
+            >>> ax2.spy(dFdm_u, ms=6)
+            >>> ax2.set_title(
+            ...     "$u^T \, \dfrac{\partial M(m)}{\partial m}$ (Isotropic)",
+            ...     fontsize=14, pad=5
+            ... )
+            >>> ax2.set_xlabel("Parameter Index", fontsize=12)
+            >>> ax2.set_ylabel("Face Index", fontsize=12)
+            >>> plt.show()
 
         For our second example, the physical properties on the mesh are fully
         anisotropic; that is, the physical properties of each cell are defined
@@ -732,23 +744,25 @@ class InnerProducts(object):
         >>> F = mesh.get_face_inner_product_deriv(m)  # Function handle
         >>> dFdm_u = F(u)
 
-        Plot the anisotropic derivative matrix,
+        Plot the anisotropic inner product matrix and its derivative matrix,
 
-        >>> fig = plt.figure(figsize=(15, 5))
-        >>> ax1 = fig.add_axes([0.05, 0.05, 0.3, 0.8])
-        >>> ax1.spy(Mf, ms=6)
-        >>> ax1.set_title("Face Inner Product (Full Tensor)", fontsize=14, pad=5)
-        >>> ax1.set_xlabel("Face Index", fontsize=12)
-        >>> ax1.set_ylabel("Face Index", fontsize=12)
-        >>> ax2 = fig.add_axes([0.4, 0.05, 0.45, 0.85])
-        >>> ax2.spy(dFdm_u, ms=6)
-        >>> ax2.set_title(
-        ...     "$u^T \, \dfrac{\partial M(m)}{\partial m} \;$ (Full Tensor)",
-        ...     fontsize=14, pad=5
-        ... )
-        >>> ax2.set_xlabel("Parameter Index", fontsize=12)
-        >>> ax2.set_ylabel("Face Index", fontsize=12)
-        >>> plt.show()
+        .. collapse:: Expand to show scripting for plot
+
+            >>> fig = plt.figure(figsize=(15, 5))
+            >>> ax1 = fig.add_axes([0.05, 0.05, 0.3, 0.8])
+            >>> ax1.spy(Mf, ms=6)
+            >>> ax1.set_title("Face Inner Product (Full Tensor)", fontsize=14, pad=5)
+            >>> ax1.set_xlabel("Face Index", fontsize=12)
+            >>> ax1.set_ylabel("Face Index", fontsize=12)
+            >>> ax2 = fig.add_axes([0.4, 0.05, 0.45, 0.85])
+            >>> ax2.spy(dFdm_u, ms=6)
+            >>> ax2.set_title(
+            ...     "$u^T \, \dfrac{\partial M(m)}{\partial m} \;$ (Full Tensor)",
+            ...     fontsize=14, pad=5
+            ... )
+            >>> ax2.set_xlabel("Parameter Index", fontsize=12)
+            >>> ax2.set_ylabel("Face Index", fontsize=12)
+            >>> plt.show()
 
         """
         if "invProp" in kwargs:
@@ -908,23 +922,25 @@ class InnerProducts(object):
         >>> F = mesh.get_edge_inner_product_deriv(m)  # Function handle
         >>> dFdm_u = F(u)
 
-        Then we plot the results,
+        Plot inner product matrix and its derivative matrix
 
-        >>> fig = plt.figure(figsize=(15, 5))
-        >>> ax1 = fig.add_axes([0.05, 0.05, 0.3, 0.8])
-        >>> ax1.spy(Me, ms=6)
-        >>> ax1.set_title("Edge Inner Product Matrix (Isotropic)", fontsize=14, pad=5)
-        >>> ax1.set_xlabel("Edge Index", fontsize=12)
-        >>> ax1.set_ylabel("Edge Index", fontsize=12)
-        >>> ax2 = fig.add_axes([0.43, 0.05, 0.17, 0.8])
-        >>> ax2.spy(dFdm_u, ms=6)
-        >>> ax2.set_title(
-        ...     "$u^T \, \dfrac{\partial M(m)}{\partial m}$ (Isotropic)",
-        ...     fontsize=14, pad=5
-        ... )
-        >>> ax2.set_xlabel("Parameter Index", fontsize=12)
-        >>> ax2.set_ylabel("Edge Index", fontsize=12)
-        >>> plt.show()
+        .. collapse:: Expand to show scripting for plot
+
+            >>> fig = plt.figure(figsize=(15, 5))
+            >>> ax1 = fig.add_axes([0.05, 0.05, 0.3, 0.8])
+            >>> ax1.spy(Me, ms=6)
+            >>> ax1.set_title("Edge Inner Product Matrix (Isotropic)", fontsize=14, pad=5)
+            >>> ax1.set_xlabel("Edge Index", fontsize=12)
+            >>> ax1.set_ylabel("Edge Index", fontsize=12)
+            >>> ax2 = fig.add_axes([0.43, 0.05, 0.17, 0.8])
+            >>> ax2.spy(dFdm_u, ms=6)
+            >>> ax2.set_title(
+            ...     "$u^T \, \dfrac{\partial M(m)}{\partial m}$ (Isotropic)",
+            ...     fontsize=14, pad=5
+            ... )
+            >>> ax2.set_xlabel("Parameter Index", fontsize=12)
+            >>> ax2.set_ylabel("Edge Index", fontsize=12)
+            >>> plt.show()
 
         For our second example, the physical properties on the mesh are fully
         anisotropic; that is, the physical properties of each cell are defined
@@ -940,23 +956,25 @@ class InnerProducts(object):
         >>> F = mesh.get_edge_inner_product_deriv(m)  # Function handle
         >>> dFdm_u = F(u)
 
-        Then we plot the anisotropic derivative matrix,
+        Plot the anisotropic inner product matrix and its derivative matrix
 
-        >>> fig = plt.figure(figsize=(15, 5))
-        >>> ax1 = fig.add_axes([0.05, 0.05, 0.3, 0.8])
-        >>> ax1.spy(Me, ms=6)
-        >>> ax1.set_title("Edge Inner Product (Full Tensor)", fontsize=14, pad=5)
-        >>> ax1.set_xlabel("Edge Index", fontsize=12)
-        >>> ax1.set_ylabel("Edge Index", fontsize=12)
-        >>> ax2 = fig.add_axes([0.4, 0.05, 0.45, 0.8])
-        >>> ax2.spy(dFdm_u, ms=6)
-        >>> ax2.set_title(
-        ...     "$u^T \, \dfrac{\partial M(m)}{\partial m} \;$ (Full Tensor)",
-        ...     fontsize=14, pad=5
-        ... )
-        >>> ax2.set_xlabel("Parameter Index", fontsize=12)
-        >>> ax2.set_ylabel("Edge Index", fontsize=12)
-        >>> plt.show()
+        .. collapse:: Expand to show scripting for plot
+
+            >>> fig = plt.figure(figsize=(15, 5))
+            >>> ax1 = fig.add_axes([0.05, 0.05, 0.3, 0.8])
+            >>> ax1.spy(Me, ms=6)
+            >>> ax1.set_title("Edge Inner Product (Full Tensor)", fontsize=14, pad=5)
+            >>> ax1.set_xlabel("Edge Index", fontsize=12)
+            >>> ax1.set_ylabel("Edge Index", fontsize=12)
+            >>> ax2 = fig.add_axes([0.4, 0.05, 0.45, 0.8])
+            >>> ax2.spy(dFdm_u, ms=6)
+            >>> ax2.set_title(
+            ...     "$u^T \, \dfrac{\partial M(m)}{\partial m} \;$ (Full Tensor)",
+            ...     fontsize=14, pad=5
+            ... )
+            >>> ax2.set_xlabel("Parameter Index", fontsize=12)
+            >>> ax2.set_ylabel("Edge Index", fontsize=12)
+            >>> plt.show()
         """
         if "invProp" in kwargs:
             warnings.warn(

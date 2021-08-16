@@ -31,6 +31,8 @@ def cylindrical_to_cartesian(grid, vec=None):
     >>> from discretize.utils import cylindrical_to_cartesian
     >>> import numpy as np
 
+    Construct original set of vectors in cylindrical coordinates
+
     >>> r = np.ones(9)
     >>> phi = np.linspace(0, 2*np.pi, 9)
     >>> z = np.linspace(-4., 4., 9)
@@ -45,6 +47,8 @@ def cylindrical_to_cartesian(grid, vec=None):
            [ 1.        ,  4.71238898,  2.        ],
            [ 1.        ,  5.49778714,  3.        ],
            [ 1.        ,  6.28318531,  4.        ]])
+
+    Create equivalent set of vectors in Cartesian coordinates
 
     >>> v = cylindrical_to_cartesian(u)
     >>> v
@@ -120,6 +124,8 @@ def cartesian_to_cylindrical(grid, vec=None):
     >>> from discretize.utils import cartesian_to_cylindrical
     >>> import numpy as np
 
+    Create set of vectors in Cartesian coordinates
+
     >>> r = np.ones(9)
     >>> phi = np.linspace(0, 2*np.pi, 9)
     >>> z = np.linspace(-4., 4., 9)
@@ -136,6 +142,8 @@ def cartesian_to_cylindrical(grid, vec=None):
            [-1.83697020e-16, -1.00000000e+00,  2.00000000e+00],
            [ 7.07106781e-01, -7.07106781e-01,  3.00000000e+00],
            [ 1.00000000e+00, -2.44929360e-16,  4.00000000e+00]])
+
+    Compute equivalent set of vectors in cylindrical coordinates
 
     >>> v = cartesian_to_cylindrical(u)
     >>> v
