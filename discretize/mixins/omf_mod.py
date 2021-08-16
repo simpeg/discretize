@@ -38,22 +38,72 @@ def ravel_data_array(arr, nx, ny, nz):
 
     >>> from discretize import TensorMesh
     >>> import numpy as np
-    >>> 
+
     >>> hx = np.ones(4)
     >>> hy = 2*np.ones(3)
     >>> hz = 3*np.ones(2)
     >>> mesh = TensorMesh([hx, hy, hz])
-    >>> 
+
     >>> dim = (mesh.nCz, mesh.nCy, mesh.nCx)  # OMF orderting
     >>> xc = np.reshape(mesh.cell_centers[:, 0], dim, order="C").ravel(order="F")
     >>> yc = np.reshape(mesh.cell_centers[:, 1], dim, order="C").ravel(order="F")
     >>> zc = np.reshape(mesh.cell_centers[:, 2], dim, order="C").ravel(order="F")
-    >>> 
-    >>> print('ORIGINAL ORDERING')
-    >>> print(mesh.cell_centers)
-    >>> print('OMF ORDERING')
-    >>> print(np.c_[xc, yc, zc])
 
+    Original ordering
+
+    >>> mesh.cell_centers
+    array([[0.5, 1. , 1.5],
+           [1.5, 1. , 1.5],
+           [2.5, 1. , 1.5],
+           [3.5, 1. , 1.5],
+           [0.5, 3. , 1.5],
+           [1.5, 3. , 1.5],
+           [2.5, 3. , 1.5],
+           [3.5, 3. , 1.5],
+           [0.5, 5. , 1.5],
+           [1.5, 5. , 1.5],
+           [2.5, 5. , 1.5],
+           [3.5, 5. , 1.5],
+           [0.5, 1. , 4.5],
+           [1.5, 1. , 4.5],
+           [2.5, 1. , 4.5],
+           [3.5, 1. , 4.5],
+           [0.5, 3. , 4.5],
+           [1.5, 3. , 4.5],
+           [2.5, 3. , 4.5],
+           [3.5, 3. , 4.5],
+           [0.5, 5. , 4.5],
+           [1.5, 5. , 4.5],
+           [2.5, 5. , 4.5],
+           [3.5, 5. , 4.5]])
+
+    OMF ordering
+
+    >>> np.c_[xc, yc, zc]
+    array([[0.5, 1. , 1.5],
+           [0.5, 1. , 4.5],
+           [0.5, 3. , 1.5],
+           [0.5, 3. , 4.5],
+           [0.5, 5. , 1.5],
+           [0.5, 5. , 4.5],
+           [1.5, 1. , 1.5],
+           [1.5, 1. , 4.5],
+           [1.5, 3. , 1.5],
+           [1.5, 3. , 4.5],
+           [1.5, 5. , 1.5],
+           [1.5, 5. , 4.5],
+           [2.5, 1. , 1.5],
+           [2.5, 1. , 4.5],
+           [2.5, 3. , 1.5],
+           [2.5, 3. , 4.5],
+           [2.5, 5. , 1.5],
+           [2.5, 5. , 4.5],
+           [3.5, 1. , 1.5],
+           [3.5, 1. , 4.5],
+           [3.5, 3. , 1.5],
+           [3.5, 3. , 4.5],
+           [3.5, 5. , 1.5],
+           [3.5, 5. , 4.5]])
     """
     dim = (nz, ny, nx)
     return np.reshape(arr, dim, order="C").ravel(order="F")
@@ -82,7 +132,7 @@ def unravel_data_array(arr, nx, ny, nz):
 
     Returns
     -------
-    numpy.ndarray (n_cells)
+    (n_cells) numpy.ndarray
         A flattened 1D array ordered according to the discretize format
 
     """
@@ -94,7 +144,7 @@ class InterfaceOMF(object):
     """
     The ``InterfaceOMF`` class was designed for easy conversion between
     ``discretize`` objects and `open mining format <https://www.seequent.com/the-open-mining-format/>`__ (OMF) objects.
-    Examples include: meshes, models and data arrays. 
+    Examples include: meshes, models and data arrays.
     """
     def _tensor_mesh_to_omf(mesh, models=None):
         """
@@ -103,13 +153,10 @@ class InterfaceOMF(object):
 
         Parameters
         ----------
-
         mesh : discretize.TensorMesh
             The tensor mesh to convert to a :class:`omf.VolumeElement`
-
         models : dict(numpy.ndarray)
             Name('s) and array('s). Match number of cells
-
         """
         if models is None:
             models = {}
@@ -187,10 +234,12 @@ class InterfaceOMF(object):
 
         Parameters
         ----------
+        models : dict of [str, (n_cells) numpy.ndarray], optional
+            Name('s) and array('s).
 
-        models : dict(numpy.ndarray)
-            Name('s) and array('s). Match number of cells
-
+        Returns
+        -------
+        omf.volume.VolumeElement
         """
         # TODO: mesh.validate()
         converters = {
@@ -237,6 +286,22 @@ class InterfaceOMF(object):
         """Convert an OMF element to it's proper ``discretize`` type.
         Automatically determines the output type. Returns both the mesh and a
         dictionary of model arrays.
+
+        Parameters
+        ----------
+        element : omf.volume.VolumeElement
+            The open mining format volume element object
+
+        Returns
+        -------
+        mesh : discretize.TensorMesh
+            The returned mesh type will be appropriately based on the input `element`.
+        models : dict of [str, (n_cells) numpy.ndarray]
+            The models contained in `element`
+
+        Notes
+        -----
+        Currently only :class:discretize.TensorMesh is supported.
         """
         element.validate()
         converters = {

@@ -113,7 +113,7 @@ class InterfaceVTK(object):
     on the traditional reference frame; see examples below.
 
     Examples
-    --------    
+    --------
     The following are examples which use the VTK interface to convert
     discretize meshes to VTK data objects and write to VTK formatted files.
     In the first example example, a tensor mesh whose axes lie on the
@@ -126,30 +126,33 @@ class InterfaceVTK(object):
     >>> h2 = np.linspace(.1, .5, 5)
     >>> h3 = np.linspace(.1, .8, 3)
     >>> mesh = discretize.TensorMesh([h1, h2, h3])
-    >>> 
-    >>> # Get a VTK data object
+
+    Get a VTK data object
+
     >>> dataset = mesh.to_vtk()
-    >>> 
-    >>> # Save this mesh to a VTK file
+
+    Save this mesh to a VTK file
+
     >>> mesh.writeVTK('sample_mesh')
 
     Here, the reference frame of the mesh is rotated. In this case, conversion
-    to VTK produces a :class:`pyvista.StructuredGrid` object. 
+    to VTK produces a :class:`pyvista.StructuredGrid` object.
 
-    >>> # Defined a rotated reference frame
     >>> axis_u = (1,-1,0)
     >>> axis_v = (-1,-1,0)
     >>> axis_w = (0,0,1)
     >>> mesh.orientation = np.array([
-    >>>    axis_u,
-    >>>    axis_v,
-    >>>    axis_w
-    >>> ])
-    >>> 
-    >>> # Yield the rotated vtkStructuredGrid
+    ...    axis_u,
+    ...    axis_v,
+    ...    axis_w
+    ... ])
+
+    Yield the rotated vtkStructuredGrid
+
     >>> dataset_r = mesh.to_vtk()
-    >>> 
-    >>> # or write it out to a VTK format
+
+    or write it out to a VTK format
+
     >>> mesh.writeVTK('sample_rotated')
 
     The two above code snippets produced a :class:`pyvista.RectilinearGrid` and a
@@ -162,7 +165,7 @@ class InterfaceVTK(object):
 
     >>> import pyvista
     >>> pyvista.set_plot_theme('document')
-    >>> 
+
     >>> p = pyvista.BackgroundPlotter()
     >>> p.add_mesh(dataset, color='green', show_edges=True)
     >>> p.add_mesh(dataset_r, color='maroon', show_edges=True)
@@ -359,11 +362,7 @@ class InterfaceVTK(object):
 
         Parameters
         ----------
-        mesh : ~discretize.base.BaseMesh
-            An instance of :class:`~discretize.CurvilinearMesh`,
-            :class:`~discretize.TreeMesh` or :class:`~discretize.TensorMesh`;
-            not implemented for :class:`~discretize.CylindricalMesh`.
-        models : dict (optional)
+        models : dict of [str, (n_cells) numpy.ndarray], optional
             Models are supplied as a dictionary where the keys are the model
             names. Each model is a 1D :class:`numpy.ndarray` of size (n_cells).
 
@@ -414,13 +413,10 @@ class InterfaceVTK(object):
 
         Parameters
         ----------
-
         file_name : str
             path to the output vtk file or just its name if directory is specified
-
         directory : str
             directory where the UBC GIF file lives
-
         """
         if not isinstance(vtkUnstructGrid, _vtk.vtkUnstructuredGrid):
             raise RuntimeError(
@@ -451,13 +447,10 @@ class InterfaceVTK(object):
 
         Parameters
         ----------
-
         file_name : str
             path to the output vtk file or just its name if directory is specified
-
         directory : str
             directory where the UBC GIF file lives
-
         """
         if not isinstance(vtkStructGrid, _vtk.vtkStructuredGrid):
             raise RuntimeError(
@@ -489,13 +482,10 @@ class InterfaceVTK(object):
 
         Parameters
         ----------
-
         file_name : str
             path to the output vtk file or just its name if directory is specified
-
         directory : str
             directory where the UBC GIF file lives
-
         """
         if not isinstance(vtkRectGrid, _vtk.vtkRectilinearGrid):
             raise RuntimeError(
@@ -530,17 +520,13 @@ class InterfaceVTK(object):
 
         Parameters
         ----------
-        mesh : ~discretize.base.BaseMesh
-            An instance of :class:`~discretize.CurvilinearMesh`,
-            :class:`~discretize.TreeMesh` or :class:`~discretize.TensorMesh`;
-            not implemented for :class:`~discretize.CylindricalMesh`.
-        file_name: str or file name
+        file_name : str or file name
             Full path for the output file or just its name if directory is specified
-        models : dict (optional)
+        models : dict of [str, (n_cells) numpy.ndarray], optional
             Models are supplied as a dictionary where the keys are the model
             names. Each model is a 1D :class:`numpy.ndarray` of size (n_cells).
-        directory : str
-            output directory (optional)
+        directory : str, optional
+            output directory
 
         Returns
         -------
@@ -585,8 +571,6 @@ class InterfaceTensorread_vtk(object):
 
         Parameters
         ----------
-        TensorMesh : discretize.TensorMesh
-            A discretize tensor mesh
         vtrGrid : ``vtkRectilinearGrid`` or :class:`~pyvista.RectilinearGrid`
             A VTK or PyVista rectilinear grid object
 
@@ -594,7 +578,6 @@ class InterfaceTensorread_vtk(object):
         -------
         discretize.TensorMesh
             A discretize tensor mesh
-
         """
         # Sort information
         hx = np.abs(np.diff(_nps.vtk_to_numpy(vtrGrid.GetXCoordinates())))
@@ -640,19 +623,19 @@ class InterfaceTensorread_vtk(object):
 
         Parameters
         ----------
-        TensorMesh : the discretize.TensorMesh class
-            Called using the syntax *TensorMesh.read_vtk(file_name, directory)*
         file_name : str
-            full path to the VTK rectilinear file (vtr or xml) containing the mesh (and models)
-            or just the file name if the directory is specified.
-        directory : str (optional)
+            full path to the VTK rectilinear file (vtr or xml) containing the mesh (and
+            models) or just the file name if the directory is specified.
+        directory : str, optional
             directory where the file lives
 
         Returns
         -------
-        tuple organized (discretize.TensorMesh, dict)
-            The fist entry of the tuple is a tensor mesh. The second entry is a dictionary
-            containing the models. The keys correspond to the names of the models.
+        mesh : discretize.TensorMesh
+            The tensor mesh object.
+        model_dict : dict of [str, (n_cells) numpy.ndarray]
+            A dictionary containing the models. The keys correspond to the names of the
+            models.
         """
         fname = os.path.join(directory, file_name)
         # Read the file

@@ -42,34 +42,38 @@ except ImportError as err:
 def interpolation_matrix(locs, x, y=None, z=None):
     """
     Generate interpolation matrix which maps a tensor quantity to a set of locations.
-    
-    This function generates a sparse matrix for interpolating tensor quantities to a set of
-    specified locations. It uses nD linear interpolation. The user may generate the interpolation
-    matrix for tensor quantities that live on 1D, 2D or 3D tensors. This functionality is
-    frequently used to interpolate quantites from cell centers or nodes to specified locations.
-    
+
+    This function generates a sparse matrix for interpolating tensor quantities to a set
+    of specified locations. It uses nD linear interpolation. The user may generate the
+    interpolation matrix for tensor quantities that live on 1D, 2D or 3D tensors. This
+    functionality is frequently used to interpolate quantites from cell centers or nodes
+    to specified locations.
+
+    In higher dimensions the ordering of the output has the 1st dimension changing the
+    quickest.
+
     Parameters
     ----------
-    locs : numpy.ndarray
-        A numpy array (n, dim) containing the locations for the interpolated values. Here *n* is
+    locs : (n, dim) numpy.ndarray
+        The locations for the interpolated values. Here *n* is
         the number of locations and *dim* is the dimension (1, 2 or 3)
-    x : numpy.ndarray
-        Vector defining the cell center or node locations of the tensor along the x-axis
-    y : numpy.ndarray, optional
-        Vector defining the cell center or node locations of the tensor along the y-axis
-    z : numpy.ndarray, optional
-        Vector defining the cell center or node locations of the tensor along the z-axis
+    x : (nx) numpy.ndarray
+        Vector defining the locations of the tensor along the x-axis
+    y : (ny) numpy.ndarray, optional
+        Vector defining the locations of the tensor along the y-axis. Required if
+        ``dim`` is 2.
+    z : (nz) numpy.ndarray, optional
+        Vector defining the locations of the tensor along the z-axis. Required if
+        ``dim`` is 3.
 
     Returns
     -------
-    scipy.sparse.csr_matrix
-        A sparse matrix which interpolates the tensor quantity on cell centers or nodes to
-        the set of specified locations. Where *n* is the number of specified locations and
-        *m* is the number of tensor quantities, the output array has shape (n, m).
+    (n, nx * ny * nz) scipy.sparse.csr_matrix
+        A sparse matrix which interpolates the tensor quantity on cell centers or nodes
+        to the set of specified locations.
 
     Examples
     --------
-
     Here is a 1D example where a function evaluated on a regularly spaced grid
     is interpolated to a set of random locations. To compare the accuracy, the
     function is evaluated at the set of random locations.
@@ -79,13 +83,15 @@ def interpolation_matrix(locs, x, y=None, z=None):
     >>> import numpy as np
     >>> import matplotlib.pyplot as plt
     >>> np.random.seed(14)
-    >>> 
+
+    Create an interpolation matrix
+
     >>> locs = np.random.rand(50)*0.8+0.1
     >>> x = np.linspace(0, 1, 7)
     >>> dense = np.linspace(0, 1, 200)
     >>> fun = lambda x: np.cos(2*np.pi*x)
     >>> Q = interpolation_matrix(locs, x)
-    >>> 
+
     >>> fig1 = plt.figure(figsize=(5, 3))
     >>> ax = fig1.add_axes([0.1, 0.1, 0.8, 0.8])
     >>> ax.plot(dense, fun(dense), 'k:', lw=3)
@@ -93,14 +99,14 @@ def interpolation_matrix(locs, x, y=None, z=None):
     >>> ax.plot(locs, Q*fun(x), 'go', markersize=4)
     >>> ax.plot(locs, fun(locs), 'rs', markersize=4)
     >>> ax.legend(
-    >>>     [
-    >>>         'True Function',
-    >>>         'True (discrete loc.)',
-    >>>         'Interpolated (computed)',
-    >>>         'True (interp. loc.)'
-    >>>     ],
-    >>>     loc='upper center'
-    >>> )
+    ...     [
+    ...         'True Function',
+    ...         'True (discrete loc.)',
+    ...         'Interpolated (computed)',
+    ...         'True (interp. loc.)'
+    ...     ],
+    ...     loc='upper center'
+    ... )
     >>> plt.show()
 
 
@@ -112,15 +118,22 @@ def interpolation_matrix(locs, x, y=None, z=None):
     >>> hy = np.ones(10)
     >>> mesh = TensorMesh([hx, hy], x0='CC')
     >>> def fun(x, y):
-    >>>     return np.exp(-(x**2 + y**2)/2**2)
+    ...     return np.exp(-(x**2 + y**2)/2**2)
+
+    Define the the value at the mesh nodes,
+
     >>> nodes = mesh.nodes
     >>> val_nodes = fun(nodes[:, 0], nodes[:, 1])
+
     >>> centers = mesh.cell_centers
-    >>> val_centers = fun(centers[:, 0], centers[:, 1])
     >>> A = interpolation_matrix(
-    >>>     centers, mesh.nodes_x, mesh.nodes_y
-    >>> )
+    ...     centers, mesh.nodes_x, mesh.nodes_y
+    ... )
     >>> val_interp = A.dot(val_nodes)
+
+    Plot the interpolated values, along with the true values at cell centers,
+
+    >>> val_centers = fun(centers[:, 0], centers[:, 1])
     >>> fig = plt.figure(figsize=(11,3.3))
     >>> clim = (0., 1.)
     >>> ax1 = fig.add_subplot(131)
@@ -133,8 +146,6 @@ def interpolation_matrix(locs, x, y=None, z=None):
     >>> ax2.set_title('Interpolated from Nodes')
     >>> ax3.set_title('Relative Error')
     >>> plt.show()
-    
-
     """
 
     npts = locs.shape[0]
@@ -165,11 +176,11 @@ def volume_average(mesh_in, mesh_out, values=None, output=None):
     This volume averaging function looks for overlapping cells in each mesh,
     and weights the output values by the partial volume ratio of the overlapping
     input cells. The volume average operation should result in an output such that
-    ``np.sum(mesh_in.cell_volumes*values)`` = ``np.sum(mesh_out.cell_volumes*output)``, when the input
-    and output meshes have the exact same extent. When the output mesh extent goes
-    beyond the input mesh, it is assumed to have constant values in that direction.
-    When the output mesh extent is smaller than the input mesh, only the overlapping
-    extent of the input mesh contributes to the output.
+    ``np.sum(mesh_in.cell_volumes*values)`` = ``np.sum(mesh_out.cell_volumes*output)``,
+    when the input and output meshes have the exact same extent. When the output mesh
+    extent goes beyond the input mesh, it is assumed to have constant values in that
+    direction. When the output mesh extent is smaller than the input mesh, only the
+    overlapping extent of the input mesh contributes to the output.
 
     This function operates in three different modes. If only *mesh_in* and
     *mesh_out* are given, the returned value is a ``scipy.sparse.csr_matrix``
@@ -185,16 +196,17 @@ def volume_average(mesh_in, mesh_out, values=None, output=None):
         Input mesh (the mesh you are interpolating from)
     mesh_out : ~discretize.TensorMesh or ~discretize.TreeMesh
         Output mesh (the mesh you are interpolating to)
-    values : numpy.ndarray (optional)
+    values : (mesh_in.n_cells) numpy.ndarray, optional
         Array with values defined at the cells of ``mesh_in``
-    output : numpy.ndarray (optional)
-        Output array to be overwritten of length *mesh_out.nC* and type ``np.float64``
+    output : (mesh_out.n_cells) numpy.ndarray of float, optional
+        Output array to be overwritten
 
     Returns
     -------
-    scipy.sparse.csr_matrix or numpy.ndarray
-        If *values* = *None* , the returned value is a matrix representing this operation,
-        otherwise it is a :class:`numpy.ndarray` of the result of the operation.
+    (mesh_out.n_cells, mesh_in.n_cells) scipy.sparse.csr_matrix or (mesh_out.n_cells) numpy.ndarray
+        If *values* = *None* , the returned value is a matrix representing this
+        operation, otherwise it is a :class:`numpy.ndarray` of the result of the
+        operation.
 
     Examples
     --------

@@ -33,26 +33,26 @@ def is_scalar(f):
 
 
 def as_array_n_by_dim(pts, dim):
-    """Verifies the dimensions of a 2D array.
+    """Ensures the given array will have *dim* columns.
 
-    The function **as_array_n_by_dim** will examine the :class:`numpy.array_like`
-    *pts* and determine if the number of columns is equal to *dim*.
-    If so, this function returns the input argument *pts*. Otherwise,
-    the function returns an error.
+    The function **as_array_n_by_dim** will examine the *pts* array,
+    and coerce it to be at least  if the number of columns is equal to *dim*.
+
+    This is similar to the :func:`numpy.atleast_2d`, except that it ensures that then
+    input has *dim* columns, and it appends a :data:`numpy.newaxis` to 1D arrays
+    instead of prepending.
 
     Parameters
     ----------
-    pts : numpy.array_like
-        A 2D numpy array
+    pts : array_like
+        array to check.
     dim : int
         The number of columns which *pts* should have
-    
+
     Returns
     -------
-    numpy.array_like
-        Returns the input argument *pts* if the number of columns equals *dim*.
-    
-
+    (n_pts, dim) numpy.ndarray
+        verified array
     """
     if type(pts) == list:
         pts = np.array(pts)
@@ -179,7 +179,13 @@ def deprecate_property(new_name, old_name, removal_version=None):
         warnings.warn(message, DeprecationWarning)
         setattr(self, new_name, other)
 
-    doc = f"`{old_name}` has been deprecated. See `{new_name}` for documentation"
+    doc = f"""
+    `{old_name}` has been deprecated. See `{new_name}` for documentation.
+
+    See Also
+    --------
+    {new_name}
+    """
 
     return property(get_dep, set_dep, None, doc)
 

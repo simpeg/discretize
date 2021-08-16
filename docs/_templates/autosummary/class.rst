@@ -3,6 +3,9 @@
 
 .. currentmodule:: {{ module }}
 
+.. inheritance-diagram:: {{ objname }}
+    :parts: 1
+
 .. autoclass:: {{ objname }}
 
   {% block methods %}
@@ -34,8 +37,6 @@
   {% endif %}
   {% endblock %}
 
-.. include:: backreferences/{{ fullname }}.examples
-
-.. raw:: html
-
-     <div style='clear:both'></div>
+.. minigallery:: {{ fullname }}
+    :add-heading: Galleries and Tutorials using ``{{ fullname }}``
+    :heading-level: -

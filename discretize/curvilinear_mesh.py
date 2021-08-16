@@ -34,20 +34,21 @@ class CurvilinearMesh(
 ):
     """Curvilinear mesh class.
 
-    Curvilinear meshes are numerical grids whose cells are general
-    quadrilaterals (2D) or cuboid (3D); unlike tensor meshes
-    (see :class:`~discretize.TensorMesh`) whose cells are rectangles
-    or rectangular prisms. That being said, the combinatorial
-    structure (i.e. organization of mesh cells) of
-    curvilinear meshes is the same as tensor meshes.
+    Curvilinear meshes are numerical grids whose cells are general quadrilaterals (2D)
+    or cuboid (3D); unlike tensor meshes (see :class:`~discretize.TensorMesh`) whose
+    cells are rectangles or rectangular prisms. That being said, the combinatorial
+    structure (i.e. connectivity of mesh cells) of curvilinear meshes is the same as
+    tensor meshes.
 
     Parameters
     ----------
-    node_list : list of numpy.array_like
-        List :class:`numpy.array_like` containing the gridded x, y (and z) node locations.
+    node_list : list of array_like
+        List :class:`array_like` containing the gridded x, y (and z) node locations.
 
-            - For a 2D curvilinear mesh, *node_list* = [X, Y] where X and Y have shape (n_nodes_x, n_nodes_y)
-            - For a 3D curvilinear mesh, *node_list* = [X, Y, Z] where X, Y and Z have shape (n_nodes_x, n_nodes_y, n_nodes_z)
+        - For a 2D curvilinear mesh, *node_list* = [X, Y] where X and Y have shape
+          (``n_nodes_x``, ``n_nodes_y``)
+        - For a 3D curvilinear mesh, *node_list* = [X, Y, Z] where X, Y and Z have shape
+          (``n_nodes_x``, ``n_nodes_y``, ``n_nodes_z``)
 
 
     Examples
@@ -58,14 +59,22 @@ class CurvilinearMesh(
     >>> from discretize import CurvilinearMesh
     >>> from discretize.utils import example_curvilinear_grid
     >>> import matplotlib.pyplot as plt
-    >>> 
+
+    The example grid slightly rotates the nodes in the center of the mesh,
+
     >>> x, y = example_curvilinear_grid([10, 10], "rotate")
+    >>> x.shape
+    (11, 11)
+    >>> y.shape
+    (11, 11)
     >>> curvilinear_mesh = CurvilinearMesh([x, y])
+    >>> curvilinear_mesh.shape_nodes
+    (11, 11)
+
     >>> fig = plt.figure(figsize=(5,5))
     >>> ax = fig.add_subplot(111)
-    >>> curvilinear_mesh.plot_grid(ax=ax, show_it=True)
-
-
+    >>> curvilinear_mesh.plot_grid(ax=ax)
+    >>> plt.show()
     """
 
     _meshType = "Curv"
@@ -124,7 +133,7 @@ class CurvilinearMesh(
 
         Returns
         -------
-        list of numpy.ndarray
+        (dim) list of numpy.ndarray
             Gridded x, y (and z) node locations used to create the mesh.
 
                 - *2D:* return is a list [X, Y] where X and Y have shape (n_nodes_x, n_nodes_y)
@@ -135,16 +144,6 @@ class CurvilinearMesh(
 
     @classmethod
     def deserialize(cls, value, **kwargs):
-        """Create curvilinear mesh from a dictionary of attributes
-
-        Parameters
-        ----------
-        cls : discretize.CurvilinearMesh
-            The :class:`~discretize.CurvilinearMesh` class
-        items : dict
-            dictionary of {attribute : value} pairs that will be passed to this class's
-            initialization method as keyword arguments.
-        """
         if "nodes" in value:
             value["node_list"] = value.pop("nodes")
         return super().deserialize(value, **kwargs)
@@ -159,7 +158,7 @@ class CurvilinearMesh(
 
         Returns
         -------
-        numpy.ndarray (n_cells, dim)
+        (n_cells, dim) numpy.ndarray of float
             The shape of the output array is the number of cells by the dimension.
 
         """
@@ -179,8 +178,8 @@ class CurvilinearMesh(
 
         Returns
         -------
-        numpy.ndarray (n_nodes, dim)
-            The shape of the output array is the number of nodes by the dimension.
+        (n_nodes, dim) numpy.ndarray of float
+            Gridded node locations
         """
         if getattr(self, "_nodes", None) is None:
             raise Exception("Someone deleted this. I blame you.")
@@ -199,7 +198,7 @@ class CurvilinearMesh(
 
         Returns
         -------
-        numpy.ndarray of float (n_faces_x, dim)
+        (n_faces_x, dim) numpy.ndarray of float
             Gridded x-face locations (staggered grid)
 
         Examples
@@ -211,16 +210,17 @@ class CurvilinearMesh(
         >>> from discretize import CurvilinearMesh
         >>> from discretize.utils import example_curvilinear_grid, mkvc
         >>> from matplotlib import pyplot as plt
-        >>> 
+
         >>> x, y = example_curvilinear_grid([10, 10], "rotate")
         >>> mesh1 = CurvilinearMesh([x, y])
-        >>> 
+        >>> x_faces = mesh1.faces_x
+
         >>> fig1 = plt.figure(figsize=(5, 5))
         >>> ax1 = fig1.add_subplot(111)
         >>> mesh1.plot_grid(ax=ax1)
-        >>> x_faces = mesh1.faces_x
         >>> ax1.scatter(x_faces[:, 0], x_faces[:, 1], 30, 'r')
         >>> ax1.legend(['Mesh', 'X-faces'], fontsize=16)
+        >>> plt.plot()
 
         Here, we provide an example of a highly irregular curvilinear mesh.
         In this case, the x-faces are not defined by normal vectors along
@@ -228,14 +228,14 @@ class CurvilinearMesh(
 
         >>> x, y = example_curvilinear_grid([10, 10], "sphere")
         >>> mesh2 = CurvilinearMesh([x, y])
-        >>> 
+        >>> x_faces = mesh2.faces_x
+
         >>> fig2 = plt.figure(figsize=(5, 5))
         >>> ax2 = fig2.add_subplot(111)
         >>> mesh2.plot_grid(ax=ax2)
-        >>> x_faces = mesh2.faces_x
         >>> ax2.scatter(x_faces[:, 0], x_faces[:, 1], 30, 'r')
         >>> ax2.legend(['Mesh', 'X-faces'], fontsize=16)
-
+        >>> plt.plot()
         """
 
         if getattr(self, "_faces_x", None) is None:
@@ -272,7 +272,7 @@ class CurvilinearMesh(
 
         Returns
         -------
-        numpy.ndarray of float (n_faces_y, dim)
+        (n_faces_y, dim) numpy.ndarray of float
             Gridded y-face locations (staggered grid)
 
         Examples
@@ -284,16 +284,17 @@ class CurvilinearMesh(
         >>> from discretize import CurvilinearMesh
         >>> from discretize.utils import example_curvilinear_grid, mkvc
         >>> from matplotlib import pyplot as plt
-        >>> 
+
         >>> x, y = example_curvilinear_grid([10, 10], "rotate")
         >>> mesh1 = CurvilinearMesh([x, y])
-        >>> 
+        >>> y_faces = mesh1.faces_y
+
         >>> fig1 = plt.figure(figsize=(5, 5))
         >>> ax1 = fig1.add_subplot(111)
         >>> mesh1.plot_grid(ax=ax1)
-        >>> y_faces = mesh1.faces_y
         >>> ax1.scatter(y_faces[:, 0], y_faces[:, 1], 30, 'r')
         >>> ax1.legend(['Mesh', 'Y-faces'], fontsize=16)
+        >>> plt.plot()
 
         Here, we provide an example of a highly irregular curvilinear mesh.
         In this case, the y-faces are not defined by normal vectors along
@@ -301,14 +302,14 @@ class CurvilinearMesh(
 
         >>> x, y = example_curvilinear_grid([10, 10], "sphere")
         >>> mesh2 = CurvilinearMesh([x, y])
-        >>> 
+        >>> y_faces = mesh2.faces_y
+
         >>> fig2 = plt.figure(figsize=(5, 5))
         >>> ax2 = fig2.add_subplot(111)
         >>> mesh2.plot_grid(ax=ax2)
-        >>> y_faces = mesh2.faces_y
         >>> ax2.scatter(y_faces[:, 0], y_faces[:, 1], 30, 'r')
         >>> ax2.legend(['Mesh', 'Y-faces'], fontsize=16)
-
+        >>> plt.plot()
         """
 
         if getattr(self, "_faces_y", None) is None:
@@ -345,7 +346,7 @@ class CurvilinearMesh(
 
         Returns
         -------
-        numpy.ndarray of float (n_faces_z, dim)
+        (n_faces_z, dim) numpy.ndarray of float
             Gridded z-face locations (staggered grid)
         """
 
@@ -372,7 +373,7 @@ class CurvilinearMesh(
 
         Returns
         -------
-        numpy.ndarray of float (n_faces, dim)
+        (n_faces, dim) numpy.ndarray of float
             Gridded face locations (staggered grid)
 
         Examples
@@ -384,17 +385,20 @@ class CurvilinearMesh(
         >>> from discretize import CurvilinearMesh
         >>> from discretize.utils import example_curvilinear_grid, mkvc
         >>> from matplotlib import pyplot as plt
-        >>> 
+
         >>> x, y = example_curvilinear_grid([10, 10], "rotate")
         >>> mesh1 = CurvilinearMesh([x, y])
-        >>> 
+        >>> faces = mesh1.faces
+        >>> x_faces = faces[:mesh1.n_faces_x]
+        >>> y_faces = faces[mesh1.n_faces_x:]
+
         >>> fig1 = plt.figure(figsize=(5, 5))
         >>> ax1 = fig1.add_subplot(111)
         >>> mesh1.plot_grid(ax=ax1)
-        >>> x_faces, y_faces = mesh1.faces_x, mesh1.faces_y
         >>> ax1.scatter(x_faces[:, 0], x_faces[:, 1], 30, 'r')
         >>> ax1.scatter(y_faces[:, 0], y_faces[:, 1], 30, 'g')
         >>> ax1.legend(['Mesh', 'X-faces', 'Y-faces'], fontsize=16)
+        >>> plt.plot()
 
         Here, we provide an example of a highly irregular curvilinear mesh.
         In this case, the y-faces are not defined by normal vectors along
@@ -402,14 +406,17 @@ class CurvilinearMesh(
 
         >>> x, y = example_curvilinear_grid([10, 10], "sphere")
         >>> mesh2 = CurvilinearMesh([x, y])
-        >>> 
+        >>> faces = mesh2.faces
+        >>> x_faces = faces[:mesh2.n_faces_x]
+        >>> y_faces = faces[mesh2.n_faces_x:]
+
         >>> fig2 = plt.figure(figsize=(5, 5))
         >>> ax2 = fig2.add_subplot(111)
         >>> mesh2.plot_grid(ax=ax2)
-        >>> x_faces, y_faces = mesh2.faces_x, mesh2.faces_y
         >>> ax2.scatter(x_faces[:, 0], x_faces[:, 1], 30, 'r')
         >>> ax2.scatter(y_faces[:, 0], y_faces[:, 1], 30, 'g')
         >>> ax2.legend(['Mesh', 'X-faces', 'Y-faces'], fontsize=16)
+        >>> plt.plot()
         """
         faces = np.r_[self.faces_x, self.faces_y]
         if self.dim > 2:
@@ -429,7 +436,7 @@ class CurvilinearMesh(
 
         Returns
         -------
-        numpy.ndarray of float (n_edges_x, dim)
+        (n_edges_x, dim) numpy.ndarray of float
             Gridded x-edge locations (staggered grid)
 
         Examples
@@ -440,16 +447,17 @@ class CurvilinearMesh(
         >>> from discretize import CurvilinearMesh
         >>> from discretize.utils import example_curvilinear_grid, mkvc
         >>> from matplotlib import pyplot as plt
-        >>> 
+
         >>> x, y = example_curvilinear_grid([10, 10], "rotate")
         >>> mesh1 = CurvilinearMesh([x, y])
-        >>> 
+        >>> x_edges = mesh1.edges_x
+
         >>> fig1 = plt.figure(figsize=(5, 5))
         >>> ax1 = fig1.add_subplot(111)
         >>> mesh1.plot_grid(ax=ax1)
-        >>> x_edges = mesh1.edges_x
         >>> ax1.scatter(x_edges[:, 0], x_edges[:, 1], 30, 'r')
         >>> ax1.legend(['Mesh', 'X-edges'], fontsize=16)
+        >>> plt.plot()
 
         Here, we provide an example of a highly irregular curvilinear mesh.
         In this case, the x-edges are not aligned primarily along
@@ -457,14 +465,14 @@ class CurvilinearMesh(
 
         >>> x, y = example_curvilinear_grid([10, 10], "sphere")
         >>> mesh2 = CurvilinearMesh([x, y])
-        >>> 
+        >>> x_edges = mesh2.edges_x
+
         >>> fig2 = plt.figure(figsize=(5, 5))
         >>> ax2 = fig2.add_subplot(111)
         >>> mesh2.plot_grid(ax=ax2)
-        >>> x_edges = mesh2.edges_x
         >>> ax2.scatter(x_edges[:, 0], x_edges[:, 1], 30, 'r')
         >>> ax2.legend(['Mesh', 'X-edges'], fontsize=16)
-
+        >>> plt.plot()
         """
         if getattr(self, "_edges_x", None) is None:
             N = self.reshape(self.gridN, "N", "N", "M")
@@ -489,7 +497,7 @@ class CurvilinearMesh(
 
         Returns
         -------
-        numpy.ndarray of float (n_edges_y, dim)
+        (n_edges_y, dim) numpy.ndarray of float
             Gridded y-edge locations (staggered grid)
 
         Examples
@@ -500,16 +508,17 @@ class CurvilinearMesh(
         >>> from discretize import CurvilinearMesh
         >>> from discretize.utils import example_curvilinear_grid, mkvc
         >>> from matplotlib import pyplot as plt
-        >>> 
+
         >>> x, y = example_curvilinear_grid([10, 10], "rotate")
         >>> mesh1 = CurvilinearMesh([x, y])
-        >>> 
+        >>> y_edges = mesh1.edges_y
+
         >>> fig1 = plt.figure(figsize=(5, 5))
         >>> ax1 = fig1.add_subplot(111)
         >>> mesh1.plot_grid(ax=ax1)
-        >>> y_edges = mesh1.edges_y
         >>> ax1.scatter(y_edges[:, 0], y_edges[:, 1], 30, 'r')
         >>> ax1.legend(['Mesh', 'Y-edges'], fontsize=16)
+        >>> plt.plot()
 
         Here, we provide an example of a highly irregular curvilinear mesh.
         In this case, the y-edges are not aligned primarily along
@@ -517,14 +526,14 @@ class CurvilinearMesh(
 
         >>> x, y = example_curvilinear_grid([10, 10], "sphere")
         >>> mesh2 = CurvilinearMesh([x, y])
-        >>> 
+        >>> y_edges = mesh2.edges_y
+
         >>> fig2 = plt.figure(figsize=(5, 5))
         >>> ax2 = fig2.add_subplot(111)
         >>> mesh2.plot_grid(ax=ax2)
-        >>> y_edges = mesh2.edges_y
         >>> ax2.scatter(y_edges[:, 0], y_edges[:, 1], 30, 'r')
         >>> ax2.legend(['Mesh', 'X-edges'], fontsize=16)
-
+        >>> plt.plot()
         """
         if getattr(self, "_edges_y", None) is None:
             N = self.reshape(self.gridN, "N", "N", "M")
@@ -549,7 +558,7 @@ class CurvilinearMesh(
 
         Returns
         -------
-        numpy.ndarray of float (n_edges_z, dim)
+        (n_edges_z, dim) numpy.ndarray of float
             Gridded z-edge locations (staggered grid)
         """
         if getattr(self, "_edges_z", None) is None and self.dim == 3:
@@ -569,7 +578,7 @@ class CurvilinearMesh(
 
         Returns
         -------
-        numpy.ndarray of float (n_edges, dim)
+        (n_edges, dim) numpy.ndarray of float
             Gridded edge locations (staggered grid)
 
         Examples
@@ -581,17 +590,20 @@ class CurvilinearMesh(
         >>> from discretize import CurvilinearMesh
         >>> from discretize.utils import example_curvilinear_grid, mkvc
         >>> from matplotlib import pyplot as plt
-        >>> 
+
         >>> x, y = example_curvilinear_grid([10, 10], "rotate")
         >>> mesh1 = CurvilinearMesh([x, y])
-        >>> 
+        >>> edges = mesh1.edges
+        >>> x_edges = edges[:mesh1.n_edges_x]
+        >>> y_edges = edges[mesh1.n_edges_x:]
+
         >>> fig1 = plt.figure(figsize=(5, 5))
         >>> ax1 = fig1.add_subplot(111)
         >>> mesh1.plot_grid(ax=ax1)
-        >>> x_edges, y_edges = mesh1.edges_x, mesh1.edges_y
         >>> ax1.scatter(x_edges[:, 0], x_edges[:, 1], 30, 'r')
         >>> ax1.scatter(y_edges[:, 0], y_edges[:, 1], 30, 'g')
         >>> ax1.legend(['Mesh', 'X-edges', 'Y-edges'], fontsize=16)
+        >>> plt.plot()
 
         Here, we provide an example of a highly irregular curvilinear mesh.
         In this case, the y-edges are not defined by normal vectors along
@@ -599,14 +611,17 @@ class CurvilinearMesh(
 
         >>> x, y = example_curvilinear_grid([10, 10], "sphere")
         >>> mesh2 = CurvilinearMesh([x, y])
-        >>> 
+        >>> edges = mesh2.edges
+        >>> x_edges = edges[:mesh2.n_edges_x]
+        >>> y_edges = edges[mesh2.n_edges_x:]
+
         >>> fig2 = plt.figure(figsize=(5, 5))
         >>> ax2 = fig2.add_subplot(111)
         >>> mesh2.plot_grid(ax=ax2)
-        >>> x_edges, y_edges = mesh2.edges_x, mesh2.edges_y
         >>> ax2.scatter(x_edges[:, 0], x_edges[:, 1], 30, 'r')
         >>> ax2.scatter(y_edges[:, 0], y_edges[:, 1], 30, 'g')
         >>> ax2.legend(['Mesh', 'X-edges', 'Y-edges'], fontsize=16)
+        >>> plt.show()
         """
         edges = np.r_[self.edges_x, self.edges_y]
         if self.dim > 2:
@@ -617,13 +632,13 @@ class CurvilinearMesh(
     def boundary_nodes(self):
         """Gridded boundary node locations
 
-        This property returns a numpy array of shape 
+        This property returns a numpy array of shape
         (n_boundary_nodes, dim) containing the gridded locations
         of the nodes on the boundary of the mesh.
 
         Returns
         -------
-        numpy.ndarray of float (n_boundary_nodes, dim)
+        (n_boundary_nodes, dim) numpy.ndarray of float
             Gridded boundary node locations
         """
         return self.nodes[make_boundary_bool(self.shape_nodes)]
@@ -632,15 +647,15 @@ class CurvilinearMesh(
     def boundary_edges(self):
         """Gridded boundary edge locations
 
-        This property returns a numpy array of shape 
+        This property returns a numpy array of shape
         (n_boundary_edges, dim) containing the gridded locations
         of the edges on the boundary of the mesh. The returned
         quantity is organized *np.r_[edges_x, edges_y, edges_z]* .
 
         Returns
         -------
-        numpy.ndarray of float (n_boundary_edges, dim)
-            Gridded boundary edge locations 
+        (n_boundary_edges, dim) numpy.ndarray of float
+            Gridded boundary edge locations
         """
         if self.dim == 2:
             ex = self.edges_x[make_boundary_bool(self.shape_edges_x, dir="y")]
@@ -661,7 +676,7 @@ class CurvilinearMesh(
 
         Returns
         -------
-        numpy.ndarray of float (n_faces_x, dim)
+        (n_faces_x, dim) numpy.ndarray of float
             Gridded locations of all non-hanging x-faces
         """
         fx = self.faces_x[make_boundary_bool(self.shape_faces_x, dir="x")]
@@ -678,12 +693,12 @@ class CurvilinearMesh(
 
         For all boundary faces in the mesh, this property returns
         the unit vectors denoting the outward normals to the boundary.
-        The returned quantity is a numpy array of shape 
+        The returned quantity is a numpy array of shape
         (n_boundary_faces, dim).
 
         Returns
         -------
-        numpy.ndarray of float (n_boundary_faces, dim)
+        (n_boundary_faces, dim) numpy.ndarray of float
             Outward normals of boundary faces
         """
         is_bxm = np.zeros(self.shape_faces_x, order="F", dtype=bool)
@@ -750,7 +765,7 @@ class CurvilinearMesh(
 
         Returns
         -------
-        numpy.ndarray (n_cells,)
+        (n_cells) numpy.ndarray
             The quantity returned depends on the dimensions of the mesh:
                 - *2D:* Returns the cell areas
                 - *3D:* Returns the cell volumes
@@ -798,11 +813,13 @@ class CurvilinearMesh(
 
         Returns
         -------
-        numpy.ndarray (n_faces,)
+        (n_faces) numpy.ndarray
             The length of the quantity returned depends on the dimensions of the mesh:
-                - *1D:* returns the x-face areas
-                - *2D:* returns the x-face and y-face areas in order; i.e. y-edge and x-edge lengths, respectively
-                - *3D:* returns the x, y and z-face areas in order
+
+            - *1D:* returns the x-face areas
+            - *2D:* returns the x-face and y-face areas in order; i.e. y-edge
+              and x-edge lengths, respectively
+            - *3D:* returns the x, y and z-face areas in order
         """
         if (
             getattr(self, "_face_areas", None) is None
@@ -857,10 +874,10 @@ class CurvilinearMesh(
         cross-products can be used to compute the normal vector.
         In this case, the average normal vector is returned so there
         is only 1 vector per face.
-        
+
         Returns
         -------
-        numpy.ndarray of shape (n_faces, dim)
+        (n_faces, dim) numpy.ndarray of shape
             Gridded average face normals for all mesh faces.
         """
 
@@ -899,11 +916,12 @@ class CurvilinearMesh(
 
         Returns
         -------
-        numpy.ndarray (n_edges,)
+        (n_edges) numpy.ndarray
             The length of the quantity returned depends on the dimensions of the mesh:
-                - *1D:* returns the x-edge lengths
-                - *2D:* returns the x-edge and y-edge lengths in order
-                - *3D:* returns the x, y and z-edge lengths in order
+
+            - *1D:* returns the x-edge lengths
+            - *2D:* returns the x-edge and y-edge lengths in order
+            - *3D:* returns the x, y and z-edge lengths in order
         """
         if getattr(self, "_edge_lengths", None) is None:
             if self.dim == 2:
@@ -944,10 +962,10 @@ class CurvilinearMesh(
         This property computes and returns a numpy array of shape
         (n_edges, dim) containing the edge tangent directions for
         all mesh edges.
-        
+
         Returns
         -------
-        numpy.ndarray of shape (n_edges, dim)
+        (n_edges, dim) numpy.ndarray of shape
             Gridded edge tangent directions for all mesh edges
         """
         if getattr(self, "_edge_tangents", None) is None:
@@ -960,6 +978,3 @@ class CurvilinearMesh(
     edge = deprecate_property("edge_lengths", "edge", removal_version="1.0.0")
     # tangent already deprecated in BaseMesh
     # normals already deprecated in BaseMesh
-
-
-CurvilinearMesh.__module__ = "discretize"

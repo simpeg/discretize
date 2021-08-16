@@ -22,13 +22,11 @@ class TensorMeshIO(InterfaceTensorread_vtk):
 
     """
     @classmethod
-    def _readUBC_3DMesh(TensorMesh, file_name):
+    def _readUBC_3DMesh(cls, file_name):
         """Read 3D tensor mesh from UBC-GIF formatted file.
 
         Parameters
         ----------
-        TensorMesh : the discretize.TensorMesh class
-            This class method is utilitized via the following syntax: *TensorMesh._readUBC_3DMesh(file_name)*
         file_name : str or file name
             full path to the UBC-GIF formatted mesh file
 
@@ -65,17 +63,15 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         # Adjust the reference point to the bottom south west corner
         origin[2] = origin[2] - np.sum(h3)
         # Make the mesh
-        tensMsh = TensorMesh([h1, h2, h3], origin=origin)
+        tensMsh = cls([h1, h2, h3], origin=origin)
         return tensMsh
 
     @classmethod
-    def _readUBC_2DMesh(TensorMesh, file_name):
+    def _readUBC_2DMesh(cls, file_name):
         """Read 2D tensor mesh from UBC-GIF formatted file.
 
         Parameters
         ----------
-        TensorMesh : the discretize.TensorMesh class
-            This class method is utilitized via the following syntax: *TensorMesh._readUBC_2DMesh(file_name)*
         file_name : str or file name
             full path to the UBC-GIF formatted mesh file
 
@@ -124,24 +120,22 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         z0 = -(z0 + sum(dz))
         dz = dz[::-1]
         # Make the mesh
-        tensMsh = TensorMesh([dx, dz], origin=(x0, z0))
+        tensMsh = cls([dx, dz], origin=(x0, z0))
 
         fopen.close()
 
         return tensMsh
 
     @classmethod
-    def read_UBC(TensorMesh, file_name, directory=""):
+    def read_UBC(cls, file_name, directory=""):
         """Read 2D or 3D tensor mesh from UBC-GIF formatted file.
 
         Parameters
         ----------
-        TensorMesh : the discretize.TensorMesh class
-            This class method is utilitized via the following syntax: *TensorMesh.read_UBC(file_name, directory)*
         file_name : str or file name
             full path to the UBC-GIF formatted mesh file or just its name if directory is specified
-        directory : str
-            directory where the UBC-GIF file lives (optional)
+        directory : str, optional
+            directory where the UBC-GIF file lives
 
         Returns
         -------
@@ -158,10 +152,10 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         sizeM = np.array(msh.ravel()[0].split(), dtype=float)
         # Check if the mesh is a UBC 2D mesh
         if sizeM.shape[0] == 1:
-            Tnsmsh = TensorMesh._readUBC_2DMesh(fname)
+            Tnsmsh = cls._readUBC_2DMesh(fname)
         # Check if the mesh is a UBC 3D mesh
         elif sizeM.shape[0] == 3:
-            Tnsmsh = TensorMesh._readUBC_3DMesh(fname)
+            Tnsmsh = cls._readUBC_3DMesh(fname)
         else:
             raise Exception("File format not recognized")
         return Tnsmsh
@@ -171,15 +165,12 @@ class TensorMeshIO(InterfaceTensorread_vtk):
 
         Parameters
         ----------
-        mesh : discretize.TensorMesh
-            Where *mesh* is an instance of the class :class:`~discretize.TensorMesh` ,
-            this class method is utilitized via the following syntax: *mesh._readModelUBC_2D(file_name)*
         file_name : str or file name
             full path to the UBC-GIF formatted model file
 
         Returns
         -------
-        numpy.ndarray of size (n_cells)
+        (n_cells) numpy.ndarray
             The model defined on the 2D tensor mesh
         """
 
@@ -209,15 +200,12 @@ class TensorMeshIO(InterfaceTensorread_vtk):
 
         Parameters
         ----------
-        mesh : discretize.TensorMesh
-            Where *mesh* is an instance of the class :class:`~discretize.TensorMesh` ,
-            this class method is utilitized via the following syntax: *mesh._readModelUBC_3D(file_name)*
         file_name : str or file name
             full path to the UBC-GIF formatted model file
 
         Returns
         -------
-        numpy.ndarray of size (n_cells)
+        (n_cells) numpy.ndarray
             The model defined on the 3D tensor mesh
         """
         f = open(file_name, "r")
@@ -235,17 +223,14 @@ class TensorMeshIO(InterfaceTensorread_vtk):
 
         Parameters
         ----------
-        mesh : discretize.TensorMesh
-            Where *mesh* is an instance of the class :class:`~discretize.TensorMesh` ,
-            this class method is utilitized via the following syntax: *mesh.read_model_UBC(file_name, directory)*
         file_name : str or file name
             full path to the UBC-GIF formatted model file or just its name if directory is specified
-        directory : str
-            directory where the UBC-GIF file lives (optional)
+        directory : str, optional
+            directory where the UBC-GIF file lives
 
         Returns
         -------
-        numpy.ndarray of size (n_cells)
+        (n_cells) numpy.ndarray
             The model defined on the mesh
         """
         fname = os.path.join(directory, file_name)
@@ -262,15 +247,11 @@ class TensorMeshIO(InterfaceTensorread_vtk):
 
         Parameters
         ----------
-        mesh : discretize.TensorMesh
-            Where *mesh* is an instance of the class :class:`~discretize.TensorMesh` ,
-            this class method is utilitized via the following syntax: *mesh.write_model_UBC(file_name, models, directory)*
         file_name : str or file name
             full path for the output mesh file or just its name if directory is specified
-        model : numpy.ndarray (n_cells)
-            A 1D numpy array of size (n_cells)
-        directory : str
-            output directory (optional)
+        model : (n_cells) numpy.ndarray
+        directory : str, optional
+            output directory
         """
         fname = os.path.join(directory, file_name)
         if mesh.dim == 3:
@@ -299,12 +280,9 @@ class TensorMeshIO(InterfaceTensorread_vtk):
 
         Parameters
         ----------
-        mesh : discretize.TensorMesh
-            Where *mesh* is an instance of the class :class:`~discretize.TensorMesh` ,
-            this class method is utilitized via the following syntax: *mesh.write_UBC(file_name, comment_lines)*
         file_name : str or file name
             full path for the output mesh file
-        comment_lines : str
+        comment_lines : str, optional
             comment lines preceded are preceeded with '!'
         """
         if not mesh.dim == 3:
@@ -330,12 +308,9 @@ class TensorMeshIO(InterfaceTensorread_vtk):
 
         Parameters
         ----------
-        mesh : discretize.TensorMesh
-            Where *mesh* is an instance of the class :class:`~discretize.TensorMesh` ,
-            this class method is utilitized via the following syntax: *mesh.write_UBC(file_name, comment_lines)*
         file_name : str or file name
             full path for the output mesh file
-        comment_lines : str
+        comment_lines : str, optional
             comment lines preceded are preceeded with '!'
         """
         if not mesh.dim == 2:
@@ -398,16 +373,14 @@ class TensorMeshIO(InterfaceTensorread_vtk):
 
         Parameters
         ----------
-        mesh : discretize.TensorMesh
-            Where *mesh* is an instance of the class :class:`~discretize.TensorMesh` ,
-            this class method is utilitized via the following syntax: *mesh.write_UBC(file_name, models, directory, comment_lines)*
-        models : dict
-            The dictionary key is a string representing the model's name. Each model is a 1D numpy array of size (n_cells).
         file_name : str or file name
             full path for the output mesh file or just its name if directory is specified
-        directory : str
-            output directory (optional)
-        comment_lines : str
+        models : dict of [str, (n_cells) numpy.ndarray], optional
+            The dictionary key is a string representing the model's name. Each model
+            is an (n_cells) array.
+        directory : str, optional
+            output directory
+        comment_lines : str, optional
             comment lines preceded are preceeded with '!'
         """
         fname = os.path.join(directory, file_name)
@@ -465,12 +438,10 @@ class TreeMeshIO(object):
 
         Parameters
         ----------
-        TreeMesh : the discretize.TreeMesh class
-            This class method is utilitized via the following syntax: *TreeMesh.read_UBC(file_name, directory)*
         file_name : str or file name
             full path to the UBC-GIF formatted mesh file or just its name if directory is specified
-        directory : str
-            directory where the UBC-GIF file lives (optional)
+        directory : str, optional
+            directory where the UBC-GIF file lives
 
         Returns
         -------
@@ -516,18 +487,17 @@ class TreeMeshIO(object):
 
         Parameters
         ----------
-        mesh : discretize.TreeMesh (3D only)
-            Where *mesh* is an instance of the class :class:`~discretize.TreeMesh` ,
-            this class method is utilitized via the following syntax: *mesh.read_model_UBC(file_name)*
-        file_name : str or file name
-            full path to the UBC-GIF formatted model file or just its name if directory is specified
+        file_name : str or list of str
+            full path to the UBC-GIF formatted model file or
+            just its name if directory is specified. It can also be a list of file_names.
         directory : str
             directory where the UBC-GIF file lives (optional)
 
         Returns
         -------
-        numpy.ndarray of size (n_cells)
-            The model defined on the mesh
+        (n_cells) numpy.ndarray or dict of [str, (n_cells) numpy.ndarray]
+            The model defined on the mesh. If **file_name** is a ``dict``, it is a
+            dictionary of models indexed by the file names.
         """
 
         if type(file_name) is list:
@@ -552,14 +522,12 @@ class TreeMeshIO(object):
 
         Parameters
         ----------
-        mesh : discretize.TreeMesh (3D only)
-            Where *mesh* is an instance of the class :class:`~discretize.TreeMesh` ,
-            this class method is utilitized via the following syntax: *mesh.write_UBC(file_name, models, directory)*
-        models : dict
-            The dictionary key is a string representing the model's name. Each model is a 1D numpy array of size (n_cells).
-        file_name : str or file name
+        file_name : str
             full path for the output mesh file or just its name if directory is specified
-        directory : str
+        models : dict of [str, (n_cells) numpy.ndarray], optional
+            The dictionary key is a string representing the model's name.
+            Each model is a 1D numpy array of size (n_cells).
+        directory : str, optional
             output directory (optional)
         """
         uniform_hs = np.array([np.allclose(h, h[0]) for h in mesh.h])
@@ -603,13 +571,10 @@ class TreeMeshIO(object):
 
         Parameters
         ----------
-        mesh : discretize.TensorMesh
-            Where *mesh* is an instance of the class :class:`~discretize.TensorMesh` ,
-            this class method is utilitized via the following syntax: *mesh.write_model_UBC(file_name, models, directory)*
-        file_name : str or file name
+        file_name : str
             full path for the output mesh file or just its name if directory is specified
-        model : numpy.ndarray (n_cells)
-            A 1D numpy array of size (n_cells)
+        model : (n_cells) numpy.ndarray
+            model values defined for each cell
         directory : str
             output directory (optional)
         """
