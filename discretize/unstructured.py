@@ -1,6 +1,6 @@
 import numpy as np
 import scipy.sparse as sp
-from simpeg.utils import Identity
+from discretize.utils import Identity
 from discretize.base import BaseMesh
 
 
