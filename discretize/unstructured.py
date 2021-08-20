@@ -2,6 +2,7 @@ import numpy as np
 import scipy.sparse as sp
 from discretize.utils import Identity
 from discretize.base import BaseMesh
+from discretize._extensions.simplex_helpers import _build_faces_edges
 
 
 class SimplexMesh(BaseMesh):
@@ -37,72 +38,81 @@ class SimplexMesh(BaseMesh):
         # self._build_adjacency()
 
     def _number(self):
-        simplices = self._simplices
-        n_simplex = self.n_cells
-
-        # Faces
-        faces_per_simplex = self.dim + 1
-        simplex_faces = np.empty((n_simplex, faces_per_simplex), dtype=simplices.dtype)
-
-        n_faces = 0
-        faces = {}
-        for i_simp, simplex in enumerate(simplices):
-            # build every face in the simplex
-            for ii in range(faces_per_simplex):
-                face = np.r_[simplex[:ii], simplex[ii+1:]]
-                face.sort()
-                face = tuple(face)
-                ind = faces.get(face)
-                if ind is None:
-                    ind = n_faces
-                    faces[face] = ind
-                    n_faces += 1
-                simplex_faces[i_simp, ii] = ind
-
-        self._simplex_faces = simplex_faces
-        self._faces = np.asarray(list(faces.keys()))
-        self._n_faces = n_faces
-
-        # edges
-        if self.dim == 2:
-            self._simplex_edges = self._simplex_faces
-            self._edges = self._faces
-            self._n_edges = self._n_faces
-        else:
-            simplex_edges = np.empty((n_simplex, 6), dtype=simplices.dtype)
-
-            # For each simplex, build up a list of unique edges,
-            # and the index into the edge array for each index
-            n_edges = 0
-            edges = {}
-            edge_pairs = np.array([[1, 2], [0, 2], [0, 1], [0, 3], [1, 3], [2, 3]])
-            for i_simp, simplex in enumerate(simplices):
-                # build every pair of nodes in the simplex.
-                for i_edge in range(6):
-                    edge = simplex[edge_pairs[i_edge]]
-                    edge.sort()
-                    edge = tuple(edge)
-                    ind = edges.get(edge)
-                    if ind is None:
-                        ind = n_edges
-                        edges[edge] = n_edges
-                        n_edges += 1
-                    simplex_edges[i_simp, i_edge] = ind
-            self._simplex_edges = simplex_edges
-            self._edges = np.asarray(list(edges.keys()))
-            self._n_edges = n_edges
-
-            face_edges = np.empty((self.n_faces, 3), dtype=simplices.dtype)
-            for i_face, face in enumerate(self._faces):
-                # get indices of each edge in the face
-                # 3 edges per face
-                for ii in range(3):
-                    edge = np.r_[face[:ii], face[ii+1:]]
-                    edge.sort()
-                    edge = tuple(edge)
-                    ind = edges.get(edge)
-                    face_edges[i_face, ii] = ind
-            self._face_edges = face_edges
+        items = _build_faces_edges(self._simplices)
+        self._simplex_faces = np.array(items[0])
+        self._faces = np.array(items[1])
+        self._simplex_edges = np.array(items[2])
+        self._edges = np.array(items[3])
+        self._n_faces = self._faces.shape[0]
+        self._n_edges = self._edges.shape[0]
+        if self.dim == 3:
+            self._face_edges = np.array(items[4])
+        # simplices = self._simplices
+        # n_simplex = self.n_cells
+        #
+        # # Faces
+        # faces_per_simplex = self.dim + 1
+        # simplex_faces = np.empty((n_simplex, faces_per_simplex), dtype=simplices.dtype)
+        #
+        # n_faces = 0
+        # faces = {}
+        # for i_simp, simplex in enumerate(simplices):
+        #     # build every face in the simplex
+        #     for ii in range(faces_per_simplex):
+        #         face = np.r_[simplex[:ii], simplex[ii+1:]]
+        #         face.sort()
+        #         face = tuple(face)
+        #         ind = faces.get(face)
+        #         if ind is None:
+        #             ind = n_faces
+        #             faces[face] = ind
+        #             n_faces += 1
+        #         simplex_faces[i_simp, ii] = ind
+        #
+        # self._simplex_faces = simplex_faces
+        # self._faces = np.asarray(list(faces.keys()))
+        # self._n_faces = n_faces
+        #
+        # # edges
+        # if self.dim == 2:
+        #     self._simplex_edges = self._simplex_faces
+        #     self._edges = self._faces
+        #     self._n_edges = self._n_faces
+        # else:
+        #     simplex_edges = np.empty((n_simplex, 6), dtype=simplices.dtype)
+        #
+        #     # For each simplex, build up a list of unique edges,
+        #     # and the index into the edge array for each index
+        #     n_edges = 0
+        #     edges = {}
+        #     edge_pairs = np.array([[1, 2], [0, 2], [0, 1], [0, 3], [1, 3], [2, 3]])
+        #     for i_simp, simplex in enumerate(simplices):
+        #         # build every pair of nodes in the simplex.
+        #         for i_edge in range(6):
+        #             edge = simplex[edge_pairs[i_edge]]
+        #             edge.sort()
+        #             edge = tuple(edge)
+        #             ind = edges.get(edge)
+        #             if ind is None:
+        #                 ind = n_edges
+        #                 edges[edge] = n_edges
+        #                 n_edges += 1
+        #             simplex_edges[i_simp, i_edge] = ind
+        #     self._simplex_edges = simplex_edges
+        #     self._edges = np.asarray(list(edges.keys()))
+        #     self._n_edges = n_edges
+        #
+        #     face_edges = np.empty((self.n_faces, 3), dtype=simplices.dtype)
+        #     for i_face, face in enumerate(self._faces):
+        #         # get indices of each edge in the face
+        #         # 3 edges per face
+        #         for ii in range(3):
+        #             edge = np.r_[face[:ii], face[ii+1:]]
+        #             edge.sort()
+        #             edge = tuple(edge)
+        #             ind = edges.get(edge)
+        #             face_edges[i_face, ii] = ind
+        #     self._face_edges = face_edges
 
     def _build_adjacency(self):
         # for each simplex, the k-th neighbor is opposite the k-th vertex

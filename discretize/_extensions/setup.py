@@ -41,4 +41,19 @@ def configuration(parent_package="", top_path=None):
         ext, sources=[ext + ".c"], include_dirs=[get_numpy_include_dirs()], **ext_kwargs
     )
 
+    ext = "simplex_helpers"
+    try:
+        from Cython.Build import cythonize
+
+        cythonize(os.path.join(base_path, ext + ".pyx"))
+    except ImportError:
+        pass
+
+    config.add_extension(
+        ext,
+        sources=[ext + ".cpp"],
+        include_dirs=[get_numpy_include_dirs()],
+        **ext_kwargs
+    )
+
     return config
