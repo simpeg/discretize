@@ -133,6 +133,7 @@ from discretize.utils.mesh_utils import (
     refine_tree_xyz,
     active_from_xyz,
     mesh_builder_xyz,
+    example_simplex_mesh,
 )
 from discretize.utils.curvilinear_utils import (
   example_curvilinear_grid, volume_tetrahedron, face_info, index_cube
