@@ -2,7 +2,7 @@ import numpy as np
 import scipy.sparse as sp
 from discretize.utils import Identity
 from discretize.base import BaseMesh
-from discretize._extensions.simplex_helpers import _build_faces_edges
+from discretize._extensions.simplex_helpers import _build_faces_edges, _build_adjacency
 
 
 class SimplexMesh(BaseMesh):
@@ -47,91 +47,12 @@ class SimplexMesh(BaseMesh):
         self._n_edges = self._edges.shape[0]
         if self.dim == 3:
             self._face_edges = np.array(items[4])
-        # simplices = self._simplices
-        # n_simplex = self.n_cells
-        #
-        # # Faces
-        # faces_per_simplex = self.dim + 1
-        # simplex_faces = np.empty((n_simplex, faces_per_simplex), dtype=simplices.dtype)
-        #
-        # n_faces = 0
-        # faces = {}
-        # for i_simp, simplex in enumerate(simplices):
-        #     # build every face in the simplex
-        #     for ii in range(faces_per_simplex):
-        #         face = np.r_[simplex[:ii], simplex[ii+1:]]
-        #         face.sort()
-        #         face = tuple(face)
-        #         ind = faces.get(face)
-        #         if ind is None:
-        #             ind = n_faces
-        #             faces[face] = ind
-        #             n_faces += 1
-        #         simplex_faces[i_simp, ii] = ind
-        #
-        # self._simplex_faces = simplex_faces
-        # self._faces = np.asarray(list(faces.keys()))
-        # self._n_faces = n_faces
-        #
-        # # edges
-        # if self.dim == 2:
-        #     self._simplex_edges = self._simplex_faces
-        #     self._edges = self._faces
-        #     self._n_edges = self._n_faces
-        # else:
-        #     simplex_edges = np.empty((n_simplex, 6), dtype=simplices.dtype)
-        #
-        #     # For each simplex, build up a list of unique edges,
-        #     # and the index into the edge array for each index
-        #     n_edges = 0
-        #     edges = {}
-        #     edge_pairs = np.array([[1, 2], [0, 2], [0, 1], [0, 3], [1, 3], [2, 3]])
-        #     for i_simp, simplex in enumerate(simplices):
-        #         # build every pair of nodes in the simplex.
-        #         for i_edge in range(6):
-        #             edge = simplex[edge_pairs[i_edge]]
-        #             edge.sort()
-        #             edge = tuple(edge)
-        #             ind = edges.get(edge)
-        #             if ind is None:
-        #                 ind = n_edges
-        #                 edges[edge] = n_edges
-        #                 n_edges += 1
-        #             simplex_edges[i_simp, i_edge] = ind
-        #     self._simplex_edges = simplex_edges
-        #     self._edges = np.asarray(list(edges.keys()))
-        #     self._n_edges = n_edges
-        #
-        #     face_edges = np.empty((self.n_faces, 3), dtype=simplices.dtype)
-        #     for i_face, face in enumerate(self._faces):
-        #         # get indices of each edge in the face
-        #         # 3 edges per face
-        #         for ii in range(3):
-        #             edge = np.r_[face[:ii], face[ii+1:]]
-        #             edge.sort()
-        #             edge = tuple(edge)
-        #             ind = edges.get(edge)
-        #             face_edges[i_face, ii] = ind
-        #     self._face_edges = face_edges
 
-    def _build_adjacency(self):
-        # for each simplex, the k-th neighbor is opposite the k-th vertex
-        simp_faces = self._simplex_faces
-
-        neighbors = np.full((self.n_cells, self.dim + 1), -1)
-
-        visited = np.full(self.n_faces, -1)
-
-        for i_cell, simp in enumerate(simp_faces):
-            for j, i_face in enumerate(simp):
-                i_other = visited[i_face]
-                if i_other == -1:
-                    visited[i_face] = i_cell
-                else:
-                    neighbors[i_cell, j] = i_other
-                    j_other = np.where(simp_faces[i_other] == i_face)
-                    neighbors[i_other, j_other] = i_cell
-        self._neighbors = neighbors
+    @property
+    def neighbors(self):
+        if getattr(self, "_neighbors", None) is None:
+            self._neighbors = np.array(_build_adjacency(self._simplex_faces, self.n_faces))
+        return self._neighbors
 
     @property
     def dim(self):
@@ -301,27 +222,32 @@ class SimplexMesh(BaseMesh):
 
     def __validate_model(self, model, invert_model=False):
         n_cells = self.n_cells
+        dim = self.dim
         # determines the tensor type of the model and reshapes it properly
         model = np.atleast_1d(model)
         n_aniso = ((dim + 1) * dim)//2
         if model.size == n_aniso * n_cells:
             # model is fully anisotropic
             # reshape it into a stack of dim x dim matrices
-            vals = model.reshape((n_aniso, -1), order='F')
+            if model.ndim == 1:
+                model = model.reshape((-1, n_aniso), order='F')
+            vals = model
             if self.dim == 2:
                 model = np.stack(
-                    [[vals[0], vals[2]], [vals[2], vals[1]]]
+                    [[vals[:, 0], vals[:, 2]], [vals[:, 2], vals[:, 1]]]
                 ).transpose((2, 0, 1))
             else:
                 model = np.stack(
                     [
-                        [vals[0], vals[3], vals[4]],
-                        [vals[3], vals[1], vals[5]],
-                        [vals[4], vals[5], vals[2]]
+                        [vals[:, 0], vals[:, 3], vals[:, 4]],
+                        [vals[:, 3], vals[:, 1], vals[:, 5]],
+                        [vals[:, 4], vals[:, 5], vals[:, 2]]
                     ]
                 ).transpose((2, 0, 1))
         elif model.size == dim * n_cells:
-            model = model.reshape(-1, order='F')
+            if model.ndim == 1:
+                model = model.reshape((n_cells, dim), order='F')
+            model = model.reshape(-1)
 
         if invert_model:
             if model.ndim == 1:

@@ -60,9 +60,6 @@ namespace std {
     size_t operator()(const pair<T, U>& k) const
     {
       using std::hash;
-      // Compute individual hash values for first,
-      // second and third and combine them using XOR
-      // and bit shifting:
 
       return ((hash<T>()(k.first)
                ^ (hash<U>()(k.second) << 1)) >> 1);
