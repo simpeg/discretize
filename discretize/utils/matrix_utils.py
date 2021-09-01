@@ -886,6 +886,89 @@ def inverse_2x2_block_diagonal(a11, a12, a21, a22, return_matrix=True, **kwargs)
     )
 
 
+def invert_blocks(A):
+    """Invert a set of 2x2 or 3x2 matricies.
+
+    This is a shortcut function that will only invert 2x2 and 3x3 matrices.
+    The function is broadcast over the last two dimensions of A.
+
+    Parameters
+    ----------
+    A : (..., N, N) numpy.ndarray
+        the block of matrices to invert, N must be either 2 or 3.
+
+    Returns
+    -------
+    (..., N, N) numpy.ndarray
+        the block of inverted matrices
+
+    See Also
+    --------
+    numpy.linalg.inv : Similar to this function, but is not specialized to 2x2 or 3x3
+    inverse_2x2_block_diagonal : use when each element of the blocks is separated
+    inverse_3x3_block_diagonal : use when each element of the blocks is separated
+
+    Examples
+    --------
+    >>> from discretize.utils import invert_blocks
+    >>> import numpy as np
+    >>> x = np.ones((1000, 3, 3))
+    >>> x[..., 1, 1] = 0
+    >>> x[..., 1, 2] = 0
+    >>> x[..., 2, 1] = 0
+    >>> As = np.einsum('...ij,...jk', x, x.transpose(0, 2, 1))
+    >>> Ainvs = invert_blocks(As)
+    >>> As[0] @ Ainvs[0]
+    array([[1., 0., 0.],
+           [0., 1., 0.],
+           [0., 0., 1.]])
+    """
+    if A.shape[-1] != A.shape[-2]:
+        raise ValueError(f"Last two dimensions are not equal, got {A.shape}")
+
+    if A.shape[-1] == 2:
+        a11 = A[..., 0, 0]
+        a12 = A[..., 0, 1]
+        a21 = A[..., 1, 0]
+        a22 = A[..., 1, 1]
+
+        detA = a11 * a22 - a21 * a12
+        B = np.empty_like(A)
+        B[..., 0, 0] = a22 / detA
+        B[..., 0, 1] = -a12 / detA
+        B[..., 1, 0] = - a21 / detA
+        B[..., 1, 1] = a11 / detA
+
+    elif A.shape[-1] == 3:
+        a11 = A[..., 0, 0]
+        a12 = A[..., 0, 1]
+        a13 = A[..., 0, 2]
+        a21 = A[..., 1, 0]
+        a22 = A[..., 1, 1]
+        a23 = A[..., 1, 2]
+        a31 = A[..., 2, 0]
+        a32 = A[..., 2, 1]
+        a33 = A[..., 2, 2]
+
+        B = np.empty_like(A)
+        B[..., 0, 0] = a22 * a33 - a23 * a32
+        B[..., 0, 1] = a13 * a32 - a12 * a33
+        B[..., 0, 2] = a12 * a23 - a13 * a22
+
+        B[..., 1, 0] = a31 * a23 - a21 * a33
+        B[..., 1, 1] = a11 * a33 - a31 * a13
+        B[..., 1, 2] = a21 * a13 - a11 * a23
+
+        B[..., 2, 0] = a21 * a32 - a31 * a22
+        B[..., 2, 1] = a31 * a12 - a11 * a32
+        B[..., 2, 2] = a11 * a22 - a21 * a12
+
+        detA = a11 * B[..., 0, 0] + a21 * B[..., 0, 1] + a31 * B[..., 0, 2]
+        B /= detA[..., None, None]
+    else:
+        raise NotImplementedError("Only supports 2x2 and 3x3 blocks")
+    return B
+
 class TensorType(object):
     r"""Class for determining property tensor type.
 

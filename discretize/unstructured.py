@@ -1,6 +1,6 @@
 import numpy as np
 import scipy.sparse as sp
-from discretize.utils import Identity
+from discretize.utils import Identity, invert_blocks, spzeros
 from discretize.base import BaseMesh
 from discretize._extensions.simplex_helpers import _build_faces_edges, _build_adjacency
 
@@ -253,26 +253,55 @@ class SimplexMesh(BaseMesh):
             if model.ndim == 1:
                 model = 1.0/model
             else:
-                model = np.linalg.inv(model)
+                model = invert_blocks(model)
         return model
 
-    def get_face_inner_product(self, model=None, invert_model=False, invert_matrix=False):
-        if invert_matrix:
-            raise NotImplementedError(
-                "The inverse of the inner product matrix with a tetrahedral mesh is not supported."
-            )
-
-        normals = self.face_normals
+    def __get_inner_product_projection_matrices(
+        self, i_type, with_volume=True, return_pointers=True
+    ):
         dim = self.dim
         n_cells = self.n_cells
-        n_faces = self.n_faces
+        if i_type == "F":
+            vecs = self.face_normals
+            n_items = self.n_faces
+            simplex_items = self._simplex_faces
+            if dim == 2:
+                node_items = np.array([
+                    [1, 2],
+                    [0, 2],
+                    [0, 1]
+                ])
+            else:
+                node_items = np.array([
+                    [1, 2, 3],
+                    [0, 2, 3],
+                    [0, 1, 3],
+                    [0, 1, 2]
+                ])
+        elif i_type == "E":
+            vecs = self.edge_tangents
+            n_items = self.n_edges
+            simplex_items = self._simplex_edges
+            if dim == 2:
+                node_items = np.array([
+                    [1, 2],
+                    [0, 2],
+                    [0, 1]
+                ])
+            elif dim == 3:
+                node_items = np.array([
+                    [1, 2, 3],
+                    [0, 2, 4],
+                    [0, 1, 5],
+                    [3, 4, 5]
+                ])
 
         Ps = []
-
         # Precalc indptr and values for the projection matrix
         P_indptr = np.arange(dim * n_cells + 1)
         ones = np.ones(dim * n_cells)
-        V = np.sqrt(self.cell_volumes / (dim + 1))
+        if with_volume:
+            V = np.sqrt(self.cell_volumes / (dim + 1))
 
         # precalculate indices for the block diagonal matrix
         d = np.ones(dim, dtype=int)[:, None] * np.arange(dim)
@@ -281,22 +310,32 @@ class SimplexMesh(BaseMesh):
         T_ind_ptr = dim * np.arange(dim * n_cells + 1)
 
         for i in range(dim + 1):
-            # matrix which selects the faces associated with node i of each simplex...
-            face_inds = np.c_[self._simplex_faces[:, :i], self._simplex_faces[:, i+1:]]
-            P_col_inds = face_inds.reshape(-1)
+            # array which selects the items associated with node i of each simplex...
+            item_inds = np.take(simplex_items, node_items[i], axis=1)
+            P_col_inds = item_inds.reshape(-1)
             P = sp.csr_matrix(
                 (ones, P_col_inds, P_indptr),
-                shape=(dim * n_cells, n_faces)
+                shape=(dim * n_cells, n_items)
             )
 
-            face_normals = normals[face_inds]
-            trans_inv = V[:, None, None] * np.linalg.inv(face_normals)
+            item_vectors = vecs[item_inds]
+            trans_inv = invert_blocks(item_vectors)
+            if with_volume:
+                trans_inv *= V[:, None, None]
             T = sp.csr_matrix(
                 (trans_inv.reshape(-1), T_col_inds, T_ind_ptr),
                 shape=(dim * n_cells, dim * n_cells)
             )
             Ps.append(T @ P)
+        if return_pointers:
+            return Ps, (T_col_inds, T_ind_ptr)
+        else:
+            return Ps
 
+    def __get_inner_product(self, i_type, model, invert_model):
+        Ps, (T_col_inds, T_ind_ptr) = self.__get_inner_product_projection_matrices(i_type)
+        n_cells = self.n_cells
+        dim = self.dim
         if model is None:
             Mu = Identity()
         else:
@@ -318,80 +357,121 @@ class SimplexMesh(BaseMesh):
 
         A = np.sum([P.T @ Mu @ P for P in Ps])
         return A
+
+    def get_face_inner_product(self, model=None, invert_model=False, invert_matrix=False):
+        if invert_matrix:
+            raise NotImplementedError(
+                "The inverse of the inner product matrix with a tetrahedral mesh is not supported."
+            )
+        return self.__get_inner_product("F", model, invert_model)
 
     def get_edge_inner_product(self, model=None, invert_model=False, invert_matrix=False):
         if invert_matrix:
             raise NotImplementedError(
-                "The inverse of the SimplexMesh's inner product matrix is not supported."
+                "The inverse of the inner product matrix with a tetrahedral mesh is not supported."
             )
+        return self.__get_inner_product("E", model, invert_model)
 
-        tangents = self.edge_tangents
+    def __get_inner_product_deriv_func(self, i_type, model):
+        Ps, _ = self.__get_inner_product_projection_matrices(i_type)
         dim = self.dim
         n_cells = self.n_cells
-        n_edges = self.n_edges
-        Ps = []
-
-        # Precalc indptr and values for the projection matrix
-        P_indptr = np.arange(dim * n_cells + 1)
-        ones = np.ones(dim * n_cells)
-
-        if dim == 2:
-            node_edges = np.array([
-                [1, 2],
-                [0, 2],
-                [0, 1]
-            ])
-        elif dim == 3:
-            node_edges = np.array([
-                [1, 2, 3],
-                [0, 2, 4],
-                [0, 1, 5],
-                [3, 4, 5]
-            ])
-
-        V = np.sqrt(self.cell_volumes/(dim + 1))
-        # precalculate indices for the block diagonal matrix
-        d = np.ones(dim, dtype=int)[:, None] * np.arange(dim)
-        t = np.arange(n_cells)
-        T_col_inds = (d + t[:, None, None]*dim).reshape(-1)
-        T_ind_ptr = dim * np.arange(dim * n_cells + 1)
-
-        for i in range(dim + 1):
-            # matrix which selects the edges associated with node i of each simplex...
-            edge_inds = np.take(self._simplex_edges, node_edges[i], axis=1)
-            P_col_inds = edge_inds.reshape(-1)
-            P = sp.csr_matrix((ones, P_col_inds, P_indptr), shape=(dim * n_cells, n_edges))
-
-            edge_tangents = tangents[edge_inds]
-            trans_inv = V[:, None, None] * np.linalg.inv(edge_tangents)
-            T = sp.csr_matrix(
-                (trans_inv.reshape(-1), T_col_inds, T_ind_ptr),
-                shape=(dim * n_cells, dim * n_cells)
-            )
-
-            Ps.append(T @ P)
-
-        if model is None:
-            Mu = Identity()
+        if model.size == 1:
+            tensor_type = 0
+        elif model.size == n_cells:
+            tensor_type = 1
+            col_inds = np.repeat(np.arange(n_cells), dim)
+            ind_ptr = np.arange(n_cells * dim + 1)
+        elif model.size == dim * n_cells:
+            tensor_type = 2
+            col_inds = np.arange(dim * n_cells).reshape((n_cells, dim), order="F")
+            col_inds = col_inds.reshape(-1)
+            ind_ptr = np.arange(n_cells * dim + 1)
+        elif model.size == (((dim + 1) * dim)//2) * n_cells:
+            tensor_type = 3
+            if dim == 2:
+                stencil = np.array([
+                    [0, 2],
+                    [2, 1]
+                ])
+            elif dim == 3:
+                stencil = np.array([
+                    [0, 3, 4],
+                    [3, 1, 5],
+                    [4, 5, 2]
+                ])
+            col_inds = (n_cells * stencil + np.arange(n_cells)[:, None, None])
+            col_inds = col_inds.reshape(-1)
+            ind_ptr = dim * np.arange(n_cells * dim + 1)
         else:
-            model = self.__validate_model(model, invert_model)
-            if model.size == 1:
-                Mu = sp.diags((model,), (0, ), shape=(dim * n_cells, dim * n_cells))
-            elif model.size == n_cells:
-                Mu = sp.diags(np.repeat(model, dim))
-            elif model.size == dim * n_cells:
-                # diagonally anisotropic model
-                Mu = sp.diags(model)
-            elif model.size == (dim * dim) * n_cells:
-                Mu = sp.csr_matrix(
-                    (model.reshape(-1), T_col_inds, T_ind_ptr),
-                    shape=(dim * n_cells, dim * n_cells)
-                )
-            else:
-                raise ValueError("Unrecognized size of model vector")
+            raise ValueError("Unrecognized size of model vector")
+        inv_items = model.size
 
-        A = np.sum([P.T @ Mu @ P for P in Ps])
-        return A
+        if i_type == "F":
+            n_items = self.n_faces
+        elif i_type == "E":
+            n_items = self.n_edges
+
+        def func(v):
+            dMdm = spzeros(n_items, inv_items)
+            if tensor_type == 0:
+                for P in Ps:
+                    dMdm = dMdm + sp.csr_matrix(
+                        (P.T * (P * v), (range(n_items), np.zeros(n_items))),
+                        shape=(n_items, inv_items)
+                    )
+            elif tensor_type == 1:
+                for P in Ps:
+                    ys = P @ v
+                    dMdm = dMdm + P.T @ sp.csr_matrix(
+                        (ys, col_inds, ind_ptr),
+                        shape=(n_cells * dim, inv_items)
+                    )
+            elif tensor_type == 2:
+                for P in Ps:
+                    ys = P @ v
+                    dMdm = dMdm + P.T @ sp.csr_matrix(
+                        (ys, col_inds, ind_ptr),
+                        shape=(n_cells * dim, inv_items)
+                    )
+            elif tensor_type == 3:
+                for P in Ps:
+                    ys = P @ v
+                    ys = np.repeat(ys, dim).reshape((-1, dim, dim))
+                    ys = ys.transpose((0, 2, 1)).reshape(-1)
+                    dMdm = dMdm + P.T @ sp.csr_matrix(
+                        (ys, col_inds, ind_ptr),
+                        shape=(n_cells * dim, inv_items)
+                    )
+            return dMdm
+        return func
+
+    def get_face_inner_product_deriv(
+        self, model, do_fast=True, invert_model=False, invert_matrix=False, **kwargs
+    ):
+        if invert_model:
+            raise NotImplementedError(
+                "Inverted model derivatives are not supported here"
+            )
+        if invert_matrix:
+            raise NotImplementedError(
+                "Inverted matrix derivatives are not supported"
+            )
+        print("here")
+        return self.__get_inner_product_deriv_func("F", model)
+
+    def get_edge_inner_product_deriv(
+        self, model, do_fast=True, invert_model=False, invert_matrix=False, **kwargs
+    ):
+        if invert_model:
+            raise NotImplementedError(
+                "Inverted model derivatives are not supported here"
+            )
+        if invert_matrix:
+            raise NotImplementedError(
+                "Inverted matrix derivatives are not supported"
+            )
+        return self.__get_inner_product_deriv_func("E", model)
 
     @property
     def average_node_to_cell(self):
@@ -432,7 +512,7 @@ class SimplexMesh(BaseMesh):
 
             face_normals = normals[face_inds]
             #face normals is now a block of dim x dim matrices...
-            trans_inv = np.linalg.inv(face_normals) / (dim + 1)
+            trans_inv = invert_blocks(face_normals) / (dim + 1)
 
             T = sp.csr_matrix(
                 (trans_inv.reshape(-1), T_col_inds, T_ind_ptr),
@@ -480,7 +560,7 @@ class SimplexMesh(BaseMesh):
             P = sp.csr_matrix((ones, P_col_inds, P_indptr), shape=(dim * n_cells, n_edges))
 
             edge_tangents = tangents[edge_inds]
-            trans_inv = np.linalg.inv(edge_tangents) / (dim + 1)
+            trans_inv = invert_blocks(edge_tangents) / (dim + 1)
             T = sp.csr_matrix(
                 (trans_inv.reshape(-1), T_col_inds, T_ind_ptr),
                 shape=(dim * n_cells, dim * n_cells)

@@ -39,6 +39,7 @@ nosetests.xml
 *.sublime-workspace
 .DS_Store
 tree_ext.cpp
+simplex_helpers.cpp
 interputils_cython.c
 
 # Jupyter
