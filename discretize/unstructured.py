@@ -457,7 +457,6 @@ class SimplexMesh(BaseMesh):
             raise NotImplementedError(
                 "Inverted matrix derivatives are not supported"
             )
-        print("here")
         return self.__get_inner_product_deriv_func("F", model)
 
     def get_edge_inner_product_deriv(
