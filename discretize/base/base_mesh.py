@@ -5,9 +5,9 @@ Base classes for all discretize meshes
 import numpy as np
 import os
 import json
-
+import scipy.spatial
 from discretize.utils import mkvc, Identity
-from discretize.utils.code_utils import deprecate_property, deprecate_method
+from discretize.utils.code_utils import deprecate_property, deprecate_method, as_array_n_by_dim
 import warnings
 
 
@@ -619,6 +619,31 @@ class BaseMesh:
         items.pop("__module__", None)
         items.pop("__class__", None)
         return cls(**items)
+
+    def get_nearest_indices(self, locations, grid_location='CC'):
+        """Return nearest indices to points.
+
+          Parameters
+          ----------
+          pts: numpy.ndarray
+              Points to move
+          grid_loc: {'CC', 'N', 'Fx', 'Fy', 'Fz', 'Ex', 'Ex', 'Ey', 'Ez'}
+              Which grid to move points to.
+
+          Returns
+          -------
+          numpy.ndarray
+              nodeInds
+          """
+
+        tree_name = f'_{grid_location}_tree'
+        pts = as_array_n_by_dim(locations, self.dim)
+        if getattr(self, tree_name, None) is None:
+            grid = getattr(self, "grid" + grid_location)
+            setattr(self, tree_name, scipy.spatial.cKDTree(grid))
+        tree = getattr(self, tree_name)
+        _, ind = tree.query(pts)
+        return ind
 
     @property
     def reference_is_rotated(self):
