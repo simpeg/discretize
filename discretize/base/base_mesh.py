@@ -620,7 +620,7 @@ class BaseMesh:
         items.pop("__class__", None)
         return cls(**items)
 
-    def get_nearest_indices(self, locations, grid_location='CC'):
+    def get_nearest_indices(self, locations, grid_location='CC', discard=False):
         """Return nearest indices to points.
 
           Parameters
@@ -629,6 +629,8 @@ class BaseMesh:
               Points to move
           grid_loc: {'CC', 'N', 'Fx', 'Fy', 'Fz', 'Ex', 'Ex', 'Ey', 'Ez'}
               Which grid to move points to.
+          discard: bool
+              Discard KDTree after use.
 
           Returns
           -------
@@ -640,9 +642,14 @@ class BaseMesh:
         pts = as_array_n_by_dim(locations, self.dim)
         if getattr(self, tree_name, None) is None:
             grid = getattr(self, "grid" + grid_location)
-            setattr(self, tree_name, scipy.spatial.cKDTree(grid))
-        tree = getattr(self, tree_name)
+            tree = scipy.spatial.cKDTree(grid)
+        else:
+            tree = getattr(self, tree_name)
         _, ind = tree.query(pts)
+
+        if not discard:
+            setattr(self, tree_name, scipy.spatial.cKDTree(grid))
+
         return ind
 
     @property
