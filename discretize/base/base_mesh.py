@@ -640,15 +640,16 @@ class BaseMesh:
 
         tree_name = f'_{grid_location}_tree'
         pts = as_array_n_by_dim(locations, self.dim)
-        if getattr(self, tree_name, None) is None:
+        exists = not getattr(self, tree_name, None) is None
+        if not exists:
             grid = getattr(self, "grid" + grid_location)
             tree = scipy.spatial.cKDTree(grid)
         else:
             tree = getattr(self, tree_name)
         _, ind = tree.query(pts)
 
-        if not discard:
-            setattr(self, tree_name, scipy.spatial.cKDTree(grid))
+        if not exists and not discard:
+            setattr(self, tree_name, tree)
 
         return ind
 
