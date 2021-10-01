@@ -1,8 +1,15 @@
 import numpy as np
 import scipy.sparse as sp
+from scipy.spatial import KDTree
 from discretize.utils import Identity, invert_blocks, spzeros
 from discretize.base import BaseMesh
-from discretize._extensions.simplex_helpers import _build_faces_edges, _build_adjacency
+from discretize._extensions.simplex_helpers import (
+    _build_faces_edges,
+    _build_adjacency,
+    _directed_search,
+)
+
+import matplotlib.pyplot as plt
 
 
 class SimplexMesh(BaseMesh):
@@ -18,8 +25,11 @@ class SimplexMesh(BaseMesh):
         else:
             raise TypeError("unsupport input")
 
-        self._nodes = nodes
-        self._simplices = simplices
+        # grab copies of the nodes and simplices for protection
+        self._nodes = nodes.copy()
+        self._simplices = simplices.copy()
+        # sort the simplices by node index to simplify further functions...
+        self._simplices.sort(axis=1)
 
         if self.cell_volumes.min() == 0.0:
             raise ValueError("Triangulation contains degenerate simplices")
@@ -53,6 +63,21 @@ class SimplexMesh(BaseMesh):
         if getattr(self, "_neighbors", None) is None:
             self._neighbors = np.array(_build_adjacency(self._simplex_faces, self.n_faces))
         return self._neighbors
+
+    @property
+    def transform_and_shift(self):
+        if getattr(self, '_transform', None) is None:
+            # compute the barycentric transforms
+            points = self.nodes
+            simplices = self._simplices
+
+            shift = points[self._simplices[:, -1]]
+
+            T = (points[simplices[:, :-1]] - shift[:, None, :]).transpose((0, 2, 1))
+
+            self._transform = invert_blocks(T)
+            self._shift = shift
+        return self._transform, self._shift
 
     @property
     def dim(self):
@@ -389,6 +414,8 @@ class SimplexMesh(BaseMesh):
             ind_ptr = np.arange(n_cells * dim + 1)
         elif model.size == (((dim + 1) * dim)//2) * n_cells:
             tensor_type = 3
+            # create a stencil that goes from the model vector ordering
+            # into the anisotropy tensor
             if dim == 2:
                 stencil = np.array([
                     [0, 2],
@@ -473,6 +500,67 @@ class SimplexMesh(BaseMesh):
         return self.__get_inner_product_deriv_func("E", model)
 
     @property
+    def cell_centers_tree(self):
+        """a KDTree object built from the cell centers"""
+        if getattr(self, "_cc_tree", None) is None:
+            self._cc_tree = KDTree(self.cell_centers)
+        return self._cc_tree
+
+    def point2index(self, locs):
+        tree = self.cell_centers_tree
+        # for each location, find the nearest cell center as an initial guess for
+        # the nearest simplex, then use a directed search to further refine
+        _, nearest_cc = tree.query(locs)
+        nodes = self.nodes
+        simplex_nodes = self._simplices
+        transform, shift = self.transform_and_shift
+        return _directed_search(
+            np.atleast_2d(locs), np.atleast_1d(nearest_cc), nodes, simplex_nodes, self.neighbors, transform, shift,
+            return_bary=False
+        )
+
+    def get_interpolation_matrix(
+        self, loc, location_type="cell_centers", zeros_outside=False, **kwargs
+    ):
+        tree = self.cell_centers_tree
+        # for each location, find the nearest cell center as an initial guess for
+        # the nearest simplex, then use a directed search to further refine
+        loc = np.atleast_2d(loc)
+        _, nearest_cc = tree.query(loc)
+        nodes = self.nodes
+        simplex_nodes = self._simplices
+        transform, shift = self.transform_and_shift
+
+        inds, barys = _directed_search(
+            loc, nearest_cc, nodes, simplex_nodes, self.neighbors, transform, shift,
+            return_bary=True
+        )
+
+        n_loc = len(loc)
+        location_type = self._parse_location_type(location_type)
+        if location_type == "nodes":
+            nodes_per_cell = self.dim + 1
+            ind_ptr = nodes_per_cell * np.arange(n_loc + 1)
+            col_inds = simplex_nodes[inds].reshape(-1)
+            Aij = barys.reshape(-1)
+            n_items = self.n_nodes
+        elif location_type == "cell_centers":
+            # this is nearest neighbor interpolation at the moment...
+            ind_ptr = np.arange(n_loc + 1)
+            col_inds = inds
+            Aij = np.ones(len(inds))
+            n_items = self.n_cells
+        elif location_type[:-2] == "faces":
+            # faces_x, faces_y, faces_z
+            # these all do the same thing, but only select different components
+            # of the vector.
+
+            # the basic idea is that we use face based vector basis functions
+            # and then only select the component we'd like.
+            pass
+        return sp.csr_matrix((Aij, col_inds, ind_ptr), shape=(n_loc, n_items))
+
+    @property
     def average_node_to_cell(self):
         nodes_per_cell = self.dim + 1
         n_cells = self.n_cells
@@ -483,86 +571,59 @@ class SimplexMesh(BaseMesh):
         return sp.csr_matrix((Aij, col_inds, ind_ptr), shape=(n_cells, self.n_nodes))
 
     @property
+    def average_node_to_face(self):
+        nodes_per_face = self.dim
+        n_faces = self.n_faces
+
+        ind_ptr = nodes_per_face * np.arange(n_faces + 1)
+        col_inds = self._simplex_faces.reshape(-1)
+        Aij = np.full(nodes_per_face * n_faces, 1/nodes_per_face)
+        return sp.csr_matrix((Aij, col_inds, ind_ptr), shape=(n_faces, self.n_nodes))
+
+    @property
+    def average_node_to_edge(self):
+        n_edges = self.n_edges
+
+        ind_ptr = 2 * np.arange(n_edges + 1)
+        col_inds = self._simplex_edges.reshape(-1)
+        Aij = np.full(2 * n_edges, 0.5)
+        return sp.csr_matrix((Aij, col_inds, ind_ptr), shape=(n_edges, self.n_nodes))
+
+    @property
+    def average_cell_to_node(self):
+        pass
+
+    @property
     def average_face_to_cell_vector(self):
-        normals = self.face_normals
         dim = self.dim
         n_cells = self.n_cells
         n_faces = self.n_faces
 
         Av = sp.csr_matrix(shape=(dim * n_cells, n_faces))
         # Precalc indptr and values for the projection matrix
-        P_indptr = np.arange(dim * n_cells + 1)
-        ones = np.ones(dim * n_cells)
-
-        # precalculate indices for the block diagonal matrix
-        d = np.ones(dim, dtype=int)[:, None] * np.arange(dim)
-        t = np.arange(n_cells)
-        T_col_inds = (d + t[:, None, None] * dim).reshape(-1)
-        T_ind_ptr = dim * np.arange(dim * n_cells + 1)
-
-        for i in range(dim + 1):
-            # matrix which selects the faces associated with node i of each simplex...
-            face_inds = np.c_[self._simplex_faces[:, :i], self._simplex_faces[:, i+1:]]
-            P_col_inds = face_inds.reshape(-1)
-            P = sp.csr_matrix(
-                (ones, P_col_inds, P_indptr),
-                shape=(dim * n_cells, n_faces)
-            )
-
-            face_normals = normals[face_inds]
-            #face normals is now a block of dim x dim matrices...
-            trans_inv = invert_blocks(face_normals) / (dim + 1)
-
-            T = sp.csr_matrix(
-                (trans_inv.reshape(-1), T_col_inds, T_ind_ptr),
-                shape=(dim * n_cells, dim * n_cells)
-            )
-            Av = Av + (T @ P)
+        Ps = self.__get_inner_product_projection_matrices(
+            "F", with_volume=False, return_pointers=False
+        )
+        for P in Ps:
+            Av = Av + 1/(dim+1) * P
         return Av
 
     @property
     def average_edge_to_cell_vector(self):
-        tangents = self.edge_tangents
         dim = self.dim
         n_cells = self.n_cells
         n_edges = self.n_edges
 
         Av = sp.csr_matrix(shape=(dim * n_cells, n_edges))
         # Precalc indptr and values for the projection matrix
-        P_indptr = np.arange(dim * n_cells + 1)
-        ones = np.ones(dim * n_cells)
-
-        if dim == 2:
-            node_edges = np.array([
-                [1, 2],
-                [0, 2],
-                [0, 1]
-            ])
-        elif dim == 3:
-            node_edges = np.array([
-                [1, 2, 3],
-                [0, 2, 4],
-                [0, 1, 5],
-                [3, 4, 5]
-            ])
-
-        # precalculate indices for the block diagonal matrix
-        d = np.ones(dim, dtype=int)[:, None] * np.arange(dim)
-        t = np.arange(n_cells)
-        T_col_inds = (d + t[:, None, None]*dim).reshape(-1)
-        T_ind_ptr = dim * np.arange(dim * n_cells + 1)
-
-        for i in range(dim + 1):
-            # matrix which selects the edges associated with node i of each simplex...
-            edge_inds = np.take(self._simplex_edges, node_edges[i], axis=1)
-            P_col_inds = edge_inds.reshape(-1)
-            P = sp.csr_matrix((ones, P_col_inds, P_indptr), shape=(dim * n_cells, n_edges))
-
-            edge_tangents = tangents[edge_inds]
-            trans_inv = invert_blocks(edge_tangents) / (dim + 1)
-            T = sp.csr_matrix(
-                (trans_inv.reshape(-1), T_col_inds, T_ind_ptr),
-                shape=(dim * n_cells, dim * n_cells)
-            )
-            Av = Av + T @ P
+        Ps = self.__get_inner_product_projection_matrices(
+            "E", with_volume=False, return_pointers=False
+        )
+        for P in Ps:
+            Av = Av + 1/(dim+1) * P
         return Av
+
+    def plot_grid(self):
+        ax = plt.subplot(111)
+        ax.triplot(*self.nodes.T, self._simplices)
+        return ax

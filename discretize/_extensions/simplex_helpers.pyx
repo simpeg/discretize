@@ -1,4 +1,5 @@
 # distutils: language=c++
+# cython: embedsignature=True, language_level=3
 # cython: linetrace=True
 
 from libcpp.pair cimport pair
@@ -23,6 +24,7 @@ ctypedef fused ints:
 
 @cython.boundscheck(False)
 def _build_faces_edges(ints[:, :] simplices):
+    # the node index in each simplex must be in increasing order
     cdef:
         int dim = simplices.shape[1] - 1
         ints n_simplex = simplices.shape[0]
@@ -68,10 +70,7 @@ def _build_faces_edges(ints[:, :] simplices):
 
             v1 = simplex[edge_pairs[i_edge, 0]]
             v2 = simplex[edge_pairs[i_edge, 1]]
-            if v1 < v2:
-                edge = pair[ints, ints](v1, v2)
-            else:
-                edge = pair[ints, ints](v2, v1)
+            edge = pair[ints, ints](v1, v2)
 
             edge_search = edges.find(edge)
             if edge_search != edges.end():
@@ -101,19 +100,6 @@ def _build_faces_edges(ints[:, :] simplices):
                     v1 = simplex[0]
                     v2 = simplex[1]
                     v3 = simplex[2]
-                # order v1, v2, v3 from lowest index to highest
-                if v1 > v3:
-                    t = v1
-                    v1 = v3
-                    v3 = t
-                if v1 > v2:
-                    t = v1
-                    v1 = v2
-                    v2 = t
-                if v2 > v3:
-                    t = v2
-                    v2 = v3
-                    v3 = t
                 face = triplet[ints, ints, ints](v1, v2, v3)
 
                 face_search = faces.find(face)
@@ -203,3 +189,90 @@ def _build_adjacency(ints[:, :] simplex_faces, n_faces):
                     k += 1
                 neighbors[i_other, k] = i_cell
     return neighbors
+
+@cython.boundscheck(False)
+@cython.linetrace(False)
+cdef void _compute_bary_coords(
+    np.float64_t[:] point,
+    np.float64_t[:, :] Tinv,
+    np.float64_t[:] shift,
+    np.float64_t * bary
+) nogil:
+    cdef:
+        int dim = point.shape[0]
+        int i, j
+
+    bary[dim] = 1.0
+    for i in range(dim):
+        bary[i] = 0.0
+        for j in range(dim):
+            bary[i] += Tinv[i, j] * (point[j] - shift[j])
+        bary[dim] -= bary[i]
+
+@cython.boundscheck(False)
+def _directed_search(
+    np.float64_t[:, :] locs,
+    np.intp_t[:] nearest_cc,
+    np.float64_t[:, :] nodes,
+    ints[:, :] simplex_nodes,
+    np.int64_t[:, :] neighbors,
+    np.float64_t[:, :, :] transform,
+    np.float64_t[:, :] shift,
+    bint return_bary=True
+):
+    cdef:
+        int i, i_simp, j
+        int n_locs = locs.shape[0], dim = locs.shape[1]
+        int max_directed = 1 + simplex_nodes.shape[0] // 4
+        int i_directed
+        np.float64_t eps = 1E-15
+        np.int64_t[:] inds = np.full(len(locs), -1, dtype=np.int64)
+        np.float64_t[:, :] all_barys = np.empty((1, 1), dtype=np.float64)
+        np.float64_t barys[4]
+        np.float64_t[:] loc
+        np.float64_t[:, :] Tinv
+        np.float64_t[:] rD
+    if return_bary:
+        all_barys = np.empty((len(locs), dim+1), dtype=np.float64)
+
+    for i in range(n_locs):
+        loc = locs[i]
+
+        i_simp = nearest_cc[i]  # start at the nearest cell center
+        i_directed = 0
+        while i_directed < max_directed:
+            Tinv = transform[i_simp]
+            rD = shift[i_simp]
+            _compute_bary_coords(loc, Tinv, rD, barys)
+            j = 0
+            is_inside = True
+            while j <= dim:
+                if barys[j] < -eps:
+                    is_inside = False
+                    # if not -1, move towards neighbor
+                    if neighbors[i_simp, j] != -1:
+                        i_simp = neighbors[i_simp, j]
+                        break
+                j += 1
+            # If inside, I found my container
+            if is_inside:
+                break
+            # Else, if I cycled through every bary
+            # without breaking out of the above loop, that means I'm completely outside
+            elif j == dim + 1:
+                i_simp = -1
+                break
+            i_directed += 1
+
+        if i_directed == max_directed:
+            # made it through the whole loop without breaking out
+            # Mark as failed
+            i_simp = -2
+        inds[i] = i_simp
+        if return_bary:
+            for j in range(dim+1):
+                all_barys[i, j] = barys[j]
+
+    if return_bary:
+        return np.array(inds), np.array(all_barys)
+    return np.array(inds)
