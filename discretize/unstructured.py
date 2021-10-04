@@ -149,17 +149,9 @@ class SimplexMesh(BaseMesh):
     @property
     def face_normals(self):
         if self.dim == 2:
-            # Here we just choose a direction that is perpendicular to
-            # the edge tangents
-            tangents = self.edge_tangents
-            # take the larger of the two elements as a divisor
-            i_max = np.argmax(np.abs(tangents), axis=1)
-
-            mins = np.take_along_axis(tangents, np.expand_dims(1-i_max, axis=-1), axis=-1)
-            maxs = np.take_along_axis(tangents, np.expand_dims(i_max, axis=-1), axis=-1)
-            normals = np.ones_like(tangents)
-            np.put_along_axis(normals, np.expand_dims(i_max, axis=-1), -mins/maxs,  axis=-1)
-            normals /= np.linalg.norm(normals, axis=-1)[:, None]
+            # Take the normal as being the cross product of edge_tangents
+            # and a unit vector in a "3rd" dimension.
+            normals = np.cross(self.edge_tangents, [0, 0, 1])[:, :-1]
             return normals
         else:
             # define normal as |01 x 02|
@@ -545,19 +537,101 @@ class SimplexMesh(BaseMesh):
             Aij = barys.reshape(-1)
             n_items = self.n_nodes
         elif location_type == "cell_centers":
-            # this is nearest neighbor interpolation at the moment...
+            # this is "nearest neighbor" interpolation at the moment...
             ind_ptr = np.arange(n_loc + 1)
             col_inds = inds
             Aij = np.ones(len(inds))
             n_items = self.n_cells
-        elif location_type[:-2] == "faces":
-            # faces_x, faces_y, faces_z
-            # these all do the same thing, but only select different components
-            # of the vector.
+        else:
+            component = location_type[-1]
+            if component == 'x':
+                i_dir = 0
+            elif component == 'y':
+                i_dir = 1
+            else:
+                i_dir = -1
+            if location_type[:-2] == "edges":
+                # grab the barycentric transforms associated with each simplex:
+                ts = transform[inds, :, i_dir]
+                ts = np.hstack((ts, -ts.sum(axis=1)[:, None]))
 
-            # the basic idea is that we use face based vector basis functions
-            # and then only select the component we'd like.
-            pass
+                # edges_x, edges_y, edges_z
+                # grab edge lengths
+                lengths = self.edge_lengths
+
+                # use 1-form Whitney basis functions for (edges)
+                edges = self._simplex_edges[inds]
+
+                # (1, 2), (0, 2), (0, 1)
+                e0 = (barys[:, 1] * ts[:, 2] - barys[:, 2] * ts[:, 1]) * lengths[edges[:, 0]]
+                e1 = (barys[:, 0] * ts[:, 2] - barys[:, 2] * ts[:, 0]) * lengths[edges[:, 1]]
+                e2 = (barys[:, 0] * ts[:, 1] - barys[:, 1] * ts[:, 0]) * lengths[edges[:, 2]]
+                if self.dim == 3:
+                    # (0, 3), (1, 3), (2, 3)
+                    e3 = (barys[:, 0] * ts[:, 3] - barys[:, 3] * ts[:, 0]) * lengths[edges[:, 3]]
+                    e4 = (barys[:, 1] * ts[:, 3] - barys[:, 3] * ts[:, 1]) * lengths[edges[:, 4]]
+                    e5 = (barys[:, 2] * ts[:, 3] - barys[:, 3] * ts[:, 2]) * lengths[edges[:, 5]]
+                    Aij = np.c_[e0, e1, e2, e3, e4, e5]
+                    ind_ptr = 6 * np.arange(n_loc + 1)
+                else:
+                    Aij = np.c_[e0, e1, e2].reshape(-1)
+                    ind_ptr = 3 * np.arange(n_loc + 1)
+                col_inds = edges.reshape(-1)
+                n_items = self.n_edges
+            elif location_type[:-2] == "faces":
+                # grab the barycentric transforms associated with each simplex:
+                ts = transform[inds, :,]
+                ts = np.hstack((ts, -ts.sum(axis=1)[:, None]))
+                # use  Whitney 2 - form basis functions for face vector interp
+                faces = self._simplex_faces[inds]
+                areas = self.face_areas
+
+                # [1, 2], [0, 2], [0, 1]
+                if self.dim == 2:
+                    f0 = (
+                        barys[:, 1] * (np.cross(ts[:, 2], [0, 0, 1])[:, i_dir])
+                        + barys[:, 2] * (np.cross([0, 0, 1], ts[:, 1])[:, i_dir])
+                    ) * areas[faces[:, 0]]
+                    f1 = (
+                        barys[:, 0] * (np.cross(ts[:, 2], [0, 0, 1])[:, i_dir])
+                        + barys[:, 2] * (np.cross([0, 0, 1], ts[:, 0])[:, i_dir])
+                    ) * areas[faces[:, 1]]
+                    f2 = (
+                        barys[:, 0] * (np.cross(ts[:, 1], [0, 0, 1])[:, i_dir])
+                        + barys[:, 1] * (np.cross([0, 0, 1], ts[:, 0])[:, i_dir])
+                    ) * areas[faces[:, 2]]
+                    Aij = np.c_[f0, f1, f2].reshape(-1)
+                    ind_ptr = 3 * np.arange(n_loc + 1)
+                else:
+                    # [1, 2, 3], [0, 2, 3], [0, 1, 3], [0, 1, 2]
+                    # f123 = (L1 * G_2 x G_3 + L2 * G_3 x G_1 + L3 * G_1 x G_2)
+                    # f023 = (L0 * G_2 x G_3 + L2 * G_3 x G_0 + L3 * G_0 x G_2)
+                    # f013 = (L0 * G_1 x G_3 + L1 * G_3 x G_0 + L3 * G_0 x G_1)
+                    # f012 = (L0 * G_1 x G_2 + L1 * G_2 x G_0 + L2 * G_0 x G_1)
+                    f0 = 2 * (
+                        barys[:, 1] * (np.cross(ts[:, 2], ts[:, 3])[:, i_dir])
+                        + barys[:, 2] * (np.cross(ts[:, 3], ts[:, 1])[:, i_dir])
+                        + barys[:, 3] * (np.cross(ts[:, 1], ts[:, 2])[:, i_dir])
+                    ) * areas[faces[:, 0]]
+                    f1 = 2 * (
+                        barys[:, 0] * (np.cross(ts[:, 2], ts[:, 3])[:, i_dir])
+                        + barys[:, 2] * (np.cross(ts[:, 3], ts[:, 0])[:, i_dir])
+                        + barys[:, 3] * (np.cross(ts[:, 0], ts[:, 2])[:, i_dir])
+                    ) * areas[faces[:, 1]]
+                    f2 = 2 * (
+                        barys[:, 0] * (np.cross(ts[:, 1], ts[:, 3])[:, i_dir])
+                        + barys[:, 1] * (np.cross(ts[:, 3], ts[:, 0])[:, i_dir])
+                        + barys[:, 3] * (np.cross(ts[:, 0], ts[:, 1])[:, i_dir])
+                    ) * areas[faces[:, 2]]
+                    f3 = 2 * (
+                        barys[:, 0] * (np.cross(ts[:, 1], ts[:, 2])[:, i_dir])
+                        + barys[:, 1] * (np.cross(ts[:, 2], ts[:, 0])[:, i_dir])
+                        + barys[:, 2] * (np.cross(ts[:, 0], ts[:, 1])[:, i_dir])
+                    ) * areas[faces[:, 3]]
+                    Aij = np.c_[f0, f1, f2, f3].reshape(-1)
+                    ind_ptr = 4 * np.arange(n_loc + 1)
+                col_inds = faces.reshape(-1)
+                n_items = self.n_faces
         return sp.csr_matrix((Aij, col_inds, ind_ptr), shape=(n_loc, n_items))
 
     @property
