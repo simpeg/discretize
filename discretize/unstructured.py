@@ -571,7 +571,7 @@ class SimplexMesh(BaseMesh):
                     e3 = (barys[:, 0] * ts[:, 3] - barys[:, 3] * ts[:, 0]) * lengths[edges[:, 3]]
                     e4 = (barys[:, 1] * ts[:, 3] - barys[:, 3] * ts[:, 1]) * lengths[edges[:, 4]]
                     e5 = (barys[:, 2] * ts[:, 3] - barys[:, 3] * ts[:, 2]) * lengths[edges[:, 5]]
-                    Aij = np.c_[e0, e1, e2, e3, e4, e5]
+                    Aij = np.c_[e0, e1, e2, e3, e4, e5].reshape(-1)
                     ind_ptr = 6 * np.arange(n_loc + 1)
                 else:
                     Aij = np.c_[e0, e1, e2].reshape(-1)
@@ -696,6 +696,11 @@ class SimplexMesh(BaseMesh):
         for P in Ps:
             Av = Av + 1/(dim+1) * P
         return Av
+
+    @property
+    def stencil_cell_gradient(self):
+        # An operator that differences cells on each side of a face
+        pass
 
     def plot_grid(self):
         ax = plt.subplot(111)

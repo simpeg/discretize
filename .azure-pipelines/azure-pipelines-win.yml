@@ -33,5 +33,5 @@ jobs:
 
   - script: |
       call activate test
-      pytest tests/base tests/cyl tests/tree -v -s -W ignore::DeprecationWarning
+      pytest tests/base tests/cyl tests/tree tests/simplex -v -s -W ignore::DeprecationWarning
     displayName: 'Running tests'
