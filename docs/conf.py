@@ -125,7 +125,7 @@ pygments_style = "sphinx"
 
 # source code links
 link_github = True
-# You can add build old with link_github = False
+# You can build old with link_github = False
 
 if link_github:
 
@@ -260,7 +260,7 @@ try:
         ],
         "use_edit_page_button": False,
     }
-    html_logo = "images/logo-block.ico"
+    html_logo = "images/discretize-logo.png"
 
     html_static_path = ['_static']
 
@@ -299,7 +299,7 @@ except Exception:
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-html_favicon = "./images/logo-block.ico"
+html_favicon = "./images/discretize-block.ico"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
