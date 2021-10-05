@@ -700,7 +700,15 @@ class SimplexMesh(BaseMesh):
     @property
     def stencil_cell_gradient(self):
         # An operator that differences cells on each side of a face
-        pass
+        tests = self.faces[self._simplex_faces] - self.cell_centers[:, None, :]
+        Aij = np.sign(
+            np.einsum('ijk, ijk -> ij', tests, self.face_normals[self._simplex_faces])
+        ).reshape(-1)
+        ind_ptr = 3*np.arange(self.n_cells + 1)
+        col_inds = self._simplex_faces.reshape(-1)
+
+        Aij = sp.csr_matrix((Aij, col_inds, ind_ptr), shape=(self.n_cells, self.n_faces)).T
+
 
     def plot_grid(self):
         ax = plt.subplot(111)
