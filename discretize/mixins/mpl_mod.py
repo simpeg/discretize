@@ -2183,9 +2183,9 @@ class InterfaceMPL(object):
 
         return out
 
-    plotGrid = deprecate_method("plot_grid", "plotGrid", removal_version="1.0.0")
-    plotImage = deprecate_method("plot_image", "plotImage", removal_version="1.0.0")
-    plotSlice = deprecate_method("plot_slice", "plotSlice", removal_version="1.0.0")
+    plotGrid = deprecate_method("plot_grid", "plotGrid", removal_version="1.0.0", future_warn=False)
+    plotImage = deprecate_method("plot_image", "plotImage", removal_version="1.0.0", future_warn=False)
+    plotSlice = deprecate_method("plot_slice", "plotSlice", removal_version="1.0.0", future_warn=False)
 
 
 class Slicer(object):
