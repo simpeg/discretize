@@ -2179,7 +2179,7 @@ class InterfaceMPL(object):
                 vecs[:, 1],
                 **quiver_opts,
             )
-            out = (qvr,)
+            out = (out, qvr,)
 
         return out
 
@@ -2243,11 +2243,14 @@ class Slicer(object):
     If you, however, call this class directly, you have first to initiate a
     figure, and afterwards connect it:
 
-    >>> # You have to initialize a figure
     >>> fig = plt.figure()
-    >>> # Then you have to get the tracker from the Slicer
+    
+    Then you have to get the tracker from the Slicer
+    
     >>> tracker = discretize.View.Slicer(mesh, Lpout)
-    >>> # Finally you have to connect the tracker to the figure
+    
+    Finally you have to connect the tracker to the figure
+    
     >>> fig.canvas.mpl_connect('scroll_event', tracker.onscroll)
     >>> plt.show()
 

@@ -284,6 +284,7 @@ def extract_core_mesh(xyzlim, mesh, mesh_type="tensor"):
     >>> mpl.rcParams.update({"font.size": 14})
 
     Form a mesh of a uniform cube
+
     >>> h = [(1., 5, -1.5), (1., 20), (1., 5, 1.5)]
     >>> mesh = TensorMesh([h, h], origin='CC')
 
@@ -437,16 +438,16 @@ def mesh_builder_xyz(
     >>> import matplotlib.pyplot as plt
     >>> import numpy as np
 
-    >>> xyLoc = np.random.randn(8,2)
+    >>> xy_loc = np.random.randn(8,2)
     >>> mesh = discretize.utils.mesh_builder_xyz(
-    ...     xyLoc, [0.1, 0.1], depth_core=0.5,
+    ...     xy_loc, [0.1, 0.1], depth_core=0.5,
     ...     padding_distance=[[1,2], [1,0]],
     ...     mesh_type='tensor',
     ... )
 
     >>> axs = plt.subplot()
     >>> mesh.plot_image(mesh.cell_volumes, grid=True, ax=axs)
-    >>> axs.scatter(xyLoc[:,0], xyLoc[:,1], 15, c='w', zorder=3)
+    >>> axs.scatter(xy_loc[:,0], xy_loc[:,1], 15, c='w', zorder=3)
     >>> axs.set_aspect('equal')
     >>> plt.show()
     """
@@ -675,6 +676,8 @@ def refine_tree_xyz(
     >>> mesh = refine_tree_xyz(
     ...     mesh, pts, octree_levels=[4, 2], method="radial", finalize=True
     ... )
+
+    Plot the mesh
 
     >>> fig = plt.figure(figsize=(6, 6))
     >>> ax = fig.add_subplot(111)
@@ -917,6 +920,8 @@ def active_from_xyz(mesh, xyz, grid_reference="CC", method="linear"):
     >>> from discretize import TensorMesh
     >>> from discretize.utils import active_from_xyz
 
+    Determine active cells for a given mesh and topography
+
     >>> mesh = TensorMesh([5, 5])
     >>> topo_func = lambda x: -3*(x-0.2)*(x-0.8)+.5
     >>> topo_points = np.linspace(0, 1)
@@ -924,17 +929,21 @@ def active_from_xyz(mesh, xyz, grid_reference="CC", method="linear"):
     >>> active_cc = active_from_xyz(mesh, np.c_[topo_points, topo_vals], grid_reference='CC')
     >>> active_n = active_from_xyz(mesh, np.c_[topo_points, topo_vals], grid_reference='N')
 
-    >>> ax = plt.subplot(121)
-    >>> mesh.plot_image(active_cc, ax=ax)
-    >>> mesh.plot_grid(centers=True, ax=ax)
-    >>> ax.plot(np.linspace(0,1), topo_func(np.linspace(0,1)), color='C3')
-    >>> ax.set_title("CC")
-    >>> ax = plt.subplot(122)
-    >>> mesh.plot_image(active_n, ax=ax)
-    >>> mesh.plot_grid(nodes=True, ax=ax)
-    >>> ax.plot(np.linspace(0,1), topo_func(np.linspace(0,1)), color='C3')
-    >>> ax.set_title("N")
-    >>> plt.show()
+    Plot visual representation
+
+    .. collapse:: Expand to show scripting for plot
+
+        >>> ax = plt.subplot(121)
+        >>> mesh.plot_image(active_cc, ax=ax)
+        >>> mesh.plot_grid(centers=True, ax=ax)
+        >>> ax.plot(np.linspace(0,1), topo_func(np.linspace(0,1)), color='C3')
+        >>> ax.set_title("CC")
+        >>> ax = plt.subplot(122)
+        >>> mesh.plot_image(active_n, ax=ax)
+        >>> mesh.plot_grid(nodes=True, ax=ax)
+        >>> ax.plot(np.linspace(0,1), topo_func(np.linspace(0,1)), color='C3')
+        >>> ax.set_title("N")
+        >>> plt.show()
     """
     try:
         if not mesh.is_symmetric:
