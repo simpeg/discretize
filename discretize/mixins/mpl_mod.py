@@ -2379,15 +2379,13 @@ class Slicer(object):
             if clim[0] == clim[1]:
                 clim[0] *= 0.99
                 clim[1] *= 1.01
-
-        self.pc_props["vmin"] = clim[0]
-        self.pc_props["vmax"] = clim[1]
-
-
         # ensure vmin/vmax of the norm is consistent with clim
         if "norm" in self.pc_props:
             self.pc_props["norm"].vmin = clim[0]
             self.pc_props["norm"].vmax = clim[1]
+        else:
+            self.pc_props["vmin"] = clim[0]
+            self.pc_props["vmax"] = clim[1]
 
         # 2. Start populating figure
 
