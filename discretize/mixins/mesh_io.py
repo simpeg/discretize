@@ -12,16 +12,28 @@ except ImportError:
 
 
 class TensorMeshIO(InterfaceTensorread_vtk):
+    """Class for managing the input/output of tensor meshes and models.
+
+    The ``TensorMeshIO`` class contains a set of class methods specifically
+    for the :class:`~discretize.TensorMesh` class. These include:
+
+        - Read/write tensor meshes to file
+        - Read/write models defined on tensor meshes
+
+    """
     @classmethod
-    def _readUBC_3DMesh(TensorMesh, file_name):
-        """Read UBC GIF 3D tensor mesh and generate same dimension TensorMesh.
+    def _readUBC_3DMesh(cls, file_name):
+        """Read 3D tensor mesh from UBC-GIF formatted file.
 
-        Input:
-        :param string file_name: path to the UBC GIF mesh file
+        Parameters
+        ----------
+        file_name : str or file name
+            full path to the UBC-GIF formatted mesh file
 
-        Output:
-        :rtype: TensorMesh
-        :return: The tensor mesh for the file_name.
+        Returns
+        -------
+        discretize.TensorMesh
+            The tensor mesh
         """
 
         # Interal function to read cell size lines for the UBC mesh files.
@@ -51,19 +63,22 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         # Adjust the reference point to the bottom south west corner
         origin[2] = origin[2] - np.sum(h3)
         # Make the mesh
-        tensMsh = TensorMesh([h1, h2, h3], origin=origin)
+        tensMsh = cls([h1, h2, h3], origin=origin)
         return tensMsh
 
     @classmethod
-    def _readUBC_2DMesh(TensorMesh, file_name):
-        """Read UBC GIF 2DTensor mesh and generate 2D Tensor mesh in simpeg
+    def _readUBC_2DMesh(cls, file_name):
+        """Read 2D tensor mesh from UBC-GIF formatted file.
 
-        Input:
-        :param string file_name: path to the UBC GIF mesh file
+        Parameters
+        ----------
+        file_name : str or file name
+            full path to the UBC-GIF formatted mesh file
 
-        Output:
-        :rtype: TensorMesh
-        :return: SimPEG TensorMesh 2D object
+        Returns
+        -------
+        discretize.TensorMesh
+            The tensor mesh
         """
 
         fopen = open(file_name, "r")
@@ -105,23 +120,27 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         z0 = -(z0 + sum(dz))
         dz = dz[::-1]
         # Make the mesh
-        tensMsh = TensorMesh([dx, dz], origin=(x0, z0))
+        tensMsh = cls([dx, dz], origin=(x0, z0))
 
         fopen.close()
 
         return tensMsh
 
     @classmethod
-    def read_UBC(TensorMesh, file_name, directory=""):
-        """Wrapper to Read UBC GIF 2D  and 3D tensor mesh and generate same dimension TensorMesh.
+    def read_UBC(cls, file_name, directory=""):
+        """Read 2D or 3D tensor mesh from UBC-GIF formatted file.
 
-        Input:
-        :param str file_name: path to the UBC GIF mesh file or just its name if directory is specified
-        :param str directory: directory where the UBC GIF file lives
+        Parameters
+        ----------
+        file_name : str or file name
+            full path to the UBC-GIF formatted mesh file or just its name if directory is specified
+        directory : str, optional
+            directory where the UBC-GIF file lives
 
-        Output:
-        :rtype: TensorMesh
-        :return: The tensor mesh for the file_name.
+        Returns
+        -------
+        discretize.TensorMesh
+            The tensor mesh
         """
         # Check the expected mesh dimensions
         fname = os.path.join(directory, file_name)
@@ -133,24 +152,26 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         sizeM = np.array(msh.ravel()[0].split(), dtype=float)
         # Check if the mesh is a UBC 2D mesh
         if sizeM.shape[0] == 1:
-            Tnsmsh = TensorMesh._readUBC_2DMesh(fname)
+            Tnsmsh = cls._readUBC_2DMesh(fname)
         # Check if the mesh is a UBC 3D mesh
         elif sizeM.shape[0] == 3:
-            Tnsmsh = TensorMesh._readUBC_3DMesh(fname)
+            Tnsmsh = cls._readUBC_3DMesh(fname)
         else:
             raise Exception("File format not recognized")
         return Tnsmsh
 
     def _readModelUBC_2D(mesh, file_name):
-        """
-        Read UBC GIF 2DTensor model and generate 2D Tensor model in simpeg
+        """Read UBC-GIF formatted model file for 2D tensor mesh.
 
-        Input:
-        :param string file_name: path to the UBC GIF 2D model file
+        Parameters
+        ----------
+        file_name : str or file name
+            full path to the UBC-GIF formatted model file
 
-        Output:
-        :rtype: numpy.ndarray
-        :return: model with TensorMesh ordered
+        Returns
+        -------
+        (n_cells) numpy.ndarray
+            The model defined on the 2D tensor mesh
         """
 
         # Open fileand skip header... assume that we know the mesh already
@@ -175,14 +196,17 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         return model.reshape(mesh.vnC, order="F")[:, ::-1].reshape(-1, order="F")
 
     def _readModelUBC_3D(mesh, file_name):
-        """Read UBC 3DTensor mesh model and generate 3D Tensor mesh model
+        """Read UBC-GIF formatted model file for 3D tensor mesh.
 
-        Input:
-        :param string file_name: path to the UBC GIF mesh file to read
+        Parameters
+        ----------
+        file_name : str or file name
+            full path to the UBC-GIF formatted model file
 
-        Output:
-        :rtype: numpy.ndarray
-        :return: model with TensorMesh ordered
+        Returns
+        -------
+        (n_cells) numpy.ndarray
+            The model defined on the 3D tensor mesh
         """
         f = open(file_name, "r")
         model = np.array(list(map(float, f.readlines())))
@@ -195,17 +219,19 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         return model
 
     def read_model_UBC(mesh, file_name, directory=""):
-        """Read UBC 2D or 3D Tensor mesh model
-            and generate Tensor mesh model
+        """Read UBC-GIF formatted model file for 2D or 3D tensor mesh.
 
-        Input:
-        :param str file_name:  path to the UBC GIF mesh file to read
-        or just its name if directory is specified
-        :param str directory: directory where the UBC GIF file lives
+        Parameters
+        ----------
+        file_name : str or file name
+            full path to the UBC-GIF formatted model file or just its name if directory is specified
+        directory : str, optional
+            directory where the UBC-GIF file lives
 
-        Output:
-        :rtype: numpy.ndarray
-        :return: model with TensorMesh ordered
+        Returns
+        -------
+        (n_cells) numpy.ndarray
+            The model defined on the mesh
         """
         fname = os.path.join(directory, file_name)
         if mesh.dim == 3:
@@ -217,14 +243,15 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         return model
 
     def write_model_UBC(mesh, file_name, model, directory=""):
-        """Writes a model associated with a TensorMesh
-        to a UBC-GIF format model file.
+        """Write 2D or 3D tensor model to UBC-GIF formatted file.
 
-        Input:
-        :param str file_name:  File to write to
-        or just its name if directory is specified
-        :param str directory: directory where the UBC GIF file lives
-        :param numpy.ndarray model: The model
+        Parameters
+        ----------
+        file_name : str or file name
+            full path for the output mesh file or just its name if directory is specified
+        model : (n_cells) numpy.ndarray
+        directory : str, optional
+            output directory
         """
         fname = os.path.join(directory, file_name)
         if mesh.dim == 3:
@@ -249,11 +276,14 @@ class TensorMeshIO(InterfaceTensorread_vtk):
             raise Exception("mesh must be a Tensor Mesh 2D or 3D")
 
     def _writeUBC_3DMesh(mesh, file_name, comment_lines=""):
-        """Writes a TensorMesh to a UBC-GIF format mesh file.
+        """Write 3D tensor mesh to UBC-GIF formatted file.
 
-        Input:
-        :param string file_name: File to write to
-        :param dict models: A dictionary of the models
+        Parameters
+        ----------
+        file_name : str or file name
+            full path for the output mesh file
+        comment_lines : str, optional
+            comment lines preceded are preceeded with '!'
         """
         if not mesh.dim == 3:
             raise Exception("Mesh must be 3D")
@@ -274,12 +304,14 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         f.close()
 
     def _writeUBC_2DMesh(mesh, file_name, comment_lines=""):
-        """Writes a TensorMesh to a UBC-GIF format mesh file.
+        """Write 2D tensor mesh to UBC-GIF formatted file.
 
-        Input:
-        :param string file_name: File to write to
-        :param dict models: A dictionary of the models
-
+        Parameters
+        ----------
+        file_name : str or file name
+            full path for the output mesh file
+        comment_lines : str, optional
+            comment lines preceded are preceeded with '!'
         """
         if not mesh.dim == 2:
             raise Exception("Mesh must be 2D")
@@ -337,13 +369,19 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         f.close()
 
     def write_UBC(mesh, file_name, models=None, directory="", comment_lines=""):
-        """Writes a TensorMesh to a UBC-GIF format mesh file.
+        """Write 2D or 3D tensor mesh (and models) to UBC-GIF formatted file(s).
 
-        Input:
-        :param str file_name: File to write to
-        :param str directory: directory where to save model
-        :param dict models: A dictionary of the models
-        :param str comment_lines: comment lines preceded with '!' to add
+        Parameters
+        ----------
+        file_name : str or file name
+            full path for the output mesh file or just its name if directory is specified
+        models : dict of [str, (n_cells) numpy.ndarray], optional
+            The dictionary key is a string representing the model's name. Each model
+            is an (n_cells) array.
+        directory : str, optional
+            output directory
+        comment_lines : str, optional
+            comment lines preceded are preceeded with '!'
         """
         fname = os.path.join(directory, file_name)
         if mesh.dim == 3:
@@ -367,6 +405,7 @@ class TensorMeshIO(InterfaceTensorread_vtk):
     # DEPRECATED
     @classmethod
     def readUBC(TensorMesh, file_name, directory=""):
+        """*readUBC* has been deprecated and replaced by *read_UBC*"""
         warnings.warn(
             "TensorMesh.readUBC has been deprecated and will be removed in"
             "discretize 1.0.0. please use TensorMesh.read_UBC",
@@ -384,13 +423,30 @@ class TensorMeshIO(InterfaceTensorread_vtk):
 
 
 class TreeMeshIO(object):
+    """Class for managing the input/output of tree meshes and models.
+
+    The ``TreeMeshIO`` class contains a set of class methods specifically
+    for the :class:`~discretize.TreeMesh` class. These include:
+
+        - Read/write tree meshes to file
+        - Read/write models defined on tree meshes
+
+    """
     @classmethod
     def read_UBC(TreeMesh, meshFile, directory=""):
-        """Read UBC 3D OcTree mesh file
-        Input:
-        :param str meshFile: path to the UBC GIF OcTree mesh file to read
-        :rtype: discretize.TreeMesh
-        :return: The octree mesh
+        """Read 3D tree mesh (OcTree mesh) from UBC-GIF formatted file.
+
+        Parameters
+        ----------
+        file_name : str or file name
+            full path to the UBC-GIF formatted mesh file or just its name if directory is specified
+        directory : str, optional
+            directory where the UBC-GIF file lives
+
+        Returns
+        -------
+        discretize.TreeMesh
+            The tree mesh
         """
         fname = os.path.join(directory, meshFile)
         fileLines = np.genfromtxt(fname, dtype=str, delimiter="\n", comments="!")
@@ -427,10 +483,21 @@ class TreeMeshIO(object):
         return mesh
 
     def read_model_UBC(mesh, file_name):
-        """Read UBC OcTree model and get vector
-        :param string file_name: path to the UBC GIF model file to read
-        :rtype: numpy.ndarray
-        :return: OcTree model
+        """Read UBC-GIF formatted file model file for 3D tree mesh (OcTree).
+
+        Parameters
+        ----------
+        file_name : str or list of str
+            full path to the UBC-GIF formatted model file or
+            just its name if directory is specified. It can also be a list of file_names.
+        directory : str
+            directory where the UBC-GIF file lives (optional)
+
+        Returns
+        -------
+        (n_cells) numpy.ndarray or dict of [str, (n_cells) numpy.ndarray]
+            The model defined on the mesh. If **file_name** is a ``dict``, it is a
+            dictionary of models indexed by the file names.
         """
 
         if type(file_name) is list:
@@ -451,11 +518,17 @@ class TreeMeshIO(object):
         return model
 
     def write_UBC(mesh, file_name, models=None, directory=""):
-        """Write UBC ocTree mesh and model files from a
-        octree mesh and model.
-        :param string file_name: File to write to
-        :param dict models: Models in a dict, where each key is the file_name
-        :param str directory: directory where to save model(s)
+        """Write OcTree mesh (and models) to UBC-GIF formatted files.
+
+        Parameters
+        ----------
+        file_name : str
+            full path for the output mesh file or just its name if directory is specified
+        models : dict of [str, (n_cells) numpy.ndarray], optional
+            The dictionary key is a string representing the model's name.
+            Each model is a 1D numpy array of size (n_cells).
+        directory : str, optional
+            output directory (optional)
         """
         uniform_hs = np.array([np.allclose(h, h[0]) for h in mesh.h])
         if np.any(~uniform_hs):
@@ -494,14 +567,16 @@ class TreeMeshIO(object):
             mesh.write_model_UBC(key, models[key], directory=directory)
 
     def write_model_UBC(mesh, file_name, model, directory=""):
-        """Writes a model associated with a TreeMesh
-        to a UBC-GIF format model file.
+        """Write 3D tree model (OcTree) to UBC-GIF formatted file.
 
-        Input:
-        :param str file_name:  File to write to
-        or just its name if directory is specified
-        :param str directory: directory where the UBC GIF file lives
-        :param numpy.ndarray model: The model
+        Parameters
+        ----------
+        file_name : str
+            full path for the output mesh file or just its name if directory is specified
+        model : (n_cells) numpy.ndarray
+            model values defined for each cell
+        directory : str
+            output directory (optional)
         """
         if type(file_name) is list:
             for f, m in zip(file_name, model):
@@ -515,6 +590,7 @@ class TreeMeshIO(object):
     # DEPRECATED
     @classmethod
     def readUBC(TreeMesh, file_name, directory=""):
+        """*readUBC* has been deprecated and replaced by *read_UBC*"""
         warnings.warn(
             "TensorMesh.readUBC has been deprecated and will be removed in"
             "discretize 1.0.0. please use TensorMesh.read_UBC",

@@ -1,3 +1,29 @@
+"""
+===========================================
+Testing Utilities (:mod:`discretize.tests`)
+===========================================
+.. currentmodule:: discretize.tests
+
+This module contains utilities for convergence testing
+
+Classes
+-------
+.. autosummary::
+  :toctree: generated/
+
+  OrderTest
+
+Functions
+---------
+.. autosummary::
+  :toctree: generated/
+
+  check_derivative
+  rosenbrock
+  get_quadratic
+  setup_mesh
+"""
+
 import numpy as np
 import scipy.sparse as sp
 
@@ -60,9 +86,28 @@ sadness = [
 
 
 def setup_mesh(mesh_type, nC, nDim):
-    """
-    For a given number of cells nc, generate a TensorMesh with uniform
-    cells with edge length h=1/nc.
+    """Generate arbitrary mesh for testing.
+
+    For the mesh type, number of cells along each axis and dimension specified,
+    **setup_mesh** will construct a random mesh that can be used for testing.
+    By design, the domain width is 1 along each axis direction.
+
+    Parameters
+    ----------
+    mesh_type : str
+        Defines the mesh type. Must be one of **{'uniformTensorMesh',
+        'randomTensorMesh', 'uniformCylindricalMesh', 'randomCylindricalMesh',
+        'uniformTree', 'randomTree', 'uniformCurv', 'rotateCurv', 'sphereCurv'}**
+    nC : int
+        Number of cells along each axis. If *mesh_type* is 'Tree', then *nC* defines the
+        number of base mesh cells and must be a power of 2.
+    nDim : int
+        The dimension of the mesh. Must be 1, 2 or 3.
+
+    Returns
+    -------
+    discretize.base.BaseMesh
+        A discretize mesh of class specified by the input argument *mesh_type*
     """
 
     if "TensorMesh" in mesh_type:
@@ -151,60 +196,89 @@ def setup_mesh(mesh_type, nC, nDim):
 
 
 class OrderTest(unittest.TestCase):
-    """
+    """Base class for testing convergence of discrete operators with respect to cell size.
 
-    OrderTest is a base class for testing convergence orders with respect to mesh
-    sizes of integral/differential operators.
+    ``OrderTest`` is a base class for testing the order of convergence of discrete
+    operators with respect to cell size. ``OrderTest`` is inherited by the test
+    class for the given operator. Within the test class, the user sets the parameters
+    for the convergence testing and defines a method :py:attr:`~OrderTest.getError`
+    which defines the error as a norm of the residual (see example).
 
-    Mathematical Problem:
+    Parameters
+    ----------
+    name : str
+        Name the convergence test
+    meshTypes : list of str
+        List denoting the mesh types on which the convergence will be tested.
+        List entries must of the list {'uniformTensorMesh', 'randomTensorMesh',
+        'uniformCylindricalMesh', 'randomCylindricalMesh', 'uniformTree', 'randomTree',
+        'uniformCurv', 'rotateCurv', 'sphereCurv'}
+    expectedOrders : float or list of float (default = 2.0)
+        Defines the expect orders of convergence for all meshes defined in *meshTypes*.
+        If list, must have same length as argument *meshTypes*.
+    tolerance : float or list of float (default = 0.85)
+        Defines tolerance for numerical approximate of convergence order.
+        If list, must have same length as argument *meshTypes*.
+    meshSizes : list of int
+        From coarsest to finest, defines the number of mesh cells in each axis direction
+        for the meshes used in the convergence test; e.g. [4, 8, 16, 32]
+    meshDimension : int
+        Mesh dimension. Must be 1, 2 or 3
 
-        Given are an operator A and its discretization A[h]. For a given test function f
-        and h --> 0  we compare:
+    Notes
+    -----
+    Consider an operator :math:`A(f)` that acts on a test function :math:`f`. And let
+    :math:`A_h (f)` be the discrete approximation to the original operator constructed
+    on a mesh will cell size :math:`h`. ``OrderTest`` assesses the convergence of
 
-        .. math::
-            error(h) = \| A[h](f) - A(f) \|_{\infty}
+    .. math::
+        error(h) = \\| A_h(f) - A(f) \\|
 
-        Note that you can provide any norm.
+    as :math:`h \\rightarrow 0`. Note that you can provide any norm to quantify the error.
+    The convergence test is passed when the numerically estimated rate of convergence is within
+    a specified tolerance of the expected convergence rate supplied by the user.
 
-        Test is passed when estimated rate order of convergence is  at least within the specified tolerance of the
-        estimated rate supplied by the user.
+    Examples
+    --------
+    Here, we utilize the ``OrderTest`` class to validate the rate of convergence for
+    the :py:attr:`~discretize.differential_operators.face_divergence`. Our convergence
+    test is done for a uniform 2D tensor mesh. Under the test class *TestDIV2D*, we
+    define the static parameters for the order test. We then define a method *getError*
+    for this class which returns the norm of some residual. With these two pieces
+    defined, we can call the order test as shown below.
 
-    Minimal example for a curl operator::
+    >>> from discretize.tests import OrderTest
+    >>> import unittest
+    >>> import numpy as np
 
-        class TestCURL(OrderTest):
-            name = "Curl"
-
-            def getError(self):
-                # For given Mesh, generate A[h], f and A(f) and return norm of error.
-
-
-                fun  = lambda x: np.cos(x)  # i (cos(y)) + j (cos(z)) + k (cos(x))
-                sol = lambda x: np.sin(x)  # i (sin(z)) + j (sin(x)) + k (sin(y))
-
-
-                Ex = fun(self.M.gridEx[:, 1])
-                Ey = fun(self.M.gridEy[:, 2])
-                Ez = fun(self.M.gridEz[:, 0])
-                f = np.concatenate((Ex, Ey, Ez))
-
-                Fx = sol(self.M.gridFx[:, 2])
-                Fy = sol(self.M.gridFy[:, 0])
-                Fz = sol(self.M.gridFz[:, 1])
-                Af = np.concatenate((Fx, Fy, Fz))
-
-                # Generate DIV matrix
-                Ah = self.M.edge_curl
-
-                curlE = Ah*E
-                err = np.linalg.norm((Ah*f -Af), np.inf)
-                return err
-
-            def test_order(self):
-                # runs the test
-                self.orderTest()
-
-    See also: test_operatorOrder.py
-
+    >>> class TestDIV2D(OrderTest):
+    ...     # Static properties for OrderTest
+    ...     name = "Face Divergence 2D"
+    ...     meshTypes = ["uniformTensorMesh"]
+    ...     meshDimension = 2
+    ...     expectedOrders = 2.0
+    ...     tolerance = 0.85
+    ...     meshSizes = [8, 16, 32, 64]
+    ...     def getError(self):
+    ...         # Test function
+    ...         fx = lambda x, y: np.sin(2 * np.pi * x)
+    ...         fy = lambda x, y: np.sin(2 * np.pi * y)
+    ...         # Analytic solution for operator acting on test function
+    ...         sol = lambda x, y: 2 * np.pi * (np.cos(2 * np.pi * x) + np.cos(2 * np.pi * y))
+    ...         # Evaluate test function on faces
+    ...         f = np.r_[
+    ...             fx(self.M.faces_x[:, 0], self.M.faces_x[:, 1]),
+    ...             fy(self.M.faces_y[:, 0], self.M.faces_y[:, 1])
+    ...         ]
+    ...         # Analytic solution at cell centers
+    ...         div_f = sol(self.M.cell_centers[:, 0], self.M.cell_centers[:, 1])
+    ...         # Numerical approximation of divergence at cell centers
+    ...         div_f_num = self.M.face_divergence * f
+    ...         # Define the error function as a norm
+    ...         err = np.linalg.norm((div_f_num - div_f), np.inf)
+    ...         return err
+    ...     def test_order(self):
+    ...         self.orderTest()
     """
 
     name = "Order Test"
@@ -218,12 +292,35 @@ class OrderTest(unittest.TestCase):
     meshDimension = 3
 
     def setupMesh(self, nC):
+        """Generate mesh and set as current mesh for testing.
+
+        Parameters
+        ----------
+        nC : int
+            Number of cells along each axis.
+
+        Returns
+        -------
+        Float
+            Maximum cell width for the mesh
+        """
         mesh, max_h = setupMesh(self._meshType, nC, self.meshDimension)
         self.M = mesh
         return max_h
 
     def getError(self):
-        """For given h, generate A[h], f and A(f) and return norm of error."""
+        """Compute error defined as a norm of the residual.
+
+        This method is overwritten within the test class of a particular operator.
+        Within the method, we define a test function :math:`f`, the analytic solution
+        of an operator :math:`A(f)` acting on the test function, and the numerical
+        approximation obtained by applying the discretized operator :math:`A_h (f)`.
+        **getError** is defined to return the norm of the residual as shown below:
+
+        .. math::
+            error(h) = \\| A_h(f) - A(f) \\|
+
+        """
         return 1.0
 
     def orderTest(self):
@@ -231,8 +328,6 @@ class OrderTest(unittest.TestCase):
         For number of cells specified in meshSizes setup mesh, call getError
         and prints mesh size, error, ratio between current and previous error,
         and estimated order of convergence.
-
-
         """
         if not isinstance(self.meshTypes, list):
             raise TypeError("meshTypes must be a list")
@@ -302,7 +397,23 @@ class OrderTest(unittest.TestCase):
 
 
 def rosenbrock(x, return_g=True, return_H=True):
-    """Rosenbrock function for testing GaussNewton scheme"""
+    """Rosenbrock function for testing Gauss-Newton scheme
+
+    Parameters
+    ----------
+    x : numpy.ndarray
+        The (x0, x1) location for the Rosenbrock test
+    return_g : bool, optional
+        If *True*, return the gradient at *x*
+    return_H : bool, optional
+        If *True*, return the approximate Hessian at *x*
+
+    Returns
+    -------
+    tuple
+        Rosenbrock function evaluated at (x0, x1), the gradient at (x0, x1) if
+        *return_g = True* and the Hessian at (x0, x1) if *return_H = True*
+    """
 
     f = 100 * (x[1] - x[0] ** 2) ** 2 + (1 - x[0]) ** 2
     g = np.array(
@@ -333,33 +444,60 @@ def check_derivative(
     eps=1e-10,
     ax=None,
 ):
-    """
-    Basic derivative check
+    """Basic derivative check
 
     Compares error decay of 0th and 1st order Taylor approximation at point
     x0 for a randomized search direction.
 
-    :param callable fctn: function handle
-    :param numpy.ndarray x0: point at which to check derivative
-    :param int num: number of times to reduce step length, h
-    :param bool plotIt: if you would like to plot
-    :param numpy.ndarray dx: step direction
-    :param int expectedOrder: The order that you expect the derivative to yield.
-    :param float tolerance: The tolerance on the expected order.
-    :param float eps: What is zero?
-    :rtype: bool
-    :return: did you pass the test?!
+    Parameters
+    ----------
+    fctn : function
+        Function handle
+    x0 : numpy.ndarray
+        Point at which to check derivative
+    num : int, optional
+        number of times to reduce step length to evaluate derivative
+    plotIt : bool, optional
+        If *True*, plot the convergence of the approximation of the derivative
+    dx : numpy.ndarray, optional
+        Step direction. By default, this parameter is set to *None* and a random
+        step direction is chosen.
+    expectedOrder : int, optional
+        The expected order of convergence for the numerical derivative
+    tolerance : float, optional
+        The tolerance on the expected order
+    eps : float, optional
+        A threshold value for approximately equal to zero
+    ax : matplotlib.pyplot.Axes, optional
+        An axis object for the convergence plot if *plotIt = True*.
+        Otherwise, the function will create a new axis.
 
+    Returns
+    -------
+    bool
+        Whether you passed the test.
 
-    .. plot::
-        :include-source:
+    Examples
+    --------
+    >>> from discretize import tests, utils
+    >>> import numpy as np
+    >>> import matplotlib.pyplot as plt
 
-        from discretize import tests, utils
-        import numpy as np
-
-        def simplePass(x):
-            return np.sin(x), utils.sdiag(np.cos(x))
-        tests.checkDerivative(simplePass, np.random.randn(5))
+    >>> def simplePass(x):
+    ...     return np.sin(x), utils.sdiag(np.cos(x))
+    >>> passed = tests.checkDerivative(simplePass, np.random.randn(5))
+    ==================== checkDerivative ====================
+    iter    h         |ft-f0|   |ft-f0-h*J0*dx|  Order
+    ---------------------------------------------------------
+     0   1.00e-01    1.690e-01     8.400e-03      nan
+     1   1.00e-02    1.636e-02     8.703e-05      1.985
+     2   1.00e-03    1.630e-03     8.732e-07      1.999
+     3   1.00e-04    1.629e-04     8.735e-09      2.000
+     4   1.00e-05    1.629e-05     8.736e-11      2.000
+     5   1.00e-06    1.629e-06     8.736e-13      2.000
+     6   1.00e-07    1.629e-07     8.822e-15      1.996
+    ========================= PASS! =========================
+    Once upon a time, a happy little test passed.
     """
 
     print("{0!s} checkDerivative {1!s}".format("=" * 20, "=" * 20))
@@ -451,12 +589,34 @@ def check_derivative(
 
 
 def get_quadratic(A, b, c=0):
-    """
-    Given A, b and c, this returns a quadratic, Q
+    """Given **A**, **b** and *c*, this returns a function that evaluates the quandratic
+    for a vector **x**.
+
+    Where :math:`\\mathbf{A} \\in \\mathbb{R}^{NxN}`,
+    :math:`\\mathbf{b} \\in \\mathbb{R}^N` and :math:`c` is a constant,
+    this function evaluates the following quadratic:
 
     .. math::
 
-        \mathbf{Q( x ) = 0.5 x A x + b x} + c
+        Q( \\mathbf{x} ) = \\frac{1}{2} \\mathbf{x^T A x + b^T x} + c
+
+    for a vector :math:`\\mathbf{x}`. It also optionally returns the gradient of the
+    above equation, and its Hessian.
+
+    Parameters
+    ----------
+    A : (N, N) numpy.ndarray
+        A square matrix
+    b : (N) numpy.ndarray
+        A vector
+    c : float
+        A constant
+
+    Returns
+    -------
+    function :
+        The callable function that returns the quadratic evaluation, and optionally its
+        gradient, and Hessian.
     """
 
     def Quadratic(x, return_g=True, return_H=True):

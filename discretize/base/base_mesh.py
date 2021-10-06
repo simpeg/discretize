@@ -1,5 +1,5 @@
 """
-Base classes for all discretize meshes
+Base classes for all meshes supported in ``discretize``
 """
 
 import numpy as np
@@ -13,8 +13,25 @@ import warnings
 
 class BaseMesh:
     """
-    BaseMesh does all the counting you don't want to do.
-    BaseMesh should be inherited by meshes with a regular structure.
+    Base mesh class for the ``discretize`` package
+
+    The ``BaseMesh`` class does all the basic counting and organizing
+    you wouldn't want to do manually. ``BaseMesh`` is a class that should
+    always be inherited by meshes with a regular structure; e.g.
+    :class:`~discretize.TensorMesh`, :class:`~discretize.CylindricalMesh`,
+    :class:`~discretize.TreeMesh` or :class:`~discretize.CurvilinearMesh`.
+
+    Parameters
+    ----------
+    shape_cells : array_like of int
+        number of cells in each dimension
+    origin : array_like of float, optional
+        origin of the bottom south west corner of the mesh, defaults to 0.
+    orientation : discretize.utils.Identity or array_like of float, optional
+        Orientation of the three major axes of the mesh; defaults to :class:`~discretize.utils.Identity`.
+        If provided, this must be an orthogonal matrix with the correct dimension.
+    reference_system : {'cartesian', 'cylindrical', 'spherical'}
+        Can also be a shorthand version of these, e.g. {'car[t]', 'cy[l]', 'sph'}
     """
 
     _REGISTRY = {}
@@ -32,6 +49,7 @@ class BaseMesh:
         "nF": "n_faces",
         "vnF": "n_faces_per_direction",
         "vnC": "shape_cells",
+        "serialize": "to_dict",
     }
     _items = {"shape_cells", "origin", "orientation", "reference_system"}
 
@@ -78,7 +96,20 @@ class BaseMesh:
 
     @property
     def origin(self):
-        """Origin of the mesh"""
+        """Origin or 'anchor point' of the mesh
+
+        For a mesh defined in Cartesian coordinates (e.g.
+        :class:`~discretize.TensorMesh`, :class:`~discretize.CylindricalMesh`,
+        :class:`~discretize.TreeMesh`), *origin* is the
+        bottom southwest corner. For a :class:`~discretize.CylindricalMesh`,
+        *origin* is the bottom of the axis of rotational symmetry
+        for the mesh (i.e. bottom of z-axis).
+
+        Returns
+        -------
+        (dim) numpy.ndarray of float
+            origin location
+        """
         return self._origin
 
     @origin.setter
@@ -94,20 +125,47 @@ class BaseMesh:
 
     @property
     def shape_cells(self):
-        """The number of cells in each direction
+        """The number of cells in each coordinate direction.
+
+        For meshes of class :class:`~discretize.TensorMesh`,
+        :class:`~discretize.CylindricalMesh` or :class:`~discretize.CurvilinearMesh`,
+        **shape_cells** returns the number of cells along each coordinate axis direction.
+        For mesh of class :class:`~discretize.TreeMesh`, *shape_cells* returns
+        the number of underlying tensor mesh cells along each coordinate direction.
 
         Returns
         -------
-        tuple of ints
+        (dim) tuple of int
+            the number of cells in each coordinate direcion
 
         Notes
         -----
-        Also accessible as `vnC`.
+        Property also accessible as using the shorthand **vnC**
         """
         return self._shape_cells
 
     @property
     def orientation(self):
+        """Rotation matrix defining mesh axes relative to Cartesian
+
+        This property returns a rotation matrix between the local coordinate
+        axes of the mesh and the standard Cartesian axes. For a 3D mesh, this
+        would define the x, y and z axes of the mesh relative to the Easting,
+        Northing and elevation directions. The *orientation* property can
+        be used to transform locations from a local coordinate
+        system to a conventional Cartesian system. By default, *orientation*
+        is an identity matrix of shape (mesh.dim, mesh.dim).
+
+        Returns
+        -------
+        (dim, dim) numpy.ndarray of float
+            Square rotation matrix defining orientation
+
+        Examples
+        --------
+        For a visual example of this, please see the figure in the
+        docs for :class:`~discretize.mixins.InterfaceVTK`.
+        """
         return self._orientation
 
     @orientation.setter
@@ -130,7 +188,16 @@ class BaseMesh:
 
     @property
     def reference_system(self):
-        "The type of coordinate reference frame. Can take on the values "
+        """Coordinate reference system
+
+        The type of coordinate reference frame. Will be one of the values "cartesian",
+        "cylindrical", or "spherical".
+
+        Returns
+        -------
+        str {'cartesian', 'cylindrical', 'spherical'}
+            The coordinate system associated with the mesh.
+        """
         return self._reference_system
 
     @reference_system.setter
@@ -155,6 +222,20 @@ class BaseMesh:
         self._reference_system = value
 
     def to_dict(self):
+        """Representation of the mesh's attributes as a dictionary
+
+        The dictionary representation of the mesh class necessary to reconstruct the
+        object. This is useful for serialization. All of the attributes returned in this
+        dictionary will be JSON serializable.
+
+        The mesh class is also stored in the dictionary as strings under the
+        `__module__` and `__class__` keys.
+
+        Returns
+        -------
+        dict
+            Dictionary of {attribute: value} for the attributes of this mesh.
+        """
         cls = type(self)
         out = {
             "__module__": cls.__module__,
@@ -174,18 +255,34 @@ class BaseMesh:
                 out[item] = attr
         return out
 
-    def equals(self, other):
-        if type(self) != type(other):
+    def equals(self, other_mesh):
+        """Compares current mesh with another mesh to determine if they are identical
+
+        This method compares all the properties of the current mesh to *other_mesh*
+        and determines if both meshes are identical. If so, this function returns
+        a boolean value of *True* . Otherwise, the function returns *False* .
+
+        Parameters
+        ----------
+        other_mesh : discretize.base.BaseMesh
+            An instance of any discretize mesh class.
+
+        Returns
+        -------
+        bool
+            *True* if meshes are identical and *False* otherwise.
+        """
+        if type(self) != type(other_mesh):
             return False
         for item in self._items:
             my_attr = getattr(self, item, None)
-            other_attr = getattr(other, item, None)
+            other_mesh_attr = getattr(other_mesh, item, None)
             if isinstance(my_attr, np.ndarray):
-                is_equal = np.allclose(my_attr, other_attr, rtol=0, atol=0)
+                is_equal = np.allclose(my_attr, other_mesh_attr, rtol=0, atol=0)
             elif isinstance(my_attr, tuple):
-                is_equal = len(my_attr) == len(other_attr)
+                is_equal = len(my_attr) == len(other_mesh_attr)
                 if is_equal:
-                    for thing1, thing2 in zip(my_attr, other_attr):
+                    for thing1, thing2 in zip(my_attr, other_mesh_attr):
                         if isinstance(thing1, np.ndarray):
                             is_equal = np.allclose(thing1, thing2, rtol=0, atol=0)
                         else:
@@ -197,7 +294,7 @@ class BaseMesh:
                         return is_equal
             else:
                 try:
-                    is_equal = my_attr == other_attr
+                    is_equal = my_attr == other_mesh_attr
                 except Exception:
                     is_equal = False
             if not is_equal:
@@ -205,16 +302,32 @@ class BaseMesh:
         return is_equal
 
     def serialize(self):
+        """
+        An alias for :py:meth:`~.BaseMesh.to_dict`
+        """
         return self.to_dict()
 
     @classmethod
     def deserialize(cls, items, **kwargs):
+        """Create this mesh from a dictionary of attributes
+
+        Parameters
+        ----------
+        items : dict
+            dictionary of {attribute : value} pairs that will be passed to this class's
+            initialization method as keyword arguments.
+        **kwargs
+            This is used to catch (and ignore) keyword arguments that used to be used.
+        """
         items.pop("__module__", None)
         items.pop("__class__", None)
         return cls(**items)
 
     @property
     def x0(self):
+        """
+        An alias for the :py:attr:`~.BaseMesh.origin`
+        """
         return self.origin
 
     @x0.setter
@@ -225,10 +338,13 @@ class BaseMesh:
     def dim(self):
         """The dimension of the mesh (1, 2, or 3).
 
+        The dimension is an integer denoting whether the mesh
+        is 1D, 2D or 3D.
+
         Returns
         -------
         int
-            dimension of the mesh
+            Dimension of the mesh; i.e. 1, 2 or 3
         """
         return len(self.shape_cells)
 
@@ -239,78 +355,74 @@ class BaseMesh:
         Returns
         -------
         int
-            number of cells in the mesh
+            Number of cells in the mesh
 
         Notes
         -----
-        Also accessible as `nC`.
-
-        Examples
-        --------
-        >>> import discretize
-        >>> import numpy as np
-        >>> import matplotlib.pyplot as plt
-        >>> mesh = discretize.TensorMesh([np.ones(n) for n in [2,3]])
-        >>> mesh.plot_grid(centers=True, show_it=True)
-        >>> print(mesh.n_cells)
+        Property also accessible as using the shorthand **nC**
         """
         return int(np.prod(self.shape_cells))
 
     def __len__(self):
-        """The number of cells on the mesh."""
-        return self.n_cells
+        """Total number of cells in the mesh.
 
-    @property
-    def n_nodes(self):
-        """Total number of nodes
+        Essentially this is an alias for :py:attr:`~.BaseMesh.n_cells`.
 
         Returns
         -------
         int
-            number of nodes in the mesh
+            Number of cells in the mesh
+        """
+        return self.n_cells
+
+    @property
+    def n_nodes(self):
+        """Total number of nodes in the mesh
+
+        Returns
+        -------
+        int
+            Number of nodes in the mesh
 
         Notes
         -----
-        Also accessible as `nN`.
-
-        Examples
-        --------
-        >>> import discretize
-        >>> import numpy as np
-        >>> import matplotlib.pyplot as plt
-        >>> mesh = discretize.TensorMesh([np.ones(n) for n in [2,3]])
-        >>> mesh.plot_grid(nodes=True, show_it=True)
-        >>> print(mesh.n_nodes)
+        Property also accessible as using the shorthand **nN**
         """
         return int(np.prod([x + 1 for x in self.shape_cells]))
 
     @property
     def n_edges_x(self):
-        """Number of x-edges
+        """Number of x-edges in the mesh
+
+        This property returns the number of edges that
+        are parallel to the x-axis; i.e. x-edges.
 
         Returns
         -------
         int
+            Number of x-edges in the mesh
 
         Notes
         -----
-        Also accessible as `nEx`.
-
+        Property also accessible as using the shorthand **nEx**
         """
         return int(np.prod([x + y for x, y in zip(self.shape_cells, (0, 1, 1))]))
 
     @property
     def n_edges_y(self):
-        """Number of y-edges
+        """Number of y-edges in the mesh
+
+        This property returns the number of edges that
+        are parallel to the y-axis; i.e. y-edges.
 
         Returns
         -------
         int
+            Number of y-edges in the mesh
 
         Notes
         -----
-        Also accessible as `nEy`.
-
+        Property also accessible as using the shorthand **nEy**
         """
         if self.dim < 2:
             return None
@@ -318,16 +430,19 @@ class BaseMesh:
 
     @property
     def n_edges_z(self):
-        """Number of z-edges
+        """Number of z-edges in the mesh
+
+        This property returns the number of edges that
+        are parallel to the z-axis; i.e. z-edges.
 
         Returns
         -------
         int
+            Number of z-edges in the mesh
 
         Notes
         -----
-        Also accessible as `nEz`.
-
+        Property also accessible as using the shorthand **nEz**
         """
         if self.dim < 3:
             return None
@@ -337,14 +452,20 @@ class BaseMesh:
     def n_edges_per_direction(self):
         """The number of edges in each direction
 
+        This property returns a tuple with the number of edges
+        in each axis direction of the mesh. For a 3D mesh,
+        *n_edges_per_direction* would return a tuple of the form
+        (nEx, nEy, nEz). Thus the length of the
+        tuple depends on the dimension of the mesh.
+
         Returns
         -------
-        n_edges_per_direction : tuple
-            [n_edges_x, n_edges_y, n_edges_z], (dim, )
+        (dim) tuple of int
+            Number of edges in each direction
 
         Notes
         -----
-        Also accessible as `vnE`.
+        Property also accessible as using the shorthand **vnE**
 
         Examples
         --------
@@ -352,7 +473,8 @@ class BaseMesh:
         >>> import matplotlib.pyplot as plt
         >>> import numpy as np
         >>> M = discretize.TensorMesh([np.ones(n) for n in [2,3]])
-        >>> M.plot_grid(edges=True, show_it=True)
+        >>> M.plot_grid(edges=True)
+        >>> plt.show()
         """
         return tuple(
             x for x in [self.n_edges_x, self.n_edges_y, self.n_edges_z] if x is not None
@@ -360,17 +482,16 @@ class BaseMesh:
 
     @property
     def n_edges(self):
-        """Total number of edges.
+        """Total number of edges in the mesh
 
         Returns
         -------
         int
-            sum([n_edges_x, n_edges_y, n_edges_z])
+            Total number of edges in the mesh
 
         Notes
         -----
-        Also accessible as `nE`.
-
+        Property also accessible as using the shorthand **nE**
         """
         n = self.n_edges_x
         if self.dim > 1:
@@ -381,29 +502,37 @@ class BaseMesh:
 
     @property
     def n_faces_x(self):
-        """Number of x-faces
+        """Number of x-faces in the mesh
+
+        This property returns the number of faces whose normal
+        vector is parallel to the x-axis; i.e. x-faces.
 
         Returns
         -------
         int
+            Number of x-faces in the mesh
 
         Notes
         -----
-        Also accessible as `nFx`.
+        Property also accessible as using the shorthand **nFx**
         """
         return int(np.prod([x + y for x, y in zip(self.shape_cells, (1, 0, 0))]))
 
     @property
     def n_faces_y(self):
-        """Number of y-faces
+        """Number of y-faces in the mesh
+
+        This property returns the number of faces whose normal
+        vector is parallel to the y-axis; i.e. y-faces.
 
         Returns
         -------
         int
+            Number of y-faces in the mesh
 
         Notes
         -----
-        Also accessible as `nFy`.
+        Property also accessible as using the shorthand **nFy**
         """
         if self.dim < 2:
             return None
@@ -411,15 +540,19 @@ class BaseMesh:
 
     @property
     def n_faces_z(self):
-        """Number of z-faces
+        """Number of z-faces in the mesh
+
+        This property returns the number of faces whose normal
+        vector is parallel to the z-axis; i.e. z-faces.
 
         Returns
         -------
         int
+            Number of z-faces in the mesh
 
         Notes
         -----
-        Also accessible as `nFz`.
+        Property also accessible as using the shorthand **nFz**
         """
         if self.dim < 3:
             return None
@@ -427,16 +560,22 @@ class BaseMesh:
 
     @property
     def n_faces_per_direction(self):
-        """The number of faces in each direction
+        """The number of faces in each axis direction
+
+        This property returns a tuple with the number of faces
+        in each axis direction of the mesh. For a 3D mesh,
+        *n_faces_per_direction* would return a tuple of the form
+        (nFx, nFy, nFz). Thus the length of the
+        tuple depends on the dimension of the mesh.
 
         Returns
         -------
-        n_faces_per_direction : tuple
-            [n_faces_x, n_faces_y, n_faces_z], (dim, )
+        (dim) tuple of int
+            Number of faces in each axis direction
 
         Notes
         -----
-        Also accessible as `vnF`.
+        Property also accessible as using the shorthand **vnF**
 
         Examples
         --------
@@ -444,7 +583,8 @@ class BaseMesh:
         >>> import numpy as np
         >>> import matplotlib.pyplot as plt
         >>> M = discretize.TensorMesh([np.ones(n) for n in [2,3]])
-        >>> M.plot_grid(faces=True, show_it=True)
+        >>> M.plot_grid(faces=True)
+        >>> plt.show()
         """
         return tuple(
             x for x in [self.n_faces_x, self.n_faces_y, self.n_faces_z] if x is not None
@@ -452,17 +592,16 @@ class BaseMesh:
 
     @property
     def n_faces(self):
-        """Total number of faces.
+        """Total number of faces in the mesh
 
         Returns
         -------
         int
-            sum([n_faces_x, n_faces_y, n_faces_z])
+            Total number of faces in the mesh
 
         Notes
         -----
-        Also accessible as `nF`.
-
+        Property also accessible as using the shorthand **nF**
         """
         n = self.n_faces_x
         if self.dim > 1:
@@ -473,12 +612,20 @@ class BaseMesh:
 
     @property
     def face_normals(self):
-        """Face Normals
+        """Unit normal vectors for all mesh faces
+
+        The unit normal vector defines the direction that
+        is perpendicular to a surface. Calling
+        *face_normals* returns a numpy.ndarray containing
+        the unit normal vectors for all faces in the mesh.
+        For a 3D mesh, the array would have shape (n_faces, dim).
+        The rows of the output are organized by x-faces,
+        then y-faces, then z-faces vectors.
 
         Returns
         -------
-        numpy.ndarray
-            normals, (n_faces, dim)
+        (n_faces, dim) numpy.ndarray of float
+            Unit normal vectors for all mesh faces
         """
         if self.dim == 2:
             nX = np.c_[np.ones(self.n_faces_x), np.zeros(self.n_faces_x)]
@@ -504,12 +651,20 @@ class BaseMesh:
 
     @property
     def edge_tangents(self):
-        """Edge Tangents
+        """Unit tangent vectors for all mesh edges
+
+        For a given edge, the unit tangent vector defines the
+        path direction one would take if traveling along that edge.
+        Calling *edge_tangents* returns a numpy.ndarray containing
+        the unit tangent vectors for all edges in the mesh.
+        For a 3D mesh, the array would have shape (n_edges, dim).
+        The rows of the output are organized by x-edges,
+        then y-edges, then z-edges vectors.
 
         Returns
         -------
-        numpy.ndarray
-            normals, (n_edges, dim)
+        (n_edges, dim) numpy.ndarray of float
+            Unit tangent vectors for all mesh edges
         """
         if self.dim == 2:
             tX = np.c_[np.ones(self.n_edges_x), np.zeros(self.n_edges_x)]
@@ -533,65 +688,79 @@ class BaseMesh:
             ]
             return np.r_[tX, tY, tZ]
 
-    def project_face_vector(self, face_vector):
+    def project_face_vector(self, face_vectors):
         """Project vectors onto the faces of the mesh.
 
-        Given a vector, face_vector, in cartesian coordinates, this will project
-        it onto the mesh using the normals
+        Consider a numpy array *face_vectors* whose rows provide
+        a vector for each face in the mesh. For each face,
+        *project_face_vector* computes the dot product between
+        a vector and the corresponding face's unit normal vector.
+        That is, *project_face_vector* projects the vectors
+        in *face_vectors* to the faces of the mesh.
 
         Parameters
         ----------
-        face_vector : numpy.ndarray
-            face vector with shape (n_faces, dim)
+        face_vectors : (n_faces, dim) numpy.ndarray
+            Numpy array containing the vectors that will be projected to the mesh faces
 
         Returns
         -------
-        numpy.ndarray
-            projected face vector, (n_faces, )
-
+        (n_faces) numpy.ndarray of float
+            Dot product between each vector and the unit normal vector of the corresponding face
         """
-        if not isinstance(face_vector, np.ndarray):
-            raise Exception("face_vector must be an ndarray")
+        if not isinstance(face_vectors, np.ndarray):
+            raise Exception("face_vectors must be an ndarray")
         if not (
-            len(face_vector.shape) == 2
-            and face_vector.shape[0] == self.n_faces
-            and face_vector.shape[1] == self.dim
+            len(face_vectors.shape) == 2
+            and face_vectors.shape[0] == self.n_faces
+            and face_vectors.shape[1] == self.dim
         ):
-            raise Exception("face_vector must be an ndarray of shape (n_faces x dim)")
-        return np.sum(face_vector * self.face_normals, 1)
+            raise Exception("face_vectors must be an ndarray of shape (n_faces, dim)")
+        return np.sum(face_vectors * self.face_normals, 1)
 
-    def project_edge_vector(self, edge_vector):
-        """Project vectors onto the edges of the mesh
+    def project_edge_vector(self, edge_vectors):
+        """Project vectors to the edges of the mesh.
 
-        Given a vector, edge_vector, in cartesian coordinates, this will project
-        it onto the mesh using the tangents
+        Consider a numpy array *edge_vectors* whose rows provide
+        a vector for each edge in the mesh. For each edge,
+        *project_edge_vector* computes the dot product between
+        a vector and the corresponding edge's unit tangent vector.
+        That is, *project_edge_vector* projects the vectors
+        in *edge_vectors* to the edges of the mesh.
 
         Parameters
         ----------
-        edge_vector : numpy.ndarray
-            edge vector with shape (n_edges, dim)
+        edge_vectors : (n_edges, dim) numpy.ndarray
+            Numpy array containing the vectors that will be projected to the mesh edges
 
         Returns
         -------
-        numpy.ndarray
-            projected edge vector, (n_edges, )
-
+        (n_edges) numpy.ndarray of float
+            Dot product between each vector and the unit tangent vector of the corresponding edge
         """
-        if not isinstance(edge_vector, np.ndarray):
-            raise Exception("edge_vector must be an ndarray")
+        if not isinstance(edge_vectors, np.ndarray):
+            raise Exception("edge_vectors must be an ndarray")
         if not (
-            len(edge_vector.shape) == 2
-            and edge_vector.shape[0] == self.n_edges
-            and edge_vector.shape[1] == self.dim
+            len(edge_vectors.shape) == 2
+            and edge_vectors.shape[0] == self.n_edges
+            and edge_vectors.shape[1] == self.dim
         ):
-            raise Exception("edge_vector must be an ndarray of shape (nE x dim)")
-        return np.sum(edge_vector * self.edge_tangents, 1)
+            raise Exception("edge_vectors must be an ndarray of shape (nE, dim)")
+        return np.sum(edge_vectors * self.edge_tangents, 1)
 
     def save(self, file_name="mesh.json", verbose=False, **kwargs):
-        """
-        Save the mesh to json
-        :param str file: file_name for saving the casing properties
-        :param str directory: working directory for saving the file
+        """Save the mesh to json
+
+        This method is used to save a mesh by writing
+        its properties to a .json file. To load a mesh you have
+        previously saved, see :py:func:`~discretize.utils.load_mesh`.
+
+        Parameters
+        ----------
+        file_name : str, optional
+            File name for saving the mesh properties
+        verbose : bool, optional
+            If *True*, the path of the json file is printed
         """
 
         if "filename" in kwargs:
@@ -611,8 +780,12 @@ class BaseMesh:
         return f
 
     def copy(self):
-        """
-        Make a copy of the current mesh
+        """Make a copy of the current mesh
+
+        Returns
+        -------
+        type(mesh)
+            A copy of this mesh.
         """
         cls = type(self)
         items = self.to_dict()
@@ -622,27 +795,30 @@ class BaseMesh:
 
     @property
     def reference_is_rotated(self):
-        """True if the axes are rotated from the traditional <X,Y,Z> system
-        with vectors of :math:`(1,0,0)`, :math:`(0,1,0)`, and :math:`(0,0,1)`
+        """Indicates whether mesh uses standard coordinate axes
+
+        The standard basis vectors defining the x, y, and z axes of
+        a mesh are :math:`(1,0,0)`, :math:`(0,1,0)` and :math:`(0,0,1)`,
+        respectively. However, the :py:attr:`~BaseMesh.orientation` property
+        can be used to define rotated coordinate axes for our mesh.
+
+        The *reference_is_rotated* property determines
+        whether the mesh is using standard coordinate axes.
+        If the coordinate axes are standard, *mesh.orientation* is
+        the identity matrix and *reference_is_rotated* returns a value of *False*.
+        Otherwise, *reference_is_rotated* returns a value of *True*.
+
+        Returns
+        -------
+        bool
+            *False* is the mesh uses the standard coordinate axes and *True* otherwise.
         """
         return not np.allclose(self.orientation, np.identity(self.dim))
 
     @property
     def rotation_matrix(self):
-        """Builds a rotation matrix to transform coordinates from their coordinate
-        system into a conventional cartesian system. This is built off of the
-        three `axis_u`, `axis_v`, and `axis_w` properties; these mapping
-        coordinates use the letters U, V, and W (the three letters preceding X,
-        Y, and Z in the alphabet) to define the projection of the X, Y, and Z
-        durections. These UVW vectors describe the placement and transformation
-        of the mesh's coordinate sytem assuming at most 3 directions.
-
-        Why would you want to use these UVW mapping vectors the this
-        `rotation_matrix` property? They allow us to define the relationship
-        between local and global coordinate systems and provide a tool for
-        switching between the two while still maintaing the connectivity of the
-        mesh's cells. For a visual example of this, please see the figure in the
-        docs for the :class:`~discretize.mixins.vtk_mod.InterfaceVTK`.
+        """
+        Alias for :py:attr:`~.BaseMesh.orientation`
         """
         return self.orientation  # np.array([self.axis_u, self.axis_v, self.axis_w])
 
@@ -670,7 +846,14 @@ class BaseMesh:
             return location_type
 
     def validate(self):
-        """Every object will be valid upon initialization"""
+        """Return the validation state of the mesh
+
+        This mesh is valid immediately upon initialization
+
+        Returns
+        -------
+        bool : True
+        """
         return True
 
     # DEPRECATED
@@ -687,12 +870,8 @@ class BaseMesh:
     def axis_u(self):
         """
         .. deprecated:: 0.7.0
-          `axis_u` will be removed in discretize 1.0.0, it is replaced by
-          `mesh.orientation` for better mesh orientation validation.
-
-        See Also
-        --------
-        orientation
+          `axis_u` will be removed in discretize 1.0.0. This functionality was replaced
+          by the :py:attr:`~.BaseMesh.orientation`.
         """
         warnings.warn(
             "The axis_u property is deprecated, please access as self.orientation[0]. "
@@ -715,12 +894,8 @@ class BaseMesh:
     def axis_v(self):
         """
         .. deprecated:: 0.7.0
-          `axis_v` will be removed in discretize 1.0.0, it is replaced by
-          `mesh.orientation` for better mesh orientation validation.
-
-        See Also
-        --------
-        orientation
+          `axis_v` will be removed in discretize 1.0.0. This functionality was replaced
+          by the :py:attr:`~.BaseMesh.orientation`.
         """
         warnings.warn(
             "The axis_v property is deprecated, please access as self.orientation[1]. "
@@ -744,12 +919,8 @@ class BaseMesh:
     def axis_w(self):
         """
         .. deprecated:: 0.7.0
-          `axis_w` will be removed in discretize 1.0.0, it is replaced by
-          `mesh.orientation` for better mesh orientation validation.
-
-        See Also
-        --------
-        orientation
+          `axis_w` will be removed in discretize 1.0.0. This functionality was replaced
+          by the :py:attr:`~.BaseMesh.orientation`.
         """
         warnings.warn(
             "The axis_w property is deprecated, please access as self.orientation[2]. "
@@ -770,12 +941,12 @@ class BaseMesh:
         self.orientation[2] = value
 
 
-BaseMesh.__module__ = "discretize.base"
-
-
 class BaseRectangularMesh(BaseMesh):
     """
-    BaseRectangularMesh
+    Base rectangular mesh class for the ``discretize`` package.
+
+    The ``BaseRectangularMesh`` class acts as an extension of the
+    :class:`~discretize.base.BaseMesh` classes with a regular structure.
     """
 
     _aliases = {
@@ -793,45 +964,65 @@ class BaseRectangularMesh(BaseMesh):
 
     @property
     def shape_nodes(self):
-        """Number of nodes in each direction
+        """Returns the number of nodes along each axis direction
+
+        This property returns a tuple containing the number of nodes along
+        each axis direction. The length of the tuple is equal to the
+        dimension of the mesh; i.e. 1, 2 or 3.
 
         Returns
         -------
-        tuple of int
+        (dim) tuple of int
+            Number of nodes along each axis direction
 
         Notes
         -----
-        Also accessible as `vnN`.
+        Property also accessible as using the shorthand **vnN**
         """
         return tuple(x + 1 for x in self.shape_cells)
 
     @property
     def shape_edges_x(self):
-        """Number of x-edges in each direction
+        """Number of x-edges along each axis direction
+
+        This property returns a tuple containing the number of x-edges
+        along each axis direction. The length of the tuple is equal to the
+        dimension of the mesh; i.e. 1, 2 or 3.
 
         Returns
         -------
-        tuple of int
-            (nx_cells, ny_nodes, nz_nodes)
+        (dim) tuple of int
+            Number of x-edges along each axis direction
+
+            - *1D mesh:* `(n_cells_x)`
+            - *2D mesh:* `(n_cells_x, n_nodes_y)`
+            - *3D mesh:* `(n_cells_x, n_nodes_y, n_nodes_z)`
 
         Notes
         -----
-        Also accessible as `vnEx`.
+        Property also accessible as using the shorthand **vnEx**
         """
         return self.shape_cells[:1] + self.shape_nodes[1:]
 
     @property
     def shape_edges_y(self):
-        """Number of y-edges in each direction
+        """Number of y-edges along each axis direction
+
+        This property returns a tuple containing the number of y-edges
+        along each axis direction. If `dim` is 1, there are no y-edges.
 
         Returns
         -------
-        tuple of int or None
-            (nx_nodes, ny_cells, nz_nodes), None if dim < 2
+        None or (dim) tuple of int
+            Number of y-edges along each axis direction
+
+            - *1D mesh: None*
+            - *2D mesh:* `(n_nodes_x, n_cells_y)`
+            - *3D mesh:* `(n_nodes_x, n_cells_y, n_nodes_z)`
 
         Notes
         -----
-        Also accessible as `vnEy`.
+        Property also accessible as using the shorthand **vnEy**
         """
         if self.dim < 2:
             return None
@@ -841,16 +1032,23 @@ class BaseRectangularMesh(BaseMesh):
 
     @property
     def shape_edges_z(self):
-        """Number of z-edges in each direction
+        """Number of z-edges along each axis direction
+
+        This property returns a tuple containing the number of z-edges
+        along each axis direction. There are only z-edges if `dim` is 3.
 
         Returns
         -------
-        tuple of int or None
-            (nx_nodes, ny_nodes, nz_cells), None if dim < 3
+        None or (dim) tuple of int
+            Number of z-edges along each axis direction.
+
+            - *1D mesh: None*
+            - *2D mesh: None*
+            - *3D mesh:* `(n_nodes_x, n_nodes_y, n_cells_z)`
 
         Notes
         -----
-        Also accessible as `vnEz`.
+        Property also accessible as using the shorthand **vnEz**
         """
         if self.dim < 3:
             return None
@@ -858,31 +1056,45 @@ class BaseRectangularMesh(BaseMesh):
 
     @property
     def shape_faces_x(self):
-        """Number of x-faces in each direction
+        """Number of x-faces along each axis direction
+
+        This property returns a tuple containing the number of x-faces
+        along each axis direction.
 
         Returns
         -------
-        tuple of int
-            (nx_nodes, ny_cells, nz_cells)
+        (dim) tuple of int
+            Number of x-faces along each axis direction
+
+            - *1D mesh:* `(n_nodes_x)`
+            - *2D mesh:* `(n_nodes_x, n_cells_y)`
+            - *3D mesh:* `(n_nodes_x, n_cells_y, n_cells_z)`
 
         Notes
         -----
-        Also accessible as `vnFx`.
+        Property also accessible as using the shorthand **vnFx**
         """
         return self.shape_nodes[:1] + self.shape_cells[1:]
 
     @property
     def shape_faces_y(self):
-        """Number of y-faces in each direction
+        """Number of y-faces along each axis direction
+
+        This property returns a tuple containing the number of y-faces
+        along each axis direction. If `dim` is 1, there are no y-edges.
 
         Returns
         -------
-        tuple of int or None
-            (nx_cells, ny_nodes, nz_cells), None if dim < 2
+        None or (dim) tuple of int
+            Number of y-faces along each axis direction
+
+            - *1D mesh: None*
+            - *2D mesh:* `(n_cells_x, n_nodes_y)`
+            - *3D mesh:* `(n_cells_x, n_nodes_y, n_cells_z)`
 
         Notes
         -----
-        Also accessible as `vnFy`.
+        Property also accessible as using the shorthand **vnFy**
         """
         if self.dim < 2:
             return None
@@ -892,16 +1104,23 @@ class BaseRectangularMesh(BaseMesh):
 
     @property
     def shape_faces_z(self):
-        """Number of z-faces in each direction
+        """Number of z-faces along each axis direction
+
+        This property returns a tuple containing the number of z-faces
+        along each axis direction. There are only z-faces if `dim` is 3.
 
         Returns
         -------
-        tuple of int or None
-            (nx_cells, ny_cells, nz_nodes), None if dim < 3
+        None or (dim) tuple of int
+            Number of z-faces along each axis direction.
+
+                - *1D mesh: None*
+                - *2D mesh: None*
+                - *3D mesh:* (n_cells_x, n_cells_y, n_nodes_z)
 
         Notes
         -----
-        Also accessible as `vnFz`.
+        Property also accessible as using the shorthand **vnFz**
         """
         if self.dim < 3:
             return None
@@ -955,45 +1174,32 @@ class BaseRectangularMesh(BaseMesh):
     def reshape(
         self, x, x_type="cell_centers", out_type="cell_centers", format="V", **kwargs
     ):
-        """A quick reshape command that will do the best it
-        can at giving you what you want.
+        """General reshape method for tensor quantities
 
-        For example, you have a face variable, and you want the x
-        component of it reshaped to a 3D matrix.
+        **Reshape** is a quick command that will do its best to reshape discrete
+        quantities living on meshes than inherit the :class:`discretize.base_mesh.RectangularMesh`
+        class. For example, you may have a 1D array defining a vector on mesh faces, and you would
+        like to extract the x-component and reshaped it to a 3D matrix.
 
-        `reshape` can fulfil your dreams::
+        Parameters
+        ----------
+        x : numpy.ndarray or list of numpy.ndarray
+            The input quantity. , ndarray (tensor) or a list
+        x_type : {'CC', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez'}
+            Defines the locations on the mesh where input parameter *x* lives.
+        out_type : str
+            Defines the output quantity. Choice depends on your input for *x_type*:
 
-            mesh.reshape(V, 'F', 'Fx', 'M')
-                         |   |     |    |
-                         |   |     |    {
-                         |   |     |      How: 'M' or ['V'] for a matrix
-                         |   |     |      (ndgrid style) or a vector (n x dim)
-                         |   |     |    }
-                         |   |     {
-                         |   |       What you want: ['CC'], 'N',
-                         |   |                       'F', 'Fx', 'Fy', 'Fz',
-                         |   |                       'E', 'Ex', 'Ey', or 'Ez'
-                         |   |     }
-                         |   {
-                         |     What is it: ['CC'], 'N',
-                         |                  'F', 'Fx', 'Fy', 'Fz',
-                         |                  'E', 'Ex', 'Ey', or 'Ez'
-                         |   }
-                         {
-                           The input: as a list or ndarray
-                         }
+                - *x_type* = 'CC' ---> *out_type* = 'CC'
+                - *x_type* = 'N' ---> *out_type* = 'N'
+                - *x_type* = 'F' ---> *out_type* = {'F', 'Fx', 'Fy', 'Fz'}
+                - *x_type* = 'E' ---> *out_type* = {'E', 'Ex', 'Ey', 'Ez'}
+        format : str
+            The dimensions of quantity being returned
 
+                - *V:* return a vector (1D array) or a list of vectors
+                - *M:* return matrix (nD array) or a list of matrices
 
-        For example::
-
-            # Separates each component of the Ex grid into 3 matrices
-            Xex, Yex, Zex = r(mesh.gridEx, 'Ex', 'Ex', 'M')
-
-            # Given an edge vector, return just the x edges as a vector
-            XedgeVector = r(edgeVector, 'E', 'Ex', 'V')
-
-            # Separates each component of the edgeVector into 3 vectors
-            eX, eY, eZ = r(edgeVector, 'E', 'E', 'V')
         """
         if "xType" in kwargs:
             warnings.warn(
@@ -1270,6 +1476,3 @@ class BaseRectangularMesh(BaseMesh):
         if self.dim < 3:
             return None
         return self.shape_nodes[2]
-
-
-BaseRectangularMesh.__module__ = "discretize.base"

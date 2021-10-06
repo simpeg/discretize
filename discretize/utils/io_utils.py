@@ -5,14 +5,22 @@ import json
 
 
 def load_mesh(file_name):
-    """
-    Open a json file and load the mesh into the target class
+    """Load discretize mesh saved to json file.
 
-    As long as there are no namespace conflicts, the target __class__
-    will be stored on the properties.HasProperties registry and may be
-    fetched from there.
+    For a discretize mesh that has been converted to dictionary and
+    written to a json file, the function **load_mesh** loads the
+    json file and reconstructs the mesh object.
 
-    :param str file_name: name of file to read in
+    Parameters
+    ----------
+    file_name : str
+        Name of the json file being read in. Contains all information required to
+        reconstruct the mesh.
+
+    Returns
+    -------
+    discretize.base.BaseMesh
+        A discretize mesh defined by the class and parameters stored in the json file
     """
     with open(file_name, "r") as outfile:
         jsondict = json.load(outfile)
@@ -32,12 +40,23 @@ def load_mesh(file_name):
 
 def download(url, folder=".", overwrite=False, verbose=True):
     """
-    Function to download all files stored in a cloud directory
+    Download file(s) stored in a cloud directory.
 
-    :param str url: url or list of urls for the file(s) to be downloaded
-    :param str folder: folder to where the directory is created and files downloaded (default is the current directory)
-    :param bool overwrite: overwrite if a file with the specified name already exists
-    :param bool verbose: print out progress
+    Parameters
+    ----------
+    url : str or list of str
+        url or list of urls for the file(s) being downloaded
+    folder : str, optional
+        Local folder where downloaded files are to be stored
+    overwrite : bool, optional
+        Overwrite files if they have the same name as newly downloaded files
+    verbose : bool, optional
+        Print progress when downloading multiple files
+
+    Returns
+    -------
+    os.path or list of os.path
+        The path or a list of paths for all downloaded files
     """
 
     def rename_path(downloadpath):
