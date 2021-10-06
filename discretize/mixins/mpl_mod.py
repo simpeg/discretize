@@ -2244,13 +2244,13 @@ class Slicer(object):
     figure, and afterwards connect it:
 
     >>> fig = plt.figure()
-    
+
     Then you have to get the tracker from the Slicer
-    
+
     >>> tracker = discretize.View.Slicer(mesh, Lpout)
-    
+
     Finally you have to connect the tracker to the figure
-    
+
     >>> fig.canvas.mpl_connect('scroll_event', tracker.onscroll)
     >>> plt.show()
 
@@ -2393,7 +2393,7 @@ class Slicer(object):
             self.pc_props["norm"].vmax = clim[1]
         else:
             self.pc_props["vmin"] = clim[0]
-            self.pc_props["vmax"] = clim[0]
+            self.pc_props["vmax"] = clim[1]
 
         # 2. Start populating figure
 
