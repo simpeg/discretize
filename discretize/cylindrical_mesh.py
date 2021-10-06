@@ -28,40 +28,93 @@ class CylindricalMesh(
     BaseTensorMesh, BaseRectangularMesh, InnerProducts, DiffOperators, InterfaceMixins
 ):
     """
-    CylindricalMesh is a mesh class for cylindrical problems. It supports both
-    cylindrically symmetric and 3D cylindrical meshes that include an azimuthal
-    discretization.
+    Class for cylindrical meshes.
 
-    For a cylindrically symmetric mesh use :code:`h = [hx, 1, hz]`. For example:
+    ``CylindricalMesh`` is a mesh class for problems with rotational symmetry.
+    It supports both cylindrically symmetric and 3D cylindrical meshes where the azimuthal
+    discretization is user-defined. In discretize, the coordinates for cylindrical
+    meshes are as follows:
 
-    .. plot::
-        :include-source:
+    - **x:** radial direction (:math:`r`)
+    - **y:** azimuthal direction (:math:`\\phi`)
+    - **z:** vertical direction (:math:`z`)
 
-        import discretize
-        from discretize import utils
+    Parameters
+    ----------
+    h : (dim) iterable of int, numpy.ndarray, or tuple
+        Defines the cell widths along each axis. The length of the iterable object is
+        equal to the dimension of the mesh (1, 2 or 3). For a 3D mesh, the list would
+        have the form *[hr, hphi, hz]* . Note that the sum of cell widths in the phi
+        direction **must** equal :math:`2\\pi`. You can also use a flat value of
+        *hphi* = *1* to define a cylindrically symmetric mesh.
 
-        cs, nc, npad = 20., 30, 8
-        hx = utils.unpack_widths([(cs, npad+10, -0.7), (cs, nc), (cs, npad, 1.3)])
-        hz = utils.unpack_widths([(cs, npad ,-1.3), (cs, nc), (cs, npad, 1.3)])
-        mesh = discretize.CylindricalMesh([hx, 1, hz], origin=[0, 0, -hz.sum()/2])
-        mesh.plot_grid()
+        Along each axis, the user has 3 choices for defining the cells widths:
 
-    To create a 3D cylindrical mesh, we also include an azimuthal discretization
+        - :class:`int` -> A unit interval is equally discretized into `N` cells.
+        - :class:`numpy.ndarray` -> The widths are explicity given for each cell
+        - the widths are defined as a :class:`list` of :class:`tuple` of the form
+          *(dh, nc, [npad])* where *dh* is the cell width, *nc* is the number of cells,
+          and *npad* (optional)is a padding factor denoting exponential
+          increase/decrease in the cell width or each cell; e.g.
+          *[(2., 10, -1.3), (2., 50), (2., 10, 1.3)]*
 
-    .. plot::
-        :include-source:
+    origin : (dim) iterable, default: 0
+        Define the origin or 'anchor point' of the mesh; i.e. the bottom-left-frontmost
+        corner. By default, the mesh is anchored such that its origin is at
+        ``[0, 0, 0]``.
 
-        import discretize
-        from discretize import utils
+        For each dimension (r, theta or z), The user may set the origin 2 ways:
 
-        cs, nc, npad = 20., 30, 8
-        nc_theta = 8
-        hx = utils.unpack_widths([(cs, npad+10, -0.7), (cs, nc), (cs, npad, 1.3)])
-        hy = 2 * np.pi/nc_theta * np.ones(nc_theta)
-        hz = utils.unpack_widths([(cs,npad, -1.3), (cs,nc), (cs, npad, 1.3)])
-        mesh = discretize.CylindricalMesh([hx, hy, hz], origin=[0, 0, -hz.sum()/2])
-        mesh.plot_grid()
+        - a ``scalar`` which explicitly defines origin along that dimension.
+        - **{'0', 'C', 'N'}** a :class:`str` specifying whether the zero coordinate
+          along each axis is the first node location ('0'), in the center ('C') or the
+          last node location ('N').
 
+    Examples
+    --------
+    To create a general 3D cylindrical mesh, we discretize along the radial,
+    azimuthal and vertical axis. For example:
+
+    >>> from discretize import CylindricalMesh
+    >>> import matplotlib.pyplot as plt
+    >>> import numpy as np
+
+    >>> ncr = 10  # number of mesh cells in r
+    >>> ncp = 8   # number of mesh cells in phi
+    >>> ncz = 15  # number of mesh cells in z
+    >>> dr = 15   # cell width r
+    >>> dz = 10   # cell width z
+
+    >>> hr = dr * np.ones(ncr)
+    >>> hp = (2 * np.pi / ncp) * np.ones(ncp)
+    >>> hz = dz * np.ones(ncz)
+    >>> mesh1 = CylindricalMesh([hr, hp, hz])
+
+    >>> mesh1.plot_grid()
+    >>> plt.show()
+
+    For a cylindrically symmetric mesh, the disretization along the
+    azimuthal direction is set with a flag of *1*. This reduces the
+    size of numerical systems given that the derivative along the
+    azimuthal direction is 0. For example:
+
+    >>> ncr = 10      # number of mesh cells in r
+    >>> ncz = 15      # number of mesh cells in z
+    >>> dr = 15       # cell width r
+    >>> dz = 10       # cell width z
+    >>> npad_r = 4    # number of padding cells in r
+    >>> npad_z = 4    # number of padding cells in z
+    >>> exp_r = 1.25  # expansion rate of padding cells in r
+    >>> exp_z = 1.25  # expansion rate of padding cells in z
+
+    A value of 1 is used to define the discretization in phi for this case.
+
+    >>> hr = [(dr, ncr), (dr, npad_r, exp_r)]
+    >>> hz = [(dz, npad_z, -exp_z), (dz, ncz), (dz, npad_z, exp_z)]
+    >>> mesh2 = CylindricalMesh([hr, 1, hz])
+
+    >>> mesh2.plot_grid()
+    >>> plt.show()
     """
 
     _meshType = "CYL"
@@ -92,7 +145,18 @@ class CylindricalMesh(
 
     @property
     def cartesian_origin(self):
-        "Cartesian origin of the mesh"
+        """Cartesian origin of the mesh
+
+        Returns the origin or 'anchor point' of the cylindrical mesh
+        in Cartesian coordinates; i.e. [x0, y0, z0]. For cylindrical
+        meshes, the origin is the bottom of the z-axis which defines
+        the mesh's rotational symmetry.
+
+        Returns
+        -------
+        (dim) numpy.ndarray
+            The Cartesian origin (or anchor point) of the mesh
+        """
         return self._cartesian_origin
 
     @cartesian_origin.setter
@@ -108,18 +172,43 @@ class CylindricalMesh(
 
     @property
     def is_symmetric(self):
-        """
-        Is the mesh cylindrically symmetric?
+        """Validates whether mesh is symmetric.
+
+        Symmetric cylindrical meshes have useful mathematical
+        properties that allow us to reduce the computational cost
+        of solving radially symmetric 3D problems.
+        When constructing cylindrical meshes in discretize, we almost
+        always use a flag of *1* when defining the discretization in
+        the azimuthal direction. By doing so, we define a mesh that is
+        symmetric. In this case, the *is_symmetric* returns a value of
+        *True* . If the discretization in the azimuthal direction was
+        defined explicitly, the mesh would not be symmetric and
+        *is_symmetric* would return a value of *False* .
 
         Returns
         -------
         bool
-            True if the mesh is cylindrically symmetric, False otherwise
+            *True* if the mesh is symmetric, *False* otherwise
         """
         return self.shape_cells[1] == 1
 
     @property
     def shape_nodes(self):
+        """Returns the number of nodes along each axis
+
+        This property returns a tuple containing the number of nodes along
+        the :math:`x` (radial), :math:`y` (azimuthal) and :math:`z` (vertical)
+        directions, respectively.
+        In the case where the mesh is symmetric, the number of nodes
+        defining the discretization in the azimuthal direction is *0* ;
+        see :py:attr:`~.CylindricalMesh.is_symmetric`.
+
+        Returns
+        -------
+        (dim) tuple of int
+            Number of nodes in the :math:`x` (radial),
+            :math:`y` (azimuthal) and :math:`z` (vertical) directions, respectively.
+        """
         vnC = self.shape_cells
         if self.is_symmetric:
             return (vnC[0], 0, vnC[2] + 1)
@@ -136,11 +225,18 @@ class CylindricalMesh(
 
     @property
     def n_nodes(self):
-        """
+        """Returns total number of mesh nodes
+
+        For non-symmetric cylindrical meshes, this property returns
+        the total number of nodes. For symmetric meshes, this property
+        returns a value of 0; see :py:attr:`~.CylindricalMesh.is_symmetric`.
+        The symmetric mesh case is unique because the azimuthal position
+        of the nodes is undefined.
+
         Returns
         -------
         int
-            Total number of nodes
+            Total number of nodes for non-symmetric meshes, 0 for symmetric meshes
         """
         if self.is_symmetric:
             return 0
@@ -170,11 +266,18 @@ class CylindricalMesh(
 
     @property
     def shape_faces_x(self):
-        """
+        """Number of x-faces along each axis direction
+
+        This property returns the number of x-faces along the
+        :math:`x` (radial), :math:`y` (azimuthal) and :math:`z` (vertical)
+        directions, respectively. Note that for symmetric meshes, the number of x-faces along
+        the azimuthal direction is 1; see :py:attr:`~.CylindricalMesh.is_symmetric`.
+
         Returns
         -------
-        numpy.ndarray
-            Number of x-faces in each direction, (dim, )
+        (dim) tuple of int
+            Number of x-faces along the :math:`x` (radial),
+            :math:`y` (azimuthal) and :math:`z` (vertical) directions, respectively.
         """
         return self.shape_cells
 
@@ -252,13 +355,18 @@ class CylindricalMesh(
 
     @property
     def shape_edges_y(self):
-        """
-        Number of y-edges in each direction
+        """Number of y-edges along each axis direction
+
+        This property returns the number of y-edges along the
+        :math:`x` (radial), :math:`y` (azimuthal) and :math:`z` (vertical)
+        directions, respectively. Note that for symmetric meshes, the number of y-edges along
+        the azimuthal direction is 1; see :py:attr:`~.CylindricalMesh.is_symmetric`.
 
         Returns
         -------
-        tuple of ints
-            vnEy or None if dim < 2, (dim, )
+        (dim) tuple of int
+            Number of y-edges along the :math:`x` (radial),
+            :math:`y` (azimuthal) and :math:`z` (vertical) directions, respectively.
         """
         return tuple(x + y for x, y in zip(self.shape_cells, [0, 0, 1]))
 
@@ -278,21 +386,36 @@ class CylindricalMesh(
 
     @property
     def shape_edges_z(self):
-        """
+        """Number of z-edges along each axis direction
+
+        This property returns the number of z-edges along the
+        :math:`x` (radial), :math:`y` (azimuthal) and :math:`z` (vertical)
+        directions, respectively. Note that for symmetric meshes, the number of z-edges along
+        the azimuthal direction is 0; see :py:attr:`~.CylindricalMesh.is_symmetric`.
+        The symmetric mesh case is unique because the azimuthal position
+        of the z-edges is undefined.
+
         Returns
         -------
-        tuple of ints
-            Number of z-edges in each direction or None if nCy > 1, (dim, )
+        (dim) tuple of int
+            Number of z-edges along the :math:`x` (radial),
+            :math:`y` (azimuthal) and :math:`z` (vertical) direction, respectively.
         """
         return self.shape_nodes[:-1] + self.shape_cells[-1:]
 
     @property
     def n_edges_z(self):
-        """
+        """Total number of z-edges in the mesh
+
+        This property returns the total number of z-edges for
+        non-symmetric cyindrical meshes; see :py:attr:`~.CylindricalMesh.is_symmetric`.
+        If the mesh is symmetric, the property returns *0* because the azimuthal
+        position of the z-edges is undefined.
+
         Returns
         -------
         int
-            Number of z-edges
+            Number of z-edges for non-symmetric meshes and *0* for symmetric meshes
         """
         z_shape = self.shape_edges_z
         cell_shape = self.shape_cells
@@ -302,19 +425,52 @@ class CylindricalMesh(
 
     @property
     def cell_centers_x(self):
-        """Cell-centered grid vector (1D) in the x direction."""
+        """Returns the x-positions of cell centers along the x-direction
+
+        This property returns a 1D vector containing the x-position values
+        of the cell centers along the x-direction (radial). The length of the vector
+        is equal to the number of cells in the x-direction.
+
+        Returns
+        -------
+        (n_cells_x) numpy.ndarray
+            x-positions of cell centers along the x-direction
+        """
         return np.r_[0, self.h[0][:-1].cumsum()] + self.h[0] * 0.5
 
     @property
     def cell_centers_y(self):
-        """Cell-centered grid vector (1D) in the y direction."""
+        """Returns the y-positions of cell centers along the y-direction (azimuthal)
+
+        This property returns a 1D vector containing the y-position values
+        of the cell centers along the y-direction (azimuthal). The length of the vector
+        is equal to the number of cells in the y-direction. If the mesh is symmetric,
+        this property returns a numpy array with a single entry of *0* ;
+        indicating all cell-centers have a y-position of 0.
+        see :py:attr:`~.CylindricalMesh.is_symmetric`.
+
+        Returns
+        -------
+        (n_cells_y) numpy.ndarray
+            y-positions of cell centers along the y-direction
+        """
         if self.is_symmetric:
             return np.r_[0, self.h[1][:-1]]
         return np.r_[0, self.h[1][:-1].cumsum()] + self.h[1] * 0.5
 
     @property
     def nodes_x(self):
-        """Nodal grid vector (1D) in the x direction."""
+        """Returns the x-positions of nodes along the x-direction (radial)
+
+        This property returns a 1D vector containing the x-position values
+        of the nodes along the x-direction (radial). The length of the vector
+        is equal to the number of nodes in the x-direction.
+
+        Returns
+        -------
+        (n_nodes_x) numpy.ndarray
+            x-positions of nodes along the x-direction
+        """
         if self.is_symmetric:
             return self.h[0].cumsum()
         return np.r_[0, self.h[0]].cumsum()
@@ -330,11 +486,18 @@ class CylindricalMesh(
 
     @property
     def nodes_y(self):
-        """Nodal grid vector (1D) in the y direction."""
-        # if self.is_symmetric:
-        #     # There aren't really any nodes, but all the grids need
-        #     # somewhere to live, why not zero?!
-        #     return np.r_[0]
+        """Returns the y-positions of nodes along the y-direction (azimuthal)
+
+        This property returns a 1D vector containing the y-position values
+        of the nodes along the y-direction (azimuthal). If the mesh is symmetric,
+        this property returns a numpy array with a single entry of *0* ;
+        indicating all nodes have a y-position of 0. See :py:attr:`~.CylindricalMesh.is_symmetric`.
+
+        Returns
+        -------
+        (n_nodes_y) numpy.ndarray
+            y-positions of nodes along the y-direction
+        """
         return np.r_[0, self.h[1][:-1].cumsum()]
 
     @property
@@ -347,14 +510,18 @@ class CylindricalMesh(
 
     @property
     def edge_x_lengths(self):
-        """
-        x-edge lengths - these are the radial edges. Radial edges only exist
-        for a 3D cyl mesh.
+        """x-edge lengths for entire mesh
+
+        If the mesh is not symmetric, this property returns a 1D vector
+        containing the lengths of all x-edges in the mesh. If the mesh
+        is symmetric, this property returns an empty numpy array since
+        there are no x-edges;
+        see :py:attr:`~CylindricalMesh.is_symmetric`.
 
         Returns
         -------
-        numpy.ndarray
-            vector of radial edge lengths
+        (n_edges_x) numpy.ndarray
+            A 1D array containing the x-edge lengths for the entire mesh
         """
         if getattr(self, "_edge_lengths_x", None) is None:
             self._edge_lengths_x = self._edge_x_lengths_full[~self._ishanging_edges_x]
@@ -373,14 +540,20 @@ class CylindricalMesh(
 
     @property
     def edge_y_lengths(self):
-        """
-        y-edge lengths - these are the azimuthal edges. Azimuthal edges exist
-        for all cylindrical meshes. These are arc-lengths (:math:`\\theta r`)
+        """arc-lengths of y-edges for entire mesh
+
+        This property returns a 1D vector containing the arc-lengths
+        of all y-edges in the mesh. For a single y-edge at radial location
+        :math:`r` with azimuthal width :math:`\\Delta \\phi`, the arc-length
+        is given by:
+
+        .. math::
+            \\Delta y = r \\Delta \\phi
 
         Returns
         -------
-        numpy.ndarray
-            vector of the azimuthal edges
+        (n_edges_y) numpy.ndarray
+            A 1D array containing the y-edge arc-lengths for the entire mesh
         """
         if getattr(self, "_edge_lengths_y", None) is None:
             if self.is_symmetric:
@@ -401,14 +574,17 @@ class CylindricalMesh(
 
     @property
     def edge_z_lengths(self):
-        """
-        z-edge lengths - these are the vertical edges. Vertical edges only
-        exist for a 3D cyl mesh.
+        """z-edge lengths for entire mesh
+
+        If the mesh is not symmetric, this property returns a 1D vector
+        containing the lengths of all z-edges in the mesh. If the mesh
+        is symmetric, this property returns an empty numpy array
+        since there are no z-edges; see :py:attr:`~CylindricalMesh.is_symmetric`.
 
         Returns
         -------
-        numpy.ndarray
-            vector of the vertical edges
+        (n_edges_z) numpy.ndarray
+            A 1D array containing the z-edge lengths for the entire mesh
         """
         if getattr(self, "_edge_lengths_z", None) is None:
             self._edge_lengths_z = self._edge_z_lengths_full[~self._ishanging_edges_z]
@@ -431,13 +607,20 @@ class CylindricalMesh(
 
     @property
     def edge_lengths(self):
-        """
-        Edge lengths
+        """Lengths of all mesh edges
+
+        This property returns a 1D vector containing the lengths
+        of all edges in the mesh organized by x-edges, y-edges, then z-edges;
+        i.e. radial, azimuthal, then vertical. However if the mesh
+        is symmetric, there are no x or z-edges and calling the property
+        returns the y-edge lengths; see :py:attr:`~CylindricalMesh.is_symmetric`.
+        Note that y-edge lengths take curvature into account; see
+        :py:attr:`~.CylindricalMesh.edge_y_lengths`.
 
         Returns
         -------
-        numpy.ndarray
-            vector of edge lengths :math:`(r, \\theta, z)`
+        (n_edges) numpy.ndarray
+            Edge lengths of all mesh edges organized x (radial), y (azimuthal), then z (vertical)
         """
         if self.is_symmetric:
             return self.edge_y_lengths
@@ -455,17 +638,21 @@ class CylindricalMesh(
 
     @property
     def face_x_areas(self):
-        """
-        Area of the x-faces (radial faces). Radial faces exist on all
-        cylindrical meshes
+        """x-face areas for the entire mesh
+
+        This property returns a 1D vector containing the areas of the
+        x-faces of the mesh. The surface area takes into account curvature.
+        For a single x-face at radial location
+        :math:`r` with azimuthal width :math:`\\Delta \\phi` and vertical
+        width :math:`h_z`, the area is given by:
 
         .. math::
-            A_x = r \\theta h_z
+            A_x = r \\Delta phi h_z
 
         Returns
         -------
-        numpy.ndarray
-            area of x-faces
+        (n_faces_x) numpy.ndarray
+            A 1D array containing the x-face areas for the entire mesh
         """
         if getattr(self, "_face_x_areas", None) is None:
             if self.is_symmetric:
@@ -485,17 +672,23 @@ class CylindricalMesh(
 
     @property
     def face_y_areas(self):
-        """
-        Area of y-faces (Azimuthal faces). Azimuthal faces exist only on 3D
-        cylindrical meshes.
+        """y-face areas for the entire mesh
+
+        This property returns a 1D vector containing the areas of the
+        y-faces of the mesh. For a single y-face with edge lengths
+        :math:`h_x` and :math:`h_z`, the area is given by:
 
         .. math::
             A_y = h_x h_z
 
+        *Note that for symmetric meshes* , there are no y-faces and calling
+        this property will return an error.
+
         Returns
         -------
-        numpy.ndarray
-            area of y-faces
+        (n_faces_y) numpy.ndarray
+            A 1D array containing the y-face areas in the case of non-symmetric meshes.
+            Returns an error for symmetric meshes.
         """
         if getattr(self, "_face_y_areas", None) is None:
             if self.is_symmetric:
@@ -523,16 +716,20 @@ class CylindricalMesh(
 
     @property
     def face_z_areas(self):
-        """
-        Area of z-faces.
+        """z-face areas for the entire mesh
+
+        This property returns a 1D vector containing the areas of the
+        z-faces of the mesh. The surface area takes into account curvature.
+        For a single z-face at between :math:`r_1` and :math:`r_2`
+        with azimuthal width :math:`\\Delta \\phi`, the area is given by:
 
         .. math::
-            A_z = \\frac{\\theta}{2} (r_2^2 - r_1^2)z
+            A_z = \\frac{\\Delta \\phi}{2} (r_2^2 - r_1^2)
 
         Returns
         -------
-        numpy.ndarray
-            area of the z-faces
+        (n_faces_z) numpy.ndarray
+            A 1D array containing the z-face areas for the entire mesh
         """
         if getattr(self, "_face_z_areas", None) is None:
             if self.is_symmetric:
@@ -552,16 +749,22 @@ class CylindricalMesh(
 
     @property
     def face_areas(self):
-        """
-        Face areas
+        """Face areas for the entire mesh
 
-        For a 3D cyl mesh: [radial, azimuthal, vertical], while a cylindrically
-        symmetric mesh doesn't have y-Faces, so it returns [radial, vertical]
+        This property returns a 1D vector containing the areas of all
+        mesh faces organized by x-faces, y-faces, then z-faces;
+        i.e. faces normal to the radial, azimuthal, then vertical direction.
+        Note that for symmetric meshes, there are no y-faces and calling the
+        property will return only the x and z-faces. To see how the face
+        areas corresponding to each component are computed, see
+        :py:attr:`~.CylindricalMesh.face_x_areas`,
+        :py:attr:`~.CylindricalMesh.face_y_areas` and
+        :py:attr:`~.CylindricalMesh.face_z_areas`.
 
         Returns
         -------
-        numpy.ndarray
-            face areas
+        (n_faces) numpy.ndarray
+            Areas of all faces in the mesh
         """
         # if getattr(self, '_area', None) is None:
         if self.is_symmetric:
@@ -571,13 +774,22 @@ class CylindricalMesh(
 
     @property
     def cell_volumes(self):
-        """
-        Volume of each cell
+        """Volumes of all mesh cells
+
+        This property returns a 1D vector containing the volumes of
+        all cells in the mesh. When computing the volume of each cell,
+        we take into account curvature. Thus a cell lying within
+        radial distance :math:`r_1` and :math:`r_2`, with height
+        :math:`h_z` and with azimuthal width :math:`\\Delta \\phi`,
+        the volume is given by:
+
+        .. math::
+            V = \\frac{\\Delta \\phi \\, h_z}{2} (r_2^2 - r_1^2)
 
         Returns
         -------
-        numpy.ndarray
-            cell volumes
+        (n_cells numpy.ndarray
+            Volumes of all mesh cells
         """
         if getattr(self, "_cell_volumes", None) is None:
             if self.is_symmetric:
@@ -931,14 +1143,17 @@ class CylindricalMesh(
 
     @property
     def nodes(self):
-        """
-        Nodal grid in cylindrical coordinates :math:`(r, \\theta, z)`.
-        Nodes do not exist in a cylindrically symmetric mesh.
+        """Gridded node locations
+
+        This property outputs a numpy array containing the gridded
+        locations of all mesh nodes in cylindrical ccordinates;
+        i.e. :math:`(r, \\phi, z)`. Note that for symmetric meshes, the azimuthal
+        position of all nodes is set to :math:`\\phi = 0`.
 
         Returns
         -------
-        numpy.ndarray
-            grid locations of nodes
+        (n_nodes, dim) numpy.ndarray
+            gridded node locations
         """
         if self.is_symmetric:
             self._nodes = self._nodes_full
@@ -955,14 +1170,18 @@ class CylindricalMesh(
 
     @property
     def faces_x(self):
-        """
-        Grid of x-faces (radial-faces) in cylindrical coordinates
-        :math:`(r, \\theta, z)`.
+        """Gridded x-face (radial face) locations
+
+        This property outputs a numpy array containing the gridded
+        locations of all x-faces (radial faces) in cylindrical coordinates;
+        i.e. the :math:`(r, \\phi, z)` position of the center of each face.
+        The shape of the array is (n_faces_x, 3). Note that for symmetric meshes,
+        the azimuthal position of all x-faces is set to :math:`\\phi = 0`.
 
         Returns
         -------
-        numpy.ndarray
-            grid locations of radial faces
+        (n_faces_x, dim) numpy.ndarray
+            gridded x-face (radial face) locations
         """
         if getattr(self, "_faces_x", None) is None:
             if self.is_symmetric:
@@ -980,14 +1199,18 @@ class CylindricalMesh(
 
     @property
     def edges_y(self):
-        """
-        Grid of y-edges (azimuthal-faces) in cylindrical coordinates
-        :math:`(r, \\theta, z)`.
+        """Gridded y-edge (azimuthal edge) locations
+
+        This property outputs a numpy array containing the gridded
+        locations of all y-edges (azimuthal edges) in cylindrical coordinates;
+        i.e. the :math:`(r, \\phi, z)` position of the middle of each y-edge.
+        The shape of the array is (n_edges_y, 3). Note that for symmetric meshes,
+        the azimuthal position of all y-edges is set to :math:`\\phi = 0`.
 
         Returns
         -------
-        numpy.ndarray
-            grid locations of azimuthal faces
+        (n_edges_y, dim) numpy.ndarray
+            gridded y-edge (azimuthal edge) locations
         """
         if getattr(self, "_edges_y", None) is None:
             if self.is_symmetric:
@@ -1005,14 +1228,18 @@ class CylindricalMesh(
 
     @property
     def edges_z(self):
-        """
-        Grid of z-faces (vertical-faces) in cylindrical coordinates
-        :math:`(r, \\theta, z)`.
+        """Gridded z-edge (vertical edge) locations
+
+        This property outputs a numpy array containing the gridded
+        locations of all z-edges (vertical edges) in cylindrical coordinates;
+        i.e. the :math:`(r, \\phi, z)` position of the middle of each z-edge.
+        The shape of the array is (n_edges_z, 3). In the case of symmetric
+        meshes, there are no z-edges and this property returns *None*.
 
         Returns
         -------
-        numpy.ndarray
-            grid locations of radial faces
+        (n_edges_z, dim) numpy.ndarray or None
+            gridded z-edge (vertical edge) locations. Returns *None* for symmetric meshes.
         """
         if getattr(self, "_edges_z", None) is None:
             if self.is_symmetric:
@@ -1027,9 +1254,6 @@ class CylindricalMesh(
 
     @property
     def face_divergence(self):
-        """
-        Construct divergence operator (faces to cell-centres).
-        """
         if getattr(self, "_face_divergence", None) is None:
             # Compute faceDivergence operator on faces
             D1 = self.face_x_divergence
@@ -1044,10 +1268,6 @@ class CylindricalMesh(
 
     @property
     def face_x_divergence(self):
-        """
-        Construct divergence operator in the x component
-        (faces to cell-centres).
-        """
         if getattr(self, "_face_x_divergence", None) is None:
             if self.is_symmetric:
                 ncx, ncy, ncz = self.shape_cells
@@ -1069,10 +1289,6 @@ class CylindricalMesh(
 
     @property
     def face_y_divergence(self):
-        """
-        Construct divergence operator in the y component
-        (faces to cell-centres).
-        """
         if getattr(self, "_face_y_divergence", None) is None:
             D2 = super()._face_y_divergence_stencil
             S = self._face_y_areas_full  # self.reshape(self.face_areas, 'F', 'Fy', 'V')
@@ -1087,10 +1303,6 @@ class CylindricalMesh(
 
     @property
     def face_z_divergence(self):
-        """
-        Construct divergence operator in the z component
-        (faces to cell-centres).
-        """
         if getattr(self, "_face_z_divergence", None) is None:
             D3 = super()._face_z_divergence_stencil
             S = self._face_z_areas_full
@@ -1172,26 +1384,16 @@ class CylindricalMesh(
 
     @property
     def nodal_gradient(self):
-        """Construct gradient operator (nodes to edges)."""
         if self.is_symmetric:
             return None
         raise NotImplementedError("nodalGrad not yet implemented")
 
     @property
     def nodal_laplacian(self):
-        """Construct laplacian operator (nodes to edges)."""
         raise NotImplementedError("nodalLaplacian not yet implemented")
 
     @property
     def edge_curl(self):
-        """
-        The edgeCurl (edges to faces)
-
-        Returns
-        -------
-        scipy.sparse.csr_matrix
-            edge curl operator
-        """
         if getattr(self, "_edge_curl", None) is None:
             A = self.face_areas
             E = self.edge_lengths
@@ -1228,14 +1430,6 @@ class CylindricalMesh(
 
     @property
     def average_edge_x_to_cell(self):
-        """
-        averaging operator of x-edges (radial) to cell centers
-
-        Returns
-        -------
-        scipy.sparse.csr_matrix
-            matrix that averages from x-edges to cell centers
-        """
         if self.is_symmetric:
             raise Exception("There are no x-edges on a cyl symmetric mesh")
         return (
@@ -1249,14 +1443,6 @@ class CylindricalMesh(
 
     @property
     def average_edge_y_to_cell(self):
-        """
-        averaging operator of y-edges (azimuthal) to cell centers
-
-        Returns
-        -------
-        scipy.sparse.csr_matrix
-            matrix that averages from y-edges to cell centers
-        """
         if self.is_symmetric:
             avR = av(self.shape_cells[0])[:, 1:]
             return sp.kron(av(self.shape_cells[2]), avR, format="csr")
@@ -1272,14 +1458,6 @@ class CylindricalMesh(
 
     @property
     def average_edge_z_to_cell(self):
-        """
-        averaging operator of z-edges to cell centers
-
-        Returns
-        -------
-        scipy.sparse.csr_matrix
-            matrix that averages from z-edges to cell centers
-        """
         if self.is_symmetric:
             raise Exception("There are no z-edges on a cyl symmetric mesh")
         return (
@@ -1293,14 +1471,6 @@ class CylindricalMesh(
 
     @property
     def average_edge_to_cell(self):
-        """
-        averaging operator of edges to cell centers
-
-        Returns
-        -------
-        scipy.sparse.csr_matrix
-            matrix that averages from edges to cell centers
-        """
         if getattr(self, "_average_edge_to_cell", None) is None:
             # The number of cell centers in each direction
             # n = self.vnC
@@ -1318,14 +1488,6 @@ class CylindricalMesh(
 
     @property
     def average_edge_to_cell_vector(self):
-        """
-        averaging operator of edges to a cell centered vector
-
-        Returns
-        -------
-        scipy.sparse.csr_matrix
-            matrix that averages from edges to cell centered vectors
-        """
         if self.is_symmetric:
             return self.average_edge_to_cell
         else:
@@ -1337,14 +1499,6 @@ class CylindricalMesh(
 
     @property
     def average_face_x_to_cell(self):
-        """
-        averaging operator of x-faces (radial) to cell centers
-
-        Returns
-        -------
-        scipy.sparse.csr_matrix
-            matrix that averages from x-faces to cell centers
-        """
         avR = av(self.vnC[0])[
             :, 1:
         ]  # TODO: this should be handled by a deflation matrix
@@ -1352,14 +1506,6 @@ class CylindricalMesh(
 
     @property
     def average_face_y_to_cell(self):
-        """
-        averaging operator of y-faces (azimuthal) to cell centers
-
-        Returns
-        -------
-        scipy.sparse.csr_matrix
-            matrix that averages from y-faces to cell centers
-        """
         return (
             kron3(speye(self.vnC[2]), av(self.vnC[1]), speye(self.vnC[0]))
             * self._deflation_matrix("Fy", as_ones=True).T
@@ -1367,27 +1513,10 @@ class CylindricalMesh(
 
     @property
     def average_face_z_to_cell(self):
-        """
-        averaging operator of z-faces (vertical) to cell centers
-
-        Returns
-        -------
-        scipy.sparse.csr_matrix
-            matrix that averages from z-faces to cell centers
-        """
-
         return kron3(av(self.vnC[2]), speye(self.vnC[1]), speye(self.vnC[0]))
 
     @property
     def average_face_to_cell(self):
-        """
-        averaging operator of faces to cell centers
-
-        Returns
-        -------
-        scipy.sparse.csr_matrix
-            matrix that averages from faces to cell centers
-        """
         if getattr(self, "_average_face_to_cell", None) is None:
             if self.is_symmetric:
                 self._average_face_to_cell = 0.5 * (
@@ -1407,14 +1536,6 @@ class CylindricalMesh(
 
     @property
     def average_face_to_cell_vector(self):
-        """
-        averaging operator of x-faces (radial) to cell centered vectors
-
-        Returns
-        -------
-        scipy.sparse.csr_matrix
-            matrix that averages from faces to cell centered vectors
-        """
         if getattr(self, "_average_face_to_cell_vector", None) is None:
             # n = self.vnC
             if self.is_symmetric:
@@ -1512,32 +1633,42 @@ class CylindricalMesh(
     def get_interpolation_matrix(
         self, loc, location_type="cell_centers", zeros_outside=False, **kwargs
     ):
-        """Produces interpolation matrix
+        """Construct interpolation matrix from mesh
+
+        This method allows the user to construct a sparse linear-interpolation
+        matrix which interpolates discrete quantities from mesh centers, nodes,
+        edges or faces to an arbitrary set of locations in 3D space.
+        Locations are defined in cylindrical coordinates; i.e. :math:`(r, \\phi, z)`.
 
         Parameters
         ----------
-        loc : numpy.ndarray
-            Location of points to interpolate to
-
+        loc : (n_pts, dim) numpy.ndarray
+            Location of points to interpolate to in cylindrical coordinates ; i.e.
+            :math:`(r, \\phi, z)`
         location_type : str
-            What to interpolate location_type can be::
+            What discrete quantity on the mesh you are interpolating from. Options are:
 
-            'Ex', 'edges_x'           -> x-component of field defined on x edges
-            'Ey', 'edges_y'           -> y-component of field defined on y edges
-            'Ez', 'edges_z'           -> z-component of field defined on z edges
-            'Fx', 'faces_x'           -> x-component of field defined on x faces
-            'Fy', 'faces_y'           -> y-component of field defined on y faces
-            'Fz', 'faces_z'           -> z-component of field defined on z faces
-            'N', 'nodes'              -> scalar field defined on nodes
-            'CC', 'cell_centers'      -> scalar field defined on cell centers
-            'CCVx', 'cell_centers_x'  -> x-component of vector field defined on cell centers
-            'CCVy', 'cell_centers_y'  -> y-component of vector field defined on cell centers
-            'CCVz', 'cell_centers_z'  -> z-component of vector field defined on cell centers
+            - 'Ex', 'edges_x'           -> x-component of field defined on x edges
+            - 'Ey', 'edges_y'           -> y-component of field defined on y edges
+            - 'Ez', 'edges_z'           -> z-component of field defined on z edges
+            - 'Fx', 'faces_x'           -> x-component of field defined on x faces
+            - 'Fy', 'faces_y'           -> y-component of field defined on y faces
+            - 'Fz', 'faces_z'           -> z-component of field defined on z faces
+            - 'N', 'nodes'              -> scalar field defined on nodes
+            - 'CC', 'cell_centers'      -> scalar field defined on cell centers
+            - 'CCVx', 'cell_centers_x'  -> x-component of vector field defined on cell centers
+            - 'CCVy', 'cell_centers_y'  -> y-component of vector field defined on cell centers
+            - 'CCVz', 'cell_centers_z'  -> z-component of vector field defined on cell centers
+
+        zeros_outside : bool
+            If *False* , nearest neighbour is used to compute the value for
+            locations outside the mesh. If *True* , values outside the mesh
+            will be equal to zero.
 
         Returns
         -------
-        scipy.sparse.csr_matrix
-            M, the interpolation matrix
+        (n_pts, n_loc_type) scipy.sparse.csr_matrix
+            The interpolation matrix
 
         """
         if "locType" in kwargs:
@@ -1596,7 +1727,7 @@ class CylindricalMesh(
 
         Returns
         -------
-        numpy.ndarray
+        (n_items, dim) numpy.ndarray
             cartesian coordinates for the cylindrical grid
         """
         if "locType" in kwargs:
@@ -1617,23 +1748,31 @@ class CylindricalMesh(
     def get_interpolation_matrix_cartesian_mesh(
         self, Mrect, location_type="cell_centers", location_type_to=None, **kwargs
     ):
-        """
-        Takes a cartesian mesh and returns a projection to translate onto
-        the cartesian grid.
+        """Construct projection matrix from ``CylindricalMesh`` to other mesh.
+
+        This method is used to construct a sparse linear interpolation matrix from gridded
+        locations on the cylindrical mesh to gridded locations on a different mesh
+        type. That is, an interpolation from the centers, nodes, faces or edges of the
+        cylindrical mesh to the centers, nodes, faces or edges of another mesh.
+        This method is generally used to interpolate from cylindrical meshes to meshes
+        defined in Cartesian coordinates; e.g. :class:`~discretize.TensorMesh`,
+        :class:`~discretize.TreeMesh` or :class:`~discretize.CurvilinearMesh`.
 
         Parameters
         ----------
         Mrect : discretize.base.BaseMesh
-            the mesh to interpolate on to
+            the mesh we are interpolating onto
         location_type : {'CC', 'N', 'Ex', 'Ey', 'Ez', 'Fx', 'Fy', 'Fz'}
-            grid location
-        location_type_to : {'CC', 'N', 'Ex', 'Ey', 'Ez', 'Fx', 'Fy', 'Fz'}, or None, optional
-            grid location to interpolate to. If None, the same grid type as `location_type` will be assumed
+            gridded locations of the cylindrical mesh.
+        location_type_to : {None, 'CC', 'N', 'Ex', 'Ey', 'Ez', 'Fx', 'Fy', 'Fz'}
+            gridded locations being interpolated to on the other mesh.
+            If *None*, this method will use the same type as *location_type*.
 
         Returns
         -------
         scipy.sparse.csr_matrix
-            M, the interpolation matrix
+            interpolation matrix from gridded locations on cylindrical mesh to gridded locations
+            on another mesh
         """
         if "locType" in kwargs:
             warnings.warn(
@@ -1753,9 +1892,6 @@ class CylindricalMesh(
     cartesianGrid = deprecate_method(
         "cartesian_grid", "cartesianGrid", removal_version="1.0.0"
     )
-
-
-CylindricalMesh.__module__ = "discretize"
 
 
 @deprecate_class(removal_version="1.0.0")
