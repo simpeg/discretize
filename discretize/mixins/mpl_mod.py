@@ -2179,7 +2179,7 @@ class InterfaceMPL(object):
                 vecs[:, 1],
                 **quiver_opts,
             )
-            out = (qvr,)
+            out = (out, qvr,)
 
         return out
 
