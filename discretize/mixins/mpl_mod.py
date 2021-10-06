@@ -2244,13 +2244,13 @@ class Slicer(object):
     figure, and afterwards connect it:
 
     >>> fig = plt.figure()
-    
+
     Then you have to get the tracker from the Slicer
-    
+
     >>> tracker = discretize.View.Slicer(mesh, Lpout)
-    
+
     Finally you have to connect the tracker to the figure
-    
+
     >>> fig.canvas.mpl_connect('scroll_event', tracker.onscroll)
     >>> plt.show()
 
@@ -2386,14 +2386,14 @@ class Slicer(object):
             if clim[0] == clim[1]:
                 clim[0] *= 0.99
                 clim[1] *= 1.01
-        else:
-            self.pc_props["vmin"] = clim[0]
-            self.pc_props["vmax"] = clim[1]
 
         # ensure vmin/vmax of the norm is consistent with clim
         if "norm" in self.pc_props:
             self.pc_props["norm"].vmin = clim[0]
             self.pc_props["norm"].vmax = clim[1]
+        else:
+            self.pc_props["vmin"] = clim[0]
+            self.pc_props["vmax"] = clim[1]
 
         # 2. Start populating figure
 
@@ -2468,7 +2468,7 @@ class Slicer(object):
             self.ax3.set_xlim([zlim[1], zlim[0]])
 
         # Cross-line properties
-        # We have to lines, a thick white one, and in the middle a thin black
+        # We have two lines, a thick white one, and in the middle a thin black
         # one, to assure that the lines can be seen on dark and on bright
         # spots.
         self.clpropsw = {"c": "w", "lw": 2, "zorder": 10}
