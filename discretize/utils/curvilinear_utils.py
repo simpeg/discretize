@@ -220,8 +220,6 @@ def face_info(xyz, A, B, C, D, average=True, normalize_normals=True, **kwargs):
     return N, area
 
 
-
-
 volTetra = deprecate_function(volume_tetrahedron, "volTetra", removal_version="1.0.0")
 indexCube = deprecate_function(index_cube, "indexCube", removal_version="1.0.0")
 faceInfo = deprecate_function(face_info, "faceInfo", removal_version="1.0.0")
