@@ -5,6 +5,26 @@ SCALARTYPES = (complex, float, int, np.number)
 
 
 def is_scalar(f):
+    """Determine if the input argument is a scalar.
+
+    The function **is_scalar** returns *True* if the input is an integer,
+    float or complex number. The function returns *False* otherwise.
+
+    Parameters
+    ----------
+    f :
+        Any input quantity
+
+    Returns
+    -------
+    bool :
+
+        - *True* if the input argument is an integer, float or complex number
+        - *False* otherwise
+
+
+    """
+
     if isinstance(f, SCALARTYPES):
         return True
     elif isinstance(f, np.ndarray) and f.size == 1 and isinstance(f[0], SCALARTYPES):
@@ -13,6 +33,27 @@ def is_scalar(f):
 
 
 def as_array_n_by_dim(pts, dim):
+    """Ensures the given array will have *dim* columns.
+
+    The function **as_array_n_by_dim** will examine the *pts* array,
+    and coerce it to be at least  if the number of columns is equal to *dim*.
+
+    This is similar to the :func:`numpy.atleast_2d`, except that it ensures that then
+    input has *dim* columns, and it appends a :data:`numpy.newaxis` to 1D arrays
+    instead of prepending.
+
+    Parameters
+    ----------
+    pts : array_like
+        array to check.
+    dim : int
+        The number of columns which *pts* should have
+
+    Returns
+    -------
+    (n_pts, dim) numpy.ndarray
+        verified array
+    """
     if type(pts) == list:
         pts = np.array(pts)
     if not isinstance(pts, np.ndarray):
@@ -138,7 +179,13 @@ def deprecate_property(new_name, old_name, removal_version=None):
         warnings.warn(message, DeprecationWarning)
         setattr(self, new_name, other)
 
-    doc = f"`{old_name}` has been deprecated. See `{new_name}` for documentation"
+    doc = f"""
+    `{old_name}` has been deprecated. See `{new_name}` for documentation.
+
+    See Also
+    --------
+    {new_name}
+    """
 
     return property(get_dep, set_dep, None, doc)
 
@@ -158,7 +205,13 @@ def deprecate_method(new_name, old_name, removal_version=None):
         )
         return getattr(self, new_name)(*args, **kwargs)
 
-    doc = f"`{old_name}` has been deprecated. See `{new_name}` for documentation"
+    doc = f"""
+    `{old_name}` has been deprecated. See `{new_name}` for documentation
+
+    See Also
+    --------
+    {new_name}
+    """
     new_method.__doc__ = doc
     return new_method
 
@@ -177,7 +230,13 @@ def deprecate_function(new_function, old_name, removal_version=None):
         )
         return new_function(*args, **kwargs)
 
-    doc = f"`{old_name}` has been deprecated. See `{new_name}` for documentation"
+    doc = f"""
+    `{old_name}` has been deprecated. See `{new_name}` for documentation
+
+    See Also
+    --------
+    {new_name}
+    """
     dep_function.__doc__ = doc
     return dep_function
 

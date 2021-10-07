@@ -15,18 +15,37 @@ from discretize._extensions.interputils_cython cimport _bisect_left, _bisect_rig
 
 
 cdef class TreeCell:
-    """A Cell of the `TreeMesh`
+    """A class for defining cells within instances of :class:`~discretize.TreeMesh`
 
     This cannot be created in python, it can only be accessed by indexing the
-    `TreeMesh` object.
+    :class:`~discretize.TreeMesh` object. ``TreeCell`` is the object being passed
+    to the user defined refine function when calling the
+    :py:attr:`~discretize.TreeMesh.refine` method for a :class:`~discretize.TreeMesh`.
 
-    This is also the object that is passed to the user defined refine function
-    when calling TreeMesh.refine(func).
+    Examples
+    --------
+    Here, we define a basic :class:`~discretize.TreeMesh` whose refinement is defined
+    by a simple function handle. After we have finalized the mesh, we index a ``TreeCell``
+    from the mesh. Once indexed, the user may examine its properties (center location,
+    dimensions, index of its neighbors, etc...)
 
-    Notes
-    -----
-    When called as part of the `refine` function, only the origin, center, and h
-    properties are valid.
+    >>> from discretize import TreeMesh
+    >>> import numpy as np
+
+    Refine a tree mesh radially outward from the center
+
+    >>> mesh = TreeMesh([32,32])
+    >>> def func(cell):
+    ...     r = np.linalg.norm(cell.center-0.5)
+    ...     return mesh.max_level if r<0.2 else mesh.max_level-2
+    >>> mesh.refine(func)
+
+    Then we can index the mesh to get access to the cell,
+
+    >>> tree_cell = mesh[16]
+    >>> tree_cell.origin
+    array([0.375, 0.25 ])
+
     """
     cdef double _x, _y, _z, _x0, _y0, _z0, _wx, _wy, _wz
     cdef int_t _dim
@@ -49,11 +68,15 @@ cdef class TreeCell:
 
     @property
     def nodes(self):
-        """indexes of this cell's nodes
+        """Indices for this cell's nodes within its parent tree mesh
+
+        This property returns the indices of the nodes in the parent
+        tree mesh which correspond to this tree cell's nodes.
 
         Returns
         -------
-        list of ints
+        list of int
+            Indices for this cell's nodes within its parent tree mesh
         """
         cdef Node *points[8]
         points = self._cell.points
@@ -67,11 +90,15 @@ cdef class TreeCell:
 
     @property
     def edges(self):
-        """indexes of this cell's edges
+        """Indices for this cell's edges within its parent tree mesh
+
+        This property returns the indices of the edges in the parent
+        tree mesh which correspond to this tree cell's edges.
 
         Returns
         -------
-        list of ints
+        list of int
+            Indices for this cell's edges within its parent tree mesh
         """
         cdef Edge *edges[12]
         edges = self._cell.edges
@@ -86,10 +113,15 @@ cdef class TreeCell:
 
     @property
     def faces(self):
-        """indexes of this cell's faces
+        """Indices for this cell's faces within its parent tree mesh
+
+        This property returns the indices of the faces in the parent
+        tree mesh which correspond to this tree cell's faces.
+
         Returns
         -------
-        list of ints
+        list of int
+            Indices for this cell's faces within its parent tree mesh
         """
         cdef Face *faces[6]
         faces = self._cell.faces
@@ -106,51 +138,101 @@ cdef class TreeCell:
 
     @property
     def center(self):
-        """numpy.array of length dim"""
+        """Cell center location for the tree cell
+
+        Returns
+        -------
+        (dim) numpy.ndarray
+            Cell center location for the tree cell
+        """
         if self._dim == 2: return np.array([self._x, self._y])
         return np.array([self._x, self._y, self._z])
 
     @property
     def origin(self):
-        """numpy.array of length dim"""
+        """Origin location ('anchor point') for the tree cell
+
+        This property returns the origin location (or 'anchor point') for the
+        tree cell. The origin location is defined as the bottom-left-front
+        corner of the tree cell.
+
+        Returns
+        -------
+        (dim) numpy.ndarray
+            Origin location ('anchor point') for the tree cell
+        """
         if self._dim == 2: return np.array([self._x0, self._y0])
         return np.array([self._x0, self._y0, self._z0])
 
     @property
     def x0(self):
+        """Origin location ('anchor point') for the tree cell
+
+        This property returns the origin location (or 'anchor point') for the
+        tree cell. The origin location is defined as the bottom-left-front
+        corner of the tree cell.
+
+        Returns
+        -------
+        (dim) numpy.ndarray
+            Origin location ('anchor point') for the tree cell
+        """
         return self.origin
 
     @property
     def h(self):
-        """ numpy.array of length dim
-        width of this cell
+        """Cell dimension along each axis direction
+
+        This property returns a 1D array containing the dimensions of the
+        tree cell along the x, y (and z) directions, respectively.
+
+        Returns
+        -------
+        (dim) numpy.ndarray
+            Cell dimension along each axis direction
         """
         if self._dim == 2: return np.array([self._wx, self._wy])
         return np.array([self._wx, self._wy, self._wz])
 
     @property
     def dim(self):
-        """"int dimension of cell"""
+        """Dimension of the tree cell; 1, 2 or 3
+
+        Returns
+        -------
+        int
+            Dimension of the tree cell; 1, 2 or 3
+        """
         return self._dim
 
     @property
     def index(self):
-        """integer index of this cell"""
+        """Index of the tree cell within its parent tree mesh
+
+        Returns
+        -------
+        int
+            Index of the tree cell within its parent tree mesh
+        """
         return self._cell.index
 
     @property
     def neighbors(self):
-        """ The indexes of this cell's neighbors
+        """Indices for this cell's neighbors within its parent tree mesh
 
-        Indexes of this cell's neighbors. If a cell has more than one neighbor
-        in a certain direction (i.e. when a level changes between adjacent cells),
-        then that entry will also be a list of all of those neighbor indices.
-        The list is order -x, +x, -y, +y, -z, +z. If a cell has no neighbor in
-        that direction, the value will be -1.
+        Returns a list containing the indexes for the cell's neighbors.
+        The ordering of the neighboring cells (i.e. the list) is
+        [-x, +x, -y, +y, -z, +z]. For each entry in the list, there
+        are several cases:
+
+            - *ind >= 0:* the cell has a single neighbor in this direct and *ind* denotes its index
+            - *ind = -1:* the neighbour in this direction lies outside the mesh
+            - *ind = [ind_1, ind_2, ...]:* When the level changes between cells it shares a boarder with more than 1 cell in this direction (2 if `dim==2`, 4 if `dim==3`).
 
         Returns
         -------
-        list of ints or list of ints
+        list of int or (list of int)
+            Indices for this cell's neighbors within its parent tree mesh
         """
         neighbors = [-1]*self._dim*2
 
@@ -360,41 +442,48 @@ cdef class _TreeMesh:
         self.__ubc_indArr = None
 
     def refine(self, function, finalize=True):
-        """ Refine a TreeMesh using a user supplied function.
+        """Refine :class:`~discretize.TreeMesh` with user-defined function.
 
-        Refines the TreeMesh using a function that is recursively called on each
-        cell of the mesh. It must accept an object of type `discretize.TreeMesh.Cell`
-        and return an integer like object defining the desired level.
-        The function can also simply be an integer, which will then cause all
-        cells to be at least that level.
+        Refines the :class:`~discretize.TreeMesh` according to a user-defined function.
+        The function is recursively called on each cell of the mesh. The user-defined
+        function **must** accept an object of type :class:`~discretize.tree_mesh.TreeCell`
+        and **must** return an integer-like object denoting the desired refinement
+        level. Instead of a function, the user may also supply an integer defining
+        the minimum refinement level for all cells.
 
         Parameters
         ----------
-        function : callable | int
-            a function describing the desired level,
+        function : callable or int
+            a function defining the desired refinement level,
             or an integer to refine all cells to at least that level.
+            The input argument of the function **must** be an instance of
+            :class:`~discretize.tree_mesh.TreeCell`.
         finalize : bool, optional
-            Whether to finalize the mesh
+            whether to finalize the mesh
 
         Examples
         --------
+        Here, we define a QuadTree mesh with a domain width of 1 along
+        the x and y axes. We then refine the mesh to its maximum level
+        at locations within a distance of 0.2 of point (0.5, 0.5). The
+        function accepts and instance of :class:`~discretize.tree_mesh.TreeCell`
+        and returns an integer value denoting its level of refinement.
+
         >>> from discretize import TreeMesh
+        >>> from matplotlib import pyplot
+
+        Define a mesh and refine it radially outward using the custom defined function
+
+
         >>> mesh = TreeMesh([32,32])
         >>> def func(cell):
-        >>>     r = np.linalg.norm(cell.center-0.5)
-        >>>     return mesh.max_level if r<0.2 else mesh.max_level-1
+        ...     r = np.linalg.norm(cell.center-0.5)
+        ...     return mesh.max_level if r<0.2 else mesh.max_level-2
         >>> mesh.refine(func)
-        >>> mesh
-        ---- QuadTreeMesh ----
-         origin: 0.00, 0.00
-         hx: 32*0.03,
-         hy: 32*0.03,
-        n_cells: 352
-        Fill: 34.38%
 
-        See Also
-        --------
-        discretize.TreeMesh.TreeCell : a description of the TreeCell object
+        >>> mesh.plot_grid()
+        >>> pyplot.show()
+
         """
         if isinstance(function, int):
             level = function
@@ -409,25 +498,27 @@ cdef class _TreeMesh:
             self.finalize()
 
     def refine_ball(self, points, radii, levels, finalize=True):
-        """Refines the TreeMesh around points with the given radii
+        """Refine :class:`~discretize.TreeMesh` using radial distance (ball) and refinement level for a cluster of points.
 
-        Refines the TreeMesh by determining if a cell intersects the given ball(s)
-        to the prescribed level(s).
+        For each point in the array `points`, this method refines the tree mesh
+        based on the radial distance (ball) and refinement level supplied. The method
+        accomplishes this by determining which cells intersect ball(s) and refining them
+        to the prescribed level(s) of refinement.
 
         Parameters
         ----------
-        points : array_like with shape (N, dim)
-            The centers of the balls
-        radii : array_like with shape (N)
-            The radii of the balls
-        levels : array_like of integers with shape (N)
-            The level to refine intersecting cells to
+        points : (N, dim) array_like
+            The centers of the refinement balls
+        radii : (N) array_like
+            A 1D array defining the radius for each ball
+        levels : (N) array_like of int
+            A 1D array defining the maximum refinement level for each ball
         finalize : bool, optional
             Whether to finalize after refining
 
         Examples
         --------
-        We create a simple mesh and refine the TreeMesh such that all cells that
+        We create a simple mesh and refine the tree mesh such that all cells that
         intersect the spherical balls are at the given levels.
 
         >>> import discretize
@@ -476,18 +567,18 @@ cdef class _TreeMesh:
             self.finalize()
 
     def refine_box(self, x0s, x1s, levels, finalize=True):
-        """Refines the TreeMesh within the axis aligned boxes to the desired level
+        """Refines the :class:`~discretize.TreeMesh` within the axis aligned boxes to the desired level
 
         Refines the TreeMesh by determining if a cell intersects the given axis aligned
         box(es) to the prescribed level(s).
 
         Parameters
         ----------
-        x0s : array_like with shape (N, dim)
+        x0s : (N, dim) array_like
             The minimum location of the boxes
-        x1s : array_like with shape (N, dim)
+        x1s : (N, dim) array_like
             The maximum location of the boxes
-        levels : array_like of integers with shape (N)
+        levels : (N) array_like of int
             The level to refine intersecting cells to
         finalize : bool, optional
             Whether to finalize after refining
@@ -547,15 +638,15 @@ cdef class _TreeMesh:
             self.finalize()
 
     def insert_cells(self, points, levels, finalize=True):
-        """Insert cells into the TreeMesh that contain given points
+        """Insert cells into the :class:`~discretize.TreeMesh` that contain given points
 
-        Insert cell(s) into the TreeMesh that contain the given point(s) at the
+        Insert cell(s) into the :class:`~discretize.TreeMesh` that contain the given point(s) at the
         assigned level(s).
 
         Parameters
         ----------
-        points : array_like with shape (N, dim)
-        levels : array_like of integers with shape (N)
+        points : (N, dim) array_like
+        levels : (N) array_like of int
         finalize : bool, optional
             Whether to finalize after inserting point(s)
 
@@ -564,13 +655,16 @@ cdef class _TreeMesh:
         >>> from discretize import TreeMesh
         >>> mesh = TreeMesh([32,32])
         >>> mesh.insert_cells([0.5, 0.5], mesh.max_level)
-        >>> print(mesh)
-        ---- QuadTreeMesh ----
-         origin: 0.00, 0.00
-         hx: 32*0.03,
-         hy: 32*0.03,
-        n_cells: 40
-        Fill: 3.91%
+        >>> mesh
+        QuadTreeMesh: 3.91%% filled
+        Level : Number of cells               Mesh Extent               Cell Widths
+        -----------------------           min     ,     max            min   ,   max
+          2   :       12             ---------------------------   --------------------
+          3   :       13          x:      0.0     ,     1.0         0.03125  ,    0.25
+          4   :       11          y:      0.0     ,     1.0         0.03125  ,    0.25
+          5   :        4
+        -----------------------
+        Total :       40
         """
         points = np.require(np.atleast_2d(points), dtype=np.float64,
                             requirements='C')
@@ -584,9 +678,13 @@ cdef class _TreeMesh:
             self.finalize()
 
     def finalize(self):
-        """Finalize the TreeMesh
-        Called after finished cronstruction of the mesh. Can only be called once.
-        After finalize is called, all other attributes and functions are valid.
+        """Finalize the :class:`~discretize.TreeMesh`
+
+        Called once a tree mesh has been finalized; i.e. no further mesh
+        refinement will be carried out. The tree mesh must be finalized
+        before it can be used to call most of its properties or construct
+        operators. When finalized, mesh refinement is no longer enabled.
+
         """
         if not self._finalized:
             self.tree.finalize_lists()
@@ -595,6 +693,19 @@ cdef class _TreeMesh:
 
     @property
     def finalized(self):
+        """Returns whether tree mesh is finalized.
+
+        This property returns a boolean stating whether the tree mesh has
+        been finalized; i.e. no further mesh refinement will be carried out.
+        A tree mesh must be finalized before it can be used to call most
+        of its properties or construct operators.
+        When finalized, mesh refinement is no longer enabled.
+
+        Returns
+        -------
+        bool
+            Returns *True* if finalized, *False* otherwise
+        """
         return self._finalized
 
     def number(self):
@@ -684,9 +795,17 @@ cdef class _TreeMesh:
 
     @property
     def fill(self):
-        """
-        How filled is the mesh compared to a TensorMesh?
-        As a fraction: [0, 1].
+        """How 'filled' the tree mesh is compared to the underlying tensor mesh
+
+        This property outputs the ratio between the number of cells in the
+        tree mesh and the number of cells in the underlying tensor mesh;
+        where the underlying tensor mesh is equivalent to the uniform tensor
+        mesh that uses the smallest cell size. Thus the output is a number between 0 and 1.
+
+        Returns
+        -------
+        float
+            A fractional percent denoting how 'filled' the tree mesh is
         """
         #Tensor mesh cells:
         cdef int_t nxc, nyc, nzc;
@@ -697,9 +816,16 @@ cdef class _TreeMesh:
 
     @property
     def max_used_level(self):
-        """
-        The maximum level used, which may be
-        less than `max_level`.
+        """Maximum refinement level used
+
+        Returns the maximum refinement level used to construct the
+        tree mesh. The maximum used level is equal or less than the
+        maximum allowable level; see :py:attr:`.~TreeMesh.max_level`.
+
+        Returns
+        -------
+        int
+            Maximum level used when refining the mesh
         """
         cdef int level = 0
         for cell in self.tree.cells:
@@ -708,160 +834,409 @@ cdef class _TreeMesh:
 
     @property
     def max_level(self):
-        """The maximum possible level for a cell on this mesh"""
+        """Maximum allowable refinement level for the mesh.
+
+        The maximum refinement level for a tree mesh depends on
+        the number of underlying tensor mesh cells along each axis
+        direction; which are always powers of 2. Where *N* is the
+        number of underlying tensor mesh cells along a given axis, then the
+        maximum allowable level of refinement :math:`k_{max}` is given by:
+
+        .. math::
+            k_{max} = \\log_2(N)
+
+        Returns
+        -------
+        int
+            Maximum allowable refinement level for the mesh
+
+        """
         return self.tree.max_level
 
     @property
     def n_cells(self):
-        """Number of cells"""
+        """Total number of cells in the mesh.
+
+        Returns
+        -------
+        int
+            Number of cells in the mesh
+
+        Notes
+        -----
+        Property also accessible as using the shorthand **nC**
+        """
         return self.tree.cells.size()
 
     @property
     def n_nodes(self):
-        """Number of non-hanging nodes"""
+        """Total number of nodes in the mesh
+
+        Returns
+        -------
+        int
+            Number of nodes in the mesh
+
+        Notes
+        -----
+        Property also accessible as using the shorthand **nN**
+        """
         return self.n_total_nodes - self.n_hanging_nodes
 
     @property
     def n_total_nodes(self):
-        """Number of non-hanging and hanging nodes"""
+        """Number of hanging and non-hanging nodes
+
+        Returns
+        -------
+        int
+            Number of hanging and non-hanging nodes
+        """
         return self.tree.nodes.size()
 
     @property
     def n_hanging_nodes(self):
-        """Number of hanging nodes"""
+        """Number of hanging nodes
+
+        Returns
+        -------
+        int
+            Number of hanging nodes
+        """
         return self.tree.hanging_nodes.size()
 
     @property
     def n_edges(self):
-        """Total number of non-hanging edges amongst all dimensions"""
+        """Total number of edges in the mesh
+
+        Returns
+        -------
+        int
+            Total number of edges in the mesh
+
+        Notes
+        -----
+        Property also accessible as using the shorthand **nE**
+        """
         return self.n_edges_x + self.n_edges_y + self.n_edges_z
 
     @property
     def n_hanging_edges(self):
-        """Total number of hanging edges amongst all dimensions"""
+        """Total number of hanging edges in all dimensions
+
+        Returns
+        -------
+        int
+            Number of hanging edges in all dimensions
+        """
         return self.n_hanging_edges_x + self.n_hanging_edges_y + self.n_hanging_edges_z
 
     @property
     def n_total_edges(self):
-        """Total number of non-hanging and hanging edges amongst all dimensions"""
+        """Total number of hanging and non-hanging edges in all dimensions
+
+        Returns
+        -------
+        int
+            Number of hanging and non-hanging edges in all dimensions
+        """
         return self.n_edges + self.n_hanging_edges
 
     @property
     def n_edges_x(self):
-        """Number of non-hanging edges oriented along the first dimension"""
+        """Number of x-edges in the mesh
+
+        This property returns the number of edges that
+        are parallel to the x-axis; i.e. x-edges.
+
+        Returns
+        -------
+        int
+            Number of x-edges in the mesh
+
+        Notes
+        -----
+        Property also accessible as using the shorthand **nEx**
+        """
         return self.n_total_edges_x - self.n_hanging_edges_x
 
     @property
     def n_edges_y(self):
-        """Number of non-hanging edges oriented along the second dimension"""
+        """Number of y-edges in the mesh
+
+        This property returns the number of edges that
+        are parallel to the y-axis; i.e. y-edges.
+
+        Returns
+        -------
+        int
+            Number of y-edges in the mesh
+
+        Notes
+        -----
+        Property also accessible as using the shorthand **nEy**
+        """
         return self.n_total_edges_y - self.n_hanging_edges_y
 
     @property
     def n_edges_z(self):
-        """Number of non-hanging edges oriented along the third dimension"""
+        """Number of z-edges in the mesh
+
+        This property returns the number of edges that
+        are parallel to the z-axis; i.e. z-edges.
+
+        Returns
+        -------
+        int
+            Number of z-edges in the mesh
+
+        Notes
+        -----
+        Property also accessible as using the shorthand **nEz**
+        """
         return self.n_total_edges_z - self.n_hanging_edges_z
 
     @property
     def n_total_edges_x(self):
-        """Number of non-hanging and hanging edges oriented along the first dimension"""
+        """Number of hanging and non-hanging x-edges in the mesh
+
+        Returns
+        -------
+        int
+            Number of hanging and non-hanging x-edges in the mesh
+        """
         return self.tree.edges_x.size()
 
     @property
     def n_total_edges_y(self):
-        """Number of non-hanging and hanging edges oriented along the second dimension"""
+        """Number of hanging and non-hanging y-edges in the mesh
+
+        Returns
+        -------
+        int
+            Number of hanging and non-hanging y-edges in the mesh
+        """
         return self.tree.edges_y.size()
 
     @property
     def n_total_edges_z(self):
-        """Number of non-hanging and hanging edges oriented along the third dimension"""
+        """Number of hanging and non-hanging z-edges in the mesh
+
+        Returns
+        -------
+        int
+            Number of hanging and non-hanging z-edges in the mesh
+        """
         return self.tree.edges_z.size()
 
     @property
     def n_hanging_edges_x(self):
-        """Number of hanging edges oriented along the first dimension"""
+        """Number of hanging x-edges in the mesh
+
+        Returns
+        -------
+        int
+            Number of hanging x-edges in the mesh
+        """
         return self.tree.hanging_edges_x.size()
 
     @property
     def n_hanging_edges_y(self):
-        """Number of hanging edges oriented along the second dimension"""
+        """Number of hanging y-edges in the mesh
+
+        Returns
+        -------
+        int
+            Number of hanging y-edges in the mesh
+        """
         return self.tree.hanging_edges_y.size()
 
     @property
     def n_hanging_edges_z(self):
-        """Number of hanging edges oriented along the third dimension"""
+        """Number of hanging z-edges in the mesh
+
+        Returns
+        -------
+        int
+            Number of hanging z-edges in the mesh
+        """
         return self.tree.hanging_edges_z.size()
 
     @property
     def n_faces(self):
-        """Total number of non-hanging faces amongst all dimensions"""
+        """Total number of faces in the mesh
+
+        Returns
+        -------
+        int
+            Total number of faces in the mesh
+
+        Notes
+        -----
+        Property also accessible as using the shorthand **nF**
+        """
         return self.n_faces_x + self.n_faces_y + self.n_faces_z
 
     @property
     def n_hanging_faces(self):
-        """Total number of hanging faces amongst all dimensions"""
+        """Total number of hanging faces in the mesh
+
+        Returns
+        -------
+        int
+            Total number of non-hanging faces in the mesh
+        """
         return self.n_hanging_faces_x + self.n_hanging_faces_y + self.n_hanging_faces_z
 
     @property
     def n_total_faces(self):
-        """Total number of hanging and non-hanging faces amongst all dimensions"""
+        """Total number of hanging and non-hanging faces in the mesh
+
+        Returns
+        -------
+        int
+            Total number of non-hanging faces in the mesh
+        """
         return self.n_faces + self.n_hanging_faces
 
     @property
     def n_faces_x(self):
-        """Number of non-hanging faces oriented along the first dimension"""
+        """Number of x-faces in the mesh
+
+        This property returns the number of faces whose normal
+        vector is parallel to the x-axis; i.e. x-faces.
+
+        Returns
+        -------
+        int
+            Number of x-faces in the mesh
+
+        Notes
+        -----
+        Property also accessible as using the shorthand **nFx**
+        """
         return self.n_total_faces_x - self.n_hanging_faces_x
 
     @property
     def n_faces_y(self):
-        """Number of non-hanging faces oriented along the second dimension"""
+        """Number of y-faces in the mesh
+
+        This property returns the number of faces whose normal
+        vector is parallel to the y-axis; i.e. y-faces.
+
+        Returns
+        -------
+        int
+            Number of y-faces in the mesh
+
+        Notes
+        -----
+        Property also accessible as using the shorthand **nFy**
+        """
         return self.n_total_faces_y - self.n_hanging_faces_y
 
     @property
     def n_faces_z(self):
-        """Number of non-hanging faces oriented along the third dimension"""
+        """Number of z-faces in the mesh
+
+        This property returns the number of faces whose normal
+        vector is parallel to the z-axis; i.e. z-faces.
+
+        Returns
+        -------
+        int
+            Number of z-faces in the mesh
+
+        Notes
+        -----
+        Property also accessible as using the shorthand **nFz**
+        """
         return self.n_total_faces_z - self.n_hanging_faces_z
 
     @property
     def n_total_faces_x(self):
-        """Number of non-hanging and hanging faces oriented along the first dimension"""
+        """Number of hanging and non-hanging x-faces in the mesh
+
+        Returns
+        -------
+        int
+            Number of hanging and non-hanging x-faces in the mesh
+        """
         if(self._dim == 2): return self.n_total_edges_y
         return self.tree.faces_x.size()
 
     @property
     def n_total_faces_y(self):
-        """Number of non-hanging and hanging faces oriented along the second dimension"""
+        """Number of hanging and non-hanging y-faces in the mesh
+
+        Returns
+        -------
+        int
+            Number of hanging and non-hanging y-faces in the mesh
+        """
         if(self._dim == 2): return self.n_total_edges_x
         return self.tree.faces_y.size()
 
     @property
     def n_total_faces_z(self):
-        """Number of non-hanging and hanging faces oriented along the third dimension"""
+        """Number of hanging and non-hanging z-faces in the mesh
+
+        Returns
+        -------
+        int
+            Number of hanging and non-hanging z-faces in the mesh
+        """
         if(self._dim == 2): return 0
         return self.tree.faces_z.size()
 
     @property
     def n_hanging_faces_x(self):
-        """Number of hanging faces oriented along the first dimension"""
+        """Number of hanging x-faces in the mesh
+
+        Returns
+        -------
+        int
+            Number of hanging x-faces in the mesh
+        """
         if(self._dim == 2): return self.n_hanging_edges_y
         return self.tree.hanging_faces_x.size()
 
     @property
     def n_hanging_faces_y(self):
-        """Number of hanging faces oriented along the second dimension"""
+        """Number of hanging y-faces in the mesh
+
+        Returns
+        -------
+        int
+            Number of hanging y-faces in the mesh
+        """
         if(self._dim == 2): return self.n_hanging_edges_x
         return self.tree.hanging_faces_y.size()
 
     @property
     def n_hanging_faces_z(self):
-        """Number of hanging faces oriented along the third dimension"""
+        """Number of hanging z-faces in the mesh
+
+        Returns
+        -------
+        int
+            Number of hanging z-faces in the mesh
+        """
         if(self._dim == 2): return 0
         return self.tree.hanging_faces_z.size()
 
     @property
     def cell_centers(self):
-        """
-        Returns a numpy arrayof shape (n_cells, dim) with the center locations of all cells
-        in order.
+        """Gridded cell center locations
+
+        This property returns a numpy array of shape (n_cells, dim)
+        containing gridded cell center locations for all cells in the
+        mesh.
+
+        Returns
+        -------
+        (n_cells, dim) numpy.ndarray of float
+            Gridded cell center locations
         """
         cdef np.float64_t[:, :] gridCC
         cdef np.int64_t ii, ind, dim
@@ -877,9 +1252,16 @@ cdef class _TreeMesh:
 
     @property
     def nodes(self):
-        """
-        Returns a numpy array of shape (n_nodes, dim) with the locations of all
-        non-hanging nodes in order.
+        """Gridded non-hanging nodes locations
+
+        This property returns a numpy array of shape (n_nodes, dim)
+        containing gridded locations for all non-hanging nodes in the
+        mesh.
+
+        Returns
+        -------
+        (n_nodes, dim) numpy.ndarray of float
+            Gridded non-hanging node locations
         """
         cdef np.float64_t[:, :] gridN
         cdef Node *node
@@ -898,9 +1280,16 @@ cdef class _TreeMesh:
 
     @property
     def hanging_nodes(self):
-        """
-        Returns a numpy array of shape (n_nodes, dim) with the locations of all
-        hanging nodes in order.
+        """Gridded hanging node locations
+
+        This property returns a numpy array of shape (n_hanging_nodes, dim)
+        containing gridded locations for all hanging nodes in the
+        mesh.
+
+        Returns
+        -------
+        (n_hanging_nodes, dim) numpy.ndarray of float
+            Gridded hanging node locations
         """
         cdef np.float64_t[:, :] gridN
         cdef Node *node
@@ -917,6 +1306,17 @@ cdef class _TreeMesh:
 
     @property
     def boundary_nodes(self):
+        """Gridded boundary node locations
+
+        This property returns a numpy array of shape
+        (n_boundary_nodes, dim) containing the gridded locations
+        of the nodes on the boundary of the mesh.
+
+        Returns
+        -------
+        (n_boundary_nodes, dim) numpy.ndarray of float
+            Gridded boundary node locations
+        """
         nodes = self.nodes
         x0, xF = self._xs[0], self._xs[-1]
         y0, yF = self._ys[0], self._ys[-1]
@@ -936,8 +1336,17 @@ cdef class _TreeMesh:
 
     @property
     def h_gridded(self):
-        """
-        Returns an (n_cells, dim) numpy array with the widths of all cells in order
+        """Gridded cell dimensions
+
+        This property returns a numpy array of shape (n_cells, dim)
+        containing the dimensions of the cells along each axis
+        direction in order. E.g. the columns of *h_gridded* for a
+        3D tree mesh would be ordered [hx,hy,hz].
+
+        Returns
+        -------
+        (n_cells, dim) numpy.ndarray of float
+            Gridded cell dimensions
         """
         if self._h_gridded is not None:
             return self._h_gridded
@@ -957,9 +1366,15 @@ cdef class _TreeMesh:
 
     @property
     def edges_x(self):
-        """
-        Returns a numpy array of shape (n_edges_x, dim) with the centers of all
-        non-hanging edges along the first dimension in order.
+        """Gridded locations of non-hanging x-edges
+
+        This property returns a numpy array of shape (n_edges_x, dim)
+        containing gridded locations for all non-hanging x-edges.
+
+        Returns
+        -------
+        (n_edges_x, dim) numpy.ndarray of float
+            Gridded locations of all non-hanging x-edges
         """
         cdef np.float64_t[:, :] gridEx
         cdef Edge *edge
@@ -978,9 +1393,15 @@ cdef class _TreeMesh:
 
     @property
     def hanging_edges_x(self):
-        """
-        Returns a numpy array of shape (n_hanging_edges_x, dim) with the centers of all
-        hanging edges along the first dimension in order.
+        """Gridded locations of hanging x-edges
+
+        This property returns a numpy array of shape (n_hanging_edges_x, dim)
+        containing gridded locations for all hanging x-edges.
+
+        Returns
+        -------
+        (n_hanging_edges_x, dim) numpy.ndarray of float
+            Gridded locations of all hanging x-edges
         """
         cdef np.float64_t[:, :] gridhEx
         cdef Edge *edge
@@ -997,9 +1418,15 @@ cdef class _TreeMesh:
 
     @property
     def edges_y(self):
-        """
-        Returns a numpy array of shape (n_edges_y, dim) with the centers of all
-        non-hanging edges along the second dimension in order.
+        """Gridded locations of non-hanging y-edges
+
+        This property returns a numpy array of shape (n_edges_y, dim)
+        containing gridded locations for all non-hanging y-edges.
+
+        Returns
+        -------
+        (n_edges_y, dim) numpy.ndarray of float
+            Gridded locations of all non-hanging y-edges
         """
         cdef np.float64_t[:, :] gridEy
         cdef Edge *edge
@@ -1018,9 +1445,15 @@ cdef class _TreeMesh:
 
     @property
     def hanging_edges_y(self):
-        """
-        Returns a numpy array of shape (n_hanging_edges_y, dim) with the centers of all
-        hanging edges along the second dimension in order.
+        """Gridded locations of hanging y-edges
+
+        This property returns a numpy array of shape (n_haning_edges_y, dim)
+        containing gridded locations for all hanging y-edges.
+
+        Returns
+        -------
+        (n_haning_edges_y, dim) numpy.ndarray of float
+            Gridded locations of all hanging y-edges
         """
         cdef np.float64_t[:, :] gridhEy
         cdef Edge *edge
@@ -1037,9 +1470,15 @@ cdef class _TreeMesh:
 
     @property
     def edges_z(self):
-        """
-        Returns a numpy array of shape (n_edges_z, dim) with the centers of all
-        non-hanging edges along the third dimension in order.
+        """Gridded locations of non-hanging z-edges
+
+        This property returns a numpy array of shape (n_edges_z, dim)
+        containing gridded locations for all non-hanging z-edges.
+
+        Returns
+        -------
+        (n_edges_z, dim) numpy.ndarray of float
+            Gridded locations of all non-hanging z-edges
         """
         cdef np.float64_t[:, :] gridEz
         cdef Edge *edge
@@ -1058,9 +1497,15 @@ cdef class _TreeMesh:
 
     @property
     def hanging_edges_z(self):
-        """
-        Returns a numpy array of shape (n_hanging_edges_z, dim) with the centers of all
-        hanging edges along the third dimension in order.
+        """Gridded locations of hanging z-edges
+
+        This property returns a numpy array of shape (n_hanging_edges_z, dim)
+        containing gridded locations for all hanging z-edges.
+
+        Returns
+        -------
+        (n_hanging_edges_z, dim) numpy.ndarray of float
+            Gridded locations of all hanging z-edges
         """
         cdef np.float64_t[:, :] gridhEz
         cdef Edge *edge
@@ -1077,6 +1522,18 @@ cdef class _TreeMesh:
 
     @property
     def boundary_edges(self):
+        """Gridded boundary edge locations
+
+        This property returns a numpy array of shape
+        (n_boundary_edges, dim) containing the gridded locations
+        of the edges on the boundary of the mesh. The returned
+        quantity is organized *np.r_[edges_x, edges_y, edges_z]* .
+
+        Returns
+        -------
+        (n_boundary_edges, dim) numpy.ndarray of float
+            Gridded boundary edge locations
+        """
         edges_x = self.edges_x
         edges_y = self.edges_y
         x0, xF = self._xs[0], self._xs[-1]
@@ -1106,9 +1563,15 @@ cdef class _TreeMesh:
 
     @property
     def faces_x(self):
-        """
-        Returns a numpy array of shape (n_faces_x, dim) with the centers of all
-        non-hanging faces along the first dimension in order.
+        """Gridded locations of non-hanging x-faces
+
+        This property returns a numpy array of shape (n_faces_x, dim)
+        containing gridded locations for all non-hanging x-faces.
+
+        Returns
+        -------
+        (n_faces_x, dim) numpy.ndarray of float
+            Gridded locations of all non-hanging x-faces
         """
         if(self._dim == 2): return self.edges_y
 
@@ -1129,9 +1592,15 @@ cdef class _TreeMesh:
 
     @property
     def faces_y(self):
-        """
-        Returns a numpy array of shape (n_faces_y, dim) with the centers of all
-        non-hanging faces along the second dimension in order.
+        """Gridded locations of non-hanging y-faces
+
+        This property returns a numpy array of shape (n_faces_y, dim)
+        containing gridded locations for all non-hanging y-faces.
+
+        Returns
+        -------
+        (n_faces_y, dim) numpy.ndarray of float
+            Gridded locations of all non-hanging y-faces
         """
         if(self._dim == 2): return self.edges_x
         cdef np.float64_t[:, :] gridFy
@@ -1151,9 +1620,15 @@ cdef class _TreeMesh:
 
     @property
     def faces_z(self):
-        """
-        Returns a numpy array of shape (n_faces_z, dim) with the centers of all
-        non-hanging faces along the third dimension in order.
+        """Gridded locations of non-hanging z-faces
+
+        This property returns a numpy array of shape (n_faces_z, dim)
+        containing gridded locations for all non-hanging z-faces.
+
+        Returns
+        -------
+        (n_faces_z, dim) numpy.ndarray of float
+            Gridded locations of all non-hanging z-faces
         """
         if(self._dim == 2): return self.cell_centers
 
@@ -1174,9 +1649,15 @@ cdef class _TreeMesh:
 
     @property
     def hanging_faces_x(self):
-        """
-        Returns a numpy array of shape (n_hanging_faces_x, dim) with the centers of all
-        hanging faces along the first dimension in order.
+        """Gridded locations of hanging x-faces
+
+        This property returns a numpy array of shape (n_hanging_faces_x, dim)
+        containing gridded locations for all hanging x-faces.
+
+        Returns
+        -------
+        (n_hanging_faces_x, dim) numpy.ndarray of float
+            Gridded locations of all hanging x-faces
         """
         if(self._dim == 2): return self.hanging_edges_y
 
@@ -1195,9 +1676,15 @@ cdef class _TreeMesh:
 
     @property
     def hanging_faces_y(self):
-        """
-        Returns a numpy array of shape (n_hanging_faces_y, dim) with the centers of all
-        hanging faces along the second dimension in order.
+        """Gridded locations of hanging y-faces
+
+        This property returns a numpy array of shape (n_hanging_faces_y, dim)
+        containing gridded locations for all hanging y-faces.
+
+        Returns
+        -------
+        (n_hanging_faces_y, dim) numpy.ndarray of float
+            Gridded locations of all hanging y-faces
         """
         if(self._dim == 2): return self.hanging_edges_x
 
@@ -1216,9 +1703,15 @@ cdef class _TreeMesh:
 
     @property
     def hanging_faces_z(self):
-        """
-        Returns a numpy array of shape (n_hanging_faces_z, dim) with the centers of all
-        hanging faces along the third dimension in order.
+        """Gridded locations of hanging z-faces
+
+        This property returns a numpy array of shape (n_hanging_faces_z, dim)
+        containing gridded locations for all hanging z-faces.
+
+        Returns
+        -------
+        (n_hanging_faces_z, dim) numpy.ndarray of float
+            Gridded locations of all hanging z-faces
         """
         if(self._dim == 2): return np.array([])
 
@@ -1237,6 +1730,18 @@ cdef class _TreeMesh:
 
     @property
     def boundary_faces(self):
+        """Gridded boundary face locations
+
+        This property returns a numpy array of shape
+        (n_boundary_faces, dim) containing the gridded locations
+        of the faces on the boundary of the mesh. The returned
+        quantity is organized *np.r_[faces_x, faces_y, faces_z]* .
+
+        Returns
+        -------
+        (n_boundary_faces, dim) numpy.ndarray of float
+            Gridded boundary face locations
+        """
         faces_x = self.faces_x
         faces_y = self.faces_y
         x0, xF = self._xs[0], self._xs[-1]
@@ -1256,6 +1761,16 @@ cdef class _TreeMesh:
 
     @property
     def boundary_face_outward_normals(self):
+        """Outward normals of boundary faces
+
+        For all boundary faces in the mesh, this property returns
+        the unit vectors denoting the outward normals to the boundary.
+
+        Returns
+        -------
+        (n_boundary_faces, dim) numpy.ndarray of float
+            Outward normals of boundary faces
+        """
         faces_x = self.faces_x
         faces_y = self.faces_y
         x0, xF = self._xs[0], self._xs[-1]
@@ -1284,9 +1799,19 @@ cdef class _TreeMesh:
 
     @property
     def cell_volumes(self):
-        """
-        Returns a numpy array of length n_cells with the volumes (areas in 2D) of all
-        cells in order.
+        """Return cell volumes
+
+        Calling this property will compute and return a 1D array
+        containing the volumes of mesh cells.
+
+        Returns
+        -------
+        (n_cells) numpy.ndarray
+            The quantity returned depends on the dimensions of the mesh:
+
+              - *2D:* Returns the cell areas
+              - *3D:* Returns the cell volumes
+
         """
         cdef np.float64_t[:] vol
         if self._cell_volumes is None:
@@ -1298,9 +1823,19 @@ cdef class _TreeMesh:
 
     @property
     def face_areas(self):
-        """
-        Returns a numpy array of length n_faces with the area (length in 2D) of all
-        faces ordered by x, then y, then z.
+        """Returns the areas of all cell faces
+
+        Calling this property will compute and return the areas of all
+        mesh faces as a 1D numpy array.
+
+        Returns
+        -------
+        (n_faces) numpy.ndarray
+            The length of the quantity returned depends on the dimensions of the mesh:
+
+            - *2D:* returns the x-face and y-face areas; i.e. y-edge and x-edge lengths,
+              respectively
+            - *3D:* returns the x, y and z-face areas in order
         """
         if self._dim == 2 and self._face_areas is None:
             self._face_areas = np.r_[self.edge_lengths[self.n_edges_x:], self.edge_lengths[:self.n_edges_x]]
@@ -1331,9 +1866,18 @@ cdef class _TreeMesh:
 
     @property
     def edge_lengths(self):
-        """
-        Returns a numpy array of length n_edges with the length of all edges ordered
-        by x, then y, then z.
+        """Returns the lengths of all edges in the mesh
+
+        Calling this property will compute and return the lengths of all
+        edges in the mesh.
+
+        Returns
+        -------
+        (n_edges) numpy.ndarray
+            The length of the quantity returned depends on the dimensions of the mesh:
+
+            - *2D:* returns the x-edge and y-edge lengths in order
+            - *3D:* returns the x, y and z-edge lengths in order
         """
         cdef np.float64_t[:] edge_l
         cdef Edge *edge
@@ -1363,8 +1907,57 @@ cdef class _TreeMesh:
 
     @property
     def cell_boundary_indices(self):
-        """Returns a tuple of arrays of indexes for boundary cells in each direction
-        xdown, xup, ydown, yup, zdown, zup
+        """Returns the indices of the x, y (and z) boundary cells
+
+        This property returns the indices of the cells on the x, y (and z)
+        boundaries, respectively. Note that each axis direction will
+        have both a lower and upper boundary. The property will
+        return the indices corresponding to the lower and upper
+        boundaries separately.
+
+        E.g. for a 2D domain, there are 2 x-boundaries and 2 y-boundaries (4 in total).
+        In this case, the return is a list of length 4 organized
+        [ind_Bx1, ind_Bx2, ind_By1, ind_By2]::
+
+                       By2
+                + ------------- +
+                |               |
+                |               |
+            Bx1 |               | Bx2
+                |               |
+                |               |
+                + ------------- +
+                       By1
+
+
+        Returns
+        -------
+        ind_bx1 ind_bx2, ind_by1, ind_by2 : numpy.ndarray of int
+            The length of each array in the list is equal to the number of faces
+            on that particular boundary.
+        ind_bz1, ind_bz2 : numpy.ndarray of int, optional
+            Returned if `dim` is 3.
+
+        Examples
+        --------
+        Here, we construct a small 2D tree mesh and return the indices
+        of the x and y-boundary cells.
+
+        >>> from discretize import TreeMesh
+        >>> from discretize.utils import refine_tree_xyz
+        >>> import numpy as np
+        >>> import matplotlib.pyplot as plt
+
+        >>> hx = np.ones(16)
+        >>> hy = np.ones(16)
+        >>> mesh = TreeMesh([hx, hy])
+        >>> mesh.refine_ball([4.0,4.0], [4.0], [4])
+        >>> ind_Bx1, ind_Bx2, ind_By1, ind_By2 = mesh.cell_boundary_indices
+
+        >>> ax = plt.subplot(111)
+        >>> mesh.plot_grid(ax=ax)
+        >>> ax.scatter(*mesh.cell_centers[ind_Bx1].T)
+        >>> plt.show()
         """
         cdef np.int64_t[:] indxu, indxd, indyu, indyd, indzu, indzd
         indxu = np.empty(self.n_cells, dtype=np.int64)
@@ -1414,8 +2007,56 @@ cdef class _TreeMesh:
 
     @property
     def face_boundary_indices(self):
-        """Returns a tuple of arrays of indexes for boundary faces in each direction
-        xdown, xup, ydown, yup, zdown, zup
+        """Returns the indices of the x, y (and z) boundary faces
+
+        This property returns the indices of the faces on the x, y (and z)
+        boundaries, respectively. Note that each axis direction will
+        have both a lower and upper boundary. The property will
+        return the indices corresponding to the lower and upper
+        boundaries separately.
+
+        E.g. for a 2D domain, there are 2 x-boundaries and 2 y-boundaries (4 in total).
+        In this case, the return is a list of length 4 organized
+        [ind_Bx1, ind_Bx2, ind_By1, ind_By2]::
+
+                       By2
+                + ------------- +
+                |               |
+                |               |
+            Bx1 |               | Bx2
+                |               |
+                |               |
+                + ------------- +
+                       By1
+
+
+        Returns
+        -------
+        ind_bx1 ind_bx2, ind_by1, ind_by2 : numpy.ndarray of int
+            The length of each array in the list is equal to the number of faces
+            on that particular boundary.
+        ind_bz1, ind_bz2 : numpy.ndarray of int, optional
+
+        Examples
+        --------
+        Here, we construct a small 2D tree mesh and return the indices
+        of the x and y-boundary faces.
+
+        >>> from discretize import TreeMesh
+        >>> from discretize.utils import refine_tree_xyz
+        >>> import numpy as np
+        >>> import matplotlib.pyplot as plt
+
+        >>> hx = np.ones(16)
+        >>> hy = np.ones(16)
+        >>> mesh = TreeMesh([hx, hy])
+        >>> mesh.refine_ball([4.0,4.0], [4.0], [4])
+        >>> ind_Bx1, ind_Bx2, ind_By1, ind_By2 = mesh.face_boundary_indices
+
+        >>> ax = plt.subplot(111)
+        >>> mesh.plot_grid(ax=ax)
+        >>> ax.scatter(*mesh.faces_x[ind_Bx1].T)
+        >>> plt.show()
         """
         cell_boundary_inds = self.cell_boundary_indices
         cdef np.int64_t[:] c_indxu, c_indxd, c_indyu, c_indyd, c_indzu, c_indzd
@@ -1472,12 +2113,12 @@ cdef class _TreeMesh:
         ----------
         active_ind : array_like of bool, optional
             If not None, then this must show which cells are active
-        direction: str, optional
-            must be one of ('zu', 'zd', 'xu', 'xd', 'yu', 'yd')
+        direction: {'zu', 'zd', 'xu', 'xd', 'yu', 'yd'}
+            The requested direction to return
 
         Returns
         -------
-        numpy.array
+        numpy.ndarray of int
             Array of indices for the boundary cells in the requested direction
         """
 
@@ -1536,13 +2177,13 @@ cdef class _TreeMesh:
 
         Parameters
         ----------
-        x0,x1 : array_like of length (dim)
+        x0,x1 : (dim) array_like
             Begining and ending point of the line segment.
 
         Returns
         -------
-        list of ints
-            Indexes for cells that contain the a line defined by the two input
+        list of int
+            Indices for cells that contain the a line defined by the two input
             points, ordered in the direction of the line.
         """
         cdef np.float64_t ax, ay, az, bx, by, bz
@@ -1730,8 +2371,53 @@ cdef class _TreeMesh:
     @cython.cdivision(True)
     @cython.boundscheck(False)
     def edge_curl(self):
-        """
-        Construct the 3D curl operator.
+        r"""Edge curl operator (edges to faces)
+
+        This property constructs the 2nd order numerical curl operator
+        that maps from edges to faces. The operator is a sparse matrix
+        :math:`\mathbf{C_e}` that can be applied as a matrix-vector product
+        to a discrete vector quantity **u** that lives
+        on the edges; i.e.::
+
+            curl_u = Ce @ u
+
+        Once constructed, the operator is stored permanently as a property of the mesh.
+
+        Returns
+        -------
+        (n_faces, n_edges) scipy.sparse.csr_matrix
+            The numerical curl operator from edges to faces
+
+        Notes
+        -----
+        In continuous space, the curl operator is defined as:
+
+        .. math::
+            \vec{w} = \nabla \times \vec{u} =
+            \begin{vmatrix}
+            \hat{x} & \hat{y} & \hat{z} \\
+            \partial_x & \partial_y & \partial_z \\
+            u_x & u_y & u_z
+            \end{vmatrix}
+
+        Where :math:`\mathbf{u}` is the discrete representation of the continuous variable
+        :math:`\vec{u}` on cell edges and :math:`\mathbf{w}` is the discrete
+        representation of the curl on the faces, **edge_curl** constructs a
+        discrete linear operator :math:`\\mathbf{C_e}` such that:
+
+        .. math::
+            \mathbf{w} = \mathbf{C_e \, u}
+
+        The computation of the curl on mesh faces can be expressed
+        according to the integral form below. For face :math:`i` bordered by
+        a set of edges indexed by subset :math:`K`:
+
+        .. math::
+            w_i = \frac{1}{A_i} \sum_{k \in K} \vec{u}_k \cdot \vec{\ell}_k
+
+        where :math:`A_i` is the surface area of face *i*,
+        :math:`u_k` is the value of :math:`\vec{u}` on face *k*,
+        and \vec{\ell}_k is the path along edge *k*.
         """
         if self._edge_curl is not None:
             return self._edge_curl
@@ -1810,8 +2496,50 @@ cdef class _TreeMesh:
     @cython.cdivision(True)
     @cython.boundscheck(False)
     def nodal_gradient(self):
-        """
-        Construct gradient operator (nodes to edges).
+        """Nodal gradient operator (nodes to edges)
+
+        This property constructs the 2nd order numerical gradient operator
+        that maps from nodes to edges. The operator is a sparse matrix
+        :math:`\\mathbf{G_n}` that can be applied as a matrix-vector product
+        to a discrete scalar quantity :math:`\\boldsymbol{\\phi}` that
+        lives on the nodes, i.e.::
+
+            grad_phi = Gn @ phi
+
+        Once constructed, the operator is stored permanently as a property of the mesh.
+
+        Returns
+        -------
+        (n_edges, n_nodes) scipy.sparse.csr_matrix
+            The numerical gradient operator from nodes to edges
+
+        Notes
+        -----
+        In continuous space, the gradient operator is defined as:
+
+        .. math::
+            \\vec{u} = \\nabla \\phi = \\frac{\\partial \\phi}{\\partial x}\\hat{x}
+            + \\frac{\\partial \\phi}{\\partial y}\\hat{y}
+            + \\frac{\\partial \\phi}{\\partial z}\\hat{z}
+
+        Where :math:`\\boldsymbol{\\phi}` is the discrete representation of the continuous variable
+        :math:`\\phi` on the nodes and :math:`\\mathbf{u}` is the discrete
+        representation of :math:`\\vec{u}` on the edges, **nodal_gradient** constructs a
+        discrete linear operator :math:`\\mathbf{G_n}` such that:
+
+        .. math::
+            \\mathbf{u} = \\mathbf{G_n} \\, \\boldsymbol{\\phi}
+
+        The Cartesian components of :math:`\\vec{u}` are defined on their corresponding
+        edges (x, y or z) as follows; e.g. the x-component of the gradient is defined
+        on x-edges. For edge :math:`i` which defines a straight path
+        of length :math:`h_i` between adjacent nodes :math:`n_1` and :math:`n_2`:
+
+        .. math::
+            u_i = \\frac{\\phi_{n_2} - \\phi_{n_1}}{h_i}
+
+        Note that :math:`u_i \\in \\mathbf{u}` may correspond to a value on an
+        x, y or z edge. See the example below.
         """
         if self._nodal_gradient is not None:
             return self._nodal_gradient
@@ -1871,11 +2599,23 @@ cdef class _TreeMesh:
 
     @property
     def nodal_laplacian(self):
+        """Not implemented on the TreeMesh"""
         raise NotImplementedError('Nodal Laplacian has not been implemented for TreeMesh')
 
     @cython.boundscheck(False)
     def average_cell_to_total_face_x(self):
-        """Average matrix for cell center to total (including hanging) x faces"""
+        """Average matrix for cell center to total (including hanging) x faces
+
+        This property constructs an averaging operator that maps scalar
+        quantities from cell centers to face. This averaging operator is
+        used when a discrete scalar quantity defined cell centers must be
+        projected to faces.
+
+        Returns
+        -------
+        (n_total_faces_x, n_cells) scipy.sparse.csr_matrix
+            The scalar averaging operator from faces to cell centers
+        """
         cdef np.int64_t[:] I = np.zeros(2*self.n_total_faces_x, dtype=np.int64)
         cdef np.int64_t[:] J = np.zeros(2*self.n_total_faces_x, dtype=np.int64)
         cdef np.float64_t[:] V = np.zeros(2*self.n_total_faces_x, dtype=np.float64)
@@ -1927,7 +2667,18 @@ cdef class _TreeMesh:
 
     @cython.boundscheck(False)
     def average_cell_to_total_face_y(self):
-        """Average matrix for cell center to total (including hanging) y faces"""
+        """Average matrix for cell center to total (including hanging) y faces
+
+        This property constructs an averaging operator that maps scalar
+        quantities from cell centers to face. This averaging operator is
+        used when a discrete scalar quantity defined cell centers must be
+        projected to faces.
+
+        Returns
+        -------
+        (n_total_faces_y, n_cells) scipy.sparse.csr_matrix
+            The scalar averaging operator from faces to cell centers
+        """
         cdef np.int64_t[:] I = np.zeros(2*self.n_total_faces_y, dtype=np.int64)
         cdef np.int64_t[:] J = np.zeros(2*self.n_total_faces_y, dtype=np.int64)
         cdef np.float64_t[:] V = np.zeros(2*self.n_total_faces_y, dtype=np.float64)
@@ -1978,7 +2729,18 @@ cdef class _TreeMesh:
 
     @cython.boundscheck(False)
     def average_cell_to_total_face_z(self):
-        """Average matrix for cell center to total (including hanging) z faces"""
+        """Average matrix for cell center to total (including hanging) z faces
+
+        This property constructs an averaging operator that maps scalar
+        quantities from cell centers to face. This averaging operator is
+        used when a discrete scalar quantity defined cell centers must be
+        projected to faces.
+
+        Returns
+        -------
+        (n_total_faces_z, n_cells) scipy.sparse.csr_matrix
+            The scalar averaging operator from faces to cell centers
+        """
         cdef np.int64_t[:] I = np.zeros(2*self.n_total_faces_z, dtype=np.int64)
         cdef np.int64_t[:] J = np.zeros(2*self.n_total_faces_z, dtype=np.int64)
         cdef np.float64_t[:] V = np.zeros(2*self.n_total_faces_z, dtype=np.float64)
@@ -2011,7 +2773,26 @@ cdef class _TreeMesh:
     @property
     @cython.boundscheck(False)
     def stencil_cell_gradient_x(self):
-        """Cell gradient stencil matrix to total (including hanging) x faces"""
+        """Differencing operator along x-direction to total (including hanging) x faces
+
+        This property constructs a differencing operator along the x-axis
+        that acts on cell centered quantities; i.e. the stencil for the
+        x-component of the cell gradient. The operator computes the
+        differences between the values at adjacent cell centers along the
+        x-direction, and places the result on the x-faces. The operator is a sparse
+        matrix :math:`\\mathbf{G_x}` that can be applied as a matrix-vector
+        product to a cell centered quantity :math:`\\boldsymbol{\\phi}`, i.e.::
+
+            diff_phi_x = Gx @ phi
+
+        By default, the operator assumes zero-Neumann boundary conditions
+        on the scalar quantity.
+
+        Returns
+        -------
+        (n_total_faces_x, n_cells) scipy.sparse.csr_matrix
+            The stencil for the x-component of the cell gradient
+        """
         if getattr(self, '_stencil_cell_gradient_x', None) is not None:
             return self._stencil_cell_gradient_x
         cdef np.int64_t[:] I = np.zeros(2*self.n_total_faces_x, dtype=np.int64)
@@ -2069,7 +2850,26 @@ cdef class _TreeMesh:
     @property
     @cython.boundscheck(False)
     def stencil_cell_gradient_y(self):
-        """Cell gradient stencil matrix to total (including hanging) y faces"""
+        """Differencing operator along y-direction to total (including hanging) y faces
+
+        This property constructs a differencing operator along the y-axis
+        that acts on cell centered quantities; i.e. the stencil for the
+        y-component of the cell gradient. The operator computes the
+        differences between the values at adjacent cell centers along the
+        y-direction, and places the result on the y-faces. The operator is a sparse
+        matrix :math:`\\mathbf{G_y}` that can be applied as a matrix-vector
+        product to a cell centered quantity :math:`\\boldsymbol{\\phi}`, i.e.::
+
+            diff_phi_y = Gy @ phi
+
+        By default, the operator assumes zero-Neumann boundary conditions
+        on the scalar quantity.
+
+        Returns
+        -------
+        (n_total_faces_y, n_cells) scipy.sparse.csr_matrix
+            The stencil for the y-component of the cell gradient
+        """
         if getattr(self, '_stencil_cell_gradient_y', None) is not None:
             return self._stencil_cell_gradient_y
 
@@ -2128,7 +2928,26 @@ cdef class _TreeMesh:
     @property
     @cython.boundscheck(False)
     def stencil_cell_gradient_z(self):
-        """Cell gradient stencil matrix to total (including hanging) z faces"""
+        """Differencing operator along z-direction to total (including hanging) z faces
+
+        This property constructs a differencing operator along the z-axis
+        that acts on cell centered quantities; i.e. the stencil for the
+        z-component of the cell gradient. The operator computes the
+        differences between the values at adjacent cell centers along the
+        z-direction, and places the result on the z-faces. The operator is a sparse
+        matrix :math:`\\mathbf{G_z}` that can be applied as a matrix-vector
+        product to a cell centered quantity :math:`\\boldsymbol{\\phi}`, i.e.::
+
+            diff_phi_z = Gz @ phi
+
+        By default, the operator assumes zero-Neumann boundary conditions
+        on the scalar quantity.
+
+        Returns
+        -------
+        (n_total_faces_z, n_cells) scipy.sparse.csr_matrix
+            The stencil for the z-component of the cell gradient
+        """
         if getattr(self, '_stencil_cell_gradient_z', None) is not None:
             return self._stencil_cell_gradient_z
 
@@ -2398,9 +3217,35 @@ cdef class _TreeMesh:
     @property
     @cython.boundscheck(False)
     def average_edge_x_to_cell(self):
-        """
-        Construct the averaging operator on cell edges in the x direction to
-        cell centers.
+        """Averaging operator from x-edges to cell centers (scalar quantities).
+
+        This property constructs a 2nd order averaging operator that maps scalar
+        quantities from x-edges to cell centers. This averaging operator is
+        used when a discrete scalar quantity defined on x-edges must be
+        projected to cell centers. Once constructed, the operator is stored
+        permanently as a property of the mesh. *See notes*.
+
+        Returns
+        -------
+        (n_cells, n_edges_x) scipy.sparse.csr_matrix
+            The scalar averaging operator from x-edges to cell centers
+
+        Notes
+        -----
+        Let :math:`\\boldsymbol{\\phi_x}` be a discrete scalar quantity that
+        lives on x-edges. **average_edge_x_to_cell** constructs a discrete
+        linear operator :math:`\\mathbf{A_{xc}}` that projects
+        :math:`\\boldsymbol{\\phi_x}` to cell centers, i.e.:
+
+        .. math::
+            \\boldsymbol{\\phi_c} = \\mathbf{A_{xc}} \\, \\boldsymbol{\\phi_x}
+
+        where :math:`\\boldsymbol{\\phi_c}` approximates the value of the scalar
+        quantity at cell centers. For each cell, we are simply averaging
+        the values defined on its x-edges. The operation is implemented as a
+        matrix vector product, i.e.::
+
+            phi_c = Axc @ phi_x
         """
         if self._average_edge_x_to_cell is not None:
             return self._average_edge_x_to_cell
@@ -2428,9 +3273,35 @@ cdef class _TreeMesh:
     @property
     @cython.boundscheck(False)
     def average_edge_y_to_cell(self):
-        """
-        Construct the averaging operator on cell edges in the y direction to
-        cell centers.
+        """Averaging operator from y-edges to cell centers (scalar quantities).
+
+        This property constructs a 2nd order averaging operator that maps scalar
+        quantities from y-edges to cell centers. This averaging operator is
+        used when a discrete scalar quantity defined on y-edges must be
+        projected to cell centers. Once constructed, the operator is stored
+        permanently as a property of the mesh. *See notes*.
+
+        Returns
+        -------
+        (n_cells, n_edges_y) scipy.sparse.csr_matrix
+            The scalar averaging operator from y-edges to cell centers
+
+        Notes
+        -----
+        Let :math:`\\boldsymbol{\\phi_y}` be a discrete scalar quantity that
+        lives on y-edges. **average_edge_y_to_cell** constructs a discrete
+        linear operator :math:`\\mathbf{A_{yc}}` that projects
+        :math:`\\boldsymbol{\\phi_y}` to cell centers, i.e.:
+
+        .. math::
+            \\boldsymbol{\\phi_c} = \\mathbf{A_{yc}} \\, \\boldsymbol{\\phi_y}
+
+        where :math:`\\boldsymbol{\\phi_c}` approximates the value of the scalar
+        quantity at cell centers. For each cell, we are simply averaging
+        the values defined on its y-edges. The operation is implemented as a
+        matrix vector product, i.e.::
+
+            phi_c = Ayc @ phi_y
         """
         if self._average_edge_y_to_cell is not None:
             return self._average_edge_y_to_cell
@@ -2458,9 +3329,35 @@ cdef class _TreeMesh:
     @property
     @cython.boundscheck(False)
     def average_edge_z_to_cell(self):
-        """
-        Construct the averaging operator on cell edges in the z direction to
-        cell centers.
+        """Averaging operator from z-edges to cell centers (scalar quantities).
+
+        This property constructs a 2nd order averaging operator that maps scalar
+        quantities from z-edges to cell centers. This averaging operator is
+        used when a discrete scalar quantity defined on z-edges must be
+        projected to cell centers. Once constructed, the operator is stored
+        permanently as a property of the mesh. *See notes*.
+
+        Returns
+        -------
+        (n_cells, n_edges_z) scipy.sparse.csr_matrix
+            The scalar averaging operator from z-edges to cell centers
+
+        Notes
+        -----
+        Let :math:`\\boldsymbol{\\phi_z}` be a discrete scalar quantity that
+        lives on z-edges. **average_edge_z_to_cell** constructs a discrete
+        linear operator :math:`\\mathbf{A_{zc}}` that projects
+        :math:`\\boldsymbol{\\phi_z}` to cell centers, i.e.:
+
+        .. math::
+            \\boldsymbol{\\phi_c} = \\mathbf{A_{zc}} \\, \\boldsymbol{\\phi_z}
+
+        where :math:`\\boldsymbol{\\phi_c}` approximates the value of the scalar
+        quantity at cell centers. For each cell, we are simply averaging
+        the values defined on its z-edges. The operation is implemented as a
+        matrix vector product, i.e.::
+
+            phi_c = Azc @ phi_z
         """
         if self._average_edge_z_to_cell is not None:
             return self._average_edge_z_to_cell
@@ -2489,7 +3386,36 @@ cdef class _TreeMesh:
 
     @property
     def average_edge_to_cell(self):
-        "Construct the averaging operator on cell edges to cell centers."
+        """Averaging operator from edges to cell centers (scalar quantities).
+
+        This property constructs a 2nd order averaging operator that maps scalar
+        quantities from edges to cell centers. This averaging operator is
+        used when a discrete scalar quantity defined on mesh edges must be
+        projected to cell centers. Once constructed, the operator is stored
+        permanently as a property of the mesh. *See notes*.
+
+        Returns
+        -------
+        (n_cells, n_edges) scipy.sparse.csr_matrix
+            The scalar averaging operator from edges to cell centers
+
+        Notes
+        -----
+        Let :math:`\\boldsymbol{\\phi_e}` be a discrete scalar quantity that
+        lives on mesh edges. **average_edge_to_cell** constructs a discrete
+        linear operator :math:`\\mathbf{A_{ec}}` that projects
+        :math:`\\boldsymbol{\\phi_e}` to cell centers, i.e.:
+
+        .. math::
+            \\boldsymbol{\\phi_c} = \\mathbf{A_{ec}} \\, \\boldsymbol{\\phi_e}
+
+        where :math:`\\boldsymbol{\\phi_c}` approximates the value of the scalar
+        quantity at cell centers. For each cell, we are simply averaging
+        the values defined on its edges. The operation is implemented as a
+        matrix vector product, i.e.::
+
+            phi_c = Aec @ phi_e
+        """
         if self._average_edge_to_cell is None:
             stacks = [self.average_edge_x_to_cell, self.average_edge_y_to_cell]
             if self._dim == 3:
@@ -2499,7 +3425,48 @@ cdef class _TreeMesh:
 
     @property
     def average_edge_to_cell_vector(self):
-        "Construct the averaging operator on cell edges to cell centers."
+        """Averaging operator from edges to cell centers (vector quantities).
+
+        This property constructs the averaging operator that independently maps the
+        Cartesian components of vector quantities from edges to cell centers.
+        This averaging operators is used when a discrete vector quantity defined on mesh edges
+        must be approximated at cell centers. Once constructed, the operator is
+        stored permanently as a property of the mesh.
+
+        Be aware that the Cartesian components of the original vector
+        are defined on their respective edges; e.g. the x-component lives
+        on x-edges. However, the x, y and z components are being averaged
+        separately to cell centers. The operation is implemented as a
+        matrix vector product, i.e.::
+
+            u_c = Aec @ u_e
+
+        Returns
+        -------
+        (dim * n_cells, n_edges) scipy.sparse.csr_matrix
+            The vector averaging operator from edges to cell centers. Since we
+            are averaging a vector quantity to cell centers, the first dimension
+            of the operator is the mesh dimension times the number of cells.
+
+        Notes
+        -----
+        Let :math:`\\mathbf{u_e}` be the discrete representation of a vector
+        quantity whose Cartesian components are defined on their respective edges;
+        e.g. :math:`u_x` is defined on x-edges.
+        **average_edge_to_cell_vector** constructs a discrete linear operator
+        :math:`\\mathbf{A_{ec}}` that projects each Cartesian component of
+        :math:`\\mathbf{u_e}` independently to cell centers, i.e.:
+
+        .. math::
+            \\mathbf{u_c} = \\mathbf{A_{ec}} \\, \\mathbf{u_e}
+
+        where :math:`\\mathbf{u_c}` is a discrete vector quantity whose Cartesian
+        components defined at the cell centers and organized into a 1D array of
+        the form np.r_[ux, uy, uz]. For each cell, and for each Cartesian component,
+        we are simply taking the average of the values
+        defined on the cell's corresponding edges and placing the result at
+        the cell's center.
+        """
         if self._average_edge_to_cell_vector is None:
             stacks = [self.average_edge_x_to_cell, self.average_edge_y_to_cell]
             if self._dim == 3:
@@ -2509,9 +3476,38 @@ cdef class _TreeMesh:
 
     @property
     def average_edge_to_face_vector(self):
-        """
-        Construct the averaging operator on cell edges in the x direction to
-        cell faces.
+        """Averaging operator from edges to faces (vector quantities).
+
+        This property constructs the averaging operator that independently maps the
+        Cartesian components of vector quantities from edges to faces.
+        This averaging operators is used when a discrete vector quantity defined on mesh edges
+        must be approximated at faces. The operation is implemented as a
+        matrix vector product, i.e.::
+
+            u_f = Aef @ u_e
+
+        Once constructed, the operator is stored permanently as a property of the mesh.
+
+        Returns
+        -------
+        (n_faces, n_edges) scipy.sparse.csr_matrix
+            The vector averaging operator from edges to faces.
+
+        Notes
+        -----
+        Let :math:`\\mathbf{u_e}` be the discrete representation of a vector
+        quantity whose Cartesian components are defined on their respective edges;
+        e.g. the x-component is defined on x-edges. **average_edge_to_face_vector**
+        constructs a discrete linear operator :math:`\\mathbf{A_{ef}}` that
+        projects each Cartesian component of :math:`\\mathbf{u_e}` to
+        its corresponding face, i.e.:
+
+        .. math::
+            \\mathbf{u_f} = \\mathbf{A_{ef}} \\, \\mathbf{u_e}
+
+        where :math:`\\mathbf{u_f}` is a discrete vector quantity whose Cartesian
+        components are defined on their respective faces; e.g. the x-component is
+        defined on x-faces.
         """
         if self.dim == 2:
             return sp.diags(
@@ -2577,9 +3573,35 @@ cdef class _TreeMesh:
     @property
     @cython.boundscheck(False)
     def average_face_x_to_cell(self):
-        """
-        Construct the averaging operator on cell faces in the x direction to
-        cell centers.
+        """Averaging operator from x-faces to cell centers (scalar quantities).
+
+        This property constructs a 2nd order averaging operator that maps scalar
+        quantities from x-faces to cell centers. This averaging operator is
+        used when a discrete scalar quantity defined on x-faces must be
+        projected to cell centers. Once constructed, the operator is stored
+        permanently as a property of the mesh.
+
+        Returns
+        -------
+        (n_cells, n_faces_x) scipy.sparse.csr_matrix
+            The scalar averaging operator from x-faces to cell centers
+
+        Notes
+        -----
+        Let :math:`\\boldsymbol{\\phi_x}` be a discrete scalar quantity that
+        lives on x-faces. **average_face_x_to_cell** constructs a discrete
+        linear operator :math:`\\mathbf{A_{xc}}` that projects
+        :math:`\\boldsymbol{\\phi_x}` to cell centers, i.e.:
+
+        .. math::
+            \\boldsymbol{\\phi_c} = \\mathbf{A_{xc}} \\, \\boldsymbol{\\phi_x}
+
+        where :math:`\\boldsymbol{\\phi_c}` approximates the value of the scalar
+        quantity at cell centers. For each cell, we are simply averaging
+        the values defined on its x-faces. The operation is implemented as a
+        matrix vector product, i.e.::
+
+            phi_c = Axc @ phi_x
         """
         if self._average_face_x_to_cell is not None:
             return self._average_face_x_to_cell
@@ -2611,9 +3633,35 @@ cdef class _TreeMesh:
     @property
     @cython.boundscheck(False)
     def average_face_y_to_cell(self):
-        """
-        Construct the averaging operator on cell faces in the y direction to
-        cell centers.
+        """Averaging operator from y-faces to cell centers (scalar quantities).
+
+        This property constructs a 2nd order averaging operator that maps scalar
+        quantities from y-faces to cell centers. This averaging operator is
+        used when a discrete scalar quantity defined on x-faces must be
+        projected to cell centers. Once constructed, the operator is stored
+        permanently as a property of the mesh. *See notes*.
+
+        Returns
+        -------
+        (n_cells, n_faces_y) scipy.sparse.csr_matrix
+            The scalar averaging operator from y-faces to cell centers
+
+        Notes
+        -----
+        Let :math:`\\boldsymbol{\\phi_y}` be a discrete scalar quantity that
+        lives on y-faces. **average_face_y_to_cell** constructs a discrete
+        linear operator :math:`\\mathbf{A_{yc}}` that projects
+        :math:`\\boldsymbol{\\phi_y}` to cell centers, i.e.:
+
+        .. math::
+            \\boldsymbol{\\phi_c} = \\mathbf{A_{yc}} \\, \\boldsymbol{\\phi_y}
+
+        where :math:`\\boldsymbol{\\phi_c}` approximates the value of the scalar
+        quantity at cell centers. For each cell, we are simply averaging
+        the values defined on its y-faces. The operation is implemented as a
+        matrix vector product, i.e.::
+
+            phi_c = Ayc @ phi_y
         """
         if self._average_face_y_to_cell is not None:
             return self._average_face_y_to_cell
@@ -2645,9 +3693,35 @@ cdef class _TreeMesh:
     @property
     @cython.boundscheck(False)
     def average_face_z_to_cell(self):
-        """
-        Construct the averaging operator on cell faces in the z direction to
-        cell centers.
+        """Averaging operator from z-faces to cell centers (scalar quantities).
+
+        This property constructs a 2nd order averaging operator that maps scalar
+        quantities from z-faces to cell centers. This averaging operator is
+        used when a discrete scalar quantity defined on z-faces must be
+        projected to cell centers. Once constructed, the operator is stored
+        permanently as a property of the mesh. *See notes*.
+
+        Returns
+        -------
+        (n_cells, n_faces_z) scipy.sparse.csr_matrix
+            The scalar averaging operator from z-faces to cell centers
+
+        Notes
+        -----
+        Let :math:`\\boldsymbol{\\phi_z}` be a discrete scalar quantity that
+        lives on z-faces. **average_face_z_to_cell** constructs a discrete
+        linear operator :math:`\\mathbf{A_{zc}}` that projects
+        :math:`\\boldsymbol{\\phi_z}` to cell centers, i.e.:
+
+        .. math::
+            \\boldsymbol{\\phi_c} = \\mathbf{A_{zc}} \\, \\boldsymbol{\\phi_z}
+
+        where :math:`\\boldsymbol{\\phi_c}` approximates the value of the scalar
+        quantity at cell centers. For each cell, we are simply averaging
+        the values defined on its z-faces. The operation is implemented as a
+        matrix vector product, i.e.::
+
+            phi_c = Azc @ phi_z
         """
         if self._average_face_z_to_cell is not None:
             return self._average_face_z_to_cell
@@ -2677,7 +3751,36 @@ cdef class _TreeMesh:
 
     @property
     def average_face_to_cell(self):
-        "Construct the averaging operator on cell faces to cell centers."
+        """Averaging operator from faces to cell centers (scalar quantities).
+
+        This property constructs a 2nd order averaging operator that maps scalar
+        quantities from faces to cell centers. This averaging operator is
+        used when a discrete scalar quantity defined on mesh faces must be
+        projected to cell centers. Once constructed, the operator is stored
+        permanently as a property of the mesh. *See notes*.
+
+        Returns
+        -------
+        (n_cells, n_faces) scipy.sparse.csr_matrix
+            The scalar averaging operator from faces to cell centers
+
+        Notes
+        -----
+        Let :math:`\\boldsymbol{\\phi_f}` be a discrete scalar quantity that
+        lives on mesh faces. **average_face_to_cell** constructs a discrete
+        linear operator :math:`\\mathbf{A_{fc}}` that projects
+        :math:`\\boldsymbol{\\phi_f}` to cell centers, i.e.:
+
+        .. math::
+            \\boldsymbol{\\phi_c} = \\mathbf{A_{fc}} \\, \\boldsymbol{\\phi_f}
+
+        where :math:`\\boldsymbol{\\phi_c}` approximates the value of the scalar
+        quantity at cell centers. For each cell, we are simply averaging
+        the values defined on its faces. The operation is implemented as a
+        matrix vector product, i.e.::
+
+            phi_c = Afc @ phi_f
+        """
         if self._average_face_to_cell is None:
             stacks = [self.average_face_x_to_cell, self.aveFy2CC]
             if self._dim == 3:
@@ -2687,7 +3790,48 @@ cdef class _TreeMesh:
 
     @property
     def average_face_to_cell_vector(self):
-        "Construct the averaging operator on cell faces to cell centers."
+        """Averaging operator from faces to cell centers (vector quantities).
+
+        This property constructs the averaging operator that independently maps the
+        Cartesian components of vector quantities from faces to cell centers.
+        This averaging operators is used when a discrete vector quantity defined on mesh faces
+        must be approximated at cell centers. Once constructed, the operator is
+        stored permanently as a property of the mesh.
+
+        Be aware that the Cartesian components of the original vector
+        are defined on their respective faces; e.g. the x-component lives
+        on x-faces. However, the x, y and z components are being averaged
+        separately to cell centers. The operation is implemented as a
+        matrix vector product, i.e.::
+
+            u_c = Afc @ u_f
+
+        Returns
+        -------
+        (dim * n_cells, n_faces) scipy.sparse.csr_matrix
+            The vector averaging operator from faces to cell centers. Since we
+            are averaging a vector quantity to cell centers, the first dimension
+            of the operator is the mesh dimension times the number of cells.
+
+        Notes
+        -----
+        Let :math:`\\mathbf{u_f}` be the discrete representation of a vector
+        quantity whose Cartesian components are defined on their respective faces;
+        e.g. :math:`u_x` is defined on x-faces.
+        **average_face_to_cell_vector** constructs a discrete linear operator
+        :math:`\\mathbf{A_{fc}}` that projects each Cartesian component of
+        :math:`\\mathbf{u_f}` independently to cell centers, i.e.:
+
+        .. math::
+            \\mathbf{u_c} = \\mathbf{A_{fc}} \\, \\mathbf{u_f}
+
+        where :math:`\\mathbf{u_c}` is a discrete vector quantity whose Cartesian
+        components defined at the cell centers and organized into a 1D array of
+        the form np.r_[ux, uy, uz]. For each cell, and for each Cartesian component,
+        we are simply taking the average of the values
+        defined on the cell's corresponding faces and placing the result at
+        the cell's center.
+        """
         if self._average_face_to_cell_vector is None:
             stacks = [self.average_face_x_to_cell, self.aveFy2CC]
             if self._dim == 3:
@@ -2698,7 +3842,36 @@ cdef class _TreeMesh:
     @property
     @cython.boundscheck(False)
     def average_node_to_cell(self):
-        "Construct the averaging operator on cell nodes to cell centers."
+        """Averaging operator from nodes to cell centers (scalar quantities).
+
+        This property constructs a 2nd order averaging operator that maps scalar
+        quantities from nodes to cell centers. This averaging operator is
+        used when a discrete scalar quantity defined on mesh nodes must be
+        projected to cell centers. Once constructed, the operator is stored
+        permanently as a property of the mesh. *See notes*.
+
+        Returns
+        -------
+        (n_cells, n_nodes) scipy.sparse.csr_matrix
+            The scalar averaging operator from nodes to cell centers
+
+        Notes
+        -----
+        Let :math:`\\boldsymbol{\\phi_n}` be a discrete scalar quantity that
+        lives on mesh nodes. **average_node_to_cell** constructs a discrete
+        linear operator :math:`\\mathbf{A_{nc}}` that projects
+        :math:`\\boldsymbol{\\phi_f}` to cell centers, i.e.:
+
+        .. math::
+            \\boldsymbol{\\phi_c} = \\mathbf{A_{nc}} \\, \\boldsymbol{\\phi_n}
+
+        where :math:`\\boldsymbol{\\phi_c}` approximates the value of the scalar
+        quantity at cell centers. For each cell, we are simply averaging
+        the values defined on its nodes. The operation is implemented as a
+        matrix vector product, i.e.::
+
+            phi_c = Anc @ phi_n
+        """
         cdef np.int64_t[:] I, J
         cdef np.float64_t[:] V
         cdef np.int64_t ii, id, n_ppc
@@ -2723,8 +3896,17 @@ cdef class _TreeMesh:
 
     @property
     def average_node_to_edge_x(self):
-        """
-        Averaging operator on cell nodes to x-edges
+        """Averaging operator from nodes to x edges (scalar quantities).
+
+        This property constructs a 2nd order averaging operator that maps scalar
+        quantities from nodes to edges. This averaging operator is
+        used when a discrete scalar quantity defined on mesh nodes must be
+        projected to edges.
+
+        Returns
+        -------
+        (n_edges_x, n_nodes) scipy.sparse.csr_matrix
+            The scalar averaging operator from nodes to edges
         """
         if self._average_node_to_edge_x is not None:
             return self._average_node_to_edge_x
@@ -2751,8 +3933,17 @@ cdef class _TreeMesh:
 
     @property
     def average_node_to_edge_y(self):
-        """
-        Averaging operator on cell nodes to y-edges
+        """Averaging operator from nodes to y edges (scalar quantities).
+
+        This property constructs a 2nd order averaging operator that maps scalar
+        quantities from nodes to edges. This averaging operator is
+        used when a discrete scalar quantity defined on mesh nodes must be
+        projected to edges.
+
+        Returns
+        -------
+        (n_edges_y, n_nodes) scipy.sparse.csr_matrix
+            The scalar averaging operator from nodes to edges
         """
         if self._average_node_to_edge_y is not None:
             return self._average_node_to_edge_y
@@ -2779,8 +3970,17 @@ cdef class _TreeMesh:
 
     @property
     def average_node_to_edge_z(self):
-        """
-        Averaging operator on cell nodes to z-edges
+        """Averaging operator from nodes to z edges (scalar quantities).
+
+        This property constructs a 2nd order averaging operator that maps scalar
+        quantities from nodes to edges. This averaging operator is
+        used when a discrete scalar quantity defined on mesh nodes must be
+        projected to edges.
+
+        Returns
+        -------
+        (n_edges_z, n_nodes) scipy.sparse.csr_matrix
+            The scalar averaging operator from nodes to edges
         """
         if self._dim == 2:
             raise Exception('TreeMesh has no z-edges in 2D')
@@ -2809,9 +4009,36 @@ cdef class _TreeMesh:
 
     @property
     def average_node_to_edge(self):
-        """
-        Construct the averaging operator on cell nodes to cell edges, keeping
-        each dimension separate.
+        """Averaging operator from nodes to edges (scalar quantities).
+
+        This property constructs a 2nd order averaging operator that maps scalar
+        quantities from nodes to edges; scalar at edges is organized in a 1D numpy.array
+        of the form [x-edges, y-edges, z-edges]. This averaging operator is
+        used when a discrete scalar quantity defined on mesh nodes must be
+        projected to edges. Once constructed, the operator is stored
+        permanently as a property of the mesh. *See notes*.
+
+        Returns
+        -------
+        (n_edges, n_nodes) scipy.sparse.csr_matrix
+            The scalar averaging operator from nodes to edges
+
+        Notes
+        -----
+        Let :math:`\\boldsymbol{\\phi_n}` be a discrete scalar quantity that
+        lives on mesh nodes. **average_node_to_edge** constructs a discrete
+        linear operator :math:`\\mathbf{A_{ne}}` that projects
+        :math:`\\boldsymbol{\\phi_n}` to edges, i.e.:
+
+        .. math::
+            \\boldsymbol{\\phi_e} = \\mathbf{A_{ne}} \\, \\boldsymbol{\\phi_n}
+
+        where :math:`\\boldsymbol{\\phi_e}` approximates the value of the scalar
+        quantity at edges. For each edge, we are simply averaging
+        the values defined on the nodes it connects. The operation is implemented as a
+        matrix vector product, i.e.::
+
+            phi_e = Ane @ phi_n
         """
         if self._average_node_to_edge is not None:
             return self._average_node_to_edge
@@ -2824,8 +4051,17 @@ cdef class _TreeMesh:
 
     @property
     def average_node_to_face_x(self):
-        """
-        Averaging operator on cell nodes to x-faces
+        """Averaging operator from nodes to x faces (scalar quantities).
+
+        This property constructs a 2nd order averaging operator that maps scalar
+        quantities from nodes to edges. This averaging operator is
+        used when a discrete scalar quantity defined on mesh nodes must be
+        projected to faces.
+
+        Returns
+        -------
+        (n_faces_x, n_nodes) scipy.sparse.csr_matrix
+            The scalar averaging operator from nodes to faces
         """
         if self._dim == 2:
             return self.average_node_to_edge_y
@@ -2854,8 +4090,17 @@ cdef class _TreeMesh:
 
     @property
     def average_node_to_face_y(self):
-        """
-        Averaging operator on cell nodes to y-faces
+        """Averaging operator from nodes to y faces (scalar quantities).
+
+        This property constructs a 2nd order averaging operator that maps scalar
+        quantities from nodes to edges. This averaging operator is
+        used when a discrete scalar quantity defined on mesh nodes must be
+        projected to faces.
+
+        Returns
+        -------
+        (n_faces_y, n_nodes) scipy.sparse.csr_matrix
+            The scalar averaging operator from nodes to faces
         """
         if self._dim == 2:
             return self.average_node_to_edge_x
@@ -2885,8 +4130,17 @@ cdef class _TreeMesh:
 
     @property
     def average_node_to_face_z(self):
-        """
-        Averaging operator on cell nodes to z-faces
+        """Averaging operator from nodes to z faces (scalar quantities).
+
+        This property constructs a 2nd order averaging operator that maps scalar
+        quantities from nodes to edges. This averaging operator is
+        used when a discrete scalar quantity defined on mesh nodes must be
+        projected to faces.
+
+        Returns
+        -------
+        (n_faces_z, n_nodes) scipy.sparse.csr_matrix
+            The scalar averaging operator from nodes to faces
         """
         if self._dim == 2:
             raise Exception('TreeMesh has no z faces in 2D')
@@ -2916,9 +4170,36 @@ cdef class _TreeMesh:
 
     @property
     def average_node_to_face(self):
-        """
-        Construct the averaging operator on cell nodes to cell edges, keeping
-        each dimension separate.
+        """Averaging operator from nodes to faces (scalar quantities).
+
+        This property constructs a 2nd order averaging operator that maps scalar
+        quantities from nodes to edges; scalar at faces is organized in a 1D numpy.array
+        of the form [x-faces, y-faces, z-faces]. This averaging operator is
+        used when a discrete scalar quantity defined on mesh nodes must be
+        projected to faces. Once constructed, the operator is stored
+        permanently as a property of the mesh. *See notes*.
+
+        Returns
+        -------
+        (n_faces, n_nodes) scipy.sparse.csr_matrix
+            The scalar averaging operator from nodes to faces
+
+        Notes
+        -----
+        Let :math:`\\boldsymbol{\\phi_n}` be a discrete scalar quantity that
+        lives on mesh nodes. **average_node_to_face** constructs a discrete
+        linear operator :math:`\\mathbf{A_{nf}}` that projects
+        :math:`\\boldsymbol{\\phi_n}` to faces, i.e.:
+
+        .. math::
+            \\boldsymbol{\\phi_f} = \\mathbf{A_{nf}} \\, \\boldsymbol{\\phi_n}
+
+        where :math:`\\boldsymbol{\\phi_f}` approximates the value of the scalar
+        quantity at faces. For each face, we are simply averaging the values at
+        the nodes which outline the face. The operation is implemented as a
+        matrix vector product, i.e.::
+
+            phi_f = Anf @ phi_n
         """
         if self._average_node_to_face is not None:
             return self._average_node_to_face
@@ -2931,7 +4212,44 @@ cdef class _TreeMesh:
 
     @property
     def average_cell_to_face(self):
-        "Construct the averaging operator on cell centers to cell faces."
+        """Averaging operator from cell centers to faces (scalar quantities).
+
+        This property constructs an averaging operator that maps scalar
+        quantities from cell centers to face. This averaging operator is
+        used when a discrete scalar quantity defined cell centers must be
+        projected to faces. Once constructed, the operator is stored
+        permanently as a property of the mesh. *See notes*.
+
+        Returns
+        -------
+        (n_faces, n_cells) scipy.sparse.csr_matrix
+            The scalar averaging operator from cell centers to faces
+
+        Notes
+        -----
+        Let :math:`\\boldsymbol{\\phi_c}` be a discrete scalar quantity that
+        lives at cell centers. **average_cell_to_face** constructs a discrete
+        linear operator :math:`\\mathbf{A_{cf}}` that projects
+        :math:`\\boldsymbol{\\phi_c}` to faces, i.e.:
+
+        .. math::
+            \\boldsymbol{\\phi_f} = \\mathbf{A_{cf}} \\, \\boldsymbol{\\phi_c}
+
+        where :math:`\\boldsymbol{\\phi_f}` approximates the value of the scalar
+        quantity at the faces. For each face, we are performing a weighted average
+        between the values at adjacent cell centers. In 1D, where adjacent cells
+        :math:`i` and :math:`i+1` have widths :math:`h_i` and :math:`h_{i+1}`,
+        :math:`\\phi` on face is approximated by:
+
+        .. math::
+            \\phi_{i \\! + \\! 1/2} \\approx \\frac{h_{i+1} \\phi_i + h_i \\phi_{i+1}}{h_i + h_{i+1}}
+
+        On boundary faces, nearest neighbour is used to extrapolate the value
+        from the nearest cell center. Once the operator is construct, the averaging
+        is implemented as a matrix vector product, i.e.::
+
+            phi_f = Acf @ phi_c
+        """
         if self._average_cell_to_face is not None:
             return self._average_cell_to_face
         stacks = [self.average_cell_to_face_x, self.average_cell_to_face_y]
@@ -2943,7 +4261,55 @@ cdef class _TreeMesh:
 
     @property
     def average_cell_vector_to_face(self):
-        "Construct the averaging operator on cell centers to cell faces."
+        """Averaging operator from cell centers to faces (vector quantities).
+
+        This property constructs the averaging operator that independently maps the
+        Cartesian components of vector quantities from cell centers to faces.
+        This averaging operators is used when a discrete vector quantity defined at
+        cell centers must be approximated on the faces. Once constructed, the operator is
+        stored permanently as a property of the mesh.
+
+        Be aware that the Cartesian components of the original vector
+        are defined seperately at cell centers in a 1D numpy.array organized [ux, uy, uz].
+        Once projected to faces, the Cartesian components are defined on their respective
+        faces; e.g. the x-component lives on x-faces. The operation is implemented as a
+        matrix vector product, i.e.::
+
+            u_f = Acf @ u_c
+
+        Returns
+        -------
+        (n_faces, dim * n_cells) scipy.sparse.csr_matrix
+            The vector averaging operator from cell centers to faces. Since we
+            are averaging a vector quantity from cell centers, the second dimension
+            of the operator is the mesh dimension times the number of cells.
+
+        Notes
+        -----
+        Let :math:`\\mathbf{u_c}` be the discrete representation of a vector
+        quantity whose Cartesian components are defined separately at cell centers.
+        **average_cell_vector_to_face** constructs a discrete linear operator
+        :math:`\\mathbf{A_{cf}}` that projects each Cartesian component of
+        :math:`\\mathbf{u_c}` to the faces, i.e.:
+
+        .. math::
+            \\mathbf{u_f} = \\mathbf{A_{cf}} \\, \\mathbf{u_c}
+
+        where :math:`\\mathbf{u_f}` is the discrete vector quantity whose Cartesian
+        components are approximated on their respective cell faces; e.g. the x-component is
+        approximated on x-faces. For each face (x, y or z), we are simply taking a weighted average
+        between the values of the correct Cartesian component at the corresponding cell centers.
+
+        E.g. for the x-component, which is projected to x-faces, the weighted average on
+        a 2D mesh would be:
+
+        .. math::
+            u_x(i \\! + \\! 1/2, j) = \\frac{h_{i+1} u_x (i,j) + h_i u_x(i \\! + \\! 1,j)}{hx_i + hx_{i+1}}
+
+        where :math:`h_i` and :math:`h_{i+1}` represent the cell respective cell widths
+        in the x-direction. For boundary faces, nearest neighbor is used to extrapolate
+        the values.
+        """
         if self._average_cell_vector_to_face is not None:
             return self._average_cell_vector_to_face
         stacks = [self.average_cell_to_face_x, self.average_cell_to_face_y]
@@ -2955,7 +4321,18 @@ cdef class _TreeMesh:
 
     @property
     def average_cell_to_face_x(self):
-        "Construct the averaging operator on cell centers to cell x-faces."
+        """Averaging operator from cell centers to x faces (scalar quantities).
+
+        This property constructs an averaging operator that maps scalar
+        quantities from cell centers to face. This averaging operator is
+        used when a discrete scalar quantity defined cell centers must be
+        projected to faces.
+
+        Returns
+        -------
+        (n_faces_x, n_cells) scipy.sparse.csr_matrix
+            The scalar averaging operator from cell centers to x faces
+        """
         if self._average_cell_to_face_x is not None:
             return self._average_cell_to_face_x
         cdef np.int64_t[:] I = np.zeros(2*self.n_total_faces_x, dtype=np.int64)
@@ -3060,7 +4437,18 @@ cdef class _TreeMesh:
 
     @property
     def average_cell_to_face_y(self):
-        "Construct the averaging operator on cell centers to cell y-faces."
+        """Averaging operator from cell centers to y faces (scalar quantities).
+
+        This property constructs an averaging operator that maps scalar
+        quantities from cell centers to face. This averaging operator is
+        used when a discrete scalar quantity defined cell centers must be
+        projected to faces.
+
+        Returns
+        -------
+        (n_faces_y, n_cells) scipy.sparse.csr_matrix
+            The scalar averaging operator from cell centers to y faces
+        """
         if self._average_cell_to_face_y is not None:
             return self._average_cell_to_face_y
         cdef np.int64_t[:] I = np.zeros(2*self.n_total_faces_y, dtype=np.int64)
@@ -3165,7 +4553,18 @@ cdef class _TreeMesh:
 
     @property
     def average_cell_to_face_z(self):
-        "Construct the averaging operator on cell centers to cell z-faces."
+        """Averaging operator from cell centers to z faces (scalar quantities).
+
+        This property constructs an averaging operator that maps scalar
+        quantities from cell centers to face. This averaging operator is
+        used when a discrete scalar quantity defined cell centers must be
+        projected to faces.
+
+        Returns
+        -------
+        (n_faces_z, n_cells) scipy.sparse.csr_matrix
+            The scalar averaging operator from cell centers to z faces
+        """
         if self.dim == 2:
             raise Exception('TreeMesh has no z-faces in 2D')
         if self._average_cell_to_face_z is not None:
@@ -3241,6 +4640,21 @@ cdef class _TreeMesh:
 
     @property
     def project_face_to_boundary_face(self):
+        """Projection matrix from all faces to boundary faces.
+
+        Constructs and returns a matrix :math:`\\mathbf{P}` that projects from
+        all mesh faces to boundary faces. That is, for a discrete vector
+        :math:`\\mathbf{u}` that lives on the faces, the values on the boundary
+        faces :math:`\\mathbf{u_b}` can be extracted via the following
+        matrix-vector product::
+
+            ub = P @ u
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            (n_boundary_faces, n_faces) Projection matrix with shape
+        """
         faces_x = self.faces_x
         faces_y = self.faces_y
 
@@ -3261,6 +4675,21 @@ cdef class _TreeMesh:
 
     @property
     def project_edge_to_boundary_edge(self):
+        """Projection matrix from all edges to boundary edges.
+
+        Constructs and returns a matrix :math:`\\mathbf{P}` that projects from
+        all mesh edges to boundary edges. That is, for a discrete vector
+        :math:`\\mathbf{u}` that lives on the edges, the values on the boundary
+        edges :math:`\\mathbf{u_b}` can be extracted via the following
+        matrix-vector product::
+
+            ub = P @ u
+
+        Returns
+        -------
+        (n_boundary_edges, n_edges) scipy.sparse.csr_matrix
+            Projection matrix with shape
+        """
         edges_x = self.edges_x
         edges_y = self.edges_y
 
@@ -3288,6 +4717,21 @@ cdef class _TreeMesh:
 
     @property
     def project_node_to_boundary_node(self):
+        """Projection matrix from all nodes to boundary nodes.
+
+        Constructs and returns a matrix :math:`\\mathbf{P}` that projects from
+        all mesh nodes to boundary nodes. That is, for a discrete scalar
+        :math:`\\mathbf{u}` that lives on the nodes, the values on the boundary
+        nodes :math:`\\mathbf{u_b}` can be extracted via the following
+        matrix-vector product::
+
+            ub = P @ u
+
+        Returns
+        -------
+        (n_boundary_nodes, n_nodes) scipy.sparse.csr_matrix
+            Projection matrix with shape
+        """
         nodes = self.nodes
         x0, xF = self._xs[0], self._xs[-1]
         y0, yF = self._ys[0], self._ys[-1]
@@ -3698,7 +5142,7 @@ cdef class _TreeMesh:
 
         Returns
         -------
-        numpy.ndarray of ints
+        numpy.ndarray of int
             Index array of shape (n_cells, 4) if 2D, or (n_cells, 6) if 3D
 
         Notes
@@ -3724,7 +5168,7 @@ cdef class _TreeMesh:
 
         Returns
         -------
-        tuple of numpy.ndarray of ints
+        (dim) tuple of numpy.ndarray of int
             One numpy array for each edge type (x, y, (z)) for this mesh.
 
         Notes
@@ -4336,6 +5780,19 @@ cdef class _TreeMesh:
         return sp.csr_matrix((all_weights, row_inds, indptr), shape=(self.n_cells, in_tens_mesh.n_cells))
 
     def get_overlapping_cells(self, rectangle):
+        """Find the indicis of cells that overlap the given rectangle
+
+        Parameters
+        ----------
+        rectangle: (dim * 2) array_like
+            array ordered ``[x_min, x_max, y_min, y_max, (z_min, z_max)]`` describing
+            the axis aligned rectangle of interest.
+
+        Returns
+        -------
+        list of int
+            The indices of cells which overlap the axis aligned rectangle.
+        """
         cdef double xm, ym, zm, xp, yp, zp
         cdef double[:] origin = self._origin
         cdef double[:] xF

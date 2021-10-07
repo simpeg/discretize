@@ -2,7 +2,9 @@ cython
 sphinx
 sphinx_rtd_theme
 sphinx-gallery
+sphinx-toolbox
 sphinxcontrib-apidoc
+pydata-sphinx-theme
 pillow
 pytest
 pytest-cov

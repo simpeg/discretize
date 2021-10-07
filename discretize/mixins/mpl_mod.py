@@ -13,11 +13,13 @@ import discretize
 
 
 class InterfaceMPL(object):
-    """This class is used for simple ``discretize`` mesh plotting using matplotlib.
+    """Class for plotting ``discretize`` meshes with matplotlib.
 
-    This interface adds three methods to the meshes. ``plot_grid`` will plot the
-    grid points of each mesh in 2D and 3D. ``plot_image`` for 2D image ploting of
-    models. and ``plot_slice`` for plotting a 2D slice through a 3D mesh.
+    This interface adds three plotting methods to all ``discretize`` meshes.
+    :py:attr:`~InterfaceMPL.plot_grid` will plot gridded points for 2D and 3D meshes.
+    :py:attr:`~InterfaceMPL.plot_image` is used for plotting models, scalars and vectors
+    defined on a given mesh. And :py:attr:`~InterfaceMPL.plot_slice` is used for plotting
+    models, scalars and vectors on a 2D slice through a 3D mesh.
     """
 
     def plot_grid(
@@ -31,20 +33,25 @@ class InterfaceMPL(object):
         show_it=False,
         **kwargs,
     ):
-        """Plot the nodal, cell-centered and staggered grids.
+        """Plot the grid for nodal, cell-centered and staggered grids.
+
+        For 2D and 3D meshes, this method plots the mesh grid. Additionally,
+        the user can choose to denote edge, face, node and cell center locations.
+        This function is built upon the ``matplotlib.pyplot.plot`` function
+        and will accept associated keyword arguments.
 
         Parameters
         ----------
         ax : matplotlib.axes.Axes or None, optional
-            The axes to draw on. None produces a new Axes.
+            The axes to draw on. *None* produces a new axes.
         nodes, faces, centers, edges, lines : bool, optional
             Whether to plot the corresponding item
         show_it : bool, optional
             whether to call plt.show()
         color : Color or str, optional
-            If lines=True, the color of the lines, defaults to first color.
+            If lines=True, defines the color of the grid lines.
         linewidth : float, optional
-            If lines=True, the linewidth for the lines.
+            If lines=True, defines the thickness of the grid lines.
 
         Returns
         -------
@@ -199,18 +206,25 @@ class InterfaceMPL(object):
         stream_threshold=None,
         **kwargs,
     ):
-        """Plots fields on the given mesh.
+        """Plots quantities defined on a given mesh.
+
+        This method is primarily used to plot models, scalar quantities and vector
+        quantities defined on 2D meshes. For 3D :class:`discretize.TensorMesh` however,
+        this method will plot the quantity for every slice of the 3D mesh.
 
         Parameters
         ----------
         v : numpy.ndarray
-            values to plot
+            Gridded values being plotted. The length of the array depends on the quantity being
+            plotted; e.g. if the quantity is a scalar value defined on mesh nodes, the
+            length must be equal to the number of mesh nodes.
         v_type : {'CC','CCV', 'N', 'F', 'Fx', 'Fy', 'Fz', 'E', 'Ex', 'Ey', 'Ez'}
-            Where the values of v are defined.
+            Defines the input parameter *v*.
         view : {'real', 'imag', 'abs', 'vec'}
-            How to view the array.
+            For complex scalar quantities, options are included to image the real, imaginary or
+            absolute value. For vector quantities, *view* must be set to 'vec'.
         ax : matplotlib.axes.Axes, optional
-            The axes to draw on. None produces a new Axes.
+            The axes to draw on. *None* produces a new Axes.
         clim : tuple of float, optional
             length 2 tuple of (vmin, vmax) for the color limits
         range_x, range_y : tuple of float, optional
@@ -232,9 +246,9 @@ class InterfaceMPL(object):
         show_it : bool, optional
             Whether to call plt.show()
         numbering : bool, optional
-            For 3D TensorMesh only, show the numbering of the slices
+            For 3D :class:`~discretize.TensorMesh` only, show the numbering of the slices
         annotation_color : Color or str, optional
-            For 3D TensorMesh only, color of the annotation
+            For 3D :class:`~discretize.TensorMesh` only, color of the annotation
 
         Examples
         --------
@@ -2165,7 +2179,7 @@ class InterfaceMPL(object):
                 vecs[:, 1],
                 **quiver_opts,
             )
-            out = (qvr,)
+            out = (out, qvr,)
 
         return out
 
@@ -2181,56 +2195,32 @@ class Slicer(object):
 
         %matplotlib notebook
 
-    The straight forward usage for the Slicer is through, e.g., a
-    `TensorMesh`-mesh, by accessing its `mesh.plot_3d_slicer`.
 
-    If you, however, call this class directly, you have first to initiate a
-    figure, and afterwards connect it:
-
-    >>> # You have to initialize a figure
-    >>> fig = plt.figure()
-    >>> # Then you have to get the tracker from the Slicer
-    >>> tracker = discretize.View.Slicer(mesh, Lpout)
-    >>> # Finally you have to connect the tracker to the figure
-    >>> fig.canvas.mpl_connect('scroll_event', tracker.onscroll)
-    >>> plt.show()
-
-
-    **Parameters**
-
-    v : array
-        Data array of length self.nC.
-
-    xslice, yslice, zslice : floats, optional
+    Parameters
+    ----------
+    v : (n_cells) numpy.ndarray
+        Data array
+    xslice, yslice, zslice : float, optional
         Initial slice locations (in meter);
         defaults to the middle of the volume.
-
-    v_type: str
-        Type of visualization. Default is 'CC'.
-        One of ['CC', 'Fx', 'Fy', 'Fz', 'Ex', 'Ey', 'Ez'].
-
-    view : str
-        Which component to show. Defaults to 'real'.
-        One of  ['real', 'imag', 'abs'].
-
-    axis : 'xy' (default) or 'yx'
+    v_type: {'CC', 'Fx', 'Fy', 'Fz', 'Ex', 'Ey', 'Ez'}
+        Type of visualization.
+    view : {'real', 'imag', 'abs'}
+        Which component to show.
+    axis : {'xy', 'yx'}
         'xy': horizontal axis is x, vertical axis is y. Reversed otherwise.
-
-    transparent : 'slider' or list of floats or pairs of floats, optional
+    transparent : 'slider' or list of float or pairs of float, optional
         Values to be removed. E.g. air, water.
         If single value, only exact matches are removed. Pairs are treated as
         ranges. E.g. [0.3, [1, 4], [-np.infty, -10]] removes all values equal
         to 0.3, all values between 1 and 4, and all values smaller than -10.
         If 'slider' is provided it will plot an interactive slider to choose
         the shown range.
-
     clim : None or list of [min, max]
         For `pcolormesh` (`vmin`, `vmax`). Note: if you use a `norm` (e.g.,
         `LogNorm`) then `vmin`/`vmax` have to be provided in the norm.
-
     xlim, ylim, zlim : None or list of [min, max]
         Axis limits.
-
     aspect : 'auto', 'equal', or num
         Aspect ratio of subplots. Defaults to 'auto'.
 
@@ -2240,12 +2230,29 @@ class Slicer(object):
 
         WARNING: For anything else than 'auto', unexpected things might happen
                  when zooming, and the subplot-arrangement won't look pretty.
-
-    grid : list of 3 int
+    grid : (3) list of int
         Number of cells occupied by x, y, and z dimension on plt.subplot2grid.
-
     pcolor_opts : dictionary
         Passed to `pcolormesh`.
+
+    Examples
+    --------
+    The straight forward usage for the Slicer is through, e.g., a
+    `TensorMesh`-mesh, by accessing its `mesh.plot_3d_slicer`.
+
+    If you, however, call this class directly, you have first to initiate a
+    figure, and afterwards connect it:
+
+    >>> fig = plt.figure()
+
+    Then you have to get the tracker from the Slicer
+
+    >>> tracker = discretize.View.Slicer(mesh, Lpout)
+
+    Finally you have to connect the tracker to the figure
+
+    >>> fig.canvas.mpl_connect('scroll_event', tracker.onscroll)
+    >>> plt.show()
 
     """
 
@@ -2379,14 +2386,14 @@ class Slicer(object):
             if clim[0] == clim[1]:
                 clim[0] *= 0.99
                 clim[1] *= 1.01
-        else:
-            self.pc_props["vmin"] = clim[0]
-            self.pc_props["vmax"] = clim[1]
 
         # ensure vmin/vmax of the norm is consistent with clim
         if "norm" in self.pc_props:
             self.pc_props["norm"].vmin = clim[0]
             self.pc_props["norm"].vmax = clim[1]
+        else:
+            self.pc_props["vmin"] = clim[0]
+            self.pc_props["vmax"] = clim[1]
 
         # 2. Start populating figure
 
@@ -2461,7 +2468,7 @@ class Slicer(object):
             self.ax3.set_xlim([zlim[1], zlim[0]])
 
         # Cross-line properties
-        # We have to lines, a thick white one, and in the middle a thin black
+        # We have two lines, a thick white one, and in the middle a thin black
         # one, to assure that the lines can be seen on dark and on bright
         # spots.
         self.clpropsw = {"c": "w", "lw": 2, "zorder": 10}

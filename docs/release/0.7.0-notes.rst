@@ -12,7 +12,7 @@ removing the ``properties`` requirement from ``discretize``.
 
 
 Removal of ``properties``
------------------------
+-------------------------
 Starting with the largest change, we have made the decision to remove the properties
 backend of `discretize`. Our main motivation for this was to give ourselves more control
 over the documentation of classes. Our goal was to recreate the functionality without

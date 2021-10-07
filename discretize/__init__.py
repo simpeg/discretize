@@ -1,3 +1,34 @@
+"""
+=====================================
+Discretize Meshes (:mod:`discretize`)
+=====================================
+.. currentmodule:: discretize
+
+The ``discretize`` package contains four types of meshes for soliving partial differential
+equations using the finite volume method.
+
+Mesh Classes
+============
+.. autosummary::
+  :toctree: generated/
+
+  TensorMesh
+  CylindricalMesh
+  CurvilinearMesh
+  TreeMesh
+
+Tree Mesh Cells
+===============
+The :class:`~discretize.tree_mesh.TreeCell` class was designed specificialy to define the cells within tree meshes.
+Instances of :class:`~discretize.tree_mesh.TreeCell` are not meant to be created on there own.
+However, they can be returned directly by indexing a particular cell within a tree mesh.
+
+.. autosummary::
+  :toctree: generated/
+
+  tree_mesh.TreeCell
+"""
+
 from discretize.tensor_mesh import TensorMesh
 from discretize.cylindrical_mesh import CylMesh, CylindricalMesh
 from discretize.curvilinear_mesh import CurvilinearMesh

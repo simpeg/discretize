@@ -99,8 +99,69 @@ from discretize.utils.code_utils import deprecate_property
 class TreeMesh(
     _TreeMesh, BaseTensorMesh, InnerProducts, DiffOperators, TreeMeshIO, InterfaceMixins
 ):
-    """
-    TreeMesh is a class for adaptive QuadTree (2D) and OcTree (3D) meshes.
+    """Class for QuadTree (2D) and OcTree (3D) meshes.
+
+    Tree meshes are numerical grids where the dimensions of each cell are powers of 2
+    larger than some base cell dimension. Unlike the :class:`~discretize.TensorMesh`
+    class, gridded locations and numerical operators for instances of ``TreeMesh``
+    cannot be simply constructed using tensor products. Furthermore, each cell
+    is an instance of ``TreeMesh`` is an instance of the
+    :class:`~discretize.tree_mesh.TreeCell` .
+
+    Parameters
+    ----------
+    h : (dim) iterable of int, numpy.ndarray, or tuple
+        Defines the cell widths of the *underlying tensor mesh* along each axis. The
+        length of the iterable object is equal to the dimension of the mesh (2 or 3).
+        For a 3D mesh, the list would have the form *[hx, hy, hz]*. The number of cells
+        along each axis **must be a power of 2** .
+
+        Along each axis, the user has 3 choices for defining the cells widths for the
+        underlying tensor mesh:
+
+        - :class:`int` -> A unit interval is equally discretized into `N` cells.
+        - :class:`numpy.ndarray` -> The widths are explicity given for each cell
+        - the widths are defined as a :class:`list` of :class:`tuple` of the form *(dh, nc, [npad])*
+          where *dh* is the cell width, *nc* is the number of cells, and *npad* (optional)
+          is a padding factor denoting exponential increase/decrease in the cell width
+          for each cell; e.g. *[(2., 10, -1.3), (2., 50), (2., 10, 1.3)]*
+
+    origin : (dim) iterable, default: 0
+        Define the origin or 'anchor point' of the mesh; i.e. the bottom-left-frontmost
+        corner. By default, the mesh is anchored such that its origin is at [0, 0, 0].
+
+        For each dimension (x, y or z), The user may set the origin 2 ways:
+
+        - a ``scalar`` which explicitly defines origin along that dimension.
+        - **{'0', 'C', 'N'}** a :class:`str` specifying whether the zero coordinate along
+          each axis is the first node location ('0'), in the center ('C') or the last
+          node location ('N') (see Examples).
+
+    Examples
+    --------
+    Here we generate a basic 2D tree mesh.
+
+    >>> from discretize import TreeMesh
+    >>> import numpy as np
+    >>> import matplotlib.pyplot as plt
+
+    Define base mesh (domain and finest discretization),
+
+    >>> dh = 5    # minimum cell width (base mesh cell width)
+    >>> nbc = 64  # number of base mesh cells
+    >>> h = dh * np.ones(nbc)
+    >>> mesh = TreeMesh([h, h])
+
+    Define corner points for a rectangular box, and subdived the mesh within the box
+    to the maximum refinement level.
+
+    >>> x0s = [120.0, 80.0]
+    >>> x1s = [240.0, 160.0]
+    >>> levels = [mesh.max_level]
+    >>> mesh.refine_box(x0s, x1s, levels)
+
+    >>> mesh.plot_grid()
+    >>> plt.show()
     """
 
     _meshType = "TREE"
@@ -291,12 +352,34 @@ class TreeMesh(
 
     @property
     def vntF(self):
-        """Total number of hanging and non-hanging faces in a [nx,ny,nz] form"""
+        """
+        Vector number of total faces along each axis
+
+        This property returns the total number of hanging and
+        non-hanging faces along each axis direction. The returned
+        quantity is a list of integers of the form [nFx,nFy,nFz].
+
+        Returns
+        -------
+        list of int
+            Vector number of total faces along each axis
+        """
         return [self.ntFx, self.ntFy] + ([] if self.dim == 2 else [self.ntFz])
 
     @property
     def vntE(self):
-        """Total number of hanging and non-hanging edges in a [nx,ny,nz] form"""
+        """
+        Vector number of total edges along each axis
+
+        This property returns the total number of hanging and
+        non-hanging edges along each axis direction. The returned
+        quantity is a list of integers of the form [nEx,nEy,nEz].
+
+        Returns
+        -------
+        list of int
+            Vector number of total edges along each axis
+        """
         return [self.ntEx, self.ntEy] + ([] if self.dim == 2 else [self.ntEz])
 
     @property
@@ -315,10 +398,6 @@ class TreeMesh(
 
     @property
     def cell_gradient(self):
-        """
-        Cell centered Gradient operator built off of the faceDiv operator.
-        Grad =  - (Mf)^{-1} * Div * diag (volume)
-        """
         if getattr(self, "_cell_gradient", None) is None:
 
             i_s = self.face_boundary_indices
@@ -353,10 +432,6 @@ class TreeMesh(
 
     @property
     def cell_gradient_x(self):
-        """
-        Cell centered Gradient operator in x-direction (Gradx)
-        Grad = sp.vstack((Gradx, Grady, Gradz))
-        """
         if getattr(self, "_cell_gradient_x", None) is None:
 
             nFx = self.nFx
@@ -378,10 +453,6 @@ class TreeMesh(
 
     @property
     def cell_gradient_y(self):
-        """
-        Cell centered Gradient operator in y-direction (Grady)
-        Grad = sp.vstack((Gradx, Grady, Gradz))
-        """
         if getattr(self, "_cell_gradient_y", None) is None:
 
             nFx = self.nFx
@@ -404,10 +475,6 @@ class TreeMesh(
 
     @property
     def cell_gradient_z(self):
-        """
-        Cell centered Gradient operator in z-direction (Gradz)
-        Grad = sp.vstack((Gradx, Grady, Gradz))
-        """
         if self.dim == 2:
             raise TypeError("z derivative not defined in 2D")
         if getattr(self, "_cell_gradient_z", None) is None:
@@ -457,12 +524,12 @@ class TreeMesh(
 
         Parameters
         ----------
-        locs: array_like of shape (N, dim)
+        locs: (N, dim) array_like
             points to search for the location of
 
         Returns
         -------
-        numpy.array of integers of length(N)
+        (N) array_like of int
             Cell indices that contain the points
         """
         locs = as_array_n_by_dim(locs, self.dim)
@@ -474,12 +541,12 @@ class TreeMesh(
 
         Parameters
         ----------
-        index: array_like of length (N)
+        index: (N) array_like
             Cell indexes to query
 
         Returns
         -------
-        numpy.array of length (N)
+        (N) numpy.ndarray of int
             Levels for the cells.
         """
 
@@ -492,27 +559,27 @@ class TreeMesh(
 
         Parameters
         ----------
-        loc : numpy.ndarray
+        loc : (N, dim) array_like
             Location of points to interpolate to
 
-        location_type: str
+        location_type: str, optional
             What to interpolate
 
-            location_type can be::
+            location_type can be:
 
-                'Ex'    -> x-component of field defined on edges
-                'Ey'    -> y-component of field defined on edges
-                'Ez'    -> z-component of field defined on edges
-                'Fx'    -> x-component of field defined on faces
-                'Fy'    -> y-component of field defined on faces
-                'Fz'    -> z-component of field defined on faces
-                'N'     -> scalar field defined on nodes
-                'CC'    -> scalar field defined on cell centers
+            - 'CC'    -> scalar field defined on cell centers
+            - 'Ex'    -> x-component of field defined on edges
+            - 'Ey'    -> y-component of field defined on edges
+            - 'Ez'    -> z-component of field defined on edges
+            - 'Fx'    -> x-component of field defined on faces
+            - 'Fy'    -> y-component of field defined on faces
+            - 'Fz'    -> z-component of field defined on faces
+            - 'N'     -> scalar field defined on nodes
 
         Returns
         -------
-        scipy.sparse.csr_matrix
-            M, the interpolation matrix
+        (N, n_loc_type) scipy.sparse.csr_matrix
+            the interpolation matrix
 
         """
         if "locType" in kwargs:
@@ -552,14 +619,24 @@ class TreeMesh(
 
     @property
     def permute_cells(self):
-        """Permutation matrix re-ordering of cells sorted by x, then y, then z"""
+        """Permutation matrix re-ordering of cells sorted by x, then y, then z
+
+        Returns
+        -------
+        (n_cells, n_cells) scipy.sparse.csr_matrix
+        """
         # TODO: cache these?
         P = np.lexsort(self.gridCC.T)  # sort by x, then y, then z
         return sp.identity(self.nC).tocsr()[P]
 
     @property
     def permute_faces(self):
-        """Permutation matrix re-ordering of faces sorted by x, then y, then z"""
+        """Permutation matrix re-ordering of faces sorted by x, then y, then z
+
+        Returns
+        -------
+        (n_faces, n_faces) scipy.sparse.csr_matrix
+        """
         # TODO: cache these?
         Px = np.lexsort(self.gridFx.T)
         Py = np.lexsort(self.gridFy.T) + self.nFx
@@ -572,7 +649,12 @@ class TreeMesh(
 
     @property
     def permute_edges(self):
-        """Permutation matrix re-ordering of edges sorted by x, then y, then z"""
+        """Permutation matrix re-ordering of edges sorted by x, then y, then z
+
+        Returns
+        -------
+        (n_edges, n_edges) scipy.sparse.csr_matrix
+        """
         # TODO: cache these?
         Px = np.lexsort(self.gridEx.T)
         Py = np.lexsort(self.gridEy.T) + self.nEx
@@ -585,6 +667,19 @@ class TreeMesh(
 
     @property
     def cell_state(self):
+        """ The current state of the cells on the mesh.
+
+        This represents the x, y, z indices of the cells in the base tensor mesh, as
+        well as their levels. It can be used to reconstruct the mesh.
+
+        Returns
+        -------
+        dict
+            dictionary with two entries:
+
+            - ``"indexes"``: the indexes of the cells
+            - ``"levels"``: the levels of the cells
+        """
         indexes, levels = self.__getstate__()
         return {"indexes": indexes.tolist(), "levels": levels.tolist()}
 
@@ -674,6 +769,3 @@ class TreeMesh(
     _cellGradzStencil = deprecate_property(
         "stencil_cell_gradient_z", "_cellGradzStencil", removal_version="1.0.0"
     )
-
-
-TreeMesh.__module__ = "discretize"
