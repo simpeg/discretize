@@ -5,15 +5,19 @@ discretize
     :target: https://pypi.python.org/pypi/discretize
     :alt: Latest PyPI version
 
+.. image:: https://anaconda.org/conda-forge/discretize/badges/version.svg
+    :target: https://anaconda.org/conda-forge/discretize
+    :alt: Latest conda-forge version
+
 .. image:: https://img.shields.io/github/license/simpeg/simpeg.svg
-    :target: https://github.com/simpeg/discretize/blob/master/LICENSE
+    :target: https://github.com/simpeg/discretize/blob/main/LICENSE
     :alt: MIT license
 
-.. image:: https://dev.azure.com/simpeg/discretize/_apis/build/status/simpeg.discretize?branchName=master
-    :target: https://dev.azure.com/simpeg/discretize/_build/latest?definitionId=1&branchName=master
+.. image:: https://dev.azure.com/simpeg/discretize/_apis/build/status/simpeg.discretize?branchName=main
+    :target: https://dev.azure.com/simpeg/discretize/_build/latest?definitionId=1&branchName=main
     :alt: Azure pipelines build status
 
-.. image:: https://codecov.io/gh/simpeg/discretize/branch/master/graph/badge.svg
+.. image:: https://codecov.io/gh/simpeg/discretize/branch/main/graph/badge.svg
     :target: https://codecov.io/gh/simpeg/discretize
     :alt: Coverage status
 

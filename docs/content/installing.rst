@@ -65,8 +65,9 @@ discretize is on pypi::
 Installing from Source
 ----------------------
 
-If you are not a developer then pip is really the preferred way. However, if
-you are an active developer of discretize you might want to install if from source:
+If you are not a developer then conda-forge is really the preferred way. However, if
+you are an active developer of discretize, and find yourself modifying the code often,
+you might want to install if from source, in an editable installation:
 
 First (you need git)::
 
@@ -74,11 +75,10 @@ First (you need git)::
 
 Second (from the root of the discretize repository)::
 
-    python setup.py build_ext --inplace
+    pip install . -e
 
-This builds the cython extensions. You will also need to add
-the discretize directory to your PYTHON_PATH.
-
+This builds and installs the local directory to your active python environment in an
+"editable" (or refered to as "develop") mode.
 
 Testing your installation
 =========================

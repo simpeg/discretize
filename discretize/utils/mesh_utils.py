@@ -2,7 +2,6 @@ import numpy as np
 import scipy.ndimage as ndi
 import scipy.sparse as sp
 
-from discretize.utils.matrix_utils import ndgrid
 from discretize.utils.code_utils import as_array_n_by_dim, is_scalar
 from scipy.spatial import cKDTree, Delaunay
 from scipy import interpolate
@@ -13,97 +12,56 @@ import warnings
 num_types = [int, float]
 
 
-def example_curvilinear_grid(nC, exType):
-    if not isinstance(nC, list):
-        raise TypeError("nC must be a list containing the number of nodes")
-    if len(nC) != 2 and len(nC) != 3:
-        raise ValueError("nC must either two or three dimensions")
-    exType = exType.lower()
-
-    possibleTypes = ["rect", "rotate", "sphere"]
-    if exType not in possibleTypes:
-        raise TypeError("Not a possible example type.")
-
-    if exType == "rect":
-        return list(
-            ndgrid([np.cumsum(np.r_[0, np.ones(nx) / nx]) for nx in nC], vector=False)
-        )
-    elif exType == "sphere":
-        nodes = list(
-            ndgrid(
-                [np.cumsum(np.r_[0, np.ones(nx) / nx]) - 0.5 for nx in nC], vector=False
-            )
-        )
-        nodes = np.stack(nodes, axis=-1)
-        nodes = 2 * nodes
-        # L_inf distance to center
-        r0 = np.linalg.norm(nodes, ord=np.inf, axis=-1)
-        # L2 distance to center
-        r2 = np.linalg.norm(nodes, axis=-1)
-        r0[r0 == 0.0] = 1.0
-        r2[r2 == 0.0] = 1.0
-        scale = r0 / r2
-        nodes = nodes * scale[..., None]
-        nodes = np.transpose(nodes, (-1, *np.arange(len(nC))))
-        nodes = [node for node in nodes]  # turn it into a list
-        return nodes
-    elif exType == "rotate":
-        if len(nC) == 2:
-            X, Y = ndgrid(
-                [np.cumsum(np.r_[0, np.ones(nx) / nx]) for nx in nC], vector=False
-            )
-            amt = 0.5 - np.sqrt((X - 0.5) ** 2 + (Y - 0.5) ** 2)
-            amt[amt < 0] = 0
-            return [X + (-(Y - 0.5)) * amt, Y + (+(X - 0.5)) * amt]
-        elif len(nC) == 3:
-            X, Y, Z = ndgrid(
-                [np.cumsum(np.r_[0, np.ones(nx) / nx]) for nx in nC], vector=False
-            )
-            amt = 0.5 - np.sqrt((X - 0.5) ** 2 + (Y - 0.5) ** 2 + (Z - 0.5) ** 2)
-            amt[amt < 0] = 0
-            return [
-                X + (-(Y - 0.5)) * amt,
-                Y + (-(Z - 0.5)) * amt,
-                Z + (-(X - 0.5)) * amt,
-            ]
-
-
 def random_model(shape, seed=None, anisotropy=None, its=100, bounds=None):
-    """
-    Create a random model by convolving a kernel with a
-    uniformly distributed model.
+    """Create random tensor model.
+
+    Creates a random tensor model by convolving a kernel function with a
+    uniformly distributed model. The user specifies the number of cells
+    along the x, (y and z) directions with the input argument *shape* and
+    the function outputs a tensor model with the same shape. Afterwards,
+    the user may use the :py:func:`~discretize.utils.mkvc` function
+    to convert the tensor to a vector which can be plotting on a
+    corresponding tensor mesh.
 
     Parameters
     ----------
-    shape: tuple
+    shape : (dim) tuple of int
         shape of the model.
-    seed: int
-        pick which model to produce, prints the seed if you don't choose.
-    anisotropy: numpy.ndarray
-        this is the (3 x n) blurring kernel that is used.
-    its: int
+    seed : int, optional
+        pick which model to produce, prints the seed if you don't choose
+    anisotropy : numpy.ndarray, optional
+        this is the kernel that is convolved with the model
+    its : int, optional
         number of smoothing iterations
-    bounds: list
-        bounds on the model, len(list) == 2
+    bounds : list, optional
+        Lower and upper bounds on the model. Has the form [lower_bound, upper_bound].
 
     Returns
     -------
     numpy.ndarray
-        M, the model
+        A random generated model whose shape was specified by the input parameter *shape*
 
     Examples
     --------
+    Here, we generate a random model for a 2D tensor mesh and plot.
 
-    .. plot::
-        :include-source:
+    >>> from discretize import TensorMesh
+    >>> from discretize.utils import random_model, mkvc
+    >>> import matplotlib as mpl
+    >>> import matplotlib.pyplot as plt
 
-        import matplotlib.pyplot as plt
-        import discretize
-        plt.colorbar(plt.imshow(discretize.utils.random_model((50, 50), bounds=[-4, 0])))
-        plt.title('A very cool, yet completely random model.')
-        plt.show()
+    >>> h = [(1., 50)]
+    >>> vmin, vmax = 0., 1.
+    >>> mesh = TensorMesh([h, h])
 
+    >>> model = random_model(mesh.shape_cells, seed=4, bounds=[vmin, vmax])
 
+    >>> fig = plt.figure(figsize=(5, 4))
+    >>> ax = plt.subplot(111)
+    >>> im, = mesh.plot_image(model, grid=False, ax=ax, clim=[vmin, vmax])
+    >>> cbar = plt.colorbar(im)
+    >>> ax.set_title('Random Tensor Model')
+    >>> plt.show()
     """
     if bounds is None:
         bounds = [0, 1]
@@ -145,36 +103,51 @@ def random_model(shape, seed=None, anisotropy=None, its=100, bounds=None):
 
 
 def unpack_widths(value):
-    """**unpack_widths** takes a list of numbers and tuples
-    that have the form::
+    """Unpack a condensed representation of cell widths or time steps.
 
-        mT = [ float, (cellSize, numCell), (cellSize, numCell, factor) ]
+    For a list of numbers, if the same value is repeat or expanded by a constant
+    factor, it may be represented in a condensed form using list of floats
+    and/or tuples. **unpack_widths** takes a list of floats and/or tuples in
+    condensed form, e.g.:
 
-    For example, a time domain mesh code needs
-    many time steps at one time::
+        [ float, (cellSize, numCell), (cellSize, numCell, factor) ]
 
-        [(1e-5, 30), (1e-4, 30), 1e-3]
+    and expands the representation to a list containing all widths in order. That is:
 
-    Means take 30 steps at 1e-5 and then 30 more at 1e-4,
-    and then one step of 1e-3.
+        [ w1, w2, w3, ..., wn ]
 
-    Tensor meshes can also be created by increase factors::
+    Parameters
+    ----------
+    value : list of float and/or tuple
+        The list of floats and/or tuples that are to be unpacked
 
-        [(10.0, 5, -1.3), (10.0, 50), (10.0, 5, 1.3)]
+    Returns
+    -------
+    numpy.ndarray
+        The unpacked list with all widths in order
 
-    When there is a third number in the tuple, it
-    refers to the increase factor, if this number
-    is negative this section of the tensor is flipped right-to-left.
+    Examples
+    --------
+    Time stepping for time-domain codes can be represented in condensed form, e.g.:
 
-    .. plot::
-        :include-source:
+    >>> from discretize.utils import unpack_widths
+    >>> dt = [ (1e-5, 10), (1e-4, 4), 1e-3 ]
 
-        import discretize
-        tx = [(10.0, 10, -1.3), (10.0, 40), (10.0, 10, 1.3)]
-        ty = [(10.0, 10, -1.3), (10.0, 40)]
-        mesh = discretize.TensorMesh([tx, ty])
-        mesh.plot_grid(show_it=True)
+    The above means to take 10 steps at a step width of 1e-5 s and then
+    4 more at 1e-4 s, and then one step of 1e-3 s. When unpacked, the output is
+    of length 15 and is given by:
 
+    >>> unpack_widths(dt)
+    array([1.e-05, 1.e-05, 1.e-05, 1.e-05, 1.e-05, 1.e-05, 1.e-05, 1.e-05,
+           1.e-05, 1.e-05, 1.e-04, 1.e-04, 1.e-04, 1.e-04, 1.e-03])
+
+    Each axis of a tensor mesh can also be defined as a condensed list of floats
+    and/or tuples. When a third number is defined in any tuple, the width value
+    is successively expanded by that factor, e.g.:
+
+    >>> dt = [ 6., 8., (10.0, 3), (8.0, 4, 2.) ]
+    >>> unpack_widths(dt)
+    array([  6.,   8.,  10.,  10.,  10.,  16.,  32.,  64., 128.])
     """
     if type(value) is not list:
         raise Exception("unpack_widths must be a list of scalars and tuples.")
@@ -202,21 +175,55 @@ def unpack_widths(value):
 
 
 def closest_points_index(mesh, pts, grid_loc="CC", **kwargs):
-    """Move a list of points to the closest points on a grid.
+    """Find the indicies for the nearest grid location for a set of points.
 
     Parameters
     ----------
-    mesh: BaseMesh
-        The mesh
-    pts: numpy.ndarray
-        Points to move
-    grid_loc: {'CC', 'N', 'Fx', 'Fy', 'Fz', 'Ex', 'Ex', 'Ey', 'Ez'}
-        Which grid to move points to.
+    mesh : discretize.base.BaseMesh
+        An instance of *discretize.base.BaseMesh*
+    pts : (n, dim) numpy.ndarray
+        Points to query.
+    grid_loc : {'CC', 'N', 'Fx', 'Fy', 'Fz', 'Ex', 'Ex', 'Ey', 'Ez'}
+        Specifies the grid on which points are being moved to.
 
     Returns
     -------
-    numpy.ndarray
-        nodeInds
+    (n ) numpy.ndarray of int
+        Vector of length *n* containing the indicies for the closest
+        respective cell center, node, face or edge.
+
+    Examples
+    --------
+    Here we define a set of random (x, y) locations and find the closest
+    cell centers and nodes on a mesh.
+
+    >>> from discretize import TensorMesh
+    >>> from discretize.utils import closest_points_index
+    >>> import numpy as np
+    >>> import matplotlib.pyplot as plt
+    >>> h = 2*np.ones(5)
+    >>> mesh = TensorMesh([h, h], x0='00')
+
+    Define some random locations, grid cell centers and grid nodes,
+
+    >>> xy_random = np.random.uniform(0, 10, size=(4,2))
+    >>> xy_centers = mesh.cell_centers
+    >>> xy_nodes = mesh.nodes
+
+    Find indicies of closest cell centers and nodes,
+
+    >>> ind_centers = closest_points_index(mesh, xy_random, 'CC')
+    >>> ind_nodes = closest_points_index(mesh, xy_random, 'N')
+
+    Plot closest cell centers and nodes
+
+    >>> fig = plt.figure(figsize=(5, 5))
+    >>> ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
+    >>> mesh.plot_grid(ax=ax)
+    >>> ax.scatter(xy_random[:, 0], xy_random[:, 1], 50, 'k')
+    >>> ax.scatter(xy_centers[ind_centers, 0], xy_centers[ind_centers, 1], 50, 'r')
+    >>> ax.scatter(xy_nodes[ind_nodes, 0], xy_nodes[ind_nodes, 1], 50, 'b')
+    >>> plt.show()
     """
     if "gridLoc" in kwargs:
         warnings.warn(
@@ -235,25 +242,71 @@ def closest_points_index(mesh, pts, grid_loc="CC", **kwargs):
 
 
 def extract_core_mesh(xyzlim, mesh, mesh_type="tensor"):
-    """
-    Extracts Core Mesh from Global mesh
+    """Extracts the core mesh from a global mesh.
 
     Parameters
     ----------
-    xyzlim: numpy.ndarray
-        2D array [ndim x 2]
-    mesh: BaseMesh
+    xyzlim : (dim, 2) numpy.ndarray
+        2D array defining the x, y and z cutoffs for the core mesh region. Each
+        row contains the minimum and maximum limit for the x, y and z axis,
+        respectively.
+    mesh : discretize.TensorMesh
         The mesh
     mesh_type : str, optional
         Unused currently
 
     Returns
     -------
-    tuple
-        This function ouputs::
-            - actind: corresponding boolean index from global to core
-            - meshcore: core sdiscretize mesh
+    tuple: (**active_index**, **core_mesh**)
+        **active_index** is a boolean array that maps from the global the mesh
+        to core mesh. **core_mesh** is a *discretize.base.BaseMesh* object representing
+        the core mesh.
+
+    Examples
+    --------
+
+    Here, we define a 2D tensor mesh that has both a core region and padding.
+    We use the function **extract_core_mesh** to return a mesh which contains
+    only the core region.
+
+    >>> from discretize.utils import extract_core_mesh
+    >>> from discretize import TensorMesh
+    >>> import numpy as np
+    >>> import matplotlib.pyplot as plt
+    >>> import matplotlib as mpl
+    >>> mpl.rcParams.update({"font.size": 14})
+
+    Form a mesh of a uniform cube
+
+    >>> h = [(1., 5, -1.5), (1., 20), (1., 5, 1.5)]
+    >>> mesh = TensorMesh([h, h], origin='CC')
+
+    Plot original mesh
+
+    >>> fig = plt.figure(figsize=(7, 7))
+    >>> ax = fig.add_subplot(111)
+    >>> mesh.plot_grid(ax=ax)
+    >>> ax.set_title('Original Tensor Mesh')
+    >>> plt.show()
+
+    Set the limits for the cutoff of the core mesh (dim, 2)
+
+    >>> xlim = np.c_[-10., 10]
+    >>> ylim = np.c_[-10., 10]
+    >>> core_limits = np.r_[xlim, ylim]
+
+    Extract indices of core mesh cells and the core mesh, then plot
+
+    >>> core_ind, core_mesh = extract_core_mesh(core_limits, mesh)
+    >>> fig = plt.figure(figsize=(4, 4))
+    >>> ax = fig.add_subplot(111)
+    >>> core_mesh.plot_grid(ax=ax)
+    >>> ax.set_title('Core Mesh')
+    >>> plt.show()
     """
+
+    if not isinstance(mesh, discretize.TensorMesh):
+        raise Exception("Only implemented for class TensorMesh")
 
     if mesh.dim == 1:
         xyzlim = xyzlim.flatten()
@@ -269,7 +322,7 @@ def extract_core_mesh(xyzlim, mesh, mesh_type="tensor"):
 
         meshCore = discretize.TensorMesh([hx], origin=origin)
 
-        actind = (mesh.gridCC > xmin) & (mesh.gridCC < xmax)
+        actind = (mesh.cell_centers > xmin) & (mesh.cell_centers < xmax)
 
     elif mesh.dim == 2:
         xmin, xmax = xyzlim[0, 0], xyzlim[0, 1]
@@ -289,10 +342,10 @@ def extract_core_mesh(xyzlim, mesh, mesh_type="tensor"):
         meshCore = discretize.TensorMesh([hx, hy], origin=origin)
 
         actind = (
-            (mesh.gridCC[:, 0] > xmin)
-            & (mesh.gridCC[:, 0] < xmax)
-            & (mesh.gridCC[:, 1] > ymin)
-            & (mesh.gridCC[:, 1] < ymax)
+            (mesh.cell_centers[:, 0] > xmin)
+            & (mesh.cell_centers[:, 0] < xmax)
+            & (mesh.cell_centers[:, 1] > ymin)
+            & (mesh.cell_centers[:, 1] < ymax)
         )
 
     elif mesh.dim == 3:
@@ -317,12 +370,12 @@ def extract_core_mesh(xyzlim, mesh, mesh_type="tensor"):
         meshCore = discretize.TensorMesh([hx, hy, hz], origin=origin)
 
         actind = (
-            (mesh.gridCC[:, 0] > xmin)
-            & (mesh.gridCC[:, 0] < xmax)
-            & (mesh.gridCC[:, 1] > ymin)
-            & (mesh.gridCC[:, 1] < ymax)
-            & (mesh.gridCC[:, 2] > zmin)
-            & (mesh.gridCC[:, 2] < zmax)
+            (mesh.cell_centers[:, 0] > xmin)
+            & (mesh.cell_centers[:, 0] < xmax)
+            & (mesh.cell_centers[:, 1] > ymin)
+            & (mesh.cell_centers[:, 1] < ymax)
+            & (mesh.cell_centers[:, 2] > zmin)
+            & (mesh.cell_centers[:, 2] < zmax)
         )
 
     else:
@@ -340,60 +393,56 @@ def mesh_builder_xyz(
     expansion_factor=1.3,
     mesh_type="tensor",
 ):
-    """
-    Function to quickly generate a Tensor or Tree mesh
-    given a cloud of xyz points, finest core cell size
-    and padding distance.
-    If a base_mesh is provided, the core cells will be centered
-    on the underlaying mesh to reduce interpolation errors.
-    The core extent is set by the bounding box of the xyz location.
+    """Generate a tensor or tree mesh using a cloud of points.
+
+    For a cloud of (x,y[,z]) locations and specified minimum cell widths
+    (hx,hy,[hz]), this function creates a tensor or a tree mesh.
+    The lateral extent of the core region is determine by the cloud of points.
+    Other properties of the mesh can be defined automatically or by the user.
+    If *base_mesh* is an instance of :class:`~discretize.TensorMesh` or
+    :class:`~discretize.TreeMesh`, the core cells will be centered
+    on the underlying mesh to reduce interpolation errors.
 
     Parameters
     ----------
-    xyz: numpy.ndarray
-        Location points [n x dim]
-    h: list
-        Cell size for the core mesh [1 x ndim]
-    padding_distance: list
+    xyz : (n, dim) numpy.ndarray
+        Location points
+    h : (dim ) list
+        Cell size(s) for the core mesh
+    padding_distance : list, optional
         Padding distances [[W,E], [N,S], [Down,Up]]
-    base_mesh: discretize.BaseMesh
+    base_mesh : discretize.TensorMesh or discretize.TreeMesh, optional
         discretize mesh used to center the core mesh
-    depth_core: float
+    depth_core : float, optional
         Depth of core mesh below xyz
-    expansion_factor: float
-        Expension factor for padding cells [1.3]
-    mesh_type: str
-        Specify output mesh type: ["TENSOR"] or "TREE"
+    expansion_factor : float. optional
+        Expansion factor for padding cells. Ignored if *mesh_type* = *tree*
+    mesh_type : {'tensor', 'tree'}
+        Specify output mesh type
 
     Returns
     --------
-    discretize.BaseMesh
-        Mesh of "mesh_type"
+    discretize.TensorMesh or discretize.TreeMesh
+        Mesh of type specified by *mesh_type*
 
     Examples
     --------
-    .. plot::
-        :include-source:
+    >>> import discretize
+    >>> import matplotlib.pyplot as plt
+    >>> import numpy as np
 
-        import discretize
-        import matplotlib.pyplot as plt
-        import numpy as np
+    >>> xy_loc = np.random.randn(8,2)
+    >>> mesh = discretize.utils.mesh_builder_xyz(
+    ...     xy_loc, [0.1, 0.1], depth_core=0.5,
+    ...     padding_distance=[[1,2], [1,0]],
+    ...     mesh_type='tensor',
+    ... )
 
-        xyLoc = np.random.randn(8,2)
-
-        mesh = discretize.utils.mesh_builder_xyz(
-            xyLoc, [0.1, 0.1], depth_core=0.5,
-            padding_distance=[[1,2], [1,0]],
-            mesh_type='tensor',
-        )
-
-
-        axs = plt.subplot()
-        mesh.plot_image(mesh.cell_volumes, grid=True, ax=axs)
-        axs.scatter(xyLoc[:,0], xyLoc[:,1], 15, c='w', zorder=3)
-        axs.set_aspect('equal')
-        plt.show()
-
+    >>> axs = plt.subplot()
+    >>> mesh.plot_image(mesh.cell_volumes, grid=True, ax=axs)
+    >>> axs.scatter(xy_loc[:,0], xy_loc[:,1], 15, c='w', zorder=3)
+    >>> axs.set_aspect('equal')
+    >>> plt.show()
     """
     if mesh_type.lower() not in ["tensor", "tree"]:
         raise ValueError("Revise mesh_type. Only TENSOR | TREE mesh are implemented")
@@ -514,39 +563,122 @@ def refine_tree_xyz(
     min_level=0,
     max_distance=np.inf,
 ):
-    """
-    Refine a TreeMesh based on xyz point locations
+    """Refine region within a :class:`~discretize.TreeMesh`
+
+    This function refines the specified region of a tree mesh using
+    one of several methods. These are summarized below:
+
+    **radial:** refines based on radial distances from a set of xy[z] locations.
+    Consider a tree mesh whose smallest cell size has a width of *h* . And
+    *octree_levels = [nc1, nc2, nc3, ...]* . Within a distance of *nc1 x h*
+    from any of the points supplied, the smallest cell size is used. Within a distance of
+    *nc2 x (2h)* , the cells will have a width of *2h* . Within a distance of *nc3 x (4h)* ,
+    the cells will have a width of *4h* . Etc...
+
+    **surface:** refines downward from a triangulated surface.
+    Consider a tree mesh whose smallest cell size has a width of *h*. And
+    *octree_levels = [nc1, nc2, nc3, ...]* . Within a downward distance of *nc1 x h*
+    from the topography (*xy[z]* ) supplied, the smallest cell size is used. The
+    topography is triangulated if the points supplied are coarser than the cell
+    size. No refinement is done above the topography. Within a vertical distance of
+    *nc2 x (2h)* , the cells will have a width of *2h* . Within a vertical distance
+    of *nc3 x (4h)* , the cells will have a width of *4h* . Etc...
+
+    **box:** refines inside the convex hull defined by the xy[z] locations.
+    Consider a tree mesh whose smallest cell size has a width of *h*. And
+    *octree_levels = [nc1, nc2, nc3, ...]* . Within the convex hull defined by *xyz* ,
+    the smallest cell size is used. Within a distance of *nc2 x (2h)* from that convex
+    hull, the cells will have a width of *2h* . Within a distance of *nc3 x (4h)* ,
+    the cells will have a width of *4h* . Etc...
 
     Parameters
     ----------
-    mesh: discretize.TreeMesh
-        The TreeMesh object to be refined
-    xyz: numpy.ndarray
-        2D array of points
-    method: str
-        Method used to refine the mesh based on xyz locations
+    mesh : discretize.TreeMesh
+        The tree mesh object to be refined
+    xyz : numpy.ndarray
+        2D array of points (n, dim)
+    method : {'radial', 'surface', 'box'}
+        Method used to refine the mesh based on xyz locations.
 
-        - "radial": Based on radial distance xyz and cell centers
-        - "surface": Along triangulated surface repeated vertically
-        - "box": Inside limits defined by outer xyz locations
+        - *radial:* Based on radial distance xy[z] and cell centers
+        - *surface:* Refines downward from a triangulated surface
+        - *box:* Inside limits defined by outer xy[z] locations
 
-    octree_levels: list
-        Minimum number of cells around points in each k octree level
-        [N(k), N(k-1), ...]
-    octree_levels_padding: list
-        Padding cells added to the outer limits of the data each octree levels
-        used for method= "surface" and "box" [N(k), N(k-1), ...].
-    finalize: bool
-        True | [False]    Finalize the TreeMesh
-    max_distance: float
-        Maximum refinement distance from xyz locations.
-        Used for method="surface" to reduce interpolation distance.
+    octree_levels : list of int, optional
+        Minimum number of cells around points in each *k* octree level
+        starting from the smallest cells size; i.e. *[nc(k), nc(k-1), ...]* .
+        Note that you *can* set entries to 0; e.g. you don't want to discretize
+        using the smallest cell size.
+    octree_levels_padding : list of int, optional
+        Padding cells added to extend the region of refinement at each level.
+        Used for *method = surface* and *box*. Has the form *[nc(k), nc(k-1), ...]*
+    finalize : bool, optional
+        Finalize the tree mesh.
+    min_level : int, optional
+        Sets the largest cell size allowed in the mesh. The default (*0*),
+        allows the largest cell size to be used.
+    max_distance : float
+        Maximum refinement distance from xy[z] locations.
+        Used if *method* = "surface" to reduce interpolation distance
 
     Returns
-    --------
+    -------
     discretize.TreeMesh
-        mesh
+        The refined tree mesh
 
+    Examples
+    --------
+    Here we use the **refine_tree_xyz** function refine a tree mesh
+    based on topography as well as a cluster of points.
+
+    >>> from discretize import TreeMesh
+    >>> from discretize.utils import mkvc, refine_tree_xyz
+    >>> import matplotlib.pyplot as plt
+    >>> import numpy as np
+
+    >>> dx = 5  # minimum cell width (base mesh cell width) in x
+    >>> dy = 5  # minimum cell width (base mesh cell width) in y
+    >>> x_length = 300.0  # domain width in x
+    >>> y_length = 300.0  # domain width in y
+
+    Compute number of base mesh cells required in x and y
+
+    >>> nbcx = 2 ** int(np.round(np.log(x_length / dx) / np.log(2.0)))
+    >>> nbcy = 2 ** int(np.round(np.log(y_length / dy) / np.log(2.0)))
+
+    Define the base mesh
+
+    >>> hx = [(dx, nbcx)]
+    >>> hy = [(dy, nbcy)]
+    >>> mesh = TreeMesh([hx, hy], x0="CC")
+
+    Refine surface topography
+
+    >>> xx = mesh.vectorNx
+    >>> yy = -3 * np.exp((xx ** 2) / 100 ** 2) + 50.0
+    >>> pts = np.c_[mkvc(xx), mkvc(yy)]
+    >>> mesh = refine_tree_xyz(
+    ...     mesh, pts, octree_levels=[2, 4], method="surface", finalize=False
+    ... )
+
+    Refine mesh near points
+
+    >>> xx = np.array([-10.0, 10.0, 10.0, -10.0])
+    >>> yy = np.array([-40.0, -40.0, -60.0, -60.0])
+    >>> pts = np.c_[mkvc(xx), mkvc(yy)]
+    >>> mesh = refine_tree_xyz(
+    ...     mesh, pts, octree_levels=[4, 2], method="radial", finalize=True
+    ... )
+
+    Plot the mesh
+
+    >>> fig = plt.figure(figsize=(6, 6))
+    >>> ax = fig.add_subplot(111)
+    >>> mesh.plotGrid(ax=ax)
+    >>> ax.set_xbound(mesh.x0[0], mesh.x0[0] + np.sum(mesh.hx))
+    >>> ax.set_ybound(mesh.x0[1], mesh.x0[1] + np.sum(mesh.hy))
+    >>> ax.set_title("QuadTree Mesh")
+    >>> plt.show()
     """
 
     if octree_levels_padding is not None:
@@ -743,72 +875,68 @@ def refine_tree_xyz(
 
 
 def active_from_xyz(mesh, xyz, grid_reference="CC", method="linear"):
-    """Returns an active cell index array below a surface
+    """Return boolean array indicating which cells are below surface
 
-    Get active cells in the `mesh` that are below the surface create by
-    interpolating over the last dimension of the input points. This method will
-    uses scipy's interpolation routine to interpolate between input points. This
-    will use a nearest neighbour interpolation for cell values outside the convex
-    hull of points.
-
-    For `grid_reference='CC'`, this will check if the center of a given cell in
-    the mesh is below the interpolation surface to determine if that cell is
-    active.
-
-    For `grid_reference='N'`, this will check if **every** node of a given cell
-    in the mesh is below the interpolation surface.
-
-    For the
+    For a set of locations defining a surface, **active_from_xyz** outputs a
+    boolean array indicating which mesh cells like below the surface points.
+    This method uses SciPy's interpolation routine to interpolate between
+    location points defining the surface. Nearest neighbour interpolation
+    is used for cells outside the convex hull of the surface points.
 
     Parameters
     ----------
-
     mesh : discretize.TensorMesh or discretize.TreeMesh or discretize.CylindricalMesh
-        Mesh object, (if CylindricalMesh: mesh must be symmetric).
-    xyz : numpy.ndarray
-        Points coordinates shape (*, mesh.dim).
+        Mesh object. If *mesh* is a cylindrical mesh, it must be symmetric
+    xyz : (N, dim) numpy.ndarray
+        Points defining the surface topography.
     grid_reference : {'CC', 'N'}
-        Use cell coordinates from cells-center 'CC' or nodes 'N'.
+        Define where the cell is defined relative to surface. Choose between {'CC','N'}
+
+        - If 'CC' is used, cells are active if their centers are below the surface.
+        - If 'N' is used, cells are active if they lie entirely below the surface.
+
     method : {'linear', 'nearest'}
-        Interpolation method for the xyz points.
+        Interpolation method for locations between the xyz points.
 
     Returns
     -------
-
-    active : numpy.ndarray
-        1D mask array of `bool` for the active cells below xyz.
+    (n_cells) numpy.ndarray of bool
+        1D mask array of *bool* for the active cells below xyz.
 
     Examples
     --------
+    Here we define the active cells below a parabola. We demonstrate the differences
+    that appear when using the 'CC' and 'N' options for *reference_grid*.
 
-    .. plot::
-        :include-source:
+    >>> import matplotlib.pyplot as plt
+    >>> import numpy as np
+    >>> from discretize import TensorMesh
+    >>> from discretize.utils import active_from_xyz
 
-        import matplotlib.pyplot as plt
-        import numpy as np
-        from discretize import TensorMesh
-        from discretize.utils import active_from_xyz
+    Determine active cells for a given mesh and topography
 
-        mesh = TensorMesh([5, 5])
-        topo_func = lambda x: -3*(x-0.2)*(x-0.8)+.5
-        topo_points = np.linspace(0, 1)
-        topo_vals = topo_func(topo_points)
+    >>> mesh = TensorMesh([5, 5])
+    >>> topo_func = lambda x: -3*(x-0.2)*(x-0.8)+.5
+    >>> topo_points = np.linspace(0, 1)
+    >>> topo_vals = topo_func(topo_points)
+    >>> active_cc = active_from_xyz(mesh, np.c_[topo_points, topo_vals], grid_reference='CC')
+    >>> active_n = active_from_xyz(mesh, np.c_[topo_points, topo_vals], grid_reference='N')
 
-        active_cc = active_from_xyz(mesh, np.c_[topo_points, topo_vals], grid_reference='CC')
-        ax = plt.subplot(121)
-        mesh.plot_image(active_cc, ax=ax)
-        mesh.plot_grid(centers=True, ax=ax)
-        ax.plot(np.linspace(0,1), topo_func(np.linspace(0,1)), color='C3')
-        ax.set_title("CC")
+    Plot visual representation
 
-        active_n = active_from_xyz(mesh, np.c_[topo_points, topo_vals], grid_reference='N')
-        ax = plt.subplot(122)
-        mesh.plot_image(active_n, ax=ax)
-        mesh.plot_grid(nodes=True, ax=ax)
-        ax.plot(np.linspace(0,1), topo_func(np.linspace(0,1)), color='C3')
-        ax.set_title("N")
-        plt.show()
+    .. collapse:: Expand to show scripting for plot
 
+        >>> ax = plt.subplot(121)
+        >>> mesh.plot_image(active_cc, ax=ax)
+        >>> mesh.plot_grid(centers=True, ax=ax)
+        >>> ax.plot(np.linspace(0,1), topo_func(np.linspace(0,1)), color='C3')
+        >>> ax.set_title("CC")
+        >>> ax = plt.subplot(122)
+        >>> mesh.plot_image(active_n, ax=ax)
+        >>> mesh.plot_grid(nodes=True, ax=ax)
+        >>> ax.plot(np.linspace(0,1), topo_func(np.linspace(0,1)), color='C3')
+        >>> ax.set_title("N")
+        >>> plt.show()
     """
     try:
         if not mesh.is_symmetric:
@@ -845,7 +973,7 @@ def active_from_xyz(mesh, xyz, grid_reference="CC", method="linear"):
 
     if grid_reference == "CC":
         # this should work for all 4 mesh types...
-        locations = mesh.gridCC
+        locations = mesh.cell_centers
 
         if mesh.dim == 1:
             active = np.zeros(mesh.nC, dtype="bool")
@@ -859,13 +987,13 @@ def active_from_xyz(mesh, xyz, grid_reference="CC", method="linear"):
             if mesh.dim == 3:
                 locations = np.vstack(
                     [
-                        mesh.gridCC
+                        mesh.cell_centers
                         + (np.c_[-1, 1, 1][:, None] * mesh.h_gridded / 2.0).squeeze(),
-                        mesh.gridCC
+                        mesh.cell_centers
                         + (np.c_[-1, -1, 1][:, None] * mesh.h_gridded / 2.0).squeeze(),
-                        mesh.gridCC
+                        mesh.cell_centers
                         + (np.c_[1, 1, 1][:, None] * mesh.h_gridded / 2.0).squeeze(),
-                        mesh.gridCC
+                        mesh.cell_centers
                         + (np.c_[1, -1, 1][:, None] * mesh.h_gridded / 2.0).squeeze(),
                     ]
                 )
@@ -873,9 +1001,9 @@ def active_from_xyz(mesh, xyz, grid_reference="CC", method="linear"):
             elif mesh.dim == 2:
                 locations = np.vstack(
                     [
-                        mesh.gridCC
+                        mesh.cell_centers
                         + (np.c_[-1, 1][:, None] * mesh.h_gridded / 2.0).squeeze(),
-                        mesh.gridCC
+                        mesh.cell_centers
                         + (np.c_[1, 1][:, None] * mesh.h_gridded / 2.0).squeeze(),
                     ]
                 )
@@ -923,13 +1051,15 @@ def active_from_xyz(mesh, xyz, grid_reference="CC", method="linear"):
     return active.ravel()
 
 
-exampleLrmGrid = deprecate_function(
-    example_curvilinear_grid, "exampleLrmGrid", removal_version="1.0.0"
-)
+
+
 meshTensor = deprecate_function(unpack_widths, "meshTensor", removal_version="1.0.0")
 closestPoints = deprecate_function(
     closest_points_index, "closestPoints", removal_version="1.0.0"
 )
 ExtractCoreMesh = deprecate_function(
     extract_core_mesh, "ExtractCoreMesh", removal_version="1.0.0"
+)
+closest_points = deprecate_function(
+    closest_points_index, "closest_points", removal_version="1.0.0"
 )
