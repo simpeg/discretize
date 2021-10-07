@@ -63,4 +63,6 @@ jobs:
   - script: |
       bash <(curl -s https://codecov.io/bash)
     displayName: 'Upload coverage to codecov.io'
+    env:
+      CODECOV_TOKEN: $(codecov.token)
     condition: eq(variables['python.version'], '3.8')
