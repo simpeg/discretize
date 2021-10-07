@@ -5,7 +5,7 @@ Base classes for all meshes supported in ``discretize``
 import numpy as np
 import os
 import json
-import scipy.spatial
+from scipy.spatial import KDTree
 from discretize.utils import mkvc, Identity
 from discretize.utils.code_utils import deprecate_property, deprecate_method, as_array_n_by_dim
 import warnings
@@ -793,35 +793,69 @@ class BaseMesh:
         items.pop("__class__", None)
         return cls(**items)
 
-    def get_nearest_indices(self, locations, grid_location='CC', discard=False):
-        """Return nearest indices to points.
+    def closest_points_index(self, locations, grid_loc='CC', discard=False):
+        """Find the indicies for the nearest grid location for a set of points.
 
-          Parameters
-          ----------
-          pts: numpy.ndarray
-              Points to move
-          grid_loc: {'CC', 'N', 'Fx', 'Fy', 'Fz', 'Ex', 'Ex', 'Ey', 'Ez'}
-              Which grid to move points to.
-          discard: bool
-              Discard KDTree after use.
+        Parameters
+        ----------
+        locations : (n, dim) numpy.ndarray
+            Points to query.
+        grid_loc : {'CC', 'N', 'Fx', 'Fy', 'Fz', 'Ex', 'Ex', 'Ey', 'Ez'}
+            Specifies the grid on which points are being moved to.
+        discard : bool, optional
+            Whether to discard the intenally created `scipy.spatial.KDTree`.
 
-          Returns
-          -------
-          numpy.ndarray
-              nodeInds
-          """
+        Returns
+        -------
+        (n ) numpy.ndarray of int
+            Vector of length *n* containing the indicies for the closest
+            respective cell center, node, face or edge.
 
-        tree_name = f'_{grid_location}_tree'
-        pts = as_array_n_by_dim(locations, self.dim)
-        exists = not getattr(self, tree_name, None) is None
-        if not exists:
-            grid = getattr(self, "grid" + grid_location)
-            tree = scipy.spatial.cKDTree(grid)
-        else:
-            tree = getattr(self, tree_name)
-        _, ind = tree.query(pts)
+        Examples
+        --------
+        Here we define a set of random (x, y) locations and find the closest
+        cell centers and nodes on a mesh.
 
-        if not exists and not discard:
+        >>> from discretize import TensorMesh
+        >>> from discretize.utils import closest_points_index
+        >>> import numpy as np
+        >>> import matplotlib.pyplot as plt
+        >>> h = 2*np.ones(5)
+        >>> mesh = TensorMesh([h, h], x0='00')
+
+        Define some random locations, grid cell centers and grid nodes,
+
+        >>> xy_random = np.random.uniform(0, 10, size=(4,2))
+        >>> xy_centers = mesh.cell_centers
+        >>> xy_nodes = mesh.nodes
+
+        Find indicies of closest cell centers and nodes,
+
+        >>> ind_centers = mesh.closest_points_index(xy_random, 'cell_centers')
+        >>> ind_nodes = mesh.closest_points_index(xy_random, 'nodes')
+
+        Plot closest cell centers and nodes
+
+        >>> fig = plt.figure(figsize=(5, 5))
+        >>> ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
+        >>> mesh.plot_grid(ax=ax)
+        >>> ax.scatter(xy_random[:, 0], xy_random[:, 1], 50, 'k')
+        >>> ax.scatter(xy_centers[ind_centers, 0], xy_centers[ind_centers, 1], 50, 'r')
+        >>> ax.scatter(xy_nodes[ind_nodes, 0], xy_nodes[ind_nodes, 1], 50, 'b')
+        >>> plt.show()
+        """
+        locations = as_array_n_by_dim(locations, self.dim)
+
+        grid_loc = self._parse_location_type(grid_loc)
+        tree_name = f'_{grid_loc}_tree'
+
+        tree = getattr(self, tree_name, None)
+        if tree is None:
+            grid = getattr(self, grid_loc)
+            tree = KDTree(grid)
+        _, ind = tree.query(locations)
+
+        if not discard:
             setattr(self, tree_name, tree)
 
         return ind

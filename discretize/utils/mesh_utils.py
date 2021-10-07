@@ -2,7 +2,7 @@ import numpy as np
 import scipy.ndimage as ndi
 import scipy.sparse as sp
 
-from discretize.utils.code_utils import as_array_n_by_dim, is_scalar
+from discretize.utils.code_utils import is_scalar
 from scipy.spatial import cKDTree, Delaunay
 from scipy import interpolate
 import discretize
@@ -232,13 +232,13 @@ def closest_points_index(mesh, pts, grid_loc="CC", **kwargs):
             DeprecationWarning,
         )
         grid_loc = kwargs["gridLoc"]
-
-    pts = as_array_n_by_dim(pts, mesh.dim)
-    grid = getattr(mesh, "grid" + grid_loc)
-    tree = cKDTree(grid)
-    _, ind = tree.query(pts)
-
-    return ind
+    warnings.warn(
+        "The closest_points_index utilty function has been moved to be a method of "
+        "a class object. Please access it as mesh.closest_points_index(). This will "
+        "be removed in a future version of discretize",
+        DeprecationWarning.
+    )
+    return mesh.closest_points_index(pts, grid_loc=grid_loc, discard=True)
 
 
 def extract_core_mesh(xyzlim, mesh, mesh_type="tensor"):
