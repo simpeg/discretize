@@ -1309,20 +1309,20 @@ class BaseTensorMesh(BaseMesh):
         )
         return None if self.dim < 3 else self.h[2]
 
-    vectorNx = deprecate_property("nodes_x", "vectorNx", removal_version="1.0.0")
-    vectorNy = deprecate_property("nodes_y", "vectorNy", removal_version="1.0.0")
-    vectorNz = deprecate_property("nodes_z", "vectorNz", removal_version="1.0.0")
+    vectorNx = deprecate_property("nodes_x", "vectorNx", removal_version="1.0.0", future_warn=False)
+    vectorNy = deprecate_property("nodes_y", "vectorNy", removal_version="1.0.0", future_warn=False)
+    vectorNz = deprecate_property("nodes_z", "vectorNz", removal_version="1.0.0", future_warn=False)
     vectorCCx = deprecate_property(
-        "cell_centers_x", "vectorCCx", removal_version="1.0.0"
+        "cell_centers_x", "vectorCCx", removal_version="1.0.0", future_warn=False
     )
     vectorCCy = deprecate_property(
-        "cell_centers_y", "vectorCCy", removal_version="1.0.0"
+        "cell_centers_y", "vectorCCy", removal_version="1.0.0", future_warn=False
     )
     vectorCCz = deprecate_property(
-        "cell_centers_z", "vectorCCz", removal_version="1.0.0"
+        "cell_centers_z", "vectorCCz", removal_version="1.0.0", future_warn=False
     )
     getInterpolationMat = deprecate_method(
-        "get_interpolation_matrix", "getInterpolationMat", removal_version="1.0.0"
+        "get_interpolation_matrix", "getInterpolationMat", removal_version="1.0.0", future_warn=False
     )
-    isInside = deprecate_method("is_inside", "isInside", removal_version="1.0.0")
-    getTensor = deprecate_method("get_tensor", "getTensor", removal_version="1.0.0")
+    isInside = deprecate_method("is_inside", "isInside", removal_version="1.0.0", future_warn=False)
+    getTensor = deprecate_method("get_tensor", "getTensor", removal_version="1.0.0", future_warn=False)

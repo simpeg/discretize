@@ -517,8 +517,8 @@ def face_info(xyz, A, B, C, D, average=True, normalize_normals=True, **kwargs):
 
 
 exampleLrmGrid = deprecate_function(
-    example_curvilinear_grid, "exampleLrmGrid", removal_version="1.0.0"
+    example_curvilinear_grid, "exampleLrmGrid", removal_version="1.0.0", future_warn=False
 )
-volTetra = deprecate_function(volume_tetrahedron, "volTetra", removal_version="1.0.0")
-indexCube = deprecate_function(index_cube, "indexCube", removal_version="1.0.0")
-faceInfo = deprecate_function(face_info, "faceInfo", removal_version="1.0.0")
+volTetra = deprecate_function(volume_tetrahedron, "volTetra", removal_version="1.0.0", future_warn=False)
+indexCube = deprecate_function(index_cube, "indexCube", removal_version="1.0.0", future_warn=False)
+faceInfo = deprecate_function(face_info, "faceInfo", removal_version="1.0.0", future_warn=False)

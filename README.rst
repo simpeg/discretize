@@ -1,3 +1,6 @@
+.. image:: https://raw.github.com/simpeg/discretize/main/docs/images/discretize-logo.png
+    :alt: Discretize Logo
+
 discretize
 ==========
 

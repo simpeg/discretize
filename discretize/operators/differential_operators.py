@@ -1458,7 +1458,7 @@ class DiffOperators(object):
         >>> mesh.set_cell_gradient_BC(BC)
 
         Define zero Dirichlet on y boundaries and zero Neumann otherwise
-        
+
         >>> BC = ['neumann', 'dirichlet', 'neumann']
         >>> mesh.set_cell_gradient_BC(BC)
 
@@ -5282,55 +5282,55 @@ class DiffOperators(object):
         return sp.eye(self.n_nodes, format="csr")[is_b]
 
     # DEPRECATED
-    cellGrad = deprecate_property("cell_gradient", "cellGrad", removal_version="1.0.0")
+    cellGrad = deprecate_property("cell_gradient", "cellGrad", removal_version="1.0.0", future_warn=False)
     cellGradBC = deprecate_property(
-        "cell_gradient_BC", "cellGradBC", removal_version="1.0.0"
+        "cell_gradient_BC", "cellGradBC", removal_version="1.0.0", future_warn=False
     )
     cellGradx = deprecate_property(
-        "cell_gradient_x", "cellGradx", removal_version="1.0.0"
+        "cell_gradient_x", "cellGradx", removal_version="1.0.0", future_warn=False
     )
     cellGrady = deprecate_property(
-        "cell_gradient_y", "cellGrady", removal_version="1.0.0"
+        "cell_gradient_y", "cellGrady", removal_version="1.0.0", future_warn=False
     )
     cellGradz = deprecate_property(
-        "cell_gradient_z", "cellGradz", removal_version="1.0.0"
+        "cell_gradient_z", "cellGradz", removal_version="1.0.0", future_warn=False
     )
     nodalGrad = deprecate_property(
-        "nodal_gradient", "nodalGrad", removal_version="1.0.0"
+        "nodal_gradient", "nodalGrad", removal_version="1.0.0", future_warn=False
     )
     nodalLaplacian = deprecate_property(
-        "nodal_laplacian", "nodalLaplacian", removal_version="1.0.0"
+        "nodal_laplacian", "nodalLaplacian", removal_version="1.0.0", future_warn=False
     )
-    faceDiv = deprecate_property("face_divergence", "faceDiv", removal_version="1.0.0")
+    faceDiv = deprecate_property("face_divergence", "faceDiv", removal_version="1.0.0", future_warn=False)
     faceDivx = deprecate_property(
-        "face_x_divergence", "faceDivx", removal_version="1.0.0"
+        "face_x_divergence", "faceDivx", removal_version="1.0.0", future_warn=False
     )
     faceDivy = deprecate_property(
-        "face_y_divergence", "faceDivy", removal_version="1.0.0"
+        "face_y_divergence", "faceDivy", removal_version="1.0.0", future_warn=False
     )
     faceDivz = deprecate_property(
-        "face_z_divergence", "faceDivz", removal_version="1.0.0"
+        "face_z_divergence", "faceDivz", removal_version="1.0.0", future_warn=False
     )
-    edgeCurl = deprecate_property("edge_curl", "edgeCurl", removal_version="1.0.0")
+    edgeCurl = deprecate_property("edge_curl", "edgeCurl", removal_version="1.0.0", future_warn=False)
     _cellGradStencil = deprecate_property(
-        "stencil_cell_gradient", "_cellGradStencil", removal_version="1.0.0"
+        "stencil_cell_gradient", "_cellGradStencil", removal_version="1.0.0", future_warn=False
     )
     _cellGradxStencil = deprecate_property(
-        "stencil_cell_gradient_x", "_cellGradxStencil", removal_version="1.0.0"
+        "stencil_cell_gradient_x", "_cellGradxStencil", removal_version="1.0.0", future_warn=False
     )
     _cellGradyStencil = deprecate_property(
-        "stencil_cell_gradient_y", "_cellGradyStencil", removal_version="1.0.0"
+        "stencil_cell_gradient_y", "_cellGradyStencil", removal_version="1.0.0", future_warn=False
     )
     _cellGradzStencil = deprecate_property(
-        "stencil_cell_gradient_z", "_cellGradzStencil", removal_version="1.0.0"
+        "stencil_cell_gradient_z", "_cellGradzStencil", removal_version="1.0.0", future_warn=False
     )
 
     setCellGradBC = deprecate_method(
-        "set_cell_gradient_BC", "setCellGradBC", removal_version="1.0.0"
+        "set_cell_gradient_BC", "setCellGradBC", removal_version="1.0.0", future_warn=False
     )
     getBCProjWF = deprecate_method(
-        "get_BC_projections", "getBCProjWF", removal_version="1.0.0"
+        "get_BC_projections", "getBCProjWF", removal_version="1.0.0", future_warn=False
     )
     getBCProjWF_simple = deprecate_method(
-        "get_BC_projections_simple", "getBCProjWF_simple", removal_version="1.0.0"
+        "get_BC_projections_simple", "getBCProjWF_simple", removal_version="1.0.0", future_warn=False
     )
