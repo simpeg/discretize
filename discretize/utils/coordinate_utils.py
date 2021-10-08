@@ -293,8 +293,8 @@ def rotate_points_from_normals(xyz, v0, v1, x0=np.r_[0.0, 0.0, 0.0]):
 
 
 rotationMatrixFromNormals = deprecate_function(
-    rotation_matrix_from_normals, "rotationMatrixFromNormals", removal_version="1.0.0"
+    rotation_matrix_from_normals, "rotationMatrixFromNormals", removal_version="1.0.0", future_warn=False
 )
 rotatePointsFromNormals = deprecate_function(
-    rotate_points_from_normals, "rotatePointsFromNormals", removal_version="1.0.0"
+    rotate_points_from_normals, "rotatePointsFromNormals", removal_version="1.0.0", future_warn=False
 )

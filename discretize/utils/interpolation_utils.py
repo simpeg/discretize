@@ -290,5 +290,5 @@ def volume_average(mesh_in, mesh_out, values=None, output=None):
 
 
 interpmat = deprecate_function(
-    interpolation_matrix, "interpmat", removal_version="1.0.0"
+    interpolation_matrix, "interpmat", removal_version="1.0.0", future_warn=False
 )

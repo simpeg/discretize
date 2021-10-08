@@ -1497,18 +1497,20 @@ class InnerProducts(object):
 
     # DEPRECATED
     getFaceInnerProduct = deprecate_method(
-        "get_face_inner_product", "getFaceInnerProduct", removal_version="1.0.0"
+        "get_face_inner_product", "getFaceInnerProduct", removal_version="1.0.0", future_warn=False
     )
     getEdgeInnerProduct = deprecate_method(
-        "get_edge_inner_product", "getEdgeInnerProduct", removal_version="1.0.0"
+        "get_edge_inner_product", "getEdgeInnerProduct", removal_version="1.0.0", future_warn=False
     )
     getFaceInnerProductDeriv = deprecate_method(
         "get_face_inner_product_deriv",
         "getFaceInnerProductDeriv",
         removal_version="1.0.0",
+        future_warn=False
     )
     getEdgeInnerProductDeriv = deprecate_method(
         "get_edge_inner_product_deriv",
         "getEdgeInnerProductDeriv",
         removal_version="1.0.0",
+        future_warn=False
     )

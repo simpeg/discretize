@@ -117,7 +117,11 @@ def requires(modules):
     return decorated_function
 
 
-def deprecate_class(removal_version=None, new_location=None):
+def deprecate_class(removal_version=None, new_location=None, future_warn=False):
+    if future_warn:
+        Warning = FutureWarning
+    else:
+        Warning = DeprecationWarning
     def decorator(cls):
         my_name = cls.__name__
         parent_name = cls.__bases__[0].__name__
@@ -133,7 +137,7 @@ def deprecate_class(removal_version=None, new_location=None):
         cls._old__init__ = cls.__init__
 
         def __init__(self, *args, **kwargs):
-            warnings.warn(message, DeprecationWarning)
+            warnings.warn(message, Warning)
             self._old__init__(*args, **kwargs)
 
         cls.__init__ = __init__
@@ -145,17 +149,25 @@ def deprecate_class(removal_version=None, new_location=None):
     return decorator
 
 
-def deprecate_module(old_name, new_name, removal_version=None):
+def deprecate_module(old_name, new_name, removal_version=None, future_warn=False):
+    if future_warn:
+        Warning = FutureWarning
+    else:
+        Warning = DeprecationWarning
     message = f"The {old_name} module has been deprecated, please use {new_name}."
     if removal_version is not None:
         message += f" It will be removed in version {removal_version} of discretize"
     else:
         message += " It will be removed in a future version of discretize."
     message += " Please update your code accordingly."
-    warnings.warn(message, DeprecationWarning)
+    warnings.warn(message, Warning)
 
 
-def deprecate_property(new_name, old_name, removal_version=None):
+def deprecate_property(new_name, old_name, removal_version=None, future_warn=False):
+    if future_warn:
+        Warning = FutureWarning
+    else:
+        Warning = DeprecationWarning
     if removal_version is not None:
         tag = f" It will be removed in version {removal_version} of discretize."
     else:
@@ -167,7 +179,7 @@ def deprecate_property(new_name, old_name, removal_version=None):
             f"{class_name}.{old_name} has been deprecated, please use {class_name}.{new_name}."
             + tag
         )
-        warnings.warn(message, DeprecationWarning)
+        warnings.warn(message, Warning)
         return getattr(self, new_name)
 
     def set_dep(self, other):
@@ -176,7 +188,7 @@ def deprecate_property(new_name, old_name, removal_version=None):
             f"{class_name}.{old_name} has been deprecated, please use {class_name}.{new_name}."
             + tag
         )
-        warnings.warn(message, DeprecationWarning)
+        warnings.warn(message, Warning)
         setattr(self, new_name, other)
 
     doc = f"""
@@ -190,7 +202,11 @@ def deprecate_property(new_name, old_name, removal_version=None):
     return property(get_dep, set_dep, None, doc)
 
 
-def deprecate_method(new_name, old_name, removal_version=None):
+def deprecate_method(new_name, old_name, removal_version=None, future_warn=False):
+    if future_warn:
+        Warning = FutureWarning
+    else:
+        Warning = DeprecationWarning
     if removal_version is not None:
         tag = f" It will be removed in version {removal_version} of discretize."
     else:
@@ -201,7 +217,7 @@ def deprecate_method(new_name, old_name, removal_version=None):
         warnings.warn(
             f"{class_name}.{old_name} has been deprecated, please use {class_name}.{new_name}."
             + tag,
-            DeprecationWarning,
+            Warning,
         )
         return getattr(self, new_name)(*args, **kwargs)
 
@@ -216,7 +232,11 @@ def deprecate_method(new_name, old_name, removal_version=None):
     return new_method
 
 
-def deprecate_function(new_function, old_name, removal_version=None):
+def deprecate_function(new_function, old_name, removal_version=None, future_warn=False):
+    if future_warn:
+        Warning = FutureWarning
+    else:
+        Warning = DeprecationWarning
     new_name = new_function.__name__
     if removal_version is not None:
         tag = f" It will be removed in version {removal_version} of discretize."
@@ -226,7 +246,7 @@ def deprecate_function(new_function, old_name, removal_version=None):
     def dep_function(*args, **kwargs):
         warnings.warn(
             f"{old_name} has been deprecated, please use {new_name}." + tag,
-            DeprecationWarning,
+            Warning,
         )
         return new_function(*args, **kwargs)
 
@@ -242,7 +262,7 @@ def deprecate_function(new_function, old_name, removal_version=None):
 
 
 # DEPRECATIONS
-isScalar = deprecate_function(is_scalar, "isScalar", removal_version="1.0.0")
+isScalar = deprecate_function(is_scalar, "isScalar", removal_version="1.0.0", future_warn=False)
 asArray_N_x_Dim = deprecate_function(
-    as_array_n_by_dim, "asArray_N_x_Dim", removal_version="1.0.0"
+    as_array_n_by_dim, "asArray_N_x_Dim", removal_version="1.0.0", future_warn=False
 )

@@ -414,11 +414,11 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         return TensorMesh.read_UBC(file_name, directory)
 
     readModelUBC = deprecate_method(
-        "read_model_UBC", "readModelUBC", removal_version="1.0.0"
+        "read_model_UBC", "readModelUBC", removal_version="1.0.0", future_warn=False
     )
-    writeUBC = deprecate_method("write_UBC", "writeUBC", removal_version="1.0.0")
+    writeUBC = deprecate_method("write_UBC", "writeUBC", removal_version="1.0.0", future_warn=False)
     writeModelUBC = deprecate_method(
-        "write_model_UBC", "writeModelUBC", removal_version="1.0.0"
+        "write_model_UBC", "writeModelUBC", removal_version="1.0.0", future_warn=False
     )
 
 
@@ -599,9 +599,9 @@ class TreeMeshIO(object):
         return TreeMesh.read_UBC(file_name, directory)
 
     readModelUBC = deprecate_method(
-        "read_model_UBC", "readModelUBC", removal_version="1.0.0"
+        "read_model_UBC", "readModelUBC", removal_version="1.0.0", future_warn=False
     )
-    writeUBC = deprecate_method("write_UBC", "writeUBC", removal_version="1.0.0")
+    writeUBC = deprecate_method("write_UBC", "writeUBC", removal_version="1.0.0", future_warn=False)
     writeModelUBC = deprecate_method(
-        "write_model_UBC", "writeModelUBC", removal_version="1.0.0"
+        "write_model_UBC", "writeModelUBC", removal_version="1.0.0", future_warn=False
     )

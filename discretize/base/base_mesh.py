@@ -924,13 +924,13 @@ class BaseMesh:
         return True
 
     # DEPRECATED
-    normals = deprecate_property("face_normals", "normals", removal_version="1.0.0")
-    tangents = deprecate_property("edge_tangents", "tangents", removal_version="1.0.0")
+    normals = deprecate_property("face_normals", "normals", removal_version="1.0.0", future_warn=False)
+    tangents = deprecate_property("edge_tangents", "tangents", removal_version="1.0.0", future_warn=False)
     projectEdgeVector = deprecate_method(
-        "project_edge_vector", "projectEdgeVector", removal_version="1.0.0"
+        "project_edge_vector", "projectEdgeVector", removal_version="1.0.0", future_warn=False
     )
     projectFaceVector = deprecate_method(
-        "project_face_vector", "projectFaceVector", removal_version="1.0.0"
+        "project_face_vector", "projectFaceVector", removal_version="1.0.0", future_warn=False
     )
 
     @property
