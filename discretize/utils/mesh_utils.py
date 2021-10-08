@@ -236,7 +236,7 @@ def closest_points_index(mesh, pts, grid_loc="CC", **kwargs):
         "The closest_points_index utilty function has been moved to be a method of "
         "a class object. Please access it as mesh.closest_points_index(). This will "
         "be removed in a future version of discretize",
-        DeprecationWarning.
+        DeprecationWarning,
     )
     return mesh.closest_points_index(pts, grid_loc=grid_loc, discard=True)
 
