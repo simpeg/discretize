@@ -1,0 +1,43 @@
+.. currentmodule:: discretize
+
+.. _0.7.1_notes:
+
+===================================
+``discretize`` 0.7.1 Release Notes
+===================================
+
+This patch release is a big step, but with minimal functional changes. There are a few
+small bug fixes, but the largest news is the updated documentation!
+
+New Documentation
+-----------------
+The documentation for every module, class, function, etc. has all been unified to
+numpy styled documentation. Many functions and methods now have small examples
+within their docstrings that show simple usage. We have also update the layout of the
+documentation to match the new ``pydata`` community layout.
+
+Bug Fixes
+---------
+We previously re-intoduced a small bug in the ``mixins.mpl.plot_3d_slicer``
+functionality that would caused the colorscales to not match for a homogenous model.
+This has be re-fixed.
+
+We also now additionally return the quiver plot object when vector plotting using the
+```plot_slice`` on a ``TreeMesh``
+
+Contributors
+============
+
+* @jcapriot
+* @dcowan
+* @lheagy
+* @prisae
+
+Pull requests
+=============
+
+* `#253 <https://github.com/simpeg/discretize/pull/253>`__: Numpy docstrings api
+* `#256 <https://github.com/simpeg/discretize/pull/256>`__: Update mpl_mod.py
+* `#258 <https://github.com/simpeg/discretize/pull/258>`__: Numpy docstrings api review
+* `#262 <https://github.com/simpeg/discretize/pull/262>`__: Fix wrong colour for fullspaces - again /
+`#264 <https://github.com/simpeg/discretize/pull/264>`__: patch for fullspace slicer colorscales

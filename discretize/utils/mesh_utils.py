@@ -2,7 +2,7 @@ import numpy as np
 import scipy.ndimage as ndi
 import scipy.sparse as sp
 
-from discretize.utils.code_utils import as_array_n_by_dim, is_scalar
+from discretize.utils.code_utils import is_scalar
 from scipy.spatial import cKDTree, Delaunay
 from scipy import interpolate
 import discretize
@@ -232,20 +232,13 @@ def closest_points_index(mesh, pts, grid_loc="CC", **kwargs):
             DeprecationWarning,
         )
         grid_loc = kwargs["gridLoc"]
-
-    pts = as_array_n_by_dim(pts, mesh.dim)
-    grid = getattr(mesh, "grid" + grid_loc)
-    nodeInds = np.empty(pts.shape[0], dtype=int)
-
-    for i, pt in enumerate(pts):
-        if mesh.dim == 1:
-            nodeInds[i] = ((pt - grid) ** 2).argmin()
-        else:
-            nodeInds[i] = (
-                ((np.tile(pt, (grid.shape[0], 1)) - grid) ** 2).sum(axis=1).argmin()
-            )
-
-    return nodeInds
+    warnings.warn(
+        "The closest_points_index utilty function has been moved to be a method of "
+        "a class object. Please access it as mesh.closest_points_index(). This will "
+        "be removed in a future version of discretize",
+        DeprecationWarning,
+    )
+    return mesh.closest_points_index(pts, grid_loc=grid_loc, discard=True)
 
 
 def extract_core_mesh(xyzlim, mesh, mesh_type="tensor"):
@@ -1133,13 +1126,13 @@ def example_simplex_mesh(rect_shape):
     return points, simplices
 
 
-meshTensor = deprecate_function(unpack_widths, "meshTensor", removal_version="1.0.0")
+meshTensor = deprecate_function(unpack_widths, "meshTensor", removal_version="1.0.0", future_warn=False)
 closestPoints = deprecate_function(
-    closest_points_index, "closestPoints", removal_version="1.0.0"
+    closest_points_index, "closestPoints", removal_version="1.0.0", future_warn=False
 )
 ExtractCoreMesh = deprecate_function(
-    extract_core_mesh, "ExtractCoreMesh", removal_version="1.0.0"
+    extract_core_mesh, "ExtractCoreMesh", removal_version="1.0.0", future_warn=False
 )
 closest_points = deprecate_function(
-    closest_points_index, "closest_points", removal_version="1.0.0"
+    closest_points_index, "closest_points", removal_version="1.0.0", future_warn=False
 )

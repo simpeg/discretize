@@ -1315,7 +1315,7 @@ def inverse_property_tensor(mesh, tensor, return_matrix=False, **kwargs):
     >>> import matplotlib as mpl
 
     Define a 2D tensor mesh
-    
+
     >>> h = [1., 1., 1.]
     >>> mesh = TensorMesh([h, h], origin='00')
 
@@ -1712,22 +1712,22 @@ class _inftup(tuple):
 #             DEPRECATED FUNCTIONS
 ################################################
 
-sdInv = deprecate_function(sdinv, "sdInv", removal_version="1.0.0")
+sdInv = deprecate_function(sdinv, "sdInv", removal_version="1.0.0", future_warn=False)
 
-getSubArray = deprecate_function(get_subarray, "getSubArray", removal_version="1.0.0")
+getSubArray = deprecate_function(get_subarray, "getSubArray", removal_version="1.0.0", future_warn=False)
 
 inv3X3BlockDiagonal = deprecate_function(
-    inverse_3x3_block_diagonal, "inv3X3BlockDiagonal", removal_version="1.0.0"
+    inverse_3x3_block_diagonal, "inv3X3BlockDiagonal", removal_version="1.0.0", future_warn=False
 )
 
 inv2X2BlockDiagonal = deprecate_function(
-    inverse_2x2_block_diagonal, "inv2X2BlockDiagonal", removal_version="1.0.0"
+    inverse_2x2_block_diagonal, "inv2X2BlockDiagonal", removal_version="1.0.0", future_warn=False
 )
 
 makePropertyTensor = deprecate_function(
-    make_property_tensor, "makePropertyTensor", removal_version="1.0.0"
+    make_property_tensor, "makePropertyTensor", removal_version="1.0.0", future_warn=False
 )
 
 invPropertyTensor = deprecate_function(
-    inverse_property_tensor, "invPropertyTensor", removal_version="1.0.0"
+    inverse_property_tensor, "invPropertyTensor", removal_version="1.0.0", future_warn=False
 )
