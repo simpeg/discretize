@@ -77,11 +77,11 @@ class TestInterpolation2d(discretize.tests.OrderTest):
         self.orderTest()
 
 class TestInterpolation3d(discretize.tests.OrderTest):
-    name = "Interpolation 2D"
+    name = "Interpolation 3D"
     meshSizes = [8, 16, 32]
     meshTypes = ['uniform simplex mesh']
     interp_points = np.random.rand(200, 3) * 0.9 + 0.1
-    meshDimension = 2
+    meshDimension = 3
     expectedOrders = 1
 
     def setupMesh(self, n):
@@ -134,32 +134,42 @@ class TestInterpolation3d(discretize.tests.OrderTest):
 
     def test_orderCC(self):
         self.type = "CC"
-        self.name = "Interpolation 2D: CC"
+        self.name = "Interpolation 3D: CC"
         self.orderTest()
 
     def test_orderN(self):
         self.type = "N"
         self.expectedOrders = 2
-        self.name = "Interpolation 2D: N"
+        self.name = "Interpolation 3D: N"
         self.orderTest()
         self.expectedOrders = 1
 
     def test_orderFx(self):
         self.type = "Fx"
-        self.name = "Interpolation 2D: Fx"
+        self.name = "Interpolation 3D: Fx"
         self.orderTest()
 
     def test_orderFy(self):
         self.type = "Fy"
-        self.name = "Interpolation 2D: Fy"
+        self.name = "Interpolation 3D: Fy"
+        self.orderTest()
+
+    def test_orderFz(self):
+        self.type = "Fz"
+        self.name = "Interpolation 3D: Fy"
         self.orderTest()
 
     def test_orderEx(self):
         self.type = "Ex"
-        self.name = "Interpolation 2D: Ex"
+        self.name = "Interpolation 3D: Ex"
         self.orderTest()
 
     def test_orderEy(self):
         self.type = "Ey"
-        self.name = "Interpolation 2D: Ey"
+        self.name = "Interpolation 3D: Ey"
+        self.orderTest()
+
+    def test_orderEz(self):
+        self.type = "Ez"
+        self.name = "Interpolation 3D: Ey"
         self.orderTest()

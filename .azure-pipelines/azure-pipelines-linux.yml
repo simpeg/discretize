@@ -36,7 +36,7 @@ jobs:
       eval "$(conda shell.bash hook)"
       conda activate test
       .ci/setup_headless_display.sh
-      pytest tests/base tests/cyl tests/tree tests/simplex  -v -s -W ignore::DeprecationWarning
+      pytest -v -s --ignore=tests/docs -W ignore::DeprecationWarning
     displayName: 'Testing'
     condition: ne(variables['python.version'], '3.8')
 
@@ -56,7 +56,7 @@ jobs:
       eval "$(conda shell.bash hook)"
       conda activate test
       .ci/setup_headless_display.sh
-      pytest tests  -v -s --cov-config=.coveragerc --cov=discretize --cov-report=xml --cov-report=html -W ignore::DeprecationWarning
+      pytest -v -s --cov-config=.coveragerc --cov=discretize --cov-report=xml --cov-report=html -W ignore::DeprecationWarning
     displayName: 'Testing with coverage'
     condition: eq(variables['python.version'], '3.8')
 
