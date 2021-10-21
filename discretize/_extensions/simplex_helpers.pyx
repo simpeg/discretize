@@ -22,6 +22,12 @@ ctypedef fused ints:
     np.int32_t
     np.int64_t
 
+ctypedef fused pointers:
+    size_t
+    np.intp_t
+    np.int32_t
+    np.int64_t
+
 @cython.boundscheck(False)
 def _build_faces_edges(ints[:, :] simplices):
     # the node index in each simplex must be in increasing order
@@ -212,7 +218,7 @@ cdef void _compute_bary_coords(
 @cython.boundscheck(False)
 def _directed_search(
     np.float64_t[:, :] locs,
-    np.intp_t[:] nearest_cc,
+    pointers[:] nearest_cc,
     np.float64_t[:, :] nodes,
     ints[:, :] simplex_nodes,
     np.int64_t[:, :] neighbors,
@@ -221,7 +227,8 @@ def _directed_search(
     bint return_bary=True
 ):
     cdef:
-        int i, i_simp, j
+        int i, j
+        pointers i_simp
         int n_locs = locs.shape[0], dim = locs.shape[1]
         int max_directed = 1 + simplex_nodes.shape[0] // 4
         int i_directed
