@@ -484,7 +484,13 @@ void Cell::divide(node_map_t& nodes, double* xs, double* ys, double* zs, bool fo
     }else{
         if(is_leaf()){
             // Only need to call the function if I am a leaf...
-            int_t test_level = (*test_func)(this);
+            int test_level = (*test_func)(this);
+            if(test_level < 0){
+                // make c modulo like python's ((n % M) + M) % M
+                test_level = (
+                    (test_level % (max_level + 1)) + max_level + 1
+                ) % (max_level + 1);
+            }
             do_splitting = test_level > level;
         }
     }

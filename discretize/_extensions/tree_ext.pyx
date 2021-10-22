@@ -299,12 +299,13 @@ cdef class TreeCell:
     def _level(self):
         return self._cell.level
 
-cdef int_t _evaluate_func(void* function, c_Cell* cell) with gil:
+cdef int _evaluate_func(void* function, c_Cell* cell) with gil:
     # Wraps a function to be called in C++
     func = <object> function
     pycell = TreeCell()
     pycell._set(cell)
-    return <int_t> func(pycell)
+    val = func(pycell)
+    return <int> func(pycell)
 
 cdef class _TreeMesh:
     cdef c_Tree *tree
@@ -497,6 +498,7 @@ cdef class _TreeMesh:
         if finalize:
             self.finalize()
 
+    @cython.cdivision(True)
     def refine_ball(self, points, radii, levels, finalize=True):
         """Refine :class:`~discretize.TreeMesh` using radial distance (ball) and refinement level for a cluster of points.
 
@@ -561,8 +563,15 @@ cdef class _TreeMesh:
             raise ValueError("level length must match the points array's first dimension")
 
         cdef int_t i
+        cdef int l
+        cdef int max_level = self.max_level
         for i in range(ls.shape[0]):
-            self.tree.refine_ball(&cs[i, 0], rs[i], ls[i])
+            l = ls[i]
+            if l < 0:
+                l = (
+                    (l % (max_level + 1)) + max_level + 1
+                ) % (max_level + 1)
+            self.tree.refine_ball(&cs[i, 0], rs[i], l)
         if finalize:
             self.finalize()
 
@@ -631,9 +640,15 @@ cdef class _TreeMesh:
         if x0.shape[0] != ls.shape[0]:
             raise ValueError("level length must match the points array's first dimension")
 
-        cdef int_t i
+        cdef int l
+        cdef int max_level = self.max_level
         for i in range(ls.shape[0]):
-            self.tree.refine_box(&x0[i, 0], &x1[i, 0], ls[i])
+            l = ls[i]
+            if l < 0:
+                l = (
+                    (l % (max_level + 1)) + max_level + 1
+                ) % (max_level + 1)
+            self.tree.refine_box(&x0[i, 0], &x1[i, 0], l)
         if finalize:
             self.finalize()
 
@@ -671,9 +686,15 @@ cdef class _TreeMesh:
         cdef double[:, :] cs = points
         cdef int[:] ls = np.require(np.atleast_1d(levels), dtype=np.int32,
                                     requirements='C')
-        cdef int_t i
+        cdef int l
+        cdef int max_level = self.max_level
         for i in range(ls.shape[0]):
-            self.tree.insert_cell(&cs[i, 0], ls[i])
+            l = ls[i]
+            if l < 0:
+                l = (
+                    (l % (max_level + 1)) + max_level + 1
+                ) % (max_level + 1)
+            self.tree.insert_cell(&cs[i, 0], l)
         if finalize:
             self.finalize()
 

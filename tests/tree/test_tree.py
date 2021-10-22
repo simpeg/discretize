@@ -399,5 +399,48 @@ class Test3DInterpolation(unittest.TestCase):
         self.assertLess(np.abs(P[:, (self.M.nEx + self.M.nEy) :] * r - r).max(), TOL)
 
 
+class TestWrapAroundLevels(unittest.TestCase):
+
+    def test_refine_func(self):
+        mesh1 = discretize.TreeMesh((16, 16, 16))
+        mesh2 = discretize.TreeMesh((16, 16, 16))
+
+        mesh1.refine(-1)
+        mesh2.refine(mesh2.max_level)
+
+        self.assertEqual(mesh1.nC, mesh2.nC)
+
+    def test_refine_box(self):
+        mesh1 = discretize.TreeMesh((16, 16, 16))
+        mesh2 = discretize.TreeMesh((16, 16, 16))
+
+        x0s = [[4, 4, 4]]
+        x1s = [[8, 8, 8]]
+        mesh1.refine_box(x0s, x1s, [-1])
+        mesh2.refine_box(x0s, x1s, [mesh2.max_level])
+
+        self.assertEqual(mesh1.nC, mesh2.nC)
+
+    def test_refine_ball(self):
+        mesh1 = discretize.TreeMesh((16, 16, 16))
+        mesh2 = discretize.TreeMesh((16, 16, 16))
+
+        centers = [[8, 8, 8]]
+        r_s = [3]
+        mesh1.refine_ball(centers, r_s, [-1])
+        mesh2.refine_ball(centers, r_s, [mesh2.max_level])
+
+        self.assertEqual(mesh1.nC, mesh2.nC)
+
+    def test_insert_point(self):
+        mesh1 = discretize.TreeMesh((16, 16, 16))
+        mesh2 = discretize.TreeMesh((16, 16, 16))
+
+        mesh1.insert_cells([[8, 8, 8]], [-1])
+        mesh2.insert_cells([[8, 8, 8]], [mesh2.max_level])
+
+        self.assertEqual(mesh1.nC, mesh2.nC)
+
+
 if __name__ == "__main__":
     unittest.main()
