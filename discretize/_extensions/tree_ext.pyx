@@ -568,9 +568,7 @@ cdef class _TreeMesh:
         for i in range(ls.shape[0]):
             l = ls[i]
             if l < 0:
-                l = (
-                    (l % (max_level + 1)) + max_level + 1
-                ) % (max_level + 1)
+                l = (max_level + 1) - (abs(l) % (max_level + 1))
             self.tree.refine_ball(&cs[i, 0], rs[i], l)
         if finalize:
             self.finalize()
@@ -645,9 +643,7 @@ cdef class _TreeMesh:
         for i in range(ls.shape[0]):
             l = ls[i]
             if l < 0:
-                l = (
-                    (l % (max_level + 1)) + max_level + 1
-                ) % (max_level + 1)
+                l = (max_level + 1) - (abs(l) % (max_level + 1))
             self.tree.refine_box(&x0[i, 0], &x1[i, 0], l)
         if finalize:
             self.finalize()
@@ -691,9 +687,7 @@ cdef class _TreeMesh:
         for i in range(ls.shape[0]):
             l = ls[i]
             if l < 0:
-                l = (
-                    (l % (max_level + 1)) + max_level + 1
-                ) % (max_level + 1)
+                l = (max_level + 1) - (abs(l) % (max_level + 1))
             self.tree.insert_cell(&cs[i, 0], l)
         if finalize:
             self.finalize()
