@@ -36,7 +36,7 @@ jobs:
       eval "$(conda shell.bash hook)"
       conda activate test
       .ci/setup_headless_display.sh
-      pytest tests  -v -s -W ignore::DeprecationWarning
+      pytest -v -s --ignore=tests/docs -W ignore::DeprecationWarning
     displayName: 'Testing'
     condition: ne(variables['python.version'], '3.8')
 
@@ -56,13 +56,13 @@ jobs:
       eval "$(conda shell.bash hook)"
       conda activate test
       .ci/setup_headless_display.sh
-      pytest tests  -v -s --cov-config=.coveragerc --cov=discretize --cov-report=xml --cov-report=html -W ignore::DeprecationWarning
+      pytest -v -s --cov-config=.coveragerc --cov=discretize --cov-report=xml --cov-report=html -W ignore::DeprecationWarning
     displayName: 'Testing with coverage'
     condition: eq(variables['python.version'], '3.8')
 
   - script: |
-      bash <(curl -s https://codecov.io/bash)
+      curl -Os https://uploader.codecov.io/latest/linux/codecov
+      chmod +x codecov
+      ./codecov
     displayName: 'Upload coverage to codecov.io'
-    env:
-      CODECOV_TOKEN: $(codecov.token)
     condition: eq(variables['python.version'], '3.8')

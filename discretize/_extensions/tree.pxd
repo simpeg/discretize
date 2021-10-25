@@ -65,7 +65,7 @@ cdef extern from "tree.h":
 
     cdef cppclass PyWrapper:
         PyWrapper()
-        void set(void*, int_t(*)(void*, Cell*))
+        void set(void*, int(*)(void*, Cell*))
 
     cdef cppclass Tree:
         int_t n_dim
