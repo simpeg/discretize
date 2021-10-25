@@ -35,13 +35,13 @@ typedef std::vector<int_t> int_vec_t;
 class PyWrapper{
   public:
     void *py_func;
-    int_t (*eval)(void *, Cell*);
+    int (*eval)(void *, Cell*);
 
   PyWrapper(){
     py_func = NULL;
   };
 
-  void set(void* func, int_t (*wrapper)(void*, Cell*)){
+  void set(void* func, int (*wrapper)(void*, Cell*)){
     py_func = func;
     eval = wrapper;
   };
