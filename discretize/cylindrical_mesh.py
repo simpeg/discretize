@@ -455,8 +455,8 @@ class CylindricalMesh(
             y-positions of cell centers along the y-direction
         """
         if self.is_symmetric:
-            return np.r_[0, self.h[1][:-1]]
-        return np.r_[0, self.h[1][:-1].cumsum()] + self.h[1] * 0.5
+            return self.origin[1] + np.r_[0, self.h[1][:-1]]
+        return self.origin[1] + np.r_[0, self.h[1][:-1].cumsum()] + self.h[1] * 0.5
 
     @property
     def nodes_x(self):
@@ -481,8 +481,8 @@ class CylindricalMesh(
         full nodal y vector (prior to deflating)
         """
         if self.is_symmetric:
-            return np.r_[0]
-        return np.r_[0, self.h[1].cumsum()]
+            return np.r_[self.origin[1]]
+        return self.origin[1] + np.r_[0, self.h[1].cumsum()]
 
     @property
     def nodes_y(self):
@@ -498,7 +498,7 @@ class CylindricalMesh(
         (n_nodes_y) numpy.ndarray
             y-positions of nodes along the y-direction
         """
-        return np.r_[0, self.h[1][:-1].cumsum()]
+        return self.origin[1] + np.r_[0, self.h[1][:-1].cumsum()]
 
     @property
     def _edge_x_lengths_full(self):
