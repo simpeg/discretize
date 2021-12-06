@@ -20,6 +20,7 @@ jobs:
     displayName: Add conda to PATH
 
   - script: |
+      conda update --yes --quiet -n base conda
       conda create --yes --quiet --name test python=$(python.version)
     displayName: Create Anaconda environment
 
