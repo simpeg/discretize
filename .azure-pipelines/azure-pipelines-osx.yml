@@ -5,12 +5,12 @@ jobs:
     vmImage: macOS-latest
   strategy:
     matrix:
-      osx-Python36:
-        python.version: '3.6'
       osx-Python37:
         python.version: '3.7'
       osx-Python38:
         python.version: '3.8'
+      osx-Python39:
+        python.version: '3.9'
   steps:
 
   - script: echo '##vso[task.prependpath]$CONDA/bin'

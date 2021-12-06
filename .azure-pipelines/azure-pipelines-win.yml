@@ -5,12 +5,12 @@ jobs:
     vmImage: vs2017-win2016
   strategy:
     matrix:
-      win-Python36:
-        python.version: '3.6'
       win-Python37:
         python.version: '3.7'
       win-Python38:
         python.version: '3.8'
+      win-Python39:
+        python.version: '3.9'
   steps:
 
   - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
