@@ -5,18 +5,19 @@ jobs:
     vmImage: vs2017-win2016
   strategy:
     matrix:
-      win-Python36:
-        python.version: '3.6'
       win-Python37:
         python.version: '3.7'
       win-Python38:
         python.version: '3.8'
+      win-Python39:
+        python.version: '3.9'
   steps:
 
   - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
     displayName: Add conda to PATH
 
   - script: |
+      conda update -n base conda
       conda create --yes --quiet -c conda-forge --name test python=$(python.version) numpy scipy matplotlib cython vtk pyvista pymatsolver pip
     displayName: Create Anaconda environment
 

@@ -5,12 +5,12 @@ jobs:
     vmImage: macOS-latest
   strategy:
     matrix:
-      osx-Python36:
-        python.version: '3.6'
       osx-Python37:
         python.version: '3.7'
       osx-Python38:
         python.version: '3.8'
+      osx-Python39:
+        python.version: '3.9'
   steps:
 
   - script: echo '##vso[task.prependpath]$CONDA/bin'
@@ -20,6 +20,7 @@ jobs:
     displayName: Take ownership of conda installation
 
   - script: |
+      conda update -n base conda
       conda create --yes --quiet --name test python=$(python.version)
     displayName: Create Anaconda environment
 
