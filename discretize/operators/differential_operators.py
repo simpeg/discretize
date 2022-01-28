@@ -2946,19 +2946,15 @@ class DiffOperators(object):
             >>> ax2.set_xlabel("Edge Index", fontsize=12)
             >>> plt.show()
         """
-        L = self.edge_lengths  # Compute lengths of cell edges
-        S = self.face_areas  # Compute areas of cell faces
-
         if getattr(self, "_edge_curl", None) is None:
-
             if self.dim <= 1:
                 raise NotImplementedError("Edge Curl only programed for 2 or 3D.")
-
+            L = self.edge_lengths  # Compute lengths of cell edges
             if self.dim == 2:
-                self._edge_curl = self._edge_curl_stencil * sdiag(1 / S)
+                S = self.cell_volumes
             elif self.dim == 3:
-                self._edge_curl = sdiag(1 / S) * (self._edge_curl_stencil * sdiag(L))
-
+                S = self.face_areas
+            self._edge_curl = sdiag(1 / S) @ self._edge_curl_stencil @ sdiag(L)
         return self._edge_curl
 
     @property
