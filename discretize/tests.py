@@ -22,6 +22,7 @@ Functions
   rosenbrock
   get_quadratic
   setup_mesh
+  dottest
 """
 
 import numpy as np
@@ -83,6 +84,9 @@ sadness = [
     "Get on it " + name + "!",
     "You break it, you fix it.",
 ]
+
+# Initiate random number generator
+rng = np.random.default_rng()
 
 
 def setup_mesh(mesh_type, nC, nDim):
@@ -631,6 +635,84 @@ def get_quadratic(A, b, c=0):
         return out if len(out) > 1 else out[0]
 
     return Quadratic
+
+
+def dottest(forward, adjoint, fwd_size, adj_size, fwd_complex=False,
+            adj_complex=False, rtol=1e-6, atol=0.0, raise_error=False,
+            verb=False):
+    r"""Dot product test for the forward operator and its adjoint operator.
+
+    Dot product test to verify the correctness of the adjoint operator
+    :math:`F^H` of the forward operator :math:`F`.
+
+    .. math::
+
+        \mathbf{v}^H ( \mathbf{F} \mathbf{u} ) =
+        ( \mathbf{F}^H \mathbf{v} )^H \mathbf{u}
+
+
+    Parameters
+    ----------
+    forward, adjoint : functions
+        Forward operator and its adjoint operator.
+
+    fwd_size, adj_size : int
+        Sizes of the vectors {u; v} passed to ``forward`` and ``adjoint``.
+
+    fwd_complex, adj_complex : bool, defaults: False, False
+        If True, complex vectors are passed to ``forward`` and ``adjoint``.
+
+    rtol, atol : float, defaults: 1e-6, 0.0
+        Relative and absolute tolerance, used with :func:`numpy.isclose`.
+
+    raise_error : bool, default: False
+        If False, the result of the test is returned as boolean.
+        If True and the test fails, an AssertionError is raised.
+
+    verb : bool, default: False
+        Verbosity; if True, print result if passed.
+
+
+    Returns
+    -------
+    passed : bool, returned if raise_error=False
+        Result of the dot product test.
+
+    """
+
+    def random(size, iscomplex):
+        """Create random data of size and dtype of <size>."""
+        out = rng.standard_normal(int(np.real(size)))
+        if iscomplex:
+            out = out + 1j*rng.standard_normal(out.size)
+        return out
+
+    # Create random vectors u and v.
+    u = random(fwd_size, fwd_complex)
+    v = random(adj_size, adj_complex)
+
+    # Carry out dot product test.
+    lhs = np.vdot(forward(u), v)  # lhs := v^H * (fwd  * u)
+    rhs = np.vdot(u, adjoint(v))  # rhs := (adj * v)^H * u
+
+    # Check if they are the same.
+    passed = np.isclose(rhs, lhs, rtol, atol)
+
+    # Verbosity and error.
+    if (not passed and raise_error) or verb:
+        msg = (
+            f"Dot test {'PASSED' if passed else 'FAILED'} ::  "
+            f"{abs(rhs-lhs):.3e} < {atol+rtol*abs(lhs):.3e}  "
+            f"[ abs(rhs-lhs) < atol + rtol * abs(lhs) ]."
+        )
+        if not passed and raise_error:
+            raise AssertionError(msg)
+        else:
+            print(msg)
+
+    # Only return if not set to raise.
+    if not raise_error:
+        return passed
 
 
 # DEPRECATIONS
