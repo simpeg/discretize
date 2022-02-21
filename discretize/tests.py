@@ -708,10 +708,10 @@ def dottest(
     v = random(np.product(adj_shape), adj_complex)
 
     # Carry out dot product test.
-    fwdu = forward(u.reshape(fwd_shape)).ravel(fwd_order)  # fwd * u
-    adjv = adjoint(v.reshape(adj_shape)).ravel(adj_order)  # adj * v
-    lhs = np.vdot(v, fwdu)  # lhs := v^H * (fwd  * u)
-    rhs = np.vdot(adjv, u)  # rhs := (adj * v)^H * u
+    fwd_u = forward(u.reshape(fwd_shape, order=fwd_order)).ravel(fwd_order)
+    adj_v = adjoint(v.reshape(adj_shape, order=adj_order)).ravel(adj_order)
+    lhs = np.vdot(v, fwd_u)  # lhs := v^H * (fwd * u)
+    rhs = np.vdot(adj_v, u)  # rhs := (adj * v)^H * u
 
     # Check if they are the same.
     passed = np.isclose(rhs, lhs, rtol, atol)
