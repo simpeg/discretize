@@ -637,9 +637,21 @@ def get_quadratic(A, b, c=0):
     return Quadratic
 
 
-def dottest(forward, adjoint, fwd_size, adj_size, fwd_complex=False,
-            adj_complex=False, rtol=1e-6, atol=0.0, raise_error=False,
-            verb=False):
+# TESTS
+def dottest(
+    forward,
+    adjoint,
+    fwd_shape,
+    adj_shape,
+    fwd_complex=False,
+    adj_complex=False,
+    fwd_order="C",
+    adj_order="C",
+    rtol=1e-6,
+    atol=0.0,
+    raise_error=False,
+    verb=False,
+):
     r"""Dot product test for the forward operator and its adjoint operator.
 
     Dot product test to verify the correctness of the adjoint operator
@@ -656,11 +668,15 @@ def dottest(forward, adjoint, fwd_size, adj_size, fwd_complex=False,
     forward, adjoint : functions
         Forward operator and its adjoint operator.
 
-    fwd_size, adj_size : int
-        Sizes of the vectors {u; v} passed to ``forward`` and ``adjoint``.
+    fwd_shape, adj_shape : int, tuple of int
+        Shapes of the vectors {u; v} passed to ``forward`` and ``adjoint``.
 
     fwd_complex, adj_complex : bool, defaults: False, False
         If True, complex vectors are passed to ``forward`` and ``adjoint``.
+
+    fwd_order, adj_order : string, defaults: 'C', 'C'
+        Used the ravel the output of the ``forward``/``adjoint`` if their shape
+        is higher than 1D.
 
     rtol, atol : float, defaults: 1e-6, 0.0
         Relative and absolute tolerance, used with :func:`numpy.isclose`.
@@ -684,16 +700,18 @@ def dottest(forward, adjoint, fwd_size, adj_size, fwd_complex=False,
         """Create random data of size and dtype of <size>."""
         out = rng.standard_normal(int(np.real(size)))
         if iscomplex:
-            out = out + 1j*rng.standard_normal(out.size)
+            out = out + 1j * rng.standard_normal(out.size)
         return out
 
     # Create random vectors u and v.
-    u = random(fwd_size, fwd_complex)
-    v = random(adj_size, adj_complex)
+    u = random(np.product(fwd_shape), fwd_complex)
+    v = random(np.product(adj_shape), adj_complex)
 
     # Carry out dot product test.
-    lhs = np.vdot(v, forward(u))  # lhs := v^H * (fwd  * u)
-    rhs = np.vdot(adjoint(v), u)  # rhs := (adj * v)^H * u
+    fwdu = forward(u.reshape(fwd_shape)).ravel(fwd_order)  # fwd * u
+    adjv = adjoint(v.reshape(adj_shape)).ravel(adj_order)  # adj * v
+    lhs = np.vdot(v, fwdu)  # lhs := v^H * (fwd  * u)
+    rhs = np.vdot(adjv, u)  # rhs := (adj * v)^H * u
 
     # Check if they are the same.
     passed = np.isclose(rhs, lhs, rtol, atol)
