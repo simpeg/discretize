@@ -720,8 +720,9 @@ def dottest(
     if (not passed and raise_error) or verb:
         msg = (
             f"Dot test {'PASSED' if passed else 'FAILED'} ::  "
-            f"{abs(rhs-lhs):.3e} < {atol+rtol*abs(lhs):.3e}  "
-            f"[ abs(rhs-lhs) < atol + rtol * abs(lhs) ]."
+            f"{abs(rhs-lhs):.3e} < {atol+rtol*abs(lhs):.3e}  :: "
+            f"|rhs-lhs| < atol + rtol|lhs|"
+
         )
         if not passed and raise_error:
             raise AssertionError(msg)
