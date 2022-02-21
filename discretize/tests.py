@@ -692,8 +692,8 @@ def dottest(forward, adjoint, fwd_size, adj_size, fwd_complex=False,
     v = random(adj_size, adj_complex)
 
     # Carry out dot product test.
-    lhs = np.vdot(forward(u), v)  # lhs := v^H * (fwd  * u)
-    rhs = np.vdot(u, adjoint(v))  # rhs := (adj * v)^H * u
+    lhs = np.vdot(v, forward(u))  # lhs := v^H * (fwd  * u)
+    rhs = np.vdot(adjoint(v), u)  # rhs := (adj * v)^H * u
 
     # Check if they are the same.
     passed = np.isclose(rhs, lhs, rtol, atol)
