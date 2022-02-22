@@ -647,6 +647,7 @@ def dottest(
     adj_complex=False,
     fwd_order="C",
     adj_order="C",
+    clinear=True,
     rtol=1e-6,
     atol=0.0,
     raise_error=False,
@@ -677,6 +678,9 @@ def dottest(
     fwd_order, adj_order : string, defaults: 'C', 'C'
         Used the ravel the output of the ``forward``/``adjoint`` if their shape
         is higher than 1D.
+
+    clinear : bool, default: True
+        If operator is complex-linear (True) or real-linear (False).
 
     rtol, atol : float, defaults: 1e-6, 0.0
         Relative and absolute tolerance, used with :func:`numpy.isclose`.
@@ -710,8 +714,12 @@ def dottest(
     # Carry out dot product test.
     fwd_u = forward(u.reshape(fwd_shape, order=fwd_order)).ravel(fwd_order)
     adj_v = adjoint(v.reshape(adj_shape, order=adj_order)).ravel(adj_order)
-    lhs = np.vdot(v, fwd_u)  # lhs := v^H * (fwd * u)
-    rhs = np.vdot(adj_v, u)  # rhs := (adj * v)^H * u
+    if clinear:
+        lhs = np.vdot(v, fwd_u)  # lhs := v^H * (fwd * u)
+        rhs = np.vdot(adj_v, u)  # rhs := (adj * v)^H * u
+    else:
+        lhs = np.dot(v.real, fwd_u.real) + np.dot(v.imag, fwd_u.imag)
+        rhs = np.dot(adj_v.real, u.real) + np.dot(adj_v.imag, u.imag)
 
     # Check if they are the same.
     passed = np.isclose(rhs, lhs, rtol, atol)
@@ -722,7 +730,6 @@ def dottest(
             f"Dot test {'PASSED' if passed else 'FAILED'} ::  "
             f"{abs(rhs-lhs):.3e} < {atol+rtol*abs(lhs):.3e}  :: "
             f"|rhs-lhs| < atol + rtol|lhs|"
-
         )
         if not passed and raise_error:
             raise AssertionError(msg)
