@@ -851,7 +851,7 @@ class BaseMesh:
 
         tree = getattr(self, tree_name, None)
         if tree is None:
-            grid = getattr(self, grid_loc)
+            grid = as_array_n_by_dim(getattr(self, grid_loc), self.dim)
             tree = KDTree(grid)
         _, ind = tree.query(locations)
 
