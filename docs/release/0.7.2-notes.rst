@@ -1,0 +1,33 @@
+.. currentmodule:: discretize
+
+.. _0.7.2_notes:
+
+===================================
+``discretize`` 0.7.2 Release Notes
+===================================
+
+This patch release is for a minor improvements to a few functions
+
+Searching
+---------
+The function ``closest_points_index`` now exists on the `base.BaseMesh`, with a default
+implementation based on a KDTree lookup. This allows for much faster repeated calls.
+The previous function one off function will now point to this method on the mesh.
+
+Negative Levels
+---------------
+To referring to levels on ``TreeMesh`` refine functions, you can now pass negative
+integers to refer to the maximum refine level (similar to negative indexing on arrays)
+
+Contributors
+============
+
+* @jcapriot
+* @ngodber
+
+Pull requests
+=============
+
+* `#251 <https://github.com/simpeg/discretize/pull/251>`__: refactor closest_points_index to use cKDTree.
+* `#267 <https://github.com/simpeg/discretize/pull/267>`__: TreeMesh negative levels
+* `#270 <https://github.com/simpeg/discretize/pull/270>`__: ensure the grid locations are (N x dim) happens in 1D
