@@ -51,7 +51,7 @@ class TestAssertIsAdjoint:
             out = np.expand_dims(inp, 1)
             return np.tile(out, nt)
 
-        assert_isadjoint(fwd, adj, shape_in=(4, nt), shape_out=(4,))
+        assert_isadjoint(fwd, adj, shape_u=(4, nt), shape_v=(4,))
 
     def test_complex_clinear(self):
         # The complex conjugate is self-adjoint, real-linear.
@@ -60,7 +60,7 @@ class TestAssertIsAdjoint:
             np.conj,
             (4, 3),
             (4, 3),
-            complex_in=True,
-            complex_out=True,
+            complex_u=True,
+            complex_v=True,
             clinear=False,
         )
