@@ -641,10 +641,10 @@ def get_quadratic(A, b, c=0):
 def assert_isadjoint(
     forward,
     adjoint,
-    shape_in,
-    shape_out,
-    complex_in=False,
-    complex_out=False,
+    shape_u,
+    shape_v,
+    complex_u=False,
+    complex_v=False,
     clinear=True,
     rtol=1e-6,
     atol=0.0,
@@ -663,22 +663,36 @@ def assert_isadjoint(
 
     Parameters
     ----------
-    forward, adjoint : functions
-        Forward operator and its adjoint operator.
+    forward : function
+        Forward operator.
 
-    shape_in, shape_out : int, tuple of int
-        Shapes of the vectors passed in to and returned from ``forward`` (and
-        vice versa for the ``adjoint``).
+    adjoint : function
+        Adjoint operator.
 
-    complex_in, complex_out : bool, defaults: False, False
-        If True, complex vectors are passed in to and returned from ``forward``
-        (and vice versa for the ``adjoint``).
+    shape_u : int, tuple of int
+        Shape of vector ``u`` passed in to ``forward``; it is accordingly the
+        expected shape of the vector returned from the ``adjoint``.
+
+    shape_v : int, tuple of int
+        Shape of vector ``v`` passed in to ``adjoint``; it is accordingly the
+        expected shape of the vector returned from the ``forward``.
+
+    complex_u : bool, default: False
+        If True, vector ``u`` passed to ``forward`` is a complex vector;
+        accordingly the ``adjoint`` is expected to return a complex vector.
+
+    complex_v : bool, default: False
+        If True, vector ``v`` passed to ``adjoint`` is a complex vector;
+        accordingly the ``forward`` is expected to return a complex vector.
 
     clinear : bool, default: True
         If operator is complex-linear (True) or real-linear (False).
 
-    rtol, atol : float, defaults: 1e-6, 0.0
-        Relative and absolute tolerance.
+    rtol : float, default: 1e-6
+        Relative tolerance.
+
+    atol : float, default: 0.0
+        Absolute tolerance.
 
     assert_error : bool, default: True
         By default this test is an assertion (silent if passed, raising an
@@ -708,8 +722,8 @@ def assert_isadjoint(
         return out
 
     # Create random vectors u and v.
-    u = random(np.product(shape_in), complex_in).reshape(shape_in)
-    v = random(np.product(shape_out), complex_out).reshape(shape_out)
+    u = random(np.product(shape_u), complex_u).reshape(shape_u)
+    v = random(np.product(shape_v), complex_v).reshape(shape_v)
 
     # Carry out dot product test.
     fwd_u = forward(u)
