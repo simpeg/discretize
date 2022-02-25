@@ -691,13 +691,20 @@ def assert_isadjoint(
     passed : bool, returned if assert_error=False
         Result of the dot product test.
 
+
+    Raises
+    ------
+    AssertionError
+        If the dot product test fails (only if assert_error=True).
+
+
     """
 
     def random(size, iscomplex):
         """Create random data of size and dtype of <size>."""
-        out = rng.standard_normal(int(np.real(size)))
+        out = rng.standard_normal(size)
         if iscomplex:
-            out = out + 1j * rng.standard_normal(out.size)
+            out = out + 1j * rng.standard_normal(size)
         return out
 
     # Create random vectors u and v.
