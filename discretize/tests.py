@@ -22,7 +22,7 @@ Functions
   rosenbrock
   get_quadratic
   setup_mesh
-  dottest
+  assert_isadjoint
 """
 
 import numpy as np
@@ -638,20 +638,17 @@ def get_quadratic(A, b, c=0):
 
 
 # TESTS
-def dottest(
+def assert_isadjoint(
     forward,
     adjoint,
-    fwd_shape,
-    adj_shape,
-    fwd_complex=False,
-    adj_complex=False,
-    fwd_order="C",
-    adj_order="C",
+    shape_in,
+    shape_out,
+    complex_in=False,
+    complex_out=False,
     clinear=True,
     rtol=1e-6,
     atol=0.0,
-    raise_error=False,
-    verb=False,
+    assert_error=True,
 ):
     r"""Dot product test for the forward operator and its adjoint operator.
 
@@ -669,33 +666,29 @@ def dottest(
     forward, adjoint : functions
         Forward operator and its adjoint operator.
 
-    fwd_shape, adj_shape : int, tuple of int
-        Shapes of the vectors {u; v} passed to ``forward`` and ``adjoint``.
+    shape_in, shape_out : int, tuple of int
+        Shapes of the vectors passed in to and returned from ``forward`` (and
+        vice versa for the ``adjoint``).
 
-    fwd_complex, adj_complex : bool, defaults: False, False
-        If True, complex vectors are passed to ``forward`` and ``adjoint``.
-
-    fwd_order, adj_order : string, defaults: 'C', 'C'
-        Used the ravel the output of the ``forward``/``adjoint`` if their shape
-        is higher than 1D.
+    complex_in, complex_out : bool, defaults: False, False
+        If True, complex vectors are passed in to and returned from ``forward``
+        (and vice versa for the ``adjoint``).
 
     clinear : bool, default: True
         If operator is complex-linear (True) or real-linear (False).
 
     rtol, atol : float, defaults: 1e-6, 0.0
-        Relative and absolute tolerance, used with :func:`numpy.isclose`.
+        Relative and absolute tolerance.
 
-    raise_error : bool, default: False
-        If False, the result of the test is returned as boolean.
-        If True and the test fails, an AssertionError is raised.
-
-    verb : bool, default: False
-        Verbosity; if True, print result if passed.
+    assert_error : bool, default: True
+        By default this test is an assertion (silent if passed, raising an
+        assertion error if failed). If set to False, the result of the test is
+        returned as boolean and a message is printed.
 
 
     Returns
     -------
-    passed : bool, returned if raise_error=False
+    passed : bool, returned if assert_error=False
         Result of the dot product test.
 
     """
@@ -708,36 +701,34 @@ def dottest(
         return out
 
     # Create random vectors u and v.
-    u = random(np.product(fwd_shape), fwd_complex)
-    v = random(np.product(adj_shape), adj_complex)
+    u = random(np.product(shape_in), complex_in).reshape(shape_in)
+    v = random(np.product(shape_out), complex_out).reshape(shape_out)
 
     # Carry out dot product test.
-    fwd_u = forward(u.reshape(fwd_shape, order=fwd_order)).ravel(fwd_order)
-    adj_v = adjoint(v.reshape(adj_shape, order=adj_order)).ravel(adj_order)
+    fwd_u = forward(u)
+    adj_v = adjoint(v)
     if clinear:
         lhs = np.vdot(v, fwd_u)  # lhs := v^H * (fwd * u)
         rhs = np.vdot(adj_v, u)  # rhs := (adj * v)^H * u
     else:
-        lhs = np.dot(v.real, fwd_u.real) + np.dot(v.imag, fwd_u.imag)
-        rhs = np.dot(adj_v.real, u.real) + np.dot(adj_v.imag, u.imag)
+        lhs = np.vdot(v.real, fwd_u.real) + np.vdot(v.imag, fwd_u.imag)
+        rhs = np.vdot(adj_v.real, u.real) + np.vdot(adj_v.imag, u.imag)
 
     # Check if they are the same.
-    passed = np.isclose(rhs, lhs, rtol, atol)
+    if assert_error:
+        np.testing.assert_allclose(
+            rhs, lhs, rtol=rtol, atol=atol, err_msg="Adjoint test failed"
+        )
 
-    # Verbosity and error.
-    if (not passed and raise_error) or verb:
-        msg = (
-            f"Dot test {'PASSED' if passed else 'FAILED'} ::  "
+    else:
+        passed = np.allclose(rhs, lhs, rtol=rtol, atol=atol)
+
+        print(
+            f"Adjoint test {'PASSED' if passed else 'FAILED'} ::  "
             f"{abs(rhs-lhs):.3e} < {atol+rtol*abs(lhs):.3e}  :: "
             f"|rhs-lhs| < atol + rtol|lhs|"
         )
-        if not passed and raise_error:
-            raise AssertionError(msg)
-        else:
-            print(msg)
 
-    # Only return if not set to raise.
-    if not raise_error:
         return passed
 
 
