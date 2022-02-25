@@ -637,7 +637,6 @@ def get_quadratic(A, b, c=0):
     return Quadratic
 
 
-# TESTS
 def assert_isadjoint(
     forward,
     adjoint,
