@@ -662,10 +662,10 @@ def assert_isadjoint(
 
     Parameters
     ----------
-    forward : function
+    forward : callable
         Forward operator.
 
-    adjoint : function
+    adjoint : callable
         Adjoint operator.
 
     shape_u : int, tuple of int
@@ -701,9 +701,8 @@ def assert_isadjoint(
 
     Returns
     -------
-    passed : bool, returned if assert_error=False
-        Result of the dot product test.
-
+    passed : bool, optional
+        Result of the dot product test; only returned if ``assert_error`` is False.
 
     Raises
     ------
