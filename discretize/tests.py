@@ -22,6 +22,7 @@ Functions
   rosenbrock
   get_quadratic
   setup_mesh
+  assert_isadjoint
 """
 
 import numpy as np
@@ -83,6 +84,9 @@ sadness = [
     "Get on it " + name + "!",
     "You break it, you fix it.",
 ]
+
+# Initiate random number generator
+rng = np.random.default_rng()
 
 
 def setup_mesh(mesh_type, nC, nDim):
@@ -631,6 +635,120 @@ def get_quadratic(A, b, c=0):
         return out if len(out) > 1 else out[0]
 
     return Quadratic
+
+
+def assert_isadjoint(
+    forward,
+    adjoint,
+    shape_u,
+    shape_v,
+    complex_u=False,
+    complex_v=False,
+    clinear=True,
+    rtol=1e-6,
+    atol=0.0,
+    assert_error=True,
+):
+    r"""Dot product test for the forward operator and its adjoint operator.
+
+    Dot product test to verify the correctness of the adjoint operator
+    :math:`F^H` of the forward operator :math:`F`.
+
+    .. math::
+
+        \mathbf{v}^H ( \mathbf{F} \mathbf{u} ) =
+        ( \mathbf{F}^H \mathbf{v} )^H \mathbf{u}
+
+
+    Parameters
+    ----------
+    forward : callable
+        Forward operator.
+
+    adjoint : callable
+        Adjoint operator.
+
+    shape_u : int, tuple of int
+        Shape of vector ``u`` passed in to ``forward``; it is accordingly the
+        expected shape of the vector returned from the ``adjoint``.
+
+    shape_v : int, tuple of int
+        Shape of vector ``v`` passed in to ``adjoint``; it is accordingly the
+        expected shape of the vector returned from the ``forward``.
+
+    complex_u : bool, default: False
+        If True, vector ``u`` passed to ``forward`` is a complex vector;
+        accordingly the ``adjoint`` is expected to return a complex vector.
+
+    complex_v : bool, default: False
+        If True, vector ``v`` passed to ``adjoint`` is a complex vector;
+        accordingly the ``forward`` is expected to return a complex vector.
+
+    clinear : bool, default: True
+        If operator is complex-linear (True) or real-linear (False).
+
+    rtol : float, default: 1e-6
+        Relative tolerance.
+
+    atol : float, default: 0.0
+        Absolute tolerance.
+
+    assert_error : bool, default: True
+        By default this test is an assertion (silent if passed, raising an
+        assertion error if failed). If set to False, the result of the test is
+        returned as boolean and a message is printed.
+
+
+    Returns
+    -------
+    passed : bool, optional
+        Result of the dot product test; only returned if ``assert_error`` is False.
+
+    Raises
+    ------
+    AssertionError
+        If the dot product test fails (only if assert_error=True).
+
+
+    """
+
+    def random(size, iscomplex):
+        """Create random data of size and dtype of <size>."""
+        out = rng.standard_normal(size)
+        if iscomplex:
+            out = out + 1j * rng.standard_normal(size)
+        return out
+
+    # Create random vectors u and v.
+    u = random(np.product(shape_u), complex_u).reshape(shape_u)
+    v = random(np.product(shape_v), complex_v).reshape(shape_v)
+
+    # Carry out dot product test.
+    fwd_u = forward(u)
+    adj_v = adjoint(v)
+    if clinear:
+        lhs = np.vdot(v, fwd_u)  # lhs := v^H * (fwd * u)
+        rhs = np.vdot(adj_v, u)  # rhs := (adj * v)^H * u
+    else:
+        lhs = np.vdot(v.real, fwd_u.real) + np.vdot(v.imag, fwd_u.imag)
+        rhs = np.vdot(adj_v.real, u.real) + np.vdot(adj_v.imag, u.imag)
+
+    # Check if they are the same.
+    if assert_error:
+        np.testing.assert_allclose(
+            rhs, lhs, rtol=rtol, atol=atol, err_msg="Adjoint test failed"
+        )
+
+    else:
+        passed = np.allclose(rhs, lhs, rtol=rtol, atol=atol)
+
+        print(
+            f"Adjoint test {'PASSED' if passed else 'FAILED'} ::  "
+            f"{abs(rhs-lhs):.3e} < {atol+rtol*abs(lhs):.3e}  :: "
+            f"|rhs-lhs| < atol + rtol|lhs|"
+        )
+
+        return passed
 
 
 # DEPRECATIONS
