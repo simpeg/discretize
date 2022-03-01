@@ -73,4 +73,5 @@ except ImportError:
     # If it was not installed, then we don't know the version. We could throw a
     # warning here, but this case *should* be rare. discretize should be
     # installed properly!
+    from datetime import datetime
     __version__ = 'unknown-'+datetime.today().strftime('%Y%m%d')
