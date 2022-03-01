@@ -650,7 +650,7 @@ class SimplexMesh(BaseMesh):
         n_faces = self.n_faces
 
         ind_ptr = nodes_per_face * np.arange(n_faces + 1)
-        col_inds = self._simplex_faces.reshape(-1)
+        col_inds = self._faces.reshape(-1)
         Aij = np.full(nodes_per_face * n_faces, 1/nodes_per_face)
         return sp.csr_matrix((Aij, col_inds, ind_ptr), shape=(n_faces, self.n_nodes))
 
@@ -659,13 +659,34 @@ class SimplexMesh(BaseMesh):
         n_edges = self.n_edges
 
         ind_ptr = 2 * np.arange(n_edges + 1)
-        col_inds = self._simplex_edges.reshape(-1)
+        col_inds = self._edges.reshape(-1)
         Aij = np.full(2 * n_edges, 0.5)
         return sp.csr_matrix((Aij, col_inds, ind_ptr), shape=(n_edges, self.n_nodes))
 
     @property
     def average_cell_to_node(self):
-        pass
+        # "volume weight the average from cells to nodes"
+        # this reproduces linear functions everywhere except on the boundary nodes
+        simps = self._simplices
+        cells = np.broadcast_to(np.arange(self.n_cells)[:, None], simps.shape).reshape(-1)
+        weights = np.broadcast_to(self.cell_volumes[:, None], simps.shape).reshape(-1)
+        simps = simps.reshape(-1)
+
+        A = sp.csr_matrix((weights, (simps, cells)), shape=(self.n_nodes, self.n_cells))
+        norm = sp.diags(1.0/np.asarray(A.sum(axis=1))[:, 0])
+        return norm @ A
+
+    @property
+    def average_cell_to_edge(self):
+        # Simple averaging of all cells with a common edge
+        simps = self._simplex_edges
+        cells = np.broadcast_to(np.arange(self.n_cells)[:, None], simps.shape).reshape(-1)
+        weights = np.broadcast_to(self.cell_volumes[:, None], simps.shape).reshape(-1)
+        simps = simps.reshape(-1)
+
+        A = sp.csr_matrix((weights, (simps, cells)), shape=(self.n_edges, self.n_cells))
+        norm = sp.diags(1.0/np.asarray(A.sum(axis=1))[:, 0])
+        return norm @ A
 
     @property
     def average_face_to_cell_vector(self):
@@ -673,13 +694,14 @@ class SimplexMesh(BaseMesh):
         n_cells = self.n_cells
         n_faces = self.n_faces
 
-        Av = sp.csr_matrix(shape=(dim * n_cells, n_faces))
-        # Precalc indptr and values for the projection matrix
+        nodes_per_cell = dim + 1
+
+        Av = sp.csr_matrix((dim * n_cells, n_faces))
         Ps = self.__get_inner_product_projection_matrices(
             "F", with_volume=False, return_pointers=False
         )
         for P in Ps:
-            Av = Av + 1/(dim+1) * P
+            Av = Av + 1/(nodes_per_cell) * P
         return Av
 
     @property
@@ -687,15 +709,39 @@ class SimplexMesh(BaseMesh):
         dim = self.dim
         n_cells = self.n_cells
         n_edges = self.n_edges
+        nodes_per_cell = dim + 1
 
-        Av = sp.csr_matrix(shape=(dim * n_cells, n_edges))
+        Av = sp.csr_matrix((dim * n_cells, n_edges))
         # Precalc indptr and values for the projection matrix
         Ps = self.__get_inner_product_projection_matrices(
             "E", with_volume=False, return_pointers=False
         )
         for P in Ps:
-            Av = Av + 1/(dim+1) * P
+            Av = Av + 1/(nodes_per_cell) * P
         return Av
+
+    @property
+    def average_face_to_cell(self):
+
+        n_cells = self.n_cells
+        n_faces = self.n_faces
+        col_inds = self._simplex_faces
+        n_face_per_cell = col_inds.shape[1]
+        Aij = np.full((n_cells, n_face_per_cell), 1.0/n_face_per_cell)
+        row_ptr = np.arange(n_cells+1)*(n_face_per_cell)
+
+        return sp.csr_matrix((Aij.reshape(-1), col_inds.reshape(-1), row_ptr), shape=(n_cells, n_faces))
+
+    @property
+    def average_edge_to_cell(self):
+        n_cells = self.n_cells
+        n_edges = self.n_edges
+        col_inds = self._simplex_edges
+        n_edge_per_cell = col_inds.shape[1]
+        Aij = np.full((n_cells, n_edge_per_cell), 1.0/(n_edge_per_cell))
+        row_ptr = np.arange(n_cells+1)*(n_edge_per_cell)
+
+        return sp.csr_matrix((Aij.reshape(-1), col_inds.reshape(-1), row_ptr), shape=(n_cells, n_edges))
 
     @property
     def stencil_cell_gradient(self):
@@ -709,8 +755,59 @@ class SimplexMesh(BaseMesh):
 
         Aij = sp.csr_matrix((Aij, col_inds, ind_ptr), shape=(self.n_cells, self.n_faces)).T
 
+    @property
+    def boundary_face_list(self):
+        if getattr(self, "_boundary_face_list", None) is None:
+            ind_dir = np.where(self.neighbors == -1)
+            self._is_boundary_face = self._simplex_faces[ind_dir]
+        return self._is_boundary_face
 
-    def plot_grid(self):
-        ax = plt.subplot(111)
+    @property
+    def project_face_to_boundary_face(self):
+        return sp.eye(self.n_faces)[self.boundary_face_list]
+
+    @property
+    def project_edge_to_boundary_edge(self):
+        if self.dim == 2:
+            return self.project_face_to_boundary_face
+        bound_edges = np.unique(self._face_edges[self.boundary_face_list])
+        return sp.eye(self.n_edges)[bound_edges]
+
+    @property
+    def project_node_to_boundary_node(self):
+        bound_nodes = np.unique(self._faces[self.boundary_face_list])
+        return sp.eye(self.n_nodes)[bound_nodes]
+
+    @property
+    def boundary_nodes(self):
+        bound_nodes = np.unique(self._faces[self.boundary_face_list])
+        return self.nodes[bound_nodes]
+
+    @property
+    def boundary_edges(self):
+        if self.dim == 2:
+            return self.boundary_edges
+        bound_nodes = np.unique(self._face_edges[self.boundary_face_list])
+        return self.edges[bound_nodes]
+
+    @property
+    def boundary_faces(self):
+        return self.faces[self.boundary_face_list]
+
+    @property
+    def boundary_face_outward_normals(self):
+        bound_cells, which_face = np.where(self.neighbors == -1)
+        bound_faces = self._simplex_faces[(bound_cells, which_face)]
+        bound_face_normals = self.face_normals[bound_faces]
+
+        out_ish = self.faces[bound_faces] - self.cell_centers[bound_cells]
+        direc = np.sign(np.einsum('ij,ij->i', bound_face_normals, out_ish))
+        boundary_face_outward_normals = direc[:, None] * bound_face_normals
+
+        return boundary_face_outward_normals
+
+    def plot_grid(self, ax=None):
+        if ax is None:
+            ax = plt.subplot(111)
         ax.triplot(*self.nodes.T, self._simplices)
         return ax
