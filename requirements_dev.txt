@@ -19,3 +19,4 @@ nbsphinx
 omf
 matplotlib
 pymatsolver>=0.1.2
+setuptools_scm

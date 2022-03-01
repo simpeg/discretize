@@ -48,15 +48,21 @@ with open("README.rst") as f:
 build_requires = [
     "numpy>=1.8",
     "cython>=0.2",
+    "setuptools_scm",
 ]
 
 install_requires = build_requires + [
     "scipy>=0.13",
 ]
 
+scm_version = {
+    "root": ".",
+    "relative_to": __file__,
+    "write_to": os.path.join("discretize", "version.py"),
+}
+
 metadata = dict(
     name="discretize",
-    version="0.7.3",
     python_requires=">=3.6",
     setup_requires=build_requires,
     install_requires=install_requires,
@@ -70,6 +76,7 @@ metadata = dict(
     download_url="http://github.com/simpeg/discretize",
     classifiers=CLASSIFIERS,
     platforms=["Windows", "Linux", "Solaris", "Mac OS-X", "Unix"],
+    use_scm_version=scm_version,
 )
 
 if len(sys.argv) >= 2 and (
