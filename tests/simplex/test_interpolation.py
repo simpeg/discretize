@@ -79,7 +79,7 @@ class TestInterpolation2d(discretize.tests.OrderTest):
 
 class TestInterpolation3d(discretize.tests.OrderTest):
     name = "Interpolation 3D"
-    meshSizes = [8, 16, 32]
+    meshSizes = [5, 10, 20, 40]
     meshTypes = ['uniform simplex mesh']
     interp_points = np.random.rand(200, 3) * 0.9 + 0.1
     meshDimension = 3
@@ -177,11 +177,8 @@ class TestInterpolation3d(discretize.tests.OrderTest):
 
 
 class TestAveraging(discretize.tests.OrderTest):
-    name = "Averaging"
     meshSizes = [8, 16, 32]
     meshTypes = ['uniform simplex mesh']
-    meshDimension = 2
-    expectedOrders = 1
 
     def setupMesh(self, n):
         dim = self.meshDimension
@@ -265,8 +262,8 @@ class TestAveraging(discretize.tests.OrderTest):
 
     def test_AvgN2E_2D(self):
         self.source_type = "N"
-        self.target_type = "F"
-        self.name = "average_node_to_cell 2D"
+        self.target_type = "E"
+        self.name = "average_node_to_edge 2D"
         self.meshDimension = 2
         self.expectedOrders = 2
         self.orderTest()
@@ -314,9 +311,9 @@ class TestAveraging(discretize.tests.OrderTest):
 
     def test_AvgN2E_3D(self):
         self.source_type = "N"
-        self.target_type = "F"
-        self.name = "average_node_to_cell 3D"
-        self.meshDimension =3
+        self.target_type = "E"
+        self.name = "average_node_to_edge 3D"
+        self.meshDimension = 3
         self.expectedOrders = 2
         self.orderTest()
 
@@ -324,7 +321,7 @@ class TestAveraging(discretize.tests.OrderTest):
         self.source_type = "CC"
         self.target_type = "N"
         self.name = "average_cell_to_node 3D"
-        self.meshDimension =3
+        self.meshDimension = 3
         self.expectedOrders = 1
         self.orderTest()
 
