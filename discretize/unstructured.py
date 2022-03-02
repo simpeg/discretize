@@ -764,19 +764,19 @@ class SimplexMesh(BaseMesh):
 
     @property
     def project_face_to_boundary_face(self):
-        return sp.eye(self.n_faces)[self.boundary_face_list]
+        return sp.eye(self.n_faces, format='csr')[self.boundary_face_list]
 
     @property
     def project_edge_to_boundary_edge(self):
         if self.dim == 2:
             return self.project_face_to_boundary_face
         bound_edges = np.unique(self._face_edges[self.boundary_face_list])
-        return sp.eye(self.n_edges)[bound_edges]
+        return sp.eye(self.n_edges, format='csr')[bound_edges]
 
     @property
     def project_node_to_boundary_node(self):
         bound_nodes = np.unique(self._faces[self.boundary_face_list])
-        return sp.eye(self.n_nodes)[bound_nodes]
+        return sp.eye(self.n_nodes, format='csr')[bound_nodes]
 
     @property
     def boundary_nodes(self):
@@ -805,6 +805,79 @@ class SimplexMesh(BaseMesh):
         boundary_face_outward_normals = direc[:, None] * bound_face_normals
 
         return boundary_face_outward_normals
+
+    @property
+    def boundary_face_scalar_integral(self):
+        r"""Represents the operation of integrating a scalar function on the boundary
+
+        This matrix represents the boundary surface integral of a scalar function
+        multiplied with a finite volume test function on the mesh.
+
+        Returns
+        -------
+        (n_faces, n_boundary_faces) scipy.sparse.csr_matrix
+
+        Notes
+        -----
+        The integral we are representing on the boundary of the mesh is
+
+        .. math:: \int_{\Omega} u\vec{w} \cdot \hat{n} \partial \Omega
+
+        In discrete form this is:
+
+        .. math:: w^T * P @ u_b
+
+        where `w` is defined on all faces, and `u_b` is defined on boundary faces.
+        """
+        P = self.project_face_to_boundary_face
+
+        w_h_dot_normal = np.sum(
+            (P @ self.face_normals) * self.boundary_face_outward_normals, axis=-1
+        )
+        A = sp.diags(self.face_areas) @ P.T @ sp.diags(w_h_dot_normal)
+        return A
+
+    @property
+    def boundary_node_vector_integral(self):
+        r"""Represents the operation of integrating a vector function dotted with the boundary normal
+
+        This matrix represents the boundary surface integral of a vector function
+        dotted with the boundary normal and multiplied with a scalar finite volume
+        test function on the mesh.
+
+        Returns
+        -------
+        (n_nodes, dim * n_boundary_nodes) scipy.sparse.csr_matrix
+            Sparse matrix of shape.
+
+        Notes
+        -----
+        The integral we are representing on the boundary of the mesh is
+
+        .. math:: \int_{\Omega} (w \vec{u}) \cdot \hat{n} \partial \Omega
+
+        In discrete form this is:
+
+        .. math:: w^T * P @ u_b
+
+        where `w` is defined on all nodes, and `u_b` is all three components defined on
+        boundary nodes.
+        """
+        Pn = self.project_node_to_boundary_node
+        Pf = self.project_face_to_boundary_face
+        n_boundary_nodes = Pn.shape[0]
+
+        dA = self.boundary_face_outward_normals * (Pf @ self.face_areas)[:, None]
+
+        Av = Pf @ self.average_node_to_face @ Pn.T
+
+        u_dot_ds = Av.T @ dA
+        diags = u_dot_ds.T
+        offsets = n_boundary_nodes * np.arange(self.dim)
+
+        return Pn.T @ sp.diags(
+            diags, offsets, shape=(n_boundary_nodes, self.dim * n_boundary_nodes)
+        )
 
     def plot_grid(self, ax=None):
         if ax is None:
