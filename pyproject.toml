@@ -1,6 +1,0 @@
-# pyproject.toml
-[build-system]
-requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2", "numpy>=1.8", "cython>=0.2"]
-
-[tool.setuptools_scm]
-write_to = "discretize/version.py"

@@ -6,12 +6,9 @@ Discretization tools for finite volume and inverse problems.
 """
 
 import os
+import sys
 
 from setuptools import setup, find_packages
-from setuptools.extension import Extension
-from setuptools_scm import get_version
-from Cython.Build import cythonize
-import numpy as np
 
 CLASSIFIERS = [
     "Development Status :: 4 - Beta",
@@ -32,25 +29,6 @@ CLASSIFIERS = [
 with open("README.rst") as f:
     LONG_DESCRIPTION = "".join(f.readlines())
 
-ext_kwargs = {}
-if os.environ.get("DISC_COV", None) is not None:
-    ext_kwargs["define_macros"] = [("CYTHON_TRACE_NOGIL", 1)]
-
-extensions = [
-    Extension(
-        "discretize._extensions.interputils_cython",
-        ["discretize/_extensions/interputils_cython.pyx"],
-        include_dirs=[np.get_include()],
-        **ext_kwargs
-    ),
-    Extension(
-        "discretize._extensions.tree_ext",
-        ["discretize/_extensions/tree_ext.pyx", "discretize/_extensions/tree.cpp"],
-        include_dirs=[np.get_include()],
-        **ext_kwargs
-    )
-]
-
 build_requires = [
     "numpy>=1.8",
     "cython>=0.2",
@@ -62,17 +40,9 @@ install_requires = [
     "scipy>=0.13",
 ]
 
-# scm_version = {
-#     "root": ".",
-#     "relative_to": __file__,
-#     "write_to": os.path.join("discretize", "version.py"),
-# }
-
 metadata = dict(
     name="discretize",
-    version=get_version(),
-    packages=find_packages(),
-    ext_modules=cythonize(extensions),
+    packages=find_packages(include=["discretize", "discretize.*"]),
     python_requires=">=3.6",
     setup_requires=build_requires,
     install_requires=install_requires,
@@ -86,7 +56,48 @@ metadata = dict(
     download_url="http://github.com/simpeg/discretize",
     classifiers=CLASSIFIERS,
     platforms=["Windows", "Linux", "Solaris", "Mac OS-X", "Unix"],
-    #use_scm_version=scm_version,
+    use_scm_version = {
+        "write_to": os.path.join("discretize", "version.py"),
+    }
 )
+if len(sys.argv) >= 2 and (
+    "--help" in sys.argv[1:]
+    or sys.argv[1] in ("--help-commands", "egg_info", "--version", "clean")
+):
+    # For these actions, build_requires are not required.
+    #
+    # They are required to succeed without Numpy/Cython, for example when
+    # pip is used to install discretize when Numpy/Cython is not yet
+    # present in the system.
+    pass
+else:
+    from setuptools.extension import Extension
+    from Cython.Build import cythonize
+    import numpy as np
+
+    ext_kwargs = {}
+    if os.environ.get("DISC_COV", None) is not None:
+        ext_kwargs["define_macros"] = [("CYTHON_TRACE_NOGIL", 1)]
+
+    extensions = [
+        Extension(
+            "discretize._extensions.interputils_cython",
+            ["discretize/_extensions/interputils_cython.pyx"],
+            include_dirs=[np.get_include()],
+            **ext_kwargs
+        ),
+        Extension(
+            "discretize._extensions.tree_ext",
+            ["discretize/_extensions/tree_ext.pyx", "discretize/_extensions/tree.cpp"],
+            include_dirs=[np.get_include()],
+            **ext_kwargs
+        )
+    ]
+
+    use_scm_version = {
+        "write_to": os.path.join("discretize", "version.py"),
+    }
+
+    metadata['ext_modules'] = cythonize(extensions)
 
 setup(**metadata)
