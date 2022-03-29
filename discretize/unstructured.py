@@ -8,11 +8,11 @@ from discretize._extensions.simplex_helpers import (
     _build_adjacency,
     _directed_search,
 )
+from discretize.mixins import InterfaceMixins, SimplexMeshIO
 
-import matplotlib.pyplot as plt
 
-
-class SimplexMesh(BaseMesh):
+class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
+    _meshType = "simplex"
     def __init__(self, *args, **kwargs):
         if len(args) == 1:
             # Assume args was a Delaunay triangulation from scipy
@@ -786,7 +786,7 @@ class SimplexMesh(BaseMesh):
     @property
     def boundary_edges(self):
         if self.dim == 2:
-            return self.boundary_edges
+            return self.boundary_faces
         bound_nodes = np.unique(self._face_edges[self.boundary_face_list])
         return self.edges[bound_nodes]
 
@@ -879,8 +879,59 @@ class SimplexMesh(BaseMesh):
             diags, offsets, shape=(n_boundary_nodes, self.dim * n_boundary_nodes)
         )
 
-    def plot_grid(self, ax=None):
-        if ax is None:
-            ax = plt.subplot(111)
-        ax.triplot(*self.nodes.T, self._simplices)
-        return ax
+    @property
+    def boundary_edge_vector_integral(self):
+        r"""Represents the operation of integrating a vector function on the boundary
+
+        This matrix represents the boundary surface integral of a vector function
+        multiplied with a finite volume test function on the mesh.
+
+        In 1D and 2D, the operation assumes that the right array contains only a single
+        component of the vector ``u``. In 3D, however, we must assume that ``u`` will
+        contain each of the three vector components, and it must be ordered as,
+        ``[edges_1_x, ... ,edge_N_x, edge_1_y, ..., edge_N_y, edge_1_z, ..., edge_N_z]``
+        , where ``N`` is the number of boundary edges.
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            Sparse matrix of shape (n_edges, n_boundary_edges) for 1D or 2D mesh,
+            (n_edges, 3*n_boundary_edges) for a 3D mesh.
+
+        Notes
+        -----
+        The integral we are representing on the boundary of the mesh is
+
+        .. math:: \int_{\Omega} \vec{w} \cdot (\vec{u} \times \hat{n}) \partial \Omega
+
+        In discrete form this is:
+
+        .. math:: w^T * P @ u_b
+
+        where `w` is defined on all edges, and `u_b` is all three components defined on
+        boundary edges.
+        """
+        boundary_faces = self.boundary_face_list
+        if self.dim == 2:
+            boundary_face_edges = boundary_faces
+        else:
+            boundary_face_edges = self._face_edges[boundary_faces]
+        dA = self.boundary_face_outward_normals * self.face_areas[boundary_faces][:, None]
+
+        # projection matrices
+        # for each edge on boundary faces
+        Pe = self.project_edge_to_boundary_edge
+        n_boundary_edges, n_edges = Pe.shape
+        if self.dim == 2:
+            index = boundary_face_edges
+            w_cross_n = np.cross(-self.edge_tangents[index], dA)
+            M_be = sp.csr_matrix((w_cross_n, (index, index)), shape=(n_edges, n_edges)) @ Pe.T
+        else:
+            Ps = [sp.csr_matrix((n_edges, n_boundary_edges)) for i in range(3)]
+            for i in range(3):
+                index = boundary_face_edges[:, i]
+                w_cross_n = np.cross(-self.edge_tangents[index], dA)
+                for j in range(3):
+                    Ps[j] = Ps[j] + sp.csr_matrix((w_cross_n[:, j], (index, index)), shape=(n_edges, n_edges)) @ Pe.T
+            M_be = sp.hstack(Ps)
+        return M_be

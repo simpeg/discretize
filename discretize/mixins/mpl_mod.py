@@ -141,6 +141,7 @@ class InterfaceMPL(object):
             "tensor": self.__plot_grid_tensor,
             "curv": self.__plot_grid_curv,
             "cyl": self.__plot_grid_cyl,
+            "simplex": self.__plot_grid_simp,
         }
         try:
             plotter = plotters[mesh_type]
@@ -2182,6 +2183,42 @@ class InterfaceMPL(object):
             out = (out, qvr,)
 
         return out
+
+    def __plot_grid_simp(
+        self,
+        ax=None,
+        nodes=False,
+        faces=False,
+        centers=False,
+        edges=False,
+        lines=True,
+        show_it=False,
+        color="C0",
+        linewidth=1.0,
+    ):
+        if lines:
+            if self.dim == 2:
+                ax.triplot(*self.nodes.T, self._simplices, color=color, linewidth=linewidth)
+            elif self.dim == 3:
+                edge_nodes = self._edges
+                n_edges = edge_nodes.shape[0]
+                to_plot = np.full((3*n_edges, 3), np.nan)
+                to_plot[::3] = self.nodes[edge_nodes[:, 0]]
+                to_plot[1::3] = self.nodes[edge_nodes[:, 1]]
+                ax.plot(*to_plot.T, color=color, linewidth=linewidth)
+        if nodes:
+            ax.plot(*self.nodes.T, color="C0", marker="s", linestyle="")
+        if centers:
+            ax.plot(*self.cell_centers.T, color="C1", marker="o", linestyle="")
+        if faces:
+            ax.plot(*self.faces.T, color="C2", marker=">", linestyle="")
+        if edges:
+            ax.plot(*self.edges.T, color="C3", marker="^", linestyle="")
+        ax.set_xlabel("x1")
+        ax.set_ylabel("x2")
+        if self.dim == 3:
+            ax.set_zlabel('x3')
+        return ax
 
     plotGrid = deprecate_method("plot_grid", "plotGrid", removal_version="1.0.0", future_warn=False)
     plotImage = deprecate_method("plot_image", "plotImage", removal_version="1.0.0", future_warn=False)
