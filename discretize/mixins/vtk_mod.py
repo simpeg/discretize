@@ -545,10 +545,7 @@ class InterfaceVTK(object):
             raise IOError("{:s} is an incorrect extension, has to be .vtr".format(ext))
         # Write the file.
         vtrWriteFilter = _vtkRectWriter()
-        if float(_vtk_version.split(".")[0]) >= 6:
-            vtrWriteFilter.SetInputDataObject(vtkRectGrid)
-        else:
-            vtuWriteFilter.SetInput(vtuObj)
+        vtrWriteFilter.SetInputDataObject(vtkRectGrid)
         vtrWriteFilter.SetFileName(fname)
         vtrWriteFilter.Update()
 

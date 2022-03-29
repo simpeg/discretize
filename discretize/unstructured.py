@@ -13,23 +13,17 @@ from discretize.mixins import InterfaceMixins, SimplexMeshIO
 
 class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
     _meshType = "simplex"
-    def __init__(self, *args, **kwargs):
-        if len(args) == 1:
-            # Assume args was a Delaunay triangulation from scipy
-            triang = args[0]
-            nodes = triang.points
-            simplices = triang.simplices
-        elif len(args) == 2:
-            # Assume args was a tuple of (nodes, simplices)
-            nodes, simplices = args
-        else:
-            raise TypeError("unsupport input")
+    _items = {"nodes", "simplices"}
 
+    def __init__(self, nodes, simplices):
         # grab copies of the nodes and simplices for protection
         self._nodes = nodes.copy()
+        self._nodes.setflags(write="false")
+
         self._simplices = simplices.copy()
         # sort the simplices by node index to simplify further functions...
         self._simplices.sort(axis=1)
+        self._simplices.setflags(write="false")
 
         if self.cell_volumes.min() == 0.0:
             raise ValueError("Triangulation contains degenerate simplices")
@@ -57,6 +51,10 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         self._n_edges = self._edges.shape[0]
         if self.dim == 3:
             self._face_edges = np.array(items[4])
+
+    @property
+    def simplices(self):
+        return self._simplices
 
     @property
     def neighbors(self):
@@ -935,3 +933,6 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
                     Ps[j] = Ps[j] + sp.csr_matrix((w_cross_n[:, j], (index, index)), shape=(n_edges, n_edges)) @ Pe.T
             M_be = sp.hstack(Ps)
         return M_be
+
+    def __reduce__(self):
+        return self.__class__, (self.nodes, self._simplices, )

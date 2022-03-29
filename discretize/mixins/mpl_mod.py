@@ -278,6 +278,7 @@ class InterfaceMPL(object):
             "tensor": self.__plot_image_tensor,
             "curv": self.__plot_image_curv,
             "cyl": self.__plot_image_cyl,
+            "simplex": self.__plot_image_simp
         }
         try:
             plotter = plotters[mesh_type]
@@ -2219,6 +2220,87 @@ class InterfaceMPL(object):
         if self.dim == 3:
             ax.set_zlabel('x3')
         return ax
+
+    def __plot_image_simp(
+        self,
+        v,
+        v_type="CC",
+        grid=False,
+        view="real",
+        ax=None,
+        pcolor_opts=None,
+        grid_opts=None,
+        range_x=None,
+        range_y=None,
+        quiver_opts=None,
+        **kwargs,
+    ):
+        if self.dim == 3:
+            raise NotImplementedError(
+                "plot_image is not implemented for 3D SimplexMesh."
+            )
+        # reshape to cell_centered thing
+        if v_type == "CCv":
+            if view != "vec":
+                raise ValueError("Other types for CCv not supported")
+        if "F" in v_type:
+            aveOp = "average_face_to_cell"
+            if view == "vec" or 'x' in v_type or "y" in v_type:
+                aveOp += "_vector"
+            v = getattr(self, aveOp) * v
+        elif "E" in v_type:
+            aveOp = "average_edge_to_cell"
+            if view == "vec" or 'x' in v_type or "y" in v_type:
+                aveOp += "_vector"
+            v = getattr(self, aveOp) * v
+        if view == "vec":
+            v = v.reshape((self.n_cells, 2))
+        elif "x" in v_type:
+            v = v.reshape((self.n_cells, 2))
+            v = v[:, 0]
+        elif "y" in v_type:
+            v = v.reshape((self.n_cells, 2))
+            v = v[:, 1]
+
+        if view in ["real", "imag", "abs"]:
+            image_data = getattr(np, view)(v)  # e.g. np.real(v)
+        elif view == "vec":
+            image_data = np.linalg.norm(v, axis=1)
+        shading = "gouraud" if v_type == "N" else "flat"
+        trip = ax.tripcolor(
+            *self.nodes.T, self._simplices, image_data,
+            shading=shading, **pcolor_opts
+        )
+
+        if range_x is None:
+            range_x = (self.nodes[:, 0].min(), self.nodes[:, 0].max())
+        if range_y is None:
+            range_y = (self.nodes[:, 1].min(), self.nodes[:, 1].max())
+
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+        ax.set_xlim(*range_x)
+        ax.set_ylim(*range_y)
+
+        out = (trip, )
+        if view == "vec":
+            if quiver_opts is None:
+                quiver_opts = {}
+            # make a copy so we can set some defaults without modifying the original
+            quiver_opts = quiver_opts.copy()
+            quiver_opts.setdefault("pivot", "mid")
+
+            v = v.reshape(2, self.n_cells)
+            qvr = ax.quiver(
+                self.cell_centers[:, 0],
+                self.cell_centers[:, 1],
+                v[0],
+                v[1],
+                **quiver_opts,
+            )
+            out = (trip, qvr)
+
+        return out
 
     plotGrid = deprecate_method("plot_grid", "plotGrid", removal_version="1.0.0", future_warn=False)
     plotImage = deprecate_method("plot_image", "plotImage", removal_version="1.0.0", future_warn=False)
