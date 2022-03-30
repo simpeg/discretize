@@ -56,7 +56,7 @@ metadata = dict(
     download_url="http://github.com/simpeg/discretize",
     classifiers=CLASSIFIERS,
     platforms=["Windows", "Linux", "Solaris", "Mac OS-X", "Unix"],
-    use_scm_version = {
+    use_scm_version={
         "write_to": os.path.join("discretize", "version.py"),
     }
 )
@@ -93,10 +93,6 @@ else:
             **ext_kwargs
         )
     ]
-
-    use_scm_version = {
-        "write_to": os.path.join("discretize", "version.py"),
-    }
 
     metadata['ext_modules'] = cythonize(extensions)
 
