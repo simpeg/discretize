@@ -913,7 +913,8 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         if self.dim == 2:
             boundary_face_edges = boundary_faces
         else:
-            boundary_face_edges = self._face_edges[boundary_faces]
+            raise NotImplementedError("The 3D boundary edge integral matrix has not been implemented yet")
+            # boundary_face_edges = self._face_edges[boundary_faces]
         dA = self.boundary_face_outward_normals * self.face_areas[boundary_faces][:, None]
 
         # projection matrices
@@ -924,14 +925,15 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
             index = boundary_face_edges
             w_cross_n = np.cross(-self.edge_tangents[index], dA)
             M_be = sp.csr_matrix((w_cross_n, (index, index)), shape=(n_edges, n_edges)) @ Pe.T
-        else:
-            Ps = [sp.csr_matrix((n_edges, n_boundary_edges)) for i in range(3)]
-            for i in range(3):
-                index = boundary_face_edges[:, i]
-                w_cross_n = np.cross(-self.edge_tangents[index], dA)
-                for j in range(3):
-                    Ps[j] = Ps[j] + sp.csr_matrix((w_cross_n[:, j], (index, index)), shape=(n_edges, n_edges)) @ Pe.T
-            M_be = sp.hstack(Ps)
+        # This is not quite correct for 3D...
+        # else:
+        #     Ps = [sp.csr_matrix((n_edges, n_boundary_edges)) for i in range(3)]
+        #     for i in range(3):
+        #         index = boundary_face_edges[:, i]
+        #         w_cross_n = np.cross(-self.edge_tangents[index], dA) / 3
+        #         for j in range(3):
+        #             Ps[j] = Ps[j] + sp.csr_matrix((w_cross_n[:, j], (index, index)), shape=(n_edges, n_edges)) @ Pe.T
+        #     M_be = sp.hstack(Ps)
         return M_be
 
     def __reduce__(self):

@@ -34,7 +34,7 @@ def w(*args):
     x, y, z = args
     return np.c_[(y-2)**2 + z**2, (x+2)**2 - (z-4)**2, y**2-x**2]
 
-"""
+
 class TestInnerProducts2D(discretize.tests.OrderTest):
     meshSizes = [8, 16, 32]
     meshTypes = ['uniform simplex mesh']
@@ -409,7 +409,7 @@ class TestInnerProductsDerivs(unittest.TestCase):
 
     def test_EdgeIP_3D_tensor(self):
         self.assertTrue(self.doTestEdge([10, 4, 5], 6))
-"""
+
 
 class Test2DBoundaryIntegral(discretize.tests.OrderTest):
     meshSizes = [8, 16, 32]
@@ -445,6 +445,17 @@ class Test2DBoundaryIntegral(discretize.tests.OrderTest):
 
             discrete_val = -(u_n.T @ G.T) @ M_e @ v_e + u_n.T @ (M_bn @ v_bn)
             true_val = 241/60
+        elif self.myTest == "face_curl":
+            w_e = mesh.project_edge_vector(w(*mesh.edges.T))
+            u_c = u(*mesh.cell_centers.T)
+            u_be = u(*mesh.boundary_edges.T)
+
+            M_c = sp.diags(mesh.cell_volumes)
+            Curl = mesh.edge_curl
+            M_be = mesh.boundary_edge_vector_integral
+
+            discrete_val = (w_e.T @ Curl.T) @ M_c @ u_c - w_e.T @ (M_be @ u_be)
+            true_val = -173/30
 
         return np.abs(discrete_val - true_val)
 
@@ -456,4 +467,9 @@ class Test2DBoundaryIntegral(discretize.tests.OrderTest):
     def test_orderWeakEdgeDivIntegral(self):
         self.name = "2D - weak edge divergence integral w/boundary"
         self.myTest = "edge_div"
+        self.orderTest()
+
+    def test_orderWeakFaceCurlIntegral(self):
+        self.name = "2D - weak face curl integral w/boundary"
+        self.myTest = "face_curl"
         self.orderTest()
