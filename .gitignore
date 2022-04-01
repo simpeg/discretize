@@ -9,6 +9,7 @@
 dist
 build
 eggs
+.eggs
 parts
 bin
 var
@@ -63,3 +64,6 @@ examples/*.tar.gz
 *.dat
 *.dir
 *.bak
+
+# setuptools_scm
+discretize/version.py
