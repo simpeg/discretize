@@ -8,6 +8,7 @@ Discretization tools for finite volume and inverse problems.
 import os
 import sys
 
+from setuptools import setup, find_packages
 
 CLASSIFIERS = [
     "Development Status :: 4 - Beta",
@@ -25,38 +26,23 @@ CLASSIFIERS = [
     "Natural Language :: English",
 ]
 
-
-def configuration(parent_package="", top_path=None):
-    from numpy.distutils.misc_util import Configuration
-
-    config = Configuration(None, parent_package, top_path)
-    config.set_options(
-        ignore_setup_xxx_py=True,
-        assume_default_configuration=True,
-        delegate_options_to_subpackages=True,
-        quiet=True,
-    )
-
-    config.add_subpackage("discretize")
-
-    return config
-
-
 with open("README.rst") as f:
     LONG_DESCRIPTION = "".join(f.readlines())
 
 build_requires = [
     "numpy>=1.8",
     "cython>=0.2",
+    "setuptools_scm",
 ]
 
-install_requires = build_requires + [
+install_requires = [
+    "numpy>=1.8",
     "scipy>=0.13",
 ]
 
 metadata = dict(
     name="discretize",
-    version="0.7.2",
+    packages=find_packages(include=["discretize", "discretize.*"]),
     python_requires=">=3.6",
     setup_requires=build_requires,
     install_requires=install_requires,
@@ -70,33 +56,50 @@ metadata = dict(
     download_url="http://github.com/simpeg/discretize",
     classifiers=CLASSIFIERS,
     platforms=["Windows", "Linux", "Solaris", "Mac OS-X", "Unix"],
+    use_scm_version={
+        "write_to": os.path.join("discretize", "version.py"),
+    }
 )
-
 if len(sys.argv) >= 2 and (
     "--help" in sys.argv[1:]
     or sys.argv[1] in ("--help-commands", "egg_info", "--version", "clean")
 ):
-    # For these actions, NumPy is not required.
+    # For these actions, build_requires are not required.
     #
-    # They are required to succeed without Numpy, for example when
-    # pip is used to install discretize when Numpy is not yet present in
-    # the system.
-    try:
-        from setuptools import setup
-    except ImportError:
-        from distutils.core import setup
+    # They are required to succeed without Numpy/Cython, for example when
+    # pip is used to install discretize when Numpy/Cython is not yet
+    # present in the system.
+    pass
 else:
-    if (len(sys.argv) >= 2 and sys.argv[1] in ("bdist_wheel", "bdist_egg")) or (
-        "develop" in sys.argv
-    ):
-        # bdist_wheel/bdist_egg needs setuptools
-        import setuptools
+    from setuptools.extension import Extension
+    from Cython.Build import cythonize
+    import numpy as np
 
-    from numpy.distutils.core import setup
+    ext_kwargs = {}
+    if os.environ.get("DISC_COV", None) is not None:
+        ext_kwargs["define_macros"] = [("CYTHON_TRACE_NOGIL", 1)]
 
-    # Add the configuration to the setup dict when building
-    # after numpy is installed
-    metadata["configuration"] = configuration
+    extensions = [
+        Extension(
+            "discretize._extensions.interputils_cython",
+            ["discretize/_extensions/interputils_cython.pyx"],
+            include_dirs=[np.get_include()],
+            **ext_kwargs
+        ),
+        Extension(
+            "discretize._extensions.tree_ext",
+            ["discretize/_extensions/tree_ext.pyx", "discretize/_extensions/tree.cpp"],
+            include_dirs=[np.get_include()],
+            **ext_kwargs
+        ),
+        Extension(
+            "discretize._extensions.simplex_helpers",
+            ["discretize/_extensions/simplex_helpers.pyx"],
+            include_dirs=[np.get_include()],
+            **ext_kwargs
+        )
+    ]
 
+    metadata['ext_modules'] = cythonize(extensions)
 
 setup(**metadata)

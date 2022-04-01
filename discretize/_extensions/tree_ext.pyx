@@ -7,11 +7,11 @@ from libc.stdlib cimport malloc, free
 from libcpp.vector cimport vector
 from numpy.math cimport INFINITY
 
-from tree cimport int_t, Tree as c_Tree, PyWrapper, Node, Edge, Face, Cell as c_Cell
+from .tree cimport int_t, Tree as c_Tree, PyWrapper, Node, Edge, Face, Cell as c_Cell
 
 import scipy.sparse as sp
 import numpy as np
-from discretize._extensions.interputils_cython cimport _bisect_left, _bisect_right
+from .interputils_cython cimport _bisect_left, _bisect_right
 
 
 cdef class TreeCell:
