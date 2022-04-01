@@ -268,7 +268,7 @@ class InterfaceVTK(object):
         vtk_pts = _vtk.vtkPoints()
         vtk_pts.SetData(_nps.numpy_to_vtk(pts, deep=True))
 
-        cell_con_array = np.c_[np.full(mesh.n_cells, mesh.dim+1), mesh._simplices]
+        cell_con_array = np.c_[np.full(mesh.n_cells, mesh.dim+1), mesh.simplices]
         cells = _vtk.vtkCellArray()
         cells.SetNumberOfCells(mesh.n_cells)
         cells.SetCells(

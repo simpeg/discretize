@@ -42,7 +42,7 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         # self._build_adjacency()
 
     def _number(self):
-        items = _build_faces_edges(self._simplices)
+        items = _build_faces_edges(self.simplices)
         self._simplex_faces = np.array(items[0])
         self._faces = np.array(items[1])
         self._simplex_edges = np.array(items[2])
@@ -67,9 +67,9 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         if getattr(self, '_transform', None) is None:
             # compute the barycentric transforms
             points = self.nodes
-            simplices = self._simplices
+            simplices = self.simplices
 
-            shift = points[self._simplices[:, -1]]
+            shift = points[self.simplices[:, -1]]
 
             T = (points[simplices[:, :-1]] - shift[:, None, :]).transpose((0, 2, 1))
 
@@ -91,16 +91,16 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
 
     @property
     def n_cells(self):
-        return self._simplices.shape[0]
+        return self.simplices.shape[0]
 
     @property
     def cell_centers(self):
-        return np.mean(self.nodes[self._simplices], axis=1)
+        return np.mean(self.nodes[self.simplices], axis=1)
 
     @property
     def cell_volumes(self):
         if getattr(self, "_cell_volumes", None) is None:
-            simplex_nodes = self._nodes[self._simplices]
+            simplex_nodes = self._nodes[self.simplices]
             mats = np.pad(simplex_nodes, ((0, 0), (0, 0), (0, 1)), constant_values=1)
             V1 = np.abs(np.linalg.det(mats))
             V1 /= 6 if self.dim == 3 else 2
@@ -193,7 +193,7 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         n_edges = self.n_edges
         if dim == 2:
             face_edges = self._simplex_edges
-            face_nodes = self.nodes[self._simplices]
+            face_nodes = self.nodes[self.simplices]
             face_areas = self.cell_volumes
             n_faces = self.n_cells
         else:
@@ -502,7 +502,7 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         # the nearest simplex, then use a directed search to further refine
         _, nearest_cc = tree.query(locs)
         nodes = self.nodes
-        simplex_nodes = self._simplices
+        simplex_nodes = self.simplices
         transform, shift = self.transform_and_shift
         return _directed_search(
             np.atleast_2d(locs), np.atleast_1d(nearest_cc), nodes, simplex_nodes, self.neighbors, transform, shift,
@@ -518,7 +518,7 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         loc = np.atleast_2d(loc)
         _, nearest_cc = tree.query(loc)
         nodes = self.nodes
-        simplex_nodes = self._simplices
+        simplex_nodes = self.simplices
         transform, shift = self.transform_and_shift
 
         inds, barys = _directed_search(
@@ -638,7 +638,7 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         n_cells = self.n_cells
 
         ind_ptr = nodes_per_cell * np.arange(n_cells + 1)
-        col_inds = self._simplices.reshape(-1)
+        col_inds = self.simplices.reshape(-1)
         Aij = np.full(nodes_per_cell * n_cells, 1/nodes_per_cell)
         return sp.csr_matrix((Aij, col_inds, ind_ptr), shape=(n_cells, self.n_nodes))
 
@@ -665,7 +665,7 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
     def average_cell_to_node(self):
         # "volume weight the average from cells to nodes"
         # this reproduces linear functions everywhere except on the boundary nodes
-        simps = self._simplices
+        simps = self.simplices
         cells = np.broadcast_to(np.arange(self.n_cells)[:, None], simps.shape).reshape(-1)
         weights = np.broadcast_to(self.cell_volumes[:, None], simps.shape).reshape(-1)
         simps = simps.reshape(-1)
@@ -937,4 +937,4 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         return M_be
 
     def __reduce__(self):
-        return self.__class__, (self.nodes, self._simplices, )
+        return self.__class__, (self.nodes, self.simplices, )
