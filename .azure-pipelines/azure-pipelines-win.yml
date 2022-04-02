@@ -16,11 +16,18 @@ jobs:
   - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
     displayName: Add conda to PATH
 
-  - script: |
-      conda update --yes --quiet -n base conda
-      conda install --yes --quiet -n base -c conda-forge mamba
-      mamba create --yes --quiet -c conda-forge --name test python=$(python.version) numpy scipy matplotlib cython vtk pyvista pymatsolver pip
-    displayName: Create Anaconda environment
+ - powershell: |
+     Invoke-Webrequest -URI https://micro.mamba.pm/api/micromamba/win-64/latest -OutFile ~\micromamba.tar.bz2
+     $env:Path = "C:\PROGRA~1\Git\usr\bin;" + $env:Path
+     tar.exe -xvjf ~/micromamba.tar.bz2 --strip-components 2 -C ~ Library/bin/micromamba.exe
+     echo "MAMBA_ROOT_PREFIX=~\micromamba" >> $GITHUB_ENV
+   displayName: install micromamba
+
+ - powershell: |
+   run: |
+     ~\micromamba.exe shell hook -s powershell | Out-String | Invoke-Expression
+     micromamba create --yes --quiet -c conda-forge --name test python=$(python.version) numpy scipy matplotlib cython vtk pyvista pymatsolver pip
+   displayName: Create Anaconda environment
 
   - script: |
       call activate test
