@@ -20,15 +20,16 @@ jobs:
     displayName: Take ownership of conda installation
 
   - script: |
-      onda update --yes --quiet -n base conda
-      conda create --yes --quiet --name test python=$(python.version)
+      conda update --yes --quiet -n base conda
+      conda install --yes --quiet -n base -c conda-forge mamba
+      mamba create --yes --quiet --name test python=$(python.version)
     displayName: Create Anaconda environment
 
   - script: |
       eval "$(conda shell.bash hook)"
       conda activate test
-      conda install --yes --quiet -c conda-forge numpy scipy matplotlib">=3.0.0" cython vtk pyvista pymatsolver graphviz
-      conda install --yes --quiet -c conda-forge pytest
+      mamba install --yes --quiet -c conda-forge numpy scipy matplotlib">=3.0.0" cython vtk pyvista pymatsolver graphviz
+      mamba install --yes --quiet -c conda-forge pytest
       pip install -r requirements_dev.txt
       pip install pytest-azurepipelines
       pip install -e .

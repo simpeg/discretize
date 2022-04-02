@@ -17,8 +17,9 @@ jobs:
     displayName: Add conda to PATH
 
   - script: |
-      onda update --yes --quiet -n base conda
-      conda create --yes --quiet -c conda-forge --name test python=$(python.version) numpy scipy matplotlib cython vtk pyvista pymatsolver pip
+      conda update --yes --quiet -n base conda
+      conda install --yes --quiet -n base -c conda-forge mamba
+      mamba create --yes --quiet -c conda-forge --name test python=$(python.version) numpy scipy matplotlib cython vtk pyvista pymatsolver pip
     displayName: Create Anaconda environment
 
   - script: |
