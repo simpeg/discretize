@@ -16,17 +16,19 @@ jobs:
         python.version: '3.9'
   steps:
 
-  - script: echo '##vso[task.prependpath]$CONDA/bin'
+  - bash: echo '##vso[task.prependpath]$CONDA/bin'
     displayName: Add conda to PATH
 
-  - script: |
+  - bash: |
       conda update --yes --quiet -n base conda
       conda install --yes --quiet -n base -c conda-forge mamba
+    displayName: Install mamba
+
+  - bash: |
       mamba create --yes --quiet --name test python=$(python.version)
     displayName: Create Anaconda environment
 
-  - script: |
-      eval "$(conda shell.bash hook)"
+  - bash: |
       conda activate test
       mamba install --yes --quiet -c conda-forge numpy scipy matplotlib cython vtk pyvista pymatsolver
       pip install -r requirements_dev.txt
@@ -34,16 +36,14 @@ jobs:
     displayName: Install requirements and build
     condition: ne(variables['python.version'], '3.8')
 
-  - script: |
-      eval "$(conda shell.bash hook)"
+  - bash: |
       conda activate test
       .ci/setup_headless_display.sh
       pytest -v -s --ignore=tests/docs -W ignore::DeprecationWarning
     displayName: 'Testing'
     condition: ne(variables['python.version'], '3.8')
 
-  - script: |
-      eval "$(conda shell.bash hook)"
+  - bash: |
       conda activate test
       mamba install --yes --quiet -c conda-forge numpy scipy matplotlib cython vtk pyvista pymatsolver graphviz
       mamba install --yes --quiet -c conda-forge pytest pytest-cov
@@ -54,15 +54,14 @@ jobs:
     displayName: Install requirements and build for Testing
     condition: eq(variables['python.version'], '3.8')
 
-  - script: |
-      eval "$(conda shell.bash hook)"
+  - bash: |
       conda activate test
       .ci/setup_headless_display.sh
       pytest -v -s --cov-config=.coveragerc --cov=discretize --cov-report=xml --cov-report=html -W ignore::DeprecationWarning
     displayName: 'Testing with coverage'
     condition: eq(variables['python.version'], '3.8')
 
-  - script: |
+  - bash: |
       curl -Os https://uploader.codecov.io/latest/linux/codecov
       chmod +x codecov
       ./codecov
