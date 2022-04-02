@@ -24,6 +24,7 @@ jobs:
     displayName: Install mamba
 
   - bash: |
+      eval "$(conda shell.bash hook)"
       mamba create --yes --quiet --name test python=$(python.version)
     displayName: Create Anaconda environment
 
