@@ -16,29 +16,29 @@ jobs:
   - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
     displayName: Add conda to PATH
 
-  - powershell: |
+  - script: |
       call activate base
       conda install --yes -c conda-forge mamba
       mamba create --yes --name test python=$(python.version)
     displayName: Install mamba
 
-  - powershell: |
+  - script: |
       call activate test
       mamba install --yes --quiet -c conda-forge numpy scipy matplotlib cython vtk pyvista pymatsolver pytest
     displayName: Create Anaconda environment
 
-  - powershell: |
+  - script: |
       call activate test
       pip install -r requirements_dev.txt
       pip install pytest-azurepipelines
     displayName: Install other requirements
 
-  - powershell: |
+  - script: |
       call activate test
       pip install -e .
     displayName: Build
 
-  - powershell: |
+  - script: |
       call activate test
       pytest -v -s --ignore=tests/docs -W ignore::DeprecationWarning
     displayName: 'Running tests'
