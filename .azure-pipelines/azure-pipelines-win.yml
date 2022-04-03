@@ -29,17 +29,20 @@ jobs:
     displayName: Create Anaconda environment
 
   - script: |
-      call activate test
+      ~\micromamba.exe shell hook -s powershell | Out-String | Invoke-Expression
+      micromamba activate test
       pip install -r requirements_dev.txt
       pip install pytest-azurepipelines
     displayName: Install other requirements
 
   - script: |
-      call activate test
+      ~\micromamba.exe shell hook -s powershell | Out-String | Invoke-Expression
+      micromamba activate test
       pip install -e .
     displayName: Build
 
   - script: |
-      call activate test
+      ~\micromamba.exe shell hook -s powershell | Out-String | Invoke-Expression
+      micromamba activate test
       pytest -v -s --ignore=tests/docs -W ignore::DeprecationWarning
     displayName: 'Running tests'
