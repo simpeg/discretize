@@ -17,32 +17,22 @@ jobs:
     displayName: Add conda to PATH
 
   - powershell: |
-      Invoke-Webrequest -URI https://micro.mamba.pm/api/micromamba/win-64/latest -OutFile ~\micromamba.tar.bz2
-      $env:Path = "C:\PROGRA~1\Git\usr\bin;" + $env:Path
-      tar.exe -xvjf ~/micromamba.tar.bz2 --strip-components 2 -C ~ Library/bin/micromamba.exe
-      echo "MAMBA_ROOT_PREFIX=~\micromamba" >> $GITHUB_ENV
-    displayName: install micromamba
-
-  - powershell: |
-      ~\micromamba.exe shell hook -s powershell | Out-String | Invoke-Expression
-      micromamba create --yes --quiet -c conda-forge --name test python=$(python.version) numpy scipy matplotlib cython vtk pyvista pymatsolver pip
+      conda install --yes -c conda-forge mamba
+      mamba create --yes --name test python=$(python.version)
     displayName: Create Anaconda environment
 
-  - script: |
-      ~\micromamba.exe shell hook -s powershell | Out-String | Invoke-Expression
-      micromamba activate test
+  - powershell: |
+      call activate test
       pip install -r requirements_dev.txt
       pip install pytest-azurepipelines
     displayName: Install other requirements
 
-  - script: |
-      ~\micromamba.exe shell hook -s powershell | Out-String | Invoke-Expression
-      micromamba activate test
+  - powershell: |
+      call activate test
       pip install -e .
     displayName: Build
 
-  - script: |
-      ~\micromamba.exe shell hook -s powershell | Out-String | Invoke-Expression
-      micromamba activate test
+  - powershell: |
+      call activate test
       pytest -v -s --ignore=tests/docs -W ignore::DeprecationWarning
     displayName: 'Running tests'
