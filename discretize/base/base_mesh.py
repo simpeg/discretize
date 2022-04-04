@@ -10,7 +10,7 @@ class BaseMesh:
     """
     Base mesh class for the ``discretize`` package.
 
-    This class contains the basic structure of properties and methdos
+    This class contains the basic structure of properties and methods
     that should be supported on all discretize meshes.
     """
 

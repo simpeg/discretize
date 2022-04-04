@@ -25,7 +25,7 @@ import warnings
 
 
 class CylindricalMesh(
-    BaseTensorMesh, BaseRectangularMesh, InnerProducts, DiffOperators, InterfaceMixins
+    InnerProducts, DiffOperators, BaseTensorMesh, BaseRectangularMesh, InterfaceMixins
 ):
     """
     Class for cylindrical meshes.

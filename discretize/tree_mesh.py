@@ -97,7 +97,7 @@ from discretize.utils.code_utils import deprecate_property
 
 
 class TreeMesh(
-    _TreeMesh, BaseTensorMesh, InnerProducts, DiffOperators, TreeMeshIO, InterfaceMixins
+    _TreeMesh, InnerProducts, DiffOperators, BaseTensorMesh, TreeMeshIO, InterfaceMixins,
 ):
     """Class for QuadTree (2D) and OcTree (3D) meshes.
 

@@ -29,7 +29,7 @@ def _normalize3D(x):
 
 
 class CurvilinearMesh(
-    BaseRectangularMesh, DiffOperators, InnerProducts, InterfaceMixins
+    DiffOperators, InnerProducts, InterfaceMixins
 ):
     """Curvilinear mesh class.
 

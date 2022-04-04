@@ -16,6 +16,7 @@ Mesh Classes
   CylindricalMesh
   CurvilinearMesh
   TreeMesh
+  SimplexMesh
 
 Tree Mesh Cells
 ===============
