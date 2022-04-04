@@ -28,18 +28,7 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         if self.cell_volumes.min() == 0.0:
             raise ValueError("Triangulation contains degenerate simplices")
 
-        # build faces from simplices
         self._number()
-
-        # build node to simplex lookup
-        # _, first = np.unique(simplices, return_index=True)
-        # self._node_to_simplex, _ = np.unravel_index(first, simplices.shape)
-
-        # build a cKDTree for fast simplex lookup
-        # self._lookup_tree = KDTree(self.cell_centers)
-
-        # build adjacency graph
-        # self._build_adjacency()
 
     def _number(self):
         items = _build_faces_edges(self.simplices)
