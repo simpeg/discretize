@@ -501,6 +501,7 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
     def get_interpolation_matrix(
         self, loc, location_type="cell_centers", zeros_outside=False, **kwargs
     ):
+        location_type = self._parse_location_type(location_type)
         tree = self.cell_centers_tree
         # for each location, find the nearest cell center as an initial guess for
         # the nearest simplex, then use a directed search to further refine
@@ -795,27 +796,6 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
 
     @property
     def boundary_face_scalar_integral(self):
-        r"""Represents the operation of integrating a scalar function on the boundary
-
-        This matrix represents the boundary surface integral of a scalar function
-        multiplied with a finite volume test function on the mesh.
-
-        Returns
-        -------
-        (n_faces, n_boundary_faces) scipy.sparse.csr_matrix
-
-        Notes
-        -----
-        The integral we are representing on the boundary of the mesh is
-
-        .. math:: \int_{\Omega} u\vec{w} \cdot \hat{n} \partial \Omega
-
-        In discrete form this is:
-
-        .. math:: w^T * P @ u_b
-
-        where `w` is defined on all faces, and `u_b` is defined on boundary faces.
-        """
         P = self.project_face_to_boundary_face
 
         w_h_dot_normal = np.sum(
@@ -826,30 +806,6 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
 
     @property
     def boundary_node_vector_integral(self):
-        r"""Represents the operation of integrating a vector function dotted with the boundary normal
-
-        This matrix represents the boundary surface integral of a vector function
-        dotted with the boundary normal and multiplied with a scalar finite volume
-        test function on the mesh.
-
-        Returns
-        -------
-        (n_nodes, dim * n_boundary_nodes) scipy.sparse.csr_matrix
-            Sparse matrix of shape.
-
-        Notes
-        -----
-        The integral we are representing on the boundary of the mesh is
-
-        .. math:: \int_{\Omega} (w \vec{u}) \cdot \hat{n} \partial \Omega
-
-        In discrete form this is:
-
-        .. math:: w^T * P @ u_b
-
-        where `w` is defined on all nodes, and `u_b` is all three components defined on
-        boundary nodes.
-        """
         Pn = self.project_node_to_boundary_node
         Pf = self.project_face_to_boundary_face
         n_boundary_nodes = Pn.shape[0]
@@ -868,36 +824,6 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
 
     @property
     def boundary_edge_vector_integral(self):
-        r"""Represents the operation of integrating a vector function on the boundary
-
-        This matrix represents the boundary surface integral of a vector function
-        multiplied with a finite volume test function on the mesh.
-
-        In 1D and 2D, the operation assumes that the right array contains only a single
-        component of the vector ``u``. In 3D, however, we must assume that ``u`` will
-        contain each of the three vector components, and it must be ordered as,
-        ``[edges_1_x, ... ,edge_N_x, edge_1_y, ..., edge_N_y, edge_1_z, ..., edge_N_z]``
-        , where ``N`` is the number of boundary edges.
-
-        Returns
-        -------
-        scipy.sparse.csr_matrix
-            Sparse matrix of shape (n_edges, n_boundary_edges) for 1D or 2D mesh,
-            (n_edges, 3*n_boundary_edges) for a 3D mesh.
-
-        Notes
-        -----
-        The integral we are representing on the boundary of the mesh is
-
-        .. math:: \int_{\Omega} \vec{w} \cdot (\vec{u} \times \hat{n}) \partial \Omega
-
-        In discrete form this is:
-
-        .. math:: w^T * P @ u_b
-
-        where `w` is defined on all edges, and `u_b` is all three components defined on
-        boundary edges.
-        """
         boundary_faces = self.boundary_face_list
         if self.dim == 2:
             boundary_face_edges = boundary_faces

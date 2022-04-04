@@ -518,20 +518,6 @@ class TreeMesh(
         return self._face_z_divergence
 
     def point2index(self, locs):
-        """Finds cells that contain the given points.
-        Returns an array of index values of the cells that contain the given
-        points
-
-        Parameters
-        ----------
-        locs: (N, dim) array_like
-            points to search for the location of
-
-        Returns
-        -------
-        (N) array_like of int
-            Cell indices that contain the points
-        """
         locs = as_array_n_by_dim(locs, self.dim)
         inds = self._get_containing_cell_indexes(locs)
         return inds
@@ -555,33 +541,6 @@ class TreeMesh(
     def get_interpolation_matrix(
         self, locs, location_type="CC", zeros_outside=False, **kwargs
     ):
-        """Produces interpolation matrix
-
-        Parameters
-        ----------
-        loc : (N, dim) array_like
-            Location of points to interpolate to
-
-        location_type: str, optional
-            What to interpolate
-
-            location_type can be:
-
-            - 'CC'    -> scalar field defined on cell centers
-            - 'Ex'    -> x-component of field defined on edges
-            - 'Ey'    -> y-component of field defined on edges
-            - 'Ez'    -> z-component of field defined on edges
-            - 'Fx'    -> x-component of field defined on faces
-            - 'Fy'    -> y-component of field defined on faces
-            - 'Fz'    -> z-component of field defined on faces
-            - 'N'     -> scalar field defined on nodes
-
-        Returns
-        -------
-        (N, n_loc_type) scipy.sparse.csr_matrix
-            the interpolation matrix
-
-        """
         if "locType" in kwargs:
             warnings.warn(
                 "The locType keyword argument has been deprecated, please use location_type. "
@@ -710,13 +669,6 @@ class TreeMesh(
     cellGradStencil = deprecate_property(
         "cell_gradient_stencil", "cellGradStencil", removal_version="1.0.0", future_warn=False
     )
-    nodalGrad = deprecate_property(
-        "nodal_gradient", "nodalGrad", removal_version="1.0.0", future_warn=False
-    )
-    nodalLaplacian = deprecate_property(
-        "nodal_laplacian", "nodalLaplacian", removal_version="1.0.0", future_warn=False
-    )
-    faceDiv = deprecate_property("face_divergence", "faceDiv", removal_version="1.0.0", future_warn=False)
     faceDivx = deprecate_property(
         "face_x_divergence", "faceDivx", removal_version="1.0.0", future_warn=False
     )
@@ -726,17 +678,13 @@ class TreeMesh(
     faceDivz = deprecate_property(
         "face_z_divergence", "faceDivz", removal_version="1.0.0", future_warn=False
     )
-    edgeCurl = deprecate_property("edge_curl", "edgeCurl", removal_version="1.0.0", future_warn=False)
     maxLevel = deprecate_property("max_used_level", "maxLevel", removal_version="1.0.0", future_warn=False)
-    vol = deprecate_property("cell_volumes", "vol", removal_version="1.0.0", future_warn=False)
     areaFx = deprecate_property("face_x_areas", "areaFx", removal_version="1.0.0", future_warn=False)
     areaFy = deprecate_property("face_y_areas", "areaFy", removal_version="1.0.0", future_warn=False)
     areaFz = deprecate_property("face_z_areas", "areaFz", removal_version="1.0.0", future_warn=False)
-    area = deprecate_property("face_areas", "area", removal_version="1.0.0", future_warn=False)
     edgeEx = deprecate_property("edge_x_lengths", "edgeEx", removal_version="1.0.0", future_warn=False)
     edgeEy = deprecate_property("edge_y_lengths", "edgeEy", removal_version="1.0.0", future_warn=False)
     edgeEz = deprecate_property("edge_z_lengths", "edgeEz", removal_version="1.0.0", future_warn=False)
-    edge = deprecate_property("edge_lengths", "edge", removal_version="1.0.0", future_warn=False)
     permuteCC = deprecate_property(
         "permute_cells", "permuteCC", removal_version="1.0.0", future_warn=False
     )

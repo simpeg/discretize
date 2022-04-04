@@ -162,21 +162,6 @@ class TensorMesh(
     # --------------- Geometries ---------------------
     @property
     def cell_volumes(self):
-        """Return cell volumes
-
-        Calling this property will compute and return the volumes of the tensor
-        mesh cells.
-
-        Returns
-        -------
-        (n_cells) numpy.ndarray
-            The quantity returned depends on the dimensions of the mesh:
-
-            - *1D:* Returns the cell widths
-            - *2D:* Returns the cell areas
-            - *3D:* Returns the cell volumes
-
-        """
         if getattr(self, "_cell_volumes", None) is None:
             vh = self.h
             # Compute cell volumes
@@ -285,21 +270,6 @@ class TensorMesh(
 
     @property
     def face_areas(self):
-        """Returns the areas of all faces in the mesh
-
-        Calling this property will compute and return the areas of all
-        faces as a 1D numpy array. The returned quantity is ordered x-face
-        areas, then y-face areas, then z-face areas.
-
-        Returns
-        -------
-        (n_faces) numpy.ndarray
-            The length of the quantity returned depends on the dimensions of the mesh:
-
-            - *1D:* returns the x-face areas
-            - *2D:* returns the x-face and y-face areas in order; i.e. y-edge and x-edge lengths, respectively
-            - *3D:* returns the x, y and z-face areas in order
-        """
         if self.dim == 1:
             return self.face_x_areas
         elif self.dim == 2:
@@ -402,21 +372,6 @@ class TensorMesh(
 
     @property
     def edge_lengths(self):
-        """Returns the lengths of all edges in the mesh
-
-        Calling this property will compute and return the lengths of all
-        edges in the mesh. The returned quantity is ordered x-edge lengths,
-        then y-edge lengths, then z-edge lengths.
-
-        Returns
-        -------
-        (n_edges) numpy.ndarray
-            The length of the quantity returned depends on the dimensions of the mesh:
-
-            - *1D:* returns the x-edge lengths
-            - *2D:* returns the x-edge and y-edge lengths in order
-            - *3D:* returns the x, y and z-edge lengths in order
-        """
         if self.dim == 1:
             return self.edge_x_lengths
         elif self.dim == 2:
@@ -613,15 +568,12 @@ class TensorMesh(
         return attrs
 
     # DEPRECATIONS
-    vol = deprecate_property("cell_volumes", "vol", removal_version="1.0.0", future_warn=False)
     areaFx = deprecate_property("face_x_areas", "areaFx", removal_version="1.0.0", future_warn=False)
     areaFy = deprecate_property("face_y_areas", "areaFy", removal_version="1.0.0", future_warn=False)
     areaFz = deprecate_property("face_z_areas", "areaFz", removal_version="1.0.0", future_warn=False)
-    area = deprecate_property("face_areas", "area", removal_version="1.0.0", future_warn=False)
     edgeEx = deprecate_property("edge_x_lengths", "edgeEx", removal_version="1.0.0", future_warn=False)
     edgeEy = deprecate_property("edge_y_lengths", "edgeEy", removal_version="1.0.0", future_warn=False)
     edgeEz = deprecate_property("edge_z_lengths", "edgeEz", removal_version="1.0.0", future_warn=False)
-    edge = deprecate_property("edge_lengths", "edge", removal_version="1.0.0", future_warn=False)
     faceBoundaryInd = deprecate_property(
         "face_boundary_indices", "faceBoundaryInd", removal_version="1.0.0", future_warn=False
     )
