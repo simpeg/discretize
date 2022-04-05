@@ -12,14 +12,65 @@ from discretize.mixins import InterfaceMixins, SimplexMeshIO
 
 
 class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
+    """Class for traingular (2D) and tetrahedral (3D) meshes.
+
+    Simplex is the abstract term for triangular like elements in an arbitrary dimension.
+    Simplex meshes are subdivided into trianglular (in 2D) or tetrahedral (in 3D)
+    elements. They are capable of representing abstract geometric surfaces, with widely
+    variable element sizes.
+
+    Parameters
+    ----------
+    nodes : (n_nodes, dim) array_like of float
+        Defines every node of the mesh.
+
+    simplices : (n_cells, dim+1) array_like of int
+        This array defines the connectivity of nodes to form cells. Each element
+        indexes into the `nodes` array. Each row defines which nodes make a given cell.
+        This array is sorted along each row and then stored on the mesh.
+
+    Notes
+    -----
+    Only rudimentary checking of the input nodes and simplices are performed, which
+    only checks for degenerate simplices who have zero volume. There are no checks for
+    overlapping cells, or for the quality of the mesh.
+
+    Examples
+    --------
+    Here we generate a basic 2D triangular mesh, by triangulating a rectangular domain.
+
+    >>> from discretize import SimplexMesh
+    >>> import numpy as np
+    >>> import matplotlib.pyplot as plt
+    >>> from scipy.spatial import Delaunay
+
+    First we define the nodes of our mesh
+
+    >>> X, Y = np.mgrid[-20:20:21j, -10:10:11j]
+    >>> nodes = np.c_[X.reshape(-1), Y.reshape(-1)]
+
+    Then we triangulate the nodes, here we use matplotlib, but you could also use
+    scipy's Delaunay, or any other triangular mesh generator.
+
+    >>> triang = tri.Triangulation(nodes[:, 0], nodes[:, 1])
+    >>> simplices = triang.triangles
+
+    Finally we can assemble them into a SimplexMesh
+
+    >>> mesh = SimplexMesh(nodes, simplices)
+    >>> mesh.plot_grid()
+    >>> plt.show()
+    """
     _meshType = "simplex"
     _items = {"nodes", "simplices"}
 
     def __init__(self, nodes, simplices):
         # grab copies of the nodes and simplices for protection
+        nodes = np.asarray(nodes)
         self._nodes = nodes.copy()
         self._nodes.setflags(write="false")
 
+        simplices = np.asarray(simplices)
         self._simplices = simplices.copy()
         # sort the simplices by node index to simplify further functions...
         self._simplices.sort(axis=1)
@@ -43,16 +94,45 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
 
     @property
     def simplices(self):
+        """The node indices for all simplexes of the mesh.
+
+        This array defines the connectivity of the mesh. For each simplex this array is
+        sorted by the node index.
+
+        Returns
+        -------
+        (n_cells, dim + 1) numpy.ndarray of int
+        """
         return self._simplices
 
     @property
     def neighbors(self):
+        """
+        The adjacancy graph of the mesh.
+
+        This array contains the adjacent cell index for each cell of the mesh. For each
+        cell the i'th neighbor is opposite the i'th node, across the i'th face. If a
+        cell has no neighbor in a particular direction, then it is listed as having -1.
+        This also implies that this is a boundary face.
+
+        Returns
+        -------
+        (n_cells, dim + 1) numpy.ndarray of int
+        """
         if getattr(self, "_neighbors", None) is None:
             self._neighbors = np.array(_build_adjacency(self._simplex_faces, self.n_faces))
         return self._neighbors
 
     @property
     def transform_and_shift(self):
+        """
+        The barycentric transformation matrix and shift.
+
+        Returns
+        -------
+        transform : (n_cells, dim, dim) numpy.ndarray
+        shift : (n_cells) numpy.ndarray
+        """
         if getattr(self, '_transform', None) is None:
             # compute the barycentric transforms
             points = self.nodes
@@ -653,7 +733,14 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
 
     @property
     def average_cell_to_node(self):
-        # "volume weight the average from cells to nodes"
+        """Averaging matrix from cell centers to nodes.
+
+        The averaging operation uses a volume weighting scheme.
+
+        Returns
+        -------
+        (n_nodes, n_cells) scipy.sparse.csr_matrix
+        """
         # this reproduces linear functions everywhere except on the boundary nodes
         simps = self.simplices
         cells = np.broadcast_to(np.arange(self.n_cells)[:, None], simps.shape).reshape(-1)
@@ -745,6 +832,12 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
 
     @property
     def boundary_face_list(self):
+        """Boolean array of faces that lie on the boundary of the mesh.
+
+        Returns
+        -------
+        (n_faces) numpy.ndarray of bool
+        """
         if getattr(self, "_boundary_face_list", None) is None:
             ind_dir = np.where(self.neighbors == -1)
             self._is_boundary_face = self._simplex_faces[ind_dir]

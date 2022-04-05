@@ -1,9 +1,84 @@
 import unittest
-from discretize.base import BaseRectangularMesh
+from discretize.base import BaseRectangularMesh, BaseMesh
 import numpy as np
-
+import inspect
 
 class TestBaseMesh(unittest.TestCase):
+    not_implemented_attributes = [
+        "dim",
+        "n_cells",
+        "n_nodes",
+        "n_edges",
+        "n_faces",
+        "cell_centers",
+        "nodes",
+        "boundary_nodes",
+        "faces",
+        "boundary_faces",
+        "edges",
+        "boundary_edges",
+        "face_normals",
+        "edge_tangents",
+        "boundary_face_outward_normals",
+        "cell_volumes",
+        "face_areas",
+        "edge_lengths",
+        "face_divergence",
+        "nodal_gradient",
+        "edge_curl",
+        "boundary_face_scalar_integral",
+        "boundary_edge_vector_integral",
+        "boundary_node_vector_integral",
+        "nodal_laplacian",
+        "stencil_cell_gradient",
+        "average_face_to_cell",
+        "average_face_to_cell_vector",
+        "average_cell_to_face",
+        "average_cell_vector_to_face",
+        "average_cell_to_edge",
+        "average_edge_to_cell",
+        "average_edge_to_cell_vector",
+        "average_edge_to_face_vector",
+        "average_node_to_cell",
+        "average_node_to_edge",
+        "average_node_to_face",
+        "project_face_to_boundary_face",
+        "project_edge_to_boundary_edge",
+        "project_node_to_boundary_node",
+    ]
+    not_implemented_functions = [
+        "get_face_inner_product",
+        "get_edge_inner_product",
+        "get_face_inner_product_deriv",
+        "get_edge_inner_product_deriv",
+        "point2index",
+        "get_interpolation_matrix"
+    ]
+
+    def setUp(self):
+        self.base_mesh = BaseMesh()
+
+    def test_not_impl_attr(self):
+        for item in self.not_implemented_attributes:
+            with self.assertRaises(NotImplementedError):
+                getattr(self.base_mesh, item)
+
+    def test_not_impl_func(self):
+        for item in self.not_implemented_functions:
+            with self.assertRaises(NotImplementedError):
+                func = getattr(self.base_mesh, item)
+                params = inspect.signature(func).parameters
+
+                n_params = sum(
+                    [1 if (
+                        param.default is param.empty and param.kind != param.VAR_KEYWORD
+                    ) else 0 for param in params.values()]
+                )
+                # pass empty parameters to the function
+                func(*([None]*n_params))
+
+
+class TestBaseRectangularMesh(unittest.TestCase):
     def setUp(self):
         self.mesh = BaseRectangularMesh([6, 2, 3])
 
