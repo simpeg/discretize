@@ -308,6 +308,7 @@ def _interp_cc(
         np.float64_t[:] point
         np.float64_t[:] close_cell
         np.float64_t det, weight_sum
+        np.float64_t xx, xy, xz, yy, yz, zz
         bint too_close
         np.float64_t eps = 1E-15
     # Find maximum number per row to pre-allocate a storage
