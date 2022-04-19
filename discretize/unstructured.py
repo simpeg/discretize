@@ -620,36 +620,11 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         elif location_type == "cell_centers":
             # detemine which node each point is closest to.
             which_node = simplex_nodes[inds, np.argmax(barys, axis=-1)]
-            # this matrix can be used to lookup which cells a given node touch.
+            # this matrix can be used to lookup which cells a given node touch,
+            # which will also be the cells used to interpolate from.
             mat = self.average_node_to_cell.T[which_node].tocsr()
-            # The below should likely be put into a cython loop for speed...
+            # this will overwrite the "mat" matrices data to create the interpolation
             _interp_cc(loc, self.cell_centers, mat.data, mat.indices, mat.indptr)
-            # for i, point in enumerate(loc):
-            #     start, stop = mat.indptr[[i, i+1]]
-            #     close_cells = mat.indices[start:stop]
-            #     drs = point - self.cell_centers[close_cells]
-            #     rs = np.linalg.norm(drs, axis=-1)
-            #     if any(rs < 1e-16):
-            #         weights = np.zeros(start-stop)
-            #         weights[np.argmin(rs)] = 1.0
-            #     else:
-            #         drs /= rs[:, None]
-            #         xx = np.sum(drs[:, 0]**2)
-            #         yy = np.sum(drs[:, 1]**2)
-            #         xy = np.sum(drs[:, 0]*drs[:, 1])
-            #         if self.dim == 3:
-            #             zz = np.sum(drs[:, 2] ** 2)
-            #             xz = np.sum(drs[:, 0]*drs[:, 2])
-            #             yz = np.sum(drs[:, 1]*drs[:, 2])
-            #             int_mat = np.array([[xx, xy, xz], [xy, yy, yz], [xz, yz, zz]])
-            #         else:
-            #             int_mat = np.array([[xx, xy], [xy, yy]])
-            #         rhs = -np.sum(drs, axis=0)
-            #         lambs = np.linalg.solve(int_mat, rhs)
-            #         weights = 1 + np.sum(lambs[None, :] * drs, axis=1)
-            #         weights /= rs
-            #         weights /= weights.sum()
-            #     mat.data[start:stop] = weights
             return mat
         else:
             component = location_type[-1]
@@ -862,7 +837,8 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
     @property
     def stencil_cell_gradient(self):
         # An operator that differences cells on each side of a face
-        tests = self.faces[self._simplex_faces] - self.cell_centers[:, None, :]
+        # in the direction of the face normal
+        tests = self.cell_centers[:, None, :] - self.faces[self._simplex_faces]
         Aij = np.sign(
             np.einsum('ijk, ijk -> ij', tests, self.face_normals[self._simplex_faces])
         ).reshape(-1)
@@ -870,6 +846,7 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         col_inds = self._simplex_faces.reshape(-1)
 
         Aij = sp.csr_matrix((Aij, col_inds, ind_ptr), shape=(self.n_cells, self.n_faces)).T
+        return Aij
 
     @property
     def boundary_face_list(self):

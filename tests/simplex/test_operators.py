@@ -68,6 +68,23 @@ class TestOperators2D(discretize.tests.OrderTest):
         self._test_type = "Grad"
         self.orderTest()
 
+    def test_cell_gradient_stencil(self):
+        n = 4
+        points, simplices = example_simplex_mesh((n, n))
+        mesh = discretize.SimplexMesh(points, simplices)
+
+        G_sten = mesh.stencil_cell_gradient
+        mod = np.zeros(mesh.n_cells)
+
+        test_cell = 21
+        mod[test_cell] = 1.0
+
+        diff = G_sten @ mod
+        np.testing.assert_equal(np.where(diff!=0.0)[0], np.sort(mesh._simplex_faces[21]))
+        np.testing.assert_equal(diff[diff!=0.0], [-1, 1, -1])
+
+
+
 
 class TestOperators3D(discretize.tests.OrderTest):
     meshSizes = [8, 16, 32]
