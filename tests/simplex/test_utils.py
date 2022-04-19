@@ -1,6 +1,7 @@
 import unittest
 import numpy as np
 import discretize
+from discretize.utils import example_simplex_mesh
 import os
 import pickle
 
@@ -13,6 +14,39 @@ else:
 
 
 class SimplexTests(unittest.TestCase):
+
+    def test_init_errors(self):
+        bad_nodes = np.array([[0, 0, 0],
+                          [1, 0, 0],
+                          [0, 1, 0],
+                          [2, 2, 0],
+                          ])
+        simplices = np.array([[0, 1, 2, 3]])
+        with self.assertRaises(ValueError):
+            mesh = discretize.SimplexMesh(bad_nodes, simplices)
+
+        good_nodes = np.array([[0, 0, 0],
+                          [1, 0, 0],
+                          [0, 1, 0],
+                          [0, 0, 1],
+                          ])
+        with self.assertRaises(ValueError):
+            # pass incompatible shaped nodes and simplices
+            mesh = discretize.SimplexMesh(good_nodes, simplices[:, :-1])
+
+        with self.assertRaises(ValueError):
+            # pass bad dimensionality
+            mesh = discretize.SimplexMesh(np.random.rand(10, 4), simplices[:, :-1])
+
+    def test_find_containing(self):
+        n = 8
+        points, simplices = example_simplex_mesh((n, n))
+        mesh = discretize.SimplexMesh(points, simplices)
+
+        x = np.array([[0.1, 0.2], [0.3, 0.4]])
+
+        inds = mesh.point2index(x)
+        np.testing.assert_equal(inds, [16, 5])
 
     def test_pickle2D(self):
         n = 5

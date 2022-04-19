@@ -473,3 +473,35 @@ class Test2DBoundaryIntegral(discretize.tests.OrderTest):
         self.name = "2D - weak face curl integral w/boundary"
         self.myTest = "face_curl"
         self.orderTest()
+
+
+class TestBadModels(unittest.TestCase):
+
+    def setUp(self):
+        n = 8
+        points, simplices = example_simplex_mesh((n, n))
+        self.mesh = discretize.SimplexMesh(points, simplices)
+
+    def test_bad_model_size(self):
+        mesh = self.mesh
+        bad_model = np.random.rand(mesh.n_cells, 5)
+        with self.assertRaises(ValueError):
+            Mf = mesh.get_face_inner_product(bad_model)
+        with self.assertRaises(ValueError):
+            Mf = mesh.get_face_inner_product_deriv(bad_model)
+
+    def test_cant_invert(self):
+        mesh = self.mesh
+        good_model = np.random.rand(mesh.n_cells)
+        with self.assertRaises(NotImplementedError):
+            Mf = mesh.get_face_inner_product(good_model, invert_matrix=True)
+        with self.assertRaises(NotImplementedError):
+            Mf = mesh.get_face_inner_product_deriv(good_model, invert_matrix=True)
+        with self.assertRaises(NotImplementedError):
+            Mf = mesh.get_face_inner_product_deriv(good_model, invert_model=True)
+        with self.assertRaises(NotImplementedError):
+            Me = mesh.get_edge_inner_product(good_model, invert_matrix=True)
+        with self.assertRaises(NotImplementedError):
+            Me = mesh.get_edge_inner_product_deriv(good_model, invert_matrix=True)
+        with self.assertRaises(NotImplementedError):
+            Me = mesh.get_edge_inner_product_deriv(good_model, invert_model=True)

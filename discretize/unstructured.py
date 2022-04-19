@@ -43,7 +43,7 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
     >>> from discretize import SimplexMesh
     >>> import numpy as np
     >>> import matplotlib.pyplot as plt
-    >>> from scipy.spatial import Delaunay
+    >>> import matplotlib.tri as tri
 
     First we define the nodes of our mesh
 
@@ -51,7 +51,9 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
     >>> nodes = np.c_[X.reshape(-1), Y.reshape(-1)]
 
     Then we triangulate the nodes, here we use matplotlib, but you could also use
-    scipy's Delaunay, or any other triangular mesh generator.
+    scipy's Delaunay, or any other triangular mesh generator. Essentailly we are
+    creating every node in the mesh, and a list of triangles/tetrahedrals defining which
+    nodes make of each cell.
 
     >>> triang = tri.Triangulation(nodes[:, 0], nodes[:, 1])
     >>> simplices = triang.triangles
@@ -68,10 +70,20 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
     def __init__(self, nodes, simplices):
         # grab copies of the nodes and simplices for protection
         nodes = np.asarray(nodes)
+        simplices = np.asarray(simplices)
+        dim = nodes.shape[1]
+        if dim not in [3, 2]:
+            raise ValueError(
+                f"Mesh must be either 2 or 3 dimensions, nodes has {dim} dimension."
+            )
+        if simplices.shape[1] != dim + 1:
+            raise ValueError(
+                "simplices second dimension is not compatible with the mesh dimension. "
+                f"Saw {simplices.shape[1]}, and expected {dim + 1}."
+            )
+
         self._nodes = nodes.copy()
         self._nodes.setflags(write="false")
-
-        simplices = np.asarray(simplices)
         self._simplices = simplices.copy()
         # sort the simplices by node index to simplify further functions...
         self._simplices.sort(axis=1)
