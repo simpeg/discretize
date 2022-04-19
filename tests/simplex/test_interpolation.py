@@ -7,7 +7,9 @@ class TestInterpolation2d(discretize.tests.OrderTest):
     name = "Interpolation 2D"
     meshSizes = [8, 16, 32, 64]
     meshTypes = ['uniform simplex mesh']
-    interp_points = np.random.rand(200, 2) * 0.9 + 0.1
+    interp_points = np.stack(np.mgrid[
+        0.25:0.75:32j, 0.25:0.75:32j
+    ], axis=-1).reshape(-1, 2)
     meshDimension = 2
     expectedOrders = 1
 
@@ -46,7 +48,9 @@ class TestInterpolation2d(discretize.tests.OrderTest):
 
     def test_orderCC(self):
         self.type = "CC"
+        self.expectedOrders = 2
         self.name = "Interpolation 2D: CC"
+        self.expectedOrders = 1
         self.orderTest()
 
     def test_orderN(self):
@@ -81,7 +85,9 @@ class TestInterpolation3d(discretize.tests.OrderTest):
     name = "Interpolation 3D"
     meshSizes = [5, 10, 20, 40]
     meshTypes = ['uniform simplex mesh']
-    interp_points = np.random.rand(200, 3) * 0.9 + 0.1
+    interp_points = np.stack(np.mgrid[
+        0.25:0.75:32j, 0.25:0.75:32j, 0.25:0.75:32j
+    ], axis=-1).reshape(-1, 3)
     meshDimension = 3
     expectedOrders = 1
 
@@ -135,8 +141,10 @@ class TestInterpolation3d(discretize.tests.OrderTest):
 
     def test_orderCC(self):
         self.type = "CC"
+        self.expectedOrders = 2
         self.name = "Interpolation 3D: CC"
         self.orderTest()
+        self.expectedOrders = 1
 
     def test_orderN(self):
         self.type = "N"
