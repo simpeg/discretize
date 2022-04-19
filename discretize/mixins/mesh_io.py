@@ -2,8 +2,6 @@ import os
 import numpy as np
 
 from discretize.utils import mkvc
-from discretize.utils.code_utils import deprecate_method
-import warnings
 
 try:
     from discretize.mixins.vtk_mod import InterfaceTensorread_vtk, InterfaceSimplexReadVTK
@@ -402,25 +400,6 @@ class TensorMeshIO(InterfaceTensorread_vtk):
                 )
             mesh.write_model_UBC(key, models[key], directory=directory)
 
-    # DEPRECATED
-    @classmethod
-    def readUBC(TensorMesh, file_name, directory=""):
-        """*readUBC* has been deprecated and replaced by *read_UBC*"""
-        warnings.warn(
-            "TensorMesh.readUBC has been deprecated and will be removed in"
-            "discretize 1.0.0. please use TensorMesh.read_UBC",
-            DeprecationWarning,
-        )
-        return TensorMesh.read_UBC(file_name, directory)
-
-    readModelUBC = deprecate_method(
-        "read_model_UBC", "readModelUBC", removal_version="1.0.0", future_warn=False
-    )
-    writeUBC = deprecate_method("write_UBC", "writeUBC", removal_version="1.0.0", future_warn=False)
-    writeModelUBC = deprecate_method(
-        "write_model_UBC", "writeModelUBC", removal_version="1.0.0", future_warn=False
-    )
-
 
 class TreeMeshIO(object):
     """Class for managing the input/output of tree meshes and models.
@@ -586,25 +565,6 @@ class TreeMeshIO(object):
             fname = os.path.join(directory, file_name)
             m = model[ubc_order]
             np.savetxt(fname, m)
-
-    # DEPRECATED
-    @classmethod
-    def readUBC(TreeMesh, file_name, directory=""):
-        """*readUBC* has been deprecated and replaced by *read_UBC*"""
-        warnings.warn(
-            "TensorMesh.readUBC has been deprecated and will be removed in"
-            "discretize 1.0.0. please use TensorMesh.read_UBC",
-            DeprecationWarning,
-        )
-        return TreeMesh.read_UBC(file_name, directory)
-
-    readModelUBC = deprecate_method(
-        "read_model_UBC", "readModelUBC", removal_version="1.0.0", future_warn=False
-    )
-    writeUBC = deprecate_method("write_UBC", "writeUBC", removal_version="1.0.0", future_warn=False)
-    writeModelUBC = deprecate_method(
-        "write_model_UBC", "writeModelUBC", removal_version="1.0.0", future_warn=False
-    )
 
 
 class SimplexMeshIO(InterfaceSimplexReadVTK):

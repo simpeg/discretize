@@ -5,8 +5,6 @@ Base classes for all meshes supported in ``discretize``
 import numpy as np
 from discretize.utils import mkvc, Identity
 from discretize.base.base_mesh import BaseMesh
-from discretize.utils.code_utils import deprecate_method
-import warnings
 
 
 class BaseRegularMesh(BaseMesh):
@@ -506,80 +504,6 @@ class BaseRegularMesh(BaseMesh):
         """
         return self.orientation  # np.array([self.axis_u, self.axis_v, self.axis_w])
 
-    @property
-    def axis_u(self):
-        """
-        .. deprecated:: 0.7.0
-          `axis_u` will be removed in discretize 1.0.0. This functionality was replaced
-          by the :py:attr:`~.BaseRegularMesh.orientation`.
-        """
-        warnings.warn(
-            "The axis_u property is deprecated, please access as self.orientation[0]. "
-            "This will be removed in discretize 1.0.0.",
-            DeprecationWarning,
-        )
-        return self.orientation[0]
-
-    @axis_u.setter
-    def axis_u(self, value):
-        warnings.warn(
-            "Setting the axis_u property is deprecated, and now unchecked, please "
-            "directly set the self.orientation property. This will be removed in "
-            "discretize 1.0.0.",
-            DeprecationWarning,
-        )
-        self.orientation[0] = value
-
-    @property
-    def axis_v(self):
-        """
-        .. deprecated:: 0.7.0
-          `axis_v` will be removed in discretize 1.0.0. This functionality was replaced
-          by the :py:attr:`~.BaseRegularMesh.orientation`.
-        """
-        warnings.warn(
-            "The axis_v property is deprecated, please access as self.orientation[1]. "
-            "This will be removed in discretize 1.0.0.",
-            DeprecationWarning,
-        )
-        return self.orientation[1]
-
-    @axis_v.setter
-    def axis_v(self, value):
-        warnings.warn(
-            "Setting the axis_v property is deprecated, and now unchecked, please "
-            "directly set the self.orientation property. This will be removed in "
-            "discretize 1.0.0.",
-            DeprecationWarning,
-        )
-        value = value / np.linalg.norm(value)
-        self.orientation[1] = value
-
-    @property
-    def axis_w(self):
-        """
-        .. deprecated:: 0.7.0
-          `axis_w` will be removed in discretize 1.0.0. This functionality was replaced
-          by the :py:attr:`~.BaseRegularMesh.orientation`.
-        """
-        warnings.warn(
-            "The axis_w property is deprecated, please access as self.orientation[2]. "
-            "This will be removed in discretize 1.0.0.",
-            DeprecationWarning,
-        )
-        return self.orientation[2]
-
-    @axis_w.setter
-    def axis_w(self, value):
-        warnings.warn(
-            "Setting the axis_v property is deprecated, and now unchecked, please "
-            "directly set the self.orientation property. This will be removed in "
-            "discretize 1.0.0.",
-            DeprecationWarning,
-        )
-        value = value / np.linalg.norm(value)
-        self.orientation[2] = value
-
 
 class BaseRectangularMesh(BaseRegularMesh):
     """
@@ -812,7 +736,7 @@ class BaseRectangularMesh(BaseRegularMesh):
         return int(np.prod(self.shape_faces_z))
 
     def reshape(
-        self, x, x_type="cell_centers", out_type="cell_centers", format="V", **kwargs
+        self, x, x_type="cell_centers", out_type="cell_centers", format="V",
     ):
         """General reshape method for tensor quantities
 
@@ -841,21 +765,6 @@ class BaseRectangularMesh(BaseRegularMesh):
                 - *M:* return matrix (nD array) or a list of matrices
 
         """
-        if "xType" in kwargs:
-            warnings.warn(
-                "The xType keyword argument has been deprecated, please use x_type. "
-                "This will be removed in discretize 1.0.0",
-                DeprecationWarning,
-            )
-            x_type = kwargs["xType"]
-        if "outType" in kwargs:
-            warnings.warn(
-                "The outType keyword argument has been deprecated, please use out_type. "
-                "This will be removed in discretize 1.0.0",
-                DeprecationWarning,
-            )
-            out_type = kwargs["outType"]
-
         x_type = self._parse_location_type(x_type)
         out_type = self._parse_location_type(out_type)
 
@@ -987,132 +896,3 @@ class BaseRectangularMesh(BaseRegularMesh):
             return out
         else:
             return switchKernal(x)
-
-    # DEPRECATED
-    r = deprecate_method("reshape", "r", removal_version="1.0.0")
-
-    @property
-    def nCx(self):
-        """Number of cells in the x direction
-
-        Returns
-        -------
-        int
-
-        .. deprecated:: 0.5.0
-          `nCx` will be removed in discretize 1.0.0, it is replaced by
-          `mesh.shape_cells[0]` to reduce namespace clutter.
-        """
-
-        warnings.warn(
-            "nCx has been deprecated, please access as mesh.shape_cells[0]",
-            DeprecationWarning,
-        )
-        return self.shape_cells[0]
-
-    @property
-    def nCy(self):
-        """Number of cells in the y direction
-
-        Returns
-        -------
-        int or None
-            None if dim < 2
-
-        .. deprecated:: 0.5.0
-          `nCy` will be removed in discretize 1.0.0, it is replaced by
-          `mesh.shape_cells[1]` to reduce namespace clutter.
-        """
-
-        warnings.warn(
-            "nCy has been deprecated, please access as mesh.shape_cells[1]",
-            DeprecationWarning,
-        )
-        if self.dim < 2:
-            return None
-        return self.shape_cells[1]
-
-    @property
-    def nCz(self):
-        """Number of cells in the z direction
-
-        Returns
-        -------
-        int or None
-            None if dim < 3
-
-        .. deprecated:: 0.5.0
-          `nCz` will be removed in discretize 1.0.0, it is replaced by
-          `mesh.shape_cells[2]` to reduce namespace clutter.
-        """
-
-        warnings.warn(
-            "nCz has been deprecated, please access as mesh.shape_cells[2]",
-            DeprecationWarning,
-        )
-        if self.dim < 3:
-            return None
-        return self.shape_cells[2]
-
-    @property
-    def nNx(self):
-        """Number of nodes in the x-direction
-
-        Returns
-        -------
-        int
-
-        .. deprecated:: 0.5.0
-          `nNx` will be removed in discretize 1.0.0, it is replaced by
-          `mesh.shape_nodes[0]` to reduce namespace clutter.
-        """
-
-        warnings.warn(
-            "nNx has been deprecated, please access as mesh.shape_nodes[0]",
-            DeprecationWarning,
-        )
-        return self.shape_nodes[0]
-
-    @property
-    def nNy(self):
-        """Number of nodes in the y-direction
-
-        Returns
-        -------
-        int or None
-            None if dim < 2
-
-        .. deprecated:: 0.5.0
-          `nNy` will be removed in discretize 1.0.0, it is replaced by
-          `mesh.shape_nodes[1]` to reduce namespace clutter.
-        """
-
-        warnings.warn(
-            "nNy has been deprecated, please access as mesh.shape_nodes[1]",
-            DeprecationWarning,
-        )
-        if self.dim < 2:
-            return None
-        return self.shape_nodes[1]
-
-    @property
-    def nNz(self):
-        """Number of nodes in the z-direction
-
-        Returns
-        -------
-        int or None
-            None if dim < 3
-
-        .. deprecated:: 0.5.0
-          `nNz` will be removed in discretize 1.0.0, it is replaced by
-          `mesh.shape_nodes[2]` to reduce namespace clutter.
-        """
-
-        warnings.warn(
-            "nNz has been deprecated, please access as mesh.shape_nodes[2]",
-            DeprecationWarning,
-        )
-        if self.dim < 3:
-            return None
-        return self.shape_nodes[2]

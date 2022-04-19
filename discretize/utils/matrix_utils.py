@@ -1,10 +1,10 @@
 import numpy as np
 import scipy.sparse as sp
-from discretize.utils.code_utils import is_scalar, deprecate_function
+from discretize.utils.code_utils import is_scalar
 import warnings
 
 
-def mkvc(x, n_dims=1, **kwargs):
+def mkvc(x, n_dims=1):
     """Creates a vector with specified dimensionality.
 
     This function converts a :class:`numpy.ndarray` to a vector. In general,
@@ -54,13 +54,6 @@ def mkvc(x, n_dims=1, **kwargs):
     Shape of output with n_dim = 2 :  (6, 1)
     Shape of output with n_dim = 3 :  (6, 1, 1)
     """
-    if "numDims" in kwargs:
-        warnings.warn(
-            "The numDims keyword argument has been deprecated, please use n_dims. "
-            "This will be removed in discretize 1.0.0",
-            DeprecationWarning,
-        )
-        n_dims = kwargs["numDims"]
     if type(x) == np.matrix:
         x = np.array(x)
 
@@ -596,7 +589,7 @@ def get_subarray(A, ind):
 
 
 def inverse_3x3_block_diagonal(
-    a11, a12, a13, a21, a22, a23, a31, a32, a33, return_matrix=True, **kwargs
+    a11, a12, a13, a21, a22, a23, a31, a32, a33, return_matrix=True,
 ):
     """Invert a set of 3x3 matricies from vectors containing their elements.
 
@@ -704,13 +697,6 @@ def inverse_3x3_block_diagonal(
     >>> plt.spy(M)
     >>> plt.show()
     """
-    if "returnMatrix" in kwargs:
-        warnings.warn(
-            "The returnMatrix keyword argument has been deprecated, please use return_matrix. "
-            "This will be removed in discretize 1.0.0",
-            DeprecationWarning,
-        )
-        return_matrix = kwargs["returnMatrix"]
 
     a11 = mkvc(a11)
     a12 = mkvc(a12)
@@ -755,7 +741,7 @@ def inverse_3x3_block_diagonal(
     )
 
 
-def inverse_2x2_block_diagonal(a11, a12, a21, a22, return_matrix=True, **kwargs):
+def inverse_2x2_block_diagonal(a11, a12, a21, a22, return_matrix=True):
     """
     Invert a set of 2x2 matricies from vectors containing their elements.
 
@@ -858,14 +844,6 @@ def inverse_2x2_block_diagonal(a11, a12, a21, a22, return_matrix=True, **kwargs)
     >>> plt.spy(M)
     >>> plt.show()
     """
-    if "returnMatrix" in kwargs:
-        warnings.warn(
-            "The returnMatrix keyword argument has been deprecated, please use return_matrix. "
-            "This will be removed in discretize 1.0.0",
-            DeprecationWarning,
-        )
-        return_matrix = kwargs["returnMatrix"]
-
     a11 = mkvc(a11)
     a12 = mkvc(a12)
     a21 = mkvc(a21)
@@ -1231,7 +1209,7 @@ def make_property_tensor(mesh, tensor):
     return Sigma
 
 
-def inverse_property_tensor(mesh, tensor, return_matrix=False, **kwargs):
+def inverse_property_tensor(mesh, tensor, return_matrix=False):
     r"""Construct the inverse of the physical property tensor.
 
     For a given *mesh*, the input parameter *tensor* is a :class:`numpy.ndarray`
@@ -1381,15 +1359,6 @@ def inverse_property_tensor(mesh, tensor, return_matrix=False, **kwargs):
         ... )
         >>> plt.show()
     """
-
-    if "returnMatrix" in kwargs:
-        warnings.warn(
-            "The returnMatrix keyword argument has been deprecated, please use return_matrix. "
-            "This will be removed in discretize 1.0.0",
-            DeprecationWarning,
-        )
-        return_matrix = kwargs["returnMatrix"]
-
     propType = TensorType(mesh, tensor)
 
     if is_scalar(tensor):
@@ -1706,28 +1675,3 @@ class _inftup(tuple):
 
     def __repr__(self):
         return f"({self._val}, {self._val}, ...)"
-
-
-################################################
-#             DEPRECATED FUNCTIONS
-################################################
-
-sdInv = deprecate_function(sdinv, "sdInv", removal_version="1.0.0", future_warn=False)
-
-getSubArray = deprecate_function(get_subarray, "getSubArray", removal_version="1.0.0", future_warn=False)
-
-inv3X3BlockDiagonal = deprecate_function(
-    inverse_3x3_block_diagonal, "inv3X3BlockDiagonal", removal_version="1.0.0", future_warn=False
-)
-
-inv2X2BlockDiagonal = deprecate_function(
-    inverse_2x2_block_diagonal, "inv2X2BlockDiagonal", removal_version="1.0.0", future_warn=False
-)
-
-makePropertyTensor = deprecate_function(
-    make_property_tensor, "makePropertyTensor", removal_version="1.0.0", future_warn=False
-)
-
-invPropertyTensor = deprecate_function(
-    inverse_property_tensor, "invPropertyTensor", removal_version="1.0.0", future_warn=False
-)

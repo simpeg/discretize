@@ -441,14 +441,6 @@ class InterfaceVTK(object):
             )
         return cvtd
 
-    def toVTK(mesh, models=None):
-        """*toVTK* has been deprecated and replaced by *to_vtk*"""
-        warnings.warn(
-            "Deprecation Warning: `toVTK` is deprecated, use `to_vtk` instead",
-            category=DeprecationWarning,
-        )
-        return InterfaceVTK.to_vtk(mesh, models=models)
-
     @staticmethod
     def _save_unstructured_grid(file_name, vtkUnstructGrid, directory=""):
         """Saves a VTK unstructured grid file (vtu) for an already generated
@@ -586,17 +578,6 @@ class InterfaceVTK(object):
             raise RuntimeError("VTK data type `%s` is not currently supported." % key)
         return write(file_name, vtkObj, directory=directory)
 
-    def writeVTK(mesh, file_name, models=None, directory=""):
-        """*writeVTK* has been deprecated and replaced by *write_vtk*"""
-        warnings.warn(
-            "Deprecation Warning: `writeVTK` is deprecated, use `write_vtk` instead",
-            category=DeprecationWarning,
-        )
-        return InterfaceVTK.write_vtk(
-            mesh, file_name, models=models, directory=directory
-        )
-
-
 class InterfaceTensorread_vtk(object):
     """
     This class provides convenient methods for converting VTK Rectilinear Grid
@@ -684,17 +665,6 @@ class InterfaceTensorread_vtk(object):
         vtrReader.Update()
         vtrGrid = vtrReader.GetOutput()
         return TensorMesh.vtk_to_tensor_mesh(vtrGrid)
-
-    @classmethod
-    def readVTK(TensorMesh, file_name, directory=""):
-        """*readVTK* has been deprecated and replaced by *read_vtk*"""
-        warnings.warn(
-            "Deprecation Warning: `readVTK` is deprecated, use `read_vtk` instead",
-            category=DeprecationWarning,
-        )
-        return InterfaceTensorread_vtk.read_vtk(
-            TensorMesh, file_name, directory=directory
-        )
 
 
 class InterfaceSimplexReadVTK:

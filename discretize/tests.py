@@ -32,7 +32,6 @@ from discretize.utils import mkvc, example_curvilinear_grid, requires
 from discretize.tensor_mesh import TensorMesh
 from discretize.curvilinear_mesh import CurvilinearMesh
 from discretize.cylindrical_mesh import CylindricalMesh
-from discretize.utils.code_utils import deprecate_function
 
 from . import TreeMesh as Tree
 
@@ -749,14 +748,3 @@ def assert_isadjoint(
         )
 
         return passed
-
-
-# DEPRECATIONS
-setupMesh = deprecate_function(setup_mesh, "setupMesh", removal_version="1.0.0")
-Rosenbrock = deprecate_function(rosenbrock, "Rosenbrock", removal_version="1.0.0")
-checkDerivative = deprecate_function(
-    check_derivative, "checkDerivative", removal_version="1.0.0"
-)
-getQuadratic = deprecate_function(
-    get_quadratic, "getQuadratic", removal_version="1.0.0"
-)

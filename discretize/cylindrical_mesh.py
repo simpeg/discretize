@@ -16,11 +16,6 @@ from discretize.utils import (
 from discretize.base import BaseTensorMesh, BaseRectangularMesh
 from discretize.operators import DiffOperators, InnerProducts
 from discretize.mixins import InterfaceMixins
-from discretize.utils.code_utils import (
-    deprecate_class,
-    deprecate_property,
-    deprecate_method,
-)
 import warnings
 
 
@@ -1631,7 +1626,7 @@ class CylindricalMesh(
     ####################################################
 
     def get_interpolation_matrix(
-        self, loc, location_type="cell_centers", zeros_outside=False, **kwargs
+        self, loc, location_type="cell_centers", zeros_outside=False,
     ):
         """Construct interpolation matrix from mesh
 
@@ -1671,20 +1666,6 @@ class CylindricalMesh(
             The interpolation matrix
 
         """
-        if "locType" in kwargs:
-            warnings.warn(
-                "The locType keyword argument has been deprecated, please use location_type. "
-                "This will be removed in discretize 1.0.0",
-                DeprecationWarning,
-            )
-            location_type = kwargs["locType"]
-        if "zerosOutside" in kwargs:
-            warnings.warn(
-                "The zerosOutside keyword argument has been deprecated, please use zeros_outside. "
-                "This will be removed in discretize 1.0.0",
-                DeprecationWarning,
-            )
-            zeros_outside = kwargs["zerosOutside"]
 
         location_type = self._parse_location_type(location_type)
 
@@ -1713,7 +1694,7 @@ class CylindricalMesh(
 
         return self._getInterpolationMat(loc, location_type, zeros_outside)
 
-    def cartesian_grid(self, location_type="cell_centers", theta_shift=None, **kwargs):
+    def cartesian_grid(self, location_type="cell_centers", theta_shift=None):
         """
         Takes a grid location ('CC', 'N', 'Ex', 'Ey', 'Ez', 'Fx', 'Fy', 'Fz')
         and returns that grid in cartesian coordinates
@@ -1730,13 +1711,6 @@ class CylindricalMesh(
         (n_items, dim) numpy.ndarray
             cartesian coordinates for the cylindrical grid
         """
-        if "locType" in kwargs:
-            warnings.warn(
-                "The locType keyword argument has been deprecated, please use location_type. "
-                "This will be removed in discretize 1.0.0",
-                DeprecationWarning,
-            )
-            location_type = kwargs["locType"]
         try:
             grid = getattr(self, location_type).copy()
         except AttributeError:
@@ -1746,7 +1720,7 @@ class CylindricalMesh(
         return cyl2cart(grid)  # TODO: account for cartesian origin
 
     def get_interpolation_matrix_cartesian_mesh(
-        self, Mrect, location_type="cell_centers", location_type_to=None, **kwargs
+        self, Mrect, location_type="cell_centers", location_type_to=None,
     ):
         """Construct projection matrix from ``CylindricalMesh`` to other mesh.
 
@@ -1774,21 +1748,6 @@ class CylindricalMesh(
             interpolation matrix from gridded locations on cylindrical mesh to gridded locations
             on another mesh
         """
-        if "locType" in kwargs:
-            warnings.warn(
-                "The locType keyword argument has been deprecated, please use location_type. "
-                "This will be removed in discretize 1.0.0",
-                DeprecationWarning,
-            )
-            location_type = kwargs["locType"]
-        if "locTypeTo" in kwargs:
-            warnings.warn(
-                "The locTypeTo keyword argument has been deprecated, please use location_type_to. "
-                "This will be removed in discretize 1.0.0",
-                DeprecationWarning,
-            )
-            location_type_to = kwargs["locTypeTo"]
-
         location_type = self._parse_location_type(location_type)
 
         if not self.is_symmetric:
@@ -1867,31 +1826,3 @@ class CylindricalMesh(
         Pc2r = self.get_interpolation_matrix(G, interp_type)
         Proj = sdiag(proj)
         return Proj * Pc2r
-
-    # DEPRECATIONS
-    areaFx = deprecate_property("face_x_areas", "areaFx", removal_version="1.0.0", future_warn=False)
-    areaFy = deprecate_property("face_y_areas", "areaFy", removal_version="1.0.0", future_warn=False)
-    areaFz = deprecate_property("face_z_areas", "areaFz", removal_version="1.0.0", future_warn=False)
-    edgeEx = deprecate_property("edge_x_lengths", "edgeEx", removal_version="1.0.0", future_warn=False)
-    edgeEy = deprecate_property("edge_y_lengths", "edgeEy", removal_version="1.0.0", future_warn=False)
-    edgeEz = deprecate_property("edge_z_lengths", "edgeEz", removal_version="1.0.0", future_warn=False)
-    isSymmetric = deprecate_property(
-        "is_symmetric", "isSymmetric", removal_version="1.0.0", future_warn=False
-    )
-    cartesianOrigin = deprecate_property(
-        "cartesian_origin", "cartesianOrigin", removal_version="1.0.0", future_warn=False
-    )
-    getInterpolationMatCartMesh = deprecate_method(
-        "get_interpolation_matrix_cartesian_mesh",
-        "getInterpolationMatCartMesh",
-        removal_version="1.0.0",
-        future_warn=False
-    )
-    cartesianGrid = deprecate_method(
-        "cartesian_grid", "cartesianGrid", removal_version="1.0.0", future_warn=False
-    )
-
-
-@deprecate_class(removal_version="1.0.0", future_warn=False)
-class CylMesh(CylindricalMesh):
-    pass
