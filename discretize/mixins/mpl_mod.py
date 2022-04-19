@@ -2239,6 +2239,7 @@ class InterfaceMPL(object):
             raise NotImplementedError(
                 "plot_image is not implemented for 3D SimplexMesh."
             )
+        v = np.squeeze(v)
         # reshape to cell_centered thing
         if v_type == "CCv":
             if view != "vec":
@@ -2290,12 +2291,11 @@ class InterfaceMPL(object):
             quiver_opts = quiver_opts.copy()
             quiver_opts.setdefault("pivot", "mid")
 
-            v = v.reshape(2, self.n_cells)
             qvr = ax.quiver(
                 self.cell_centers[:, 0],
                 self.cell_centers[:, 1],
-                v[0],
-                v[1],
+                v[:, 0],
+                v[:, 1],
                 **quiver_opts,
             )
             out = (trip, qvr)
