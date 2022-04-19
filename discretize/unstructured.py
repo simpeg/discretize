@@ -7,6 +7,7 @@ from discretize._extensions.simplex_helpers import (
     _build_faces_edges,
     _build_adjacency,
     _directed_search,
+    _interp_cc
 )
 from discretize.mixins import InterfaceMixins, SimplexMeshIO
 
@@ -605,11 +606,39 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
             Aij = barys.reshape(-1)
             n_items = self.n_nodes
         elif location_type == "cell_centers":
-            # this is "nearest neighbor" interpolation at the moment...
-            ind_ptr = np.arange(n_loc + 1)
-            col_inds = inds
-            Aij = np.ones(len(inds))
-            n_items = self.n_cells
+            # detemine which node each point is closest to.
+            which_node = simplex_nodes[inds, np.argmax(barys, axis=-1)]
+            # this matrix can be used to lookup which cells a given node touch.
+            mat = self.average_node_to_cell.T[which_node].tocsr()
+            # The below should likely be put into a cython loop for speed...
+            _interp_cc(loc, self.cell_centers, mat.data, mat.indices, mat.indptr)
+            # for i, point in enumerate(loc):
+            #     start, stop = mat.indptr[[i, i+1]]
+            #     close_cells = mat.indices[start:stop]
+            #     drs = point - self.cell_centers[close_cells]
+            #     rs = np.linalg.norm(drs, axis=-1)
+            #     if any(rs < 1e-16):
+            #         weights = np.zeros(start-stop)
+            #         weights[np.argmin(rs)] = 1.0
+            #     else:
+            #         drs /= rs[:, None]
+            #         xx = np.sum(drs[:, 0]**2)
+            #         yy = np.sum(drs[:, 1]**2)
+            #         xy = np.sum(drs[:, 0]*drs[:, 1])
+            #         if self.dim == 3:
+            #             zz = np.sum(drs[:, 2] ** 2)
+            #             xz = np.sum(drs[:, 0]*drs[:, 2])
+            #             yz = np.sum(drs[:, 1]*drs[:, 2])
+            #             int_mat = np.array([[xx, xy, xz], [xy, yy, yz], [xz, yz, zz]])
+            #         else:
+            #             int_mat = np.array([[xx, xy], [xy, yy]])
+            #         rhs = -np.sum(drs, axis=0)
+            #         lambs = np.linalg.solve(int_mat, rhs)
+            #         weights = 1 + np.sum(lambs[None, :] * drs, axis=1)
+            #         weights /= rs
+            #         weights /= weights.sum()
+            #     mat.data[start:stop] = weights
+            return mat
         else:
             component = location_type[-1]
             if component == 'x':

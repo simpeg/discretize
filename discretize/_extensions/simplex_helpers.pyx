@@ -7,6 +7,8 @@ from libcpp.unordered_map cimport unordered_map
 from cython.operator cimport dereference
 cimport cython
 cimport numpy as np
+from cython cimport view
+from libc.math cimport sqrt
 
 cdef extern from "triplet.h":
     cdef cppclass triplet[T, U, V]:
@@ -283,3 +285,126 @@ def _directed_search(
     if return_bary:
         return np.array(inds), np.array(all_barys)
     return np.array(inds)
+
+@cython.boundscheck(False)
+@cython.cdivision(True)
+def _interp_cc(
+  np.float64_t[:, :] locs,
+  np.float64_t[:, :] cell_centers,
+  np.float64_t[:] mat_data,
+  ints[:] mat_indices,
+  ints[:] mat_indptr,
+):
+    cdef:
+        ints i, j, diff, start, stop, i_d
+        ints n_max_per_row = 0
+        ints[:] close_cells
+        int dim = locs.shape[1]
+        np.float64_t[:, :] drs
+        np.float64_t[:] rs
+        np.float64_t[:] rhs
+        np.float64_t[:] lambs
+        np.float64_t[:] weights
+        np.float64_t[:] point
+        np.float64_t[:] close_cell
+        np.float64_t det, weight_sum
+        bint too_close
+        np.float64_t eps = 1E-15
+    # Find maximum number per row to pre-allocate a storage
+    for i in range(locs.shape[0]):
+        diff = mat_indptr[i+1] - mat_indptr[i]
+        if diff > n_max_per_row:
+          n_max_per_row = diff
+    #
+    drs = np.empty((n_max_per_row, dim), dtype=np.float64)
+    rs = np.empty((n_max_per_row,), dtype=np.float64)
+    rhs = np.empty((dim,),dtype=np.float64)
+    lambs = np.empty((dim,),dtype=np.float64)
+
+    for i in range(locs.shape[0]):
+        point = locs[i]
+        start = mat_indptr[i]
+        stop = mat_indptr[i+1]
+        diff = stop-start
+        close_cells = mat_indices[start:stop]
+        for j in range(diff):
+            rs[j] = 0.0
+            close_cell = cell_centers[close_cells[j]]
+            for i_d in range(dim):
+                drs[j, i_d] = close_cell[i_d] - point[i_d]
+                rs[j] += drs[j, i_d]*drs[j, i_d]
+            rs[j] = sqrt(rs[j])
+        weights = mat_data[start:stop]
+        weights[:] = 0.0
+        too_close = False
+        i_d = 0
+        for j in range(diff):
+            if rs[j] < eps:
+                too_close = True
+                i_d = j
+        if too_close:
+            weights[i_d] = 1.0
+        else:
+            for j in range(diff):
+                for i_d in range(dim):
+                    drs[j, i_d] /= rs[j]
+            xx = xy = yy = 0.0
+            rhs[:] = 0.0
+            if dim == 2:
+                for j in range(diff):
+                    xx += drs[j, 0] * drs[j, 0]
+                    xy += drs[j, 0] * drs[j, 1]
+                    yy += drs[j, 1] * drs[j, 1]
+                    rhs[0] -= drs[j, 0]
+                    rhs[1] -= drs[j, 1]
+                det = xx * yy - xy * xy
+                # inv_mat[0, 0] = yy/det
+                # inv_mat[0, 1] = -xy/det
+                # inv_mat[1, 0] = -xy/det
+                # inv_mat[1, 1] = xx/det
+                lambs[0] = (yy * rhs[0] - xy * rhs[1])/det
+                lambs[1] = (-xy * rhs[0] + xx * rhs[1])/det
+
+            if dim == 3:
+                zz = xz = yz = 0.0
+                for j in range(diff):
+                    xx += drs[j, 0] * drs[j, 0]
+                    xy += drs[j, 0] * drs[j, 1]
+                    yy += drs[j, 1] * drs[j, 1]
+                    xz += drs[j, 0] * drs[j, 2]
+                    yz += drs[j, 0] * drs[j, 2]
+                    zz += drs[j, 2] * drs[j, 2]
+                    rhs[0] -= drs[j, 0]
+                    rhs[1] -= drs[j, 1]
+                    rhs[2] -= drs[j, 2]
+
+                det = (
+                      xx * (yy * zz - yz * yz)
+                      + xy * (xz * yz - xy * zz)
+                      + xz * (xy * yz - xz * yy)
+                )
+                lambs[0] = (
+                    (yy * zz - yz * yz) * rhs[0]
+                    + (xz * yz - xy * zz) * rhs[1]
+                    + (xy * yz - xz * yy) * rhs[1]
+                )/det
+                lambs[1] = (
+                    (xz * yz - xy * zz) * rhs[0]
+                    + (xx * zz - xz * xz) * rhs[1]
+                    + (xy * xz - xx * yz) * rhs[2]
+                )/det
+                lambs[2] = (
+                    (xy * yz - xz * yy) * rhs[0]
+                    + (xz * xy - xx * yz) * rhs[1]
+                    + (xx * yy - xy * xy) * rhs[2]
+                )/det
+
+            weight_sum = 0.0
+            for j in range(diff):
+                weights[j] = 1.0
+                for i_d in range(dim):
+                    weights[j] += lambs[i_d] * drs[j, i_d]
+                weights[j] /= rs[j]
+                weight_sum += weights[j]
+            for j in range(diff):
+                weights[j] /= weight_sum
