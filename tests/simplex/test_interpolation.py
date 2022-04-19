@@ -157,7 +157,7 @@ class TestInterpolation3d(discretize.tests.OrderTest):
 
     def test_orderFz(self):
         self.type = "Fz"
-        self.name = "Interpolation 3D: Fy"
+        self.name = "Interpolation 3D: Fz"
         self.orderTest()
 
     def test_orderEx(self):
@@ -172,7 +172,7 @@ class TestInterpolation3d(discretize.tests.OrderTest):
 
     def test_orderEz(self):
         self.type = "Ez"
-        self.name = "Interpolation 3D: Ey"
+        self.name = "Interpolation 3D: Ez"
         self.orderTest()
 
 

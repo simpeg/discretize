@@ -358,10 +358,6 @@ def _interp_cc(
                     rhs[0] -= drs[j, 0]
                     rhs[1] -= drs[j, 1]
                 det = xx * yy - xy * xy
-                # inv_mat[0, 0] = yy/det
-                # inv_mat[0, 1] = -xy/det
-                # inv_mat[1, 0] = -xy/det
-                # inv_mat[1, 1] = xx/det
                 lambs[0] = (yy * rhs[0] - xy * rhs[1])/det
                 lambs[1] = (-xy * rhs[0] + xx * rhs[1])/det
 
@@ -372,7 +368,7 @@ def _interp_cc(
                     xy += drs[j, 0] * drs[j, 1]
                     yy += drs[j, 1] * drs[j, 1]
                     xz += drs[j, 0] * drs[j, 2]
-                    yz += drs[j, 0] * drs[j, 2]
+                    yz += drs[j, 1] * drs[j, 2]
                     zz += drs[j, 2] * drs[j, 2]
                     rhs[0] -= drs[j, 0]
                     rhs[1] -= drs[j, 1]
@@ -386,7 +382,7 @@ def _interp_cc(
                 lambs[0] = (
                     (yy * zz - yz * yz) * rhs[0]
                     + (xz * yz - xy * zz) * rhs[1]
-                    + (xy * yz - xz * yy) * rhs[1]
+                    + (xy * yz - xz * yy) * rhs[2]
                 )/det
                 lambs[1] = (
                     (xz * yz - xy * zz) * rhs[0]
