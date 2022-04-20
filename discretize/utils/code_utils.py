@@ -262,7 +262,7 @@ def deprecate_function(new_function, old_name, removal_version=None, future_warn
 
 
 # DEPRECATIONS
-isScalar = deprecate_function(is_scalar, "isScalar", removal_version="1.0.0", future_warn=False)
+isScalar = deprecate_function(is_scalar, "isScalar", removal_version="1.0.0", future_warn=True)
 asArray_N_x_Dim = deprecate_function(
-    as_array_n_by_dim, "asArray_N_x_Dim", removal_version="1.0.0", future_warn=False
+    as_array_n_by_dim, "asArray_N_x_Dim", removal_version="1.0.0", future_warn=True
 )
