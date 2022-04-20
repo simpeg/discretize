@@ -455,14 +455,26 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         A = np.sum([P.T @ Mu @ P for P in Ps])
         return A
 
-    def get_face_inner_product(self, model=None, invert_model=False, invert_matrix=False):
+    def get_face_inner_product(
+        self,
+        model=None,
+        invert_model=False,
+        invert_matrix=False,
+        do_fast=True,
+    ):
         if invert_matrix:
             raise NotImplementedError(
                 "The inverse of the inner product matrix with a tetrahedral mesh is not supported."
             )
         return self.__get_inner_product("F", model, invert_model)
 
-    def get_edge_inner_product(self, model=None, invert_model=False, invert_matrix=False):
+    def get_edge_inner_product(
+        self,
+        model=None,
+        invert_model=False,
+        invert_matrix=False,
+        do_fast=True,
+    ):
         if invert_matrix:
             raise NotImplementedError(
                 "The inverse of the inner product matrix with a tetrahedral mesh is not supported."
@@ -546,7 +558,7 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         return func
 
     def get_face_inner_product_deriv(
-        self, model, do_fast=True, invert_model=False, invert_matrix=False, **kwargs
+        self, model, do_fast=True, invert_model=False, invert_matrix=False
     ):
         if invert_model:
             raise NotImplementedError(
@@ -559,7 +571,7 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         return self.__get_inner_product_deriv_func("F", model)
 
     def get_edge_inner_product_deriv(
-        self, model, do_fast=True, invert_model=False, invert_matrix=False, **kwargs
+        self, model, do_fast=True, invert_model=False, invert_matrix=False
     ):
         if invert_model:
             raise NotImplementedError(
