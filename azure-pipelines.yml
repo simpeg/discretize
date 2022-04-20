@@ -33,7 +33,7 @@ stages:
         DISPLAY: ':99.0'
         PYVISTA_OFF_SCREEN: 'True'
       steps:
-        - script: |
+        - bash: |
             git config --global user.name ${GH_NAME}
             git config --global user.email ${GH_EMAIL}
             git config --list | grep user.
@@ -41,18 +41,29 @@ stages:
           env:
             GH_NAME: $(gh.name)
             GH_EMAIL: $(gh.email)
-        - script: echo '##vso[task.prependpath]$CONDA/bin'
+
+        - bash: echo '##vso[task.prependpath]$CONDA/bin'
           displayName: Add conda to PATH
-        - script: |
-            conda create --yes --quiet --name test python=3.8
+
+        - bash: sudo chown -R $USER $CONDA
+          displayName: Take ownership of conda installation
+
+        - bash: |
             eval "$(conda shell.bash hook)"
+            conda update --yes --quiet -n base conda
+            conda install --yes --quiet -c conda-forge mamba
+          displayName: Install mamba
+
+        - bash: |
+            eval "$(conda shell.bash hook)"
+            mamba create --yes --quiet --name test python=3.8
             conda activate test
-            conda env list
-            conda install --yes --quiet -c conda-forge numpy scipy matplotlib cython vtk pyvista pymatsolver graphviz
+            mamba install --yes --quiet -c conda-forge numpy scipy matplotlib cython vtk pyvista pymatsolver graphviz
             pip install -r requirements_dev.txt
             pip install .
           displayName: building and installing deps
-        - script: |
+
+        - bash: |
             eval "$(conda shell.bash hook)"
             conda activate test
             .ci/setup_headless_display.sh
@@ -61,7 +72,7 @@ stages:
             cd ..
           displayName: Building documentation
         # upload documentation to discretize-docs gh-pages on tags
-        - script: |
+        - bash: |
             git clone --depth 1 https://${GH_TOKEN}@github.com/simpeg/discretize-docs.git
             cd discretize-docs
             git gc --prune=now
@@ -75,7 +86,7 @@ stages:
           displayName: Push documentation to discretize-docs
           env:
             GH_TOKEN: $(gh.token)
-        - script: |
+        - bash: |
             eval "$(conda shell.bash hook)"
             conda activate test
             python setup.py sdist
