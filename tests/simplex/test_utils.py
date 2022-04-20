@@ -39,7 +39,7 @@ class SimplexTests(unittest.TestCase):
             mesh = discretize.SimplexMesh(np.random.rand(10, 4), simplices[:, :-1])
 
     def test_find_containing(self):
-        n = 8
+        n = 4
         points, simplices = example_simplex_mesh((n, n))
         mesh = discretize.SimplexMesh(points, simplices)
 
