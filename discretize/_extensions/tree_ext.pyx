@@ -125,7 +125,7 @@ cdef class TreeCell:
         """
         cdef Face *faces[6]
         faces = self._cell.faces
-        if self._ == 3:
+        if self._dim == 3:
             return [
                 faces[0].index, faces[1].index,
                 faces[2].index, faces[3].index,
