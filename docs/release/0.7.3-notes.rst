@@ -1,0 +1,26 @@
+.. currentmodule:: discretize
+
+.. _0.7.3_notes:
+
+===================================
+``discretize`` 0.7.3 Release Notes
+===================================
+
+This patch release fixes a few minor bugs related to the edge curl operator in 2D for
+```TensorMesh`` which was not properly indexed as edges. There is also minor additions
+to the functionality of cylindrical meshes, allowing the user to set an origin point
+for the rotational component. Finally, there is an added dot product test to simplify
+future development and testing.
+
+Contributors
+============
+
+* @jcapriot
+* @prisae
+
+Pull requests
+=============
+
+* `#268 <https://github.com/simpeg/discretize/pull/268>`__: ENH: Actually use origin[1] for cylindrical mesh
+* `#271 <https://github.com/simpeg/discretize/pull/271>`__: update 2D edge curl operator to properly go from 2D edges to Z-faces
+* `#272 <https://github.com/simpeg/discretize/pull/272>`__: Add dot product test.
