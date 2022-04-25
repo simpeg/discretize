@@ -4928,14 +4928,19 @@ cdef class _TreeMesh:
             int_t dim = self._dim
             int_t n_loc = locs.shape[0]
             int_t n_edges = 2 if self._dim == 2 else 4
-            np.int64_t[:] I = np.empty(n_loc*n_edges, dtype=np.int64)
-            np.int64_t[:] J = np.empty(n_loc*n_edges, dtype=np.int64)
-            np.float64_t[:] V = np.empty(n_loc*n_edges, dtype=np.float64)
+            np.int64_t[:] indptr = 2 * n_edges * np.arange(n_loc+1, dtype=np.int64)
+            np.int64_t[:] indices = np.empty(n_loc * 2 * n_edges, dtype=np.int64)
+            np.float64_t[:] data = np.empty(n_loc * 2 * n_edges, dtype=np.float64)
+
+            np.int64_t[:] row_inds
+            np.float64_t[:] row_data
 
             int_t ii, i, j, offset
             c_Cell *cell
+            c_Cell *i0, *i1
+            Edge *i000, *i001, *i010, *i011, *i100, *i101, *i110, *i111
             double x, y, z
-            double w1, w2
+            double w1, w2, w3
             double eps = 100*np.finfo(float).eps
             int zeros_out = zerosOutside
 
@@ -4955,65 +4960,136 @@ cdef class _TreeMesh:
             x = locations[i, 0]
             y = locations[i, 1]
             z = locations[i, 2] if dim==3 else 0.0
-            #get containing (or closest) cell
+            # get containing (or closest) cell
             cell = self.tree.containing_cell(x, y, z)
-            for j in range(n_edges):
-                I[n_edges*i+j] = i
-                J[n_edges*i+j] = cell.edges[n_edges*dir+j].index + offset
-
-            w1 = ((cell.edges[n_edges*dir+1].location[dir1] - locations[i, dir1])/
-                  (cell.edges[n_edges*dir+1].location[dir1] - cell.edges[n_edges*dir].location[dir1]))
-            if dim == 3:
-                w2 = ((cell.edges[n_edges*dir+3].location[dir2] - locations[i, dir2])/
-                      (cell.edges[n_edges*dir+3].location[dir2] - cell.edges[n_edges*dir].location[dir2]))
-            else:
-                w2 = 1.0
+            row_inds = indices[indptr[i]:indptr[i+1]]
+            row_data = data[indptr[i]:indptr[i+1]]
             if zeros_out:
-                if (w1 < -eps or w1 > 1 + eps or w2 < -eps or w2 > eps):
-                    for j in range(n_edges):
-                        V[n_edges*i + j] = 0.0
-                    continue
-            w1 = _clip01(w1)
-            w2 = _clip01(w2)
+                if x < cell.points[0].location[0]-eps:
+                    row_data[:] = 0.0
+                    row_inds[:] = 0
+                elif x > cell.points[3].location[0]+eps:
+                    row_data[:] = 0.0
+                    row_inds[:] = 0
+                elif y < cell.points[0].location[1]-eps:
+                    row_data[:] = 0.0
+                    row_inds[:] = 0
+                elif y > cell.points[3].location[1]+eps:
+                    row_data[:] = 0.0
+                    row_inds[:] = 0
+                elif dim == 3 and z < cell.points[0].location[2]-eps:
+                    row_data[:] = 0.0
+                    row_inds[:] = 0
+                elif dim == 3 and z > cell.points[7].location[2]+eps:
+                    row_data[:] = 0.0
+                    row_inds[:] = 0
+            else:
+                # look + dir and - dir away
+                if (
+                    locations[i, dir] < cell.location[dir]
+                    and cell.neighbors[2*dir] != NULL
+                    and cell.neighbors[2*dir].is_leaf()
+                    and cell.neighbors[2*dir].level == cell.level
+                ):
+                    i0 = cell.neighbors[2*dir]
+                    i1 = cell
+                elif(
+                    locations[i, dir] > cell.location[dir]
+                    and cell.neighbors[2*dir + 1] != NULL
+                    and cell.neighbors[2*dir + 1].is_leaf()
+                    and cell.neighbors[2*dir + 1].level == cell.level
+                ):
+                    i0 = cell
+                    i1 = cell.neighbors[2*dir + 1]
+                else:
+                    i0 = cell
+                    i1 = cell
 
-            V[n_edges*i  ] = w1*w2
-            V[n_edges*i+1] = (1.0-w1)*w2
-            if dim == 3:
-                V[n_edges*i+2] = w1*(1.0-w2)
-                V[n_edges*i+3] = (1.0-w1)*(1.0-w2)
+                i000 = i0.edges[n_edges * dir]
+                i001 = i0.edges[n_edges * dir + 1]
+                w1 = ((i001.location[dir1] - locations[i, dir1])/
+                      (i001.location[dir1] - i000.location[dir1]))
+
+                i010 = i1.edges[n_edges*dir]
+                i011 = i1.edges[n_edges*dir + 1]
+                if i0.index != i1.index:
+                    w2 = ((i010.location[dir] - locations[i, dir])/
+                          (i010.location[dir] - i000.location[dir]))
+                else:
+                    w2 = 1.0
+
+                if dim == 3:
+                    i100 = i0.edges[n_edges * dir + 2]
+                    i101 = i0.edges[n_edges * dir + 3]
+                    i110 = i1.edges[n_edges * dir + 2]
+                    i111 = i1.edges[n_edges * dir + 3]
+
+                    w3 = ((i100.location[dir2] - locations[i, dir2])/
+                          (i100.location[dir2] - i000.location[dir2]))
+                else:
+                    w3 = 1.0
+
+                w1 = _clip01(w1)
+                w2 = _clip01(w2)
+                w3 = _clip01(w3)
+
+                row_data[0] = w1 * w2 * w3
+                row_data[1] = (1 - w1) * w2 * w3
+                row_data[2] = w1 * (1 - w2) * w3
+                row_data[3] = (1 - w1) * (1 - w2) * w3
+                row_inds[0] = i000.index + offset
+                row_inds[1] = i001.index + offset
+                row_inds[2] = i010.index + offset
+                row_inds[3] = i011.index + offset
+                if dim==3:
+                    row_data[4] = w1 * w2 * (1 - w3)
+                    row_data[5] = (1 - w1) * w2 * (1 - w3)
+                    row_data[6] = w1 * (1 - w2) * (1 - w3)
+                    row_data[7] = (1 - w1) * (1 - w2) * (1 - w3)
+                    row_inds[4] = i100.index + offset
+                    row_inds[5] = i101.index + offset
+                    row_inds[6] = i110.index + offset
+                    row_inds[7] = i111.index + offset
 
         Re = self._deflate_edges()
-        A = sp.csr_matrix((V, (I, J)), shape=(locs.shape[0], self.n_total_edges))
+        A = sp.csr_matrix((data, indices, indptr), shape=(locs.shape[0], self.n_total_edges))
         return A*Re
 
     def _getFaceIntMat(self, locs, zerosOutside, direction):
         cdef:
             double[:, :] locations = locs
-            int_t dir, dir2d
+            int_t dir, dir1, dir2, temp
             int_t dim = self._dim
             int_t n_loc = locs.shape[0]
-            int_t n_faces = 2
-            np.int64_t[:] I = np.empty(n_loc*n_faces, dtype=np.int64)
-            np.int64_t[:] J = np.empty(n_loc*n_faces, dtype=np.int64)
-            np.float64_t[:] V = np.empty(n_loc*n_faces, dtype=np.float64)
+            int_t n_faces = 4 if dim == 2 else 8
+            np.int64_t[:] indptr = n_faces * np.arange(n_loc + 1, dtype=np.int64)
+            np.int64_t[:] indices = np.empty(n_loc*n_faces, dtype=np.int64)
+            np.float64_t[:] data = np.empty(n_loc*n_faces, dtype=np.float64)
 
             int_t ii, i, offset
             c_Cell *cell
+            c_Cell *i00, *i01, *i10, *i11
+            Face *f000, *f001, *f010, *f011, *f100, *f101, *f110, *f111
+            Edge *e00, *e01, *e10, *e11
             double x, y, z
-            double w
+            double w1, w2, w3
             double eps = 100*np.finfo(float).eps
             int zeros_out = zerosOutside
 
         if direction == 'x':
             dir = 0
-            dir2d = 1
+            dir1 = 1
+            dir2 = 2
             offset = 0
         elif direction == 'y':
             dir = 1
-            dir2d = 0
+            dir1 = 0
+            dir2 = 2
             offset = self.n_total_faces_x
         elif direction == 'z':
             dir = 2
+            dir1 = 0
+            dir2 = 1
             offset = self.n_total_faces_x + self.n_total_faces_y
         else:
             raise ValueError('Invalid direction, must be x, y, or z')
@@ -5024,29 +5100,156 @@ cdef class _TreeMesh:
             z = locations[i, 2] if dim==3 else 0.0
             #get containing (or closest) cell
             cell = self.tree.containing_cell(x, y, z)
-            I[n_faces*i  ] = i
-            I[n_faces*i+1] = i
-            if self._dim == 3:
-                J[n_faces*i  ] = cell.faces[dir*2  ].index + offset
-                J[n_faces*i+1] = cell.faces[dir*2+1].index + offset
-                w = ((cell.faces[dir*2+1].location[dir] - locations[i, dir])/
-                      (cell.faces[dir*2+1].location[dir] - cell.faces[dir*2].location[dir]))
-            else:
-                J[n_faces*i  ] = cell.edges[dir2d*2  ].index + offset
-                J[n_faces*i+1] = cell.edges[dir2d*2+1].index + offset
-                w = ((cell.edges[dir2d*2+1].location[dir] - locations[i, dir])/
-                      (cell.edges[dir2d*2+1].location[dir] - cell.edges[dir2d*2].location[dir]))
+            row_inds = indices[indptr[i]:indptr[i+1]]
+            row_data = data[indptr[i]:indptr[i+1]]
             if zeros_out:
-                if (w < -eps or w > 1 + eps):
-                    V[n_faces*i  ] = 0.0
-                    V[n_faces*i+1] = 0.0
-                    continue
-            w = _clip01(w)
-            V[n_faces*i  ] = w
-            V[n_faces*i+1] = 1.0-w
+                if x < cell.points[0].location[0]-eps:
+                    row_data[:] = 0.0
+                    row_inds[:] = 0
+                elif x > cell.points[3].location[0]+eps:
+                    row_data[:] = 0.0
+                    row_inds[:] = 0
+                elif y < cell.points[0].location[1]-eps:
+                    row_data[:] = 0.0
+                    row_inds[:] = 0
+                elif y > cell.points[3].location[1]+eps:
+                    row_data[:] = 0.0
+                    row_inds[:] = 0
+                elif dim == 3 and z < cell.points[0].location[2]-eps:
+                    row_data[:] = 0.0
+                    row_inds[:] = 0
+                elif dim == 3 and z > cell.points[7].location[2]+eps:
+                    row_data[:] = 0.0
+                    row_inds[:] = 0
+            else:
+              # Find containing cells
+              # Decide order to search based on which face it is closest to
+              if dim == 3:
+                  if (
+                      abs(locations[i, dir1] - cell.location[dir1]) <
+                      abs(locations[i, dir2] - cell.location[dir2])
+                  ):
+                    temp = dir1
+                    dir1 = dir2
+                    dir2 = temp
+              # look in dir1 direction
+              if (
+                  locations[i, dir1] < cell.location[dir1]
+                  and cell.neighbors[2*dir1] != NULL
+                  and cell.neighbors[2*dir1].is_leaf()
+                  and cell.neighbors[2*dir1].level == cell.level
+              ):
+                  i00 = cell.neighbors[2*dir1]
+                  i01 = cell
+              elif (
+                  locations[i, dir1] > cell.location[dir1]
+                  and cell.neighbors[2*dir1 + 1] != NULL
+                  and cell.neighbors[2*dir1 + 1].is_leaf()
+                  and cell.neighbors[2*dir1 + 1].level == cell.level
+              ):
+                  i00 = cell
+                  i01 = cell.neighbors[2*dir1 + 1]
+              else:
+                  i00 = i01 = cell
+
+              if dim == 2:
+                  e00 = i00.edges[2 * dir1]
+                  e01 = i00.edges[2 * dir1 + 1]
+                  e10 = i01.edges[2 * dir1]
+                  e11 = i01.edges[2 * dir1 + 1]
+                  w1 = ((e01.location[dir] - locations[i, dir])/
+                        (e01.location[dir] - e00.location[dir]))
+                  if i00.index != i01.index:
+                      w2 = ((e10.location[dir1] - locations[i, dir1])/
+                            (e10.location[dir1] - e00.location[dir1]))
+                  else:
+                      w2 = 1.0
+
+                  w1 = _clip01(w1)
+                  w2 = _clip01(w2)
+                  row_data[0] = w1 * w2
+                  row_data[1] = (1 - w1) * w2
+                  row_data[2] = w1 * (1 - w2)
+                  row_data[3] = (1 - w1) * (1 - w2)
+                  row_inds[0] = e00.index + offset
+                  row_inds[1] = e01.index + offset
+                  row_inds[2] = e10.index + offset
+                  row_inds[3] = e11.index + offset
+              else:
+                  # Look dir2 from previous two cells
+                  if (
+                      locations[i, dir2] < cell.location[dir2]
+                      and i00.neighbors[2*dir2] != NULL
+                      and i01.neighbors[2*dir2] != NULL
+                      and i00.neighbors[2*dir2].is_leaf()
+                      and i01.neighbors[2*dir2].is_leaf()
+                      and i00.neighbors[2*dir2].level == i00.level
+                      and i01.neighbors[2*dir2].level == i01.level
+                  ):
+                      i10 = i00
+                      i11 = i01
+                      i00 = i00.neighbors[2*dir2]
+                      i01 = i01.neighbors[2*dir2]
+                  elif (
+                      locations[i, dir2] > cell.location[dir2]
+                      and i00.neighbors[2*dir2 + 1] != NULL
+                      and i01.neighbors[2*dir2 + 1] != NULL
+                      and i00.neighbors[2*dir2 + 1].is_leaf()
+                      and i01.neighbors[2*dir2 + 1].is_leaf()
+                      and i00.neighbors[2*dir2 + 1].level == i00.level
+                      and i01.neighbors[2*dir2 + 1].level == i01.level
+                  ):
+                      i10 = i00.neighbors[2*dir2 + 1]
+                      i11 = i01.neighbors[2*dir2 + 1]
+                  else:
+                      i10 = i00
+                      i11 = i01
+
+                  f000 = i00.faces[dir * 2]
+                  f001 = i00.faces[dir * 2 + 1]
+                  f010 = i01.faces[dir * 2]
+                  f011 = i01.faces[dir * 2 + 1]
+                  f100 = i10.faces[dir * 2]
+                  f101 = i10.faces[dir * 2 + 1]
+                  f110 = i11.faces[dir * 2]
+                  f111 = i11.faces[dir * 2 + 1]
+
+                  w1 = ((f001.location[dir] - locations[i, dir])/
+                        (f001.location[dir] - f000.location[dir]))
+                  if i00.index != i01.index:
+                      w2 = ((f010.location[dir1] - locations[i, dir1])/
+                            (f010.location[dir1] - f000.location[dir1]))
+                  else:
+                      w2 = 1.0
+                  if i10.index != i00.index:
+                      w3 = ((f100.location[dir2] - locations[i, dir2])/
+                            (f100.location[dir2] - f000.location[dir2]))
+                  else:
+                      w3 = 1.0
+
+                  w1 = _clip01(w1)
+                  w2 = _clip01(w2)
+                  w3 = _clip01(w3)
+
+                  row_data[0] = w1 * w2 * w3
+                  row_data[1] = (1 - w1) * w2 * w3
+                  row_data[2] = w1 * (1 - w2) * w3
+                  row_data[3] = (1 - w1) * (1 - w2) * w3
+                  row_data[4] = w1 * w2 * (1 - w3)
+                  row_data[5] = (1 - w1) * w2 * (1 - w3)
+                  row_data[6] = w1 * (1 - w2) * (1 - w3)
+                  row_data[7] = (1 - w1) * (1 - w2) * (1 - w3)
+                  row_inds[0] = f000.index + offset
+                  row_inds[1] = f001.index + offset
+                  row_inds[2] = f010.index + offset
+                  row_inds[3] = f011.index + offset
+                  row_inds[4] = f100.index + offset
+                  row_inds[5] = f101.index + offset
+                  row_inds[6] = f110.index + offset
+                  row_inds[7] = f111.index + offset
 
         Rf = self._deflate_faces()
-        return sp.csr_matrix((V, (I, J)), shape=(locs.shape[0], self.n_total_faces))*Rf
+        return sp.csr_matrix((data, indices, indptr), shape=(locs.shape[0], self.n_total_faces))*Rf
 
     def _getNodeIntMat(self, locs, zerosOutside):
         cdef:
@@ -5117,16 +5320,27 @@ cdef class _TreeMesh:
         cdef:
             double[:, :] locations = locs
             int_t dim = self._dim
+            int_t dir0, dir1, dir2, temp
             int_t n_loc = locations.shape[0]
-            np.int64_t[:] I = np.arange(n_loc, dtype=np.int64)
-            np.int64_t[:] J = np.empty(n_loc, dtype=np.int64)
-            np.float64_t[:] V = np.ones(n_loc, dtype=np.float64)
+            int_t n_cells = 4 if dim == 2 else 8
+            np.int64_t[:] indptr = n_cells * np.arange(n_loc+1, dtype=np.int64)
+            np.int64_t[:] indices = np.empty(n_cells * n_loc, dtype=np.int64)
+            np.float64_t[:] data = np.ones(n_cells * n_loc, dtype=np.float64)
+
+            np.int64_t[:] row_inds
+            np.float64_t[:] row_data
+            np.float64_t w0, w1, w2
 
             int_t ii, i
+            c_Cell *i000, *i001, *i010, *i011, *i100, *i101, *i110, *i111
             c_Cell *cell
             double x, y, z
             double eps = 100*np.finfo(float).eps
             int zeros_out = zerosOutside
+
+        dir0 = 0
+        dir1 = 1
+        dir2 = 2
 
         for i in range(n_loc):
             x = locations[i, 0]
@@ -5134,22 +5348,191 @@ cdef class _TreeMesh:
             z = locations[i, 2] if dim==3 else 0.0
             # get containing (or closest) cell
             cell = self.tree.containing_cell(x, y, z)
-            J[i] = cell.index
+            row_inds = indices[indptr[i]:indptr[i + 1]]
+            row_data = data[indptr[i]:indptr[i + 1]]
             if zeros_out:
                 if x < cell.points[0].location[0]-eps:
-                    V[i] = 0.0
+                    row_data[:] = 0.0
+                    row_inds[:] = 0
                 elif x > cell.points[3].location[0]+eps:
-                    V[i] = 0.0
+                    row_data[:] = 0.0
+                    row_inds[:] = 0
                 elif y < cell.points[0].location[1]-eps:
-                    V[i] = 0.0
+                    row_data[:] = 0.0
+                    row_inds[:] = 0
                 elif y > cell.points[3].location[1]+eps:
-                    V[i] = 0.0
+                    row_data[:] = 0.0
+                    row_inds[:] = 0
                 elif dim == 3 and z < cell.points[0].location[2]-eps:
-                    V[i] = 0.0
+                    row_data[:] = 0.0
+                    row_inds[:] = 0
                 elif dim == 3 and z > cell.points[7].location[2]+eps:
-                    V[i] = 0.0
+                    row_data[:] = 0.0
+                    row_inds[:] = 0
+            else:
+                # decide order to search based on distance to each faces
+                #
+                if (
+                    abs(locations[i, dir0] - cell.location[dir0]) <
+                    abs(locations[i, dir1] - cell.location[dir1])
+                ):
+                    temp = dir0
+                    dir0 = dir1
+                    dir1 = temp
+                if dim == 3:
+                    if (
+                        abs(locations[i, dir1] - cell.location[dir1]) <
+                        abs(locations[i, dir2] - cell.location[dir2])
+                    ):
+                        temp = dir1
+                        dir1 = dir2
+                        dir2 = temp
+                    if (
+                        abs(locations[i, dir0] - cell.location[dir0]) <
+                        abs(locations[i, dir1] - cell.location[dir1])
+                    ):
+                        temp = dir0
+                        dir0 = dir1
+                        dir0 = temp
+                # Look -dir0 and +dir0 from current cell
+                if (
+                    locations[i, dir0] < cell.location[dir0]
+                    and cell.neighbors[2 * dir0] != NULL
+                    and cell.neighbors[2 * dir0].is_leaf()
+                    and cell.neighbors[2 * dir0].level == cell.level
+                ):
+                    i000 = cell.neighbors[2 * dir0]
+                    i001 = cell
+                elif (
+                    locations[i, dir0] > cell.location[dir0]
+                    and cell.neighbors[2 * dir0 + 1] != NULL
+                    and cell.neighbors[2 * dir0 + 1].is_leaf()
+                    and cell.neighbors[2 * dir0 + 1].level == cell.level
+                ):
+                    i000 = cell
+                    i001 = cell.neighbors[2 * dir0 + 1]
+                else:
+                    i000 = i001 = cell
+                # Look -y and +y from previous two cells
+                if (
+                    locations[i, dir1] < cell.location[dir1]
+                    and i000.neighbors[2 * dir1] != NULL
+                    and i001.neighbors[2 * dir1] != NULL
+                    and i000.neighbors[2 * dir1].is_leaf()
+                    and i001.neighbors[2 * dir1].is_leaf()
+                    and i000.neighbors[2 * dir1].level == i000.level
+                    and i001.neighbors[2 * dir1].level == i001.level
+                ):
+                    i010 = i000
+                    i011 = i001
+                    i000 = i000.neighbors[2 * dir1]
+                    i001 = i001.neighbors[2 * dir1]
+                elif (
+                    locations[i, dir1] > cell.location[dir1]
+                    and i000.neighbors[2 * dir1 + 1] != NULL
+                    and i001.neighbors[2 * dir1 + 1] != NULL
+                    and i000.neighbors[2 * dir1 + 1].is_leaf()
+                    and i001.neighbors[2 * dir1 + 1].is_leaf()
+                    and i000.neighbors[2 * dir1 + 1].level == i000.level
+                    and i001.neighbors[2 * dir1 + 1].level == i001.level
+                ):
+                    i010 = i000.neighbors[2 * dir1 + 1]
+                    i011 = i001.neighbors[2 * dir1 + 1]
+                else:
+                    i010 = i000
+                    i011 = i001
+                    w1 = 1.0
+                # Look -z and +z from previous four cells
+                if (
+                    dim == 3
+                    and locations[i, dir2] < cell.location[dir2]
+                    and i000.neighbors[2 * dir2] != NULL
+                    and i001.neighbors[2 * dir2] != NULL
+                    and i010.neighbors[2 * dir2] != NULL
+                    and i011.neighbors[2 * dir2] != NULL
+                    and i000.neighbors[2 * dir2].is_leaf()
+                    and i001.neighbors[2 * dir2].is_leaf()
+                    and i010.neighbors[2 * dir2].is_leaf()
+                    and i011.neighbors[2 * dir2].is_leaf()
+                    and i000.neighbors[2 * dir2].level == i000.level
+                    and i001.neighbors[2 * dir2].level == i001.level
+                    and i010.neighbors[2 * dir2].level == i010.level
+                    and i011.neighbors[2 * dir2].level == i011.level
+                ):
+                    i100 = i000
+                    i101 = i001
+                    i110 = i010
+                    i111 = i011
+                    i000 = i000.neighbors[2 * dir2]
+                    i001 = i001.neighbors[2 * dir2]
+                    i010 = i010.neighbors[2 * dir2]
+                    i011 = i011.neighbors[2 * dir2]
+                elif (
+                    dim == 3
+                    and locations[i, dir2] > cell.location[dir2]
+                    and i000.neighbors[2 * dir2 + 1] != NULL
+                    and i001.neighbors[2 * dir2 + 1] != NULL
+                    and i010.neighbors[2 * dir2 + 1] != NULL
+                    and i011.neighbors[2 * dir2 + 1] != NULL
+                    and i000.neighbors[2 * dir2 + 1].is_leaf()
+                    and i001.neighbors[2 * dir2 + 1].is_leaf()
+                    and i010.neighbors[2 * dir2 + 1].is_leaf()
+                    and i011.neighbors[2 * dir2 + 1].is_leaf()
+                    and i000.neighbors[2 * dir2 + 1].level == i000.level
+                    and i001.neighbors[2 * dir2 + 1].level == i001.level
+                    and i010.neighbors[2 * dir2 + 1].level == i010.level
+                    and i011.neighbors[2 * dir2 + 1].level == i011.level
+                ):
+                    i100 = i000.neighbors[2 * dir2 + 1]
+                    i101 = i001.neighbors[2 * dir2 + 1]
+                    i110 = i010.neighbors[2 * dir2 + 1]
+                    i111 = i011.neighbors[2 * dir2 + 1]
+                else:
+                    i100 = i000
+                    i101 = i001
+                    i110 = i010
+                    i111 = i011
 
-        return sp.csr_matrix((V, (I, J)), shape=(locs.shape[0],self.n_cells))
+                if i001.index != i000.index:
+                    w1 = ((i001.location[dir0] - locations[i, dir0])/
+                          (i001.location[dir0] - i000.location[dir0]))
+                else:
+                   w1 = 1.0
+
+                if i010.index != i000.index:
+                    w2 = ((i010.location[dir1] - locations[i, dir1])/
+                          (i010.location[dir1] - i000.location[dir1]))
+                else:
+                    w2 = 1.0
+
+                if dim == 3 and i100.index != i000.index:
+                    w3 = ((i100.location[dir2] - locations[i, dir2])/
+                          (i100.location[dir2] - i000.location[dir2]))
+                else:
+                    w3 = 1.0
+
+
+                w1 = _clip01(w1)
+                w2 = _clip01(w2)
+                w3 = _clip01(w3)
+                row_data[0] = w1 * w2 * w3
+                row_data[1] = (1 - w1) * w2 * w3
+                row_data[2] = w1 * (1 - w2) * w3
+                row_data[3] = (1 - w1) * (1 - w2) * w3
+                row_inds[0] = i000.index
+                row_inds[1] = i001.index
+                row_inds[2] = i010.index
+                row_inds[3] = i011.index
+                if dim==3:
+                    row_data[4] = w1 * w2 * (1 - w3)
+                    row_data[5] = (1 - w1) * w2 * (1 - w3)
+                    row_data[6] = w1 * (1 - w2) * (1 - w3)
+                    row_data[7] = (1 - w1) * (1 - w2) * (1 - w3)
+                    row_inds[4] = i100.index
+                    row_inds[5] = i101.index
+                    row_inds[6] = i110.index
+                    row_inds[7] = i111.index
+        return sp.csr_matrix((data, indices, indptr), shape=(locs.shape[0],self.n_cells))
 
     @property
     def cell_nodes(self):
