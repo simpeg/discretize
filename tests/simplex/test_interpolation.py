@@ -367,7 +367,7 @@ class TestVectorAveraging2D(discretize.tests.OrderTest):
         funX = lambda x, y: -y**2
         funY = lambda x, y: x**2
         mesh = self.M
-        ana = np.c_[funX(*mesh.cell_centers.T), funY(*mesh.cell_centers.T)].reshape(-1)
+        ana = np.c_[funX(*mesh.cell_centers.T), funY(*mesh.cell_centers.T)].reshape(-1, order='F')
 
         if self.source_type == "F":
             Fc = np.c_[funX(*mesh.faces.T), funY(*mesh.faces.T)]
@@ -410,7 +410,7 @@ class TestVectorAveraging3D(discretize.tests.OrderTest):
         funY = lambda x, y, z: np.cos(2 * np.pi * z)
         funZ = lambda x, y, z: np.cos(2 * np.pi * x)
         mesh = self.M
-        ana = np.c_[funX(*mesh.cell_centers.T), funY(*mesh.cell_centers.T), funZ(*mesh.cell_centers.T)].reshape(-1)
+        ana = np.c_[funX(*mesh.cell_centers.T), funY(*mesh.cell_centers.T), funZ(*mesh.cell_centers.T)].reshape(-1, order='F')
 
         if self.source_type == "F":
             Fc = np.c_[funX(*mesh.faces.T), funY(*mesh.faces.T), funZ(*mesh.faces.T)]

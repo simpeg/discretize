@@ -2199,7 +2199,7 @@ class InterfaceMPL(object):
     ):
         if lines:
             if self.dim == 2:
-                ax.triplot(*self.nodes.T, self._simplices, color=color, linewidth=linewidth)
+                ax.triplot(*self.nodes.T, self.simplices, color=color, linewidth=linewidth)
             elif self.dim == 3:
                 edge_nodes = self._edges
                 n_edges = edge_nodes.shape[0]
@@ -2255,12 +2255,12 @@ class InterfaceMPL(object):
                 aveOp += "_vector"
             v = getattr(self, aveOp) * v
         if view == "vec":
-            v = v.reshape((self.n_cells, 2))
+            v = v.reshape((self.n_cells, 2), order='F')
         elif "x" in v_type:
-            v = v.reshape((self.n_cells, 2))
+            v = v.reshape((self.n_cells, 2), order='F')
             v = v[:, 0]
         elif "y" in v_type:
-            v = v.reshape((self.n_cells, 2))
+            v = v.reshape((self.n_cells, 2), order='F')
             v = v[:, 1]
 
         if view in ["real", "imag", "abs"]:
