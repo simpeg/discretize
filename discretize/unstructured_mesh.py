@@ -805,6 +805,10 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         )
         for P in Ps:
             Av = Av + 1/(nodes_per_cell) * P
+        # Av needs to be re-ordered to comply with discretize standard
+        ind = np.arange(Av.shape[0]).reshape(n_cells, -1).flatten(order='F')
+        P = sp.eye(Av.shape[0], format='csr')[ind]
+        Av = P @ Av
         return Av
 
     @property
@@ -821,6 +825,10 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         )
         for P in Ps:
             Av = Av + 1/(nodes_per_cell) * P
+        # Av needs to be re-ordered to comply with discretize standard
+        ind = np.arange(Av.shape[0]).reshape(n_cells, -1).flatten(order='F')
+        P = sp.eye(Av.shape[0], format='csr')[ind]
+        Av = P @ Av
         return Av
 
     @property
