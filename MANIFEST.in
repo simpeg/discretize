@@ -4,6 +4,5 @@ prune docs
 prune examples
 prune tests
 prune tutorials
-prune discretize.egg-info
 exclude .coveragerc .gitignore azure-pipelines.yml MANIFEST.in setup.cfg
 exclude requirements_dev.txt requirements.txt

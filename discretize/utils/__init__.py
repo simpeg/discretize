@@ -74,6 +74,7 @@ Matrix Utilities
   get_subarray
   inverse_3x3_block_diagonal
   inverse_2x2_block_diagonal
+  invert_blocks
   make_property_tensor
   inverse_property_tensor
 
@@ -119,6 +120,7 @@ from discretize.utils.matrix_utils import (
     get_subarray,
     inverse_3x3_block_diagonal,
     inverse_2x2_block_diagonal,
+    invert_blocks,
     TensorType,
     make_property_tensor,
     inverse_property_tensor,
@@ -133,6 +135,7 @@ from discretize.utils.mesh_utils import (
     refine_tree_xyz,
     active_from_xyz,
     mesh_builder_xyz,
+    example_simplex_mesh,
 )
 from discretize.utils.curvilinear_utils import (
   example_curvilinear_grid, volume_tetrahedron, face_info, index_cube

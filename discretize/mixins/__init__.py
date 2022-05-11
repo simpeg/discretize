@@ -27,9 +27,10 @@ Other Optional Classes
 
   Slicer
 """
-from .mesh_io import TensorMeshIO, TreeMeshIO
+from .mesh_io import TensorMeshIO, TreeMeshIO, SimplexMeshIO
 
 AVAILABLE_MIXIN_CLASSES = []
+SIMPLEX_MIXIN_CLASSES = []
 
 try:
     from .vtk_mod import InterfaceVTK

@@ -64,6 +64,7 @@ from vtk import vtkXMLRectilinearGridWriter as _vtkRectWriter
 from vtk import vtkXMLUnstructuredGridWriter as _vtkUnstWriter
 from vtk import vtkXMLStructuredGridWriter as _vtkStrucWriter
 from vtk import vtkXMLRectilinearGridReader as _vtkRectReader
+from vtk import vtkXMLUnstructuredGridReader as _vtkUnstReader
 
 import warnings
 
@@ -241,6 +242,47 @@ class InterfaceVTK(object):
         # Assign the model('s) to the object
         return assign_cell_data(output, models=models)
 
+    def __simplex_mesh_to_vtk(mesh, models=None):
+        """
+        Constructs a :class:`pyvista.UnstructuredGrid` object of this simplex mesh and
+        the given models as ``cell_arrays`` of that ``pyvista`` dataset.
+
+        Parameters
+        ----------
+
+        mesh : discretize.SimplexMesh
+            The simplex mesh to convert to a :class:`pyvista.UnstructuredGrid`
+
+        models : dict(numpy.ndarray)
+            Name('s) and array('s). Match number of cells
+
+        """
+        # Make the data parts for the vtu object
+        # Points
+        pts = mesh.nodes
+        if mesh.dim == 2:
+            cell_type = _vtk.VTK_TRIANGLE
+            pts = np.c_[pts, np.zeros(mesh.n_nodes)]
+        elif mesh.dim == 3:
+            cell_type = _vtk.VTK_TETRA
+        vtk_pts = _vtk.vtkPoints()
+        vtk_pts.SetData(_nps.numpy_to_vtk(pts, deep=True))
+
+        cell_con_array = np.c_[np.full(mesh.n_cells, mesh.dim+1), mesh.simplices]
+        cells = _vtk.vtkCellArray()
+        cells.SetNumberOfCells(mesh.n_cells)
+        cells.SetCells(
+            mesh.n_cells,
+            _nps.numpy_to_vtk(cell_con_array.reshape(-1), deep=True, array_type=_vtk.VTK_ID_TYPE),
+        )
+
+        output = _vtk.vtkUnstructuredGrid()
+        output.SetPoints(vtk_pts)
+        output.SetCells(cell_type, cells)
+        # Assign the model('s) to the object
+        return assign_cell_data(output, models=models)
+
+
     @staticmethod
     def __create_structured_grid(ptsMat, dims, models=None):
         """An internal helper to build out structured grids"""
@@ -375,6 +417,7 @@ class InterfaceVTK(object):
             "tree": InterfaceVTK.__tree_mesh_to_vtk,
             "tensor": InterfaceVTK.__tensor_mesh_to_vtk,
             "curv": InterfaceVTK.__curvilinear_mesh_to_vtk,
+            "simplex": InterfaceVTK.__simplex_mesh_to_vtk,
             # TODO: 'CylindricalMesh' : InterfaceVTK.__cyl_mesh_to_vtk,
         }
         key = mesh._meshType.lower()
@@ -502,10 +545,7 @@ class InterfaceVTK(object):
             raise IOError("{:s} is an incorrect extension, has to be .vtr".format(ext))
         # Write the file.
         vtrWriteFilter = _vtkRectWriter()
-        if float(_vtk_version.split(".")[0]) >= 6:
-            vtrWriteFilter.SetInputDataObject(vtkRectGrid)
-        else:
-            vtuWriteFilter.SetInput(vtuObj)
+        vtrWriteFilter.SetInputDataObject(vtkRectGrid)
         vtrWriteFilter.SetFileName(fname)
         vtrWriteFilter.Update()
 
@@ -571,7 +611,7 @@ class InterfaceTensorread_vtk(object):
 
         Parameters
         ----------
-        vtrGrid : ``vtkRectilinearGrid`` or :class:`~pyvista.RectilinearGrid`
+        vtuGrid : ``vtkRectilinearGrid`` or :class:`~pyvista.RectilinearGrid`
             A VTK or PyVista rectilinear grid object
 
         Returns
@@ -655,3 +695,83 @@ class InterfaceTensorread_vtk(object):
         return InterfaceTensorread_vtk.read_vtk(
             TensorMesh, file_name, directory=directory
         )
+
+
+class InterfaceSimplexReadVTK:
+
+    @classmethod
+    def vtk_to_simplex_mesh(SimplexMesh, vtuGrid):
+        """Convert ``vtkUnstructuredGrid`` or :class:`~pyvista.UnstructuredGrid` object
+        to a :class:`~discretize.SimplexMesh` object.
+
+        Parameters
+        ----------
+        vtrGrid : ``vtkUnstructuredGrid`` or :class:`~pyvista.UnstructuredGrid`
+            A VTK or PyVista unstructured grid object
+
+        Returns
+        -------
+        discretize.SimplexMesh
+            A discretize tensor mesh
+        """
+        # check if all of the cells are the same type
+        cell_types = np.unique(_nps.vtk_to_numpy(vtuGrid.GetCellTypesArray()))
+        if len(cell_types) > 1:
+            raise ValueError(
+                "Incompatible unstructured grid. All cell's must have the same type.")
+        if cell_types[0] not in [5, 10]:
+            raise ValueError("Cell types must be either triangular or tetrahedral")
+        if cell_types[0] == 5:
+            dim = 2
+        else:
+            dim = 3
+        # then should be safe to move forward
+        simplices = _nps.vtk_to_numpy(vtuGrid.GetCells().GetConnectivityArray()).reshape(-1, dim + 1)
+        points = _nps.vtk_to_numpy(vtuGrid.GetPoints().GetData())
+        if dim == 2:
+            points = points[:, :-1]
+
+        mesh = SimplexMesh(points, simplices)
+
+        # Grap the models
+        models = {}
+        for i in np.arange(vtuGrid.GetCellData().GetNumberOfArrays()):
+            modelName = vtuGrid.GetCellData().GetArrayName(i)
+            modArr = _nps.vtk_to_numpy(vtuGrid.GetCellData().GetArray(i))
+            models[modelName] = modArr
+
+        # Return the data
+        return mesh, models
+
+    @classmethod
+    def read_vtk(SimplexMesh, file_name, directory=""):
+        """Read VTK unstructured file (vtu or xml) and return a discretize simplex mesh (and models)
+
+        This method reads a VTK unstructured file (vtu or xml format) and returns
+        the :class:`~discretize.SimplexMesh` as well as a dictionary containing any
+        models. The keys in the model dictionary correspond to the file names of the
+        models.
+
+        Parameters
+        ----------
+        file_name : str
+            full path to the VTK unstructured file (vtr or xml) containing the mesh (and
+            models) or just the file name if the directory is specified.
+        directory : str, optional
+            directory where the file lives
+
+        Returns
+        -------
+        mesh : discretize.SimplexMesh
+            The tensor mesh object.
+        model_dict : dict of [str, (n_cells) numpy.ndarray]
+            A dictionary containing the models. The keys correspond to the names of the
+            models.
+        """
+        fname = os.path.join(directory, file_name)
+        # Read the file
+        vtuReader = _vtkUnstReader()
+        vtuReader.SetFileName(fname)
+        vtuReader.Update()
+        vtuGrid = vtuReader.GetOutput()
+        return SimplexMesh.vtk_to_simplex_mesh(vtuGrid)

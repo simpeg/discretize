@@ -6,9 +6,9 @@ from discretize.utils.code_utils import deprecate_method
 import warnings
 
 try:
-    from discretize.mixins.vtk_mod import InterfaceTensorread_vtk
+    from discretize.mixins.vtk_mod import InterfaceTensorread_vtk, InterfaceSimplexReadVTK
 except ImportError:
-    InterfaceTensorread_vtk = object
+    InterfaceSimplexReadVTK = InterfaceTensorread_vtk = object
 
 
 class TensorMeshIO(InterfaceTensorread_vtk):
@@ -605,3 +605,7 @@ class TreeMeshIO(object):
     writeModelUBC = deprecate_method(
         "write_model_UBC", "writeModelUBC", removal_version="1.0.0", future_warn=False
     )
+
+
+class SimplexMeshIO(InterfaceSimplexReadVTK):
+    pass

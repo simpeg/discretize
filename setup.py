@@ -91,6 +91,12 @@ else:
             ["discretize/_extensions/tree_ext.pyx", "discretize/_extensions/tree.cpp"],
             include_dirs=[np.get_include()],
             **ext_kwargs
+        ),
+        Extension(
+            "discretize._extensions.simplex_helpers",
+            ["discretize/_extensions/simplex_helpers.pyx"],
+            include_dirs=[np.get_include()],
+            **ext_kwargs
         )
     ]
 

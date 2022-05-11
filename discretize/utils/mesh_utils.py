@@ -1051,6 +1051,106 @@ def active_from_xyz(mesh, xyz, grid_reference="CC", method="linear"):
     return active.ravel()
 
 
+def example_simplex_mesh(rect_shape):
+    """Returns a simple tetrahedral mesh on a unit cube in 2D or 3D.
+
+    Returns the nodes and connectivity of a triangulated domain on the [0, 1] cube.
+    This is not necessarily a good triangulation, just a complete one. This is mostly
+    used for testing purposes. In 2D, this discretizes each rectangle into two triangles.
+    In 3D, each cube is broken into 6 tetrahedrons.
+
+    Parameters
+    ----------
+    rect_shape : (dim) array_like of int
+        For each dimension, create n+1 nodes along that axis.
+
+    Returns
+    -------
+    points : (n_points, dim) numpy.ndarray
+        array of created nodes
+    simplics : (n_cells, dim + 1) numpy.ndarray
+        connectivity of nodes for each cell.
+
+    Examples
+    --------
+    >>> from discretize import SimplexMesh
+    >>> from discretize.utils import example_simplex_mesh
+    >>> from matplotlib import pyplot as plt
+    >>> nodes, simplices = example_simplex_mesh((5, 6))
+    >>> mesh = SimplexMesh(nodes, simplices)
+    >>> mesh.plot_grid()
+    >>> plt.show()
+    """
+    if len(rect_shape) == 2:
+        n1, n2 = rect_shape
+        xs, ys = np.mgrid[0:1:(n1+1)*1j, 0:1:(n2+1)*1j]
+        points = np.c_[xs.reshape(-1), ys.reshape(-1)]
+
+        node_inds = np.arange((n1+1) * (n2+1)).reshape((n1+1, n2+1))
+
+        left_triangs = np.c_[
+            node_inds[:-1, :-1].reshape(-1), # i00
+            node_inds[1:, :-1].reshape(-1),  # i10
+            node_inds[:-1, 1:].reshape(-1)   # i01
+        ]
+        right_triangs = np.c_[
+            node_inds[1:,1:].reshape(-1),    # i11
+            node_inds[1:, :-1].reshape(-1),  # i10
+            node_inds[:-1, 1:].reshape(-1)   # i01
+        ]
+
+        simplices = np.r_[left_triangs, right_triangs]
+    if len(rect_shape) == 3:
+        n1, n2, n3 = rect_shape
+        xs, ys, zs = np.mgrid[0:1:(n1+1)*1j, 0:1:(n2+1)*1j, 0:1:(n3+1)*1j]
+        points = np.c_[xs.reshape(-1), ys.reshape(-1), zs.reshape(-1)]
+
+        node_inds = np.arange(
+            (n1+1) * (n2+1) * (n3+1)
+        ).reshape((n1+1, n2+1, n3+1))
+
+        a_triangs = np.c_[
+            node_inds[1:, :-1, :-1].reshape(-1),  # i100
+            node_inds[:-1, :-1, 1:].reshape(-1),  # i001
+            node_inds[:-1, 1:, :-1].reshape(-1),  # i010
+            node_inds[:-1, :-1, :-1].reshape(-1)  # i000
+        ]
+        b_triangs = np.c_[
+            node_inds[:-1, 1:, 1:].reshape(-1),  # i011
+            node_inds[1:, :-1, :-1].reshape(-1), # i100
+            node_inds[:-1, :-1, 1:].reshape(-1), # i001
+            node_inds[:-1, 1:, :-1].reshape(-1)  # i010
+        ]
+        c_triangs = np.c_[
+            node_inds[1:, 1:, :-1].reshape(-1),  # i110
+            node_inds[:-1, 1:, 1:].reshape(-1),  # i011
+            node_inds[1:, :-1, :-1].reshape(-1), # i100
+            node_inds[:-1, 1:, :-1].reshape(-1)  # i010
+        ]
+        d_triangs = np.c_[
+            node_inds[1:, :-1, 1:].reshape(-1),  # i101
+            node_inds[:-1, 1:, 1:].reshape(-1),  # i011
+            node_inds[1:, :-1, :-1].reshape(-1), # i100
+            node_inds[:-1, :-1, 1:].reshape(-1)  # i001
+        ]
+        e_triangs = np.c_[
+            node_inds[1:, :-1, 1:].reshape(-1),  # i101
+            node_inds[1:, 1:, :-1].reshape(-1),  # i110
+            node_inds[:-1, 1:, 1:].reshape(-1),  # i011
+            node_inds[1:, 1:, 1:].reshape(-1)    # i111
+        ]
+        f_triangs = np.c_[
+            node_inds[1:, :-1, 1:].reshape(-1),  # i101
+            node_inds[1:, 1:, :-1].reshape(-1),  # i110
+            node_inds[:-1, 1:, 1:].reshape(-1),  # i011
+            node_inds[1:, :-1, :-1].reshape(-1),  # i100
+        ]
+
+        simplices = np.r_[
+            a_triangs, b_triangs, c_triangs, d_triangs, e_triangs, f_triangs
+        ]
+
+    return points, simplices
 
 
 meshTensor = deprecate_function(unpack_widths, "meshTensor", removal_version="1.0.0", future_warn=False)
