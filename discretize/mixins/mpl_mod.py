@@ -155,7 +155,7 @@ class InterfaceMPL(object):
         if "showIt" in kwargs:
             show_it = kwargs.pop("showIt")
             warnings.warn(
-                "showIt has been deprecated, please use show_it", DeprecationWarning
+                "showIt has been deprecated, please use show_it", FutureWarning
             )
 
         if ax is not None:
@@ -293,28 +293,28 @@ class InterfaceMPL(object):
             pcolor_opts = kwargs.pop("pcolorOpts")
             warnings.warn(
                 "pcolorOpts has been deprecated, please use pcolor_opts",
-                DeprecationWarning,
+                FutureWarning,
             )
         if "streamOpts" in kwargs:
             stream_opts = kwargs.pop("streamOpts")
             warnings.warn(
                 "streamOpts has been deprecated, please use stream_opts",
-                DeprecationWarning,
+                FutureWarning,
             )
         if "gridOpts" in kwargs:
             grid_opts = kwargs.pop("gridOpts")
             warnings.warn(
-                "gridOpts has been deprecated, please use grid_opts", DeprecationWarning
+                "gridOpts has been deprecated, please use grid_opts", FutureWarning
             )
         if "showIt" in kwargs:
             show_it = kwargs.pop("showIt")
             warnings.warn(
-                "showIt has been deprecated, please use show_it", DeprecationWarning
+                "showIt has been deprecated, please use show_it", FutureWarning
             )
         if "vType" in kwargs:
             v_type = kwargs.pop("vType")
             warnings.warn(
-                "vType has been deprecated, please use v_type", DeprecationWarning
+                "vType has been deprecated, please use v_type", FutureWarning
             )
 
         # Some Error checking and common defaults
@@ -528,28 +528,28 @@ class InterfaceMPL(object):
             pcolor_opts = kwargs["pcolorOpts"]
             warnings.warn(
                 "pcolorOpts has been deprecated, please use pcolor_opts",
-                DeprecationWarning,
+                FutureWarning,
             )
         if "streamOpts" in kwargs:
             stream_opts = kwargs["streamOpts"]
             warnings.warn(
                 "streamOpts has been deprecated, please use stream_opts",
-                DeprecationWarning,
+                FutureWarning,
             )
         if "gridOpts" in kwargs:
             grid_opts = kwargs["gridOpts"]
             warnings.warn(
-                "gridOpts has been deprecated, please use grid_opts", DeprecationWarning
+                "gridOpts has been deprecated, please use grid_opts", FutureWarning
             )
         if "showIt" in kwargs:
             show_it = kwargs["showIt"]
             warnings.warn(
-                "showIt has been deprecated, please use show_it", DeprecationWarning
+                "showIt has been deprecated, please use show_it", FutureWarning
             )
         if "vType" in kwargs:
             v_type = kwargs["vType"]
             warnings.warn(
-                "vType has been deprecated, please use v_type", DeprecationWarning
+                "vType has been deprecated, please use v_type", FutureWarning
             )
         if pcolor_opts is None:
             pcolor_opts = {}
@@ -732,7 +732,7 @@ class InterfaceMPL(object):
             pcolor_opts = kwargs["pcolorOpts"]
             warnings.warn(
                 "pcolorOpts has been deprecated, please use pcolor_opts",
-                DeprecationWarning,
+                FutureWarning,
             )
 
         # Populate figure
@@ -1011,7 +1011,7 @@ class InterfaceMPL(object):
             annotation_color = kwargs.pop("annotationColor")
             warnings.warn(
                 "annotationColor has been deprecated, please use annotation_color",
-                DeprecationWarning,
+                FutureWarning,
             )
 
         if self.dim == 1:
@@ -2402,7 +2402,7 @@ class Slicer(object):
             pcolor_opts = kwargs["pcolorOpts"]
             warnings.warn(
                 "pcolorOpts has been deprecated, please use pcolor_opts",
-                DeprecationWarning,
+                FutureWarning,
             )
 
         # Add pcolor_opts to self
