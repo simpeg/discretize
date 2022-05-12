@@ -464,7 +464,7 @@ def face_info(xyz, A, B, C, D, average=True, normalize_normals=True, **kwargs):
         warnings.warn(
             "The normalizeNormals keyword argument has been deprecated, please use normalize_normals. "
             "This will be removed in discretize 1.0.0",
-            DeprecationWarning,
+            FutureWarning,
         )
         normalize_normals = kwargs["normalizeNormals"]
     if not isinstance(average, bool):
@@ -517,8 +517,8 @@ def face_info(xyz, A, B, C, D, average=True, normalize_normals=True, **kwargs):
 
 
 exampleLrmGrid = deprecate_function(
-    example_curvilinear_grid, "exampleLrmGrid", removal_version="1.0.0", future_warn=False
+    example_curvilinear_grid, "exampleLrmGrid", removal_version="1.0.0", future_warn=True
 )
-volTetra = deprecate_function(volume_tetrahedron, "volTetra", removal_version="1.0.0", future_warn=False)
-indexCube = deprecate_function(index_cube, "indexCube", removal_version="1.0.0", future_warn=False)
-faceInfo = deprecate_function(face_info, "faceInfo", removal_version="1.0.0", future_warn=False)
+volTetra = deprecate_function(volume_tetrahedron, "volTetra", removal_version="1.0.0", future_warn=True)
+indexCube = deprecate_function(index_cube, "indexCube", removal_version="1.0.0", future_warn=True)
+faceInfo = deprecate_function(face_info, "faceInfo", removal_version="1.0.0", future_warn=True)

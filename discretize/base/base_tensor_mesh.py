@@ -656,7 +656,7 @@ class BaseTensorMesh(BaseRegularMesh):
             warnings.warn(
                 "The locType keyword argument has been deprecated, please use location_type. "
                 "This will be removed in discretize 1.0.0",
-                DeprecationWarning,
+                FutureWarning,
             )
             location_type = kwargs["locType"]
         pts = as_array_n_by_dim(pts, self.dim)
@@ -778,14 +778,14 @@ class BaseTensorMesh(BaseRegularMesh):
             warnings.warn(
                 "The locType keyword argument has been deprecated, please use location_type. "
                 "This will be removed in discretize 1.0.0",
-                DeprecationWarning,
+                FutureWarning,
             )
             location_type = kwargs["locType"]
         if "zerosOutside" in kwargs:
             warnings.warn(
                 "The zerosOutside keyword argument has been deprecated, please use zeros_outside. "
                 "This will be removed in discretize 1.0.0",
-                DeprecationWarning,
+                FutureWarning,
             )
             zeros_outside = kwargs["zerosOutside"]
         return self._getInterpolationMat(loc, location_type, zeros_outside)
@@ -994,7 +994,7 @@ class BaseTensorMesh(BaseRegularMesh):
                         "Depreciation Warning: TensorMesh.innerProductDeriv."
                         " You should be supplying a vector. "
                         "Use: sdiag(u)*dMdprop",
-                        DeprecationWarning,
+                        FutureWarning,
                     )
                     return dMdprop
                 return sdiag(v) * dMdprop
@@ -1017,7 +1017,7 @@ class BaseTensorMesh(BaseRegularMesh):
           please use `mesh.h[0]`.
         """
         warnings.warn(
-            "hx has been deprecated, please access as mesh.h[0]", DeprecationWarning
+            "hx has been deprecated, please access as mesh.h[0]", FutureWarning
         )
         return self.h[0]
 
@@ -1034,7 +1034,7 @@ class BaseTensorMesh(BaseRegularMesh):
           please use `mesh.h[1]`.
         """
         warnings.warn(
-            "hy has been deprecated, please access as mesh.h[1]", DeprecationWarning
+            "hy has been deprecated, please access as mesh.h[1]", FutureWarning
         )
         return None if self.dim < 2 else self.h[1]
 
@@ -1051,21 +1051,21 @@ class BaseTensorMesh(BaseRegularMesh):
           please use `mesh.h[2]`.
         """
         warnings.warn(
-            "hz has been deprecated, please access as mesh.h[2]", DeprecationWarning
+            "hz has been deprecated, please access as mesh.h[2]", FutureWarning
         )
         return None if self.dim < 3 else self.h[2]
 
-    vectorNx = deprecate_property("nodes_x", "vectorNx", removal_version="1.0.0", future_warn=False)
-    vectorNy = deprecate_property("nodes_y", "vectorNy", removal_version="1.0.0", future_warn=False)
-    vectorNz = deprecate_property("nodes_z", "vectorNz", removal_version="1.0.0", future_warn=False)
+    vectorNx = deprecate_property("nodes_x", "vectorNx", removal_version="1.0.0", future_warn=True)
+    vectorNy = deprecate_property("nodes_y", "vectorNy", removal_version="1.0.0", future_warn=True)
+    vectorNz = deprecate_property("nodes_z", "vectorNz", removal_version="1.0.0", future_warn=True)
     vectorCCx = deprecate_property(
-        "cell_centers_x", "vectorCCx", removal_version="1.0.0", future_warn=False
+        "cell_centers_x", "vectorCCx", removal_version="1.0.0", future_warn=True
     )
     vectorCCy = deprecate_property(
-        "cell_centers_y", "vectorCCy", removal_version="1.0.0", future_warn=False
+        "cell_centers_y", "vectorCCy", removal_version="1.0.0", future_warn=True
     )
     vectorCCz = deprecate_property(
-        "cell_centers_z", "vectorCCz", removal_version="1.0.0", future_warn=False
+        "cell_centers_z", "vectorCCz", removal_version="1.0.0", future_warn=True
     )
-    isInside = deprecate_method("is_inside", "isInside", removal_version="1.0.0", future_warn=False)
-    getTensor = deprecate_method("get_tensor", "getTensor", removal_version="1.0.0", future_warn=False)
+    isInside = deprecate_method("is_inside", "isInside", removal_version="1.0.0", future_warn=True)
+    getTensor = deprecate_method("get_tensor", "getTensor", removal_version="1.0.0", future_warn=True)

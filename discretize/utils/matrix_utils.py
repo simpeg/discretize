@@ -58,7 +58,7 @@ def mkvc(x, n_dims=1, **kwargs):
         warnings.warn(
             "The numDims keyword argument has been deprecated, please use n_dims. "
             "This will be removed in discretize 1.0.0",
-            DeprecationWarning,
+            FutureWarning,
         )
         n_dims = kwargs["numDims"]
     if type(x) == np.matrix:
@@ -708,7 +708,7 @@ def inverse_3x3_block_diagonal(
         warnings.warn(
             "The returnMatrix keyword argument has been deprecated, please use return_matrix. "
             "This will be removed in discretize 1.0.0",
-            DeprecationWarning,
+            FutureWarning,
         )
         return_matrix = kwargs["returnMatrix"]
 
@@ -862,7 +862,7 @@ def inverse_2x2_block_diagonal(a11, a12, a21, a22, return_matrix=True, **kwargs)
         warnings.warn(
             "The returnMatrix keyword argument has been deprecated, please use return_matrix. "
             "This will be removed in discretize 1.0.0",
-            DeprecationWarning,
+            FutureWarning,
         )
         return_matrix = kwargs["returnMatrix"]
 
@@ -1386,7 +1386,7 @@ def inverse_property_tensor(mesh, tensor, return_matrix=False, **kwargs):
         warnings.warn(
             "The returnMatrix keyword argument has been deprecated, please use return_matrix. "
             "This will be removed in discretize 1.0.0",
-            DeprecationWarning,
+            FutureWarning,
         )
         return_matrix = kwargs["returnMatrix"]
 
@@ -1712,22 +1712,22 @@ class _inftup(tuple):
 #             DEPRECATED FUNCTIONS
 ################################################
 
-sdInv = deprecate_function(sdinv, "sdInv", removal_version="1.0.0", future_warn=False)
+sdInv = deprecate_function(sdinv, "sdInv", removal_version="1.0.0", future_warn=True)
 
-getSubArray = deprecate_function(get_subarray, "getSubArray", removal_version="1.0.0", future_warn=False)
+getSubArray = deprecate_function(get_subarray, "getSubArray", removal_version="1.0.0", future_warn=True)
 
 inv3X3BlockDiagonal = deprecate_function(
-    inverse_3x3_block_diagonal, "inv3X3BlockDiagonal", removal_version="1.0.0", future_warn=False
+    inverse_3x3_block_diagonal, "inv3X3BlockDiagonal", removal_version="1.0.0", future_warn=True
 )
 
 inv2X2BlockDiagonal = deprecate_function(
-    inverse_2x2_block_diagonal, "inv2X2BlockDiagonal", removal_version="1.0.0", future_warn=False
+    inverse_2x2_block_diagonal, "inv2X2BlockDiagonal", removal_version="1.0.0", future_warn=True
 )
 
 makePropertyTensor = deprecate_function(
-    make_property_tensor, "makePropertyTensor", removal_version="1.0.0", future_warn=False
+    make_property_tensor, "makePropertyTensor", removal_version="1.0.0", future_warn=True
 )
 
 invPropertyTensor = deprecate_function(
-    inverse_property_tensor, "invPropertyTensor", removal_version="1.0.0", future_warn=False
+    inverse_property_tensor, "invPropertyTensor", removal_version="1.0.0", future_warn=True
 )

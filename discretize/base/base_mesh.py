@@ -161,7 +161,7 @@ class BaseMesh:
             warnings.warn(
                 "The filename keyword argument has been deprecated, please use file_name. "
                 "This will be removed in discretize 1.0.0",
-                DeprecationWarning,
+                FutureWarning,
             )
         f = os.path.abspath(file_name)  # make sure we are working with abs path
         with open(f, "w") as outfile:
@@ -3555,43 +3555,43 @@ class BaseMesh:
             return location_type
 
     # DEPRECATED
-    normals = deprecate_property("face_normals", "normals", removal_version="1.0.0", future_warn=False)
-    tangents = deprecate_property("edge_tangents", "tangents", removal_version="1.0.0", future_warn=False)
+    normals = deprecate_property("face_normals", "normals", removal_version="1.0.0", future_warn=True)
+    tangents = deprecate_property("edge_tangents", "tangents", removal_version="1.0.0", future_warn=True)
     projectEdgeVector = deprecate_method(
-        "project_edge_vector", "projectEdgeVector", removal_version="1.0.0", future_warn=False
+        "project_edge_vector", "projectEdgeVector", removal_version="1.0.0", future_warn=True
     )
     projectFaceVector = deprecate_method(
-        "project_face_vector", "projectFaceVector", removal_version="1.0.0", future_warn=False
+        "project_face_vector", "projectFaceVector", removal_version="1.0.0", future_warn=True
     )
     getInterpolationMat = deprecate_method(
-        "get_interpolation_matrix", "getInterpolationMat", removal_version="1.0.0", future_warn=False
+        "get_interpolation_matrix", "getInterpolationMat", removal_version="1.0.0", future_warn=True
     )
     nodalGrad = deprecate_property(
-        "nodal_gradient", "nodalGrad", removal_version="1.0.0", future_warn=False
+        "nodal_gradient", "nodalGrad", removal_version="1.0.0", future_warn=True
     )
     nodalLaplacian = deprecate_property(
-        "nodal_laplacian", "nodalLaplacian", removal_version="1.0.0", future_warn=False
+        "nodal_laplacian", "nodalLaplacian", removal_version="1.0.0", future_warn=True
     )
-    faceDiv = deprecate_property("face_divergence", "faceDiv", removal_version="1.0.0", future_warn=False)
-    edgeCurl = deprecate_property("edge_curl", "edgeCurl", removal_version="1.0.0", future_warn=False)
+    faceDiv = deprecate_property("face_divergence", "faceDiv", removal_version="1.0.0", future_warn=True)
+    edgeCurl = deprecate_property("edge_curl", "edgeCurl", removal_version="1.0.0", future_warn=True)
     getFaceInnerProduct = deprecate_method(
-        "get_face_inner_product", "getFaceInnerProduct", removal_version="1.0.0", future_warn=False
+        "get_face_inner_product", "getFaceInnerProduct", removal_version="1.0.0", future_warn=True
     )
     getEdgeInnerProduct = deprecate_method(
-        "get_edge_inner_product", "getEdgeInnerProduct", removal_version="1.0.0", future_warn=False
+        "get_edge_inner_product", "getEdgeInnerProduct", removal_version="1.0.0", future_warn=True
     )
     getFaceInnerProductDeriv = deprecate_method(
         "get_face_inner_product_deriv",
         "getFaceInnerProductDeriv",
         removal_version="1.0.0",
-        future_warn=False
+        future_warn=True
     )
     getEdgeInnerProductDeriv = deprecate_method(
         "get_edge_inner_product_deriv",
         "getEdgeInnerProductDeriv",
         removal_version="1.0.0",
-        future_warn=False
+        future_warn=True
     )
-    vol = deprecate_property("cell_volumes", "vol", removal_version="1.0.0", future_warn=False)
-    area = deprecate_property("face_areas", "area", removal_version="1.0.0", future_warn=False)
-    edge = deprecate_property("edge_lengths", "edge", removal_version="1.0.0", future_warn=False)
+    vol = deprecate_property("cell_volumes", "vol", removal_version="1.0.0", future_warn=True)
+    area = deprecate_property("face_areas", "area", removal_version="1.0.0", future_warn=True)
+    edge = deprecate_property("edge_lengths", "edge", removal_version="1.0.0", future_warn=True)

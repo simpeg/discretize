@@ -445,7 +445,7 @@ class InterfaceVTK(object):
         """*toVTK* has been deprecated and replaced by *to_vtk*"""
         warnings.warn(
             "Deprecation Warning: `toVTK` is deprecated, use `to_vtk` instead",
-            category=DeprecationWarning,
+            category=FutureWarning,
         )
         return InterfaceVTK.to_vtk(mesh, models=models)
 
@@ -590,7 +590,7 @@ class InterfaceVTK(object):
         """*writeVTK* has been deprecated and replaced by *write_vtk*"""
         warnings.warn(
             "Deprecation Warning: `writeVTK` is deprecated, use `write_vtk` instead",
-            category=DeprecationWarning,
+            category=FutureWarning,
         )
         return InterfaceVTK.write_vtk(
             mesh, file_name, models=models, directory=directory
@@ -690,7 +690,7 @@ class InterfaceTensorread_vtk(object):
         """*readVTK* has been deprecated and replaced by *read_vtk*"""
         warnings.warn(
             "Deprecation Warning: `readVTK` is deprecated, use `read_vtk` instead",
-            category=DeprecationWarning,
+            category=FutureWarning,
         )
         return InterfaceTensorread_vtk.read_vtk(
             TensorMesh, file_name, directory=directory

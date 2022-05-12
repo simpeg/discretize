@@ -752,11 +752,11 @@ def assert_isadjoint(
 
 
 # DEPRECATIONS
-setupMesh = deprecate_function(setup_mesh, "setupMesh", removal_version="1.0.0")
-Rosenbrock = deprecate_function(rosenbrock, "Rosenbrock", removal_version="1.0.0")
+setupMesh = deprecate_function(setup_mesh, "setupMesh", removal_version="1.0.0", future_warn=True)
+Rosenbrock = deprecate_function(rosenbrock, "Rosenbrock", removal_version="1.0.0", future_warn=True)
 checkDerivative = deprecate_function(
-    check_derivative, "checkDerivative", removal_version="1.0.0"
+    check_derivative, "checkDerivative", removal_version="1.0.0", future_warn=True
 )
 getQuadratic = deprecate_function(
-    get_quadratic, "getQuadratic", removal_version="1.0.0"
+    get_quadratic, "getQuadratic", removal_version="1.0.0", future_warn=True
 )

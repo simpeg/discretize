@@ -1675,14 +1675,14 @@ class CylindricalMesh(
             warnings.warn(
                 "The locType keyword argument has been deprecated, please use location_type. "
                 "This will be removed in discretize 1.0.0",
-                DeprecationWarning,
+                FutureWarning,
             )
             location_type = kwargs["locType"]
         if "zerosOutside" in kwargs:
             warnings.warn(
                 "The zerosOutside keyword argument has been deprecated, please use zeros_outside. "
                 "This will be removed in discretize 1.0.0",
-                DeprecationWarning,
+                FutureWarning,
             )
             zeros_outside = kwargs["zerosOutside"]
 
@@ -1734,7 +1734,7 @@ class CylindricalMesh(
             warnings.warn(
                 "The locType keyword argument has been deprecated, please use location_type. "
                 "This will be removed in discretize 1.0.0",
-                DeprecationWarning,
+                FutureWarning,
             )
             location_type = kwargs["locType"]
         try:
@@ -1778,14 +1778,14 @@ class CylindricalMesh(
             warnings.warn(
                 "The locType keyword argument has been deprecated, please use location_type. "
                 "This will be removed in discretize 1.0.0",
-                DeprecationWarning,
+                FutureWarning,
             )
             location_type = kwargs["locType"]
         if "locTypeTo" in kwargs:
             warnings.warn(
                 "The locTypeTo keyword argument has been deprecated, please use location_type_to. "
                 "This will be removed in discretize 1.0.0",
-                DeprecationWarning,
+                FutureWarning,
             )
             location_type_to = kwargs["locTypeTo"]
 
@@ -1869,29 +1869,29 @@ class CylindricalMesh(
         return Proj * Pc2r
 
     # DEPRECATIONS
-    areaFx = deprecate_property("face_x_areas", "areaFx", removal_version="1.0.0", future_warn=False)
-    areaFy = deprecate_property("face_y_areas", "areaFy", removal_version="1.0.0", future_warn=False)
-    areaFz = deprecate_property("face_z_areas", "areaFz", removal_version="1.0.0", future_warn=False)
-    edgeEx = deprecate_property("edge_x_lengths", "edgeEx", removal_version="1.0.0", future_warn=False)
-    edgeEy = deprecate_property("edge_y_lengths", "edgeEy", removal_version="1.0.0", future_warn=False)
-    edgeEz = deprecate_property("edge_z_lengths", "edgeEz", removal_version="1.0.0", future_warn=False)
+    areaFx = deprecate_property("face_x_areas", "areaFx", removal_version="1.0.0", future_warn=True)
+    areaFy = deprecate_property("face_y_areas", "areaFy", removal_version="1.0.0", future_warn=True)
+    areaFz = deprecate_property("face_z_areas", "areaFz", removal_version="1.0.0", future_warn=True)
+    edgeEx = deprecate_property("edge_x_lengths", "edgeEx", removal_version="1.0.0", future_warn=True)
+    edgeEy = deprecate_property("edge_y_lengths", "edgeEy", removal_version="1.0.0", future_warn=True)
+    edgeEz = deprecate_property("edge_z_lengths", "edgeEz", removal_version="1.0.0", future_warn=True)
     isSymmetric = deprecate_property(
-        "is_symmetric", "isSymmetric", removal_version="1.0.0", future_warn=False
+        "is_symmetric", "isSymmetric", removal_version="1.0.0", future_warn=True
     )
     cartesianOrigin = deprecate_property(
-        "cartesian_origin", "cartesianOrigin", removal_version="1.0.0", future_warn=False
+        "cartesian_origin", "cartesianOrigin", removal_version="1.0.0", future_warn=True
     )
     getInterpolationMatCartMesh = deprecate_method(
         "get_interpolation_matrix_cartesian_mesh",
         "getInterpolationMatCartMesh",
         removal_version="1.0.0",
-        future_warn=False
+        future_warn=True
     )
     cartesianGrid = deprecate_method(
-        "cartesian_grid", "cartesianGrid", removal_version="1.0.0", future_warn=False
+        "cartesian_grid", "cartesianGrid", removal_version="1.0.0", future_warn=True
     )
 
 
-@deprecate_class(removal_version="1.0.0", future_warn=False)
+@deprecate_class(removal_version="1.0.0", future_warn=True)
 class CylMesh(CylindricalMesh):
     pass

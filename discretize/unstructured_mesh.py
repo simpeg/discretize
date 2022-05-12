@@ -32,8 +32,8 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
 
     Notes
     -----
-    Only rudimentary checking of the input nodes and simplices are performed, which
-    only checks for degenerate simplices who have zero volume. There are no checks for
+    Only rudimentary checking of the input nodes and simplices is performed, only
+    checking for degenerate simplices who have zero volume. There are no checks for
     overlapping cells, or for the quality of the mesh.
 
     Examples
