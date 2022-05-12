@@ -36,7 +36,7 @@ cell centered, edge, and face interpolators.
 Future Warnings
 ===============
 All of the previous Deprecation Warnings from the refactor of ``discretize`` to pep8
-friendly names in 0.6.0_ have been changed to Future Warnings in preparation for the
+friendly names in v0.6.0 have been changed to Future Warnings in preparation for the
 1.0.0 release of discretize.
 
 Contributors
