@@ -244,6 +244,10 @@ class CylindricalMesh(
         return (nx - 1) * ny * nz + nz
 
     @property
+    def _n_total_nodes(self):
+        return int(np.prod(self._shape_total_nodes))
+
+    @property
     def _shape_total_faces_x(self):
         """
         vector number of total Fx (prior to deflating)
@@ -993,6 +997,13 @@ class CylindricalMesh(
         return self._hanging_edges_y_dict
 
     @property
+    def _ishanging_edges(self):
+        if self.dim == 2:
+            return np.r_[self._ishanging_edges_x, self._ishanging_edges_y]
+        else:
+            return np.r_[self._ishanging_edges_x, self._ishanging_edges_y, self._ishanging_edges_z]
+
+    @property
     def _axis_of_symmetry_edges_z(self):
         """
         bool vector indicating if a z-edge is along the axis of symmetry or not
@@ -1111,7 +1122,7 @@ class CylindricalMesh(
     def _hanging_nodes(self):
         """
         dictionary of the indices of the hanging nodes (keys) and a list
-        of indices that the eliminated faces map to (if applicable)
+        of indices that the eliminated nodes map to (if applicable)
         """
         if getattr(self, "_hanging_nodes_dict", None) is None:
             nx, ny, nz = self._shape_total_nodes
@@ -1310,87 +1321,26 @@ class CylindricalMesh(
             self._face_z_divergence = sdiag(1 / V) * D3 * sdiag(S)
         return self._face_z_divergence
 
-    # @property
-    # def stencil_cell_gradient_x(self):
-    #     n = self.vnC
-
-    #     if self.is_symmetric:
-    #         G1 = sp.kron(speye(n[2]), ddxCellGrad(n[0], BC))
-    #     else:
-    #         G1 = self._deflation_matrix('Fx').T * kron3(
-    #             speye(n[2]), speye(n[1]), ddxCellGrad(n[0], BC)
-    #         )
-    #     return G1
-
-    @property
-    def cell_gradient_x(self):
-        raise NotImplementedError("Cell Grad is not yet implemented.")
-        # if getattr(self, '_cellGradx', None) is None:
-        #     G1 = super(CylindricalMesh, self).stencil_cell_gradient_x
-        #     V = self._deflation_matrix('F', withHanging='True', as_ones='True')*self.aveCC2F*self.cell_volumes
-        #     A = self.face_areas
-        #     L = (A/V)[:self._n_total_faces_x]
-        #     # L = self.reshape(L, 'F', 'Fx', 'V')
-        #     # L = A[:self.nFx] / V
-        #     self._cellGradx = self._deflation_matrix('Fx')*sdiag(L)*G1
-        # return self._cellGradx
-
-    @property
-    def stencil_cell_gradient_y(self):
-        raise NotImplementedError("Cell Grad is not yet implemented.")
-
-    @property
-    def stencil_cell_gradient_z(self):
-        raise NotImplementedError("Cell Grad is not yet implemented.")
-
-    @property
-    def stencil_cell_gradient(self):
-        raise NotImplementedError("Cell Grad is not yet implemented.")
-
-    @property
-    def cell_gradient(self):
-        raise NotImplementedError("Cell Grad is not yet implemented.")
-
-    # @property
-    # def _nodal_gradient_x_stencil(self):
-    #     if self.is_symmetric:
-    #         return None
-    #     return kron3(speye(self.shape_nodes[2]), speye(self.shape_nodes[1]), ddx(self.shape_cells[0]))
-
-    # @property
-    # def _nodal_gradient_y_stencil(self):
-    #     if self.is_symmetric:
-    #         None
-    #         # return kron3(speye(self.shape_nodes[2]), ddx(self.shape_cells[1]), speye(self.shape_nodes[0])) * self._deflation_matrix('Ey')
-    #     return kron3(speye(self.shape_nodes[2]), ddx(self.shape_cells[1]), speye(self.shape_nodes[0]))
-
-    # @property
-    # def _nodal_gradient_z_stencil(self):
-    #     if self.is_symmetric:
-    #         return None
-    #     return kron3(ddx(self.shape_cells[2]), speye(self.shape_nodes[1]), speye(self.shape_nodes[0]))
-
-    # @property
-    # def _nodal_gradient_stencil(self):
-    #     if self.is_symmetric:
-    #         return None
-    #     else:
-    #         G = self._deflation_matrix('E').T * sp.vstack((
-    #             self._nodal_gradient_x_stencil,
-    #             self._nodal_gradient_y_stencil,
-    #             self._nodal_gradient_z_stencil
-    #         ), format="csr") * self._deflation_matrix('N')
-    #     return G
-
     @property
     def nodal_gradient(self):
         if self.is_symmetric:
             return None
-        raise NotImplementedError("nodalGrad not yet implemented")
+        if getattr(self, "_nodal_gradient", None) is None:
+            if self.dim == 2:
+                Gr = sp.kron(sp.eye(self._shape_total_nodes[1]), ddx(self.shape_cells[0]))
+                Gphi = sp.kron(ddx(self.shape_cells[1]), sp.eye(self._shape_total_nodes[0]))
+                Gz = None
+            else:
+                Gr = kron3(sp.eye(self._shape_total_nodes[2]), sp.eye(self._shape_total_nodes[1]), ddx(self.shape_cells[0]))
+                Gphi = kron3(sp.eye(self._shape_total_nodes[2]), ddx(self.shape_cells[1]), sp.eye(self._shape_total_nodes[0]))
+                Gz = kron3(ddx(self.shape_cells[2]), sp.eye(self._shape_total_nodes[1]), sp.eye(self._shape_total_nodes[0]))
+            # stack them and remove the hanging edges
+            G = sp.vstack([Gr, Gphi, Gz])[~self._ishanging_edges]
 
-    @property
-    def nodal_laplacian(self):
-        raise NotImplementedError("nodalLaplacian not yet implemented")
+            # apply inflation to map true nodes to hanging nodes with the same values
+            G = sdiag(1/self.edge_lengths) @ G @ self._deflation_matrix('nodes', as_ones=True).T
+            self._nodal_gradient = G
+        return self._nodal_gradient
 
     @property
     def edge_curl(self):
