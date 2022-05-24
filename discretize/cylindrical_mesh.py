@@ -1322,6 +1322,35 @@ class CylindricalMesh(
         return self._face_z_divergence
 
     @property
+    def cell_gradient_x(self):
+        raise NotImplementedError("Cell Grad is not yet implemented.")
+        # if getattr(self, '_cellGradx', None) is None:
+        #     G1 = super(CylindricalMesh, self).stencil_cell_gradient_x
+        #     V = self._deflation_matrix('F', withHanging='True', as_ones='True')*self.aveCC2F*self.cell_volumes
+        #     A = self.face_areas
+        #     L = (A/V)[:self._n_total_faces_x]
+        #     # L = self.reshape(L, 'F', 'Fx', 'V')
+        #     # L = A[:self.nFx] / V
+        #     self._cellGradx = self._deflation_matrix('Fx')*sdiag(L)*G1
+        # return self._cellGradx
+
+    @property
+    def stencil_cell_gradient_y(self):
+        raise NotImplementedError("Cell Grad is not yet implemented.")
+
+    @property
+    def stencil_cell_gradient_z(self):
+        raise NotImplementedError("Cell Grad is not yet implemented.")
+
+    @property
+    def stencil_cell_gradient(self):
+        raise NotImplementedError("Cell Grad is not yet implemented.")
+
+    @property
+    def cell_gradient(self):
+        raise NotImplementedError("Cell Grad is not yet implemented.")
+
+    @property
     def nodal_gradient(self):
         if self.is_symmetric:
             return None
