@@ -503,6 +503,47 @@ class TestCylEdgeInnerProducts_Order(tests.OrderTest):
     def test_order(self):
         self.orderTest()
 
+class TestCylNodalGradient_Order(tests.OrderTest):
+    meshTypes = MESHTYPES
+    meshSizes = [8, 16, 32, 64]
+    meshDimension = 3
+
+    def getError(self):
+
+        mesh = self.M
+
+        def fun(r, t, z=None):
+            out_r = np.sin(2 * np.pi * r)
+            out_t = np.sin(t)
+            out = out_r * out_t
+            if z is not None:
+                out *= np.sin(2 * np.pi * z)
+            return out
+
+        def g_fun(r, t, z=None):
+            out_r = np.sin(2 * np.pi * r)
+            out_t = np.sin(t)
+
+            g_r = out_t * 2 * np.pi * np.cos(2 * np.pi * r)
+            g_phi = out_r / r * np.cos(t)
+            g_phi[r==0.0] = 0.0
+            out = np.c_[g_r, g_phi]
+            if z is not None:
+                out_z = np.sin(2 * np.pi * z)
+                out = np.c_[out_z[:, None] * out, out_r * out_t * 2 * np.pi * np.cos(2 * np.pi * z)]
+            return out
+
+        phi = fun(*mesh.nodes.T)
+
+        g_phi_ana = mesh.project_edge_vector(g_fun(*mesh.edges.T))
+        g_phi_num = mesh.nodal_gradient @ phi
+
+        return np.linalg.norm(g_phi_num - g_phi_ana, np.inf)
+
+    def test_order3(self):
+        self.meshDimension = 3
+        self.orderTest()
+
 
 class MimeticProperties(unittest.TestCase):
     meshTypes = MESHTYPES
@@ -516,7 +557,7 @@ class MimeticProperties(unittest.TestCase):
                 meshType, self.meshSize, self.meshDimension
             )
             v = np.random.rand(mesh.nE)
-            divcurlv = mesh.faceDiv * (mesh.edgeCurl * v)
+            divcurlv = mesh.face_divergence * (mesh.edge_curl * v)
             rel_err = np.linalg.norm(divcurlv) / np.linalg.norm(v)
             passed = rel_err < self.tol
             print(
@@ -524,22 +565,21 @@ class MimeticProperties(unittest.TestCase):
                 "... {}".format(meshType, rel_err, "FAIL" if not passed else "ok")
             )
 
-    # # Nodal Grad has not been implemented yet
-    # def test_CurlGrad(self):
-    #     for meshType in self.meshTypes:
-    #         mesh, _ = discretize.tests.setupMesh(
-    #             meshType, self.meshSize, self.meshDimension
-    #         )
-    #         v = np.random.rand(mesh.nN)
-    #         curlgradv = mesh.edgeCurl * (mesh.nodalGrad * v)
-    #         rel_err = np.linalg.norm(curlgradv) / np.linalg.norm(v)
-    #         passed = rel_err  < self.tol
-    #         print(
-    #             "Testing Curl * Grad on {} : |Curl Grad v| / |v|= {} "
-    #             "... {}".format(
-    #                 meshType, rel_err, 'FAIL' if not passed else 'ok'
-    #             )
-    #         )
+    def test_CurlGrad(self):
+        for meshType in self.meshTypes:
+            mesh, _ = discretize.tests.setupMesh(
+                meshType, self.meshSize, self.meshDimension
+            )
+            v = np.random.rand(mesh.nN)
+            curlgradv = mesh.edge_curl * (mesh.nodal_gradient * v)
+            rel_err = np.linalg.norm(curlgradv) / np.linalg.norm(v)
+            passed = rel_err  < self.tol
+            print(
+                "Testing Curl * Grad on {} : |Curl Grad v| / |v|= {} "
+                "... {}".format(
+                    meshType, rel_err, 'FAIL' if not passed else 'ok'
+                )
+            )
 
 
 if __name__ == "__main__":
