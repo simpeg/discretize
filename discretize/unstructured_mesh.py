@@ -855,6 +855,17 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         return sp.csr_matrix((Aij.reshape(-1), col_inds.reshape(-1), row_ptr), shape=(n_cells, n_edges))
 
     @property
+    def average_cell_to_face(self):
+        ind_ptr = 3*np.arange(self.n_cells + 1)
+        col_inds = self._simplex_faces.reshape(-1)
+        Aij = np.ones(len(col_inds))
+        A = sp.csr_matrix((Aij, col_inds, ind_ptr), shape=(self.n_cells, self.n_faces)).T
+        row_sum = np.asarray(A.sum(axis=-1))[:, 0]
+        row_sum[row_sum == 0.0] = 1.0
+        A = sp.diags(1.0/row_sum) @ A
+        return A
+
+    @property
     def stencil_cell_gradient(self):
         # An operator that differences cells on each side of a face
         # in the direction of the face normal
