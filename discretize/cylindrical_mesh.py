@@ -12,6 +12,7 @@ from discretize.utils import (
     spzeros,
     interpolation_matrix,
     cyl2cart,
+    as_array_n_by_dim,
 )
 from discretize.base import BaseTensorMesh, BaseRectangularMesh
 from discretize.operators import DiffOperators, InnerProducts
@@ -1682,6 +1683,8 @@ class CylindricalMesh(
                 "as this variable does not exist.".format(location_type)
             )
 
+        loc = as_array_n_by_dim(loc, self.dim)
+
         if location_type in ["cell_centers_x", "cell_centers_y", "cell_centers_z"]:
             Q = interpolation_matrix(loc, *self.get_tensor("cell_centers"))
             Z = spzeros(loc.shape[0], self.nC)
@@ -1707,7 +1710,8 @@ class CylindricalMesh(
             if zeros_outside:
                 indZeros = np.logical_not(self.is_inside(loc))
                 Q[indZeros, :] = 0
-            Q = Q * self._deflation_matrix('nodes', as_ones=True)
+            Q = Q * self._deflation_matrix('nodes', as_ones=True).T
+            return Q
 
         return self._getInterpolationMat(loc, location_type, zeros_outside)
 
