@@ -1699,6 +1699,16 @@ class CylindricalMesh(
 
             return Q.tocsr()
 
+        if location_type == 'nodes':
+            rtz = [self.nodes_x, self._nodes_y_full]
+            if self.dim == 3:
+                rtz.append(self.nodes_z)
+            Q = interpolation_matrix(loc, *rtz)
+            if zeros_outside:
+                indZeros = np.logical_not(self.is_inside(loc))
+                Q[indZeros, :] = 0
+            Q = Q * self._deflation_matrix('nodes', as_ones=True)
+
         return self._getInterpolationMat(loc, location_type, zeros_outside)
 
     def cartesian_grid(self, location_type="cell_centers", theta_shift=None, **kwargs):
