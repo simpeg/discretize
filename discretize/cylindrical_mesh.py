@@ -809,58 +809,15 @@ class CylindricalMesh(
                 )
         return self._cell_volumes
 
-    ###########################################################################
-    # Active and Hanging Edges and Faces
-    #
-    #    To find the active edges, faces, we use krons of bools (sorry). It is
-    #    more efficient than working with 3D matrices. For example...
-    #
-    #    The computation of `ishangingFx` (is the Fx face hanging? a vector of
-    #    True and False corresponding to each face) can be computed using krons
-    #    of bools:
-    #
-    #          hang_x = np.zeros(self._ntNx, dtype=bool)
-    #          hang_x[0] = True
-    #          ishangingFx_bool = np.kron(
-    #              np.ones(self.shape_cells[2], dtype=bool),  # 1 * 0 == 0
-    #              np.kron(np.ones(self.shape_cells[1], dtype=bool), hang_x)
-    #          )
-    #          return self._ishanging_faces_x_bool
-    #
-    #
-    #   This is equivalent to forming the 3D matrix and indexing the
-    #   corresponding rows and columns (here, the hanging faces are all of
-    #   the first x-faces along the axis of symmetry):
-    #
-    #         hang_x = np.zeros(self._shape_total_faces_x, dtype=bool)
-    #         hang_x[0, :, :] = True
-    #         isHangingFx_bool = mkvc(hang_x)
-    #
-    #
-    # but krons of bools is more efficient.
-    #
-    ###########################################################################
-
     @property
     def _ishanging_faces_x(self):
         """
         bool vector indicating if an x-face is hanging or not
         """
         if getattr(self, "_ishanging_faces_x_bool", None) is None:
-
-            # the following is equivalent to
-            #     hang_x = np.zeros(self._shape_total_faces_x, dtype=bool)
-            #     hang_x[0, :, :] = True
-            #     isHangingFx_bool = mkvc(hang_x)
-            #
-            # but krons of bools is more efficient
-
-            hang_x = np.zeros(self._shape_total_nodes[0], dtype=bool)
-            hang_x[0] = True
-            self._ishanging_faces_x_bool = np.kron(
-                np.ones(self.shape_cells[2], dtype=bool),  # 1 * 0 == 0
-                np.kron(np.ones(self.shape_cells[1], dtype=bool), hang_x),
-            )
+            hang_x = np.zeros(self._shape_total_faces_x, dtype=bool, order="F")
+            hang_x[0, :, :] = True
+            self._ishanging_faces_x_bool = hang_x.reshape(-1, order="F")
         return self._ishanging_faces_x_bool
 
     @property
@@ -885,12 +842,9 @@ class CylindricalMesh(
         """
 
         if getattr(self, "_ishanging_faces_y_bool", None) is None:
-            hang_y = np.zeros(self._shape_total_nodes[1], dtype=bool)
-            hang_y[-1] = True
-            self._ishanging_faces_y_bool = np.kron(
-                np.ones(self.shape_cells[2], dtype=bool),
-                np.kron(hang_y, np.ones(self.shape_cells[0], dtype=bool)),
-            )
+            hang_y = np.zeros(self._shape_total_faces_y, dtype=bool, order="F")
+            hang_y[:, -1, :] = True
+            self._ishanging_faces_y_bool = hang_y.reshape(-1, order="F")
         return self._ishanging_faces_y_bool
 
     @property
@@ -936,13 +890,9 @@ class CylindricalMesh(
         bool vector indicating if a x-edge is hanging or not
         """
         if getattr(self, "_ishanging_edges_x_bool", None) is None:
-            nx, ny, nz = self._shape_total_nodes
-            hang_y = np.zeros(ny, dtype=bool)
-            hang_y[-1] = True
-            self._ishanging_edges_x_bool = np.kron(
-                np.ones(nz, dtype=bool),
-                np.kron(hang_y, np.ones(self.shape_cells[0], dtype=bool)),
-            )
+            hang_x = np.zeros(self._shape_total_edges_x, dtype=bool, order="F")
+            hang_x[:, -1, :] = True
+            self._ishanging_edges_x_bool = hang_x.reshape(-1, order="F")
         return self._ishanging_edges_x_bool
 
     @property
@@ -972,13 +922,9 @@ class CylindricalMesh(
         bool vector indicating if a y-edge is hanging or not
         """
         if getattr(self, "_ishanging_edges_y_bool", None) is None:
-            nx, ny, nz = self._shape_total_nodes
-            hang_x = np.zeros(nx, dtype=bool)
-            hang_x[0] = True
-            self._ishanging_edges_y_bool = np.kron(
-                np.ones(nz, dtype=bool),
-                np.kron(np.ones(self.shape_cells[1], dtype=bool), hang_x),
-            )
+            hang_y = np.zeros(self._shape_total_edges_y, dtype=bool, order="F")
+            hang_y[0, :, :] = True
+            self._ishanging_edges_y_bool = hang_y.reshape(-1, order="F")
         return self._ishanging_edges_y_bool
 
     @property
@@ -1259,6 +1205,41 @@ class CylindricalMesh(
                 self._edges_z = self._edges_z_full[~self._ishanging_edges_z, :]
         return self._edges_z
 
+    @property
+    def _is_boundary_face(self):
+        # outer most radial faces are a boundaries
+        is_br = np.zeros(self._shape_total_faces_x, dtype=bool, order="F")
+        is_br[-1] = True
+        is_br = is_br.reshape(-1, order="F")
+        # no theta face is on a boundary
+        is_bt = np.zeros(self._n_total_faces_y, dtype=bool)
+        # top and bottom faces are boundaries
+        is_bz = np.zeros(self.shape_faces_z, dtype=bool, order="F")
+        is_bz[:, :, [0, -1]] = True
+        is_bz = is_bz.reshape(-1, order="F")
+
+        is_b = np.r_[
+            is_br[~self._ishanging_faces_x],
+            is_bt[~self._ishanging_faces_y],
+            is_bz
+        ]
+        return is_b
+
+    @property
+    def boundary_faces(self):
+        return self.faces[self._is_boundary_face]
+
+    @property
+    def boundary_face_outward_normals(self):
+        normals = self.face_normals[self._is_boundary_face]
+        # need to switch the direction of the bottom z faces
+        # there should be n_cells_theta * n_cells_z, radial faces
+        # then n_cells_theta * n_cells_r, bottom faces,
+        n1 = self.shape_cells[1] * self.shape_cells[2]
+        n2 = self.shape_cells[0] * self.shape_cells[1]
+        normals[n1:n1+n2] *= -1
+        return normals
+
     ####################################################
     # Operators
     ####################################################
@@ -1526,6 +1507,34 @@ class CylindricalMesh(
                     (self.aveFx2CC, self.aveFy2CC, self.aveFz2CC), format="csr"
                 )
         return self._average_face_to_cell_vector
+
+    @property
+    def _average_node_to_face_x(self):
+        aveN2Fx = kron3(
+            av(self.shape_cells[2]),
+            av(self.shape_cells[1]),
+            sp.eye(self._shape_total_nodes[0])
+        )
+        aveN2Fx[~self._ishanging_faces_x]
+        return aveN2Fx
+
+    @property
+    def _average_node_to_face_y(self):
+        aveN2Fy = kron3(
+            av(self.shape_cells[2]),
+            sp.eye(self._shape_total_nodes[1]),
+            av(self.shape_cells[0]),
+        )
+        aveN2Fy[~self._ishanging_faces_y]
+        return aveN2Fy
+
+    @property
+    def average_node_to_face(self):
+        if getattr(self, "_average_node_to_face", None) is None:
+            ave = super().average_node_to_face
+            ave = ave @ self._deflation_matrix('nodes', as_ones=True).T
+            self._average_node_to_face = ave
+        return self._average_node_to_face
 
     ####################################################
     # Deflation Matrices
