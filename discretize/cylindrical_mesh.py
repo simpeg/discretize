@@ -1354,6 +1354,15 @@ class CylindricalMesh(
         return self._nodal_gradient
 
     @property
+    def _edge_curl_stencil(self):
+        stencil = super()._edge_curl_stencil
+        Pr = sp.eye(self._n_total_faces_x)[~self._ishanging_faces_x]
+        Pt = self._deflation_matrix('faces_y')
+        Pz = sp.eye(self._n_total_faces_z)[~self._ishanging_faces_z]
+        P = sp.vstack((Pr, Pt, Pz))
+        return P @ stencil @ self._deflation_matrix('edges', as_ones=True).T
+
+    @property
     def edge_curl(self):
         if getattr(self, "_edge_curl", None) is None:
             A = self.face_areas
@@ -1381,10 +1390,8 @@ class CylindricalMesh(
             else:
                 self._edge_curl = (
                     sdiag(1 / self.face_areas)
-                    * self._deflation_matrix("F", as_ones=False)
                     * self._edge_curl_stencil
-                    * sdiag(self._edge_lengths_full)
-                    * self._deflation_matrix("E", as_ones=True).T
+                    * sdiag(self.edge_lengths)
                 )
 
         return self._edge_curl
@@ -1516,8 +1523,7 @@ class CylindricalMesh(
             av(self.shape_cells[1]),
             sp.eye(self._shape_total_nodes[0])
         )
-        aveN2Fx[~self._ishanging_faces_x]
-        return aveN2Fx
+        return aveN2Fx[~self._ishanging_faces_x]
 
     @property
     def _average_node_to_face_y(self):
@@ -1526,8 +1532,7 @@ class CylindricalMesh(
             sp.eye(self._shape_total_nodes[1]),
             av(self.shape_cells[0]),
         )
-        aveN2Fy[~self._ishanging_faces_y]
-        return aveN2Fy
+        return aveN2Fy[~self._ishanging_faces_y]
 
     @property
     def average_node_to_face(self):
@@ -1592,12 +1597,11 @@ class CylindricalMesh(
 
         values = list(hang.values())
         entries = np.ones(len(values))
-
-        if not as_ones and len(hang) > 0:
-            repeats = set(values)
-            repeat_locs = [(np.r_[values] == repeat).nonzero()[0] for repeat in repeats]
-            for loc in repeat_locs:
-                entries[loc] = 1.0 / len(loc)
+        # if not as_ones and len(hang) > 0:
+        #     repeats = set(values)
+        #     repeat_locs = [(np.r_[values] == repeat).nonzero()[0] for repeat in repeats]
+        #     for loc in repeat_locs:
+        #         entries[loc] = 1.0 / len(loc)
 
         Hang = sp.csr_matrix(
             (entries, (values, list(hang.keys()))),
