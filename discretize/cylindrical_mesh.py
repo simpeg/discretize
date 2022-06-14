@@ -818,7 +818,7 @@ class CylindricalMesh(
         """
         if getattr(self, "_ishanging_faces_x_bool", None) is None:
             hang_x = np.zeros(self._shape_total_faces_x, dtype=bool, order="F")
-            hang_x[0, :, :] = True
+            hang_x[0] = True
             self._ishanging_faces_x_bool = hang_x.reshape(-1, order="F")
         return self._ishanging_faces_x_bool
 
@@ -845,7 +845,7 @@ class CylindricalMesh(
 
         if getattr(self, "_ishanging_faces_y_bool", None) is None:
             hang_y = np.zeros(self._shape_total_faces_y, dtype=bool, order="F")
-            hang_y[:, -1, :] = True
+            hang_y[:, -1] = True
             self._ishanging_faces_y_bool = hang_y.reshape(-1, order="F")
         return self._ishanging_faces_y_bool
 
@@ -893,7 +893,7 @@ class CylindricalMesh(
         """
         if getattr(self, "_ishanging_edges_x_bool", None) is None:
             hang_x = np.zeros(self._shape_total_edges_x, dtype=bool, order="F")
-            hang_x[:, -1, :] = True
+            hang_x[:, -1] = True
             self._ishanging_edges_x_bool = hang_x.reshape(-1, order="F")
         return self._ishanging_edges_x_bool
 
@@ -925,7 +925,7 @@ class CylindricalMesh(
         """
         if getattr(self, "_ishanging_edges_y_bool", None) is None:
             hang_y = np.zeros(self._shape_total_edges_y, dtype=bool, order="F")
-            hang_y[0, :, :] = True
+            hang_y[0] = True
             self._ishanging_edges_y_bool = hang_y.reshape(-1, order="F")
         return self._ishanging_edges_y_bool
 
@@ -1025,44 +1025,19 @@ class CylindricalMesh(
         return self._hanging_edges_z_dict
 
     @property
-    def _axis_of_symmetry_nodes(self):
-        """
-        bool vector indicating if a node is along the axis of symmetry or not
-        """
-        if getattr(self, "_axis_of_symmetry_nodes_bool", None) is None:
-            nx, ny, nz = self._shape_total_nodes
-            axis_x = np.zeros(nx, dtype=bool)
-            axis_x[0] = True
-
-            axis_y = np.zeros(ny, dtype=bool)
-            axis_y[0] = True
-            self._axis_of_symmetry_nodes_bool = np.kron(
-                np.ones(nz, dtype=bool), np.kron(axis_y, axis_x)
-            )
-        return self._axis_of_symmetry_nodes_bool
-
-    @property
     def _ishanging_nodes(self):
         """
         bool vector indicating if a node is hanging or not
         """
         if getattr(self, "_ishanging_nodes_bool", None) is None:
-            nx, ny, nz = self._shape_total_nodes
-            hang_x = np.zeros(nx, dtype=bool)
-            hang_x[0] = True
-
-            hang_y = np.zeros(ny, dtype=bool)
-            hang_y[-1] = True
-
-            hangingN = np.kron(
-                np.ones(nz, dtype=bool),
-                (
-                    np.kron(np.ones(ny, dtype=bool), hang_x)
-                    | np.kron(hang_y, np.ones(nx, dtype=bool))
-                ),
-            )
-
-            self._ishanging_nodes_bool = hangingN & ~self._axis_of_symmetry_nodes
+            if self.is_symmetric:
+                self._ishanging_nodes_bool = np.zeros(self._n_total_nodes, dtype=bool)
+            else:
+                is_hanging = np.zeros(self._shape_total_nodes, dtype=bool, order="F")
+                is_hanging[0] = True  # axis of symmetry nodes are hanging
+                is_hanging[0, 0] = False  # axis of symmetry nodes which are not hanging
+                is_hanging[:, -1] = True  # nodes at maximum theta that are duplicated
+                self._ishanging_nodes_bool = is_hanging.reshape(-1, order='F')
 
         return self._ishanging_nodes_bool
 
@@ -1346,7 +1321,7 @@ class CylindricalMesh(
                 Gr = kron3(sp.eye(self._shape_total_nodes[2]), sp.eye(self._shape_total_nodes[1]), ddx(self.shape_cells[0]))
                 Gphi = kron3(sp.eye(self._shape_total_nodes[2]), ddx(self.shape_cells[1]), sp.eye(self._shape_total_nodes[0]))
                 Gz = kron3(ddx(self.shape_cells[2]), sp.eye(self._shape_total_nodes[1]), sp.eye(self._shape_total_nodes[0]))
-            # stack them and remove the hanging edges
+            # remove the hanging edges
             G = sp.vstack([Gr, Gphi, Gz])[~self._ishanging_edges]
 
             # apply inflation to map true nodes to hanging nodes with the same values
@@ -1599,11 +1574,13 @@ class CylindricalMesh(
             "edges_z",
             "cell_centers",
         ]:
-            raise AssertionError(
+            raise ValueError(
                 "Location must be a grid location, not {}".format(location)
             )
         if location == "cell_centers":
             return speye(self.nC)
+        if self.is_symmetric and location == 'nodes':
+            return speye(self.n_nodes)
 
         elif location in ["edges", "faces"]:
             if self.is_symmetric:
@@ -1742,14 +1719,19 @@ class CylindricalMesh(
             return Q.tocsr()
 
         if location_type == 'nodes':
-            rtz = [self.nodes_x, self._nodes_y_full]
-            if self.dim == 3:
-                rtz.append(self.nodes_z)
+            if self.is_symmetric and self.dim == 3:
+                rtz = [self.nodes_x, self.nodes_z]
+                loc = loc[:, [0, -1]]
+            else:
+                rtz = [self.nodes_x, self._nodes_y_full]
+                if self.dim == 3:
+                    rtz.append(self.nodes_z)
             Q = interpolation_matrix(loc, *rtz)
             if zeros_outside:
                 indZeros = np.logical_not(self.is_inside(loc))
                 Q[indZeros, :] = 0
-            Q = Q * self._deflation_matrix('nodes', as_ones=True).T
+            if not self.is_symmetric:
+                Q = Q * self._deflation_matrix('nodes', as_ones=True).T
             return Q
 
         return self._getInterpolationMat(loc, location_type, zeros_outside)

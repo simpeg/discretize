@@ -159,7 +159,7 @@ class TestInterpolation2d(discretize.tests.OrderTest):
         self.orderTest()
 
 
-class TestInterpolation2dCyl_Simple(unittest.TestCase):
+class TestInterpolationSymmetricCyl_Simple(unittest.TestCase):
     def test_simpleInter(self):
         M = discretize.CylMesh([4, 1, 1])
         locs = np.r_[0, 0, 0.5]
@@ -176,8 +176,8 @@ class TestInterpolation2dCyl_Simple(unittest.TestCase):
         self.assertRaises(Exception, lambda: M.getInterpolationMat(locs, "Ez"))
 
 
-class TestInterpolation2dCyl(discretize.tests.OrderTest):
-    name = "Interpolation 2D"
+class TestInterpolationSymCyl(discretize.tests.OrderTest):
+    name = "Interpolation Symmetric 3D"
     LOCS = np.c_[
         np.random.rand(4) * 0.6 + 0.2, np.zeros(4), np.random.rand(4) * 0.6 + 0.2
     ]
