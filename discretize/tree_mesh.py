@@ -539,7 +539,7 @@ class TreeMesh(
         return self._cell_levels_by_indexes(indices)
 
     def get_interpolation_matrix(
-        self, locs, location_type="CC", zeros_outside=False, **kwargs
+        self, locs, location_type="cell_centers", zeros_outside=False, **kwargs
     ):
         if "locType" in kwargs:
             warnings.warn(
@@ -556,9 +556,21 @@ class TreeMesh(
             )
             zeros_outside = kwargs["zerosOutside"]
         locs = as_array_n_by_dim(locs, self.dim)
-        if location_type not in ["N", "CC", "Ex", "Ey", "Ez", "Fx", "Fy", "Fz"]:
-            raise Exception(
-                "location_type must be one of N, CC, Ex, Ey, Ez, Fx, Fy, or Fz"
+        location_type = self._parse_location_type(location_type)
+        if location_type not in [
+            "nodes",
+            "faces",
+            "faces_x",
+            "faces_y",
+            "faces_z",
+            "edges",
+            "edges_x",
+            "edges_y",
+            "edges_z",
+            "cell_centers",
+        ]:
+            raise ValueError(
+                "Location must be a grid location, not {}".format(location_type)
             )
 
         if self.dim == 2 and location_type in ["Ez", "Fz"]:
@@ -566,13 +578,13 @@ class TreeMesh(
 
         locs = np.require(np.atleast_2d(locs), dtype=np.float64, requirements="C")
 
-        if location_type == "N":
+        if location_type == "nodes":
             Av = self._getNodeIntMat(locs, zeros_outside)
-        elif location_type in ["Ex", "Ey", "Ez"]:
-            Av = self._getEdgeIntMat(locs, zeros_outside, location_type[1])
-        elif location_type in ["Fx", "Fy", "Fz"]:
-            Av = self._getFaceIntMat(locs, zeros_outside, location_type[1])
-        elif location_type in ["CC"]:
+        elif location_type in ["edges_x", "edges_y", "edges_z"]:
+            Av = self._getEdgeIntMat(locs, zeros_outside, location_type[-1])
+        elif location_type in ["faces_x", "faces_y", "faces_z"]:
+            Av = self._getFaceIntMat(locs, zeros_outside, location_type[-1])
+        elif location_type in ["cell_centers"]:
             Av = self._getCellIntMat(locs, zeros_outside)
         return Av
 
