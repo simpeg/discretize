@@ -6,6 +6,7 @@ from discretize.utils import (
     kron3,
     ndgrid,
     av,
+    av_extrap,
     speye,
     ddx,
     sdiag,
@@ -1541,6 +1542,40 @@ class CylindricalMesh(
             ave = ave @ self._deflation_matrix('nodes', as_ones=True).T
             self._average_node_to_face = ave
         return self._average_node_to_face
+
+    @property
+    def average_cell_to_face(self):
+        if getattr(self, "_average_cell_to_face", None) is None:
+            if self.dim == 3:
+                # average_cell_to_face_r
+                av_c2f_r = kron3(
+                    sp.eye(self.shape_cells[2]),
+                    sp.eye(self.shape_cells[1]),
+                    av_extrap(self.shape_cells[0]),
+                )[~self._ishanging_faces_x]
+
+                av_c2f_t = self._deflation_matrix('faces_y') @ kron3(
+                    speye(self.shape_cells[2]),
+                    av_extrap(self.shape_cells[1]),
+                    speye(self.shape_cells[0]),
+                )
+
+                av_c2f_z = kron3(
+                    av_extrap(self.shape_cells[2]),
+                    speye(self.shape_cells[1]),
+                    speye(self.shape_cells[0]),
+                )
+
+                self._average_cell_to_face = sp.vstack(
+                    (av_c2f_r, av_c2f_t, av_c2f_z),
+                    format="csr",
+                )
+        return self._average_cell_to_face
+
+    @property
+    def project_face_to_boundary_face(self):
+        P = sp.eye(self.n_faces, format='csr')
+        return P[self._is_boundary_face]
 
     ####################################################
     # Deflation Matrices
