@@ -1300,45 +1300,37 @@ class CylindricalMesh(
 
     @property
     def _edge_curl_stencil(self):
-        stencil = super()._edge_curl_stencil
-        Pr = speye(self._n_total_faces_x)[~self._ishanging_faces_x]
-        Pt = self._deflation_matrix('faces_y')
-        Pz = speye(self._n_total_faces_z)[~self._ishanging_faces_z]
-        P = sp.block_diag((Pr, Pt, Pz))
-        return P @ stencil @ self._deflation_matrix('edges', as_ones=True).T
+        if self.is_symmetric:
+            nCx, nCy, nCz = self.shape_cells
+            # 1D Difference matricies
+            dr = sp.spdiags(
+                (np.ones((nCx + 1, 1)) * [-1, 1]).T, [-1, 0], nCx, nCx, format="csr"
+            )
+            dz = sp.spdiags(
+                (np.ones((nCz + 1, 1)) * [-1, 1]).T,
+                [0, 1],
+                nCz,
+                nCz + 1,
+                format="csr",
+            )
+            # 2D Difference matricies
+            Dr = sp.kron(sp.identity(nCz + 1), dr)
+            Dz = -sp.kron(dz, sp.identity(nCx))
+            return sp.vstack((Dz, Dr))
+        else:
+            stencil = super()._edge_curl_stencil
+            P_f = self._deflation_matrix('faces')
+            P_e = self._deflation_matrix('edges', as_ones=True)
+            return P_f @ stencil @ P_e.T
 
     @property
     def edge_curl(self):
         if getattr(self, "_edge_curl", None) is None:
-            A = self.face_areas
-            E = self.edge_lengths
-
-            if self.is_symmetric:
-                nCx, nCy, nCz = self.shape_cells
-                # 1D Difference matricies
-                dr = sp.spdiags(
-                    (np.ones((nCx + 1, 1)) * [-1, 1]).T, [-1, 0], nCx, nCx, format="csr"
-                )
-                dz = sp.spdiags(
-                    (np.ones((nCz + 1, 1)) * [-1, 1]).T,
-                    [0, 1],
-                    nCz,
-                    nCz + 1,
-                    format="csr",
-                )
-                # 2D Difference matricies
-                Dr = sp.kron(sp.identity(nCz + 1), dr)
-                Dz = -sp.kron(dz, sp.identity(nCx))
-
-                # Edge curl operator
-                self._edge_curl = sdiag(1 / A) * sp.vstack((Dz, Dr)) * sdiag(E)
-            else:
-                self._edge_curl = (
-                    sdiag(1 / self.face_areas)
-                    * self._edge_curl_stencil
-                    * sdiag(self.edge_lengths)
-                )
-
+            self._edge_curl = (
+                sdiag(1 / self.face_areas)
+                * self._edge_curl_stencil
+                * sdiag(self.edge_lengths)
+            )
         return self._edge_curl
 
     @property
@@ -1578,11 +1570,6 @@ class CylindricalMesh(
 
         values = list(hang.values())
         entries = np.ones(len(values))
-        # if not as_ones and len(hang) > 0:
-        #     repeats = set(values)
-        #     repeat_locs = [(np.r_[values] == repeat).nonzero()[0] for repeat in repeats]
-        #     for loc in repeat_locs:
-        #         entries[loc] = 1.0 / len(loc)
 
         Hang = sp.csr_matrix(
             (entries, (values, list(hang.keys()))),
