@@ -952,23 +952,6 @@ class CylindricalMesh(
             return np.r_[self._ishanging_edges_x, self._ishanging_edges_y, self._ishanging_edges_z]
 
     @property
-    def _axis_of_symmetry_edges_z(self):
-        """
-        bool vector indicating if a z-edge is along the axis of symmetry or not
-        """
-        if getattr(self, "_axis_of_symmetry_edges_z_bool", None) is None:
-            nx, ny, nz = self._shape_total_nodes
-            axis_x = np.zeros(nx, dtype=bool)
-            axis_x[0] = True
-
-            axis_y = np.zeros(ny, dtype=bool)
-            axis_y[0] = True
-            self._axis_of_symmetry_edges_z_bool = np.kron(
-                np.ones(self.shape_cells[2], dtype=bool), np.kron(axis_y, axis_x)
-            )
-        return self._axis_of_symmetry_edges_z_bool
-
-    @property
     def _ishanging_edges_z(self):
         """
         bool vector indicating if a z-edge is hanging or not
@@ -979,25 +962,11 @@ class CylindricalMesh(
                     self._n_total_edges_z, dtype=bool
                 )
             else:
-                nx, ny, nz = self._shape_total_nodes
-                hang_x = np.zeros(nx, dtype=bool)
-                hang_x[0] = True
-
-                hang_y = np.zeros(ny, dtype=bool)
-                hang_y[-1] = True
-
-                hangingEz = np.kron(
-                    np.ones(self.shape_cells[2], dtype=bool),
-                    (
-                        # True * False = False
-                        np.kron(np.ones(ny, dtype=bool), hang_x)
-                        | np.kron(hang_y, np.ones(nx, dtype=bool))
-                    ),
-                )
-
-                self._ishanging_edges_z_bool = (
-                    hangingEz & ~self._axis_of_symmetry_edges_z
-                )
+                is_hanging = np.zeros(self._shape_total_edges_z, dtype=bool, order="F")
+                is_hanging[0] = True  # axis of symmetry nodes are hanging
+                is_hanging[0, 0] = False  # axis of symmetry nodes which are not hanging
+                is_hanging[:, -1] = True  # nodes at maximum theta that are duplicated
+                self._ishanging_edges_z_bool = is_hanging.reshape(-1, order="F")
 
         return self._ishanging_edges_z_bool
 
@@ -1314,13 +1283,13 @@ class CylindricalMesh(
             return None
         if getattr(self, "_nodal_gradient", None) is None:
             if self.dim == 2:
-                Gr = sp.kron(sp.eye(self._shape_total_nodes[1]), ddx(self.shape_cells[0]))
-                Gphi = sp.kron(ddx(self.shape_cells[1]), sp.eye(self._shape_total_nodes[0]))
+                Gr = sp.kron(speye(self._shape_total_nodes[1]), ddx(self.shape_cells[0]))
+                Gphi = sp.kron(ddx(self.shape_cells[1]), speye(self._shape_total_nodes[0]))
                 Gz = None
             else:
-                Gr = kron3(sp.eye(self._shape_total_nodes[2]), sp.eye(self._shape_total_nodes[1]), ddx(self.shape_cells[0]))
-                Gphi = kron3(sp.eye(self._shape_total_nodes[2]), ddx(self.shape_cells[1]), sp.eye(self._shape_total_nodes[0]))
-                Gz = kron3(ddx(self.shape_cells[2]), sp.eye(self._shape_total_nodes[1]), sp.eye(self._shape_total_nodes[0]))
+                Gr = kron3(speye(self._shape_total_nodes[2]), speye(self._shape_total_nodes[1]), ddx(self.shape_cells[0]))
+                Gphi = kron3(speye(self._shape_total_nodes[2]), ddx(self.shape_cells[1]), speye(self._shape_total_nodes[0]))
+                Gz = kron3(ddx(self.shape_cells[2]), speye(self._shape_total_nodes[1]), speye(self._shape_total_nodes[0]))
             # remove the hanging edges
             G = sp.vstack([Gr, Gphi, Gz])[~self._ishanging_edges]
 
@@ -1332,10 +1301,10 @@ class CylindricalMesh(
     @property
     def _edge_curl_stencil(self):
         stencil = super()._edge_curl_stencil
-        Pr = sp.eye(self._n_total_faces_x)[~self._ishanging_faces_x]
+        Pr = speye(self._n_total_faces_x)[~self._ishanging_faces_x]
         Pt = self._deflation_matrix('faces_y')
-        Pz = sp.eye(self._n_total_faces_z)[~self._ishanging_faces_z]
-        P = sp.vstack((Pr, Pt, Pz))
+        Pz = speye(self._n_total_faces_z)[~self._ishanging_faces_z]
+        P = sp.block_diag((Pr, Pt, Pz))
         return P @ stencil @ self._deflation_matrix('edges', as_ones=True).T
 
     @property
@@ -1497,7 +1466,7 @@ class CylindricalMesh(
         aveN2Fx = kron3(
             av(self.shape_cells[2]),
             av(self.shape_cells[1]),
-            sp.eye(self._shape_total_nodes[0])
+            speye(self._shape_total_nodes[0])
         )
         return aveN2Fx[~self._ishanging_faces_x]
 
@@ -1505,7 +1474,7 @@ class CylindricalMesh(
     def _average_node_to_face_y(self):
         aveN2Fy = kron3(
             av(self.shape_cells[2]),
-            sp.eye(self._shape_total_nodes[1]),
+            speye(self._shape_total_nodes[1]),
             av(self.shape_cells[0]),
         )
         return aveN2Fy[~self._ishanging_faces_y]
@@ -1524,8 +1493,8 @@ class CylindricalMesh(
             if self.dim == 3:
                 # average_cell_to_face_r
                 av_c2f_r = kron3(
-                    sp.eye(self.shape_cells[2]),
-                    sp.eye(self.shape_cells[1]),
+                    speye(self.shape_cells[2]),
+                    speye(self.shape_cells[1]),
                     av_extrap(self.shape_cells[0]),
                 )[~self._ishanging_faces_x]
 
@@ -1549,7 +1518,7 @@ class CylindricalMesh(
 
     @property
     def project_face_to_boundary_face(self):
-        P = sp.eye(self.n_faces, format='csr')
+        P = speye(self.n_faces)
         return P[self._is_boundary_face]
 
     ####################################################
