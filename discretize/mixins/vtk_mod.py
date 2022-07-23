@@ -70,8 +70,9 @@ def load_vtk(extra=None):
     import vtk.util.numpy_support as _nps
     if extra:
         if isinstance(extra, str):
-            extra = [extra, ]
-        return _vtk, _nps, *[getattr(_vtk, e) for e in extra]
+            return _vtk, _nps, getattr(_vtk, extra)
+        else:
+            return _vtk, _nps, [getattr(_vtk, e) for e in extra]
     else:
         return _vtk, _nps
 
@@ -477,9 +478,8 @@ class InterfaceVTK(object):
         directory : str
             directory where the UBC GIF file lives
         """
-        _vtk, _, _vtk_version, _vtkUnstWriter = load_vtk(
-                ('VTK_VERSION', 'vtkXMLUnstructuredGridWriter')
-        )
+        _vtk, _, extra = load_vtk(('VTK_VERSION', 'vtkXMLUnstructuredGridWriter'))
+        _vtk_version, _vtkUnstWriter = extra
 
         if not isinstance(vtkUnstructGrid, _vtk.vtkUnstructuredGrid):
             raise RuntimeError(
@@ -515,9 +515,8 @@ class InterfaceVTK(object):
         directory : str
             directory where the UBC GIF file lives
         """
-        _vtk, _, _vtk_version,  _vtkStrucWriter = load_vtk(
-                ('VTK_VERSION', 'vtkXMLStructuredGridWriter')
-        )
+        _vtk, _, extra = load_vtk(('VTK_VERSION', 'vtkXMLStructuredGridWriter'))
+        _vtk_version,  _vtkStrucWriter = extra
 
         if not isinstance(vtkStructGrid, _vtk.vtkStructuredGrid):
             raise RuntimeError(
