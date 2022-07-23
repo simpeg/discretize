@@ -71,7 +71,7 @@ def load_vtk(extra=None):
     if extra:
         if isinstance(extra, str):
             extra = [extra, ]
-        return _vtk, _nps, *[getattr(vtk, e) for e in extra]
+        return _vtk, _nps, *[getattr(_vtk, e) for e in extra]
     else:
         return _vtk, _nps
 
@@ -705,6 +705,7 @@ class InterfaceTensorread_vtk(object):
             A dictionary containing the models. The keys correspond to the names of the
             models.
         """
+        _, _, _vtkRectReader = load_vtk('vtkXMLRectilinearGridReader')
         fname = os.path.join(directory, file_name)
         # Read the file
         vtrReader = _vtkRectReader()

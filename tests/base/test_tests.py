@@ -1,3 +1,4 @@
+import sys
 import pytest
 import discretize
 import subprocess
@@ -77,5 +78,5 @@ def test_import_time():
     # Capture it
     out = subprocess.run(cmd, capture_output=True)
 
-    # Currently we check t < 0.5s.
-    assert float(out.stderr.decode("utf-8")[:-1]) < 0.5
+    # Currently we check t < 0.8s.
+    assert float(out.stderr.decode("utf-8")[:-1]) < 0.8

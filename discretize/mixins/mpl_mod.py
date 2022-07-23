@@ -1567,6 +1567,7 @@ class InterfaceMPL(object):
         return mesh2D.plot_grid(*args, **kwargs)
 
     def __plotGridZSlice(self, *args, **kwargs):
+        _, plt = load_matplotlib()
         # https://github.com/matplotlib/matplotlib/issues/312
         ax = kwargs.get("ax", None)
         if ax is not None:
