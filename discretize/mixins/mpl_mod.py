@@ -3,13 +3,18 @@ import warnings
 from discretize.utils import mkvc, ndgrid
 from discretize.utils.code_utils import deprecate_method
 
-import matplotlib
-import matplotlib.pyplot as plt
-from matplotlib.widgets import Slider
-from matplotlib.collections import PolyCollection, LineCollection
-from matplotlib import rc_params
-from mpl_toolkits.mplot3d.art3d import Line3DCollection
 import discretize
+
+def load_matplotlib():
+    """Lazy load principal matplotlib routines.
+
+    This is not beautiful. But if matplotlib is installed, but never used, it
+    reduces load time significantly.
+    """
+    import matplotlib
+    import matplotlib.pyplot as plt
+    return matplotlib, plt
+    _, plt = load_matplotlib()
 
 
 class InterfaceMPL(object):
@@ -135,6 +140,8 @@ class InterfaceMPL(object):
         >>> M.plot_grid()
         >>> plt.show()
         """
+        matplotlib, plt = load_matplotlib()
+        from matplotlib import rc_params  # lazy loaded
         mesh_type = self._meshType.lower()
         plotters = {
             "tree": self.__plot_grid_tree,
@@ -272,6 +279,8 @@ class InterfaceMPL(object):
         >>> M.plot_image(v, annotation_color='k')
         >>> plt.show()
         """
+        matplotlib, plt = load_matplotlib()
+
         mesh_type = self._meshType.lower()
         plotters = {
             "tree": self.__plot_image_tree,
@@ -507,6 +516,8 @@ class InterfaceMPL(object):
         >>> plt.show()
 
         """
+        matplotlib, plt = load_matplotlib()
+
         mesh_type = self._meshType.lower()
         plotters = {
             "tree": self.__plot_slice_tree,
@@ -717,6 +728,8 @@ class InterfaceMPL(object):
         first.
 
         """
+        _, plt = load_matplotlib()
+
         mesh_type = self._meshType.lower()
         if mesh_type != "tensor":
             raise NotImplementedError(
@@ -1132,6 +1145,7 @@ class InterfaceMPL(object):
         stream_thickness=None,
     ):
         """Common function for plotting an image of a TensorMesh"""
+        matplotlib, plt = load_matplotlib()
 
         if ax is None:
             plt.figure()
@@ -1388,6 +1402,8 @@ class InterfaceMPL(object):
 
     # CylindricalMesh plotting
     def __plotCylTensorMesh(self, plotType, *args, **kwargs):
+        matplotlib, plt = load_matplotlib()
+
         if not self.is_symmetric:
             raise NotImplementedError("We have not yet implemented this type of view.")
         if plotType not in ["plot_image", "plot_grid"]:
@@ -1472,6 +1488,8 @@ class InterfaceMPL(object):
         return out
 
     def __plot_grid_cyl(self, *args, **kwargs):
+        _, plt = load_matplotlib()
+
         if self.is_symmetric:
             return self.__plotCylTensorMesh("plot_grid", *args, **kwargs)
 
@@ -1786,6 +1804,9 @@ class InterfaceMPL(object):
         edges_z=False,
         **kwargs,
     ):
+        from matplotlib.collections import LineCollection  # Lazy loaded
+        from mpl_toolkits.mplot3d.art3d import Line3DCollection  # Lazy loaded
+
         if faces:
             faces_x = faces_y = True
             if self.dim == 3:
@@ -1959,6 +1980,8 @@ class InterfaceMPL(object):
         quiver_opts=None,
         **kwargs,
     ):
+        from matplotlib.collections import PolyCollection  # lazy loaded
+
         if self.dim == 3:
             raise NotImplementedError(
                 "plotImage is not implemented for 3D TreeMesh, please use plotSlice"
@@ -2396,6 +2419,8 @@ class Slicer(object):
         **kwargs,
     ):
         """Initialize interactive figure."""
+        _, plt = load_matplotlib()
+        from matplotlib.widgets import Slider  # Lazy loaded
 
         # 0. Some checks, not very extensive
         if "pcolorOpts" in kwargs:
@@ -2660,6 +2685,7 @@ class Slicer(object):
 
     def onscroll(self, event):
         """Update index and data when scrolling."""
+        _, plt = load_matplotlib()
 
         # Get scroll direction
         if event.button == "up":

@@ -1,6 +1,10 @@
-import omf
 import numpy as np
 import discretize
+
+def omf():
+    """Lazy loading omf."""
+    import omf
+    return omf
 
 
 def ravel_data_array(arr, nx, ny, nz):
@@ -161,7 +165,7 @@ class InterfaceOMF(object):
         if models is None:
             models = {}
         # Make the geometry
-        geometry = omf.VolumeGridGeometry()
+        geometry = omf().VolumeGridGeometry()
         # Set tensors
         tensors = mesh.h
         if len(tensors) < 1:
@@ -203,13 +207,13 @@ class InterfaceOMF(object):
         # Make sure the geometry is built correctly
         geometry.validate()
         # Make the volume elemet (the OMF object)
-        omfmesh = omf.VolumeElement(
+        omfmesh = omf().VolumeElement(
             geometry=geometry,
         )
         # Add model data arrays onto the cells of the mesh
         omfmesh.data = []
         for name, arr in models.items():
-            data = omf.ScalarData(
+            data = omf().ScalarData(
                 name=name,
                 array=ravel_data_array(arr, *mesh.shape_cells),
                 location="cells",
@@ -305,7 +309,7 @@ class InterfaceOMF(object):
         """
         element.validate()
         converters = {
-            omf.VolumeElement.__name__: InterfaceOMF._omf_volume_to_tensor,
+            omf().VolumeElement.__name__: InterfaceOMF._omf_volume_to_tensor,
         }
         key = element.__class__.__name__
         try:
