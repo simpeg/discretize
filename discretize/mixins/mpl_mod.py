@@ -14,7 +14,6 @@ def load_matplotlib():
     import matplotlib
     import matplotlib.pyplot as plt
     return matplotlib, plt
-    _, plt = load_matplotlib()
 
 
 class InterfaceMPL(object):
