@@ -83,12 +83,12 @@ class TestOutliersInterp1D(unittest.TestCase):
     def test_outliers(self):
         M = discretize.TensorMesh([4])
         Q = M.getInterpolationMat(
-            np.array([[0], [0.126], [0.127]]), "CC", zerosOutside=True
+            np.array([[0], [0.126], [0.127]]), "CC", zeros_outside=True
         )
         x = np.arange(4) + 1
         self.assertTrue(np.linalg.norm(Q * x - np.r_[1, 1.004, 1.008]) < TOL)
         Q = M.getInterpolationMat(
-            np.array([[-1], [0.126], [0.127]]), "CC", zerosOutside=True
+            np.array([[-1], [0.126], [0.127]]), "CC", zeros_outside=True
         )
         self.assertTrue(np.linalg.norm(Q * x - np.r_[0, 1.004, 1.008]) < TOL)
 
