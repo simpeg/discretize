@@ -5547,7 +5547,7 @@ cdef class _TreeMesh:
         -----
         These indices will also point to hanging nodes.
         """
-        cdef int_t npc = 4 if self.dim == 2 else 6
+        cdef int_t npc = 4 if self.dim == 2 else 8
         inds = np.empty((self.n_cells, npc), dtype=np.int64)
         cdef np.int64_t[:, :] node_index = inds
         cdef int_t i
