@@ -100,8 +100,6 @@ stages:
       displayName: Windows Wheels
       strategy:
         matrix:
-          win-Python36:
-            python.version: '3.6'
           win-Python37:
             python.version: '3.7'
           win-Python38:
