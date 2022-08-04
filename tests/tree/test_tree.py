@@ -305,6 +305,37 @@ class TestOcTree(unittest.TestCase):
 
         self.assertTrue(test_hx and test_hy and test_hz)
 
+    def test_cell_nodes(self):
+        # 2D
+        nc = 8
+        h1 = np.random.rand(nc) * nc * 0.5 + nc * 0.5
+        h2 = np.random.rand(nc) * nc * 0.5 + nc * 0.5
+        h = [hi / np.sum(hi) for hi in [h1, h2]]  # normalize
+        M = discretize.TreeMesh(h)
+        points = np.array([[0.2, 0.1], [0.8, 0.4]])
+        levels = np.array([1, 2])
+        M.insert_cells(points, levels, finalize=True)
+
+        cell_nodes = M.cell_nodes
+
+        cell_2 = M[2]
+        np.testing.assert_equal(cell_2.nodes, cell_nodes[2])
+
+        # 3D
+        nc = 8
+        h1 = np.random.rand(nc) * nc * 0.5 + nc * 0.5
+        h2 = np.random.rand(nc) * nc * 0.5 + nc * 0.5
+        h3 = np.random.rand(nc) * nc * 0.5 + nc * 0.5
+        h = [hi / np.sum(hi) for hi in [h1, h2, h3]]  # normalize
+        M = discretize.TreeMesh(h, levels=3)
+        points = np.array([[0.2, 0.1, 0.7], [0.8, 0.4, 0.2]])
+        levels = np.array([1, 2])
+        M.insert_cells(points, levels, finalize=True)
+
+        cell_nodes = M.cell_nodes
+
+        cell_2 = M[2]
+        np.testing.assert_equal(cell_2.nodes, cell_nodes[2])
 
 class Test2DInterpolation(unittest.TestCase):
     def setUp(self):
