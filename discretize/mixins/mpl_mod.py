@@ -1216,7 +1216,7 @@ class InterfaceMPL(object):
             U, V = self.reshape(v.reshape((self.nC, -1), order="F"), "CC", "CC", "M")
 
             tMi = self.__class__(h=[hx, hy], origin=np.r_[origin_x, origin_y])
-            P = self.get_interpolation_matrix(tMi.gridCC, "CC", zerosOutside=True)
+            P = self.get_interpolation_matrix(tMi.gridCC, "CC", zeros_outside=True)
 
             Ui = tMi.reshape(P * mkvc(U), "CC", "CC", "M")
             Vi = tMi.reshape(P * mkvc(V), "CC", "CC", "M")
