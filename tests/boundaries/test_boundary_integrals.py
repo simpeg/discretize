@@ -303,7 +303,17 @@ class Test3DCylindricalBoundary(discretize.tests.OrderTest):
 
             discrete_val = -(v_f.T @ D.T) @ M_c @ u_cc + v_f.T @ (M_bf @ u_bf)
             true_val = -7 * np.pi/6
+        elif self.myTest == "edge_div":
+            u_n = u_cyl(*mesh.nodes.T)
+            v_e = mesh.project_edge_vector(v_cyl(*mesh.edges.T))
+            v_bn = v_cyl(*mesh.boundary_nodes.T).reshape(-1, order='F')
 
+            M_e = mesh.get_edge_inner_product()
+            G = mesh.nodal_gradient
+            M_bn = mesh.boundary_node_vector_integral
+
+            true_val = -31 * np.pi/120
+            discrete_val = -(u_n.T @ G.T) @ M_e @ v_e + u_n.T @ (M_bn @ v_bn)
         return np.abs(discrete_val - true_val)
 
     def test_orderWeakCellGradIntegral(self):

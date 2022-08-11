@@ -1186,6 +1186,21 @@ class CylindricalMesh(
         normals[n1:n1+n2] *= -1
         return normals
 
+    @property
+    def _is_boundary_node(self):
+        is_b = np.zeros(self._shape_total_nodes, dtype=bool, order='F')
+        # outward rs are boundary:
+        is_b[-1] = True
+        # top and bottom zs are boundary
+        is_b[:, :, [0, -1]] = True
+        is_b = is_b.reshape(-1, order='F')
+        is_b = is_b[~self._ishanging_nodes]
+        return is_b
+
+    @property
+    def boundary_nodes(self):
+        return self.nodes[self._is_boundary_node]
+
     ####################################################
     # Operators
     ####################################################
@@ -1512,6 +1527,11 @@ class CylindricalMesh(
     def project_face_to_boundary_face(self):
         P = speye(self.n_faces)
         return P[self._is_boundary_face]
+
+    @property
+    def project_node_to_boundary_node(self):
+        P = speye(self.n_nodes)
+        return P[self._is_boundary_node]
 
     ####################################################
     # Deflation Matrices
