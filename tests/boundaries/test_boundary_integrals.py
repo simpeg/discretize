@@ -213,7 +213,7 @@ class Test3DBoundaryIntegral(discretize.tests.OrderTest):
         "sphereCurv",
         ]
     meshDimension = 3
-    expectedOrders = [2, 1, 2, 2, 2, 0, 2]
+    expectedOrders = [2, 1, 2, 2, 2, 0]
     meshSizes = [4, 8, 16, 32]
 
     def getError(self):
@@ -304,7 +304,6 @@ class Test3DCylindricalBoundary(discretize.tests.OrderTest):
             discrete_val = -(v_f.T @ D.T) @ M_c @ u_cc + v_f.T @ (M_bf @ u_bf)
             true_val = -7 * np.pi/6
 
-        #print(discrete_val, true_val)
         return np.abs(discrete_val - true_val)
 
     def test_orderWeakCellGradIntegral(self):
