@@ -1,5 +1,7 @@
+import sys
 import pytest
 import discretize
+import subprocess
 import numpy as np
 from discretize.utils import volume_average
 from discretize.tests import assert_isadjoint
@@ -64,3 +66,17 @@ class TestAssertIsAdjoint:
             complex_v=True,
             clinear=False,
         )
+
+
+@pytest.mark.skipif(not sys.platform.startswith('linux'), reason="Not Linux.")
+def test_import_time():
+    # Relevant for the CLI: How long does it take to import?
+    cmd = ["time", "-f", "%U", "python", "-c", "import discretize"]
+    # Run it twice, just in case.
+    subprocess.run(cmd)
+    subprocess.run(cmd)
+    # Capture it
+    out = subprocess.run(cmd, capture_output=True)
+
+    # Currently we check t < 0.8s.
+    assert float(out.stderr.decode("utf-8")[:-1]) < 0.8

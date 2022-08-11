@@ -27,33 +27,28 @@ Other Optional Classes
 
   Slicer
 """
+import importlib
 from .mesh_io import TensorMeshIO, TreeMeshIO, SimplexMeshIO
 
 AVAILABLE_MIXIN_CLASSES = []
 SIMPLEX_MIXIN_CLASSES = []
 
-try:
+if importlib.util.find_spec("vtk"):
     from .vtk_mod import InterfaceVTK
 
     AVAILABLE_MIXIN_CLASSES.append(InterfaceVTK)
-except ImportError as err:
-    pass
 
-try:
+if importlib.util.find_spec("omf"):
     from .omf_mod import InterfaceOMF
 
     AVAILABLE_MIXIN_CLASSES.append(InterfaceOMF)
-except ImportError as err:
-    pass
 
 # keep this one last in defaults in case anything else wants to overwrite
 # plot commands
-try:
+if importlib.util.find_spec("matplotlib"):
     from .mpl_mod import Slicer, InterfaceMPL
 
     AVAILABLE_MIXIN_CLASSES.append(InterfaceMPL)
-except ImportError as err:
-    pass
 
 # # Python 3 friendly
 class InterfaceMixins(*AVAILABLE_MIXIN_CLASSES):
