@@ -39,13 +39,6 @@ from . import TreeMesh as Tree
 import unittest
 import inspect
 
-# matplotlib is a soft dependencies for discretize
-try:
-    import matplotlib
-    import matplotlib.pyplot as plt
-except ImportError:
-    matplotlib = False
-
 try:
     import getpass
 
@@ -503,6 +496,14 @@ def check_derivative(
     ========================= PASS! =========================
     Once upon a time, a happy little test passed.
     """
+
+    # matplotlib is a soft dependencies for discretize,
+    # lazy-loaded to decrease load time of discretize.
+    try:
+        import matplotlib
+        import matplotlib.pyplot as plt
+    except ImportError:
+        matplotlib = False
 
     print("{0!s} checkDerivative {1!s}".format("=" * 20, "=" * 20))
     print(

@@ -58,16 +58,24 @@ from discretize.utils import cyl2cart
 
 # from ..utils import cyl2cart
 
-import vtk as _vtk
-import vtk.util.numpy_support as _nps
-from vtk import VTK_VERSION as _vtk_version
-from vtk import vtkXMLRectilinearGridWriter as _vtkRectWriter
-from vtk import vtkXMLUnstructuredGridWriter as _vtkUnstWriter
-from vtk import vtkXMLStructuredGridWriter as _vtkStrucWriter
-from vtk import vtkXMLRectilinearGridReader as _vtkRectReader
-from vtk import vtkXMLUnstructuredGridReader as _vtkUnstReader
-
 import warnings
+
+
+def load_vtk(extra=None):
+    """Lazy load principal VTK routines.
+
+    This is not beautiful. But if VTK is installed, but never used, it reduces
+    load time significantly.
+    """
+    import vtk as _vtk
+    import vtk.util.numpy_support as _nps
+    if extra:
+        if isinstance(extra, str):
+            return _vtk, _nps, getattr(_vtk, extra)
+        else:
+            return _vtk, _nps, [getattr(_vtk, e) for e in extra]
+    else:
+        return _vtk, _nps
 
 
 def assign_cell_data(vtkDS, models=None):
@@ -83,6 +91,8 @@ def assign_cell_data(vtkDS, models=None):
         Name('s) and array('s). Match number of cells
 
     """
+    _, _nps = load_vtk()
+
     nc = vtkDS.GetNumberOfCells()
     if models is not None:
         for name, mod in models.items():
@@ -193,6 +203,8 @@ class InterfaceVTK(object):
             Name('s) and array('s). Match number of cells
 
         """
+        _vtk, _nps = load_vtk()
+
         # Make the data parts for the vtu object
         # Points
         ptsMat = np.vstack((mesh.gridN, mesh.gridhN))
@@ -258,6 +270,8 @@ class InterfaceVTK(object):
             Name('s) and array('s). Match number of cells
 
         """
+        _vtk, _nps = load_vtk()
+
         # Make the data parts for the vtu object
         # Points
         pts = mesh.nodes
@@ -283,10 +297,11 @@ class InterfaceVTK(object):
         # Assign the model('s) to the object
         return assign_cell_data(output, models=models)
 
-
     @staticmethod
     def __create_structured_grid(ptsMat, dims, models=None):
         """An internal helper to build out structured grids"""
+        _vtk, _nps = load_vtk()
+
         # Adjust if result was 2D:
         if ptsMat.shape[1] == 2:
             # Figure out which dim is null
@@ -336,6 +351,8 @@ class InterfaceVTK(object):
             Name('s) and array('s). Match number of cells
 
         """
+        _vtk, _nps = load_vtk()
+
         # Deal with dimensionalities
         if mesh.dim >= 1:
             vX = mesh.nodes_x
@@ -388,7 +405,7 @@ class InterfaceVTK(object):
     def __cyl_mesh_to_vtk(mesh, models=None):
         """
         Constructs an vtkUnstructuredGrid made of rational Bezier hexahedrons and wedges.
-        Wedges happen on the very internal layer about r=0, and hexs occur elsewhere.
+        Wedges happen on the very internal layer about r=0, and hexes occur elsewhere.
         """
         # # Points
         P = mesh._deflation_matrix('nodes', as_ones=True).T.tocsr()
@@ -454,6 +471,8 @@ class InterfaceVTK(object):
             izs = np.stack([iz, iz+1], axis=-1)
             i_wccn = np.ravel_multi_index((irs, its, izs), Rs.shape, order='F')
             i_wedge_control_nodes = np.c_[i_wscn[:, 0], i_wccn[:, 0], i_wscn[:, 1], i_wscn[:, 2], i_wccn[:, 1], i_wscn[:, 3]]
+
+        _vtk, _nps = load_vtk()
         ####
         # assemble cells
         cell_types = np.empty(mesh.n_cells, dtype=np.uint8)
@@ -575,6 +594,9 @@ class InterfaceVTK(object):
         directory : str
             directory where the UBC GIF file lives
         """
+        _vtk, _, extra = load_vtk(('VTK_VERSION', 'vtkXMLUnstructuredGridWriter'))
+        _vtk_version, _vtkUnstWriter = extra
+
         if not isinstance(vtkUnstructGrid, _vtk.vtkUnstructuredGrid):
             raise RuntimeError(
                 "`_save_unstructured_grid` can only handle `vtkUnstructuredGrid` objects. `%s` is not supported."
@@ -609,6 +631,9 @@ class InterfaceVTK(object):
         directory : str
             directory where the UBC GIF file lives
         """
+        _vtk, _, extra = load_vtk(('VTK_VERSION', 'vtkXMLStructuredGridWriter'))
+        _vtk_version,  _vtkStrucWriter = extra
+
         if not isinstance(vtkStructGrid, _vtk.vtkStructuredGrid):
             raise RuntimeError(
                 "`_save_structured_grid` can only handle `vtkStructuredGrid` objects. `{}` is not supported.".format(
@@ -644,6 +669,8 @@ class InterfaceVTK(object):
         directory : str
             directory where the UBC GIF file lives
         """
+        _vtk, _, _vtkRectWriter = load_vtk('vtkXMLRectilinearGridWriter')
+
         if not isinstance(vtkRectGrid, _vtk.vtkRectilinearGrid):
             raise RuntimeError(
                 "`_save_rectilinear_grid` can only handle `vtkRectilinearGrid` objects. `{}` is not supported.".format(
@@ -733,6 +760,8 @@ class InterfaceTensorread_vtk(object):
         discretize.TensorMesh
             A discretize tensor mesh
         """
+        _, _nps = load_vtk()
+
         # Sort information
         hx = np.abs(np.diff(_nps.vtk_to_numpy(vtrGrid.GetXCoordinates())))
         xR = _nps.vtk_to_numpy(vtrGrid.GetXCoordinates())[0]
@@ -791,6 +820,7 @@ class InterfaceTensorread_vtk(object):
             A dictionary containing the models. The keys correspond to the names of the
             models.
         """
+        _, _, _vtkRectReader = load_vtk('vtkXMLRectilinearGridReader')
         fname = os.path.join(directory, file_name)
         # Read the file
         vtrReader = _vtkRectReader()
@@ -828,6 +858,8 @@ class InterfaceSimplexReadVTK:
         discretize.SimplexMesh
             A discretize tensor mesh
         """
+        _, _nps = load_vtk()
+
         # check if all of the cells are the same type
         cell_types = np.unique(_nps.vtk_to_numpy(vtuGrid.GetCellTypesArray()))
         if len(cell_types) > 1:
@@ -882,6 +914,8 @@ class InterfaceSimplexReadVTK:
             A dictionary containing the models. The keys correspond to the names of the
             models.
         """
+        _, _, _vtkUnstReader = load_vtk('vtkXMLUnstructuredGridReader')
+
         fname = os.path.join(directory, file_name)
         # Read the file
         vtuReader = _vtkUnstReader()
