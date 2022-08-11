@@ -410,6 +410,11 @@ class InterfaceVTK(object):
         # # Points
         P = mesh._deflation_matrix('nodes', as_ones=True).T.tocsr()
 
+        if np.any(mesh.h[1] >= np.pi):
+            raise NotImplementedError(
+                "Exporting cylindrical meshes to vtk with angles larger than 180 degrees"
+                " is not yet supported."
+            )
         # calculate control points
         dphis_half = mesh.h[1]/2
         phi_controls = mesh.nodes_y + dphis_half
