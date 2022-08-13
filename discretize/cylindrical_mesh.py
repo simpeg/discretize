@@ -1201,6 +1201,34 @@ class CylindricalMesh(
     def boundary_nodes(self):
         return self.nodes[self._is_boundary_node]
 
+    @property
+    def _is_boundary_edge(self):
+        # top and bottom radial edges are on the boundary
+        is_br = np.zeros(self._shape_total_edges_x, dtype=bool, order='F')
+        is_br[:, :, [0, -1]] = True
+        is_br = is_br.reshape(-1, order='F')
+        is_bt = np.zeros(self._shape_total_edges_y, dtype=bool, order='F')
+        # outside theta edges are on boundary
+        is_bt[-1] = True
+        # top and bottom theta edges are on boundary
+        is_bt[:, :, [0, -1]] = True
+        is_bt = is_bt.reshape(-1, order='F')
+        # outside z edges are on boundaries
+        is_bz = np.zeros(self._shape_total_edges_z, dtype=bool, order="F")
+        is_bz[-1] = True
+        is_bz = is_bz.reshape(-1, order="F")
+
+        is_b = np.r_[
+            is_br[~self._ishanging_edges_x],
+            is_bt[~self._ishanging_edges_y],
+            is_bz[~self._ishanging_edges_z]
+        ]
+        return is_b
+
+    @property
+    def boundary_edges(self):
+        return self.edges[self._is_boundary_edge]
+
     ####################################################
     # Operators
     ####################################################
@@ -1532,6 +1560,11 @@ class CylindricalMesh(
     def project_node_to_boundary_node(self):
         P = speye(self.n_nodes)
         return P[self._is_boundary_node]
+
+    @property
+    def project_edge_to_boundary_edge(self):
+        P = speye(self.n_edges)
+        return P[self._is_boundary_edge]
 
     ####################################################
     # Deflation Matrices

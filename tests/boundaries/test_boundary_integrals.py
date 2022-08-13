@@ -286,7 +286,7 @@ class Test3DCylindricalBoundary(discretize.tests.OrderTest):
         "uniformCylindricalMesh",
         ]
     meshDimension = 3
-    expectedOrders = [2,]
+    expectedOrders = [2, ]
     meshSizes = [8, 16, 32, 64]
 
     def getError(self):
@@ -319,4 +319,9 @@ class Test3DCylindricalBoundary(discretize.tests.OrderTest):
     def test_orderWeakCellGradIntegral(self):
         self.name = "3D - weak cell gradient integral w/boundary"
         self.myTest = "cell_grad"
+        self.orderTest()
+
+    def test_orderWeakEdgeDivIntegral(self):
+        self.name = "3D - weak edge divergence integral w/boundary"
+        self.myTest = "edge_div"
         self.orderTest()
