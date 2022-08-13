@@ -268,6 +268,62 @@ class TestAveF2CC(tests.OrderTest):
     def test_order(self):
         self.orderTest()
 
+class TestAveCC2F(tests.OrderTest):
+    name = "aveCC2F"
+    meshTypes = ["uniformCylindricalMesh"]
+    meshSizes = [8, 16, 32, 64]
+    meshDimension = 3
+    expectedOrders = 1 # Extrapolation at the boundaries
+    full = True
+
+    def getError(self):
+        mesh = self.M
+        fun = lambda r, t, z: np.sin(np.pi * z) * np.sin(np.pi * r) * np.sin(t)
+
+        CC = fun(*mesh.cell_centers.T)
+
+        aveF = mesh.aveCC2F @ CC
+        aveF_ana = fun(*mesh.faces.T)
+
+        diff = aveF - aveF_ana
+        if not self.full:
+            diff = diff[~mesh._is_boundary_face]
+
+        err = np.linalg.norm(diff, np.inf)
+        return err
+
+    def test_order_inside(self):
+        self.expectedOrders = 2
+        self.full = False
+        self.orderTest()
+
+    def test_order_with_boundary(self):
+        # This one extrapolates at boundaries
+        self.expectedOrders = 1
+        self.full = True
+        self.orderTest()
+
+class TestAveN2F(tests.OrderTest):
+    name = "aveN2F"
+    meshTypes = MESHTYPES
+    meshSizes = [8, 16, 32, 64]
+    meshDimension = 3
+    expectedOrders = 2
+
+    def getError(self):
+        mesh = self.M
+        fun = lambda r, t, z: np.sin(np.pi * z) * np.sin(np.pi * r) * np.sin(t)
+
+        N = fun(*mesh.nodes.T)
+
+        aveF = mesh.aveN2F @ N
+        aveF_ana = fun(*mesh.faces.T)
+
+        err = np.linalg.norm(aveF - aveF_ana, np.inf)
+        return err
+
+    def test_order(self):
+        self.orderTest()
 
 class FaceInnerProductFctsIsotropic(object):
     def fcts(self):
@@ -502,6 +558,7 @@ class TestCylEdgeInnerProducts_Order(tests.OrderTest):
 
     def test_order(self):
         self.orderTest()
+
 
 class TestCylNodalGradient_Order(tests.OrderTest):
     meshTypes = MESHTYPES
