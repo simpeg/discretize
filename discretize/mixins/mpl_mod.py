@@ -1323,7 +1323,7 @@ class InterfaceMPL(object):
         szSliceDim = self.shape_cells[dim_ind]  #: Size of the sliced dimension
         if ind is None:
             ind = szSliceDim // 2
-        if not isinstance(ind, int):
+        if not isinstance(ind, (np.integer, int)):
             raise TypeError("ind must be an integer")
 
         def getIndSlice(v):
@@ -2112,15 +2112,14 @@ class InterfaceMPL(object):
         szSliceDim = len(self.h[normalInd])
         if ind is None:
             ind = szSliceDim // 2
+        if not isinstance(ind, (np.integer, int)):
+            raise ValueError("ind must be an integer")
 
         cc_tensor = [None, None, None]
         for i in range(3):
             cc_tensor[i] = np.cumsum(np.r_[self.origin[i], self.h[i]])
             cc_tensor[i] = (cc_tensor[i][1:] + cc_tensor[i][:-1]) * 0.5
         slice_loc = cc_tensor[normalInd][ind]
-
-        if not isinstance(ind, int):
-            raise ValueError("ind must be an integer")
 
         # create a temporary TreeMesh with the slice through
         temp_mesh = discretize.TreeMesh(h2d, x2d)
