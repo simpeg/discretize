@@ -280,21 +280,6 @@ class TestCylFaceInnerProductsDiagAnisotropic_Order(tests.OrderTest):
         self.orderTest()
 
 
-class TestCylEdgeInnerProducts_Order(tests.OrderTest):
-
-    meshTypes = ["uniform_symmetric_CylMesh"]
-    meshDimension = 3
-
-    def getError(self):
-        fct = EdgeInnerProductFunctionsDiagAnisotropic()
-        sig, ht = fct.vectors(self.M)
-        Msig = self.M.getEdgeInnerProduct(sig)
-        return float(fct.sol()) - ht.T.dot(Msig.dot(ht))
-
-    def test_order(self):
-        self.orderTest()
-
-
 class TestCylInnerProducts_Deriv(unittest.TestCase):
     def setUp(self):
         n = 2
