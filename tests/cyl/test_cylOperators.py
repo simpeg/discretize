@@ -268,6 +268,7 @@ class TestAveF2CC(tests.OrderTest):
     def test_order(self):
         self.orderTest()
 
+
 class TestAveCC2F(tests.OrderTest):
     name = "aveCC2F"
     meshTypes = ["uniformCylindricalMesh"]
@@ -303,6 +304,7 @@ class TestAveCC2F(tests.OrderTest):
         self.full = True
         self.orderTest()
 
+
 class TestAveN2F(tests.OrderTest):
     name = "aveN2F"
     meshTypes = MESHTYPES
@@ -324,6 +326,7 @@ class TestAveN2F(tests.OrderTest):
 
     def test_order(self):
         self.orderTest()
+
 
 class FaceInnerProductFctsIsotropic(object):
     def fcts(self):
