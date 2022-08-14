@@ -559,7 +559,7 @@ class TreeMesh(
         location_type = self._parse_location_type(location_type)
 
         if self.dim == 2 and "z" in location_type:
-            raise Exception("Unable to interpolate from Z edges/faces in 2D")
+            raise NotImplementedError("Unable to interpolate from Z edges/faces in 2D")
 
         locs = np.require(np.atleast_2d(locs), dtype=np.float64, requirements="C")
 
