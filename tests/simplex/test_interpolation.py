@@ -300,6 +300,14 @@ class TestAveraging(discretize.tests.OrderTest):
         self.expectedOrders = 2
         self.orderTest()
 
+    def test_AvgCC2F_2D(self):
+        self.source_type = "CC"
+        self.target_type = "F"
+        self.name = "average_cell_to_face 2D"
+        self.meshDimension = 2
+        self.expectedOrders = 1
+        self.orderTest()
+
     # 3D
     def test_AvgN2CC_3D(self):
         self.source_type = "N"
@@ -347,6 +355,14 @@ class TestAveraging(discretize.tests.OrderTest):
         self.name = "average_face_to_cell 3D"
         self.meshDimension = 3
         self.expectedOrders = 2
+        self.orderTest()
+
+    def test_AvgCC2F_3D(self):
+        self.source_type = "CC"
+        self.target_type = "F"
+        self.name = "average_cell_to_face 3D"
+        self.meshDimension = 3
+        self.expectedOrders = 1
         self.orderTest()
 
 
@@ -435,3 +451,25 @@ class TestVectorAveraging3D(discretize.tests.OrderTest):
         self.name = "average_face_to_cell_vector 2D"
         self.expectedOrders = 1
         self.orderTest()
+
+
+def test_cell_to_face_extrap():
+    # 2D
+    points, simplices = example_simplex_mesh((10, 10))
+    mesh = discretize.SimplexMesh(points, simplices)
+
+    v = np.ones(len(mesh))
+
+    Fv = mesh.average_cell_to_face @ v
+
+    np.testing.assert_equal(1.0, Fv)
+
+    # 3D
+    points, simplices = example_simplex_mesh((4, 4, 4))
+    mesh = discretize.SimplexMesh(points, simplices)
+
+    v = np.ones(len(mesh))
+
+    Fv = mesh.average_cell_to_face @ v
+
+    np.testing.assert_equal(1.0, Fv)
