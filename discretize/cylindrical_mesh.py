@@ -1703,7 +1703,7 @@ class CylindricalMesh(
         location_type = self._parse_location_type(location_type)
 
         if self.is_symmetric and location_type in ["edges_x", "edges_z", "faces_y"]:
-            raise Exception(
+            raise KeyError(
                 "Symmetric CylindricalMesh does not support {0!s} interpolation, "
                 "as this variable does not exist.".format(location_type)
             )
@@ -1726,8 +1726,7 @@ class CylindricalMesh(
                 Q[indZeros, :] = 0
 
             return Q.tocsr()
-
-        if location_type == 'nodes':
+        elif location_type == 'nodes':
             if self.is_symmetric and self.dim == 3:
                 rtz = [self.nodes_x, self.nodes_z]
                 loc = loc[:, [0, -1]]
@@ -1742,8 +1741,8 @@ class CylindricalMesh(
             if not self.is_symmetric:
                 Q = Q * self._deflation_matrix('nodes', as_ones=True).T
             return Q
-
-        return self._getInterpolationMat(loc, location_type, zeros_outside)
+        else:
+            return self._getInterpolationMat(loc, location_type, zeros_outside)
 
     def cartesian_grid(self, location_type="cell_centers", theta_shift=None, **kwargs):
         """
