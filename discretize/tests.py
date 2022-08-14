@@ -123,10 +123,16 @@ def setup_mesh(mesh_type, nC, nDim):
 
     elif "CylindricalMesh" in mesh_type or "CylMesh" in mesh_type:
         if "uniform" in mesh_type:
-            h = [nC, nC, nC]
+            if "symmetric" in mesh_type:
+                h = [nC, 1, nC]
+            else:
+                h = [nC, nC, nC]
         elif "random" in mesh_type:
             h1 = np.random.rand(nC) * nC * 0.5 + nC * 0.5
-            h2 = np.random.rand(nC) * nC * 0.5 + nC * 0.5
+            if "symmetric" in mesh_type:
+                h2 = [2 * np.pi, ]
+            else:
+                h2 = np.random.rand(nC) * nC * 0.5 + nC * 0.5
             h3 = np.random.rand(nC) * nC * 0.5 + nC * 0.5
             h = [hi / np.sum(hi) for hi in [h1, h2, h3]]  # normalize
             h[1] = h[1] * 2 * np.pi
@@ -138,7 +144,10 @@ def setup_mesh(mesh_type, nC, nDim):
             max_h = max([np.max(hi) for hi in [mesh.h[0], mesh.h[2]]])
         elif nDim == 3:
             mesh = CylindricalMesh(h)
-            max_h = max([np.max(hi) for hi in mesh.h])
+            if "symmetric" in mesh_type:
+                max_h = max([np.max(hi) for hi in [mesh.h[0], mesh.h[2]]])
+            else:
+                max_h = max([np.max(hi) for hi in mesh.h])
 
     elif "Curv" in mesh_type:
         if "uniform" in mesh_type:
