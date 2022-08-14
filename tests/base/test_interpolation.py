@@ -181,9 +181,9 @@ class TestInterpolationSymCyl(discretize.tests.OrderTest):
     LOCS = np.c_[
         np.random.rand(4) * 0.6 + 0.2, np.zeros(4), np.random.rand(4) * 0.6 + 0.2
     ]
-    meshTypes = ["uniformCylMesh"]  # MESHTYPES +
+    meshTypes = ["uniform_symmetric_CylMesh"]  # MESHTYPES +
     tolerance = 0.6
-    meshDimension = 2
+    meshDimension = 3
     meshSizes = [32, 64, 128, 256]
 
     def getError(self):
