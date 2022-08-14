@@ -43,7 +43,7 @@ try:
     import getpass
 
     name = getpass.getuser()[0].upper() + getpass.getuser()[1:]
-except Exception as e:
+except Exception:
     name = "You"
 
 happiness = [
@@ -140,8 +140,11 @@ def setup_mesh(mesh_type, nC, nDim):
             raise Exception("Unexpected mesh_type")
 
         if nDim == 2:
-            mesh = CylindricalMesh([h[0], 1, h[2]])
-            max_h = max([np.max(hi) for hi in [mesh.h[0], mesh.h[2]]])
+            mesh = CylindricalMesh([h[0], h[1]])
+            if "symmetric" in mesh_type:
+                max_h = np.max(mesh.h[0])
+            else:
+                max_h = max([np.max(hi) for hi in mesh.h])
         elif nDim == 3:
             mesh = CylindricalMesh(h)
             if "symmetric" in mesh_type:
