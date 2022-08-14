@@ -557,24 +557,9 @@ class TreeMesh(
             zeros_outside = kwargs["zerosOutside"]
         locs = as_array_n_by_dim(locs, self.dim)
         location_type = self._parse_location_type(location_type)
-        if location_type not in [
-            "nodes",
-            "faces",
-            "faces_x",
-            "faces_y",
-            "faces_z",
-            "edges",
-            "edges_x",
-            "edges_y",
-            "edges_z",
-            "cell_centers",
-        ]:
-            raise ValueError(
-                "Location must be a grid location, not {}".format(location_type)
-            )
 
-        if self.dim == 2 and location_type in ["Ez", "Fz"]:
-            raise Exception("Unable to interpolate from Z edges/face in 2D")
+        if self.dim == 2 and "z" in location_type:
+            raise Exception("Unable to interpolate from Z edges/faces in 2D")
 
         locs = np.require(np.atleast_2d(locs), dtype=np.float64, requirements="C")
 
@@ -586,6 +571,10 @@ class TreeMesh(
             Av = self._getFaceIntMat(locs, zeros_outside, location_type[-1])
         elif location_type in ["cell_centers"]:
             Av = self._getCellIntMat(locs, zeros_outside)
+        else:
+            raise ValueError(
+                "Location must be a grid location, not {}".format(location_type)
+            )
         return Av
 
     @property
