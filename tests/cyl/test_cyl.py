@@ -7,7 +7,7 @@ from discretize import tests, utils
 np.random.seed(13)
 
 
-class TestCyl2DMesh(unittest.TestCase):
+class TestCylSymmetricMesh(unittest.TestCase):
     def setUp(self):
         hx = np.r_[1, 1, 0.5]
         hz = np.r_[2, 1]
@@ -318,7 +318,7 @@ class TestCyl2DMesh(unittest.TestCase):
         self.assertTrue(np.all(self.mesh.gridCC == mesh.gridCC))
 
 
-MESHTYPES = ["uniformCylMesh"]
+MESHTYPES = ["uniform_symmetric_CylMesh"]
 call2 = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 2])
 call3 = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1], xyz[:, 2])
 cyl_row2 = lambda g, xfun, yfun: np.c_[call2(xfun, g), call2(yfun, g)]
@@ -333,7 +333,7 @@ cylF2 = lambda M, fx, fy: np.vstack(
 class TestFaceDiv2D(tests.OrderTest):
     name = "FaceDiv"
     meshTypes = MESHTYPES
-    meshDimension = 2
+    meshDimension = 3
 
     def getError(self):
 
@@ -361,7 +361,7 @@ class TestFaceDiv2D(tests.OrderTest):
 class TestEdgeCurl2D(tests.OrderTest):
     name = "EdgeCurl"
     meshTypes = MESHTYPES
-    meshDimension = 2
+    meshDimension = 3
 
     def getError(self):
         # To Recreate or change the functions:
@@ -461,7 +461,7 @@ class TestAveragingSimple(unittest.TestCase):
 class TestAveE2CC(tests.OrderTest):
     name = "aveE2CC"
     meshTypes = MESHTYPES
-    meshDimension = 2
+    meshDimension = 3
     meshSizes = [8, 16, 32, 64]
 
     def getError(self):
@@ -483,7 +483,7 @@ class TestAveE2CC(tests.OrderTest):
 class TestAveE2CCV(tests.OrderTest):
     name = "aveE2CCV"
     meshTypes = MESHTYPES
-    meshDimension = 2
+    meshDimension = 3
     meshSizes = [8, 16, 32, 64]
 
     def getError(self):
@@ -505,7 +505,7 @@ class TestAveE2CCV(tests.OrderTest):
 class TestAveF2CCV(tests.OrderTest):
     name = "aveF2CCV"
     meshTypes = MESHTYPES
-    meshDimension = 2
+    meshDimension = 3
 
     def getError(self):
 
@@ -533,7 +533,7 @@ class TestAveF2CCV(tests.OrderTest):
 class TestAveF2CC(tests.OrderTest):
     name = "aveF2CC"
     meshTypes = MESHTYPES
-    meshDimension = 2
+    meshDimension = 3
 
     def getError(self):
 
@@ -557,7 +557,7 @@ class TestInnerProducts2D(tests.OrderTest):
     """Integrate an function over a unit cube domain using edgeInnerProducts and faceInnerProducts."""
 
     meshTypes = MESHTYPES
-    meshDimension = 2
+    meshDimension = 3
     meshSizes = [4, 8, 16, 32, 64, 128]
 
     def getError(self):

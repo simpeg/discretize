@@ -179,7 +179,7 @@ def cart2cyl(grid, vec=None):
     --------
     cartesian_to_cylindrical
     """
-    return cylindrical_to_cartesian(grid, vec)
+    return cartesian_to_cylindrical(grid, vec)
 
 
 def rotation_matrix_from_normals(v0, v1, tol=1e-20):

@@ -159,7 +159,7 @@ class TestInterpolation2d(discretize.tests.OrderTest):
         self.orderTest()
 
 
-class TestInterpolation2dCyl_Simple(unittest.TestCase):
+class TestInterpolationSymmetricCyl_Simple(unittest.TestCase):
     def test_simpleInter(self):
         M = discretize.CylMesh([4, 1, 1])
         locs = np.r_[0, 0, 0.5]
@@ -176,14 +176,14 @@ class TestInterpolation2dCyl_Simple(unittest.TestCase):
         self.assertRaises(Exception, lambda: M.getInterpolationMat(locs, "Ez"))
 
 
-class TestInterpolation2dCyl(discretize.tests.OrderTest):
-    name = "Interpolation 2D"
+class TestInterpolationSymCyl(discretize.tests.OrderTest):
+    name = "Interpolation Symmetric 3D"
     LOCS = np.c_[
         np.random.rand(4) * 0.6 + 0.2, np.zeros(4), np.random.rand(4) * 0.6 + 0.2
     ]
-    meshTypes = ["uniformCylMesh"]  # MESHTYPES +
+    meshTypes = ["uniform_symmetric_CylMesh"]  # MESHTYPES +
     tolerance = 0.6
-    meshDimension = 2
+    meshDimension = 3
     meshSizes = [32, 64, 128, 256]
 
     def getError(self):
@@ -223,29 +223,91 @@ class TestInterpolation2dCyl(discretize.tests.OrderTest):
 
     def test_orderCC(self):
         self.type = "CC"
-        self.name = "Interpolation 2D CYLMESH: CC"
-        self.orderTest()
-
-    def test_orderN(self):
-        self.type = "N"
-        self.name = "Interpolation 2D CYLMESH: N"
+        self.name = "Interpolation 3D Symmetric CYLMESH: CC"
         self.orderTest()
 
     def test_orderFx(self):
         self.type = "Fx"
-        self.name = "Interpolation 2D CYLMESH: Fx"
+        self.name = "Interpolation 3D Symmetric CYLMESH: Fx"
         self.orderTest()
 
     def test_orderFz(self):
         self.type = "Fz"
-        self.name = "Interpolation 2D CYLMESH: Fz"
+        self.name = "Interpolation 3D Symmetric CYLMESH: Fz"
         self.orderTest()
 
     def test_orderEy(self):
         self.type = "Ey"
-        self.name = "Interpolation 2D CYLMESH: Ey"
+        self.name = "Interpolation 3D Symmetric CYLMESH: Ey"
         self.orderTest()
 
+class TestInterpolationCyl(discretize.tests.OrderTest):
+    name = "Interpolation Cylindrical 3D"
+    LOCS = np.c_[
+        np.random.rand(20) * 0.6 + 0.2, 2*np.pi*(np.random.rand(20) * 0.6 + 0.2), np.random.rand(20) * 0.6 + 0.2
+    ]
+    meshTypes = ["uniformCylMesh", "randomCylMesh"]  # MESHTYPES +
+    meshDimension = 3
+    meshSizes = [8, 16, 32, 64]
+
+    def getError(self):
+        func = lambda x, y, z: np.cos(2 * np.pi * x) + np.cos(y) + np.cos(2 * np.pi * z)
+        ana = func(*self.LOCS.T)
+        mesh = self.M
+
+        if "F" in self.type:
+            v = func(*mesh.faces.T)
+        elif "E" in self.type:
+            v = func(*mesh.edges.T)
+        elif "CC" == self.type:
+            v = func(*mesh.cell_centers.T)
+        elif "N" == self.type:
+            v = func(*mesh.nodes.T)
+
+        comp = mesh.getInterpolationMat(self.LOCS, self.type) * v
+
+        err = np.linalg.norm((comp - ana), np.inf)
+        return err
+
+    def test_orderCC(self):
+        self.type = "CC"
+        self.name = "Interpolation 3D CYLMESH: CC"
+        self.orderTest()
+
+    def test_orderN(self):
+        self.type = "N"
+        self.name = "Interpolation 3D CYLMESH: N"
+        self.orderTest()
+
+    def test_orderFx(self):
+        self.type = "Fx"
+        self.name = "Interpolation 3D CYLMESH: Fx"
+        self.orderTest()
+
+    def test_orderFy(self):
+        self.type = "Fy"
+        self.name = "Interpolation 3D CYLMESH: Fy"
+        self.orderTest()
+
+    def test_orderFz(self):
+        self.type = "Fz"
+        self.name = "Interpolation 3D CYLMESH: Fz"
+        self.orderTest()
+
+    def test_orderEx(self):
+        self.type = "Ex"
+        self.name = "Interpolation 3D CYLMESH: Ex"
+        self.orderTest()
+
+    def test_orderEy(self):
+        self.type = "Ey"
+        self.name = "Interpolation 3D CYLMESH: Ey"
+        self.orderTest()
+
+    def test_orderEz(self):
+        self.type = "Ez"
+        self.name = "Interpolation 3D CYLMESH: Ez"
+        self.orderTest()
 
 class TestInterpolation3D(discretize.tests.OrderTest):
     name = "Interpolation"

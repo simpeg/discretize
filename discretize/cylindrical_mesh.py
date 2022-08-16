@@ -6,12 +6,14 @@ from discretize.utils import (
     kron3,
     ndgrid,
     av,
+    av_extrap,
     speye,
     ddx,
     sdiag,
     spzeros,
     interpolation_matrix,
     cyl2cart,
+    as_array_n_by_dim,
 )
 from discretize.base import BaseTensorMesh, BaseRectangularMesh
 from discretize.operators import DiffOperators, InnerProducts
@@ -809,58 +811,15 @@ class CylindricalMesh(
                 )
         return self._cell_volumes
 
-    ###########################################################################
-    # Active and Hanging Edges and Faces
-    #
-    #    To find the active edges, faces, we use krons of bools (sorry). It is
-    #    more efficient than working with 3D matrices. For example...
-    #
-    #    The computation of `ishangingFx` (is the Fx face hanging? a vector of
-    #    True and False corresponding to each face) can be computed using krons
-    #    of bools:
-    #
-    #          hang_x = np.zeros(self._ntNx, dtype=bool)
-    #          hang_x[0] = True
-    #          ishangingFx_bool = np.kron(
-    #              np.ones(self.shape_cells[2], dtype=bool),  # 1 * 0 == 0
-    #              np.kron(np.ones(self.shape_cells[1], dtype=bool), hang_x)
-    #          )
-    #          return self._ishanging_faces_x_bool
-    #
-    #
-    #   This is equivalent to forming the 3D matrix and indexing the
-    #   corresponding rows and columns (here, the hanging faces are all of
-    #   the first x-faces along the axis of symmetry):
-    #
-    #         hang_x = np.zeros(self._shape_total_faces_x, dtype=bool)
-    #         hang_x[0, :, :] = True
-    #         isHangingFx_bool = mkvc(hang_x)
-    #
-    #
-    # but krons of bools is more efficient.
-    #
-    ###########################################################################
-
     @property
     def _ishanging_faces_x(self):
         """
         bool vector indicating if an x-face is hanging or not
         """
         if getattr(self, "_ishanging_faces_x_bool", None) is None:
-
-            # the following is equivalent to
-            #     hang_x = np.zeros(self._shape_total_faces_x, dtype=bool)
-            #     hang_x[0, :, :] = True
-            #     isHangingFx_bool = mkvc(hang_x)
-            #
-            # but krons of bools is more efficient
-
-            hang_x = np.zeros(self._shape_total_nodes[0], dtype=bool)
+            hang_x = np.zeros(self._shape_total_faces_x, dtype=bool, order="F")
             hang_x[0] = True
-            self._ishanging_faces_x_bool = np.kron(
-                np.ones(self.shape_cells[2], dtype=bool),  # 1 * 0 == 0
-                np.kron(np.ones(self.shape_cells[1], dtype=bool), hang_x),
-            )
+            self._ishanging_faces_x_bool = hang_x.reshape(-1, order="F")
         return self._ishanging_faces_x_bool
 
     @property
@@ -885,12 +844,9 @@ class CylindricalMesh(
         """
 
         if getattr(self, "_ishanging_faces_y_bool", None) is None:
-            hang_y = np.zeros(self._shape_total_nodes[1], dtype=bool)
-            hang_y[-1] = True
-            self._ishanging_faces_y_bool = np.kron(
-                np.ones(self.shape_cells[2], dtype=bool),
-                np.kron(hang_y, np.ones(self.shape_cells[0], dtype=bool)),
-            )
+            hang_y = np.zeros(self._shape_total_faces_y, dtype=bool, order="F")
+            hang_y[:, -1] = True
+            self._ishanging_faces_y_bool = hang_y.reshape(-1, order="F")
         return self._ishanging_faces_y_bool
 
     @property
@@ -936,13 +892,9 @@ class CylindricalMesh(
         bool vector indicating if a x-edge is hanging or not
         """
         if getattr(self, "_ishanging_edges_x_bool", None) is None:
-            nx, ny, nz = self._shape_total_nodes
-            hang_y = np.zeros(ny, dtype=bool)
-            hang_y[-1] = True
-            self._ishanging_edges_x_bool = np.kron(
-                np.ones(nz, dtype=bool),
-                np.kron(hang_y, np.ones(self.shape_cells[0], dtype=bool)),
-            )
+            hang_x = np.zeros(self._shape_total_edges_x, dtype=bool, order="F")
+            hang_x[:, -1] = True
+            self._ishanging_edges_x_bool = hang_x.reshape(-1, order="F")
         return self._ishanging_edges_x_bool
 
     @property
@@ -972,13 +924,10 @@ class CylindricalMesh(
         bool vector indicating if a y-edge is hanging or not
         """
         if getattr(self, "_ishanging_edges_y_bool", None) is None:
-            nx, ny, nz = self._shape_total_nodes
-            hang_x = np.zeros(nx, dtype=bool)
-            hang_x[0] = True
-            self._ishanging_edges_y_bool = np.kron(
-                np.ones(nz, dtype=bool),
-                np.kron(np.ones(self.shape_cells[1], dtype=bool), hang_x),
-            )
+            hang_y = np.zeros(self._shape_total_edges_y, dtype=bool, order="F")
+            if not self.is_symmetric:
+                hang_y[0] = True
+            self._ishanging_edges_y_bool = hang_y.reshape(-1, order="F")
         return self._ishanging_edges_y_bool
 
     @property
@@ -1004,23 +953,6 @@ class CylindricalMesh(
             return np.r_[self._ishanging_edges_x, self._ishanging_edges_y, self._ishanging_edges_z]
 
     @property
-    def _axis_of_symmetry_edges_z(self):
-        """
-        bool vector indicating if a z-edge is along the axis of symmetry or not
-        """
-        if getattr(self, "_axis_of_symmetry_edges_z_bool", None) is None:
-            nx, ny, nz = self._shape_total_nodes
-            axis_x = np.zeros(nx, dtype=bool)
-            axis_x[0] = True
-
-            axis_y = np.zeros(ny, dtype=bool)
-            axis_y[0] = True
-            self._axis_of_symmetry_edges_z_bool = np.kron(
-                np.ones(self.shape_cells[2], dtype=bool), np.kron(axis_y, axis_x)
-            )
-        return self._axis_of_symmetry_edges_z_bool
-
-    @property
     def _ishanging_edges_z(self):
         """
         bool vector indicating if a z-edge is hanging or not
@@ -1031,25 +963,11 @@ class CylindricalMesh(
                     self._n_total_edges_z, dtype=bool
                 )
             else:
-                nx, ny, nz = self._shape_total_nodes
-                hang_x = np.zeros(nx, dtype=bool)
-                hang_x[0] = True
-
-                hang_y = np.zeros(ny, dtype=bool)
-                hang_y[-1] = True
-
-                hangingEz = np.kron(
-                    np.ones(self.shape_cells[2], dtype=bool),
-                    (
-                        # True * False = False
-                        np.kron(np.ones(ny, dtype=bool), hang_x)
-                        | np.kron(hang_y, np.ones(nx, dtype=bool))
-                    ),
-                )
-
-                self._ishanging_edges_z_bool = (
-                    hangingEz & ~self._axis_of_symmetry_edges_z
-                )
+                is_hanging = np.zeros(self._shape_total_edges_z, dtype=bool, order="F")
+                is_hanging[0] = True  # axis of symmetry nodes are hanging
+                is_hanging[0, 0] = False  # axis of symmetry nodes which are not hanging
+                is_hanging[:, -1] = True  # nodes at maximum theta that are duplicated
+                self._ishanging_edges_z_bool = is_hanging.reshape(-1, order="F")
 
         return self._ishanging_edges_z_bool
 
@@ -1077,44 +995,19 @@ class CylindricalMesh(
         return self._hanging_edges_z_dict
 
     @property
-    def _axis_of_symmetry_nodes(self):
-        """
-        bool vector indicating if a node is along the axis of symmetry or not
-        """
-        if getattr(self, "_axis_of_symmetry_nodes_bool", None) is None:
-            nx, ny, nz = self._shape_total_nodes
-            axis_x = np.zeros(nx, dtype=bool)
-            axis_x[0] = True
-
-            axis_y = np.zeros(ny, dtype=bool)
-            axis_y[0] = True
-            self._axis_of_symmetry_nodes_bool = np.kron(
-                np.ones(nz, dtype=bool), np.kron(axis_y, axis_x)
-            )
-        return self._axis_of_symmetry_nodes_bool
-
-    @property
     def _ishanging_nodes(self):
         """
         bool vector indicating if a node is hanging or not
         """
         if getattr(self, "_ishanging_nodes_bool", None) is None:
-            nx, ny, nz = self._shape_total_nodes
-            hang_x = np.zeros(nx, dtype=bool)
-            hang_x[0] = True
-
-            hang_y = np.zeros(ny, dtype=bool)
-            hang_y[-1] = True
-
-            hangingN = np.kron(
-                np.ones(nz, dtype=bool),
-                (
-                    np.kron(np.ones(ny, dtype=bool), hang_x)
-                    | np.kron(hang_y, np.ones(nx, dtype=bool))
-                ),
-            )
-
-            self._ishanging_nodes_bool = hangingN & ~self._axis_of_symmetry_nodes
+            if self.is_symmetric:
+                self._ishanging_nodes_bool = np.zeros(self._n_total_nodes, dtype=bool)
+            else:
+                is_hanging = np.zeros(self._shape_total_nodes, dtype=bool, order="F")
+                is_hanging[0] = True  # axis of symmetry nodes are hanging
+                is_hanging[0, 0] = False  # axis of symmetry nodes which are not hanging
+                is_hanging[:, -1] = True  # nodes at maximum theta that are duplicated
+                self._ishanging_nodes_bool = is_hanging.reshape(-1, order='F')
 
         return self._ishanging_nodes_bool
 
@@ -1259,6 +1152,84 @@ class CylindricalMesh(
                 self._edges_z = self._edges_z_full[~self._ishanging_edges_z, :]
         return self._edges_z
 
+    @property
+    def _is_boundary_face(self):
+        # outer most radial faces are a boundaries
+        is_br = np.zeros(self._shape_total_faces_x, dtype=bool, order="F")
+        is_br[-1] = True
+        is_br = is_br.reshape(-1, order="F")
+        # no theta face is on a boundary
+        is_bt = np.zeros(self._n_total_faces_y, dtype=bool)
+        # top and bottom faces are boundaries
+        is_bz = np.zeros(self.shape_faces_z, dtype=bool, order="F")
+        is_bz[:, :, [0, -1]] = True
+        is_bz = is_bz.reshape(-1, order="F")
+
+        is_b = np.r_[
+            is_br[~self._ishanging_faces_x],
+            is_bt[~self._ishanging_faces_y],
+            is_bz
+        ]
+        return is_b
+
+    @property
+    def boundary_faces(self):
+        return self.faces[self._is_boundary_face]
+
+    @property
+    def boundary_face_outward_normals(self):
+        normals = self.face_normals[self._is_boundary_face]
+        # need to switch the direction of the bottom z faces
+        # there should be n_cells_theta * n_cells_z, radial faces
+        # then n_cells_theta * n_cells_r, bottom faces,
+        n1 = self.shape_cells[1] * self.shape_cells[2]
+        n2 = self.shape_cells[0] * self.shape_cells[1]
+        normals[n1:n1+n2] *= -1
+        return normals
+
+    @property
+    def _is_boundary_node(self):
+        is_b = np.zeros(self._shape_total_nodes, dtype=bool, order='F')
+        # outward rs are boundary:
+        is_b[-1] = True
+        # top and bottom zs are boundary
+        is_b[:, :, [0, -1]] = True
+        is_b = is_b.reshape(-1, order='F')
+        is_b = is_b[~self._ishanging_nodes]
+        return is_b
+
+    @property
+    def boundary_nodes(self):
+        return self.nodes[self._is_boundary_node]
+
+    @property
+    def _is_boundary_edge(self):
+        # top and bottom radial edges are on the boundary
+        is_br = np.zeros(self._shape_total_edges_x, dtype=bool, order='F')
+        is_br[:, :, [0, -1]] = True
+        is_br = is_br.reshape(-1, order='F')
+        is_bt = np.zeros(self._shape_total_edges_y, dtype=bool, order='F')
+        # outside theta edges are on boundary
+        is_bt[-1] = True
+        # top and bottom theta edges are on boundary
+        is_bt[:, :, [0, -1]] = True
+        is_bt = is_bt.reshape(-1, order='F')
+        # outside z edges are on boundaries
+        is_bz = np.zeros(self._shape_total_edges_z, dtype=bool, order="F")
+        is_bz[-1] = True
+        is_bz = is_bz.reshape(-1, order="F")
+
+        is_b = np.r_[
+            is_br[~self._ishanging_edges_x],
+            is_bt[~self._ishanging_edges_y],
+            is_bz[~self._ishanging_edges_z]
+        ]
+        return is_b
+
+    @property
+    def boundary_edges(self):
+        return self.edges[self._is_boundary_edge]
+
     ####################################################
     # Operators
     ####################################################
@@ -1356,14 +1327,14 @@ class CylindricalMesh(
             return None
         if getattr(self, "_nodal_gradient", None) is None:
             if self.dim == 2:
-                Gr = sp.kron(sp.eye(self._shape_total_nodes[1]), ddx(self.shape_cells[0]))
-                Gphi = sp.kron(ddx(self.shape_cells[1]), sp.eye(self._shape_total_nodes[0]))
+                Gr = sp.kron(speye(self._shape_total_nodes[1]), ddx(self.shape_cells[0]))
+                Gphi = sp.kron(ddx(self.shape_cells[1]), speye(self._shape_total_nodes[0]))
                 Gz = None
             else:
-                Gr = kron3(sp.eye(self._shape_total_nodes[2]), sp.eye(self._shape_total_nodes[1]), ddx(self.shape_cells[0]))
-                Gphi = kron3(sp.eye(self._shape_total_nodes[2]), ddx(self.shape_cells[1]), sp.eye(self._shape_total_nodes[0]))
-                Gz = kron3(ddx(self.shape_cells[2]), sp.eye(self._shape_total_nodes[1]), sp.eye(self._shape_total_nodes[0]))
-            # stack them and remove the hanging edges
+                Gr = kron3(speye(self._shape_total_nodes[2]), speye(self._shape_total_nodes[1]), ddx(self.shape_cells[0]))
+                Gphi = kron3(speye(self._shape_total_nodes[2]), ddx(self.shape_cells[1]), speye(self._shape_total_nodes[0]))
+                Gz = kron3(ddx(self.shape_cells[2]), speye(self._shape_total_nodes[1]), speye(self._shape_total_nodes[0]))
+            # remove the hanging edges
             G = sp.vstack([Gr, Gphi, Gz])[~self._ishanging_edges]
 
             # apply inflation to map true nodes to hanging nodes with the same values
@@ -1372,39 +1343,38 @@ class CylindricalMesh(
         return self._nodal_gradient
 
     @property
+    def _edge_curl_stencil(self):
+        if self.is_symmetric:
+            nCx, nCy, nCz = self.shape_cells
+            # 1D Difference matricies
+            dr = sp.spdiags(
+                (np.ones((nCx + 1, 1)) * [-1, 1]).T, [-1, 0], nCx, nCx, format="csr"
+            )
+            dz = sp.spdiags(
+                (np.ones((nCz + 1, 1)) * [-1, 1]).T,
+                [0, 1],
+                nCz,
+                nCz + 1,
+                format="csr",
+            )
+            # 2D Difference matricies
+            Dr = sp.kron(sp.identity(nCz + 1), dr)
+            Dz = -sp.kron(dz, sp.identity(nCx))
+            return sp.vstack((Dz, Dr))
+        else:
+            stencil = super()._edge_curl_stencil
+            P_f = self._deflation_matrix('faces')
+            P_e = self._deflation_matrix('edges', as_ones=True)
+            return P_f @ stencil @ P_e.T
+
+    @property
     def edge_curl(self):
         if getattr(self, "_edge_curl", None) is None:
-            A = self.face_areas
-            E = self.edge_lengths
-
-            if self.is_symmetric:
-                nCx, nCy, nCz = self.shape_cells
-                # 1D Difference matricies
-                dr = sp.spdiags(
-                    (np.ones((nCx + 1, 1)) * [-1, 1]).T, [-1, 0], nCx, nCx, format="csr"
-                )
-                dz = sp.spdiags(
-                    (np.ones((nCz + 1, 1)) * [-1, 1]).T,
-                    [0, 1],
-                    nCz,
-                    nCz + 1,
-                    format="csr",
-                )
-                # 2D Difference matricies
-                Dr = sp.kron(sp.identity(nCz + 1), dr)
-                Dz = -sp.kron(dz, sp.identity(nCx))
-
-                # Edge curl operator
-                self._edge_curl = sdiag(1 / A) * sp.vstack((Dz, Dr)) * sdiag(E)
-            else:
-                self._edge_curl = (
-                    sdiag(1 / self.face_areas)
-                    * self._deflation_matrix("F", as_ones=False)
-                    * self._edge_curl_stencil
-                    * sdiag(self._edge_lengths_full)
-                    * self._deflation_matrix("E", as_ones=True).T
-                )
-
+            self._edge_curl = (
+                sdiag(1 / self.face_areas)
+                * self._edge_curl_stencil
+                * sdiag(self.edge_lengths)
+            )
         return self._edge_curl
 
     @property
@@ -1527,6 +1497,76 @@ class CylindricalMesh(
                 )
         return self._average_face_to_cell_vector
 
+    @property
+    def _average_node_to_face_x(self):
+        aveN2Fx = kron3(
+            av(self.shape_cells[2]),
+            av(self.shape_cells[1]),
+            speye(self._shape_total_nodes[0])
+        )
+        return aveN2Fx[~self._ishanging_faces_x]
+
+    @property
+    def _average_node_to_face_y(self):
+        aveN2Fy = kron3(
+            av(self.shape_cells[2]),
+            speye(self._shape_total_nodes[1]),
+            av(self.shape_cells[0]),
+        )
+        return aveN2Fy[~self._ishanging_faces_y]
+
+    @property
+    def average_node_to_face(self):
+        if getattr(self, "_average_node_to_face", None) is None:
+            ave = super().average_node_to_face
+            ave = ave @ self._deflation_matrix('nodes', as_ones=True).T
+            self._average_node_to_face = ave
+        return self._average_node_to_face
+
+    @property
+    def average_cell_to_face(self):
+        if getattr(self, "_average_cell_to_face", None) is None:
+            if self.dim == 3:
+                # average_cell_to_face_r
+                av_c2f_r = kron3(
+                    speye(self.shape_cells[2]),
+                    speye(self.shape_cells[1]),
+                    av_extrap(self.shape_cells[0]),
+                )[~self._ishanging_faces_x]
+
+                av_c2f_t = self._deflation_matrix('faces_y') @ kron3(
+                    speye(self.shape_cells[2]),
+                    av_extrap(self.shape_cells[1]),
+                    speye(self.shape_cells[0]),
+                )
+
+                av_c2f_z = kron3(
+                    av_extrap(self.shape_cells[2]),
+                    speye(self.shape_cells[1]),
+                    speye(self.shape_cells[0]),
+                )
+
+                self._average_cell_to_face = sp.vstack(
+                    (av_c2f_r, av_c2f_t, av_c2f_z),
+                    format="csr",
+                )
+        return self._average_cell_to_face
+
+    @property
+    def project_face_to_boundary_face(self):
+        P = speye(self.n_faces)
+        return P[self._is_boundary_face]
+
+    @property
+    def project_node_to_boundary_node(self):
+        P = speye(self.n_nodes)
+        return P[self._is_boundary_node]
+
+    @property
+    def project_edge_to_boundary_edge(self):
+        P = speye(self.n_edges)
+        return P[self._is_boundary_edge]
+
     ####################################################
     # Deflation Matrices
     ####################################################
@@ -1549,11 +1589,13 @@ class CylindricalMesh(
             "edges_z",
             "cell_centers",
         ]:
-            raise AssertionError(
+            raise ValueError(
                 "Location must be a grid location, not {}".format(location)
             )
         if location == "cell_centers":
-            return speye(self.nC)
+            return speye(self.n_cells)
+        if self.is_symmetric and location == 'nodes':
+            return sp.csr_matrix((self.n_nodes, self._n_total_nodes))
 
         elif location in ["edges", "faces"]:
             if self.is_symmetric:
@@ -1582,12 +1624,6 @@ class CylindricalMesh(
 
         values = list(hang.values())
         entries = np.ones(len(values))
-
-        if not as_ones and len(hang) > 0:
-            repeats = set(values)
-            repeat_locs = [(np.r_[values] == repeat).nonzero()[0] for repeat in repeats]
-            for loc in repeat_locs:
-                entries[loc] = 1.0 / len(loc)
 
         Hang = sp.csr_matrix(
             (entries, (values, list(hang.keys()))),
@@ -1666,12 +1702,14 @@ class CylindricalMesh(
             zeros_outside = kwargs["zerosOutside"]
 
         location_type = self._parse_location_type(location_type)
-
         if self.is_symmetric and location_type in ["edges_x", "edges_z", "faces_y"]:
-            raise Exception(
+            raise ValueError(
                 "Symmetric CylindricalMesh does not support {0!s} interpolation, "
                 "as this variable does not exist.".format(location_type)
             )
+
+        loc = as_array_n_by_dim(loc, self.dim).copy()
+        loc[:, 1] = loc[:, 1] % (2 * np.pi)
 
         if location_type in ["cell_centers_x", "cell_centers_y", "cell_centers_z"]:
             Q = interpolation_matrix(loc, *self.get_tensor("cell_centers"))
@@ -1682,15 +1720,135 @@ class CylindricalMesh(
                 Q = sp.hstack([Q])
             elif location_type[-1] == "z":
                 Q = sp.hstack([Z, Q])
-
-            if zeros_outside:
-                indZeros = np.logical_not(self.is_inside(loc))
-                loc[indZeros, :] = np.array([v.mean() for v in self.get_tensor("CC")])
-                Q[indZeros, :] = 0
-
-            return Q.tocsr()
-
-        return self._getInterpolationMat(loc, location_type, zeros_outside)
+            Q = Q.tocsr()
+        elif location_type == 'nodes':
+            rtz = [
+                self.nodes_x,
+                self._nodes_y_full
+            ]
+            if self.dim == 3:
+                rtz.append(self.nodes_z)
+            Q = interpolation_matrix(loc, *rtz)
+            Q = Q @ self._deflation_matrix('nodes', as_ones=True).T
+        elif location_type == 'cell_centers':
+            # theta wrap around interpolation
+            rtz = [
+                self.cell_centers_x,
+                np.r_[
+                    self.cell_centers_y[-1] - 2 * np.pi,
+                    self.cell_centers_y,
+                    self.cell_centers_y[0] + 2 * np.pi
+                ],
+            ]
+            if self.dim == 3:
+                rtz.append(self.cell_centers_z)
+            Q = interpolation_matrix(loc, *rtz)
+            irs, its, izs = np.unravel_index(Q.indices, self.shape_cells + np.r_[0, 2, 0], order='F')
+            its = (its - 1) % self.shape_cells[1]
+            new_indices = np.ravel_multi_index((irs, its, izs), self.shape_cells, order='F')
+            Q = sp.csr_matrix((Q.data, new_indices, Q.indptr), shape=(Q.shape[0], self.n_cells))
+        else:
+            ind = {"x": 0, "y": 1, "z": 2}[location_type[-1]]
+            if self.dim < ind:
+                raise ValueError("mesh is not high enough dimension.")
+            if "f" in location_type.lower():
+                items = (self.nFx, self.nFy, self.nFz)[: self.dim]
+            else:
+                items = (self.nEx, self.nEy, self.nEz)[: self.dim]
+            components = [spzeros(loc.shape[0], n) for n in items]
+            if location_type == 'faces_x':
+                # theta wrap around interpolation
+                nodes_x = self.nodes_x if self.is_symmetric else self.nodes_x[1:]
+                rtz = [
+                    nodes_x,
+                    np.r_[
+                        self.cell_centers_y[-1] - 2 * np.pi,
+                        self.cell_centers_y,
+                        self.cell_centers_y[0] + 2 * np.pi
+                    ],
+                ]
+                if self.dim == 3:
+                    rtz.append(self.cell_centers_z)
+                Q = interpolation_matrix(loc, *rtz)
+                # unwrap the theta indices
+                irs, its, izs = np.unravel_index(Q.indices, self.shape_faces_x + np.r_[0, 2, 0], order='F')
+                its = (its - 1) % self.shape_faces_x[1]
+                new_indices = np.ravel_multi_index((irs, its, izs), self.shape_faces_x, order='F')
+                Q = sp.csr_matrix((Q.data, new_indices, Q.indptr), shape=(Q.shape[0], self.n_faces_x))
+                components[0] = Q
+            elif location_type == 'faces_y':
+                rtz = [
+                    self.cell_centers_x,
+                    self._nodes_y_full,
+                ]
+                if self.dim == 3:
+                    rtz.append(self.cell_centers_z)
+                Q = interpolation_matrix(loc, *rtz)
+                Q = Q @ self._deflation_matrix('faces_y', as_ones=True).T
+                components[1] = Q
+            elif location_type == 'faces_z':
+                # theta wrap around interpolation
+                rtz = [
+                    self.cell_centers_x,
+                    np.r_[
+                        self.cell_centers_y[-1] - 2 * np.pi,
+                        self.cell_centers_y,
+                        self.cell_centers_y[0] + 2 * np.pi
+                    ],
+                    self.nodes_z
+                ]
+                Q = interpolation_matrix(loc, *rtz)
+                # unwrap the theta indices
+                irs, its, izs = np.unravel_index(Q.indices, self.shape_faces_z + np.r_[0, 2, 0], order='F')
+                its = (its - 1) % self.shape_faces_z[1]
+                new_indices = np.ravel_multi_index((irs, its, izs), self.shape_faces_z, order='F')
+                Q = sp.csr_matrix((Q.data, new_indices, Q.indptr), shape=(Q.shape[0], self.n_faces_z))
+                components[2] = Q
+            elif location_type == 'edges_x':
+                rtz = [
+                    self.cell_centers_x,
+                    self._nodes_y_full,
+                ]
+                if self.dim == 3:
+                    rtz.append(self.nodes_z)
+                Q = interpolation_matrix(loc, *rtz)
+                Q = Q @ self._deflation_matrix('edges_x', as_ones=True).T
+                components[0] = Q
+            elif location_type == 'edges_y':
+                # theta wrap around
+                nodes_x = self.nodes_x if self.is_symmetric else self.nodes_x[1:]
+                rtz = [
+                    nodes_x,
+                    np.r_[
+                        self.cell_centers_y[-1] - 2 * np.pi,
+                        self.cell_centers_y,
+                        self.cell_centers_y[0] + 2 * np.pi
+                    ],
+                ]
+                if self.dim == 3:
+                    rtz.append(self.nodes_z)
+                Q = interpolation_matrix(loc, *rtz)
+                irs, its, izs = np.unravel_index(Q.indices, self.shape_edges_y + np.r_[0, 2, 0], order='F')
+                its = (its - 1) % self.shape_edges_y[1]
+                new_indices = np.ravel_multi_index((irs, its, izs), self.shape_edges_y, order='F')
+                Q = sp.csr_matrix((Q.data, new_indices, Q.indptr), shape=(Q.shape[0], self.n_edges_y))
+                components[1] = Q
+            elif location_type == 'edges_z':
+                rtz = [
+                    self.nodes_x,
+                    self._nodes_y_full,
+                    self.cell_centers_z
+                ]
+                Q = interpolation_matrix(loc, *rtz)
+                Q = Q @ self._deflation_matrix('edges_z', as_ones=True).T
+                components[2] = Q
+            else:
+                raise ValueError("Unrecognized location type")
+            # remove any zero blocks (hstack complains)
+            Q = sp.hstack([comp for comp in components if comp.shape[1] > 0])
+        if zeros_outside:
+            Q[~self.is_inside(loc), :] = 0
+        return Q
 
     def cartesian_grid(self, location_type="cell_centers", theta_shift=None, **kwargs):
         """
