@@ -925,7 +925,8 @@ class CylindricalMesh(
         """
         if getattr(self, "_ishanging_edges_y_bool", None) is None:
             hang_y = np.zeros(self._shape_total_edges_y, dtype=bool, order="F")
-            hang_y[0] = True
+            if not self.is_symmetric:
+                hang_y[0] = True
             self._ishanging_edges_y_bool = hang_y.reshape(-1, order="F")
         return self._ishanging_edges_y_bool
 
@@ -1592,9 +1593,9 @@ class CylindricalMesh(
                 "Location must be a grid location, not {}".format(location)
             )
         if location == "cell_centers":
-            return speye(self.nC)
+            return speye(self.n_cells)
         if self.is_symmetric and location == 'nodes':
-            return speye(self.n_nodes)
+            return sp.csr_matrix((self.n_nodes, self._n_total_nodes))
 
         elif location in ["edges", "faces"]:
             if self.is_symmetric:
@@ -1701,14 +1702,14 @@ class CylindricalMesh(
             zeros_outside = kwargs["zerosOutside"]
 
         location_type = self._parse_location_type(location_type)
-
         if self.is_symmetric and location_type in ["edges_x", "edges_z", "faces_y"]:
-            raise KeyError(
+            raise ValueError(
                 "Symmetric CylindricalMesh does not support {0!s} interpolation, "
                 "as this variable does not exist.".format(location_type)
             )
 
-        loc = as_array_n_by_dim(loc, self.dim)
+        loc = as_array_n_by_dim(loc, self.dim).copy()
+        loc[:, 1] = loc[:, 1] % (2 * np.pi)
 
         if location_type in ["cell_centers_x", "cell_centers_y", "cell_centers_z"]:
             Q = interpolation_matrix(loc, *self.get_tensor("cell_centers"))
@@ -1719,30 +1720,135 @@ class CylindricalMesh(
                 Q = sp.hstack([Q])
             elif location_type[-1] == "z":
                 Q = sp.hstack([Z, Q])
-
-            if zeros_outside:
-                indZeros = np.logical_not(self.is_inside(loc))
-                loc[indZeros, :] = np.array([v.mean() for v in self.get_tensor("CC")])
-                Q[indZeros, :] = 0
-
-            return Q.tocsr()
+            Q = Q.tocsr()
         elif location_type == 'nodes':
-            if self.is_symmetric and self.dim == 3:
-                rtz = [self.nodes_x, self.nodes_z]
-                loc = loc[:, [0, -1]]
+            rtz = [
+                self.nodes_x,
+                self._nodes_y_full
+            ]
+            if self.dim == 3:
+                rtz.append(self.nodes_z)
+            Q = interpolation_matrix(loc, *rtz)
+            Q = Q @ self._deflation_matrix('nodes', as_ones=True).T
+        elif location_type == 'cell_centers':
+            # theta wrap around interpolation
+            rtz = [
+                self.cell_centers_x,
+                np.r_[
+                    self.cell_centers_y[-1] - 2 * np.pi,
+                    self.cell_centers_y,
+                    self.cell_centers_y[0] + 2 * np.pi
+                ],
+            ]
+            if self.dim == 3:
+                rtz.append(self.cell_centers_z)
+            Q = interpolation_matrix(loc, *rtz)
+            irs, its, izs = np.unravel_index(Q.indices, self.shape_cells + np.r_[0, 2, 0], order='F')
+            its = (its - 1) % self.shape_cells[1]
+            new_indices = np.ravel_multi_index((irs, its, izs), self.shape_cells, order='F')
+            Q = sp.csr_matrix((Q.data, new_indices, Q.indptr), shape=(Q.shape[0], self.n_cells))
+        else:
+            ind = {"x": 0, "y": 1, "z": 2}[location_type[-1]]
+            if self.dim < ind:
+                raise ValueError("mesh is not high enough dimension.")
+            if "f" in location_type.lower():
+                items = (self.nFx, self.nFy, self.nFz)[: self.dim]
             else:
-                rtz = [self.nodes_x, self._nodes_y_full]
+                items = (self.nEx, self.nEy, self.nEz)[: self.dim]
+            components = [spzeros(loc.shape[0], n) for n in items]
+            if location_type == 'faces_x':
+                # theta wrap around interpolation
+                nodes_x = self.nodes_x if self.is_symmetric else self.nodes_x[1:]
+                rtz = [
+                    nodes_x,
+                    np.r_[
+                        self.cell_centers_y[-1] - 2 * np.pi,
+                        self.cell_centers_y,
+                        self.cell_centers_y[0] + 2 * np.pi
+                    ],
+                ]
+                if self.dim == 3:
+                    rtz.append(self.cell_centers_z)
+                Q = interpolation_matrix(loc, *rtz)
+                # unwrap the theta indices
+                irs, its, izs = np.unravel_index(Q.indices, self.shape_faces_x + np.r_[0, 2, 0], order='F')
+                its = (its - 1) % self.shape_faces_x[1]
+                new_indices = np.ravel_multi_index((irs, its, izs), self.shape_faces_x, order='F')
+                Q = sp.csr_matrix((Q.data, new_indices, Q.indptr), shape=(Q.shape[0], self.n_faces_x))
+                components[0] = Q
+            elif location_type == 'faces_y':
+                rtz = [
+                    self.cell_centers_x,
+                    self._nodes_y_full,
+                ]
+                if self.dim == 3:
+                    rtz.append(self.cell_centers_z)
+                Q = interpolation_matrix(loc, *rtz)
+                Q = Q @ self._deflation_matrix('faces_y', as_ones=True).T
+                components[1] = Q
+            elif location_type == 'faces_z':
+                # theta wrap around interpolation
+                rtz = [
+                    self.cell_centers_x,
+                    np.r_[
+                        self.cell_centers_y[-1] - 2 * np.pi,
+                        self.cell_centers_y,
+                        self.cell_centers_y[0] + 2 * np.pi
+                    ],
+                    self.nodes_z
+                ]
+                Q = interpolation_matrix(loc, *rtz)
+                # unwrap the theta indices
+                irs, its, izs = np.unravel_index(Q.indices, self.shape_faces_z + np.r_[0, 2, 0], order='F')
+                its = (its - 1) % self.shape_faces_z[1]
+                new_indices = np.ravel_multi_index((irs, its, izs), self.shape_faces_z, order='F')
+                Q = sp.csr_matrix((Q.data, new_indices, Q.indptr), shape=(Q.shape[0], self.n_faces_z))
+                components[2] = Q
+            elif location_type == 'edges_x':
+                rtz = [
+                    self.cell_centers_x,
+                    self._nodes_y_full,
+                ]
                 if self.dim == 3:
                     rtz.append(self.nodes_z)
-            Q = interpolation_matrix(loc, *rtz)
-            if zeros_outside:
-                indZeros = np.logical_not(self.is_inside(loc))
-                Q[indZeros, :] = 0
-            if not self.is_symmetric:
-                Q = Q * self._deflation_matrix('nodes', as_ones=True).T
-            return Q
-        else:
-            return self._getInterpolationMat(loc, location_type, zeros_outside)
+                Q = interpolation_matrix(loc, *rtz)
+                Q = Q @ self._deflation_matrix('edges_x', as_ones=True).T
+                components[0] = Q
+            elif location_type == 'edges_y':
+                # theta wrap around
+                nodes_x = self.nodes_x if self.is_symmetric else self.nodes_x[1:]
+                rtz = [
+                    nodes_x,
+                    np.r_[
+                        self.cell_centers_y[-1] - 2 * np.pi,
+                        self.cell_centers_y,
+                        self.cell_centers_y[0] + 2 * np.pi
+                    ],
+                ]
+                if self.dim == 3:
+                    rtz.append(self.nodes_z)
+                Q = interpolation_matrix(loc, *rtz)
+                irs, its, izs = np.unravel_index(Q.indices, self.shape_edges_y + np.r_[0, 2, 0], order='F')
+                its = (its - 1) % self.shape_edges_y[1]
+                new_indices = np.ravel_multi_index((irs, its, izs), self.shape_edges_y, order='F')
+                Q = sp.csr_matrix((Q.data, new_indices, Q.indptr), shape=(Q.shape[0], self.n_edges_y))
+                components[1] = Q
+            elif location_type == 'edges_z':
+                rtz = [
+                    self.nodes_x,
+                    self._nodes_y_full,
+                    self.cell_centers_z
+                ]
+                Q = interpolation_matrix(loc, *rtz)
+                Q = Q @ self._deflation_matrix('edges_z', as_ones=True).T
+                components[2] = Q
+            else:
+                raise ValueError("Unrecognized location type")
+            # remove any zero blocks (hstack complains)
+            Q = sp.hstack([comp for comp in components if comp.shape[1] > 0])
+        if zeros_outside:
+            Q[~self.is_inside(loc), :] = 0
+        return Q
 
     def cartesian_grid(self, location_type="cell_centers", theta_shift=None, **kwargs):
         """

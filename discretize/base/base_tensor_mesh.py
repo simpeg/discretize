@@ -416,10 +416,13 @@ class BaseTensorMesh(BaseRegularMesh):
 
     @property
     def faces(self):
-        faces = self.faces_x
-        if self.dim > 1:
+        if self.faces_x is not None:
+            faces = self.faces_x
+        else:
+            faces = np.empty((0, self.dim))
+        if self.dim > 1 and self.faces_y is not None:
             faces = np.r_[faces, self.faces_y]
-        if self.dim > 2:
+        if self.dim > 2 and self.faces_z is not None:
             faces = np.r_[faces, self.faces_z]
         return faces
 
@@ -521,10 +524,13 @@ class BaseTensorMesh(BaseRegularMesh):
 
     @property
     def edges(self):
-        edges = self.edges_x
-        if self.dim > 1:
+        if self.edges_x is not None:
+            edges = self.edges_x
+        else:
+            edges = np.empty((0, self.dim))
+        if self.dim > 1 and self.edges_y is not None:
             edges = np.r_[edges, self.edges_y]
-        if self.dim > 2:
+        if self.dim > 2 and self.edges_z is not None:
             edges = np.r_[edges, self.edges_z]
         return edges
 
