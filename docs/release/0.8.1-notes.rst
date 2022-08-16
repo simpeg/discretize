@@ -46,11 +46,11 @@ Contributors
 
 Pull requests
 =============
-* `#280 <https://github.com/simpeg/discretize/pull/263>`__: Nodal_Gradient for the CylindricalMesh
-* `#281 <https://github.com/simpeg/discretize/pull/277>`__: Cyl vtk
-* `#283 <https://github.com/simpeg/discretize/pull/278>`__: add python 3.10 to testing suite
-* `#284 <https://github.com/simpeg/discretize/pull/278>`__: Improve load time
-* `#285 <https://github.com/simpeg/discretize/pull/278>`__: zeros_outside
-* `#286 <https://github.com/simpeg/discretize/pull/278>`__: Cell node tree
-* `#288 <https://github.com/simpeg/discretize/pull/278>`__: Allow np.int_
-* `#289 <https://github.com/simpeg/discretize/pull/278>`__: 0.8.1 Release
+* `#280 <https://github.com/simpeg/discretize/pull/280>`__: Nodal_Gradient for the CylindricalMesh
+* `#281 <https://github.com/simpeg/discretize/pull/281>`__: Cyl vtk
+* `#283 <https://github.com/simpeg/discretize/pull/283>`__: add python 3.10 to testing suite
+* `#284 <https://github.com/simpeg/discretize/pull/284>`__: Improve load time
+* `#285 <https://github.com/simpeg/discretize/pull/285>`__: zeros_outside
+* `#286 <https://github.com/simpeg/discretize/pull/286>`__: Cell node tree
+* `#288 <https://github.com/simpeg/discretize/pull/288>`__: Allow np.int_
+* `#289 <https://github.com/simpeg/discretize/pull/289>`__: 0.8.1 Release
