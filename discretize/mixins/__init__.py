@@ -27,7 +27,7 @@ Other Optional Classes
 
   Slicer
 """
-import importlib
+import importlib.util
 from .mesh_io import TensorMeshIO, TreeMeshIO, SimplexMeshIO
 
 AVAILABLE_MIXIN_CLASSES = []
