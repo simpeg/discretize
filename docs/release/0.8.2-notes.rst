@@ -1,0 +1,24 @@
+.. currentmodule:: discretize
+
+.. _0.8.1_notes:
+
+===================================
+``discretize`` 0.8.1 Release Notes
+===================================
+
+This patch release fixes a small bug in importing the ``importlib.util`` library
+
+Bug Fixes
+---------
+
+ - ``importlib.util`` import should now work
+
+
+Contributors
+============
+
+* @jcapriot
+
+Pull requests
+=============
+* `#290 <https://github.com/simpeg/discretize/pull/290>`__: Importlib import fix
