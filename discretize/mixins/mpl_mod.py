@@ -2,13 +2,17 @@ import numpy as np
 import warnings
 from discretize.utils import mkvc, ndgrid
 
-import matplotlib
-import matplotlib.pyplot as plt
-from matplotlib.widgets import Slider
-from matplotlib.collections import PolyCollection, LineCollection
-from matplotlib import rc_params
-from mpl_toolkits.mplot3d.art3d import Line3DCollection
 import discretize
+
+def load_matplotlib():
+    """Lazy load principal matplotlib routines.
+
+    This is not beautiful. But if matplotlib is installed, but never used, it
+    reduces load time significantly.
+    """
+    import matplotlib
+    import matplotlib.pyplot as plt
+    return matplotlib, plt
 
 
 class InterfaceMPL(object):
@@ -134,6 +138,8 @@ class InterfaceMPL(object):
         >>> M.plot_grid()
         >>> plt.show()
         """
+        matplotlib, plt = load_matplotlib()
+        from matplotlib import rc_params  # lazy loaded
         mesh_type = self._meshType.lower()
         plotters = {
             "tree": self.__plot_grid_tree,
@@ -265,6 +271,8 @@ class InterfaceMPL(object):
         >>> M.plot_image(v, annotation_color='k')
         >>> plt.show()
         """
+        matplotlib, plt = load_matplotlib()
+
         mesh_type = self._meshType.lower()
         plotters = {
             "tree": self.__plot_image_tree,
@@ -472,6 +480,8 @@ class InterfaceMPL(object):
         >>> plt.show()
 
         """
+        matplotlib, plt = load_matplotlib()
+
         mesh_type = self._meshType.lower()
         plotters = {
             "tree": self.__plot_slice_tree,
@@ -655,6 +665,8 @@ class InterfaceMPL(object):
         first.
 
         """
+        _, plt = load_matplotlib()
+
         mesh_type = self._meshType.lower()
         if mesh_type != "tensor":
             raise NotImplementedError(
@@ -1056,6 +1068,7 @@ class InterfaceMPL(object):
         stream_thickness=None,
     ):
         """Common function for plotting an image of a TensorMesh"""
+        matplotlib, plt = load_matplotlib()
 
         if ax is None:
             plt.figure()
@@ -1127,7 +1140,7 @@ class InterfaceMPL(object):
             U, V = self.reshape(v.reshape((self.nC, -1), order="F"), "CC", "CC", "M")
 
             tMi = self.__class__(h=[hx, hy], origin=np.r_[origin_x, origin_y])
-            P = self.get_interpolation_matrix(tMi.gridCC, "CC", zerosOutside=True)
+            P = self.get_interpolation_matrix(tMi.gridCC, "CC", zeros_outside=True)
 
             Ui = tMi.reshape(P * mkvc(U), "CC", "CC", "M")
             Vi = tMi.reshape(P * mkvc(V), "CC", "CC", "M")
@@ -1234,7 +1247,7 @@ class InterfaceMPL(object):
         szSliceDim = self.shape_cells[dim_ind]  #: Size of the sliced dimension
         if ind is None:
             ind = szSliceDim // 2
-        if not isinstance(ind, int):
+        if not isinstance(ind, (np.integer, int)):
             raise TypeError("ind must be an integer")
 
         def getIndSlice(v):
@@ -1312,6 +1325,8 @@ class InterfaceMPL(object):
 
     # CylindricalMesh plotting
     def __plotCylTensorMesh(self, plotType, *args, **kwargs):
+        matplotlib, plt = load_matplotlib()
+
         if not self.is_symmetric:
             raise NotImplementedError("We have not yet implemented this type of view.")
         if plotType not in ["plot_image", "plot_grid"]:
@@ -1396,6 +1411,8 @@ class InterfaceMPL(object):
         return out
 
     def __plot_grid_cyl(self, *args, **kwargs):
+        _, plt = load_matplotlib()
+
         if self.is_symmetric:
             return self.__plotCylTensorMesh("plot_grid", *args, **kwargs)
 
@@ -1473,6 +1490,7 @@ class InterfaceMPL(object):
         return mesh2D.plot_grid(*args, **kwargs)
 
     def __plotGridZSlice(self, *args, **kwargs):
+        _, plt = load_matplotlib()
         # https://github.com/matplotlib/matplotlib/issues/312
         ax = kwargs.get("ax", None)
         if ax is not None:
@@ -1710,6 +1728,9 @@ class InterfaceMPL(object):
         edges_z=False,
         **kwargs,
     ):
+        from matplotlib.collections import LineCollection  # Lazy loaded
+        from mpl_toolkits.mplot3d.art3d import Line3DCollection  # Lazy loaded
+
         if faces:
             faces_x = faces_y = True
             if self.dim == 3:
@@ -1883,6 +1904,8 @@ class InterfaceMPL(object):
         quiver_opts=None,
         **kwargs,
     ):
+        from matplotlib.collections import PolyCollection  # lazy loaded
+
         if self.dim == 3:
             raise NotImplementedError(
                 "plotImage is not implemented for 3D TreeMesh, please use plotSlice"
@@ -2013,15 +2036,14 @@ class InterfaceMPL(object):
         szSliceDim = len(self.h[normalInd])
         if ind is None:
             ind = szSliceDim // 2
+        if not isinstance(ind, (np.integer, int)):
+            raise ValueError("ind must be an integer")
 
         cc_tensor = [None, None, None]
         for i in range(3):
             cc_tensor[i] = np.cumsum(np.r_[self.origin[i], self.h[i]])
             cc_tensor[i] = (cc_tensor[i][1:] + cc_tensor[i][:-1]) * 0.5
         slice_loc = cc_tensor[normalInd][ind]
-
-        if not isinstance(ind, int):
-            raise ValueError("ind must be an integer")
 
         # create a temporary TreeMesh with the slice through
         temp_mesh = discretize.TreeMesh(h2d, x2d)
@@ -2123,7 +2145,7 @@ class InterfaceMPL(object):
     ):
         if lines:
             if self.dim == 2:
-                ax.triplot(*self.nodes.T, self._simplices, color=color, linewidth=linewidth)
+                ax.triplot(*self.nodes.T, self.simplices, color=color, linewidth=linewidth)
             elif self.dim == 3:
                 edge_nodes = self._edges
                 n_edges = edge_nodes.shape[0]
@@ -2179,12 +2201,12 @@ class InterfaceMPL(object):
                 aveOp += "_vector"
             v = getattr(self, aveOp) * v
         if view == "vec":
-            v = v.reshape((self.n_cells, 2))
+            v = v.reshape((self.n_cells, 2), order='F')
         elif "x" in v_type:
-            v = v.reshape((self.n_cells, 2))
+            v = v.reshape((self.n_cells, 2), order='F')
             v = v[:, 0]
         elif "y" in v_type:
-            v = v.reshape((self.n_cells, 2))
+            v = v.reshape((self.n_cells, 2), order='F')
             v = v[:, 1]
 
         if view in ["real", "imag", "abs"]:
@@ -2315,6 +2337,8 @@ class Slicer(object):
         pcolor_opts=None,
     ):
         """Initialize interactive figure."""
+        _, plt = load_matplotlib()
+        from matplotlib.widgets import Slider  # Lazy loaded
 
         # Add pcolor_opts to self
         self.pc_props = pcolor_opts if pcolor_opts is not None else {}
@@ -2571,6 +2595,7 @@ class Slicer(object):
 
     def onscroll(self, event):
         """Update index and data when scrolling."""
+        _, plt = load_matplotlib()
 
         # Get scroll direction
         if event.button == "up":

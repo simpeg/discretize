@@ -54,19 +54,28 @@ and PVGeo_:
 """
 import os
 import numpy as np
+from discretize.utils import cyl2cart
 
 # from ..utils import cyl2cart
 
-import vtk as _vtk
-import vtk.util.numpy_support as _nps
-from vtk import VTK_VERSION as _vtk_version
-from vtk import vtkXMLRectilinearGridWriter as _vtkRectWriter
-from vtk import vtkXMLUnstructuredGridWriter as _vtkUnstWriter
-from vtk import vtkXMLStructuredGridWriter as _vtkStrucWriter
-from vtk import vtkXMLRectilinearGridReader as _vtkRectReader
-from vtk import vtkXMLUnstructuredGridReader as _vtkUnstReader
-
 import warnings
+
+
+def load_vtk(extra=None):
+    """Lazy load principal VTK routines.
+
+    This is not beautiful. But if VTK is installed, but never used, it reduces
+    load time significantly.
+    """
+    import vtk as _vtk
+    import vtk.util.numpy_support as _nps
+    if extra:
+        if isinstance(extra, str):
+            return _vtk, _nps, getattr(_vtk, extra)
+        else:
+            return _vtk, _nps, [getattr(_vtk, e) for e in extra]
+    else:
+        return _vtk, _nps
 
 
 def assign_cell_data(vtkDS, models=None):
@@ -82,6 +91,8 @@ def assign_cell_data(vtkDS, models=None):
         Name('s) and array('s). Match number of cells
 
     """
+    _, _nps = load_vtk()
+
     nc = vtkDS.GetNumberOfCells()
     if models is not None:
         for name, mod in models.items():
@@ -192,6 +203,8 @@ class InterfaceVTK(object):
             Name('s) and array('s). Match number of cells
 
         """
+        _vtk, _nps = load_vtk()
+
         # Make the data parts for the vtu object
         # Points
         ptsMat = np.vstack((mesh.gridN, mesh.gridhN))
@@ -257,6 +270,8 @@ class InterfaceVTK(object):
             Name('s) and array('s). Match number of cells
 
         """
+        _vtk, _nps = load_vtk()
+
         # Make the data parts for the vtu object
         # Points
         pts = mesh.nodes
@@ -282,10 +297,11 @@ class InterfaceVTK(object):
         # Assign the model('s) to the object
         return assign_cell_data(output, models=models)
 
-
     @staticmethod
     def __create_structured_grid(ptsMat, dims, models=None):
         """An internal helper to build out structured grids"""
+        _vtk, _nps = load_vtk()
+
         # Adjust if result was 2D:
         if ptsMat.shape[1] == 2:
             # Figure out which dim is null
@@ -335,6 +351,8 @@ class InterfaceVTK(object):
             Name('s) and array('s). Match number of cells
 
         """
+        _vtk, _nps = load_vtk()
+
         # Deal with dimensionalities
         if mesh.dim >= 1:
             vX = mesh.nodes_x
@@ -385,15 +403,135 @@ class InterfaceVTK(object):
         )
 
     def __cyl_mesh_to_vtk(mesh, models=None):
-        """This treats the CylindricalMesh defined in cylindrical coordinates
-        :math:`(r, \theta, z)` and transforms it to cartesian coordinates.
+        """
+        Constructs an vtkUnstructuredGrid made of rational Bezier hexahedrons and wedges.
+        Wedges happen on the very internal layer about r=0, and hexes occur elsewhere.
         """
         # # Points
-        # ptsMat = cyl2cart(mesh.gridN)
-        # return InterfaceVTK.__create_structured_grid(ptsMat, mesh.shape_cells, models=models)
-        raise NotImplementedError(
-            "`CylindricalMesh`s are not currently supported for VTK conversion."
+        P = mesh._deflation_matrix('nodes', as_ones=True).T.tocsr()
+
+        if np.any(mesh.h[1] >= np.pi):
+            raise NotImplementedError(
+                "Exporting cylindrical meshes to vtk with angles larger than 180 degrees"
+                " is not yet supported."
+            )
+        # calculate control points
+        dphis_half = mesh.h[1]/2
+        phi_controls = mesh.nodes_y + dphis_half
+        if mesh.nodes_x[0] == 0.0:
+            Rs, Phis, Zs = np.meshgrid(mesh.nodes_x[1:], phi_controls, mesh.nodes_z, indexing='ij')
+        else:
+            Rs, Phis, Zs = np.meshgrid(mesh.nodes_x, phi_controls, mesh.nodes_z, indexing='ij')
+        Rs /= np.cos(dphis_half)[None, :, None]
+
+        control_nodes = np.c_[Rs.reshape(-1, order='F'), Phis.reshape(-1, order='F'), Zs.reshape(-1, order='F')]
+
+        cells = np.arange(mesh.n_cells).reshape(mesh.shape_cells, order="F")
+        if mesh.nodes_x[0] == 0.0:
+            wedge_cells = cells[0].reshape(-1, order='F')
+            hex_cells = (cells[1:]).reshape(-1, order='F')
+        else:
+            hex_cells = cells.reshape(-1, order='F')
+
+        # Hex Cells...
+        # calculate indices
+        ir, it, iz = np.unravel_index(hex_cells, shape=mesh.shape_cells, order='F')
+
+        irs = np.stack([ir, ir, ir+1, ir+1, ir, ir, ir+1, ir+1], axis=-1)
+        its = np.stack([it+1, it, it, it+1, it+1, it, it, it+1], axis=-1)
+        izs = np.stack([iz, iz, iz, iz, iz+1, iz+1, iz+1, iz+1], axis=-1)
+        i_hex_nodes = np.ravel_multi_index((irs, its, izs), mesh._shape_total_nodes, order='F')
+        i_hex_nodes = (P.indices[i_hex_nodes])
+
+        if mesh.nodes_x[0] == 0.0:
+            irs = np.stack([ir-1, ir, ir-1, ir], axis=-1)
+        else:
+            irs = np.stack([ir, ir+1, ir, ir+1], axis=-1)
+        its = np.stack([it, it, it, it], axis=-1)
+        izs = np.stack([iz, iz, iz+1, iz+1], axis=-1)
+        i_hex_control_nodes = np.ravel_multi_index((irs, its, izs), Rs.shape, order='F')
+
+        if mesh.nodes_x[0] == 0.0:
+            # Wedge Cells nodes
+            # put control points along radial edge for halfway points on the edges...
+            Phis, Zs = np.meshgrid(mesh.nodes_y, mesh.nodes_z, indexing='ij')
+            Rhalfs = np.full_like(Phis, mesh.nodes_x[1]*0.5)
+            wedge_control_nodes = np.c_[Rhalfs.reshape(-1, order='F'), Phis.reshape(-1, order='F'), Zs.reshape(-1, order='F')]
+
+            # indices for wedge nodes: for cell 0
+            ir, it, iz = np.unravel_index(wedge_cells, shape=mesh.shape_cells, order='F')
+            irs = np.stack([ir, ir+1, ir+1, ir, ir+1, ir+1], axis=-1)
+            its = np.stack([it, it, it+1, it, it, it+1], axis=-1)
+            izs = np.stack([iz, iz, iz, iz+1, iz+1, iz+1], axis=-1)
+            i_wedge_nodes = np.ravel_multi_index((irs, its, izs), mesh._shape_total_nodes, order='F')
+            i_wedge_nodes = (P.indices[i_wedge_nodes])
+
+            its = np.stack([it, it+1, it, it+1], axis=-1)
+            izs = np.stack([iz, iz, iz+1, iz+1], axis=-1)
+            # wrap mode for the duplicated wedge control nodes
+            i_wscn = np.ravel_multi_index((its, izs), Rhalfs.shape, order='F', mode='wrap') + len(control_nodes)
+
+            irs = np.stack([ir, ir], axis=-1)
+            its = np.stack([it, it], axis=-1)
+            izs = np.stack([iz, iz+1], axis=-1)
+            i_wccn = np.ravel_multi_index((irs, its, izs), Rs.shape, order='F')
+            i_wedge_control_nodes = np.c_[i_wscn[:, 0], i_wccn[:, 0], i_wscn[:, 1], i_wscn[:, 2], i_wccn[:, 1], i_wscn[:, 3]]
+
+        _vtk, _nps = load_vtk()
+        ####
+        # assemble cells
+        cell_types = np.empty(mesh.n_cells, dtype=np.uint8)
+        cell_types[hex_cells] = _vtk.VTK_BEZIER_HEXAHEDRON
+
+        cell_con = np.empty((mesh.n_cells, 13), dtype=int)
+        cell_con[:, 0] = 12
+        cell_con[hex_cells, 1:9] = i_hex_nodes
+        cell_con[hex_cells, 9:] = i_hex_control_nodes + mesh.n_nodes
+        nodes_cyl = np.r_[mesh.nodes, control_nodes]
+
+        # calculate weights for control points
+        control_weights = (
+            np.sin(np.pi/2 - dphis_half)[None, :, None]
+            * np.ones((mesh.shape_nodes[0]-1, mesh.shape_nodes[2]))[:, None, :]
         )
+        rational_weights = np.r_[np.ones(mesh.n_nodes), control_weights.reshape(-1, order='F')]
+
+        higher_order_degrees = np.empty((mesh.n_cells, 3))
+        higher_order_degrees[hex_cells, :] = [2, 1, 1]
+
+        if mesh.nodes_x[0] == 0.0:
+            cell_types[wedge_cells] = _vtk.VTK_BEZIER_WEDGE
+            cell_con[wedge_cells, 1:7] = i_wedge_nodes
+            cell_con[wedge_cells, 7:] = i_wedge_control_nodes + mesh.n_nodes
+            nodes_cyl = np.r_[nodes_cyl, wedge_control_nodes]
+            rational_weights = np.r_[rational_weights, np.ones(len(wedge_control_nodes))]
+            higher_order_degrees[wedge_cells] = [2, 2, 1]
+
+        nodes = cyl2cart(nodes_cyl)
+
+        vtk_pts = _vtk.vtkPoints()
+        vtk_pts.SetData(_nps.numpy_to_vtk(nodes, deep=True))
+
+        cells = _vtk.vtkCellArray()
+        cells.SetNumberOfCells(mesh.n_cells)
+        cells.SetCells(
+            mesh.n_cells,
+            _nps.numpy_to_vtk(cell_con.reshape(-1), deep=True, array_type=_vtk.VTK_ID_TYPE),
+        )
+        cell_types = _nps.numpy_to_vtk(cell_types, deep=True)
+
+        output = _vtk.vtkUnstructuredGrid()
+        output.SetPoints(vtk_pts)
+        output.SetCells(cell_types, cells)
+
+        vtk_rational_weights = _nps.numpy_to_vtk(rational_weights)
+        vtk_higher_order_degrees = _nps.numpy_to_vtk(higher_order_degrees)
+
+        output.GetPointData().SetRationalWeights(vtk_rational_weights)
+        output.GetCellData().SetHigherOrderDegrees(vtk_higher_order_degrees)
+        # Assign the model('s) to the object
+        return assign_cell_data(output, models=models)
+
 
     def to_vtk(mesh, models=None):
         """Convert mesh (and models) to corresponding VTK or PyVista data object
@@ -418,7 +556,7 @@ class InterfaceVTK(object):
             "tensor": InterfaceVTK.__tensor_mesh_to_vtk,
             "curv": InterfaceVTK.__curvilinear_mesh_to_vtk,
             "simplex": InterfaceVTK.__simplex_mesh_to_vtk,
-            # TODO: 'CylindricalMesh' : InterfaceVTK.__cyl_mesh_to_vtk,
+            "cyl" : InterfaceVTK.__cyl_mesh_to_vtk,
         }
         key = mesh._meshType.lower()
         try:
@@ -453,6 +591,9 @@ class InterfaceVTK(object):
         directory : str
             directory where the UBC GIF file lives
         """
+        _vtk, _, extra = load_vtk(('VTK_VERSION', 'vtkXMLUnstructuredGridWriter'))
+        _vtk_version, _vtkUnstWriter = extra
+
         if not isinstance(vtkUnstructGrid, _vtk.vtkUnstructuredGrid):
             raise RuntimeError(
                 "`_save_unstructured_grid` can only handle `vtkUnstructuredGrid` objects. `%s` is not supported."
@@ -487,6 +628,9 @@ class InterfaceVTK(object):
         directory : str
             directory where the UBC GIF file lives
         """
+        _vtk, _, extra = load_vtk(('VTK_VERSION', 'vtkXMLStructuredGridWriter'))
+        _vtk_version,  _vtkStrucWriter = extra
+
         if not isinstance(vtkStructGrid, _vtk.vtkStructuredGrid):
             raise RuntimeError(
                 "`_save_structured_grid` can only handle `vtkStructuredGrid` objects. `{}` is not supported.".format(
@@ -522,6 +666,8 @@ class InterfaceVTK(object):
         directory : str
             directory where the UBC GIF file lives
         """
+        _vtk, _, _vtkRectWriter = load_vtk('vtkXMLRectilinearGridWriter')
+
         if not isinstance(vtkRectGrid, _vtk.vtkRectilinearGrid):
             raise RuntimeError(
                 "`_save_rectilinear_grid` can only handle `vtkRectilinearGrid` objects. `{}` is not supported.".format(
@@ -600,6 +746,8 @@ class InterfaceTensorread_vtk(object):
         discretize.TensorMesh
             A discretize tensor mesh
         """
+        _, _nps = load_vtk()
+
         # Sort information
         hx = np.abs(np.diff(_nps.vtk_to_numpy(vtrGrid.GetXCoordinates())))
         xR = _nps.vtk_to_numpy(vtrGrid.GetXCoordinates())[0]
@@ -658,6 +806,7 @@ class InterfaceTensorread_vtk(object):
             A dictionary containing the models. The keys correspond to the names of the
             models.
         """
+        _, _, _vtkRectReader = load_vtk('vtkXMLRectilinearGridReader')
         fname = os.path.join(directory, file_name)
         # Read the file
         vtrReader = _vtkRectReader()
@@ -684,6 +833,8 @@ class InterfaceSimplexReadVTK:
         discretize.SimplexMesh
             A discretize tensor mesh
         """
+        _, _nps = load_vtk()
+
         # check if all of the cells are the same type
         cell_types = np.unique(_nps.vtk_to_numpy(vtuGrid.GetCellTypesArray()))
         if len(cell_types) > 1:
@@ -738,6 +889,8 @@ class InterfaceSimplexReadVTK:
             A dictionary containing the models. The keys correspond to the names of the
             models.
         """
+        _, _, _vtkUnstReader = load_vtk('vtkXMLUnstructuredGridReader')
+
         fname = os.path.join(directory, file_name)
         # Read the file
         vtuReader = _vtkUnstReader()

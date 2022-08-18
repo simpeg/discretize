@@ -866,7 +866,7 @@ def inverse_2x2_block_diagonal(a11, a12, a21, a22, return_matrix=True):
 
 
 def invert_blocks(A):
-    """Invert a set of 2x2 or 3x2 matricies.
+    """Invert a set of 2x2 or 3x3 matricies.
 
     This is a shortcut function that will only invert 2x2 and 3x3 matrices.
     The function is broadcast over the last two dimensions of A.

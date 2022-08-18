@@ -412,7 +412,7 @@ class TreeMeshIO(object):
 
     """
     @classmethod
-    def read_UBC(TreeMesh, meshFile, directory=""):
+    def read_UBC(TreeMesh, file_name, directory=""):
         """Read 3D tree mesh (OcTree mesh) from UBC-GIF formatted file.
 
         Parameters
@@ -427,7 +427,7 @@ class TreeMeshIO(object):
         discretize.TreeMesh
             The tree mesh
         """
-        fname = os.path.join(directory, meshFile)
+        fname = os.path.join(directory, file_name)
         fileLines = np.genfromtxt(fname, dtype=str, delimiter="\n", comments="!")
         nCunderMesh = np.array(fileLines[0].split("!")[0].split(), dtype=int)
         tswCorn = np.array(fileLines[1].split("!")[0].split(), dtype=float)

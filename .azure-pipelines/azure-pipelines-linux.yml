@@ -14,6 +14,8 @@ jobs:
         python.version: '3.8'
       linux-Python39:
         python.version: '3.9'
+      linux-Python310:
+        python.version: '3.10'
   steps:
 
   - bash: echo '##vso[task.prependpath]$CONDA/bin'

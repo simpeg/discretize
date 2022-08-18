@@ -1,0 +1,56 @@
+.. currentmodule:: discretize
+
+.. _0.8.1_notes:
+
+===================================
+``discretize`` 0.8.1 Release Notes
+===================================
+
+This patch release, in addition to some small bug fixes and runtime improvements implements,
+also implements some missing functionality for cylindrical meshes.
+
+``CylindricalMesh``
+---------------
+The big news is that 3D cylindrical meshes can now be output to a vtk format, which
+represents the wedges and arced cells as rational bezier curves in an unstructured vtk
+mesh.
+
+There is now full interpolation functionality when using 3D meshes, that includes
+appropriate interpolation that wraps around the angular component across the cylindrical
+mesh. The 3D nodal gradient operator is also implemented now.
+
+On the backend, several internal matrices should now build much quicker than before.
+
+Startup
+------------
+Since ``matplotlib``, ``vtk`` and ``omf`` libraries have been made optional, they are now
+only imported when the corresponding functionality is actually used. These means a
+reasonable improvement in the speed on the first import of ``discretize``.
+
+
+Bug Fixes
+---------
+
+ - 3D ``TreeMesh`` now generates the correct list of nodes in each cell
+ - A missed internal deprecation for `zerosOutside` has been cleaned up
+ - We've added python 3.10 to the testing sweet.
+ - Bumped the minimum version of python to 3.7 to match the tests.
+
+
+Contributors
+============
+
+* @jcapriot
+* @prisae
+* @lheagy
+
+Pull requests
+=============
+* `#280 <https://github.com/simpeg/discretize/pull/280>`__: Nodal_Gradient for the CylindricalMesh
+* `#281 <https://github.com/simpeg/discretize/pull/281>`__: Cyl vtk
+* `#283 <https://github.com/simpeg/discretize/pull/283>`__: add python 3.10 to testing suite
+* `#284 <https://github.com/simpeg/discretize/pull/284>`__: Improve load time
+* `#285 <https://github.com/simpeg/discretize/pull/285>`__: zeros_outside
+* `#286 <https://github.com/simpeg/discretize/pull/286>`__: Cell node tree
+* `#288 <https://github.com/simpeg/discretize/pull/288>`__: Allow np.int_
+* `#289 <https://github.com/simpeg/discretize/pull/289>`__: 0.8.1 Release

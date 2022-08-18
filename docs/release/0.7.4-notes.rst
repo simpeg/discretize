@@ -1,0 +1,25 @@
+.. currentmodule:: discretize
+
+.. _0.7.4_notes:
+
+===================================
+``discretize`` 0.7.4 Release Notes
+===================================
+
+This bug fix patch addressed an issue accessing the face indices of a ``TreeCell``.
+We are also testing a new versioning system that is based off of git tags. If you are
+a developer ``setuptools_scm`` is now a requirement along with an installation of
+``git`` that is discoverable from the command line.
+
+Contributors
+============
+
+* @jcapriot
+* @prisae
+* @thibaut-kobold
+
+Pull requests
+=============
+
+* `#273 <https://github.com/simpeg/discretize/pull/273>`__: Move from bumpversion to setuptools_scm
+* `#276 <https://github.com/simpeg/discretize/pull/276>`__: fix faces property of TreeCell

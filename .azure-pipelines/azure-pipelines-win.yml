@@ -11,6 +11,8 @@ jobs:
         python.version: '3.8'
       win-Python39:
         python.version: '3.9'
+      win-Python310:
+        python.version: '3.10'
   steps:
 
   - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
@@ -23,7 +25,7 @@ jobs:
 
   - script: |
       call activate base
-      mamba create --yes -c conda-forge --name test python=$(python.version) numpy scipy matplotlib cython vtk pyvista pymatsolver pytest
+      mamba create --yes -c conda-forge --name test python=$(python.version) numpy scipy matplotlib cython vtk pyvista pymatsolver pytest "mkl>=2022.1"
     displayName: Create Anaconda environment
 
   - script: |

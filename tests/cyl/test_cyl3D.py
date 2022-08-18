@@ -69,6 +69,27 @@ class TestCyl3DGeometries(unittest.TestCase):
         )
 
 
+def test_boundary_items():
+    mesh = discretize.CylindricalMesh([3, 4, 5])
+
+    # Nodes
+    is_bn = (mesh.nodes[:, 0] == 1) | (mesh.nodes[:, 2] == 0) | (mesh.nodes[:, 2] == 1)
+    np.testing.assert_equal(mesh.boundary_nodes, mesh.nodes[is_bn])
+    P_bn = mesh.project_node_to_boundary_node
+    np.testing.assert_equal(mesh.boundary_nodes, P_bn @ mesh.nodes)
+
+    # Edges
+    is_be = (mesh.edges[:, 0] == 1) | (mesh.edges[:, 2] == 0) | (mesh.edges[:, 2] == 1)
+    np.testing.assert_equal(mesh.boundary_edges, mesh.edges[is_be])
+    P_be = mesh.project_edge_to_boundary_edge
+    np.testing.assert_equal(mesh.boundary_edges, P_be @ mesh.edges)
+
+    # Faces
+    is_bf = (mesh.faces[:, 0] == 1) | (mesh.faces[:, 2] == 0) | (mesh.faces[:, 2] == 1)
+    np.testing.assert_equal(mesh.boundary_faces, mesh.faces[is_bf])
+    P_bf = mesh.project_face_to_boundary_face
+    np.testing.assert_equal(mesh.boundary_faces, P_bf @ mesh.faces)
+
 # ----------------------- Test Grids and Counting --------------------------- #
 
 

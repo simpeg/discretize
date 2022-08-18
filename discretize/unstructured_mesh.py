@@ -32,8 +32,8 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
 
     Notes
     -----
-    Only rudimentary checking of the input nodes and simplices are performed, which
-    only checks for degenerate simplices who have zero volume. There are no checks for
+    Only rudimentary checking of the input nodes and simplices is performed, only
+    checking for degenerate simplices who have zero volume. There are no checks for
     overlapping cells, or for the quality of the mesh.
 
     Examples
@@ -455,14 +455,26 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         A = np.sum([P.T @ Mu @ P for P in Ps])
         return A
 
-    def get_face_inner_product(self, model=None, invert_model=False, invert_matrix=False):
+    def get_face_inner_product(
+        self,
+        model=None,
+        invert_model=False,
+        invert_matrix=False,
+        do_fast=True,
+    ):
         if invert_matrix:
             raise NotImplementedError(
                 "The inverse of the inner product matrix with a tetrahedral mesh is not supported."
             )
         return self.__get_inner_product("F", model, invert_model)
 
-    def get_edge_inner_product(self, model=None, invert_model=False, invert_matrix=False):
+    def get_edge_inner_product(
+        self,
+        model=None,
+        invert_model=False,
+        invert_matrix=False,
+        do_fast=True,
+    ):
         if invert_matrix:
             raise NotImplementedError(
                 "The inverse of the inner product matrix with a tetrahedral mesh is not supported."
@@ -546,7 +558,7 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         return func
 
     def get_face_inner_product_deriv(
-        self, model, do_fast=True, invert_model=False, invert_matrix=False, **kwargs
+        self, model, do_fast=True, invert_model=False, invert_matrix=False
     ):
         if invert_model:
             raise NotImplementedError(
@@ -559,7 +571,7 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         return self.__get_inner_product_deriv_func("F", model)
 
     def get_edge_inner_product_deriv(
-        self, model, do_fast=True, invert_model=False, invert_matrix=False, **kwargs
+        self, model, do_fast=True, invert_model=False, invert_matrix=False
     ):
         if invert_model:
             raise NotImplementedError(
@@ -793,6 +805,10 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         )
         for P in Ps:
             Av = Av + 1/(nodes_per_cell) * P
+        # Av needs to be re-ordered to comply with discretize standard
+        ind = np.arange(Av.shape[0]).reshape(n_cells, -1).flatten(order='F')
+        P = sp.eye(Av.shape[0], format='csr')[ind]
+        Av = P @ Av
         return Av
 
     @property
@@ -809,6 +825,10 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         )
         for P in Ps:
             Av = Av + 1/(nodes_per_cell) * P
+        # Av needs to be re-ordered to comply with discretize standard
+        ind = np.arange(Av.shape[0]).reshape(n_cells, -1).flatten(order='F')
+        P = sp.eye(Av.shape[0], format='csr')[ind]
+        Av = P @ Av
         return Av
 
     @property
@@ -833,6 +853,14 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         row_ptr = np.arange(n_cells+1)*(n_edge_per_cell)
 
         return sp.csr_matrix((Aij.reshape(-1), col_inds.reshape(-1), row_ptr), shape=(n_cells, n_edges))
+
+    @property
+    def average_cell_to_face(self):
+        A = self.average_face_to_cell.T
+        row_sum = np.asarray(A.sum(axis=-1))[:, 0]
+        row_sum[row_sum == 0.0] = 1.0
+        A = sp.diags(1.0/row_sum) @ A
+        return A
 
     @property
     def stencil_cell_gradient(self):

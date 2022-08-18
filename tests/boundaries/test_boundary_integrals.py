@@ -1,6 +1,7 @@
 import numpy as np
 import scipy.sparse as sp
 import discretize
+from discretize.utils import cart2cyl, cyl2cart
 
 
 def u(*args):
@@ -14,6 +15,11 @@ def u(*args):
     return x**3 + y**2 + z**4
 
 
+def u_cyl(*args):
+    xyz = cyl2cart(np.stack(args, axis=-1))
+    return u(*xyz.T)
+
+
 def v(*args):
     if len(args) == 1:
         x = args[0]
@@ -25,12 +31,24 @@ def v(*args):
     return np.c_[2*x**2, 3*y**3, -4*z**2]
 
 
+def v_cyl(*args):
+    xyz = cyl2cart(np.stack(args, axis=-1))
+    xyz_vec = v(*xyz.T)
+    return cart2cyl(xyz, xyz_vec)
+
+
 def w(*args):
     if len(args) == 2:
         x, y = args
         return np.c_[(y - 2)**2, (x + 2)**2]
     x, y, z = args
     return np.c_[(y-2)**2 + z**2, (x+2)**2 - (z-4)**2, y**2-x**2]
+
+
+def w_cyl(*args):
+    xyz = cyl2cart(np.stack(args, axis=-1))
+    xyz_vec = w(*xyz.T)
+    return cart2cyl(xyz, xyz_vec)
 
 # mesh will be on [0, 1] square
 
@@ -54,6 +72,11 @@ def w(*args):
 # int_V grad_u dot v dV = -4/15
 # int_V u div_v dV = 27/20
 # int_v curl_w dot v dV = 17/6
+
+# 3D Cylindrical Values
+# int_V grad_u dot v dV = -7 * np.pi/6
+# int_V u div_v dV = -31 * np.pi/120
+# int_v curl_w dot v dV = -85 * np.pi/6
 
 
 class Test1DBoundaryIntegral(discretize.tests.OrderTest):
@@ -187,7 +210,7 @@ class Test3DBoundaryIntegral(discretize.tests.OrderTest):
         "uniformTree",
         "uniformCurv",
         "rotateCurv",
-        "sphereCurv"
+        "sphereCurv",
         ]
     meshDimension = 3
     expectedOrders = [2, 1, 2, 2, 2, 0]
@@ -254,4 +277,51 @@ class Test3DBoundaryIntegral(discretize.tests.OrderTest):
     def test_orderWeakFaceCurlIntegral(self):
         self.name = "3D - weak face curl integral w/boundary"
         self.myTest = "face_curl"
+        self.orderTest()
+
+
+class Test3DCylindricalBoundary(discretize.tests.OrderTest):
+    name = "3D Cylindrical Boundary Integrals"
+    meshTypes = [
+        "uniformCylindricalMesh",
+        ]
+    meshDimension = 3
+    expectedOrders = [2, ]
+    meshSizes = [8, 16, 32, 64]
+
+    def getError(self):
+        mesh = self.M
+        if self.myTest == "cell_grad":
+            # Functions:
+            u_cc = u_cyl(*mesh.cell_centers.T)
+            v_f = mesh.project_face_vector(v_cyl(*mesh.faces.T))
+            u_bf = u_cyl(*mesh.boundary_faces.T)
+
+            D = mesh.face_divergence
+            M_c = sp.diags(mesh.cell_volumes)
+            M_bf = mesh.boundary_face_scalar_integral
+
+            discrete_val = -(v_f.T @ D.T) @ M_c @ u_cc + v_f.T @ (M_bf @ u_bf)
+            true_val = -7 * np.pi/6
+        elif self.myTest == "edge_div":
+            u_n = u_cyl(*mesh.nodes.T)
+            v_e = mesh.project_edge_vector(v_cyl(*mesh.edges.T))
+            v_bn = v_cyl(*mesh.boundary_nodes.T).reshape(-1, order='F')
+
+            M_e = mesh.get_edge_inner_product()
+            G = mesh.nodal_gradient
+            M_bn = mesh.boundary_node_vector_integral
+
+            true_val = -31 * np.pi/120
+            discrete_val = -(u_n.T @ G.T) @ M_e @ v_e + u_n.T @ (M_bn @ v_bn)
+        return np.abs(discrete_val - true_val)
+
+    def test_orderWeakCellGradIntegral(self):
+        self.name = "3D - weak cell gradient integral w/boundary"
+        self.myTest = "cell_grad"
+        self.orderTest()
+
+    def test_orderWeakEdgeDivIntegral(self):
+        self.name = "3D - weak edge divergence integral w/boundary"
+        self.myTest = "edge_div"
         self.orderTest()

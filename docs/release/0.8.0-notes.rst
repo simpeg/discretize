@@ -1,0 +1,51 @@
+.. currentmodule:: discretize
+
+.. _0.8.0_notes:
+
+===================================
+``discretize`` 0.8.0 Release Notes
+===================================
+
+This minor release introduces a new mesh type to discretize, :class:`SimplexMesh`!
+
+``SimplexMesh``
+---------------
+``discretize`` now has support for triangular (2D) and tetrahedral (3D) meshes. These meshes
+support most of the operations that you would expect of a discretize mesh that is used
+to solve PDEs with the finite volume method. You have access to :func:`SimplexMesh.face_divergence`,
+:func:`SimplexMesh.nodal_gradient`, and :func:`SimplexMesh.edge_curl` operators, along
+with the expected inner product operators and their derivatives: :func:`SimplexMesh.get_edge_inner_product`,
+:func:`SimplexMesh.get_face_inner_product`, :func:`SimplexMesh.get_edge_inner_product_deriv`,
+and :func:`SimplexMesh.get_face_inner_product_deriv`. They contain the expected average
+operators that move between nodes, cell centers, faces, and edges. The interpolation
+operator can interpolate scalar values from nodes and cell centers, and interpolate vector
+quantities from edges and faces. The mesh also has operators to handle the boundary
+conditions in manners similar to the previous implementation.
+
+The basic format of input into a :class:`SimplexMesh` is an array of node locations,
+and an array of the simplex indices, enabling for simple interaction with many different
+mesh generation libraries. There are readers for unstructured VTK files which contain
+all of either triangular or tetrahedral elements.
+
+``TreeMesh``
+------------
+Interpolation on :class:`TreeMesh` is now linear between cells of the same level for the
+cell centered, edge, and face interpolators.
+
+
+Future Warnings
+===============
+All of the previous Deprecation Warnings from the refactor of ``discretize`` to pep8
+friendly names in v0.6.0 have been changed to Future Warnings in preparation for the
+1.0.0 release of discretize.
+
+Contributors
+============
+
+* @jcapriot
+
+Pull requests
+=============
+* `#263 <https://github.com/simpeg/discretize/pull/263>`__: Unstructured Triangular/Tetrahedral meshes
+* `#277 <https://github.com/simpeg/discretize/pull/277>`__: Updating TreeMesh Interpolation
+* `#278 <https://github.com/simpeg/discretize/pull/278>`__: 0.8.0 Release

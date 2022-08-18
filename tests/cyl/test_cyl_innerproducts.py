@@ -237,8 +237,8 @@ class TestCylInnerProducts_simple(unittest.TestCase):
 
 class TestCylFaceInnerProducts_Order(tests.OrderTest):
 
-    meshTypes = ["uniformCylMesh"]
-    meshDimension = 2
+    meshTypes = ["uniform_symmetric_CylMesh"]
+    meshDimension = 3
 
     def getError(self):
         fct = FaceInnerProductFctsIsotropic()
@@ -252,8 +252,8 @@ class TestCylFaceInnerProducts_Order(tests.OrderTest):
 
 class TestCylEdgeInnerProducts_Order(tests.OrderTest):
 
-    meshTypes = ["uniformCylMesh"]
-    meshDimension = 2
+    meshTypes = ["uniform_symmetric_CylMesh"]
+    meshDimension = 3
 
     def getError(self):
         fct = EdgeInnerProductFctsIsotropic()
@@ -267,29 +267,14 @@ class TestCylEdgeInnerProducts_Order(tests.OrderTest):
 
 class TestCylFaceInnerProductsDiagAnisotropic_Order(tests.OrderTest):
 
-    meshTypes = ["uniformCylMesh"]
-    meshDimension = 2
+    meshTypes = ["uniform_symmetric_CylMesh"]
+    meshDimension = 3
 
     def getError(self):
         fct = FaceInnerProductFunctionsDiagAnisotropic()
         sig, jv = fct.vectors(self.M)
         Msig = self.M.getFaceInnerProduct(sig)
         return float(fct.sol()) - jv.T.dot(Msig.dot(jv))
-
-    def test_order(self):
-        self.orderTest()
-
-
-class TestCylEdgeInnerProducts_Order(tests.OrderTest):
-
-    meshTypes = ["uniformCylMesh"]
-    meshDimension = 2
-
-    def getError(self):
-        fct = EdgeInnerProductFunctionsDiagAnisotropic()
-        sig, ht = fct.vectors(self.M)
-        Msig = self.M.getEdgeInnerProduct(sig)
-        return float(fct.sol()) - ht.T.dot(Msig.dot(ht))
 
     def test_order(self):
         self.orderTest()
