@@ -31,7 +31,7 @@ However, they can be returned directly by indexing a particular cell within a tr
 """
 
 from discretize.tensor_mesh import TensorMesh
-from discretize.cylindrical_mesh import CylMesh, CylindricalMesh
+from discretize.cylindrical_mesh import CylindricalMesh
 from discretize.curvilinear_mesh import CurvilinearMesh
 from discretize.unstructured_mesh import SimplexMesh
 from discretize.utils.io_utils import load_mesh
