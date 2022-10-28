@@ -40,6 +40,13 @@ install_requires = [
     "scipy>=0.13",
 ]
 
+if len(sys.argv) >= 2 and (
+    "--help" in sys.argv[1:]
+    or sys.argv[1] in ("--help-commands", "egg_info", "--version", "clean")
+):
+    # add cython and setuptools_scm to install requires on these commands
+    install_requires = build_requires + install_requires[1:]
+
 metadata = dict(
     name="discretize",
     packages=find_packages(include=["discretize", "discretize.*"]),
