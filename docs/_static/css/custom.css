@@ -34,11 +34,11 @@ Matplotlib images are in png and inverted while other output
 types are assumed to be normal images.
 */
 html[data-theme=dark] img[src*='.png'] {
-    filter: invert(0.82) brightness(0.8) contrast(1.2);
+    filter: invert(0.82) brightness(0.8) contrast(1.2) !important;
 }
 
 html[data-theme=dark] img[src*='discretize-logo.png'] {
-    filter: invert(0.82) brightness(0.8) contrast(1.2) hue-rotate(180deg);
+    filter: invert(0.82) brightness(0.8) contrast(1.2) hue-rotate(180deg) !important;
 }
 
 html[data-theme=dark] .MathJax_SVG *  {
