@@ -6,6 +6,8 @@
 ``discretize`` 0.7.3 Release Notes
 ===================================
 
+February 28, 2022
+
 This patch release fixes a few minor bugs related to the edge curl operator in 2D for
 ```TensorMesh`` which was not properly indexed as edges. There is also minor additions
 to the functionality of cylindrical meshes, allowing the user to set an origin point

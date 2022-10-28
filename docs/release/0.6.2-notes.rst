@@ -6,6 +6,8 @@
 ``discretize`` 0.6.2 Release Notes
 ===================================
 
+November 26, 2020
+
 This patch release changes ``FutureWarning`` to ``DeprecationWarning`` to temporarily
 hide them from end users. Our current plan is to switch them back to ``FutureWarning`` on
 the next minor release. We encourage developers to update their code prior to this.

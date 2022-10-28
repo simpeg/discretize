@@ -6,6 +6,8 @@
 ``discretize`` 0.4.12 Release Notes
 ===================================
 
+June 6, 2020
+
 This patch release is for a few small bugs and code speed improvements.
 
 There is now a fast function for return active cell indexes for ``TensorMesh``-s,

@@ -6,6 +6,8 @@
 ``discretize`` 0.6.0 Release Notes
 ===================================
 
+November 16, 2020
+
 This minor release is intended to bring consistent pep8 style naming across all
 of discretize's classes and functions.
 

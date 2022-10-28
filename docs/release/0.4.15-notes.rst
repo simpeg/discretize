@@ -6,6 +6,8 @@
 ``discretize`` 0.4.15 Release Notes
 ===================================
 
+July 23, 2020
+
 This is a minor release to fix a small error in the deprecated vType argument
 
 Contributors
