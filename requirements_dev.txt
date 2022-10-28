@@ -1,6 +1,5 @@
 cython
 sphinx
-sphinx_rtd_theme
 sphinx-gallery
 sphinx-toolbox
 sphinxcontrib-apidoc
