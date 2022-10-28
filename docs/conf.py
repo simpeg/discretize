@@ -44,6 +44,7 @@ extensions = [
     "sphinx.ext.mathjax",
     "sphinx.ext.inheritance_diagram",
     "sphinx.ext.graphviz",
+    "matplotlib.sphinxext.plot_directive",
     "sphinx_toolbox.collapse",
     "sphinx_gallery.gen_gallery",
 ]

@@ -25,7 +25,7 @@ jobs:
 
   - script: |
       call activate base
-      echo   - python=$(python.version) >> environment_test.yml
+      echo   - python=$(python.version)>> environment_test.yml
       mamba env create -f environment_test.yml
       conda activate test
       pip install pytest-azurepipelines
