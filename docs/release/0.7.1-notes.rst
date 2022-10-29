@@ -6,6 +6,8 @@
 ``discretize`` 0.7.1 Release Notes
 ===================================
 
+October 7, 2021
+
 This patch release is a big step, but with minimal functional changes. There are a few
 small bug fixes, but the largest news is the updated documentation!
 

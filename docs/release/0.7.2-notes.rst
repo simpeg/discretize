@@ -6,6 +6,8 @@
 ``discretize`` 0.7.2 Release Notes
 ===================================
 
+December 6, 2021
+
 This patch release is for a minor improvements to a few functions
 
 Searching

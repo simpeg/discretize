@@ -6,6 +6,8 @@
 ``discretize`` 0.4.14 Release Notes
 ===================================
 
+July 4, 2020
+
 This release is renaming a few of the options to the plotting routines to more
 pep8 friendly names. The older name will still function, but throw a deprecation warning
 

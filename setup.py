@@ -69,7 +69,10 @@ if len(sys.argv) >= 2 and (
     # They are required to succeed without Numpy/Cython, for example when
     # pip is used to install discretize when Numpy/Cython is not yet
     # present in the system.
-    pass
+
+    # add cython and setuptools_scm to install requires on these commands though
+    install_requires = build_requires + install_requires[1:]
+    metadata['install_requires'] = install_requires
 else:
     from setuptools.extension import Extension
     from Cython.Build import cythonize

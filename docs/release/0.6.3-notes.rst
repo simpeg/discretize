@@ -6,6 +6,8 @@
 ``discretize`` 0.6.3 Release Notes
 ===================================
 
+March 1, 2021
+
 This patch contains a bug-fix related to plotting on a :class:`TreeMesh`.
 It also contains a few additions which caused a minor functionality change in
 :func:`utils.refine_tree_xyz`.

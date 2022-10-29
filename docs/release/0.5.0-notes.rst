@@ -6,6 +6,8 @@
 ``discretize`` 0.5.0 Release Notes
 ===================================
 
+September 2, 2020
+
 This minor release has a few small bug fixes as well as a new volume averaging
 operator.
 

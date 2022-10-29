@@ -6,6 +6,8 @@
 ``discretize`` 0.6.1 Release Notes
 ===================================
 
+November 17, 2020
+
 This patch release adds deprecation for 3 of the hidden properties on the TreeMesh.
 These properties are now publicly accessible.
 
