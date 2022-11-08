@@ -5,6 +5,7 @@ cimport cython
 cimport numpy as np
 from libc.stdlib cimport malloc, free
 from libcpp.vector cimport vector
+from libcpp cimport bool
 from numpy.math cimport INFINITY
 
 from .tree cimport int_t, Tree as c_Tree, PyWrapper, Node, Edge, Face, Cell as c_Cell
@@ -337,7 +338,7 @@ cdef class _TreeMesh:
         self.wrapper = new PyWrapper()
         self.tree = new c_Tree()
 
-    def __init__(self, h, origin):
+    def __init__(self, h, origin, bool diagonal_balance=False):
         super().__init__(h=h, origin=origin)
         def is_pow2(num):
             return ((num & (num - 1)) == 0) and num != 0
@@ -378,6 +379,7 @@ cdef class _TreeMesh:
 
         self.tree.set_dimension(self._dim)
         self.tree.set_levels(self.ls[0], self.ls[1], self.ls[2])
+        self.tree.set_diag_balance(diagonal_balance)
         self.tree.set_xs(&self._xs[0], &self._ys[0], &self._zs[0])
         self.tree.initialize_roots()
         self._finalized = False

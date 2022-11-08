@@ -70,6 +70,7 @@ cdef extern from "tree.h":
     cdef cppclass Tree:
         int_t n_dim
         int_t max_level, nx, ny, nz
+        bool diag_balance
 
         vector[Cell *] cells
         node_map_t nodes
@@ -83,6 +84,7 @@ cdef extern from "tree.h":
 
         void set_dimension(int_t)
         void set_levels(int_t, int_t, int_t)
+        void set_diag_balance(bool)
         void set_xs(double*, double*, double*)
         void refine_function(PyWrapper *)
         void refine_ball(double*, double, int_t)

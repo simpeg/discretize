@@ -375,22 +375,22 @@ void Cell::shift_centers(double *shift){
     }
 }
 
-void Cell::insert_cell(node_map_t& nodes, double *new_cell, int_t p_level, double *xs, double *ys, double *zs){
+void Cell::insert_cell(node_map_t& nodes, double *new_cell, int_t p_level, double *xs, double *ys, double *zs, bool diag_balance){
     //Inserts a cell at min(max_level,p_level) that contains the given point
     if(p_level > level){
         // Need to go look in children,
         // Need to spawn children if i don't have any...
         if(is_leaf()){
-            divide(nodes, xs, ys, zs, true);
+            divide(nodes, xs, ys, zs, true, true, diag_balance);
         }
         int ix = new_cell[0] > children[0]->points[3]->location[0];
         int iy = new_cell[1] > children[0]->points[3]->location[1];
         int iz = n_dim>2 && new_cell[2]>children[0]->points[7]->location[2];
-        children[ix + 2*iy + 4*iz]->insert_cell(nodes, new_cell, p_level, xs, ys, zs);
+        children[ix + 2*iy + 4*iz]->insert_cell(nodes, new_cell, p_level, xs, ys, zs, diag_balance);
     }
 };
 
-void Cell::refine_ball(node_map_t& nodes, double* center, double r2, int_t p_level, double *xs, double *ys, double* zs){
+void Cell::refine_ball(node_map_t& nodes, double* center, double r2, int_t p_level, double *xs, double *ys, double* zs, bool diag_balance){
     // early exit if my level is higher than or equal to target
     if (level >= p_level || level == max_level){
         return;
@@ -415,22 +415,22 @@ void Cell::refine_ball(node_map_t& nodes, double* center, double r2, int_t p_lev
     }
     // if I intersect cell, I will need to be divided (if I'm not already)
     if(is_leaf()){
-        divide(nodes, xs, ys, zs, true);
+        divide(nodes, xs, ys, zs, true, true, diag_balance);
     }
     // recurse into children
-    children[0]->refine_ball(nodes, center, r2, p_level, xs, ys, zs);
-    children[1]->refine_ball(nodes, center, r2, p_level, xs, ys, zs);
-    children[2]->refine_ball(nodes, center, r2, p_level, xs, ys, zs);
-    children[3]->refine_ball(nodes, center, r2, p_level, xs, ys, zs);
+    children[0]->refine_ball(nodes, center, r2, p_level, xs, ys, zs, diag_balance);
+    children[1]->refine_ball(nodes, center, r2, p_level, xs, ys, zs, diag_balance);
+    children[2]->refine_ball(nodes, center, r2, p_level, xs, ys, zs, diag_balance);
+    children[3]->refine_ball(nodes, center, r2, p_level, xs, ys, zs, diag_balance);
     if (n_dim > 2){
-        children[4]->refine_ball(nodes, center, r2, p_level, xs, ys, zs);
-        children[5]->refine_ball(nodes, center, r2, p_level, xs, ys, zs);
-        children[6]->refine_ball(nodes, center, r2, p_level, xs, ys, zs);
-        children[7]->refine_ball(nodes, center, r2, p_level, xs, ys, zs);
+        children[4]->refine_ball(nodes, center, r2, p_level, xs, ys, zs, diag_balance);
+        children[5]->refine_ball(nodes, center, r2, p_level, xs, ys, zs, diag_balance);
+        children[6]->refine_ball(nodes, center, r2, p_level, xs, ys, zs, diag_balance);
+        children[7]->refine_ball(nodes, center, r2, p_level, xs, ys, zs, diag_balance);
     }
 }
 
-void Cell::refine_box(node_map_t& nodes, double* x0, double* x1, int_t p_level, double *xs, double *ys, double* zs, bool enclosed){
+void Cell::refine_box(node_map_t& nodes, double* x0, double* x1, int_t p_level, double *xs, double *ys, double* zs, bool enclosed, bool diag_balance){
     // early exit if my level is higher than target
     if (level >= p_level || level == max_level){
         return;
@@ -460,22 +460,22 @@ void Cell::refine_box(node_map_t& nodes, double* x0, double* x1, int_t p_level, 
     }
     // Will only be here if I intersect the box
     if(is_leaf()){
-        divide(nodes, xs, ys, zs, true);
+        divide(nodes, xs, ys, zs, true, true, diag_balance);
     }
     // recurse into children
-    children[0]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed);
-    children[1]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed);
-    children[2]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed);
-    children[3]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed);
+    children[0]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed, diag_balance);
+    children[1]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed, diag_balance);
+    children[2]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed, diag_balance);
+    children[3]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed, diag_balance);
     if (n_dim > 2){
-        children[4]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed);
-        children[5]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed);
-        children[6]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed);
-        children[7]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed);
+        children[4]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed, diag_balance);
+        children[5]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed, diag_balance);
+        children[6]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed, diag_balance);
+        children[7]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed, diag_balance);
     }
 }
 
-void Cell::divide(node_map_t& nodes, double* xs, double* ys, double* zs, bool force, bool balance){
+void Cell::divide(node_map_t& nodes, double* xs, double* ys, double* zs, bool force, bool balance, bool diag_balance){
     bool do_splitting = false;
     if(level == max_level){
         do_splitting = false;
@@ -502,7 +502,42 @@ void Cell::divide(node_map_t& nodes, double* xs, double* ys, double* zs, bool fo
             if(balance){
                 for(int_t i = 0; i < 2*n_dim; ++i){
                     if(neighbors[i] != NULL && neighbors[i]->level < level){
-                        neighbors[i]->divide(nodes, xs, ys, zs, true);
+                        neighbors[i]->divide(nodes, xs, ys, zs, true, balance, diag_balance);
+                    }
+                }
+            }
+            if(diag_balance){
+                Cell *neighbor;
+                if (neighbors[0] != NULL){
+                    // WS
+                    if (neighbors[2] != NULL){
+                        neighbor = neighbors[0]->neighbors[2];
+                        if(neighbor->level < level){
+                            neighbor->divide(nodes, xs, ys, zs, true, balance, diag_balance);
+                        }
+                    }
+                    // WN
+                    if (neighbors[3] != NULL){
+                        neighbor = neighbors[0]->neighbors[3];
+                        if(neighbor->level < level){
+                            neighbor->divide(nodes, xs, ys, zs, true, balance, diag_balance);
+                        }
+                    }
+                }
+                if (neighbors[1] != NULL){
+                    // ES
+                    if (neighbors[2] != NULL){
+                        neighbor = neighbors[1]->neighbors[2];
+                        if(neighbor->level < level){
+                            neighbor->divide(nodes, xs, ys, zs, true, balance, diag_balance);
+                        }
+                    }
+                    // EN
+                    if (neighbors[3] != NULL){
+                        neighbor = neighbors[1]->neighbors[3];
+                        if(neighbor->level < level){
+                            neighbor->divide(nodes, xs, ys, zs, true, balance, diag_balance);
+                        }
                     }
                 }
             }
@@ -623,7 +658,7 @@ void Cell::divide(node_map_t& nodes, double* xs, double* ys, double* zs, bool fo
     if(!force){
         if(!is_leaf()){
             for(int_t i = 0; i < (1<<n_dim); ++i){
-                children[i]->divide(nodes, xs, ys, zs);
+                children[i]->divide(nodes, xs, ys, zs, force, balance, diag_balance);
             }
         }
     }
@@ -697,6 +732,7 @@ Tree::Tree(){
     nz = 0;
     n_dim = 0;
     max_level = 0;
+    diag_balance = false;
 };
 
 void Tree::set_dimension(int_t dim){
@@ -749,6 +785,10 @@ void Tree::set_levels(int_t l_x, int_t l_y, int_t l_z){
             }
         }
     }
+};
+
+void Tree::set_diag_balance(bool diagonal_balance){
+    diag_balance = diagonal_balance;
 };
 
 void Tree::set_xs(double *x, double *y, double *z){
@@ -840,7 +880,7 @@ void Tree::insert_cell(double *new_center, int_t p_level){
             ++iz;
         }
     }
-    roots[iz][iy][ix]->insert_cell(nodes, new_center, p_level, xs, ys, zs);
+    roots[iz][iy][ix]->insert_cell(nodes, new_center, p_level, xs, ys, zs, diag_balance);
 }
 
 void Tree::refine_function(function test_func){
@@ -853,14 +893,14 @@ void Tree::refine_function(function test_func){
     for(int_t iz=0; iz<nz_roots; ++iz)
         for(int_t iy=0; iy<ny_roots; ++iy)
             for(int_t ix=0; ix<nx_roots; ++ix)
-                roots[iz][iy][ix]->divide(nodes, xs, ys, zs);
+                roots[iz][iy][ix]->divide(nodes, xs, ys, zs, false, true, diag_balance);
 };
 
 void Tree::refine_box(double* x0, double* x1, int_t p_level){
     for(int_t iz=0; iz<nz_roots; ++iz)
         for(int_t iy=0; iy<ny_roots; ++iy)
             for(int_t ix=0; ix<nx_roots; ++ix)
-                roots[iz][iy][ix]->refine_box(nodes, x0, x1, p_level, xs, ys, zs);
+                roots[iz][iy][ix]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, false, diag_balance);
 };
 
 void Tree::refine_ball(double* center, double r, int_t p_level){
@@ -868,7 +908,7 @@ void Tree::refine_ball(double* center, double r, int_t p_level){
     for(int_t iz=0; iz<nz_roots; ++iz)
         for(int_t iy=0; iy<ny_roots; ++iy)
             for(int_t ix=0; ix<nx_roots; ++ix)
-                roots[iz][iy][ix]->refine_ball(nodes, center, r2, p_level, xs, ys, zs);
+                roots[iz][iy][ix]->refine_ball(nodes, center, r2, p_level, xs, ys, zs, diag_balance);
 };
 
 void Tree::finalize_lists(){
