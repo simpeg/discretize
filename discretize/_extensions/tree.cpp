@@ -509,14 +509,14 @@ void Cell::divide(node_map_t& nodes, double* xs, double* ys, double* zs, bool fo
             if(diag_balance){
                 Cell *neighbor;
                 if (neighbors[0] != NULL){
-                    // WS
+                    // -x-y
                     if (neighbors[2] != NULL){
                         neighbor = neighbors[0]->neighbors[2];
                         if(neighbor->level < level){
                             neighbor->divide(nodes, xs, ys, zs, true, balance, diag_balance);
                         }
                     }
-                    // WN
+                    // -x+y
                     if (neighbors[3] != NULL){
                         neighbor = neighbors[0]->neighbors[3];
                         if(neighbor->level < level){
@@ -525,18 +525,138 @@ void Cell::divide(node_map_t& nodes, double* xs, double* ys, double* zs, bool fo
                     }
                 }
                 if (neighbors[1] != NULL){
-                    // ES
+                    // +x-y
                     if (neighbors[2] != NULL){
                         neighbor = neighbors[1]->neighbors[2];
                         if(neighbor->level < level){
                             neighbor->divide(nodes, xs, ys, zs, true, balance, diag_balance);
                         }
                     }
-                    // EN
+                    // +x+y
                     if (neighbors[3] != NULL){
                         neighbor = neighbors[1]->neighbors[3];
                         if(neighbor->level < level){
                             neighbor->divide(nodes, xs, ys, zs, true, balance, diag_balance);
+                        }
+                    }
+                }
+                if(n_dim == 3){
+                    // -z
+                    if (neighbors[4] != NULL){
+                        if (neighbors[0] != NULL){
+                            // -z-x
+                            neighbor = neighbors[4]->neighbors[0];
+                            if(neighbor->level < level){
+                                neighbor->divide(nodes, xs, ys, zs, true, balance, diag_balance);
+                            }
+                            // -z-x-y
+                            if (neighbors[2] != NULL){
+                                neighbor = neighbors[4]->neighbors[0]->neighbors[2];
+                                if(neighbor->level < level){
+                                    neighbor->divide(nodes, xs, ys, zs, true, balance, diag_balance);
+                                }
+                            }
+                            // -z-x+y
+                            if (neighbors[3] != NULL){
+                                neighbor = neighbors[4]->neighbors[0]->neighbors[3];
+                                if(neighbor->level < level){
+                                    neighbor->divide(nodes, xs, ys, zs, true, balance, diag_balance);
+                                }
+                            }
+                        }
+                        if (neighbors[1] != NULL){
+                            // -z+x
+                            neighbor = neighbors[4]->neighbors[1];
+                            if(neighbor->level < level){
+                                neighbor->divide(nodes, xs, ys, zs, true, balance, diag_balance);
+                            }
+                            // -z+x-y
+                            if (neighbors[2] != NULL){
+                                neighbor = neighbors[4]->neighbors[1]->neighbors[2];
+                                if(neighbor->level < level){
+                                    neighbor->divide(nodes, xs, ys, zs, true, balance, diag_balance);
+                                }
+                            }
+                            // -z+x+y
+                            if (neighbors[3] != NULL){
+                                neighbor = neighbors[4]->neighbors[1]->neighbors[3];
+                                if(neighbor->level < level){
+                                    neighbor->divide(nodes, xs, ys, zs, true, balance, diag_balance);
+                                }
+                            }
+                        }
+                        if (neighbors[2] != NULL){
+                            // -z-y
+                            neighbor = neighbors[4]->neighbors[2];
+                            if(neighbor->level < level){
+                                neighbor->divide(nodes, xs, ys, zs, true, balance, diag_balance);
+                            }
+                        }
+                        if (neighbors[3] != NULL){
+                            // -z+y
+                            neighbor = neighbors[4]->neighbors[3];
+                            if(neighbor->level < level){
+                                neighbor->divide(nodes, xs, ys, zs, true, balance, diag_balance);
+                            }
+                        }
+                    }
+                    // +z
+                    if (neighbors[5] != NULL){
+                        if (neighbors[0] != NULL){
+                            // +z-x
+                            neighbor = neighbors[5]->neighbors[0];
+                            if(neighbor->level < level){
+                                neighbor->divide(nodes, xs, ys, zs, true, balance, diag_balance);
+                            }
+                            // +z-x-y
+                            if (neighbors[2] != NULL){
+                                neighbor = neighbors[5]->neighbors[0]->neighbors[2];
+                                if(neighbor->level < level){
+                                    neighbor->divide(nodes, xs, ys, zs, true, balance, diag_balance);
+                                }
+                            }
+                            // +z-x+y
+                            if (neighbors[3] != NULL){
+                                neighbor = neighbors[5]->neighbors[0]->neighbors[3];
+                                if(neighbor->level < level){
+                                    neighbor->divide(nodes, xs, ys, zs, true, balance, diag_balance);
+                                }
+                            }
+                        }
+                        if (neighbors[1] != NULL){
+                            // +z+x
+                            neighbor = neighbors[5]->neighbors[1];
+                            if(neighbor->level < level){
+                                neighbor->divide(nodes, xs, ys, zs, true, balance, diag_balance);
+                            }
+                            // +z+x-y
+                            if (neighbors[2] != NULL){
+                                neighbor = neighbors[5]->neighbors[1]->neighbors[2];
+                                if(neighbor->level < level){
+                                    neighbor->divide(nodes, xs, ys, zs, true, balance, diag_balance);
+                                }
+                            }
+                            // +z+x+y
+                            if (neighbors[3] != NULL){
+                                neighbor = neighbors[5]->neighbors[1]->neighbors[3];
+                                if(neighbor->level < level){
+                                    neighbor->divide(nodes, xs, ys, zs, true, balance, diag_balance);
+                                }
+                            }
+                        }
+                        if (neighbors[2] != NULL){
+                            // +z-y
+                            neighbor = neighbors[5]->neighbors[2];
+                            if(neighbor->level < level){
+                                neighbor->divide(nodes, xs, ys, zs, true, balance, diag_balance);
+                            }
+                        }
+                        if (neighbors[3] != NULL){
+                            // +z+y
+                            neighbor = neighbors[5]->neighbors[3];
+                            if(neighbor->level < level){
+                                neighbor->divide(nodes, xs, ys, zs, true, balance, diag_balance);
+                            }
                         }
                     }
                 }
