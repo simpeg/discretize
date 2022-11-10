@@ -5658,7 +5658,12 @@ cdef class _TreeMesh:
                                       zs[indArr[:, 2]]))
         else:
             points = np.column_stack((xs[indArr[:, 0]], ys[indArr[:, 1]]))
-        self.insert_cells(points, levels)
+        # Set diagonal balance as false. If the state itself came from a diagonally
+        # balanced tree, those cells will naturally be included in the state information
+        # itself (no need to re-enforce that balancing). This then also allows
+        # us to support reading in older TreeMesh that are not diagonally balanced when
+        # we switch the default to be a diagonally balanced tree.
+        self.insert_cells(points, levels, diagonal_balance=False)
 
     def __getitem__(self, key):
         if isinstance(key, slice):
