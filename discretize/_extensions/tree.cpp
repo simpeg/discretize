@@ -784,7 +784,6 @@ void Cell::divide(node_map_t& nodes, double* xs, double* ys, double* zs, bool fo
     }
 };
 
-
 void Cell::set_test_function(function func){
     test_func = func;
     if(!is_leaf()){
@@ -852,7 +851,6 @@ Tree::Tree(){
     nz = 0;
     n_dim = 0;
     max_level = 0;
-    diag_balance = false;
 };
 
 void Tree::set_dimension(int_t dim){
@@ -905,10 +903,6 @@ void Tree::set_levels(int_t l_x, int_t l_y, int_t l_z){
             }
         }
     }
-};
-
-void Tree::set_diag_balance(bool diagonal_balance){
-    diag_balance = diagonal_balance;
 };
 
 void Tree::set_xs(double *x, double *y, double *z){
@@ -984,7 +978,7 @@ void Tree::initialize_roots(){
     }
 }
 
-void Tree::insert_cell(double *new_center, int_t p_level){
+void Tree::insert_cell(double *new_center, int_t p_level, bool diagonal_balance){
     // find containing root
     int_t ix = 0;
     int_t iy = 0;
@@ -1000,10 +994,10 @@ void Tree::insert_cell(double *new_center, int_t p_level){
             ++iz;
         }
     }
-    roots[iz][iy][ix]->insert_cell(nodes, new_center, p_level, xs, ys, zs, diag_balance);
+    roots[iz][iy][ix]->insert_cell(nodes, new_center, p_level, xs, ys, zs, diagonal_balance);
 }
 
-void Tree::refine_function(function test_func){
+void Tree::refine_function(function test_func, bool diagonal_balance){
     //Must set the test_func of all of the roots before I can start dividing
     for(int_t iz=0; iz<nz_roots; ++iz)
         for(int_t iy=0; iy<ny_roots; ++iy)
@@ -1013,22 +1007,22 @@ void Tree::refine_function(function test_func){
     for(int_t iz=0; iz<nz_roots; ++iz)
         for(int_t iy=0; iy<ny_roots; ++iy)
             for(int_t ix=0; ix<nx_roots; ++ix)
-                roots[iz][iy][ix]->divide(nodes, xs, ys, zs, false, true, diag_balance);
+                roots[iz][iy][ix]->divide(nodes, xs, ys, zs, false, true, diagonal_balance);
 };
 
-void Tree::refine_box(double* x0, double* x1, int_t p_level){
+void Tree::refine_box(double* x0, double* x1, int_t p_level, bool diagonal_balance){
     for(int_t iz=0; iz<nz_roots; ++iz)
         for(int_t iy=0; iy<ny_roots; ++iy)
             for(int_t ix=0; ix<nx_roots; ++ix)
-                roots[iz][iy][ix]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, false, diag_balance);
+                roots[iz][iy][ix]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, false, diagonal_balance);
 };
 
-void Tree::refine_ball(double* center, double r, int_t p_level){
+void Tree::refine_ball(double* center, double r, int_t p_level, bool diagonal_balance){
     double r2 = r*r;
     for(int_t iz=0; iz<nz_roots; ++iz)
         for(int_t iy=0; iy<ny_roots; ++iy)
             for(int_t ix=0; ix<nx_roots; ++ix)
-                roots[iz][iy][ix]->refine_ball(nodes, center, r2, p_level, xs, ys, zs, diag_balance);
+                roots[iz][iy][ix]->refine_ball(nodes, center, r2, p_level, xs, ys, zs, diagonal_balance);
 };
 
 void Tree::finalize_lists(){

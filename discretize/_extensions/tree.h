@@ -144,7 +144,6 @@ class Tree{
     double *xs;
     double *ys;
     double *zs;
-    bool diag_balance;
 
     std::vector<Cell *> cells;
     node_map_t nodes;
@@ -159,16 +158,15 @@ class Tree{
 
     void set_dimension(int_t dim);
     void set_levels(int_t l_x, int_t l_y, int_t l_z);
-    void set_diag_balance(bool diagonal_balance);
     void set_xs(double *x , double *y, double *z);
     void initialize_roots();
-    void refine_function(function test_func);
-    void refine_ball(double *center, double r, int_t p_level);
-    void refine_box(double* x0, double* x1, int_t p_level);
+    void refine_function(function test_func, bool diagonal_balance=false);
+    void refine_ball(double *center, double r, int_t p_level, bool diagonal_balance=false);
+    void refine_box(double* x0, double* x1, int_t p_level, bool diagonal_balance=false);
     void number();
     void finalize_lists();
 
-    void insert_cell(double *new_center, int_t p_level);
+    void insert_cell(double *new_center, int_t p_level, bool diagonal_balance=false);
 
     Cell* containing_cell(double, double, double);
     int_vec_t find_overlapping_cells(double xm, double xp, double ym, double yp, double zm, double zp);
