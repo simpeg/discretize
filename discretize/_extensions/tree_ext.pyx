@@ -5,6 +5,7 @@ cimport cython
 cimport numpy as np
 from libc.stdlib cimport malloc, free
 from libcpp.vector cimport vector
+from libcpp cimport bool
 from numpy.math cimport INFINITY
 
 from .tree cimport int_t, Tree as c_Tree, PyWrapper, Node, Edge, Face, Cell as c_Cell
@@ -313,6 +314,7 @@ cdef class _TreeMesh:
     cdef int_t _dim
     cdef int_t[3] ls
     cdef int _finalized
+    cdef bool _diagonal_balance
 
     cdef double[:] _xs, _ys, _zs
     cdef double[:] _origin
@@ -337,7 +339,7 @@ cdef class _TreeMesh:
         self.wrapper = new PyWrapper()
         self.tree = new c_Tree()
 
-    def __init__(self, h, origin):
+    def __init__(self, h, origin, bool diagonal_balance=False):
         super().__init__(h=h, origin=origin)
         def is_pow2(num):
             return ((num & (num - 1)) == 0) and num != 0
@@ -381,6 +383,7 @@ cdef class _TreeMesh:
         self.tree.set_xs(&self._xs[0], &self._ys[0], &self._zs[0])
         self.tree.initialize_roots()
         self._finalized = False
+        self._diagonal_balance = diagonal_balance
         self._clear_cache()
 
     def _clear_cache(self):
@@ -442,7 +445,7 @@ cdef class _TreeMesh:
         self.__ubc_order = None
         self.__ubc_indArr = None
 
-    def refine(self, function, finalize=True):
+    def refine(self, function, finalize=True, diagonal_balance=None):
         """Refine :class:`~discretize.TreeMesh` with user-defined function.
 
         Refines the :class:`~discretize.TreeMesh` according to a user-defined function.
@@ -461,6 +464,9 @@ cdef class _TreeMesh:
             :class:`~discretize.tree_mesh.TreeCell`.
         finalize : bool, optional
             whether to finalize the mesh
+        diagonal_balance : bool or None, optional
+            Whether to balance cells diagonally in the refinement, `None` implies using
+            the same setting used to instantiate the TreeMesh`.
 
         Examples
         --------
@@ -490,16 +496,20 @@ cdef class _TreeMesh:
             level = function
             function = lambda cell: level
 
+        if diagonal_balance is None:
+            diagonal_balance = self._diagonal_balance
+        cdef bool diag_balance = diagonal_balance
+
         #Wrapping function so it can be called in c++
         cdef void * func_ptr = <void *> function
         self.wrapper.set(func_ptr, _evaluate_func)
         #Then tell c++ to build the tree
-        self.tree.refine_function(self.wrapper)
+        self.tree.refine_function(self.wrapper, diag_balance)
         if finalize:
             self.finalize()
 
     @cython.cdivision(True)
-    def refine_ball(self, points, radii, levels, finalize=True):
+    def refine_ball(self, points, radii, levels, finalize=True, diagonal_balance=None):
         """Refine :class:`~discretize.TreeMesh` using radial distance (ball) and refinement level for a cluster of points.
 
         For each point in the array `points`, this method refines the tree mesh
@@ -517,6 +527,9 @@ cdef class _TreeMesh:
             A 1D array defining the maximum refinement level for each ball
         finalize : bool, optional
             Whether to finalize after refining
+        diagonal_balance : bool or None, optional
+            Whether to balance cells diagonally in the refinement, `None` implies using
+            the same setting used to instantiate the TreeMesh`.
 
         Examples
         --------
@@ -562,6 +575,10 @@ cdef class _TreeMesh:
         if points.shape[0] != ls.shape[0]:
             raise ValueError("level length must match the points array's first dimension")
 
+        if diagonal_balance is None:
+            diagonal_balance = self._diagonal_balance
+        cdef bool diag_balance = diagonal_balance
+
         cdef int_t i
         cdef int l
         cdef int max_level = self.max_level
@@ -569,11 +586,12 @@ cdef class _TreeMesh:
             l = ls[i]
             if l < 0:
                 l = (max_level + 1) - (abs(l) % (max_level + 1))
-            self.tree.refine_ball(&cs[i, 0], rs[i], l)
+            self.tree.refine_ball(&cs[i, 0], rs[i], l, diag_balance)
         if finalize:
             self.finalize()
 
-    def refine_box(self, x0s, x1s, levels, finalize=True):
+    @cython.cdivision(True)
+    def refine_box(self, x0s, x1s, levels, finalize=True, diagonal_balance=None):
         """Refines the :class:`~discretize.TreeMesh` within the axis aligned boxes to the desired level
 
         Refines the TreeMesh by determining if a cell intersects the given axis aligned
@@ -589,6 +607,9 @@ cdef class _TreeMesh:
             The level to refine intersecting cells to
         finalize : bool, optional
             Whether to finalize after refining
+        diagonal_balance : bool or None, optional
+            Whether to balance cells diagonally in the refinement, `None` implies using
+            the same setting used to instantiate the TreeMesh`.
 
         Examples
         --------
@@ -638,17 +659,22 @@ cdef class _TreeMesh:
         if x0.shape[0] != ls.shape[0]:
             raise ValueError("level length must match the points array's first dimension")
 
+        if diagonal_balance is None:
+            diagonal_balance = self._diagonal_balance
+        cdef bool diag_balance = diagonal_balance
+
         cdef int l
         cdef int max_level = self.max_level
         for i in range(ls.shape[0]):
             l = ls[i]
             if l < 0:
                 l = (max_level + 1) - (abs(l) % (max_level + 1))
-            self.tree.refine_box(&x0[i, 0], &x1[i, 0], l)
+            self.tree.refine_box(&x0[i, 0], &x1[i, 0], l, diag_balance)
         if finalize:
             self.finalize()
 
-    def insert_cells(self, points, levels, finalize=True):
+    @cython.cdivision(True)
+    def insert_cells(self, points, levels, finalize=True, diagonal_balance=None):
         """Insert cells into the :class:`~discretize.TreeMesh` that contain given points
 
         Insert cell(s) into the :class:`~discretize.TreeMesh` that contain the given point(s) at the
@@ -660,6 +686,9 @@ cdef class _TreeMesh:
         levels : (N) array_like of int
         finalize : bool, optional
             Whether to finalize after inserting point(s)
+        diagonal_balance : bool or None, optional
+            Whether to balance cells diagonally in the refinement, `None` implies using
+            the same setting used to instantiate the TreeMesh`.
 
         Examples
         --------
@@ -684,11 +713,14 @@ cdef class _TreeMesh:
                                     requirements='C')
         cdef int l
         cdef int max_level = self.max_level
+        if diagonal_balance is None:
+            diagonal_balance = self._diagonal_balance
+        cdef bool diag_balance = diagonal_balance
         for i in range(ls.shape[0]):
             l = ls[i]
             if l < 0:
                 l = (max_level + 1) - (abs(l) % (max_level + 1))
-            self.tree.insert_cell(&cs[i, 0], l)
+            self.tree.insert_cell(&cs[i, 0], l, diagonal_balance)
         if finalize:
             self.finalize()
 
@@ -5626,7 +5658,12 @@ cdef class _TreeMesh:
                                       zs[indArr[:, 2]]))
         else:
             points = np.column_stack((xs[indArr[:, 0]], ys[indArr[:, 1]]))
-        self.insert_cells(points, levels)
+        # Set diagonal balance as false. If the state itself came from a diagonally
+        # balanced tree, those cells will naturally be included in the state information
+        # itself (no need to re-enforce that balancing). This then also allows
+        # us to support reading in older TreeMesh that are not diagonally balanced when
+        # we switch the default to be a diagonally balanced tree.
+        self.insert_cells(points, levels, diagonal_balance=False)
 
     def __getitem__(self, key):
         if isinstance(key, slice):
