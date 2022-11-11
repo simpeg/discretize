@@ -3,6 +3,7 @@
 #include "tree.h"
 #include <iostream>
 #include <algorithm>
+#include <limits>
 
 Node::Node(){
     location_ind[0] = 0;
@@ -470,6 +471,63 @@ void Cell::refine_box(node_map_t& nodes, double* x0, double* x1, int_t p_level, 
         children[5]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed, diag_balance);
         children[6]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed, diag_balance);
         children[7]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed, diag_balance);
+    }
+}
+
+void Cell::refine_line(node_map_t& nodes, double* x0, double* x1, double* diff_inv, int_t p_level, double *xs, double *ys, double* zs, bool diag_balance){
+    // Return If I'm at max_level or p_level
+    if (level >= p_level || level == max_level){
+        return;
+    }
+    // then check to see if I intersect the segment
+    double t0x, t0y, t0z, t1x, t1y, t1z;
+    double tminx, tminy, tminz, tmaxx, tmaxy, tmaxz;
+    double tmin, tmax;
+
+    t0x = (points[0]->location[0] - x0[0]) * diff_inv[0];
+    t1x = (points[3]->location[0] - x0[0]) * diff_inv[0];
+    if (t0x <= t1x){
+      tminx = t0x;
+      tmaxx = t1x;
+    }else{
+      tminx = t1x;
+      tmaxx = t0x;
+    }
+
+    t0y = (points[0]->location[1] - x0[1]) * diff_inv[1];
+    t1y = (points[3]->location[1] - x0[1]) * diff_inv[1];
+    if (t0y <= t1y){
+      tminy = t0y;
+      tmaxy = t1y;
+    }else{
+      tminy = t1y;
+      tmaxy = t0y;
+    }
+
+    tmin = std::max(tminx, tminy);
+    tmax = std::min(tmaxx, tmaxy);
+    if (n_dim > 2){
+        t0z = (points[0]->location[2] - x0[2]) * diff_inv[2];
+        t1z = (points[7]->location[2] - x0[2]) * diff_inv[2];
+        if (t0z <= t1z){
+          tminz = t0z;
+          tmaxz = t1z;
+        }else{
+          tminz = t1z;
+          tmaxz = t0z;
+        }
+        tmin = std::max(tmin, tminz);
+        tmax = std::min(tmax, tmaxz);
+    }
+    // now can test if I intersect!
+    if (tmax >= 0 && tmin <= 1 && tmin <= tmax){
+        if(is_leaf()){
+            divide(nodes, xs, ys, zs, true, diag_balance);
+        }
+        // recurse into children
+        for(int_t i = 0; i < (1<<n_dim); ++i){
+            children[i]->refine_line(nodes, x0, x1, diff_inv, p_level, xs, ys, zs, diag_balance);
+        }
     }
 }
 
@@ -1010,6 +1068,17 @@ void Tree::refine_ball(double* center, double r, int_t p_level, bool diagonal_ba
         for(int_t iy=0; iy<ny_roots; ++iy)
             for(int_t ix=0; ix<nx_roots; ++ix)
                 roots[iz][iy][ix]->refine_ball(nodes, center, r2, p_level, xs, ys, zs, diagonal_balance);
+};
+
+void Tree::refine_line(double* x0, double* x1, int_t p_level, bool diagonal_balance){
+    double diff_inv[3];
+    for(int_t i=0; i<n_dim; ++i){
+        diff_inv[i] = 1/(x1[i] - x0[i]);
+    }
+    for(int_t iz=0; iz<nz_roots; ++iz)
+        for(int_t iy=0; iy<ny_roots; ++iy)
+            for(int_t ix=0; ix<nx_roots; ++ix)
+                roots[iz][iy][ix]->refine_line(nodes, x0, x1, diff_inv, p_level, xs, ys, zs, diagonal_balance);
 };
 
 void Tree::finalize_lists(){

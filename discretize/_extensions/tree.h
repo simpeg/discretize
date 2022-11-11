@@ -126,6 +126,7 @@ class Cell{
     void insert_cell(node_map_t &nodes, double *new_center, int_t p_level, double* xs, double *ys, double *zs, bool diag_balance=false);
     void refine_ball(node_map_t& nodes, double* center, double r2, int_t p_level, double *xs, double *ys, double* zs, bool diag_balance=false);
     void refine_box(node_map_t& nodes, double* x0, double* x1, int_t p_level, double *xs, double *ys, double* zs, bool enclosed=false, bool diag_balance=false);
+    void refine_line(node_map_t& nodes, double* x0, double* x1, double* diff_inv, int_t p_level, double *xs, double *ys, double* zs, bool diag_balance=false);
     void refine_func(node_map_t& nodes, function test_func, double *xs, double *ys, double* zs, bool diag_balance=false);
 
     Cell* containing_cell(double, double, double);
@@ -161,6 +162,7 @@ class Tree{
     void refine_function(function test_func, bool diagonal_balance=false);
     void refine_ball(double *center, double r, int_t p_level, bool diagonal_balance=false);
     void refine_box(double* x0, double* x1, int_t p_level, bool diagonal_balance=false);
+    void refine_line(double* x0, double* x1, int_t p_level, bool diag_balance=false);
     void number();
     void finalize_lists();
 

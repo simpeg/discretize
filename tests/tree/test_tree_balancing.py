@@ -111,6 +111,22 @@ def test_refine_ball():
     assert len(bad_nodes) == 0
 
 
+def test_refine_line():
+    segments = np.array([[0.1, 0.3], [0.3, 0.9], [0.8, 0.9]])
+
+    mesh1 = discretize.TreeMesh([64, 64])
+    mesh1.refine_line(segments, -1)
+    bad_nodes = check_for_diag_unbalance(mesh1)
+
+    assert len(bad_nodes) == 7
+
+    mesh2 = discretize.TreeMesh([64, 64], diagonal_balance=True)
+    mesh2.refine_line(segments, -1)
+    bad_nodes = check_for_diag_unbalance(mesh2)
+
+    assert len(bad_nodes) == 0
+
+
 def test_balance_out_unbalance_in():
     mesh1 = discretize.TreeMesh([64, 64], diagonal_balance=True)
     mesh1.insert_cells([0.09, 0.09], -1, finalize=False)
