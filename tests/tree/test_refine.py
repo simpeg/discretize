@@ -180,6 +180,170 @@ def test_triangle_errors():
         mesh1.refine_triangle(triangles2, levels, finalize=False)
 
 
+def test_tetra2d():
+    # It actually calls triangle refine... just double check that works
+    # define a slower function that is surely accurate
+    triangle = np.array([[0.14, 0.31], [0.32, 0.96], [0.23, 0.87]])
+    edges = np.stack(
+        [
+            triangle[1] - triangle[0],
+            triangle[2] - triangle[1],
+            triangle[2] - triangle[0],
+        ]
+    )
+
+    def project_min_max(points, axis):
+        ps = points @ axis
+        return ps.min(), ps.max()
+
+    def refine_triangle2d(cell):
+        # The underlying C functions are more optimized
+        # but this is more explicit
+        x0 = cell.origin
+        xF = x0 + cell.h
+
+        mins = triangle.min(axis=0)
+        if np.any(mins > xF):
+            return 0
+        maxs = triangle.max(axis=0)
+        if np.any(maxs < x0):
+            return 0
+
+        box_points = np.array(
+            [
+                [x0[0], x0[1]],
+                [x0[0], xF[1]],
+                [xF[0], x0[1]],
+                [xF[0], xF[1]],
+            ]
+        )
+        for i in range(3):
+            axis = [-edges[i, 1], edges[i, 0]]
+            bmin, bmax = project_min_max(box_points, axis)
+            tmin, tmax = project_min_max(triangle, axis)
+            if bmax < tmin or bmin > tmax:
+                return 0
+        return -1
+
+    mesh1 = discretize.TreeMesh([64, 64])
+    mesh1.refine(refine_triangle2d)
+
+    mesh2 = discretize.TreeMesh([64, 64])
+    mesh2.refine_tetrahedron(triangle, -1)
+
+    assert mesh1.equals(mesh2)
+
+
+def test_tetra3d():
+    # define a slower function that is surely accurate
+    simplex = np.array(
+        [[0.32, 0.21, 0.15], [0.82, 0.19, 0.34], [0.14, 0.82, 0.29], [0.32, 0.27, 0.83]]
+    )
+    edges = np.stack(
+        [
+            simplex[1] - simplex[0],
+            simplex[2] - simplex[0],
+            simplex[2] - simplex[1],
+            simplex[3] - simplex[0],
+            simplex[3] - simplex[1],
+            simplex[3] - simplex[2],
+        ]
+    )
+
+    def project_min_max(points, axis):
+        ps = points @ axis
+        return ps.min(), ps.max()
+
+    box_normals = np.eye(3)
+
+    def refine_simplex(cell):
+        x0 = cell.origin
+        xF = x0 + cell.h
+        simp = simplex
+
+        # Bounding box tests
+        # 3(x2) box face normals
+        mins = simp.min(axis=0)
+        if np.any(mins > xF):
+            return 0
+        maxs = simp.max(axis=0)
+        if np.any(maxs < x0):
+            return 0
+
+        box_points = np.array(
+            [
+                [x0[0], x0[1], x0[2]],
+                [x0[0], xF[1], x0[2]],
+                [xF[0], x0[1], x0[2]],
+                [xF[0], xF[1], x0[2]],
+                [x0[0], x0[1], xF[2]],
+                [x0[0], xF[1], xF[2]],
+                [xF[0], x0[1], xF[2]],
+                [xF[0], xF[1], xF[2]],
+            ]
+        )
+        # 3 box edges tangents and 6 simplex edge tangents
+        for i in range(6):
+            for j in range(3):
+                axis = np.cross(edges[i], box_normals[j])
+                bmin, bmax = project_min_max(box_points, axis)
+                tmin, tmax = project_min_max(simp, axis)
+                if bmax < tmin or bmin > tmax:
+                    return 0
+
+        # 4 simplex faces
+        axis = np.cross(edges[0], edges[1])
+        tmin, tmax = project_min_max(simp, axis)
+        bmin, bmax = project_min_max(box_points, axis)
+        if bmax < tmin or bmin > tmax:
+            return 0
+        axis = np.cross(edges[0], edges[3])
+        tmin, tmax = project_min_max(simp, axis)
+        bmin, bmax = project_min_max(box_points, axis)
+        if bmax < tmin or bmin > tmax:
+            return 0
+        axis = np.cross(edges[1], edges[4])
+        tmin, tmax = project_min_max(simp, axis)
+        bmin, bmax = project_min_max(box_points, axis)
+        if bmax < tmin or bmin > tmax:
+            return 0
+        axis = np.cross(edges[2], edges[5])
+        tmin, tmax = project_min_max(simp, axis)
+        bmin, bmax = project_min_max(box_points, axis)
+        if bmax < tmin or bmin > tmax:
+            return 0
+        return -1
+
+    mesh1 = discretize.TreeMesh([32, 32, 32])
+    mesh1.refine(refine_simplex)
+
+    mesh2 = discretize.TreeMesh([32, 32, 32])
+    mesh2.refine_tetrahedron(simplex, -1)
+
+    assert mesh1.equals(mesh2)
+
+
+def test_tetra_errors():
+    not_simplex_array = np.random.rand(4, 3, 3)
+    simplex = np.random.rand(4, 2)
+    simplices = np.random.rand(10, 4, 3)
+    levels = np.full(8, -1)
+
+    mesh1 = discretize.TreeMesh([32, 32, 32])
+
+    # not passing 4 points on the second to last dimension to make a simplex
+    with pytest.raises(ValueError):
+        mesh1.refine_tetrahedron(not_simplex_array, -1, finalize=False)
+
+    # incorrect dimension
+    with pytest.raises(ValueError):
+        mesh1.refine_tetrahedron(simplex, -1, finalize=False)
+
+    # bad number of levels and triangles
+    with pytest.raises(ValueError):
+        mesh1.refine_tetrahedron(simplices, levels, finalize=False)
+
+
 def test_box_errors():
     mesh = discretize.TreeMesh([64, 64])
     x0s = np.array([0.1, 0.2])

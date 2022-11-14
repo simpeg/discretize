@@ -132,6 +132,12 @@ class Cell{
       double* x0, double* x1, double* x2, double* e0, double* e1, double* e2, double* t_norm,
       int_t p_level, double *xs, double *ys, double* zs, bool diag_balance=false
     );
+    void refine_tetra(
+      node_map_t& nodes,
+      double* x0, double* x1, double* x2, double* x3,
+      double edge_tans[6][3], double face_normals[4][3],
+      int_t p_level, double *xs, double *ys, double* zs, bool diag_balance
+    );
 
     Cell* containing_cell(double, double, double);
     void shift_centers(double * shift);
@@ -167,7 +173,12 @@ class Tree{
     void refine_ball(double *center, double r, int_t p_level, bool diagonal_balance=false);
     void refine_box(double* x0, double* x1, int_t p_level, bool diagonal_balance=false);
     void refine_line(double* x0, double* x1, int_t p_level, bool diag_balance=false);
-    void refine_triangle(double* x0, double* x1, double* x2, int_t p_level, bool diag_balance=false);
+    void refine_triangle(
+        double* x0, double* x1, double* x2, int_t p_level, bool diag_balance=false
+    );
+    void refine_tetra(
+        double* x0, double* x1, double* x2, double* x3, int_t p_level, bool diag_balance=false
+    );
     void number();
     void finalize_lists();
 

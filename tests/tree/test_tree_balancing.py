@@ -142,6 +142,23 @@ def test_refine_triangle():
     assert len(bad_nodes) == 0
 
 
+def test_refine_tetra():
+    simplex = np.array(
+        [[0.32, 0.21, 0.15], [0.82, 0.19, 0.34], [0.14, 0.82, 0.29], [0.32, 0.27, 0.83]]
+    )
+    mesh1 = discretize.TreeMesh([32, 32, 32], diagonal_balance=False)
+    mesh1.refine_tetrahedron(simplex, -1)
+    bad_nodes = check_for_diag_unbalance(mesh1)
+
+    assert len(bad_nodes) == 62
+
+    mesh2 = discretize.TreeMesh([32, 32, 32], diagonal_balance=True)
+    mesh2.refine_tetrahedron(simplex, -1)
+    bad_nodes = check_for_diag_unbalance(mesh2)
+
+    assert len(bad_nodes) == 0
+
+
 def test_balance_out_unbalance_in():
     mesh1 = discretize.TreeMesh([64, 64], diagonal_balance=True)
     mesh1.insert_cells([0.09, 0.09], -1, finalize=False)

@@ -827,6 +827,85 @@ cdef class _TreeMesh:
             self.finalize()
 
     @cython.cdivision(True)
+    def refine_tetrahedron(self, tetra, levels, finalize=True, diagonal_balance=None):
+        """Refines the :class:`~discretize.TreeMesh` along the tetrahedron to the desired level
+
+        Refines the TreeMesh by determining if a cell intersects the given triangle(s)
+        to the prescribed level(s).
+
+        Parameters
+        ----------
+        tetra : (N, dim+1, dim) array_like
+            The nodes of the tetrahedron(s).
+        levels : int or (N) array_like of int
+            The level to refine intersecting cells to.
+        finalize : bool, optional
+            Whether to finalize after refining
+        diagonal_balance : bool or None, optional
+            Whether to balance cells diagonally in the refinement, `None` implies using
+            the same setting used to instantiate the TreeMesh`.
+
+        Examples
+        --------
+        We create a simple mesh and refine the TreeMesh such that all cells that
+        intersect the line segment path are at the given levels.
+
+        >>> import discretize
+        >>> import matplotlib.pyplot as plt
+        >>> import matplotlib.patches as patches
+        >>> tree_mesh = discretize.TreeMesh([32, 32])
+        >>> tree_mesh.max_level
+        5
+
+        Next we define the points along the line and the level we want to refine to,
+        and refine the mesh.
+
+        >>> segments = np.array([[0.1, 0.3], [0.3, 0.9], [0.8, 0.9]])
+        >>> levels = 5
+        >>> tree_mesh.refine_line(segments, levels)
+
+        Now lets look at the mesh, and overlay the line on it to ensure it refined
+        where we wanted it to.
+
+        >>> ax = tree_mesh.plot_grid()
+        >>> ax.plot(*segments.T, color='C1')
+        >>> plt.show()
+
+        """
+        if self.dim == 2:
+            return self.refine_triangle(tetra, levels, finalize=finalize, diagonal_balance=diagonal_balance)
+        tetra = np.require(np.atleast_2d(tetra), dtype=np.float64, requirements="C")
+        if tetra.ndim == 2:
+            tetra = tetra[None, ...]
+        if tetra.shape[-1] != self.dim or tetra.shape[-2] != self.dim+1:
+            raise ValueError(f"tetra array must be (N, {self.dim+1}, {self.dim})")
+        cdef double[:, :, :] tris = tetra
+
+        levels = np.require(np.atleast_1d(levels), dtype=np.int32,
+                                    requirements='C')
+        cdef int n_triangles = tetra.shape[0];
+        if levels.shape[0] == 1:
+            levels = np.full(n_triangles, levels[0], dtype=np.int32)
+        if n_triangles != levels.shape[0]:
+            raise ValueError(f"inconsistent number of triangles {n_triangles} and levels {levels.shape[0]}")
+
+        cdef int[:] ls = levels
+
+        if diagonal_balance is None:
+            diagonal_balance = self._diagonal_balance
+        cdef bool diag_balance = diagonal_balance
+
+        cdef int l
+        cdef int max_level = self.max_level
+        for i in range(n_triangles):
+            l = ls[i]
+            if l < 0:
+                l = (max_level + 1) - (abs(l) % (max_level + 1))
+            self.tree.refine_tetra(&tris[i, 0, 0], &tris[i, 1, 0], &tris[i, 2, 0], &tris[i, 3, 0], l, diag_balance)
+        if finalize:
+            self.finalize()
+
+    @cython.cdivision(True)
     def insert_cells(self, points, levels, finalize=True, diagonal_balance=None):
         """Insert cells into the :class:`~discretize.TreeMesh` that contain given points
 
