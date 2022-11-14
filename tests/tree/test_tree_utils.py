@@ -28,18 +28,17 @@ class TestRefineOcTree(unittest.TestCase):
         )
         cell_levels = mesh.cell_levels_by_index(np.arange(mesh.n_cells))
 
-        vol = 4.0 * np.pi / 3.0 * (rad+dx) ** 3.0
+        vol = 4.0 * np.pi / 3.0 * (rad + dx) ** 3.0
 
         vol_mesh = mesh.cell_volumes[cell_levels == mesh.max_level].sum()
 
-        self.assertLess(np.abs(vol - vol_mesh)/vol, 0.05)
+        self.assertLess(np.abs(vol - vol_mesh) / vol, 0.05)
 
         levels, cells_per_level = np.unique(cell_levels, return_counts=True)
 
         self.assertEqual(mesh.n_cells, 311858)
         np.testing.assert_array_equal(levels, [3, 4, 5, 6, 7])
         np.testing.assert_array_equal(cells_per_level, [232, 1176, 2671, 9435, 298344])
-
 
     def test_box(self):
         dx = 0.25
@@ -61,9 +60,9 @@ class TestRefineOcTree(unittest.TestCase):
         )
         cell_levels = mesh.cell_levels_by_index(np.arange(mesh.n_cells))
 
-        vol = (2*(dl+2*dx))**3  # 2*dx is cell size at second to highest level
+        vol = (2 * (dl + 2 * dx)) ** 3  # 2*dx is cell size at second to highest level
         vol_mesh = np.sum(mesh.cell_volumes[cell_levels == mesh.max_level - 1])
-        self.assertLess((vol-vol_mesh)/vol, 0.05)
+        self.assertLess((vol - vol_mesh) / vol, 0.05)
 
         levels, cells_per_level = np.unique(cell_levels, return_counts=True)
 

@@ -44,11 +44,13 @@ def test_line_errors():
 def test_triangle2d():
     # define a slower function that is surely accurate
     triangle = np.array([[0.14, 0.31], [0.32, 0.96], [0.23, 0.87]])
-    edges = np.stack([
-        triangle[1]-triangle[0],
-        triangle[2]-triangle[1],
-        triangle[2]-triangle[0],
-    ])
+    edges = np.stack(
+        [
+            triangle[1] - triangle[0],
+            triangle[2] - triangle[1],
+            triangle[2] - triangle[0],
+        ]
+    )
 
     def project_min_max(points, axis):
         ps = points @ axis
@@ -67,12 +69,14 @@ def test_triangle2d():
         if np.any(maxs < x0):
             return 0
 
-        box_points = np.array([
-            [x0[0], x0[1]],
-            [x0[0], xF[1]],
-            [xF[0], x0[1]],
-            [xF[0], xF[1]],
-        ])
+        box_points = np.array(
+            [
+                [x0[0], x0[1]],
+                [x0[0], xF[1]],
+                [xF[0], x0[1]],
+                [xF[0], xF[1]],
+            ]
+        )
         for i in range(3):
             axis = [-edges[i, 1], edges[i, 0]]
             bmin, bmax = project_min_max(box_points, axis)
@@ -93,17 +97,20 @@ def test_triangle2d():
 def test_triangle3d():
     # define a slower function that is surely accurate
     triangle = np.array([[0.14, 0.31, 0.23], [0.32, 0.96, 0.41], [0.23, 0.87, 0.72]])
-    edges = np.stack([
-        triangle[1]-triangle[0],
-        triangle[2]-triangle[1],
-        triangle[2]-triangle[0],
-    ])
+    edges = np.stack(
+        [
+            triangle[1] - triangle[0],
+            triangle[2] - triangle[1],
+            triangle[2] - triangle[0],
+        ]
+    )
     triangle_norm = np.cross(edges[0], edges[1])
     triangle_proj = triangle[0] @ triangle_norm
 
     def project_min_max(points, axis):
         ps = points @ axis
         return ps.min(), ps.max()
+
     box_normals = np.eye(3)
 
     def refine_triangle(cell):
@@ -119,16 +126,18 @@ def test_triangle3d():
         if np.any(maxs < x0):
             return 0
 
-        box_points = np.array([
-            [x0[0], x0[1], x0[2]],
-            [x0[0], xF[1], x0[2]],
-            [xF[0], x0[1], x0[2]],
-            [xF[0], xF[1], x0[2]],
-            [x0[0], x0[1], xF[2]],
-            [x0[0], xF[1], xF[2]],
-            [xF[0], x0[1], xF[2]],
-            [xF[0], xF[1], xF[2]],
-        ])
+        box_points = np.array(
+            [
+                [x0[0], x0[1], x0[2]],
+                [x0[0], xF[1], x0[2]],
+                [xF[0], x0[1], x0[2]],
+                [xF[0], xF[1], x0[2]],
+                [x0[0], x0[1], xF[2]],
+                [x0[0], xF[1], xF[2]],
+                [xF[0], x0[1], xF[2]],
+                [xF[0], xF[1], xF[2]],
+            ]
+        )
         for i in range(3):
             for j in range(3):
                 axis = np.cross(edges[i], box_normals[j])

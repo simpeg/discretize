@@ -3,7 +3,11 @@ import warnings
 import os
 import json
 from scipy.spatial import KDTree
-from discretize.utils.code_utils import deprecate_property, deprecate_method, as_array_n_by_dim
+from discretize.utils.code_utils import (
+    deprecate_property,
+    deprecate_method,
+    as_array_n_by_dim,
+)
 
 
 class BaseMesh:
@@ -610,7 +614,9 @@ class BaseMesh:
         (n_boundary_faces, dim) numpy.ndarray of float
             Outward normal vectors of boundary faces
         """
-        raise NotImplementedError(f"boundary_face_outward_normals not implemented for {type(self)}")
+        raise NotImplementedError(
+            f"boundary_face_outward_normals not implemented for {type(self)}"
+        )
 
     def project_face_vector(self, face_vectors):
         """Project vectors onto the faces of the mesh.
@@ -1206,7 +1212,9 @@ class BaseMesh:
 
         where `w` is defined on all faces, and `u_b` is defined on boundary faces.
         """
-        raise NotImplementedError(f"boundary_face_scalar_integral not implemented for {type(self)}")
+        raise NotImplementedError(
+            f"boundary_face_scalar_integral not implemented for {type(self)}"
+        )
 
     @property
     def boundary_edge_vector_integral(self):
@@ -1240,7 +1248,9 @@ class BaseMesh:
         where `w` is defined on all edges, and `u_b` is all three components defined on
         boundary edges.
         """
-        raise NotImplementedError(f"boundary_edge_vector_integral not implemented for {type(self)}")
+        raise NotImplementedError(
+            f"boundary_edge_vector_integral not implemented for {type(self)}"
+        )
 
     @property
     def boundary_node_vector_integral(self):
@@ -1268,7 +1278,9 @@ class BaseMesh:
         where `w` is defined on all nodes, and `u_b` is all three components defined on
         boundary nodes.
         """
-        raise NotImplementedError(f"boundary_node_vector_integral not implemented for {type(self)}")
+        raise NotImplementedError(
+            f"boundary_node_vector_integral not implemented for {type(self)}"
+        )
 
     @property
     def nodal_laplacian(self):
@@ -1519,7 +1531,9 @@ class BaseMesh:
             >>> ax2.set_xlabel("Cell Index", fontsize=12)
             >>> plt.show()
         """
-        raise NotImplementedError(f"stencil_cell_gradient not implemented for {type(self)}")
+        raise NotImplementedError(
+            f"stencil_cell_gradient not implemented for {type(self)}"
+        )
 
     # Inner Products
     def get_face_inner_product(
@@ -1528,7 +1542,7 @@ class BaseMesh:
         invert_model=False,
         invert_matrix=False,
         do_fast=True,
-        **kwargs
+        **kwargs,
     ):
         r"""Generate the face inner product matrix or its inverse.
 
@@ -1699,7 +1713,9 @@ class BaseMesh:
             >>> ax3.set_title("M (full anisotropic)", fontsize=16)
             >>> plt.show()
         """
-        raise NotImplementedError(f"get_face_inner_product not implemented for {type(self)}")
+        raise NotImplementedError(
+            f"get_face_inner_product not implemented for {type(self)}"
+        )
 
     def get_edge_inner_product(
         self,
@@ -1707,7 +1723,7 @@ class BaseMesh:
         invert_model=False,
         invert_matrix=False,
         do_fast=True,
-        **kwargs
+        **kwargs,
     ):
         r"""Generate the edge inner product matrix or its inverse.
 
@@ -1880,7 +1896,9 @@ class BaseMesh:
             >>> plt.show()
 
         """
-        raise NotImplementedError(f"get_edge_inner_product not implemented for {type(self)}")
+        raise NotImplementedError(
+            f"get_edge_inner_product not implemented for {type(self)}"
+        )
 
     def get_face_inner_product_deriv(
         self, model, do_fast=True, invert_model=False, invert_matrix=False, **kwargs
@@ -2066,7 +2084,9 @@ class BaseMesh:
             >>> plt.show()
 
         """
-        raise NotImplementedError(f"get_face_inner_product_deriv not implemented for {type(self)}")
+        raise NotImplementedError(
+            f"get_face_inner_product_deriv not implemented for {type(self)}"
+        )
 
     def get_edge_inner_product_deriv(
         self, model, do_fast=True, invert_model=False, invert_matrix=False, **kwargs
@@ -2250,7 +2270,9 @@ class BaseMesh:
             >>> ax2.set_ylabel("Edge Index", fontsize=12)
             >>> plt.show()
         """
-        raise NotImplementedError(f"get_edge_inner_product_deriv not implemented for {type(self)}")
+        raise NotImplementedError(
+            f"get_edge_inner_product_deriv not implemented for {type(self)}"
+        )
 
     # Averaging
     @property
@@ -2339,7 +2361,9 @@ class BaseMesh:
             >>> ax1.set_ylabel("Cell Index", fontsize=12)
             >>> plt.show()
         """
-        raise NotImplementedError(f"average_face_to_cell not implemented for {type(self)}")
+        raise NotImplementedError(
+            f"average_face_to_cell not implemented for {type(self)}"
+        )
 
     @property
     def average_face_to_cell_vector(self):
@@ -2442,7 +2466,9 @@ class BaseMesh:
             >>> ax1.set_ylabel("Cell Vector Index", fontsize=12)
             >>> plt.show()
         """
-        raise NotImplementedError(f"average_face_to_cell_vector not implemented for {type(self)}")
+        raise NotImplementedError(
+            f"average_face_to_cell_vector not implemented for {type(self)}"
+        )
 
     @property
     def average_cell_to_face(self):
@@ -2538,7 +2564,9 @@ class BaseMesh:
             >>> ax1.set_ylabel("Face Index", fontsize=12)
             >>> plt.show()
         """
-        raise NotImplementedError(f"average_cell_to_face not implemented for {type(self)}")
+        raise NotImplementedError(
+            f"average_cell_to_face not implemented for {type(self)}"
+        )
 
     @property
     def average_cell_vector_to_face(self):
@@ -2646,7 +2674,9 @@ class BaseMesh:
             >>> ax1.set_ylabel("Face Index", fontsize=12)
             >>> plt.show()
         """
-        raise NotImplementedError(f"average_cell_vector_to_face not implemented for {type(self)}")
+        raise NotImplementedError(
+            f"average_cell_vector_to_face not implemented for {type(self)}"
+        )
 
     @property
     def average_cell_to_edge(self):
@@ -2741,7 +2771,9 @@ class BaseMesh:
             >>> ax1.set_ylabel("Edge Index", fontsize=12)
             >>> plt.show()
         """
-        raise NotImplementedError(f"average_cell_to_edge not implemented for {type(self)}")
+        raise NotImplementedError(
+            f"average_cell_to_edge not implemented for {type(self)}"
+        )
 
     @property
     def average_edge_to_cell(self):
@@ -2828,7 +2860,9 @@ class BaseMesh:
             >>> ax1.set_ylabel("Cell Index", fontsize=12)
             >>> plt.show()
         """
-        raise NotImplementedError(f"average_edge_to_cell not implemented for {type(self)}")
+        raise NotImplementedError(
+            f"average_edge_to_cell not implemented for {type(self)}"
+        )
 
     @property
     def average_edge_to_cell_vector(self):
@@ -2930,7 +2964,9 @@ class BaseMesh:
             >>> ax1.set_ylabel("Cell Vector Index", fontsize=12)
             >>> plt.show()
         """
-        raise NotImplementedError(f"average_edge_to_cell_vector not implemented for {type(self)}")
+        raise NotImplementedError(
+            f"average_edge_to_cell_vector not implemented for {type(self)}"
+        )
 
     @property
     def average_edge_to_face_vector(self):
@@ -3024,7 +3060,9 @@ class BaseMesh:
             >>> ax1.set_ylabel("Face Index", fontsize=12)
             >>> plt.show()
         """
-        raise NotImplementedError(f"average_edge_to_face_vector not implemented for {type(self)}")
+        raise NotImplementedError(
+            f"average_edge_to_face_vector not implemented for {type(self)}"
+        )
 
     @property
     def average_node_to_cell(self):
@@ -3111,7 +3149,9 @@ class BaseMesh:
             >>> ax1.set_ylabel("Cell Index", fontsize=12)
             >>> plt.show()
         """
-        raise NotImplementedError(f"average_node_to_cell not implemented for {type(self)}")
+        raise NotImplementedError(
+            f"average_node_to_cell not implemented for {type(self)}"
+        )
 
     @property
     def average_node_to_edge(self):
@@ -3199,7 +3239,9 @@ class BaseMesh:
             >>> ax1.set_ylabel("Edge Index", fontsize=12)
             >>> plt.show()
         """
-        raise NotImplementedError(f"average_node_to_edge not implemented for {type(self)}")
+        raise NotImplementedError(
+            f"average_node_to_edge not implemented for {type(self)}"
+        )
 
     @property
     def average_node_to_face(self):
@@ -3287,7 +3329,9 @@ class BaseMesh:
             >>> ax1.set_ylabel("Face Index", fontsize=12)
             >>> plt.show()
         """
-        raise NotImplementedError(f"average_node_to_face not implemented for {type(self)}")
+        raise NotImplementedError(
+            f"average_node_to_face not implemented for {type(self)}"
+        )
 
     @property
     def project_face_to_boundary_face(self):
@@ -3306,7 +3350,9 @@ class BaseMesh:
         scipy.sparse.csr_matrix
             (n_boundary_faces, n_faces) Projection matrix with shape
         """
-        raise NotImplementedError(f"project_face_to_boundary_face not implemented for {type(self)}")
+        raise NotImplementedError(
+            f"project_face_to_boundary_face not implemented for {type(self)}"
+        )
 
     @property
     def project_edge_to_boundary_edge(self):
@@ -3325,7 +3371,9 @@ class BaseMesh:
         (n_boundary_edges, n_edges) scipy.sparse.csr_matrix
             Projection matrix with shape
         """
-        raise NotImplementedError(f"project_edge_to_boundary_edge not implemented for {type(self)}")
+        raise NotImplementedError(
+            f"project_edge_to_boundary_edge not implemented for {type(self)}"
+        )
 
     @property
     def project_node_to_boundary_node(self):
@@ -3344,9 +3392,11 @@ class BaseMesh:
         (n_boundary_nodes, n_nodes) scipy.sparse.csr_matrix
             Projection matrix with shape
         """
-        raise NotImplementedError(f"project_node_to_boundary_node not implemented for {type(self)}")
+        raise NotImplementedError(
+            f"project_node_to_boundary_node not implemented for {type(self)}"
+        )
 
-    def closest_points_index(self, locations, grid_loc='CC', discard=False):
+    def closest_points_index(self, locations, grid_loc="CC", discard=False):
         """Find the indicies for the nearest grid location for a set of points.
 
         Parameters
@@ -3400,7 +3450,7 @@ class BaseMesh:
         locations = as_array_n_by_dim(locations, self.dim)
 
         grid_loc = self._parse_location_type(grid_loc)
-        tree_name = f'_{grid_loc}_tree'
+        tree_name = f"_{grid_loc}_tree"
 
         tree = getattr(self, tree_name, None)
         if tree is None:
@@ -3429,7 +3479,6 @@ class BaseMesh:
             Cell indices that contain the points
         """
         raise NotImplementedError(f"point2index not implemented for {type(self)}")
-
 
     def get_interpolation_matrix(
         self, loc, location_type="cell_centers", zeros_outside=False, **kwargs
@@ -3529,7 +3578,9 @@ class BaseMesh:
             >>> ax3.set_title('Relative Error')
             >>> plt.show()
         """
-        raise NotImplementedError(f"get_interpolation_matrix not implemented for {type(self)}")
+        raise NotImplementedError(
+            f"get_interpolation_matrix not implemented for {type(self)}"
+        )
 
     def _parse_location_type(self, location_type):
         if len(location_type) == 0:
@@ -3555,16 +3606,29 @@ class BaseMesh:
             return location_type
 
     # DEPRECATED
-    normals = deprecate_property("face_normals", "normals", removal_version="1.0.0", future_warn=True)
-    tangents = deprecate_property("edge_tangents", "tangents", removal_version="1.0.0", future_warn=True)
+    normals = deprecate_property(
+        "face_normals", "normals", removal_version="1.0.0", future_warn=True
+    )
+    tangents = deprecate_property(
+        "edge_tangents", "tangents", removal_version="1.0.0", future_warn=True
+    )
     projectEdgeVector = deprecate_method(
-        "project_edge_vector", "projectEdgeVector", removal_version="1.0.0", future_warn=True
+        "project_edge_vector",
+        "projectEdgeVector",
+        removal_version="1.0.0",
+        future_warn=True,
     )
     projectFaceVector = deprecate_method(
-        "project_face_vector", "projectFaceVector", removal_version="1.0.0", future_warn=True
+        "project_face_vector",
+        "projectFaceVector",
+        removal_version="1.0.0",
+        future_warn=True,
     )
     getInterpolationMat = deprecate_method(
-        "get_interpolation_matrix", "getInterpolationMat", removal_version="1.0.0", future_warn=True
+        "get_interpolation_matrix",
+        "getInterpolationMat",
+        removal_version="1.0.0",
+        future_warn=True,
     )
     nodalGrad = deprecate_property(
         "nodal_gradient", "nodalGrad", removal_version="1.0.0", future_warn=True
@@ -3572,26 +3636,42 @@ class BaseMesh:
     nodalLaplacian = deprecate_property(
         "nodal_laplacian", "nodalLaplacian", removal_version="1.0.0", future_warn=True
     )
-    faceDiv = deprecate_property("face_divergence", "faceDiv", removal_version="1.0.0", future_warn=True)
-    edgeCurl = deprecate_property("edge_curl", "edgeCurl", removal_version="1.0.0", future_warn=True)
+    faceDiv = deprecate_property(
+        "face_divergence", "faceDiv", removal_version="1.0.0", future_warn=True
+    )
+    edgeCurl = deprecate_property(
+        "edge_curl", "edgeCurl", removal_version="1.0.0", future_warn=True
+    )
     getFaceInnerProduct = deprecate_method(
-        "get_face_inner_product", "getFaceInnerProduct", removal_version="1.0.0", future_warn=True
+        "get_face_inner_product",
+        "getFaceInnerProduct",
+        removal_version="1.0.0",
+        future_warn=True,
     )
     getEdgeInnerProduct = deprecate_method(
-        "get_edge_inner_product", "getEdgeInnerProduct", removal_version="1.0.0", future_warn=True
+        "get_edge_inner_product",
+        "getEdgeInnerProduct",
+        removal_version="1.0.0",
+        future_warn=True,
     )
     getFaceInnerProductDeriv = deprecate_method(
         "get_face_inner_product_deriv",
         "getFaceInnerProductDeriv",
         removal_version="1.0.0",
-        future_warn=True
+        future_warn=True,
     )
     getEdgeInnerProductDeriv = deprecate_method(
         "get_edge_inner_product_deriv",
         "getEdgeInnerProductDeriv",
         removal_version="1.0.0",
-        future_warn=True
+        future_warn=True,
     )
-    vol = deprecate_property("cell_volumes", "vol", removal_version="1.0.0", future_warn=True)
-    area = deprecate_property("face_areas", "area", removal_version="1.0.0", future_warn=True)
-    edge = deprecate_property("edge_lengths", "edge", removal_version="1.0.0", future_warn=True)
+    vol = deprecate_property(
+        "cell_volumes", "vol", removal_version="1.0.0", future_warn=True
+    )
+    area = deprecate_property(
+        "face_areas", "area", removal_version="1.0.0", future_warn=True
+    )
+    edge = deprecate_property(
+        "edge_lengths", "edge", removal_version="1.0.0", future_warn=True
+    )

@@ -41,7 +41,7 @@ class TestCC1D_InhomogeneousDirichlet(discretize.tests.OrderTest):
         rhs = V @ q_ana - V @ D @ MfI @ M_bf @ phi_bc
 
         phi_test = Solver(A) * rhs
-        err = np.linalg.norm((phi_test - phi_ana))/np.sqrt(mesh.n_cells)
+        err = np.linalg.norm((phi_test - phi_ana)) / np.sqrt(mesh.n_cells)
 
         return err
 
@@ -84,9 +84,9 @@ class TestCC2D_InhomogeneousDirichlet(discretize.tests.OrderTest):
 
         phi_test = Solver(A) * rhs
         if self._meshType == "rotateCurv":
-            err = np.linalg.norm(mesh.cell_volumes*(phi_test - phi_ana))
+            err = np.linalg.norm(mesh.cell_volumes * (phi_test - phi_ana))
         else:
-            err = np.linalg.norm(phi_test - phi_ana)/np.sqrt(mesh.n_cells)
+            err = np.linalg.norm(phi_test - phi_ana) / np.sqrt(mesh.n_cells)
 
         return err
 
@@ -127,9 +127,11 @@ class TestCC1D_InhomogeneousNeumann(discretize.tests.OrderTest):
         alpha = 0.0
         beta = 1.0
         gamma = alpha * phi_bc + beta * j_bc * mesh.boundary_face_outward_normals
-        B_bc, b_bc = mesh.cell_gradient_weak_form_robin(alpha=alpha, beta=beta, gamma=gamma)
+        B_bc, b_bc = mesh.cell_gradient_weak_form_robin(
+            alpha=alpha, beta=beta, gamma=gamma
+        )
 
-        j = MfI @ ((-G+B_bc)@ xc_ana + b_bc)
+        j = MfI @ ((-G + B_bc) @ xc_ana + b_bc)
         q = D @ j
 
         # Since the xc_bc is a known, move it to the RHS!
@@ -144,7 +146,7 @@ class TestCC1D_InhomogeneousNeumann(discretize.tests.OrderTest):
             # TODO: fix the null space
             xc, info = linalg.minres(A, rhs, tol=1e-6)
             j = MfI @ ((-G + B_bc) @ xc + b_bc)
-            err = np.linalg.norm((j - j_ana))/np.sqrt(mesh.n_edges)
+            err = np.linalg.norm((j - j_ana)) / np.sqrt(mesh.n_edges)
             if info > 0:
                 print("Solve does not work well")
                 print("ACCURACY", np.linalg.norm(utils.mkvc(A * xc) - rhs))
@@ -198,7 +200,9 @@ class TestCC2D_InhomogeneousNeumann(discretize.tests.OrderTest):
         beta = 1.0
         gamma = alpha * phi_bc + beta * j_bc_dot_n
 
-        B_bc, b_bc = mesh.cell_gradient_weak_form_robin(alpha=alpha, beta=beta, gamma=gamma)
+        B_bc, b_bc = mesh.cell_gradient_weak_form_robin(
+            alpha=alpha, beta=beta, gamma=gamma
+        )
 
         A = V @ D @ MfI @ (-G + B_bc)
         rhs = V @ q_ana - V @ D @ MfI @ b_bc
@@ -210,7 +214,7 @@ class TestCC2D_InhomogeneousNeumann(discretize.tests.OrderTest):
         # err = np.linalg.norm(phi_test - phi_ana)/np.sqrt(mesh.n_cells)
 
         if self._meshType == "rotateCurv":
-            err = np.linalg.norm(mesh.cell_volumes*(phi_test - phi_ana))
+            err = np.linalg.norm(mesh.cell_volumes * (phi_test - phi_ana))
         else:
             err = np.linalg.norm((phi_test - phi_ana), np.inf)
 
@@ -253,17 +257,19 @@ class TestCC1D_InhomogeneousMixed(discretize.tests.OrderTest):
         alpha = np.r_[1.0, 0.0]
         beta = np.r_[0.0, 1.0]
         gamma = alpha * phi_bc + beta * j_bc * mesh.boundary_face_outward_normals
-        B_bc, b_bc = mesh.cell_gradient_weak_form_robin(alpha=alpha, beta=beta, gamma=gamma)
+        B_bc, b_bc = mesh.cell_gradient_weak_form_robin(
+            alpha=alpha, beta=beta, gamma=gamma
+        )
 
         A = V @ D @ MfI @ (-G + B_bc)
         rhs = V @ q_ana - V @ D @ MfI @ b_bc
 
         if self.myTest == "xc":
-            xc = Solver(A)*rhs
-            err = np.linalg.norm(xc - xc_ana)/np.sqrt(mesh.n_cells)
+            xc = Solver(A) * rhs
+            err = np.linalg.norm(xc - xc_ana) / np.sqrt(mesh.n_cells)
         elif self.myTest == "xcJ":
-            xc = Solver(A)*rhs
-            j = MfI @ ((-G+B_bc)@ xc + b_bc)
+            xc = Solver(A) * rhs
+            j = MfI @ ((-G + B_bc) @ xc + b_bc)
             err = np.linalg.norm(j - j_ana, np.inf)
         return err
 
@@ -323,7 +329,9 @@ class TestCC2D_InhomogeneousMixed(discretize.tests.OrderTest):
 
         gamma = alpha * phi_bc + beta * j_bc_dot_n
 
-        B_bc, b_bc = mesh.cell_gradient_weak_form_robin(alpha=alpha, beta=beta, gamma=gamma)
+        B_bc, b_bc = mesh.cell_gradient_weak_form_robin(
+            alpha=alpha, beta=beta, gamma=gamma
+        )
 
         A = V @ D @ MfI @ (-G + B_bc)
         rhs = V @ q_ana - V @ D @ MfI @ b_bc
@@ -331,9 +339,9 @@ class TestCC2D_InhomogeneousMixed(discretize.tests.OrderTest):
         phi_test = Solver(A) * rhs
 
         if self._meshType == "rotateCurv":
-            err = np.linalg.norm(mesh.cell_volumes*(phi_test - phi_ana))
+            err = np.linalg.norm(mesh.cell_volumes * (phi_test - phi_ana))
         else:
-            err = np.linalg.norm((phi_test - phi_ana))/np.sqrt(mesh.n_cells)
+            err = np.linalg.norm((phi_test - phi_ana)) / np.sqrt(mesh.n_cells)
 
         return err
 
@@ -352,11 +360,30 @@ class TestCC3D_InhomogeneousMixed(discretize.tests.OrderTest):
 
     def getError(self):
         # Test function
-        phi = lambda x: np.sin(np.pi * x[:, 0]) * np.sin(np.pi * x[:, 1]) * np.sin(np.pi * x[:, 2])
+        phi = (
+            lambda x: np.sin(np.pi * x[:, 0])
+            * np.sin(np.pi * x[:, 1])
+            * np.sin(np.pi * x[:, 2])
+        )
 
-        j_funX = lambda x: np.pi * np.cos(np.pi * x[:, 0]) * np.sin(np.pi * x[:, 1]) * np.sin(np.pi * x[:, 2])
-        j_funY = lambda x: np.pi * np.sin(np.pi * x[:, 0]) * np.cos(np.pi * x[:, 1]) * np.sin(np.pi * x[:, 2])
-        j_funZ = lambda x: np.pi * np.sin(np.pi * x[:, 0]) * np.sin(np.pi * x[:, 1]) * np.cos(np.pi * x[:, 2])
+        j_funX = (
+            lambda x: np.pi
+            * np.cos(np.pi * x[:, 0])
+            * np.sin(np.pi * x[:, 1])
+            * np.sin(np.pi * x[:, 2])
+        )
+        j_funY = (
+            lambda x: np.pi
+            * np.sin(np.pi * x[:, 0])
+            * np.cos(np.pi * x[:, 1])
+            * np.sin(np.pi * x[:, 2])
+        )
+        j_funZ = (
+            lambda x: np.pi
+            * np.sin(np.pi * x[:, 0])
+            * np.sin(np.pi * x[:, 1])
+            * np.cos(np.pi * x[:, 2])
+        )
 
         q_fun = lambda x: -3 * (np.pi ** 2) * phi(x)
 
@@ -391,7 +418,9 @@ class TestCC3D_InhomogeneousMixed(discretize.tests.OrderTest):
 
         gamma = alpha * phi_bc + beta * j_bc_dot_n
 
-        B_bc, b_bc = mesh.cell_gradient_weak_form_robin(alpha=alpha, beta=beta, gamma=gamma)
+        B_bc, b_bc = mesh.cell_gradient_weak_form_robin(
+            alpha=alpha, beta=beta, gamma=gamma
+        )
 
         A = V @ D @ MfI @ (-G + B_bc)
         rhs = V @ q_ana - V @ D @ MfI @ b_bc
@@ -399,9 +428,9 @@ class TestCC3D_InhomogeneousMixed(discretize.tests.OrderTest):
         phi_test = Pardiso(A) * rhs
 
         if self._meshType == "rotateCurv":
-            err = np.linalg.norm(mesh.cell_volumes*(phi_test - phi_ana))
+            err = np.linalg.norm(mesh.cell_volumes * (phi_test - phi_ana))
         else:
-            err = np.linalg.norm(phi_test - phi_ana)/np.sqrt(mesh.n_cells)
+            err = np.linalg.norm(phi_test - phi_ana) / np.sqrt(mesh.n_cells)
         return err
 
     def test_orderX(self):
@@ -425,7 +454,9 @@ class TestN1D_boundaries(discretize.tests.OrderTest):
         q_fun = lambda x: -1 * (np.pi ** 2) * phi(x)
 
         mesh = self.M
-        mesh.origin = [-0.25, ]
+        mesh.origin = [
+            -0.25,
+        ]
 
         phi_ana = phi(mesh.nodes)
         j_ana = j_fun(mesh.edges_x)
@@ -492,9 +523,9 @@ class TestN2D_boundaries(discretize.tests.OrderTest):
 
     def getError(self):
         # Test function
-        phi = lambda x: np.sin(np.pi * x[:, 0])*np.sin(np.pi*x[:, 1])
-        j_funX = lambda x: np.pi * np.cos(np.pi * x[:, 0])*np.sin(np.pi*x[:, 1])
-        j_funY = lambda x: np.pi * np.cos(np.pi * x[:, 1])*np.sin(np.pi*x[:, 0])
+        phi = lambda x: np.sin(np.pi * x[:, 0]) * np.sin(np.pi * x[:, 1])
+        j_funX = lambda x: np.pi * np.cos(np.pi * x[:, 0]) * np.sin(np.pi * x[:, 1])
+        j_funY = lambda x: np.pi * np.cos(np.pi * x[:, 1]) * np.sin(np.pi * x[:, 0])
         q_fun = lambda x: -2 * (np.pi ** 2) * phi(x)
 
         mesh = self.M
@@ -518,7 +549,7 @@ class TestN2D_boundaries(discretize.tests.OrderTest):
             M_bn = mesh.boundary_node_vector_integral
 
             B_bc = sp.csr_matrix((mesh.n_nodes, mesh.n_nodes))
-            b_bc = M_bn @ (j_bc.reshape(-1, order='F'))
+            b_bc = M_bn @ (j_bc.reshape(-1, order="F"))
         else:
             phi_bc = phi(mesh.boundary_faces)
             jx_bc = j_funX(mesh.boundary_faces)
@@ -587,11 +618,30 @@ class TestN3D_boundaries(discretize.tests.OrderTest):
 
     def getError(self):
         # Test function
-        phi = lambda x: np.sin(np.pi * x[:, 0]) * np.sin(np.pi * x[:, 1]) * np.sin(np.pi * x[:, 2])
+        phi = (
+            lambda x: np.sin(np.pi * x[:, 0])
+            * np.sin(np.pi * x[:, 1])
+            * np.sin(np.pi * x[:, 2])
+        )
 
-        j_funX = lambda x: np.pi * np.cos(np.pi * x[:, 0]) * np.sin(np.pi * x[:, 1]) * np.sin(np.pi * x[:, 2])
-        j_funY = lambda x: np.pi * np.sin(np.pi * x[:, 0]) * np.cos(np.pi * x[:, 1]) * np.sin(np.pi * x[:, 2])
-        j_funZ = lambda x: np.pi * np.sin(np.pi * x[:, 0]) * np.sin(np.pi * x[:, 1]) * np.cos(np.pi * x[:, 2])
+        j_funX = (
+            lambda x: np.pi
+            * np.cos(np.pi * x[:, 0])
+            * np.sin(np.pi * x[:, 1])
+            * np.sin(np.pi * x[:, 2])
+        )
+        j_funY = (
+            lambda x: np.pi
+            * np.sin(np.pi * x[:, 0])
+            * np.cos(np.pi * x[:, 1])
+            * np.sin(np.pi * x[:, 2])
+        )
+        j_funZ = (
+            lambda x: np.pi
+            * np.sin(np.pi * x[:, 0])
+            * np.sin(np.pi * x[:, 1])
+            * np.cos(np.pi * x[:, 2])
+        )
 
         q_fun = lambda x: -3 * (np.pi ** 2) * phi(x)
 
@@ -607,11 +657,7 @@ class TestN3D_boundaries(discretize.tests.OrderTest):
 
         phi_ana = phi(mesh.nodes)
         q_ana = q_fun(mesh.nodes)
-        j_ana = np.r_[
-            j_funX(mesh.edges_x),
-            j_funY(mesh.edges_y),
-            j_funZ(mesh.edges_z)
-        ]
+        j_ana = np.r_[j_funX(mesh.edges_x), j_funY(mesh.edges_y), j_funZ(mesh.edges_z)]
 
         if self.boundary_type == "Nuemann":
             # Nuemann with J defined at boundary nodes
@@ -623,7 +669,7 @@ class TestN3D_boundaries(discretize.tests.OrderTest):
             M_bn = mesh.boundary_node_vector_integral
 
             B_bc = sp.csr_matrix((mesh.n_nodes, mesh.n_nodes))
-            b_bc = M_bn @ (j_bc.reshape(-1, order='F'))
+            b_bc = M_bn @ (j_bc.reshape(-1, order="F"))
         else:
             phi_bc = phi(mesh.boundary_faces)
             jx_bc = j_funX(mesh.boundary_faces)

@@ -58,7 +58,7 @@ metadata = dict(
     platforms=["Windows", "Linux", "Solaris", "Mac OS-X", "Unix"],
     use_scm_version={
         "write_to": os.path.join("discretize", "version.py"),
-    }
+    },
 )
 if len(sys.argv) >= 2 and (
     "--help" in sys.argv[1:]
@@ -72,7 +72,7 @@ if len(sys.argv) >= 2 and (
 
     # add cython and setuptools_scm to install requires on these commands though
     install_requires = build_requires + install_requires[1:]
-    metadata['install_requires'] = install_requires
+    metadata["install_requires"] = install_requires
 else:
     from setuptools.extension import Extension
     from Cython.Build import cythonize
@@ -100,9 +100,9 @@ else:
             ["discretize/_extensions/simplex_helpers.pyx"],
             include_dirs=[np.get_include()],
             **ext_kwargs
-        )
+        ),
     ]
 
-    metadata['ext_modules'] = cythonize(extensions)
+    metadata["ext_modules"] = cythonize(extensions)
 
 setup(**metadata)

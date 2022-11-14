@@ -13,7 +13,7 @@ np.random.seed(99)
 
 
 class FaceInnerProductFctsIsotropic(object):
-    """ Some made up face functions to test the face inner product """
+    """Some made up face functions to test the face inner product"""
 
     def fcts(self):
         j = sympy.Matrix([r ** 2 * z, r * z ** 2])
@@ -43,7 +43,7 @@ class FaceInnerProductFctsIsotropic(object):
         return ans
 
     def vectors(self, mesh):
-        """ Get Vectors sig, sr. jx from sympy"""
+        """Get Vectors sig, sr. jx from sympy"""
         j, Sig = self.fcts()
 
         f_jr = sympy.lambdify((r, z), j[0], "numpy")
@@ -78,7 +78,7 @@ class FaceInnerProductFunctionsDiagAnisotropic(FaceInnerProductFctsIsotropic):
         return j, Sig
 
     def vectors(self, mesh):
-        """ Get Vectors sig, sr. jx from sympy"""
+        """Get Vectors sig, sr. jx from sympy"""
         j, Sig = self.fcts()
 
         f_jr = sympy.lambdify((r, z), j[0], "numpy")
@@ -95,7 +95,7 @@ class FaceInnerProductFunctionsDiagAnisotropic(FaceInnerProductFctsIsotropic):
 
 
 class EdgeInnerProductFctsIsotropic(object):
-    """ Some made up edge functions to test the edge inner product """
+    """Some made up edge functions to test the edge inner product"""
 
     def fcts(self):
         h = sympy.Matrix([r ** 2 * z])
@@ -118,7 +118,7 @@ class EdgeInnerProductFctsIsotropic(object):
         return ans
 
     def vectors(self, mesh):
-        """ Get Vectors sig, sr. jx from sympy"""
+        """Get Vectors sig, sr. jx from sympy"""
         h, Sig = self.fcts()
 
         f_h = sympy.lambdify((r, z), h[0], "numpy")

@@ -7,12 +7,12 @@ from discretize.utils import cart2cyl, cyl2cart
 def u(*args):
     if len(args) == 1:
         x = args[0]
-        return x**3
+        return x ** 3
     if len(args) == 2:
         x, y = args
-        return x**3 + y**2
+        return x ** 3 + y ** 2
     x, y, z = args
-    return x**3 + y**2 + z**4
+    return x ** 3 + y ** 2 + z ** 4
 
 
 def u_cyl(*args):
@@ -23,12 +23,12 @@ def u_cyl(*args):
 def v(*args):
     if len(args) == 1:
         x = args[0]
-        return 2*x**2
+        return 2 * x ** 2
     if len(args) == 2:
         x, y = args
-        return np.c_[2*x**2, 3*y**3]
+        return np.c_[2 * x ** 2, 3 * y ** 3]
     x, y, z = args
-    return np.c_[2*x**2, 3*y**3, -4*z**2]
+    return np.c_[2 * x ** 2, 3 * y ** 3, -4 * z ** 2]
 
 
 def v_cyl(*args):
@@ -40,15 +40,16 @@ def v_cyl(*args):
 def w(*args):
     if len(args) == 2:
         x, y = args
-        return np.c_[(y - 2)**2, (x + 2)**2]
+        return np.c_[(y - 2) ** 2, (x + 2) ** 2]
     x, y, z = args
-    return np.c_[(y-2)**2 + z**2, (x+2)**2 - (z-4)**2, y**2-x**2]
+    return np.c_[(y - 2) ** 2 + z ** 2, (x + 2) ** 2 - (z - 4) ** 2, y ** 2 - x ** 2]
 
 
 def w_cyl(*args):
     xyz = cyl2cart(np.stack(args, axis=-1))
     xyz_vec = w(*xyz.T)
     return cart2cyl(xyz, xyz_vec)
+
 
 # mesh will be on [0, 1] square
 
@@ -98,18 +99,18 @@ class Test1DBoundaryIntegral(discretize.tests.OrderTest):
             M_bf = mesh.boundary_face_scalar_integral
 
             discrete_val = -(v_f.T @ D.T) @ M_c @ u_cc + v_f.T @ (M_bf @ u_bf)
-            true_val = 6/5
+            true_val = 6 / 5
         if self.myTest == "edge_div":
             u_n = u(mesh.nodes)
             v_e = v(mesh.edges)
-            v_bn = v(mesh.boundary_nodes).reshape(-1, order='F')
+            v_bn = v(mesh.boundary_nodes).reshape(-1, order="F")
 
             M_e = mesh.get_edge_inner_product()
             G = mesh.nodal_gradient
             M_bn = mesh.boundary_node_vector_integral
 
             discrete_val = -(u_n.T @ G.T) @ M_e @ v_e + u_n.T @ (M_bn @ v_bn)
-            true_val = 4/5
+            true_val = 4 / 5
         return np.abs(discrete_val - true_val)
 
     def test_orderWeakCellGradIntegral(self):
@@ -130,8 +131,8 @@ class Test2DBoundaryIntegral(discretize.tests.OrderTest):
         "uniformTree",
         "uniformCurv",
         "rotateCurv",
-        "sphereCurv"
-        ]
+        "sphereCurv",
+    ]
     meshDimension = 2
     expectedOrders = [2, 2, 2, 2, 1]
     meshSizes = [4, 8, 16, 32, 64, 128]
@@ -150,13 +151,13 @@ class Test2DBoundaryIntegral(discretize.tests.OrderTest):
 
             discrete_val = -(v_f.T @ D.T) @ M_c @ u_cc + v_f.T @ (M_bf @ u_bf)
             if "sphere" not in self._meshType:
-                true_val = 12/5
+                true_val = 12 / 5
             else:
-                true_val = 3*np.pi/2
+                true_val = 3 * np.pi / 2
         elif self.myTest == "edge_div":
             u_n = u(*mesh.nodes.T)
             v_e = mesh.project_edge_vector(v(*mesh.edges.T))
-            v_bn = v(*mesh.boundary_nodes.T).reshape(-1, order='F')
+            v_bn = v(*mesh.boundary_nodes.T).reshape(-1, order="F")
 
             M_e = mesh.get_edge_inner_product()
             G = mesh.nodal_gradient
@@ -164,9 +165,9 @@ class Test2DBoundaryIntegral(discretize.tests.OrderTest):
 
             discrete_val = -(u_n.T @ G.T) @ M_e @ v_e + u_n.T @ (M_bn @ v_bn)
             if "sphere" not in self._meshType:
-                true_val = 241/60
+                true_val = 241 / 60
             else:
-                true_val = 13*np.pi/8
+                true_val = 13 * np.pi / 8
         elif self.myTest == "face_curl":
             w_e = mesh.project_edge_vector(w(*mesh.edges.T))
             u_c = u(*mesh.cell_centers.T)
@@ -177,12 +178,12 @@ class Test2DBoundaryIntegral(discretize.tests.OrderTest):
             M_be = mesh.boundary_edge_vector_integral
 
             discrete_val = (w_e.T @ Curl.T) @ M_c @ u_c - w_e.T @ (M_be @ u_be)
-            if 'Curv' in self._meshType:
+            if "Curv" in self._meshType:
                 self._expectedOrder = -1.0
             if "sphere" not in self._meshType:
-                true_val = -173/30
+                true_val = -173 / 30
             else:
-                true_val = -43*np.pi/8
+                true_val = -43 * np.pi / 8
 
         return np.abs(discrete_val - true_val)
 
@@ -211,7 +212,7 @@ class Test3DBoundaryIntegral(discretize.tests.OrderTest):
         "uniformCurv",
         "rotateCurv",
         "sphereCurv",
-        ]
+    ]
     meshDimension = 3
     expectedOrders = [2, 1, 2, 2, 2, 0]
     meshSizes = [4, 8, 16, 32]
@@ -230,13 +231,13 @@ class Test3DBoundaryIntegral(discretize.tests.OrderTest):
 
             discrete_val = -(v_f.T @ D.T) @ M_c @ u_cc + v_f.T @ (M_bf @ u_bf)
             if "sphere" not in self._meshType:
-                true_val = -4/15
+                true_val = -4 / 15
             else:
-                true_val = 48*np.pi/35
+                true_val = 48 * np.pi / 35
         elif self.myTest == "edge_div":
             u_n = u(*mesh.nodes.T)
             v_e = mesh.project_edge_vector(v(*mesh.edges.T))
-            v_bn = v(*mesh.boundary_nodes.T).reshape(-1, order='F')
+            v_bn = v(*mesh.boundary_nodes.T).reshape(-1, order="F")
 
             M_e = mesh.get_edge_inner_product()
             G = mesh.nodal_gradient
@@ -244,13 +245,13 @@ class Test3DBoundaryIntegral(discretize.tests.OrderTest):
 
             discrete_val = -(u_n.T @ G.T) @ M_e @ v_e + u_n.T @ (M_bn @ v_bn)
             if "sphere" not in self._meshType:
-                true_val = 27/20
+                true_val = 27 / 20
             else:
-                true_val = 8*np.pi/5
+                true_val = 8 * np.pi / 5
         elif self.myTest == "face_curl":
             w_f = mesh.project_face_vector(w(*mesh.faces.T))
             v_e = mesh.project_edge_vector(v(*mesh.edges.T))
-            w_be = w(*mesh.boundary_edges.T).reshape(-1, order='F')
+            w_be = w(*mesh.boundary_edges.T).reshape(-1, order="F")
 
             M_f = mesh.get_face_inner_product()
             Curl = mesh.edge_curl
@@ -258,9 +259,9 @@ class Test3DBoundaryIntegral(discretize.tests.OrderTest):
 
             discrete_val = (v_e.T @ Curl.T) @ M_f @ w_f - v_e.T @ (M_be @ w_be)
             if "sphere" not in self._meshType:
-                true_val = -79/6
+                true_val = -79 / 6
             else:
-                true_val = -64*np.pi/5
+                true_val = -64 * np.pi / 5
 
         return np.abs(discrete_val - true_val)
 
@@ -284,9 +285,11 @@ class Test3DCylindricalBoundary(discretize.tests.OrderTest):
     name = "3D Cylindrical Boundary Integrals"
     meshTypes = [
         "uniformCylindricalMesh",
-        ]
+    ]
     meshDimension = 3
-    expectedOrders = [2, ]
+    expectedOrders = [
+        2,
+    ]
     meshSizes = [8, 16, 32, 64]
 
     def getError(self):
@@ -302,17 +305,17 @@ class Test3DCylindricalBoundary(discretize.tests.OrderTest):
             M_bf = mesh.boundary_face_scalar_integral
 
             discrete_val = -(v_f.T @ D.T) @ M_c @ u_cc + v_f.T @ (M_bf @ u_bf)
-            true_val = -7 * np.pi/6
+            true_val = -7 * np.pi / 6
         elif self.myTest == "edge_div":
             u_n = u_cyl(*mesh.nodes.T)
             v_e = mesh.project_edge_vector(v_cyl(*mesh.edges.T))
-            v_bn = v_cyl(*mesh.boundary_nodes.T).reshape(-1, order='F')
+            v_bn = v_cyl(*mesh.boundary_nodes.T).reshape(-1, order="F")
 
             M_e = mesh.get_edge_inner_product()
             G = mesh.nodal_gradient
             M_bn = mesh.boundary_node_vector_integral
 
-            true_val = -31 * np.pi/120
+            true_val = -31 * np.pi / 120
             discrete_val = -(u_n.T @ G.T) @ M_e @ v_e + u_n.T @ (M_bn @ v_bn)
         return np.abs(discrete_val - true_val)
 

@@ -7,7 +7,7 @@ from discretize._extensions.simplex_helpers import (
     _build_faces_edges,
     _build_adjacency,
     _directed_search,
-    _interp_cc
+    _interp_cc,
 )
 from discretize.mixins import InterfaceMixins, SimplexMeshIO
 
@@ -64,6 +64,7 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
     >>> mesh.plot_grid()
     >>> plt.show()
     """
+
     _meshType = "simplex"
     _items = {"nodes", "simplices"}
 
@@ -133,7 +134,9 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         (n_cells, dim + 1) numpy.ndarray of int
         """
         if getattr(self, "_neighbors", None) is None:
-            self._neighbors = np.array(_build_adjacency(self._simplex_faces, self.n_faces))
+            self._neighbors = np.array(
+                _build_adjacency(self._simplex_faces, self.n_faces)
+            )
         return self._neighbors
 
     @property
@@ -146,7 +149,7 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         transform : (n_cells, dim, dim) numpy.ndarray
         shift : (n_cells) numpy.ndarray
         """
-        if getattr(self, '_transform', None) is None:
+        if getattr(self, "_transform", None) is None:
             # compute the barycentric transforms
             points = self.nodes
             simplices = self.simplices
@@ -205,7 +208,9 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
 
     @property
     def edge_lengths(self):
-        return np.linalg.norm(np.diff(self.nodes[self._edges], axis=1).squeeze(), axis=-1)
+        return np.linalg.norm(
+            np.diff(self.nodes[self._edges], axis=1).squeeze(), axis=-1
+        )
 
     @property
     def n_faces(self):
@@ -250,24 +255,26 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
 
         # approx outward normals (to figure out if face normal is opposite the outward direction)
         test = self.faces[self._simplex_faces] - self.cell_centers[:, None, :]
-        dirs = np.einsum('ijk,ijk->ij', normals[self._simplex_faces], test)
+        dirs = np.einsum("ijk,ijk->ij", normals[self._simplex_faces], test)
 
         Aijs = areas[self._simplex_faces] / self.cell_volumes[:, None]
         Aijs[dirs < 0] *= -1
 
         Aijs = Aijs.reshape(-1)
-        ind_ptr = (self.dim + 1) * np.arange(self.n_cells+1)
+        ind_ptr = (self.dim + 1) * np.arange(self.n_cells + 1)
         col_inds = self._simplex_faces.reshape(-1)
         D = sp.csr_matrix((Aijs, col_inds, ind_ptr), shape=(self.n_cells, self.n_faces))
         return D
 
     @property
     def nodal_gradient(self):
-        ind_ptr = 2 * np.arange(self.n_edges+1)
+        ind_ptr = 2 * np.arange(self.n_edges + 1)
         col_inds = self._edges.reshape(-1)
-        Aijs = ((1.0/self.edge_lengths[:, None]) * [-1, 1]).reshape(-1)
+        Aijs = ((1.0 / self.edge_lengths[:, None]) * [-1, 1]).reshape(-1)
 
-        return sp.csr_matrix((Aijs, col_inds, ind_ptr), shape=(self.n_edges, self.n_nodes))
+        return sp.csr_matrix(
+            (Aijs, col_inds, ind_ptr), shape=(self.n_edges, self.n_nodes)
+        )
 
     @property
     def edge_curl(self):
@@ -307,11 +314,14 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
             face_areas = face_areas * cp
             # don't due *= here
 
-        Aijs = (np.c_[
-            np.einsum('ij,ij->i', face_path_tangents[:, 0], l12),
-            np.einsum('ij,ij->i', face_path_tangents[:, 1], l20),
-            np.einsum('ij,ij->i', face_path_tangents[:, 2], l01),
-        ] / face_areas[:, None]).reshape(-1)
+        Aijs = (
+            np.c_[
+                np.einsum("ij,ij->i", face_path_tangents[:, 0], l12),
+                np.einsum("ij,ij->i", face_path_tangents[:, 1], l20),
+                np.einsum("ij,ij->i", face_path_tangents[:, 2], l01),
+            ]
+            / face_areas[:, None]
+        ).reshape(-1)
 
         C = sp.csr_matrix((Aijs, col_inds, ind_ptr), shape=(n_faces, n_edges))
 
@@ -322,12 +332,12 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         dim = self.dim
         # determines the tensor type of the model and reshapes it properly
         model = np.atleast_1d(model)
-        n_aniso = ((dim + 1) * dim)//2
+        n_aniso = ((dim + 1) * dim) // 2
         if model.size == n_aniso * n_cells:
             # model is fully anisotropic
             # reshape it into a stack of dim x dim matrices
             if model.ndim == 1:
-                model = model.reshape((-1, n_aniso), order='F')
+                model = model.reshape((-1, n_aniso), order="F")
             vals = model
             if self.dim == 2:
                 model = np.stack(
@@ -338,17 +348,17 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
                     [
                         [vals[:, 0], vals[:, 3], vals[:, 4]],
                         [vals[:, 3], vals[:, 1], vals[:, 5]],
-                        [vals[:, 4], vals[:, 5], vals[:, 2]]
+                        [vals[:, 4], vals[:, 5], vals[:, 2]],
                     ]
                 ).transpose((2, 0, 1))
         elif model.size == dim * n_cells:
             if model.ndim == 1:
-                model = model.reshape((n_cells, dim), order='F')
+                model = model.reshape((n_cells, dim), order="F")
             model = model.reshape(-1)
 
         if invert_model:
             if model.ndim == 1:
-                model = 1.0/model
+                model = 1.0 / model
             else:
                 model = invert_blocks(model)
         return model
@@ -363,35 +373,17 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
             n_items = self.n_faces
             simplex_items = self._simplex_faces
             if dim == 2:
-                node_items = np.array([
-                    [1, 2],
-                    [0, 2],
-                    [0, 1]
-                ])
+                node_items = np.array([[1, 2], [0, 2], [0, 1]])
             else:
-                node_items = np.array([
-                    [1, 2, 3],
-                    [0, 2, 3],
-                    [0, 1, 3],
-                    [0, 1, 2]
-                ])
+                node_items = np.array([[1, 2, 3], [0, 2, 3], [0, 1, 3], [0, 1, 2]])
         elif i_type == "E":
             vecs = self.edge_tangents
             n_items = self.n_edges
             simplex_items = self._simplex_edges
             if dim == 2:
-                node_items = np.array([
-                    [1, 2],
-                    [0, 2],
-                    [0, 1]
-                ])
+                node_items = np.array([[1, 2], [0, 2], [0, 1]])
             elif dim == 3:
-                node_items = np.array([
-                    [1, 2, 3],
-                    [0, 2, 4],
-                    [0, 1, 5],
-                    [3, 4, 5]
-                ])
+                node_items = np.array([[1, 2, 3], [0, 2, 4], [0, 1, 5], [3, 4, 5]])
 
         Ps = []
         # Precalc indptr and values for the projection matrix
@@ -411,8 +403,7 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
             item_inds = np.take(simplex_items, node_items[i], axis=1)
             P_col_inds = item_inds.reshape(-1)
             P = sp.csr_matrix(
-                (ones, P_col_inds, P_indptr),
-                shape=(dim * n_cells, n_items)
+                (ones, P_col_inds, P_indptr), shape=(dim * n_cells, n_items)
             )
 
             item_vectors = vecs[item_inds]
@@ -421,7 +412,7 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
                 trans_inv *= V[:, None, None]
             T = sp.csr_matrix(
                 (trans_inv.reshape(-1), T_col_inds, T_ind_ptr),
-                shape=(dim * n_cells, dim * n_cells)
+                shape=(dim * n_cells, dim * n_cells),
             )
             Ps.append(T @ P)
         if return_pointers:
@@ -430,7 +421,9 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
             return Ps
 
     def __get_inner_product(self, i_type, model, invert_model):
-        Ps, (T_col_inds, T_ind_ptr) = self.__get_inner_product_projection_matrices(i_type)
+        Ps, (T_col_inds, T_ind_ptr) = self.__get_inner_product_projection_matrices(
+            i_type
+        )
         n_cells = self.n_cells
         dim = self.dim
         if model is None:
@@ -438,7 +431,7 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         else:
             model = self.__validate_model(model, invert_model)
             if model.size == 1:
-                Mu = sp.diags((model,), (0, ), shape=(dim * n_cells, dim * n_cells))
+                Mu = sp.diags((model,), (0,), shape=(dim * n_cells, dim * n_cells))
             elif model.size == n_cells:
                 Mu = sp.diags(np.repeat(model, dim))
             elif model.size == dim * n_cells:
@@ -447,7 +440,7 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
             elif model.size == (dim * dim) * n_cells:
                 Mu = sp.csr_matrix(
                     (model.reshape(-1), T_col_inds, T_ind_ptr),
-                    shape=(dim * n_cells, dim * n_cells)
+                    shape=(dim * n_cells, dim * n_cells),
                 )
             else:
                 raise ValueError("Unrecognized size of model vector")
@@ -496,22 +489,15 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
             col_inds = np.arange(dim * n_cells).reshape((n_cells, dim), order="F")
             col_inds = col_inds.reshape(-1)
             ind_ptr = np.arange(n_cells * dim + 1)
-        elif model.size == (((dim + 1) * dim)//2) * n_cells:
+        elif model.size == (((dim + 1) * dim) // 2) * n_cells:
             tensor_type = 3
             # create a stencil that goes from the model vector ordering
             # into the anisotropy tensor
             if dim == 2:
-                stencil = np.array([
-                    [0, 2],
-                    [2, 1]
-                ])
+                stencil = np.array([[0, 2], [2, 1]])
             elif dim == 3:
-                stencil = np.array([
-                    [0, 3, 4],
-                    [3, 1, 5],
-                    [4, 5, 2]
-                ])
-            col_inds = (n_cells * stencil + np.arange(n_cells)[:, None, None])
+                stencil = np.array([[0, 3, 4], [3, 1, 5], [4, 5, 2]])
+            col_inds = n_cells * stencil + np.arange(n_cells)[:, None, None]
             col_inds = col_inds.reshape(-1)
             ind_ptr = dim * np.arange(n_cells * dim + 1)
         else:
@@ -529,21 +515,19 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
                 for P in Ps:
                     dMdm = dMdm + sp.csr_matrix(
                         (P.T * (P * v), (range(n_items), np.zeros(n_items))),
-                        shape=(n_items, inv_items)
+                        shape=(n_items, inv_items),
                     )
             elif tensor_type == 1:
                 for P in Ps:
                     ys = P @ v
                     dMdm = dMdm + P.T @ sp.csr_matrix(
-                        (ys, col_inds, ind_ptr),
-                        shape=(n_cells * dim, inv_items)
+                        (ys, col_inds, ind_ptr), shape=(n_cells * dim, inv_items)
                     )
             elif tensor_type == 2:
                 for P in Ps:
                     ys = P @ v
                     dMdm = dMdm + P.T @ sp.csr_matrix(
-                        (ys, col_inds, ind_ptr),
-                        shape=(n_cells * dim, inv_items)
+                        (ys, col_inds, ind_ptr), shape=(n_cells * dim, inv_items)
                     )
             elif tensor_type == 3:
                 for P in Ps:
@@ -551,10 +535,10 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
                     ys = np.repeat(ys, dim).reshape((-1, dim, dim))
                     ys = ys.transpose((0, 2, 1)).reshape(-1)
                     dMdm = dMdm + P.T @ sp.csr_matrix(
-                        (ys, col_inds, ind_ptr),
-                        shape=(n_cells * dim, inv_items)
+                        (ys, col_inds, ind_ptr), shape=(n_cells * dim, inv_items)
                     )
             return dMdm
+
         return func
 
     def get_face_inner_product_deriv(
@@ -565,9 +549,7 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
                 "Inverted model derivatives are not supported here"
             )
         if invert_matrix:
-            raise NotImplementedError(
-                "Inverted matrix derivatives are not supported"
-            )
+            raise NotImplementedError("Inverted matrix derivatives are not supported")
         return self.__get_inner_product_deriv_func("F", model)
 
     def get_edge_inner_product_deriv(
@@ -578,9 +560,7 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
                 "Inverted model derivatives are not supported here"
             )
         if invert_matrix:
-            raise NotImplementedError(
-                "Inverted matrix derivatives are not supported"
-            )
+            raise NotImplementedError("Inverted matrix derivatives are not supported")
         return self.__get_inner_product_deriv_func("E", model)
 
     @property
@@ -599,8 +579,14 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         simplex_nodes = self.simplices
         transform, shift = self.transform_and_shift
         return _directed_search(
-            np.atleast_2d(locs), np.atleast_1d(nearest_cc), nodes, simplex_nodes, self.neighbors, transform, shift,
-            return_bary=False
+            np.atleast_2d(locs),
+            np.atleast_1d(nearest_cc),
+            nodes,
+            simplex_nodes,
+            self.neighbors,
+            transform,
+            shift,
+            return_bary=False,
         )
 
     def get_interpolation_matrix(
@@ -617,8 +603,14 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         transform, shift = self.transform_and_shift
 
         inds, barys = _directed_search(
-            loc, nearest_cc, nodes, simplex_nodes, self.neighbors, transform, shift,
-            return_bary=True
+            loc,
+            nearest_cc,
+            nodes,
+            simplex_nodes,
+            self.neighbors,
+            transform,
+            shift,
+            return_bary=True,
         )
 
         n_loc = len(loc)
@@ -640,9 +632,9 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
             return mat
         else:
             component = location_type[-1]
-            if component == 'x':
+            if component == "x":
                 i_dir = 0
-            elif component == 'y':
+            elif component == "y":
                 i_dir = 1
             else:
                 i_dir = -1
@@ -659,14 +651,26 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
                 edges = self._simplex_edges[inds]
 
                 # (1, 2), (0, 2), (0, 1)
-                e0 = (barys[:, 1] * ts[:, 2] - barys[:, 2] * ts[:, 1]) * lengths[edges[:, 0]]
-                e1 = (barys[:, 0] * ts[:, 2] - barys[:, 2] * ts[:, 0]) * lengths[edges[:, 1]]
-                e2 = (barys[:, 0] * ts[:, 1] - barys[:, 1] * ts[:, 0]) * lengths[edges[:, 2]]
+                e0 = (barys[:, 1] * ts[:, 2] - barys[:, 2] * ts[:, 1]) * lengths[
+                    edges[:, 0]
+                ]
+                e1 = (barys[:, 0] * ts[:, 2] - barys[:, 2] * ts[:, 0]) * lengths[
+                    edges[:, 1]
+                ]
+                e2 = (barys[:, 0] * ts[:, 1] - barys[:, 1] * ts[:, 0]) * lengths[
+                    edges[:, 2]
+                ]
                 if self.dim == 3:
                     # (0, 3), (1, 3), (2, 3)
-                    e3 = (barys[:, 0] * ts[:, 3] - barys[:, 3] * ts[:, 0]) * lengths[edges[:, 3]]
-                    e4 = (barys[:, 1] * ts[:, 3] - barys[:, 3] * ts[:, 1]) * lengths[edges[:, 4]]
-                    e5 = (barys[:, 2] * ts[:, 3] - barys[:, 3] * ts[:, 2]) * lengths[edges[:, 5]]
+                    e3 = (barys[:, 0] * ts[:, 3] - barys[:, 3] * ts[:, 0]) * lengths[
+                        edges[:, 3]
+                    ]
+                    e4 = (barys[:, 1] * ts[:, 3] - barys[:, 3] * ts[:, 1]) * lengths[
+                        edges[:, 4]
+                    ]
+                    e5 = (barys[:, 2] * ts[:, 3] - barys[:, 3] * ts[:, 2]) * lengths[
+                        edges[:, 5]
+                    ]
                     Aij = np.c_[e0, e1, e2, e3, e4, e5].reshape(-1)
                     ind_ptr = 6 * np.arange(n_loc + 1)
                 else:
@@ -676,7 +680,10 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
                 n_items = self.n_edges
             elif location_type[:-2] == "faces":
                 # grab the barycentric transforms associated with each simplex:
-                ts = transform[inds, :,]
+                ts = transform[
+                    inds,
+                    :,
+                ]
                 ts = np.hstack((ts, -ts.sum(axis=1)[:, None]))
                 # use  Whitney 2 - form basis functions for face vector interp
                 faces = self._simplex_faces[inds]
@@ -704,26 +711,42 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
                     # f023 = (L0 * G_2 x G_3 + L2 * G_3 x G_0 + L3 * G_0 x G_2)
                     # f013 = (L0 * G_1 x G_3 + L1 * G_3 x G_0 + L3 * G_0 x G_1)
                     # f012 = (L0 * G_1 x G_2 + L1 * G_2 x G_0 + L2 * G_0 x G_1)
-                    f0 = 2 * (
-                        barys[:, 1] * (np.cross(ts[:, 2], ts[:, 3])[:, i_dir])
-                        + barys[:, 2] * (np.cross(ts[:, 3], ts[:, 1])[:, i_dir])
-                        + barys[:, 3] * (np.cross(ts[:, 1], ts[:, 2])[:, i_dir])
-                    ) * areas[faces[:, 0]]
-                    f1 = 2 * (
-                        barys[:, 0] * (np.cross(ts[:, 2], ts[:, 3])[:, i_dir])
-                        + barys[:, 2] * (np.cross(ts[:, 3], ts[:, 0])[:, i_dir])
-                        + barys[:, 3] * (np.cross(ts[:, 0], ts[:, 2])[:, i_dir])
-                    ) * areas[faces[:, 1]]
-                    f2 = 2 * (
-                        barys[:, 0] * (np.cross(ts[:, 1], ts[:, 3])[:, i_dir])
-                        + barys[:, 1] * (np.cross(ts[:, 3], ts[:, 0])[:, i_dir])
-                        + barys[:, 3] * (np.cross(ts[:, 0], ts[:, 1])[:, i_dir])
-                    ) * areas[faces[:, 2]]
-                    f3 = 2 * (
-                        barys[:, 0] * (np.cross(ts[:, 1], ts[:, 2])[:, i_dir])
-                        + barys[:, 1] * (np.cross(ts[:, 2], ts[:, 0])[:, i_dir])
-                        + barys[:, 2] * (np.cross(ts[:, 0], ts[:, 1])[:, i_dir])
-                    ) * areas[faces[:, 3]]
+                    f0 = (
+                        2
+                        * (
+                            barys[:, 1] * (np.cross(ts[:, 2], ts[:, 3])[:, i_dir])
+                            + barys[:, 2] * (np.cross(ts[:, 3], ts[:, 1])[:, i_dir])
+                            + barys[:, 3] * (np.cross(ts[:, 1], ts[:, 2])[:, i_dir])
+                        )
+                        * areas[faces[:, 0]]
+                    )
+                    f1 = (
+                        2
+                        * (
+                            barys[:, 0] * (np.cross(ts[:, 2], ts[:, 3])[:, i_dir])
+                            + barys[:, 2] * (np.cross(ts[:, 3], ts[:, 0])[:, i_dir])
+                            + barys[:, 3] * (np.cross(ts[:, 0], ts[:, 2])[:, i_dir])
+                        )
+                        * areas[faces[:, 1]]
+                    )
+                    f2 = (
+                        2
+                        * (
+                            barys[:, 0] * (np.cross(ts[:, 1], ts[:, 3])[:, i_dir])
+                            + barys[:, 1] * (np.cross(ts[:, 3], ts[:, 0])[:, i_dir])
+                            + barys[:, 3] * (np.cross(ts[:, 0], ts[:, 1])[:, i_dir])
+                        )
+                        * areas[faces[:, 2]]
+                    )
+                    f3 = (
+                        2
+                        * (
+                            barys[:, 0] * (np.cross(ts[:, 1], ts[:, 2])[:, i_dir])
+                            + barys[:, 1] * (np.cross(ts[:, 2], ts[:, 0])[:, i_dir])
+                            + barys[:, 2] * (np.cross(ts[:, 0], ts[:, 1])[:, i_dir])
+                        )
+                        * areas[faces[:, 3]]
+                    )
                     Aij = np.c_[f0, f1, f2, f3].reshape(-1)
                     ind_ptr = 4 * np.arange(n_loc + 1)
                 col_inds = faces.reshape(-1)
@@ -737,7 +760,7 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
 
         ind_ptr = nodes_per_cell * np.arange(n_cells + 1)
         col_inds = self.simplices.reshape(-1)
-        Aij = np.full(nodes_per_cell * n_cells, 1/nodes_per_cell)
+        Aij = np.full(nodes_per_cell * n_cells, 1 / nodes_per_cell)
         return sp.csr_matrix((Aij, col_inds, ind_ptr), shape=(n_cells, self.n_nodes))
 
     @property
@@ -747,7 +770,7 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
 
         ind_ptr = nodes_per_face * np.arange(n_faces + 1)
         col_inds = self._faces.reshape(-1)
-        Aij = np.full(nodes_per_face * n_faces, 1/nodes_per_face)
+        Aij = np.full(nodes_per_face * n_faces, 1 / nodes_per_face)
         return sp.csr_matrix((Aij, col_inds, ind_ptr), shape=(n_faces, self.n_nodes))
 
     @property
@@ -771,24 +794,28 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         """
         # this reproduces linear functions everywhere except on the boundary nodes
         simps = self.simplices
-        cells = np.broadcast_to(np.arange(self.n_cells)[:, None], simps.shape).reshape(-1)
+        cells = np.broadcast_to(np.arange(self.n_cells)[:, None], simps.shape).reshape(
+            -1
+        )
         weights = np.broadcast_to(self.cell_volumes[:, None], simps.shape).reshape(-1)
         simps = simps.reshape(-1)
 
         A = sp.csr_matrix((weights, (simps, cells)), shape=(self.n_nodes, self.n_cells))
-        norm = sp.diags(1.0/np.asarray(A.sum(axis=1))[:, 0])
+        norm = sp.diags(1.0 / np.asarray(A.sum(axis=1))[:, 0])
         return norm @ A
 
     @property
     def average_cell_to_edge(self):
         # Simple averaging of all cells with a common edge
         simps = self._simplex_edges
-        cells = np.broadcast_to(np.arange(self.n_cells)[:, None], simps.shape).reshape(-1)
+        cells = np.broadcast_to(np.arange(self.n_cells)[:, None], simps.shape).reshape(
+            -1
+        )
         weights = np.broadcast_to(self.cell_volumes[:, None], simps.shape).reshape(-1)
         simps = simps.reshape(-1)
 
         A = sp.csr_matrix((weights, (simps, cells)), shape=(self.n_edges, self.n_cells))
-        norm = sp.diags(1.0/np.asarray(A.sum(axis=1))[:, 0])
+        norm = sp.diags(1.0 / np.asarray(A.sum(axis=1))[:, 0])
         return norm @ A
 
     @property
@@ -804,10 +831,10 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
             "F", with_volume=False, return_pointers=False
         )
         for P in Ps:
-            Av = Av + 1/(nodes_per_cell) * P
+            Av = Av + 1 / (nodes_per_cell) * P
         # Av needs to be re-ordered to comply with discretize standard
-        ind = np.arange(Av.shape[0]).reshape(n_cells, -1).flatten(order='F')
-        P = sp.eye(Av.shape[0], format='csr')[ind]
+        ind = np.arange(Av.shape[0]).reshape(n_cells, -1).flatten(order="F")
+        P = sp.eye(Av.shape[0], format="csr")[ind]
         Av = P @ Av
         return Av
 
@@ -824,10 +851,10 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
             "E", with_volume=False, return_pointers=False
         )
         for P in Ps:
-            Av = Av + 1/(nodes_per_cell) * P
+            Av = Av + 1 / (nodes_per_cell) * P
         # Av needs to be re-ordered to comply with discretize standard
-        ind = np.arange(Av.shape[0]).reshape(n_cells, -1).flatten(order='F')
-        P = sp.eye(Av.shape[0], format='csr')[ind]
+        ind = np.arange(Av.shape[0]).reshape(n_cells, -1).flatten(order="F")
+        P = sp.eye(Av.shape[0], format="csr")[ind]
         Av = P @ Av
         return Av
 
@@ -838,10 +865,12 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         n_faces = self.n_faces
         col_inds = self._simplex_faces
         n_face_per_cell = col_inds.shape[1]
-        Aij = np.full((n_cells, n_face_per_cell), 1.0/n_face_per_cell)
-        row_ptr = np.arange(n_cells+1)*(n_face_per_cell)
+        Aij = np.full((n_cells, n_face_per_cell), 1.0 / n_face_per_cell)
+        row_ptr = np.arange(n_cells + 1) * (n_face_per_cell)
 
-        return sp.csr_matrix((Aij.reshape(-1), col_inds.reshape(-1), row_ptr), shape=(n_cells, n_faces))
+        return sp.csr_matrix(
+            (Aij.reshape(-1), col_inds.reshape(-1), row_ptr), shape=(n_cells, n_faces)
+        )
 
     @property
     def average_edge_to_cell(self):
@@ -849,17 +878,19 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         n_edges = self.n_edges
         col_inds = self._simplex_edges
         n_edge_per_cell = col_inds.shape[1]
-        Aij = np.full((n_cells, n_edge_per_cell), 1.0/(n_edge_per_cell))
-        row_ptr = np.arange(n_cells+1)*(n_edge_per_cell)
+        Aij = np.full((n_cells, n_edge_per_cell), 1.0 / (n_edge_per_cell))
+        row_ptr = np.arange(n_cells + 1) * (n_edge_per_cell)
 
-        return sp.csr_matrix((Aij.reshape(-1), col_inds.reshape(-1), row_ptr), shape=(n_cells, n_edges))
+        return sp.csr_matrix(
+            (Aij.reshape(-1), col_inds.reshape(-1), row_ptr), shape=(n_cells, n_edges)
+        )
 
     @property
     def average_cell_to_face(self):
         A = self.average_face_to_cell.T
         row_sum = np.asarray(A.sum(axis=-1))[:, 0]
         row_sum[row_sum == 0.0] = 1.0
-        A = sp.diags(1.0/row_sum) @ A
+        A = sp.diags(1.0 / row_sum) @ A
         return A
 
     @property
@@ -868,12 +899,14 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         # in the direction of the face normal
         tests = self.cell_centers[:, None, :] - self.faces[self._simplex_faces]
         Aij = np.sign(
-            np.einsum('ijk, ijk -> ij', tests, self.face_normals[self._simplex_faces])
+            np.einsum("ijk, ijk -> ij", tests, self.face_normals[self._simplex_faces])
         ).reshape(-1)
-        ind_ptr = 3*np.arange(self.n_cells + 1)
+        ind_ptr = 3 * np.arange(self.n_cells + 1)
         col_inds = self._simplex_faces.reshape(-1)
 
-        Aij = sp.csr_matrix((Aij, col_inds, ind_ptr), shape=(self.n_cells, self.n_faces)).T
+        Aij = sp.csr_matrix(
+            (Aij, col_inds, ind_ptr), shape=(self.n_cells, self.n_faces)
+        ).T
         return Aij
 
     @property
@@ -891,19 +924,19 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
 
     @property
     def project_face_to_boundary_face(self):
-        return sp.eye(self.n_faces, format='csr')[self.boundary_face_list]
+        return sp.eye(self.n_faces, format="csr")[self.boundary_face_list]
 
     @property
     def project_edge_to_boundary_edge(self):
         if self.dim == 2:
             return self.project_face_to_boundary_face
         bound_edges = np.unique(self._face_edges[self.boundary_face_list])
-        return sp.eye(self.n_edges, format='csr')[bound_edges]
+        return sp.eye(self.n_edges, format="csr")[bound_edges]
 
     @property
     def project_node_to_boundary_node(self):
         bound_nodes = np.unique(self._faces[self.boundary_face_list])
-        return sp.eye(self.n_nodes, format='csr')[bound_nodes]
+        return sp.eye(self.n_nodes, format="csr")[bound_nodes]
 
     @property
     def boundary_nodes(self):
@@ -928,7 +961,7 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         bound_face_normals = self.face_normals[bound_faces]
 
         out_ish = self.faces[bound_faces] - self.cell_centers[bound_cells]
-        direc = np.sign(np.einsum('ij,ij->i', bound_face_normals, out_ish))
+        direc = np.sign(np.einsum("ij,ij->i", bound_face_normals, out_ish))
         boundary_face_outward_normals = direc[:, None] * bound_face_normals
 
         return boundary_face_outward_normals
@@ -967,9 +1000,14 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         if self.dim == 2:
             boundary_face_edges = boundary_faces
         else:
-            raise NotImplementedError("The 3D boundary edge integral matrix has not been implemented yet")
+            raise NotImplementedError(
+                "The 3D boundary edge integral matrix has not been implemented yet"
+            )
             # boundary_face_edges = self._face_edges[boundary_faces]
-        dA = self.boundary_face_outward_normals * self.face_areas[boundary_faces][:, None]
+        dA = (
+            self.boundary_face_outward_normals
+            * self.face_areas[boundary_faces][:, None]
+        )
 
         # projection matrices
         # for each edge on boundary faces
@@ -978,7 +1016,10 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         if self.dim == 2:
             index = boundary_face_edges
             w_cross_n = np.cross(-self.edge_tangents[index], dA)
-            M_be = sp.csr_matrix((w_cross_n, (index, index)), shape=(n_edges, n_edges)) @ Pe.T
+            M_be = (
+                sp.csr_matrix((w_cross_n, (index, index)), shape=(n_edges, n_edges))
+                @ Pe.T
+            )
         # This is not quite correct for 3D...
         # else:
         #     Ps = [sp.csr_matrix((n_edges, n_boundary_edges)) for i in range(3)]
@@ -991,4 +1032,7 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         return M_be
 
     def __reduce__(self):
-        return self.__class__, (self.nodes, self.simplices, )
+        return self.__class__, (
+            self.nodes,
+            self.simplices,
+        )

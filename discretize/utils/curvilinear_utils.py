@@ -4,7 +4,6 @@ from discretize.utils.code_utils import deprecate_function
 import warnings
 
 
-
 def example_curvilinear_grid(nC, exType):
     """Creates and returns the gridded node locations for a curvilinear mesh.
 
@@ -472,7 +471,6 @@ def face_info(xyz, A, B, C, D, average=True, normalize_normals=True, **kwargs):
     if not isinstance(normalize_normals, bool):
         raise TypeError("normalize_normals must be a boolean")
 
-
     AB = xyz[B, :] - xyz[A, :]
     BC = xyz[C, :] - xyz[B, :]
     CD = xyz[D, :] - xyz[C, :]
@@ -517,8 +515,17 @@ def face_info(xyz, A, B, C, D, average=True, normalize_normals=True, **kwargs):
 
 
 exampleLrmGrid = deprecate_function(
-    example_curvilinear_grid, "exampleLrmGrid", removal_version="1.0.0", future_warn=True
+    example_curvilinear_grid,
+    "exampleLrmGrid",
+    removal_version="1.0.0",
+    future_warn=True,
 )
-volTetra = deprecate_function(volume_tetrahedron, "volTetra", removal_version="1.0.0", future_warn=True)
-indexCube = deprecate_function(index_cube, "indexCube", removal_version="1.0.0", future_warn=True)
-faceInfo = deprecate_function(face_info, "faceInfo", removal_version="1.0.0", future_warn=True)
+volTetra = deprecate_function(
+    volume_tetrahedron, "volTetra", removal_version="1.0.0", future_warn=True
+)
+indexCube = deprecate_function(
+    index_cube, "indexCube", removal_version="1.0.0", future_warn=True
+)
+faceInfo = deprecate_function(
+    face_info, "faceInfo", removal_version="1.0.0", future_warn=True
+)

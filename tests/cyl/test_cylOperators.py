@@ -274,7 +274,7 @@ class TestAveCC2F(tests.OrderTest):
     meshTypes = ["uniformCylindricalMesh"]
     meshSizes = [8, 16, 32, 64]
     meshDimension = 3
-    expectedOrders = 1 # Extrapolation at the boundaries
+    expectedOrders = 1  # Extrapolation at the boundaries
     full = True
 
     def getError(self):
@@ -586,11 +586,14 @@ class TestCylNodalGradient_Order(tests.OrderTest):
 
             g_r = out_t * 2 * np.pi * np.cos(2 * np.pi * r)
             g_phi = out_r / r * np.cos(t)
-            g_phi[r==0.0] = 0.0
+            g_phi[r == 0.0] = 0.0
             out = np.c_[g_r, g_phi]
             if z is not None:
                 out_z = np.sin(2 * np.pi * z)
-                out = np.c_[out_z[:, None] * out, out_r * out_t * 2 * np.pi * np.cos(2 * np.pi * z)]
+                out = np.c_[
+                    out_z[:, None] * out,
+                    out_r * out_t * 2 * np.pi * np.cos(2 * np.pi * z),
+                ]
             return out
 
         phi = fun(*mesh.nodes.T)
@@ -633,12 +636,10 @@ class MimeticProperties(unittest.TestCase):
             v = np.random.rand(mesh.nN)
             curlgradv = mesh.edge_curl * (mesh.nodal_gradient * v)
             rel_err = np.linalg.norm(curlgradv) / np.linalg.norm(v)
-            passed = rel_err  < self.tol
+            passed = rel_err < self.tol
             print(
                 "Testing Curl * Grad on {} : |Curl Grad v| / |v|= {} "
-                "... {}".format(
-                    meshType, rel_err, 'FAIL' if not passed else 'ok'
-                )
+                "... {}".format(meshType, rel_err, "FAIL" if not passed else "ok")
             )
 
 

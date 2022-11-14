@@ -130,7 +130,9 @@ def setup_mesh(mesh_type, nC, nDim):
         elif "random" in mesh_type:
             h1 = np.random.rand(nC) * nC * 0.5 + nC * 0.5
             if "symmetric" in mesh_type:
-                h2 = [2 * np.pi, ]
+                h2 = [
+                    2 * np.pi,
+                ]
             else:
                 h2 = np.random.rand(nC) * nC * 0.5 + nC * 0.5
             h3 = np.random.rand(nC) * nC * 0.5 + nC * 0.5
@@ -765,8 +767,12 @@ def assert_isadjoint(
 
 
 # DEPRECATIONS
-setupMesh = deprecate_function(setup_mesh, "setupMesh", removal_version="1.0.0", future_warn=True)
-Rosenbrock = deprecate_function(rosenbrock, "Rosenbrock", removal_version="1.0.0", future_warn=True)
+setupMesh = deprecate_function(
+    setup_mesh, "setupMesh", removal_version="1.0.0", future_warn=True
+)
+Rosenbrock = deprecate_function(
+    rosenbrock, "Rosenbrock", removal_version="1.0.0", future_warn=True
+)
 checkDerivative = deprecate_function(
     check_derivative, "checkDerivative", removal_version="1.0.0", future_warn=True
 )

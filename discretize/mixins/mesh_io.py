@@ -6,7 +6,10 @@ from discretize.utils.code_utils import deprecate_method
 import warnings
 
 try:
-    from discretize.mixins.vtk_mod import InterfaceTensorread_vtk, InterfaceSimplexReadVTK
+    from discretize.mixins.vtk_mod import (
+        InterfaceTensorread_vtk,
+        InterfaceSimplexReadVTK,
+    )
 except ImportError:
     InterfaceSimplexReadVTK = InterfaceTensorread_vtk = object
 
@@ -21,6 +24,7 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         - Read/write models defined on tensor meshes
 
     """
+
     @classmethod
     def _readUBC_3DMesh(cls, file_name):
         """Read 3D tensor mesh from UBC-GIF formatted file.
@@ -416,7 +420,9 @@ class TensorMeshIO(InterfaceTensorread_vtk):
     readModelUBC = deprecate_method(
         "read_model_UBC", "readModelUBC", removal_version="1.0.0", future_warn=True
     )
-    writeUBC = deprecate_method("write_UBC", "writeUBC", removal_version="1.0.0", future_warn=True)
+    writeUBC = deprecate_method(
+        "write_UBC", "writeUBC", removal_version="1.0.0", future_warn=True
+    )
     writeModelUBC = deprecate_method(
         "write_model_UBC", "writeModelUBC", removal_version="1.0.0", future_warn=True
     )
@@ -432,6 +438,7 @@ class TreeMeshIO(object):
         - Read/write models defined on tree meshes
 
     """
+
     @classmethod
     def read_UBC(TreeMesh, file_name, directory=""):
         """Read 3D tree mesh (OcTree mesh) from UBC-GIF formatted file.
@@ -601,7 +608,9 @@ class TreeMeshIO(object):
     readModelUBC = deprecate_method(
         "read_model_UBC", "readModelUBC", removal_version="1.0.0", future_warn=True
     )
-    writeUBC = deprecate_method("write_UBC", "writeUBC", removal_version="1.0.0", future_warn=True)
+    writeUBC = deprecate_method(
+        "write_UBC", "writeUBC", removal_version="1.0.0", future_warn=True
+    )
     writeModelUBC = deprecate_method(
         "write_model_UBC", "writeModelUBC", removal_version="1.0.0", future_warn=True
     )

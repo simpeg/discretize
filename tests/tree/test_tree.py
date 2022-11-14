@@ -337,6 +337,7 @@ class TestOcTree(unittest.TestCase):
         cell_2 = M[2]
         np.testing.assert_equal(cell_2.nodes, cell_nodes[2])
 
+
 class Test2DInterpolation(unittest.TestCase):
     def setUp(self):
         def topo(x):
@@ -431,7 +432,6 @@ class Test3DInterpolation(unittest.TestCase):
 
 
 class TestWrapAroundLevels(unittest.TestCase):
-
     def test_refine_func(self):
         mesh1 = discretize.TreeMesh((16, 16, 16))
         mesh2 = discretize.TreeMesh((16, 16, 16))

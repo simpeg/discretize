@@ -8,7 +8,7 @@ def check_for_diag_unbalance(mesh):
     for i in range(mesh.n_nodes):
         cells_around_node = avg[i, :].indices
         levels = np.atleast_1d(mesh.cell_levels_by_index(cells_around_node))
-        level_diff = max(levels)-min(levels)
+        level_diff = max(levels) - min(levels)
         if level_diff >= 2:
             bad_nodes.append(i)
     bad_nodes = np.asarray(bad_nodes)

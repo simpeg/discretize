@@ -4,7 +4,6 @@ import discretize
 
 
 class RobinOperatorTest(unittest.TestCase):
-
     def setUp(self):
         self.mesh = discretize.TensorMesh([18, 20, 32])
 
@@ -18,39 +17,25 @@ class RobinOperatorTest(unittest.TestCase):
         beta = np.full(n_boundary_faces, 1.5)
         gamma = np.full(n_boundary_faces, 2.0)
 
-        B1, b1 = mesh.cell_gradient_weak_form_robin(
-            alpha=alpha,
-            beta=beta,
-            gamma=gamma
-        )
+        B1, b1 = mesh.cell_gradient_weak_form_robin(alpha=alpha, beta=beta, gamma=gamma)
 
         for a in [0.5, alpha]:
             for b in [1.5, beta]:
                 for g in [2.0, gamma]:
                     B_t, bt = mesh.cell_gradient_weak_form_robin(
-                        alpha=a,
-                        beta=b,
-                        gamma=g
+                        alpha=a, beta=b, gamma=g
                     )
                     np.testing.assert_equal(bt, b1)
-                    self.assertEqual((B1-B_t).nnz, 0)
+                    self.assertEqual((B1 - B_t).nnz, 0)
 
         gamma = np.random.rand(n_boundary_faces, 2)
         B1, b1 = mesh.cell_gradient_weak_form_robin(
-            alpha=0.5,
-            beta=1.5,
-            gamma=gamma[:, 0]
+            alpha=0.5, beta=1.5, gamma=gamma[:, 0]
         )
         B2, b2 = mesh.cell_gradient_weak_form_robin(
-            alpha=0.5,
-            beta=1.5,
-            gamma=gamma[:, 1]
+            alpha=0.5, beta=1.5, gamma=gamma[:, 1]
         )
-        B3, b3 = mesh.cell_gradient_weak_form_robin(
-            alpha=0.5,
-            beta=1.5,
-            gamma=gamma
-        )
+        B3, b3 = mesh.cell_gradient_weak_form_robin(alpha=0.5, beta=1.5, gamma=gamma)
         np.testing.assert_allclose(B1.data, B2.data)
         np.testing.assert_allclose(B1.data, B3.data)
         np.testing.assert_allclose(np.c_[b1, b2], b3)
@@ -68,18 +53,14 @@ class RobinOperatorTest(unittest.TestCase):
         gamma = np.full(n_boundary_faces, 2.0)
 
         B1, b1 = mesh.edge_divergence_weak_form_robin(
-            alpha=alpha,
-            beta=beta,
-            gamma=gamma
+            alpha=alpha, beta=beta, gamma=gamma
         )
 
         for a in [0.5, alpha]:
             for b in [1.5, beta]:
                 for g in [2.0, gamma]:
                     B_t, bt = mesh.edge_divergence_weak_form_robin(
-                        alpha=a,
-                        beta=b,
-                        gamma=g
+                        alpha=a, beta=b, gamma=g
                     )
                     np.testing.assert_allclose(bt, b1)
                     np.testing.assert_allclose(B1.data, B_t.data)
@@ -92,49 +73,31 @@ class RobinOperatorTest(unittest.TestCase):
             for b in [1.5, beta]:
                 for g in [2.0, gamma]:
                     B_t, bt = mesh.edge_divergence_weak_form_robin(
-                        alpha=a,
-                        beta=b,
-                        gamma=g
+                        alpha=a, beta=b, gamma=g
                     )
                     np.testing.assert_allclose(bt, b1)
                     np.testing.assert_allclose(B1.data, B_t.data)
 
         gamma = np.random.rand(n_boundary_faces, 2)
         B1, b1 = mesh.edge_divergence_weak_form_robin(
-            alpha=0.5,
-            beta=1.5,
-            gamma=gamma[:, 0]
+            alpha=0.5, beta=1.5, gamma=gamma[:, 0]
         )
         B2, b2 = mesh.edge_divergence_weak_form_robin(
-            alpha=0.5,
-            beta=1.5,
-            gamma=gamma[:, 1]
+            alpha=0.5, beta=1.5, gamma=gamma[:, 1]
         )
-        B3, b3 = mesh.edge_divergence_weak_form_robin(
-            alpha=0.5,
-            beta=1.5,
-            gamma=gamma
-        )
+        B3, b3 = mesh.edge_divergence_weak_form_robin(alpha=0.5, beta=1.5, gamma=gamma)
         np.testing.assert_allclose(B1.data, B2.data)
         np.testing.assert_allclose(B1.data, B3.data)
         np.testing.assert_allclose(np.c_[b1, b2], b3)
 
         gamma = np.random.rand(n_boundary_nodes, 2)
         B1, b1 = mesh.edge_divergence_weak_form_robin(
-            alpha=0.5,
-            beta=1.5,
-            gamma=gamma[:, 0]
+            alpha=0.5, beta=1.5, gamma=gamma[:, 0]
         )
         B2, b2 = mesh.edge_divergence_weak_form_robin(
-            alpha=0.5,
-            beta=1.5,
-            gamma=gamma[:, 1]
+            alpha=0.5, beta=1.5, gamma=gamma[:, 1]
         )
-        B3, b3 = mesh.edge_divergence_weak_form_robin(
-            alpha=0.5,
-            beta=1.5,
-            gamma=gamma
-        )
+        B3, b3 = mesh.edge_divergence_weak_form_robin(alpha=0.5, beta=1.5, gamma=gamma)
         np.testing.assert_allclose(B1.data, B2.data)
         np.testing.assert_allclose(B1.data, B3.data)
         np.testing.assert_allclose(np.c_[b1, b2], b3)
@@ -165,9 +128,8 @@ class RobinOperatorTest(unittest.TestCase):
 
 
 class mesh1DTests(unittest.TestCase):
-
     def setUp(self):
-        self.mesh, _ = discretize.tests.setup_mesh('uniformTensorMesh', 32, 1)
+        self.mesh, _ = discretize.tests.setup_mesh("uniformTensorMesh", 32, 1)
 
     def testItems(self):
         mesh = self.mesh
