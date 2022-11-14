@@ -41,6 +41,136 @@ def test_line_errors():
         mesh.refine_line(segments2D, [mesh.max_level, 3], finalize=False)
 
 
+def test_triangle2d():
+    # define a slower function that is surely accurate
+    triangle = np.array([[0.14, 0.31], [0.32, 0.96], [0.23, 0.87]])
+    edges = np.stack([
+        triangle[1]-triangle[0],
+        triangle[2]-triangle[1],
+        triangle[2]-triangle[0],
+    ])
+
+    def project_min_max(points, axis):
+        ps = points @ axis
+        return ps.min(), ps.max()
+
+    def refine_triangle2d(cell):
+        # The underlying C functions are more optimized
+        # but this is more explicit
+        x0 = cell.origin
+        xF = x0 + cell.h
+
+        mins = triangle.min(axis=0)
+        if np.any(mins > xF):
+            return 0
+        maxs = triangle.max(axis=0)
+        if np.any(maxs < x0):
+            return 0
+
+        box_points = np.array([
+            [x0[0], x0[1]],
+            [x0[0], xF[1]],
+            [xF[0], x0[1]],
+            [xF[0], xF[1]],
+        ])
+        for i in range(3):
+            axis = [-edges[i, 1], edges[i, 0]]
+            bmin, bmax = project_min_max(box_points, axis)
+            tmin, tmax = project_min_max(triangle, axis)
+            if bmax < tmin or bmin > tmax:
+                return 0
+        return -1
+
+    mesh1 = discretize.TreeMesh([64, 64])
+    mesh1.refine(refine_triangle2d)
+
+    mesh2 = discretize.TreeMesh([64, 64])
+    mesh2.refine_triangle(triangle, -1)
+
+    assert mesh1.equals(mesh2)
+
+
+def test_triangle3d():
+    # define a slower function that is surely accurate
+    triangle = np.array([[0.14, 0.31, 0.23], [0.32, 0.96, 0.41], [0.23, 0.87, 0.72]])
+    edges = np.stack([
+        triangle[1]-triangle[0],
+        triangle[2]-triangle[1],
+        triangle[2]-triangle[0],
+    ])
+    triangle_norm = np.cross(edges[0], edges[1])
+    triangle_proj = triangle[0] @ triangle_norm
+
+    def project_min_max(points, axis):
+        ps = points @ axis
+        return ps.min(), ps.max()
+    box_normals = np.eye(3)
+
+    def refine_triangle(cell):
+        # The underlying C functions are more optimized
+        # but this is more explicit
+        x0 = cell.origin
+        xF = x0 + cell.h
+
+        mins = triangle.min(axis=0)
+        if np.any(mins > xF):
+            return 0
+        maxs = triangle.max(axis=0)
+        if np.any(maxs < x0):
+            return 0
+
+        box_points = np.array([
+            [x0[0], x0[1], x0[2]],
+            [x0[0], xF[1], x0[2]],
+            [xF[0], x0[1], x0[2]],
+            [xF[0], xF[1], x0[2]],
+            [x0[0], x0[1], xF[2]],
+            [x0[0], xF[1], xF[2]],
+            [xF[0], x0[1], xF[2]],
+            [xF[0], xF[1], xF[2]],
+        ])
+        for i in range(3):
+            for j in range(3):
+                axis = np.cross(edges[i], box_normals[j])
+                bmin, bmax = project_min_max(box_points, axis)
+                tmin, tmax = project_min_max(triangle, axis)
+                if bmax < tmin or bmin > tmax:
+                    return 0
+        bmin, bmax = project_min_max(box_points, triangle_norm)
+        if bmax < triangle_proj or bmin > triangle_proj:
+            return 0
+        return -1
+
+    mesh1 = discretize.TreeMesh([64, 64, 64])
+    mesh1.refine(refine_triangle)
+
+    mesh2 = discretize.TreeMesh([64, 64, 64])
+    mesh2.refine_triangle(triangle, -1)
+
+    assert mesh1.equals(mesh2)
+
+
+def test_triangle_errors():
+    not_triangles_array = np.random.rand(4, 2, 2)
+    triangle3 = np.random.rand(3, 3)
+    triangles2 = np.random.rand(10, 3, 2)
+    levels = np.full(8, -1)
+
+    mesh1 = discretize.TreeMesh([64, 64])
+
+    # not passing 3 points on the second to last dimension to make a triangle
+    with pytest.raises(ValueError):
+        mesh1.refine_triangle(not_triangles_array, -1, finalize=False)
+
+    # incorrect dimension
+    with pytest.raises(ValueError):
+        mesh1.refine_triangle(triangle3, -1, finalize=False)
+
+    # bad number of levels and triangles
+    with pytest.raises(ValueError):
+        mesh1.refine_triangle(triangles2, levels, finalize=False)
+
+
 def test_box_errors():
     mesh = discretize.TreeMesh([64, 64])
     x0s = np.array([0.1, 0.2])

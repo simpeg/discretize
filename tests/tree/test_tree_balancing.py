@@ -127,6 +127,21 @@ def test_refine_line():
     assert len(bad_nodes) == 0
 
 
+def test_refine_triangle():
+    triangle = np.array([[0.14, 0.31], [0.32, 0.96], [0.23, 0.87]])
+    mesh1 = discretize.TreeMesh([64, 64], diagonal_balance=False)
+    mesh1.refine_triangle(triangle, -1)
+    bad_nodes = check_for_diag_unbalance(mesh1)
+
+    assert len(bad_nodes) == 5
+
+    mesh2 = discretize.TreeMesh([64, 64], diagonal_balance=True)
+    mesh2.refine_triangle(triangle, -1)
+    bad_nodes = check_for_diag_unbalance(mesh2)
+
+    assert len(bad_nodes) == 0
+
+
 def test_balance_out_unbalance_in():
     mesh1 = discretize.TreeMesh([64, 64], diagonal_balance=True)
     mesh1.insert_cells([0.09, 0.09], -1, finalize=False)
