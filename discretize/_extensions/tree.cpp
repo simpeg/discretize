@@ -3,6 +3,7 @@
 #include "tree.h"
 #include <iostream>
 #include <algorithm>
+#include <limits>
 
 Node::Node(){
     location_ind[0] = 0;
@@ -470,6 +471,309 @@ void Cell::refine_box(node_map_t& nodes, double* x0, double* x1, int_t p_level, 
         children[5]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed, diag_balance);
         children[6]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed, diag_balance);
         children[7]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed, diag_balance);
+    }
+}
+
+void Cell::refine_line(node_map_t& nodes, double* x0, double* x1, double* diff_inv, int_t p_level, double *xs, double *ys, double* zs, bool diag_balance){
+    // Return If I'm at max_level or p_level
+    if (level >= p_level || level == max_level){
+        return;
+    }
+    // then check to see if I intersect the segment
+    double t0x, t0y, t0z, t1x, t1y, t1z;
+    double tminx, tminy, tminz, tmaxx, tmaxy, tmaxz;
+    double tmin, tmax;
+
+    t0x = (points[0]->location[0] - x0[0]) * diff_inv[0];
+    t1x = (points[3]->location[0] - x0[0]) * diff_inv[0];
+    if (t0x <= t1x){
+      tminx = t0x;
+      tmaxx = t1x;
+    }else{
+      tminx = t1x;
+      tmaxx = t0x;
+    }
+
+    t0y = (points[0]->location[1] - x0[1]) * diff_inv[1];
+    t1y = (points[3]->location[1] - x0[1]) * diff_inv[1];
+    if (t0y <= t1y){
+      tminy = t0y;
+      tmaxy = t1y;
+    }else{
+      tminy = t1y;
+      tmaxy = t0y;
+    }
+
+    tmin = std::max(tminx, tminy);
+    tmax = std::min(tmaxx, tmaxy);
+    if (n_dim > 2){
+        t0z = (points[0]->location[2] - x0[2]) * diff_inv[2];
+        t1z = (points[7]->location[2] - x0[2]) * diff_inv[2];
+        if (t0z <= t1z){
+          tminz = t0z;
+          tmaxz = t1z;
+        }else{
+          tminz = t1z;
+          tmaxz = t0z;
+        }
+        tmin = std::max(tmin, tminz);
+        tmax = std::min(tmax, tmaxz);
+    }
+    // now can test if I intersect!
+    if (tmax >= 0 && tmin <= 1 && tmin <= tmax){
+        if(is_leaf()){
+            divide(nodes, xs, ys, zs, true, diag_balance);
+        }
+        // recurse into children
+        for(int_t i = 0; i < (1<<n_dim); ++i){
+            children[i]->refine_line(nodes, x0, x1, diff_inv, p_level, xs, ys, zs, diag_balance);
+        }
+    }
+}
+
+void Cell::refine_triangle(
+  node_map_t& nodes,
+  double* x0, double* x1, double* x2,
+  double* e0, double* e1, double* e2,
+  double* t_norm,
+  int_t p_level, double *xs, double *ys, double* zs, bool diag_balance
+){
+    // Return If I'm at max_level or p_level
+    if (level >= p_level || level == max_level){
+        return;
+    }
+    // then check to see if I intersect the segment
+    double v0[3], v1[3], v2[3], half[3];
+    double vmin, vmax;
+    double p0, p1, p2, pmin, pmax, rad;
+    for(int_t i=0; i < n_dim; ++i){
+        v0[i] = x0[i] - location[i];
+        v1[i] = x1[i] - location[i];
+        vmin = std::min(v0[i], v1[i]);
+        vmax = std::max(v0[i], v1[i]);
+        v2[i] = x2[i] - location[i];
+        vmin = std::min(vmin, v2[i]);
+        vmax = std::max(vmax, v2[i]);
+        half[i] = location[i] - points[0]->location[i];
+
+        // Bounding box check
+        if (vmin > half[i] || vmax < -half[i]){
+            return;
+        }
+    }
+    // first do the 3 edge cross tests that apply in 2D and 3D
+
+    // edge 0 cross z_hat
+    //p0 = e0[1] * v0[0] - e0[0] * v0[1];
+    p1 = e0[1] * v1[0] - e0[0] * v1[1];
+    p2 = e0[1] * v2[0] - e0[0] * v2[1];
+    pmin = std::min(p1, p2);
+    pmax = std::max(p1, p2);
+    rad = std::abs(e0[1]) * half[0] + std::abs(e0[0]) * half[1];
+    if (pmin > rad || pmax < -rad){
+        return;
+    }
+
+    // edge 1 cross z_hat
+    p0 = e1[1] * v0[0] - e1[0] * v0[1];
+    p1 = e1[1] * v1[0] - e1[0] * v1[1];
+    //p2 = e1[1] * v2[0] - e1[0] * v2[1];
+    pmin = std::min(p0, p1);
+    pmax = std::max(p0, p1);
+    rad = std::abs(e1[1]) * half[0] + std::abs(e1[0]) * half[1];
+    if (pmin > rad || pmax < -rad){
+        return;
+    }
+
+    // edge 2 cross z_hat
+    //p0 = e2[1] * v0[0] - e2[0] * v0[1];
+    p1 = e2[1] * v1[0] - e2[0] * v1[1];
+    p2 = e2[1] * v2[0] - e2[0] * v2[1];
+    pmin = std::min(p1, p2);
+    pmax = std::max(p1, p2);
+    rad = std::abs(e2[1]) * half[0] + std::abs(e2[0]) * half[1];
+    if (pmin > rad || pmax < -rad){
+        return;
+    }
+
+    if(n_dim > 2){
+        // edge 0 cross x_hat
+        p0 = e0[2] * v0[1] - e0[1] * v0[2];
+        //p1 = e0[2] * v1[1] - e0[1] * v1[2];
+        p2 = e0[2] * v2[1] - e0[1] * v2[2];
+        pmin = std::min(p0, p2);
+        pmax = std::max(p0, p2);
+        rad = std::abs(e0[2]) * half[1] + std::abs(e0[1]) * half[2];
+        if (pmin > rad || pmax < -rad){
+            return;
+        }
+        // edge 0 cross y_hat
+        p0 = -e0[2] * v0[0] + e0[0] * v0[2];
+        //p1 = -e0[2] * v1[0] + e0[0] * v1[2];
+        p2 = -e0[2] * v2[0] + e0[0] * v2[2];
+        pmin = std::min(p0, p2);
+        pmax = std::max(p0, p2);
+        rad = std::abs(e0[2]) * half[0] + std::abs(e0[0]) * half[2];
+        if (pmin > rad || pmax < -rad){
+            return;
+        }
+        // edge 1 cross x_hat
+        p0 = e1[2] * v0[1] - e1[1] * v0[2];
+        //p1 = e1[2] * v1[1] - e1[1] * v1[2];
+        p2 = e1[2] * v2[1] - e1[1] * v2[2];
+        pmin = std::min(p0, p2);
+        pmax = std::max(p0, p2);
+        rad = std::abs(e1[2]) * half[1] + std::abs(e1[1]) * half[2];
+        if (pmin > rad || pmax < -rad){
+            return;
+        }
+        // edge 1 cross y_hat
+        p0 = -e1[2] * v0[0] + e1[0] * v0[2];
+        //p1 = -e1[2] * v1[0] + e1[0] * v1[2];
+        p2 = -e1[2] * v2[0] + e1[0] * v2[2];
+        pmin = std::min(p0, p2);
+        pmax = std::max(p0, p2);
+        rad = std::abs(e1[2]) * half[0] + std::abs(e1[0]) * half[2];
+        if (pmin > rad || pmax < -rad){
+            return;
+        }
+        // edge 2 cross x_hat
+        p0 = e2[2] * v0[1] - e2[1] * v0[2];
+        p1 = e2[2] * v1[1] - e2[1] * v1[2];
+        //p2 = e2[2] * v2[1] - e2[1] * v2[2];
+        pmin = std::min(p0, p1);
+        pmax = std::max(p0, p1);
+        rad = std::abs(e2[2]) * half[1] + std::abs(e2[1]) * half[2];
+        if (pmin > rad || pmax < -rad){
+            return;
+        }
+        // edge 2 cross y_hat
+        p0 = -e2[2] * v0[0] + e2[0] * v0[2];
+        p1 = -e2[2] * v1[0] + e2[0] * v1[2];
+        //p2 = -e2[2] * v2[0] + e2[0] * v2[2];
+        pmin = std::min(p0, p1);
+        pmax = std::max(p0, p1);
+        rad = std::abs(e2[2]) * half[0] + std::abs(e2[0]) * half[2];
+        if (pmin > rad || pmax < -rad){
+            return;
+        }
+
+        // triangle normal axis
+        pmin = 0.0;
+        pmax = 0.0;
+        for(int_t i=0; i<n_dim; ++i){
+            if(t_norm[i] > 0){
+                pmin += t_norm[i] * (-half[i] - v0[i]);
+                pmax += t_norm[i] * (half[i] - v0[i]);
+            }else{
+                pmin += t_norm[i] * (half[i] - v0[i]);
+                pmax += t_norm[i] * (-half[i] - v0[i]);
+            }
+        }
+        if (pmin > 0 || pmax < 0){
+            return;
+        }
+    }
+    // If here, then I intersect the triangle!
+    if(is_leaf()){
+        divide(nodes, xs, ys, zs, true, diag_balance);
+    }
+    for(int_t i = 0; i < (1<<n_dim); ++i){
+        children[i]->refine_triangle(
+            nodes, x0, x1, x2, e0, e1, e2, t_norm, p_level, xs, ys, zs, diag_balance
+        );
+    }
+}
+
+void Cell::refine_tetra(
+  node_map_t& nodes,
+  double* x0, double* x1, double* x2, double* x3,
+  double edge_tans[6][3], double face_normals[4][3],
+  int_t p_level, double *xs, double *ys, double* zs, bool diag_balance
+){
+    // Return If I'm at max_level or p_level
+    if (level >= p_level || level == max_level){
+        return;
+    }
+    if (n_dim < 3){
+        return;
+    }
+    // then check to see if I intersect the segment
+    double v0[3], v1[3], v2[3], v3[3], half[3];
+    double p0, p1, p2, p3, pmin, pmax, rad;
+    for(int_t i=0; i < n_dim; ++i){
+        v0[i] = x0[i] - location[i];
+        v1[i] = x1[i] - location[i];
+        v2[i] = x2[i] - location[i];
+        v3[i] = x3[i] - location[i];
+        half[i] = location[i] - points[0]->location[i];
+        pmin = std::min(std::min(std::min(v0[i], v1[i]), v2[i]), v3[i]);
+        pmax = std::max(std::max(std::max(v0[i], v1[i]), v2[i]), v3[i]);
+        // Bounding box check
+        if (pmin > half[i] || pmax < -half[i]){
+            return;
+        }
+    }
+    // first do the 3 edge cross tests that apply in 2D and 3D
+    double *axis;
+
+    for(int_t i=0; i<6; ++i){
+        // edge cross [1, 0, 0]
+        p0 = edge_tans[i][2] * v0[1] - edge_tans[i][1] * v0[2];
+        p1 = edge_tans[i][2] * v1[1] - edge_tans[i][1] * v1[2];
+        p2 = edge_tans[i][2] * v2[1] - edge_tans[i][1] * v2[2];
+        p3 = edge_tans[i][2] * v3[1] - edge_tans[i][1] * v3[2];
+        pmin = std::min(std::min(std::min(p0, p1), p2), p3);
+        pmax = std::max(std::max(std::max(p0, p1), p2), p3);
+        rad = std::abs(edge_tans[i][2]) * half[1] + std::abs(edge_tans[i][1]) * half[2];
+        if (pmin > rad || pmax < -rad){
+            return;
+        }
+
+        p0 = -edge_tans[i][2] * v0[0] + edge_tans[i][0] * v0[2];
+        p1 = -edge_tans[i][2] * v1[0] + edge_tans[i][0] * v1[2];
+        p2 = -edge_tans[i][2] * v2[0] + edge_tans[i][0] * v2[2];
+        p3 = -edge_tans[i][2] * v3[0] + edge_tans[i][0] * v3[2];
+        pmin = std::min(std::min(std::min(p0, p1), p2), p3);
+        pmax = std::max(std::max(std::max(p0, p1), p2), p3);
+        rad = std::abs(edge_tans[i][2]) * half[0] + std::abs(edge_tans[i][0]) * half[2];
+        if (pmin > rad || pmax < -rad){
+            return;
+        }
+
+        p0 = edge_tans[i][1] * v0[0] - edge_tans[i][0] * v0[1];
+        p1 = edge_tans[i][1] * v1[0] - edge_tans[i][0] * v1[1];
+        p2 = edge_tans[i][1] * v2[0] - edge_tans[i][0] * v2[1];
+        p3 = edge_tans[i][1] * v3[0] - edge_tans[i][0] * v3[1];
+        pmin = std::min(std::min(std::min(p0, p1), p2), p3);
+        pmax = std::max(std::max(std::max(p0, p1), p2), p3);
+        rad = std::abs(edge_tans[i][1]) * half[0] + std::abs(edge_tans[i][0]) * half[1];
+        if (pmin > rad || pmax < -rad){
+            return;
+        }
+    }
+    // triangle face normals
+    for(int_t i=0; i<4; ++i){
+        axis = face_normals[i];
+        p0 = axis[0] * v0[0] + axis[1] * v0[1] + axis[2] * v0[2];
+        p1 = axis[0] * v1[0] + axis[1] * v1[1] + axis[2] * v1[2];
+        p2 = axis[0] * v2[0] + axis[1] * v2[1] + axis[2] * v2[2];
+        p3 = axis[0] * v3[0] + axis[1] * v3[1] + axis[2] * v3[2];
+        pmin = std::min(std::min(std::min(p0, p1), p2), p3);
+        pmax = std::max(std::max(std::max(p0, p1), p2), p3);
+        rad = std::abs(axis[0]) * half[0] + std::abs(axis[1]) * half[1] + std::abs(axis[2]) * half[2];
+        if (pmin > rad || pmax < -rad){
+            return;
+        }
+    }
+    // If here, then I intersect the tetrahedron!
+    if(is_leaf()){
+        divide(nodes, xs, ys, zs, true, diag_balance);
+    }
+    for(int_t i = 0; i < (1<<n_dim); ++i){
+        children[i]->refine_tetra(
+            nodes, x0, x1, x2, x3, edge_tans, face_normals, p_level, xs, ys, zs, diag_balance
+        );
     }
 }
 
@@ -1010,6 +1314,72 @@ void Tree::refine_ball(double* center, double r, int_t p_level, bool diagonal_ba
         for(int_t iy=0; iy<ny_roots; ++iy)
             for(int_t ix=0; ix<nx_roots; ++ix)
                 roots[iz][iy][ix]->refine_ball(nodes, center, r2, p_level, xs, ys, zs, diagonal_balance);
+};
+
+void Tree::refine_line(double* x0, double* x1, int_t p_level, bool diagonal_balance){
+    double diff_inv[3];
+    for(int_t i=0; i<n_dim; ++i){
+        diff_inv[i] = 1/(x1[i] - x0[i]);
+    }
+    for(int_t iz=0; iz<nz_roots; ++iz)
+        for(int_t iy=0; iy<ny_roots; ++iy)
+            for(int_t ix=0; ix<nx_roots; ++ix)
+                roots[iz][iy][ix]->refine_line(nodes, x0, x1, diff_inv, p_level, xs, ys, zs, diagonal_balance);
+};
+
+void Tree::refine_triangle(double* x0, double* x1, double* x2, int_t p_level, bool diagonal_balance){
+    double e0[3], e1[3], e2[3], t_norm[3];
+    for(int_t i=0; i<n_dim; ++i){
+      e0[i] = x1[i] - x0[i];
+      e1[i] = x2[i] - x1[i];
+      e2[i] = x2[i] - x0[i];
+    }
+    if(n_dim > 2){
+        t_norm[0] = e0[1] * e1[2] - e0[2] * e1[1];
+        t_norm[1] = e0[2] * e1[0] - e0[0] * e1[2];
+        t_norm[2] = e0[0] * e1[1] - e0[1] * e1[0];
+    }
+    for(int_t iz=0; iz<nz_roots; ++iz)
+        for(int_t iy=0; iy<ny_roots; ++iy)
+            for(int_t ix=0; ix<nx_roots; ++ix)
+                roots[iz][iy][ix]->refine_triangle(
+                    nodes, x0, x1, x2, e0, e1, e2, t_norm, p_level, xs, ys, zs, diagonal_balance
+                );
+};
+
+void Tree::refine_tetra(double* x0, double* x1, double* x2, double* x3, int_t p_level, bool diagonal_balance){
+    double t_edges[6][3];
+    double face_normals[4][3];
+    for(int_t i=0; i<n_dim; ++i){
+        t_edges[0][i] = x1[i] - x0[i];
+        t_edges[1][i] = x2[i] - x0[i];
+        t_edges[2][i] = x2[i] - x1[i];
+        t_edges[3][i] = x3[i] - x0[i];
+        t_edges[4][i] = x3[i] - x1[i];
+        t_edges[5][i] = x3[i] - x2[i];
+    }
+    face_normals[0][0] = t_edges[0][1] * t_edges[1][2] - t_edges[0][2] * t_edges[1][1];
+    face_normals[0][1] = t_edges[0][2] * t_edges[1][0] - t_edges[0][0] * t_edges[1][2];
+    face_normals[0][2] = t_edges[0][0] * t_edges[1][1] - t_edges[0][1] * t_edges[1][0];
+
+    face_normals[1][0] = t_edges[0][1] * t_edges[3][2] - t_edges[0][2] * t_edges[3][1];
+    face_normals[1][1] = t_edges[0][2] * t_edges[3][0] - t_edges[0][0] * t_edges[3][2];
+    face_normals[1][2] = t_edges[0][0] * t_edges[3][1] - t_edges[0][1] * t_edges[3][0];
+
+    face_normals[2][0] = t_edges[1][1] * t_edges[4][2] - t_edges[1][2] * t_edges[4][1];
+    face_normals[2][1] = t_edges[1][2] * t_edges[4][0] - t_edges[1][0] * t_edges[4][2];
+    face_normals[2][2] = t_edges[1][0] * t_edges[4][1] - t_edges[1][1] * t_edges[4][0];
+
+    face_normals[3][0] = t_edges[2][1] * t_edges[5][2] - t_edges[2][2] * t_edges[5][1];
+    face_normals[3][1] = t_edges[2][2] * t_edges[5][0] - t_edges[2][0] * t_edges[5][2];
+    face_normals[3][2] = t_edges[2][0] * t_edges[5][1] - t_edges[2][1] * t_edges[5][0];
+
+    for(int_t iz=0; iz<nz_roots; ++iz)
+        for(int_t iy=0; iy<ny_roots; ++iy)
+            for(int_t ix=0; ix<nx_roots; ++ix)
+                roots[iz][iy][ix]->refine_tetra(
+                    nodes, x0, x1, x2, x3, t_edges, face_normals, p_level, xs, ys, zs, diagonal_balance
+                );
 };
 
 void Tree::finalize_lists(){

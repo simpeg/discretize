@@ -3,6 +3,7 @@ from discretize.base import BaseRectangularMesh, BaseMesh
 import numpy as np
 import inspect
 
+
 class TestBaseMesh(unittest.TestCase):
     not_implemented_attributes = [
         "dim",
@@ -52,7 +53,7 @@ class TestBaseMesh(unittest.TestCase):
         "get_face_inner_product_deriv",
         "get_edge_inner_product_deriv",
         "point2index",
-        "get_interpolation_matrix"
+        "get_interpolation_matrix",
     ]
 
     def setUp(self):
@@ -70,12 +71,18 @@ class TestBaseMesh(unittest.TestCase):
                 params = inspect.signature(func).parameters
 
                 n_params = sum(
-                    [1 if (
-                        param.default is param.empty and param.kind != param.VAR_KEYWORD
-                    ) else 0 for param in params.values()]
+                    [
+                        1
+                        if (
+                            param.default is param.empty
+                            and param.kind != param.VAR_KEYWORD
+                        )
+                        else 0
+                        for param in params.values()
+                    ]
                 )
                 # pass empty parameters to the function
-                func(*([None]*n_params))
+                func(*([None] * n_params))
 
 
 class TestBaseRectangularMesh(unittest.TestCase):

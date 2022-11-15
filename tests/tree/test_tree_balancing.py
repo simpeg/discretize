@@ -8,7 +8,7 @@ def check_for_diag_unbalance(mesh):
     for i in range(mesh.n_nodes):
         cells_around_node = avg[i, :].indices
         levels = np.atleast_1d(mesh.cell_levels_by_index(cells_around_node))
-        level_diff = max(levels)-min(levels)
+        level_diff = max(levels) - min(levels)
         if level_diff >= 2:
             bad_nodes.append(i)
     bad_nodes = np.asarray(bad_nodes)
@@ -106,6 +106,54 @@ def test_refine_ball():
 
     mesh2 = discretize.TreeMesh([64, 64], diagonal_balance=True)
     mesh2.refine_ball([0.5, 0.5], [0.1], -1)
+    bad_nodes = check_for_diag_unbalance(mesh2)
+
+    assert len(bad_nodes) == 0
+
+
+def test_refine_line():
+    segments = np.array([[0.1, 0.3], [0.3, 0.9], [0.8, 0.9]])
+
+    mesh1 = discretize.TreeMesh([64, 64])
+    mesh1.refine_line(segments, -1)
+    bad_nodes = check_for_diag_unbalance(mesh1)
+
+    assert len(bad_nodes) == 7
+
+    mesh2 = discretize.TreeMesh([64, 64], diagonal_balance=True)
+    mesh2.refine_line(segments, -1)
+    bad_nodes = check_for_diag_unbalance(mesh2)
+
+    assert len(bad_nodes) == 0
+
+
+def test_refine_triangle():
+    triangle = np.array([[0.14, 0.31], [0.32, 0.96], [0.23, 0.87]])
+    mesh1 = discretize.TreeMesh([64, 64], diagonal_balance=False)
+    mesh1.refine_triangle(triangle, -1)
+    bad_nodes = check_for_diag_unbalance(mesh1)
+
+    assert len(bad_nodes) == 5
+
+    mesh2 = discretize.TreeMesh([64, 64], diagonal_balance=True)
+    mesh2.refine_triangle(triangle, -1)
+    bad_nodes = check_for_diag_unbalance(mesh2)
+
+    assert len(bad_nodes) == 0
+
+
+def test_refine_tetra():
+    simplex = np.array(
+        [[0.32, 0.21, 0.15], [0.82, 0.19, 0.34], [0.14, 0.82, 0.29], [0.32, 0.27, 0.83]]
+    )
+    mesh1 = discretize.TreeMesh([32, 32, 32], diagonal_balance=False)
+    mesh1.refine_tetrahedron(simplex, -1)
+    bad_nodes = check_for_diag_unbalance(mesh1)
+
+    assert len(bad_nodes) == 62
+
+    mesh2 = discretize.TreeMesh([32, 32, 32], diagonal_balance=True)
+    mesh2.refine_tetrahedron(simplex, -1)
     bad_nodes = check_for_diag_unbalance(mesh2)
 
     assert len(bad_nodes) == 0

@@ -67,7 +67,7 @@ models = {"Lpout": np.load(os.path.join("laguna_del_maule_slicer", "Lpout.npy"))
 
 # Get the PyVista dataset of the inverted model
 dataset = mesh.to_vtk(models)
-dataset.set_active_scalars('Lpout')
+dataset.set_active_scalars("Lpout")
 
 ###############################################################################
 
@@ -86,7 +86,7 @@ grav = pv.PolyData(grav_data[:, 0:3])
 # Add the data arrays
 grav.point_data["comp-1"] = grav_data[:, 3]
 grav.point_data["comp-2"] = grav_data[:, 4]
-grav.set_active_scalars('comp-1')
+grav.set_active_scalars("comp-1")
 
 ###############################################################################
 # Plot the topographic surface and the gravity data
@@ -94,8 +94,10 @@ grav.set_active_scalars('comp-1')
 p = pv.Plotter()
 p.add_mesh(topo, color="grey")
 p.add_mesh(
-    grav, point_size=15, render_points_as_spheres=True,
-    scalar_bar_args={"title": "Observed Gravtiy Data"}
+    grav,
+    point_size=15,
+    render_points_as_spheres=True,
+    scalar_bar_args={"title": "Observed Gravtiy Data"},
 )
 # Use a non-phot-realistic shading technique to show topographic relief
 p.enable_eye_dome_lighting()

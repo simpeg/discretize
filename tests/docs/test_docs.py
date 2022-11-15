@@ -2,6 +2,7 @@ import unittest
 import os
 from sphinx.application import Sphinx
 import multiprocessing
+
 n_cpu = multiprocessing.cpu_count()
 
 
@@ -15,14 +16,32 @@ class Doc_Test(unittest.TestCase):
         src_dir = config_dir = self.path_to_docs
         output_dir = os.path.sep.join([src_dir, "_build", "html"])
         doctree_dir = os.path.sep.join([src_dir, "_build", "doctrees"])
-        app = Sphinx(src_dir, config_dir, output_dir, doctree_dir, buildername="html", warningiserror=False, parallel=n_cpu, confoverrides={"numpydoc_show_inherited_class_members":False})
+        app = Sphinx(
+            src_dir,
+            config_dir,
+            output_dir,
+            doctree_dir,
+            buildername="html",
+            warningiserror=False,
+            parallel=n_cpu,
+            confoverrides={"numpydoc_show_inherited_class_members": False},
+        )
         app.build()
 
     def test_linkcheck(self):
         src_dir = config_dir = self.path_to_docs
         output_dir = os.path.sep.join([src_dir, "_build", "linkcheck"])
         doctree_dir = os.path.sep.join([src_dir, "_build", "doctrees"])
-        app = Sphinx(src_dir, config_dir, output_dir, doctree_dir, buildername="linkcheck", warningiserror=False, parallel=n_cpu, confoverrides={"numpydoc_show_inherited_class_members":False})
+        app = Sphinx(
+            src_dir,
+            config_dir,
+            output_dir,
+            doctree_dir,
+            buildername="linkcheck",
+            warningiserror=False,
+            parallel=n_cpu,
+            confoverrides={"numpydoc_show_inherited_class_members": False},
+        )
         app.build()
 
 

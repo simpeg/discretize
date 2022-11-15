@@ -950,7 +950,11 @@ class CylindricalMesh(
         if self.dim == 2:
             return np.r_[self._ishanging_edges_x, self._ishanging_edges_y]
         else:
-            return np.r_[self._ishanging_edges_x, self._ishanging_edges_y, self._ishanging_edges_z]
+            return np.r_[
+                self._ishanging_edges_x,
+                self._ishanging_edges_y,
+                self._ishanging_edges_z,
+            ]
 
     @property
     def _ishanging_edges_z(self):
@@ -1007,7 +1011,7 @@ class CylindricalMesh(
                 is_hanging[0] = True  # axis of symmetry nodes are hanging
                 is_hanging[0, 0] = False  # axis of symmetry nodes which are not hanging
                 is_hanging[:, -1] = True  # nodes at maximum theta that are duplicated
-                self._ishanging_nodes_bool = is_hanging.reshape(-1, order='F')
+                self._ishanging_nodes_bool = is_hanging.reshape(-1, order="F")
 
         return self._ishanging_nodes_bool
 
@@ -1166,9 +1170,7 @@ class CylindricalMesh(
         is_bz = is_bz.reshape(-1, order="F")
 
         is_b = np.r_[
-            is_br[~self._ishanging_faces_x],
-            is_bt[~self._ishanging_faces_y],
-            is_bz
+            is_br[~self._ishanging_faces_x], is_bt[~self._ishanging_faces_y], is_bz
         ]
         return is_b
 
@@ -1184,17 +1186,17 @@ class CylindricalMesh(
         # then n_cells_theta * n_cells_r, bottom faces,
         n1 = self.shape_cells[1] * self.shape_cells[2]
         n2 = self.shape_cells[0] * self.shape_cells[1]
-        normals[n1:n1+n2] *= -1
+        normals[n1 : n1 + n2] *= -1
         return normals
 
     @property
     def _is_boundary_node(self):
-        is_b = np.zeros(self._shape_total_nodes, dtype=bool, order='F')
+        is_b = np.zeros(self._shape_total_nodes, dtype=bool, order="F")
         # outward rs are boundary:
         is_b[-1] = True
         # top and bottom zs are boundary
         is_b[:, :, [0, -1]] = True
-        is_b = is_b.reshape(-1, order='F')
+        is_b = is_b.reshape(-1, order="F")
         is_b = is_b[~self._ishanging_nodes]
         return is_b
 
@@ -1205,15 +1207,15 @@ class CylindricalMesh(
     @property
     def _is_boundary_edge(self):
         # top and bottom radial edges are on the boundary
-        is_br = np.zeros(self._shape_total_edges_x, dtype=bool, order='F')
+        is_br = np.zeros(self._shape_total_edges_x, dtype=bool, order="F")
         is_br[:, :, [0, -1]] = True
-        is_br = is_br.reshape(-1, order='F')
-        is_bt = np.zeros(self._shape_total_edges_y, dtype=bool, order='F')
+        is_br = is_br.reshape(-1, order="F")
+        is_bt = np.zeros(self._shape_total_edges_y, dtype=bool, order="F")
         # outside theta edges are on boundary
         is_bt[-1] = True
         # top and bottom theta edges are on boundary
         is_bt[:, :, [0, -1]] = True
-        is_bt = is_bt.reshape(-1, order='F')
+        is_bt = is_bt.reshape(-1, order="F")
         # outside z edges are on boundaries
         is_bz = np.zeros(self._shape_total_edges_z, dtype=bool, order="F")
         is_bz[-1] = True
@@ -1222,7 +1224,7 @@ class CylindricalMesh(
         is_b = np.r_[
             is_br[~self._ishanging_edges_x],
             is_bt[~self._ishanging_edges_y],
-            is_bz[~self._ishanging_edges_z]
+            is_bz[~self._ishanging_edges_z],
         ]
         return is_b
 
@@ -1327,18 +1329,38 @@ class CylindricalMesh(
             return None
         if getattr(self, "_nodal_gradient", None) is None:
             if self.dim == 2:
-                Gr = sp.kron(speye(self._shape_total_nodes[1]), ddx(self.shape_cells[0]))
-                Gphi = sp.kron(ddx(self.shape_cells[1]), speye(self._shape_total_nodes[0]))
+                Gr = sp.kron(
+                    speye(self._shape_total_nodes[1]), ddx(self.shape_cells[0])
+                )
+                Gphi = sp.kron(
+                    ddx(self.shape_cells[1]), speye(self._shape_total_nodes[0])
+                )
                 Gz = None
             else:
-                Gr = kron3(speye(self._shape_total_nodes[2]), speye(self._shape_total_nodes[1]), ddx(self.shape_cells[0]))
-                Gphi = kron3(speye(self._shape_total_nodes[2]), ddx(self.shape_cells[1]), speye(self._shape_total_nodes[0]))
-                Gz = kron3(ddx(self.shape_cells[2]), speye(self._shape_total_nodes[1]), speye(self._shape_total_nodes[0]))
+                Gr = kron3(
+                    speye(self._shape_total_nodes[2]),
+                    speye(self._shape_total_nodes[1]),
+                    ddx(self.shape_cells[0]),
+                )
+                Gphi = kron3(
+                    speye(self._shape_total_nodes[2]),
+                    ddx(self.shape_cells[1]),
+                    speye(self._shape_total_nodes[0]),
+                )
+                Gz = kron3(
+                    ddx(self.shape_cells[2]),
+                    speye(self._shape_total_nodes[1]),
+                    speye(self._shape_total_nodes[0]),
+                )
             # remove the hanging edges
             G = sp.vstack([Gr, Gphi, Gz])[~self._ishanging_edges]
 
             # apply inflation to map true nodes to hanging nodes with the same values
-            G = sdiag(1/self.edge_lengths) @ G @ self._deflation_matrix('nodes', as_ones=True).T
+            G = (
+                sdiag(1 / self.edge_lengths)
+                @ G
+                @ self._deflation_matrix("nodes", as_ones=True).T
+            )
             self._nodal_gradient = G
         return self._nodal_gradient
 
@@ -1363,8 +1385,8 @@ class CylindricalMesh(
             return sp.vstack((Dz, Dr))
         else:
             stencil = super()._edge_curl_stencil
-            P_f = self._deflation_matrix('faces')
-            P_e = self._deflation_matrix('edges', as_ones=True)
+            P_f = self._deflation_matrix("faces")
+            P_e = self._deflation_matrix("edges", as_ones=True)
             return P_f @ stencil @ P_e.T
 
     @property
@@ -1502,7 +1524,7 @@ class CylindricalMesh(
         aveN2Fx = kron3(
             av(self.shape_cells[2]),
             av(self.shape_cells[1]),
-            speye(self._shape_total_nodes[0])
+            speye(self._shape_total_nodes[0]),
         )
         return aveN2Fx[~self._ishanging_faces_x]
 
@@ -1519,7 +1541,7 @@ class CylindricalMesh(
     def average_node_to_face(self):
         if getattr(self, "_average_node_to_face", None) is None:
             ave = super().average_node_to_face
-            ave = ave @ self._deflation_matrix('nodes', as_ones=True).T
+            ave = ave @ self._deflation_matrix("nodes", as_ones=True).T
             self._average_node_to_face = ave
         return self._average_node_to_face
 
@@ -1534,7 +1556,7 @@ class CylindricalMesh(
                     av_extrap(self.shape_cells[0]),
                 )[~self._ishanging_faces_x]
 
-                av_c2f_t = self._deflation_matrix('faces_y') @ kron3(
+                av_c2f_t = self._deflation_matrix("faces_y") @ kron3(
                     speye(self.shape_cells[2]),
                     av_extrap(self.shape_cells[1]),
                     speye(self.shape_cells[0]),
@@ -1594,7 +1616,7 @@ class CylindricalMesh(
             )
         if location == "cell_centers":
             return speye(self.n_cells)
-        if self.is_symmetric and location == 'nodes':
+        if self.is_symmetric and location == "nodes":
             return sp.csr_matrix((self.n_nodes, self._n_total_nodes))
 
         elif location in ["edges", "faces"]:
@@ -1721,32 +1743,35 @@ class CylindricalMesh(
             elif location_type[-1] == "z":
                 Q = sp.hstack([Z, Q])
             Q = Q.tocsr()
-        elif location_type == 'nodes':
-            rtz = [
-                self.nodes_x,
-                self._nodes_y_full
-            ]
+        elif location_type == "nodes":
+            rtz = [self.nodes_x, self._nodes_y_full]
             if self.dim == 3:
                 rtz.append(self.nodes_z)
             Q = interpolation_matrix(loc, *rtz)
-            Q = Q @ self._deflation_matrix('nodes', as_ones=True).T
-        elif location_type == 'cell_centers':
+            Q = Q @ self._deflation_matrix("nodes", as_ones=True).T
+        elif location_type == "cell_centers":
             # theta wrap around interpolation
             rtz = [
                 self.cell_centers_x,
                 np.r_[
                     self.cell_centers_y[-1] - 2 * np.pi,
                     self.cell_centers_y,
-                    self.cell_centers_y[0] + 2 * np.pi
+                    self.cell_centers_y[0] + 2 * np.pi,
                 ],
             ]
             if self.dim == 3:
                 rtz.append(self.cell_centers_z)
             Q = interpolation_matrix(loc, *rtz)
-            irs, its, izs = np.unravel_index(Q.indices, self.shape_cells + np.r_[0, 2, 0], order='F')
+            irs, its, izs = np.unravel_index(
+                Q.indices, self.shape_cells + np.r_[0, 2, 0], order="F"
+            )
             its = (its - 1) % self.shape_cells[1]
-            new_indices = np.ravel_multi_index((irs, its, izs), self.shape_cells, order='F')
-            Q = sp.csr_matrix((Q.data, new_indices, Q.indptr), shape=(Q.shape[0], self.n_cells))
+            new_indices = np.ravel_multi_index(
+                (irs, its, izs), self.shape_cells, order="F"
+            )
+            Q = sp.csr_matrix(
+                (Q.data, new_indices, Q.indptr), shape=(Q.shape[0], self.n_cells)
+            )
         else:
             ind = {"x": 0, "y": 1, "z": 2}[location_type[-1]]
             if self.dim < ind:
@@ -1756,7 +1781,7 @@ class CylindricalMesh(
             else:
                 items = (self.nEx, self.nEy, self.nEz)[: self.dim]
             components = [spzeros(loc.shape[0], n) for n in items]
-            if location_type == 'faces_x':
+            if location_type == "faces_x":
                 # theta wrap around interpolation
                 nodes_x = self.nodes_x if self.is_symmetric else self.nodes_x[1:]
                 rtz = [
@@ -1764,19 +1789,25 @@ class CylindricalMesh(
                     np.r_[
                         self.cell_centers_y[-1] - 2 * np.pi,
                         self.cell_centers_y,
-                        self.cell_centers_y[0] + 2 * np.pi
+                        self.cell_centers_y[0] + 2 * np.pi,
                     ],
                 ]
                 if self.dim == 3:
                     rtz.append(self.cell_centers_z)
                 Q = interpolation_matrix(loc, *rtz)
                 # unwrap the theta indices
-                irs, its, izs = np.unravel_index(Q.indices, self.shape_faces_x + np.r_[0, 2, 0], order='F')
+                irs, its, izs = np.unravel_index(
+                    Q.indices, self.shape_faces_x + np.r_[0, 2, 0], order="F"
+                )
                 its = (its - 1) % self.shape_faces_x[1]
-                new_indices = np.ravel_multi_index((irs, its, izs), self.shape_faces_x, order='F')
-                Q = sp.csr_matrix((Q.data, new_indices, Q.indptr), shape=(Q.shape[0], self.n_faces_x))
+                new_indices = np.ravel_multi_index(
+                    (irs, its, izs), self.shape_faces_x, order="F"
+                )
+                Q = sp.csr_matrix(
+                    (Q.data, new_indices, Q.indptr), shape=(Q.shape[0], self.n_faces_x)
+                )
                 components[0] = Q
-            elif location_type == 'faces_y':
+            elif location_type == "faces_y":
                 rtz = [
                     self.cell_centers_x,
                     self._nodes_y_full,
@@ -1784,27 +1815,33 @@ class CylindricalMesh(
                 if self.dim == 3:
                     rtz.append(self.cell_centers_z)
                 Q = interpolation_matrix(loc, *rtz)
-                Q = Q @ self._deflation_matrix('faces_y', as_ones=True).T
+                Q = Q @ self._deflation_matrix("faces_y", as_ones=True).T
                 components[1] = Q
-            elif location_type == 'faces_z':
+            elif location_type == "faces_z":
                 # theta wrap around interpolation
                 rtz = [
                     self.cell_centers_x,
                     np.r_[
                         self.cell_centers_y[-1] - 2 * np.pi,
                         self.cell_centers_y,
-                        self.cell_centers_y[0] + 2 * np.pi
+                        self.cell_centers_y[0] + 2 * np.pi,
                     ],
-                    self.nodes_z
+                    self.nodes_z,
                 ]
                 Q = interpolation_matrix(loc, *rtz)
                 # unwrap the theta indices
-                irs, its, izs = np.unravel_index(Q.indices, self.shape_faces_z + np.r_[0, 2, 0], order='F')
+                irs, its, izs = np.unravel_index(
+                    Q.indices, self.shape_faces_z + np.r_[0, 2, 0], order="F"
+                )
                 its = (its - 1) % self.shape_faces_z[1]
-                new_indices = np.ravel_multi_index((irs, its, izs), self.shape_faces_z, order='F')
-                Q = sp.csr_matrix((Q.data, new_indices, Q.indptr), shape=(Q.shape[0], self.n_faces_z))
+                new_indices = np.ravel_multi_index(
+                    (irs, its, izs), self.shape_faces_z, order="F"
+                )
+                Q = sp.csr_matrix(
+                    (Q.data, new_indices, Q.indptr), shape=(Q.shape[0], self.n_faces_z)
+                )
                 components[2] = Q
-            elif location_type == 'edges_x':
+            elif location_type == "edges_x":
                 rtz = [
                     self.cell_centers_x,
                     self._nodes_y_full,
@@ -1812,9 +1849,9 @@ class CylindricalMesh(
                 if self.dim == 3:
                     rtz.append(self.nodes_z)
                 Q = interpolation_matrix(loc, *rtz)
-                Q = Q @ self._deflation_matrix('edges_x', as_ones=True).T
+                Q = Q @ self._deflation_matrix("edges_x", as_ones=True).T
                 components[0] = Q
-            elif location_type == 'edges_y':
+            elif location_type == "edges_y":
                 # theta wrap around
                 nodes_x = self.nodes_x if self.is_symmetric else self.nodes_x[1:]
                 rtz = [
@@ -1822,25 +1859,27 @@ class CylindricalMesh(
                     np.r_[
                         self.cell_centers_y[-1] - 2 * np.pi,
                         self.cell_centers_y,
-                        self.cell_centers_y[0] + 2 * np.pi
+                        self.cell_centers_y[0] + 2 * np.pi,
                     ],
                 ]
                 if self.dim == 3:
                     rtz.append(self.nodes_z)
                 Q = interpolation_matrix(loc, *rtz)
-                irs, its, izs = np.unravel_index(Q.indices, self.shape_edges_y + np.r_[0, 2, 0], order='F')
+                irs, its, izs = np.unravel_index(
+                    Q.indices, self.shape_edges_y + np.r_[0, 2, 0], order="F"
+                )
                 its = (its - 1) % self.shape_edges_y[1]
-                new_indices = np.ravel_multi_index((irs, its, izs), self.shape_edges_y, order='F')
-                Q = sp.csr_matrix((Q.data, new_indices, Q.indptr), shape=(Q.shape[0], self.n_edges_y))
+                new_indices = np.ravel_multi_index(
+                    (irs, its, izs), self.shape_edges_y, order="F"
+                )
+                Q = sp.csr_matrix(
+                    (Q.data, new_indices, Q.indptr), shape=(Q.shape[0], self.n_edges_y)
+                )
                 components[1] = Q
-            elif location_type == 'edges_z':
-                rtz = [
-                    self.nodes_x,
-                    self._nodes_y_full,
-                    self.cell_centers_z
-                ]
+            elif location_type == "edges_z":
+                rtz = [self.nodes_x, self._nodes_y_full, self.cell_centers_z]
                 Q = interpolation_matrix(loc, *rtz)
-                Q = Q @ self._deflation_matrix('edges_z', as_ones=True).T
+                Q = Q @ self._deflation_matrix("edges_z", as_ones=True).T
                 components[2] = Q
             else:
                 raise ValueError("Unrecognized location type")
@@ -2006,12 +2045,24 @@ class CylindricalMesh(
         return Proj * Pc2r
 
     # DEPRECATIONS
-    areaFx = deprecate_property("face_x_areas", "areaFx", removal_version="1.0.0", future_warn=True)
-    areaFy = deprecate_property("face_y_areas", "areaFy", removal_version="1.0.0", future_warn=True)
-    areaFz = deprecate_property("face_z_areas", "areaFz", removal_version="1.0.0", future_warn=True)
-    edgeEx = deprecate_property("edge_x_lengths", "edgeEx", removal_version="1.0.0", future_warn=True)
-    edgeEy = deprecate_property("edge_y_lengths", "edgeEy", removal_version="1.0.0", future_warn=True)
-    edgeEz = deprecate_property("edge_z_lengths", "edgeEz", removal_version="1.0.0", future_warn=True)
+    areaFx = deprecate_property(
+        "face_x_areas", "areaFx", removal_version="1.0.0", future_warn=True
+    )
+    areaFy = deprecate_property(
+        "face_y_areas", "areaFy", removal_version="1.0.0", future_warn=True
+    )
+    areaFz = deprecate_property(
+        "face_z_areas", "areaFz", removal_version="1.0.0", future_warn=True
+    )
+    edgeEx = deprecate_property(
+        "edge_x_lengths", "edgeEx", removal_version="1.0.0", future_warn=True
+    )
+    edgeEy = deprecate_property(
+        "edge_y_lengths", "edgeEy", removal_version="1.0.0", future_warn=True
+    )
+    edgeEz = deprecate_property(
+        "edge_z_lengths", "edgeEz", removal_version="1.0.0", future_warn=True
+    )
     isSymmetric = deprecate_property(
         "is_symmetric", "isSymmetric", removal_version="1.0.0", future_warn=True
     )
@@ -2022,7 +2073,7 @@ class CylindricalMesh(
         "get_interpolation_matrix_cartesian_mesh",
         "getInterpolationMatCartMesh",
         removal_version="1.0.0",
-        future_warn=True
+        future_warn=True,
     )
     cartesianGrid = deprecate_method(
         "cartesian_grid", "cartesianGrid", removal_version="1.0.0", future_warn=True

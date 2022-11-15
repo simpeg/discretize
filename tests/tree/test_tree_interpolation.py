@@ -218,15 +218,15 @@ class TestInterpolation3D(discretize.tests.OrderTest):
 
 
 class TestCaching(unittest.TestCase):
-
     def setUp(self):
-        self.mesh, maxh = discretize.tests.setup_mesh('uniformTree', 32, 3)
+        self.mesh, maxh = discretize.tests.setup_mesh("uniformTree", 32, 3)
 
     def testCaching(self):
         mesh = self.mesh
         A1 = mesh.average_edge_to_face_vector
         A2 = mesh.average_edge_to_face_vector
         self.assertIs(A1, A2)
+
 
 if __name__ == "__main__":
     unittest.main()

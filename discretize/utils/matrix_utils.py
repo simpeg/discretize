@@ -937,7 +937,7 @@ def invert_blocks(A):
         B = np.empty_like(A)
         B[..., 0, 0] = a22 / detA
         B[..., 0, 1] = -a12 / detA
-        B[..., 1, 0] = - a21 / detA
+        B[..., 1, 0] = -a21 / detA
         B[..., 1, 1] = a11 / detA
 
     elif A.shape[-1] == 3:
@@ -969,6 +969,7 @@ def invert_blocks(A):
     else:
         raise NotImplementedError("Only supports 2x2 and 3x3 blocks")
     return B
+
 
 class TensorType(object):
     r"""Class for determining property tensor type.
@@ -1714,20 +1715,34 @@ class _inftup(tuple):
 
 sdInv = deprecate_function(sdinv, "sdInv", removal_version="1.0.0", future_warn=True)
 
-getSubArray = deprecate_function(get_subarray, "getSubArray", removal_version="1.0.0", future_warn=True)
+getSubArray = deprecate_function(
+    get_subarray, "getSubArray", removal_version="1.0.0", future_warn=True
+)
 
 inv3X3BlockDiagonal = deprecate_function(
-    inverse_3x3_block_diagonal, "inv3X3BlockDiagonal", removal_version="1.0.0", future_warn=True
+    inverse_3x3_block_diagonal,
+    "inv3X3BlockDiagonal",
+    removal_version="1.0.0",
+    future_warn=True,
 )
 
 inv2X2BlockDiagonal = deprecate_function(
-    inverse_2x2_block_diagonal, "inv2X2BlockDiagonal", removal_version="1.0.0", future_warn=True
+    inverse_2x2_block_diagonal,
+    "inv2X2BlockDiagonal",
+    removal_version="1.0.0",
+    future_warn=True,
 )
 
 makePropertyTensor = deprecate_function(
-    make_property_tensor, "makePropertyTensor", removal_version="1.0.0", future_warn=True
+    make_property_tensor,
+    "makePropertyTensor",
+    removal_version="1.0.0",
+    future_warn=True,
 )
 
 invPropertyTensor = deprecate_function(
-    inverse_property_tensor, "invPropertyTensor", removal_version="1.0.0", future_warn=True
+    inverse_property_tensor,
+    "invPropertyTensor",
+    removal_version="1.0.0",
+    future_warn=True,
 )

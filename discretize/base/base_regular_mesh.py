@@ -31,6 +31,7 @@ class BaseRegularMesh(BaseMesh):
     reference_system : {'cartesian', 'cylindrical', 'spherical'}
         Can also be a shorthand version of these, e.g. {'car[t]', 'cy[l]', 'sph'}
     """
+
     _aliases = {
         **BaseMesh._aliases,
         "nEx": "n_edges_x",

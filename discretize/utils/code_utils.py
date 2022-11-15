@@ -122,6 +122,7 @@ def deprecate_class(removal_version=None, new_location=None, future_warn=False):
         Warning = FutureWarning
     else:
         Warning = DeprecationWarning
+
     def decorator(cls):
         my_name = cls.__name__
         parent_name = cls.__bases__[0].__name__
@@ -262,7 +263,9 @@ def deprecate_function(new_function, old_name, removal_version=None, future_warn
 
 
 # DEPRECATIONS
-isScalar = deprecate_function(is_scalar, "isScalar", removal_version="1.0.0", future_warn=True)
+isScalar = deprecate_function(
+    is_scalar, "isScalar", removal_version="1.0.0", future_warn=True
+)
 asArray_N_x_Dim = deprecate_function(
     as_array_n_by_dim, "asArray_N_x_Dim", removal_version="1.0.0", future_warn=True
 )

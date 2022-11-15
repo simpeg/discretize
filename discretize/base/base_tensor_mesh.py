@@ -1061,9 +1061,15 @@ class BaseTensorMesh(BaseRegularMesh):
         )
         return None if self.dim < 3 else self.h[2]
 
-    vectorNx = deprecate_property("nodes_x", "vectorNx", removal_version="1.0.0", future_warn=True)
-    vectorNy = deprecate_property("nodes_y", "vectorNy", removal_version="1.0.0", future_warn=True)
-    vectorNz = deprecate_property("nodes_z", "vectorNz", removal_version="1.0.0", future_warn=True)
+    vectorNx = deprecate_property(
+        "nodes_x", "vectorNx", removal_version="1.0.0", future_warn=True
+    )
+    vectorNy = deprecate_property(
+        "nodes_y", "vectorNy", removal_version="1.0.0", future_warn=True
+    )
+    vectorNz = deprecate_property(
+        "nodes_z", "vectorNz", removal_version="1.0.0", future_warn=True
+    )
     vectorCCx = deprecate_property(
         "cell_centers_x", "vectorCCx", removal_version="1.0.0", future_warn=True
     )
@@ -1073,5 +1079,9 @@ class BaseTensorMesh(BaseRegularMesh):
     vectorCCz = deprecate_property(
         "cell_centers_z", "vectorCCz", removal_version="1.0.0", future_warn=True
     )
-    isInside = deprecate_method("is_inside", "isInside", removal_version="1.0.0", future_warn=True)
-    getTensor = deprecate_method("get_tensor", "getTensor", removal_version="1.0.0", future_warn=True)
+    isInside = deprecate_method(
+        "is_inside", "isInside", removal_version="1.0.0", future_warn=True
+    )
+    getTensor = deprecate_method(
+        "get_tensor", "getTensor", removal_version="1.0.0", future_warn=True
+    )
