@@ -12,7 +12,7 @@ class TestSimpleQuadTree(unittest.TestCase):
         h2 = np.random.rand(nc) * nc * 0.5 + nc * 0.5
         h = [hi / np.sum(hi) for hi in [h1, h2]]  # normalize
         M = discretize.TreeMesh(h)
-        points = np.array([[0.1, 0.1, 0.3]])
+        points = np.array([[0.1, 0.1]])
         level = np.array([3])
 
         M.insert_cells(points, level)
