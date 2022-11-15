@@ -562,15 +562,15 @@ void Cell::refine_triangle(
         }
     }
     // first do the 3 edge cross tests that apply in 2D and 3D
-    std::pair<double, double> res;
 
     // edge 0 cross z_hat
     //p0 = e0[1] * v0[0] - e0[0] * v0[1];
     p1 = e0[1] * v1[0] - e0[0] * v1[1];
     p2 = e0[1] * v2[0] - e0[0] * v2[1];
-    res = std::minmax({p1, p2});
+    pmin = std::min(p1, p2);
+    pmax = std::max(p1, p2);
     rad = std::abs(e0[1]) * half[0] + std::abs(e0[0]) * half[1];
-    if (res.first > rad || res.second < -rad){
+    if (pmin > rad || pmax < -rad){
         return;
     }
 
@@ -578,9 +578,10 @@ void Cell::refine_triangle(
     p0 = e1[1] * v0[0] - e1[0] * v0[1];
     p1 = e1[1] * v1[0] - e1[0] * v1[1];
     //p2 = e1[1] * v2[0] - e1[0] * v2[1];
-    res = std::minmax({p0, p1});
+    pmin = std::min(p0, p1);
+    pmax = std::max(p0, p1);
     rad = std::abs(e1[1]) * half[0] + std::abs(e1[0]) * half[1];
-    if (res.first > rad || res.second < -rad){
+    if (pmin > rad || pmax < -rad){
         return;
     }
 
@@ -588,9 +589,10 @@ void Cell::refine_triangle(
     //p0 = e2[1] * v0[0] - e2[0] * v0[1];
     p1 = e2[1] * v1[0] - e2[0] * v1[1];
     p2 = e2[1] * v2[0] - e2[0] * v2[1];
-    res = std::minmax({p1, p2});
+    pmin = std::min(p1, p2);
+    pmax = std::max(p1, p2);
     rad = std::abs(e2[1]) * half[0] + std::abs(e2[0]) * half[1];
-    if (res.first > rad || res.second < -rad){
+    if (pmin > rad || pmax < -rad){
         return;
     }
 
@@ -599,54 +601,60 @@ void Cell::refine_triangle(
         p0 = e0[2] * v0[1] - e0[1] * v0[2];
         //p1 = e0[2] * v1[1] - e0[1] * v1[2];
         p2 = e0[2] * v2[1] - e0[1] * v2[2];
-        res = std::minmax({p0, p2});
+        pmin = std::min(p0, p2);
+        pmax = std::max(p0, p2);
         rad = std::abs(e0[2]) * half[1] + std::abs(e0[1]) * half[2];
-        if (res.first > rad || res.second < -rad){
+        if (pmin > rad || pmax < -rad){
             return;
         }
         // edge 0 cross y_hat
         p0 = -e0[2] * v0[0] + e0[0] * v0[2];
         //p1 = -e0[2] * v1[0] + e0[0] * v1[2];
         p2 = -e0[2] * v2[0] + e0[0] * v2[2];
-        res = std::minmax({p0, p2});
+        pmin = std::min(p0, p2);
+        pmax = std::max(p0, p2);
         rad = std::abs(e0[2]) * half[0] + std::abs(e0[0]) * half[2];
-        if (res.first > rad || res.second < -rad){
+        if (pmin > rad || pmax < -rad){
             return;
         }
         // edge 1 cross x_hat
         p0 = e1[2] * v0[1] - e1[1] * v0[2];
         //p1 = e1[2] * v1[1] - e1[1] * v1[2];
         p2 = e1[2] * v2[1] - e1[1] * v2[2];
-        res = std::minmax({p0, p2});
+        pmin = std::min(p0, p2);
+        pmax = std::max(p0, p2);
         rad = std::abs(e1[2]) * half[1] + std::abs(e1[1]) * half[2];
-        if (res.first > rad || res.second < -rad){
+        if (pmin > rad || pmax < -rad){
             return;
         }
         // edge 1 cross y_hat
         p0 = -e1[2] * v0[0] + e1[0] * v0[2];
         //p1 = -e1[2] * v1[0] + e1[0] * v1[2];
         p2 = -e1[2] * v2[0] + e1[0] * v2[2];
-        res = std::minmax({p0, p2});
+        pmin = std::min(p0, p2);
+        pmax = std::max(p0, p2);
         rad = std::abs(e1[2]) * half[0] + std::abs(e1[0]) * half[2];
-        if (res.first > rad || res.second < -rad){
+        if (pmin > rad || pmax < -rad){
             return;
         }
         // edge 2 cross x_hat
         p0 = e2[2] * v0[1] - e2[1] * v0[2];
         p1 = e2[2] * v1[1] - e2[1] * v1[2];
         //p2 = e2[2] * v2[1] - e2[1] * v2[2];
-        res = std::minmax({p0, p1});
+        pmin = std::min(p0, p1);
+        pmax = std::max(p0, p1);
         rad = std::abs(e2[2]) * half[1] + std::abs(e2[1]) * half[2];
-        if (res.first > rad || res.second < -rad){
+        if (pmin > rad || pmax < -rad){
             return;
         }
         // edge 2 cross y_hat
         p0 = -e2[2] * v0[0] + e2[0] * v0[2];
         p1 = -e2[2] * v1[0] + e2[0] * v1[2];
         //p2 = -e2[2] * v2[0] + e2[0] * v2[2];
-        res = std::minmax({p0, p1});
+        pmin = std::min(p0, p1);
+        pmax = std::max(p0, p1);
         rad = std::abs(e2[2]) * half[0] + std::abs(e2[0]) * half[2];
-        if (res.first > rad || res.second < -rad){
+        if (pmin > rad || pmax < -rad){
             return;
         }
 
@@ -692,18 +700,17 @@ void Cell::refine_tetra(
     }
     // then check to see if I intersect the segment
     double v0[3], v1[3], v2[3], v3[3], half[3];
-    double vmin, vmax;
     double p0, p1, p2, p3, pmin, pmax, rad;
-    std::pair<double, double> res;
     for(int_t i=0; i < n_dim; ++i){
         v0[i] = x0[i] - location[i];
         v1[i] = x1[i] - location[i];
         v2[i] = x2[i] - location[i];
         v3[i] = x3[i] - location[i];
         half[i] = location[i] - points[0]->location[i];
-        res = std::minmax({v0[i], v1[i], v2[i], v3[i]});
+        pmin = std::min(std::min(std::min(v0[i], v1[i]), v2[i]), v3[i]);
+        pmax = std::max(std::max(std::max(v0[i], v1[i]), v2[i]), v3[i]);
         // Bounding box check
-        if (vmin > half[i] || vmax < -half[i]){
+        if (pmin > half[i] || pmax < -half[i]){
             return;
         }
     }
@@ -716,9 +723,10 @@ void Cell::refine_tetra(
         p1 = edge_tans[i][2] * v1[1] - edge_tans[i][1] * v1[2];
         p2 = edge_tans[i][2] * v2[1] - edge_tans[i][1] * v2[2];
         p3 = edge_tans[i][2] * v3[1] - edge_tans[i][1] * v3[2];
-        res = std::minmax({p0, p1, p2, p3});
+        pmin = std::min(std::min(std::min(p0, p1), p2), p3);
+        pmax = std::max(std::max(std::max(p0, p1), p2), p3);
         rad = std::abs(edge_tans[i][2]) * half[1] + std::abs(edge_tans[i][1]) * half[2];
-        if (res.first > rad || res.second < -rad){
+        if (pmin > rad || pmax < -rad){
             return;
         }
 
@@ -726,9 +734,10 @@ void Cell::refine_tetra(
         p1 = -edge_tans[i][2] * v1[0] + edge_tans[i][0] * v1[2];
         p2 = -edge_tans[i][2] * v2[0] + edge_tans[i][0] * v2[2];
         p3 = -edge_tans[i][2] * v3[0] + edge_tans[i][0] * v3[2];
-        res = std::minmax({p0, p1, p2, p3});
+        pmin = std::min(std::min(std::min(p0, p1), p2), p3);
+        pmax = std::max(std::max(std::max(p0, p1), p2), p3);
         rad = std::abs(edge_tans[i][2]) * half[0] + std::abs(edge_tans[i][0]) * half[2];
-        if (res.first > rad || res.second < -rad){
+        if (pmin > rad || pmax < -rad){
             return;
         }
 
@@ -736,9 +745,10 @@ void Cell::refine_tetra(
         p1 = edge_tans[i][1] * v1[0] - edge_tans[i][0] * v1[1];
         p2 = edge_tans[i][1] * v2[0] - edge_tans[i][0] * v2[1];
         p3 = edge_tans[i][1] * v3[0] - edge_tans[i][0] * v3[1];
-        res = std::minmax({p0, p1, p2, p3});
+        pmin = std::min(std::min(std::min(p0, p1), p2), p3);
+        pmax = std::max(std::max(std::max(p0, p1), p2), p3);
         rad = std::abs(edge_tans[i][1]) * half[0] + std::abs(edge_tans[i][0]) * half[1];
-        if (res.first > rad || res.second < -rad){
+        if (pmin > rad || pmax < -rad){
             return;
         }
     }
@@ -749,9 +759,10 @@ void Cell::refine_tetra(
         p1 = axis[0] * v1[0] + axis[1] * v1[1] + axis[2] * v1[2];
         p2 = axis[0] * v2[0] + axis[1] * v2[1] + axis[2] * v2[2];
         p3 = axis[0] * v3[0] + axis[1] * v3[1] + axis[2] * v3[2];
-        res = std::minmax({p0, p1, p2, p3});
+        pmin = std::min(std::min(std::min(p0, p1), p2), p3);
+        pmax = std::max(std::max(std::max(p0, p1), p2), p3);
         rad = std::abs(axis[0]) * half[0] + std::abs(axis[1]) * half[1] + std::abs(axis[2]) * half[2];
-        if (res.first > rad || res.second < -rad){
+        if (pmin > rad || pmax < -rad){
             return;
         }
     }
