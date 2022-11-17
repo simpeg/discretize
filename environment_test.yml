@@ -1,0 +1,28 @@
+name: test
+channels:
+  - conda-forge
+dependencies:
+  - numpy>=1.8
+  - scipy>=0.13
+  - cython>=0.2
+  - setuptools_scm
+  - pymatsolver>=0.1.2
+  - matplotlib
+  - jupyter
+  - sphinx
+  - sphinx-gallery>=0.1.13
+  - sphinx-toolbox
+  - sphinxcontrib-apidoc
+  - pydata-sphinx-theme
+  - numpydoc
+  - pillow
+  - sympy
+  - wheel
+  - pytest
+  - pytest-cov
+  - twine
+  - vtk
+  - pyvista
+  - pip
+  - omf
+  - graphviz

@@ -241,10 +241,13 @@ class TestInterpolationSymCyl(discretize.tests.OrderTest):
         self.name = "Interpolation 3D Symmetric CYLMESH: Ey"
         self.orderTest()
 
+
 class TestInterpolationCyl(discretize.tests.OrderTest):
     name = "Interpolation Cylindrical 3D"
     LOCS = np.c_[
-        np.random.rand(20) * 0.6 + 0.2, 2*np.pi*(np.random.rand(20) * 0.6 + 0.2), np.random.rand(20) * 0.6 + 0.2
+        np.random.rand(20) * 0.6 + 0.2,
+        2 * np.pi * (np.random.rand(20) * 0.6 + 0.2),
+        np.random.rand(20) * 0.6 + 0.2,
     ]
     meshTypes = ["uniformCylMesh", "randomCylMesh"]  # MESHTYPES +
     meshDimension = 3
@@ -308,6 +311,7 @@ class TestInterpolationCyl(discretize.tests.OrderTest):
         self.type = "Ez"
         self.name = "Interpolation 3D CYLMESH: Ez"
         self.orderTest()
+
 
 class TestInterpolation3D(discretize.tests.OrderTest):
     name = "Interpolation"

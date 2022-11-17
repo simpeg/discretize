@@ -915,7 +915,7 @@ def invert_blocks(A):
         B = np.empty_like(A)
         B[..., 0, 0] = a22 / detA
         B[..., 0, 1] = -a12 / detA
-        B[..., 1, 0] = - a21 / detA
+        B[..., 1, 0] = -a21 / detA
         B[..., 1, 1] = a11 / detA
 
     elif A.shape[-1] == 3:
@@ -947,6 +947,7 @@ def invert_blocks(A):
     else:
         raise NotImplementedError("Only supports 2x2 and 3x3 blocks")
     return B
+
 
 class TensorType(object):
     r"""Class for determining property tensor type.

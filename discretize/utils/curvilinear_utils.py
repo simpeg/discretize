@@ -3,7 +3,6 @@ from discretize.utils.matrix_utils import mkvc, ndgrid, sub2ind
 import warnings
 
 
-
 def example_curvilinear_grid(nC, exType):
     """Creates and returns the gridded node locations for a curvilinear mesh.
 
@@ -463,7 +462,6 @@ def face_info(xyz, A, B, C, D, average=True, normalize_normals=True):
         raise TypeError("average must be a boolean")
     if not isinstance(normalize_normals, bool):
         raise TypeError("normalize_normals must be a boolean")
-
 
     AB = xyz[B, :] - xyz[A, :]
     BC = xyz[C, :] - xyz[B, :]

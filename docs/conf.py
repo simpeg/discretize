@@ -46,7 +46,6 @@ extensions = [
     "sphinx.ext.graphviz",
     "matplotlib.sphinxext.plot_directive",
     "sphinx_toolbox.collapse",
-    "nbsphinx",
     "sphinx_gallery.gen_gallery",
 ]
 
@@ -68,8 +67,8 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
-project = u"discretize"
-copyright = u"2013 - {}, SimPEG Developers, http://simpeg.xyz".format(
+project = "discretize"
+copyright = "2013 - {}, SimPEG Developers, http://simpeg.xyz".format(
     datetime.now().year
 )
 
@@ -132,7 +131,7 @@ if link_github:
     import inspect
     from os.path import relpath, dirname
 
-    extensions.append('sphinx.ext.linkcode')
+    extensions.append("sphinx.ext.linkcode")
 
     def linkcode_resolve(domain, info):
         if domain != "py":
@@ -181,9 +180,13 @@ if link_github:
         except ValueError:
             return None
 
-        return f"https://github.com/simpeg/discretize/blob/main/discretize/{fn}{linespec}"
+        return (
+            f"https://github.com/simpeg/discretize/blob/main/discretize/{fn}{linespec}"
+        )
+
+
 else:
-    extensions.append('sphinx.ext.viewcode')
+    extensions.append("sphinx.ext.viewcode")
 
 # Make numpydoc to generate plots for example sections
 numpydoc_use_plots = True
@@ -229,7 +232,7 @@ try:
     html_theme_options = {
         "external_links": [
             {"name": "SimPEG", "url": "https://simpeg.xyz"},
-            {"name": "Contact", "url": "http://slack.simpeg.xyz"}
+            {"name": "Contact", "url": "http://slack.simpeg.xyz"},
         ],
         "icon_links": [
             {
@@ -262,10 +265,10 @@ try:
     }
     html_logo = "images/discretize-logo.png"
 
-    html_static_path = ['_static']
+    html_static_path = ["_static"]
 
     html_css_files = [
-        'css/custom.css',
+        "css/custom.css",
     ]
 
     html_context = {
@@ -367,8 +370,8 @@ latex_documents = [
     (
         "index",
         "discretize.tex",
-        u"discretize documentation",
-        u"SimPEG Developers",
+        "discretize documentation",
+        "SimPEG Developers",
         "manual",
     ),
 ]
@@ -398,9 +401,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [
-    ("index", "simpeg", u"discretize Documentation", [u"SimPEG Developers"], 1)
-]
+man_pages = [("index", "simpeg", "discretize Documentation", ["SimPEG Developers"], 1)]
 
 # If true, show URL addresses after external links.
 # man_show_urls = False
@@ -412,7 +413,7 @@ intersphinx_mapping = {
     "scipy": ("https://docs.scipy.org/doc/scipy/reference/", None),
     "matplotlib": ("https://matplotlib.org/stable", None),
     "pyvista": ("https://docs.pyvista.org/", None),
-    "omf": ("https://omf.readthedocs.io/en/stable/", None)
+    "omf": ("https://omf.readthedocs.io/en/stable/", None),
 }
 numpydoc_xref_param_type = True
 
@@ -425,8 +426,8 @@ texinfo_documents = [
     (
         "index",
         "discretize",
-        u"discretize documentation",
-        u"SimPEG Developers",
+        "discretize documentation",
+        "SimPEG Developers",
         "discretize",
         "Finite volume methods for python.",
         "Miscellaneous",
@@ -477,7 +478,7 @@ sphinx_gallery_conf["image_scrapers"] = (pyvista.Scraper(), "matplotlib")
 # How to display URL addresses: 'footnote', 'no', or 'inline'.
 # texinfo_show_urls = 'footnote'
 
-graphviz_dot = shutil.which('dot')
+graphviz_dot = shutil.which("dot")
 # this must be png, because links on SVG are broken
 graphviz_output_format = "png"
 

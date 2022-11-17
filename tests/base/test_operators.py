@@ -422,7 +422,7 @@ class TestAveraging1D(discretize.tests.OrderTest):
     def test_exactN2F(self):
         self.name = "Averaging 1D: N2F"
         fun = lambda x: np.cos(x)
-        M, _ = discretize.tests.setup_mesh('uniformTensorMesh', 32, 1)
+        M, _ = discretize.tests.setup_mesh("uniformTensorMesh", 32, 1)
         v1 = M.aveN2F * fun(M.gridN)
         v2 = fun(M.faces)
         np.testing.assert_allclose(v1, v2)
@@ -464,7 +464,7 @@ class TestAveraging1D(discretize.tests.OrderTest):
     def test_exactE2CC(self):
         self.name = "Averaging 1D: E2CC"
         fun = lambda x: np.cos(x)
-        M, _ = discretize.tests.setup_mesh('uniformTensorMesh', 32, 1)
+        M, _ = discretize.tests.setup_mesh("uniformTensorMesh", 32, 1)
         v1 = M.aveE2CC @ fun(M.edges)
         v2 = fun(M.gridCC)
         np.testing.assert_allclose(v1, v2)
@@ -472,7 +472,7 @@ class TestAveraging1D(discretize.tests.OrderTest):
     def test_exactE2CCV(self):
         self.name = "Averaging 1D: E2CCV"
         fun = lambda x: np.cos(x)
-        M, _ = discretize.tests.setup_mesh('uniformTensorMesh', 32, 1)
+        M, _ = discretize.tests.setup_mesh("uniformTensorMesh", 32, 1)
         v1 = M.aveE2CCV @ fun(M.edges)
         v2 = fun(M.gridCC)
         np.testing.assert_allclose(v1, v2)
@@ -480,7 +480,7 @@ class TestAveraging1D(discretize.tests.OrderTest):
     def test_exactCC2E(self):
         self.name = "Averaging 1D: cell_centers_to_edges"
         fun = lambda x: np.cos(x)
-        M, _ = discretize.tests.setup_mesh('uniformTensorMesh', 32, 1)
+        M, _ = discretize.tests.setup_mesh("uniformTensorMesh", 32, 1)
         v1 = M.average_cell_to_edge @ fun(M.edges)
         v2 = fun(M.gridCC)
         np.testing.assert_allclose(v1, v2)

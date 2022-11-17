@@ -3,6 +3,7 @@
 #include "tree.h"
 #include <iostream>
 #include <algorithm>
+#include <limits>
 
 Node::Node(){
     location_ind[0] = 0;
@@ -180,7 +181,7 @@ Face * set_default_face(face_map_t& faces, Node& p1, Node& p2, Node& p3, Node& p
     return face;
 }
 
-Cell::Cell(Node *pts[8], int_t ndim, int_t maxlevel, function func){
+Cell::Cell(Node *pts[8], int_t ndim, int_t maxlevel){
     n_dim = ndim;
     int_t n_points = 1<<n_dim;
     for(int_t i = 0; i < n_points; ++i)
@@ -189,7 +190,6 @@ Cell::Cell(Node *pts[8], int_t ndim, int_t maxlevel, function func){
     level = 0;
     max_level = maxlevel;
     parent = NULL;
-    test_func = func;
     Node p1 = *pts[0];
     Node p2 = *pts[n_points - 1];
     location_ind[0] = (p1.location_ind[0]+p2.location_ind[0])/2;
@@ -216,7 +216,6 @@ Cell::Cell(Node *pts[8], Cell *parent){
     index = -1;
     level = parent->level + 1;
     max_level = parent->max_level;
-    test_func = parent->test_func;
     Node p1 = *pts[0];
     Node p2 = *pts[n_points - 1];
     location_ind[0] = (p1.location_ind[0]+p2.location_ind[0])/2;
@@ -375,22 +374,22 @@ void Cell::shift_centers(double *shift){
     }
 }
 
-void Cell::insert_cell(node_map_t& nodes, double *new_cell, int_t p_level, double *xs, double *ys, double *zs){
+void Cell::insert_cell(node_map_t& nodes, double *new_cell, int_t p_level, double *xs, double *ys, double *zs, bool diag_balance){
     //Inserts a cell at min(max_level,p_level) that contains the given point
     if(p_level > level){
         // Need to go look in children,
         // Need to spawn children if i don't have any...
         if(is_leaf()){
-            divide(nodes, xs, ys, zs, true);
+            divide(nodes, xs, ys, zs, true, diag_balance);
         }
         int ix = new_cell[0] > children[0]->points[3]->location[0];
         int iy = new_cell[1] > children[0]->points[3]->location[1];
         int iz = n_dim>2 && new_cell[2]>children[0]->points[7]->location[2];
-        children[ix + 2*iy + 4*iz]->insert_cell(nodes, new_cell, p_level, xs, ys, zs);
+        children[ix + 2*iy + 4*iz]->insert_cell(nodes, new_cell, p_level, xs, ys, zs, diag_balance);
     }
 };
 
-void Cell::refine_ball(node_map_t& nodes, double* center, double r2, int_t p_level, double *xs, double *ys, double* zs){
+void Cell::refine_ball(node_map_t& nodes, double* center, double r2, int_t p_level, double *xs, double *ys, double* zs, bool diag_balance){
     // early exit if my level is higher than or equal to target
     if (level >= p_level || level == max_level){
         return;
@@ -415,22 +414,22 @@ void Cell::refine_ball(node_map_t& nodes, double* center, double r2, int_t p_lev
     }
     // if I intersect cell, I will need to be divided (if I'm not already)
     if(is_leaf()){
-        divide(nodes, xs, ys, zs, true);
+        divide(nodes, xs, ys, zs, true, diag_balance);
     }
     // recurse into children
-    children[0]->refine_ball(nodes, center, r2, p_level, xs, ys, zs);
-    children[1]->refine_ball(nodes, center, r2, p_level, xs, ys, zs);
-    children[2]->refine_ball(nodes, center, r2, p_level, xs, ys, zs);
-    children[3]->refine_ball(nodes, center, r2, p_level, xs, ys, zs);
+    children[0]->refine_ball(nodes, center, r2, p_level, xs, ys, zs, diag_balance);
+    children[1]->refine_ball(nodes, center, r2, p_level, xs, ys, zs, diag_balance);
+    children[2]->refine_ball(nodes, center, r2, p_level, xs, ys, zs, diag_balance);
+    children[3]->refine_ball(nodes, center, r2, p_level, xs, ys, zs, diag_balance);
     if (n_dim > 2){
-        children[4]->refine_ball(nodes, center, r2, p_level, xs, ys, zs);
-        children[5]->refine_ball(nodes, center, r2, p_level, xs, ys, zs);
-        children[6]->refine_ball(nodes, center, r2, p_level, xs, ys, zs);
-        children[7]->refine_ball(nodes, center, r2, p_level, xs, ys, zs);
+        children[4]->refine_ball(nodes, center, r2, p_level, xs, ys, zs, diag_balance);
+        children[5]->refine_ball(nodes, center, r2, p_level, xs, ys, zs, diag_balance);
+        children[6]->refine_ball(nodes, center, r2, p_level, xs, ys, zs, diag_balance);
+        children[7]->refine_ball(nodes, center, r2, p_level, xs, ys, zs, diag_balance);
     }
 }
 
-void Cell::refine_box(node_map_t& nodes, double* x0, double* x1, int_t p_level, double *xs, double *ys, double* zs, bool enclosed){
+void Cell::refine_box(node_map_t& nodes, double* x0, double* x1, int_t p_level, double *xs, double *ys, double* zs, bool enclosed, bool diag_balance){
     // early exit if my level is higher than target
     if (level >= p_level || level == max_level){
         return;
@@ -460,184 +459,635 @@ void Cell::refine_box(node_map_t& nodes, double* x0, double* x1, int_t p_level, 
     }
     // Will only be here if I intersect the box
     if(is_leaf()){
-        divide(nodes, xs, ys, zs, true);
+        divide(nodes, xs, ys, zs, true, diag_balance);
     }
     // recurse into children
-    children[0]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed);
-    children[1]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed);
-    children[2]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed);
-    children[3]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed);
+    children[0]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed, diag_balance);
+    children[1]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed, diag_balance);
+    children[2]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed, diag_balance);
+    children[3]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed, diag_balance);
     if (n_dim > 2){
-        children[4]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed);
-        children[5]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed);
-        children[6]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed);
-        children[7]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed);
+        children[4]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed, diag_balance);
+        children[5]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed, diag_balance);
+        children[6]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed, diag_balance);
+        children[7]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed, diag_balance);
     }
 }
 
-void Cell::divide(node_map_t& nodes, double* xs, double* ys, double* zs, bool force, bool balance){
-    bool do_splitting = false;
-    if(level == max_level){
-        do_splitting = false;
-    }else if(force){
-        do_splitting = true;
+void Cell::refine_line(node_map_t& nodes, double* x0, double* x1, double* diff_inv, int_t p_level, double *xs, double *ys, double* zs, bool diag_balance){
+    // Return If I'm at max_level or p_level
+    if (level >= p_level || level == max_level){
+        return;
+    }
+    // then check to see if I intersect the segment
+    double t0x, t0y, t0z, t1x, t1y, t1z;
+    double tminx, tminy, tminz, tmaxx, tmaxy, tmaxz;
+    double tmin, tmax;
+
+    t0x = (points[0]->location[0] - x0[0]) * diff_inv[0];
+    t1x = (points[3]->location[0] - x0[0]) * diff_inv[0];
+    if (t0x <= t1x){
+      tminx = t0x;
+      tmaxx = t1x;
     }else{
+      tminx = t1x;
+      tmaxx = t0x;
+    }
+
+    t0y = (points[0]->location[1] - x0[1]) * diff_inv[1];
+    t1y = (points[3]->location[1] - x0[1]) * diff_inv[1];
+    if (t0y <= t1y){
+      tminy = t0y;
+      tmaxy = t1y;
+    }else{
+      tminy = t1y;
+      tmaxy = t0y;
+    }
+
+    tmin = std::max(tminx, tminy);
+    tmax = std::min(tmaxx, tmaxy);
+    if (n_dim > 2){
+        t0z = (points[0]->location[2] - x0[2]) * diff_inv[2];
+        t1z = (points[7]->location[2] - x0[2]) * diff_inv[2];
+        if (t0z <= t1z){
+          tminz = t0z;
+          tmaxz = t1z;
+        }else{
+          tminz = t1z;
+          tmaxz = t0z;
+        }
+        tmin = std::max(tmin, tminz);
+        tmax = std::min(tmax, tmaxz);
+    }
+    // now can test if I intersect!
+    if (tmax >= 0 && tmin <= 1 && tmin <= tmax){
         if(is_leaf()){
-            // Only need to call the function if I am a leaf...
-            int test_level = (*test_func)(this);
-            if(test_level < 0){
-                test_level = (max_level + 1) - (abs(test_level) % (max_level + 1));
-            }
-            do_splitting = test_level > level;
+            divide(nodes, xs, ys, zs, true, diag_balance);
+        }
+        // recurse into children
+        for(int_t i = 0; i < (1<<n_dim); ++i){
+            children[i]->refine_line(nodes, x0, x1, diff_inv, p_level, xs, ys, zs, diag_balance);
         }
     }
-    if(do_splitting){
-        //If i haven't already been split...
-        if(is_leaf()){
-            spawn(nodes, children, xs, ys, zs);
+}
 
-            //If I need to be split, and my neighbor is below my level
-            //Then it needs to be split
-            //-x,+x,-y,+y,-z,+z
-            if(balance){
-                for(int_t i = 0; i < 2*n_dim; ++i){
-                    if(neighbors[i] != NULL && neighbors[i]->level < level){
-                        neighbors[i]->divide(nodes, xs, ys, zs, true);
+void Cell::refine_triangle(
+  node_map_t& nodes,
+  double* x0, double* x1, double* x2,
+  double* e0, double* e1, double* e2,
+  double* t_norm,
+  int_t p_level, double *xs, double *ys, double* zs, bool diag_balance
+){
+    // Return If I'm at max_level or p_level
+    if (level >= p_level || level == max_level){
+        return;
+    }
+    // then check to see if I intersect the segment
+    double v0[3], v1[3], v2[3], half[3];
+    double vmin, vmax;
+    double p0, p1, p2, pmin, pmax, rad;
+    for(int_t i=0; i < n_dim; ++i){
+        v0[i] = x0[i] - location[i];
+        v1[i] = x1[i] - location[i];
+        vmin = std::min(v0[i], v1[i]);
+        vmax = std::max(v0[i], v1[i]);
+        v2[i] = x2[i] - location[i];
+        vmin = std::min(vmin, v2[i]);
+        vmax = std::max(vmax, v2[i]);
+        half[i] = location[i] - points[0]->location[i];
+
+        // Bounding box check
+        if (vmin > half[i] || vmax < -half[i]){
+            return;
+        }
+    }
+    // first do the 3 edge cross tests that apply in 2D and 3D
+
+    // edge 0 cross z_hat
+    //p0 = e0[1] * v0[0] - e0[0] * v0[1];
+    p1 = e0[1] * v1[0] - e0[0] * v1[1];
+    p2 = e0[1] * v2[0] - e0[0] * v2[1];
+    pmin = std::min(p1, p2);
+    pmax = std::max(p1, p2);
+    rad = std::abs(e0[1]) * half[0] + std::abs(e0[0]) * half[1];
+    if (pmin > rad || pmax < -rad){
+        return;
+    }
+
+    // edge 1 cross z_hat
+    p0 = e1[1] * v0[0] - e1[0] * v0[1];
+    p1 = e1[1] * v1[0] - e1[0] * v1[1];
+    //p2 = e1[1] * v2[0] - e1[0] * v2[1];
+    pmin = std::min(p0, p1);
+    pmax = std::max(p0, p1);
+    rad = std::abs(e1[1]) * half[0] + std::abs(e1[0]) * half[1];
+    if (pmin > rad || pmax < -rad){
+        return;
+    }
+
+    // edge 2 cross z_hat
+    //p0 = e2[1] * v0[0] - e2[0] * v0[1];
+    p1 = e2[1] * v1[0] - e2[0] * v1[1];
+    p2 = e2[1] * v2[0] - e2[0] * v2[1];
+    pmin = std::min(p1, p2);
+    pmax = std::max(p1, p2);
+    rad = std::abs(e2[1]) * half[0] + std::abs(e2[0]) * half[1];
+    if (pmin > rad || pmax < -rad){
+        return;
+    }
+
+    if(n_dim > 2){
+        // edge 0 cross x_hat
+        p0 = e0[2] * v0[1] - e0[1] * v0[2];
+        //p1 = e0[2] * v1[1] - e0[1] * v1[2];
+        p2 = e0[2] * v2[1] - e0[1] * v2[2];
+        pmin = std::min(p0, p2);
+        pmax = std::max(p0, p2);
+        rad = std::abs(e0[2]) * half[1] + std::abs(e0[1]) * half[2];
+        if (pmin > rad || pmax < -rad){
+            return;
+        }
+        // edge 0 cross y_hat
+        p0 = -e0[2] * v0[0] + e0[0] * v0[2];
+        //p1 = -e0[2] * v1[0] + e0[0] * v1[2];
+        p2 = -e0[2] * v2[0] + e0[0] * v2[2];
+        pmin = std::min(p0, p2);
+        pmax = std::max(p0, p2);
+        rad = std::abs(e0[2]) * half[0] + std::abs(e0[0]) * half[2];
+        if (pmin > rad || pmax < -rad){
+            return;
+        }
+        // edge 1 cross x_hat
+        p0 = e1[2] * v0[1] - e1[1] * v0[2];
+        //p1 = e1[2] * v1[1] - e1[1] * v1[2];
+        p2 = e1[2] * v2[1] - e1[1] * v2[2];
+        pmin = std::min(p0, p2);
+        pmax = std::max(p0, p2);
+        rad = std::abs(e1[2]) * half[1] + std::abs(e1[1]) * half[2];
+        if (pmin > rad || pmax < -rad){
+            return;
+        }
+        // edge 1 cross y_hat
+        p0 = -e1[2] * v0[0] + e1[0] * v0[2];
+        //p1 = -e1[2] * v1[0] + e1[0] * v1[2];
+        p2 = -e1[2] * v2[0] + e1[0] * v2[2];
+        pmin = std::min(p0, p2);
+        pmax = std::max(p0, p2);
+        rad = std::abs(e1[2]) * half[0] + std::abs(e1[0]) * half[2];
+        if (pmin > rad || pmax < -rad){
+            return;
+        }
+        // edge 2 cross x_hat
+        p0 = e2[2] * v0[1] - e2[1] * v0[2];
+        p1 = e2[2] * v1[1] - e2[1] * v1[2];
+        //p2 = e2[2] * v2[1] - e2[1] * v2[2];
+        pmin = std::min(p0, p1);
+        pmax = std::max(p0, p1);
+        rad = std::abs(e2[2]) * half[1] + std::abs(e2[1]) * half[2];
+        if (pmin > rad || pmax < -rad){
+            return;
+        }
+        // edge 2 cross y_hat
+        p0 = -e2[2] * v0[0] + e2[0] * v0[2];
+        p1 = -e2[2] * v1[0] + e2[0] * v1[2];
+        //p2 = -e2[2] * v2[0] + e2[0] * v2[2];
+        pmin = std::min(p0, p1);
+        pmax = std::max(p0, p1);
+        rad = std::abs(e2[2]) * half[0] + std::abs(e2[0]) * half[2];
+        if (pmin > rad || pmax < -rad){
+            return;
+        }
+
+        // triangle normal axis
+        pmin = 0.0;
+        pmax = 0.0;
+        for(int_t i=0; i<n_dim; ++i){
+            if(t_norm[i] > 0){
+                pmin += t_norm[i] * (-half[i] - v0[i]);
+                pmax += t_norm[i] * (half[i] - v0[i]);
+            }else{
+                pmin += t_norm[i] * (half[i] - v0[i]);
+                pmax += t_norm[i] * (-half[i] - v0[i]);
+            }
+        }
+        if (pmin > 0 || pmax < 0){
+            return;
+        }
+    }
+    // If here, then I intersect the triangle!
+    if(is_leaf()){
+        divide(nodes, xs, ys, zs, true, diag_balance);
+    }
+    for(int_t i = 0; i < (1<<n_dim); ++i){
+        children[i]->refine_triangle(
+            nodes, x0, x1, x2, e0, e1, e2, t_norm, p_level, xs, ys, zs, diag_balance
+        );
+    }
+}
+
+void Cell::refine_tetra(
+  node_map_t& nodes,
+  double* x0, double* x1, double* x2, double* x3,
+  double edge_tans[6][3], double face_normals[4][3],
+  int_t p_level, double *xs, double *ys, double* zs, bool diag_balance
+){
+    // Return If I'm at max_level or p_level
+    if (level >= p_level || level == max_level){
+        return;
+    }
+    if (n_dim < 3){
+        return;
+    }
+    // then check to see if I intersect the segment
+    double v0[3], v1[3], v2[3], v3[3], half[3];
+    double p0, p1, p2, p3, pmin, pmax, rad;
+    for(int_t i=0; i < n_dim; ++i){
+        v0[i] = x0[i] - location[i];
+        v1[i] = x1[i] - location[i];
+        v2[i] = x2[i] - location[i];
+        v3[i] = x3[i] - location[i];
+        half[i] = location[i] - points[0]->location[i];
+        pmin = std::min(std::min(std::min(v0[i], v1[i]), v2[i]), v3[i]);
+        pmax = std::max(std::max(std::max(v0[i], v1[i]), v2[i]), v3[i]);
+        // Bounding box check
+        if (pmin > half[i] || pmax < -half[i]){
+            return;
+        }
+    }
+    // first do the 3 edge cross tests that apply in 2D and 3D
+    double *axis;
+
+    for(int_t i=0; i<6; ++i){
+        // edge cross [1, 0, 0]
+        p0 = edge_tans[i][2] * v0[1] - edge_tans[i][1] * v0[2];
+        p1 = edge_tans[i][2] * v1[1] - edge_tans[i][1] * v1[2];
+        p2 = edge_tans[i][2] * v2[1] - edge_tans[i][1] * v2[2];
+        p3 = edge_tans[i][2] * v3[1] - edge_tans[i][1] * v3[2];
+        pmin = std::min(std::min(std::min(p0, p1), p2), p3);
+        pmax = std::max(std::max(std::max(p0, p1), p2), p3);
+        rad = std::abs(edge_tans[i][2]) * half[1] + std::abs(edge_tans[i][1]) * half[2];
+        if (pmin > rad || pmax < -rad){
+            return;
+        }
+
+        p0 = -edge_tans[i][2] * v0[0] + edge_tans[i][0] * v0[2];
+        p1 = -edge_tans[i][2] * v1[0] + edge_tans[i][0] * v1[2];
+        p2 = -edge_tans[i][2] * v2[0] + edge_tans[i][0] * v2[2];
+        p3 = -edge_tans[i][2] * v3[0] + edge_tans[i][0] * v3[2];
+        pmin = std::min(std::min(std::min(p0, p1), p2), p3);
+        pmax = std::max(std::max(std::max(p0, p1), p2), p3);
+        rad = std::abs(edge_tans[i][2]) * half[0] + std::abs(edge_tans[i][0]) * half[2];
+        if (pmin > rad || pmax < -rad){
+            return;
+        }
+
+        p0 = edge_tans[i][1] * v0[0] - edge_tans[i][0] * v0[1];
+        p1 = edge_tans[i][1] * v1[0] - edge_tans[i][0] * v1[1];
+        p2 = edge_tans[i][1] * v2[0] - edge_tans[i][0] * v2[1];
+        p3 = edge_tans[i][1] * v3[0] - edge_tans[i][0] * v3[1];
+        pmin = std::min(std::min(std::min(p0, p1), p2), p3);
+        pmax = std::max(std::max(std::max(p0, p1), p2), p3);
+        rad = std::abs(edge_tans[i][1]) * half[0] + std::abs(edge_tans[i][0]) * half[1];
+        if (pmin > rad || pmax < -rad){
+            return;
+        }
+    }
+    // triangle face normals
+    for(int_t i=0; i<4; ++i){
+        axis = face_normals[i];
+        p0 = axis[0] * v0[0] + axis[1] * v0[1] + axis[2] * v0[2];
+        p1 = axis[0] * v1[0] + axis[1] * v1[1] + axis[2] * v1[2];
+        p2 = axis[0] * v2[0] + axis[1] * v2[1] + axis[2] * v2[2];
+        p3 = axis[0] * v3[0] + axis[1] * v3[1] + axis[2] * v3[2];
+        pmin = std::min(std::min(std::min(p0, p1), p2), p3);
+        pmax = std::max(std::max(std::max(p0, p1), p2), p3);
+        rad = std::abs(axis[0]) * half[0] + std::abs(axis[1]) * half[1] + std::abs(axis[2]) * half[2];
+        if (pmin > rad || pmax < -rad){
+            return;
+        }
+    }
+    // If here, then I intersect the tetrahedron!
+    if(is_leaf()){
+        divide(nodes, xs, ys, zs, true, diag_balance);
+    }
+    for(int_t i = 0; i < (1<<n_dim); ++i){
+        children[i]->refine_tetra(
+            nodes, x0, x1, x2, x3, edge_tans, face_normals, p_level, xs, ys, zs, diag_balance
+        );
+    }
+}
+
+void Cell::refine_func(node_map_t& nodes, function test_func, double *xs, double *ys, double *zs, bool diag_balance){
+    // return if I'm at the maximum level
+    if (level == max_level){
+        return;
+    }
+    if(is_leaf()){
+        // only evaluate the function on leaf cells
+        int test_level = (*test_func)(this);
+        if(test_level < 0){
+            test_level = (max_level + 1) - (abs(test_level) % (max_level + 1));
+        }
+        if (test_level <= level){
+            return;
+        }
+        divide(nodes, xs, ys, zs, true, diag_balance);
+    }
+    // should only be here if not a leaf cell, or I was divided by the function
+    // recurse into children
+    for(int_t i = 0; i < (1<<n_dim); ++i){
+        children[i]->refine_func(nodes, test_func, xs, ys, zs, diag_balance);
+    }
+}
+
+void Cell::divide(node_map_t& nodes, double* xs, double* ys, double* zs, bool balance, bool diag_balance){
+    // Gaurd against dividing a cell that is already at the max level
+    if (level == max_level){
+        return;
+    }
+    //If i haven't already been split...
+    if(is_leaf()){
+        spawn(nodes, children, xs, ys, zs);
+
+        //If I need to be split, and my neighbor is below my level
+        //Then it needs to be split
+        //-x,+x,-y,+y,-z,+z
+        if(balance){
+            for(int_t i = 0; i < 2*n_dim; ++i){
+                if(neighbors[i] != NULL && neighbors[i]->level < level){
+                    neighbors[i]->divide(nodes, xs, ys, zs, balance, diag_balance);
+                }
+            }
+        }
+        if(diag_balance){
+            Cell *neighbor;
+            if (neighbors[0] != NULL){
+                // -x-y
+                if (neighbors[2] != NULL){
+                    neighbor = neighbors[0]->neighbors[2];
+                    if(neighbor->level < level){
+                        neighbor->divide(nodes, xs, ys, zs, balance, diag_balance);
+                    }
+                }
+                // -x+y
+                if (neighbors[3] != NULL){
+                    neighbor = neighbors[0]->neighbors[3];
+                    if(neighbor->level < level){
+                        neighbor->divide(nodes, xs, ys, zs, balance, diag_balance);
                     }
                 }
             }
-
-            //Set children's neighbors (first do the easy ones)
-            // all of the children live next to each other
-            children[0]->set_neighbor(children[1], 1);
-            children[0]->set_neighbor(children[2], 3);
-            children[1]->set_neighbor(children[3], 3);
-            children[2]->set_neighbor(children[3], 1);
-
+            if (neighbors[1] != NULL){
+                // +x-y
+                if (neighbors[2] != NULL){
+                    neighbor = neighbors[1]->neighbors[2];
+                    if(neighbor->level < level){
+                        neighbor->divide(nodes, xs, ys, zs, balance, diag_balance);
+                    }
+                }
+                // +x+y
+                if (neighbors[3] != NULL){
+                    neighbor = neighbors[1]->neighbors[3];
+                    if(neighbor->level < level){
+                        neighbor->divide(nodes, xs, ys, zs, balance, diag_balance);
+                    }
+                }
+            }
             if(n_dim == 3){
-                children[4]->set_neighbor(children[5], 1);
-                children[4]->set_neighbor(children[6], 3);
-                children[5]->set_neighbor(children[7], 3);
-                children[6]->set_neighbor(children[7], 1);
-
-                children[0]->set_neighbor(children[4], 5);
-                children[1]->set_neighbor(children[5], 5);
-                children[2]->set_neighbor(children[6], 5);
-                children[3]->set_neighbor(children[7], 5);
-            }
-
-            // -x direction
-            if(neighbors[0]!=NULL && !(neighbors[0]->is_leaf())){
-                children[0]->set_neighbor(neighbors[0]->children[1], 0);
-                children[2]->set_neighbor(neighbors[0]->children[3], 0);
-            }
-            else{
-                children[0]->set_neighbor(neighbors[0], 0);
-                children[2]->set_neighbor(neighbors[0], 0);
-            }
-            // +x direction
-            if(neighbors[1]!=NULL && !neighbors[1]->is_leaf()){
-                children[1]->set_neighbor(neighbors[1]->children[0], 1);
-                children[3]->set_neighbor(neighbors[1]->children[2], 1);
-            }else{
-                children[1]->set_neighbor(neighbors[1], 1);
-                children[3]->set_neighbor(neighbors[1], 1);
-            }
-            // -y direction
-            if(neighbors[2]!=NULL && !neighbors[2]->is_leaf()){
-                children[0]->set_neighbor(neighbors[2]->children[2], 2);
-                children[1]->set_neighbor(neighbors[2]->children[3], 2);
-            }else{
-                children[0]->set_neighbor(neighbors[2], 2);
-                children[1]->set_neighbor(neighbors[2], 2);
-            }
-            // +y direction
-            if(neighbors[3]!=NULL && !neighbors[3]->is_leaf()){
-                children[2]->set_neighbor(neighbors[3]->children[0], 3);
-                children[3]->set_neighbor(neighbors[3]->children[1], 3);
-            }else{
-                children[2]->set_neighbor(neighbors[3], 3);
-                children[3]->set_neighbor(neighbors[3], 3);
-            }
-            if(n_dim==3){
-                // -x direction
-                if(neighbors[0]!=NULL && !(neighbors[0]->is_leaf())){
-                    children[4]->set_neighbor(neighbors[0]->children[5], 0);
-                    children[6]->set_neighbor(neighbors[0]->children[7], 0);
+                // -z
+                if (neighbors[4] != NULL){
+                    if (neighbors[0] != NULL){
+                        // -z-x
+                        neighbor = neighbors[4]->neighbors[0];
+                        if(neighbor->level < level){
+                            neighbor->divide(nodes, xs, ys, zs, balance, diag_balance);
+                        }
+                        // -z-x-y
+                        if (neighbors[2] != NULL){
+                            neighbor = neighbors[4]->neighbors[0]->neighbors[2];
+                            if(neighbor->level < level){
+                                neighbor->divide(nodes, xs, ys, zs, balance, diag_balance);
+                            }
+                        }
+                        // -z-x+y
+                        if (neighbors[3] != NULL){
+                            neighbor = neighbors[4]->neighbors[0]->neighbors[3];
+                            if(neighbor->level < level){
+                                neighbor->divide(nodes, xs, ys, zs, balance, diag_balance);
+                            }
+                        }
+                    }
+                    if (neighbors[1] != NULL){
+                        // -z+x
+                        neighbor = neighbors[4]->neighbors[1];
+                        if(neighbor->level < level){
+                            neighbor->divide(nodes, xs, ys, zs, balance, diag_balance);
+                        }
+                        // -z+x-y
+                        if (neighbors[2] != NULL){
+                            neighbor = neighbors[4]->neighbors[1]->neighbors[2];
+                            if(neighbor->level < level){
+                                neighbor->divide(nodes, xs, ys, zs, balance, diag_balance);
+                            }
+                        }
+                        // -z+x+y
+                        if (neighbors[3] != NULL){
+                            neighbor = neighbors[4]->neighbors[1]->neighbors[3];
+                            if(neighbor->level < level){
+                                neighbor->divide(nodes, xs, ys, zs, balance, diag_balance);
+                            }
+                        }
+                    }
+                    if (neighbors[2] != NULL){
+                        // -z-y
+                        neighbor = neighbors[4]->neighbors[2];
+                        if(neighbor->level < level){
+                            neighbor->divide(nodes, xs, ys, zs, balance, diag_balance);
+                        }
+                    }
+                    if (neighbors[3] != NULL){
+                        // -z+y
+                        neighbor = neighbors[4]->neighbors[3];
+                        if(neighbor->level < level){
+                            neighbor->divide(nodes, xs, ys, zs, balance, diag_balance);
+                        }
+                    }
                 }
-                else{
-                    children[4]->set_neighbor(neighbors[0], 0);
-                    children[6]->set_neighbor(neighbors[0], 0);
-                }
-                // +x direction
-                if(neighbors[1]!=NULL && !neighbors[1]->is_leaf()){
-                    children[5]->set_neighbor(neighbors[1]->children[4], 1);
-                    children[7]->set_neighbor(neighbors[1]->children[6], 1);
-                }else{
-                    children[5]->set_neighbor(neighbors[1], 1);
-                    children[7]->set_neighbor(neighbors[1], 1);
-                }
-                // -y direction
-                if(neighbors[2]!=NULL && !neighbors[2]->is_leaf()){
-                    children[4]->set_neighbor(neighbors[2]->children[6], 2);
-                    children[5]->set_neighbor(neighbors[2]->children[7], 2);
-                }else{
-                    children[4]->set_neighbor(neighbors[2], 2);
-                    children[5]->set_neighbor(neighbors[2], 2);
-                }
-                // +y direction
-                if(neighbors[3]!=NULL && !neighbors[3]->is_leaf()){
-                    children[6]->set_neighbor(neighbors[3]->children[4], 3);
-                    children[7]->set_neighbor(neighbors[3]->children[5], 3);
-                }else{
-                    children[6]->set_neighbor(neighbors[3], 3);
-                    children[7]->set_neighbor(neighbors[3], 3);
-                }
-                // -z direction
-                if(neighbors[4]!=NULL && !neighbors[4]->is_leaf()){
-                    children[0]->set_neighbor(neighbors[4]->children[4], 4);
-                    children[1]->set_neighbor(neighbors[4]->children[5], 4);
-                    children[2]->set_neighbor(neighbors[4]->children[6], 4);
-                    children[3]->set_neighbor(neighbors[4]->children[7], 4);
-                }else{
-                    children[0]->set_neighbor(neighbors[4], 4);
-                    children[1]->set_neighbor(neighbors[4], 4);
-                    children[2]->set_neighbor(neighbors[4], 4);
-                    children[3]->set_neighbor(neighbors[4], 4);
-                }
-                // +z direction
-                if(neighbors[5]!=NULL && !neighbors[5]->is_leaf()){
-                    children[4]->set_neighbor(neighbors[5]->children[0], 5);
-                    children[5]->set_neighbor(neighbors[5]->children[1], 5);
-                    children[6]->set_neighbor(neighbors[5]->children[2], 5);
-                    children[7]->set_neighbor(neighbors[5]->children[3], 5);
-                }else{
-                    children[4]->set_neighbor(neighbors[5], 5);
-                    children[5]->set_neighbor(neighbors[5], 5);
-                    children[6]->set_neighbor(neighbors[5], 5);
-                    children[7]->set_neighbor(neighbors[5], 5);
+                // +z
+                if (neighbors[5] != NULL){
+                    if (neighbors[0] != NULL){
+                        // +z-x
+                        neighbor = neighbors[5]->neighbors[0];
+                        if(neighbor->level < level){
+                            neighbor->divide(nodes, xs, ys, zs, balance, diag_balance);
+                        }
+                        // +z-x-y
+                        if (neighbors[2] != NULL){
+                            neighbor = neighbors[5]->neighbors[0]->neighbors[2];
+                            if(neighbor->level < level){
+                                neighbor->divide(nodes, xs, ys, zs, balance, diag_balance);
+                            }
+                        }
+                        // +z-x+y
+                        if (neighbors[3] != NULL){
+                            neighbor = neighbors[5]->neighbors[0]->neighbors[3];
+                            if(neighbor->level < level){
+                                neighbor->divide(nodes, xs, ys, zs, balance, diag_balance);
+                            }
+                        }
+                    }
+                    if (neighbors[1] != NULL){
+                        // +z+x
+                        neighbor = neighbors[5]->neighbors[1];
+                        if(neighbor->level < level){
+                            neighbor->divide(nodes, xs, ys, zs, balance, diag_balance);
+                        }
+                        // +z+x-y
+                        if (neighbors[2] != NULL){
+                            neighbor = neighbors[5]->neighbors[1]->neighbors[2];
+                            if(neighbor->level < level){
+                                neighbor->divide(nodes, xs, ys, zs, balance, diag_balance);
+                            }
+                        }
+                        // +z+x+y
+                        if (neighbors[3] != NULL){
+                            neighbor = neighbors[5]->neighbors[1]->neighbors[3];
+                            if(neighbor->level < level){
+                                neighbor->divide(nodes, xs, ys, zs, balance, diag_balance);
+                            }
+                        }
+                    }
+                    if (neighbors[2] != NULL){
+                        // +z-y
+                        neighbor = neighbors[5]->neighbors[2];
+                        if(neighbor->level < level){
+                            neighbor->divide(nodes, xs, ys, zs, balance, diag_balance);
+                        }
+                    }
+                    if (neighbors[3] != NULL){
+                        // +z+y
+                        neighbor = neighbors[5]->neighbors[3];
+                        if(neighbor->level < level){
+                            neighbor->divide(nodes, xs, ys, zs, balance, diag_balance);
+                        }
+                    }
                 }
             }
         }
-    }
-    if(!force){
-        if(!is_leaf()){
-            for(int_t i = 0; i < (1<<n_dim); ++i){
-                children[i]->divide(nodes, xs, ys, zs);
+
+        //Set children's neighbors (first do the easy ones)
+        // all of the children live next to each other
+        children[0]->set_neighbor(children[1], 1);
+        children[0]->set_neighbor(children[2], 3);
+        children[1]->set_neighbor(children[3], 3);
+        children[2]->set_neighbor(children[3], 1);
+
+        if(n_dim == 3){
+            children[4]->set_neighbor(children[5], 1);
+            children[4]->set_neighbor(children[6], 3);
+            children[5]->set_neighbor(children[7], 3);
+            children[6]->set_neighbor(children[7], 1);
+
+            children[0]->set_neighbor(children[4], 5);
+            children[1]->set_neighbor(children[5], 5);
+            children[2]->set_neighbor(children[6], 5);
+            children[3]->set_neighbor(children[7], 5);
+        }
+
+        // -x direction
+        if(neighbors[0]!=NULL && !(neighbors[0]->is_leaf())){
+            children[0]->set_neighbor(neighbors[0]->children[1], 0);
+            children[2]->set_neighbor(neighbors[0]->children[3], 0);
+        }
+        else{
+            children[0]->set_neighbor(neighbors[0], 0);
+            children[2]->set_neighbor(neighbors[0], 0);
+        }
+        // +x direction
+        if(neighbors[1]!=NULL && !neighbors[1]->is_leaf()){
+            children[1]->set_neighbor(neighbors[1]->children[0], 1);
+            children[3]->set_neighbor(neighbors[1]->children[2], 1);
+        }else{
+            children[1]->set_neighbor(neighbors[1], 1);
+            children[3]->set_neighbor(neighbors[1], 1);
+        }
+        // -y direction
+        if(neighbors[2]!=NULL && !neighbors[2]->is_leaf()){
+            children[0]->set_neighbor(neighbors[2]->children[2], 2);
+            children[1]->set_neighbor(neighbors[2]->children[3], 2);
+        }else{
+            children[0]->set_neighbor(neighbors[2], 2);
+            children[1]->set_neighbor(neighbors[2], 2);
+        }
+        // +y direction
+        if(neighbors[3]!=NULL && !neighbors[3]->is_leaf()){
+            children[2]->set_neighbor(neighbors[3]->children[0], 3);
+            children[3]->set_neighbor(neighbors[3]->children[1], 3);
+        }else{
+            children[2]->set_neighbor(neighbors[3], 3);
+            children[3]->set_neighbor(neighbors[3], 3);
+        }
+        if(n_dim==3){
+            // -x direction
+            if(neighbors[0]!=NULL && !(neighbors[0]->is_leaf())){
+                children[4]->set_neighbor(neighbors[0]->children[5], 0);
+                children[6]->set_neighbor(neighbors[0]->children[7], 0);
+            }
+            else{
+                children[4]->set_neighbor(neighbors[0], 0);
+                children[6]->set_neighbor(neighbors[0], 0);
+            }
+            // +x direction
+            if(neighbors[1]!=NULL && !neighbors[1]->is_leaf()){
+                children[5]->set_neighbor(neighbors[1]->children[4], 1);
+                children[7]->set_neighbor(neighbors[1]->children[6], 1);
+            }else{
+                children[5]->set_neighbor(neighbors[1], 1);
+                children[7]->set_neighbor(neighbors[1], 1);
+            }
+            // -y direction
+            if(neighbors[2]!=NULL && !neighbors[2]->is_leaf()){
+                children[4]->set_neighbor(neighbors[2]->children[6], 2);
+                children[5]->set_neighbor(neighbors[2]->children[7], 2);
+            }else{
+                children[4]->set_neighbor(neighbors[2], 2);
+                children[5]->set_neighbor(neighbors[2], 2);
+            }
+            // +y direction
+            if(neighbors[3]!=NULL && !neighbors[3]->is_leaf()){
+                children[6]->set_neighbor(neighbors[3]->children[4], 3);
+                children[7]->set_neighbor(neighbors[3]->children[5], 3);
+            }else{
+                children[6]->set_neighbor(neighbors[3], 3);
+                children[7]->set_neighbor(neighbors[3], 3);
+            }
+            // -z direction
+            if(neighbors[4]!=NULL && !neighbors[4]->is_leaf()){
+                children[0]->set_neighbor(neighbors[4]->children[4], 4);
+                children[1]->set_neighbor(neighbors[4]->children[5], 4);
+                children[2]->set_neighbor(neighbors[4]->children[6], 4);
+                children[3]->set_neighbor(neighbors[4]->children[7], 4);
+            }else{
+                children[0]->set_neighbor(neighbors[4], 4);
+                children[1]->set_neighbor(neighbors[4], 4);
+                children[2]->set_neighbor(neighbors[4], 4);
+                children[3]->set_neighbor(neighbors[4], 4);
+            }
+            // +z direction
+            if(neighbors[5]!=NULL && !neighbors[5]->is_leaf()){
+                children[4]->set_neighbor(neighbors[5]->children[0], 5);
+                children[5]->set_neighbor(neighbors[5]->children[1], 5);
+                children[6]->set_neighbor(neighbors[5]->children[2], 5);
+                children[7]->set_neighbor(neighbors[5]->children[3], 5);
+            }else{
+                children[4]->set_neighbor(neighbors[5], 5);
+                children[5]->set_neighbor(neighbors[5], 5);
+                children[6]->set_neighbor(neighbors[5], 5);
+                children[7]->set_neighbor(neighbors[5], 5);
             }
         }
     }
 };
-
-
-void Cell::set_test_function(function func){
-    test_func = func;
-    if(!is_leaf()){
-        for(int_t i = 0; i < (1<<n_dim); ++i){
-            children[i]->set_test_function(func);
-        }
-    }
-}
 
 void Cell::build_cell_vector(cell_vec_t& cells){
     if(this->is_leaf()){
@@ -793,7 +1243,7 @@ void Tree::initialize_roots(){
                         ps[6] = points[iz+1][iy+1][ix  ];
                         ps[7] = points[iz+1][iy+1][ix+1];
                     }
-                    roots[iz][iy][ix] = new Cell(ps, n_dim, max_level, NULL);
+                    roots[iz][iy][ix] = new Cell(ps, n_dim, max_level);
                     if (nx==ny && (n_dim==2 || ny==nz)){
                         roots[iz][iy][ix]->level = 0;
                     }else{
@@ -824,7 +1274,7 @@ void Tree::initialize_roots(){
     }
 }
 
-void Tree::insert_cell(double *new_center, int_t p_level){
+void Tree::insert_cell(double *new_center, int_t p_level, bool diagonal_balance){
     // find containing root
     int_t ix = 0;
     int_t iy = 0;
@@ -840,35 +1290,96 @@ void Tree::insert_cell(double *new_center, int_t p_level){
             ++iz;
         }
     }
-    roots[iz][iy][ix]->insert_cell(nodes, new_center, p_level, xs, ys, zs);
+    roots[iz][iy][ix]->insert_cell(nodes, new_center, p_level, xs, ys, zs, diagonal_balance);
 }
 
-void Tree::refine_function(function test_func){
-    //Must set the test_func of all of the roots before I can start dividing
-    for(int_t iz=0; iz<nz_roots; ++iz)
-        for(int_t iy=0; iy<ny_roots; ++iy)
-            for(int_t ix=0; ix<nx_roots; ++ix)
-                roots[iz][iy][ix]->set_test_function(test_func);
+void Tree::refine_function(function test_func, bool diagonal_balance){
     //Now we can divide
     for(int_t iz=0; iz<nz_roots; ++iz)
         for(int_t iy=0; iy<ny_roots; ++iy)
             for(int_t ix=0; ix<nx_roots; ++ix)
-                roots[iz][iy][ix]->divide(nodes, xs, ys, zs);
+                roots[iz][iy][ix]->refine_func(nodes, test_func, xs, ys, zs, diagonal_balance);
 };
 
-void Tree::refine_box(double* x0, double* x1, int_t p_level){
+void Tree::refine_box(double* x0, double* x1, int_t p_level, bool diagonal_balance){
     for(int_t iz=0; iz<nz_roots; ++iz)
         for(int_t iy=0; iy<ny_roots; ++iy)
             for(int_t ix=0; ix<nx_roots; ++ix)
-                roots[iz][iy][ix]->refine_box(nodes, x0, x1, p_level, xs, ys, zs);
+                roots[iz][iy][ix]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, false, diagonal_balance);
 };
 
-void Tree::refine_ball(double* center, double r, int_t p_level){
+void Tree::refine_ball(double* center, double r, int_t p_level, bool diagonal_balance){
     double r2 = r*r;
     for(int_t iz=0; iz<nz_roots; ++iz)
         for(int_t iy=0; iy<ny_roots; ++iy)
             for(int_t ix=0; ix<nx_roots; ++ix)
-                roots[iz][iy][ix]->refine_ball(nodes, center, r2, p_level, xs, ys, zs);
+                roots[iz][iy][ix]->refine_ball(nodes, center, r2, p_level, xs, ys, zs, diagonal_balance);
+};
+
+void Tree::refine_line(double* x0, double* x1, int_t p_level, bool diagonal_balance){
+    double diff_inv[3];
+    for(int_t i=0; i<n_dim; ++i){
+        diff_inv[i] = 1/(x1[i] - x0[i]);
+    }
+    for(int_t iz=0; iz<nz_roots; ++iz)
+        for(int_t iy=0; iy<ny_roots; ++iy)
+            for(int_t ix=0; ix<nx_roots; ++ix)
+                roots[iz][iy][ix]->refine_line(nodes, x0, x1, diff_inv, p_level, xs, ys, zs, diagonal_balance);
+};
+
+void Tree::refine_triangle(double* x0, double* x1, double* x2, int_t p_level, bool diagonal_balance){
+    double e0[3], e1[3], e2[3], t_norm[3];
+    for(int_t i=0; i<n_dim; ++i){
+      e0[i] = x1[i] - x0[i];
+      e1[i] = x2[i] - x1[i];
+      e2[i] = x2[i] - x0[i];
+    }
+    if(n_dim > 2){
+        t_norm[0] = e0[1] * e1[2] - e0[2] * e1[1];
+        t_norm[1] = e0[2] * e1[0] - e0[0] * e1[2];
+        t_norm[2] = e0[0] * e1[1] - e0[1] * e1[0];
+    }
+    for(int_t iz=0; iz<nz_roots; ++iz)
+        for(int_t iy=0; iy<ny_roots; ++iy)
+            for(int_t ix=0; ix<nx_roots; ++ix)
+                roots[iz][iy][ix]->refine_triangle(
+                    nodes, x0, x1, x2, e0, e1, e2, t_norm, p_level, xs, ys, zs, diagonal_balance
+                );
+};
+
+void Tree::refine_tetra(double* x0, double* x1, double* x2, double* x3, int_t p_level, bool diagonal_balance){
+    double t_edges[6][3];
+    double face_normals[4][3];
+    for(int_t i=0; i<n_dim; ++i){
+        t_edges[0][i] = x1[i] - x0[i];
+        t_edges[1][i] = x2[i] - x0[i];
+        t_edges[2][i] = x2[i] - x1[i];
+        t_edges[3][i] = x3[i] - x0[i];
+        t_edges[4][i] = x3[i] - x1[i];
+        t_edges[5][i] = x3[i] - x2[i];
+    }
+    face_normals[0][0] = t_edges[0][1] * t_edges[1][2] - t_edges[0][2] * t_edges[1][1];
+    face_normals[0][1] = t_edges[0][2] * t_edges[1][0] - t_edges[0][0] * t_edges[1][2];
+    face_normals[0][2] = t_edges[0][0] * t_edges[1][1] - t_edges[0][1] * t_edges[1][0];
+
+    face_normals[1][0] = t_edges[0][1] * t_edges[3][2] - t_edges[0][2] * t_edges[3][1];
+    face_normals[1][1] = t_edges[0][2] * t_edges[3][0] - t_edges[0][0] * t_edges[3][2];
+    face_normals[1][2] = t_edges[0][0] * t_edges[3][1] - t_edges[0][1] * t_edges[3][0];
+
+    face_normals[2][0] = t_edges[1][1] * t_edges[4][2] - t_edges[1][2] * t_edges[4][1];
+    face_normals[2][1] = t_edges[1][2] * t_edges[4][0] - t_edges[1][0] * t_edges[4][2];
+    face_normals[2][2] = t_edges[1][0] * t_edges[4][1] - t_edges[1][1] * t_edges[4][0];
+
+    face_normals[3][0] = t_edges[2][1] * t_edges[5][2] - t_edges[2][2] * t_edges[5][1];
+    face_normals[3][1] = t_edges[2][2] * t_edges[5][0] - t_edges[2][0] * t_edges[5][2];
+    face_normals[3][2] = t_edges[2][0] * t_edges[5][1] - t_edges[2][1] * t_edges[5][0];
+
+    for(int_t iz=0; iz<nz_roots; ++iz)
+        for(int_t iy=0; iy<ny_roots; ++iy)
+            for(int_t ix=0; ix<nx_roots; ++ix)
+                roots[iz][iy][ix]->refine_tetra(
+                    nodes, x0, x1, x2, x3, t_edges, face_normals, p_level, xs, ys, zs, diagonal_balance
+                );
 };
 
 void Tree::finalize_lists(){
@@ -1451,7 +1962,6 @@ int_vec_t Tree::find_overlapping_cells(double xm, double xp, double ym, double y
     }
     return overlaps;
   }
-
 
 void Tree::shift_cell_centers(double *shift){
     for(int_t iz=0; iz<nz_roots; ++iz)

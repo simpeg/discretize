@@ -98,7 +98,6 @@ class Face{
         Face(Node& p1, Node& p2, Node& p3, Node& p4);
 };
 
-
 class Cell{
   public:
     int_t n_dim;
@@ -111,24 +110,34 @@ class Cell{
     long long int index; // non root parents will have a -1 value
     double location[3];
     double volume;
-    function test_func;
 
     Cell();
-    Cell(Node *pts[4], int_t ndim, int_t maxlevel, function func);
+    Cell(Node *pts[4], int_t ndim, int_t maxlevel);//, function func);
     Cell(Node *pts[4], Cell *parent);
     ~Cell();
 
     bool inline is_leaf(){ return children[0]==NULL;};
     void spawn(node_map_t& nodes, Cell *kids[8], double* xs, double *ys, double *zs);
-    void divide(node_map_t& nodes, double* xs, double* ys, double* zs, bool force=false, bool balance=true);
+    void divide(node_map_t& nodes, double* xs, double* ys, double* zs, bool balance=true, bool diag_balance=false);
     void set_neighbor(Cell* other, int_t direction);
-    void set_test_function(function func);
     void build_cell_vector(cell_vec_t& cells);
     void find_overlapping_cells(int_vec_t& cells, double xm, double xp, double ym, double yp, double zm, double zp);
 
-    void insert_cell(node_map_t &nodes, double *new_center, int_t p_level, double* xs, double *ys, double *zs);
-    void refine_ball(node_map_t& nodes, double* center, double r2, int_t p_level, double *xs, double *ys, double* zs);
-    void refine_box(node_map_t& nodes, double* x0, double* x1, int_t p_level, double *xs, double *ys, double* zs, bool enclosed=false);
+    void insert_cell(node_map_t &nodes, double *new_center, int_t p_level, double* xs, double *ys, double *zs, bool diag_balance=false);
+    void refine_ball(node_map_t& nodes, double* center, double r2, int_t p_level, double *xs, double *ys, double* zs, bool diag_balance=false);
+    void refine_box(node_map_t& nodes, double* x0, double* x1, int_t p_level, double *xs, double *ys, double* zs, bool enclosed=false, bool diag_balance=false);
+    void refine_line(node_map_t& nodes, double* x0, double* x1, double* diff_inv, int_t p_level, double *xs, double *ys, double* zs, bool diag_balance=false);
+    void refine_func(node_map_t& nodes, function test_func, double *xs, double *ys, double* zs, bool diag_balance=false);
+    void refine_triangle(node_map_t& nodes,
+      double* x0, double* x1, double* x2, double* e0, double* e1, double* e2, double* t_norm,
+      int_t p_level, double *xs, double *ys, double* zs, bool diag_balance=false
+    );
+    void refine_tetra(
+      node_map_t& nodes,
+      double* x0, double* x1, double* x2, double* x3,
+      double edge_tans[6][3], double face_normals[4][3],
+      int_t p_level, double *xs, double *ys, double* zs, bool diag_balance
+    );
 
     Cell* containing_cell(double, double, double);
     void shift_centers(double * shift);
@@ -160,13 +169,20 @@ class Tree{
     void set_levels(int_t l_x, int_t l_y, int_t l_z);
     void set_xs(double *x , double *y, double *z);
     void initialize_roots();
-    void refine_function(function test_func);
-    void refine_ball(double *center, double r, int_t p_level);
-    void refine_box(double* x0, double* x1, int_t p_level);
+    void refine_function(function test_func, bool diagonal_balance=false);
+    void refine_ball(double *center, double r, int_t p_level, bool diagonal_balance=false);
+    void refine_box(double* x0, double* x1, int_t p_level, bool diagonal_balance=false);
+    void refine_line(double* x0, double* x1, int_t p_level, bool diag_balance=false);
+    void refine_triangle(
+        double* x0, double* x1, double* x2, int_t p_level, bool diag_balance=false
+    );
+    void refine_tetra(
+        double* x0, double* x1, double* x2, double* x3, int_t p_level, bool diag_balance=false
+    );
     void number();
     void finalize_lists();
 
-    void insert_cell(double *new_center, int_t p_level);
+    void insert_cell(double *new_center, int_t p_level, bool diagonal_balance=false);
 
     Cell* containing_cell(double, double, double);
     int_vec_t find_overlapping_cells(double xm, double xp, double ym, double yp, double zm, double zp);

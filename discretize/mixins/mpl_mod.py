@@ -4,6 +4,7 @@ from discretize.utils import mkvc, ndgrid
 
 import discretize
 
+
 def load_matplotlib():
     """Lazy load principal matplotlib routines.
 
@@ -12,6 +13,7 @@ def load_matplotlib():
     """
     import matplotlib
     import matplotlib.pyplot as plt
+
     return matplotlib, plt
 
 
@@ -140,6 +142,7 @@ class InterfaceMPL(object):
         """
         matplotlib, plt = load_matplotlib()
         from matplotlib import rc_params  # lazy loaded
+
         mesh_type = self._meshType.lower()
         plotters = {
             "tree": self.__plot_grid_tree,
@@ -279,7 +282,7 @@ class InterfaceMPL(object):
             "tensor": self.__plot_image_tensor,
             "curv": self.__plot_image_curv,
             "cyl": self.__plot_image_cyl,
-            "simplex": self.__plot_image_simp
+            "simplex": self.__plot_image_simp,
         }
         try:
             plotter = plotters[mesh_type]
@@ -2127,7 +2130,10 @@ class InterfaceMPL(object):
                 vecs[:, 1],
                 **quiver_opts,
             )
-            out = (out, qvr,)
+            out = (
+                out,
+                qvr,
+            )
 
         return out
 
@@ -2145,11 +2151,13 @@ class InterfaceMPL(object):
     ):
         if lines:
             if self.dim == 2:
-                ax.triplot(*self.nodes.T, self.simplices, color=color, linewidth=linewidth)
+                ax.triplot(
+                    *self.nodes.T, self.simplices, color=color, linewidth=linewidth
+                )
             elif self.dim == 3:
                 edge_nodes = self._edges
                 n_edges = edge_nodes.shape[0]
-                to_plot = np.full((3*n_edges, 3), np.nan)
+                to_plot = np.full((3 * n_edges, 3), np.nan)
                 to_plot[::3] = self.nodes[edge_nodes[:, 0]]
                 to_plot[1::3] = self.nodes[edge_nodes[:, 1]]
                 ax.plot(*to_plot.T, color=color, linewidth=linewidth)
@@ -2164,7 +2172,7 @@ class InterfaceMPL(object):
         ax.set_xlabel("x1")
         ax.set_ylabel("x2")
         if self.dim == 3:
-            ax.set_zlabel('x3')
+            ax.set_zlabel("x3")
         return ax
 
     def __plot_image_simp(
@@ -2192,21 +2200,21 @@ class InterfaceMPL(object):
                 raise ValueError("Other types for CCv not supported")
         if "F" in v_type:
             aveOp = "average_face_to_cell"
-            if view == "vec" or 'x' in v_type or "y" in v_type:
+            if view == "vec" or "x" in v_type or "y" in v_type:
                 aveOp += "_vector"
             v = getattr(self, aveOp) * v
         elif "E" in v_type:
             aveOp = "average_edge_to_cell"
-            if view == "vec" or 'x' in v_type or "y" in v_type:
+            if view == "vec" or "x" in v_type or "y" in v_type:
                 aveOp += "_vector"
             v = getattr(self, aveOp) * v
         if view == "vec":
-            v = v.reshape((self.n_cells, 2), order='F')
+            v = v.reshape((self.n_cells, 2), order="F")
         elif "x" in v_type:
-            v = v.reshape((self.n_cells, 2), order='F')
+            v = v.reshape((self.n_cells, 2), order="F")
             v = v[:, 0]
         elif "y" in v_type:
-            v = v.reshape((self.n_cells, 2), order='F')
+            v = v.reshape((self.n_cells, 2), order="F")
             v = v[:, 1]
 
         if view in ["real", "imag", "abs"]:
@@ -2215,8 +2223,7 @@ class InterfaceMPL(object):
             image_data = np.linalg.norm(v, axis=1)
         shading = "gouraud" if v_type == "N" else "flat"
         trip = ax.tripcolor(
-            *self.nodes.T, self._simplices, image_data,
-            shading=shading, **pcolor_opts
+            *self.nodes.T, self._simplices, image_data, shading=shading, **pcolor_opts
         )
 
         if range_x is None:
@@ -2229,7 +2236,7 @@ class InterfaceMPL(object):
         ax.set_xlim(*range_x)
         ax.set_ylim(*range_y)
 
-        out = (trip, )
+        out = (trip,)
         if view == "vec":
             if quiver_opts is None:
                 quiver_opts = {}

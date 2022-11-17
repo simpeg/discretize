@@ -1075,61 +1075,63 @@ def example_simplex_mesh(rect_shape):
     """
     if len(rect_shape) == 2:
         n1, n2 = rect_shape
-        xs, ys = np.mgrid[0:1:(n1+1)*1j, 0:1:(n2+1)*1j]
+        xs, ys = np.mgrid[0 : 1 : (n1 + 1) * 1j, 0 : 1 : (n2 + 1) * 1j]
         points = np.c_[xs.reshape(-1), ys.reshape(-1)]
 
-        node_inds = np.arange((n1+1) * (n2+1)).reshape((n1+1, n2+1))
+        node_inds = np.arange((n1 + 1) * (n2 + 1)).reshape((n1 + 1, n2 + 1))
 
         left_triangs = np.c_[
-            node_inds[:-1, :-1].reshape(-1), # i00
+            node_inds[:-1, :-1].reshape(-1),  # i00
             node_inds[1:, :-1].reshape(-1),  # i10
-            node_inds[:-1, 1:].reshape(-1)   # i01
+            node_inds[:-1, 1:].reshape(-1),  # i01
         ]
         right_triangs = np.c_[
-            node_inds[1:,1:].reshape(-1),    # i11
+            node_inds[1:, 1:].reshape(-1),  # i11
             node_inds[1:, :-1].reshape(-1),  # i10
-            node_inds[:-1, 1:].reshape(-1)   # i01
+            node_inds[:-1, 1:].reshape(-1),  # i01
         ]
 
         simplices = np.r_[left_triangs, right_triangs]
     if len(rect_shape) == 3:
         n1, n2, n3 = rect_shape
-        xs, ys, zs = np.mgrid[0:1:(n1+1)*1j, 0:1:(n2+1)*1j, 0:1:(n3+1)*1j]
+        xs, ys, zs = np.mgrid[
+            0 : 1 : (n1 + 1) * 1j, 0 : 1 : (n2 + 1) * 1j, 0 : 1 : (n3 + 1) * 1j
+        ]
         points = np.c_[xs.reshape(-1), ys.reshape(-1), zs.reshape(-1)]
 
-        node_inds = np.arange(
-            (n1+1) * (n2+1) * (n3+1)
-        ).reshape((n1+1, n2+1, n3+1))
+        node_inds = np.arange((n1 + 1) * (n2 + 1) * (n3 + 1)).reshape(
+            (n1 + 1, n2 + 1, n3 + 1)
+        )
 
         a_triangs = np.c_[
             node_inds[1:, :-1, :-1].reshape(-1),  # i100
             node_inds[:-1, :-1, 1:].reshape(-1),  # i001
             node_inds[:-1, 1:, :-1].reshape(-1),  # i010
-            node_inds[:-1, :-1, :-1].reshape(-1)  # i000
+            node_inds[:-1, :-1, :-1].reshape(-1),  # i000
         ]
         b_triangs = np.c_[
             node_inds[:-1, 1:, 1:].reshape(-1),  # i011
-            node_inds[1:, :-1, :-1].reshape(-1), # i100
-            node_inds[:-1, :-1, 1:].reshape(-1), # i001
-            node_inds[:-1, 1:, :-1].reshape(-1)  # i010
+            node_inds[1:, :-1, :-1].reshape(-1),  # i100
+            node_inds[:-1, :-1, 1:].reshape(-1),  # i001
+            node_inds[:-1, 1:, :-1].reshape(-1),  # i010
         ]
         c_triangs = np.c_[
             node_inds[1:, 1:, :-1].reshape(-1),  # i110
             node_inds[:-1, 1:, 1:].reshape(-1),  # i011
-            node_inds[1:, :-1, :-1].reshape(-1), # i100
-            node_inds[:-1, 1:, :-1].reshape(-1)  # i010
+            node_inds[1:, :-1, :-1].reshape(-1),  # i100
+            node_inds[:-1, 1:, :-1].reshape(-1),  # i010
         ]
         d_triangs = np.c_[
             node_inds[1:, :-1, 1:].reshape(-1),  # i101
             node_inds[:-1, 1:, 1:].reshape(-1),  # i011
-            node_inds[1:, :-1, :-1].reshape(-1), # i100
-            node_inds[:-1, :-1, 1:].reshape(-1)  # i001
+            node_inds[1:, :-1, :-1].reshape(-1),  # i100
+            node_inds[:-1, :-1, 1:].reshape(-1),  # i001
         ]
         e_triangs = np.c_[
             node_inds[1:, :-1, 1:].reshape(-1),  # i101
             node_inds[1:, 1:, :-1].reshape(-1),  # i110
             node_inds[:-1, 1:, 1:].reshape(-1),  # i011
-            node_inds[1:, 1:, 1:].reshape(-1)    # i111
+            node_inds[1:, 1:, 1:].reshape(-1),  # i111
         ]
         f_triangs = np.c_[
             node_inds[1:, :-1, 1:].reshape(-1),  # i101

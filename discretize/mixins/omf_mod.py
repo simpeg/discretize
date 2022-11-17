@@ -1,9 +1,11 @@
 import numpy as np
 import discretize
 
+
 def omf():
     """Lazy loading omf."""
     import omf
+
     return omf
 
 
@@ -150,6 +152,7 @@ class InterfaceOMF(object):
     ``discretize`` objects and `open mining format <https://www.seequent.com/the-open-mining-format/>`__ (OMF) objects.
     Examples include: meshes, models and data arrays.
     """
+
     def _tensor_mesh_to_omf(mesh, models=None):
         """
         Constructs an :class:`omf.VolumeElement` object of this tensor mesh and

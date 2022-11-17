@@ -6,6 +6,8 @@
 ``discretize`` 0.8.0 Release Notes
 ===================================
 
+May 12, 2022
+
 This minor release introduces a new mesh type to discretize, :class:`SimplexMesh`!
 
 ``SimplexMesh``

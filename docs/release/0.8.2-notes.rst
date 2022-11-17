@@ -6,6 +6,8 @@
 ``discretize`` 0.8.1 Release Notes
 ===================================
 
+August 17, 2022
+
 This patch release fixes a small bug in importing the ``importlib.util`` library
 
 Bug Fixes

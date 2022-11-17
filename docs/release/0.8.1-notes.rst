@@ -6,6 +6,8 @@
 ``discretize`` 0.8.1 Release Notes
 ===================================
 
+August 16, 2022
+
 This patch release, in addition to some small bug fixes and runtime improvements implements,
 also implements some missing functionality for cylindrical meshes.
 

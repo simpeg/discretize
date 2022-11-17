@@ -129,7 +129,9 @@ def setup_mesh(mesh_type, nC, nDim):
         elif "random" in mesh_type:
             h1 = np.random.rand(nC) * nC * 0.5 + nC * 0.5
             if "symmetric" in mesh_type:
-                h2 = [2 * np.pi, ]
+                h2 = [
+                    2 * np.pi,
+                ]
             else:
                 h2 = np.random.rand(nC) * nC * 0.5 + nC * 0.5
             h3 = np.random.rand(nC) * nC * 0.5 + nC * 0.5

@@ -96,7 +96,12 @@ import warnings
 
 
 class TreeMesh(
-    _TreeMesh, InnerProducts, DiffOperators, BaseTensorMesh, TreeMeshIO, InterfaceMixins,
+    _TreeMesh,
+    InnerProducts,
+    DiffOperators,
+    BaseTensorMesh,
+    TreeMeshIO,
+    InterfaceMixins,
 ):
     """Class for QuadTree (2D) and OcTree (3D) meshes.
 
@@ -135,6 +140,10 @@ class TreeMesh(
         - **{'0', 'C', 'N'}** a :class:`str` specifying whether the zero coordinate along
           each axis is the first node location ('0'), in the center ('C') or the last
           node location ('N') (see Examples).
+
+    diagonal_balance : bool, optional
+        Whether to balance cells along the diagonal of the tree during construction.
+        This will effect all calls to refine the tree.
 
     Examples
     --------
@@ -198,10 +207,10 @@ class TreeMesh(
     _items = {"h", "origin", "cell_state"}
 
     # inheriting stuff from BaseTensorMesh that isn't defined in _QuadTree
-    def __init__(self, h=None, origin=None, **kwargs):
+    def __init__(self, h=None, origin=None, diagonal_balance=False, **kwargs):
         if "x0" in kwargs:
             origin = kwargs.pop("x0")
-        super().__init__(h=h, origin=origin)
+        super().__init__(h=h, origin=origin, diagonal_balance=diagonal_balance)
 
         cell_state = kwargs.pop("cell_state", None)
         cell_indexes = kwargs.pop("cell_indexes", None)
@@ -612,7 +621,7 @@ class TreeMesh(
 
     @property
     def cell_state(self):
-        """ The current state of the cells on the mesh.
+        """The current state of the cells on the mesh.
 
         This represents the x, y, z indices of the cells in the base tensor mesh, as
         well as their levels. It can be used to reconstruct the mesh.

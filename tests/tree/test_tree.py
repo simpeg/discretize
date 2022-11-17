@@ -12,7 +12,7 @@ class TestSimpleQuadTree(unittest.TestCase):
         h2 = np.random.rand(nc) * nc * 0.5 + nc * 0.5
         h = [hi / np.sum(hi) for hi in [h1, h2]]  # normalize
         M = discretize.TreeMesh(h)
-        points = np.array([[0.1, 0.1, 0.3]])
+        points = np.array([[0.1, 0.1]])
         level = np.array([3])
 
         M.insert_cells(points, level)
@@ -337,6 +337,7 @@ class TestOcTree(unittest.TestCase):
         cell_2 = M[2]
         np.testing.assert_equal(cell_2.nodes, cell_nodes[2])
 
+
 class Test2DInterpolation(unittest.TestCase):
     def setUp(self):
         def topo(x):
@@ -431,7 +432,6 @@ class Test3DInterpolation(unittest.TestCase):
 
 
 class TestWrapAroundLevels(unittest.TestCase):
-
     def test_refine_func(self):
         mesh1 = discretize.TreeMesh((16, 16, 16))
         mesh2 = discretize.TreeMesh((16, 16, 16))

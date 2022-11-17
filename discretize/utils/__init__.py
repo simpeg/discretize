@@ -138,7 +138,10 @@ from discretize.utils.mesh_utils import (
     example_simplex_mesh,
 )
 from discretize.utils.curvilinear_utils import (
-  example_curvilinear_grid, volume_tetrahedron, face_info, index_cube
+    example_curvilinear_grid,
+    volume_tetrahedron,
+    face_info,
+    index_cube,
 )
 from discretize.utils.interpolation_utils import interpolation_matrix, volume_average
 from discretize.utils.coordinate_utils import (

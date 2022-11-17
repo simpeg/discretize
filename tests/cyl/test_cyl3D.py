@@ -90,6 +90,7 @@ def test_boundary_items():
     P_bf = mesh.project_face_to_boundary_face
     np.testing.assert_equal(mesh.boundary_faces, P_bf @ mesh.faces)
 
+
 # ----------------------- Test Grids and Counting --------------------------- #
 
 
@@ -356,11 +357,17 @@ class Deflation(unittest.TestCase):
         mesh = discretize.CylMesh([2, 5, 3])
 
         hangingF = np.hstack(
-            [getattr(mesh, "_ishanging_faces_{}".format(dim)) for dim in ["x", "y", "z"]]
+            [
+                getattr(mesh, "_ishanging_faces_{}".format(dim))
+                for dim in ["x", "y", "z"]
+            ]
         )
         self.assertTrue(np.all(mesh._face_areas_full[~hangingF] == mesh.area))
         hangingE = np.hstack(
-            [getattr(mesh, "_ishanging_edges_{}".format(dim)) for dim in ["x", "y", "z"]]
+            [
+                getattr(mesh, "_ishanging_edges_{}".format(dim))
+                for dim in ["x", "y", "z"]
+            ]
         )
         self.assertTrue(np.all(mesh._edge_lengths_full[~hangingE] == mesh.edge))
 

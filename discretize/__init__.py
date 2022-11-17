@@ -76,4 +76,5 @@ except ImportError:
     # warning here, but this case *should* be rare. discretize should be
     # installed properly!
     from datetime import datetime
-    __version__ = 'unknown-'+datetime.today().strftime('%Y%m%d')
+
+    __version__ = "unknown-" + datetime.today().strftime("%Y%m%d")

@@ -122,6 +122,7 @@ def deprecate_class(removal_version=None, new_location=None, future_warn=False):
         Warning = FutureWarning
     else:
         Warning = DeprecationWarning
+
     def decorator(cls):
         my_name = cls.__name__
         parent_name = cls.__bases__[0].__name__

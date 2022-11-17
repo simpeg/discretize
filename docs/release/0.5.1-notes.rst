@@ -6,6 +6,8 @@
 ``discretize`` 0.5.1 Release Notes
 ===================================
 
+September 4, 2020
+
 A small patch to fix a bug in the volume averaging operator when using
 meshes with different shaped bases, to address `#222 <https://github.com/simpeg/discretize/issues/222>`__.
 

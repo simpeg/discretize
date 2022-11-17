@@ -6,6 +6,8 @@
 ``discretize`` 0.4.13 Release Notes
 ===================================
 
+June 22, 2020
+
 This release contains some bug fixes:
 
 First, we have squashed a few bugs related to serializing the TreeMesh to a json

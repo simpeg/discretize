@@ -6,6 +6,8 @@
 ``discretize`` 0.7.0 Release Notes
 ===================================
 
+April 30, 2021
+
 This Minor release has several new features, including support for boundary conditions,
 quiver vector plotting for :func:`TreeMesh.plot_slice`, and a rather large change in
 removing the ``properties`` requirement from ``discretize``.

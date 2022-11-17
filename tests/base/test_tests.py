@@ -68,7 +68,7 @@ class TestAssertIsAdjoint:
         )
 
 
-@pytest.mark.skipif(not sys.platform.startswith('linux'), reason="Not Linux.")
+@pytest.mark.skipif(not sys.platform.startswith("linux"), reason="Not Linux.")
 def test_import_time():
     # Relevant for the CLI: How long does it take to import?
     cmd = ["time", "-f", "%U", "python", "-c", "import discretize"]
