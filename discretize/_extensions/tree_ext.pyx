@@ -521,9 +521,9 @@ cdef class _TreeMesh:
         ----------
         points : (N, dim) array_like
             The centers of the refinement balls
-        radii : (N) array_like
+        radii : float or (N) array_like of float
             A 1D array defining the radius for each ball
-        levels : (N) array_like of int
+        levels : int or (N) array_like of int
             A 1D array defining the maximum refinement level for each ball
         finalize : bool, optional
             Whether to finalize after refining
@@ -566,12 +566,19 @@ cdef class _TreeMesh:
         if points.shape[1] != self.dim:
             raise ValueError(f"points array must be (N, {self.dim})")
         cdef double[:, :] cs = points
-        cdef double[:] rs = np.require(np.atleast_1d(radii), dtype=np.float64,
+        radii = np.require(np.atleast_1d(radii), dtype=np.float64,
                                        requirements='C')
+        if radii.shape[0] == 1:
+           radii = np.full(points.shape[0], radii[0], dtype=np.float64)
+        cdef double[:] rs = radii
         if points.shape[0] != rs.shape[0]:
             raise ValueError("radii length must match the points array's first dimension")
-        cdef int[:] ls = np.require(np.atleast_1d(levels), dtype=np.int32,
+
+        levels = np.require(np.atleast_1d(levels), dtype=np.int32,
                                     requirements='C')
+        if levels.shape[0] == 1:
+            levels = np.full(points.shape[0], levels[0], dtype=np.int32)
+        cdef int[:] ls = levels
         if points.shape[0] != ls.shape[0]:
             raise ValueError("level length must match the points array's first dimension")
 
@@ -603,11 +610,11 @@ cdef class _TreeMesh:
             The minimum location of the boxes
         x1s : (N, dim) array_like
             The maximum location of the boxes
-        levels : (N) array_like of int
+        levels : int or (N) array_like of int
             The level to refine intersecting cells to
         finalize : bool, optional
             Whether to finalize after refining
-        diagonal_balance : bool or None, optional
+        diagonal_balance : None or bool, optional
             Whether to balance cells diagonally in the refinement, `None` implies using
             the same setting used to instantiate the TreeMesh`.
 
@@ -640,7 +647,6 @@ cdef class _TreeMesh:
         >>> rect = patches.Rectangle([0.8, 0.8], 0.1, 0.2, facecolor='none', edgecolor='k', linewidth=3)
         >>> ax.add_patch(rect)
         >>> plt.show()
-
         """
         x0s = np.require(np.atleast_2d(x0s), dtype=np.float64,
                             requirements='C')
@@ -654,8 +660,11 @@ cdef class _TreeMesh:
             raise ValueError(f"x0s and x1s must have the same length")
         cdef double[:, :] x0 = x0s
         cdef double[:, :] x1 = x1s
-        cdef int[:] ls = np.require(np.atleast_1d(levels), dtype=np.int32,
+        levels = np.require(np.atleast_1d(levels), dtype=np.int32,
                                     requirements='C')
+        if levels.shape[0] == 1:
+            levels = np.full(x0.shape[0], levels[0], dtype=np.int32)
+        cdef int[:] ls = levels
         if x0.shape[0] != ls.shape[0]:
             raise ValueError("level length must match the points array's first dimension")
 

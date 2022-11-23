@@ -94,6 +94,7 @@ import numpy as np
 import scipy.sparse as sp
 import warnings
 from discretize.utils.code_utils import deprecate_property
+from scipy.spatial import Delaunay
 
 
 class TreeMesh(
@@ -358,6 +359,310 @@ class TreeMesh(
         BaseTensorMesh.origin.fset(self, value)
         # then update the TreeMesh with the hidden value
         self._set_origin(self._origin)
+
+    def refine_bounding_box(self, points, level, padding_cells_by_level=None, finalize=True, diagonal_balance=None):
+        """Refine within a bounding box based on the maximum and minimum extent of scattered points.
+
+        This function refines the tree mesh based on the bounding box defined by the
+        maximum and minimum extent of the scattered input `points`. It will refine
+        the tree mesh for each level given.
+
+        It also optionally pads the bounding box at each level based on the number of
+        padding cells at each dimension.
+
+        Parameters
+        ----------
+        points : (N, dim) array_like
+            The bounding box will be the maximum and minimum extent of these points
+        level : (n_level) array_like of int
+            The level of the treemesh to refine the bounding box to. If an array it will
+            refine the box to each level (mostly useful in combination with `padding_cells_by_level`)
+            Negative values index backwards, (e.g. `-1` is `max_level`).
+        padding_cells_by_level : None or (n_level) iterable, optional
+            The number of cells to pad the bounding box at each level of refinement.
+            Each entry may be either a single number, which means to pad equally in each
+            dimension, or it may be an (`dim`) `array_like` for variable padding along
+            each dimension. None implies no padding.
+        finalize : bool, optional
+            Whether to finalize the mesh after the call.
+        diagonal_balance : None or bool, optional
+            Whether to balance cells diagonally in the refinement, `None` implies using
+            the same setting used to instantiate the TreeMesh`.
+
+        Examples
+        --------
+        Given a set of points, we want to refine the tree mesh with the bounding box
+        that surrounds those points. The arbitrary points we use for this example are
+        uniformly scattered between [3/8, 5/8] in the first and second dimension.
+
+        >>> import discretize
+        >>> import matplotlib.pyplot as plt
+        >>> import matplotlib.patches as patches
+        >>> mesh = discretize.TreeMesh([32, 32])
+        >>> points = np.random.rand(20, 2) * 0.25 + 3/8
+
+        Now we want to refine to the maximum level, with a no padding the in `x`
+        direction and `2` cells in `y`, and the second highest level we want 2 padding
+        cells in each direction equally beyond that.
+
+        >>> levels = [-1, -2]
+        >>> padding = [[0, 2], 2]
+        >>> mesh.refine_bounding_box(points, levels, padding)
+
+        For demonstration we, overlay the bounding box to show the effects of padding.
+
+        >>> ax = mesh.plot_grid()
+        >>> rect = patches.Rectangle([3/8, 3/8], 1/4, 1/4, facecolor='none', edgecolor='r', linewidth=3)
+        >>> ax.add_patch(rect)
+        >>> plt.show()
+        """
+        bsw = np.min(np.atleast_2d(xyz), axis=0)
+        tnw = np.max(np.atleast_2d(xyz), axis=0)
+        level = np.atleast_1d(level)
+
+        # pad based on the number of cells at each level
+        if padding_cells_by_level is None:
+            padding_cells_by_level = np.zeros_like(level)
+        padding_cells_by_level = np.asarray(padding_cells_by_level, dtype=object)
+        padding_cells_by_level = np.atleast_1d(padding_cells_by_level)
+        if len(level) != len(padding_cells_by_level):
+            raise ValueError("level and padding_cells_by_level must be the same length")
+        if np.any(level > self.max_level):
+            raise IndexError(f"Level beyond max octree level, {self.max_level}")
+        sorted = np.argsort(level)[::-1]
+        level = level[sorted]
+        padding_cells_by_level = padding_cells_by_level[sorted]
+
+        h_min = np.r_[[h.min() for h in self.h]]
+        x0 = []
+        xF = []
+        for lv, n_pad in zip(level, padding_cells_by_level):
+            if lv < 0:
+                lv = (self.max_level + 1) - (abs(lv) % (self.max_level + 1))
+            padding_at_level = n_pad * h_min * 2 ** (self.max_level - lv)
+            bsw = bsw - padding_at_level
+            tnw = tnw + padding_at_level
+            x0.append(bsw)
+            xF.append(tnw)
+
+        self.refine_box(x0, xF, level, finalize=finalize, diagonal_balance=diagonal_balance)
+
+    def refine_points(self, points, level, padding_cells_by_level=None, finalize=True, diagonal_balance=None):
+        """Refine the mesh at given points to the prescribed level.
+
+        This function refines the tree mesh around the `points`. It will refine
+        the tree mesh for each level given. It also optionally radially pads around each
+        point at each level with the number of padding cells given.
+
+        Parameters
+        ----------
+        points : (N, dim) array_like
+            The points to be refined around.
+        level : int or (n_level) array_like of int
+            The level of the tree mesh to refine to. If an array, it will
+            refine at each point to each level (mostly useful in combination with
+            `padding_cells_by_level`). Negative values index backwards, (e.g. `-1` is
+            `max_level`).
+        padding_cells_by_level : None or (n_level) iterable, optional
+            The number of cells each level to pad around the point. The base cell size
+            is the largest value amongst the smallest cell widths for each dimension.
+            None implies no padding.
+        finalize : bool, optional
+            Whether to finalize the mesh after the call.
+        diagonal_balance : None or bool, optional
+            Whether to balance cells diagonally in the refinement, `None` implies using
+            the same setting used to instantiate the TreeMesh`.
+
+        Examples
+        --------
+        Given a set of points, we want to refine the tree mesh around these points to
+        a prescribed level with a certain amount of padding.
+
+        >>> import discretize
+        >>> import matplotlib.pyplot as plt
+        >>> import matplotlib.patches as patches
+        >>> mesh = discretize.TreeMesh([32, 32])
+
+        Now we want to refine to the maximum level with 1 cell padding around the point,
+        and then refine at the second highest level with at least 3 cell beyond that.
+
+        >>> points = np.array([[0.1, 0.3], [0.6, 0.8]])
+        >>> levels = [-1, -2]
+        >>> padding = [1, 3]
+        >>> mesh.refine_points(points, levels, padding)
+
+        >>> ax = mesh.plot_grid()
+        >>> ax.scatter(*points.T, color='C1')
+        >>> plt.show()
+        """
+        level = np.atleast_1d(level)
+
+        # pad based on the number of cells at each level
+        if padding_cells_by_level is None:
+            padding_cells_by_level = np.zeros_like(level)
+        padding_cells_by_level = np.atleast_1d(padding_cells_by_level)
+        if len(level) != len(padding_cells_by_level):
+            raise ValueError("level and padding_cells_by_level must be the same length")
+        if np.any(level > self.max_level):
+            raise IndexError(f"Level beyond max octree level, {self.max_level}")
+        sorted = np.argsort(level)[::-1]
+        level = level[sorted]
+        padding_cells_by_level = padding_cells_by_level[sorted]
+
+        h_min = np.max([h.min() for h in self.h])
+        radius_at_level = 0.0
+        for lv, n_pad in zip(level, padding_cells_by_level):
+            if lv < 0:
+                lv = (self.max_level + 1) - (abs(lv) % (self.max_level + 1))
+            radius_at_level += n_pad * h_min * 2 ** (self.max_level - lv)
+            self.refine_ball(
+                points, radius_at_level, lv, finalize=False, diagonal_balance=diagonal_balance
+            )
+
+        if finalize:
+            self.finalize()
+
+    def refine_surface(self, xyz, level, padding_cells_by_level=None, pad_up=False, pad_down=True, finalize=True, diagonal_balance=None):
+        """Refine along a surface triangulated from xyz to the prescribed level.
+
+        This function refines the mesh based on a triangulated surface from the input
+        points. Every cell that intersects the surface will be refined to the given
+        level.
+
+        It also optionally pads the bounding box at each level based on the number of
+        padding cells at each dimension.
+
+        Parameters
+        ----------
+        xyz : (N, dim) array_like
+            The points defining the surface. Will be triangulated along the horizontal
+            dimensions.
+        level : int or (n_level) array_like of int
+            The level of the tree mesh to refine to. If an array, it will
+            refine at the surface to each level (mostly useful in combination with
+            `padding_cells_by_level`). Negative values index backwards, (e.g. `-1` is
+            `max_level`).
+        padding_cells_by_level : None or (n_level) iterable, optional
+            The number of cells to pad the surface with at each level of refinement.
+            Each entry may be either a single number, which means to pad equally in each
+            dimension, or it may be an (`dim`) `array_like` for variable padding along
+            each dimension. None implies no padding.
+        pad_up : bool, optional
+            Whether to pad above the surface.
+        pad_down : bool, optional
+            Whether to pad below the surface.
+        finalize : bool, optional
+            Whether to finalize the mesh after the call.
+        diagonal_balance : None or bool, optional
+            Whether to balance cells diagonally in the refinement, `None` implies using
+            the same setting used to instantiate the TreeMesh`.
+
+        Examples
+        --------
+        In 2D we define the surface as a line segment, which we would like to refine
+        along.
+
+        >>> import discretize
+        >>> import matplotlib.pyplot as plt
+        >>> import matplotlib.patches as patches
+        >>> mesh = discretize.TreeMesh([32, 32])
+
+        This surface is a simple sine curve. Which we would like to pad with at least
+        2 cells vertically below at the maximum level, with 3 cells below that at the
+        second highest level.
+
+        >>> x = np.linspace(0.2, 0.8, 51)
+        >>> z = 0.25*np.sin(2*np.pi*x)+0.5
+        >>> xz = np.c_[x, z]
+        >>> mesh.refine_surface(xz, [-1, -2], [[0, 2], [0, 3]])
+
+        >>> ax = mesh.plot_grid()
+        >>> ax.plot(x, z, color='C1')
+        >>> plt.show()
+
+        In 3D we define a grid of surface locations with there corresponding elevations.
+        In this example we pad 2 cells at the finest level below the surface, and 3
+        cells down at the next level.
+
+        >>> mesh = discretize.TreeMesh([32, 32, 32])
+        >>> x, y = np.mgrid[0.2:0.8:21j, 0.2:0.8:21j]
+        >>> z = 0.125*np.sin(2*np.pi*x) + 0.5 + 0.125 * np.cos(2 * np.pi * y)
+        >>> points = np.stack([x, y, z], axis=-1).reshape(-1, 3)
+        >>> mesh.refine_surface(points, [-1, -2], [[0, 0, 2], [0, 0, 3]])
+
+        >>> v = mesh.cell_levels_by_index(np.arange(mesh.n_cells))
+        >>> fig, axs = plt.subplots(1, 3, figsize=(12,4))
+        >>> mesh.plot_slice(v, ax=axs[0], normal='x', grid=True, clim=[2, 5])
+        >>> mesh.plot_slice(v, ax=axs[1], normal='y', grid=True, clim=[2, 5])
+        >>> mesh.plot_slice(v, ax=axs[2], normal='z', grid=True, clim=[2, 5])
+        >>> plt.show()
+
+        """
+        level = np.atleast_1d(level)
+        # pad based on the number of cells at each level
+        if padding_cells_by_level is None:
+            padding_cells_by_level = np.zeros_like(level)
+        padding_cells_by_level = np.asarray(padding_cells_by_level, dtype=object)
+        padding_cells_by_level = np.atleast_1d(padding_cells_by_level)
+        if len(level) != len(padding_cells_by_level):
+            raise ValueError("level and padding_cells_by_level must be the same length")
+        if np.any(level > self.max_level):
+            raise IndexError(f"Level beyond max octree level, {self.max_level}")
+        sorted = np.argsort(level)[::-1]
+        level = level[sorted]
+        padding_cells_by_level = padding_cells_by_level[sorted]
+
+        if self.dim == 2:
+            sorted = np.argsort(xyz[:, 0])
+            xyz = xyz[sorted]
+            n_ps = len(xyz)
+            inds = np.arange(n_ps)
+            simps1 = np.c_[inds[:-1], inds[1:], inds[:-1]] + [0, 0, n_ps]
+            simps2 = np.c_[inds[:-1], inds[1:], inds[1:]] + [n_ps, n_ps, 0]
+            simps = np.r_[simps1, simps2]
+        else:
+            if isinstance(xyz, tuple):
+                xyz, simps = xyz
+            else:
+                triang = Delaunay(xyz[:, :2])
+                simps = triang.simplices
+            n_ps = len(xyz)
+            simps1 = np.c_[
+                simps[:, 0], simps[:, 1], simps[:, 2], simps[:, 0]
+            ] + [0, 0, 0, n_ps]
+            simps2 = np.c_[
+                simps[:, 0], simps[:, 1], simps[:, 2], simps[:, 1]
+            ] + [n_ps, n_ps, n_ps, 0]
+            simps3 = np.c_[
+                simps[:, 1], simps[:, 2], simps[:, 0], simps[:, 2]
+            ] + [0, 0, n_ps, n_ps]
+            simps = np.r_[simps1, simps2, simps3]
+
+        # calculate bounding box for padding
+        bb_min = np.min(xyz, axis=0)[:-1]
+        bb_max = np.max(xyz, axis=0)[:-1]
+        half_width = (bb_max - bb_min) / 2
+        center = (bb_max + bb_min) / 2
+        points = np.empty((2, n_ps, self.dim))
+        points[:, :, -1] = xyz[:, -1]
+
+        h_min = np.r_[[h.min() for h in self.h]]
+        pad = 0.0
+        for lv, n_pad in zip(level, padding_cells_by_level):
+            if lv < 0:
+                lv = (self.max_level + 1) - (abs(lv) % (self.max_level + 1))
+            pad += n_pad * h_min * 2 ** (self.max_level - lv)
+            if pad_up:
+                points[0, :, -1] = xyz[:, -1] + pad[-1]
+            if pad_down:
+                points[1, :, -1] = xyz[:, -1] - pad[-1]
+            expansion = (half_width + pad[:-1]) / half_width
+            points[:, :, :-1] = expansion * (xyz[:, :-1] - center) + center
+            tetrahedrons = points.reshape((-1, self.dim))[simps]
+            self.refine_tetrahedron(tetrahedrons, lv, finalize=False, diagonal_balance=diagonal_balance)
+
+        if finalize:
+            self.finalize()
 
     @property
     def vntF(self):
