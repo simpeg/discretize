@@ -367,7 +367,7 @@ def test_box_errors():
 
     # incorrect number of levels
     with pytest.raises(ValueError):
-        mesh.refine_box(x0s2d, x1s2d, [mesh.max_level], finalize=False)
+        mesh.refine_box(x0s2d, x1s2d, [-1, -1, -1], finalize=False)
 
 
 def test_ball_errors():
