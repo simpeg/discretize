@@ -400,3 +400,106 @@ def test_insert_errors():
     # incorrect number of levels
     with pytest.raises(ValueError):
         mesh.insert_cells(x0s2d, [1, 1, 3], finalize=False)
+
+
+def test_bounding_box():
+    mesh1 = discretize.TreeMesh([32, 32])
+
+    xyz = np.random.rand(20, 2)
+    mesh1.refine_bounding_box(xyz, -1, 2)
+
+    padding = (2/32)
+    x0 = xyz.min(axis=0) - padding
+    xF = xyz.max(axis=0) + padding
+
+    mesh2 = discretize.TreeMesh([32, 32])
+    mesh2.refine_box(x0, xF, -1)
+
+    assert mesh1.equals(mesh2)
+
+
+def test_bounding_box_errors():
+    mesh1 = discretize.TreeMesh([32, 32])
+
+    xyz = np.random.rand(20, 3)
+    with pytest.raises(ValueError):
+        mesh1.refine_bounding_box(xyz, [-1, -2], [2, 3, 4])
+
+    with pytest.raises(IndexError):
+        mesh1.refine_bounding_box(xyz, 20)
+
+
+def test_refine_points():
+    mesh1 = discretize.TreeMesh([32, 32])
+    point = [0.5, 0.5]
+    level = -1
+    n_cell_pad = 3
+    mesh1.refine_points(point, level, n_cell_pad)
+
+    ball_rad = 1/32 * n_cell_pad
+    mesh2 = discretize.TreeMesh([32, 32])
+    mesh2.refine_ball(point, ball_rad, level)
+
+    assert mesh1.equals(mesh2)
+
+
+def test_refine_points_errors():
+    mesh1 = discretize.TreeMesh([32, 32])
+
+    point = [0.5, 0.5]
+
+    with pytest.raises(ValueError):
+        mesh1.refine_points(point, [-1, -2], [2, 2, 2])
+
+    with pytest.raises(IndexError):
+        mesh1.refine_points(point, [20, -2], [2, 2])
+
+
+def test_refine_surface2D():
+
+    mesh1 = discretize.TreeMesh([32, 32])
+    points = [[0.3, 0.3], [0.7, 0.3]]
+    mesh1.refine_surface(points, -1, [[0, 2]], pad_up=True, pad_down=True)
+
+    mesh2 = discretize.TreeMesh([32, 32])
+    x0 = [0.3, 0.3 - 2/32]
+    xF = [0.7, 0.3 + 2/32]
+    mesh2.refine_box(x0, xF, -1)
+
+    assert mesh1.equals(mesh2)
+
+
+def test_refine_surface3D():
+    mesh1 = discretize.TreeMesh([32, 32, 32])
+    points = [
+        [0.3, 0.3, 0.5],
+        [0.7, 0.3, 0.5],
+        [0.3, 0.7, 0.5],
+        [0.7, 0.7, 0.5],
+    ]
+    mesh1.refine_surface(points, -1, [[1, 2, 3]], pad_up=True, pad_down=True)
+
+    mesh2 = discretize.TreeMesh([32, 32, 32])
+    pad = np.array([1, 2, 3])/32
+    x0 = [0.3, 0.3, 0.5] - pad
+    xF = [0.7, 0.7, 0.5] + pad
+    mesh2.refine_box(x0, xF, -1)
+
+    assert mesh1.equals(mesh2)
+
+    mesh3 = discretize.TreeMesh([32, 32, 32])
+    simps = [[0, 1, 2], [1, 2, 3]]
+    mesh3.refine_surface((points, simps), -1, [[1, 2, 3]], pad_up=True, pad_down=True)
+
+    assert mesh1.equals(mesh3)
+
+
+def test_refine_surface_errors():
+    mesh = discretize.TreeMesh([32, 32])
+    points = [[0.3, 0.3], [0.7, 0.3]]
+
+    with pytest.raises(ValueError):
+        mesh.refine_surface(points, [-1, -2], [0, 1, 2, 3])
+
+    with pytest.raises(IndexError):
+        mesh.refine_surface(points, 20)

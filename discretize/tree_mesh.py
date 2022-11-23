@@ -403,7 +403,7 @@ class TreeMesh(
 
         Now we want to refine to the maximum level, with a no padding the in `x`
         direction and `2` cells in `y`, and the second highest level we want 2 padding
-        cells in each direction equally beyond that.
+        cells in each direction beyond that.
 
         >>> levels = [-1, -2]
         >>> padding = [[0, 2], 2]
@@ -464,7 +464,7 @@ class TreeMesh(
             `padding_cells_by_level`). Negative values index backwards, (e.g. `-1` is
             `max_level`).
         padding_cells_by_level : None or (n_level) iterable, optional
-            The number of cells each level to pad around the point. The base cell size
+            The number of cells at each level to pad around the point. The base cell size
             is the largest value amongst the smallest cell widths for each dimension.
             None implies no padding.
         finalize : bool, optional
@@ -529,14 +529,16 @@ class TreeMesh(
         points. Every cell that intersects the surface will be refined to the given
         level.
 
-        It also optionally pads the bounding box at each level based on the number of
-        padding cells at each dimension.
+        It also optionally pads the surface at each level based on the number of
+        padding cells at each dimension. It does so by stretching the bounding box of
+        the surface in each dimension.
 
         Parameters
         ----------
-        xyz : (N, dim) array_like
+        xyz : (N, dim) array_like or tuple
             The points defining the surface. Will be triangulated along the horizontal
-            dimensions.
+            dimensions. You are able to supply your own triangulation in 3D by inputing
+            a tuple of (`xyz`, `triangle_indices`).
         level : int or (n_level) array_like of int
             The level of the tree mesh to refine to. If an array, it will
             refine at the surface to each level (mostly useful in combination with
@@ -613,6 +615,7 @@ class TreeMesh(
         padding_cells_by_level = padding_cells_by_level[sorted]
 
         if self.dim == 2:
+            xyz = np.asarray(xyz)
             sorted = np.argsort(xyz[:, 0])
             xyz = xyz[sorted]
             n_ps = len(xyz)
@@ -623,7 +626,10 @@ class TreeMesh(
         else:
             if isinstance(xyz, tuple):
                 xyz, simps = xyz
+                xyz = np.asarray(xyz)
+                simps = np.asarray(simps)
             else:
+                xyz = np.asarray(xyz)
                 triang = Delaunay(xyz[:, :2])
                 simps = triang.simplices
             n_ps = len(xyz)
