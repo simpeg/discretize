@@ -721,7 +721,7 @@ def refine_tree_xyz(
         warnings.warn(
             "The radial option is deprecated as of `0.9.0` please update your code to "
             "use the `TreeMesh.refine_points` functionality. It will be removed in a "
-            "future version of discretize."
+            "future version of discretize.",
             DeprecationWarning,
         )
 
