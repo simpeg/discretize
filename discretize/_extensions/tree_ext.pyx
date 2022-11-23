@@ -2242,7 +2242,6 @@ cdef class _TreeMesh:
         of the x and y-boundary cells.
 
         >>> from discretize import TreeMesh
-        >>> from discretize.utils import refine_tree_xyz
         >>> import numpy as np
         >>> import matplotlib.pyplot as plt
 
@@ -2341,7 +2340,6 @@ cdef class _TreeMesh:
         of the x and y-boundary faces.
 
         >>> from discretize import TreeMesh
-        >>> from discretize.utils import refine_tree_xyz
         >>> import numpy as np
         >>> import matplotlib.pyplot as plt
 

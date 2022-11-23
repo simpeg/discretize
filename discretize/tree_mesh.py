@@ -416,8 +416,8 @@ class TreeMesh(
         >>> ax.add_patch(rect)
         >>> plt.show()
         """
-        bsw = np.min(np.atleast_2d(xyz), axis=0)
-        tnw = np.max(np.atleast_2d(xyz), axis=0)
+        bsw = np.min(np.atleast_2d(points), axis=0)
+        tnw = np.max(np.atleast_2d(points), axis=0)
         level = np.atleast_1d(level)
 
         # pad based on the number of cells at each level
