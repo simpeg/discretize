@@ -719,10 +719,10 @@ def refine_tree_xyz(
         # padding = octree_levels[non_zeros]
         # mesh.refine_points(xyz, levels, padding, finalize=finalize,)
         warnings.warn(
-            DeprecationWarning,
             "The radial option is deprecated as of `0.9.0` please update your code to "
             "use the `TreeMesh.refine_points` functionality. It will be removed in a "
             "future version of discretize."
+            DeprecationWarning,
         )
 
         # Compute the outer limits of each octree level
@@ -742,10 +742,10 @@ def refine_tree_xyz(
 
     elif method.lower() == "surface":
         warnings.warn(
-            DeprecationWarning,
             "The surface option is deprecated as of `0.9.0` please update your code to "
             "use the `TreeMesh.refine_surface` functionality. It will be removed in a "
-            "future version of discretize."
+            "future version of discretize.",
+            DeprecationWarning,
         )
         # padding = np.zeros((len(octree_levels), mesh.dim))
         # padding[:, -1] = np.maximum(octree_levels - 1, 0)
@@ -864,10 +864,10 @@ def refine_tree_xyz(
 
     elif method.lower() == "box":
         warnings.warn(
-            DeprecationWarning,
             "The box option is deprecated as of `0.9.0` please update your code to "
             "use the `TreeMesh.refine_bounding_box` functionality. It will be removed in a "
-            "future version of discretize."
+            "future version of discretize.",
+            DeprecationWarning,
         )
         # padding = np.zeros((len(octree_levels), mesh.dim))
         # padding[:, -1] = np.maximum(octree_levels - 1, 0)
