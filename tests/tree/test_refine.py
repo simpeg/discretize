@@ -452,7 +452,7 @@ def test_refine_points_errors():
         mesh1.refine_points(point, [-1, -2], [2, 2, 2])
 
     with pytest.raises(IndexError):
-        mesh1.refine_points(point, [20, -2], [2, 2])
+        mesh1.refine_points(point, [20, -2])
 
 
 def test_refine_surface2D():
