@@ -62,9 +62,8 @@ xy = np.c_[mkvc(xp), mkvc(yp)]  # mkvc creates vectors
 
 # Discretize to finest cell size within rectangular box, with padding in the z direction
 # at the finest and second finest levels.
-levels = [-1, -2]
 padding = [[0, 2], [0, 2]]
-mesh.refine_bounding_box(xy, levels, padding)
+mesh.refine_bounding_box(xy, level=-1, padding_cells_by_level=padding)
 
 mesh.plotGrid(show_it=True)
 
@@ -102,15 +101,14 @@ mesh = TreeMesh([hx, hy], x0="CC")
 xx = mesh.vectorNx
 yy = -3 * np.exp((xx ** 2) / 100 ** 2) + 50.0
 pts = np.c_[mkvc(xx), mkvc(yy)]
-levels = [-1, -2]
 padding = [[0, 2], [0, 2]]
-mesh.refine_surface(pts, levels, padding, finalize=False)
+mesh.refine_surface(pts, padding_cells_by_level=padding, finalize=False)
 
 # Refine mesh near points
 xx = np.array([0.0, 10.0, 0.0, -10.0])
 yy = np.array([-20.0, -10.0, 0.0, -10])
 pts = np.c_[mkvc(xx), mkvc(yy)]
-mesh.refine_points(pts, [-1, -2], [2, 2], finalize=False)
+mesh.refine_points(pts, padding_cells_by_level=[2, 2], finalize=False)
 
 mesh.finalize()
 
@@ -149,15 +147,14 @@ mesh = TreeMesh([hx, hy], x0="CC")
 xx = mesh.vectorNx
 yy = -3 * np.exp((xx ** 2) / 100 ** 2) + 50.0
 pts = np.c_[mkvc(xx), mkvc(yy)]
-levels = [-1 , -2]
 padding = [[0, 2], [0, 2]]
-mesh.refine_surface(pts, levels, padding, finalize=False)
+mesh.refine_surface(pts, padding_cells_by_level=padding, finalize=False)
 
 # Refine near points
 xx = np.array([0.0, 10.0, 0.0, -10.0])
 yy = np.array([-20.0, -10.0, 0.0, -10])
 pts = np.c_[mkvc(xx), mkvc(yy)]
-mesh.refine_points(pts, [-1, -2], [2, 2], finalize=False)
+mesh.refine_points(pts, padding_cells_by_level=[2, 2], finalize=False)
 
 mesh.finalize()
 
@@ -214,14 +211,13 @@ mesh = TreeMesh([hx, hy, hz], x0="CCC")
 [xx, yy] = np.meshgrid(mesh.vectorNx, mesh.vectorNy)
 zz = -3 * np.exp((xx ** 2 + yy ** 2) / 100 ** 2) + 50.0
 pts = np.c_[mkvc(xx), mkvc(yy), mkvc(zz)]
-levels = [-1, -2]
 padding = [[0, 0, 2], [0, 0, 2]]
-mesh.refine_surface(pts, levels, padding, finalize=False)
+mesh.refine_surface(pts, padding_cells_by_level=padding, finalize=False)
 
 # Refine box
 xp, yp, zp = np.meshgrid([-40.0, 40.0], [-40.0, 40.0], [-60.0, 0.0])
 xyz = np.c_[mkvc(xp), mkvc(yp), mkvc(zp)]
-mesh.refine_bounding_box(xyz, levels, padding, finalize=False)
+mesh.refine_bounding_box(xyz, padding_cells_by_level=padding, finalize=False)
 mesh.finalize()
 
 # The bottom west corner

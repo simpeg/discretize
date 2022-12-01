@@ -685,6 +685,163 @@ void Cell::refine_triangle(
     }
 }
 
+void Cell::refine_vert_triang_prism(
+  node_map_t& nodes,
+    double* x0, double* x1, double* x2, double h,
+    double* e0, double* e1, double* e2, double* t_norm,
+    int_t p_level, double *xs, double *ys, double* zs, bool diag_balance
+){
+    // Return If I'm at max_level or p_level
+    if (level >= p_level || level == max_level){
+        return;
+    }
+    // check all the AABB faces
+    double v0[3], v1[3], v2[3], half[3];
+    double vmin, vmax;
+    double p0, p1, p2, p3, pmin, pmax, rad;
+    for(int_t i=0; i < n_dim; ++i){
+        v0[i] = x0[i] - location[i];
+        v1[i] = x1[i] - location[i];
+        vmin = std::min(v0[i], v1[i]);
+        vmax = std::max(v0[i], v1[i]);
+        v2[i] = x2[i] - location[i];
+        vmin = std::min(vmin, v2[i]);
+        vmax = std::max(vmax, v2[i]);
+        if(i == 2){
+            vmax += h;
+        }
+        half[i] = location[i] - points[0]->location[i];
+
+        // Bounding box check
+        if (vmin > half[i] || vmax < -half[i]){
+            return;
+        }
+    }
+    // first do the 3 edge cross tests that apply in 2D and 3D
+
+    // edge 0 cross z_hat
+    //p0 = e0[1] * v0[0] - e0[0] * v0[1];
+    p1 = e0[1] * v1[0] - e0[0] * v1[1];
+    p2 = e0[1] * v2[0] - e0[0] * v2[1];
+    pmin = std::min(p1, p2);
+    pmax = std::max(p1, p2);
+    rad = std::abs(e0[1]) * half[0] + std::abs(e0[0]) * half[1];
+    if (pmin > rad || pmax < -rad){
+        return;
+    }
+
+    // edge 1 cross z_hat
+    p0 = e1[1] * v0[0] - e1[0] * v0[1];
+    p1 = e1[1] * v1[0] - e1[0] * v1[1];
+    //p2 = e1[1] * v2[0] - e1[0] * v2[1];
+    pmin = std::min(p0, p1);
+    pmax = std::max(p0, p1);
+    rad = std::abs(e1[1]) * half[0] + std::abs(e1[0]) * half[1];
+    if (pmin > rad || pmax < -rad){
+        return;
+    }
+
+    // edge 2 cross z_hat
+    //p0 = e2[1] * v0[0] - e2[0] * v0[1];
+    p1 = e2[1] * v1[0] - e2[0] * v1[1];
+    p2 = e2[1] * v2[0] - e2[0] * v2[1];
+    pmin = std::min(p1, p2);
+    pmax = std::max(p1, p2);
+    rad = std::abs(e2[1]) * half[0] + std::abs(e2[0]) * half[1];
+    if (pmin > rad || pmax < -rad){
+        return;
+    }
+
+    // edge 0 cross x_hat
+    p0 = e0[2] * v0[1] - e0[1] * v0[2];
+    p1 = e0[2] * v0[1] - e0[1] * (v0[2] + h);
+    p2 = e0[2] * v2[1] - e0[1] * v2[2];
+    p3 = e0[2] * v2[1] - e0[1] * (v2[2] + h);
+    pmin = std::min(std::min(std::min(p0, p1), p2), p3);
+    pmax = std::max(std::max(std::max(p0, p1), p2), p3);
+    rad = std::abs(e0[2]) * half[1] + std::abs(e0[1]) * half[2];
+    if (pmin > rad || pmax < -rad){
+        return;
+    }
+    // edge 0 cross y_hat
+    p0 = -e0[2] * v0[0] + e0[0] * v0[2];
+    p1 = -e0[2] * v0[0] + e0[0] * (v0[2] + h);
+    p2 = -e0[2] * v2[0] + e0[0] * v2[2];
+    p3 = -e0[2] * v2[0] + e0[0] * (v2[2] + h);
+    pmin = std::min(std::min(std::min(p0, p1), p2), p3);
+    pmax = std::max(std::max(std::max(p0, p1), p2), p3);
+    rad = std::abs(e0[2]) * half[0] + std::abs(e0[0]) * half[2];
+    if (pmin > rad || pmax < -rad){
+        return;
+    }
+    // edge 1 cross x_hat
+    p0 = e1[2] * v0[1] - e1[1] * v0[2];
+    p1 = e1[2] * v0[1] - e1[1] * (v0[2] + h);
+    p2 = e1[2] * v2[1] - e1[1] * v2[2];
+    p3 = e1[2] * v2[1] - e1[1] * (v2[2] + h);
+    pmin = std::min(std::min(std::min(p0, p1), p2), p3);
+    pmax = std::max(std::max(std::max(p0, p1), p2), p3);
+    rad = std::abs(e1[2]) * half[1] + std::abs(e1[1]) * half[2];
+    if (pmin > rad || pmax < -rad){
+        return;
+    }
+    // edge 1 cross y_hat
+    p0 = -e1[2] * v0[0] + e1[0] * v0[2];
+    p1 = -e1[2] * v0[0] + e1[0] * (v0[2] + h);
+    p2 = -e1[2] * v2[0] + e1[0] * v2[2];
+    p3 = -e1[2] * v2[0] + e1[0] * (v2[2] + h);
+    pmin = std::min(std::min(std::min(p0, p1), p2), p3);
+    pmax = std::max(std::max(std::max(p0, p1), p2), p3);
+    rad = std::abs(e1[2]) * half[0] + std::abs(e1[0]) * half[2];
+    if (pmin > rad || pmax < -rad){
+        return;
+    }
+    // edge 2 cross x_hat
+    p0 = e2[2] * v0[1] - e2[1] * v0[2];
+    p1 = e2[2] * v0[1] - e2[1] * (v0[2] + h);
+    p2 = e2[2] * v1[1] - e2[1] * v1[2];
+    p3 = e2[2] * v1[1] - e2[1] * (v1[2] + h);
+    pmin = std::min(std::min(std::min(p0, p1), p2), p3);
+    pmax = std::max(std::max(std::max(p0, p1), p2), p3);
+    rad = std::abs(e2[2]) * half[1] + std::abs(e2[1]) * half[2];
+    if (pmin > rad || pmax < -rad){
+        return;
+    }
+    // edge 2 cross y_hat
+    p0 = -e2[2] * v0[0] + e2[0] * v0[2];
+    p1 = -e2[2] * v0[0] + e2[0] * (v0[2] + h);
+    p2 = -e2[2] * v1[0] + e2[0] * v1[2];
+    p3 = -e2[2] * v1[0] + e2[0] * (v1[2] + h);
+    pmin = std::min(std::min(std::min(p0, p1), p2), p3);
+    pmax = std::max(std::max(std::max(p0, p1), p2), p3);
+    rad = std::abs(e2[2]) * half[0] + std::abs(e2[0]) * half[2];
+    if (pmin > rad || pmax < -rad){
+        return;
+    }
+
+    // triangle normal axis
+    p0 = t_norm[0] * v0[0] + t_norm[1] * v0[1] + t_norm[2] * v0[2];
+    p1 = t_norm[0] * v0[0] + t_norm[1] * v0[1] + t_norm[2] * (v0[2] + h);
+    pmin = std::min(p0, p1);
+    pmax = std::max(p0, p1);
+    rad = std::abs(t_norm[0]) * half[0] + std::abs(t_norm[1]) * half[1] + std::abs(t_norm[2]) * half[2];
+    if (pmin > rad || pmax < -rad){
+        return;
+    }
+    // the axes defined by the three vertical prism faces
+    // should already be tested by the e0, e1, e2 cross z_hat tests
+
+    // If here, then I intersect the triangle!
+    if(is_leaf()){
+        divide(nodes, xs, ys, zs, true, diag_balance);
+    }
+    for(int_t i = 0; i < (1<<n_dim); ++i){
+        children[i]->refine_vert_triang_prism(
+            nodes, x0, x1, x2, h, e0, e1, e2, t_norm, p_level, xs, ys, zs, diag_balance
+        );
+    }
+}
+
 void Cell::refine_tetra(
   node_map_t& nodes,
   double* x0, double* x1, double* x2, double* x3,
@@ -1344,6 +1501,26 @@ void Tree::refine_triangle(double* x0, double* x1, double* x2, int_t p_level, bo
             for(int_t ix=0; ix<nx_roots; ++ix)
                 roots[iz][iy][ix]->refine_triangle(
                     nodes, x0, x1, x2, e0, e1, e2, t_norm, p_level, xs, ys, zs, diagonal_balance
+                );
+};
+
+void Tree::refine_vert_triang_prism(double* x0, double* x1, double* x2, double h, int_t p_level, bool diagonal_balance){
+    double e0[3], e1[3], e2[3], t_norm[3];
+    for(int_t i=0; i<n_dim; ++i){
+      e0[i] = x1[i] - x0[i];
+      e1[i] = x2[i] - x1[i];
+      e2[i] = x2[i] - x0[i];
+    }
+    if(n_dim > 2){
+        t_norm[0] = e0[1] * e1[2] - e0[2] * e1[1];
+        t_norm[1] = e0[2] * e1[0] - e0[0] * e1[2];
+        t_norm[2] = e0[0] * e1[1] - e0[1] * e1[0];
+    }
+    for(int_t iz=0; iz<nz_roots; ++iz)
+        for(int_t iy=0; iy<ny_roots; ++iy)
+            for(int_t ix=0; ix<nx_roots; ++ix)
+                roots[iz][iy][ix]->refine_vert_triang_prism(
+                    nodes, x0, x1, x2, h, e0, e1, e2, t_norm, p_level, xs, ys, zs, diagonal_balance
                 );
 };
 
