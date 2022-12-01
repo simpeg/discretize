@@ -111,8 +111,32 @@ class TreeMesh(
     larger than some base cell dimension. Unlike the :class:`~discretize.TensorMesh`
     class, gridded locations and numerical operators for instances of ``TreeMesh``
     cannot be simply constructed using tensor products. Furthermore, each cell
-    is an instance of ``TreeMesh`` is an instance of the
-    :class:`~discretize.tree_mesh.TreeCell` .
+    is an instance of :class:`~discretize.tree_mesh.TreeCell` .
+
+    Each cell of a `TreeMesh` has a certain level associated with it which describes its
+    height in the structure of the tree. The tree mesh is refined by specifying what
+    level you want in a given location. They start at level 0, defining the largest
+    possible cell on the mesh, and go to a level of `max_level` describing the
+    finest possible cell on the mesh. TreeMesh` contains several refinement functions
+    used to design the mesh, starting with a general purpose refinement function, along
+    with several faster specialized refinement functions based on fundamental geometric
+    entities:
+
+    - `refine` -> The general purpose refinement function supporting arbitrary defined functions
+    - `insert_cells`
+    - `refine_ball`
+    - `refine_line`
+    - `refine_triangle`
+    - `refine_box`
+    - `refine_tetrahedron`
+    - `refine_vertical_trianglular_prism`
+    - `refine_bounding_box`
+    - `refine_points`
+    - `refine_surface`
+
+    Like array indexing in python, you can also supply negative indices as a level
+    arguments to these functions to index levels in a reveresed order (i.e. -1 is
+    equivalent to `max_level`).
 
     Parameters
     ----------
@@ -390,6 +414,10 @@ class TreeMesh(
             Whether to balance cells diagonally in the refinement, `None` implies using
             the same setting used to instantiate the TreeMesh`.
 
+        See Also
+        --------
+        refine_box
+
         Examples
         --------
         Given a set of points, we want to refine the tree mesh with the bounding box
@@ -402,8 +430,8 @@ class TreeMesh(
         >>> mesh = discretize.TreeMesh([32, 32])
         >>> points = np.random.rand(20, 2) * 0.25 + 3/8
 
-        Now we want to refine to the maximum level, with a no padding the in `x`
-        direction and `2` cells in `y`, and the second highest level we want 2 padding
+        Now we want to refine to the maximum level, with no padding the in `x`
+        direction and `2` cells in `y`. At the second highest level we want 2 padding
         cells in each direction beyond that.
 
         >>> padding = [[0, 2], [2, 2]]
@@ -473,6 +501,10 @@ class TreeMesh(
             Whether to balance cells diagonally in the refinement, `None` implies using
             the same setting used to instantiate the TreeMesh`.
 
+        See Also
+        --------
+        refine_ball, insert_cells
+
         Examples
         --------
         Given a set of points, we want to refine the tree mesh around these points to
@@ -484,7 +516,7 @@ class TreeMesh(
         >>> mesh = discretize.TreeMesh([32, 32])
 
         Now we want to refine to the maximum level with 1 cell padding around the point,
-        and then refine at the second highest level with at least 3 cell beyond that.
+        and then refine at the second highest level with at least 3 cells beyond that.
 
         >>> points = np.array([[0.1, 0.3], [0.6, 0.8]])
         >>> padding = [1, 3]
@@ -536,9 +568,9 @@ class TreeMesh(
         ----------
         xyz : (N, dim) array_like or tuple
             The points defining the surface. Will be triangulated along the horizontal
-            dimensions. You are able to supply your own triangulation in 3D by inputing
+            dimensions. You are able to supply your own triangulation in 3D by passing
             a tuple of (`xyz`, `triangle_indices`).
-        level : int or (n_level) array_like of int
+        level : int, optional
             The level of the tree mesh to refine to. Negative values index tree levels
             backwards, (e.g. `-1` is `max_level`).
         padding_cells_by_level : None, int, (n_level) array_like or (n_level, dim) array_like, optional
@@ -558,6 +590,10 @@ class TreeMesh(
             Whether to balance cells diagonally in the refinement, `None` implies using
             the same setting used to instantiate the TreeMesh`.
 
+        See Also
+        --------
+        refine_triangle, refine_vertical_trianglular_prism
+
         Examples
         --------
         In 2D we define the surface as a line segment, which we would like to refine
@@ -568,8 +604,8 @@ class TreeMesh(
         >>> import matplotlib.patches as patches
         >>> mesh = discretize.TreeMesh([32, 32])
 
-        This surface is a simple sine curve. Which we would like to pad with at least
-        2 cells vertically below at the maximum level, with 3 cells below that at the
+        This surface is a simple sine curve, which we would like to pad with at least
+        2 cells vertically below at the maximum level, and 3 cells below that at the
         second highest level.
 
         >>> x = np.linspace(0.2, 0.8, 51)

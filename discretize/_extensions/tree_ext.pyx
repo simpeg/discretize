@@ -857,6 +857,10 @@ cdef class _TreeMesh:
             Whether to balance cells diagonally in the refinement, `None` implies using
             the same setting used to instantiate the TreeMesh`.
 
+        See Also
+        --------
+        refine_surface
+
         Examples
         --------
         We create a simple mesh and refine the TreeMesh such that all cells that
@@ -865,23 +869,25 @@ cdef class _TreeMesh:
         >>> import discretize
         >>> import matplotlib.pyplot as plt
         >>> import matplotlib.patches as patches
-        >>> tree_mesh = discretize.TreeMesh([32, 32])
+        >>> tree_mesh = discretize.TreeMesh([32, 32, 32])
         >>> tree_mesh.max_level
         5
 
-        Next we define the points along the line and the level we want to refine to,
-        and refine the mesh.
+        Next we define the bottom points of the prism, its heights, and the level we
+        want to refine to, then refine the mesh.
 
-        >>> triangle = [[0.14, 0.31], [0.32, 0.96], [0.23, 0.87]]
+        >>> triangle = [[0.14, 0.31, 0.21], [0.32, 0.96, 0.34], [0.87, 0.23, 0.12]]
+        >>> height = 0.35
         >>> levels = 5
-        >>> tree_mesh.refine_triangle(triangle, levels)
+        >>> mesh.refine_vertical_trianglular_prism(triangle, height, levels)
 
-        Now lets look at the mesh, and overlay the line on it to ensure it refined
-        where we wanted it to.
+        Now lets look at the mesh.
 
-        >>> ax = tree_mesh.plot_grid()
-        >>> tri = patches.Polygon(triangle, fill=False)
-        >>> ax.add_patch(tri)
+        >>> v = mesh.cell_levels_by_index(np.arange(mesh.n_cells))
+        >>> fig, axs = plt.subplots(1, 3, figsize=(12,4))
+        >>> mesh.plot_slice(v, ax=axs[0], normal='x', grid=True, clim=[2, 5])
+        >>> mesh.plot_slice(v, ax=axs[1], normal='y', grid=True, clim=[2, 5])
+        >>> mesh.plot_slice(v, ax=axs[2], normal='z', grid=True, clim=[2, 5])
         >>> plt.show()
 
         """
