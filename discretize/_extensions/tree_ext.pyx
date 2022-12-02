@@ -521,9 +521,9 @@ cdef class _TreeMesh:
         ----------
         points : (N, dim) array_like
             The centers of the refinement balls
-        radii : (N) array_like
+        radii : float or (N) array_like of float
             A 1D array defining the radius for each ball
-        levels : (N) array_like of int
+        levels : int or (N) array_like of int
             A 1D array defining the maximum refinement level for each ball
         finalize : bool, optional
             Whether to finalize after refining
@@ -566,12 +566,19 @@ cdef class _TreeMesh:
         if points.shape[1] != self.dim:
             raise ValueError(f"points array must be (N, {self.dim})")
         cdef double[:, :] cs = points
-        cdef double[:] rs = np.require(np.atleast_1d(radii), dtype=np.float64,
+        radii = np.require(np.atleast_1d(radii), dtype=np.float64,
                                        requirements='C')
+        if radii.shape[0] == 1:
+           radii = np.full(points.shape[0], radii[0], dtype=np.float64)
+        cdef double[:] rs = radii
         if points.shape[0] != rs.shape[0]:
             raise ValueError("radii length must match the points array's first dimension")
-        cdef int[:] ls = np.require(np.atleast_1d(levels), dtype=np.int32,
+
+        levels = np.require(np.atleast_1d(levels), dtype=np.int32,
                                     requirements='C')
+        if levels.shape[0] == 1:
+            levels = np.full(points.shape[0], levels[0], dtype=np.int32)
+        cdef int[:] ls = levels
         if points.shape[0] != ls.shape[0]:
             raise ValueError("level length must match the points array's first dimension")
 
@@ -603,11 +610,11 @@ cdef class _TreeMesh:
             The minimum location of the boxes
         x1s : (N, dim) array_like
             The maximum location of the boxes
-        levels : (N) array_like of int
+        levels : int or (N) array_like of int
             The level to refine intersecting cells to
         finalize : bool, optional
             Whether to finalize after refining
-        diagonal_balance : bool or None, optional
+        diagonal_balance : None or bool, optional
             Whether to balance cells diagonally in the refinement, `None` implies using
             the same setting used to instantiate the TreeMesh`.
 
@@ -640,7 +647,6 @@ cdef class _TreeMesh:
         >>> rect = patches.Rectangle([0.8, 0.8], 0.1, 0.2, facecolor='none', edgecolor='k', linewidth=3)
         >>> ax.add_patch(rect)
         >>> plt.show()
-
         """
         x0s = np.require(np.atleast_2d(x0s), dtype=np.float64,
                             requirements='C')
@@ -654,8 +660,11 @@ cdef class _TreeMesh:
             raise ValueError(f"x0s and x1s must have the same length")
         cdef double[:, :] x0 = x0s
         cdef double[:, :] x1 = x1s
-        cdef int[:] ls = np.require(np.atleast_1d(levels), dtype=np.int32,
+        levels = np.require(np.atleast_1d(levels), dtype=np.int32,
                                     requirements='C')
+        if levels.shape[0] == 1:
+            levels = np.full(x0.shape[0], levels[0], dtype=np.int32)
+        cdef int[:] ls = levels
         if x0.shape[0] != ls.shape[0]:
             raise ValueError("level length must match the points array's first dimension")
 
@@ -824,6 +833,102 @@ cdef class _TreeMesh:
             if l < 0:
                 l = (max_level + 1) - (abs(l) % (max_level + 1))
             self.tree.refine_triangle(&tris[i, 0, 0], &tris[i, 1, 0], &tris[i, 2, 0], l, diag_balance)
+        if finalize:
+            self.finalize()
+
+    @cython.cdivision(True)
+    def refine_vertical_trianglular_prism(self, triangle, h, levels, finalize=True, diagonal_balance=None):
+        """Refines the :class:`~discretize.TreeMesh` along the trianglular prism to the desired level
+
+        Refines the TreeMesh by determining if a cell intersects the given trianglular prism(s)
+        to the prescribed level(s).
+
+        Parameters
+        ----------
+        triangle : (N, 3, dim) array_like
+            The nodes of the bottom triangle(s).
+        h : (N) array_like
+            The height of the prism(s).
+        levels : int or (N) array_like of int
+            The level to refine intersecting cells to.
+        finalize : bool, optional
+            Whether to finalize after refining
+        diagonal_balance : bool or None, optional
+            Whether to balance cells diagonally in the refinement, `None` implies using
+            the same setting used to instantiate the TreeMesh`.
+
+        See Also
+        --------
+        refine_surface
+
+        Examples
+        --------
+        We create a simple mesh and refine the TreeMesh such that all cells that
+        intersect the line segment path are at the given levels.
+
+        >>> import discretize
+        >>> import matplotlib.pyplot as plt
+        >>> import matplotlib.patches as patches
+        >>> tree_mesh = discretize.TreeMesh([32, 32, 32])
+        >>> tree_mesh.max_level
+        5
+
+        Next we define the bottom points of the prism, its heights, and the level we
+        want to refine to, then refine the mesh.
+
+        >>> triangle = [[0.14, 0.31, 0.21], [0.32, 0.96, 0.34], [0.87, 0.23, 0.12]]
+        >>> height = 0.35
+        >>> levels = 5
+        >>> mesh.refine_vertical_trianglular_prism(triangle, height, levels)
+
+        Now lets look at the mesh.
+
+        >>> v = mesh.cell_levels_by_index(np.arange(mesh.n_cells))
+        >>> fig, axs = plt.subplots(1, 3, figsize=(12,4))
+        >>> mesh.plot_slice(v, ax=axs[0], normal='x', grid=True, clim=[2, 5])
+        >>> mesh.plot_slice(v, ax=axs[1], normal='y', grid=True, clim=[2, 5])
+        >>> mesh.plot_slice(v, ax=axs[2], normal='z', grid=True, clim=[2, 5])
+        >>> plt.show()
+
+        """
+        if self.dim == 2:
+            raise NotImplementedError("refine_vertical_trianglular_prism only implemented in 3D.")
+        triangle = np.require(np.atleast_2d(triangle), dtype=np.float64, requirements="C")
+        if triangle.ndim == 2:
+            triangle = triangle[None, ...]
+        if triangle.shape[-1] != self.dim or triangle.shape[-2] != 3:
+            raise ValueError(f"triangle array must be (N, 3, {self.dim})")
+        cdef double[:, :, :] tris = triangle
+
+        h = np.require(np.atleast_1d(h), dtype=np.float64, requirements="C")
+        levels = np.require(np.atleast_1d(levels), dtype=np.int32,
+                                    requirements='C')
+        cdef int n_triangles = triangle.shape[0];
+        if levels.shape[0] == 1:
+            levels = np.full(n_triangles, levels[0], dtype=np.int32)
+        if h.shape[0] == 1:
+            h = np.full(n_triangles, h[0], dtype=np.float64)
+        if n_triangles != levels.shape[0]:
+            raise ValueError(f"inconsistent number of triangles {n_triangles} and levels {levels.shape[0]}")
+        if n_triangles != h.shape[0]:
+            raise ValueError(f"inconsistent number of triangles {n_triangles} and heights {h.shape[0]}")
+        if np.any(h < 0):
+            raise ValueError("All heights must be positive.")
+
+        cdef int[:] ls = levels
+        cdef double[:] hs = h
+
+        if diagonal_balance is None:
+            diagonal_balance = self._diagonal_balance
+        cdef bool diag_balance = diagonal_balance
+
+        cdef int l
+        cdef int max_level = self.max_level
+        for i in range(n_triangles):
+            l = ls[i]
+            if l < 0:
+                l = (max_level + 1) - (abs(l) % (max_level + 1))
+            self.tree.refine_vert_triang_prism(&tris[i, 0, 0], &tris[i, 1, 0], &tris[i, 2, 0], hs[i], l, diag_balance)
         if finalize:
             self.finalize()
 
@@ -2233,7 +2338,6 @@ cdef class _TreeMesh:
         of the x and y-boundary cells.
 
         >>> from discretize import TreeMesh
-        >>> from discretize.utils import refine_tree_xyz
         >>> import numpy as np
         >>> import matplotlib.pyplot as plt
 
@@ -2332,7 +2436,6 @@ cdef class _TreeMesh:
         of the x and y-boundary faces.
 
         >>> from discretize import TreeMesh
-        >>> from discretize.utils import refine_tree_xyz
         >>> import numpy as np
         >>> import matplotlib.pyplot as plt
 

@@ -89,6 +89,7 @@ cdef extern from "tree.h":
         void refine_box(double*, double*, int_t, bool)
         void refine_line(double*, double*, int_t, bool)
         void refine_triangle(double*, double*, double*, int_t, bool)
+        void refine_vert_triang_prism(double*, double*, double*, double, int_t, bool)
         void refine_tetra(double*, double*, double*, double*, int_t, bool)
         void number()
         void initialize_roots()
