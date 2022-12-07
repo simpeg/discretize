@@ -478,3 +478,19 @@ def test_cell_to_face_extrap():
     Fv = mesh.average_cell_to_face @ v
 
     np.testing.assert_equal(1.0, Fv)
+
+
+def test_zeros_outside():
+    points, simplices = example_simplex_mesh((8, 8))
+    mesh = discretize.SimplexMesh(points, simplices)
+
+    outside_point = [-0.1, -0.1]
+    Q1 = mesh.get_interpolation_matrix(
+        outside_point, location_type='cell_centers', zeros_outside=True
+    )
+
+    assert Q1.nnz == 0
+    Q2 = mesh.get_interpolation_matrix(
+        outside_point, location_type='nodes', zeros_outside=True
+    )
+    np.testing.assert_equal(Q2.data, 0)
