@@ -53,7 +53,7 @@ class TensorMeshIO(InterfaceTensorread_vtk):
             return np.concatenate(line_list)
 
         # Read the file as line strings, remove lines with comment = !
-        msh = np.genfromtxt(file_name, delimiter="\n", dtype=np.str, comments="!")
+        msh = np.genfromtxt(file_name, delimiter="\n", dtype=str, comments="!")
         # Fist line is the size of the model
         sizeM = np.array(msh[0].split(), dtype=float)
         # Second line is the South-West-Top corner coordinates.
@@ -150,7 +150,7 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         fname = os.path.join(directory, file_name)
         # Read the file as line strings, remove lines with comment = !
         msh = np.genfromtxt(
-            fname, delimiter="\n", dtype=np.str, comments="!", max_rows=1
+            fname, delimiter="\n", dtype=str, comments="!", max_rows=1
         )
         # Fist line is the size of the model
         sizeM = np.array(msh.ravel()[0].split(), dtype=float)
@@ -178,8 +178,8 @@ class TensorMeshIO(InterfaceTensorread_vtk):
             The model defined on the 2D tensor mesh
         """
 
-        # Open fileand skip header... assume that we know the mesh already
-        obsfile = np.genfromtxt(file_name, delimiter=" \n", dtype=np.str, comments="!")
+        # Open file and skip header... assume that we know the mesh already
+        obsfile = np.genfromtxt(file_name, delimiter=" \n", dtype=str, comments="!")
 
         dim = tuple(np.array(obsfile[0].split(), dtype=int))
         if mesh.shape_cells != dim:
