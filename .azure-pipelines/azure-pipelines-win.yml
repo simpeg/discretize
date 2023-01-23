@@ -25,16 +25,16 @@ jobs:
       call activate base
       echo   - python=$(python.version)>> environment_test.yml
       mamba env create -f environment_test.yml
-      conda activate test
+      conda activate discretize-test
       pip install pytest-azurepipelines
     displayName: Create Anaconda testing environment
 
   - script: |
-      call activate test
+      call activate discretize-test
       pip install -e .
     displayName: Build
 
   - script: |
-      call activate test
+      call activate discretize-test
       pytest --ignore=tests/docs -W ignore::DeprecationWarning
     displayName: 'Running tests'
