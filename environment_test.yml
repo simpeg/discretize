@@ -2,9 +2,9 @@ name: discretize-test
 channels:
   - conda-forge
 dependencies:
-  - numpy>=1.8
-  - scipy>=0.13
-  - cython>=0.2
+  - numpy>=1.20
+  - scipy>=1.8
+  - cython>=0.29
   - setuptools_scm
   - pymatsolver>=0.1.2
   - matplotlib
