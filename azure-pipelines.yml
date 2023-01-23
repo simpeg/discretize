@@ -32,7 +32,7 @@ stages:
       variables:
         DISPLAY: ':99.0'
         PYVISTA_OFF_SCREEN: 'True'
-        python.version: '3.8'
+        python.version: '3.10'
       timeoutInMinutes: 180
       steps:
         - bash: |

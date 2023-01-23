@@ -35,7 +35,7 @@ jobs:
       conda activate discretize-test
       pip install -e .
     displayName: Install requirements and build
-    condition: ne(variables['python.version'], '3.8')
+    condition: ne(variables['python.version'], '3.10')
 
   - bash: |
       source "${HOME}/conda/etc/profile.d/conda.sh"
@@ -43,7 +43,7 @@ jobs:
       .ci/setup_headless_display.sh
       pytest -v -s --ignore=tests/docs -W ignore::DeprecationWarning
     displayName: 'Testing'
-    condition: ne(variables['python.version'], '3.8')
+    condition: ne(variables['python.version'], '3.10')
 
   - bash: |
       source "${HOME}/conda/etc/profile.d/conda.sh"
@@ -51,7 +51,7 @@ jobs:
       export DISC_COV=1
       pip install -e .
     displayName: Install requirements and build for Testing
-    condition: eq(variables['python.version'], '3.8')
+    condition: eq(variables['python.version'], '3.10')
 
   - bash: |
       source "${HOME}/conda/etc/profile.d/conda.sh"
@@ -59,11 +59,11 @@ jobs:
       .ci/setup_headless_display.sh
       pytest -v -s --cov-config=.coveragerc --cov=discretize --cov-report=xml --cov-report=html -W ignore::DeprecationWarning
     displayName: 'Testing with coverage'
-    condition: eq(variables['python.version'], '3.8')
+    condition: eq(variables['python.version'], '3.10')
 
   - bash: |
       curl -Os https://uploader.codecov.io/latest/linux/codecov
       chmod +x codecov
       ./codecov
     displayName: 'Upload coverage to codecov.io'
-    condition: eq(variables['python.version'], '3.8')
+    condition: eq(variables['python.version'], '3.10')
