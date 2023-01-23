@@ -63,7 +63,7 @@ from discretize import tests
 
 __author__ = "SimPEG Team"
 __license__ = "MIT"
-__copyright__ = "2013, SimPEG Developers, http://simpeg.xyz"
+__copyright__ = "2013 - 2023, SimPEG Developers, https://simpeg.xyz"
 
 # Version
 try:
