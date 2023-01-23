@@ -5,8 +5,6 @@ jobs:
     vmImage: macOS-latest
   strategy:
     matrix:
-      osx-Python37:
-        python.version: '3.7'
       osx-Python38:
         python.version: '3.8'
       osx-Python39:

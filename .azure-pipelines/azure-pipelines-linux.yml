@@ -8,8 +8,6 @@ jobs:
     PYVISTA_OFF_SCREEN: 'True'
   strategy:
     matrix:
-      linux-Python37:
-        python.version: '3.7'
       linux-Python38:
         python.version: '3.8'
       linux-Python39:
