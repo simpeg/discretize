@@ -149,9 +149,7 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         # Check the expected mesh dimensions
         fname = os.path.join(directory, file_name)
         # Read the file as line strings, remove lines with comment = !
-        msh = np.genfromtxt(
-            fname, delimiter="\n", dtype=str, comments="!", max_rows=1
-        )
+        msh = np.genfromtxt(fname, delimiter="\n", dtype=str, comments="!", max_rows=1)
         # Fist line is the size of the model
         sizeM = np.array(msh.ravel()[0].split(), dtype=float)
         # Check if the mesh is a UBC 2D mesh

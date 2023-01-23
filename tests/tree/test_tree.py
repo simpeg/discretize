@@ -57,7 +57,7 @@ class TestSimpleQuadTree(unittest.TestCase):
 
         def refinefcn(cell):
             xyz = cell.center
-            d = (xyz ** 2).sum() ** 0.5
+            d = (xyz**2).sum() ** 0.5
             if d < 3:
                 return 2
             return 1
@@ -85,7 +85,6 @@ class TestSimpleQuadTree(unittest.TestCase):
     #        self.assertTrue(np.all(H[:, 1] == 0.25*np.ones(16)))
 
     def test_faceDiv(self):
-
         hx, hy = np.r_[1.0, 2, 3, 4], np.r_[5.0, 6, 7, 8]
         T = discretize.TreeMesh([hx, hy], levels=2)
         T.refine(lambda xc: 2)
@@ -151,7 +150,6 @@ class TestOcTree(unittest.TestCase):
         # self.assertTrue(np.allclose(M._edgeEzFull, (M._deflationMatrix('E') * M.edge)[(M.ntEx+M.ntEy):]))
 
     def test_faceDiv(self):
-
         hx, hy, hz = np.r_[1.0, 2, 3, 4], np.r_[5.0, 6, 7, 8], np.r_[9.0, 10, 11, 12]
         M = discretize.TreeMesh([hx, hy, hz], levels=2)
         M.refine(lambda xc: 2)
@@ -173,7 +171,6 @@ class TestOcTree(unittest.TestCase):
         self.assertTrue(np.allclose(A.data, 0))
 
     def test_edgeCurl(self):
-
         hx, hy, hz = np.r_[1.0, 2, 3, 4], np.r_[5.0, 6, 7, 8], np.r_[9.0, 10, 11, 12]
         M = discretize.TreeMesh([hx, hy, hz], levels=2)
         M.refine(lambda xc: 2)
@@ -185,7 +182,6 @@ class TestOcTree(unittest.TestCase):
         self.assertTrue(len(A.data) == 0 or np.allclose(A.data, 0))
 
     def test_faceInnerProduct(self):
-
         hx, hy, hz = np.r_[1.0, 2, 3, 4], np.r_[5.0, 6, 7, 8], np.r_[9.0, 10, 11, 12]
         # hx, hy, hz = [[(1, 4)], [(1, 4)], [(1, 4)]]
 
@@ -234,7 +230,7 @@ class TestOcTree(unittest.TestCase):
 
         def refinefcn(cell):
             xyz = cell.center
-            d = (xyz ** 2).sum() ** 0.5
+            d = (xyz**2).sum() ** 0.5
             if d < 3:
                 return 2
             return 1

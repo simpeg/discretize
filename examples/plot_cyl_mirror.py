@@ -11,7 +11,6 @@ import discretize
 
 
 def run(plotIt=True):
-
     sig_halfspace = 1e-6
     sig_sphere = 1e0
     sig_air = 1e-8
@@ -33,7 +32,7 @@ def run(plotIt=True):
     # indices of the sphere
     sphere_ind = (
         mesh.gridCC[:, 0] ** 2 + (mesh.gridCC[:, 2] - sphere_z) ** 2
-    ) <= sphere_radius ** 2
+    ) <= sphere_radius**2
     sigma[sphere_ind] = sig_sphere  # sphere
 
     if not plotIt:

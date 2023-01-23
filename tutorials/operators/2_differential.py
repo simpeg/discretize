@@ -56,8 +56,8 @@ x_nodes = mesh.vectorNx
 x_centers = mesh.vectorCCx
 
 # Compute function on nodes and derivative at cell centers
-v = np.exp(-(x_nodes ** 2) / 4 ** 2)
-dvdx = -(2 * x_centers / 4 ** 2) * np.exp(-(x_centers ** 2) / 4 ** 2)
+v = np.exp(-(x_nodes**2) / 4**2)
+dvdx = -(2 * x_centers / 4**2) * np.exp(-(x_centers**2) / 4**2)
 
 # Derivative in x (gradient in 1D) from nodes to cell centers
 G = mesh.nodalGrad
@@ -162,19 +162,19 @@ CURL = mesh.edgeCurl  # Curl edges to cell centers (goes to faces in 3D)
 
 # Evaluate gradient of a scalar function
 nodes = mesh.gridN
-u = np.exp(-(nodes[:, 0] ** 2 + nodes[:, 1] ** 2) / 4 ** 2)
+u = np.exp(-(nodes[:, 0] ** 2 + nodes[:, 1] ** 2) / 4**2)
 grad_u = GRAD * u
 
 # Evaluate divergence of a vector function in x and y
 faces_x = mesh.gridFx
 faces_y = mesh.gridFy
 
-vx = (faces_x[:, 0] / np.sqrt(np.sum(faces_x ** 2, axis=1))) * np.exp(
-    -(faces_x[:, 0] ** 2 + faces_x[:, 1] ** 2) / 6 ** 2
+vx = (faces_x[:, 0] / np.sqrt(np.sum(faces_x**2, axis=1))) * np.exp(
+    -(faces_x[:, 0] ** 2 + faces_x[:, 1] ** 2) / 6**2
 )
 
-vy = (faces_y[:, 1] / np.sqrt(np.sum(faces_y ** 2, axis=1))) * np.exp(
-    -(faces_y[:, 0] ** 2 + faces_y[:, 1] ** 2) / 6 ** 2
+vy = (faces_y[:, 1] / np.sqrt(np.sum(faces_y**2, axis=1))) * np.exp(
+    -(faces_y[:, 0] ** 2 + faces_y[:, 1] ** 2) / 6**2
 )
 
 v = np.r_[vx, vy]
@@ -184,12 +184,12 @@ div_v = DIV * v
 edges_x = mesh.gridEx
 edges_y = mesh.gridEy
 
-wx = (-edges_x[:, 1] / np.sqrt(np.sum(edges_x ** 2, axis=1))) * np.exp(
-    -(edges_x[:, 0] ** 2 + edges_x[:, 1] ** 2) / 6 ** 2
+wx = (-edges_x[:, 1] / np.sqrt(np.sum(edges_x**2, axis=1))) * np.exp(
+    -(edges_x[:, 0] ** 2 + edges_x[:, 1] ** 2) / 6**2
 )
 
-wy = (edges_y[:, 0] / np.sqrt(np.sum(edges_y ** 2, axis=1))) * np.exp(
-    -(edges_y[:, 0] ** 2 + edges_y[:, 1] ** 2) / 6 ** 2
+wy = (edges_y[:, 0] / np.sqrt(np.sum(edges_y**2, axis=1))) * np.exp(
+    -(edges_y[:, 0] ** 2 + edges_y[:, 1] ** 2) / 6**2
 )
 
 w = np.r_[wx, wy]

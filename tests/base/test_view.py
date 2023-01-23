@@ -16,7 +16,6 @@ class Cyl3DView(unittest.TestCase):
         self.mesh = discretize.CylMesh([10, 4, 12])
 
     def test_incorrectAxesWarnings(self):
-
         # axes aren't polar
         fig, ax = plt.subplots(1, 1)
         # test z-slice

@@ -16,7 +16,7 @@ class TestFz2D_InhomogeneousDirichlet(discretize.tests.OrderTest):
         # PDE: Curl(Curl Ez) + Ez = q
         # faces_z are cell_centers on 2D mesh
         ez_fun = lambda x: np.cos(np.pi * x[:, 0]) * np.cos(np.pi * x[:, 1])
-        q_fun = lambda x: (1 + 2 * np.pi ** 2) * ez_fun(x)
+        q_fun = lambda x: (1 + 2 * np.pi**2) * ez_fun(x)
 
         mesh = self.M
         ez_ana = ez_fun(mesh.cell_centers)

@@ -262,7 +262,6 @@ class TestSequenceFunctions(unittest.TestCase):
         self.assertTrue(isScalar(np.r_[1j]))
 
     def test_asArray_N_x_Dim(self):
-
         true = np.array([[1, 2, 3]])
 
         listArray = asArray_N_x_Dim([1, 2, 3], 3)
@@ -371,7 +370,6 @@ class TestZero(unittest.TestCase):
         assert o.transpose() == 1
 
     def test_mat_one(self):
-
         o = Identity()
         S = sdiag(np.r_[2, 3])
 
@@ -431,7 +429,6 @@ class TestZero(unittest.TestCase):
 
 class TestMeshUtils(unittest.TestCase):
     def test_ExtractCoreMesh(self):
-
         # 1D Test on TensorMesh
         meshtest1d = discretize.TensorMesh([[(50.0, 10)]])
         xzlim1d = np.r_[[[0.0, 250.0]]]
@@ -469,7 +466,6 @@ class TestMeshUtils(unittest.TestCase):
         self.assertLess(meshCore3d.vectorCCz.max(), xzlim3d[2, :].max())
 
     def test_active_from_xyz(self):
-
         # Create 3D topo
         [xx, yy] = np.meshgrid(np.linspace(-200, 200, 50), np.linspace(-200, 200, 50))
         b = 50

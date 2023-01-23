@@ -50,6 +50,7 @@ if importlib.util.find_spec("matplotlib"):
 
     AVAILABLE_MIXIN_CLASSES.append(InterfaceMPL)
 
+
 # # Python 3 friendly
 class InterfaceMixins(*AVAILABLE_MIXIN_CLASSES):
     """This class handles all the avaialble mixins that can be inherrited
