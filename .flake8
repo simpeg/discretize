@@ -25,9 +25,9 @@ per-file-ignores =
     __init__.py: F401
     # do not check for assigned lambdas in tests
     tests/*: E731
-exclude-from-doctest =
-    # Don't check style in docstring of test functions
-    tests
+include-in-doctest =
+    # Only check discretize for docstring style
+    discretize/
 
 # Configure flake8-rst-docstrings
 # -------------------------------
