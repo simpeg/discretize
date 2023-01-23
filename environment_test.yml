@@ -1,4 +1,4 @@
-name: test
+name: discretize-test
 channels:
   - conda-forge
 dependencies:

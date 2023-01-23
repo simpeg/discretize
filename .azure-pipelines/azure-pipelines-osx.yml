@@ -15,34 +15,28 @@ jobs:
         python.version: '3.10'
   steps:
 
-  - bash: echo '##vso[task.prependpath]$CONDA/bin'
-    displayName: Add conda to PATH
-
-  - bash: sudo chown -R $USER $CONDA
-    displayName: Take ownership of conda installation
-
   - bash: |
-      eval "$(conda shell.bash hook)"
-      conda update --yes --quiet -n base conda
-      conda install --yes --quiet -c conda-forge mamba
+      wget -O Mambaforge.sh  "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh"
+      bash Mambaforge.sh -b -p "${HOME}/conda"
     displayName: Install mamba
 
-  - script: |
-      eval "$(conda shell.bash hook)"
+  - bash: |
+      source "${HOME}/conda/etc/profile.d/conda.sh"
+      source "${HOME}/conda/etc/profile.d/mamba.sh"
       echo "  - python="$(python.version) >> environment_test.yml
       mamba env create -f environment_test.yml
-      conda activate test
+      conda activate discretize-test
       pip install pytest-azurepipelines
     displayName: Create Anaconda testing environment
 
   - bash: |
-      eval "$(conda shell.bash hook)"
-      conda activate test
+      source "${HOME}/conda/etc/profile.d/conda.sh"
+      conda activate discretize-test
       pip install -e .
     displayName: Install requirements and build
 
   - script: |
-      eval "$(conda shell.bash hook)"
-      conda activate test
+      source "${HOME}/conda/etc/profile.d/conda.sh"
+      conda activate discretize-test
       pytest -v -s --ignore=tests/docs -W ignore::DeprecationWarning
     displayName: 'Running Tests'
