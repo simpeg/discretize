@@ -462,7 +462,7 @@ class TreeMeshIO(object):
         smallCell = np.array(fileLines[2].split("!")[0].split(), dtype=float)
         # Read the index array
         indArr = np.genfromtxt(
-            (line.encode("utf8") for line in fileLines[4::]), dtype=np.int
+            (line.encode("utf8") for line in fileLines[4::]), dtype=np.int64
         )
         nCunderMesh = nCunderMesh[: len(tswCorn)]  # remove information related to core
 
