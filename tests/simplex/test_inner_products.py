@@ -8,23 +8,23 @@ from discretize.utils import example_simplex_mesh
 def u(*args):
     if len(args) == 1:
         x = args[0]
-        return x ** 3
+        return x**3
     if len(args) == 2:
         x, y = args
-        return x ** 3 + y ** 2
+        return x**3 + y**2
     x, y, z = args
-    return x ** 3 + y ** 2 + z ** 4
+    return x**3 + y**2 + z**4
 
 
 def v(*args):
     if len(args) == 1:
         x = args[0]
-        return 2 * x ** 2
+        return 2 * x**2
     if len(args) == 2:
         x, y = args
-        return np.c_[2 * x ** 2, 3 * y ** 3]
+        return np.c_[2 * x**2, 3 * y**3]
     x, y, z = args
-    return np.c_[2 * x ** 2, 3 * y ** 3, -4 * z ** 2]
+    return np.c_[2 * x**2, 3 * y**3, -4 * z**2]
 
 
 def w(*args):
@@ -32,7 +32,7 @@ def w(*args):
         x, y = args
         return np.c_[(y - 2) ** 2, (x + 2) ** 2]
     x, y, z = args
-    return np.c_[(y - 2) ** 2 + z ** 2, (x + 2) ** 2 - (z - 4) ** 2, y ** 2 - x ** 2]
+    return np.c_[(y - 2) ** 2 + z**2, (x + 2) ** 2 - (z - 4) ** 2, y**2 - x**2]
 
 
 class TestInnerProducts2D(discretize.tests.OrderTest):
@@ -45,11 +45,10 @@ class TestInnerProducts2D(discretize.tests.OrderTest):
         return 1.0 / n
 
     def getError(self):
-
         z = 5  # Because 5 is just such a great number.
 
-        ex = lambda x, y: x ** 2 + y * z
-        ey = lambda x, y: (z ** 2) * x + y * z
+        ex = lambda x, y: x**2 + y * z
+        ey = lambda x, y: (z**2) * x + y * z
 
         sigma1 = lambda x, y: x * y + 1
         sigma2 = lambda x, y: x * z + 2
@@ -190,9 +189,9 @@ class TestInnerProducts3D(discretize.tests.OrderTest):
         return 1.0 / n
 
     def getError(self):
-        ex = lambda x, y, z: x ** 2 + y * z
-        ey = lambda x, y, z: (z ** 2) * x + y * z
-        ez = lambda x, y, z: y ** 2 + x * z
+        ex = lambda x, y, z: x**2 + y * z
+        ey = lambda x, y, z: (z**2) * x + y * z
+        ez = lambda x, y, z: y**2 + x * z
 
         sigma1 = lambda x, y, z: x * y + 1
         sigma2 = lambda x, y, z: x * z + 2

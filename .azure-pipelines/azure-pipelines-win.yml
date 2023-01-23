@@ -5,8 +5,6 @@ jobs:
     vmImage: windows-latest
   strategy:
     matrix:
-      win-Python37:
-        python.version: '3.7'
       win-Python38:
         python.version: '3.8'
       win-Python39:
@@ -27,16 +25,16 @@ jobs:
       call activate base
       echo   - python=$(python.version)>> environment_test.yml
       mamba env create -f environment_test.yml
-      conda activate test
+      conda activate discretize-test
       pip install pytest-azurepipelines
     displayName: Create Anaconda testing environment
 
   - script: |
-      call activate test
+      call activate discretize-test
       pip install -e .
     displayName: Build
 
   - script: |
-      call activate test
-      pytest -v -s --ignore=tests/docs -W ignore::DeprecationWarning
+      call activate discretize-test
+      pytest --ignore=tests/docs -W ignore::DeprecationWarning
     displayName: 'Running tests'

@@ -776,7 +776,6 @@ class MimeticProperties(unittest.TestCase):
     tol = 1e-11  # there is still some error due to rounding
 
     def test_DivCurl(self):
-
         for meshType in self.meshTypes:
             mesh, _ = discretize.tests.setupMesh(
                 meshType, self.meshSize, self.meshDimension
@@ -791,7 +790,6 @@ class MimeticProperties(unittest.TestCase):
             )
 
     def test_CurlGrad(self):
-
         for meshType in self.meshTypes:
             mesh, _ = discretize.tests.setupMesh(
                 meshType, self.meshSize, self.meshDimension

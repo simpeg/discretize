@@ -99,7 +99,7 @@ mesh = TreeMesh([hx, hy], x0="CC")
 
 # Refine surface topography
 xx = mesh.vectorNx
-yy = -3 * np.exp((xx ** 2) / 100 ** 2) + 50.0
+yy = -3 * np.exp((xx**2) / 100**2) + 50.0
 pts = np.c_[mkvc(xx), mkvc(yy)]
 padding = [[0, 2], [0, 2]]
 mesh.refine_surface(pts, padding_cells_by_level=padding, finalize=False)
@@ -145,7 +145,7 @@ mesh = TreeMesh([hx, hy], x0="CC")
 
 # Refine surface topography
 xx = mesh.vectorNx
-yy = -3 * np.exp((xx ** 2) / 100 ** 2) + 50.0
+yy = -3 * np.exp((xx**2) / 100**2) + 50.0
 pts = np.c_[mkvc(xx), mkvc(yy)]
 padding = [[0, 2], [0, 2]]
 mesh.refine_surface(pts, padding_cells_by_level=padding, finalize=False)
@@ -209,7 +209,7 @@ mesh = TreeMesh([hx, hy, hz], x0="CCC")
 
 # Refine surface topography
 [xx, yy] = np.meshgrid(mesh.vectorNx, mesh.vectorNy)
-zz = -3 * np.exp((xx ** 2 + yy ** 2) / 100 ** 2) + 50.0
+zz = -3 * np.exp((xx**2 + yy**2) / 100**2) + 50.0
 pts = np.c_[mkvc(xx), mkvc(yy), mkvc(zz)]
 padding = [[0, 0, 2], [0, 0, 2]]
 mesh.refine_surface(pts, padding_cells_by_level=padding, finalize=False)

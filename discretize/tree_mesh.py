@@ -384,7 +384,14 @@ class TreeMesh(
         # then update the TreeMesh with the hidden value
         self._set_origin(self._origin)
 
-    def refine_bounding_box(self, points, level=-1, padding_cells_by_level=None, finalize=True, diagonal_balance=None):
+    def refine_bounding_box(
+        self,
+        points,
+        level=-1,
+        padding_cells_by_level=None,
+        finalize=True,
+        diagonal_balance=None,
+    ):
         """Refine within a bounding box based on the maximum and minimum extent of scattered points.
 
         This function refines the tree mesh based on the bounding box defined by the
@@ -458,7 +465,10 @@ class TreeMesh(
         if padding_cells_by_level.ndim == 0 and level > 1:
             padding_cells_by_level = np.full(level - 1, padding_cells_by_level)
         padding_cells_by_level = np.atleast_1d(padding_cells_by_level)
-        if padding_cells_by_level.ndim == 2 and padding_cells_by_level.shape[1] != self.dim:
+        if (
+            padding_cells_by_level.ndim == 2
+            and padding_cells_by_level.shape[1] != self.dim
+        ):
             raise ValueError("incorrect dimension for padding_cells_by_level.")
 
         h_min = np.r_[[h.min() for h in self.h]]
@@ -474,9 +484,18 @@ class TreeMesh(
             xF.append(tnw)
             ls.append(lv)
 
-        self.refine_box(x0, xF, ls, finalize=finalize, diagonal_balance=diagonal_balance)
+        self.refine_box(
+            x0, xF, ls, finalize=finalize, diagonal_balance=diagonal_balance
+        )
 
-    def refine_points(self, points, level=-1, padding_cells_by_level=None, finalize=True, diagonal_balance=None):
+    def refine_points(
+        self,
+        points,
+        level=-1,
+        padding_cells_by_level=None,
+        finalize=True,
+        diagonal_balance=None,
+    ):
         """Refine the mesh at given points to the prescribed level.
 
         This function refines the tree mesh around the `points`. It will refine
@@ -544,16 +563,31 @@ class TreeMesh(
         for lv, n_pad in zip(np.arange(level, 1, -1), padding_cells_by_level):
             radius_at_level += n_pad * h_min * 2 ** (self.max_level - lv)
             if radius_at_level == 0:
-                self.insert_cells(points, lv, finalize=False, diagonal_balance=diagonal_balance)
+                self.insert_cells(
+                    points, lv, finalize=False, diagonal_balance=diagonal_balance
+                )
             else:
                 self.refine_ball(
-                    points, radius_at_level, lv, finalize=False, diagonal_balance=diagonal_balance
+                    points,
+                    radius_at_level,
+                    lv,
+                    finalize=False,
+                    diagonal_balance=diagonal_balance,
                 )
 
         if finalize:
             self.finalize()
 
-    def refine_surface(self, xyz, level=-1, padding_cells_by_level=None, pad_up=False, pad_down=True, finalize=True, diagonal_balance=None):
+    def refine_surface(
+        self,
+        xyz,
+        level=-1,
+        padding_cells_by_level=None,
+        pad_up=False,
+        pad_down=True,
+        finalize=True,
+        diagonal_balance=None,
+    ):
         """Refine along a surface triangulated from xyz to the prescribed level.
 
         This function refines the mesh based on a triangulated surface from the input
@@ -646,7 +680,10 @@ class TreeMesh(
         if padding_cells_by_level.ndim == 0 and level > 1:
             padding_cells_by_level = np.full(level - 1, padding_cells_by_level)
         padding_cells_by_level = np.atleast_1d(padding_cells_by_level)
-        if padding_cells_by_level.ndim == 2 and padding_cells_by_level.shape[1] != self.dim:
+        if (
+            padding_cells_by_level.ndim == 2
+            and padding_cells_by_level.shape[1] != self.dim
+        ):
             raise ValueError("incorrect dimension for padding_cells_by_level.")
 
         if self.dim == 2:
@@ -691,10 +728,14 @@ class TreeMesh(
             points[:, :-1] = horizontal_expansion * (xyz[:, :-1] - center) + center
             if self.dim == 2:
                 triangles = np.r_[points, points + [0, h]][simps]
-                self.refine_triangle(triangles, lv, finalize=False, diagonal_balance=diagonal_balance)
+                self.refine_triangle(
+                    triangles, lv, finalize=False, diagonal_balance=diagonal_balance
+                )
             else:
                 triangles = points[simps]
-                self.refine_vertical_trianglular_prism(triangles, h, lv, finalize=False, diagonal_balance=diagonal_balance)
+                self.refine_vertical_trianglular_prism(
+                    triangles, h, lv, finalize=False, diagonal_balance=diagonal_balance
+                )
 
         if finalize:
             self.finalize()
@@ -734,7 +775,6 @@ class TreeMesh(
     @property
     def stencil_cell_gradient(self):
         if getattr(self, "_stencil_cell_gradient", None) is None:
-
             self._stencil_cell_gradient = sp.vstack(
                 [self.stencil_cell_gradient_x, self.stencil_cell_gradient_y]
             )
@@ -748,7 +788,6 @@ class TreeMesh(
     @property
     def cell_gradient(self):
         if getattr(self, "_cell_gradient", None) is None:
-
             i_s = self.face_boundary_indices
 
             ix = np.ones(self.nFx)
@@ -782,7 +821,6 @@ class TreeMesh(
     @property
     def cell_gradient_x(self):
         if getattr(self, "_cell_gradient_x", None) is None:
-
             nFx = self.nFx
             i_s = self.face_boundary_indices
 
@@ -803,7 +841,6 @@ class TreeMesh(
     @property
     def cell_gradient_y(self):
         if getattr(self, "_cell_gradient_y", None) is None:
-
             nFx = self.nFx
             nFy = self.nFy
             i_s = self.face_boundary_indices
@@ -827,7 +864,6 @@ class TreeMesh(
         if self.dim == 2:
             raise TypeError("z derivative not defined in 2D")
         if getattr(self, "_cell_gradient_z", None) is None:
-
             nFx = self.nFx
             nFy = self.nFy
             i_s = self.face_boundary_indices

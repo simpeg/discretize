@@ -16,7 +16,6 @@ import numpy as np
 
 
 def run(plotIt=True, n=60):
-
     M = discretize.TreeMesh([[(1, 16)], [(1, 16)]], levels=4)
     M.insert_cells(np.array([5.0, 5.0]), np.array([3]))
     M.number()

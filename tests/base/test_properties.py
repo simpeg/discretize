@@ -5,7 +5,6 @@ import discretize
 
 
 def compare_meshes(test, mesh0, mesh1):
-
     # check some basic properties
     test.assertEqual(
         mesh0.nC,
@@ -53,7 +52,6 @@ def compare_meshes(test, mesh0, mesh1):
 
 
 class TensorTest(unittest.TestCase):
-
     n = [4, 5, 9]
     x0 = [-0.5, -0.25, 0]
 
@@ -88,7 +86,6 @@ class TensorTest(unittest.TestCase):
 
 
 class CylTest(unittest.TestCase):
-
     n = [4, 1, 9]
 
     def setUp(self):

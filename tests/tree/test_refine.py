@@ -403,25 +403,31 @@ def test_insert_errors():
 
 
 def test_refine_triang_prism():
-    xyz = np.array([
-        [0.41, 0.21, 0.11],
-        [0.21, 0.61, 0.22],
-        [0.71, 0.71, 0.31],
-        ])
+    xyz = np.array(
+        [
+            [0.41, 0.21, 0.11],
+            [0.21, 0.61, 0.22],
+            [0.71, 0.71, 0.31],
+        ]
+    )
     h = 0.48
 
     simps = np.array([[0, 1, 2]])
 
     n_ps = len(xyz)
-    simps1 = np.c_[
-        simps[:, 0], simps[:, 1], simps[:, 2], simps[:, 0]
-    ] + [0, 0, 0, n_ps]
-    simps2 = np.c_[
-        simps[:, 0], simps[:, 1], simps[:, 2], simps[:, 1]
-    ] + [n_ps, n_ps, n_ps, 0]
-    simps3 = np.c_[
-        simps[:, 1], simps[:, 2], simps[:, 0], simps[:, 2]
-    ] + [0, 0, n_ps, n_ps]
+    simps1 = np.c_[simps[:, 0], simps[:, 1], simps[:, 2], simps[:, 0]] + [0, 0, 0, n_ps]
+    simps2 = np.c_[simps[:, 0], simps[:, 1], simps[:, 2], simps[:, 1]] + [
+        n_ps,
+        n_ps,
+        n_ps,
+        0,
+    ]
+    simps3 = np.c_[simps[:, 1], simps[:, 2], simps[:, 0], simps[:, 2]] + [
+        0,
+        0,
+        n_ps,
+        n_ps,
+    ]
     simps = np.r_[simps1, simps2, simps3]
 
     points = np.r_[xyz, xyz + [0, 0, h]]
@@ -435,11 +441,13 @@ def test_refine_triang_prism():
 
 
 def test_refine_triang_prism_errors():
-    xyz = np.array([
-        [0.41, 0.21, 0.11],
-        [0.21, 0.61, 0.22],
-        [0.71, 0.71, 0.31],
-        ])
+    xyz = np.array(
+        [
+            [0.41, 0.21, 0.11],
+            [0.21, 0.61, 0.22],
+            [0.71, 0.71, 0.31],
+        ]
+    )
     h = 0.48
 
     mesh = discretize.TreeMesh([32, 32])
@@ -469,9 +477,8 @@ def test_refine_triang_prism_errors():
 
 
 def test_bounding_box():
-
     # No padding
-    xyz = np.random.rand(20, 2) * 0.25 + 3/8
+    xyz = np.random.rand(20, 2) * 0.25 + 3 / 8
     mesh1 = discretize.TreeMesh([32, 32])
     mesh1.refine_bounding_box(xyz, -1, None)
 
@@ -493,7 +500,7 @@ def test_bounding_box():
 
     mesh2 = discretize.TreeMesh([32, 32])
     for lv in range(mesh2.max_level, 1, -1):
-        padding = n_cell_pad * (2**(mesh2.max_level - lv)/32)
+        padding = n_cell_pad * (2 ** (mesh2.max_level - lv) / 32)
         x0 -= padding
         xF += padding
         mesh2.refine_box(x0, xF, lv, finalize=False)
@@ -533,7 +540,7 @@ def test_refine_points():
     mesh2 = discretize.TreeMesh([32, 32])
     ball_rad = 0.0
     for lv in range(mesh2.max_level, 1, -1):
-        ball_rad += 2**(mesh2.max_level - lv)/32 * n_cell_pad
+        ball_rad += 2 ** (mesh2.max_level - lv) / 32 * n_cell_pad
         mesh2.refine_ball(point, ball_rad, lv, finalize=False)
     mesh2.finalize()
 
@@ -550,7 +557,6 @@ def test_refine_points_errors():
 
 
 def test_refine_surface2D():
-
     mesh1 = discretize.TreeMesh([32, 32])
     points = [[0.3, 0.3], [0.7, 0.3]]
     mesh1.refine_surface(points, -1, None, pad_up=True, pad_down=True)
@@ -571,7 +577,7 @@ def test_refine_surface2D():
     x0 = np.r_[0.3, 0.3]
     xF = np.r_[0.7, 0.3]
     for lv in range(mesh2.max_level, 1, -1):
-        pad = 2**(mesh2.max_level - lv)/32 * n_cell_pad
+        pad = 2 ** (mesh2.max_level - lv) / 32 * n_cell_pad
         x0 -= pad
         xF += pad
         mesh2.refine_box(x0, xF, lv, finalize=False)
@@ -591,7 +597,7 @@ def test_refine_surface3D():
     mesh1.refine_surface(points, -1, [[1, 2, 3]], pad_up=True, pad_down=True)
 
     mesh2 = discretize.TreeMesh([32, 32, 32])
-    pad = np.array([1, 2, 3])/32
+    pad = np.array([1, 2, 3]) / 32
     x0 = [0.3, 0.3, 0.5] - pad
     xF = [0.7, 0.7, 0.5] + pad
     mesh2.refine_box(x0, xF, -1)

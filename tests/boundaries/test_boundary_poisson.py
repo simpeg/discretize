@@ -18,7 +18,7 @@ class TestCC1D_InhomogeneousDirichlet(discretize.tests.OrderTest):
         # Test function
         phi = lambda x: np.cos(np.pi * x)
         j_fun = lambda x: -np.pi * np.sin(np.pi * x)
-        q_fun = lambda x: -(np.pi ** 2) * np.cos(np.pi * x)
+        q_fun = lambda x: -(np.pi**2) * np.cos(np.pi * x)
 
         mesh = self.M
 
@@ -63,7 +63,7 @@ class TestCC2D_InhomogeneousDirichlet(discretize.tests.OrderTest):
         phi = lambda x: np.cos(np.pi * x[:, 0]) * np.cos(np.pi * x[:, 1])
         j_funX = lambda x: -np.pi * np.sin(np.pi * x[:, 0]) * np.cos(np.pi * x[:, 1])
         j_funY = lambda x: -np.pi * np.cos(np.pi * x[:, 0]) * np.sin(np.pi * x[:, 1])
-        q_fun = lambda x: -2 * (np.pi ** 2) * phi(x)
+        q_fun = lambda x: -2 * (np.pi**2) * phi(x)
 
         mesh = self.M
         phi_ana = phi(mesh.cell_centers)
@@ -107,7 +107,7 @@ class TestCC1D_InhomogeneousNeumann(discretize.tests.OrderTest):
         # Test function
         phi = lambda x: np.sin(np.pi * x)
         j_fun = lambda x: np.pi * np.cos(np.pi * x)
-        q_fun = lambda x: -(np.pi ** 2) * np.sin(np.pi * x)
+        q_fun = lambda x: -(np.pi**2) * np.sin(np.pi * x)
 
         mesh = self.M
         xc_ana = phi(mesh.cell_centers)
@@ -176,7 +176,7 @@ class TestCC2D_InhomogeneousNeumann(discretize.tests.OrderTest):
         phi = lambda x: np.sin(np.pi * x[:, 0]) * np.sin(np.pi * x[:, 1])
         j_funX = lambda x: np.pi * np.cos(np.pi * x[:, 0]) * np.sin(np.pi * x[:, 1])
         j_funY = lambda x: np.pi * np.sin(np.pi * x[:, 0]) * np.cos(np.pi * x[:, 1])
-        q_fun = lambda x: -2 * (np.pi ** 2) * phi(x)
+        q_fun = lambda x: -2 * (np.pi**2) * phi(x)
 
         mesh = self.M
         phi_ana = phi(mesh.cell_centers)
@@ -237,7 +237,7 @@ class TestCC1D_InhomogeneousMixed(discretize.tests.OrderTest):
         # Test function
         phi = lambda x: np.cos(0.5 * np.pi * x)
         j_fun = lambda x: -0.5 * np.pi * np.sin(0.5 * np.pi * x)
-        q_fun = lambda x: -0.25 * (np.pi ** 2) * np.cos(0.5 * np.pi * x)
+        q_fun = lambda x: -0.25 * (np.pi**2) * np.cos(0.5 * np.pi * x)
 
         mesh = self.M
         xc_ana = phi(mesh.cell_centers)
@@ -297,7 +297,7 @@ class TestCC2D_InhomogeneousMixed(discretize.tests.OrderTest):
         phi = lambda x: np.sin(np.pi * x[:, 0]) * np.sin(np.pi * x[:, 1])
         j_funX = lambda x: np.pi * np.cos(np.pi * x[:, 0]) * np.sin(np.pi * x[:, 1])
         j_funY = lambda x: np.pi * np.sin(np.pi * x[:, 0]) * np.cos(np.pi * x[:, 1])
-        q_fun = lambda x: -2 * (np.pi ** 2) * phi(x)
+        q_fun = lambda x: -2 * (np.pi**2) * phi(x)
 
         mesh = self.M
         phi_ana = phi(mesh.cell_centers)
@@ -385,7 +385,7 @@ class TestCC3D_InhomogeneousMixed(discretize.tests.OrderTest):
             * np.cos(np.pi * x[:, 2])
         )
 
-        q_fun = lambda x: -3 * (np.pi ** 2) * phi(x)
+        q_fun = lambda x: -3 * (np.pi**2) * phi(x)
 
         mesh = self.M
         phi_ana = phi(mesh.cell_centers)
@@ -451,7 +451,7 @@ class TestN1D_boundaries(discretize.tests.OrderTest):
         # Test function
         phi = lambda x: np.sin(np.pi * x)
         j_fun = lambda x: np.pi * np.cos(np.pi * x)
-        q_fun = lambda x: -1 * (np.pi ** 2) * phi(x)
+        q_fun = lambda x: -1 * (np.pi**2) * phi(x)
 
         mesh = self.M
         mesh.origin = [
@@ -526,7 +526,7 @@ class TestN2D_boundaries(discretize.tests.OrderTest):
         phi = lambda x: np.sin(np.pi * x[:, 0]) * np.sin(np.pi * x[:, 1])
         j_funX = lambda x: np.pi * np.cos(np.pi * x[:, 0]) * np.sin(np.pi * x[:, 1])
         j_funY = lambda x: np.pi * np.cos(np.pi * x[:, 1]) * np.sin(np.pi * x[:, 0])
-        q_fun = lambda x: -2 * (np.pi ** 2) * phi(x)
+        q_fun = lambda x: -2 * (np.pi**2) * phi(x)
 
         mesh = self.M
         if self._meshType == "rotateCurv":
@@ -643,7 +643,7 @@ class TestN3D_boundaries(discretize.tests.OrderTest):
             * np.cos(np.pi * x[:, 2])
         )
 
-        q_fun = lambda x: -3 * (np.pi ** 2) * phi(x)
+        q_fun = lambda x: -3 * (np.pi**2) * phi(x)
 
         mesh = self.M
         if self._meshType == "rotateCurv":

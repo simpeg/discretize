@@ -103,8 +103,7 @@ import numpy as np
 
 # Define the Gaussian function
 def fcn_gaussian(x, mu, sig):
-
-    return (1 / np.sqrt(2 * np.pi * sig ** 2)) * np.exp(-0.5 * (x - mu) ** 2 / sig ** 2)
+    return (1 / np.sqrt(2 * np.pi * sig**2)) * np.exp(-0.5 * (x - mu) ** 2 / sig**2)
 
 
 # Create a tensor mesh that is sufficiently large
@@ -166,14 +165,14 @@ print("Cell-centered approx.:", ipc)
 
 # Define components of the function
 def fcn_x(xy, sig):
-    return (-xy[:, 1] / np.sqrt(np.sum(xy ** 2, axis=1))) * np.exp(
-        -0.5 * np.sum(xy ** 2, axis=1) / sig ** 2
+    return (-xy[:, 1] / np.sqrt(np.sum(xy**2, axis=1))) * np.exp(
+        -0.5 * np.sum(xy**2, axis=1) / sig**2
     )
 
 
 def fcn_y(xy, sig):
-    return (xy[:, 0] / np.sqrt(np.sum(xy ** 2, axis=1))) * np.exp(
-        -0.5 * np.sum(xy ** 2, axis=1) / sig ** 2
+    return (xy[:, 0] / np.sqrt(np.sum(xy**2, axis=1))) * np.exp(
+        -0.5 * np.sum(xy**2, axis=1) / sig**2
     )
 
 
@@ -203,7 +202,7 @@ Mf = mesh.getFaceInnerProduct()  # Edge inner product matrix
 ipf = np.dot(v, Mf * v)
 
 # The analytic solution of (v, v)
-ipt = np.pi * sig ** 2
+ipt = np.pi * sig**2
 
 # Plot the vector function
 fig = plt.figure(figsize=(5, 5))

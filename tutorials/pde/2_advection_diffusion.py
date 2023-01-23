@@ -184,8 +184,8 @@ mesh = TensorMesh([h, h], "CC")
 faces_x = mesh.gridFx
 faces_y = mesh.gridFy
 
-r_x = np.sqrt(np.sum(faces_x ** 2, axis=1))
-r_y = np.sqrt(np.sum(faces_y ** 2, axis=1))
+r_x = np.sqrt(np.sum(faces_x**2, axis=1))
+r_y = np.sqrt(np.sum(faces_y**2, axis=1))
 
 ux = 0.5 * (-faces_x[:, 1] / r_x) * (1 + np.tanh(0.15 * (28.0 - r_x)))
 uy = 0.5 * (faces_y[:, 0] / r_y) * (1 + np.tanh(0.15 * (28.0 - r_y)))
@@ -252,7 +252,6 @@ cbar.set_label("Velocity (m/s)", rotation=270, labelpad=5)
 n = 3
 
 for ii in range(300):
-
     p = Binv * (p + s)
 
     if ii + 1 in (1, 25, 50, 100, 200, 300):
