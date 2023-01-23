@@ -36,5 +36,5 @@ jobs:
 
   - script: |
       call activate test
-      pytest -v -s --ignore=tests/docs -W ignore::DeprecationWarning
+      pytest --ignore=tests/docs -W ignore::DeprecationWarning
     displayName: 'Running tests'
