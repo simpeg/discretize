@@ -1,6 +1,5 @@
 import numpy as np
 import scipy.sparse as sp
-from scipy.sparse import linalg
 import unittest
 import discretize
 from discretize import utils
@@ -37,7 +36,7 @@ class Test1D_InhomogeneousDirichlet(discretize.tests.OrderTest):
         P, Pin, Pout = self.M.getBCProjWF([["dirichlet", "dirichlet"]])
 
         Mc = self.M.getFaceInnerProduct()
-        McI = utils.sdInv(self.M.getFaceInnerProduct())
+        McI = utils.sdInv(Mc)
         V = utils.sdiag(self.M.vol)
         G = -Pin.T * Pin * self.M.faceDiv.T * V
         D = self.M.faceDiv
@@ -57,12 +56,12 @@ class Test1D_InhomogeneousDirichlet(discretize.tests.OrderTest):
         elif self.myTest == "xc":
             # TODO: fix the null space
             solver = SolverCG(A, maxiter=1000)
-            xc = solver * (rhs)
+            xc = solver * rhs
             print("ACCURACY", np.linalg.norm(utils.mkvc(A * xc) - rhs))
             err = np.linalg.norm((xc - xc_ana), np.inf)
         elif self.myTest == "xcJ":
             # TODO: fix the null space
-            xc = Solver(A) * (rhs)
+            xc = Solver(A) * rhs
             print(np.linalg.norm(utils.mkvc(A * xc) - rhs))
             j = McI * (G * xc + P * phi_bc)
             err = np.linalg.norm((j - j_ana), np.inf)
@@ -125,7 +124,7 @@ class Test2D_InhomogeneousDirichlet(discretize.tests.OrderTest):
         P, Pin, Pout = self.M.getBCProjWF("dirichlet")
 
         Mc = self.M.getFaceInnerProduct()
-        McI = utils.sdInv(self.M.getFaceInnerProduct())
+        McI = utils.sdInv(Mc)
         G = -self.M.faceDiv.T * utils.sdiag(self.M.vol)
         D = self.M.faceDiv
         j = McI * (G * xc_ana + P * bc)
@@ -199,7 +198,7 @@ class Test1D_InhomogeneousNeumann(discretize.tests.OrderTest):
         P, Pin, Pout = self.M.getBCProjWF([["neumann", "neumann"]])
 
         Mc = self.M.getFaceInnerProduct()
-        McI = utils.sdInv(self.M.getFaceInnerProduct())
+        McI = utils.sdInv(Mc)
         V = utils.sdiag(self.M.vol)
         G = -Pin.T * Pin * self.M.faceDiv.T * V
         D = self.M.faceDiv
@@ -278,9 +277,6 @@ class Test2D_InhomogeneousNeumann(discretize.tests.OrderTest):
         gBFx = self.M.gridFx[(fxm | fxp), :]
         gBFy = self.M.gridFy[(fym | fyp), :]
 
-        gBCx = self.M.gridCC[(cxm | cxp), :]
-        gBCy = self.M.gridCC[(cym | cyp), :]
-
         phi_bc = phi(np.r_[gBFx, gBFy])
         j_bc = np.r_[j_funX(gBFx), j_funY(gBFy)]
 
@@ -289,7 +285,7 @@ class Test2D_InhomogeneousNeumann(discretize.tests.OrderTest):
         P, Pin, Pout = self.M.getBCProjWF("neumann")
 
         Mc = self.M.getFaceInnerProduct()
-        McI = utils.sdInv(self.M.getFaceInnerProduct())
+        McI = utils.sdInv(Mc)
         V = utils.sdiag(self.M.vol)
         G = -Pin.T * Pin * self.M.faceDiv.T * V
         D = self.M.faceDiv
@@ -364,7 +360,7 @@ class Test1D_InhomogeneousMixed(discretize.tests.OrderTest):
         P, Pin, Pout = self.M.getBCProjWF([["dirichlet", "neumann"]])
 
         Mc = self.M.getFaceInnerProduct()
-        McI = utils.sdInv(self.M.getFaceInnerProduct())
+        McI = utils.sdInv(Mc)
         V = utils.sdiag(self.M.vol)
         G = -Pin.T * Pin * self.M.faceDiv.T * V
         D = self.M.faceDiv
@@ -466,7 +462,7 @@ class Test2D_InhomogeneousMixed(discretize.tests.OrderTest):
         )
 
         Mc = self.M.getFaceInnerProduct()
-        McI = utils.sdInv(self.M.getFaceInnerProduct())
+        McI = utils.sdInv(Mc)
         V = utils.sdiag(self.M.vol)
         G = -Pin.T * Pin * self.M.faceDiv.T * V
         D = self.M.faceDiv

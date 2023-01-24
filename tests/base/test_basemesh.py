@@ -219,7 +219,7 @@ class TestMeshNumbers2D(unittest.TestCase):
         self.assertTrue(self.mesh.vnEz is None)
 
     def test_mesh_numbers(self):
-        c = self.mesh.nC == 12
+        self.assertEqual(self.mesh.nC, 12)
         self.assertEqual(self.mesh.vnF, (14, 18))
         self.assertEqual(self.mesh.nFx, 14)
         self.assertEqual(self.mesh.nFy, 18)

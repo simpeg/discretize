@@ -3,7 +3,6 @@ import pytest
 import discretize
 import subprocess
 import numpy as np
-from discretize.utils import volume_average
 from discretize.tests import assert_isadjoint
 
 

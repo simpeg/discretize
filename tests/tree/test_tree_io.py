@@ -6,11 +6,10 @@ import pickle
 import json
 
 try:
-    import vtk
+    import vtk  # NOQA F401
+    has_vtk = True
 except ImportError:
     has_vtk = False
-else:
-    has_vtk = True
 
 
 class TestOcTreeMeshIO(unittest.TestCase):

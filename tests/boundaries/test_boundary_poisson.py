@@ -17,7 +17,6 @@ class TestCC1D_InhomogeneousDirichlet(discretize.tests.OrderTest):
     def getError(self):
         # Test function
         phi = lambda x: np.cos(np.pi * x)
-        j_fun = lambda x: -np.pi * np.sin(np.pi * x)
         q_fun = lambda x: -(np.pi**2) * np.cos(np.pi * x)
 
         mesh = self.M
@@ -61,8 +60,6 @@ class TestCC2D_InhomogeneousDirichlet(discretize.tests.OrderTest):
     def getError(self):
         # Test function
         phi = lambda x: np.cos(np.pi * x[:, 0]) * np.cos(np.pi * x[:, 1])
-        j_funX = lambda x: -np.pi * np.sin(np.pi * x[:, 0]) * np.cos(np.pi * x[:, 1])
-        j_funY = lambda x: -np.pi * np.cos(np.pi * x[:, 0]) * np.sin(np.pi * x[:, 1])
         q_fun = lambda x: -2 * (np.pi**2) * phi(x)
 
         mesh = self.M
@@ -132,7 +129,6 @@ class TestCC1D_InhomogeneousNeumann(discretize.tests.OrderTest):
         )
 
         j = MfI @ ((-G + B_bc) @ xc_ana + b_bc)
-        q = D @ j
 
         # Since the xc_bc is a known, move it to the RHS!
         A = V @ D @ MfI @ (-G + B_bc)
@@ -459,7 +455,6 @@ class TestN1D_boundaries(discretize.tests.OrderTest):
         ]
 
         phi_ana = phi(mesh.nodes)
-        j_ana = j_fun(mesh.edges_x)
         q_ana = q_fun(mesh.nodes)
 
         phi_bc = phi(mesh.boundary_nodes)
@@ -657,7 +652,6 @@ class TestN3D_boundaries(discretize.tests.OrderTest):
 
         phi_ana = phi(mesh.nodes)
         q_ana = q_fun(mesh.nodes)
-        j_ana = np.r_[j_funX(mesh.edges_x), j_funY(mesh.edges_y), j_funZ(mesh.edges_z)]
 
         if self.boundary_type == "Nuemann":
             # Nuemann with J defined at boundary nodes
