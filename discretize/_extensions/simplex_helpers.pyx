@@ -226,6 +226,8 @@ def _directed_search(
     np.int64_t[:, :] neighbors,
     np.float64_t[:, :, :] transform,
     np.float64_t[:, :] shift,
+    np.float64_t eps=1E-15,
+    bint zeros_outside=False,
     bint return_bary=True
 ):
     cdef:
@@ -234,7 +236,7 @@ def _directed_search(
         int n_locs = locs.shape[0], dim = locs.shape[1]
         int max_directed = 1 + simplex_nodes.shape[0] // 4
         int i_directed
-        np.float64_t eps = 1E-15
+        bint is_inside
         np.int64_t[:] inds = np.full(len(locs), -1, dtype=np.int64)
         np.float64_t[:, :] all_barys = np.empty((1, 1), dtype=np.float64)
         np.float64_t barys[4]
@@ -269,7 +271,8 @@ def _directed_search(
             # Else, if I cycled through every bary
             # without breaking out of the above loop, that means I'm completely outside
             elif j == dim + 1:
-                i_simp = -1
+                if zeros_outside:
+                    i_simp = -1
                 break
             i_directed += 1
 
