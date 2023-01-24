@@ -1,4 +1,4 @@
-"""
+r"""
 Basic Inner Products
 ====================
 
@@ -9,35 +9,35 @@ basic class of inner products. For this class of inner products, we demonstrate:
     - How to use inner product matricies to approximate the inner product
     - How to construct the inverse of the inner product matrix.
 
-For scalar quantities :math:`\\psi` and :math:`\\phi`, the
+For scalar quantities :math:`\psi` and :math:`\phi`, the
 inner product is given by:
 
 .. math::
-    (\\psi , \\phi ) = \\int_\\Omega \\psi \\, \\phi \\, dv
+    (\psi , \phi ) = \int_\Omega \psi \, \phi \, dv
 
 
-And for vector quantities :math:`\\vec{u}` and :math:`\\vec{v}`, the
+And for vector quantities :math:`\vec{u}` and :math:`\vec{v}`, the
 inner product is given by:
 
 .. math::
-    (\\vec{u}, \\vec{v}) = \\int_\\Omega \\vec{u} \\cdot \\vec{v} \\, dv
+    (\vec{u}, \vec{v}) = \int_\Omega \vec{u} \cdot \vec{v} \, dv
 
 
 In discretized form, we can approximate the aforementioned inner-products as:
 
 .. math::
-    (\\psi , \\phi) \\approx \\mathbf{\\psi^T \\, M \\, \\phi}
+    (\psi , \phi) \approx \mathbf{\psi^T \, M \, \phi}
 
 
 and
 
 .. math::
-    (\\vec{u}, \\vec{v}) \\approx \\mathbf{u^T \\, M \\, v}
+    (\vec{u}, \vec{v}) \approx \mathbf{u^T \, M \, v}
 
 
-where :math:`\\mathbf{M}` in either equation represents an
-*inner-product matrix*. :math:`\\mathbf{\\psi}`, :math:`\\mathbf{\\phi}`,
-:math:`\\mathbf{u}` and :math:`\\mathbf{v}` are discrete variables that live
+where :math:`\mathbf{M}` in either equation represents an
+*inner-product matrix*. :math:`\mathbf{\psi}`, :math:`\mathbf{\phi}`,
+:math:`\mathbf{u}` and :math:`\mathbf{v}` are discrete variables that live
 on the mesh. It is important to note a few things about the
 inner-product matrix in this case:
 
@@ -48,13 +48,13 @@ For this simple class of inner products, the inner product matricies for
 discrete quantities living on various parts of the mesh have the form:
 
 .. math::
-    \\textrm{Centers:} \\; \\mathbf{M_c} &= \\textrm{diag} (\\mathbf{v} ) \n
-    \\textrm{Nodes:} \\; \\mathbf{M_n} &= \\frac{1}{2^{2k}} \\mathbf{P_n^T } \\textrm{diag} (\\mathbf{v} ) \\mathbf{P_n} \n
-    \\textrm{Faces:} \\; \\mathbf{M_f} &= \\frac{1}{4} \\mathbf{P_f^T } \\textrm{diag} (\\mathbf{I_k \\otimes v} ) \\mathbf{P_f} \n
-    \\textrm{Edges:} \\; \\mathbf{M_e} &= \\frac{1}{4^{k-1}} \\mathbf{P_e^T } \\textrm{diag} (\\mathbf{I_k \\otimes v}) \\mathbf{P_e}
+    \textrm{Centers:} \; \mathbf{M_c} &= \textrm{diag} (\mathbf{v} ) \n
+    \textrm{Nodes:} \; \mathbf{M_n} &= \frac{1}{2^{2k}} \mathbf{P_n^T } \textrm{diag} (\mathbf{v} ) \mathbf{P_n} \n
+    \textrm{Faces:} \; \mathbf{M_f} &= \frac{1}{4} \mathbf{P_f^T } \textrm{diag} (\mathbf{I_k \otimes v} ) \mathbf{P_f} \n
+    \textrm{Edges:} \; \mathbf{M_e} &= \frac{1}{4^{k-1}} \mathbf{P_e^T } \textrm{diag} (\mathbf{I_k \otimes v}) \mathbf{P_e}
 
-where :math:`k = 1,2,3`, :math:`\\mathbf{I_k}` is the identity matrix and
-:math:`\\otimes` is the kronecker product. :math:`\\mathbf{P}` are projection
+where :math:`k = 1,2,3`, :math:`\mathbf{I_k}` is the identity matrix and
+:math:`\otimes` is the kronecker product. :math:`\mathbf{P}` are projection
 matricies that map quantities from one part of the cell (nodes, faces, edges)
 to cell centers.
 
@@ -258,7 +258,7 @@ Mf_inv = mesh.getFaceInnerProduct(invMat=True)
 
 # Generate some random vectors
 phi_c = np.random.rand(mesh.nC)
-phi_n = np.random.rand(mesh.nN)
+# phi_n = np.random.rand(mesh.nN)
 vec_e = np.random.rand(mesh.nE)
 vec_f = np.random.rand(mesh.nF)
 

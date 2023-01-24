@@ -5,8 +5,6 @@ Advanced Examples
 In this section, we demonstrate how to go from the inner product to the
 discrete approximation for some special cases. We also show how all
 necessary operators are constructed for each case.
-    
-
 
 """
 
