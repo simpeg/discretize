@@ -55,7 +55,7 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         # Read the file as line strings, remove lines with comment = !
         msh = np.genfromtxt(file_name, delimiter="\n", dtype=str, comments="!")
         # Fist line is the size of the model
-        sizeM = np.array(msh[0].split(), dtype=float)
+        # sizeM = np.array(msh[0].split(), dtype=float)
         # Second line is the South-West-Top corner coordinates.
         origin = np.array(msh[1].split(), dtype=float)
         # Read the cell sizes
@@ -252,6 +252,7 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         file_name : str or file name
             full path for the output mesh file or just its name if directory is specified
         model : (n_cells) numpy.ndarray
+            The model to write out.
         directory : str, optional
             output directory
         """

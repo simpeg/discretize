@@ -763,7 +763,7 @@ class InterfaceVTK(object):
         key = vtkObj.GetClassName()
         try:
             write = writers[key]
-        except:
+        except KeyError:
             raise RuntimeError("VTK data type `%s` is not currently supported." % key)
         return write(file_name, vtkObj, directory=directory)
 

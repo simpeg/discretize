@@ -488,8 +488,12 @@ def face_info(xyz, A, B, C, D, average=True, normalize_normals=True, **kwargs):
     nC = cross(CD, BC)
     nD = cross(DA, CD)
 
-    length = lambda x: np.sqrt(x[:, 0] ** 2 + x[:, 1] ** 2 + x[:, 2] ** 2)
-    normalize = lambda x: x / np.kron(np.ones((1, x.shape[1])), mkvc(length(x), 2))
+    def length(x):
+        return np.sqrt(x[:, 0] ** 2 + x[:, 1] ** 2 + x[:, 2] ** 2)
+
+    def normalize(x):
+        return x / np.kron(np.ones((1, x.shape[1])), mkvc(length(x), 2))
+
     if average:
         # average the normals at each vertex.
         N = (nA + nB + nC + nD) / 4  # this is intrinsically weighted by area

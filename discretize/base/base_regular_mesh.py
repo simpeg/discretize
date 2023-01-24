@@ -813,7 +813,12 @@ class BaseRectangularMesh(BaseRegularMesh):
         return int(np.prod(self.shape_faces_z))
 
     def reshape(
-        self, x, x_type="cell_centers", out_type="cell_centers", format="V", **kwargs
+        self,
+        x,
+        x_type="cell_centers",
+        out_type="cell_centers",
+        return_format="V",
+        **kwargs,
     ):
         """General reshape method for tensor quantities
 
@@ -831,15 +836,15 @@ class BaseRectangularMesh(BaseRegularMesh):
         out_type : str
             Defines the output quantity. Choice depends on your input for *x_type*:
 
-                - *x_type* = 'CC' ---> *out_type* = 'CC'
-                - *x_type* = 'N' ---> *out_type* = 'N'
-                - *x_type* = 'F' ---> *out_type* = {'F', 'Fx', 'Fy', 'Fz'}
-                - *x_type* = 'E' ---> *out_type* = {'E', 'Ex', 'Ey', 'Ez'}
-        format : str
+            - *x_type* = 'CC' ---> *out_type* = 'CC'
+            - *x_type* = 'N' ---> *out_type* = 'N'
+            - *x_type* = 'F' ---> *out_type* = {'F', 'Fx', 'Fy', 'Fz'}
+            - *x_type* = 'E' ---> *out_type* = {'E', 'Ex', 'Ey', 'Ez'}
+        return_format : str
             The dimensions of quantity being returned
 
-                - *V:* return a vector (1D array) or a list of vectors
-                - *M:* return matrix (nD array) or a list of matrices
+            - *V:* return a vector (1D array) or a list of vectors
+            - *M:* return matrix (nD array) or a list of matrices
 
         """
         if "xType" in kwargs:
@@ -856,6 +861,13 @@ class BaseRectangularMesh(BaseRegularMesh):
                 FutureWarning,
             )
             out_type = kwargs["outType"]
+        if "format" in kwargs:
+            warnings.warn(
+                "The format keyword argument has been deprecated, please use return_format. "
+                "This will be removed in discretize 1.0.0",
+                FutureWarning,
+            )
+            return_format = kwargs["format"]
 
         x_type = self._parse_location_type(x_type)
         out_type = self._parse_location_type(out_type)
@@ -882,8 +894,8 @@ class BaseRectangularMesh(BaseRegularMesh):
             raise Exception(
                 "out_type must be either '" + "', '".join(allowed_x_type) + "'"
             )
-        if format not in ["M", "V"]:
-            raise Exception("format must be either 'M' or 'V'")
+        if return_format not in ["M", "V"]:
+            raise Exception("return_format must be either 'M' or 'V'")
         if out_type[: len(x_type)] != x_type:
             raise Exception("You cannot change types when reshaping.")
         if x_type not in out_type:
@@ -914,9 +926,9 @@ class BaseRectangularMesh(BaseRegularMesh):
 
         def outKernal(xx, nn):
             """Returns xx as either a matrix (shape == nn) or a vector."""
-            if format == "M":
+            if return_format == "M":
                 return xx.reshape(nn, order="F")
-            elif format == "V":
+            elif return_format == "V":
                 return mkvc(xx)
 
         def switchKernal(xx):
@@ -977,7 +989,7 @@ class BaseRectangularMesh(BaseRegularMesh):
                 raise Exception("Not sure what to do with a vector vector quantity..")
             outTypeCopy = out_type
             out = ()
-            for ii, dirName in enumerate(["x", "y", "z"][: self.dim]):
+            for dirName in ["x", "y", "z"][: self.dim]:
                 out_type = outTypeCopy + "_" + dirName
                 out += (switchKernal(x),)
             return out

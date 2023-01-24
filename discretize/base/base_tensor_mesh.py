@@ -143,7 +143,7 @@ class BaseTensorMesh(BaseRegularMesh):
         # ensure value is a 1D array at all times
         try:
             value = list(value)
-        except:
+        except TypeError:
             raise TypeError("origin must be iterable")
         if len(value) != self.dim:
             raise ValueError("Dimension mismatch. len(origin) != len(h)")
@@ -877,29 +877,23 @@ class BaseTensorMesh(BaseRegularMesh):
     def _fastInnerProductDeriv(
         self, projection_type, model, invert_model=False, invert_matrix=False
     ):
-        """
+        """Faster function for inner product derivatives on tensor meshes
 
         Parameters
         ----------
-
         projection_type : str
             'E' or 'F'
-
         tensorType : TensorType
             type of the tensor
-
         invert_model : bool
             inverts the material property
-
         invert_matrix : bool
             inverts the matrix
-
 
         Returns
         -------
         function
             dMdmu, the derivative of the inner product matrix
-
         """
 
         projection_type = projection_type[0].upper()

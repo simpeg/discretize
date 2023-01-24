@@ -16,6 +16,8 @@ extend-ignore =
     W503,
     # Ignore spaces before a colon (Black handles it)
     E203,
+    # Ignore rst warnings for start and end, due to *args and **kwargs being invalid rst, but good for numpydoc
+    RST210,RST213,
     D,
 exclude =
     .git,
@@ -50,8 +52,9 @@ rst-roles =
     mod,
     meth,
     ref,
+    data,
     # Python programming language:
-    py:func,py:mod,py:attr,
+    py:func,py:mod,py:attr,py:meth,
     # Collapse functionality
 rst-directives =
     # These are sorted alphabetically - but that does not matter

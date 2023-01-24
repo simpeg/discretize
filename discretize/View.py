@@ -7,6 +7,6 @@ deprecate_module(
     future_warn=True,
 )
 try:
-    from discretize.mixins.mpl_mod import Slicer
+    from discretize.mixins.mpl_mod import Slicer  # NOQA F401
 except ImportError:
     pass

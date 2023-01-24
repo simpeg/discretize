@@ -594,9 +594,9 @@ def check_derivative(
             ax.set_xlabel("h")
             ax.set_ylabel("Error")
             leg = ax.legend(
-                ["$\mathcal{O}(h)$", "$\mathcal{O}(h^2)$"],
+                [r"$\mathcal{O}(h)$", r"$\mathcal{O}(h^2)$"],
                 loc="best",
-                title="$f(x + h\Delta x) - f(x) - h g(x) \Delta x - \mathcal{O}(h^2) = 0$",
+                title=r"$f(x + h\Delta x) - f(x) - h g(x) \Delta x - \mathcal{O}(h^2) = 0$",
                 frameon=False,
             )
             plt.setp(leg.get_title(), fontsize=15)

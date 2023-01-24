@@ -13,7 +13,6 @@ from discretize.utils import (
     sdinv,
 )
 import numpy as np
-from discretize.utils.code_utils import deprecate_method
 import warnings
 
 
@@ -117,29 +116,21 @@ class InnerProducts(object):
 
         Parameters
         ----------
-
         str : projection_type
             'F' for faces 'E' for edges
-
         numpy.ndarray : model
             material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
-
         bool : invert_model
             inverts the material property
-
         bool : invert_matrix
             inverts the matrix
-
         bool : do_fast
             do a faster implementation if available.
 
-
         Returns
         -------
-
         scipy.sparse.csr_matrix
             M, the inner product matrix (nE, nE)
-
         """
         if "invProp" in kwargs:
             warnings.warn(
@@ -193,14 +184,18 @@ class InnerProducts(object):
         return A
 
     def _getInnerProductProjectionMatrices(self, projection_type, tensorType):
-        """
+        """Internal function for creating matrices.
+
         Parameters
         ----------
         projection_type : str
             'F' for faces 'E' for edges
-
         tensorType : TensorType
             type of the tensor: TensorType(mesh, sigma)
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix
         """
         if not isinstance(tensorType, TensorType):
             raise TypeError("tensorType must be an instance of TensorType.")
@@ -313,30 +308,25 @@ class InnerProducts(object):
         invert_model=False,
         invert_matrix=False,
     ):
-        """
+        """Internal function for creating derivatives.
+
         Parameters
         ----------
         model : numpy.ndarray
             material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
-
         projection_type : str
             'F' for faces 'E' for edges
-
         do_fast : bool
             do a faster implementation if available.
-
         invert_model : bool
             inverts the material property
-
         invert_matrix : bool
             inverts the matrix
-
 
         Returns
         -------
         scipy.sparse.csr_matrix
             dMdm, the derivative of the inner product matrix (nE, nC*nA)
-
         """
         fast = None
         if hasattr(self, "_fastInnerProductDeriv") and do_fast:
@@ -365,27 +355,23 @@ class InnerProducts(object):
         return innerProductDeriv
 
     def _getInnerProductDerivFunction(self, tensorType, P, projection_type, v):
-        """
+        """Internal function for creating derivatives.
+
         Parameters
         ----------
         model : numpy.ndarray
             material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
-
         v : numpy.ndarray
             vector to multiply (required in the general implementation)
-
         P : list
             list of projection matrices
-
         projection_type : str
             'F' for faces 'E' for edges
-
 
         Returns
         -------
         scipy.sparse.csr_matrix
             dMdm, the derivative of the inner product matrix (n, nC*nA)
-
         """
         if projection_type not in ["F", "E"]:
             raise TypeError("projection_type must be 'F' for faces or 'E' for edges")
@@ -403,26 +389,26 @@ class InnerProducts(object):
 
         if tensorType == 0:
             dMdm = spzeros(n, 1)
-            for i, p in enumerate(P):
+            for p in P:
                 dMdm = dMdm + sp.csr_matrix(
                     (p.T * (p * v), (range(n), np.zeros(n))), shape=(n, 1)
                 )
         if d == 1:
             if tensorType == 1:
                 dMdm = spzeros(n, self.nC)
-                for i, p in enumerate(P):
+                for p in P:
                     dMdm = dMdm + p.T * sdiag(p * v)
         elif d == 2:
             if tensorType == 1:
                 dMdm = spzeros(n, self.nC)
-                for i, p in enumerate(P):
+                for p in P:
                     Y = p * v
                     y1 = Y[: self.nC]
                     y2 = Y[self.nC :]
                     dMdm = dMdm + p.T * sp.vstack((sdiag(y1), sdiag(y2)))
             elif tensorType == 2:
                 dMdms = [spzeros(n, self.nC) for _ in range(2)]
-                for i, p in enumerate(P):
+                for p in P:
                     Y = p * v
                     y1 = Y[: self.nC]
                     y2 = Y[self.nC :]
@@ -431,7 +417,7 @@ class InnerProducts(object):
                 dMdm = sp.hstack(dMdms)
             elif tensorType == 3:
                 dMdms = [spzeros(n, self.nC) for _ in range(3)]
-                for i, p in enumerate(P):
+                for p in P:
                     Y = p * v
                     y1 = Y[: self.nC]
                     y2 = Y[self.nC :]
@@ -442,7 +428,7 @@ class InnerProducts(object):
         elif d == 3:
             if tensorType == 1:
                 dMdm = spzeros(n, self.nC)
-                for i, p in enumerate(P):
+                for p in P:
                     Y = p * v
                     y1 = Y[: self.nC]
                     y2 = Y[self.nC : self.nC * 2]
@@ -450,7 +436,7 @@ class InnerProducts(object):
                     dMdm = dMdm + p.T * sp.vstack((sdiag(y1), sdiag(y2), sdiag(y3)))
             elif tensorType == 2:
                 dMdms = [spzeros(n, self.nC) for _ in range(3)]
-                for i, p in enumerate(P):
+                for p in P:
                     Y = p * v
                     y1 = Y[: self.nC]
                     y2 = Y[self.nC : self.nC * 2]
@@ -461,7 +447,7 @@ class InnerProducts(object):
                 dMdm = sp.hstack(dMdms)
             elif tensorType == 3:
                 dMdms = [spzeros(n, self.nC) for _ in range(6)]
-                for i, p in enumerate(P):
+                for p in P:
                     Y = p * v
                     y1 = Y[: self.nC]
                     y2 = Y[self.nC : self.nC * 2]
@@ -511,34 +497,32 @@ class InnerProducts(object):
         return Px
 
     def _getFacePxx(M):
-        """returns a function for creating projection matrices
-
-        Mats takes you from faces a subset of all faces on only the
-        faces that you ask for.
-
-        These are centered around a single nodes.
-
-        For example, if this was your entire mesh:
-
-                        f3(Yp)
-                  2_______________3
-                  |               |
-                  |               |
-                  |               |
-          f0(Xm)  |       x       |  f1(Xp)
-                  |               |
-                  |               |
-                  |_______________|
-                  0               1
-                        f2(Ym)
-
-        Pxx('fXm','fYm') = | 1, 0, 0, 0 |
-                           | 0, 0, 1, 0 |
-
-        Pxx('fXp','fYm') = | 0, 1, 0, 0 |
-                           | 0, 0, 1, 0 |
-
-        """
+        # returns a function for creating projection matrices
+        #
+        # Mats takes you from faces a subset of all faces on only the
+        # faces that you ask for.
+        #
+        # These are centered around a single nodes.
+        #
+        # For example, if this was your entire mesh:
+        #
+        #                 f3(Yp)
+        #           2_______________3
+        #           |               |
+        #           |               |
+        #           |               |
+        #   f0(Xm)  |       x       |  f1(Xp)
+        #           |               |
+        #           |               |
+        #           |_______________|
+        #           0               1
+        #                 f2(Ym)
+        #
+        # Pxx('fXm','fYm') = | 1, 0, 0, 0 |
+        #                    | 0, 0, 1, 0 |
+        #
+        # Pxx('fXp','fYm') = | 0, 1, 0, 0 |
+        #                    | 0, 0, 1, 0 |
         i, j = np.arange(M.shape_cells[0]), np.arange(M.shape_cells[1])
 
         iijj = ndgrid(i, j)

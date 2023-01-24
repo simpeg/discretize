@@ -1,4 +1,4 @@
-from discretize.utils.curvilinear_utils import *
+from discretize.utils.curvilinear_utils import *  # NOQA F401,F403
 import warnings
 
 warnings.warn(

@@ -92,7 +92,7 @@ def random_model(shape, seed=None, anisotropy=None, its=100, bounds=None):
 
     smth = smth / smth.sum()  # normalize
     mi = mr
-    for i in range(its):
+    for _i in range(its):
         mi = ndi.convolve(mi, smth)
 
     # scale the model to live between the bounds.
@@ -387,7 +387,7 @@ def extract_core_mesh(xyzlim, mesh, mesh_type="tensor"):
 def mesh_builder_xyz(
     xyz,
     h,
-    padding_distance=[[0, 0], [0, 0], [0, 0]],
+    padding_distance=None,
     base_mesh=None,
     depth_core=None,
     expansion_factor=1.3,
@@ -410,7 +410,7 @@ def mesh_builder_xyz(
     h : (dim ) list
         Cell size(s) for the core mesh
     padding_distance : list, optional
-        Padding distances [[W,E], [N,S], [Down,Up]]
+        Padding distances [[W,E], [N,S], [Down,Up]], default is no padding.
     base_mesh : discretize.TensorMesh or discretize.TreeMesh, optional
         discretize mesh used to center the core mesh
     depth_core : float, optional
@@ -447,6 +447,8 @@ def mesh_builder_xyz(
     if mesh_type.lower() not in ["tensor", "tree"]:
         raise ValueError("Revise mesh_type. Only TENSOR | TREE mesh are implemented")
 
+    if padding_distance is None:
+        padding_distance = [[0, 0], [0, 0], [0, 0]]
     # Get extent of points
     limits = []
     center = []
@@ -501,7 +503,7 @@ def mesh_builder_xyz(
         # Figure out full extent required from input
         h_dim = []
         nC_origin = []
-        for ii, cc in enumerate(nC):
+        for ii, _cc in enumerate(nC):
             extent = limits[ii][0] - limits[ii][1] + np.sum(padding_distance[ii])
 
             # Number of cells at the small octree level
@@ -511,9 +513,8 @@ def mesh_builder_xyz(
         # Define the mesh and origin
         mesh = discretize.TreeMesh(h_dim)
 
-        for ii, cc in enumerate(nC):
+        for ii, _cc in enumerate(nC):
             core = limits[ii][0] - limits[ii][1]
-            pad2 = int(np.log2(padding_distance[ii][0] / h[ii] + 1))
 
             nC_origin += [int(np.ceil((mesh.h[ii].sum() - core) / h[ii] / 2))]
 
@@ -553,7 +554,7 @@ def refine_tree_xyz(
     mesh,
     xyz,
     method="radial",
-    octree_levels=[1, 1, 1],
+    octree_levels=(1, 1, 1),
     octree_levels_padding=None,
     finalize=False,
     min_level=0,
@@ -726,7 +727,7 @@ def refine_tree_xyz(
         )
         rs = np.ones(xyz.shape[0])
         level = np.ones(xyz.shape[0], dtype=np.int32)
-        for ii, nC in enumerate(octree_levels):
+        for ii, _nC in enumerate(octree_levels):
             # skip "zero" sized balls
             if rMax[ii] > 0:
                 mesh.refine_ball(

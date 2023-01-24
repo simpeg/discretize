@@ -103,7 +103,7 @@ class CurvilinearMesh(
             raise ValueError(
                 f"Only supports 2 and 3 dimensional meshes, saw a node_list of length {dim}"
             )
-        for i, nodes in enumerate(node_list):
+        for nodes in node_list:
             if len(nodes.shape) != dim:
                 raise ValueError(
                     f"Unexpected shape of item in node list, expect array with {dim} dimensions, got {len(nodes.shape)}"

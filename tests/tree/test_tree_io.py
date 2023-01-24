@@ -7,6 +7,7 @@ import json
 
 try:
     import vtk  # NOQA F401
+
     has_vtk = True
 except ImportError:
     has_vtk = False

@@ -18,7 +18,7 @@ def mkvc(x, n_dims=1, **kwargs):
         An array that will be reorganized and output as a vector. The input array
         will be flattened on input in Fortran order.
     n_dims : int
-        The dimension of the output vector. :data:`numpy.newaxis` are appened to the
+        The dimension of the output vector. :data:`numpy.newaxis` are appended to the
         output array until it has this many axes.
 
     Returns
@@ -381,7 +381,7 @@ def ndgrid(*args, vector=True, order="F"):
     return meshed
 
 
-def make_boundary_bool(shape, dir="xyz"):
+def make_boundary_bool(shape, bdir="xyz", **kwargs):
     r"""Return boundary indices of a tensor grid.
 
     For a tensor grid whose shape is given (1D, 2D or 3D), this function
@@ -392,7 +392,7 @@ def make_boundary_bool(shape, dir="xyz"):
     ----------
     shape : (dim) tuple of int
         Defines the shape of the tensor (1D, 2D or 3D).
-    dir : str containing characters 'x', 'y' and/or 'z'
+    bdir : str containing characters 'x', 'y' and/or 'z'
         Specify the boundaries whose indices you want returned; e.g. for a 3D
         tensor, you may set *dir* = 'xz' to return the indices of the x and
         z boundary locations.
@@ -441,14 +441,22 @@ def make_boundary_bool(shape, dir="xyz"):
            [1, 6],
            [3, 6]])
     """
+    old_dir = kwargs.pop("dir", None)
+    if old_dir is not None:
+        warnings.warn(
+            DeprecationWarning,
+            "The `dir` keyword argument has been renamed to `bdir` to avoid shadowing the "
+            "builtin variable `dir`. This will be removed in discretize 1.0.0",
+        )
+        bdir = old_dir
     is_b = np.zeros(shape, dtype=bool, order="F")
-    if "x" in dir:
+    if "x" in bdir:
         is_b[[0, -1]] = True
     if len(shape) > 1:
-        if "y" in dir:
+        if "y" in bdir:
             is_b[:, [0, -1]] = True
     if len(shape) > 2:
-        if "z" in dir:
+        if "z" in bdir:
             is_b[:, :, [0, -1]] = True
     return is_b.reshape(-1, order="F")
 
@@ -606,7 +614,6 @@ def inverse_3x3_block_diagonal(
         Vectors which contain the
         corresponding element for all 3x3 matricies
     return_matrix : bool, optional
-
         - **True**: Returns the sparse block 3x3 matrix *M* (default).
         - **False:** Returns the vectors containing the elements of each matrix' inverse.
 
@@ -765,7 +772,6 @@ def inverse_2x2_block_diagonal(a11, a12, a21, a22, return_matrix=True, **kwargs)
         All arguments a11, a12, a21, a22 are vectors which contain the
         corresponding element for all 2x2 matricies
     return_matrix : bool, optional
-
         - **True:** Returns the sparse block 2x2 matrix *M*.
         - **False:** Returns the vectors containing the elements of each matrix' inverse.
 
@@ -1101,7 +1107,6 @@ def make_property_tensor(mesh, tensor):
     mesh : discretize.base.BaseMesh
        A mesh
     tensor : numpy.ndarray or a float
-
         - *Scalar:* A float is entered.
         - *Isotropic:* A 1D numpy.ndarray with a property value for every cell.
         - *Anisotropic:* A (*nCell*, *dim*) numpy.ndarray where each row
@@ -1256,7 +1261,6 @@ def inverse_property_tensor(mesh, tensor, return_matrix=False, **kwargs):
     mesh : discretize.base.BaseMesh
        A mesh
     tensor : numpy.ndarray or float
-
         - *Scalar:* A float is entered.
         - *Isotropic:* A 1D numpy.ndarray with a property value for every cell.
         - *Anisotropic:* A (*nCell*, *dim*) numpy.ndarray where each row
@@ -1267,7 +1271,6 @@ def inverse_property_tensor(mesh, tensor, return_matrix=False, **kwargs):
           meshes and *nParam* = 6 for 3D meshes.
 
     return_matrix : bool, optional
-
         - *True:* the function returns the inverse of the property tensor.
         - *False:* the function returns the non-zero elements of the inverse of the
           property tensor in a numpy.ndarray in the same order as the input argument
@@ -1276,7 +1279,6 @@ def inverse_property_tensor(mesh, tensor, return_matrix=False, **kwargs):
     Returns
     -------
     numpy.ndarray or scipy.sparse.coo_matrix
-
         - If *return_matrix* = *False*, the function outputs the parameters defining the
           inverse of the property tensor in a numpy.ndarray with the same dimensions as
           the input argument *tensor*
