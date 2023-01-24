@@ -1,3 +1,4 @@
+"""Functions for working with curvilinear meshes."""
 import numpy as np
 from discretize.utils.matrix_utils import mkvc, ndgrid, sub2ind
 from discretize.utils.code_utils import deprecate_function
@@ -5,7 +6,7 @@ import warnings
 
 
 def example_curvilinear_grid(nC, exType):
-    """Creates and returns the gridded node locations for a curvilinear mesh.
+    """Create the gridded node locations for a curvilinear mesh.
 
     Parameters
     ----------
@@ -75,7 +76,7 @@ def example_curvilinear_grid(nC, exType):
 
 
 def volume_tetrahedron(xyz, A, B, C, D):
-    """Returns the tetrahedron volumes for a specified set of verticies.
+    r"""Return the tetrahedron volumes for a specified set of verticies.
 
     Let *xyz* be an (n, 3) array denoting a set of vertex locations.
     Any 4 vertex locations *a, b, c* and *d* can be used to define a tetrahedron.
@@ -84,8 +85,8 @@ def volume_tetrahedron(xyz, A, B, C, D):
     See algorithm: https://en.wikipedia.org/wiki/Tetrahedron#Volume
 
     .. math::
-       vol = {1 \\over 6} \\big | ( \\mathbf{a - d} ) \\cdot
-       ( ( \\mathbf{b - d} ) \\times ( \\mathbf{c - d} ) ) \\big |
+       vol = {1 \over 6} \big | ( \mathbf{a - d} ) \cdot
+       ( ( \mathbf{b - d} ) \times ( \mathbf{c - d} ) ) \big |
 
     Parameters
     ----------
@@ -153,7 +154,6 @@ def volume_tetrahedron(xyz, A, B, C, D):
         >>> ax.text(-0.25, 0., 3., 'Volume of the tetrahedron: {:g} $m^3$'.format(vol))
         >>> plt.show()
     """
-
     AD = xyz[A, :] - xyz[D, :]
     BD = xyz[B, :] - xyz[D, :]
     CD = xyz[C, :] - xyz[D, :]
@@ -167,7 +167,7 @@ def volume_tetrahedron(xyz, A, B, C, D):
 
 
 def index_cube(nodes, grid_shape, n=None):
-    """Returns the index of nodes on a tensor (or curvilinear) mesh.
+    """Return the index of nodes on a tensor (or curvilinear) mesh.
 
     For 2D tensor meshes, each cell is defined by nodes
     *A, B, C* and *D*. And for 3D tensor meshes, each cell
@@ -256,7 +256,6 @@ def index_cube(nodes, grid_shape, n=None):
         >>> ax1.set_title('A nodes (red) and C nodes (green)')
         >>> plt.show()
     """
-
     if not isinstance(nodes, str):
         raise TypeError("Nodes must be a str variable: e.g. 'ABCD'")
     nodes = nodes.upper()
@@ -307,7 +306,7 @@ def index_cube(nodes, grid_shape, n=None):
 
 
 def face_info(xyz, A, B, C, D, average=True, normalize_normals=True, **kwargs):
-    """Returns normal surface vector and area for a given set of faces.
+    r"""Return normal surface vectors and areas for a given set of faces.
 
     Let *xyz* be an (n, 3) array denoting a set of vertex locations.
     Now let vertex locations *a, b, c* and *d* define a quadrilateral
@@ -337,11 +336,11 @@ def face_info(xyz, A, B, C, D, average=True, normalize_normals=True, **kwargs):
     the average normal surface vector as follows:
 
     .. math::
-        \\bf{n} = \\frac{1}{4} \\big (
-        \\bf{v_{ab} \\times v_{da}} +
-        \\bf{v_{bc} \\times v_{ab}} +
-        \\bf{v_{cd} \\times v_{bc}} +
-        \\bf{v_{da} \\times v_{cd}} \\big )
+        \bf{n} = \frac{1}{4} \big (
+        \bf{v_{ab} \times v_{da}} +
+        \bf{v_{bc} \times v_{ab}} +
+        \bf{v_{cd} \times v_{bc}} +
+        \bf{v_{da} \times v_{cd}} \big )
 
 
     For computing the surface area, we assume the vertices define a quadrilateral.

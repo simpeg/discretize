@@ -1,3 +1,4 @@
+"""Useful tools for working with meshes."""
 import numpy as np
 import scipy.ndimage as ndi
 import scipy.sparse as sp
@@ -242,7 +243,7 @@ def closest_points_index(mesh, pts, grid_loc="CC", **kwargs):
 
 
 def extract_core_mesh(xyzlim, mesh, mesh_type="tensor"):
-    """Extracts the core mesh from a global mesh.
+    """Extract the core mesh from a global mesh.
 
     Parameters
     ----------
@@ -264,7 +265,6 @@ def extract_core_mesh(xyzlim, mesh, mesh_type="tensor"):
 
     Examples
     --------
-
     Here, we define a 2D tensor mesh that has both a core region and padding.
     We use the function **extract_core_mesh** to return a mesh which contains
     only the core region.
@@ -304,7 +304,6 @@ def extract_core_mesh(xyzlim, mesh, mesh_type="tensor"):
     >>> ax.set_title('Core Mesh')
     >>> plt.show()
     """
-
     if not isinstance(mesh, discretize.TensorMesh):
         raise Exception("Only implemented for class TensorMesh")
 
@@ -421,7 +420,7 @@ def mesh_builder_xyz(
         Specify output mesh type
 
     Returns
-    --------
+    -------
     discretize.TensorMesh or discretize.TreeMesh
         Mesh of type specified by *mesh_type*
 
@@ -560,7 +559,7 @@ def refine_tree_xyz(
     min_level=0,
     max_distance=np.inf,
 ):
-    """Refine region within a :class:`~discretize.TreeMesh`
+    """Refine region within a :class:`~discretize.TreeMesh`.
 
     This function refines the specified region of a tree mesh using
     one of several methods. These are summarized below:
@@ -694,7 +693,6 @@ def refine_tree_xyz(
     >>> ax.set_title("QuadTree Mesh")
     >>> plt.show()
     """
-
     if octree_levels_padding is not None:
         if len(octree_levels_padding) != len(octree_levels):
             raise ValueError(
@@ -922,7 +920,7 @@ def refine_tree_xyz(
 
 
 def active_from_xyz(mesh, xyz, grid_reference="CC", method="linear"):
-    """Return boolean array indicating which cells are below surface
+    """Return boolean array indicating which cells are below surface.
 
     For a set of locations defining a surface, **active_from_xyz** outputs a
     boolean array indicating which mesh cells like below the surface points.
@@ -1098,7 +1096,7 @@ def active_from_xyz(mesh, xyz, grid_reference="CC", method="linear"):
 
 
 def example_simplex_mesh(rect_shape):
-    """Returns a simple tetrahedral mesh on a unit cube in 2D or 3D.
+    """Create a simple tetrahedral mesh on a unit cube in 2D or 3D.
 
     Returns the nodes and connectivity of a triangulated domain on the [0, 1] cube.
     This is not necessarily a good triangulation, just a complete one. This is mostly

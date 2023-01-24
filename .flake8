@@ -18,7 +18,6 @@ extend-ignore =
     E203,
     # Ignore rst warnings for start and end, due to *args and **kwargs being invalid rst, but good for numpydoc
     RST210,RST213,
-    D,
 exclude =
     .git,
     .eggs,
@@ -31,7 +30,8 @@ exclude =
     discretize/_extensions/*.py
 per-file-ignores =
     # disable unused-imports errors on __init__.py
-    __init__.py: F401,
+    # Automodule used for __init__ scripts' description
+    __init__.py: F401, D204, D205, D400,
     # do not check for assigned lambdas in tests
     # do not check for missing docstrings in tests
     tests/*: E731, D,

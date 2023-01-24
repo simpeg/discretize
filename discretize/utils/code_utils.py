@@ -1,3 +1,4 @@
+"""Utilities for common operations within code."""
 import numpy as np
 import warnings
 
@@ -12,19 +13,15 @@ def is_scalar(f):
 
     Parameters
     ----------
-    f :
+    f : object
         Any input quantity
 
     Returns
     -------
-    bool :
-
+    bool
         - *True* if the input argument is an integer, float or complex number
         - *False* otherwise
-
-
     """
-
     if isinstance(f, SCALARTYPES):
         return True
     elif isinstance(f, np.ndarray) and f.size == 1 and isinstance(f[0], SCALARTYPES):
@@ -33,7 +30,7 @@ def is_scalar(f):
 
 
 def as_array_n_by_dim(pts, dim):
-    """Ensures the given array will have *dim* columns.
+    """Coerce the given array to have *dim* columns.
 
     The function **as_array_n_by_dim** will examine the *pts* array,
     and coerce it to be at least  if the number of columns is equal to *dim*.
@@ -75,7 +72,7 @@ def as_array_n_by_dim(pts, dim):
 
 
 def requires(modules):
-    """Decorator to wrap functions with soft dependencies.
+    """Decorate a function with soft dependencies.
 
     This function was inspired by the `requires` function of pysal,
     which is released under the 'BSD 3-Clause "New" or "Revised" License'.
@@ -95,7 +92,6 @@ def requires(modules):
         it returns an empty function which prints why it is not running.
 
     """
-
     # Check the required modules, add missing ones in the list `missing`.
     missing = []
     for key, item in modules.items():
@@ -118,6 +114,17 @@ def requires(modules):
 
 
 def deprecate_class(removal_version=None, new_location=None, future_warn=False):
+    """Decorate a class as deprecated.
+
+    Parameters
+    ----------
+    removal_version : str, optional
+        Which version the class will be removed in.
+    new_location : str, optional
+        A new package location for the class.
+    future_warn : bool, optional
+        Whether to issue a FutureWarning, or a DeprecationWarning.
+    """
     if future_warn:
         warn = FutureWarning
     else:
@@ -151,6 +158,19 @@ def deprecate_class(removal_version=None, new_location=None, future_warn=False):
 
 
 def deprecate_module(old_name, new_name, removal_version=None, future_warn=False):
+    """Deprecate a module.
+
+    Parameters
+    ----------
+    old_name : str
+        The old name of the module.
+    new_name : str
+        The new name of the module.
+    removal_version : str, optional
+        Which version the class will be removed in.
+    future_warn : bool, optional
+        Whether to issue a FutureWarning, or a DeprecationWarning.
+    """
     if future_warn:
         warn = FutureWarning
     else:
@@ -165,6 +185,19 @@ def deprecate_module(old_name, new_name, removal_version=None, future_warn=False
 
 
 def deprecate_property(new_name, old_name, removal_version=None, future_warn=False):
+    """Deprecate a class property.
+
+    Parameters
+    ----------
+    new_name : str
+        The new name of the property.
+    old_name : str
+        The old name of the property.
+    removal_version : str, optional
+        Which version the class will be removed in.
+    future_warn : bool, optional
+        Whether to issue a FutureWarning, or a DeprecationWarning.
+    """
     if future_warn:
         warn = FutureWarning
     else:
@@ -204,6 +237,19 @@ def deprecate_property(new_name, old_name, removal_version=None, future_warn=Fal
 
 
 def deprecate_method(new_name, old_name, removal_version=None, future_warn=False):
+    """Deprecate a class method.
+
+    Parameters
+    ----------
+    new_name : str
+        The new name of the method.
+    old_name : str
+        The old name of the method.
+    removal_version : str, optional
+        Which version the class will be removed in.
+    future_warn : bool, optional
+        Whether to issue a FutureWarning, or a DeprecationWarning.
+    """
     if future_warn:
         warn = FutureWarning
     else:
@@ -234,6 +280,19 @@ def deprecate_method(new_name, old_name, removal_version=None, future_warn=False
 
 
 def deprecate_function(new_function, old_name, removal_version=None, future_warn=False):
+    """Deprecate a function.
+
+    Parameters
+    ----------
+    new_function : callable
+        The new function.
+    old_name : str
+        The old name of the function.
+    removal_version : str, optional
+        Which version the class will be removed in.
+    future_warn : bool, optional
+        Whether to issue a FutureWarning, or a DeprecationWarning.
+    """
     if future_warn:
         warn = FutureWarning
     else:
