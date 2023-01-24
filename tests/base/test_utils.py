@@ -363,7 +363,9 @@ class TestZero(unittest.TestCase):
         assert -o // 2 == -1
         assert -o / 2.0 == -0.5
         assert 2 / o == 2
-        assert 2 / -o == -2
+        assert 2 // -o == -2
+        assert 2.3 // o == 2
+        assert 2.3 // -o == -3
 
         assert o.T == 1
         assert o.transpose() == 1

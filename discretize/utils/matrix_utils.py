@@ -1653,7 +1653,7 @@ class Identity(object):
         return 1 // v if self._positive else -1 // v
 
     def __rfloordiv__(self, v):
-        return 1 // v if self._positivie else -1 // v
+        return v // 1 if self._positivie else v // -1
 
     def __lt__(self, v):
         return 1 < v if self._positive else -1 < v
