@@ -16,18 +16,29 @@ extend-ignore =
     W503,
     # Ignore spaces before a colon (Black handles it)
     E203,
+    D,
 exclude =
     .git,
+    .eggs,
+    version.py,
     __pycache__,
     .ipynb_checkpoints,
+    docs/examples/*,
+    docs/tutorials/*,
+    docs/*,
+    discretize/_extensions/*.py
 per-file-ignores =
     # disable unused-imports errors on __init__.py
-    __init__.py: F401
+    __init__.py: F401,
     # do not check for assigned lambdas in tests
-    tests/*: E731
-include-in-doctest =
+    # do not check for missing docstrings in tests
+    tests/*: E731, D,
+    tutorials/*: D,
+    examples/*: D,
+exclude-from-doctest =
     # Only check discretize for docstring style
-    discretize/
+    tests/*,
+    tutorials/*,
 
 # Configure flake8-rst-docstrings
 # -------------------------------
@@ -39,3 +50,9 @@ rst-roles =
     mod,
     meth,
     ref,
+    # Python programming language:
+    py:func,py:mod,py:attr,
+    # Collapse functionality
+rst-directives =
+    # These are sorted alphabetically - but that does not matter
+    autosummary,currentmodule,deprecated,collapse,
