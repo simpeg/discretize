@@ -12,12 +12,11 @@ class TestInnerProducts(discretize.tests.OrderTest):
     meshSizes = [16, 32]
 
     def getError(self):
-
         call = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1], xyz[:, 2])
 
-        ex = lambda x, y, z: x ** 2 + y * z
-        ey = lambda x, y, z: (z ** 2) * x + y * z
-        ez = lambda x, y, z: y ** 2 + x * z
+        ex = lambda x, y, z: x**2 + y * z
+        ey = lambda x, y, z: (z**2) * x + y * z
+        ez = lambda x, y, z: y**2 + x * z
 
         sigma1 = lambda x, y, z: x * y + 1
         sigma2 = lambda x, y, z: x * z + 2
@@ -170,13 +169,12 @@ class TestInnerProducts2D(discretize.tests.OrderTest):
     meshSizes = [4, 8, 16, 32, 64, 128]
 
     def getError(self):
-
         z = 5  # Because 5 is just such a great number.
 
         call = lambda fun, xy: fun(xy[:, 0], xy[:, 1])
 
-        ex = lambda x, y: x ** 2 + y * z
-        ey = lambda x, y: (z ** 2) * x + y * z
+        ex = lambda x, y: x**2 + y * z
+        ey = lambda x, y: (z**2) * x + y * z
 
         sigma1 = lambda x, y: x * y + 1
         sigma2 = lambda x, y: x * z + 2
@@ -314,13 +312,12 @@ class TestInnerProducts1D(discretize.tests.OrderTest):
     meshSizes = [4, 8, 16, 32, 64, 128]
 
     def getError(self):
-
         y = 12  # Because 12 is just such a great number.
         z = 5  # Because 5 is just such a great number as well!
 
         call = lambda fun, x: fun(x)
 
-        ex = lambda x: x ** 2 + y * z
+        ex = lambda x: x**2 + y * z
 
         sigma1 = lambda x: x * y + 1
 

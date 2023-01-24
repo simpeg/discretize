@@ -64,7 +64,6 @@ class TestCellGrad2D(discretize.tests.OrderTest):
 
 
 class TestCellGrad3D(discretize.tests.OrderTest):
-
     name = "Cell Gradient 3D, using cellGradx, cellGrady, and cellGradz"
     meshTypes = MESHTYPES
     meshDimension = 3
@@ -316,12 +315,11 @@ class TestTreeInnerProducts(discretize.tests.OrderTest):
     meshSizes = [4, 8]
 
     def getError(self):
-
         call = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1], xyz[:, 2])
 
-        ex = lambda x, y, z: x ** 2 + y * z
-        ey = lambda x, y, z: (z ** 2) * x + y * z
-        ez = lambda x, y, z: y ** 2 + x * z
+        ex = lambda x, y, z: x**2 + y * z
+        ey = lambda x, y, z: (z**2) * x + y * z
+        ez = lambda x, y, z: y**2 + x * z
 
         sigma1 = lambda x, y, z: x * y + 1
         sigma2 = lambda x, y, z: x * z + 2
@@ -473,13 +471,12 @@ class TestTreeInnerProducts2D(discretize.tests.OrderTest):
     meshSizes = [4, 8]
 
     def getError(self):
-
         z = 5  # Because 5 is just such a great number.
 
         call = lambda fun, xy: fun(xy[:, 0], xy[:, 1])
 
-        ex = lambda x, y: x ** 2 + y * z
-        ey = lambda x, y: (z ** 2) * x + y * z
+        ex = lambda x, y: x**2 + y * z
+        ey = lambda x, y: (z**2) * x + y * z
 
         sigma1 = lambda x, y: x * y + 1
         sigma2 = lambda x, y: x * z + 2
@@ -617,7 +614,6 @@ class TestTreeAveraging2D(discretize.tests.OrderTest):
     expectedOrders = [2, 1]
 
     def getError(self):
-
         num = self.getAve(self.M) * self.getHere(self.M)
         err = np.linalg.norm((self.getThere(self.M) - num), np.inf)
         return err
@@ -698,7 +694,6 @@ class TestAveraging3D(discretize.tests.OrderTest):
     expectedOrders = [2, 1]
 
     def getError(self):
-
         num = self.getAve(self.M) * self.getHere(self.M)
         err = np.linalg.norm((self.getThere(self.M) - num), np.inf)
         return err

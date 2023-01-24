@@ -16,7 +16,7 @@ class FaceInnerProductFctsIsotropic(object):
     """Some made up face functions to test the face inner product"""
 
     def fcts(self):
-        j = sympy.Matrix([r ** 2 * z, r * z ** 2])
+        j = sympy.Matrix([r**2 * z, r * z**2])
 
         # Create an isotropic sigma vector
         Sig = sympy.Matrix(
@@ -65,7 +65,7 @@ class FaceInnerProductFunctionsDiagAnisotropic(FaceInnerProductFctsIsotropic):
     """
 
     def fcts(self):
-        j = sympy.Matrix([r ** 2 * z, r * z ** 2])
+        j = sympy.Matrix([r**2 * z, r * z**2])
 
         # Create an isotropic sigma vector
         Sig = sympy.Matrix(
@@ -98,7 +98,7 @@ class EdgeInnerProductFctsIsotropic(object):
     """Some made up edge functions to test the edge inner product"""
 
     def fcts(self):
-        h = sympy.Matrix([r ** 2 * z])
+        h = sympy.Matrix([r**2 * z])
 
         # Create an isotropic sigma vector
         Sig = sympy.Matrix([200 / (sympy.pi) * (r * z) ** 2])
@@ -236,7 +236,6 @@ class TestCylInnerProducts_simple(unittest.TestCase):
 
 
 class TestCylFaceInnerProducts_Order(tests.OrderTest):
-
     meshTypes = ["uniform_symmetric_CylMesh"]
     meshDimension = 3
 
@@ -251,7 +250,6 @@ class TestCylFaceInnerProducts_Order(tests.OrderTest):
 
 
 class TestCylEdgeInnerProducts_Order(tests.OrderTest):
-
     meshTypes = ["uniform_symmetric_CylMesh"]
     meshDimension = 3
 
@@ -266,7 +264,6 @@ class TestCylEdgeInnerProducts_Order(tests.OrderTest):
 
 
 class TestCylFaceInnerProductsDiagAnisotropic_Order(tests.OrderTest):
-
     meshTypes = ["uniform_symmetric_CylMesh"]
     meshDimension = 3
 

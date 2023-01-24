@@ -32,7 +32,7 @@ class TestCyl3DGeometries(unittest.TestCase):
         self.assertTrue(
             np.all(
                 area[sum(self.mesh.vnF[:2]) :]
-                == np.pi * self.mesh.hx ** 2 / self.mesh.nCy
+                == np.pi * self.mesh.hx**2 / self.mesh.nCy
             )
         )
 
@@ -60,11 +60,11 @@ class TestCyl3DGeometries(unittest.TestCase):
         )
 
     def test_vol(self):
-        self.assertTrue(self.mesh.vol.sum() == np.pi * self.mesh.hx ** 2 * self.mesh.hz)
+        self.assertTrue(self.mesh.vol.sum() == np.pi * self.mesh.hx**2 * self.mesh.hz)
         self.assertTrue(
             np.all(
                 self.mesh.vol
-                == np.pi * self.mesh.hx ** 2 * self.mesh.hz / self.mesh.nCy
+                == np.pi * self.mesh.hx**2 * self.mesh.hz / self.mesh.nCy
             )
         )
 

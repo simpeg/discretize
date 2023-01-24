@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 
 
 def run(plotIt=True):
-
     # Step1: Generate Tensor and Curvilinear Mesh
     sz = [40, 40]
     tM = discretize.TensorMesh(sz)

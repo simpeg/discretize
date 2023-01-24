@@ -233,7 +233,7 @@ def rotation_matrix_from_normals(v0, v1, tol=1e-20):
     rotAx *= 1.0 / np.linalg.norm(rotAx)
 
     cosT = n0dotn1 / (np.linalg.norm(n0) * np.linalg.norm(n1))
-    sinT = np.sqrt(1.0 - n0dotn1 ** 2)
+    sinT = np.sqrt(1.0 - n0dotn1**2)
 
     ux = np.array(
         [

@@ -57,6 +57,7 @@ Currently, discretize supports:
 * Cylindrically Symmetric Meshes
 * QuadTree and OcTree Meshes (2D and 3D)
 * Logically Rectangular Meshes (2D and 3D)
+* Triangular (2D) and Tetrahedral (3D) Meshes
 
 Installing
 ^^^^^^^^^^

@@ -201,7 +201,7 @@ class Test1D_InhomogeneousMixed(discretize.tests.OrderTest):
             return -j_fun(x)
 
         def q_fun(x):
-            return (np.pi ** 2) * np.cos(np.pi * x)
+            return (np.pi**2) * np.cos(np.pi * x)
 
         xc_ana = phi_fun(self.M.gridCC)
         q_ana = q_fun(self.M.gridCC)
@@ -277,7 +277,7 @@ class Test2D_InhomogeneousMixed(discretize.tests.OrderTest):
             return -j_funY(x)
 
         def q_fun(x):
-            return +2 * (np.pi ** 2) * phi_fun(x)
+            return +2 * (np.pi**2) * phi_fun(x)
 
         xc_ana = phi_fun(self.M.gridCC)
         q_ana = q_fun(self.M.gridCC)
@@ -401,7 +401,7 @@ class Test3D_InhomogeneousMixed(discretize.tests.OrderTest):
             return -j_funZ(x)
 
         def q_fun(x):
-            return 3 * (np.pi ** 2) * phi_fun(x)
+            return 3 * (np.pi**2) * phi_fun(x)
 
         xc_ana = phi_fun(self.M.gridCC)
         q_ana = q_fun(self.M.gridCC)

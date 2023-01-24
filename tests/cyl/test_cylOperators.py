@@ -73,7 +73,6 @@ class TestFaceDiv3D(tests.OrderTest):
     meshSizes = [8, 16, 32, 64]
 
     def getError(self):
-
         funR = lambda r, t, z: np.sin(2.0 * np.pi * r)
         funT = lambda r, t, z: r * np.exp(-r) * np.sin(t)  # * np.sin(2.*np.pi*r)
         funZ = lambda r, t, z: np.sin(2.0 * np.pi * z)
@@ -99,14 +98,12 @@ class TestFaceDiv3D(tests.OrderTest):
 
 
 class TestEdgeCurl3D(tests.OrderTest):
-
     name = "edgeCurl"
     meshTypes = MESHTYPES
     meshDimension = 3
     meshSizes = [8, 16, 32, 64]
 
     def getError(self):
-
         # use the same function in r, t, z
         # need to pick functions that make sense at the axis of symmetry
         # careful that r, theta contributions make sense at axis of symmetry
@@ -222,7 +219,6 @@ class TestAveF2CCV(tests.OrderTest):
     expectedOrders = 2
 
     def getError(self):
-
         funR = lambda r, t, z: np.sin(2 * np.pi * z) * np.sin(np.pi * r) * np.sin(t)
         funT = lambda r, t, z: np.sin(np.pi * z) * np.sin(np.pi * r) * np.sin(2 * t)
         funZ = lambda r, t, z: np.sin(np.pi * z) * np.sin(2 * np.pi * r) * np.sin(t)
@@ -253,7 +249,6 @@ class TestAveF2CC(tests.OrderTest):
     expectedOrders = 2  # the averaging does not account for differences in theta edge lengths (inner product does though)
 
     def getError(self):
-
         fun = lambda r, t, z: np.sin(np.pi * z) * np.sin(np.pi * r) * np.sin(t)
 
         Fc = cylF3(self.M, fun, fun, fun)
@@ -330,12 +325,11 @@ class TestAveN2F(tests.OrderTest):
 
 class FaceInnerProductFctsIsotropic(object):
     def fcts(self):
-
         j = sympy.Matrix(
             [
-                r ** 2 * sympy.sin(t) * z,
+                r**2 * sympy.sin(t) * z,
                 r * sympy.sin(t) * z,
-                r * sympy.sin(t) * z ** 2,
+                r * sympy.sin(t) * z**2,
             ]
         )
 
@@ -389,7 +383,6 @@ class TestAveE2CCV(tests.OrderTest):
     meshDimension = 3
 
     def getError(self):
-
         funR = lambda r, t, z: np.sin(np.pi * z) * np.sin(np.pi * r) * np.sin(t)
         funT = lambda r, t, z: np.sin(np.pi * z) * np.sin(np.pi * r) * np.sin(t)
         funZ = lambda r, t, z: np.sin(np.pi * z) * np.sin(np.pi * r) * np.sin(t)
@@ -419,7 +412,6 @@ class TestAveE2CC(tests.OrderTest):
     meshDimension = 3
 
     def getError(self):
-
         fun = lambda r, t, z: np.sin(np.pi * z) * np.sin(np.pi * r) * np.sin(t)
 
         Ec = cylE3(self.M, fun, fun, fun)
@@ -439,9 +431,9 @@ class EdgeInnerProductFctsIsotropic(object):
     def fcts(self):
         h = sympy.Matrix(
             [
-                r ** 2 * sympy.sin(t) * z,
+                r**2 * sympy.sin(t) * z,
                 r * sympy.sin(t) * z,
-                r * sympy.sin(t) * z ** 2,
+                r * sympy.sin(t) * z**2,
             ]
         )
 
@@ -534,7 +526,6 @@ class TestCylInnerProducts_simple(unittest.TestCase):
 
 
 class TestCylFaceInnerProducts_Order(tests.OrderTest):
-
     meshTypes = ["uniformCylMesh"]
     meshDimension = 3
 
@@ -549,7 +540,6 @@ class TestCylFaceInnerProducts_Order(tests.OrderTest):
 
 
 class TestCylEdgeInnerProducts_Order(tests.OrderTest):
-
     meshTypes = ["uniformCylMesh"]
     meshDimension = 3
 
@@ -569,7 +559,6 @@ class TestCylNodalGradient_Order(tests.OrderTest):
     meshDimension = 3
 
     def getError(self):
-
         mesh = self.M
 
         def fun(r, t, z=None):

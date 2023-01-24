@@ -868,7 +868,6 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
 
     @property
     def average_face_to_cell(self):
-
         n_cells = self.n_cells
         n_faces = self.n_faces
         col_inds = self._simplex_faces

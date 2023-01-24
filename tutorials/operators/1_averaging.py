@@ -54,7 +54,7 @@ x_centers = mesh.vectorCCx
 
 # Define a continuous function
 def fun(x):
-    return np.exp(-(x ** 2) / 50 ** 2)
+    return np.exp(-(x**2) / 50**2)
 
 
 # Compute function on nodes and cell centers
