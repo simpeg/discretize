@@ -1,3 +1,4 @@
+"""Module for ``matplotlib`` interaction with ``discretize``."""
 import numpy as np
 import warnings
 from discretize.utils import mkvc, ndgrid
@@ -81,7 +82,6 @@ class InterfaceMPL(object):
 
         Examples
         --------
-
         Plotting a 2D TensorMesh grid
 
         >>> from matplotlib import pyplot as plt
@@ -216,7 +216,7 @@ class InterfaceMPL(object):
         stream_threshold=None,
         **kwargs,
     ):
-        """Plots quantities defined on a given mesh.
+        """Plot quantities defined on a given mesh.
 
         This method is primarily used to plot models, scalar quantities and vector
         quantities defined on 2D meshes. For 3D :class:`discretize.TensorMesh` however,
@@ -410,7 +410,7 @@ class InterfaceMPL(object):
         stream_thickness=None,
         **kwargs,
     ):
-        """Plots slice of fields on the given 3D mesh.
+        """Plot a slice of fields on the given 3D mesh.
 
         Parameters
         ----------
@@ -1139,7 +1139,7 @@ class InterfaceMPL(object):
         stream_threshold=None,
         stream_thickness=None,
     ):
-        """Common function for plotting an image of a TensorMesh"""
+        # Common function for plotting an image of a TensorMesh
         matplotlib, plt = load_matplotlib()
 
         if ax is None:
@@ -2715,7 +2715,6 @@ class Slicer(object):
 
     def update_xy(self):
         """Update plot for change in Z-index."""
-
         # Clean up
         self._clear_elements(["xy_pc", "xz_ahw", "xz_ahk", "zy_avw", "zy_avk"])
 
@@ -2740,7 +2739,6 @@ class Slicer(object):
 
     def update_xz(self):
         """Update plot for change in Y-index."""
-
         # Clean up
         self._clear_elements(["xz_pc", "zy_ahk", "zy_ahw", "xy_ahk", "xy_ahw"])
 
@@ -2767,7 +2765,6 @@ class Slicer(object):
 
     def update_zy(self):
         """Update plot for change in X-index."""
-
         # Clean up
         self._clear_elements(["zy_pc", "xz_avw", "xz_avk", "xy_avw", "xy_avk"])
 

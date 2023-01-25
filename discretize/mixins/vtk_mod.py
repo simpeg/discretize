@@ -1,4 +1,5 @@
-"""
+"""Module for ``vtk`` interaction with ``discretize``.
+
 This module provides a way for ``discretize`` meshes to be
 converted to VTK data objects (and back when possible) if the
 `VTK Python package`_ is available.
@@ -80,17 +81,14 @@ def load_vtk(extra=None):
 
 
 def assign_cell_data(vtkDS, models=None):
-    """Assign the model(s) to the VTK dataset as ``CellData``
+    """Assign the model(s) to the VTK dataset as ``CellData``.
 
     Parameters
     ----------
-
     vtkDS : pyvista.Common
         Any given VTK data object that has cell data
-
     models : dict of str:numpy.ndarray
         Name('s) and array('s). Match number of cells
-
     """
     _, _nps = load_vtk()
 
@@ -111,7 +109,9 @@ def assign_cell_data(vtkDS, models=None):
 
 
 class InterfaceVTK(object):
-    """Class enabling straight forward conversion between ``discretize``
+    """VTK interface for ``discretize`` meshes.
+
+    Class enabling straight forward conversion between ``discretize``
     meshes and their corresponding `VTK <https://vtk.org/doc/nightly/html/index.html>`__ or
     `PyVista <https://docs.pyvista.org/>`__ data objects. Since ``InterfaceVTK``
     is inherritted by the :class:`~discretize.base.BaseMesh` class, this
@@ -190,16 +190,15 @@ class InterfaceVTK(object):
     """
 
     def __tree_mesh_to_vtk(mesh, models=None):
-        """
+        """Convert the TreeMesh to a vtk object.
+
         Constructs a :class:`pyvista.UnstructuredGrid` object of this tree mesh and
         the given models as ``cell_arrays`` of that ``pyvista`` dataset.
 
         Parameters
         ----------
-
         mesh : discretize.TreeMesh
             The tree mesh to convert to a :class:`pyvista.UnstructuredGrid`
-
         models : dict(numpy.ndarray)
             Name('s) and array('s). Match number of cells
 
@@ -257,19 +256,18 @@ class InterfaceVTK(object):
         return assign_cell_data(output, models=models)
 
     def __simplex_mesh_to_vtk(mesh, models=None):
-        """
+        """Convert the SimplexMesh to a vtk object.
+
         Constructs a :class:`pyvista.UnstructuredGrid` object of this simplex mesh and
         the given models as ``cell_arrays`` of that ``pyvista`` dataset.
 
         Parameters
         ----------
-
         mesh : discretize.SimplexMesh
             The simplex mesh to convert to a :class:`pyvista.UnstructuredGrid`
 
         models : dict(numpy.ndarray)
             Name('s) and array('s). Match number of cells
-
         """
         _vtk, _nps = load_vtk()
 
@@ -302,7 +300,7 @@ class InterfaceVTK(object):
 
     @staticmethod
     def __create_structured_grid(ptsMat, dims, models=None):
-        """An internal helper to build out structured grids"""
+        """Build a structured grid (an internal helper)."""
         _vtk, _nps = load_vtk()
 
         # Adjust if result was 2D:
@@ -324,7 +322,7 @@ class InterfaceVTK(object):
         return assign_cell_data(output, models=models)
 
     def __get_rotated_nodes(mesh):
-        """A helper to get the nodes of a mesh rotated by specified axes"""
+        """Rotate mesh nodes (a helper routine)."""
         nodes = mesh.gridN
         if mesh.dim == 1:
             nodes = np.c_[mesh.gridN, np.zeros((mesh.nN, 2))]
@@ -337,7 +335,8 @@ class InterfaceVTK(object):
         return np.dot(nodes, mesh.rotation_matrix)
 
     def __tensor_mesh_to_vtk(mesh, models=None):
-        """
+        """Convert the TensorMesh to a vtk object.
+
         Constructs a :class:`pyvista.RectilinearGrid`
         (or a :class:`pyvista.StructuredGrid`) object of this tensor mesh and the
         given models as ``cell_arrays`` of that grid.
@@ -346,13 +345,11 @@ class InterfaceVTK(object):
 
         Parameters
         ----------
-
         mesh : discretize.TensorMesh
             The tensor mesh to convert to a :class:`pyvista.RectilinearGrid`
 
         models : dict(numpy.ndarray)
             Name('s) and array('s). Match number of cells
-
         """
         _vtk, _nps = load_vtk()
 
@@ -386,19 +383,17 @@ class InterfaceVTK(object):
         )
 
     def __curvilinear_mesh_to_vtk(mesh, models=None):
-        """
+        """Convert the CurvilinearMesh to a vtk object.
+
         Constructs a :class:`pyvista.StructuredGrid` of this mesh and the given
         models as ``cell_arrays`` of that object.
 
         Parameters
         ----------
-
         mesh : discretize.CurvilinearMesh
             The curvilinear mesh to convert to a :class:`pyvista.StructuredGrid`
-
         models : dict(numpy.ndarray)
             Name('s) and array('s). Match number of cells
-
         """
         ptsMat = InterfaceVTK.__get_rotated_nodes(mesh)
         return InterfaceVTK.__create_structured_grid(
@@ -406,7 +401,8 @@ class InterfaceVTK(object):
         )
 
     def __cyl_mesh_to_vtk(mesh, models=None):
-        """
+        """Convert the CylindricalMesh to a vtk object.
+
         Constructs an vtkUnstructuredGrid made of rational Bezier hexahedrons and wedges.
         Wedges happen on the very internal layer about r=0, and hexes occur elsewhere.
         """
@@ -569,7 +565,7 @@ class InterfaceVTK(object):
         return assign_cell_data(output, models=models)
 
     def to_vtk(mesh, models=None):
-        """Convert mesh (and models) to corresponding VTK or PyVista data object
+        """Convert mesh (and models) to corresponding VTK or PyVista data object.
 
         This method converts a ``discretize`` mesh (and associated models) to its
         corresponding `VTK <https://vtk.org/doc/nightly/html/index.html>`__ or
@@ -615,7 +611,14 @@ class InterfaceVTK(object):
         return cvtd
 
     def toVTK(mesh, models=None):
-        """*toVTK* has been deprecated and replaced by *to_vtk*"""
+        """Convert mesh (and models) to corresponding VTK or PyVista data object.
+
+        *toVTK* has been deprecated and replaced by *to_vtk*.
+
+        See Also
+        --------
+        to_vtk
+        """
         warnings.warn(
             "Deprecation Warning: `toVTK` is deprecated, use `to_vtk` instead",
             category=FutureWarning,
@@ -624,7 +627,9 @@ class InterfaceVTK(object):
 
     @staticmethod
     def _save_unstructured_grid(file_name, vtkUnstructGrid, directory=""):
-        """Saves a VTK unstructured grid file (vtu) for an already generated
+        """Save an unstructured grid to a vtk file.
+
+        Saves a VTK unstructured grid file (vtu) for an already generated
         :class:`pyvista.UnstructuredGrid` object.
 
         Parameters
@@ -661,7 +666,9 @@ class InterfaceVTK(object):
 
     @staticmethod
     def _save_structured_grid(file_name, vtkStructGrid, directory=""):
-        """Saves a VTK structured grid file (vtk) for an already generated
+        """Save a structured grid to a vtk file.
+
+        Saves a VTK structured grid file (vtk) for an already generated
         :class:`pyvista.StructuredGrid` object.
 
         Parameters
@@ -699,7 +706,9 @@ class InterfaceVTK(object):
 
     @staticmethod
     def _save_rectilinear_grid(file_name, vtkRectGrid, directory=""):
-        """Saves a VTK rectilinear file (vtr) ffor an already generated
+        """Save a rectilinear grid to a vtk file.
+
+        Saves a VTK rectilinear file (vtr) ffor an already generated
         :class:`pyvista.RectilinearGrid` object.
 
         Parameters
@@ -731,7 +740,7 @@ class InterfaceVTK(object):
         vtrWriteFilter.Update()
 
     def write_vtk(mesh, file_name, models=None, directory=""):
-        """Convert mesh (and models) to corresponding VTK or PyVista data object then writes to file
+        """Convert mesh (and models) to corresponding VTK or PyVista data object then writes to file.
 
         This method converts a ``discretize`` mesh (and associated models) to its
         corresponding `VTK <https://vtk.org/doc/nightly/html/index.html>`__ or
@@ -768,7 +777,14 @@ class InterfaceVTK(object):
         return write(file_name, vtkObj, directory=directory)
 
     def writeVTK(mesh, file_name, models=None, directory=""):
-        """*writeVTK* has been deprecated and replaced by *write_vtk*"""
+        """Convert mesh (and models) to corresponding VTK or PyVista data object then writes to file.
+
+        *writeVTK* has been deprecated and replaced by *write_vtk*
+
+        See Also
+        --------
+        write_vtk
+        """
         warnings.warn(
             "Deprecation Warning: `writeVTK` is deprecated, use `write_vtk` instead",
             category=FutureWarning,
@@ -779,15 +795,17 @@ class InterfaceVTK(object):
 
 
 class InterfaceTensorread_vtk(object):
-    """
+    """Mixin class for converting vtk to TensorMesh.
+
     This class provides convenient methods for converting VTK Rectilinear Grid
     files/objects to :class:`~discretize.TensorMesh` objects.
-
     """
 
     @classmethod
     def vtk_to_tensor_mesh(TensorMesh, vtrGrid):
-        """Convert ``vtkRectilinearGrid`` or :class:`~pyvista.RectilinearGrid` object
+        """Convert vtk object to a TensorMesh.
+
+        Convert ``vtkRectilinearGrid`` or :class:`~pyvista.RectilinearGrid` object
         to a :class:`~discretize.TensorMesh` object.
 
         Parameters
@@ -837,7 +855,7 @@ class InterfaceTensorread_vtk(object):
 
     @classmethod
     def read_vtk(TensorMesh, file_name, directory=""):
-        """Read VTK rectilinear file (vtr or xml) and return a discretize tensor mesh (and models)
+        """Read VTK rectilinear file (vtr or xml) and return a discretize tensor mesh (and models).
 
         This method reads a VTK rectilinear file (vtr or xml format) and returns
         a tuple containing the :class:`~discretize.TensorMesh` as well as a dictionary
@@ -871,7 +889,14 @@ class InterfaceTensorread_vtk(object):
 
     @classmethod
     def readVTK(TensorMesh, file_name, directory=""):
-        """*readVTK* has been deprecated and replaced by *read_vtk*"""
+        """Read VTK rectilinear file (vtr or xml) and return a discretize tensor mesh (and models).
+
+        *readVTK* has been deprecated and replaced by *read_vtk*
+
+        See Also
+        --------
+        read_vtk
+        """
         warnings.warn(
             "Deprecation Warning: `readVTK` is deprecated, use `read_vtk` instead",
             category=FutureWarning,
@@ -882,9 +907,17 @@ class InterfaceTensorread_vtk(object):
 
 
 class InterfaceSimplexReadVTK:
+    """Mixin class for converting vtk to SimplexMesh.
+
+    This class provides convenient methods for converting VTK Unstructured Grid
+    files/objects to :class:`~discretize.SimplexMesh` objects.
+    """
+
     @classmethod
     def vtk_to_simplex_mesh(SimplexMesh, vtuGrid):
-        """Convert ``vtkUnstructuredGrid`` or :class:`~pyvista.UnstructuredGrid` object
+        """Convert an unstructured grid of simplices to a SimplexMesh.
+
+        Convert ``vtkUnstructuredGrid`` or :class:`~pyvista.UnstructuredGrid` object
         to a :class:`~discretize.SimplexMesh` object.
 
         Parameters
@@ -933,7 +966,7 @@ class InterfaceSimplexReadVTK:
 
     @classmethod
     def read_vtk(SimplexMesh, file_name, directory=""):
-        """Read VTK unstructured file (vtu or xml) and return a discretize simplex mesh (and models)
+        """Read VTK unstructured file (vtu or xml) and return a discretize simplex mesh (and models).
 
         This method reads a VTK unstructured file (vtu or xml format) and returns
         the :class:`~discretize.SimplexMesh` as well as a dictionary containing any
