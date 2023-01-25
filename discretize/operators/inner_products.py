@@ -1,3 +1,4 @@
+"""Construct inner product operators for tensor like meshes."""
 from scipy import sparse as sp
 from discretize.utils import (
     sub2ind,
@@ -28,7 +29,7 @@ class InnerProducts(object):
     meshes using the appropriate method.
     """
 
-    def get_face_inner_product(
+    def get_face_inner_product(  # NOQA D102
         self,
         model=None,
         invert_model=False,
@@ -36,6 +37,7 @@ class InnerProducts(object):
         do_fast=True,
         **kwargs
     ):
+        # Inherited documentation from discretize.base.BaseMesh
         if "invProp" in kwargs:
             warnings.warn(
                 "The invProp keyword argument has been deprecated, please use invert_model. "
@@ -66,7 +68,7 @@ class InnerProducts(object):
             do_fast=do_fast,
         )
 
-    def get_edge_inner_product(
+    def get_edge_inner_product(  # NOQA D102
         self,
         model=None,
         invert_model=False,
@@ -74,6 +76,7 @@ class InnerProducts(object):
         do_fast=True,
         **kwargs
     ):
+        # Inherited documentation from discretize.base.BaseMesh
         if "invProp" in kwargs:
             warnings.warn(
                 "The invProp keyword argument has been deprecated, please use invert_model. "
@@ -112,7 +115,7 @@ class InnerProducts(object):
         do_fast=True,
         **kwargs
     ):
-        """get the inner product matrix
+        """Get the inner product matrix.
 
         Parameters
         ----------
@@ -184,7 +187,7 @@ class InnerProducts(object):
         return A
 
     def _getInnerProductProjectionMatrices(self, projection_type, tensorType):
-        """Internal function for creating matrices.
+        """Get the inner product projection matrices.
 
         Parameters
         ----------
@@ -236,9 +239,10 @@ class InnerProducts(object):
 
         return [V * proj(*locs[node][d - 1]) for node in nodes]
 
-    def get_face_inner_product_deriv(
+    def get_face_inner_product_deriv(  # NOQA D102
         self, model, do_fast=True, invert_model=False, invert_matrix=False, **kwargs
     ):
+        # Inherited documentation from discretize.base.BaseMesh
         if "invProp" in kwargs:
             warnings.warn(
                 "The invProp keyword argument has been deprecated, please use invert_model. "
@@ -268,9 +272,10 @@ class InnerProducts(object):
             invert_matrix=invert_matrix,
         )
 
-    def get_edge_inner_product_deriv(
+    def get_edge_inner_product_deriv(  # NOQA D102
         self, model, do_fast=True, invert_model=False, invert_matrix=False, **kwargs
     ):
+        # Inherited documentation from discretize.base.BaseMesh
         if "invProp" in kwargs:
             warnings.warn(
                 "The invProp keyword argument has been deprecated, please use invert_model. "
@@ -308,7 +313,7 @@ class InnerProducts(object):
         invert_model=False,
         invert_matrix=False,
     ):
-        """Internal function for creating derivatives.
+        """Get the inner product projection derivative function.
 
         Parameters
         ----------
@@ -325,7 +330,7 @@ class InnerProducts(object):
 
         Returns
         -------
-        scipy.sparse.csr_matrix
+        callable
             dMdm, the derivative of the inner product matrix (nE, nC*nA)
         """
         fast = None
@@ -355,7 +360,7 @@ class InnerProducts(object):
         return innerProductDeriv
 
     def _getInnerProductDerivFunction(self, tensorType, P, projection_type, v):
-        """Internal function for creating derivatives.
+        """Get the inner product projection derivative function depending on the tensor type.
 
         Parameters
         ----------
@@ -482,13 +487,11 @@ class InnerProducts(object):
     #    node(i+1,j,k) ------ edge2(i+1,j,k) ----- node(i+1,j+1,k)
 
     def _getFacePx(M):
-        """Returns a function for creating projection matrices"""
+        """Return a function for creating face projection matrices in 1D."""
         ii = np.arange(M.shape_cells[0])
 
         def Px(xFace):
-            """
-            xFace is 'fXp' or 'fXm'
-            """
+            # xFace is 'fXp' or 'fXm'
             posFx = 0 if xFace == "fXm" else 1
             IND = ii + posFx
             PX = sp.csr_matrix((np.ones(M.nC), (range(M.nC), IND)), shape=(M.nC, M.nF))
@@ -497,6 +500,7 @@ class InnerProducts(object):
         return Px
 
     def _getFacePxx(M):
+        """Return a function for creating face projection matrices in 2D."""
         # returns a function for creating projection matrices
         #
         # Mats takes you from faces a subset of all faces on only the
@@ -533,10 +537,9 @@ class InnerProducts(object):
             fN2 = M.reshape(M.face_normals, "F", "Fy", "M")
 
         def Pxx(xFace, yFace):
-            """
-            xFace is 'fXp' or 'fXm'
-            yFace is 'fYp' or 'fYm'
-            """
+            # xFace is 'fXp' or 'fXm'
+            # yFace is 'fYp' or 'fYm'
+
             # no | node      | f1     | f2
             # 00 | i  ,j     | i  , j | i, j
             # 10 | i+1,j     | i+1, j | i, j
@@ -569,14 +572,13 @@ class InnerProducts(object):
         return Pxx
 
     def _getFacePxxx(M):
-        """returns a function for creating projection matrices
+        """Return a function for creating face projection matrices in 3D.
 
         Mats takes you from faces a subset of all faces on only the
         faces that you ask for.
 
         These are centered around a single nodes.
         """
-
         i, j, k = (
             np.arange(M.shape_cells[0]),
             np.arange(M.shape_cells[1]),
@@ -592,11 +594,9 @@ class InnerProducts(object):
             fN3 = M.reshape(M.face_normals, "F", "Fz", "M")
 
         def Pxxx(xFace, yFace, zFace):
-            """
-            xFace is 'fXp' or 'fXm'
-            yFace is 'fYp' or 'fYm'
-            zFace is 'fZp' or 'fZm'
-            """
+            # xFace is 'fXp' or 'fXm'
+            # yFace is 'fYp' or 'fYm'
+            # zFace is 'fZp' or 'fZm'
 
             # no  | node        | f1        | f2        | f3
             # 000 | i  ,j  ,k   | i  , j, k | i, j  , k | i, j, k
@@ -641,8 +641,7 @@ class InnerProducts(object):
         return Pxxx
 
     def _getEdgePx(M):
-        """Returns a function for creating projection matrices"""
-
+        """Return a function for creating edge projection matrices in 1D."""
         def Px(xEdge):
             if xEdge != "eX0":
                 raise TypeError("xEdge = {0!s}, not eX0".format(xEdge))
@@ -651,6 +650,7 @@ class InnerProducts(object):
         return Px
 
     def _getEdgePxx(M):
+        """Return a function for creating edge projection matrices in 2D."""
         i, j = np.arange(M.shape_cells[0]), np.arange(M.shape_cells[1])
 
         iijj = ndgrid(i, j)
@@ -661,13 +661,11 @@ class InnerProducts(object):
             eT2 = M.reshape(M.edge_tangents, "E", "Ey", "M")
 
         def Pxx(xEdge, yEdge):
-            """
-            no | node      | e1      | e2
-            00 | i  ,j     | i  ,j   | i  ,j
-            10 | i+1,j     | i  ,j   | i+1,j
-            01 | i  ,j+1   | i  ,j+1 | i  ,j
-            11 | i+1,j+1   | i  ,j+1 | i+1,j
-            """
+            # no | node      | e1      | e2
+            # 00 | i  ,j     | i  ,j   | i  ,j
+            # 10 | i+1,j     | i  ,j   | i+1,j
+            # 01 | i  ,j+1   | i  ,j+1 | i  ,j
+            # 11 | i+1,j+1   | i  ,j+1 | i+1,j
             posX = 0 if xEdge == "eX0" else 1
             posY = 0 if yEdge == "eY0" else 1
 
@@ -694,6 +692,7 @@ class InnerProducts(object):
         return Pxx
 
     def _getEdgePxxx(M):
+        """Return a function for creating edge projection matrices in 3D."""
         i, j, k = (
             np.arange(M.shape_cells[0]),
             np.arange(M.shape_cells[1]),
@@ -709,17 +708,15 @@ class InnerProducts(object):
             eT3 = M.reshape(M.edge_tangents, "E", "Ez", "M")
 
         def Pxxx(xEdge, yEdge, zEdge):
-            """
-            no  | node        | e1          | e2          | e3
-            000 | i  ,j  ,k   | i  ,j  ,k   | i  ,j  ,k   | i  ,j  ,k
-            100 | i+1,j  ,k   | i  ,j  ,k   | i+1,j  ,k   | i+1,j  ,k
-            010 | i  ,j+1,k   | i  ,j+1,k   | i  ,j  ,k   | i  ,j+1,k
-            110 | i+1,j+1,k   | i  ,j+1,k   | i+1,j  ,k   | i+1,j+1,k
-            001 | i  ,j  ,k+1 | i  ,j  ,k+1 | i  ,j  ,k+1 | i  ,j  ,k
-            101 | i+1,j  ,k+1 | i  ,j  ,k+1 | i+1,j  ,k+1 | i+1,j  ,k
-            011 | i  ,j+1,k+1 | i  ,j+1,k+1 | i  ,j  ,k+1 | i  ,j+1,k
-            111 | i+1,j+1,k+1 | i  ,j+1,k+1 | i+1,j  ,k+1 | i+1,j+1,k
-            """
+            # no  | node        | e1          | e2          | e3
+            # 000 | i  ,j  ,k   | i  ,j  ,k   | i  ,j  ,k   | i  ,j  ,k
+            # 100 | i+1,j  ,k   | i  ,j  ,k   | i+1,j  ,k   | i+1,j  ,k
+            # 010 | i  ,j+1,k   | i  ,j+1,k   | i  ,j  ,k   | i  ,j+1,k
+            # 110 | i+1,j+1,k   | i  ,j+1,k   | i+1,j  ,k   | i+1,j+1,k
+            # 001 | i  ,j  ,k+1 | i  ,j  ,k+1 | i  ,j  ,k+1 | i  ,j  ,k
+            # 101 | i+1,j  ,k+1 | i  ,j  ,k+1 | i+1,j  ,k+1 | i+1,j  ,k
+            # 011 | i  ,j+1,k+1 | i  ,j+1,k+1 | i  ,j  ,k+1 | i  ,j+1,k
+            # 111 | i+1,j+1,k+1 | i  ,j+1,k+1 | i+1,j  ,k+1 | i+1,j+1,k
 
             posX = (
                 [0, 0]

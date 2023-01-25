@@ -16,6 +16,8 @@ extend-ignore =
     W503,
     # Ignore spaces before a colon (Black handles it)
     E203,
+    # Ignore spaces around an operator (Black handles it)
+    E225,
     # Ignore rst warnings for start and end, due to *args and **kwargs being invalid rst, but good for numpydoc
     RST210,RST213,
 exclude =
