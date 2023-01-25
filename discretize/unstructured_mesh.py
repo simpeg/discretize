@@ -1,3 +1,4 @@
+"""Module containing unstructured meshes for discretize."""
 import numpy as np
 import scipy.sparse as sp
 from scipy.spatial import KDTree
@@ -163,27 +164,33 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         return self._transform, self._shift
 
     @property
-    def dim(self):
+    def dim(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         return self.nodes.shape[-1]
 
     @property
-    def n_nodes(self):
+    def n_nodes(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         return self._nodes.shape[0]
 
     @property
-    def nodes(self):
+    def nodes(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         return self._nodes
 
     @property
-    def n_cells(self):
+    def n_cells(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         return self.simplices.shape[0]
 
     @property
-    def cell_centers(self):
+    def cell_centers(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         return np.mean(self.nodes[self.simplices], axis=1)
 
     @property
-    def cell_volumes(self):
+    def cell_volumes(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if getattr(self, "_cell_volumes", None) is None:
             simplex_nodes = self._nodes[self.simplices]
             mats = np.pad(simplex_nodes, ((0, 0), (0, 0), (0, 1)), constant_values=1)
@@ -193,35 +200,42 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         return self._cell_volumes
 
     @property
-    def n_edges(self):
+    def n_edges(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         return self._n_edges
 
     @property
-    def edges(self):
+    def edges(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         return np.mean(self.nodes[self._edges], axis=1)
 
     @property
-    def edge_tangents(self):
+    def edge_tangents(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         tangents = np.diff(self.nodes[self._edges], axis=1).squeeze()
         tangents /= np.linalg.norm(tangents, axis=-1)[:, None]
         return tangents
 
     @property
-    def edge_lengths(self):
+    def edge_lengths(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         return np.linalg.norm(
             np.diff(self.nodes[self._edges], axis=1).squeeze(), axis=-1
         )
 
     @property
-    def n_faces(self):
+    def n_faces(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         return self._n_faces
 
     @property
-    def faces(self):
+    def faces(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         return np.mean(self.nodes[self._faces], axis=1)
 
     @property
-    def face_areas(self):
+    def face_areas(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if self.dim == 2:
             return self.edge_lengths
         else:
@@ -232,7 +246,8 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
             return areas
 
     @property
-    def face_normals(self):
+    def face_normals(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if self.dim == 2:
             # Take the normal as being the cross product of edge_tangents
             # and a unit vector in a "3rd" dimension.
@@ -249,7 +264,8 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
             return normal
 
     @property
-    def face_divergence(self):
+    def face_divergence(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         areas = self.face_areas
         normals = self.face_normals
 
@@ -267,7 +283,8 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         return D
 
     @property
-    def nodal_gradient(self):
+    def nodal_gradient(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         ind_ptr = 2 * np.arange(self.n_edges + 1)
         col_inds = self._edges.reshape(-1)
         Aijs = ((1.0 / self.edge_lengths[:, None]) * [-1, 1]).reshape(-1)
@@ -277,7 +294,8 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         )
 
     @property
-    def edge_curl(self):
+    def edge_curl(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         dim = self.dim
         n_edges = self.n_edges
         if dim == 2:
@@ -448,26 +466,28 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         A = np.sum([P.T @ Mu @ P for P in Ps])
         return A
 
-    def get_face_inner_product(
+    def get_face_inner_product(  # NOQA D102
         self,
         model=None,
         invert_model=False,
         invert_matrix=False,
         do_fast=True,
     ):
+        # Documentation inherited from discretize.base.BaseMesh
         if invert_matrix:
             raise NotImplementedError(
                 "The inverse of the inner product matrix with a tetrahedral mesh is not supported."
             )
         return self.__get_inner_product("F", model, invert_model)
 
-    def get_edge_inner_product(
+    def get_edge_inner_product(  # NOQA D102
         self,
         model=None,
         invert_model=False,
         invert_matrix=False,
         do_fast=True,
     ):
+        # Documentation inherited from discretize.base.BaseMesh
         if invert_matrix:
             raise NotImplementedError(
                 "The inverse of the inner product matrix with a tetrahedral mesh is not supported."
@@ -541,9 +561,10 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
 
         return func
 
-    def get_face_inner_product_deriv(
+    def get_face_inner_product_deriv(  # NOQA D102
         self, model, do_fast=True, invert_model=False, invert_matrix=False
     ):
+        # Documentation inherited from discretize.base.BaseMesh
         if invert_model:
             raise NotImplementedError(
                 "Inverted model derivatives are not supported here"
@@ -552,9 +573,10 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
             raise NotImplementedError("Inverted matrix derivatives are not supported")
         return self.__get_inner_product_deriv_func("F", model)
 
-    def get_edge_inner_product_deriv(
+    def get_edge_inner_product_deriv(  # NOQA D102
         self, model, do_fast=True, invert_model=False, invert_matrix=False
     ):
+        # Documentation inherited from discretize.base.BaseMesh
         if invert_model:
             raise NotImplementedError(
                 "Inverted model derivatives are not supported here"
@@ -565,12 +587,18 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
 
     @property
     def cell_centers_tree(self):
-        """a KDTree object built from the cell centers"""
+        """A KDTree object built from the cell centers.
+
+        Returns
+        -------
+        scipy.spatial.KDTree
+        """
         if getattr(self, "_cc_tree", None) is None:
             self._cc_tree = KDTree(self.cell_centers)
         return self._cc_tree
 
-    def point2index(self, locs):
+    def point2index(self, locs):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         tree = self.cell_centers_tree
         # for each location, find the nearest cell center as an initial guess for
         # the nearest simplex, then use a directed search to further refine
@@ -589,9 +617,10 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
             return_bary=False,
         )
 
-    def get_interpolation_matrix(
+    def get_interpolation_matrix(  # NOQA D102
         self, loc, location_type="cell_centers", zeros_outside=False, **kwargs
     ):
+        # Documentation inherited from discretize.base.BaseMesh
         location_type = self._parse_location_type(location_type)
         tree = self.cell_centers_tree
         # for each location, find the nearest cell center as an initial guess for
@@ -754,7 +783,8 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         return sp.csr_matrix((Aij, col_inds, ind_ptr), shape=(n_loc, n_items))
 
     @property
-    def average_node_to_cell(self):
+    def average_node_to_cell(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         nodes_per_cell = self.dim + 1
         n_cells = self.n_cells
 
@@ -764,7 +794,8 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         return sp.csr_matrix((Aij, col_inds, ind_ptr), shape=(n_cells, self.n_nodes))
 
     @property
-    def average_node_to_face(self):
+    def average_node_to_face(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         nodes_per_face = self.dim
         n_faces = self.n_faces
 
@@ -774,7 +805,8 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         return sp.csr_matrix((Aij, col_inds, ind_ptr), shape=(n_faces, self.n_nodes))
 
     @property
-    def average_node_to_edge(self):
+    def average_node_to_edge(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         n_edges = self.n_edges
 
         ind_ptr = 2 * np.arange(n_edges + 1)
@@ -805,7 +837,8 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         return norm @ A
 
     @property
-    def average_cell_to_edge(self):
+    def average_cell_to_edge(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         # Simple averaging of all cells with a common edge
         simps = self._simplex_edges
         cells = np.broadcast_to(np.arange(self.n_cells)[:, None], simps.shape).reshape(
@@ -819,7 +852,8 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         return norm @ A
 
     @property
-    def average_face_to_cell_vector(self):
+    def average_face_to_cell_vector(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         dim = self.dim
         n_cells = self.n_cells
         n_faces = self.n_faces
@@ -839,7 +873,8 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         return Av
 
     @property
-    def average_edge_to_cell_vector(self):
+    def average_edge_to_cell_vector(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         dim = self.dim
         n_cells = self.n_cells
         n_edges = self.n_edges
@@ -859,7 +894,8 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         return Av
 
     @property
-    def average_face_to_cell(self):
+    def average_face_to_cell(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         n_cells = self.n_cells
         n_faces = self.n_faces
         col_inds = self._simplex_faces
@@ -872,7 +908,8 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         )
 
     @property
-    def average_edge_to_cell(self):
+    def average_edge_to_cell(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         n_cells = self.n_cells
         n_edges = self.n_edges
         col_inds = self._simplex_edges
@@ -885,7 +922,8 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         )
 
     @property
-    def average_cell_to_face(self):
+    def average_cell_to_face(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         A = self.average_face_to_cell.T
         row_sum = np.asarray(A.sum(axis=-1))[:, 0]
         row_sum[row_sum == 0.0] = 1.0
@@ -893,7 +931,8 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         return A
 
     @property
-    def stencil_cell_gradient(self):
+    def stencil_cell_gradient(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         # An operator that differences cells on each side of a face
         # in the direction of the face normal
         tests = self.cell_centers[:, None, :] - self.faces[self._simplex_faces]
@@ -922,39 +961,46 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         return self._is_boundary_face
 
     @property
-    def project_face_to_boundary_face(self):
+    def project_face_to_boundary_face(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         return sp.eye(self.n_faces, format="csr")[self.boundary_face_list]
 
     @property
-    def project_edge_to_boundary_edge(self):
+    def project_edge_to_boundary_edge(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if self.dim == 2:
             return self.project_face_to_boundary_face
         bound_edges = np.unique(self._face_edges[self.boundary_face_list])
         return sp.eye(self.n_edges, format="csr")[bound_edges]
 
     @property
-    def project_node_to_boundary_node(self):
+    def project_node_to_boundary_node(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         bound_nodes = np.unique(self._faces[self.boundary_face_list])
         return sp.eye(self.n_nodes, format="csr")[bound_nodes]
 
     @property
-    def boundary_nodes(self):
+    def boundary_nodes(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         bound_nodes = np.unique(self._faces[self.boundary_face_list])
         return self.nodes[bound_nodes]
 
     @property
-    def boundary_edges(self):
+    def boundary_edges(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if self.dim == 2:
             return self.boundary_faces
         bound_nodes = np.unique(self._face_edges[self.boundary_face_list])
         return self.edges[bound_nodes]
 
     @property
-    def boundary_faces(self):
+    def boundary_faces(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         return self.faces[self.boundary_face_list]
 
     @property
-    def boundary_face_outward_normals(self):
+    def boundary_face_outward_normals(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         bound_cells, which_face = np.where(self.neighbors == -1)
         bound_faces = self._simplex_faces[(bound_cells, which_face)]
         bound_face_normals = self.face_normals[bound_faces]
@@ -966,7 +1012,8 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         return boundary_face_outward_normals
 
     @property
-    def boundary_face_scalar_integral(self):
+    def boundary_face_scalar_integral(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         P = self.project_face_to_boundary_face
 
         w_h_dot_normal = np.sum(
@@ -976,7 +1023,8 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         return A
 
     @property
-    def boundary_node_vector_integral(self):
+    def boundary_node_vector_integral(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         Pn = self.project_node_to_boundary_node
         Pf = self.project_face_to_boundary_face
         n_boundary_nodes = Pn.shape[0]
@@ -994,7 +1042,8 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         )
 
     @property
-    def boundary_edge_vector_integral(self):
+    def boundary_edge_vector_integral(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         boundary_faces = self.boundary_face_list
         if self.dim == 2:
             boundary_face_edges = boundary_faces
@@ -1031,6 +1080,7 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         return M_be
 
     def __reduce__(self):
+        """Return the class and attributes necessary to reconstruct the mesh."""
         return self.__class__, (
             self.nodes,
             self.simplices,
