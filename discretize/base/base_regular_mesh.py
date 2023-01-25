@@ -1,6 +1,4 @@
-"""
-Base classes for all meshes supported in ``discretize``
-"""
+"""Base classes for all regular shaped meshes supported in ``discretize``."""
 
 import numpy as np
 from discretize.utils import mkvc, Identity
@@ -10,8 +8,7 @@ import warnings
 
 
 class BaseRegularMesh(BaseMesh):
-    """
-    Base Regular mesh class for the ``discretize`` package
+    """Base Regular mesh class for the ``discretize`` package.
 
     The ``BaseRegularMesh`` class does all the basic counting and organizing
     you wouldn't want to do manually. ``BaseRegularMesh`` is a class that should
@@ -84,7 +81,7 @@ class BaseRegularMesh(BaseMesh):
 
     @property
     def origin(self):
-        """Origin or 'anchor point' of the mesh
+        """Origin or 'anchor point' of the mesh.
 
         For a mesh defined in Cartesian coordinates (e.g.
         :class:`~discretize.TensorMesh`, :class:`~discretize.CylindricalMesh`,
@@ -113,7 +110,7 @@ class BaseRegularMesh(BaseMesh):
 
     @property
     def shape_cells(self):
-        """The number of cells in each coordinate direction.
+        """Number of cells in each coordinate direction.
 
         For meshes of class :class:`~discretize.TensorMesh`,
         :class:`~discretize.CylindricalMesh` or :class:`~discretize.CurvilinearMesh`,
@@ -134,7 +131,7 @@ class BaseRegularMesh(BaseMesh):
 
     @property
     def orientation(self):
-        """Rotation matrix defining mesh axes relative to Cartesian
+        """Rotation matrix defining mesh axes relative to Cartesian.
 
         This property returns a rotation matrix between the local coordinate
         axes of the mesh and the standard Cartesian axes. For a 3D mesh, this
@@ -176,7 +173,7 @@ class BaseRegularMesh(BaseMesh):
 
     @property
     def reference_system(self):
-        """Coordinate reference system
+        """Coordinate reference system.
 
         The type of coordinate reference frame. Will be one of the values "cartesian",
         "cylindrical", or "spherical".
@@ -211,8 +208,11 @@ class BaseRegularMesh(BaseMesh):
 
     @property
     def x0(self):
-        """
-        An alias for the :py:attr:`~.BaseRegularMesh.origin`
+        """Alias for the :py:attr:`~.BaseRegularMesh.origin`.
+
+        See Also
+        --------
+        origin
         """
         return self.origin
 
@@ -221,20 +221,23 @@ class BaseRegularMesh(BaseMesh):
         self.origin = val
 
     @property
-    def dim(self):
+    def dim(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         return len(self.shape_cells)
 
     @property
-    def n_cells(self):
+    def n_cells(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         return int(np.prod(self.shape_cells))
 
     @property
-    def n_nodes(self):
+    def n_nodes(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         return int(np.prod([x + 1 for x in self.shape_cells]))
 
     @property
     def n_edges_x(self):
-        """Number of x-edges in the mesh
+        """Number of x-edges in the mesh.
 
         This property returns the number of edges that
         are parallel to the x-axis; i.e. x-edges.
@@ -252,7 +255,7 @@ class BaseRegularMesh(BaseMesh):
 
     @property
     def n_edges_y(self):
-        """Number of y-edges in the mesh
+        """Number of y-edges in the mesh.
 
         This property returns the number of edges that
         are parallel to the y-axis; i.e. y-edges.
@@ -272,7 +275,7 @@ class BaseRegularMesh(BaseMesh):
 
     @property
     def n_edges_z(self):
-        """Number of z-edges in the mesh
+        """Number of z-edges in the mesh.
 
         This property returns the number of edges that
         are parallel to the z-axis; i.e. z-edges.
@@ -292,7 +295,7 @@ class BaseRegularMesh(BaseMesh):
 
     @property
     def n_edges_per_direction(self):
-        """The number of edges in each direction
+        """The number of edges in each direction.
 
         This property returns a tuple with the number of edges
         in each axis direction of the mesh. For a 3D mesh,
@@ -323,7 +326,8 @@ class BaseRegularMesh(BaseMesh):
         )
 
     @property
-    def n_edges(self):
+    def n_edges(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         n = self.n_edges_x
         if self.dim > 1:
             n += self.n_edges_y
@@ -333,7 +337,7 @@ class BaseRegularMesh(BaseMesh):
 
     @property
     def n_faces_x(self):
-        """Number of x-faces in the mesh
+        """Number of x-faces in the mesh.
 
         This property returns the number of faces whose normal
         vector is parallel to the x-axis; i.e. x-faces.
@@ -351,7 +355,7 @@ class BaseRegularMesh(BaseMesh):
 
     @property
     def n_faces_y(self):
-        """Number of y-faces in the mesh
+        """Number of y-faces in the mesh.
 
         This property returns the number of faces whose normal
         vector is parallel to the y-axis; i.e. y-faces.
@@ -371,7 +375,7 @@ class BaseRegularMesh(BaseMesh):
 
     @property
     def n_faces_z(self):
-        """Number of z-faces in the mesh
+        """Number of z-faces in the mesh.
 
         This property returns the number of faces whose normal
         vector is parallel to the z-axis; i.e. z-faces.
@@ -391,7 +395,7 @@ class BaseRegularMesh(BaseMesh):
 
     @property
     def n_faces_per_direction(self):
-        """The number of faces in each axis direction
+        """The number of faces in each axis direction.
 
         This property returns a tuple with the number of faces
         in each axis direction of the mesh. For a 3D mesh,
@@ -422,7 +426,8 @@ class BaseRegularMesh(BaseMesh):
         )
 
     @property
-    def n_faces(self):
+    def n_faces(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         n = self.n_faces_x
         if self.dim > 1:
             n += self.n_faces_y
@@ -431,7 +436,8 @@ class BaseRegularMesh(BaseMesh):
         return n
 
     @property
-    def face_normals(self):
+    def face_normals(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if self.dim == 2:
             nX = np.c_[np.ones(self.n_faces_x), np.zeros(self.n_faces_x)]
             nY = np.c_[np.zeros(self.n_faces_y), np.ones(self.n_faces_y)]
@@ -455,7 +461,8 @@ class BaseRegularMesh(BaseMesh):
             return np.r_[nX, nY, nZ]
 
     @property
-    def edge_tangents(self):
+    def edge_tangents(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if self.dim == 2:
             tX = np.c_[np.ones(self.n_edges_x), np.zeros(self.n_edges_x)]
             tY = np.c_[np.zeros(self.n_edges_y), np.ones(self.n_edges_y)]
@@ -480,7 +487,7 @@ class BaseRegularMesh(BaseMesh):
 
     @property
     def reference_is_rotated(self):
-        """Indicates whether mesh uses standard coordinate axes
+        """Indicate whether mesh uses standard coordinate axes.
 
         The standard basis vectors defining the x, y, and z axes of
         a mesh are :math:`(1,0,0)`, :math:`(0,1,0)` and :math:`(0,0,1)`,
@@ -502,14 +509,18 @@ class BaseRegularMesh(BaseMesh):
 
     @property
     def rotation_matrix(self):
-        """
-        Alias for :py:attr:`~.BaseRegularMesh.orientation`
+        """Alias for :py:attr:`~.BaseRegularMesh.orientation`.
+
+        See Also
+        --------
+        orientation
         """
         return self.orientation  # np.array([self.axis_u, self.axis_v, self.axis_w])
 
     @property
     def axis_u(self):
-        """
+        """Orientation of the first axis.
+
         .. deprecated:: 0.7.0
           `axis_u` will be removed in discretize 1.0.0. This functionality was replaced
           by the :py:attr:`~.BaseRegularMesh.orientation`.
@@ -533,7 +544,8 @@ class BaseRegularMesh(BaseMesh):
 
     @property
     def axis_v(self):
-        """
+        """Orientation of the second axis.
+
         .. deprecated:: 0.7.0
           `axis_v` will be removed in discretize 1.0.0. This functionality was replaced
           by the :py:attr:`~.BaseRegularMesh.orientation`.
@@ -558,7 +570,8 @@ class BaseRegularMesh(BaseMesh):
 
     @property
     def axis_w(self):
-        """
+        """Orientation of the third axis.
+
         .. deprecated:: 0.7.0
           `axis_w` will be removed in discretize 1.0.0. This functionality was replaced
           by the :py:attr:`~.BaseRegularMesh.orientation`.
@@ -583,8 +596,7 @@ class BaseRegularMesh(BaseMesh):
 
 
 class BaseRectangularMesh(BaseRegularMesh):
-    """
-    Base rectangular mesh class for the ``discretize`` package.
+    """Base rectangular mesh class for the ``discretize`` package.
 
     The ``BaseRectangularMesh`` class acts as an extension of the
     :class:`~discretize.base.BaseRegularMesh` classes with a regular structure.
@@ -605,7 +617,7 @@ class BaseRectangularMesh(BaseRegularMesh):
 
     @property
     def shape_nodes(self):
-        """Returns the number of nodes along each axis direction
+        """The number of nodes along each axis direction.
 
         This property returns a tuple containing the number of nodes along
         each axis direction. The length of the tuple is equal to the
@@ -624,7 +636,7 @@ class BaseRectangularMesh(BaseRegularMesh):
 
     @property
     def shape_edges_x(self):
-        """Number of x-edges along each axis direction
+        """Number of x-edges along each axis direction.
 
         This property returns a tuple containing the number of x-edges
         along each axis direction. The length of the tuple is equal to the
@@ -647,7 +659,7 @@ class BaseRectangularMesh(BaseRegularMesh):
 
     @property
     def shape_edges_y(self):
-        """Number of y-edges along each axis direction
+        """Number of y-edges along each axis direction.
 
         This property returns a tuple containing the number of y-edges
         along each axis direction. If `dim` is 1, there are no y-edges.
@@ -673,7 +685,7 @@ class BaseRectangularMesh(BaseRegularMesh):
 
     @property
     def shape_edges_z(self):
-        """Number of z-edges along each axis direction
+        """Number of z-edges along each axis direction.
 
         This property returns a tuple containing the number of z-edges
         along each axis direction. There are only z-edges if `dim` is 3.
@@ -697,7 +709,7 @@ class BaseRectangularMesh(BaseRegularMesh):
 
     @property
     def shape_faces_x(self):
-        """Number of x-faces along each axis direction
+        """Number of x-faces along each axis direction.
 
         This property returns a tuple containing the number of x-faces
         along each axis direction.
@@ -719,7 +731,7 @@ class BaseRectangularMesh(BaseRegularMesh):
 
     @property
     def shape_faces_y(self):
-        """Number of y-faces along each axis direction
+        """Number of y-faces along each axis direction.
 
         This property returns a tuple containing the number of y-faces
         along each axis direction. If `dim` is 1, there are no y-edges.
@@ -745,7 +757,7 @@ class BaseRectangularMesh(BaseRegularMesh):
 
     @property
     def shape_faces_z(self):
-        """Number of z-faces along each axis direction
+        """Number of z-faces along each axis direction.
 
         This property returns a tuple containing the number of z-faces
         along each axis direction. There are only z-faces if `dim` is 3.
@@ -773,41 +785,49 @@ class BaseRectangularMesh(BaseRegularMesh):
     ##################################
 
     @property
-    def n_cells(self):
+    def n_cells(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         return int(np.prod(self.shape_cells))
 
     @property
-    def n_nodes(self):
+    def n_nodes(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         return int(np.prod(self.shape_nodes))
 
     @property
-    def n_edges_x(self):
+    def n_edges_x(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseRegularMesh
         return int(np.prod(self.shape_edges_x))
 
     @property
-    def n_edges_y(self):
+    def n_edges_y(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseRegularMesh
         if self.dim < 2:
             return
         return int(np.prod(self.shape_edges_y))
 
     @property
-    def n_edges_z(self):
+    def n_edges_z(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseRegularMesh
         if self.dim < 3:
             return
         return int(np.prod(self.shape_edges_z))
 
     @property
-    def n_faces_x(self):
+    def n_faces_x(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseRegularMesh
         return int(np.prod(self.shape_faces_x))
 
     @property
-    def n_faces_y(self):
+    def n_faces_y(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseRegularMesh
         if self.dim < 2:
             return
         return int(np.prod(self.shape_faces_y))
 
     @property
-    def n_faces_z(self):
+    def n_faces_z(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseRegularMesh
         if self.dim < 3:
             return
         return int(np.prod(self.shape_faces_z))
@@ -820,7 +840,7 @@ class BaseRectangularMesh(BaseRegularMesh):
         return_format="V",
         **kwargs,
     ):
-        """General reshape method for tensor quantities
+        """Reshape tensor quantities.
 
         **Reshape** is a quick command that will do its best to reshape discrete
         quantities living on meshes than inherit the :class:`discretize.base_mesh.RectangularMesh`
@@ -925,14 +945,14 @@ class BaseRectangularMesh(BaseRegularMesh):
         )
 
         def outKernal(xx, nn):
-            """Returns xx as either a matrix (shape == nn) or a vector."""
+            """Return xx as either a matrix (shape == nn) or a vector."""
             if return_format == "M":
                 return xx.reshape(nn, order="F")
             elif return_format == "V":
                 return mkvc(xx)
 
         def switchKernal(xx):
-            """Switches over the different options."""
+            """Switch over the different options."""
             if x_type in ["cell_centers", "nodes"]:
                 nn = self.shape_cells if x_type == "cell_centers" else self.shape_nodes
                 if xx.size != np.prod(nn):
@@ -1006,7 +1026,7 @@ class BaseRectangularMesh(BaseRegularMesh):
 
     @property
     def nCx(self):
-        """Number of cells in the x direction
+        """Number of cells in the x direction.
 
         Returns
         -------
@@ -1016,7 +1036,6 @@ class BaseRectangularMesh(BaseRegularMesh):
           `nCx` will be removed in discretize 1.0.0, it is replaced by
           `mesh.shape_cells[0]` to reduce namespace clutter.
         """
-
         warnings.warn(
             "nCx has been deprecated, please access as mesh.shape_cells[0]",
             FutureWarning,
@@ -1025,7 +1044,7 @@ class BaseRectangularMesh(BaseRegularMesh):
 
     @property
     def nCy(self):
-        """Number of cells in the y direction
+        """Number of cells in the y direction.
 
         Returns
         -------
@@ -1036,7 +1055,6 @@ class BaseRectangularMesh(BaseRegularMesh):
           `nCy` will be removed in discretize 1.0.0, it is replaced by
           `mesh.shape_cells[1]` to reduce namespace clutter.
         """
-
         warnings.warn(
             "nCy has been deprecated, please access as mesh.shape_cells[1]",
             FutureWarning,
@@ -1047,7 +1065,7 @@ class BaseRectangularMesh(BaseRegularMesh):
 
     @property
     def nCz(self):
-        """Number of cells in the z direction
+        """Number of cells in the z direction.
 
         Returns
         -------
@@ -1058,7 +1076,6 @@ class BaseRectangularMesh(BaseRegularMesh):
           `nCz` will be removed in discretize 1.0.0, it is replaced by
           `mesh.shape_cells[2]` to reduce namespace clutter.
         """
-
         warnings.warn(
             "nCz has been deprecated, please access as mesh.shape_cells[2]",
             FutureWarning,
@@ -1069,7 +1086,7 @@ class BaseRectangularMesh(BaseRegularMesh):
 
     @property
     def nNx(self):
-        """Number of nodes in the x-direction
+        """Number of nodes in the x-direction.
 
         Returns
         -------
@@ -1079,7 +1096,6 @@ class BaseRectangularMesh(BaseRegularMesh):
           `nNx` will be removed in discretize 1.0.0, it is replaced by
           `mesh.shape_nodes[0]` to reduce namespace clutter.
         """
-
         warnings.warn(
             "nNx has been deprecated, please access as mesh.shape_nodes[0]",
             FutureWarning,
@@ -1088,7 +1104,7 @@ class BaseRectangularMesh(BaseRegularMesh):
 
     @property
     def nNy(self):
-        """Number of nodes in the y-direction
+        """Number of nodes in the y-direction.
 
         Returns
         -------
@@ -1099,7 +1115,6 @@ class BaseRectangularMesh(BaseRegularMesh):
           `nNy` will be removed in discretize 1.0.0, it is replaced by
           `mesh.shape_nodes[1]` to reduce namespace clutter.
         """
-
         warnings.warn(
             "nNy has been deprecated, please access as mesh.shape_nodes[1]",
             FutureWarning,
@@ -1110,7 +1125,7 @@ class BaseRectangularMesh(BaseRegularMesh):
 
     @property
     def nNz(self):
-        """Number of nodes in the z-direction
+        """Number of nodes in the z-direction.
 
         Returns
         -------
@@ -1121,7 +1136,6 @@ class BaseRectangularMesh(BaseRegularMesh):
           `nNz` will be removed in discretize 1.0.0, it is replaced by
           `mesh.shape_nodes[2]` to reduce namespace clutter.
         """
-
         warnings.warn(
             "nNz has been deprecated, please access as mesh.shape_nodes[2]",
             FutureWarning,

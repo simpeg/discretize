@@ -629,6 +629,6 @@ class TreeMeshIO(object):
 
 
 class SimplexMeshIO(InterfaceSimplexReadVTK):
-    """Empty class for future text based IO of a SimplexMesh.
-    """
+    """Empty class for future text based IO of a SimplexMesh."""
+
     pass
