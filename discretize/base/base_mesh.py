@@ -1908,7 +1908,7 @@ class BaseMesh:
     def get_face_inner_product_deriv(
         self, model, do_fast=True, invert_model=False, invert_matrix=False, **kwargs
     ):
-        r"""Function handle to multiply vector with derivative of face inner product matrix (or its inverse).
+        r"""Get a function handle to multiply a vector with derivative of face inner product matrix (or its inverse).
 
         Let :math:`\mathbf{M}(\mathbf{m})` be the face inner product matrix
         constructed with a set of physical property parameters :math:`\mathbf{m}`
@@ -2096,7 +2096,7 @@ class BaseMesh:
     def get_edge_inner_product_deriv(
         self, model, do_fast=True, invert_model=False, invert_matrix=False, **kwargs
     ):
-        r"""Function handle to multiply vector with derivative of edge inner product matrix (or its inverse).
+        r"""Get a function handle to multiply vector with derivative of edge inner product matrix (or its inverse).
 
         Let :math:`\mathbf{M}(\mathbf{m})` be the edge inner product matrix
         constructed with a set of physical property parameters :math:`\mathbf{m}`

@@ -1050,7 +1050,7 @@ class TreeMesh(
         return False
 
     def __reduce__(self):
-        """The necessary items to reconstruct this object's state."""
+        """Return the necessary items to reconstruct this object's state."""
         return TreeMesh, (self.h, self.origin), self.__getstate__()
 
     cellGrad = deprecate_property(
