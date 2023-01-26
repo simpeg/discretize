@@ -34,7 +34,7 @@ stages:
           displayName: "Run black"
 
     - job:
-      displayName: Run style checks with flake8 (allowed to fail)
+      displayName: Run style checks with flake8
       pool:
         vmImage: ubuntu-latest
       variables:
