@@ -24,6 +24,7 @@ exclude =
     .git,
     .eggs,
     version.py,
+    setup.py,
     __pycache__,
     .ipynb_checkpoints,
     docs/examples/*,
@@ -39,6 +40,7 @@ per-file-ignores =
     tests/*: E731, D,
     tutorials/*: D,
     examples/*: D,
+
 exclude-from-doctest =
     # Only check discretize for docstring style
     tests/*,
