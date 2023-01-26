@@ -1,3 +1,4 @@
+"""Module containing the curvilinear mesh implementation."""
 import numpy as np
 
 from discretize.utils import (
@@ -126,7 +127,7 @@ class CurvilinearMesh(
 
     @property
     def node_list(self):
-        """Returns the gridded x, y (and z) node locations used to create the mesh.
+        """The gridded x, y (and z) node locations used to create the mesh.
 
         Returns
         -------
@@ -140,13 +141,15 @@ class CurvilinearMesh(
         return self._node_list
 
     @classmethod
-    def deserialize(cls, value, **kwargs):
+    def deserialize(cls, value, **kwargs):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if "nodes" in value:
             value["node_list"] = value.pop("nodes")
         return super().deserialize(value, **kwargs)
 
     @property
-    def cell_centers(self):
+    def cell_centers(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if getattr(self, "_cell_centers", None) is None:
             self._cell_centers = np.concatenate(
                 [self.aveN2CC * self.gridN[:, i] for i in range(self.dim)]
@@ -154,14 +157,15 @@ class CurvilinearMesh(
         return self._cell_centers
 
     @property
-    def nodes(self):
+    def nodes(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if getattr(self, "_nodes", None) is None:
             raise Exception("Someone deleted this. I blame you.")
         return self._nodes
 
     @property
     def faces_x(self):
-        """Gridded x-face locations (staggered grid)
+        """Gridded x-face locations (staggered grid).
 
         This property returns a numpy array of shape (n_faces_x, dim)
         containing gridded locations for all x-faces in the
@@ -211,7 +215,6 @@ class CurvilinearMesh(
         >>> ax2.legend(['Mesh', 'X-faces'], fontsize=16)
         >>> plt.plot()
         """
-
         if getattr(self, "_faces_x", None) is None:
             N = self.reshape(self.gridN, "N", "N", "M")
             if self.dim == 2:
@@ -235,7 +238,7 @@ class CurvilinearMesh(
 
     @property
     def faces_y(self):
-        """Gridded y-face locations (staggered grid)
+        """Gridded y-face locations (staggered grid).
 
         This property returns a numpy array of shape (n_faces_y, dim)
         containing gridded locations for all y-faces in the
@@ -285,7 +288,6 @@ class CurvilinearMesh(
         >>> ax2.legend(['Mesh', 'Y-faces'], fontsize=16)
         >>> plt.plot()
         """
-
         if getattr(self, "_faces_y", None) is None:
             N = self.reshape(self.gridN, "N", "N", "M")
             if self.dim == 2:
@@ -309,7 +311,7 @@ class CurvilinearMesh(
 
     @property
     def faces_z(self):
-        """Gridded z-face locations (staggered grid)
+        """Gridded z-face locations (staggered grid).
 
         This property returns a numpy array of shape (n_faces_z, dim)
         containing gridded locations for all z-faces in the
@@ -323,7 +325,6 @@ class CurvilinearMesh(
         (n_faces_z, dim) numpy.ndarray of float
             Gridded z-face locations (staggered grid)
         """
-
         if getattr(self, "_faces_z", None) is None:
             N = self.reshape(self.gridN, "N", "N", "M")
             XYZ = [
@@ -337,7 +338,8 @@ class CurvilinearMesh(
         return self._faces_z
 
     @property
-    def faces(self):
+    def faces(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         faces = np.r_[self.faces_x, self.faces_y]
         if self.dim > 2:
             faces = np.r_[faces, self.faces_z]
@@ -345,7 +347,7 @@ class CurvilinearMesh(
 
     @property
     def edges_x(self):
-        """Gridded x-edge locations (staggered grid)
+        """Gridded x-edge locations (staggered grid).
 
         This property returns a numpy array of shape (n_edges_x, dim)
         containing gridded locations for all x-edges in the
@@ -406,7 +408,7 @@ class CurvilinearMesh(
 
     @property
     def edges_y(self):
-        """Gridded y-edge locations (staggered grid)
+        """Gridded y-edge locations (staggered grid).
 
         This property returns a numpy array of shape (n_edges_y, dim)
         containing gridded locations for all y-edges in the
@@ -467,7 +469,7 @@ class CurvilinearMesh(
 
     @property
     def edges_z(self):
-        """Gridded z-edge locations (staggered grid)
+        """Gridded z-edge locations (staggered grid).
 
         This property returns a numpy array of shape (n_edges_z, dim)
         containing gridded locations for all z-edges in the
@@ -488,18 +490,21 @@ class CurvilinearMesh(
         return self._edges_z
 
     @property
-    def edges(self):
+    def edges(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         edges = np.r_[self.edges_x, self.edges_y]
         if self.dim > 2:
             edges = np.r_[edges, self.edges_z]
         return edges
 
     @property
-    def boundary_nodes(self):
+    def boundary_nodes(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         return self.nodes[make_boundary_bool(self.shape_nodes)]
 
     @property
-    def boundary_edges(self):
+    def boundary_edges(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if self.dim == 2:
             ex = self.edges_x[make_boundary_bool(self.shape_edges_x, dir="y")]
             ey = self.edges_y[make_boundary_bool(self.shape_edges_y, dir="x")]
@@ -511,7 +516,8 @@ class CurvilinearMesh(
             return np.r_[ex, ey, ez]
 
     @property
-    def boundary_faces(self):
+    def boundary_faces(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         fx = self.faces_x[make_boundary_bool(self.shape_faces_x, dir="x")]
         fy = self.faces_y[make_boundary_bool(self.shape_faces_y, dir="y")]
         if self.dim == 2:
@@ -521,7 +527,8 @@ class CurvilinearMesh(
             return np.r_[fx, fy, fz]
 
     @property
-    def boundary_face_outward_normals(self):
+    def boundary_face_outward_normals(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         is_bxm = np.zeros(self.shape_faces_x, order="F", dtype=bool)
         is_bxm[0, :] = True
         is_bxm = is_bxm.reshape(-1, order="F")
@@ -578,7 +585,8 @@ class CurvilinearMesh(
     #       node(i+1,j,k)      node(i+1,j+1,k)
 
     @property
-    def cell_volumes(self):
+    def cell_volumes(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if getattr(self, "_cell_volumes", None) is None:
             if self.dim == 2:
                 A, B, C, D = index_cube("ABCD", self.vnN)
@@ -612,7 +620,8 @@ class CurvilinearMesh(
         return self._cell_volumes
 
     @property
-    def face_areas(self):
+    def face_areas(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if (
             getattr(self, "_face_areas", None) is None
             or getattr(self, "_normals", None) is None
@@ -656,7 +665,8 @@ class CurvilinearMesh(
         return self._face_areas
 
     @property
-    def face_normals(self):
+    def face_normals(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         # For 3D meshes, there are 4 nodes in which
         # cross-products can be used to compute the normal vector.
         # In this case, the average normal vector is returned so there
@@ -687,7 +697,8 @@ class CurvilinearMesh(
             return _normalize3D(np.r_[normal1, normal2, normal3])
 
     @property
-    def edge_lengths(self):
+    def edge_lengths(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if getattr(self, "_edge_lengths", None) is None:
             if self.dim == 2:
                 xy = self.gridN
@@ -721,7 +732,8 @@ class CurvilinearMesh(
         return self._edge_lengths
 
     @property
-    def edge_tangents(self):
+    def edge_tangents(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if getattr(self, "_edge_tangents", None) is None:
             self.edge_lengths  # calling .edge_lengths will create the tangents
         return self._edge_tangents
