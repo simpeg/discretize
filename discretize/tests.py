@@ -23,7 +23,7 @@ Functions
   get_quadratic
   setup_mesh
   assert_isadjoint
-""" # NOQA D205
+"""  # NOQA D205
 
 import numpy as np
 import scipy.sparse as sp
@@ -637,6 +637,7 @@ def get_quadratic(A, b, c=0):
         The callable function that returns the quadratic evaluation, and optionally its
         gradient, and Hessian.
     """
+
     def Quadratic(x, return_g=True, return_H=True):
         f = 0.5 * x.dot(A.dot(x)) + b.dot(x) + c
         out = (f,)
@@ -724,6 +725,7 @@ def assert_isadjoint(
         If the dot product test fails (only if assert_error=True).
 
     """
+
     def random(size, iscomplex):
         """Create random data of size and dtype of <size>."""
         out = rng.standard_normal(size)

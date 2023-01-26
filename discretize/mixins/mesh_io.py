@@ -43,6 +43,9 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         discretize.TensorMesh
             The tensor mesh
         """
+        # Read the file as line strings, remove lines with comment = !
+        msh = np.genfromtxt(file_name, delimiter="\n", dtype=str, comments="!")
+
         # Interal function to read cell size lines for the UBC mesh files.
         def readCellLine(line):
             line_list = []
@@ -55,8 +58,6 @@ class TensorMeshIO(InterfaceTensorread_vtk):
                 line_list.append(seg_arr)
             return np.concatenate(line_list)
 
-        # Read the file as line strings, remove lines with comment = !
-        msh = np.genfromtxt(file_name, delimiter="\n", dtype=str, comments="!")
         # Fist line is the size of the model
         # sizeM = np.array(msh[0].split(), dtype=float)
         # Second line is the South-West-Top corner coordinates.

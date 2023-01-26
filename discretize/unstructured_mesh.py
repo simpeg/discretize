@@ -644,7 +644,7 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         )
 
         if zeros_outside:
-            barys[inds==-1] = 0.0
+            barys[inds == -1] = 0.0
 
         n_loc = len(loc)
         location_type = self._parse_location_type(location_type)
@@ -664,8 +664,8 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
             _interp_cc(loc, self.cell_centers, mat.data, mat.indices, mat.indptr)
             if zeros_outside:
                 e = np.ones(n_loc)
-                e[inds==-1] = 0.0
-                mat = sp.diags(e, format='csr') @ mat
+                e[inds == -1] = 0.0
+                mat = sp.diags(e, format="csr") @ mat
             return mat
         else:
             component = location_type[-1]

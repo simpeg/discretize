@@ -642,6 +642,7 @@ class InnerProducts(object):
 
     def _getEdgePx(M):
         """Return a function for creating edge projection matrices in 1D."""
+
         def Px(xEdge):
             if xEdge != "eX0":
                 raise TypeError("xEdge = {0!s}, not eX0".format(xEdge))
