@@ -1,3 +1,4 @@
+"""Module containing the cylindrical mesh implementation."""
 import numpy as np
 import scipy.sparse as sp
 from scipy.constants import pi
@@ -29,7 +30,7 @@ import warnings
 class CylindricalMesh(
     InnerProducts, DiffOperators, BaseTensorMesh, BaseRectangularMesh, InterfaceMixins
 ):
-    """
+    r"""
     Class for cylindrical meshes.
 
     ``CylindricalMesh`` is a mesh class for problems with rotational symmetry.
@@ -38,7 +39,7 @@ class CylindricalMesh(
     meshes are as follows:
 
     - **x:** radial direction (:math:`r`)
-    - **y:** azimuthal direction (:math:`\\phi`)
+    - **y:** azimuthal direction (:math:`\phi`)
     - **z:** vertical direction (:math:`z`)
 
     Parameters
@@ -47,7 +48,7 @@ class CylindricalMesh(
         Defines the cell widths along each axis. The length of the iterable object is
         equal to the dimension of the mesh (1, 2 or 3). For a 3D mesh, the list would
         have the form *[hr, hphi, hz]* . Note that the sum of cell widths in the phi
-        direction **must** equal :math:`2\\pi`. You can also use a flat value of
+        direction **must** equal :math:`2\pi`. You can also use a flat value of
         *hphi* = *1* to define a cylindrically symmetric mesh.
 
         Along each axis, the user has 3 choices for defining the cells widths:
@@ -147,7 +148,7 @@ class CylindricalMesh(
 
     @property
     def cartesian_origin(self):
-        """Cartesian origin of the mesh
+        """Cartesian origin of the mesh.
 
         Returns the origin or 'anchor point' of the cylindrical mesh
         in Cartesian coordinates; i.e. [x0, y0, z0]. For cylindrical
@@ -174,7 +175,7 @@ class CylindricalMesh(
 
     @property
     def is_symmetric(self):
-        """Validates whether mesh is symmetric.
+        """Validate whether mesh is symmetric.
 
         Symmetric cylindrical meshes have useful mathematical
         properties that allow us to reduce the computational cost
@@ -196,7 +197,7 @@ class CylindricalMesh(
 
     @property
     def shape_nodes(self):
-        """Returns the number of nodes along each axis
+        """Return the number of nodes along each axis.
 
         This property returns a tuple containing the number of nodes along
         the :math:`x` (radial), :math:`y` (azimuthal) and :math:`z` (vertical)
@@ -227,7 +228,7 @@ class CylindricalMesh(
 
     @property
     def n_nodes(self):
-        """Returns total number of mesh nodes
+        """Return total number of mesh nodes.
 
         For non-symmetric cylindrical meshes, this property returns
         the total number of nodes. For symmetric meshes, this property
@@ -251,28 +252,22 @@ class CylindricalMesh(
 
     @property
     def _shape_total_faces_x(self):
-        """
-        vector number of total Fx (prior to deflating)
-        """
+        """Vector number of total Fx (prior to deflating)."""
         return self._shape_total_nodes[:1] + self.shape_cells[1:]
 
     @property
     def _n_total_faces_x(self):
-        """
-        number of total Fx (prior to defplating)
-        """
+        """Number of total Fx (prior to defplating)."""
         return int(np.prod(self._shape_total_faces_x))
 
     @property
     def _n_hanging_faces_x(self):
-        """
-        Number of hanging Fx
-        """
+        """Number of hanging Fx."""
         return int(np.prod(self.shape_cells[1:]))
 
     @property
     def shape_faces_x(self):
-        """Number of x-faces along each axis direction
+        """Number of x-faces along each axis direction.
 
         This property returns the number of x-faces along the
         :math:`x` (radial), :math:`y` (azimuthal) and :math:`z` (vertical)
@@ -289,79 +284,59 @@ class CylindricalMesh(
 
     @property
     def _shape_total_faces_y(self):
-        """
-        vector number of total Fy (prior to deflating)
-        """
+        """Vector number of total Fy (prior to deflating)."""
         vnC = self.shape_cells
         return (vnC[0], self._shape_total_nodes[1]) + vnC[2:]
 
     @property
     def _n_total_faces_y(self):
-        """
-        number of total Fy (prior to deflating)
-        """
+        """Number of total Fy (prior to deflating)."""
         return int(np.prod(self._shape_total_faces_y))
 
     @property
     def _n_hanging_faces_y(self):
-        """
-        number of hanging y-faces
-        """
+        """Number of hanging y-faces."""
         return int(np.prod(self.shape_cells[::2]))
 
     @property
     def _shape_total_faces_z(self):
-        """
-        vector number of total Fz (prior to deflating)
-        """
+        """Vector number of total Fz (prior to deflating)."""
         return self.shape_cells[:-1] + self._shape_total_nodes[-1:]
 
     @property
     def _n_total_faces_z(self):
-        """
-        number of total Fz (prior to deflating)
-        """
+        """Number of total Fz (prior to deflating)."""
         return int(np.prod(self._shape_total_faces_z))
 
     @property
     def _n_hanging_faces_z(self):
-        """
-        number of hanging Fz
-        """
+        """Number of hanging Fz."""
         return int(np.prod(self.shape_cells[::2]))
 
     @property
     def _shape_total_edges_x(self):
-        """
-        vector number of total Ex (prior to deflating)
-        """
+        """Vector number of total Ex (prior to deflating)."""
         return self.shape_cells[:1] + self._shape_total_nodes[1:]
 
     @property
     def _n_total_edges_x(self):
-        """
-        number of total Ex (prior to deflating)
-        """
+        """Number of total Ex (prior to deflating)."""
         return int(np.prod(self._shape_total_edges_x))
 
     @property
     def _shape_total_edges_y(self):
-        """
-        vector number of total Ey (prior to deflating)
-        """
+        """Vector number of total Ey (prior to deflating)."""
         _shape_total_nodes = self._shape_total_nodes
         return (_shape_total_nodes[0], self.shape_cells[1], _shape_total_nodes[2])
 
     @property
     def _n_total_edges_y(self):
-        """
-        number of total Ey (prior to deflating)
-        """
+        """Number of total Ey (prior to deflating)."""
         return int(np.prod(self._shape_total_edges_y))
 
     @property
     def shape_edges_y(self):
-        """Number of y-edges along each axis direction
+        """Number of y-edges along each axis direction.
 
         This property returns the number of y-edges along the
         :math:`x` (radial), :math:`y` (azimuthal) and :math:`z` (vertical)
@@ -378,21 +353,17 @@ class CylindricalMesh(
 
     @property
     def _shape_total_edges_z(self):
-        """
-        vector number of total Ez (prior to deflating)
-        """
+        """Vector number of total Ez (prior to deflating)."""
         return self._shape_total_nodes[:-1] + self.shape_cells[-1:]
 
     @property
     def _n_total_edges_z(self):
-        """
-        number of total Ez (prior to deflating)
-        """
+        """Number of total Ez (prior to deflating)."""
         return int(np.prod(self._shape_total_edges_z))
 
     @property
     def shape_edges_z(self):
-        """Number of z-edges along each axis direction
+        """Number of z-edges along each axis direction.
 
         This property returns the number of z-edges along the
         :math:`x` (radial), :math:`y` (azimuthal) and :math:`z` (vertical)
@@ -411,7 +382,7 @@ class CylindricalMesh(
 
     @property
     def n_edges_z(self):
-        """Total number of z-edges in the mesh
+        """Total number of z-edges in the mesh.
 
         This property returns the total number of z-edges for
         non-symmetric cyindrical meshes; see :py:attr:`~.CylindricalMesh.is_symmetric`.
@@ -431,7 +402,7 @@ class CylindricalMesh(
 
     @property
     def cell_centers_x(self):
-        """Returns the x-positions of cell centers along the x-direction
+        """Return the x-positions of cell centers along the x-direction.
 
         This property returns a 1D vector containing the x-position values
         of the cell centers along the x-direction (radial). The length of the vector
@@ -446,7 +417,7 @@ class CylindricalMesh(
 
     @property
     def cell_centers_y(self):
-        """Returns the y-positions of cell centers along the y-direction (azimuthal)
+        """Return the y-positions of cell centers along the y-direction (azimuthal).
 
         This property returns a 1D vector containing the y-position values
         of the cell centers along the y-direction (azimuthal). The length of the vector
@@ -466,7 +437,7 @@ class CylindricalMesh(
 
     @property
     def nodes_x(self):
-        """Returns the x-positions of nodes along the x-direction (radial)
+        """Return the x-positions of nodes along the x-direction (radial).
 
         This property returns a 1D vector containing the x-position values
         of the nodes along the x-direction (radial). The length of the vector
@@ -483,16 +454,14 @@ class CylindricalMesh(
 
     @property
     def _nodes_y_full(self):
-        """
-        full nodal y vector (prior to deflating)
-        """
+        """Full nodal y vector (prior to deflating)."""
         if self.is_symmetric:
             return np.r_[self.origin[1]]
         return self.origin[1] + np.r_[0, self.h[1].cumsum()]
 
     @property
     def nodes_y(self):
-        """Returns the y-positions of nodes along the y-direction (azimuthal)
+        """Return the y-positions of nodes along the y-direction (azimuthal).
 
         This property returns a 1D vector containing the y-position values
         of the nodes along the y-direction (azimuthal). If the mesh is symmetric,
@@ -508,15 +477,13 @@ class CylindricalMesh(
 
     @property
     def _edge_x_lengths_full(self):
-        """
-        full x-edge lengths (prior to deflating)
-        """
+        """Full x-edge lengths (prior to deflating)."""
         nx, ny, nz = self._shape_total_nodes
         return np.kron(np.ones(nz), np.kron(np.ones(ny), self.h[0]))
 
     @property
     def edge_x_lengths(self):
-        """x-edge lengths for entire mesh
+        """Lengths of each x edge for the entire mesh.
 
         If the mesh is not symmetric, this property returns a 1D vector
         containing the lengths of all x-edges in the mesh. If the mesh
@@ -535,9 +502,7 @@ class CylindricalMesh(
 
     @property
     def _edge_y_lengths_full(self):
-        """
-        full vector of y-edge lengths (prior to deflating)
-        """
+        """Full vector of y-edge lengths (prior to deflating)."""
         if self.is_symmetric:
             return 2 * pi * self.nodes[:, 0]
         return np.kron(
@@ -546,7 +511,7 @@ class CylindricalMesh(
 
     @property
     def edge_y_lengths(self):
-        """arc-lengths of y-edges for entire mesh
+        r"""Arc-lengths of each y-edge for the entire mesh.
 
         This property returns a 1D vector containing the arc-lengths
         of all y-edges in the mesh. For a single y-edge at radial location
@@ -554,7 +519,7 @@ class CylindricalMesh(
         is given by:
 
         .. math::
-            \\Delta y = r \\Delta \\phi
+            \Delta y = r \Delta \phi
 
         Returns
         -------
@@ -572,15 +537,13 @@ class CylindricalMesh(
 
     @property
     def _edge_z_lengths_full(self):
-        """
-        full z-edge lengths (prior to deflation)
-        """
+        """Full z-edge lengths (prior to deflation)."""
         nx, ny, nz = self._shape_total_nodes
         return np.kron(self.h[2], np.kron(np.ones(ny), np.ones(nx)))
 
     @property
     def edge_z_lengths(self):
-        """z-edge lengths for entire mesh
+        """Lengths of each z-edges for the entire mesh.
 
         If the mesh is not symmetric, this property returns a 1D vector
         containing the lengths of all z-edges in the mesh. If the mesh
@@ -598,10 +561,7 @@ class CylindricalMesh(
 
     @property
     def _edge_lengths_full(self):
-        """
-        full edge lengths [r-edges, theta-edgesm z-edges] (prior to
-        deflation)
-        """
+        """Full edge lengths [r-edges, theta-edges z-edges] (prior to deflation)."""
         if self.is_symmetric:
             raise NotImplementedError
         else:
@@ -613,7 +573,7 @@ class CylindricalMesh(
 
     @property
     def edge_lengths(self):
-        """Lengths of all mesh edges
+        """Lengths of all mesh edges.
 
         This property returns a 1D vector containing the lengths
         of all edges in the mesh organized by x-edges, y-edges, then z-edges;
@@ -635,25 +595,23 @@ class CylindricalMesh(
 
     @property
     def _face_x_areas_full(self):
-        """
-        area of x-faces prior to deflation
-        """
+        """Areas of x-faces prior to deflation."""
         if self.is_symmetric:
             return np.kron(self.h[2], 2 * pi * self.nodes_x)
         return np.kron(self.h[2], np.kron(self.h[1], self.nodes_x))
 
     @property
     def face_x_areas(self):
-        """x-face areas for the entire mesh
+        r"""Areas of each x-face for the entire mesh.
 
         This property returns a 1D vector containing the areas of the
         x-faces of the mesh. The surface area takes into account curvature.
         For a single x-face at radial location
-        :math:`r` with azimuthal width :math:`\\Delta \\phi` and vertical
+        :math:`r` with azimuthal width :math:`\Delta \phi` and vertical
         width :math:`h_z`, the area is given by:
 
         .. math::
-            A_x = r \\Delta phi h_z
+            A_x = r \Delta \phi h_z
 
         Returns
         -------
@@ -669,16 +627,14 @@ class CylindricalMesh(
 
     @property
     def _face_y_areas_full(self):
-        """
-        Area of y-faces (Azimuthal faces), prior to deflation.
-        """
+        """Area of y-faces (Azimuthal faces), prior to deflation."""
         return np.kron(
             self.h[2], np.kron(np.ones(self._shape_total_nodes[1]), self.h[0])
         )
 
     @property
     def face_y_areas(self):
-        """y-face areas for the entire mesh
+        """Areas of each y-face for the entire mesh.
 
         This property returns a 1D vector containing the areas of the
         y-faces of the mesh. For a single y-face with edge lengths
@@ -704,9 +660,7 @@ class CylindricalMesh(
 
     @property
     def _face_z_areas_full(self):
-        """
-        area of z-faces prior to deflation
-        """
+        """Area of z-faces prior to deflation."""
         if self.is_symmetric:
             return np.kron(
                 np.ones_like(self.nodes_z),
@@ -722,15 +676,15 @@ class CylindricalMesh(
 
     @property
     def face_z_areas(self):
-        """z-face areas for the entire mesh
+        r"""Areas of each z-face for the entire mesh.
 
         This property returns a 1D vector containing the areas of the
         z-faces of the mesh. The surface area takes into account curvature.
         For a single z-face at between :math:`r_1` and :math:`r_2`
-        with azimuthal width :math:`\\Delta \\phi`, the area is given by:
+        with azimuthal width :math:`\Delta \phi`, the area is given by:
 
         .. math::
-            A_z = \\frac{\\Delta \\phi}{2} (r_2^2 - r_1^2)
+            A_z = \frac{\Delta \phi}{2} (r_2^2 - r_1^2)
 
         Returns
         -------
@@ -746,16 +700,14 @@ class CylindricalMesh(
 
     @property
     def _face_areas_full(self):
-        """
-        Area of all faces (prior to delflation)
-        """
+        """Area of all faces (prior to deflation)."""
         return np.r_[
             self._face_x_areas_full, self._face_y_areas_full, self._face_z_areas_full
         ]
 
     @property
     def face_areas(self):
-        """Face areas for the entire mesh
+        """Face areas for the entire mesh.
 
         This property returns a 1D vector containing the areas of all
         mesh faces organized by x-faces, y-faces, then z-faces;
@@ -780,17 +732,17 @@ class CylindricalMesh(
 
     @property
     def cell_volumes(self):
-        """Volumes of all mesh cells
+        r"""Volumes of all mesh cells.
 
         This property returns a 1D vector containing the volumes of
         all cells in the mesh. When computing the volume of each cell,
         we take into account curvature. Thus a cell lying within
         radial distance :math:`r_1` and :math:`r_2`, with height
-        :math:`h_z` and with azimuthal width :math:`\\Delta \\phi`,
+        :math:`h_z` and with azimuthal width :math:`\Delta \phi`,
         the volume is given by:
 
         .. math::
-            V = \\frac{\\Delta \\phi \\, h_z}{2} (r_2^2 - r_1^2)
+            V = \frac{\Delta \phi \, h_z}{2} (r_2^2 - r_1^2)
 
         Returns
         -------
@@ -813,9 +765,7 @@ class CylindricalMesh(
 
     @property
     def _ishanging_faces_x(self):
-        """
-        bool vector indicating if an x-face is hanging or not
-        """
+        """Boolean vector indicating if an x-face is hanging or not."""
         if getattr(self, "_ishanging_faces_x_bool", None) is None:
             hang_x = np.zeros(self._shape_total_faces_x, dtype=bool, order="F")
             hang_x[0] = True
@@ -824,8 +774,9 @@ class CylindricalMesh(
 
     @property
     def _hanging_faces_x(self):
-        """
-        dictionary of the indices of the hanging x-faces (keys) and a list
+        """Hanging x-faces dictionary mapping.
+
+        Dictionary of the indices of the hanging x-faces (keys) and a list
         of indices that the eliminated faces map to (if applicable)
         """
         if getattr(self, "_hanging_faces_x_dict", None) is None:
@@ -839,10 +790,7 @@ class CylindricalMesh(
 
     @property
     def _ishanging_faces_y(self):
-        """
-        bool vector indicating if a y-face is hanging or not
-        """
-
+        """Boolean vector indicating if a y-face is hanging or not."""
         if getattr(self, "_ishanging_faces_y_bool", None) is None:
             hang_y = np.zeros(self._shape_total_faces_y, dtype=bool, order="F")
             hang_y[:, -1] = True
@@ -851,9 +799,10 @@ class CylindricalMesh(
 
     @property
     def _hanging_faces_y(self):
-        """
-        dictionary of the indices of the hanging y-faces (keys) and a list
-        of indices that the eliminated faces map to (if applicable)
+        """Hanging y-faces dictionary mapping.
+
+        Dictionary of the indices of the hanging y-faces (keys) and a list
+        of indices that the eliminated faces map to (if applicable).
         """
         if getattr(self, "_hanging_faces_y_dict", None) is None:
             deflate_y = np.zeros(self._shape_total_nodes[1], dtype=bool)
@@ -871,26 +820,23 @@ class CylindricalMesh(
 
     @property
     def _ishanging_faces_z(self):
-        """
-        bool vector indicating if a z-face is hanging or not
-        """
+        """Boolean vector indicating if a z-face is hanging or not."""
         if getattr(self, "_ishanging_faces_z_bool", None) is None:
             self._ishanging_faces_z_bool = np.zeros(self._n_total_faces_z, dtype=bool)
         return self._ishanging_faces_z_bool
 
     @property
     def _hanging_faces_z(self):
-        """
-        dictionary of the indices of the hanging z-faces (keys) and a list
-        of indices that the eliminated faces map to (if applicable)
+        """Hanging z-faces dictionary mapping.
+
+        Dictionary of the indices of the hanging z-faces (keys) and a list
+        of indices that the eliminated faces map to (if applicable).
         """
         return {}
 
     @property
     def _ishanging_edges_x(self):
-        """
-        bool vector indicating if a x-edge is hanging or not
-        """
+        """Boolean vector indicating if a x-edge is hanging or not."""
         if getattr(self, "_ishanging_edges_x_bool", None) is None:
             hang_x = np.zeros(self._shape_total_edges_x, dtype=bool, order="F")
             hang_x[:, -1] = True
@@ -899,9 +845,10 @@ class CylindricalMesh(
 
     @property
     def _hanging_edges_x(self):
-        """
-        dictionary of the indices of the hanging x-edges (keys) and a list
-        of indices that the eliminated faces map to (if applicable)
+        """Hanging x-edges dictionary mapping.
+
+        Dictionary of the indices of the hanging x-edges (keys) and a list
+        of indices that the eliminated faces map to (if applicable).
         """
         if getattr(self, "_hanging_edges_x_dict", None) is None:
             nx, ny, nz = self._shape_total_nodes
@@ -920,9 +867,7 @@ class CylindricalMesh(
 
     @property
     def _ishanging_edges_y(self):
-        """
-        bool vector indicating if a y-edge is hanging or not
-        """
+        """Boolean vector indicating if a y-edge is hanging or not."""
         if getattr(self, "_ishanging_edges_y_bool", None) is None:
             hang_y = np.zeros(self._shape_total_edges_y, dtype=bool, order="F")
             if not self.is_symmetric:
@@ -932,9 +877,10 @@ class CylindricalMesh(
 
     @property
     def _hanging_edges_y(self):
-        """
-        dictionary of the indices of the hanging y-edges (keys) and a list
-        of indices that the eliminated faces map to (if applicable)
+        """Hanging y-edges dictionary mapping.
+
+        Dictionary of the indices of the hanging y-edges (keys) and a list
+        of indices that the eliminated faces map to (if applicable).
         """
         if getattr(self, "_hanging_edges_y_dict", None) is None:
             self._hanging_edges_y_dict = dict(
@@ -958,9 +904,7 @@ class CylindricalMesh(
 
     @property
     def _ishanging_edges_z(self):
-        """
-        bool vector indicating if a z-edge is hanging or not
-        """
+        """Boolean vector indicating if a z-edge is hanging or not."""
         if getattr(self, "_ishanging_edges_z_bool", None) is None:
             if self.is_symmetric:
                 self._ishanging_edges_z_bool = np.ones(
@@ -977,9 +921,10 @@ class CylindricalMesh(
 
     @property
     def _hanging_edges_z(self):
-        """
-        dictionary of the indices of the hanging z-edges (keys) and a list
-        of indices that the eliminated faces map to (if applicable)
+        """Hanging z-edges dictionary mapping.
+
+        Dictionary of the indices of the hanging z-edges (keys) and a list
+        of indices that the eliminated faces map to (if applicable).
         """
         if getattr(self, "_hanging_edges_z_dict", None) is None:
             nx, ny, nz = self._shape_total_nodes
@@ -1000,9 +945,7 @@ class CylindricalMesh(
 
     @property
     def _ishanging_nodes(self):
-        """
-        bool vector indicating if a node is hanging or not
-        """
+        """Boolean vector indicating if a node is hanging or not."""
         if getattr(self, "_ishanging_nodes_bool", None) is None:
             if self.is_symmetric:
                 self._ishanging_nodes_bool = np.zeros(self._n_total_nodes, dtype=bool)
@@ -1017,9 +960,10 @@ class CylindricalMesh(
 
     @property
     def _hanging_nodes(self):
-        """
-        dictionary of the indices of the hanging nodes (keys) and a list
-        of indices that the eliminated nodes map to (if applicable)
+        """Hanging nodes dictionary mapping.
+
+        Dictionary of the indices of the hanging nodes (keys) and a list
+        of indices that the eliminated nodes map to (if applicable).
         """
         if getattr(self, "_hanging_nodes_dict", None) is None:
             nx, ny, nz = self._shape_total_nodes
@@ -1044,19 +988,17 @@ class CylindricalMesh(
 
     @property
     def _nodes_full(self):
-        """
-        Full Nodal grid (including hanging nodes)
-        """
+        """Full Nodal grid (including hanging nodes)."""
         return ndgrid([self.nodes_x, self._nodes_y_full, self.nodes_z])
 
     @property
     def nodes(self):
-        """Gridded node locations
+        r"""Gridded node locations.
 
         This property outputs a numpy array containing the gridded
         locations of all mesh nodes in cylindrical ccordinates;
-        i.e. :math:`(r, \\phi, z)`. Note that for symmetric meshes, the azimuthal
-        position of all nodes is set to :math:`\\phi = 0`.
+        i.e. :math:`(r, \phi, z)`. Note that for symmetric meshes, the azimuthal
+        position of all nodes is set to :math:`\phi = 0`.
 
         Returns
         -------
@@ -1071,20 +1013,18 @@ class CylindricalMesh(
 
     @property
     def _faces_x_full(self):
-        """
-        Full Fx grid (including hanging faces)
-        """
+        """Full Fx grid (including hanging faces)."""
         return ndgrid([self.nodes_x, self.cell_centers_y, self.cell_centers_z])
 
     @property
     def faces_x(self):
-        """Gridded x-face (radial face) locations
+        r"""Gridded x-face (radial face) locations.
 
         This property outputs a numpy array containing the gridded
         locations of all x-faces (radial faces) in cylindrical coordinates;
-        i.e. the :math:`(r, \\phi, z)` position of the center of each face.
+        i.e. the :math:`(r, \phi, z)` position of the center of each face.
         The shape of the array is (n_faces_x, 3). Note that for symmetric meshes,
-        the azimuthal position of all x-faces is set to :math:`\\phi = 0`.
+        the azimuthal position of all x-faces is set to :math:`\phi = 0`.
 
         Returns
         -------
@@ -1100,20 +1040,18 @@ class CylindricalMesh(
 
     @property
     def _edges_y_full(self):
-        """
-        Full grid of y-edges (including eliminated edges)
-        """
+        """Full grid of y-edges (including eliminated edges)."""
         return super().edges_y
 
     @property
     def edges_y(self):
-        """Gridded y-edge (azimuthal edge) locations
+        r"""Gridded y-edge (azimuthal edge) locations.
 
         This property outputs a numpy array containing the gridded
         locations of all y-edges (azimuthal edges) in cylindrical coordinates;
-        i.e. the :math:`(r, \\phi, z)` position of the middle of each y-edge.
+        i.e. the :math:`(r, \phi, z)` position of the middle of each y-edge.
         The shape of the array is (n_edges_y, 3). Note that for symmetric meshes,
-        the azimuthal position of all y-edges is set to :math:`\\phi = 0`.
+        the azimuthal position of all y-edges is set to :math:`\phi = 0`.
 
         Returns
         -------
@@ -1129,18 +1067,16 @@ class CylindricalMesh(
 
     @property
     def _edges_z_full(self):
-        """
-        Full z-edge grid (including hanging edges)
-        """
+        """Full z-edge grid (including hanging edges)."""
         return ndgrid([self.nodes_x, self._nodes_y_full, self.cell_centers_z])
 
     @property
     def edges_z(self):
-        """Gridded z-edge (vertical edge) locations
+        r"""Gridded z-edge (vertical edge) locations.
 
         This property outputs a numpy array containing the gridded
         locations of all z-edges (vertical edges) in cylindrical coordinates;
-        i.e. the :math:`(r, \\phi, z)` position of the middle of each z-edge.
+        i.e. the :math:`(r, \phi, z)` position of the middle of each z-edge.
         The shape of the array is (n_edges_z, 3). In the case of symmetric
         meshes, there are no z-edges and this property returns *None*.
 
@@ -1175,11 +1111,13 @@ class CylindricalMesh(
         return is_b
 
     @property
-    def boundary_faces(self):
+    def boundary_faces(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         return self.faces[self._is_boundary_face]
 
     @property
-    def boundary_face_outward_normals(self):
+    def boundary_face_outward_normals(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         normals = self.face_normals[self._is_boundary_face]
         # need to switch the direction of the bottom z faces
         # there should be n_cells_theta * n_cells_z, radial faces
@@ -1201,7 +1139,8 @@ class CylindricalMesh(
         return is_b
 
     @property
-    def boundary_nodes(self):
+    def boundary_nodes(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         return self.nodes[self._is_boundary_node]
 
     @property
@@ -1229,7 +1168,8 @@ class CylindricalMesh(
         return is_b
 
     @property
-    def boundary_edges(self):
+    def boundary_edges(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         return self.edges[self._is_boundary_edge]
 
     ####################################################
@@ -1237,7 +1177,8 @@ class CylindricalMesh(
     ####################################################
 
     @property
-    def face_divergence(self):
+    def face_divergence(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if getattr(self, "_face_divergence", None) is None:
             # Compute faceDivergence operator on faces
             D1 = self.face_x_divergence
@@ -1251,7 +1192,8 @@ class CylindricalMesh(
         return self._face_divergence
 
     @property
-    def face_x_divergence(self):
+    def face_x_divergence(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseTensorMesh
         if getattr(self, "_face_x_divergence", None) is None:
             if self.is_symmetric:
                 ncx, ncy, ncz = self.shape_cells
@@ -1272,7 +1214,8 @@ class CylindricalMesh(
         return self._face_x_divergence
 
     @property
-    def face_y_divergence(self):
+    def face_y_divergence(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseTensorMesh
         if getattr(self, "_face_y_divergence", None) is None:
             D2 = super()._face_y_divergence_stencil
             S = self._face_y_areas_full  # self.reshape(self.face_areas, 'F', 'Fy', 'V')
@@ -1286,7 +1229,8 @@ class CylindricalMesh(
         return self._face_y_divergence
 
     @property
-    def face_z_divergence(self):
+    def face_z_divergence(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseTensorMesh
         if getattr(self, "_face_z_divergence", None) is None:
             D3 = super()._face_z_divergence_stencil
             S = self._face_z_areas_full
@@ -1295,7 +1239,8 @@ class CylindricalMesh(
         return self._face_z_divergence
 
     @property
-    def cell_gradient_x(self):
+    def cell_gradient_x(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseTensorMesh
         raise NotImplementedError("Cell Grad is not yet implemented.")
         # if getattr(self, '_cellGradx', None) is None:
         #     G1 = super(CylindricalMesh, self).stencil_cell_gradient_x
@@ -1308,23 +1253,28 @@ class CylindricalMesh(
         # return self._cellGradx
 
     @property
-    def stencil_cell_gradient_y(self):
+    def stencil_cell_gradient_y(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseTensorMesh
         raise NotImplementedError("Cell Grad is not yet implemented.")
 
     @property
-    def stencil_cell_gradient_z(self):
+    def stencil_cell_gradient_z(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseTensorMesh
         raise NotImplementedError("Cell Grad is not yet implemented.")
 
     @property
-    def stencil_cell_gradient(self):
+    def stencil_cell_gradient(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         raise NotImplementedError("Cell Grad is not yet implemented.")
 
     @property
-    def cell_gradient(self):
+    def cell_gradient(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseTensorMesh
         raise NotImplementedError("Cell Grad is not yet implemented.")
 
     @property
-    def nodal_gradient(self):
+    def nodal_gradient(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if self.is_symmetric:
             return None
         if getattr(self, "_nodal_gradient", None) is None:
@@ -1390,7 +1340,8 @@ class CylindricalMesh(
             return P_f @ stencil @ P_e.T
 
     @property
-    def edge_curl(self):
+    def edge_curl(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if getattr(self, "_edge_curl", None) is None:
             self._edge_curl = (
                 sdiag(1 / self.face_areas)
@@ -1400,7 +1351,8 @@ class CylindricalMesh(
         return self._edge_curl
 
     @property
-    def average_edge_x_to_cell(self):
+    def average_edge_x_to_cell(self):  # NOQA D102
+        # Documentation inherited from discretize.operators.DiffOperators
         if self.is_symmetric:
             raise Exception("There are no x-edges on a cyl symmetric mesh")
         return (
@@ -1413,7 +1365,8 @@ class CylindricalMesh(
         )
 
     @property
-    def average_edge_y_to_cell(self):
+    def average_edge_y_to_cell(self):  # NOQA D102
+        # Documentation inherited from discretize.operators.DiffOperators
         if self.is_symmetric:
             avR = av(self.shape_cells[0])[:, 1:]
             return sp.kron(av(self.shape_cells[2]), avR, format="csr")
@@ -1428,7 +1381,8 @@ class CylindricalMesh(
             )
 
     @property
-    def average_edge_z_to_cell(self):
+    def average_edge_z_to_cell(self):  # NOQA D102
+        # Documentation inherited from discretize.operators.DiffOperators
         if self.is_symmetric:
             raise Exception("There are no z-edges on a cyl symmetric mesh")
         return (
@@ -1441,7 +1395,8 @@ class CylindricalMesh(
         )
 
     @property
-    def average_edge_to_cell(self):
+    def average_edge_to_cell(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if getattr(self, "_average_edge_to_cell", None) is None:
             # The number of cell centers in each direction
             # n = self.vnC
@@ -1458,7 +1413,8 @@ class CylindricalMesh(
         return self._average_edge_to_cell
 
     @property
-    def average_edge_to_cell_vector(self):
+    def average_edge_to_cell_vector(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if self.is_symmetric:
             return self.average_edge_to_cell
         else:
@@ -1469,25 +1425,29 @@ class CylindricalMesh(
         return self._average_edge_to_cell_vector
 
     @property
-    def average_face_x_to_cell(self):
+    def average_face_x_to_cell(self):  # NOQA D102
+        # Documentation inherited from discretize.operators.DiffOperators
         avR = av(self.vnC[0])[
             :, 1:
         ]  # TODO: this should be handled by a deflation matrix
         return kron3(speye(self.vnC[2]), speye(self.vnC[1]), avR)
 
     @property
-    def average_face_y_to_cell(self):
+    def average_face_y_to_cell(self):  # NOQA D102
+        # Documentation inherited from discretize.operators.DiffOperators
         return (
             kron3(speye(self.vnC[2]), av(self.vnC[1]), speye(self.vnC[0]))
             * self._deflation_matrix("Fy", as_ones=True).T
         )
 
     @property
-    def average_face_z_to_cell(self):
+    def average_face_z_to_cell(self):  # NOQA D102
+        # Documentation inherited from discretize.operators.DiffOperators
         return kron3(av(self.vnC[2]), speye(self.vnC[1]), speye(self.vnC[0]))
 
     @property
-    def average_face_to_cell(self):
+    def average_face_to_cell(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if getattr(self, "_average_face_to_cell", None) is None:
             if self.is_symmetric:
                 self._average_face_to_cell = 0.5 * (
@@ -1506,7 +1466,8 @@ class CylindricalMesh(
         return self._average_face_to_cell
 
     @property
-    def average_face_to_cell_vector(self):
+    def average_face_to_cell_vector(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if getattr(self, "_average_face_to_cell_vector", None) is None:
             # n = self.vnC
             if self.is_symmetric:
@@ -1538,7 +1499,8 @@ class CylindricalMesh(
         return aveN2Fy[~self._ishanging_faces_y]
 
     @property
-    def average_node_to_face(self):
+    def average_node_to_face(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if getattr(self, "_average_node_to_face", None) is None:
             ave = super().average_node_to_face
             ave = ave @ self._deflation_matrix("nodes", as_ones=True).T
@@ -1546,7 +1508,8 @@ class CylindricalMesh(
         return self._average_node_to_face
 
     @property
-    def average_cell_to_face(self):
+    def average_cell_to_face(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if getattr(self, "_average_cell_to_face", None) is None:
             if self.dim == 3:
                 # average_cell_to_face_r
@@ -1575,17 +1538,20 @@ class CylindricalMesh(
         return self._average_cell_to_face
 
     @property
-    def project_face_to_boundary_face(self):
+    def project_face_to_boundary_face(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         P = speye(self.n_faces)
         return P[self._is_boundary_face]
 
     @property
-    def project_node_to_boundary_node(self):
+    def project_node_to_boundary_node(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         P = speye(self.n_nodes)
         return P[self._is_boundary_node]
 
     @property
-    def project_edge_to_boundary_edge(self):
+    def project_edge_to_boundary_edge(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         P = speye(self.n_edges)
         return P[self._is_boundary_edge]
 
@@ -1594,9 +1560,10 @@ class CylindricalMesh(
     ####################################################
 
     def _deflation_matrix(self, location, as_ones=False):
-        """
-        construct the deflation matrix to remove hanging edges / faces / nodes
-        from the operators
+        """Construct the deflation matrix.
+
+        Construct the deflation matrix to remove hanging edges / faces / nodes
+        from the operators.
         """
         location = self._parse_location_type(location)
         if location not in [
@@ -1670,18 +1637,18 @@ class CylindricalMesh(
     def get_interpolation_matrix(
         self, loc, location_type="cell_centers", zeros_outside=False, **kwargs
     ):
-        """Construct interpolation matrix from mesh
+        r"""Construct interpolation matrix from mesh.
 
         This method allows the user to construct a sparse linear-interpolation
         matrix which interpolates discrete quantities from mesh centers, nodes,
         edges or faces to an arbitrary set of locations in 3D space.
-        Locations are defined in cylindrical coordinates; i.e. :math:`(r, \\phi, z)`.
+        Locations are defined in cylindrical coordinates; i.e. :math:`(r, \phi, z)`.
 
         Parameters
         ----------
         loc : (n_pts, dim) numpy.ndarray
             Location of points to interpolate to in cylindrical coordinates ; i.e.
-            :math:`(r, \\phi, z)`
+            :math:`(r, \phi, z)`
         location_type : str
             What discrete quantity on the mesh you are interpolating from. Options are:
 
@@ -1890,7 +1857,8 @@ class CylindricalMesh(
         return Q
 
     def cartesian_grid(self, location_type="cell_centers", theta_shift=None, **kwargs):
-        """
+        """Return the specified grid in cartesian coordinates.
+
         Takes a grid location ('CC', 'N', 'Ex', 'Ey', 'Ez', 'Fx', 'Fy', 'Fz')
         and returns that grid in cartesian coordinates
 
@@ -2082,4 +2050,6 @@ class CylindricalMesh(
 
 @deprecate_class(removal_version="1.0.0", future_warn=True)
 class CylMesh(CylindricalMesh):
+    """Deprecated calling of `discretize.CylindricalMesh`."""
+
     pass
