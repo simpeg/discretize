@@ -1697,7 +1697,7 @@ class Identity(object):
 
     def __rfloordiv__(self, v):
         """Flooring division of a value by 1 (or -1 if not positive)."""
-        return v // 1 if self._positivie else v // -1
+        return v // 1 if self._positive else v // -1
 
     def __lt__(self, v):
         """Compare less than 1 (or -1 if not positive)."""
