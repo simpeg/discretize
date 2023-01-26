@@ -443,9 +443,9 @@ def make_boundary_bool(shape, bdir="xyz", **kwargs):
     old_dir = kwargs.pop("dir", None)
     if old_dir is not None:
         warnings.warn(
-            DeprecationWarning,
             "The `dir` keyword argument has been renamed to `bdir` to avoid shadowing the "
             "builtin variable `dir`. This will be removed in discretize 1.0.0",
+            FutureWarning,
         )
         bdir = old_dir
     is_b = np.zeros(shape, dtype=bool, order="F")
