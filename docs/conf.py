@@ -18,6 +18,7 @@ import discretize
 import subprocess
 from sphinx_gallery.sorting import FileNameSortKey
 import shutil
+from collections import defaultdict
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -53,6 +54,22 @@ extensions = [
 autosummary_generate = True
 
 numpydoc_attributes_as_param_list = False
+
+numpydoc_show_inherited_class_members = {
+    "discretize.base.BaseMesh": False,
+    "discretize.base.BaseRegularMesh": False,
+    "discretize.base.BaseRectangularMesh": False,
+    "discretize.base.BaseTensorMesh": False,
+    "discretize.operators.DiffOperators": False,
+    "discretize.operators.InnerProducts": False,
+    "discretize.mixins.TensorMeshIO": False,
+    "discretize.mixins.TreeMeshIO": False,
+    "discretize.mixins.InterfaceMPL": False,
+    "discretize.mixins.InterfaceVTK": False,
+    "discretize.mixins.InterfaceOMF": False,
+    "discretize.mixins.Slicer": False,
+    "discretize.tests.OrderTest": False,
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
