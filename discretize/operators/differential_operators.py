@@ -2,6 +2,7 @@
 import numpy as np
 from scipy import sparse as sp
 import warnings
+from discretize.base import BaseMesh
 from discretize.utils import (
     sdiag,
     speye,
@@ -128,7 +129,7 @@ def _ddxCellGradBC(n, bc):
     return D
 
 
-class DiffOperators(object):
+class DiffOperators(BaseMesh):
     """Class used for creating differential and averaging operators.
 
     ``DiffOperators`` is a class for managing the construction of
