@@ -12,7 +12,7 @@ This patch release, in addition to some small bug fixes and runtime improvements
 also implements some missing functionality for cylindrical meshes.
 
 ``CylindricalMesh``
----------------
+-------------------
 The big news is that 3D cylindrical meshes can now be output to a vtk format, which
 represents the wedges and arced cells as rational bezier curves in an unstructured vtk
 mesh.
