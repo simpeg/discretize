@@ -14,7 +14,6 @@ from discretize.utils import (
     sdinv,
 )
 import numpy as np
-import warnings
 
 
 class InnerProducts(object):

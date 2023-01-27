@@ -19,7 +19,6 @@ from discretize.utils import (
 from discretize.base import BaseTensorMesh, BaseRectangularMesh
 from discretize.operators import DiffOperators, InnerProducts
 from discretize.mixins import InterfaceMixins
-import warnings
 
 
 class CylindricalMesh(
@@ -1673,7 +1672,6 @@ class CylindricalMesh(
             The interpolation matrix
 
         """
-
         location_type = self._parse_location_type(location_type)
         if self.is_symmetric and location_type in ["edges_x", "edges_z", "faces_y"]:
             raise ValueError(

@@ -2,7 +2,6 @@
 import numpy as np
 import scipy.sparse as sp
 from discretize.utils.code_utils import is_scalar
-import warnings
 
 
 def mkvc(x, n_dims=1):
@@ -373,7 +372,7 @@ def ndgrid(*args, vector=True, order="F"):
     return meshed
 
 
-def make_boundary_bool(shape, bdir="xyz", **kwargs):
+def make_boundary_bool(shape, bdir="xyz"):
     r"""Return boundary indices of a tensor grid.
 
     For a tensor grid whose shape is given (1D, 2D or 3D), this function
@@ -433,14 +432,6 @@ def make_boundary_bool(shape, bdir="xyz", **kwargs):
            [1, 6],
            [3, 6]])
     """
-    old_dir = kwargs.pop("dir", None)
-    if old_dir is not None:
-        warnings.warn(
-            "The `dir` keyword argument has been renamed to `bdir` to avoid shadowing the "
-            "builtin variable `dir`. This will be removed in discretize 1.0.0",
-            FutureWarning,
-        )
-        bdir = old_dir
     is_b = np.zeros(shape, dtype=bool, order="F")
     if "x" in bdir:
         is_b[[0, -1]] = True
@@ -712,7 +703,6 @@ def inverse_3x3_block_diagonal(
     >>> plt.spy(M)
     >>> plt.show()
     """
-
     a11 = mkvc(a11)
     a12 = mkvc(a12)
     a13 = mkvc(a13)

@@ -1,7 +1,6 @@
 """Functions for working with curvilinear meshes."""
 import numpy as np
 from discretize.utils.matrix_utils import mkvc, ndgrid, sub2ind
-import warnings
 
 
 def example_curvilinear_grid(nC, exType):

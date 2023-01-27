@@ -161,14 +161,6 @@ class BaseMesh:
         verbose : bool, optional
             If *True*, the path of the json file is printed
         """
-
-        if "filename" in kwargs:
-            file_name = kwargs["filename"]
-            warnings.warn(
-                "The filename keyword argument has been deprecated, please use file_name. "
-                "This will be removed in discretize 1.0.0",
-                FutureWarning,
-            )
         f = os.path.abspath(file_name)  # make sure we are working with abs path
         with open(f, "w") as outfile:
             json.dump(self.to_dict(), outfile)

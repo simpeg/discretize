@@ -313,7 +313,7 @@ class OrderTest(unittest.TestCase):
         Float
             Maximum cell width for the mesh
         """
-        mesh, max_h = setupMesh(self._meshType, nC, self.meshDimension)
+        mesh, max_h = setup_mesh(self._meshType, nC, self.meshDimension)
         self.M = mesh
         return max_h
 
