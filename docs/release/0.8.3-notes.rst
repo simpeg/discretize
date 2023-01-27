@@ -1,0 +1,72 @@
+.. currentmodule:: discretize
+
+.. _0.8.3_notes:
+
+===================================
+``discretize`` 0.8.3 Release Notes
+===================================
+
+January 27, 2023
+
+This is a patch release with several bugfixes, as well as additions to the
+``TreeMesh``.
+
+``TreeMesh`` improvements
+-----------------------
+
+We have added several methods to the :class:`discretize.TreeMesh` that
+provide specialize geometric refinement entities including:
+
+- Refine along a line segment path, :meth:`~discretize.TreeMesh.refine_line`
+- Refine on triangle intersection, :meth:`~discretize.TreeMesh.refine_triangle`
+- Refine on tetrahedron interseciton, :meth:`~discretize.TreeMesh.refine_tetrahedron`
+- Refine on vertical triangular prism, :meth:`~discretize.TreeMesh.refine_vertical_trianglular_prism`
+
+These enabled more accurate functions for refining along surfaces. Therefore we
+have deprecated the :meth:`discretize.utils.refine_tree_xyz` which was essentially
+three different functions, in favor of separate and distinct methods on the ``TreeMesh``
+itself which all allow for padding at different levels.:
+
+- Refine on surface, :meth:`~discretize.TreeMesh.refine_surface`
+- Refine on bounding box of points, :meth:`~discretize.TreeMesh.refine_bounding_box`
+- Refine around points, :meth:`~discretize.TreeMesh.refine_points`
+
+We have also added optional diagonal balancing to the `TreeMesh` which will ensure
+only a single level change across diagonally adjacent cells. This can be set at the
+instantiation of the object, or on a each separate call to a refinement function.
+We plan to make this option `True` by default in a future version, but this will
+never change how any mesh is read in from a file, ensuring only newly created
+meshes are affected.
+
+Style Updates
+-------------
+All new PR's for ``discretize`` are now checked for style consistency by ``black`` and
+``flake8`` before running the testing sweet.
+
+Bug Fixes
+---------
+
+- Interpolation on the :class:`~discretize.SimplexMesh` now respects the `zeros_outside`
+  keyword argument
+- Documentation inheritance for the functions inherited from :class:`~discretize.operators.DiffOperators`
+  and :class:`~discretize.operators.InnerProducts` have been fixed by making
+  these two classes subclass :class:`~discretize.base.BaseMesh`.
+
+
+Contributors
+============
+
+* @jcapriot
+
+Pull requests
+=============
+* `#292 <https://github.com/simpeg/discretize/pull/292>`__: Dark mode theme for documentation
+* `#294 <https://github.com/simpeg/discretize/pull/294>`__: Testing environment updates
+* `#295 <https://github.com/simpeg/discretize/pull/295>`__: Diagonal tree balance
+* `#296 <https://github.com/simpeg/discretize/pull/296>`__: More tree refine functions
+* `#297 <https://github.com/simpeg/discretize/pull/297>`__: Add new refine surface, bounding box, and point refine methods.
+* `#298 <https://github.com/simpeg/discretize/pull/298>`__: implement zeros outside for interpolation function
+* `#299 <https://github.com/simpeg/discretize/pull/299>`__: Build maintenance
+* `#300 <https://github.com/simpeg/discretize/pull/300>`__: Add style testing
+* `#301 <https://github.com/simpeg/discretize/pull/301>`__: Documentation updates
+* `#302 <https://github.com/simpeg/discretize/pull/302>`__: 0.8.3 release
