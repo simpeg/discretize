@@ -596,7 +596,16 @@ def get_subarray(A, ind):
 
 
 def inverse_3x3_block_diagonal(
-    a11, a12, a13, a21, a22, a23, a31, a32, a33, return_matrix=True,
+    a11,
+    a12,
+    a13,
+    a21,
+    a22,
+    a23,
+    a31,
+    a32,
+    a33,
+    return_matrix=True,
 ):
     r"""Invert a set of 3x3 matricies from vectors containing their elements.
 

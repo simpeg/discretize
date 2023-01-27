@@ -1630,7 +1630,10 @@ class CylindricalMesh(
     ####################################################
 
     def get_interpolation_matrix(
-        self, loc, location_type="cell_centers", zeros_outside=False,
+        self,
+        loc,
+        location_type="cell_centers",
+        zeros_outside=False,
     ):
         r"""Construct interpolation matrix from mesh.
 
@@ -1864,7 +1867,10 @@ class CylindricalMesh(
         return cyl2cart(grid)  # TODO: account for cartesian origin
 
     def get_interpolation_matrix_cartesian_mesh(
-        self, Mrect, location_type="cell_centers", location_type_to=None,
+        self,
+        Mrect,
+        location_type="cell_centers",
+        location_type_to=None,
     ):
         """Construct projection matrix from ``CylindricalMesh`` to other mesh.
 

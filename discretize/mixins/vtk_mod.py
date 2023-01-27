@@ -609,6 +609,7 @@ class InterfaceVTK(object):
                 "For easier use of VTK objects, you should install `pyvista` (the VTK interface): pip install pyvista"
             )
         return cvtd
+
     @staticmethod
     def _save_unstructured_grid(file_name, vtkUnstructGrid, directory=""):
         """Save an unstructured grid to a vtk file.
@@ -759,6 +760,7 @@ class InterfaceVTK(object):
         except KeyError:
             raise RuntimeError("VTK data type `%s` is not currently supported." % key)
         return write(file_name, vtkObj, directory=directory)
+
 
 class InterfaceTensorread_vtk(object):
     """Mixin class for converting vtk to TensorMesh.

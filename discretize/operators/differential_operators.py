@@ -1754,7 +1754,6 @@ class DiffOperators(object):
 
         return A, b
 
-
     @property
     def cell_gradient_x(self):
         r"""X-derivative operator (cell centers to x-faces).
