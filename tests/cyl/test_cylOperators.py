@@ -229,10 +229,6 @@ class TestAveF2CCV(tests.OrderTest):
         aveF = self.M.aveF2CCV * F
 
         aveF_anaR = funR(self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2])
-        aveF_anaT = funT(self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2])
-        aveF_anaZ = funZ(self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2])
-
-        aveF_ana = np.hstack([aveF_anaR, aveF_anaT, aveF_anaZ])
 
         err = np.linalg.norm((aveF[: self.M.vnF[0]] - aveF_anaR), np.inf)
         return err

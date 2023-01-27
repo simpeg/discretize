@@ -13,7 +13,6 @@ demonstrate:
     - How to plot cylindrical meshes
     - How to extract properties from meshes
     - How to create cylindrical meshes to solve PDEs with rotational symmetry
-    
 
 """
 

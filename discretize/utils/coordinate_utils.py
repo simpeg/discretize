@@ -1,19 +1,21 @@
+"""Simple utilities for coordinate transformations."""
 import numpy as np
 from discretize.utils.matrix_utils import mkvc
 from discretize.utils.code_utils import as_array_n_by_dim, deprecate_function
 
 
 def cylindrical_to_cartesian(grid, vec=None):
-    """
-    Transform a grid or a vector from cylindrical coordinates :math:`(r, \\theta, z)` to
-    Cartesian coordinates :math:`(x, y, z)`. :math:`\\theta` is given in radians.
+    r"""Transform from cylindrical to cartesian coordinates.
+
+    Transform a grid or a vector from cylindrical coordinates :math:`(r, \theta, z)` to
+    Cartesian coordinates :math:`(x, y, z)`. :math:`\theta` is given in radians.
 
     Parameters
     ----------
     grid : (n, 3) array_like
-        Location points defined in cylindrical coordinates :math:`(r, \\theta, z)`.
+        Location points defined in cylindrical coordinates :math:`(r, \theta, z)`.
     vec : (n, 3) array_like, optional
-        Vector defined in cylindrical coordinates :math:`(r, \\theta, z)` at the
+        Vector defined in cylindrical coordinates :math:`(r, \theta, z)` at the
         locations grid. Will also except a flattend array in column major order with the
         same number of elements.
 
@@ -88,7 +90,9 @@ def cylindrical_to_cartesian(grid, vec=None):
 
 
 def cyl2cart(grid, vec=None):
-    """An alias for cylindrical_to_cartesian
+    """Transform from cylindrical to cartesian coordinates.
+
+    An alias for `cylindrical_to_cartesian``.
 
     See Also
     --------
@@ -98,9 +102,10 @@ def cyl2cart(grid, vec=None):
 
 
 def cartesian_to_cylindrical(grid, vec=None):
-    """
+    r"""Transform from cartesian to cylindrical coordinates.
+
     Transform a grid or a vector from Cartesian coordinates :math:`(x, y, z)` to
-    cylindrical coordinates :math:`(r, \\theta, z)`.
+    cylindrical coordinates :math:`(r, \theta, z)`.
 
     Parameters
     ----------
@@ -173,7 +178,9 @@ def cartesian_to_cylindrical(grid, vec=None):
 
 
 def cart2cyl(grid, vec=None):
-    """An alias for cartesian_to_cylindrical
+    """Transform from cartesian to cylindrical coordinates.
+
+    An alias for cartesian_to_cylindrical
 
     See Also
     --------
@@ -183,15 +190,14 @@ def cart2cyl(grid, vec=None):
 
 
 def rotation_matrix_from_normals(v0, v1, tol=1e-20):
-    """
-    Generate a 3x3 rotation matrix defining the rotation from vector v0 to v1.
+    r"""Generate a 3x3 rotation matrix defining the rotation from vector v0 to v1.
 
     This function uses Rodrigues' rotation formula to generate the rotation
-    matrix :math:`\\mathbf{A}` going from vector :math:`\\mathbf{v_0}` to
-    vector :math:`\\mathbf{v_1}`. Thus:
+    matrix :math:`\mathbf{A}` going from vector :math:`\mathbf{v_0}` to
+    vector :math:`\mathbf{v_1}`. Thus:
 
     .. math::
-        \\mathbf{Av_0} = \\mathbf{v_1}
+        \mathbf{Av_0} = \mathbf{v_1}
 
     For detailed desciption of the algorithm, see
     https://en.wikipedia.org/wiki/Rodrigues%27_rotation_formula
@@ -211,7 +217,6 @@ def rotation_matrix_from_normals(v0, v1, tol=1e-20):
     (3, 3) numpy.ndarray
         The rotation matrix from v0 to v1.
     """
-
     # ensure both v0, v1 are vectors of length 1
     if len(v0) != 3:
         raise ValueError("Length of n0 should be 3")
@@ -248,18 +253,18 @@ def rotation_matrix_from_normals(v0, v1, tol=1e-20):
 
 
 def rotate_points_from_normals(xyz, v0, v1, x0=np.r_[0.0, 0.0, 0.0]):
-    """Rotate a set of xyz locations about a specified point.
+    r"""Rotate a set of xyz locations about a specified point.
 
     Rotate a grid of Cartesian points about a location x0 according to the
     rotation defined from vector v0 to v1.
 
-    Let :math:`\\mathbf{x}` represent an input xyz location, let :math:`\\mathbf{x_0}` be
-    the origin of rotation, and let :math:`\\mathbf{R}` denote the rotation matrix from
-    vector v0 to v1. Where :math:`\\mathbf{x'}` is the new xyz location, this function
+    Let :math:`\mathbf{x}` represent an input xyz location, let :math:`\mathbf{x_0}` be
+    the origin of rotation, and let :math:`\mathbf{R}` denote the rotation matrix from
+    vector v0 to v1. Where :math:`\mathbf{x'}` is the new xyz location, this function
     outputs the following operation for all input locations:
 
     .. math::
-        \\mathbf{x'} = \\mathbf{R (x - x_0)} + \\mathbf{x_0}
+        \mathbf{x'} = \mathbf{R (x - x_0)} + \mathbf{x_0}
 
     Parameters
     ----------
@@ -277,7 +282,6 @@ def rotate_points_from_normals(xyz, v0, v1, x0=np.r_[0.0, 0.0, 0.0]):
     (n, 3) numpy.ndarray
         The rotated xyz locations.
     """
-
     # Compute rotation matrix between v0 and v1
     R = rotation_matrix_from_normals(v0, v1)
 

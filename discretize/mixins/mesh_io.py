@@ -1,3 +1,7 @@
+"""Module for reading and writing meshes to text files.
+
+The text files representing meshes are often in the `UBC` format.
+"""
 import os
 import numpy as np
 
@@ -39,6 +43,8 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         discretize.TensorMesh
             The tensor mesh
         """
+        # Read the file as line strings, remove lines with comment = !
+        msh = np.genfromtxt(file_name, delimiter="\n", dtype=str, comments="!")
 
         # Interal function to read cell size lines for the UBC mesh files.
         def readCellLine(line):
@@ -52,10 +58,8 @@ class TensorMeshIO(InterfaceTensorread_vtk):
                 line_list.append(seg_arr)
             return np.concatenate(line_list)
 
-        # Read the file as line strings, remove lines with comment = !
-        msh = np.genfromtxt(file_name, delimiter="\n", dtype=str, comments="!")
         # Fist line is the size of the model
-        sizeM = np.array(msh[0].split(), dtype=float)
+        # sizeM = np.array(msh[0].split(), dtype=float)
         # Second line is the South-West-Top corner coordinates.
         origin = np.array(msh[1].split(), dtype=float)
         # Read the cell sizes
@@ -84,7 +88,6 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         discretize.TensorMesh
             The tensor mesh
         """
-
         fopen = open(file_name, "r")
 
         # Read down the file and unpack dx vector
@@ -175,7 +178,6 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         (n_cells) numpy.ndarray
             The model defined on the 2D tensor mesh
         """
-
         # Open file and skip header... assume that we know the mesh already
         obsfile = np.genfromtxt(file_name, delimiter=" \n", dtype=str, comments="!")
 
@@ -252,6 +254,7 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         file_name : str or file name
             full path for the output mesh file or just its name if directory is specified
         model : (n_cells) numpy.ndarray
+            The model to write out.
         directory : str, optional
             output directory
         """
@@ -407,7 +410,13 @@ class TensorMeshIO(InterfaceTensorread_vtk):
     # DEPRECATED
     @classmethod
     def readUBC(TensorMesh, file_name, directory=""):
-        """*readUBC* has been deprecated and replaced by *read_UBC*"""
+        """Read 2D or 3D tensor mesh from UBC-GIF formatted file.
+
+        *readUBC* has been deprecated and replaced by *read_UBC*
+        See Also
+        --------
+        read_UBC
+        """
         warnings.warn(
             "TensorMesh.readUBC has been deprecated and will be removed in"
             "discretize 1.0.0. please use TensorMesh.read_UBC",
@@ -504,7 +513,6 @@ class TreeMeshIO(object):
             The model defined on the mesh. If **file_name** is a ``dict``, it is a
             dictionary of models indexed by the file names.
         """
-
         if type(file_name) is list:
             out = {}
             for f in file_name:
@@ -595,7 +603,14 @@ class TreeMeshIO(object):
     # DEPRECATED
     @classmethod
     def readUBC(TreeMesh, file_name, directory=""):
-        """*readUBC* has been deprecated and replaced by *read_UBC*"""
+        """Read 3D Tree mesh from UBC-GIF formatted file.
+
+        *readUBC* has been deprecated and replaced by *read_UBC*
+
+        See Also
+        --------
+        read_UBC
+        """
         warnings.warn(
             "TensorMesh.readUBC has been deprecated and will be removed in"
             "discretize 1.0.0. please use TensorMesh.read_UBC",
@@ -615,4 +630,6 @@ class TreeMeshIO(object):
 
 
 class SimplexMeshIO(InterfaceSimplexReadVTK):
+    """Empty class for future text based IO of a SimplexMesh."""
+
     pass

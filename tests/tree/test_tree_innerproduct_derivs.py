@@ -13,7 +13,7 @@ def doTestFace(h, rep, fast, meshType, invProp=False, invMat=False):
     elif meshType == "Tensor":
         mesh = discretize.TensorMesh(h)
     v = np.random.rand(mesh.nF)
-    sig = np.random.rand(1) if rep is 0 else np.random.rand(mesh.nC * rep)
+    sig = np.random.rand(1) if rep == 0 else np.random.rand(mesh.nC * rep)
 
     def fun(sig):
         M = mesh.getFaceInnerProduct(sig, invProp=invProp, invMat=invMat)
@@ -43,7 +43,7 @@ def doTestEdge(h, rep, fast, meshType, invProp=False, invMat=False):
     elif meshType == "Tensor":
         mesh = discretize.TensorMesh(h)
     v = np.random.rand(mesh.nE)
-    sig = np.random.rand(1) if rep is 0 else np.random.rand(mesh.nC * rep)
+    sig = np.random.rand(1) if rep == 0 else np.random.rand(mesh.nC * rep)
 
     def fun(sig):
         M = mesh.getEdgeInnerProduct(sig, invProp=invProp, invMat=invMat)

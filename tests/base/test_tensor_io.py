@@ -4,11 +4,11 @@ import os
 import discretize
 
 try:
-    import vtk
+    import vtk  # NOQA F401
+
+    has_vtk = True
 except ImportError:
     has_vtk = False
-else:
-    has_vtk = True
 
 
 class TestTensorMeshIO(unittest.TestCase):

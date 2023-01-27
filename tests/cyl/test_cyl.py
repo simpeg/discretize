@@ -542,18 +542,18 @@ class TestAveF2CC(tests.OrderTest):
         self.orderTest()
 
 
-class TestInnerProducts2D(tests.OrderTest):
-    """Integrate an function over a unit cube domain using edgeInnerProducts and faceInnerProducts."""
-
-    meshTypes = MESHTYPES
-    meshDimension = 3
-    meshSizes = [4, 8, 16, 32, 64, 128]
-
-    def getError(self):
-        funR = lambda r, t, z: np.cos(2.0 * np.pi * z)
-        funT = lambda r, t, z: 0 * t
-        funZ = lambda r, t, z: np.sin(2.0 * np.pi * r)
-
+# class TestInnerProducts2D(tests.OrderTest):
+#     """Integrate an function over a unit cube domain using edgeInnerProducts and faceInnerProducts."""
+#
+#     meshTypes = MESHTYPES
+#     meshDimension = 3
+#     meshSizes = [4, 8, 16, 32, 64, 128]
+#
+#     def getError(self):
+#         funR = lambda r, t, z: np.cos(2.0 * np.pi * z)
+#         funT = lambda r, t, z: 0 * t
+#         funZ = lambda r, t, z: np.sin(2.0 * np.pi * r)
+#
 
 #         call = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1], xyz[:, 2])
 

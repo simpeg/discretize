@@ -1,3 +1,4 @@
+"""Useful functions for working with vectors and matrices."""
 import numpy as np
 import scipy.sparse as sp
 from discretize.utils.code_utils import is_scalar, deprecate_function
@@ -5,7 +6,7 @@ import warnings
 
 
 def mkvc(x, n_dims=1, **kwargs):
-    """Creates a vector with specified dimensionality.
+    """Coerce a vector to the specified dimensionality.
 
     This function converts a :class:`numpy.ndarray` to a vector. In general,
     the output vector has a dimension of 1. However, the dimensionality
@@ -18,7 +19,7 @@ def mkvc(x, n_dims=1, **kwargs):
         An array that will be reorganized and output as a vector. The input array
         will be flattened on input in Fortran order.
     n_dims : int
-        The dimension of the output vector. :data:`numpy.newaxis` are appened to the
+        The dimension of the output vector. :data:`numpy.newaxis` are appended to the
         output array until it has this many axes.
 
     Returns
@@ -114,7 +115,7 @@ def sdiag(v):
 
 
 def sdinv(M):
-    """Return inverse of a sparse diagonal matrix
+    """Return inverse of a sparse diagonal matrix.
 
     This function extracts the diagonal elements of the input matrix *M*
     and creates a sparse diagonal matrix from the reciprocal these elements.
@@ -197,18 +198,18 @@ def spzeros(n1, n2):
 
 
 def ddx(n):
-    """Create 1D difference (derivative) operator from nodes to centers.
+    r"""Create 1D difference (derivative) operator from nodes to centers.
 
     For n cells, the 1D difference (derivative) operator from nodes to
     centers is sparse, has shape (n, n+1) and takes the form:
 
     .. math::
-        \\begin{bmatrix}
-        -1 & \\; 1 & & & \n
-        & -1 & \\; 1 & & \n
-        & & \\ddots & \\ddots & \n
-        & & & -1 & \\; 1 \\;
-        \\end{bmatrix}
+        \begin{bmatrix}
+        -1 & 1 & & & \\
+        & -1 & 1 & & \\
+        & & \ddots & \ddots & \\
+        & & & -1 & 1
+        \end{bmatrix}
 
     Parameters
     ----------
@@ -224,18 +225,18 @@ def ddx(n):
 
 
 def av(n):
-    """Create 1D averaging operator from nodes to cell-centers.
+    r"""Create 1D averaging operator from nodes to cell-centers.
 
     For n cells, the 1D averaging operator from nodes to centerss
     is sparse, has shape (n, n+1) and takes the form:
 
     .. math::
-        \\begin{bmatrix}
-        1/2 & 1/2 & & & \n
-        & 1/2 & 1/2 & & \n
-        & & \\ddots & \\ddots & \n
-        & & & 1/2 & 1/2 \\;
-        \\end{bmatrix}
+        \begin{bmatrix}
+        1/2 & 1/2 & & & \\
+        & 1/2 & 1/2 & & \\
+        & & \ddots & \ddots & \\
+        & & & 1/2 & 1/2
+        \end{bmatrix}
 
     Parameters
     ----------
@@ -246,7 +247,6 @@ def av(n):
     -------
     (n, n + 1) scipy.sparse.csr_matrix
         The 1D averaging operator from nodes to centers.
-
     """
     return sp.spdiags(
         (0.5 * np.ones((n + 1, 1)) * [1, 1]).T, [0, 1], n, n + 1, format="csr"
@@ -254,7 +254,7 @@ def av(n):
 
 
 def av_extrap(n):
-    """Create 1D averaging operator from cell-centers to nodes.
+    r"""Create 1D averaging operator from cell-centers to nodes.
 
     For n cells, the 1D averaging operator from cell centers to nodes
     is sparse and has shape (n+1, n). Values at the outmost nodes are
@@ -262,14 +262,14 @@ def av_extrap(n):
     takes the form:
 
     .. math::
-        \\begin{bmatrix}
-        1 & & & & \n
-        1/2 & 1/2 & & & \n
-        & 1/2 & 1/2 & & & \n
-        & & \\ddots & \\ddots & \n
-        & & & 1/2 & 1/2 \n
-        & & & & 1 \\;
-        \\end{bmatrix}
+        \begin{bmatrix}
+        1 & & & & \\
+        1/2 & 1/2 & & & \\
+        & 1/2 & 1/2 & & & \\
+        & & \ddots & \ddots & \\
+        & & & 1/2 & 1/2 \\
+        & & & & 1
+        \end{bmatrix}
 
     Parameters
     ----------
@@ -357,7 +357,6 @@ def ndgrid(*args, vector=True, order="F"):
            [2, 4],
            [2, 4]])]
     """
-
     # Read the keyword arguments, and only accept a vector=True/False
     if not isinstance(vector, bool):
         raise TypeError("'vector' keyword must be a bool")
@@ -381,7 +380,7 @@ def ndgrid(*args, vector=True, order="F"):
     return meshed
 
 
-def make_boundary_bool(shape, dir="xyz"):
+def make_boundary_bool(shape, bdir="xyz", **kwargs):
     r"""Return boundary indices of a tensor grid.
 
     For a tensor grid whose shape is given (1D, 2D or 3D), this function
@@ -392,7 +391,7 @@ def make_boundary_bool(shape, dir="xyz"):
     ----------
     shape : (dim) tuple of int
         Defines the shape of the tensor (1D, 2D or 3D).
-    dir : str containing characters 'x', 'y' and/or 'z'
+    bdir : str containing characters 'x', 'y' and/or 'z'
         Specify the boundaries whose indices you want returned; e.g. for a 3D
         tensor, you may set *dir* = 'xz' to return the indices of the x and
         z boundary locations.
@@ -441,14 +440,22 @@ def make_boundary_bool(shape, dir="xyz"):
            [1, 6],
            [3, 6]])
     """
+    old_dir = kwargs.pop("dir", None)
+    if old_dir is not None:
+        warnings.warn(
+            "The `dir` keyword argument has been renamed to `bdir` to avoid shadowing the "
+            "builtin variable `dir`. This will be removed in discretize 1.0.0",
+            FutureWarning,
+        )
+        bdir = old_dir
     is_b = np.zeros(shape, dtype=bool, order="F")
-    if "x" in dir:
+    if "x" in bdir:
         is_b[[0, -1]] = True
     if len(shape) > 1:
-        if "y" in dir:
+        if "y" in bdir:
             is_b[:, [0, -1]] = True
     if len(shape) > 2:
-        if "z" in dir:
+        if "z" in bdir:
             is_b[:, :, [0, -1]] = True
     return is_b.reshape(-1, order="F")
 
@@ -537,7 +544,7 @@ def sub2ind(shape, subs):
 
 
 def get_subarray(A, ind):
-    """Extract a subarray
+    """Extract a subarray.
 
     For a :class:`numpy.ndarray`, the function **get_subarray** extracts a subset of
     the array. The portion of the original array being extracted is defined
@@ -598,7 +605,7 @@ def get_subarray(A, ind):
 def inverse_3x3_block_diagonal(
     a11, a12, a13, a21, a22, a23, a31, a32, a33, return_matrix=True, **kwargs
 ):
-    """Invert a set of 3x3 matricies from vectors containing their elements.
+    r"""Invert a set of 3x3 matricies from vectors containing their elements.
 
     Parameters
     ----------
@@ -606,7 +613,6 @@ def inverse_3x3_block_diagonal(
         Vectors which contain the
         corresponding element for all 3x3 matricies
     return_matrix : bool, optional
-
         - **True**: Returns the sparse block 3x3 matrix *M* (default).
         - **False:** Returns the vectors containing the elements of each matrix' inverse.
 
@@ -622,35 +628,35 @@ def inverse_3x3_block_diagonal(
     The elements of a 3x3 matrix *A* are given by:
 
     .. math::
-        A = \\begin{bmatrix}
-        a_{11} & a_{12} & a_{13} \n
-        a_{21} & a_{22} & a_{23} \n
+        A = \begin{bmatrix}
+        a_{11} & a_{12} & a_{13} \\
+        a_{21} & a_{22} & a_{23} \\
         a_{31} & a_{32} & a_{33}
-        \\end{bmatrix}
+        \end{bmatrix}
 
     For a set of 3x3 matricies, the elements may be stored in a set of 9 distinct vectors
-    :math:`\\mathbf{a_{11}}`, :math:`\\mathbf{a_{12}}`, ..., :math:`\\mathbf{a_{33}}`.
+    :math:`\mathbf{a_{11}}`, :math:`\mathbf{a_{12}}`, ..., :math:`\mathbf{a_{33}}`.
     For each matrix, **inverse_3x3_block_diagonal** ouputs the vectors containing the
     elements of each matrix' inverse; i.e.
-    :math:`\\mathbf{b_{11}}`, :math:`\\mathbf{b_{12}}`, ..., :math:`\\mathbf{b_{33}}`
+    :math:`\mathbf{b_{11}}`, :math:`\mathbf{b_{12}}`, ..., :math:`\mathbf{b_{33}}`
     where:
 
     .. math::
-        A^{-1} = B = \\begin{bmatrix}
-        b_{11} & b_{12} & b_{13} \n
-        b_{21} & b_{22} & b_{23} \n
+        A^{-1} = B = \begin{bmatrix}
+        b_{11} & b_{12} & b_{13} \\
+        b_{21} & b_{22} & b_{23} \\
         b_{31} & b_{32} & b_{33}
-        \\end{bmatrix}
+        \end{bmatrix}
 
     For special applications, we may want to output the elements of the inverses
     of the matricies as a 3x3 block matrix of the form:
 
     .. math::
-        M = \\begin{bmatrix}
-        D_{11} & D_{12} & D_{13} \n
-        D_{21} & D_{22} & D_{23} \n
+        M = \begin{bmatrix}
+        D_{11} & D_{12} & D_{13} \\
+        D_{21} & D_{22} & D_{23} \\
         D_{31} & D_{32} & D_{33}
-        \\end{bmatrix}
+        \end{bmatrix}
 
     where :math:`D_{ij}` are diagonal matrices whose non-zero elements
     are defined by vector :math:`\\mathbf{b_{ij}}`. Where *n* is the
@@ -756,7 +762,7 @@ def inverse_3x3_block_diagonal(
 
 
 def inverse_2x2_block_diagonal(a11, a12, a21, a22, return_matrix=True, **kwargs):
-    """
+    r"""
     Invert a set of 2x2 matricies from vectors containing their elements.
 
     Parameters
@@ -765,7 +771,6 @@ def inverse_2x2_block_diagonal(a11, a12, a21, a22, return_matrix=True, **kwargs)
         All arguments a11, a12, a21, a22 are vectors which contain the
         corresponding element for all 2x2 matricies
     return_matrix : bool, optional
-
         - **True:** Returns the sparse block 2x2 matrix *M*.
         - **False:** Returns the vectors containing the elements of each matrix' inverse.
 
@@ -782,42 +787,41 @@ def inverse_2x2_block_diagonal(a11, a12, a21, a22, return_matrix=True, **kwargs)
     The elements of a 2x2 matrix *A* are given by:
 
     .. math::
-        A = \\begin{bmatrix}
-        a_{11} & a_{12} \n
+        A = \begin{bmatrix}
+        a_{11} & a_{12} \\
         a_{21} & a_{22}
-        \\end{bmatrix}
+        \end{bmatrix}
 
     For a set of 2x2 matricies, the elements may be stored in a set of 4 distinct vectors
-    :math:`\\mathbf{a_{11}}`, :math:`\\mathbf{a_{12}}`, :math:`\\mathbf{a_{21}}` and
-    :math:`\\mathbf{a_{22}}`.
+    :math:`\mathbf{a_{11}}`, :math:`\mathbf{a_{12}}`, :math:`\mathbf{a_{21}}` and
+    :math:`\mathbf{a_{22}}`.
     For each matrix, **inverse_2x2_block_diagonal** ouputs the vectors containing the
     elements of each matrix' inverse; i.e.
-    :math:`\\mathbf{b_{11}}`, :math:`\\mathbf{b_{12}}`, :math:`\\mathbf{b_{21}}` and
-    :math:`\\mathbf{b_{22}}` where:
+    :math:`\mathbf{b_{11}}`, :math:`\mathbf{b_{12}}`, :math:`\mathbf{b_{21}}` and
+    :math:`\mathbf{b_{22}}` where:
 
     .. math::
-        A^{-1} = B = \\begin{bmatrix}
-        b_{11} & b_{12} \n
+        A^{-1} = B = \begin{bmatrix}
+        b_{11} & b_{12} \\
         b_{21} & b_{22}
-        \\end{bmatrix}
+        \end{bmatrix}
 
     For special applications, we may want to output the elements of the inverses
     of the matricies as a 2x2 block matrix of the form:
 
     .. math::
-        M = \\begin{bmatrix}
-        D_{11} & D_{12} \n
+        M = \begin{bmatrix}
+        D_{11} & D_{12} \\
         D_{21} & D_{22}
-        \\end{bmatrix}
+        \end{bmatrix}
 
     where :math:`D_{ij}` are diagonal matrices whose non-zero elements
-    are defined by vector :math:`\\mathbf{b_{ij}}`. Where *n* is the
+    are defined by vector :math:`\mathbf{b_{ij}}`. Where *n* is the
     number of matricies, the block matrix is sparse with dimensions
     (2n, 2n).
 
     Examples
     --------
-
     Here, we define four 2x2 matricies and reorganize their elements into
     4 vectors a11, a12, a21 and a22. We then examine the outputs of the
     function **inverse_2x2_block_diagonal** when the argument
@@ -1060,21 +1064,27 @@ class TensorType(object):
             raise Exception("Unexpected shape of tensor: {}".format(tensor.shape))
 
     def __str__(self):
+        """Represent tensor type as a string."""
         return "TensorType[{0:d}]: {1!s}".format(self._tt, self._tts)
 
     def __eq__(self, v):
+        """Compare tensor type equal to a value."""
         return self._tt == v
 
     def __le__(self, v):
+        """Compare tensor type less than or equal to a value."""
         return self._tt <= v
 
     def __ge__(self, v):
+        """Compare tensor type greater than or equal to a value."""
         return self._tt >= v
 
     def __lt__(self, v):
+        """Compare tensor type less than a value."""
         return self._tt < v
 
     def __gt__(self, v):
+        """Compare tensor type greater than a value."""
         return self._tt > v
 
 
@@ -1101,7 +1111,6 @@ def make_property_tensor(mesh, tensor):
     mesh : discretize.base.BaseMesh
        A mesh
     tensor : numpy.ndarray or a float
-
         - *Scalar:* A float is entered.
         - *Isotropic:* A 1D numpy.ndarray with a property value for every cell.
         - *Anisotropic:* A (*nCell*, *dim*) numpy.ndarray where each row
@@ -1137,7 +1146,6 @@ def make_property_tensor(mesh, tensor):
 
     Examples
     --------
-
     For the 4 classifications allowable (scalar, isotropic, anistropic and tensor),
     we construct and compare the property tensor on a small 2D mesh. For this
     example, note the following:
@@ -1256,7 +1264,6 @@ def inverse_property_tensor(mesh, tensor, return_matrix=False, **kwargs):
     mesh : discretize.base.BaseMesh
        A mesh
     tensor : numpy.ndarray or float
-
         - *Scalar:* A float is entered.
         - *Isotropic:* A 1D numpy.ndarray with a property value for every cell.
         - *Anisotropic:* A (*nCell*, *dim*) numpy.ndarray where each row
@@ -1267,7 +1274,6 @@ def inverse_property_tensor(mesh, tensor, return_matrix=False, **kwargs):
           meshes and *nParam* = 6 for 3D meshes.
 
     return_matrix : bool, optional
-
         - *True:* the function returns the inverse of the property tensor.
         - *False:* the function returns the non-zero elements of the inverse of the
           property tensor in a numpy.ndarray in the same order as the input argument
@@ -1276,7 +1282,6 @@ def inverse_property_tensor(mesh, tensor, return_matrix=False, **kwargs):
     Returns
     -------
     numpy.ndarray or scipy.sparse.coo_matrix
-
         - If *return_matrix* = *False*, the function outputs the parameters defining the
           inverse of the property tensor in a numpy.ndarray with the same dimensions as
           the input argument *tensor*
@@ -1382,7 +1387,6 @@ def inverse_property_tensor(mesh, tensor, return_matrix=False, **kwargs):
         ... )
         >>> plt.show()
     """
-
     if "returnMatrix" in kwargs:
         warnings.warn(
             "The returnMatrix keyword argument has been deprecated, please use return_matrix. "
@@ -1460,97 +1464,122 @@ class Zero(object):
     __array_ufunc__ = None
 
     def __repr__(self):
+        """Represent zeros a string."""
         return "Zero"
 
     def __add__(self, v):
+        """Add a value to zero."""
         return v
 
     def __radd__(self, v):
+        """Add zero to a value."""
         return v
 
     def __iadd__(self, v):
+        """Add zero to a value inplace."""
         return v
 
     def __sub__(self, v):
+        """Subtract a value from zero."""
         return -v
 
     def __rsub__(self, v):
+        """Subtract zero from a value."""
         return v
 
     def __isub__(self, v):
+        """Subtract zero from a value inplace."""
         return v
 
     def __mul__(self, v):
+        """Multiply zero by a value."""
         return self
 
     def __rmul__(self, v):
+        """Multiply a value by zero."""
         return self
 
     def __matmul__(self, v):
+        """Multiply zero by a matrix."""
         return self
 
     def __rmatmul__(self, v):
+        """Multiply a matrix by zero."""
         return self
 
     def __div__(self, v):
+        """Divide zero by a value."""
         return self
 
     def __truediv__(self, v):
+        """Divide zero by a value."""
         return self
 
     def __rdiv__(self, v):
+        """Try to divide a value by zero."""
         raise ZeroDivisionError("Cannot divide by zero.")
 
     def __rtruediv__(self, v):
+        """Try to divide a value by zero."""
         raise ZeroDivisionError("Cannot divide by zero.")
 
     def __rfloordiv__(self, v):
+        """Try to divide a value by zero."""
         raise ZeroDivisionError("Cannot divide by zero.")
 
     def __pos__(self):
+        """Return zero."""
         return self
 
     def __neg__(self):
+        """Negate zero."""
         return self
 
     def __lt__(self, v):
+        """Compare less than zero."""
         return 0 < v
 
     def __le__(self, v):
+        """Compare less than or equal to zero."""
         return 0 <= v
 
     def __eq__(self, v):
+        """Compare equal to zero."""
         return v == 0
 
     def __ne__(self, v):
+        """Compare not equal to zero."""
         return not (0 == v)
 
     def __ge__(self, v):
+        """Compare greater than or equal to zero."""
         return 0 >= v
 
     def __gt__(self, v):
+        """Compare greater than zero."""
         return 0 > v
 
     def transpose(self):
-        """Returns the transpose of the *Zero* class, i.e. itself"""
+        """Return the transpose of the *Zero* class, i.e. itself."""
         return self
 
     def __getitem__(self, key):
+        """Get an element of the *Zero* class, i.e. itself."""
         return self
 
     @property
     def ndim(self):
-        """Returns the dimension of *Zero* class, i.e. *None*"""
+        """Return the dimension of *Zero* class, i.e. *None*."""
         return None
 
     @property
     def shape(self):
-        """Returns the shape *Zero* class, i.e. *None*"""
+        """Return the shape *Zero* class, i.e. *None*."""
         return _inftup(None)
 
     @property
     def T(self):
-        """Returns the *Zero* class as an operator"""
+        """Return the *Zero* class as an operator."""
         return self
 
 
@@ -1594,105 +1623,128 @@ class Identity(object):
         self._positive = positive
 
     def __repr__(self):
+        """Represent 1 (or -1 if not positive)."""
         if self._positive:
             return "I"
         else:
             return "-I"
 
     def __pos__(self):
+        """Return positive 1 (or -1 if not positive)."""
         return self
 
     def __neg__(self):
+        """Negate 1 (or -1 if not positive)."""
         return Identity(not self._positive)
 
     def __add__(self, v):
+        """Add 1 (or -1 if not positive) to a value."""
         if sp.issparse(v):
             return v + speye(v.shape[0]) if self._positive else v - speye(v.shape[0])
         return v + 1 if self._positive else v - 1
 
     def __radd__(self, v):
+        """Add 1 (or -1 if not positive) to a value."""
         return self.__add__(v)
 
     def __sub__(self, v):
+        """Subtract a value from 1 (or -1 if not positive)."""
         return self + -v
 
     def __rsub__(self, v):
+        """Subtract 1 (or -1 if not positive) from a value."""
         return -self + v
 
     def __mul__(self, v):
+        """Multiply 1 (or -1 if not positive) by a value."""
         return v if self._positive else -v
 
     def __rmul__(self, v):
+        """Multiply 1 (or -1 if not positive) by a value."""
         return v if self._positive else -v
 
     def __matmul__(self, v):
+        """Multiply 1 (or -1 if not positive) by a matrix."""
         return v if self._positive else -v
 
     def __rmatmul__(self, v):
+        """Multiply a matrix by 1 (or -1 if not positive)."""
         return v if self._positive else -v
 
     def __div__(self, v):
+        """Divide 1 (or -1 if not positive) by a value."""
         if sp.issparse(v):
             raise NotImplementedError("Sparse arrays not divisibile.")
         return 1 / v if self._positive else -1 / v
 
     def __truediv__(self, v):
+        """Divide 1 (or -1 if not positive) by a value."""
         if sp.issparse(v):
             raise NotImplementedError("Sparse arrays not divisibile.")
         return 1.0 / v if self._positive else -1.0 / v
 
     def __rdiv__(self, v):
+        """Divide a value by 1 (or -1 if not positive)."""
         return v if self._positive else -v
 
     def __rtruediv__(self, v):
+        """Divide a value by 1 (or -1 if not positive)."""
         return v if self._positive else -v
 
     def __floordiv__(self, v):
+        """Flooring division of 1 (or -1 if not positive) by a value."""
         return 1 // v if self._positive else -1 // v
 
     def __rfloordiv__(self, v):
-        return 1 // v if self._positivie else -1 // v
+        """Flooring division of a value by 1 (or -1 if not positive)."""
+        return v // 1 if self._positive else v // -1
 
     def __lt__(self, v):
+        """Compare less than 1 (or -1 if not positive)."""
         return 1 < v if self._positive else -1 < v
 
     def __le__(self, v):
+        """Compare less than or equal to 1 (or -1 if not positive)."""
         return 1 <= v if self._positive else -1 <= v
 
     def __eq__(self, v):
+        """Compare equal to 1 (or -1 if not positive)."""
         return v == 1 if self._positive else v == -1
 
     def __ne__(self, v):
+        """Compare not equal to 1 (or -1 if not positive)."""
         return (not (1 == v)) if self._positive else (not (-1 == v))
 
     def __ge__(self, v):
+        """Compare greater than or equal to 1 (or -1 if not positive)."""
         return 1 >= v if self._positive else -1 >= v
 
     def __gt__(self, v):
+        """Compare greater than 1 (or -1 if not positive)."""
         return 1 > v if self._positive else -1 > v
 
     @property
     def ndim(self):
-        """Returns the dimension of *Identity* class, i.e. *None*"""
+        """Return the dimension of *Identity* class, i.e. *None*."""
         return None
 
     @property
     def shape(self):
-        """Returns the shape of *Identity* class, i.e. *None*"""
+        """Return the shape of *Identity* class, i.e. *None*."""
         return _inftup(None)
 
     @property
     def T(self):
-        """Returns the *Identity* class as an operator"""
+        """Return the *Identity* class as an operator."""
         return self
 
     def transpose(self):
-        """Returns the transpose of the *Identity* class, i.e. itself"""
+        """Return the transpose of the *Identity* class, i.e. itself."""
         return self
 
 
 class _inftup(tuple):
-    """An infinitely long tuple of a value repeated infinitely"""
+    """An infinitely long tuple of a value repeated infinitely."""
 
     def __init__(self, val=None):
         self._val = val

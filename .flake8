@@ -1,0 +1,65 @@
+# -----------------------------
+# Configuration file for flake8
+# -----------------------------
+
+# Configure flake8
+# ----------------
+[flake8]
+extend-ignore =
+    # Too many leading '#' for block comment
+    E266,
+    # Line too long (82 > 79 characters)
+    E501,
+    # Do not use variables named 'I', 'O', or 'l'
+    E741,
+    # Line break before binary operator (conflicts with black)
+    W503,
+    # Ignore spaces before a colon (Black handles it)
+    E203,
+    # Ignore spaces around an operator (Black handles it)
+    E225,
+    # Ignore rst warnings for start and end, due to *args and **kwargs being invalid rst, but good for numpydoc
+    RST210,RST213,
+exclude =
+    .git,
+    .eggs,
+    version.py,
+    setup.py,
+    __pycache__,
+    .ipynb_checkpoints,
+    docs/examples/*,
+    docs/tutorials/*,
+    docs/*,
+    discretize/_extensions/*.py
+per-file-ignores =
+    # disable unused-imports errors on __init__.py
+    # Automodule used for __init__ scripts' description
+    __init__.py: F401, D204, D205, D400,
+    # do not check for assigned lambdas in tests
+    # do not check for missing docstrings in tests
+    tests/*: E731, D,
+    tutorials/*: D,
+    examples/*: D,
+
+exclude-from-doctest =
+    # Only check discretize for docstring style
+    tests/*,
+    tutorials/*,
+
+# Configure flake8-rst-docstrings
+# -------------------------------
+docstring-convention=numpy
+# Add some roles used in our docstrings
+rst-roles =
+    class,
+    func,
+    mod,
+    meth,
+    ref,
+    data,
+    # Python programming language:
+    py:func,py:mod,py:attr,py:meth,
+    # Collapse functionality
+rst-directives =
+    # These are sorted alphabetically - but that does not matter
+    autosummary,currentmodule,deprecated,collapse,

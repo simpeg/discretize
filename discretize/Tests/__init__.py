@@ -1,4 +1,4 @@
-from discretize.tests import *
+from discretize.tests import *  # NOQA F401,F403
 from discretize.utils.code_utils import deprecate_module
 
 # note this needs to be a module with an __init__ so we can avoid name clash

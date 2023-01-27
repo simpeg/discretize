@@ -4,7 +4,7 @@ Testing Utilities (:mod:`discretize.tests`)
 ===========================================
 .. currentmodule:: discretize.tests
 
-This module contains utilities for convergence testing
+This module contains utilities for convergence testing.
 
 Classes
 -------
@@ -23,7 +23,7 @@ Functions
   get_quadratic
   setup_mesh
   assert_isadjoint
-"""
+"""  # NOQA D205
 
 import numpy as np
 import scipy.sparse as sp
@@ -106,7 +106,6 @@ def setup_mesh(mesh_type, nC, nDim):
     discretize.base.BaseMesh
         A discretize mesh of class specified by the input argument *mesh_type*
     """
-
     if "TensorMesh" in mesh_type:
         if "uniform" in mesh_type:
             h = [nC, nC, nC]
@@ -207,7 +206,7 @@ def setup_mesh(mesh_type, nC, nDim):
 
 
 class OrderTest(unittest.TestCase):
-    """Base class for testing convergence of discrete operators with respect to cell size.
+    r"""Base class for testing convergence of discrete operators with respect to cell size.
 
     ``OrderTest`` is a base class for testing the order of convergence of discrete
     operators with respect to cell size. ``OrderTest`` is inherited by the test
@@ -243,9 +242,9 @@ class OrderTest(unittest.TestCase):
     on a mesh will cell size :math:`h`. ``OrderTest`` assesses the convergence of
 
     .. math::
-        error(h) = \\| A_h(f) - A(f) \\|
+        error(h) = \| A_h(f) - A(f) \|
 
-    as :math:`h \\rightarrow 0`. Note that you can provide any norm to quantify the error.
+    as :math:`h \rightarrow 0`. Note that you can provide any norm to quantify the error.
     The convergence test is passed when the numerically estimated rate of convergence is within
     a specified tolerance of the expected convergence rate supplied by the user.
 
@@ -320,7 +319,7 @@ class OrderTest(unittest.TestCase):
         return max_h
 
     def getError(self):
-        """Compute error defined as a norm of the residual.
+        r"""Compute error defined as a norm of the residual.
 
         This method is overwritten within the test class of a particular operator.
         Within the method, we define a test function :math:`f`, the analytic solution
@@ -329,13 +328,14 @@ class OrderTest(unittest.TestCase):
         **getError** is defined to return the norm of the residual as shown below:
 
         .. math::
-            error(h) = \\| A_h(f) - A(f) \\|
+            error(h) = \| A_h(f) - A(f) \|
 
         """
         return 1.0
 
     def orderTest(self):
-        """
+        """Perform an order test.
+
         For number of cells specified in meshSizes setup mesh, call getError
         and prints mesh size, error, ratio between current and previous error,
         and estimated order of convergence.
@@ -408,7 +408,9 @@ class OrderTest(unittest.TestCase):
 
 
 def rosenbrock(x, return_g=True, return_H=True):
-    """Rosenbrock function for testing Gauss-Newton scheme
+    """Evaluate the Rosenbrock function.
+
+    This is mostly used for testing Gauss-Newton schemes
 
     Parameters
     ----------
@@ -425,7 +427,6 @@ def rosenbrock(x, return_g=True, return_H=True):
         Rosenbrock function evaluated at (x0, x1), the gradient at (x0, x1) if
         *return_g = True* and the Hessian at (x0, x1) if *return_H = True*
     """
-
     f = 100 * (x[1] - x[0] ** 2) ** 2 + (1 - x[0]) ** 2
     g = np.array(
         [2 * (200 * x[0] ** 3 - 200 * x[0] * x[1] + x[0] - 1), 200 * (x[1] - x[0] ** 2)]
@@ -455,7 +456,7 @@ def check_derivative(
     eps=1e-10,
     ax=None,
 ):
-    """Basic derivative check
+    """Perform a basic derivative check.
 
     Compares error decay of 0th and 1st order Taylor approximation at point
     x0 for a randomized search direction.
@@ -510,7 +511,6 @@ def check_derivative(
     ========================= PASS! =========================
     Once upon a time, a happy little test passed.
     """
-
     # matplotlib is a soft dependencies for discretize,
     # lazy-loaded to decrease load time of discretize.
     try:
@@ -594,9 +594,9 @@ def check_derivative(
             ax.set_xlabel("h")
             ax.set_ylabel("Error")
             leg = ax.legend(
-                ["$\mathcal{O}(h)$", "$\mathcal{O}(h^2)$"],
+                [r"$\mathcal{O}(h)$", r"$\mathcal{O}(h^2)$"],
                 loc="best",
-                title="$f(x + h\Delta x) - f(x) - h g(x) \Delta x - \mathcal{O}(h^2) = 0$",
+                title=r"$f(x + h\Delta x) - f(x) - h g(x) \Delta x - \mathcal{O}(h^2) = 0$",
                 frameon=False,
             )
             plt.setp(leg.get_title(), fontsize=15)
@@ -608,18 +608,18 @@ def check_derivative(
 
 
 def get_quadratic(A, b, c=0):
-    """Given **A**, **b** and *c*, this returns a function that evaluates the quandratic
-    for a vector **x**.
+    r"""Return a function that evaluates the given quadratic.
 
-    Where :math:`\\mathbf{A} \\in \\mathbb{R}^{NxN}`,
-    :math:`\\mathbf{b} \\in \\mathbb{R}^N` and :math:`c` is a constant,
+    Given **A**, **b** and *c*, this returns a function that evaluates
+    the quadratic for a vector **x**. Where :math:`\mathbf{A} \in \mathbb{R}^{NxN}`,
+    :math:`\mathbf{b} \in \mathbb{R}^N` and :math:`c` is a constant,
     this function evaluates the following quadratic:
 
     .. math::
 
-        Q( \\mathbf{x} ) = \\frac{1}{2} \\mathbf{x^T A x + b^T x} + c
+        Q( \mathbf{x} ) = \frac{1}{2} \mathbf{x^T A x + b^T x} + c
 
-    for a vector :math:`\\mathbf{x}`. It also optionally returns the gradient of the
+    for a vector :math:`\mathbf{x}`. It also optionally returns the gradient of the
     above equation, and its Hessian.
 
     Parameters
@@ -664,7 +664,7 @@ def assert_isadjoint(
     atol=0.0,
     assert_error=True,
 ):
-    r"""Dot product test for the forward operator and its adjoint operator.
+    r"""Do a dot product test for the forward operator and its adjoint operator.
 
     Dot product test to verify the correctness of the adjoint operator
     :math:`F^H` of the forward operator :math:`F`.
@@ -723,7 +723,6 @@ def assert_isadjoint(
     ------
     AssertionError
         If the dot product test fails (only if assert_error=True).
-
 
     """
 

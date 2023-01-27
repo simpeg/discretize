@@ -1,4 +1,4 @@
-from discretize.utils.matrix_utils import *
+from discretize.utils.matrix_utils import *  # NOQA F401,F403
 import warnings
 
 warnings.warn(

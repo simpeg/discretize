@@ -1,5 +1,5 @@
+"""Module housing the TensorMesh implementation."""
 import numpy as np
-
 
 from discretize.base import BaseRectangularMesh, BaseTensorMesh
 from discretize.operators import DiffOperators, InnerProducts
@@ -161,7 +161,8 @@ class TensorMesh(
 
     # --------------- Geometries ---------------------
     @property
-    def cell_volumes(self):
+    def cell_volumes(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if getattr(self, "_cell_volumes", None) is None:
             vh = self.h
             # Compute cell volumes
@@ -177,7 +178,7 @@ class TensorMesh(
 
     @property
     def face_x_areas(self):
-        """Returns the areas of the x-faces
+        """Return the areas of the x-faces.
 
         Calling this property will compute and return the areas of faces
         whose normal vector is along the x-axis.
@@ -208,7 +209,7 @@ class TensorMesh(
 
     @property
     def face_y_areas(self):
-        """Returns the areas of the y-faces
+        """Return the areas of the y-faces.
 
         Calling this property will compute and return the areas of faces
         whose normal vector is along the y-axis. Note that only 2D and 3D
@@ -240,7 +241,7 @@ class TensorMesh(
 
     @property
     def face_z_areas(self):
-        """Returns the areas of the z-faces
+        """Return the areas of the z-faces.
 
         Calling this property will compute and return the areas of faces
         whose normal vector is along the z-axis. Note that only 3D tensor
@@ -269,7 +270,8 @@ class TensorMesh(
         return self._face_z_areas
 
     @property
-    def face_areas(self):
+    def face_areas(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if self.dim == 1:
             return self.face_x_areas
         elif self.dim == 2:
@@ -279,7 +281,7 @@ class TensorMesh(
 
     @property
     def edge_x_lengths(self):
-        """Returns the x-edge lengths
+        """Return the x-edge lengths.
 
         Calling this property will compute and return the lengths of edges
         parallel to the x-axis.
@@ -308,7 +310,7 @@ class TensorMesh(
 
     @property
     def edge_y_lengths(self):
-        """Returns the y-edge lengths
+        """Return the y-edge lengths.
 
         Calling this property will compute and return the lengths of edges
         parallel to the y-axis.
@@ -341,7 +343,7 @@ class TensorMesh(
 
     @property
     def edge_z_lengths(self):
-        """Returns the z-edge lengths
+        """Return the z-edge lengths.
 
         Calling this property will compute and return the lengths of edges
         parallel to the z-axis.
@@ -371,7 +373,8 @@ class TensorMesh(
         return self._edge_z_lengths
 
     @property
-    def edge_lengths(self):
+    def edge_lengths(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if self.dim == 1:
             return self.edge_x_lengths
         elif self.dim == 2:
@@ -382,7 +385,7 @@ class TensorMesh(
 
     @property
     def face_boundary_indices(self):
-        """Returns the indices of the x, (y and z) boundary faces
+        """Return the indices of the x, (y and z) boundary faces.
 
         For x, (y and z) faces, this property returns the indices of the faces
         on the boundaries. That is, the property returns the indices of the x-faces
@@ -459,7 +462,7 @@ class TensorMesh(
 
     @property
     def cell_boundary_indices(self):
-        """Returns the indices of the x, (y and z) boundary cells
+        """Return the indices of the x, (y and z) boundary cells.
 
         This property returns the indices of the cells on the x, (y and z)
         boundaries, respectively. Note that each axis direction will
@@ -534,8 +537,7 @@ class TensorMesh(
             return indxd, indxu, indyd, indyu, indzd, indzu
 
     def _repr_attributes(self):
-        """Attributes for the representation of the mesh."""
-
+        """Represent attributes of the mesh."""
         attrs = {}
         attrs["names"] = ["x", "y", "z"][: self.dim]
 
