@@ -214,7 +214,7 @@ class OrderTest(unittest.TestCase):
     for the convergence testing and defines a method :py:attr:`~OrderTest.getError`
     which defines the error as a norm of the residual (see example).
 
-    OrderTest inherits from :py:class:`unittest.TestCase`.
+    OrderTest inherits from :class:`unittest.TestCase`.
 
     Parameters
     ----------
