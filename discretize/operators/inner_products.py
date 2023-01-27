@@ -1,5 +1,6 @@
 """Construct inner product operators for tensor like meshes."""
 from scipy import sparse as sp
+from discretize.base import BaseMesh
 from discretize.utils import (
     sub2ind,
     sdiag,
@@ -17,7 +18,7 @@ import numpy as np
 import warnings
 
 
-class InnerProducts(object):
+class InnerProducts(BaseMesh):
     """Class for constructing inner product matrices.
 
     ``InnerProducts`` is a mixin class for constructing inner product matrices,

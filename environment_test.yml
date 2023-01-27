@@ -14,7 +14,7 @@ dependencies:
   - sphinx-toolbox
   - sphinxcontrib-apidoc
   - pydata-sphinx-theme
-  - numpydoc
+  - numpydoc>=1.5
   - pillow
   - sympy
   - wheel
