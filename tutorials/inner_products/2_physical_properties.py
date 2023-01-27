@@ -44,8 +44,8 @@ In the case of anisotropy, the constitutive relations are defined by a tensor
 where
 
 .. math::
-    \Sigma = \begin{bmatrix} \sigma_{1} & \sigma_{4} & \sigma_{5} \n
-    \sigma_{4} & \sigma_{2} & \sigma_{6} \n
+    \Sigma = \begin{bmatrix} \sigma_{1} & \sigma_{4} & \sigma_{5} \\
+    \sigma_{4} & \sigma_{2} & \sigma_{6} \\
     \sigma_{5} & \sigma_{6} & \sigma_{3} \end{bmatrix}
 
 Is symmetric and defined by 6 independent parameters. The inner product between

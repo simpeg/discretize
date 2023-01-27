@@ -18,7 +18,7 @@ the advection-diffusion equation with Neumann boundary conditions is given by:
 
 .. math::
     p_t = \nabla \cdot \alpha \nabla p
-    - \mathbf{u} \cdot \nabla p + s \n
+    - \mathbf{u} \cdot \nabla p + s \\
     \textrm{s.t.} \;\;\; \frac{\partial p}{\partial n} \Bigg |_{\partial \Omega} = 0
 
 where :math:`p` is the unknown variable, :math:`\alpha` defines the
@@ -33,8 +33,8 @@ where :math:`s_0` is a constant. To solve this problem numerically, we
 re-express the advection-diffusion equation as a set of first order PDEs:
 
 .. math::
-    \; \; p_t = \nabla \cdot \mathbf{j} - \mathbf{u} \cdot \mathbf{w} + s \;\;\; (1)\n
-    \; \; \mathbf{w} = \nabla p \;\;\; (2) \n
+    \; \; p_t = \nabla \cdot \mathbf{j} - \mathbf{u} \cdot \mathbf{w} + s \;\;\; (1)\\
+    \; \; \mathbf{w} = \nabla p \;\;\; (2) \\
     \; \; \alpha^{-1} \mathbf{j} = \mathbf{w} \;\;\; (3)
 
 
