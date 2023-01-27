@@ -30,20 +30,20 @@ with open("README.rst") as f:
     LONG_DESCRIPTION = "".join(f.readlines())
 
 build_requires = [
-    "numpy>=1.8",
-    "cython>=0.2",
+    "numpy>=1.20",
+    "cython>=0.29",
     "setuptools_scm",
 ]
 
 install_requires = [
-    "numpy>=1.8",
-    "scipy>=0.13",
+    "numpy>=1.20",
+    "scipy>=1.8",
 ]
 
 metadata = dict(
     name="discretize",
     packages=find_packages(include=["discretize", "discretize.*"]),
-    python_requires=">=3.7",
+    python_requires=">=3.8",
     setup_requires=build_requires,
     install_requires=install_requires,
     author="SimPEG developers",

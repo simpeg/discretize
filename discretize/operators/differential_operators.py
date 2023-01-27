@@ -2196,7 +2196,6 @@ class DiffOperators(object):
             return C
 
         elif self.dim == 3:
-
             # D32 = kron3(ddx(n[2]), speye(n[1]), speye(n[0]+1))
             # D23 = kron3(speye(n[2]), ddx(n[1]), speye(n[0]+1))
             # D31 = kron3(ddx(n[2]), speye(n[1]+1), speye(n[0]))

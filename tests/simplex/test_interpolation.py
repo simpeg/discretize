@@ -19,8 +19,8 @@ class TestInterpolation2d(discretize.tests.OrderTest):
         return 1.0 / n
 
     def getError(self):
-        funX = lambda x, y: -(y ** 2)
-        funY = lambda x, y: x ** 2
+        funX = lambda x, y: -(y**2)
+        funY = lambda x, y: x**2
 
         if "x" in self.type:
             ana = funX(*self.interp_points.T)
@@ -193,14 +193,14 @@ class TestAveraging(discretize.tests.OrderTest):
     def getError(self):
         mesh = self.M
         if mesh.dim == 2:
-            func = lambda x, y: np.cos(x ** 2) - np.sin(y ** 2) + 2 * x * y
+            func = lambda x, y: np.cos(x**2) - np.sin(y**2) + 2 * x * y
         else:
             func = (
-                lambda x, y, z: np.cos(x ** 2)
-                - np.sin(y ** 2)
+                lambda x, y, z: np.cos(x**2)
+                - np.sin(y**2)
                 + 2 * x * y
                 + np.cos(2 * z) ** 2
-                + z ** 3
+                + z**3
             )
 
         if self.target_type == "CC":
@@ -380,8 +380,8 @@ class TestVectorAveraging2D(discretize.tests.OrderTest):
         return 1.0 / n
 
     def getError(self):
-        funX = lambda x, y: -(y ** 2)
-        funY = lambda x, y: x ** 2
+        funX = lambda x, y: -(y**2)
+        funY = lambda x, y: x**2
         mesh = self.M
         ana = np.c_[funX(*mesh.cell_centers.T), funY(*mesh.cell_centers.T)].reshape(
             -1, order="F"
@@ -478,3 +478,19 @@ def test_cell_to_face_extrap():
     Fv = mesh.average_cell_to_face @ v
 
     np.testing.assert_equal(1.0, Fv)
+
+
+def test_zeros_outside():
+    points, simplices = example_simplex_mesh((8, 8))
+    mesh = discretize.SimplexMesh(points, simplices)
+
+    outside_point = [-0.1, -0.1]
+    Q1 = mesh.get_interpolation_matrix(
+        outside_point, location_type='cell_centers', zeros_outside=True
+    )
+
+    assert Q1.nnz == 0
+    Q2 = mesh.get_interpolation_matrix(
+        outside_point, location_type='nodes', zeros_outside=True
+    )
+    np.testing.assert_equal(Q2.data, 0)

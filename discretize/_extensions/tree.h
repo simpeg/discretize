@@ -132,6 +132,11 @@ class Cell{
       double* x0, double* x1, double* x2, double* e0, double* e1, double* e2, double* t_norm,
       int_t p_level, double *xs, double *ys, double* zs, bool diag_balance=false
     );
+    void refine_vert_triang_prism(node_map_t& nodes,
+      double* x0, double* x1, double* x2, double h,
+      double* e0, double* e1, double* e2, double* t_norm,
+      int_t p_level, double *xs, double *ys, double* zs, bool diag_balance=false
+    );
     void refine_tetra(
       node_map_t& nodes,
       double* x0, double* x1, double* x2, double* x3,
@@ -178,6 +183,9 @@ class Tree{
     );
     void refine_tetra(
         double* x0, double* x1, double* x2, double* x3, int_t p_level, bool diag_balance=false
+    );
+    void refine_vert_triang_prism(
+        double* x0, double* x1, double* x2, double h, int_t p_level, bool diagonal_balance=false
     );
     void number();
     void finalize_lists();

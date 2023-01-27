@@ -705,7 +705,7 @@ class CylindricalMesh(
         if self.is_symmetric:
             return np.kron(
                 np.ones_like(self.nodes_z),
-                pi * (self.nodes_x ** 2 - np.r_[0, self.nodes_x[:-1]] ** 2),
+                pi * (self.nodes_x**2 - np.r_[0, self.nodes_x[:-1]] ** 2),
             )
         return np.kron(
             np.ones(self._shape_total_nodes[2]),
@@ -794,7 +794,7 @@ class CylindricalMesh(
         """
         if getattr(self, "_cell_volumes", None) is None:
             if self.is_symmetric:
-                az = pi * (self.nodes_x ** 2 - np.r_[0, self.nodes_x[:-1]] ** 2)
+                az = pi * (self.nodes_x**2 - np.r_[0, self.nodes_x[:-1]] ** 2)
                 self._cell_volumes = np.kron(self.h[2], az)
             else:
                 self._cell_volumes = np.kron(

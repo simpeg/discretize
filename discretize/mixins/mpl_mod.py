@@ -720,7 +720,6 @@ class InterfaceMPL(object):
         linewidth=1.0,
         **kwargs,
     ):
-
         if self.dim == 1:
             if nodes:
                 ax.plot(
@@ -952,7 +951,6 @@ class InterfaceMPL(object):
         stream_threshold=None,
         **kwargs,
     ):
-
         if self.dim == 1:
             if v_type == "CC":
                 ph = ax.plot(
@@ -1163,7 +1161,7 @@ class InterfaceMPL(object):
                 V = Vi
 
             if stream_threshold is not None:
-                mask_me = np.sqrt(Ui ** 2 + Vi ** 2) <= stream_threshold
+                mask_me = np.sqrt(Ui**2 + Vi**2) <= stream_threshold
                 Ui = np.ma.masked_where(mask_me, Ui)
                 Vi = np.ma.masked_where(mask_me, Vi)
 
@@ -1171,7 +1169,7 @@ class InterfaceMPL(object):
                 scaleFact = np.copy(stream_thickness)
 
                 # Calculate vector amplitude
-                vecAmp = np.sqrt(U ** 2 + V ** 2).T
+                vecAmp = np.sqrt(U**2 + V**2).T
 
                 # Form bounds to knockout the top and bottom 10%
                 vecAmp_sort = np.sort(vecAmp.ravel())
@@ -1199,7 +1197,7 @@ class InterfaceMPL(object):
                 ax.pcolormesh(
                     x,
                     y,
-                    np.sqrt(U ** 2 + V ** 2).T,
+                    np.sqrt(U**2 + V**2).T,
                     **{**pcolor_opts, **grid_opts},
                 ),
             )
@@ -2565,7 +2563,6 @@ class Slicer(object):
             self.smin.on_changed(update)
 
         elif transparent is not None:
-
             # Loop over values
             for value in transparent:
                 # If value is a list/tuple, we treat is as a range

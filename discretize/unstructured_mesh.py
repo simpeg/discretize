@@ -610,8 +610,12 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
             self.neighbors,
             transform,
             shift,
+            zeros_outside=zeros_outside,
             return_bary=True,
         )
+
+        if zeros_outside:
+            barys[inds==-1] = 0.0
 
         n_loc = len(loc)
         location_type = self._parse_location_type(location_type)
@@ -629,6 +633,10 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
             mat = self.average_node_to_cell.T[which_node].tocsr()
             # this will overwrite the "mat" matrices data to create the interpolation
             _interp_cc(loc, self.cell_centers, mat.data, mat.indices, mat.indptr)
+            if zeros_outside:
+                e = np.ones(n_loc)
+                e[inds==-1] = 0.0
+                mat = sp.diags(e, format='csr') @ mat
             return mat
         else:
             component = location_type[-1]
@@ -860,7 +868,6 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
 
     @property
     def average_face_to_cell(self):
-
         n_cells = self.n_cells
         n_faces = self.n_faces
         col_inds = self._simplex_faces

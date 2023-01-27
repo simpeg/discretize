@@ -920,10 +920,10 @@ class BaseTensorMesh(BaseRegularMesh):
                     * Av.T
                     * V
                     * ones
-                    * sdiag(1.0 / model ** 2)
+                    * sdiag(1.0 / model**2)
                 )
             elif invert_model:
-                dMdprop = n_elements * Av.T * V * sdiag(-1.0 / model ** 2)
+                dMdprop = n_elements * Av.T * V * sdiag(-1.0 / model**2)
             elif invert_matrix:
                 dMdprop = n_elements * (sdiag(-MI.diagonal() ** 2) * Av.T * V)
 
@@ -934,10 +934,10 @@ class BaseTensorMesh(BaseRegularMesh):
                 dMdprop = n_elements * Av.T * V
             elif invert_matrix and invert_model:
                 dMdprop = n_elements * (
-                    sdiag(MI.diagonal() ** 2) * Av.T * V * sdiag(1.0 / model ** 2)
+                    sdiag(MI.diagonal() ** 2) * Av.T * V * sdiag(1.0 / model**2)
                 )
             elif invert_model:
-                dMdprop = n_elements * Av.T * V * sdiag(-1.0 / model ** 2)
+                dMdprop = n_elements * Av.T * V * sdiag(-1.0 / model**2)
             elif invert_matrix:
                 dMdprop = n_elements * (sdiag(-MI.diagonal() ** 2) * Av.T * V)
 
@@ -963,10 +963,10 @@ class BaseTensorMesh(BaseRegularMesh):
                 dMdprop = Av.T * P * V
             elif invert_matrix and invert_model:
                 dMdprop = (
-                    sdiag(MI.diagonal() ** 2) * Av.T * P * V * sdiag(1.0 / model ** 2)
+                    sdiag(MI.diagonal() ** 2) * Av.T * P * V * sdiag(1.0 / model**2)
                 )
             elif invert_model:
-                dMdprop = Av.T * P * V * sdiag(-1.0 / model ** 2)
+                dMdprop = Av.T * P * V * sdiag(-1.0 / model**2)
             elif invert_matrix:
                 dMdprop = sdiag(-MI.diagonal() ** 2) * Av.T * P * V
 

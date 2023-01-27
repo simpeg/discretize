@@ -49,7 +49,6 @@ import matplotlib.pyplot as plt
 
 
 def run(plotIt=True, n=60):
-
     np.random.seed(5)
 
     # Here we are going to rearrange the equations:
@@ -73,7 +72,7 @@ def run(plotIt=True, n=60):
 
     # Operators
     A = D * M.faceDiv * M.cellGrad
-    L = epsilon ** 2 * M.faceDiv * M.cellGrad
+    L = epsilon**2 * M.faceDiv * M.cellGrad
 
     duration = 75
     elapsed = 0.0
@@ -87,8 +86,8 @@ def run(plotIt=True, n=60):
         elapsed += dt
         dexp += 0.05
 
-        dfdphi = a ** 2 * 2 * phi * (1 - phi) * (1 - 2 * phi)
-        d2fdphi2 = discretize.utils.sdiag(a ** 2 * 2 * (1 - 6 * phi * (1 - phi)))
+        dfdphi = a**2 * 2 * phi * (1 - phi) * (1 - 2 * phi)
+        d2fdphi2 = discretize.utils.sdiag(a**2 * 2 * (1 - 6 * phi * (1 - phi)))
 
         MAT = dt * A * d2fdphi2 - I - dt * A * L
         rhs = (dt * A * d2fdphi2 - I) * phi - dt * A * dfdphi

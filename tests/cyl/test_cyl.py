@@ -90,7 +90,7 @@ class TestCylSymmetricMesh(unittest.TestCase):
         self.assertEqual(mesh.vol, np.pi)
 
         mesh = discretize.CylMesh([2.0, 1.0, 1.0])
-        self.assertTrue(np.all(mesh.vol == np.pi * np.r_[0.5 ** 2, 1 - 0.5 ** 2]))
+        self.assertTrue(np.all(mesh.vol == np.pi * np.r_[0.5**2, 1 - 0.5**2]))
 
     def test_gridSizes(self):
         self.assertEqual(self.mesh.gridCC.shape, (self.mesh.nC, 3))
@@ -143,7 +143,6 @@ class TestCylSymmetricMesh(unittest.TestCase):
         self.assertTrue(self.mesh.nodalGrad is None)
 
     def test_getInterpMatCartMesh_Cells(self):
-
         Mr = discretize.TensorMesh([100, 100, 2], x0="CC0")
         Mc = discretize.CylMesh(
             [np.ones(10) / 5, 1, 10], x0="0C0", cartesianOrigin=[-0.2, -0.2, 0]
@@ -161,7 +160,6 @@ class TestCylSymmetricMesh(unittest.TestCase):
         assert np.abs(Pr * (Pc2r * mc) - Pc * mc).max() < 1e-3
 
     def test_getInterpMatCartMesh_Cells2Nodes(self):
-
         Mr = discretize.TensorMesh([100, 100, 2], x0="CC0")
         Mc = discretize.CylMesh(
             [np.ones(10) / 5, 1, 10], x0="0C0", cartesianOrigin=[-0.2, -0.2, 0]
@@ -179,7 +177,6 @@ class TestCylSymmetricMesh(unittest.TestCase):
         assert np.abs(Pr * (Pc2r * mc) - Pc * mc).max() < 1e-3
 
     def test_getInterpMatCartMesh_Faces(self):
-
         Mr = discretize.TensorMesh([100, 100, 2], x0="CC0")
         Mc = discretize.CylMesh(
             [np.ones(10) / 5, 1, 10], x0="0C0", cartesianOrigin=[-0.2, -0.2, 0]
@@ -204,14 +201,13 @@ class TestCylSymmetricMesh(unittest.TestCase):
         assert np.abs(float(fycc[indY]) - 1) < TOL
         assert np.abs((fzcc - 1).sum()) < TOL
 
-        mag = (fxcc ** 2 + fycc ** 2) ** 0.5
+        mag = (fxcc**2 + fycc**2) ** 0.5
         dist = ((Mr.gridCC[:, 0] + 0.2) ** 2 + (Mr.gridCC[:, 1] + 0.2) ** 2) ** 0.5
 
         assert np.abs(mag[dist > 0.1].max() - 1) < TOL
         assert np.abs(mag[dist > 0.1].min() - 1) < TOL
 
     def test_getInterpMatCartMesh_Faces2Edges(self):
-
         Mr = discretize.TensorMesh([100, 100, 2], x0="CC0")
         Mc = discretize.CylMesh(
             [np.ones(10) / 5, 1, 10], x0="0C0", cartesianOrigin=[-0.2, -0.2, 0]
@@ -238,14 +234,13 @@ class TestCylSymmetricMesh(unittest.TestCase):
         assert np.abs(float(eycc[indY]) - 1) < TOL
         assert np.abs((ezcc - 1).sum()) < TOL
 
-        mag = (excc ** 2 + eycc ** 2) ** 0.5
+        mag = (excc**2 + eycc**2) ** 0.5
         dist = ((Mr.gridCC[:, 0] + 0.2) ** 2 + (Mr.gridCC[:, 1] + 0.2) ** 2) ** 0.5
 
         assert np.abs(mag[dist > 0.1].max() - 1) < TOL
         assert np.abs(mag[dist > 0.1].min() - 1) < TOL
 
     def test_getInterpMatCartMesh_Edges(self):
-
         Mr = discretize.TensorMesh([100, 100, 2], x0="CC0")
         Mc = discretize.CylMesh(
             [np.ones(10) / 5, 1, 10], x0="0C0", cartesianOrigin=[-0.2, -0.2, 0]
@@ -270,14 +265,13 @@ class TestCylSymmetricMesh(unittest.TestCase):
         assert np.abs(float(eycc[indY]) - 0) < TOL
         assert np.abs(ezcc.sum()) < TOL
 
-        mag = (excc ** 2 + eycc ** 2) ** 0.5
+        mag = (excc**2 + eycc**2) ** 0.5
         dist = ((Mr.gridCC[:, 0] + 0.2) ** 2 + (Mr.gridCC[:, 1] + 0.2) ** 2) ** 0.5
 
         assert np.abs(mag[dist > 0.1].max() - 1) < TOL
         assert np.abs(mag[dist > 0.1].min() - 1) < TOL
 
     def test_getInterpMatCartMesh_Edges2Faces(self):
-
         Mr = discretize.TensorMesh([100, 100, 2], x0="CC0")
         Mc = discretize.CylMesh(
             [np.ones(10) / 5, 1, 10], x0="0C0", cartesianOrigin=[-0.2, -0.2, 0]
@@ -302,7 +296,7 @@ class TestCylSymmetricMesh(unittest.TestCase):
         assert np.abs(float(eycc[indY]) - 0) < TOL
         assert np.abs(ezcc.sum()) < TOL
 
-        mag = (excc ** 2 + eycc ** 2) ** 0.5
+        mag = (excc**2 + eycc**2) ** 0.5
         dist = ((Mr.gridCC[:, 0] + 0.2) ** 2 + (Mr.gridCC[:, 1] + 0.2) ** 2) ** 0.5
 
         assert np.abs(mag[dist > 0.1].max() - 1) < TOL
@@ -336,7 +330,6 @@ class TestFaceDiv2D(tests.OrderTest):
     meshDimension = 3
 
     def getError(self):
-
         funR = lambda r, z: np.sin(2.0 * np.pi * r)
         funZ = lambda r, z: np.sin(2.0 * np.pi * z)
 
@@ -465,7 +458,6 @@ class TestAveE2CC(tests.OrderTest):
     meshSizes = [8, 16, 32, 64]
 
     def getError(self):
-
         fun = lambda r, t, z: np.sin(2.0 * np.pi * z) * np.sin(np.pi * r)
 
         E = call3(fun, self.M.gridEy)
@@ -487,7 +479,6 @@ class TestAveE2CCV(tests.OrderTest):
     meshSizes = [8, 16, 32, 64]
 
     def getError(self):
-
         fun = lambda r, t, z: np.sin(2.0 * np.pi * z) * np.sin(2 * np.pi * r)
 
         E = call3(fun, self.M.gridEy)
@@ -508,7 +499,6 @@ class TestAveF2CCV(tests.OrderTest):
     meshDimension = 3
 
     def getError(self):
-
         funR = lambda r, z: np.sin(2.0 * np.pi * z) * np.sin(np.pi * r)
         funZ = lambda r, z: np.sin(3.0 * np.pi * z) * np.sin(2.0 * np.pi * r)
 
@@ -536,7 +526,6 @@ class TestAveF2CC(tests.OrderTest):
     meshDimension = 3
 
     def getError(self):
-
         fun = lambda r, z: np.sin(2.0 * np.pi * z) * np.sin(np.pi * r)
 
         Fc = cylF2(self.M, fun, fun)
@@ -561,7 +550,6 @@ class TestInnerProducts2D(tests.OrderTest):
     meshSizes = [4, 8, 16, 32, 64, 128]
 
     def getError(self):
-
         funR = lambda r, t, z: np.cos(2.0 * np.pi * z)
         funT = lambda r, t, z: 0 * t
         funZ = lambda r, t, z: np.sin(2.0 * np.pi * r)

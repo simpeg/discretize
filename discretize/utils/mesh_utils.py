@@ -444,7 +444,6 @@ def mesh_builder_xyz(
     center = []
     nC = []
     for dim in range(xyz.shape[1]):
-
         max_min = np.r_[xyz[:, dim].max(), xyz[:, dim].min()]
         limits += [max_min]
         center += [np.mean(max_min)]
@@ -455,7 +454,6 @@ def mesh_builder_xyz(
         limits[-1][1] -= depth_core
 
     if mesh_type.lower() == "tensor":
-
         # Figure out padding cells from distance
         def expand(dx, pad):
             length = 0
@@ -492,7 +490,6 @@ def mesh_builder_xyz(
         mesh = discretize.TensorMesh(h_dim)
 
     elif mesh_type.lower() == "tree":
-
         # Figure out full extent required from input
         h_dim = []
         nC_origin = []
@@ -501,7 +498,7 @@ def mesh_builder_xyz(
 
             # Number of cells at the small octree level
             maxLevel = int(np.log2(extent / h[ii])) + 1
-            h_dim += [np.ones(2 ** maxLevel) * h[ii]]
+            h_dim += [np.ones(2**maxLevel) * h[ii]]
 
         # Define the mesh and origin
         mesh = discretize.TreeMesh(h_dim)
@@ -523,7 +520,6 @@ def mesh_builder_xyz(
     axis = ["x", "y", "z"]
     if base_mesh is not None:
         for dim in range(base_mesh.dim):
-
             cc_base = getattr(
                 base_mesh,
                 "cell_centers_{orientation}".format(orientation=axis[dim]),
@@ -583,6 +579,14 @@ def refine_tree_xyz(
     hull, the cells will have a width of *2h* . Within a distance of *nc3 x (4h)* ,
     the cells will have a width of *4h* . Etc...
 
+    .. deprecated:: 0.9.0
+          `refine_tree_xyz` will be removed in a future version of discretize. It is
+          replaced by `discretize.TreeMesh.refine_surface`, `discretize.TreeMesh.refine_bounding_box`,
+          and `discretize.TreeMesh.refine_points`, to separate the calling convetions,
+          and improve the individual documentation. Those methods are more explicit
+          about which levels of the TreeMesh you are refining, and provide more
+          flexibility for padding cells in each dimension.
+
     Parameters
     ----------
     mesh : discretize.TreeMesh
@@ -617,6 +621,15 @@ def refine_tree_xyz(
     -------
     discretize.TreeMesh
         The refined tree mesh
+
+    See Also
+    --------
+    discretize.TreeMesh.refine_surface
+        Recommended to use instead of this function for the `surface` option.
+    discretize.TreeMesh.refine_bounding_box
+        Recommended to use instead of this function for the `box` option.
+    discretize.TreeMesh.refine_points
+        Recommended to use instead of this function for the `radial` option.
 
     Examples
     --------
@@ -674,7 +687,6 @@ def refine_tree_xyz(
     """
 
     if octree_levels_padding is not None:
-
         if len(octree_levels_padding) != len(octree_levels):
             raise ValueError(
                 "'octree_levels_padding' must be the length %i" % len(octree_levels)
@@ -685,8 +697,20 @@ def refine_tree_xyz(
     octree_levels = np.asarray(octree_levels)
     octree_levels_padding = np.asarray(octree_levels_padding)
 
+    # levels = mesh.max_level - np.arange(len(octree_levels))
+    # non_zeros = octree_levels != 0
+    # levels = levels[non_zeros]
+
     # Trigger different refine methods
     if method.lower() == "radial":
+        # padding = octree_levels[non_zeros]
+        # mesh.refine_points(xyz, levels, padding, finalize=finalize,)
+        warnings.warn(
+            "The radial option is deprecated as of `0.9.0` please update your code to "
+            "use the `TreeMesh.refine_points` functionality. It will be removed in a "
+            "future version of discretize.",
+            DeprecationWarning,
+        )
 
         # Compute the outer limits of each octree level
         rMax = np.cumsum(
@@ -704,6 +728,17 @@ def refine_tree_xyz(
             mesh.finalize()
 
     elif method.lower() == "surface":
+        warnings.warn(
+            "The surface option is deprecated as of `0.9.0` please update your code to "
+            "use the `TreeMesh.refine_surface` functionality. It will be removed in a "
+            "future version of discretize.",
+            DeprecationWarning,
+        )
+        # padding = np.zeros((len(octree_levels), mesh.dim))
+        # padding[:, -1] = np.maximum(octree_levels - 1, 0)
+        # padding[:, :-1] = octree_levels_padding[:, None]
+        # padding = padding[non_zeros]
+        # mesh.refine_surface(xyz, levels, padding, finalize=finalize, pad_down=True, pad_up=False)
 
         # Compute centroid
         centroid = np.mean(xyz, axis=0)
@@ -737,14 +772,13 @@ def refine_tree_xyz(
         depth = zmax[-1]
         # Cycle through the Tree levels backward
         for ii in range(len(octree_levels) - 1, -1, -1):
-
-            dx = mesh.h[0].min() * 2 ** ii
+            dx = mesh.h[0].min() * 2**ii
 
             if mesh.dim == 3:
-                dy = mesh.h[1].min() * 2 ** ii
-                dz = mesh.h[2].min() * 2 ** ii
+                dy = mesh.h[1].min() * 2**ii
+                dz = mesh.h[2].min() * 2**ii
             else:
-                dz = mesh.h[1].min() * 2 ** ii
+                dz = mesh.h[1].min() * 2**ii
 
             # Increase the horizontal extent of the surface
             if xyPad != padWidth[ii]:
@@ -815,6 +849,18 @@ def refine_tree_xyz(
             mesh.finalize()
 
     elif method.lower() == "box":
+        warnings.warn(
+            "The box option is deprecated as of `0.9.0` please update your code to "
+            "use the `TreeMesh.refine_bounding_box` functionality. It will be removed in a "
+            "future version of discretize.",
+            DeprecationWarning,
+        )
+        # padding = np.zeros((len(octree_levels), mesh.dim))
+        # padding[:, -1] = np.maximum(octree_levels - 1, 0)
+        # padding[:, :-1] = octree_levels_padding[:, None]
+        # padding = padding[non_zeros]
+        # mesh.refine_bounding_box(xyz, levels, padding, finalize=finalize)
+
         # Define the data extent [bottom SW, top NE]
         bsw = np.min(xyz, axis=0)
         tne = np.max(xyz, axis=0)
@@ -973,7 +1019,6 @@ def active_from_xyz(mesh, xyz, grid_reference="CC", method="linear"):
             return active
 
     elif grid_reference == "N":
-
         try:
             # try for Cyl, Tensor, and Tree operations
             if mesh.dim == 3:

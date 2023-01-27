@@ -7,12 +7,12 @@ from discretize.utils import cart2cyl, cyl2cart
 def u(*args):
     if len(args) == 1:
         x = args[0]
-        return x ** 3
+        return x**3
     if len(args) == 2:
         x, y = args
-        return x ** 3 + y ** 2
+        return x**3 + y**2
     x, y, z = args
-    return x ** 3 + y ** 2 + z ** 4
+    return x**3 + y**2 + z**4
 
 
 def u_cyl(*args):
@@ -23,12 +23,12 @@ def u_cyl(*args):
 def v(*args):
     if len(args) == 1:
         x = args[0]
-        return 2 * x ** 2
+        return 2 * x**2
     if len(args) == 2:
         x, y = args
-        return np.c_[2 * x ** 2, 3 * y ** 3]
+        return np.c_[2 * x**2, 3 * y**3]
     x, y, z = args
-    return np.c_[2 * x ** 2, 3 * y ** 3, -4 * z ** 2]
+    return np.c_[2 * x**2, 3 * y**3, -4 * z**2]
 
 
 def v_cyl(*args):
@@ -42,7 +42,7 @@ def w(*args):
         x, y = args
         return np.c_[(y - 2) ** 2, (x + 2) ** 2]
     x, y, z = args
-    return np.c_[(y - 2) ** 2 + z ** 2, (x + 2) ** 2 - (z - 4) ** 2, y ** 2 - x ** 2]
+    return np.c_[(y - 2) ** 2 + z**2, (x + 2) ** 2 - (z - 4) ** 2, y**2 - x**2]
 
 
 def w_cyl(*args):

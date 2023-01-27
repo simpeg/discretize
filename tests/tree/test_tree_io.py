@@ -23,7 +23,6 @@ class TestOcTreeMeshIO(unittest.TestCase):
         self.mesh = mesh
 
     def test_UBC3Dfiles(self):
-
         mesh = self.mesh
         # Make a vector
         vec = np.arange(mesh.nC)

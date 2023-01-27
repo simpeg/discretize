@@ -367,7 +367,7 @@ def test_box_errors():
 
     # incorrect number of levels
     with pytest.raises(ValueError):
-        mesh.refine_box(x0s2d, x1s2d, [mesh.max_level], finalize=False)
+        mesh.refine_box(x0s2d, x1s2d, [-1, -1, -1], finalize=False)
 
 
 def test_ball_errors():
@@ -400,3 +400,223 @@ def test_insert_errors():
     # incorrect number of levels
     with pytest.raises(ValueError):
         mesh.insert_cells(x0s2d, [1, 1, 3], finalize=False)
+
+
+def test_refine_triang_prism():
+    xyz = np.array(
+        [
+            [0.41, 0.21, 0.11],
+            [0.21, 0.61, 0.22],
+            [0.71, 0.71, 0.31],
+        ]
+    )
+    h = 0.48
+
+    simps = np.array([[0, 1, 2]])
+
+    n_ps = len(xyz)
+    simps1 = np.c_[simps[:, 0], simps[:, 1], simps[:, 2], simps[:, 0]] + [0, 0, 0, n_ps]
+    simps2 = np.c_[simps[:, 0], simps[:, 1], simps[:, 2], simps[:, 1]] + [
+        n_ps,
+        n_ps,
+        n_ps,
+        0,
+    ]
+    simps3 = np.c_[simps[:, 1], simps[:, 2], simps[:, 0], simps[:, 2]] + [
+        0,
+        0,
+        n_ps,
+        n_ps,
+    ]
+    simps = np.r_[simps1, simps2, simps3]
+
+    points = np.r_[xyz, xyz + [0, 0, h]]
+    mesh1 = discretize.TreeMesh([32, 32, 32])
+    mesh1.refine_tetrahedron(points[simps], -1)
+
+    mesh2 = discretize.TreeMesh([32, 32, 32])
+    mesh2.refine_vertical_trianglular_prism(xyz, h, -1)
+
+    assert mesh1.equals(mesh2)
+
+
+def test_refine_triang_prism_errors():
+    xyz = np.array(
+        [
+            [0.41, 0.21, 0.11],
+            [0.21, 0.61, 0.22],
+            [0.71, 0.71, 0.31],
+        ]
+    )
+    h = 0.48
+
+    mesh = discretize.TreeMesh([32, 32])
+    # Not implemented for 2D
+    with pytest.raises(NotImplementedError):
+        mesh.refine_vertical_trianglular_prism(xyz, h, -1)
+
+    mesh = discretize.TreeMesh([32, 32, 32])
+    # incorrect triangle dimensions
+    with pytest.raises(ValueError):
+        mesh.refine_vertical_trianglular_prism(xyz[:, :-1], h, -1)
+
+    # incorrect levels and triangles
+    ps = np.random.rand(10, 3, 3)
+    with pytest.raises(ValueError):
+        mesh.refine_vertical_trianglular_prism(ps, h, [-1, -2])
+
+    # incorrect heights and triangles
+    ps = np.random.rand(10, 3, 3)
+    with pytest.raises(ValueError):
+        mesh.refine_vertical_trianglular_prism(ps, [h, h], -1)
+
+    # negative heights
+    ps = np.random.rand(10, 3, 3)
+    with pytest.raises(ValueError):
+        mesh.refine_vertical_trianglular_prism(ps, -h, -1)
+
+
+def test_bounding_box():
+    # No padding
+    xyz = np.random.rand(20, 2) * 0.25 + 3 / 8
+    mesh1 = discretize.TreeMesh([32, 32])
+    mesh1.refine_bounding_box(xyz, -1, None)
+
+    x0 = xyz.min(axis=0)
+    xF = xyz.max(axis=0)
+
+    mesh2 = discretize.TreeMesh([32, 32])
+    mesh2.refine_box(x0, xF, -1)
+
+    assert mesh1.equals(mesh2)
+
+    # Padding at all levels
+    n_cell_pad = 2
+    x0 = xyz.min(axis=0)
+    xF = xyz.max(axis=0)
+
+    mesh1 = discretize.TreeMesh([32, 32])
+    mesh1.refine_bounding_box(xyz, -1, n_cell_pad)
+
+    mesh2 = discretize.TreeMesh([32, 32])
+    for lv in range(mesh2.max_level, 1, -1):
+        padding = n_cell_pad * (2 ** (mesh2.max_level - lv) / 32)
+        x0 -= padding
+        xF += padding
+        mesh2.refine_box(x0, xF, lv, finalize=False)
+    mesh2.finalize()
+
+    assert mesh1.equals(mesh2)
+
+
+def test_bounding_box_errors():
+    mesh1 = discretize.TreeMesh([32, 32])
+
+    xyz = np.random.rand(20, 3)
+    # incorrect padding shape
+    with pytest.raises(ValueError):
+        mesh1.refine_bounding_box(xyz, -1, [[2, 3, 4]])
+
+    # bad level
+    with pytest.raises(IndexError):
+        mesh1.refine_bounding_box(xyz, 20)
+
+
+def test_refine_points():
+    mesh1 = discretize.TreeMesh([32, 32])
+    point = [0.5, 0.5]
+    level = -1
+    n_cell_pad = 3
+    mesh1.refine_points(point, level, None)
+
+    mesh2 = discretize.TreeMesh([32, 32])
+    mesh2.insert_cells(point, -1)
+
+    assert mesh1.equals(mesh2)
+
+    mesh1 = discretize.TreeMesh([32, 32])
+    mesh1.refine_points(point, level, n_cell_pad)
+
+    mesh2 = discretize.TreeMesh([32, 32])
+    ball_rad = 0.0
+    for lv in range(mesh2.max_level, 1, -1):
+        ball_rad += 2 ** (mesh2.max_level - lv) / 32 * n_cell_pad
+        mesh2.refine_ball(point, ball_rad, lv, finalize=False)
+    mesh2.finalize()
+
+    assert mesh1.equals(mesh2)
+
+
+def test_refine_points_errors():
+    mesh1 = discretize.TreeMesh([32, 32])
+
+    point = [0.5, 0.5]
+
+    with pytest.raises(IndexError):
+        mesh1.refine_points(point, 20)
+
+
+def test_refine_surface2D():
+    mesh1 = discretize.TreeMesh([32, 32])
+    points = [[0.3, 0.3], [0.7, 0.3]]
+    mesh1.refine_surface(points, -1, None, pad_up=True, pad_down=True)
+
+    mesh2 = discretize.TreeMesh([32, 32])
+    x0 = [0.3, 0.3]
+    xF = [0.7, 0.3]
+    mesh2.refine_box(x0, xF, -1)
+
+    assert mesh1.equals(mesh2)
+
+    mesh1 = discretize.TreeMesh([32, 32])
+    points = [[0.3, 0.3], [0.7, 0.3]]
+    n_cell_pad = 2
+    mesh1.refine_surface(points, -1, n_cell_pad, pad_up=True, pad_down=True)
+
+    mesh2 = discretize.TreeMesh([32, 32])
+    x0 = np.r_[0.3, 0.3]
+    xF = np.r_[0.7, 0.3]
+    for lv in range(mesh2.max_level, 1, -1):
+        pad = 2 ** (mesh2.max_level - lv) / 32 * n_cell_pad
+        x0 -= pad
+        xF += pad
+        mesh2.refine_box(x0, xF, lv, finalize=False)
+    mesh2.finalize()
+
+    assert mesh1.equals(mesh2)
+
+
+def test_refine_surface3D():
+    mesh1 = discretize.TreeMesh([32, 32, 32])
+    points = [
+        [0.3, 0.3, 0.5],
+        [0.7, 0.3, 0.5],
+        [0.3, 0.7, 0.5],
+        [0.7, 0.7, 0.5],
+    ]
+    mesh1.refine_surface(points, -1, [[1, 2, 3]], pad_up=True, pad_down=True)
+
+    mesh2 = discretize.TreeMesh([32, 32, 32])
+    pad = np.array([1, 2, 3]) / 32
+    x0 = [0.3, 0.3, 0.5] - pad
+    xF = [0.7, 0.7, 0.5] + pad
+    mesh2.refine_box(x0, xF, -1)
+
+    assert mesh1.equals(mesh2)
+
+    mesh3 = discretize.TreeMesh([32, 32, 32])
+    simps = [[0, 1, 2], [1, 2, 3]]
+    mesh3.refine_surface((points, simps), -1, [[1, 2, 3]], pad_up=True, pad_down=True)
+
+    assert mesh1.equals(mesh3)
+
+
+def test_refine_surface_errors():
+    mesh = discretize.TreeMesh([32, 32])
+    points = [[0.3, 0.3], [0.7, 0.3]]
+
+    with pytest.raises(ValueError):
+        mesh.refine_surface(points, -1, [[0, 1, 2, 3]])
+
+    with pytest.raises(IndexError):
+        mesh.refine_surface(points, 20)

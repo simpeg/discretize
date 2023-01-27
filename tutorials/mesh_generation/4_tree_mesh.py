@@ -20,7 +20,7 @@ creating tree meshes, we must remember certain rules:
     - The number of base mesh cells in x, y and z must all be powers of 2
     - We cannot refine the mesh to create cells smaller than those defining the base mesh
     - The range of cell sizes in the tree mesh depends on the number of base mesh cells in x, y and z
-    
+
 
 """
 
@@ -33,7 +33,7 @@ creating tree meshes, we must remember certain rules:
 #
 
 from discretize import TreeMesh
-from discretize.utils import mkvc, refine_tree_xyz
+from discretize.utils import mkvc
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -60,10 +60,10 @@ mesh = TreeMesh([h, h])
 xp, yp = np.meshgrid([120.0, 240.0], [80.0, 160.0])
 xy = np.c_[mkvc(xp), mkvc(yp)]  # mkvc creates vectors
 
-# Discretize to finest cell size within rectangular box
-mesh = refine_tree_xyz(mesh, xy, octree_levels=[2, 2], method="box", finalize=False)
-
-mesh.finalize()  # Must finalize tree mesh before use
+# Discretize to finest cell size within rectangular box, with padding in the z direction
+# at the finest and second finest levels.
+padding = [[0, 2], [0, 2]]
+mesh.refine_bounding_box(xy, level=-1, padding_cells_by_level=padding)
 
 mesh.plotGrid(show_it=True)
 
@@ -99,17 +99,16 @@ mesh = TreeMesh([hx, hy], x0="CC")
 
 # Refine surface topography
 xx = mesh.vectorNx
-yy = -3 * np.exp((xx ** 2) / 100 ** 2) + 50.0
+yy = -3 * np.exp((xx**2) / 100**2) + 50.0
 pts = np.c_[mkvc(xx), mkvc(yy)]
-mesh = refine_tree_xyz(
-    mesh, pts, octree_levels=[2, 2], method="surface", finalize=False
-)
+padding = [[0, 2], [0, 2]]
+mesh.refine_surface(pts, padding_cells_by_level=padding, finalize=False)
 
 # Refine mesh near points
 xx = np.array([0.0, 10.0, 0.0, -10.0])
 yy = np.array([-20.0, -10.0, 0.0, -10])
 pts = np.c_[mkvc(xx), mkvc(yy)]
-mesh = refine_tree_xyz(mesh, pts, octree_levels=[2, 2], method="radial", finalize=False)
+mesh.refine_points(pts, padding_cells_by_level=[2, 2], finalize=False)
 
 mesh.finalize()
 
@@ -146,17 +145,16 @@ mesh = TreeMesh([hx, hy], x0="CC")
 
 # Refine surface topography
 xx = mesh.vectorNx
-yy = -3 * np.exp((xx ** 2) / 100 ** 2) + 50.0
+yy = -3 * np.exp((xx**2) / 100**2) + 50.0
 pts = np.c_[mkvc(xx), mkvc(yy)]
-mesh = refine_tree_xyz(
-    mesh, pts, octree_levels=[2, 2], method="surface", finalize=False
-)
+padding = [[0, 2], [0, 2]]
+mesh.refine_surface(pts, padding_cells_by_level=padding, finalize=False)
 
 # Refine near points
 xx = np.array([0.0, 10.0, 0.0, -10.0])
 yy = np.array([-20.0, -10.0, 0.0, -10])
 pts = np.c_[mkvc(xx), mkvc(yy)]
-mesh = refine_tree_xyz(mesh, pts, octree_levels=[2, 2], method="radial", finalize=False)
+mesh.refine_points(pts, padding_cells_by_level=[2, 2], finalize=False)
 
 mesh.finalize()
 
@@ -211,18 +209,15 @@ mesh = TreeMesh([hx, hy, hz], x0="CCC")
 
 # Refine surface topography
 [xx, yy] = np.meshgrid(mesh.vectorNx, mesh.vectorNy)
-zz = -3 * np.exp((xx ** 2 + yy ** 2) / 100 ** 2) + 50.0
+zz = -3 * np.exp((xx**2 + yy**2) / 100**2) + 50.0
 pts = np.c_[mkvc(xx), mkvc(yy), mkvc(zz)]
-mesh = refine_tree_xyz(
-    mesh, pts, octree_levels=[2, 2], method="surface", finalize=False
-)
+padding = [[0, 0, 2], [0, 0, 2]]
+mesh.refine_surface(pts, padding_cells_by_level=padding, finalize=False)
 
 # Refine box
 xp, yp, zp = np.meshgrid([-40.0, 40.0], [-40.0, 40.0], [-60.0, 0.0])
 xyz = np.c_[mkvc(xp), mkvc(yp), mkvc(zp)]
-
-mesh = refine_tree_xyz(mesh, xyz, octree_levels=[2, 2], method="box", finalize=False)
-
+mesh.refine_bounding_box(xyz, padding_cells_by_level=padding, finalize=False)
 mesh.finalize()
 
 # The bottom west corner

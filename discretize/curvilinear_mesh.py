@@ -11,6 +11,7 @@ from discretize.base import BaseRectangularMesh
 from discretize.operators import DiffOperators, InnerProducts
 from discretize.mixins import InterfaceMixins
 
+
 # Some helper functions.
 def _length2D(x):
     return (x[:, 0] ** 2 + x[:, 1] ** 2) ** 0.5
@@ -92,7 +93,6 @@ class CurvilinearMesh(
     _items = {"node_list"}
 
     def __init__(self, node_list, **kwargs):
-
         if "nodes" in kwargs:
             node_list = kwargs.pop("nodes")
 
@@ -636,7 +636,6 @@ class CurvilinearMesh(
                 self._normals = [_normalize2D(normal1), _normalize2D(normal2)]
 
             elif self.dim == 3:
-
                 A, E, F, B = index_cube("AEFB", self.vnN, self.vnFx)
                 normal1, area1 = face_info(
                     self.gridN, A, E, F, B, average=False, normalizeNormals=False
