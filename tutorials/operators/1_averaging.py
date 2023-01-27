@@ -15,7 +15,6 @@ Here we discuss:
     - Averaging matricies in 1D, 2D and 3D
     - Averaging discontinuous functions
     - The transpose of an averaging matrix
-    
 
 """
 

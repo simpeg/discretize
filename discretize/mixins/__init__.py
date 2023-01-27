@@ -53,7 +53,7 @@ if importlib.util.find_spec("matplotlib"):
 
 # # Python 3 friendly
 class InterfaceMixins(*AVAILABLE_MIXIN_CLASSES):
-    """This class handles all the avaialble mixins that can be inherrited
+    """Class to handle all the avaialble mixins that can be inherrited
     directly onto ``discretize.base.BaseMesh``
     """
 

@@ -1,3 +1,4 @@
+"""Simple input/output routines."""
 from urllib.request import urlretrieve
 import os
 import importlib

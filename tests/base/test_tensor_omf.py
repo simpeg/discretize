@@ -11,7 +11,7 @@ else:
 
 
 if has_omf:
-    from discretize.mixins.omf_mod import unravel_data_array, ravel_data_array
+    from discretize.mixins.omf_mod import _unravel_data_array, _ravel_data_array
 
     class TestTensorMeshOMF(unittest.TestCase):
         def setUp(self):
@@ -44,7 +44,7 @@ if has_omf:
                 name = list(models.keys())[i]
                 scalar_data = omf_element.data[i]
                 self.assertEqual(name, scalar_data.name)
-                arr = unravel_data_array(
+                arr = _unravel_data_array(
                     np.array(scalar_data.array), mesh.nCx, mesh.nCy, mesh.nCz
                 )
                 self.assertTrue(np.allclose(models[name], arr))
@@ -91,7 +91,7 @@ if has_omf:
                 name = list(models.keys())[i]
                 scalar_data = omf_element.data[i]
                 self.assertEqual(name, scalar_data.name)
-                arr = ravel_data_array(
+                arr = _ravel_data_array(
                     models[name],
                     len(geom.tensor_u),
                     len(geom.tensor_v),

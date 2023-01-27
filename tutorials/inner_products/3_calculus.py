@@ -1,26 +1,22 @@
-# -*- coding: utf-8 -*-
-"""
+r"""
 Differential Operators
 ======================
 
 When solving PDEs using the finite volume approach, inner products may
-contain differential operators. Where :math:`\\psi` and :math:`\\phi` are
-scalar quantities, and :math:`\\vec{u}` and :math:`\\vec{v}` are vector
+contain differential operators. Where :math:`\psi` and :math:`\phi` are
+scalar quantities, and :math:`\vec{u}` and :math:`\vec{v}` are vector
 quantities, we may need to derive a discrete approximation for the following
 inner products:
 
-    1. :math:`(\\vec{u} , \\nabla \\phi)`
-    2. :math:`(\\psi , \\nabla \\cdot \\vec{v})`
-    3. :math:`(\\vec{u} , \\nabla \\times \\vec{v})`
-    4. :math:`(\\psi, \\Delta^2 \\phi)`
+    1. :math:`(\vec{u} , \nabla \phi)`
+    2. :math:`(\psi , \nabla \cdot \vec{v})`
+    3. :math:`(\vec{u} , \nabla \times \vec{v})`
+    4. :math:`(\psi, \Delta^2 \phi)`
 
 In this section, we demonstrate how to go from the inner product to the
 discrete approximation for each case. In doing so, we must construct
 discrete differential operators, inner product matricies and consider
 boundary conditions.
-    
-
-
 """
 
 ####################################################

@@ -480,22 +480,22 @@ class TestBadModels(unittest.TestCase):
         mesh = self.mesh
         bad_model = np.random.rand(mesh.n_cells, 5)
         with self.assertRaises(ValueError):
-            Mf = mesh.get_face_inner_product(bad_model)
+            mesh.get_face_inner_product(bad_model)
         with self.assertRaises(ValueError):
-            Mf = mesh.get_face_inner_product_deriv(bad_model)
+            mesh.get_face_inner_product_deriv(bad_model)
 
     def test_cant_invert(self):
         mesh = self.mesh
         good_model = np.random.rand(mesh.n_cells)
         with self.assertRaises(NotImplementedError):
-            Mf = mesh.get_face_inner_product(good_model, invert_matrix=True)
+            mesh.get_face_inner_product(good_model, invert_matrix=True)
         with self.assertRaises(NotImplementedError):
-            Mf = mesh.get_face_inner_product_deriv(good_model, invert_matrix=True)
+            mesh.get_face_inner_product_deriv(good_model, invert_matrix=True)
         with self.assertRaises(NotImplementedError):
-            Mf = mesh.get_face_inner_product_deriv(good_model, invert_model=True)
+            mesh.get_face_inner_product_deriv(good_model, invert_model=True)
         with self.assertRaises(NotImplementedError):
-            Me = mesh.get_edge_inner_product(good_model, invert_matrix=True)
+            mesh.get_edge_inner_product(good_model, invert_matrix=True)
         with self.assertRaises(NotImplementedError):
-            Me = mesh.get_edge_inner_product_deriv(good_model, invert_matrix=True)
+            mesh.get_edge_inner_product_deriv(good_model, invert_matrix=True)
         with self.assertRaises(NotImplementedError):
-            Me = mesh.get_edge_inner_product_deriv(good_model, invert_model=True)
+            mesh.get_edge_inner_product_deriv(good_model, invert_model=True)

@@ -1,6 +1,4 @@
-"""
-Base class for tensor-product style meshes
-"""
+"""Base class for tensor-product style meshes."""
 
 import numpy as np
 import scipy.sparse as sp
@@ -23,7 +21,7 @@ import warnings
 
 
 class BaseTensorMesh(BaseRegularMesh):
-    """Base class for tensor-product style meshes
+    """Base class for tensor-product style meshes.
 
     This class contains properites and methods that are common to Cartesian
     and cylindrical meshes. That is, meshes whose cell centers, nodes, faces
@@ -116,7 +114,7 @@ class BaseTensorMesh(BaseRegularMesh):
 
     @property
     def h(self):
-        """Cell widths along each axis direction
+        r"""Cell widths along each axis direction.
 
         The widths of the cells along each axis direction are returned
         as a tuple of 1D arrays; e.g. (hx, hy, hz) for a 3D mesh.
@@ -130,19 +128,18 @@ class BaseTensorMesh(BaseRegularMesh):
         (dim) tuple of numpy.ndarray
             Cell widths along each axis direction. This depends on the mesh class:
 
-                - :class:`~discretize.TensorMesh`: cell widths along the *x* , [*y* and *z* ] directions
-                - :class:`~discretize.CylindricalMesh`: cell widths along the *r*, :math:`\\phi` and *z* directions
-                - :class:`~discretize.TreeMesh`: cells widths of the *underlying tensor mesh* along the *x* , *y* [and *z* ] directions
-
+            - :class:`~discretize.TensorMesh`: cell widths along the *x* , [*y* and *z* ] directions
+            - :class:`~discretize.CylindricalMesh`: cell widths along the *r*, :math:`\phi` and *z* directions
+            - :class:`~discretize.TreeMesh`: cells widths of the *underlying tensor mesh* along the *x* , *y* [and *z* ] directions
         """
         return self._h
 
     @BaseRegularMesh.origin.setter
-    def origin(self, value):
+    def origin(self, value):  # NOQA D102
         # ensure value is a 1D array at all times
         try:
             value = list(value)
-        except:
+        except TypeError:
             raise TypeError("origin must be iterable")
         if len(value) != self.dim:
             raise ValueError("Dimension mismatch. len(origin) != len(h)")
@@ -156,8 +153,7 @@ class BaseTensorMesh(BaseRegularMesh):
 
     @property
     def nodes_x(self):
-        """
-        Return x-coordinates of the nodes along the x-direction
+        """Return x-coordinates of the nodes along the x-direction.
 
         This property returns a vector containing the x-coordinate values of
         the nodes along the x-direction. For instances of
@@ -178,8 +174,7 @@ class BaseTensorMesh(BaseRegularMesh):
 
     @property
     def nodes_y(self):
-        """
-        Return y-coordinates of the nodes along the y-direction
+        """Return y-coordinates of the nodes along the y-direction.
 
         For 2D and 3D meshes, this property returns a vector
         containing the y-coordinate values of the nodes along the
@@ -201,8 +196,7 @@ class BaseTensorMesh(BaseRegularMesh):
 
     @property
     def nodes_z(self):
-        """
-        Return z-coordinates of the nodes along the z-direction
+        """Return z-coordinates of the nodes along the z-direction.
 
         For 3D meshes, this property returns a 1D vector
         containing the z-coordinate values of the nodes along the
@@ -224,8 +218,7 @@ class BaseTensorMesh(BaseRegularMesh):
 
     @property
     def cell_centers_x(self):
-        """
-        Return x-coordinates of the cell centers along the x-direction
+        """Return x-coordinates of the cell centers along the x-direction.
 
         For 1D, 2D and 3D meshes, this property returns a 1D vector
         containing the x-coordinate values of the cell centers along the
@@ -247,8 +240,7 @@ class BaseTensorMesh(BaseRegularMesh):
 
     @property
     def cell_centers_y(self):
-        """
-        Return y-coordinates of the cell centers along the y-direction
+        """Return y-coordinates of the cell centers along the y-direction.
 
         For 2D and 3D meshes, this property returns a 1D vector
         containing the y-coordinate values of the cell centers along the
@@ -273,8 +265,7 @@ class BaseTensorMesh(BaseRegularMesh):
 
     @property
     def cell_centers_z(self):
-        """
-        Return z-coordinates of the cell centers along the z-direction
+        """Return z-coordinates of the cell centers along the z-direction.
 
         For 3D meshes, this property returns a 1D vector
         containing the z-coordinate values of the cell centers along the
@@ -298,15 +289,18 @@ class BaseTensorMesh(BaseRegularMesh):
         return (nodes[1:] + nodes[:-1]) / 2
 
     @property
-    def cell_centers(self):
+    def cell_centers(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         return self._getTensorGrid("cell_centers")
 
     @property
-    def nodes(self):
+    def nodes(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         return self._getTensorGrid("nodes")
 
     @property
-    def boundary_nodes(self):
+    def boundary_nodes(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         dim = self.dim
         if dim == 1:
             return self.nodes_x[[0, -1]]
@@ -361,7 +355,7 @@ class BaseTensorMesh(BaseRegularMesh):
 
     @property
     def faces_x(self):
-        """Gridded x-face locations
+        """Gridded x-face locations.
 
         This property returns a numpy array of shape (n_faces_x, dim)
         containing gridded locations for all x-faces in the
@@ -379,7 +373,7 @@ class BaseTensorMesh(BaseRegularMesh):
 
     @property
     def faces_y(self):
-        """Gridded y-face locations
+        """Gridded y-face locations.
 
         This property returns a numpy array of shape (n_faces_y, dim)
         containing gridded locations for all y-faces in the
@@ -397,7 +391,7 @@ class BaseTensorMesh(BaseRegularMesh):
 
     @property
     def faces_z(self):
-        """Gridded z-face locations
+        """Gridded z-face locations.
 
         This property returns a numpy array of shape (n_faces_z, dim)
         containing gridded locations for all z-faces in the
@@ -414,7 +408,8 @@ class BaseTensorMesh(BaseRegularMesh):
         return self._getTensorGrid("faces_z")
 
     @property
-    def faces(self):
+    def faces(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if self.faces_x is not None:
             faces = self.faces_x
         else:
@@ -426,7 +421,8 @@ class BaseTensorMesh(BaseRegularMesh):
         return faces
 
     @property
-    def boundary_faces(self):
+    def boundary_faces(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         dim = self.dim
         if dim == 1:
             return self.nodes_x[[0, -1]]
@@ -441,7 +437,8 @@ class BaseTensorMesh(BaseRegularMesh):
             return np.r_[fx, fy, fz]
 
     @property
-    def boundary_face_outward_normals(self):
+    def boundary_face_outward_normals(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         dim = self.dim
         if dim == 1:
             return np.array([-1, 1])
@@ -469,7 +466,7 @@ class BaseTensorMesh(BaseRegularMesh):
 
     @property
     def edges_x(self):
-        """Gridded x-edge locations
+        """Gridded x-edge locations.
 
         This property returns a numpy array of shape (n_edges_x, dim)
         containing gridded locations for all x-edges in the mesh.
@@ -487,7 +484,7 @@ class BaseTensorMesh(BaseRegularMesh):
 
     @property
     def edges_y(self):
-        """Gridded y-edge locations
+        """Gridded y-edge locations.
 
         This property returns a numpy array of shape (n_edges_y, dim)
         containing gridded locations for all y-edges in the mesh.
@@ -505,7 +502,7 @@ class BaseTensorMesh(BaseRegularMesh):
 
     @property
     def edges_z(self):
-        """Gridded z-edge locations
+        """Gridded z-edge locations.
 
         This property returns a numpy array of shape (n_edges_z, dim)
         containing gridded locations for all z-edges in the mesh.
@@ -522,7 +519,8 @@ class BaseTensorMesh(BaseRegularMesh):
         return self._getTensorGrid("edges_z")
 
     @property
-    def edges(self):
+    def edges(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if self.edges_x is not None:
             edges = self.edges_x
         else:
@@ -535,7 +533,7 @@ class BaseTensorMesh(BaseRegularMesh):
 
     @property
     def boundary_edges(self):
-        """Boundary edge locations
+        """Boundary edge locations.
 
         This property returns the locations of the edges on
         the boundary of the mesh as a numpy array. The shape
@@ -566,7 +564,7 @@ class BaseTensorMesh(BaseRegularMesh):
         return getattr(self, "_" + key)
 
     def get_tensor(self, key):
-        """Returns the base 1D arrays for a specified mesh tensor.
+        """Return the base 1D arrays for a specified mesh tensor.
 
         The cell-centers, nodes, x-faces, z-edges, etc... of a tensor mesh
         can be constructed by applying tensor products to the set of base
@@ -637,7 +635,7 @@ class BaseTensorMesh(BaseRegularMesh):
     # --------------- Methods ---------------------
 
     def is_inside(self, pts, location_type="nodes"):
-        """Determine which points lie within the mesh
+        """Determine which points lie within the mesh.
 
         For an arbitrary set of points, **is_indside** returns a
         boolean array identifying which points lie within the mesh.
@@ -680,7 +678,7 @@ class BaseTensorMesh(BaseRegularMesh):
     def _getInterpolationMat(
         self, loc, location_type="cell_centers", zeros_outside=False
     ):
-        """Produces interpolation matrix
+        """Produce an interpolation matrix.
 
         Parameters
         ----------
@@ -710,7 +708,6 @@ class BaseTensorMesh(BaseRegularMesh):
             M, the interpolation matrix
 
         """
-
         loc = as_array_n_by_dim(loc, self.dim)
 
         if not zeros_outside:
@@ -769,16 +766,18 @@ class BaseTensorMesh(BaseRegularMesh):
 
         return Q.tocsr()
 
-    def get_interpolation_matrix(
-        self, loc, location_type="cell_centers", zeros_outside=False,
+    def get_interpolation_matrix(  # NOQA D102
+        self, loc, location_type="cell_centers", zeros_outside=False
     ):
+        # Documentation inherited from discretize.base.BaseMesh
         return self._getInterpolationMat(loc, location_type, zeros_outside)
 
     def _fastInnerProduct(
         self, projection_type, model=None, invert_model=False, invert_matrix=False
     ):
         """Fast version of getFaceInnerProduct.
-            This does not handle the case of a full tensor property.
+
+        This does not handle the case of a full tensor property.
 
         Parameters
         ----------
@@ -855,31 +854,24 @@ class BaseTensorMesh(BaseRegularMesh):
     def _fastInnerProductDeriv(
         self, projection_type, model, invert_model=False, invert_matrix=False
     ):
-        """
+        """Faster function for inner product derivatives on tensor meshes.
 
         Parameters
         ----------
-
         projection_type : str
             'E' or 'F'
-
         tensorType : TensorType
             type of the tensor
-
         invert_model : bool
             inverts the material property
-
         invert_matrix : bool
             inverts the matrix
-
 
         Returns
         -------
         function
             dMdmu, the derivative of the inner product matrix
-
         """
-
         projection_type = projection_type[0].upper()
         if projection_type not in ["F", "E"]:
             raise ValueError("projection_type must be 'F' for faces or 'E' for edges")

@@ -7,20 +7,16 @@ MESHTYPES = ["uniformTensorMesh"]
 
 
 def getxBCyBC_CC(mesh, alpha, beta, gamma):
-    """
+    r"""
     This is a subfunction generating mixed-boundary condition:
 
     .. math::
-
-        \nabla \cdot \vec{j} = -\nabla \cdot \vec{j}_s = q
-
-        \rho \vec{j} = -\nabla \phi \phi
-
+        \nabla \cdot \vec{j} = -\nabla \cdot \vec{j}_s = q \\
+        \rho \vec{j} = -\nabla \phi \phi \\
         \alpha \phi + \beta \frac{\partial \phi}{\partial r} = \gamma \ at \ r
-        = \partial \Omega
-
-        xBC = f_1(\alpha, \beta, \gamma)
-        yBC = f(\alpha, \beta, \gamma)
+        = \partial \Omega \\
+        xBC = f_1(\alpha, \beta, \gamma)\\
+        yBC = f(\alpha, \beta, \gamma)\\
 
     Computes xBC and yBC for cell-centered discretizations
     """
@@ -28,9 +24,7 @@ def getxBCyBC_CC(mesh, alpha, beta, gamma):
     if mesh.dim == 1:  # 1D
         if len(alpha) != 2 or len(beta) != 2 or len(gamma) != 2:
             raise Exception("Lenght of list, alpha should be 2")
-        fCCxm, fCCxp = mesh.cellBoundaryInd
-        nBC = fCCxm.sum() + fCCxp.sum()
-        h_xm, h_xp = mesh.gridCC[fCCxm], mesh.gridCC[fCCxp]
+        mesh.cellBoundaryInd
 
         alpha_xm, beta_xm, gamma_xm = alpha[0], beta[0], gamma[0]
         alpha_xp, beta_xp, gamma_xp = alpha[1], beta[1], gamma[1]
@@ -56,7 +50,6 @@ def getxBCyBC_CC(mesh, alpha, beta, gamma):
             raise Exception("Lenght of list, alpha should be 4")
 
         fxm, fxp, fym, fyp = mesh.faceBoundaryInd
-        nBC = fxm.sum() + fxp.sum() + fxm.sum() + fxp.sum()
 
         alpha_xm, beta_xm, gamma_xm = alpha[0], beta[0], gamma[0]
         alpha_xp, beta_xp, gamma_xp = alpha[1], beta[1], gamma[1]
@@ -110,7 +103,6 @@ def getxBCyBC_CC(mesh, alpha, beta, gamma):
             raise Exception("Lenght of list, alpha should be 6")
         # fCCxm,fCCxp,fCCym,fCCyp,fCCzm,fCCzp = mesh.cellBoundaryInd
         fxm, fxp, fym, fyp, fzm, fzp = mesh.faceBoundaryInd
-        nBC = fxm.sum() + fxp.sum() + fxm.sum() + fxp.sum()
 
         alpha_xm, beta_xm, gamma_xm = alpha[0], beta[0], gamma[0]
         alpha_xp, beta_xp, gamma_xp = alpha[1], beta[1], gamma[1]
@@ -204,27 +196,22 @@ class Test1D_InhomogeneousMixed(discretize.tests.OrderTest):
             return (np.pi**2) * np.cos(np.pi * x)
 
         xc_ana = phi_fun(self.M.gridCC)
-        q_ana = q_fun(self.M.gridCC)
-        j_ana = j_fun(self.M.gridFx)
 
         # Get boundary locations
         vecN = self.M.vectorNx
-        vecC = self.M.vectorCCx
 
         # Setup Mixed B.C (alpha, beta, gamma)
         alpha_xm, alpha_xp = 1.0, 1.0
         beta_xm, beta_xp = 1.0, 1.0
         alpha = np.r_[alpha_xm, alpha_xp]
         beta = np.r_[beta_xm, beta_xp]
-        vecN = self.M.vectorNx
-        vecC = self.M.vectorCCx
         phi_bc = phi_fun(vecN[[0, -1]])
         phi_deriv_bc = phi_deriv(vecN[[0, -1]])
         gamma = alpha * phi_bc + beta * phi_deriv_bc
         x_BC, y_BC = getxBCyBC_CC(self.M, alpha, beta, gamma)
 
         sigma = np.ones(self.M.nC)
-        Mfrho = self.M.getFaceInnerProduct(1.0 / sigma)
+        self.M.getFaceInnerProduct(1.0 / sigma)
         MfrhoI = self.M.getFaceInnerProduct(1.0 / sigma, invMat=True)
         V = discretize.utils.sdiag(self.M.vol)
         Div = V * self.M.faceDiv
@@ -280,10 +267,6 @@ class Test2D_InhomogeneousMixed(discretize.tests.OrderTest):
             return +2 * (np.pi**2) * phi_fun(x)
 
         xc_ana = phi_fun(self.M.gridCC)
-        q_ana = q_fun(self.M.gridCC)
-        jX_ana = j_funX(self.M.gridFx)
-        jY_ana = j_funY(self.M.gridFy)
-        j_ana = np.r_[jX_ana, jY_ana]
 
         # Get boundary locations
         fxm, fxp, fym, fyp = self.M.faceBoundaryInd
@@ -325,7 +308,7 @@ class Test2D_InhomogeneousMixed(discretize.tests.OrderTest):
         x_BC, y_BC = getxBCyBC_CC(self.M, alpha, beta, gamma)
 
         sigma = np.ones(self.M.nC)
-        Mfrho = self.M.getFaceInnerProduct(1.0 / sigma)
+        self.M.getFaceInnerProduct(1.0 / sigma)
         MfrhoI = self.M.getFaceInnerProduct(1.0 / sigma, invMat=True)
         V = discretize.utils.sdiag(self.M.vol)
         Div = V * self.M.faceDiv
@@ -404,10 +387,6 @@ class Test3D_InhomogeneousMixed(discretize.tests.OrderTest):
             return 3 * (np.pi**2) * phi_fun(x)
 
         xc_ana = phi_fun(self.M.gridCC)
-        q_ana = q_fun(self.M.gridCC)
-        jX_ana = j_funX(self.M.gridFx)
-        jY_ana = j_funY(self.M.gridFy)
-        j_ana = np.r_[jX_ana, jY_ana, jY_ana]
 
         # Get boundary locations
         fxm, fxp, fym, fyp, fzm, fzp = self.M.faceBoundaryInd
@@ -460,7 +439,7 @@ class Test3D_InhomogeneousMixed(discretize.tests.OrderTest):
         x_BC, y_BC = getxBCyBC_CC(self.M, alpha, beta, gamma)
 
         sigma = np.ones(self.M.nC)
-        Mfrho = self.M.getFaceInnerProduct(1.0 / sigma)
+        self.M.getFaceInnerProduct(1.0 / sigma)
         MfrhoI = self.M.getFaceInnerProduct(1.0 / sigma, invMat=True)
         V = discretize.utils.sdiag(self.M.vol)
         Div = V * self.M.faceDiv

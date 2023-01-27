@@ -1,4 +1,4 @@
-"""
+r"""
 Advection-Diffusion Equation
 ============================
 
@@ -13,29 +13,29 @@ equation. The goal of this tutorial is to demonstrate:
 Derivation
 ----------
 
-If we assume the fluid is incompressible (:math:`\\nabla \\cdot \\mathbf{u} = 0`),
+If we assume the fluid is incompressible (:math:`\nabla \cdot \mathbf{u} = 0`),
 the advection-diffusion equation with Neumann boundary conditions is given by:
 
 .. math::
-    p_t = \\nabla \\cdot \\alpha \\nabla p
-    - \\mathbf{u} \\cdot \\nabla p + s \n
-    \\textrm{s.t.} \;\;\; \\frac{\\partial p}{\\partial n} \Bigg |_{\partial \Omega} = 0
+    p_t = \nabla \cdot \alpha \nabla p
+    - \mathbf{u} \cdot \nabla p + s \\
+    \textrm{s.t.} \;\;\; \frac{\partial p}{\partial n} \Bigg |_{\partial \Omega} = 0
 
-where :math:`p` is the unknown variable, :math:`\\alpha` defines the
-diffusivity within the domain, :math:`\\mathbf{u}` is the velocity field, and
+where :math:`p` is the unknown variable, :math:`\alpha` defines the
+diffusivity within the domain, :math:`\mathbf{u}` is the velocity field, and
 :math:`s` is the source term. We will consider the case where there is a single
 point source within our domain. Thus:
 
 .. math::
-    s = s_0 \\delta ( \\mathbf{r} )
+    s = s_0 \delta ( \mathbf{r} )
 
 where :math:`s_0` is a constant. To solve this problem numerically, we
 re-express the advection-diffusion equation as a set of first order PDEs:
 
 .. math::
-    \\; \\; p_t = \\nabla \\cdot \\mathbf{j} - \\mathbf{u} \\cdot \\mathbf{w} + s \\;\\;\\; (1)\n
-    \\; \\; \\mathbf{w} = \\nabla p \\;\\;\\; (2) \n
-    \\; \\; \\alpha^{-1} \\mathbf{j} = \\mathbf{w} \\;\\;\\; (3)
+    \; \; p_t = \nabla \cdot \mathbf{j} - \mathbf{u} \cdot \mathbf{w} + s \;\;\; (1)\\
+    \; \; \mathbf{w} = \nabla p \;\;\; (2) \\
+    \; \; \alpha^{-1} \mathbf{j} = \mathbf{w} \;\;\; (3)
 
 
 We then apply the weak formulation; that is, we
@@ -43,114 +43,114 @@ take the inner product of each equation with an appropriate test function.
 
 **Expression 1:**
 
-Let :math:`\\psi` be a scalar test function. By taking the inner product with
+Let :math:`\psi` be a scalar test function. By taking the inner product with
 expression (1) we obtain:
 
 .. math::
-    \int_\\Omega \\psi \\, p_t \\, dv =
-    \int_\\Omega \\psi \\, (\\nabla \\cdot \\mathbf{j}) \\, dv
-    - \int_\\Omega \\psi \\, \\big ( \mathbf{u} \\cdot \\mathbf{w} \\big ) \\, dv
-    + s_0 \int_\\Omega \\psi \\, \\delta (\\mathbf{r}) \\, dv
+    \int_\Omega \psi \, p_t \, dv =
+    \int_\Omega \psi \, (\nabla \cdot \mathbf{j}) \, dv
+    - \int_\Omega \psi \, \big ( \mathbf{u} \cdot \mathbf{w} \big ) \, dv
+    + s_0 \int_\Omega \psi \, \delta (\mathbf{r}) \, dv
 
 The source term is a volume integral containing the Dirac delta function, thus:
 
 .. math::
-    s_0 \int_\\Omega \\psi \\, \\delta (\\mathbf{r}) \\, dv \\approx \\mathbf{\\psi^T \\, q}
+    s_0 \int_\Omega \psi \, \delta (\mathbf{r}) \, dv \approx \mathbf{\psi^T \, q}
 
 where :math:`q=s_0` for the cell containing the point source and zero everywhere
 else. By evaluating the inner products according to the finite volume approach
 we obtain:
 
 .. math::
-    \\mathbf{\\psi^T M_c p_t} = \\mathbf{\\psi^T M_c D \\, j}
-    - \\mathbf{\\psi^T M_c A_{fc}} \\, \\textrm{diag} ( \\mathbf{u} ) \\mathbf{w}
-    + \\mathbf{\\psi^T q}
+    \mathbf{\psi^T M_c p_t} = \mathbf{\psi^T M_c D \, j}
+    - \mathbf{\psi^T M_c A_{fc}} \, \textrm{diag} ( \mathbf{u} ) \mathbf{w}
+    + \mathbf{\psi^T q}
 
-where :math:`\\mathbf{\\psi}`, :math:`\\mathbf{p}` and :math:`\\mathbf{p_t}`
-live at cell centers and :math:`\\mathbf{j}`, :math:`\\mathbf{u}` and
-:math:`\\mathbf{w}` live on cell faces. :math:`\\mathbf{D}`
-is a discrete divergence operator. :math:`\\mathbf{M_c}` is the cell center
-inner product matrix. :math:`\\mathbf{A_{fc}}` takes the dot product of
-:math:`\\mathbf{u}` and :math:`\\mathbf{w}`, projects it to cell centers and sums
+where :math:`\mathbf{\psi}`, :math:`\mathbf{p}` and :math:`\mathbf{p_t}`
+live at cell centers and :math:`\mathbf{j}`, :math:`\mathbf{u}` and
+:math:`\mathbf{w}` live on cell faces. :math:`\mathbf{D}`
+is a discrete divergence operator. :math:`\mathbf{M_c}` is the cell center
+inner product matrix. :math:`\mathbf{A_{fc}}` takes the dot product of
+:math:`\mathbf{u}` and :math:`\mathbf{w}`, projects it to cell centers and sums
 the contributions by each Cartesian component.
 
 **Expression 2:**
 
-Let :math:`\\mathbf{f}` be a vector test function. By taking the inner product
+Let :math:`\mathbf{f}` be a vector test function. By taking the inner product
 with expression (2) we obtain:
 
 .. math::
-    \\int_\\Omega \\mathbf{f \\cdot w} \\, dv =
-    \\int_\\Omega \\mathbf{f \\cdot \\nabla}p \\, dv
+    \int_\Omega \mathbf{f \cdot w} \, dv =
+    \int_\Omega \mathbf{f \cdot \nabla}p \, dv
 
 If we use the identity
-:math:`\\phi \\nabla \\cdot \\mathbf{a} = \\nabla \\cdot (\\phi \\mathbf{a}) - \\mathbf{a} \\cdot (\\nabla \\phi )`
+:math:`\phi \nabla \cdot \mathbf{a} = \nabla \cdot (\phi \mathbf{a}) - \mathbf{a} \cdot (\nabla \phi )`
 and apply the divergence theorem we obtain:
 
 .. math::
-    \\int_\\Omega \\mathbf{f \\cdot w} \\, dv =
-    \\int_{\\partial \\Omega} \\mathbf{n \\, \\cdot} \\, p \\mathbf{f} \\, da
-    - \\int_{\\Omega} p \\cdot \\nabla \\mathbf{f} \\, dv
+    \int_\Omega \mathbf{f \cdot w} \, dv =
+    \int_{\partial \Omega} \mathbf{n \, \cdot} \, p \mathbf{f} \, da
+    - \int_{\Omega} p \cdot \nabla \mathbf{f} \, dv
 
 If we assume that :math:`f=0` on the boundary, we can eliminate the surface
 integral. By evaluating the inner products in the weak formulation according
 to the finite volume approach we obtain:
 
 .. math::
-    \\mathbf{f^T M_f w} = - \\mathbf{f^T D^T M_c}p
+    \mathbf{f^T M_f w} = - \mathbf{f^T D^T M_c}p
 
-where :math:`\\mathbf{f}` lives at cell faces and :math:`\\mathbf{M_f}` is
+where :math:`\mathbf{f}` lives at cell faces and :math:`\mathbf{M_f}` is
 the face inner product matrix.
 
 **Expression 3:**
 
-Let :math:`\\mathbf{f}` be a vector test function. By taking the inner product
+Let :math:`\mathbf{f}` be a vector test function. By taking the inner product
 with expression (3) we obtain:
 
 .. math::
-    \\int_\\Omega \\mathbf{f} \\cdot \\alpha^{-1} \\mathbf{j} \\, dv =
-    \\int_\\Omega \\mathbf{f} \\cdot \\mathbf{w} \\, dv
+    \int_\Omega \mathbf{f} \cdot \alpha^{-1} \mathbf{j} \, dv =
+    \int_\Omega \mathbf{f} \cdot \mathbf{w} \, dv
 
 By evaluating the inner products according to the finite volume approach
 we obtain:
 
 .. math::
-    \\mathbf{f^T M_\\alpha \\, j} = \\mathbf{f^T M_f \\, w}
+    \mathbf{f^T M_\alpha \, j} = \mathbf{f^T M_f \, w}
 
-where :math:`\\mathbf{M_\\alpha}` is a face inner product matrix that
+where :math:`\mathbf{M_\alpha}` is a face inner product matrix that
 depends on the inverse of the diffusivity.
 
 **Final Numerical System:**
 
 By combining the set of discrete expressions and letting
-:math:`\\mathbf{s} = \\mathbf{M_c^{-1} q}`, we obtain:
+:math:`\mathbf{s} = \mathbf{M_c^{-1} q}`, we obtain:
 
 .. math::
-    \\mathbf{p_t} =
-    - \\mathbf{D M_\\alpha^{-1} \\, D^T \\, M_c} \\, p
-    + \\mathbf{A_{fc}} \\, \\textrm{diag} ( \\mathbf{u} ) \\mathbf{M_f^{-1} D^T \\, M_c} p
-    + \\mathbf{s}
+    \mathbf{p_t} =
+    - \mathbf{D M_\alpha^{-1} \, D^T \, M_c} \, p
+    + \mathbf{A_{fc}} \, \textrm{diag} ( \mathbf{u} ) \mathbf{M_f^{-1} D^T \, M_c} p
+    + \mathbf{s}
 
 Since the Neumann boundary condition is being used for the variable :math:`p`,
 the transpose of the divergence operator is the negative of the gradient
-operator with Neumann boundary conditions; e.g. :math:`\\mathbf{D^T = -G}`. Thus:
+operator with Neumann boundary conditions; e.g. :math:`\mathbf{D^T = -G}`. Thus:
 
 .. math::
-    \\mathbf{p_t} = - \\mathbf{M} \\mathbf{p} + \\mathbf{s}
+    \mathbf{p_t} = - \mathbf{M} \mathbf{p} + \mathbf{s}
 
 where
 
 .. math::
-    \\mathbf{M} = - \\mathbf{D M_\\alpha^{-1} \\, G \\, M_c} \\, p
-    + \\mathbf{A_{fc}} \\, \\textrm{diag} ( \\mathbf{u} ) \\mathbf{M_f^{-1} G \\, M_c} p
+    \mathbf{M} = - \mathbf{D M_\alpha^{-1} \, G \, M_c} \, p
+    + \mathbf{A_{fc}} \, \textrm{diag} ( \mathbf{u} ) \mathbf{M_f^{-1} G \, M_c} p
 
 For the example, we will discretize in time using backward Euler. This results
 in the following system which must be solve at every time step :math:`k`.
-Where :math:`\\Delta t` is the step size:
+Where :math:`\Delta t` is the step size:
 
 .. math::
-    \\big [ \\mathbf{I} + \\Delta t \\, \\mathbf{M} \\big ] \\mathbf{p}^{k+1} =
-    \\mathbf{p}^k + \\Delta t \\, \\mathbf{s}
+    \big [ \mathbf{I} + \Delta t \, \mathbf{M} \big ] \mathbf{p}^{k+1} =
+    \mathbf{p}^k + \Delta t \, \mathbf{s}
 
 
 """

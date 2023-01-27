@@ -1,3 +1,4 @@
+"""Module for the base ``discretize`` mesh."""
 import numpy as np
 import os
 import json
@@ -33,13 +34,14 @@ class BaseMesh:
     }
 
     def __getattr__(self, name):
+        """Reimplement get attribute to allow for aliases."""
         if name == "_aliases":
             raise AttributeError
         name = self._aliases.get(name, name)
         return super().__getattribute__(name)
 
     def to_dict(self):
-        """Representation of the mesh's attributes as a dictionary
+        """Represent the mesh's attributes as a dictionary.
 
         The dictionary representation of the mesh class necessary to reconstruct the
         object. This is useful for serialization. All of the attributes returned in this
@@ -73,7 +75,7 @@ class BaseMesh:
         return out
 
     def equals(self, other_mesh):
-        """Compares current mesh with another mesh to determine if they are identical
+        """Compare the current mesh with another mesh to determine if they are identical.
 
         This method compares all the properties of the current mesh to *other_mesh*
         and determines if both meshes are identical. If so, this function returns
@@ -119,14 +121,19 @@ class BaseMesh:
         return is_equal
 
     def serialize(self):
-        """
+        """Represent the mesh's attributes as a dictionary.
+
         An alias for :py:meth:`~.BaseMesh.to_dict`
+
+        See Also
+        --------
+        to_dict
         """
         return self.to_dict()
 
     @classmethod
     def deserialize(cls, items, **kwargs):
-        """Create this mesh from a dictionary of attributes
+        """Create this mesh from a dictionary of attributes.
 
         Parameters
         ----------
@@ -141,7 +148,7 @@ class BaseMesh:
         return cls(**items)
 
     def save(self, file_name="mesh.json", verbose=False):
-        """Save the mesh to json
+        """Save the mesh to json.
 
         This method is used to save a mesh by writing
         its properties to a .json file. To load a mesh you have
@@ -154,6 +161,14 @@ class BaseMesh:
         verbose : bool, optional
             If *True*, the path of the json file is printed
         """
+
+        if "filename" in kwargs:
+            file_name = kwargs["filename"]
+            warnings.warn(
+                "The filename keyword argument has been deprecated, please use file_name. "
+                "This will be removed in discretize 1.0.0",
+                FutureWarning,
+            )
         f = os.path.abspath(file_name)  # make sure we are working with abs path
         with open(f, "w") as outfile:
             json.dump(self.to_dict(), outfile)
@@ -164,7 +179,7 @@ class BaseMesh:
         return f
 
     def copy(self):
-        """Make a copy of the current mesh
+        """Make a copy of the current mesh.
 
         Returns
         -------
@@ -178,7 +193,7 @@ class BaseMesh:
         return cls(**items)
 
     def validate(self):
-        """Return the validation state of the mesh
+        """Return the validation state of the mesh.
 
         This mesh is valid immediately upon initialization
 
@@ -232,7 +247,7 @@ class BaseMesh:
 
     @property
     def n_nodes(self):
-        """Total number of nodes in the mesh
+        """Total number of nodes in the mesh.
 
         Returns
         -------
@@ -247,7 +262,7 @@ class BaseMesh:
 
     @property
     def n_edges(self):
-        """Total number of edges in the mesh
+        """Total number of edges in the mesh.
 
         Returns
         -------
@@ -262,7 +277,7 @@ class BaseMesh:
 
     @property
     def n_faces(self):
-        """Total number of faces in the mesh
+        """Total number of faces in the mesh.
 
         Returns
         -------
@@ -278,7 +293,7 @@ class BaseMesh:
     # grid locations
     @property
     def cell_centers(self):
-        """Return gridded cell center locations
+        """Return gridded cell center locations.
 
         This property returns a numpy array of shape (n_cells, dim)
         containing gridded cell center locations for all cells in the
@@ -318,7 +333,7 @@ class BaseMesh:
 
     @property
     def nodes(self):
-        """Return gridded node locations
+        """Return gridded node locations.
 
         This property returns a numpy array of shape (n_nodes, dim)
         containing gridded node locations for all nodes in the
@@ -377,7 +392,7 @@ class BaseMesh:
 
     @property
     def boundary_nodes(self):
-        """Boundary node locations
+        """Boundary node locations.
 
         This property returns the locations of the nodes on
         the boundary of the mesh as a numpy array. The shape
@@ -393,7 +408,7 @@ class BaseMesh:
 
     @property
     def faces(self):
-        """Gridded face locations
+        """Gridded face locations.
 
         This property returns a numpy array of shape (n_faces, dim)
         containing gridded locations for all faces in the mesh.
@@ -455,7 +470,7 @@ class BaseMesh:
 
     @property
     def boundary_faces(self):
-        """Boundary face locations
+        """Boundary face locations.
 
         This property returns the locations of the faces on
         the boundary of the mesh as a numpy array. The shape
@@ -471,7 +486,7 @@ class BaseMesh:
 
     @property
     def edges(self):
-        """Gridded edge locations
+        """Gridded edge locations.
 
         This property returns a numpy array of shape (n_edges, dim)
         containing gridded locations for all edges in the mesh.
@@ -533,7 +548,7 @@ class BaseMesh:
 
     @property
     def boundary_edges(self):
-        """Boundary edge locations
+        """Boundary edge locations.
 
         This property returns the locations of the edges on
         the boundary of the mesh as a numpy array. The shape
@@ -551,7 +566,7 @@ class BaseMesh:
 
     @property
     def face_normals(self):
-        """Unit normal vectors for all mesh faces
+        """Unit normal vectors for all mesh faces.
 
         The unit normal vector defines the direction that
         is perpendicular to a surface. Calling
@@ -570,7 +585,7 @@ class BaseMesh:
 
     @property
     def edge_tangents(self):
-        """Unit tangent vectors for all mesh edges
+        """Unit tangent vectors for all mesh edges.
 
         For a given edge, the unit tangent vector defines the
         path direction one would take if traveling along that edge.
@@ -589,7 +604,7 @@ class BaseMesh:
 
     @property
     def boundary_face_outward_normals(self):
-        """Outward normal vectors of boundary faces
+        """Outward normal vectors of boundary faces.
 
         This property returns the outward normal vectors of faces
         the boundary of the mesh as a numpy array. The shape
@@ -668,7 +683,7 @@ class BaseMesh:
     # Mesh properties
     @property
     def cell_volumes(self):
-        """Return cell volumes
+        """Return cell volumes.
 
         Calling this property will compute and return a 1D array
         containing the volumes of mesh cells.
@@ -686,7 +701,7 @@ class BaseMesh:
 
     @property
     def face_areas(self):
-        """Returns the areas of all faces in the mesh
+        """Return areas of all faces in the mesh.
 
         Calling this property will compute and return the areas of all
         faces as a 1D numpy array. For structured meshes, the returned quantity is
@@ -706,7 +721,7 @@ class BaseMesh:
 
     @property
     def edge_lengths(self):
-        """Returns the lengths of all edges in the mesh
+        """Return lengths of all edges in the mesh.
 
         Calling this property will compute and return the lengths of all
         edges in the mesh. For structured meshes, the returned quantity is ordered
@@ -726,12 +741,12 @@ class BaseMesh:
     # Differential Operators
     @property
     def face_divergence(self):
-        """Face divergence operator (faces to cell-centres)
+        r"""Face divergence operator (faces to cell-centres).
 
         This property constructs the 2nd order numerical divergence operator
         that maps from faces to cell centers. The operator is a sparse matrix
-        :math:`\\mathbf{D_f}` that can be applied as a matrix-vector product to
-        a discrete vector :math:`\\mathbf{u}` that lives on mesh faces; i.e.::
+        :math:`\mathbf{D_f}` that can be applied as a matrix-vector product to
+        a discrete vector :math:`\mathbf{u}` that lives on mesh faces; i.e.::
 
             div_u = Df @ u
 
@@ -748,27 +763,27 @@ class BaseMesh:
         In continuous space, the divergence operator is defined as:
 
         .. math::
-            \\phi = \\nabla \\cdot \\vec{u} = \\frac{\\partial u_x}{\\partial x}
-            + \\frac{\\partial u_y}{\\partial y} + \\frac{\\partial u_z}{\\partial z}
+            \phi = \nabla \cdot \vec{u} = \frac{\partial u_x}{\partial x}
+            + \frac{\partial u_y}{\partial y} + \frac{\partial u_z}{\partial z}
 
-        Where :math:`\\mathbf{u}` is the discrete representation of the continuous variable
-        :math:`\\vec{u}` on cell faces and :math:`\\boldsymbol{\\phi}` is the discrete
-        representation of :math:`\\phi` at cell centers, **face_divergence** constructs a
-        discrete linear operator :math:`\\mathbf{D_f}` such that:
+        Where :math:`\mathbf{u}` is the discrete representation of the continuous variable
+        :math:`\vec{u}` on cell faces and :math:`\boldsymbol{\phi}` is the discrete
+        representation of :math:`\phi` at cell centers, **face_divergence** constructs a
+        discrete linear operator :math:`\mathbf{D_f}` such that:
 
         .. math::
-            \\boldsymbol{\\phi} = \\mathbf{D_f \\, u}
+            \boldsymbol{\phi} = \mathbf{D_f \, u}
 
         For each cell, the computation of the face divergence can be expressed
         according to the integral form below. For cell :math:`i` whose corresponding
         faces are indexed as a subset :math:`K` from the set of all mesh faces:
 
         .. math::
-            \\phi_i = \\frac{1}{V_i} \\sum_{k \\in K} A_k \\, \\vec{u}_k \\cdot \\hat{n}_k
+            \phi_i = \frac{1}{V_i} \sum_{k \in K} A_k \, \vec{u}_k \cdot \hat{n}_k
 
         where :math:`V_i` is the volume of cell :math:`i`, :math:`A_k` is
-        the surface area of face *k*, :math:`\\vec{u}_k` is the value of
-        :math:`\\vec{u}` on face *k*, and :math:`\\hat{n}_k`
+        the surface area of face *k*, :math:`\vec{u}_k` is the value of
+        :math:`\vec{u}` on face *k*, and :math:`\hat{n}_k`
         represents the outward normal vector of face *k* for cell *i*.
 
 
@@ -828,8 +843,8 @@ class BaseMesh:
         The discrete divergence operator is a sparse matrix that maps
         from faces to cell centers. To demonstrate this, we construct
         a small 2D mesh. We then show the ordering of the elements in
-        the original discrete quantity :math:`\\mathbf{u}` and its
-        discrete divergence :math:`\\boldsymbol{\\phi}` as well as a
+        the original discrete quantity :math:`\mathbf{u}` and its
+        discrete divergence :math:`\boldsymbol{\phi}` as well as a
         spy plot.
 
         .. collapse:: Expand to show scripting for plot
@@ -864,7 +879,7 @@ class BaseMesh:
             >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
             >>> ax1.set_title("Mapping of Face Divergence", fontsize=14, pad=15)
             >>> ax1.legend(
-            ...     ['Mesh', '$\\mathbf{\\phi}$ (centers)', '$\\mathbf{u}$ (faces)'],
+            ...     ['Mesh', r'$\mathbf{\phi}$ (centers)', r'$\mathbf{u}$ (faces)'],
             ...     loc='upper right', fontsize=14
             ... )
             >>> ax2 = fig.add_subplot(212)
@@ -878,12 +893,12 @@ class BaseMesh:
 
     @property
     def nodal_gradient(self):
-        """Nodal gradient operator (nodes to edges)
+        r"""Nodal gradient operator (nodes to edges).
 
         This property constructs the 2nd order numerical gradient operator
         that maps from nodes to edges. The operator is a sparse matrix
-        :math:`\\mathbf{G_n}` that can be applied as a matrix-vector product
-        to a discrete scalar quantity :math:`\\boldsymbol{\\phi}` that
+        :math:`\mathbf{G_n}` that can be applied as a matrix-vector product
+        to a discrete scalar quantity :math:`\boldsymbol{\phi}` that
         lives on the nodes, i.e.::
 
             grad_phi = Gn @ phi
@@ -900,27 +915,27 @@ class BaseMesh:
         In continuous space, the gradient operator is defined as:
 
         .. math::
-            \\vec{u} = \\nabla \\phi = \\frac{\\partial \\phi}{\\partial x}\\hat{x}
-            + \\frac{\\partial \\phi}{\\partial y}\\hat{y}
-            + \\frac{\\partial \\phi}{\\partial z}\\hat{z}
+            \vec{u} = \nabla \phi = \frac{\partial \phi}{\partial x}\hat{x}
+            + \frac{\partial \phi}{\partial y}\hat{y}
+            + \frac{\partial \phi}{\partial z}\hat{z}
 
-        Where :math:`\\boldsymbol{\\phi}` is the discrete representation of the continuous variable
-        :math:`\\phi` on the nodes and :math:`\\mathbf{u}` is the discrete
-        representation of :math:`\\vec{u}` on the edges, **nodal_gradient** constructs a
-        discrete linear operator :math:`\\mathbf{G_n}` such that:
+        Where :math:`\boldsymbol{\phi}` is the discrete representation of the continuous variable
+        :math:`\phi` on the nodes and :math:`\mathbf{u}` is the discrete
+        representation of :math:`\vec{u}` on the edges, **nodal_gradient** constructs a
+        discrete linear operator :math:`\mathbf{G_n}` such that:
 
         .. math::
-            \\mathbf{u} = \\mathbf{G_n} \\, \\boldsymbol{\\phi}
+            \mathbf{u} = \mathbf{G_n} \, \boldsymbol{\phi}
 
-        The Cartesian components of :math:`\\vec{u}` are defined on their corresponding
+        The Cartesian components of :math:`\vec{u}` are defined on their corresponding
         edges (x, y or z) as follows; e.g. the x-component of the gradient is defined
         on x-edges. For edge :math:`i` which defines a straight path
         of length :math:`h_i` between adjacent nodes :math:`n_1` and :math:`n_2`:
 
         .. math::
-            u_i = \\frac{\\phi_{n_2} - \\phi_{n_1}}{h_i}
+            u_i = \frac{\phi_{n_2} - \phi_{n_1}}{h_i}
 
-        Note that :math:`u_i \\in \\mathbf{u}` may correspond to a value on an
+        Note that :math:`u_i \in \mathbf{u}` may correspond to a value on an
         x, y or z edge. See the example below.
 
         Examples
@@ -977,7 +992,7 @@ class BaseMesh:
         The nodal gradient operator is a sparse matrix that maps
         from nodes to edges. To demonstrate this, we construct
         a small 2D mesh. We then show the ordering of the elements in
-        the original discrete quantity :math:`\\boldsymbol{\\phi}` and its
+        the original discrete quantity :math:`\boldsymbol{\phi}` and its
         discrete gradient as well as a spy plot.
 
         .. collapse:: Expand to show scripting for plot
@@ -1008,7 +1023,7 @@ class BaseMesh:
             >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
             >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
             >>> ax1.legend(
-            >>>     ['Mesh', '$\\mathbf{\\phi}$ (nodes)', '$\\mathbf{u}$ (edges)'],
+            >>>     ['Mesh', r'$\mathbf{\phi}$ (nodes)', r'$\mathbf{u}$ (edges)'],
             >>>     loc='upper right', fontsize=14
             >>> )
             >>> ax2 = fig.add_subplot(122)
@@ -1022,7 +1037,7 @@ class BaseMesh:
 
     @property
     def edge_curl(self):
-        r"""Edge curl operator (edges to faces)
+        r"""Edge curl operator (edges to faces).
 
         This property constructs the 2nd order numerical curl operator
         that maps from edges to faces. The operator is a sparse matrix
@@ -1054,7 +1069,7 @@ class BaseMesh:
         Where :math:`\mathbf{u}` is the discrete representation of the continuous variable
         :math:`\vec{u}` on cell edges and :math:`\mathbf{w}` is the discrete
         representation of the curl on the faces, **edge_curl** constructs a
-        discrete linear operator :math:`\\mathbf{C_e}` such that:
+        discrete linear operator :math:`\mathbf{C_e}` such that:
 
         .. math::
             \mathbf{w} = \mathbf{C_e \, u}
@@ -1147,7 +1162,7 @@ class BaseMesh:
             >>> for ii, loc in zip(range(len(edge_ind)), edges):
             ...     ax1.text(loc[0]+ds[0], loc[1]+ds[1], loc[2]+ds[2], "{0:d}".format(edge_ind[ii]), color="g")
             >>> ax1.legend(
-            ...     ['Mesh', '$\\mathbf{u}$ (edges)', '$\\mathbf{w}$ (face)'],
+            ...     ['Mesh', r'$\mathbf{u}$ (edges)', r'$\mathbf{w}$ (face)'],
             ...     loc='upper right', fontsize=14
             ... )
 
@@ -1178,7 +1193,7 @@ class BaseMesh:
 
     @property
     def boundary_face_scalar_integral(self):
-        r"""Represents the operation of integrating a scalar function on the boundary
+        r"""Represent the operation of integrating a scalar function on the boundary.
 
         This matrix represents the boundary surface integral of a scalar function
         multiplied with a finite volume test function on the mesh.
@@ -1205,7 +1220,7 @@ class BaseMesh:
 
     @property
     def boundary_edge_vector_integral(self):
-        r"""Represents the operation of integrating a vector function on the boundary
+        r"""Represent the operation of integrating a vector function on the boundary.
 
         This matrix represents the boundary surface integral of a vector function
         multiplied with a finite volume test function on the mesh.
@@ -1241,7 +1256,7 @@ class BaseMesh:
 
     @property
     def boundary_node_vector_integral(self):
-        r"""Represents the operation of integrating a vector function dotted with the boundary normal
+        r"""Represent the operation of integrating a vector function dotted with the boundary normal.
 
         This matrix represents the boundary surface integral of a vector function
         dotted with the boundary normal and multiplied with a scalar finite volume
@@ -1271,12 +1286,12 @@ class BaseMesh:
 
     @property
     def nodal_laplacian(self):
-        """Nodal scalar Laplacian operator (nodes to nodes)
+        r"""Nodal scalar Laplacian operator (nodes to nodes).
 
         This property constructs the 2nd order scalar Laplacian operator
         that maps from nodes to nodes. The operator is a sparse matrix
-        :math:`\\mathbf{L_n}` that can be applied as a matrix-vector product to a
-        discrete scalar quantity :math:`\\boldsymbol{\\phi}` that lives on the
+        :math:`\mathbf{L_n}` that can be applied as a matrix-vector product to a
+        discrete scalar quantity :math:`\boldsymbol{\phi}` that lives on the
         nodes, i.e.::
 
             laplace_phi = Ln @ phi
@@ -1295,19 +1310,18 @@ class BaseMesh:
         In continuous space, the scalar Laplacian operator is defined as:
 
         .. math::
-            \\psi = \\nabla^2 \\phi = \\frac{\\partial^2 \\phi}{\\partial x^2}
-            + \\frac{\\partial^2 \\phi}{\\partial y^2}
-            + \\frac{\\partial^2 \\phi}{\\partial z^2}
+            \psi = \nabla^2 \phi = \frac{\partial^2 \phi}{\partial x^2}
+            + \frac{\partial^2 \phi}{\partial y^2}
+            + \frac{\partial^2 \phi}{\partial z^2}
 
-        Where :math:`\\boldsymbol{\\phi}` is the discrete representation of the continuous variable
-        :math:`\\phi` on the nodes, and :math:`\\boldsymbol{\\psi}` is the discrete representation
+        Where :math:`\boldsymbol{\phi}` is the discrete representation of the continuous variable
+        :math:`\phi` on the nodes, and :math:`\boldsymbol{\psi}` is the discrete representation
         of its scalar Laplacian on the nodes, **nodal_laplacian** constructs a
-        discrete linear operator :math:`\\mathbf{L_n}` such that:
+        discrete linear operator :math:`\mathbf{L_n}` such that:
 
         .. math::
-            \\boldsymbol{\\psi} = \\mathbf{L_n} \\, \\boldsymbol{\\phi}
+            \boldsymbol{\psi} = \mathbf{L_n} \, \boldsymbol{\phi}
         """
-
         # EXAMPLE INACTIVE BECAUSE OPERATOR IS BROKEN
         #
         # Examples
@@ -1376,7 +1390,7 @@ class BaseMesh:
         # >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
         # >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
         # >>> ax1.legend(
-        # ...     ['Mesh', '$\\mathbf{\\phi}$ (nodes)'],
+        # ...     ['Mesh', r'$\mathbf{\phi}$ (nodes)'],
         # ...     loc='upper right', fontsize=14
         # ... )
         # >>> ax2 = fig.add_subplot(212)
@@ -1388,15 +1402,15 @@ class BaseMesh:
 
     @property
     def stencil_cell_gradient(self):
-        """Stencil for cell gradient operator (cell centers to faces)
+        r"""Stencil for cell gradient operator (cell centers to faces).
 
         This property constructs a differencing operator that acts on
         cell centered quantities. The operator takes the difference between
         the values at adjacent cell centers along each axis direction,
         and places the result on the shared face; e.g. differences
         along the x-axis are mapped to x-faces. The operator is a sparse
-        matrix :math:`\\mathbf{G}` that can be applied as a matrix-vector
-        product to a cell centered quantity :math:`\\boldsymbol{\\phi}`, i.e.::
+        matrix :math:`\mathbf{G}` that can be applied as a matrix-vector
+        product to a cell centered quantity :math:`\boldsymbol{\phi}`, i.e.::
 
             diff_phi = G @ phi
 
@@ -1507,7 +1521,7 @@ class BaseMesh:
             >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
             >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
             >>> ax1.legend(
-            ...     ['Mesh', r'$\\mathbf{\\phi}$ (centers)', r'$\\mathbf{G^\\ast \\phi}$ (faces)'],
+            ...     ['Mesh', r'$\mathbf{\phi}$ (centers)', r'$\mathbf{G^\ast \phi}$ (faces)'],
             ...     loc='upper right', fontsize=14
             ... )
 
@@ -1890,7 +1904,7 @@ class BaseMesh:
     def get_face_inner_product_deriv(
         self, model, do_fast=True, invert_model=False, invert_matrix=False, **kwargs
     ):
-        r"""Function handle to multiply vector with derivative of face inner product matrix (or its inverse).
+        r"""Get a function handle to multiply a vector with derivative of face inner product matrix (or its inverse).
 
         Let :math:`\mathbf{M}(\mathbf{m})` be the face inner product matrix
         constructed with a set of physical property parameters :math:`\mathbf{m}`
@@ -2078,7 +2092,7 @@ class BaseMesh:
     def get_edge_inner_product_deriv(
         self, model, do_fast=True, invert_model=False, invert_matrix=False, **kwargs
     ):
-        r"""Function handle to multiply vector with derivative of edge inner product matrix (or its inverse).
+        r"""Get a function handle to multiply vector with derivative of edge inner product matrix (or its inverse).
 
         Let :math:`\mathbf{M}(\mathbf{m})` be the edge inner product matrix
         constructed with a set of physical property parameters :math:`\mathbf{m}`
@@ -2264,7 +2278,7 @@ class BaseMesh:
     # Averaging
     @property
     def average_face_to_cell(self):
-        """Averaging operator from faces to cell centers (scalar quantities).
+        r"""Averaging operator from faces to cell centers (scalar quantities).
 
         This property constructs a 2nd order averaging operator that maps scalar
         quantities from faces to cell centers. This averaging operator is
@@ -2279,15 +2293,15 @@ class BaseMesh:
 
         Notes
         -----
-        Let :math:`\\boldsymbol{\\phi_f}` be a discrete scalar quantity that
+        Let :math:`\boldsymbol{\phi_f}` be a discrete scalar quantity that
         lives on mesh faces. **average_face_to_cell** constructs a discrete
-        linear operator :math:`\\mathbf{A_{fc}}` that projects
-        :math:`\\boldsymbol{\\phi_f}` to cell centers, i.e.:
+        linear operator :math:`\mathbf{A_{fc}}` that projects
+        :math:`\boldsymbol{\phi_f}` to cell centers, i.e.:
 
         .. math::
-            \\boldsymbol{\\phi_c} = \\mathbf{A_{fc}} \\, \\boldsymbol{\\phi_f}
+            \boldsymbol{\phi_c} = \mathbf{A_{fc}} \, \boldsymbol{\phi_f}
 
-        where :math:`\\boldsymbol{\\phi_c}` approximates the value of the scalar
+        where :math:`\boldsymbol{\phi_c}` approximates the value of the scalar
         quantity at cell centers. For each cell, we are simply averaging
         the values defined on its faces. The operation is implemented as a
         matrix vector product, i.e.::
@@ -2354,7 +2368,7 @@ class BaseMesh:
 
     @property
     def average_face_to_cell_vector(self):
-        """Averaging operator from faces to cell centers (vector quantities).
+        r"""Averaging operator from faces to cell centers (vector quantities).
 
         This property constructs the averaging operator that independently maps the
         Cartesian components of vector quantities from faces to cell centers.
@@ -2379,17 +2393,17 @@ class BaseMesh:
 
         Notes
         -----
-        Let :math:`\\mathbf{u_f}` be the discrete representation of a vector
+        Let :math:`\mathbf{u_f}` be the discrete representation of a vector
         quantity whose Cartesian components are defined on their respective faces;
         e.g. :math:`u_x` is defined on x-faces.
         **average_face_to_cell_vector** constructs a discrete linear operator
-        :math:`\\mathbf{A_{fc}}` that projects each Cartesian component of
-        :math:`\\mathbf{u_f}` independently to cell centers, i.e.:
+        :math:`\mathbf{A_{fc}}` that projects each Cartesian component of
+        :math:`\mathbf{u_f}` independently to cell centers, i.e.:
 
         .. math::
-            \\mathbf{u_c} = \\mathbf{A_{fc}} \\, \\mathbf{u_f}
+            \mathbf{u_c} = \mathbf{A_{fc}} \, \mathbf{u_f}
 
-        where :math:`\\mathbf{u_c}` is a discrete vector quantity whose Cartesian
+        where :math:`\mathbf{u_c}` is a discrete vector quantity whose Cartesian
         components defined at the cell centers and organized into a 1D array of
         the form np.r_[ux, uy, uz]. For each cell, and for each Cartesian component,
         we are simply taking the average of the values
@@ -2459,7 +2473,7 @@ class BaseMesh:
 
     @property
     def average_cell_to_face(self):
-        """Averaging operator from cell centers to faces (scalar quantities).
+        r"""Averaging operator from cell centers to faces (scalar quantities).
 
         This property constructs an averaging operator that maps scalar
         quantities from cell centers to face. This averaging operator is
@@ -2474,22 +2488,22 @@ class BaseMesh:
 
         Notes
         -----
-        Let :math:`\\boldsymbol{\\phi_c}` be a discrete scalar quantity that
+        Let :math:`\boldsymbol{\phi_c}` be a discrete scalar quantity that
         lives at cell centers. **average_cell_to_face** constructs a discrete
-        linear operator :math:`\\mathbf{A_{cf}}` that projects
-        :math:`\\boldsymbol{\\phi_c}` to faces, i.e.:
+        linear operator :math:`\mathbf{A_{cf}}` that projects
+        :math:`\boldsymbol{\phi_c}` to faces, i.e.:
 
         .. math::
-            \\boldsymbol{\\phi_f} = \\mathbf{A_{cf}} \\, \\boldsymbol{\\phi_c}
+            \boldsymbol{\phi_f} = \mathbf{A_{cf}} \, \boldsymbol{\phi_c}
 
-        where :math:`\\boldsymbol{\\phi_f}` approximates the value of the scalar
+        where :math:`\boldsymbol{\phi_f}` approximates the value of the scalar
         quantity at the faces. For each face, we are performing a weighted average
         between the values at adjacent cell centers. In 1D, where adjacent cells
         :math:`i` and :math:`i+1` have widths :math:`h_i` and :math:`h_{i+1}`,
-        :math:`\\phi` on face is approximated by:
+        :math:`\phi` on face is approximated by:
 
         .. math::
-            \\phi_{i \\! + \\! 1/2} \\approx \\frac{h_{i+1} \\phi_i + h_i \\phi_{i+1}}{h_i + h_{i+1}}
+            \phi_{i \! + \! 1/2} \approx \frac{h_{i+1} \phi_i + h_i \phi_{i+1}}{h_i + h_{i+1}}
 
         On boundary faces, nearest neighbour is used to extrapolate the value
         from the nearest cell center. Once the operator is construct, the averaging
@@ -2557,7 +2571,7 @@ class BaseMesh:
 
     @property
     def average_cell_vector_to_face(self):
-        """Averaging operator from cell centers to faces (vector quantities).
+        r"""Averaging operator from cell centers to faces (vector quantities).
 
         This property constructs the averaging operator that independently maps the
         Cartesian components of vector quantities from cell centers to faces.
@@ -2582,16 +2596,16 @@ class BaseMesh:
 
         Notes
         -----
-        Let :math:`\\mathbf{u_c}` be the discrete representation of a vector
+        Let :math:`\mathbf{u_c}` be the discrete representation of a vector
         quantity whose Cartesian components are defined separately at cell centers.
         **average_cell_vector_to_face** constructs a discrete linear operator
-        :math:`\\mathbf{A_{cf}}` that projects each Cartesian component of
-        :math:`\\mathbf{u_c}` to the faces, i.e.:
+        :math:`\mathbf{A_{cf}}` that projects each Cartesian component of
+        :math:`\mathbf{u_c}` to the faces, i.e.:
 
         .. math::
-            \\mathbf{u_f} = \\mathbf{A_{cf}} \\, \\mathbf{u_c}
+            \mathbf{u_f} = \mathbf{A_{cf}} \, \mathbf{u_c}
 
-        where :math:`\\mathbf{u_f}` is the discrete vector quantity whose Cartesian
+        where :math:`\mathbf{u_f}` is the discrete vector quantity whose Cartesian
         components are approximated on their respective cell faces; e.g. the x-component is
         approximated on x-faces. For each face (x, y or z), we are simply taking a weighted average
         between the values of the correct Cartesian component at the corresponding cell centers.
@@ -2600,7 +2614,7 @@ class BaseMesh:
         a 2D mesh would be:
 
         .. math::
-            u_x(i \\! + \\! 1/2, j) = \\frac{h_{i+1} u_x (i,j) + h_i u_x(i \\! + \\! 1,j)}{hx_i + hx_{i+1}}
+            u_x(i \! + \! 1/2, j) = \frac{h_{i+1} u_x (i,j) + h_i u_x(i \! + \! 1,j)}{hx_i + hx_{i+1}}
 
         where :math:`h_i` and :math:`h_{i+1}` represent the cell respective cell widths
         in the x-direction. For boundary faces, nearest neighbor is used to extrapolate
@@ -2667,7 +2681,7 @@ class BaseMesh:
 
     @property
     def average_cell_to_edge(self):
-        """Averaging operator from cell centers to edges (scalar quantities).
+        r"""Averaging operator from cell centers to edges (scalar quantities).
 
         This property constructs an averaging operator that maps scalar
         quantities from cell centers to edge. This averaging operator is
@@ -2682,22 +2696,22 @@ class BaseMesh:
 
         Notes
         -----
-        Let :math:`\\boldsymbol{\\phi_c}` be a discrete scalar quantity that
+        Let :math:`\boldsymbol{\phi_c}` be a discrete scalar quantity that
         lives at cell centers. **average_cell_to_edge** constructs a discrete
-        linear operator :math:`\\mathbf{A_{ce}}` that projects
-        :math:`\\boldsymbol{\\phi_c}` to edges, i.e.:
+        linear operator :math:`\mathbf{A_{ce}}` that projects
+        :math:`\boldsymbol{\phi_c}` to edges, i.e.:
 
         .. math::
-            \\boldsymbol{\\phi_e} = \\mathbf{A_{ce}} \\, \\boldsymbol{\\phi_c}
+            \boldsymbol{\phi_e} = \mathbf{A_{ce}} \, \boldsymbol{\phi_c}
 
-        where :math:`\\boldsymbol{\\phi_e}` approximates the value of the scalar
+        where :math:`\boldsymbol{\phi_e}` approximates the value of the scalar
         quantity at the edges. For each edge, we are performing a weighted average
         between the values at adjacent cell centers. In 1D, where adjacent cells
         :math:`i` and :math:`i+1` have widths :math:`h_i` and :math:`h_{i+1}`,
-        :math:`\\phi` on edge (node location in 1D) is approximated by:
+        :math:`\phi` on edge (node location in 1D) is approximated by:
 
         .. math::
-            \\phi_{i \\! + \\! 1/2} \\approx \\frac{h_{i+1} \\phi_i + h_i \\phi_{i+1}}{h_i + h_{i+1}}
+            \phi_{i \! + \! 1/2} \approx \frac{h_{i+1} \phi_i + h_i \phi_{i+1}}{h_i + h_{i+1}}
 
         On boundary edges, nearest neighbour is used to extrapolate the value
         from the nearest cell center. Once the operator is construct, the averaging
@@ -2764,7 +2778,7 @@ class BaseMesh:
 
     @property
     def average_edge_to_cell(self):
-        """Averaging operator from edges to cell centers (scalar quantities).
+        r"""Averaging operator from edges to cell centers (scalar quantities).
 
         This property constructs a 2nd order averaging operator that maps scalar
         quantities from edges to cell centers. This averaging operator is
@@ -2779,15 +2793,15 @@ class BaseMesh:
 
         Notes
         -----
-        Let :math:`\\boldsymbol{\\phi_e}` be a discrete scalar quantity that
+        Let :math:`\boldsymbol{\phi_e}` be a discrete scalar quantity that
         lives on mesh edges. **average_edge_to_cell** constructs a discrete
-        linear operator :math:`\\mathbf{A_{ec}}` that projects
-        :math:`\\boldsymbol{\\phi_e}` to cell centers, i.e.:
+        linear operator :math:`\mathbf{A_{ec}}` that projects
+        :math:`\boldsymbol{\phi_e}` to cell centers, i.e.:
 
         .. math::
-            \\boldsymbol{\\phi_c} = \\mathbf{A_{ec}} \\, \\boldsymbol{\\phi_e}
+            \boldsymbol{\phi_c} = \mathbf{A_{ec}} \, \boldsymbol{\phi_e}
 
-        where :math:`\\boldsymbol{\\phi_c}` approximates the value of the scalar
+        where :math:`\boldsymbol{\phi_c}` approximates the value of the scalar
         quantity at cell centers. For each cell, we are simply averaging
         the values defined on its edges. The operation is implemented as a
         matrix vector product, i.e.::
@@ -2853,7 +2867,7 @@ class BaseMesh:
 
     @property
     def average_edge_to_cell_vector(self):
-        """Averaging operator from edges to cell centers (vector quantities).
+        r"""Averaging operator from edges to cell centers (vector quantities).
 
         This property constructs the averaging operator that independently maps the
         Cartesian components of vector quantities from edges to cell centers.
@@ -2878,17 +2892,17 @@ class BaseMesh:
 
         Notes
         -----
-        Let :math:`\\mathbf{u_e}` be the discrete representation of a vector
+        Let :math:`\mathbf{u_e}` be the discrete representation of a vector
         quantity whose Cartesian components are defined on their respective edges;
         e.g. :math:`u_x` is defined on x-edges.
         **average_edge_to_cell_vector** constructs a discrete linear operator
-        :math:`\\mathbf{A_{ec}}` that projects each Cartesian component of
-        :math:`\\mathbf{u_e}` independently to cell centers, i.e.:
+        :math:`\mathbf{A_{ec}}` that projects each Cartesian component of
+        :math:`\mathbf{u_e}` independently to cell centers, i.e.:
 
         .. math::
-            \\mathbf{u_c} = \\mathbf{A_{ec}} \\, \\mathbf{u_e}
+            \mathbf{u_c} = \mathbf{A_{ec}} \, \mathbf{u_e}
 
-        where :math:`\\mathbf{u_c}` is a discrete vector quantity whose Cartesian
+        where :math:`\mathbf{u_c}` is a discrete vector quantity whose Cartesian
         components defined at the cell centers and organized into a 1D array of
         the form np.r_[ux, uy, uz]. For each cell, and for each Cartesian component,
         we are simply taking the average of the values
@@ -2957,7 +2971,7 @@ class BaseMesh:
 
     @property
     def average_edge_to_face_vector(self):
-        """Averaging operator from edges to faces (vector quantities).
+        r"""Averaging operator from edges to faces (vector quantities).
 
         This property constructs the averaging operator that independently maps the
         Cartesian components of vector quantities from edges to faces.
@@ -2976,17 +2990,17 @@ class BaseMesh:
 
         Notes
         -----
-        Let :math:`\\mathbf{u_e}` be the discrete representation of a vector
+        Let :math:`\mathbf{u_e}` be the discrete representation of a vector
         quantity whose Cartesian components are defined on their respective edges;
         e.g. the x-component is defined on x-edges. **average_edge_to_face_vector**
-        constructs a discrete linear operator :math:`\\mathbf{A_{ef}}` that
-        projects each Cartesian component of :math:`\\mathbf{u_e}` to
+        constructs a discrete linear operator :math:`\mathbf{A_{ef}}` that
+        projects each Cartesian component of :math:`\mathbf{u_e}` to
         its corresponding face, i.e.:
 
         .. math::
-            \\mathbf{u_f} = \\mathbf{A_{ef}} \\, \\mathbf{u_e}
+            \mathbf{u_f} = \mathbf{A_{ef}} \, \mathbf{u_e}
 
-        where :math:`\\mathbf{u_f}` is a discrete vector quantity whose Cartesian
+        where :math:`\mathbf{u_f}` is a discrete vector quantity whose Cartesian
         components are defined on their respective faces; e.g. the x-component is
         defined on x-faces.
 
@@ -3053,7 +3067,7 @@ class BaseMesh:
 
     @property
     def average_node_to_cell(self):
-        """Averaging operator from nodes to cell centers (scalar quantities).
+        r"""Averaging operator from nodes to cell centers (scalar quantities).
 
         This property constructs a 2nd order averaging operator that maps scalar
         quantities from nodes to cell centers. This averaging operator is
@@ -3068,15 +3082,15 @@ class BaseMesh:
 
         Notes
         -----
-        Let :math:`\\boldsymbol{\\phi_n}` be a discrete scalar quantity that
+        Let :math:`\boldsymbol{\phi_n}` be a discrete scalar quantity that
         lives on mesh nodes. **average_node_to_cell** constructs a discrete
-        linear operator :math:`\\mathbf{A_{nc}}` that projects
-        :math:`\\boldsymbol{\\phi_f}` to cell centers, i.e.:
+        linear operator :math:`\mathbf{A_{nc}}` that projects
+        :math:`\boldsymbol{\phi_f}` to cell centers, i.e.:
 
         .. math::
-            \\boldsymbol{\\phi_c} = \\mathbf{A_{nc}} \\, \\boldsymbol{\\phi_n}
+            \boldsymbol{\phi_c} = \mathbf{A_{nc}} \, \boldsymbol{\phi_n}
 
-        where :math:`\\boldsymbol{\\phi_c}` approximates the value of the scalar
+        where :math:`\boldsymbol{\phi_c}` approximates the value of the scalar
         quantity at cell centers. For each cell, we are simply averaging
         the values defined on its nodes. The operation is implemented as a
         matrix vector product, i.e.::
@@ -3142,7 +3156,7 @@ class BaseMesh:
 
     @property
     def average_node_to_edge(self):
-        """Averaging operator from nodes to edges (scalar quantities).
+        r"""Averaging operator from nodes to edges (scalar quantities).
 
         This property constructs a 2nd order averaging operator that maps scalar
         quantities from nodes to edges; scalar at edges is organized in a 1D numpy.array
@@ -3158,15 +3172,15 @@ class BaseMesh:
 
         Notes
         -----
-        Let :math:`\\boldsymbol{\\phi_n}` be a discrete scalar quantity that
+        Let :math:`\boldsymbol{\phi_n}` be a discrete scalar quantity that
         lives on mesh nodes. **average_node_to_edge** constructs a discrete
-        linear operator :math:`\\mathbf{A_{ne}}` that projects
-        :math:`\\boldsymbol{\\phi_n}` to edges, i.e.:
+        linear operator :math:`\mathbf{A_{ne}}` that projects
+        :math:`\boldsymbol{\phi_n}` to edges, i.e.:
 
         .. math::
-            \\boldsymbol{\\phi_e} = \\mathbf{A_{ne}} \\, \\boldsymbol{\\phi_n}
+            \boldsymbol{\phi_e} = \mathbf{A_{ne}} \, \boldsymbol{\phi_n}
 
-        where :math:`\\boldsymbol{\\phi_e}` approximates the value of the scalar
+        where :math:`\boldsymbol{\phi_e}` approximates the value of the scalar
         quantity at edges. For each edge, we are simply averaging
         the values defined on the nodes it connects. The operation is implemented as a
         matrix vector product, i.e.::
@@ -3232,7 +3246,7 @@ class BaseMesh:
 
     @property
     def average_node_to_face(self):
-        """Averaging operator from nodes to faces (scalar quantities).
+        r"""Averaging operator from nodes to faces (scalar quantities).
 
         This property constructs a 2nd order averaging operator that maps scalar
         quantities from nodes to edges; scalar at faces is organized in a 1D numpy.array
@@ -3248,15 +3262,15 @@ class BaseMesh:
 
         Notes
         -----
-        Let :math:`\\boldsymbol{\\phi_n}` be a discrete scalar quantity that
+        Let :math:`\boldsymbol{\phi_n}` be a discrete scalar quantity that
         lives on mesh nodes. **average_node_to_face** constructs a discrete
-        linear operator :math:`\\mathbf{A_{nf}}` that projects
-        :math:`\\boldsymbol{\\phi_n}` to faces, i.e.:
+        linear operator :math:`\mathbf{A_{nf}}` that projects
+        :math:`\boldsymbol{\phi_n}` to faces, i.e.:
 
         .. math::
-            \\boldsymbol{\\phi_f} = \\mathbf{A_{nf}} \\, \\boldsymbol{\\phi_n}
+            \boldsymbol{\phi_f} = \mathbf{A_{nf}} \, \boldsymbol{\phi_n}
 
-        where :math:`\\boldsymbol{\\phi_f}` approximates the value of the scalar
+        where :math:`\boldsymbol{\phi_f}` approximates the value of the scalar
         quantity at faces. For each face, we are simply averaging the values at
         the nodes which outline the face. The operation is implemented as a
         matrix vector product, i.e.::
@@ -3322,12 +3336,12 @@ class BaseMesh:
 
     @property
     def project_face_to_boundary_face(self):
-        """Projection matrix from all faces to boundary faces.
+        r"""Projection matrix from all faces to boundary faces.
 
-        Constructs and returns a matrix :math:`\\mathbf{P}` that projects from
+        Constructs and returns a matrix :math:`\mathbf{P}` that projects from
         all mesh faces to boundary faces. That is, for a discrete vector
-        :math:`\\mathbf{u}` that lives on the faces, the values on the boundary
-        faces :math:`\\mathbf{u_b}` can be extracted via the following
+        :math:`\mathbf{u}` that lives on the faces, the values on the boundary
+        faces :math:`\mathbf{u_b}` can be extracted via the following
         matrix-vector product::
 
             ub = P @ u
@@ -3343,12 +3357,12 @@ class BaseMesh:
 
     @property
     def project_edge_to_boundary_edge(self):
-        """Projection matrix from all edges to boundary edges.
+        r"""Projection matrix from all edges to boundary edges.
 
-        Constructs and returns a matrix :math:`\\mathbf{P}` that projects from
+        Constructs and returns a matrix :math:`\mathbf{P}` that projects from
         all mesh edges to boundary edges. That is, for a discrete vector
-        :math:`\\mathbf{u}` that lives on the edges, the values on the boundary
-        edges :math:`\\mathbf{u_b}` can be extracted via the following
+        :math:`\mathbf{u}` that lives on the edges, the values on the boundary
+        edges :math:`\mathbf{u_b}` can be extracted via the following
         matrix-vector product::
 
             ub = P @ u
@@ -3364,12 +3378,12 @@ class BaseMesh:
 
     @property
     def project_node_to_boundary_node(self):
-        """Projection matrix from all nodes to boundary nodes.
+        r"""Projection matrix from all nodes to boundary nodes.
 
-        Constructs and returns a matrix :math:`\\mathbf{P}` that projects from
+        Constructs and returns a matrix :math:`\mathbf{P}` that projects from
         all mesh nodes to boundary nodes. That is, for a discrete scalar
-        :math:`\\mathbf{u}` that lives on the nodes, the values on the boundary
-        nodes :math:`\\mathbf{u_b}` can be extracted via the following
+        :math:`\mathbf{u}` that lives on the nodes, the values on the boundary
+        nodes :math:`\mathbf{u_b}` can be extracted via the following
         matrix-vector product::
 
             ub = P @ u
@@ -3451,7 +3465,8 @@ class BaseMesh:
         return ind
 
     def point2index(self, locs):
-        """Finds cells that contain the given points.
+        """Find cells that contain the given points.
+
         Returns an array of index values of the cells that contain the given
         points
 
@@ -3470,7 +3485,7 @@ class BaseMesh:
     def get_interpolation_matrix(
         self, loc, location_type="cell_centers", zeros_outside=False, **kwargs
     ):
-        """Construct linear interpolation matrix from mesh
+        """Construct a linear interpolation matrix from mesh.
 
         This method constructs a linear interpolation matrix from tensor locations
         (nodes, cell-centers, faces, etc...) on the mesh to a set of arbitrary locations.

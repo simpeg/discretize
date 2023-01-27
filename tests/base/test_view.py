@@ -49,7 +49,7 @@ class Cyl3DView(unittest.TestCase):
         self.mesh.plotGrid(ax=[ax1, ax0])  # plot both
 
     def test_plotImage(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(NotImplementedError):
             self.mesh.plotImage(np.random.rand(self.mesh.nC))
 
 

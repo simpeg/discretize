@@ -1,4 +1,4 @@
-"""
+r"""
 Constitutive Relations
 ======================
 
@@ -10,58 +10,56 @@ For this class of inner products, you will learn how to:
     - Construct the inverse of the inner-product matrix
     - Work with constitutive relations defined by the reciprocal of a parameter
 
-Let :math:`\\vec{J}` and :math:`\\vec{E}` be two physically related
+Let :math:`\vec{J}` and :math:`\vec{E}` be two physically related
 quantities. If their relationship is isotropic (defined by a constant
-:math:`\\sigma`), then the constitutive relation is given by:
+:math:`\sigma`), then the constitutive relation is given by:
 
 .. math::
-    \\vec{J} = \\sigma \\vec{E}
+    \vec{J} = \sigma \vec{E}
 
-The inner product between a vector :math:`\\vec{v}` and the right-hand side
+The inner product between a vector :math:`\vec{v}` and the right-hand side
 of this expression is given by:
 
 .. math::
-    (\\vec{v}, \\sigma \\vec{E} ) = \\int_\\Omega \\vec{v} \\cdot \\sigma \\vec{E} \\, dv
+    (\vec{v}, \sigma \vec{E} ) = \int_\Omega \vec{v} \cdot \sigma \vec{E} \, dv
 
 Just like in the previous tutorial, we would like to approximate the inner
 product numerically using an *inner-product matrix* such that:
 
 .. math::
-    (\\vec{v}, \\sigma \\vec{E} ) \\approx \\mathbf{v^T M_\\sigma e}
+    (\vec{v}, \sigma \vec{E} ) \approx \mathbf{v^T M_\sigma e}
 
-where the inner product matrix :math:`\\mathbf{M_\\sigma}` now depends on:
+where the inner product matrix :math:`\mathbf{M_\sigma}` now depends on:
 
     1. the dimensions and discretization of the mesh
-    2. where :math:`\\mathbf{v}` and :math:`\\mathbf{e}` live
-    3. the spatial distribution of the property :math:`\\sigma`
+    2. where :math:`\mathbf{v}` and :math:`\mathbf{e}` live
+    3. the spatial distribution of the property :math:`\sigma`
 
 In the case of anisotropy, the constitutive relations are defined by a tensor
-(:math:`\\Sigma`). Here, the constitutive relation is of the form:
+(:math:`\Sigma`). Here, the constitutive relation is of the form:
 
 .. math::
-    \\vec{J} = \\Sigma \\vec{E}
+    \vec{J} = \Sigma \vec{E}
 
 where
 
 .. math::
-    \\Sigma = \\begin{bmatrix} \\sigma_{1} & \\sigma_{4} & \\sigma_{5} \n
-    \\sigma_{4} & \\sigma_{2} & \\sigma_{6} \n
-    \\sigma_{5} & \\sigma_{6} & \\sigma_{3} \\end{bmatrix}
+    \Sigma = \begin{bmatrix} \sigma_{1} & \sigma_{4} & \sigma_{5} \\
+    \sigma_{4} & \sigma_{2} & \sigma_{6} \\
+    \sigma_{5} & \sigma_{6} & \sigma_{3} \end{bmatrix}
 
 Is symmetric and defined by 6 independent parameters. The inner product between
-a vector :math:`\\vec{v}` and the right-hand side of this expression is given
+a vector :math:`\vec{v}` and the right-hand side of this expression is given
 by:
 
 .. math::
-    (\\vec{v}, \\Sigma \\vec{E} ) = \\int_\\Omega \\vec{v} \\cdot \\Sigma \\vec{E}  \\, dv
+    (\vec{v}, \Sigma \vec{E} ) = \int_\Omega \vec{v} \cdot \Sigma \vec{E}  \, dv
 
 Once again we would like to approximate the inner product numerically using an
-*inner-product matrix* :math:`\\mathbf{M_\\Sigma}` such that:
+*inner-product matrix* :math:`\mathbf{M_\Sigma}` such that:
 
 .. math::
-    (\\vec{v}, \\Sigma \\vec{E} ) \\approx \\mathbf{v^T M_\\Sigma e}
-    
-
+    (\vec{v}, \Sigma \vec{E} ) \approx \mathbf{v^T M_\Sigma e}
 
 """
 
@@ -267,7 +265,7 @@ Mf3 = mesh.getFaceInnerProduct(sig)
 # .. math::
 #     \vec{J} = \frac{1}{\rho} \vec{E}
 #
-# The inner product between a vector :math:`\\vec{v}` and the right-hand side
+# The inner product between a vector :math:`\vec{v}` and the right-hand side
 # of the expression is given by:
 #
 # .. math::

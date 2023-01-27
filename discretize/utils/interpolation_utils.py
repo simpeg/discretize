@@ -1,3 +1,4 @@
+"""Utilities for creating averaging operators."""
 import numpy as np
 import scipy.sparse as sp
 from discretize.utils.matrix_utils import mkvc, sub2ind
@@ -151,7 +152,6 @@ def interpolation_matrix(locs, x, y=None, z=None):
         >>> ax3.set_title('Relative Error')
         >>> plt.show()
     """
-
     npts = locs.shape[0]
     locs = locs.astype(float)
     x = x.astype(float)

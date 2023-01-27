@@ -1,3 +1,4 @@
+"""Module containing the TreeMesh implementation."""
 #      ___          ___       ___          ___          ___          ___
 #     /\  \        /\  \     /\  \        /\  \        /\  \        /\  \
 #    /::\  \      /::\  \    \:\  \      /::\  \      /::\  \      /::\  \
@@ -89,7 +90,7 @@ from discretize.base import BaseTensorMesh
 from discretize.operators import InnerProducts, DiffOperators
 from discretize.mixins import InterfaceMixins, TreeMeshIO
 from discretize.utils import as_array_n_by_dim
-from discretize._extensions.tree_ext import _TreeMesh, TreeCell
+from discretize._extensions.tree_ext import _TreeMesh, TreeCell  # NOQA F401
 import numpy as np
 import scipy.sparse as sp
 import warnings
@@ -297,7 +298,7 @@ class TreeMesh(
         return top + "\n".join(cell_display)
 
     def _repr_html_(self):
-        """html representation"""
+        """HTML representation."""
         mesh_name = "{0!s}TreeMesh".format(("Oc" if self.dim == 3 else "Quad"))
         level_count = self._count_cells_per_index()
         non_zero_levels = np.nonzero(level_count)[0]
@@ -376,7 +377,7 @@ class TreeMesh(
         return full_tbl
 
     @BaseTensorMesh.origin.setter
-    def origin(self, value):
+    def origin(self, value):  # NOQA D102
         # first use the BaseTensorMesh to set the origin to handle "0, C, N"
         BaseTensorMesh.origin.fset(self, value)
         # then update the TreeMesh with the hidden value
@@ -686,8 +687,8 @@ class TreeMesh(
 
         if self.dim == 2:
             xyz = np.asarray(xyz)
-            sorted = np.argsort(xyz[:, 0])
-            xyz = xyz[sorted]
+            sorter = np.argsort(xyz[:, 0])
+            xyz = xyz[sorter]
             n_ps = len(xyz)
             inds = np.arange(n_ps)
             simps1 = np.c_[inds[:-1], inds[1:], inds[:-1]] + [0, 0, n_ps]
@@ -740,8 +741,7 @@ class TreeMesh(
 
     @property
     def vntF(self):
-        """
-        Vector number of total faces along each axis
+        """Vector number of total faces along each axis.
 
         This property returns the total number of hanging and
         non-hanging faces along each axis direction. The returned
@@ -756,8 +756,7 @@ class TreeMesh(
 
     @property
     def vntE(self):
-        """
-        Vector number of total edges along each axis
+        """Vector number of total edges along each axis.
 
         This property returns the total number of hanging and
         non-hanging edges along each axis direction. The returned
@@ -771,7 +770,8 @@ class TreeMesh(
         return [self.ntEx, self.ntEy] + ([] if self.dim == 2 else [self.ntEz])
 
     @property
-    def stencil_cell_gradient(self):
+    def stencil_cell_gradient(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if getattr(self, "_stencil_cell_gradient", None) is None:
             self._stencil_cell_gradient = sp.vstack(
                 [self.stencil_cell_gradient_x, self.stencil_cell_gradient_y]
@@ -784,7 +784,8 @@ class TreeMesh(
         return self._stencil_cell_gradient
 
     @property
-    def cell_gradient(self):
+    def cell_gradient(self):  # NOQA D102
+        # Documentation inherited from discretize.operators.DifferentialOperators
         if getattr(self, "_cell_gradient", None) is None:
             i_s = self.face_boundary_indices
 
@@ -817,7 +818,8 @@ class TreeMesh(
         return self._cell_gradient
 
     @property
-    def cell_gradient_x(self):
+    def cell_gradient_x(self):  # NOQA D102
+        # Documentation inherited from discretize.operators.DifferentialOperators
         if getattr(self, "_cell_gradient_x", None) is None:
             nFx = self.nFx
             i_s = self.face_boundary_indices
@@ -837,7 +839,8 @@ class TreeMesh(
         return self._cell_gradient_x
 
     @property
-    def cell_gradient_y(self):
+    def cell_gradient_y(self):  # NOQA D102
+        # Documentation inherited from discretize.operators.DifferentialOperators
         if getattr(self, "_cell_gradient_y", None) is None:
             nFx = self.nFx
             nFy = self.nFy
@@ -858,7 +861,8 @@ class TreeMesh(
         return self._cell_gradient_y
 
     @property
-    def cell_gradient_z(self):
+    def cell_gradient_z(self):  # NOQA D102
+        # Documentation inherited from discretize.operators.DifferentialOperators
         if self.dim == 2:
             raise TypeError("z derivative not defined in 2D")
         if getattr(self, "_cell_gradient_z", None) is None:
@@ -881,13 +885,15 @@ class TreeMesh(
         return self._cell_gradient_z
 
     @property
-    def face_x_divergence(self):
+    def face_x_divergence(self):  # NOQA D102
+        # Documentation inherited from discretize.operators.DifferentialOperators
         if getattr(self, "_face_x_divergence", None) is None:
             self._face_x_divergence = self.face_divergence[:, : self.nFx]
         return self._face_x_divergence
 
     @property
-    def face_y_divergence(self):
+    def face_y_divergence(self):  # NOQA D102
+        # Documentation inherited from discretize.operators.DifferentialOperators
         if getattr(self, "_face_y_divergence", None) is None:
             self._face_y_divergence = self.face_divergence[
                 :, self.nFx : self.nFx + self.nFy
@@ -895,22 +901,24 @@ class TreeMesh(
         return self._face_y_divergence
 
     @property
-    def face_z_divergence(self):
+    def face_z_divergence(self):  # NOQA D102
+        # Documentation inherited from discretize.operators.DifferentialOperators
         if getattr(self, "_face_z_divergence", None) is None:
             self._face_z_divergence = self.face_divergence[:, self.nFx + self.nFy :]
         return self._face_z_divergence
 
-    def point2index(self, locs):
+    def point2index(self, locs):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         locs = as_array_n_by_dim(locs, self.dim)
         inds = self._get_containing_cell_indexes(locs)
         return inds
 
     def cell_levels_by_index(self, indices):
-        """Fast function to return a list of levels for the given cell indices
+        """Fast function to return a list of levels for the given cell indices.
 
         Parameters
         ----------
-        index: (N) array_like
+        indices: (N) array_like
             Cell indexes to query
 
         Returns
@@ -918,12 +926,12 @@ class TreeMesh(
         (N) numpy.ndarray of int
             Levels for the cells.
         """
-
         return self._cell_levels_by_indexes(indices)
 
-    def get_interpolation_matrix(
-        self, locs, location_type="cell_centers", zeros_outside=False,
+    def get_interpolation_matrix(  # NOQA D102
+        self, locs, location_type="cell_centers", zeros_outside=False
     ):
+        # Documentation inherited from discretize.base.BaseMesh
         locs = as_array_n_by_dim(locs, self.dim)
         location_type = self._parse_location_type(location_type)
 
@@ -948,7 +956,7 @@ class TreeMesh(
 
     @property
     def permute_cells(self):
-        """Permutation matrix re-ordering of cells sorted by x, then y, then z
+        """Permutation matrix re-ordering of cells sorted by x, then y, then z.
 
         Returns
         -------
@@ -960,7 +968,7 @@ class TreeMesh(
 
     @property
     def permute_faces(self):
-        """Permutation matrix re-ordering of faces sorted by x, then y, then z
+        """Permutation matrix re-ordering of faces sorted by x, then y, then z.
 
         Returns
         -------
@@ -978,7 +986,7 @@ class TreeMesh(
 
     @property
     def permute_edges(self):
-        """Permutation matrix re-ordering of edges sorted by x, then y, then z
+        """Permutation matrix re-ordering of edges sorted by x, then y, then z.
 
         Returns
         -------
@@ -1012,10 +1020,12 @@ class TreeMesh(
         indexes, levels = self.__getstate__()
         return {"indexes": indexes.tolist(), "levels": levels.tolist()}
 
-    def validate(self):
+    def validate(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         return self.finalized
 
-    def equals(self, other):
+    def equals(self, other):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         try:
             if self.finalized and other.finalized:
                 return super().equals(other)
@@ -1024,4 +1034,5 @@ class TreeMesh(
         return False
 
     def __reduce__(self):
+        """Return the necessary items to reconstruct this object's state."""
         return TreeMesh, (self.h, self.origin), self.__getstate__()

@@ -6,11 +6,11 @@ import os
 import pickle
 
 try:
-    import vtk
+    import vtk  # NOQA F401
+
+    has_vtk = True
 except ImportError:
     has_vtk = False
-else:
-    has_vtk = True
 
 
 class SimplexTests(unittest.TestCase):
@@ -25,7 +25,7 @@ class SimplexTests(unittest.TestCase):
         )
         simplices = np.array([[0, 1, 2, 3]])
         with self.assertRaises(ValueError):
-            mesh = discretize.SimplexMesh(bad_nodes, simplices)
+            discretize.SimplexMesh(bad_nodes, simplices)
 
         good_nodes = np.array(
             [
@@ -37,11 +37,11 @@ class SimplexTests(unittest.TestCase):
         )
         with self.assertRaises(ValueError):
             # pass incompatible shaped nodes and simplices
-            mesh = discretize.SimplexMesh(good_nodes, simplices[:, :-1])
+            discretize.SimplexMesh(good_nodes, simplices[:, :-1])
 
         with self.assertRaises(ValueError):
             # pass bad dimensionality
-            mesh = discretize.SimplexMesh(np.random.rand(10, 4), simplices[:, :-1])
+            discretize.SimplexMesh(np.random.rand(10, 4), simplices[:, :-1])
 
     def test_find_containing(self):
         n = 4

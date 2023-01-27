@@ -25,7 +25,6 @@ from discretize.utils import (
 )
 from discretize.tests import checkDerivative
 import discretize
-import matplotlib.pyplot as plt
 
 TOL = 1e-8
 
@@ -364,7 +363,9 @@ class TestZero(unittest.TestCase):
         assert -o // 2 == -1
         assert -o / 2.0 == -0.5
         assert 2 / o == 2
-        assert 2 / -o == -2
+        assert 2 // -o == -2
+        assert 2.3 // o == 2
+        assert 2.3 // -o == -3
 
         assert o.T == 1
         assert o.transpose() == 1
@@ -441,7 +442,7 @@ class TestMeshUtils(unittest.TestCase):
 
         # 2D Test on TensorMesh
         meshtest2d = discretize.TensorMesh([[(50.0, 10)], [(25.0, 10)]])
-        xzlim2d = xyzlim = np.r_[[[0.0, 200.0], [0.0, 200.0]]]
+        xzlim2d = np.r_[[[0.0, 200.0], [0.0, 200.0]]]
         actind2d, meshCore2d = ExtractCoreMesh(xzlim2d, meshtest2d)
 
         self.assertEqual(len(actind2d), meshtest2d.nC)

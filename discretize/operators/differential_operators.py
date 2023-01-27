@@ -1,3 +1,4 @@
+"""Differential operators for meshes."""
 import numpy as np
 from scipy import sparse as sp
 import warnings
@@ -14,10 +15,9 @@ from discretize.utils import (
 
 
 def _validate_BC(bc):
-    """Checks if boundary condition 'bc' is valid.
+    """Check if boundary condition 'bc' is valid.
 
     Each bc must be either 'dirichlet' or 'neumann'
-
     """
     if isinstance(bc, str):
         bc = [bc, bc]
@@ -35,9 +35,9 @@ def _validate_BC(bc):
 
 
 def _ddxCellGrad(n, bc):
-    """
-    Create 1D derivative operator from cell-centers to nodes this means we
-    go from n to n+1
+    """Create 1D derivative operator from cell-centers to nodes.
+
+    This means we go from n to n+1
 
     For Cell-Centered **Dirichlet**, use a ghost point::
 
@@ -61,7 +61,6 @@ def _ddxCellGrad(n, bc):
 
         u_g = u_1
         grad = 0;  put a zero in.
-
     """
     bc = _validate_BC(bc)
 
@@ -80,9 +79,9 @@ def _ddxCellGrad(n, bc):
 
 
 def _ddxCellGradBC(n, bc):
-    """
-    Create 1D derivative operator from cell-centers to nodes this means we
-    go from n to n+1
+    """Create 1D derivative operator from cell-centers to nodes.
+
+    This means we go from n to n+1.
 
     For Cell-Centered **Dirichlet**, use a ghost point::
 
@@ -108,8 +107,6 @@ def _ddxCellGradBC(n, bc):
         ( 2/hf )*u_1 + ( -2/hf )*u_b = grad
 
                        (   ^   ) JUST RETURN THIS
-
-
     """
     bc = _validate_BC(bc)
 
@@ -159,9 +156,7 @@ class DiffOperators(object):
     ###########################################################################
     @property
     def _face_x_divergence_stencil(self):
-        """
-        Stencil for face divergence operator in the x-direction (x-faces to cell centers)
-        """
+        """Stencil for face divergence operator in the x-direction (x-faces to cell centers)."""
         if self.dim == 1:
             Dx = ddx(self.shape_cells[0])
         elif self.dim == 2:
@@ -176,9 +171,7 @@ class DiffOperators(object):
 
     @property
     def _face_y_divergence_stencil(self):
-        """
-        Stencil for face divergence operator in the y-direction (y-faces to cell centers)
-        """
+        """Stencil for face divergence operator in the y-direction (y-faces to cell centers)."""
         if self.dim == 1:
             return None
         elif self.dim == 2:
@@ -193,9 +186,7 @@ class DiffOperators(object):
 
     @property
     def _face_z_divergence_stencil(self):
-        """
-        Stencil for face divergence operator in the z-direction (z-faces to cell centers)
-        """
+        """Stencil for face divergence operator in the z-direction (z-faces to cell centers)."""
         if self.dim == 1 or self.dim == 2:
             return None
         elif self.dim == 3:
@@ -208,9 +199,7 @@ class DiffOperators(object):
 
     @property
     def _face_divergence_stencil(self):
-        """
-        Full stencil for face divergence operator (faces to cell centers)
-        """
+        """Full stencil for face divergence operator (faces to cell centers)."""
         if self.dim == 1:
             D = self._face_x_divergence_stencil
         elif self.dim == 2:
@@ -230,7 +219,8 @@ class DiffOperators(object):
         return D
 
     @property
-    def face_divergence(self):
+    def face_divergence(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if getattr(self, "_face_divergence", None) is None:
             # Get the stencil of +1, -1's
             D = self._face_divergence_stencil
@@ -242,12 +232,12 @@ class DiffOperators(object):
 
     @property
     def face_x_divergence(self):
-        """X-derivative operator (x-faces to cell-centres)
+        r"""X-derivative operator (x-faces to cell-centres).
 
         This property constructs a 2nd order x-derivative operator which maps
         from x-faces to cell centers. The operator is a sparse matrix
-        :math:`\\mathbf{D_x}` that can be applied as a matrix-vector product
-        to a discrete scalar quantity :math:`\\boldsymbol{\\phi}` that lives on
+        :math:`\mathbf{D_x}` that can be applied as a matrix-vector product
+        to a discrete scalar quantity :math:`\boldsymbol{\phi}` that lives on
         x-faces; i.e.::
 
             dphi_dx = Dx @ phi
@@ -275,7 +265,7 @@ class DiffOperators(object):
         >>> import matplotlib.pyplot as plt
         >>> import matplotlib as mpl
 
-        For a discrete scalar quantity :math:`\\boldsymbol{\\phi}` defined on the
+        For a discrete scalar quantity :math:`\boldsymbol{\phi}` defined on the
         x-faces, we take the x-derivative by constructing the face-x divergence
         operator and multiplying as a matrix-vector product.
 
@@ -311,8 +301,8 @@ class DiffOperators(object):
         The discrete x-face divergence operator is a sparse matrix that maps
         from x-faces to cell centers. To demonstrate this, we construct
         a small 2D mesh. We then show the ordering of the elements in
-        the original discrete quantity :math:`\\boldsymbol{\\phi}}` and its
-        x-derivative :math:`\\partial \\boldsymbol{\\phi}}/ \\partial x` as well as a
+        the original discrete quantity :math:`\boldsymbol{\phi}}` and its
+        x-derivative :math:`\partial \boldsymbol{\phi}}/ \partial x` as well as a
         spy plot.
 
         .. collapse:: Expand to show scripting for plot
@@ -342,7 +332,7 @@ class DiffOperators(object):
             >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
             >>> ax1.set_title("Mapping of Face-X Divergence", fontsize=14, pad=15)
             >>> ax1.legend(
-            ...     ['Mesh', '$\\mathbf{\\phi}$ (x-faces)', '$\\partial \\mathbf{phi}/\\partial x$ (centers)'],
+            ...     ['Mesh', '$\mathbf{\phi}$ (x-faces)', '$\partial \mathbf{phi}/\partial x$ (centers)'],
             ...     loc='upper right', fontsize=14
             ... )
             >>> ax2 = fig.add_subplot(212)
@@ -359,12 +349,12 @@ class DiffOperators(object):
 
     @property
     def face_y_divergence(self):
-        """Y-derivative operator (y-faces to cell-centres)
+        r"""Y-derivative operator (y-faces to cell-centres).
 
         This property constructs a 2nd order y-derivative operator which maps
         from y-faces to cell centers. The operator is a sparse matrix
-        :math:`\\mathbf{D_y}` that can be applied as a matrix-vector product
-        to a discrete scalar quantity :math:`\\boldsymbol{\\phi}` that lives on
+        :math:`\mathbf{D_y}` that can be applied as a matrix-vector product
+        to a discrete scalar quantity :math:`\boldsymbol{\phi}` that lives on
         y-faces; i.e.::
 
             dphi_dy = Dy @ phi
@@ -392,7 +382,7 @@ class DiffOperators(object):
         >>> import matplotlib.pyplot as plt
         >>> import matplotlib as mpl
 
-        For a discrete scalar quantity :math:`\\boldsymbol{\\phi}` defined on the
+        For a discrete scalar quantity :math:`\boldsymbol{\phi}` defined on the
         y-faces, we take the y-derivative by constructing the face-y divergence
         operator and multiplying as a matrix-vector product.
 
@@ -428,8 +418,8 @@ class DiffOperators(object):
         The discrete y-face divergence operator is a sparse matrix that maps
         from y-faces to cell centers. To demonstrate this, we construct
         a small 2D mesh. We then show the ordering of the elements in
-        the original discrete quantity :math:`\\boldsymbol{\\phi}` and its
-        y-derivative :math:`\\partial \\boldsymbol{\\phi}/ \\partial y` as well as a
+        the original discrete quantity :math:`\boldsymbol{\phi}` and its
+        y-derivative :math:`\partial \boldsymbol{\phi}/ \partial y` as well as a
         spy plot.
 
         .. collapse:: Expand to show scripting for plot
@@ -459,7 +449,7 @@ class DiffOperators(object):
             >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
             >>> ax1.set_title("Mapping of Face-Y Divergence", fontsize=14, pad=15)
             >>> ax1.legend(
-            ...     ['Mesh','$\\mathbf{\\phi}$ (y-faces)','$\\partial_y \\mathbf{\\phi}/\\partial y$ (centers)'],
+            ...     ['Mesh','$\mathbf{\phi}$ (y-faces)','$\partial_y \mathbf{\phi}/\partial y$ (centers)'],
             ...     loc='upper right', fontsize=14
             ... )
             >>> ax2 = fig.add_subplot(212)
@@ -478,12 +468,12 @@ class DiffOperators(object):
 
     @property
     def face_z_divergence(self):
-        """Z-derivative operator (z-faces to cell-centres)
+        r"""Z-derivative operator (z-faces to cell-centres).
 
         This property constructs a 2nd order z-derivative operator which maps
         from z-faces to cell centers. The operator is a sparse matrix
-        :math:`\\mathbf{D_z}` that can be applied as a matrix-vector product
-        to a discrete scalar quantity :math:`\\boldsymbol{\\phi}` that lives on
+        :math:`\mathbf{D_z}` that can be applied as a matrix-vector product
+        to a discrete scalar quantity :math:`\boldsymbol{\phi}` that lives on
         z-faces; i.e.::
 
             dphi_dz = Dz @ phi
@@ -510,7 +500,7 @@ class DiffOperators(object):
         >>> import matplotlib.pyplot as plt
         >>> import matplotlib as mpl
 
-        For a discrete scalar quantity :math:`\\boldsymbol{\\phi}` defined on the
+        For a discrete scalar quantity :math:`\boldsymbol{\phi}` defined on the
         z-faces, we take the z-derivative by constructing the face-z divergence
         operator and multiplying as a matrix-vector product.
 
@@ -546,8 +536,8 @@ class DiffOperators(object):
         The discrete z-face divergence operator is a sparse matrix that maps
         from z-faces to cell centers. To demonstrate this, we construct
         a small 3D mesh. We then show the ordering of the elements in
-        the original discrete quantity :math:`\\boldsymbol{\\phi}` and its
-        z-derivative :math:`\\partial \\boldsymbol{\\phi}/ \\partial z` as well as a
+        the original discrete quantity :math:`\boldsymbol{\phi}` and its
+        z-derivative :math:`\partial \boldsymbol{\phi}/ \partial z` as well as a
         spy plot.
 
         .. collapse:: Expand to show scripting for plot
@@ -569,7 +559,7 @@ class DiffOperators(object):
             >>> for ii, loc in zip(range(mesh.nC), mesh.cell_centers):
             ...     ax1.text(loc[0] + 0.05, loc[1] + 0.05, loc[2], "{0:d}".format(ii), color="r")
             >>> ax1.legend(
-            ...     ['Mesh','$\\mathbf{\\phi}$ (z-faces)','$\\partial \\mathbf{\\phi}/\\partial z$ (centers)'],
+            ...     ['Mesh','$\mathbf{\phi}$ (z-faces)','$\partial \mathbf{\phi}/\partial z$ (centers)'],
             ...     loc='upper right', fontsize=14
             ... )
 
@@ -613,9 +603,7 @@ class DiffOperators(object):
 
     @property
     def _nodal_gradient_x_stencil(self):
-        """
-        Stencil for the nodal gradient in the x-direction (nodes to x-edges)
-        """
+        """Stencil for the nodal gradient in the x-direction (nodes to x-edges)."""
         if self.dim == 1:
             Gx = ddx(self.shape_cells[0])
         elif self.dim == 2:
@@ -630,9 +618,7 @@ class DiffOperators(object):
 
     @property
     def _nodal_gradient_y_stencil(self):
-        """
-        Stencil for the nodal gradient in the y-direction (nodes to y-edges)
-        """
+        """Stencil for the nodal gradient in the y-direction (nodes to y-edges)."""
         if self.dim == 1:
             return None
         elif self.dim == 2:
@@ -647,9 +633,7 @@ class DiffOperators(object):
 
     @property
     def _nodal_gradient_z_stencil(self):
-        """
-        Stencil for the nodal gradient in the z-direction (nodes to z-edges)
-        """
+        """Stencil for the nodal gradient in the z-direction (nodes to z-edges)."""
         if self.dim == 1 or self.dim == 2:
             return None
         else:
@@ -662,9 +646,7 @@ class DiffOperators(object):
 
     @property
     def _nodal_gradient_stencil(self):
-        """
-        Full stencil for the nodal gradient (nodes to edges)
-        """
+        """Full stencil for the nodal gradient (nodes to edges)."""
         # Compute divergence operator on faces
         if self.dim == 1:
             G = self._nodal_gradient_x_stencil
@@ -685,7 +667,7 @@ class DiffOperators(object):
         return G
 
     @property
-    def nodal_gradient(self):
+    def nodal_gradient(self):  # NOQA D102
         if getattr(self, "_nodal_gradient", None) is None:
             G = self._nodal_gradient_stencil
             L = self.edge_lengths
@@ -694,9 +676,7 @@ class DiffOperators(object):
 
     @property
     def _nodal_laplacian_x_stencil(self):
-        """
-        Stencil for the nodal Laplacian in the x-direction (nodes to nodes)
-        """
+        """Stencil for the nodal Laplacian in the x-direction (nodes to nodes)."""
         warnings.warn("Laplacian has not been tested rigorously.")
 
         Dx = ddx(self.shape_cells[0])
@@ -710,9 +690,7 @@ class DiffOperators(object):
 
     @property
     def _nodal_laplacian_y_stencil(self):
-        """
-        Stencil for the nodal Laplacian in the y-direction (nodes to nodes)
-        """
+        """Stencil for the nodal Laplacian in the y-direction (nodes to nodes)."""
         warnings.warn("Laplacian has not been tested rigorously.")
 
         if self.dim == 1:
@@ -729,9 +707,7 @@ class DiffOperators(object):
 
     @property
     def _nodal_laplacian_z_stencil(self):
-        """
-        Stencil for the nodal Laplacian in the z-direction (nodes to nodes)
-        """
+        """Stencil for the nodal Laplacian in the z-direction (nodes to nodes)."""
         warnings.warn("Laplacian has not been tested rigorously.")
 
         if self.dim == 1 or self.dim == 2:
@@ -743,9 +719,7 @@ class DiffOperators(object):
 
     @property
     def _nodal_laplacian_x(self):
-        """
-        Construct the nodal Laplacian in the x-direction (nodes to nodes)
-        """
+        """Construct the nodal Laplacian in the x-direction (nodes to nodes)."""
         Hx = sdiag(1.0 / self.h[0])
         if self.dim == 2:
             Hx = sp.kron(speye(self.shape_nodes[1]), Hx)
@@ -755,9 +729,7 @@ class DiffOperators(object):
 
     @property
     def _nodal_laplacian_y(self):
-        """
-        Construct the nodal Laplacian in the y-direction (nodes to nodes)
-        """
+        """Construct the nodal Laplacian in the y-direction (nodes to nodes)."""
         Hy = sdiag(1.0 / self.h[1])
         if self.dim == 1:
             return None
@@ -769,9 +741,7 @@ class DiffOperators(object):
 
     @property
     def _nodal_laplacian_z(self):
-        """
-        Construct the nodal Laplacian in the z-direction (nodes to nodes)
-        """
+        """Construct the nodal Laplacian in the z-direction (nodes to nodes)."""
         if self.dim == 1 or self.dim == 2:
             return None
         Hz = sdiag(1.0 / self.h[2])
@@ -779,7 +749,8 @@ class DiffOperators(object):
         return Hz.T * self._nodal_laplacian_z_stencil * Hz
 
     @property
-    def nodal_laplacian(self):
+    def nodal_laplacian(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if getattr(self, "_nodal_laplacian", None) is None:
             warnings.warn("Laplacian has not been tested rigorously.")
             # Compute divergence operator on faces
@@ -798,7 +769,7 @@ class DiffOperators(object):
         return self._nodal_laplacian
 
     def edge_divergence_weak_form_robin(self, alpha=0.0, beta=1.0, gamma=0.0):
-        r"""Robin conditions for weak form of the edge divergence operator (edges to nodes)
+        r"""Create Robin conditions pieces for weak form of the edge divergence operator (edges to nodes).
 
         This method returns the pieces required to impose Robin boundary conditions
         for the discrete weak form divergence operator that maps from edges to nodes.
@@ -1001,8 +972,7 @@ class DiffOperators(object):
     _cell_gradient_BC_list = "neumann"
 
     def set_cell_gradient_BC(self, BC):
-        """Set zero Dirichlet/Neumann boundary conditions for derivative operators
-        acting on cell-centered quantities.
+        """Set boundary conditions for derivative operators acting on cell-centered quantities.
 
         This method is used to set zero Dirichlet and/or zero Neumann boundary
         conditions for differential operators that act on cell-centered quantities.
@@ -1057,7 +1027,6 @@ class DiffOperators(object):
         >>> BC = [['neumann', 'dirichlet'], 'dirichlet', 'dirichlet']
         >>> mesh.set_cell_gradient_BC(BC)
         """
-
         if isinstance(BC, str):
             BC = [BC] * self.dim
         if isinstance(BC, list):
@@ -1077,15 +1046,15 @@ class DiffOperators(object):
 
     @property
     def stencil_cell_gradient_x(self):
-        """Differencing operator along x-direction (cell centers to x-faces)
+        r"""Differencing operator along x-direction (cell centers to x-faces).
 
         This property constructs a differencing operator along the x-axis
         that acts on cell centered quantities; i.e. the stencil for the
         x-component of the cell gradient. The operator computes the
         differences between the values at adjacent cell centers along the
         x-direction, and places the result on the x-faces. The operator is a sparse
-        matrix :math:`\\mathbf{G_x}` that can be applied as a matrix-vector
-        product to a cell centered quantity :math:`\\boldsymbol{\\phi}`, i.e.::
+        matrix :math:`\mathbf{G_x}` that can be applied as a matrix-vector
+        product to a cell centered quantity :math:`\boldsymbol{\phi}`, i.e.::
 
             diff_phi_x = Gx @ phi
 
@@ -1190,7 +1159,7 @@ class DiffOperators(object):
             >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
             >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
             >>> ax1.legend(
-            ...     ['Mesh', '$\\mathbf{\\phi}$ (centers)', '$\\mathbf{Gx^* \\phi}$ (x-faces)'],
+            ...     ['Mesh', '$\mathbf{\phi}$ (centers)', '$\mathbf{Gx^* \phi}$ (x-faces)'],
             ...     loc='upper right', fontsize=14
             ... )
             >>> ax2 = fig.add_subplot(122)
@@ -1217,15 +1186,15 @@ class DiffOperators(object):
 
     @property
     def stencil_cell_gradient_y(self):
-        """Differencing operator along y-direction (cell centers to y-faces)
+        r"""Differencing operator along y-direction (cell centers to y-faces).
 
         This property constructs a differencing operator along the x-axis
         that acts on cell centered quantities; i.e. the stencil for the
         y-component of the cell gradient. The operator computes the
         differences between the values at adjacent cell centers along the
         y-direction, and places the result on the y-faces. The operator is a sparse
-        matrix :math:`\\mathbf{G_y}` that can be applied as a matrix-vector
-        product to a cell centered quantity :math:`\\boldsymbol{\\phi}`, i.e.::
+        matrix :math:`\mathbf{G_y}` that can be applied as a matrix-vector
+        product to a cell centered quantity :math:`\boldsymbol{\phi}`, i.e.::
 
             diff_phi_y = Gy @ phi
 
@@ -1329,7 +1298,7 @@ class DiffOperators(object):
             >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
             >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
             >>> ax1.legend(
-            ...     ['Mesh', '$\\mathbf{\\phi}$ (centers)', '$\\mathbf{Gy^* \\phi}$ (y-faces)'],
+            ...     ['Mesh', '$\mathbf{\phi}$ (centers)', '$\mathbf{Gy^* \phi}$ (y-faces)'],
             ...     loc='upper right', fontsize=14
             ... )
 
@@ -1352,15 +1321,15 @@ class DiffOperators(object):
 
     @property
     def stencil_cell_gradient_z(self):
-        """Differencing operator along z-direction (cell centers to z-faces)
+        r"""Differencing operator along z-direction (cell centers to z-faces).
 
         This property constructs a differencing operator along the z-axis
         that acts on cell centered quantities; i.e. the stencil for the
         z-component of the cell gradient. The operator computes the
         differences between the values at adjacent cell centers along the
         z-direction, and places the result on the z-faces. The operator is a sparse
-        matrix :math:`\\mathbf{G_z}` that can be applied as a matrix-vector
-        product to a cell centered quantity :math:`\\boldsymbol{\\phi}`, i.e.::
+        matrix :math:`\mathbf{G_z}` that can be applied as a matrix-vector
+        product to a cell centered quantity :math:`\boldsymbol{\phi}`, i.e.::
 
             diff_phi_z = Gz @ phi
 
@@ -1457,7 +1426,8 @@ class DiffOperators(object):
         return G3
 
     @property
-    def stencil_cell_gradient(self):
+    def stencil_cell_gradient(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         BC = self.set_cell_gradient_BC(self._cell_gradient_BC_list)
         if self.dim == 1:
             G = _ddxCellGrad(self.shape_cells[0], BC[0])
@@ -1490,12 +1460,12 @@ class DiffOperators(object):
 
     @property
     def cell_gradient(self):
-        """Cell gradient operator (cell centers to faces)
+        r"""Cell gradient operator (cell centers to faces).
 
         This property constructs the 2nd order numerical gradient operator
         that maps from cell centers to faces. The operator is a sparse matrix
-        :math:`\\mathbf{G_c}` that can be applied as a matrix-vector product
-        to a discrete scalar quantity :math:`\\boldsymbol{\\phi}` that lives
+        :math:`\mathbf{G_c}` that can be applied as a matrix-vector product
+        to a discrete scalar quantity :math:`\boldsymbol{\phi}` that lives
         at the cell centers; i.e.::
 
             grad_phi = Gc @ phi
@@ -1522,17 +1492,17 @@ class DiffOperators(object):
         In continuous space, the gradient operator is defined as:
 
         .. math::
-            \\vec{u} = \\nabla \\phi = \\frac{\\partial \\phi}{\\partial x}\\hat{x}
-            + \\frac{\\partial \\phi}{\\partial y}\\hat{y}
-            + \\frac{\\partial \\phi}{\\partial z}\\hat{z}
+            \vec{u} = \nabla \phi = \frac{\partial \phi}{\partial x}\hat{x}
+            + \frac{\partial \phi}{\partial y}\hat{y}
+            + \frac{\partial \phi}{\partial z}\hat{z}
 
-        Where :math:`\\boldsymbol{\\phi}` is the discrete representation of the continuous variable
-        :math:`\\phi` at cell centers and :math:`\\mathbf{u}` is the discrete
-        representation of :math:`\\vec{u}` on the faces, **cell_gradient** constructs a
-        discrete linear operator :math:`\\mathbf{G_c}` such that:
+        Where :math:`\boldsymbol{\phi}` is the discrete representation of the continuous variable
+        :math:`\phi` at cell centers and :math:`\mathbf{u}` is the discrete
+        representation of :math:`\vec{u}` on the faces, **cell_gradient** constructs a
+        discrete linear operator :math:`\mathbf{G_c}` such that:
 
         .. math::
-            \\mathbf{u} = \\mathbf{G_c} \\, \\boldsymbol{\\phi}
+            \mathbf{u} = \mathbf{G_c} \, \boldsymbol{\phi}
 
         Second order ghost points are used to enforce boundary conditions and map
         appropriately to boundary faces. Along each axes direction, we are
@@ -1596,7 +1566,7 @@ class DiffOperators(object):
         The cell gradient operator is a sparse matrix that maps
         from cell centers to faces. To demonstrate this, we construct
         a small 2D mesh. We then show the ordering of the elements in
-        the original discrete quantity :math:`\\boldsymbol{\\phi}` and its
+        the original discrete quantity :math:`\boldsymbol{\phi}` and its
         discrete gradient as well as a spy plot.
 
         >>> mesh = TensorMesh([[(1, 3)], [(1, 6)]])
@@ -1629,7 +1599,7 @@ class DiffOperators(object):
             >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
 
             >>> ax1.legend(
-            ...     ['Mesh', '$\\mathbf{\\phi}$ (centers)', '$\\mathbf{u}$ (faces)'],
+            ...     ['Mesh', '$\mathbf{\phi}$ (centers)', '$\mathbf{u}$ (faces)'],
             ...     loc='upper right', fontsize=14
             ... )
             >>> ax2 = fig.add_subplot(122)
@@ -1649,7 +1619,7 @@ class DiffOperators(object):
         return self._cell_gradient
 
     def cell_gradient_weak_form_robin(self, alpha=0.0, beta=1.0, gamma=0.0):
-        r"""Robin conditions for weak form of the cell gradient operator (cell centers to faces)
+        r"""Create Robin conditions pieces for weak form of the cell gradient operator (cell centers to faces).
 
         This method returns the pieces required to impose Robin boundary conditions
         for the discrete weak form gradient operator that maps from cell centers to faces.
@@ -1756,7 +1726,6 @@ class DiffOperators(object):
         >>> def inner_product(u, phi):
         ...     return u @ (-Df.T @ Mc + B) @ phi + u @ b
         """
-
         # get length between boundary cell_centers and boundary_faces
         Pf = self.project_face_to_boundary_face
         aveC2BF = Pf @ self.average_cell_to_face
@@ -1788,13 +1757,13 @@ class DiffOperators(object):
 
     @property
     def cell_gradient_x(self):
-        """X-derivative operator (cell centers to x-faces)
+        r"""X-derivative operator (cell centers to x-faces).
 
         This property constructs an x-derivative operator that acts on
         cell centered quantities; i.e. the x-component of the cell gradient operator.
         When applied, the x-derivative is mapped to x-faces. The operator is a
-        sparse matrix :math:`\\mathbf{G_x}` that can be applied as a matrix-vector
-        product to a cell centered quantity :math:`\\boldsymbol{\\phi}`, i.e.::
+        sparse matrix :math:`\mathbf{G_x}` that can be applied as a matrix-vector
+        product to a cell centered quantity :math:`\boldsymbol{\phi}`, i.e.::
 
             grad_phi_x = Gx @ phi
 
@@ -1891,7 +1860,7 @@ class DiffOperators(object):
             >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
             >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
             >>> ax1.legend(
-            ...     ['Mesh', '$\\mathbf{\\phi}$ (centers)', '$\\mathbf{Gx^* \\phi}$ (x-faces)'],
+            ...     ['Mesh', '$\mathbf{\phi}$ (centers)', '$\mathbf{Gx^* \phi}$ (x-faces)'],
             ...     loc='upper right', fontsize=14
             ... )
 
@@ -1912,13 +1881,13 @@ class DiffOperators(object):
 
     @property
     def cell_gradient_y(self):
-        """Y-derivative operator (cell centers to y-faces)
+        r"""Y-derivative operator (cell centers to y-faces).
 
         This property constructs a y-derivative operator that acts on
         cell centered quantities; i.e. the y-component of the cell gradient operator.
         When applied, the y-derivative is mapped to y-faces. The operator is a
-        sparse matrix :math:`\\mathbf{G_y}` that can be applied as a matrix-vector
-        product to a cell centered quantity :math:`\\boldsymbol{\\phi}`, i.e.::
+        sparse matrix :math:`\mathbf{G_y}` that can be applied as a matrix-vector
+        product to a cell centered quantity :math:`\boldsymbol{\phi}`, i.e.::
 
             grad_phi_y = Gy @ phi
 
@@ -2014,7 +1983,7 @@ class DiffOperators(object):
             >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
             >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
             >>> ax1.legend(
-            ...     ['Mesh', '$\\mathbf{\\phi}$ (centers)', '$\\mathbf{Gy^* \\phi}$ (y-faces)'],
+            ...     ['Mesh', '$\mathbf{\phi}$ (centers)', '$\mathbf{Gy^* \phi}$ (y-faces)'],
             ...     loc='upper right', fontsize=14
             ... )
 
@@ -2037,13 +2006,13 @@ class DiffOperators(object):
 
     @property
     def cell_gradient_z(self):
-        """Z-derivative operator (cell centers to z-faces)
+        r"""Z-derivative operator (cell centers to z-faces).
 
         This property constructs an z-derivative operator that acts on
         cell centered quantities; i.e. the z-component of the cell gradient operator.
         When applied, the z-derivative is mapped to z-faces. The operator is a
-        sparse matrix :math:`\\mathbf{G_z}` that can be applied as a matrix-vector
-        product to a cell centered quantity :math:`\\boldsymbol{\\phi}`, i.e.::
+        sparse matrix :math:`\mathbf{G_z}` that can be applied as a matrix-vector
+        product to a cell centered quantity :math:`\boldsymbol{\phi}`, i.e.::
 
             grad_phi_z = Gz @ phi
 
@@ -2138,9 +2107,7 @@ class DiffOperators(object):
 
     @property
     def _edge_x_curl_stencil(self):
-        """
-        Stencil for the edge curl operator in the x-direction.
-        """
+        """Stencil for the edge curl operator in the x-direction."""
         n = self.vnC  # The number of cell centers in each direction
 
         D32 = kron3(ddx(n[2]), speye(n[1]), speye(n[0] + 1))
@@ -2152,9 +2119,7 @@ class DiffOperators(object):
 
     @property
     def _edge_y_curl_stencil(self):
-        """
-        Stencil for the edge curl operator in the y-direction.
-        """
+        """Stencil for the edge curl operator in the y-direction."""
         n = self.vnC  # The number of cell centers in each direction
 
         D31 = kron3(ddx(n[2]), speye(n[1] + 1), speye(n[0]))
@@ -2166,9 +2131,7 @@ class DiffOperators(object):
 
     @property
     def _edge_z_curl_stencil(self):
-        """
-        Stencil for the edge curl operator in the z-direction.
-        """
+        """Stencil for the edge curl operator in the z-direction."""
         n = self.vnC  # The number of cell centers in each direction
 
         D21 = kron3(speye(n[2] + 1), ddx(n[1]), speye(n[0]))
@@ -2180,9 +2143,7 @@ class DiffOperators(object):
 
     @property
     def _edge_curl_stencil(self):
-        """
-        Full stencil for the edge curl operator.
-        """
+        """Full stencil for the edge curl operator."""
         if self.dim <= 1:
             raise NotImplementedError("Edge Curl only programed for 2 or 3D.")
 
@@ -2223,7 +2184,8 @@ class DiffOperators(object):
             return C
 
     @property
-    def edge_curl(self):
+    def edge_curl(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if getattr(self, "_edge_curl", None) is None:
             if self.dim <= 1:
                 raise NotImplementedError("Edge Curl only programed for 2 or 3D.")
@@ -2236,7 +2198,8 @@ class DiffOperators(object):
         return self._edge_curl
 
     @property
-    def boundary_face_scalar_integral(self):
+    def boundary_face_scalar_integral(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if self.dim == 1:
             return sp.csr_matrix(
                 ([-1, 1], ([0, self.n_faces_x - 1], [0, 1])), shape=(self.n_faces_x, 2)
@@ -2251,7 +2214,7 @@ class DiffOperators(object):
 
     @property
     def boundary_edge_vector_integral(self):
-        r"""Represents the operation of integrating a vector function on the boundary
+        r"""Integrate a vector function on the boundary.
 
         This matrix represents the boundary surface integral of a vector function
         multiplied with a finite volume test function on the mesh.
@@ -2302,7 +2265,7 @@ class DiffOperators(object):
 
     @property
     def boundary_node_vector_integral(self):
-        r"""Represents the operation of integrating a vector function dotted with the boundary normal
+        r"""Integrate a vector function dotted with the boundary normal.
 
         This matrix represents the boundary surface integral of a vector function
         dotted with the boundary normal and multiplied with a scalar finite volume
@@ -2348,8 +2311,7 @@ class DiffOperators(object):
         )
 
     def get_BC_projections(self, BC, discretization="CC"):
-        """
-        The weak form boundary condition projection matrices.
+        """Create the weak form boundary condition projection matrices.
 
         Examples
         --------
@@ -2364,7 +2326,6 @@ class DiffOperators(object):
             # 3D, Neumann in x on bottom of domain, Dirichlet else
             BC = [['neumann', 'dirichlet'], 'dirichlet', 'dirichlet']
         """
-
         if discretization != "CC":
             raise NotImplementedError(
                 "Boundary conditions only implemented" "for CC discretization."
@@ -2457,10 +2418,7 @@ class DiffOperators(object):
         return Pbc, Pin, Pout
 
     def get_BC_projections_simple(self, discretization="CC"):
-        """The weak form boundary condition projection matrices
-        when mixed boundary condition is used
-        """
-
+        """Create weak form boundary condition projection matrices for mixed boundary condition."""
         if discretization != "CC":
             raise NotImplementedError(
                 "Boundary conditions only implemented" "for CC discretization."
@@ -2528,7 +2486,8 @@ class DiffOperators(object):
     ###########################################################################
 
     @property
-    def average_face_to_cell(self):
+    def average_face_to_cell(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if getattr(self, "_average_face_to_cell", None) is None:
             if self.dim == 1:
                 self._average_face_to_cell = self.aveFx2CC
@@ -2543,7 +2502,8 @@ class DiffOperators(object):
         return self._average_face_to_cell
 
     @property
-    def average_face_to_cell_vector(self):
+    def average_face_to_cell_vector(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if getattr(self, "_average_face_to_cell_vector", None) is None:
             if self.dim == 1:
                 self._average_face_to_cell_vector = self.aveFx2CC
@@ -2559,7 +2519,7 @@ class DiffOperators(object):
 
     @property
     def average_face_x_to_cell(self):
-        """Averaging operator from x-faces to cell centers (scalar quantities).
+        r"""Averaging operator from x-faces to cell centers (scalar quantities).
 
         This property constructs a 2nd order averaging operator that maps scalar
         quantities from x-faces to cell centers. This averaging operator is
@@ -2574,15 +2534,15 @@ class DiffOperators(object):
 
         Notes
         -----
-        Let :math:`\\boldsymbol{\\phi_x}` be a discrete scalar quantity that
+        Let :math:`\boldsymbol{\phi_x}` be a discrete scalar quantity that
         lives on x-faces. **average_face_x_to_cell** constructs a discrete
-        linear operator :math:`\\mathbf{A_{xc}}` that projects
-        :math:`\\boldsymbol{\\phi_x}` to cell centers, i.e.:
+        linear operator :math:`\mathbf{A_{xc}}` that projects
+        :math:`\boldsymbol{\phi_x}` to cell centers, i.e.:
 
         .. math::
-            \\boldsymbol{\\phi_c} = \\mathbf{A_{xc}} \\, \\boldsymbol{\\phi_x}
+            \boldsymbol{\phi_c} = \mathbf{A_{xc}} \, \boldsymbol{\phi_x}
 
-        where :math:`\\boldsymbol{\\phi_c}` approximates the value of the scalar
+        where :math:`\boldsymbol{\phi_c}` approximates the value of the scalar
         quantity at cell centers. For each cell, we are simply averaging
         the values defined on its x-faces. The operation is implemented as a
         matrix vector product, i.e.::
@@ -2644,7 +2604,6 @@ class DiffOperators(object):
             >>> ax1.set_ylabel("Cell Index", fontsize=12)
             >>> plt.show()
         """
-
         if getattr(self, "_average_face_x_to_cell", None) is None:
             n = self.vnC
             if self.dim == 1:
@@ -2657,7 +2616,7 @@ class DiffOperators(object):
 
     @property
     def average_face_y_to_cell(self):
-        """Averaging operator from y-faces to cell centers (scalar quantities).
+        r"""Averaging operator from y-faces to cell centers (scalar quantities).
 
         This property constructs a 2nd order averaging operator that maps scalar
         quantities from y-faces to cell centers. This averaging operator is
@@ -2672,15 +2631,15 @@ class DiffOperators(object):
 
         Notes
         -----
-        Let :math:`\\boldsymbol{\\phi_y}` be a discrete scalar quantity that
+        Let :math:`\boldsymbol{\phi_y}` be a discrete scalar quantity that
         lives on y-faces. **average_face_y_to_cell** constructs a discrete
-        linear operator :math:`\\mathbf{A_{yc}}` that projects
-        :math:`\\boldsymbol{\\phi_y}` to cell centers, i.e.:
+        linear operator :math:`\mathbf{A_{yc}}` that projects
+        :math:`\boldsymbol{\phi_y}` to cell centers, i.e.:
 
         .. math::
-            \\boldsymbol{\\phi_c} = \\mathbf{A_{yc}} \\, \\boldsymbol{\\phi_y}
+            \boldsymbol{\phi_c} = \mathbf{A_{yc}} \, \boldsymbol{\phi_y}
 
-        where :math:`\\boldsymbol{\\phi_c}` approximates the value of the scalar
+        where :math:`\boldsymbol{\phi_c}` approximates the value of the scalar
         quantity at cell centers. For each cell, we are simply averaging
         the values defined on its y-faces. The operation is implemented as a
         matrix vector product, i.e.::
@@ -2754,7 +2713,7 @@ class DiffOperators(object):
 
     @property
     def average_face_z_to_cell(self):
-        """Averaging operator from z-faces to cell centers (scalar quantities).
+        r"""Averaging operator from z-faces to cell centers (scalar quantities).
 
         This property constructs a 2nd order averaging operator that maps scalar
         quantities from z-faces to cell centers. This averaging operator is
@@ -2769,15 +2728,15 @@ class DiffOperators(object):
 
         Notes
         -----
-        Let :math:`\\boldsymbol{\\phi_z}` be a discrete scalar quantity that
+        Let :math:`\boldsymbol{\phi_z}` be a discrete scalar quantity that
         lives on z-faces. **average_face_z_to_cell** constructs a discrete
-        linear operator :math:`\\mathbf{A_{zc}}` that projects
-        :math:`\\boldsymbol{\\phi_z}` to cell centers, i.e.:
+        linear operator :math:`\mathbf{A_{zc}}` that projects
+        :math:`\boldsymbol{\phi_z}` to cell centers, i.e.:
 
         .. math::
-            \\boldsymbol{\\phi_c} = \\mathbf{A_{zc}} \\, \\boldsymbol{\\phi_z}
+            \boldsymbol{\phi_c} = \mathbf{A_{zc}} \, \boldsymbol{\phi_z}
 
-        where :math:`\\boldsymbol{\\phi_c}` approximates the value of the scalar
+        where :math:`\boldsymbol{\phi_c}` approximates the value of the scalar
         quantity at cell centers. For each cell, we are simply averaging
         the values defined on its z-faces. The operation is implemented as a
         matrix vector product, i.e.::
@@ -2850,7 +2809,8 @@ class DiffOperators(object):
         return self._average_face_z_to_cell
 
     @property
-    def average_cell_to_face(self):
+    def average_cell_to_face(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if getattr(self, "_average_cell_to_face", None) is None:
             if self.dim == 1:
                 self._average_cell_to_face = av_extrap(self.shape_cells[0])
@@ -2890,7 +2850,8 @@ class DiffOperators(object):
         return self._average_cell_to_face
 
     @property
-    def average_cell_vector_to_face(self):
+    def average_cell_vector_to_face(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if getattr(self, "_average_cell_vector_to_face", None) is None:
             if self.dim == 1:
                 self._average_cell_vector_to_face = self.aveCC2F
@@ -2926,7 +2887,8 @@ class DiffOperators(object):
         return self._average_cell_vector_to_face
 
     @property
-    def average_cell_to_edge(self):
+    def average_cell_to_edge(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if getattr(self, "_average_cell_to_edge", None) is None:
             n = self.shape_cells
             if self.dim == 1:
@@ -2952,7 +2914,8 @@ class DiffOperators(object):
         return self._average_cell_to_edge
 
     @property
-    def average_edge_to_cell(self):
+    def average_edge_to_cell(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if getattr(self, "_average_edge_to_cell", None) is None:
             if self.dim == 1:
                 self._avE2CC = self.aveEx2CC
@@ -2967,7 +2930,8 @@ class DiffOperators(object):
         return self._avE2CC
 
     @property
-    def average_edge_to_cell_vector(self):
+    def average_edge_to_cell_vector(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if getattr(self, "_average_edge_to_cell_vector", None) is None:
             if self.dim == 1:
                 self._average_edge_to_cell_vector = self.aveEx2CC
@@ -2983,7 +2947,7 @@ class DiffOperators(object):
 
     @property
     def average_edge_x_to_cell(self):
-        """Averaging operator from x-edges to cell centers (scalar quantities).
+        r"""Averaging operator from x-edges to cell centers (scalar quantities).
 
         This property constructs a 2nd order averaging operator that maps scalar
         quantities from x-edges to cell centers. This averaging operator is
@@ -2998,15 +2962,15 @@ class DiffOperators(object):
 
         Notes
         -----
-        Let :math:`\\boldsymbol{\\phi_x}` be a discrete scalar quantity that
+        Let :math:`\boldsymbol{\phi_x}` be a discrete scalar quantity that
         lives on x-edges. **average_edge_x_to_cell** constructs a discrete
-        linear operator :math:`\\mathbf{A_{xc}}` that projects
-        :math:`\\boldsymbol{\\phi_x}` to cell centers, i.e.:
+        linear operator :math:`\mathbf{A_{xc}}` that projects
+        :math:`\boldsymbol{\phi_x}` to cell centers, i.e.:
 
         .. math::
-            \\boldsymbol{\\phi_c} = \\mathbf{A_{xc}} \\, \\boldsymbol{\\phi_x}
+            \boldsymbol{\phi_c} = \mathbf{A_{xc}} \, \boldsymbol{\phi_x}
 
-        where :math:`\\boldsymbol{\\phi_c}` approximates the value of the scalar
+        where :math:`\boldsymbol{\phi_c}` approximates the value of the scalar
         quantity at cell centers. For each cell, we are simply averaging
         the values defined on its x-edges. The operation is implemented as a
         matrix vector product, i.e.::
@@ -3080,7 +3044,7 @@ class DiffOperators(object):
 
     @property
     def average_edge_y_to_cell(self):
-        """Averaging operator from y-edges to cell centers (scalar quantities).
+        r"""Averaging operator from y-edges to cell centers (scalar quantities).
 
         This property constructs a 2nd order averaging operator that maps scalar
         quantities from y-edges to cell centers. This averaging operator is
@@ -3095,15 +3059,15 @@ class DiffOperators(object):
 
         Notes
         -----
-        Let :math:`\\boldsymbol{\\phi_y}` be a discrete scalar quantity that
+        Let :math:`\boldsymbol{\phi_y}` be a discrete scalar quantity that
         lives on y-edges. **average_edge_y_to_cell** constructs a discrete
-        linear operator :math:`\\mathbf{A_{yc}}` that projects
-        :math:`\\boldsymbol{\\phi_y}` to cell centers, i.e.:
+        linear operator :math:`\mathbf{A_{yc}}` that projects
+        :math:`\boldsymbol{\phi_y}` to cell centers, i.e.:
 
         .. math::
-            \\boldsymbol{\\phi_c} = \\mathbf{A_{yc}} \\, \\boldsymbol{\\phi_y}
+            \boldsymbol{\phi_c} = \mathbf{A_{yc}} \, \boldsymbol{\phi_y}
 
-        where :math:`\\boldsymbol{\\phi_c}` approximates the value of the scalar
+        where :math:`\boldsymbol{\phi_c}` approximates the value of the scalar
         quantity at cell centers. For each cell, we are simply averaging
         the values defined on its y-edges. The operation is implemented as a
         matrix vector product, i.e.::
@@ -3177,7 +3141,7 @@ class DiffOperators(object):
 
     @property
     def average_edge_z_to_cell(self):
-        """Averaging operator from z-edges to cell centers (scalar quantities).
+        r"""Averaging operator from z-edges to cell centers (scalar quantities).
 
         This property constructs a 2nd order averaging operator that maps scalar
         quantities from z-edges to cell centers. This averaging operator is
@@ -3192,15 +3156,15 @@ class DiffOperators(object):
 
         Notes
         -----
-        Let :math:`\\boldsymbol{\\phi_z}` be a discrete scalar quantity that
+        Let :math:`\boldsymbol{\phi_z}` be a discrete scalar quantity that
         lives on z-edges. **average_edge_z_to_cell** constructs a discrete
-        linear operator :math:`\\mathbf{A_{zc}}` that projects
-        :math:`\\boldsymbol{\\phi_z}` to cell centers, i.e.:
+        linear operator :math:`\mathbf{A_{zc}}` that projects
+        :math:`\boldsymbol{\phi_z}` to cell centers, i.e.:
 
         .. math::
-            \\boldsymbol{\\phi_c} = \\mathbf{A_{zc}} \\, \\boldsymbol{\\phi_z}
+            \boldsymbol{\phi_c} = \mathbf{A_{zc}} \, \boldsymbol{\phi_z}
 
-        where :math:`\\boldsymbol{\\phi_c}` approximates the value of the scalar
+        where :math:`\boldsymbol{\phi_c}` approximates the value of the scalar
         quantity at cell centers. For each cell, we are simply averaging
         the values defined on its z-edges. The operation is implemented as a
         matrix vector product, i.e.::
@@ -3273,7 +3237,8 @@ class DiffOperators(object):
         return self._average_edge_z_to_cell
 
     @property
-    def average_edge_to_face_vector(self):
+    def average_edge_to_face_vector(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if self.dim == 1:
             return self.average_cell_to_face
         elif self.dim == 2:
@@ -3303,7 +3268,8 @@ class DiffOperators(object):
         return e_to_f
 
     @property
-    def average_node_to_cell(self):
+    def average_node_to_cell(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if getattr(self, "_average_node_to_cell", None) is None:
             # The number of cell centers in each direction
             if self.dim == 1:
@@ -3322,9 +3288,7 @@ class DiffOperators(object):
 
     @property
     def _average_node_to_edge_x(self):
-        """
-        Averaging operator on cell nodes to x-edges
-        """
+        """Averaging operator on cell nodes to x-edges."""
         if self.dim == 1:
             aveN2Ex = av(self.shape_cells[0])
         elif self.dim == 2:
@@ -3339,9 +3303,7 @@ class DiffOperators(object):
 
     @property
     def _average_node_to_edge_y(self):
-        """
-        Averaging operator on cell nodes to y-edges
-        """
+        """Averaging operator on cell nodes to y-edges."""
         if self.dim == 1:
             return None
         elif self.dim == 2:
@@ -3356,9 +3318,7 @@ class DiffOperators(object):
 
     @property
     def _average_node_to_edge_z(self):
-        """
-        Averaging operator on cell nodes to z-edges
-        """
+        """Averaging operator on cell nodes to z-edges."""
         if self.dim == 1 or self.dim == 2:
             return None
         elif self.dim == 3:
@@ -3370,7 +3330,8 @@ class DiffOperators(object):
         return aveN2Ez
 
     @property
-    def average_node_to_edge(self):
+    def average_node_to_edge(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if getattr(self, "_average_node_to_edge", None) is None:
             # The number of cell centers in each direction
             if self.dim == 1:
@@ -3432,7 +3393,8 @@ class DiffOperators(object):
         return aveN2Fz
 
     @property
-    def average_node_to_face(self):
+    def average_node_to_face(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         if getattr(self, "_average_node_to_face", None) is None:
             # The number of cell centers in each direction
             if self.dim == 1:
@@ -3454,7 +3416,8 @@ class DiffOperators(object):
         return self._average_node_to_face
 
     @property
-    def project_face_to_boundary_face(self):
+    def project_face_to_boundary_face(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         # Simple matrix which projects the values of the faces onto the boundary faces
         # Can also be used to "select" the boundary faces
 
@@ -3468,7 +3431,8 @@ class DiffOperators(object):
         return sp.eye(self.n_faces, format="csr")[is_b]
 
     @property
-    def project_edge_to_boundary_edge(self):
+    def project_edge_to_boundary_edge(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         # Simple matrix which projects the values of the faces onto the boundary faces
         # Can also be used to "select" the boundary faces
 
@@ -3486,7 +3450,8 @@ class DiffOperators(object):
         return sp.eye(self.n_edges, format="csr")[is_b]
 
     @property
-    def project_node_to_boundary_node(self):
+    def project_node_to_boundary_node(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
         # Simple matrix which projects the values of the nodes onto the boundary nodes
         # Can also be used to "select" the boundary nodes
 

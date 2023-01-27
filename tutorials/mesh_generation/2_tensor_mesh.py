@@ -10,7 +10,6 @@ Tensor meshes can be defined in 1, 2 or 3 dimensions. Here we demonstrate:
     - How to include padding cells
     - How to plot tensor meshes
     - How to extract properties from meshes
-    
 
 """
 

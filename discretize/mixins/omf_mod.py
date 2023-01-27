@@ -1,3 +1,4 @@
+"""Module for ``omf`` interaction with ``discretize``."""
 import numpy as np
 import discretize
 
@@ -9,13 +10,15 @@ def omf():
     return omf
 
 
-def ravel_data_array(arr, nx, ny, nz):
-    """Converts a 1D numpy array from ``discretize`` ordering (x, y, z)
+def _ravel_data_array(arr, nx, ny, nz):
+    """Ravel an array from discretize ordering to omf ordering.
+
+    Converts a 1D numpy array from ``discretize`` ordering (x, y, z)
     to a flattened 1D numpy array with ``OMF`` ordering (z, y, x)
 
     In ``discretize``, three-dimensional data are frequently organized within a
     1D numpy array whose elements are ordered along the x-axis, then the y-axis,
-    then the z-axis. **ravel_data_array** converts the input array
+    then the z-axis. **_ravel_data_array** converts the input array
     (discretize format) to a 1D numpy array ordered according to the open
     mining format; which is ordered along
     the z-axis, then the y-axis, then the x-axis.
@@ -115,13 +118,15 @@ def ravel_data_array(arr, nx, ny, nz):
     return np.reshape(arr, dim, order="C").ravel(order="F")
 
 
-def unravel_data_array(arr, nx, ny, nz):
-    """Converts a 1D numpy array from ``OMF`` ordering (z, y, x)
+def _unravel_data_array(arr, nx, ny, nz):
+    """Unravel an array from omf ordering to discretize ordering.
+
+    Converts a 1D numpy array from ``OMF`` ordering (z, y, x)
     to a flattened 1D numpy array with ``discretize`` ordering (x, y, z)
 
     In ``OMF``, three-dimensional data are organized within a
     1D numpy array whose elements are ordered along the z-axis, then the y-axis,
-    then the x-axis. **unravel_data_array** converts the input array
+    then the x-axis. **_unravel_data_array** converts the input array
     (OMF format) to a 1D numpy array ordered according to ``discretize``;
     which is ordered along the x-axis, then the y-axis, then the y-axis.
 
@@ -147,14 +152,16 @@ def unravel_data_array(arr, nx, ny, nz):
 
 
 class InterfaceOMF(object):
-    """
+    """Convert between ``omf`` and ``discretize`` objects.
+
     The ``InterfaceOMF`` class was designed for easy conversion between
     ``discretize`` objects and `open mining format <https://www.seequent.com/the-open-mining-format/>`__ (OMF) objects.
     Examples include: meshes, models and data arrays.
     """
 
     def _tensor_mesh_to_omf(mesh, models=None):
-        """
+        """Convert a TensorMesh to an omf object.
+
         Constructs an :class:`omf.VolumeElement` object of this tensor mesh and
         the given models as cell data of that grid.
 
@@ -218,7 +225,7 @@ class InterfaceOMF(object):
         for name, arr in models.items():
             data = omf().ScalarData(
                 name=name,
-                array=ravel_data_array(arr, *mesh.shape_cells),
+                array=_ravel_data_array(arr, *mesh.shape_cells),
                 location="cells",
             )
             omfmesh.data.append(data)
@@ -236,7 +243,9 @@ class InterfaceOMF(object):
         raise NotImplementedError("Not currently possible.")
 
     def to_omf(mesh, models=None):
-        """Convert this mesh object to it's proper ``omf`` data object with
+        """Convert to an ``omf`` data object.
+
+        Convert this mesh object to its proper ``omf`` data object with
         the given model dictionary as the cell data of that dataset.
 
         Parameters
@@ -269,7 +278,7 @@ class InterfaceOMF(object):
 
     @staticmethod
     def _omf_volume_to_tensor(element):
-        """Convert an :class:`omf.VolumeElement` to :class:`discretize.TensorMesh`"""
+        """Convert an :class:`omf.VolumeElement` to :class:`discretize.TensorMesh`."""
         geometry = element.geometry
         h = [geometry.tensor_u, geometry.tensor_v, geometry.tensor_w]
         mesh = discretize.TensorMesh(h)
@@ -281,7 +290,7 @@ class InterfaceOMF(object):
         data_dict = {}
         for data in element.data:
             # NOTE: this is agnostic about data location - i.e. nodes vs cells
-            data_dict[data.name] = unravel_data_array(
+            data_dict[data.name] = _unravel_data_array(
                 np.array(data.array), *mesh.shape_cells
             )
 
@@ -290,7 +299,9 @@ class InterfaceOMF(object):
 
     @staticmethod
     def from_omf(element):
-        """Convert an OMF element to it's proper ``discretize`` type.
+        """Convert an ``omf`` object to a ``discretize`` mesh.
+
+        Convert an OMF element to it's proper ``discretize`` type.
         Automatically determines the output type. Returns both the mesh and a
         dictionary of model arrays.
 

@@ -1,13 +1,13 @@
-"""
+r"""
 Differential Operators
 ======================
 
 For discretized quantities living on a mesh, sparse matricies can be used to
 approximate the following differential operators:
 
-    - gradient: :math:`\\nabla \phi`
-    - divergence: :math:`\\nabla \cdot \mathbf{v}`
-    - curl: :math:`\\nabla \\times \mathbf{v}`
+    - gradient: :math:`\nabla \phi`
+    - divergence: :math:`\nabla \cdot \mathbf{v}`
+    - curl: :math:`\nabla \times \mathbf{v}`
     - scalar Laplacian: :math:`\Delta \mathbf{v}`
 
 Numerical differential operators exist for 1D, 2D and 3D meshes. For each mesh

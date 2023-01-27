@@ -1,3 +1,4 @@
+"""Module for ``matplotlib`` interaction with ``discretize``."""
 import numpy as np
 import warnings
 from discretize.utils import mkvc, ndgrid
@@ -80,7 +81,6 @@ class InterfaceMPL(object):
 
         Examples
         --------
-
         Plotting a 2D TensorMesh grid
 
         >>> from matplotlib import pyplot as plt
@@ -209,7 +209,7 @@ class InterfaceMPL(object):
         stream_threshold=None,
         **kwargs,
     ):
-        """Plots quantities defined on a given mesh.
+        """Plot quantities defined on a given mesh.
 
         This method is primarily used to plot models, scalar quantities and vector
         quantities defined on 2D meshes. For 3D :class:`discretize.TensorMesh` however,
@@ -326,12 +326,11 @@ class InterfaceMPL(object):
             raise NotImplementedError("Can not plot a complex vector.")
 
         if ax is None:
-            fig = plt.figure()
+            plt.figure()
             ax = plt.subplot(111)
         else:
             if not isinstance(ax, matplotlib.axes.Axes):
                 raise TypeError("ax must be an Axes!")
-            fig = ax.figure
         if clim is not None:
             pcolor_opts["vmin"] = clim[0]
             pcolor_opts["vmax"] = clim[1]
@@ -378,7 +377,7 @@ class InterfaceMPL(object):
         stream_thickness=None,
         **kwargs,
     ):
-        """Plots slice of fields on the given 3D mesh.
+        """Plot a slice of fields on the given 3D mesh.
 
         Parameters
         ----------
@@ -637,7 +636,7 @@ class InterfaceMPL(object):
         ylim=None,
         zlim=None,
         aspect="auto",
-        grid=[2, 2, 1],
+        grid=(2, 2, 1),
         pcolor_opts=None,
         fig=None,
         **kwargs,
@@ -1068,7 +1067,7 @@ class InterfaceMPL(object):
         stream_threshold=None,
         stream_thickness=None,
     ):
-        """Common function for plotting an image of a TensorMesh"""
+        # Common function for plotting an image of a TensorMesh
         matplotlib, plt = load_matplotlib()
 
         if ax is None:
@@ -1396,13 +1395,12 @@ class InterfaceMPL(object):
 
         ax = kwargs.get("ax", None)
         if ax is None:
-            fig = plt.figure()
+            plt.figure()
             ax = plt.subplot(111)
             kwargs["ax"] = ax
         else:
             if not isinstance(ax, matplotlib.axes.Axes):
                 raise AssertionError("ax must be an matplotlib.axes.Axes")
-            fig = ax.figure
 
         out = getattr(M, plotType)(*args, **kwargs)
 
@@ -1466,7 +1464,7 @@ class InterfaceMPL(object):
 
             # ax may have been None to start with or set to None
             if ax is None:
-                fig = plt.figure(figsize=(12, 5))
+                plt.figure(figsize=(12, 5))
                 polarax = plt.subplot(121, projection="polar")
                 cartax = plt.subplot(122)
 
@@ -1531,7 +1529,7 @@ class InterfaceMPL(object):
 
         # circles
         n = 100
-        XY2 = [
+        for r in self.nodes_x:
             ax.plot(
                 np.linspace(0.0, np.pi * 2, n),
                 r * np.ones(n),
@@ -1539,8 +1537,6 @@ class InterfaceMPL(object):
                 color=color,
                 lw=linewidth,
             )
-            for r in self.nodes_x
-        ]
 
         return ax
 
@@ -1947,7 +1943,7 @@ class InterfaceMPL(object):
         cmap = pcolor_opts.pop("cmap", None)
         vmin = pcolor_opts.pop("vmin", None)
         vmax = pcolor_opts.pop("vmax", None)
-        shading = pcolor_opts.pop("shading", "flat")
+        pcolor_opts.pop("shading", "flat")  # polycollection does not support shading
         antialiased = pcolor_opts.pop("antialiased", False)
 
         node_grid = np.r_[self.nodes, self.hanging_nodes]
@@ -2338,7 +2334,7 @@ class Slicer(object):
         ylim=None,
         zlim=None,
         aspect="auto",
-        grid=[2, 2, 1],
+        grid=(2, 2, 1),
         pcolor_opts=None,
     ):
         """Initialize interactive figure."""
@@ -2628,7 +2624,6 @@ class Slicer(object):
 
     def update_xy(self):
         """Update plot for change in Z-index."""
-
         # Clean up
         self._clear_elements(["xy_pc", "xz_ahw", "xz_ahk", "zy_avw", "zy_avk"])
 
@@ -2653,7 +2648,6 @@ class Slicer(object):
 
     def update_xz(self):
         """Update plot for change in Y-index."""
-
         # Clean up
         self._clear_elements(["xz_pc", "zy_ahk", "zy_ahw", "xy_ahk", "xy_ahw"])
 
@@ -2680,7 +2674,6 @@ class Slicer(object):
 
     def update_zy(self):
         """Update plot for change in X-index."""
-
         # Clean up
         self._clear_elements(["zy_pc", "xz_avw", "xz_avk", "xy_avw", "xy_avk"])
 

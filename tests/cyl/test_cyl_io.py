@@ -1,4 +1,3 @@
-import numpy as np
 import discretize
 import pytest
 import os
@@ -6,7 +5,7 @@ import os
 
 def test_convert_to_vtk():
     mesh = discretize.CylindricalMesh([20, 15, 10])
-    vtk_mesh = mesh.to_vtk()
+    mesh.to_vtk()
 
 
 def test_bad_convert():
@@ -33,5 +32,5 @@ def cleanup_files(monkeypatch):
     for file in files:
         try:
             os.remove(file)
-        except:
+        except FileNotFoundError:
             pass
