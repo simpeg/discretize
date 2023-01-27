@@ -6,16 +6,16 @@ This example is based on the example in the FiPy_ library.
 Please see their documentation for more information about the
 Cahn-Hilliard equation.
 
-The "Cahn-Hilliard" equation separates a field \( \phi \)
+The "Cahn-Hilliard" equation separates a field :math:`\phi`
 into 0 and 1 with smooth transitions.
 
 .. math::
 
     \frac{\partial \phi}{\partial t} = \nabla \cdot D \nabla \left( \frac{\partial f}{\partial \phi} - \epsilon^2 \nabla^2 \phi \right)
 
-Where \( f \) is the energy function \( f = ( a^2 / 2 )\phi^2(1 - \phi)^2 \)
-which drives \( \phi \) towards either 0 or 1, this competes with the term
-\(\epsilon^2 \nabla^2 \phi \) which is a diffusion term that creates smooth changes in \( \phi \).
+Where :math:`f` is the energy function :math:`f = ( a^2 / 2 )\phi^2(1 - \phi)^2`
+which drives :math:`\phi` towards either 0 or 1, this competes with the term
+:math:`\epsilon^2 \nabla^2 \phi` which is a diffusion term that creates smooth changes in :math:`\phi`.
 The equation can be factored:
 
 .. math::
@@ -23,7 +23,7 @@ The equation can be factored:
     \frac{\partial \phi}{\partial t} = \nabla \cdot D \nabla \psi \\
     \psi = \frac{\partial^2 f}{\partial \phi^2} (\phi - \phi^{\text{old}}) + \frac{\partial f}{\partial \phi} - \epsilon^2 \nabla^2 \phi
 
-Here we will need the derivatives of \( f \):
+Here we will need the derivatives of :math:`f`:
 
 .. math::
 
@@ -31,7 +31,7 @@ Here we will need the derivatives of \( f \):
     \frac{\partial^2 f}{\partial \phi^2} = (a^2/2)2[1-6\phi(1-\phi)]
 
 The implementation below uses backwards Euler in time with an
-exponentially increasing time step. The initial \( \phi \)
+exponentially increasing time step. The initial :math:`\phi`
 is a normally distributed field with a standard deviation of 0.1 and
 mean of 0.5. The grid is 60x60 and takes a few seconds to solve ~130
 times. The results are seen below, and you can see the field separating
