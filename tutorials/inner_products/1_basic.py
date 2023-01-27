@@ -48,9 +48,9 @@ For this simple class of inner products, the inner product matricies for
 discrete quantities living on various parts of the mesh have the form:
 
 .. math::
-    \textrm{Centers:} \; \mathbf{M_c} &= \textrm{diag} (\mathbf{v} ) \n
-    \textrm{Nodes:} \; \mathbf{M_n} &= \frac{1}{2^{2k}} \mathbf{P_n^T } \textrm{diag} (\mathbf{v} ) \mathbf{P_n} \n
-    \textrm{Faces:} \; \mathbf{M_f} &= \frac{1}{4} \mathbf{P_f^T } \textrm{diag} (\mathbf{I_k \otimes v} ) \mathbf{P_f} \n
+    \textrm{Centers:} \; \mathbf{M_c} &= \textrm{diag} (\mathbf{v} ) \\
+    \textrm{Nodes:} \; \mathbf{M_n} &= \frac{1}{2^{2k}} \mathbf{P_n^T } \textrm{diag} (\mathbf{v} ) \mathbf{P_n} \\
+    \textrm{Faces:} \; \mathbf{M_f} &= \frac{1}{4} \mathbf{P_f^T } \textrm{diag} (\mathbf{I_k \otimes v} ) \mathbf{P_f} \\
     \textrm{Edges:} \; \mathbf{M_e} &= \frac{1}{4^{k-1}} \mathbf{P_e^T } \textrm{diag} (\mathbf{I_k \otimes v}) \mathbf{P_e}
 
 where :math:`k = 1,2,3`, :math:`\mathbf{I_k}` is the identity matrix and
