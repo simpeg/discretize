@@ -1,9 +1,9 @@
 .. currentmodule:: discretize
 
-.. _0.8.1_notes:
+.. _0.8.2_notes:
 
 ===================================
-``discretize`` 0.8.1 Release Notes
+``discretize`` 0.8.2 Release Notes
 ===================================
 
 August 17, 2022
