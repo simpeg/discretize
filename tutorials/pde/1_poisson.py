@@ -107,9 +107,9 @@ h = np.ones(75)
 mesh = TensorMesh([h, h], "CC")
 
 # Create system
-DIV = mesh.faceDiv  # Faces to cell centers divergence
-Mf_inv = mesh.getFaceInnerProduct(invMat=True)
-Mc = sdiag(mesh.vol)
+DIV = mesh.face_divergence  # Faces to cell centers divergence
+Mf_inv = mesh.get_face_inner_product(invert_matrix=True)
+Mc = sdiag(mesh.cell_volumes)
 A = Mc * DIV * Mf_inv * DIV.T * Mc
 
 # Define RHS (charge distributions at cell centers)
@@ -132,15 +132,15 @@ E = Mf_inv * DIV.T * Mc * phi
 fig = plt.figure(figsize=(14, 4))
 
 ax1 = fig.add_subplot(131)
-mesh.plotImage(rho, v_type="CC", ax=ax1)
+mesh.plot_image(rho, v_type="CC", ax=ax1)
 ax1.set_title("Charge Density")
 
 ax2 = fig.add_subplot(132)
-mesh.plotImage(phi, v_type="CC", ax=ax2)
+mesh.plot_image(phi, v_type="CC", ax=ax2)
 ax2.set_title("Electric Potential")
 
 ax3 = fig.add_subplot(133)
-mesh.plotImage(
+mesh.plot_image(
     E, ax=ax3, v_type="F", view="vec", stream_opts={"color": "w", "density": 1.0}
 )
 ax3.set_title("Electric Fields")
