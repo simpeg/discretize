@@ -300,7 +300,9 @@ class TestCylInnerProducts_Deriv(unittest.TestCase):
     def test_FaceInnerProductIsotropicDerivInvProp(self):
         def fun(x):
             MfSig = self.mesh.get_face_inner_product(x, invert_model=True)
-            MfSigDeriv = self.mesh.get_face_inner_product_deriv(self.x0, invert_model=True)
+            MfSigDeriv = self.mesh.get_face_inner_product_deriv(
+                self.x0, invert_model=True
+            )
             return MfSig * self.face_vec, MfSigDeriv(self.face_vec)
 
         print("Testing FaceInnerProduct Isotropic InvProp")
@@ -311,7 +313,9 @@ class TestCylInnerProducts_Deriv(unittest.TestCase):
     def test_FaceInnerProductIsotropicDerivInvMat(self):
         def fun(x):
             MfSig = self.mesh.get_face_inner_product(x, invert_matrix=True)
-            MfSigDeriv = self.mesh.get_face_inner_product_deriv(self.x0, invert_matrix=True)
+            MfSigDeriv = self.mesh.get_face_inner_product_deriv(
+                self.x0, invert_matrix=True
+            )
             return MfSig * self.face_vec, MfSigDeriv(self.face_vec)
 
         print("Testing FaceInnerProduct Isotropic InvMat")
@@ -321,7 +325,9 @@ class TestCylInnerProducts_Deriv(unittest.TestCase):
 
     def test_FaceInnerProductIsotropicDerivInvPropInvMat(self):
         def fun(x):
-            MfSig = self.mesh.get_face_inner_product(x, invert_model=True, invert_matrix=True)
+            MfSig = self.mesh.get_face_inner_product(
+                x, invert_model=True, invert_matrix=True
+            )
             MfSigDeriv = self.mesh.get_face_inner_product_deriv(
                 self.x0, invert_model=True, invert_matrix=True
             )
@@ -346,7 +352,9 @@ class TestCylInnerProducts_Deriv(unittest.TestCase):
     def test_EdgeInnerProductIsotropicDerivInvProp(self):
         def fun(x):
             MeSig = self.mesh.get_edge_inner_product(x, invert_model=True)
-            MeSigDeriv = self.mesh.get_edge_inner_product_deriv(self.x0, invert_model=True)
+            MeSigDeriv = self.mesh.get_edge_inner_product_deriv(
+                self.x0, invert_model=True
+            )
             return MeSig * self.edge_vec, MeSigDeriv(self.edge_vec)
 
         print("Testing EdgeInnerProduct Isotropic InvProp")
@@ -357,7 +365,9 @@ class TestCylInnerProducts_Deriv(unittest.TestCase):
     def test_EdgeInnerProductIsotropicDerivInvMat(self):
         def fun(x):
             MeSig = self.mesh.get_edge_inner_product(x, invert_matrix=True)
-            MeSigDeriv = self.mesh.get_edge_inner_product_deriv(self.x0, invert_matrix=True)
+            MeSigDeriv = self.mesh.get_edge_inner_product_deriv(
+                self.x0, invert_matrix=True
+            )
             return MeSig * self.edge_vec, MeSigDeriv(self.edge_vec)
 
         print("Testing EdgeInnerProduct Isotropic InvMat")
@@ -367,7 +377,9 @@ class TestCylInnerProducts_Deriv(unittest.TestCase):
 
     def test_EdgeInnerProductIsotropicDerivInvPropInvMat(self):
         def fun(x):
-            MeSig = self.mesh.get_edge_inner_product(x, invert_model=True, invert_matrix=True)
+            MeSig = self.mesh.get_edge_inner_product(
+                x, invert_model=True, invert_matrix=True
+            )
             MeSigDeriv = self.mesh.get_edge_inner_product_deriv(
                 self.x0, invert_model=True, invert_matrix=True
             )
@@ -455,7 +467,9 @@ class TestCylInnerProductsAnisotropic_Deriv(unittest.TestCase):
             eye = sp.eye(self.mesh.nC)
             P = sp.vstack([sp.hstack([eye, zero, eye])])
 
-            MfSig = self.mesh.get_face_inner_product(x, invert_model=True, invert_matrix=True)
+            MfSig = self.mesh.get_face_inner_product(
+                x, invert_model=True, invert_matrix=True
+            )
             MfSigDeriv = self.mesh.get_face_inner_product_deriv(
                 x0, invert_model=True, invert_matrix=True
             )
@@ -529,7 +543,9 @@ class TestCylInnerProductsAnisotropic_Deriv(unittest.TestCase):
             eye = sp.eye(self.mesh.nC)
             P = sp.vstack([sp.hstack([zero, eye, zero])])
 
-            MeSig = self.mesh.get_edge_inner_product(x, invert_model=True, invert_matrix=True)
+            MeSig = self.mesh.get_edge_inner_product(
+                x, invert_model=True, invert_matrix=True
+            )
             MeSigDeriv = self.mesh.get_edge_inner_product_deriv(
                 x0, invert_model=True, invert_matrix=True
             )

@@ -106,7 +106,13 @@ class TestSimpleQuadTree(unittest.TestCase):
         # plt.subplot(212).spy(T.permute_cells*T.face_divergence*T.permute_faces.T)
         # plt.show()
 
-        self.assertEqual((M.face_divergence - T.permute_cells * T.face_divergence * T.permute_faces.T).nnz, 0)
+        self.assertEqual(
+            (
+                M.face_divergence
+                - T.permute_cells * T.face_divergence * T.permute_faces.T
+            ).nnz,
+            0,
+        )
 
     def test_serialization(self):
         hx, hy = np.r_[1.0, 2, 3, 4], np.r_[5.0, 6, 7, 8]

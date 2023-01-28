@@ -85,7 +85,9 @@ Mf = mesh.get_face_inner_product(sig)  # Inner product matrix for tensor (faces)
 
 # Differential operators
 Gne = mesh.nodal_gradient  # Nodes to edges gradient
-mesh.set_cell_gradient_BC(["neumann", "dirichlet", "neumann"])  # Set boundary conditions
+mesh.set_cell_gradient_BC(
+    ["neumann", "dirichlet", "neumann"]
+)  # Set boundary conditions
 Gcf = mesh.cell_gradient  # Cells to faces gradient
 D = mesh.face_divergence  # Faces to centers divergence
 Cef = mesh.edge_curl  # Edges to faces curl
@@ -157,7 +159,9 @@ mesh = TensorMesh([h, h, h])
 Mc = sdiag(mesh.cell_volumes * sig)  # Inner product matrix (centers)
 
 # Differential operators
-mesh.set_cell_gradient_BC(["neumann", "dirichlet", "neumann"])  # Set boundary conditions
+mesh.set_cell_gradient_BC(
+    ["neumann", "dirichlet", "neumann"]
+)  # Set boundary conditions
 Gcf = mesh.cell_gradient  # Cells to faces gradient
 Dfc = mesh.face_divergence  # Faces to centers divergence
 

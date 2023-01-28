@@ -52,7 +52,8 @@ class TestInnerProducts(discretize.tests.OrderTest):
 
             if self.invert_model:
                 A = self.M.get_edge_inner_product(
-                    discretize.utils.inverse_property_tensor(self.M, sigma), invert_model=True
+                    discretize.utils.inverse_property_tensor(self.M, sigma),
+                    invert_model=True,
                 )
             else:
                 A = self.M.get_edge_inner_product(sigma)
@@ -66,7 +67,8 @@ class TestInnerProducts(discretize.tests.OrderTest):
 
             if self.invert_model:
                 A = self.M.get_face_inner_product(
-                    discretize.utils.inverse_property_tensor(self.M, sigma), invert_model=True
+                    discretize.utils.inverse_property_tensor(self.M, sigma),
+                    invert_model=True,
                 )
             else:
                 A = self.M.get_face_inner_product(sigma)
@@ -197,7 +199,8 @@ class TestInnerProducts2D(discretize.tests.OrderTest):
             E = self.M.project_edge_vector(Ec)
             if self.invert_model:
                 A = self.M.get_edge_inner_product(
-                    discretize.utils.inverse_property_tensor(self.M, sigma), invert_model=True
+                    discretize.utils.inverse_property_tensor(self.M, sigma),
+                    invert_model=True,
                 )
             else:
                 A = self.M.get_edge_inner_product(sigma)
@@ -209,7 +212,8 @@ class TestInnerProducts2D(discretize.tests.OrderTest):
 
             if self.invert_model:
                 A = self.M.get_face_inner_product(
-                    discretize.utils.inverse_property_tensor(self.M, sigma), invert_model=True
+                    discretize.utils.inverse_property_tensor(self.M, sigma),
+                    invert_model=True,
                 )
             else:
                 A = self.M.get_face_inner_product(sigma)

@@ -16,7 +16,9 @@ def doTestFace(h, rep, fast, meshType, invert_model=False, invert_matrix=False):
     sig = np.random.rand(1) if rep == 0 else np.random.rand(mesh.nC * rep)
 
     def fun(sig):
-        M = mesh.get_face_inner_product(sig, invert_model=invert_model, invert_matrix=invert_matrix)
+        M = mesh.get_face_inner_product(
+            sig, invert_model=invert_model, invert_matrix=invert_matrix
+        )
         Md = mesh.get_face_inner_product_deriv(
             sig, invert_model=invert_model, invert_matrix=invert_matrix, do_fast=fast
         )
@@ -46,7 +48,9 @@ def doTestEdge(h, rep, fast, meshType, invert_model=False, invert_matrix=False):
     sig = np.random.rand(1) if rep == 0 else np.random.rand(mesh.nC * rep)
 
     def fun(sig):
-        M = mesh.get_edge_inner_product(sig, invert_model=invert_model, invert_matrix=invert_matrix)
+        M = mesh.get_edge_inner_product(
+            sig, invert_model=invert_model, invert_matrix=invert_matrix
+        )
         Md = mesh.get_edge_inner_product_deriv(
             sig, invert_model=invert_model, invert_matrix=invert_matrix, do_fast=fast
         )

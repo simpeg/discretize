@@ -90,7 +90,9 @@ class TestCylSymmetricMesh(unittest.TestCase):
         self.assertEqual(mesh.cell_volumes, np.pi)
 
         mesh = discretize.CylindricalMesh([2.0, 1.0, 1.0])
-        self.assertTrue(np.all(mesh.cell_volumes == np.pi * np.r_[0.5**2, 1 - 0.5**2]))
+        self.assertTrue(
+            np.all(mesh.cell_volumes == np.pi * np.r_[0.5**2, 1 - 0.5**2])
+        )
 
     def test_gridSizes(self):
         self.assertEqual(self.mesh.gridCC.shape, (self.mesh.nC, 3))
@@ -154,7 +156,9 @@ class TestCylSymmetricMesh(unittest.TestCase):
         Pr = Mr.get_interpolation_matrix(
             np.c_[xr, np.ones(50) * -0.2, np.ones(50) * 0.5], "CC"
         )
-        Pc = Mc.get_interpolation_matrix(np.c_[xc, np.zeros(50), np.ones(50) * 0.5], "CC")
+        Pc = Mc.get_interpolation_matrix(
+            np.c_[xc, np.zeros(50), np.ones(50) * 0.5], "CC"
+        )
         Pc2r = Mc.get_interpolation_matrix_cartesian_mesh(Mr, "CC")
 
         assert np.abs(Pr * (Pc2r * mc) - Pc * mc).max() < 1e-3
@@ -171,8 +175,12 @@ class TestCylSymmetricMesh(unittest.TestCase):
         Pr = Mr.get_interpolation_matrix(
             np.c_[xr, np.ones(50) * -0.2, np.ones(50) * 0.5], "N"
         )
-        Pc = Mc.get_interpolation_matrix(np.c_[xc, np.zeros(50), np.ones(50) * 0.5], "CC")
-        Pc2r = Mc.get_interpolation_matrix_cartesian_mesh(Mr, "CC", location_type_to="N")
+        Pc = Mc.get_interpolation_matrix(
+            np.c_[xc, np.zeros(50), np.ones(50) * 0.5], "CC"
+        )
+        Pc2r = Mc.get_interpolation_matrix_cartesian_mesh(
+            Mr, "CC", location_type_to="N"
+        )
 
         assert np.abs(Pr * (Pc2r * mc) - Pc * mc).max() < 1e-3
 

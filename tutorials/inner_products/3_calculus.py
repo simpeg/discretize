@@ -80,7 +80,9 @@ Gn = mesh.nodal_gradient  # Nodes to edges gradient
 
 # Items required to perform u.T*(Mf*Gc*phi)
 Mf = mesh.get_face_inner_product()  # Basic inner product matrix (faces)
-mesh.set_cell_gradient_BC(["neumann", "dirichlet", "neumann"])  # Set boundary conditions
+mesh.set_cell_gradient_BC(
+    ["neumann", "dirichlet", "neumann"]
+)  # Set boundary conditions
 Gc = mesh.cell_gradient  # Cells to faces gradient
 
 # Plot Sparse Representation

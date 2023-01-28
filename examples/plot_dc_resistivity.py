@@ -14,13 +14,17 @@ def run(plotIt=True):
     # Step1: Generate Tensor and Curvilinear Mesh
     sz = [40, 40]
     tM = discretize.TensorMesh(sz)
-    rM = discretize.CurvilinearMesh(discretize.utils.example_curvilinear_grid(sz, "rotate"))
+    rM = discretize.CurvilinearMesh(
+        discretize.utils.example_curvilinear_grid(sz, "rotate")
+    )
 
     # Step2: Direct Current (DC) operator
     def DCfun(mesh, pts):
         D = mesh.face_divergence
         sigma = 1e-2 * np.ones(mesh.nC)
-        MsigI = mesh.get_face_inner_product(sigma, invert_model=True, invert_matrix=True)
+        MsigI = mesh.get_face_inner_product(
+            sigma, invert_model=True, invert_matrix=True
+        )
         A = -D * MsigI * D.T
         A[-1, -1] /= mesh.cell_volumes[-1]  # Remove null space
         rhs = np.zeros(mesh.nC)

@@ -22,17 +22,19 @@ class TestCyl3DGeometries(unittest.TestCase):
         area = self.mesh.face_areas
         self.assertTrue(self.mesh.nF == len(area))
         self.assertTrue(
-            area[: self.mesh.vnF[0]].sum() == 2 * np.pi * self.mesh.h[0] * self.mesh.h[2]
+            area[: self.mesh.vnF[0]].sum()
+            == 2 * np.pi * self.mesh.h[0] * self.mesh.h[2]
         )
         self.assertTrue(
             np.all(
-                area[self.mesh.vnF[0] : self.mesh.vnF[1]] == self.mesh.h[0] * self.mesh.h[2]
+                area[self.mesh.vnF[0] : self.mesh.vnF[1]]
+                == self.mesh.h[0] * self.mesh.h[2]
             )
         )
         self.assertTrue(
             np.all(
                 area[sum(self.mesh.vnF[:2]) :]
-                == np.pi * self.mesh.h[0]**2 / self.mesh.shape_cells[1]
+                == np.pi * self.mesh.h[0] ** 2 / self.mesh.shape_cells[1]
             )
         )
 
@@ -43,13 +45,19 @@ class TestCyl3DGeometries(unittest.TestCase):
         self.assertTrue(
             np.all(
                 self.mesh.edge_lengths[self.mesh.vnE[0] : sum(self.mesh.vnE[:2])]
-                == np.kron(np.ones(self.mesh.shape_cells[2] + 1), self.mesh.h[0] * self.mesh.h[1])
+                == np.kron(
+                    np.ones(self.mesh.shape_cells[2] + 1),
+                    self.mesh.h[0] * self.mesh.h[1],
+                )
             )
         )
         self.assertTrue(
             np.all(
                 self.mesh.edge_lengths[self.mesh.vnE[0] : sum(self.mesh.vnE[:2])]
-                == np.kron(np.ones(self.mesh.shape_cells[2] + 1), self.mesh.h[0] * self.mesh.h[1])
+                == np.kron(
+                    np.ones(self.mesh.shape_cells[2] + 1),
+                    self.mesh.h[0] * self.mesh.h[1],
+                )
             )
         )
         self.assertTrue(
@@ -60,11 +68,16 @@ class TestCyl3DGeometries(unittest.TestCase):
         )
 
     def test_vol(self):
-        self.assertTrue(self.mesh.cell_volumes.sum() == np.pi * self.mesh.h[0]**2 * self.mesh.h[2])
+        self.assertTrue(
+            self.mesh.cell_volumes.sum() == np.pi * self.mesh.h[0] ** 2 * self.mesh.h[2]
+        )
         self.assertTrue(
             np.all(
                 self.mesh.cell_volumes
-                == np.pi * self.mesh.h[0]**2 * self.mesh.h[2] / self.mesh.shape_cells[1]
+                == np.pi
+                * self.mesh.h[0] ** 2
+                * self.mesh.h[2]
+                / self.mesh.shape_cells[1]
             )
         )
 
@@ -175,9 +188,7 @@ class Cyl3DGrid(unittest.TestCase):
 
         # Nodes
         self.assertTrue((mesh.nodes_x == [0.0, 0.5, 1.0]).all())
-        self.assertTrue(
-            (mesh.nodes_y == 2 * np.pi * np.r_[0.0, 0.25, 0.5, 0.75]).all()
-        )
+        self.assertTrue((mesh.nodes_y == 2 * np.pi * np.r_[0.0, 0.25, 0.5, 0.75]).all())
         self.assertTrue((mesh.nodes_z == np.r_[0.0, 1.0]).all())
 
         self.assertTrue(
