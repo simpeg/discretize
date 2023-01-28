@@ -23,4 +23,4 @@ Contributors
 
 Pull requests
 =============
-* `#290 <https://github.com/simpeg/discretize/pull/290>`__: Importlib import fix
+* `#291 <https://github.com/simpeg/discretize/pull/291>`__: Importlib import fix
