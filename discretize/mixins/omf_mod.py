@@ -209,14 +209,15 @@ class InterfaceOMF(object):
         else:
             raise RuntimeError("This mesh is too high-dimensional for OMF")
         # Set rotation axes
-        geometry.axis_u = mesh.axis_u
-        geometry.axis_v = mesh.axis_v
-        geometry.axis_w = mesh.axis_w
+        orientation = mesh.orientation
+        geometry.axis_u = orientation[0]
+        geometry.axis_v = orientation[1]
+        geometry.axis_w = orientation[2]
         # Set the origin
         geometry.origin = mesh.origin
         # Make sure the geometry is built correctly
         geometry.validate()
-        # Make the volume elemet (the OMF object)
+        # Make the volume element (the OMF object)
         omfmesh = omf().VolumeElement(
             geometry=geometry,
         )
@@ -281,11 +282,14 @@ class InterfaceOMF(object):
         """Convert an :class:`omf.VolumeElement` to :class:`discretize.TensorMesh`."""
         geometry = element.geometry
         h = [geometry.tensor_u, geometry.tensor_v, geometry.tensor_w]
-        mesh = discretize.TensorMesh(h)
-        mesh.axis_u = geometry.axis_u
-        mesh.axis_v = geometry.axis_v
-        mesh.axis_w = geometry.axis_w
-        mesh.origin = geometry.origin
+        orientation = np.array(
+            [
+                geometry.axis_u,
+                geometry.axis_v,
+                geometry.axis_w,
+            ]
+        )
+        mesh = discretize.TensorMesh(h, origin=geometry.origin, orientation=orientation)
 
         data_dict = {}
         for data in element.data:
