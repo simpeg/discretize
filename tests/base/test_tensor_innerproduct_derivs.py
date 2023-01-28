@@ -6,9 +6,9 @@ np.random.seed(50)
 
 
 class TestInnerProductsDerivsTensor(unittest.TestCase):
-    def doTestFace(self, h, rep, fast, meshType, invProp=False, invMat=False):
+    def doTestFace(self, h, rep, fast, meshType, invert_model=False, invert_matrix=False):
         if meshType == "Curv":
-            hRect = discretize.utils.exampleLrmGrid(h, "rotate")
+            hRect = discretize.utils.example_curvilinear_grid(h, "rotate")
             mesh = discretize.CurvilinearMesh(hRect)
         elif meshType == "Tree":
             mesh = discretize.TreeMesh(h, levels=3)
@@ -20,9 +20,9 @@ class TestInnerProductsDerivsTensor(unittest.TestCase):
         sig = np.random.rand(1) if rep == 0 else np.random.rand(mesh.nC * rep)
 
         def fun(sig):
-            M = mesh.getFaceInnerProduct(sig, invProp=invProp, invMat=invMat)
-            Md = mesh.getFaceInnerProductDeriv(
-                sig, invProp=invProp, invMat=invMat, doFast=fast
+            M = mesh.get_face_inner_product(sig, invert_model=invert_model, invert_matrix=invert_matrix)
+            Md = mesh.get_face_inner_product_deriv(
+                sig, invert_model=invert_model, invert_matrix=invert_matrix, do_fast=fast
             )
             return M * v, Md(v)
 
@@ -32,13 +32,13 @@ class TestInnerProductsDerivsTensor(unittest.TestCase):
             h,
             rep,
             fast,
-            ("harmonic" if invProp and invMat else "standard"),
+            ("harmonic" if invert_model and invert_matrix else "standard"),
         )
-        return discretize.tests.checkDerivative(fun, sig, num=5, plotIt=False)
+        return discretize.tests.check_derivative(fun, sig, num=5, plotIt=False)
 
-    def doTestEdge(self, h, rep, fast, meshType, invProp=False, invMat=False):
+    def doTestEdge(self, h, rep, fast, meshType, invert_model=False, invert_matrix=False):
         if meshType == "Curv":
-            hRect = discretize.utils.exampleLrmGrid(h, "rotate")
+            hRect = discretize.utils.example_curvilinear_grid(h, "rotate")
             mesh = discretize.CurvilinearMesh(hRect)
         elif meshType == "Tree":
             mesh = discretize.TreeMesh(h, levels=3)
@@ -50,9 +50,9 @@ class TestInnerProductsDerivsTensor(unittest.TestCase):
         sig = np.random.rand(1) if rep == 0 else np.random.rand(mesh.nC * rep)
 
         def fun(sig):
-            M = mesh.getEdgeInnerProduct(sig, invProp=invProp, invMat=invMat)
-            Md = mesh.getEdgeInnerProductDeriv(
-                sig, invProp=invProp, invMat=invMat, doFast=fast
+            M = mesh.get_edge_inner_product(sig, invert_model=invert_model, invert_matrix=invert_matrix)
+            Md = mesh.get_edge_inner_product_deriv(
+                sig, invert_model=invert_model, invert_matrix=invert_matrix, do_fast=fast
             )
             return M * v, Md(v)
 
@@ -62,9 +62,9 @@ class TestInnerProductsDerivsTensor(unittest.TestCase):
             h,
             rep,
             fast,
-            ("harmonic" if invProp and invMat else "standard"),
+            ("harmonic" if invert_model and invert_matrix else "standard"),
         )
-        return discretize.tests.checkDerivative(fun, sig, num=5, plotIt=False)
+        return discretize.tests.check_derivative(fun, sig, num=5, plotIt=False)
 
     def test_FaceIP_1D_float(self):
         self.assertTrue(self.doTestFace([10], 0, False, "Tensor"))
@@ -176,42 +176,42 @@ class TestInnerProductsDerivsTensor(unittest.TestCase):
 
     def test_FaceIP_1D_float_fast_harmonic(self):
         self.assertTrue(
-            self.doTestFace([10], 0, True, "Tensor", invProp=True, invMat=True)
+            self.doTestFace([10], 0, True, "Tensor", invert_model=True, invert_matrix=True)
         )
 
     def test_FaceIP_2D_float_fast_harmonic(self):
         self.assertTrue(
-            self.doTestFace([10, 4], 0, True, "Tensor", invProp=True, invMat=True)
+            self.doTestFace([10, 4], 0, True, "Tensor", invert_model=True, invert_matrix=True)
         )
 
     def test_FaceIP_3D_float_fast_harmonic(self):
         self.assertTrue(
-            self.doTestFace([10, 4, 5], 0, True, "Tensor", invProp=True, invMat=True)
+            self.doTestFace([10, 4, 5], 0, True, "Tensor", invert_model=True, invert_matrix=True)
         )
 
     def test_FaceIP_1D_isotropic_fast_harmonic(self):
         self.assertTrue(
-            self.doTestFace([10], 1, True, "Tensor", invProp=True, invMat=True)
+            self.doTestFace([10], 1, True, "Tensor", invert_model=True, invert_matrix=True)
         )
 
     def test_FaceIP_2D_isotropic_fast_harmonic(self):
         self.assertTrue(
-            self.doTestFace([10, 4], 1, True, "Tensor", invProp=True, invMat=True)
+            self.doTestFace([10, 4], 1, True, "Tensor", invert_model=True, invert_matrix=True)
         )
 
     def test_FaceIP_3D_isotropic_fast_harmonic(self):
         self.assertTrue(
-            self.doTestFace([10, 4, 5], 1, True, "Tensor", invProp=True, invMat=True)
+            self.doTestFace([10, 4, 5], 1, True, "Tensor", invert_model=True, invert_matrix=True)
         )
 
     def test_FaceIP_2D_anisotropic_fast_harmonic(self):
         self.assertTrue(
-            self.doTestFace([10, 4], 2, True, "Tensor", invProp=True, invMat=True)
+            self.doTestFace([10, 4], 2, True, "Tensor", invert_model=True, invert_matrix=True)
         )
 
     def test_FaceIP_3D_anisotropic_fast_harmonic(self):
         self.assertTrue(
-            self.doTestFace([10, 4, 5], 3, True, "Tensor", invProp=True, invMat=True)
+            self.doTestFace([10, 4, 5], 3, True, "Tensor", invert_model=True, invert_matrix=True)
         )
 
     def test_FaceIP_2D_float_Curv(self):

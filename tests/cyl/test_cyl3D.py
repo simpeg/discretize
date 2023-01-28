@@ -11,60 +11,60 @@ TOL = 1e-1
 
 class TestCyl3DGeometries(unittest.TestCase):
     def setUp(self):
-        hx = utils.meshTensor([(1, 1)])
-        htheta = utils.meshTensor([(1.0, 4)])
+        hx = utils.unpack_widths([(1, 1)])
+        htheta = utils.unpack_widths([(1.0, 4)])
         htheta = htheta * 2 * np.pi / htheta.sum()
         hz = hx
 
-        self.mesh = discretize.CylMesh([hx, htheta, hz])
+        self.mesh = discretize.CylindricalMesh([hx, htheta, hz])
 
     def test_areas(self):
-        area = self.mesh.area
+        area = self.mesh.face_areas
         self.assertTrue(self.mesh.nF == len(area))
         self.assertTrue(
-            area[: self.mesh.vnF[0]].sum() == 2 * np.pi * self.mesh.hx * self.mesh.hz
+            area[: self.mesh.vnF[0]].sum() == 2 * np.pi * self.mesh.h[0] * self.mesh.h[2]
         )
         self.assertTrue(
             np.all(
-                area[self.mesh.vnF[0] : self.mesh.vnF[1]] == self.mesh.hx * self.mesh.hz
+                area[self.mesh.vnF[0] : self.mesh.vnF[1]] == self.mesh.h[0] * self.mesh.h[2]
             )
         )
         self.assertTrue(
             np.all(
                 area[sum(self.mesh.vnF[:2]) :]
-                == np.pi * self.mesh.hx**2 / self.mesh.nCy
+                == np.pi * self.mesh.h[0]**2 / self.mesh.shape_cells[1]
             )
         )
 
     def test_edges(self):
-        edge = self.mesh.edge
+        edge = self.mesh.edge_lengths
         self.assertTrue(self.mesh.nE == len(edge))
-        self.assertTrue(np.all(edge[: self.mesh.vnF[0]] == self.mesh.hx))
+        self.assertTrue(np.all(edge[: self.mesh.vnF[0]] == self.mesh.h[0]))
         self.assertTrue(
             np.all(
-                self.mesh.edge[self.mesh.vnE[0] : sum(self.mesh.vnE[:2])]
-                == np.kron(np.ones(self.mesh.nCz + 1), self.mesh.hx * self.mesh.hy)
+                self.mesh.edge_lengths[self.mesh.vnE[0] : sum(self.mesh.vnE[:2])]
+                == np.kron(np.ones(self.mesh.shape_cells[2] + 1), self.mesh.h[0] * self.mesh.h[1])
             )
         )
         self.assertTrue(
             np.all(
-                self.mesh.edge[self.mesh.vnE[0] : sum(self.mesh.vnE[:2])]
-                == np.kron(np.ones(self.mesh.nCz + 1), self.mesh.hx * self.mesh.hy)
+                self.mesh.edge_lengths[self.mesh.vnE[0] : sum(self.mesh.vnE[:2])]
+                == np.kron(np.ones(self.mesh.shape_cells[2] + 1), self.mesh.h[0] * self.mesh.h[1])
             )
         )
         self.assertTrue(
             np.all(
-                self.mesh.edge[sum(self.mesh.vnE[:2]) :]
-                == np.kron(self.mesh.hz, np.ones(self.mesh.nCy + 1))
+                self.mesh.edge_lengths[sum(self.mesh.vnE[:2]) :]
+                == np.kron(self.mesh.h[2], np.ones(self.mesh.shape_cells[1] + 1))
             )
         )
 
     def test_vol(self):
-        self.assertTrue(self.mesh.vol.sum() == np.pi * self.mesh.hx**2 * self.mesh.hz)
+        self.assertTrue(self.mesh.cell_volumes.sum() == np.pi * self.mesh.h[0]**2 * self.mesh.h[2])
         self.assertTrue(
             np.all(
-                self.mesh.vol
-                == np.pi * self.mesh.hx**2 * self.mesh.hz / self.mesh.nCy
+                self.mesh.cell_volumes
+                == np.pi * self.mesh.h[0]**2 * self.mesh.h[2] / self.mesh.shape_cells[1]
             )
         )
 
@@ -96,16 +96,16 @@ def test_boundary_items():
 
 class Cyl3DGrid(unittest.TestCase):
     def setUp(self):
-        self.mesh = discretize.CylMesh([2, 4, 1])
+        self.mesh = discretize.CylindricalMesh([2, 4, 1])
 
     def test_counting(self):
         mesh = self.mesh
 
         # cell centers
         self.assertEqual(mesh.nC, 8)
-        self.assertEqual(mesh.nCx, 2)
-        self.assertEqual(mesh.nCy, 4)
-        self.assertEqual(mesh.nCz, 1)
+        self.assertEqual(mesh.shape_cells[0], 2)
+        self.assertEqual(mesh.shape_cells[1], 4)
+        self.assertEqual(mesh.shape_cells[2], 1)
         self.assertEqual(mesh.vnC, (2, 4, 1))
 
         # faces
@@ -130,9 +130,9 @@ class Cyl3DGrid(unittest.TestCase):
         self.assertNotEqual(np.prod(mesh.vnEz), mesh.nEz)  # periodic boundary condition
 
         # nodes
-        self.assertEqual(mesh.nNx, 3)
-        self.assertEqual(mesh.nNy, 4)
-        self.assertEqual(mesh.nNz, 2)
+        self.assertEqual(mesh.shape_nodes[0], 3)
+        self.assertEqual(mesh.shape_nodes[1], 4)
+        self.assertEqual(mesh.shape_nodes[2], 2)
         self.assertEqual(mesh.vnN, (3, 4, 2))
         self.assertEqual(mesh.nN, 18)
         self.assertNotEqual(mesh.nN, np.prod(mesh.vnN))  # periodic boundary condition
@@ -141,14 +141,14 @@ class Cyl3DGrid(unittest.TestCase):
         mesh = self.mesh
 
         # Cell centers
-        self.assertTrue((mesh.vectorCCx == [0.25, 0.75]).all())
+        self.assertTrue((mesh.cell_centers_x == [0.25, 0.75]).all())
         self.assertTrue(
             (
-                mesh.vectorCCy
+                mesh.cell_centers_y
                 == 2.0 * np.pi * np.r_[1.0 / 8.0, 3.0 / 8.0, 5.0 / 8.0, 7.0 / 8.0]
             ).all()
         )
-        self.assertTrue(mesh.vectorCCz == 0.5)
+        self.assertTrue(mesh.cell_centers_z == 0.5)
 
         self.assertTrue((mesh.gridCC[:, 0] == 4 * [0.25, 0.75]).all())
         self.assertTrue(
@@ -174,11 +174,11 @@ class Cyl3DGrid(unittest.TestCase):
         mesh = self.mesh
 
         # Nodes
-        self.assertTrue((mesh.vectorNx == [0.0, 0.5, 1.0]).all())
+        self.assertTrue((mesh.nodes_x == [0.0, 0.5, 1.0]).all())
         self.assertTrue(
-            (mesh.vectorNy == 2 * np.pi * np.r_[0.0, 0.25, 0.5, 0.75]).all()
+            (mesh.nodes_y == 2 * np.pi * np.r_[0.0, 0.25, 0.5, 0.75]).all()
         )
-        self.assertTrue((mesh.vectorNz == np.r_[0.0, 1.0]).all())
+        self.assertTrue((mesh.nodes_z == np.r_[0.0, 1.0]).all())
 
         self.assertTrue(
             (
@@ -319,12 +319,12 @@ class Cyl3DGrid(unittest.TestCase):
 
 class TestCartesianGrid(unittest.TestCase):
     def test_cartesianGrid(self):
-        mesh = discretize.CylMesh([1, 4, 1])
+        mesh = discretize.CylindricalMesh([1, 4, 1])
 
         root2over2 = np.sqrt(2.0) / 2.0
 
         # cell centers
-        cartCC = mesh.cartesianGrid("CC")
+        cartCC = mesh.cartesian_grid("CC")
         self.assertTrue(
             np.allclose(cartCC[:, 0], 0.5 * root2over2 * np.r_[1.0, -1.0, -1.0, 1.0])
         )
@@ -334,7 +334,7 @@ class TestCartesianGrid(unittest.TestCase):
         self.assertTrue(np.allclose(cartCC[:, 2], 0.5 * np.ones(4)))
 
         # nodes
-        cartN = mesh.cartesianGrid("N")
+        cartN = mesh.cartesian_grid("N")
         self.assertTrue(
             np.allclose(cartN[:, 0], np.hstack(2 * [0.0, 1.0, 0.0, -1.0, 0.0]))
         )
@@ -346,15 +346,15 @@ class TestCartesianGrid(unittest.TestCase):
 
 class Deflation(unittest.TestCase):
     def test_areas(self):
-        mesh = discretize.CylMesh([1, 2, 1])
+        mesh = discretize.CylindricalMesh([1, 2, 1])
 
         areas = np.hstack([[np.pi] * 2, [1] * 2, [np.pi / 2] * 4])
-        self.assertTrue(np.all(mesh.area == areas))
+        self.assertTrue(np.all(mesh.face_areas == areas))
 
         edges = np.hstack([[1] * 4, [np.pi] * 4, [1] * 3])
-        self.assertTrue(np.all(mesh.edge == edges))
+        self.assertTrue(np.all(mesh.edge_lengths == edges))
 
-        mesh = discretize.CylMesh([2, 5, 3])
+        mesh = discretize.CylindricalMesh([2, 5, 3])
 
         hangingF = np.hstack(
             [
@@ -362,14 +362,14 @@ class Deflation(unittest.TestCase):
                 for dim in ["x", "y", "z"]
             ]
         )
-        self.assertTrue(np.all(mesh._face_areas_full[~hangingF] == mesh.area))
+        self.assertTrue(np.all(mesh._face_areas_full[~hangingF] == mesh.face_areas))
         hangingE = np.hstack(
             [
                 getattr(mesh, "_ishanging_edges_{}".format(dim))
                 for dim in ["x", "y", "z"]
             ]
         )
-        self.assertTrue(np.all(mesh._edge_lengths_full[~hangingE] == mesh.edge))
+        self.assertTrue(np.all(mesh._edge_lengths_full[~hangingE] == mesh.edge_lengths))
 
 
 if __name__ == "__main__":

@@ -56,7 +56,7 @@ cylE3 = lambda M, ex, ey, ez: np.vstack(
 
 #         phi = call3(fun, self.M.gridCC)
 
-#         phix_num = self.M.cellGradx * phi
+#         phix_num = self.M.cell_gradient_x * phi
 #         phix_ana = call3(solR, self.M.gridFx)
 
 #         err = np.linalg.norm(phix_num - phix_ana, np.inf)
@@ -85,9 +85,9 @@ class TestFaceDiv3D(tests.OrderTest):
 
         Fc = cylF3(self.M, funR, funT, funZ)
         # Fc = np.c_[Fc[:, 0], np.zeros(self.M.nF), Fc[:, 1]]
-        F = self.M.projectFaceVector(Fc)
+        F = self.M.project_face_vector(Fc)
 
-        divF = self.M.faceDiv.dot(F)
+        divF = self.M.face_divergence.dot(F)
         divF_ana = call3(sol, self.M.gridCC)
 
         err = np.linalg.norm((divF - divF_ana), np.inf)
@@ -98,7 +98,7 @@ class TestFaceDiv3D(tests.OrderTest):
 
 
 class TestEdgeCurl3D(tests.OrderTest):
-    name = "edgeCurl"
+    name = "edge_curl"
     meshTypes = MESHTYPES
     meshDimension = 3
     meshSizes = [8, 16, 32, 64]
@@ -140,11 +140,11 @@ class TestEdgeCurl3D(tests.OrderTest):
         )
 
         Ec = cylE3(self.M, funR, funT, funZ)
-        E = self.M.projectEdgeVector(Ec)
-        curlE_num = self.M.edgeCurl * E
+        E = self.M.project_edge_vector(Ec)
+        curlE_num = self.M.edge_curl * E
 
         Fc = cylF3(self.M, sol_r, sol_t, sol_z)
-        curlE_ana = self.M.projectFaceVector(Fc)
+        curlE_ana = self.M.project_face_vector(Fc)
 
         err = np.linalg.norm((curlE_num - curlE_ana), np.inf)
         return err
@@ -160,7 +160,7 @@ class TestAverageSimple(unittest.TestCase):
         hy = np.random.rand(n)
         hy = hy * 2 * np.pi / hy.sum()
         hz = np.random.rand(n)
-        self.mesh = discretize.CylMesh([hx, hy, hz])
+        self.mesh = discretize.CylindricalMesh([hx, hy, hz])
 
     def test_constantEdges(self):
         funR = lambda r, t, z: r
@@ -168,7 +168,7 @@ class TestAverageSimple(unittest.TestCase):
         funZ = lambda r, t, z: z
 
         Ec = cylE3(self.mesh, funR, funT, funZ)
-        E = self.mesh.projectEdgeVector(Ec)
+        E = self.mesh.project_edge_vector(Ec)
 
         aveE = self.mesh.aveE2CCV * E
 
@@ -192,7 +192,7 @@ class TestAverageSimple(unittest.TestCase):
         funZ = lambda r, t, z: z
 
         Fc = cylF3(self.mesh, funR, funT, funZ)
-        F = self.mesh.projectFaceVector(Fc)
+        F = self.mesh.project_face_vector(Fc)
 
         aveF = self.mesh.aveF2CCV * F
 
@@ -224,7 +224,7 @@ class TestAveF2CCV(tests.OrderTest):
         funZ = lambda r, t, z: np.sin(np.pi * z) * np.sin(2 * np.pi * r) * np.sin(t)
 
         Fc = cylF3(self.M, funR, funT, funZ)
-        F = self.M.projectFaceVector(Fc)
+        F = self.M.project_face_vector(Fc)
 
         aveF = self.M.aveF2CCV * F
 
@@ -248,7 +248,7 @@ class TestAveF2CC(tests.OrderTest):
         fun = lambda r, t, z: np.sin(np.pi * z) * np.sin(np.pi * r) * np.sin(t)
 
         Fc = cylF3(self.M, fun, fun, fun)
-        F = self.M.projectFaceVector(Fc)
+        F = self.M.project_face_vector(Fc)
 
         aveF = self.M.aveF2CC * F
         aveF_ana = fun(self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2])
@@ -384,7 +384,7 @@ class TestAveE2CCV(tests.OrderTest):
         funZ = lambda r, t, z: np.sin(np.pi * z) * np.sin(np.pi * r) * np.sin(t)
 
         Ec = cylE3(self.M, funR, funT, funZ)
-        E = self.M.projectEdgeVector(Ec)
+        E = self.M.project_edge_vector(Ec)
 
         aveE = self.M.aveE2CCV * E
 
@@ -411,7 +411,7 @@ class TestAveE2CC(tests.OrderTest):
         fun = lambda r, t, z: np.sin(np.pi * z) * np.sin(np.pi * r) * np.sin(t)
 
         Ec = cylE3(self.M, fun, fun, fun)
-        E = self.M.projectEdgeVector(Ec)
+        E = self.M.project_edge_vector(Ec)
 
         aveE = self.M.aveE2CC * E
         aveE_ana = fun(self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2])
@@ -478,7 +478,7 @@ class EdgeInnerProductFctsIsotropic(object):
 class TestCylInnerProducts_simple(unittest.TestCase):
     def setUp(self):
         n = 100.0
-        self.mesh = discretize.CylMesh([n, n, n])
+        self.mesh = discretize.CylindricalMesh([n, n, n])
 
     def test_FaceInnerProductIsotropic(self):
         # Here we will make up some j vectors that vary in space
@@ -486,7 +486,7 @@ class TestCylInnerProducts_simple(unittest.TestCase):
 
         fcts = FaceInnerProductFctsIsotropic()
         sig, jv = fcts.vectors(self.mesh)
-        MfSig = self.mesh.getFaceInnerProduct(sig)
+        MfSig = self.mesh.get_face_inner_product(sig)
         numeric_ans = jv.T.dot(MfSig.dot(jv))
 
         ans = fcts.sol()
@@ -506,7 +506,7 @@ class TestCylInnerProducts_simple(unittest.TestCase):
 
         fcts = EdgeInnerProductFctsIsotropic()
         sig, hv = fcts.vectors(self.mesh)
-        MeSig = self.mesh.getEdgeInnerProduct(sig)
+        MeSig = self.mesh.get_edge_inner_product(sig)
         numeric_ans = hv.T.dot(MeSig.dot(hv))
 
         ans = fcts.sol()
@@ -528,7 +528,7 @@ class TestCylFaceInnerProducts_Order(tests.OrderTest):
     def getError(self):
         fct = FaceInnerProductFctsIsotropic()
         sig, jv = fct.vectors(self.M)
-        Msig = self.M.getFaceInnerProduct(sig)
+        Msig = self.M.get_face_inner_product(sig)
         return float(fct.sol()) - jv.T.dot(Msig.dot(jv))
 
     def test_order(self):
@@ -542,7 +542,7 @@ class TestCylEdgeInnerProducts_Order(tests.OrderTest):
     def getError(self):
         fct = EdgeInnerProductFctsIsotropic()
         sig, hv = fct.vectors(self.M)
-        Msig = self.M.getEdgeInnerProduct(sig)
+        Msig = self.M.get_edge_inner_product(sig)
         return float(fct.sol()) - hv.T.dot(Msig.dot(hv))
 
     def test_order(self):
@@ -601,7 +601,7 @@ class MimeticProperties(unittest.TestCase):
 
     def test_DivCurl(self):
         for meshType in self.meshTypes:
-            mesh, _ = discretize.tests.setupMesh(
+            mesh, _ = discretize.tests.setup_mesh(
                 meshType, self.meshSize, self.meshDimension
             )
             v = np.random.rand(mesh.nE)
@@ -615,7 +615,7 @@ class MimeticProperties(unittest.TestCase):
 
     def test_CurlGrad(self):
         for meshType in self.meshTypes:
-            mesh, _ = discretize.tests.setupMesh(
+            mesh, _ = discretize.tests.setup_mesh(
                 meshType, self.meshSize, self.meshDimension
             )
             v = np.random.rand(mesh.nN)
