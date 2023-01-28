@@ -799,7 +799,7 @@ class TreeMesh(
             iy[i_s[3]] = 0.0
             Pafy = sp.diags(iy)
 
-            MfI = self.get_face_inner_product(invMat=True)
+            MfI = self.get_face_inner_product(invert_matrix=True)
 
             if self.dim == 2:
                 Pi = sp.block_diag([Pafx, Pafy])
@@ -829,7 +829,7 @@ class TreeMesh(
             ix[i_s[1]] = 0.0
             Pafx = sp.diags(ix)
 
-            MfI = self.get_face_inner_product(invMat=True)
+            MfI = self.get_face_inner_product(invert_matrix=True)
             MfIx = sp.diags(MfI.diagonal()[:nFx])
 
             self._cell_gradient_x = (
@@ -851,7 +851,7 @@ class TreeMesh(
             iy[i_s[3]] = 0.0
             Pafy = sp.diags(iy)
 
-            MfI = self.get_face_inner_product(invMat=True)
+            MfI = self.get_face_inner_product(invert_matrix=True)
             MfIy = sp.diags(MfI.diagonal()[nFx : nFx + nFy])
 
             self._cell_gradient_y = (
@@ -875,7 +875,7 @@ class TreeMesh(
             iz[i_s[5]] = 0.0
             Pafz = sp.diags(iz)
 
-            MfI = self.get_face_inner_product(invMat=True)
+            MfI = self.get_face_inner_product(invert_matrix=True)
             MfIz = sp.diags(MfI.diagonal()[nFx + nFy :])
 
             self._cell_gradient_z = (

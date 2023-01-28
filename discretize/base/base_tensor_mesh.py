@@ -553,9 +553,9 @@ class BaseTensorMesh(BaseRegularMesh):
             ey = ndgrid(self.nodes_x[[0, -1]], self.cell_centers_y)
             return np.r_[ex, ey]
         if dim == 3:
-            ex = self.edges_x[make_boundary_bool(self.shape_edges_x, dir="yz")]
-            ey = self.edges_y[make_boundary_bool(self.shape_edges_y, dir="xz")]
-            ez = self.edges_z[make_boundary_bool(self.shape_edges_z, dir="xy")]
+            ex = self.edges_x[make_boundary_bool(self.shape_edges_x, bdir="yz")]
+            ey = self.edges_y[make_boundary_bool(self.shape_edges_y, bdir="xz")]
+            ez = self.edges_z[make_boundary_bool(self.shape_edges_z, bdir="xy")]
             return np.r_[ex, ey, ez]
 
     def _getTensorGrid(self, key):
@@ -675,7 +675,7 @@ class BaseTensorMesh(BaseRegularMesh):
             )
         return inside
 
-    def _getInterpolationMat(
+    def _get_interpolation_matrix(
         self, loc, location_type="cell_centers", zeros_outside=False
     ):
         """Produce an interpolation matrix.
@@ -755,7 +755,7 @@ class BaseTensorMesh(BaseRegularMesh):
 
         else:
             raise NotImplementedError(
-                "getInterpolationMat: location_type=="
+                "get_interpolation_matrix: location_type=="
                 + location_type
                 + " and mesh.dim=="
                 + str(self.dim)
@@ -770,12 +770,12 @@ class BaseTensorMesh(BaseRegularMesh):
         self, loc, location_type="cell_centers", zeros_outside=False
     ):
         # Documentation inherited from discretize.base.BaseMesh
-        return self._getInterpolationMat(loc, location_type, zeros_outside)
+        return self._get_interpolation_matrix(loc, location_type, zeros_outside)
 
     def _fastInnerProduct(
         self, projection_type, model=None, invert_model=False, invert_matrix=False
     ):
-        """Fast version of getFaceInnerProduct.
+        """Fast version of get_face_inner_product_deriv.
 
         This does not handle the case of a full tensor property.
 

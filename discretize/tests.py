@@ -498,8 +498,8 @@ def check_derivative(
 
     >>> def simplePass(x):
     ...     return np.sin(x), utils.sdiag(np.cos(x))
-    >>> passed = tests.checkDerivative(simplePass, np.random.randn(5))
-    ==================== checkDerivative ====================
+    >>> passed = tests.check_derivative(simplePass, np.random.randn(5))
+    ==================== check_derivative ====================
     iter    h         |ft-f0|   |ft-f0-h*J0*dx|  Order
     ---------------------------------------------------------
      0   1.00e-01    1.690e-01     8.400e-03      nan
@@ -520,7 +520,7 @@ def check_derivative(
     except ImportError:
         matplotlib = False
 
-    print("{0!s} checkDerivative {1!s}".format("=" * 20, "=" * 20))
+    print("{0!s} check_derivative {1!s}".format("=" * 20, "=" * 20))
     print(
         "iter    h         |ft-f0|   |ft-f0-h*J0*dx|  Order\n{0!s}".format(("-" * 57))
     )

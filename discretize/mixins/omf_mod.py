@@ -53,7 +53,7 @@ def _ravel_data_array(arr, nx, ny, nz):
     >>> hz = 3*np.ones(2)
     >>> mesh = TensorMesh([hx, hy, hz])
 
-    >>> dim = (mesh.nCz, mesh.nCy, mesh.nCx)  # OMF orderting
+    >>> dim = mesh.shape_cells[::-1] # OMF orderting
     >>> xc = np.reshape(mesh.cell_centers[:, 0], dim, order="C").ravel(order="F")
     >>> yc = np.reshape(mesh.cell_centers[:, 1], dim, order="C").ravel(order="F")
     >>> zc = np.reshape(mesh.cell_centers[:, 2], dim, order="C").ravel(order="F")

@@ -146,7 +146,7 @@ class InterfaceVTK(object):
 
     Save this mesh to a VTK file
 
-    >>> mesh.writeVTK('sample_mesh')
+    >>> mesh.write_vtk('sample_mesh')
 
     Here, the reference frame of the mesh is rotated. In this case, conversion
     to VTK produces a :class:`pyvista.StructuredGrid` object.
@@ -166,7 +166,7 @@ class InterfaceVTK(object):
 
     or write it out to a VTK format
 
-    >>> mesh.writeVTK('sample_rotated')
+    >>> mesh.write_vtk('sample_rotated')
 
     The two above code snippets produced a :class:`pyvista.RectilinearGrid` and a
     :class:`pyvista.StructuredGrid` respecitvely. To demonstarte the difference, we

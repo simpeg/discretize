@@ -659,7 +659,7 @@ def refine_tree_xyz(
 
     Refine surface topography
 
-    >>> xx = mesh.vectorNx
+    >>> xx = mesh.nodes_x
     >>> yy = -3 * np.exp((xx ** 2) / 100 ** 2) + 50.0
     >>> pts = np.c_[mkvc(xx), mkvc(yy)]
     >>> mesh = refine_tree_xyz(
@@ -679,9 +679,9 @@ def refine_tree_xyz(
 
     >>> fig = plt.figure(figsize=(6, 6))
     >>> ax = fig.add_subplot(111)
-    >>> mesh.plotGrid(ax=ax)
-    >>> ax.set_xbound(mesh.x0[0], mesh.x0[0] + np.sum(mesh.hx))
-    >>> ax.set_ybound(mesh.x0[1], mesh.x0[1] + np.sum(mesh.hy))
+    >>> mesh.plot_grid(ax=ax)
+    >>> ax.set_xbound(mesh.x0[0], mesh.x0[0] + np.sum(mesh.h[0]))
+    >>> ax.set_ybound(mesh.x0[1], mesh.x0[1] + np.sum(mesh.h[1]))
     >>> ax.set_title("QuadTree Mesh")
     >>> plt.show()
     """

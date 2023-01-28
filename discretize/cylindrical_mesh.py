@@ -126,8 +126,6 @@ class CylindricalMesh(
 
     def __init__(self, h, origin=None, cartesian_origin=None, **kwargs):
         kwargs.pop("reference_system", None)  # reference system must be cylindrical
-        if "cartesianOrigin" in kwargs.keys():
-            cartesian_origin = kwargs.pop("cartesianOrigin")
         super().__init__(h=h, origin=origin, reference_system="cylindrical", **kwargs)
 
         if not np.abs(self.h[1].sum() - 2 * np.pi) < 1e-10:
