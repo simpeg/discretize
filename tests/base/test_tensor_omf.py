@@ -33,9 +33,9 @@ if has_omf:
             self.assertTrue(np.allclose(mesh.h[0], geom.tensor_u))
             self.assertTrue(np.allclose(mesh.h[1], geom.tensor_v))
             self.assertTrue(np.allclose(mesh.h[2], geom.tensor_w))
-            self.assertTrue(np.allclose(mesh.axis_u, geom.axis_u))
-            self.assertTrue(np.allclose(mesh.axis_v, geom.axis_v))
-            self.assertTrue(np.allclose(mesh.axis_w, geom.axis_w))
+            self.assertTrue(np.allclose(mesh.orientation[0], geom.axis_u))
+            self.assertTrue(np.allclose(mesh.orientation[1], geom.axis_v))
+            self.assertTrue(np.allclose(mesh.orientation[2], geom.axis_w))
             self.assertTrue(np.allclose(mesh.x0, geom.origin))
 
             # Check data arrays
@@ -80,9 +80,9 @@ if has_omf:
             self.assertTrue(np.allclose(mesh.h[0], geom.tensor_u))
             self.assertTrue(np.allclose(mesh.h[1], geom.tensor_v))
             self.assertTrue(np.allclose(mesh.h[2], geom.tensor_w))
-            self.assertTrue(np.allclose(mesh.axis_u, geom.axis_u))
-            self.assertTrue(np.allclose(mesh.axis_v, geom.axis_v))
-            self.assertTrue(np.allclose(mesh.axis_w, geom.axis_w))
+            self.assertTrue(np.allclose(mesh.orientation[0], geom.axis_u))
+            self.assertTrue(np.allclose(mesh.orientation[1], geom.axis_v))
+            self.assertTrue(np.allclose(mesh.orientation[2], geom.axis_w))
             self.assertTrue(np.allclose(mesh.x0, geom.origin))
 
             # Check data arrays

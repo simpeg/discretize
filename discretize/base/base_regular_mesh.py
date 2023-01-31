@@ -55,11 +55,6 @@ class BaseRegularMesh(BaseMesh):
             shape_cells = kwargs.pop("n")
         if "x0" in kwargs:
             origin = kwargs.pop("x0")
-        axis_u = kwargs.pop("axis_u", None)
-        axis_v = kwargs.pop("axis_v", None)
-        axis_w = kwargs.pop("axis_w", None)
-        if axis_u is not None and axis_v is not None and axis_w is not None:
-            orientation = np.array([axis_u, axis_v, axis_w])
 
         shape_cells = tuple((int(val) for val in shape_cells))
         self._shape_cells = shape_cells
