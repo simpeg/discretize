@@ -1424,6 +1424,154 @@ class CylindricalMesh(
                 )
         return self._average_edge_to_cell_vector
 
+    
+
+
+
+
+
+
+
+
+
+    @property
+    def average_edge_x_to_face_x(self):  # NOQA D102
+        if self.is_symmetric:
+            raise Exception("There are no x-edges on a cyl symmetric mesh")
+        else:
+            raise Exception("X-edges are not projected to x-faces")
+
+    @property
+    def average_edge_x_to_face_y(self):  # NOQA D102
+        # Documentation inherited from discretize.operators.DiffOperators
+        if self.is_symmetric:
+            raise Exception("There are no x-edges on a cyl symmetric mesh")
+        # NEEDS TESTING
+        return (
+            kron3(
+                av(self.shape_cells[2]),
+                speye(self.shape_nodes[1]),
+                speye(self.shape_cells[0]),
+            )
+            * self._deflation_matrix("Ex", as_ones=True).T
+        )
+
+    @property
+    def average_edge_x_to_face_z(self):  # NOQA D102
+        # Documentation inherited from discretize.operators.DiffOperators
+        if self.is_symmetric:
+            raise Exception("There are no x-edges on a cyl symmetric mesh")
+        # NEEDS TESTING
+        return (
+            kron3(
+                speye(self.shape_nodes[2]),
+                av(self.shape_cells[1]),
+                speye(self.shape_cells[0]),
+            )
+            * self._deflation_matrix("Ex", as_ones=True).T
+        )
+
+    @property
+    def average_edge_y_to_face_x(self):  # NOQA D102
+        # Documentation inherited from discretize.operators.DiffOperators
+        if self.is_symmetric:
+            # No x-edges at center axis of symmetry
+            return sp.kron(
+                av(self.shape_cells[2]),
+                speye(self.shape_cells[0]),
+                format="csr"
+            )
+        else:
+            # NEEDS TESTING
+            return (
+                kron3(
+                    av(self.shape_cells[2]),
+                    speye(self.shape_cells[1]),
+                    speye(self.shape_nodes[0]),
+                )
+                * self._deflation_matrix("Ey", as_ones=True).T
+            )
+
+    @property
+    def average_edge_y_to_face_y(self):  # NOQA D102
+        raise Exception("Y-edges are not projected to y-faces")
+
+    @property
+    def average_edge_y_to_face_z(self):  # NOQA D102
+        # Documentation inherited from discretize.operators.DiffOperators
+        if self.is_symmetric:
+            # No x-edges at center axis of symmetry
+            return sp.kron(
+                speye(self.shape_cells[2]),
+                av(self.shape_cells[0])[:, 1:],
+                format="csr"
+            )
+        else:
+            # NEEDS TESTING
+            return (
+                kron3(
+                    speye(self.shape_nodes[2]),
+                    speye(self.shape_cells[1]),
+                    av(self.shape_cells[0]),
+                )
+                * self._deflation_matrix("Ey", as_ones=True).T
+            )
+
+    @property
+    def average_edge_z_to_face_x(self):  # NOQA D102
+        # Documentation inherited from discretize.operators.DiffOperators
+        if self.is_symmetric:
+            raise Exception("There are no x-edges on a cyl symmetric mesh")
+        # NEEDS TESTING
+        return (
+            kron3(
+                speye(self.shape_cells[2]),
+                av(self.shape_cells[1]),
+                speye(self.shape_nodes[0]),
+            )
+            * self._deflation_matrix("Ez", as_ones=True).T
+        )
+
+    @property
+    def average_edge_z_to_face_y(self):  # NOQA D102
+        # Documentation inherited from discretize.operators.DiffOperators
+        if self.is_symmetric:
+            raise Exception("There are no x-edges on a cyl symmetric mesh")
+        # NEEDS TESTING
+        return (
+            kron3(
+                speye(self.shape_cells[2]),
+                speye(self.shape_nodes[1]),
+                av(self.shape_cells[0]),
+            )
+            * self._deflation_matrix("Ez", as_ones=True).T
+        )
+
+    @property
+    def average_edge_z_to_face_z(self):  # NOQA D102
+        if self.is_symmetric:
+            raise Exception("There are no z-edges on a cyl symmetric mesh")
+        else:
+            raise Exception("Z-edges are not projected to z-faces")
+
+    @property
+    def average_edge_to_face(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
+        if getattr(self, "_average_edge_to_face", None) is None:
+
+            if self.is_symmetric:
+                self._average_edge_to_face = sp.vstack(self.aveEy2Fx, self.aveEy2Fz)
+            else:
+
+                self._average_edge_to_face = (1./2.) * sp.vstack(
+                    sp.hstack((sp.csr_matrix((self.n_faces_x, self.n_edges_x)), self.aveEy2Fx, self.aveEz2Fx), format="csr"),
+                    sp.hstack((self.aveEx2Fy, sp.csr_matrix((self.n_faces_y, self.n_edges_y)), self.aveEz2Fy), format="csr"),
+                    sp.hstack((self.aveEx2Fz, self.aveEy2Fz, sp.csr_matrix((self.n_faces_z, self.n_edges_z))), format="csr"),
+                    format="csr"
+                )
+        return self._average_edge_to_face
+
+
     @property
     def average_face_x_to_cell(self):  # NOQA D102
         # Documentation inherited from discretize.operators.DiffOperators

@@ -809,9 +809,6 @@ class BaseTensorMesh(BaseRegularMesh):
         projection_type : str
             'edges' or 'faces'
 
-        returnP : bool
-            returns the projection matrices
-
         invert_model : bool
             inverts the material property
 
@@ -1000,6 +997,74 @@ class BaseTensorMesh(BaseRegularMesh):
             return innerProductDeriv
         else:
             return None
+
+
+    def _fastEdgeMassMatrixFaceProperties(
+        self,model, invert_model=False, invert_matrix=False
+    ):
+        """Fast version of get_edge_mass_matrix_face_properties.
+
+        This does not handle the case of a full tensor property.
+
+        Parameters
+        ----------
+        model : numpy.ndarray
+            material property (tensor properties are possible) at each cell center (nF, (1 or 2))
+
+        invert_model : bool
+            inverts the material property
+
+        invert_matrix : bool
+            inverts the matrix
+
+        Returns
+        -------
+        (n_edges, n_edges) scipy.sparse.csr_matrix
+            M, the mass matrix
+
+        """
+
+        if invert_model:
+            model = 1.0 / model
+
+        if is_scalar(model):
+            model = model * np.ones(self.nF)
+
+        # number of elements we are averaging (equals dim for regular
+        # meshes, but for cyl, where we use symmetry, it is 1 for edge
+        # variables)
+        if self._meshType == "CYL":
+            n_elements = 1
+        else:
+            n_elements = self.dim
+
+        # Isotropic? or anisotropic?
+        if model.size == self.nF:
+            Av = getattr(self, "aveE2FV")
+            Vprop = self.face_areas * mkvc(model)
+            M = n_elements * sdiag(Av.T * Vprop)
+
+        # TODO, FIX ANISOTROPIC CASE
+        elif model.size == self.nF * self.dim:
+            Av = getattr(self, "aveE2FV")
+
+            # if cyl, then only certain components are relevant due to symmetry
+            # for faces, x, z matters, for edges, y (which is theta) matters
+            if self._meshType == "CYL":
+                if projection_type == "E":
+                    model = model[:, 1]  # this is the action of a projection mat
+                elif projection_type == "F":
+                    model = model[:, [0, 2]]
+
+            V = sp.kron(sp.identity(n_elements), sdiag(self.cell_volumes))
+            M = sdiag(Av.T * V * mkvc(model))
+        else:
+            return None
+
+        if invert_matrix:
+            return sdinv(M)
+        else:
+            return M
 
     # DEPRECATED
     @property
