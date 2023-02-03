@@ -33,7 +33,6 @@ class BaseMesh:
         "aveCCV2F": "average_cell_vector_to_face",
         "aveE2CC": "average_edge_to_cell",
         "aveE2CCV": "average_edge_to_cell_vector",
-        "aveE2FV": "average_edge_to_face_vector",
         "aveN2CC": "average_node_to_cell",
         "aveN2E": "average_node_to_edge",
         "aveN2F": "average_node_to_face",
