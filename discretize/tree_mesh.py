@@ -939,6 +939,7 @@ class TreeMesh(
                 "The locType keyword argument has been deprecated, please use location_type. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
+                stacklevel=2,
             )
             location_type = kwargs["locType"]
         if "zerosOutside" in kwargs:
@@ -946,6 +947,7 @@ class TreeMesh(
                 "The zerosOutside keyword argument has been deprecated, please use zeros_outside. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
+                stacklevel=2,
             )
             zeros_outside = kwargs["zerosOutside"]
         locs = as_array_n_by_dim(locs, self.dim)
