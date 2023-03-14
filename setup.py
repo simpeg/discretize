@@ -93,6 +93,7 @@ else:
             "discretize._extensions.tree_ext",
             ["discretize/_extensions/tree_ext.pyx", "discretize/_extensions/tree.cpp"],
             include_dirs=[np.get_include()],
+            extra_compile_args=["/std:c++17", "-std=c++17"],
             **ext_kwargs
         ),
         Extension(
