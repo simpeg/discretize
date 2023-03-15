@@ -1680,6 +1680,7 @@ class CylindricalMesh(
                 "The locType keyword argument has been deprecated, please use location_type. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
+                stacklevel=2,
             )
             location_type = kwargs["locType"]
         if "zerosOutside" in kwargs:
@@ -1687,6 +1688,7 @@ class CylindricalMesh(
                 "The zerosOutside keyword argument has been deprecated, please use zeros_outside. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
+                stacklevel=2,
             )
             zeros_outside = kwargs["zerosOutside"]
 
@@ -1879,6 +1881,7 @@ class CylindricalMesh(
                 "The locType keyword argument has been deprecated, please use location_type. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
+                stacklevel=2,
             )
             location_type = kwargs["locType"]
         try:
@@ -1923,6 +1926,7 @@ class CylindricalMesh(
                 "The locType keyword argument has been deprecated, please use location_type. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
+                stacklevel=2,
             )
             location_type = kwargs["locType"]
         if "locTypeTo" in kwargs:
@@ -1930,6 +1934,7 @@ class CylindricalMesh(
                 "The locTypeTo keyword argument has been deprecated, please use location_type_to. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
+                stacklevel=2,
             )
             location_type_to = kwargs["locTypeTo"]
 

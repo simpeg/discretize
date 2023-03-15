@@ -172,6 +172,7 @@ class BaseMesh:
                 "The filename keyword argument has been deprecated, please use file_name. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
+                stacklevel=2,
             )
         f = os.path.abspath(file_name)  # make sure we are working with abs path
         with open(f, "w") as outfile:

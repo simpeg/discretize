@@ -60,6 +60,7 @@ def mkvc(x, n_dims=1, **kwargs):
             "The numDims keyword argument has been deprecated, please use n_dims. "
             "This will be removed in discretize 1.0.0",
             FutureWarning,
+            stacklevel=2,
         )
         n_dims = kwargs["numDims"]
     if type(x) == np.matrix:
@@ -446,6 +447,7 @@ def make_boundary_bool(shape, bdir="xyz", **kwargs):
             "The `dir` keyword argument has been renamed to `bdir` to avoid shadowing the "
             "builtin variable `dir`. This will be removed in discretize 1.0.0",
             FutureWarning,
+            stacklevel=2,
         )
         bdir = old_dir
     is_b = np.zeros(shape, dtype=bool, order="F")
@@ -715,6 +717,7 @@ def inverse_3x3_block_diagonal(
             "The returnMatrix keyword argument has been deprecated, please use return_matrix. "
             "This will be removed in discretize 1.0.0",
             FutureWarning,
+            stacklevel=2,
         )
         return_matrix = kwargs["returnMatrix"]
 
@@ -867,6 +870,7 @@ def inverse_2x2_block_diagonal(a11, a12, a21, a22, return_matrix=True, **kwargs)
             "The returnMatrix keyword argument has been deprecated, please use return_matrix. "
             "This will be removed in discretize 1.0.0",
             FutureWarning,
+            stacklevel=2,
         )
         return_matrix = kwargs["returnMatrix"]
 
@@ -1392,6 +1396,7 @@ def inverse_property_tensor(mesh, tensor, return_matrix=False, **kwargs):
             "The returnMatrix keyword argument has been deprecated, please use return_matrix. "
             "This will be removed in discretize 1.0.0",
             FutureWarning,
+            stacklevel=2,
         )
         return_matrix = kwargs["returnMatrix"]
 
