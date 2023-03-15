@@ -679,7 +679,10 @@ class DiffOperators(BaseMesh):
     @property
     def _nodal_laplacian_x_stencil(self):
         """Stencil for the nodal Laplacian in the x-direction (nodes to nodes)."""
-        warnings.warn("Laplacian has not been tested rigorously.")
+        warnings.warn(
+            "Laplacian has not been tested rigorously.",
+            stacklevel=3,
+        )
 
         Dx = ddx(self.shape_cells[0])
         Lx = -Dx.T * Dx
@@ -693,7 +696,10 @@ class DiffOperators(BaseMesh):
     @property
     def _nodal_laplacian_y_stencil(self):
         """Stencil for the nodal Laplacian in the y-direction (nodes to nodes)."""
-        warnings.warn("Laplacian has not been tested rigorously.")
+        warnings.warn(
+            "Laplacian has not been tested rigorously.",
+            stacklevel=3,
+        )
 
         if self.dim == 1:
             return None
@@ -710,7 +716,10 @@ class DiffOperators(BaseMesh):
     @property
     def _nodal_laplacian_z_stencil(self):
         """Stencil for the nodal Laplacian in the z-direction (nodes to nodes)."""
-        warnings.warn("Laplacian has not been tested rigorously.")
+        warnings.warn(
+            "Laplacian has not been tested rigorously.",
+            stacklevel=3,
+        )
 
         if self.dim == 1 or self.dim == 2:
             return None
@@ -754,7 +763,10 @@ class DiffOperators(BaseMesh):
     def nodal_laplacian(self):  # NOQA D102
         # Documentation inherited from discretize.base.BaseMesh
         if getattr(self, "_nodal_laplacian", None) is None:
-            warnings.warn("Laplacian has not been tested rigorously.")
+            warnings.warn(
+                "Laplacian has not been tested rigorously.",
+                stacklevel=2,
+            )
             # Compute divergence operator on faces
             if self.dim == 1:
                 self._nodal_laplacian = self._nodal_laplacian_x
@@ -1760,7 +1772,8 @@ class DiffOperators(BaseMesh):
     def cell_gradient_BC(self):
         """Boundary conditions matrix for the cell gradient operator (Deprecated)."""
         warnings.warn(
-            "cell_gradient_BC is deprecated and is not longer used. See cell_gradient"
+            "cell_gradient_BC is deprecated and is not longer used. See cell_gradient",
+            stacklevel=2,
         )
         if getattr(self, "_cell_gradient_BC", None) is None:
             BC = self.set_cell_gradient_BC(self._cell_gradient_BC_list)

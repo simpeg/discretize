@@ -164,7 +164,9 @@ class InterfaceMPL(object):
         if "showIt" in kwargs:
             show_it = kwargs.pop("showIt")
             warnings.warn(
-                "showIt has been deprecated, please use show_it", FutureWarning
+                "showIt has been deprecated, please use show_it",
+                FutureWarning,
+                stacklevel=2,
             )
 
         if ax is not None:
@@ -305,26 +307,36 @@ class InterfaceMPL(object):
             warnings.warn(
                 "pcolorOpts has been deprecated, please use pcolor_opts",
                 FutureWarning,
+                stacklevel=2,
             )
         if "streamOpts" in kwargs:
             stream_opts = kwargs.pop("streamOpts")
             warnings.warn(
                 "streamOpts has been deprecated, please use stream_opts",
                 FutureWarning,
+                stacklevel=2,
             )
         if "gridOpts" in kwargs:
             grid_opts = kwargs.pop("gridOpts")
             warnings.warn(
-                "gridOpts has been deprecated, please use grid_opts", FutureWarning
+                "gridOpts has been deprecated, please use grid_opts",
+                FutureWarning,
+                stacklevel=2,
             )
         if "showIt" in kwargs:
             show_it = kwargs.pop("showIt")
             warnings.warn(
-                "showIt has been deprecated, please use show_it", FutureWarning
+                "showIt has been deprecated, please use show_it",
+                FutureWarning,
+                stacklevel=2,
             )
         if "vType" in kwargs:
             v_type = kwargs.pop("vType")
-            warnings.warn("vType has been deprecated, please use v_type", FutureWarning)
+            warnings.warn(
+                "vType has been deprecated, please use v_type",
+                FutureWarning,
+                stacklevel=2,
+            )
 
         # Some Error checking and common defaults
         if pcolor_opts is None:
@@ -539,26 +551,36 @@ class InterfaceMPL(object):
             warnings.warn(
                 "pcolorOpts has been deprecated, please use pcolor_opts",
                 FutureWarning,
+                stacklevel=2,
             )
         if "streamOpts" in kwargs:
             stream_opts = kwargs["streamOpts"]
             warnings.warn(
                 "streamOpts has been deprecated, please use stream_opts",
                 FutureWarning,
+                stacklevel=2,
             )
         if "gridOpts" in kwargs:
             grid_opts = kwargs["gridOpts"]
             warnings.warn(
-                "gridOpts has been deprecated, please use grid_opts", FutureWarning
+                "gridOpts has been deprecated, please use grid_opts",
+                FutureWarning,
+                stacklevel=2,
             )
         if "showIt" in kwargs:
             show_it = kwargs["showIt"]
             warnings.warn(
-                "showIt has been deprecated, please use show_it", FutureWarning
+                "showIt has been deprecated, please use show_it",
+                FutureWarning,
+                stacklevel=2,
             )
         if "vType" in kwargs:
             v_type = kwargs["vType"]
-            warnings.warn("vType has been deprecated, please use v_type", FutureWarning)
+            warnings.warn(
+                "vType has been deprecated, please use v_type",
+                FutureWarning,
+                stacklevel=2,
+            )
         if pcolor_opts is None:
             pcolor_opts = {}
         if stream_opts is None:
@@ -743,6 +765,7 @@ class InterfaceMPL(object):
             warnings.warn(
                 "pcolorOpts has been deprecated, please use pcolor_opts",
                 FutureWarning,
+                stacklevel=2,
             )
 
         # Populate figure
@@ -1020,6 +1043,7 @@ class InterfaceMPL(object):
             warnings.warn(
                 "annotationColor has been deprecated, please use annotation_color",
                 FutureWarning,
+                stacklevel=2,
             )
 
         if self.dim == 1:
@@ -1507,14 +1531,17 @@ class InterfaceMPL(object):
                 if not isinstance(ax, list) or len(ax) != 2:
                     warnings.warn(
                         "two axes handles must be provided to plot both theta "
-                        "and z slices through the mesh. Over-writing the axes."
+                        "and z slices through the mesh. Over-writing the axes.",
+                        stacklevel=2,
                     )
                     ax = None
                 else:
                     # find the one with a polar projection and pass it to the
                     # theta slice, other one to the z-slice
                     polarax = [
-                        a for a in ax if a.__class__.__name__ == "PolarAxesSubplot"
+                        a
+                        for a in ax
+                        if a.__class__.__name__ in ["PolarAxesSubplot", "PolarAxes"]
                     ]
                     if len(polarax) != 1:
                         warnings.warn(
@@ -1526,7 +1553,8 @@ class InterfaceMPL(object):
 
                             for reference, see: http://matplotlib.org/examples/pylab_examples/polar_demo.html
                                                 https://github.com/matplotlib/matplotlib/issues/312
-                            """
+                            """,
+                            stacklevel=2,
                         )
                         ax = None
 
@@ -1565,7 +1593,8 @@ class InterfaceMPL(object):
         # https://github.com/matplotlib/matplotlib/issues/312
         ax = kwargs.get("ax", None)
         if ax is not None:
-            if ax.__class__.__name__ != "PolarAxesSubplot":
+            print(ax.__class__.__name__)
+            if ax.__class__.__name__ not in ["PolarAxesSubplot", "PolarAxes"]:
                 warnings.warn(
                     """
                     Creating new axes with Polar projection. If you prefer to create your own, please use
@@ -1574,7 +1603,8 @@ class InterfaceMPL(object):
 
                     for reference, see: http://matplotlib.org/examples/pylab_examples/polar_demo.html
                                         https://github.com/matplotlib/matplotlib/issues/312
-                    """
+                    """,
+                    stacklevel=2,
                 )
                 ax = plt.subplot(111, projection="polar")
         else:
@@ -2430,6 +2460,7 @@ class Slicer(object):
             warnings.warn(
                 "pcolorOpts has been deprecated, please use pcolor_opts",
                 FutureWarning,
+                stacklevel=2,
             )
 
         # Add pcolor_opts to self

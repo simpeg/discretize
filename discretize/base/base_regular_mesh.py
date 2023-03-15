@@ -529,6 +529,7 @@ class BaseRegularMesh(BaseMesh):
             "The axis_u property is deprecated, please access as self.orientation[0]. "
             "This will be removed in discretize 1.0.0.",
             FutureWarning,
+            stacklevel=2,
         )
         return self.orientation[0]
 
@@ -539,6 +540,7 @@ class BaseRegularMesh(BaseMesh):
             "directly set the self.orientation property. This will be removed in "
             "discretize 1.0.0.",
             FutureWarning,
+            stacklevel=2,
         )
         self.orientation[0] = value
 
@@ -554,6 +556,7 @@ class BaseRegularMesh(BaseMesh):
             "The axis_v property is deprecated, please access as self.orientation[1]. "
             "This will be removed in discretize 1.0.0.",
             FutureWarning,
+            stacklevel=2,
         )
         return self.orientation[1]
 
@@ -564,6 +567,7 @@ class BaseRegularMesh(BaseMesh):
             "directly set the self.orientation property. This will be removed in "
             "discretize 1.0.0.",
             FutureWarning,
+            stacklevel=2,
         )
         value = value / np.linalg.norm(value)
         self.orientation[1] = value
@@ -580,6 +584,7 @@ class BaseRegularMesh(BaseMesh):
             "The axis_w property is deprecated, please access as self.orientation[2]. "
             "This will be removed in discretize 1.0.0.",
             FutureWarning,
+            stacklevel=2,
         )
         return self.orientation[2]
 
@@ -590,6 +595,7 @@ class BaseRegularMesh(BaseMesh):
             "directly set the self.orientation property. This will be removed in "
             "discretize 1.0.0.",
             FutureWarning,
+            stacklevel=2,
         )
         value = value / np.linalg.norm(value)
         self.orientation[2] = value
@@ -872,6 +878,7 @@ class BaseRectangularMesh(BaseRegularMesh):
                 "The xType keyword argument has been deprecated, please use x_type. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
+                stacklevel=2,
             )
             x_type = kwargs["xType"]
         if "outType" in kwargs:
@@ -879,6 +886,7 @@ class BaseRectangularMesh(BaseRegularMesh):
                 "The outType keyword argument has been deprecated, please use out_type. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
+                stacklevel=2,
             )
             out_type = kwargs["outType"]
         if "format" in kwargs:
@@ -886,6 +894,7 @@ class BaseRectangularMesh(BaseRegularMesh):
                 "The format keyword argument has been deprecated, please use return_format. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
+                stacklevel=2,
             )
             return_format = kwargs["format"]
 
@@ -1039,6 +1048,7 @@ class BaseRectangularMesh(BaseRegularMesh):
         warnings.warn(
             "nCx has been deprecated, please access as mesh.shape_cells[0]",
             FutureWarning,
+            stacklevel=2,
         )
         return self.shape_cells[0]
 
@@ -1058,6 +1068,7 @@ class BaseRectangularMesh(BaseRegularMesh):
         warnings.warn(
             "nCy has been deprecated, please access as mesh.shape_cells[1]",
             FutureWarning,
+            stacklevel=2,
         )
         if self.dim < 2:
             return None
@@ -1079,6 +1090,7 @@ class BaseRectangularMesh(BaseRegularMesh):
         warnings.warn(
             "nCz has been deprecated, please access as mesh.shape_cells[2]",
             FutureWarning,
+            stacklevel=2,
         )
         if self.dim < 3:
             return None
@@ -1099,6 +1111,7 @@ class BaseRectangularMesh(BaseRegularMesh):
         warnings.warn(
             "nNx has been deprecated, please access as mesh.shape_nodes[0]",
             FutureWarning,
+            stacklevel=2,
         )
         return self.shape_nodes[0]
 
@@ -1118,6 +1131,7 @@ class BaseRectangularMesh(BaseRegularMesh):
         warnings.warn(
             "nNy has been deprecated, please access as mesh.shape_nodes[1]",
             FutureWarning,
+            stacklevel=2,
         )
         if self.dim < 2:
             return None
@@ -1139,6 +1153,7 @@ class BaseRectangularMesh(BaseRegularMesh):
         warnings.warn(
             "nNz has been deprecated, please access as mesh.shape_nodes[2]",
             FutureWarning,
+            stacklevel=2,
         )
         if self.dim < 3:
             return None

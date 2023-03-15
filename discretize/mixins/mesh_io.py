@@ -421,6 +421,7 @@ class TensorMeshIO(InterfaceTensorread_vtk):
             "TensorMesh.readUBC has been deprecated and will be removed in"
             "discretize 1.0.0. please use TensorMesh.read_UBC",
             FutureWarning,
+            stacklevel=2,
         )
         return TensorMesh.read_UBC(file_name, directory)
 
@@ -615,6 +616,7 @@ class TreeMeshIO(object):
             "TensorMesh.readUBC has been deprecated and will be removed in"
             "discretize 1.0.0. please use TensorMesh.read_UBC",
             FutureWarning,
+            stacklevel=2,
         )
         return TreeMesh.read_UBC(file_name, directory)
 
