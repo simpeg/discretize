@@ -137,15 +137,12 @@ Face::Face(Node& p1, Node& p2, Node& p3, Node& p4){
 Node * set_default_node(node_map_t& nodes, int_t x, int_t y, int_t z,
                         double *xs, double *ys, double *zs){
   int_t key = key_func(x, y, z);
-  Node * point;
-  if(nodes.count(key) == 0){
-    point = new Node(x, y, z, xs, ys, zs);
-    nodes[key] = point;
+  auto [it, inserted] = nodes.try_emplace(key, nullptr);
+  if(inserted){
+        // construct a new item at the emplaced location
+        it->second = new Node(x, y, z, xs, ys, zs);
   }
-  else{
-    point = nodes[key];
-  }
-  return point;
+  return it->second;
 }
 
 Edge * set_default_edge(edge_map_t& edges, Node& p1, Node& p2){
@@ -153,15 +150,12 @@ Edge * set_default_edge(edge_map_t& edges, Node& p1, Node& p2){
   int_t yC = (p1.location_ind[1]+p2.location_ind[1])/2;
   int_t zC = (p1.location_ind[2]+p2.location_ind[2])/2;
   int_t key = key_func(xC, yC, zC);
-  Edge * edge;
-  if(edges.count(key) == 0){
-    edge = new Edge(p1, p2);
-    edges[key] = edge;
+  auto [it, inserted] = edges.try_emplace(key, nullptr);
+  if(inserted){
+        // construct a new item at the emplaced location
+        it->second = new Edge(p1, p2);
   }
-  else{
-    edge = edges[key];
-  }
-  return edge;
+  return it->second;
 };
 
 Face * set_default_face(face_map_t& faces, Node& p1, Node& p2, Node& p3, Node& p4){
@@ -170,15 +164,12 @@ Face * set_default_face(face_map_t& faces, Node& p1, Node& p2, Node& p3, Node& p
     y = (p1.location_ind[1]+p2.location_ind[1]+p3.location_ind[1]+p4.location_ind[1])/4;
     z = (p1.location_ind[2]+p2.location_ind[2]+p3.location_ind[2]+p4.location_ind[2])/4;
     key = key_func(x, y, z);
-    Face * face;
-    if(faces.count(key) == 0){
-        face = new Face(p1, p2, p3, p4);
-        faces[key] = face;
+    auto [it, inserted] = faces.try_emplace(key, nullptr);
+    if(inserted){
+        // construct a new item at the emplaced location
+        it->second = new Face(p1, p2, p3, p4);
     }
-    else{
-        face = faces[key];
-    }
-    return face;
+    return it->second;
 }
 
 Cell::Cell(Node *pts[8], int_t ndim, int_t maxlevel){
