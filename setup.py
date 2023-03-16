@@ -94,7 +94,6 @@ else:
             "discretize._extensions.tree_ext",
             ["discretize/_extensions/tree_ext.pyx", "discretize/_extensions/tree.cpp"],
             include_dirs=[np.get_include()],
-            #extra_compile_args=["-std:c++17", "-std=c++17"],
             **ext_kwargs
         ),
         Extension(
@@ -111,17 +110,20 @@ else:
             # This module requires c++17 standard
             if ext.name == "discretize._extensions.tree_ext":
                 comp_type = self.compiler.compiler_type
-                if comp_type == 'msvc':
-                    std_arg = "\std:c++17"
-                elif comp_type == 'bcpp':
-                    raise Exception('Must use cpp compiler that support C++17 standard.')
+                if comp_type == "msvc":
+                    std_arg = "/std:c++17"
+                elif comp_type == "bcpp":
+                    raise Exception(
+                        "Must use cpp compiler that support C++17 standard."
+                    )
                 else:
                     std_arg = "-std=c++17"
-                ext.extra_compile_args = [std_arg,]
+                ext.extra_compile_args = [
+                    std_arg,
+                ]
             super().build_extension(ext)
 
-
     metadata["ext_modules"] = cythonize(extensions)
-    metadata["cmdclass"] = {"build_ext":build_ext_cpp_standard}
+    metadata["cmdclass"] = {"build_ext": build_ext_cpp_standard}
 
 setup(**metadata)
