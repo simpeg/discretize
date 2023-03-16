@@ -606,7 +606,8 @@ class InterfaceVTK(object):
             cvtd = pyvista.wrap(cvtd)
         except ImportError:
             warnings.warn(
-                "For easier use of VTK objects, you should install `pyvista` (the VTK interface): pip install pyvista"
+                "For easier use of VTK objects, you should install `pyvista` (the VTK interface): pip install pyvista",
+                stacklevel=1,
             )
         return cvtd
 
@@ -622,6 +623,7 @@ class InterfaceVTK(object):
         warnings.warn(
             "Deprecation Warning: `toVTK` is deprecated, use `to_vtk` instead",
             category=FutureWarning,
+            stacklevel=2,
         )
         return InterfaceVTK.to_vtk(mesh, models=models)
 
@@ -788,6 +790,7 @@ class InterfaceVTK(object):
         warnings.warn(
             "Deprecation Warning: `writeVTK` is deprecated, use `write_vtk` instead",
             category=FutureWarning,
+            stacklevel=2,
         )
         return InterfaceVTK.write_vtk(
             mesh, file_name, models=models, directory=directory
@@ -900,6 +903,7 @@ class InterfaceTensorread_vtk(object):
         warnings.warn(
             "Deprecation Warning: `readVTK` is deprecated, use `read_vtk` instead",
             category=FutureWarning,
+            stacklevel=2,
         )
         return InterfaceTensorread_vtk.read_vtk(
             TensorMesh, file_name, directory=directory

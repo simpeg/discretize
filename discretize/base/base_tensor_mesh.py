@@ -661,6 +661,7 @@ class BaseTensorMesh(BaseRegularMesh):
                 "The locType keyword argument has been deprecated, please use location_type. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
+                stacklevel=2,
             )
             location_type = kwargs["locType"]
         pts = as_array_n_by_dim(pts, self.dim)
@@ -783,6 +784,7 @@ class BaseTensorMesh(BaseRegularMesh):
                 "The locType keyword argument has been deprecated, please use location_type. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
+                stacklevel=2,
             )
             location_type = kwargs["locType"]
         if "zerosOutside" in kwargs:
@@ -790,6 +792,7 @@ class BaseTensorMesh(BaseRegularMesh):
                 "The zerosOutside keyword argument has been deprecated, please use zeros_outside. "
                 "This will be removed in discretize 1.0.0",
                 FutureWarning,
+                stacklevel=2,
             )
             zeros_outside = kwargs["zerosOutside"]
         return self._getInterpolationMat(loc, location_type, zeros_outside)
@@ -990,6 +993,7 @@ class BaseTensorMesh(BaseRegularMesh):
                         " You should be supplying a vector. "
                         "Use: sdiag(u)*dMdprop",
                         FutureWarning,
+                        stacklevel=2,
                     )
                     return dMdprop
                 return sdiag(v) * dMdprop
@@ -1094,7 +1098,9 @@ class BaseTensorMesh(BaseRegularMesh):
           please use `mesh.h[0]`.
         """
         warnings.warn(
-            "hx has been deprecated, please access as mesh.h[0]", FutureWarning
+            "hx has been deprecated, please access as mesh.h[0]",
+            FutureWarning,
+            stacklevel=2,
         )
         return self.h[0]
 
@@ -1111,7 +1117,9 @@ class BaseTensorMesh(BaseRegularMesh):
           please use `mesh.h[1]`.
         """
         warnings.warn(
-            "hy has been deprecated, please access as mesh.h[1]", FutureWarning
+            "hy has been deprecated, please access as mesh.h[1]",
+            FutureWarning,
+            stacklevel=2,
         )
         return None if self.dim < 2 else self.h[1]
 
@@ -1128,7 +1136,9 @@ class BaseTensorMesh(BaseRegularMesh):
           please use `mesh.h[2]`.
         """
         warnings.warn(
-            "hz has been deprecated, please access as mesh.h[2]", FutureWarning
+            "hz has been deprecated, please access as mesh.h[2]",
+            FutureWarning,
+            stacklevel=2,
         )
         return None if self.dim < 3 else self.h[2]
 
