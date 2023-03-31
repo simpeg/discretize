@@ -513,13 +513,6 @@ def check_derivative(
     ========================= PASS! =========================
     Once upon a time, a happy little test passed.
     """
-    # matplotlib is a soft dependencies for discretize,
-    # lazy-loaded to decrease load time of discretize.
-    try:
-        import matplotlib
-        import matplotlib.pyplot as plt
-    except ImportError:
-        matplotlib = False
 
     print("{0!s} checkDerivative {1!s}".format("=" * 20, "=" * 20))
     print(
@@ -564,38 +557,52 @@ def check_derivative(
     # Ensure we are about precision
     order0 = order0[E0[1:] > eps]
     order1 = order1[E1[1:] > eps]
-    belowTol = order1.size == 0 and order0.size >= 0
-    # Make sure we get the correct order
-    correctOrder = order1.size > 0 and np.mean(order1) > tolerance * expectedOrder
-
-    passTest = belowTol or correctOrder
-
-    if passTest:
+    # belowTol = order1.size == 0 and order0.size >= 0
+    # # Make sure we get the correct order
+    # correctOrder = order1.size > 0 and np.mean(order1) > tolerance * expectedOrder
+    #
+    # passTest = belowTol or correctOrder
+    try:
+        if order1.size == 0:
+            # This should happen if the original function was a linear function
+            # Thus it has no higher order derivatives.
+            assert order0.size >= 0
+        else:
+            assert np.mean(order1) > tolerance * expectedOrder
         print("{0!s} PASS! {1!s}".format("=" * 25, "=" * 25))
-        print(happiness[np.random.randint(len(happiness))] + "\n")
-    else:
+        print(np.random.choice(happiness) + "\n")
+    except AssertionError as err:
         print(
             "{0!s}\n{1!s} FAIL! {2!s}\n{3!s}".format(
                 "*" * 57, "<" * 25, ">" * 25, "*" * 57
             )
         )
-        print(sadness[np.random.randint(len(sadness))] + "\n")
+        print(np.random.choice(sadness) + "\n")
+        raise err
 
-    @requires({"matplotlib": matplotlib})
-    def plot_it(ax):
-        if plotIt:
-            if ax is None:
-                ax = plt.subplot(111)
-            ax.loglog(h, E0, "b")
-            ax.loglog(h, E1, "g--")
-            ax.set_title(
+    if plotIt:
+        # matplotlib is a soft dependencies for discretize,
+        # lazy-loaded to decrease load time of discretize.
+        try:
+            import matplotlib
+            import matplotlib.pyplot as plt
+        except ImportError:
+            matplotlib = False
+
+        @requires({"matplotlib": matplotlib})
+        def plot_it(axes):
+            if axes is None:
+                axes = plt.subplot(111)
+            axes.loglog(h, E0, "b")
+            axes.loglog(h, E1, "g--")
+            axes.set_title(
                 "Check Derivative - {0!s}".format(
                     ("PASSED :)" if passTest else "FAILED :(")
                 )
             )
-            ax.set_xlabel("h")
-            ax.set_ylabel("Error")
-            leg = ax.legend(
+            axes.set_xlabel("h")
+            axes.set_ylabel("Error")
+            leg = axes.legend(
                 [r"$\mathcal{O}(h)$", r"$\mathcal{O}(h^2)$"],
                 loc="best",
                 title=r"$f(x + h\Delta x) - f(x) - h g(x) \Delta x - \mathcal{O}(h^2) = 0$",
@@ -604,9 +611,9 @@ def check_derivative(
             plt.setp(leg.get_title(), fontsize=15)
             plt.show()
 
-    plot_it(ax)
+        plot_it(ax)
 
-    return passTest
+    return True
 
 
 def get_quadratic(A, b, c=0):
