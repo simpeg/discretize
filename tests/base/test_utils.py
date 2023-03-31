@@ -23,7 +23,6 @@ from discretize.utils import (
     refine_tree_xyz,
     meshTensor,
 )
-from discretize.tests import checkDerivative
 import discretize
 
 TOL = 1e-8

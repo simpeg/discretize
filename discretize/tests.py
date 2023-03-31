@@ -454,16 +454,6 @@ def assert_expected_order(
 
     Then run the expected order test.
     >>> assert_expected_order(deriv_error, [10, 20, 30, 40, 50])
-    _______________________________________________________
-      nc  |    h    |    error    | e(i-1)/e(i) |  order
-    ~~~~~~|~~~~~~~~~|~~~~~~~~~~~~~|~~~~~~~~~~~~~|~~~~~~~~~~
-      10  |1.00e-01 |  3.389e-04  |             |
-      20  |5.00e-02 |  8.622e-05  |   3.9306    |  1.9747
-      30  |3.33e-02 |  3.853e-05  |   2.2374    |  1.9861
-      40  |2.50e-02 |  2.174e-05  |   1.7729    |  1.9904
-      50  |2.00e-02 |  1.393e-05  |   1.5599    |  1.9926
-    -------------------------------------------------------
-    That was easy!
     """
     n_cells = np.asarray(n_cells, dtype=int)
     if test_type not in ["mean", "min", "last", "all", "mean_at_least"]:
