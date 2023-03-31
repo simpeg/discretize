@@ -1,4 +1,5 @@
 import unittest
+import pytest
 import numpy as np
 import scipy.sparse as sp
 from discretize.utils import (
@@ -29,27 +30,25 @@ import discretize
 TOL = 1e-8
 
 
-class TestCheckDerivative(unittest.TestCase):
+class TestCheckDerivative:
     def test_simplePass(self):
         def simplePass(x):
             return np.sin(x), sdiag(np.cos(x))
 
-        passed = checkDerivative(simplePass, np.random.randn(5), plotIt=False)
-        self.assertTrue(passed, True)
+        checkDerivative(simplePass, np.random.randn(5), plotIt=False)
 
     def test_simpleFunction(self):
         def simpleFunction(x):
             return np.sin(x), lambda xi: sdiag(np.cos(x)) * xi
 
-        passed = checkDerivative(simpleFunction, np.random.randn(5), plotIt=False)
-        self.assertTrue(passed, True)
+        checkDerivative(simpleFunction, np.random.randn(5), plotIt=False)
 
     def test_simpleFail(self):
         def simpleFail(x):
             return np.sin(x), -sdiag(np.cos(x))
 
-        passed = checkDerivative(simpleFail, np.random.randn(5), plotIt=False)
-        self.assertTrue(not passed, True)
+        with pytest.raises(AssertionError):
+            checkDerivative(simpleFail, np.random.randn(5), plotIt=False)
 
 
 class TestSequenceFunctions(unittest.TestCase):
