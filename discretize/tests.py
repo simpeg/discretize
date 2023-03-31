@@ -466,6 +466,8 @@ def assert_expected_order(
     That was easy!
     """
     n_cells = np.asarray(n_cells, dtype=int)
+    if test_type not in ["mean", "min", "last", "all", "mean_at_least"]:
+        raise ValueError
     orders = []
     # Do first values:
     nc = n_cells[0]
@@ -497,7 +499,6 @@ def assert_expected_order(
             np.testing.assert_allclose(orders[-1], expected_order, rtol=rtol)
         elif test_type == "all":
             np.testing.assert_allclose(orders, expected_order, rtol=rtol)
-
         print(np.random.choice(happiness))
     except AssertionError as err:
         print(np.random.choice(sadness))
