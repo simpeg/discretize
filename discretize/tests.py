@@ -359,54 +359,151 @@ class OrderTest(unittest.TestCase):
                 "expectedOrders must have the same length as the meshTypes"
             )
 
-        for ii_meshType, mesh_type in enumerate(self.meshTypes):
-            self._meshType = mesh_type
-            self._tolerance = self.tolerance[ii_meshType]
-            self._expectedOrder = self.expectedOrders[ii_meshType]
+        def test_func(n_cells):
+            max_h = self.setupMesh(n_cells)
+            err = self.getError()
+            return err, max_h
 
-            order = []
-            err_old = 0.0
-            max_h_old = 0.0
-            for ii, nc in enumerate(self.meshSizes):
-                # Leave these as setupMesh and getError for deprecated classes that might have extended these two methods
-                max_h = self.setupMesh(nc)
-                err = self.getError()
-                if ii == 0:
-                    print("")
-                    print(self._meshType + ":  " + self.name)
-                    print("_____________________________________________")
-                    print("   h  |    error    | e(i-1)/e(i) |  order")
-                    print("~~~~~~|~~~~~~~~~~~~~|~~~~~~~~~~~~~|~~~~~~~~~~")
-                    print("{0:4d}  |  {1:8.2e}   |".format(nc, err))
-                else:
-                    order.append(np.log(err / err_old) / np.log(max_h / max_h_old))
-                    print(
-                        "{0:4d}  |  {1:8.2e}   |   {2:6.4f}    |  {3:6.4f}".format(
-                            nc, err, err_old / err, order[-1]
-                        )
-                    )
-                err_old = err
-                max_h_old = max_h
-            print("---------------------------------------------")
-            passTest = np.mean(np.array(order)) > self._tolerance * self._expectedOrder
-            if passTest:
-                print(happiness[np.random.randint(len(happiness))])
-            else:
-                print("Failed to pass test on " + self._meshType + ".")
-                print(sadness[np.random.randint(len(sadness))])
-            print("")
-            self.assertGreater(
-                np.mean(np.array(order)), self._tolerance * self._expectedOrder
+        for mesh_type, order, tolerance in zip(
+            self.meshTypes, self.tolerance, self.expectedOrders
+        ):
+            self._meshType = mesh_type
+            assert_expected_order(
+                test_func,
+                self.meshSizes,
+                expected_order=order,
+                rtol=np.abs(1 - tolerance),
+                test_type="mean_at_least",
             )
 
-    # expectedOrders = deprecate_property("expectedOrders", "expectedOrders", removal_version="1.0.0")
-    # meshSizes = deprecate_property("meshSizes", "meshSizes", removal_version="1.0.0")
-    # meshTypes = deprecate_property("meshTypes", "meshTypes", removal_version="1.0.0")
-    # meshDimension = deprecate_property("meshDimension", "meshDimension", removal_version="1.0.0")
-    # setupMesh = deprecate_method("setupMesh", "setupMesh", removal_version="1.0.0")
-    # getError = deprecate_method("getError", "getError", removal_version="1.0.0")
-    # orderTest = deprecate_method("orderTest", "orderTest", removal_version="1.0.0")
-    # _meshType = deprecate_property("_meshType", "_meshType", removal_version="1.0.0")
+
+def assert_expected_order(
+    func, n_cells, expected_order=2.0, rtol=0.15, test_type="mean"
+):
+    """Perform an order test.
+
+    For number of cells specified in `mesh_sizes` call `func`
+    and prints mesh size, error, ratio between current and previous error,
+    and estimated order of convergence.
+
+    Parameters
+    ----------
+    func : callable
+        Function which should accept an integer representing the number of
+        discretizations on the domain and return a tuple of the error and
+        the discretization widths.
+    n_cells : array_like of int
+        List of number of discretizations to pass to func.
+    expected_order : float, optional
+        The expected order of accuracy for you test
+    rtol : float, optional
+        The relative tolerance of the order test.
+    test_type : {'mean', 'min', 'last', 'all', 'mean_at_least'}
+        Which property of the list of calculated orders to test.
+
+    Returns
+    -------
+    numpy.ndarray
+        The calculated order values on success
+
+    Raises
+    ------
+    AssertionError
+
+    Notes
+    -----
+    For the different ``test_type`` arguments, different properties of the
+    order is tested:
+
+        - `mean`: the mean value of all calculated orders is tested for
+          approximate equality with the expected order.
+        - `min`: The minimimum value of calculated orders is tested for
+          approximate equality with the expected order.
+        - `last`: The last calculated order is tested for approximate equality
+          with the expected order.
+        - `all`: All calculated orders are tested for approximate equality with
+          the expected order.
+        - `mean_at_least`: The mean is tested to be at least approximately the
+          expected order. This is the default test for the previous ``OrderTest``
+          class in older versions of `discretize`.
+
+    Examples
+    --------
+    Testing the convergence order of an central difference operator
+
+    >>> from discretize.tests import assert_expected_order
+    >>> func = lambda y: np.cos(y)
+    >>> func_deriv = lambda y: -np.sin(y)
+
+    Define the function that returns the error and cell width for
+    a given number of discretizations.
+    >>> def deriv_error(n):
+    ...     # grid points
+    ...     nodes = np.linspace(0, 1, n+1)
+    ...     cc = 0.5 * (nodes[1:] + nodes[:-1])
+    ...     dh = nodes[1]-nodes[0]
+    ...     # evaluate the function on nodes
+    ...     node_eval = func(nodes)
+    ...     # calculate the numerical derivative
+    ...     num_deriv = (node_eval[1:] - node_eval[:-1]) / dh
+    ...     # calculate the true derivative
+    ...     true_deriv = func_deriv(cc)
+    ...     # compare the L-inf norm of the error vector
+    ...     err = np.linalg.norm(num_deriv - true_deriv, ord=np.inf)
+    ...     return err, dh
+
+    Then run the expected order test.
+    >>> assert_expected_order(deriv_error, [10, 20, 30, 40, 50])
+    _______________________________________________________
+      nc  |    h    |    error    | e(i-1)/e(i) |  order
+    ~~~~~~|~~~~~~~~~|~~~~~~~~~~~~~|~~~~~~~~~~~~~|~~~~~~~~~~
+      10  |1.00e-01 |  3.389e-04  |             |
+      20  |5.00e-02 |  8.622e-05  |   3.9306    |  1.9747
+      30  |3.33e-02 |  3.853e-05  |   2.2374    |  1.9861
+      40  |2.50e-02 |  2.174e-05  |   1.7729    |  1.9904
+      50  |2.00e-02 |  1.393e-05  |   1.5599    |  1.9926
+    -------------------------------------------------------
+    That was easy!
+    """
+    n_cells = np.asarray(n_cells, dtype=int)
+    orders = []
+    # Do first values:
+    nc = n_cells[0]
+    err_last, h_last = func(nc)
+
+    print("_______________________________________________________")
+    print("  nc  |    h    |    error    | e(i-1)/e(i) |  order   ")
+    print("~~~~~~|~~~~~~~~~|~~~~~~~~~~~~~|~~~~~~~~~~~~~|~~~~~~~~~~")
+    print(f"{nc:^6d}|{h_last:^9.2e}|{err_last:^13.3e}|             |")
+
+    for nc in n_cells[1:]:
+        err, h = func(nc)
+        order = np.log(err / err_last) / np.log(h / h_last)
+        print(f"{nc:^6d}|{h:^9.2e}|{err:^13.3e}|{err_last / err:^13.4f}|{order:^10.4f}")
+        err_last = err
+        h_last = h
+        orders.append(order)
+
+    print("-------------------------------------------------------")
+
+    try:
+        if test_type == "mean":
+            np.testing.assert_allclose(np.mean(orders), expected_order, rtol=rtol)
+        elif test_type == "mean_at_least":
+            assert np.mean(orders) > expected_order * (1 - rtol)
+        elif test_type == "min":
+            np.testing.assert_allclose(np.min(orders), expected_order, rtol=rtol)
+        elif test_type == "last":
+            np.testing.assert_allclose(orders[-1], expected_order, rtol=rtol)
+        elif test_type == "all":
+            np.testing.assert_allclose(orders, expected_order, rtol=rtol)
+
+        print(np.random.choice(happiness))
+    except AssertionError as err:
+        print(np.random.choice(sadness))
+        raise err
+
+    return orders
 
 
 def rosenbrock(x, return_g=True, return_H=True):
