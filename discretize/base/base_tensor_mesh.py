@@ -554,9 +554,9 @@ class BaseTensorMesh(BaseRegularMesh):
             ey = ndgrid(self.nodes_x[[0, -1]], self.cell_centers_y)
             return np.r_[ex, ey]
         if dim == 3:
-            ex = self.edges_x[make_boundary_bool(self.shape_edges_x, dir="yz")]
-            ey = self.edges_y[make_boundary_bool(self.shape_edges_y, dir="xz")]
-            ez = self.edges_z[make_boundary_bool(self.shape_edges_z, dir="xy")]
+            ex = self.edges_x[make_boundary_bool(self.shape_edges_x, bdir="yz")]
+            ey = self.edges_y[make_boundary_bool(self.shape_edges_y, bdir="xz")]
+            ez = self.edges_z[make_boundary_bool(self.shape_edges_z, bdir="xy")]
             return np.r_[ex, ey, ez]
 
     def _getTensorGrid(self, key):

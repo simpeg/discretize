@@ -3465,11 +3465,11 @@ class DiffOperators(BaseMesh):
 
         # Create a matrix that projects all faces onto boundary faces
         # The below should work for a regular structured mesh
-        is_b = make_boundary_bool(self.shape_faces_x, dir="x")
+        is_b = make_boundary_bool(self.shape_faces_x, bdir="x")
         if self.dim > 1:
-            is_b = np.r_[is_b, make_boundary_bool(self.shape_faces_y, dir="y")]
+            is_b = np.r_[is_b, make_boundary_bool(self.shape_faces_y, bdir="y")]
         if self.dim == 3:
-            is_b = np.r_[is_b, make_boundary_bool(self.shape_faces_z, dir="z")]
+            is_b = np.r_[is_b, make_boundary_bool(self.shape_faces_z, bdir="z")]
         return sp.eye(self.n_faces, format="csr")[is_b]
 
     @property
@@ -3484,11 +3484,11 @@ class DiffOperators(BaseMesh):
             return None  # No edges are on the boundary in 1D
 
         is_b = np.r_[
-            make_boundary_bool(self.shape_edges_x, dir="yz"),
-            make_boundary_bool(self.shape_edges_y, dir="xz"),
+            make_boundary_bool(self.shape_edges_x, bdir="yz"),
+            make_boundary_bool(self.shape_edges_y, bdir="xz"),
         ]
         if self.dim == 3:
-            is_b = np.r_[is_b, make_boundary_bool(self.shape_edges_z, dir="xy")]
+            is_b = np.r_[is_b, make_boundary_bool(self.shape_edges_z, bdir="xy")]
         return sp.eye(self.n_edges, format="csr")[is_b]
 
     @property

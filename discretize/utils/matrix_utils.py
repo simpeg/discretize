@@ -381,7 +381,7 @@ def ndgrid(*args, vector=True, order="F"):
     return meshed
 
 
-def make_boundary_bool(shape, bdir="xyz", **kwargs):
+def make_boundary_bool(shape, b"xyz", **kwargs):
     r"""Return boundary indices of a tensor grid.
 
     For a tensor grid whose shape is given (1D, 2D or 3D), this function
