@@ -1435,14 +1435,17 @@ class InterfaceMPL(object):
                 if not isinstance(ax, list) or len(ax) != 2:
                     warnings.warn(
                         "two axes handles must be provided to plot both theta "
-                        "and z slices through the mesh. Over-writing the axes."
+                        "and z slices through the mesh. Over-writing the axes.",
+                        stacklevel=2,
                     )
                     ax = None
                 else:
                     # find the one with a polar projection and pass it to the
                     # theta slice, other one to the z-slice
                     polarax = [
-                        a for a in ax if a.__class__.__name__ == "PolarAxesSubplot"
+                        a
+                        for a in ax
+                        if a.__class__.__name__ in ["PolarAxesSubplot", "PolarAxes"]
                     ]
                     if len(polarax) != 1:
                         warnings.warn(
@@ -1454,7 +1457,8 @@ class InterfaceMPL(object):
 
                             for reference, see: http://matplotlib.org/examples/pylab_examples/polar_demo.html
                                                 https://github.com/matplotlib/matplotlib/issues/312
-                            """
+                            """,
+                            stacklevel=2,
                         )
                         ax = None
 
@@ -1493,7 +1497,8 @@ class InterfaceMPL(object):
         # https://github.com/matplotlib/matplotlib/issues/312
         ax = kwargs.get("ax", None)
         if ax is not None:
-            if ax.__class__.__name__ != "PolarAxesSubplot":
+            print(ax.__class__.__name__)
+            if ax.__class__.__name__ not in ["PolarAxesSubplot", "PolarAxes"]:
                 warnings.warn(
                     """
                     Creating new axes with Polar projection. If you prefer to create your own, please use
@@ -1502,7 +1507,8 @@ class InterfaceMPL(object):
 
                     for reference, see: http://matplotlib.org/examples/pylab_examples/polar_demo.html
                                         https://github.com/matplotlib/matplotlib/issues/312
-                    """
+                    """,
+                    stacklevel=2,
                 )
                 ax = plt.subplot(111, projection="polar")
         else:

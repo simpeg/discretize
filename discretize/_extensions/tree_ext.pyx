@@ -869,8 +869,8 @@ cdef class _TreeMesh:
         >>> import discretize
         >>> import matplotlib.pyplot as plt
         >>> import matplotlib.patches as patches
-        >>> tree_mesh = discretize.TreeMesh([32, 32, 32])
-        >>> tree_mesh.max_level
+        >>> mesh = discretize.TreeMesh([32, 32, 32])
+        >>> mesh.max_level
         5
 
         Next we define the bottom points of the prism, its heights, and the level we

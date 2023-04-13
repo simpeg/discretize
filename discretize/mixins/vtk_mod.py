@@ -606,7 +606,8 @@ class InterfaceVTK(object):
             cvtd = pyvista.wrap(cvtd)
         except ImportError:
             warnings.warn(
-                "For easier use of VTK objects, you should install `pyvista` (the VTK interface): pip install pyvista"
+                "For easier use of VTK objects, you should install `pyvista` (the VTK interface): pip install pyvista",
+                stacklevel=1,
             )
         return cvtd
 

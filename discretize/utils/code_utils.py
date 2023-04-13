@@ -145,7 +145,7 @@ def deprecate_class(removal_version=None, new_location=None, future_warn=False):
         cls._old__init__ = cls.__init__
 
         def __init__(self, *args, **kwargs):
-            warnings.warn(message, warn)
+            warnings.warn(message, warn, stacklevel=2)
             self._old__init__(*args, **kwargs)
 
         cls.__init__ = __init__
@@ -181,7 +181,7 @@ def deprecate_module(old_name, new_name, removal_version=None, future_warn=False
     else:
         message += " It will be removed in a future version of discretize."
     message += " Please update your code accordingly."
-    warnings.warn(message, warn)
+    warnings.warn(message, warn, stacklevel=2)
 
 
 def deprecate_property(new_name, old_name, removal_version=None, future_warn=False):
@@ -213,7 +213,7 @@ def deprecate_property(new_name, old_name, removal_version=None, future_warn=Fal
             f"{class_name}.{old_name} has been deprecated, please use {class_name}.{new_name}."
             + tag
         )
-        warnings.warn(message, warn)
+        warnings.warn(message, warn, stacklevel=2)
         return getattr(self, new_name)
 
     def set_dep(self, other):
@@ -222,7 +222,7 @@ def deprecate_property(new_name, old_name, removal_version=None, future_warn=Fal
             f"{class_name}.{old_name} has been deprecated, please use {class_name}.{new_name}."
             + tag
         )
-        warnings.warn(message, warn)
+        warnings.warn(message, warn, stacklevel=2)
         setattr(self, new_name, other)
 
     doc = f"""
@@ -265,6 +265,7 @@ def deprecate_method(new_name, old_name, removal_version=None, future_warn=False
             f"{class_name}.{old_name} has been deprecated, please use {class_name}.{new_name}."
             + tag,
             warn,
+            stacklevel=2,
         )
         return getattr(self, new_name)(*args, **kwargs)
 
@@ -307,6 +308,7 @@ def deprecate_function(new_function, old_name, removal_version=None, future_warn
         warnings.warn(
             f"{old_name} has been deprecated, please use {new_name}." + tag,
             warn,
+            stacklevel=2,
         )
         return new_function(*args, **kwargs)
 

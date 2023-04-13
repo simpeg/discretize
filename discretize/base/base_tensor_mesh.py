@@ -971,6 +971,7 @@ class BaseTensorMesh(BaseRegularMesh):
                         " You should be supplying a vector. "
                         "Use: sdiag(u)*dMdprop",
                         FutureWarning,
+                        stacklevel=2,
                     )
                     return dMdprop
                 return sdiag(v) * dMdprop

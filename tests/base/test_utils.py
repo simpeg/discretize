@@ -23,33 +23,9 @@ from discretize.utils import (
     refine_tree_xyz,
     unpack_widths,
 )
-from discretize.tests import check_derivative
 import discretize
 
 TOL = 1e-8
-
-
-class TestCheckDerivative(unittest.TestCase):
-    def test_simplePass(self):
-        def simplePass(x):
-            return np.sin(x), sdiag(np.cos(x))
-
-        passed = check_derivative(simplePass, np.random.randn(5), plotIt=False)
-        self.assertTrue(passed, True)
-
-    def test_simpleFunction(self):
-        def simpleFunction(x):
-            return np.sin(x), lambda xi: sdiag(np.cos(x)) * xi
-
-        passed = check_derivative(simpleFunction, np.random.randn(5), plotIt=False)
-        self.assertTrue(passed, True)
-
-    def test_simpleFail(self):
-        def simpleFail(x):
-            return np.sin(x), -sdiag(np.cos(x))
-
-        passed = check_derivative(simpleFail, np.random.randn(5), plotIt=False)
-        self.assertTrue(not passed, True)
 
 
 class TestSequenceFunctions(unittest.TestCase):

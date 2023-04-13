@@ -230,6 +230,7 @@ def closest_points_index(mesh, pts, grid_loc="CC"):
         "a class object. Please access it as mesh.closest_points_index(). This will "
         "be removed in a future version of discretize",
         DeprecationWarning,
+        stacklevel=2,
     )
     return mesh.closest_points_index(pts, grid_loc=grid_loc, discard=True)
 
@@ -709,6 +710,7 @@ def refine_tree_xyz(
             "use the `TreeMesh.refine_points` functionality. It will be removed in a "
             "future version of discretize.",
             DeprecationWarning,
+            stacklevel=2,
         )
 
         # Compute the outer limits of each octree level
@@ -732,6 +734,7 @@ def refine_tree_xyz(
             "use the `TreeMesh.refine_surface` functionality. It will be removed in a "
             "future version of discretize.",
             DeprecationWarning,
+            stacklevel=2,
         )
         # padding = np.zeros((len(octree_levels), mesh.dim))
         # padding[:, -1] = np.maximum(octree_levels - 1, 0)
@@ -853,6 +856,7 @@ def refine_tree_xyz(
             "use the `TreeMesh.refine_bounding_box` functionality. It will be removed in a "
             "future version of discretize.",
             DeprecationWarning,
+            stacklevel=2,
         )
         # padding = np.zeros((len(octree_levels), mesh.dim))
         # padding[:, -1] = np.maximum(octree_levels - 1, 0)

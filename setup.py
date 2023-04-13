@@ -75,6 +75,7 @@ if len(sys.argv) >= 2 and (
     metadata["install_requires"] = install_requires
 else:
     from setuptools.extension import Extension
+    from setuptools.command.build_ext import build_ext
     from Cython.Build import cythonize
     import numpy as np
 
@@ -103,6 +104,26 @@ else:
         ),
     ]
 
+    class build_ext_cpp_standard(build_ext):
+        # add compiler specific standard argument specifier
+        def build_extension(self, ext):
+            # This module requires c++17 standard
+            if ext.name == "discretize._extensions.tree_ext":
+                comp_type = self.compiler.compiler_type
+                if comp_type == "msvc":
+                    std_arg = "/std:c++17"
+                elif comp_type == "bcpp":
+                    raise Exception(
+                        "Must use cpp compiler that support C++17 standard."
+                    )
+                else:
+                    std_arg = "-std=c++17"
+                ext.extra_compile_args = [
+                    std_arg,
+                ]
+            super().build_extension(ext)
+
     metadata["ext_modules"] = cythonize(extensions)
+    metadata["cmdclass"] = {"build_ext": build_ext_cpp_standard}
 
 setup(**metadata)
