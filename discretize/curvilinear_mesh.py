@@ -506,24 +506,24 @@ class CurvilinearMesh(
     def boundary_edges(self):  # NOQA D102
         # Documentation inherited from discretize.base.BaseMesh
         if self.dim == 2:
-            ex = self.edges_x[make_boundary_bool(self.shape_edges_x, dir="y")]
-            ey = self.edges_y[make_boundary_bool(self.shape_edges_y, dir="x")]
+            ex = self.edges_x[make_boundary_bool(self.shape_edges_x, bdir="y")]
+            ey = self.edges_y[make_boundary_bool(self.shape_edges_y, bdir="x")]
             return np.r_[ex, ey]
         elif self.dim == 3:
-            ex = self.edges_x[make_boundary_bool(self.shape_edges_x, dir="yz")]
-            ey = self.edges_y[make_boundary_bool(self.shape_edges_y, dir="xz")]
-            ez = self.edges_z[make_boundary_bool(self.shape_edges_z, dir="xy")]
+            ex = self.edges_x[make_boundary_bool(self.shape_edges_x, bdir="yz")]
+            ey = self.edges_y[make_boundary_bool(self.shape_edges_y, bdir="xz")]
+            ez = self.edges_z[make_boundary_bool(self.shape_edges_z, bdir="xy")]
             return np.r_[ex, ey, ez]
 
     @property
     def boundary_faces(self):  # NOQA D102
         # Documentation inherited from discretize.base.BaseMesh
-        fx = self.faces_x[make_boundary_bool(self.shape_faces_x, dir="x")]
-        fy = self.faces_y[make_boundary_bool(self.shape_faces_y, dir="y")]
+        fx = self.faces_x[make_boundary_bool(self.shape_faces_x, bdir="x")]
+        fy = self.faces_y[make_boundary_bool(self.shape_faces_y, bdir="y")]
         if self.dim == 2:
             return np.r_[fx, fy]
         elif self.dim == 3:
-            fz = self.faces_z[make_boundary_bool(self.shape_faces_z, dir="z")]
+            fz = self.faces_z[make_boundary_bool(self.shape_faces_z, bdir="z")]
             return np.r_[fx, fy, fz]
 
     @property
@@ -538,8 +538,8 @@ class CurvilinearMesh(
         is_bym = is_bym.reshape(-1, order="F")
 
         is_b = np.r_[
-            make_boundary_bool(self.shape_faces_x, dir="x"),
-            make_boundary_bool(self.shape_faces_y, dir="y"),
+            make_boundary_bool(self.shape_faces_x, bdir="x"),
+            make_boundary_bool(self.shape_faces_y, bdir="y"),
         ]
         switch = np.r_[is_bxm, is_bym]
         if self.dim == 3:
@@ -547,7 +547,7 @@ class CurvilinearMesh(
             is_bzm[:, :, 0] = True
             is_bzm = is_bzm.reshape(-1, order="F")
 
-            is_b = np.r_[is_b, make_boundary_bool(self.shape_faces_z, dir="z")]
+            is_b = np.r_[is_b, make_boundary_bool(self.shape_faces_z, bdir="z")]
             switch = np.r_[switch, is_bzm]
         face_normals = self.face_normals.copy()
         face_normals[switch] *= -1
