@@ -500,10 +500,8 @@ class TestAveraging1D(discretize.tests.OrderTest):
         fun = lambda x: np.cos(x)
         self.getHere = lambda M: fun(M.edges)
         self.getThere = lambda M: fun(M.faces)
-        self.getAve = lambda M: M.average_edge_to_face_vector
-        self.expectedOrders = 1
+        self.getAve = lambda M: M.average_edge_to_face
         self.orderTest()
-        self.expectedOrders = 2
 
 
 class TestAverating2DSimple(unittest.TestCase):
