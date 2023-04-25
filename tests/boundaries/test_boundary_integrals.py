@@ -214,7 +214,7 @@ class Test3DBoundaryIntegral(discretize.tests.OrderTest):
         "sphereCurv",
     ]
     meshDimension = 3
-    expectedOrders = [2, 1, 2, 2, 2, 0]
+    expectedOrders = [2, 1, 2, 2, 2, 2]
     meshSizes = [4, 8, 16, 32]
 
     def getError(self):

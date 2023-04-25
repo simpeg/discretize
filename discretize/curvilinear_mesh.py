@@ -1,5 +1,6 @@
 """Module containing the curvilinear mesh implementation."""
 import numpy as np
+import scipy.sparse as sp
 
 from discretize.utils import (
     mkvc,
@@ -737,3 +738,100 @@ class CurvilinearMesh(
         if getattr(self, "_edge_tangents", None) is None:
             self.edge_lengths  # calling .edge_lengths will create the tangents
         return self._edge_tangents
+
+    def _get_edge_surf_int_proj_mats(self, only_boundary=False, with_area=True):
+        """Return the projection operators for integrating edges on each face.
+
+        Parameters
+        ----------
+        only_boundary : whether to only operate on the boundary faces or not.
+
+        Returns
+        -------
+        list of (3 * n_faces, n_edges) scipy.sparse.csr_matrix
+        """
+        # edges associated with each face... can just get the indices of the curl...
+        face_edges = self.edge_curl.indices.reshape(-1, 4)
+        face_areas = self.face_areas
+        if only_boundary:
+            bf_inds = self.project_face_to_boundary_face.indices
+            face_edges = face_edges[bf_inds]
+            face_areas = face_areas[bf_inds]
+            face_normals = self.boundary_face_outward_normals
+        else:
+            face_normals = self.face_normals
+
+        # face_edges is edge_x1m, edge_x1p, edge_x2m, edge_x2p for each of them so...
+        edge_inds = [[0, 2], [1, 2], [0, 3], [1, 3]]
+
+        n_f = face_edges.shape[0]
+
+        ones = np.ones(n_f * 2)
+        P_indptr = np.arange(2 * n_f + 1)
+
+        d = np.ones(3, dtype=int)[:, None] * np.arange(2)
+        t = np.arange(n_f)
+        T_col_inds = (d + t[:, None, None] * 2).reshape(-1)
+        T_ind_ptr = 2 * np.arange(3 * n_f + 1)
+
+        Ps = []
+
+        # translate c to fortran ordering
+        C2F_col_inds = np.arange(n_f * 3).reshape((-1, 3), order="C").reshape(-1)
+        C2F_row_inds = np.arange(n_f * 3).reshape((-1, 3), order="F").reshape(-1)
+        C2F = sp.csr_matrix(
+            (np.ones(n_f * 3), (C2F_row_inds, C2F_col_inds)), shape=(n_f * 3, n_f * 3)
+        )
+
+        for i in range(4):
+            # matrix which selects the edges associate with each of the nodes of each boundary face
+            node_edges = face_edges[:, edge_inds[i]]
+            P = sp.csr_matrix(
+                (ones, node_edges.reshape(-1), P_indptr), shape=(2 * n_f, self.n_edges)
+            )
+
+            edge_dirs = self.edge_tangents[node_edges]
+            t_for = np.concatenate((edge_dirs, face_normals[:, None, :]), axis=1)
+            t_inv = np.linalg.inv(t_for)
+            t_inv = t_inv[:, :, :-1] / 4  # n_edges_per_thing
+
+            if with_area:
+                t_inv *= face_areas[:, None, None]
+
+            T = C2F @ sp.csr_matrix(
+                (t_inv.reshape(-1), T_col_inds, T_ind_ptr),
+                shape=(3 * n_f, 2 * n_f),
+            )
+            Ps.append((T @ P))
+        return Ps
+
+    @property
+    def boundary_edge_vector_integral(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
+        if self.dim == 2:
+            return super().boundary_edge_vector_integral
+
+        Ps = self._get_edge_surf_int_proj_mats(only_boundary=True, with_area=True)
+        # cross product matrix:
+        # cx = mesh.boundary_face_outward_normals[:, 0]
+        # cy = mesh.boundary_face_outward_normals[:, 1]
+        # cz = mesh.boundary_face_outward_normals[:, 2]
+        # z = np.zeros(n_bf)
+        #
+        # vs = np.stack([np.c_[z, cz, -cy], np.c_[-cz, z, cx], np.c_[cy, -cx, z]], axis=-1)
+        # the cross product of a vector defined on each face with the face outward normal...
+        # so V cross n = -n cross V
+
+        cx = sp.diags(self.boundary_face_outward_normals[:, 0])
+        cy = sp.diags(self.boundary_face_outward_normals[:, 1])
+        cz = sp.diags(self.boundary_face_outward_normals[:, 2])
+        # the negative cross mat
+        cross_mat = sp.bmat([[None, cz, -cy], [-cz, None, cx], [cy, -cx, None]])
+
+        Pf = self.project_face_to_boundary_face
+        Pe = self.project_edge_to_boundary_edge
+        Av = (Pf @ self.average_edge_to_face) @ Pe.T
+        Av = cross_mat @ sp.block_diag((Av, Av, Av))
+
+        Me = np.sum(Ps).T @ Av
+        return Me
