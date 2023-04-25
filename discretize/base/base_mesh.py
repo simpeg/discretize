@@ -2975,12 +2975,11 @@ class BaseMesh:
         )
 
     @property
-    def average_edge_to_face_vector(self):
-        r"""Averaging operator from edges to faces (vector quantities).
+    def average_edge_to_face(self):
+        r"""Averaging operator from edges to faces.
 
-        This property constructs the averaging operator that independently maps the
-        Cartesian components of vector quantities from edges to faces.
-        This averaging operators is used when a discrete vector quantity defined on mesh edges
+        This property constructs the averaging operator that maps uantities from edges to faces.
+        This averaging operators is used when a discrete quantity defined on mesh edges
         must be approximated at faces. The operation is implemented as a
         matrix vector product, i.e.::
 
@@ -2991,23 +2990,19 @@ class BaseMesh:
         Returns
         -------
         (n_faces, n_edges) scipy.sparse.csr_matrix
-            The vector averaging operator from edges to faces.
+            The averaging operator from edges to faces.
 
         Notes
         -----
-        Let :math:`\mathbf{u_e}` be the discrete representation of a vector
-        quantity whose Cartesian components are defined on their respective edges;
-        e.g. the x-component is defined on x-edges. **average_edge_to_face_vector**
+        Let :math:`\mathbf{u_e}` be the discrete representation of aquantity whose
+        that is defined on the edges. **average_edge_to_face**
         constructs a discrete linear operator :math:`\mathbf{A_{ef}}` that
-        projects each Cartesian component of :math:`\mathbf{u_e}` to
-        its corresponding face, i.e.:
+        projects :math:`\mathbf{u_e}` to its corresponding face, i.e.:
 
         .. math::
             \mathbf{u_f} = \mathbf{A_{ef}} \, \mathbf{u_e}
 
-        where :math:`\mathbf{u_f}` is a discrete vector quantity whose Cartesian
-        components are defined on their respective faces; e.g. the x-component is
-        defined on x-faces.
+        where :math:`\mathbf{u_f}` is a quantity defined on the respective faces.
 
         Examples
         --------
@@ -3025,20 +3020,19 @@ class BaseMesh:
 
         Create a discrete vector on mesh edges
 
-        >>> edges_x = mesh.edges_x
-        >>> edges_y = mesh.edges_y
-        >>> u_ex = -(edges_x[:, 1] / np.sqrt(np.sum(edges_x ** 2, axis=1))) * np.exp(
-        ...     -(edges_x[:, 0] ** 2 + edges_x[:, 1] ** 2) / 6 ** 2
+        >>> edges = mesh.edges
+        >>> u_ex = -(edges[:, 1] / np.sqrt(np.sum(edges ** 2, axis=1))) * np.exp(
+        ...     -(edges[:, 0] ** 2 + edges[:, 1] ** 2) / 6 ** 2
         ... )
-        >>> u_ey = (edges_y[:, 0] / np.sqrt(np.sum(edges_y ** 2, axis=1))) * np.exp(
-        ...     -(edges_y[:, 0] ** 2 + edges_y[:, 1] ** 2) / 6 ** 2
+        >>> u_ey = (edges[:, 0] / np.sqrt(np.sum(edges ** 2, axis=1))) * np.exp(
+        ...     -(edges[:, 0] ** 2 + edges[:, 1] ** 2) / 6 ** 2
         ... )
-        >>> u_e = np.r_[u_ex, u_ey]
+        >>> u_e = np.c_[u_ex, u_ey]
 
         Next, we construct the averaging operator and apply it to
         the discrete vector quantity to approximate the value at the faces.
 
-        >>> Aef = mesh.average_edge_to_face_vector
+        >>> Aef = mesh.average_edge_to_face
         >>> u_f = Aef @ u_e
 
         Plot the results,
@@ -3047,10 +3041,12 @@ class BaseMesh:
 
             >>> fig = plt.figure(figsize=(11, 5))
             >>> ax1 = fig.add_subplot(121)
-            >>> mesh.plot_image(u_e, ax=ax1, v_type="E", view='vec')
+            >>> proj_ue = mesh.project_edge_vector(u_e)
+            >>> mesh.plot_image(proj_ue, ax=ax1, v_type="E", view='vec')
             >>> ax1.set_title("Variable at edges", fontsize=16)
             >>> ax2 = fig.add_subplot(122)
-            >>> mesh.plot_image(u_f, ax=ax2, v_type="F", view='vec')
+            >>> proj_uf = mesh.project_face_vector(u_f)
+            >>> mesh.plot_image(proj_uf, ax=ax2, v_type="F", view='vec')
             >>> ax2.set_title("Averaged to faces", fontsize=16)
             >>> plt.show()
 
@@ -3067,7 +3063,7 @@ class BaseMesh:
             >>> plt.show()
         """
         raise NotImplementedError(
-            f"average_edge_to_face_vector not implemented for {type(self)}"
+            f"average_edge_to_face not implemented for {type(self)}"
         )
 
     @property
