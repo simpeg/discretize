@@ -744,7 +744,10 @@ class CurvilinearMesh(
 
         Parameters
         ----------
-        only_boundary : whether to only operate on the boundary faces or not.
+        only_boundary : bool, optional
+            Whether to only operate on the boundary faces or not.
+        with_area : bool, optional
+            Whether to include the face area.
 
         Returns
         -------
