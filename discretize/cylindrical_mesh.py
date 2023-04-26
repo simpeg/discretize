@@ -1425,6 +1425,15 @@ class CylindricalMesh(
         return self._average_edge_to_cell_vector
 
     @property
+    def average_edge_to_face(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
+        Av = super().average_edge_to_face
+        # then need to deflate it...
+        De = self._deflation_matrix("edges", as_ones=True)
+        Df = self._deflation_matrix("faces", as_ones=False)
+        return Df @ Av @ De.T
+
+    @property
     def average_face_x_to_cell(self):  # NOQA D102
         # Documentation inherited from discretize.operators.DiffOperators
         avR = av(self.vnC[0])[
