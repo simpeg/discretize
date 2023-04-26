@@ -5,6 +5,7 @@ from sympy.abc import r, t, z
 
 import discretize
 from discretize import tests
+import pytest
 
 np.random.seed(16)
 
@@ -421,6 +422,22 @@ class TestAveE2CC(tests.OrderTest):
 
     def test_order(self):
         self.orderTest()
+
+
+@pytest.mark.parametrize("mesh_type", MESHTYPES + ["uniform_symmetric_CylMesh"])
+def test_ave_edge_to_face(mesh_type):
+    def get_error(n_cells):
+        mesh, h = tests.setup_mesh(mesh_type, n_cells, 3)
+
+        fun = lambda r, t, z: np.sin(np.pi * z) * np.sin(np.pi * r) * np.cos(t)
+        Ee = fun(*mesh.edges.T)
+
+        ave = mesh.average_edge_to_face @ Ee
+        ana = fun(*mesh.faces.T)
+        err = np.linalg.norm((ave - ana), np.inf)
+        return err, h
+
+    tests.assert_expected_order(get_error, [8, 16, 32, 64])
 
 
 class EdgeInnerProductFctsIsotropic(object):

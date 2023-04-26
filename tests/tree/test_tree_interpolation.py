@@ -223,8 +223,8 @@ class TestCaching(unittest.TestCase):
 
     def testCaching(self):
         mesh = self.mesh
-        A1 = mesh.average_edge_to_face_vector
-        A2 = mesh.average_edge_to_face_vector
+        A1 = mesh.average_edge_to_face
+        A2 = mesh.average_edge_to_face
         self.assertIs(A1, A2)
 
 

@@ -2263,7 +2263,9 @@ class DiffOperators(BaseMesh):
 
         n_boundary_edges = len(w)
 
-        Av = Pf @ self.average_edge_to_face_vector @ Pe.T
+        Av = Pf @ self.average_edge_to_face @ Pe.T
+        if self.dim > 2:
+            Av *= 2
 
         w_cross_n = np.cross(-w, Av.T @ dA)
 
@@ -3249,7 +3251,7 @@ class DiffOperators(BaseMesh):
         return self._average_edge_z_to_cell
 
     @property
-    def average_edge_to_face_vector(self):  # NOQA D102
+    def average_edge_to_face(self):  # NOQA D102
         # Documentation inherited from discretize.base.BaseMesh
         if self.dim == 1:
             return self.average_cell_to_face
@@ -3269,7 +3271,7 @@ class DiffOperators(BaseMesh):
         ez_to_fx = kron3(speye(n3), av(n2), speye(n1 + 1))
         ez_to_fy = kron3(speye(n3), speye(n2 + 1), av(n1))
 
-        e_to_f = sp.bmat(
+        e_to_f = 0.5 * sp.bmat(
             [
                 [None, ey_to_fx, ez_to_fx],
                 [ex_to_fy, None, ez_to_fy],

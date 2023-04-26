@@ -39,7 +39,7 @@ class TestBaseMesh(unittest.TestCase):
         "average_cell_to_edge",
         "average_edge_to_cell",
         "average_edge_to_cell_vector",
-        "average_edge_to_face_vector",
+        "average_edge_to_face",
         "average_node_to_cell",
         "average_node_to_edge",
         "average_node_to_face",

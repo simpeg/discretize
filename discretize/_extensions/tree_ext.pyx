@@ -426,7 +426,7 @@ cdef class _TreeMesh:
         self._average_edge_z_to_cell = None
         self._average_edge_to_cell = None
         self._average_edge_to_cell_vector = None
-        self._average_edge_to_face_vector = None
+        self._average_edge_to_face = None
 
         self._average_node_to_cell = None
         self._average_node_to_edge = None
@@ -3912,12 +3912,11 @@ cdef class _TreeMesh:
         return self._average_edge_to_cell_vector
 
     @property
-    def average_edge_to_face_vector(self):
-        """Averaging operator from edges to faces (vector quantities).
+    def average_edge_to_face(self):
+        r"""Averaging operator from edges to faces.
 
-        This property constructs the averaging operator that independently maps the
-        Cartesian components of vector quantities from edges to faces.
-        This averaging operators is used when a discrete vector quantity defined on mesh edges
+        This property constructs the averaging operator that maps uantities from edges to faces.
+        This averaging operators is used when a discrete quantity defined on mesh edges
         must be approximated at faces. The operation is implemented as a
         matrix vector product, i.e.::
 
@@ -3928,23 +3927,19 @@ cdef class _TreeMesh:
         Returns
         -------
         (n_faces, n_edges) scipy.sparse.csr_matrix
-            The vector averaging operator from edges to faces.
+            The averaging operator from edges to faces.
 
         Notes
         -----
-        Let :math:`\mathbf{u_e}` be the discrete representation of a vector
-        quantity whose Cartesian components are defined on their respective edges;
-        e.g. the x-component is defined on x-edges. **average_edge_to_face_vector**
+        Let :math:`\mathbf{u_e}` be the discrete representation of aquantity whose
+        that is defined on the edges. **average_edge_to_face**
         constructs a discrete linear operator :math:`\mathbf{A_{ef}}` that
-        projects each Cartesian component of :math:`\mathbf{u_e}` to
-        its corresponding face, i.e.:
+        projects :math:`\mathbf{u_e}` to its corresponding face, i.e.:
 
         .. math::
             \mathbf{u_f} = \mathbf{A_{ef}} \, \mathbf{u_e}
 
-        where :math:`\mathbf{u_f}` is a discrete vector quantity whose Cartesian
-        components are defined on their respective faces; e.g. the x-component is
-        defined on x-faces.
+        where :math:`\mathbf{u_f}` is a quantity defined on the respective faces.
         """
         if self.dim == 2:
             return sp.diags(
@@ -3953,13 +3948,13 @@ cdef class _TreeMesh:
                 shape=(self.n_faces, self.n_edges)
             )
 
-        if self._average_edge_to_face_vector is not None:
-            return self._average_edge_to_face_vector
+        if self._average_edge_to_face is not None:
+            return self._average_edge_to_face
         cdef:
             int_t dim = self._dim
             np.int64_t[:] I = np.empty(4*self.n_faces, dtype=np.int64)
             np.int64_t[:] J = np.empty(4*self.n_faces, dtype=np.int64)
-            np.float64_t[:] V = np.full(4*self.n_faces, 0.5, dtype=np.float64)
+            np.float64_t[:] V = np.full(4*self.n_faces, 0.25, dtype=np.float64)
             Face *face
             int_t ii
             int_t face_offset_y = self.n_faces_x
@@ -4004,8 +3999,8 @@ cdef class _TreeMesh:
         Av = sp.csr_matrix((V, (I, J)),shape=(self.n_faces, self.n_total_edges))
         R = self._deflate_edges()
 
-        self._average_edge_to_face_vector = Av @ R
-        return self._average_edge_to_face_vector
+        self._average_edge_to_face = Av @ R
+        return self._average_edge_to_face
 
     @property
     @cython.boundscheck(False)

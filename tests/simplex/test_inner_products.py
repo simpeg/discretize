@@ -470,6 +470,72 @@ class Test2DBoundaryIntegral(discretize.tests.OrderTest):
         self.orderTest()
 
 
+class Test3DBoundaryIntegral(discretize.tests.OrderTest):
+    meshSizes = [8, 16, 32]
+    meshTypes = ["uniform simplex mesh"]
+
+    def setupMesh(self, n):
+        points, simplices = example_simplex_mesh((n, n, n))
+        self.M = discretize.SimplexMesh(points, simplices)
+        return 1.0 / n
+
+    def getError(self):
+        mesh = self.M
+        if self.myTest == "cell_grad":
+            # Functions:
+            u_cc = u(*mesh.cell_centers.T)
+            v_f = mesh.project_face_vector(v(*mesh.faces.T))
+            u_bf = u(*mesh.boundary_faces.T)
+
+            D = mesh.face_divergence
+            M_c = sp.diags(mesh.cell_volumes)
+            M_bf = mesh.boundary_face_scalar_integral
+
+            discrete_val = -(v_f.T @ D.T) @ M_c @ u_cc + v_f.T @ (M_bf @ u_bf)
+
+            true_val = -4 / 15
+        elif self.myTest == "edge_div":
+            u_n = u(*mesh.nodes.T)
+            v_e = mesh.project_edge_vector(v(*mesh.edges.T))
+            v_bn = v(*mesh.boundary_nodes.T).reshape(-1, order="F")
+
+            M_e = mesh.get_edge_inner_product()
+            G = mesh.nodal_gradient
+            M_bn = mesh.boundary_node_vector_integral
+
+            discrete_val = -(u_n.T @ G.T) @ M_e @ v_e + u_n.T @ (M_bn @ v_bn)
+            true_val = 27 / 20
+
+        elif self.myTest == "face_curl":
+            w_f = mesh.project_face_vector(w(*mesh.faces.T))
+            v_e = mesh.project_edge_vector(v(*mesh.edges.T))
+            w_be = w(*mesh.boundary_edges.T).reshape(-1, order="F")
+
+            M_f = mesh.get_face_inner_product()
+            Curl = mesh.edge_curl
+            M_be = mesh.boundary_edge_vector_integral
+
+            discrete_val = (v_e.T @ Curl.T) @ M_f @ w_f - v_e.T @ (M_be @ w_be)
+            true_val = -79 / 6
+
+        return np.abs(discrete_val - true_val)
+
+    def test_orderWeakCellGradIntegral(self):
+        self.name = "3D - weak cell gradient integral w/boundary"
+        self.myTest = "cell_grad"
+        self.orderTest()
+
+    def test_orderWeakEdgeDivIntegral(self):
+        self.name = "3D - weak edge divergence integral w/boundary"
+        self.myTest = "edge_div"
+        self.orderTest()
+
+    def test_orderWeakFaceCurlIntegral(self):
+        self.name = "3D - weak face curl integral w/boundary"
+        self.myTest = "face_curl"
+        self.orderTest()
+
+
 class TestBadModels(unittest.TestCase):
     def setUp(self):
         n = 8

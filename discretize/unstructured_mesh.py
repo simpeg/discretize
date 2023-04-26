@@ -585,6 +585,75 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
             raise NotImplementedError("Inverted matrix derivatives are not supported")
         return self.__get_inner_product_deriv_func("E", model)
 
+    def _get_edge_surf_int_proj_mats(self, only_boundary=False, with_area=True):
+        """Return the projection operators for integrating edges on each face.
+
+        Parameters
+        ----------
+        only_boundary : bool, optional
+            Whether to only operate on the boundary faces or not.
+        with_area : bool, optional
+            Whether to include the face area.
+
+        Returns
+        -------
+        list of (3 * n_faces, n_edges) scipy.sparse.csr_matrix
+        """
+        # edges associated with each face... can just get the indices of the curl...
+        face_edges = self._face_edges
+        face_areas = self.face_areas
+        if only_boundary:
+            bf_inds = self.boundary_face_list
+            face_edges = face_edges[bf_inds]
+            face_areas = face_areas[bf_inds]
+            face_normals = self.boundary_face_outward_normals
+        else:
+            face_normals = self.face_normals
+
+        # face_edges for these are:
+        edge_inds = [[1, 2], [0, 2], [0, 1]]
+
+        n_f = face_edges.shape[0]
+
+        ones = np.ones(n_f * 2)
+        P_indptr = np.arange(2 * n_f + 1)
+
+        d = np.ones(3, dtype=int)[:, None] * np.arange(2)
+        t = np.arange(n_f)
+        T_col_inds = (d + t[:, None, None] * 2).reshape(-1)
+        T_ind_ptr = 2 * np.arange(3 * n_f + 1)
+
+        Ps = []
+
+        # translate c to fortran ordering
+        C2F_col_inds = np.arange(n_f * 3).reshape((-1, 3), order="C").reshape(-1)
+        C2F_row_inds = np.arange(n_f * 3).reshape((-1, 3), order="F").reshape(-1)
+        C2F = sp.csr_matrix(
+            (np.ones(n_f * 3), (C2F_row_inds, C2F_col_inds)), shape=(n_f * 3, n_f * 3)
+        )
+
+        for i in range(3):
+            # matrix which selects the edges associate with each of the nodes of each boundary face
+            node_edges = face_edges[:, edge_inds[i]]
+            P = sp.csr_matrix(
+                (ones, node_edges.reshape(-1), P_indptr), shape=(2 * n_f, self.n_edges)
+            )
+
+            edge_dirs = self.edge_tangents[node_edges]
+            t_for = np.concatenate((edge_dirs, face_normals[:, None, :]), axis=1)
+            t_inv = invert_blocks(t_for)
+            t_inv = t_inv[:, :, :-1] / 3  # n_edges_per_thing
+
+            if with_area:
+                t_inv *= face_areas[:, None, None]
+
+            T = C2F @ sp.csr_matrix(
+                (t_inv.reshape(-1), T_col_inds, T_ind_ptr),
+                shape=(3 * n_f, 2 * n_f),
+            )
+            Ps.append((T @ P))
+        return Ps
+
     @property
     def cell_centers_tree(self):
         """A KDTree object built from the cell centers.
@@ -930,6 +999,23 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         )
 
     @property
+    def average_edge_to_face(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
+        if self.dim == 2:
+            # in 2D edges are at the same location as faces
+            return sp.eye(self.n_edges, self.n_edges)
+        # in 3D there are three edges per face
+        n_faces = self.n_faces
+        n_edges = self.n_edges
+        face_edges = self._face_edges
+
+        ind_ptr = 3 * np.arange(n_faces + 1)
+        col_inds = face_edges.reshape(-1)
+        Aijs = np.full(3 * self.n_faces, 1 / 3)
+        Av = sp.csr_matrix((Aijs, col_inds, ind_ptr), shape=(n_faces, n_edges))
+        return Av
+
+    @property
     def average_cell_to_face(self):  # NOQA D102
         # Documentation inherited from discretize.base.BaseMesh
         A = self.average_face_to_cell.T
@@ -1055,36 +1141,37 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         boundary_faces = self.boundary_face_list
         if self.dim == 2:
             boundary_face_edges = boundary_faces
-        else:
-            raise NotImplementedError(
-                "The 3D boundary edge integral matrix has not been implemented yet"
+            dA = (
+                self.boundary_face_outward_normals
+                * self.face_areas[boundary_faces][:, None]
             )
-            # boundary_face_edges = self._face_edges[boundary_faces]
-        dA = (
-            self.boundary_face_outward_normals
-            * self.face_areas[boundary_faces][:, None]
-        )
 
-        # projection matrices
-        # for each edge on boundary faces
-        Pe = self.project_edge_to_boundary_edge
-        n_boundary_edges, n_edges = Pe.shape
-        if self.dim == 2:
+            # projection matrices
+            # for each edge on boundary faces
+            Pe = self.project_edge_to_boundary_edge
+            n_boundary_edges, n_edges = Pe.shape
             index = boundary_face_edges
             w_cross_n = np.cross(-self.edge_tangents[index], dA)
             M_be = (
                 sp.csr_matrix((w_cross_n, (index, index)), shape=(n_edges, n_edges))
                 @ Pe.T
             )
-        # This is not quite correct for 3D...
-        # else:
-        #     Ps = [sp.csr_matrix((n_edges, n_boundary_edges)) for i in range(3)]
-        #     for i in range(3):
-        #         index = boundary_face_edges[:, i]
-        #         w_cross_n = np.cross(-self.edge_tangents[index], dA) / 3
-        #         for j in range(3):
-        #             Ps[j] = Ps[j] + sp.csr_matrix((w_cross_n[:, j], (index, index)), shape=(n_edges, n_edges)) @ Pe.T
-        #     M_be = sp.hstack(Ps)
+        else:
+            Ps = self._get_edge_surf_int_proj_mats(only_boundary=True, with_area=True)
+            # the cross product of a vector defined on each face with the face outward normal...
+            # so V cross n = -n cross V
+            cx = sp.diags(self.boundary_face_outward_normals[:, 0])
+            cy = sp.diags(self.boundary_face_outward_normals[:, 1])
+            cz = sp.diags(self.boundary_face_outward_normals[:, 2])
+            # the negative cross mat
+            cross_mat = sp.bmat([[None, cz, -cy], [-cz, None, cx], [cy, -cx, None]])
+
+            Pf = self.project_face_to_boundary_face
+            Pe = self.project_edge_to_boundary_edge
+            Av = (Pf @ self.average_edge_to_face) @ Pe.T
+            Av = cross_mat @ sp.block_diag((Av, Av, Av))
+
+            M_be = np.sum(Ps).T @ Av
         return M_be
 
     def __reduce__(self):
