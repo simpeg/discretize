@@ -1427,11 +1427,19 @@ class CylindricalMesh(
     @property
     def average_edge_to_face(self):  # NOQA D102
         # Documentation inherited from discretize.base.BaseMesh
-        Av = super().average_edge_to_face
-        # then need to deflate it...
-        De = self._deflation_matrix("edges", as_ones=True)
-        Df = self._deflation_matrix("faces", as_ones=False)
-        return Df @ Av @ De.T
+        if self.is_symmetric:
+            nx, _, nz = self.shape_edges_y
+
+            e_to_fx = sp.kron(av(nz - 1), sp.eye(nx))
+            e_to_fz = sp.kron(sp.eye(nz), av_extrap(nx)[:-1])
+
+            return sp.vstack([e_to_fx, e_to_fz])
+        else:
+            Av = super().average_edge_to_face
+            # then need to deflate it...
+            De = self._deflation_matrix("edges", as_ones=True)
+            Df = self._deflation_matrix("faces", as_ones=False)
+            return Df @ Av @ De.T
 
     @property
     def average_face_x_to_cell(self):  # NOQA D102
