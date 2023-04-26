@@ -685,10 +685,10 @@ def check_derivative(
     # passTest = belowTol or correctOrder
     try:
         if order1.size == 0:
-            # This should happen if the original function was a linear function
+            # This should happen if all of the 1st order taylor approximation errors
+            # were below epsilon, common if the original function was linear.
             # Thus it has no higher order derivatives.
-            if not order0.size >= 0:
-                raise AssertionError(f"\nDerivative of linear operator is incorrect.")
+            pass
         else:
             test = np.mean(order1) > tolerance * expectedOrder
             if not test:
