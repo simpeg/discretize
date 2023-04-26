@@ -1431,7 +1431,7 @@ class CylindricalMesh(
             nx, _, nz = self.shape_edges_y
 
             e_to_fx = sp.kron(av(nz - 1), sp.eye(nx))
-            e_to_fz = sp.kron(sp.eye(nz), av_extrap(nx)[:-1])
+            e_to_fz = sp.kron(sp.eye(nz), av(nx).toarray()[:, 1:])
 
             return sp.vstack([e_to_fx, e_to_fz])
         else:
