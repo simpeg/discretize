@@ -482,7 +482,12 @@ def assert_expected_order(
         if test_type == "mean":
             np.testing.assert_allclose(np.mean(orders), expected_order, rtol=rtol)
         elif test_type == "mean_at_least":
-            assert np.mean(orders) > expected_order * (1 - rtol)
+            test = np.mean(orders) > expected_order * (1 - rtol)
+            if not test:
+                raise AssertionError(
+                    f"\nOrder mean {np.mean(orders)} is not greater than the expected order "
+                    f"{expected_order} within the tolerance {rtol}."
+                )
         elif test_type == "min":
             np.testing.assert_allclose(np.min(orders), expected_order, rtol=rtol)
         elif test_type == "last":
@@ -680,11 +685,17 @@ def check_derivative(
     # passTest = belowTol or correctOrder
     try:
         if order1.size == 0:
-            # This should happen if the original function was a linear function
+            # This should happen if all of the 1st order taylor approximation errors
+            # were below epsilon, common if the original function was linear.
             # Thus it has no higher order derivatives.
-            assert order0.size >= 0
+            pass
         else:
-            assert np.mean(order1) > tolerance * expectedOrder
+            test = np.mean(order1) > tolerance * expectedOrder
+            if not test:
+                raise AssertionError(
+                    f"\n Order mean {np.mean(order1)} is not greater than"
+                    f" {tolerance} of the expected order {expectedOrder}."
+                )
         print("{0!s} PASS! {1!s}".format("=" * 25, "=" * 25))
         print(np.random.choice(happiness) + "\n")
         if plotIt:
