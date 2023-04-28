@@ -130,7 +130,7 @@ print(f)
 # `discretize`'s testing utilities to perform an order test for us.
 
 
-def get_error(n_cells):
+def get_error(n_cells, plot_it=False):
     # Create a mesh with a certain number of cells on the [0, 1] square
     mesh = discretize.TensorMesh([n_cells, n_cells])
     h = mesh.nodes_x[1] - mesh.nodes_x[0]
