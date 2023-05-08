@@ -378,7 +378,10 @@ class CylindricalMesh(
             Number of y-edges along the :math:`x` (radial),
             :math:`y` (azimuthal) and :math:`z` (vertical) directions, respectively.
         """
-        return tuple(x + y for x, y in zip(self.shape_cells, [0, 0, 1]))
+        if self.includes_zero:
+            return tuple(x + y for x, y in zip(self.shape_cells, [0, 0, 1]))
+        else:
+            return tuple(x + y for x, y in zip(self.shape_cells, [1, 0, 1]))
 
     @property
     def _shape_total_edges_z(self):
@@ -435,21 +438,6 @@ class CylindricalMesh(
         return int(np.prod(z_shape))
 
     @property
-    def cell_centers_x(self):
-        """Return the x-positions of cell centers along the x-direction.
-
-        This property returns a 1D vector containing the x-position values
-        of the cell centers along the x-direction (radial). The length of the vector
-        is equal to the number of cells in the x-direction.
-
-        Returns
-        -------
-        (n_cells_x) numpy.ndarray
-            x-positions of cell centers along the x-direction
-        """
-        return np.r_[self.origin[0], self.h[0][:-1].cumsum()] + self.h[0] * 0.5
-
-    @property
     def cell_centers_y(self):
         """Return the y-positions of cell centers along the y-direction (azimuthal).
 
@@ -466,8 +454,9 @@ class CylindricalMesh(
             y-positions of cell centers along the y-direction
         """
         if self.is_symmetric:
-            return self.origin[1] + np.r_[0, self.h[1][:-1]]
-        return self.origin[1] + np.r_[0, self.h[1][:-1].cumsum()] + self.h[1] * 0.5
+            return self.origin[1]
+        nodes = self._nodes_y_full
+        return (nodes[1:] + nodes[:-1]) / 2
 
     @property
     def nodes_x(self):
@@ -903,7 +892,7 @@ class CylindricalMesh(
         """Boolean vector indicating if a y-edge is hanging or not."""
         if getattr(self, "_ishanging_edges_y_bool", None) is None:
             hang_y = np.zeros(self._shape_total_edges_y, dtype=bool, order="F")
-            if not self.is_symmetric:
+            if self.includes_zero or self.is_symmetric:
                 hang_y[0] = True
             self._ishanging_edges_y_bool = hang_y.reshape(-1, order="F")
         return self._ishanging_edges_y_bool
@@ -1689,30 +1678,26 @@ class CylindricalMesh(
                 ]
             )
 
-        R = speye(getattr(self, "_n_total_{}".format(location)))
+        n_total = getattr(self, "_n_total_{}".format(location))
+        n_items = getattr(self, "n_{}".format(location))
+        if n_total == n_items:
+            return sp.eye(n_total, format="csr")
+        is_hanging = getattr(self, "_ishanging_{}".format(location))
         hanging_dict = getattr(self, "_hanging_{}".format(location))
-        nothanging = ~getattr(self, "_ishanging_{}".format(location))
 
-        # remove eliminated edges / faces (eg. Fx just doesn't exist)
-        hang = {k: v for k, v in hanging_dict.items() if v is not None}
+        vs = np.ones(n_total)
+        inds = np.empty(n_total, dtype=int)
+        inds[~is_hanging] = np.arange(n_items)
+        for k, v in hanging_dict.items():
+            if v is not None:
+                inds[k] = v
+            else:
+                inds[k] = 0
+                vs[k] = 0
 
-        values = list(hang.values())
-        entries = np.ones(len(values))
-
-        Hang = sp.csr_matrix(
-            (entries, (values, list(hang.keys()))),
-            shape=(
-                getattr(self, "_n_total_{}".format(location)),
-                getattr(self, "_n_total_{}".format(location)),
-            ),
-        )
-        R = R + Hang
-
-        R = R[nothanging, :]
-
+        R = sp.csr_matrix((vs, (inds, np.arange(n_total))), shape=(n_items, n_total))
         if not as_ones:
             R = sdiag(1.0 / R.sum(1)) * R
-
         return R
 
     ####################################################
