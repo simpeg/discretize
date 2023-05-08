@@ -918,12 +918,13 @@ class CylindricalMesh(
         of indices that the eliminated faces map to (if applicable).
         """
         if getattr(self, "_hanging_edges_y_dict", None) is None:
-            self._hanging_edges_y_dict = dict(
-                zip(
-                    np.nonzero(self._ishanging_edges_y)[0].tolist(),
-                    [None] * len(self._ishanging_edges_y_bool),
-                )
-            )
+            if self.includes_zero:
+                hanging_e = np.where(self._ishanging_edges_y)[0]
+                # Mark as None to remove them...
+                deflate_e = [None] * len(hanging_e)
+            else:
+                hanging_e = deflate_e = []
+            self._hanging_edges_y_dict = dict(zip(hanging_e, deflate_e))
         return self._hanging_edges_y_dict
 
     @property
