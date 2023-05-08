@@ -817,12 +817,13 @@ class CylindricalMesh(
         of indices that the eliminated faces map to (if applicable)
         """
         if getattr(self, "_hanging_faces_x_dict", None) is None:
-            self._hanging_faces_x_dict = dict(
-                zip(
-                    np.nonzero(self._ishanging_faces_x)[0].tolist(),
-                    [None] * self._n_hanging_faces_x,
-                )
-            )
+            if self.includes_zero:
+                hanging_f = np.where(self._ishanging_faces_x)[0]
+                # Mark as None to remove them...
+                deflate_f = [None] * len(hanging_f)
+            else:
+                hanging_f = deflate_f = []
+            self._hanging_faces_x_dict = dict(zip(hanging_f, deflate_f))
         return self._hanging_faces_x_dict
 
     @property
@@ -843,17 +844,14 @@ class CylindricalMesh(
         of indices that the eliminated faces map to (if applicable).
         """
         if getattr(self, "_hanging_faces_y_dict", None) is None:
-            deflate_y = np.zeros(self._shape_total_nodes[1], dtype=bool)
-            deflate_y[0] = True
-            deflateFy = np.nonzero(
-                np.kron(
-                    np.ones(self.shape_cells[2], dtype=bool),
-                    np.kron(deflate_y, np.ones(self.shape_cells[0], dtype=bool)),
-                )
-            )[0].tolist()
-            self._hanging_faces_y_dict = dict(
-                zip(np.nonzero(self._ishanging_faces_y)[0].tolist(), deflateFy)
-            )
+            hanging_f = np.where(self._ishanging_faces_y)[0]
+            nx, ny, nz = self._shape_total_faces_y
+            irs, its, izs = np.unravel_index(hanging_f, (nx, ny, nz), order="F")
+            if self.is_wrapped:
+                ny = ny - 1
+                its %= ny
+            deflate_f = np.ravel_multi_index((irs, its, izs), (nx, ny, nz), order="F")
+            self._hanging_faces_y_dict = dict(zip(hanging_f, deflate_f))
         return self._hanging_faces_y_dict
 
     @property
