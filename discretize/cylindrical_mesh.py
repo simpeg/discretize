@@ -208,7 +208,7 @@ class CylindricalMesh(
 
     @property
     def includes_zero(self):
-        return self.nodes_x[0] == 0.0
+        return self.origin[0] == 0.0
 
     @property
     def shape_nodes(self):
