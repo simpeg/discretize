@@ -55,7 +55,7 @@ and PVGeo_:
 """
 import os
 import numpy as np
-from discretize.utils import cyl2cart
+from discretize.utils import cyl2cart, Identity
 
 # from ..utils import cyl2cart
 
@@ -407,7 +407,12 @@ class InterfaceVTK(object):
         Wedges happen on the very internal layer about r=0, and hexes occur elsewhere.
         """
         # # Points
-        P = mesh._deflation_matrix("nodes", as_ones=True).T.tocsr()
+        deflate_nodes = mesh._n_total_nodes != mesh.n_nodes
+        if deflate_nodes:
+            inds = np.empty(mesh._n_total_nodes, dtype=int)
+            is_hanging_nodes = mesh._ishanging_nodes
+            inds[~is_hanging_nodes] = np.arange(mesh.n_nodes)
+            inds[is_hanging_nodes] = list(mesh._hanging_nodes.values())
 
         if np.any(mesh.h[1] >= np.pi):
             raise NotImplementedError(
@@ -416,7 +421,10 @@ class InterfaceVTK(object):
             )
         # calculate control points
         dphis_half = mesh.h[1] / 2
-        phi_controls = mesh.nodes_y + dphis_half
+        if mesh.is_wrapped:
+            phi_controls = mesh.nodes_y + dphis_half
+        else:
+            phi_controls = mesh.nodes_y[:-1] + dphis_half
         if mesh.nodes_x[0] == 0.0:
             Rs, Phis, Zs = np.meshgrid(
                 mesh.nodes_x[1:], phi_controls, mesh.nodes_z, indexing="ij"
@@ -434,7 +442,7 @@ class InterfaceVTK(object):
         ]
 
         cells = np.arange(mesh.n_cells).reshape(mesh.shape_cells, order="F")
-        if mesh.nodes_x[0] == 0.0:
+        if mesh.includes_zero:
             wedge_cells = cells[0].reshape(-1, order="F")
             hex_cells = (cells[1:]).reshape(-1, order="F")
         else:
@@ -450,9 +458,10 @@ class InterfaceVTK(object):
         i_hex_nodes = np.ravel_multi_index(
             (irs, its, izs), mesh._shape_total_nodes, order="F"
         )
-        i_hex_nodes = P.indices[i_hex_nodes]
+        if deflate_nodes:
+            i_hex_nodes = inds[i_hex_nodes]
 
-        if mesh.nodes_x[0] == 0.0:
+        if mesh.includes_zero:
             irs = np.stack([ir - 1, ir, ir - 1, ir], axis=-1)
         else:
             irs = np.stack([ir, ir + 1, ir, ir + 1], axis=-1)
@@ -460,7 +469,7 @@ class InterfaceVTK(object):
         izs = np.stack([iz, iz, iz + 1, iz + 1], axis=-1)
         i_hex_control_nodes = np.ravel_multi_index((irs, its, izs), Rs.shape, order="F")
 
-        if mesh.nodes_x[0] == 0.0:
+        if mesh.includes_zero:
             # Wedge Cells nodes
             # put control points along radial edge for halfway points on the edges...
             Phis, Zs = np.meshgrid(mesh.nodes_y, mesh.nodes_z, indexing="ij")
@@ -481,7 +490,8 @@ class InterfaceVTK(object):
             i_wedge_nodes = np.ravel_multi_index(
                 (irs, its, izs), mesh._shape_total_nodes, order="F"
             )
-            i_wedge_nodes = P.indices[i_wedge_nodes]
+            if deflate_nodes:
+                i_wedge_nodes = inds[i_wedge_nodes]
 
             its = np.stack([it, it + 1, it, it + 1], axis=-1)
             izs = np.stack([iz, iz, iz + 1, iz + 1], axis=-1)
@@ -516,10 +526,17 @@ class InterfaceVTK(object):
         nodes_cyl = np.r_[mesh.nodes, control_nodes]
 
         # calculate weights for control points
-        control_weights = (
-            np.sin(np.pi / 2 - dphis_half)[None, :, None]
-            * np.ones((mesh.shape_nodes[0] - 1, mesh.shape_nodes[2]))[:, None, :]
-        )
+        if mesh.includes_zero:
+            control_weights = (
+                np.sin(np.pi / 2 - dphis_half)[None, :, None]
+                * np.ones((mesh.shape_nodes[0] - 1, mesh.shape_nodes[2]))[:, None, :]
+            )
+        else:
+            control_weights = (
+                np.sin(np.pi / 2 - dphis_half)[None, :, None]
+                * np.ones((mesh.shape_nodes[0], mesh.shape_nodes[2]))[:, None, :]
+            )
+
         rational_weights = np.r_[
             np.ones(mesh.n_nodes), control_weights.reshape(-1, order="F")
         ]
@@ -527,7 +544,7 @@ class InterfaceVTK(object):
         higher_order_degrees = np.empty((mesh.n_cells, 3))
         higher_order_degrees[hex_cells, :] = [2, 1, 1]
 
-        if mesh.nodes_x[0] == 0.0:
+        if mesh.includes_zero:
             cell_types[wedge_cells] = _vtk.VTK_BEZIER_WEDGE
             cell_con[wedge_cells, 1:7] = i_wedge_nodes
             cell_con[wedge_cells, 7:] = i_wedge_control_nodes + mesh.n_nodes

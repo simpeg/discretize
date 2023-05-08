@@ -15,6 +15,7 @@ from discretize.utils import (
     interpolation_matrix,
     cyl2cart,
     as_array_n_by_dim,
+    Identity,
 )
 from discretize.base import BaseTensorMesh, BaseRectangularMesh
 from discretize.operators import DiffOperators, InnerProducts
@@ -136,8 +137,8 @@ class CylindricalMesh(
             cartesian_origin = kwargs.pop("cartesianOrigin")
         super().__init__(h=h, origin=origin, reference_system="cylindrical", **kwargs)
 
-        if not np.abs(self.h[1].sum() - 2 * np.pi) < 1e-10:
-            raise AssertionError("The 2nd dimension must sum to 2*pi")
+        if self.h[1].sum() > 2 * np.pi + 1e-10:
+            raise ValueError("The 2nd dimension must cannot sum to more than 2*pi.")
 
         if self.dim == 2:
             print("Warning, a disk mesh has not been tested thoroughly.")
@@ -174,6 +175,16 @@ class CylindricalMesh(
         self._cartesian_origin = value
 
     @property
+    def is_wrapped(self):
+        """Whether or not the mesh discretizes the full azimuthal space.
+
+        Returns
+        -------
+        bool
+        """
+        return np.allclose(self.h[1].sum(), 2 * np.pi, atol=1e-10)
+
+    @property
     def is_symmetric(self):
         """Validate whether mesh is symmetric.
 
@@ -193,7 +204,11 @@ class CylindricalMesh(
         bool
             *True* if the mesh is symmetric, *False* otherwise
         """
-        return self.shape_cells[1] == 1
+        return self.is_wrapped and self.shape_cells[1] == 1
+
+    @property
+    def includes_zero(self):
+        return self.nodes_x[0] == 0.0
 
     @property
     def shape_nodes(self):
@@ -215,8 +230,10 @@ class CylindricalMesh(
         vnC = self.shape_cells
         if self.is_symmetric:
             return (vnC[0], 0, vnC[2] + 1)
-        else:
+        elif self.is_wrapped:
             return (vnC[0] + 1, vnC[1], vnC[2] + 1)
+        else:
+            return super().shape_nodes
 
     @property
     def _shape_total_nodes(self):
@@ -244,7 +261,10 @@ class CylindricalMesh(
         if self.is_symmetric:
             return 0
         nx, ny, nz = self.shape_nodes
-        return (nx - 1) * ny * nz + nz
+        if self.includes_zero:
+            return (nx - 1) * ny * nz + nz
+        else:
+            return nx * ny * nz
 
     @property
     def _n_total_nodes(self):
@@ -263,7 +283,10 @@ class CylindricalMesh(
     @property
     def _n_hanging_faces_x(self):
         """Number of hanging Fx."""
-        return int(np.prod(self.shape_cells[1:]))
+        if self.includes_zero:
+            return int(np.prod(self.shape_cells[1:]))
+        else:
+            return 0
 
     @property
     def shape_faces_x(self):
@@ -280,7 +303,10 @@ class CylindricalMesh(
             Number of x-faces along the :math:`x` (radial),
             :math:`y` (azimuthal) and :math:`z` (vertical) directions, respectively.
         """
-        return self.shape_cells
+        if self.includes_zero:
+            return self.shape_cells
+        else:
+            return super().shape_faces_x
 
     @property
     def _shape_total_faces_y(self):
@@ -296,7 +322,10 @@ class CylindricalMesh(
     @property
     def _n_hanging_faces_y(self):
         """Number of hanging y-faces."""
-        return int(np.prod(self.shape_cells[::2]))
+        if self.is_wrapped:
+            return int(np.prod(self.shape_cells[::2]))
+        else:
+            return 0
 
     @property
     def _shape_total_faces_z(self):
@@ -398,7 +427,12 @@ class CylindricalMesh(
         cell_shape = self.shape_cells
         if self.is_symmetric:
             return int(np.prod(z_shape))
-        return int(np.prod([z_shape[0] - 1, z_shape[1], cell_shape[2]])) + cell_shape[2]
+        if self.includes_zero:
+            return (
+                int(np.prod([z_shape[0] - 1, z_shape[1], cell_shape[2]]))
+                + cell_shape[2]
+            )
+        return int(np.prod(z_shape))
 
     @property
     def cell_centers_x(self):
@@ -413,7 +447,7 @@ class CylindricalMesh(
         (n_cells_x) numpy.ndarray
             x-positions of cell centers along the x-direction
         """
-        return np.r_[0, self.h[0][:-1].cumsum()] + self.h[0] * 0.5
+        return np.r_[self.origin[0], self.h[0][:-1].cumsum()] + self.h[0] * 0.5
 
     @property
     def cell_centers_y(self):
@@ -450,7 +484,7 @@ class CylindricalMesh(
         """
         if self.is_symmetric:
             return self.h[0].cumsum()
-        return np.r_[0, self.h[0]].cumsum()
+        return np.r_[self.origin[0], self.h[0]].cumsum()
 
     @property
     def _nodes_y_full(self):
@@ -473,7 +507,9 @@ class CylindricalMesh(
         (n_nodes_y) numpy.ndarray
             y-positions of nodes along the y-direction
         """
-        return self.origin[1] + np.r_[0, self.h[1][:-1].cumsum()]
+        if self.is_wrapped:
+            return self.origin[1] + np.r_[0, self.h[1][:-1].cumsum()]
+        return super().nodes_y
 
     @property
     def _edge_x_lengths_full(self):
@@ -768,7 +804,8 @@ class CylindricalMesh(
         """Boolean vector indicating if an x-face is hanging or not."""
         if getattr(self, "_ishanging_faces_x_bool", None) is None:
             hang_x = np.zeros(self._shape_total_faces_x, dtype=bool, order="F")
-            hang_x[0] = True
+            if self.includes_zero:
+                hang_x[0] = True
             self._ishanging_faces_x_bool = hang_x.reshape(-1, order="F")
         return self._ishanging_faces_x_bool
 
@@ -793,7 +830,8 @@ class CylindricalMesh(
         """Boolean vector indicating if a y-face is hanging or not."""
         if getattr(self, "_ishanging_faces_y_bool", None) is None:
             hang_y = np.zeros(self._shape_total_faces_y, dtype=bool, order="F")
-            hang_y[:, -1] = True
+            if self.is_wrapped:
+                hang_y[:, -1] = True
             self._ishanging_faces_y_bool = hang_y.reshape(-1, order="F")
         return self._ishanging_faces_y_bool
 
@@ -839,7 +877,8 @@ class CylindricalMesh(
         """Boolean vector indicating if a x-edge is hanging or not."""
         if getattr(self, "_ishanging_edges_x_bool", None) is None:
             hang_x = np.zeros(self._shape_total_edges_x, dtype=bool, order="F")
-            hang_x[:, -1] = True
+            if self.is_wrapped:
+                hang_x[:, -1] = True
             self._ishanging_edges_x_bool = hang_x.reshape(-1, order="F")
         return self._ishanging_edges_x_bool
 
@@ -912,9 +951,15 @@ class CylindricalMesh(
                 )
             else:
                 is_hanging = np.zeros(self._shape_total_edges_z, dtype=bool, order="F")
-                is_hanging[0] = True  # axis of symmetry nodes are hanging
-                is_hanging[0, 0] = False  # axis of symmetry nodes which are not hanging
-                is_hanging[:, -1] = True  # nodes at maximum theta that are duplicated
+                if self.includes_zero:
+                    is_hanging[0] = True  # axis of symmetry nodes are hanging
+                    is_hanging[
+                        0, 0
+                    ] = False  # axis of symmetry nodes which are not hanging
+                if self.is_wrapped:
+                    is_hanging[
+                        :, -1
+                    ] = True  # nodes at maximum theta that are duplicated
                 self._ishanging_edges_z_bool = is_hanging.reshape(-1, order="F")
 
         return self._ishanging_edges_z_bool
@@ -951,9 +996,12 @@ class CylindricalMesh(
                 self._ishanging_nodes_bool = np.zeros(self._n_total_nodes, dtype=bool)
             else:
                 is_hanging = np.zeros(self._shape_total_nodes, dtype=bool, order="F")
-                is_hanging[0] = True  # axis of symmetry nodes are hanging
-                is_hanging[0, 0] = False  # axis of symmetry nodes which are not hanging
-                is_hanging[:, -1] = True  # nodes at maximum theta that are duplicated
+                if self.includes_zero:
+                    is_hanging[0, 1:] = True  # axis of symmetry nodes that are hanging
+                if self.is_wrapped:
+                    is_hanging[
+                        :, -1
+                    ] = True  # nodes at maximum theta that are duplicated
                 self._ishanging_nodes_bool = is_hanging.reshape(-1, order="F")
 
         return self._ishanging_nodes_bool
@@ -966,20 +1014,24 @@ class CylindricalMesh(
         of indices that the eliminated nodes map to (if applicable).
         """
         if getattr(self, "_hanging_nodes_dict", None) is None:
+            hanging_nodes = np.where(self._ishanging_nodes)[0]
             nx, ny, nz = self._shape_total_nodes
-            # go by layer
-            deflateN = np.hstack(
-                [
-                    np.hstack(
-                        [np.zeros(ny - 1, dtype=int), np.arange(1, nx, dtype=int)]
-                    )
-                    + i * int(nx * ny)
-                    for i in range(nz)
-                ]
-            ).tolist()
-            self._hanging_nodes_dict = dict(
-                zip(np.nonzero(self._ishanging_nodes)[0].tolist(), deflateN)
-            )
+            irs, its, izs = np.unravel_index(hanging_nodes, (nx, ny, nz), order="F")
+            # If wrapped, map max it to it=0.
+            if self.is_wrapped:
+                ny = ny - 1
+                its %= ny
+            # If I include zero, wrap all the thetas at the center together
+            if self.includes_zero:
+                centers = irs == 0
+                its[centers] = 0
+                deflated_n = irs + ny * its + ((nx - 1) * ny + 1) * izs
+            else:
+                deflated_n = np.ravel_multi_index(
+                    (irs, its, izs), (nx, ny, nz), order="F"
+                )
+
+            self._hanging_nodes_dict = dict(zip(hanging_nodes, deflated_n))
         return self._hanging_nodes_dict
 
     ####################################################
@@ -1094,12 +1146,18 @@ class CylindricalMesh(
 
     @property
     def _is_boundary_face(self):
-        # outer most radial faces are a boundaries
         is_br = np.zeros(self._shape_total_faces_x, dtype=bool, order="F")
+        # if I don't start at r=0, then the inner faces are boundary faces
+        if not self.includes_zero:
+            is_br[0] = True
+        # outer most radial faces are a boundaries
         is_br[-1] = True
         is_br = is_br.reshape(-1, order="F")
-        # no theta face is on a boundary
-        is_bt = np.zeros(self._n_total_faces_y, dtype=bool)
+        # Theta face is on a boundary if not wrapped
+        is_bt = np.zeros(self._shape_total_faces_y, dtype=bool)
+        if not self.is_wrapped:
+            is_bt[:, [0, -1]] = True
+        is_bt = is_bt.reshape(-1, order="F")
         # top and bottom faces are boundaries
         is_bz = np.zeros(self.shape_faces_z, dtype=bool, order="F")
         is_bz[:, :, [0, -1]] = True
@@ -1132,6 +1190,10 @@ class CylindricalMesh(
         is_b = np.zeros(self._shape_total_nodes, dtype=bool, order="F")
         # outward rs are boundary:
         is_b[-1] = True
+        if not self.includes_zero:
+            is_b[0] = True
+        if not self.is_wrapped:
+            is_b[:, [0, -1]] = True
         # top and bottom zs are boundary
         is_b[:, :, [0, -1]] = True
         is_b = is_b.reshape(-1, order="F")
@@ -1148,16 +1210,22 @@ class CylindricalMesh(
         # top and bottom radial edges are on the boundary
         is_br = np.zeros(self._shape_total_edges_x, dtype=bool, order="F")
         is_br[:, :, [0, -1]] = True
+        if not self.is_wrapped:
+            is_br[:, [0, -1]] = True
         is_br = is_br.reshape(-1, order="F")
         is_bt = np.zeros(self._shape_total_edges_y, dtype=bool, order="F")
         # outside theta edges are on boundary
         is_bt[-1] = True
+        if not self.includes_zero:
+            is_bt[0] = True
         # top and bottom theta edges are on boundary
         is_bt[:, :, [0, -1]] = True
         is_bt = is_bt.reshape(-1, order="F")
         # outside z edges are on boundaries
         is_bz = np.zeros(self._shape_total_edges_z, dtype=bool, order="F")
         is_bz[-1] = True
+        if not self.includes_zero or not self.is_wrapped:
+            is_bz[0] = True
         is_bz = is_bz.reshape(-1, order="F")
 
         is_b = np.r_[
@@ -1598,6 +1666,8 @@ class CylindricalMesh(
             raise ValueError(
                 "Location must be a grid location, not {}".format(location)
             )
+        if not (self.is_symmetric or self.is_wrapped or self.includes_zero):
+            return Identity()
         if location == "cell_centers":
             return speye(self.n_cells)
         if self.is_symmetric and location == "nodes":
@@ -1736,28 +1806,34 @@ class CylindricalMesh(
             Q = interpolation_matrix(loc, *rtz)
             Q = Q @ self._deflation_matrix("nodes", as_ones=True).T
         elif location_type == "cell_centers":
-            # theta wrap around interpolation
             rtz = [
                 self.cell_centers_x,
-                np.r_[
-                    self.cell_centers_y[-1] - 2 * np.pi,
-                    self.cell_centers_y,
-                    self.cell_centers_y[0] + 2 * np.pi,
-                ],
             ]
+            # theta wrap around interpolation
+            if self.is_wrapped:
+                rtz.append(
+                    np.r_[
+                        self.cell_centers_y[-1] - 2 * np.pi,
+                        self.cell_centers_y,
+                        self.cell_centers_y[0] + 2 * np.pi,
+                    ]
+                )
+            else:
+                rtz.append(self.cell_centers_y)
             if self.dim == 3:
                 rtz.append(self.cell_centers_z)
             Q = interpolation_matrix(loc, *rtz)
-            irs, its, izs = np.unravel_index(
-                Q.indices, self.shape_cells + np.r_[0, 2, 0], order="F"
-            )
-            its = (its - 1) % self.shape_cells[1]
-            new_indices = np.ravel_multi_index(
-                (irs, its, izs), self.shape_cells, order="F"
-            )
-            Q = sp.csr_matrix(
-                (Q.data, new_indices, Q.indptr), shape=(Q.shape[0], self.n_cells)
-            )
+            if self.is_wrapped:
+                irs, its, izs = np.unravel_index(
+                    Q.indices, self.shape_cells + np.r_[0, 2, 0], order="F"
+                )
+                its = (its - 1) % self.shape_cells[1]
+                new_indices = np.ravel_multi_index(
+                    (irs, its, izs), self.shape_cells, order="F"
+                )
+                Q = sp.csr_matrix(
+                    (Q.data, new_indices, Q.indptr), shape=(Q.shape[0], self.n_cells)
+                )
         else:
             ind = {"x": 0, "y": 1, "z": 2}[location_type[-1]]
             if self.dim < ind:
@@ -1772,26 +1848,33 @@ class CylindricalMesh(
                 nodes_x = self.nodes_x if self.is_symmetric else self.nodes_x[1:]
                 rtz = [
                     nodes_x,
-                    np.r_[
-                        self.cell_centers_y[-1] - 2 * np.pi,
-                        self.cell_centers_y,
-                        self.cell_centers_y[0] + 2 * np.pi,
-                    ],
                 ]
+                if self.is_wrapped:
+                    rtz.append(
+                        np.r_[
+                            self.cell_centers_y[-1] - 2 * np.pi,
+                            self.cell_centers_y,
+                            self.cell_centers_y[0] + 2 * np.pi,
+                        ],
+                    )
+                else:
+                    rtz.append(self.cell_centers_y)
                 if self.dim == 3:
                     rtz.append(self.cell_centers_z)
                 Q = interpolation_matrix(loc, *rtz)
                 # unwrap the theta indices
-                irs, its, izs = np.unravel_index(
-                    Q.indices, self.shape_faces_x + np.r_[0, 2, 0], order="F"
-                )
-                its = (its - 1) % self.shape_faces_x[1]
-                new_indices = np.ravel_multi_index(
-                    (irs, its, izs), self.shape_faces_x, order="F"
-                )
-                Q = sp.csr_matrix(
-                    (Q.data, new_indices, Q.indptr), shape=(Q.shape[0], self.n_faces_x)
-                )
+                if self.is_wrapped:
+                    irs, its, izs = np.unravel_index(
+                        Q.indices, self.shape_faces_x + np.r_[0, 2, 0], order="F"
+                    )
+                    its = (its - 1) % self.shape_faces_x[1]
+                    new_indices = np.ravel_multi_index(
+                        (irs, its, izs), self.shape_faces_x, order="F"
+                    )
+                    Q = sp.csr_matrix(
+                        (Q.data, new_indices, Q.indptr),
+                        shape=(Q.shape[0], self.n_faces_x),
+                    )
                 components[0] = Q
             elif location_type == "faces_y":
                 rtz = [
@@ -1804,28 +1887,35 @@ class CylindricalMesh(
                 Q = Q @ self._deflation_matrix("faces_y", as_ones=True).T
                 components[1] = Q
             elif location_type == "faces_z":
-                # theta wrap around interpolation
                 rtz = [
                     self.cell_centers_x,
-                    np.r_[
-                        self.cell_centers_y[-1] - 2 * np.pi,
-                        self.cell_centers_y,
-                        self.cell_centers_y[0] + 2 * np.pi,
-                    ],
-                    self.nodes_z,
                 ]
+                # theta wrap around interpolation
+                if self.is_wrapped:
+                    rtz.append(
+                        np.r_[
+                            self.cell_centers_y[-1] - 2 * np.pi,
+                            self.cell_centers_y,
+                            self.cell_centers_y[0] + 2 * np.pi,
+                        ],
+                    )
+                else:
+                    rtz.append(self.cell_centers_y)
+                rtz.append(self.nodes_z)
                 Q = interpolation_matrix(loc, *rtz)
-                # unwrap the theta indices
-                irs, its, izs = np.unravel_index(
-                    Q.indices, self.shape_faces_z + np.r_[0, 2, 0], order="F"
-                )
-                its = (its - 1) % self.shape_faces_z[1]
-                new_indices = np.ravel_multi_index(
-                    (irs, its, izs), self.shape_faces_z, order="F"
-                )
-                Q = sp.csr_matrix(
-                    (Q.data, new_indices, Q.indptr), shape=(Q.shape[0], self.n_faces_z)
-                )
+                if self.is_wrapped:
+                    # unwrap the theta indices
+                    irs, its, izs = np.unravel_index(
+                        Q.indices, self.shape_faces_z + np.r_[0, 2, 0], order="F"
+                    )
+                    its = (its - 1) % self.shape_faces_z[1]
+                    new_indices = np.ravel_multi_index(
+                        (irs, its, izs), self.shape_faces_z, order="F"
+                    )
+                    Q = sp.csr_matrix(
+                        (Q.data, new_indices, Q.indptr),
+                        shape=(Q.shape[0], self.n_faces_z),
+                    )
                 components[2] = Q
             elif location_type == "edges_x":
                 rtz = [
@@ -1839,28 +1929,36 @@ class CylindricalMesh(
                 components[0] = Q
             elif location_type == "edges_y":
                 # theta wrap around
-                nodes_x = self.nodes_x if self.is_symmetric else self.nodes_x[1:]
-                rtz = [
-                    nodes_x,
-                    np.r_[
-                        self.cell_centers_y[-1] - 2 * np.pi,
-                        self.cell_centers_y,
-                        self.cell_centers_y[0] + 2 * np.pi,
-                    ],
-                ]
+                if self.is_symmetric or not self.includes_zero:
+                    nodes_x = self.nodes_x
+                else:
+                    nodes_x = self.nodes_x[1:]
+                rtz = [nodes_x]
+                if self.is_wrapped:
+                    rtz.append(
+                        np.r_[
+                            self.cell_centers_y[-1] - 2 * np.pi,
+                            self.cell_centers_y,
+                            self.cell_centers_y[0] + 2 * np.pi,
+                        ],
+                    )
+                else:
+                    rtz.append(self.cell_centers_y)
                 if self.dim == 3:
                     rtz.append(self.nodes_z)
                 Q = interpolation_matrix(loc, *rtz)
-                irs, its, izs = np.unravel_index(
-                    Q.indices, self.shape_edges_y + np.r_[0, 2, 0], order="F"
-                )
-                its = (its - 1) % self.shape_edges_y[1]
-                new_indices = np.ravel_multi_index(
-                    (irs, its, izs), self.shape_edges_y, order="F"
-                )
-                Q = sp.csr_matrix(
-                    (Q.data, new_indices, Q.indptr), shape=(Q.shape[0], self.n_edges_y)
-                )
+                if self.is_wrapped:
+                    irs, its, izs = np.unravel_index(
+                        Q.indices, self.shape_edges_y + np.r_[0, 2, 0], order="F"
+                    )
+                    its = (its - 1) % self.shape_edges_y[1]
+                    new_indices = np.ravel_multi_index(
+                        (irs, its, izs), self.shape_edges_y, order="F"
+                    )
+                    Q = sp.csr_matrix(
+                        (Q.data, new_indices, Q.indptr),
+                        shape=(Q.shape[0], self.n_edges_y),
+                    )
                 components[1] = Q
             elif location_type == "edges_z":
                 rtz = [self.nodes_x, self._nodes_y_full, self.cell_centers_z]
