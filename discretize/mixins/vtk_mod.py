@@ -406,6 +406,11 @@ class InterfaceVTK(object):
         Constructs an vtkUnstructuredGrid made of rational Bezier hexahedrons and wedges.
         Wedges happen on the very internal layer about r=0, and hexes occur elsewhere.
         """
+        if np.any(mesh.h[1] >= np.pi):
+            raise NotImplementedError(
+                "Exporting cylindrical meshes to vtk with angles larger than 180 degrees"
+                " is not yet supported."
+            )
         # # Points
         deflate_nodes = mesh._n_total_nodes != mesh.n_nodes
         if deflate_nodes:
@@ -414,11 +419,6 @@ class InterfaceVTK(object):
             inds[~is_hanging_nodes] = np.arange(mesh.n_nodes)
             inds[is_hanging_nodes] = list(mesh._hanging_nodes.values())
 
-        if np.any(mesh.h[1] >= np.pi):
-            raise NotImplementedError(
-                "Exporting cylindrical meshes to vtk with angles larger than 180 degrees"
-                " is not yet supported."
-            )
         # calculate control points
         dphis_half = mesh.h[1] / 2
         if mesh.is_wrapped:
