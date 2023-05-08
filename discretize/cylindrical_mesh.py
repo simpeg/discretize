@@ -969,20 +969,23 @@ class CylindricalMesh(
         of indices that the eliminated faces map to (if applicable).
         """
         if getattr(self, "_hanging_edges_z_dict", None) is None:
-            nx, ny, nz = self._shape_total_nodes
-            # deflate
-            deflateEz = np.hstack(
-                [
-                    np.hstack(
-                        [np.zeros(ny - 1, dtype=int), np.arange(1, nx, dtype=int)]
-                    )
-                    + i * int(nx * ny)
-                    for i in range(self.shape_cells[2])
-                ]
-            )
-            deflate = zip(np.nonzero(self._ishanging_edges_z)[0].tolist(), deflateEz)
-
-            self._hanging_edges_z_dict = dict(deflate)
+            hanging_e = np.where(self._ishanging_edges_z)[0]
+            nx, ny, nz = self._shape_total_edges_z
+            irs, its, izs = np.unravel_index(hanging_e, (nx, ny, nz), order="F")
+            # If wrapped, map max it to it=0.
+            if self.is_wrapped:
+                ny = ny - 1
+                its %= ny
+            # If I include zero, wrap all the thetas at the center together
+            if self.includes_zero:
+                centers = irs == 0
+                its[centers] = 0
+                deflated_e = irs + ny * its + ((nx - 1) * ny + 1) * izs
+            else:
+                deflated_e = np.ravel_multi_index(
+                    (irs, its, izs), (nx, ny, nz), order="F"
+                )
+            self._hanging_edges_z_dict = dict(zip(hanging_e, deflated_e))
         return self._hanging_edges_z_dict
 
     @property
