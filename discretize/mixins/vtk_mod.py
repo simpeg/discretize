@@ -55,9 +55,7 @@ and PVGeo_:
 """
 import os
 import numpy as np
-from discretize.utils import cyl2cart, Identity
-
-# from ..utils import cyl2cart
+from discretize.utils import cyl2cart
 
 import warnings
 
