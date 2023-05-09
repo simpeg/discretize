@@ -438,6 +438,21 @@ class CylindricalMesh(
         return int(np.prod(z_shape))
 
     @property
+    def cell_centers_x(self):
+        """Return the x-positions of cell centers along the x-direction.
+
+        This property returns a 1D vector containing the x-position values
+        of the cell centers along the x-direction (radial). The length of the vector
+        is equal to the number of cells in the x-direction.
+
+        Returns
+        -------
+        (n_cells_x) numpy.ndarray
+            x-positions of cell centers along the x-direction
+        """
+        return np.r_[self.origin[0], self.h[0][:-1].cumsum()] + self.h[0] * 0.5
+
+    @property
     def cell_centers_y(self):
         """Return the y-positions of cell centers along the y-direction (azimuthal).
 
@@ -454,7 +469,7 @@ class CylindricalMesh(
             y-positions of cell centers along the y-direction
         """
         if self.is_symmetric:
-            return self.origin[1]
+            return np.r_[self.origin[1]]
         nodes = self._nodes_y_full
         return (nodes[1:] + nodes[:-1]) / 2
 
