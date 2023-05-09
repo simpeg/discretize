@@ -235,7 +235,9 @@ class CylindricalMesh(
         """
         vnC = self.shape_cells
         if self.is_symmetric:
-            return (vnC[0], 0, vnC[2] + 1)
+            if self.includes_zero:
+                return (vnC[0], 0, vnC[2] + 1)
+            return (vnC[0] + 1, 0, vnC[2] + 1)
         elif self.is_wrapped:
             return (vnC[0] + 1, vnC[1], vnC[2] + 1)
         else:
@@ -245,7 +247,9 @@ class CylindricalMesh(
     def _shape_total_nodes(self):
         vnC = self.shape_cells
         if self.is_symmetric:
-            return (vnC[0], 1, vnC[2] + 1)
+            if self.includes_zero:
+                return (vnC[0], 1, vnC[2] + 1)
+            return (vnC[0] + 1, 1, vnC[2] + 1)
         else:
             return tuple(x + 1 for x in vnC)
 
@@ -346,7 +350,7 @@ class CylindricalMesh(
     @property
     def _n_hanging_faces_z(self):
         """Number of hanging Fz."""
-        return int(np.prod(self.shape_cells[::2]))
+        return 0
 
     @property
     def _shape_total_edges_x(self):
