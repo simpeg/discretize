@@ -176,7 +176,7 @@ class CylindricalMesh(
 
     @property
     def is_wrapped(self):
-        """Whether or not the mesh discretizes the full azimuthal space.
+        """Whether the mesh discretizes the full azimuthal space.
 
         Returns
         -------
@@ -208,6 +208,12 @@ class CylindricalMesh(
 
     @property
     def includes_zero(self):
+        """Whether the radial dimension starts at 0.
+
+        Returns
+        -------
+        bool
+        """
         return self.origin[0] == 0.0
 
     @property
