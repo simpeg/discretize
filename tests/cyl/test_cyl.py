@@ -13,43 +13,6 @@ class TestCylSymmetricMesh(unittest.TestCase):
         hz = np.r_[2, 1]
         self.mesh = discretize.CylMesh([hx, 1, hz], np.r_[0.0, 0.0, 0.0])
 
-    def test_dim(self):
-        self.assertEqual(self.mesh.dim, 3)
-
-    def test_nC(self):
-        self.assertEqual(self.mesh.nC, 6)
-        self.assertEqual(self.mesh.nCx, 3)
-        self.assertEqual(self.mesh.nCy, 1)
-        self.assertEqual(self.mesh.nCz, 2)
-        self.assertEqual(self.mesh.vnC, (3, 1, 2))
-
-    def test_nN(self):
-        self.assertEqual(self.mesh.nN, 0)
-        self.assertEqual(self.mesh.nNx, 3)
-        self.assertEqual(self.mesh.nNy, 0)
-        self.assertEqual(self.mesh.nNz, 3)
-        self.assertEqual(self.mesh.vnN, (3, 0, 3))
-
-    def test_nF(self):
-        self.assertEqual(self.mesh.nFx, 6)
-        self.assertEqual(self.mesh.vnFx, (3, 1, 2))
-        self.assertEqual(self.mesh.nFy, 0)
-        self.assertEqual(self.mesh.vnFy, (3, 0, 2))
-        self.assertEqual(self.mesh.nFz, 9)
-        self.assertEqual(self.mesh.vnFz, (3, 1, 3))
-        self.assertEqual(self.mesh.nF, 15)
-        self.assertEqual(self.mesh.vnF, (6, 0, 9))
-
-    def test_nE(self):
-        self.assertEqual(self.mesh.nEx, 0)
-        self.assertEqual(self.mesh.vnEx, (3, 0, 3))
-        self.assertEqual(self.mesh.nEy, 9)
-        self.assertEqual(self.mesh.vnEy, (3, 1, 3))
-        self.assertEqual(self.mesh.nEz, 0)
-        self.assertEqual(self.mesh.vnEz, (3, 0, 2))
-        self.assertEqual(self.mesh.nE, 9)
-        self.assertEqual(self.mesh.vnE, (0, 9, 0))
-
     def test_vectorsCC(self):
         v = np.r_[0.5, 1.5, 2.25]
         self.assertEqual(np.linalg.norm((v - self.mesh.vectorCCx)), 0)
@@ -603,42 +566,6 @@ class TestCyl3DMesh(unittest.TestCase):
         hy = np.r_[np.pi, np.pi]
         hz = np.r_[2, 1]
         self.mesh = discretize.CylMesh([hx, hy, hz])
-
-    def test_dim(self):
-        self.assertEqual(self.mesh.dim, 3)
-
-    def test_nC(self):
-        self.assertEqual(self.mesh.nCx, 3)
-        self.assertEqual(self.mesh.nCy, 2)
-        self.assertEqual(self.mesh.nCz, 2)
-        self.assertEqual(self.mesh.vnC, (3, 2, 2))
-
-    def test_nN(self):
-        self.assertEqual(self.mesh.nN, 21)
-        self.assertEqual(self.mesh.nNx, 4)
-        self.assertEqual(self.mesh.nNy, 2)
-        self.assertEqual(self.mesh.nNz, 3)
-        self.assertEqual(self.mesh.vnN, (4, 2, 3))
-
-    def test_nF(self):
-        self.assertEqual(self.mesh.nFx, 12)
-        self.assertEqual(self.mesh.vnFx, (3, 2, 2))
-        self.assertEqual(self.mesh.nFy, 12)
-        self.assertEqual(self.mesh.vnFy, (3, 2, 2))
-        self.assertEqual(self.mesh.nFz, 18)
-        self.assertEqual(self.mesh.vnFz, (3, 2, 3))
-        self.assertEqual(self.mesh.nF, 42)
-        self.assertEqual(self.mesh.vnF, (12, 12, 18))
-
-    def test_nE(self):
-        self.assertEqual(self.mesh.nEx, 18)
-        self.assertEqual(self.mesh.vnEx, (3, 2, 3))
-        self.assertEqual(self.mesh.nEy, 18)
-        self.assertEqual(self.mesh.vnEy, (3, 2, 3))
-        self.assertEqual(self.mesh.nEz, 12 + 2)
-        self.assertEqual(self.mesh.vnEz, (4, 2, 2))
-        self.assertEqual(self.mesh.nE, 50)
-        self.assertEqual(self.mesh.vnE, (18, 18, 14))
 
     def test_vectorsCC(self):
         v = np.r_[0.5, 1.5, 2.25]

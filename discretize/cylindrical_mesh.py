@@ -287,7 +287,7 @@ class CylindricalMesh(
 
     @property
     def _n_total_faces_x(self):
-        """Number of total Fx (prior to defplating)."""
+        """Number of total Fx (prior to deflating)."""
         return int(np.prod(self._shape_total_faces_x))
 
     @property
@@ -460,7 +460,12 @@ class CylindricalMesh(
         (n_cells_x) numpy.ndarray
             x-positions of cell centers along the x-direction
         """
-        return np.r_[self.origin[0], self.h[0][:-1].cumsum()] + self.h[0] * 0.5
+        nodes = self.nodes_x
+        ccx = 0.5 * (nodes[1:] + nodes[:-1])
+        if self.is_symmetric and self.includes_zero:
+            return np.r_[self.h[0][0] * 0.5, ccx]
+        return ccx
+        # return np.r_[self.origin[0], self.h[0][:-1].cumsum()] + self.h[0] * 0.5
 
     @property
     def cell_centers_y(self):
@@ -496,9 +501,10 @@ class CylindricalMesh(
         (n_nodes_x) numpy.ndarray
             x-positions of nodes along the x-direction
         """
-        if self.is_symmetric:
-            return self.h[0].cumsum()
-        return np.r_[self.origin[0], self.h[0]].cumsum()
+        nodes = np.r_[self.origin[0], self.h[0]].cumsum()
+        if self.is_symmetric and self.includes_zero:
+            return nodes[1:]
+        return nodes
 
     @property
     def _nodes_y_full(self):
@@ -711,7 +717,7 @@ class CylindricalMesh(
     @property
     def _face_z_areas_full(self):
         """Area of z-faces prior to deflation."""
-        if self.is_symmetric:
+        if self.is_symmetric and self.includes_zero:
             return np.kron(
                 np.ones_like(self.nodes_z),
                 pi * (self.nodes_x**2 - np.r_[0, self.nodes_x[:-1]] ** 2),
@@ -800,7 +806,7 @@ class CylindricalMesh(
             Volumes of all mesh cells
         """
         if getattr(self, "_cell_volumes", None) is None:
-            if self.is_symmetric:
+            if self.is_symmetric and self.includes_zero:
                 az = pi * (self.nodes_x**2 - np.r_[0, self.nodes_x[:-1]] ** 2)
                 self._cell_volumes = np.kron(self.h[2], az)
             else:
@@ -1399,19 +1405,15 @@ class CylindricalMesh(
         if self.is_symmetric:
             nCx, nCy, nCz = self.shape_cells
             # 1D Difference matricies
-            dr = sp.spdiags(
-                (np.ones((nCx + 1, 1)) * [-1, 1]).T, [-1, 0], nCx, nCx, format="csr"
-            )
-            dz = sp.spdiags(
-                (np.ones((nCz + 1, 1)) * [-1, 1]).T,
-                [0, 1],
-                nCz,
-                nCz + 1,
-                format="csr",
-            )
+            if self.includes_zero:
+                dr = sp.diags([-1, 1], [-1, 0], shape=(nCx, nCx), format="csr")
+                dz = sp.diags([-1, 1], [0, 1], shape=(nCz, nCz + 1), format="csr")
+            else:
+                dr = sp.diags([-1, 1], [0, 1], shape=(nCx, nCx + 1), format="csr")
+                dz = sp.diags([-1, 1], [0, 1], shape=(nCz, nCz + 1), format="csr")
             # 2D Difference matricies
             Dr = sp.kron(sp.identity(nCz + 1), dr)
-            Dz = -sp.kron(dz, sp.identity(nCx))
+            Dz = -sp.kron(dz, sp.identity(dr.shape[-1]))
             return sp.vstack((Dz, Dr))
         else:
             stencil = super()._edge_curl_stencil
@@ -1448,7 +1450,10 @@ class CylindricalMesh(
     def average_edge_y_to_cell(self):  # NOQA D102
         # Documentation inherited from discretize.operators.DiffOperators
         if self.is_symmetric:
-            avR = av(self.shape_cells[0])[:, 1:]
+            if self.includes_zero:
+                avR = av(self.shape_cells[0])[:, 1:]
+            else:
+                avR = av(self.shape_cells[0])
             return sp.kron(av(self.shape_cells[2]), avR, format="csr")
         else:
             return (
@@ -1510,8 +1515,12 @@ class CylindricalMesh(
         if self.is_symmetric:
             nx, _, nz = self.shape_edges_y
 
-            e_to_fx = sp.kron(av(nz - 1), sp.eye(nx))
-            e_to_fz = sp.kron(sp.eye(nz), av(nx).toarray()[:, 1:])
+            if self.includes_zero:
+                e_to_fx = sp.kron(av(nz - 1), sp.eye(nx))
+                e_to_fz = sp.kron(sp.eye(nz), av(nx).toarray()[:, 1:])
+            else:
+                e_to_fx = sp.kron(av(nz - 1), sp.eye(nx))
+                e_to_fz = sp.kron(sp.eye(nz), av(nx - 1))
 
             return sp.vstack([e_to_fx, e_to_fz])
         else:
@@ -1533,14 +1542,9 @@ class CylindricalMesh(
     def average_face_y_to_cell(self):  # NOQA D102
         # Documentation inherited from discretize.operators.DiffOperators
         return (
-            kron3(speye(self.vnC[2]), av(self.vnC[1]), speye(self.vnC[0]))
+            super().average_face_y_to_cell
             * self._deflation_matrix("Fy", as_ones=True).T
         )
-
-    @property
-    def average_face_z_to_cell(self):  # NOQA D102
-        # Documentation inherited from discretize.operators.DiffOperators
-        return kron3(av(self.vnC[2]), speye(self.vnC[1]), speye(self.vnC[0]))
 
     @property
     def average_face_to_cell(self):  # NOQA D102
