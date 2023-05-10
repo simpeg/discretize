@@ -125,29 +125,6 @@ class TestAveF2CCV(tests.OrderTest):
         self.orderTest()
 
 
-class TestAveF2CC(tests.OrderTest):
-    name = "aveF2CC"
-    meshTypes = MESHTYPES
-    meshSizes = [8, 16, 32, 64]
-    meshDimension = 3
-    expectedOrders = 2  # the averaging does not account for differences in theta edge lengths (inner product does though)
-
-    def getError(self):
-        fun = lambda r, t, z: np.sin(np.pi * z) * np.sin(np.pi * r) * np.sin(t)
-
-        Fc = cylF3(self.M, fun, fun, fun)
-        F = self.M.projectFaceVector(Fc)
-
-        aveF = self.M.aveF2CC * F
-        aveF_ana = fun(self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2])
-
-        err = np.linalg.norm((aveF - aveF_ana), np.inf)
-        return err
-
-    def test_order(self):
-        self.orderTest()
-
-
 class TestAveCC2F(tests.OrderTest):
     name = "aveCC2F"
     meshTypes = ["uniformCylindricalMesh"]
@@ -181,29 +158,6 @@ class TestAveCC2F(tests.OrderTest):
         # This one extrapolates at boundaries
         self.expectedOrders = 1
         self.full = True
-        self.orderTest()
-
-
-class TestAveN2F(tests.OrderTest):
-    name = "aveN2F"
-    meshTypes = MESHTYPES
-    meshSizes = [8, 16, 32, 64]
-    meshDimension = 3
-    expectedOrders = 2
-
-    def getError(self):
-        mesh = self.M
-        fun = lambda r, t, z: np.sin(np.pi * z) * np.sin(np.pi * r) * np.sin(t)
-
-        N = fun(*mesh.nodes.T)
-
-        aveF = mesh.aveN2F @ N
-        aveF_ana = fun(*mesh.faces.T)
-
-        err = np.linalg.norm(aveF - aveF_ana, np.inf)
-        return err
-
-    def test_order(self):
         self.orderTest()
 
 
@@ -281,28 +235,6 @@ class TestAveE2CCV(tests.OrderTest):
         aveE_anaZ = funZ(self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2])
 
         aveE_ana = np.hstack([aveE_anaR, aveE_anaT, aveE_anaZ])
-
-        err = np.linalg.norm((aveE - aveE_ana), np.inf)
-        return err
-
-    def test_order(self):
-        self.orderTest()
-
-
-class TestAveE2CC(tests.OrderTest):
-    name = "aveE2CC"
-    meshTypes = MESHTYPES
-    meshSizes = [8, 16, 32, 64]
-    meshDimension = 3
-
-    def getError(self):
-        fun = lambda r, t, z: np.sin(np.pi * z) * np.sin(np.pi * r) * np.sin(t)
-
-        Ec = cylE3(self.M, fun, fun, fun)
-        E = self.M.projectEdgeVector(Ec)
-
-        aveE = self.M.aveE2CC * E
-        aveE_ana = fun(self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2])
 
         err = np.linalg.norm((aveE - aveE_ana), np.inf)
         return err

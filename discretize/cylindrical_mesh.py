@@ -824,7 +824,7 @@ class CylindricalMesh(
         """Boolean vector indicating if an x-face is hanging or not."""
         if getattr(self, "_ishanging_faces_x_bool", None) is None:
             hang_x = np.zeros(self._shape_total_faces_x, dtype=bool, order="F")
-            if self.includes_zero:
+            if self.includes_zero and not self.is_symmetric:
                 hang_x[0] = True
             self._ishanging_faces_x_bool = hang_x.reshape(-1, order="F")
         return self._ishanging_faces_x_bool
@@ -1622,23 +1622,33 @@ class CylindricalMesh(
         # Documentation inherited from discretize.base.BaseMesh
         if getattr(self, "_average_cell_to_face", None) is None:
             if self.dim == 3:
-                # average_cell_to_face_r
-                av_c2f_r = kron3(
-                    speye(self.shape_cells[2]),
-                    speye(self.shape_cells[1]),
-                    av_extrap(self.shape_cells[0]),
-                )[~self._ishanging_faces_x]
+                nx, ny, nz = self.shape_cells
+                if self.is_symmetric and self.includes_zero:
+                    av_c2f_r = kron3(
+                        speye(nz),
+                        speye(ny),
+                        av_extrap(nx)[1:],
+                    )
+                else:
+                    av_c2f_r = kron3(
+                        speye(nz),
+                        speye(ny),
+                        av_extrap(nx),
+                    )[~self._ishanging_faces_x]
 
-                av_c2f_t = self._deflation_matrix("faces_y") @ kron3(
-                    speye(self.shape_cells[2]),
-                    av_extrap(self.shape_cells[1]),
-                    speye(self.shape_cells[0]),
-                )
+                if not self.is_symmetric:
+                    av_c2f_t = self._deflation_matrix("faces_y") @ kron3(
+                        speye(nz),
+                        av_extrap(ny),
+                        speye(nx),
+                    )
+                else:
+                    av_c2f_t = None
 
                 av_c2f_z = kron3(
-                    av_extrap(self.shape_cells[2]),
-                    speye(self.shape_cells[1]),
-                    speye(self.shape_cells[0]),
+                    av_extrap(nz),
+                    speye(ny),
+                    speye(nx),
                 )
 
                 self._average_cell_to_face = sp.vstack(

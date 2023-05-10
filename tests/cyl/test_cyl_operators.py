@@ -216,6 +216,24 @@ def test_ave_face_to_cell(mesh_type):
     tests.assert_expected_order(get_error, [10, 20, 30])
 
 
+@pytest.mark.parametrize("mesh_type", MESHTYPES)
+def test_ave_cell_to_face(mesh_type):
+    def get_error(n_cells):
+        mesh, h = setup_mesh(mesh_type, n_cells)
+        if "sym" in mesh_type:
+            u = su_func
+        else:
+            u = u_func
+        Ee = u(*mesh.cell_centers.T)
+
+        ave = (mesh.average_cell_to_face @ Ee)[~mesh._is_boundary_face]
+        ana = u(*mesh.faces.T)[~mesh._is_boundary_face]
+        err = np.linalg.norm((ave - ana), np.inf)
+        return err, h
+
+    tests.assert_expected_order(get_error, [10, 20, 30])
+
+
 @pytest.mark.parametrize("mesh_type", NONSYMMETRIC)
 def test_ave_node_to_cell(mesh_type):
     def get_error(n_cells):
@@ -228,6 +246,24 @@ def test_ave_node_to_cell(mesh_type):
 
         ave = mesh.average_node_to_cell @ Ee
         ana = u(*mesh.cell_centers.T)
+        err = np.linalg.norm((ave - ana), np.inf)
+        return err, h
+
+    tests.assert_expected_order(get_error, [10, 20, 30])
+
+
+@pytest.mark.parametrize("mesh_type", NONSYMMETRIC)
+def test_ave_node_to_face(mesh_type):
+    def get_error(n_cells):
+        mesh, h = setup_mesh(mesh_type, n_cells)
+        if "sym" in mesh_type:
+            u = su_func
+        else:
+            u = u_func
+        Ee = u(*mesh.nodes.T)
+
+        ave = mesh.average_node_to_face @ Ee
+        ana = u(*mesh.faces.T)
         err = np.linalg.norm((ave - ana), np.inf)
         return err, h
 
