@@ -1609,6 +1609,15 @@ class CylindricalMesh(
         return self._average_node_to_face
 
     @property
+    def average_node_to_cell(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
+        if getattr(self, "_average_node_to_cell", None) is None:
+            ave = super().average_node_to_cell
+            ave = ave @ self._deflation_matrix("nodes", as_ones=True).T
+            self._average_node_to_cell = ave
+        return self._average_node_to_cell
+
+    @property
     def average_cell_to_face(self):  # NOQA D102
         # Documentation inherited from discretize.base.BaseMesh
         if getattr(self, "_average_cell_to_face", None) is None:
