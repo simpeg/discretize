@@ -1533,10 +1533,10 @@ class CylindricalMesh(
     @property
     def average_face_x_to_cell(self):  # NOQA D102
         # Documentation inherited from discretize.operators.DiffOperators
-        avR = av(self.vnC[0])[
-            :, 1:
-        ]  # TODO: this should be handled by a deflation matrix
-        return kron3(speye(self.vnC[2]), speye(self.vnC[1]), avR)
+        if self.includes_zero:
+            avR = av(self.vnC[0])[:, 1:]
+            return kron3(speye(self.vnC[2]), speye(self.vnC[1]), avR)
+        return super().average_face_x_to_cell
 
     @property
     def average_face_y_to_cell(self):  # NOQA D102
