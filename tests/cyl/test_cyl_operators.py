@@ -79,19 +79,31 @@ def setup_mesh(mesh_type, n):
     return mesh, max_h
 
 
-SYMMETRIC = [
+SYMMETRIC = {
     "sym_full",
     "sym_ring",
-]
+}
 
-NONSYMMETRIC = [
+NONSYMMETRIC = {
     "quarter_pizza",
     "full",
     "ring",
     "cyl_tensor",
-]
+}
 
-MESHTYPES = SYMMETRIC + NONSYMMETRIC
+ZEROSTART = {
+    "sym_full",
+    "quarter_pizza",
+    "full",
+}
+
+NONZEROSTART = {
+    "sym_ring",
+    "ring",
+    "cyl_tensor",
+}
+
+MESHTYPES = SYMMETRIC | NONSYMMETRIC | ZEROSTART | NONZEROSTART
 
 
 @pytest.mark.parametrize("mesh_type", MESHTYPES)
@@ -331,87 +343,61 @@ def test_mimetic_curl_grad(mesh_type):
     divcurlv = mesh.edge_curl @ (mesh.nodal_gradient @ v)
     np.testing.assert_allclose(divcurlv, 0, atol=1e-11)
 
-    # class MimeticProperties(unittest.TestCase):
-    #     meshTypes = MESHTYPES
-    #     meshDimension = 3
-    #     meshSize = 64
-    #     tol = 1e-11  # there is still some error due to rounding
-    #
-    #     def test_DivCurl(self):
-    #         for meshType in self.meshTypes:
-    #             mesh, _ = discretize.tests.setupMesh(
-    #                 meshType, self.meshSize, self.meshDimension
-    #             )
-    #             v = np.random.rand(mesh.nE)
-    #             divcurlv = mesh.face_divergence * (mesh.edge_curl * v)
-    #             rel_err = np.linalg.norm(divcurlv) / np.linalg.norm(v)
-    #             passed = rel_err < self.tol
-    #             print(
-    #                 "Testing Div * Curl on {} : |Div Curl v| / |v| = {} "
-    #                 "... {}".format(meshType, rel_err, "FAIL" if not passed else "ok")
-    #             )
 
-    # def test_CurlGrad(self):
-    #     for meshType in self.meshTypes:
-    #         mesh, _ = discretize.tests.setupMesh(
-    #             meshType, self.meshSize, self.meshDimension
-    #         )
-    #         v = np.random.rand(mesh.nN)
-    #         curlgradv = mesh.edge_curl * (mesh.nodal_gradient * v)
-    #         rel_err = np.linalg.norm(curlgradv) / np.linalg.norm(v)
-    #         passed = rel_err < self.tol
-    #         print(
-    #             "Testing Curl * Grad on {} : |Curl Grad v| / |v|= {} "
-    #             "... {}".format(meshType, rel_err, "FAIL" if not passed else "ok")
-    #         )
-
-
-# @pytest.mark.parametrize("mesh_type", MESHTYPES)
-# def test_face_inner_product(mesh_type):
-#
-#     # r bounds:
-#     if mesh_type in ["sym_full", "quarter_pizza", "full"]:
-#         r_lims = [0, 1]
-#     else:
-#         r_lims = [1, 2]
-#     if mesh_type in ['quarter_pizza', "cyl_tensor"]:
-#         t_lims = [0, np.pi/4]
-#     else:
-#         t_lims = [0, 2 * np.pi]
-#
-#     if 'sym' in mesh_type:
-#         func = sw.dot(sw)
-#     else:
-#         func = w.dot(w)
-#     ana = float(sp.integrate(
-#         func, (C.R, *r_lims), (C.T, *t_lims), (C.Z, 0, 1)
-#     ).evalf())
-#     def get_error(n_cells):
-#         mesh, h = setup_mesh(mesh_type, n_cells)
-#         if "sym" in mesh_type:
-#             w = sw_func
-#         else:
-#             w = w_func
-#
-#         Ee = mesh.project_edge_vector(w(*mesh.edges.T))
-#         Me = mesh.get_edge_inner_product()
-#         num = Ee.T @ Me @ Ee
-#         err = np.abs(num - ana)
-#         return err, h
-#
-#     tests.assert_expected_order(get_error, [10, 20, 30])
-
-
-@pytest.mark.parametrize("mesh_type", NONSYMMETRIC)
+@pytest.mark.parametrize("mesh_type", MESHTYPES)
 def test_simple_edge_inner_product(mesh_type):
-    def get_error(n_cells):
-        mesh, h = setup_mesh(mesh_type, n_cells)
-        ana = np.sum(mesh.cell_volumes) * 3
+    if mesh_type in ZEROSTART:
+        def get_error(n_cells):
+            mesh, h = setup_mesh(mesh_type, n_cells)
+            ana = np.sum(mesh.cell_volumes)
+            if 'sym' not in mesh_type:
+                ana *= 3
+
+            Ee = np.ones(mesh.n_edges)
+            Me = mesh.get_edge_inner_product()
+            num = Ee.T @ Me @ Ee
+            err = np.abs(num - ana)
+            return err, h
+
+        tests.assert_expected_order(get_error, [10, 20, 30])
+    else:
+        mesh, _ = setup_mesh(mesh_type, 10)
+        ana = np.sum(mesh.cell_volumes)
+        if 'sym' not in mesh_type:
+            ana *= 3
 
         Ee = np.ones(mesh.n_edges)
         Me = mesh.get_edge_inner_product()
         num = Ee.T @ Me @ Ee
-        err = np.abs(num - ana)
-        return err, h
+        np.testing.assert_allclose(num, ana)
 
-    tests.assert_expected_order(get_error, [10, 20, 30])
+@pytest.mark.parametrize("mesh_type", MESHTYPES)
+def test_simple_face_inner_product(mesh_type):
+    if mesh_type in ZEROSTART:
+        def get_error(n_cells):
+            mesh, h = setup_mesh(mesh_type, n_cells)
+            ana = np.sum(mesh.cell_volumes)
+            if 'sym' in mesh_type:
+                ana *= 2
+            else:
+                ana *= 3
+
+            Ee = np.ones(mesh.n_faces)
+            Me = mesh.get_face_inner_product()
+            num = Ee.T @ Me @ Ee
+            err = np.abs(num - ana)
+            return err, h
+
+        tests.assert_expected_order(get_error, [10, 20, 30])
+    else:
+        mesh, _ = setup_mesh(mesh_type, 10)
+        ana = np.sum(mesh.cell_volumes)
+        if 'sym' in mesh_type:
+            ana *= 2
+        else:
+            ana *= 3
+
+        Ee = np.ones(mesh.n_faces)
+        Me = mesh.get_face_inner_product()
+        num = Ee.T @ Me @ Ee
+        np.testing.assert_allclose(num, ana)
