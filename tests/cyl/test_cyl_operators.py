@@ -13,13 +13,13 @@ C = CoordSys3D(
 )
 
 
-def lambdify_vector(vars, u_vecs, func):
-    funcs = [sp.lambdify(vars, func.coeff(u_hat), "numpy") for u_hat in u_vecs]
+def lambdify_vector(variabls, u_vecs, func):
+    funcs = [sp.lambdify(variabls, func.coeff(u_hat), "numpy") for u_hat in u_vecs]
     return lambda *args: np.stack([g_func(*args) for g_func in funcs], axis=-1)
 
 
-u = C.R * sp.sin(sp.pi * C.Z) * sp.sin(sp.pi * C.R) * sp.cos(C.T)
-su = C.R * sp.sin(sp.pi * C.Z) * sp.sin(sp.pi * C.R)
+u = C.R * (sp.sin(sp.pi * C.Z) * sp.sin(sp.pi * C.R) * sp.cos(C.T) + 1)
+su = C.R * (sp.sin(sp.pi * C.Z) * sp.sin(sp.pi * C.R) + 1)
 grad_u = gradient(u)
 grad_su = gradient(su)
 
@@ -138,7 +138,7 @@ def test_nodal_gradient(mesh_type):
     tests.assert_expected_order(get_error, [10, 20, 30])
 
 
-@pytest.mark.parametrize("mesh_type", NONSYMMETRIC)
+@pytest.mark.parametrize("mesh_type", MESHTYPES)
 def test_face_divergence(mesh_type):
     def get_error(n_cells):
         mesh, h = setup_mesh(mesh_type, n_cells)
@@ -265,6 +265,153 @@ def test_ave_node_to_face(mesh_type):
         ave = mesh.average_node_to_face @ Ee
         ana = u(*mesh.faces.T)
         err = np.linalg.norm((ave - ana), np.inf)
+        return err, h
+
+    tests.assert_expected_order(get_error, [10, 20, 30])
+
+
+@pytest.mark.parametrize("mesh_type", MESHTYPES)
+def test_ave_face_to_cell_vector(mesh_type):
+    def get_error(n_cells):
+        mesh, h = setup_mesh(mesh_type, n_cells)
+        if "sym" in mesh_type:
+            w = sw_func
+        else:
+            w = w_func
+
+        Ee = mesh.project_face_vector(w(*mesh.faces.T))
+
+        ave = mesh.average_face_to_cell_vector @ Ee
+        ana = w(*mesh.cell_centers.T)
+        if "sym" in mesh_type:
+            ana = ana[:, [0, 2]]
+        ana = ana.reshape(-1, order="F")
+        err = np.linalg.norm((ave - ana), np.inf)
+        return err, h
+
+    tests.assert_expected_order(get_error, [10, 20, 30])
+
+
+@pytest.mark.parametrize("mesh_type", MESHTYPES)
+def test_ave_edge_to_cell_vector(mesh_type):
+    def get_error(n_cells):
+        mesh, h = setup_mesh(mesh_type, n_cells)
+        if "sym" in mesh_type:
+            w = sw_func
+        else:
+            w = w_func
+
+        Ee = mesh.project_edge_vector(w(*mesh.edges.T))
+
+        ave = mesh.average_edge_to_cell_vector @ Ee
+        ana = w(*mesh.cell_centers.T)
+        if "sym" in mesh_type:
+            ana = ana[:, [1]]
+        ana = ana.reshape(-1, order="F")
+        err = np.linalg.norm((ave - ana), np.inf)
+        return err, h
+
+    tests.assert_expected_order(get_error, [10, 20, 30])
+
+
+@pytest.mark.parametrize("mesh_type", MESHTYPES)
+def test_mimetic_div_curl(mesh_type):
+    mesh, _ = setup_mesh(mesh_type, 10)
+
+    v = np.random.rand(mesh.n_edges)
+    divcurlv = mesh.face_divergence @ (mesh.edge_curl @ v)
+    np.testing.assert_allclose(divcurlv, 0, atol=1e-11)
+
+
+@pytest.mark.parametrize("mesh_type", NONSYMMETRIC)
+def test_mimetic_curl_grad(mesh_type):
+    mesh, _ = setup_mesh(mesh_type, 10)
+
+    v = np.random.rand(mesh.n_nodes)
+    divcurlv = mesh.edge_curl @ (mesh.nodal_gradient @ v)
+    np.testing.assert_allclose(divcurlv, 0, atol=1e-11)
+
+    # class MimeticProperties(unittest.TestCase):
+    #     meshTypes = MESHTYPES
+    #     meshDimension = 3
+    #     meshSize = 64
+    #     tol = 1e-11  # there is still some error due to rounding
+    #
+    #     def test_DivCurl(self):
+    #         for meshType in self.meshTypes:
+    #             mesh, _ = discretize.tests.setupMesh(
+    #                 meshType, self.meshSize, self.meshDimension
+    #             )
+    #             v = np.random.rand(mesh.nE)
+    #             divcurlv = mesh.face_divergence * (mesh.edge_curl * v)
+    #             rel_err = np.linalg.norm(divcurlv) / np.linalg.norm(v)
+    #             passed = rel_err < self.tol
+    #             print(
+    #                 "Testing Div * Curl on {} : |Div Curl v| / |v| = {} "
+    #                 "... {}".format(meshType, rel_err, "FAIL" if not passed else "ok")
+    #             )
+
+    # def test_CurlGrad(self):
+    #     for meshType in self.meshTypes:
+    #         mesh, _ = discretize.tests.setupMesh(
+    #             meshType, self.meshSize, self.meshDimension
+    #         )
+    #         v = np.random.rand(mesh.nN)
+    #         curlgradv = mesh.edge_curl * (mesh.nodal_gradient * v)
+    #         rel_err = np.linalg.norm(curlgradv) / np.linalg.norm(v)
+    #         passed = rel_err < self.tol
+    #         print(
+    #             "Testing Curl * Grad on {} : |Curl Grad v| / |v|= {} "
+    #             "... {}".format(meshType, rel_err, "FAIL" if not passed else "ok")
+    #         )
+
+
+# @pytest.mark.parametrize("mesh_type", MESHTYPES)
+# def test_face_inner_product(mesh_type):
+#
+#     # r bounds:
+#     if mesh_type in ["sym_full", "quarter_pizza", "full"]:
+#         r_lims = [0, 1]
+#     else:
+#         r_lims = [1, 2]
+#     if mesh_type in ['quarter_pizza', "cyl_tensor"]:
+#         t_lims = [0, np.pi/4]
+#     else:
+#         t_lims = [0, 2 * np.pi]
+#
+#     if 'sym' in mesh_type:
+#         func = sw.dot(sw)
+#     else:
+#         func = w.dot(w)
+#     ana = float(sp.integrate(
+#         func, (C.R, *r_lims), (C.T, *t_lims), (C.Z, 0, 1)
+#     ).evalf())
+#     def get_error(n_cells):
+#         mesh, h = setup_mesh(mesh_type, n_cells)
+#         if "sym" in mesh_type:
+#             w = sw_func
+#         else:
+#             w = w_func
+#
+#         Ee = mesh.project_edge_vector(w(*mesh.edges.T))
+#         Me = mesh.get_edge_inner_product()
+#         num = Ee.T @ Me @ Ee
+#         err = np.abs(num - ana)
+#         return err, h
+#
+#     tests.assert_expected_order(get_error, [10, 20, 30])
+
+
+@pytest.mark.parametrize("mesh_type", NONSYMMETRIC)
+def test_simple_edge_inner_product(mesh_type):
+    def get_error(n_cells):
+        mesh, h = setup_mesh(mesh_type, n_cells)
+        ana = np.sum(mesh.cell_volumes) * 3
+
+        Ee = np.ones(mesh.n_edges)
+        Me = mesh.get_edge_inner_product()
+        num = Ee.T @ Me @ Ee
+        err = np.abs(num - ana)
         return err, h
 
     tests.assert_expected_order(get_error, [10, 20, 30])

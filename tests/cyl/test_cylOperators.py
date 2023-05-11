@@ -5,7 +5,6 @@ from sympy.abc import r, t, z
 
 import discretize
 from discretize import tests
-import pytest
 
 np.random.seed(16)
 
@@ -99,68 +98,6 @@ class TestAverageSimple(unittest.TestCase):
         assert np.linalg.norm(aveF - aveF_ana) < 1e-10
 
 
-class TestAveF2CCV(tests.OrderTest):
-    name = "aveF2CCV"
-    meshTypes = MESHTYPES
-    meshSizes = [8, 16, 32, 64]
-    meshDimension = 3
-    expectedOrders = 2
-
-    def getError(self):
-        funR = lambda r, t, z: np.sin(2 * np.pi * z) * np.sin(np.pi * r) * np.sin(t)
-        funT = lambda r, t, z: np.sin(np.pi * z) * np.sin(np.pi * r) * np.sin(2 * t)
-        funZ = lambda r, t, z: np.sin(np.pi * z) * np.sin(2 * np.pi * r) * np.sin(t)
-
-        Fc = cylF3(self.M, funR, funT, funZ)
-        F = self.M.projectFaceVector(Fc)
-
-        aveF = self.M.aveF2CCV * F
-
-        aveF_anaR = funR(self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2])
-
-        err = np.linalg.norm((aveF[: self.M.vnF[0]] - aveF_anaR), np.inf)
-        return err
-
-    def test_order(self):
-        self.orderTest()
-
-
-class TestAveCC2F(tests.OrderTest):
-    name = "aveCC2F"
-    meshTypes = ["uniformCylindricalMesh"]
-    meshSizes = [8, 16, 32, 64]
-    meshDimension = 3
-    expectedOrders = 1  # Extrapolation at the boundaries
-    full = True
-
-    def getError(self):
-        mesh = self.M
-        fun = lambda r, t, z: np.sin(np.pi * z) * np.sin(np.pi * r) * np.sin(t)
-
-        CC = fun(*mesh.cell_centers.T)
-
-        aveF = mesh.aveCC2F @ CC
-        aveF_ana = fun(*mesh.faces.T)
-
-        diff = aveF - aveF_ana
-        if not self.full:
-            diff = diff[~mesh._is_boundary_face]
-
-        err = np.linalg.norm(diff, np.inf)
-        return err
-
-    def test_order_inside(self):
-        self.expectedOrders = 2
-        self.full = False
-        self.orderTest()
-
-    def test_order_with_boundary(self):
-        # This one extrapolates at boundaries
-        self.expectedOrders = 1
-        self.full = True
-        self.orderTest()
-
-
 class FaceInnerProductFctsIsotropic(object):
     def fcts(self):
         j = sympy.Matrix(
@@ -212,35 +149,6 @@ class FaceInnerProductFctsIsotropic(object):
         sig = f_sig(mesh.gridCC[:, 0], mesh.gridCC[:, 1], mesh.gridCC[:, 2])
 
         return sig, np.r_[jr, jt, jz]
-
-
-class TestAveE2CCV(tests.OrderTest):
-    name = "aveE2CCV"
-    meshTypes = MESHTYPES
-    meshSizes = [8, 16, 32, 64]
-    meshDimension = 3
-
-    def getError(self):
-        funR = lambda r, t, z: np.sin(np.pi * z) * np.sin(np.pi * r) * np.sin(t)
-        funT = lambda r, t, z: np.sin(np.pi * z) * np.sin(np.pi * r) * np.sin(t)
-        funZ = lambda r, t, z: np.sin(np.pi * z) * np.sin(np.pi * r) * np.sin(t)
-
-        Ec = cylE3(self.M, funR, funT, funZ)
-        E = self.M.projectEdgeVector(Ec)
-
-        aveE = self.M.aveE2CCV * E
-
-        aveE_anaR = funR(self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2])
-        aveE_anaT = funT(self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2])
-        aveE_anaZ = funZ(self.M.gridCC[:, 0], self.M.gridCC[:, 1], self.M.gridCC[:, 2])
-
-        aveE_ana = np.hstack([aveE_anaR, aveE_anaT, aveE_anaZ])
-
-        err = np.linalg.norm((aveE - aveE_ana), np.inf)
-        return err
-
-    def test_order(self):
-        self.orderTest()
 
 
 class EdgeInnerProductFctsIsotropic(object):
@@ -367,41 +275,6 @@ class TestCylEdgeInnerProducts_Order(tests.OrderTest):
 
     def test_order(self):
         self.orderTest()
-
-
-class MimeticProperties(unittest.TestCase):
-    meshTypes = MESHTYPES
-    meshDimension = 3
-    meshSize = 64
-    tol = 1e-11  # there is still some error due to rounding
-
-    def test_DivCurl(self):
-        for meshType in self.meshTypes:
-            mesh, _ = discretize.tests.setupMesh(
-                meshType, self.meshSize, self.meshDimension
-            )
-            v = np.random.rand(mesh.nE)
-            divcurlv = mesh.face_divergence * (mesh.edge_curl * v)
-            rel_err = np.linalg.norm(divcurlv) / np.linalg.norm(v)
-            passed = rel_err < self.tol
-            print(
-                "Testing Div * Curl on {} : |Div Curl v| / |v| = {} "
-                "... {}".format(meshType, rel_err, "FAIL" if not passed else "ok")
-            )
-
-    def test_CurlGrad(self):
-        for meshType in self.meshTypes:
-            mesh, _ = discretize.tests.setupMesh(
-                meshType, self.meshSize, self.meshDimension
-            )
-            v = np.random.rand(mesh.nN)
-            curlgradv = mesh.edge_curl * (mesh.nodal_gradient * v)
-            rel_err = np.linalg.norm(curlgradv) / np.linalg.norm(v)
-            passed = rel_err < self.tol
-            print(
-                "Testing Curl * Grad on {} : |Curl Grad v| / |v|= {} "
-                "... {}".format(meshType, rel_err, "FAIL" if not passed else "ok")
-            )
 
 
 if __name__ == "__main__":

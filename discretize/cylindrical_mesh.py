@@ -1281,7 +1281,7 @@ class CylindricalMesh(
     def face_x_divergence(self):  # NOQA D102
         # Documentation inherited from discretize.base.BaseTensorMesh
         if getattr(self, "_face_x_divergence", None) is None:
-            if self.is_symmetric:
+            if self.is_symmetric and self.includes_zero:
                 ncx, ncy, ncz = self.shape_cells
                 D1 = kron3(speye(ncz), speye(ncy), ddx(ncx)[:, 1:])
             else:
