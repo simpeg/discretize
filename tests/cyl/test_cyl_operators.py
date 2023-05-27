@@ -15,7 +15,9 @@ C = CoordSys3D(
 
 def lambdify_vector(variabls, u_vecs, func):
     funcs = [sp.lambdify(variabls, func.coeff(u_hat), "numpy") for u_hat in u_vecs]
-    return lambda *args: np.stack([g_func(*args) for g_func in funcs], axis=-1)
+    return lambda *args: np.stack(
+        [g_func(*args) * np.ones_like(args[0]) for g_func in funcs], axis=-1
+    )
 
 
 u = C.R * (sp.sin(sp.pi * C.Z) * sp.sin(sp.pi * C.R) * sp.cos(C.T) + 1)
@@ -74,7 +76,7 @@ def setup_mesh(mesh_type, n):
     else:
         # tensor styled (1/4 ring)
         ht = n * [np.pi / (4 * n)]
-        mesh = discretize.CylindricalMesh([n, ht, ht], origin=[1, 0, 0])
+        mesh = discretize.CylindricalMesh([n, ht, n], origin=[1, 0, 0])
         max_h = max([np.max(hi) for hi in mesh.h])
     return mesh, max_h
 
@@ -97,13 +99,12 @@ ZEROSTART = {
     "full",
 }
 
-NONZEROSTART = {
-    "sym_ring",
-    "ring",
+PARTAZIMUTH = {
     "cyl_tensor",
+    "quarter_pizza",
 }
 
-MESHTYPES = SYMMETRIC | NONSYMMETRIC | ZEROSTART | NONZEROSTART
+MESHTYPES = SYMMETRIC | NONSYMMETRIC
 
 
 @pytest.mark.parametrize("mesh_type", MESHTYPES)
@@ -347,57 +348,66 @@ def test_mimetic_curl_grad(mesh_type):
 @pytest.mark.parametrize("mesh_type", MESHTYPES)
 def test_simple_edge_inner_product(mesh_type):
     if mesh_type in ZEROSTART:
-        def get_error(n_cells):
-            mesh, h = setup_mesh(mesh_type, n_cells)
-            ana = np.sum(mesh.cell_volumes)
-            if 'sym' not in mesh_type:
-                ana *= 3
-
-            Ee = np.ones(mesh.n_edges)
-            Me = mesh.get_edge_inner_product()
-            num = Ee.T @ Me @ Ee
-            err = np.abs(num - ana)
-            return err, h
-
-        tests.assert_expected_order(get_error, [10, 20, 30])
+        r_lims = [0, 1]
     else:
-        mesh, _ = setup_mesh(mesh_type, 10)
-        ana = np.sum(mesh.cell_volumes)
-        if 'sym' not in mesh_type:
-            ana *= 3
+        r_lims = [1, 2]
 
-        Ee = np.ones(mesh.n_edges)
-        Me = mesh.get_edge_inner_product()
-        num = Ee.T @ Me @ Ee
-        np.testing.assert_allclose(num, ana)
+    if mesh_type in PARTAZIMUTH:
+        t_lims = [0, sp.pi / 4]
+    else:
+        t_lims = [0, 2 * sp.pi]
+    z_lims = [0, 1]
+
+    if mesh_type in SYMMETRIC:
+        # only theta edges
+        e_ana = C.R * C.t
+    else:
+        e_ana = 1 * C.r + C.R * C.t + 1 * C.z
+    e_func = lambdify_vector((C.R, C.T, C.Z), (C.r, C.t, C.z), e_ana)
+
+    ana = float(
+        sp.integrate(
+            e_ana.dot(e_ana) * C.R, (C.R, *r_lims), (C.T, *t_lims), (C.Z, *z_lims)
+        )
+    )
+
+    mesh, _ = setup_mesh(mesh_type, 10)
+
+    e = mesh.project_edge_vector(e_func(*mesh.edges.T))
+    Me = mesh.get_edge_inner_product()
+    num = e.T @ Me @ e
+    np.testing.assert_allclose(num, ana)
+
 
 @pytest.mark.parametrize("mesh_type", MESHTYPES)
 def test_simple_face_inner_product(mesh_type):
     if mesh_type in ZEROSTART:
-        def get_error(n_cells):
-            mesh, h = setup_mesh(mesh_type, n_cells)
-            ana = np.sum(mesh.cell_volumes)
-            if 'sym' in mesh_type:
-                ana *= 2
-            else:
-                ana *= 3
-
-            Ee = np.ones(mesh.n_faces)
-            Me = mesh.get_face_inner_product()
-            num = Ee.T @ Me @ Ee
-            err = np.abs(num - ana)
-            return err, h
-
-        tests.assert_expected_order(get_error, [10, 20, 30])
+        r_lims = [0, 1]
     else:
-        mesh, _ = setup_mesh(mesh_type, 10)
-        ana = np.sum(mesh.cell_volumes)
-        if 'sym' in mesh_type:
-            ana *= 2
-        else:
-            ana *= 3
+        r_lims = [1, 2]
 
-        Ee = np.ones(mesh.n_faces)
-        Me = mesh.get_face_inner_product()
-        num = Ee.T @ Me @ Ee
-        np.testing.assert_allclose(num, ana)
+    if mesh_type in PARTAZIMUTH:
+        t_lims = [0, sp.pi / 4]
+    else:
+        t_lims = [0, 2 * sp.pi]
+    z_lims = [0, 1]
+
+    if mesh_type in SYMMETRIC:
+        # no theta faces
+        f_ana = C.R * C.r + 1 * C.z
+    else:
+        f_ana = C.R * C.r + 1 * C.t + 1 * C.z
+    f_func = lambdify_vector((C.R, C.T, C.Z), (C.r, C.t, C.z), f_ana)
+
+    ana = float(
+        sp.integrate(
+            f_ana.dot(f_ana) * C.R, (C.R, *r_lims), (C.T, *t_lims), (C.Z, *z_lims)
+        )
+    )
+
+    mesh, _ = setup_mesh(mesh_type, 10)
+
+    f = mesh.project_face_vector(f_func(*mesh.faces.T))
+    Mf = mesh.get_face_inner_product()
+    num = f.T @ Mf @ f
+    np.testing.assert_allclose(num, ana)

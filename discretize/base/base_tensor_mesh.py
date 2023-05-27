@@ -860,7 +860,7 @@ class BaseTensorMesh(BaseRegularMesh):
 
             # if cyl, then only certain components are relevant due to symmetry
             # for faces, x, z matters, for edges, y (which is theta) matters
-            if self._meshType == "CYL":
+            if self._meshType == "CYL" and self.is_symmetric:
                 if projection_type == "E":
                     model = model[:, 1]  # this is the action of a projection mat
                 elif projection_type == "F":
@@ -962,7 +962,7 @@ class BaseTensorMesh(BaseRegularMesh):
             Av = getattr(self, "ave" + projection_type + "2CCV")
             V = sp.kron(sp.identity(self.dim), sdiag(self.cell_volumes))
 
-            if self._meshType == "CYL":
+            if self._meshType == "CYL" and self.is_symmetric:
                 Zero = sp.csr_matrix((self.nC, self.nC))
                 Eye = sp.eye(self.nC)
                 if projection_type == "E":
