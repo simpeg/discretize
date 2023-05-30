@@ -547,3 +547,46 @@ def test_curl_boundary_integral(mesh_type):
         return err, h
 
     tests.assert_expected_order(get_error, [10, 20, 30])
+
+
+@pytest.mark.parametrize(
+    "location_type",
+    [
+        "cell_centers",
+        "nodes",
+        "edges_x",
+        "edges_y",
+        "edges_z",
+        "faces_x",
+        "faces_y",
+        "faces_z",
+    ],
+)
+@pytest.mark.parametrize("mesh_type", NONSYMMETRIC)
+def test_interpolation(mesh_type, location_type):
+    u_func = lambda x, y, z: x**2 + y**2 + z**2
+
+    interp_points = (
+        np.mgrid[0.3:0.8:5j, np.pi / 10 : np.pi / 5 : 5j, 0.3:0.8:5j].reshape(3, -1).T
+    )
+    interp_points.shape
+
+    if mesh_type not in ZEROSTART:
+        interp_points[:, 0] += 1
+    ana = u_func(*interp_points.T)
+
+    def get_error(n_cells):
+        mesh, h = setup_mesh(mesh_type, n_cells)
+        if "edges" in location_type:
+            grid = mesh.edges
+        elif "faces" in location_type:
+            grid = mesh.faces
+        else:
+            grid = getattr(mesh, location_type)
+        A = mesh.get_interpolation_matrix(interp_points, location_type=location_type)
+
+        num = A @ u_func(*grid.T)
+        err = np.linalg.norm((num - ana), np.inf)
+        return err, h
+
+    tests.assert_expected_order(get_error, [10, 20, 30])

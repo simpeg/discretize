@@ -586,6 +586,9 @@ class TestCyl3DMesh(unittest.TestCase):
 
 
 def test_non_sym_errors():
+    with pytest.raises(ValueError, match=r"more than 2\*pi."):
+        discretize.CylindricalMesh([5, np.ones(8), 4])
+
     mesh = discretize.CylindricalMesh([5, 5, 5])
     # bad cartesian setter
     with pytest.raises(ValueError, match="cartesian origin"):

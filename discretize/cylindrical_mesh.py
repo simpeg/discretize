@@ -1893,11 +1893,14 @@ class CylindricalMesh(
                 items = (self.nEx, self.nEy, self.nEz)[: self.dim]
             components = [spzeros(loc.shape[0], n) for n in items]
             if location_type == "faces_x":
-                # theta wrap around interpolation
-                nodes_x = self.nodes_x if self.is_symmetric else self.nodes_x[1:]
+                if self.includes_zero and not self.is_symmetric:
+                    nodes_x = self.nodes_x[1:]
+                else:
+                    nodes_x = self.nodes_x
                 rtz = [
                     nodes_x,
                 ]
+                # theta wrap around interpolation
                 if self.is_wrapped:
                     rtz.append(
                         np.r_[
