@@ -341,6 +341,7 @@ class OrderTest(unittest.TestCase):
         and prints mesh size, error, ratio between current and previous error,
         and estimated order of convergence.
         """
+        __tracebackhide__ = True
         if not isinstance(self.meshTypes, list):
             raise TypeError("meshTypes must be a list")
         if type(self.tolerance) is not list:
@@ -454,6 +455,7 @@ def assert_expected_order(
     Then run the expected order test.
     >>> assert_expected_order(deriv_error, [10, 20, 30, 40, 50])
     """
+    __tracebackhide__ = True
     n_cells = np.asarray(n_cells, dtype=int)
     if test_type not in ["mean", "min", "last", "all", "mean_at_least"]:
         raise ValueError
@@ -605,6 +607,7 @@ def check_derivative(
     ========================= PASS! =========================
     Once upon a time, a happy little test passed.
     """
+    __tracebackhide__ = True
     # matplotlib is a soft dependencies for discretize,
     # lazy-loaded to decrease load time of discretize.
     try:
@@ -831,6 +834,7 @@ def assert_isadjoint(
         If the dot product test fails (only if assert_error=True).
 
     """
+    __tracebackhide__ = True
 
     def random(size, iscomplex):
         """Create random data of size and dtype of <size>."""

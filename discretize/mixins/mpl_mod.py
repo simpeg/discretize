@@ -1535,9 +1535,13 @@ class InterfaceMPL(object):
 
         # circles
         n = 100
+        if self.is_wrapped:
+            th = np.linspace(0, 2 * np.pi, n)
+        else:
+            th = np.linspace(self.nodes_y[0], self.nodes_y[-1], n)
         for r in self.nodes_x:
             ax.plot(
-                np.linspace(0.0, np.pi * 2, n),
+                th,
                 r * np.ones(n),
                 linestyle="-",
                 color=color,
@@ -2464,6 +2468,8 @@ class Slicer(object):
         # Create subplots
         self.fig = plt.gcf()
         self.fig.subplots_adjust(wspace=0.075, hspace=0.1)
+        # To capture mouse scroll in notebooks (otherwise it is hard to slice through volume)
+        self.fig.canvas.capture_scroll = True
 
         # X-Y
         self.ax1 = plt.subplot2grid(

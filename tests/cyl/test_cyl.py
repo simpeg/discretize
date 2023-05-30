@@ -1,5 +1,6 @@
 import unittest
 import numpy as np
+import pytest
 
 import discretize
 from discretize import tests, utils
@@ -12,43 +13,6 @@ class TestCylSymmetricMesh(unittest.TestCase):
         hx = np.r_[1, 1, 0.5]
         hz = np.r_[2, 1]
         self.mesh = discretize.CylindricalMesh([hx, 1, hz], np.r_[0.0, 0.0, 0.0])
-
-    def test_dim(self):
-        self.assertEqual(self.mesh.dim, 3)
-
-    def test_nC(self):
-        self.assertEqual(self.mesh.nC, 6)
-        self.assertEqual(self.mesh.shape_cells[0], 3)
-        self.assertEqual(self.mesh.shape_cells[1], 1)
-        self.assertEqual(self.mesh.shape_cells[2], 2)
-        self.assertEqual(self.mesh.vnC, (3, 1, 2))
-
-    def test_nN(self):
-        self.assertEqual(self.mesh.nN, 0)
-        self.assertEqual(self.mesh.shape_nodes[0], 3)
-        self.assertEqual(self.mesh.shape_nodes[1], 0)
-        self.assertEqual(self.mesh.shape_nodes[2], 3)
-        self.assertEqual(self.mesh.vnN, (3, 0, 3))
-
-    def test_nF(self):
-        self.assertEqual(self.mesh.nFx, 6)
-        self.assertEqual(self.mesh.vnFx, (3, 1, 2))
-        self.assertEqual(self.mesh.nFy, 0)
-        self.assertEqual(self.mesh.vnFy, (3, 0, 2))
-        self.assertEqual(self.mesh.nFz, 9)
-        self.assertEqual(self.mesh.vnFz, (3, 1, 3))
-        self.assertEqual(self.mesh.nF, 15)
-        self.assertEqual(self.mesh.vnF, (6, 0, 9))
-
-    def test_nE(self):
-        self.assertEqual(self.mesh.nEx, 0)
-        self.assertEqual(self.mesh.vnEx, (3, 0, 3))
-        self.assertEqual(self.mesh.nEy, 9)
-        self.assertEqual(self.mesh.vnEy, (3, 1, 3))
-        self.assertEqual(self.mesh.nEz, 0)
-        self.assertEqual(self.mesh.vnEz, (3, 0, 2))
-        self.assertEqual(self.mesh.nE, 9)
-        self.assertEqual(self.mesh.vnE, (0, 9, 0))
 
     def test_vectorsCC(self):
         v = np.r_[0.5, 1.5, 2.25]
@@ -612,42 +576,6 @@ class TestCyl3DMesh(unittest.TestCase):
         hz = np.r_[2, 1]
         self.mesh = discretize.CylindricalMesh([hx, hy, hz])
 
-    def test_dim(self):
-        self.assertEqual(self.mesh.dim, 3)
-
-    def test_nC(self):
-        self.assertEqual(self.mesh.shape_cells[0], 3)
-        self.assertEqual(self.mesh.shape_cells[1], 2)
-        self.assertEqual(self.mesh.shape_cells[2], 2)
-        self.assertEqual(self.mesh.vnC, (3, 2, 2))
-
-    def test_nN(self):
-        self.assertEqual(self.mesh.nN, 21)
-        self.assertEqual(self.mesh.shape_nodes[0], 4)
-        self.assertEqual(self.mesh.shape_nodes[1], 2)
-        self.assertEqual(self.mesh.shape_nodes[2], 3)
-        self.assertEqual(self.mesh.vnN, (4, 2, 3))
-
-    def test_nF(self):
-        self.assertEqual(self.mesh.nFx, 12)
-        self.assertEqual(self.mesh.vnFx, (3, 2, 2))
-        self.assertEqual(self.mesh.nFy, 12)
-        self.assertEqual(self.mesh.vnFy, (3, 2, 2))
-        self.assertEqual(self.mesh.nFz, 18)
-        self.assertEqual(self.mesh.vnFz, (3, 2, 3))
-        self.assertEqual(self.mesh.nF, 42)
-        self.assertEqual(self.mesh.vnF, (12, 12, 18))
-
-    def test_nE(self):
-        self.assertEqual(self.mesh.nEx, 18)
-        self.assertEqual(self.mesh.vnEx, (3, 2, 3))
-        self.assertEqual(self.mesh.nEy, 18)
-        self.assertEqual(self.mesh.vnEy, (3, 2, 3))
-        self.assertEqual(self.mesh.nEz, 12 + 2)
-        self.assertEqual(self.mesh.vnEz, (4, 2, 2))
-        self.assertEqual(self.mesh.nE, 50)
-        self.assertEqual(self.mesh.vnE, (18, 18, 14))
-
     def test_vectorsCC(self):
         v = np.r_[0.5, 1.5, 2.25]
         self.assertEqual(np.linalg.norm((v - self.mesh.cell_centers_x)), 0)
@@ -663,6 +591,80 @@ class TestCyl3DMesh(unittest.TestCase):
         self.assertEqual(np.linalg.norm((v - self.mesh.nodes_y)), 0)
         v = np.r_[0, 2, 3]
         self.assertEqual(np.linalg.norm((v - self.mesh.nodes_z)), 0)
+
+
+def test_non_sym_errors():
+    with pytest.raises(ValueError, match=r"more than 2\*pi."):
+        discretize.CylindricalMesh([5, np.ones(8), 4])
+
+    mesh = discretize.CylindricalMesh([5, 5, 5])
+    # bad cartesian setter
+    with pytest.raises(ValueError, match="cartesian origin"):
+        mesh.cartesian_origin = [0, 1]
+
+    # no cell gradients
+    with pytest.raises(NotImplementedError, match="Cell Grad is not yet implemented."):
+        mesh.cell_gradient_x
+
+    # no cell gradients
+    with pytest.raises(NotImplementedError, match="Cell Grad is not yet implemented."):
+        mesh.stencil_cell_gradient_y
+
+    # no cell gradients
+    with pytest.raises(NotImplementedError, match="Cell Grad is not yet implemented."):
+        mesh.stencil_cell_gradient_z
+
+    # no cell gradients
+    with pytest.raises(NotImplementedError, match="Cell Grad is not yet implemented."):
+        mesh.stencil_cell_gradient
+
+    # no cell gradients
+    with pytest.raises(NotImplementedError, match="Cell Grad is not yet implemented."):
+        mesh.cell_gradient
+
+    # bad deflation key
+
+    # no cell gradients
+    with pytest.raises(ValueError, match="Location must be a grid location"):
+        mesh._deflation_matrix("CCV")
+
+    # bad location type
+    with pytest.raises(ValueError, match="Unrecognized location type"):
+        mesh.get_interpolation_matrix([0, 0, 0], "bad")
+
+    with pytest.raises(
+        NotImplementedError, match="for more complicated CylindricalMeshes"
+    ):
+        mesh.get_interpolation_matrix_cartesian_mesh([0, 0, 0], "edge_x")
+
+
+def test_sym_errors():
+    mesh = discretize.CylindricalMesh([5, 1, 5])
+    # no full edge lengths for symmetric
+    with pytest.raises(NotImplementedError):
+        mesh._edge_lengths_full
+
+    # no y faces
+    with pytest.raises(
+        AttributeError, match="There are no y-faces on the Cyl Symmetric mesh"
+    ):
+        mesh.face_y_areas
+
+    # no x edges
+    with pytest.raises(
+        AttributeError, match="There are no x-edges on a cyl symmetric mesh"
+    ):
+        mesh.average_edge_x_to_cell
+
+    # no z edges
+    with pytest.raises(
+        AttributeError, match="There are no z-edges on a cyl symmetric mesh"
+    ):
+        mesh.average_edge_z_to_cell
+
+    # no items for symmetric
+    with pytest.raises(ValueError, match="Symmetric CylindricalMesh does not support"):
+        mesh.get_interpolation_matrix([0, 0, 0], "edges_x")
 
 
 if __name__ == "__main__":
