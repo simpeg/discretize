@@ -170,7 +170,7 @@ class CylindricalMesh(
         value = np.atleast_1d(value)
         if len(value) != self.dim:
             raise ValueError(
-                f"cartesian origin and shape must be the same length, got {len(value)} and {len(self.dim)}"
+                f"cartesian origin and shape must be the same length, got {len(value)} and {self.dim}"
             )
         self._cartesian_origin = value
 
@@ -710,7 +710,7 @@ class CylindricalMesh(
         """
         if getattr(self, "_face_y_areas", None) is None:
             if self.is_symmetric:
-                raise Exception("There are no y-faces on the Cyl Symmetric mesh")
+                raise AttributeError("There are no y-faces on the Cyl Symmetric mesh")
             self._face_y_areas = self._face_y_areas_full[~self._ishanging_faces_y]
         return self._face_y_areas
 
@@ -1447,7 +1447,7 @@ class CylindricalMesh(
     def average_edge_x_to_cell(self):  # NOQA D102
         # Documentation inherited from discretize.operators.DiffOperators
         if self.is_symmetric:
-            raise Exception("There are no x-edges on a cyl symmetric mesh")
+            raise AttributeError("There are no x-edges on a cyl symmetric mesh")
         return (
             kron3(
                 av(self.shape_cells[2]),
@@ -1480,7 +1480,7 @@ class CylindricalMesh(
     def average_edge_z_to_cell(self):  # NOQA D102
         # Documentation inherited from discretize.operators.DiffOperators
         if self.is_symmetric:
-            raise Exception("There are no z-edges on a cyl symmetric mesh")
+            raise AttributeError("There are no z-edges on a cyl symmetric mesh")
         return (
             kron3(
                 speye(self.shape_cells[2]),
@@ -1876,7 +1876,14 @@ class CylindricalMesh(
                 Q = sp.csr_matrix(
                     (Q.data, new_indices, Q.indptr), shape=(Q.shape[0], self.n_cells)
                 )
-        else:
+        elif location_type in [
+            "edges_x",
+            "edges_y",
+            "edges_z",
+            "faces_x",
+            "faces_y",
+            "faces_z",
+        ]:
             ind = {"x": 0, "y": 1, "z": 2}[location_type[-1]]
             if self.dim < ind:
                 raise ValueError("mesh is not high enough dimension.")
@@ -2007,10 +2014,10 @@ class CylindricalMesh(
                 Q = interpolation_matrix(loc, *rtz)
                 Q = Q @ self._deflation_matrix("edges_z", as_ones=True).T
                 components[2] = Q
-            else:
-                raise ValueError("Unrecognized location type")
             # remove any zero blocks (hstack complains)
             Q = sp.hstack([comp for comp in components if comp.shape[1] > 0])
+        else:
+            raise ValueError("Unrecognized location type")
         if zeros_outside:
             Q[~self.is_inside(loc), :] = 0
         return Q
@@ -2098,7 +2105,7 @@ class CylindricalMesh(
         location_type = self._parse_location_type(location_type)
 
         if not self.is_symmetric:
-            raise AssertionError(
+            raise NotImplementedError(
                 "Currently we have not taken into account other projections "
                 "for more complicated CylindricalMeshes"
             )

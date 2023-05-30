@@ -1,5 +1,6 @@
 import unittest
 import numpy as np
+import pytest
 
 import discretize
 from discretize import tests, utils
@@ -582,6 +583,77 @@ class TestCyl3DMesh(unittest.TestCase):
         self.assertEqual(np.linalg.norm((v - self.mesh.vectorNy)), 0)
         v = np.r_[0, 2, 3]
         self.assertEqual(np.linalg.norm((v - self.mesh.vectorNz)), 0)
+
+
+def test_non_sym_errors():
+    mesh = discretize.CylindricalMesh([5, 5, 5])
+    # bad cartesian setter
+    with pytest.raises(ValueError, match="cartesian origin"):
+        mesh.cartesian_origin = [0, 1]
+
+    # no cell gradients
+    with pytest.raises(NotImplementedError, match="Cell Grad is not yet implemented."):
+        mesh.cell_gradient_x
+
+    # no cell gradients
+    with pytest.raises(NotImplementedError, match="Cell Grad is not yet implemented."):
+        mesh.stencil_cell_gradient_y
+
+    # no cell gradients
+    with pytest.raises(NotImplementedError, match="Cell Grad is not yet implemented."):
+        mesh.stencil_cell_gradient_z
+
+    # no cell gradients
+    with pytest.raises(NotImplementedError, match="Cell Grad is not yet implemented."):
+        mesh.stencil_cell_gradient
+
+    # no cell gradients
+    with pytest.raises(NotImplementedError, match="Cell Grad is not yet implemented."):
+        mesh.cell_gradient
+
+    # bad deflation key
+
+    # no cell gradients
+    with pytest.raises(ValueError, match="Location must be a grid location"):
+        mesh._deflation_matrix("CCV")
+
+    # bad location type
+    with pytest.raises(ValueError, match="Unrecognized location type"):
+        mesh.get_interpolation_matrix([0, 0, 0], "bad")
+
+    with pytest.raises(
+        NotImplementedError, match="for more complicated CylindricalMeshes"
+    ):
+        mesh.get_interpolation_matrix_cartesian_mesh([0, 0, 0], "edge_x")
+
+
+def test_sym_errors():
+    mesh = discretize.CylindricalMesh([5, 1, 5])
+    # no full edge lengths for symmetric
+    with pytest.raises(NotImplementedError):
+        mesh._edge_lengths_full
+
+    # no y faces
+    with pytest.raises(
+        AttributeError, match="There are no y-faces on the Cyl Symmetric mesh"
+    ):
+        mesh.face_y_areas
+
+    # no x edges
+    with pytest.raises(
+        AttributeError, match="There are no x-edges on a cyl symmetric mesh"
+    ):
+        mesh.average_edge_x_to_cell
+
+    # no z edges
+    with pytest.raises(
+        AttributeError, match="There are no z-edges on a cyl symmetric mesh"
+    ):
+        mesh.average_edge_z_to_cell
+
+    # no items for symmetric
+    with pytest.raises(ValueError, match="Symmetric CylindricalMesh does not support"):
+        mesh.get_interpolation_matrix([0, 0, 0], "edges_x")
 
 
 if __name__ == "__main__":
