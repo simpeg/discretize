@@ -1172,7 +1172,7 @@ class CylindricalMesh(
         is_br[-1] = True
         is_br = is_br.reshape(-1, order="F")
         # Theta face is on a boundary if not wrapped
-        is_bt = np.zeros(self._shape_total_faces_y, dtype=bool)
+        is_bt = np.zeros(self._shape_total_faces_y, dtype=bool, order="F")
         if not self.is_wrapped:
             is_bt[:, [0, -1]] = True
         is_bt = is_bt.reshape(-1, order="F")
@@ -1195,12 +1195,23 @@ class CylindricalMesh(
     def boundary_face_outward_normals(self):  # NOQA D102
         # Documentation inherited from discretize.base.BaseMesh
         normals = self.face_normals[self._is_boundary_face]
-        # need to switch the direction of the bottom z faces
-        # there should be n_cells_theta * n_cells_z, radial faces
+
+        # determine which to flip
+        neg_x = np.zeros(self._shape_total_faces_x, dtype=bool, order="F")
+        neg_x[0] = True
+        neg_x = neg_x.reshape(-1, order="F")
+        neg_y = np.zeros(self._shape_total_faces_y, dtype=bool, order="F")
+        neg_y[:, 0] = True
+        neg_y = neg_y.reshape(-1, order="F")
+        neg_z = np.zeros(self._shape_total_faces_z, dtype=bool, order="F")
+        neg_z[:, :, 0] = True
+        neg_z = neg_z.reshape(-1, order="F")
+        neg = np.r_[
+            neg_x[~self._ishanging_faces_x], neg_y[~self._ishanging_faces_y], neg_z
+        ][self._is_boundary_face]
+
         # then n_cells_theta * n_cells_r, bottom faces,
-        n1 = self.shape_cells[1] * self.shape_cells[2]
-        n2 = self.shape_cells[0] * self.shape_cells[1]
-        normals[n1 : n1 + n2] *= -1
+        normals[neg] = -normals[neg]
         return normals
 
     @property

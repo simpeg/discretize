@@ -40,64 +40,6 @@ cylE3 = lambda M, ex, ey, ez: np.vstack(
 )
 
 
-class TestAverageSimple(unittest.TestCase):
-    def setUp(self):
-        n = 10
-        hx = np.random.rand(n)
-        hy = np.random.rand(n)
-        hy = hy * 2 * np.pi / hy.sum()
-        hz = np.random.rand(n)
-        self.mesh = discretize.CylMesh([hx, hy, hz])
-
-    def test_constantEdges(self):
-        funR = lambda r, t, z: r
-        funT = lambda r, t, z: r  # theta edges don't exist at the center of the mesh
-        funZ = lambda r, t, z: z
-
-        Ec = cylE3(self.mesh, funR, funT, funZ)
-        E = self.mesh.projectEdgeVector(Ec)
-
-        aveE = self.mesh.aveE2CCV * E
-
-        aveE_anaR = funR(
-            self.mesh.gridCC[:, 0], self.mesh.gridCC[:, 1], self.mesh.gridCC[:, 2]
-        )
-        aveE_anaT = funT(
-            self.mesh.gridCC[:, 0], self.mesh.gridCC[:, 1], self.mesh.gridCC[:, 2]
-        )
-        aveE_anaZ = funZ(
-            self.mesh.gridCC[:, 0], self.mesh.gridCC[:, 1], self.mesh.gridCC[:, 2]
-        )
-
-        aveE_ana = np.hstack([aveE_anaR, aveE_anaT, aveE_anaZ])
-
-        assert np.linalg.norm(aveE - aveE_ana) < 1e-10
-
-    def test_simplefct(self):
-        funR = lambda r, t, z: r
-        funT = lambda r, t, z: r
-        funZ = lambda r, t, z: z
-
-        Fc = cylF3(self.mesh, funR, funT, funZ)
-        F = self.mesh.projectFaceVector(Fc)
-
-        aveF = self.mesh.aveF2CCV * F
-
-        aveF_anaR = funR(
-            self.mesh.gridCC[:, 0], self.mesh.gridCC[:, 1], self.mesh.gridCC[:, 2]
-        )
-        aveF_anaT = funT(
-            self.mesh.gridCC[:, 0], self.mesh.gridCC[:, 1], self.mesh.gridCC[:, 2]
-        )
-        aveF_anaZ = funZ(
-            self.mesh.gridCC[:, 0], self.mesh.gridCC[:, 1], self.mesh.gridCC[:, 2]
-        )
-
-        aveF_ana = np.hstack([aveF_anaR, aveF_anaT, aveF_anaZ])
-
-        assert np.linalg.norm(aveF - aveF_ana) < 1e-10
-
-
 class FaceInnerProductFctsIsotropic(object):
     def fcts(self):
         j = sympy.Matrix(

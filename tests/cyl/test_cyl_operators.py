@@ -4,6 +4,7 @@ import discretize.tests as tests
 import sympy as sp
 from sympy.vector import CoordSys3D, gradient, divergence, curl
 import pytest
+import scipy.sparse as spr
 
 C = CoordSys3D(
     "C",
@@ -107,12 +108,26 @@ PARTAZIMUTH = {
 MESHTYPES = SYMMETRIC | NONSYMMETRIC
 
 
+def get_integration_limits(mesh_type):
+    if mesh_type in ZEROSTART:
+        r_lims = [0, 1]
+    else:
+        r_lims = [1, 2]
+
+    if mesh_type in PARTAZIMUTH:
+        t_lims = [0, sp.pi / 4]
+    else:
+        t_lims = [0, 2 * sp.pi]
+    z_lims = [0, 1]
+    return r_lims, t_lims, z_lims
+
+
 @pytest.mark.parametrize("mesh_type", MESHTYPES)
 def test_edge_curl(mesh_type):
     def get_error(n_cells):
         mesh, h = setup_mesh(mesh_type, n_cells)
 
-        if "sym" in mesh_type:
+        if mesh_type in SYMMETRIC:
             w = sw_func
             cw = csw_func
         else:
@@ -156,7 +171,7 @@ def test_face_divergence(mesh_type):
     def get_error(n_cells):
         mesh, h = setup_mesh(mesh_type, n_cells)
 
-        if "sym" in mesh_type:
+        if mesh_type in SYMMETRIC:
             w = sw_func
             dw = dsw_func
         else:
@@ -179,7 +194,7 @@ def test_face_divergence(mesh_type):
 def test_ave_edge_to_face(mesh_type):
     def get_error(n_cells):
         mesh, h = setup_mesh(mesh_type, n_cells)
-        if "sym" in mesh_type:
+        if mesh_type in SYMMETRIC:
             u = su_func
         else:
             u = u_func
@@ -197,7 +212,7 @@ def test_ave_edge_to_face(mesh_type):
 def test_ave_edge_to_cell(mesh_type):
     def get_error(n_cells):
         mesh, h = setup_mesh(mesh_type, n_cells)
-        if "sym" in mesh_type:
+        if mesh_type in SYMMETRIC:
             u = su_func
         else:
             u = u_func
@@ -215,7 +230,7 @@ def test_ave_edge_to_cell(mesh_type):
 def test_ave_face_to_cell(mesh_type):
     def get_error(n_cells):
         mesh, h = setup_mesh(mesh_type, n_cells)
-        if "sym" in mesh_type:
+        if mesh_type in SYMMETRIC:
             u = su_func
         else:
             u = u_func
@@ -233,7 +248,7 @@ def test_ave_face_to_cell(mesh_type):
 def test_ave_cell_to_face(mesh_type):
     def get_error(n_cells):
         mesh, h = setup_mesh(mesh_type, n_cells)
-        if "sym" in mesh_type:
+        if mesh_type in SYMMETRIC:
             u = su_func
         else:
             u = u_func
@@ -251,7 +266,7 @@ def test_ave_cell_to_face(mesh_type):
 def test_ave_node_to_cell(mesh_type):
     def get_error(n_cells):
         mesh, h = setup_mesh(mesh_type, n_cells)
-        if "sym" in mesh_type:
+        if mesh_type in SYMMETRIC:
             u = su_func
         else:
             u = u_func
@@ -269,7 +284,7 @@ def test_ave_node_to_cell(mesh_type):
 def test_ave_node_to_face(mesh_type):
     def get_error(n_cells):
         mesh, h = setup_mesh(mesh_type, n_cells)
-        if "sym" in mesh_type:
+        if mesh_type in SYMMETRIC:
             u = su_func
         else:
             u = u_func
@@ -287,7 +302,7 @@ def test_ave_node_to_face(mesh_type):
 def test_ave_face_to_cell_vector(mesh_type):
     def get_error(n_cells):
         mesh, h = setup_mesh(mesh_type, n_cells)
-        if "sym" in mesh_type:
+        if mesh_type in SYMMETRIC:
             w = sw_func
         else:
             w = w_func
@@ -296,7 +311,7 @@ def test_ave_face_to_cell_vector(mesh_type):
 
         ave = mesh.average_face_to_cell_vector @ Ee
         ana = w(*mesh.cell_centers.T)
-        if "sym" in mesh_type:
+        if mesh_type in SYMMETRIC:
             ana = ana[:, [0, 2]]
         ana = ana.reshape(-1, order="F")
         err = np.linalg.norm((ave - ana), np.inf)
@@ -309,7 +324,7 @@ def test_ave_face_to_cell_vector(mesh_type):
 def test_ave_edge_to_cell_vector(mesh_type):
     def get_error(n_cells):
         mesh, h = setup_mesh(mesh_type, n_cells)
-        if "sym" in mesh_type:
+        if mesh_type in SYMMETRIC:
             w = sw_func
         else:
             w = w_func
@@ -318,7 +333,7 @@ def test_ave_edge_to_cell_vector(mesh_type):
 
         ave = mesh.average_edge_to_cell_vector @ Ee
         ana = w(*mesh.cell_centers.T)
-        if "sym" in mesh_type:
+        if mesh_type in SYMMETRIC:
             ana = ana[:, [1]]
         ana = ana.reshape(-1, order="F")
         err = np.linalg.norm((ave - ana), np.inf)
@@ -347,16 +362,7 @@ def test_mimetic_curl_grad(mesh_type):
 
 @pytest.mark.parametrize("mesh_type", MESHTYPES)
 def test_simple_edge_inner_product(mesh_type):
-    if mesh_type in ZEROSTART:
-        r_lims = [0, 1]
-    else:
-        r_lims = [1, 2]
-
-    if mesh_type in PARTAZIMUTH:
-        t_lims = [0, sp.pi / 4]
-    else:
-        t_lims = [0, 2 * sp.pi]
-    z_lims = [0, 1]
+    r_lims, t_lims, z_lims = get_integration_limits(mesh_type)
 
     if mesh_type in SYMMETRIC:
         # only theta edges
@@ -381,16 +387,7 @@ def test_simple_edge_inner_product(mesh_type):
 
 @pytest.mark.parametrize("mesh_type", MESHTYPES)
 def test_simple_face_inner_product(mesh_type):
-    if mesh_type in ZEROSTART:
-        r_lims = [0, 1]
-    else:
-        r_lims = [1, 2]
-
-    if mesh_type in PARTAZIMUTH:
-        t_lims = [0, sp.pi / 4]
-    else:
-        t_lims = [0, 2 * sp.pi]
-    z_lims = [0, 1]
+    r_lims, t_lims, z_lims = get_integration_limits(mesh_type)
 
     if mesh_type in SYMMETRIC:
         # no theta faces
@@ -411,3 +408,142 @@ def test_simple_face_inner_product(mesh_type):
     Mf = mesh.get_face_inner_product()
     num = f.T @ Mf @ f
     np.testing.assert_allclose(num, ana)
+
+
+@pytest.mark.parametrize("mesh_type", NONSYMMETRIC)
+def test_simple_edge_ave(mesh_type):
+    func = lambda r, t, z: np.c_[r, r, z]
+    mesh, _ = setup_mesh(mesh_type, 10)
+    e_ana = mesh.project_edge_vector(func(*mesh.edges.T))
+    ave_e = mesh.aveE2CCV @ e_ana
+
+    ana_cc = func(*mesh.cell_centers.T).reshape(-1, order="F")
+
+    np.testing.assert_allclose(ave_e, ana_cc)
+
+
+@pytest.mark.parametrize("mesh_type", NONSYMMETRIC)
+def test_simple_face_ave(mesh_type):
+    func = lambda r, t, z: np.c_[r, r, z]
+    mesh, _ = setup_mesh(mesh_type, 10)
+    f_ana = mesh.project_face_vector(func(*mesh.faces.T))
+    ave_f = mesh.aveF2CCV @ f_ana
+
+    ana_cc = func(*mesh.cell_centers.T).reshape(-1, order="F")
+
+    np.testing.assert_allclose(ave_f, ana_cc)
+
+
+@pytest.mark.parametrize("mesh_type", NONSYMMETRIC)
+def test_gradient_boundary_integral(mesh_type):
+    u_simp = C.R**2 + sp.cos(C.T) + C.Z**2
+    gu_simp = gradient(u_simp)
+    v_simp = C.R**2 * C.r + C.R * C.t + C.R * C.Z * C.z
+
+    u_sfunc = sp.lambdify((C.R, C.T, C.Z), u_simp, "numpy")
+    v_sfunc = lambdify_vector((C.R, C.T, C.Z), (C.r, C.t, C.z), v_simp)
+
+    # int_V grad_u dot w dV
+    r_lims, t_lims, z_lims = get_integration_limits(mesh_type)
+
+    ana = float(
+        sp.integrate(
+            gu_simp.dot(v_simp) * C.R, (C.R, *r_lims), (C.T, *t_lims), (C.Z, *z_lims)
+        )
+    )
+
+    def get_error(n_cells):
+        mesh, h = setup_mesh(mesh_type, n_cells)
+
+        u_cc = u_sfunc(*mesh.cell_centers.T)
+        w_f = mesh.project_face_vector(v_sfunc(*mesh.faces.T))
+        u_bf = u_sfunc(*mesh.boundary_faces.T)
+
+        D = mesh.face_divergence
+        M_c = spr.diags(mesh.cell_volumes)
+        M_bf = mesh.boundary_face_scalar_integral
+
+        d1 = (w_f.T @ D.T) @ M_c @ u_cc
+        d2 = w_f.T @ M_bf @ u_bf
+
+        discrete_val = -d1 + d2
+        err = np.abs(ana - discrete_val)
+        return err, h
+
+    tests.assert_expected_order(get_error, [10, 20, 30])
+
+
+@pytest.mark.parametrize("mesh_type", NONSYMMETRIC)
+def test_div_boundary_integral(mesh_type):
+    u_simp = C.R**2 + sp.cos(C.T) + C.Z**2
+    v_simp = C.R**2 * C.r + C.R * C.t + C.R * C.Z * C.z
+    dv_simp = divergence(v_simp)
+
+    u_sfunc = sp.lambdify((C.R, C.T, C.Z), u_simp, "numpy")
+    v_sfunc = lambdify_vector((C.R, C.T, C.Z), (C.r, C.t, C.z), v_simp)
+
+    r_lims, t_lims, z_lims = get_integration_limits(mesh_type)
+
+    ana = float(
+        sp.integrate(
+            u_simp * dv_simp * C.R, (C.R, *r_lims), (C.T, *t_lims), (C.Z, *z_lims)
+        )
+    )
+
+    def get_error(n_cells):
+        mesh, h = setup_mesh(mesh_type, n_cells)
+
+        u_n = u_sfunc(*mesh.nodes.T)
+        v_e = mesh.project_edge_vector(v_sfunc(*mesh.edges.T))
+        v_bn = v_sfunc(*mesh.boundary_nodes.T).reshape(-1, order="F")
+
+        M_e = mesh.get_edge_inner_product()
+        G = mesh.nodal_gradient
+        M_bn = mesh.boundary_node_vector_integral
+
+        d1 = (u_n.T @ G.T) @ M_e @ v_e
+        d2 = u_n.T @ (M_bn @ v_bn)
+
+        discrete_val = -d1 + d2
+        err = np.abs(ana - discrete_val)
+        return err, h
+
+    tests.assert_expected_order(get_error, [10, 20, 30])
+
+
+@pytest.mark.parametrize("mesh_type", NONSYMMETRIC)
+def test_curl_boundary_integral(mesh_type):
+    w_simp = C.R**2 * C.Z * C.r + sp.sin(C.R) * C.Z * C.t + C.R**3 * C.z
+    v_simp = C.R**2 * C.r + C.R * C.t + C.R * C.Z * C.z
+    cw_simp = curl(w_simp)
+
+    w_sfunc = lambdify_vector((C.R, C.T, C.Z), (C.r, C.t, C.z), w_simp)
+    v_sfunc = lambdify_vector((C.R, C.T, C.Z), (C.r, C.t, C.z), v_simp)
+
+    r_lims, t_lims, z_lims = get_integration_limits(mesh_type)
+
+    ana = float(
+        sp.integrate(
+            cw_simp.dot(v_simp) * C.R, (C.R, *r_lims), (C.T, *t_lims), (C.Z, *z_lims)
+        )
+    )
+
+    def get_error(n_cells):
+        mesh, h = setup_mesh(mesh_type, n_cells)
+
+        w_f = mesh.project_face_vector(w_sfunc(*mesh.faces.T))
+        v_e = mesh.project_edge_vector(v_sfunc(*mesh.edges.T))
+        w_be = w_sfunc(*mesh.boundary_edges.T).reshape(-1, order="F")
+
+        M_f = mesh.get_face_inner_product()
+        Curl = mesh.edge_curl
+        M_be = mesh.boundary_edge_vector_integral
+
+        d1 = (v_e.T @ Curl.T) @ M_f @ w_f
+        d2 = v_e.T @ (M_be @ w_be)
+
+        discrete_val = d1 - d2
+        err = np.abs(ana - discrete_val)
+        return err, h
+
+    tests.assert_expected_order(get_error, [10, 20, 30])
