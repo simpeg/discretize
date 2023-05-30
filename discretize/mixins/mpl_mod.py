@@ -2580,6 +2580,8 @@ class Slicer(object):
         # Create subplots
         self.fig = plt.gcf()
         self.fig.subplots_adjust(wspace=0.075, hspace=0.1)
+        # To capture mouse scroll in notebooks (otherwise it is hard to slice through volume)
+        self.fig.canvas.capture_scroll = True
 
         # X-Y
         self.ax1 = plt.subplot2grid(
