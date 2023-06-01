@@ -159,6 +159,27 @@ class TensorMesh(
         fmt += "</table>\n"
         return fmt
 
+    def __getitem__(self, indices):
+        """
+        Return the boundaries of a single cell of the mesh
+        """
+        if len(indices) != self.dim:
+            raise ValueError(
+                f"Invalid indices {indices}. "
+                f"They should match the number of dimensions of the mesh ({self.dim})."
+            )
+        if self.dim == 2:
+            i, j = indices
+            x1, x2 = self.nodes_x[i], self.nodes_x[i + 1]
+            y1, y2 = self.nodes_y[j], self.nodes_y[j + 1]
+            return (x1, x2, y1, y2)
+        if self.dim == 3:
+            i, j, k = indices
+            x1, x2 = self.nodes_x[i], self.nodes_x[i + 1]
+            y1, y2 = self.nodes_y[j], self.nodes_y[j + 1]
+            z1, z2 = self.nodes_z[k], self.nodes_z[k + 1]
+            return (x1, x2, y1, y2, z1, z2)
+
     # --------------- Geometries ---------------------
     @property
     def cell_volumes(self):  # NOQA D102
