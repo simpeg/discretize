@@ -60,7 +60,7 @@ class TestInterpolation1D(discretize.tests.OrderTest):
         elif "N" == self.type:
             grid = call1(funX, self.M.gridN)
 
-        comp = self.M.getInterpolationMat(self.LOCS, self.type) * grid
+        comp = self.M.get_interpolation_matrix(self.LOCS, self.type) * grid
 
         err = np.linalg.norm((comp - ana), 2)
         return err
@@ -82,12 +82,12 @@ class TestOutliersInterp1D(unittest.TestCase):
 
     def test_outliers(self):
         M = discretize.TensorMesh([4])
-        Q = M.getInterpolationMat(
+        Q = M.get_interpolation_matrix(
             np.array([[0], [0.126], [0.127]]), "CC", zeros_outside=True
         )
         x = np.arange(4) + 1
         self.assertTrue(np.linalg.norm(Q * x - np.r_[1, 1.004, 1.008]) < TOL)
-        Q = M.getInterpolationMat(
+        Q = M.get_interpolation_matrix(
             np.array([[-1], [0.126], [0.127]]), "CC", zeros_outside=True
         )
         self.assertTrue(np.linalg.norm(Q * x - np.r_[0, 1.004, 1.008]) < TOL)
@@ -114,16 +114,16 @@ class TestInterpolation2d(discretize.tests.OrderTest):
 
         if "F" in self.type:
             Fc = cartF2(self.M, funX, funY)
-            grid = self.M.projectFaceVector(Fc)
+            grid = self.M.project_face_vector(Fc)
         elif "E" in self.type:
             Ec = cartE2(self.M, funX, funY)
-            grid = self.M.projectEdgeVector(Ec)
+            grid = self.M.project_edge_vector(Ec)
         elif "CC" == self.type:
             grid = call2(funX, self.M.gridCC)
         elif "N" == self.type:
             grid = call2(funX, self.M.gridN)
 
-        comp = self.M.getInterpolationMat(self.LOCS, self.type) * grid
+        comp = self.M.get_interpolation_matrix(self.LOCS, self.type) * grid
 
         err = np.linalg.norm((comp - ana), np.inf)
         return err
@@ -161,19 +161,19 @@ class TestInterpolation2d(discretize.tests.OrderTest):
 
 class TestInterpolationSymmetricCyl_Simple(unittest.TestCase):
     def test_simpleInter(self):
-        M = discretize.CylMesh([4, 1, 1])
+        M = discretize.CylindricalMesh([4, 1, 1])
         locs = np.r_[0, 0, 0.5]
         fx = np.array([[1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]])
-        self.assertTrue(np.all(fx == M.getInterpolationMat(locs, "Fx").todense()))
+        self.assertTrue(np.all(fx == M.get_interpolation_matrix(locs, "Fx").todense()))
         fz = np.array([[0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0]])
-        self.assertTrue(np.all(fz == M.getInterpolationMat(locs, "Fz").todense()))
+        self.assertTrue(np.all(fz == M.get_interpolation_matrix(locs, "Fz").todense()))
 
     def test_exceptions(self):
-        M = discretize.CylMesh([4, 1, 1])
+        M = discretize.CylindricalMesh([4, 1, 1])
         locs = np.r_[0, 0, 0.5]
-        self.assertRaises(Exception, lambda: M.getInterpolationMat(locs, "Fy"))
-        self.assertRaises(Exception, lambda: M.getInterpolationMat(locs, "Ex"))
-        self.assertRaises(Exception, lambda: M.getInterpolationMat(locs, "Ez"))
+        self.assertRaises(Exception, lambda: M.get_interpolation_matrix(locs, "Fy"))
+        self.assertRaises(Exception, lambda: M.get_interpolation_matrix(locs, "Ex"))
+        self.assertRaises(Exception, lambda: M.get_interpolation_matrix(locs, "Ez"))
 
 
 class TestInterpolationSymCyl(discretize.tests.OrderTest):
@@ -202,12 +202,12 @@ class TestInterpolationSymCyl(discretize.tests.OrderTest):
         if "Fx" == self.type:
             Fc = cartF2Cyl(self.M, funX, funY)
             Fc = np.c_[Fc[:, 0], np.zeros(self.M.nF), Fc[:, 1]]
-            grid = self.M.projectFaceVector(Fc)
+            grid = self.M.project_face_vector(Fc)
         elif "Fz" == self.type:
             Fc = cartF2Cyl(self.M, funX, funY)
             Fc = np.c_[Fc[:, 0], np.zeros(self.M.nF), Fc[:, 1]]
 
-            grid = self.M.projectFaceVector(Fc)
+            grid = self.M.project_face_vector(Fc)
         elif "E" in self.type:
             Ec = cartE2Cyl(self.M, funX, funY)
             grid = Ec[:, 1]
@@ -216,7 +216,7 @@ class TestInterpolationSymCyl(discretize.tests.OrderTest):
         elif "N" == self.type:
             grid = call2(funX, self.M.gridN)
 
-        comp = self.M.getInterpolationMat(self.LOCS, self.type) * grid
+        comp = self.M.get_interpolation_matrix(self.LOCS, self.type) * grid
 
         err = np.linalg.norm((comp - ana), np.inf)
         return err
@@ -267,7 +267,7 @@ class TestInterpolationCyl(discretize.tests.OrderTest):
         elif "N" == self.type:
             v = func(*mesh.nodes.T)
 
-        comp = mesh.getInterpolationMat(self.LOCS, self.type) * v
+        comp = mesh.get_interpolation_matrix(self.LOCS, self.type) * v
 
         err = np.linalg.norm((comp - ana), np.inf)
         return err
@@ -337,16 +337,16 @@ class TestInterpolation3D(discretize.tests.OrderTest):
 
         if "F" in self.type:
             Fc = cartF3(self.M, funX, funY, funZ)
-            grid = self.M.projectFaceVector(Fc)
+            grid = self.M.project_face_vector(Fc)
         elif "E" in self.type:
             Ec = cartE3(self.M, funX, funY, funZ)
-            grid = self.M.projectEdgeVector(Ec)
+            grid = self.M.project_edge_vector(Ec)
         elif "CC" == self.type:
             grid = call3(funX, self.M.gridCC)
         elif "N" == self.type:
             grid = call3(funX, self.M.gridN)
 
-        comp = self.M.getInterpolationMat(self.LOCS, self.type) * grid
+        comp = self.M.get_interpolation_matrix(self.LOCS, self.type) * grid
 
         err = np.linalg.norm((comp - ana), np.inf)
         return err

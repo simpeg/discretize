@@ -151,7 +151,7 @@ class EdgeInnerProductFunctionsDiagAnisotropic(EdgeInnerProductFctsIsotropic):
 class TestCylInnerProducts_simple(unittest.TestCase):
     def setUp(self):
         n = 100.0
-        self.mesh = discretize.CylMesh([n, 1, n])
+        self.mesh = discretize.CylindricalMesh([n, 1, n])
 
     def test_FaceInnerProductIsotropic(self):
         # Here we will make up some j vectors that vary in space
@@ -159,7 +159,7 @@ class TestCylInnerProducts_simple(unittest.TestCase):
 
         fcts = FaceInnerProductFctsIsotropic()
         sig, jv = fcts.vectors(self.mesh)
-        MfSig = self.mesh.getFaceInnerProduct(sig)
+        MfSig = self.mesh.get_face_inner_product(sig)
         numeric_ans = jv.T.dot(MfSig.dot(jv))
 
         ans = fcts.sol()
@@ -179,7 +179,7 @@ class TestCylInnerProducts_simple(unittest.TestCase):
 
         fcts = FaceInnerProductFunctionsDiagAnisotropic()
         sig, jv = fcts.vectors(self.mesh)
-        MfSig = self.mesh.getFaceInnerProduct(sig)
+        MfSig = self.mesh.get_face_inner_product(sig)
         numeric_ans = jv.T.dot(MfSig.dot(jv))
 
         ans = fcts.sol()
@@ -199,7 +199,7 @@ class TestCylInnerProducts_simple(unittest.TestCase):
 
         fcts = EdgeInnerProductFctsIsotropic()
         sig, hv = fcts.vectors(self.mesh)
-        MeSig = self.mesh.getEdgeInnerProduct(sig)
+        MeSig = self.mesh.get_edge_inner_product(sig)
         numeric_ans = hv.T.dot(MeSig.dot(hv))
 
         ans = fcts.sol()
@@ -220,7 +220,7 @@ class TestCylInnerProducts_simple(unittest.TestCase):
         fcts = EdgeInnerProductFunctionsDiagAnisotropic()
 
         sig, hv = fcts.vectors(self.mesh)
-        MeSig = self.mesh.getEdgeInnerProduct(sig)
+        MeSig = self.mesh.get_edge_inner_product(sig)
         numeric_ans = hv.T.dot(MeSig.dot(hv))
 
         ans = fcts.sol()
@@ -242,7 +242,7 @@ class TestCylFaceInnerProducts_Order(tests.OrderTest):
     def getError(self):
         fct = FaceInnerProductFctsIsotropic()
         sig, jv = fct.vectors(self.M)
-        Msig = self.M.getFaceInnerProduct(sig)
+        Msig = self.M.get_face_inner_product(sig)
         return float(fct.sol()) - jv.T.dot(Msig.dot(jv))
 
     def test_order(self):
@@ -256,7 +256,7 @@ class TestCylEdgeInnerProducts_Order(tests.OrderTest):
     def getError(self):
         fct = EdgeInnerProductFctsIsotropic()
         sig, ht = fct.vectors(self.M)
-        Msig = self.M.getEdgeInnerProduct(sig)
+        Msig = self.M.get_edge_inner_product(sig)
         return float(fct.sol()) - ht.T.dot(Msig.dot(ht))
 
     def test_order(self):
@@ -270,7 +270,7 @@ class TestCylFaceInnerProductsDiagAnisotropic_Order(tests.OrderTest):
     def getError(self):
         fct = FaceInnerProductFunctionsDiagAnisotropic()
         sig, jv = fct.vectors(self.M)
-        Msig = self.M.getFaceInnerProduct(sig)
+        Msig = self.M.get_face_inner_product(sig)
         return float(fct.sol()) - jv.T.dot(Msig.dot(jv))
 
     def test_order(self):
@@ -280,7 +280,7 @@ class TestCylFaceInnerProductsDiagAnisotropic_Order(tests.OrderTest):
 class TestCylInnerProducts_Deriv(unittest.TestCase):
     def setUp(self):
         n = 2
-        self.mesh = discretize.CylMesh([n, 1, n])
+        self.mesh = discretize.CylindricalMesh([n, 1, n])
         self.face_vec = np.random.rand(self.mesh.nF)
         self.edge_vec = np.random.rand(self.mesh.nE)
         # make up a smooth function
@@ -288,101 +288,113 @@ class TestCylInnerProducts_Deriv(unittest.TestCase):
 
     def test_FaceInnerProductIsotropicDeriv(self):
         def fun(x):
-            MfSig = self.mesh.getFaceInnerProduct(x)
-            MfSigDeriv = self.mesh.getFaceInnerProductDeriv(self.x0)
+            MfSig = self.mesh.get_face_inner_product(x)
+            MfSigDeriv = self.mesh.get_face_inner_product_deriv(self.x0)
             return MfSig * self.face_vec, MfSigDeriv(self.face_vec)
 
         print("Testing FaceInnerProduct Isotropic")
         return self.assertTrue(
-            tests.checkDerivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
+            tests.check_derivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
         )
 
     def test_FaceInnerProductIsotropicDerivInvProp(self):
         def fun(x):
-            MfSig = self.mesh.getFaceInnerProduct(x, invProp=True)
-            MfSigDeriv = self.mesh.getFaceInnerProductDeriv(self.x0, invProp=True)
+            MfSig = self.mesh.get_face_inner_product(x, invert_model=True)
+            MfSigDeriv = self.mesh.get_face_inner_product_deriv(
+                self.x0, invert_model=True
+            )
             return MfSig * self.face_vec, MfSigDeriv(self.face_vec)
 
         print("Testing FaceInnerProduct Isotropic InvProp")
         return self.assertTrue(
-            tests.checkDerivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
+            tests.check_derivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
         )
 
     def test_FaceInnerProductIsotropicDerivInvMat(self):
         def fun(x):
-            MfSig = self.mesh.getFaceInnerProduct(x, invMat=True)
-            MfSigDeriv = self.mesh.getFaceInnerProductDeriv(self.x0, invMat=True)
+            MfSig = self.mesh.get_face_inner_product(x, invert_matrix=True)
+            MfSigDeriv = self.mesh.get_face_inner_product_deriv(
+                self.x0, invert_matrix=True
+            )
             return MfSig * self.face_vec, MfSigDeriv(self.face_vec)
 
         print("Testing FaceInnerProduct Isotropic InvMat")
         return self.assertTrue(
-            tests.checkDerivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
+            tests.check_derivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
         )
 
     def test_FaceInnerProductIsotropicDerivInvPropInvMat(self):
         def fun(x):
-            MfSig = self.mesh.getFaceInnerProduct(x, invProp=True, invMat=True)
-            MfSigDeriv = self.mesh.getFaceInnerProductDeriv(
-                self.x0, invProp=True, invMat=True
+            MfSig = self.mesh.get_face_inner_product(
+                x, invert_model=True, invert_matrix=True
+            )
+            MfSigDeriv = self.mesh.get_face_inner_product_deriv(
+                self.x0, invert_model=True, invert_matrix=True
             )
             return MfSig * self.face_vec, MfSigDeriv(self.face_vec)
 
         print("Testing FaceInnerProduct Isotropic InvProp InvMat")
         return self.assertTrue(
-            tests.checkDerivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
+            tests.check_derivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
         )
 
     def test_EdgeInnerProductIsotropicDeriv(self):
         def fun(x):
-            MeSig = self.mesh.getEdgeInnerProduct(x)
-            MeSigDeriv = self.mesh.getEdgeInnerProductDeriv(self.x0)
+            MeSig = self.mesh.get_edge_inner_product(x)
+            MeSigDeriv = self.mesh.get_edge_inner_product_deriv(self.x0)
             return MeSig * self.edge_vec, MeSigDeriv(self.edge_vec)
 
         print("Testing EdgeInnerProduct Isotropic")
         return self.assertTrue(
-            tests.checkDerivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
+            tests.check_derivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
         )
 
     def test_EdgeInnerProductIsotropicDerivInvProp(self):
         def fun(x):
-            MeSig = self.mesh.getEdgeInnerProduct(x, invProp=True)
-            MeSigDeriv = self.mesh.getEdgeInnerProductDeriv(self.x0, invProp=True)
+            MeSig = self.mesh.get_edge_inner_product(x, invert_model=True)
+            MeSigDeriv = self.mesh.get_edge_inner_product_deriv(
+                self.x0, invert_model=True
+            )
             return MeSig * self.edge_vec, MeSigDeriv(self.edge_vec)
 
         print("Testing EdgeInnerProduct Isotropic InvProp")
         return self.assertTrue(
-            tests.checkDerivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
+            tests.check_derivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
         )
 
     def test_EdgeInnerProductIsotropicDerivInvMat(self):
         def fun(x):
-            MeSig = self.mesh.getEdgeInnerProduct(x, invMat=True)
-            MeSigDeriv = self.mesh.getEdgeInnerProductDeriv(self.x0, invMat=True)
+            MeSig = self.mesh.get_edge_inner_product(x, invert_matrix=True)
+            MeSigDeriv = self.mesh.get_edge_inner_product_deriv(
+                self.x0, invert_matrix=True
+            )
             return MeSig * self.edge_vec, MeSigDeriv(self.edge_vec)
 
         print("Testing EdgeInnerProduct Isotropic InvMat")
         return self.assertTrue(
-            tests.checkDerivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
+            tests.check_derivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
         )
 
     def test_EdgeInnerProductIsotropicDerivInvPropInvMat(self):
         def fun(x):
-            MeSig = self.mesh.getEdgeInnerProduct(x, invProp=True, invMat=True)
-            MeSigDeriv = self.mesh.getEdgeInnerProductDeriv(
-                self.x0, invProp=True, invMat=True
+            MeSig = self.mesh.get_edge_inner_product(
+                x, invert_model=True, invert_matrix=True
+            )
+            MeSigDeriv = self.mesh.get_edge_inner_product_deriv(
+                self.x0, invert_model=True, invert_matrix=True
             )
             return MeSig * self.edge_vec, MeSigDeriv(self.edge_vec)
 
         print("Testing EdgeInnerProduct Isotropic InvProp InvMat")
         return self.assertTrue(
-            tests.checkDerivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
+            tests.check_derivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
         )
 
 
 class TestCylInnerProductsAnisotropic_Deriv(unittest.TestCase):
     def setUp(self):
         n = 60
-        self.mesh = discretize.CylMesh([n, 1, n])
+        self.mesh = discretize.CylindricalMesh([n, 1, n])
         self.face_vec = np.random.rand(self.mesh.nF)
         self.edge_vec = np.random.rand(self.mesh.nE)
         # make up a smooth function
@@ -401,13 +413,13 @@ class TestCylInnerProductsAnisotropic_Deriv(unittest.TestCase):
             eye = sp.eye(self.mesh.nC)
             P = sp.vstack([sp.hstack([eye, zero, eye])])
 
-            MfSig = self.mesh.getFaceInnerProduct(x)
-            MfSigDeriv = self.mesh.getFaceInnerProductDeriv(x0)
+            MfSig = self.mesh.get_face_inner_product(x)
+            MfSigDeriv = self.mesh.get_face_inner_product_deriv(x0)
             return MfSig * self.face_vec, MfSigDeriv(self.face_vec) * P.T
 
         print("Testing FaceInnerProduct Anisotropic")
         return self.assertTrue(
-            tests.checkDerivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
+            tests.check_derivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
         )
 
     def test_FaceInnerProductAnisotropicDerivInvProp(self):
@@ -419,13 +431,13 @@ class TestCylInnerProductsAnisotropic_Deriv(unittest.TestCase):
             eye = sp.eye(self.mesh.nC)
             P = sp.vstack([sp.hstack([eye, zero, eye])])
 
-            MfSig = self.mesh.getFaceInnerProduct(x, invProp=True)
-            MfSigDeriv = self.mesh.getFaceInnerProductDeriv(x0, invProp=True)
+            MfSig = self.mesh.get_face_inner_product(x, invert_model=True)
+            MfSigDeriv = self.mesh.get_face_inner_product_deriv(x0, invert_model=True)
             return MfSig * self.face_vec, MfSigDeriv(self.face_vec) * P.T
 
         print("Testing FaceInnerProduct Anisotropic InvProp")
         return self.assertTrue(
-            tests.checkDerivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
+            tests.check_derivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
         )
 
     def test_FaceInnerProductAnisotropicDerivInvMat(self):
@@ -437,13 +449,13 @@ class TestCylInnerProductsAnisotropic_Deriv(unittest.TestCase):
             eye = sp.eye(self.mesh.nC)
             P = sp.vstack([sp.hstack([eye, zero, eye])])
 
-            MfSig = self.mesh.getFaceInnerProduct(x, invMat=True)
-            MfSigDeriv = self.mesh.getFaceInnerProductDeriv(x0, invMat=True)
+            MfSig = self.mesh.get_face_inner_product(x, invert_matrix=True)
+            MfSigDeriv = self.mesh.get_face_inner_product_deriv(x0, invert_matrix=True)
             return MfSig * self.face_vec, MfSigDeriv(self.face_vec) * P.T
 
         print("Testing FaceInnerProduct Anisotropic InvMat")
         return self.assertTrue(
-            tests.checkDerivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
+            tests.check_derivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
         )
 
     def test_FaceInnerProductAnisotropicDerivInvPropInvMat(self):
@@ -455,15 +467,17 @@ class TestCylInnerProductsAnisotropic_Deriv(unittest.TestCase):
             eye = sp.eye(self.mesh.nC)
             P = sp.vstack([sp.hstack([eye, zero, eye])])
 
-            MfSig = self.mesh.getFaceInnerProduct(x, invProp=True, invMat=True)
-            MfSigDeriv = self.mesh.getFaceInnerProductDeriv(
-                x0, invProp=True, invMat=True
+            MfSig = self.mesh.get_face_inner_product(
+                x, invert_model=True, invert_matrix=True
+            )
+            MfSigDeriv = self.mesh.get_face_inner_product_deriv(
+                x0, invert_model=True, invert_matrix=True
             )
             return MfSig * self.face_vec, MfSigDeriv(self.face_vec) * P.T
 
         print("Testing FaceInnerProduct Anisotropic InvProp InvMat")
         return self.assertTrue(
-            tests.checkDerivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
+            tests.check_derivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
         )
 
     def test_EdgeInnerProductAnisotropicDeriv(self):
@@ -475,13 +489,13 @@ class TestCylInnerProductsAnisotropic_Deriv(unittest.TestCase):
             eye = sp.eye(self.mesh.nC)
             P = sp.vstack([sp.hstack([zero, eye, zero])])
 
-            MeSig = self.mesh.getEdgeInnerProduct(x.reshape(self.mesh.nC, 3))
-            MeSigDeriv = self.mesh.getEdgeInnerProductDeriv(x0)
+            MeSig = self.mesh.get_edge_inner_product(x.reshape(self.mesh.nC, 3))
+            MeSigDeriv = self.mesh.get_edge_inner_product_deriv(x0)
             return MeSig * self.edge_vec, MeSigDeriv(self.edge_vec) * P.T
 
         print("Testing EdgeInnerProduct Anisotropic")
         return self.assertTrue(
-            tests.checkDerivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
+            tests.check_derivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
         )
 
     def test_EdgeInnerProductAnisotropicDerivInvProp(self):
@@ -493,13 +507,13 @@ class TestCylInnerProductsAnisotropic_Deriv(unittest.TestCase):
             eye = sp.eye(self.mesh.nC)
             P = sp.vstack([sp.hstack([zero, eye, zero])])
 
-            MeSig = self.mesh.getEdgeInnerProduct(x, invProp=True)
-            MeSigDeriv = self.mesh.getEdgeInnerProductDeriv(x0, invProp=True)
+            MeSig = self.mesh.get_edge_inner_product(x, invert_model=True)
+            MeSigDeriv = self.mesh.get_edge_inner_product_deriv(x0, invert_model=True)
             return MeSig * self.edge_vec, MeSigDeriv(self.edge_vec) * P.T
 
         print("Testing EdgeInnerProduct Anisotropic InvProp")
         return self.assertTrue(
-            tests.checkDerivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
+            tests.check_derivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
         )
 
     def test_EdgeInnerProductAnisotropicDerivInvMat(self):
@@ -511,13 +525,13 @@ class TestCylInnerProductsAnisotropic_Deriv(unittest.TestCase):
             eye = sp.eye(self.mesh.nC)
             P = sp.vstack([sp.hstack([zero, eye, zero])])
 
-            MeSig = self.mesh.getEdgeInnerProduct(x, invMat=True)
-            MeSigDeriv = self.mesh.getEdgeInnerProductDeriv(x0, invMat=True)
+            MeSig = self.mesh.get_edge_inner_product(x, invert_matrix=True)
+            MeSigDeriv = self.mesh.get_edge_inner_product_deriv(x0, invert_matrix=True)
             return MeSig * self.edge_vec, MeSigDeriv(self.edge_vec) * P.T
 
         print("Testing EdgeInnerProduct Anisotropic InvMat")
         return self.assertTrue(
-            tests.checkDerivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
+            tests.check_derivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
         )
 
     def test_EdgeInnerProductAnisotropicDerivInvPropInvMat(self):
@@ -529,15 +543,17 @@ class TestCylInnerProductsAnisotropic_Deriv(unittest.TestCase):
             eye = sp.eye(self.mesh.nC)
             P = sp.vstack([sp.hstack([zero, eye, zero])])
 
-            MeSig = self.mesh.getEdgeInnerProduct(x, invProp=True, invMat=True)
-            MeSigDeriv = self.mesh.getEdgeInnerProductDeriv(
-                x0, invProp=True, invMat=True
+            MeSig = self.mesh.get_edge_inner_product(
+                x, invert_model=True, invert_matrix=True
+            )
+            MeSigDeriv = self.mesh.get_edge_inner_product_deriv(
+                x0, invert_model=True, invert_matrix=True
             )
             return MeSig * self.edge_vec, MeSigDeriv(self.edge_vec) * P.T
 
         print("Testing EdgeInnerProduct Anisotropic InvProp InvMat")
         return self.assertTrue(
-            tests.checkDerivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
+            tests.check_derivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
         )
 
 

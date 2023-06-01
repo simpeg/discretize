@@ -148,7 +148,7 @@ class EdgeInnerProductFctsIsotropic(object):
 class TestCylInnerProducts_simple(unittest.TestCase):
     def setUp(self):
         n = 100.0
-        self.mesh = discretize.CylMesh([n, n, n])
+        self.mesh = discretize.CylindricalMesh([n, n, n])
 
     def test_FaceInnerProductIsotropic(self):
         # Here we will make up some j vectors that vary in space
@@ -156,7 +156,7 @@ class TestCylInnerProducts_simple(unittest.TestCase):
 
         fcts = FaceInnerProductFctsIsotropic()
         sig, jv = fcts.vectors(self.mesh)
-        MfSig = self.mesh.getFaceInnerProduct(sig)
+        MfSig = self.mesh.get_face_inner_product(sig)
         numeric_ans = jv.T.dot(MfSig.dot(jv))
 
         ans = fcts.sol()
@@ -176,7 +176,7 @@ class TestCylInnerProducts_simple(unittest.TestCase):
 
         fcts = EdgeInnerProductFctsIsotropic()
         sig, hv = fcts.vectors(self.mesh)
-        MeSig = self.mesh.getEdgeInnerProduct(sig)
+        MeSig = self.mesh.get_edge_inner_product(sig)
         numeric_ans = hv.T.dot(MeSig.dot(hv))
 
         ans = fcts.sol()
@@ -198,7 +198,7 @@ class TestCylFaceInnerProducts_Order(tests.OrderTest):
     def getError(self):
         fct = FaceInnerProductFctsIsotropic()
         sig, jv = fct.vectors(self.M)
-        Msig = self.M.getFaceInnerProduct(sig)
+        Msig = self.M.get_face_inner_product(sig)
         return float(fct.sol()) - jv.T.dot(Msig.dot(jv))
 
     def test_order(self):
@@ -212,7 +212,7 @@ class TestCylEdgeInnerProducts_Order(tests.OrderTest):
     def getError(self):
         fct = EdgeInnerProductFctsIsotropic()
         sig, hv = fct.vectors(self.M)
-        Msig = self.M.getEdgeInnerProduct(sig)
+        Msig = self.M.get_edge_inner_product(sig)
         return float(fct.sol()) - hv.T.dot(Msig.dot(hv))
 
     def test_order(self):

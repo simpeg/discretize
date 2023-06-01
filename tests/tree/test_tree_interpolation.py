@@ -68,26 +68,26 @@ class TestInterpolation2d(discretize.tests.OrderTest):
 
         if "F" in self.type:
             Fc = cartF2(self.M, funX, funY)
-            grid = self.M.projectFaceVector(Fc)
+            grid = self.M.project_face_vector(Fc)
         elif "E" in self.type:
             Ec = cartE2(self.M, funX, funY)
-            grid = self.M.projectEdgeVector(Ec)
+            grid = self.M.project_edge_vector(Ec)
         elif "CC" == self.type:
             grid = call2(funX, self.M.gridCC)
         elif "N" == self.type:
             grid = call2(funX, self.M.gridN)
 
-        comp = self.M.getInterpolationMat(self.LOCS, self.type) * grid
+        comp = self.M.get_interpolation_matrix(self.LOCS, self.type) * grid
 
         err = np.linalg.norm((comp - ana), np.inf)
         if plotIt:
             import matplotlib.pyplot as plt
 
             ax = plt.subplot(211)
-            self.M.plotGrid(ax=ax)
+            self.M.plot_grid(ax=ax)
             plt.plot(self.LOCS[:, 0], self.LOCS[:, 1], "mx")
             # ax = plt.subplot(111)
-            # self.M.plotImage(call2(funX, self.M.gridCC), ax=ax)
+            # self.M.plot_image(call2(funX, self.M.gridCC), ax=ax)
             ax = plt.subplot(212)
             plt.plot(self.LOCS[:, 1], comp, "bx")
             plt.plot(self.LOCS[:, 1], ana, "ro")
@@ -153,16 +153,16 @@ class TestInterpolation3D(discretize.tests.OrderTest):
 
         if "F" in self.type:
             Fc = cartF3(self.M, funX, funY, funZ)
-            grid = self.M.projectFaceVector(Fc)
+            grid = self.M.project_face_vector(Fc)
         elif "E" in self.type:
             Ec = cartE3(self.M, funX, funY, funZ)
-            grid = self.M.projectEdgeVector(Ec)
+            grid = self.M.project_edge_vector(Ec)
         elif "CC" == self.type:
             grid = call3(funX, self.M.gridCC)
         elif "N" == self.type:
             grid = call3(funX, self.M.gridN)
 
-        A = self.M.getInterpolationMat(self.LOCS, self.type)
+        A = self.M.get_interpolation_matrix(self.LOCS, self.type)
         comp = A * grid
 
         err = np.linalg.norm((comp - ana), np.inf)

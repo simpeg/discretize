@@ -3,9 +3,9 @@ import unittest
 import discretize
 
 
-def doTestFace(h, rep, fast, meshType, invProp=False, invMat=False):
+def doTestFace(h, rep, fast, meshType, invert_model=False, invert_matrix=False):
     if meshType == "Curv":
-        hRect = discretize.utils.exampleLrmGrid(h, "rotate")
+        hRect = discretize.utils.example_curvilinear_grid(h, "rotate")
         mesh = discretize.CurvilinearMesh(hRect)
     elif meshType == "Tree":
         mesh = discretize.TreeMesh(h, levels=3)
@@ -16,9 +16,11 @@ def doTestFace(h, rep, fast, meshType, invProp=False, invMat=False):
     sig = np.random.rand(1) if rep == 0 else np.random.rand(mesh.nC * rep)
 
     def fun(sig):
-        M = mesh.getFaceInnerProduct(sig, invProp=invProp, invMat=invMat)
-        Md = mesh.getFaceInnerProductDeriv(
-            sig, invProp=invProp, invMat=invMat, doFast=fast
+        M = mesh.get_face_inner_product(
+            sig, invert_model=invert_model, invert_matrix=invert_matrix
+        )
+        Md = mesh.get_face_inner_product_deriv(
+            sig, invert_model=invert_model, invert_matrix=invert_matrix, do_fast=fast
         )
         return M * v, Md(v)
 
@@ -28,14 +30,14 @@ def doTestFace(h, rep, fast, meshType, invProp=False, invMat=False):
         h,
         rep,
         fast,
-        ("harmonic" if invProp and invMat else "standard"),
+        ("harmonic" if invert_model and invert_matrix else "standard"),
     )
-    return discretize.tests.checkDerivative(fun, sig, num=5, plotIt=False)
+    return discretize.tests.check_derivative(fun, sig, num=5, plotIt=False)
 
 
-def doTestEdge(h, rep, fast, meshType, invProp=False, invMat=False):
+def doTestEdge(h, rep, fast, meshType, invert_model=False, invert_matrix=False):
     if meshType == "Curv":
-        hRect = discretize.utils.exampleLrmGrid(h, "rotate")
+        hRect = discretize.utils.example_curvilinear_grid(h, "rotate")
         mesh = discretize.CurvilinearMesh(hRect)
     elif meshType == "Tree":
         mesh = discretize.TreeMesh(h, levels=3)
@@ -46,9 +48,11 @@ def doTestEdge(h, rep, fast, meshType, invProp=False, invMat=False):
     sig = np.random.rand(1) if rep == 0 else np.random.rand(mesh.nC * rep)
 
     def fun(sig):
-        M = mesh.getEdgeInnerProduct(sig, invProp=invProp, invMat=invMat)
-        Md = mesh.getEdgeInnerProductDeriv(
-            sig, invProp=invProp, invMat=invMat, doFast=fast
+        M = mesh.get_edge_inner_product(
+            sig, invert_model=invert_model, invert_matrix=invert_matrix
+        )
+        Md = mesh.get_edge_inner_product_deriv(
+            sig, invert_model=invert_model, invert_matrix=invert_matrix, do_fast=fast
         )
         return M * v, Md(v)
 
@@ -58,9 +62,9 @@ def doTestEdge(h, rep, fast, meshType, invProp=False, invMat=False):
         h,
         rep,
         fast,
-        ("harmonic" if invProp and invMat else "standard"),
+        ("harmonic" if invert_model and invert_matrix else "standard"),
     )
-    return discretize.tests.checkDerivative(fun, sig, num=5, plotIt=False)
+    return discretize.tests.check_derivative(fun, sig, num=5, plotIt=False)
 
 
 class TestInnerProductsDerivsTensor(unittest.TestCase):
