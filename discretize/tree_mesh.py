@@ -742,6 +742,21 @@ class TreeMesh(
             self.finalize()
 
     @property
+    def nodes_all(self):
+        """Gridded hanging and non-hanging nodes locations.
+
+        This property returns a numpy array of shape
+        ``(n_nodes + n_hanging_nodes, dim)`` containing gridded locations for
+        all hanging and non-hanging nodes in the mesh.
+
+        Returns
+        -------
+        (n_nodes + n_hanging_nodes, dim) numpy.ndarray of float
+            Gridded hanging and non-hanging node locations
+        """
+        return np.vstack((self.nodes, self.hanging_nodes))
+
+    @property
     def vntF(self):
         """Vector number of total faces along each axis.
 
