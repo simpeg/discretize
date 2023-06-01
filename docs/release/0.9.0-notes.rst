@@ -9,7 +9,9 @@
 May 31, 2023
 
 This is a minor release with several pieces of additional functionality, and some
-small bug fixes.
+small bug fixes. It also stages the updates for the `1.0.0` release by changing the
+``FutureWarnings`` to actual errors that describe to the user of how to update
+their code. All of these errors and messages will be removed on `1.0.0`.
 
 ``CylindricalMesh``
 -------------------
