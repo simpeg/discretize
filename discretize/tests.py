@@ -878,14 +878,14 @@ def assert_isadjoint(
 
 # DEPRECATIONS
 setupMesh = deprecate_function(
-    setup_mesh, "setupMesh", removal_version="1.0.0", future_warn=True
+    setup_mesh, "setupMesh", removal_version="1.0.0", error=True
 )
 Rosenbrock = deprecate_function(
-    rosenbrock, "Rosenbrock", removal_version="1.0.0", future_warn=True
+    rosenbrock, "Rosenbrock", removal_version="1.0.0", error=True
 )
 checkDerivative = deprecate_function(
-    check_derivative, "checkDerivative", removal_version="1.0.0", future_warn=True
+    check_derivative, "checkDerivative", removal_version="1.0.0", error=True
 )
 getQuadratic = deprecate_function(
-    get_quadratic, "getQuadratic", removal_version="1.0.0", future_warn=True
+    get_quadratic, "getQuadratic", removal_version="1.0.0", error=True
 )

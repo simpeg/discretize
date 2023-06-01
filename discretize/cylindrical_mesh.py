@@ -1805,21 +1805,15 @@ class CylindricalMesh(
 
         """
         if "locType" in kwargs:
-            warnings.warn(
-                "The locType keyword argument has been deprecated, please use location_type. "
-                "This will be removed in discretize 1.0.0",
-                FutureWarning,
-                stacklevel=2,
+            raise TypeError(
+                "The locType keyword argument has been removed, please use location_type. "
+                "This will be removed in discretize 1.0.0"
             )
-            location_type = kwargs["locType"]
         if "zerosOutside" in kwargs:
-            warnings.warn(
-                "The zerosOutside keyword argument has been deprecated, please use zeros_outside. "
-                "This will be removed in discretize 1.0.0",
-                FutureWarning,
-                stacklevel=2,
+            raise TypeError(
+                "The zerosOutside keyword argument has been removed, please use zeros_outside. "
+                "This will be removed in discretize 1.0.0"
             )
-            zeros_outside = kwargs["zerosOutside"]
 
         location_type = self._parse_location_type(location_type)
         if self.is_symmetric and location_type in ["edges_x", "edges_z", "faces_y"]:
@@ -2044,13 +2038,10 @@ class CylindricalMesh(
             cartesian coordinates for the cylindrical grid
         """
         if "locType" in kwargs:
-            warnings.warn(
-                "The locType keyword argument has been deprecated, please use location_type. "
-                "This will be removed in discretize 1.0.0",
-                FutureWarning,
-                stacklevel=2,
+            raise TypeError(
+                "The locType keyword argument has been removed, please use location_type. "
+                "This will be removed in discretize 1.0.0"
             )
-            location_type = kwargs["locType"]
         try:
             grid = getattr(self, location_type).copy()
         except AttributeError:
@@ -2089,21 +2080,15 @@ class CylindricalMesh(
             on another mesh
         """
         if "locType" in kwargs:
-            warnings.warn(
-                "The locType keyword argument has been deprecated, please use location_type. "
-                "This will be removed in discretize 1.0.0",
-                FutureWarning,
-                stacklevel=2,
+            raise TypeError(
+                "The locType keyword argument has been removed, please use location_type. "
+                "This will be removed in discretize 1.0.0"
             )
-            location_type = kwargs["locType"]
         if "locTypeTo" in kwargs:
-            warnings.warn(
-                "The locTypeTo keyword argument has been deprecated, please use location_type_to. "
-                "This will be removed in discretize 1.0.0",
-                FutureWarning,
-                stacklevel=2,
+            raise TypeError(
+                "The locTypeTo keyword argument has been removed, please use location_type_to. "
+                "This will be removed in discretize 1.0.0"
             )
-            location_type_to = kwargs["locTypeTo"]
 
         location_type = self._parse_location_type(location_type)
 
@@ -2186,41 +2171,41 @@ class CylindricalMesh(
 
     # DEPRECATIONS
     areaFx = deprecate_property(
-        "face_x_areas", "areaFx", removal_version="1.0.0", future_warn=True
+        "face_x_areas", "areaFx", removal_version="1.0.0", error=True
     )
     areaFy = deprecate_property(
-        "face_y_areas", "areaFy", removal_version="1.0.0", future_warn=True
+        "face_y_areas", "areaFy", removal_version="1.0.0", error=True
     )
     areaFz = deprecate_property(
-        "face_z_areas", "areaFz", removal_version="1.0.0", future_warn=True
+        "face_z_areas", "areaFz", removal_version="1.0.0", error=True
     )
     edgeEx = deprecate_property(
-        "edge_x_lengths", "edgeEx", removal_version="1.0.0", future_warn=True
+        "edge_x_lengths", "edgeEx", removal_version="1.0.0", error=True
     )
     edgeEy = deprecate_property(
-        "edge_y_lengths", "edgeEy", removal_version="1.0.0", future_warn=True
+        "edge_y_lengths", "edgeEy", removal_version="1.0.0", error=True
     )
     edgeEz = deprecate_property(
-        "edge_z_lengths", "edgeEz", removal_version="1.0.0", future_warn=True
+        "edge_z_lengths", "edgeEz", removal_version="1.0.0", error=True
     )
     isSymmetric = deprecate_property(
-        "is_symmetric", "isSymmetric", removal_version="1.0.0", future_warn=True
+        "is_symmetric", "isSymmetric", removal_version="1.0.0", error=True
     )
     cartesianOrigin = deprecate_property(
-        "cartesian_origin", "cartesianOrigin", removal_version="1.0.0", future_warn=True
+        "cartesian_origin", "cartesianOrigin", removal_version="1.0.0", error=True
     )
     getInterpolationMatCartMesh = deprecate_method(
         "get_interpolation_matrix_cartesian_mesh",
         "getInterpolationMatCartMesh",
         removal_version="1.0.0",
-        future_warn=True,
+        error=True,
     )
     cartesianGrid = deprecate_method(
-        "cartesian_grid", "cartesianGrid", removal_version="1.0.0", future_warn=True
+        "cartesian_grid", "cartesianGrid", removal_version="1.0.0", error=True
     )
 
 
-@deprecate_class(removal_version="1.0.0", future_warn=True)
+@deprecate_class(removal_version="1.0.0", error=True)
 class CylMesh(CylindricalMesh):
     """Deprecated calling of `discretize.CylindricalMesh`."""
 

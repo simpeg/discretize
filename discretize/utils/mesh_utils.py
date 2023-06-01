@@ -227,13 +227,10 @@ def closest_points_index(mesh, pts, grid_loc="CC", **kwargs):
     >>> plt.show()
     """
     if "gridLoc" in kwargs:
-        warnings.warn(
-            "The gridLoc keyword argument has been deprecated, please use grid_loc. "
-            "This will be removed in discretize 1.0.0",
-            FutureWarning,
-            stacklevel=2,
+        raise TypeError(
+            "The gridLoc keyword argument has been removed, please use grid_loc. "
+            "This message will be removed in discretize 1.0.0",
         )
-        grid_loc = kwargs["gridLoc"]
     warnings.warn(
         "The closest_points_index utilty function has been moved to be a method of "
         "a class object. Please access it as mesh.closest_points_index(). This will "
@@ -1205,14 +1202,14 @@ def example_simplex_mesh(rect_shape):
 
 
 meshTensor = deprecate_function(
-    unpack_widths, "meshTensor", removal_version="1.0.0", future_warn=True
+    unpack_widths, "meshTensor", removal_version="1.0.0", error=True
 )
 closestPoints = deprecate_function(
-    closest_points_index, "closestPoints", removal_version="1.0.0", future_warn=True
+    closest_points_index, "closestPoints", removal_version="1.0.0", error=True
 )
 ExtractCoreMesh = deprecate_function(
-    extract_core_mesh, "ExtractCoreMesh", removal_version="1.0.0", future_warn=True
+    extract_core_mesh, "ExtractCoreMesh", removal_version="1.0.0", error=True
 )
 closest_points = deprecate_function(
-    closest_points_index, "closest_points", removal_version="1.0.0", future_warn=True
+    closest_points_index, "closest_points", removal_version="1.0.0", error=True
 )

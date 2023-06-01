@@ -522,14 +522,14 @@ exampleLrmGrid = deprecate_function(
     example_curvilinear_grid,
     "exampleLrmGrid",
     removal_version="1.0.0",
-    future_warn=True,
+    error=True,
 )
 volTetra = deprecate_function(
-    volume_tetrahedron, "volTetra", removal_version="1.0.0", future_warn=True
+    volume_tetrahedron, "volTetra", removal_version="1.0.0", error=True
 )
 indexCube = deprecate_function(
-    index_cube, "indexCube", removal_version="1.0.0", future_warn=True
+    index_cube, "indexCube", removal_version="1.0.0", error=True
 )
 faceInfo = deprecate_function(
-    face_info, "faceInfo", removal_version="1.0.0", future_warn=True
+    face_info, "faceInfo", removal_version="1.0.0", error=True
 )

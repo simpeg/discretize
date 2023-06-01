@@ -525,24 +525,17 @@ class BaseRegularMesh(BaseMesh):
           `axis_u` will be removed in discretize 1.0.0. This functionality was replaced
           by the :py:attr:`~.BaseRegularMesh.orientation`.
         """
-        warnings.warn(
-            "The axis_u property is deprecated, please access as self.orientation[0]. "
-            "This will be removed in discretize 1.0.0.",
-            FutureWarning,
-            stacklevel=2,
+        raise NotImplementedError(
+            "The axis_u property is rmoved, please access as self.orientation[0]. "
+            "This will be removed in discretize 1.0.0."
         )
-        return self.orientation[0]
 
     @axis_u.setter
     def axis_u(self, value):
-        warnings.warn(
-            "Setting the axis_u property is deprecated, and now unchecked, please "
-            "directly set the self.orientation property. This will be removed in "
-            "discretize 1.0.0.",
-            FutureWarning,
-            stacklevel=2,
+        raise NotImplementedError(
+            "The axis_u property is removed, please access as self.orientation[0]. "
+            "This will be removed in discretize 1.0.0."
         )
-        self.orientation[0] = value
 
     @property
     def axis_v(self):
@@ -552,25 +545,17 @@ class BaseRegularMesh(BaseMesh):
           `axis_v` will be removed in discretize 1.0.0. This functionality was replaced
           by the :py:attr:`~.BaseRegularMesh.orientation`.
         """
-        warnings.warn(
-            "The axis_v property is deprecated, please access as self.orientation[1]. "
-            "This will be removed in discretize 1.0.0.",
-            FutureWarning,
-            stacklevel=2,
+        raise NotImplementedError(
+            "The axis_v property is removed, please access as self.orientation[1]. "
+            "This will be removed in discretize 1.0.0."
         )
-        return self.orientation[1]
 
     @axis_v.setter
     def axis_v(self, value):
-        warnings.warn(
-            "Setting the axis_v property is deprecated, and now unchecked, please "
-            "directly set the self.orientation property. This will be removed in "
-            "discretize 1.0.0.",
-            FutureWarning,
-            stacklevel=2,
+        raise NotImplementedError(
+            "The axis_v property is removed, please access as self.orientation[1]. "
+            "This will be removed in discretize 1.0.0."
         )
-        value = value / np.linalg.norm(value)
-        self.orientation[1] = value
 
     @property
     def axis_w(self):
@@ -580,25 +565,17 @@ class BaseRegularMesh(BaseMesh):
           `axis_w` will be removed in discretize 1.0.0. This functionality was replaced
           by the :py:attr:`~.BaseRegularMesh.orientation`.
         """
-        warnings.warn(
-            "The axis_w property is deprecated, please access as self.orientation[2]. "
-            "This will be removed in discretize 1.0.0.",
-            FutureWarning,
-            stacklevel=2,
+        raise NotImplementedError(
+            "The axis_w property is removed, please access as self.orientation[2]. "
+            "This will be removed in discretize 1.0.0."
         )
-        return self.orientation[2]
 
     @axis_w.setter
     def axis_w(self, value):
-        warnings.warn(
-            "Setting the axis_v property is deprecated, and now unchecked, please "
-            "directly set the self.orientation property. This will be removed in "
-            "discretize 1.0.0.",
-            FutureWarning,
-            stacklevel=2,
+        raise NotImplementedError(
+            "The axis_w property is removed, please access as self.orientation[2]. "
+            "This will be removed in discretize 1.0.0."
         )
-        value = value / np.linalg.norm(value)
-        self.orientation[2] = value
 
 
 class BaseRectangularMesh(BaseRegularMesh):
@@ -874,27 +851,20 @@ class BaseRectangularMesh(BaseRegularMesh):
 
         """
         if "xType" in kwargs:
-            warnings.warn(
-                "The xType keyword argument has been deprecated, please use x_type. "
-                "This will be removed in discretize 1.0.0",
-                FutureWarning,
-                stacklevel=2,
+            raise TypeError(
+                "The xType keyword argument has been removed, please use x_type. "
+                "This will be removed in discretize 1.0.0"
             )
             x_type = kwargs["xType"]
         if "outType" in kwargs:
-            warnings.warn(
-                "The outType keyword argument has been deprecated, please use out_type. "
+            raise TypeError(
+                "The outType keyword argument has been removed, please use out_type. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
-                stacklevel=2,
             )
-            out_type = kwargs["outType"]
         if "format" in kwargs:
-            warnings.warn(
-                "The format keyword argument has been deprecated, please use return_format. "
+            raise TypeError(
+                "The format keyword argument has been removed, please use return_format. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
-                stacklevel=2,
             )
             return_format = kwargs["format"]
 
@@ -1031,130 +1001,76 @@ class BaseRectangularMesh(BaseRegularMesh):
             return switchKernal(x)
 
     # DEPRECATED
-    r = deprecate_method("reshape", "r", removal_version="1.0.0", future_warn=True)
+    r = deprecate_method("reshape", "r", removal_version="1.0.0", error=True)
 
     @property
     def nCx(self):
         """Number of cells in the x direction.
 
-        Returns
-        -------
-        int
-
-        .. deprecated:: 0.5.0
-          `nCx` will be removed in discretize 1.0.0, it is replaced by
-          `mesh.shape_cells[0]` to reduce namespace clutter.
+        `nCx` will be removed in discretize 1.0.0, it is replaced by
+        `mesh.shape_cells[0]` to reduce namespace clutter.
         """
-        warnings.warn(
-            "nCx has been deprecated, please access as mesh.shape_cells[0]",
-            FutureWarning,
-            stacklevel=2,
+        raise NotImplementedError(
+            "The nCx property is removed, please access as mesh.shape_cells[0]. "
+            "This message will be removed in discretize 1.0.0."
         )
-        return self.shape_cells[0]
 
     @property
     def nCy(self):
         """Number of cells in the y direction.
 
-        Returns
-        -------
-        int or None
-            None if dim < 2
-
-        .. deprecated:: 0.5.0
-          `nCy` will be removed in discretize 1.0.0, it is replaced by
-          `mesh.shape_cells[1]` to reduce namespace clutter.
+        `nCy` will be removed in discretize 1.0.0, it is replaced by
+        `mesh.shape_cells[1]` to reduce namespace clutter.
         """
-        warnings.warn(
-            "nCy has been deprecated, please access as mesh.shape_cells[1]",
-            FutureWarning,
-            stacklevel=2,
+        raise NotImplementedError(
+            "The nCy property is removed, please access as mesh.shape_cells[1]. "
+            "This message will be removed in discretize 1.0.0."
         )
-        if self.dim < 2:
-            return None
-        return self.shape_cells[1]
 
     @property
     def nCz(self):
         """Number of cells in the z direction.
 
-        Returns
-        -------
-        int or None
-            None if dim < 3
-
-        .. deprecated:: 0.5.0
-          `nCz` will be removed in discretize 1.0.0, it is replaced by
-          `mesh.shape_cells[2]` to reduce namespace clutter.
+        `nCz` will be removed in discretize 1.0.0, it is replaced by
+        `mesh.shape_cells[2]` to reduce namespace clutter.
         """
-        warnings.warn(
-            "nCz has been deprecated, please access as mesh.shape_cells[2]",
-            FutureWarning,
-            stacklevel=2,
+        raise NotImplementedError(
+            "The nCz property is removed, please access as mesh.shape_cells[2]. "
+            "This message will be removed in discretize 1.0.0."
         )
-        if self.dim < 3:
-            return None
-        return self.shape_cells[2]
 
     @property
     def nNx(self):
         """Number of nodes in the x-direction.
 
-        Returns
-        -------
-        int
-
-        .. deprecated:: 0.5.0
-          `nNx` will be removed in discretize 1.0.0, it is replaced by
-          `mesh.shape_nodes[0]` to reduce namespace clutter.
+        `nNx` will be removed in discretize 1.0.0, it is replaced by
+        `mesh.shape_nodes[0]` to reduce namespace clutter.
         """
-        warnings.warn(
-            "nNx has been deprecated, please access as mesh.shape_nodes[0]",
-            FutureWarning,
-            stacklevel=2,
+        raise NotImplementedError(
+            "The nNx property is removed, please access as mesh.shape_nodes[0]. "
+            "This message will be removed in discretize 1.0.0."
         )
-        return self.shape_nodes[0]
 
     @property
     def nNy(self):
         """Number of nodes in the y-direction.
 
-        Returns
-        -------
-        int or None
-            None if dim < 2
-
-        .. deprecated:: 0.5.0
-          `nNy` will be removed in discretize 1.0.0, it is replaced by
-          `mesh.shape_nodes[1]` to reduce namespace clutter.
+        `nNy` will be removed in discretize 1.0.0, it is replaced by
+        `mesh.shape_nodes[1]` to reduce namespace clutter.
         """
-        warnings.warn(
-            "nNy has been deprecated, please access as mesh.shape_nodes[1]",
-            FutureWarning,
-            stacklevel=2,
+        raise NotImplementedError(
+            "The nNy property is removed, please access as mesh.shape_nodes[1]. "
+            "This message will be removed in discretize 1.0.0."
         )
-        if self.dim < 2:
-            return None
-        return self.shape_nodes[1]
 
     @property
     def nNz(self):
         """Number of nodes in the z-direction.
 
-        Returns
-        -------
-        int or None
-            None if dim < 3
-
-        .. deprecated:: 0.5.0
-          `nNz` will be removed in discretize 1.0.0, it is replaced by
-          `mesh.shape_nodes[2]` to reduce namespace clutter.
+        `nNz` will be removed in discretize 1.0.0, it is replaced by
+        `mesh.shape_nodes[2]` to reduce namespace clutter.
         """
-        warnings.warn(
-            "nNz has been deprecated, please access as mesh.shape_nodes[2]",
-            FutureWarning,
-            stacklevel=2,
+        raise NotImplementedError(
+            "The nNz property is removed, please access as mesh.shape_nodes[2]. "
+            "This message will be removed in discretize 1.0.0."
         )
-        if self.dim < 3:
-            return None
-        return self.shape_nodes[2]

@@ -3507,66 +3507,66 @@ class DiffOperators(BaseMesh):
 
     # DEPRECATED
     cellGrad = deprecate_property(
-        "cell_gradient", "cellGrad", removal_version="1.0.0", future_warn=True
+        "cell_gradient", "cellGrad", removal_version="1.0.0", error=True
     )
     cellGradBC = deprecate_property(
-        "cell_gradient_BC", "cellGradBC", removal_version="1.0.0", future_warn=True
+        "cell_gradient_BC", "cellGradBC", removal_version="1.0.0", error=True
     )
     cellGradx = deprecate_property(
-        "cell_gradient_x", "cellGradx", removal_version="1.0.0", future_warn=True
+        "cell_gradient_x", "cellGradx", removal_version="1.0.0", error=True
     )
     cellGrady = deprecate_property(
-        "cell_gradient_y", "cellGrady", removal_version="1.0.0", future_warn=True
+        "cell_gradient_y", "cellGrady", removal_version="1.0.0", error=True
     )
     cellGradz = deprecate_property(
-        "cell_gradient_z", "cellGradz", removal_version="1.0.0", future_warn=True
+        "cell_gradient_z", "cellGradz", removal_version="1.0.0", error=True
     )
     faceDivx = deprecate_property(
-        "face_x_divergence", "faceDivx", removal_version="1.0.0", future_warn=True
+        "face_x_divergence", "faceDivx", removal_version="1.0.0", error=True
     )
     faceDivy = deprecate_property(
-        "face_y_divergence", "faceDivy", removal_version="1.0.0", future_warn=True
+        "face_y_divergence", "faceDivy", removal_version="1.0.0", error=True
     )
     faceDivz = deprecate_property(
-        "face_z_divergence", "faceDivz", removal_version="1.0.0", future_warn=True
+        "face_z_divergence", "faceDivz", removal_version="1.0.0", error=True
     )
     _cellGradStencil = deprecate_property(
         "stencil_cell_gradient",
         "_cellGradStencil",
         removal_version="1.0.0",
-        future_warn=True,
+        error=True,
     )
     _cellGradxStencil = deprecate_property(
         "stencil_cell_gradient_x",
         "_cellGradxStencil",
         removal_version="1.0.0",
-        future_warn=True,
+        error=True,
     )
     _cellGradyStencil = deprecate_property(
         "stencil_cell_gradient_y",
         "_cellGradyStencil",
         removal_version="1.0.0",
-        future_warn=True,
+        error=True,
     )
     _cellGradzStencil = deprecate_property(
         "stencil_cell_gradient_z",
         "_cellGradzStencil",
         removal_version="1.0.0",
-        future_warn=True,
+        error=True,
     )
 
     setCellGradBC = deprecate_method(
         "set_cell_gradient_BC",
         "setCellGradBC",
         removal_version="1.0.0",
-        future_warn=True,
+        error=True,
     )
     getBCProjWF = deprecate_method(
-        "get_BC_projections", "getBCProjWF", removal_version="1.0.0", future_warn=True
+        "get_BC_projections", "getBCProjWF", removal_version="1.0.0", error=True
     )
     getBCProjWF_simple = deprecate_method(
         "get_BC_projections_simple",
         "getBCProjWF_simple",
         removal_version="1.0.0",
-        future_warn=True,
+        error=True,
     )

@@ -1770,36 +1770,36 @@ class _inftup(tuple):
 #             DEPRECATED FUNCTIONS
 ################################################
 
-sdInv = deprecate_function(sdinv, "sdInv", removal_version="1.0.0", future_warn=True)
+sdInv = deprecate_function(sdinv, "sdInv", removal_version="1.0.0", error=True)
 
 getSubArray = deprecate_function(
-    get_subarray, "getSubArray", removal_version="1.0.0", future_warn=True
+    get_subarray, "getSubArray", removal_version="1.0.0", error=True
 )
 
 inv3X3BlockDiagonal = deprecate_function(
     inverse_3x3_block_diagonal,
     "inv3X3BlockDiagonal",
     removal_version="1.0.0",
-    future_warn=True,
+    error=True,
 )
 
 inv2X2BlockDiagonal = deprecate_function(
     inverse_2x2_block_diagonal,
     "inv2X2BlockDiagonal",
     removal_version="1.0.0",
-    future_warn=True,
+    error=True,
 )
 
 makePropertyTensor = deprecate_function(
     make_property_tensor,
     "makePropertyTensor",
     removal_version="1.0.0",
-    future_warn=True,
+    error=True,
 )
 
 invPropertyTensor = deprecate_function(
     inverse_property_tensor,
     "invPropertyTensor",
     removal_version="1.0.0",
-    future_warn=True,
+    error=True,
 )
