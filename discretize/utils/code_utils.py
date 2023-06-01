@@ -325,7 +325,9 @@ def deprecate_method(
     return new_method
 
 
-def deprecate_function(new_function, old_name, removal_version=None, future_warn=False, error=False):
+def deprecate_function(
+    new_function, old_name, removal_version=None, future_warn=False, error=False
+):
     """Deprecate a function.
 
     Parameters
