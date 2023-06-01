@@ -25,7 +25,6 @@ from discretize.utils.code_utils import (
     deprecate_property,
     deprecate_method,
 )
-import warnings
 
 
 class CylindricalMesh(

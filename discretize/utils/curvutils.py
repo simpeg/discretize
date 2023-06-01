@@ -1,5 +1,4 @@
 from discretize.utils.curvilinear_utils import *  # NOQA F401,F403
-import warnings
 
 raise ImportError(
     "Importing from discretize.curvutils is deprecated behavoir. Please import "

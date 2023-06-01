@@ -325,7 +325,7 @@ def deprecate_method(
     return new_method
 
 
-def deprecate_function(new_function, old_name, removal_version=None, future_warn=False):
+def deprecate_function(new_function, old_name, removal_version=None, future_warn=False, error=False):
     """Deprecate a function.
 
     Parameters
@@ -338,6 +338,8 @@ def deprecate_function(new_function, old_name, removal_version=None, future_warn
         Which version the class will be removed in.
     future_warn : bool, optional
         Whether to issue a FutureWarning, or a DeprecationWarning.
+    error : bool, default: ``False``
+        Throw error if deprecated function no longer implemented
     """
     if future_warn:
         warn = FutureWarning
@@ -351,7 +353,7 @@ def deprecate_function(new_function, old_name, removal_version=None, future_warn
     else:
         tag = " It will be removed in a future version of discretize."
 
-    message = (f"{old_name} has been deprecated, please use {new_name}." + tag,)
+    message = f"{old_name} has been deprecated, please use {new_name}." + tag
 
     def dep_function(*args, **kwargs):
         if error:

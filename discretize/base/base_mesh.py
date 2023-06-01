@@ -1,6 +1,5 @@
 """Module for the base ``discretize`` mesh."""
 import numpy as np
-import warnings
 import os
 import json
 from scipy.spatial import KDTree

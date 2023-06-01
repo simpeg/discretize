@@ -1,5 +1,4 @@
 from discretize.utils.mesh_utils import *  # NOQA F401,F403
-import warnings
 
 raise ImportError(
     "Importing from discretize.meshutils is deprecated behavoir. Please import "

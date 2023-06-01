@@ -7,7 +7,6 @@ import numpy as np
 
 from discretize.utils import mkvc
 from discretize.utils.code_utils import deprecate_method
-import warnings
 
 try:
     from discretize.mixins.vtk_mod import (

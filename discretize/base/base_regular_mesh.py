@@ -4,7 +4,6 @@ import numpy as np
 from discretize.utils import mkvc, Identity
 from discretize.base.base_mesh import BaseMesh
 from discretize.utils.code_utils import deprecate_method
-import warnings
 
 
 class BaseRegularMesh(BaseMesh):
