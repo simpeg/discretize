@@ -5964,7 +5964,7 @@ cdef class _TreeMesh:
 
         See also
         --------
-        TreeMesh.nodes_all
+        TreeMesh.total_nodes
         """
         cdef int_t npc = 4 if self.dim == 2 else 8
         inds = np.empty((self.n_cells, npc), dtype=np.int64)

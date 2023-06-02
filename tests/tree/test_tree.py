@@ -357,18 +357,18 @@ class TestTreeMeshNodes:
             mesh.insert_cells(points, levels, finalize=True)
         return mesh
 
-    def test_nodes_all(self, sample_mesh):
+    def test_total_nodes(self, sample_mesh):
         """
-        Test if ``TreeMesh.nodes_all`` works as expected
+        Test if ``TreeMesh.total_nodes`` works as expected
         """
         n_non_hanging_nodes = sample_mesh.n_nodes
-        # Check if nodes_all contain all non hanging nodes (in the right order)
+        # Check if total_nodes contain all non hanging nodes (in the right order)
         np.testing.assert_equal(
-            sample_mesh.nodes_all[:n_non_hanging_nodes, :], sample_mesh.nodes
+            sample_mesh.total_nodes[:n_non_hanging_nodes, :], sample_mesh.nodes
         )
-        # Check if nodes_all contain all hanging nodes (in the right order)
+        # Check if total_nodes contain all hanging nodes (in the right order)
         np.testing.assert_equal(
-            sample_mesh.nodes_all[n_non_hanging_nodes:, :], sample_mesh.hanging_nodes
+            sample_mesh.total_nodes[n_non_hanging_nodes:, :], sample_mesh.hanging_nodes
         )
 
 

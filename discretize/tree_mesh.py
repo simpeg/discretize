@@ -742,7 +742,7 @@ class TreeMesh(
             self.finalize()
 
     @property
-    def nodes_all(self):
+    def total_nodes(self):
         """Gridded hanging and non-hanging nodes locations.
 
         This property returns a numpy array of shape
