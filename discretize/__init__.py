@@ -35,6 +35,7 @@ from discretize.cylindrical_mesh import CylMesh, CylindricalMesh
 from discretize.curvilinear_mesh import CurvilinearMesh
 from discretize.unstructured_mesh import SimplexMesh
 from discretize.utils.io_utils import load_mesh
+from .tensor_cell import TensorCell
 
 try:
     from discretize.tree_mesh import TreeMesh

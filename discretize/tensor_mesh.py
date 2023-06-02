@@ -1,4 +1,5 @@
 """Module housing the TensorMesh implementation."""
+import itertools
 import numpy as np
 
 from discretize.base import BaseRectangularMesh, BaseTensorMesh
@@ -6,6 +7,8 @@ from discretize.operators import DiffOperators, InnerProducts
 from discretize.mixins import InterfaceMixins, TensorMeshIO
 from discretize.utils import mkvc
 from discretize.utils.code_utils import deprecate_property
+
+from .tensor_cell import TensorCell
 
 
 class TensorMesh(
@@ -159,6 +162,24 @@ class TensorMesh(
         fmt += "</table>\n"
         return fmt
 
+    def __iter__(self):
+        """
+        Iterator over the cells
+        """
+        if self.dim == 1:
+            (nx,) = self.shape_cells
+            indices = ((i,) for i in range(nx))
+        if self.dim == 2:
+            nx, ny = self.shape_cells
+            indices = ((i, j) for j in range(ny) for i in range(nx))
+        elif self.dim == 3:
+            nx, ny, nz = self.shape_cells
+            indices = (
+                (i, j, k) for k in range(nz) for j in range(ny) for i in range(nx)
+            )
+        iterator = (self[index] for index in indices)
+        return iterator
+
     def __getitem__(self, indices):
         """
         Return the boundaries of a single cell of the mesh
@@ -168,17 +189,25 @@ class TensorMesh(
                 f"Invalid indices {indices}. "
                 f"They should match the number of dimensions of the mesh ({self.dim})."
             )
+        if self.dim == 1:
+            (i,) = indices
+            x1, x2 = self.nodes_x[i], self.nodes_x[i + 1]
+            origin = (x1,)
+            h = (x2 - x1,)
         if self.dim == 2:
             i, j = indices
             x1, x2 = self.nodes_x[i], self.nodes_x[i + 1]
             y1, y2 = self.nodes_y[j], self.nodes_y[j + 1]
-            return (x1, x2, y1, y2)
+            origin = (x1, y1)
+            h = (x2 - x1, y2 - y1)
         if self.dim == 3:
             i, j, k = indices
             x1, x2 = self.nodes_x[i], self.nodes_x[i + 1]
             y1, y2 = self.nodes_y[j], self.nodes_y[j + 1]
             z1, z2 = self.nodes_z[k], self.nodes_z[k + 1]
-            return (x1, x2, y1, y2, z1, z2)
+            origin = (x1, y1, z1)
+            h = (x2 - x1, y2 - y1, z2 - z1)
+        return TensorCell(h, origin)
 
     # --------------- Geometries ---------------------
     @property
