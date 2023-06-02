@@ -92,13 +92,13 @@ class TestTensorMeshCells:
             x1 = mesh.cell_centers - mesh.h_gridded.ravel() / 2
             x2 = mesh.cell_centers + mesh.h_gridded.ravel() / 2
             true_bounds = np.vstack([x1, x2]).T
-        if mesh.dim == 2:
+        elif mesh.dim == 2:
             x1 = mesh.cell_centers[:, 0] - mesh.h_gridded[:, 0] / 2
             x2 = mesh.cell_centers[:, 0] + mesh.h_gridded[:, 0] / 2
             y1 = mesh.cell_centers[:, 1] - mesh.h_gridded[:, 1] / 2
             y2 = mesh.cell_centers[:, 1] + mesh.h_gridded[:, 1] / 2
             true_bounds = np.vstack([x1, x2, y1, y2]).T
-        if mesh.dim == 3:
+        elif mesh.dim == 3:
             x1 = mesh.cell_centers[:, 0] - mesh.h_gridded[:, 0] / 2
             x2 = mesh.cell_centers[:, 0] + mesh.h_gridded[:, 0] / 2
             y1 = mesh.cell_centers[:, 1] - mesh.h_gridded[:, 1] / 2
