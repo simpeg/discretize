@@ -681,7 +681,7 @@ class BaseTensorMesh(BaseRegularMesh):
             )
         return inside
 
-    def _getInterpolationMat(
+    def _get_interpolation_matrix(
         self, loc, location_type="cell_centers", zeros_outside=False
     ):
         """Produce an interpolation matrix.
@@ -761,7 +761,7 @@ class BaseTensorMesh(BaseRegularMesh):
 
         else:
             raise NotImplementedError(
-                "getInterpolationMat: location_type=="
+                "get_interpolation_matrix: location_type=="
                 + location_type
                 + " and mesh.dim=="
                 + str(self.dim)
@@ -786,12 +786,12 @@ class BaseTensorMesh(BaseRegularMesh):
                 "The zerosOutside keyword argument has been removed, please use zeros_outside. "
                 "This will be removed in discretize 1.0.0",
             )
-        return self._getInterpolationMat(loc, location_type, zeros_outside)
+        return self._get_interpolation_matrix(loc, location_type, zeros_outside)
 
     def _fastInnerProduct(
         self, projection_type, model=None, invert_model=False, invert_matrix=False
     ):
-        """Fast version of getFaceInnerProduct.
+        """Fast version of get_face_inner_product_deriv.
 
         This does not handle the case of a full tensor property.
 

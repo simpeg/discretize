@@ -2292,6 +2292,9 @@ class DiffOperators(BaseMesh):
         w = Pe @ self.edge_tangents
 
         n_boundary_edges = len(w)
+        print(type(self))
+        print(self.n_faces, self.n_edges)
+        print(Pf.shape, self.average_edge_to_face.shape, Pe.T.shape)
 
         Av = Pf @ self.average_edge_to_face @ Pe.T
         if self.dim > 2:

@@ -648,17 +648,17 @@ class CurvilinearMesh(
             elif self.dim == 3:
                 A, E, F, B = index_cube("AEFB", self.vnN, self.vnFx)
                 normal1, area1 = face_info(
-                    self.gridN, A, E, F, B, average=False, normalizeNormals=False
+                    self.gridN, A, E, F, B, average=False, normalize_normals=False
                 )
 
                 A, D, H, E = index_cube("ADHE", self.vnN, self.vnFy)
                 normal2, area2 = face_info(
-                    self.gridN, A, D, H, E, average=False, normalizeNormals=False
+                    self.gridN, A, D, H, E, average=False, normalize_normals=False
                 )
 
                 A, B, C, D = index_cube("ABCD", self.vnN, self.vnFz)
                 normal3, area3 = face_info(
-                    self.gridN, A, B, C, D, average=False, normalizeNormals=False
+                    self.gridN, A, B, C, D, average=False, normalize_normals=False
                 )
 
                 self._face_areas = np.r_[mkvc(area1), mkvc(area2), mkvc(area3)]

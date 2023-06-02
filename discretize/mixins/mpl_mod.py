@@ -109,7 +109,7 @@ class InterfaceMPL(object):
 
         >>> from matplotlib import pyplot as plt
         >>> import discretize
-        >>> X, Y = discretize.utils.exampleLrmGrid([10, 10], 'rotate')
+        >>> X, Y = discretize.utils.example_curvilinear_grid([10, 10], 'rotate')
         >>> M = discretize.CurvilinearMesh([X, Y])
         >>> M.plot_grid()
         >>> plt.show()
@@ -118,7 +118,7 @@ class InterfaceMPL(object):
 
         >>> from matplotlib import pyplot as plt
         >>> import discretize
-        >>> X, Y, Z = discretize.utils.exampleLrmGrid([5, 5, 5], 'rotate')
+        >>> X, Y, Z = discretize.utils.example_curvilinear_grid([5, 5, 5], 'rotate')
         >>> M = discretize.CurvilinearMesh([X, Y, Z])
         >>> M.plot_grid()
         >>> plt.show()
@@ -640,7 +640,7 @@ class InterfaceMPL(object):
                 "v_type must be in ['{0!s}']".format("', '".join(v_typeOpts))
             )
         if not self.dim == 3:
-            raise TypeError("Must be a 3D mesh. Use plotImage.")
+            raise TypeError("Must be a 3D mesh. Use plot_image.")
         if view not in viewOpts:
             raise ValueError("view must be in ['{0!s}']".format("', '".join(viewOpts)))
         if normal not in normalOpts:
@@ -654,7 +654,7 @@ class InterfaceMPL(object):
             raise NotImplementedError("Can not plot a complex vector.")
 
         if self.dim == 2:
-            raise NotImplementedError("Must be a 3D mesh. Use plotImage.")
+            raise NotImplementedError("Must be a 3D mesh. Use plot_image.")
 
         # slice_loc errors
         if (ind is not None) and (slice_loc is not None):
@@ -1522,9 +1522,9 @@ class InterfaceMPL(object):
 
         # if slc is None, provide slices in both the theta and z directions
         if slc == "theta":
-            return self.__plotGridThetaSlice(*args, **kwargs)
+            return self.__plot_gridThetaSlice(*args, **kwargs)
         elif slc == "z":
-            return self.__plotGridZSlice(*args, **kwargs)
+            return self.__plot_gridZSlice(*args, **kwargs)
         else:
             ax = kwargs.pop("ax", None)
             if ax is not None:
@@ -1576,19 +1576,19 @@ class InterfaceMPL(object):
             kwargscart["ax"] = cartax
 
             ax = []
-            ax.append(self.__plotGridZSlice(*args, **kwargspolar))
-            ax.append(self.__plotGridThetaSlice(*args, **kwargscart))
+            ax.append(self.__plot_gridZSlice(*args, **kwargspolar))
+            ax.append(self.__plot_gridThetaSlice(*args, **kwargscart))
             plt.tight_layout()
 
         return ax
 
-    def __plotGridThetaSlice(self, *args, **kwargs):
+    def __plot_gridThetaSlice(self, *args, **kwargs):
         # make a cyl symmetric mesh
         h2d = [self.h[0], 1, self.h[2]]
         mesh2D = self.__class__(h=h2d, origin=self.origin)
         return mesh2D.plot_grid(*args, **kwargs)
 
-    def __plotGridZSlice(self, *args, **kwargs):
+    def __plot_gridZSlice(self, *args, **kwargs):
         _, plt = load_matplotlib()
         # https://github.com/matplotlib/matplotlib/issues/312
         ax = kwargs.get("ax", None)
@@ -2011,7 +2011,7 @@ class InterfaceMPL(object):
 
         if self.dim == 3:
             raise NotImplementedError(
-                "plotImage is not implemented for 3D TreeMesh, please use plotSlice"
+                "plot_image is not implemented for 3D TreeMesh, please use plot_slice"
             )
         # reshape to cell_centered thing
         if v_type == "CC":
@@ -2472,7 +2472,7 @@ class Slicer(object):
 
         # (a) Mesh dimensionality
         if mesh.dim != 3:
-            err = "Must be a 3D mesh. Use plotImage instead."
+            err = "Must be a 3D mesh. Use plot_image instead."
             err += " Mesh provided has {} dimension(s).".format(mesh.dim)
             raise ValueError(err)
 

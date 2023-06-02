@@ -879,15 +879,15 @@ cdef class _TreeMesh:
         >>> triangle = [[0.14, 0.31, 0.21], [0.32, 0.96, 0.34], [0.87, 0.23, 0.12]]
         >>> height = 0.35
         >>> levels = 5
-        >>> mesh.refine_vertical_trianglular_prism(triangle, height, levels)
+        >>> tree_mesh.refine_vertical_trianglular_prism(triangle, height, levels)
 
         Now lets look at the mesh.
 
-        >>> v = mesh.cell_levels_by_index(np.arange(mesh.n_cells))
+        >>> v = tree_mesh.cell_levels_by_index(np.arange(tree_mesh.n_cells))
         >>> fig, axs = plt.subplots(1, 3, figsize=(12,4))
-        >>> mesh.plot_slice(v, ax=axs[0], normal='x', grid=True, clim=[2, 5])
-        >>> mesh.plot_slice(v, ax=axs[1], normal='y', grid=True, clim=[2, 5])
-        >>> mesh.plot_slice(v, ax=axs[2], normal='z', grid=True, clim=[2, 5])
+        >>> tree_mesh.plot_slice(v, ax=axs[0], normal='x', grid=True, clim=[2, 5])
+        >>> tree_mesh.plot_slice(v, ax=axs[1], normal='y', grid=True, clim=[2, 5])
+        >>> tree_mesh.plot_slice(v, ax=axs[2], normal='z', grid=True, clim=[2, 5])
         >>> plt.show()
 
         """
@@ -5338,7 +5338,7 @@ cdef class _TreeMesh:
             return self._getEdgeP(xEdge, yEdge, zEdge)
         return Pxxx
 
-    def _getEdgeIntMat(self, locs, zerosOutside, direction):
+    def _getEdgeIntMat(self, locs, zeros_outside, direction):
         cdef:
             double[:, :] locations = locs
             int_t dir, dir1, dir2
@@ -5359,7 +5359,7 @@ cdef class _TreeMesh:
             double x, y, z
             double w1, w2, w3
             double eps = 100*np.finfo(float).eps
-            int zeros_out = zerosOutside
+            int zeros_out = zeros_outside
 
         if direction == 'x':
             dir, dir1, dir2 = 0, 1, 2
@@ -5472,7 +5472,7 @@ cdef class _TreeMesh:
         A = sp.csr_matrix((data, indices, indptr), shape=(locs.shape[0], self.n_total_edges))
         return A*Re
 
-    def _getFaceIntMat(self, locs, zerosOutside, direction):
+    def _getFaceIntMat(self, locs, zeros_outside, direction):
         cdef:
             double[:, :] locations = locs
             int_t dir, dir1, dir2, temp
@@ -5491,7 +5491,7 @@ cdef class _TreeMesh:
             double x, y, z
             double w1, w2, w3
             double eps = 100*np.finfo(float).eps
-            int zeros_out = zerosOutside
+            int zeros_out = zeros_outside
 
         if direction == 'x':
             dir = 0
@@ -5668,7 +5668,7 @@ cdef class _TreeMesh:
         Rf = self._deflate_faces()
         return sp.csr_matrix((data, indices, indptr), shape=(locs.shape[0], self.n_total_faces))*Rf
 
-    def _getNodeIntMat(self, locs, zerosOutside):
+    def _getNodeIntMat(self, locs, zeros_outside):
         cdef:
             double[:, :] locations = locs
             int_t dim = self._dim
@@ -5683,7 +5683,7 @@ cdef class _TreeMesh:
             double x, y, z
             double wx, wy, wz
             double eps = 100*np.finfo(float).eps
-            int zeros_out = zerosOutside
+            int zeros_out = zeros_outside
 
         for i in range(n_loc):
             x = locations[i, 0]
@@ -5733,7 +5733,7 @@ cdef class _TreeMesh:
         Rn = self._deflate_nodes()
         return sp.csr_matrix((V, (I, J)), shape=(locs.shape[0],self.n_total_nodes))*Rn
 
-    def _getCellIntMat(self, locs, zerosOutside):
+    def _getCellIntMat(self, locs, zeros_outside):
         cdef:
             double[:, :] locations = locs
             int_t dim = self._dim
@@ -5753,7 +5753,7 @@ cdef class _TreeMesh:
             c_Cell *cell
             double x, y, z
             double eps = 100*np.finfo(float).eps
-            int zeros_out = zerosOutside
+            int zeros_out = zeros_outside
 
         dir0 = 0
         dir1 = 1

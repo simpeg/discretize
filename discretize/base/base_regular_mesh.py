@@ -883,28 +883,28 @@ class BaseRectangularMesh(BaseRegularMesh):
             "edges_z",
         ]
         if not (isinstance(x, list) or isinstance(x, np.ndarray)):
-            raise Exception("x must be either a list or a ndarray")
+            raise TypeError("x must be either a list or a ndarray")
         if x_type not in allowed_x_type:
-            raise Exception(
+            raise ValueError(
                 "x_type must be either '" + "', '".join(allowed_x_type) + "'"
             )
         if out_type not in allowed_x_type:
-            raise Exception(
+            raise ValueError(
                 "out_type must be either '" + "', '".join(allowed_x_type) + "'"
             )
         if return_format not in ["M", "V"]:
-            raise Exception("return_format must be either 'M' or 'V'")
+            raise ValueError("return_format must be either 'M' or 'V'")
         if out_type[: len(x_type)] != x_type:
-            raise Exception("You cannot change types when reshaping.")
+            raise ValueError("You cannot change types when reshaping.")
         if x_type not in out_type:
-            raise Exception("You cannot change type of components.")
+            raise ValueError("You cannot change type of components.")
 
         if isinstance(x, list):
             for i, xi in enumerate(x):
                 if not isinstance(x, np.ndarray):
-                    raise Exception("x[{0:d}] must be a numpy array".format(i))
+                    raise TypeError("x[{0:d}] must be a numpy array".format(i))
                 if xi.size != x[0].size:
-                    raise Exception("Number of elements in list must not change.")
+                    raise ValueError("Number of elements in list must not change.")
 
             x_array = np.ones((x.size, len(x)))
             # Unwrap it and put it in a np array
@@ -913,7 +913,7 @@ class BaseRectangularMesh(BaseRegularMesh):
             x = x_array
 
         if not isinstance(x, np.ndarray):
-            raise Exception("x must be a numpy array")
+            raise TypeError("x must be a numpy array")
 
         x = x[:]  # make a copy.
         x_type_is_FE_xyz = (
@@ -934,7 +934,7 @@ class BaseRectangularMesh(BaseRegularMesh):
             if x_type in ["cell_centers", "nodes"]:
                 nn = self.shape_cells if x_type == "cell_centers" else self.shape_nodes
                 if xx.size != np.prod(nn):
-                    raise Exception("Number of elements must not change.")
+                    raise ValueError("Number of elements must not change.")
                 return outKernal(xx, nn)
             elif x_type in ["faces", "edges"]:
                 # This will only deal with components of fields,
@@ -954,12 +954,12 @@ class BaseRectangularMesh(BaseRegularMesh):
                 for dim, dimName in enumerate(["x", "y", "z"]):
                     if dimName in out_type:
                         if self.dim <= dim:
-                            raise Exception(
+                            raise ValueError(
                                 "Dimensions of mesh not great enough for "
                                 "{}_{}".format(x_type, dimName)
                             )
                         if xx.size != np.sum(nn):
-                            raise Exception("Vector is not the right size.")
+                            raise ValueError("Vector is not the right size.")
                         start = np.sum(nn[: dim + 1])
                         end = np.sum(nn[: dim + 2])
                         return outKernal(xx[start:end], nx[dim])
@@ -974,7 +974,7 @@ class BaseRectangularMesh(BaseRegularMesh):
                 elif "z" in x_type:
                     nn = self.shape_faces_z if "f" in x_type else self.shape_edges_z
                 if xx.size != np.prod(nn):
-                    raise Exception(
+                    raise ValueError(
                         f"Vector is not the right size. Expected {np.prod(nn)}, got {xx.size}"
                     )
                 return outKernal(xx, nn)
@@ -984,7 +984,7 @@ class BaseRectangularMesh(BaseRegularMesh):
 
         if out_type in ["faces", "edges"]:
             if isVectorQuantity:
-                raise Exception("Not sure what to do with a vector vector quantity..")
+                raise ValueError("Not sure what to do with a vector vector quantity..")
             outTypeCopy = out_type
             out = ()
             for dirName in ["x", "y", "z"][: self.dim]:

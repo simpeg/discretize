@@ -56,13 +56,10 @@ def mkvc(x, n_dims=1, **kwargs):
     Shape of output with n_dim = 3 :  (6, 1, 1)
     """
     if "numDims" in kwargs:
-        warnings.warn(
-            "The numDims keyword argument has been deprecated, please use n_dims. "
+        raise TypeError(
+            "The numDims keyword argument has been removed, please use n_dims. "
             "This will be removed in discretize 1.0.0",
-            FutureWarning,
-            stacklevel=2,
         )
-        n_dims = kwargs["numDims"]
     if type(x) == np.matrix:
         x = np.array(x)
 
