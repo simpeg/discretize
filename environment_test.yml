@@ -9,7 +9,7 @@ dependencies:
   - pymatsolver>=0.1.2
   - matplotlib
   - jupyter
-  - sphinx<7.0.0
+  - sphinx=6.*
   - sphinx-gallery>=0.1.13
   - sphinx-toolbox
   - sphinxcontrib-apidoc
