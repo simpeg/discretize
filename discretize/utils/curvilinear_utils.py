@@ -2,7 +2,6 @@
 import numpy as np
 from discretize.utils.matrix_utils import mkvc, ndgrid, sub2ind
 from discretize.utils.code_utils import deprecate_function
-import warnings
 
 
 def example_curvilinear_grid(nC, exType):
@@ -451,13 +450,10 @@ def face_info(xyz, A, B, C, D, average=True, normalize_normals=True, **kwargs):
     >>> plt.show()
     """
     if "normalizeNormals" in kwargs:
-        warnings.warn(
-            "The normalizeNormals keyword argument has been deprecated, please use normalize_normals. "
+        raise TypeError(
+            "The normalizeNormals keyword argument has been removed, please use normalize_normals. "
             "This will be removed in discretize 1.0.0",
-            FutureWarning,
-            stacklevel=2,
         )
-        normalize_normals = kwargs["normalizeNormals"]
     if not isinstance(average, bool):
         raise TypeError("average must be a boolean")
     if not isinstance(normalize_normals, bool):
