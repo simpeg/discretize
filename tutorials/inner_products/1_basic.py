@@ -119,7 +119,7 @@ phi_c = fcn_gaussian(mesh.gridCC, mu, sig)
 phi_n = fcn_gaussian(mesh.gridN, mu, sig)
 
 # Define inner-product matricies
-Mc = sdiag(mesh.vol)  # cell-centered
+Mc = sdiag(mesh.cell_volumes)  # cell-centered
 # Mn = mesh.getNodalInnerProduct()  # on nodes (*functionality pending*)
 
 # Compute the inner product
@@ -188,7 +188,7 @@ vx = fcn_x(mesh.gridEx, sig)
 vy = fcn_y(mesh.gridEy, sig)
 v = np.r_[vx, vy]
 
-Me = mesh.getEdgeInnerProduct()  # Edge inner product matrix
+Me = mesh.get_edge_inner_product()  # Edge inner product matrix
 
 ipe = np.dot(v, Me * v)
 
@@ -197,7 +197,7 @@ vx = fcn_x(mesh.gridFx, sig)
 vy = fcn_y(mesh.gridFy, sig)
 v = np.r_[vx, vy]
 
-Mf = mesh.getFaceInnerProduct()  # Edge inner product matrix
+Mf = mesh.get_face_inner_product()  # Edge inner product matrix
 
 ipf = np.dot(v, Mf * v)
 
@@ -207,7 +207,7 @@ ipt = np.pi * sig**2
 # Plot the vector function
 fig = plt.figure(figsize=(5, 5))
 ax = fig.add_subplot(111)
-mesh.plotImage(
+mesh.plot_image(
     v, ax=ax, v_type="F", view="vec", stream_opts={"color": "w", "density": 1.0}
 )
 ax.set_title("v at cell faces")
@@ -241,20 +241,20 @@ h = 0.1 * np.ones(100)
 mesh = TensorMesh([h, h], "CC")
 
 # Cell centered for scalar quantities
-Mc = sdiag(mesh.vol)
-Mc_inv = sdiag(1 / mesh.vol)
+Mc = sdiag(mesh.cell_volumes)
+Mc_inv = sdiag(1 / mesh.cell_volumes)
 
 # Nodes for scalar quantities  (*functionality pending*)
 # Mn = mesh.getNodalInnerProduct()
-# Mn_inv = mesh.getNodalInnerProduct(invMat=True)
+# Mn_inv = mesh.getNodalInnerProduct(invert_matrix=True)
 
 # Edges for vector quantities
-Me = mesh.getEdgeInnerProduct()
-Me_inv = mesh.getEdgeInnerProduct(invMat=True)
+Me = mesh.get_edge_inner_product()
+Me_inv = mesh.get_edge_inner_product(invert_matrix=True)
 
 # Faces for vector quantities
-Mf = mesh.getFaceInnerProduct()
-Mf_inv = mesh.getFaceInnerProduct(invMat=True)
+Mf = mesh.get_face_inner_product()
+Mf_inv = mesh.get_face_inner_product(invert_matrix=True)
 
 # Generate some random vectors
 phi_c = np.random.rand(mesh.nC)

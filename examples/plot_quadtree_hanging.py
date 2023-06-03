@@ -26,7 +26,7 @@ def run(plotIt=True):
 
     M.refine(refine)
     if plotIt:
-        M.plotGrid(nodes=True, centers=True, faces_x=True)
+        M.plot_grid(nodes=True, centers=True, faces_x=True)
         plt.legend(
             (
                 "Nodes",
