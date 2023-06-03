@@ -1,7 +1,6 @@
 cython
-sphinx=6.*
+sphinx=
 sphinx-gallery
-sphinx-toolbox
 pydata-sphinx-theme
 pillow
 pytest
