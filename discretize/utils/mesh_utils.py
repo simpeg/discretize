@@ -971,19 +971,17 @@ def active_from_xyz(mesh, xyz, grid_reference="CC", method="linear"):
 
     Plot visual representation
 
-    .. collapse:: Expand to show scripting for plot
-
-        >>> ax = plt.subplot(121)
-        >>> mesh.plot_image(active_cc, ax=ax)
-        >>> mesh.plot_grid(centers=True, ax=ax)
-        >>> ax.plot(np.linspace(0,1), topo_func(np.linspace(0,1)), color='C3')
-        >>> ax.set_title("CC")
-        >>> ax = plt.subplot(122)
-        >>> mesh.plot_image(active_n, ax=ax)
-        >>> mesh.plot_grid(nodes=True, ax=ax)
-        >>> ax.plot(np.linspace(0,1), topo_func(np.linspace(0,1)), color='C3')
-        >>> ax.set_title("N")
-        >>> plt.show()
+    >>> ax = plt.subplot(121)
+    >>> mesh.plot_image(active_cc, ax=ax)
+    >>> mesh.plot_grid(centers=True, ax=ax)
+    >>> ax.plot(np.linspace(0,1), topo_func(np.linspace(0,1)), color='C3')
+    >>> ax.set_title("CC")
+    >>> ax = plt.subplot(122)
+    >>> mesh.plot_image(active_n, ax=ax)
+    >>> mesh.plot_grid(nodes=True, ax=ax)
+    >>> ax.plot(np.linspace(0,1), topo_func(np.linspace(0,1)), color='C3')
+    >>> ax.set_title("N")
+    >>> plt.show()
     """
     try:
         if not mesh.is_symmetric:

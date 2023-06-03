@@ -1,8 +1,7 @@
 cython
-sphinx<7.0.0
+sphinx=6.*
 sphinx-gallery
 sphinx-toolbox
-sphinxcontrib-apidoc
 pydata-sphinx-theme
 pillow
 pytest

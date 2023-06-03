@@ -9,9 +9,8 @@ dependencies:
   - pymatsolver>=0.1.2
   - matplotlib
   - jupyter
-  - sphinx=6.*
+  - sphinx
   - sphinx-gallery>=0.1.13
-  - sphinx-toolbox
   - pydata-sphinx-theme
   - numpydoc>=1.5
   - pillow

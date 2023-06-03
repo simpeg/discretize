@@ -1188,24 +1188,22 @@ def make_property_tensor(mesh, tensor):
 
     Plot the property tensors.
 
-    .. collapse:: Expand to show scripting for plot
-
-        >>> M_list = [M_scalar, M_isotropic, M_anisotropic, M_tensor]
-        >>> case_list = ['Scalar', 'Isotropic', 'Anisotropic', 'Full Tensor']
-        >>> ax1 = 4*[None]
-        >>> fig = plt.figure(figsize=(15, 4))
-        >>> for ii in range(0, 4):
-        ...     ax1[ii] = fig.add_axes([0.05+0.22*ii, 0.05, 0.18, 0.9])
-        ...     ax1[ii].imshow(
-        ...         M_list[ii].todense(), interpolation='none', cmap='binary', vmax=10.
-        ...     )
-        ...     ax1[ii].set_title(case_list[ii], fontsize=24)
-        >>> ax2 = fig.add_axes([0.92, 0.15, 0.01, 0.7])
-        >>> norm = mpl.colors.Normalize(vmin=0., vmax=10.)
-        >>> cbar = mpl.colorbar.ColorbarBase(
-        ...     ax2, norm=norm, orientation="vertical", cmap=mpl.cm.binary
-        ... )
-        >>> plt.show()
+    >>> M_list = [M_scalar, M_isotropic, M_anisotropic, M_tensor]
+    >>> case_list = ['Scalar', 'Isotropic', 'Anisotropic', 'Full Tensor']
+    >>> ax1 = 4*[None]
+    >>> fig = plt.figure(figsize=(15, 4))
+    >>> for ii in range(0, 4):
+    ...     ax1[ii] = fig.add_axes([0.05+0.22*ii, 0.05, 0.18, 0.9])
+    ...     ax1[ii].imshow(
+    ...         M_list[ii].todense(), interpolation='none', cmap='binary', vmax=10.
+    ...     )
+    ...     ax1[ii].set_title(case_list[ii], fontsize=24)
+    >>> ax2 = fig.add_axes([0.92, 0.15, 0.01, 0.7])
+    >>> norm = mpl.colors.Normalize(vmin=0., vmax=10.)
+    >>> cbar = mpl.colorbar.ColorbarBase(
+    ...     ax2, norm=norm, orientation="vertical", cmap=mpl.cm.binary
+    ... )
+    >>> plt.show()
     """
     if tensor is None:  # default is ones
         tensor = np.ones(mesh.nC)
@@ -1349,44 +1347,40 @@ def inverse_property_tensor(mesh, tensor, return_matrix=False, **kwargs):
 
     Plot the property tensors.
 
-    .. collapse:: Expand to show scripting for plot
-
-        >>> M_list = [M_scalar, M_isotropic, M_anisotropic, M_tensor]
-        >>> Minv_list = [Minv_scalar, Minv_isotropic, Minv_anisotropic, Minv_tensor]
-        >>> case_list = ['Scalar', 'Isotropic', 'Anisotropic', 'Full Tensor']
-        >>> fig1 = plt.figure(figsize=(15, 4))
-        >>> ax1 = 4*[None]
-        >>> for ii in range(0, 4):
-        ...     ax1[ii] = fig1.add_axes([0.05+0.22*ii, 0.05, 0.18, 0.9])
-        ...     ax1[ii].imshow(
-        ...         M_list[ii].todense(), interpolation='none', cmap='binary', vmax=10.
-        ...     )
-        ...     ax1[ii].set_title('$M$ (' + case_list[ii] + ')', fontsize=24)
-        >>> cax1 = fig1.add_axes([0.92, 0.15, 0.01, 0.7])
-        >>> norm1 = mpl.colors.Normalize(vmin=0., vmax=10.)
-        >>> cbar1 = mpl.colorbar.ColorbarBase(
-        ...     cax1, norm=norm1, orientation="vertical", cmap=mpl.cm.binary
-        ... )
-        >>> plt.show()
+    >>> M_list = [M_scalar, M_isotropic, M_anisotropic, M_tensor]
+    >>> Minv_list = [Minv_scalar, Minv_isotropic, Minv_anisotropic, Minv_tensor]
+    >>> case_list = ['Scalar', 'Isotropic', 'Anisotropic', 'Full Tensor']
+    >>> fig1 = plt.figure(figsize=(15, 4))
+    >>> ax1 = 4*[None]
+    >>> for ii in range(0, 4):
+    ...     ax1[ii] = fig1.add_axes([0.05+0.22*ii, 0.05, 0.18, 0.9])
+    ...     ax1[ii].imshow(
+    ...         M_list[ii].todense(), interpolation='none', cmap='binary', vmax=10.
+    ...     )
+    ...     ax1[ii].set_title('$M$ (' + case_list[ii] + ')', fontsize=24)
+    >>> cax1 = fig1.add_axes([0.92, 0.15, 0.01, 0.7])
+    >>> norm1 = mpl.colors.Normalize(vmin=0., vmax=10.)
+    >>> cbar1 = mpl.colorbar.ColorbarBase(
+    ...     cax1, norm=norm1, orientation="vertical", cmap=mpl.cm.binary
+    ... )
+    >>> plt.show()
 
     Plot the inverse property tensors.
 
-    .. collapse:: Expand to show scripting for plot
-
-        >>> fig2 = plt.figure(figsize=(15, 4))
-        >>> ax2 = 4*[None]
-        >>> for ii in range(0, 4):
-        ...     ax2[ii] = fig2.add_axes([0.05+0.22*ii, 0.05, 0.18, 0.9])
-        ...     ax2[ii].imshow(
-        ...         Minv_list[ii].todense(), interpolation='none', cmap='binary', vmax=1.
-        ...     )
-        ...     ax2[ii].set_title('$M^{-1}$ (' + case_list[ii] + ')', fontsize=24)
-        >>> cax2 = fig2.add_axes([0.92, 0.15, 0.01, 0.7])
-        >>> norm2 = mpl.colors.Normalize(vmin=0., vmax=1.)
-        >>> cbar2 = mpl.colorbar.ColorbarBase(
-        ...     cax2, norm=norm2, orientation="vertical", cmap=mpl.cm.binary
-        ... )
-        >>> plt.show()
+    >>> fig2 = plt.figure(figsize=(15, 4))
+    >>> ax2 = 4*[None]
+    >>> for ii in range(0, 4):
+    ...     ax2[ii] = fig2.add_axes([0.05+0.22*ii, 0.05, 0.18, 0.9])
+    ...     ax2[ii].imshow(
+    ...         Minv_list[ii].todense(), interpolation='none', cmap='binary', vmax=1.
+    ...     )
+    ...     ax2[ii].set_title('$M^{-1}$ (' + case_list[ii] + ')', fontsize=24)
+    >>> cax2 = fig2.add_axes([0.92, 0.15, 0.01, 0.7])
+    >>> norm2 = mpl.colors.Normalize(vmin=0., vmax=1.)
+    >>> cbar2 = mpl.colorbar.ColorbarBase(
+    ...     cax2, norm=norm2, orientation="vertical", cmap=mpl.cm.binary
+    ... )
+    >>> plt.show()
     """
     if "returnMatrix" in kwargs:
         warnings.warn(
