@@ -48,7 +48,7 @@ y0 = -150
 
 mesh = TensorMesh([hx, hy], x0=[x0, y0])
 
-mesh.plotGrid()
+mesh.plot_grid()
 
 
 ###############################################
@@ -81,12 +81,12 @@ hy = [(dy, npad_y, -exp_y), (dy, ncy), (dy, npad_y, exp_y)]
 # relative to the origin
 mesh = TensorMesh([hx, hy], x0="CN")
 
-# We can apply the plotGrid method and output to a specified axes object
+# We can apply the plot_grid method and output to a specified axes object
 fig = plt.figure(figsize=(6, 6))
 ax = fig.add_subplot(111)
-mesh.plotGrid(ax=ax)
-ax.set_xbound(mesh.x0[0], mesh.x0[0] + np.sum(mesh.hx))
-ax.set_ybound(mesh.x0[1], mesh.x0[1] + np.sum(mesh.hy))
+mesh.plot_grid(ax=ax)
+ax.set_xbound(mesh.x0[0], mesh.x0[0] + np.sum(mesh.h[0]))
+ax.set_ybound(mesh.x0[1], mesh.x0[1] + np.sum(mesh.h[1]))
 ax.set_title("Tensor Mesh")
 
 ###############################################
@@ -121,16 +121,16 @@ nC = mesh.nC
 cc = mesh.gridCC
 
 # A boolean array specifying which cells lie on the boundary
-bInd = mesh.cellBoundaryInd
+bInd = mesh.cell_boundary_indices
 
 # Plot the cell areas (2D "volume")
-s = mesh.vol
+s = mesh.cell_volumes
 
 fig = plt.figure(figsize=(6, 6))
 ax = fig.add_subplot(111)
-mesh.plotImage(s, grid=True, ax=ax)
-ax.set_xbound(mesh.x0[0], mesh.x0[0] + np.sum(mesh.hx))
-ax.set_ybound(mesh.x0[1], mesh.x0[1] + np.sum(mesh.hy))
+mesh.plot_image(s, grid=True, ax=ax)
+ax.set_xbound(mesh.x0[0], mesh.x0[0] + np.sum(mesh.h[0]))
+ax.set_ybound(mesh.x0[1], mesh.x0[1] + np.sum(mesh.h[1]))
 ax.set_title("Cell Areas")
 
 
@@ -160,19 +160,19 @@ nC = mesh.nC
 cc = mesh.gridCC
 
 # A boolean array specifying which cells lie on the boundary
-bInd = mesh.cellBoundaryInd
+bInd = mesh.cell_boundary_indices
 
 # The cell volumes
-v = mesh.vol
+v = mesh.cell_volumes
 
 # Plot all cells volumes or plot cell volumes for a particular horizontal slice
 fig = plt.figure(figsize=(9, 4))
 ax1 = fig.add_subplot(121)
 ax2 = fig.add_subplot(122)
 
-mesh.plotImage(np.log10(v), grid=True, ax=ax1)
+mesh.plot_image(np.log10(v), grid=True, ax=ax1)
 ax1.set_title("All Cell Log-Volumes")
 
-cplot = mesh.plotSlice(np.log10(v), grid=True, ax=ax2, normal="Z", ind=2)
+cplot = mesh.plot_slice(np.log10(v), grid=True, ax=ax2, normal="Z", ind=2)
 cplot[0].set_clim(np.min(np.log10(v)), np.max(np.log10(v)))
 ax2.set_title("Cell Log-Volumes #2")

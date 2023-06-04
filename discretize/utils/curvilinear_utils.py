@@ -2,7 +2,6 @@
 import numpy as np
 from discretize.utils.matrix_utils import mkvc, ndgrid, sub2ind
 from discretize.utils.code_utils import deprecate_function
-import warnings
 
 
 def example_curvilinear_grid(nC, exType):
@@ -143,16 +142,14 @@ def volume_tetrahedron(xyz, A, B, C, D):
 
     Plotting small mesh and tetrahedron
 
-    .. collapse:: Expand to show scripting for plot
-
-        >>> fig = plt.figure(figsize=(7, 7))
-        >>> ax = fig.gca(projection='3d')
-        >>> mesh.plot_grid(ax=ax)
-        >>> k = [0, 6, 8, 0, 24, 6, 24, 8]
-        >>> xyz_tetra = xyz[k, :]
-        >>> ax.plot(xyz_tetra[:, 0], xyz_tetra[:, 1], xyz_tetra[:, 2], 'r')
-        >>> ax.text(-0.25, 0., 3., 'Volume of the tetrahedron: {:g} $m^3$'.format(vol))
-        >>> plt.show()
+    >>> fig = plt.figure(figsize=(7, 7))
+    >>> ax = fig.gca(projection='3d')
+    >>> mesh.plot_grid(ax=ax)
+    >>> k = [0, 6, 8, 0, 24, 6, 24, 8]
+    >>> xyz_tetra = xyz[k, :]
+    >>> ax.plot(xyz_tetra[:, 0], xyz_tetra[:, 1], xyz_tetra[:, 2], 'r')
+    >>> ax.text(-0.25, 0., 3., 'Volume of the tetrahedron: {:g} $m^3$'.format(vol))
+    >>> plt.show()
     """
     AD = xyz[A, :] - xyz[D, :]
     BD = xyz[B, :] - xyz[D, :]
@@ -246,15 +243,13 @@ def index_cube(nodes, grid_shape, n=None):
 
     Plot mesh and the locations of the A and C nodes
 
-    .. collapse:: Expand to show scripting for plot
-
-        >>> fig1 = plt.figure(figsize=(5, 5))
-        >>> ax1 = fig1.add_axes([0.1, 0.1, 0.8, 0.8])
-        >>> mesh.plot_grid(ax=ax1)
-        >>> ax1.scatter(mesh.nodes[A, 0], mesh.nodes[A, 1], 100, 'r', marker='^')
-        >>> ax1.scatter(mesh.nodes[C, 0], mesh.nodes[C, 1], 100, 'g', marker='v')
-        >>> ax1.set_title('A nodes (red) and C nodes (green)')
-        >>> plt.show()
+    >>> fig1 = plt.figure(figsize=(5, 5))
+    >>> ax1 = fig1.add_axes([0.1, 0.1, 0.8, 0.8])
+    >>> mesh.plot_grid(ax=ax1)
+    >>> ax1.scatter(mesh.nodes[A, 0], mesh.nodes[A, 1], 100, 'r', marker='^')
+    >>> ax1.scatter(mesh.nodes[C, 0], mesh.nodes[C, 1], 100, 'g', marker='v')
+    >>> ax1.set_title('A nodes (red) and C nodes (green)')
+    >>> plt.show()
     """
     if not isinstance(nodes, str):
         raise TypeError("Nodes must be a str variable: e.g. 'ABCD'")
@@ -412,19 +407,17 @@ def face_info(xyz, A, B, C, D, average=True, normalize_normals=True, **kwargs):
 
     Plot surface for example 1 on mesh
 
-    .. collapse:: Expand to show scripting for plot
-
-        >>> fig = plt.figure(figsize=(7, 7))
-        >>> ax = fig.gca(projection='3d')
-        >>> mesh.plot_grid(ax=ax)
-        >>> k = [0, 4, 26, 18, 0]
-        >>> xyz_quad = xyz[k, :]
-        >>> ax.plot(xyz_quad[:, 0], xyz_quad[:, 1], xyz_quad[:, 2], 'r')
-        >>> ax.text(-0.25, 0., 3., 'Area of the surface: {:g} $m^2$'.format(area[0]))
-        >>> ax.text(-0.25, 0., 2.8, 'Normal vector: ({:.2f}, {:.2f}, {:.2f})'.format(
-        ...     nvec[0, 0], nvec[0, 1], nvec[0, 2])
-        ... )
-        >>> plt.show()
+    >>> fig = plt.figure(figsize=(7, 7))
+    >>> ax = fig.gca(projection='3d')
+    >>> mesh.plot_grid(ax=ax)
+    >>> k = [0, 4, 26, 18, 0]
+    >>> xyz_quad = xyz[k, :]
+    >>> ax.plot(xyz_quad[:, 0], xyz_quad[:, 1], xyz_quad[:, 2], 'r')
+    >>> ax.text(-0.25, 0., 3., 'Area of the surface: {:g} $m^2$'.format(area[0]))
+    >>> ax.text(-0.25, 0., 2.8, 'Normal vector: ({:.2f}, {:.2f}, {:.2f})'.format(
+    ...     nvec[0, 0], nvec[0, 1], nvec[0, 2])
+    ... )
+    >>> plt.show()
 
     In our second example, the vertices are unable to define a flat
     surface in 3D space. However, we will demonstrate the *face_info*
@@ -444,28 +437,23 @@ def face_info(xyz, A, B, C, D, average=True, normalize_normals=True, **kwargs):
 
     Plot surface for example 2 on mesh
 
-    .. collapse:: Expand to show scripting for plot
-
-        >>> fig = plt.figure(figsize=(7, 7))
-        >>> ax = fig.gca(projection='3d')
-        >>> mesh.plot_grid(ax=ax)
-        >>> k = [0, 5, 26, 18, 0]
-        >>> xyz_quad = xyz[k, :]
-        >>> ax.plot(xyz_quad[:, 0], xyz_quad[:, 1], xyz_quad[:, 2], 'g')
-        >>> ax.text(-0.25, 0., 3., 'Area of the surface: {:g} $m^2$'.format(area[0]))
-        >>> ax.text(-0.25, 0., 2.8, 'Average normal vector: ({:.2f}, {:.2f}, {:.2f})'.format(
-        ...     nvec[0, 0], nvec[0, 1], nvec[0, 2])
-        ... )
-        >>> plt.show()
+    >>> fig = plt.figure(figsize=(7, 7))
+    >>> ax = fig.gca(projection='3d')
+    >>> mesh.plot_grid(ax=ax)
+    >>> k = [0, 5, 26, 18, 0]
+    >>> xyz_quad = xyz[k, :]
+    >>> ax.plot(xyz_quad[:, 0], xyz_quad[:, 1], xyz_quad[:, 2], 'g')
+    >>> ax.text(-0.25, 0., 3., 'Area of the surface: {:g} $m^2$'.format(area[0]))
+    >>> ax.text(-0.25, 0., 2.8, 'Average normal vector: ({:.2f}, {:.2f}, {:.2f})'.format(
+    ...     nvec[0, 0], nvec[0, 1], nvec[0, 2])
+    ... )
+    >>> plt.show()
     """
     if "normalizeNormals" in kwargs:
-        warnings.warn(
-            "The normalizeNormals keyword argument has been deprecated, please use normalize_normals. "
+        raise TypeError(
+            "The normalizeNormals keyword argument has been removed, please use normalize_normals. "
             "This will be removed in discretize 1.0.0",
-            FutureWarning,
-            stacklevel=2,
         )
-        normalize_normals = kwargs["normalizeNormals"]
     if not isinstance(average, bool):
         raise TypeError("average must be a boolean")
     if not isinstance(normalize_normals, bool):
@@ -522,14 +510,14 @@ exampleLrmGrid = deprecate_function(
     example_curvilinear_grid,
     "exampleLrmGrid",
     removal_version="1.0.0",
-    future_warn=True,
+    error=True,
 )
 volTetra = deprecate_function(
-    volume_tetrahedron, "volTetra", removal_version="1.0.0", future_warn=True
+    volume_tetrahedron, "volTetra", removal_version="1.0.0", error=True
 )
 indexCube = deprecate_function(
-    index_cube, "indexCube", removal_version="1.0.0", future_warn=True
+    index_cube, "indexCube", removal_version="1.0.0", error=True
 )
 faceInfo = deprecate_function(
-    face_info, "faceInfo", removal_version="1.0.0", future_warn=True
+    face_info, "faceInfo", removal_version="1.0.0", error=True
 )

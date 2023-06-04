@@ -65,7 +65,7 @@ xy = np.c_[mkvc(xp), mkvc(yp)]  # mkvc creates vectors
 padding = [[0, 2], [0, 2]]
 mesh.refine_bounding_box(xy, level=-1, padding_cells_by_level=padding)
 
-mesh.plotGrid(show_it=True)
+mesh.plot_grid(show_it=True)
 
 
 ###############################################
@@ -98,7 +98,7 @@ hy = [(dy, nbcy)]
 mesh = TreeMesh([hx, hy], x0="CC")
 
 # Refine surface topography
-xx = mesh.vectorNx
+xx = mesh.nodes_x
 yy = -3 * np.exp((xx**2) / 100**2) + 50.0
 pts = np.c_[mkvc(xx), mkvc(yy)]
 padding = [[0, 2], [0, 2]]
@@ -112,12 +112,12 @@ mesh.refine_points(pts, padding_cells_by_level=[2, 2], finalize=False)
 
 mesh.finalize()
 
-# We can apply the plotGrid method and output to a specified axes object
+# We can apply the plot_grid method and output to a specified axes object
 fig = plt.figure(figsize=(6, 6))
 ax = fig.add_subplot(111)
-mesh.plotGrid(ax=ax)
-ax.set_xbound(mesh.x0[0], mesh.x0[0] + np.sum(mesh.hx))
-ax.set_ybound(mesh.x0[1], mesh.x0[1] + np.sum(mesh.hy))
+mesh.plot_grid(ax=ax)
+ax.set_xbound(mesh.x0[0], mesh.x0[0] + np.sum(mesh.h[0]))
+ax.set_ybound(mesh.x0[1], mesh.x0[1] + np.sum(mesh.h[1]))
 ax.set_title("QuadTree Mesh")
 
 ####################################################
@@ -144,7 +144,7 @@ hy = [(dy, nbcy)]
 mesh = TreeMesh([hx, hy], x0="CC")
 
 # Refine surface topography
-xx = mesh.vectorNx
+xx = mesh.nodes_x
 yy = -3 * np.exp((xx**2) / 100**2) + 50.0
 pts = np.c_[mkvc(xx), mkvc(yy)]
 padding = [[0, 2], [0, 2]]
@@ -168,16 +168,16 @@ nC = mesh.nC
 cc = mesh.gridCC
 
 # A boolean array specifying which cells lie on the boundary
-bInd = mesh.cellBoundaryInd
+bInd = mesh.cell_boundary_indices
 
 # The cell areas (2D "volume")
-s = mesh.vol
+s = mesh.cell_volumes
 
 fig = plt.figure(figsize=(6, 6))
 ax = fig.add_subplot(111)
-mesh.plotImage(np.log10(s), grid=True, ax=ax)
-ax.set_xbound(mesh.x0[0], mesh.x0[0] + np.sum(mesh.hx))
-ax.set_ybound(mesh.x0[1], mesh.x0[1] + np.sum(mesh.hy))
+mesh.plot_image(np.log10(s), grid=True, ax=ax)
+ax.set_xbound(mesh.x0[0], mesh.x0[0] + np.sum(mesh.h[0]))
+ax.set_ybound(mesh.x0[1], mesh.x0[1] + np.sum(mesh.h[1]))
 ax.set_title("Log of Cell Areas")
 
 ###############################################
@@ -208,7 +208,7 @@ hz = [(dz, nbcz)]
 mesh = TreeMesh([hx, hy, hz], x0="CCC")
 
 # Refine surface topography
-[xx, yy] = np.meshgrid(mesh.vectorNx, mesh.vectorNy)
+[xx, yy] = np.meshgrid(mesh.nodes_x, mesh.nodes_y)
 zz = -3 * np.exp((xx**2 + yy**2) / 100**2) + 50.0
 pts = np.c_[mkvc(xx), mkvc(yy), mkvc(zz)]
 padding = [[0, 0, 2], [0, 0, 2]]
@@ -230,12 +230,12 @@ nC = mesh.nC
 cc = mesh.gridCC
 
 # A boolean array specifying which cells lie on the boundary
-bInd = mesh.cellBoundaryInd
+bInd = mesh.cell_boundary_indices
 
 # Cell volumes
-v = mesh.vol
+v = mesh.cell_volumes
 
 fig = plt.figure(figsize=(6, 6))
 ax = fig.add_subplot(111)
-mesh.plotSlice(np.log10(v), normal="Y", ax=ax, ind=int(mesh.hy.size / 2), grid=True)
+mesh.plot_slice(np.log10(v), normal="Y", ax=ax, ind=int(mesh.h[1].size / 2), grid=True)
 ax.set_title("Cell Log-Volumes at Y = 0 m")

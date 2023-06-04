@@ -34,8 +34,8 @@ class TestVolumeAverage(unittest.TestCase):
             out3 = Av @ in_put
             assert_allclose(out1, out3)
 
-            vol1 = np.sum(mesh1.vol * in_put)
-            vol2 = np.sum(mesh2.vol * out3)
+            vol1 = np.sum(mesh1.cell_volumes * in_put)
+            vol2 = np.sum(mesh2.cell_volumes * out3)
             print(vol1, vol2)
             self.assertAlmostEqual(vol1, vol2)
 
@@ -73,8 +73,8 @@ class TestVolumeAverage(unittest.TestCase):
             out3 = Av @ in_put
             assert_allclose(out1, out3)
 
-            vol1 = np.sum(mesh1.vol * in_put)
-            vol2 = np.sum(mesh2.vol * out3)
+            vol1 = np.sum(mesh1.cell_volumes * in_put)
+            vol2 = np.sum(mesh2.cell_volumes * out3)
             print(vol1, vol2)
             self.assertAlmostEqual(vol1, vol2)
 
@@ -109,8 +109,8 @@ class TestVolumeAverage(unittest.TestCase):
             out3 = Av @ in_put
             assert_allclose(out1, out3)
 
-            vol1 = np.sum(mesh1.vol * in_put)
-            vol2 = np.sum(mesh2.vol * out3)
+            vol1 = np.sum(mesh1.cell_volumes * in_put)
+            vol2 = np.sum(mesh2.cell_volumes * out3)
             print(vol1, vol2)
             self.assertAlmostEqual(vol1, vol2)
 
@@ -145,8 +145,8 @@ class TestVolumeAverage(unittest.TestCase):
             out3 = Av @ in_put
             assert_allclose(out1, out3)
 
-            vol1 = np.sum(mesh1.vol * in_put)
-            vol2 = np.sum(mesh2.vol * out3)
+            vol1 = np.sum(mesh1.cell_volumes * in_put)
+            vol2 = np.sum(mesh2.cell_volumes * out3)
             print(vol1, vol2)
             self.assertAlmostEqual(vol1, vol2)
 
@@ -161,7 +161,7 @@ class TestVolumeAverage(unittest.TestCase):
 
         hr = np.r_[1, 1, 0.5]
         hz = np.r_[2, 1]
-        meshCyl = discretize.CylMesh([hr, 1, hz], np.r_[0.0, 0.0, 0.0])
+        meshCyl = discretize.CylindricalMesh([hr, 1, hz], np.r_[0.0, 0.0, 0.0])
         mesh2 = discretize.TreeMesh([h2, h2])
         mesh2.insert_cells([0.75, 0.75], [4])
 
@@ -214,8 +214,8 @@ class TestVolumeAverage(unittest.TestCase):
             out3 = Av @ in_put
             assert_allclose(out1, out3)
 
-            vol1 = np.sum(mesh1.vol * in_put)
-            vol2 = np.sum(mesh2.vol * out3)
+            vol1 = np.sum(mesh1.cell_volumes * in_put)
+            vol2 = np.sum(mesh2.cell_volumes * out3)
             print(vol1, vol2)
             self.assertAlmostEqual(vol1, vol2)
 
@@ -246,8 +246,8 @@ class TestVolumeAverage(unittest.TestCase):
             out3 = Av @ in_put
             assert_allclose(out1, out3)
 
-            vol1 = np.sum(mesh1.vol * in_put)
-            vol2 = np.sum(mesh2.vol * out3)
+            vol1 = np.sum(mesh1.cell_volumes * in_put)
+            vol2 = np.sum(mesh2.cell_volumes * out3)
             print(vol1, vol2)
             self.assertAlmostEqual(vol1, vol2)
 
@@ -278,8 +278,8 @@ class TestVolumeAverage(unittest.TestCase):
             out3 = Av @ in_put
             assert_allclose(out1, out3)
 
-            vol1 = np.sum(mesh1.vol * in_put)
-            vol2 = np.sum(mesh2.vol * out3)
+            vol1 = np.sum(mesh1.cell_volumes * in_put)
+            vol2 = np.sum(mesh2.cell_volumes * out3)
             print(vol1, vol2)
             self.assertAlmostEqual(vol1, vol2)
 
@@ -314,8 +314,8 @@ class TestVolumeAverage(unittest.TestCase):
             if i > 0:
                 cells = np.all(cells, axis=1)
 
-            vol1 = np.sum(mesh1.vol[cells] * in_put[cells])
-            vol2 = np.sum(mesh2.vol * out3)
+            vol1 = np.sum(mesh1.cell_volumes[cells] * in_put[cells])
+            vol2 = np.sum(mesh2.cell_volumes * out3)
             print(vol1, vol2)
             self.assertAlmostEqual(vol1, vol2)
 
@@ -356,8 +356,8 @@ class TestVolumeAverage(unittest.TestCase):
             if i > 0:
                 cells = np.all(cells, axis=1)
 
-            vol1 = np.sum(mesh1.vol[cells] * in_put[cells])
-            vol2 = np.sum(mesh2.vol * out3)
+            vol1 = np.sum(mesh1.cell_volumes[cells] * in_put[cells])
+            vol2 = np.sum(mesh2.cell_volumes * out3)
             print(vol1, vol2)
             self.assertAlmostEqual(vol1, vol2)
 
@@ -395,8 +395,8 @@ class TestVolumeAverage(unittest.TestCase):
             if i > 0:
                 cells = np.all(cells, axis=1)
 
-            vol1 = np.sum(mesh1.vol[cells] * in_put[cells])
-            vol2 = np.sum(mesh2.vol * out3)
+            vol1 = np.sum(mesh1.cell_volumes[cells] * in_put[cells])
+            vol2 = np.sum(mesh2.cell_volumes * out3)
             print(vol1, vol2)
             self.assertAlmostEqual(vol1, vol2)
 
@@ -434,8 +434,8 @@ class TestVolumeAverage(unittest.TestCase):
             if i > 0:
                 cells = np.all(cells, axis=1)
 
-            vol1 = np.sum(mesh1.vol[cells] * in_put[cells])
-            vol2 = np.sum(mesh2.vol * out3)
+            vol1 = np.sum(mesh1.cell_volumes[cells] * in_put[cells])
+            vol2 = np.sum(mesh2.cell_volumes * out3)
             print(vol1, vol2)
             self.assertAlmostEqual(vol1, vol2)
 

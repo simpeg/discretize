@@ -52,15 +52,15 @@ h = np.ones(20)
 mesh = TensorMesh([h], "C")
 
 # Get node and cell center locations
-x_nodes = mesh.vectorNx
-x_centers = mesh.vectorCCx
+x_nodes = mesh.nodes_x
+x_centers = mesh.cell_centers_x
 
 # Compute function on nodes and derivative at cell centers
 v = np.exp(-(x_nodes**2) / 4**2)
 dvdx = -(2 * x_centers / 4**2) * np.exp(-(x_centers**2) / 4**2)
 
 # Derivative in x (gradient in 1D) from nodes to cell centers
-G = mesh.nodalGrad
+G = mesh.nodal_gradient
 dvdx_approx = G * v
 
 # Compare
@@ -102,9 +102,9 @@ h = np.ones(20)
 mesh = TensorMesh([h, h, h], "CCC")
 
 # Get differential operators
-GRAD = mesh.nodalGrad  # Gradient from nodes to edges
-DIV = mesh.faceDiv  # Divergence from faces to cell centers
-CURL = mesh.edgeCurl  # Curl edges to cell centers
+GRAD = mesh.nodal_gradient  # Gradient from nodes to edges
+DIV = mesh.face_divergence  # Divergence from faces to cell centers
+CURL = mesh.edge_curl  # Curl edges to cell centers
 
 
 fig = plt.figure(figsize=(9, 8))
@@ -156,9 +156,9 @@ h = np.ones(20)
 mesh = TensorMesh([h, h], "CC")
 
 # Get differential operators
-GRAD = mesh.nodalGrad  # Gradient from nodes to edges
-DIV = mesh.faceDiv  # Divergence from faces to cell centers
-CURL = mesh.edgeCurl  # Curl edges to cell centers (goes to faces in 3D)
+GRAD = mesh.nodal_gradient  # Gradient from nodes to edges
+DIV = mesh.face_divergence  # Divergence from faces to cell centers
+CURL = mesh.edge_curl  # Curl edges to cell centers (goes to faces in 3D)
 
 # Evaluate gradient of a scalar function
 nodes = mesh.gridN
@@ -199,11 +199,11 @@ curl_w = CURL * w
 fig = plt.figure(figsize=(10, 5))
 
 ax1 = fig.add_subplot(121)
-mesh.plotImage(u, ax=ax1, v_type="N")
+mesh.plot_image(u, ax=ax1, v_type="N")
 ax1.set_title("u at cell centers")
 
 ax2 = fig.add_subplot(122)
-mesh.plotImage(
+mesh.plot_image(
     grad_u, ax=ax2, v_type="E", view="vec", stream_opts={"color": "w", "density": 1.0}
 )
 ax2.set_title("gradient of u on edges")
@@ -214,13 +214,13 @@ fig.show()
 fig = plt.figure(figsize=(10, 5))
 
 ax1 = fig.add_subplot(121)
-mesh.plotImage(
+mesh.plot_image(
     v, ax=ax1, v_type="F", view="vec", stream_opts={"color": "w", "density": 1.0}
 )
 ax1.set_title("v at cell faces")
 
 ax2 = fig.add_subplot(122)
-mesh.plotImage(div_v, ax=ax2)
+mesh.plot_image(div_v, ax=ax2)
 ax2.set_title("divergence of v at cell centers")
 
 fig.show()
@@ -229,13 +229,13 @@ fig.show()
 fig = plt.figure(figsize=(10, 5))
 
 ax1 = fig.add_subplot(121)
-mesh.plotImage(
+mesh.plot_image(
     w, ax=ax1, v_type="E", view="vec", stream_opts={"color": "w", "density": 1.0}
 )
 ax1.set_title("w at cell edges")
 
 ax2 = fig.add_subplot(122)
-mesh.plotImage(curl_w, ax=ax2)
+mesh.plot_image(curl_w, ax=ax2)
 ax2.set_title("curl of w at cell centers")
 
 fig.show()
@@ -261,7 +261,7 @@ fig = plt.figure(figsize=(10, 10))
 
 ax1 = fig.add_subplot(211)
 
-mesh.plotGrid(centers=True, nodes=False, ax=ax1)
+mesh.plot_grid(centers=True, nodes=False, ax=ax1)
 ax1.axis("off")
 ax1.set_title("Simple QuadTree Mesh")
 ax1.set_xlim([-1, 17])
@@ -279,7 +279,7 @@ for ii, loc in zip(range(mesh.nFy), mesh.gridFy):
     ax1.text(loc[0] + 0.2, loc[1] + 0.2, "{0:d}".format((ii + mesh.nFx)), color="m")
 
 ax2 = fig.add_subplot(212)
-ax2.spy(mesh.faceDiv)
+ax2.spy(mesh.face_divergence)
 ax2.set_title("Face Divergence")
 ax2.set_ylabel("Cell Number")
 ax2.set_xlabel("Face Number")
@@ -310,9 +310,9 @@ h = 5 * np.ones(20)
 mesh = TensorMesh([h, h, h], "CCC")
 
 # Get operators
-GRAD = mesh.nodalGrad  # nodes to edges
-DIV = mesh.faceDiv  # faces to centers
-CURL = mesh.edgeCurl  # edges to faces
+GRAD = mesh.nodal_gradient  # nodes to edges
+DIV = mesh.face_divergence  # faces to centers
+CURL = mesh.edge_curl  # edges to faces
 
 # Plot
 fig = plt.figure(figsize=(11, 7))

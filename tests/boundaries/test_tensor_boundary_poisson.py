@@ -27,19 +27,19 @@ class Test1D_InhomogeneousDirichlet(discretize.tests.OrderTest):
         j_ana = j_fun(self.M.gridFx)
 
         # TODO: Check where our boundary conditions are CCx or Nx
-        # vec = self.M.vectorNx
-        vec = self.M.vectorCCx
+        # vec = self.M.nodes_x
+        vec = self.M.cell_centers_x
 
         phi_bc = phi(vec[[0, -1]])
         j_bc = j_fun(vec[[0, -1]])
 
-        P, Pin, Pout = self.M.getBCProjWF([["dirichlet", "dirichlet"]])
+        P, Pin, Pout = self.M.get_BC_projections([["dirichlet", "dirichlet"]])
 
-        Mc = self.M.getFaceInnerProduct()
-        McI = utils.sdInv(Mc)
-        V = utils.sdiag(self.M.vol)
-        G = -Pin.T * Pin * self.M.faceDiv.T * V
-        D = self.M.faceDiv
+        Mc = self.M.get_face_inner_product()
+        McI = utils.sdinv(Mc)
+        V = utils.sdiag(self.M.cell_volumes)
+        G = -Pin.T * Pin * self.M.face_divergence.T * V
+        D = self.M.face_divergence
         j = McI * (G * xc_ana + P * phi_bc)
         q = D * Pin.T * Pin * j + D * Pout.T * j_bc
 
@@ -110,10 +110,10 @@ class Test2D_InhomogeneousDirichlet(discretize.tests.OrderTest):
         j_ana = np.r_[jX_ana, jY_ana]
 
         # TODO: Check where our boundary conditions are CCx or Nx
-        # fxm,fxp,fym,fyp = self.M.faceBoundaryInd
+        # fxm,fxp,fym,fyp = self.M.face_boundary_indices
         # gBFx = self.M.gridFx[(fxm|fxp),:]
         # gBFy = self.M.gridFy[(fym|fyp),:]
-        fxm, fxp, fym, fyp = self.M.cellBoundaryInd
+        fxm, fxp, fym, fyp = self.M.cell_boundary_indices
         gBFx = self.M.gridCC[(fxm | fxp), :]
         gBFy = self.M.gridCC[(fym | fyp), :]
 
@@ -121,16 +121,16 @@ class Test2D_InhomogeneousDirichlet(discretize.tests.OrderTest):
 
         # P = sp.csr_matrix(([-1,1],([0,self.M.nF-1],[0,1])), shape=(self.M.nF, 2))
 
-        P, Pin, Pout = self.M.getBCProjWF("dirichlet")
+        P, Pin, Pout = self.M.get_BC_projections("dirichlet")
 
-        Mc = self.M.getFaceInnerProduct()
-        McI = utils.sdInv(Mc)
-        G = -self.M.faceDiv.T * utils.sdiag(self.M.vol)
-        D = self.M.faceDiv
+        Mc = self.M.get_face_inner_product()
+        McI = utils.sdinv(Mc)
+        G = -self.M.face_divergence.T * utils.sdiag(self.M.cell_volumes)
+        D = self.M.face_divergence
         j = McI * (G * xc_ana + P * bc)
         q = D * j
 
-        # self.M.plotImage(j, 'FxFy', show_it=True)
+        # self.M.plot_image(j, 'FxFy', show_it=True)
 
         # Rearrange if we know q to solve for x
         A = D * McI * G
@@ -189,19 +189,19 @@ class Test1D_InhomogeneousNeumann(discretize.tests.OrderTest):
         j_ana = j_fun(self.M.gridFx)
 
         # TODO: Check where our boundary conditions are CCx or Nx
-        vecN = self.M.vectorNx
-        vecC = self.M.vectorCCx
+        vecN = self.M.nodes_x
+        vecC = self.M.cell_centers_x
 
         phi_bc = phi(vecC[[0, -1]])
         j_bc = j_fun(vecN[[0, -1]])
 
-        P, Pin, Pout = self.M.getBCProjWF([["neumann", "neumann"]])
+        P, Pin, Pout = self.M.get_BC_projections([["neumann", "neumann"]])
 
-        Mc = self.M.getFaceInnerProduct()
-        McI = utils.sdInv(Mc)
-        V = utils.sdiag(self.M.vol)
-        G = -Pin.T * Pin * self.M.faceDiv.T * V
-        D = self.M.faceDiv
+        Mc = self.M.get_face_inner_product()
+        McI = utils.sdinv(Mc)
+        V = utils.sdiag(self.M.cell_volumes)
+        G = -Pin.T * Pin * self.M.face_divergence.T * V
+        D = self.M.face_divergence
         j = McI * (G * xc_ana + P * phi_bc)
         q = V * D * Pin.T * Pin * j + V * D * Pout.T * j_bc
 
@@ -271,8 +271,8 @@ class Test2D_InhomogeneousNeumann(discretize.tests.OrderTest):
 
         # TODO: Check where our boundary conditions are CCx or Nx
 
-        cxm, cxp, cym, cyp = self.M.cellBoundaryInd
-        fxm, fxp, fym, fyp = self.M.faceBoundaryInd
+        cxm, cxp, cym, cyp = self.M.cell_boundary_indices
+        fxm, fxp, fym, fyp = self.M.face_boundary_indices
 
         gBFx = self.M.gridFx[(fxm | fxp), :]
         gBFy = self.M.gridFy[(fym | fyp), :]
@@ -282,13 +282,13 @@ class Test2D_InhomogeneousNeumann(discretize.tests.OrderTest):
 
         # P = sp.csr_matrix(([-1,1],([0,self.M.nF-1],[0,1])), shape=(self.M.nF, 2))
 
-        P, Pin, Pout = self.M.getBCProjWF("neumann")
+        P, Pin, Pout = self.M.get_BC_projections("neumann")
 
-        Mc = self.M.getFaceInnerProduct()
-        McI = utils.sdInv(Mc)
-        V = utils.sdiag(self.M.vol)
-        G = -Pin.T * Pin * self.M.faceDiv.T * V
-        D = self.M.faceDiv
+        Mc = self.M.get_face_inner_product()
+        McI = utils.sdinv(Mc)
+        V = utils.sdiag(self.M.cell_volumes)
+        G = -Pin.T * Pin * self.M.face_divergence.T * V
+        D = self.M.face_divergence
         j = McI * (G * xc_ana + P * phi_bc)
         q = V * D * Pin.T * Pin * j + V * D * Pout.T * j_bc
 
@@ -351,19 +351,19 @@ class Test1D_InhomogeneousMixed(discretize.tests.OrderTest):
         j_ana = j_fun(self.M.gridFx)
 
         # TODO: Check where our boundary conditions are CCx or Nx
-        vecN = self.M.vectorNx
-        vecC = self.M.vectorCCx
+        vecN = self.M.nodes_x
+        vecC = self.M.cell_centers_x
 
         phi_bc = phi(vecC[[0, -1]])
         j_bc = j_fun(vecN[[0, -1]])
 
-        P, Pin, Pout = self.M.getBCProjWF([["dirichlet", "neumann"]])
+        P, Pin, Pout = self.M.get_BC_projections([["dirichlet", "neumann"]])
 
-        Mc = self.M.getFaceInnerProduct()
-        McI = utils.sdInv(Mc)
-        V = utils.sdiag(self.M.vol)
-        G = -Pin.T * Pin * self.M.faceDiv.T * V
-        D = self.M.faceDiv
+        Mc = self.M.get_face_inner_product()
+        McI = utils.sdinv(Mc)
+        V = utils.sdiag(self.M.cell_volumes)
+        G = -Pin.T * Pin * self.M.face_divergence.T * V
+        D = self.M.face_divergence
         j = McI * (G * xc_ana + P * phi_bc)
         q = V * D * Pin.T * Pin * j + V * D * Pout.T * j_bc
 
@@ -443,8 +443,8 @@ class Test2D_InhomogeneousMixed(discretize.tests.OrderTest):
 
         # TODO: Check where our boundary conditions are CCx or Nx
 
-        cxm, cxp, cym, cyp = self.M.cellBoundaryInd
-        fxm, fxp, fym, fyp = self.M.faceBoundaryInd
+        cxm, cxp, cym, cyp = self.M.cell_boundary_indices
+        fxm, fxp, fym, fyp = self.M.face_boundary_indices
 
         gBFx = self.M.gridFx[(fxm | fxp), :]
         gBFy = self.M.gridFy[(fym | fyp), :]
@@ -457,15 +457,15 @@ class Test2D_InhomogeneousMixed(discretize.tests.OrderTest):
 
         # P = sp.csr_matrix(([-1,1],([0,self.M.nF-1],[0,1])), shape=(self.M.nF, 2))
 
-        P, Pin, Pout = self.M.getBCProjWF(
+        P, Pin, Pout = self.M.get_BC_projections(
             [["dirichlet", "neumann"], ["dirichlet", "neumann"]]
         )
 
-        Mc = self.M.getFaceInnerProduct()
-        McI = utils.sdInv(Mc)
-        V = utils.sdiag(self.M.vol)
-        G = -Pin.T * Pin * self.M.faceDiv.T * V
-        D = self.M.faceDiv
+        Mc = self.M.get_face_inner_product()
+        McI = utils.sdinv(Mc)
+        V = utils.sdiag(self.M.cell_volumes)
+        G = -Pin.T * Pin * self.M.face_divergence.T * V
+        D = self.M.face_divergence
         j = McI * (G * xc_ana + P * phi_bc)
         q = V * D * Pin.T * Pin * j + V * D * Pout.T * j_bc
 

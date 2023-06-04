@@ -23,7 +23,7 @@ def run(plotIt=True, n=60):
     if plotIt:
         fig, axes = plt.subplots(2, 1, figsize=(10, 10))
 
-        M.plotGrid(centers=True, nodes=False, ax=axes[0])
+        M.plot_grid(centers=True, nodes=False, ax=axes[0])
         axes[0].axis("off")
         axes[0].set_title("Simple QuadTree Mesh")
         axes[0].set_xlim([-1, 17])
@@ -42,7 +42,7 @@ def run(plotIt=True, n=60):
                 loc[0] + 0.2, loc[1] + 0.2, "{0:d}".format((ii + M.nFx)), color="m"
             )
 
-        axes[1].spy(M.faceDiv)
+        axes[1].spy(M.face_divergence)
         axes[1].set_title("Face Divergence")
         axes[1].set_ylabel("Cell Number")
         axes[1].set_xlabel("Face Number")

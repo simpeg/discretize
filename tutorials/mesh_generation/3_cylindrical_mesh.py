@@ -2,7 +2,7 @@
 Cylindrical meshes
 ==================
 
-Cylindrical meshes (:class:`~discretize.CylMesh`) are defined in terms of *r*
+Cylindrical meshes (:class:`~discretize.CylindricalMesh`) are defined in terms of *r*
 (radial position), *z* (vertical position) and *phi* (azimuthal position).
 They are a child class of the tensor mesh class. Cylindrical meshes are useful
 in solving differential equations that possess rotational symmetry. Here we
@@ -24,7 +24,7 @@ demonstrate:
 # Here we import the packages required for this tutorial.
 #
 
-from discretize import CylMesh
+from discretize import CylindricalMesh
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -55,9 +55,9 @@ x0 = 0.0
 y0 = 0.0
 z0 = -150.0
 
-mesh = CylMesh([hr, hp, hz], x0=[x0, y0, z0])
+mesh = CylindricalMesh([hr, hp, hz], x0=[x0, y0, z0])
 
-mesh.plotGrid()
+mesh.plot_grid()
 
 
 ###############################################
@@ -89,16 +89,16 @@ hp = [(dp, ncp)]
 hz = [(dz, npad_z, -exp_z), (dz, ncz), (dz, npad_z, exp_z)]
 
 # We can use flags 'C', '0' and 'N' to define the xyz position of the mesh.
-mesh = CylMesh([hr, hp, hz], x0="00C")
+mesh = CylindricalMesh([hr, hp, hz], x0="00C")
 
-# We can apply the plotGrid method and change the axis properties
-ax = mesh.plotGrid()
+# We can apply the plot_grid method and change the axis properties
+ax = mesh.plot_grid()
 ax[0].set_title("Discretization in phi")
 
 ax[1].set_title("Discretization in r and z")
 ax[1].set_xlabel("r")
-ax[1].set_xbound(mesh.x0[0], mesh.x0[0] + np.sum(mesh.hx))
-ax[1].set_ybound(mesh.x0[2], mesh.x0[2] + np.sum(mesh.hz))
+ax[1].set_xbound(mesh.x0[0], mesh.x0[0] + np.sum(mesh.h[0]))
+ax[1].set_ybound(mesh.x0[2], mesh.x0[2] + np.sum(mesh.h[2]))
 
 # The bottom end of the vertical axis of rotational symmetry
 x0 = mesh.x0
@@ -110,7 +110,7 @@ nC = mesh.nC
 cc = mesh.gridCC
 
 # The cell volumes
-v = mesh.vol
+v = mesh.cell_volumes
 
 ###############################################
 # Cylindrical Mesh for Rotational Symmetry
@@ -142,7 +142,7 @@ hr = [(dr, ncr), (dr, npad_r, exp_r)]
 hz = [(dz, npad_z, -exp_z), (dz, ncz), (dz, npad_z, exp_z)]
 
 # A value of 1 is used to define the discretization in phi for this case.
-mesh = CylMesh([hr, 1, hz], x0="00C")
+mesh = CylindricalMesh([hr, 1, hz], x0="00C")
 
 # The bottom end of the vertical axis of rotational symmetry
 x0 = mesh.x0
@@ -154,14 +154,14 @@ nC = mesh.nC
 cc = mesh.gridCC
 
 # Plot the cell volumes.
-v = mesh.vol
+v = mesh.cell_volumes
 
 fig = plt.figure(figsize=(6, 4))
 ax = fig.add_subplot(111)
-mesh.plotImage(np.log10(v), grid=True, ax=ax)
+mesh.plot_image(np.log10(v), grid=True, ax=ax)
 ax.set_xlabel("r")
-ax.set_xbound(mesh.x0[0], mesh.x0[0] + np.sum(mesh.hx))
-ax.set_ybound(mesh.x0[2], mesh.x0[2] + np.sum(mesh.hz))
+ax.set_xbound(mesh.x0[0], mesh.x0[0] + np.sum(mesh.h[0]))
+ax.set_ybound(mesh.x0[2], mesh.x0[2] + np.sum(mesh.h[2]))
 ax.set_title("Cell Log-Volumes")
 
 ##############################################################################

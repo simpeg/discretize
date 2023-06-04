@@ -12,7 +12,7 @@ This is a patch release with several bugfixes, as well as additions to the
 ``TreeMesh``.
 
 ``TreeMesh`` improvements
------------------------
+-------------------------
 
 We have added several methods to the :class:`discretize.TreeMesh` that
 provide specialize geometric refinement entities including:

@@ -27,8 +27,8 @@ def compare_meshes(test, mesh0, mesh1):
         test.assertEqual(mesh0.vnF, mesh1.vnF)
         test.assertEqual(mesh0.vnN, mesh1.vnN)
 
-    test.assertTrue((mesh0.normals == mesh1.normals).all())
-    test.assertTrue((mesh0.tangents == mesh1.tangents).all())
+    test.assertTrue((mesh0.face_normals == mesh1.face_normals).all())
+    test.assertTrue((mesh0.edge_tangents == mesh1.edge_tangents).all())
 
     if hasattr(mesh0, "h"):
         for i in range(len(mesh0.h)):
@@ -37,9 +37,9 @@ def compare_meshes(test, mesh0, mesh1):
             )
 
     # check edges, faces, volumes
-    test.assertTrue((mesh0.edge == mesh1.edge).all())
-    test.assertTrue((mesh0.area == mesh1.area).all())
-    test.assertTrue((mesh0.vol == mesh1.vol).all())
+    test.assertTrue((mesh0.edge_lengths == mesh1.edge_lengths).all())
+    test.assertTrue((mesh0.face_areas == mesh1.face_areas).all())
+    test.assertTrue((mesh0.cell_volumes == mesh1.cell_volumes).all())
 
     # Tree mesh specific
     # if hasattr(mesh0, '_cells'):
@@ -89,7 +89,7 @@ class CylTest(unittest.TestCase):
     n = [4, 1, 9]
 
     def setUp(self):
-        self.mesh = discretize.CylMesh(self.n, x0="00C")
+        self.mesh = discretize.CylindricalMesh(self.n, x0="00C")
 
     def test_save_load(self):
         print("\nTesting save / load of Cyl Mesh ...")

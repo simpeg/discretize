@@ -4,6 +4,7 @@ import discretize
 from discretize.utils import example_simplex_mesh
 import os
 import pickle
+import matplotlib.pyplot as plt
 
 try:
     import vtk  # NOQA F401
@@ -108,6 +109,8 @@ class SimplexTests(unittest.TestCase):
             cc_dat = np.random.rand(mesh.n_cells)
             mesh.plot_image(cc_dat)
 
+        plt.close("all")
+
     def test_plot_grid(self):
         n = 5
         points, simplices = discretize.utils.example_simplex_mesh((n, n))
@@ -117,6 +120,7 @@ class SimplexTests(unittest.TestCase):
         points, simplices = discretize.utils.example_simplex_mesh((n, n, n))
         mesh = discretize.SimplexMesh(points, simplices)
         mesh.plot_grid(nodes=True, faces=True, edges=True, centers=True)
+        plt.close("all")
 
     if has_vtk:
 

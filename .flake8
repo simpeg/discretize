@@ -59,7 +59,6 @@ rst-roles =
     data,
     # Python programming language:
     py:func,py:mod,py:attr,py:meth,
-    # Collapse functionality
 rst-directives =
     # These are sorted alphabetically - but that does not matter
-    autosummary,currentmodule,deprecated,collapse,
+    autosummary,currentmodule,deprecated,

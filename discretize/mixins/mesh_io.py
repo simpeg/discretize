@@ -7,7 +7,6 @@ import numpy as np
 
 from discretize.utils import mkvc
 from discretize.utils.code_utils import deprecate_method
-import warnings
 
 try:
     from discretize.mixins.vtk_mod import (
@@ -417,22 +416,19 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         --------
         read_UBC
         """
-        warnings.warn(
-            "TensorMesh.readUBC has been deprecated and will be removed in"
+        raise NotImplementedError(
+            "TensorMesh.readUBC has been removed and this be removed in"
             "discretize 1.0.0. please use TensorMesh.read_UBC",
-            FutureWarning,
-            stacklevel=2,
         )
-        return TensorMesh.read_UBC(file_name, directory)
 
     readModelUBC = deprecate_method(
-        "read_model_UBC", "readModelUBC", removal_version="1.0.0", future_warn=True
+        "read_model_UBC", "readModelUBC", removal_version="1.0.0", error=True
     )
     writeUBC = deprecate_method(
-        "write_UBC", "writeUBC", removal_version="1.0.0", future_warn=True
+        "write_UBC", "writeUBC", removal_version="1.0.0", error=True
     )
     writeModelUBC = deprecate_method(
-        "write_model_UBC", "writeModelUBC", removal_version="1.0.0", future_warn=True
+        "write_model_UBC", "writeModelUBC", removal_version="1.0.0", error=True
     )
 
 
@@ -612,22 +608,19 @@ class TreeMeshIO(object):
         --------
         read_UBC
         """
-        warnings.warn(
-            "TensorMesh.readUBC has been deprecated and will be removed in"
+        raise NotImplementedError(
+            "TensorMesh.readUBC has been removed and this be removed in"
             "discretize 1.0.0. please use TensorMesh.read_UBC",
-            FutureWarning,
-            stacklevel=2,
         )
-        return TreeMesh.read_UBC(file_name, directory)
 
     readModelUBC = deprecate_method(
-        "read_model_UBC", "readModelUBC", removal_version="1.0.0", future_warn=True
+        "read_model_UBC", "readModelUBC", removal_version="1.0.0", error=True
     )
     writeUBC = deprecate_method(
-        "write_UBC", "writeUBC", removal_version="1.0.0", future_warn=True
+        "write_UBC", "writeUBC", removal_version="1.0.0", error=True
     )
     writeModelUBC = deprecate_method(
-        "write_model_UBC", "writeModelUBC", removal_version="1.0.0", future_warn=True
+        "write_model_UBC", "writeModelUBC", removal_version="1.0.0", error=True
     )
 
 

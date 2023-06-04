@@ -2,6 +2,7 @@ import discretize
 import pytest
 import os
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 def test_convert_zero_wrapped_to_vtk():
@@ -53,3 +54,4 @@ def cleanup_files(monkeypatch):
             os.remove(file)
         except FileNotFoundError:
             pass
+    plt.close("all")
