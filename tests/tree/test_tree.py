@@ -1,5 +1,6 @@
 import numpy as np
 import unittest
+import pytest
 import discretize
 
 TOL = 1e-8
@@ -338,6 +339,43 @@ class TestOcTree(unittest.TestCase):
 
         cell_2 = M[2]
         np.testing.assert_equal(cell_2.nodes, cell_nodes[2])
+
+
+class TestTreeMeshNodes:
+    @pytest.fixture(params=["2D", "3D"])
+    def sample_mesh(self, request):
+        """Return a sample TreeMesh"""
+        nc = 8
+        h1 = np.random.rand(nc) * nc * 0.5 + nc * 0.5
+        h2 = np.random.rand(nc) * nc * 0.5 + nc * 0.5
+        if request.param == "2D":
+            h = [hi / np.sum(hi) for hi in [h1, h2]]  # normalize
+            mesh = discretize.TreeMesh(h)
+            points = np.array([[0.2, 0.1], [0.8, 0.4]])
+            levels = np.array([1, 2])
+            mesh.insert_cells(points, levels, finalize=True)
+        else:
+            h3 = np.random.rand(nc) * nc * 0.5 + nc * 0.5
+            h = [hi / np.sum(hi) for hi in [h1, h2, h3]]  # normalize
+            mesh = discretize.TreeMesh(h, levels=3)
+            points = np.array([[0.2, 0.1, 0.7], [0.8, 0.4, 0.2]])
+            levels = np.array([1, 2])
+            mesh.insert_cells(points, levels, finalize=True)
+        return mesh
+
+    def test_total_nodes(self, sample_mesh):
+        """
+        Test if ``TreeMesh.total_nodes`` works as expected
+        """
+        n_non_hanging_nodes = sample_mesh.n_nodes
+        # Check if total_nodes contain all non hanging nodes (in the right order)
+        np.testing.assert_equal(
+            sample_mesh.total_nodes[:n_non_hanging_nodes, :], sample_mesh.nodes
+        )
+        # Check if total_nodes contain all hanging nodes (in the right order)
+        np.testing.assert_equal(
+            sample_mesh.total_nodes[n_non_hanging_nodes:, :], sample_mesh.hanging_nodes
+        )
 
 
 class Test2DInterpolation(unittest.TestCase):
