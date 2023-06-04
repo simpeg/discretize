@@ -817,20 +817,18 @@ class BaseMesh:
 
         Plot the original face-vector and its divergence
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(13, 6))
-            >>> ax1 = fig.add_subplot(121)
-            >>> mesh.plot_image(
-            ...     u, ax=ax1, v_type="F", view="vec", stream_opts={"color": "w", "density": 1.0}
-            ... )
-            >>> ax1.set_title("Vector at cell faces", fontsize=14)
-            >>> ax2 = fig.add_subplot(122)
-            >>> mesh.plot_image(div_u, ax=ax2)
-            >>> ax2.set_yticks([])
-            >>> ax2.set_ylabel("")
-            >>> ax2.set_title("Divergence at cell centers", fontsize=14)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(13, 6))
+        >>> ax1 = fig.add_subplot(121)
+        >>> mesh.plot_image(
+        ...     u, ax=ax1, v_type="F", view="vec", stream_opts={"color": "w", "density": 1.0}
+        ... )
+        >>> ax1.set_title("Vector at cell faces", fontsize=14)
+        >>> ax2 = fig.add_subplot(122)
+        >>> mesh.plot_image(div_u, ax=ax2)
+        >>> ax2.set_yticks([])
+        >>> ax2.set_ylabel("")
+        >>> ax2.set_title("Divergence at cell centers", fontsize=14)
+        >>> plt.show()
 
         The discrete divergence operator is a sparse matrix that maps
         from faces to cell centers. To demonstrate this, we construct
@@ -839,47 +837,45 @@ class BaseMesh:
         discrete divergence :math:`\boldsymbol{\phi}` as well as a
         spy plot.
 
-        .. collapse:: Expand to show scripting for plot
+        >>> mesh = TensorMesh([[(1, 6)], [(1, 3)]])
+        >>> fig = plt.figure(figsize=(10, 10))
+        >>> ax1 = fig.add_subplot(211)
+        >>> mesh.plot_grid(ax=ax1)
+        >>> ax1.plot(
+        ...     mesh.cell_centers[:, 0], mesh.cell_centers[:, 1], "ro", markersize=8
+        ... )
+        >>> for ii, loc in zip(range(mesh.nC), mesh.cell_centers):
+        ...     ax1.text(loc[0]+0.05, loc[1]+0.02, "{0:d}".format(ii), color="r")
+        >>> ax1.plot(
+        ...     mesh.faces_x[:, 0], mesh.faces_x[:, 1], "g>", markersize=8
+        ... )
+        >>> for ii, loc in zip(range(mesh.nFx), mesh.faces_x):
+        ...     ax1.text(loc[0]+0.05, loc[1]+0.02, "{0:d}".format(ii), color="g")
+        >>> ax1.plot(
+        ...     mesh.faces_y[:, 0], mesh.faces_y[:, 1], "g^", markersize=8
+        ... )
+        >>> for ii, loc in zip(range(mesh.nFy), mesh.faces_y):
+        ...     ax1.text(loc[0] + 0.05, loc[1] + 0.1, "{0:d}".format((ii + mesh.nFx)), color="g")
 
-            >>> mesh = TensorMesh([[(1, 6)], [(1, 3)]])
-            >>> fig = plt.figure(figsize=(10, 10))
-            >>> ax1 = fig.add_subplot(211)
-            >>> mesh.plot_grid(ax=ax1)
-            >>> ax1.plot(
-            ...     mesh.cell_centers[:, 0], mesh.cell_centers[:, 1], "ro", markersize=8
-            ... )
-            >>> for ii, loc in zip(range(mesh.nC), mesh.cell_centers):
-            ...     ax1.text(loc[0]+0.05, loc[1]+0.02, "{0:d}".format(ii), color="r")
-            >>> ax1.plot(
-            ...     mesh.faces_x[:, 0], mesh.faces_x[:, 1], "g>", markersize=8
-            ... )
-            >>> for ii, loc in zip(range(mesh.nFx), mesh.faces_x):
-            ...     ax1.text(loc[0]+0.05, loc[1]+0.02, "{0:d}".format(ii), color="g")
-            >>> ax1.plot(
-            ...     mesh.faces_y[:, 0], mesh.faces_y[:, 1], "g^", markersize=8
-            ... )
-            >>> for ii, loc in zip(range(mesh.nFy), mesh.faces_y):
-            ...     ax1.text(loc[0] + 0.05, loc[1] + 0.1, "{0:d}".format((ii + mesh.nFx)), color="g")
-
-            >>> ax1.set_xticks([])
-            >>> ax1.set_yticks([])
-            >>> ax1.spines['bottom'].set_color('white')
-            >>> ax1.spines['top'].set_color('white')
-            >>> ax1.spines['left'].set_color('white')
-            >>> ax1.spines['right'].set_color('white')
-            >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
-            >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
-            >>> ax1.set_title("Mapping of Face Divergence", fontsize=14, pad=15)
-            >>> ax1.legend(
-            ...     ['Mesh', r'$\mathbf{\phi}$ (centers)', r'$\mathbf{u}$ (faces)'],
-            ...     loc='upper right', fontsize=14
-            ... )
-            >>> ax2 = fig.add_subplot(212)
-            >>> ax2.spy(mesh.face_divergence)
-            >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
-            >>> ax2.set_ylabel("Cell Index", fontsize=12)
-            >>> ax2.set_xlabel("Face Index", fontsize=12)
-            >>> plt.show()
+        >>> ax1.set_xticks([])
+        >>> ax1.set_yticks([])
+        >>> ax1.spines['bottom'].set_color('white')
+        >>> ax1.spines['top'].set_color('white')
+        >>> ax1.spines['left'].set_color('white')
+        >>> ax1.spines['right'].set_color('white')
+        >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
+        >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
+        >>> ax1.set_title("Mapping of Face Divergence", fontsize=14, pad=15)
+        >>> ax1.legend(
+        ...     ['Mesh', r'$\mathbf{\phi}$ (centers)', r'$\mathbf{u}$ (faces)'],
+        ...     loc='upper right', fontsize=14
+        ... )
+        >>> ax2 = fig.add_subplot(212)
+        >>> ax2.spy(mesh.face_divergence)
+        >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
+        >>> ax2.set_ylabel("Cell Index", fontsize=12)
+        >>> ax2.set_xlabel("Face Index", fontsize=12)
+        >>> plt.show()
         """
         raise NotImplementedError(f"face_divergence not implemented for {type(self)}")
 
@@ -965,21 +961,19 @@ class BaseMesh:
 
         Plot the original function and the gradient
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(13, 6))
-            >>> ax1 = fig.add_subplot(121)
-            >>> mesh.plot_image(phi, v_type="N", ax=ax1)
-            >>> ax1.set_title("Scalar at nodes", fontsize=14)
-            >>> ax2 = fig.add_subplot(122)
-            >>> mesh.plot_image(
-            ...     grad_phi, ax=ax2, v_type="E", view="vec",
-            ...     stream_opts={"color": "w", "density": 1.0}
-            ... )
-            >>> ax2.set_yticks([])
-            >>> ax2.set_ylabel("")
-            >>> ax2.set_title("Gradient at edges", fontsize=14)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(13, 6))
+        >>> ax1 = fig.add_subplot(121)
+        >>> mesh.plot_image(phi, v_type="N", ax=ax1)
+        >>> ax1.set_title("Scalar at nodes", fontsize=14)
+        >>> ax2 = fig.add_subplot(122)
+        >>> mesh.plot_image(
+        ...     grad_phi, ax=ax2, v_type="E", view="vec",
+        ...     stream_opts={"color": "w", "density": 1.0}
+        ... )
+        >>> ax2.set_yticks([])
+        >>> ax2.set_ylabel("")
+        >>> ax2.set_title("Gradient at edges", fontsize=14)
+        >>> plt.show()
 
         The nodal gradient operator is a sparse matrix that maps
         from nodes to edges. To demonstrate this, we construct
@@ -987,43 +981,41 @@ class BaseMesh:
         the original discrete quantity :math:`\boldsymbol{\phi}` and its
         discrete gradient as well as a spy plot.
 
-        .. collapse:: Expand to show scripting for plot
+        >>> mesh = TensorMesh([[(1, 3)], [(1, 6)]])
+        >>> fig = plt.figure(figsize=(12, 10))
+        >>> ax1 = fig.add_subplot(121)
+        >>> mesh.plot_grid(ax=ax1)
+        >>> ax1.set_title("Mapping of Gradient Operator", fontsize=14, pad=15)
+        >>> ax1.plot(mesh.nodes[:, 0], mesh.nodes[:, 1], "ro", markersize=8)
+        >>> for ii, loc in zip(range(mesh.nN), mesh.nodes):
+        >>>     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format(ii), color="r")
 
-            >>> mesh = TensorMesh([[(1, 3)], [(1, 6)]])
-            >>> fig = plt.figure(figsize=(12, 10))
-            >>> ax1 = fig.add_subplot(121)
-            >>> mesh.plot_grid(ax=ax1)
-            >>> ax1.set_title("Mapping of Gradient Operator", fontsize=14, pad=15)
-            >>> ax1.plot(mesh.nodes[:, 0], mesh.nodes[:, 1], "ro", markersize=8)
-            >>> for ii, loc in zip(range(mesh.nN), mesh.nodes):
-            >>>     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format(ii), color="r")
+        >>> ax1.plot(mesh.edges_x[:, 0], mesh.edges_x[:, 1], "g>", markersize=8)
+        >>> for ii, loc in zip(range(mesh.nEx), mesh.edges_x):
+        >>>     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format(ii), color="g")
 
-            >>> ax1.plot(mesh.edges_x[:, 0], mesh.edges_x[:, 1], "g>", markersize=8)
-            >>> for ii, loc in zip(range(mesh.nEx), mesh.edges_x):
-            >>>     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format(ii), color="g")
+        >>> ax1.plot(mesh.edges_y[:, 0], mesh.edges_y[:, 1], "g^", markersize=8)
+        >>> for ii, loc in zip(range(mesh.nEy), mesh.edges_y):
+        >>>     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format((ii + mesh.nEx)), color="g")
 
-            >>> ax1.plot(mesh.edges_y[:, 0], mesh.edges_y[:, 1], "g^", markersize=8)
-            >>> for ii, loc in zip(range(mesh.nEy), mesh.edges_y):
-            >>>     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format((ii + mesh.nEx)), color="g")
-
-            >>> ax1.set_xticks([])
-            >>> ax1.set_yticks([])
-            >>> ax1.spines['bottom'].set_color('white')
-            >>> ax1.spines['top'].set_color('white')
-            >>> ax1.spines['left'].set_color('white')
-            >>> ax1.spines['right'].set_color('white')
-            >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
-            >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
-            >>> ax1.legend(
-            >>>     ['Mesh', r'$\mathbf{\phi}$ (nodes)', r'$\mathbf{u}$ (edges)'],
-            >>>     loc='upper right', fontsize=14
-            >>> )
-            >>> ax2 = fig.add_subplot(122)
-            >>> ax2.spy(mesh.nodal_gradient)
-            >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
-            >>> ax2.set_ylabel("Edge Index", fontsize=12)
-            >>> ax2.set_xlabel("Node Index", fontsize=12)
-            >>> plt.plot()
+        >>> ax1.set_xticks([])
+        >>> ax1.set_yticks([])
+        >>> ax1.spines['bottom'].set_color('white')
+        >>> ax1.spines['top'].set_color('white')
+        >>> ax1.spines['left'].set_color('white')
+        >>> ax1.spines['right'].set_color('white')
+        >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
+        >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
+        >>> ax1.legend(
+        >>>     ['Mesh', r'$\mathbf{\phi}$ (nodes)', r'$\mathbf{u}$ (edges)'],
+        >>>     loc='upper right', fontsize=14
+        >>> )
+        >>> ax2 = fig.add_subplot(122)
+        >>> ax2.spy(mesh.nodal_gradient)
+        >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
+        >>> ax2.set_ylabel("Edge Index", fontsize=12)
+        >>> ax2.set_xlabel("Node Index", fontsize=12)
+        >>> plt.plot()
         """
         raise NotImplementedError(f"nodal_gradient not implemented for {type(self)}")
 
@@ -1128,35 +1120,33 @@ class BaseMesh:
 
         Plot the curve and its mapping for a single face.
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(10, 15))
-            >>> ax1 = fig.add_axes([0, 0.35, 1, 0.6], projection='3d', elev=25, azim=-60)
-            >>> mesh.plot_grid(ax=ax1)
-            >>> ax1.plot(
-            ...     mesh.edges[edge_ind, 0], mesh.edges[edge_ind, 1], mesh.edges[edge_ind, 2],
-            ...     "go", markersize=10
-            ... )
-            >>> ax1.plot(
-            ...     mesh.faces[face_ind, 0], mesh.faces[face_ind, 1], mesh.faces[face_ind, 2],
-            ...     "rs", markersize=10
-            ... )
-            >>> poly = mp3d.art3d.Poly3DCollection(
-            ...     [poly], alpha=0.1, facecolor='r', linewidth=None
-            ... )
-            >>> ax1.add_collection(poly)
-            >>> ax1.quiver(
-            ...     edges[:, 0], edges[:, 1], edges[:, 2],
-            ...     0.5*edge_tan[:, 0], 0.5*edge_tan[:, 1], 0.5*edge_tan[:, 2],
-            ...     edgecolor='g', pivot='middle', linewidth=4, arrow_length_ratio=0.25
-            ... )
-            >>> ax1.text(face[0]+ds[0], face[1]+ds[1], face[2]+ds[2], "{0:d}".format(face_ind), color="r")
-            >>> for ii, loc in zip(range(len(edge_ind)), edges):
-            ...     ax1.text(loc[0]+ds[0], loc[1]+ds[1], loc[2]+ds[2], "{0:d}".format(edge_ind[ii]), color="g")
-            >>> ax1.legend(
-            ...     ['Mesh', r'$\mathbf{u}$ (edges)', r'$\mathbf{w}$ (face)'],
-            ...     loc='upper right', fontsize=14
-            ... )
+        >>> fig = plt.figure(figsize=(10, 15))
+        >>> ax1 = fig.add_axes([0, 0.35, 1, 0.6], projection='3d', elev=25, azim=-60)
+        >>> mesh.plot_grid(ax=ax1)
+        >>> ax1.plot(
+        ...     mesh.edges[edge_ind, 0], mesh.edges[edge_ind, 1], mesh.edges[edge_ind, 2],
+        ...     "go", markersize=10
+        ... )
+        >>> ax1.plot(
+        ...     mesh.faces[face_ind, 0], mesh.faces[face_ind, 1], mesh.faces[face_ind, 2],
+        ...     "rs", markersize=10
+        ... )
+        >>> poly = mp3d.art3d.Poly3DCollection(
+        ...     [poly], alpha=0.1, facecolor='r', linewidth=None
+        ... )
+        >>> ax1.add_collection(poly)
+        >>> ax1.quiver(
+        ...     edges[:, 0], edges[:, 1], edges[:, 2],
+        ...     0.5*edge_tan[:, 0], 0.5*edge_tan[:, 1], 0.5*edge_tan[:, 2],
+        ...     edgecolor='g', pivot='middle', linewidth=4, arrow_length_ratio=0.25
+        ... )
+        >>> ax1.text(face[0]+ds[0], face[1]+ds[1], face[2]+ds[2], "{0:d}".format(face_ind), color="r")
+        >>> for ii, loc in zip(range(len(edge_ind)), edges):
+        ...     ax1.text(loc[0]+ds[0], loc[1]+ds[1], loc[2]+ds[2], "{0:d}".format(edge_ind[ii]), color="g")
+        >>> ax1.legend(
+        ...     ['Mesh', r'$\mathbf{u}$ (edges)', r'$\mathbf{w}$ (face)'],
+        ...     loc='upper right', fontsize=14
+        ... )
 
             Manually make axis properties invisible
 
@@ -1461,25 +1451,23 @@ class BaseMesh:
         Now we plot the original scalar, and the differencing taken along the
         x and y axes.
 
-        .. collapse:: Expand to show scripting for plot
+        >>> fig = plt.figure(figsize=(15, 4.5))
+        >>> ax1 = fig.add_subplot(131)
+        >>> mesh.plot_image(phi, ax=ax1)
+        >>> ax1.set_title("Scalar at cell centers", fontsize=14)
 
-            >>> fig = plt.figure(figsize=(15, 4.5))
-            >>> ax1 = fig.add_subplot(131)
-            >>> mesh.plot_image(phi, ax=ax1)
-            >>> ax1.set_title("Scalar at cell centers", fontsize=14)
+        >>> ax2 = fig.add_subplot(132)
+        >>> mesh.plot_image(diff_phi, ax=ax2, v_type="Fx")
+        >>> ax2.set_yticks([])
+        >>> ax2.set_ylabel("")
+        >>> ax2.set_title("Difference (x-axis)", fontsize=14)
 
-            >>> ax2 = fig.add_subplot(132)
-            >>> mesh.plot_image(diff_phi, ax=ax2, v_type="Fx")
-            >>> ax2.set_yticks([])
-            >>> ax2.set_ylabel("")
-            >>> ax2.set_title("Difference (x-axis)", fontsize=14)
-
-            >>> ax3 = fig.add_subplot(133)
-            >>> mesh.plot_image(diff_phi, ax=ax3, v_type="Fy")
-            >>> ax3.set_yticks([])
-            >>> ax3.set_ylabel("")
-            >>> ax3.set_title("Difference (y-axis)", fontsize=14)
-            >>> plt.show()
+        >>> ax3 = fig.add_subplot(133)
+        >>> mesh.plot_image(diff_phi, ax=ax3, v_type="Fy")
+        >>> ax3.set_yticks([])
+        >>> ax3.set_ylabel("")
+        >>> ax3.set_title("Difference (y-axis)", fontsize=14)
+        >>> plt.show()
 
         The cell gradient stencil is a sparse differencing matrix that maps
         from cell centers to faces. To demonstrate this, we construct
@@ -1489,40 +1477,38 @@ class BaseMesh:
         >>> mesh = TensorMesh([[(1, 3)], [(1, 6)]])
         >>> mesh.set_cell_gradient_BC('neumann')
 
-        .. collapse:: Expand to show scripting for plot
+        >>> fig = plt.figure(figsize=(12, 10))
+        >>> ax1 = fig.add_subplot(121)
+        >>> mesh.plot_grid(ax=ax1)
+        >>> ax1.set_title("Mapping of Stencil", fontsize=14, pad=15)
+        >>> ax1.plot(mesh.cell_centers[:, 0], mesh.cell_centers[:, 1], "ro", markersize=8)
+        >>> for ii, loc in zip(range(mesh.nC), mesh.cell_centers):
+        ...     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format(ii), color="r")
+        >>> ax1.plot(mesh.faces_x[:, 0], mesh.faces_x[:, 1], "g>", markersize=8)
+        >>> for ii, loc in zip(range(mesh.nFx), mesh.faces_x):
+        ...     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format(ii), color="g")
+        >>> ax1.plot(mesh.faces_y[:, 0], mesh.faces_y[:, 1], "g^", markersize=8)
+        >>> for ii, loc in zip(range(mesh.nFy), mesh.faces_y):
+        ...     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format((ii + mesh.nFx)), color="g")
+        >>> ax1.set_xticks([])
+        >>> ax1.set_yticks([])
+        >>> ax1.spines['bottom'].set_color('white')
+        >>> ax1.spines['top'].set_color('white')
+        >>> ax1.spines['left'].set_color('white')
+        >>> ax1.spines['right'].set_color('white')
+        >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
+        >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
+        >>> ax1.legend(
+        ...     ['Mesh', r'$\mathbf{\phi}$ (centers)', r'$\mathbf{G^\ast \phi}$ (faces)'],
+        ...     loc='upper right', fontsize=14
+        ... )
 
-            >>> fig = plt.figure(figsize=(12, 10))
-            >>> ax1 = fig.add_subplot(121)
-            >>> mesh.plot_grid(ax=ax1)
-            >>> ax1.set_title("Mapping of Stencil", fontsize=14, pad=15)
-            >>> ax1.plot(mesh.cell_centers[:, 0], mesh.cell_centers[:, 1], "ro", markersize=8)
-            >>> for ii, loc in zip(range(mesh.nC), mesh.cell_centers):
-            ...     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format(ii), color="r")
-            >>> ax1.plot(mesh.faces_x[:, 0], mesh.faces_x[:, 1], "g>", markersize=8)
-            >>> for ii, loc in zip(range(mesh.nFx), mesh.faces_x):
-            ...     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format(ii), color="g")
-            >>> ax1.plot(mesh.faces_y[:, 0], mesh.faces_y[:, 1], "g^", markersize=8)
-            >>> for ii, loc in zip(range(mesh.nFy), mesh.faces_y):
-            ...     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format((ii + mesh.nFx)), color="g")
-            >>> ax1.set_xticks([])
-            >>> ax1.set_yticks([])
-            >>> ax1.spines['bottom'].set_color('white')
-            >>> ax1.spines['top'].set_color('white')
-            >>> ax1.spines['left'].set_color('white')
-            >>> ax1.spines['right'].set_color('white')
-            >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
-            >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
-            >>> ax1.legend(
-            ...     ['Mesh', r'$\mathbf{\phi}$ (centers)', r'$\mathbf{G^\ast \phi}$ (faces)'],
-            ...     loc='upper right', fontsize=14
-            ... )
-
-            >>> ax2 = fig.add_subplot(122)
-            >>> ax2.spy(mesh.stencil_cell_gradient)
-            >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
-            >>> ax2.set_ylabel("Face Index", fontsize=12)
-            >>> ax2.set_xlabel("Cell Index", fontsize=12)
-            >>> plt.show()
+        >>> ax2 = fig.add_subplot(122)
+        >>> ax2.spy(mesh.stencil_cell_gradient)
+        >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
+        >>> ax2.set_ylabel("Face Index", fontsize=12)
+        >>> ax2.set_xlabel("Cell Index", fontsize=12)
+        >>> plt.show()
         """
         raise NotImplementedError(
             f"stencil_cell_gradient not implemented for {type(self)}"
@@ -1652,22 +1638,20 @@ class BaseMesh:
 
         Then plot matrix entries,
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(15, 5))
-            >>> ax1 = fig.add_subplot(131)
-            >>> ax1.imshow(sig_iso_tensor)
-            >>> ax1.axis('off')
-            >>> ax1.set_title("Tensor (isotropic)", fontsize=16)
-            >>> ax2 = fig.add_subplot(132)
-            >>> ax2.imshow(sig_diag_tensor)
-            >>> ax2.axis('off')
-            >>> ax2.set_title("Tensor (diagonal anisotropic)", fontsize=16)
-            >>> ax3 = fig.add_subplot(133)
-            >>> ax3.imshow(sig_full_tensor)
-            >>> ax3.axis('off')
-            >>> ax3.set_title("Tensor (full anisotropic)", fontsize=16)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(15, 5))
+        >>> ax1 = fig.add_subplot(131)
+        >>> ax1.imshow(sig_iso_tensor)
+        >>> ax1.axis('off')
+        >>> ax1.set_title("Tensor (isotropic)", fontsize=16)
+        >>> ax2 = fig.add_subplot(132)
+        >>> ax2.imshow(sig_diag_tensor)
+        >>> ax2.axis('off')
+        >>> ax2.set_title("Tensor (diagonal anisotropic)", fontsize=16)
+        >>> ax3 = fig.add_subplot(133)
+        >>> ax3.imshow(sig_full_tensor)
+        >>> ax3.axis('off')
+        >>> ax3.set_title("Tensor (full anisotropic)", fontsize=16)
+        >>> plt.show()
 
         Here, construct and image the face inner product matrices for
         the isotropic, diagonal anisotropic and full tensor cases.
@@ -1692,19 +1676,17 @@ class BaseMesh:
 
         And then we can plot the sparse representation,
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(12, 4))
-            >>> ax1 = fig.add_subplot(131)
-            >>> ax1.spy(M1, ms=5)
-            >>> ax1.set_title("M (isotropic)", fontsize=16)
-            >>> ax2 = fig.add_subplot(132)
-            >>> ax2.spy(M2, ms=5)
-            >>> ax2.set_title("M (diagonal anisotropic)", fontsize=16)
-            >>> ax3 = fig.add_subplot(133)
-            >>> ax3.spy(M3, ms=5)
-            >>> ax3.set_title("M (full anisotropic)", fontsize=16)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(12, 4))
+        >>> ax1 = fig.add_subplot(131)
+        >>> ax1.spy(M1, ms=5)
+        >>> ax1.set_title("M (isotropic)", fontsize=16)
+        >>> ax2 = fig.add_subplot(132)
+        >>> ax2.spy(M2, ms=5)
+        >>> ax2.set_title("M (diagonal anisotropic)", fontsize=16)
+        >>> ax3 = fig.add_subplot(133)
+        >>> ax3.spy(M3, ms=5)
+        >>> ax3.set_title("M (full anisotropic)", fontsize=16)
+        >>> plt.show()
         """
         raise NotImplementedError(
             f"get_face_inner_product not implemented for {type(self)}"
@@ -1834,22 +1816,20 @@ class BaseMesh:
 
         Then plot the matrix entries,
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(15, 5))
-            >>> ax1 = fig.add_subplot(131)
-            >>> ax1.imshow(sig_iso_tensor)
-            >>> ax1.axis('off')
-            >>> ax1.set_title("Tensor (isotropic)", fontsize=16)
-            >>> ax2 = fig.add_subplot(132)
-            >>> ax2.imshow(sig_diag_tensor)
-            >>> ax2.axis('off')
-            >>> ax2.set_title("Tensor (diagonal anisotropic)", fontsize=16)
-            >>> ax3 = fig.add_subplot(133)
-            >>> ax3.imshow(sig_full_tensor)
-            >>> ax3.axis('off')
-            >>> ax3.set_title("Tensor (full anisotropic)", fontsize=16)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(15, 5))
+        >>> ax1 = fig.add_subplot(131)
+        >>> ax1.imshow(sig_iso_tensor)
+        >>> ax1.axis('off')
+        >>> ax1.set_title("Tensor (isotropic)", fontsize=16)
+        >>> ax2 = fig.add_subplot(132)
+        >>> ax2.imshow(sig_diag_tensor)
+        >>> ax2.axis('off')
+        >>> ax2.set_title("Tensor (diagonal anisotropic)", fontsize=16)
+        >>> ax3 = fig.add_subplot(133)
+        >>> ax3.imshow(sig_full_tensor)
+        >>> ax3.axis('off')
+        >>> ax3.set_title("Tensor (full anisotropic)", fontsize=16)
+        >>> plt.show()
 
         Here construct and image the edge inner product matrices for
         the isotropic, diagonal anisotropic and full tensor cases.
@@ -1874,19 +1854,17 @@ class BaseMesh:
 
         Then plot the sparse representation,
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(12, 4))
-            >>> ax1 = fig.add_subplot(131)
-            >>> ax1.spy(M1, ms=5)
-            >>> ax1.set_title("M (isotropic)", fontsize=16)
-            >>> ax2 = fig.add_subplot(132)
-            >>> ax2.spy(M2, ms=5)
-            >>> ax2.set_title("M (diagonal anisotropic)", fontsize=16)
-            >>> ax3 = fig.add_subplot(133)
-            >>> ax3.spy(M3, ms=5)
-            >>> ax3.set_title("M (full anisotropic)", fontsize=16)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(12, 4))
+        >>> ax1 = fig.add_subplot(131)
+        >>> ax1.spy(M1, ms=5)
+        >>> ax1.set_title("M (isotropic)", fontsize=16)
+        >>> ax2 = fig.add_subplot(132)
+        >>> ax2.spy(M2, ms=5)
+        >>> ax2.set_title("M (diagonal anisotropic)", fontsize=16)
+        >>> ax3 = fig.add_subplot(133)
+        >>> ax3.spy(M3, ms=5)
+        >>> ax3.set_title("M (full anisotropic)", fontsize=16)
+        >>> plt.show()
 
         """
         raise NotImplementedError(
@@ -2024,23 +2002,21 @@ class BaseMesh:
 
         Spy plot for the inner product matrix and its derivative
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(15, 5))
-            >>> ax1 = fig.add_axes([0.05, 0.05, 0.3, 0.85])
-            >>> ax1.spy(Mf, ms=6)
-            >>> ax1.set_title("Face Inner Product Matrix (Isotropic)", fontsize=14, pad=5)
-            >>> ax1.set_xlabel("Face Index", fontsize=12)
-            >>> ax1.set_ylabel("Face Index", fontsize=12)
-            >>> ax2 = fig.add_axes([0.43, 0.05, 0.17, 0.8])
-            >>> ax2.spy(dFdm_u, ms=6)
-            >>> ax2.set_title(
-            ...     "$u^T \, \dfrac{\partial M(m)}{\partial m}$ (Isotropic)",
-            ...     fontsize=14, pad=5
-            ... )
-            >>> ax2.set_xlabel("Parameter Index", fontsize=12)
-            >>> ax2.set_ylabel("Face Index", fontsize=12)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(15, 5))
+        >>> ax1 = fig.add_axes([0.05, 0.05, 0.3, 0.85])
+        >>> ax1.spy(Mf, ms=6)
+        >>> ax1.set_title("Face Inner Product Matrix (Isotropic)", fontsize=14, pad=5)
+        >>> ax1.set_xlabel("Face Index", fontsize=12)
+        >>> ax1.set_ylabel("Face Index", fontsize=12)
+        >>> ax2 = fig.add_axes([0.43, 0.05, 0.17, 0.8])
+        >>> ax2.spy(dFdm_u, ms=6)
+        >>> ax2.set_title(
+        ...     "$u^T \, \dfrac{\partial M(m)}{\partial m}$ (Isotropic)",
+        ...     fontsize=14, pad=5
+        ... )
+        >>> ax2.set_xlabel("Parameter Index", fontsize=12)
+        >>> ax2.set_ylabel("Face Index", fontsize=12)
+        >>> plt.show()
 
         For our second example, the physical properties on the mesh are fully
         anisotropic; that is, the physical properties of each cell are defined
@@ -2058,23 +2034,21 @@ class BaseMesh:
 
         Plot the anisotropic inner product matrix and its derivative matrix,
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(15, 5))
-            >>> ax1 = fig.add_axes([0.05, 0.05, 0.3, 0.8])
-            >>> ax1.spy(Mf, ms=6)
-            >>> ax1.set_title("Face Inner Product (Full Tensor)", fontsize=14, pad=5)
-            >>> ax1.set_xlabel("Face Index", fontsize=12)
-            >>> ax1.set_ylabel("Face Index", fontsize=12)
-            >>> ax2 = fig.add_axes([0.4, 0.05, 0.45, 0.85])
-            >>> ax2.spy(dFdm_u, ms=6)
-            >>> ax2.set_title(
-            ...     "$u^T \, \dfrac{\partial M(m)}{\partial m} \;$ (Full Tensor)",
-            ...     fontsize=14, pad=5
-            ... )
-            >>> ax2.set_xlabel("Parameter Index", fontsize=12)
-            >>> ax2.set_ylabel("Face Index", fontsize=12)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(15, 5))
+        >>> ax1 = fig.add_axes([0.05, 0.05, 0.3, 0.8])
+        >>> ax1.spy(Mf, ms=6)
+        >>> ax1.set_title("Face Inner Product (Full Tensor)", fontsize=14, pad=5)
+        >>> ax1.set_xlabel("Face Index", fontsize=12)
+        >>> ax1.set_ylabel("Face Index", fontsize=12)
+        >>> ax2 = fig.add_axes([0.4, 0.05, 0.45, 0.85])
+        >>> ax2.spy(dFdm_u, ms=6)
+        >>> ax2.set_title(
+        ...     "$u^T \, \dfrac{\partial M(m)}{\partial m} \;$ (Full Tensor)",
+        ...     fontsize=14, pad=5
+        ... )
+        >>> ax2.set_xlabel("Parameter Index", fontsize=12)
+        >>> ax2.set_ylabel("Face Index", fontsize=12)
+        >>> plt.show()
 
         """
         raise NotImplementedError(
@@ -2211,23 +2185,21 @@ class BaseMesh:
 
         Plot inner product matrix and its derivative matrix
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(15, 5))
-            >>> ax1 = fig.add_axes([0.05, 0.05, 0.3, 0.8])
-            >>> ax1.spy(Me, ms=6)
-            >>> ax1.set_title("Edge Inner Product Matrix (Isotropic)", fontsize=14, pad=5)
-            >>> ax1.set_xlabel("Edge Index", fontsize=12)
-            >>> ax1.set_ylabel("Edge Index", fontsize=12)
-            >>> ax2 = fig.add_axes([0.43, 0.05, 0.17, 0.8])
-            >>> ax2.spy(dFdm_u, ms=6)
-            >>> ax2.set_title(
-            ...     "$u^T \, \dfrac{\partial M(m)}{\partial m}$ (Isotropic)",
-            ...     fontsize=14, pad=5
-            ... )
-            >>> ax2.set_xlabel("Parameter Index", fontsize=12)
-            >>> ax2.set_ylabel("Edge Index", fontsize=12)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(15, 5))
+        >>> ax1 = fig.add_axes([0.05, 0.05, 0.3, 0.8])
+        >>> ax1.spy(Me, ms=6)
+        >>> ax1.set_title("Edge Inner Product Matrix (Isotropic)", fontsize=14, pad=5)
+        >>> ax1.set_xlabel("Edge Index", fontsize=12)
+        >>> ax1.set_ylabel("Edge Index", fontsize=12)
+        >>> ax2 = fig.add_axes([0.43, 0.05, 0.17, 0.8])
+        >>> ax2.spy(dFdm_u, ms=6)
+        >>> ax2.set_title(
+        ...     "$u^T \, \dfrac{\partial M(m)}{\partial m}$ (Isotropic)",
+        ...     fontsize=14, pad=5
+        ... )
+        >>> ax2.set_xlabel("Parameter Index", fontsize=12)
+        >>> ax2.set_ylabel("Edge Index", fontsize=12)
+        >>> plt.show()
 
         For our second example, the physical properties on the mesh are fully
         anisotropic; that is, the physical properties of each cell are defined
@@ -2245,23 +2217,21 @@ class BaseMesh:
 
         Plot the anisotropic inner product matrix and its derivative matrix
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(15, 5))
-            >>> ax1 = fig.add_axes([0.05, 0.05, 0.3, 0.8])
-            >>> ax1.spy(Me, ms=6)
-            >>> ax1.set_title("Edge Inner Product (Full Tensor)", fontsize=14, pad=5)
-            >>> ax1.set_xlabel("Edge Index", fontsize=12)
-            >>> ax1.set_ylabel("Edge Index", fontsize=12)
-            >>> ax2 = fig.add_axes([0.4, 0.05, 0.45, 0.8])
-            >>> ax2.spy(dFdm_u, ms=6)
-            >>> ax2.set_title(
-            ...     "$u^T \, \dfrac{\partial M(m)}{\partial m} \;$ (Full Tensor)",
-            ...     fontsize=14, pad=5
-            ... )
-            >>> ax2.set_xlabel("Parameter Index", fontsize=12)
-            >>> ax2.set_ylabel("Edge Index", fontsize=12)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(15, 5))
+        >>> ax1 = fig.add_axes([0.05, 0.05, 0.3, 0.8])
+        >>> ax1.spy(Me, ms=6)
+        >>> ax1.set_title("Edge Inner Product (Full Tensor)", fontsize=14, pad=5)
+        >>> ax1.set_xlabel("Edge Index", fontsize=12)
+        >>> ax1.set_ylabel("Edge Index", fontsize=12)
+        >>> ax2 = fig.add_axes([0.4, 0.05, 0.45, 0.8])
+        >>> ax2.spy(dFdm_u, ms=6)
+        >>> ax2.set_title(
+        ...     "$u^T \, \dfrac{\partial M(m)}{\partial m} \;$ (Full Tensor)",
+        ...     fontsize=14, pad=5
+        ... )
+        >>> ax2.set_xlabel("Parameter Index", fontsize=12)
+        >>> ax2.set_ylabel("Edge Index", fontsize=12)
+        >>> plt.show()
         """
         raise NotImplementedError(
             f"get_edge_inner_product_deriv not implemented for {type(self)}"
@@ -2331,28 +2301,24 @@ class BaseMesh:
 
         And finally plot the results:
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(11, 5))
-            >>> ax1 = fig.add_subplot(121)
-            >>> mesh.plot_image(phi_f, ax=ax1, v_type="F")
-            >>> ax1.set_title("Variable at faces", fontsize=16)
-            >>> ax2 = fig.add_subplot(122)
-            >>> mesh.plot_image(phi_c, ax=ax2, v_type="CC")
-            >>> ax2.set_title("Averaged to cell centers", fontsize=16)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(11, 5))
+        >>> ax1 = fig.add_subplot(121)
+        >>> mesh.plot_image(phi_f, ax=ax1, v_type="F")
+        >>> ax1.set_title("Variable at faces", fontsize=16)
+        >>> ax2 = fig.add_subplot(122)
+        >>> mesh.plot_image(phi_c, ax=ax2, v_type="CC")
+        >>> ax2.set_title("Averaged to cell centers", fontsize=16)
+        >>> plt.show()
 
         Below, we show a spy plot illustrating the sparsity and mapping
         of the operator
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(9, 9))
-            >>> ax1 = fig.add_subplot(111)
-            >>> ax1.spy(Afc, ms=1)
-            >>> ax1.set_title("Face Index", fontsize=12, pad=5)
-            >>> ax1.set_ylabel("Cell Index", fontsize=12)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(9, 9))
+        >>> ax1 = fig.add_subplot(111)
+        >>> ax1.spy(Afc, ms=1)
+        >>> ax1.set_title("Face Index", fontsize=12, pad=5)
+        >>> ax1.set_ylabel("Cell Index", fontsize=12)
+        >>> plt.show()
         """
         raise NotImplementedError(
             f"average_face_to_cell not implemented for {type(self)}"
@@ -2436,28 +2402,24 @@ class BaseMesh:
 
         And finally, plot the results:
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(11, 5))
-            >>> ax1 = fig.add_subplot(121)
-            >>> mesh.plot_image(u_f, ax=ax1, v_type="F", view='vec')
-            >>> ax1.set_title("Variable at faces", fontsize=16)
-            >>> ax2 = fig.add_subplot(122)
-            >>> mesh.plot_image(u_c, ax=ax2, v_type="CCv", view='vec')
-            >>> ax2.set_title("Averaged to cell centers", fontsize=16)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(11, 5))
+        >>> ax1 = fig.add_subplot(121)
+        >>> mesh.plot_image(u_f, ax=ax1, v_type="F", view='vec')
+        >>> ax1.set_title("Variable at faces", fontsize=16)
+        >>> ax2 = fig.add_subplot(122)
+        >>> mesh.plot_image(u_c, ax=ax2, v_type="CCv", view='vec')
+        >>> ax2.set_title("Averaged to cell centers", fontsize=16)
+        >>> plt.show()
 
         Below, we show a spy plot illustrating the sparsity and mapping
         of the operator
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(9, 9))
-            >>> ax1 = fig.add_subplot(111)
-            >>> ax1.spy(Afc, ms=1)
-            >>> ax1.set_title("Face Index", fontsize=12, pad=5)
-            >>> ax1.set_ylabel("Cell Vector Index", fontsize=12)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(9, 9))
+        >>> ax1 = fig.add_subplot(111)
+        >>> ax1.spy(Afc, ms=1)
+        >>> ax1.set_title("Face Index", fontsize=12, pad=5)
+        >>> ax1.set_ylabel("Cell Vector Index", fontsize=12)
+        >>> plt.show()
         """
         raise NotImplementedError(
             f"average_face_to_cell_vector not implemented for {type(self)}"
@@ -2534,28 +2496,24 @@ class BaseMesh:
 
         Plot the results
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(11, 5))
-            >>> ax1 = fig.add_subplot(121)
-            >>> mesh.plot_image(phi_c, ax=ax1, v_type="CC")
-            >>> ax1.set_title("Variable at cell centers", fontsize=16)
-            >>> ax2 = fig.add_subplot(122)
-            >>> mesh.plot_image(phi_f, ax=ax2, v_type="F")
-            >>> ax2.set_title("Averaged to faces", fontsize=16)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(11, 5))
+        >>> ax1 = fig.add_subplot(121)
+        >>> mesh.plot_image(phi_c, ax=ax1, v_type="CC")
+        >>> ax1.set_title("Variable at cell centers", fontsize=16)
+        >>> ax2 = fig.add_subplot(122)
+        >>> mesh.plot_image(phi_f, ax=ax2, v_type="F")
+        >>> ax2.set_title("Averaged to faces", fontsize=16)
+        >>> plt.show()
 
         Below, we show a spy plot illustrating the sparsity and mapping
         of the operator.
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(9, 9))
-            >>> ax1 = fig.add_subplot(111)
-            >>> ax1.spy(Acf, ms=1)
-            >>> ax1.set_title("Cell Index", fontsize=12, pad=5)
-            >>> ax1.set_ylabel("Face Index", fontsize=12)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(9, 9))
+        >>> ax1 = fig.add_subplot(111)
+        >>> ax1.spy(Acf, ms=1)
+        >>> ax1.set_title("Cell Index", fontsize=12, pad=5)
+        >>> ax1.set_ylabel("Face Index", fontsize=12)
+        >>> plt.show()
         """
         raise NotImplementedError(
             f"average_cell_to_face not implemented for {type(self)}"
@@ -2644,28 +2602,24 @@ class BaseMesh:
 
         And plot the results
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(11, 5))
-            >>> ax1 = fig.add_subplot(121)
-            >>> mesh.plot_image(u_c, ax=ax1, v_type="CCv", view='vec')
-            >>> ax1.set_title("Variable at faces", fontsize=16)
-            >>> ax2 = fig.add_subplot(122)
-            >>> mesh.plot_image(u_f, ax=ax2, v_type="F", view='vec')
-            >>> ax2.set_title("Averaged to cell centers", fontsize=16)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(11, 5))
+        >>> ax1 = fig.add_subplot(121)
+        >>> mesh.plot_image(u_c, ax=ax1, v_type="CCv", view='vec')
+        >>> ax1.set_title("Variable at faces", fontsize=16)
+        >>> ax2 = fig.add_subplot(122)
+        >>> mesh.plot_image(u_f, ax=ax2, v_type="F", view='vec')
+        >>> ax2.set_title("Averaged to cell centers", fontsize=16)
+        >>> plt.show()
 
         Below, we show a spy plot illustrating the sparsity and mapping
         of the operator
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(9, 9))
-            >>> ax1 = fig.add_subplot(111)
-            >>> ax1.spy(Acf, ms=1)
-            >>> ax1.set_title("Cell Vector Index", fontsize=12, pad=5)
-            >>> ax1.set_ylabel("Face Index", fontsize=12)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(9, 9))
+        >>> ax1 = fig.add_subplot(111)
+        >>> ax1.spy(Acf, ms=1)
+        >>> ax1.set_title("Cell Vector Index", fontsize=12, pad=5)
+        >>> ax1.set_ylabel("Face Index", fontsize=12)
+        >>> plt.show()
         """
         raise NotImplementedError(
             f"average_cell_vector_to_face not implemented for {type(self)}"
@@ -2741,28 +2695,24 @@ class BaseMesh:
 
         And plot the results:
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(11, 5))
-            >>> ax1 = fig.add_subplot(121)
-            >>> mesh.plot_image(phi_c, ax=ax1, v_type="CC")
-            >>> ax1.set_title("Variable at cell centers", fontsize=16)
-            >>> ax2 = fig.add_subplot(122)
-            >>> mesh.plot_image(phi_e, ax=ax2, v_type="E")
-            >>> ax2.set_title("Averaged to edges", fontsize=16)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(11, 5))
+        >>> ax1 = fig.add_subplot(121)
+        >>> mesh.plot_image(phi_c, ax=ax1, v_type="CC")
+        >>> ax1.set_title("Variable at cell centers", fontsize=16)
+        >>> ax2 = fig.add_subplot(122)
+        >>> mesh.plot_image(phi_e, ax=ax2, v_type="E")
+        >>> ax2.set_title("Averaged to edges", fontsize=16)
+        >>> plt.show()
 
         Below, we show a spy plot illustrating the sparsity and mapping
         of the operator.
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(9, 9))
-            >>> ax1 = fig.add_subplot(111)
-            >>> ax1.spy(Ace, ms=1)
-            >>> ax1.set_title("Cell Index", fontsize=12, pad=5)
-            >>> ax1.set_ylabel("Edge Index", fontsize=12)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(9, 9))
+        >>> ax1 = fig.add_subplot(111)
+        >>> ax1.spy(Ace, ms=1)
+        >>> ax1.set_title("Cell Index", fontsize=12, pad=5)
+        >>> ax1.set_ylabel("Edge Index", fontsize=12)
+        >>> plt.show()
         """
         raise NotImplementedError(
             f"average_cell_to_edge not implemented for {type(self)}"
@@ -2830,28 +2780,24 @@ class BaseMesh:
 
         And plot the results:
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(11, 5))
-            >>> ax1 = fig.add_subplot(121)
-            >>> mesh.plot_image(phi_e, ax=ax1, v_type="E")
-            >>> ax1.set_title("Variable at edges", fontsize=16)
-            >>> ax2 = fig.add_subplot(122)
-            >>> mesh.plot_image(phi_c, ax=ax2, v_type="CC")
-            >>> ax2.set_title("Averaged to cell centers", fontsize=16)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(11, 5))
+        >>> ax1 = fig.add_subplot(121)
+        >>> mesh.plot_image(phi_e, ax=ax1, v_type="E")
+        >>> ax1.set_title("Variable at edges", fontsize=16)
+        >>> ax2 = fig.add_subplot(122)
+        >>> mesh.plot_image(phi_c, ax=ax2, v_type="CC")
+        >>> ax2.set_title("Averaged to cell centers", fontsize=16)
+        >>> plt.show()
 
         Below, we show a spy plot illustrating the sparsity and mapping
         of the operator
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(9, 9))
-            >>> ax1 = fig.add_subplot(111)
-            >>> ax1.spy(Aec, ms=1)
-            >>> ax1.set_title("Edge Index", fontsize=12, pad=5)
-            >>> ax1.set_ylabel("Cell Index", fontsize=12)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(9, 9))
+        >>> ax1 = fig.add_subplot(111)
+        >>> ax1.spy(Aec, ms=1)
+        >>> ax1.set_title("Edge Index", fontsize=12, pad=5)
+        >>> ax1.set_ylabel("Cell Index", fontsize=12)
+        >>> plt.show()
         """
         raise NotImplementedError(
             f"average_edge_to_cell not implemented for {type(self)}"
@@ -2934,28 +2880,24 @@ class BaseMesh:
 
         And plot the results:
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(11, 5))
-            >>> ax1 = fig.add_subplot(121)
-            >>> mesh.plot_image(u_e, ax=ax1, v_type="E", view='vec')
-            >>> ax1.set_title("Variable at edges", fontsize=16)
-            >>> ax2 = fig.add_subplot(122)
-            >>> mesh.plot_image(u_c, ax=ax2, v_type="CCv", view='vec')
-            >>> ax2.set_title("Averaged to cell centers", fontsize=16)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(11, 5))
+        >>> ax1 = fig.add_subplot(121)
+        >>> mesh.plot_image(u_e, ax=ax1, v_type="E", view='vec')
+        >>> ax1.set_title("Variable at edges", fontsize=16)
+        >>> ax2 = fig.add_subplot(122)
+        >>> mesh.plot_image(u_c, ax=ax2, v_type="CCv", view='vec')
+        >>> ax2.set_title("Averaged to cell centers", fontsize=16)
+        >>> plt.show()
 
         Below, we show a spy plot illustrating the sparsity and mapping
         of the operator
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(9, 9))
-            >>> ax1 = fig.add_subplot(111)
-            >>> ax1.spy(Aec, ms=1)
-            >>> ax1.set_title("Edge Index", fontsize=12, pad=5)
-            >>> ax1.set_ylabel("Cell Vector Index", fontsize=12)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(9, 9))
+        >>> ax1 = fig.add_subplot(111)
+        >>> ax1.spy(Aec, ms=1)
+        >>> ax1.set_title("Edge Index", fontsize=12, pad=5)
+        >>> ax1.set_ylabel("Cell Vector Index", fontsize=12)
+        >>> plt.show()
         """
         raise NotImplementedError(
             f"average_edge_to_cell_vector not implemented for {type(self)}"
@@ -3024,30 +2966,26 @@ class BaseMesh:
 
         Plot the results,
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(11, 5))
-            >>> ax1 = fig.add_subplot(121)
-            >>> proj_ue = mesh.project_edge_vector(u_e)
-            >>> mesh.plot_image(proj_ue, ax=ax1, v_type="E", view='vec')
-            >>> ax1.set_title("Variable at edges", fontsize=16)
-            >>> ax2 = fig.add_subplot(122)
-            >>> proj_uf = mesh.project_face_vector(u_f)
-            >>> mesh.plot_image(proj_uf, ax=ax2, v_type="F", view='vec')
-            >>> ax2.set_title("Averaged to faces", fontsize=16)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(11, 5))
+        >>> ax1 = fig.add_subplot(121)
+        >>> proj_ue = mesh.project_edge_vector(u_e)
+        >>> mesh.plot_image(proj_ue, ax=ax1, v_type="E", view='vec')
+        >>> ax1.set_title("Variable at edges", fontsize=16)
+        >>> ax2 = fig.add_subplot(122)
+        >>> proj_uf = mesh.project_face_vector(u_f)
+        >>> mesh.plot_image(proj_uf, ax=ax2, v_type="F", view='vec')
+        >>> ax2.set_title("Averaged to faces", fontsize=16)
+        >>> plt.show()
 
         Below, we show a spy plot illustrating the sparsity and mapping
         of the operator
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(9, 9))
-            >>> ax1 = fig.add_subplot(111)
-            >>> ax1.spy(Aef, ms=1)
-            >>> ax1.set_title("Edge Index", fontsize=12, pad=5)
-            >>> ax1.set_ylabel("Face Index", fontsize=12)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(9, 9))
+        >>> ax1 = fig.add_subplot(111)
+        >>> ax1.spy(Aef, ms=1)
+        >>> ax1.set_title("Edge Index", fontsize=12, pad=5)
+        >>> ax1.set_ylabel("Face Index", fontsize=12)
+        >>> plt.show()
         """
         raise NotImplementedError(
             f"average_edge_to_face not implemented for {type(self)}"
@@ -3115,28 +3053,24 @@ class BaseMesh:
 
         Plot the results,
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(11, 5))
-            >>> ax1 = fig.add_subplot(121)
-            >>> mesh.plot_image(phi_n, ax=ax1, v_type="N")
-            >>> ax1.set_title("Variable at nodes", fontsize=16)
-            >>> ax2 = fig.add_subplot(122)
-            >>> mesh.plot_image(phi_c, ax=ax2, v_type="CC")
-            >>> ax2.set_title("Averaged to cell centers", fontsize=16)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(11, 5))
+        >>> ax1 = fig.add_subplot(121)
+        >>> mesh.plot_image(phi_n, ax=ax1, v_type="N")
+        >>> ax1.set_title("Variable at nodes", fontsize=16)
+        >>> ax2 = fig.add_subplot(122)
+        >>> mesh.plot_image(phi_c, ax=ax2, v_type="CC")
+        >>> ax2.set_title("Averaged to cell centers", fontsize=16)
+        >>> plt.show()
 
         Below, we show a spy plot illustrating the sparsity and mapping
         of the operator
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(9, 9))
-            >>> ax1 = fig.add_subplot(111)
-            >>> ax1.spy(Anc, ms=1)
-            >>> ax1.set_title("Node Index", fontsize=12, pad=5)
-            >>> ax1.set_ylabel("Cell Index", fontsize=12)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(9, 9))
+        >>> ax1 = fig.add_subplot(111)
+        >>> ax1.spy(Anc, ms=1)
+        >>> ax1.set_title("Node Index", fontsize=12, pad=5)
+        >>> ax1.set_ylabel("Cell Index", fontsize=12)
+        >>> plt.show()
         """
         raise NotImplementedError(
             f"average_node_to_cell not implemented for {type(self)}"
@@ -3205,28 +3139,24 @@ class BaseMesh:
 
         Plot the results,
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(11, 5))
-            >>> ax1 = fig.add_subplot(121)
-            >>> mesh.plot_image(phi_n, ax=ax1, v_type="N")
-            >>> ax1.set_title("Variable at nodes")
-            >>> ax2 = fig.add_subplot(122)
-            >>> mesh.plot_image(phi_e, ax=ax2, v_type="E")
-            >>> ax2.set_title("Averaged to edges")
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(11, 5))
+        >>> ax1 = fig.add_subplot(121)
+        >>> mesh.plot_image(phi_n, ax=ax1, v_type="N")
+        >>> ax1.set_title("Variable at nodes")
+        >>> ax2 = fig.add_subplot(122)
+        >>> mesh.plot_image(phi_e, ax=ax2, v_type="E")
+        >>> ax2.set_title("Averaged to edges")
+        >>> plt.show()
 
         Below, we show a spy plot illustrating the sparsity and mapping
         of the operator
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(9, 9))
-            >>> ax1 = fig.add_subplot(111)
-            >>> ax1.spy(Ane, ms=1)
-            >>> ax1.set_title("Node Index", fontsize=12, pad=5)
-            >>> ax1.set_ylabel("Edge Index", fontsize=12)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(9, 9))
+        >>> ax1 = fig.add_subplot(111)
+        >>> ax1.spy(Ane, ms=1)
+        >>> ax1.set_title("Node Index", fontsize=12, pad=5)
+        >>> ax1.set_ylabel("Edge Index", fontsize=12)
+        >>> plt.show()
         """
         raise NotImplementedError(
             f"average_node_to_edge not implemented for {type(self)}"
@@ -3295,28 +3225,24 @@ class BaseMesh:
 
         Plot the results,
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(11, 5))
-            >>> ax1 = fig.add_subplot(121)
-            >>> mesh.plot_image(phi_n, ax=ax1, v_type="N")
-            >>> ax1.set_title("Variable at nodes")
-            >>> ax2 = fig.add_subplot(122)
-            >>> mesh.plot_image(phi_f, ax=ax2, v_type="F")
-            >>> ax2.set_title("Averaged to faces")
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(11, 5))
+        >>> ax1 = fig.add_subplot(121)
+        >>> mesh.plot_image(phi_n, ax=ax1, v_type="N")
+        >>> ax1.set_title("Variable at nodes")
+        >>> ax2 = fig.add_subplot(122)
+        >>> mesh.plot_image(phi_f, ax=ax2, v_type="F")
+        >>> ax2.set_title("Averaged to faces")
+        >>> plt.show()
 
         Below, we show a spy plot illustrating the sparsity and mapping
         of the operator
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(9, 9))
-            >>> ax1 = fig.add_subplot(111)
-            >>> ax1.spy(Anf, ms=1)
-            >>> ax1.set_title("Node Index", fontsize=12, pad=5)
-            >>> ax1.set_ylabel("Face Index", fontsize=12)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(9, 9))
+        >>> ax1 = fig.add_subplot(111)
+        >>> ax1.spy(Anf, ms=1)
+        >>> ax1.set_title("Node Index", fontsize=12, pad=5)
+        >>> ax1.set_ylabel("Face Index", fontsize=12)
+        >>> plt.show()
         """
         raise NotImplementedError(
             f"average_node_to_face not implemented for {type(self)}"
@@ -3527,14 +3453,12 @@ class BaseMesh:
         >>> mesh1D = TensorMesh([hx])
         >>> Q = mesh1D.get_interpolation_matrix(locs, 'nodes')
 
-        .. collapse:: Expand to see scripting for plot
-
-            >>> plt.figure(figsize=(5, 3))
-            >>> plt.plot(dense, fun(dense), ':', c="C0", lw=3, label="True Function")
-            >>> plt.plot(mesh1D.nodes, fun(mesh1D.nodes), 's', c="C0", ms=8, label="True sampled")
-            >>> plt.plot(locs, Q*fun(mesh1D.nodes), 'o', ms=4, label="Interpolated")
-            >>> plt.legend()
-            >>> plt.show()
+        >>> plt.figure(figsize=(5, 3))
+        >>> plt.plot(dense, fun(dense), ':', c="C0", lw=3, label="True Function")
+        >>> plt.plot(mesh1D.nodes, fun(mesh1D.nodes), 's', c="C0", ms=8, label="True sampled")
+        >>> plt.plot(locs, Q*fun(mesh1D.nodes), 'o', ms=4, label="Interpolated")
+        >>> plt.legend()
+        >>> plt.show()
 
         Here, demonstrate a similar example on a 2D mesh using a 2D Gaussian distribution.
         We interpolate the Gaussian from the nodes to cell centers and examine the relative
@@ -3553,20 +3477,18 @@ class BaseMesh:
         >>> A = mesh2D.get_interpolation_matrix(centers, 'nodes')
         >>> val_interp = A.dot(val_nodes)
 
-        .. collapse:: Expand to see scripting for plot
-
-            >>> fig = plt.figure(figsize=(11,3.3))
-            >>> clim = (0., 1.)
-            >>> ax1 = fig.add_subplot(131)
-            >>> ax2 = fig.add_subplot(132)
-            >>> ax3 = fig.add_subplot(133)
-            >>> mesh2D.plot_image(val_centers, ax=ax1, clim=clim)
-            >>> mesh2D.plot_image(val_interp, ax=ax2, clim=clim)
-            >>> mesh2D.plot_image(val_centers-val_interp, ax=ax3, clim=clim)
-            >>> ax1.set_title('Analytic at Centers')
-            >>> ax2.set_title('Interpolated from Nodes')
-            >>> ax3.set_title('Relative Error')
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(11,3.3))
+        >>> clim = (0., 1.)
+        >>> ax1 = fig.add_subplot(131)
+        >>> ax2 = fig.add_subplot(132)
+        >>> ax3 = fig.add_subplot(133)
+        >>> mesh2D.plot_image(val_centers, ax=ax1, clim=clim)
+        >>> mesh2D.plot_image(val_interp, ax=ax2, clim=clim)
+        >>> mesh2D.plot_image(val_centers-val_interp, ax=ax3, clim=clim)
+        >>> ax1.set_title('Analytic at Centers')
+        >>> ax2.set_title('Interpolated from Nodes')
+        >>> ax3.set_title('Relative Error')
+        >>> plt.show()
         """
         raise NotImplementedError(
             f"get_interpolation_matrix not implemented for {type(self)}"

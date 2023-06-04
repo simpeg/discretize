@@ -421,7 +421,7 @@ class TestCC3D_InhomogeneousMixed(discretize.tests.OrderTest):
         A = V @ D @ MfI @ (-G + B_bc)
         rhs = V @ q_ana - V @ D @ MfI @ b_bc
 
-        phi_test = Pardiso(A) * rhs
+        phi_test = Pardiso(A.tocsr()) * rhs
 
         if self._meshType == "rotateCurv":
             err = np.linalg.norm(mesh.cell_volumes * (phi_test - phi_ana))
@@ -481,11 +481,17 @@ class TestN1D_boundaries(discretize.tests.OrderTest):
         rhs = Mn @ q_ana - b_bc
 
         if self.boundary_type == "Nuemann":
-            A[0, :] = 0.0
-            A[0, 0] = 1.0
-            rhs[0] = phi_ana[0]
+            # put a single dirichlet node on the boundary
+            P_b = sp.eye(mesh.n_nodes, format="csc")[:, 0]
+            P_f = sp.eye(mesh.n_nodes, format="csc")[:, 1:]
+            # P_f.T @ A @ (P_f @ x + P_b @ ana) = P_f.T @ rhs
+            rhs = P_f.T @ rhs - (P_f.T @ A @ P_b) @ phi_ana[[0]]
+            A = P_f.T @ A @ P_f
 
         phi_test = Solver(A) * rhs
+
+        if self.boundary_type == "Nuemann":
+            phi_test = P_f @ phi_test + P_b @ phi_ana[[0]]
 
         err = np.linalg.norm(phi_test - phi_ana, np.inf)
 
@@ -577,11 +583,17 @@ class TestN2D_boundaries(discretize.tests.OrderTest):
         rhs = Mn @ q_ana - b_bc
 
         if self.boundary_type == "Nuemann":
-            A[0, :] = 0.0
-            A[0, 0] = 1.0
-            rhs[0] = phi_ana[0]
+            # put a single dirichlet node on the boundary
+            P_b = sp.eye(mesh.n_nodes, format="csc")[:, 0]
+            P_f = sp.eye(mesh.n_nodes, format="csc")[:, 1:]
+            # P_f.T @ A @ (P_f @ x + P_b @ ana) = P_f.T @ rhs
+            rhs = P_f.T @ rhs - (P_f.T @ A @ P_b) @ phi_ana[[0]]
+            A = P_f.T @ A @ P_f
 
         phi_test = Solver(A) * rhs
+
+        if self.boundary_type == "Nuemann":
+            phi_test = P_f @ phi_test + P_b @ phi_ana[[0]]
 
         err = np.linalg.norm(phi_test - phi_ana, np.inf)
         return err
@@ -697,16 +709,16 @@ class TestN3D_boundaries(discretize.tests.OrderTest):
         rhs = Mn @ q_ana - b_bc
 
         if self.boundary_type == "Nuemann":
-            A[0, :] = 0.0
-            A[0, 0] = 1.0
-            rhs[0] = phi_ana[0]
+            P_b = sp.eye(mesh.n_nodes, format="csc")[:, 0]
+            P_f = sp.eye(mesh.n_nodes, format="csc")[:, 1:]
+            # P_f.T @ A @ (P_f @ x + P_b @ ana) = P_f.T @ rhs
+            rhs = P_f.T @ rhs - (P_f.T @ A @ P_b) @ phi_ana[[0]]
+            A = P_f.T @ A @ P_f
 
-        phi_test = Pardiso(A) * rhs
+        phi_test = Pardiso(A.tocsr()) * rhs
 
         if self.boundary_type == "Nuemann":
-            # set them both to have a 0 mean
-            phi_test -= phi_test.mean()
-            phi_ana -= phi_ana.mean()
+            phi_test = P_f @ phi_test + P_b @ phi_ana[[0]]
         err = np.linalg.norm(phi_test - phi_ana) / np.sqrt(mesh.n_nodes)
         return err
 

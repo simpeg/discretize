@@ -1,0 +1,75 @@
+.. currentmodule:: discretize
+
+.. _0.9.0_notes:
+
+===================================
+``discretize`` 0.9.0 Release Notes
+===================================
+
+May 31, 2023
+
+This is a minor release with several pieces of additional functionality, and some
+small bug fixes. It also stages the updates for the `1.0.0` release by changing the
+``FutureWarnings`` to actual errors that describe to the user of how to update
+their code. All of these errors and messages will be removed on `1.0.0`.
+
+``CylindricalMesh``
+-------------------
+Cylindrical meshes have now become more flexible. They can be created without discretizing
+the full azimuthal space (think a slice of pizza, or a half-cylinder), and they can
+be created without starting the radial dimension at 0 (think a ring).
+
+Cylindrical meshes now also support averaging edges to faces, and thus now allow for
+boundary conditions to be imposed on PDEs involving curls.
+
+Boundary Conditions
+-------------------
+The curvilinear and simplex meshes now better support boundary conditions with
+improved (and corrected) handling of the inner products in the boundary condition
+surface integral.
+
+There is also now a detailed example on how to solve a nodal gradient problem with
+a dirichlet boundary condition.
+
+Tests
+-----
+Discretize tests now better support a ``pytest`` environment with new assertion tests.
+Previous tests now use these internally. Thhe new tests are more flexible and should
+give better messages when they fail.
+
+``TreeMesh``
+------------
+The external ``c++`` code now uses a ``try_emplace`` function for determining if an item
+already exists when constructing the mesh. This should speedup mesh refinement.
+
+
+Bug Fixes
+---------
+
+- Scrolling through the ``Slicer`` object within modern notebook enviroments should now
+  be working correctly.
+
+
+Contributors
+============
+
+* @jcapriot
+* @prisae
+
+Pull requests
+=============
+* `#308 <https://github.com/simpeg/discretize/pull/308>`__: Switch to try_emplace
+* `#309 <https://github.com/simpeg/discretize/pull/309>`__: Add stacklevel to warnings
+* `#310 <https://github.com/simpeg/discretize/pull/310>`__: Assert tests
+* `#312 <https://github.com/simpeg/discretize/pull/312>`__: Remove calls with deprecated dir argument
+* `#314 <https://github.com/simpeg/discretize/pull/314>`__: change name and description of average edge to face
+* `#315 <https://github.com/simpeg/discretize/pull/315>`__: update doc page style sheet
+* `#316 <https://github.com/simpeg/discretize/pull/316>`__: Curvilinear vector boundary integral
+* `#317 <https://github.com/simpeg/discretize/pull/317>`__: Cyl average edge
+* `#318 <https://github.com/simpeg/discretize/pull/318>`__: Feat/simp boundary
+* `#319 <https://github.com/simpeg/discretize/pull/319>`__: Add message to assertion error in tests.
+* `#320 <https://github.com/simpeg/discretize/pull/320>`__: Nodal boundary example
+* `#321 <https://github.com/simpeg/discretize/pull/321>`__: Cyl mesh generalization
+* `#322 <https://github.com/simpeg/discretize/pull/322>`__: Capture scroll
+* `#323 <https://github.com/simpeg/discretize/pull/323>`__: 0.9.0 release
+* `#324 <https://github.com/simpeg/discretize/pull/324>`__: Add total_nodes method to TreeMeshes

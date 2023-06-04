@@ -47,6 +47,7 @@ class Cyl3DView(unittest.TestCase):
         self.mesh.plot_grid(slice="both", ax=[ax0, ax1])  # plot both
         self.mesh.plot_grid(slice="both", ax=[ax1, ax0])  # plot both
         self.mesh.plot_grid(ax=[ax1, ax0])  # plot both
+        plt.close("all")
 
     def test_plot_image(self):
         with self.assertRaises(NotImplementedError):

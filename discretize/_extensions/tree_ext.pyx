@@ -5953,16 +5953,18 @@ cdef class _TreeMesh:
 
     @property
     def cell_nodes(self):
-        """The index of nodes for each cell.
+        """The index of all nodes for each cell.
+
+        These indices point to non-hanging and hanging nodes.
 
         Returns
         -------
         numpy.ndarray of int
             Index array of shape (n_cells, 4) if 2D, or (n_cells, 8) if 3D
 
-        Notes
-        -----
-        These indices will also point to hanging nodes.
+        See also
+        --------
+        TreeMesh.total_nodes
         """
         cdef int_t npc = 4 if self.dim == 2 else 8
         inds = np.empty((self.n_cells, npc), dtype=np.int64)
