@@ -746,12 +746,12 @@ class TreeMesh(
         """Gridded hanging and non-hanging nodes locations.
 
         This property returns a numpy array of shape
-        ``(n_nodes + n_hanging_nodes, dim)`` containing gridded locations for
+        ``(n_total_nodes, dim)`` containing gridded locations for
         all hanging and non-hanging nodes in the mesh.
 
         Returns
         -------
-        (n_nodes + n_hanging_nodes, dim) numpy.ndarray of float
+        (n_total_nodes, dim) numpy.ndarray of float
             Gridded hanging and non-hanging node locations
         """
         return np.vstack((self.nodes, self.hanging_nodes))
