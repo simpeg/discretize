@@ -72,3 +72,4 @@ Pull requests
 * `#321 <https://github.com/simpeg/discretize/pull/321>`__: Cyl mesh generalization
 * `#322 <https://github.com/simpeg/discretize/pull/322>`__: Capture scroll
 * `#323 <https://github.com/simpeg/discretize/pull/323>`__: 0.9.0 release
+* `#324 <https://github.com/simpeg/discretize/pull/324>`__: Add total_nodes method to TreeMeshes
