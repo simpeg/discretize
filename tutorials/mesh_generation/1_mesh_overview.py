@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 #
 # The three main types of meshes in discretize are
 #
-#    - **Tensor meshes** (:class:`discretize.TensorMesh`); which includes **cylindrical meshes** (:class:`discretize.CylMesh`)
+#    - **Tensor meshes** (:class:`discretize.TensorMesh`); which includes **cylindrical meshes** (:class:`discretize.CylindricalMesh`)
 #
 #    - **Tree meshes** (:class:`discretize.TreeMesh`): also referred to as QuadTree or OcTree meshes
 #
@@ -46,18 +46,18 @@ tree_mesh.refine(refine)
 
 # create a curvilinear mesh
 curvi_mesh = discretize.CurvilinearMesh(
-    discretize.utils.exampleLrmGrid([ncx, ncy], "rotate")
+    discretize.utils.example_curvilinear_grid([ncx, ncy], "rotate")
 )
 
 # Plot
 fig, axes = plt.subplots(1, 3, figsize=(14.5, 4))
-tensor_mesh.plotGrid(ax=axes[0])
+tensor_mesh.plot_grid(ax=axes[0])
 axes[0].set_title("TensorMesh")
 
-tree_mesh.plotGrid(ax=axes[1])
+tree_mesh.plot_grid(ax=axes[1])
 axes[1].set_title("TreeMesh")
 
-curvi_mesh.plotGrid(ax=axes[2])
+curvi_mesh.plot_grid(ax=axes[2])
 axes[2].set_title("CurvilinearMesh")
 
 ###############################################################################
@@ -81,15 +81,15 @@ tensor_mesh2 = discretize.TensorMesh([hx, hy])
 
 # Plot
 fig, axes2 = plt.subplots(1, 3, figsize=(14.5, 5))
-tensor_mesh2.plotGrid(ax=axes2[0], nodes=True, centers=True)
+tensor_mesh2.plot_grid(ax=axes2[0], nodes=True, centers=True)
 axes2[0].legend(("Nodes", "Centers"))
 axes2[0].set_title("Nodes and cell centers")
 
-tensor_mesh2.plotGrid(ax=axes2[1], edges=True)
+tensor_mesh2.plot_grid(ax=axes2[1], edges=True)
 axes2[1].legend(("X-edges", "Y-edges"))
 axes2[1].set_title("Cell edges")
 
-tensor_mesh2.plotGrid(ax=axes2[2], faces=True)
+tensor_mesh2.plot_grid(ax=axes2[2], faces=True)
 axes2[2].legend(("X-faces", "Y-faces"))
 axes2[2].set_title("Cell faces")
 

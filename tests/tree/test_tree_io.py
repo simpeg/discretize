@@ -27,9 +27,9 @@ class TestOcTreeMeshIO(unittest.TestCase):
         # Make a vector
         vec = np.arange(mesh.nC)
         # Write and read
-        mesh.writeUBC("temp.msh", {"arange.txt": vec})
-        meshUBC = discretize.TreeMesh.readUBC("temp.msh")
-        vecUBC = meshUBC.readModelUBC("arange.txt")
+        mesh.write_UBC("temp.msh", {"arange.txt": vec})
+        meshUBC = discretize.TreeMesh.read_UBC("temp.msh")
+        vecUBC = meshUBC.read_model_UBC("arange.txt")
 
         self.assertEqual(mesh.nC, meshUBC.nC)
         self.assertEqual(mesh.__str__(), meshUBC.__str__())
@@ -38,8 +38,8 @@ class TestOcTreeMeshIO(unittest.TestCase):
         self.assertTrue(np.allclose(np.array(mesh.h), np.array(meshUBC.h)))
 
         # Write it again with another IO function
-        mesh.writeModelUBC(["arange.txt"], [vec])
-        vecUBC2 = mesh.readModelUBC("arange.txt")
+        mesh.write_model_UBC(["arange.txt"], [vec])
+        vecUBC2 = mesh.read_model_UBC("arange.txt")
         self.assertTrue(np.allclose(vec, vecUBC2))
 
         print("IO of UBC octree files is working")
@@ -59,9 +59,9 @@ class TestOcTreeMeshIO(unittest.TestCase):
         mesh0.refine(refine)
 
         mod0 = np.arange(mesh0.nC)
-        mesh0.writeUBC("tmp.msh", {"arange.txt": mod0})
-        mesh1 = discretize.TreeMesh.readUBC("tmp.msh")
-        mod1 = mesh1.readModelUBC("arange.txt")
+        mesh0.write_UBC("tmp.msh", {"arange.txt": mod0})
+        mesh1 = discretize.TreeMesh.read_UBC("tmp.msh")
+        mod1 = mesh1.read_model_UBC("arange.txt")
 
         self.assertEqual(mesh0.nC, mesh1.nC)
         self.assertEqual(mesh0.__str__(), mesh1.__str__())
@@ -75,7 +75,7 @@ class TestOcTreeMeshIO(unittest.TestCase):
         def test_VTUfiles(self):
             mesh = self.mesh
             vec = np.arange(mesh.nC)
-            mesh.writeVTK("temp.vtu", {"arange": vec})
+            mesh.write_vtk("temp.vtu", {"arange": vec})
             print("Writing of VTU files is working")
             os.remove("temp.vtu")
 

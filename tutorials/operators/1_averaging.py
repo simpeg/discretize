@@ -47,8 +47,8 @@ h = 10 * np.ones(20)
 mesh = TensorMesh([h], "C")
 
 # Get node and cell center locations
-x_nodes = mesh.vectorNx
-x_centers = mesh.vectorCCx
+x_nodes = mesh.nodes_x
+x_centers = mesh.cell_centers_x
 
 
 # Define a continuous function
@@ -175,22 +175,22 @@ v[(xy[:, 1] < -10.0) & (xy[:, 0] > -10.0) & (xy[:, 0] < 10.0)] = 50.0
 
 fig = plt.figure(figsize=(10, 10))
 ax1 = fig.add_subplot(221)
-mesh.plotImage(v, ax=ax1)
+mesh.plot_image(v, ax=ax1)
 ax1.set_title("Variable at cell centers")
 
 # Apply cell centers to faces averaging
 ax2 = fig.add_subplot(222)
-mesh.plotImage(A2 * v, ax=ax2, v_type="F")
+mesh.plot_image(A2 * v, ax=ax2, v_type="F")
 ax2.set_title("Cell centers to faces")
 
 # Use the transpose to go from cell centers to nodes
 ax3 = fig.add_subplot(223)
-mesh.plotImage(A3.T * v, ax=ax3, v_type="N")
+mesh.plot_image(A3.T * v, ax=ax3, v_type="N")
 ax3.set_title("Cell centers to nodes using transpose")
 
 # Use the transpose to go from cell centers to faces
 ax4 = fig.add_subplot(224)
-mesh.plotImage(A4.T * v, ax=ax4, v_type="F")
+mesh.plot_image(A4.T * v, ax=ax4, v_type="F")
 ax4.set_title("Cell centers to faces using transpose")
 
 fig.show()

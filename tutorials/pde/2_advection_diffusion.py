@@ -204,14 +204,14 @@ a = mkvc(8.0 * np.ones(mesh.nC))
 
 # Define the matrix M
 Afc = mesh.dim * mesh.aveF2CC  # modified averaging operator to sum dot product
-Mf_inv = mesh.getFaceInnerProduct(invMat=True)
-Mc = sdiag(mesh.vol)
-Mc_inv = sdiag(1 / mesh.vol)
-Mf_alpha_inv = mesh.getFaceInnerProduct(a, invProp=True, invMat=True)
+Mf_inv = mesh.get_face_inner_product(invert_matrix=True)
+Mc = sdiag(mesh.cell_volumes)
+Mc_inv = sdiag(1 / mesh.cell_volumes)
+Mf_alpha_inv = mesh.get_face_inner_product(a, invert_model=True, invert_matrix=True)
 
-mesh.setCellGradBC(["neumann", "neumann"])  # Set Neumann BC
-G = mesh.cellGrad
-D = mesh.faceDiv
+mesh.set_cell_gradient_BC(["neumann", "neumann"])  # Set Neumann BC
+G = mesh.cell_gradient
+D = mesh.face_divergence
 
 M = -D * Mf_alpha_inv * G * Mc + Afc * sdiag(u) * Mf_inv * G * Mc
 
@@ -232,7 +232,7 @@ fig = plt.figure(figsize=(15, 15))
 ax = 9 * [None]
 
 ax[0] = fig.add_subplot(332)
-mesh.plotImage(
+mesh.plot_image(
     u,
     ax=ax[0],
     v_type="F",
@@ -256,7 +256,7 @@ for ii in range(300):
 
     if ii + 1 in (1, 25, 50, 100, 200, 300):
         ax[n] = fig.add_subplot(3, 3, n + 1)
-        mesh.plotImage(p, v_type="CC", ax=ax[n], pcolor_opts={"cmap": "gist_heat_r"})
+        mesh.plot_image(p, v_type="CC", ax=ax[n], pcolor_opts={"cmap": "gist_heat_r"})
         title_str = "p at t = " + str((ii + 1) * dt) + " s"
         ax[n].set_title(title_str)
         n = n + 1

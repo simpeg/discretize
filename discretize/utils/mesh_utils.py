@@ -227,13 +227,10 @@ def closest_points_index(mesh, pts, grid_loc="CC", **kwargs):
     >>> plt.show()
     """
     if "gridLoc" in kwargs:
-        warnings.warn(
-            "The gridLoc keyword argument has been deprecated, please use grid_loc. "
-            "This will be removed in discretize 1.0.0",
-            FutureWarning,
-            stacklevel=2,
+        raise TypeError(
+            "The gridLoc keyword argument has been removed, please use grid_loc. "
+            "This message will be removed in discretize 1.0.0",
         )
-        grid_loc = kwargs["gridLoc"]
     warnings.warn(
         "The closest_points_index utilty function has been moved to be a method of "
         "a class object. Please access it as mesh.closest_points_index(). This will "
@@ -669,7 +666,7 @@ def refine_tree_xyz(
 
     Refine surface topography
 
-    >>> xx = mesh.vectorNx
+    >>> xx = mesh.nodes_x
     >>> yy = -3 * np.exp((xx ** 2) / 100 ** 2) + 50.0
     >>> pts = np.c_[mkvc(xx), mkvc(yy)]
     >>> mesh = refine_tree_xyz(
@@ -689,9 +686,9 @@ def refine_tree_xyz(
 
     >>> fig = plt.figure(figsize=(6, 6))
     >>> ax = fig.add_subplot(111)
-    >>> mesh.plotGrid(ax=ax)
-    >>> ax.set_xbound(mesh.x0[0], mesh.x0[0] + np.sum(mesh.hx))
-    >>> ax.set_ybound(mesh.x0[1], mesh.x0[1] + np.sum(mesh.hy))
+    >>> mesh.plot_grid(ax=ax)
+    >>> ax.set_xbound(mesh.x0[0], mesh.x0[0] + np.sum(mesh.h[0]))
+    >>> ax.set_ybound(mesh.x0[1], mesh.x0[1] + np.sum(mesh.h[1]))
     >>> ax.set_title("QuadTree Mesh")
     >>> plt.show()
     """
@@ -974,19 +971,17 @@ def active_from_xyz(mesh, xyz, grid_reference="CC", method="linear"):
 
     Plot visual representation
 
-    .. collapse:: Expand to show scripting for plot
-
-        >>> ax = plt.subplot(121)
-        >>> mesh.plot_image(active_cc, ax=ax)
-        >>> mesh.plot_grid(centers=True, ax=ax)
-        >>> ax.plot(np.linspace(0,1), topo_func(np.linspace(0,1)), color='C3')
-        >>> ax.set_title("CC")
-        >>> ax = plt.subplot(122)
-        >>> mesh.plot_image(active_n, ax=ax)
-        >>> mesh.plot_grid(nodes=True, ax=ax)
-        >>> ax.plot(np.linspace(0,1), topo_func(np.linspace(0,1)), color='C3')
-        >>> ax.set_title("N")
-        >>> plt.show()
+    >>> ax = plt.subplot(121)
+    >>> mesh.plot_image(active_cc, ax=ax)
+    >>> mesh.plot_grid(centers=True, ax=ax)
+    >>> ax.plot(np.linspace(0,1), topo_func(np.linspace(0,1)), color='C3')
+    >>> ax.set_title("CC")
+    >>> ax = plt.subplot(122)
+    >>> mesh.plot_image(active_n, ax=ax)
+    >>> mesh.plot_grid(nodes=True, ax=ax)
+    >>> ax.plot(np.linspace(0,1), topo_func(np.linspace(0,1)), color='C3')
+    >>> ax.set_title("N")
+    >>> plt.show()
     """
     try:
         if not mesh.is_symmetric:
@@ -1205,14 +1200,14 @@ def example_simplex_mesh(rect_shape):
 
 
 meshTensor = deprecate_function(
-    unpack_widths, "meshTensor", removal_version="1.0.0", future_warn=True
+    unpack_widths, "meshTensor", removal_version="1.0.0", error=True
 )
 closestPoints = deprecate_function(
-    closest_points_index, "closestPoints", removal_version="1.0.0", future_warn=True
+    closest_points_index, "closestPoints", removal_version="1.0.0", error=True
 )
 ExtractCoreMesh = deprecate_function(
-    extract_core_mesh, "ExtractCoreMesh", removal_version="1.0.0", future_warn=True
+    extract_core_mesh, "ExtractCoreMesh", removal_version="1.0.0", error=True
 )
 closest_points = deprecate_function(
-    closest_points_index, "closest_points", removal_version="1.0.0", future_warn=True
+    closest_points_index, "closest_points", removal_version="1.0.0", error=True
 )

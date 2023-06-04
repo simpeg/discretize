@@ -75,13 +75,15 @@ h = np.ones(10)
 mesh = TensorMesh([h, h, h])
 
 # Items required to perform u.T*(Me*Gn*phi)
-Me = mesh.getEdgeInnerProduct()  # Basic inner product matrix (edges)
-Gn = mesh.nodalGrad  # Nodes to edges gradient
+Me = mesh.get_edge_inner_product()  # Basic inner product matrix (edges)
+Gn = mesh.nodal_gradient  # Nodes to edges gradient
 
 # Items required to perform u.T*(Mf*Gc*phi)
-Mf = mesh.getFaceInnerProduct()  # Basic inner product matrix (faces)
-mesh.setCellGradBC(["neumann", "dirichlet", "neumann"])  # Set boundary conditions
-Gc = mesh.cellGrad  # Cells to faces gradient
+Mf = mesh.get_face_inner_product()  # Basic inner product matrix (faces)
+mesh.set_cell_gradient_BC(
+    ["neumann", "dirichlet", "neumann"]
+)  # Set boundary conditions
+Gc = mesh.cell_gradient  # Cells to faces gradient
 
 # Plot Sparse Representation
 fig = plt.figure(figsize=(5, 6))
@@ -120,8 +122,8 @@ h = np.ones(10)
 mesh = TensorMesh([h, h, h])
 
 # Items required to perform psi.T*(Mc*D*v)
-Mc = sdiag(mesh.vol)  # Basic inner product matrix (centers)
-D = mesh.faceDiv  # Faces to centers divergence
+Mc = sdiag(mesh.cell_volumes)  # Basic inner product matrix (centers)
+D = mesh.face_divergence  # Faces to centers divergence
 
 # Plot sparse representation
 fig = plt.figure(figsize=(8, 5))
@@ -173,12 +175,12 @@ h = np.ones(10)
 mesh = TensorMesh([h, h, h])
 
 # Items required to perform u.T*(Mf*Ce*v)
-Mf = mesh.getFaceInnerProduct()  # Basic inner product matrix (faces)
-Ce = mesh.edgeCurl  # Edges to faces curl
+Mf = mesh.get_face_inner_product()  # Basic inner product matrix (faces)
+Ce = mesh.edge_curl  # Edges to faces curl
 
 # Items required to perform u.T*(Me*Cf*v)
-Me = mesh.getEdgeInnerProduct()  # Basic inner product matrix (edges)
-Cf = mesh.edgeCurl.T  # Faces to edges curl (assumes Dirichlet)
+Me = mesh.get_edge_inner_product()  # Basic inner product matrix (edges)
+Cf = mesh.edge_curl.T  # Faces to edges curl (assumes Dirichlet)
 
 # Plot Sparse Representation
 fig = plt.figure(figsize=(9, 5))
@@ -241,13 +243,13 @@ h = np.ones(10)
 mesh = TensorMesh([h, h, h])
 
 # Items required to perform psi.T*(Gn.T*Me*Gn*phi)
-Me = mesh.getEdgeInnerProduct()  # Basic inner product matrix (edges)
-Gn = mesh.nodalGrad  # Nodes to edges gradient
+Me = mesh.get_edge_inner_product()  # Basic inner product matrix (edges)
+Gn = mesh.nodal_gradient  # Nodes to edges gradient
 
 # Items required to perform psi.T*(Gc.T*Mf*Gc*phi)
-Mf = mesh.getFaceInnerProduct()  # Basic inner product matrix (faces)
-mesh.setCellGradBC(["dirichlet", "dirichlet", "dirichlet"])
-Gc = mesh.cellGrad  # Centers to faces gradient
+Mf = mesh.get_face_inner_product()  # Basic inner product matrix (faces)
+mesh.set_cell_gradient_BC(["dirichlet", "dirichlet", "dirichlet"])
+Gc = mesh.cell_gradient  # Centers to faces gradient
 
 # Plot Sparse Representation
 fig = plt.figure(figsize=(9, 4))

@@ -15,7 +15,6 @@ from discretize.utils import (
     sdinv,
 )
 import numpy as np
-import warnings
 
 
 class InnerProducts(BaseMesh):
@@ -40,27 +39,19 @@ class InnerProducts(BaseMesh):
     ):
         # Inherited documentation from discretize.base.BaseMesh
         if "invProp" in kwargs:
-            warnings.warn(
-                "The invProp keyword argument has been deprecated, please use invert_model. "
+            raise TypeError(
+                "The invProp keyword argument has been removed, please use invert_model. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
-                stacklevel=2,
             )
-            invert_model = kwargs["invProp"]
         if "invMat" in kwargs:
-            warnings.warn(
-                "The invMat keyword argument has been deprecated, please use invert_matrix. "
+            raise TypeError(
+                "The invMat keyword argument has been removed, please use invert_matrix. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
-                stacklevel=2,
             )
-            invert_matrix = kwargs["invMat"]
         if "doFast" in kwargs:
-            warnings.warn(
-                "The doFast keyword argument has been deprecated, please use do_fast. "
+            raise TypeError(
+                "The doFast keyword argument has been removed, please use do_fast. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
-                stacklevel=2,
             )
             do_fast = kwargs["doFast"]
 
@@ -82,29 +73,20 @@ class InnerProducts(BaseMesh):
     ):
         # Inherited documentation from discretize.base.BaseMesh
         if "invProp" in kwargs:
-            warnings.warn(
-                "The invProp keyword argument has been deprecated, please use invert_model. "
+            raise TypeError(
+                "The invProp keyword argument has been removed, please use invert_model. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
-                stacklevel=2,
             )
-            invert_model = kwargs["invProp"]
         if "invMat" in kwargs:
-            warnings.warn(
-                "The invMat keyword argument has been deprecated, please use invert_matrix. "
+            raise TypeError(
+                "The invMat keyword argument has been removed, please use invert_matrix. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
-                stacklevel=2,
             )
-            invert_matrix = kwargs["invMat"]
         if "doFast" in kwargs:
-            warnings.warn(
-                "The doFast keyword argument has been deprecated, please use do_fast. "
+            raise TypeError(
+                "The doFast keyword argument has been removed, please use do_fast. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
-                stacklevel=2,
             )
-            do_fast = kwargs["doFast"]
         return self._getInnerProduct(
             "E",
             model=model,
@@ -143,29 +125,20 @@ class InnerProducts(BaseMesh):
             M, the inner product matrix (nE, nE)
         """
         if "invProp" in kwargs:
-            warnings.warn(
-                "The invProp keyword argument has been deprecated, please use invert_model. "
+            raise TypeError(
+                "The invProp keyword argument has been removed, please use invert_model. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
-                stacklevel=2,
             )
-            invert_model = kwargs["invProp"]
         if "invMat" in kwargs:
-            warnings.warn(
-                "The invMat keyword argument has been deprecated, please use invert_matrix. "
+            raise TypeError(
+                "The invMat keyword argument has been removed, please use invert_matrix. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
-                stacklevel=2,
             )
-            invert_matrix = kwargs["invMat"]
         if "doFast" in kwargs:
-            warnings.warn(
-                "The doFast keyword argument has been deprecated, please use do_fast. "
+            raise TypeError(
+                "The doFast keyword argument has been removed, please use do_fast. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
-                stacklevel=2,
             )
-            do_fast = kwargs["doFast"]
         if projection_type not in ["F", "E"]:
             raise TypeError("projection_type must be 'F' for faces or 'E' for edges")
 
@@ -254,29 +227,20 @@ class InnerProducts(BaseMesh):
     ):
         # Inherited documentation from discretize.base.BaseMesh
         if "invProp" in kwargs:
-            warnings.warn(
-                "The invProp keyword argument has been deprecated, please use invert_model. "
+            raise TypeError(
+                "The invProp keyword argument has been removed, please use invert_model. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
-                stacklevel=2,
             )
-            invert_model = kwargs["invProp"]
         if "invMat" in kwargs:
-            warnings.warn(
-                "The invMat keyword argument has been deprecated, please use invert_matrix. "
+            raise TypeError(
+                "The invMat keyword argument has been removed, please use invert_matrix. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
-                stacklevel=2,
             )
-            invert_matrix = kwargs["invMat"]
         if "doFast" in kwargs:
-            warnings.warn(
-                "The doFast keyword argument has been deprecated, please use do_fast. "
+            raise TypeError(
+                "The doFast keyword argument has been removed, please use do_fast. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
-                stacklevel=2,
             )
-            do_fast = kwargs["doFast"]
         return self._getInnerProductDeriv(
             model,
             "F",
@@ -290,29 +254,20 @@ class InnerProducts(BaseMesh):
     ):
         # Inherited documentation from discretize.base.BaseMesh
         if "invProp" in kwargs:
-            warnings.warn(
-                "The invProp keyword argument has been deprecated, please use invert_model. "
+            raise TypeError(
+                "The invProp keyword argument has been removed, please use invert_model. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
-                stacklevel=2,
             )
-            invert_model = kwargs["invProp"]
         if "invMat" in kwargs:
-            warnings.warn(
-                "The invMat keyword argument has been deprecated, please use invert_matrix. "
+            raise TypeError(
+                "The invMat keyword argument has been removed, please use invert_matrix. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
-                stacklevel=2,
             )
-            invert_matrix = kwargs["invMat"]
         if "doFast" in kwargs:
-            warnings.warn(
-                "The doFast keyword argument has been deprecated, please use do_fast. "
+            raise TypeError(
+                "The doFast keyword argument has been removed, please use do_fast. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
-                stacklevel=2,
             )
-            do_fast = kwargs["doFast"]
         return self._getInnerProductDeriv(
             model,
             "E",
