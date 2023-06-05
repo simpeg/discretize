@@ -108,3 +108,37 @@ class TestTensorMeshCells:
             true_bounds = np.vstack([x1, x2, y1, y2, z1, z2]).T
         cell_bounds = np.array([cell.bounds for cell in mesh])
         np.testing.assert_allclose(true_bounds, cell_bounds)
+
+    def test_cell_int_indices(self, mesh):
+        """
+        Test if integer indices return the expected cell
+
+        Test if an integer index is correctly converted to a tuple of indices,
+        i.e. unravelling using FORTRAN order.
+        """
+        if mesh.dim == 1:
+            size = 5  # mesh size
+            indices_tuples = [(i,) for i in range(size)]
+            for i in range(len(mesh)):
+                cell_i, cell_indices = mesh[i], mesh[indices_tuples[i]]
+                assert cell_i.h == cell_indices.h
+                assert cell_i.origin == cell_indices.origin
+        elif mesh.dim == 2:
+            shape = (5, 3)  # mesh shape
+            indices_tuples = [(i, j) for j in range(shape[1]) for i in range(shape[0])]
+            for i in range(len(mesh)):
+                cell_i, cell_indices = mesh[i], mesh[indices_tuples[i]]
+                assert cell_i.h == cell_indices.h
+                assert cell_i.origin == cell_indices.origin
+        elif mesh.dim == 3:
+            shape = (5, 3, 10)  # mesh shape
+            indices_tuples = [
+                (i, j, k)
+                for k in range(shape[2])
+                for j in range(shape[1])
+                for i in range(shape[0])
+            ]
+            for i in range(len(mesh)):
+                cell_i, cell_indices = mesh[i], mesh[indices_tuples[i]]
+                assert cell_i.h == cell_indices.h
+                assert cell_i.origin == cell_indices.origin

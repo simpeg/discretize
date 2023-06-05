@@ -1,5 +1,4 @@
 """Module housing the TensorMesh implementation."""
-import itertools
 import numpy as np
 
 from discretize.base import BaseRectangularMesh, BaseTensorMesh
@@ -166,24 +165,15 @@ class TensorMesh(
         """
         Iterator over the cells
         """
-        if self.dim == 1:
-            (nx,) = self.shape_cells
-            indices = ((i,) for i in range(nx))
-        if self.dim == 2:
-            nx, ny = self.shape_cells
-            indices = ((i, j) for j in range(ny) for i in range(nx))
-        elif self.dim == 3:
-            nx, ny, nz = self.shape_cells
-            indices = (
-                (i, j, k) for k in range(nz) for j in range(ny) for i in range(nx)
-            )
-        iterator = (self[index] for index in indices)
+        iterator = (self[i] for i in range(len(self)))
         return iterator
 
     def __getitem__(self, indices):
         """
         Return the boundaries of a single cell of the mesh
         """
+        if not isinstance(indices, tuple):
+            indices = np.unravel_index(indices, self.shape_cells, order="F")
         if len(indices) != self.dim:
             raise ValueError(
                 f"Invalid indices {indices}. "
