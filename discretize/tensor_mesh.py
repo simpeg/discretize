@@ -197,7 +197,7 @@ class TensorMesh(
                 f"Invalid number of indices '{len(indices)}'. "
                 f"It should match the number of dimensions of the mesh ({self.dim})."
             )
-        # Int indexes only
+        # Int indices only
         all_indices_are_ints = not any(isinstance(i, slice) for i in indices)
         if all_indices_are_ints:
             return self._get_cell(indices)
