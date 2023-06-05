@@ -197,9 +197,9 @@ class TestTensorMeshCells:
                 for j in range(shape[1])
                 for i in range(shape[0])
             ]
-            for i in range(len(mesh)):
-                cell, expected_cell = mesh[i], mesh[indices_tuples[i]]
-                assert cell == expected_cell
+            cells = [mesh[i] for i in range(len(mesh))]
+            expected_cells = [mesh[indices] for indices in indices_tuples]
+            assert cells == expected_cells
 
     @pytest.mark.parametrize("start", [None, 0, 1])
     @pytest.mark.parametrize("stop", [None, 4, "end"])
@@ -213,9 +213,7 @@ class TestTensorMeshCells:
         cells = mesh[start:stop:step]
         indices = _slice_to_index(slice(start, stop, step), len(mesh))
         expected_cells = [mesh[i] for i in indices]
-        assert len(cells) == len(expected_cells)
-        for cell, expected_cell in zip(cells, expected_cells):
-            assert cell == expected_cell
+        assert cells == expected_cells
 
     @pytest.mark.parametrize("step", (None, 1, 2, -1))
     def test_cells_slices(self, mesh, step):
@@ -228,26 +226,20 @@ class TestTensorMeshCells:
             expected_cells = [
                 mesh[i] for i in _slice_to_index(slice(start, stop, step), len(mesh))
             ]
-            assert len(cells) == len(expected_cells)
-            for cell, expected_cell in zip(cells, expected_cells):
-                assert cell == expected_cell
+            assert cells == expected_cells
         elif mesh.dim == 2:
             index_x = slice(start, stop, step)
             index_y = slice(start, stop, step)
             cells = mesh[index_x, index_y]
             expected_cells = self.generate_expected_cells(mesh, start, stop, step)
-            assert len(cells) == len(expected_cells)
-            for cell, expected_cell in zip(cells, expected_cells):
-                assert cell == expected_cell
+            assert cells == expected_cells
         elif mesh.dim == 3:
             index_x = slice(start, stop, step)
             index_y = slice(start, stop, step)
             index_z = slice(start, stop, step)
             cells = mesh[index_x, index_y, index_z]
             expected_cells = self.generate_expected_cells(mesh, start, stop, step)
-            assert len(cells) == len(expected_cells)
-            for cell, expected_cell in zip(cells, expected_cells):
-                assert cell == expected_cell
+            assert cells == expected_cells
 
     def generate_expected_cells(self, mesh, start, stop, step):
         """
