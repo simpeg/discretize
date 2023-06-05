@@ -26,11 +26,11 @@ class TensorCell:
     Parameters
     ----------
     h : (dim) array_like
-        Iterable with the cell widths along each direction. For a 2D mesh, it
+        Array with the cell widths along each direction. For a 2D mesh, it
         must have two elements (``hx``, ``hy``). For a 3D mesh it must have
         three elements (``hx``, ``hy``, ``hz``).
     origin : (dim) array_like
-        Iterable with the coordinates of the origin of the cell, i.e. the
+        Array with the coordinates of the origin of the cell, i.e. the
         bottom-left-frontmost corner.
     """
 
@@ -116,3 +116,25 @@ class TensorCell:
             for factor in (0, 1)
         )
         return bounds
+
+    def get_neighbors(self, mesh):
+        """
+        Return the neighboring cells in the mesh
+
+        Parameters
+        ----------
+        mesh : TensorMesh
+            TensorMesh where the current cell lives.
+
+        Returns
+        -------
+        list of TensorCell
+        """
+        neighbor_indices = []
+        for dim in range(self.dim):
+            for delta in (-1, 1):
+                index = list(self.index)
+                index[dim] += delta
+                if 0 <= index[dim] < mesh.shape_cells[dim]:
+                    neighbor_indices.append(index)
+        return [mesh[*i] for i in neighbor_indices]

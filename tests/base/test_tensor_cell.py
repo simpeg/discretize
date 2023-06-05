@@ -276,3 +276,102 @@ class TestTensorMeshCells:
                     for i in reversed(range(start, stop, -step))
                 ]
         return expected_cells
+
+
+class TestNeighbors:
+    """Test the get_neighbors method"""
+
+    @pytest.fixture
+    def mesh_1D(self):
+        """Sample 1D TensorMesh"""
+        h = [5]
+        origin = [-2.0]
+        return TensorMesh(h, origin)
+
+    @pytest.fixture
+    def mesh_2D(self):
+        """Sample 2D TensorMesh"""
+        h = [5, 4]
+        origin = [-2.0, 5.0]
+        return TensorMesh(h, origin)
+
+    @pytest.fixture
+    def mesh_3D(self):
+        """Sample 3D TensorMesh"""
+        h = [5, 4, 10]
+        origin = [-2.0, 5.0, -12.0]
+        return TensorMesh(h, origin)
+
+    @pytest.mark.parametrize("index", (0, 3, 4))
+    def test_get_neighbors_1D(self, mesh_1D, index):
+        """
+        Test the get_neighbors method on a 1D mesh
+        """
+        cell = mesh_1D[index]
+        neighbors = cell.get_neighbors(mesh_1D)
+        if index == 0:
+            expected_neighbors = [mesh_1D[1]]
+        elif index == 3:
+            expected_neighbors = [mesh_1D[2], mesh_1D[4]]
+        elif index == 4:
+            expected_neighbors = [mesh_1D[3]]
+        assert expected_neighbors == neighbors
+
+    @pytest.mark.parametrize("index_x", (0, 3, 4))
+    @pytest.mark.parametrize("index_y", (0, 1, 3))
+    def test_get_neighbors_2D(self, mesh_2D, index_x, index_y):
+        """
+        Test the get_neighbors method on a 2D mesh
+        """
+        cell = mesh_2D[index_x, index_y]
+        neighbors = cell.get_neighbors(mesh_2D)
+        expected_neighbors = []
+        if index_x == 0:
+            expected_neighbors += [mesh_2D[1, cell.index[1]]]
+        elif index_x == 3:
+            expected_neighbors += [mesh_2D[i, cell.index[1]] for i in (2, 4)]
+        elif index_x == 4:
+            expected_neighbors += [mesh_2D[3, cell.index[1]]]
+        if index_y == 0:
+            expected_neighbors += [mesh_2D[cell.index[0], 1]]
+        elif index_y == 1:
+            expected_neighbors += [mesh_2D[cell.index[0], j] for j in (0, 2)]
+        elif index_y == 3:
+            expected_neighbors += [mesh_2D[cell.index[0], 2]]
+        assert expected_neighbors == neighbors
+
+    @pytest.mark.parametrize("index_x", (0, 3, 4))
+    @pytest.mark.parametrize("index_y", (0, 1, 3))
+    @pytest.mark.parametrize("index_z", (0, 4, 9))
+    def test_get_neighbors_3D(self, mesh_3D, index_x, index_y, index_z):
+        """
+        Test the get_neighbors method on a 3D mesh
+        """
+        cell = mesh_3D[index_x, index_y, index_z]
+        neighbors = cell.get_neighbors(mesh_3D)
+        expected_neighbors = []
+        if index_x == 0:
+            expected_neighbors += [mesh_3D[1, cell.index[1], cell.index[2]]]
+        elif index_x == 3:
+            expected_neighbors += [
+                mesh_3D[i, cell.index[1], cell.index[2]] for i in (2, 4)
+            ]
+        elif index_x == 4:
+            expected_neighbors += [mesh_3D[3, cell.index[1], cell.index[2]]]
+        if index_y == 0:
+            expected_neighbors += [mesh_3D[cell.index[0], 1, cell.index[2]]]
+        elif index_y == 1:
+            expected_neighbors += [
+                mesh_3D[cell.index[0], j, cell.index[2]] for j in (0, 2)
+            ]
+        elif index_y == 3:
+            expected_neighbors += [mesh_3D[cell.index[0], 2, cell.index[2]]]
+        if index_z == 0:
+            expected_neighbors += [mesh_3D[cell.index[0], cell.index[1], 1]]
+        elif index_z == 4:
+            expected_neighbors += [
+                mesh_3D[cell.index[0], cell.index[1], k] for k in (3, 5)
+            ]
+        elif index_z == 9:
+            expected_neighbors += [mesh_3D[cell.index[0], cell.index[1], 8]]
+        assert expected_neighbors == neighbors
