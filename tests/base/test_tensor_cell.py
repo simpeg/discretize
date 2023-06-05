@@ -132,7 +132,7 @@ class TestTensorMeshCells:
             h = [5]
             origin = [-2.0]
         elif dim == "2D":
-            h = [5, 3]
+            h = [5, 4]
             origin = [-2.0, 5.0]
         elif dim == "3D":
             h = [5, 4, 10]
