@@ -3,7 +3,7 @@ Cell class for TensorMesh
 """
 
 
-def _check_inputs(h, origin):
+def _check_inputs(h, origin, index):
     """
     Check inputs for the TensorCell
     """
@@ -12,7 +12,11 @@ def _check_inputs(h, origin):
             f"Invalid h and origin arguments with {len(h)} and {len(origin)} "
             "elements, respectively. They must have the same number of elements."
         )
-    pass
+    if len(index) != len(h):
+        raise ValueError(
+            f"Invalid index argument with {len(index)} elements. "
+            f"It should match the number of elements of h and origin ('{len(h)}')."
+        )
 
 
 class TensorCell:
@@ -30,10 +34,11 @@ class TensorCell:
         bottom-left-frontmost corner.
     """
 
-    def __init__(self, h, origin):
-        _check_inputs(h, origin)
+    def __init__(self, h, origin, index):
+        _check_inputs(h, origin, index)
         self._h = h
         self._origin = origin
+        self._index = index
 
     def __repr__(self):
         return f"TensorCell(h={self.h}, origin={self.origin})"
@@ -44,7 +49,12 @@ class TensorCell:
                 f"Cannot compare an object of type '{other.__class__.__name__}' "
                 "with a TensorCell"
             )
-        return self.h == other.h and self.origin == other.origin
+        are_equal = (
+            self.h == other.h
+            and self.origin == other.origin
+            and self.index == other.index
+        )
+        return are_equal
 
     @property
     def h(self):
@@ -59,6 +69,13 @@ class TensorCell:
         Coordinates of the origin of the cell
         """
         return self._origin
+
+    @property
+    def index(self):
+        """
+        Index of the cell in a TensorMesh
+        """
+        return self._index
 
     @property
     def dim(self):

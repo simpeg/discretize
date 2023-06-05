@@ -1,6 +1,7 @@
 """
 Test TensorCell
 """
+import itertools
 import pytest
 import numpy as np
 
@@ -31,17 +32,23 @@ def test_slice_to_index(slice_indices, expected_result):
 
 
 @pytest.mark.parametrize(
-    "h, origin",
+    "h, origin, index",
     [
-        ((1.0,), (2.0, 3.0)),
-        ((1.0, 2.0), (3.0,)),
-        ((1.0, 2.0, 4.0), (3.0, 5.0)),
+        ((1.0,), (2.0, 3.0), (0, 1, 4)),
+        ((1.0, 2.0), (3.0,), (0, 1, 4)),
+        ((1.0, 2.0, 4.0), (3.0, 5.0), (0, 1, 4)),
+        ((1.0, 2.0, 4.0), (3.0, 5.0, 7.0), (0, 1)),
+        ((1.0, 2.0, 4.0), (3.0, 5.0, 7.0), (0, 1, 4, 5)),
     ],
 )
-def test_invalid_h_origin(h, origin):
+def test_invalid_h_origin(h, origin, index):
     """Test if error is raised after invalid h and origin arguments"""
-    with pytest.raises(ValueError, match="Invalid h and origin"):
-        TensorCell(h, origin)
+    if len(index) == 3:
+        msg = "Invalid h and origin"
+    else:
+        msg = "Invalid index argument"
+    with pytest.raises(ValueError, match=msg):
+        TensorCell(h, origin, index)
 
 
 class TestTensorCell:
@@ -54,13 +61,16 @@ class TestTensorCell:
         if dim == "1D":
             h = (4.0,)
             origin = (-2.0,)
+            index = (0,)
         elif dim == "2D":
             h = (4.0, 2.0)
             origin = (-2.0, 5.0)
+            index = (0, 0)
         elif dim == "3D":
             h = (4.0, 2.0, 10.0)
             origin = (-2.0, 5.0, -12.0)
-        return TensorCell(h, origin)
+            index = (0, 0, 0)
+        return TensorCell(h, origin, index)
 
     def test_center(self, cell):
         """Test center property"""
@@ -83,17 +93,19 @@ class TestTensorCell:
         assert cell.bounds == true_bounds
 
     @pytest.mark.parametrize(
-        "change_h, change_origin",
-        [(True, True), (False, False), (True, False), (False, True)],
+        "change_h, change_origin, change_index",
+        itertools.product((True, False), (True, False), (True, False)),
     )
-    def test_eq(self, cell, change_h, change_origin):
-        h, origin = cell.h, cell.origin
+    def test_eq(self, cell, change_h, change_origin, change_index):
+        h, origin, index = cell.h, cell.origin, cell.index
         if change_h:
             h = [h_i + 0.1 for h_i in h]
         if change_origin:
             origin = [o + 0.1 for o in origin]
-        other_cell = TensorCell(h, origin)
-        if change_origin or change_h:
+        if change_index:
+            index = [i + 1 for i in index]
+        other_cell = TensorCell(h, origin, index)
+        if change_origin or change_h or change_index:
             assert cell != other_cell
         else:
             assert cell == other_cell
