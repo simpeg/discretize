@@ -59,6 +59,32 @@ class TestTensorCell:
             true_bounds = (-2.0, 2.0, 5.0, 7.0, -12.0, -2.0)
         assert cell.bounds == true_bounds
 
+    @pytest.mark.parametrize(
+        "change_h, change_origin",
+        [(True, True), (False, False), (True, False), (False, True)],
+    )
+    def test_eq(self, cell, change_h, change_origin):
+        h, origin = cell.h, cell.origin
+        if change_h:
+            h = [h_i + 0.1 for h_i in h]
+        if change_origin:
+            origin = [o + 0.1 for o in origin]
+        other_cell = TensorCell(h, origin)
+        if change_origin or change_h:
+            assert cell != other_cell
+        else:
+            assert cell == other_cell
+
+    def test_eq_invalid_type(self, cell):
+        class Dummy:
+            def __init__(self):
+                pass
+
+        other_object = Dummy()
+        msg = "Cannot compare an object of type 'Dummy'"
+        with pytest.raises(TypeError, match=msg):
+            cell == other_object
+
 
 class TestTensorMeshCells:
     @pytest.fixture(params=("1D", "2D", "3D"))

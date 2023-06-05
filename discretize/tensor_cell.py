@@ -38,6 +38,14 @@ class TensorCell:
     def __repr__(self):
         return f"TensorCell(h={self.h}, origin={self.origin})"
 
+    def __eq__(self, other):
+        if not isinstance(other, TensorCell):
+            raise TypeError(
+                f"Cannot compare an object of type '{other.__class__.__name__}' "
+                "with a TensorCell"
+            )
+        return self.h == other.h and self.origin == other.origin
+
     @property
     def h(self):
         """
