@@ -5,6 +5,29 @@ import pytest
 import numpy as np
 
 from discretize import TensorCell, TensorMesh
+from discretize.tensor_mesh import _slice_to_index
+
+
+@pytest.mark.parametrize(
+    "slice_indices, expected_result",
+    [
+        (slice(None, None, None), range(8)),
+        (slice(0, None, None), range(8)),
+        (slice(1, None, None), range(1, 8)),
+        (slice(None, 4, None), range(4)),
+        (slice(None, 8, None), range(8)),
+        (slice(None, None, 1), range(8)),
+        (slice(None, None, 2), range(0, 8, 2)),
+        (slice(None, None, -1), reversed(range(0, 8, 1))),
+        (slice(1, 7, -2), reversed(range(1, 7, 2))),
+    ],
+)
+def test_slice_to_index(slice_indices, expected_result):
+    """Test private _slice_to_index function"""
+    end = 8
+    indices = tuple(i for i in _slice_to_index(slice_indices, end))
+    expected_result = tuple(i for i in expected_result)
+    assert indices == expected_result
 
 
 @pytest.mark.parametrize(
@@ -100,7 +123,7 @@ class TestTensorMeshCells:
             h = [5, 3]
             origin = [-2.0, 5.0]
         elif dim == "3D":
-            h = [5, 3, 10]
+            h = [5, 4, 10]
             origin = [-2.0, 5.0, -12.0]
         return TensorMesh(h, origin)
 
@@ -143,21 +166,19 @@ class TestTensorMeshCells:
         i.e. unravelling using FORTRAN order.
         """
         if mesh.dim == 1:
-            size = 5  # mesh size
+            size = len(mesh)
             indices_tuples = [(i,) for i in range(size)]
             for i in range(len(mesh)):
-                cell_i, cell_indices = mesh[i], mesh[indices_tuples[i]]
-                assert cell_i.h == cell_indices.h
-                assert cell_i.origin == cell_indices.origin
+                cell, expected_cell = mesh[i], mesh[indices_tuples[i]]
+                assert cell == expected_cell
         elif mesh.dim == 2:
-            shape = (5, 3)  # mesh shape
+            shape = mesh.shape_cells
             indices_tuples = [(i, j) for j in range(shape[1]) for i in range(shape[0])]
             for i in range(len(mesh)):
-                cell_i, cell_indices = mesh[i], mesh[indices_tuples[i]]
-                assert cell_i.h == cell_indices.h
-                assert cell_i.origin == cell_indices.origin
+                cell, expected_cell = mesh[i], mesh[indices_tuples[i]]
+                assert cell == expected_cell
         elif mesh.dim == 3:
-            shape = (5, 3, 10)  # mesh shape
+            shape = mesh.shape_cells
             indices_tuples = [
                 (i, j, k)
                 for k in range(shape[2])
@@ -165,6 +186,89 @@ class TestTensorMeshCells:
                 for i in range(shape[0])
             ]
             for i in range(len(mesh)):
-                cell_i, cell_indices = mesh[i], mesh[indices_tuples[i]]
-                assert cell_i.h == cell_indices.h
-                assert cell_i.origin == cell_indices.origin
+                cell, expected_cell = mesh[i], mesh[indices_tuples[i]]
+                assert cell == expected_cell
+
+    @pytest.mark.parametrize("start", [None, 0, 1])
+    @pytest.mark.parametrize("stop", [None, 4, "end"])
+    @pytest.mark.parametrize("step", [None, 1, 2, -1])
+    def test_cells_single_slice(self, mesh, start, stop, step):
+        """
+        Test if a single slice return the expected cells
+        """
+        if stop == "end":
+            stop = len(mesh)
+        cells = mesh[start:stop:step]
+        indices = _slice_to_index(slice(start, stop, step), len(mesh))
+        expected_cells = [mesh[i] for i in indices]
+        assert len(cells) == len(expected_cells)
+        for cell, expected_cell in zip(cells, expected_cells):
+            assert cell == expected_cell
+
+    @pytest.mark.parametrize("step", (None, 1, 2, -1))
+    def test_cells_slices(self, mesh, step):
+        """
+        Test passing slices return the expected cells
+        """
+        start, stop = 1, 3
+        if mesh.dim == 1:
+            cells = mesh[start:stop:step]
+            expected_cells = [
+                mesh[i] for i in _slice_to_index(slice(start, stop, step), len(mesh))
+            ]
+            assert len(cells) == len(expected_cells)
+            for cell, expected_cell in zip(cells, expected_cells):
+                assert cell == expected_cell
+        elif mesh.dim == 2:
+            index_x = slice(start, stop, step)
+            index_y = slice(start, stop, step)
+            cells = mesh[index_x, index_y]
+            expected_cells = self.generate_expected_cells(mesh, start, stop, step)
+            assert len(cells) == len(expected_cells)
+            for cell, expected_cell in zip(cells, expected_cells):
+                assert cell == expected_cell
+        elif mesh.dim == 3:
+            index_x = slice(start, stop, step)
+            index_y = slice(start, stop, step)
+            index_z = slice(start, stop, step)
+            cells = mesh[index_x, index_y, index_z]
+            expected_cells = self.generate_expected_cells(mesh, start, stop, step)
+            assert len(cells) == len(expected_cells)
+            for cell, expected_cell in zip(cells, expected_cells):
+                assert cell == expected_cell
+
+    def generate_expected_cells(self, mesh, start, stop, step):
+        """
+        Generate expected cells after slicing the mesh
+        """
+        if step is None:
+            step = 1
+        if mesh.dim == 2:
+            if step > 0:
+                expected_cells = [
+                    mesh[i, j]
+                    for j in range(start, stop, step)
+                    for i in range(start, stop, step)
+                ]
+            else:
+                expected_cells = [
+                    mesh[i, j]
+                    for j in reversed(range(start, stop, -step))
+                    for i in reversed(range(start, stop, -step))
+                ]
+        elif mesh.dim == 3:
+            if step > 0:
+                expected_cells = [
+                    mesh[i, j, k]
+                    for k in range(start, stop, step)
+                    for j in range(start, stop, step)
+                    for i in range(start, stop, step)
+                ]
+            else:
+                expected_cells = [
+                    mesh[i, j, k]
+                    for k in reversed(range(start, stop, -step))
+                    for j in reversed(range(start, stop, -step))
+                    for i in reversed(range(start, stop, -step))
+                ]
+        return expected_cells

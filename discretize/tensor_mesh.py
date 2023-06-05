@@ -1,4 +1,5 @@
 """Module housing the TensorMesh implementation."""
+import itertools
 import numpy as np
 
 from discretize.base import BaseRectangularMesh, BaseTensorMesh
@@ -171,14 +172,64 @@ class TensorMesh(
     def __getitem__(self, indices):
         """
         Return the boundaries of a single cell of the mesh
+
+        Parameters
+        ----------
+        indices : int, slice, or tuple of int and slices
+            Indices of a cell in the mesh.
+            It can be a single integer or a single slice (for ravelled
+            indices), or a tuple combining integers and slices for each
+            direction.
+
+        Returns
+        -------
+        TensorCell or list of TensorCell
         """
+        # Handle non tuple indices
         if not isinstance(indices, tuple):
+            if isinstance(indices, slice):
+                cells = [self[i] for i in _slice_to_index(indices, len(self))]
+                return cells
             indices = np.unravel_index(indices, self.shape_cells, order="F")
+        # Handle tuple indices
         if len(indices) != self.dim:
             raise ValueError(
-                f"Invalid indices {indices}. "
-                f"They should match the number of dimensions of the mesh ({self.dim})."
+                f"Invalid number of indices '{len(indices)}'. "
+                f"It should match the number of dimensions of the mesh ({self.dim})."
             )
+        # Int indexes only
+        all_indices_are_ints = not any(isinstance(i, slice) for i in indices)
+        if all_indices_are_ints:
+            return self._get_cell(indices)
+        # Slice and int indices
+        indices_per_dim = [
+            _slice_to_index(index, self.shape_cells[dim])
+            if isinstance(index, slice)
+            else [index]
+            for dim, index in enumerate(indices)
+        ]
+        # Combine the indices_per_dim using itertools.product.
+        # Because we want to follow a FORTRAN order, we need to reverse the
+        # order of the indices_per_dim and the indices.
+        indices = (i[::-1] for i in itertools.product(*indices_per_dim[::-1]))
+        cells = [self._get_cell(i) for i in indices]
+        if not cells:
+            return None
+        return cells
+
+    def _get_cell(self, indices):
+        """Return a single cell in the mesh
+
+        Parameters
+        ----------
+        indices : tuple of int
+            Tuple containing the indices of the cell. Must have the same number
+            of elements as the mesh dimensions.
+
+        Returns
+        -------
+        TensorCell
+        """
         if self.dim == 1:
             (i,) = indices
             x1, x2 = self.nodes_x[i], self.nodes_x[i + 1]
@@ -640,3 +691,29 @@ class TensorMesh(
         removal_version="1.0.0",
         future_warn=True,
     )
+
+
+def _slice_to_index(index_slice, end):
+    """Generate indices from a slice
+
+    Parameters
+    ----------
+    index_slice : slice
+        Slice for cell indices along a single dimension
+    end : int
+        End of the slice. Will use this value as the stop in case the
+        `index_slice.stop` is None.
+
+    Returns
+    -------
+    Generator
+    """
+    if (start := index_slice.start) is None:
+        start = 0
+    if (stop := index_slice.stop) is None:
+        stop = end
+    if (step := index_slice.step) is None:
+        step = 1
+    if step < 0:
+        return reversed(range(start, stop, abs(step)))
+    return range(start, stop, step)
