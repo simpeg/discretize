@@ -31,24 +31,84 @@ def test_slice_to_index(slice_indices, expected_result):
     assert indices == expected_result
 
 
-@pytest.mark.parametrize(
-    "h, origin, index",
-    [
-        ((1.0,), (2.0, 3.0), (0, 1, 4)),
-        ((1.0, 2.0), (3.0,), (0, 1, 4)),
-        ((1.0, 2.0, 4.0), (3.0, 5.0), (0, 1, 4)),
-        ((1.0, 2.0, 4.0), (3.0, 5.0, 7.0), (0, 1)),
-        ((1.0, 2.0, 4.0), (3.0, 5.0, 7.0), (0, 1, 4, 5)),
-    ],
-)
-def test_invalid_h_origin(h, origin, index):
-    """Test if error is raised after invalid h and origin arguments"""
-    if len(index) == 3:
-        msg = "Invalid h and origin"
-    else:
-        msg = "Invalid index argument"
-    with pytest.raises(ValueError, match=msg):
-        TensorCell(h, origin, index)
+class TestInvalidTensorCell:
+    """
+    Test if invalid arguments passed to TensorCell constructor raise errors
+    """
+
+    @pytest.mark.parametrize(
+        "h, origin",
+        [
+            [(1.0,), (2.0, 3.0)],
+            [(1.0, 2.0), (3.0,)],
+            [(1.0, 2.0, 4.0), (3.0, 5.0)],
+        ],
+    )
+    def test_invalid_sizes_h_origin(self, h, origin):
+        """Test if error is raised after invalid sizes of h and origin"""
+        index = (0, 1, 4)
+        with pytest.raises(ValueError, match="Invalid h and origin"):
+            TensorCell(h, origin, index)
+
+    @pytest.mark.parametrize("index", [(0, 1), (0, 1, 4, 5)])
+    def test_invalid_sizes_index(self, index):
+        """Test if error is raised after invalid size of index"""
+        h, origin = (1.0, 2.0, 4.0), (3.0, 5.0, 7.0)
+        with pytest.raises(ValueError, match="Invalid index argument"):
+            TensorCell(h, origin, index)
+
+    @pytest.mark.parametrize(
+        "h",
+        [
+            ([1.0], [2.3]),
+            (True, 2.3),
+            (2.3, False),
+            (np.array([1.2, 2.3, 4.5]), 2.3),
+            (2.3, np.array([1.2, 2.3, 4.5])),
+        ],
+    )
+    def test_invalid_type_h(self, h):
+        """Test if error is raised after invalid types of h elements"""
+        origin = (2.3, 3.1)
+        index = (0, 1)
+        with pytest.raises(ValueError, match="Invalid value for h"):
+            TensorCell(h, origin, index)
+
+    @pytest.mark.parametrize(
+        "origin",
+        [
+            ([1.0], [2.3]),
+            (True, 2.3),
+            (2.3, False),
+            (np.array([1.2, 2.3, 4.5]), 2.3),
+            (2.3, np.array([1.2, 2.3, 4.5])),
+        ],
+    )
+    def test_invalid_type_origin(self, origin):
+        """Test if error is raised after invalid types of origin elements"""
+        h = (2.3, 3.1)
+        index = (0, 1)
+        with pytest.raises(ValueError, match="Invalid value for origin"):
+            TensorCell(h, origin, index)
+
+    @pytest.mark.parametrize(
+        "index",
+        [
+            (1, 2.3),
+            (3.1, 2),
+            ([1], [2]),
+            (True, 2),
+            (2, False),
+            (np.array([1, 2, 4]), 2),
+            (2, np.array([1, 2, 4])),
+        ],
+    )
+    def test_invalid_type_index(self, index):
+        """Test if error is raised after invalid types of index elements"""
+        h = (2.3, 3.1)
+        origin = (2.0, 1.2)
+        with pytest.raises(ValueError, match="Invalid value for index"):
+            TensorCell(h, origin, index)
 
 
 class TestTensorCell:

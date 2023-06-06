@@ -3,6 +3,7 @@ Cell class for TensorMesh
 """
 from numbers import Number, Integral
 
+
 def _check_inputs(h, origin, index):
     """
     Check inputs for the TensorCell
@@ -18,12 +19,18 @@ def _check_inputs(h, origin, index):
             f"It should match the number of elements of h and origin ('{len(h)}')."
         )
     for name, input in [("h", h), ("origin", origin)]:
-        if not all(isinstance(element, Number) for element in input):
+        if any(
+            isinstance(element, bool) or not isinstance(element, Number)
+            for element in input
+        ):
             raise ValueError(
                 f"Invalid value for {name} '{input}'. "
                 f"Elements of {name} should be numerical variables."
             )
-    if not all(isinstance(element, Integral) for element in index):
+    if any(
+        isinstance(element, bool) or not isinstance(element, Integral)
+        for element in index
+    ):
         raise ValueError(
             f"Invalid value for index '{index}'. Elements of index should be ints."
         )
