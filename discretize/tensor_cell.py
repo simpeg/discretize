@@ -41,7 +41,7 @@ class TensorCell:
         self._index = index
 
     def __repr__(self):
-        return f"TensorCell(h={self.h}, origin={self.origin})"
+        return f"TensorCell(h={self.h}, origin={self.origin}, index={self.index})"
 
     def __eq__(self, other):
         if not isinstance(other, TensorCell):
