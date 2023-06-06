@@ -180,7 +180,7 @@ class TestTensorCell:
         other_object = Dummy()
         msg = "Cannot compare an object of type 'Dummy'"
         with pytest.raises(TypeError, match=msg):
-            cell == other_object
+            cell == other_object  # noqa: B015
 
 
 class TestTensorMeshCells:

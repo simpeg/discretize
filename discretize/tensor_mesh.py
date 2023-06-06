@@ -163,15 +163,13 @@ class TensorMesh(
         return fmt
 
     def __iter__(self):
-        """
-        Iterator over the cells
-        """
+        """Iterator over the cells."""
         iterator = (self[i] for i in range(len(self)))
         return iterator
 
     def __getitem__(self, indices):
         """
-        Return the boundaries of a single cell of the mesh
+        Return the boundaries of a single cell of the mesh.
 
         Parameters
         ----------
@@ -226,7 +224,7 @@ class TensorMesh(
 
     def _sanitize_indices(self, indices, dim=None):
         """
-        Sanitize integer indices for cell in the mesh
+        Sanitize integer indices for cell in the mesh.
 
         Convert negative indices into their corresponding positive values
         within the mesh. It works with a tuple of indices or with
@@ -258,7 +256,7 @@ class TensorMesh(
         return indices
 
     def _get_cell(self, indices):
-        """Return a single cell in the mesh
+        """Return a single cell in the mesh.
 
         Parameters
         ----------
@@ -735,7 +733,7 @@ class TensorMesh(
 
 
 def _slice_to_index(index_slice, end):
-    """Generate indices from a slice
+    """Generate indices from a slice.
 
     Parameters
     ----------
