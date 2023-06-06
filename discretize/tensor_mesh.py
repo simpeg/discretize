@@ -186,26 +186,33 @@ class TensorMesh(
         TensorCell or list of TensorCell
         """
         # Handle non tuple indices
-        if not isinstance(indices, tuple):
-            if isinstance(indices, slice):
-                cells = [self[i] for i in _slice_to_index(indices, len(self))]
-                return cells
+        if isinstance(indices, slice):
+            cells = [self[i] for i in _slice_to_index(indices, len(self))]
+            return cells
+        if np.issubdtype(type(indices), int):
+            indices = self._sanitize_indices(indices)
             indices = np.unravel_index(indices, self.shape_cells, order="F")
         # Handle tuple indices
+        if not isinstance(indices, tuple):
+            raise ValueError(
+                f"Invalid indices '{indices}'. "
+                "It should be an int, a slice or a tuple of int and slices."
+            )
         if len(indices) != self.dim:
             raise ValueError(
                 f"Invalid number of indices '{len(indices)}'. "
                 f"It should match the number of dimensions of the mesh ({self.dim})."
             )
         # Int indices only
-        all_indices_are_ints = not any(isinstance(i, slice) for i in indices)
+        all_indices_are_ints = all(np.issubdtype(type(i), int) for i in indices)
         if all_indices_are_ints:
+            indices = self._sanitize_indices(indices)
             return self._get_cell(indices)
         # Slice and int indices
         indices_per_dim = [
             _slice_to_index(index, self.shape_cells[dim])
             if isinstance(index, slice)
-            else [index]
+            else [self._sanitize_indices(index, dim=dim)]
             for dim, index in enumerate(indices)
         ]
         # Combine the indices_per_dim using itertools.product.
@@ -216,6 +223,39 @@ class TensorMesh(
         if not cells:
             return None
         return cells
+
+    def _sanitize_indices(self, indices, dim=None):
+        """
+        Sanitize integer indices for cell in the mesh
+
+        Convert negative indices into their corresponding positive values
+        within the mesh. It works with a tuple of indices or with
+        single int (ravelled indices).
+
+        Parameters
+        ----------
+        indices : int or tuple of int
+            Indices of a single mesh cell. It can contain negative indices.
+        dim : int or None
+            Corresponding dimension of ``indices``, if it's a single int. If
+            None and ``indices`` is an int, then ``indices`` will be assumed to
+            be a ravelled index. If ``indices`` is a tuple, ``dim`` is ignored.
+
+        Returns
+        -------
+        int or tuple of int
+        """
+        if isinstance(indices, tuple):
+            indices = tuple(
+                index if index >= 0 else index + self.shape_cells[i]
+                for i, index in enumerate(indices)
+            )
+        elif indices < 0:
+            if dim is None:
+                indices = indices + self.n_cells
+            else:
+                indices = indices + self.shape_cells[dim]
+        return indices
 
     def _get_cell(self, indices):
         """Return a single cell in the mesh
@@ -230,6 +270,7 @@ class TensorMesh(
         -------
         TensorCell
         """
+        assert all(index >= 0 for index in indices)
         if self.dim == 1:
             (i,) = indices
             x1, x2 = self.nodes_x[i], self.nodes_x[i + 1]
@@ -714,6 +755,10 @@ def _slice_to_index(index_slice, end):
         stop = end
     if (step := index_slice.step) is None:
         step = 1
+    if start < 0:
+        start += end
+    if stop < 0:
+        stop += end
     if step < 0:
         return reversed(range(start, stop, abs(step)))
     return range(start, stop, step)

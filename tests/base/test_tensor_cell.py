@@ -21,6 +21,8 @@ from discretize.tensor_mesh import _slice_to_index
         (slice(None, None, 2), range(0, 8, 2)),
         (slice(None, None, -1), reversed(range(0, 8, 1))),
         (slice(1, 7, -2), reversed(range(1, 7, 2))),
+        (slice(1, -1, None), range(1, 7, 1)),
+        (slice(1, -2, 2), range(1, 6, 2)),
     ],
 )
 def test_slice_to_index(slice_indices, expected_result):
@@ -261,8 +263,29 @@ class TestTensorMeshCells:
             expected_cells = [mesh[indices] for indices in indices_tuples]
             assert cells == expected_cells
 
-    @pytest.mark.parametrize("start", [None, 0, 1])
-    @pytest.mark.parametrize("stop", [None, 4, "end"])
+    def test_cell_negative_int_indices(self, mesh):
+        """
+        Test if negative integer indices return the expected cell
+        """
+        if mesh.dim == 1:
+            assert mesh[-1] == mesh[5 - 1]
+            assert mesh[-2] == mesh[5 - 2]
+        elif mesh.dim == 2:
+            assert mesh[-1] == mesh[5 * 4 - 1]
+            assert mesh[-2] == mesh[5 * 4 - 2]
+            assert mesh[-1, 0] == mesh[5 - 1, 0]
+            assert mesh[0, -1] == mesh[0, 4 - 1]
+            assert mesh[-2, -2] == mesh[5 - 2, 4 - 2]
+        elif mesh.dim == 3:
+            assert mesh[-1] == mesh[5 * 4 * 10 - 1]
+            assert mesh[-2] == mesh[5 * 4 * 10 - 2]
+            assert mesh[-1, 0, 0] == mesh[5 - 1, 0, 0]
+            assert mesh[0, -1, 0] == mesh[0, 4 - 1, 0]
+            assert mesh[0, 0, -1] == mesh[0, 0, 10 - 1]
+            assert mesh[-2, -2, -2] == mesh[5 - 2, 4 - 2, 10 - 2]
+
+    @pytest.mark.parametrize("start", [None, 0, 1, -2])
+    @pytest.mark.parametrize("stop", [None, 4, -1, "end"])
     @pytest.mark.parametrize("step", [None, 1, 2, -1])
     def test_cells_single_slice(self, mesh, start, stop, step):
         """
@@ -278,7 +301,7 @@ class TestTensorMeshCells:
     @pytest.mark.parametrize("step", (None, 1, 2, -1))
     def test_cells_slices(self, mesh, step):
         """
-        Test passing slices return the expected cells
+        Test if passing slices return the expected cells
         """
         start, stop = 1, 3
         if mesh.dim == 1:
@@ -300,6 +323,39 @@ class TestTensorMeshCells:
             cells = mesh[index_x, index_y, index_z]
             expected_cells = self.generate_expected_cells(mesh, start, stop, step)
             assert cells == expected_cells
+
+    @pytest.mark.parametrize("step", (None, 1, 2, -1))
+    def test_cells_slices_negative_bounds(self, mesh, step):
+        """
+        Test if passing slices with negative bounds return the expected cells
+        """
+        if mesh.dim == 1:
+            n = mesh.n_cells
+            assert mesh[1:-1:step] == mesh[1 : n - 1 : step]
+            assert mesh[-3:-1:step] == mesh[n - 3 : n - 1 : step]
+        elif mesh.dim == 2:
+            nx, ny = mesh.shape_cells
+            assert (
+                mesh[1:-1:step, 1:-1:step] == mesh[1 : nx - 1 : step, 1 : ny - 1 : step]
+            )
+            assert (
+                mesh[-3:-1:step, -3:-1:step]
+                == mesh[nx - 3 : nx - 1 : step, ny - 3 : ny - 1 : step]
+            )
+        elif mesh.dim == 3:
+            nx, ny, nz = mesh.shape_cells
+            assert (
+                mesh[1:-1:step, 1:-1:step, 1:-1:step]
+                == mesh[1 : nx - 1 : step, 1 : ny - 1 : step, 1 : nz - 1 : step]
+            )
+            assert (
+                mesh[-3:-1:step, -3:-1:step, -3:-1:step]
+                == mesh[
+                    nx - 3 : nx - 1 : step,
+                    ny - 3 : ny - 1 : step,
+                    nz - 3 : nz - 1 : step,
+                ]
+            )
 
     def generate_expected_cells(self, mesh, start, stop, step):
         """
