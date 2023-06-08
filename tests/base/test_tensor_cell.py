@@ -1,7 +1,6 @@
 """
 Test TensorCell
 """
-import itertools
 import pytest
 import numpy as np
 
@@ -418,6 +417,46 @@ class TestNeighbors:
         elif index_z == 9:
             expected_neighbors += [[cell.index[0], cell.index[1], 8]]
         assert expected_neighbors == cell.neighbors
+
+
+class TestNodes:
+    """Test the nodes property"""
+
+    @pytest.fixture
+    def cell_1D(self):
+        """Sample 1D TensorCell"""
+        return TensorCell(h=[3.4], origin=[-2.3], index=[1], mesh_shape=[3])
+
+    @pytest.fixture
+    def cell_2D(self):
+        """Sample 1D TensorCell"""
+        cell = TensorCell(
+            h=[3.4, 4.3], origin=[-2.3, 0.3], index=[1, 2], mesh_shape=[3, 4]
+        )
+        return cell
+
+    @pytest.fixture
+    def cell_3D(self):
+        """Sample 1D TensorCell"""
+        cell = TensorCell(
+            h=[3.4, 4.3, 5.6],
+            origin=[-2.3, 0.3, 3.1],
+            index=[1, 2, 3],
+            mesh_shape=[3, 4, 5],
+        )
+        return cell
+
+    def test_nodes_indices_1D(self, cell_1D):
+        """Test if nodes property return the expected indices"""
+        assert cell_1D.nodes == [1, 2]
+
+    def test_nodes_indices_2D(self, cell_2D):
+        """Test if nodes property return the expected indices"""
+        assert cell_2D.nodes == [9, 10, 13, 14]
+
+    def test_nodes_indices_3D(self, cell_3D):
+        """Test if nodes property return the expected indices"""
+        assert cell_3D.nodes == [69, 70, 73, 74, 89, 90, 93, 94]
 
 
 class TestGetNeighbors:

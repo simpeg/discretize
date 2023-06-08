@@ -1,7 +1,8 @@
 """
 Cell class for TensorMesh
 """
-from numbers import Number, Integral
+import itertools
+import numpy as np
 
 
 class TensorCell:
@@ -137,6 +138,30 @@ class TensorCell:
                 if 0 <= index[dim] < self._mesh_shape[dim]:
                     neighbor_indices.append(index)
         return neighbor_indices
+
+    @property
+    def nodes(self):
+        """
+        Indices for this cell's nodes within its parent mesh.
+
+        Returns
+        -------
+        list of int
+        """
+        # Define shape of nodes in parent mesh
+        nodes_shape = [s + 1 for s in self.mesh_shape]
+        # Get indices of nodes per dimension
+        nodes_index_per_dim = [[index, index + 1] for index in self.index]
+        # Combine the nodes_index_per_dim using itertools.product.
+        # Because we want to follow a FORTRAN order, we need to reverse the
+        # order of the nodes_index_per_dim and the indices.
+        nodes_indices = [i[::-1] for i in itertools.product(*nodes_index_per_dim[::-1])]
+        # Ravel indices
+        nodes_indices = [
+            np.ravel_multi_index(index, dims=nodes_shape, order="F")
+            for index in nodes_indices
+        ]
+        return nodes_indices
 
     def get_neighbors(self, mesh):
         """
