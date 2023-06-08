@@ -4,38 +4,6 @@ Cell class for TensorMesh
 from numbers import Number, Integral
 
 
-def _check_inputs(h, origin, index):
-    """
-    Check inputs for the TensorCell
-    """
-    if len(h) != len(origin):
-        raise ValueError(
-            f"Invalid h and origin arguments with {len(h)} and {len(origin)} "
-            "elements, respectively. They must have the same number of elements."
-        )
-    if len(index) != len(h):
-        raise ValueError(
-            f"Invalid index argument with {len(index)} elements. "
-            f"It should match the number of elements of h and origin ('{len(h)}')."
-        )
-    for name, input in [("h", h), ("origin", origin)]:
-        if any(
-            isinstance(element, bool) or not isinstance(element, Number)
-            for element in input
-        ):
-            raise ValueError(
-                f"Invalid value for {name} '{input}'. "
-                f"Elements of {name} should be numerical variables."
-            )
-    if any(
-        isinstance(element, bool) or not isinstance(element, Integral)
-        for element in index
-    ):
-        raise ValueError(
-            f"Invalid value for index '{index}'. Elements of index should be ints."
-        )
-
-
 class TensorCell:
     """
     Representation of a cell in a TensorMesh
@@ -56,7 +24,6 @@ class TensorCell:
     """
 
     def __init__(self, h, origin, index, mesh_shape):
-        _check_inputs(h, origin, index)
         self._h = h
         self._origin = origin
         self._index = index
