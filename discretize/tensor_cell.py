@@ -51,16 +51,25 @@ class TensorCell:
         bottom-left-frontmost corner.
     index : (dim) array_like
         Array with the indices of the cell in its parent mesh.
+    mesh_shape : (dim) array_like
+        Shape of the parent mesh.
     """
 
-    def __init__(self, h, origin, index):
+    def __init__(self, h, origin, index, mesh_shape):
         _check_inputs(h, origin, index)
         self._h = h
         self._origin = origin
         self._index = index
+        self._mesh_shape = mesh_shape
 
     def __repr__(self):
-        return f"TensorCell(h={self.h}, origin={self.origin}, index={self.index})"
+        repr = ", ".join(
+            [
+                f"{attr}={getattr(self, attr)}"
+                for attr in ("h", "origin", "index", "mesh_shape")
+            ]
+        )
+        return f"TensorCell({repr})"
 
     def __eq__(self, other):
         if not isinstance(other, TensorCell):
@@ -72,6 +81,7 @@ class TensorCell:
             self.h == other.h
             and self.origin == other.origin
             and self.index == other.index
+            and self.mesh_shape == other.mesh_shape
         )
         return are_equal
 
@@ -95,6 +105,13 @@ class TensorCell:
         Index of the cell in a TensorMesh
         """
         return self._index
+
+    @property
+    def mesh_shape(self):
+        """
+        Shape of the parent mesh.
+        """
+        return self._mesh_shape
 
     @property
     def dim(self):
@@ -136,6 +153,24 @@ class TensorCell:
         )
         return bounds
 
+    @property
+    def neighbors(self):
+        """
+        Indices for this cell's neighbors within its parent mesh.
+
+        Returns
+        -------
+        list of int
+        """
+        neighbor_indices = []
+        for dim in range(self.dim):
+            for delta in (-1, 1):
+                index = list(self.index)
+                index[dim] += delta
+                if 0 <= index[dim] < self._mesh_shape[dim]:
+                    neighbor_indices.append(index)
+        return neighbor_indices
+
     def get_neighbors(self, mesh):
         """
         Return the neighboring cells in the mesh
@@ -149,11 +184,4 @@ class TensorCell:
         -------
         list of TensorCell
         """
-        neighbor_indices = []
-        for dim in range(self.dim):
-            for delta in (-1, 1):
-                index = list(self.index)
-                index[dim] += delta
-                if 0 <= index[dim] < mesh.shape_cells[dim]:
-                    neighbor_indices.append(index)
-        return [mesh[*i] for i in neighbor_indices]
+        return [mesh[*i] for i in self.neighbors]

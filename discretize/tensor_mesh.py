@@ -287,7 +287,7 @@ class TensorMesh(
             z1, z2 = self.nodes_z[k], self.nodes_z[k + 1]
             origin = (x1, y1, z1)
             h = (x2 - x1, y2 - y1, z2 - z1)
-        return TensorCell(h, origin, indices)
+        return TensorCell(h, origin, indices, self.shape_cells)
 
     # --------------- Geometries ---------------------
     @property

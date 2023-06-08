@@ -124,15 +124,18 @@ class TestTensorCell:
             h = (4.0,)
             origin = (-2.0,)
             index = (0,)
+            mesh_shape = (8,)
         elif dim == "2D":
             h = (4.0, 2.0)
             origin = (-2.0, 5.0)
             index = (0, 0)
+            mesh_shape = (8, 3)
         elif dim == "3D":
             h = (4.0, 2.0, 10.0)
             origin = (-2.0, 5.0, -12.0)
             index = (0, 0, 0)
-        return TensorCell(h, origin, index)
+            mesh_shape = (8, 3, 10)
+        return TensorCell(h, origin, index, mesh_shape)
 
     def test_center(self, cell):
         """Test center property"""
@@ -154,20 +157,22 @@ class TestTensorCell:
             true_bounds = (-2.0, 2.0, 5.0, 7.0, -12.0, -2.0)
         assert cell.bounds == true_bounds
 
-    @pytest.mark.parametrize(
-        "change_h, change_origin, change_index",
-        itertools.product((True, False), (True, False), (True, False)),
-    )
-    def test_eq(self, cell, change_h, change_origin, change_index):
-        h, origin, index = cell.h, cell.origin, cell.index
+    @pytest.mark.parametrize("change_h", (True, False))
+    @pytest.mark.parametrize("change_origin", (True, False))
+    @pytest.mark.parametrize("change_index", (True, False))
+    @pytest.mark.parametrize("change_mesh_shape", (True, False))
+    def test_eq(self, cell, change_h, change_origin, change_index, change_mesh_shape):
+        h, origin, index, mesh_shape = cell.h, cell.origin, cell.index, cell.mesh_shape
         if change_h:
             h = [h_i + 0.1 for h_i in h]
         if change_origin:
             origin = [o + 0.1 for o in origin]
         if change_index:
             index = [i + 1 for i in index]
-        other_cell = TensorCell(h, origin, index)
-        if change_origin or change_h or change_index:
+        if change_mesh_shape:
+            mesh_shape = [i + 1 for i in mesh_shape]
+        other_cell = TensorCell(h, origin, index, mesh_shape)
+        if any((change_origin, change_h, change_index, change_mesh_shape)):
             assert cell != other_cell
         else:
             assert cell == other_cell
