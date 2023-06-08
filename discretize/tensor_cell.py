@@ -49,6 +49,8 @@ class TensorCell:
     origin : (dim) array_like
         Array with the coordinates of the origin of the cell, i.e. the
         bottom-left-frontmost corner.
+    index : (dim) array_like
+        Array with the indices of the cell in its parent mesh.
     """
 
     def __init__(self, h, origin, index):
