@@ -320,6 +320,107 @@ class TestTensorMeshCells:
 
 
 class TestNeighbors:
+    """Test the neighbors property"""
+
+    @pytest.fixture
+    def sample_1D(self):
+        """Cell attributes for building a 1D cell"""
+        h = [3.1]
+        origin = [-2.3]
+        mesh_shape = [5]
+        return h, origin, mesh_shape
+
+    @pytest.fixture
+    def sample_2D(self):
+        """Cell attributes for building a 2D cell"""
+        h = [3.1, 5.6]
+        origin = [-2.3, 4.1]
+        mesh_shape = [5, 4]
+        return h, origin, mesh_shape
+
+    @pytest.fixture
+    def sample_3D(self):
+        """Cell attributes for building a 3D cell"""
+        h = [3.1, 5.6, 10.2]
+        origin = [-2.3, 4.1, -3.4]
+        mesh_shape = [5, 4, 10]
+        return h, origin, mesh_shape
+
+    @pytest.mark.parametrize("index", (0, 3, 4))
+    def test_neighbors_1D(self, sample_1D, index):
+        """
+        Test the neighbors property on a 1D mesh
+        """
+        h, origin, mesh_shape = sample_1D
+        cell = TensorCell(h=h, origin=origin, index=[index], mesh_shape=mesh_shape)
+        expected_neighbors = []
+        if index == 0:
+            expected_neighbors = [[1]]
+        elif index == 3:
+            expected_neighbors = [[2], [4]]
+        elif index == 4:
+            expected_neighbors = [[3]]
+        assert expected_neighbors == cell.neighbors
+
+    @pytest.mark.parametrize("index_x", (0, 3, 4))
+    @pytest.mark.parametrize("index_y", (0, 1, 3))
+    def test_neighbors_2D(self, sample_2D, index_x, index_y):
+        """
+        Test the neighbors property on a 2D mesh
+        """
+        h, origin, mesh_shape = sample_2D
+        cell = TensorCell(
+            h=h, origin=origin, index=[index_x, index_y], mesh_shape=mesh_shape
+        )
+        expected_neighbors = []
+        if index_x == 0:
+            expected_neighbors += [[1, cell.index[1]]]
+        elif index_x == 3:
+            expected_neighbors += [[i, cell.index[1]] for i in (2, 4)]
+        elif index_x == 4:
+            expected_neighbors += [[3, cell.index[1]]]
+        if index_y == 0:
+            expected_neighbors += [[cell.index[0], 1]]
+        elif index_y == 1:
+            expected_neighbors += [[cell.index[0], j] for j in (0, 2)]
+        elif index_y == 3:
+            expected_neighbors += [[cell.index[0], 2]]
+        assert expected_neighbors == cell.neighbors
+
+    @pytest.mark.parametrize("index_x", (0, 3, 4))
+    @pytest.mark.parametrize("index_y", (0, 1, 3))
+    @pytest.mark.parametrize("index_z", (0, 4, 9))
+    def test_neighbors_3D(self, sample_3D, index_x, index_y, index_z):
+        """
+        Test the neighbors property on a 3D mesh
+        """
+        h, origin, mesh_shape = sample_3D
+        cell = TensorCell(
+            h=h, origin=origin, index=[index_x, index_y, index_z], mesh_shape=mesh_shape
+        )
+        expected_neighbors = []
+        if index_x == 0:
+            expected_neighbors += [[1, cell.index[1], cell.index[2]]]
+        elif index_x == 3:
+            expected_neighbors += [[i, cell.index[1], cell.index[2]] for i in (2, 4)]
+        elif index_x == 4:
+            expected_neighbors += [[3, cell.index[1], cell.index[2]]]
+        if index_y == 0:
+            expected_neighbors += [[cell.index[0], 1, cell.index[2]]]
+        elif index_y == 1:
+            expected_neighbors += [[cell.index[0], j, cell.index[2]] for j in (0, 2)]
+        elif index_y == 3:
+            expected_neighbors += [[cell.index[0], 2, cell.index[2]]]
+        if index_z == 0:
+            expected_neighbors += [[cell.index[0], cell.index[1], 1]]
+        elif index_z == 4:
+            expected_neighbors += [[cell.index[0], cell.index[1], k] for k in (3, 5)]
+        elif index_z == 9:
+            expected_neighbors += [[cell.index[0], cell.index[1], 8]]
+        assert expected_neighbors == cell.neighbors
+
+
+class TestGetNeighbors:
     """Test the get_neighbors method"""
 
     @pytest.fixture

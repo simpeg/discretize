@@ -127,7 +127,7 @@ class TensorCell:
 
         Returns
         -------
-        list of int
+        list of list of int
         """
         neighbor_indices = []
         for dim in range(self.dim):
