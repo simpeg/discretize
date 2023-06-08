@@ -163,6 +163,42 @@ class TensorCell:
         ]
         return nodes_indices
 
+    @property
+    def edges(self):
+        """
+        Indices for this cell's edges within its parent mesh.
+
+        Returns
+        -------
+        list of int
+        """
+        if self.dim == 1:
+            edges_indices = self.index
+        elif self.dim == 2:
+            # Get shape of edges grids (for edges_x and edges_y)
+            edges_x_shape = [self.mesh_shape[0], self.mesh_shape[1] + 1]
+            edges_y_shape = [self.mesh_shape[0] + 1, self.mesh_shape[1]]
+            # Calculate total amount of edges_x
+            n_edges_x = edges_x_shape[0] * edges_x_shape[1]
+            # Get indices of edges_x
+            edges_x_indices = [
+                [self.index[0], self.index[1] + delta] for delta in (0, 1)
+            ]
+            edges_x_indices = [
+                np.ravel_multi_index(index, dims=edges_x_shape, order="F")
+                for index in edges_x_indices
+            ]
+            # Get indices of edges_y
+            edges_y_indices = [
+                [self.index[0] + delta, self.index[1]] for delta in (0, 1)
+            ]
+            edges_y_indices = [
+                n_edges_x + np.ravel_multi_index(index, dims=edges_y_shape, order="F")
+                for index in edges_y_indices
+            ]
+            edges_indices = edges_x_indices + edges_y_indices
+        return edges_indices
+
     def get_neighbors(self, mesh):
         """
         Return the neighboring cells in the mesh
