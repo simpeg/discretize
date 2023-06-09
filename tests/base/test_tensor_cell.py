@@ -64,7 +64,7 @@ class TestTensorCell:
             true_center = (0.0, 6.0)
         elif cell.dim == 3:
             true_center = (0.0, 6.0, -7.0)
-        assert cell.center == true_center
+        assert all(cell.center == true_center)
 
     def test_bounds(self, cell):
         """Test bounds property"""
@@ -74,7 +74,7 @@ class TestTensorCell:
             true_bounds = (-2.0, 2.0, 5.0, 7.0)
         elif cell.dim == 3:
             true_bounds = (-2.0, 2.0, 5.0, 7.0, -12.0, -2.0)
-        assert cell.bounds == true_bounds
+        assert all(cell.bounds == true_bounds)
 
     @pytest.mark.parametrize("change_h", (True, False))
     @pytest.mark.parametrize("change_origin", (True, False))

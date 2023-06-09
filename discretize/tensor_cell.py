@@ -104,10 +104,10 @@ class TensorCell:
 
         Returns
         -------
-        center : (dim) tuple
-            Tuple with the coordinates of the cell center.
+        center : (dim) array
+            Array with the coordinates of the cell center.
         """
-        center = tuple(origin_i + h_i / 2 for origin_i, h_i in zip(self.origin, self.h))
+        center = np.array(self.origin) + np.array(self.h) / 2
         return center
 
     @property
@@ -120,13 +120,15 @@ class TensorCell:
 
         Returns
         -------
-        bounds : (2 * dim) tuple
-            Tuple with the cell bounds.
+        bounds : (2 * dim) array
+            Array with the cell bounds.
         """
-        bounds = tuple(
-            origin_i + factor * h_i
-            for origin_i, h_i in zip(self.origin, self.h)
-            for factor in (0, 1)
+        bounds = np.array(
+            [
+                origin_i + factor * h_i
+                for origin_i, h_i in zip(self.origin, self.h)
+                for factor in (0, 1)
+            ]
         )
         return bounds
 
