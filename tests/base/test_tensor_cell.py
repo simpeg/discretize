@@ -81,16 +81,17 @@ class TestTensorCell:
     @pytest.mark.parametrize("change_index", (True, False))
     @pytest.mark.parametrize("change_mesh_shape", (True, False))
     def test_eq(self, cell, change_h, change_origin, change_index, change_mesh_shape):
-        h, origin, index, mesh_shape = cell.h, cell.origin, cell.index, cell.mesh_shape
+        h, origin = cell.h, cell.origin
+        index_unraveled, mesh_shape = cell.index_unraveled, cell.mesh_shape
         if change_h:
             h = [h_i + 0.1 for h_i in h]
         if change_origin:
             origin = [o + 0.1 for o in origin]
         if change_index:
-            index = [i + 1 for i in index]
+            index_unraveled = [i + 1 for i in index_unraveled]
         if change_mesh_shape:
             mesh_shape = [i + 1 for i in mesh_shape]
-        other_cell = TensorCell(h, origin, index, mesh_shape)
+        other_cell = TensorCell(h, origin, index_unraveled, mesh_shape)
         if any((change_origin, change_h, change_index, change_mesh_shape)):
             assert cell != other_cell
         else:
@@ -351,7 +352,9 @@ class TestNeighbors:
         Test the neighbors property on a 1D mesh
         """
         h, origin, mesh_shape = sample_1D
-        cell = TensorCell(h=h, origin=origin, index=[index], mesh_shape=mesh_shape)
+        cell = TensorCell(
+            h=h, origin=origin, index_unraveled=[index], mesh_shape=mesh_shape
+        )
         expected_neighbors = []
         if index == 0:
             expected_neighbors = [[1]]
@@ -369,21 +372,29 @@ class TestNeighbors:
         """
         h, origin, mesh_shape = sample_2D
         cell = TensorCell(
-            h=h, origin=origin, index=[index_x, index_y], mesh_shape=mesh_shape
+            h=h,
+            origin=origin,
+            index_unraveled=[index_x, index_y],
+            mesh_shape=mesh_shape,
         )
+        cell_index = cell.index_unraveled
         expected_neighbors = []
         if index_x == 0:
-            expected_neighbors += [[1, cell.index[1]]]
+            expected_neighbors += [[1, cell_index[1]]]
         elif index_x == 3:
-            expected_neighbors += [[i, cell.index[1]] for i in (2, 4)]
+            expected_neighbors += [[i, cell_index[1]] for i in (2, 4)]
         elif index_x == 4:
-            expected_neighbors += [[3, cell.index[1]]]
+            expected_neighbors += [[3, cell_index[1]]]
         if index_y == 0:
-            expected_neighbors += [[cell.index[0], 1]]
+            expected_neighbors += [[cell_index[0], 1]]
         elif index_y == 1:
-            expected_neighbors += [[cell.index[0], j] for j in (0, 2)]
+            expected_neighbors += [[cell_index[0], j] for j in (0, 2)]
         elif index_y == 3:
-            expected_neighbors += [[cell.index[0], 2]]
+            expected_neighbors += [[cell_index[0], 2]]
+        expected_neighbors = [
+            np.ravel_multi_index(index, dims=mesh_shape, order="F")
+            for index in expected_neighbors
+        ]
         assert expected_neighbors == cell.neighbors
 
     @pytest.mark.parametrize("index_x", (0, 3, 4))
@@ -395,27 +406,35 @@ class TestNeighbors:
         """
         h, origin, mesh_shape = sample_3D
         cell = TensorCell(
-            h=h, origin=origin, index=[index_x, index_y, index_z], mesh_shape=mesh_shape
+            h=h,
+            origin=origin,
+            index_unraveled=[index_x, index_y, index_z],
+            mesh_shape=mesh_shape,
         )
+        cell_index = cell.index_unraveled
         expected_neighbors = []
         if index_x == 0:
-            expected_neighbors += [[1, cell.index[1], cell.index[2]]]
+            expected_neighbors += [[1, cell_index[1], cell_index[2]]]
         elif index_x == 3:
-            expected_neighbors += [[i, cell.index[1], cell.index[2]] for i in (2, 4)]
+            expected_neighbors += [[i, cell_index[1], cell_index[2]] for i in (2, 4)]
         elif index_x == 4:
-            expected_neighbors += [[3, cell.index[1], cell.index[2]]]
+            expected_neighbors += [[3, cell_index[1], cell_index[2]]]
         if index_y == 0:
-            expected_neighbors += [[cell.index[0], 1, cell.index[2]]]
+            expected_neighbors += [[cell_index[0], 1, cell_index[2]]]
         elif index_y == 1:
-            expected_neighbors += [[cell.index[0], j, cell.index[2]] for j in (0, 2)]
+            expected_neighbors += [[cell_index[0], j, cell_index[2]] for j in (0, 2)]
         elif index_y == 3:
-            expected_neighbors += [[cell.index[0], 2, cell.index[2]]]
+            expected_neighbors += [[cell_index[0], 2, cell_index[2]]]
         if index_z == 0:
-            expected_neighbors += [[cell.index[0], cell.index[1], 1]]
+            expected_neighbors += [[cell_index[0], cell_index[1], 1]]
         elif index_z == 4:
-            expected_neighbors += [[cell.index[0], cell.index[1], k] for k in (3, 5)]
+            expected_neighbors += [[cell_index[0], cell_index[1], k] for k in (3, 5)]
         elif index_z == 9:
-            expected_neighbors += [[cell.index[0], cell.index[1], 8]]
+            expected_neighbors += [[cell_index[0], cell_index[1], 8]]
+        expected_neighbors = [
+            np.ravel_multi_index(index, dims=mesh_shape, order="F")
+            for index in expected_neighbors
+        ]
         assert expected_neighbors == cell.neighbors
 
 
@@ -425,13 +444,13 @@ class TestNodes:
     @pytest.fixture
     def cell_1D(self):
         """Sample 1D TensorCell"""
-        return TensorCell(h=[3.4], origin=[-2.3], index=[1], mesh_shape=[3])
+        return TensorCell(h=[3.4], origin=[-2.3], index_unraveled=[1], mesh_shape=[3])
 
     @pytest.fixture
     def cell_2D(self):
         """Sample 1D TensorCell"""
         cell = TensorCell(
-            h=[3.4, 4.3], origin=[-2.3, 0.3], index=[1, 2], mesh_shape=[3, 4]
+            h=[3.4, 4.3], origin=[-2.3, 0.3], index_unraveled=[1, 2], mesh_shape=[3, 4]
         )
         return cell
 
@@ -441,7 +460,7 @@ class TestNodes:
         cell = TensorCell(
             h=[3.4, 4.3, 5.6],
             origin=[-2.3, 0.3, 3.1],
-            index=[1, 2, 3],
+            index_unraveled=[1, 2, 3],
             mesh_shape=[3, 4, 5],
         )
         return cell
@@ -507,18 +526,19 @@ class TestGetNeighbors:
         cell = mesh_2D[index_x, index_y]
         neighbors = cell.get_neighbors(mesh_2D)
         expected_neighbors = []
+        cell_index = cell.index_unraveled
         if index_x == 0:
-            expected_neighbors += [mesh_2D[1, cell.index[1]]]
+            expected_neighbors += [mesh_2D[1, cell_index[1]]]
         elif index_x == 3:
-            expected_neighbors += [mesh_2D[i, cell.index[1]] for i in (2, 4)]
+            expected_neighbors += [mesh_2D[i, cell_index[1]] for i in (2, 4)]
         elif index_x == 4:
-            expected_neighbors += [mesh_2D[3, cell.index[1]]]
+            expected_neighbors += [mesh_2D[3, cell_index[1]]]
         if index_y == 0:
-            expected_neighbors += [mesh_2D[cell.index[0], 1]]
+            expected_neighbors += [mesh_2D[cell_index[0], 1]]
         elif index_y == 1:
-            expected_neighbors += [mesh_2D[cell.index[0], j] for j in (0, 2)]
+            expected_neighbors += [mesh_2D[cell_index[0], j] for j in (0, 2)]
         elif index_y == 3:
-            expected_neighbors += [mesh_2D[cell.index[0], 2]]
+            expected_neighbors += [mesh_2D[cell_index[0], 2]]
         assert expected_neighbors == neighbors
 
     @pytest.mark.parametrize("index_x", (0, 3, 4))
@@ -531,28 +551,29 @@ class TestGetNeighbors:
         cell = mesh_3D[index_x, index_y, index_z]
         neighbors = cell.get_neighbors(mesh_3D)
         expected_neighbors = []
+        cell_index = cell.index_unraveled
         if index_x == 0:
-            expected_neighbors += [mesh_3D[1, cell.index[1], cell.index[2]]]
+            expected_neighbors += [mesh_3D[1, cell_index[1], cell_index[2]]]
         elif index_x == 3:
             expected_neighbors += [
-                mesh_3D[i, cell.index[1], cell.index[2]] for i in (2, 4)
+                mesh_3D[i, cell_index[1], cell_index[2]] for i in (2, 4)
             ]
         elif index_x == 4:
-            expected_neighbors += [mesh_3D[3, cell.index[1], cell.index[2]]]
+            expected_neighbors += [mesh_3D[3, cell_index[1], cell_index[2]]]
         if index_y == 0:
-            expected_neighbors += [mesh_3D[cell.index[0], 1, cell.index[2]]]
+            expected_neighbors += [mesh_3D[cell_index[0], 1, cell_index[2]]]
         elif index_y == 1:
             expected_neighbors += [
-                mesh_3D[cell.index[0], j, cell.index[2]] for j in (0, 2)
+                mesh_3D[cell_index[0], j, cell_index[2]] for j in (0, 2)
             ]
         elif index_y == 3:
-            expected_neighbors += [mesh_3D[cell.index[0], 2, cell.index[2]]]
+            expected_neighbors += [mesh_3D[cell_index[0], 2, cell_index[2]]]
         if index_z == 0:
-            expected_neighbors += [mesh_3D[cell.index[0], cell.index[1], 1]]
+            expected_neighbors += [mesh_3D[cell_index[0], cell_index[1], 1]]
         elif index_z == 4:
             expected_neighbors += [
-                mesh_3D[cell.index[0], cell.index[1], k] for k in (3, 5)
+                mesh_3D[cell_index[0], cell_index[1], k] for k in (3, 5)
             ]
         elif index_z == 9:
-            expected_neighbors += [mesh_3D[cell.index[0], cell.index[1], 8]]
+            expected_neighbors += [mesh_3D[cell_index[0], cell_index[1], 8]]
         assert expected_neighbors == neighbors

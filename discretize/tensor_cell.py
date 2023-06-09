@@ -18,16 +18,16 @@ class TensorCell:
     origin : (dim) array_like
         Array with the coordinates of the origin of the cell, i.e. the
         bottom-left-frontmost corner.
-    index : (dim) array_like
-        Array with the indices of the cell in its parent mesh.
+    index_unraveled : (dim) array_like
+        Array with the unraveled indices of the cell in its parent mesh.
     mesh_shape : (dim) array_like
         Shape of the parent mesh.
     """
 
-    def __init__(self, h, origin, index, mesh_shape):
+    def __init__(self, h, origin, index_unraveled, mesh_shape):
         self._h = h
         self._origin = origin
-        self._index = index
+        self._index_unraveled = index_unraveled
         self._mesh_shape = mesh_shape
 
     def __repr__(self):
@@ -72,7 +72,16 @@ class TensorCell:
         """
         Index of the cell in a TensorMesh
         """
-        return self._index
+        return np.ravel_multi_index(
+            self.index_unraveled, dims=self.mesh_shape, order="F"
+        )
+
+    @property
+    def index_unraveled(self):
+        """
+        Unraveled index of the cell in a TensorMesh
+        """
+        return self._index_unraveled
 
     @property
     def mesh_shape(self):
@@ -133,10 +142,12 @@ class TensorCell:
         neighbor_indices = []
         for dim in range(self.dim):
             for delta in (-1, 1):
-                index = list(self.index)
+                index = list(self.index_unraveled)
                 index[dim] += delta
                 if 0 <= index[dim] < self._mesh_shape[dim]:
-                    neighbor_indices.append(index)
+                    neighbor_indices.append(
+                        np.ravel_multi_index(index, dims=self.mesh_shape, order="F")
+                    )
         return neighbor_indices
 
     @property
@@ -151,7 +162,7 @@ class TensorCell:
         # Define shape of nodes in parent mesh
         nodes_shape = [s + 1 for s in self.mesh_shape]
         # Get indices of nodes per dimension
-        nodes_index_per_dim = [[index, index + 1] for index in self.index]
+        nodes_index_per_dim = [[index, index + 1] for index in self.index_unraveled]
         # Combine the nodes_index_per_dim using itertools.product.
         # Because we want to follow a FORTRAN order, we need to reverse the
         # order of the nodes_index_per_dim and the indices.
@@ -173,7 +184,7 @@ class TensorCell:
         list of int
         """
         if self.dim == 1:
-            edges_indices = self.index
+            edges_indices = self.index_unraveled
         elif self.dim == 2:
             # Get shape of edges grids (for edges_x and edges_y)
             edges_x_shape = [self.mesh_shape[0], self.mesh_shape[1] + 1]
@@ -182,7 +193,8 @@ class TensorCell:
             n_edges_x = edges_x_shape[0] * edges_x_shape[1]
             # Get indices of edges_x
             edges_x_indices = [
-                [self.index[0], self.index[1] + delta] for delta in (0, 1)
+                [self.index_unraveled[0], self.index_unraveled[1] + delta]
+                for delta in (0, 1)
             ]
             edges_x_indices = [
                 np.ravel_multi_index(index, dims=edges_x_shape, order="F")
@@ -190,7 +202,8 @@ class TensorCell:
             ]
             # Get indices of edges_y
             edges_y_indices = [
-                [self.index[0] + delta, self.index[1]] for delta in (0, 1)
+                [self.index_unraveled[0] + delta, self.index_unraveled[1]]
+                for delta in (0, 1)
             ]
             edges_y_indices = [
                 n_edges_x + np.ravel_multi_index(index, dims=edges_y_shape, order="F")
@@ -212,4 +225,4 @@ class TensorCell:
         -------
         list of TensorCell
         """
-        return [mesh[*i] for i in self.neighbors]
+        return [mesh[index] for index in self.neighbors]
