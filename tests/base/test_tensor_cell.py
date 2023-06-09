@@ -40,21 +40,21 @@ class TestTensorCell:
         """
         dim = request.param
         if dim == "1D":
-            h = (4.0,)
-            origin = (-2.0,)
-            index = (0,)
+            h = np.array([4.0])
+            origin = np.array([-2.0])
+            index_unraveled = (1,)
             mesh_shape = (8,)
         elif dim == "2D":
-            h = (4.0, 2.0)
-            origin = (-2.0, 5.0)
-            index = (0, 0)
+            h = np.array([4.0, 2.0])
+            origin = np.array([-2.0, 5.0])
+            index_unraveled = (1, 2)
             mesh_shape = (8, 3)
         elif dim == "3D":
-            h = (4.0, 2.0, 10.0)
-            origin = (-2.0, 5.0, -12.0)
-            index = (0, 0, 0)
+            h = np.array([4.0, 2.0, 10.0])
+            origin = np.array([-2.0, 5.0, -12.0])
+            index_unraveled = (1, 2, 3)
             mesh_shape = (8, 3, 10)
-        return TensorCell(h, origin, index, mesh_shape)
+        return TensorCell(h, origin, index_unraveled, mesh_shape)
 
     def test_center(self, cell):
         """Test center property"""
@@ -65,6 +65,26 @@ class TestTensorCell:
         elif cell.dim == 3:
             true_center = (0.0, 6.0, -7.0)
         assert all(cell.center == true_center)
+
+    def test_index(self, cell):
+        """Test index property"""
+        if cell.dim == 1:
+            true_index = 1
+        elif cell.dim == 2:
+            true_index = 17
+        elif cell.dim == 3:
+            true_index = 46
+        assert cell.index == true_index
+
+    def test_index_unraveled(self, cell):
+        """Test index_unraveled property"""
+        if cell.dim == 1:
+            true_index_unraveled = (1,)
+        elif cell.dim == 2:
+            true_index_unraveled = (1, 2)
+        elif cell.dim == 3:
+            true_index_unraveled = (1, 2, 3)
+        assert cell.index_unraveled == true_index_unraveled
 
     def test_bounds(self, cell):
         """Test bounds property"""
@@ -84,13 +104,13 @@ class TestTensorCell:
         h, origin = cell.h, cell.origin
         index_unraveled, mesh_shape = cell.index_unraveled, cell.mesh_shape
         if change_h:
-            h = [h_i + 0.1 for h_i in h]
+            h = np.array([h_i + 0.1 for h_i in h])
         if change_origin:
-            origin = [o + 0.1 for o in origin]
+            origin = np.array([origin_i + 0.1 for origin_i in origin])
         if change_index:
-            index_unraveled = [i + 1 for i in index_unraveled]
+            index_unraveled = tuple(i - 1 for i in index_unraveled)
         if change_mesh_shape:
-            mesh_shape = [i + 1 for i in mesh_shape]
+            mesh_shape = tuple(i + 1 for i in mesh_shape)
         other_cell = TensorCell(h, origin, index_unraveled, mesh_shape)
         if any((change_origin, change_h, change_index, change_mesh_shape)):
             assert cell != other_cell
