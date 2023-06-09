@@ -11,16 +11,16 @@ class TensorCell:
 
     Parameters
     ----------
-    h : (dim) array_like
+    h : (dim) numpy.ndarray
         Array with the cell widths along each direction. For a 2D mesh, it
         must have two elements (``hx``, ``hy``). For a 3D mesh it must have
         three elements (``hx``, ``hy``, ``hz``).
-    origin : (dim) array_like
+    origin : (dim) numpy.ndarray
         Array with the coordinates of the origin of the cell, i.e. the
         bottom-left-frontmost corner.
-    index_unraveled : (dim) array_like
+    index_unraveled : (dim) tuple
         Array with the unraveled indices of the cell in its parent mesh.
-    mesh_shape : (dim) array_like
+    mesh_shape : (dim) tuple
         Shape of the parent mesh.
     """
 
@@ -46,8 +46,8 @@ class TensorCell:
                 "with a TensorCell"
             )
         are_equal = (
-            self.h == other.h
-            and self.origin == other.origin
+            np.all(self.h == other.h)
+            and np.all(self.origin == other.origin)
             and self.index == other.index
             and self.mesh_shape == other.mesh_shape
         )
