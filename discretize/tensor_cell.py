@@ -31,13 +31,13 @@ class TensorCell:
         self._mesh_shape = mesh_shape
 
     def __repr__(self):
-        repr = ", ".join(
+        attributes = ", ".join(
             [
                 f"{attr}={getattr(self, attr)}"
                 for attr in ("h", "origin", "index", "mesh_shape")
             ]
         )
-        return f"TensorCell({repr})"
+        return f"TensorCell({attributes})"
 
     def __eq__(self, other):
         if not isinstance(other, TensorCell):
