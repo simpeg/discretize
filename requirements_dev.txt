@@ -1,8 +1,6 @@
 cython
-sphinx
+sphinx=
 sphinx-gallery
-sphinx-toolbox
-sphinxcontrib-apidoc
 pydata-sphinx-theme
 pillow
 pytest

@@ -3,7 +3,8 @@ import pytest
 import discretize
 import subprocess
 import numpy as np
-from discretize.tests import assert_isadjoint
+import scipy.sparse as sp
+from discretize.tests import assert_isadjoint, check_derivative, assert_expected_order
 
 
 class TestAssertIsAdjoint:
@@ -65,6 +66,74 @@ class TestAssertIsAdjoint:
             complex_v=True,
             clinear=False,
         )
+
+
+class TestCheckDerivative:
+    def test_simplePass(self):
+        def simplePass(x):
+            return np.sin(x), sp.diags(np.cos(x))
+
+        check_derivative(simplePass, np.random.randn(5), plotIt=False)
+
+    def test_simpleFunction(self):
+        def simpleFunction(x):
+            return np.sin(x), lambda xi: np.cos(x) * xi
+
+        check_derivative(simpleFunction, np.random.randn(5), plotIt=False)
+
+    def test_simpleFail(self):
+        def simpleFail(x):
+            return np.sin(x), -sp.diags(np.cos(x))
+
+        with pytest.raises(AssertionError):
+            check_derivative(simpleFail, np.random.randn(5), plotIt=False)
+
+
+@pytest.mark.parametrize("test_type", ["mean", "min", "last", "all", "mean_at_least"])
+def test_expected_order_pass(test_type):
+    func = lambda y: np.cos(y)
+    func_deriv = lambda y: -np.sin(y)
+
+    def deriv_error(n):
+        # The l-inf norm of the average error vector does
+        # follow second order convergence.
+        nodes = np.linspace(0, 1, n + 1)
+        cc = 0.5 * (nodes[1:] + nodes[:-1])
+        dh = nodes[1] - nodes[0]
+        node_eval = func(nodes)
+        num_deriv = (node_eval[1:] - node_eval[:-1]) / dh
+        true_deriv = func_deriv(cc)
+        err = np.linalg.norm(num_deriv - true_deriv, ord=np.inf)
+        return err, dh
+
+    assert_expected_order(deriv_error, [10, 20, 30, 40, 50], test_type=test_type)
+
+
+@pytest.mark.parametrize("test_type", ["mean", "min", "last", "all", "mean_at_least"])
+def test_expected_order_failed(test_type):
+    func = lambda y: np.cos(y)
+    func_deriv = lambda y: -np.sin(y)
+
+    def deriv_error(n):
+        # The l2 norm of the average error vector does not
+        # follow second order convergence.
+        nodes = np.linspace(0, 1, n + 1)
+        cc = 0.5 * (nodes[1:] + nodes[:-1])
+        dh = nodes[1] - nodes[0]
+        node_eval = func(nodes)
+        num_deriv = (node_eval[1:] - node_eval[:-1]) / dh
+        true_deriv = func_deriv(cc)
+        err = np.linalg.norm(num_deriv - true_deriv)
+        return err, dh
+
+    with pytest.raises(AssertionError):
+        assert_expected_order(deriv_error, [10, 20, 30, 40, 50], test_type=test_type)
+
+
+def test_expected_order_bad_test_type():
+    # should fail fast if given a bad test_type
+    with pytest.raises(ValueError):
+        assert_expected_order(None, [10, 20, 30, 40, 50], test_type="not_a_test")
 
 
 @pytest.mark.skipif(not sys.platform.startswith("linux"), reason="Not Linux.")

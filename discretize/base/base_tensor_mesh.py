@@ -554,9 +554,9 @@ class BaseTensorMesh(BaseRegularMesh):
             ey = ndgrid(self.nodes_x[[0, -1]], self.cell_centers_y)
             return np.r_[ex, ey]
         if dim == 3:
-            ex = self.edges_x[make_boundary_bool(self.shape_edges_x, dir="yz")]
-            ey = self.edges_y[make_boundary_bool(self.shape_edges_y, dir="xz")]
-            ez = self.edges_z[make_boundary_bool(self.shape_edges_z, dir="xy")]
+            ex = self.edges_x[make_boundary_bool(self.shape_edges_x, bdir="yz")]
+            ey = self.edges_y[make_boundary_bool(self.shape_edges_y, bdir="xz")]
+            ez = self.edges_z[make_boundary_bool(self.shape_edges_z, bdir="xy")]
             return np.r_[ex, ey, ez]
 
     def _getTensorGrid(self, key):
@@ -657,13 +657,10 @@ class BaseTensorMesh(BaseRegularMesh):
 
         """
         if "locType" in kwargs:
-            warnings.warn(
-                "The locType keyword argument has been deprecated, please use location_type. "
+            raise TypeError(
+                "The locType keyword argument has been removed, please use location_type. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
-                stacklevel=2,
             )
-            location_type = kwargs["locType"]
         pts = as_array_n_by_dim(pts, self.dim)
 
         tensors = self.get_tensor(location_type)
@@ -684,7 +681,7 @@ class BaseTensorMesh(BaseRegularMesh):
             )
         return inside
 
-    def _getInterpolationMat(
+    def _get_interpolation_matrix(
         self, loc, location_type="cell_centers", zeros_outside=False
     ):
         """Produce an interpolation matrix.
@@ -764,7 +761,7 @@ class BaseTensorMesh(BaseRegularMesh):
 
         else:
             raise NotImplementedError(
-                "getInterpolationMat: location_type=="
+                "get_interpolation_matrix: location_type=="
                 + location_type
                 + " and mesh.dim=="
                 + str(self.dim)
@@ -780,27 +777,21 @@ class BaseTensorMesh(BaseRegularMesh):
     ):
         # Documentation inherited from discretize.base.BaseMesh
         if "locType" in kwargs:
-            warnings.warn(
-                "The locType keyword argument has been deprecated, please use location_type. "
+            raise TypeError(
+                "The locType keyword argument has been removed, please use location_type. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
-                stacklevel=2,
             )
-            location_type = kwargs["locType"]
         if "zerosOutside" in kwargs:
-            warnings.warn(
-                "The zerosOutside keyword argument has been deprecated, please use zeros_outside. "
+            raise TypeError(
+                "The zerosOutside keyword argument has been removed, please use zeros_outside. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
-                stacklevel=2,
             )
-            zeros_outside = kwargs["zerosOutside"]
-        return self._getInterpolationMat(loc, location_type, zeros_outside)
+        return self._get_interpolation_matrix(loc, location_type, zeros_outside)
 
     def _fastInnerProduct(
         self, projection_type, model=None, invert_model=False, invert_matrix=False
     ):
-        """Fast version of getFaceInnerProduct.
+        """Fast version of get_face_inner_product_deriv.
 
         This does not handle the case of a full tensor property.
 
@@ -857,7 +848,7 @@ class BaseTensorMesh(BaseRegularMesh):
 
             # if cyl, then only certain components are relevant due to symmetry
             # for faces, x, z matters, for edges, y (which is theta) matters
-            if self._meshType == "CYL":
+            if self._meshType == "CYL" and self.is_symmetric:
                 if projection_type == "E":
                     model = model[:, 1]  # this is the action of a projection mat
                 elif projection_type == "F":
@@ -959,7 +950,7 @@ class BaseTensorMesh(BaseRegularMesh):
             Av = getattr(self, "ave" + projection_type + "2CCV")
             V = sp.kron(sp.identity(self.dim), sdiag(self.cell_volumes))
 
-            if self._meshType == "CYL":
+            if self._meshType == "CYL" and self.is_symmetric:
                 Zero = sp.csr_matrix((self.nC, self.nC))
                 Eye = sp.eye(self.nC)
                 if projection_type == "E":
@@ -1089,80 +1080,59 @@ class BaseTensorMesh(BaseRegularMesh):
     def hx(self):
         """Width of cells in the x direction.
 
-        Returns
-        -------
-        numpy.ndarray
-
-        .. deprecated:: 0.5.0
-          `hx` will be removed in discretize 1.0.0 to reduce namespace clutter,
-          please use `mesh.h[0]`.
+        `hx` will be removed in discretize 1.0.0, it is replaced by
+        `mesh.h[0]` to reduce namespace clutter.
         """
-        warnings.warn(
-            "hx has been deprecated, please access as mesh.h[0]",
-            FutureWarning,
-            stacklevel=2,
+        raise NotImplementedError(
+            "The hx property is removed, please access as mesh.h[0]. "
+            "This message will be removed in discretize 1.0.0."
         )
-        return self.h[0]
 
     @property
     def hy(self):
         """Width of cells in the y direction.
 
-        Returns
-        -------
-        numpy.ndarray or None
-
-        .. deprecated:: 0.5.0
-          `hy` will be removed in discretize 1.0.0 to reduce namespace clutter,
-          please use `mesh.h[1]`.
+        `hy` will be removed in discretize 1.0.0, it is replaced by
+        `mesh.h[1]` to reduce namespace clutter.
         """
-        warnings.warn(
-            "hy has been deprecated, please access as mesh.h[1]",
-            FutureWarning,
-            stacklevel=2,
+        raise NotImplementedError(
+            "The hy property is removed, please access as mesh.h[1]. "
+            "This message will be removed in discretize 1.0.0."
         )
-        return None if self.dim < 2 else self.h[1]
 
     @property
     def hz(self):
         """Width of cells in the z direction.
 
-        Returns
-        -------
-        numpy.ndarray or None
-
-        .. deprecated:: 0.5.0
-          `hz` will be removed in discretize 1.0.0 to reduce namespace clutter,
-          please use `mesh.h[2]`.
+        `hz` will be removed in discretize 1.0.0, it is replaced by
+        `mesh.h[2]` to reduce namespace clutter.
         """
-        warnings.warn(
-            "hz has been deprecated, please access as mesh.h[2]",
-            FutureWarning,
-            stacklevel=2,
+        raise NotImplementedError(
+            "The hz property is removed, please access as mesh.h[2]. "
+            "This message will be removed in discretize 1.0.0."
         )
-        return None if self.dim < 3 else self.h[2]
 
     vectorNx = deprecate_property(
-        "nodes_x", "vectorNx", removal_version="1.0.0", future_warn=True
+        "nodes_x", "vectorNx", removal_version="1.0.0", error=True
     )
     vectorNy = deprecate_property(
-        "nodes_y", "vectorNy", removal_version="1.0.0", future_warn=True
+        "nodes_y", "vectorNy", removal_version="1.0.0", error=True
     )
     vectorNz = deprecate_property(
-        "nodes_z", "vectorNz", removal_version="1.0.0", future_warn=True
+        "nodes_z", "vectorNz", removal_version="1.0.0", error=True
     )
     vectorCCx = deprecate_property(
-        "cell_centers_x", "vectorCCx", removal_version="1.0.0", future_warn=True
+        "cell_centers_x", "vectorCCx", removal_version="1.0.0", error=True
     )
     vectorCCy = deprecate_property(
-        "cell_centers_y", "vectorCCy", removal_version="1.0.0", future_warn=True
+        "cell_centers_y", "vectorCCy", removal_version="1.0.0", error=True
     )
     vectorCCz = deprecate_property(
-        "cell_centers_z", "vectorCCz", removal_version="1.0.0", future_warn=True
+        "cell_centers_z", "vectorCCz", removal_version="1.0.0", error=True
     )
     isInside = deprecate_method(
-        "is_inside", "isInside", removal_version="1.0.0", future_warn=True
+        "is_inside", "isInside", removal_version="1.0.0", error=True
     )
     getTensor = deprecate_method(
-        "get_tensor", "getTensor", removal_version="1.0.0", future_warn=True
+        "get_tensor", "getTensor", removal_version="1.0.0", error=True
     )

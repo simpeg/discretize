@@ -30,12 +30,12 @@ if has_omf:
             # Check geometry
             self.assertEqual(mesh.nC, geom.num_cells)
             self.assertEqual(mesh.nN, geom.num_nodes)
-            self.assertTrue(np.allclose(mesh.hx, geom.tensor_u))
-            self.assertTrue(np.allclose(mesh.hy, geom.tensor_v))
-            self.assertTrue(np.allclose(mesh.hz, geom.tensor_w))
-            self.assertTrue(np.allclose(mesh.axis_u, geom.axis_u))
-            self.assertTrue(np.allclose(mesh.axis_v, geom.axis_v))
-            self.assertTrue(np.allclose(mesh.axis_w, geom.axis_w))
+            self.assertTrue(np.allclose(mesh.h[0], geom.tensor_u))
+            self.assertTrue(np.allclose(mesh.h[1], geom.tensor_v))
+            self.assertTrue(np.allclose(mesh.h[2], geom.tensor_w))
+            self.assertTrue(np.allclose(mesh.orientation[0], geom.axis_u))
+            self.assertTrue(np.allclose(mesh.orientation[1], geom.axis_v))
+            self.assertTrue(np.allclose(mesh.orientation[2], geom.axis_w))
             self.assertTrue(np.allclose(mesh.x0, geom.origin))
 
             # Check data arrays
@@ -45,7 +45,7 @@ if has_omf:
                 scalar_data = omf_element.data[i]
                 self.assertEqual(name, scalar_data.name)
                 arr = _unravel_data_array(
-                    np.array(scalar_data.array), mesh.nCx, mesh.nCy, mesh.nCz
+                    np.array(scalar_data.array), *mesh.shape_cells
                 )
                 self.assertTrue(np.allclose(models[name], arr))
 
@@ -77,12 +77,12 @@ if has_omf:
             # Check geometry
             self.assertEqual(mesh.nC, geom.num_cells)
             self.assertEqual(mesh.nN, geom.num_nodes)
-            self.assertTrue(np.allclose(mesh.hx, geom.tensor_u))
-            self.assertTrue(np.allclose(mesh.hy, geom.tensor_v))
-            self.assertTrue(np.allclose(mesh.hz, geom.tensor_w))
-            self.assertTrue(np.allclose(mesh.axis_u, geom.axis_u))
-            self.assertTrue(np.allclose(mesh.axis_v, geom.axis_v))
-            self.assertTrue(np.allclose(mesh.axis_w, geom.axis_w))
+            self.assertTrue(np.allclose(mesh.h[0], geom.tensor_u))
+            self.assertTrue(np.allclose(mesh.h[1], geom.tensor_v))
+            self.assertTrue(np.allclose(mesh.h[2], geom.tensor_w))
+            self.assertTrue(np.allclose(mesh.orientation[0], geom.axis_u))
+            self.assertTrue(np.allclose(mesh.orientation[1], geom.axis_v))
+            self.assertTrue(np.allclose(mesh.orientation[2], geom.axis_w))
             self.assertTrue(np.allclose(mesh.x0, geom.origin))
 
             # Check data arrays

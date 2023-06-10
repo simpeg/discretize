@@ -7,8 +7,8 @@ Here we use the discretize package to solve for the electric potential
 a static charge distribution. Starting with Gauss' law and Faraday's law:
 
 .. math::
-    &\nabla \cdot \mathbf{E} = \frac{\rho}{\epsilon_0} \n
-    &\nabla \times \mathbf{E} = \mathbf{0} \;\;\; \Rightarrow \;\;\; \mathbf{E} = -\nabla \phi \n
+    &\nabla \cdot \mathbf{E} = \frac{\rho}{\epsilon_0} \\
+    &\nabla \times \mathbf{E} = \mathbf{0} \;\;\; \Rightarrow \;\;\; \mathbf{E} = -\nabla \phi \\
     &\textrm{s.t.} \;\;\; \phi \Big |_{\partial \Omega} = 0
 
 where :math:`\sigma` is the charge density and :math:`\epsilon_0` is the
@@ -24,7 +24,7 @@ Where :math:`\psi` is a scalar test function and :math:`\mathbf{f}` is a
 vector test function:
 
 .. math::
-    \int_\Omega \psi (\nabla \cdot \mathbf{E}) dV = \frac{1}{\epsilon_0} \int_\Omega \psi \rho dV \n
+    \int_\Omega \psi (\nabla \cdot \mathbf{E}) dV = \frac{1}{\epsilon_0} \int_\Omega \psi \rho dV \\
     \int_\Omega \mathbf{f \cdot E} \, dV = - \int_\Omega \mathbf{f} \cdot (\nabla \phi ) dV
 
 
@@ -54,9 +54,11 @@ For the second weak form equation, we make use of the divergence theorem as
 follows:
 
 .. math::
-    \int_\Omega \mathbf{f \cdot E} \, dV &= - \int_\Omega \mathbf{f} \cdot (\nabla \phi ) dV \n
-    & = - \frac{1}{\epsilon_0} \int_\Omega \nabla \cdot (\mathbf{f} \phi ) dV + \frac{1}{\epsilon_0} \int_\Omega ( \nabla \cdot \mathbf{f} ) \phi \, dV \n
-    & = - \frac{1}{\epsilon_0} \int_{\partial \Omega} \mathbf{n} \cdot (\mathbf{f} \phi ) da + \frac{1}{\epsilon_0} \int_\Omega ( \nabla \cdot \mathbf{f} ) \phi \, dV \n
+    \int_\Omega \mathbf{f \cdot E} \, dV &= - \int_\Omega \mathbf{f} \cdot (\nabla \phi ) dV \\
+    & = - \frac{1}{\epsilon_0} \int_\Omega \nabla \cdot (\mathbf{f} \phi ) dV
+    + \frac{1}{\epsilon_0} \int_\Omega ( \nabla \cdot \mathbf{f} ) \phi \, dV \\
+    & = - \frac{1}{\epsilon_0} \int_{\partial \Omega} \mathbf{n} \cdot (\mathbf{f} \phi ) da
+    + \frac{1}{\epsilon_0} \int_\Omega ( \nabla \cdot \mathbf{f} ) \phi \, dV \\
     & = 0 + \frac{1}{\epsilon_0} \int_\Omega ( \nabla \cdot \mathbf{f} ) \phi \, dV
 
 where the surface integral is zero due to the boundary conditions we imposed.
@@ -107,9 +109,9 @@ h = np.ones(75)
 mesh = TensorMesh([h, h], "CC")
 
 # Create system
-DIV = mesh.faceDiv  # Faces to cell centers divergence
-Mf_inv = mesh.getFaceInnerProduct(invMat=True)
-Mc = sdiag(mesh.vol)
+DIV = mesh.face_divergence  # Faces to cell centers divergence
+Mf_inv = mesh.get_face_inner_product(invert_matrix=True)
+Mc = sdiag(mesh.cell_volumes)
 A = Mc * DIV * Mf_inv * DIV.T * Mc
 
 # Define RHS (charge distributions at cell centers)
@@ -132,15 +134,15 @@ E = Mf_inv * DIV.T * Mc * phi
 fig = plt.figure(figsize=(14, 4))
 
 ax1 = fig.add_subplot(131)
-mesh.plotImage(rho, v_type="CC", ax=ax1)
+mesh.plot_image(rho, v_type="CC", ax=ax1)
 ax1.set_title("Charge Density")
 
 ax2 = fig.add_subplot(132)
-mesh.plotImage(phi, v_type="CC", ax=ax2)
+mesh.plot_image(phi, v_type="CC", ax=ax2)
 ax2.set_title("Electric Potential")
 
 ax3 = fig.add_subplot(133)
-mesh.plotImage(
+mesh.plot_image(
     E, ax=ax3, v_type="F", view="vec", stream_opts={"color": "w", "density": 1.0}
 )
 ax3.set_title("Electric Fields")

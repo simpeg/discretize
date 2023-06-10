@@ -30,10 +30,10 @@ class TestTensorMeshIO(unittest.TestCase):
         modelfname = "arange.txt"
         modelfname1 = "arange2.txt"
         modeldict = {modelfname: vec, modelfname1: vec + 1}
-        mesh.writeUBC("temp.msh", modeldict, directory=self.basePath)
-        meshUBC = discretize.TensorMesh.readUBC(mshfname, directory=self.basePath)
-        vecUBC = meshUBC.readModelUBC(modelfname, directory=self.basePath)
-        vec2UBC = mesh.readModelUBC(modelfname1, directory=self.basePath)
+        mesh.write_UBC("temp.msh", modeldict, directory=self.basePath)
+        meshUBC = discretize.TensorMesh.read_UBC(mshfname, directory=self.basePath)
+        vecUBC = meshUBC.read_model_UBC(modelfname, directory=self.basePath)
+        vec2UBC = mesh.read_model_UBC(modelfname1, directory=self.basePath)
 
         # The mesh
         self.assertTrue(mesh.__str__() == meshUBC.__str__())
@@ -62,7 +62,7 @@ class TestTensorMeshIO(unittest.TestCase):
             vtrfname = "temp.vtr"
             modelfname = "arange.txt"
             modeldict = {modelfname: vec}
-            mesh.writeVTK(vtrfname, modeldict, directory=self.basePath)
+            mesh.write_vtk(vtrfname, modeldict, directory=self.basePath)
             meshVTR, models = discretize.TensorMesh.read_vtk(
                 vtrfname, directory=self.basePath
             )
@@ -118,7 +118,7 @@ class TestTensorMeshIO(unittest.TestCase):
 
         # Write Mesh and model
         comment_lines = "!comment line\n" + "!again\n" + "!and again\n"
-        mesh.writeUBC(
+        mesh.write_UBC(
             fname,
             models=modeldict,
             directory=self.basePath,
@@ -127,18 +127,18 @@ class TestTensorMeshIO(unittest.TestCase):
 
         # Read back mesh and model
         fname = os.path.sep.join([self.basePath, "ubc_DC2D_tensor_mesh.msh"])
-        mesh = discretize.TensorMesh.readUBC(fname)
+        mesh = discretize.TensorMesh.read_UBC(fname)
         modelfname = os.path.sep.join([self.basePath, "2d_2cyl_model"])
-        readmodel = mesh.readModelUBC(modelfname)
-        self.assertTrue(mesh.nCx == 135)
-        self.assertTrue(mesh.nCy == 47)
+        readmodel = mesh.read_model_UBC(modelfname)
+        self.assertTrue(mesh.shape_cells[0] == 135)
+        self.assertTrue(mesh.shape_cells[1] == 47)
         # spot check a few things in the file
-        self.assertTrue(mesh.hx[0] == 2.84765625)
+        self.assertTrue(mesh.h[0][0] == 2.84765625)
         # The x0 is in a different place (-z)
-        self.assertTrue(mesh.x0[-1] == -np.sum(mesh.hy))
+        self.assertTrue(mesh.x0[-1] == -np.sum(mesh.h[1]))
         # the z axis is flipped
-        self.assertTrue(mesh.hy[0] == 2.84765625)
-        self.assertTrue(mesh.hy[-1] == csz)
+        self.assertTrue(mesh.h[1][0] == 2.84765625)
+        self.assertTrue(mesh.h[1][-1] == csz)
         self.assertTrue(mesh.dim == 2)
         self.assertTrue(np.all(model == readmodel))
 

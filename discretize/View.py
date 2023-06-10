@@ -5,7 +5,7 @@ deprecate_module(
     "discretize.View",
     "discretize.mixins.mpl_mod",
     removal_version="1.0.0",
-    future_warn=True,
+    error=True,
 )
 try:
     from discretize.mixins.mpl_mod import Slicer  # NOQA F401

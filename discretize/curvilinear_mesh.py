@@ -1,5 +1,6 @@
 """Module containing the curvilinear mesh implementation."""
 import numpy as np
+import scipy.sparse as sp
 
 from discretize.utils import (
     mkvc,
@@ -506,24 +507,24 @@ class CurvilinearMesh(
     def boundary_edges(self):  # NOQA D102
         # Documentation inherited from discretize.base.BaseMesh
         if self.dim == 2:
-            ex = self.edges_x[make_boundary_bool(self.shape_edges_x, dir="y")]
-            ey = self.edges_y[make_boundary_bool(self.shape_edges_y, dir="x")]
+            ex = self.edges_x[make_boundary_bool(self.shape_edges_x, bdir="y")]
+            ey = self.edges_y[make_boundary_bool(self.shape_edges_y, bdir="x")]
             return np.r_[ex, ey]
         elif self.dim == 3:
-            ex = self.edges_x[make_boundary_bool(self.shape_edges_x, dir="yz")]
-            ey = self.edges_y[make_boundary_bool(self.shape_edges_y, dir="xz")]
-            ez = self.edges_z[make_boundary_bool(self.shape_edges_z, dir="xy")]
+            ex = self.edges_x[make_boundary_bool(self.shape_edges_x, bdir="yz")]
+            ey = self.edges_y[make_boundary_bool(self.shape_edges_y, bdir="xz")]
+            ez = self.edges_z[make_boundary_bool(self.shape_edges_z, bdir="xy")]
             return np.r_[ex, ey, ez]
 
     @property
     def boundary_faces(self):  # NOQA D102
         # Documentation inherited from discretize.base.BaseMesh
-        fx = self.faces_x[make_boundary_bool(self.shape_faces_x, dir="x")]
-        fy = self.faces_y[make_boundary_bool(self.shape_faces_y, dir="y")]
+        fx = self.faces_x[make_boundary_bool(self.shape_faces_x, bdir="x")]
+        fy = self.faces_y[make_boundary_bool(self.shape_faces_y, bdir="y")]
         if self.dim == 2:
             return np.r_[fx, fy]
         elif self.dim == 3:
-            fz = self.faces_z[make_boundary_bool(self.shape_faces_z, dir="z")]
+            fz = self.faces_z[make_boundary_bool(self.shape_faces_z, bdir="z")]
             return np.r_[fx, fy, fz]
 
     @property
@@ -538,8 +539,8 @@ class CurvilinearMesh(
         is_bym = is_bym.reshape(-1, order="F")
 
         is_b = np.r_[
-            make_boundary_bool(self.shape_faces_x, dir="x"),
-            make_boundary_bool(self.shape_faces_y, dir="y"),
+            make_boundary_bool(self.shape_faces_x, bdir="x"),
+            make_boundary_bool(self.shape_faces_y, bdir="y"),
         ]
         switch = np.r_[is_bxm, is_bym]
         if self.dim == 3:
@@ -547,7 +548,7 @@ class CurvilinearMesh(
             is_bzm[:, :, 0] = True
             is_bzm = is_bzm.reshape(-1, order="F")
 
-            is_b = np.r_[is_b, make_boundary_bool(self.shape_faces_z, dir="z")]
+            is_b = np.r_[is_b, make_boundary_bool(self.shape_faces_z, bdir="z")]
             switch = np.r_[switch, is_bzm]
         face_normals = self.face_normals.copy()
         face_normals[switch] *= -1
@@ -647,17 +648,17 @@ class CurvilinearMesh(
             elif self.dim == 3:
                 A, E, F, B = index_cube("AEFB", self.vnN, self.vnFx)
                 normal1, area1 = face_info(
-                    self.gridN, A, E, F, B, average=False, normalizeNormals=False
+                    self.gridN, A, E, F, B, average=False, normalize_normals=False
                 )
 
                 A, D, H, E = index_cube("ADHE", self.vnN, self.vnFy)
                 normal2, area2 = face_info(
-                    self.gridN, A, D, H, E, average=False, normalizeNormals=False
+                    self.gridN, A, D, H, E, average=False, normalize_normals=False
                 )
 
                 A, B, C, D = index_cube("ABCD", self.vnN, self.vnFz)
                 normal3, area3 = face_info(
-                    self.gridN, A, B, C, D, average=False, normalizeNormals=False
+                    self.gridN, A, B, C, D, average=False, normalize_normals=False
                 )
 
                 self._face_areas = np.r_[mkvc(area1), mkvc(area2), mkvc(area3)]
@@ -737,3 +738,103 @@ class CurvilinearMesh(
         if getattr(self, "_edge_tangents", None) is None:
             self.edge_lengths  # calling .edge_lengths will create the tangents
         return self._edge_tangents
+
+    def _get_edge_surf_int_proj_mats(self, only_boundary=False, with_area=True):
+        """Return the projection operators for integrating edges on each face.
+
+        Parameters
+        ----------
+        only_boundary : bool, optional
+            Whether to only operate on the boundary faces or not.
+        with_area : bool, optional
+            Whether to include the face area.
+
+        Returns
+        -------
+        list of (3 * n_faces, n_edges) scipy.sparse.csr_matrix
+        """
+        # edges associated with each face... can just get the indices of the curl...
+        face_edges = self.edge_curl.indices.reshape(-1, 4)
+        face_areas = self.face_areas
+        if only_boundary:
+            bf_inds = self.project_face_to_boundary_face.indices
+            face_edges = face_edges[bf_inds]
+            face_areas = face_areas[bf_inds]
+            face_normals = self.boundary_face_outward_normals
+        else:
+            face_normals = self.face_normals
+
+        # face_edges is edge_x1m, edge_x1p, edge_x2m, edge_x2p for each of them so...
+        edge_inds = [[0, 2], [1, 2], [0, 3], [1, 3]]
+
+        n_f = face_edges.shape[0]
+
+        ones = np.ones(n_f * 2)
+        P_indptr = np.arange(2 * n_f + 1)
+
+        d = np.ones(3, dtype=int)[:, None] * np.arange(2)
+        t = np.arange(n_f)
+        T_col_inds = (d + t[:, None, None] * 2).reshape(-1)
+        T_ind_ptr = 2 * np.arange(3 * n_f + 1)
+
+        Ps = []
+
+        # translate c to fortran ordering
+        C2F_col_inds = np.arange(n_f * 3).reshape((-1, 3), order="C").reshape(-1)
+        C2F_row_inds = np.arange(n_f * 3).reshape((-1, 3), order="F").reshape(-1)
+        C2F = sp.csr_matrix(
+            (np.ones(n_f * 3), (C2F_row_inds, C2F_col_inds)), shape=(n_f * 3, n_f * 3)
+        )
+
+        for i in range(4):
+            # matrix which selects the edges associate with each of the nodes of each boundary face
+            node_edges = face_edges[:, edge_inds[i]]
+            P = sp.csr_matrix(
+                (ones, node_edges.reshape(-1), P_indptr), shape=(2 * n_f, self.n_edges)
+            )
+
+            edge_dirs = self.edge_tangents[node_edges]
+            t_for = np.concatenate((edge_dirs, face_normals[:, None, :]), axis=1)
+            t_inv = np.linalg.inv(t_for)
+            t_inv = t_inv[:, :, :-1] / 4  # n_edges_per_thing
+
+            if with_area:
+                t_inv *= face_areas[:, None, None]
+
+            T = C2F @ sp.csr_matrix(
+                (t_inv.reshape(-1), T_col_inds, T_ind_ptr),
+                shape=(3 * n_f, 2 * n_f),
+            )
+            Ps.append((T @ P))
+        return Ps
+
+    @property
+    def boundary_edge_vector_integral(self):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
+        if self.dim == 2:
+            return super().boundary_edge_vector_integral
+
+        Ps = self._get_edge_surf_int_proj_mats(only_boundary=True, with_area=True)
+        # cross product matrix:
+        # cx = mesh.boundary_face_outward_normals[:, 0]
+        # cy = mesh.boundary_face_outward_normals[:, 1]
+        # cz = mesh.boundary_face_outward_normals[:, 2]
+        # z = np.zeros(n_bf)
+        #
+        # vs = np.stack([np.c_[z, cz, -cy], np.c_[-cz, z, cx], np.c_[cy, -cx, z]], axis=-1)
+        # the cross product of a vector defined on each face with the face outward normal...
+        # so V cross n = -n cross V
+
+        cx = sp.diags(self.boundary_face_outward_normals[:, 0])
+        cy = sp.diags(self.boundary_face_outward_normals[:, 1])
+        cz = sp.diags(self.boundary_face_outward_normals[:, 2])
+        # the negative cross mat
+        cross_mat = sp.bmat([[None, cz, -cy], [-cz, None, cx], [cy, -cx, None]])
+
+        Pf = self.project_face_to_boundary_face
+        Pe = self.project_edge_to_boundary_edge
+        Av = (Pf @ self.average_edge_to_face) @ Pe.T
+        Av = cross_mat @ sp.block_diag((Av, Av, Av))
+
+        Me = np.sum(Ps).T @ Av
+        return Me

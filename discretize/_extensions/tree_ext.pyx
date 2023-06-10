@@ -426,7 +426,7 @@ cdef class _TreeMesh:
         self._average_edge_z_to_cell = None
         self._average_edge_to_cell = None
         self._average_edge_to_cell_vector = None
-        self._average_edge_to_face_vector = None
+        self._average_edge_to_face = None
 
         self._average_node_to_cell = None
         self._average_node_to_edge = None
@@ -879,15 +879,15 @@ cdef class _TreeMesh:
         >>> triangle = [[0.14, 0.31, 0.21], [0.32, 0.96, 0.34], [0.87, 0.23, 0.12]]
         >>> height = 0.35
         >>> levels = 5
-        >>> mesh.refine_vertical_trianglular_prism(triangle, height, levels)
+        >>> tree_mesh.refine_vertical_trianglular_prism(triangle, height, levels)
 
         Now lets look at the mesh.
 
-        >>> v = mesh.cell_levels_by_index(np.arange(mesh.n_cells))
+        >>> v = tree_mesh.cell_levels_by_index(np.arange(tree_mesh.n_cells))
         >>> fig, axs = plt.subplots(1, 3, figsize=(12,4))
-        >>> mesh.plot_slice(v, ax=axs[0], normal='x', grid=True, clim=[2, 5])
-        >>> mesh.plot_slice(v, ax=axs[1], normal='y', grid=True, clim=[2, 5])
-        >>> mesh.plot_slice(v, ax=axs[2], normal='z', grid=True, clim=[2, 5])
+        >>> tree_mesh.plot_slice(v, ax=axs[0], normal='x', grid=True, clim=[2, 5])
+        >>> tree_mesh.plot_slice(v, ax=axs[1], normal='y', grid=True, clim=[2, 5])
+        >>> tree_mesh.plot_slice(v, ax=axs[2], normal='z', grid=True, clim=[2, 5])
         >>> plt.show()
 
         """
@@ -3912,12 +3912,11 @@ cdef class _TreeMesh:
         return self._average_edge_to_cell_vector
 
     @property
-    def average_edge_to_face_vector(self):
-        """Averaging operator from edges to faces (vector quantities).
+    def average_edge_to_face(self):
+        r"""Averaging operator from edges to faces.
 
-        This property constructs the averaging operator that independently maps the
-        Cartesian components of vector quantities from edges to faces.
-        This averaging operators is used when a discrete vector quantity defined on mesh edges
+        This property constructs the averaging operator that maps uantities from edges to faces.
+        This averaging operators is used when a discrete quantity defined on mesh edges
         must be approximated at faces. The operation is implemented as a
         matrix vector product, i.e.::
 
@@ -3928,23 +3927,19 @@ cdef class _TreeMesh:
         Returns
         -------
         (n_faces, n_edges) scipy.sparse.csr_matrix
-            The vector averaging operator from edges to faces.
+            The averaging operator from edges to faces.
 
         Notes
         -----
-        Let :math:`\mathbf{u_e}` be the discrete representation of a vector
-        quantity whose Cartesian components are defined on their respective edges;
-        e.g. the x-component is defined on x-edges. **average_edge_to_face_vector**
+        Let :math:`\mathbf{u_e}` be the discrete representation of aquantity whose
+        that is defined on the edges. **average_edge_to_face**
         constructs a discrete linear operator :math:`\mathbf{A_{ef}}` that
-        projects each Cartesian component of :math:`\mathbf{u_e}` to
-        its corresponding face, i.e.:
+        projects :math:`\mathbf{u_e}` to its corresponding face, i.e.:
 
         .. math::
             \mathbf{u_f} = \mathbf{A_{ef}} \, \mathbf{u_e}
 
-        where :math:`\mathbf{u_f}` is a discrete vector quantity whose Cartesian
-        components are defined on their respective faces; e.g. the x-component is
-        defined on x-faces.
+        where :math:`\mathbf{u_f}` is a quantity defined on the respective faces.
         """
         if self.dim == 2:
             return sp.diags(
@@ -3953,13 +3948,13 @@ cdef class _TreeMesh:
                 shape=(self.n_faces, self.n_edges)
             )
 
-        if self._average_edge_to_face_vector is not None:
-            return self._average_edge_to_face_vector
+        if self._average_edge_to_face is not None:
+            return self._average_edge_to_face
         cdef:
             int_t dim = self._dim
             np.int64_t[:] I = np.empty(4*self.n_faces, dtype=np.int64)
             np.int64_t[:] J = np.empty(4*self.n_faces, dtype=np.int64)
-            np.float64_t[:] V = np.full(4*self.n_faces, 0.5, dtype=np.float64)
+            np.float64_t[:] V = np.full(4*self.n_faces, 0.25, dtype=np.float64)
             Face *face
             int_t ii
             int_t face_offset_y = self.n_faces_x
@@ -4004,8 +3999,8 @@ cdef class _TreeMesh:
         Av = sp.csr_matrix((V, (I, J)),shape=(self.n_faces, self.n_total_edges))
         R = self._deflate_edges()
 
-        self._average_edge_to_face_vector = Av @ R
-        return self._average_edge_to_face_vector
+        self._average_edge_to_face = Av @ R
+        return self._average_edge_to_face
 
     @property
     @cython.boundscheck(False)
@@ -5343,7 +5338,7 @@ cdef class _TreeMesh:
             return self._getEdgeP(xEdge, yEdge, zEdge)
         return Pxxx
 
-    def _getEdgeIntMat(self, locs, zerosOutside, direction):
+    def _getEdgeIntMat(self, locs, zeros_outside, direction):
         cdef:
             double[:, :] locations = locs
             int_t dir, dir1, dir2
@@ -5364,7 +5359,7 @@ cdef class _TreeMesh:
             double x, y, z
             double w1, w2, w3
             double eps = 100*np.finfo(float).eps
-            int zeros_out = zerosOutside
+            int zeros_out = zeros_outside
 
         if direction == 'x':
             dir, dir1, dir2 = 0, 1, 2
@@ -5477,7 +5472,7 @@ cdef class _TreeMesh:
         A = sp.csr_matrix((data, indices, indptr), shape=(locs.shape[0], self.n_total_edges))
         return A*Re
 
-    def _getFaceIntMat(self, locs, zerosOutside, direction):
+    def _getFaceIntMat(self, locs, zeros_outside, direction):
         cdef:
             double[:, :] locations = locs
             int_t dir, dir1, dir2, temp
@@ -5496,7 +5491,7 @@ cdef class _TreeMesh:
             double x, y, z
             double w1, w2, w3
             double eps = 100*np.finfo(float).eps
-            int zeros_out = zerosOutside
+            int zeros_out = zeros_outside
 
         if direction == 'x':
             dir = 0
@@ -5673,7 +5668,7 @@ cdef class _TreeMesh:
         Rf = self._deflate_faces()
         return sp.csr_matrix((data, indices, indptr), shape=(locs.shape[0], self.n_total_faces))*Rf
 
-    def _getNodeIntMat(self, locs, zerosOutside):
+    def _getNodeIntMat(self, locs, zeros_outside):
         cdef:
             double[:, :] locations = locs
             int_t dim = self._dim
@@ -5688,7 +5683,7 @@ cdef class _TreeMesh:
             double x, y, z
             double wx, wy, wz
             double eps = 100*np.finfo(float).eps
-            int zeros_out = zerosOutside
+            int zeros_out = zeros_outside
 
         for i in range(n_loc):
             x = locations[i, 0]
@@ -5738,7 +5733,7 @@ cdef class _TreeMesh:
         Rn = self._deflate_nodes()
         return sp.csr_matrix((V, (I, J)), shape=(locs.shape[0],self.n_total_nodes))*Rn
 
-    def _getCellIntMat(self, locs, zerosOutside):
+    def _getCellIntMat(self, locs, zeros_outside):
         cdef:
             double[:, :] locations = locs
             int_t dim = self._dim
@@ -5758,7 +5753,7 @@ cdef class _TreeMesh:
             c_Cell *cell
             double x, y, z
             double eps = 100*np.finfo(float).eps
-            int zeros_out = zerosOutside
+            int zeros_out = zeros_outside
 
         dir0 = 0
         dir1 = 1
@@ -5958,16 +5953,18 @@ cdef class _TreeMesh:
 
     @property
     def cell_nodes(self):
-        """The index of nodes for each cell.
+        """The index of all nodes for each cell.
+
+        These indices point to non-hanging and hanging nodes.
 
         Returns
         -------
         numpy.ndarray of int
             Index array of shape (n_cells, 4) if 2D, or (n_cells, 8) if 3D
 
-        Notes
-        -----
-        These indices will also point to hanging nodes.
+        See also
+        --------
+        TreeMesh.total_nodes
         """
         cdef int_t npc = 4 if self.dim == 2 else 8
         inds = np.empty((self.n_cells, npc), dtype=np.int64)

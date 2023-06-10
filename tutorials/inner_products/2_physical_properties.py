@@ -106,14 +106,14 @@ sig1, sig2, sig3, sig4, sig5, sig6 = 6, 5, 4, 3, 2, 1
 # Isotropic case
 sig = sig1 * np.ones((1, 1))
 sig_tensor_1 = np.diag(sig1 * np.ones(3))
-Me1 = mesh.getEdgeInnerProduct(sig)  # Edges inner product matrix
-Mf1 = mesh.getFaceInnerProduct(sig)  # Faces inner product matrix
+Me1 = mesh.get_edge_inner_product(sig)  # Edges inner product matrix
+Mf1 = mesh.get_face_inner_product(sig)  # Faces inner product matrix
 
 # Diagonal anisotropic
 sig = np.c_[sig1, sig2, sig3]
 sig_tensor_2 = np.diag(np.array([sig1, sig2, sig3]))
-Me2 = mesh.getEdgeInnerProduct(sig)
-Mf2 = mesh.getFaceInnerProduct(sig)
+Me2 = mesh.get_edge_inner_product(sig)
+Mf2 = mesh.get_face_inner_product(sig)
 
 # Full anisotropic
 sig = np.c_[sig1, sig2, sig3, sig4, sig5, sig6]
@@ -121,8 +121,8 @@ sig_tensor_3 = np.diag(np.array([sig1, sig2, sig3]))
 sig_tensor_3[(0, 1), (1, 0)] = sig4
 sig_tensor_3[(0, 2), (2, 0)] = sig5
 sig_tensor_3[(1, 2), (2, 1)] = sig6
-Me3 = mesh.getEdgeInnerProduct(sig)
-Mf3 = mesh.getFaceInnerProduct(sig)
+Me3 = mesh.get_edge_inner_product(sig)
+Mf3 = mesh.get_face_inner_product(sig)
 
 # Plotting matrix entries
 fig = plt.figure(figsize=(12, 12))
@@ -182,18 +182,18 @@ mesh = TensorMesh([h, h, h])
 
 # Isotropic case: (nC, ) numpy array
 sig = np.random.rand(mesh.nC)  # sig for each cell
-Me1 = mesh.getEdgeInnerProduct(sig)  # Edges inner product matrix
-Mf1 = mesh.getFaceInnerProduct(sig)  # Faces inner product matrix
+Me1 = mesh.get_edge_inner_product(sig)  # Edges inner product matrix
+Mf1 = mesh.get_face_inner_product(sig)  # Faces inner product matrix
 
 # Linear case: (nC, dim) numpy array
 sig = np.random.rand(mesh.nC, mesh.dim)
-Me2 = mesh.getEdgeInnerProduct(sig)
-Mf2 = mesh.getFaceInnerProduct(sig)
+Me2 = mesh.get_edge_inner_product(sig)
+Mf2 = mesh.get_face_inner_product(sig)
 
 # Anisotropic case: (nC, 3) for 2D and (nC, 6) for 3D
 sig = np.random.rand(mesh.nC, 6)
-Me3 = mesh.getEdgeInnerProduct(sig)
-Mf3 = mesh.getFaceInnerProduct(sig)
+Me3 = mesh.get_edge_inner_product(sig)
+Mf3 = mesh.get_face_inner_product(sig)
 
 # Properties of inner product matricies
 print("\n FACE INNER PRODUCT MATRIX")
@@ -217,7 +217,7 @@ print("- Number non-zero (anisotropic):", str(Me3.nnz), "\n")
 #
 # The final discretized system using the finite volume method may contain
 # the inverse of the inner-product matrix. Here we show how to call this
-# using the *invMat* keyword argument.
+# using the *invert_matrix* keyword argument.
 #
 # For the isotropic and diagonally anisotropic cases, the inner product matrix
 # is diagonal. As a result, its inverse can be easily formed. For the full
@@ -236,18 +236,18 @@ mesh = TensorMesh([h, h, h])
 
 # Isotropic case: (nC, ) numpy array
 sig = np.random.rand(mesh.nC)
-Me1_inv = mesh.getEdgeInnerProduct(sig, invMat=True)
-Mf1_inv = mesh.getFaceInnerProduct(sig, invMat=True)
+Me1_inv = mesh.get_edge_inner_product(sig, invert_matrix=True)
+Mf1_inv = mesh.get_face_inner_product(sig, invert_matrix=True)
 
 # Diagonal anisotropic: (nC, dim) numpy array
 sig = np.random.rand(mesh.nC, mesh.dim)
-Me2_inv = mesh.getEdgeInnerProduct(sig, invMat=True)
-Mf2_inv = mesh.getFaceInnerProduct(sig, invMat=True)
+Me2_inv = mesh.get_edge_inner_product(sig, invert_matrix=True)
+Mf2_inv = mesh.get_face_inner_product(sig, invert_matrix=True)
 
 # Full anisotropic: (nC, 3) for 2D and (nC, 6) for 3D
 sig = np.random.rand(mesh.nC, 6)
-Me3 = mesh.getEdgeInnerProduct(sig)
-Mf3 = mesh.getFaceInnerProduct(sig)
+Me3 = mesh.get_edge_inner_product(sig)
+Mf3 = mesh.get_face_inner_product(sig)
 
 
 ###########################################################################
@@ -256,7 +256,7 @@ Mf3 = mesh.getFaceInnerProduct(sig)
 #
 # At times, the constitutive relation may be defined by the reciprocal of
 # a parameter (:math:`\rho`). Here we demonstrate how inner product matricies
-# can be formed using the keyword argument *invProp*. We will do this for a
+# can be formed using the keyword argument *invert_model*. We will do this for a
 # single cell and plot the matrix elements. We can easily extend this to
 # a mesh comprised of many cells.
 #
@@ -322,18 +322,18 @@ rho1, rho2, rho3, rho4, rho5, rho6 = (
 
 # Isotropic case
 rho = rho1 * np.ones((1, 1))
-Me1 = mesh.getEdgeInnerProduct(rho, invProp=True)  # Edges inner product matrix
-Mf1 = mesh.getFaceInnerProduct(rho, invProp=True)  # Faces inner product matrix
+Me1 = mesh.get_edge_inner_product(rho, invert_model=True)  # Edges inner product matrix
+Mf1 = mesh.get_face_inner_product(rho, invert_model=True)  # Faces inner product matrix
 
 # Diagonal anisotropic case
 rho = np.c_[rho1, rho2, rho3]
-Me2 = mesh.getEdgeInnerProduct(rho, invProp=True)
-Mf2 = mesh.getFaceInnerProduct(rho, invProp=True)
+Me2 = mesh.get_edge_inner_product(rho, invert_model=True)
+Mf2 = mesh.get_face_inner_product(rho, invert_model=True)
 
 # Full anisotropic case
 rho = np.c_[rho1, rho2, rho3, rho4, rho5, rho6]
-Me3 = mesh.getEdgeInnerProduct(rho, invProp=True)
-Mf3 = mesh.getFaceInnerProduct(rho, invProp=True)
+Me3 = mesh.get_edge_inner_product(rho, invert_model=True)
+Mf3 = mesh.get_face_inner_product(rho, invert_model=True)
 
 # Plotting matrix entries
 fig = plt.figure(figsize=(14, 9))

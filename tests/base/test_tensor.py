@@ -36,16 +36,16 @@ class BasicTensorMeshTests(unittest.TestCase):
     def test_vectorN_2D(self):
         testNx = np.array([3, 4, 5, 6])
         testNy = np.array([5, 6, 8])
-        xtest = np.all(self.mesh2.vectorNx == testNx)
-        ytest = np.all(self.mesh2.vectorNy == testNy)
+        xtest = np.all(self.mesh2.nodes_x == testNx)
+        ytest = np.all(self.mesh2.nodes_y == testNy)
         self.assertTrue(xtest and ytest)
 
     def test_vectorCC_2D(self):
         testNx = np.array([3.5, 4.5, 5.5])
         testNy = np.array([5.5, 7])
 
-        xtest = np.all(self.mesh2.vectorCCx == testNx)
-        ytest = np.all(self.mesh2.vectorCCy == testNy)
+        xtest = np.all(self.mesh2.cell_centers_x == testNx)
+        ytest = np.all(self.mesh2.cell_centers_y == testNy)
         self.assertTrue(xtest and ytest)
 
     def test_area_3D(self):
@@ -105,17 +105,17 @@ class BasicTensorMeshTests(unittest.TestCase):
                 2,
             ]
         )
-        t1 = np.all(self.mesh3.area == test_area)
+        t1 = np.all(self.mesh3.face_areas == test_area)
         self.assertTrue(t1)
 
     def test_vol_3D(self):
         test_vol = np.array([1, 1, 1, 2, 2, 2, 4, 4, 4, 8, 8, 8])
-        t1 = np.all(self.mesh3.vol == test_vol)
+        t1 = np.all(self.mesh3.cell_volumes == test_vol)
         self.assertTrue(t1)
 
     def test_vol_2D(self):
         test_vol = np.array([1, 1, 1, 2, 2, 2])
-        t1 = np.all(self.mesh2.vol == test_vol)
+        t1 = np.all(self.mesh2.cell_volumes == test_vol)
         self.assertTrue(t1)
 
     def test_edge_3D(self):
@@ -198,12 +198,12 @@ class BasicTensorMeshTests(unittest.TestCase):
                 4,
             ]
         )
-        t1 = np.all(self.mesh3.edge == test_edge)
+        t1 = np.all(self.mesh3.edge_lengths == test_edge)
         self.assertTrue(t1)
 
     def test_edge_2D(self):
         test_edge = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2])
-        t1 = np.all(self.mesh2.edge == test_edge)
+        t1 = np.all(self.mesh2.edge_lengths == test_edge)
         self.assertTrue(t1)
 
     def test_oneCell(self):
@@ -239,14 +239,14 @@ class BasicTensorMeshTests(unittest.TestCase):
 
     def test_tensor(self):
         M = discretize.TensorMesh([[(10.0, 2)]])
-        self.assertLess(np.abs(M.hx - np.r_[10.0, 10.0]).sum(), TOL)
+        self.assertLess(np.abs(M.h[0] - np.r_[10.0, 10.0]).sum(), TOL)
 
     def test_serialization(self):
         mesh = discretize.TensorMesh.deserialize(self.mesh2.serialize())
         self.assertTrue(np.all(self.mesh2.x0 == mesh.x0))
         self.assertTrue(np.all(self.mesh2.shape_cells == mesh.shape_cells))
-        self.assertTrue(np.all(self.mesh2.hx == mesh.hx))
-        self.assertTrue(np.all(self.mesh2.hy == mesh.hy))
+        self.assertTrue(np.all(self.mesh2.h[0] == mesh.h[0]))
+        self.assertTrue(np.all(self.mesh2.h[1] == mesh.h[1]))
         self.assertTrue(np.all(self.mesh2.gridCC == mesh.gridCC))
 
 
@@ -263,10 +263,10 @@ class TestPoissonEqn(discretize.tests.OrderTest):
         )
         sol = lambda x: -3.0 * ((2 * np.pi) ** 2) * fun(x)
 
-        self.M.setCellGradBC("dirichlet")
+        self.M.set_cell_gradient_BC("dirichlet")
 
-        D = self.M.faceDiv
-        G = self.M.cellGrad
+        D = self.M.face_divergence
+        G = self.M.cell_gradient
         if self.forward:
             sA = sol(self.M.gridCC)
             sN = D * G * fun(self.M.gridCC)

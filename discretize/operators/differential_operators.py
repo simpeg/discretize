@@ -286,19 +286,17 @@ class DiffOperators(BaseMesh):
 
         Plot the original function and the x-divergence
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(13, 6))
-            >>> ax1 = fig.add_subplot(121)
-            >>> w = np.r_[phi, np.ones(mesh.nFy)]  # Need vector on all faces for image plot
-            >>> mesh.plot_image(w, ax=ax1, v_type="Fx")
-            >>> ax1.set_title("Scalar on x-faces", fontsize=14)
-            >>> ax2 = fig.add_subplot(122)
-            >>> mesh.plot_image(dphi_dx, ax=ax2)
-            >>> ax2.set_yticks([])
-            >>> ax2.set_ylabel("")
-            >>> ax2.set_title("X-derivative at cell center", fontsize=14)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(13, 6))
+        >>> ax1 = fig.add_subplot(121)
+        >>> w = np.r_[phi, np.ones(mesh.nFy)]  # Need vector on all faces for image plot
+        >>> mesh.plot_image(w, ax=ax1, v_type="Fx")
+        >>> ax1.set_title("Scalar on x-faces", fontsize=14)
+        >>> ax2 = fig.add_subplot(122)
+        >>> mesh.plot_image(dphi_dx, ax=ax2)
+        >>> ax2.set_yticks([])
+        >>> ax2.set_ylabel("")
+        >>> ax2.set_title("X-derivative at cell center", fontsize=14)
+        >>> plt.show()
 
         The discrete x-face divergence operator is a sparse matrix that maps
         from x-faces to cell centers. To demonstrate this, we construct
@@ -307,42 +305,39 @@ class DiffOperators(BaseMesh):
         x-derivative :math:`\partial \boldsymbol{\phi}}/ \partial x` as well as a
         spy plot.
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> mesh = TensorMesh([[(1, 6)], [(1, 3)]])
-            >>> fig = plt.figure(figsize=(10, 10))
-            >>> ax1 = fig.add_subplot(211)
-            >>> mesh.plot_grid(ax=ax1)
-            >>> ax1.plot(
-            ...     mesh.faces_x[:, 0], mesh.faces_x[:, 1], "g>", markersize=8
-            ... )
-            >>> for ii, loc in zip(range(mesh.nFx), mesh.faces_x):
-            ...     ax1.text(loc[0]+0.05, loc[1]+0.02, "{0:d}".format(ii), color="g")
-            >>> ax1.plot(
-            ...     mesh.cell_centers[:, 0], mesh.cell_centers[:, 1], "ro", markersize=8
-            ... )
-            >>> for ii, loc in zip(range(mesh.nC), mesh.cell_centers):
-            ...     ax1.text(loc[0]+0.05, loc[1]+0.02, "{0:d}".format(ii), color="r")
-
-            >>> ax1.set_xticks([])
-            >>> ax1.set_yticks([])
-            >>> ax1.spines['bottom'].set_color('white')
-            >>> ax1.spines['top'].set_color('white')
-            >>> ax1.spines['left'].set_color('white')
-            >>> ax1.spines['right'].set_color('white')
-            >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
-            >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
-            >>> ax1.set_title("Mapping of Face-X Divergence", fontsize=14, pad=15)
-            >>> ax1.legend(
-            ...     ['Mesh', '$\mathbf{\phi}$ (x-faces)', '$\partial \mathbf{phi}/\partial x$ (centers)'],
-            ...     loc='upper right', fontsize=14
-            ... )
-            >>> ax2 = fig.add_subplot(212)
-            >>> ax2.spy(mesh.face_x_divergence)
-            >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
-            >>> ax2.set_ylabel("Cell Index", fontsize=12)
-            >>> ax2.set_xlabel("X-Face Index", fontsize=12)
-            >>> plt.show()
+        >>> mesh = TensorMesh([[(1, 6)], [(1, 3)]])
+        >>> fig = plt.figure(figsize=(10, 10))
+        >>> ax1 = fig.add_subplot(211)
+        >>> mesh.plot_grid(ax=ax1)
+        >>> ax1.plot(
+        ...     mesh.faces_x[:, 0], mesh.faces_x[:, 1], "g>", markersize=8
+        ... )
+        >>> for ii, loc in zip(range(mesh.nFx), mesh.faces_x):
+        ...     ax1.text(loc[0]+0.05, loc[1]+0.02, "{0:d}".format(ii), color="g")
+        >>> ax1.plot(
+        ...     mesh.cell_centers[:, 0], mesh.cell_centers[:, 1], "ro", markersize=8
+        ... )
+        >>> for ii, loc in zip(range(mesh.nC), mesh.cell_centers):
+        ...     ax1.text(loc[0]+0.05, loc[1]+0.02, "{0:d}".format(ii), color="r")
+        >>> ax1.set_xticks([])
+        >>> ax1.set_yticks([])
+        >>> ax1.spines['bottom'].set_color('white')
+        >>> ax1.spines['top'].set_color('white')
+        >>> ax1.spines['left'].set_color('white')
+        >>> ax1.spines['right'].set_color('white')
+        >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
+        >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
+        >>> ax1.set_title("Mapping of Face-X Divergence", fontsize=14, pad=15)
+        >>> ax1.legend(
+        ...     ['Mesh', '$\mathbf{\phi}$ (x-faces)', '$\partial \mathbf{phi}/\partial x$ (centers)'],
+        ...     loc='upper right', fontsize=14
+        ... )
+        >>> ax2 = fig.add_subplot(212)
+        >>> ax2.spy(mesh.face_x_divergence)
+        >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
+        >>> ax2.set_ylabel("Cell Index", fontsize=12)
+        >>> ax2.set_xlabel("X-Face Index", fontsize=12)
+        >>> plt.show()
         """
         # Compute areas of cell faces & volumes
         S = self.reshape(self.face_areas, "F", "Fx", "V")
@@ -403,19 +398,17 @@ class DiffOperators(BaseMesh):
 
         Plot original function and the y-divergence
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(13, 6))
-            >>> ax1 = fig.add_subplot(121)
-            >>> w = np.r_[np.ones(mesh.nFx), phi]  # Need vector on all faces for image plot
-            >>> mesh.plot_image(w, ax=ax1, v_type="Fy")
-            >>> ax1.set_title("Scalar on y-faces", fontsize=14)
-            >>> ax2 = fig.add_subplot(122)
-            >>> mesh.plot_image(dphi_dy, ax=ax2)
-            >>> ax2.set_yticks([])
-            >>> ax2.set_ylabel("")
-            >>> ax2.set_title("Y-derivative at cell center", fontsize=14)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(13, 6))
+        >>> ax1 = fig.add_subplot(121)
+        >>> w = np.r_[np.ones(mesh.nFx), phi]  # Need vector on all faces for image plot
+        >>> mesh.plot_image(w, ax=ax1, v_type="Fy")
+        >>> ax1.set_title("Scalar on y-faces", fontsize=14)
+        >>> ax2 = fig.add_subplot(122)
+        >>> mesh.plot_image(dphi_dy, ax=ax2)
+        >>> ax2.set_yticks([])
+        >>> ax2.set_ylabel("")
+        >>> ax2.set_title("Y-derivative at cell center", fontsize=14)
+        >>> plt.show()
 
         The discrete y-face divergence operator is a sparse matrix that maps
         from y-faces to cell centers. To demonstrate this, we construct
@@ -424,42 +417,39 @@ class DiffOperators(BaseMesh):
         y-derivative :math:`\partial \boldsymbol{\phi}/ \partial y` as well as a
         spy plot.
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> mesh = TensorMesh([[(1, 6)], [(1, 3)]])
-            >>> fig = plt.figure(figsize=(10, 10))
-            >>> ax1 = fig.add_subplot(211)
-            >>> mesh.plot_grid(ax=ax1)
-            >>> ax1.plot(
-            ...     mesh.faces_y[:, 0], mesh.faces_y[:, 1], "g^", markersize=8
-            ... )
-            >>> for ii, loc in zip(range(mesh.nFy), mesh.faces_y):
-            ...     ax1.text(loc[0]+0.05, loc[1]+0.02, "{0:d}".format(ii), color="g")
-            >>> ax1.plot(
-            ...     mesh.cell_centers[:, 0], mesh.cell_centers[:, 1], "ro", markersize=8
-            ... )
-            >>> for ii, loc in zip(range(mesh.nC), mesh.cell_centers):
-            ...     ax1.text(loc[0]+0.05, loc[1]+0.02, "{0:d}".format(ii), color="r")
-
-            >>> ax1.set_xticks([])
-            >>> ax1.set_yticks([])
-            >>> ax1.spines['bottom'].set_color('white')
-            >>> ax1.spines['top'].set_color('white')
-            >>> ax1.spines['left'].set_color('white')
-            >>> ax1.spines['right'].set_color('white')
-            >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
-            >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
-            >>> ax1.set_title("Mapping of Face-Y Divergence", fontsize=14, pad=15)
-            >>> ax1.legend(
-            ...     ['Mesh','$\mathbf{\phi}$ (y-faces)','$\partial_y \mathbf{\phi}/\partial y$ (centers)'],
-            ...     loc='upper right', fontsize=14
-            ... )
-            >>> ax2 = fig.add_subplot(212)
-            >>> ax2.spy(mesh.face_y_divergence)
-            >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
-            >>> ax2.set_ylabel("Cell Index", fontsize=12)
-            >>> ax2.set_xlabel("Y-Face Index", fontsize=12)
-            >>> plt.show()
+        >>> mesh = TensorMesh([[(1, 6)], [(1, 3)]])
+        >>> fig = plt.figure(figsize=(10, 10))
+        >>> ax1 = fig.add_subplot(211)
+        >>> mesh.plot_grid(ax=ax1)
+        >>> ax1.plot(
+        ...     mesh.faces_y[:, 0], mesh.faces_y[:, 1], "g^", markersize=8
+        ... )
+        >>> for ii, loc in zip(range(mesh.nFy), mesh.faces_y):
+        ...     ax1.text(loc[0]+0.05, loc[1]+0.02, "{0:d}".format(ii), color="g")
+        >>> ax1.plot(
+        ...     mesh.cell_centers[:, 0], mesh.cell_centers[:, 1], "ro", markersize=8
+        ... )
+        >>> for ii, loc in zip(range(mesh.nC), mesh.cell_centers):
+        ...     ax1.text(loc[0]+0.05, loc[1]+0.02, "{0:d}".format(ii), color="r")
+        >>> ax1.set_xticks([])
+        >>> ax1.set_yticks([])
+        >>> ax1.spines['bottom'].set_color('white')
+        >>> ax1.spines['top'].set_color('white')
+        >>> ax1.spines['left'].set_color('white')
+        >>> ax1.spines['right'].set_color('white')
+        >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
+        >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
+        >>> ax1.set_title("Mapping of Face-Y Divergence", fontsize=14, pad=15)
+        >>> ax1.legend(
+        ...     ['Mesh','$\mathbf{\phi}$ (y-faces)','$\partial_y \mathbf{\phi}/\partial y$ (centers)'],
+        ...     loc='upper right', fontsize=14
+        ... )
+        >>> ax2 = fig.add_subplot(212)
+        >>> ax2.spy(mesh.face_y_divergence)
+        >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
+        >>> ax2.set_ylabel("Cell Index", fontsize=12)
+        >>> ax2.set_xlabel("Y-Face Index", fontsize=12)
+        >>> plt.show()
         """
         if self.dim < 2:
             return None
@@ -521,19 +511,17 @@ class DiffOperators(BaseMesh):
 
         Plot the original function and the z-divergence
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(13, 6))
-            >>> ax1 = fig.add_subplot(121)
-            >>> w = np.r_[np.ones(mesh.nFx+mesh.nFz), phi]  # Need vector on all faces for image plot
-            >>> mesh.plot_slice(w, ax=ax1, v_type="Fz", normal='Y', ind=20)
-            >>> ax1.set_title("Scalar on z-faces (y-slice)", fontsize=14)
-            >>> ax2 = fig.add_subplot(122)
-            >>> mesh.plot_slice(dphi_dz, ax=ax2, normal='Y', ind=20)
-            >>> ax2.set_yticks([])
-            >>> ax2.set_ylabel("")
-            >>> ax2.set_title("Z-derivative at cell center (y-slice)", fontsize=14)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(13, 6))
+        >>> ax1 = fig.add_subplot(121)
+        >>> w = np.r_[np.ones(mesh.nFx+mesh.nFz), phi]  # Need vector on all faces for image plot
+        >>> mesh.plot_slice(w, ax=ax1, v_type="Fz", normal='Y', ind=20)
+        >>> ax1.set_title("Scalar on z-faces (y-slice)", fontsize=14)
+        >>> ax2 = fig.add_subplot(122)
+        >>> mesh.plot_slice(dphi_dz, ax=ax2, normal='Y', ind=20)
+        >>> ax2.set_yticks([])
+        >>> ax2.set_ylabel("")
+        >>> ax2.set_title("Z-derivative at cell center (y-slice)", fontsize=14)
+        >>> plt.show()
 
         The discrete z-face divergence operator is a sparse matrix that maps
         from z-faces to cell centers. To demonstrate this, we construct
@@ -542,28 +530,25 @@ class DiffOperators(BaseMesh):
         z-derivative :math:`\partial \boldsymbol{\phi}/ \partial z` as well as a
         spy plot.
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> mesh = TensorMesh([[(1, 3)], [(1, 2)], [(1, 2)]])
-            >>> fig = plt.figure(figsize=(9, 12))
-            >>> ax1 = fig.add_axes([0, 0.35, 1, 0.6], projection='3d', elev=10, azim=-82)
-            >>> mesh.plot_grid(ax=ax1)
-            >>> ax1.plot(
-            ...     mesh.faces_z[:, 0], mesh.faces_z[:, 1], mesh.faces_z[:, 2], "g^", markersize=10
-            ... )
-            >>> for ii, loc in zip(range(mesh.nFz), mesh.faces_z):
-            ...     ax1.text(loc[0] + 0.05, loc[1] + 0.05, loc[2], "{0:d}".format(ii), color="g")
-
-            >>> ax1.plot(
-            ...    mesh.cell_centers[:, 0], mesh.cell_centers[:, 1], mesh.cell_centers[:, 2],
-            ...    "ro", markersize=10
-            ... )
-            >>> for ii, loc in zip(range(mesh.nC), mesh.cell_centers):
-            ...     ax1.text(loc[0] + 0.05, loc[1] + 0.05, loc[2], "{0:d}".format(ii), color="r")
-            >>> ax1.legend(
-            ...     ['Mesh','$\mathbf{\phi}$ (z-faces)','$\partial \mathbf{\phi}/\partial z$ (centers)'],
-            ...     loc='upper right', fontsize=14
-            ... )
+        >>> mesh = TensorMesh([[(1, 3)], [(1, 2)], [(1, 2)]])
+        >>> fig = plt.figure(figsize=(9, 12))
+        >>> ax1 = fig.add_axes([0, 0.35, 1, 0.6], projection='3d', elev=10, azim=-82)
+        >>> mesh.plot_grid(ax=ax1)
+        >>> ax1.plot(
+        ...     mesh.faces_z[:, 0], mesh.faces_z[:, 1], mesh.faces_z[:, 2], "g^", markersize=10
+        ... )
+        >>> for ii, loc in zip(range(mesh.nFz), mesh.faces_z):
+        ...     ax1.text(loc[0] + 0.05, loc[1] + 0.05, loc[2], "{0:d}".format(ii), color="g")
+        >>> ax1.plot(
+        ...    mesh.cell_centers[:, 0], mesh.cell_centers[:, 1], mesh.cell_centers[:, 2],
+        ...    "ro", markersize=10
+        ... )
+        >>> for ii, loc in zip(range(mesh.nC), mesh.cell_centers):
+        ...     ax1.text(loc[0] + 0.05, loc[1] + 0.05, loc[2], "{0:d}".format(ii), color="r")
+        >>> ax1.legend(
+        ...     ['Mesh','$\mathbf{\phi}$ (z-faces)','$\partial \mathbf{\phi}/\partial z$ (centers)'],
+        ...     loc='upper right', fontsize=14
+        ... )
 
             Manually make axis properties invisible
 
@@ -1128,20 +1113,17 @@ class DiffOperators(BaseMesh):
         Now we plot the original scalar, and the differencing taken along the
         x axes.
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(13, 5))
-            >>> ax1 = fig.add_subplot(121)
-            >>> mesh.plot_image(phi, ax=ax1)
-            >>> ax1.set_title("Scalar at cell centers", fontsize=14)
-
-            >>> ax2 = fig.add_subplot(122)
-            >>> v = np.r_[diff_phi_x, np.zeros(mesh.nFy)]  # Define vector for plotting fun
-            >>> mesh.plot_image(v, ax=ax2, v_type="Fx")
-            >>> ax2.set_yticks([])
-            >>> ax2.set_ylabel("")
-            >>> ax2.set_title("Difference (x-axis)", fontsize=14)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(13, 5))
+        >>> ax1 = fig.add_subplot(121)
+        >>> mesh.plot_image(phi, ax=ax1)
+        >>> ax1.set_title("Scalar at cell centers", fontsize=14)
+        >>> ax2 = fig.add_subplot(122)
+        >>> v = np.r_[diff_phi_x, np.zeros(mesh.nFy)]  # Define vector for plotting fun
+        >>> mesh.plot_image(v, ax=ax2, v_type="Fx")
+        >>> ax2.set_yticks([])
+        >>> ax2.set_ylabel("")
+        >>> ax2.set_title("Difference (x-axis)", fontsize=14)
+        >>> plt.show()
 
         The x-component cell gradient stencil is a sparse differencing matrix
         that maps from cell centers to x-faces. To demonstrate this, we construct
@@ -1151,37 +1133,34 @@ class DiffOperators(BaseMesh):
         >>> mesh = TensorMesh([[(1, 3)], [(1, 4)]])
         >>> mesh.set_cell_gradient_BC('neumann')
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(12, 8))
-            >>> ax1 = fig.add_subplot(121)
-            >>> mesh.plot_grid(ax=ax1)
-            >>> ax1.set_title("Mapping of Stencil", fontsize=14, pad=15)
-
-            >>> ax1.plot(mesh.cell_centers[:, 0], mesh.cell_centers[:, 1], "ro", markersize=8)
-            >>> for ii, loc in zip(range(mesh.nC), mesh.cell_centers):
-            ...     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format(ii), color="r")
-            >>> ax1.plot(mesh.faces_x[:, 0], mesh.faces_x[:, 1], "g>", markersize=8)
-            >>> for ii, loc in zip(range(mesh.nFx), mesh.faces_x):
-            ...     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format(ii), color="g")
-            >>> ax1.set_xticks([])
-            >>> ax1.set_yticks([])
-            >>> ax1.spines['bottom'].set_color('white')
-            >>> ax1.spines['top'].set_color('white')
-            >>> ax1.spines['left'].set_color('white')
-            >>> ax1.spines['right'].set_color('white')
-            >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
-            >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
-            >>> ax1.legend(
-            ...     ['Mesh', '$\mathbf{\phi}$ (centers)', '$\mathbf{Gx^* \phi}$ (x-faces)'],
-            ...     loc='upper right', fontsize=14
-            ... )
-            >>> ax2 = fig.add_subplot(122)
-            >>> ax2.spy(mesh.stencil_cell_gradient_x)
-            >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
-            >>> ax2.set_ylabel("X-Face Index", fontsize=12)
-            >>> ax2.set_xlabel("Cell Index", fontsize=12)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(12, 8))
+        >>> ax1 = fig.add_subplot(121)
+        >>> mesh.plot_grid(ax=ax1)
+        >>> ax1.set_title("Mapping of Stencil", fontsize=14, pad=15)
+        >>> ax1.plot(mesh.cell_centers[:, 0], mesh.cell_centers[:, 1], "ro", markersize=8)
+        >>> for ii, loc in zip(range(mesh.nC), mesh.cell_centers):
+        ...     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format(ii), color="r")
+        >>> ax1.plot(mesh.faces_x[:, 0], mesh.faces_x[:, 1], "g>", markersize=8)
+        >>> for ii, loc in zip(range(mesh.nFx), mesh.faces_x):
+        ...     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format(ii), color="g")
+        >>> ax1.set_xticks([])
+        >>> ax1.set_yticks([])
+        >>> ax1.spines['bottom'].set_color('white')
+        >>> ax1.spines['top'].set_color('white')
+        >>> ax1.spines['left'].set_color('white')
+        >>> ax1.spines['right'].set_color('white')
+        >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
+        >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
+        >>> ax1.legend(
+        ...     ['Mesh', '$\mathbf{\phi}$ (centers)', '$\mathbf{Gx^* \phi}$ (x-faces)'],
+        ...     loc='upper right', fontsize=14
+        ... )
+        >>> ax2 = fig.add_subplot(122)
+        >>> ax2.spy(mesh.stencil_cell_gradient_x)
+        >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
+        >>> ax2.set_ylabel("X-Face Index", fontsize=12)
+        >>> ax2.set_xlabel("Cell Index", fontsize=12)
+        >>> plt.show()
         """
         BC = ["neumann", "neumann"]
         if self.dim == 1:
@@ -1268,19 +1247,17 @@ class DiffOperators(BaseMesh):
         Now we plot the original scalar, and the differencing taken along the
         y-axis.
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(13, 5))
-            >>> ax1 = fig.add_subplot(121)
-            >>> mesh.plot_image(phi, ax=ax1)
-            >>> ax1.set_title("Scalar at cell centers", fontsize=14)
-            >>> ax2 = fig.add_subplot(122)
-            >>> v = np.r_[np.zeros(mesh.nFx), diff_phi_y]  # Define vector for plotting fun
-            >>> mesh.plot_image(v, ax=ax2, v_type="Fy")
-            >>> ax2.set_yticks([])
-            >>> ax2.set_ylabel("")
-            >>> ax2.set_title("Difference (y-axis)", fontsize=14)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(13, 5))
+        >>> ax1 = fig.add_subplot(121)
+        >>> mesh.plot_image(phi, ax=ax1)
+        >>> ax1.set_title("Scalar at cell centers", fontsize=14)
+        >>> ax2 = fig.add_subplot(122)
+        >>> v = np.r_[np.zeros(mesh.nFx), diff_phi_y]  # Define vector for plotting fun
+        >>> mesh.plot_image(v, ax=ax2, v_type="Fy")
+        >>> ax2.set_yticks([])
+        >>> ax2.set_ylabel("")
+        >>> ax2.set_title("Difference (y-axis)", fontsize=14)
+        >>> plt.show()
 
         The y-component cell gradient stencil is a sparse differencing matrix
         that maps from cell centers to y-faces. To demonstrate this, we construct
@@ -1289,39 +1266,34 @@ class DiffOperators(BaseMesh):
 
         >>> mesh = TensorMesh([[(1, 3)], [(1, 4)]])
         >>> mesh.set_cell_gradient_BC('neumann')
-
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(12, 8))
-            >>> ax1 = fig.add_subplot(121)
-            >>> mesh.plot_grid(ax=ax1)
-            >>> ax1.set_title("Mapping of Stencil", fontsize=14, pad=15)
-            >>> ax1.plot(mesh.cell_centers[:, 0], mesh.cell_centers[:, 1], "ro", markersize=8)
-            >>> for ii, loc in zip(range(mesh.nC), mesh.cell_centers):
-            ...     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format(ii), color="r")
-            >>> ax1.plot(mesh.faces_y[:, 0], mesh.faces_y[:, 1], "g^", markersize=8)
-            >>> for ii, loc in zip(range(mesh.nFy), mesh.faces_y):
-            ...     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format(ii + mesh.nFx), color="g")
-
-            >>> ax1.set_xticks([])
-            >>> ax1.set_yticks([])
-            >>> ax1.spines['bottom'].set_color('white')
-            >>> ax1.spines['top'].set_color('white')
-            >>> ax1.spines['left'].set_color('white')
-            >>> ax1.spines['right'].set_color('white')
-            >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
-            >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
-            >>> ax1.legend(
-            ...     ['Mesh', '$\mathbf{\phi}$ (centers)', '$\mathbf{Gy^* \phi}$ (y-faces)'],
-            ...     loc='upper right', fontsize=14
-            ... )
-
-            >>> ax2 = fig.add_subplot(122)
-            >>> ax2.spy(mesh.stencil_cell_gradient_y)
-            >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
-            >>> ax2.set_ylabel("Y-Face Index", fontsize=12)
-            >>> ax2.set_xlabel("Cell Index", fontsize=12)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(12, 8))
+        >>> ax1 = fig.add_subplot(121)
+        >>> mesh.plot_grid(ax=ax1)
+        >>> ax1.set_title("Mapping of Stencil", fontsize=14, pad=15)
+        >>> ax1.plot(mesh.cell_centers[:, 0], mesh.cell_centers[:, 1], "ro", markersize=8)
+        >>> for ii, loc in zip(range(mesh.nC), mesh.cell_centers):
+        ...     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format(ii), color="r")
+        >>> ax1.plot(mesh.faces_y[:, 0], mesh.faces_y[:, 1], "g^", markersize=8)
+        >>> for ii, loc in zip(range(mesh.nFy), mesh.faces_y):
+        ...     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format(ii + mesh.nFx), color="g")
+        >>> ax1.set_xticks([])
+        >>> ax1.set_yticks([])
+        >>> ax1.spines['bottom'].set_color('white')
+        >>> ax1.spines['top'].set_color('white')
+        >>> ax1.spines['left'].set_color('white')
+        >>> ax1.spines['right'].set_color('white')
+        >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
+        >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
+        >>> ax1.legend(
+        ...     ['Mesh', '$\mathbf{\phi}$ (centers)', '$\mathbf{Gy^* \phi}$ (y-faces)'],
+        ...     loc='upper right', fontsize=14
+        ... )
+        >>> ax2 = fig.add_subplot(122)
+        >>> ax2.spy(mesh.stencil_cell_gradient_y)
+        >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
+        >>> ax2.set_ylabel("Y-Face Index", fontsize=12)
+        >>> ax2.set_xlabel("Cell Index", fontsize=12)
+        >>> plt.show()
         """
         if self.dim < 2:
             return None
@@ -1406,31 +1378,27 @@ class DiffOperators(BaseMesh):
         Now we plot the original scalar, and the differencing taken along the
         z-axis for a slice at y = 0.
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(13, 5))
-            >>> ax1 = fig.add_subplot(121)
-            >>> mesh.plot_slice(phi, ax=ax1, normal='Y', slice_loc=0)
-            >>> ax1.set_title("Scalar at cell centers", fontsize=14)
-            >>> ax2 = fig.add_subplot(122)
-            >>> v = np.r_[np.zeros(mesh.nFx+mesh.nFy), diff_phi_z]  # Define vector for plotting fun
-            >>> mesh.plot_slice(v, ax=ax2, v_type='Fz', normal='Y', slice_loc=0)
-            >>> ax2.set_title("Difference (z-axis)", fontsize=14)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(13, 5))
+        >>> ax1 = fig.add_subplot(121)
+        >>> mesh.plot_slice(phi, ax=ax1, normal='Y', slice_loc=0)
+        >>> ax1.set_title("Scalar at cell centers", fontsize=14)
+        >>> ax2 = fig.add_subplot(122)
+        >>> v = np.r_[np.zeros(mesh.nFx+mesh.nFy), diff_phi_z]  # Define vector for plotting fun
+        >>> mesh.plot_slice(v, ax=ax2, v_type='Fz', normal='Y', slice_loc=0)
+        >>> ax2.set_title("Difference (z-axis)", fontsize=14)
+        >>> plt.show()
 
         The z-component cell gradient stencil is a sparse differencing matrix
         that maps from cell centers to z-faces. To demonstrate this, we provide
         a spy plot
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(9, 9))
-            >>> ax1 = fig.add_subplot(111)
-            >>> ax1.spy(mesh.stencil_cell_gradient_z, ms=1)
-            >>> ax1.set_title("Spy Plot", fontsize=16, pad=5)
-            >>> ax1.set_xlabel("Cell Index", fontsize=12)
-            >>> ax1.set_ylabel("Z-Face Index", fontsize=12)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(9, 9))
+        >>> ax1 = fig.add_subplot(111)
+        >>> ax1.spy(mesh.stencil_cell_gradient_z, ms=1)
+        >>> ax1.set_title("Spy Plot", fontsize=16, pad=5)
+        >>> ax1.set_xlabel("Cell Index", fontsize=12)
+        >>> ax1.set_ylabel("Z-Face Index", fontsize=12)
+        >>> plt.show()
         """
         if self.dim < 3:
             return None
@@ -1561,21 +1529,19 @@ class DiffOperators(BaseMesh):
 
         Plot the results
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(13, 6))
-            >>> ax1 = fig.add_subplot(121)
-            >>> mesh.plot_image(phi, ax=ax1)
-            >>> ax1.set_title("Scalar at cell centers", fontsize=14)
-            >>> ax2 = fig.add_subplot(122)
-            >>> mesh.plot_image(
-            ...     grad_phi, ax=ax2, v_type="F", view="vec",
-            ...     stream_opts={"color": "w", "density": 1.0}
-            ... )
-            >>> ax2.set_yticks([])
-            >>> ax2.set_ylabel("")
-            >>> ax2.set_title("Gradient at faces", fontsize=14)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(13, 6))
+        >>> ax1 = fig.add_subplot(121)
+        >>> mesh.plot_image(phi, ax=ax1)
+        >>> ax1.set_title("Scalar at cell centers", fontsize=14)
+        >>> ax2 = fig.add_subplot(122)
+        >>> mesh.plot_image(
+        ...     grad_phi, ax=ax2, v_type="F", view="vec",
+        ...     stream_opts={"color": "w", "density": 1.0}
+        ... )
+        >>> ax2.set_yticks([])
+        >>> ax2.set_ylabel("")
+        >>> ax2.set_title("Gradient at faces", fontsize=14)
+        >>> plt.show()
 
         The cell gradient operator is a sparse matrix that maps
         from cell centers to faces. To demonstrate this, we construct
@@ -1585,43 +1551,37 @@ class DiffOperators(BaseMesh):
 
         >>> mesh = TensorMesh([[(1, 3)], [(1, 6)]])
         >>> mesh.set_cell_gradient_BC('dirichlet')
-
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(12, 10))
-            >>> ax1 = fig.add_subplot(121)
-            >>> mesh.plot_grid(ax=ax1)
-            >>> ax1.set_title("Mapping of Gradient Operator", fontsize=14, pad=15)
-            >>> ax1.plot(mesh.cell_centers[:, 0], mesh.cell_centers[:, 1], "ro", markersize=8)
-            >>> for ii, loc in zip(range(mesh.nC), mesh.cell_centers):
-            ...     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format(ii), color="r")
-
-            >>> ax1.plot(mesh.faces_x[:, 0], mesh.faces_x[:, 1], "g^", markersize=8)
-            >>> for ii, loc in zip(range(mesh.nFx), mesh.faces_x):
-            ...     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format(ii), color="g")
-            >>> ax1.plot(mesh.faces_y[:, 0], mesh.faces_y[:, 1], "g>", markersize=8)
-            >>> for ii, loc in zip(range(mesh.nFy), mesh.faces_y):
-            ...     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format((ii + mesh.nFx)), color="g")
-
-            >>> ax1.set_xticks([])
-            >>> ax1.set_yticks([])
-            >>> ax1.spines['bottom'].set_color('white')
-            >>> ax1.spines['top'].set_color('white')
-            >>> ax1.spines['left'].set_color('white')
-            >>> ax1.spines['right'].set_color('white')
-            >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
-            >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
-
-            >>> ax1.legend(
-            ...     ['Mesh', '$\mathbf{\phi}$ (centers)', '$\mathbf{u}$ (faces)'],
-            ...     loc='upper right', fontsize=14
-            ... )
-            >>> ax2 = fig.add_subplot(122)
-            >>> ax2.spy(mesh.cell_gradient)
-            >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
-            >>> ax2.set_ylabel("Face Index", fontsize=12)
-            >>> ax2.set_xlabel("Cell Index", fontsize=12)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(12, 10))
+        >>> ax1 = fig.add_subplot(121)
+        >>> mesh.plot_grid(ax=ax1)
+        >>> ax1.set_title("Mapping of Gradient Operator", fontsize=14, pad=15)
+        >>> ax1.plot(mesh.cell_centers[:, 0], mesh.cell_centers[:, 1], "ro", markersize=8)
+        >>> for ii, loc in zip(range(mesh.nC), mesh.cell_centers):
+        ...     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format(ii), color="r")
+        >>> ax1.plot(mesh.faces_x[:, 0], mesh.faces_x[:, 1], "g^", markersize=8)
+        >>> for ii, loc in zip(range(mesh.nFx), mesh.faces_x):
+        ...     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format(ii), color="g")
+        >>> ax1.plot(mesh.faces_y[:, 0], mesh.faces_y[:, 1], "g>", markersize=8)
+        >>> for ii, loc in zip(range(mesh.nFy), mesh.faces_y):
+        ...     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format((ii + mesh.nFx)), color="g")
+        >>> ax1.set_xticks([])
+        >>> ax1.set_yticks([])
+        >>> ax1.spines['bottom'].set_color('white')
+        >>> ax1.spines['top'].set_color('white')
+        >>> ax1.spines['left'].set_color('white')
+        >>> ax1.spines['right'].set_color('white')
+        >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
+        >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
+        >>> ax1.legend(
+        ...     ['Mesh', '$\mathbf{\phi}$ (centers)', '$\mathbf{u}$ (faces)'],
+        ...     loc='upper right', fontsize=14
+        ... )
+        >>> ax2 = fig.add_subplot(122)
+        >>> ax2.spy(mesh.cell_gradient)
+        >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
+        >>> ax2.set_ylabel("Face Index", fontsize=12)
+        >>> ax2.set_xlabel("Cell Index", fontsize=12)
+        >>> plt.show()
         """
         if getattr(self, "_cell_gradient", None) is None:
             G = self.stencil_cell_gradient
@@ -1856,20 +1816,17 @@ class DiffOperators(BaseMesh):
 
         Now we plot the original scalar, and the x-derivative.
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(13, 5))
-            >>> ax1 = fig.add_subplot(121)
-            >>> mesh.plot_image(phi, ax=ax1)
-            >>> ax1.set_title("Scalar at cell centers", fontsize=14)
-
-            >>> ax2 = fig.add_subplot(122)
-            >>> v = np.r_[grad_phi_x, np.zeros(mesh.nFy)]  # Define vector for plotting fun
-            >>> mesh.plot_image(v, ax=ax2, v_type="Fx")
-            >>> ax2.set_yticks([])
-            >>> ax2.set_ylabel("")
-            >>> ax2.set_title("X-derivative at x-faces", fontsize=14)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(13, 5))
+        >>> ax1 = fig.add_subplot(121)
+        >>> mesh.plot_image(phi, ax=ax1)
+        >>> ax1.set_title("Scalar at cell centers", fontsize=14)
+        >>> ax2 = fig.add_subplot(122)
+        >>> v = np.r_[grad_phi_x, np.zeros(mesh.nFy)]  # Define vector for plotting fun
+        >>> mesh.plot_image(v, ax=ax2, v_type="Fx")
+        >>> ax2.set_yticks([])
+        >>> ax2.set_ylabel("")
+        >>> ax2.set_title("X-derivative at x-faces", fontsize=14)
+        >>> plt.show()
 
         The operator is a sparse x-derivative matrix
         that maps from cell centers to x-faces. To demonstrate this, we construct
@@ -1879,39 +1836,34 @@ class DiffOperators(BaseMesh):
         >>> mesh = TensorMesh([[(1, 3)], [(1, 4)]])
         >>> mesh.set_cell_gradient_BC('neumann')
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(12, 8))
-            >>> ax1 = fig.add_subplot(121)
-            >>> mesh.plot_grid(ax=ax1)
-            >>> ax1.set_title("Mapping of Operator", fontsize=14, pad=15)
-            >>> ax1.plot(mesh.cell_centers[:, 0], mesh.cell_centers[:, 1], "ro", markersize=8)
-            >>> for ii, loc in zip(range(mesh.nC), mesh.cell_centers):
-            ...     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format(ii), color="r")
-
-            >>> ax1.plot(mesh.faces_x[:, 0], mesh.faces_x[:, 1], "g>", markersize=8)
-            >>> for ii, loc in zip(range(mesh.nFx), mesh.faces_x):
-            ...     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format(ii), color="g")
-
-            >>> ax1.set_xticks([])
-            >>> ax1.set_yticks([])
-            >>> ax1.spines['bottom'].set_color('white')
-            >>> ax1.spines['top'].set_color('white')
-            >>> ax1.spines['left'].set_color('white')
-            >>> ax1.spines['right'].set_color('white')
-            >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
-            >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
-            >>> ax1.legend(
-            ...     ['Mesh', '$\mathbf{\phi}$ (centers)', '$\mathbf{Gx^* \phi}$ (x-faces)'],
-            ...     loc='upper right', fontsize=14
-            ... )
-
-            >>> ax2 = fig.add_subplot(122)
-            >>> ax2.spy(mesh.cell_gradient_x)
-            >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
-            >>> ax2.set_ylabel("X-Face Index", fontsize=12)
-            >>> ax2.set_xlabel("Cell Index", fontsize=12)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(12, 8))
+        >>> ax1 = fig.add_subplot(121)
+        >>> mesh.plot_grid(ax=ax1)
+        >>> ax1.set_title("Mapping of Operator", fontsize=14, pad=15)
+        >>> ax1.plot(mesh.cell_centers[:, 0], mesh.cell_centers[:, 1], "ro", markersize=8)
+        >>> for ii, loc in zip(range(mesh.nC), mesh.cell_centers):
+        ...     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format(ii), color="r")
+        >>> ax1.plot(mesh.faces_x[:, 0], mesh.faces_x[:, 1], "g>", markersize=8)
+        >>> for ii, loc in zip(range(mesh.nFx), mesh.faces_x):
+        ...     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format(ii), color="g")
+        >>> ax1.set_xticks([])
+        >>> ax1.set_yticks([])
+        >>> ax1.spines['bottom'].set_color('white')
+        >>> ax1.spines['top'].set_color('white')
+        >>> ax1.spines['left'].set_color('white')
+        >>> ax1.spines['right'].set_color('white')
+        >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
+        >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
+        >>> ax1.legend(
+        ...     ['Mesh', '$\mathbf{\phi}$ (centers)', '$\mathbf{Gx^* \phi}$ (x-faces)'],
+        ...     loc='upper right', fontsize=14
+        ... )
+        >>> ax2 = fig.add_subplot(122)
+        >>> ax2.spy(mesh.cell_gradient_x)
+        >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
+        >>> ax2.set_ylabel("X-Face Index", fontsize=12)
+        >>> ax2.set_xlabel("Cell Index", fontsize=12)
+        >>> plt.show()
         """
         if getattr(self, "_cell_gradient_x", None) is None:
             G1 = self.stencil_cell_gradient_x
@@ -1980,20 +1932,17 @@ class DiffOperators(BaseMesh):
 
         Now we plot the original scalar is y-derivative.
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(13, 5))
-            >>> ax1 = fig.add_subplot(121)
-            >>> mesh.plot_image(phi, ax=ax1)
-            >>> ax1.set_title("Scalar at cell centers", fontsize=14)
-
-            >>> ax2 = fig.add_subplot(122)
-            >>> v = np.r_[np.zeros(mesh.nFx), grad_phi_y]  # Define vector for plotting fun
-            >>> mesh.plot_image(v, ax=ax2, v_type="Fy")
-            >>> ax2.set_yticks([])
-            >>> ax2.set_ylabel("")
-            >>> ax2.set_title("Y-derivative at y-faces", fontsize=14)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(13, 5))
+        >>> ax1 = fig.add_subplot(121)
+        >>> mesh.plot_image(phi, ax=ax1)
+        >>> ax1.set_title("Scalar at cell centers", fontsize=14)
+        >>> ax2 = fig.add_subplot(122)
+        >>> v = np.r_[np.zeros(mesh.nFx), grad_phi_y]  # Define vector for plotting fun
+        >>> mesh.plot_image(v, ax=ax2, v_type="Fy")
+        >>> ax2.set_yticks([])
+        >>> ax2.set_ylabel("")
+        >>> ax2.set_title("Y-derivative at y-faces", fontsize=14)
+        >>> plt.show()
 
         The operator is a sparse y-derivative matrix
         that maps from cell centers to y-faces. To demonstrate this, we construct
@@ -2002,39 +1951,34 @@ class DiffOperators(BaseMesh):
 
         >>> mesh = TensorMesh([[(1, 3)], [(1, 4)]])
         >>> mesh.set_cell_gradient_BC('neumann')
-
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(12, 8))
-            >>> ax1 = fig.add_subplot(121)
-            >>> mesh.plot_grid(ax=ax1)
-            >>> ax1.set_title("Mapping of Operator", fontsize=14, pad=15)
-            >>> ax1.plot(mesh.cell_centers[:, 0], mesh.cell_centers[:, 1], "ro", markersize=8)
-            >>> for ii, loc in zip(range(mesh.nC), mesh.cell_centers):
-            ...     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format(ii), color="r")
-            >>> ax1.plot(mesh.faces_y[:, 0], mesh.faces_y[:, 1], "g^", markersize=8)
-            >>> for ii, loc in zip(range(mesh.nFy), mesh.faces_y):
-            ...     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format(ii + mesh.nFx), color="g")
-
-            >>> ax1.set_xticks([])
-            >>> ax1.set_yticks([])
-            >>> ax1.spines['bottom'].set_color('white')
-            >>> ax1.spines['top'].set_color('white')
-            >>> ax1.spines['left'].set_color('white')
-            >>> ax1.spines['right'].set_color('white')
-            >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
-            >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
-            >>> ax1.legend(
-            ...     ['Mesh', '$\mathbf{\phi}$ (centers)', '$\mathbf{Gy^* \phi}$ (y-faces)'],
-            ...     loc='upper right', fontsize=14
-            ... )
-
-            >>> ax2 = fig.add_subplot(122)
-            >>> ax2.spy(mesh.stencil_cell_gradient_y)
-            >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
-            >>> ax2.set_ylabel("Y-Face Index", fontsize=12)
-            >>> ax2.set_xlabel("Cell Index", fontsize=12)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(12, 8))
+        >>> ax1 = fig.add_subplot(121)
+        >>> mesh.plot_grid(ax=ax1)
+        >>> ax1.set_title("Mapping of Operator", fontsize=14, pad=15)
+        >>> ax1.plot(mesh.cell_centers[:, 0], mesh.cell_centers[:, 1], "ro", markersize=8)
+        >>> for ii, loc in zip(range(mesh.nC), mesh.cell_centers):
+        ...     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format(ii), color="r")
+        >>> ax1.plot(mesh.faces_y[:, 0], mesh.faces_y[:, 1], "g^", markersize=8)
+        >>> for ii, loc in zip(range(mesh.nFy), mesh.faces_y):
+        ...     ax1.text(loc[0] + 0.05, loc[1] + 0.02, "{0:d}".format(ii + mesh.nFx), color="g")
+        >>> ax1.set_xticks([])
+        >>> ax1.set_yticks([])
+        >>> ax1.spines['bottom'].set_color('white')
+        >>> ax1.spines['top'].set_color('white')
+        >>> ax1.spines['left'].set_color('white')
+        >>> ax1.spines['right'].set_color('white')
+        >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
+        >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
+        >>> ax1.legend(
+        ...     ['Mesh', '$\mathbf{\phi}$ (centers)', '$\mathbf{Gy^* \phi}$ (y-faces)'],
+        ...     loc='upper right', fontsize=14
+        ... )
+        >>> ax2 = fig.add_subplot(122)
+        >>> ax2.spy(mesh.stencil_cell_gradient_y)
+        >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
+        >>> ax2.set_ylabel("Y-Face Index", fontsize=12)
+        >>> ax2.set_xlabel("Cell Index", fontsize=12)
+        >>> plt.show()
         """
         if self.dim < 2:
             return None
@@ -2104,32 +2048,27 @@ class DiffOperators(BaseMesh):
 
         Now we plot the original scalar and the z-derivative for a slice at y = 0.
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(13, 5))
-            >>> ax1 = fig.add_subplot(121)
-            >>> mesh.plot_slice(phi, ax=ax1, normal='Y', slice_loc=0)
-            >>> ax1.set_title("Scalar at cell centers", fontsize=14)
-
-            >>> ax2 = fig.add_subplot(122)
-            >>> v = np.r_[np.zeros(mesh.nFx+mesh.nFy), grad_phi_z]  # Define vector for plotting fun
-            >>> mesh.plot_slice(v, ax=ax2, v_type='Fz', normal='Y', slice_loc=0)
-            >>> ax2.set_title("Z-derivative (z-faces)", fontsize=14)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(13, 5))
+        >>> ax1 = fig.add_subplot(121)
+        >>> mesh.plot_slice(phi, ax=ax1, normal='Y', slice_loc=0)
+        >>> ax1.set_title("Scalar at cell centers", fontsize=14)
+        >>> ax2 = fig.add_subplot(122)
+        >>> v = np.r_[np.zeros(mesh.nFx+mesh.nFy), grad_phi_z]  # Define vector for plotting fun
+        >>> mesh.plot_slice(v, ax=ax2, v_type='Fz', normal='Y', slice_loc=0)
+        >>> ax2.set_title("Z-derivative (z-faces)", fontsize=14)
+        >>> plt.show()
 
         The z-component cell gradient is a sparse derivative matrix
         that maps from cell centers to z-faces. To demonstrate this, we provide
         a spy plot
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(9, 9))
-            >>> ax1 = fig.add_subplot(111)
-            >>> ax1.spy(mesh.cell_gradient_z, ms=1)
-            >>> ax1.set_title("Spy Plot", fontsize=16, pad=5)
-            >>> ax1.set_xlabel("Cell Index", fontsize=12)
-            >>> ax1.set_ylabel("Z-Face Index", fontsize=12)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(9, 9))
+        >>> ax1 = fig.add_subplot(111)
+        >>> ax1.spy(mesh.cell_gradient_z, ms=1)
+        >>> ax1.set_title("Spy Plot", fontsize=16, pad=5)
+        >>> ax1.set_xlabel("Cell Index", fontsize=12)
+        >>> ax1.set_ylabel("Z-Face Index", fontsize=12)
+        >>> plt.show()
         """
         if self.dim < 3:
             return None
@@ -2293,7 +2232,9 @@ class DiffOperators(BaseMesh):
 
         n_boundary_edges = len(w)
 
-        Av = Pf @ self.average_edge_to_face_vector @ Pe.T
+        Av = Pf @ self.average_edge_to_face @ Pe.T
+        if self.dim > 2:
+            Av *= 2
 
         w_cross_n = np.cross(-w, Av.T @ dA)
 
@@ -2622,29 +2563,25 @@ class DiffOperators(BaseMesh):
 
         And plot the results:
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(11, 5))
-            >>> ax1 = fig.add_subplot(121)
-            >>> v = np.r_[phi_x, np.zeros(mesh.nFy)]  # create vector for plotting function
-            >>> mesh.plot_image(v, ax=ax1, v_type="Fx")
-            >>> ax1.set_title("Variable at x-faces", fontsize=16)
-            >>> ax2 = fig.add_subplot(122)
-            >>> mesh.plot_image(phi_c, ax=ax2, v_type="CC")
-            >>> ax2.set_title("Averaged to cell centers", fontsize=16)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(11, 5))
+        >>> ax1 = fig.add_subplot(121)
+        >>> v = np.r_[phi_x, np.zeros(mesh.nFy)]  # create vector for plotting function
+        >>> mesh.plot_image(v, ax=ax1, v_type="Fx")
+        >>> ax1.set_title("Variable at x-faces", fontsize=16)
+        >>> ax2 = fig.add_subplot(122)
+        >>> mesh.plot_image(phi_c, ax=ax2, v_type="CC")
+        >>> ax2.set_title("Averaged to cell centers", fontsize=16)
+        >>> plt.show()
 
         Below, we show a spy plot illustrating the sparsity and mapping
         of the operator
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(9, 9))
-            >>> ax1 = fig.add_subplot(111)
-            >>> ax1.spy(Axc, ms=1)
-            >>> ax1.set_title("X-Face Index", fontsize=12, pad=5)
-            >>> ax1.set_ylabel("Cell Index", fontsize=12)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(9, 9))
+        >>> ax1 = fig.add_subplot(111)
+        >>> ax1.spy(Axc, ms=1)
+        >>> ax1.set_title("X-Face Index", fontsize=12, pad=5)
+        >>> ax1.set_ylabel("Cell Index", fontsize=12)
+        >>> plt.show()
         """
         if getattr(self, "_average_face_x_to_cell", None) is None:
             n = self.vnC
@@ -2719,29 +2656,25 @@ class DiffOperators(BaseMesh):
 
         And finally, plot the results:
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(11, 5))
-            >>> ax1 = fig.add_subplot(121)
-            >>> v = np.r_[np.zeros(mesh.nFx), phi_y]  # create vector for plotting function
-            >>> mesh.plot_image(v, ax=ax1, v_type="Fy")
-            >>> ax1.set_title("Variable at y-faces", fontsize=16)
-            >>> ax2 = fig.add_subplot(122)
-            >>> mesh.plot_image(phi_c, ax=ax2, v_type="CC")
-            >>> ax2.set_title("Averaged to cell centers", fontsize=16)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(11, 5))
+        >>> ax1 = fig.add_subplot(121)
+        >>> v = np.r_[np.zeros(mesh.nFx), phi_y]  # create vector for plotting function
+        >>> mesh.plot_image(v, ax=ax1, v_type="Fy")
+        >>> ax1.set_title("Variable at y-faces", fontsize=16)
+        >>> ax2 = fig.add_subplot(122)
+        >>> mesh.plot_image(phi_c, ax=ax2, v_type="CC")
+        >>> ax2.set_title("Averaged to cell centers", fontsize=16)
+        >>> plt.show()
 
         Below, we show a spy plot illustrating the sparsity and mapping
         of the operator
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(9, 9))
-            >>> ax1 = fig.add_subplot(111)
-            >>> ax1.spy(Ayc, ms=1)
-            >>> ax1.set_title("Y-Face Index", fontsize=12, pad=5)
-            >>> ax1.set_ylabel("Cell Index", fontsize=12)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(9, 9))
+        >>> ax1 = fig.add_subplot(111)
+        >>> ax1.spy(Ayc, ms=1)
+        >>> ax1.set_title("Y-Face Index", fontsize=12, pad=5)
+        >>> ax1.set_ylabel("Cell Index", fontsize=12)
+        >>> plt.show()
         """
         if self.dim < 2:
             return None
@@ -2818,29 +2751,25 @@ class DiffOperators(BaseMesh):
 
         And plot the results:
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(11, 5))
-            >>> ax1 = fig.add_subplot(121)
-            >>> v = np.r_[np.zeros(mesh.nFx+mesh.nFy), phi_z]  # create vector for plotting
-            >>> mesh.plot_slice(v, ax=ax1, normal='Y', slice_loc=0, v_type="Fz")
-            >>> ax1.set_title("Variable at z-faces", fontsize=16)
-            >>> ax2 = fig.add_subplot(122)
-            >>> mesh.plot_image(phi_c, ax=ax2, normal='Y', slice_loc=0, v_type="CC")
-            >>> ax2.set_title("Averaged to cell centers", fontsize=16)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(11, 5))
+        >>> ax1 = fig.add_subplot(121)
+        >>> v = np.r_[np.zeros(mesh.nFx+mesh.nFy), phi_z]  # create vector for plotting
+        >>> mesh.plot_slice(v, ax=ax1, normal='Y', slice_loc=0, v_type="Fz")
+        >>> ax1.set_title("Variable at z-faces", fontsize=16)
+        >>> ax2 = fig.add_subplot(122)
+        >>> mesh.plot_image(phi_c, ax=ax2, normal='Y', slice_loc=0, v_type="CC")
+        >>> ax2.set_title("Averaged to cell centers", fontsize=16)
+        >>> plt.show()
 
         Below, we show a spy plot illustrating the sparsity and mapping
         of the operator
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(9, 9))
-            >>> ax1 = fig.add_subplot(111)
-            >>> ax1.spy(Azc, ms=1)
-            >>> ax1.set_title("Z-Face Index", fontsize=12, pad=5)
-            >>> ax1.set_ylabel("Cell Index", fontsize=12)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(9, 9))
+        >>> ax1 = fig.add_subplot(111)
+        >>> ax1.spy(Azc, ms=1)
+        >>> ax1.set_title("Z-Face Index", fontsize=12, pad=5)
+        >>> ax1.set_ylabel("Cell Index", fontsize=12)
+        >>> plt.show()
         """
         if self.dim < 3:
             return None
@@ -3049,29 +2978,25 @@ class DiffOperators(BaseMesh):
 
         And plot the results,
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(11, 5))
-            >>> ax1 = fig.add_subplot(121)
-            >>> v = np.r_[phi_x, np.zeros(mesh.nEy)]  # create vector for plotting function
-            >>> mesh.plot_image(v, ax=ax1, v_type="Ex")
-            >>> ax1.set_title("Variable at x-edges", fontsize=16)
-            >>> ax2 = fig.add_subplot(122)
-            >>> mesh.plot_image(phi_c, ax=ax2, v_type="CC")
-            >>> ax2.set_title("Averaged to cell centers", fontsize=16)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(11, 5))
+        >>> ax1 = fig.add_subplot(121)
+        >>> v = np.r_[phi_x, np.zeros(mesh.nEy)]  # create vector for plotting function
+        >>> mesh.plot_image(v, ax=ax1, v_type="Ex")
+        >>> ax1.set_title("Variable at x-edges", fontsize=16)
+        >>> ax2 = fig.add_subplot(122)
+        >>> mesh.plot_image(phi_c, ax=ax2, v_type="CC")
+        >>> ax2.set_title("Averaged to cell centers", fontsize=16)
+        >>> plt.show()
 
         Below, we show a spy plot illustrating the sparsity and mapping
         of the operator
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(9, 9))
-            >>> ax1 = fig.add_subplot(111)
-            >>> ax1.spy(Axc, ms=1)
-            >>> ax1.set_title("X-Edge Index", fontsize=12, pad=5)
-            >>> ax1.set_ylabel("Cell Index", fontsize=12)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(9, 9))
+        >>> ax1 = fig.add_subplot(111)
+        >>> ax1.spy(Axc, ms=1)
+        >>> ax1.set_title("X-Edge Index", fontsize=12, pad=5)
+        >>> ax1.set_ylabel("Cell Index", fontsize=12)
+        >>> plt.show()
         """
         if getattr(self, "_average_edge_x_to_cell", None) is None:
             # The number of cell centers in each direction
@@ -3146,29 +3071,25 @@ class DiffOperators(BaseMesh):
 
         And plot the results,
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(11, 5))
-            >>> ax1 = fig.add_subplot(121)
-            >>> v = np.r_[np.zeros(mesh.nEx), phi_y]  # create vector for plotting function
-            >>> mesh.plot_image(v, ax=ax1, v_type="Ey")
-            >>> ax1.set_title("Variable at y-edges", fontsize=16)
-            >>> ax2 = fig.add_subplot(122)
-            >>> mesh.plot_image(phi_c, ax=ax2, v_type="CC")
-            >>> ax2.set_title("Averaged to cell centers", fontsize=16)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(11, 5))
+        >>> ax1 = fig.add_subplot(121)
+        >>> v = np.r_[np.zeros(mesh.nEx), phi_y]  # create vector for plotting function
+        >>> mesh.plot_image(v, ax=ax1, v_type="Ey")
+        >>> ax1.set_title("Variable at y-edges", fontsize=16)
+        >>> ax2 = fig.add_subplot(122)
+        >>> mesh.plot_image(phi_c, ax=ax2, v_type="CC")
+        >>> ax2.set_title("Averaged to cell centers", fontsize=16)
+        >>> plt.show()
 
         Below, we show a spy plot illustrating the sparsity and mapping
         of the operator
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(9, 9))
-            >>> ax1 = fig.add_subplot(111)
-            >>> ax1.spy(Ayc, ms=1)
-            >>> ax1.set_title("Y-Edge Index", fontsize=12, pad=5)
-            >>> ax1.set_ylabel("Cell Index", fontsize=12)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(9, 9))
+        >>> ax1 = fig.add_subplot(111)
+        >>> ax1.spy(Ayc, ms=1)
+        >>> ax1.set_title("Y-Edge Index", fontsize=12, pad=5)
+        >>> ax1.set_ylabel("Cell Index", fontsize=12)
+        >>> plt.show()
         """
         if self.dim < 2:
             return None
@@ -3245,29 +3166,25 @@ class DiffOperators(BaseMesh):
 
         Plot the results,
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(11, 5))
-            >>> ax1 = fig.add_subplot(121)
-            >>> v = np.r_[np.zeros(mesh.nEx+mesh.nEy), phi_z]  # create vector for plotting
-            >>> mesh.plot_slice(v, ax=ax1, normal='Y', slice_loc=0, v_type="Ez")
-            >>> ax1.set_title("Variable at z-edges", fontsize=16)
-            >>> ax2 = fig.add_subplot(122)
-            >>> mesh.plot_image(phi_c, ax=ax2, normal='Y', slice_loc=0, v_type="CC")
-            >>> ax2.set_title("Averaged to cell centers", fontsize=16)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(11, 5))
+        >>> ax1 = fig.add_subplot(121)
+        >>> v = np.r_[np.zeros(mesh.nEx+mesh.nEy), phi_z]  # create vector for plotting
+        >>> mesh.plot_slice(v, ax=ax1, normal='Y', slice_loc=0, v_type="Ez")
+        >>> ax1.set_title("Variable at z-edges", fontsize=16)
+        >>> ax2 = fig.add_subplot(122)
+        >>> mesh.plot_image(phi_c, ax=ax2, normal='Y', slice_loc=0, v_type="CC")
+        >>> ax2.set_title("Averaged to cell centers", fontsize=16)
+        >>> plt.show()
 
         Below, we show a spy plot illustrating the sparsity and mapping
         of the operator
 
-        .. collapse:: Expand to show scripting for plot
-
-            >>> fig = plt.figure(figsize=(9, 9))
-            >>> ax1 = fig.add_subplot(111)
-            >>> ax1.spy(Azc, ms=1)
-            >>> ax1.set_title("Z-Edge Index", fontsize=12, pad=5)
-            >>> ax1.set_ylabel("Cell Index", fontsize=12)
-            >>> plt.show()
+        >>> fig = plt.figure(figsize=(9, 9))
+        >>> ax1 = fig.add_subplot(111)
+        >>> ax1.spy(Azc, ms=1)
+        >>> ax1.set_title("Z-Edge Index", fontsize=12, pad=5)
+        >>> ax1.set_ylabel("Cell Index", fontsize=12)
+        >>> plt.show()
         """
         if self.dim < 3:
             return None
@@ -3279,7 +3196,7 @@ class DiffOperators(BaseMesh):
         return self._average_edge_z_to_cell
 
     @property
-    def average_edge_to_face_vector(self):  # NOQA D102
+    def average_edge_to_face(self):  # NOQA D102
         # Documentation inherited from discretize.base.BaseMesh
         if self.dim == 1:
             return self.average_cell_to_face
@@ -3299,7 +3216,7 @@ class DiffOperators(BaseMesh):
         ez_to_fx = kron3(speye(n3), av(n2), speye(n1 + 1))
         ez_to_fy = kron3(speye(n3), speye(n2 + 1), av(n1))
 
-        e_to_f = sp.bmat(
+        e_to_f = 0.5 * sp.bmat(
             [
                 [None, ey_to_fx, ez_to_fx],
                 [ex_to_fy, None, ez_to_fy],
@@ -3508,11 +3425,11 @@ class DiffOperators(BaseMesh):
 
         # Create a matrix that projects all faces onto boundary faces
         # The below should work for a regular structured mesh
-        is_b = make_boundary_bool(self.shape_faces_x, dir="x")
+        is_b = make_boundary_bool(self.shape_faces_x, bdir="x")
         if self.dim > 1:
-            is_b = np.r_[is_b, make_boundary_bool(self.shape_faces_y, dir="y")]
+            is_b = np.r_[is_b, make_boundary_bool(self.shape_faces_y, bdir="y")]
         if self.dim == 3:
-            is_b = np.r_[is_b, make_boundary_bool(self.shape_faces_z, dir="z")]
+            is_b = np.r_[is_b, make_boundary_bool(self.shape_faces_z, bdir="z")]
         return sp.eye(self.n_faces, format="csr")[is_b]
 
     @property
@@ -3527,11 +3444,11 @@ class DiffOperators(BaseMesh):
             return None  # No edges are on the boundary in 1D
 
         is_b = np.r_[
-            make_boundary_bool(self.shape_edges_x, dir="yz"),
-            make_boundary_bool(self.shape_edges_y, dir="xz"),
+            make_boundary_bool(self.shape_edges_x, bdir="yz"),
+            make_boundary_bool(self.shape_edges_y, bdir="xz"),
         ]
         if self.dim == 3:
-            is_b = np.r_[is_b, make_boundary_bool(self.shape_edges_z, dir="xy")]
+            is_b = np.r_[is_b, make_boundary_bool(self.shape_edges_z, bdir="xy")]
         return sp.eye(self.n_edges, format="csr")[is_b]
 
     @property
@@ -3548,66 +3465,66 @@ class DiffOperators(BaseMesh):
 
     # DEPRECATED
     cellGrad = deprecate_property(
-        "cell_gradient", "cellGrad", removal_version="1.0.0", future_warn=True
+        "cell_gradient", "cellGrad", removal_version="1.0.0", error=True
     )
     cellGradBC = deprecate_property(
-        "cell_gradient_BC", "cellGradBC", removal_version="1.0.0", future_warn=True
+        "cell_gradient_BC", "cellGradBC", removal_version="1.0.0", error=True
     )
     cellGradx = deprecate_property(
-        "cell_gradient_x", "cellGradx", removal_version="1.0.0", future_warn=True
+        "cell_gradient_x", "cellGradx", removal_version="1.0.0", error=True
     )
     cellGrady = deprecate_property(
-        "cell_gradient_y", "cellGrady", removal_version="1.0.0", future_warn=True
+        "cell_gradient_y", "cellGrady", removal_version="1.0.0", error=True
     )
     cellGradz = deprecate_property(
-        "cell_gradient_z", "cellGradz", removal_version="1.0.0", future_warn=True
+        "cell_gradient_z", "cellGradz", removal_version="1.0.0", error=True
     )
     faceDivx = deprecate_property(
-        "face_x_divergence", "faceDivx", removal_version="1.0.0", future_warn=True
+        "face_x_divergence", "faceDivx", removal_version="1.0.0", error=True
     )
     faceDivy = deprecate_property(
-        "face_y_divergence", "faceDivy", removal_version="1.0.0", future_warn=True
+        "face_y_divergence", "faceDivy", removal_version="1.0.0", error=True
     )
     faceDivz = deprecate_property(
-        "face_z_divergence", "faceDivz", removal_version="1.0.0", future_warn=True
+        "face_z_divergence", "faceDivz", removal_version="1.0.0", error=True
     )
     _cellGradStencil = deprecate_property(
         "stencil_cell_gradient",
         "_cellGradStencil",
         removal_version="1.0.0",
-        future_warn=True,
+        error=True,
     )
     _cellGradxStencil = deprecate_property(
         "stencil_cell_gradient_x",
         "_cellGradxStencil",
         removal_version="1.0.0",
-        future_warn=True,
+        error=True,
     )
     _cellGradyStencil = deprecate_property(
         "stencil_cell_gradient_y",
         "_cellGradyStencil",
         removal_version="1.0.0",
-        future_warn=True,
+        error=True,
     )
     _cellGradzStencil = deprecate_property(
         "stencil_cell_gradient_z",
         "_cellGradzStencil",
         removal_version="1.0.0",
-        future_warn=True,
+        error=True,
     )
 
     setCellGradBC = deprecate_method(
         "set_cell_gradient_BC",
         "setCellGradBC",
         removal_version="1.0.0",
-        future_warn=True,
+        error=True,
     )
     getBCProjWF = deprecate_method(
-        "get_BC_projections", "getBCProjWF", removal_version="1.0.0", future_warn=True
+        "get_BC_projections", "getBCProjWF", removal_version="1.0.0", error=True
     )
     getBCProjWF_simple = deprecate_method(
         "get_BC_projections_simple",
         "getBCProjWF_simple",
         removal_version="1.0.0",
-        future_warn=True,
+        error=True,
     )

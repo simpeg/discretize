@@ -17,7 +17,7 @@ if has_vtk:
         def setUp(self):
             sz = [16, 16, 16]
             mesh = discretize.CurvilinearMesh(
-                discretize.utils.exampleLrmGrid(sz, "rotate")
+                discretize.utils.example_curvilinear_grid(sz, "rotate")
             )
             self.mesh = mesh
 
@@ -50,7 +50,7 @@ if has_vtk:
             mesh = self.mesh
             vec = np.arange(mesh.nC)
             models = {"arange.txt": vec}
-            mesh.writeVTK("temp.vts", models)
+            mesh.write_vtk("temp.vts", models)
             print("Writing of VTK files is working")
             os.remove("temp.vts")
 

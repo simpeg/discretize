@@ -93,7 +93,6 @@ from discretize.utils import as_array_n_by_dim
 from discretize._extensions.tree_ext import _TreeMesh, TreeCell  # NOQA F401
 import numpy as np
 import scipy.sparse as sp
-import warnings
 from discretize.utils.code_utils import deprecate_property
 from scipy.spatial import Delaunay
 
@@ -742,6 +741,21 @@ class TreeMesh(
             self.finalize()
 
     @property
+    def total_nodes(self):
+        """Gridded hanging and non-hanging nodes locations.
+
+        This property returns a numpy array of shape
+        ``(n_total_nodes, dim)`` containing gridded locations for
+        all hanging and non-hanging nodes in the mesh.
+
+        Returns
+        -------
+        (n_total_nodes, dim) numpy.ndarray of float
+            Gridded hanging and non-hanging node locations
+        """
+        return np.vstack((self.nodes, self.hanging_nodes))
+
+    @property
     def vntF(self):
         """Vector number of total faces along each axis.
 
@@ -801,7 +815,7 @@ class TreeMesh(
             iy[i_s[3]] = 0.0
             Pafy = sp.diags(iy)
 
-            MfI = self.get_face_inner_product(invMat=True)
+            MfI = self.get_face_inner_product(invert_matrix=True)
 
             if self.dim == 2:
                 Pi = sp.block_diag([Pafx, Pafy])
@@ -831,7 +845,7 @@ class TreeMesh(
             ix[i_s[1]] = 0.0
             Pafx = sp.diags(ix)
 
-            MfI = self.get_face_inner_product(invMat=True)
+            MfI = self.get_face_inner_product(invert_matrix=True)
             MfIx = sp.diags(MfI.diagonal()[:nFx])
 
             self._cell_gradient_x = (
@@ -853,7 +867,7 @@ class TreeMesh(
             iy[i_s[3]] = 0.0
             Pafy = sp.diags(iy)
 
-            MfI = self.get_face_inner_product(invMat=True)
+            MfI = self.get_face_inner_product(invert_matrix=True)
             MfIy = sp.diags(MfI.diagonal()[nFx : nFx + nFy])
 
             self._cell_gradient_y = (
@@ -877,7 +891,7 @@ class TreeMesh(
             iz[i_s[5]] = 0.0
             Pafz = sp.diags(iz)
 
-            MfI = self.get_face_inner_product(invMat=True)
+            MfI = self.get_face_inner_product(invert_matrix=True)
             MfIz = sp.diags(MfI.diagonal()[nFx + nFy :])
 
             self._cell_gradient_z = (
@@ -935,21 +949,15 @@ class TreeMesh(
     ):
         # Documentation inherited from discretize.base.BaseMesh
         if "locType" in kwargs:
-            warnings.warn(
-                "The locType keyword argument has been deprecated, please use location_type. "
-                "This will be removed in discretize 1.0.0",
-                FutureWarning,
-                stacklevel=2,
+            raise TypeError(
+                "The locType keyword argument has been removed, please use location_type. "
+                "This will be removed in discretize 1.0.0"
             )
-            location_type = kwargs["locType"]
         if "zerosOutside" in kwargs:
-            warnings.warn(
-                "The zerosOutside keyword argument has been deprecated, please use zeros_outside. "
-                "This will be removed in discretize 1.0.0",
-                FutureWarning,
-                stacklevel=2,
+            raise TypeError(
+                "The zerosOutside keyword argument has been removed, please use zeros_outside. "
+                "This will be removed in discretize 1.0.0"
             )
-            zeros_outside = kwargs["zerosOutside"]
         locs = as_array_n_by_dim(locs, self.dim)
         location_type = self._parse_location_type(location_type)
 
@@ -1056,113 +1064,113 @@ class TreeMesh(
         return TreeMesh, (self.h, self.origin), self.__getstate__()
 
     cellGrad = deprecate_property(
-        "cell_gradient", "cellGrad", removal_version="1.0.0", future_warn=True
+        "cell_gradient", "cellGrad", removal_version="1.0.0", error=True
     )
     cellGradx = deprecate_property(
-        "cell_gradient_x", "cellGradx", removal_version="1.0.0", future_warn=True
+        "cell_gradient_x", "cellGradx", removal_version="1.0.0", error=True
     )
     cellGrady = deprecate_property(
-        "cell_gradient_y", "cellGrady", removal_version="1.0.0", future_warn=True
+        "cell_gradient_y", "cellGrady", removal_version="1.0.0", error=True
     )
     cellGradz = deprecate_property(
-        "cell_gradient_z", "cellGradz", removal_version="1.0.0", future_warn=True
+        "cell_gradient_z", "cellGradz", removal_version="1.0.0", error=True
     )
     cellGradStencil = deprecate_property(
         "cell_gradient_stencil",
         "cellGradStencil",
         removal_version="1.0.0",
-        future_warn=True,
+        error=True,
     )
     faceDivx = deprecate_property(
-        "face_x_divergence", "faceDivx", removal_version="1.0.0", future_warn=True
+        "face_x_divergence", "faceDivx", removal_version="1.0.0", error=True
     )
     faceDivy = deprecate_property(
-        "face_y_divergence", "faceDivy", removal_version="1.0.0", future_warn=True
+        "face_y_divergence", "faceDivy", removal_version="1.0.0", error=True
     )
     faceDivz = deprecate_property(
-        "face_z_divergence", "faceDivz", removal_version="1.0.0", future_warn=True
+        "face_z_divergence", "faceDivz", removal_version="1.0.0", error=True
     )
     maxLevel = deprecate_property(
-        "max_used_level", "maxLevel", removal_version="1.0.0", future_warn=True
+        "max_used_level", "maxLevel", removal_version="1.0.0", error=True
     )
     areaFx = deprecate_property(
-        "face_x_areas", "areaFx", removal_version="1.0.0", future_warn=True
+        "face_x_areas", "areaFx", removal_version="1.0.0", error=True
     )
     areaFy = deprecate_property(
-        "face_y_areas", "areaFy", removal_version="1.0.0", future_warn=True
+        "face_y_areas", "areaFy", removal_version="1.0.0", error=True
     )
     areaFz = deprecate_property(
-        "face_z_areas", "areaFz", removal_version="1.0.0", future_warn=True
+        "face_z_areas", "areaFz", removal_version="1.0.0", error=True
     )
     edgeEx = deprecate_property(
-        "edge_x_lengths", "edgeEx", removal_version="1.0.0", future_warn=True
+        "edge_x_lengths", "edgeEx", removal_version="1.0.0", error=True
     )
     edgeEy = deprecate_property(
-        "edge_y_lengths", "edgeEy", removal_version="1.0.0", future_warn=True
+        "edge_y_lengths", "edgeEy", removal_version="1.0.0", error=True
     )
     edgeEz = deprecate_property(
-        "edge_z_lengths", "edgeEz", removal_version="1.0.0", future_warn=True
+        "edge_z_lengths", "edgeEz", removal_version="1.0.0", error=True
     )
     permuteCC = deprecate_property(
-        "permute_cells", "permuteCC", removal_version="1.0.0", future_warn=True
+        "permute_cells", "permuteCC", removal_version="1.0.0", error=True
     )
     permuteF = deprecate_property(
-        "permute_faces", "permuteF", removal_version="1.0.0", future_warn=True
+        "permute_faces", "permuteF", removal_version="1.0.0", error=True
     )
     permuteE = deprecate_property(
-        "permute_edges", "permuteE", removal_version="1.0.0", future_warn=True
+        "permute_edges", "permuteE", removal_version="1.0.0", error=True
     )
     faceBoundaryInd = deprecate_property(
         "face_boundary_indices",
         "faceBoundaryInd",
         removal_version="1.0.0",
-        future_warn=True,
+        error=True,
     )
     cellBoundaryInd = deprecate_property(
         "cell_boundary_indices",
         "cellBoundaryInd",
         removal_version="1.0.0",
-        future_warn=True,
+        error=True,
     )
     _aveCC2FxStencil = deprecate_property(
         "average_cell_to_total_face_x",
         "_aveCC2FxStencil",
         removal_version="1.0.0",
-        future_warn=True,
+        error=True,
     )
     _aveCC2FyStencil = deprecate_property(
         "average_cell_to_total_face_y",
         "_aveCC2FyStencil",
         removal_version="1.0.0",
-        future_warn=True,
+        error=True,
     )
     _aveCC2FzStencil = deprecate_property(
         "average_cell_to_total_face_z",
         "_aveCC2FzStencil",
         removal_version="1.0.0",
-        future_warn=True,
+        error=True,
     )
     _cellGradStencil = deprecate_property(
         "stencil_cell_gradient",
         "_cellGradStencil",
         removal_version="1.0.0",
-        future_warn=True,
+        error=True,
     )
     _cellGradxStencil = deprecate_property(
         "stencil_cell_gradient_x",
         "_cellGradxStencil",
         removal_version="1.0.0",
-        future_warn=True,
+        error=True,
     )
     _cellGradyStencil = deprecate_property(
         "stencil_cell_gradient_y",
         "_cellGradyStencil",
         removal_version="1.0.0",
-        future_warn=True,
+        error=True,
     )
     _cellGradzStencil = deprecate_property(
         "stencil_cell_gradient_z",
         "_cellGradzStencil",
         removal_version="1.0.0",
-        future_warn=True,
+        error=True,
     )

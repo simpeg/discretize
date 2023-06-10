@@ -34,7 +34,7 @@ def run(plotIt=True):
 
     O.refine(function)
 
-    P = M.getInterpolationMat(O.gridCC, "CC")
+    P = M.get_interpolation_matrix(O.gridCC, "CC")
 
     ov = P * v
 
@@ -43,12 +43,12 @@ def run(plotIt=True):
 
     fig, axes = plt.subplots(1, 2, figsize=(10, 5))
 
-    out = M.plotImage(v, grid=True, ax=axes[0])
+    out = M.plot_image(v, grid=True, ax=axes[0])
     cb = plt.colorbar(out[0], ax=axes[0])
     cb.set_label("Random Field")
     axes[0].set_title("TensorMesh")
 
-    out = O.plotImage(ov, grid=True, ax=axes[1], clim=[0, 1])
+    out = O.plot_image(ov, grid=True, ax=axes[1], clim=[0, 1])
     cb = plt.colorbar(out[0], ax=axes[1])
     cb.set_label("Random Field")
     axes[1].set_title("TreeMesh")
