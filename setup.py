@@ -62,7 +62,8 @@ metadata = dict(
 )
 if len(sys.argv) >= 2 and (
     "--help" in sys.argv[1:]
-    or sys.argv[1] in ("--help-commands", "egg_info", "--version", "clean")
+    or sys.argv[1]
+    in ("--help-commands", "egg_info", "install_egg_info", "--version", "clean")
 ):
     # For these actions, build_requires are not required.
     #

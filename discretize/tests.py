@@ -316,7 +316,7 @@ class OrderTest(unittest.TestCase):
         Float
             Maximum cell width for the mesh
         """
-        mesh, max_h = setupMesh(self._meshType, nC, self.meshDimension)
+        mesh, max_h = setup_mesh(self._meshType, nC, self.meshDimension)
         self.M = mesh
         return max_h
 
@@ -594,8 +594,8 @@ def check_derivative(
 
     >>> def simplePass(x):
     ...     return np.sin(x), utils.sdiag(np.cos(x))
-    >>> passed = tests.checkDerivative(simplePass, np.random.randn(5))
-    ==================== checkDerivative ====================
+    >>> passed = tests.check_derivative(simplePass, np.random.randn(5))
+    ==================== check_derivative ====================
     iter    h         |ft-f0|   |ft-f0-h*J0*dx|  Order
     ---------------------------------------------------------
      0   1.00e-01    1.690e-01     8.400e-03      nan
@@ -617,7 +617,7 @@ def check_derivative(
     except ImportError:
         matplotlib = False
 
-    print("{0!s} checkDerivative {1!s}".format("=" * 20, "=" * 20))
+    print("{0!s} check_derivative {1!s}".format("=" * 20, "=" * 20))
     print(
         "iter    h         |ft-f0|   |ft-f0-h*J0*dx|  Order\n{0!s}".format(("-" * 57))
     )
@@ -878,14 +878,14 @@ def assert_isadjoint(
 
 # DEPRECATIONS
 setupMesh = deprecate_function(
-    setup_mesh, "setupMesh", removal_version="1.0.0", future_warn=True
+    setup_mesh, "setupMesh", removal_version="1.0.0", error=True
 )
 Rosenbrock = deprecate_function(
-    rosenbrock, "Rosenbrock", removal_version="1.0.0", future_warn=True
+    rosenbrock, "Rosenbrock", removal_version="1.0.0", error=True
 )
 checkDerivative = deprecate_function(
-    check_derivative, "checkDerivative", removal_version="1.0.0", future_warn=True
+    check_derivative, "checkDerivative", removal_version="1.0.0", error=True
 )
 getQuadratic = deprecate_function(
-    get_quadratic, "getQuadratic", removal_version="1.0.0", future_warn=True
+    get_quadratic, "getQuadratic", removal_version="1.0.0", error=True
 )

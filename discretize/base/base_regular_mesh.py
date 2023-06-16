@@ -4,7 +4,6 @@ import numpy as np
 from discretize.utils import mkvc, Identity
 from discretize.base.base_mesh import BaseMesh
 from discretize.utils.code_utils import deprecate_method
-import warnings
 
 
 class BaseRegularMesh(BaseMesh):
@@ -525,24 +524,17 @@ class BaseRegularMesh(BaseMesh):
           `axis_u` will be removed in discretize 1.0.0. This functionality was replaced
           by the :py:attr:`~.BaseRegularMesh.orientation`.
         """
-        warnings.warn(
-            "The axis_u property is deprecated, please access as self.orientation[0]. "
-            "This will be removed in discretize 1.0.0.",
-            FutureWarning,
-            stacklevel=2,
+        raise NotImplementedError(
+            "The axis_u property is rmoved, please access as self.orientation[0]. "
+            "This will be removed in discretize 1.0.0."
         )
-        return self.orientation[0]
 
     @axis_u.setter
     def axis_u(self, value):
-        warnings.warn(
-            "Setting the axis_u property is deprecated, and now unchecked, please "
-            "directly set the self.orientation property. This will be removed in "
-            "discretize 1.0.0.",
-            FutureWarning,
-            stacklevel=2,
+        raise NotImplementedError(
+            "The axis_u property is removed, please access as self.orientation[0]. "
+            "This will be removed in discretize 1.0.0."
         )
-        self.orientation[0] = value
 
     @property
     def axis_v(self):
@@ -552,25 +544,17 @@ class BaseRegularMesh(BaseMesh):
           `axis_v` will be removed in discretize 1.0.0. This functionality was replaced
           by the :py:attr:`~.BaseRegularMesh.orientation`.
         """
-        warnings.warn(
-            "The axis_v property is deprecated, please access as self.orientation[1]. "
-            "This will be removed in discretize 1.0.0.",
-            FutureWarning,
-            stacklevel=2,
+        raise NotImplementedError(
+            "The axis_v property is removed, please access as self.orientation[1]. "
+            "This will be removed in discretize 1.0.0."
         )
-        return self.orientation[1]
 
     @axis_v.setter
     def axis_v(self, value):
-        warnings.warn(
-            "Setting the axis_v property is deprecated, and now unchecked, please "
-            "directly set the self.orientation property. This will be removed in "
-            "discretize 1.0.0.",
-            FutureWarning,
-            stacklevel=2,
+        raise NotImplementedError(
+            "The axis_v property is removed, please access as self.orientation[1]. "
+            "This will be removed in discretize 1.0.0."
         )
-        value = value / np.linalg.norm(value)
-        self.orientation[1] = value
 
     @property
     def axis_w(self):
@@ -580,25 +564,17 @@ class BaseRegularMesh(BaseMesh):
           `axis_w` will be removed in discretize 1.0.0. This functionality was replaced
           by the :py:attr:`~.BaseRegularMesh.orientation`.
         """
-        warnings.warn(
-            "The axis_w property is deprecated, please access as self.orientation[2]. "
-            "This will be removed in discretize 1.0.0.",
-            FutureWarning,
-            stacklevel=2,
+        raise NotImplementedError(
+            "The axis_w property is removed, please access as self.orientation[2]. "
+            "This will be removed in discretize 1.0.0."
         )
-        return self.orientation[2]
 
     @axis_w.setter
     def axis_w(self, value):
-        warnings.warn(
-            "Setting the axis_v property is deprecated, and now unchecked, please "
-            "directly set the self.orientation property. This will be removed in "
-            "discretize 1.0.0.",
-            FutureWarning,
-            stacklevel=2,
+        raise NotImplementedError(
+            "The axis_w property is removed, please access as self.orientation[2]. "
+            "This will be removed in discretize 1.0.0."
         )
-        value = value / np.linalg.norm(value)
-        self.orientation[2] = value
 
 
 class BaseRectangularMesh(BaseRegularMesh):
@@ -874,27 +850,20 @@ class BaseRectangularMesh(BaseRegularMesh):
 
         """
         if "xType" in kwargs:
-            warnings.warn(
-                "The xType keyword argument has been deprecated, please use x_type. "
-                "This will be removed in discretize 1.0.0",
-                FutureWarning,
-                stacklevel=2,
+            raise TypeError(
+                "The xType keyword argument has been removed, please use x_type. "
+                "This will be removed in discretize 1.0.0"
             )
             x_type = kwargs["xType"]
         if "outType" in kwargs:
-            warnings.warn(
-                "The outType keyword argument has been deprecated, please use out_type. "
+            raise TypeError(
+                "The outType keyword argument has been removed, please use out_type. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
-                stacklevel=2,
             )
-            out_type = kwargs["outType"]
         if "format" in kwargs:
-            warnings.warn(
-                "The format keyword argument has been deprecated, please use return_format. "
+            raise TypeError(
+                "The format keyword argument has been removed, please use return_format. "
                 "This will be removed in discretize 1.0.0",
-                FutureWarning,
-                stacklevel=2,
             )
             return_format = kwargs["format"]
 
@@ -914,28 +883,28 @@ class BaseRectangularMesh(BaseRegularMesh):
             "edges_z",
         ]
         if not (isinstance(x, list) or isinstance(x, np.ndarray)):
-            raise Exception("x must be either a list or a ndarray")
+            raise TypeError("x must be either a list or a ndarray")
         if x_type not in allowed_x_type:
-            raise Exception(
+            raise ValueError(
                 "x_type must be either '" + "', '".join(allowed_x_type) + "'"
             )
         if out_type not in allowed_x_type:
-            raise Exception(
+            raise ValueError(
                 "out_type must be either '" + "', '".join(allowed_x_type) + "'"
             )
         if return_format not in ["M", "V"]:
-            raise Exception("return_format must be either 'M' or 'V'")
+            raise ValueError("return_format must be either 'M' or 'V'")
         if out_type[: len(x_type)] != x_type:
-            raise Exception("You cannot change types when reshaping.")
+            raise ValueError("You cannot change types when reshaping.")
         if x_type not in out_type:
-            raise Exception("You cannot change type of components.")
+            raise ValueError("You cannot change type of components.")
 
         if isinstance(x, list):
             for i, xi in enumerate(x):
                 if not isinstance(x, np.ndarray):
-                    raise Exception("x[{0:d}] must be a numpy array".format(i))
+                    raise TypeError("x[{0:d}] must be a numpy array".format(i))
                 if xi.size != x[0].size:
-                    raise Exception("Number of elements in list must not change.")
+                    raise ValueError("Number of elements in list must not change.")
 
             x_array = np.ones((x.size, len(x)))
             # Unwrap it and put it in a np array
@@ -944,7 +913,7 @@ class BaseRectangularMesh(BaseRegularMesh):
             x = x_array
 
         if not isinstance(x, np.ndarray):
-            raise Exception("x must be a numpy array")
+            raise TypeError("x must be a numpy array")
 
         x = x[:]  # make a copy.
         x_type_is_FE_xyz = (
@@ -965,7 +934,7 @@ class BaseRectangularMesh(BaseRegularMesh):
             if x_type in ["cell_centers", "nodes"]:
                 nn = self.shape_cells if x_type == "cell_centers" else self.shape_nodes
                 if xx.size != np.prod(nn):
-                    raise Exception("Number of elements must not change.")
+                    raise ValueError("Number of elements must not change.")
                 return outKernal(xx, nn)
             elif x_type in ["faces", "edges"]:
                 # This will only deal with components of fields,
@@ -985,12 +954,12 @@ class BaseRectangularMesh(BaseRegularMesh):
                 for dim, dimName in enumerate(["x", "y", "z"]):
                     if dimName in out_type:
                         if self.dim <= dim:
-                            raise Exception(
+                            raise ValueError(
                                 "Dimensions of mesh not great enough for "
                                 "{}_{}".format(x_type, dimName)
                             )
                         if xx.size != np.sum(nn):
-                            raise Exception("Vector is not the right size.")
+                            raise ValueError("Vector is not the right size.")
                         start = np.sum(nn[: dim + 1])
                         end = np.sum(nn[: dim + 2])
                         return outKernal(xx[start:end], nx[dim])
@@ -1005,7 +974,7 @@ class BaseRectangularMesh(BaseRegularMesh):
                 elif "z" in x_type:
                     nn = self.shape_faces_z if "f" in x_type else self.shape_edges_z
                 if xx.size != np.prod(nn):
-                    raise Exception(
+                    raise ValueError(
                         f"Vector is not the right size. Expected {np.prod(nn)}, got {xx.size}"
                     )
                 return outKernal(xx, nn)
@@ -1015,7 +984,7 @@ class BaseRectangularMesh(BaseRegularMesh):
 
         if out_type in ["faces", "edges"]:
             if isVectorQuantity:
-                raise Exception("Not sure what to do with a vector vector quantity..")
+                raise ValueError("Not sure what to do with a vector vector quantity..")
             outTypeCopy = out_type
             out = ()
             for dirName in ["x", "y", "z"][: self.dim]:
@@ -1031,130 +1000,76 @@ class BaseRectangularMesh(BaseRegularMesh):
             return switchKernal(x)
 
     # DEPRECATED
-    r = deprecate_method("reshape", "r", removal_version="1.0.0", future_warn=True)
+    r = deprecate_method("reshape", "r", removal_version="1.0.0", error=True)
 
     @property
     def nCx(self):
         """Number of cells in the x direction.
 
-        Returns
-        -------
-        int
-
-        .. deprecated:: 0.5.0
-          `nCx` will be removed in discretize 1.0.0, it is replaced by
-          `mesh.shape_cells[0]` to reduce namespace clutter.
+        `nCx` will be removed in discretize 1.0.0, it is replaced by
+        `mesh.shape_cells[0]` to reduce namespace clutter.
         """
-        warnings.warn(
-            "nCx has been deprecated, please access as mesh.shape_cells[0]",
-            FutureWarning,
-            stacklevel=2,
+        raise NotImplementedError(
+            "The nCx property is removed, please access as mesh.shape_cells[0]. "
+            "This message will be removed in discretize 1.0.0."
         )
-        return self.shape_cells[0]
 
     @property
     def nCy(self):
         """Number of cells in the y direction.
 
-        Returns
-        -------
-        int or None
-            None if dim < 2
-
-        .. deprecated:: 0.5.0
-          `nCy` will be removed in discretize 1.0.0, it is replaced by
-          `mesh.shape_cells[1]` to reduce namespace clutter.
+        `nCy` will be removed in discretize 1.0.0, it is replaced by
+        `mesh.shape_cells[1]` to reduce namespace clutter.
         """
-        warnings.warn(
-            "nCy has been deprecated, please access as mesh.shape_cells[1]",
-            FutureWarning,
-            stacklevel=2,
+        raise NotImplementedError(
+            "The nCy property is removed, please access as mesh.shape_cells[1]. "
+            "This message will be removed in discretize 1.0.0."
         )
-        if self.dim < 2:
-            return None
-        return self.shape_cells[1]
 
     @property
     def nCz(self):
         """Number of cells in the z direction.
 
-        Returns
-        -------
-        int or None
-            None if dim < 3
-
-        .. deprecated:: 0.5.0
-          `nCz` will be removed in discretize 1.0.0, it is replaced by
-          `mesh.shape_cells[2]` to reduce namespace clutter.
+        `nCz` will be removed in discretize 1.0.0, it is replaced by
+        `mesh.shape_cells[2]` to reduce namespace clutter.
         """
-        warnings.warn(
-            "nCz has been deprecated, please access as mesh.shape_cells[2]",
-            FutureWarning,
-            stacklevel=2,
+        raise NotImplementedError(
+            "The nCz property is removed, please access as mesh.shape_cells[2]. "
+            "This message will be removed in discretize 1.0.0."
         )
-        if self.dim < 3:
-            return None
-        return self.shape_cells[2]
 
     @property
     def nNx(self):
         """Number of nodes in the x-direction.
 
-        Returns
-        -------
-        int
-
-        .. deprecated:: 0.5.0
-          `nNx` will be removed in discretize 1.0.0, it is replaced by
-          `mesh.shape_nodes[0]` to reduce namespace clutter.
+        `nNx` will be removed in discretize 1.0.0, it is replaced by
+        `mesh.shape_nodes[0]` to reduce namespace clutter.
         """
-        warnings.warn(
-            "nNx has been deprecated, please access as mesh.shape_nodes[0]",
-            FutureWarning,
-            stacklevel=2,
+        raise NotImplementedError(
+            "The nNx property is removed, please access as mesh.shape_nodes[0]. "
+            "This message will be removed in discretize 1.0.0."
         )
-        return self.shape_nodes[0]
 
     @property
     def nNy(self):
         """Number of nodes in the y-direction.
 
-        Returns
-        -------
-        int or None
-            None if dim < 2
-
-        .. deprecated:: 0.5.0
-          `nNy` will be removed in discretize 1.0.0, it is replaced by
-          `mesh.shape_nodes[1]` to reduce namespace clutter.
+        `nNy` will be removed in discretize 1.0.0, it is replaced by
+        `mesh.shape_nodes[1]` to reduce namespace clutter.
         """
-        warnings.warn(
-            "nNy has been deprecated, please access as mesh.shape_nodes[1]",
-            FutureWarning,
-            stacklevel=2,
+        raise NotImplementedError(
+            "The nNy property is removed, please access as mesh.shape_nodes[1]. "
+            "This message will be removed in discretize 1.0.0."
         )
-        if self.dim < 2:
-            return None
-        return self.shape_nodes[1]
 
     @property
     def nNz(self):
         """Number of nodes in the z-direction.
 
-        Returns
-        -------
-        int or None
-            None if dim < 3
-
-        .. deprecated:: 0.5.0
-          `nNz` will be removed in discretize 1.0.0, it is replaced by
-          `mesh.shape_nodes[2]` to reduce namespace clutter.
+        `nNz` will be removed in discretize 1.0.0, it is replaced by
+        `mesh.shape_nodes[2]` to reduce namespace clutter.
         """
-        warnings.warn(
-            "nNz has been deprecated, please access as mesh.shape_nodes[2]",
-            FutureWarning,
-            stacklevel=2,
+        raise NotImplementedError(
+            "The nNz property is removed, please access as mesh.shape_nodes[2]. "
+            "This message will be removed in discretize 1.0.0."
         )
-        if self.dim < 3:
-            return None
-        return self.shape_nodes[2]

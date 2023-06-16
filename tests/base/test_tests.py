@@ -4,7 +4,7 @@ import discretize
 import subprocess
 import numpy as np
 import scipy.sparse as sp
-from discretize.tests import assert_isadjoint, checkDerivative, assert_expected_order
+from discretize.tests import assert_isadjoint, check_derivative, assert_expected_order
 
 
 class TestAssertIsAdjoint:
@@ -73,20 +73,20 @@ class TestCheckDerivative:
         def simplePass(x):
             return np.sin(x), sp.diags(np.cos(x))
 
-        checkDerivative(simplePass, np.random.randn(5), plotIt=False)
+        check_derivative(simplePass, np.random.randn(5), plotIt=False)
 
     def test_simpleFunction(self):
         def simpleFunction(x):
             return np.sin(x), lambda xi: np.cos(x) * xi
 
-        checkDerivative(simpleFunction, np.random.randn(5), plotIt=False)
+        check_derivative(simpleFunction, np.random.randn(5), plotIt=False)
 
     def test_simpleFail(self):
         def simpleFail(x):
             return np.sin(x), -sp.diags(np.cos(x))
 
         with pytest.raises(AssertionError):
-            checkDerivative(simpleFail, np.random.randn(5), plotIt=False)
+            check_derivative(simpleFail, np.random.randn(5), plotIt=False)
 
 
 @pytest.mark.parametrize("test_type", ["mean", "min", "last", "all", "mean_at_least"])

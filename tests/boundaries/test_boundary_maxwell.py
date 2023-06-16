@@ -33,7 +33,7 @@ class TestFz2D_InhomogeneousDirichlet(discretize.tests.OrderTest):
         A = V @ C @ MeI @ C.T @ V + V
         rhs = V @ q_ana + V @ C @ MeI @ M_be @ ez_bc
 
-        ez_test = Pardiso(A) * rhs
+        ez_test = Pardiso(A.tocsr()) * rhs
         if self._meshType == "rotateCurv":
             err = np.linalg.norm(mesh.cell_volumes * (ez_test - ez_ana))
         else:
@@ -99,7 +99,7 @@ class TestE3D_Inhomogeneous(discretize.tests.OrderTest):
             A = C.T @ Mf @ C + Me
             rhs = Me @ q_ana + M_be * h_bc
 
-        e_test = Pardiso(A, is_symmetric=True, is_positive_definite=True) * rhs
+        e_test = Pardiso(A.tocsr(), is_symmetric=True, is_positive_definite=True) * rhs
 
         diff = e_test - e_ana
         if "Face" in self.myTest:

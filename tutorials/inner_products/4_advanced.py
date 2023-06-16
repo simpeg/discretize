@@ -78,18 +78,20 @@ sig = np.random.rand(mesh.nC)  # isotropic
 Sig = np.random.rand(mesh.nC, 6)  # anisotropic
 
 # Inner product matricies
-Mc = sdiag(mesh.vol * sig)  # Inner product matrix (centers)
+Mc = sdiag(mesh.cell_volumes * sig)  # Inner product matrix (centers)
 # Mn = mesh.getNodalInnerProduct(sig)  # Inner product matrix (nodes)  (*functionality pending*)
-Me = mesh.getEdgeInnerProduct(sig)  # Inner product matrix (edges)
-Mf = mesh.getFaceInnerProduct(sig)  # Inner product matrix for tensor (faces)
+Me = mesh.get_edge_inner_product(sig)  # Inner product matrix (edges)
+Mf = mesh.get_face_inner_product(sig)  # Inner product matrix for tensor (faces)
 
 # Differential operators
-Gne = mesh.nodalGrad  # Nodes to edges gradient
-mesh.setCellGradBC(["neumann", "dirichlet", "neumann"])  # Set boundary conditions
-Gcf = mesh.cellGrad  # Cells to faces gradient
-D = mesh.faceDiv  # Faces to centers divergence
-Cef = mesh.edgeCurl  # Edges to faces curl
-Cfe = mesh.edgeCurl.T  # Faces to edges curl
+Gne = mesh.nodal_gradient  # Nodes to edges gradient
+mesh.set_cell_gradient_BC(
+    ["neumann", "dirichlet", "neumann"]
+)  # Set boundary conditions
+Gcf = mesh.cell_gradient  # Cells to faces gradient
+D = mesh.face_divergence  # Faces to centers divergence
+Cef = mesh.edge_curl  # Edges to faces curl
+Cfe = mesh.edge_curl.T  # Faces to edges curl
 
 # EXAMPLE: (u, sig*Curl*v)
 fig = plt.figure(figsize=(9, 5))
@@ -98,7 +100,7 @@ ax1 = fig.add_subplot(121)
 ax1.spy(Mf * Cef, markersize=0.5)
 ax1.set_title("Me(sig)*Cef (Isotropic)", pad=10)
 
-Mf_tensor = mesh.getFaceInnerProduct(Sig)  # inner product matrix for tensor
+Mf_tensor = mesh.get_face_inner_product(Sig)  # inner product matrix for tensor
 ax2 = fig.add_subplot(122)
 ax2.spy(Mf_tensor * Cef, markersize=0.5)
 ax2.set_title("Me(sig)*Cef (Anisotropic)", pad=10)
@@ -154,12 +156,14 @@ h = np.ones(10)
 mesh = TensorMesh([h, h, h])
 
 # Inner product matricies
-Mc = sdiag(mesh.vol * sig)  # Inner product matrix (centers)
+Mc = sdiag(mesh.cell_volumes * sig)  # Inner product matrix (centers)
 
 # Differential operators
-mesh.setCellGradBC(["neumann", "dirichlet", "neumann"])  # Set boundary conditions
-Gcf = mesh.cellGrad  # Cells to faces gradient
-Dfc = mesh.faceDiv  # Faces to centers divergence
+mesh.set_cell_gradient_BC(
+    ["neumann", "dirichlet", "neumann"]
+)  # Set boundary conditions
+Gcf = mesh.cell_gradient  # Cells to faces gradient
+Dfc = mesh.face_divergence  # Faces to centers divergence
 
 # Averaging and summing matrix
 Afc = mesh.dim * mesh.aveF2CC

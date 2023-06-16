@@ -71,8 +71,8 @@ def run(plotIt=True, n=60):
     I = discretize.utils.speye(M.nC)
 
     # Operators
-    A = D * M.faceDiv * M.cellGrad
-    L = epsilon**2 * M.faceDiv * M.cellGrad
+    A = D * M.face_divergence * M.cell_gradient
+    L = epsilon**2 * M.face_divergence * M.cell_gradient
 
     duration = 75
     elapsed = 0.0
@@ -105,7 +105,7 @@ def run(plotIt=True, n=60):
         axes = np.array(axes).flatten().tolist()
         for ii, ax in zip(np.linspace(0, len(PHIS) - 1, len(axes)), axes):
             ii = int(ii)
-            M.plotImage(PHIS[ii][1], ax=ax)
+            M.plot_image(PHIS[ii][1], ax=ax)
             ax.axis("off")
             ax.set_title("Elapsed Time: {0:4.1f}".format(PHIS[ii][0]))
 

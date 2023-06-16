@@ -53,66 +53,62 @@ def _ravel_data_array(arr, nx, ny, nz):
     >>> hz = 3*np.ones(2)
     >>> mesh = TensorMesh([hx, hy, hz])
 
-    >>> dim = (mesh.nCz, mesh.nCy, mesh.nCx)  # OMF orderting
+    >>> dim = mesh.shape_cells[::-1] # OMF orderting
     >>> xc = np.reshape(mesh.cell_centers[:, 0], dim, order="C").ravel(order="F")
     >>> yc = np.reshape(mesh.cell_centers[:, 1], dim, order="C").ravel(order="F")
     >>> zc = np.reshape(mesh.cell_centers[:, 2], dim, order="C").ravel(order="F")
 
-    .. collapse:: Original ordering. Click to expand
+    >>> mesh.cell_centers
+    array([[0.5, 1. , 1.5],
+           [1.5, 1. , 1.5],
+           [2.5, 1. , 1.5],
+           [3.5, 1. , 1.5],
+           [0.5, 3. , 1.5],
+           [1.5, 3. , 1.5],
+           [2.5, 3. , 1.5],
+           [3.5, 3. , 1.5],
+           [0.5, 5. , 1.5],
+           [1.5, 5. , 1.5],
+           [2.5, 5. , 1.5],
+           [3.5, 5. , 1.5],
+           [0.5, 1. , 4.5],
+           [1.5, 1. , 4.5],
+           [2.5, 1. , 4.5],
+           [3.5, 1. , 4.5],
+           [0.5, 3. , 4.5],
+           [1.5, 3. , 4.5],
+           [2.5, 3. , 4.5],
+           [3.5, 3. , 4.5],
+           [0.5, 5. , 4.5],
+           [1.5, 5. , 4.5],
+           [2.5, 5. , 4.5],
+           [3.5, 5. , 4.5]])
 
-        >>> mesh.cell_centers
-        array([[0.5, 1. , 1.5],
-               [1.5, 1. , 1.5],
-               [2.5, 1. , 1.5],
-               [3.5, 1. , 1.5],
-               [0.5, 3. , 1.5],
-               [1.5, 3. , 1.5],
-               [2.5, 3. , 1.5],
-               [3.5, 3. , 1.5],
-               [0.5, 5. , 1.5],
-               [1.5, 5. , 1.5],
-               [2.5, 5. , 1.5],
-               [3.5, 5. , 1.5],
-               [0.5, 1. , 4.5],
-               [1.5, 1. , 4.5],
-               [2.5, 1. , 4.5],
-               [3.5, 1. , 4.5],
-               [0.5, 3. , 4.5],
-               [1.5, 3. , 4.5],
-               [2.5, 3. , 4.5],
-               [3.5, 3. , 4.5],
-               [0.5, 5. , 4.5],
-               [1.5, 5. , 4.5],
-               [2.5, 5. , 4.5],
-               [3.5, 5. , 4.5]])
-
-    .. collapse:: OMF ordering. Click to expand
-
-        >>> np.c_[xc, yc, zc]
-        array([[0.5, 1. , 1.5],
-               [0.5, 1. , 4.5],
-               [0.5, 3. , 1.5],
-               [0.5, 3. , 4.5],
-               [0.5, 5. , 1.5],
-               [0.5, 5. , 4.5],
-               [1.5, 1. , 1.5],
-               [1.5, 1. , 4.5],
-               [1.5, 3. , 1.5],
-               [1.5, 3. , 4.5],
-               [1.5, 5. , 1.5],
-               [1.5, 5. , 4.5],
-               [2.5, 1. , 1.5],
-               [2.5, 1. , 4.5],
-               [2.5, 3. , 1.5],
-               [2.5, 3. , 4.5],
-               [2.5, 5. , 1.5],
-               [2.5, 5. , 4.5],
-               [3.5, 1. , 1.5],
-               [3.5, 1. , 4.5],
-               [3.5, 3. , 1.5],
-               [3.5, 3. , 4.5],
-               [3.5, 5. , 1.5],
-               [3.5, 5. , 4.5]])
+    >>> np.c_[xc, yc, zc]
+    array([[0.5, 1. , 1.5],
+           [0.5, 1. , 4.5],
+           [0.5, 3. , 1.5],
+           [0.5, 3. , 4.5],
+           [0.5, 5. , 1.5],
+           [0.5, 5. , 4.5],
+           [1.5, 1. , 1.5],
+           [1.5, 1. , 4.5],
+           [1.5, 3. , 1.5],
+           [1.5, 3. , 4.5],
+           [1.5, 5. , 1.5],
+           [1.5, 5. , 4.5],
+           [2.5, 1. , 1.5],
+           [2.5, 1. , 4.5],
+           [2.5, 3. , 1.5],
+           [2.5, 3. , 4.5],
+           [2.5, 5. , 1.5],
+           [2.5, 5. , 4.5],
+           [3.5, 1. , 1.5],
+           [3.5, 1. , 4.5],
+           [3.5, 3. , 1.5],
+           [3.5, 3. , 4.5],
+           [3.5, 5. , 1.5],
+           [3.5, 5. , 4.5]])
     """
     dim = (nz, ny, nx)
     return np.reshape(arr, dim, order="C").ravel(order="F")
@@ -209,14 +205,15 @@ class InterfaceOMF(object):
         else:
             raise RuntimeError("This mesh is too high-dimensional for OMF")
         # Set rotation axes
-        geometry.axis_u = mesh.axis_u
-        geometry.axis_v = mesh.axis_v
-        geometry.axis_w = mesh.axis_w
+        orientation = mesh.orientation
+        geometry.axis_u = orientation[0]
+        geometry.axis_v = orientation[1]
+        geometry.axis_w = orientation[2]
         # Set the origin
         geometry.origin = mesh.origin
         # Make sure the geometry is built correctly
         geometry.validate()
-        # Make the volume elemet (the OMF object)
+        # Make the volume element (the OMF object)
         omfmesh = omf().VolumeElement(
             geometry=geometry,
         )
@@ -281,11 +278,14 @@ class InterfaceOMF(object):
         """Convert an :class:`omf.VolumeElement` to :class:`discretize.TensorMesh`."""
         geometry = element.geometry
         h = [geometry.tensor_u, geometry.tensor_v, geometry.tensor_w]
-        mesh = discretize.TensorMesh(h)
-        mesh.axis_u = geometry.axis_u
-        mesh.axis_v = geometry.axis_v
-        mesh.axis_w = geometry.axis_w
-        mesh.origin = geometry.origin
+        orientation = np.array(
+            [
+                geometry.axis_u,
+                geometry.axis_v,
+                geometry.axis_w,
+            ]
+        )
+        mesh = discretize.TensorMesh(h, origin=geometry.origin, orientation=orientation)
 
         data_dict = {}
         for data in element.data:

@@ -11,8 +11,6 @@ dependencies:
   - jupyter
   - sphinx
   - sphinx-gallery>=0.1.13
-  - sphinx-toolbox
-  - sphinxcontrib-apidoc
   - pydata-sphinx-theme
   - numpydoc>=1.5
   - pillow

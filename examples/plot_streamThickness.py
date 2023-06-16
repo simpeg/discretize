@@ -71,7 +71,7 @@ print(dataVec.shape)
 stream_opts = {"color": "w", "density": 2.0}
 pcolor_opts = {"cmap": "viridis"}
 
-dat = mesh.plotSlice(
+dat = mesh.plot_slice(
     dataVec,
     ax=ax,
     normal="Z",

@@ -53,7 +53,7 @@ class TestOcTreePlotting(unittest.TestCase):
         # Nodes
         mod_n = np.random.rand(mesh.n_nodes)
         mesh.plot_slice(mod_n, v_type="N")
-        plt.close()
+        plt.close("all")
 
 
 class TestQuadTreePlotting(unittest.TestCase):
@@ -98,4 +98,4 @@ class TestQuadTreePlotting(unittest.TestCase):
         # Nodes
         mod_n = np.random.rand(mesh.n_nodes)
         mesh.plot_image(mod_n, v_type="N", ax=ax)
-        plt.close()
+        plt.close("all")
