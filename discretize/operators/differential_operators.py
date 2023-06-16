@@ -3227,49 +3227,6 @@ class DiffOperators(BaseMesh):
         return e_to_f
 
     @property
-    def _average_edge_to_face_by_component(self):  # NOQA D102
-        # Documentation inherited from discretize.base.BaseMesh
-        if self.dim == 1:
-            return self.average_cell_to_face
-
-        elif self.dim == 2:
-            n1, n2 = self.shape_cells
-
-            e_to_f = sp.bmat(
-                [
-                    [None, sp.identity(n2, format="csr")],
-                    [sp.identity(n1, format="csr"), None],
-                ],
-                format="csr",
-            )
-            return e_to_f
-
-        else:
-            n1, n2, n3 = self.shape_cells
-            
-            ex_to_fy = kron3(av(n3), speye(n2 + 1), speye(n1))
-            ex_to_fz = kron3(speye(n3 + 1), av(n2), speye(n1))
-
-            ey_to_fx = kron3(av(n3), speye(n2), speye(n1 + 1))
-            ey_to_fz = kron3(speye(n3 + 1), speye(n2), av(n1))
-
-            ez_to_fx = kron3(speye(n3), av(n2), speye(n1 + 1))
-            ez_to_fy = kron3(speye(n3), speye(n2 + 1), av(n1))
-
-            e_to_f = sp.bmat(
-                [
-                    [None, ey_to_fx, None],
-                    [None, None, ez_to_fx],
-                    [ex_to_fy, None, None],
-                    [None, None, ez_to_fy],
-                    [ex_to_fz, None, None],
-                    [None, ey_to_fz, None],
-                ],
-                format="csr",
-            )
-            return e_to_f
-
-    @property
     def average_node_to_cell(self):  # NOQA D102
         # Documentation inherited from discretize.base.BaseMesh
         if getattr(self, "_average_node_to_cell", None) is None:

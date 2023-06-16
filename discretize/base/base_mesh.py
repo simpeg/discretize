@@ -3001,14 +3001,6 @@ class BaseMesh:
         )
 
     @property
-    def average_edge_to_face_by_component(self):
-        r"""Averaging operator from edges to faces (vector quantities)."""
-
-        raise NotImplementedError(
-            f"average_edge_to_face_by_component not implemented for {type(self)}"
-        )
-
-    @property
     def average_node_to_cell(self):
         r"""Averaging operator from nodes to cell centers (scalar quantities).
 

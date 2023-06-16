@@ -1520,42 +1520,6 @@ class CylindricalMesh(
         return self._average_edge_to_cell_vector
 
     @property
-    def _average_edge_to_face_by_component(self):  # NOQA D102
-        # Documentation inherited from discretize.base.BaseMesh
-        
-        if self.is_symmetric:
-
-            ey_to_fx = self.average_node_to_face_x
-            ey_to_fz = self.average_node_to_face_y
-
-            return sp.vstack([ey_to_fx, ey_to_fz], format="csr")
-
-        else:
-
-            n1, n2, n3 = self.shape_cells
-            
-            ex_to_fy = kron3(av(n3), speye(n2 + 1), speye(n1)) * self._deflation_matrix("Ex", as_ones=True).T
-            ex_to_fz = kron3(speye(n3 + 1), av(n2), speye(n1)) * self._deflation_matrix("Ex", as_ones=True).T
-
-            ey_to_fx = kron3(av(n3), speye(n2), speye(n1 + 1)) * self._deflation_matrix("Ey", as_ones=True).T
-            ey_to_fz = kron3(speye(n3 + 1), speye(n2), av(n1)) * self._deflation_matrix("Ey", as_ones=True).T
-
-            ez_to_fx = kron3(speye(n3), av(n2), speye(n1 + 1)) * self._deflation_matrix("Ez", as_ones=True).T
-            ez_to_fy = kron3(speye(n3), speye(n2 + 1), av(n1)) * self._deflation_matrix("Ez", as_ones=True).T
-
-            e_to_f = sp.bmat(
-                [
-                    [None, ey_to_fx, None],
-                    [None, None, ez_to_fx],
-                    [ex_to_fy, None, None],
-                    [None, None, ez_to_fy],
-                    [ex_to_fz, None, None],
-                    [None, ey_to_fz, None],
-                ],
-                format="csr",
-            )
-            return e_to_f
-    @property
     def average_edge_to_face(self):  # NOQA D102
         # Documentation inherited from discretize.base.BaseMesh
         if self.is_symmetric:
