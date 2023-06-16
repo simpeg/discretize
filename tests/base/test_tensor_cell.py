@@ -498,102 +498,71 @@ class TestNodes:
         assert cell_3D.nodes == [69, 70, 73, 74, 89, 90, 93, 94]
 
 
-class TestGetNeighbors:
-    """Test the get_neighbors method"""
+class TestEdges:
+    """Test the edges property."""
 
     @pytest.fixture
     def mesh_1D(self):
-        """Sample 1D TensorMesh"""
+        """Sample 1D TensorMesh."""
         h = [5]
         origin = [-2.0]
         return TensorMesh(h, origin)
 
     @pytest.fixture
     def mesh_2D(self):
-        """Sample 2D TensorMesh"""
+        """Sample 2D TensorMesh."""
         h = [5, 4]
         origin = [-2.0, 5.0]
         return TensorMesh(h, origin)
 
     @pytest.fixture
     def mesh_3D(self):
-        """Sample 3D TensorMesh"""
+        """Sample 3D TensorMesh."""
         h = [5, 4, 10]
         origin = [-2.0, 5.0, -12.0]
         return TensorMesh(h, origin)
 
-    @pytest.mark.parametrize("index", (0, 3, 4))
-    def test_get_neighbors_1D(self, mesh_1D, index):
-        """
-        Test the get_neighbors method on a 1D mesh
-        """
+    def test_edges_1D(self, mesh_1D):
+        """Test the edges property on a 1D mesh."""
+        index = (2,)
         cell = mesh_1D[index]
-        neighbors = cell.get_neighbors(mesh_1D)
-        if index == 0:
-            expected_neighbors = [mesh_1D[1]]
-        elif index == 3:
-            expected_neighbors = [mesh_1D[2], mesh_1D[4]]
-        elif index == 4:
-            expected_neighbors = [mesh_1D[3]]
-        assert expected_neighbors == neighbors
+        xmin, xmax = cell.bounds
+        true_edges = [(xmin + xmax) / 2]
+        edges = [mesh_1D.edges[i] for i in cell.edges]
+        assert true_edges == edges
 
-    @pytest.mark.parametrize("index_x", (0, 3, 4))
-    @pytest.mark.parametrize("index_y", (0, 1, 3))
-    def test_get_neighbors_2D(self, mesh_2D, index_x, index_y):
-        """
-        Test the get_neighbors method on a 2D mesh
-        """
-        cell = mesh_2D[index_x, index_y]
-        neighbors = cell.get_neighbors(mesh_2D)
-        expected_neighbors = []
-        cell_index = cell.index_unraveled
-        if index_x == 0:
-            expected_neighbors += [mesh_2D[1, cell_index[1]]]
-        elif index_x == 3:
-            expected_neighbors += [mesh_2D[i, cell_index[1]] for i in (2, 4)]
-        elif index_x == 4:
-            expected_neighbors += [mesh_2D[3, cell_index[1]]]
-        if index_y == 0:
-            expected_neighbors += [mesh_2D[cell_index[0], 1]]
-        elif index_y == 1:
-            expected_neighbors += [mesh_2D[cell_index[0], j] for j in (0, 2)]
-        elif index_y == 3:
-            expected_neighbors += [mesh_2D[cell_index[0], 2]]
-        assert expected_neighbors == neighbors
+    def test_edges_2D(self, mesh_2D):
+        """Test the edges property on a 2D mesh."""
+        index = (2, 3)
+        cell = mesh_2D[index]
+        xmin, xmax, ymin, ymax = cell.bounds
+        true_edges = [
+            np.array([(xmin + xmax) / 2, ymin]),
+            np.array([(xmin + xmax) / 2, ymax]),
+            np.array([xmin, (ymin + ymax) / 2]),
+            np.array([xmax, (ymin + ymax) / 2]),
+        ]
+        edges = [mesh_2D.edges[i] for i in cell.edges]
+        np.testing.assert_array_equal(true_edges, edges)
 
-    @pytest.mark.parametrize("index_x", (0, 3, 4))
-    @pytest.mark.parametrize("index_y", (0, 1, 3))
-    @pytest.mark.parametrize("index_z", (0, 4, 9))
-    def test_get_neighbors_3D(self, mesh_3D, index_x, index_y, index_z):
-        """
-        Test the get_neighbors method on a 3D mesh
-        """
-        cell = mesh_3D[index_x, index_y, index_z]
-        neighbors = cell.get_neighbors(mesh_3D)
-        expected_neighbors = []
-        cell_index = cell.index_unraveled
-        if index_x == 0:
-            expected_neighbors += [mesh_3D[1, cell_index[1], cell_index[2]]]
-        elif index_x == 3:
-            expected_neighbors += [
-                mesh_3D[i, cell_index[1], cell_index[2]] for i in (2, 4)
-            ]
-        elif index_x == 4:
-            expected_neighbors += [mesh_3D[3, cell_index[1], cell_index[2]]]
-        if index_y == 0:
-            expected_neighbors += [mesh_3D[cell_index[0], 1, cell_index[2]]]
-        elif index_y == 1:
-            expected_neighbors += [
-                mesh_3D[cell_index[0], j, cell_index[2]] for j in (0, 2)
-            ]
-        elif index_y == 3:
-            expected_neighbors += [mesh_3D[cell_index[0], 2, cell_index[2]]]
-        if index_z == 0:
-            expected_neighbors += [mesh_3D[cell_index[0], cell_index[1], 1]]
-        elif index_z == 4:
-            expected_neighbors += [
-                mesh_3D[cell_index[0], cell_index[1], k] for k in (3, 5)
-            ]
-        elif index_z == 9:
-            expected_neighbors += [mesh_3D[cell_index[0], cell_index[1], 8]]
-        assert expected_neighbors == neighbors
+    def test_edges_3D(self, mesh_3D):
+        """Test the edges property on a 3D mesh."""
+        index = (2, 3, 4)
+        cell = mesh_3D[index]
+        xmin, xmax, ymin, ymax, zmin, zmax = cell.bounds
+        true_edges = [
+            np.array([(xmin + xmax) / 2, ymin, zmin]),
+            np.array([(xmin + xmax) / 2, ymax, zmin]),
+            np.array([(xmin + xmax) / 2, ymin, zmax]),
+            np.array([(xmin + xmax) / 2, ymax, zmax]),
+            np.array([xmin, (ymin + ymax) / 2, zmin]),
+            np.array([xmax, (ymin + ymax) / 2, zmin]),
+            np.array([xmin, (ymin + ymax) / 2, zmax]),
+            np.array([xmax, (ymin + ymax) / 2, zmax]),
+            np.array([xmin, ymin, (zmin + zmax) / 2]),
+            np.array([xmax, ymin, (zmin + zmax) / 2]),
+            np.array([xmin, ymax, (zmin + zmax) / 2]),
+            np.array([xmax, ymax, (zmin + zmax) / 2]),
+        ]
+        edges = [mesh_3D.edges[i] for i in cell.edges]
+        np.testing.assert_array_equal(true_edges, edges)
