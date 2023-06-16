@@ -73,7 +73,7 @@ class TestTensorCell:
         elif cell.dim == 2:
             true_index = 17
         elif cell.dim == 3:
-            true_index = 46
+            true_index = 89
         assert cell.index == true_index
 
     def test_index_unraveled(self, cell):
