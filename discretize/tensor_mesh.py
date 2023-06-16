@@ -163,7 +163,7 @@ class TensorMesh(
         return fmt
 
     def __iter__(self):
-        """Iterator over the cells."""
+        """Iterate over the cells."""
         iterator = (self[i] for i in range(len(self)))
         return iterator
 

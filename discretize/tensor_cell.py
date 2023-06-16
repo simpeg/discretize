@@ -1,13 +1,11 @@
-"""
-Cell class for TensorMesh
-"""
+"""Cell class for TensorMesh."""
 import itertools
 import numpy as np
 
 
 class TensorCell:
     """
-    Representation of a cell in a TensorMesh
+    Representation of a cell in a TensorMesh.
 
     Parameters
     ----------
@@ -31,6 +29,7 @@ class TensorCell:
         self._mesh_shape = mesh_shape
 
     def __repr__(self):
+        """Represent a TensorCell."""
         attributes = ", ".join(
             [
                 f"{attr}={getattr(self, attr)}"
@@ -40,6 +39,7 @@ class TensorCell:
         return f"TensorCell({attributes})"
 
     def __eq__(self, other):
+        """Check if this cell is the same as other one."""
         if not isinstance(other, TensorCell):
             raise TypeError(
                 f"Cannot compare an object of type '{other.__class__.__name__}' "
@@ -55,52 +55,40 @@ class TensorCell:
 
     @property
     def h(self):
-        """
-        Cell widths
-        """
+        """Cell widths."""
         return self._h
 
     @property
     def origin(self):
-        """
-        Coordinates of the origin of the cell
-        """
+        """Coordinates of the origin of the cell."""
         return self._origin
 
     @property
     def index(self):
-        """
-        Index of the cell in a TensorMesh
-        """
+        """Index of the cell in a TensorMesh."""
         return np.ravel_multi_index(
             self.index_unraveled, dims=self.mesh_shape, order="F"
         )
 
     @property
     def index_unraveled(self):
-        """
-        Unraveled index of the cell in a TensorMesh
-        """
+        """Unraveled index of the cell in a TensorMesh."""
         return self._index_unraveled
 
     @property
     def mesh_shape(self):
-        """
-        Shape of the parent mesh.
-        """
+        """Shape of the parent mesh."""
         return self._mesh_shape
 
     @property
     def dim(self):
-        """
-        Dimensions of the cell (1, 2 or 3)
-        """
+        """Dimensions of the cell (1, 2 or 3)."""
         return len(self.h)
 
     @property
     def center(self):
         """
-        Coordinates of the cell center
+        Coordinates of the cell center.
 
         Returns
         -------
@@ -113,7 +101,7 @@ class TensorCell:
     @property
     def bounds(self):
         """
-        Bounds of the cell
+        Bounds of the cell.
 
         Coordinates that define the bounds of the cell. Bounds are returned in
         the following order: ``x1``, ``x2``, ``y1``, ``y2``, ``z1``, ``z2``.
@@ -216,7 +204,7 @@ class TensorCell:
 
     def get_neighbors(self, mesh):
         """
-        Return the neighboring cells in the mesh
+        Return the neighboring cells in the mesh.
 
         Parameters
         ----------
