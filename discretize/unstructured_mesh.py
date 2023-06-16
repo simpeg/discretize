@@ -208,10 +208,10 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
 
     @property
     def edges(self):  # NOQA D102
-        if getattr(self, "_edges", None) is None:
-            self._edges = np.mean(self.nodes[self._edges], axis=1)
+        if getattr(self, "_edge_locs", None) is None:
+            self._edge_locs = np.mean(self.nodes[self._edges], axis=1)
         # Documentation inherited from discretize.base.BaseMesh
-        return self._edges
+        return self._edge_locs
 
     @property
     def edge_tangents(self):  # NOQA D102
@@ -239,9 +239,9 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
     @property
     def faces(self):  # NOQA D102
         # Documentation inherited from discretize.base.BaseMesh
-        if getattr(self, "_faces", None) is None:
-            self._faces = np.mean(self.nodes[self._faces], axis=1)
-        return self._faces
+        if getattr(self, "_face_locs", None) is None:
+            self._face_locs = np.mean(self.nodes[self._faces], axis=1)
+        return self._face_locs
 
     @property
     def face_areas(self):  # NOQA D102
