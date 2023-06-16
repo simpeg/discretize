@@ -200,6 +200,64 @@ class TensorCell:
                 for index in edges_y_indices
             ]
             edges_indices = edges_x_indices + edges_y_indices
+        elif self.dim == 3:
+            edges_x_shape = [
+                n if i == 0 else n + 1 for i, n in enumerate(self.mesh_shape)
+            ]
+            edges_y_shape = [
+                n if i == 1 else n + 1 for i, n in enumerate(self.mesh_shape)
+            ]
+            edges_z_shape = [
+                n if i == 2 else n + 1 for i, n in enumerate(self.mesh_shape)
+            ]
+            # Calculate total amount of edges_x and edges_y
+            n_edges_x = edges_x_shape[0] * edges_x_shape[1] * edges_x_shape[2]
+            n_edges_y = edges_y_shape[0] * edges_y_shape[1] * edges_y_shape[2]
+            # Get indices of edges_x
+            edges_x_indices = [
+                [
+                    self.index_unraveled[0],
+                    self.index_unraveled[1] + delta_y,
+                    self.index_unraveled[2] + delta_z,
+                ]
+                for delta_z in (0, 1)
+                for delta_y in (0, 1)
+            ]
+            edges_x_indices = [
+                np.ravel_multi_index(index, dims=edges_x_shape, order="F")
+                for index in edges_x_indices
+            ]
+            # Get indices of edges_y
+            edges_y_indices = [
+                [
+                    self.index_unraveled[0] + delta_x,
+                    self.index_unraveled[1],
+                    self.index_unraveled[2] + delta_z,
+                ]
+                for delta_z in (0, 1)
+                for delta_x in (0, 1)
+            ]
+            edges_y_indices = [
+                n_edges_x + np.ravel_multi_index(index, dims=edges_y_shape, order="F")
+                for index in edges_y_indices
+            ]
+            # Get indices of edges_z
+            edges_z_indices = [
+                [
+                    self.index_unraveled[0] + delta_x,
+                    self.index_unraveled[1] + delta_y,
+                    self.index_unraveled[2],
+                ]
+                for delta_y in (0, 1)
+                for delta_x in (0, 1)
+            ]
+            edges_z_indices = [
+                n_edges_x
+                + n_edges_y
+                + np.ravel_multi_index(index, dims=edges_z_shape, order="F")
+                for index in edges_z_indices
+            ]
+            edges_indices = edges_x_indices + edges_y_indices + edges_z_indices
         return edges_indices
 
     def get_neighbors(self, mesh):
