@@ -1880,6 +1880,46 @@ class BaseMesh:
             f"get_edge_inner_product not implemented for {type(self)}"
         )
 
+
+    def get_edge_inner_product_face_properties(
+        self,
+        model=None,
+        invert_model=False,
+        invert_matrix=False,
+        do_fast=True,
+        **kwargs,
+    ):
+
+        raise NotImplementedError(
+            f"get_edge_inner_product_face_properties not implemented for {type(self)}"
+        )
+
+    def get_face_inner_product_face_properties(
+        self,
+        model=None,
+        invert_model=False,
+        invert_matrix=False,
+        do_fast=True,
+        **kwargs,
+    ):
+
+        raise NotImplementedError(
+            f"get_edge_inner_product_face_properties not implemented for {type(self)}"
+        )
+
+    def get_edge_inner_product_edge_properties(
+        self,
+        model=None,
+        invert_model=False,
+        invert_matrix=False,
+        do_fast=True,
+        **kwargs,
+    ):
+
+        raise NotImplementedError(
+            f"get_edge_inner_product_face_properties not implemented for {type(self)}"
+        )
+
     def get_face_inner_product_deriv(
         self, model, do_fast=True, invert_model=False, invert_matrix=False, **kwargs
     ):

@@ -161,6 +161,161 @@ class TestInnerProducts(discretize.tests.OrderTest):
         self.invert_model = True
         self.orderTest()
 
+class TestInnerProductsFaceProperties(discretize.tests.OrderTest):
+    """Integrate a function over a surface within a unit cube domain
+    using edgeInnerProducts and faceInnerProducts."""
+
+    meshTypes = ["uniformTensorMesh"]
+    meshDimension = 3
+    meshSizes = [16, 32]
+
+    def getError(self):
+        call = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1], xyz[:, 2])
+
+        ex = lambda x, y, z: x**2 + y * z
+        ey = lambda x, y, z: (z**2) * x + y * z
+        ez = lambda x, y, z: y**2 + x * z
+
+        tau_x = lambda x, y, z: y * z + 1  # x-face properties
+        tau_y = lambda x, y, z: x * z + 2  # y-face properties
+        tau_z = lambda x, y, z: 3 + x * y  # z-face properties
+        
+        tau = 3 * [None]
+        for ii, comp in enumerate(['x', 'y', 'z']):
+            k = np.isclose(eval('self.M.faces_{}'.format(comp))[:, ii], 0.5)  # x, y or z location for each plane
+            tau_ii = 1e-8*eval('np.ones(self.M.nF{})'.format(comp))  # effectively zeros but stable
+            tau_ii[k] = eval('call(tau_{}, self.M.faces_{}[k, :])'.format(comp, comp))
+            tau[ii] = tau_ii
+        tau = np.hstack(tau)
+        
+        # integrate components parallel to the plane of integration
+        if self.location == "edges":
+            
+            analytic = 5.02760416666667  # Found using sympy.
+            
+            cart = lambda g: np.c_[call(ex, g), call(ey, g), call(ez, g)]
+            
+            Ec = np.vstack(
+                (cart(self.M.gridEx), cart(self.M.gridEy), cart(self.M.gridEz))
+            )
+            E = self.M.project_edge_vector(Ec)
+
+            if self.invert_model:     
+                A = self.M.get_edge_inner_product_face_properties(1/tau, invert_model=True)
+            else:
+                A = self.M.get_edge_inner_product_face_properties(tau)
+            
+            numeric = E.T.dot(A.dot(E))
+            
+        # integrate component normal to the plane of integration
+        elif self.location == "faces":
+            
+            analytic = 2.66979166666667  # Found using sympy.
+            
+            cart = lambda g: np.c_[call(ex, g), call(ey, g), call(ez, g)]
+            
+            Fc = np.vstack(
+                (cart(self.M.gridFx), cart(self.M.gridFy), cart(self.M.gridFz))
+            )
+            F = self.M.project_face_vector(Fc)
+
+            if self.invert_model:
+                A = self.M.get_face_inner_product_face_properties(1/tau, invert_model=True)
+            else:
+                A = self.M.get_face_inner_product_face_properties(tau)
+            
+            numeric = F.T.dot(A.dot(F))
+
+        err = np.abs(numeric - analytic)
+        
+        return err
+
+    def test_order1_edges(self):
+        self.name = "Edge Inner Product - Isotropic"
+        self.location = "edges"
+        self.invert_model = False
+        self.orderTest()
+
+    def test_order1_edges_invert_model(self):
+        self.name = "Edge Inner Product - Isotropic - invert_model"
+        self.location = "edges"
+        self.invert_model = True
+        self.orderTest()
+
+    def test_order1_faces(self):
+        self.name = "Face Inner Product - Isotropic"
+        self.location = "faces"
+        self.invert_model = False
+        self.orderTest()
+
+    def test_order1_faces_invert_model(self):
+        self.name = "Face Inner Product - Isotropic - invert_model"
+        self.location = "faces"
+        self.invert_model = True
+        self.orderTest()
+
+class TestInnerProductsEdgeProperties(discretize.tests.OrderTest):
+    """Integrate a function over a line within a unit cube domain
+    using edgeInnerProducts."""
+
+    meshTypes = ["uniformTensorMesh"]
+    meshDimension = 3
+    meshSizes = [16, 32]
+
+    def getError(self):
+        call = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1], xyz[:, 2])
+
+        ex = lambda x, y, z: x**2 + y * z
+        ey = lambda x, y, z: (z**2) * x + y * z
+        ez = lambda x, y, z: y**2 + x * z
+
+        tau_x = lambda x, y, z: x + 1  # x-face properties
+        tau_y = lambda x, y, z: y + 2  # y-face properties
+        tau_z = lambda x, y, z: 3*z + 1  # z-face properties
+        
+        tau = 3 * [None]
+        for ii, comp in enumerate(['x', 'y', 'z']):
+            k = (
+                np.isclose(eval('self.M.edges_{}'.format(comp))[:, ii-1], 0.5) &
+                np.isclose(eval('self.M.edges_{}'.format(comp))[:, ii-2], 0.5)
+            )  # x, y or z location for each line
+            tau_ii = 1e-8*eval('np.ones(self.M.nE{})'.format(comp))  # effectively zeros but stable
+            tau_ii[k] = eval('call(tau_{}, self.M.edges_{}[k, :])'.format(comp, comp))
+            tau[ii] = tau_ii
+        tau = np.hstack(tau)
+            
+        analytic = 1.98906250000000  # Found using sympy.
+        
+        cart = lambda g: np.c_[call(ex, g), call(ey, g), call(ez, g)]
+        
+        Ec = np.vstack(
+            (cart(self.M.gridEx), cart(self.M.gridEy), cart(self.M.gridEz))
+        )
+        E = self.M.project_edge_vector(Ec)
+
+        if self.invert_model:     
+            A = self.M.get_edge_inner_product_edge_properties(1/tau, invert_model=True)
+        else:
+            A = self.M.get_edge_inner_product_edge_properties(tau)
+        
+        numeric = E.T.dot(A.dot(E))
+
+        err = np.abs(numeric - analytic)
+        
+        return err
+
+    def test_order1_edges(self):
+        self.name = "Edge Inner Product - Isotropic"
+        self.location = "edges"
+        self.invert_model = False
+        self.orderTest()
+
+    def test_order1_edges_invert_model(self):
+        self.name = "Edge Inner Product - Isotropic - invert_model"
+        self.location = "edges"
+        self.invert_model = True
+        self.orderTest()
+
 
 class TestInnerProducts2D(discretize.tests.OrderTest):
     """Integrate an function over a unit cube domain

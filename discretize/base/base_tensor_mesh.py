@@ -994,85 +994,139 @@ class BaseTensorMesh(BaseRegularMesh):
             return None
 
 
-    # def _fastEdgeMassMatrixFaceProperties(
-    #     self, model, invert_model=False, invert_matrix=False
-    # ):
-    #     """Fast version of get_edge_mass_matrix_face_properties.
+    def _fastFacePropertiesInnerProduct(
+        self, projection_type, model=None, invert_model=False, invert_matrix=False
+    ):
+        """Fast version of get_face_inner_product_deriv.
 
-    #     This does not handle the case of a full tensor property.
+        This does not handle the case of a full tensor property.
 
-    #     Parameters
-    #     ----------
-    #     model : numpy.ndarray
-    #         material property (tensor properties are possible) at each cell center (nF, (1 or 2))
+        Parameters
+        ----------
+        model : numpy.ndarray
+            material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
 
-    #     invert_model : bool
-    #         inverts the material property
+        projection_type : str
+            'edges' or 'faces'
 
-    #     invert_matrix : bool
-    #         inverts the matrix
+        invert_model : bool
+            inverts the material property
 
-    #     Returns
-    #     -------
-    #     (n_edges, n_edges) scipy.sparse.csr_matrix
-    #         M, the mass matrix
+        invert_matrix : bool
+            inverts the matrix
 
-    #     """
+        Returns
+        -------
+        (n_faces, n_faces) or (n_edges, n_edges) scipy.sparse.csr_matrix
+            M, the inner product matrix
 
-    #     if self.dim == 1:
-    #         raise NotImplementedError("Mass matrix for face properties not implemented for 1D meshes.")
+        """
+        projection_type = projection_type[0].upper()
+        if projection_type not in ["F", "E"]:
+            raise ValueError("projection_type must be 'F' for faces or 'E' for edges")
 
-    #     if invert_model:
-    #         model = 1.0 / model
+        if model is None:
+            model = np.ones(self.nF)
 
-    #     # Define the model on all faces
-    #     if is_scalar(model):
-    #         model = model * np.ones(self.nF)
-    #     elif len(model) == self.dim:
-    #         model = np.hstack([model[ii]*np.ones(self.vnF[ii]) for ii in range(0, self.dim)])
+        if invert_model:
+            model = 1.0 / model
 
-    #     # number of elements we are averaging (equals dim for regular
-    #     # meshes, but for cyl, where we use symmetry, it is 1 for edge
-    #     # variables)
-    #     if self._meshType == "CYL":
-    #         n_elements = 1
-    #     else:
-    #         n_elements = self.dim
+        if is_scalar(model):
+            model = model * np.ones(self.nF)
+        elif len(model) == self.dim:
+            model = np.r_[
+                [model[ii]*self.vnF[ii] for ii in range(0, self.dim)]
+            ]
 
-    #     # Isotropic
-    #     if model.size == self.nF:
+        # number of elements we are averaging (equals dim for regular
+        # meshes, but for cyl, where we use symmetry, it is 1 for edge
+        # variables and 2 for face variables)
+        if self._meshType == "CYL":
+            shape = getattr(self, "vn" + projection_type)
+            n_elements = sum([1 if x != 0 else 0 for x in shape])
+        else:
+            n_elements = self.dim - 1
 
-    #         # Extraction matrix
-    #         E = 
+        # Isotropic case only
+        if model.size == self.nF:
+            Aprop = self.face_areas * mkvc(model)
+            if projection_type == 'E':
+                Av = getattr(self, "average_edge_to_face")
+                M = n_elements * sdiag(Av.T * Aprop)
+            else:
+                M = sdiag(Aprop)
 
-    #         # Averaging matrix
-    #         Av = getattr(self, "_average_edge_to_face_by_component")
+        else:
+            raise NotImplementedError(
+                "FacePropertiesInnerProduct not implemented for anisotropy."
+            )
 
-    #         Vprop = self.face_areas * mkvc(model)
-            
-    #         M = n_elements * sdiag(Av.T * Vprop)
+        if invert_matrix:
+            return sdinv(M)
+        else:
+            return M
 
-    #     # TODO, FIX ANISOTROPIC CASE
-    #     # elif model.size == self.nF * self.dim:
-    #     #     Av = getattr(self, "aveE2FV")
+    def _fastEdgePropertiesInnerProduct(
+        self, model=None, invert_model=False, invert_matrix=False
+    ):
+        """Fast version of get_face_inner_product_deriv.
 
-    #     #     # if cyl, then only certain components are relevant due to symmetry
-    #     #     # for faces, x, z matters, for edges, y (which is theta) matters
-    #     #     if self._meshType == "CYL":
-    #     #         if projection_type == "E":
-    #     #             model = model[:, 1]  # this is the action of a projection mat
-    #     #         elif projection_type == "F":
-    #     #             model = model[:, [0, 2]]
+        This does not handle the case of a full tensor property.
 
-    #     #     V = sp.kron(sp.identity(n_elements), sdiag(self.cell_volumes))
-    #     #     M = sdiag(Av.T * V * mkvc(model))
-    #     else:
-    #         return None
+        Parameters
+        ----------
+        model : numpy.ndarray
+            material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
 
-    #     if invert_matrix:
-    #         return sdinv(M)
-    #     else:
-    #         return M
+        invert_model : bool
+            inverts the material property
+
+        invert_matrix : bool
+            inverts the matrix
+
+        Returns
+        -------
+        (n_edges, n_edges) scipy.sparse.csr_matrix
+            M, the inner product matrix
+
+        """
+        if model is None:
+            model = np.ones(self.nE)
+
+        if invert_model:
+            model = 1.0 / model
+
+        if is_scalar(model):
+            model = model * np.ones(self.nE)
+        elif len(model) == self.dim:
+            model = np.r_[
+                [model[ii]*self.vnE[ii] for ii in range(0, self.dim)]
+            ]
+
+
+        # number of elements we are averaging (equals dim for regular
+        # meshes, but for cyl, where we use symmetry, it is 1 for edge
+        # variables and 2 for face variables)
+        # if self._meshType == "CYL":
+        #     shape = getattr(self, "vn" + projection_type)
+        #     n_elements = sum([1 if x != 0 else 0 for x in shape])
+        # else:
+        #     n_elements = self.dim - 1
+
+        # Isotropic case only
+        if model.size == self.nE:
+            Lprop = self.edge_lengths * mkvc(model)
+            M = sdiag(Lprop)
+
+        else:
+            raise NotImplementedError(
+                "FacePropertiesInnerProduct not implemented for anisotropy."
+            )
+
+        if invert_matrix:
+            return sdinv(M)
+        else:
+            return M
 
 
     # DEPRECATED
