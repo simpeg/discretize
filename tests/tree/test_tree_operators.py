@@ -465,7 +465,7 @@ class TestTreeInnerProducts(discretize.tests.OrderTest):
         self.orderTest()
 
 
-class TestInnerProductsFaceProperties(discretize.tests.OrderTest):
+class TestInnerProductsFaceProperties3D(discretize.tests.OrderTest):
     """Integrate a function over a surface within a unit cube domain
     using edgeInnerProducts and faceInnerProducts."""
 
@@ -558,7 +558,7 @@ class TestInnerProductsFaceProperties(discretize.tests.OrderTest):
         self.invert_model = True
         self.orderTest()
 
-class TestInnerProductsEdgeProperties(discretize.tests.OrderTest):
+class TestInnerProductsEdgeProperties3D(discretize.tests.OrderTest):
     """Integrate a function over a line within a unit cube domain
     using edgeInnerProducts."""
 
@@ -761,6 +761,158 @@ class TestTreeInnerProducts2D(discretize.tests.OrderTest):
         self.name = "2D Face Inner Product - Full Tensor - invert_model"
         self.location = "faces"
         self.sigmaTest = 3
+        self.invert_model = True
+        self.orderTest()
+
+
+class TestInnerProductsFaceProperties2D(discretize.tests.OrderTest):
+    """Integrate a function over a surface within a unit cube domain
+    using edgeInnerProducts and faceInnerProducts."""
+
+    meshTypes = ["uniformTree", "notatreeTree"]
+    meshDimension = 2
+    meshSizes = [16, 32]
+
+    def getError(self):
+        call = lambda fun, xy: fun(xy[:, 0], xy[:, 1])
+
+        ex = lambda x, y: x**2 + y
+        ey = lambda x, y: (y**2) * x
+
+        tau_x = lambda x, y: 2*y + 1  # x-face properties
+        tau_y = lambda x, y: x + 2    # y-face properties
+        
+        tau = 2 * [None]
+        for ii, comp in enumerate(['x', 'y']):
+            k = np.isclose(eval('self.M.faces_{}'.format(comp))[:, ii], 0.5)  # x, or y location for each plane
+            tau_ii = 1e-8*eval('np.ones(self.M.nF{})'.format(comp))  # effectively zeros but stable
+            tau_ii[k] = eval('call(tau_{}, self.M.faces_{}[k, :])'.format(comp, comp))
+            tau[ii] = tau_ii
+        tau = np.hstack(tau)
+        
+        # integrate components parallel to the plane of integration
+        if self.location == "edges":
+            
+            analytic = 2.24166666666667  # Found using sympy.
+            
+            cart = lambda g: np.c_[call(ex, g), call(ey, g)]
+            
+            Ec = np.vstack(
+                (cart(self.M.gridEx), cart(self.M.gridEy))
+            )
+            E = self.M.project_edge_vector(Ec)
+
+            if self.invert_model:     
+                A = self.M.get_edge_inner_product_face_properties(1/tau, invert_model=True)
+            else:
+                A = self.M.get_edge_inner_product_face_properties(tau)
+            
+            numeric = E.T.dot(A.dot(E))
+            
+        # integrate component normal to the plane of integration
+        elif self.location == "faces":
+            
+            analytic = 1.59895833333333  # Found using sympy.
+            
+            cart = lambda g: np.c_[call(ex, g), call(ey, g)]
+            
+            Fc = np.vstack(
+                (cart(self.M.gridFx), cart(self.M.gridFy))
+            )
+            F = self.M.project_face_vector(Fc)
+
+            if self.invert_model:
+                A = self.M.get_face_inner_product_face_properties(1/tau, invert_model=True)
+            else:
+                A = self.M.get_face_inner_product_face_properties(tau)
+            
+            numeric = F.T.dot(A.dot(F))
+
+        err = np.abs(numeric - analytic)
+        
+        return err
+
+    def test_order1_edges(self):
+        self.name = "Edge Inner Product - Isotropic"
+        self.location = "edges"
+        self.invert_model = False
+        self.orderTest()
+
+    def test_order1_edges_invert_model(self):
+        self.name = "Edge Inner Product - Isotropic - invert_model"
+        self.location = "edges"
+        self.invert_model = True
+        self.orderTest()
+
+    def test_order1_faces(self):
+        self.name = "Face Inner Product - Isotropic"
+        self.location = "faces"
+        self.invert_model = False
+        self.orderTest()
+
+    def test_order1_faces_invert_model(self):
+        self.name = "Face Inner Product - Isotropic - invert_model"
+        self.location = "faces"
+        self.invert_model = True
+        self.orderTest()
+
+class TestInnerProductsEdgeProperties2D(discretize.tests.OrderTest):
+    """Integrate a function over a line within a unit cube domain
+    using edgeInnerProducts."""
+
+    meshTypes = ["uniformTree", "notatreeTree"]
+    meshDimension = 2
+    meshSizes = [16, 32]
+
+    def getError(self):
+        call = lambda fun, xy: fun(xy[:, 0], xy[:, 1])
+
+        ex = lambda x, y: x**2 + y
+        ey = lambda x, y: (x**2) * y
+
+        tau_x = lambda x, y: x + 1  # x-face properties
+        tau_y = lambda x, y: y + 2  # y-face properties
+        
+        tau = 2 * [None]
+        for ii, comp in enumerate(['x', 'y']):
+            k = (
+                np.isclose(eval('self.M.edges_{}'.format(comp))[:, ii-1], 0.5) &
+                np.isclose(eval('self.M.edges_{}'.format(comp))[:, ii-2], 0.5)
+            )  # x, y or z location for each line
+            tau_ii = 1e-8*eval('np.ones(self.M.nE{})'.format(comp))  # effectively zeros but stable
+            tau_ii[k] = eval('call(tau_{}, self.M.edges_{}[k, :])'.format(comp, comp))
+            tau[ii] = tau_ii
+        tau = np.hstack(tau)
+            
+        analytic = 1.38229166666667  # Found using sympy.
+        
+        cart = lambda g: np.c_[call(ex, g), call(ey, g)]
+        
+        Ec = np.vstack(
+            (cart(self.M.gridEx), cart(self.M.gridEy))
+        )
+        E = self.M.project_edge_vector(Ec)
+
+        if self.invert_model:     
+            A = self.M.get_edge_inner_product_edge_properties(1/tau, invert_model=True)
+        else:
+            A = self.M.get_edge_inner_product_edge_properties(tau)
+        
+        numeric = E.T.dot(A.dot(E))
+
+        err = np.abs(numeric - analytic)
+        
+        return err
+
+    def test_order1_edges(self):
+        self.name = "Edge Inner Product - Isotropic"
+        self.location = "edges"
+        self.invert_model = False
+        self.orderTest()
+
+    def test_order1_edges_invert_model(self):
+        self.name = "Edge Inner Product - Isotropic - invert_model"
+        self.location = "edges"
         self.invert_model = True
         self.orderTest()
 
