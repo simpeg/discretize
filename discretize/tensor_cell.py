@@ -174,7 +174,7 @@ class TensorCell:
         list of int
         """
         if self.dim == 1:
-            edges_indices = self.index_unraveled
+            edges_indices = [self.index]
         elif self.dim == 2:
             # Get shape of edges grids (for edges_x and edges_y)
             edges_x_shape = [self.mesh_shape[0], self.mesh_shape[1] + 1]
@@ -259,6 +259,101 @@ class TensorCell:
             ]
             edges_indices = edges_x_indices + edges_y_indices + edges_z_indices
         return edges_indices
+
+    @property
+    def faces(self):
+        """
+        Indices for cell's faces within its parent mesh.
+
+        Returns
+        -------
+        list of int
+        """
+        if self.dim == 1:
+            faces_indices = [self.index, self.index + 1]
+        elif self.dim == 2:
+            # Get shape of faces grids
+            # (faces_x are normal to x and faces_y are normal to y)
+            faces_x_shape = [self.mesh_shape[0] + 1, self.mesh_shape[1]]
+            faces_y_shape = [self.mesh_shape[0], self.mesh_shape[1] + 1]
+            # Calculate total amount of faces_x
+            n_faces_x = faces_x_shape[0] * faces_x_shape[1]
+            # Get indices of faces_x
+            faces_x_indices = [
+                [self.index_unraveled[0] + delta, self.index_unraveled[1]]
+                for delta in (0, 1)
+            ]
+            faces_x_indices = [
+                np.ravel_multi_index(index, dims=faces_x_shape, order="F")
+                for index in faces_x_indices
+            ]
+            # Get indices of faces_y
+            faces_y_indices = [
+                [self.index_unraveled[0], self.index_unraveled[1] + delta]
+                for delta in (0, 1)
+            ]
+            faces_y_indices = [
+                n_faces_x + np.ravel_multi_index(index, dims=faces_y_shape, order="F")
+                for index in faces_y_indices
+            ]
+            faces_indices = faces_x_indices + faces_y_indices
+        elif self.dim == 3:
+            # Get shape of faces grids
+            faces_x_shape = [
+                n + 1 if i == 0 else n for i, n in enumerate(self.mesh_shape)
+            ]
+            faces_y_shape = [
+                n + 1 if i == 1 else n for i, n in enumerate(self.mesh_shape)
+            ]
+            faces_z_shape = [
+                n + 1 if i == 2 else n for i, n in enumerate(self.mesh_shape)
+            ]
+            # Calculate total amount of faces_x and faces_y
+            n_faces_x = faces_x_shape[0] * faces_x_shape[1] * faces_x_shape[2]
+            n_faces_y = faces_y_shape[0] * faces_y_shape[1] * faces_y_shape[2]
+            # Get indices of faces_x
+            faces_x_indices = [
+                [
+                    self.index_unraveled[0] + delta,
+                    self.index_unraveled[1],
+                    self.index_unraveled[2],
+                ]
+                for delta in (0, 1)
+            ]
+            faces_x_indices = [
+                np.ravel_multi_index(index, dims=faces_x_shape, order="F")
+                for index in faces_x_indices
+            ]
+            # Get indices of faces_y
+            faces_y_indices = [
+                [
+                    self.index_unraveled[0],
+                    self.index_unraveled[1] + delta,
+                    self.index_unraveled[2],
+                ]
+                for delta in (0, 1)
+            ]
+            faces_y_indices = [
+                n_faces_x + np.ravel_multi_index(index, dims=faces_y_shape, order="F")
+                for index in faces_y_indices
+            ]
+            # Get indices of faces_z
+            faces_z_indices = [
+                [
+                    self.index_unraveled[0],
+                    self.index_unraveled[1],
+                    self.index_unraveled[2] + delta,
+                ]
+                for delta in (0, 1)
+            ]
+            faces_z_indices = [
+                n_faces_x
+                + n_faces_y
+                + np.ravel_multi_index(index, dims=faces_z_shape, order="F")
+                for index in faces_z_indices
+            ]
+            faces_indices = faces_x_indices + faces_y_indices + faces_z_indices
+        return faces_indices
 
     def get_neighbors(self, mesh):
         """

@@ -566,3 +566,67 @@ class TestEdges:
         ]
         edges = [mesh_3D.edges[i] for i in cell.edges]
         np.testing.assert_array_equal(true_edges, edges)
+
+
+class TestFaces:
+    """Test the faces property."""
+
+    @pytest.fixture
+    def mesh_1D(self):
+        """Sample 1D TensorMesh."""
+        h = [5]
+        origin = [-2.0]
+        return TensorMesh(h, origin)
+
+    @pytest.fixture
+    def mesh_2D(self):
+        """Sample 2D TensorMesh."""
+        h = [5, 4]
+        origin = [-2.0, 5.0]
+        return TensorMesh(h, origin)
+
+    @pytest.fixture
+    def mesh_3D(self):
+        """Sample 3D TensorMesh."""
+        h = [5, 4, 10]
+        origin = [-2.0, 5.0, -12.0]
+        return TensorMesh(h, origin)
+
+    def test_faces_1D(self, mesh_1D):
+        """Test the faces property on a 1D mesh."""
+        index = (2,)
+        cell = mesh_1D[index]
+        xmin, xmax = cell.bounds
+        true_faces = [xmin, xmax]
+        faces = [mesh_1D.faces[i] for i in cell.faces]
+        assert true_faces == faces
+
+    def test_faces_2D(self, mesh_2D):
+        """Test the faces property on a 2D mesh."""
+        index = (2, 3)
+        cell = mesh_2D[index]
+        xmin, xmax, ymin, ymax = cell.bounds
+        true_faces = [
+            np.array([xmin, (ymin + ymax) / 2]),
+            np.array([xmax, (ymin + ymax) / 2]),
+            np.array([(xmin + xmax) / 2, ymin]),
+            np.array([(xmin + xmax) / 2, ymax]),
+        ]
+        faces = [mesh_2D.faces[i] for i in cell.faces]
+        np.testing.assert_array_equal(true_faces, faces)
+
+    def test_faces_3D(self, mesh_3D):
+        """Test the faces property on a 3D mesh."""
+        index = (2, 3, 4)
+        cell = mesh_3D[index]
+        xmin, xmax, ymin, ymax, zmin, zmax = cell.bounds
+        true_faces = [
+            np.array([xmin, (ymin + ymax) / 2, (zmin + zmax) / 2]),
+            np.array([xmax, (ymin + ymax) / 2, (zmin + zmax) / 2]),
+            np.array([(xmin + xmax) / 2, ymin, (zmin + zmax) / 2]),
+            np.array([(xmin + xmax) / 2, ymax, (zmin + zmax) / 2]),
+            np.array([(xmin + xmax) / 2, (ymin + ymax) / 2, zmin]),
+            np.array([(xmin + xmax) / 2, (ymin + ymax) / 2, zmax]),
+        ]
+        faces = [mesh_3D.faces[i] for i in cell.faces]
+        np.testing.assert_array_equal(true_faces, faces)
