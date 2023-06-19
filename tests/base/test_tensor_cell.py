@@ -1,6 +1,4 @@
-"""
-Test TensorCell
-"""
+"""Test TensorCell."""
 import pytest
 import numpy as np
 
