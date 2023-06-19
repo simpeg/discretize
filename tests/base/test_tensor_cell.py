@@ -25,7 +25,7 @@ from discretize.tensor_mesh import _slice_to_index
     ],
 )
 def test_slice_to_index(slice_indices, expected_result):
-    """Test private _slice_to_index function"""
+    """Test private _slice_to_index function."""
     end = 8
     indices = tuple(i for i in _slice_to_index(slice_indices, end))
     expected_result = tuple(i for i in expected_result)
@@ -33,11 +33,11 @@ def test_slice_to_index(slice_indices, expected_result):
 
 
 class TestTensorCell:
+    """Test attributes of TensorCell."""
+
     @pytest.fixture(params=("1D", "2D", "3D"))
     def cell(self, request):
-        """
-        Sample TensorCell
-        """
+        """Sample TensorCell."""
         dim = request.param
         if dim == "1D":
             h = np.array([4.0])
@@ -57,7 +57,7 @@ class TestTensorCell:
         return TensorCell(h, origin, index_unraveled, mesh_shape)
 
     def test_center(self, cell):
-        """Test center property"""
+        """Test center property."""
         if cell.dim == 1:
             true_center = (0.0,)
         elif cell.dim == 2:
@@ -67,7 +67,7 @@ class TestTensorCell:
         assert all(cell.center == true_center)
 
     def test_index(self, cell):
-        """Test index property"""
+        """Test index property."""
         if cell.dim == 1:
             true_index = 1
         elif cell.dim == 2:
@@ -77,7 +77,7 @@ class TestTensorCell:
         assert cell.index == true_index
 
     def test_index_unraveled(self, cell):
-        """Test index_unraveled property"""
+        """Test index_unraveled property."""
         if cell.dim == 1:
             true_index_unraveled = (1,)
         elif cell.dim == 2:
@@ -87,7 +87,7 @@ class TestTensorCell:
         assert cell.index_unraveled == true_index_unraveled
 
     def test_bounds(self, cell):
-        """Test bounds property"""
+        """Test bounds property."""
         if cell.dim == 1:
             true_bounds = (-2.0, 2.0)
         elif cell.dim == 2:
@@ -118,6 +118,8 @@ class TestTensorCell:
             assert cell == other_cell
 
     def test_eq_invalid_type(self, cell):
+        """Test if error is raised when comparing other class to a TensorCell."""
+
         class Dummy:
             def __init__(self):
                 pass
@@ -129,11 +131,11 @@ class TestTensorCell:
 
 
 class TestTensorMeshCells:
+    """Test TensorMesh iterator and its resulting cells."""
+
     @pytest.fixture(params=("1D", "2D", "3D"))
     def mesh(self, request):
-        """
-        Sample TensorMesh
-        """
+        """Sample TensorMesh."""
         dim = request.param
         if dim == "1D":
             h = [5]
@@ -147,7 +149,7 @@ class TestTensorMeshCells:
         return TensorMesh(h, origin)
 
     def test_cell_centers(self, mesh):
-        """Test if cells in iterator are properly ordered by comparing cell centers"""
+        """Test if cells in iterator are properly ordered by comparing cell centers."""
         cell_centers = np.array([cell.center for cell in mesh])
         if mesh.dim == 1:
             # Ravel cell_centers if mesh is 1D
@@ -155,7 +157,7 @@ class TestTensorMeshCells:
         np.testing.assert_allclose(mesh.cell_centers, cell_centers)
 
     def test_cell_bounds(self, mesh):
-        """Test if cells in iterator are properly ordered by comparing cell bounds"""
+        """Test if cells in iterator are properly ordered by comparing cell bounds."""
         if mesh.dim == 1:
             x1 = mesh.cell_centers - mesh.h_gridded.ravel() / 2
             x2 = mesh.cell_centers + mesh.h_gridded.ravel() / 2
@@ -179,7 +181,7 @@ class TestTensorMeshCells:
 
     def test_cell_int_indices(self, mesh):
         """
-        Test if integer indices return the expected cell
+        Test if integer indices return the expected cell.
 
         Test if an integer index is correctly converted to a tuple of indices,
         i.e. unravelling using FORTRAN order.
@@ -209,9 +211,7 @@ class TestTensorMeshCells:
             assert cells == expected_cells
 
     def test_cell_negative_int_indices(self, mesh):
-        """
-        Test if negative integer indices return the expected cell
-        """
+        """Test if negative integer indices return the expected cell."""
         if mesh.dim == 1:
             assert mesh[-1] == mesh[5 - 1]
             assert mesh[-2] == mesh[5 - 2]
@@ -233,9 +233,7 @@ class TestTensorMeshCells:
     @pytest.mark.parametrize("stop", [None, 4, -1, "end"])
     @pytest.mark.parametrize("step", [None, 1, 2, -1])
     def test_cells_single_slice(self, mesh, start, stop, step):
-        """
-        Test if a single slice return the expected cells
-        """
+        """Test if a single slice return the expected cells."""
         if stop == "end":
             stop = len(mesh)
         cells = mesh[start:stop:step]
@@ -245,9 +243,7 @@ class TestTensorMeshCells:
 
     @pytest.mark.parametrize("step", (None, 1, 2, -1))
     def test_cells_slices(self, mesh, step):
-        """
-        Test if passing slices return the expected cells
-        """
+        """Test if passing slices return the expected cells."""
         start, stop = 1, 3
         if mesh.dim == 1:
             cells = mesh[start:stop:step]
@@ -271,9 +267,7 @@ class TestTensorMeshCells:
 
     @pytest.mark.parametrize("step", (None, 1, 2, -1))
     def test_cells_slices_negative_bounds(self, mesh, step):
-        """
-        Test if passing slices with negative bounds return the expected cells
-        """
+        """Test if passing slices with negative bounds return the expected cells."""
         if mesh.dim == 1:
             n = mesh.n_cells
             assert mesh[1:-1:step] == mesh[1 : n - 1 : step]
@@ -303,9 +297,7 @@ class TestTensorMeshCells:
             )
 
     def generate_expected_cells(self, mesh, start, stop, step):
-        """
-        Generate expected cells after slicing the mesh
-        """
+        """Generate expected cells after slicing the mesh."""
         if step is None:
             step = 1
         if mesh.dim == 2:
@@ -340,11 +332,11 @@ class TestTensorMeshCells:
 
 
 class TestNeighbors:
-    """Test the neighbors property"""
+    """Test the neighbors property."""
 
     @pytest.fixture
     def sample_1D(self):
-        """Cell attributes for building a 1D cell"""
+        """Cell attributes for building a 1D cell."""
         h = [3.1]
         origin = [-2.3]
         mesh_shape = [5]
@@ -352,7 +344,7 @@ class TestNeighbors:
 
     @pytest.fixture
     def sample_2D(self):
-        """Cell attributes for building a 2D cell"""
+        """Cell attributes for building a 2D cell."""
         h = [3.1, 5.6]
         origin = [-2.3, 4.1]
         mesh_shape = [5, 4]
@@ -360,7 +352,7 @@ class TestNeighbors:
 
     @pytest.fixture
     def sample_3D(self):
-        """Cell attributes for building a 3D cell"""
+        """Cell attributes for building a 3D cell."""
         h = [3.1, 5.6, 10.2]
         origin = [-2.3, 4.1, -3.4]
         mesh_shape = [5, 4, 10]
@@ -368,9 +360,7 @@ class TestNeighbors:
 
     @pytest.mark.parametrize("index", (0, 3, 4))
     def test_neighbors_1D(self, sample_1D, index):
-        """
-        Test the neighbors property on a 1D mesh
-        """
+        """Test the neighbors property on a 1D mesh."""
         h, origin, mesh_shape = sample_1D
         cell = TensorCell(
             h=h, origin=origin, index_unraveled=[index], mesh_shape=mesh_shape
@@ -387,9 +377,7 @@ class TestNeighbors:
     @pytest.mark.parametrize("index_x", (0, 3, 4))
     @pytest.mark.parametrize("index_y", (0, 1, 3))
     def test_neighbors_2D(self, sample_2D, index_x, index_y):
-        """
-        Test the neighbors property on a 2D mesh
-        """
+        """Test the neighbors property on a 2D mesh."""
         h, origin, mesh_shape = sample_2D
         cell = TensorCell(
             h=h,
@@ -421,9 +409,7 @@ class TestNeighbors:
     @pytest.mark.parametrize("index_y", (0, 1, 3))
     @pytest.mark.parametrize("index_z", (0, 4, 9))
     def test_neighbors_3D(self, sample_3D, index_x, index_y, index_z):
-        """
-        Test the neighbors property on a 3D mesh
-        """
+        """Test the neighbors property on a 3D mesh."""
         h, origin, mesh_shape = sample_3D
         cell = TensorCell(
             h=h,
@@ -459,16 +445,16 @@ class TestNeighbors:
 
 
 class TestNodes:
-    """Test the nodes property"""
+    """Test the nodes property."""
 
     @pytest.fixture
     def cell_1D(self):
-        """Sample 1D TensorCell"""
+        """Sample 1D TensorCell."""
         return TensorCell(h=[3.4], origin=[-2.3], index_unraveled=[1], mesh_shape=[3])
 
     @pytest.fixture
     def cell_2D(self):
-        """Sample 1D TensorCell"""
+        """Sample 1D TensorCell."""
         cell = TensorCell(
             h=[3.4, 4.3], origin=[-2.3, 0.3], index_unraveled=[1, 2], mesh_shape=[3, 4]
         )
@@ -476,7 +462,7 @@ class TestNodes:
 
     @pytest.fixture
     def cell_3D(self):
-        """Sample 1D TensorCell"""
+        """Sample 1D TensorCell."""
         cell = TensorCell(
             h=[3.4, 4.3, 5.6],
             origin=[-2.3, 0.3, 3.1],
@@ -486,15 +472,15 @@ class TestNodes:
         return cell
 
     def test_nodes_indices_1D(self, cell_1D):
-        """Test if nodes property return the expected indices"""
+        """Test if nodes property return the expected indices."""
         assert cell_1D.nodes == [1, 2]
 
     def test_nodes_indices_2D(self, cell_2D):
-        """Test if nodes property return the expected indices"""
+        """Test if nodes property return the expected indices."""
         assert cell_2D.nodes == [9, 10, 13, 14]
 
     def test_nodes_indices_3D(self, cell_3D):
-        """Test if nodes property return the expected indices"""
+        """Test if nodes property return the expected indices."""
         assert cell_3D.nodes == [69, 70, 73, 74, 89, 90, 93, 94]
 
 
