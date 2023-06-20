@@ -187,7 +187,7 @@ class TensorMesh(
         if isinstance(indices, slice):
             cells = [self[i] for i in _slice_to_index(indices, len(self))]
             return cells
-        if np.issubdtype(type(indices), int):
+        if np.issubdtype(type(indices), np.integer):
             indices = self._sanitize_indices(indices)
             indices = np.unravel_index(indices, self.shape_cells, order="F")
         # Handle tuple indices
@@ -202,7 +202,7 @@ class TensorMesh(
                 f"It should match the number of dimensions of the mesh ({self.dim})."
             )
         # Int indices only
-        all_indices_are_ints = all(np.issubdtype(type(i), int) for i in indices)
+        all_indices_are_ints = all(np.issubdtype(type(i), np.integer) for i in indices)
         if all_indices_are_ints:
             indices = self._sanitize_indices(indices)
             return self._get_cell(indices)
