@@ -399,6 +399,68 @@ class InnerProducts(BaseMesh):
             invert_matrix=invert_matrix,
         )
 
+    def get_face_inner_product_face_properties_deriv(  # NOQA D102
+        self, model, invert_model=False, invert_matrix=False, **kwargs
+    ):
+        # Inherited documentation from discretize.base.BaseMesh
+        if "invProp" in kwargs:
+            raise TypeError(
+                "The invProp keyword argument has been removed, please use invert_model. "
+                "This will be removed in discretize 1.0.0",
+            )
+        if "invMat" in kwargs:
+            raise TypeError(
+                "The invMat keyword argument has been removed, please use invert_matrix. "
+                "This will be removed in discretize 1.0.0",
+            )
+        return self._fastFacePropertiesInnerProductDeriv(
+            "F",
+            model,
+            invert_model=invert_model,
+            invert_matrix=invert_matrix,
+        )
+
+    def get_edge_inner_product_face_properties_deriv(  # NOQA D102
+        self, model, invert_model=False, invert_matrix=False, **kwargs
+    ):
+        # Inherited documentation from discretize.base.BaseMesh
+        if "invProp" in kwargs:
+            raise TypeError(
+                "The invProp keyword argument has been removed, please use invert_model. "
+                "This will be removed in discretize 1.0.0",
+            )
+        if "invMat" in kwargs:
+            raise TypeError(
+                "The invMat keyword argument has been removed, please use invert_matrix. "
+                "This will be removed in discretize 1.0.0",
+            )
+        return self._fastFacePropertiesInnerProductDeriv(
+            "E",
+            model,
+            invert_model=invert_model,
+            invert_matrix=invert_matrix,
+        )
+
+    def get_edge_inner_product_edge_properties_deriv(  # NOQA D102
+        self, model, invert_model=False, invert_matrix=False, **kwargs
+    ):
+        # Inherited documentation from discretize.base.BaseMesh
+        if "invProp" in kwargs:
+            raise TypeError(
+                "The invProp keyword argument has been removed, please use invert_model. "
+                "This will be removed in discretize 1.0.0",
+            )
+        if "invMat" in kwargs:
+            raise TypeError(
+                "The invMat keyword argument has been removed, please use invert_matrix. "
+                "This will be removed in discretize 1.0.0",
+            )
+        return self._fastEdgePropertiesInnerProductDeriv(
+            model,
+            invert_model=invert_model,
+            invert_matrix=invert_matrix,
+        )
+
     def _getInnerProductDeriv(
         self,
         model,
