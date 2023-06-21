@@ -104,12 +104,12 @@ class InnerProducts(BaseMesh):
         **kwargs
     ):
 
-        """Get edge mass matrix for properties defined on cell faces.
+        """Get edge inner product matrix for properties defined on cell faces.
 
         Parameters
         ----------
         numpy.ndarray : model
-            material property (tensor properties are possible) at each cell center (nF, (1 or 2))
+            material property (isotropic only) for all mesh faces (nF, )
         bool : invert_model
             inverts the material property
         bool : invert_matrix
@@ -145,12 +145,12 @@ class InnerProducts(BaseMesh):
         **kwargs
     ):
 
-        """Get face mass matrix for properties defined on cell faces.
+        """Get face inner product matrix for properties defined on cell faces.
 
         Parameters
         ----------
         numpy.ndarray : model
-            material property (tensor properties are possible) at each cell center (nF, (1 or 2))
+            material property (isotropic only) for all mesh faces (nF, )
         bool : invert_model
             inverts the material property
         bool : invert_matrix
@@ -161,7 +161,7 @@ class InnerProducts(BaseMesh):
         Returns
         -------
         scipy.sparse.csr_matrix
-            M, the mass matrix. (nE, nE)
+            M, the mass matrix. (nF, nF)
         """
 
         fast = None
@@ -186,12 +186,12 @@ class InnerProducts(BaseMesh):
         **kwargs
     ):
 
-        """Get edge mass matrix for properties defined on cell faces.
+        """Get edge inner product matrix for properties defined on cell edges.
 
         Parameters
         ----------
         numpy.ndarray : model
-            material property (tensor properties are possible) at each cell center (nF, (1 or 2))
+            material property (isotropic only) for all mesh edges (nE, )
         bool : invert_model
             inverts the material property
         bool : invert_matrix

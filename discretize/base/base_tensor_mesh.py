@@ -1038,7 +1038,10 @@ class BaseTensorMesh(BaseRegularMesh):
         # variables and 2 for face variables)
         if self._meshType == "CYL":
             shape = getattr(self, "vn" + projection_type)
-            n_elements = sum([1 if x != 0 else 0 for x in shape])
+            if self.is_symmetric:
+                n_elements = 1
+            else:
+                n_elements = sum([1 if x != 0 else 0 for x in shape]) - 1
         else:
             n_elements = self.dim - 1
 
@@ -1112,7 +1115,10 @@ class BaseTensorMesh(BaseRegularMesh):
         # variables and 2 for face variables)
         if self._meshType == "CYL":
             shape = getattr(self, "vn" + projection_type)
-            n_elements = sum([1 if x != 0 else 0 for x in shape])
+            if self.is_symmetric:
+                n_elements = 1
+            else:
+                n_elements = sum([1 if x != 0 else 0 for x in shape]) - 1
         else:
             n_elements = self.dim - 1
 
