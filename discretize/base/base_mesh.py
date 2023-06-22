@@ -1881,7 +1881,7 @@ class BaseMesh:
         )
 
 
-    def get_edge_inner_product_face_properties(
+    def get_edge_inner_product_surface(
         self,
         model=None,
         invert_model=False,
@@ -1891,10 +1891,10 @@ class BaseMesh:
     ):
 
         raise NotImplementedError(
-            f"get_edge_inner_product_face_properties not implemented for {type(self)}"
+            f"get_edge_inner_product_surface not implemented for {type(self)}"
         )
 
-    def get_face_inner_product_face_properties(
+    def get_face_inner_product_surface(
         self,
         model=None,
         invert_model=False,
@@ -1904,10 +1904,10 @@ class BaseMesh:
     ):
 
         raise NotImplementedError(
-            f"get_face_inner_product_face_properties not implemented for {type(self)}"
+            f"get_face_inner_product_surface not implemented for {type(self)}"
         )
 
-    def get_edge_inner_product_edge_properties(
+    def get_edge_inner_product_line(
         self,
         model=None,
         invert_model=False,
@@ -1917,7 +1917,7 @@ class BaseMesh:
     ):
 
         raise NotImplementedError(
-            f"get_edge_inner_product_edge_properties not implemented for {type(self)}"
+            f"get_edge_inner_product_line not implemented for {type(self)}"
         )
 
     def get_face_inner_product_deriv(
@@ -2286,7 +2286,7 @@ class BaseMesh:
             f"get_edge_inner_product_deriv not implemented for {type(self)}"
         )
 
-    def get_edge_inner_product_face_properties_deriv(
+    def get_edge_inner_product_surface_deriv(
         self,
         model=None,
         invert_model=False,
@@ -2296,10 +2296,10 @@ class BaseMesh:
     ):
 
         raise NotImplementedError(
-            f"get_edge_inner_product_face_properties_deriv not implemented for {type(self)}"
+            f"get_edge_inner_product_surface_deriv not implemented for {type(self)}"
         )
 
-    def get_face_inner_product_face_properties_deriv(
+    def get_face_inner_product_surface_deriv(
         self,
         model=None,
         invert_model=False,
@@ -2309,10 +2309,10 @@ class BaseMesh:
     ):
 
         raise NotImplementedError(
-            f"get_face_inner_product_face_properties_deriv not implemented for {type(self)}"
+            f"get_face_inner_product_surface_deriv not implemented for {type(self)}"
         )
 
-    def get_edge_inner_product_edge_properties_deriv(
+    def get_edge_inner_product_line_deriv(
         self,
         model=None,
         invert_model=False,
@@ -2322,7 +2322,7 @@ class BaseMesh:
     ):
 
         raise NotImplementedError(
-            f"get_edge_inner_product_edge_properties_deriv not implemented for {type(self)}"
+            f"get_edge_inner_product_line_deriv not implemented for {type(self)}"
         )
 
     # Averaging

@@ -95,7 +95,7 @@ class InnerProducts(BaseMesh):
             do_fast=do_fast,
         )
 
-    def get_edge_inner_product_face_properties(
+    def get_edge_inner_product_surface(
         self,
         model,
         invert_model=False,
@@ -136,7 +136,7 @@ class InnerProducts(BaseMesh):
 
         raise NotImplementedError("General edge mass matrix for face properties is not implemented. Only meshes with fast implementation possible")
 
-    def get_face_inner_product_face_properties(
+    def get_face_inner_product_surface(
         self,
         model,
         invert_model=False,
@@ -177,7 +177,7 @@ class InnerProducts(BaseMesh):
 
         raise NotImplementedError("General edge mass matrix for face properties is not implemented. Only meshes with fast implementation possible")
 
-    def get_edge_inner_product_edge_properties(
+    def get_edge_inner_product_line(
         self,
         model,
         invert_model=False,
@@ -399,7 +399,7 @@ class InnerProducts(BaseMesh):
             invert_matrix=invert_matrix,
         )
 
-    def get_face_inner_product_face_properties_deriv(  # NOQA D102
+    def get_face_inner_product_surface_deriv(  # NOQA D102
         self, model, invert_model=False, invert_matrix=False, **kwargs
     ):
         # Inherited documentation from discretize.base.BaseMesh
@@ -420,7 +420,7 @@ class InnerProducts(BaseMesh):
             invert_matrix=invert_matrix,
         )
 
-    def get_edge_inner_product_face_properties_deriv(  # NOQA D102
+    def get_edge_inner_product_surface_deriv(  # NOQA D102
         self, model, invert_model=False, invert_matrix=False, **kwargs
     ):
         # Inherited documentation from discretize.base.BaseMesh
@@ -441,7 +441,7 @@ class InnerProducts(BaseMesh):
             invert_matrix=invert_matrix,
         )
 
-    def get_edge_inner_product_edge_properties_deriv(  # NOQA D102
+    def get_edge_inner_product_line_deriv(  # NOQA D102
         self, model, invert_model=False, invert_matrix=False, **kwargs
     ):
         # Inherited documentation from discretize.base.BaseMesh

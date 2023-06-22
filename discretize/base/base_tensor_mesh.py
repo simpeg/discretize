@@ -991,10 +991,10 @@ class BaseTensorMesh(BaseRegularMesh):
             return None
 
 
-    def _fastFacePropertiesInnerProduct(
+    def _fastInnerProductSurface(
         self, projection_type, model=None, invert_model=False, invert_matrix=False
     ):
-        """Fast version of get_face_inner_product_deriv.
+        """Fast version of get_face_inner_product_surface.
 
         This does not handle the case of a full tensor property.
 
@@ -1065,7 +1065,7 @@ class BaseTensorMesh(BaseRegularMesh):
         else:
             return M
 
-    def _fastFacePropertiesInnerProductDeriv(
+    def _fastInnerProductSurfaceDeriv(
         self, projection_type, model, invert_model=False, invert_matrix=False
     ):
         """Faster function for inner product derivatives on tensor meshes.
@@ -1178,7 +1178,7 @@ class BaseTensorMesh(BaseRegularMesh):
         else:
             return None
 
-    def _fastEdgePropertiesInnerProduct(
+    def _fastInnerProductLine(
         self, model=None, invert_model=False, invert_matrix=False
     ):
         """Fast version of get_face_inner_product_deriv.
@@ -1235,7 +1235,7 @@ class BaseTensorMesh(BaseRegularMesh):
         else:
             return M
 
-    def _fastEdgePropertiesInnerProductDeriv(
+    def _fastInnerProductLineDeriv(
         self, model, invert_model=False, invert_matrix=False
     ):
         """Faster function for inner product derivatives on tensor meshes.
