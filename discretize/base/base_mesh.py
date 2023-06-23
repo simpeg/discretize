@@ -1741,7 +1741,7 @@ class BaseMesh:
         invert_model : bool, optional
             The inverse of *model* is used as the physical property.
         invert_matrix : bool, optional
-            Teturns the inverse of the inner product matrix.
+            Returns the inverse of the inner product matrix.
             The inverse not implemented for full tensor properties.
         do_fast : bool, optional
             Do a faster implementation (if available).
@@ -1880,7 +1880,6 @@ class BaseMesh:
             f"get_edge_inner_product not implemented for {type(self)}"
         )
 
-
     def get_edge_inner_product_surface(
         self,
         model=None,
@@ -1889,6 +1888,117 @@ class BaseMesh:
         do_fast=True,
         **kwargs,
     ):
+        r"""Generate the edge inner product surface matrix or its inverse.
+
+        This method generates the inner product surface matrix (or its inverse)
+        when discrete variables are defined on mesh edges. It is also capable of
+        constructing the inner product surface matrix when diagnostic
+        properties (e.g. conductance) are defined on mesh faces. For a comprehensive
+        description of the inner product surface matrices that can be constructed
+        with **get_edge_inner_product_surface**, see *Notes*.
+
+        Parameters
+        ----------
+        model : None or numpy.ndarray
+            Parameters defining the diagnostic properties for every face in the mesh.
+            Inner product surface matrices can be constructed for the following cases:
+
+            - *None* : returns the basic inner product surface matrix
+            - *(n_faces)* :class:`numpy.ndarray` : returns inner product surface matrix
+              for an isotropic model. The array contains a scalar diagnostic property value
+              for each face.
+
+        invert_model : bool, optional
+            The inverse of *model* is used as the diagnostic property.
+        invert_matrix : bool, optional
+            Returns the inverse of the inner product surface matrix.
+            The inverse not implemented for full tensor properties.
+        do_fast : bool, optional
+            Do a faster implementation (if available).
+
+        Returns
+        -------
+        (n_edges, n_edges) scipy.sparse.csr_matrix
+            inner product surface matrix
+
+        Notes
+        -----
+        For continuous vector quantities :math:`\vec{u}` and :math:`\vec{w}`, and
+        scalar physical property distribution :math:`\sigma`, we define the following inner product:
+
+        .. math::
+            \langle \vec{u}, \sigma \vec{w} \rangle = \int_\Omega \, \vec{u} \cdot \sigma \vec{v} \, dv
+
+        If the material property is distributed over a set of surfaces :math:`S_i` with thickness
+        :math:`h`, we can define a diagnostic property value :math:`\tau = \sigma h`.
+        And the inner-product can be approximated by a set of surface integrals as follows:
+
+        .. math::
+            \langle \vec{u}, \sigma \vec{w} \rangle =
+            \sum_i \int_{S_i} \, \vec{u} \cdot \tau \vec{v} \, da
+
+        Let :math:`\vec{u}` and :math:`\vec{w}` have discrete representations :math:`\mathbf{u}`
+        and :math:`\mathbf{w}` that live on the edges. Assuming the contribution of vector components
+        normal to the surface are negligible compared to tangential components,
+        **get_edge_inner_product_suface** constructs the inner product matrix :math:`\mathbf{M_\tau}`
+        (or its inverse :math:`\mathbf{M_\tau^{-1}}`) such that:
+
+        .. math::
+            \sum_i \int_{S_i} \, \vec{u} \cdot \tau \vec{v} \, da
+            \approx \sum_i \int_{S_i} \, \vec{u}_\parallel \cdot \tau \vec{v}_\parallel \, da
+            = \mathbf{u^T \, M_\tau \, w}
+
+        where the diagnostic properties on mesh faces (i.e. the model) are stored within an array of the form:
+
+        .. math::
+            \boldsymbol{\tau} = \begin{bmatrix} \boldsymbol{\tau_x} \\
+            \boldsymbol{\tau_y} \\ \boldsymbol{\tau_z} \end{bmatrix}
+
+        Examples
+        --------
+        Here we provide an example of edge inner product surface matrix.
+        For simplicity, we will work on a 2 x 2 x 2 tensor mesh.
+        As seen below, we begin by constructing and imaging the basic
+        edge inner product surface matrix.
+
+        >>> from discretize import TensorMesh
+        >>> import matplotlib.pyplot as plt
+        >>> import numpy as np
+        >>> import matplotlib as mpl
+
+        >>> h = np.ones(2)
+        >>> mesh = TensorMesh([h, h, h])
+        >>> Me = mesh.get_edge_inner_product_surface()
+
+        >>> fig = plt.figure(figsize=(6, 6))
+        >>> ax = fig.add_subplot(111)
+        >>> ax.imshow(Me.todense())
+        >>> ax.set_title('Basic Edge Inner Product Surface Matrix', fontsize=18)
+        >>> plt.show()
+
+        Next, we consider the case where the physical properties
+        are defined by diagnostic properties on mesh faces. For the isotropic case,
+        we show the physical property tensor for a single cell.
+
+        Define the diagnostic property values for x, y and z faces.
+
+        >>> tau_x, tau_y, tau_z = 3, 2, 1
+
+        Here construct and image the edge inner product surface matrix for the isotropic case.
+        Spy plots are used to demonstrate the sparsity of the inner product surface matrices.
+
+        >>> tau = np.r_[tau_x * mesh.n_faces_x, tau_y * mesh.n_faces_y, tau_z * mesh.n_faces_z]
+        >>> M = mesh.get_edge_inner_product_surface(tau)
+
+        Then plot the sparse representation,
+
+        >>> fig = plt.figure(figsize=(4, 4))
+        >>> ax1 = fig.add_subplot(111)
+        >>> ax1.spy(M, ms=5)
+        >>> ax1.set_title("M (isotropic)", fontsize=16)
+        >>> plt.show()
+
+        """
 
         raise NotImplementedError(
             f"get_edge_inner_product_surface not implemented for {type(self)}"
@@ -1902,6 +2012,116 @@ class BaseMesh:
         do_fast=True,
         **kwargs,
     ):
+        r"""Generate the face inner product matrix or its inverse.
+
+        This method generates the inner product surface matrix (or its inverse)
+        when discrete variables are defined on mesh faces. It is also capable of
+        constructing the inner product surface matrix when diagnostic quantitative
+        properties (e.g. conductance) are defined on mesh faces. For a comprehensive
+        description of the inner product surface matrices that can be constructed
+        with **get_face_inner_product_surface**, see *Notes*.
+
+        Parameters
+        ----------
+        model : None or numpy.ndarray
+            Parameters defining the diagnostic properties for every face in the mesh.
+            Inner product surface matrices can be constructed for the following cases:
+
+            - *None* : returns the basic inner product surface matrix
+            - *(n_faces)* :class:`numpy.ndarray` : returns inner product surface matrix
+              for an isotropic model. The array contains a scalar diagnostic property value
+              for each face.
+
+        invert_model : bool, optional
+            The inverse of *model* is used as the diagnostic property.
+        invert_matrix : bool, optional
+            Returns the inverse of the inner product surface matrix.
+            The inverse not implemented for full tensor properties.
+        do_fast : bool, optional
+            Do a faster implementation (if available).
+
+        Returns
+        -------
+        (n_faces, n_faces) scipy.sparse.csr_matrix
+            inner product matrix
+
+        Notes
+        -----
+        For continuous vector quantities :math:`\vec{u}` and :math:`\vec{w}`, and
+        scalar physical property distribution :math:`\sigma`, we define the following inner product:
+
+        .. math::
+            \langle \vec{u}, \sigma \vec{w} \rangle = \int_\Omega \, \vec{u} \cdot \sigma \vec{v} \, dv
+
+        If the material property is distributed over a set of surfaces :math:`S_i` with thickness
+        :math:`h`, we can define a diagnostic property value :math:`\tau = \sigma h`.
+        And the inner-product can be approximated by a set of surface integrals as follows:
+
+        .. math::
+            \langle \vec{u}, \sigma \vec{w} \rangle =
+            \sum_i \int_{S_i} \, \vec{u} \cdot \tau \vec{v} \, da
+
+        Let :math:`\vec{u}` and :math:`\vec{w}` have discrete representations :math:`\mathbf{u}`
+        and :math:`\mathbf{w}` that live on the edges. Assuming the contribution of vector components
+        tangential to the surface are negligible compared to normal components,
+        **get_face_inner_product_suface** constructs the inner product matrix :math:`\mathbf{M_\tau}`
+        (or its inverse :math:`\mathbf{M_\tau^{-1}}`) such that:
+
+        .. math::
+            \sum_i \int_{S_i} \, \vec{u} \cdot \tau \vec{v} \, da
+            \approx \sum_i \int_{S_i} \, \vec{u}_\perp \cdot \tau \vec{v}_\perp \, da
+            = \mathbf{u^T \, M_\tau \, w}
+
+        where the diagnostic properties on mesh faces (i.e. the model) are stored within an array of the form:
+
+        .. math::
+            \boldsymbol{\tau} = \begin{bmatrix} \boldsymbol{\tau_x} \\
+            \boldsymbol{\tau_y} \\ \boldsymbol{\tau_z} \end{bmatrix}
+
+        Examples
+        --------
+        Here we provide an example of face inner product surface matrix.
+        For simplicity, we will work on a 2 x 2 x 2 tensor mesh.
+        As seen below, we begin by constructing and imaging the basic
+        face inner product surface matrix.
+
+        >>> from discretize import TensorMesh
+        >>> import matplotlib.pyplot as plt
+        >>> import numpy as np
+        >>> import matplotlib as mpl
+
+        >>> h = np.ones(2)
+        >>> mesh = TensorMesh([h, h, h])
+        >>> Mf = mesh.get_face_inner_product_surface()
+
+        >>> fig = plt.figure(figsize=(6, 6))
+        >>> ax = fig.add_subplot(111)
+        >>> ax.imshow(Mf.todense())
+        >>> ax.set_title('Basic Face Inner Product Surface Matrix', fontsize=18)
+        >>> plt.show()
+
+        Next, we consider the case where the physical properties
+        are defined by diagnostic properties on mesh faces. For the isotropic case,
+        we show the physical property tensor for a single cell.
+
+        Define the diagnostic property values for x, y and z faces.
+
+        >>> tau_x, tau_y, tau_z = 3, 2, 1
+
+        Here construct and image the face inner product surface matrix for the isotropic case.
+        Spy plots are used to demonstrate the sparsity of the inner product surface matrices.
+
+        >>> tau = np.r_[tau_x * mesh.n_faces_x, tau_y * mesh.n_faces_y, tau_z * mesh.n_faces_z]
+        >>> M = mesh.get_face_inner_product_surface(tau)
+
+        Then plot the sparse representation,
+
+        >>> fig = plt.figure(figsize=(4, 4))
+        >>> ax1 = fig.add_subplot(111)
+        >>> ax1.spy(M, ms=5)
+        >>> ax1.set_title("M (isotropic)", fontsize=16)
+        >>> plt.show()
+        """
 
         raise NotImplementedError(
             f"get_face_inner_product_surface not implemented for {type(self)}"
@@ -1915,6 +2135,116 @@ class BaseMesh:
         do_fast=True,
         **kwargs,
     ):
+        r"""Generate the edge inner product line matrix or its inverse.
+
+        This method generates the inner product line matrix (or its inverse)
+        when discrete variables are defined on mesh edges. It is also capable of
+        constructing the inner product line matrix when diagnostic
+        properties (e.g. integrated conductance) are defined on mesh edges.
+        For a comprehensive description of the inner product line matrices that
+        can be constructed with **get_edge_inner_product_line**, see *Notes*.
+
+        Parameters
+        ----------
+        model : None or numpy.ndarray
+            Parameters defining the diagnostic property for every edge in the mesh.
+            Inner product line matrices can be constructed for the following cases:
+
+            - *None* : returns the basic inner product line matrix
+            - *(n_edges)* :class:`numpy.ndarray` : returns inner product line matrix
+              for an isotropic model. The array contains a scalar diagnostic property value
+              for each edge.
+
+        invert_model : bool, optional
+            The inverse of *model* is used as the diagnostic property.
+        invert_matrix : bool, optional
+            Returns the inverse of the inner product line matrix.
+            The inverse not implemented for full tensor properties.
+        do_fast : bool, optional
+            Do a faster implementation (if available).
+
+        Returns
+        -------
+        (n_edges, n_edges) scipy.sparse.csr_matrix
+            inner product line matriz
+
+        Notes
+        -----
+        For continuous vector quantities :math:`\vec{u}` and :math:`\vec{w}`, and
+        scalar physical property distribution :math:`\sigma`, we define the following inner product:
+
+        .. math::
+            \langle \vec{u}, \sigma \vec{w} \rangle = \int_\Omega \, \vec{u} \cdot \sigma \vec{v} \, dv
+
+        If the material property is distributed over a set of lines :math:`\ell_i` with cross-sectional
+        area :math:`a`, we can define a diagnostic property value :math:`\lambda = \sigma a`.
+        And the inner-product can be approximated by a set of line integrals as follows:
+
+        .. math::
+            \langle \vec{u}, \sigma \vec{w} \rangle =
+            \sum_i \int_{\ell_i} \, \vec{u} \cdot \lambda \vec{v} \, ds
+
+        Let :math:`\vec{u}` and :math:`\vec{w}` have discrete representations :math:`\mathbf{u}`
+        and :math:`\mathbf{w}` that live on the edges. Assuming the contribution of vector components
+        perpendicular to the lines are negligible compared to parallel components,
+        **get_edge_inner_product_line** constructs the inner product matrix :math:`\mathbf{M_\lambda}`
+        (or its inverse :math:`\mathbf{M_\lambda^{-1}}`) such that:
+
+        .. math::
+            \sum_i \int_{\ell_i} \, \vec{u} \cdot \lambda \vec{v} \, ds
+            \approx \sum_i \int_{\ell_i} \, \vec{u}_\parallel \cdot \lambda \vec{v}_\parallel \, ds
+            = \mathbf{u^T \, M_\lambda \, w}
+
+        where the diagnostic properties on mesh edges (i.e. the model) are stored within an array of the form:
+
+        .. math::
+            \boldsymbol{\lambda} = \begin{bmatrix} \boldsymbol{\lambda_x} \\
+            \boldsymbol{\lambda_y} \\ \boldsymbol{\lambda_z} \end{bmatrix}
+
+        Examples
+        --------
+        Here we provide an example of edge inner product line matrix.
+        For simplicity, we will work on a 2 x 2 x 2 tensor mesh.
+        As seen below, we begin by constructing and imaging the basic
+        edge inner product line matrix.
+
+        >>> from discretize import TensorMesh
+        >>> import matplotlib.pyplot as plt
+        >>> import numpy as np
+        >>> import matplotlib as mpl
+
+        >>> h = np.ones(2)
+        >>> mesh = TensorMesh([h, h, h])
+        >>> Me = mesh.get_edge_inner_product_line()
+
+        >>> fig = plt.figure(figsize=(6, 6))
+        >>> ax = fig.add_subplot(111)
+        >>> ax.imshow(Me.todense())
+        >>> ax.set_title('Basic Edge Inner Product Line Matrix', fontsize=18)
+        >>> plt.show()
+
+        Next, we consider the case where the physical properties
+        are defined by diagnostic properties on mesh edges. For the isotropic case,
+        we show the physical property tensor for a single cell.
+
+        Define the diagnostic property values for x, y and z faces.
+
+        >>> tau_x, tau_y, tau_z = 3, 2, 1
+
+        Here construct and image the edge inner product line matrix for the isotropic case.
+        Spy plots are used to demonstrate the sparsity of the matrix.
+
+        >>> tau = np.r_[tau_x * mesh.n_edges_x, tau_y * mesh.n_edges_y, tau_z * mesh.n_edges_z]
+        >>> M = mesh.get_edge_inner_product_line(tau)
+
+        Then plot the sparse representation,
+
+        >>> fig = plt.figure(figsize=(4, 4))
+        >>> ax1 = fig.add_subplot(111)
+        >>> ax1.spy(M, ms=5)
+        >>> ax1.set_title("M (isotropic)", fontsize=16)
+        >>> plt.show()
+        """
 
         raise NotImplementedError(
             f"get_edge_inner_product_line not implemented for {type(self)}"
@@ -2294,6 +2624,43 @@ class BaseMesh:
         do_fast=True,
         **kwargs,
     ):
+        r"""Get a function handle to multiply a vector with derivative of edge inner product surface matrix (or its inverse).
+
+        Let :math:`\mathbf{M}(\mathbf{m})` be the edge inner product surface matrix
+        constructed with a set of diagnostic property parameters :math:`\mathbf{m}`
+        (or its inverse) defined on mesh faces. **get_edge_inner_product_surface_deriv**
+        constructs a function handle
+
+        .. math::
+            \mathbf{F}(\mathbf{u}) = \mathbf{u}^T \, \frac{\partial \mathbf{M}(\mathbf{m})}{\partial \mathbf{m}}
+
+        which accepts any numpy.array :math:`\mathbf{u}` of shape (n_edges,). That is,
+        **get_edge_inner_product_surface_deriv** constructs a function handle for computing
+        the dot product between a vector :math:`\mathbf{u}` and the derivative of the
+        edge inner product surface matrix (or its inverse) with respect to the property parameters.
+        When computed, :math:`\mathbf{F}(\mathbf{u})` returns a ``scipy.sparse.csr_matrix``
+        of shape (n_edges, n_param).
+
+        The function handle can only be created for isotropic diagnostic properties.
+
+        Parameters
+        ----------
+        model : (n_faces, ) numpy.ndarray
+            Parameters defining the diagnostic property values for every face in the mesh.
+        invert_model : bool, optional
+            The inverse of *model* is used as the diagnostic property.
+        invert_matrix : bool, optional
+            Returns the inverse of the inner product surface matrix.
+        do_fast : bool, optional
+            Do a faster implementation (if available).
+
+        Returns
+        -------
+        function
+            The function handle :math:`\mathbf{F}(\mathbf{u})` which accepts a
+            (``n_edges``) :class:`numpy.ndarray` :math:`\mathbf{u}`. The function
+            returns a (``n_edges``, ``n_params``) :class:`scipy.sparse.csr_matrix`.
+        """
 
         raise NotImplementedError(
             f"get_edge_inner_product_surface_deriv not implemented for {type(self)}"
@@ -2307,6 +2674,43 @@ class BaseMesh:
         do_fast=True,
         **kwargs,
     ):
+        r"""Get a function handle to multiply a vector with derivative of face inner product surface matrix (or its inverse).
+
+        Let :math:`\mathbf{M}(\mathbf{m})` be the face inner product surface matrix
+        constructed with a set of diagnostic property parameters :math:`\mathbf{m}`
+        (or its inverse) defined on mesh faces. **get_face_inner_product_surface_deriv**
+        constructs a function handle
+
+        .. math::
+            \mathbf{F}(\mathbf{u}) = \mathbf{u}^T \, \frac{\partial \mathbf{M}(\mathbf{m})}{\partial \mathbf{m}}
+
+        which accepts any numpy.array :math:`\mathbf{u}` of shape (n_faces,). That is,
+        **get_face_inner_product_surface_deriv** constructs a function handle for computing
+        the dot product between a vector :math:`\mathbf{u}` and the derivative of the
+        face inner product surface matrix (or its inverse) with respect to the property parameters.
+        When computed, :math:`\mathbf{F}(\mathbf{u})` returns a ``scipy.sparse.csr_matrix``
+        of shape (n_faces, n_param).
+
+        The function handle can only be created for isotropic diagnostic properties.
+
+        Parameters
+        ----------
+        model : (n_faces, ) numpy.ndarray
+            Parameters defining the diagnostic property values for every face in the mesh.
+        invert_model : bool, optional
+            The inverse of *model* is used as the diagnostic property.
+        invert_matrix : bool, optional
+            Returns the inverse of the inner product surface matrix.
+        do_fast : bool, optional
+            Do a faster implementation (if available).
+
+        Returns
+        -------
+        function
+            The function handle :math:`\mathbf{F}(\mathbf{u})` which accepts a
+            (``n_faces``) :class:`numpy.ndarray` :math:`\mathbf{u}`. The function
+            returns a (``n_faces``, ``n_params``) :class:`scipy.sparse.csr_matrix`.
+        """
 
         raise NotImplementedError(
             f"get_face_inner_product_surface_deriv not implemented for {type(self)}"
@@ -2320,6 +2724,43 @@ class BaseMesh:
         do_fast=True,
         **kwargs,
     ):
+        r"""Get a function handle to multiply a vector with derivative of edge inner product line matrix (or its inverse).
+
+        Let :math:`\mathbf{M}(\mathbf{m})` be the edge inner product line matrix
+        constructed with a set of diagnostic property parameters :math:`\mathbf{m}`
+        (or its inverse) defined on mesh edges. **get_edge_inner_product_line_deriv**
+        constructs a function handle
+
+        .. math::
+            \mathbf{F}(\mathbf{u}) = \mathbf{u}^T \, \frac{\partial \mathbf{M}(\mathbf{m})}{\partial \mathbf{m}}
+
+        which accepts any numpy.array :math:`\mathbf{u}` of shape (n_edges,). That is,
+        **get_edge_inner_product_line_deriv** constructs a function handle for computing
+        the dot product between a vector :math:`\mathbf{u}` and the derivative of the
+        edge inner product line matrix (or its inverse) with respect to the diagnostic parameters.
+        When computed, :math:`\mathbf{F}(\mathbf{u})` returns a ``scipy.sparse.csr_matrix``
+        of shape (n_edges, n_param).
+
+        The function handle can only be created for isotropic diagnostic properties.
+
+        Parameters
+        ----------
+        model : (n_edges, ) numpy.ndarray
+            Parameters defining the diagnostic property values for every edge in the mesh.
+        invert_model : bool, optional
+            The inverse of *model* is used as the diagnostic property.
+        invert_matrix : bool, optional
+            Returns the inverse of the inner product line matrix.
+        do_fast : bool, optional
+            Do a faster implementation (if available).
+
+        Returns
+        -------
+        function
+            The function handle :math:`\mathbf{F}(\mathbf{u})` which accepts a
+            (``n_edges``) :class:`numpy.ndarray` :math:`\mathbf{u}`. The function
+            returns a (``n_edges``, ``n_params``) :class:`scipy.sparse.csr_matrix`.
+        """
 
         raise NotImplementedError(
             f"get_edge_inner_product_line_deriv not implemented for {type(self)}"

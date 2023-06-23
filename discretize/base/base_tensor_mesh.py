@@ -990,7 +990,6 @@ class BaseTensorMesh(BaseRegularMesh):
         else:
             return None
 
-
     def _fastInnerProductSurface(
         self, projection_type, model=None, invert_model=False, invert_matrix=False
     ):
@@ -1048,7 +1047,7 @@ class BaseTensorMesh(BaseRegularMesh):
         # Isotropic case only
         if model.size == self.nF:
             Aprop = self.face_areas * mkvc(model)
-            if projection_type == 'E':
+            if projection_type == "E":
                 Av = getattr(self, "average_edge_to_face")
                 M = n_elements * sdiag(Av.T * Aprop)
             else:
@@ -1057,7 +1056,7 @@ class BaseTensorMesh(BaseRegularMesh):
         else:
             raise Exception(
                 "Unexpected shape of tensor: {}".format(model.shape),
-                "Must be scalar or have length equal to total number of faces."
+                "Must be scalar or have length equal to total number of faces.",
             )
 
         if invert_matrix:
@@ -1097,9 +1096,11 @@ class BaseTensorMesh(BaseRegularMesh):
         else:
             raise Exception(
                 "Unexpected shape of tensor: {}".format(model.shape),
-                "Must be scalar or have length equal to total number of faces.".format(self.nF)
+                "Must be scalar or have length equal to total number of faces.".format(
+                    self.nF
+                ),
             )
-        
+
         dMdprop = None
 
         if invert_matrix or invert_model:
@@ -1123,7 +1124,7 @@ class BaseTensorMesh(BaseRegularMesh):
             n_elements = self.dim - 1
 
         A = sdiag(self.face_areas)
-        if projection_type == 'E':
+        if projection_type == "E":
             Av = getattr(self, "average_edge_to_face")
         else:
             Av = sdiag(np.ones(self.nF) / n_elements)
@@ -1209,7 +1210,6 @@ class BaseTensorMesh(BaseRegularMesh):
         if is_scalar(model):
             model = model * np.ones(self.nE)
 
-
         # number of elements we are averaging (equals dim for regular
         # meshes, but for cyl, where we use symmetry, it is 1 for edge
         # variables and 2 for face variables)
@@ -1227,7 +1227,7 @@ class BaseTensorMesh(BaseRegularMesh):
         else:
             raise Exception(
                 "Unexpected shape of tensor: {}".format(model.shape),
-                "Must be scalar or have length equal to total number of edges."
+                "Must be scalar or have length equal to total number of edges.",
             )
 
         if invert_matrix:
@@ -1261,7 +1261,9 @@ class BaseTensorMesh(BaseRegularMesh):
         else:
             raise Exception(
                 "Unexpected shape of tensor: {}.".format(model.shape),
-                "Must be scalar or have length equal to total number of edges: {}.".format(self.nE)
+                "Must be scalar or have length equal to total number of edges: {}.".format(
+                    self.nE
+                ),
             )
 
         dMdprop = None
@@ -1282,31 +1284,23 @@ class BaseTensorMesh(BaseRegularMesh):
             if not invert_matrix and not invert_model:
                 dMdprop = L * ones
             elif invert_matrix and invert_model:
-                dMdprop = (
-                    sdiag(MI.diagonal() ** 2)
-                    * L
-                    * ones
-                    * sdiag(1.0 / model**2)
-                )
+                dMdprop = sdiag(MI.diagonal() ** 2) * L * ones * sdiag(1.0 / model**2)
             elif invert_model:
                 dMdprop = L * sdiag(-1.0 / model**2)
             elif invert_matrix:
-                dMdprop = (sdiag(-MI.diagonal() ** 2) * L)
+                dMdprop = sdiag(-MI.diagonal() ** 2) * L
 
         elif tensorType == 1:  # isotropic, variable in space
             if not invert_matrix and not invert_model:
                 dMdprop = L
             elif invert_matrix and invert_model:
-                dMdprop = (
-                    sdiag(MI.diagonal() ** 2) * L * sdiag(1.0 / model**2)
-                )
+                dMdprop = sdiag(MI.diagonal() ** 2) * L * sdiag(1.0 / model**2)
             elif invert_model:
                 dMdprop = L * sdiag(-1.0 / model**2)
             elif invert_matrix:
-                dMdprop = (sdiag(-MI.diagonal() ** 2) * L)
+                dMdprop = sdiag(-MI.diagonal() ** 2) * L
 
         elif tensorType == 2:  # anisotropic
-
             raise NotImplementedError(
                 "EdgePropertiesInnerProductDeriv not implemented for anisotropy."
             )
@@ -1328,7 +1322,6 @@ class BaseTensorMesh(BaseRegularMesh):
             return innerProductDeriv
         else:
             return None
-
 
     # DEPRECATED
     @property

@@ -96,37 +96,14 @@ class InnerProducts(BaseMesh):
         )
 
     def get_edge_inner_product_surface(
-        self,
-        model,
-        invert_model=False,
-        invert_matrix=False,
-        do_fast=True,
-        **kwargs
+        self, model, invert_model=False, invert_matrix=False, do_fast=True, **kwargs
     ):
-
-        """Get edge inner product matrix for properties defined on cell faces.
-
-        Parameters
-        ----------
-        numpy.ndarray : model
-            material property (isotropic only) for all mesh faces (nF, )
-        bool : invert_model
-            inverts the material property
-        bool : invert_matrix
-            inverts the matrix
-        bool : do_fast
-            do a faster implementation if available.
-
-        Returns
-        -------
-        scipy.sparse.csr_matrix
-            M, the mass matrix. (nE, nE)
-        """
+        # Inherited documentation from discretize.base.BaseMesh
 
         fast = None
         if hasattr(self, "_fastFacePropertiesInnerProduct") and do_fast:
             fast = self._fastFacePropertiesInnerProduct(
-                projection_type='E',
+                projection_type="E",
                 model=model,
                 invert_model=invert_model,
                 invert_matrix=invert_matrix,
@@ -134,40 +111,19 @@ class InnerProducts(BaseMesh):
         if fast is not None:
             return fast
 
-        raise NotImplementedError("General edge mass matrix for face properties is not implemented. Only meshes with fast implementation possible")
+        raise NotImplementedError(
+            "General edge mass matrix for face properties is not implemented. Only meshes with fast implementation possible"
+        )
 
     def get_face_inner_product_surface(
-        self,
-        model,
-        invert_model=False,
-        invert_matrix=False,
-        do_fast=True,
-        **kwargs
+        self, model, invert_model=False, invert_matrix=False, do_fast=True, **kwargs
     ):
-
-        """Get face inner product matrix for properties defined on cell faces.
-
-        Parameters
-        ----------
-        numpy.ndarray : model
-            material property (isotropic only) for all mesh faces (nF, )
-        bool : invert_model
-            inverts the material property
-        bool : invert_matrix
-            inverts the matrix
-        bool : do_fast
-            do a faster implementation if available.
-
-        Returns
-        -------
-        scipy.sparse.csr_matrix
-            M, the mass matrix. (nF, nF)
-        """
+        # Inherited documentation from discretize.base.BaseMesh
 
         fast = None
         if hasattr(self, "_fastFacePropertiesInnerProduct") and do_fast:
             fast = self._fastFacePropertiesInnerProduct(
-                projection_type='F',
+                projection_type="F",
                 model=model,
                 invert_model=invert_model,
                 invert_matrix=invert_matrix,
@@ -175,35 +131,14 @@ class InnerProducts(BaseMesh):
         if fast is not None:
             return fast
 
-        raise NotImplementedError("General edge mass matrix for face properties is not implemented. Only meshes with fast implementation possible")
+        raise NotImplementedError(
+            "General edge mass matrix for face properties is not implemented. Only meshes with fast implementation possible"
+        )
 
     def get_edge_inner_product_line(
-        self,
-        model,
-        invert_model=False,
-        invert_matrix=False,
-        do_fast=True,
-        **kwargs
+        self, model, invert_model=False, invert_matrix=False, do_fast=True, **kwargs
     ):
-
-        """Get edge inner product matrix for properties defined on cell edges.
-
-        Parameters
-        ----------
-        numpy.ndarray : model
-            material property (isotropic only) for all mesh edges (nE, )
-        bool : invert_model
-            inverts the material property
-        bool : invert_matrix
-            inverts the matrix
-        bool : do_fast
-            do a faster implementation if available.
-
-        Returns
-        -------
-        scipy.sparse.csr_matrix
-            M, the mass matrix. (nE, nE)
-        """
+        # Inherited documentation from discretize.base.BaseMesh
 
         fast = None
         if hasattr(self, "_fastEdgePropertiesInnerProduct") and do_fast:
@@ -215,8 +150,9 @@ class InnerProducts(BaseMesh):
         if fast is not None:
             return fast
 
-        raise NotImplementedError("General edge mass matrix for face properties is not implemented. Only meshes with fast implementation possible")
-
+        raise NotImplementedError(
+            "General edge mass matrix for face properties is not implemented. Only meshes with fast implementation possible"
+        )
 
     def _getInnerProduct(
         self,
