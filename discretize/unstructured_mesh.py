@@ -186,7 +186,9 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
     @property
     def cell_centers(self):  # NOQA D102
         # Documentation inherited from discretize.base.BaseMesh
-        return np.mean(self.nodes[self.simplices], axis=1)
+        if getattr(self, "_cell_centers", None) is None:
+            self._cell_centers = np.mean(self.nodes[self.simplices], axis=1)
+        return self._cell_centers
 
     @property
     def cell_volumes(self):  # NOQA D102
@@ -206,22 +208,28 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
 
     @property
     def edges(self):  # NOQA D102
+        if getattr(self, "_edge_locs", None) is None:
+            self._edge_locs = np.mean(self.nodes[self._edges], axis=1)
         # Documentation inherited from discretize.base.BaseMesh
-        return np.mean(self.nodes[self._edges], axis=1)
+        return self._edge_locs
 
     @property
     def edge_tangents(self):  # NOQA D102
         # Documentation inherited from discretize.base.BaseMesh
-        tangents = np.diff(self.nodes[self._edges], axis=1).squeeze()
-        tangents /= np.linalg.norm(tangents, axis=-1)[:, None]
-        return tangents
+        if getattr(self, "_edge_tangents", None) is None:
+            tangents = np.diff(self.nodes[self._edges], axis=1).squeeze()
+            tangents /= np.linalg.norm(tangents, axis=-1)[:, None]
+            self._edge_tangents = tangents
+        return self._edge_tangents
 
     @property
     def edge_lengths(self):  # NOQA D102
         # Documentation inherited from discretize.base.BaseMesh
-        return np.linalg.norm(
-            np.diff(self.nodes[self._edges], axis=1).squeeze(), axis=-1
-        )
+        if getattr(self, "_edge_lengths", None) is None:
+            self._edge_lengths = np.linalg.norm(
+                np.diff(self.nodes[self._edges], axis=1).squeeze(), axis=-1
+            )
+        return self._edge_lengths
 
     @property
     def n_faces(self):  # NOQA D102
@@ -231,7 +239,9 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
     @property
     def faces(self):  # NOQA D102
         # Documentation inherited from discretize.base.BaseMesh
-        return np.mean(self.nodes[self._faces], axis=1)
+        if getattr(self, "_face_locs", None) is None:
+            self._face_locs = np.mean(self.nodes[self._faces], axis=1)
+        return self._face_locs
 
     @property
     def face_areas(self):  # NOQA D102
@@ -239,111 +249,119 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         if self.dim == 2:
             return self.edge_lengths
         else:
-            face_nodes = self._nodes[self._faces]
-            v01 = face_nodes[:, 1] - face_nodes[:, 0]
-            v02 = face_nodes[:, 2] - face_nodes[:, 0]
-            areas = np.linalg.norm(np.cross(v01, v02), axis=1) / 2
-            return areas
+            if getattr(self, "_face_areas", None) is None:
+                face_nodes = self._nodes[self._faces]
+                v01 = face_nodes[:, 1] - face_nodes[:, 0]
+                v02 = face_nodes[:, 2] - face_nodes[:, 0]
+                self._face_areas = np.linalg.norm(np.cross(v01, v02), axis=1) / 2
+            return self._face_areas
 
     @property
     def face_normals(self):  # NOQA D102
         # Documentation inherited from discretize.base.BaseMesh
-        if self.dim == 2:
-            # Take the normal as being the cross product of edge_tangents
-            # and a unit vector in a "3rd" dimension.
-            normals = np.cross(self.edge_tangents, [0, 0, 1])[:, :-1]
-            return normals
-        else:
-            # define normal as |01 x 02|
-            # therefore clockwise path about the normal is 0->1->2->0
-            face_nodes = self._nodes[self._faces]
-            v01 = face_nodes[:, 1] - face_nodes[:, 0]
-            v02 = face_nodes[:, 2] - face_nodes[:, 0]
-            normal = np.cross(v01, v02)
-            normal /= np.linalg.norm(normal, axis=1)[:, None]
-            return normal
+        if getattr(self, "_face_normals", None) is None:
+            if self.dim == 2:
+                # Take the normal as being the cross product of edge_tangents
+                # and a unit vector in a "3rd" dimension.
+                normal = np.cross(self.edge_tangents, [0, 0, 1])[:, :-1]
+            else:
+                # define normal as |01 x 02|
+                # therefore clockwise path about the normal is 0->1->2->0
+                face_nodes = self._nodes[self._faces]
+                v01 = face_nodes[:, 1] - face_nodes[:, 0]
+                v02 = face_nodes[:, 2] - face_nodes[:, 0]
+                normal = np.cross(v01, v02)
+                normal /= np.linalg.norm(normal, axis=1)[:, None]
+            self._face_normals = normal
+        return self._face_normals
 
     @property
     def face_divergence(self):  # NOQA D102
         # Documentation inherited from discretize.base.BaseMesh
-        areas = self.face_areas
-        normals = self.face_normals
+        if getattr(self, "_face_divergence", None) is None:
+            areas = self.face_areas
+            normals = self.face_normals
 
-        # approx outward normals (to figure out if face normal is opposite the outward direction)
-        test = self.faces[self._simplex_faces] - self.cell_centers[:, None, :]
-        dirs = np.einsum("ijk,ijk->ij", normals[self._simplex_faces], test)
+            # approx outward normals (to figure out if face normal is opposite the outward direction)
+            test = self.faces[self._simplex_faces] - self.cell_centers[:, None, :]
+            dirs = np.einsum("ijk,ijk->ij", normals[self._simplex_faces], test)
 
-        Aijs = areas[self._simplex_faces] / self.cell_volumes[:, None]
-        Aijs[dirs < 0] *= -1
+            Aijs = areas[self._simplex_faces] / self.cell_volumes[:, None]
+            Aijs[dirs < 0] *= -1
 
-        Aijs = Aijs.reshape(-1)
-        ind_ptr = (self.dim + 1) * np.arange(self.n_cells + 1)
-        col_inds = self._simplex_faces.reshape(-1)
-        D = sp.csr_matrix((Aijs, col_inds, ind_ptr), shape=(self.n_cells, self.n_faces))
-        return D
+            Aijs = Aijs.reshape(-1)
+            ind_ptr = (self.dim + 1) * np.arange(self.n_cells + 1)
+            col_inds = self._simplex_faces.reshape(-1)
+            self._face_divergence = sp.csr_matrix(
+                (Aijs, col_inds, ind_ptr), shape=(self.n_cells, self.n_faces)
+            )
+        return self._face_divergence
 
     @property
     def nodal_gradient(self):  # NOQA D102
         # Documentation inherited from discretize.base.BaseMesh
-        ind_ptr = 2 * np.arange(self.n_edges + 1)
-        col_inds = self._edges.reshape(-1)
-        Aijs = ((1.0 / self.edge_lengths[:, None]) * [-1, 1]).reshape(-1)
-
-        return sp.csr_matrix(
-            (Aijs, col_inds, ind_ptr), shape=(self.n_edges, self.n_nodes)
-        )
+        if getattr(self, "_nodal_gradient", None) is None:
+            ind_ptr = 2 * np.arange(self.n_edges + 1)
+            col_inds = self._edges.reshape(-1)
+            Aijs = ((1.0 / self.edge_lengths[:, None]) * [-1, 1]).reshape(-1)
+            self._nodal_gradient = sp.csr_matrix(
+                (Aijs, col_inds, ind_ptr), shape=(self.n_edges, self.n_nodes)
+            )
+        return self._nodal_gradient
 
     @property
     def edge_curl(self):  # NOQA D102
         # Documentation inherited from discretize.base.BaseMesh
-        dim = self.dim
-        n_edges = self.n_edges
-        if dim == 2:
-            face_edges = self._simplex_edges
-            face_nodes = self.nodes[self.simplices]
-            face_areas = self.cell_volumes
-            n_faces = self.n_cells
-        else:
-            face_edges = self._face_edges
-            face_nodes = self.nodes[self._faces]
-            face_areas = self.face_areas
-            n_faces = self.n_faces
+        if getattr(self, "_edge_curl", None) is None:
+            dim = self.dim
+            n_edges = self.n_edges
+            if dim == 2:
+                face_edges = self._simplex_edges
+                face_nodes = self.nodes[self.simplices]
+                face_areas = self.cell_volumes
+                n_faces = self.n_cells
+            else:
+                face_edges = self._face_edges
+                face_nodes = self.nodes[self._faces]
+                face_areas = self.face_areas
+                n_faces = self.n_faces
 
-        ind_ptr = 3 * np.arange(n_faces + 1)
-        col_inds = face_edges.reshape(-1)
+            ind_ptr = 3 * np.arange(n_faces + 1)
+            col_inds = face_edges.reshape(-1)
 
-        # edge tangents point from lower node to higher node
-        # clockwise about the face normal on face is path from 0 -> 1 -> 2 -> 0
-        # so for each face can take the dot product of the path with the edge tangent
+            # edge tangents point from lower node to higher node
+            # clockwise about the face normal on face is path from 0 -> 1 -> 2 -> 0
+            # so for each face can take the dot product of the path with the edge tangent
 
-        l01 = face_nodes[:, 1] - face_nodes[:, 0]  # path opposite node 2
-        l12 = face_nodes[:, 2] - face_nodes[:, 1]  # path opposite node 0
-        l20 = face_nodes[:, 0] - face_nodes[:, 2]  # path opposite node 1
+            l01 = face_nodes[:, 1] - face_nodes[:, 0]  # path opposite node 2
+            l12 = face_nodes[:, 2] - face_nodes[:, 1]  # path opposite node 0
+            l20 = face_nodes[:, 0] - face_nodes[:, 2]  # path opposite node 1
 
-        face_path_tangents = self.edge_tangents[face_edges]
+            face_path_tangents = self.edge_tangents[face_edges]
 
-        if dim == 2:
-            # need to do an adjustment in 2D for the places where the simplices
-            # are not oriented counter clockwise about the +z axis
-            # cp = np.cross(l01, -l20)
-            # cp is a bunch of 1s (where simplices are CCW) and -1s (where simplices are CW)
-            # (but we take the sign here to guard against numerical precision)
-            cp = np.sign(np.cross(l20, l01))
-            face_areas = face_areas * cp
-            # don't due *= here
+            if dim == 2:
+                # need to do an adjustment in 2D for the places where the simplices
+                # are not oriented counter clockwise about the +z axis
+                # cp = np.cross(l01, -l20)
+                # cp is a bunch of 1s (where simplices are CCW) and -1s (where simplices are CW)
+                # (but we take the sign here to guard against numerical precision)
+                cp = np.sign(np.cross(l20, l01))
+                face_areas = face_areas * cp
+                # don't due *= here
 
-        Aijs = (
-            np.c_[
-                np.einsum("ij,ij->i", face_path_tangents[:, 0], l12),
-                np.einsum("ij,ij->i", face_path_tangents[:, 1], l20),
-                np.einsum("ij,ij->i", face_path_tangents[:, 2], l01),
-            ]
-            / face_areas[:, None]
-        ).reshape(-1)
+            Aijs = (
+                np.c_[
+                    np.einsum("ij,ij->i", face_path_tangents[:, 0], l12),
+                    np.einsum("ij,ij->i", face_path_tangents[:, 1], l20),
+                    np.einsum("ij,ij->i", face_path_tangents[:, 2], l01),
+                ]
+                / face_areas[:, None]
+            ).reshape(-1)
 
-        C = sp.csr_matrix((Aijs, col_inds, ind_ptr), shape=(n_faces, n_edges))
-
-        return C
+            self._edge_curl = sp.csr_matrix(
+                (Aijs, col_inds, ind_ptr), shape=(n_faces, n_edges)
+            )
+        return self._edge_curl
 
     def __validate_model(self, model, invert_model=False):
         n_cells = self.n_cells
@@ -384,55 +402,61 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
     def __get_inner_product_projection_matrices(
         self, i_type, with_volume=True, return_pointers=True
     ):
-        dim = self.dim
-        n_cells = self.n_cells
-        if i_type == "F":
-            vecs = self.face_normals
-            n_items = self.n_faces
-            simplex_items = self._simplex_faces
-            if dim == 2:
-                node_items = np.array([[1, 2], [0, 2], [0, 1]])
-            else:
-                node_items = np.array([[1, 2, 3], [0, 2, 3], [0, 1, 3], [0, 1, 2]])
-        elif i_type == "E":
-            vecs = self.edge_tangents
-            n_items = self.n_edges
-            simplex_items = self._simplex_edges
-            if dim == 2:
-                node_items = np.array([[1, 2], [0, 2], [0, 1]])
-            elif dim == 3:
-                node_items = np.array([[1, 2, 3], [0, 2, 4], [0, 1, 5], [3, 4, 5]])
+        if getattr(self, "_proj_stash", None is None):
+            self._proj_stash = {}
+        if i_type not in self._proj_stash:
+            dim = self.dim
+            n_cells = self.n_cells
+            if i_type == "F":
+                vecs = self.face_normals
+                n_items = self.n_faces
+                simplex_items = self._simplex_faces
+                if dim == 2:
+                    node_items = np.array([[1, 2], [0, 2], [0, 1]])
+                else:
+                    node_items = np.array([[1, 2, 3], [0, 2, 3], [0, 1, 3], [0, 1, 2]])
+            elif i_type == "E":
+                vecs = self.edge_tangents
+                n_items = self.n_edges
+                simplex_items = self._simplex_edges
+                if dim == 2:
+                    node_items = np.array([[1, 2], [0, 2], [0, 1]])
+                elif dim == 3:
+                    node_items = np.array([[1, 2, 3], [0, 2, 4], [0, 1, 5], [3, 4, 5]])
 
-        Ps = []
-        # Precalc indptr and values for the projection matrix
-        P_indptr = np.arange(dim * n_cells + 1)
-        ones = np.ones(dim * n_cells)
-        if with_volume:
-            V = np.sqrt(self.cell_volumes / (dim + 1))
-
-        # precalculate indices for the block diagonal matrix
-        d = np.ones(dim, dtype=int)[:, None] * np.arange(dim)
-        t = np.arange(n_cells)
-        T_col_inds = (d + t[:, None, None] * dim).reshape(-1)
-        T_ind_ptr = dim * np.arange(dim * n_cells + 1)
-
-        for i in range(dim + 1):
-            # array which selects the items associated with node i of each simplex...
-            item_inds = np.take(simplex_items, node_items[i], axis=1)
-            P_col_inds = item_inds.reshape(-1)
-            P = sp.csr_matrix(
-                (ones, P_col_inds, P_indptr), shape=(dim * n_cells, n_items)
-            )
-
-            item_vectors = vecs[item_inds]
-            trans_inv = invert_blocks(item_vectors)
+            Ps = []
+            # Precalc indptr and values for the projection matrix
+            P_indptr = np.arange(dim * n_cells + 1)
+            ones = np.ones(dim * n_cells)
             if with_volume:
-                trans_inv *= V[:, None, None]
-            T = sp.csr_matrix(
-                (trans_inv.reshape(-1), T_col_inds, T_ind_ptr),
-                shape=(dim * n_cells, dim * n_cells),
-            )
-            Ps.append(T @ P)
+                V = np.sqrt(self.cell_volumes / (dim + 1))
+
+            # precalculate indices for the block diagonal matrix
+            d = np.ones(dim, dtype=int)[:, None] * np.arange(dim)
+            t = np.arange(n_cells)
+            T_col_inds = (d + t[:, None, None] * dim).reshape(-1)
+            T_ind_ptr = dim * np.arange(dim * n_cells + 1)
+
+            for i in range(dim + 1):
+                # array which selects the items associated with node i of each simplex...
+                item_inds = np.take(simplex_items, node_items[i], axis=1)
+                P_col_inds = item_inds.reshape(-1)
+                P = sp.csr_matrix(
+                    (ones, P_col_inds, P_indptr), shape=(dim * n_cells, n_items)
+                )
+
+                item_vectors = vecs[item_inds]
+                trans_inv = invert_blocks(item_vectors)
+                if with_volume:
+                    trans_inv *= V[:, None, None]
+                T = sp.csr_matrix(
+                    (trans_inv.reshape(-1), T_col_inds, T_ind_ptr),
+                    shape=(dim * n_cells, dim * n_cells),
+                )
+                Ps.append(T @ P)
+
+            self._proj_stash[i_type] = (Ps, T_col_inds, T_ind_ptr)
+        Ps, T_col_inds, T_ind_ptr = self._proj_stash[i_type]
         if return_pointers:
             return Ps, (T_col_inds, T_ind_ptr)
         else:
@@ -862,34 +886,46 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
     @property
     def average_node_to_cell(self):  # NOQA D102
         # Documentation inherited from discretize.base.BaseMesh
-        nodes_per_cell = self.dim + 1
-        n_cells = self.n_cells
+        if getattr(self, "_average_node_to_cell", None) is None:
+            nodes_per_cell = self.dim + 1
+            n_cells = self.n_cells
 
-        ind_ptr = nodes_per_cell * np.arange(n_cells + 1)
-        col_inds = self.simplices.reshape(-1)
-        Aij = np.full(nodes_per_cell * n_cells, 1 / nodes_per_cell)
-        return sp.csr_matrix((Aij, col_inds, ind_ptr), shape=(n_cells, self.n_nodes))
+            ind_ptr = nodes_per_cell * np.arange(n_cells + 1)
+            col_inds = self.simplices.reshape(-1)
+            Aij = np.full(nodes_per_cell * n_cells, 1 / nodes_per_cell)
+            self._average_node_to_cell = sp.csr_matrix(
+                (Aij, col_inds, ind_ptr), shape=(n_cells, self.n_nodes)
+            )
+        return self._average_node_to_cell
 
     @property
     def average_node_to_face(self):  # NOQA D102
         # Documentation inherited from discretize.base.BaseMesh
-        nodes_per_face = self.dim
-        n_faces = self.n_faces
+        if getattr(self, "_average_node_to_face", None) is None:
+            nodes_per_face = self.dim
+            n_faces = self.n_faces
 
-        ind_ptr = nodes_per_face * np.arange(n_faces + 1)
-        col_inds = self._faces.reshape(-1)
-        Aij = np.full(nodes_per_face * n_faces, 1 / nodes_per_face)
-        return sp.csr_matrix((Aij, col_inds, ind_ptr), shape=(n_faces, self.n_nodes))
+            ind_ptr = nodes_per_face * np.arange(n_faces + 1)
+            col_inds = self._faces.reshape(-1)
+            Aij = np.full(nodes_per_face * n_faces, 1 / nodes_per_face)
+            self._average_node_to_face = sp.csr_matrix(
+                (Aij, col_inds, ind_ptr), shape=(n_faces, self.n_nodes)
+            )
+        return self._average_node_to_face
 
     @property
     def average_node_to_edge(self):  # NOQA D102
         # Documentation inherited from discretize.base.BaseMesh
-        n_edges = self.n_edges
+        if getattr(self, "_average_node_to_edge", None) is None:
+            n_edges = self.n_edges
 
-        ind_ptr = 2 * np.arange(n_edges + 1)
-        col_inds = self._edges.reshape(-1)
-        Aij = np.full(2 * n_edges, 0.5)
-        return sp.csr_matrix((Aij, col_inds, ind_ptr), shape=(n_edges, self.n_nodes))
+            ind_ptr = 2 * np.arange(n_edges + 1)
+            col_inds = self._edges.reshape(-1)
+            Aij = np.full(2 * n_edges, 0.5)
+            self._average_node_to_edge = sp.csr_matrix(
+                (Aij, col_inds, ind_ptr), shape=(n_edges, self.n_nodes)
+            )
+        return self._average_node_to_edge
 
     @property
     def average_cell_to_node(self):
@@ -902,101 +938,122 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         (n_nodes, n_cells) scipy.sparse.csr_matrix
         """
         # this reproduces linear functions everywhere except on the boundary nodes
-        simps = self.simplices
-        cells = np.broadcast_to(np.arange(self.n_cells)[:, None], simps.shape).reshape(
-            -1
-        )
-        weights = np.broadcast_to(self.cell_volumes[:, None], simps.shape).reshape(-1)
-        simps = simps.reshape(-1)
+        if getattr(self, "_average_cell_to_node", None) is None:
+            simps = self.simplices
+            cells = np.broadcast_to(
+                np.arange(self.n_cells)[:, None], simps.shape
+            ).reshape(-1)
+            weights = np.broadcast_to(self.cell_volumes[:, None], simps.shape).reshape(
+                -1
+            )
+            simps = simps.reshape(-1)
 
-        A = sp.csr_matrix((weights, (simps, cells)), shape=(self.n_nodes, self.n_cells))
-        norm = sp.diags(1.0 / np.asarray(A.sum(axis=1))[:, 0])
-        return norm @ A
+            A = sp.csr_matrix(
+                (weights, (simps, cells)), shape=(self.n_nodes, self.n_cells)
+            )
+            norm = sp.diags(1.0 / np.asarray(A.sum(axis=1))[:, 0])
+            self._average_cell_to_node = norm @ A
+        return self._average_cell_to_node
 
     @property
     def average_cell_to_edge(self):  # NOQA D102
         # Documentation inherited from discretize.base.BaseMesh
         # Simple averaging of all cells with a common edge
-        simps = self._simplex_edges
-        cells = np.broadcast_to(np.arange(self.n_cells)[:, None], simps.shape).reshape(
-            -1
-        )
-        weights = np.broadcast_to(self.cell_volumes[:, None], simps.shape).reshape(-1)
-        simps = simps.reshape(-1)
+        if getattr(self, "_average_cell_to_edge", None) is None:
+            simps = self._simplex_edges
+            cells = np.broadcast_to(
+                np.arange(self.n_cells)[:, None], simps.shape
+            ).reshape(-1)
+            weights = np.broadcast_to(self.cell_volumes[:, None], simps.shape).reshape(
+                -1
+            )
+            simps = simps.reshape(-1)
 
-        A = sp.csr_matrix((weights, (simps, cells)), shape=(self.n_edges, self.n_cells))
-        norm = sp.diags(1.0 / np.asarray(A.sum(axis=1))[:, 0])
-        return norm @ A
+            A = sp.csr_matrix(
+                (weights, (simps, cells)), shape=(self.n_edges, self.n_cells)
+            )
+            norm = sp.diags(1.0 / np.asarray(A.sum(axis=1))[:, 0])
+            self._average_cell_to_edge = norm @ A
+        return self._average_cell_to_edge
 
     @property
     def average_face_to_cell_vector(self):  # NOQA D102
         # Documentation inherited from discretize.base.BaseMesh
-        dim = self.dim
-        n_cells = self.n_cells
-        n_faces = self.n_faces
+        if getattr(self, "_average_face_to_cell_vector", None) is None:
+            dim = self.dim
+            n_cells = self.n_cells
+            n_faces = self.n_faces
 
-        nodes_per_cell = dim + 1
+            nodes_per_cell = dim + 1
 
-        Av = sp.csr_matrix((dim * n_cells, n_faces))
-        Ps = self.__get_inner_product_projection_matrices(
-            "F", with_volume=False, return_pointers=False
-        )
-        for P in Ps:
-            Av = Av + 1 / (nodes_per_cell) * P
-        # Av needs to be re-ordered to comply with discretize standard
-        ind = np.arange(Av.shape[0]).reshape(n_cells, -1).flatten(order="F")
-        P = sp.eye(Av.shape[0], format="csr")[ind]
-        Av = P @ Av
-        return Av
+            Av = sp.csr_matrix((dim * n_cells, n_faces))
+            Ps = self.__get_inner_product_projection_matrices(
+                "F", with_volume=False, return_pointers=False
+            )
+            for P in Ps:
+                Av = Av + 1 / (nodes_per_cell) * P
+            # Av needs to be re-ordered to comply with discretize standard
+            ind = np.arange(Av.shape[0]).reshape(n_cells, -1).flatten(order="F")
+            P = sp.eye(Av.shape[0], format="csr")[ind]
+            self._average_face_to_cell_vector = P @ Av
+
+        return self._average_face_to_cell_vector
 
     @property
     def average_edge_to_cell_vector(self):  # NOQA D102
         # Documentation inherited from discretize.base.BaseMesh
-        dim = self.dim
-        n_cells = self.n_cells
-        n_edges = self.n_edges
-        nodes_per_cell = dim + 1
+        if getattr(self, "_average_edge_to_cell_vector", None) is None:
+            dim = self.dim
+            n_cells = self.n_cells
+            n_edges = self.n_edges
+            nodes_per_cell = dim + 1
 
-        Av = sp.csr_matrix((dim * n_cells, n_edges))
-        # Precalc indptr and values for the projection matrix
-        Ps = self.__get_inner_product_projection_matrices(
-            "E", with_volume=False, return_pointers=False
-        )
-        for P in Ps:
-            Av = Av + 1 / (nodes_per_cell) * P
-        # Av needs to be re-ordered to comply with discretize standard
-        ind = np.arange(Av.shape[0]).reshape(n_cells, -1).flatten(order="F")
-        P = sp.eye(Av.shape[0], format="csr")[ind]
-        Av = P @ Av
-        return Av
+            Av = sp.csr_matrix((dim * n_cells, n_edges))
+            # Precalc indptr and values for the projection matrix
+            Ps = self.__get_inner_product_projection_matrices(
+                "E", with_volume=False, return_pointers=False
+            )
+            for P in Ps:
+                Av = Av + 1 / (nodes_per_cell) * P
+            # Av needs to be re-ordered to comply with discretize standard
+            ind = np.arange(Av.shape[0]).reshape(n_cells, -1).flatten(order="F")
+            P = sp.eye(Av.shape[0], format="csr")[ind]
+            self._average_edge_to_cell_vector = P @ Av
+        return self._average_edge_to_cell_vector
 
     @property
     def average_face_to_cell(self):  # NOQA D102
         # Documentation inherited from discretize.base.BaseMesh
-        n_cells = self.n_cells
-        n_faces = self.n_faces
-        col_inds = self._simplex_faces
-        n_face_per_cell = col_inds.shape[1]
-        Aij = np.full((n_cells, n_face_per_cell), 1.0 / n_face_per_cell)
-        row_ptr = np.arange(n_cells + 1) * (n_face_per_cell)
+        if getattr(self, "_average_face_to_cell", None) is None:
+            n_cells = self.n_cells
+            n_faces = self.n_faces
+            col_inds = self._simplex_faces
+            n_face_per_cell = col_inds.shape[1]
+            Aij = np.full((n_cells, n_face_per_cell), 1.0 / n_face_per_cell)
+            row_ptr = np.arange(n_cells + 1) * (n_face_per_cell)
 
-        return sp.csr_matrix(
-            (Aij.reshape(-1), col_inds.reshape(-1), row_ptr), shape=(n_cells, n_faces)
-        )
+            self._average_face_to_cell = sp.csr_matrix(
+                (Aij.reshape(-1), col_inds.reshape(-1), row_ptr),
+                shape=(n_cells, n_faces),
+            )
+        return self._average_face_to_cell
 
     @property
     def average_edge_to_cell(self):  # NOQA D102
         # Documentation inherited from discretize.base.BaseMesh
-        n_cells = self.n_cells
-        n_edges = self.n_edges
-        col_inds = self._simplex_edges
-        n_edge_per_cell = col_inds.shape[1]
-        Aij = np.full((n_cells, n_edge_per_cell), 1.0 / (n_edge_per_cell))
-        row_ptr = np.arange(n_cells + 1) * (n_edge_per_cell)
+        if getattr(self, "_average_edge_to_cell", None) is None:
+            n_cells = self.n_cells
+            n_edges = self.n_edges
+            col_inds = self._simplex_edges
+            n_edge_per_cell = col_inds.shape[1]
+            Aij = np.full((n_cells, n_edge_per_cell), 1.0 / (n_edge_per_cell))
+            row_ptr = np.arange(n_cells + 1) * (n_edge_per_cell)
 
-        return sp.csr_matrix(
-            (Aij.reshape(-1), col_inds.reshape(-1), row_ptr), shape=(n_cells, n_edges)
-        )
+            self._average_edge_to_cell = sp.csr_matrix(
+                (Aij.reshape(-1), col_inds.reshape(-1), row_ptr),
+                shape=(n_cells, n_edges),
+            )
+        return self._average_edge_to_cell
 
     @property
     def average_edge_to_face(self):  # NOQA D102
@@ -1004,42 +1061,51 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         if self.dim == 2:
             # in 2D edges are at the same location as faces
             return sp.eye(self.n_edges, self.n_edges)
-        # in 3D there are three edges per face
-        n_faces = self.n_faces
-        n_edges = self.n_edges
-        face_edges = self._face_edges
 
-        ind_ptr = 3 * np.arange(n_faces + 1)
-        col_inds = face_edges.reshape(-1)
-        Aijs = np.full(3 * self.n_faces, 1 / 3)
-        Av = sp.csr_matrix((Aijs, col_inds, ind_ptr), shape=(n_faces, n_edges))
-        return Av
+        if getattr(self, "_average_edge_to_face", None) is None:
+            # in 3D there are three edges per face
+            n_faces = self.n_faces
+            n_edges = self.n_edges
+            face_edges = self._face_edges
+
+            ind_ptr = 3 * np.arange(n_faces + 1)
+            col_inds = face_edges.reshape(-1)
+            Aijs = np.full(3 * self.n_faces, 1 / 3)
+            self._average_edge_to_face = sp.csr_matrix(
+                (Aijs, col_inds, ind_ptr), shape=(n_faces, n_edges)
+            )
+        return self._average_edge_to_face
 
     @property
     def average_cell_to_face(self):  # NOQA D102
         # Documentation inherited from discretize.base.BaseMesh
-        A = self.average_face_to_cell.T
-        row_sum = np.asarray(A.sum(axis=-1))[:, 0]
-        row_sum[row_sum == 0.0] = 1.0
-        A = sp.diags(1.0 / row_sum) @ A
-        return A
+
+        if getattr(self, "_average_cell_to_face", None) is None:
+            A = self.average_face_to_cell.T
+            row_sum = np.asarray(A.sum(axis=-1))[:, 0]
+            row_sum[row_sum == 0.0] = 1.0
+            self._average_cell_to_face = sp.diags(1.0 / row_sum) @ A
+        return self._average_cell_to_face
 
     @property
     def stencil_cell_gradient(self):  # NOQA D102
         # Documentation inherited from discretize.base.BaseMesh
         # An operator that differences cells on each side of a face
         # in the direction of the face normal
-        tests = self.cell_centers[:, None, :] - self.faces[self._simplex_faces]
-        Aij = np.sign(
-            np.einsum("ijk, ijk -> ij", tests, self.face_normals[self._simplex_faces])
-        ).reshape(-1)
-        ind_ptr = 3 * np.arange(self.n_cells + 1)
-        col_inds = self._simplex_faces.reshape(-1)
+        if getattr(self, "_stencil_cell_gradient", None) is None:
+            tests = self.cell_centers[:, None, :] - self.faces[self._simplex_faces]
+            Aij = np.sign(
+                np.einsum(
+                    "ijk, ijk -> ij", tests, self.face_normals[self._simplex_faces]
+                )
+            ).reshape(-1)
+            ind_ptr = 3 * np.arange(self.n_cells + 1)
+            col_inds = self._simplex_faces.reshape(-1)
 
-        Aij = sp.csr_matrix(
-            (Aij, col_inds, ind_ptr), shape=(self.n_cells, self.n_faces)
-        ).T
-        return Aij
+            self._stencil_cell_gradient = sp.csr_matrix(
+                (Aij, col_inds, ind_ptr), shape=(self.n_cells, self.n_faces)
+            ).T
+        return self._stencil_cell_gradient
 
     @property
     def boundary_face_list(self):
