@@ -1997,9 +1997,7 @@ class BaseMesh:
         >>> ax1.spy(M, ms=5)
         >>> ax1.set_title("M (isotropic)", fontsize=16)
         >>> plt.show()
-
         """
-
         raise NotImplementedError(
             f"get_edge_inner_product_surface not implemented for {type(self)}"
         )
@@ -2122,7 +2120,6 @@ class BaseMesh:
         >>> ax1.set_title("M (isotropic)", fontsize=16)
         >>> plt.show()
         """
-
         raise NotImplementedError(
             f"get_face_inner_product_surface not implemented for {type(self)}"
         )
@@ -2245,7 +2242,6 @@ class BaseMesh:
         >>> ax1.set_title("M (isotropic)", fontsize=16)
         >>> plt.show()
         """
-
         raise NotImplementedError(
             f"get_edge_inner_product_line not implemented for {type(self)}"
         )
@@ -2428,7 +2424,6 @@ class BaseMesh:
         >>> ax2.set_xlabel("Parameter Index", fontsize=12)
         >>> ax2.set_ylabel("Face Index", fontsize=12)
         >>> plt.show()
-
         """
         raise NotImplementedError(
             f"get_face_inner_product_deriv not implemented for {type(self)}"
@@ -2661,7 +2656,6 @@ class BaseMesh:
             (``n_edges``) :class:`numpy.ndarray` :math:`\mathbf{u}`. The function
             returns a (``n_edges``, ``n_params``) :class:`scipy.sparse.csr_matrix`.
         """
-
         raise NotImplementedError(
             f"get_edge_inner_product_surface_deriv not implemented for {type(self)}"
         )
@@ -2711,7 +2705,6 @@ class BaseMesh:
             (``n_faces``) :class:`numpy.ndarray` :math:`\mathbf{u}`. The function
             returns a (``n_faces``, ``n_params``) :class:`scipy.sparse.csr_matrix`.
         """
-
         raise NotImplementedError(
             f"get_face_inner_product_surface_deriv not implemented for {type(self)}"
         )
@@ -2761,7 +2754,6 @@ class BaseMesh:
             (``n_edges``) :class:`numpy.ndarray` :math:`\mathbf{u}`. The function
             returns a (``n_edges``, ``n_params``) :class:`scipy.sparse.csr_matrix`.
         """
-
         raise NotImplementedError(
             f"get_edge_inner_product_line_deriv not implemented for {type(self)}"
         )

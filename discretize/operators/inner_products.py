@@ -95,14 +95,14 @@ class InnerProducts(BaseMesh):
             do_fast=do_fast,
         )
 
-    def get_edge_inner_product_surface(
+    def get_edge_inner_product_surface(  # NOQA D102
         self, model, invert_model=False, invert_matrix=False, do_fast=True, **kwargs
     ):
         # Inherited documentation from discretize.base.BaseMesh
 
         fast = None
-        if hasattr(self, "_fastFacePropertiesInnerProduct") and do_fast:
-            fast = self._fastFacePropertiesInnerProduct(
+        if hasattr(self, "_fastInnerProductSurface") and do_fast:
+            fast = self._fastInnerProductSurface(
                 projection_type="E",
                 model=model,
                 invert_model=invert_model,
@@ -115,14 +115,14 @@ class InnerProducts(BaseMesh):
             "General edge mass matrix for face properties is not implemented. Only meshes with fast implementation possible"
         )
 
-    def get_face_inner_product_surface(
+    def get_face_inner_product_surface(  # NOQA D102
         self, model, invert_model=False, invert_matrix=False, do_fast=True, **kwargs
     ):
         # Inherited documentation from discretize.base.BaseMesh
 
         fast = None
-        if hasattr(self, "_fastFacePropertiesInnerProduct") and do_fast:
-            fast = self._fastFacePropertiesInnerProduct(
+        if hasattr(self, "_fastInnerProductSurface") and do_fast:
+            fast = self._fastInnerProductSurface(
                 projection_type="F",
                 model=model,
                 invert_model=invert_model,
@@ -135,14 +135,14 @@ class InnerProducts(BaseMesh):
             "General edge mass matrix for face properties is not implemented. Only meshes with fast implementation possible"
         )
 
-    def get_edge_inner_product_line(
+    def get_edge_inner_product_line(  # NOQA D102
         self, model, invert_model=False, invert_matrix=False, do_fast=True, **kwargs
     ):
         # Inherited documentation from discretize.base.BaseMesh
 
         fast = None
-        if hasattr(self, "_fastEdgePropertiesInnerProduct") and do_fast:
-            fast = self._fastEdgePropertiesInnerProduct(
+        if hasattr(self, "_fastInnerProductLine") and do_fast:
+            fast = self._fastInnerProductLine(
                 model=model,
                 invert_model=invert_model,
                 invert_matrix=invert_matrix,
@@ -349,7 +349,7 @@ class InnerProducts(BaseMesh):
                 "The invMat keyword argument has been removed, please use invert_matrix. "
                 "This will be removed in discretize 1.0.0",
             )
-        return self._fastFacePropertiesInnerProductDeriv(
+        return self._fastInnerProductSurfaceDeriv(
             "F",
             model,
             invert_model=invert_model,
@@ -370,7 +370,7 @@ class InnerProducts(BaseMesh):
                 "The invMat keyword argument has been removed, please use invert_matrix. "
                 "This will be removed in discretize 1.0.0",
             )
-        return self._fastFacePropertiesInnerProductDeriv(
+        return self._fastInnerProductSurfaceDeriv(
             "E",
             model,
             invert_model=invert_model,
@@ -391,7 +391,7 @@ class InnerProducts(BaseMesh):
                 "The invMat keyword argument has been removed, please use invert_matrix. "
                 "This will be removed in discretize 1.0.0",
             )
-        return self._fastEdgePropertiesInnerProductDeriv(
+        return self._fastInnerProductLineDeriv(
             model,
             invert_model=invert_model,
             invert_matrix=invert_matrix,

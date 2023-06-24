@@ -1048,7 +1048,7 @@ class BaseTensorMesh(BaseRegularMesh):
         if model.size == self.nF:
             Aprop = self.face_areas * mkvc(model)
             if projection_type == "E":
-                Av = getattr(self, "average_edge_to_face")
+                Av = self.average_edge_to_face
                 M = n_elements * sdiag(Av.T * Aprop)
             else:
                 M = sdiag(Aprop)
@@ -1096,9 +1096,7 @@ class BaseTensorMesh(BaseRegularMesh):
         else:
             raise Exception(
                 "Unexpected shape of tensor: {}".format(model.shape),
-                "Must be scalar or have length equal to total number of faces.".format(
-                    self.nF
-                ),
+                "Must be scalar or have length equal to total number of faces."
             )
 
         dMdprop = None
@@ -1125,7 +1123,7 @@ class BaseTensorMesh(BaseRegularMesh):
 
         A = sdiag(self.face_areas)
         if projection_type == "E":
-            Av = getattr(self, "average_edge_to_face")
+            Av = self.average_edge_to_face
         else:
             Av = sdiag(np.ones(self.nF) / n_elements)
 
