@@ -1,4 +1,5 @@
 """Module housing the TensorMesh implementation."""
+import itertools
 import numpy as np
 
 from discretize.base import BaseRectangularMesh, BaseTensorMesh
@@ -6,6 +7,8 @@ from discretize.operators import DiffOperators, InnerProducts
 from discretize.mixins import InterfaceMixins, TensorMeshIO
 from discretize.utils import mkvc
 from discretize.utils.code_utils import deprecate_property
+
+from .tensor_cell import TensorCell
 
 
 class TensorMesh(
@@ -158,6 +161,133 @@ class TensorMesh(
 
         fmt += "</table>\n"
         return fmt
+
+    def __iter__(self):
+        """Iterate over the cells."""
+        iterator = (self[i] for i in range(len(self)))
+        return iterator
+
+    def __getitem__(self, indices):
+        """
+        Return the boundaries of a single cell of the mesh.
+
+        Parameters
+        ----------
+        indices : int, slice, or tuple of int and slices
+            Indices of a cell in the mesh.
+            It can be a single integer or a single slice (for ravelled
+            indices), or a tuple combining integers and slices for each
+            direction.
+
+        Returns
+        -------
+        TensorCell or list of TensorCell
+        """
+        # Handle non tuple indices
+        if isinstance(indices, slice):
+            cells = [self[i] for i in _slice_to_index(indices, len(self))]
+            return cells
+        if np.issubdtype(type(indices), np.integer):
+            indices = self._sanitize_indices(indices)
+            indices = np.unravel_index(indices, self.shape_cells, order="F")
+        # Handle tuple indices
+        if not isinstance(indices, tuple):
+            raise ValueError(
+                f"Invalid indices '{indices}'. "
+                "It should be an int, a slice or a tuple of int and slices."
+            )
+        if len(indices) != self.dim:
+            raise ValueError(
+                f"Invalid number of indices '{len(indices)}'. "
+                f"It should match the number of dimensions of the mesh ({self.dim})."
+            )
+        # Int indices only
+        all_indices_are_ints = all(np.issubdtype(type(i), np.integer) for i in indices)
+        if all_indices_are_ints:
+            indices = self._sanitize_indices(indices)
+            return self._get_cell(indices)
+        # Slice and int indices
+        indices_per_dim = [
+            _slice_to_index(index, self.shape_cells[dim])
+            if isinstance(index, slice)
+            else [self._sanitize_indices(index, dim=dim)]
+            for dim, index in enumerate(indices)
+        ]
+        # Combine the indices_per_dim using itertools.product.
+        # Because we want to follow a FORTRAN order, we need to reverse the
+        # order of the indices_per_dim and the indices.
+        indices = (i[::-1] for i in itertools.product(*indices_per_dim[::-1]))
+        cells = [self._get_cell(i) for i in indices]
+        if not cells:
+            return None
+        return cells
+
+    def _sanitize_indices(self, indices, dim=None):
+        """
+        Sanitize integer indices for cell in the mesh.
+
+        Convert negative indices into their corresponding positive values
+        within the mesh. It works with a tuple of indices or with
+        single int (ravelled indices).
+
+        Parameters
+        ----------
+        indices : int or tuple of int
+            Indices of a single mesh cell. It can contain negative indices.
+        dim : int or None
+            Corresponding dimension of ``indices``, if it's a single int. If
+            None and ``indices`` is an int, then ``indices`` will be assumed to
+            be a ravelled index. If ``indices`` is a tuple, ``dim`` is ignored.
+
+        Returns
+        -------
+        int or tuple of int
+        """
+        if isinstance(indices, tuple):
+            indices = tuple(
+                index if index >= 0 else index + self.shape_cells[i]
+                for i, index in enumerate(indices)
+            )
+        elif indices < 0:
+            if dim is None:
+                indices = indices + self.n_cells
+            else:
+                indices = indices + self.shape_cells[dim]
+        return indices
+
+    def _get_cell(self, indices):
+        """Return a single cell in the mesh.
+
+        Parameters
+        ----------
+        indices : tuple of int
+            Tuple containing the indices of the cell. Must have the same number
+            of elements as the mesh dimensions.
+
+        Returns
+        -------
+        TensorCell
+        """
+        assert all(index >= 0 for index in indices)
+        if self.dim == 1:
+            (i,) = indices
+            x1, x2 = self.nodes_x[i], self.nodes_x[i + 1]
+            origin = np.array([x1])
+            h = np.array([x2 - x1])
+        if self.dim == 2:
+            i, j = indices
+            x1, x2 = self.nodes_x[i], self.nodes_x[i + 1]
+            y1, y2 = self.nodes_y[j], self.nodes_y[j + 1]
+            origin = np.array([x1, y1])
+            h = np.array([x2 - x1, y2 - y1])
+        if self.dim == 3:
+            i, j, k = indices
+            x1, x2 = self.nodes_x[i], self.nodes_x[i + 1]
+            y1, y2 = self.nodes_y[j], self.nodes_y[j + 1]
+            z1, z2 = self.nodes_z[k], self.nodes_z[k + 1]
+            origin = np.array([x1, y1, z1])
+            h = np.array([x2 - x1, y2 - y1, z2 - z1])
+        return TensorCell(h, origin, indices, self.shape_cells)
 
     # --------------- Geometries ---------------------
     @property
@@ -600,3 +730,33 @@ class TensorMesh(
         removal_version="1.0.0",
         error=True,
     )
+
+
+def _slice_to_index(index_slice, end):
+    """Generate indices from a slice.
+
+    Parameters
+    ----------
+    index_slice : slice
+        Slice for cell indices along a single dimension
+    end : int
+        End of the slice. Will use this value as the stop in case the
+        `index_slice.stop` is None.
+
+    Returns
+    -------
+    Generator
+    """
+    if (start := index_slice.start) is None:
+        start = 0
+    if (stop := index_slice.stop) is None:
+        stop = end
+    if (step := index_slice.step) is None:
+        step = 1
+    if start < 0:
+        start += end
+    if stop < 0:
+        stop += end
+    if step < 0:
+        return reversed(range(start, stop, abs(step)))
+    return range(start, stop, step)

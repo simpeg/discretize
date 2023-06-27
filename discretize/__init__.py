@@ -18,15 +18,21 @@ Mesh Classes
   TreeMesh
   SimplexMesh
 
-Tree Mesh Cells
-===============
-The :class:`~discretize.tree_mesh.TreeCell` class was designed specificialy to define the cells within tree meshes.
-Instances of :class:`~discretize.tree_mesh.TreeCell` are not meant to be created on there own.
-However, they can be returned directly by indexing a particular cell within a tree mesh.
+Mesh Cells
+==========
+The :class:`~discretize.tensor_cell.TensorCell` and
+:class:`~discretize.tree_mesh.TreeCell` classes were designed specifically to
+define the cells within tensor and tree meshes, respectively.
+Instances of :class:`~discretize.tree_mesh.TreeCell` and
+:class:`~discretize.tensor_cell.TensorCell` are not meant to be created on
+their own.
+However, they can be returned directly by indexing a particular cell within
+a tensor or tree mesh.
 
 .. autosummary::
   :toctree: generated/
 
+  tensor_cell.TensorCell
   tree_mesh.TreeCell
 """
 
@@ -35,6 +41,7 @@ from discretize.cylindrical_mesh import CylMesh, CylindricalMesh
 from discretize.curvilinear_mesh import CurvilinearMesh
 from discretize.unstructured_mesh import SimplexMesh
 from discretize.utils.io_utils import load_mesh
+from .tensor_cell import TensorCell
 
 try:
     from discretize.tree_mesh import TreeMesh
