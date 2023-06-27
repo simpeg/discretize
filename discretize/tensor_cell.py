@@ -20,6 +20,50 @@ class TensorCell:
         Array with the unraveled indices of the cell in its parent mesh.
     mesh_shape : (dim) tuple
         Shape of the parent mesh.
+
+    Examples
+    --------
+    Define a simple :class:`discretize.TensorMesh`.
+
+    >>> from discretize import TensorMesh
+    >>> mesh = TensorMesh([5, 8, 10])
+
+    We can obtain a particular cell in the mesh by its index:
+
+    >>> cell = mesh[3]
+    >>> cell
+    TensorCell(h=[0.2   0.125 0.1  ], origin=[0.6 0.  0. ], index=3, mesh_shape=(5, 8, 10))
+
+    And then obtain information about it, like its
+    :attr:`discretize.tensor_cell.TensorCell.origin`:
+
+    >>> cell.origin
+    array([0.6, 0. , 0. ])
+
+    Or its
+    :attr:`discretize.tensor_cell.TensorCell.bounds`:
+
+    >>> cell.bounds
+    array([0.6  , 0.8  , 0.   , 0.125, 0.   , 0.1  ])
+
+    We can also get its neighboring cells:
+
+    >>> neighbours = cell.get_neighbors(mesh)
+    >>> for neighbor in neighbours:
+    ...     print(neighbor.center)
+    [0.5    0.0625 0.05  ]
+    [0.9    0.0625 0.05  ]
+    [0.7    0.1875 0.05  ]
+    [0.7    0.0625 0.15  ]
+
+
+    Alternatively, we can iterate over all cells in the mesh with a simple
+    *for loop* or list comprehension:
+
+    >>> cells = [cell for cell in mesh]
+    >>> len(cells)
+    400
+
     """
 
     def __init__(self, h, origin, index_unraveled, mesh_shape):
