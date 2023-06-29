@@ -12,18 +12,18 @@ class TestInnerProducts(discretize.tests.OrderTest):
     meshSizes = [16, 32]
 
     def getError(self):
-        call = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1], xyz[:, 2])
+        call = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1], xyz[:, 2])  # NOQA E731
 
-        ex = lambda x, y, z: x**2 + y * z
-        ey = lambda x, y, z: (z**2) * x + y * z
-        ez = lambda x, y, z: y**2 + x * z
+        ex = lambda x, y, z: x**2 + y * z  # NOQA E731
+        ey = lambda x, y, z: (z**2) * x + y * z  # NOQA E731
+        ez = lambda x, y, z: y**2 + x * z  # NOQA E731
 
-        sigma1 = lambda x, y, z: x * y + 1
-        sigma2 = lambda x, y, z: x * z + 2
-        sigma3 = lambda x, y, z: 3 + z * y
-        sigma4 = lambda x, y, z: 0.1 * x * y * z
-        sigma5 = lambda x, y, z: 0.2 * x * y
-        sigma6 = lambda x, y, z: 0.1 * z
+        sigma1 = lambda x, y, z: x * y + 1  # NOQA E731
+        sigma2 = lambda x, y, z: x * z + 2  # NOQA E731
+        sigma3 = lambda x, y, z: 3 + z * y  # NOQA E731
+        sigma4 = lambda x, y, z: 0.1 * x * y * z  # NOQA E731
+        sigma5 = lambda x, y, z: 0.2 * x * y  # NOQA E731
+        sigma6 = lambda x, y, z: 0.1 * z  # NOQA E731
 
         Gc = self.M.gridCC
         if self.sigmaTest == 1:
@@ -44,7 +44,7 @@ class TestInnerProducts(discretize.tests.OrderTest):
             analytic = 69881.0 / 21600  # Found using sympy.
 
         if self.location == "edges":
-            cart = lambda g: np.c_[call(ex, g), call(ey, g), call(ez, g)]
+            cart = lambda g: np.c_[call(ex, g), call(ey, g), call(ez, g)]  # NOQA E731
             Ec = np.vstack(
                 (cart(self.M.gridEx), cart(self.M.gridEy), cart(self.M.gridEz))
             )
@@ -59,7 +59,7 @@ class TestInnerProducts(discretize.tests.OrderTest):
                 A = self.M.get_edge_inner_product(sigma)
             numeric = E.T.dot(A.dot(E))
         elif self.location == "faces":
-            cart = lambda g: np.c_[call(ex, g), call(ey, g), call(ez, g)]
+            cart = lambda g: np.c_[call(ex, g), call(ey, g), call(ez, g)]  # NOQA E731
             Fc = np.vstack(
                 (cart(self.M.gridFx), cart(self.M.gridFy), cart(self.M.gridFz))
             )
@@ -171,15 +171,15 @@ class TestInnerProductsFaceProperties3D(discretize.tests.OrderTest):
     meshSizes = [16, 32]
 
     def getError(self):
-        call = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1], xyz[:, 2])
+        call = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1], xyz[:, 2])  # NOQA E731
 
-        ex = lambda x, y, z: x**2 + y * z
-        ey = lambda x, y, z: (z**2) * x + y * z
-        ez = lambda x, y, z: y**2 + x * z
+        ex = lambda x, y, z: x**2 + y * z  # NOQA E731
+        ey = lambda x, y, z: (z**2) * x + y * z  # NOQA E731
+        ez = lambda x, y, z: y**2 + x * z  # NOQA E731
 
-        tau_x = lambda x, y, z: y * z + 1  # x-face properties
-        tau_y = lambda x, y, z: x * z + 2  # y-face properties
-        tau_z = lambda x, y, z: 3 + x * y  # z-face properties
+        tau_x = lambda x, y, z: y * z + 1  # NOQA E731  # x-face properties
+        tau_y = lambda x, y, z: x * z + 2  # NOQA E731  # y-face properties
+        tau_z = lambda x, y, z: 3 + x * y  # NOQA E731  # z-face properties
 
         tau = 3 * [None]
         for ii, comp in enumerate(["x", "y", "z"]):
@@ -197,7 +197,7 @@ class TestInnerProductsFaceProperties3D(discretize.tests.OrderTest):
         if self.location == "edges":
             analytic = 5.02760416666667  # Found using sympy.
 
-            cart = lambda g: np.c_[call(ex, g), call(ey, g), call(ez, g)]
+            cart = lambda g: np.c_[call(ex, g), call(ey, g), call(ez, g)]  # NOQA E731
 
             Ec = np.vstack(
                 (cart(self.M.gridEx), cart(self.M.gridEy), cart(self.M.gridEz))
@@ -215,7 +215,7 @@ class TestInnerProductsFaceProperties3D(discretize.tests.OrderTest):
         elif self.location == "faces":
             analytic = 2.66979166666667  # Found using sympy.
 
-            cart = lambda g: np.c_[call(ex, g), call(ey, g), call(ez, g)]
+            cart = lambda g: np.c_[call(ex, g), call(ey, g), call(ez, g)]  # NOQA E731
 
             Fc = np.vstack(
                 (cart(self.M.gridFx), cart(self.M.gridFy), cart(self.M.gridFz))
@@ -267,15 +267,15 @@ class TestInnerProductsEdgeProperties3D(discretize.tests.OrderTest):
     meshSizes = [16, 32]
 
     def getError(self):
-        call = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1], xyz[:, 2])
+        call = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1], xyz[:, 2])  # NOQA E731
 
-        ex = lambda x, y, z: x**2 + y * z
-        ey = lambda x, y, z: (z**2) * x + y * z
-        ez = lambda x, y, z: y**2 + x * z
+        ex = lambda x, y, z: x**2 + y * z  # NOQA E731
+        ey = lambda x, y, z: (z**2) * x + y * z  # NOQA E731
+        ez = lambda x, y, z: y**2 + x * z  # NOQA E731
 
-        tau_x = lambda x, y, z: x + 1  # x-face properties
-        tau_y = lambda x, y, z: y + 2  # y-face properties
-        tau_z = lambda x, y, z: 3 * z + 1  # z-face properties
+        tau_x = lambda x, y, z: x + 1  # NOQA E731  # x-face properties
+        tau_y = lambda x, y, z: y + 2  # NOQA E731  # y-face properties
+        tau_z = lambda x, y, z: 3 * z + 1  # NOQA E731  # z-face properties
 
         tau = 3 * [None]
         for ii, comp in enumerate(["x", "y", "z"]):
@@ -293,7 +293,7 @@ class TestInnerProductsEdgeProperties3D(discretize.tests.OrderTest):
 
         analytic = 1.98906250000000  # Found using sympy.
 
-        cart = lambda g: np.c_[call(ex, g), call(ey, g), call(ez, g)]
+        cart = lambda g: np.c_[call(ex, g), call(ey, g), call(ez, g)]  # NOQA E731
 
         Ec = np.vstack((cart(self.M.gridEx), cart(self.M.gridEy), cart(self.M.gridEz)))
         E = self.M.project_edge_vector(Ec)
@@ -333,14 +333,14 @@ class TestInnerProducts2D(discretize.tests.OrderTest):
     def getError(self):
         z = 5  # Because 5 is just such a great number.
 
-        call = lambda fun, xy: fun(xy[:, 0], xy[:, 1])
+        call = lambda fun, xy: fun(xy[:, 0], xy[:, 1])  # NOQA E731
 
-        ex = lambda x, y: x**2 + y * z
-        ey = lambda x, y: (z**2) * x + y * z
+        ex = lambda x, y: x**2 + y * z  # NOQA E731
+        ey = lambda x, y: (z**2) * x + y * z  # NOQA E731
 
-        sigma1 = lambda x, y: x * y + 1
-        sigma2 = lambda x, y: x * z + 2
-        sigma3 = lambda x, y: 3 + z * y
+        sigma1 = lambda x, y: x * y + 1  # NOQA E731
+        sigma2 = lambda x, y: x * z + 2  # NOQA E731
+        sigma3 = lambda x, y: 3 + z * y  # NOQA E731
 
         Gc = self.M.gridCC
         if self.sigmaTest == 1:
@@ -354,7 +354,7 @@ class TestInnerProducts2D(discretize.tests.OrderTest):
             analytic = 781427.0 / 360  # Found using sympy. z=5
 
         if self.location == "edges":
-            cart = lambda g: np.c_[call(ex, g), call(ey, g)]
+            cart = lambda g: np.c_[call(ex, g), call(ey, g)]  # NOQA E731
             Ec = np.vstack((cart(self.M.gridEx), cart(self.M.gridEy)))
             E = self.M.project_edge_vector(Ec)
             if self.invert_model:
@@ -366,7 +366,7 @@ class TestInnerProducts2D(discretize.tests.OrderTest):
                 A = self.M.get_edge_inner_product(sigma)
             numeric = E.T.dot(A.dot(E))
         elif self.location == "faces":
-            cart = lambda g: np.c_[call(ex, g), call(ey, g)]
+            cart = lambda g: np.c_[call(ex, g), call(ey, g)]  # NOQA E731
             Fc = np.vstack((cart(self.M.gridFx), cart(self.M.gridFy)))
             F = self.M.project_face_vector(Fc)
 
@@ -476,13 +476,13 @@ class TestInnerProductsFaceProperties2D(discretize.tests.OrderTest):
     meshSizes = [8, 16, 32]
 
     def getError(self):
-        call = lambda fun, xy: fun(xy[:, 0], xy[:, 1])
+        call = lambda fun, xy: fun(xy[:, 0], xy[:, 1])  # NOQA E731
 
-        ex = lambda x, y: x**2 + y
-        ey = lambda x, y: (y**2) * x
+        ex = lambda x, y: x**2 + y  # NOQA E731
+        ey = lambda x, y: (y**2) * x  # NOQA E731
 
-        tau_x = lambda x, y: 2 * y + 1  # x-face properties
-        tau_y = lambda x, y: x + 2  # y-face properties
+        tau_x = lambda x, y: 2 * y + 1  # NOQA E731  # x-face properties
+        tau_y = lambda x, y: x + 2  # NOQA E731  # y-face properties
 
         tau = 2 * [None]
         for ii, comp in enumerate(["x", "y"]):
@@ -500,7 +500,7 @@ class TestInnerProductsFaceProperties2D(discretize.tests.OrderTest):
         if self.location == "edges":
             analytic = 2.24166666666667  # Found using sympy.
 
-            cart = lambda g: np.c_[call(ex, g), call(ey, g)]
+            cart = lambda g: np.c_[call(ex, g), call(ey, g)]  # NOQA E731
 
             Ec = np.vstack((cart(self.M.gridEx), cart(self.M.gridEy)))
             E = self.M.project_edge_vector(Ec)
@@ -516,7 +516,7 @@ class TestInnerProductsFaceProperties2D(discretize.tests.OrderTest):
         elif self.location == "faces":
             analytic = 1.59895833333333  # Found using sympy.
 
-            cart = lambda g: np.c_[call(ex, g), call(ey, g)]
+            cart = lambda g: np.c_[call(ex, g), call(ey, g)]  # NOQA E731
 
             Fc = np.vstack((cart(self.M.gridFx), cart(self.M.gridFy)))
             F = self.M.project_face_vector(Fc)
@@ -566,13 +566,13 @@ class TestInnerProductsEdgeProperties2D(discretize.tests.OrderTest):
     meshSizes = [8, 16, 32]
 
     def getError(self):
-        call = lambda fun, xy: fun(xy[:, 0], xy[:, 1])
+        call = lambda fun, xy: fun(xy[:, 0], xy[:, 1])  # NOQA E731
 
-        ex = lambda x, y: x**2 + y
-        ey = lambda x, y: (x**2) * y
+        ex = lambda x, y: x**2 + y  # NOQA E731
+        ey = lambda x, y: (x**2) * y  # NOQA E731
 
-        tau_x = lambda x, y: x + 1  # x-face properties
-        tau_y = lambda x, y: y + 2  # y-face properties
+        tau_x = lambda x, y: x + 1  # NOQA E731  # x-face properties
+        tau_y = lambda x, y: y + 2  # NOQA E731  # y-face properties
 
         tau = 2 * [None]
         for ii, comp in enumerate(["x", "y"]):
@@ -590,7 +590,7 @@ class TestInnerProductsEdgeProperties2D(discretize.tests.OrderTest):
 
         analytic = 1.38229166666667  # Found using sympy.
 
-        cart = lambda g: np.c_[call(ex, g), call(ey, g)]
+        cart = lambda g: np.c_[call(ex, g), call(ey, g)]  # NOQA E731
 
         Ec = np.vstack((cart(self.M.gridEx), cart(self.M.gridEy)))
         E = self.M.project_edge_vector(Ec)
@@ -631,11 +631,11 @@ class TestInnerProducts1D(discretize.tests.OrderTest):
         y = 12  # Because 12 is just such a great number.
         z = 5  # Because 5 is just such a great number as well!
 
-        call = lambda fun, x: fun(x)
+        call = lambda fun, x: fun(x)  # NOQA E731
 
-        ex = lambda x: x**2 + y * z
+        ex = lambda x: x**2 + y * z  # NOQA E731
 
-        sigma1 = lambda x: x * y + 1
+        sigma1 = lambda x: x * y + 1  # NOQA E731
 
         Gc = self.M.gridCC
         sigma = call(sigma1, Gc)

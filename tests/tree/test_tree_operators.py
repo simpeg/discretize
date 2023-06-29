@@ -4,26 +4,26 @@ import discretize
 
 MESHTYPES = ["uniformTree", "randomTree"]
 # MESHTYPES = ['randomTree']
-call2 = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1])
-call3 = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1], xyz[:, 2])
-cart_row2 = lambda g, xfun, yfun: np.c_[call2(xfun, g), call2(yfun, g)]
-cart_row3 = lambda g, xfun, yfun, zfun: np.c_[
+call2 = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1])  # NOQA E731
+call3 = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1], xyz[:, 2])  # NOQA E731
+cart_row2 = lambda g, xfun, yfun: np.c_[call2(xfun, g), call2(yfun, g)]  # NOQA E731
+cart_row3 = lambda g, xfun, yfun, zfun: np.c_[  # NOQA E731
     call3(xfun, g), call3(yfun, g), call3(zfun, g)
 ]
-cartF2 = lambda M, fx, fy: np.vstack(
+cartF2 = lambda M, fx, fy: np.vstack(  # NOQA E731
     (cart_row2(M.gridFx, fx, fy), cart_row2(M.gridFy, fx, fy))
 )
-cartE2 = lambda M, ex, ey: np.vstack(
+cartE2 = lambda M, ex, ey: np.vstack(  # NOQA E731
     (cart_row2(M.gridEx, ex, ey), cart_row2(M.gridEy, ex, ey))
 )
-cartF3 = lambda M, fx, fy, fz: np.vstack(
+cartF3 = lambda M, fx, fy, fz: np.vstack(  # NOQA E731
     (
         cart_row3(M.gridFx, fx, fy, fz),
         cart_row3(M.gridFy, fx, fy, fz),
         cart_row3(M.gridFz, fx, fy, fz),
     )
 )
-cartE3 = lambda M, ex, ey, ez: np.vstack(
+cartE3 = lambda M, ex, ey, ez: np.vstack(  # NOQA E731
     (
         cart_row3(M.gridEx, ex, ey, ez),
         cart_row3(M.gridEy, ex, ey, ez),
@@ -45,9 +45,9 @@ class TestCellGrad2D(discretize.tests.OrderTest):
 
     def getError(self):
         # Test function
-        sol = lambda x, y: np.cos(2 * np.pi * x) * np.cos(2 * np.pi * y)
-        fx = lambda x, y: -2 * np.pi * np.sin(2 * np.pi * x) * np.cos(2 * np.pi * y)
-        fy = lambda x, y: -2 * np.pi * np.sin(2 * np.pi * y) * np.cos(2 * np.pi * x)
+        sol = lambda x, y: np.cos(2 * np.pi * x) * np.cos(2 * np.pi * y)  # NOQA E731
+        fx = lambda x, y: -2 * np.pi * np.sin(2 * np.pi * x) * np.cos(2 * np.pi * y)  # NOQA E731
+        fy = lambda x, y: -2 * np.pi * np.sin(2 * np.pi * y) * np.cos(2 * np.pi * x)  # NOQA E731
 
         phi = call2(sol, self.M.gridCC)
         gradF = self.M.cell_gradient * phi
@@ -121,9 +121,9 @@ class TestFaceDivxy2D(discretize.tests.OrderTest):
 
     def getError(self):
         # Test function
-        fx = lambda x, y: np.sin(2 * np.pi * x)
-        fy = lambda x, y: np.sin(2 * np.pi * y)
-        sol = lambda x, y: 2 * np.pi * (np.cos(2 * np.pi * x) + np.cos(2 * np.pi * y))
+        fx = lambda x, y: np.sin(2 * np.pi * x)  # NOQA E731
+        fy = lambda x, y: np.sin(2 * np.pi * y)  # NOQA E731
+        sol = lambda x, y: 2 * np.pi * (np.cos(2 * np.pi * x) + np.cos(2 * np.pi * y))  # NOQA E731
 
         Fx = call2(fx, self.M.gridFx)
         Fy = call2(fy, self.M.gridFy)
@@ -150,10 +150,10 @@ class TestFaceDiv3D(discretize.tests.OrderTest):
     meshSizes = [8, 16, 32]
 
     def getError(self):
-        fx = lambda x, y, z: np.sin(2 * np.pi * x)
-        fy = lambda x, y, z: np.sin(2 * np.pi * y)
-        fz = lambda x, y, z: np.sin(2 * np.pi * z)
-        sol = lambda x, y, z: (
+        fx = lambda x, y, z: np.sin(2 * np.pi * x)  # NOQA E731
+        fy = lambda x, y, z: np.sin(2 * np.pi * y)  # NOQA E731
+        fz = lambda x, y, z: np.sin(2 * np.pi * z)  # NOQA E731
+        sol = lambda x, y, z: (  # NOQA E731
             2 * np.pi * np.cos(2 * np.pi * x)
             + 2 * np.pi * np.cos(2 * np.pi * y)
             + 2 * np.pi * np.cos(2 * np.pi * z)
@@ -180,10 +180,10 @@ class TestFaceDivxyz3D(discretize.tests.OrderTest):
 
     def getError(self):
         # Test function
-        fx = lambda x, y, z: np.sin(2 * np.pi * x)
-        fy = lambda x, y, z: np.sin(2 * np.pi * y)
-        fz = lambda x, y, z: np.sin(2 * np.pi * z)
-        sol = lambda x, y, z: (
+        fx = lambda x, y, z: np.sin(2 * np.pi * x)  # NOQA E731
+        fy = lambda x, y, z: np.sin(2 * np.pi * y)  # NOQA E731
+        fz = lambda x, y, z: np.sin(2 * np.pi * z)  # NOQA E731
+        sol = lambda x, y, z: (  # NOQA E731
             2 * np.pi * np.cos(2 * np.pi * x)
             + 2 * np.pi * np.cos(2 * np.pi * y)
             + 2 * np.pi * np.cos(2 * np.pi * z)
@@ -220,13 +220,13 @@ class TestCurl(discretize.tests.OrderTest):
         # fun: i (cos(y)) + j (cos(z)) + k (cos(x))
         # sol: i (sin(z)) + j (sin(x)) + k (sin(y))
 
-        funX = lambda x, y, z: np.cos(2 * np.pi * y)
-        funY = lambda x, y, z: np.cos(2 * np.pi * z)
-        funZ = lambda x, y, z: np.cos(2 * np.pi * x)
+        funX = lambda x, y, z: np.cos(2 * np.pi * y)  # NOQA E731
+        funY = lambda x, y, z: np.cos(2 * np.pi * z)  # NOQA E731
+        funZ = lambda x, y, z: np.cos(2 * np.pi * x)  # NOQA E731
 
-        solX = lambda x, y, z: 2 * np.pi * np.sin(2 * np.pi * z)
-        solY = lambda x, y, z: 2 * np.pi * np.sin(2 * np.pi * x)
-        solZ = lambda x, y, z: 2 * np.pi * np.sin(2 * np.pi * y)
+        solX = lambda x, y, z: 2 * np.pi * np.sin(2 * np.pi * z)  # NOQA E731
+        solY = lambda x, y, z: 2 * np.pi * np.sin(2 * np.pi * x)  # NOQA E731
+        solZ = lambda x, y, z: 2 * np.pi * np.sin(2 * np.pi * y)  # NOQA E731
 
         Ec = cartE3(self.M, funX, funY, funZ)
         E = self.M.project_edge_vector(Ec)
@@ -254,11 +254,11 @@ class TestNodalGrad(discretize.tests.OrderTest):
 
     def getError(self):
         # Test function
-        fun = lambda x, y, z: (np.cos(x) + np.cos(y) + np.cos(z))
+        fun = lambda x, y, z: (np.cos(x) + np.cos(y) + np.cos(z))  # NOQA E731
         # i (sin(x)) + j (sin(y)) + k (sin(z))
-        solX = lambda x, y, z: -np.sin(x)
-        solY = lambda x, y, z: -np.sin(y)
-        solZ = lambda x, y, z: -np.sin(z)
+        solX = lambda x, y, z: -np.sin(x)  # NOQA E731
+        solY = lambda x, y, z: -np.sin(y)  # NOQA E731
+        solZ = lambda x, y, z: -np.sin(z)  # NOQA E731
 
         phi = call3(fun, self.M.gridN)
         gradE = self.M.nodal_gradient.dot(phi)
@@ -284,10 +284,10 @@ class TestNodalGrad2D(discretize.tests.OrderTest):
 
     def getError(self):
         # Test function
-        fun = lambda x, y: (np.cos(x) + np.cos(y))
+        fun = lambda x, y: (np.cos(x) + np.cos(y))  # NOQA E731
         # i (sin(x)) + j (sin(y)) + k (sin(z))
-        solX = lambda x, y: -np.sin(x)
-        solY = lambda x, y: -np.sin(y)
+        solX = lambda x, y: -np.sin(x)  # NOQA E731
+        solY = lambda x, y: -np.sin(y)  # NOQA E731
 
         phi = call2(fun, self.M.gridN)
         gradE = self.M.nodal_gradient.dot(phi)
@@ -315,18 +315,18 @@ class TestTreeInnerProducts(discretize.tests.OrderTest):
     meshSizes = [4, 8]
 
     def getError(self):
-        call = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1], xyz[:, 2])
+        call = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1], xyz[:, 2])  # NOQA E731
 
-        ex = lambda x, y, z: x**2 + y * z
-        ey = lambda x, y, z: (z**2) * x + y * z
-        ez = lambda x, y, z: y**2 + x * z
+        ex = lambda x, y, z: x**2 + y * z  # NOQA E731
+        ey = lambda x, y, z: (z**2) * x + y * z  # NOQA E731
+        ez = lambda x, y, z: y**2 + x * z  # NOQA E731
 
-        sigma1 = lambda x, y, z: x * y + 1
-        sigma2 = lambda x, y, z: x * z + 2
-        sigma3 = lambda x, y, z: 3 + z * y
-        sigma4 = lambda x, y, z: 0.1 * x * y * z
-        sigma5 = lambda x, y, z: 0.2 * x * y
-        sigma6 = lambda x, y, z: 0.1 * z
+        sigma1 = lambda x, y, z: x * y + 1  # NOQA E731
+        sigma2 = lambda x, y, z: x * z + 2  # NOQA E731
+        sigma3 = lambda x, y, z: 3 + z * y  # NOQA E731
+        sigma4 = lambda x, y, z: 0.1 * x * y * z  # NOQA E731
+        sigma5 = lambda x, y, z: 0.2 * x * y  # NOQA E731
+        sigma6 = lambda x, y, z: 0.1 * z  # NOQA E731
 
         Gc = self.M.gridCC
         if self.sigmaTest == 1:
@@ -347,7 +347,7 @@ class TestTreeInnerProducts(discretize.tests.OrderTest):
             analytic = 69881.0 / 21600  # Found using sympy.
 
         if self.location == "edges":
-            cart = lambda g: np.c_[call(ex, g), call(ey, g), call(ez, g)]
+            cart = lambda g: np.c_[call(ex, g), call(ey, g), call(ez, g)]  # NOQA E731
             Ec = np.vstack(
                 (cart(self.M.gridEx), cart(self.M.gridEy), cart(self.M.gridEz))
             )
@@ -362,7 +362,7 @@ class TestTreeInnerProducts(discretize.tests.OrderTest):
                 A = self.M.get_edge_inner_product(sigma)
             numeric = E.T.dot(A.dot(E))
         elif self.location == "faces":
-            cart = lambda g: np.c_[call(ex, g), call(ey, g), call(ez, g)]
+            cart = lambda g: np.c_[call(ex, g), call(ey, g), call(ez, g)]  # NOQA E731
             Fc = np.vstack(
                 (cart(self.M.gridFx), cart(self.M.gridFy), cart(self.M.gridFz))
             )
@@ -474,15 +474,15 @@ class TestInnerProductsFaceProperties3D(discretize.tests.OrderTest):
     meshSizes = [8, 16]
 
     def getError(self):
-        call = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1], xyz[:, 2])
+        call = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1], xyz[:, 2])  # NOQA E731
 
-        ex = lambda x, y, z: x**2 + y * z
-        ey = lambda x, y, z: (z**2) * x + y * z
-        ez = lambda x, y, z: y**2 + x * z
+        ex = lambda x, y, z: x**2 + y * z  # NOQA E731
+        ey = lambda x, y, z: (z**2) * x + y * z  # NOQA E731
+        ez = lambda x, y, z: y**2 + x * z  # NOQA E731
 
-        tau_x = lambda x, y, z: y * z + 1  # x-face properties
-        tau_y = lambda x, y, z: x * z + 2  # y-face properties
-        tau_z = lambda x, y, z: 3 + x * y  # z-face properties
+        tau_x = lambda x, y, z: y * z + 1  # NOQA E731  # x-face properties
+        tau_y = lambda x, y, z: x * z + 2  # NOQA E731  # y-face properties
+        tau_z = lambda x, y, z: 3 + x * y  # NOQA E731  # z-face properties
 
         tau = 3 * [None]
         for ii, comp in enumerate(["x", "y", "z"]):
@@ -500,7 +500,7 @@ class TestInnerProductsFaceProperties3D(discretize.tests.OrderTest):
         if self.location == "edges":
             analytic = 5.02760416666667  # Found using sympy.
 
-            cart = lambda g: np.c_[call(ex, g), call(ey, g), call(ez, g)]
+            cart = lambda g: np.c_[call(ex, g), call(ey, g), call(ez, g)]  # NOQA E731
 
             Ec = np.vstack(
                 (cart(self.M.gridEx), cart(self.M.gridEy), cart(self.M.gridEz))
@@ -518,7 +518,7 @@ class TestInnerProductsFaceProperties3D(discretize.tests.OrderTest):
         elif self.location == "faces":
             analytic = 2.66979166666667  # Found using sympy.
 
-            cart = lambda g: np.c_[call(ex, g), call(ey, g), call(ez, g)]
+            cart = lambda g: np.c_[call(ex, g), call(ey, g), call(ez, g)]  # NOQA E731
 
             Fc = np.vstack(
                 (cart(self.M.gridFx), cart(self.M.gridFy), cart(self.M.gridFz))
@@ -570,15 +570,15 @@ class TestInnerProductsEdgeProperties3D(discretize.tests.OrderTest):
     meshSizes = [16, 32]
 
     def getError(self):
-        call = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1], xyz[:, 2])
+        call = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1], xyz[:, 2])  # NOQA E731
 
-        ex = lambda x, y, z: x**2 + y * z
-        ey = lambda x, y, z: (z**2) * x + y * z
-        ez = lambda x, y, z: y**2 + x * z
+        ex = lambda x, y, z: x**2 + y * z  # NOQA E731
+        ey = lambda x, y, z: (z**2) * x + y * z  # NOQA E731
+        ez = lambda x, y, z: y**2 + x * z  # NOQA E731
 
-        tau_x = lambda x, y, z: x + 1  # x-face properties
-        tau_y = lambda x, y, z: y + 2  # y-face properties
-        tau_z = lambda x, y, z: 3 * z + 1  # z-face properties
+        tau_x = lambda x, y, z: x + 1  # NOQA E731  # x-face properties
+        tau_y = lambda x, y, z: y + 2  # NOQA E731  # y-face properties
+        tau_z = lambda x, y, z: 3 * z + 1  # NOQA E731  # z-face properties
 
         tau = 3 * [None]
         for ii, comp in enumerate(["x", "y", "z"]):
@@ -596,7 +596,7 @@ class TestInnerProductsEdgeProperties3D(discretize.tests.OrderTest):
 
         analytic = 1.98906250000000  # Found using sympy.
 
-        cart = lambda g: np.c_[call(ex, g), call(ey, g), call(ez, g)]
+        cart = lambda g: np.c_[call(ex, g), call(ey, g), call(ez, g)]  # NOQA E731
 
         Ec = np.vstack((cart(self.M.gridEx), cart(self.M.gridEy), cart(self.M.gridEz)))
         E = self.M.project_edge_vector(Ec)
@@ -635,14 +635,14 @@ class TestTreeInnerProducts2D(discretize.tests.OrderTest):
     def getError(self):
         z = 5  # Because 5 is just such a great number.
 
-        call = lambda fun, xy: fun(xy[:, 0], xy[:, 1])
+        call = lambda fun, xy: fun(xy[:, 0], xy[:, 1])  # NOQA E731
 
-        ex = lambda x, y: x**2 + y * z
-        ey = lambda x, y: (z**2) * x + y * z
+        ex = lambda x, y: x**2 + y * z  # NOQA E731
+        ey = lambda x, y: (z**2) * x + y * z  # NOQA E731
 
-        sigma1 = lambda x, y: x * y + 1
-        sigma2 = lambda x, y: x * z + 2
-        sigma3 = lambda x, y: 3 + z * y
+        sigma1 = lambda x, y: x * y + 1  # NOQA E731
+        sigma2 = lambda x, y: x * z + 2  # NOQA E731
+        sigma3 = lambda x, y: 3 + z * y  # NOQA E731
 
         Gc = self.M.gridCC
         if self.sigmaTest == 1:
@@ -656,7 +656,7 @@ class TestTreeInnerProducts2D(discretize.tests.OrderTest):
             analytic = 781427.0 / 360  # Found using sympy. z=5
 
         if self.location == "edges":
-            cart = lambda g: np.c_[call(ex, g), call(ey, g)]
+            cart = lambda g: np.c_[call(ex, g), call(ey, g)]  # NOQA E731
             Ec = np.vstack((cart(self.M.gridEx), cart(self.M.gridEy)))
             E = self.M.project_edge_vector(Ec)
             if self.invert_model:
@@ -668,7 +668,7 @@ class TestTreeInnerProducts2D(discretize.tests.OrderTest):
                 A = self.M.get_edge_inner_product(sigma)
             numeric = E.T.dot(A.dot(E))
         elif self.location == "faces":
-            cart = lambda g: np.c_[call(ex, g), call(ey, g)]
+            cart = lambda g: np.c_[call(ex, g), call(ey, g)]  # NOQA E731
             Fc = np.vstack((cart(self.M.gridFx), cart(self.M.gridFy)))
             F = self.M.project_face_vector(Fc)
 
@@ -778,13 +778,13 @@ class TestInnerProductsFaceProperties2D(discretize.tests.OrderTest):
     meshSizes = [16, 32]
 
     def getError(self):
-        call = lambda fun, xy: fun(xy[:, 0], xy[:, 1])
+        call = lambda fun, xy: fun(xy[:, 0], xy[:, 1])  # NOQA E731  # NOQA E731
 
-        ex = lambda x, y: x**2 + y
-        ey = lambda x, y: (y**2) * x
+        ex = lambda x, y: x**2 + y  # NOQA E731
+        ey = lambda x, y: (y**2) * x  # NOQA E731
 
-        tau_x = lambda x, y: 2 * y + 1  # x-face properties
-        tau_y = lambda x, y: x + 2  # y-face properties
+        tau_x = lambda x, y: 2 * y + 1  # NOQA E731  # x-face properties
+        tau_y = lambda x, y: x + 2  # NOQA E731  # y-face properties
 
         tau = 2 * [None]
         for ii, comp in enumerate(["x", "y"]):
@@ -802,7 +802,7 @@ class TestInnerProductsFaceProperties2D(discretize.tests.OrderTest):
         if self.location == "edges":
             analytic = 2.24166666666667  # Found using sympy.
 
-            cart = lambda g: np.c_[call(ex, g), call(ey, g)]
+            cart = lambda g: np.c_[call(ex, g), call(ey, g)]  # NOQA E731
 
             Ec = np.vstack((cart(self.M.gridEx), cart(self.M.gridEy)))
             E = self.M.project_edge_vector(Ec)
@@ -818,7 +818,7 @@ class TestInnerProductsFaceProperties2D(discretize.tests.OrderTest):
         elif self.location == "faces":
             analytic = 1.59895833333333  # Found using sympy.
 
-            cart = lambda g: np.c_[call(ex, g), call(ey, g)]
+            cart = lambda g: np.c_[call(ex, g), call(ey, g)]  # NOQA E731
 
             Fc = np.vstack((cart(self.M.gridFx), cart(self.M.gridFy)))
             F = self.M.project_face_vector(Fc)
@@ -868,13 +868,13 @@ class TestInnerProductsEdgeProperties2D(discretize.tests.OrderTest):
     meshSizes = [16, 32]
 
     def getError(self):
-        call = lambda fun, xy: fun(xy[:, 0], xy[:, 1])
+        call = lambda fun, xy: fun(xy[:, 0], xy[:, 1])  # NOQA E731
 
-        ex = lambda x, y: x**2 + y
-        ey = lambda x, y: (x**2) * y
+        ex = lambda x, y: x**2 + y  # NOQA E731
+        ey = lambda x, y: (x**2) * y  # NOQA E731
 
-        tau_x = lambda x, y: x + 1  # x-face properties
-        tau_y = lambda x, y: y + 2  # y-face properties
+        tau_x = lambda x, y: x + 1  # NOQA E731  # x-face properties
+        tau_y = lambda x, y: y + 2  # NOQA E731  # y-face properties
 
         tau = 2 * [None]
         for ii, comp in enumerate(["x", "y"]):
@@ -892,7 +892,7 @@ class TestInnerProductsEdgeProperties2D(discretize.tests.OrderTest):
 
         analytic = 1.38229166666667  # Found using sympy.
 
-        cart = lambda g: np.c_[call(ex, g), call(ey, g)]
+        cart = lambda g: np.c_[call(ex, g), call(ey, g)]  # NOQA E731
 
         Ec = np.vstack((cart(self.M.gridEx), cart(self.M.gridEy)))
         E = self.M.project_edge_vector(Ec)
@@ -936,7 +936,7 @@ class TestTreeAveraging2D(discretize.tests.OrderTest):
 
     def test_orderN2CC(self):
         self.name = "Averaging 2D: N2CC"
-        fun = lambda x, y: (np.cos(x) + np.sin(y))
+        fun = lambda x, y: (np.cos(x) + np.sin(y))  # NOQA E731
         self.getHere = lambda M: call2(fun, M.gridN)
         self.getThere = lambda M: call2(fun, M.gridCC)
         self.getAve = lambda M: M.aveN2CC
@@ -944,7 +944,7 @@ class TestTreeAveraging2D(discretize.tests.OrderTest):
 
     def test_orderN2Fx(self):
         self.name = "Averaging 2D: N2Fx"
-        fun = lambda x, y: (np.cos(x) + np.sin(y))
+        fun = lambda x, y: (np.cos(x) + np.sin(y))  # NOQA E731
         self.getHere = lambda M: call2(fun, M.gridN)
         self.getThere = lambda M: np.r_[call2(fun, M.gridFx), call2(fun, M.gridFy)]
         self.getAve = lambda M: M.aveN2F
@@ -952,7 +952,7 @@ class TestTreeAveraging2D(discretize.tests.OrderTest):
 
     def test_orderN2E(self):
         self.name = "Averaging 2D: N2E"
-        fun = lambda x, y: (np.cos(x) + np.sin(y))
+        fun = lambda x, y: (np.cos(x) + np.sin(y))  # NOQA E731
         self.getHere = lambda M: call2(fun, M.gridN)
         self.getThere = lambda M: np.r_[call2(fun, M.gridEx), call2(fun, M.gridEy)]
         self.getAve = lambda M: M.aveN2E
@@ -960,7 +960,7 @@ class TestTreeAveraging2D(discretize.tests.OrderTest):
 
     def test_orderF2CC(self):
         self.name = "Averaging 2D: F2CC"
-        fun = lambda x, y: (np.cos(x) + np.sin(y))
+        fun = lambda x, y: (np.cos(x) + np.sin(y))  # NOQA E731
         self.getHere = lambda M: np.r_[call2(fun, np.r_[M.gridFx, M.gridFy])]
         self.getThere = lambda M: call2(fun, M.gridCC)
         self.getAve = lambda M: M.aveF2CC
@@ -968,7 +968,7 @@ class TestTreeAveraging2D(discretize.tests.OrderTest):
 
     def test_orderFx2CC(self):
         self.name = "Averaging 2D: Fx2CC"
-        funX = lambda x, y: (np.cos(x) + np.sin(y))
+        funX = lambda x, y: (np.cos(x) + np.sin(y))  # NOQA E731
         self.getHere = lambda M: np.r_[call2(funX, M.gridFx)]
         self.getThere = lambda M: np.r_[call2(funX, M.gridCC)]
         self.getAve = lambda M: M.aveFx2CC
@@ -976,7 +976,7 @@ class TestTreeAveraging2D(discretize.tests.OrderTest):
 
     def test_orderFy2CC(self):
         self.name = "Averaging 2D: Fy2CC"
-        funY = lambda x, y: (np.cos(y) * np.sin(x))
+        funY = lambda x, y: (np.cos(y) * np.sin(x))  # NOQA E731
         self.getHere = lambda M: np.r_[call2(funY, M.gridFy)]
         self.getThere = lambda M: np.r_[call2(funY, M.gridCC)]
         self.getAve = lambda M: M.aveFy2CC
@@ -984,8 +984,8 @@ class TestTreeAveraging2D(discretize.tests.OrderTest):
 
     def test_orderF2CCV(self):
         self.name = "Averaging 2D: F2CCV"
-        funX = lambda x, y: (np.cos(x) + np.sin(y))
-        funY = lambda x, y: (np.cos(y) * np.sin(x))
+        funX = lambda x, y: (np.cos(x) + np.sin(y))  # NOQA E731
+        funY = lambda x, y: (np.cos(y) * np.sin(x))  # NOQA E731
         self.getHere = lambda M: np.r_[call2(funX, M.gridFx), call2(funY, M.gridFy)]
         self.getThere = lambda M: np.r_[call2(funX, M.gridCC), call2(funY, M.gridCC)]
         self.getAve = lambda M: M.aveF2CCV
@@ -993,7 +993,7 @@ class TestTreeAveraging2D(discretize.tests.OrderTest):
 
     def test_orderCC2F(self):
         self.name = "Averaging 2D: CC2F"
-        fun = lambda x, y: (np.cos(x) + np.sin(y))
+        fun = lambda x, y: (np.cos(x) + np.sin(y))  # NOQA E731
         self.getHere = lambda M: call2(fun, M.gridCC)
         self.getThere = lambda M: np.r_[call2(fun, M.gridFx), call2(fun, M.gridFy)]
         self.getAve = lambda M: M.aveCC2F
@@ -1016,7 +1016,7 @@ class TestAveraging3D(discretize.tests.OrderTest):
 
     def test_orderN2CC(self):
         self.name = "Averaging 3D: N2CC"
-        fun = lambda x, y, z: (np.cos(x) + np.sin(y) + np.exp(z))
+        fun = lambda x, y, z: (np.cos(x) + np.sin(y) + np.exp(z))  # NOQA E731
         self.getHere = lambda M: call3(fun, M.gridN)
         self.getThere = lambda M: call3(fun, M.gridCC)
         self.getAve = lambda M: M.aveN2CC
@@ -1024,7 +1024,7 @@ class TestAveraging3D(discretize.tests.OrderTest):
 
     def test_orderN2F(self):
         self.name = "Averaging 3D: N2F"
-        fun = lambda x, y, z: (np.cos(x) + np.sin(y) + np.exp(z))
+        fun = lambda x, y, z: (np.cos(x) + np.sin(y) + np.exp(z))  # NOQA E731
         self.getHere = lambda M: call3(fun, M.gridN)
         self.getThere = lambda M: np.r_[
             call3(fun, M.gridFx), call3(fun, M.gridFy), call3(fun, M.gridFz)
@@ -1034,7 +1034,7 @@ class TestAveraging3D(discretize.tests.OrderTest):
 
     def test_orderN2E(self):
         self.name = "Averaging 3D: N2E"
-        fun = lambda x, y, z: (np.cos(x) + np.sin(y) + np.exp(z))
+        fun = lambda x, y, z: (np.cos(x) + np.sin(y) + np.exp(z))  # NOQA E731
         self.getHere = lambda M: call3(fun, M.gridN)
         self.getThere = lambda M: np.r_[
             call3(fun, M.gridEx), call3(fun, M.gridEy), call3(fun, M.gridEz)
@@ -1044,7 +1044,7 @@ class TestAveraging3D(discretize.tests.OrderTest):
 
     def test_orderF2CC(self):
         self.name = "Averaging 3D: F2CC"
-        fun = lambda x, y, z: (np.cos(x) + np.sin(y) + np.exp(z))
+        fun = lambda x, y, z: (np.cos(x) + np.sin(y) + np.exp(z))  # NOQA E731
         self.getHere = lambda M: np.r_[
             call3(fun, M.gridFx), call3(fun, M.gridFy), call3(fun, M.gridFz)
         ]
@@ -1054,7 +1054,7 @@ class TestAveraging3D(discretize.tests.OrderTest):
 
     def test_orderFx2CC(self):
         self.name = "Averaging 3D: Fx2CC"
-        funX = lambda x, y, z: (np.cos(x) + np.sin(y) + np.exp(z))
+        funX = lambda x, y, z: (np.cos(x) + np.sin(y) + np.exp(z))  # NOQA E731
         self.getHere = lambda M: np.r_[call3(funX, M.gridFx)]
         self.getThere = lambda M: np.r_[call3(funX, M.gridCC)]
         self.getAve = lambda M: M.aveFx2CC
@@ -1062,7 +1062,7 @@ class TestAveraging3D(discretize.tests.OrderTest):
 
     def test_orderFy2CC(self):
         self.name = "Averaging 3D: Fy2CC"
-        funY = lambda x, y, z: (np.cos(x) + np.sin(y) * np.exp(z))
+        funY = lambda x, y, z: (np.cos(x) + np.sin(y) * np.exp(z))  # NOQA E731
         self.getHere = lambda M: np.r_[call3(funY, M.gridFy)]
         self.getThere = lambda M: np.r_[call3(funY, M.gridCC)]
         self.getAve = lambda M: M.aveFy2CC
@@ -1070,7 +1070,7 @@ class TestAveraging3D(discretize.tests.OrderTest):
 
     def test_orderFz2CC(self):
         self.name = "Averaging 3D: Fz2CC"
-        funZ = lambda x, y, z: (np.cos(x) + np.sin(y) * np.exp(z))
+        funZ = lambda x, y, z: (np.cos(x) + np.sin(y) * np.exp(z))  # NOQA E731
         self.getHere = lambda M: np.r_[call3(funZ, M.gridFz)]
         self.getThere = lambda M: np.r_[call3(funZ, M.gridCC)]
         self.getAve = lambda M: M.aveFz2CC
@@ -1078,9 +1078,9 @@ class TestAveraging3D(discretize.tests.OrderTest):
 
     def test_orderF2CCV(self):
         self.name = "Averaging 3D: F2CCV"
-        funX = lambda x, y, z: (np.cos(x) + np.sin(y) + np.exp(z))
-        funY = lambda x, y, z: (np.cos(x) + np.sin(y) * np.exp(z))
-        funZ = lambda x, y, z: (np.cos(x) * np.sin(y) + np.exp(z))
+        funX = lambda x, y, z: (np.cos(x) + np.sin(y) + np.exp(z))  # NOQA E731
+        funY = lambda x, y, z: (np.cos(x) + np.sin(y) * np.exp(z))  # NOQA E731
+        funZ = lambda x, y, z: (np.cos(x) * np.sin(y) + np.exp(z))  # NOQA E731
         self.getHere = lambda M: np.r_[
             call3(funX, M.gridFx), call3(funY, M.gridFy), call3(funZ, M.gridFz)
         ]
@@ -1092,7 +1092,7 @@ class TestAveraging3D(discretize.tests.OrderTest):
 
     def test_orderEx2CC(self):
         self.name = "Averaging 3D: Ex2CC"
-        funX = lambda x, y, z: (np.cos(x) + np.sin(y) + np.exp(z))
+        funX = lambda x, y, z: (np.cos(x) + np.sin(y) + np.exp(z))  # NOQA E731
         self.getHere = lambda M: np.r_[call3(funX, M.gridEx)]
         self.getThere = lambda M: np.r_[call3(funX, M.gridCC)]
         self.getAve = lambda M: M.aveEx2CC
@@ -1100,7 +1100,7 @@ class TestAveraging3D(discretize.tests.OrderTest):
 
     def test_orderEy2CC(self):
         self.name = "Averaging 3D: Ey2CC"
-        funY = lambda x, y, z: (np.cos(x) + np.sin(y) + np.exp(z))
+        funY = lambda x, y, z: (np.cos(x) + np.sin(y) + np.exp(z))  # NOQA E731
         self.getHere = lambda M: np.r_[call3(funY, M.gridEy)]
         self.getThere = lambda M: np.r_[call3(funY, M.gridCC)]
         self.getAve = lambda M: M.aveEy2CC
@@ -1108,7 +1108,7 @@ class TestAveraging3D(discretize.tests.OrderTest):
 
     def test_orderEz2CC(self):
         self.name = "Averaging 3D: Ez2CC"
-        funZ = lambda x, y, z: (np.cos(x) + np.sin(y) + np.exp(z))
+        funZ = lambda x, y, z: (np.cos(x) + np.sin(y) + np.exp(z))  # NOQA E731
         self.getHere = lambda M: np.r_[call3(funZ, M.gridEz)]
         self.getThere = lambda M: np.r_[call3(funZ, M.gridCC)]
         self.getAve = lambda M: M.aveEz2CC
@@ -1116,7 +1116,7 @@ class TestAveraging3D(discretize.tests.OrderTest):
 
     def test_orderE2CC(self):
         self.name = "Averaging 3D: E2CC"
-        fun = lambda x, y, z: (np.cos(x) + np.sin(y) + np.exp(z))
+        fun = lambda x, y, z: (np.cos(x) + np.sin(y) + np.exp(z))  # NOQA E731
         self.getHere = lambda M: np.r_[
             call3(fun, M.gridEx), call3(fun, M.gridEy), call3(fun, M.gridEz)
         ]
@@ -1126,9 +1126,9 @@ class TestAveraging3D(discretize.tests.OrderTest):
 
     def test_orderE2CCV(self):
         self.name = "Averaging 3D: E2CCV"
-        funX = lambda x, y, z: (np.cos(x) + np.sin(y) + np.exp(z))
-        funY = lambda x, y, z: (np.cos(x) + np.sin(y) * np.exp(z))
-        funZ = lambda x, y, z: (np.cos(x) * np.sin(y) + np.exp(z))
+        funX = lambda x, y, z: (np.cos(x) + np.sin(y) + np.exp(z))  # NOQA E731
+        funY = lambda x, y, z: (np.cos(x) + np.sin(y) * np.exp(z))  # NOQA E731
+        funZ = lambda x, y, z: (np.cos(x) * np.sin(y) + np.exp(z))  # NOQA E731
         self.getHere = lambda M: np.r_[
             call3(funX, M.gridEx), call3(funY, M.gridEy), call3(funZ, M.gridEz)
         ]
@@ -1140,7 +1140,7 @@ class TestAveraging3D(discretize.tests.OrderTest):
 
     def test_orderCC2F(self):
         self.name = "Averaging 3D: CC2F"
-        fun = lambda x, y, z: (np.cos(x) + np.sin(y) + np.exp(z))
+        fun = lambda x, y, z: (np.cos(x) + np.sin(y) + np.exp(z))  # NOQA E731
         self.getHere = lambda M: call3(fun, M.gridCC)
         self.getThere = lambda M: np.r_[
             call3(fun, M.gridFx), call3(fun, M.gridFy), call3(fun, M.gridFz)
