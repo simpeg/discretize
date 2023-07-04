@@ -46,8 +46,12 @@ class TestCellGrad2D(discretize.tests.OrderTest):
     def getError(self):
         # Test function
         sol = lambda x, y: np.cos(2 * np.pi * x) * np.cos(2 * np.pi * y)  # NOQA E731
-        fx = lambda x, y: -2 * np.pi * np.sin(2 * np.pi * x) * np.cos(2 * np.pi * y)  # NOQA E731
-        fy = lambda x, y: -2 * np.pi * np.sin(2 * np.pi * y) * np.cos(2 * np.pi * x)  # NOQA E731
+        fx = (
+            lambda x, y: -2 * np.pi * np.sin(2 * np.pi * x) * np.cos(2 * np.pi * y)
+        )  # NOQA E731
+        fy = (
+            lambda x, y: -2 * np.pi * np.sin(2 * np.pi * y) * np.cos(2 * np.pi * x)
+        )  # NOQA E731
 
         phi = call2(sol, self.M.gridCC)
         gradF = self.M.cell_gradient * phi
@@ -123,7 +127,9 @@ class TestFaceDivxy2D(discretize.tests.OrderTest):
         # Test function
         fx = lambda x, y: np.sin(2 * np.pi * x)  # NOQA E731
         fy = lambda x, y: np.sin(2 * np.pi * y)  # NOQA E731
-        sol = lambda x, y: 2 * np.pi * (np.cos(2 * np.pi * x) + np.cos(2 * np.pi * y))  # NOQA E731
+        sol = (
+            lambda x, y: 2 * np.pi * (np.cos(2 * np.pi * x) + np.cos(2 * np.pi * y))
+        )  # NOQA E731
 
         Fx = call2(fx, self.M.gridFx)
         Fy = call2(fy, self.M.gridFy)

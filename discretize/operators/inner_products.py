@@ -121,7 +121,7 @@ class InnerProducts(BaseMesh):
         # meshes, but for cyl, where we use symmetry, it is 1 for edge
         # variables and 2 for face variables)
         if self._meshType == "CYL":
-            shape = getattr(self, "vnE")
+            shape = self.vnE
             if self.is_symmetric:
                 n_elements = 1
             else:
@@ -424,7 +424,7 @@ class InnerProducts(BaseMesh):
         # meshes, but for cyl, where we use symmetry, it is 1 for edge
         # variables and 2 for face variables)
         if self._meshType == "CYL":
-            shape = getattr(self, "vnE")
+            shape = self.vnE
             if self.is_symmetric:
                 n_elements = 1
             else:
