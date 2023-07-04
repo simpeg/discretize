@@ -1,8 +1,11 @@
 """Module for the base ``discretize`` mesh."""
 import numpy as np
+import scipy.sparse as sp
 import os
 import json
+import warnings
 from scipy.spatial import KDTree
+from discretize.utils import is_scalar, mkvc, sdiag, sdinv
 from discretize.utils.code_utils import (
     deprecate_property,
     deprecate_method,
@@ -1885,7 +1888,6 @@ class BaseMesh:
         model=None,
         invert_model=False,
         invert_matrix=False,
-        do_fast=True,
         **kwargs,
     ):
         r"""Generate the edge inner product surface matrix or its inverse.
@@ -1913,8 +1915,6 @@ class BaseMesh:
         invert_matrix : bool, optional
             Returns the inverse of the inner product surface matrix.
             The inverse not implemented for full tensor properties.
-        do_fast : bool, optional
-            Do a faster implementation (if available).
 
         Returns
         -------
@@ -2007,7 +2007,6 @@ class BaseMesh:
         model=None,
         invert_model=False,
         invert_matrix=False,
-        do_fast=True,
         **kwargs,
     ):
         r"""Generate the face inner product matrix or its inverse.
@@ -2035,8 +2034,6 @@ class BaseMesh:
         invert_matrix : bool, optional
             Returns the inverse of the inner product surface matrix.
             The inverse not implemented for full tensor properties.
-        do_fast : bool, optional
-            Do a faster implementation (if available).
 
         Returns
         -------
@@ -2120,16 +2117,35 @@ class BaseMesh:
         >>> ax1.set_title("M (isotropic)", fontsize=16)
         >>> plt.show()
         """
-        raise NotImplementedError(
-            f"get_face_inner_product_surface not implemented for {type(self)}"
-        )
+        if model is None:
+            model = np.ones(self.nF)
+
+        if invert_model:
+            model = 1.0 / model
+
+        if is_scalar(model):
+            model = model * np.ones(self.nF)
+
+        # Isotropic case only
+        if model.size == self.nF:
+            Aprop = self.face_areas * mkvc(model)
+            M = sdiag(Aprop)
+        else:
+            raise Exception(
+                "Unexpected shape of tensor: {}".format(model.shape),
+                "Must be scalar or have length equal to total number of faces.",
+            )
+
+        if invert_matrix:
+            return sdinv(M)
+        else:
+            return M
 
     def get_edge_inner_product_line(
         self,
         model=None,
         invert_model=False,
         invert_matrix=False,
-        do_fast=True,
         **kwargs,
     ):
         r"""Generate the edge inner product line matrix or its inverse.
@@ -2157,8 +2173,6 @@ class BaseMesh:
         invert_matrix : bool, optional
             Returns the inverse of the inner product line matrix.
             The inverse not implemented for full tensor properties.
-        do_fast : bool, optional
-            Do a faster implementation (if available).
 
         Returns
         -------
@@ -2242,9 +2256,30 @@ class BaseMesh:
         >>> ax1.set_title("M (isotropic)", fontsize=16)
         >>> plt.show()
         """
-        raise NotImplementedError(
-            f"get_edge_inner_product_line not implemented for {type(self)}"
-        )
+        if model is None:
+            model = np.ones(self.nE)
+
+        if invert_model:
+            model = 1.0 / model
+
+        if is_scalar(model):
+            model = model * np.ones(self.nE)
+
+        # Isotropic case only
+        if model.size == self.nE:
+            Lprop = self.edge_lengths * mkvc(model)
+            M = sdiag(Lprop)
+
+        else:
+            raise Exception(
+                "Unexpected shape of tensor: {}".format(model.shape),
+                "Must be scalar or have length equal to total number of edges.",
+            )
+
+        if invert_matrix:
+            return sdinv(M)
+        else:
+            return M
 
     def get_face_inner_product_deriv(
         self, model, do_fast=True, invert_model=False, invert_matrix=False, **kwargs
@@ -2284,13 +2319,13 @@ class BaseMesh:
               are ordered ``np.c_[σ_xx, σ_yy, σ_zz, σ_xy, σ_xz, σ_yz]`` This can also be
               a 1D array with the same number of total elements in column major order.
 
+        do_fast : bool, optional
+            Do a faster implementation (if available).
         invert_model : bool, optional
             The inverse of *model* is used as the physical property.
         invert_matrix : bool, optional
             Returns the inverse of the inner product matrix.
             The inverse not implemented for full tensor properties.
-        do_fast : bool, optional
-            Do a faster implementation (if available).
 
         Returns
         -------
@@ -2616,7 +2651,6 @@ class BaseMesh:
         model=None,
         invert_model=False,
         invert_matrix=False,
-        do_fast=True,
         **kwargs,
     ):
         r"""Get a function handle to multiply a vector with derivative of edge inner product surface matrix (or its inverse).
@@ -2646,8 +2680,6 @@ class BaseMesh:
             The inverse of *model* is used as the diagnostic property.
         invert_matrix : bool, optional
             Returns the inverse of the inner product surface matrix.
-        do_fast : bool, optional
-            Do a faster implementation (if available).
 
         Returns
         -------
@@ -2665,7 +2697,6 @@ class BaseMesh:
         model=None,
         invert_model=False,
         invert_matrix=False,
-        do_fast=True,
         **kwargs,
     ):
         r"""Get a function handle to multiply a vector with derivative of face inner product surface matrix (or its inverse).
@@ -2695,8 +2726,6 @@ class BaseMesh:
             The inverse of *model* is used as the diagnostic property.
         invert_matrix : bool, optional
             Returns the inverse of the inner product surface matrix.
-        do_fast : bool, optional
-            Do a faster implementation (if available).
 
         Returns
         -------
@@ -2705,16 +2734,74 @@ class BaseMesh:
             (``n_faces``) :class:`numpy.ndarray` :math:`\mathbf{u}`. The function
             returns a (``n_faces``, ``n_params``) :class:`scipy.sparse.csr_matrix`.
         """
-        raise NotImplementedError(
-            f"get_face_inner_product_surface_deriv not implemented for {type(self)}"
-        )
+        if is_scalar(model):
+            tensorType = 0
+        elif model.size == self.nF:
+            tensorType = 1
+        else:
+            raise Exception(
+                "Unexpected shape of tensor: {}".format(model.shape),
+                "Must be scalar or have length equal to total number of faces.",
+            )
+
+        dMdprop = None
+
+        if invert_matrix or invert_model:
+            MI = self.get_face_inner_product_surface(
+                model,
+                invert_model=invert_model,
+                invert_matrix=invert_matrix,
+            )
+
+        A = sdiag(self.face_areas)
+
+        if tensorType == 0:  # isotropic, constant
+            ones = sp.csr_matrix(
+                (np.ones(self.nF), (range(self.nF), np.zeros(self.nF))),
+                shape=(self.nF, 1),
+            )
+            if not invert_matrix and not invert_model:
+                dMdprop = A * ones
+            elif invert_matrix and invert_model:
+                dMdprop = sdiag(MI.diagonal() ** 2) * A * ones * sdiag(1.0 / model**2)
+            elif invert_model:
+                dMdprop = A * sdiag(-1.0 / model**2)
+            elif invert_matrix:
+                dMdprop = sdiag(-MI.diagonal() ** 2) * A
+
+        else:  # isotropic, variable in space
+            if not invert_matrix and not invert_model:
+                dMdprop = A
+            elif invert_matrix and invert_model:
+                dMdprop = sdiag(MI.diagonal() ** 2) * A * sdiag(1.0 / model**2)
+            elif invert_model:
+                dMdprop = A * sdiag(-1.0 / model**2)
+            elif invert_matrix:
+                dMdprop = sdiag(-MI.diagonal() ** 2) * A
+
+        if dMdprop is not None:
+
+            def innerProductDeriv(v=None):
+                if v is None:
+                    warnings.warn(
+                        "Depreciation Warning: TensorMesh.innerProductDeriv."
+                        " You should be supplying a vector. "
+                        "Use: sdiag(u)*dMdprop",
+                        FutureWarning,
+                        stacklevel=2,
+                    )
+                    return dMdprop
+                return sdiag(v) * dMdprop
+
+            return innerProductDeriv
+        else:
+            return None
 
     def get_edge_inner_product_line_deriv(
         self,
         model=None,
         invert_model=False,
         invert_matrix=False,
-        do_fast=True,
         **kwargs,
     ):
         r"""Get a function handle to multiply a vector with derivative of edge inner product line matrix (or its inverse).
@@ -2744,8 +2831,6 @@ class BaseMesh:
             The inverse of *model* is used as the diagnostic property.
         invert_matrix : bool, optional
             Returns the inverse of the inner product line matrix.
-        do_fast : bool, optional
-            Do a faster implementation (if available).
 
         Returns
         -------
@@ -2754,9 +2839,74 @@ class BaseMesh:
             (``n_edges``) :class:`numpy.ndarray` :math:`\mathbf{u}`. The function
             returns a (``n_edges``, ``n_params``) :class:`scipy.sparse.csr_matrix`.
         """
-        raise NotImplementedError(
-            f"get_edge_inner_product_line_deriv not implemented for {type(self)}"
-        )
+        if is_scalar(model):
+            tensorType = 0
+        elif model.size == self.nE:
+            tensorType = 1
+        else:
+            raise Exception(
+                "Unexpected shape of tensor: {}.".format(model.shape),
+                "Must be scalar or have length equal to total number of edges: {}.".format(
+                    self.nE
+                ),
+            )
+
+        dMdprop = None
+
+        if invert_matrix or invert_model:
+            MI = self.get_edge_inner_product_line(
+                model,
+                invert_model=invert_model,
+                invert_matrix=invert_matrix,
+            )
+
+        L = sdiag(self.edge_lengths)
+        if tensorType == 0:  # isotropic, constant
+            ones = sp.csr_matrix(
+                (np.ones(self.nE), (range(self.nE), np.zeros(self.nE))),
+                shape=(self.nE, 1),
+            )
+            if not invert_matrix and not invert_model:
+                dMdprop = L * ones
+            elif invert_matrix and invert_model:
+                dMdprop = sdiag(MI.diagonal() ** 2) * L * ones * sdiag(1.0 / model**2)
+            elif invert_model:
+                dMdprop = L * sdiag(-1.0 / model**2)
+            elif invert_matrix:
+                dMdprop = sdiag(-MI.diagonal() ** 2) * L
+
+        elif tensorType == 1:  # isotropic, variable in space
+            if not invert_matrix and not invert_model:
+                dMdprop = L
+            elif invert_matrix and invert_model:
+                dMdprop = sdiag(MI.diagonal() ** 2) * L * sdiag(1.0 / model**2)
+            elif invert_model:
+                dMdprop = L * sdiag(-1.0 / model**2)
+            elif invert_matrix:
+                dMdprop = sdiag(-MI.diagonal() ** 2) * L
+
+        elif tensorType == 2:  # anisotropic
+            raise NotImplementedError(
+                "EdgePropertiesInnerProductDeriv not implemented for anisotropy."
+            )
+
+        if dMdprop is not None:
+
+            def innerProductDeriv(v=None):
+                if v is None:
+                    warnings.warn(
+                        "Depreciation Warning: TensorMesh.innerProductDeriv."
+                        " You should be supplying a vector. "
+                        "Use: sdiag(u)*dMdprop",
+                        FutureWarning,
+                        stacklevel=2,
+                    )
+                    return dMdprop
+                return sdiag(v) * dMdprop
+
+            return innerProductDeriv
+        else:
+            return None
 
     # Averaging
     @property
