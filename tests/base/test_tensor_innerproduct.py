@@ -679,17 +679,17 @@ class TestTensorSizeErrorRaises(unittest.TestCase):
 
     def test_edge_inner_product_surface(self):
         self.assertRaises(
-            Exception, self.mesh3D.get_edge_inner_product_surface, self.model
+            ValueError, self.mesh3D.get_edge_inner_product_surface, self.model
         )
 
     def test_face_inner_product_surface(self):
         self.assertRaises(
-            Exception, self.mesh3D.get_face_inner_product_surface, self.model
+            ValueError, self.mesh3D.get_face_inner_product_surface, self.model
         )
 
     def test_edge_inner_product_line(self):
         self.assertRaises(
-            Exception, self.mesh3D.get_edge_inner_product_line, self.model
+            ValueError, self.mesh3D.get_edge_inner_product_line, self.model
         )
 
 

@@ -116,6 +116,13 @@ class InnerProducts(BaseMesh):
         #         [model[ii]*self.vnF[ii] for ii in range(0, self.dim)]
         #     ]
 
+        # Isotropic case only
+        if model.size != self.nF:
+            raise ValueError(
+                "Unexpected shape of tensor: {}".format(model.shape),
+                "Must be scalar or have length equal to total number of faces.",
+            )
+
         # number of elements we are averaging (equals dim for regular
         # meshes, but for cyl, where we use symmetry, it is 1 for edge
         # variables and 2 for face variables)
@@ -128,16 +135,9 @@ class InnerProducts(BaseMesh):
         else:
             n_elements = self.dim - 1
 
-        # Isotropic case only
-        if model.size == self.nF:
-            Aprop = self.face_areas * mkvc(model)
-            Av = self.average_edge_to_face
-            M = n_elements * sdiag(Av.T * Aprop)
-        else:
-            raise Exception(
-                "Unexpected shape of tensor: {}".format(model.shape),
-                "Must be scalar or have length equal to total number of faces.",
-            )
+        Aprop = self.face_areas * mkvc(model)
+        Av = self.average_edge_to_face
+        M = n_elements * sdiag(Av.T * Aprop)
 
         if invert_matrix:
             return sdinv(M)
@@ -336,7 +336,7 @@ class InnerProducts(BaseMesh):
         elif model.size == self.nF:
             tensorType = 1
         else:
-            raise Exception(
+            raise ValueError(
                 "Unexpected shape of tensor: {}".format(model.shape),
                 "Must be scalar or have length equal to total number of faces.",
             )
