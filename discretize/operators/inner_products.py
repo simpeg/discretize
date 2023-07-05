@@ -145,45 +145,6 @@ class InnerProducts(BaseMesh):
         else:
             return M
 
-    # def get_face_inner_product_surface(  # NOQA D102
-    #     self, model, invert_model=False, invert_matrix=False, do_fast=True, **kwargs
-    # ):
-    #     # Inherited documentation from discretize.base.BaseMesh
-
-    #     fast = None
-    #     if hasattr(self, "_fastInnerProductSurface") and do_fast:
-    #         fast = self._fastInnerProductSurface(
-    #             projection_type="F",
-    #             model=model,
-    #             invert_model=invert_model,
-    #             invert_matrix=invert_matrix,
-    #         )
-    #     if fast is not None:
-    #         return fast
-
-    #     raise NotImplementedError(
-    #         "General edge mass matrix for face properties is not implemented. Only meshes with fast implementation possible"
-    #     )
-
-    # def get_edge_inner_product_line(  # NOQA D102
-    #     self, model, invert_model=False, invert_matrix=False, do_fast=True, **kwargs
-    # ):
-    #     # Inherited documentation from discretize.base.BaseMesh
-
-    #     fast = None
-    #     if hasattr(self, "_fastInnerProductLine") and do_fast:
-    #         fast = self._fastInnerProductLine(
-    #             model=model,
-    #             invert_model=invert_model,
-    #             invert_matrix=invert_matrix,
-    #         )
-    #     if fast is not None:
-    #         return fast
-
-    #     raise NotImplementedError(
-    #         "General edge mass matrix for face properties is not implemented. Only meshes with fast implementation possible"
-    #     )
-
     def _getInnerProduct(
         self,
         projection_type,
@@ -365,27 +326,6 @@ class InnerProducts(BaseMesh):
             invert_matrix=invert_matrix,
         )
 
-    # def get_face_inner_product_surface_deriv(  # NOQA D102
-    #     self, model, invert_model=False, invert_matrix=False, **kwargs
-    # ):
-    #     # Inherited documentation from discretize.base.BaseMesh
-    #     if "invProp" in kwargs:
-    #         raise TypeError(
-    #             "The invProp keyword argument has been removed, please use invert_model. "
-    #             "This will be removed in discretize 1.0.0",
-    #         )
-    #     if "invMat" in kwargs:
-    #         raise TypeError(
-    #             "The invMat keyword argument has been removed, please use invert_matrix. "
-    #             "This will be removed in discretize 1.0.0",
-    #         )
-    #     return self._fastInnerProductSurfaceDeriv(
-    #         "F",
-    #         model,
-    #         invert_model=invert_model,
-    #         invert_matrix=invert_matrix,
-    #     )
-
     def get_edge_inner_product_surface_deriv(  # NOQA D102
         self, model, invert_model=False, invert_matrix=False, **kwargs
     ):
@@ -401,7 +341,9 @@ class InnerProducts(BaseMesh):
                 "This will be removed in discretize 1.0.0",
             )
 
-        if is_scalar(model):
+        if model is None:
+            tensorType = -1
+        elif is_scalar(model):
             tensorType = 0
         elif model.size == self.nF:
             tensorType = 1
@@ -484,26 +426,6 @@ class InnerProducts(BaseMesh):
             return innerProductDeriv
         else:
             return None
-
-    # def get_edge_inner_product_line_deriv(  # NOQA D102
-    #     self, model, invert_model=False, invert_matrix=False, **kwargs
-    # ):
-    #     # Inherited documentation from discretize.base.BaseMesh
-    #     if "invProp" in kwargs:
-    #         raise TypeError(
-    #             "The invProp keyword argument has been removed, please use invert_model. "
-    #             "This will be removed in discretize 1.0.0",
-    #         )
-    #     if "invMat" in kwargs:
-    #         raise TypeError(
-    #             "The invMat keyword argument has been removed, please use invert_matrix. "
-    #             "This will be removed in discretize 1.0.0",
-    #         )
-    #     return self._fastInnerProductLineDeriv(
-    #         model,
-    #         invert_model=invert_model,
-    #         invert_matrix=invert_matrix,
-    #     )
 
     def _getInnerProductDeriv(
         self,

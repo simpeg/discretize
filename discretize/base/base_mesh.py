@@ -2117,23 +2117,28 @@ class BaseMesh:
         >>> ax1.set_title("M (isotropic)", fontsize=16)
         >>> plt.show()
         """
-        if model is None:
-            model = np.ones(self.nF)
+        try:
+            if model is None:
+                model = np.ones(self.nF)
 
-        if invert_model:
-            model = 1.0 / model
+            if invert_model:
+                model = 1.0 / model
 
-        if is_scalar(model):
-            model = model * np.ones(self.nF)
+            if is_scalar(model):
+                model = model * np.ones(self.nF)
 
-        # Isotropic case only
-        if model.size == self.nF:
-            Aprop = self.face_areas * mkvc(model)
-            M = sdiag(Aprop)
-        else:
-            raise Exception(
-                "Unexpected shape of tensor: {}".format(model.shape),
-                "Must be scalar or have length equal to total number of faces.",
+            # Isotropic case only
+            if model.size == self.nF:
+                Aprop = self.face_areas * mkvc(model)
+                M = sdiag(Aprop)
+            else:
+                raise Exception(
+                    "Unexpected shape of tensor: {}".format(model.shape),
+                    "Must be scalar or have length equal to total number of faces.",
+                )
+        except NotImplementedError:
+            raise NotImplementedError(
+                f"get_face_inner_product_surface not implemented for {type(self)}"
             )
 
         if invert_matrix:
@@ -2256,24 +2261,30 @@ class BaseMesh:
         >>> ax1.set_title("M (isotropic)", fontsize=16)
         >>> plt.show()
         """
-        if model is None:
-            model = np.ones(self.nE)
+        try:
+            if model is None:
+                model = np.ones(self.nE)
 
-        if invert_model:
-            model = 1.0 / model
+            if invert_model:
+                model = 1.0 / model
 
-        if is_scalar(model):
-            model = model * np.ones(self.nE)
+            if is_scalar(model):
+                model = model * np.ones(self.nE)
 
-        # Isotropic case only
-        if model.size == self.nE:
-            Lprop = self.edge_lengths * mkvc(model)
-            M = sdiag(Lprop)
+            # Isotropic case only
+            if model.size == self.nE:
+                Lprop = self.edge_lengths * mkvc(model)
+                M = sdiag(Lprop)
 
-        else:
-            raise Exception(
-                "Unexpected shape of tensor: {}".format(model.shape),
-                "Must be scalar or have length equal to total number of edges.",
+            else:
+                raise Exception(
+                    "Unexpected shape of tensor: {}".format(model.shape),
+                    "Must be scalar or have length equal to total number of edges.",
+                )
+
+        except NotImplementedError:
+            raise NotImplementedError(
+                f"get_edge_inner_product_line not implemented for {type(self)}"
             )
 
         if invert_matrix:
@@ -2648,7 +2659,7 @@ class BaseMesh:
 
     def get_edge_inner_product_surface_deriv(
         self,
-        model=None,
+        model,
         invert_model=False,
         invert_matrix=False,
         **kwargs,
@@ -2694,7 +2705,7 @@ class BaseMesh:
 
     def get_face_inner_product_surface_deriv(
         self,
-        model=None,
+        model,
         invert_model=False,
         invert_matrix=False,
         **kwargs,
@@ -2734,14 +2745,24 @@ class BaseMesh:
             (``n_faces``) :class:`numpy.ndarray` :math:`\mathbf{u}`. The function
             returns a (``n_faces``, ``n_params``) :class:`scipy.sparse.csr_matrix`.
         """
-        if is_scalar(model):
-            tensorType = 0
-        elif model.size == self.nF:
-            tensorType = 1
-        else:
-            raise Exception(
-                "Unexpected shape of tensor: {}".format(model.shape),
-                "Must be scalar or have length equal to total number of faces.",
+        try:
+            if model is None:
+                tensorType = -1
+            elif is_scalar(model):
+                tensorType = 0
+            elif model.size == self.nF:
+                tensorType = 1
+            else:
+                raise Exception(
+                    "Unexpected shape of tensor: {}".format(model.shape),
+                    "Must be scalar or have length equal to total number of faces.",
+                )
+
+            A = sdiag(self.face_areas)
+
+        except NotImplementedError:
+            raise NotImplementedError(
+                f"get_face_inner_product_surface_deriv not implemented for {type(self)}"
             )
 
         dMdprop = None
@@ -2752,8 +2773,6 @@ class BaseMesh:
                 invert_model=invert_model,
                 invert_matrix=invert_matrix,
             )
-
-        A = sdiag(self.face_areas)
 
         if tensorType == 0:  # isotropic, constant
             ones = sp.csr_matrix(
@@ -2799,7 +2818,7 @@ class BaseMesh:
 
     def get_edge_inner_product_line_deriv(
         self,
-        model=None,
+        model,
         invert_model=False,
         invert_matrix=False,
         **kwargs,
@@ -2839,16 +2858,26 @@ class BaseMesh:
             (``n_edges``) :class:`numpy.ndarray` :math:`\mathbf{u}`. The function
             returns a (``n_edges``, ``n_params``) :class:`scipy.sparse.csr_matrix`.
         """
-        if is_scalar(model):
-            tensorType = 0
-        elif model.size == self.nE:
-            tensorType = 1
-        else:
-            raise Exception(
-                "Unexpected shape of tensor: {}.".format(model.shape),
-                "Must be scalar or have length equal to total number of edges: {}.".format(
-                    self.nE
-                ),
+        try:
+            if model is None:
+                tensorType = -1
+            elif is_scalar(model):
+                tensorType = 0
+            elif model.size == self.nE:
+                tensorType = 1
+            else:
+                raise Exception(
+                    "Unexpected shape of tensor: {}.".format(model.shape),
+                    "Must be scalar or have length equal to total number of edges: {}.".format(
+                        self.nE
+                    ),
+                )
+
+            L = sdiag(self.edge_lengths)
+
+        except NotImplementedError:
+            raise NotImplementedError(
+                f"get_edge_inner_product_line_deriv not implemented for {type(self)}"
             )
 
         dMdprop = None
@@ -2860,7 +2889,6 @@ class BaseMesh:
                 invert_matrix=invert_matrix,
             )
 
-        L = sdiag(self.edge_lengths)
         if tensorType == 0:  # isotropic, constant
             ones = sp.csr_matrix(
                 (np.ones(self.nE), (range(self.nE), np.zeros(self.nE))),
