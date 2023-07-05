@@ -2788,7 +2788,7 @@ class BaseMesh:
             elif invert_matrix:
                 dMdprop = sdiag(-MI.diagonal() ** 2) * A
 
-        else:  # isotropic, variable in space
+        elif tensorType == 1:  # isotropic, variable in space
             if not invert_matrix and not invert_model:
                 dMdprop = A
             elif invert_matrix and invert_model:
@@ -2912,11 +2912,6 @@ class BaseMesh:
                 dMdprop = L * sdiag(-1.0 / model**2)
             elif invert_matrix:
                 dMdprop = sdiag(-MI.diagonal() ** 2) * L
-
-        elif tensorType == 2:  # anisotropic
-            raise NotImplementedError(
-                "EdgePropertiesInnerProductDeriv not implemented for anisotropy."
-            )
 
         if dMdprop is not None:
 

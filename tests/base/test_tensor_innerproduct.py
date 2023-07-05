@@ -1,6 +1,9 @@
 import numpy as np
 import unittest
 import discretize
+from discretize import TensorMesh
+
+np.random.seed(50)
 
 
 class TestInnerProducts(discretize.tests.OrderTest):
@@ -665,6 +668,29 @@ class TestInnerProducts1D(discretize.tests.OrderTest):
         self.sigmaTest = 1
         self.invert_model = True
         self.orderTest()
+
+
+class TestTensorSizeErrorRaises(unittest.TestCase):
+    """Ensure exception error when model is incorrect size"""
+
+    def setUp(self):
+        self.mesh3D = TensorMesh([4, 4, 4])
+        self.model = np.random.rand(self.mesh3D.nC)
+
+    def test_edge_inner_product_surface(self):
+        self.assertRaises(
+            Exception, self.mesh3D.get_edge_inner_product_surface, self.model
+        )
+
+    def test_face_inner_product_surface(self):
+        self.assertRaises(
+            Exception, self.mesh3D.get_face_inner_product_surface, self.model
+        )
+
+    def test_edge_inner_product_line(self):
+        self.assertRaises(
+            Exception, self.mesh3D.get_edge_inner_product_line, self.model
+        )
 
 
 if __name__ == "__main__":

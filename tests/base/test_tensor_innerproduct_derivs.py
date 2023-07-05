@@ -1,6 +1,7 @@
 import numpy as np
 import unittest
 import discretize
+from discretize import TensorMesh
 
 np.random.seed(50)
 
@@ -348,10 +349,7 @@ class TestFacePropertiesInnerProductsDerivsTensor(unittest.TestCase):
                 sig, invert_model=invert_model, invert_matrix=invert_matrix
             )
             Md = mesh.get_face_inner_product_surface_deriv(
-                sig,
-                invert_model=invert_model,
-                invert_matrix=invert_matrix,
-                # do_fast=fast,
+                sig, invert_model=invert_model, invert_matrix=invert_matrix
             )
             return M * v, Md(v)
 
@@ -379,16 +377,10 @@ class TestFacePropertiesInnerProductsDerivsTensor(unittest.TestCase):
 
         def fun(sig):
             M = mesh.get_edge_inner_product_surface(
-                sig,
-                invert_model=invert_model,
-                invert_matrix=invert_matrix,
-                do_fast=True,
+                sig, invert_model=invert_model, invert_matrix=invert_matrix
             )
             Md = mesh.get_edge_inner_product_surface_deriv(
-                sig,
-                invert_model=invert_model,
-                invert_matrix=invert_matrix,
-                # do_fast=fast,
+                sig, invert_model=invert_model, invert_matrix=invert_matrix
             )
             return M * v, Md(v)
 
@@ -424,6 +416,54 @@ class TestFacePropertiesInnerProductsDerivsTensor(unittest.TestCase):
 
     def test_EdgeIP_3D_isotropic_fast(self):
         self.assertTrue(self.doTestEdge([10, 4, 5], 1, "Tensor"))
+
+    def test_FaceIP_2D_float_invert(self):
+        self.assertTrue(
+            self.doTestFace([10, 4], 0, "Tensor", invert_model=True, invert_matrix=True)
+        )
+
+    def test_FaceIP_3D_float_invert(self):
+        self.assertTrue(
+            self.doTestFace(
+                [10, 4, 5], 0, "Tensor", invert_model=True, invert_matrix=True
+            )
+        )
+
+    def test_FaceIP_2D_isotropic_invert(self):
+        self.assertTrue(
+            self.doTestFace([10, 4], 1, "Tensor", invert_model=True, invert_matrix=True)
+        )
+
+    def test_FaceIP_3D_isotropic_invert(self):
+        self.assertTrue(
+            self.doTestFace(
+                [10, 4, 5], 1, "Tensor", invert_model=True, invert_matrix=True
+            )
+        )
+
+    def test_EdgeIP_2D_float_invert(self):
+        self.assertTrue(
+            self.doTestEdge([10, 4], 0, "Tensor", invert_model=True, invert_matrix=True)
+        )
+
+    def test_EdgeIP_3D_float_invert(self):
+        self.assertTrue(
+            self.doTestEdge(
+                [10, 4, 5], 0, "Tensor", invert_model=True, invert_matrix=True
+            )
+        )
+
+    def test_EdgeIP_2D_isotropic_invert(self):
+        self.assertTrue(
+            self.doTestEdge([10, 4], 1, "Tensor", invert_model=True, invert_matrix=True)
+        )
+
+    def test_EdgeIP_3D_isotropic_invert(self):
+        self.assertTrue(
+            self.doTestEdge(
+                [10, 4, 5], 1, "Tensor", invert_model=True, invert_matrix=True
+            )
+        )
 
 
 class TestEdgePropertiesInnerProductsDerivsTensor(unittest.TestCase):
@@ -475,6 +515,53 @@ class TestEdgePropertiesInnerProductsDerivsTensor(unittest.TestCase):
 
     def test_EdgeIP_3D_isotropic_fast(self):
         self.assertTrue(self.doTestEdge([10, 4, 5], 1, "Tensor"))
+
+    def test_EdgeIP_2D_float_invert(self):
+        self.assertTrue(
+            self.doTestEdge([10, 4], 0, "Tensor", invert_model=True, invert_matrix=True)
+        )
+
+    def test_EdgeIP_3D_float_invert(self):
+        self.assertTrue(
+            self.doTestEdge(
+                [10, 4, 5], 0, "Tensor", invert_model=True, invert_matrix=True
+            )
+        )
+
+    def test_EdgeIP_2D_isotropic_invert(self):
+        self.assertTrue(
+            self.doTestEdge([10, 4], 1, "Tensor", invert_model=True, invert_matrix=True)
+        )
+
+    def test_EdgeIP_3D_isotropic_invert(self):
+        self.assertTrue(
+            self.doTestEdge(
+                [10, 4, 5], 1, "Tensor", invert_model=True, invert_matrix=True
+            )
+        )
+
+
+class TestTensorSizeErrorRaises(unittest.TestCase):
+    """Ensure exception error when model is incorrect size"""
+
+    def setUp(self):
+        self.mesh3D = TensorMesh([4, 4, 4])
+        self.model = np.random.rand(self.mesh3D.nC)
+
+    def test_edge_inner_product_surface_deriv(self):
+        self.assertRaises(
+            Exception, self.mesh3D.get_edge_inner_product_surface_deriv, self.model
+        )
+
+    def test_face_inner_product_surface_deriv(self):
+        self.assertRaises(
+            Exception, self.mesh3D.get_face_inner_product_surface_deriv, self.model
+        )
+
+    def test_edge_inner_product_line_deriv(self):
+        self.assertRaises(
+            Exception, self.mesh3D.get_edge_inner_product_line_deriv, self.model
+        )
 
 
 if __name__ == "__main__":

@@ -102,7 +102,6 @@ class InnerProducts(BaseMesh):
         self, model, invert_model=False, invert_matrix=False, **kwargs
     ):
         # Inherited documentation from discretize.base.BaseMesh
-
         if model is None:
             model = np.ones(self.nF)
 
@@ -330,17 +329,6 @@ class InnerProducts(BaseMesh):
         self, model, invert_model=False, invert_matrix=False, **kwargs
     ):
         # Inherited documentation from discretize.base.BaseMesh
-        if "invProp" in kwargs:
-            raise TypeError(
-                "The invProp keyword argument has been removed, please use invert_model. "
-                "This will be removed in discretize 1.0.0",
-            )
-        if "invMat" in kwargs:
-            raise TypeError(
-                "The invMat keyword argument has been removed, please use invert_matrix. "
-                "This will be removed in discretize 1.0.0",
-            )
-
         if model is None:
             tensorType = -1
         elif is_scalar(model):
@@ -397,7 +385,7 @@ class InnerProducts(BaseMesh):
             elif invert_matrix:
                 dMdprop = n_elements * (sdiag(-MI.diagonal() ** 2) * Av.T * A)
 
-        else:  # isotropic, variable in space
+        elif tensorType == 1:  # isotropic, variable in space
             if not invert_matrix and not invert_model:
                 dMdprop = n_elements * Av.T * A
             elif invert_matrix and invert_model:
