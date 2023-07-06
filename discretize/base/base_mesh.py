@@ -1987,14 +1987,18 @@ class BaseMesh:
         Here construct and image the edge inner product surface matrix for the isotropic case.
         Spy plots are used to demonstrate the sparsity of the inner product surface matrices.
 
-        >>> tau = np.r_[tau_x * mesh.n_faces_x, tau_y * mesh.n_faces_y, tau_z * mesh.n_faces_z]
+        >>> tau = np.r_[
+        >>>     tau_x * np.ones(mesh.n_faces_x),
+        >>>     tau_y * np.ones(mesh.n_faces_y),
+        >>>     tau_z * np.ones(mesh.n_faces_z)
+        >>> ]
         >>> M = mesh.get_edge_inner_product_surface(tau)
 
         Then plot the sparse representation,
 
         >>> fig = plt.figure(figsize=(4, 4))
         >>> ax1 = fig.add_subplot(111)
-        >>> ax1.spy(M, ms=5)
+        >>> ax1.imshow(M.todense())
         >>> ax1.set_title("M (isotropic)", fontsize=16)
         >>> plt.show()
         """
@@ -2106,14 +2110,18 @@ class BaseMesh:
         Here construct and image the face inner product surface matrix for the isotropic case.
         Spy plots are used to demonstrate the sparsity of the inner product surface matrices.
 
-        >>> tau = np.r_[tau_x * mesh.n_faces_x, tau_y * mesh.n_faces_y, tau_z * mesh.n_faces_z]
+        >>> tau = np.r_[
+        >>>     tau_x * np.ones(mesh.n_faces_x),
+        >>>     tau_y * np.ones(mesh.n_faces_y),
+        >>>     tau_z * np.ones(mesh.n_faces_z)
+        >>> ]
         >>> M = mesh.get_face_inner_product_surface(tau)
 
         Then plot the sparse representation,
 
         >>> fig = plt.figure(figsize=(4, 4))
         >>> ax1 = fig.add_subplot(111)
-        >>> ax1.spy(M, ms=5)
+        >>> ax1.imshow(M.todense())
         >>> ax1.set_title("M (isotropic)", fontsize=16)
         >>> plt.show()
         """
@@ -2228,7 +2236,6 @@ class BaseMesh:
         >>> from discretize import TensorMesh
         >>> import matplotlib.pyplot as plt
         >>> import numpy as np
-        >>> import matplotlib as mpl
 
         >>> h = np.ones(2)
         >>> mesh = TensorMesh([h, h, h])
@@ -2251,14 +2258,18 @@ class BaseMesh:
         Here construct and image the edge inner product line matrix for the isotropic case.
         Spy plots are used to demonstrate the sparsity of the matrix.
 
-        >>> tau = np.r_[tau_x * mesh.n_edges_x, tau_y * mesh.n_edges_y, tau_z * mesh.n_edges_z]
+        >>> tau = np.r_[
+        >>>     tau_x * np.ones(mesh.n_edges_x),
+        >>>     tau_y * np.ones(mesh.n_edges_y),
+        >>>     tau_z * np.ones(mesh.n_edges_z)
+        >>> ]
         >>> M = mesh.get_edge_inner_product_line(tau)
 
         Then plot the sparse representation,
 
         >>> fig = plt.figure(figsize=(4, 4))
         >>> ax1 = fig.add_subplot(111)
-        >>> ax1.spy(M, ms=5)
+        >>> ax1.imshow(M.todense())
         >>> ax1.set_title("M (isotropic)", fontsize=16)
         >>> plt.show()
         """
