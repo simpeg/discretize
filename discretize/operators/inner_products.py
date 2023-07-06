@@ -99,7 +99,7 @@ class InnerProducts(BaseMesh):
         )
 
     def get_edge_inner_product_surface(  # NOQA D102
-        self, model, invert_model=False, invert_matrix=False, **kwargs
+        self, model=None, invert_model=False, invert_matrix=False, **kwargs
     ):
         # Inherited documentation from discretize.base.BaseMesh
         if model is None:
