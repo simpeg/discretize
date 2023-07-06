@@ -2,6 +2,7 @@ import numpy as np
 import unittest
 import discretize
 from discretize import TensorMesh
+from discretize.utils import sdinv
 
 np.random.seed(50)
 
@@ -207,10 +208,20 @@ class TestInnerProductsFaceProperties3D(discretize.tests.OrderTest):
             )
             E = self.M.project_edge_vector(Ec)
 
-            if self.invert_model:
-                A = self.M.get_edge_inner_product_surface(1 / tau, invert_model=True)
-            else:
+            if not self.invert_model and not self.invert_matrix:
                 A = self.M.get_edge_inner_product_surface(tau)
+            elif self.invert_model:
+                A = self.M.get_edge_inner_product_surface(1 / tau, invert_model=True)
+            elif self.invert_matrix:
+                A = sdinv(
+                    self.M.get_edge_inner_product_surface(tau, invert_matrix=True)
+                )
+            else:
+                A = sdinv(
+                    self.M.get_edge_inner_product_surface(
+                        1 / tau, invert_model=True, invert_matrix=True
+                    )
+                )
 
             numeric = E.T.dot(A.dot(E))
 
@@ -225,10 +236,20 @@ class TestInnerProductsFaceProperties3D(discretize.tests.OrderTest):
             )
             F = self.M.project_face_vector(Fc)
 
-            if self.invert_model:
-                A = self.M.get_face_inner_product_surface(1 / tau, invert_model=True)
-            else:
+            if not self.invert_model and not self.invert_matrix:
                 A = self.M.get_face_inner_product_surface(tau)
+            elif self.invert_model:
+                A = self.M.get_face_inner_product_surface(1 / tau, invert_model=True)
+            elif self.invert_matrix:
+                A = sdinv(
+                    self.M.get_face_inner_product_surface(tau, invert_matrix=True)
+                )
+            else:
+                A = sdinv(
+                    self.M.get_face_inner_product_surface(
+                        1 / tau, invert_model=True, invert_matrix=True
+                    )
+                )
 
             numeric = F.T.dot(A.dot(F))
 
@@ -240,24 +261,56 @@ class TestInnerProductsFaceProperties3D(discretize.tests.OrderTest):
         self.name = "Edge Inner Product - Isotropic"
         self.location = "edges"
         self.invert_model = False
+        self.invert_matrix = False
         self.orderTest()
 
     def test_order1_edges_invert_model(self):
         self.name = "Edge Inner Product - Isotropic - invert_model"
         self.location = "edges"
         self.invert_model = True
+        self.invert_matrix = False
+        self.orderTest()
+
+    def test_order1_edges_invert_matrix(self):
+        self.name = "Edge Inner Product - Isotropic - invert_matrix"
+        self.location = "edges"
+        self.invert_model = False
+        self.invert_matrix = True
+        self.orderTest()
+
+    def test_order1_edges_invert_matrix_and_model(self):
+        self.name = "Edge Inner Product - Isotropic - invert_matrix and invert_model"
+        self.location = "edges"
+        self.invert_model = True
+        self.invert_matrix = True
         self.orderTest()
 
     def test_order1_faces(self):
         self.name = "Face Inner Product - Isotropic"
         self.location = "faces"
         self.invert_model = False
+        self.invert_matrix = False
         self.orderTest()
 
     def test_order1_faces_invert_model(self):
         self.name = "Face Inner Product - Isotropic - invert_model"
         self.location = "faces"
         self.invert_model = True
+        self.invert_matrix = False
+        self.orderTest()
+
+    def test_order1_faces_invert_matrix(self):
+        self.name = "Face Inner Product - Isotropic - invert_matrix"
+        self.location = "faces"
+        self.invert_model = False
+        self.invert_matrix = True
+        self.orderTest()
+
+    def test_order1_faces_invert_matrix_and_model(self):
+        self.name = "Face Inner Product - Isotropic - invert_matrix and invert_model"
+        self.location = "faces"
+        self.invert_model = True
+        self.invert_matrix = True
         self.orderTest()
 
 
@@ -301,10 +354,18 @@ class TestInnerProductsEdgeProperties3D(discretize.tests.OrderTest):
         Ec = np.vstack((cart(self.M.gridEx), cart(self.M.gridEy), cart(self.M.gridEz)))
         E = self.M.project_edge_vector(Ec)
 
-        if self.invert_model:
-            A = self.M.get_edge_inner_product_line(1 / tau, invert_model=True)
-        else:
+        if not self.invert_model and not self.invert_matrix:
             A = self.M.get_edge_inner_product_line(tau)
+        elif self.invert_model:
+            A = self.M.get_edge_inner_product_line(1 / tau, invert_model=True)
+        elif self.invert_matrix:
+            A = sdinv(self.M.get_edge_inner_product_line(tau, invert_matrix=True))
+        else:
+            A = sdinv(
+                self.M.get_edge_inner_product_line(
+                    1 / tau, invert_model=True, invert_matrix=True
+                )
+            )
 
         numeric = E.T.dot(A.dot(E))
 
@@ -316,12 +377,28 @@ class TestInnerProductsEdgeProperties3D(discretize.tests.OrderTest):
         self.name = "Edge Inner Product - Isotropic"
         self.location = "edges"
         self.invert_model = False
+        self.invert_matrix = False
         self.orderTest()
 
     def test_order1_edges_invert_model(self):
         self.name = "Edge Inner Product - Isotropic - invert_model"
         self.location = "edges"
         self.invert_model = True
+        self.invert_matrix = False
+        self.orderTest()
+
+    def test_order1_edges_invert_matrix(self):
+        self.name = "Edge Inner Product - Isotropic - invert_matrix"
+        self.location = "edges"
+        self.invert_model = False
+        self.invert_matrix = True
+        self.orderTest()
+
+    def test_order1_edges_invert_matrix_and_model(self):
+        self.name = "Edge Inner Product - Isotropic - invert_matrix and invert_model"
+        self.location = "edges"
+        self.invert_model = True
+        self.invert_matrix = True
         self.orderTest()
 
 

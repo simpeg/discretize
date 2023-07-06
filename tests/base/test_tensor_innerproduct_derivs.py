@@ -393,72 +393,72 @@ class TestFacePropertiesInnerProductsDerivsTensor(unittest.TestCase):
         )
         return discretize.tests.check_derivative(fun, sig, num=5, plotIt=False)
 
-    def test_FaceIP_2D_float_fast(self):
+    def test_FaceIP_2D_float(self):
         self.assertTrue(self.doTestFace([10, 4], 0, "Tensor"))
 
-    def test_FaceIP_3D_float_fast(self):
+    def test_FaceIP_3D_float(self):
         self.assertTrue(self.doTestFace([10, 4, 5], 0, "Tensor"))
 
-    def test_FaceIP_2D_isotropic_fast(self):
+    def test_FaceIP_2D_isotropic(self):
         self.assertTrue(self.doTestFace([10, 4], 1, "Tensor"))
 
-    def test_FaceIP_3D_isotropic_fast(self):
+    def test_FaceIP_3D_isotropic(self):
         self.assertTrue(self.doTestFace([10, 4, 5], 1, "Tensor"))
 
-    def test_EdgeIP_2D_float_fast(self):
+    def test_EdgeIP_2D_float(self):
         self.assertTrue(self.doTestEdge([10, 4], 0, "Tensor"))
 
-    def test_EdgeIP_3D_float_fast(self):
+    def test_EdgeIP_3D_float(self):
         self.assertTrue(self.doTestEdge([10, 4, 5], 0, "Tensor"))
 
-    def test_EdgeIP_2D_isotropic_fast(self):
+    def test_EdgeIP_2D_isotropic(self):
         self.assertTrue(self.doTestEdge([10, 4], 1, "Tensor"))
 
-    def test_EdgeIP_3D_isotropic_fast(self):
+    def test_EdgeIP_3D_isotropic(self):
         self.assertTrue(self.doTestEdge([10, 4, 5], 1, "Tensor"))
 
-    def test_FaceIP_2D_float_invert(self):
+    def test_FaceIP_2D_float_invert_all(self):
         self.assertTrue(
             self.doTestFace([10, 4], 0, "Tensor", invert_model=True, invert_matrix=True)
         )
 
-    def test_FaceIP_3D_float_invert(self):
+    def test_FaceIP_3D_float_invert_all(self):
         self.assertTrue(
             self.doTestFace(
                 [10, 4, 5], 0, "Tensor", invert_model=True, invert_matrix=True
             )
         )
 
-    def test_FaceIP_2D_isotropic_invert(self):
+    def test_FaceIP_2D_isotropic_invert_all(self):
         self.assertTrue(
             self.doTestFace([10, 4], 1, "Tensor", invert_model=True, invert_matrix=True)
         )
 
-    def test_FaceIP_3D_isotropic_invert(self):
+    def test_FaceIP_3D_isotropic_invert_all(self):
         self.assertTrue(
             self.doTestFace(
                 [10, 4, 5], 1, "Tensor", invert_model=True, invert_matrix=True
             )
         )
 
-    def test_EdgeIP_2D_float_invert(self):
+    def test_EdgeIP_2D_float_invert_all(self):
         self.assertTrue(
             self.doTestEdge([10, 4], 0, "Tensor", invert_model=True, invert_matrix=True)
         )
 
-    def test_EdgeIP_3D_float_invert(self):
+    def test_EdgeIP_3D_float_invert_all(self):
         self.assertTrue(
             self.doTestEdge(
                 [10, 4, 5], 0, "Tensor", invert_model=True, invert_matrix=True
             )
         )
 
-    def test_EdgeIP_2D_isotropic_invert(self):
+    def test_EdgeIP_2D_isotropic_invert_all(self):
         self.assertTrue(
             self.doTestEdge([10, 4], 1, "Tensor", invert_model=True, invert_matrix=True)
         )
 
-    def test_EdgeIP_3D_isotropic_invert(self):
+    def test_EdgeIP_3D_isotropic_invert_all(self):
         self.assertTrue(
             self.doTestEdge(
                 [10, 4, 5], 1, "Tensor", invert_model=True, invert_matrix=True
@@ -485,13 +485,11 @@ class TestEdgePropertiesInnerProductsDerivsTensor(unittest.TestCase):
                 sig,
                 invert_model=invert_model,
                 invert_matrix=invert_matrix,
-                do_fast=True,
             )
             Md = mesh.get_edge_inner_product_line_deriv(
                 sig,
                 invert_model=invert_model,
                 invert_matrix=invert_matrix,
-                # do_fast=fast,
             )
             return M * v, Md(v)
 
@@ -504,36 +502,36 @@ class TestEdgePropertiesInnerProductsDerivsTensor(unittest.TestCase):
         )
         return discretize.tests.check_derivative(fun, sig, num=5, plotIt=False)
 
-    def test_EdgeIP_2D_float_fast(self):
+    def test_EdgeIP_2D_float(self):
         self.assertTrue(self.doTestEdge([10, 4], 0, "Tensor"))
 
-    def test_EdgeIP_3D_float_fast(self):
+    def test_EdgeIP_3D_float(self):
         self.assertTrue(self.doTestEdge([10, 4, 5], 0, "Tensor"))
 
-    def test_EdgeIP_2D_isotropic_fast(self):
+    def test_EdgeIP_2D_isotropic(self):
         self.assertTrue(self.doTestEdge([10, 4], 1, "Tensor"))
 
-    def test_EdgeIP_3D_isotropic_fast(self):
+    def test_EdgeIP_3D_isotropic(self):
         self.assertTrue(self.doTestEdge([10, 4, 5], 1, "Tensor"))
 
-    def test_EdgeIP_2D_float_invert(self):
+    def test_EdgeIP_2D_float_invert_all(self):
         self.assertTrue(
             self.doTestEdge([10, 4], 0, "Tensor", invert_model=True, invert_matrix=True)
         )
 
-    def test_EdgeIP_3D_float_invert(self):
+    def test_EdgeIP_3D_float_invert_all(self):
         self.assertTrue(
             self.doTestEdge(
                 [10, 4, 5], 0, "Tensor", invert_model=True, invert_matrix=True
             )
         )
 
-    def test_EdgeIP_2D_isotropic_invert(self):
+    def test_EdgeIP_2D_isotropic_invert_all(self):
         self.assertTrue(
             self.doTestEdge([10, 4], 1, "Tensor", invert_model=True, invert_matrix=True)
         )
 
-    def test_EdgeIP_3D_isotropic_invert(self):
+    def test_EdgeIP_3D_isotropic_invert_all(self):
         self.assertTrue(
             self.doTestEdge(
                 [10, 4, 5], 1, "Tensor", invert_model=True, invert_matrix=True
@@ -562,6 +560,22 @@ class TestTensorSizeErrorRaises(unittest.TestCase):
         self.assertRaises(
             ValueError, self.mesh3D.get_edge_inner_product_line_deriv, self.model
         )
+
+
+class TestNone(unittest.TestCase):
+    """Test None outputs"""
+
+    def setUp(self):
+        self.mesh3D = TensorMesh([4, 4, 4])
+
+    def test_edge_inner_product_surface_deriv(self):
+        self.assertIsNone(self.mesh3D.get_edge_inner_product_surface_deriv(None))
+
+    def test_face_inner_product_surface_deriv(self):
+        self.assertIsNone(self.mesh3D.get_face_inner_product_surface_deriv(None))
+
+    def test_edge_inner_product_line_deriv(self):
+        self.assertIsNone(self.mesh3D.get_edge_inner_product_line_deriv(None))
 
 
 if __name__ == "__main__":
