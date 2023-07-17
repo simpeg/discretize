@@ -55,6 +55,7 @@ rst-roles =
     func,
     mod,
     meth,
+    attr,
     ref,
     data,
     # Python programming language:
