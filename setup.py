@@ -31,7 +31,7 @@ with open("README.rst") as f:
 
 build_requires = [
     "numpy>=1.20",
-    "cython>=0.29",
+    "cython>=0.29.31",
     "setuptools_scm",
 ]
 
