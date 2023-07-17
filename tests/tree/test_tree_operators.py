@@ -1,5 +1,5 @@
 import numpy as np
-import unittest
+# import unittest
 import discretize
 
 MESHTYPES = ["uniformTree", "randomTree"]
