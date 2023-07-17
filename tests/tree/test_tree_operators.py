@@ -1155,7 +1155,3 @@ class TestAveraging3D(discretize.tests.OrderTest):
         self.expectedOrders = 1
         self.orderTest()
         self.expectedOrders = 2
-
-
-if __name__ == "__main__":
-    unittest.main()

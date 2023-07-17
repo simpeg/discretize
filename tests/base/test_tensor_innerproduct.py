@@ -769,6 +769,7 @@ class TestTensorSizeErrorRaises(unittest.TestCase):
             ValueError, self.mesh3D.get_edge_inner_product_line, self.model
         )
 
+
 ###################################################
 #### Uncomment to Reevaluate the InnerProducts ####
 ###################################################

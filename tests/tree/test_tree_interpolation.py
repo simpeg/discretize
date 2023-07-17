@@ -3,26 +3,26 @@ import unittest
 import discretize
 
 MESHTYPES = ["uniformTree"]  # ['randomTree', 'uniformTree']
-call2 = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1])
-call3 = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1], xyz[:, 2])
-cart_row2 = lambda g, xfun, yfun: np.c_[call2(xfun, g), call2(yfun, g)]
-cart_row3 = lambda g, xfun, yfun, zfun: np.c_[
+call2 = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1])  # NOQA E731
+call3 = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1], xyz[:, 2])  # NOQA E731
+cart_row2 = lambda g, xfun, yfun: np.c_[call2(xfun, g), call2(yfun, g)]  # NOQA E731
+cart_row3 = lambda g, xfun, yfun, zfun: np.c_[  # NOQA E731
     call3(xfun, g), call3(yfun, g), call3(zfun, g)
 ]
-cartF2 = lambda M, fx, fy: np.vstack(
+cartF2 = lambda M, fx, fy: np.vstack(  # NOQA E731
     (cart_row2(M.gridFx, fx, fy), cart_row2(M.gridFy, fx, fy))
 )
-cartE2 = lambda M, ex, ey: np.vstack(
+cartE2 = lambda M, ex, ey: np.vstack(  # NOQA E731
     (cart_row2(M.gridEx, ex, ey), cart_row2(M.gridEy, ex, ey))
 )
-cartF3 = lambda M, fx, fy, fz: np.vstack(
+cartF3 = lambda M, fx, fy, fz: np.vstack(  # NOQA E731
     (
         cart_row3(M.gridFx, fx, fy, fz),
         cart_row3(M.gridFy, fx, fy, fz),
         cart_row3(M.gridFz, fx, fy, fz),
     )
 )
-cartE3 = lambda M, ex, ey, ez: np.vstack(
+cartE3 = lambda M, ex, ey, ez: np.vstack(  # NOQA E731
     (
         cart_row3(M.gridEx, ex, ey, ez),
         cart_row3(M.gridEy, ex, ey, ez),
@@ -54,8 +54,8 @@ class TestInterpolation2d(discretize.tests.OrderTest):
     expectedOrders = 1
 
     def getError(self):
-        funX = lambda x, y: np.cos(2.0 * np.pi * y) * np.cos(2.0 * np.pi * x) + x
-        funY = lambda x, y: np.cos(2.0 * np.pi * x) * np.cos(2.0 * np.pi * y) + y
+        funX = lambda x, y: np.cos(2.0 * np.pi * y) * np.cos(2.0 * np.pi * x) + x  # NOQA E731
+        funY = lambda x, y: np.cos(2.0 * np.pi * x) * np.cos(2.0 * np.pi * y) + y  # NOQA E731
 
         # self.LOCS = self.M.gridCC
 
@@ -138,9 +138,9 @@ class TestInterpolation3D(discretize.tests.OrderTest):
     meshSizes = [8, 16]
 
     def getError(self):
-        funX = lambda x, y, z: np.cos(2 * np.pi * y)
-        funY = lambda x, y, z: np.cos(2 * np.pi * z)
-        funZ = lambda x, y, z: np.cos(2 * np.pi * x)
+        funX = lambda x, y, z: np.cos(2 * np.pi * y)  # NOQA E731
+        funY = lambda x, y, z: np.cos(2 * np.pi * z)  # NOQA E731
+        funZ = lambda x, y, z: np.cos(2 * np.pi * x)  # NOQA E731
 
         if "x" in self.type:
             ana = call3(funX, self.LOCS)
