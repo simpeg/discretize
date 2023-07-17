@@ -226,7 +226,3 @@ class TestCaching(unittest.TestCase):
         A1 = mesh.average_edge_to_face
         A2 = mesh.average_edge_to_face
         self.assertIs(A1, A2)
-
-
-if __name__ == "__main__":
-    unittest.main()

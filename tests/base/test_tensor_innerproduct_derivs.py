@@ -576,7 +576,3 @@ class TestNone(unittest.TestCase):
 
     def test_edge_inner_product_line_deriv(self):
         self.assertIsNone(self.mesh3D.get_edge_inner_product_line_deriv(None))
-
-
-if __name__ == "__main__":
-    unittest.main()

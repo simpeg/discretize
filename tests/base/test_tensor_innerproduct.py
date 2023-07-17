@@ -769,10 +769,6 @@ class TestTensorSizeErrorRaises(unittest.TestCase):
             ValueError, self.mesh3D.get_edge_inner_product_line, self.model
         )
 
-
-if __name__ == "__main__":
-    unittest.main()
-
 ###################################################
 #### Uncomment to Reevaluate the InnerProducts ####
 ###################################################

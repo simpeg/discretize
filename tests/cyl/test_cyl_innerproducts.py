@@ -828,7 +828,3 @@ class TestCylInnerProductsFaceProperties_Deriv(unittest.TestCase):
         return self.assertTrue(
             tests.check_derivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
         )
-
-
-if __name__ == "__main__":
-    unittest.main()

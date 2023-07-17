@@ -296,7 +296,3 @@ class TestEdgePropertiesInnerProductsDerivsTensor(unittest.TestCase):
 
     def test_EdgeIP_3D_isotropic_fast_Tree(self):
         self.assertTrue(self.doTestEdge([8, 8, 8], 1, "Tree"))
-
-
-if __name__ == "__main__":
-    unittest.main()
