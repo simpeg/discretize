@@ -412,7 +412,7 @@ def test_simple_face_inner_product(mesh_type):
 
 @pytest.mark.parametrize("mesh_type", NONSYMMETRIC)
 def test_simple_edge_ave(mesh_type):
-    func = lambda r, t, z: np.c_[r, r, z]  # NOQA E731
+    func = lambda r, t, z: np.c_[r, r, z]
     mesh, _ = setup_mesh(mesh_type, 10)
     e_ana = mesh.project_edge_vector(func(*mesh.edges.T))
     ave_e = mesh.aveE2CCV @ e_ana
@@ -424,7 +424,7 @@ def test_simple_edge_ave(mesh_type):
 
 @pytest.mark.parametrize("mesh_type", NONSYMMETRIC)
 def test_simple_face_ave(mesh_type):
-    func = lambda r, t, z: np.c_[r, r, z]  # NOQA E731
+    func = lambda r, t, z: np.c_[r, r, z]
     mesh, _ = setup_mesh(mesh_type, 10)
     f_ana = mesh.project_face_vector(func(*mesh.faces.T))
     ave_f = mesh.aveF2CCV @ f_ana
@@ -564,7 +564,7 @@ def test_curl_boundary_integral(mesh_type):
 )
 @pytest.mark.parametrize("mesh_type", NONSYMMETRIC)
 def test_interpolation(mesh_type, location_type):
-    u_func = lambda x, y, z: x**2 + y**2 + z**2  # NOQA E731
+    u_func = lambda x, y, z: x**2 + y**2 + z**2
 
     interp_points = (
         np.mgrid[0.3:0.8:5j, np.pi / 10 : np.pi / 5 : 5j, 0.3:0.8:5j].reshape(3, -1).T
