@@ -300,7 +300,7 @@ cdef class TreeCell:
     def _level(self):
         return self._cell.level
 
-cdef int _evaluate_func(void* function, c_Cell* cell) with gil:
+cdef int _evaluate_func(void* function, c_Cell* cell) noexcept with gil:
     # Wraps a function to be called in C++
     func = <object> function
     pycell = TreeCell()
@@ -750,6 +750,7 @@ cdef class _TreeMesh:
 
         cdef int l
         cdef int max_level = self.max_level
+        cdef int i
         for i in range(n_segments):
             l = ls[i]
             if l < 0:
@@ -5354,8 +5355,16 @@ cdef class _TreeMesh:
 
             int_t ii, i, j, offset
             c_Cell *cell
-            c_Cell *i0, *i1
-            Edge *i000, *i001, *i010, *i011, *i100, *i101, *i110, *i111
+            c_Cell *i0
+            c_Cell *i1
+            Edge *i000
+            Edge *i001
+            Edge *i010
+            Edge *i011
+            Edge *i100
+            Edge *i101
+            Edge *i110
+            Edge *i111
             double x, y, z
             double w1, w2, w3
             double eps = 100*np.finfo(float).eps
@@ -5485,9 +5494,22 @@ cdef class _TreeMesh:
 
             int_t ii, i, offset
             c_Cell *cell
-            c_Cell *i00, *i01, *i10, *i11
-            Face *f000, *f001, *f010, *f011, *f100, *f101, *f110, *f111
-            Edge *e00, *e01, *e10, *e11
+            c_Cell *i00
+            c_Cell *i01
+            c_Cell *i10
+            c_Cell *i11
+            Face *f000
+            Face *f001
+            Face *f010
+            Face *f011
+            Face *f100
+            Face *f101
+            Face *f110
+            Face *f111
+            Edge *e00
+            Edge *e01
+            Edge *e10
+            Edge *e11
             double x, y, z
             double w1, w2, w3
             double eps = 100*np.finfo(float).eps
@@ -5749,7 +5771,14 @@ cdef class _TreeMesh:
             np.float64_t w0, w1, w2
 
             int_t ii, i
-            c_Cell *i000, *i001, *i010, *i011, *i100, *i101, *i110, *i111
+            c_Cell *i000
+            c_Cell *i001
+            c_Cell *i010
+            c_Cell *i011
+            c_Cell *i100
+            c_Cell *i101
+            c_Cell *i110
+            c_Cell *i111
             c_Cell *cell
             double x, y, z
             double eps = 100*np.finfo(float).eps
