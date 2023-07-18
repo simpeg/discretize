@@ -2,7 +2,6 @@ trigger:
   branches:
     include:
     - 'main'
-    - '1.0.0_alpha'
     exclude:
     - '*no-ci*'
   tags:
