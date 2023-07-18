@@ -1,6 +1,4 @@
 import numpy as np
-
-# import unittest
 import discretize
 
 MESHTYPES = ["uniformTree", "randomTree"]
@@ -481,19 +479,17 @@ class TestInnerProductsFaceProperties3D(discretize.tests.OrderTest):
         ey = lambda x, y, z: (z**2) * x + y * z
         ez = lambda x, y, z: y**2 + x * z
 
-        tau_x = lambda x, y, z: y * z + 1  # x-face properties  # NOQA F841
-        tau_y = lambda x, y, z: x * z + 2  # y-face properties  # NOQA F841
-        tau_z = lambda x, y, z: 3 + x * y  # z-face properties  # NOQA F841
+        tau_x = lambda x, y, z: y * z + 1  # x-face properties
+        tau_y = lambda x, y, z: x * z + 2  # y-face properties
+        tau_z = lambda x, y, z: 3 + x * y  # z-face properties
+        tau_funcs = [tau_x, tau_y, tau_z]
 
         tau = 3 * [None]
         for ii, comp in enumerate(["x", "y", "z"]):
-            k = np.isclose(
-                eval("self.M.faces_{}".format(comp))[:, ii], 0.5
-            )  # x, y or z location for each plane
-            tau_ii = 1e-8 * eval(
-                "np.ones(self.M.nF{})".format(comp)
-            )  # effectively zeros but stable
-            tau_ii[k] = eval("call(tau_{}, self.M.faces_{}[k, :])".format(comp, comp))
+            faces = getattr(self.M, f"faces_{comp}")
+            k = np.isclose(faces[:, ii], 0.5)  # x, y or z location for each plane
+            tau_ii = 1e-8 * np.ones(len(faces))  # effectively zeros but stable
+            tau_ii[k] = tau_funcs[ii](*faces[k].T)
             tau[ii] = tau_ii
         tau = np.hstack(tau)
 
