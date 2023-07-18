@@ -4,7 +4,7 @@ channels:
 dependencies:
   - numpy>=1.20
   - scipy>=1.8
-  - cython>=0.29
+  - cython>=0.29.31
   - setuptools_scm
   - pymatsolver>=0.1.2
   - matplotlib
