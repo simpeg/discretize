@@ -797,18 +797,12 @@ class BaseTensorMesh(BaseRegularMesh):
 
         Parameters
         ----------
-        model : numpy.ndarray
-            material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
-
         projection_type : str
             'edges' or 'faces'
-
-        returnP : bool
-            returns the projection matrices
-
+        model : numpy.ndarray
+            material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
         invert_model : bool
             inverts the material property
-
         invert_matrix : bool
             inverts the matrix
 
@@ -875,9 +869,9 @@ class BaseTensorMesh(BaseRegularMesh):
         Parameters
         ----------
         projection_type : str
-            'E' or 'F'
-        tensorType : TensorType
-            type of the tensor
+            'edges' or 'faces'
+        model : numpy.ndarray
+            material property (tensor properties are possible) at each cell center (nC, (1, 3, or 6))
         invert_model : bool
             inverts the material property
         invert_matrix : bool

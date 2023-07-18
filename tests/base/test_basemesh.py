@@ -50,8 +50,14 @@ class TestBaseMesh(unittest.TestCase):
     not_implemented_functions = [
         "get_face_inner_product",
         "get_edge_inner_product",
+        "get_face_inner_product_surface",
+        "get_edge_inner_product_surface",
+        "get_edge_inner_product_line",
         "get_face_inner_product_deriv",
         "get_edge_inner_product_deriv",
+        "get_face_inner_product_surface_deriv",
+        "get_edge_inner_product_surface_deriv",
+        "get_edge_inner_product_line_deriv",
         "point2index",
         "get_interpolation_matrix",
     ]

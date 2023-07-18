@@ -148,6 +148,124 @@ class EdgeInnerProductFunctionsDiagAnisotropic(EdgeInnerProductFctsIsotropic):
         return np.c_[sig, sig, sig], np.r_[ht]
 
 
+class FaceInnerProductFctsFacePropertiesIsotropic(object):
+    """Some made up face functions to test the face inner product"""
+
+    def fcts(self):
+        r_plane = 0.5
+        z_plane = 0.5
+
+        j_r = (r_plane**2) * z  # radial component
+        j_z = r * z_plane  # vertical component
+
+        # Create an isotropic sigma vector
+        tau_r = (r_plane + z) ** 2  # r-faces
+        tau_z = r + z_plane**2  # z_faces
+
+        return j_r, j_z, tau_r, tau_z
+
+    def sol(self):
+        r_plane = 0.5
+
+        # Do the inner product! - we are in cyl coordinates!
+        j_r, j_z, tau_r, tau_z = self.fcts()
+
+        # we are integrating in cyl coordinates
+        int_r = sympy.integrate(
+            r_plane * j_r**2 * tau_r, (z, 0, 1), (t, 0, 2 * np.pi)
+        )
+        int_z = sympy.integrate(r * j_z**2 * tau_z, (r, 0, 1), (t, 0, 2 * np.pi))
+
+        # return int_z(z_plane)
+        return int_r + int_z
+
+    def vectors(self, mesh):
+        r_plane = 0.5
+        z_plane = 0.5
+
+        """Get Vectors sig, sr. jx from sympy"""
+        j_r, j_z, tau_r, tau_z = self.fcts()
+
+        fun_j_r = sympy.lambdify(z, j_r, "numpy")
+        fun_j_z = sympy.lambdify(r, j_z, "numpy")
+        fun_tau_r = sympy.lambdify(z, tau_r, "numpy")
+        fun_tau_z = sympy.lambdify(r, tau_z, "numpy")
+
+        eval_j_r = fun_j_r(mesh.gridFx[:, 2])
+        eval_j_z = fun_j_z(mesh.gridFz[:, 0])
+        eval_tau_r = 1e-12 * np.ones(mesh.nFx)
+        eval_tau_z = 1e-12 * np.ones(mesh.nFz)
+
+        k_r = np.isclose(mesh.faces_x[:, 0], r_plane)
+        k_z = np.isclose(mesh.faces_z[:, 2], z_plane)
+
+        eval_tau_r[k_r] = fun_tau_r(mesh.gridFx[k_r, 2])
+        eval_tau_z[k_z] = fun_tau_z(mesh.gridFz[k_z, 0])
+
+        return np.r_[eval_tau_r, eval_tau_z], np.r_[eval_j_r, eval_j_z]
+
+
+class EdgeInnerProductFctsFacePropertiesIsotropic(object):
+    """Some made up face functions to test the face inner product"""
+
+    def fcts(self):
+        r_plane = 0.5
+        z_plane = 0.5
+
+        j_t = 0.5 * r * z  # azimuthal
+
+        # Create an isotropic sigma vector
+        tau_r = (r_plane + z) ** 2  # r-faces
+        tau_z = r + z_plane**2  # z_faces
+
+        return j_t, tau_r, tau_z
+
+    def sol(self):
+        r_plane = 0.5
+        z_plane = 0.5
+
+        # Do the inner product! - we are in cyl coordinates!
+        j_t, tau_r, tau_z = self.fcts()
+
+        # we are integrating in cyl coordinates
+        int_r = sympy.lambdify(
+            r,
+            sympy.integrate(r * j_t**2 * tau_r, (z, 0, 1), (t, 0, 2 * np.pi)),
+            "numpy",
+        )
+
+        int_z = sympy.lambdify(
+            z,
+            sympy.integrate(r * j_t**2 * tau_z, (r, 0, 1), (t, 0, 2 * np.pi)),
+            "numpy",
+        )
+
+        return int_r(r_plane) + int_z(z_plane)
+
+    def vectors(self, mesh):
+        r_plane = 0.5
+        z_plane = 0.5
+
+        """Get Vectors sig, sr. jx from sympy"""
+        j_t, tau_r, tau_z = self.fcts()
+
+        fun_j_t = sympy.lambdify((r, z), j_t, "numpy")
+        fun_tau_r = sympy.lambdify(z, tau_r, "numpy")
+        fun_tau_z = sympy.lambdify(r, tau_z, "numpy")
+
+        eval_j_t = fun_j_t(mesh.gridEy[:, 0], mesh.gridEy[:, 2])
+        eval_tau_r = 1e-8 * np.ones(mesh.nFx)
+        eval_tau_z = 1e-8 * np.ones(mesh.nFz)
+
+        k_r = np.isclose(mesh.faces_x[:, 0], r_plane)
+        k_z = np.isclose(mesh.faces_z[:, 2], z_plane)
+
+        eval_tau_r[k_r] = fun_tau_r(mesh.faces_x[k_r, 2])
+        eval_tau_z[k_z] = fun_tau_z(mesh.faces_z[k_z, 0])
+
+        return np.r_[eval_tau_r, eval_tau_z], eval_j_t
+
+
 class TestCylInnerProducts_simple(unittest.TestCase):
     def setUp(self):
         n = 100.0
@@ -234,6 +352,46 @@ class TestCylInnerProducts_simple(unittest.TestCase):
         )
         assert np.abs(ans - numeric_ans) < TOL
 
+    def test_FaceInnerProductFacePropertiesIsotropic(self):
+        # Here we will make up some j vectors that vary in space
+        # j = [j_r, j_z] - to test face inner products
+
+        fcts = FaceInnerProductFctsFacePropertiesIsotropic()
+        tau, jv = fcts.vectors(self.mesh)
+        Mftau = self.mesh.get_face_inner_product_surface(tau)
+        numeric_ans = jv.T.dot(Mftau.dot(jv))
+
+        ans = fcts.sol()
+
+        print("--- Testing Face Inner Product (face properties) ---")
+        print(
+            " Analytic: {analytic}, Numeric: {numeric}, "
+            "ratio (num/ana): {ratio}".format(
+                analytic=ans, numeric=numeric_ans, ratio=float(numeric_ans) / ans
+            )
+        )
+        assert np.abs(ans - numeric_ans) < TOL
+
+    def test_EdgeInnerProductFacePropertiesIsotropic(self):
+        # Here we will make up some j vectors that vary in space
+        # j = [j_r, j_z] - to test face inner products
+
+        fcts = EdgeInnerProductFctsFacePropertiesIsotropic()
+        tau, jv = fcts.vectors(self.mesh)
+        Metau = self.mesh.get_edge_inner_product_surface(tau)
+        numeric_ans = jv.T.dot(Metau.dot(jv))
+
+        ans = fcts.sol()
+
+        print("--- Testing Edge Inner Product (face properties) ---")
+        print(
+            " Analytic: {analytic}, Numeric: {numeric}, "
+            "ratio (num/ana): {ratio}".format(
+                analytic=ans, numeric=numeric_ans, ratio=float(numeric_ans) / ans
+            )
+        )
+        assert np.abs(ans - numeric_ans) < TOL
+
 
 class TestCylFaceInnerProducts_Order(tests.OrderTest):
     meshTypes = ["uniform_symmetric_CylMesh"]
@@ -272,6 +430,34 @@ class TestCylFaceInnerProductsDiagAnisotropic_Order(tests.OrderTest):
         sig, jv = fct.vectors(self.M)
         Msig = self.M.get_face_inner_product(sig)
         return float(fct.sol()) - jv.T.dot(Msig.dot(jv))
+
+    def test_order(self):
+        self.orderTest()
+
+
+class TestCylFaceInnerProductsFaceProperties_Order(tests.OrderTest):
+    meshTypes = ["uniform_symmetric_CylMesh"]
+    meshDimension = 3
+
+    def getError(self):
+        fct = FaceInnerProductFctsFacePropertiesIsotropic()
+        tau, jv = fct.vectors(self.M)
+        Mtau = self.M.get_face_inner_product_surface(tau)
+        return float(fct.sol()) - jv.T.dot(Mtau.dot(jv))
+
+    def test_order(self):
+        self.orderTest()
+
+
+class TestCylEdgeInnerProductsFaceProperties_Order(tests.OrderTest):
+    meshTypes = ["uniform_symmetric_CylMesh"]
+    meshDimension = 3
+
+    def getError(self):
+        fct = EdgeInnerProductFctsFacePropertiesIsotropic()
+        tau, jv = fct.vectors(self.M)
+        Mtau = self.M.get_edge_inner_product_surface(tau)
+        return float(fct.sol()) - jv.T.dot(Mtau.dot(jv))
 
     def test_order(self):
         self.orderTest()
@@ -557,5 +743,88 @@ class TestCylInnerProductsAnisotropic_Deriv(unittest.TestCase):
         )
 
 
-if __name__ == "__main__":
-    unittest.main()
+class TestCylInnerProductsFaceProperties_Deriv(unittest.TestCase):
+    def setUp(self):
+        n = 2
+        self.mesh = discretize.CylindricalMesh([n, 1, n])
+        self.face_vec = np.random.rand(self.mesh.nF)
+        self.edge_vec = np.random.rand(self.mesh.nE)
+        # make up a smooth function
+        self.x0 = np.r_[
+            2 * self.mesh.gridFx[:, 0] ** 2 + self.mesh.gridFx[:, 2] ** 4,
+            2 * self.mesh.gridFz[:, 0] ** 2 + self.mesh.gridFz[:, 2] ** 4,
+        ]
+
+    def test_FaceInnerProductIsotropicDeriv(self):
+        def fun(x):
+            MfTau = self.mesh.get_face_inner_product_surface(x)
+            MfTauDeriv = self.mesh.get_face_inner_product_surface_deriv(self.x0)
+            return MfTau * self.face_vec, MfTauDeriv(self.face_vec)
+
+        print("Testing FaceInnerProduct Isotropic (Face Properties)")
+        return self.assertTrue(
+            tests.check_derivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
+        )
+
+    def test_FaceInnerProductIsotropicDerivInvProp(self):
+        def fun(x):
+            MfTau = self.mesh.get_face_inner_product_surface(x, invert_model=True)
+            MfTauDeriv = self.mesh.get_face_inner_product_surface_deriv(
+                self.x0, invert_model=True
+            )
+            return MfTau * self.face_vec, MfTauDeriv(self.face_vec)
+
+        print("Testing FaceInnerProduct Isotropic InvProp (Face Properties)")
+        return self.assertTrue(
+            tests.check_derivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
+        )
+
+    def test_FaceInnerProductIsotropicDerivInvMat(self):
+        def fun(x):
+            MfTau = self.mesh.get_face_inner_product_surface(x, invert_matrix=True)
+            MfTauDeriv = self.mesh.get_face_inner_product_surface_deriv(
+                self.x0, invert_matrix=True
+            )
+            return MfTau * self.face_vec, MfTauDeriv(self.face_vec)
+
+        print("Testing FaceInnerProduct Isotropic InvMat (Face Properties)")
+        return self.assertTrue(
+            tests.check_derivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
+        )
+
+    def test_EdgeInnerProductIsotropicDeriv(self):
+        def fun(x):
+            MeTau = self.mesh.get_edge_inner_product_surface(x)
+            MeTauDeriv = self.mesh.get_edge_inner_product_surface_deriv(self.x0)
+            return MeTau * self.edge_vec, MeTauDeriv(self.edge_vec)
+
+        print("Testing EdgeInnerProduct Isotropic (Face Properties)")
+        return self.assertTrue(
+            tests.check_derivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
+        )
+
+    def test_EdgeInnerProductIsotropicDerivInvProp(self):
+        def fun(x):
+            MeTau = self.mesh.get_edge_inner_product_surface(x, invert_model=True)
+            MeTauDeriv = self.mesh.get_edge_inner_product_surface_deriv(
+                self.x0, invert_model=True
+            )
+            return MeTau * self.edge_vec, MeTauDeriv(self.edge_vec)
+
+        print("Testing EdgeInnerProduct Isotropic InvProp (Face Properties)")
+        return self.assertTrue(
+            tests.check_derivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
+        )
+
+    def test_EdgeInnerProductIsotropicDerivInvMat(self):
+        def fun(x):
+            MeTau = self.mesh.get_edge_inner_product_surface(x, invert_matrix=True)
+            MeTauDeriv = self.mesh.get_edge_inner_product_surface_deriv(
+                self.x0, invert_matrix=True
+            )
+            return MeTau * self.edge_vec, MeTauDeriv(self.edge_vec)
+
+        print("Testing EdgeInnerProduct Isotropic InvMat (Face Properties)")
+        return self.assertTrue(
+            tests.check_derivative(fun, self.x0, num=7, tolerance=TOLD, plotIt=False)
+        )
