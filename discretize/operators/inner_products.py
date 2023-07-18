@@ -1,6 +1,5 @@
 """Construct inner product operators for tensor like meshes."""
 from scipy import sparse as sp
-import warnings
 from discretize.base import BaseMesh
 from discretize.utils import (
     sub2ind,
@@ -399,16 +398,7 @@ class InnerProducts(BaseMesh):
 
         if dMdprop is not None:
 
-            def innerProductDeriv(v=None):
-                if v is None:
-                    warnings.warn(
-                        "Depreciation Warning: TensorMesh.innerProductDeriv."
-                        " You should be supplying a vector. "
-                        "Use: sdiag(u)*dMdprop",
-                        FutureWarning,
-                        stacklevel=2,
-                    )
-                    return dMdprop
+            def innerProductDeriv(v):
                 return sdiag(v) * dMdprop
 
             return innerProductDeriv

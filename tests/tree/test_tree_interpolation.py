@@ -54,12 +54,8 @@ class TestInterpolation2d(discretize.tests.OrderTest):
     expectedOrders = 1
 
     def getError(self):
-        funX = (
-            lambda x, y: np.cos(2.0 * np.pi * y) * np.cos(2.0 * np.pi * x) + x
-        )
-        funY = (
-            lambda x, y: np.cos(2.0 * np.pi * x) * np.cos(2.0 * np.pi * y) + y
-        )
+        funX = lambda x, y: np.cos(2.0 * np.pi * y) * np.cos(2.0 * np.pi * x) + x
+        funY = lambda x, y: np.cos(2.0 * np.pi * x) * np.cos(2.0 * np.pi * y) + y
 
         # self.LOCS = self.M.gridCC
 

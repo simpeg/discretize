@@ -3,7 +3,6 @@ import numpy as np
 import scipy.sparse as sp
 import os
 import json
-import warnings
 from scipy.spatial import KDTree
 from discretize.utils import is_scalar, mkvc, sdiag, sdinv
 from discretize.utils.code_utils import (
@@ -2810,16 +2809,7 @@ class BaseMesh:
 
         if dMdprop is not None:
 
-            def innerProductDeriv(v=None):
-                if v is None:
-                    warnings.warn(
-                        "Depreciation Warning: TensorMesh.innerProductDeriv."
-                        " You should be supplying a vector. "
-                        "Use: sdiag(u)*dMdprop",
-                        FutureWarning,
-                        stacklevel=2,
-                    )
-                    return dMdprop
+            def innerProductDeriv(v):
                 return sdiag(v) * dMdprop
 
             return innerProductDeriv
@@ -2924,16 +2914,7 @@ class BaseMesh:
 
         if dMdprop is not None:
 
-            def innerProductDeriv(v=None):
-                if v is None:
-                    warnings.warn(
-                        "Depreciation Warning: TensorMesh.innerProductDeriv."
-                        " You should be supplying a vector. "
-                        "Use: sdiag(u)*dMdprop",
-                        FutureWarning,
-                        stacklevel=2,
-                    )
-                    return dMdprop
+            def innerProductDeriv(v):
                 return sdiag(v) * dMdprop
 
             return innerProductDeriv

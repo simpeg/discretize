@@ -47,12 +47,8 @@ class TestCellGrad2D(discretize.tests.OrderTest):
     def getError(self):
         # Test function
         sol = lambda x, y: np.cos(2 * np.pi * x) * np.cos(2 * np.pi * y)
-        fx = (
-            lambda x, y: -2 * np.pi * np.sin(2 * np.pi * x) * np.cos(2 * np.pi * y)
-        )
-        fy = (
-            lambda x, y: -2 * np.pi * np.sin(2 * np.pi * y) * np.cos(2 * np.pi * x)
-        )
+        fx = lambda x, y: -2 * np.pi * np.sin(2 * np.pi * x) * np.cos(2 * np.pi * y)
+        fy = lambda x, y: -2 * np.pi * np.sin(2 * np.pi * y) * np.cos(2 * np.pi * x)
 
         phi = call2(sol, self.M.gridCC)
         gradF = self.M.cell_gradient * phi
@@ -128,9 +124,7 @@ class TestFaceDivxy2D(discretize.tests.OrderTest):
         # Test function
         fx = lambda x, y: np.sin(2 * np.pi * x)
         fy = lambda x, y: np.sin(2 * np.pi * y)
-        sol = (
-            lambda x, y: 2 * np.pi * (np.cos(2 * np.pi * x) + np.cos(2 * np.pi * y))
-        )
+        sol = lambda x, y: 2 * np.pi * (np.cos(2 * np.pi * x) + np.cos(2 * np.pi * y))
 
         Fx = call2(fx, self.M.gridFx)
         Fy = call2(fy, self.M.gridFy)
