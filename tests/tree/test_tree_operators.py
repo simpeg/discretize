@@ -481,9 +481,9 @@ class TestInnerProductsFaceProperties3D(discretize.tests.OrderTest):
         ey = lambda x, y, z: (z**2) * x + y * z
         ez = lambda x, y, z: y**2 + x * z
 
-        tau_x = lambda x, y, z: y * z + 1  # x-face properties
-        tau_y = lambda x, y, z: x * z + 2  # y-face properties
-        tau_z = lambda x, y, z: 3 + x * y  # z-face properties
+        tau_x = lambda x, y, z: y * z + 1  # x-face properties  # NOQA F841
+        tau_y = lambda x, y, z: x * z + 2  # y-face properties  # NOQA F841
+        tau_z = lambda x, y, z: 3 + x * y  # z-face properties  # NOQA F841
 
         tau = 3 * [None]
         for ii, comp in enumerate(["x", "y", "z"]):
@@ -577,9 +577,9 @@ class TestInnerProductsEdgeProperties3D(discretize.tests.OrderTest):
         ey = lambda x, y, z: (z**2) * x + y * z
         ez = lambda x, y, z: y**2 + x * z
 
-        tau_x = lambda x, y, z: x + 1  # x-face properties
-        tau_y = lambda x, y, z: y + 2  # y-face properties
-        tau_z = lambda x, y, z: 3 * z + 1  # z-face properties
+        tau_x = lambda x, y, z: x + 1  # x-face properties  # NOQA F841
+        tau_y = lambda x, y, z: y + 2  # y-face properties  # NOQA F841
+        tau_z = lambda x, y, z: 3 * z + 1  # z-face properties  # NOQA F841
 
         tau = 3 * [None]
         for ii, comp in enumerate(["x", "y", "z"]):
@@ -784,8 +784,8 @@ class TestInnerProductsFaceProperties2D(discretize.tests.OrderTest):
         ex = lambda x, y: x**2 + y
         ey = lambda x, y: (y**2) * x
 
-        tau_x = lambda x, y: 2 * y + 1  # x-face properties
-        tau_y = lambda x, y: x + 2  # y-face properties
+        tau_x = lambda x, y: 2 * y + 1  # x-face properties  # NOQA F841
+        tau_y = lambda x, y: x + 2  # y-face properties  # NOQA F841
 
         tau = 2 * [None]
         for ii, comp in enumerate(["x", "y"]):
@@ -874,8 +874,8 @@ class TestInnerProductsEdgeProperties2D(discretize.tests.OrderTest):
         ex = lambda x, y: x**2 + y
         ey = lambda x, y: (x**2) * y
 
-        tau_x = lambda x, y: x + 1  # x-face properties
-        tau_y = lambda x, y: y + 2  # y-face properties
+        tau_x = lambda x, y: x + 1  # x-face properties  # NOQA F841
+        tau_y = lambda x, y: y + 2  # y-face properties  # NOQA F841
 
         tau = 2 * [None]
         for ii, comp in enumerate(["x", "y"]):
