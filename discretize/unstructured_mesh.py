@@ -536,7 +536,6 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
         dim = self.dim
         
         if dim == 2:
-            Ps = sp.diags(np.ones(n_faces))
             
             if model is None:
                 Mu = sp.diags(face_areas)
@@ -545,28 +544,26 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
                     model = 1.0 / model
                 
                 if (model.size == 1) | (model.size == n_faces):
-                    model = model * face_areas
-                    Mu = sp.diags(model)
+                    Mu = sp.diags(model * face_areas)
                 else:
                     raise ValueError(
                         "Unrecognized size of model vector.",
                         "Must be scalar or have length equal to total number of faces."
                     )
                     
-            A = Ps.T @ Mu @ Ps        
+            return Mu        
             
         else:
             Ps = self._get_edge_surf_int_proj_mats(with_area=False)
         
             if model is None:
-                Mu = sp.diags(np.repeat(face_areas, dim))
+                Mu = sp.diags(np.tile(face_areas, dim))
             else:
                 if invert_model:
                     model = 1.0 / model
                 
                 if (model.size == 1) | (model.size == n_faces):
-                    model = model * face_areas
-                    Mu = sp.diags(np.repeat(model, dim))
+                    Mu = sp.diags(np.tile(model * face_areas, dim))
                 else:
                     raise ValueError(
                         "Unrecognized size of model vector.",
@@ -575,7 +572,7 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
 
             A = np.sum([P.T @ Mu @ P for P in Ps])
             
-        return A
+            return A
         
         
     def __get_inner_product_deriv_func(self, i_type, model):
@@ -726,10 +723,13 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
             edge_dirs = self.edge_tangents[node_edges]
             t_for = np.concatenate((edge_dirs, face_normals[:, None, :]), axis=1)
             t_inv = invert_blocks(t_for)
-            t_inv = t_inv[:, :, :-1] / 3  # n_edges_per_thing
+            t_inv = t_inv[:, :, :-1]
 
             if with_area:
                 t_inv *= face_areas[:, None, None]
+                t_inv /= 3  # n_edges_per_thing
+            else:
+                t_inv /= np.sqrt(3)  # sqrt n_edges_per_thing
 
             T = C2F @ sp.csr_matrix(
                 (t_inv.reshape(-1), T_col_inds, T_ind_ptr),

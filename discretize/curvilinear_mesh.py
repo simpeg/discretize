@@ -796,10 +796,13 @@ class CurvilinearMesh(
             edge_dirs = self.edge_tangents[node_edges]
             t_for = np.concatenate((edge_dirs, face_normals[:, None, :]), axis=1)
             t_inv = np.linalg.inv(t_for)
-            t_inv = t_inv[:, :, :-1] / 4  # n_edges_per_thing
+            t_inv = t_inv[:, :, :-1]
 
             if with_area:
                 t_inv *= face_areas[:, None, None]
+                t_inv /= 4  # n_edges_per_thing
+            else:
+                t_inv /= 2  # sqrt n_edges_per_thing
 
             T = C2F @ sp.csr_matrix(
                 (t_inv.reshape(-1), T_col_inds, T_ind_ptr),
