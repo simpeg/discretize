@@ -702,6 +702,87 @@ class TestInnerProductsDerivs(unittest.TestCase):
         self.assertTrue(self.doTestEdge([10, 4, 5], 6))
 
 
+class TestFacePropertiesInnerProductsDerivs(unittest.TestCase):
+    def doTestFace(self, h, rep):
+        nodes, simplices = example_simplex_mesh(h)
+        mesh = discretize.SimplexMesh(nodes, simplices)
+        v = np.random.rand(mesh.n_faces)
+        tau = np.random.rand(1) if rep == 0 else np.random.rand(mesh.nF * rep)
+
+        def fun(tau):
+            M = mesh.get_face_inner_product_surface(tau)
+            Md = mesh.get_face_inner_product_surface_deriv(tau)
+            return M * v, Md(v)
+
+        print("Face", rep)
+        return discretize.tests.check_derivative(fun, tau, num=5, plotIt=False)
+
+    def doTestEdge(self, h, rep):
+        nodes, simplices = example_simplex_mesh(h)
+        mesh = discretize.SimplexMesh(nodes, simplices)
+        v = np.random.rand(mesh.n_edges)
+        tau = np.random.rand(1) if rep == 0 else np.random.rand(mesh.nF * rep)
+
+        def fun(tau):
+            M = mesh.get_edge_inner_product_surface(tau)
+            Md = mesh.get_edge_inner_product_surface_deriv(tau)
+            return M * v, Md(v)
+
+        print("Edge", rep)
+        return discretize.tests.check_derivative(fun, tau, num=5, plotIt=False)
+
+    # def test_FaceIP_2D_float(self):
+    #     self.assertTrue(self.doTestFace([10, 4], 0))
+
+    # def test_FaceIP_3D_float(self):
+    #     self.assertTrue(self.doTestFace([10, 4, 5], 0))
+
+    # def test_FaceIP_2D_isotropic(self):
+    #     self.assertTrue(self.doTestFace([10, 4], 1))
+
+    # def test_FaceIP_3D_isotropic(self):
+    #     self.assertTrue(self.doTestFace([10, 4, 5], 1))
+
+    # def test_EdgeIP_2D_float(self):
+    #     self.assertTrue(self.doTestEdge([10, 4], 0))
+
+    # def test_EdgeIP_3D_float(self):
+    #     self.assertTrue(self.doTestEdge([10, 4, 5], 0))
+
+    # def test_EdgeIP_2D_isotropic(self):
+    #     self.assertTrue(self.doTestEdge([10, 4], 1))
+
+    # def test_EdgeIP_3D_isotropic(self):
+    #     self.assertTrue(self.doTestEdge([10, 4, 5], 1))
+
+class TestFacePropertiesInnerProductsDerivs(unittest.TestCase):
+    def doTestEdge(self, h, rep):
+        nodes, simplices = example_simplex_mesh(h)
+        mesh = discretize.SimplexMesh(nodes, simplices)
+        v = np.random.rand(mesh.n_edges)
+        tau = np.random.rand(1) if rep == 0 else np.random.rand(mesh.nE * rep)
+
+        def fun(tau):
+            M = mesh.get_edge_inner_product_line(tau)
+            Md = mesh.get_edge_inner_product_line_deriv(tau)
+            return M * v, Md(v)
+
+        print("Edge", rep)
+        return discretize.tests.check_derivative(fun, tau, num=5, plotIt=False)
+
+    # def test_EdgeIP_2D_float(self):
+    #     self.assertTrue(self.doTestEdge([10, 4], 0))
+
+    # def test_EdgeIP_3D_float(self):
+    #     self.assertTrue(self.doTestEdge([10, 4, 5], 0))
+
+    # def test_EdgeIP_2D_isotropic(self):
+    #     self.assertTrue(self.doTestEdge([10, 4], 1))
+
+    # def test_EdgeIP_3D_isotropic(self):
+    #     self.assertTrue(self.doTestEdge([10, 4, 5], 1))
+
+
 class Test2DBoundaryIntegral(discretize.tests.OrderTest):
     meshSizes = [8, 16, 32]
     meshTypes = ["uniform simplex mesh"]
