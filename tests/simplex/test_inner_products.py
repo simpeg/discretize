@@ -178,6 +178,148 @@ class TestInnerProducts2D(discretize.tests.OrderTest):
         self.invert_model = True
         self.orderTest()
 
+class TestInnerProductsFaceProperties2D(discretize.tests.OrderTest):
+    meshSizes = [8, 16, 32]
+    meshTypes = ["uniform simplex mesh"]
+
+    def setupMesh(self, n):
+        points, simplices = example_simplex_mesh((n, n))
+        self.M = discretize.SimplexMesh(points, simplices)
+        return 1.0 / n
+
+    def getError(self):
+        
+        call = lambda fun, xy: fun(xy[:, 0], xy[:, 1])  # NOQA F841
+
+        ex = lambda x, y: x**2 + y
+        ey = lambda x, y: (y**2) * x
+
+        tau_x = lambda x, y: 2 * y + 1  # x-face properties  # NOQA F841
+        tau_y = lambda x, y: x + 2  # y-face properties  # NOQA F841
+
+        mesh = self.M
+
+        tau = 1e-8 * np.ones(mesh.n_faces)
+        for ii, comp in enumerate(["x", "y"]):
+            k = np.isclose(self.M.faces[:, ii], 0.5)  # x, or y location for each plane
+            tau[k] = eval("call(tau_{}, self.M.faces[k, :])".format(comp))
+
+        # integrate components parallel to the plane of integration
+        if self.location == "edges":
+            analytic = 2.24166666666667  # Found using sympy.
+            
+            p = mesh.edges
+            Ec = np.c_[ex(*p.T), ey(*p.T)]
+            E = mesh.project_edge_vector(Ec)
+
+            if self.invert_model:
+                A = self.M.get_edge_inner_product_surface(1 / tau, invert_model=True)
+            else:
+                A = self.M.get_edge_inner_product_surface(tau)
+
+            numeric = E.T.dot(A.dot(E))
+
+        # integrate component normal to the plane of integration
+        elif self.location == "faces":
+            analytic = 1.59895833333333  # Found using sympy.
+
+            p = mesh.faces
+            Fc = np.c_[ex(*p.T), ey(*p.T)]
+            F = mesh.project_face_vector(Fc)
+
+            if self.invert_model:
+                A = self.M.get_face_inner_product_surface(1 / tau, invert_model=True)
+            else:
+                A = self.M.get_face_inner_product_surface(tau)
+
+            numeric = F.T.dot(A.dot(F))
+
+        err = np.abs(numeric - analytic)
+
+        return err
+
+    def test_order1_edges(self):
+        self.name = "Edge Inner Product - Isotropic"
+        self.location = "edges"
+        self.invert_model = False
+        self.orderTest()
+
+    def test_order1_edges_invert_model(self):
+        self.name = "Edge Inner Product - Isotropic - invert_model"
+        self.location = "edges"
+        self.invert_model = True
+        self.orderTest()
+
+    def test_order1_faces(self):
+        self.name = "Face Inner Product - Isotropic"
+        self.location = "faces"
+        self.invert_model = False
+        self.orderTest()
+
+    def test_order1_faces_invert_model(self):
+        self.name = "Face Inner Product - Isotropic - invert_model"
+        self.location = "faces"
+        self.invert_model = True
+        self.orderTest()
+
+
+class TestInnerProductsEdgeProperties2D(discretize.tests.OrderTest):
+    """Integrate a function over a line within a unit cube domain
+    using edgeInnerProducts."""
+
+    meshTypes = ["uniformTree", "notatreeTree"]
+    meshDimension = 2
+    meshSizes = [16, 32]
+
+    def getError(self):
+        call = lambda fun, xy: fun(xy[:, 0], xy[:, 1])  # NOQA F841
+
+        ex = lambda x, y: x**2 + y
+        ey = lambda x, y: (x**2) * y
+
+        tau_x = lambda x, y: x + 1  # x-face properties  # NOQA F841
+        tau_y = lambda x, y: y + 2  # y-face properties  # NOQA F841
+        
+        mesh = self.M
+
+        tau = 1e-8 * np.ones(mesh.n_edges)
+        for ii, comp in enumerate(["x", "y"]):
+            k = (
+                np.isclose(self.M.edges[:, ii - 1], 0.5) & 
+                np.isclose(self.M.edges[:, ii - 2], 0.5)
+            )  # x, y or z location for each line
+            tau[k] = eval("call(tau_{}, self.M.edges[k, :])".format(comp))
+            
+
+        analytic = 1.38229166666667  # Found using sympy.
+
+        p = mesh.edges
+        Ec = np.c_[ex(*p.T), ey(*p.T)]
+        E = mesh.project_edge_vector(Ec)
+
+        if self.invert_model:
+            A = self.M.get_edge_inner_product_line(1 / tau, invert_model=True)
+        else:
+            A = self.M.get_edge_inner_product_line(tau)
+
+        numeric = E.T.dot(A.dot(E))
+
+        err = np.abs(numeric - analytic)
+
+        return err
+
+    def test_order1_edges(self):
+        self.name = "Edge Inner Product - Isotropic"
+        self.location = "edges"
+        self.invert_model = False
+        self.orderTest()
+
+    def test_order1_edges_invert_model(self):
+        self.name = "Edge Inner Product - Isotropic - invert_model"
+        self.location = "edges"
+        self.invert_model = True
+        self.orderTest()
+
 
 class TestInnerProducts3D(discretize.tests.OrderTest):
     meshSizes = [8, 16, 32]

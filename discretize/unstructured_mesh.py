@@ -517,7 +517,67 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
                 "The inverse of the inner product matrix with a tetrahedral mesh is not supported."
             )
         return self.__get_inner_product("E", model, invert_model)
+    
+    def get_edge_inner_product_surface(  # NOQA D102
+        self,
+        model=None,
+        invert_model=False,
+        invert_matrix=False
+    ):
+        # Documentation inherited from discretize.base.BaseMesh
+        if invert_matrix:
+            raise NotImplementedError(
+                "The inverse of the inner product matrix with a tetrahedral mesh is not supported."
+            )
+        
+        # Edge inner product surface projection matrices
+        n_faces = self.n_faces
+        face_areas = self.face_areas
+        dim = self.dim
+        
+        if dim == 2:
+            Ps = sp.diags(np.ones(n_faces))
+            
+            if model is None:
+                Mu = sp.diags(face_areas)
+            else:
+                if invert_model:
+                    model = 1.0 / model
+                
+                if (model.size == 1) | (model.size == n_faces):
+                    model = model * face_areas
+                    Mu = sp.diags(model)
+                else:
+                    raise ValueError(
+                        "Unrecognized size of model vector.",
+                        "Must be scalar or have length equal to total number of faces."
+                    )
+                    
+            A = Ps.T @ Mu @ Ps        
+            
+        else:
+            Ps = self._get_edge_surf_int_proj_mats(with_area=False)
+        
+            if model is None:
+                Mu = sp.diags(np.repeat(face_areas, dim))
+            else:
+                if invert_model:
+                    model = 1.0 / model
+                
+                if (model.size == 1) | (model.size == n_faces):
+                    model = model * face_areas
+                    Mu = sp.diags(np.repeat(model, dim))
+                else:
+                    raise ValueError(
+                        "Unrecognized size of model vector.",
+                        "Must be scalar or have length equal to total number of faces."
+                )
 
+            A = np.sum([P.T @ Mu @ P for P in Ps])
+            
+        return A
+        
+        
     def __get_inner_product_deriv_func(self, i_type, model):
         Ps, _ = self.__get_inner_product_projection_matrices(i_type)
         dim = self.dim
