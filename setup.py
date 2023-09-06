@@ -7,124 +7,70 @@ Discretization tools for finite volume and inverse problems.
 
 import os
 import sys
+import numpy
+import platform
+from setuptools import setup
+from setuptools import Extension
+from Cython.Build import cythonize
+from setuptools.command.build_ext import build_ext as _build_ext
 
-from setuptools import setup, find_packages
 
-CLASSIFIERS = [
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: Developers",
-    "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python",
-    "Topic :: Scientific/Engineering",
-    "Topic :: Scientific/Engineering :: Mathematics",
-    "Topic :: Scientific/Engineering :: Physics",
-    "Operating System :: Microsoft :: Windows",
-    "Operating System :: POSIX",
-    "Operating System :: Unix",
-    "Operating System :: MacOS",
-    "Natural Language :: English",
-]
+# cmdclass['bdist_wheel']
+if platform.python_implementation() == 'CPython':
+    try:
+        import wheel.bdist_wheel
+    except:
+        pass
+    else:
+        class bdist_wheel(wheel.bdist_wheel.bdist_wheel):
+            def finalize_options(self):
+                self.py_limited_api = 'cp3{}'.format(sys.version_info[1])
+                super().finalize_options()
 
-with open("README.rst") as f:
-    LONG_DESCRIPTION = "".join(f.readlines())
 
-build_requires = [
-    "numpy>=1.20",
-    "cython>=0.29.31",
-    "setuptools_scm",
-]
+# cmdclass['build_ext']
+ext_kwargs = {
+    "py_limited_api": True,
+    "define_macros": [('CYTHON_LIMITED_API', '1')],
+}
+if os.environ.get("DISC_COV", None) is not None:
+    ext_kwargs["define_macros"].append(("CYTHON_TRACE_NOGIL", 1))
 
-install_requires = [
-    "numpy>=1.20",
-    "scipy>=1.8",
-]
-
-metadata = dict(
-    name="discretize",
-    packages=find_packages(include=["discretize", "discretize.*"]),
-    python_requires=">=3.8",
-    setup_requires=build_requires,
-    install_requires=install_requires,
-    author="SimPEG developers",
-    author_email="rowanc1@gmail.com",
-    description="Discretization tools for finite volume and inverse problems",
-    long_description=LONG_DESCRIPTION,
-    license="MIT",
-    keywords="finite volume, discretization, pde, ode",
-    url="http://simpeg.xyz/",
-    download_url="http://github.com/simpeg/discretize",
-    classifiers=CLASSIFIERS,
-    platforms=["Windows", "Linux", "Solaris", "Mac OS-X", "Unix"],
-    use_scm_version={
-        "write_to": os.path.join("discretize", "version.py"),
-    },
-)
-if len(sys.argv) >= 2 and (
-    "--help" in sys.argv[1:]
-    or sys.argv[1]
-    in ("--help-commands", "egg_info", "install_egg_info", "--version", "clean")
-):
-    # For these actions, build_requires are not required.
-    #
-    # They are required to succeed without Numpy/Cython, for example when
-    # pip is used to install discretize when Numpy/Cython is not yet
-    # present in the system.
-
-    # add cython and setuptools_scm to install requires on these commands though
-    install_requires = build_requires + install_requires[1:]
-    metadata["install_requires"] = install_requires
-else:
-    from setuptools.extension import Extension
-    from setuptools.command.build_ext import build_ext
-    from Cython.Build import cythonize
-    import numpy as np
-
-    ext_kwargs = {}
-    if os.environ.get("DISC_COV", None) is not None:
-        ext_kwargs["define_macros"] = [("CYTHON_TRACE_NOGIL", 1)]
-
-    extensions = [
+extensions = [
         Extension(
             "discretize._extensions.interputils_cython",
-            ["discretize/_extensions/interputils_cython.pyx"],
-            include_dirs=[np.get_include()],
-            **ext_kwargs
-        ),
-        Extension(
-            "discretize._extensions.tree_ext",
-            ["discretize/_extensions/tree_ext.pyx", "discretize/_extensions/tree.cpp"],
-            include_dirs=[np.get_include()],
+            ["src/discretize/_extensions/interputils_cython.pyx"],
+            include_dirs=[numpy.get_include()],
+            language="c",
             **ext_kwargs
         ),
         Extension(
             "discretize._extensions.simplex_helpers",
-            ["discretize/_extensions/simplex_helpers.pyx"],
-            include_dirs=[np.get_include()],
+            ["src/discretize/_extensions/simplex_helpers.pyx"],
+            include_dirs=[numpy.get_include()],
+            language="c",
             **ext_kwargs
         ),
-    ]
+        Extension(
+            "discretize._extensions.tree_ext",
+            ["src/discretize/_extensions/tree_ext.pyx", "src/discretize/_extensions/tree.cpp"],
+            include_dirs=[numpy.get_include()],
+            language="c++",
+            extra_compile_args=['-std=c++17'],
+            **ext_kwargs
+        )
+]
 
-    class build_ext_cpp_standard(build_ext):
-        # add compiler specific standard argument specifier
-        def build_extension(self, ext):
-            # This module requires c++17 standard
-            if ext.name == "discretize._extensions.tree_ext":
-                comp_type = self.compiler.compiler_type
-                if comp_type == "msvc":
-                    std_arg = "/std:c++17"
-                elif comp_type == "bcpp":
-                    raise Exception(
-                        "Must use cpp compiler that support C++17 standard."
-                    )
-                else:
-                    std_arg = "-std=c++17"
-                ext.extra_compile_args = [
-                    std_arg,
-                ]
-            super().build_extension(ext)
+class build_ext(_build_ext):
+    def finalize_options(self):
+        _build_ext.finalize_options(self)
+        import numpy
+        self.include_dirs.append(numpy.get_include())
 
-    metadata["ext_modules"] = cythonize(extensions)
-    metadata["cmdclass"] = {"build_ext": build_ext_cpp_standard}
 
-setup(**metadata)
+setup_kwargs = {} # see 'pyproject.toml' for other kwargs and settings
+setup_kwargs["name"] = "discretize"
+setup_kwargs["cmdclass"] = {'bdist_wheel': bdist_wheel,'build_ext': build_ext} 
+setup_kwargs["ext_modules"] = cythonize(extensions, compiler_directives={"language_level": 3})
+
+setup(**setup_kwargs)

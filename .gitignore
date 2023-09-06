@@ -67,4 +67,4 @@ examples/*.tar.gz
 *.bak
 
 # setuptools_scm
-discretize/version.py
+src/discretize/version.py
