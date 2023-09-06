@@ -1,6 +1,7 @@
 """Module housing the TensorMesh implementation."""
 import itertools
 import numpy as np
+import time
 
 from discretize.base import BaseRectangularMesh, BaseTensorMesh
 from discretize.operators import DiffOperators, InnerProducts
@@ -589,6 +590,43 @@ class TensorMesh(
             indzd = self.gridFz[:, 2] == min(self.gridFz[:, 2])
             indzu = self.gridFz[:, 2] == max(self.gridFz[:, 2])
             return indxd, indxu, indyd, indyu, indzd, indzu
+
+    @property
+    def cell_nodes(self):
+        """The index of all nodes for each cell.
+
+        Returns
+        -------
+        numpy.ndarray of int
+            Index array of shape (n_cells, 4) if 2D, or (n_cells, 8) if 3D
+        """
+        order = "F"
+        nodes_indices = np.arange(self.n_nodes).reshape(self.shape_nodes, order=order)
+        if self.dim == 1:
+            cell_nodes = [
+                nodes_indices[:-1].reshape(-1, order=order),
+                nodes_indices[1:].reshape(-1, order=order),
+            ]
+        elif self.dim == 2:
+            cell_nodes = [
+                nodes_indices[:-1, :-1].reshape(-1, order=order),
+                nodes_indices[1:, :-1].reshape(-1, order=order),
+                nodes_indices[:-1, 1:].reshape(-1, order=order),
+                nodes_indices[1:, 1:].reshape(-1, order=order),
+            ]
+        else:
+            cell_nodes = [
+                nodes_indices[:-1, :-1, :-1].reshape(-1, order=order),
+                nodes_indices[1:, :-1, :-1].reshape(-1, order=order),
+                nodes_indices[:-1, 1:, :-1].reshape(-1, order=order),
+                nodes_indices[1:, 1:, :-1].reshape(-1, order=order),
+                nodes_indices[:-1, :-1, 1:].reshape(-1, order=order),
+                nodes_indices[1:, :-1, 1:].reshape(-1, order=order),
+                nodes_indices[:-1, 1:, 1:].reshape(-1, order=order),
+                nodes_indices[1:, 1:, 1:].reshape(-1, order=order),
+            ]
+        cell_nodes = np.stack(cell_nodes, axis=-1)
+        return cell_nodes
 
     @property
     def cell_boundary_indices(self):
