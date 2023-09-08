@@ -1,5 +1,5 @@
 cython
-sphinx=
+sphinx
 sphinx-gallery
 pydata-sphinx-theme
 pillow
