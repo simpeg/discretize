@@ -50,7 +50,7 @@ jobs:
   - bash: |
       source "${HOME}/conda/etc/profile.d/conda.sh"
       conda activate discretize-test
-      pip install --no-build-isolation --editable --config-settings=setup-args="-Dcy_line_trace=true" .
+      pip install --no-build-isolation --editable . --config-settings=setup-args="-Dcy_line_trace=true"
     displayName: Install requirements and build for Testing
     condition: eq(variables['python.version'], '3.10')
 
