@@ -66,8 +66,8 @@ classifiers = [
 file = 'LICENSE'
 
 [project.optional-dependencies]
-matplotlib = ["matplotlib"]
-vtk = ['vtk', 'pyvista']
+plot = ["matplotlib"]
+viz = ['vtk', 'pyvista']
 omf = ['omf']
 test = [
     "pytest",
