@@ -1,0 +1,104 @@
+
+[build-system]
+build-backend = 'mesonpy'
+requires = [
+    "meson-python>=0.14.0",
+    "Cython>=0.29.35",  # when updating version, also update check in meson.build
+
+    # The following is taken from scipy's pyproject.toml file to handle
+    # building against the proper numpy API
+
+    # When numpy 2.0.0rc1 comes out, we should update this to build against 2.0,
+    # and then runtime depend on the range 1.22.X to <2.3. No need to switch to
+    # 1.25.2 in the meantime (1.25.x is the first version which exports older C
+    # API versions by default).
+
+    # default numpy requirements
+    "numpy==1.22.4; python_version<='3.10' and platform_python_implementation != 'PyPy'",
+    "numpy==1.23.2; python_version=='3.11' and platform_python_implementation != 'PyPy'",
+    # For Python versions which aren't yet officially supported, we specify an
+    # unpinned NumPy which allows source distributions to be used and allows
+    # wheels to be used as soon as they become available.
+    "numpy>=1.26.0b1; python_version>='3.12'",
+    "numpy; python_version>='3.9' and platform_python_implementation=='PyPy'",
+    "setuptools_scm[toml]>=6.2",
+
+]
+
+[project]
+name = 'discretize'
+dynamic = ["version"]
+description = 'Discretization tools for finite volume and inverse problems'
+readme = 'README.rst'
+requires-python = '>=3.8'
+authors = [
+  {name = 'SimPEG developers', email = 'rowanc1@gmail.com'},
+]
+keywords = [
+    'finite volume', 'discretization', 'pde', 'ode'
+]
+
+# Note: Python and NumPy upper version bounds should be set correctly in
+# release branches, see:
+#     https://scipy.github.io/devdocs/dev/core-dev/index.html#version-ranges-for-numpy-and-other-dependencies
+dependencies = [
+    # TODO: update to "pin-compatible" once possible, see
+    # https://github.com/mesonbuild/meson-python/issues/29
+    "numpy>=1.22.4",
+    "scipy>=1.8",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX",
+    "Operating System :: Unix",
+    "Operating System :: MacOS",
+    "Natural Language :: English",
+]
+
+[project.license]
+file = 'LICENSE'
+
+[project.optional-dependencies]
+matplotlib = ["matplotlib"]
+vtk = ['vtk', 'pyvista']
+omf = ['omf']
+test = [
+    "pytest",
+    "pytest-cov",
+    "sympy",
+    "pymatsolver>=0.1.2",
+]
+doc = [
+    "sphinx!=4.1.0",
+    "pydata-sphinx-theme==0.9.0",
+    "sphinx-gallery>=0.1.13",
+    "matplotlib>2",
+    "numpydoc",
+    "jupyter",
+    "graphviz"
+]
+style = [
+    "black==23.1.0",
+    "flake8==6.0.0",
+    "flake8-bugbear",
+    "flake8-builtins",
+    "flake8-mutable",
+    "flake8-rst-docstrings",
+    "flake8-docstrings",
+]
+
+[project.urls]
+Homepage = 'https://simpeg.xyz'
+Documentation = 'https://discretize.simpeg.xyz'
+Repository = 'http://github.com/simpeg/discretize.git'
+
+[tool.setuptools_scm]
+version_file = "discretize/version.py"
