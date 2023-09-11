@@ -48,6 +48,12 @@ numpy_nodepr_api = '-DNPY_NO_DEPRECATED_API=NPY_1_9_API_VERSION'
 c_undefined_ok = ['-Wno-maybe-uninitialized']
 
 cython_c_args = [numpy_nodepr_api, use_math_defines]
+
+cy_line_trace = get_option('cy_line_trace')
+if cy_line_trace
+  cython_c_args += ['-DCYTHON_TRACE_NOGIL=1']
+endif
+
 cython_cpp_args = cython_c_args
 
 module_path = 'discretize/_extensions'

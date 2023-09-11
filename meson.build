@@ -1,8 +1,8 @@
 project(
   'SciPy',
   'c', 'cpp', 'cython',
-  # Note that the git commit hash cannot be added dynamically here (it is added
-  # in the dynamically generated and installed `discretize/version.py` though setuptools_scm)
+  # Note that the git commit hash cannot be added dynamically here
+  # (it is dynamically generated though setuptools_scm)
   version: run_command('python',
     [
       '-c',
