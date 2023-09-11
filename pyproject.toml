@@ -101,4 +101,3 @@ Documentation = 'https://discretize.simpeg.xyz'
 Repository = 'http://github.com/simpeg/discretize.git'
 
 [tool.setuptools_scm]
-version_file = "discretize/version.py"
