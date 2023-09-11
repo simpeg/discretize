@@ -28,18 +28,27 @@ print(incdir)
     ],
     check: true
   ).stdout().strip()
-
-  # We do need an absolute path to feed to `cc.find_library` below
-  _incdir_numpy_abs = run_command(py,
-    ['-c', 'import os; import numpy; print(numpy.get_include())'],
-    check: true
-  ).stdout().strip()
 else
   _incdir_numpy_abs = incdir_numpy
 endif
 inc_np = include_directories(incdir_numpy)
 np_dep = declare_dependency(include_directories: inc_np)
 
+# Deal with M_PI & friends; add `use_math_defines` to c_args or cpp_args
+# Cython doesn't always get this right itself (see, e.g., gh-16800), so
+# explicitly add the define as a compiler flag for Cython-generated code.
+is_windows = host_machine.system() == 'windows'
+if is_windows
+  use_math_defines = ['-D_USE_MATH_DEFINES']
+else
+  use_math_defines = []
+endif
+
+numpy_nodepr_api = '-DNPY_NO_DEPRECATED_API=NPY_1_9_API_VERSION'
+c_undefined_ok = ['-Wno-maybe-uninitialized']
+
+cython_c_args = [numpy_nodepr_api, use_math_defines]
+cython_cpp_args = cython_c_args
 
 module_path = 'discretize/_extensions'
 
@@ -47,6 +56,7 @@ py.extension_module(
     'interputils_cython',
     'interputils_cython.pyx',
     include_directories: incdir_numpy,
+    c_args: cython_c_args,
     install: true,
     subdir: module_path,
     dependencies : [py_dep, np_dep],
@@ -56,6 +66,7 @@ py.extension_module(
     'tree_ext',
     ['tree_ext.pyx' , 'tree.cpp'],
     include_directories: incdir_numpy,
+    c_args: cython_cpp_args,
     install: true,
     subdir: module_path,
     dependencies : [py_dep, np_dep],
@@ -66,6 +77,7 @@ py.extension_module(
     'simplex_helpers',
     'simplex_helpers.pyx',
     include_directories: incdir_numpy,
+    c_args: cython_cpp_args,
     install: true,
     subdir: module_path,
     dependencies : [py_dep, np_dep],
