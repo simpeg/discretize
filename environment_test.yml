@@ -26,7 +26,7 @@ dependencies:
   - graphviz
   # Linters and checkers
   - black==23.1.0
-  - flake8
+  - flake8==6.0.0
   - flake8-bugbear
   - flake8-builtins
   - flake8-mutable
