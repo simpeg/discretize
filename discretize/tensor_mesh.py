@@ -1,7 +1,6 @@
 """Module housing the TensorMesh implementation."""
 import itertools
 import numpy as np
-import time
 
 from discretize.base import BaseRectangularMesh, BaseTensorMesh
 from discretize.operators import DiffOperators, InnerProducts
