@@ -591,6 +591,73 @@ class TensorMesh(
             return indxd, indxu, indyd, indyu, indzd, indzu
 
     @property
+    def cell_nodes(self):
+        """The index of all nodes for each cell.
+
+        The nodes for each cell are listed following an "F" order: the first
+        coordinate (``x``) changes faster than the second one (``y``). If the
+        mesh is 3D, the second coordinate (``y``) changes faster than the third
+        one (``z``).
+
+        Returns
+        -------
+        numpy.ndarray of int
+            Index array of shape (n_cells, 4) if 2D, or (n_cells, 8) if 3D
+
+        Notes
+        -----
+        For a 2D mesh, the nodes indices for a single cell are returned in the
+        following order:
+
+        .. code::
+
+            2 -- 3
+            |    |
+            0 -- 1
+
+        For a 3D mesh, the nodes indices for a single cell are returned in the
+        following order:
+
+        .. code::
+
+              6-----7
+             /|    /|
+            4-----5 |
+            | |   | |
+            | 2---|-3
+            |/    |/
+            0-----1
+
+        """
+        order = "F"
+        nodes_indices = np.arange(self.n_nodes).reshape(self.shape_nodes, order=order)
+        if self.dim == 1:
+            cell_nodes = [
+                nodes_indices[:-1].reshape(-1, order=order),
+                nodes_indices[1:].reshape(-1, order=order),
+            ]
+        elif self.dim == 2:
+            cell_nodes = [
+                nodes_indices[:-1, :-1].reshape(-1, order=order),
+                nodes_indices[1:, :-1].reshape(-1, order=order),
+                nodes_indices[:-1, 1:].reshape(-1, order=order),
+                nodes_indices[1:, 1:].reshape(-1, order=order),
+            ]
+        else:
+            cell_nodes = [
+                nodes_indices[:-1, :-1, :-1].reshape(-1, order=order),
+                nodes_indices[1:, :-1, :-1].reshape(-1, order=order),
+                nodes_indices[:-1, 1:, :-1].reshape(-1, order=order),
+                nodes_indices[1:, 1:, :-1].reshape(-1, order=order),
+                nodes_indices[:-1, :-1, 1:].reshape(-1, order=order),
+                nodes_indices[1:, :-1, 1:].reshape(-1, order=order),
+                nodes_indices[:-1, 1:, 1:].reshape(-1, order=order),
+                nodes_indices[1:, 1:, 1:].reshape(-1, order=order),
+            ]
+        cell_nodes = np.stack(cell_nodes, axis=-1)
+        return cell_nodes
+
+    @property
     def cell_boundary_indices(self):
         """Return the indices of the x, (y and z) boundary cells.
 
