@@ -402,7 +402,7 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
     def __get_inner_product_projection_matrices(
         self, i_type, with_volume=True, return_pointers=True
     ):
-        if getattr(self, "_proj_stash", None is None):
+        if getattr(self, "_proj_stash", None) is None:
             self._proj_stash = {}
         if i_type not in self._proj_stash:
             dim = self.dim
