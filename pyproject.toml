@@ -71,22 +71,24 @@ file = 'LICENSE'
 
 [project.optional-dependencies]
 plot = ["matplotlib"]
-viz = ['vtk', 'pyvista']
-omf = ['omf']
+viz = ["vtk", "pyvista"]
+omf = ["omf"]
+all = ["discretize[plot,viz,omf]"]
+doc = [
+    "sphinx!=4.1.0",
+    "pydata-sphinx-theme==0.9.0",
+    "sphinx-gallery==0.1.13",
+    "numpydoc>=1.5",
+    "jupyter",
+    "graphviz",
+    "pymatsolver>=0.1.2",
+    "discretize[all]",
+]
 test = [
     "pytest",
     "pytest-cov",
     "sympy",
-    "pymatsolver>=0.1.2",
-]
-doc = [
-    "sphinx!=4.1.0",
-    "pydata-sphinx-theme==0.9.0",
-    "sphinx-gallery>=0.1.13",
-    "matplotlib>2",
-    "numpydoc",
-    "jupyter",
-    "graphviz"
+    "discretize[doc,all]",
 ]
 style = [
     "black==23.1.0",
@@ -96,6 +98,14 @@ style = [
     "flake8-mutable",
     "flake8-rst-docstrings",
     "flake8-docstrings",
+]
+build = [
+    "meson-python>=0.14.0",
+    "meson",
+    "ninja",
+    "numpy>=1.22.4",
+    "cython>=0.29.35",
+    "setuptools_scm",
 ]
 
 [project.urls]
