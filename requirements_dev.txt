@@ -1,5 +1,5 @@
 cython
-sphinx=
+sphinx
 sphinx-gallery
 pydata-sphinx-theme
 pillow
@@ -17,3 +17,6 @@ omf
 matplotlib
 pymatsolver>=0.1.2
 setuptools_scm
+meson-python>=0.14.0
+meson
+ninja
