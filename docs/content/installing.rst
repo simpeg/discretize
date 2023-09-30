@@ -84,7 +84,7 @@ steps to take, first you must have the `meson-python` requirements in your envir
 This will allow you to use the build backend required by `discretize`.
 
 `discretize` also has its own build requirements (listed above) which must be installed,
-alond with the runtime requirements::
+along with the runtime requirements::
 
     pip install numpy cython setuptools_scm scipy
 
@@ -94,7 +94,7 @@ Finally, you should then be able to perform an editable install using the source
 
 
 This builds and installs the local directory to your active python environment in an
-"editable" (or refered to as "develop") mode. It also builds against the packages installed
+"editable" mode; when source code is changed, you will be able to make use of it immediately. It also builds againstthe packages installed
 in your environment instead of creating and isolated environment to build a wheel for the package.
 
 Testing your installation
