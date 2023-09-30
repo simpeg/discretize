@@ -28,7 +28,7 @@ stages:
         python.version: '3.8'
       steps:
         - script: |
-            pip install -r requirements_style.txt
+            pip install .[style]
           displayName: "Install dependencies to run the checks"
         - script: black --check .
           displayName: "Run black"
@@ -41,7 +41,7 @@ stages:
         python.version: '3.8'
       steps:
         - script: |
-            pip install -r requirements_style.txt
+            pip install .[style]
           displayName: "Install dependencies to run the checks"
         - script: flake8
           displayName: "Run flake8"
