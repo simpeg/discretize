@@ -85,6 +85,7 @@ doc = [
     "jupyter",
     "graphviz",
     "pymatsolver>=0.1.2",
+    "pillow",
     "discretize[all]",
 ]
 test = [
