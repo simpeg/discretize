@@ -37,7 +37,7 @@ class InnerProducts(BaseMesh):
         invert_model=False,
         invert_matrix=False,
         do_fast=True,
-        **kwargs
+        **kwargs,
     ):
         # Inherited documentation from discretize.base.BaseMesh
         if "invProp" in kwargs:
@@ -71,7 +71,7 @@ class InnerProducts(BaseMesh):
         invert_model=False,
         invert_matrix=False,
         do_fast=True,
-        **kwargs
+        **kwargs,
     ):
         # Inherited documentation from discretize.base.BaseMesh
         if "invProp" in kwargs:
@@ -150,7 +150,7 @@ class InnerProducts(BaseMesh):
         invert_model=False,
         invert_matrix=False,
         do_fast=True,
-        **kwargs
+        **kwargs,
     ):
         """Get the inner product matrix.
 
