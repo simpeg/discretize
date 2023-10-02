@@ -25,7 +25,7 @@ stages:
       pool:
         vmImage: ubuntu-latest
       variables:
-        python.version: '3.8'
+        python.version: '3.9'
       steps:
         - script: |
             pip install -r requirements_style.txt
@@ -38,7 +38,7 @@ stages:
       pool:
         vmImage: ubuntu-latest
       variables:
-        python.version: '3.8'
+        python.version: '3.9'
       steps:
         - script: |
             pip install -r requirements_style.txt
@@ -92,13 +92,14 @@ stages:
         - bash: |
             source "${HOME}/conda/etc/profile.d/conda.sh"
             conda activate discretize-test
-            pip install -e .
+            pip install --no-build-isolation --editable .
           displayName: Build package
 
         - bash: |
             source "${HOME}/conda/etc/profile.d/conda.sh"
             conda activate discretize-test
-            python setup.py sdist
+            python -m build --no-isolation --skip-dependency-check --sdist .
+            ls -la dist
             twine upload --skip-existing dist/*
           displayName: Deploy source
           env:
@@ -139,15 +140,17 @@ stages:
             python.version: '3.9'
           win-Python310:
             python.version: '3.10'
+          win-Python311:
+            python.version: '3.11'
       pool:
         vmImage: windows-latest
       steps:
         - task: UsePythonVersion@0
           inputs:
             versionSpec: '$(python.version)'
-        - script: pip install numpy cython twine wheel setuptools_scm
+        - script: pip install build twine
           displayName: Install build dependencies
-        - script: python setup.py bdist_wheel
+        - script: python -m build --wheel .
           displayName: Build Wheel
         - script: twine upload --skip-existing dist/*
           displayName: Upload to PYPI
