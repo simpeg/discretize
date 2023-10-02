@@ -11,4 +11,5 @@
 .flake8 export-ignore
 .git* export-ignore
 *.yml export-ignore
+*.yaml export-ignore
 requirements_style.txt export-ignore
