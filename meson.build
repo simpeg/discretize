@@ -1,5 +1,5 @@
 project(
-  'SciPy',
+  'discretize',
   'c', 'cpp', 'cython',
   # Note that the git commit hash cannot be added dynamically here
   # (it is dynamically generated though setuptools_scm)
