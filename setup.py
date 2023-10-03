@@ -42,7 +42,9 @@ install_requires = [
 
 metadata = dict(
     name="discretize",
-    packages=find_packages(include=["discretize", "discretize.*"]),
+    packages=find_packages(where="src"),
+    package_dir={"": "src"},
+    include_package_data=True,
     python_requires=">=3.8",
     setup_requires=build_requires,
     install_requires=install_requires,
@@ -57,7 +59,7 @@ metadata = dict(
     classifiers=CLASSIFIERS,
     platforms=["Windows", "Linux", "Solaris", "Mac OS-X", "Unix"],
     use_scm_version={
-        "write_to": os.path.join("discretize", "version.py"),
+        "write_to": os.path.join("src", "discretize", "version.py"),
     },
 )
 if len(sys.argv) >= 2 and (
@@ -87,19 +89,22 @@ else:
     extensions = [
         Extension(
             "discretize._extensions.interputils_cython",
-            ["discretize/_extensions/interputils_cython.pyx"],
+            ["src/discretize/_extensions/interputils_cython.pyx"],
             include_dirs=[np.get_include()],
             **ext_kwargs
         ),
         Extension(
             "discretize._extensions.tree_ext",
-            ["discretize/_extensions/tree_ext.pyx", "discretize/_extensions/tree.cpp"],
+            [
+                "src/discretize/_extensions/tree_ext.pyx",
+                "src/discretize/_extensions/tree.cpp",
+            ],
             include_dirs=[np.get_include()],
             **ext_kwargs
         ),
         Extension(
             "discretize._extensions.simplex_helpers",
-            ["discretize/_extensions/simplex_helpers.pyx"],
+            ["src/discretize/_extensions/simplex_helpers.pyx"],
             include_dirs=[np.get_include()],
             **ext_kwargs
         ),
