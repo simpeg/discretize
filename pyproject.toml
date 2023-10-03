@@ -1,0 +1,60 @@
+[build-system]
+requires = [
+    "cython>=0.29.31",
+    "numpy>=1.20",
+    "scipy>=1.8",
+    "setuptools>=45",
+    "setuptools_scm[toml]>=6.2",
+    "wheel",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "discretize"
+dynamic = ["readme", "version"]
+
+authors = [
+    {name = "SimPEG developers", email = "rowanc1@gmail.com"},
+]
+description = "Discretization tools for finite volume and inverse problems"
+requires-python = ">=3.8"
+license = {text = "LICENSE"}
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX",
+    "Operating System :: Unix",
+    "Operating System :: MacOS",
+    "Natural Language :: English"
+]
+keywords = [
+    "finite volume",
+    "discretization",
+    "pde",
+    "ode"
+]
+dependencies = [
+    "cython>=0.29.31",
+    "numpy>=1.20",
+    "scipy>=1.8",
+    "setuptools_scm",
+]
+
+[project.urls]
+homepage = "http://simpeg.xyz/"
+documentation = "https://docs.simpeg.xyz/"
+repository = "http://github.com/simpeg/discretize"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+namespaces = false
+
+[tool.setuptools.dynamic]
+readme = {file = ["README.rst"]}
