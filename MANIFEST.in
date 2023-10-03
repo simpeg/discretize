@@ -6,3 +6,6 @@ prune tests
 prune tutorials
 exclude .coveragerc .gitignore azure-pipelines.yml MANIFEST.in setup.cfg
 exclude requirements_dev.txt requirements.txt
+include src/discretize/_extensions/*.h
+include src/discretize/_extensions/*.pyx
+include src/discretize/_extensions/*.pxd
