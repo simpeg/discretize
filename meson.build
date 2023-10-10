@@ -1,17 +1,7 @@
 project(
   'discretize',
   'c', 'cpp', 'cython',
-  # Note that the git commit hash cannot be added dynamically here
-  # (it is dynamically generated though setuptools_scm)
-  version: run_command('python',
-    [
-      '-c',
-      '''
-from setuptools_scm import get_version
-print(get_version())'''
-    ],
-    check: true
-).stdout().strip(),
+  version: '0.9.0',
   license: 'MIT',
   meson_version: '>= 1.1.0',
   default_options: [
