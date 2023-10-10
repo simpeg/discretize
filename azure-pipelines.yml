@@ -46,7 +46,7 @@ stages:
         - script: flake8
           displayName: "Run flake8"
 
-- stage: WheelsBuilds
+- stage: WheelBuilds
   displayName: "Wheel Building"
   jobs:
     - job: linux
@@ -65,6 +65,8 @@ stages:
 
     - job: macos
       pool: { vmImage: 'macOS-11' }
+      variables:
+        CIBW_ARCHS_MACOS: "x86_64 arm64"
       steps:
         - task: UsePythonVersion@0
         - bash: |
