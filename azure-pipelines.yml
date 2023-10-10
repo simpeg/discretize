@@ -46,6 +46,51 @@ stages:
         - script: flake8
           displayName: "Run flake8"
 
+- stage: WheelsBuilds
+  displayName: "Wheel Building"
+  jobs:
+    - job: linux
+      pool: { vmImage: 'Ubuntu-20.04' }
+      steps:
+        - task: UsePythonVersion@0
+        - bash: |
+            set -o errexit
+            python3 -m pip install --upgrade pip
+            pip3 install cibuildwheel==2.16.2
+          displayName: Install dependencies
+        - bash: cibuildwheel --output-dir wheelhouse .
+          displayName: Build wheels
+        - task: PublishBuildArtifacts@1
+          inputs: { pathtoPublish: 'wheelhouse' }
+
+    - job: macos
+      pool: { vmImage: 'macOS-11' }
+      steps:
+        - task: UsePythonVersion@0
+        - bash: |
+            set -o errexit
+            python3 -m pip install --upgrade pip
+            python3 -m pip install cibuildwheel==2.16.2
+          displayName: Install dependencies
+        - bash: cibuildwheel --output-dir wheelhouse .
+          displayName: Build wheels
+        - task: PublishBuildArtifacts@1
+          inputs: { pathtoPublish: wheelhouse }
+
+    - job: windows
+      pool: { vmImage: 'windows-2019' }
+      steps:
+        - task: UsePythonVersion@0
+        - bash: |
+            set -o errexit
+            python -m pip install --upgrade pip
+            pip install cibuildwheel==2.16.2
+          displayName: Install dependencies
+        - bash: cibuildwheel --output-dir wheelhouse .
+          displayName: Build wheels
+        - task: PublishBuildArtifacts@1
+          inputs: { pathtoPublish: 'wheelhouse' }
+
 - stage: Testing
   jobs:
     - template: ./.azure-pipelines/azure-pipelines-linux.yml
