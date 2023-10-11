@@ -81,6 +81,8 @@ stages:
 
     - job: windows
       pool: { vmImage: 'windows-2019' }
+      variables:
+        CIBW_ARCHS_WINDOWS: "amd64 arm64"
       steps:
         - task: UsePythonVersion@0
         - bash: |
