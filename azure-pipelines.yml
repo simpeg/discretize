@@ -85,6 +85,8 @@ stages:
         CIBW_ARCHS_WINDOWS: "AMD64"
       steps:
         - task: UsePythonVersion@0
+        - bash:
+            git fetch --tags
         - bash: |
             set -o errexit
             python -m pip install --upgrade pip
