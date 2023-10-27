@@ -53,6 +53,7 @@ stages:
     - template: ./.azure-pipelines/azure-pipelines-win.yml
 
 - stage: Deploy
+  displayName: "Deploy Source Wheels and Docs"
   condition: and(succeeded(), startsWith(variables['build.sourceBranch'], 'refs/tags/'))
   jobs:
     - job:
@@ -130,30 +131,75 @@ stages:
           env:
             GH_TOKEN: $(gh.token)
 
-    - job:
-      displayName: Windows Wheels
-      strategy:
-        matrix:
-          win-Python38:
-            python.version: '3.8'
-          win-Python39:
-            python.version: '3.9'
-          win-Python310:
-            python.version: '3.10'
-          win-Python311:
-            python.version: '3.11'
-      pool:
-        vmImage: windows-latest
+    - job: linux
+      displayName: Build Linux wheels
+      pool: { vmImage: 'Ubuntu-20.04' }
       steps:
         - task: UsePythonVersion@0
-          inputs:
-            versionSpec: '$(python.version)'
-        - script: pip install build twine
-          displayName: Install build dependencies
-        - script: python -m build --wheel .
-          displayName: Build Wheel
-        - script: twine upload --skip-existing dist/*
+        - bash:
+            git fetch --tags
+          displayName: Fetch tags
+        - bash: |
+            set -o errexit
+            python3 -m pip install --upgrade pip
+            pip3 install cibuildwheel==2.16.2
+          displayName: Install dependencies
+        - bash: cibuildwheel --output-dir wheelhouse .
+          displayName: Build wheels
+        - script: twine upload --skip-existing wheelhouse/*
           displayName: Upload to PYPI
           env:
             TWINE_USERNAME: $(twine.username)
             TWINE_PASSWORD: $(twine.password)
+        - task: PublishBuildArtifacts@1
+          inputs: { pathtoPublish: 'wheelhouse' }
+
+    - job: macos
+      displayName: Build Mac wheels
+      pool: { vmImage: 'macOS-11' }
+      variables:
+        CIBW_ARCHS_MACOS: "x86_64 arm64"
+      steps:
+        - task: UsePythonVersion@0
+        - bash:
+            git fetch --tags
+          displayName: Fetch tags
+        - bash: |
+            set -o errexit
+            python3 -m pip install --upgrade pip
+            python3 -m pip install cibuildwheel==2.16.2
+          displayName: Install dependencies
+        - bash: cibuildwheel --output-dir wheelhouse .
+          displayName: Build wheels
+        - script: twine upload --skip-existing wheelhouse/*
+          displayName: Upload to PYPI
+          env:
+            TWINE_USERNAME: $(twine.username)
+            TWINE_PASSWORD: $(twine.password)
+        - task: PublishBuildArtifacts@1
+          inputs: { pathtoPublish: wheelhouse }
+
+    - job: windows
+      displayName: Build Windows wheels
+      pool: { vmImage: 'windows-2019' }
+      variables:
+        CIBW_ARCHS_WINDOWS: "AMD64"
+      steps:
+        - task: UsePythonVersion@0
+        - bash:
+            git fetch --tags
+          displayName: Fetch tags
+        - bash: |
+            set -o errexit
+            python -m pip install --upgrade pip
+            pip install cibuildwheel==2.16.2
+          displayName: Install dependencies
+        - bash: cibuildwheel --output-dir wheelhouse .
+          displayName: Build wheels
+        - script: twine upload --skip-existing wheelhouse/*
+          displayName: Upload to PYPI
+          env:
+            TWINE_USERNAME: $(twine.username)
+            TWINE_PASSWORD: $(twine.password)
+        - task: PublishBuildArtifacts@1
+          inputs: { pathtoPublish: 'wheelhouse' }

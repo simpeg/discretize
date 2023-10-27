@@ -12,6 +12,7 @@ print(get_version())'''
     ],
     check: true
 ).stdout().strip(),
+
   license: 'MIT',
   meson_version: '>= 1.1.0',
   default_options: [

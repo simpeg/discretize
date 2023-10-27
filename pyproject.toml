@@ -122,3 +122,13 @@ Repository = 'http://github.com/simpeg/discretize.git'
 [tool.meson-python.args]
 # for windows this will prioritize the msvc compilers
 setup = ['--vsenv']
+
+[tool.cibuildwheel]
+# skip building wheels for python 3.6, 3.7, all pypy versions, and specialty linux
+# processors (still does arm builds though).
+# skip windows 32bit
+skip = "cp36-* cp37-* pp* *_ppc64le *_i686 *_s390x *-win32 cp38-musllinux_x86_64"
+build-verbosity = "3"
+
+# test importing discretize to make sure externals are loadable.
+test-command = 'python -c "import discretize; print(discretize.__version__)"'
