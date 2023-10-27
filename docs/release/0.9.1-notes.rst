@@ -1,0 +1,75 @@
+.. currentmodule:: discretize
+
+.. _0.10.0_notes:
+
+===================================
+``discretize`` 0.10.0 Release Notes
+===================================
+
+October 27, 2023
+
+This minor release changes ``discretize`` to use a ``pyproject.toml`` file with a
+``meson-python`` build backend, and does away with the old `setup.py` style. This should
+allow the package to more reliably be built from the source code, properly setting the
+build-requirements.
+
+It also adds more functionality for integrating properties that are defined on cell faces
+and edges for finite volume formulations (previously we only supported integrating with properties
+that were defined on cell centers).
+
+Build system
+------------
+``discretize`` now uses a ``pyproject.toml`` file with a ``meson-python`` backend to build
+the compiled external modules (used for the ``TreeMesh``, ``SimplexMesh``, and interpolation
+functions. Moving away from a ``setup.py`` file allows us to reliably control the build environment
+seperate from the install environment, as the build requirements are not the same as the runtime
+requirements.
+
+We will also begin distributing many more pre-compiled wheels on pypi for Windows, MacOS, and Linux
+systems from python 3.8 to 3.12. Our goal is to provide a pre-compiled wheel for every system that
+scipy provides wheels for.
+
+Tensor Mesh
+------------
+You can now directly index a ``TensorMesh``, and it will then return a ``TensorCell`` object.
+This functionality mimics what is currently available in ``TreeMesh``s.
+
+``Tensor Mesh`` also has a ``cell_nodes`` property that list the indices of each node of every
+cell (again similar to the ``TreeMesh``).
+
+Face Properties
+---------------
+All meshes now have new functionality to integrate properties that are defined on cell faces
+and cell meshes within the finite volume formulation.
+
+Style updates
+-------------
+The pre-commit config files for discretize have been updated to more recent versions of ``black``
+and ``flake8``.
+
+
+Contributors
+============
+
+* @jcapriot
+* @santisoler
+* @dccowan
+* @munahaf
+
+Pull requests
+=============
+
+* `#327 <https://github.com/simpeg/discretize/pull/327>`__: Add black, flake8 and flake8 plugins to environment file
+* `#328 <https://github.com/simpeg/discretize/pull/328>`__: Use any Python 3 in pre-commit
+* `#329 <https://github.com/simpeg/discretize/pull/329>`__: Simplex stashing
+* `#325 <https://github.com/simpeg/discretize/pull/325>`__: Add new TensorCell class
+* `#330 <https://github.com/simpeg/discretize/pull/330>`__: Configure pyvista for doc builds
+* `#331 <https://github.com/simpeg/discretize/pull/331>`__: Add a noexcept clause to the wrapper function
+* `#326 <https://github.com/simpeg/discretize/pull/326>`__: Face props mass matrices
+* `#335 <https://github.com/simpeg/discretize/pull/335>`__: Pin flake8
+* `#333 <https://github.com/simpeg/discretize/pull/333>`__: Add cell_nodes property to TensorMesh
+* `#339 <https://github.com/simpeg/discretize/pull/339>`__: Update a test expression to fix a logical short circuit
+* `#340 <https://github.com/simpeg/discretize/pull/340>`__: Add export config for git archives
+* `#338 <https://github.com/simpeg/discretize/pull/338>`__: Pyproject.toml
+* `#342 <https://github.com/simpeg/discretize/pull/342>`__: CIbuildwheel
+* `#342 <https://github.com/simpeg/discretize/pull/343>`__: 0.10.0 Release Notes
