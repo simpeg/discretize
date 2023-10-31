@@ -1,6 +1,7 @@
 import numpy as np
 import unittest
 import discretize
+from discretize import TensorMesh
 
 np.random.seed(50)
 
@@ -329,5 +330,249 @@ class TestInnerProductsDerivsTensor(unittest.TestCase):
         self.assertTrue(self.doTestEdge([10, 4, 5], 3, True, "Curv"))
 
 
-if __name__ == "__main__":
-    unittest.main()
+class TestFacePropertiesInnerProductsDerivsTensor(unittest.TestCase):
+    def doTestFace(self, h, rep, meshType, invert_model=False, invert_matrix=False):
+        if meshType == "Curv":
+            hRect = discretize.utils.example_curvilinear_grid(h, "rotate")
+            mesh = discretize.CurvilinearMesh(hRect)
+        elif meshType == "Tree":
+            mesh = discretize.TreeMesh(h, levels=3)
+            mesh.refine(lambda xc: 3)
+            mesh.number(balance=False)
+        elif meshType == "Tensor":
+            mesh = discretize.TensorMesh(h)
+        v = np.random.rand(mesh.nF)
+        sig = np.random.rand(1) if rep == 0 else np.random.rand(mesh.nF * rep)
+
+        def fun(sig):
+            M = mesh.get_face_inner_product_surface(
+                sig, invert_model=invert_model, invert_matrix=invert_matrix
+            )
+            Md = mesh.get_face_inner_product_surface_deriv(
+                sig, invert_model=invert_model, invert_matrix=invert_matrix
+            )
+            return M * v, Md(v)
+
+        print(
+            meshType,
+            "Face",
+            h,
+            rep,
+            ("harmonic" if invert_model and invert_matrix else "standard"),
+        )
+        return discretize.tests.check_derivative(fun, sig, num=5, plotIt=False)
+
+    def doTestEdge(self, h, rep, meshType, invert_model=False, invert_matrix=False):
+        if meshType == "Curv":
+            hRect = discretize.utils.example_curvilinear_grid(h, "rotate")
+            mesh = discretize.CurvilinearMesh(hRect)
+        elif meshType == "Tree":
+            mesh = discretize.TreeMesh(h, levels=3)
+            mesh.refine(lambda xc: 3)
+            mesh.number(balance=False)
+        elif meshType == "Tensor":
+            mesh = discretize.TensorMesh(h)
+        v = np.random.rand(mesh.nE)
+        sig = np.random.rand(1) if rep == 0 else np.random.rand(mesh.nF * rep)
+
+        def fun(sig):
+            M = mesh.get_edge_inner_product_surface(
+                sig, invert_model=invert_model, invert_matrix=invert_matrix
+            )
+            Md = mesh.get_edge_inner_product_surface_deriv(
+                sig, invert_model=invert_model, invert_matrix=invert_matrix
+            )
+            return M * v, Md(v)
+
+        print(
+            meshType,
+            "Edge",
+            h,
+            rep,
+            ("harmonic" if invert_model and invert_matrix else "standard"),
+        )
+        return discretize.tests.check_derivative(fun, sig, num=5, plotIt=False)
+
+    def test_FaceIP_2D_float(self):
+        self.assertTrue(self.doTestFace([10, 4], 0, "Tensor"))
+
+    def test_FaceIP_3D_float(self):
+        self.assertTrue(self.doTestFace([10, 4, 5], 0, "Tensor"))
+
+    def test_FaceIP_2D_isotropic(self):
+        self.assertTrue(self.doTestFace([10, 4], 1, "Tensor"))
+
+    def test_FaceIP_3D_isotropic(self):
+        self.assertTrue(self.doTestFace([10, 4, 5], 1, "Tensor"))
+
+    def test_EdgeIP_2D_float(self):
+        self.assertTrue(self.doTestEdge([10, 4], 0, "Tensor"))
+
+    def test_EdgeIP_3D_float(self):
+        self.assertTrue(self.doTestEdge([10, 4, 5], 0, "Tensor"))
+
+    def test_EdgeIP_2D_isotropic(self):
+        self.assertTrue(self.doTestEdge([10, 4], 1, "Tensor"))
+
+    def test_EdgeIP_3D_isotropic(self):
+        self.assertTrue(self.doTestEdge([10, 4, 5], 1, "Tensor"))
+
+    def test_FaceIP_2D_float_invert_all(self):
+        self.assertTrue(
+            self.doTestFace([10, 4], 0, "Tensor", invert_model=True, invert_matrix=True)
+        )
+
+    def test_FaceIP_3D_float_invert_all(self):
+        self.assertTrue(
+            self.doTestFace(
+                [10, 4, 5], 0, "Tensor", invert_model=True, invert_matrix=True
+            )
+        )
+
+    def test_FaceIP_2D_isotropic_invert_all(self):
+        self.assertTrue(
+            self.doTestFace([10, 4], 1, "Tensor", invert_model=True, invert_matrix=True)
+        )
+
+    def test_FaceIP_3D_isotropic_invert_all(self):
+        self.assertTrue(
+            self.doTestFace(
+                [10, 4, 5], 1, "Tensor", invert_model=True, invert_matrix=True
+            )
+        )
+
+    def test_EdgeIP_2D_float_invert_all(self):
+        self.assertTrue(
+            self.doTestEdge([10, 4], 0, "Tensor", invert_model=True, invert_matrix=True)
+        )
+
+    def test_EdgeIP_3D_float_invert_all(self):
+        self.assertTrue(
+            self.doTestEdge(
+                [10, 4, 5], 0, "Tensor", invert_model=True, invert_matrix=True
+            )
+        )
+
+    def test_EdgeIP_2D_isotropic_invert_all(self):
+        self.assertTrue(
+            self.doTestEdge([10, 4], 1, "Tensor", invert_model=True, invert_matrix=True)
+        )
+
+    def test_EdgeIP_3D_isotropic_invert_all(self):
+        self.assertTrue(
+            self.doTestEdge(
+                [10, 4, 5], 1, "Tensor", invert_model=True, invert_matrix=True
+            )
+        )
+
+
+class TestEdgePropertiesInnerProductsDerivsTensor(unittest.TestCase):
+    def doTestEdge(self, h, rep, meshType, invert_model=False, invert_matrix=False):
+        if meshType == "Curv":
+            hRect = discretize.utils.example_curvilinear_grid(h, "rotate")
+            mesh = discretize.CurvilinearMesh(hRect)
+        elif meshType == "Tree":
+            mesh = discretize.TreeMesh(h, levels=3)
+            mesh.refine(lambda xc: 3)
+            mesh.number(balance=False)
+        elif meshType == "Tensor":
+            mesh = discretize.TensorMesh(h)
+        v = np.random.rand(mesh.nE)
+        sig = np.random.rand(1) if rep == 0 else np.random.rand(mesh.nE * rep)
+
+        def fun(sig):
+            M = mesh.get_edge_inner_product_line(
+                sig,
+                invert_model=invert_model,
+                invert_matrix=invert_matrix,
+            )
+            Md = mesh.get_edge_inner_product_line_deriv(
+                sig,
+                invert_model=invert_model,
+                invert_matrix=invert_matrix,
+            )
+            return M * v, Md(v)
+
+        print(
+            meshType,
+            "Edge",
+            h,
+            rep,
+            ("harmonic" if invert_model and invert_matrix else "standard"),
+        )
+        return discretize.tests.check_derivative(fun, sig, num=5, plotIt=False)
+
+    def test_EdgeIP_2D_float(self):
+        self.assertTrue(self.doTestEdge([10, 4], 0, "Tensor"))
+
+    def test_EdgeIP_3D_float(self):
+        self.assertTrue(self.doTestEdge([10, 4, 5], 0, "Tensor"))
+
+    def test_EdgeIP_2D_isotropic(self):
+        self.assertTrue(self.doTestEdge([10, 4], 1, "Tensor"))
+
+    def test_EdgeIP_3D_isotropic(self):
+        self.assertTrue(self.doTestEdge([10, 4, 5], 1, "Tensor"))
+
+    def test_EdgeIP_2D_float_invert_all(self):
+        self.assertTrue(
+            self.doTestEdge([10, 4], 0, "Tensor", invert_model=True, invert_matrix=True)
+        )
+
+    def test_EdgeIP_3D_float_invert_all(self):
+        self.assertTrue(
+            self.doTestEdge(
+                [10, 4, 5], 0, "Tensor", invert_model=True, invert_matrix=True
+            )
+        )
+
+    def test_EdgeIP_2D_isotropic_invert_all(self):
+        self.assertTrue(
+            self.doTestEdge([10, 4], 1, "Tensor", invert_model=True, invert_matrix=True)
+        )
+
+    def test_EdgeIP_3D_isotropic_invert_all(self):
+        self.assertTrue(
+            self.doTestEdge(
+                [10, 4, 5], 1, "Tensor", invert_model=True, invert_matrix=True
+            )
+        )
+
+
+class TestTensorSizeErrorRaises(unittest.TestCase):
+    """Ensure exception error when model is incorrect size"""
+
+    def setUp(self):
+        self.mesh3D = TensorMesh([4, 4, 4])
+        self.model = np.random.rand(self.mesh3D.nC)
+
+    def test_edge_inner_product_surface_deriv(self):
+        self.assertRaises(
+            ValueError, self.mesh3D.get_edge_inner_product_surface_deriv, self.model
+        )
+
+    def test_face_inner_product_surface_deriv(self):
+        self.assertRaises(
+            ValueError, self.mesh3D.get_face_inner_product_surface_deriv, self.model
+        )
+
+    def test_edge_inner_product_line_deriv(self):
+        self.assertRaises(
+            ValueError, self.mesh3D.get_edge_inner_product_line_deriv, self.model
+        )
+
+
+class TestNone(unittest.TestCase):
+    """Test None outputs"""
+
+    def setUp(self):
+        self.mesh3D = TensorMesh([4, 4, 4])
+
+    def test_edge_inner_product_surface_deriv(self):
+        self.assertIsNone(self.mesh3D.get_edge_inner_product_surface_deriv(None))
+
+    def test_face_inner_product_surface_deriv(self):
+        self.assertIsNone(self.mesh3D.get_face_inner_product_surface_deriv(None))
+
+    def test_edge_inner_product_line_deriv(self):
+        self.assertIsNone(self.mesh3D.get_edge_inner_product_line_deriv(None))

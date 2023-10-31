@@ -46,7 +46,6 @@ from .tensor_cell import TensorCell
 try:
     from discretize.tree_mesh import TreeMesh
 except ImportError as err:
-    print(err)
     import os
 
     # Check if being called from non-standard location (i.e. a git repository)
@@ -56,29 +55,30 @@ except ImportError as err:
         # Then we are being run from a repository
         raise ImportError(
             """
-            Unable to import TreeMesh.
+            It would appear that discretize is being imported from its source code
+            directory and is unable to load its compiled extension modules. Try changing
+            your directory and re-launching your python interpreter.
 
-            It would appear that discretize is being imported from its repository.
-            If this is intentional, you need to run:
-
-            python setup.py build_ext --inplace
-
-            to compile the cython code.
+            If this was intentional, you need to install discretize in an editable mode.
             """
         )
+    else:
+        raise err
 from discretize import tests
 
 __author__ = "SimPEG Team"
 __license__ = "MIT"
 __copyright__ = "2013 - 2023, SimPEG Developers, https://simpeg.xyz"
 
+from importlib.metadata import version, PackageNotFoundError
+
 # Version
 try:
     # - Released versions just tags:       0.8.0
     # - GitHub commits add .dev#+hash:     0.8.1.dev4+g2785721
     # - Uncommitted changes add timestamp: 0.8.1.dev4+g2785721.d20191022
-    from discretize.version import version as __version__
-except ImportError:
+    __version__ = version("discretize")
+except PackageNotFoundError:
     # If it was not installed, then we don't know the version. We could throw a
     # warning here, but this case *should* be rare. discretize should be
     # installed properly!

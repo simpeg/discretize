@@ -1,0 +1,134 @@
+
+[build-system]
+build-backend = 'mesonpy'
+requires = [
+    "meson-python>=0.14.0",
+    "Cython>=0.29.35",  # when updating version, also update check in meson.build
+    "setuptools_scm[toml]>=6.2",
+
+    # This package automatically provides all of the numpy pinning for different python
+    # versions and runtime requirements.
+    "oldest-supported-numpy",
+
+    # The following is taken from scipy's pyproject.toml file to handle
+    # building against the proper numpy API
+
+    # When numpy 2.0.0rc1 comes out, we should update this to build against 2.0,
+    # and then runtime depend on the range 1.22.X to <2.3. No need to switch to
+    # 1.25.2 in the meantime (1.25.x is the first version which exports older C
+    # API versions by default).
+
+    # default numpy requirements
+    # "numpy==1.22.4; python_version<='3.10' and platform_python_implementation != 'PyPy'",
+    # "numpy==1.23.2; python_version=='3.11' and platform_python_implementation != 'PyPy'",
+
+    # For Python versions which aren't yet officially supported, we specify an
+    # unpinned NumPy which allows source distributions to be used and allows
+    # wheels to be used as soon as they become available.
+    # "numpy>=1.26.0b1; python_version>='3.12'",
+    # "numpy; python_version>='3.8' and platform_python_implementation=='PyPy'",
+]
+
+[project]
+name = 'discretize'
+dynamic = ["version"]
+description = 'Discretization tools for finite volume and inverse problems'
+readme = 'README.rst'
+requires-python = '>=3.8'
+authors = [
+  {name = 'SimPEG developers', email = 'rowanc1@gmail.com'},
+]
+keywords = [
+    'finite volume', 'discretization', 'pde', 'ode'
+]
+
+# Note: Python and NumPy upper version bounds should be set correctly in
+# release branches, see:
+#     https://scipy.github.io/devdocs/dev/core-dev/index.html#version-ranges-for-numpy-and-other-dependencies
+dependencies = [
+    # TODO: update to "pin-compatible" once possible, see
+    # https://github.com/mesonbuild/meson-python/issues/29
+    "numpy>=1.22.4",
+    "scipy>=1.8",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Cython",
+    "Programming Language :: C++",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX",
+    "Operating System :: Unix",
+    "Operating System :: MacOS",
+    "Natural Language :: English",
+]
+
+[project.license]
+file = 'LICENSE'
+
+[project.optional-dependencies]
+plot = ["matplotlib"]
+viz = ["vtk", "pyvista"]
+omf = ["omf"]
+all = ["discretize[plot,viz,omf]"]
+doc = [
+    "sphinx!=4.1.0",
+    "pydata-sphinx-theme==0.9.0",
+    "sphinx-gallery==0.1.13",
+    "numpydoc>=1.5",
+    "jupyter",
+    "graphviz",
+    "pymatsolver>=0.1.2",
+    "pillow",
+    "discretize[all]",
+]
+test = [
+    "pytest",
+    "pytest-cov",
+    "sympy",
+    "discretize[doc,all]",
+]
+style = [
+    "black==23.1.0",
+    "flake8==6.0.0",
+    "flake8-bugbear",
+    "flake8-builtins",
+    "flake8-mutable",
+    "flake8-rst-docstrings",
+    "flake8-docstrings>=1.7",
+]
+build = [
+    "meson-python>=0.14.0",
+    "meson",
+    "ninja",
+    "numpy>=1.22.4",
+    "cython>=0.29.35",
+    "setuptools_scm",
+]
+
+[project.urls]
+Homepage = 'https://simpeg.xyz'
+Documentation = 'https://discretize.simpeg.xyz'
+Repository = 'http://github.com/simpeg/discretize.git'
+
+[tool.setuptools_scm]
+
+[tool.meson-python.args]
+# for windows this will prioritize the msvc compilers
+setup = ['--vsenv']
+
+[tool.cibuildwheel]
+# skip building wheels for python 3.6, 3.7, all pypy versions, and specialty linux
+# processors (still does arm builds though).
+# skip windows 32bit
+skip = "cp36-* cp37-* pp* *_ppc64le *_i686 *_s390x *-win32 cp38-musllinux_x86_64"
+build-verbosity = "3"
+
+# test importing discretize to make sure externals are loadable.
+test-command = 'python -c "import discretize; print(discretize.__version__)"'

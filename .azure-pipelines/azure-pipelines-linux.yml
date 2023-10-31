@@ -14,6 +14,8 @@ jobs:
         python.version: '3.9'
       linux-Python310:
         python.version: '3.10'
+      linux-Python311:
+        python.version: '3.11'
   steps:
 
   - bash: |
@@ -33,7 +35,7 @@ jobs:
   - bash: |
       source "${HOME}/conda/etc/profile.d/conda.sh"
       conda activate discretize-test
-      pip install -e .
+      pip install --no-build-isolation --editable .
     displayName: Install requirements and build
     condition: ne(variables['python.version'], '3.10')
 
@@ -48,8 +50,7 @@ jobs:
   - bash: |
       source "${HOME}/conda/etc/profile.d/conda.sh"
       conda activate discretize-test
-      export DISC_COV=1
-      pip install -e .
+      pip install --no-build-isolation --editable . --config-settings=setup-args="-Dcy_line_trace=true"
     displayName: Install requirements and build for Testing
     condition: eq(variables['python.version'], '3.10')
 
