@@ -845,8 +845,8 @@ def assert_isadjoint(
         return out
 
     # Create random vectors u and v.
-    u = random(np.product(shape_u), complex_u).reshape(shape_u)
-    v = random(np.product(shape_v), complex_v).reshape(shape_v)
+    u = random(np.prod(shape_u), complex_u).reshape(shape_u)
+    v = random(np.prod(shape_v), complex_v).reshape(shape_v)
 
     # Carry out dot product test.
     fwd_u = forward(u)
