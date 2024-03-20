@@ -95,7 +95,7 @@ test = [
     "discretize[doc,all]",
 ]
 style = [
-    "black==23.1.0",
+    "black==24.3.0",
     "flake8==6.0.0",
     "flake8-bugbear",
     "flake8-builtins",
