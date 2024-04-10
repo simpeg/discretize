@@ -365,6 +365,100 @@ void Cell::shift_centers(double *shift){
     }
 }
 
+// intersections tests:
+
+bool Cell::intersects_point(double *x){
+    // A simple bounding box check:
+    int_t last_point = (ndim < 3)? 3 : 7;
+    for(int_t i=0; i < n_dim; ++i){
+        if(x[i] < points[0].location[i] || x[i] > points[last_point].location[i]){
+            return false
+        }
+    }
+    return true;
+}
+
+bool Cell:intersects_ball(double *x, double rsq){
+
+    // check if I intersect the ball
+    double xp = std::max(points[0]->location[0], std::min(center[0], points[3]->location[0]));
+    double yp = std::max(points[0]->location[1], std::min(center[1], points[3]->location[1]));
+    double zp = 0.0;
+    if (n_dim > 2){
+        zp = std::max(points[0]->location[2], std::min(center[2], points[7]->location[2]));
+    }
+
+    // xp, yp, zp is closest point in the cell to the center of the circle
+    // check if that point is in the circle!
+    double r2_test = (xp - center[0])*(xp - center[0]) + (yp - center[1]) *(yp - center[1]);
+    if (n_dim > 2){
+        r2_test += (zp - center[2])*(zp - center[2]);
+    }
+    return r2_test < rsq;
+}
+
+
+bool Cell::intersects_line(double *x0, double *x1, double* dx, bool segment=true){
+    // bounding box intersection if doing a segment test:
+    int_t last_point = (ndim < 3)? 3 : 7;
+    if (segment){
+        for(int_t i=0; i<ndim; ++i){
+            if(std:max(x0[i], x1[i]) < points[0].location[i]){
+                return false;
+            }
+            if(std:min(x0[i], x1[i] > points[last_point].location[i]){
+                return false;
+            }
+        }
+    }
+    // Separating axis test
+    abs()
+
+    // Check to see if I intersect the segment
+    double t0x, t0y, t0z, t1x, t1y, t1z;
+    double tminx, tminy, tminz, tmaxx, tmaxy, tmaxz;
+    double tmin, tmax;
+
+    t0x = (points[0]->location[0] - x0[0]) * diff_inv[0];
+    t1x = (points[3]->location[0] - x0[0]) * diff_inv[0];
+    if (t0x <= t1x){
+      tminx = t0x;
+      tmaxx = t1x;
+    }else{
+      tminx = t1x;
+      tmaxx = t0x;
+    }
+
+    t0y = (points[0]->location[1] - x0[1]) * diff_inv[1];
+    t1y = (points[3]->location[1] - x0[1]) * diff_inv[1];
+    if (t0y <= t1y){
+      tminy = t0y;
+      tmaxy = t1y;
+    }else{
+      tminy = t1y;
+      tmaxy = t0y;
+    }
+
+    tmin = std::max(tminx, tminy);
+    tmax = std::min(tmaxx, tmaxy);
+    if (n_dim > 2){
+        t0z = (points[0]->location[2] - x0[2]) * diff_inv[2];
+        t1z = (points[7]->location[2] - x0[2]) * diff_inv[2];
+        if (t0z <= t1z){
+          tminz = t0z;
+          tmaxz = t1z;
+        }else{
+          tminz = t1z;
+          tmaxz = t0z;
+        }
+        tmin = std::max(tmin, tminz);
+        tmax = std::min(tmax, tmaxz);
+    }
+    // now can test if I intersect!
+    return tmax >= 0 && tmin <= 1 && tmin <= tmax
+}
+
+
 void Cell::insert_cell(node_map_t& nodes, double *new_cell, int_t p_level, double *xs, double *ys, double *zs, bool diag_balance){
     //Inserts a cell at min(max_level,p_level) that contains the given point
     if(p_level > level){
@@ -385,22 +479,7 @@ void Cell::refine_ball(node_map_t& nodes, double* center, double r2, int_t p_lev
     if (level >= p_level || level == max_level){
         return;
     }
-    // check if I intersect the ball
-    double xp = std::max(points[0]->location[0], std::min(center[0], points[3]->location[0]));
-    double yp = std::max(points[0]->location[1], std::min(center[1], points[3]->location[1]));
-    double zp = 0.0;
-    if (n_dim > 2){
-        zp = std::max(points[0]->location[2], std::min(center[2], points[7]->location[2]));
-    }
-
-    // xp, yp, zp is closest point in the cell to the center of the circle
-    // check if that point is in the circle!
-    double r2_test = (xp - center[0])*(xp - center[0]) + (yp - center[1]) *(yp - center[1]);
-    if (n_dim > 2){
-        r2_test += (zp - center[2])*(zp - center[2]);
-    }
-    if (r2_test >= r2){
-        // I do not intersect the ball
+    if (!intersects_ball(center, r2)){
         return;
     }
     // if I intersect cell, I will need to be divided (if I'm not already)

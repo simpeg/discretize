@@ -116,6 +116,15 @@ class Cell{
     Cell(Node *pts[4], Cell *parent);
     ~Cell();
 
+    // intersection tests
+    bool intersects_point(double *x);
+    bool intersects_ball(double *x, double rsq);
+    bool intersects_line(double *x0, double *x1, bool segment=true);
+    bool intersects_plane(double *x0, double *x1, double *x2, bool segment=true);
+    bool intersects_box(double *x0, double *xF);
+    bool intersects_tetra(double *x0, double *x1, double *x2);
+    bool intersects_vert_triang_prism(double *x0, double *x1, double *x2, double h);
+
     bool inline is_leaf(){ return children[0]==NULL;};
     void spawn(node_map_t& nodes, Cell *kids[8], double* xs, double *ys, double *zs);
     void divide(node_map_t& nodes, double* xs, double* ys, double* zs, bool balance=true, bool diag_balance=false);
