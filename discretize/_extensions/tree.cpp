@@ -378,7 +378,7 @@ bool Cell::intersects_point(double *x){
     return true;
 }
 
-bool Cell:intersects_ball(double *x, double rsq){
+bool Cell::intersects_ball(double *x, double rsq){
 
     // check if I intersect the ball
     double xp = std::max(points[0]->location[0], std::min(center[0], points[3]->location[0]));
@@ -397,67 +397,422 @@ bool Cell:intersects_ball(double *x, double rsq){
     return r2_test < rsq;
 }
 
+bool Cell::intersects_line(double *x0, double *x1, double* i_dx, bool segment=true){
+    // bounding box intersection if doing a segment test
+    Node *p0 = points[0];
+    Node *p1 = (ndim < 3) ? points[3] : points[7];
 
-bool Cell::intersects_line(double *x0, double *x1, double* dx, bool segment=true){
-    // bounding box intersection if doing a segment test:
-    int_t last_point = (ndim < 3)? 3 : 7;
-    if (segment){
-        for(int_t i=0; i<ndim; ++i){
-            if(std:max(x0[i], x1[i]) < points[0].location[i]){
+    double t_near = -std::numeric_limits<double>::infinity();
+    double t_far = std::numeric_limits<double>::infinity();
+    double t0, t1, dx_sign, dx_abs;
+
+    for(int_t i=0; i<ndim; ++i){
+        // do a quick test if the line has no chance of intersecting the aabb
+        if(x0[i] == x1[i] && (x0[i] < p0->location[i] || x0[i] > p1->location[i])){
+            return false;
+        }
+        if (segment){
+            if(std:max(x0[i], x1[i]) < p0->location[i]){
                 return false;
             }
-            if(std:min(x0[i], x1[i] > points[last_point].location[i]){
+            if(std:min(x0[i], x1[i]) > p1->location[i]){
+                return false;
+            }
+        }
+        if (x0[i] != x1[i]){
+            t0 = (p0->location[i] - x0[i]) * i_dx[i];
+            t1 = (p1->location[i] - x0[i]) * i_dx[i];
+            if (t0 > t1){
+                std::swap(t0, t1);
+            }
+            t_near = std::max(t_near, t0);
+            t_far = std::min(t_far, t1);
+            if (t_near > t_far || (segment && (t_far < 0 || t_near > 1))){
                 return false;
             }
         }
     }
-    // Separating axis test
-    abs()
-
-    // Check to see if I intersect the segment
-    double t0x, t0y, t0z, t1x, t1y, t1z;
-    double tminx, tminy, tminz, tmaxx, tmaxy, tmaxz;
-    double tmin, tmax;
-
-    t0x = (points[0]->location[0] - x0[0]) * diff_inv[0];
-    t1x = (points[3]->location[0] - x0[0]) * diff_inv[0];
-    if (t0x <= t1x){
-      tminx = t0x;
-      tmaxx = t1x;
-    }else{
-      tminx = t1x;
-      tmaxx = t0x;
-    }
-
-    t0y = (points[0]->location[1] - x0[1]) * diff_inv[1];
-    t1y = (points[3]->location[1] - x0[1]) * diff_inv[1];
-    if (t0y <= t1y){
-      tminy = t0y;
-      tmaxy = t1y;
-    }else{
-      tminy = t1y;
-      tmaxy = t0y;
-    }
-
-    tmin = std::max(tminx, tminy);
-    tmax = std::min(tmaxx, tmaxy);
-    if (n_dim > 2){
-        t0z = (points[0]->location[2] - x0[2]) * diff_inv[2];
-        t1z = (points[7]->location[2] - x0[2]) * diff_inv[2];
-        if (t0z <= t1z){
-          tminz = t0z;
-          tmaxz = t1z;
-        }else{
-          tminz = t1z;
-          tmaxz = t0z;
-        }
-        tmin = std::max(tmin, tminz);
-        tmax = std::min(tmax, tmaxz);
-    }
-    // now can test if I intersect!
-    return tmax >= 0 && tmin <= 1 && tmin <= tmax
+    return true;
 }
 
+bool Cell::intersects_box(double *x0, double *x1){
+    Node *p0 = points[0];
+    Node *p1 = (ndim < 3) ? points[3] : points[7];
+
+    for(int_t i; i<ndim; ++i){
+        if(std::max(x0[i], x1[i]) < p0->location[i]){
+            return false;
+        }
+        if(std::min(x0[i], x1[i]) > p1->location[i]){
+            return false;
+        }
+    }
+    return true;
+}
+
+bool Cell::intersects_triangle(double *x0, double *x1, double *x2, double *e0, double *e1, double *e2, double *t_norm){
+    // then check to see if I intersect the segment
+    double v0[3], v1[3], v2[3], half[3];
+    double vmin, vmax;
+    double p0, p1, p2, pmin, pmax, rad;
+    for(int_t i=0; i < n_dim; ++i){
+        v0[i] = x0[i] - location[i];
+        v1[i] = x1[i] - location[i];
+        vmin = std::min(v0[i], v1[i]);
+        vmax = std::max(v0[i], v1[i]);
+        v2[i] = x2[i] - location[i];
+        vmin = std::min(vmin, v2[i]);
+        vmax = std::max(vmax, v2[i]);
+        half[i] = location[i] - points[0]->location[i];
+
+        // Bounding box check
+        if (vmin > half[i] || vmax < -half[i]){
+            return false;
+        }
+    }
+    // first do the 3 edge cross tests that apply in 2D and 3D
+
+    // edge 0 cross z_hat
+    //p0 = e0[1] * v0[0] - e0[0] * v0[1];
+    p1 = e0[1] * v1[0] - e0[0] * v1[1];
+    p2 = e0[1] * v2[0] - e0[0] * v2[1];
+    pmin = std::min(p1, p2);
+    pmax = std::max(p1, p2);
+    rad = std::abs(e0[1]) * half[0] + std::abs(e0[0]) * half[1];
+    if (pmin > rad || pmax < -rad){
+        return false;
+    }
+
+    // edge 1 cross z_hat
+    p0 = e1[1] * v0[0] - e1[0] * v0[1];
+    p1 = e1[1] * v1[0] - e1[0] * v1[1];
+    //p2 = e1[1] * v2[0] - e1[0] * v2[1];
+    pmin = std::min(p0, p1);
+    pmax = std::max(p0, p1);
+    rad = std::abs(e1[1]) * half[0] + std::abs(e1[0]) * half[1];
+    if (pmin > rad || pmax < -rad){
+        return false;
+    }
+
+    // edge 2 cross z_hat
+    //p0 = e2[1] * v0[0] - e2[0] * v0[1];
+    p1 = e2[1] * v1[0] - e2[0] * v1[1];
+    p2 = e2[1] * v2[0] - e2[0] * v2[1];
+    pmin = std::min(p1, p2);
+    pmax = std::max(p1, p2);
+    rad = std::abs(e2[1]) * half[0] + std::abs(e2[0]) * half[1];
+    if (pmin > rad || pmax < -rad){
+        return false;
+    }
+
+    if(n_dim > 2){
+        // edge 0 cross x_hat
+        p0 = e0[2] * v0[1] - e0[1] * v0[2];
+        //p1 = e0[2] * v1[1] - e0[1] * v1[2];
+        p2 = e0[2] * v2[1] - e0[1] * v2[2];
+        pmin = std::min(p0, p2);
+        pmax = std::max(p0, p2);
+        rad = std::abs(e0[2]) * half[1] + std::abs(e0[1]) * half[2];
+        if (pmin > rad || pmax < -rad){
+            return false;
+        }
+        // edge 0 cross y_hat
+        p0 = -e0[2] * v0[0] + e0[0] * v0[2];
+        //p1 = -e0[2] * v1[0] + e0[0] * v1[2];
+        p2 = -e0[2] * v2[0] + e0[0] * v2[2];
+        pmin = std::min(p0, p2);
+        pmax = std::max(p0, p2);
+        rad = std::abs(e0[2]) * half[0] + std::abs(e0[0]) * half[2];
+        if (pmin > rad || pmax < -rad){
+            return false;
+        }
+        // edge 1 cross x_hat
+        p0 = e1[2] * v0[1] - e1[1] * v0[2];
+        //p1 = e1[2] * v1[1] - e1[1] * v1[2];
+        p2 = e1[2] * v2[1] - e1[1] * v2[2];
+        pmin = std::min(p0, p2);
+        pmax = std::max(p0, p2);
+        rad = std::abs(e1[2]) * half[1] + std::abs(e1[1]) * half[2];
+        if (pmin > rad || pmax < -rad){
+            return false;
+        }
+        // edge 1 cross y_hat
+        p0 = -e1[2] * v0[0] + e1[0] * v0[2];
+        //p1 = -e1[2] * v1[0] + e1[0] * v1[2];
+        p2 = -e1[2] * v2[0] + e1[0] * v2[2];
+        pmin = std::min(p0, p2);
+        pmax = std::max(p0, p2);
+        rad = std::abs(e1[2]) * half[0] + std::abs(e1[0]) * half[2];
+        if (pmin > rad || pmax < -rad){
+            return false;
+        }
+        // edge 2 cross x_hat
+        p0 = e2[2] * v0[1] - e2[1] * v0[2];
+        p1 = e2[2] * v1[1] - e2[1] * v1[2];
+        //p2 = e2[2] * v2[1] - e2[1] * v2[2];
+        pmin = std::min(p0, p1);
+        pmax = std::max(p0, p1);
+        rad = std::abs(e2[2]) * half[1] + std::abs(e2[1]) * half[2];
+        if (pmin > rad || pmax < -rad){
+            return false;
+        }
+        // edge 2 cross y_hat
+        p0 = -e2[2] * v0[0] + e2[0] * v0[2];
+        p1 = -e2[2] * v1[0] + e2[0] * v1[2];
+        //p2 = -e2[2] * v2[0] + e2[0] * v2[2];
+        pmin = std::min(p0, p1);
+        pmax = std::max(p0, p1);
+        rad = std::abs(e2[2]) * half[0] + std::abs(e2[0]) * half[2];
+        if (pmin > rad || pmax < -rad){
+            return false;
+        }
+
+        // triangle normal axis
+        pmin = 0.0;
+        pmax = 0.0;
+        for(int_t i=0; i<n_dim; ++i){
+            if(t_norm[i] > 0){
+                pmin += t_norm[i] * (-half[i] - v0[i]);
+                pmax += t_norm[i] * (half[i] - v0[i]);
+            }else{
+                pmin += t_norm[i] * (half[i] - v0[i]);
+                pmax += t_norm[i] * (-half[i] - v0[i]);
+            }
+        }
+        if (pmin > 0 || pmax < 0){
+            return false;
+        }
+    }
+    return true;
+}
+
+bool Cell::intersects_vert_triang_prism(double *x0, double *x1, double *x2, double h, double* e0, double* e1, double* e2, double* t_norm){
+    // check all the AABB faces
+    double v0[3], v1[3], v2[3], half[3];
+    double vmin, vmax;
+    double p0, p1, p2, p3, pmin, pmax, rad;
+    for(int_t i=0; i < n_dim; ++i){
+        v0[i] = x0[i] - location[i];
+        v1[i] = x1[i] - location[i];
+        vmin = std::min(v0[i], v1[i]);
+        vmax = std::max(v0[i], v1[i]);
+        v2[i] = x2[i] - location[i];
+        vmin = std::min(vmin, v2[i]);
+        vmax = std::max(vmax, v2[i]);
+        if(i == 2){
+            vmax += h;
+        }
+        half[i] = location[i] - points[0]->location[i];
+
+        // Bounding box check
+        if (vmin > half[i] || vmax < -half[i]){
+            return false;
+        }
+    }
+    // first do the 3 edge cross tests that apply in 2D and 3D
+
+    // edge 0 cross z_hat
+    //p0 = e0[1] * v0[0] - e0[0] * v0[1];
+    p1 = e0[1] * v1[0] - e0[0] * v1[1];
+    p2 = e0[1] * v2[0] - e0[0] * v2[1];
+    pmin = std::min(p1, p2);
+    pmax = std::max(p1, p2);
+    rad = std::abs(e0[1]) * half[0] + std::abs(e0[0]) * half[1];
+    if (pmin > rad || pmax < -rad){
+        return false;
+    }
+
+    // edge 1 cross z_hat
+    p0 = e1[1] * v0[0] - e1[0] * v0[1];
+    p1 = e1[1] * v1[0] - e1[0] * v1[1];
+    //p2 = e1[1] * v2[0] - e1[0] * v2[1];
+    pmin = std::min(p0, p1);
+    pmax = std::max(p0, p1);
+    rad = std::abs(e1[1]) * half[0] + std::abs(e1[0]) * half[1];
+    if (pmin > rad || pmax < -rad){
+        return false;
+    }
+
+    // edge 2 cross z_hat
+    //p0 = e2[1] * v0[0] - e2[0] * v0[1];
+    p1 = e2[1] * v1[0] - e2[0] * v1[1];
+    p2 = e2[1] * v2[0] - e2[0] * v2[1];
+    pmin = std::min(p1, p2);
+    pmax = std::max(p1, p2);
+    rad = std::abs(e2[1]) * half[0] + std::abs(e2[0]) * half[1];
+    if (pmin > rad || pmax < -rad){
+        return false;
+    }
+
+    // edge 0 cross x_hat
+    p0 = e0[2] * v0[1] - e0[1] * v0[2];
+    p1 = e0[2] * v0[1] - e0[1] * (v0[2] + h);
+    p2 = e0[2] * v2[1] - e0[1] * v2[2];
+    p3 = e0[2] * v2[1] - e0[1] * (v2[2] + h);
+    pmin = std::min(std::min(std::min(p0, p1), p2), p3);
+    pmax = std::max(std::max(std::max(p0, p1), p2), p3);
+    rad = std::abs(e0[2]) * half[1] + std::abs(e0[1]) * half[2];
+    if (pmin > rad || pmax < -rad){
+        return false;
+    }
+    // edge 0 cross y_hat
+    p0 = -e0[2] * v0[0] + e0[0] * v0[2];
+    p1 = -e0[2] * v0[0] + e0[0] * (v0[2] + h);
+    p2 = -e0[2] * v2[0] + e0[0] * v2[2];
+    p3 = -e0[2] * v2[0] + e0[0] * (v2[2] + h);
+    pmin = std::min(std::min(std::min(p0, p1), p2), p3);
+    pmax = std::max(std::max(std::max(p0, p1), p2), p3);
+    rad = std::abs(e0[2]) * half[0] + std::abs(e0[0]) * half[2];
+    if (pmin > rad || pmax < -rad){
+        return false;
+    }
+    // edge 1 cross x_hat
+    p0 = e1[2] * v0[1] - e1[1] * v0[2];
+    p1 = e1[2] * v0[1] - e1[1] * (v0[2] + h);
+    p2 = e1[2] * v2[1] - e1[1] * v2[2];
+    p3 = e1[2] * v2[1] - e1[1] * (v2[2] + h);
+    pmin = std::min(std::min(std::min(p0, p1), p2), p3);
+    pmax = std::max(std::max(std::max(p0, p1), p2), p3);
+    rad = std::abs(e1[2]) * half[1] + std::abs(e1[1]) * half[2];
+    if (pmin > rad || pmax < -rad){
+        return false;
+    }
+    // edge 1 cross y_hat
+    p0 = -e1[2] * v0[0] + e1[0] * v0[2];
+    p1 = -e1[2] * v0[0] + e1[0] * (v0[2] + h);
+    p2 = -e1[2] * v2[0] + e1[0] * v2[2];
+    p3 = -e1[2] * v2[0] + e1[0] * (v2[2] + h);
+    pmin = std::min(std::min(std::min(p0, p1), p2), p3);
+    pmax = std::max(std::max(std::max(p0, p1), p2), p3);
+    rad = std::abs(e1[2]) * half[0] + std::abs(e1[0]) * half[2];
+    if (pmin > rad || pmax < -rad){
+        return false;
+    }
+    // edge 2 cross x_hat
+    p0 = e2[2] * v0[1] - e2[1] * v0[2];
+    p1 = e2[2] * v0[1] - e2[1] * (v0[2] + h);
+    p2 = e2[2] * v1[1] - e2[1] * v1[2];
+    p3 = e2[2] * v1[1] - e2[1] * (v1[2] + h);
+    pmin = std::min(std::min(std::min(p0, p1), p2), p3);
+    pmax = std::max(std::max(std::max(p0, p1), p2), p3);
+    rad = std::abs(e2[2]) * half[1] + std::abs(e2[1]) * half[2];
+    if (pmin > rad || pmax < -rad){
+        return false;
+    }
+    // edge 2 cross y_hat
+    p0 = -e2[2] * v0[0] + e2[0] * v0[2];
+    p1 = -e2[2] * v0[0] + e2[0] * (v0[2] + h);
+    p2 = -e2[2] * v1[0] + e2[0] * v1[2];
+    p3 = -e2[2] * v1[0] + e2[0] * (v1[2] + h);
+    pmin = std::min(std::min(std::min(p0, p1), p2), p3);
+    pmax = std::max(std::max(std::max(p0, p1), p2), p3);
+    rad = std::abs(e2[2]) * half[0] + std::abs(e2[0]) * half[2];
+    if (pmin > rad || pmax < -rad){
+        return false;
+    }
+
+    // triangle normal axis
+    p0 = t_norm[0] * v0[0] + t_norm[1] * v0[1] + t_norm[2] * v0[2];
+    p1 = t_norm[0] * v0[0] + t_norm[1] * v0[1] + t_norm[2] * (v0[2] + h);
+    pmin = std::min(p0, p1);
+    pmax = std::max(p0, p1);
+    rad = std::abs(t_norm[0]) * half[0] + std::abs(t_norm[1]) * half[1] + std::abs(t_norm[2]) * half[2];
+    if (pmin > rad || pmax < -rad){
+        return false;
+    }
+    // the axes defined by the three vertical prism faces
+    // should already be tested by the e0, e1, e2 cross z_hat tests
+    return true;
+}
+
+bool Cell::intersects_tetra(
+  double* x0, double* x1, double* x2, double* x3,
+  double edge_tans[6][3], double face_normals[4][3]
+){
+    // then check to see if I intersect the segment
+    double v0[3], v1[3], v2[3], v3[3], half[3];
+    double p0, p1, p2, p3, pmin, pmax, rad;
+    for(int_t i=0; i < n_dim; ++i){
+        v0[i] = x0[i] - location[i];
+        v1[i] = x1[i] - location[i];
+        v2[i] = x2[i] - location[i];
+        v3[i] = x3[i] - location[i];
+        half[i] = location[i] - points[0]->location[i];
+        pmin = std::min(std::min(std::min(v0[i], v1[i]), v2[i]), v3[i]);
+        pmax = std::max(std::max(std::max(v0[i], v1[i]), v2[i]), v3[i]);
+        // Bounding box check
+        if (pmin > half[i] || pmax < -half[i]){
+            return false;
+        }
+    }
+    // first do the 3 edge cross tests that apply in 2D and 3D
+    double *axis;
+
+    for(int_t i=0; i<6; ++i){
+        // edge cross [1, 0, 0]
+        p0 = edge_tans[i][2] * v0[1] - edge_tans[i][1] * v0[2];
+        p1 = edge_tans[i][2] * v1[1] - edge_tans[i][1] * v1[2];
+        p2 = edge_tans[i][2] * v2[1] - edge_tans[i][1] * v2[2];
+        p3 = edge_tans[i][2] * v3[1] - edge_tans[i][1] * v3[2];
+        pmin = std::min(std::min(std::min(p0, p1), p2), p3);
+        pmax = std::max(std::max(std::max(p0, p1), p2), p3);
+        rad = std::abs(edge_tans[i][2]) * half[1] + std::abs(edge_tans[i][1]) * half[2];
+        if (pmin > rad || pmax < -rad){
+            return false;
+        }
+
+        p0 = -edge_tans[i][2] * v0[0] + edge_tans[i][0] * v0[2];
+        p1 = -edge_tans[i][2] * v1[0] + edge_tans[i][0] * v1[2];
+        p2 = -edge_tans[i][2] * v2[0] + edge_tans[i][0] * v2[2];
+        p3 = -edge_tans[i][2] * v3[0] + edge_tans[i][0] * v3[2];
+        pmin = std::min(std::min(std::min(p0, p1), p2), p3);
+        pmax = std::max(std::max(std::max(p0, p1), p2), p3);
+        rad = std::abs(edge_tans[i][2]) * half[0] + std::abs(edge_tans[i][0]) * half[2];
+        if (pmin > rad || pmax < -rad){
+            return false;
+        }
+
+        p0 = edge_tans[i][1] * v0[0] - edge_tans[i][0] * v0[1];
+        p1 = edge_tans[i][1] * v1[0] - edge_tans[i][0] * v1[1];
+        p2 = edge_tans[i][1] * v2[0] - edge_tans[i][0] * v2[1];
+        p3 = edge_tans[i][1] * v3[0] - edge_tans[i][0] * v3[1];
+        pmin = std::min(std::min(std::min(p0, p1), p2), p3);
+        pmax = std::max(std::max(std::max(p0, p1), p2), p3);
+        rad = std::abs(edge_tans[i][1]) * half[0] + std::abs(edge_tans[i][0]) * half[1];
+        if (pmin > rad || pmax < -rad){
+            return false;
+        }
+    }
+    // triangle face normals
+    for(int_t i=0; i<4; ++i){
+        axis = face_normals[i];
+        p0 = axis[0] * v0[0] + axis[1] * v0[1] + axis[2] * v0[2];
+        p1 = axis[0] * v1[0] + axis[1] * v1[1] + axis[2] * v1[2];
+        p2 = axis[0] * v2[0] + axis[1] * v2[1] + axis[2] * v2[2];
+        p3 = axis[0] * v3[0] + axis[1] * v3[1] + axis[2] * v3[2];
+        pmin = std::min(std::min(std::min(p0, p1), p2), p3);
+        pmax = std::max(std::max(std::max(p0, p1), p2), p3);
+        rad = std::abs(axis[0]) * half[0] + std::abs(axis[1]) * half[1] + std::abs(axis[2]) * half[2];
+        if (pmin > rad || pmax < -rad){
+            return false;
+        }
+    }
+    return true;
+}
+
+bool Cell::intersects_plane(double *x0, double *normal){
+    double half
+    double s = 0;
+    double r = 0;
+    Node *p0 = points[0];
+    Node *p1 = (ndim < 3) points[3] : points[7];
+    for(int_t i=0;i<ndim;++i){
+        half = location[i] - points[0]->location[i];
+        r += half + std::abs(normal[i]);
+        s += normal[i] * half[i] - x0[i];
+    }
+    return std::abs(s) <= r;
+}
 
 void Cell::insert_cell(node_map_t& nodes, double *new_cell, int_t p_level, double *xs, double *ys, double *zs, bool diag_balance){
     //Inserts a cell at min(max_level,p_level) that contains the given point
@@ -479,68 +834,32 @@ void Cell::refine_ball(node_map_t& nodes, double* center, double r2, int_t p_lev
     if (level >= p_level || level == max_level){
         return;
     }
-    if (!intersects_ball(center, r2)){
-        return;
-    }
     // if I intersect cell, I will need to be divided (if I'm not already)
-    if(is_leaf()){
-        divide(nodes, xs, ys, zs, true, diag_balance);
-    }
-    // recurse into children
-    children[0]->refine_ball(nodes, center, r2, p_level, xs, ys, zs, diag_balance);
-    children[1]->refine_ball(nodes, center, r2, p_level, xs, ys, zs, diag_balance);
-    children[2]->refine_ball(nodes, center, r2, p_level, xs, ys, zs, diag_balance);
-    children[3]->refine_ball(nodes, center, r2, p_level, xs, ys, zs, diag_balance);
-    if (n_dim > 2){
-        children[4]->refine_ball(nodes, center, r2, p_level, xs, ys, zs, diag_balance);
-        children[5]->refine_ball(nodes, center, r2, p_level, xs, ys, zs, diag_balance);
-        children[6]->refine_ball(nodes, center, r2, p_level, xs, ys, zs, diag_balance);
-        children[7]->refine_ball(nodes, center, r2, p_level, xs, ys, zs, diag_balance);
+    if (intersects_ball(center, r2)){
+        if(is_leaf()){
+            divide(nodes, xs, ys, zs, true, diag_balance);
+        }
+        // recurse into children
+        for(int_t i = 0; i < (1<<n_dim); ++i){
+            children[i]->refine_ball(nodes, center, r2, p_level, xs, ys, zs, diag_balance);
+        }
     }
 }
 
-void Cell::refine_box(node_map_t& nodes, double* x0, double* x1, int_t p_level, double *xs, double *ys, double* zs, bool enclosed, bool diag_balance){
+void Cell::refine_box(node_map_t& nodes, double* x0, double* x1, int_t p_level, double *xs, double *ys, double* zs, bool diag_balance){
     // early exit if my level is higher than target
     if (level >= p_level || level == max_level){
         return;
     }
-    if (!enclosed){
-        // check if I overlap (not if an edge overlaps)
-        // If I do not overlap the cells then return
-        if (x0[0] >= points[3]->location[0] || x1[0] <= points[0]->location[0]){
-          return;
+    // If I intersect cell, I will need to be divided (if I'm not already)
+    if (intersects_box(x0, x1)){
+        if(is_leaf()){
+            divide(nodes, xs, ys, zs, true, diag_balance);
         }
-
-        if (x0[1] >= points[3]->location[1] || x1[1] <= points[0]->location[1]){
-          return;
+        // recurse into children
+        for(int_t i = 0; i < (1<<n_dim); ++i){
+            children[i]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, diag_balance);
         }
-
-        if (n_dim>2 && (x0[2] >= points[7]->location[2] || x1[2] <= points[0]->location[2])){
-          return;
-        }
-
-        // check to see if I am completely enclosed (for faster subdivision of children)
-        enclosed = (
-            points[0]->location[0] > x0[0] && points[3]->location[0] < x1[0] &&
-            points[0]->location[1] > x0[1] && points[3]->location[1] < x1[1] &&
-            (n_dim == 2 || (n_dim == 3 && points[0]->location[2] > x0[2] && points[7]->location[2] < x1[2]))
-        );
-
-    }
-    // Will only be here if I intersect the box
-    if(is_leaf()){
-        divide(nodes, xs, ys, zs, true, diag_balance);
-    }
-    // recurse into children
-    children[0]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed, diag_balance);
-    children[1]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed, diag_balance);
-    children[2]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed, diag_balance);
-    children[3]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed, diag_balance);
-    if (n_dim > 2){
-        children[4]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed, diag_balance);
-        children[5]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed, diag_balance);
-        children[6]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed, diag_balance);
-        children[7]->refine_box(nodes, x0, x1, p_level, xs, ys, zs, enclosed, diag_balance);
     }
 }
 
@@ -550,47 +869,7 @@ void Cell::refine_line(node_map_t& nodes, double* x0, double* x1, double* diff_i
         return;
     }
     // then check to see if I intersect the segment
-    double t0x, t0y, t0z, t1x, t1y, t1z;
-    double tminx, tminy, tminz, tmaxx, tmaxy, tmaxz;
-    double tmin, tmax;
-
-    t0x = (points[0]->location[0] - x0[0]) * diff_inv[0];
-    t1x = (points[3]->location[0] - x0[0]) * diff_inv[0];
-    if (t0x <= t1x){
-      tminx = t0x;
-      tmaxx = t1x;
-    }else{
-      tminx = t1x;
-      tmaxx = t0x;
-    }
-
-    t0y = (points[0]->location[1] - x0[1]) * diff_inv[1];
-    t1y = (points[3]->location[1] - x0[1]) * diff_inv[1];
-    if (t0y <= t1y){
-      tminy = t0y;
-      tmaxy = t1y;
-    }else{
-      tminy = t1y;
-      tmaxy = t0y;
-    }
-
-    tmin = std::max(tminx, tminy);
-    tmax = std::min(tmaxx, tmaxy);
-    if (n_dim > 2){
-        t0z = (points[0]->location[2] - x0[2]) * diff_inv[2];
-        t1z = (points[7]->location[2] - x0[2]) * diff_inv[2];
-        if (t0z <= t1z){
-          tminz = t0z;
-          tmaxz = t1z;
-        }else{
-          tminz = t1z;
-          tmaxz = t0z;
-        }
-        tmin = std::max(tmin, tminz);
-        tmax = std::min(tmax, tmaxz);
-    }
-    // now can test if I intersect!
-    if (tmax >= 0 && tmin <= 1 && tmin <= tmax){
+    if (intersects_line(x0, x1, diff_inv, segment=true)){
         if(is_leaf()){
             divide(nodes, xs, ys, zs, true, diag_balance);
         }
@@ -608,150 +887,19 @@ void Cell::refine_triangle(
   double* t_norm,
   int_t p_level, double *xs, double *ys, double* zs, bool diag_balance
 ){
-    // Return If I'm at max_level or p_level
+    // Return if I'm at max_level or p_level
     if (level >= p_level || level == max_level){
         return;
     }
-    // then check to see if I intersect the segment
-    double v0[3], v1[3], v2[3], half[3];
-    double vmin, vmax;
-    double p0, p1, p2, pmin, pmax, rad;
-    for(int_t i=0; i < n_dim; ++i){
-        v0[i] = x0[i] - location[i];
-        v1[i] = x1[i] - location[i];
-        vmin = std::min(v0[i], v1[i]);
-        vmax = std::max(v0[i], v1[i]);
-        v2[i] = x2[i] - location[i];
-        vmin = std::min(vmin, v2[i]);
-        vmax = std::max(vmax, v2[i]);
-        half[i] = location[i] - points[0]->location[i];
-
-        // Bounding box check
-        if (vmin > half[i] || vmax < -half[i]){
-            return;
+    if (intersects_triangle(x0, x1, x2, e0, e1, e2, t_norm)){
+        if(is_leaf()){
+            divide(nodes, xs, ys, zs, true, diag_balance);
         }
-    }
-    // first do the 3 edge cross tests that apply in 2D and 3D
-
-    // edge 0 cross z_hat
-    //p0 = e0[1] * v0[0] - e0[0] * v0[1];
-    p1 = e0[1] * v1[0] - e0[0] * v1[1];
-    p2 = e0[1] * v2[0] - e0[0] * v2[1];
-    pmin = std::min(p1, p2);
-    pmax = std::max(p1, p2);
-    rad = std::abs(e0[1]) * half[0] + std::abs(e0[0]) * half[1];
-    if (pmin > rad || pmax < -rad){
-        return;
-    }
-
-    // edge 1 cross z_hat
-    p0 = e1[1] * v0[0] - e1[0] * v0[1];
-    p1 = e1[1] * v1[0] - e1[0] * v1[1];
-    //p2 = e1[1] * v2[0] - e1[0] * v2[1];
-    pmin = std::min(p0, p1);
-    pmax = std::max(p0, p1);
-    rad = std::abs(e1[1]) * half[0] + std::abs(e1[0]) * half[1];
-    if (pmin > rad || pmax < -rad){
-        return;
-    }
-
-    // edge 2 cross z_hat
-    //p0 = e2[1] * v0[0] - e2[0] * v0[1];
-    p1 = e2[1] * v1[0] - e2[0] * v1[1];
-    p2 = e2[1] * v2[0] - e2[0] * v2[1];
-    pmin = std::min(p1, p2);
-    pmax = std::max(p1, p2);
-    rad = std::abs(e2[1]) * half[0] + std::abs(e2[0]) * half[1];
-    if (pmin > rad || pmax < -rad){
-        return;
-    }
-
-    if(n_dim > 2){
-        // edge 0 cross x_hat
-        p0 = e0[2] * v0[1] - e0[1] * v0[2];
-        //p1 = e0[2] * v1[1] - e0[1] * v1[2];
-        p2 = e0[2] * v2[1] - e0[1] * v2[2];
-        pmin = std::min(p0, p2);
-        pmax = std::max(p0, p2);
-        rad = std::abs(e0[2]) * half[1] + std::abs(e0[1]) * half[2];
-        if (pmin > rad || pmax < -rad){
-            return;
+        for(int_t i = 0; i < (1<<n_dim); ++i){
+            children[i]->refine_triangle(
+                nodes, x0, x1, x2, e0, e1, e2, t_norm, p_level, xs, ys, zs, diag_balance
+            );
         }
-        // edge 0 cross y_hat
-        p0 = -e0[2] * v0[0] + e0[0] * v0[2];
-        //p1 = -e0[2] * v1[0] + e0[0] * v1[2];
-        p2 = -e0[2] * v2[0] + e0[0] * v2[2];
-        pmin = std::min(p0, p2);
-        pmax = std::max(p0, p2);
-        rad = std::abs(e0[2]) * half[0] + std::abs(e0[0]) * half[2];
-        if (pmin > rad || pmax < -rad){
-            return;
-        }
-        // edge 1 cross x_hat
-        p0 = e1[2] * v0[1] - e1[1] * v0[2];
-        //p1 = e1[2] * v1[1] - e1[1] * v1[2];
-        p2 = e1[2] * v2[1] - e1[1] * v2[2];
-        pmin = std::min(p0, p2);
-        pmax = std::max(p0, p2);
-        rad = std::abs(e1[2]) * half[1] + std::abs(e1[1]) * half[2];
-        if (pmin > rad || pmax < -rad){
-            return;
-        }
-        // edge 1 cross y_hat
-        p0 = -e1[2] * v0[0] + e1[0] * v0[2];
-        //p1 = -e1[2] * v1[0] + e1[0] * v1[2];
-        p2 = -e1[2] * v2[0] + e1[0] * v2[2];
-        pmin = std::min(p0, p2);
-        pmax = std::max(p0, p2);
-        rad = std::abs(e1[2]) * half[0] + std::abs(e1[0]) * half[2];
-        if (pmin > rad || pmax < -rad){
-            return;
-        }
-        // edge 2 cross x_hat
-        p0 = e2[2] * v0[1] - e2[1] * v0[2];
-        p1 = e2[2] * v1[1] - e2[1] * v1[2];
-        //p2 = e2[2] * v2[1] - e2[1] * v2[2];
-        pmin = std::min(p0, p1);
-        pmax = std::max(p0, p1);
-        rad = std::abs(e2[2]) * half[1] + std::abs(e2[1]) * half[2];
-        if (pmin > rad || pmax < -rad){
-            return;
-        }
-        // edge 2 cross y_hat
-        p0 = -e2[2] * v0[0] + e2[0] * v0[2];
-        p1 = -e2[2] * v1[0] + e2[0] * v1[2];
-        //p2 = -e2[2] * v2[0] + e2[0] * v2[2];
-        pmin = std::min(p0, p1);
-        pmax = std::max(p0, p1);
-        rad = std::abs(e2[2]) * half[0] + std::abs(e2[0]) * half[2];
-        if (pmin > rad || pmax < -rad){
-            return;
-        }
-
-        // triangle normal axis
-        pmin = 0.0;
-        pmax = 0.0;
-        for(int_t i=0; i<n_dim; ++i){
-            if(t_norm[i] > 0){
-                pmin += t_norm[i] * (-half[i] - v0[i]);
-                pmax += t_norm[i] * (half[i] - v0[i]);
-            }else{
-                pmin += t_norm[i] * (half[i] - v0[i]);
-                pmax += t_norm[i] * (-half[i] - v0[i]);
-            }
-        }
-        if (pmin > 0 || pmax < 0){
-            return;
-        }
-    }
-    // If here, then I intersect the triangle!
-    if(is_leaf()){
-        divide(nodes, xs, ys, zs, true, diag_balance);
-    }
-    for(int_t i = 0; i < (1<<n_dim); ++i){
-        children[i]->refine_triangle(
-            nodes, x0, x1, x2, e0, e1, e2, t_norm, p_level, xs, ys, zs, diag_balance
-        );
     }
 }
 
@@ -765,150 +913,15 @@ void Cell::refine_vert_triang_prism(
     if (level >= p_level || level == max_level){
         return;
     }
-    // check all the AABB faces
-    double v0[3], v1[3], v2[3], half[3];
-    double vmin, vmax;
-    double p0, p1, p2, p3, pmin, pmax, rad;
-    for(int_t i=0; i < n_dim; ++i){
-        v0[i] = x0[i] - location[i];
-        v1[i] = x1[i] - location[i];
-        vmin = std::min(v0[i], v1[i]);
-        vmax = std::max(v0[i], v1[i]);
-        v2[i] = x2[i] - location[i];
-        vmin = std::min(vmin, v2[i]);
-        vmax = std::max(vmax, v2[i]);
-        if(i == 2){
-            vmax += h;
+    if(intersects_vert_triang_prism(x0, x1, x2, h, e0, e1, e2, t_norm)){
+        if(is_leaf()){
+            divide(nodes, xs, ys, zs, true, diag_balance);
         }
-        half[i] = location[i] - points[0]->location[i];
-
-        // Bounding box check
-        if (vmin > half[i] || vmax < -half[i]){
-            return;
+        for(int_t i = 0; i < (1<<n_dim); ++i){
+            children[i]->refine_vert_triang_prism(
+                nodes, x0, x1, x2, h, e0, e1, e2, t_norm, p_level, xs, ys, zs, diag_balance
+            );
         }
-    }
-    // first do the 3 edge cross tests that apply in 2D and 3D
-
-    // edge 0 cross z_hat
-    //p0 = e0[1] * v0[0] - e0[0] * v0[1];
-    p1 = e0[1] * v1[0] - e0[0] * v1[1];
-    p2 = e0[1] * v2[0] - e0[0] * v2[1];
-    pmin = std::min(p1, p2);
-    pmax = std::max(p1, p2);
-    rad = std::abs(e0[1]) * half[0] + std::abs(e0[0]) * half[1];
-    if (pmin > rad || pmax < -rad){
-        return;
-    }
-
-    // edge 1 cross z_hat
-    p0 = e1[1] * v0[0] - e1[0] * v0[1];
-    p1 = e1[1] * v1[0] - e1[0] * v1[1];
-    //p2 = e1[1] * v2[0] - e1[0] * v2[1];
-    pmin = std::min(p0, p1);
-    pmax = std::max(p0, p1);
-    rad = std::abs(e1[1]) * half[0] + std::abs(e1[0]) * half[1];
-    if (pmin > rad || pmax < -rad){
-        return;
-    }
-
-    // edge 2 cross z_hat
-    //p0 = e2[1] * v0[0] - e2[0] * v0[1];
-    p1 = e2[1] * v1[0] - e2[0] * v1[1];
-    p2 = e2[1] * v2[0] - e2[0] * v2[1];
-    pmin = std::min(p1, p2);
-    pmax = std::max(p1, p2);
-    rad = std::abs(e2[1]) * half[0] + std::abs(e2[0]) * half[1];
-    if (pmin > rad || pmax < -rad){
-        return;
-    }
-
-    // edge 0 cross x_hat
-    p0 = e0[2] * v0[1] - e0[1] * v0[2];
-    p1 = e0[2] * v0[1] - e0[1] * (v0[2] + h);
-    p2 = e0[2] * v2[1] - e0[1] * v2[2];
-    p3 = e0[2] * v2[1] - e0[1] * (v2[2] + h);
-    pmin = std::min(std::min(std::min(p0, p1), p2), p3);
-    pmax = std::max(std::max(std::max(p0, p1), p2), p3);
-    rad = std::abs(e0[2]) * half[1] + std::abs(e0[1]) * half[2];
-    if (pmin > rad || pmax < -rad){
-        return;
-    }
-    // edge 0 cross y_hat
-    p0 = -e0[2] * v0[0] + e0[0] * v0[2];
-    p1 = -e0[2] * v0[0] + e0[0] * (v0[2] + h);
-    p2 = -e0[2] * v2[0] + e0[0] * v2[2];
-    p3 = -e0[2] * v2[0] + e0[0] * (v2[2] + h);
-    pmin = std::min(std::min(std::min(p0, p1), p2), p3);
-    pmax = std::max(std::max(std::max(p0, p1), p2), p3);
-    rad = std::abs(e0[2]) * half[0] + std::abs(e0[0]) * half[2];
-    if (pmin > rad || pmax < -rad){
-        return;
-    }
-    // edge 1 cross x_hat
-    p0 = e1[2] * v0[1] - e1[1] * v0[2];
-    p1 = e1[2] * v0[1] - e1[1] * (v0[2] + h);
-    p2 = e1[2] * v2[1] - e1[1] * v2[2];
-    p3 = e1[2] * v2[1] - e1[1] * (v2[2] + h);
-    pmin = std::min(std::min(std::min(p0, p1), p2), p3);
-    pmax = std::max(std::max(std::max(p0, p1), p2), p3);
-    rad = std::abs(e1[2]) * half[1] + std::abs(e1[1]) * half[2];
-    if (pmin > rad || pmax < -rad){
-        return;
-    }
-    // edge 1 cross y_hat
-    p0 = -e1[2] * v0[0] + e1[0] * v0[2];
-    p1 = -e1[2] * v0[0] + e1[0] * (v0[2] + h);
-    p2 = -e1[2] * v2[0] + e1[0] * v2[2];
-    p3 = -e1[2] * v2[0] + e1[0] * (v2[2] + h);
-    pmin = std::min(std::min(std::min(p0, p1), p2), p3);
-    pmax = std::max(std::max(std::max(p0, p1), p2), p3);
-    rad = std::abs(e1[2]) * half[0] + std::abs(e1[0]) * half[2];
-    if (pmin > rad || pmax < -rad){
-        return;
-    }
-    // edge 2 cross x_hat
-    p0 = e2[2] * v0[1] - e2[1] * v0[2];
-    p1 = e2[2] * v0[1] - e2[1] * (v0[2] + h);
-    p2 = e2[2] * v1[1] - e2[1] * v1[2];
-    p3 = e2[2] * v1[1] - e2[1] * (v1[2] + h);
-    pmin = std::min(std::min(std::min(p0, p1), p2), p3);
-    pmax = std::max(std::max(std::max(p0, p1), p2), p3);
-    rad = std::abs(e2[2]) * half[1] + std::abs(e2[1]) * half[2];
-    if (pmin > rad || pmax < -rad){
-        return;
-    }
-    // edge 2 cross y_hat
-    p0 = -e2[2] * v0[0] + e2[0] * v0[2];
-    p1 = -e2[2] * v0[0] + e2[0] * (v0[2] + h);
-    p2 = -e2[2] * v1[0] + e2[0] * v1[2];
-    p3 = -e2[2] * v1[0] + e2[0] * (v1[2] + h);
-    pmin = std::min(std::min(std::min(p0, p1), p2), p3);
-    pmax = std::max(std::max(std::max(p0, p1), p2), p3);
-    rad = std::abs(e2[2]) * half[0] + std::abs(e2[0]) * half[2];
-    if (pmin > rad || pmax < -rad){
-        return;
-    }
-
-    // triangle normal axis
-    p0 = t_norm[0] * v0[0] + t_norm[1] * v0[1] + t_norm[2] * v0[2];
-    p1 = t_norm[0] * v0[0] + t_norm[1] * v0[1] + t_norm[2] * (v0[2] + h);
-    pmin = std::min(p0, p1);
-    pmax = std::max(p0, p1);
-    rad = std::abs(t_norm[0]) * half[0] + std::abs(t_norm[1]) * half[1] + std::abs(t_norm[2]) * half[2];
-    if (pmin > rad || pmax < -rad){
-        return;
-    }
-    // the axes defined by the three vertical prism faces
-    // should already be tested by the e0, e1, e2 cross z_hat tests
-
-    // If here, then I intersect the triangle!
-    if(is_leaf()){
-        divide(nodes, xs, ys, zs, true, diag_balance);
-    }
-    for(int_t i = 0; i < (1<<n_dim); ++i){
-        children[i]->refine_vert_triang_prism(
-            nodes, x0, x1, x2, h, e0, e1, e2, t_norm, p_level, xs, ys, zs, diag_balance
-        );
     }
 }
 
@@ -925,82 +938,35 @@ void Cell::refine_tetra(
     if (n_dim < 3){
         return;
     }
-    // then check to see if I intersect the segment
-    double v0[3], v1[3], v2[3], v3[3], half[3];
-    double p0, p1, p2, p3, pmin, pmax, rad;
-    for(int_t i=0; i < n_dim; ++i){
-        v0[i] = x0[i] - location[i];
-        v1[i] = x1[i] - location[i];
-        v2[i] = x2[i] - location[i];
-        v3[i] = x3[i] - location[i];
-        half[i] = location[i] - points[0]->location[i];
-        pmin = std::min(std::min(std::min(v0[i], v1[i]), v2[i]), v3[i]);
-        pmax = std::max(std::max(std::max(v0[i], v1[i]), v2[i]), v3[i]);
-        // Bounding box check
-        if (pmin > half[i] || pmax < -half[i]){
-            return;
+    if (intersects_tetra(x0, x1, x2, x3, edge_tans, face_normals)){
+        if(is_leaf()){
+            divide(nodes, xs, ys, zs, true, diag_balance);
+        }
+        for(int_t i = 0; i < (1<<n_dim); ++i){
+            children[i]->refine_tetra(
+                nodes, x0, x1, x2, x3, edge_tans, face_normals, p_level, xs, ys, zs, diag_balance
+            );
         }
     }
-    // first do the 3 edge cross tests that apply in 2D and 3D
-    double *axis;
+}
 
-    for(int_t i=0; i<6; ++i){
-        // edge cross [1, 0, 0]
-        p0 = edge_tans[i][2] * v0[1] - edge_tans[i][1] * v0[2];
-        p1 = edge_tans[i][2] * v1[1] - edge_tans[i][1] * v1[2];
-        p2 = edge_tans[i][2] * v2[1] - edge_tans[i][1] * v2[2];
-        p3 = edge_tans[i][2] * v3[1] - edge_tans[i][1] * v3[2];
-        pmin = std::min(std::min(std::min(p0, p1), p2), p3);
-        pmax = std::max(std::max(std::max(p0, p1), p2), p3);
-        rad = std::abs(edge_tans[i][2]) * half[1] + std::abs(edge_tans[i][1]) * half[2];
-        if (pmin > rad || pmax < -rad){
-            return;
-        }
-
-        p0 = -edge_tans[i][2] * v0[0] + edge_tans[i][0] * v0[2];
-        p1 = -edge_tans[i][2] * v1[0] + edge_tans[i][0] * v1[2];
-        p2 = -edge_tans[i][2] * v2[0] + edge_tans[i][0] * v2[2];
-        p3 = -edge_tans[i][2] * v3[0] + edge_tans[i][0] * v3[2];
-        pmin = std::min(std::min(std::min(p0, p1), p2), p3);
-        pmax = std::max(std::max(std::max(p0, p1), p2), p3);
-        rad = std::abs(edge_tans[i][2]) * half[0] + std::abs(edge_tans[i][0]) * half[2];
-        if (pmin > rad || pmax < -rad){
-            return;
-        }
-
-        p0 = edge_tans[i][1] * v0[0] - edge_tans[i][0] * v0[1];
-        p1 = edge_tans[i][1] * v1[0] - edge_tans[i][0] * v1[1];
-        p2 = edge_tans[i][1] * v2[0] - edge_tans[i][0] * v2[1];
-        p3 = edge_tans[i][1] * v3[0] - edge_tans[i][0] * v3[1];
-        pmin = std::min(std::min(std::min(p0, p1), p2), p3);
-        pmax = std::max(std::max(std::max(p0, p1), p2), p3);
-        rad = std::abs(edge_tans[i][1]) * half[0] + std::abs(edge_tans[i][0]) * half[1];
-        if (pmin > rad || pmax < -rad){
-            return;
-        }
+void Cell::void refine_plane(node_map_t& nodes, double* x0, double* normal, int_t p_level, double *xs, double *ys, double* zs, bool diag_balance=false){
+    // Return If I'm at max_level or p_level
+    if (level >= p_level || level == max_level){
+        return;
     }
-    // triangle face normals
-    for(int_t i=0; i<4; ++i){
-        axis = face_normals[i];
-        p0 = axis[0] * v0[0] + axis[1] * v0[1] + axis[2] * v0[2];
-        p1 = axis[0] * v1[0] + axis[1] * v1[1] + axis[2] * v1[2];
-        p2 = axis[0] * v2[0] + axis[1] * v2[1] + axis[2] * v2[2];
-        p3 = axis[0] * v3[0] + axis[1] * v3[1] + axis[2] * v3[2];
-        pmin = std::min(std::min(std::min(p0, p1), p2), p3);
-        pmax = std::max(std::max(std::max(p0, p1), p2), p3);
-        rad = std::abs(axis[0]) * half[0] + std::abs(axis[1]) * half[1] + std::abs(axis[2]) * half[2];
-        if (pmin > rad || pmax < -rad){
-            return;
+    if (n_dim < 3){
+        return;
+    }
+    if (intersects_plane(x0, normal)){
+        if(is_leaf()){
+            divide(nodes, xs, ys, zs, true, diag_balance);
         }
-    }
-    // If here, then I intersect the tetrahedron!
-    if(is_leaf()){
-        divide(nodes, xs, ys, zs, true, diag_balance);
-    }
-    for(int_t i = 0; i < (1<<n_dim); ++i){
-        children[i]->refine_tetra(
-            nodes, x0, x1, x2, x3, edge_tans, face_normals, p_level, xs, ys, zs, diag_balance
-        );
+        for(int_t i = 0; i < (1<<n_dim); ++i){
+            children[i]->refine_plane(
+                nodes, x0, normal, p_level, xs, ys, zs, diag_balance
+            );
+        }
     }
 }
 
@@ -1336,26 +1302,15 @@ Cell* Cell::containing_cell(double x, double y, double z){
     return children[ix + 2*iy + 4*iz]->containing_cell(x, y, z);
 };
 
-void Cell::find_overlapping_cells(int_vec_t& cells, double xm, double xp, double ym, double yp, double zm, double zp){
-    // If I do not overlap the cells
-    if (xm > points[3]->location[0] || xp < points[0]->location[0]){
-      return;
-    }
-
-    if (ym > points[3]->location[1] || yp < points[0]->location[1]){
-      return;
-    }
-
-    if (n_dim>2 && (zm > points[7]->location[2] || zp < points[0]->location[2])){
-      return;
-    }
-
-    if(this->is_leaf()){
-        cells.push_back(index);
-        return;
-    }
-    for(int_t i = 0; i < (1<<n_dim); ++i){
-        children[i]->find_overlapping_cells(cells, xm, xp, ym, yp, zm, zp);
+void Cell::find_overlapping_cells(int_vec_t& cells, double* x0, double* x1){
+    if(intersects_box(x0, x1)){
+        if(this->is_leaf()){
+            cells.push_back(index);
+            return;
+        }
+        for(int_t i = 0; i < (1<<n_dim); ++i){
+            children[i]->find_overlapping_cells(cells, x0, x1);
+        }
     }
 }
 
@@ -2198,17 +2153,30 @@ Cell* Tree::containing_cell(double x, double y, double z){
     return roots[iz][iy][ix]->containing_cell(x, y, z);
 }
 
-int_vec_t Tree::find_overlapping_cells(double xm, double xp, double ym, double yp, double zm, double zp){
+int_vec_t Tree::find_overlapping_cells(double *x0, double *x1){
     int_vec_t overlaps;
     for(int_t iz=0; iz<nz_roots; ++iz){
         for(int_t iy=0; iy<ny_roots; ++iy){
             for(int_t ix=0; ix<nx_roots; ++ix){
-                roots[iz][iy][ix]->find_overlapping_cells(overlaps, xm, xp, ym, yp, zm, zp);
+                roots[iz][iy][ix]->find_overlapping_cells(overlaps, x0, x1);
             }
         }
     }
     return overlaps;
   }
+
+int_vec_t find_cells_along_line(double *x0, double *x1, bool segment=true){
+    int_vec_t intersections;
+    for(int_t iz=0; iz<nz_roots; ++iz){
+        for(int_t iy=0; iy<ny_roots; ++iy){
+            for(int_t ix=0; ix<nx_roots; ++ix){
+                roots[iz][iy][ix]->find_overlapping_cells(overlaps, x0, x1);
+            }
+        }
+    }
+    return intersections;
+  }
+}
 
 void Tree::shift_cell_centers(double *shift){
     for(int_t iz=0; iz<nz_roots; ++iz)

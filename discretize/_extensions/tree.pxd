@@ -96,5 +96,5 @@ cdef extern from "tree.h":
         void insert_cell(double *new_center, int_t p_level, bool)
         void finalize_lists()
         Cell * containing_cell(double, double, double)
-        vector[int_t] find_overlapping_cells(double xm, double xp, double ym, double yp, double zm, double zp)
+        vector[int_t] find_overlapping_cells(double* x0, double* x1)
         void shift_cell_centers(double*)

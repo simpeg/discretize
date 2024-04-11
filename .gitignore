@@ -68,3 +68,5 @@ examples/*.tar.gz
 
 # setuptools_scm
 discretize/version.py
+
+.idea/

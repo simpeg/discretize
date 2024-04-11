@@ -118,34 +118,46 @@ class Cell{
 
     // intersection tests
     bool intersects_point(double *x);
-    bool intersects_ball(double *x, double rsq);
-    bool intersects_line(double *x0, double *x1, bool segment=true);
-    bool intersects_plane(double *x0, double *x1, double *x2, bool segment=true);
-    bool intersects_box(double *x0, double *xF);
-    bool intersects_tetra(double *x0, double *x1, double *x2);
-    bool intersects_vert_triang_prism(double *x0, double *x1, double *x2, double h);
-
-    bool inline is_leaf(){ return children[0]==NULL;};
-    void spawn(node_map_t& nodes, Cell *kids[8], double* xs, double *ys, double *zs);
-    void divide(node_map_t& nodes, double* xs, double* ys, double* zs, bool balance=true, bool diag_balance=false);
-    void set_neighbor(Cell* other, int_t direction);
-    void build_cell_vector(cell_vec_t& cells);
-    void find_overlapping_cells(int_vec_t& cells, double xm, double xp, double ym, double yp, double zm, double zp);
-
+    Cell* containing_cell(double, double, double);
     void insert_cell(node_map_t &nodes, double *new_center, int_t p_level, double* xs, double *ys, double *zs, bool diag_balance=false);
+
+    bool intersects_ball(double *x, double rsq);
+    void find_intersect_ball_cells(int_vec_t& cells, double *x, double rsq);
     void refine_ball(node_map_t& nodes, double* center, double r2, int_t p_level, double *xs, double *ys, double* zs, bool diag_balance=false);
-    void refine_box(node_map_t& nodes, double* x0, double* x1, int_t p_level, double *xs, double *ys, double* zs, bool enclosed=false, bool diag_balance=false);
+
+    bool intersects_line(double *x0, double *x1, double* i_dx, bool segment=true);
+    void find_intersect_line_cells(int_vec_t& cells, double *x0, double *x1, double* i_dx, bool segment=true);
     void refine_line(node_map_t& nodes, double* x0, double* x1, double* diff_inv, int_t p_level, double *xs, double *ys, double* zs, bool diag_balance=false);
-    void refine_func(node_map_t& nodes, function test_func, double *xs, double *ys, double* zs, bool diag_balance=false);
+
+    bool intersects_box(double *x0, double *x1);
+    void find_overlapping_cells(int_vec_t& cells, double* x0, double* x1);
+    void refine_box(node_map_t& nodes, double* x0, double* x1, int_t p_level, double *xs, double *ys, double* zs, bool diag_balance=false);
+
+    bool intersects_plane(double *x0, double *normal);
+    void find_intersect_plane_cells(int_vec_t& cells, double *x0, double *normal);
+    void refine_plane(node_map_t& nodes, double* x0, double* normal, int_t p_level, double *xs, double *ys, double* zs, bool diag_balance=false);
+
+    bool intersects_triangle(double *x0, double *x1, double *x2, double *e0, double *e1, double *e2, double *t_norm);
+    void find_intersect_triangle_cells(int_vec_t& cells, double *x0, double *x1, double *x2, double *e0, double *e1, double *e2, double *t_norm);
     void refine_triangle(node_map_t& nodes,
       double* x0, double* x1, double* x2, double* e0, double* e1, double* e2, double* t_norm,
       int_t p_level, double *xs, double *ys, double* zs, bool diag_balance=false
     );
+
+    bool intersects_vert_triang_prism(double *x0, double *x1, double *x2, double h, double* e0, double* e1, double* e2, double* t_norm);
+    void find_intersect_vert_triang_prism_cells(int_vec_t& cells, double *x0, double *x1, double *x2, double h, double* e0, double* e1, double* e2, double* t_norm);
     void refine_vert_triang_prism(node_map_t& nodes,
       double* x0, double* x1, double* x2, double h,
       double* e0, double* e1, double* e2, double* t_norm,
       int_t p_level, double *xs, double *ys, double* zs, bool diag_balance=false
     );
+
+    bool intersects_tetra(
+        double* x0, double* x1, double* x2, double* x3,
+        double edge_tans[6][3], double face_normals[4][3]
+    );
+    void find_intersect_tetra_cells(int_vec_t& cells, double* x0, double* x1, double* x2, double* x3,
+        double edge_tans[6][3], double face_normals[4][3]);
     void refine_tetra(
       node_map_t& nodes,
       double* x0, double* x1, double* x2, double* x3,
@@ -153,7 +165,16 @@ class Cell{
       int_t p_level, double *xs, double *ys, double* zs, bool diag_balance
     );
 
-    Cell* containing_cell(double, double, double);
+    void refine_func(node_map_t& nodes, function test_func, double *xs, double *ys, double* zs, bool diag_balance=false);
+
+    bool inline is_leaf(){ return children[0]==NULL;};
+    void spawn(node_map_t& nodes, Cell *kids[8], double* xs, double *ys, double *zs);
+    void divide(node_map_t& nodes, double* xs, double* ys, double* zs, bool balance=true, bool diag_balance=false);
+    void set_neighbor(Cell* other, int_t direction);
+    void build_cell_vector(cell_vec_t& cells);
+
+
+
     void shift_centers(double * shift);
 };
 
@@ -202,7 +223,8 @@ class Tree{
     void insert_cell(double *new_center, int_t p_level, bool diagonal_balance=false);
 
     Cell* containing_cell(double, double, double);
-    int_vec_t find_overlapping_cells(double xm, double xp, double ym, double yp, double zm, double zp);
+    int_vec_t find_overlapping_cells(double *x0, double *x1);
+    int_vec_t find_cells_along_line(double *x0, double *x1, bool segment=true);
     void shift_cell_centers(double *shift);
 };
 #endif
