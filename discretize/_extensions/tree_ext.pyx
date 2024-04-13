@@ -9,6 +9,7 @@ from libcpp cimport bool
 from numpy.math cimport INFINITY
 
 from .tree cimport int_t, Tree as c_Tree, PyWrapper, Node, Edge, Face, Cell as c_Cell
+from . cimport geom
 
 import scipy.sparse as sp
 import numpy as np
@@ -586,14 +587,17 @@ cdef class _TreeMesh:
             diagonal_balance = self._diagonal_balance
         cdef bool diag_balance = diagonal_balance
 
+        cdef geom.Ball *ball
         cdef int_t i
         cdef int l
         cdef int max_level = self.max_level
         for i in range(ls.shape[0]):
+            ball = new geom.Ball(self._dim, &cs[i, 0], rs[i])
             l = ls[i]
             if l < 0:
                 l = (max_level + 1) - (abs(l) % (max_level + 1))
-            self.tree.refine_ball(&cs[i, 0], rs[i], l, diag_balance)
+            self.tree.refine_geom(ball[0], l, diag_balance)
+            del ball
         if finalize:
             self.finalize()
 
@@ -672,13 +676,16 @@ cdef class _TreeMesh:
             diagonal_balance = self._diagonal_balance
         cdef bool diag_balance = diagonal_balance
 
+        cdef geom.Box *box
         cdef int l
         cdef int max_level = self.max_level
         for i in range(ls.shape[0]):
+            box = new geom.Box(self._dim, &x0[i, 0], &x1[i, 0])
             l = ls[i]
             if l < 0:
                 l = (max_level + 1) - (abs(l) % (max_level + 1))
-            self.tree.refine_box(&x0[i, 0], &x1[i, 0], l, diag_balance)
+            self.tree.refine_geom(box[0], l, diag_balance)
+            del box
         if finalize:
             self.finalize()
 
@@ -748,14 +755,18 @@ cdef class _TreeMesh:
             diagonal_balance = self._diagonal_balance
         cdef bool diag_balance = diagonal_balance
 
+        cdef geom.Line *line
+
         cdef int l
         cdef int max_level = self.max_level
         cdef int i
         for i in range(n_segments):
+            line = new geom.Line(self._dim, &line_nodes[i, 0], &line_nodes[i+1, 0], True)
             l = ls[i]
             if l < 0:
                 l = (max_level + 1) - (abs(l) % (max_level + 1))
-            self.tree.refine_line(&line_nodes[i, 0], &line_nodes[i+1, 0], l, diag_balance)
+            self.tree.refine_geom(line[0], l, diag_balance)
+            del line
         if finalize:
             self.finalize()
 
@@ -827,13 +838,16 @@ cdef class _TreeMesh:
             diagonal_balance = self._diagonal_balance
         cdef bool diag_balance = diagonal_balance
 
+        cdef geom.Triangle *triang
         cdef int l
         cdef int max_level = self.max_level
         for i in range(n_triangles):
+            triang = new geom.Triangle(self._dim, &tris[i, 0, 0], &tris[i, 1, 0], &tris[i, 2, 0])
             l = ls[i]
             if l < 0:
                 l = (max_level + 1) - (abs(l) % (max_level + 1))
-            self.tree.refine_triangle(&tris[i, 0, 0], &tris[i, 1, 0], &tris[i, 2, 0], l, diag_balance)
+            self.tree.refine_geom(triang[0], l, diag_balance)
+            del triang
         if finalize:
             self.finalize()
 
@@ -923,13 +937,16 @@ cdef class _TreeMesh:
             diagonal_balance = self._diagonal_balance
         cdef bool diag_balance = diagonal_balance
 
+        cdef geom.VerticalTriangularPrism *vert_prism
         cdef int l
         cdef int max_level = self.max_level
         for i in range(n_triangles):
+            vert_prism = new geom.VerticalTriangularPrism(self._dim, &tris[i, 0, 0], &tris[i, 1, 0], &tris[i, 2, 0], hs[i])
             l = ls[i]
             if l < 0:
                 l = (max_level + 1) - (abs(l) % (max_level + 1))
-            self.tree.refine_vert_triang_prism(&tris[i, 0, 0], &tris[i, 1, 0], &tris[i, 2, 0], hs[i], l, diag_balance)
+            self.tree.refine_geom(vert_prism[0], l, diag_balance)
+            del vert_prism
         if finalize:
             self.finalize()
 
@@ -1007,13 +1024,16 @@ cdef class _TreeMesh:
             diagonal_balance = self._diagonal_balance
         cdef bool diag_balance = diagonal_balance
 
+        cdef geom.Tetrahedron *tet
         cdef int l
         cdef int max_level = self.max_level
         for i in range(n_triangles):
             l = ls[i]
+            tet = new geom.Tetrahedron(self._dim, &tris[i, 0, 0], &tris[i, 1, 0], &tris[i, 2, 0], &tris[i, 3, 0])
             if l < 0:
                 l = (max_level + 1) - (abs(l) % (max_level + 1))
-            self.tree.refine_tetra(&tris[i, 0, 0], &tris[i, 1, 0], &tris[i, 2, 0], &tris[i, 3, 0], l, diag_balance)
+            self.tree.refine_geom(tet[0], l, diag_balance)
+            del tet
         if finalize:
             self.finalize()
 
@@ -6181,8 +6201,10 @@ cdef class _TreeMesh:
         cdef vector[int_t] *overlapping_cells
         cdef double *weights
         cdef double over_lap_vol
-        cdef double x1m, x1p, y1m, y1p, z1m, z1p
-        cdef double x2m, x2p, y2m, y2p, z2m, z2p
+        cdef double x1m[3]
+        cdef double x1p[3]
+        cdef double *x2m
+        cdef double *x2p
         cdef double[:] origin = meshin._origin
         cdef double[:] xF
         if self.dim == 2:
@@ -6259,16 +6281,20 @@ cdef class _TreeMesh:
                 return output
             return P
 
+        cdef geom.Box *box
         for cell in self.tree.cells:
-            x1m = min(cell.points[0].location[0], xF[0])
-            y1m = min(cell.points[0].location[1], xF[1])
+            x1m[0] = min(cell.points[0].location[0], xF[0])
+            x1m[1] = min(cell.points[0].location[1], xF[1])
 
-            x1p = max(cell.points[3].location[0], origin[0])
-            y1p = max(cell.points[3].location[1], origin[1])
+            x1p[0] = max(cell.points[3].location[0], origin[0])
+            x1p[1] = max(cell.points[3].location[1], origin[1])
             if self._dim==3:
-                z1m = min(cell.points[0].location[2], xF[2])
-                z1p = max(cell.points[7].location[2], origin[2])
-            overlapping_cell_inds = meshin.tree.find_overlapping_cells(x1m, x1p, y1m, y1p, z1m, z1p)
+                x1m[2] = min(cell.points[0].location[2], xF[2])
+                x1p[2] = max(cell.points[7].location[2], origin[2])
+
+            box = new geom.Box(self._dim, x1m, x1p)
+            overlapping_cell_inds = meshin.tree.find_cells_geom(box[0])
+            del box
             n_overlap = overlapping_cell_inds.size()
             weights = <double *> malloc(n_overlap*sizeof(double))
             i = 0
@@ -6276,26 +6302,13 @@ cdef class _TreeMesh:
             nnz_row = 0
             for in_cell_ind in overlapping_cell_inds:
                 in_cell = meshin.tree.cells[in_cell_ind]
-                x2m = in_cell.points[0].location[0]
-                y2m = in_cell.points[0].location[1]
-                z2m = in_cell.points[0].location[2]
-                x2p = in_cell.points[3].location[0]
-                y2p = in_cell.points[3].location[1]
-                z2p = in_cell.points[7].location[2] if self._dim==3 else 0.0
+                x2m = &in_cell.points[0].location[0]
+                x2p = &in_cell.points[7].location[0] if self._dim==3 else &in_cell.points[3].location[0]
 
-                if x1m == xF[0] or x1p == origin[0]:
-                    over_lap_vol = 1.0
-                else:
-                    over_lap_vol = min(x1p, x2p) - max(x1m, x2m)
-                if y1m == xF[1] or y1p == origin[1]:
-                    over_lap_vol *= 1.0
-                else:
-                    over_lap_vol *= min(y1p, y2p) - max(y1m, y2m)
-                if self._dim==3:
-                    if z1m == xF[2] or z1p == origin[2]:
-                        over_lap_vol *= 1.0
-                    else:
-                        over_lap_vol *= min(z1p, z2p) - max(z1m, z2m)
+                over_lap_vol = 1.0
+                for i_dim in range(self._dim):
+                    if x1m[i] != xF[i] and  x1p[i] != origin[i]:
+                        over_lap_vol *= min(x1p[i], x2p[i]) - max(x1m[i], x2m[i])
 
                 weights[i] = over_lap_vol
                 if build_mat and weights[i] != 0.0:
@@ -6329,8 +6342,10 @@ cdef class _TreeMesh:
         cdef vector[int_t] *overlapping_cells
         cdef double *weights
         cdef double over_lap_vol
-        cdef double x1m, x1p, y1m, y1p, z1m, z1p
-        cdef double x2m, x2p, y2m, y2p, z2m, z2p
+        cdef double x1m[3]
+        cdef double x1p[3]
+        cdef double *x2m
+        cdef double *x2p
         cdef double[:] origin
         cdef double[:] xF
 
@@ -6405,15 +6420,17 @@ cdef class _TreeMesh:
 
         #for cell in self.tree.cells:
         for iz in range(nz):
-            z1m = min(nodes_z[iz], xF[2])
-            z1p = max(nodes_z[iz+1], origin[2])
+            x1m[2] = min(nodes_z[iz], xF[2])
+            x1p[2] = max(nodes_z[iz+1], origin[2])
             for iy in range(ny):
-                y1m = min(nodes_y[iy], xF[1])
-                y1p = max(nodes_y[iy+1], origin[1])
+                x1m[1] = min(nodes_y[iy], xF[1])
+                x1p[1] = max(nodes_y[iy+1], origin[1])
                 for ix in range(nx):
-                    x1m = min(nodes_x[ix], xF[0])
-                    x1p = max(nodes_x[ix+1], origin[0])
-                    overlapping_cell_inds = self.tree.find_overlapping_cells(x1m, x1p, y1m, y1p, z1m, z1p)
+                    x1m[0] = min(nodes_x[ix], xF[0])
+                    x1p[0] = max(nodes_x[ix+1], origin[0])
+                    box = new geom.Box(self._dim, x1m, x1p)
+                    overlapping_cell_inds = self.tree.find_cells_geom(box[0])
+                    del box
                     n_overlap = overlapping_cell_inds.size()
                     weights = <double *> malloc(n_overlap*sizeof(double))
                     i = 0
@@ -6421,26 +6438,13 @@ cdef class _TreeMesh:
                     nnz_row = 0
                     for in_cell_ind in overlapping_cell_inds:
                         in_cell = self.tree.cells[in_cell_ind]
-                        x2m = in_cell.points[0].location[0]
-                        y2m = in_cell.points[0].location[1]
-                        z2m = in_cell.points[0].location[2]
-                        x2p = in_cell.points[3].location[0]
-                        y2p = in_cell.points[3].location[1]
-                        z2p = in_cell.points[7].location[2] if self._dim==3 else 0.0
+                        x2m = &in_cell.points[0].location[0]
+                        x2p = &in_cell.points[7].location[0] if self._dim==3 else &in_cell.points[3].location[0]
 
-                        if x1m == xF[0] or x1p == origin[0]:
-                            over_lap_vol = 1.0
-                        else:
-                            over_lap_vol = min(x1p, x2p) - max(x1m, x2m)
-                        if y1m == xF[1] or y1p == origin[1]:
-                            over_lap_vol *= 1.0
-                        else:
-                            over_lap_vol *= min(y1p, y2p) - max(y1m, y2m)
-                        if self._dim==3:
-                            if z1m == xF[2] or z1p == origin[2]:
-                                over_lap_vol *= 1.0
-                            else:
-                                over_lap_vol *= min(z1p, z2p) - max(z1m, z2m)
+                        over_lap_vol = 1.0
+                        for i_dim in range(self._dim):
+                            if x1m[i] != xF[i] and  x1p[i] != origin[i]:
+                                over_lap_vol *= min(x1p[i], x2p[i]) - max(x1m[i], x2m[i])
 
                         weights[i] = over_lap_vol
                         if build_mat and weights[i] != 0.0:
@@ -6655,24 +6659,23 @@ cdef class _TreeMesh:
         list of int
             The indices of cells which overlap the axis aligned rectangle.
         """
-        cdef double xm, ym, zm, xp, yp, zp
+        cdef double xm[3]
+        cdef double xp[3]
         cdef double[:] origin = self._origin
         cdef double[:] xF
         if self.dim == 2:
             xF = np.array([self._xs[-1], self._ys[-1]])
         else:
             xF = np.array([self._xs[-1], self._ys[-1], self._zs[-1]])
-        xm = min(rectangle[0], xF[0])
-        xp = max(rectangle[1], origin[0])
-        ym = min(rectangle[2], xF[1])
-        yp = max(rectangle[3], origin[1])
-        if self.dim==3:
-            zm = min(rectangle[4], xF[2])
-            zp = max(rectangle[5], origin[2])
-        else:
-            zm = 0.0
-            zp = 0.0
-        return self.tree.find_overlapping_cells(xm, xp, ym, yp, zm, zp)
+        for i_d in range(self._dim):
+            xm[i_d] = min(rectangle[i_d], xF[i_d])
+            xp[i_d] = max(rectangle[i_d], origin[i_d])
+
+        cdef geom.Box *box = new geom.Box(self._dim, xm, xp)
+        cdef vector[int_t] cell_inds = self.tree.find_cells_geom(box[0])
+        del box
+
+        return cell_inds
 
 
 cdef inline double _clip01(double x) nogil:
