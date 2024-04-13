@@ -246,7 +246,10 @@ try:
     html_theme_options = {
         "external_links": [
             {"name": "SimPEG", "url": "https://simpeg.xyz"},
-            {"name": "Contact", "url": "http://slack.simpeg.xyz"},
+            {
+                "name": "Contact",
+                "url": "https://mattermost.softwareunderground.org/simpeg",
+            },
         ],
         "icon_links": [
             {
@@ -255,9 +258,9 @@ try:
                 "icon": "fab fa-github",
             },
             {
-                "name": "Slack",
-                "url": "http://slack.simpeg.xyz/",
-                "icon": "fab fa-slack",
+                "name": "Mattermost",
+                "url": "https://mattermost.softwareunderground.org/simpeg",
+                "icon": "fas fa-comment",
             },
             {
                 "name": "Discourse",
