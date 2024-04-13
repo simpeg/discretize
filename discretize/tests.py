@@ -78,11 +78,10 @@ sadness = [
     "You break it, you fix it.",
 ]
 
-# Initiate random number generator
-rng = np.random.default_rng()
+_happiness_rng = np.random.default_rng()
 
 
-def setup_mesh(mesh_type, nC, nDim):
+def setup_mesh(mesh_type, nC, nDim, rng=None):
     """Generate arbitrary mesh for testing.
 
     For the mesh type, number of cells along each axis and dimension specified,
@@ -106,13 +105,15 @@ def setup_mesh(mesh_type, nC, nDim):
     discretize.base.BaseMesh
         A discretize mesh of class specified by the input argument *mesh_type*
     """
+    if "random" in mesh_type:
+        rng = np.random.default_rng(rng)
     if "TensorMesh" in mesh_type:
         if "uniform" in mesh_type:
             h = [nC, nC, nC]
         elif "random" in mesh_type:
-            h1 = np.random.rand(nC) * nC * 0.5 + nC * 0.5
-            h2 = np.random.rand(nC) * nC * 0.5 + nC * 0.5
-            h3 = np.random.rand(nC) * nC * 0.5 + nC * 0.5
+            h1 = rng.random(nC) * nC * 0.5 + nC * 0.5
+            h2 = rng.random(nC) * nC * 0.5 + nC * 0.5
+            h3 = rng.random(nC) * nC * 0.5 + nC * 0.5
             h = [hi / np.sum(hi) for hi in [h1, h2, h3]]  # normalize
         else:
             raise Exception("Unexpected mesh_type")
@@ -127,14 +128,14 @@ def setup_mesh(mesh_type, nC, nDim):
             else:
                 h = [nC, nC, nC]
         elif "random" in mesh_type:
-            h1 = np.random.rand(nC) * nC * 0.5 + nC * 0.5
+            h1 = rng.random(nC) * nC * 0.5 + nC * 0.5
             if "symmetric" in mesh_type:
                 h2 = [
                     2 * np.pi,
                 ]
             else:
-                h2 = np.random.rand(nC) * nC * 0.5 + nC * 0.5
-            h3 = np.random.rand(nC) * nC * 0.5 + nC * 0.5
+                h2 = rng.random(nC) * nC * 0.5 + nC * 0.5
+            h3 = rng.random(nC) * nC * 0.5 + nC * 0.5
             h = [hi / np.sum(hi) for hi in [h1, h2, h3]]  # normalize
             h[1] = h[1] * 2 * np.pi
         else:
@@ -179,9 +180,9 @@ def setup_mesh(mesh_type, nC, nDim):
         if "uniform" in mesh_type or "notatree" in mesh_type:
             h = [nC, nC, nC]
         elif "random" in mesh_type:
-            h1 = np.random.rand(nC) * nC * 0.5 + nC * 0.5
-            h2 = np.random.rand(nC) * nC * 0.5 + nC * 0.5
-            h3 = np.random.rand(nC) * nC * 0.5 + nC * 0.5
+            h1 = rng.random(nC) * nC * 0.5 + nC * 0.5
+            h2 = rng.random(nC) * nC * 0.5 + nC * 0.5
+            h3 = rng.random(nC) * nC * 0.5 + nC * 0.5
             h = [hi / np.sum(hi) for hi in [h1, h2, h3]]  # normalize
         else:
             raise Exception("Unexpected mesh_type")
@@ -302,6 +303,7 @@ class OrderTest(unittest.TestCase):
     meshTypes = ["uniformTensorMesh"]
     _meshType = meshTypes[0]
     meshDimension = 3
+    rng = np.random.default_rng()
 
     def setupMesh(self, nC):
         """Generate mesh and set as current mesh for testing.
@@ -316,7 +318,7 @@ class OrderTest(unittest.TestCase):
         Float
             Maximum cell width for the mesh
         """
-        mesh, max_h = setup_mesh(self._meshType, nC, self.meshDimension)
+        mesh, max_h = setup_mesh(self._meshType, nC, self.meshDimension, rng=self.rng)
         self.M = mesh
         return max_h
 
@@ -335,7 +337,7 @@ class OrderTest(unittest.TestCase):
         """
         return 1.0
 
-    def orderTest(self):
+    def orderTest(self, rng=None):
         """Perform an order test.
 
         For number of cells specified in meshSizes setup mesh, call getError
@@ -496,9 +498,9 @@ def assert_expected_order(
             np.testing.assert_allclose(orders[-1], expected_order, rtol=rtol)
         elif test_type == "all":
             np.testing.assert_allclose(orders, expected_order, rtol=rtol)
-        print(np.random.choice(happiness))
+        print(_happiness_rng.choice(happiness))
     except AssertionError as err:
-        print(np.random.choice(sadness))
+        print(_happiness_rng.choice(sadness))
         raise err
 
     return orders
@@ -552,6 +554,7 @@ def check_derivative(
     tolerance=0.85,
     eps=1e-10,
     ax=None,
+    rng=None,
 ):
     """Perform a basic derivative check.
 
@@ -580,6 +583,9 @@ def check_derivative(
     ax : matplotlib.pyplot.Axes, optional
         An axis object for the convergence plot if *plotIt = True*.
         Otherwise, the function will create a new axis.
+    rng : numpy.random.Generator, int, optional
+        The random number generator to use for the adjoint test, if an integer or None
+        it used to seed a new `numpy.random.default_rng`.
 
     Returns
     -------
@@ -611,6 +617,8 @@ def check_derivative(
     __tracebackhide__ = True
     # matplotlib is a soft dependencies for discretize,
     # lazy-loaded to decrease load time of discretize.
+    rng = np.random.default_rng(rng)
+
     try:
         import matplotlib
         import matplotlib.pyplot as plt
@@ -627,7 +635,7 @@ def check_derivative(
     x0 = mkvc(x0)
 
     if dx is None:
-        dx = np.random.randn(len(x0))
+        dx = rng.standard_normal(len(x0))
 
     h = np.logspace(-1, -num, num)
     E0 = np.ones(h.shape)
@@ -700,7 +708,7 @@ def check_derivative(
                     f" {tolerance} of the expected order {expectedOrder}."
                 )
         print("{0!s} PASS! {1!s}".format("=" * 25, "=" * 25))
-        print(np.random.choice(happiness) + "\n")
+        print(_happiness_rng.choice(happiness) + "\n")
         if plotIt:
             _plot_it(ax, True)
     except AssertionError as err:
@@ -709,7 +717,7 @@ def check_derivative(
                 "*" * 57, "<" * 25, ">" * 25, "*" * 57
             )
         )
-        print(np.random.choice(sadness) + "\n")
+        print(_happiness_rng.choice(sadness) + "\n")
         if plotIt:
             _plot_it(ax, False)
         raise err
@@ -773,6 +781,7 @@ def assert_isadjoint(
     rtol=1e-6,
     atol=0.0,
     assert_error=True,
+    rng=None,
 ):
     r"""Do a dot product test for the forward operator and its adjoint operator.
 
@@ -823,6 +832,9 @@ def assert_isadjoint(
         assertion error if failed). If set to False, the result of the test is
         returned as boolean and a message is printed.
 
+    rng : numpy.random.Generator, int, optional
+        The random number generator to use for the adjoint test, if an integer or None
+        it used to seed a new `numpy.random.default_rng`.
 
     Returns
     -------
@@ -836,6 +848,8 @@ def assert_isadjoint(
 
     """
     __tracebackhide__ = True
+
+    rng = np.random.default_rng(rng)
 
     def random(size, iscomplex):
         """Create random data of size and dtype of <size>."""

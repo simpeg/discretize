@@ -6,6 +6,8 @@ from pymatsolver import Solver
 
 TOL = 1e-10
 
+gen = np.random.default_rng(123)
+
 
 class BasicTensorMeshTests(unittest.TestCase):
     def setUp(self):
@@ -276,6 +278,7 @@ class TestTensorMeshCellNodes:
 class TestPoissonEqn(discretize.tests.OrderTest):
     name = "Poisson Equation"
     meshSizes = [10, 16, 20]
+    rng = gen
 
     def getError(self):
         # Create some functions to integrate
