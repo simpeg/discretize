@@ -62,6 +62,8 @@ cdef extern from "tree.h":
         long long int index
         double volume
         inline bool is_leaf()
+        inline Node* min_node()
+        inline Node* max_node()
 
     cdef cppclass PyWrapper:
         PyWrapper()

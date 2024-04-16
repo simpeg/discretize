@@ -118,6 +118,9 @@ class Cell{
     Cell(Node *pts[4], Cell *parent);
     ~Cell();
 
+    inline Node* min_node(){ return points[0];};
+    inline Node* max_node(){ return points[(1<<n_dim)-1];};
+
     // intersection tests
     bool intersects_point(double *x);
     Cell* containing_cell(double, double, double);
@@ -125,7 +128,7 @@ class Cell{
 
     void refine_func(node_map_t& nodes, function test_func, double *xs, double *ys, double* zs, bool diag_balance=false);
 
-    bool inline is_leaf(){ return children[0]==NULL;};
+    inline bool is_leaf(){ return children[0]==NULL;};
     void spawn(node_map_t& nodes, Cell *kids[8], double* xs, double *ys, double *zs);
     void divide(node_map_t& nodes, double* xs, double* ys, double* zs, bool balance=true, bool diag_balance=false);
     void set_neighbor(Cell* other, int_t direction);
@@ -139,8 +142,8 @@ class Cell{
         if (level >= p_level || level == max_level){
             return;
         }
-        double *a = points[0]->location;
-        double *b = (n_dim<3)? points[3]->location : points[7]->location;
+        double *a = min_node()->location;
+        double *b = max_node()->location;
         // if I intersect cell, I will need to be divided (if I'm not already)
         if (geom.intersects_cell(a, b)){
             if(is_leaf()){
@@ -155,8 +158,8 @@ class Cell{
 
     template <class T>
     void find_cells_geom(int_vec_t &cells, const T& geom){
-        double *a = points[0]->location;
-        double *b = (n_dim<3)? points[3]->location : points[7]->location;
+        double *a = min_node()->location;
+        double *b = max_node()->location;
         if(geom.intersects_cell(a, b)){
             if(this->is_leaf()){
                 cells.push_back(index);

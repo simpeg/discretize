@@ -6065,14 +6065,16 @@ cdef class _TreeMesh:
         cdef c_Cell * out_cell
         cdef c_Cell * in_cell
 
-        cdef np.float64_t[:] vals = np.array([])
-        cdef np.float64_t[:] outs = np.array([])
+        cdef np.float64_t[:] vals
+        cdef np.float64_t[:] outs
         cdef int_t build_mat = 1
 
         if values is not None:
             vals = values
             if output is None:
-                output = np.empty(self.n_cells)
+                output = np.empty(self.n_cells, dtype=np.float64)
+            else:
+                output = np.require(output, dtype=np.float64, requirements=['A', 'W'])
             output[:] = 0
             outs = output
 
@@ -6087,8 +6089,8 @@ cdef class _TreeMesh:
         cdef double over_lap_vol
         cdef double x1m[3]
         cdef double x1p[3]
-        cdef double *x2m
-        cdef double *x2p
+        cdef double x2m[3]
+        cdef double x2p[33]
         cdef double[:] origin = meshin._origin
         cdef double[:] xF
         if self.dim == 2:
@@ -6166,15 +6168,11 @@ cdef class _TreeMesh:
             return P
 
         cdef geom.Box *box
+        cdef int_t last_point_ind = 7 if self._dim==3 else 3
         for cell in self.tree.cells:
-            x1m[0] = min(cell.points[0].location[0], xF[0])
-            x1m[1] = min(cell.points[0].location[1], xF[1])
-
-            x1p[0] = max(cell.points[3].location[0], origin[0])
-            x1p[1] = max(cell.points[3].location[1], origin[1])
-            if self._dim==3:
-                x1m[2] = min(cell.points[0].location[2], xF[2])
-                x1p[2] = max(cell.points[7].location[2], origin[2])
+            for i_d in range(self._dim):
+                x1m[i_d] = min(cell.min_node().location[i_d], xF[i_d])
+                x1p[i_d] = max(cell.max_node().location[i_d], origin[i_d])
 
             box = new geom.Box(self._dim, x1m, x1p)
             overlapping_cell_inds = meshin.tree.find_cells_geom(box[0])
@@ -6186,13 +6184,13 @@ cdef class _TreeMesh:
             nnz_row = 0
             for in_cell_ind in overlapping_cell_inds:
                 in_cell = meshin.tree.cells[in_cell_ind]
-                x2m = &in_cell.points[0].location[0]
-                x2p = &in_cell.points[7].location[0] if self._dim==3 else &in_cell.points[3].location[0]
+                x2m = in_cell.min_node().location
+                x2p = in_cell.max_node().location
 
                 over_lap_vol = 1.0
-                for i_dim in range(self._dim):
-                    if x1m[i] != xF[i] and  x1p[i] != origin[i]:
-                        over_lap_vol *= min(x1p[i], x2p[i]) - max(x1m[i], x2m[i])
+                for i_d in range(self._dim):
+                    if x1m[i_d]< xF[i_d] and x1p[i_d] > origin[i_d]:
+                        over_lap_vol *= min(x1p[i_d], x2p[i_d]) - max(x1m[i_d], x2m[i_d])
 
                 weights[i] = over_lap_vol
                 if build_mat and weights[i] != 0.0:
@@ -6201,10 +6199,11 @@ cdef class _TreeMesh:
 
                 weight_sum += weights[i]
                 i += 1
-            for i in range(n_overlap):
-                weights[i] /= weight_sum
-                if build_mat and weights[i] != 0.0:
-                    all_weights.push_back(weights[i])
+            if weight_sum > 0:
+                for i in range(n_overlap):
+                    weights[i] /= weight_sum
+                    if build_mat and weights[i] != 0.0:
+                        all_weights.push_back(weights[i])
 
             if not build_mat:
                 for i in range(n_overlap):
@@ -6228,8 +6227,8 @@ cdef class _TreeMesh:
         cdef double over_lap_vol
         cdef double x1m[3]
         cdef double x1p[3]
-        cdef double *x2m
-        cdef double *x2p
+        cdef double x2m[3]
+        cdef double x2p[3]
         cdef double[:] origin
         cdef double[:] xF
 
@@ -6280,6 +6279,7 @@ cdef class _TreeMesh:
         cdef double[:] nodes_z = np.array([0.0, 0.0])
         if self._dim==3:
             nodes_z = out_tens_mesh.nodes_z
+
         cdef int_t nx = len(nodes_x)-1
         cdef int_t ny = len(nodes_y)-1
         cdef int_t nz = len(nodes_z)-1
@@ -6288,17 +6288,17 @@ cdef class _TreeMesh:
         if values is not None:
             vals = values
             if output is None:
-                output = np.empty((nx, ny, nz), order='F')
+                output = np.empty(out_tens_mesh.n_cells, dtype=np.float64)
             else:
-                output = output.reshape((nx, ny, nz), order='F')
+                output = np.require(output, dtype=np.float64, requirements=['A', 'W'])
             output[:] = 0
-            outs = output
+            outs = output.reshape((nx, ny, nz), order='F')
 
             build_mat = 0
         if build_mat:
             indptr.push_back(0)
 
-        cdef int_t ix, iy, iz, in_cell_ind, i
+        cdef int_t ix, iy, iz, in_cell_ind, i, i_dim
         cdef int_t n_overlap
         cdef double weight_sum
 
@@ -6312,9 +6312,11 @@ cdef class _TreeMesh:
                 for ix in range(nx):
                     x1m[0] = min(nodes_x[ix], xF[0])
                     x1p[0] = max(nodes_x[ix+1], origin[0])
+
                     box = new geom.Box(self._dim, x1m, x1p)
                     overlapping_cell_inds = self.tree.find_cells_geom(box[0])
                     del box
+
                     n_overlap = overlapping_cell_inds.size()
                     weights = <double *> malloc(n_overlap*sizeof(double))
                     i = 0
@@ -6322,13 +6324,13 @@ cdef class _TreeMesh:
                     nnz_row = 0
                     for in_cell_ind in overlapping_cell_inds:
                         in_cell = self.tree.cells[in_cell_ind]
-                        x2m = &in_cell.points[0].location[0]
-                        x2p = &in_cell.points[7].location[0] if self._dim==3 else &in_cell.points[3].location[0]
+                        x2m = in_cell.min_node().location
+                        x2p = in_cell.max_node().location
 
                         over_lap_vol = 1.0
-                        for i_dim in range(self._dim):
-                            if x1m[i] != xF[i] and  x1p[i] != origin[i]:
-                                over_lap_vol *= min(x1p[i], x2p[i]) - max(x1m[i], x2m[i])
+                        for i_d in range(self._dim):
+                            if x1m[i_d]< xF[i_d] and x1p[i_d] > origin[i_d]:
+                                over_lap_vol *= min(x1p[i_d], x2p[i_d]) - max(x1m[i_d], x2m[i_d])
 
                         weights[i] = over_lap_vol
                         if build_mat and weights[i] != 0.0:
@@ -6336,10 +6338,12 @@ cdef class _TreeMesh:
                             row_inds.push_back(in_cell_ind)
                         weight_sum += weights[i]
                         i += 1
-                    for i in range(n_overlap):
-                        weights[i] /= weight_sum
-                        if build_mat and weights[i] != 0.0:
-                            all_weights.push_back(weights[i])
+
+                    if weight_sum > 0:
+                        for i in range(n_overlap):
+                            weights[i] /= weight_sum
+                            if build_mat and weights[i] != 0.0:
+                                all_weights.push_back(weights[i])
 
                     if not build_mat:
                         for i in range(n_overlap):
@@ -6352,7 +6356,7 @@ cdef class _TreeMesh:
                     overlapping_cell_inds.clear()
 
         if not build_mat:
-            return output.reshape(-1, order='F')
+            return output
         return sp.csr_matrix((all_weights, row_inds, indptr), shape=(out_tens_mesh.n_cells, self.n_cells))
 
     @cython.boundscheck(False)
@@ -6410,14 +6414,16 @@ cdef class _TreeMesh:
         else:
             xF = np.array([nodes_x[-1], nodes_y[-1], nodes_z[-1]])
 
-        cdef np.float64_t[::1, :, :] vals = np.array([[[]]])
-        cdef np.float64_t[:] outs = np.array([])
+        cdef np.float64_t[::1, :, :] vals
+        cdef np.float64_t[:] outs
 
         cdef int_t build_mat = 1
         if values is not None:
             vals = values.reshape((nx, ny, nz), order='F')
             if output is None:
-                output = np.empty(self.n_cells)
+                output = np.empty(self.n_cells, dtype=np.float64)
+            else:
+                output = np.require(output, dtype=np.float64, requirements=['A', 'W'])
             output[:] = 0
             outs = output
 
@@ -6552,8 +6558,8 @@ cdef class _TreeMesh:
         else:
             xF = np.array([self._xs[-1], self._ys[-1], self._zs[-1]])
         for i_d in range(self._dim):
-            xm[i_d] = min(rectangle[i_d], xF[i_d])
-            xp[i_d] = max(rectangle[i_d], origin[i_d])
+            xm[i_d] = min(rectangle[2 * i_d], xF[i_d])
+            xp[i_d] = max(rectangle[2 * i_d + 1], origin[i_d])
 
         cdef geom.Box *box = new geom.Box(self._dim, xm, xp)
         cdef vector[int_t] cell_inds = self.tree.find_cells_geom(box[0])

@@ -370,8 +370,8 @@ void Cell::shift_centers(double *shift){
 
 bool Cell::intersects_point(double *x){
     // A simple bounding box check:
-    double *p0 = points[0]->location;
-    double *p1 = (n_dim < 3)? points[3]->location : points[7]->location;
+    double *p0 = min_node()->location;
+    double *p1 = max_node()->location;
     for(int_t i=0; i < n_dim; ++i){
         if(x[i] < p0[i] || x[i] > p1[i]){
             return false;
