@@ -6,7 +6,7 @@ cdef extern from "geom.h":
         Ball(int_t dim, double * x0, double r)
 
     cdef cppclass Line:
-        Line(int_t dim, double * x0, double *x1, bool segment)
+        Line(int_t dim, double * x0, double *x1)
 
     cdef cppclass Box:
         Box(int_t dim, double * x0, double *x1)

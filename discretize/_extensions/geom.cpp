@@ -23,11 +23,10 @@ bool Ball::intersects_cell(double *a, double *b) const{
     return r2_test < rsq;
 }
 
-Line::Line(int_t dim, double* x0, double *x1, bool segment){
+Line::Line(int_t dim, double* x0, double *x1){
     this->dim = dim;
     this->x0 = x0;
     this->x1 = x1;
-    this->segment = segment;
     for(int_t i=0; i<dim; ++i){
         inv_dx[i] = 1.0/(x1[i] - x0[i]);
     }
@@ -43,13 +42,11 @@ bool Line::intersects_cell(double *a, double *b) const{
         if(x0[i] == x1[i] && (x0[i] < a[i] || x0[i] > b[i])){
             return false;
         }
-        if (segment){
-            if(std::max(x0[i], x1[i]) < a[i]){
-                return false;
-            }
-            if(std::min(x0[i], x1[i]) > b[i]){
-                return false;
-            }
+        if(std::max(x0[i], x1[i]) < a[i]){
+            return false;
+        }
+        if(std::min(x0[i], x1[i]) > b[i]){
+            return false;
         }
         if (x0[i] != x1[i]){
             t0 = (a[i] - x0[i]) * inv_dx[i];
@@ -59,7 +56,7 @@ bool Line::intersects_cell(double *a, double *b) const{
             }
             t_near = std::max(t_near, t0);
             t_far = std::min(t_far, t1);
-            if (t_near > t_far || (segment && (t_far < 0 || t_near > 1))){
+            if (t_near > t_far || t_far < 0 || t_near > 1){
                 return false;
             }
         }
@@ -92,13 +89,15 @@ Plane::Plane(int_t dim, double* origin, double *normal){
 }
 
 bool Plane::intersects_cell(double *a, double *b) const{
-    double half;
+    double center;
+    double half_width;
     double s = 0.0;
     double r = 0.0;
     for(int_t i=0;i<dim;++i){
-        half = (b[i] - a[i]) * 0.5;
-        r += half + std::abs(normal[i]);
-        s += normal[i] * half - origin[i];
+        center = (b[i] + a[i]) * 0.5;
+        half_width = center - a[i];
+        r += half_width * std::abs(normal[i]);
+        s += normal[i] * (center - origin[i]);
     }
     return std::abs(s) <= r;
 }

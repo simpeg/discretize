@@ -25,9 +25,8 @@ class Line : public Geometric{
         double *x0;
         double *x1;
         double inv_dx[3];
-        bool segment;
 
-        Line(int_t dim, double* x0, double *x1, bool segment);
+        Line(int_t dim, double* x0, double *x1);
         virtual bool intersects_cell(double *a, double *b) const;
 };
 

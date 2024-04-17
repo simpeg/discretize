@@ -739,7 +739,7 @@ cdef class _TreeMesh:
         path = np.require(np.atleast_2d(path), dtype=np.float64,
                             requirements='C')
         if path.shape[1] != self.dim:
-            raise ValueError(f"line_nodes array must be (N, {self.dim})")
+            raise ValueError(f"path array must be (N, {self.dim})")
         cdef double[:, :] line_nodes = path
         levels = np.require(np.atleast_1d(levels), dtype=np.int32,
                                     requirements='C')
@@ -761,12 +761,120 @@ cdef class _TreeMesh:
         cdef int max_level = self.max_level
         cdef int i
         for i in range(n_segments):
-            line = new geom.Line(self._dim, &line_nodes[i, 0], &line_nodes[i+1, 0], True)
+            line = new geom.Line(self._dim, &line_nodes[i, 0], &line_nodes[i+1, 0])
             l = ls[i]
             if l < 0:
                 l = (max_level + 1) - (abs(l) % (max_level + 1))
             self.tree.refine_geom(line[0], l, diag_balance)
             del line
+        if finalize:
+            self.finalize()
+
+    @cython.cdivision(True)
+    def refine_plane(self, origins, normals, levels, finalize=True, diagonal_balance=None):
+        """Refine the :class:`~discretize.TreeMesh` along a plane to the desired level.
+
+        Refines the TreeMesh by determining if a cell intersects the given plane(s)
+        to the prescribed level(s).
+
+        Parameters
+        ----------
+        origins : (dim) or (N, dim) array_like of float
+            The origin of the planes.
+        normals : (dim) or (N, dim) array_like of float
+            The normals to the planes.
+        levels : int or (N) array_like of int
+            The level to refine intersecting cells to.
+        finalize : bool, optional
+            Whether to finalize after refining.
+        diagonal_balance : bool or None, optional
+            Whether to balance cells diagonally in the refinement, `None` implies using
+            the same setting used to instantiate the TreeMesh`.
+
+        Examples
+        --------
+        We create a simple mesh and refine the TreeMesh such that all cells that
+        intersect the plane path are at the given levels. (In 2D, the plane is also a
+        line.)
+
+        >>> import discretize
+        >>> import matplotlib.pyplot as plt
+        >>> tree_mesh = discretize.TreeMesh([32, 32])
+        >>> tree_mesh.max_level
+        5
+
+        Next we define the origin and normal of the plane, and the level we want
+        to refine to.
+
+        >>> origin = [0, 0.25]
+        >>> normal = [-1, -1]
+        >>> level = -1
+        >>> tree_mesh.refine_plane(origin, normal, level)
+
+        Now lets look at the mesh, and overlay the plane on it to ensure it refined
+        where we wanted it to.
+
+        >>> ax = tree_mesh.plot_grid()
+        >>> ax.axline(origin, slope=-normal[0]/normal[1], color='C1')
+        >>> plt.show()
+
+        """
+        origins = np.asarray(origins)
+        normals = np.asarray(normals)
+        levels = np.asarray(levels)
+        try:
+            broadcast_shape = np.broadcast_shapes(origins.shape, normals.shape, levels.shape)
+        except ValueError as err:
+            raise ValueError(
+                f"Incompatible shapes for origins:{origins.shape}, "
+                f"normals: {normals.shape}, and levels: {levels.shape}"
+            )
+        if origins.shape[-1] != self.dim:
+            raise ValueError(
+                f"origins last dimension ({origins.shape[-1]}) should be equal to {self.dim}."
+            )
+        if normals.shape[-1] != self.dim:
+            raise ValueError(
+                f"normals last dimension ({normals.shape[-1]}) should be equal to {self.dim}."
+            )
+
+        cdef double[:, :] x_0s = np.require(
+            np.atleast_2d(origins), dtype=np.float64, requirements='C'
+        )
+        cdef double[:, :] norms = np.require(
+            np.atleast_2d(normals), dtype=np.float64, requirements='C'
+        )
+        cdef int[:] ls = np.require(
+            np.atleast_1d(levels), dtype=np.int32, requirements='C'
+        )
+        cdef int n_planes = broadcast_shape[0];  # number of broadcasted planes to process.
+
+        cdef int origin_step = 1 if x_0s.shape[0] == n_planes else 0
+        cdef int normal_step = 1 if norms.shape[0] == n_planes else 0
+        cdef int level_step =  1 if ls.shape[0] == n_planes else 0
+
+        if diagonal_balance is None:
+            diagonal_balance = self._diagonal_balance
+        cdef bool diag_balance = diagonal_balance
+
+        cdef geom.Plane *plane
+
+        cdef int l
+        cdef int max_level = self.max_level
+        cdef int i_plane, i_o, i_n, i_l
+        i_0 = i_n = i_l = 0
+        for i in range(n_planes):
+            plane = new geom.Plane(self._dim, &x_0s[i_0, 0], &norms[i_n, 0])
+            l = ls[i_l]
+            if l < 0:
+                l = (max_level + 1) - (abs(l) % (max_level + 1))
+
+            self.tree.refine_geom(plane[0], l, diag_balance)
+            del plane
+
+            i_0 += origin_step
+            i_n += normal_step
+            i_l += level_step
         if finalize:
             self.finalize()
 
@@ -6584,8 +6692,9 @@ cdef class _TreeMesh:
         cdef double[:] start = np.require(x0, dtype=np.float64, requirements='A')
         cdef double[:] end = np.require(x0, dtype=np.float64, requirements='A')
 
-        cdef geom.Line *line = new geom.Line(self._dim, &start[0], &end[0], True)
+        cdef geom.Line *line = new geom.Line(self._dim, &start[0], &end[0])
         cdef vector[int_t] cell_inds = self.tree.find_cells_geom(line[0])
+        del line
         return cell_inds
 
 
