@@ -58,14 +58,21 @@ if get_option('cy_coverage')
 
   # compile the .c file from the .pyx file in it's directory.
   # These should include the default options passed to the cython compiler
-  cython_sources = [
+  cython_c_sources = [
     'interputils_cython.pyx',
+  ]
+
+  cython_cpp_sources = [
     'tree_ext.pyx',
     'simplex_helpers.pyx',
   ]
-  foreach cython_file : cython_sources
+  foreach cython_file : cython_c_sources
     cython_file_full_path = meson.current_source_dir() / cython_file
     run_command(cython, '-M', '--fast-fail', '-3', '--directive', 'linetrace=true', cython_file_full_path)
+  endforeach
+  foreach cython_file : cython_cpp_sources
+    cython_file_full_path = meson.current_source_dir() / cython_file
+    run_command(cython, '-cplus', '-M', '--fast-fail', '-3', '--directive', 'linetrace=true', cython_file_full_path)
   endforeach
 endif
 
