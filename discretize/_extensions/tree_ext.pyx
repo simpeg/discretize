@@ -1243,12 +1243,12 @@ cdef class _TreeMesh:
         cdef geom.Ball ball = geom.Ball(self._dim, &a[0], radius)
         return np.array(self.tree.find_cells_geom(ball))
 
-    def get_cells_along_line(self, x0, x1):
+    def get_cells_along_line(self, segment):
         """Find the cells along a line segment.
 
         Parameters
         ----------
-        x0,x1 : (dim) array_like
+        segment : (2, dim) array-like
             Beginning and ending point of the line segment.
 
         Returns
@@ -1257,8 +1257,11 @@ cdef class _TreeMesh:
             Indices for cells that contain the a line defined by the two input
             points, ordered in the direction of the line.
         """
-        cdef double[:] start = self._require_ndarray_with_dim('x0', x0, dtype=np.float64)
-        cdef double[:] end = self._require_ndarray_with_dim('x1', x1, dtype=np.float64)
+        segment = self._require_ndarray_with_dim('segment', segment, ndim=2, dtype=np.float64)
+        if segment.shape[0] != 2:
+            raise ValueError(f"A line segment has two points, not {segment.shape[0]}")
+        cdef double[:] start = segment[0]
+        cdef double[:] end = segment[1]
 
         cdef geom.Line line = geom.Line(self._dim, &start[0], &end[0])
         return np.array(self.tree.find_cells_geom(line))

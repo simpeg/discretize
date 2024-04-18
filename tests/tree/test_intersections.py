@@ -44,20 +44,21 @@ def test_ball_locator(dim):
 
 
 def test_line_locator(dim):
-    p0 = [0.1] * dim
-    p1 = [0.8] * dim
-    points = np.stack([p0, p1])
+    segment = np.array([[0.12, 0.33, 0.19], [0.32, 0.93, 0.68]])[:, :dim]
 
     mesh = discretize.TreeMesh([32] * dim)
-    mesh.refine_line(points, -1)
+    mesh.refine_line(segment, -1)
 
-    cell_inds = mesh.get_cells_along_line(p0, p1)
+    with pytest.raises(ValueError):
+        mesh.get_cells_along_line(segment[:-1])
+
+    cell_inds = mesh.get_cells_along_line(segment)
 
     # ensure it found all of the cells by using a brute force search
     test = []
     for cell in mesh:
         try:
-            assert_cell_intersects_geometric(cell, points, edges=[0, 1])
+            assert_cell_intersects_geometric(cell, segment, edges=[0, 1])
             test.append(cell.index)
         except AssertionError:
             pass
