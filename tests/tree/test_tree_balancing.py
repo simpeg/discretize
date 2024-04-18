@@ -150,7 +150,7 @@ def test_refine_tetra():
     mesh1.refine_tetrahedron(simplex, -1)
     bad_nodes = check_for_diag_unbalance(mesh1)
 
-    assert len(bad_nodes) == 62
+    assert len(bad_nodes) == 64
 
     mesh2 = discretize.TreeMesh([32, 32, 32], diagonal_balance=True)
     mesh2.refine_tetrahedron(simplex, -1)

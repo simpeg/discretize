@@ -228,10 +228,11 @@ def _tensor_volume_averaging(mesh_in, mesh_out, values=None, output=None):
         # If given a values array, do the operation
         val_in = values.reshape(mesh_in_shape, order='F').astype(np.float64)
         if output is None:
-            v_o = np.zeros(mesh_out_shape, order='F')
+            output = np.zeros(mesh_out.n_cells, dtype=np.float64)
         else:
-            v_o = output.reshape(mesh_out_shape, order='F')
-            v_o.fill(0)
+            output = np.require(output, dtype=np.float64, requirements=['A', 'W'])
+        v_o = output.reshape(mesh_out_shape, order='F')
+        v_o.fill(0)
         val_out = v_o
         for i3 in range(w_shape[2]):
             i3i = i3_in[i3]
@@ -245,7 +246,7 @@ def _tensor_volume_averaging(mesh_in, mesh_out, values=None, output=None):
                     i1i = i1_in[i1]
                     i1o = i1_out[i1]
                     val_out[i1o, i2o, i3o] += w_32*w1[i1]*val_in[i1i, i2i, i3i]/vol[i1o, i2o, i3o]
-        return v_o.reshape(-1, order='F')
+        return output
 
     # Else, build and return a sparse matrix representing the operation
     i_i = np.empty(w_shape, dtype=np.int32, order='F')
