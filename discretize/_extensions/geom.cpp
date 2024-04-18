@@ -3,10 +3,30 @@
 #include "geom.h"
 #include <algorithm>
 #include <limits>
+
+// Define the 3D cross product as a pre-processor macro
+#define CROSS3D(e0, e1, out) \
+    out[0] = e0[1] * e1[2] - e0[2] * e1[1]; \
+    out[1] = e0[2] * e1[0] - e0[0] * e1[2]; \
+    out[2] = e0[0] * e1[1] - e0[1] * e0[0];
+
 // simple geometric objects for intersection tests with an aabb
 
-Ball::Ball(int_t dim, double* x0, double r){
+Geometric::Geometric(){
+    dim = 0;
+}
+
+Geometric::Geometric(int_t dim){
     this->dim = dim;
+}
+
+Ball::Ball() : Geometric(){
+    x0 = NULL;
+    r = 0;
+    rsq = 0;
+}
+
+Ball::Ball(int_t dim, double* x0, double r) : Geometric(dim){
     this->x0 = x0;
     this->r = r;
     this->rsq = r * r;
@@ -23,8 +43,13 @@ bool Ball::intersects_cell(double *a, double *b) const{
     return r2_test < rsq;
 }
 
-Line::Line(int_t dim, double* x0, double *x1){
-    this->dim = dim;
+Line::Line() : Geometric(){
+    x0 = NULL;
+    x1 = NULL;
+    for(int_t i=0; i<3; ++i) inv_dx[i] = 1;
+}
+
+Line::Line(int_t dim, double* x0, double *x1) : Geometric(dim){
     this->x0 = x0;
     this->x1 = x1;
     for(int_t i=0; i<dim; ++i){
@@ -64,8 +89,12 @@ bool Line::intersects_cell(double *a, double *b) const{
     return true;
 }
 
-Box::Box(int_t dim, double* x0, double *x1){
-    this->dim = dim;
+Box::Box() : Geometric(){
+    x0 = NULL;
+    x1 = NULL;
+}
+
+Box::Box(int_t dim, double* x0, double *x1) : Geometric(dim){
     this->x0 = x0;
     this->x1 = x1;
 }
@@ -82,8 +111,12 @@ bool Box::intersects_cell(double *a, double *b) const{
     return true;
 }
 
-Plane::Plane(int_t dim, double* origin, double *normal){
-    this->dim = dim;
+Plane::Plane() : Geometric(){
+    origin = NULL;
+    normal = NULL;
+}
+
+Plane::Plane(int_t dim, double* origin, double *normal) : Geometric(dim){
     this->origin = origin;
     this->normal = normal;
 }
@@ -102,8 +135,19 @@ bool Plane::intersects_cell(double *a, double *b) const{
     return std::abs(s) <= r;
 }
 
-Triangle::Triangle(int_t dim, double* x0, double *x1, double *x2){
-    this->dim = dim;
+Triangle::Triangle() : Geometric(){
+    x0 = NULL;
+    x1 = NULL;
+    x2 = NULL;
+    for(int_t i=0; i<3; ++i){
+        e0[i] = 0.0;
+        e1[i] = 0.0;
+        e2[i] = 0.0;
+        normal[i] = 0.0;
+    }
+}
+
+Triangle::Triangle(int_t dim, double* x0, double *x1, double *x2) : Geometric(dim){
     this->x0 = x0;
     this->x1 = x1;
     this->x2 = x2;
@@ -257,6 +301,10 @@ bool Triangle::intersects_cell(double *a, double *b) const{
     return true;
 }
 
+VerticalTriangularPrism::VerticalTriangularPrism() : Triangle(){
+    h = 0;
+}
+
 VerticalTriangularPrism::VerticalTriangularPrism(int_t dim, double* x0, double *x1, double *x2, double h) : Triangle(dim, x0, x1, x2){
     this->h = h;
 }
@@ -401,8 +449,24 @@ bool VerticalTriangularPrism::intersects_cell(double *a, double *b) const{
     return true;
 }
 
-Tetrahedron::Tetrahedron(int_t dim, double* x0, double *x1, double *x2, double *x3){
-    this->dim = dim;
+Tetrahedron::Tetrahedron() : Geometric(){
+    x0 = NULL;
+    x1 = NULL;
+    x2 = NULL;
+    x3 = NULL;
+    for(int_t i=0; i<6; ++i){
+        for(int_t j=0; j<3; ++j){
+            edge_tans[i][j] = 0.0;
+        }
+    }
+    for(int_t i=0; i<4; ++i){
+        for(int_t j=0; j<3; ++j){
+            face_normals[i][j] = 0.0;
+        }
+    }
+}
+
+Tetrahedron::Tetrahedron(int_t dim, double* x0, double *x1, double *x2, double *x3) : Geometric(dim){
     this->x0 = x0;
     this->x1 = x1;
     this->x2 = x2;
@@ -415,21 +479,17 @@ Tetrahedron::Tetrahedron(int_t dim, double* x0, double *x1, double *x2, double *
         edge_tans[4][i] = x3[i] - x1[i];
         edge_tans[5][i] = x3[i] - x2[i];
     }
-    face_normals[0][0] = edge_tans[0][1] * edge_tans[1][2] - edge_tans[0][2] * edge_tans[1][1];
-    face_normals[0][1] = edge_tans[0][2] * edge_tans[1][0] - edge_tans[0][0] * edge_tans[1][2];
-    face_normals[0][2] = edge_tans[0][0] * edge_tans[1][1] - edge_tans[0][1] * edge_tans[1][0];
+    // cross e0, e1 (x0, x1, x2)
+    CROSS3D(edge_tans[0], edge_tans[1], face_normals[0])
 
-    face_normals[1][0] = edge_tans[0][1] * edge_tans[3][2] - edge_tans[0][2] * edge_tans[3][1];
-    face_normals[1][1] = edge_tans[0][2] * edge_tans[3][0] - edge_tans[0][0] * edge_tans[3][2];
-    face_normals[1][2] = edge_tans[0][0] * edge_tans[3][1] - edge_tans[0][1] * edge_tans[3][0];
+    // cross e0, e3 (x0, x1, x3)
+    CROSS3D(edge_tans[0], edge_tans[3], face_normals[1])
 
-    face_normals[2][0] = edge_tans[1][1] * edge_tans[4][2] - edge_tans[1][2] * edge_tans[4][1];
-    face_normals[2][1] = edge_tans[1][2] * edge_tans[4][0] - edge_tans[1][0] * edge_tans[4][2];
-    face_normals[2][2] = edge_tans[1][0] * edge_tans[4][1] - edge_tans[1][1] * edge_tans[4][0];
+    // cross e1, e3 (x0, x2, x3)
+    CROSS3D(edge_tans[1], edge_tans[3], face_normals[2])
 
-    face_normals[3][0] = edge_tans[2][1] * edge_tans[5][2] - edge_tans[2][2] * edge_tans[5][1];
-    face_normals[3][1] = edge_tans[2][2] * edge_tans[5][0] - edge_tans[2][0] * edge_tans[5][2];
-    face_normals[3][2] = edge_tans[2][0] * edge_tans[5][1] - edge_tans[2][1] * edge_tans[5][0];
+    // cross e2, e5 (x1, x2, x3)
+    CROSS3D(edge_tans[2], edge_tans[5], face_normals[3])
 }
 
 bool Tetrahedron::intersects_cell(double *a, double *b) const{

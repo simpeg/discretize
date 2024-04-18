@@ -2158,7 +2158,7 @@ class InterfaceMPL(object):
         )
         XS[normalInd] = np.ones_like(XS[antiNormalInd[0]]) * slice_loc
         loc_grid = np.c_[XS[0].reshape(-1), XS[1].reshape(-1), XS[2].reshape(-1)]
-        inds = np.unique(self._get_containing_cell_indexes(loc_grid))
+        inds = np.unique(self.get_containing_cells(loc_grid))
 
         grid2d = self.gridCC[inds][:, antiNormalInd]
         levels = self._cell_levels_by_indexes(inds) - level_diff

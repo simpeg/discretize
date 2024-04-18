@@ -562,42 +562,37 @@ cdef class _TreeMesh:
         >>> ax.add_patch(circ)
         >>> plt.show()
         """
-        points = np.require(np.atleast_2d(points), dtype=np.float64,
-                            requirements='C')
-        if points.shape[1] != self.dim:
-            raise ValueError(f"points array must be (N, {self.dim})")
-        cdef double[:, :] cs = points
-        radii = np.require(np.atleast_1d(radii), dtype=np.float64,
-                                       requirements='C')
-        if radii.shape[0] == 1:
-           radii = np.full(points.shape[0], radii[0], dtype=np.float64)
-        cdef double[:] rs = radii
-        if points.shape[0] != rs.shape[0]:
-            raise ValueError("radii length must match the points array's first dimension")
+        points = self._require_ndarray_with_dim('points', points, ndim=2, dtype=np.float64)
+        radii = np.require(np.atleast_1d(radii), dtype=np.float64, requirements='C')
+        levels = np.require(np.atleast_1d(levels), dtype=np.int32, requirements='C')
 
-        levels = np.require(np.atleast_1d(levels), dtype=np.int32,
-                                    requirements='C')
-        if levels.shape[0] == 1:
-            levels = np.full(points.shape[0], levels[0], dtype=np.int32)
+        cdef int_t n_balls = _check_first_dim_broadcast(points=points, radii=radii, levels=levels)
+
+        cdef double[:, :] cs = points
+        cdef double[:] rs = radii
         cdef int[:] ls = levels
-        if points.shape[0] != ls.shape[0]:
-            raise ValueError("level length must match the points array's first dimension")
+
+        cdef int_t cs_step = cs.shape[0] > 1
+        cdef int_t rs_step = rs.shape[0] > 1
+        cdef int_t l_step = ls.shape[0] > 1
+        cdef int_t i_c=0, i_r=0, i_l=0
 
         if diagonal_balance is None:
             diagonal_balance = self._diagonal_balance
         cdef bool diag_balance = diagonal_balance
 
-        cdef geom.Ball *ball
+        cdef geom.Ball ball
         cdef int_t i
         cdef int l
         cdef int max_level = self.max_level
-        for i in range(ls.shape[0]):
-            ball = new geom.Ball(self._dim, &cs[i, 0], rs[i])
-            l = ls[i]
-            if l < 0:
-                l = (max_level + 1) - (abs(l) % (max_level + 1))
-            self.tree.refine_geom(ball[0], l, diag_balance)
-            del ball
+        for i in range(n_balls):
+            ball = geom.Ball(self._dim, &cs[i_c, 0], rs[i_r])
+            l = _wrap_levels(ls[i_l], max_level)
+            self.tree.refine_geom(ball, l, diag_balance)
+
+            i_c += cs_step
+            i_r += rs_step
+            i_l += l_step
         if finalize:
             self.finalize()
 
@@ -652,40 +647,36 @@ cdef class _TreeMesh:
         >>> ax.add_patch(rect)
         >>> plt.show()
         """
-        x0s = np.require(np.atleast_2d(x0s), dtype=np.float64,
-                            requirements='C')
-        if x0s.shape[1] != self.dim:
-            raise ValueError(f"x0s array must be (N, {self.dim})")
-        x1s = np.require(np.atleast_2d(x1s), dtype=np.float64,
-                            requirements='C')
-        if x1s.shape[1] != self.dim:
-            raise ValueError(f"x1s array must be (N, {self.dim})")
-        if x1s.shape[0] != x0s.shape[0]:
-            raise ValueError(f"x0s and x1s must have the same length")
+        x0s = self._require_ndarray_with_dim('x0s', x0s, ndim=2, dtype=np.float64)
+        x1s = self._require_ndarray_with_dim('x1s', x1s, ndim=2, dtype=np.float64)
+        levels = np.require(np.atleast_1d(levels), dtype=np.int32, requirements='C')
+
+        cdef int_t n_boxes = _check_first_dim_broadcast(x0s=x0s, x1s=x1s, levels=levels)
+
         cdef double[:, :] x0 = x0s
         cdef double[:, :] x1 = x1s
-        levels = np.require(np.atleast_1d(levels), dtype=np.int32,
-                                    requirements='C')
-        if levels.shape[0] == 1:
-            levels = np.full(x0.shape[0], levels[0], dtype=np.int32)
         cdef int[:] ls = levels
-        if x0.shape[0] != ls.shape[0]:
-            raise ValueError("level length must match the points array's first dimension")
+
+        cdef int_t x0_step = x0.shape[0] > 1
+        cdef int_t x1_step = x1.shape[0] > 1
+        cdef int_t l_step = ls.shape[0] > 1
+        cdef int_t i_x0=0, i_x1=0, i_l=0
 
         if diagonal_balance is None:
             diagonal_balance = self._diagonal_balance
         cdef bool diag_balance = diagonal_balance
 
-        cdef geom.Box *box
+        cdef geom.Box box
         cdef int l
         cdef int max_level = self.max_level
-        for i in range(ls.shape[0]):
-            box = new geom.Box(self._dim, &x0[i, 0], &x1[i, 0])
-            l = ls[i]
-            if l < 0:
-                l = (max_level + 1) - (abs(l) % (max_level + 1))
-            self.tree.refine_geom(box[0], l, diag_balance)
-            del box
+        for i in range(n_boxes):
+            box = geom.Box(self._dim, &x0[i_x0, 0], &x1[i_x1, 0])
+            l = _wrap_levels(ls[i_l], max_level)
+            self.tree.refine_geom(box, l, diag_balance)
+
+            i_x0 += x0_step
+            i_x1 += x1_step
+            i_l += l_step
         if finalize:
             self.finalize()
 
@@ -736,37 +727,32 @@ cdef class _TreeMesh:
         >>> plt.show()
 
         """
-        path = np.require(np.atleast_2d(path), dtype=np.float64,
-                            requirements='C')
-        if path.shape[1] != self.dim:
-            raise ValueError(f"path array must be (N, {self.dim})")
+        path = self._require_ndarray_with_dim('path', path, ndim=2, dtype=np.float64)
+        levels = np.require(np.atleast_1d(levels), dtype=np.int32, requirements='C')
+        cdef int_t n_segments = _check_first_dim_broadcast(path=path[:-1], levels=levels)
         cdef double[:, :] line_nodes = path
-        levels = np.require(np.atleast_1d(levels), dtype=np.int32,
-                                    requirements='C')
-        cdef int n_segments = line_nodes.shape[0] - 1;
-        if levels.shape[0] == 1:
-            levels = np.full(n_segments, levels[0], dtype=np.int32)
-        if n_segments != levels.shape[0]:
-            raise ValueError(f"inconsistent number of line segments {n_segments} and levels {levels.shape[0]}")
-
         cdef int[:] ls = levels
+
+        cdef int_t line_step = line_nodes.shape[0] > 2
+        cdef int_t l_step = levels.shape[0] > 1
+        cdef int_t i_line=0, i_l=0
 
         if diagonal_balance is None:
             diagonal_balance = self._diagonal_balance
         cdef bool diag_balance = diagonal_balance
 
-        cdef geom.Line *line
+        cdef geom.Line line
 
         cdef int l
         cdef int max_level = self.max_level
         cdef int i
         for i in range(n_segments):
-            line = new geom.Line(self._dim, &line_nodes[i, 0], &line_nodes[i+1, 0])
-            l = ls[i]
-            if l < 0:
-                l = (max_level + 1) - (abs(l) % (max_level + 1))
-            self.tree.refine_geom(line[0], l, diag_balance)
-            del line
+            line = geom.Line(self._dim, &line_nodes[i_line, 0], &line_nodes[i_line+1, 0])
+            l = _wrap_levels(ls[i_l], max_level)
+            self.tree.refine_geom(line, l, diag_balance)
+
+            i_line += line_step
+            i_l += l_step
         if finalize:
             self.finalize()
 
@@ -819,60 +805,36 @@ cdef class _TreeMesh:
         >>> plt.show()
 
         """
-        origins = np.asarray(origins)
-        normals = np.asarray(normals)
-        levels = np.asarray(levels)
-        try:
-            broadcast_shape = np.broadcast_shapes(origins.shape, normals.shape, levels.shape)
-        except ValueError as err:
-            raise ValueError(
-                f"Incompatible shapes for origins:{origins.shape}, "
-                f"normals: {normals.shape}, and levels: {levels.shape}"
-            )
-        if origins.shape[-1] != self.dim:
-            raise ValueError(
-                f"origins last dimension ({origins.shape[-1]}) should be equal to {self.dim}."
-            )
-        if normals.shape[-1] != self.dim:
-            raise ValueError(
-                f"normals last dimension ({normals.shape[-1]}) should be equal to {self.dim}."
-            )
+        origins = self._require_ndarray_with_dim('origins', origins, ndim=2, dtype=np.float64)
+        normals = self._require_ndarray_with_dim('normals', normals, ndim=2, dtype=np.float64)
+        levels = np.require(np.atleast_1d(levels), dtype=np.int32, requirements='C')
 
-        cdef double[:, :] x_0s = np.require(
-            np.atleast_2d(origins), dtype=np.float64, requirements='C'
-        )
-        cdef double[:, :] norms = np.require(
-            np.atleast_2d(normals), dtype=np.float64, requirements='C'
-        )
-        cdef int[:] ls = np.require(
-            np.atleast_1d(levels), dtype=np.int32, requirements='C'
-        )
-        cdef int n_planes = broadcast_shape[0];  # number of broadcasted planes to process.
+        cdef int n_planes = _check_first_dim_broadcast(origins=origins, normals=normals, levels=levels)
 
-        cdef int origin_step = 1 if x_0s.shape[0] == n_planes else 0
-        cdef int normal_step = 1 if norms.shape[0] == n_planes else 0
-        cdef int level_step =  1 if ls.shape[0] == n_planes else 0
+        cdef double[:, :] x_0s = origins
+        cdef double[:, :] norms = normals
+        cdef int[:] ls = levels
+
+        cdef int_t origin_step = x_0s.shape[0] > 1
+        cdef int_t normal_step = norms.shape[0] > 1
+        cdef int_t level_step = ls.shape[0] > 1
+        cdef int_t i_o=0, i_n=0, i_l=0
 
         if diagonal_balance is None:
             diagonal_balance = self._diagonal_balance
         cdef bool diag_balance = diagonal_balance
 
-        cdef geom.Plane *plane
+        cdef geom.Plane plane
 
         cdef int l
         cdef int max_level = self.max_level
-        cdef int i_plane, i_o, i_n, i_l
-        i_0 = i_n = i_l = 0
+        cdef int i_plane
         for i in range(n_planes):
-            plane = new geom.Plane(self._dim, &x_0s[i_0, 0], &norms[i_n, 0])
-            l = ls[i_l]
-            if l < 0:
-                l = (max_level + 1) - (abs(l) % (max_level + 1))
+            plane = geom.Plane(self._dim, &x_0s[i_o, 0], &norms[i_n, 0])
+            l = _wrap_levels(ls[i_l], max_level)
+            self.tree.refine_geom(plane, l, diag_balance)
 
-            self.tree.refine_geom(plane[0], l, diag_balance)
-            del plane
-
-            i_0 += origin_step
+            i_o += origin_step
             i_n += normal_step
             i_l += level_step
         if finalize:
@@ -925,37 +887,33 @@ cdef class _TreeMesh:
         >>> plt.show()
 
         """
-        triangle = np.require(np.atleast_2d(triangle), dtype=np.float64, requirements="C")
-        if triangle.ndim == 2:
-            triangle = triangle[None, ...]
-        if triangle.shape[-1] != self.dim or triangle.shape[-2] != 3:
+        triangle = self._require_ndarray_with_dim('triangle', triangle, ndim=3, dtype=np.float64)
+        if triangle.shape[-2] != 3:
             raise ValueError(f"triangle array must be (N, 3, {self.dim})")
+        levels = np.require(np.atleast_1d(levels), dtype=np.int32, requirements='C')
+        cdef int n_triangles = _check_first_dim_broadcast(triangle=triangle, levels=levels)
+
         cdef double[:, :, :] tris = triangle
-
-        levels = np.require(np.atleast_1d(levels), dtype=np.int32,
-                                    requirements='C')
-        cdef int n_triangles = triangle.shape[0];
-        if levels.shape[0] == 1:
-            levels = np.full(n_triangles, levels[0], dtype=np.int32)
-        if n_triangles != levels.shape[0]:
-            raise ValueError(f"inconsistent number of triangles {n_triangles} and levels {levels.shape[0]}")
-
         cdef int[:] ls = levels
+
+        cdef int_t tri_step = tris.shape[0] > 1
+        cdef int_t l_step = ls.shape[0] > 1
+        cdef int_t i_tri=0, i_l=0
 
         if diagonal_balance is None:
             diagonal_balance = self._diagonal_balance
         cdef bool diag_balance = diagonal_balance
 
-        cdef geom.Triangle *triang
+        cdef geom.Triangle triang
         cdef int l
         cdef int max_level = self.max_level
         for i in range(n_triangles):
-            triang = new geom.Triangle(self._dim, &tris[i, 0, 0], &tris[i, 1, 0], &tris[i, 2, 0])
-            l = ls[i]
-            if l < 0:
-                l = (max_level + 1) - (abs(l) % (max_level + 1))
-            self.tree.refine_geom(triang[0], l, diag_balance)
-            del triang
+            triang = geom.Triangle(self._dim, &tris[i_tri, 0, 0], &tris[i_tri, 1, 0], &tris[i_tri, 2, 0])
+            l = _wrap_levels(ls[i_l], max_level)
+            self.tree.refine_geom(triang, l, diag_balance)
+
+            i_tri += tri_step
+            i_l += l_step
         if finalize:
             self.finalize()
 
@@ -1016,45 +974,42 @@ cdef class _TreeMesh:
         """
         if self.dim == 2:
             raise NotImplementedError("refine_vertical_trianglular_prism only implemented in 3D.")
-        triangle = np.require(np.atleast_2d(triangle), dtype=np.float64, requirements="C")
-        if triangle.ndim == 2:
-            triangle = triangle[None, ...]
-        if triangle.shape[-1] != self.dim or triangle.shape[-2] != 3:
+        triangle = self._require_ndarray_with_dim('triangle', triangle, ndim=3, dtype=np.float64)
+        if triangle.shape[-2] != 3:
             raise ValueError(f"triangle array must be (N, 3, {self.dim})")
-        cdef double[:, :, :] tris = triangle
 
         h = np.require(np.atleast_1d(h), dtype=np.float64, requirements="C")
-        levels = np.require(np.atleast_1d(levels), dtype=np.int32,
-                                    requirements='C')
-        cdef int n_triangles = triangle.shape[0];
-        if levels.shape[0] == 1:
-            levels = np.full(n_triangles, levels[0], dtype=np.int32)
-        if h.shape[0] == 1:
-            h = np.full(n_triangles, h[0], dtype=np.float64)
-        if n_triangles != levels.shape[0]:
-            raise ValueError(f"inconsistent number of triangles {n_triangles} and levels {levels.shape[0]}")
-        if n_triangles != h.shape[0]:
-            raise ValueError(f"inconsistent number of triangles {n_triangles} and heights {h.shape[0]}")
         if np.any(h < 0):
             raise ValueError("All heights must be positive.")
 
-        cdef int[:] ls = levels
+        levels = np.require(np.atleast_1d(levels), dtype=np.int32, requirements='C')
+
+        cdef int_t n_triangles = _check_first_dim_broadcast(triangle=triangle, h=h, levels=levels)
+
+        cdef double[:, :, :] tris = triangle
         cdef double[:] hs = h
+        cdef int[:] ls = levels
+
+        cdef int_t tri_step = tris.shape[0] > 1
+        cdef int_t h_step = hs.shape[0] > 1
+        cdef int_t l_step = ls.shape[0] > 1
+        cdef int_t i_tri=0, i_h=0, i_l=0
 
         if diagonal_balance is None:
             diagonal_balance = self._diagonal_balance
         cdef bool diag_balance = diagonal_balance
 
-        cdef geom.VerticalTriangularPrism *vert_prism
+        cdef geom.VerticalTriangularPrism vert_prism
         cdef int l
         cdef int max_level = self.max_level
         for i in range(n_triangles):
-            vert_prism = new geom.VerticalTriangularPrism(self._dim, &tris[i, 0, 0], &tris[i, 1, 0], &tris[i, 2, 0], hs[i])
-            l = ls[i]
-            if l < 0:
-                l = (max_level + 1) - (abs(l) % (max_level + 1))
-            self.tree.refine_geom(vert_prism[0], l, diag_balance)
-            del vert_prism
+            vert_prism = geom.VerticalTriangularPrism(self._dim, &tris[i_tri, 0, 0], &tris[i_tri, 1, 0], &tris[i_tri, 2, 0], hs[i_h])
+            l = _wrap_levels(ls[i_l], max_level)
+            self.tree.refine_geom(vert_prism, l, diag_balance)
+
+            i_tri += tri_step
+            i_h += h_step
+            i_l += l_step
         if finalize:
             self.finalize()
 
@@ -1111,37 +1066,34 @@ cdef class _TreeMesh:
         """
         if self.dim == 2:
             return self.refine_triangle(tetra, levels, finalize=finalize, diagonal_balance=diagonal_balance)
-        tetra = np.require(np.atleast_2d(tetra), dtype=np.float64, requirements="C")
-        if tetra.ndim == 2:
-            tetra = tetra[None, ...]
-        if tetra.shape[-1] != self.dim or tetra.shape[-2] != self.dim+1:
+        tetra = self._require_ndarray_with_dim('tetra', tetra, ndim=3, dtype=np.float64)
+        if tetra.shape[-2] != self.dim+1:
             raise ValueError(f"tetra array must be (N, {self.dim+1}, {self.dim})")
+        levels = np.require(np.atleast_1d(levels), dtype=np.int32, requirements='C')
+
+        cdef int_t n_triangles = _check_first_dim_broadcast(tetra=tetra, levels=levels)
+
         cdef double[:, :, :] tris = tetra
-
-        levels = np.require(np.atleast_1d(levels), dtype=np.int32,
-                                    requirements='C')
-        cdef int n_triangles = tetra.shape[0];
-        if levels.shape[0] == 1:
-            levels = np.full(n_triangles, levels[0], dtype=np.int32)
-        if n_triangles != levels.shape[0]:
-            raise ValueError(f"inconsistent number of triangles {n_triangles} and levels {levels.shape[0]}")
-
         cdef int[:] ls = levels
+
+        cdef int_t tri_step = tris.shape[0] > 1
+        cdef int_t l_step = ls.shape[0] > 1
+        cdef int_t i_tri=0, i_l=0
 
         if diagonal_balance is None:
             diagonal_balance = self._diagonal_balance
         cdef bool diag_balance = diagonal_balance
 
-        cdef geom.Tetrahedron *tet
+        cdef geom.Tetrahedron tet
         cdef int l
         cdef int max_level = self.max_level
         for i in range(n_triangles):
-            l = ls[i]
-            tet = new geom.Tetrahedron(self._dim, &tris[i, 0, 0], &tris[i, 1, 0], &tris[i, 2, 0], &tris[i, 3, 0])
-            if l < 0:
-                l = (max_level + 1) - (abs(l) % (max_level + 1))
-            self.tree.refine_geom(tet[0], l, diag_balance)
-            del tet
+            l = _wrap_levels(ls[i_l], max_level)
+            tet = geom.Tetrahedron(self._dim, &tris[i_tri, 0, 0], &tris[i_tri, 1, 0], &tris[i_tri, 2, 0], &tris[i_tri, 3, 0])
+            self.tree.refine_geom(tet, l, diag_balance)
+
+            i_tri += tri_step
+            i_l += l_step
         if finalize:
             self.finalize()
 
@@ -1178,25 +1130,29 @@ cdef class _TreeMesh:
         -----------------------
         Total :       40
         """
-        points = np.require(np.atleast_2d(points), dtype=np.float64,
-                            requirements='C')
-        if points.shape[1] != self.dim:
-            raise ValueError(f"points array must be (N, {self.dim})")
+        points = self._require_ndarray_with_dim('points', points, ndim=2, dtype=np.float64)
+        levels = np.require(np.atleast_1d(levels), dtype=np.int32, requirements='C')
+        cdef int_t n_points = _check_first_dim_broadcast(points=points, levels=levels)
+
         cdef double[:, :] cs = points
-        cdef int[:] ls = np.require(np.atleast_1d(levels), dtype=np.int32,
-                                    requirements='C')
-        if points.shape[0] != ls.shape[0]:
-            raise ValueError("level length must match the points array's first dimension")
+        cdef int[:] ls = levels
+
         cdef int l
         cdef int max_level = self.max_level
         if diagonal_balance is None:
             diagonal_balance = self._diagonal_balance
         cdef bool diag_balance = diagonal_balance
+
+        cdef int_t p_step = cs.shape[0] > 1
+        cdef int_t l_step = ls.shape[0] > 1
+        cdef int_t i_p=0, i_l=0
+
         for i in range(ls.shape[0]):
-            l = ls[i]
-            if l < 0:
-                l = (max_level + 1) - (abs(l) % (max_level + 1))
-            self.tree.insert_cell(&cs[i, 0], l, diagonal_balance)
+            l = _wrap_levels(ls[i_l], max_level)
+            self.tree.insert_cell(&cs[i_p, 0], l, diagonal_balance)
+
+            i_l += l_step
+            i_p += p_step
         if finalize:
             self.finalize()
 
@@ -1234,6 +1190,184 @@ cdef class _TreeMesh:
     def number(self):
         """Number the cells, nodes, faces, and edges of the TreeMesh."""
         self.tree.number()
+
+    def get_containing_cells(self, points):
+        """
+
+        Parameters
+        ----------
+        points : (dim) or (n_point, dim) array_like
+            The locations to query for the containing cells
+
+        Returns
+        -------
+        numpy.intp or (n_point) numpy.ndarray of numpy.intp
+            The indexes of cells containing each point.
+
+        """
+        cdef double[:,:] d_locs = self._require_ndarray_with_dim(
+            'locs', points, ndim=2, dtype=np.float64
+        )
+        cdef int_t n_locs = d_locs.shape[0]
+        cdef np.int64_t[:] indexes = np.empty(n_locs, dtype=np.int64)
+        cdef double x, y, z
+        for i in range(n_locs):
+            x = d_locs[i, 0]
+            y = d_locs[i, 1]
+            if self._dim == 3:
+                z = d_locs[i, 2]
+            else:
+                z = 0
+            indexes[i] = self.tree.containing_cell(x, y, z).index
+        if n_locs==1:
+            return indexes[0]
+        return np.array(indexes)
+
+    def get_cells_within_ball(self, center, double radius):
+        """Find the indices of cells that overlap a ball
+
+        Parameters
+        ----------
+        center : (dim) array_like
+            center of the ball.
+        radius : float
+            radius of the ball
+
+        Returns
+        -------
+        numpy.ndarray of numpy.intp
+            The indices of cells which overlap the ball.
+        """
+        cdef double[:] a = self._require_ndarray_with_dim('center', center, dtype=np.float64)
+
+        cdef geom.Ball ball = geom.Ball(self._dim, &a[0], radius)
+        return np.array(self.tree.find_cells_geom(ball))
+
+    def get_cells_along_line(self, x0, x1):
+        """Find the cells along a line segment.
+
+        Parameters
+        ----------
+        x0,x1 : (dim) array_like
+            Beginning and ending point of the line segment.
+
+        Returns
+        -------
+        numpy.ndarray of numpy.intp
+            Indices for cells that contain the a line defined by the two input
+            points, ordered in the direction of the line.
+        """
+        cdef double[:] start = self._require_ndarray_with_dim('x0', x0, dtype=np.float64)
+        cdef double[:] end = self._require_ndarray_with_dim('x1', x1, dtype=np.float64)
+
+        cdef geom.Line line = geom.Line(self._dim, &start[0], &end[0])
+        return np.array(self.tree.find_cells_geom(line))
+
+    def get_cells_within_aabb(self, x_min, x_max):
+        """Find the indices of cells that overlap an axis aligned bounding box (aabb)
+
+        Parameters
+        ----------
+        x_min : (dim, ) array_like
+            Minimum extent of the box.
+        x_max : (dim, ) array_like
+            Maximum extent of the box.
+
+        Returns
+        -------
+        numpy.ndarray of numpy.intp
+            The indices of cells which overlap the axis aligned bounding box.
+        """
+        cdef double[:] a = self._require_ndarray_with_dim('x_min', x_min, dtype=np.float64)
+        cdef double[:] b = self._require_ndarray_with_dim('x_max', x_max, dtype=np.float64)
+
+        cdef geom.Box box = geom.Box(self._dim, &a[0], &b[0])
+        return np.array(self.tree.find_cells_geom(box))
+
+    def get_cells_along_plane(self, origin, normal):
+        """Find the indices of cells that intersect a plane.
+
+        Parameters
+        ----------
+        origin : (dim) array_like
+        normal : (dim) array_like
+
+        Returns
+        -------
+        numpy.ndarray of numpy.intp
+            The indices of cells which intersect the plane.
+        """
+        cdef double[:] orig = self._require_ndarray_with_dim('origin', origin, dtype=np.float64)
+        cdef double[:] norm = self._require_ndarray_with_dim('normal', normal, dtype=np.float64)
+
+        cdef geom.Plane plane = geom.Plane(self._dim, &orig[0], &norm[0])
+        return np.array(self.tree.find_cells_geom(plane))
+
+    def get_cells_within_triangle(self, x0, x1, x2):
+        """Find the indices of cells that overlap a triangle.
+
+        Parameters
+        ----------
+        x0, x1, x2 : (dim) array_like
+           The three points of the triangle.
+
+        Returns
+        -------
+        numpy.ndarray of numpy.intp
+            The indices of cells which overlap the triangle.
+        """
+        cdef double[:] a = self._require_ndarray_with_dim('x0', x0, dtype=np.float64)
+        cdef double[:] b = self._require_ndarray_with_dim('x1', x1, dtype=np.float64)
+        cdef double[:] c = self._require_ndarray_with_dim('x2', x2, dtype=np.float64)
+
+        cdef geom.Triangle triangle = geom.Triangle(self._dim, &a[0], &b[0], &c[0])
+        return np.array(self.tree.find_cells_geom(triangle))
+
+    def get_cells_within_vertical_trianglular_prism(self, x0, x1, x2, double h):
+        """Find the indices of cells that overlap a vertical triangular prism.
+
+        Parameters
+        ----------
+        x0, x1, x2 : (dim) array_like
+            The three points of the triangle, assumes the top and bottom
+            faces are parallel.
+        h : float
+            The height of the prism.
+
+        Returns
+        -------
+        numpy.ndarray of numpy.intp
+            The indices of cells which overlap the vertical triangular prism.
+        """
+        if self.dim == 2:
+            raise NotImplementedError("vertical_trianglular_prism only implemented in 3D.")
+        cdef double[:] a = self._require_ndarray_with_dim('x0', x0, dtype=np.float64)
+        cdef double[:] b = self._require_ndarray_with_dim('x1', x1, dtype=np.float64)
+        cdef double[:] c = self._require_ndarray_with_dim('x2', x2, dtype=np.float64)
+
+        cdef geom.VerticalTriangularPrism vert = geom.VerticalTriangularPrism(self._dim, &a[0], &b[0], &c[0], h)
+        return np.array(self.tree.find_cells_geom(vert))
+
+    def get_cells_within_tetrahedron(self, x0, x1, x2, x3):
+        """Find the indices of cells that overlap a tetrahedron.
+
+        Parameters
+        ----------
+        x0, x1, x2, x3: (dim) array_like
+           The four points of the tetrahedron.
+
+        Returns
+        -------
+        numpy.ndarray of numpy.intp
+            The indices of cells which overlap the triangle.
+        """
+        cdef double[:] a = self._require_ndarray_with_dim('x0', x0, dtype=np.float64)
+        cdef double[:] b = self._require_ndarray_with_dim('x1', x1, dtype=np.float64)
+        cdef double[:] c = self._require_ndarray_with_dim('x2', x2, dtype=np.float64)
+        cdef double[:] d = self._require_ndarray_with_dim('x3', x3, dtype=np.float64)
+
+        cdef geom.Tetrahedron tet = geom.Tetrahedron(self._dim, &a[0], &b[0], &c[0], &d[0])
+        return np.array(self.tree.find_cells_geom(tet))
 
     def _set_origin(self, origin):
         if not isinstance(origin, (list, tuple, np.ndarray)):
@@ -5191,34 +5325,6 @@ cdef class _TreeMesh:
             is_b |= (nodes[:, 2] == z0) | (nodes[:, 2] == zF)
         return sp.eye(self.n_nodes, format='csr')[is_b]
 
-    def _get_containing_cell_index(self, loc):
-        cdef double x, y, z
-        x = loc[0]
-        y = loc[1]
-        if self._dim == 3:
-            z = loc[2]
-        else:
-            z = 0
-        return self.tree.containing_cell(x, y, z).index
-
-    def _get_containing_cell_indexes(self, locs):
-        locs = np.require(np.atleast_2d(locs), dtype=np.float64, requirements='C')
-        cdef double[:,:] d_locs = locs
-        cdef int_t n_locs = d_locs.shape[0]
-        cdef np.int64_t[:] indexes = np.empty(n_locs, dtype=np.int64)
-        cdef double x, y, z
-        for i in range(n_locs):
-            x = d_locs[i, 0]
-            y = d_locs[i, 1]
-            if self._dim == 3:
-                z = d_locs[i, 2]
-            else:
-                z = 0
-            indexes[i] = self.tree.containing_cell(x, y, z).index
-        if n_locs==1:
-            return indexes[0]
-        return np.array(indexes)
-
     def _count_cells_per_index(self):
         cdef np.int64_t[:] counts = np.zeros(self.max_level+1, dtype=np.int64)
         for cell in self.tree.cells:
@@ -6352,7 +6458,7 @@ cdef class _TreeMesh:
             same_base = False
 
         if same_base:
-            in_cell_inds = self._get_containing_cell_indexes(out_tens_mesh.cell_centers)
+            in_cell_inds = self.get_containing_cells(out_tens_mesh.cell_centers)
             # Every cell input cell is gauranteed to be a lower level than the output tenser mesh
             # therefore all weights a 1.0
             if values is not None:
@@ -6491,7 +6597,7 @@ cdef class _TreeMesh:
 
 
         if same_base:
-            out_cell_inds = self._get_containing_cell_indexes(in_tens_mesh.cell_centers)
+            out_cell_inds = self.get_containing_cells(in_tens_mesh.cell_centers)
             ws = in_tens_mesh.cell_volumes/self.cell_volumes[out_cell_inds]
             if values is not None:
                 if output is None:
@@ -6648,7 +6754,7 @@ cdef class _TreeMesh:
 
         Parameters
         ----------
-        rectangle: (dim * 2) array_like
+        rectangle: (2 * dim) array_like
             array ordered ``[x_min, x_max, y_min, y_max, (z_min, z_max)]`` describing
             the axis aligned rectangle of interest.
 
@@ -6657,46 +6763,72 @@ cdef class _TreeMesh:
         list of int
             The indices of cells which overlap the axis aligned rectangle.
         """
-        cdef double xm[3]
-        cdef double xp[3]
-        cdef double[:] origin = self._origin
-        cdef double[:] xF
-        if self.dim == 2:
-            xF = np.array([self._xs[-1], self._ys[-1]])
-        else:
-            xF = np.array([self._xs[-1], self._ys[-1], self._zs[-1]])
-        for i_d in range(self._dim):
-            xm[i_d] = min(rectangle[2 * i_d], xF[i_d])
-            xp[i_d] = max(rectangle[2 * i_d + 1], origin[i_d])
+        return self.get_cells_within_aabb(*rectangle.reshape(self.dim, 2).T)
 
-        cdef geom.Box *box = new geom.Box(self._dim, xm, xp)
-        cdef vector[int_t] cell_inds = self.tree.find_cells_geom(box[0])
-        del box
-
-        return cell_inds
-
-    def get_cells_along_line(self, x0, x1):
-        """Find the cells along a line segment defined by two points.
+    def _require_ndarray_with_dim(self, name, arr, ndim=1, dtype=None, requirements=None):
+        """Returns an ndarray that has dim along it's last dimension, with ndim dims,
 
         Parameters
         ----------
-        x0,x1 : (dim) array_like
-            Begining and ending point of the line segment.
+        name : str
+            name of the parameter for raised error
+        arr : array_like
+        ndim : {1, 2, 3}
+        dtype, optional
+            dtype input to np.requires
+        requirements, optional
+            requirements input to np.requires, defaults to 'C'.
 
         Returns
         -------
-        list of int
-            Indices for cells that contain the a line defined by the two input
-            points, ordered in the direction of the line.
+        numpy.ndarray
+            validated array
         """
-        cdef double[:] start = np.require(x0, dtype=np.float64, requirements='A')
-        cdef double[:] end = np.require(x0, dtype=np.float64, requirements='A')
+        if requirements is None:
+            requirements = 'C'
+        if ndim == 1:
+            arr = np.atleast_1d(arr)
+        elif ndim > 1:
+            arr = np.atleast_2d(arr)
+            if ndim == 3 and arr.ndim != 3:
+                arr = arr[None, ...]
+        else:
+            arr = np.asarray(arr)
+        if arr.ndim != ndim:
+            raise ValueError(f"{name} must have at most {ndim} dimensions.")
+        if arr.shape[-1] != self.dim:
+            raise ValueError(
+                f"Expected the last dimension of {name}.shape={arr.shape} to be {self.dim}."
+            )
+        return np.require(arr, dtype=dtype, requirements=requirements)
 
-        cdef geom.Line *line = new geom.Line(self._dim, &start[0], &end[0])
-        cdef vector[int_t] cell_inds = self.tree.find_cells_geom(line[0])
-        del line
-        return cell_inds
+
+def _check_first_dim_broadcast(**kwargs):
+    """Perform a check to make sure that the first dimensions of the inputs will broadcast."""
+    n_items = 1
+    err = False
+    for key, arr in kwargs.items():
+        test_len = arr.shape[0]
+        if test_len != 1:
+            if n_items == 1:
+                n_items = test_len
+            elif test_len != n_items:
+                err = True
+                break
+    if err:
+        message = "First dimensions of"
+        for key, arr in kwargs.items():
+            message += f" {key}: {arr.shape},"
+        message = message[:-1]
+        message += " do not broadcast."
+        raise ValueError(message)
+    return n_items
 
 
 cdef inline double _clip01(double x) nogil:
     return min(1, max(x, 0))
+
+cdef inline int _wrap_levels(int l, int max_level):
+    if l < 0:
+        l = (max_level + 1) - (abs(l) % (max_level + 1))
+    return l
