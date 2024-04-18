@@ -879,9 +879,7 @@ def assert_isadjoint(
 def assert_cell_intersects_geometric(
     cell, points, edges=None, faces=None, as_refine=False
 ):
-    """Asserst if a cell intersects a convex geometric object.
-
-    Used to determine if a axis aligned cell with the properties
+    """Assert if a cell intersects a convex polygon.
 
     Parameters
     ----------

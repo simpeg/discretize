@@ -8,7 +8,7 @@
 #define CROSS3D(e0, e1, out) \
     out[0] = e0[1] * e1[2] - e0[2] * e1[1]; \
     out[1] = e0[2] * e1[0] - e0[0] * e1[2]; \
-    out[2] = e0[0] * e1[1] - e0[1] * e0[0];
+    out[2] = e0[0] * e1[1] - e0[1] * e1[0];
 
 // simple geometric objects for intersection tests with an aabb
 

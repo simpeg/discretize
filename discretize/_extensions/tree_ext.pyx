@@ -1201,7 +1201,7 @@ cdef class _TreeMesh:
 
         Returns
         -------
-        numpy.intp or (n_point) numpy.ndarray of numpy.intp
+        int or (n_point) numpy.ndarray of int
             The indexes of cells containing each point.
 
         """
@@ -1235,7 +1235,7 @@ cdef class _TreeMesh:
 
         Returns
         -------
-        numpy.ndarray of numpy.intp
+        numpy.ndarray of int
             The indices of cells which overlap the ball.
         """
         cdef double[:] a = self._require_ndarray_with_dim('center', center, dtype=np.float64)
@@ -1253,7 +1253,7 @@ cdef class _TreeMesh:
 
         Returns
         -------
-        numpy.ndarray of numpy.intp
+        numpy.ndarray of int
             Indices for cells that contain the a line defined by the two input
             points, ordered in the direction of the line.
         """
@@ -1275,7 +1275,7 @@ cdef class _TreeMesh:
 
         Returns
         -------
-        numpy.ndarray of numpy.intp
+        numpy.ndarray of int
             The indices of cells which overlap the axis aligned bounding box.
         """
         cdef double[:] a = self._require_ndarray_with_dim('x_min', x_min, dtype=np.float64)
@@ -1294,7 +1294,7 @@ cdef class _TreeMesh:
 
         Returns
         -------
-        numpy.ndarray of numpy.intp
+        numpy.ndarray of int
             The indices of cells which intersect the plane.
         """
         cdef double[:] orig = self._require_ndarray_with_dim('origin', origin, dtype=np.float64)
@@ -1303,32 +1303,33 @@ cdef class _TreeMesh:
         cdef geom.Plane plane = geom.Plane(self._dim, &orig[0], &norm[0])
         return np.array(self.tree.find_cells_geom(plane))
 
-    def get_cells_within_triangle(self, x0, x1, x2):
+    def get_cells_within_triangle(self, triangle):
         """Find the indices of cells that overlap a triangle.
 
         Parameters
         ----------
-        x0, x1, x2 : (dim) array_like
-           The three points of the triangle.
+        triangle : (3, dim) array_like
+            The three points of the triangle.
 
         Returns
         -------
-        numpy.ndarray of numpy.intp
+        numpy.ndarray of int
             The indices of cells which overlap the triangle.
         """
-        cdef double[:] a = self._require_ndarray_with_dim('x0', x0, dtype=np.float64)
-        cdef double[:] b = self._require_ndarray_with_dim('x1', x1, dtype=np.float64)
-        cdef double[:] c = self._require_ndarray_with_dim('x2', x2, dtype=np.float64)
+        triangle = self._require_ndarray_with_dim('triangle', triangle, ndim=2, dtype=np.float64)
+        if triangle.shape[0] != 3:
+            raise ValueError(f"Triangle array must have three points, saw {triangle.shape[0]}")
+        cdef double[:, :] tri = triangle
 
-        cdef geom.Triangle triangle = geom.Triangle(self._dim, &a[0], &b[0], &c[0])
-        return np.array(self.tree.find_cells_geom(triangle))
+        cdef geom.Triangle poly = geom.Triangle(self._dim, &tri[0, 0], &tri[1, 0], &tri[2, 0])
+        return np.array(self.tree.find_cells_geom(poly))
 
-    def get_cells_within_vertical_trianglular_prism(self, x0, x1, x2, double h):
+    def get_cells_within_vertical_trianglular_prism(self, triangle, double h):
         """Find the indices of cells that overlap a vertical triangular prism.
 
         Parameters
         ----------
-        x0, x1, x2 : (dim) array_like
+        triangle : (3, dim) array_like
             The three points of the triangle, assumes the top and bottom
             faces are parallel.
         h : float
@@ -1336,38 +1337,41 @@ cdef class _TreeMesh:
 
         Returns
         -------
-        numpy.ndarray of numpy.intp
+        numpy.ndarray of int
             The indices of cells which overlap the vertical triangular prism.
         """
         if self.dim == 2:
             raise NotImplementedError("vertical_trianglular_prism only implemented in 3D.")
-        cdef double[:] a = self._require_ndarray_with_dim('x0', x0, dtype=np.float64)
-        cdef double[:] b = self._require_ndarray_with_dim('x1', x1, dtype=np.float64)
-        cdef double[:] c = self._require_ndarray_with_dim('x2', x2, dtype=np.float64)
+        triangle = self._require_ndarray_with_dim('triangle', triangle, ndim=2, dtype=np.float64)
+        if triangle.shape[0] != 3:
+            raise ValueError(f"Triangle array must have three points, saw {triangle.shape[0]}")
+        cdef double[:, :] tri = triangle
 
-        cdef geom.VerticalTriangularPrism vert = geom.VerticalTriangularPrism(self._dim, &a[0], &b[0], &c[0], h)
+        cdef geom.VerticalTriangularPrism vert = geom.VerticalTriangularPrism(self._dim, &tri[0, 0], &tri[1, 0], &tri[2, 0], h)
         return np.array(self.tree.find_cells_geom(vert))
 
-    def get_cells_within_tetrahedron(self, x0, x1, x2, x3):
+    def get_cells_within_tetrahedron(self, tetra):
         """Find the indices of cells that overlap a tetrahedron.
 
         Parameters
         ----------
-        x0, x1, x2, x3: (dim) array_like
-           The four points of the tetrahedron.
+        tetra : (dim+1, dim) array_like
+            The points of the tetrahedron(s).
 
         Returns
         -------
-        numpy.ndarray of numpy.intp
+        numpy.ndarray of int
             The indices of cells which overlap the triangle.
         """
-        cdef double[:] a = self._require_ndarray_with_dim('x0', x0, dtype=np.float64)
-        cdef double[:] b = self._require_ndarray_with_dim('x1', x1, dtype=np.float64)
-        cdef double[:] c = self._require_ndarray_with_dim('x2', x2, dtype=np.float64)
-        cdef double[:] d = self._require_ndarray_with_dim('x3', x3, dtype=np.float64)
+        if self.dim == 2:
+            return self.get_cells_within_triangle(tetra)
+        tetra = self._require_ndarray_with_dim('tetra', tetra, ndim=2, dtype=np.float64)
+        if tetra.shape[0] != 4:
+            raise ValueError(f"A tetrahedron is defined by 4 points in 3D, not {tetra.shape[0]}.")
+        cdef double[:, :] tet = tetra
 
-        cdef geom.Tetrahedron tet = geom.Tetrahedron(self._dim, &a[0], &b[0], &c[0], &d[0])
-        return np.array(self.tree.find_cells_geom(tet))
+        cdef geom.Tetrahedron poly = geom.Tetrahedron(self._dim, &tet[0, 0], &tet[1, 0], &tet[2, 0], &tet[3, 0])
+        return np.array(self.tree.find_cells_geom(poly))
 
     def _set_origin(self, origin):
         if not isinstance(origin, (list, tuple, np.ndarray)):
