@@ -67,6 +67,7 @@ if get_option('cy_coverage')
     cython_file_full_path = meson.current_source_dir() / cython_file
     run_command(cython, '-M', '--fast-fail', '-3', '--directive', 'linetrace=true', cython_file_full_path)
   endforeach
+endif
 
 cython_cpp_args = cython_c_args
 
