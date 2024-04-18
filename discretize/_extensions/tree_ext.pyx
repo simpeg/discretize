@@ -5335,13 +5335,22 @@ cdef class _TreeMesh:
             counts[cell.level] += 1
         return np.array(counts)
 
-    def _cell_levels_by_indexes(self, index):
-        index = np.require(np.atleast_1d(index), dtype=np.int64, requirements='C')
-        cdef np.int64_t[:] inds = index
-        cdef int_t n_cells = inds.shape[0]
+    def _cell_levels_by_indexes(self, index=None):
+        cdef np.int64_t[:] inds
+        cdef bool do_all = index is None
+        cdef int_t n_cells
+        if not do_all:
+            index = np.require(np.atleast_1d(index), dtype=np.int64, requirements='C')
+            inds = index
+            n_cells = inds.shape[0]
+        else:
+            n_cells = self.n_cells
+
         cdef np.int64_t[:] levels = np.empty(n_cells, dtype=np.int64)
+        cdef int_t ii
         for i in range(n_cells):
-            levels[i] = self.tree.cells[inds[i]].level
+            ii = i if do_all else inds[i]
+            levels[i] = self.tree.cells[ii].level
         if n_cells == 1:
             return levels[0]
         else:
