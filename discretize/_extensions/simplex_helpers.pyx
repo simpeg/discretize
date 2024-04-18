@@ -1,6 +1,4 @@
-# distutils: language=c++
 # cython: embedsignature=True, language_level=3
-# cython: linetrace=True
 
 from libcpp.pair cimport pair
 from libcpp.unordered_map cimport unordered_map

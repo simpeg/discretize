@@ -49,10 +49,24 @@ c_undefined_ok = ['-Wno-maybe-uninitialized']
 
 cython_c_args = [numpy_nodepr_api, use_math_defines]
 
-cy_line_trace = get_option('cy_line_trace')
-if cy_line_trace
-  cython_c_args += ['-DCYTHON_TRACE_NOGIL=1']
-endif
+if get_option('cy_coverage')
+  # tell cython to enable linetracing
+  add_project_arguments(['--directive', 'linetrace=true'], language : 'cython')
+  # tell the c_compiler and cpp_compiler to define CYTHON_TRACE_NOGIL
+  add_project_arguments(['-DCYTHON_TRACE_NOGIL=1'], language : 'c')
+  add_project_arguments(['-DCYTHON_TRACE_NOGIL=1'], language : 'cpp')
+
+  # compile the .c file from the .pyx file in it's directory.
+  # These should include the default options passed to the cython compiler
+  cython_sources = [
+    'interputils_cython.pyx',
+    'tree_ext.pyx',
+    'simplex_helpers.pyx',
+  ]
+  foreach cython_file : cython_sources
+    cython_file_full_path = meson.current_source_dir() / cython_file
+    run_command(cython, '-M', '--fast-fail', '-3', '--directive', 'linetrace=true', cython_file_full_path)
+  endforeach
 
 cython_cpp_args = cython_c_args
 
