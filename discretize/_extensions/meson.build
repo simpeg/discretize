@@ -72,7 +72,7 @@ if get_option('cy_coverage')
   endforeach
   foreach cython_file : cython_cpp_sources
     cython_file_full_path = meson.current_source_dir() / cython_file
-    run_command(cython, '-cplus', '-M', '--fast-fail', '-3', '--directive', 'linetrace=true', cython_file_full_path)
+    run_command(cython, '--cplus', '-M', '--fast-fail', '-3', '--directive', 'linetrace=true', cython_file_full_path)
   endforeach
 endif
 
