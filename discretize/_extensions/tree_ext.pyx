@@ -1,4 +1,4 @@
-# cython: embedsignature=True, language_level=3
+# cython: embedsignature=True
 cimport cython
 cimport numpy as np
 from libc.stdlib cimport malloc, free

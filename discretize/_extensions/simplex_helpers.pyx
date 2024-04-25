@@ -1,4 +1,4 @@
-# cython: embedsignature=True, language_level=3
+# cython: embedsignature=True
 
 from libcpp.pair cimport pair
 from libcpp.unordered_map cimport unordered_map
