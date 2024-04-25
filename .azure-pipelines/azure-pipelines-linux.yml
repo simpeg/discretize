@@ -50,8 +50,12 @@ jobs:
   - bash: |
       source "${HOME}/conda/etc/profile.d/conda.sh"
       conda activate discretize-test
-      pip install --no-build-isolation --editable . --config-settings=setup-args="-Dcy_coverage=true"
-    displayName: Install requirements and build for Testing
+      python -m pip install --no-build-isolation --verbose --editable . \
+          --config-settings=compile-args=-v \
+          --config-settings=setup-args='-Dcy_coverage=true' \
+          --config-settings=setup-args='-Dbuildtype=debug' \
+          --config-settings=build-dir='build-dbg'
+    displayName: Install requirements and build for coverage
     condition: eq(variables['python.version'], '3.10')
 
   - bash: |
