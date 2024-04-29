@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 #
 #    - **Tree meshes** (:class:`discretize.TreeMesh`): also referred to as QuadTree or OcTree meshes
 #
-#    - **Curvilinear meshes** (:class:`discretize.CurviMesh`): also referred to as logically rectangular non-orthogonal
+#    - **Curvilinear meshes** (:class:`discretize.CurvilinearMesh`): also referred to as logically rectangular non-orthogonal
 #
 # Examples for each mesh type are shown below.
 #
