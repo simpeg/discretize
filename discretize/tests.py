@@ -552,6 +552,7 @@ def check_derivative(
     tolerance=0.85,
     eps=1e-10,
     ax=None,
+    seed=None,
 ):
     """Perform a basic derivative check.
 
@@ -580,6 +581,10 @@ def check_derivative(
     ax : matplotlib.pyplot.Axes, optional
         An axis object for the convergence plot if *plotIt = True*.
         Otherwise, the function will create a new axis.
+    seed : {None, int, np.random.Generator}, optional
+        Random seed used building ``dx`` if it's None, and to make the random
+        choice.
+
 
     Returns
     -------
@@ -626,8 +631,9 @@ def check_derivative(
 
     x0 = mkvc(x0)
 
+    rng = np.random.default_rng(seed=seed)
     if dx is None:
-        dx = np.random.randn(len(x0))
+        dx = rng.normal(size=len(x0))
 
     h = np.logspace(-1, -num, num)
     E0 = np.ones(h.shape)
@@ -700,7 +706,7 @@ def check_derivative(
                     f" {tolerance} of the expected order {expectedOrder}."
                 )
         print("{0!s} PASS! {1!s}".format("=" * 25, "=" * 25))
-        print(np.random.choice(happiness) + "\n")
+        print(rng.choice(happiness) + "\n")
         if plotIt:
             _plot_it(ax, True)
     except AssertionError as err:
@@ -709,7 +715,7 @@ def check_derivative(
                 "*" * 57, "<" * 25, ">" * 25, "*" * 57
             )
         )
-        print(np.random.choice(sadness) + "\n")
+        print(rng.choice(sadness) + "\n")
         if plotIt:
             _plot_it(ax, False)
         raise err
