@@ -6,6 +6,8 @@ import discretize
 from discretize import utils
 from pymatsolver import Solver, Pardiso
 
+gen = np.random.default_rng(42)
+
 
 class TestCC1D_InhomogeneousDirichlet(discretize.tests.OrderTest):
     name = "1D - Dirichlet"
@@ -13,6 +15,7 @@ class TestCC1D_InhomogeneousDirichlet(discretize.tests.OrderTest):
     meshDimension = 1
     expectedOrders = 2
     meshSizes = [4, 8, 16, 32, 64, 128]
+    rng = gen
 
     def getError(self):
         # Test function
@@ -56,6 +59,7 @@ class TestCC2D_InhomogeneousDirichlet(discretize.tests.OrderTest):
     meshDimension = 2
     expectedOrders = [2, 2, 1]
     meshSizes = [4, 8, 16, 32, 64]
+    rng = gen
 
     def getError(self):
         # Test function
@@ -99,6 +103,7 @@ class TestCC1D_InhomogeneousNeumann(discretize.tests.OrderTest):
     meshDimension = 1
     expectedOrders = 2
     meshSizes = [4, 8, 16, 32, 64, 128]
+    rng = gen
 
     def getError(self):
         # Test function
@@ -166,6 +171,7 @@ class TestCC2D_InhomogeneousNeumann(discretize.tests.OrderTest):
     expectedOrders = [2, 2, 1]
     meshSizes = [4, 8, 16, 32]
     # meshSizes = [4]
+    rng = gen
 
     def getError(self):
         # Test function
@@ -228,6 +234,7 @@ class TestCC1D_InhomogeneousMixed(discretize.tests.OrderTest):
     meshDimension = 1
     expectedOrders = 2
     meshSizes = [4, 8, 16, 32, 64, 128]
+    rng = gen
 
     def getError(self):
         # Test function
@@ -286,6 +293,7 @@ class TestCC2D_InhomogeneousMixed(discretize.tests.OrderTest):
     meshDimension = 2
     expectedOrders = [2, 2, 1]
     meshSizes = [2, 4, 8, 16]
+    rng = gen
     # meshSizes = [4]
 
     def getError(self):
@@ -353,6 +361,7 @@ class TestCC3D_InhomogeneousMixed(discretize.tests.OrderTest):
     meshDimension = 3
     expectedOrders = [2, 2, 2]
     meshSizes = [2, 4, 8, 16, 32]
+    rng = gen
 
     def getError(self):
         # Test function
@@ -441,6 +450,7 @@ class TestN1D_boundaries(discretize.tests.OrderTest):
     meshDimension = 1
     expectedOrders = 2
     meshSizes = [2, 4, 8, 16, 32, 64, 128]
+    rng = gen
     # meshSizes = [4]
 
     def getError(self):
@@ -520,6 +530,7 @@ class TestN2D_boundaries(discretize.tests.OrderTest):
     expectedOrders = 2
     tolerance = [0.8, 0.8, 0.6]
     meshSizes = [8, 16, 32, 64]
+    rng = gen
     # meshSizes = [4]
 
     def getError(self):
@@ -621,6 +632,7 @@ class TestN3D_boundaries(discretize.tests.OrderTest):
     expectedOrders = 2
     tolerance = 0.6
     meshSizes = [2, 4, 8, 16, 32]
+    rng = gen
     # meshSizes = [4]
 
     def getError(self):

@@ -30,9 +30,6 @@ cartE3 = lambda M, ex, ey, ez: np.vstack(
     )
 )
 
-# np.random.seed(None)
-# np.random.seed(7)
-
 
 class TestCellGrad2D(discretize.tests.OrderTest):
     name = "Cell Gradient 2D, using cellGradx and cellGrady"

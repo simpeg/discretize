@@ -3,7 +3,7 @@ import unittest
 
 import discretize
 
-np.random.seed(182)
+gen = np.random.default_rng(182)
 
 MESHTYPES = ["uniformTensorMesh", "randomTensorMesh"]
 TOLERANCES = [0.9, 0.5, 0.5]
@@ -49,6 +49,7 @@ class TestInterpolation1D(discretize.tests.OrderTest):
     tolerance = TOLERANCES
     meshDimension = 1
     meshSizes = [8, 16, 32, 64, 128]
+    rng = gen
 
     def getError(self):
         funX = lambda x: np.cos(2 * np.pi * x)
@@ -100,6 +101,7 @@ class TestInterpolation2d(discretize.tests.OrderTest):
     tolerance = TOLERANCES
     meshDimension = 2
     meshSizes = [8, 16, 32, 64]
+    rng = gen
 
     def getError(self):
         funX = lambda x, y: np.cos(2 * np.pi * y)
@@ -185,6 +187,7 @@ class TestInterpolationSymCyl(discretize.tests.OrderTest):
     tolerance = 0.6
     meshDimension = 3
     meshSizes = [32, 64, 128, 256]
+    rng = gen
 
     def getError(self):
         funX = lambda x, y: np.cos(2 * np.pi * y)
@@ -252,6 +255,7 @@ class TestInterpolationCyl(discretize.tests.OrderTest):
     meshTypes = ["uniformCylMesh", "randomCylMesh"]  # MESHTYPES +
     meshDimension = 3
     meshSizes = [8, 16, 32, 64]
+    rng = gen
 
     def getError(self):
         func = lambda x, y, z: np.cos(2 * np.pi * x) + np.cos(y) + np.cos(2 * np.pi * z)
@@ -320,6 +324,7 @@ class TestInterpolation3D(discretize.tests.OrderTest):
     tolerance = TOLERANCES
     meshDimension = 3
     meshSizes = [8, 16, 32, 64]
+    rng = gen
 
     def getError(self):
         funX = lambda x, y, z: np.cos(2 * np.pi * y)
