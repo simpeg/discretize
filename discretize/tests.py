@@ -305,7 +305,7 @@ class OrderTest(unittest.TestCase):
     meshDimension = 3
     rng = np.random.default_rng()
 
-    def setupMesh(self, nC):
+    def setupMesh(self, nC, rng=None):
         """Generate mesh and set as current mesh for testing.
 
         Parameters
@@ -318,7 +318,9 @@ class OrderTest(unittest.TestCase):
         Float
             Maximum cell width for the mesh
         """
-        mesh, max_h = setup_mesh(self._meshType, nC, self.meshDimension, rng=self.rng)
+        if rng is None:
+            rng = self.rng
+        mesh, max_h = setup_mesh(self._meshType, nC, self.meshDimension, rng=rng)
         self.M = mesh
         return max_h
 
@@ -363,7 +365,7 @@ class OrderTest(unittest.TestCase):
             )
 
         def test_func(n_cells):
-            max_h = self.setupMesh(n_cells)
+            max_h = self.setupMesh(n_cells, rng=rng)
             err = self.getError()
             return err, max_h
 
