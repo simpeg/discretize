@@ -99,6 +99,9 @@ def setup_mesh(mesh_type, nC, nDim, rng=None):
         number of base mesh cells and must be a power of 2.
     nDim : int
         The dimension of the mesh. Must be 1, 2 or 3.
+    rng : numpy.random.Generator, int, optional
+        The random number generator to use for the adjoint test, if an integer or None
+        it used to seed a new `numpy.random.default_rng`. Only used if mesh_type is 'random'
 
     Returns
     -------
@@ -237,6 +240,9 @@ class OrderTest(unittest.TestCase):
         for the meshes used in the convergence test; e.g. [4, 8, 16, 32]
     meshDimension : int
         Mesh dimension. Must be 1, 2 or 3
+    rng : numpy.random.Generator, int, optional
+        The random number generator to use for the adjoint test, if an integer or None
+        it used to seed a new `numpy.random.default_rng`. Only used if mesh_type is 'random'
 
     Notes
     -----
@@ -312,6 +318,9 @@ class OrderTest(unittest.TestCase):
         ----------
         nC : int
             Number of cells along each axis.
+        rng : numpy.random.Generator, int, optional
+            The random number generator to use for the adjoint test, if an integer or None
+            it used to seed a new `numpy.random.default_rng`. Only used if mesh_type is 'random'
 
         Returns
         -------
