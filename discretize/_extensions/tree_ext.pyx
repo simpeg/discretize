@@ -1243,7 +1243,7 @@ cdef class _TreeMesh:
         cdef geom.Ball ball = geom.Ball(self._dim, &a[0], radius)
         return np.array(self.tree.find_cells_geom(ball))
 
-    def get_cells_along_line(self, segment):
+    def get_cells_along_line(self, *args):
         """Find the cells along a line segment.
 
         Parameters
@@ -1257,6 +1257,12 @@ cdef class _TreeMesh:
             Indices for cells that contain the a line defined by the two input
             points, ordered in the direction of the line.
         """
+        if len(args) == 1:
+            segment = args[0]
+        elif len(args) == 2:
+            segment = np.stack(args)
+        else:
+            raise TypeError('get_cells_along_line() takes 1 or 2 positional arguments')
         segment = self._require_ndarray_with_dim('segment', segment, ndim=2, dtype=np.float64)
         if segment.shape[0] != 2:
             raise ValueError(f"A line segment has two points, not {segment.shape[0]}")
