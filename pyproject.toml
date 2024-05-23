@@ -134,7 +134,6 @@ build-verbosity = "3"
 test-command = 'python -c "import discretize; print(discretize.__version__)"'
 
 [tool.coverage.run]
-branch = true
 plugins = ["Cython.Coverage"]
 source = ["discretize", "tests"]
 
