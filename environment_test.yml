@@ -21,7 +21,7 @@ dependencies:
   # testing
   - sympy
   - pytest
-  - pytest-cov
+  - coverage
   # Building
   - pip
   - meson-python>=0.14.0

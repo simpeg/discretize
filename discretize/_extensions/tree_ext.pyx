@@ -1,6 +1,4 @@
-# distutils: language=c++
-# cython: embedsignature=True, language_level=3
-# cython: linetrace=True
+# cython: embedsignature=True
 cimport cython
 cimport numpy as np
 from libc.stdlib cimport malloc, free

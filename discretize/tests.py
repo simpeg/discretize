@@ -23,6 +23,7 @@ Functions
   get_quadratic
   setup_mesh
   assert_isadjoint
+  assert_expected_order
 """  # NOQA D205
 
 import numpy as np

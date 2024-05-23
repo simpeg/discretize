@@ -1,5 +1,0 @@
-[run]
-source = discretize
-plugins = Cython.Coverage
-omit =
-    */setup.py

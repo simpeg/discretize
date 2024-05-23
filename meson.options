@@ -1,1 +1,1 @@
-option('cy_line_trace', type : 'boolean', value : false)
+option('cy_coverage', type : 'boolean', value : false)
