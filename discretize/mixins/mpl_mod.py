@@ -2568,6 +2568,11 @@ class Slicer(object):
                 clim[0] *= 0.99
                 clim[1] *= 1.01
 
+            # Edge-case. If the entire vector is zero, `clim` is still
+            #  [0, 0] after the above check, hence `clim[0]==clim[1]`.
+            if clim[0] == clim[1]:
+                clim = [-0.1, 0.1]
+
         # ensure vmin/vmax of the norm is consistent with clim
         if "norm" in self.pc_props:
             self.pc_props["norm"].vmin = clim[0]
