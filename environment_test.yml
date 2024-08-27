@@ -27,7 +27,7 @@ dependencies:
   - meson-python>=0.14.0
   - meson
   - ninja
-  - build
+  - python-build
   - cython>=0.29.35
   - setuptools_scm
   # Distribute
