@@ -591,6 +591,38 @@ class TensorMesh(
             return indxd, indxu, indyd, indyu, indzd, indzu
 
     @property
+    def cell_bounds(self):
+        """The bounds of each cell.
+
+        Return a 2D array with the coordinates that define the bounds of each
+        cell in the mesh. Each row of the array contains the bounds for
+        a particular cell in the following order: ``x1``, ``x2``, ``y1``,
+        ``y2``, ``z1``, ``z2``, where ``x1 < x2``, ``y1 < y2`` and ``z1 < z2``.
+        """
+        # Define indexing for meshgrid and order for ravel
+        indexing = "ij"
+        order = "F"
+
+        if self.dim == 1:
+            x = self.nodes_x
+            bounds = (x[:-1], x[1:])
+        elif self.dim == 2:
+            x, y = self.nodes_x, self.nodes_y
+            x1, y1 = np.meshgrid(x[:-1], y[:-1], indexing=indexing)
+            x2, y2 = np.meshgrid(x[1:], y[1:], indexing=indexing)
+            bounds = (x1, x2, y1, y2)
+        else:
+            x, y, z = self.nodes_x, self.nodes_y, self.nodes_z
+            x1, y1, z1 = np.meshgrid(x[:-1], y[:-1], z[:-1], indexing=indexing)
+            x2, y2, z2 = np.meshgrid(x[1:], y[1:], z[1:], indexing=indexing)
+            bounds = (x1, x2, y1, y2, z1, z2)
+
+        cell_bounds = np.hstack(
+            tuple(v.ravel(order=order)[:, np.newaxis] for v in bounds)
+        )
+        return cell_bounds
+
+    @property
     def cell_nodes(self):
         """The index of all nodes for each cell.
 
