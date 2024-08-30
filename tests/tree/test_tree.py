@@ -378,6 +378,43 @@ class TestTreeMeshNodes:
         )
 
 
+class TestTreeCellBounds:
+    """Test ``TreeCell.bounds`` method"""
+
+    @pytest.fixture(params=["2D", "3D"])
+    def mesh(self, request):
+        """Return a sample TreeMesh"""
+        nc = 16
+        if request.param == "2D":
+            h = [nc, nc]
+            origin = (-32.4, 245.4)
+            mesh = discretize.TreeMesh(h, origin)
+            p1 = (origin[0] + 0.4, origin[1] + 0.4)
+            p2 = (origin[0] + 0.6, origin[1] + 0.6)
+            mesh.refine_box(p1, p2, levels=5, finalize=True)
+        else:
+            h = [nc, nc, nc]
+            origin = (-32.4, 245.4, 192.3)
+            mesh = discretize.TreeMesh(h, origin)
+            p1 = (origin[0] + 0.4, origin[1] + 0.4, origin[2] + 0.7)
+            p2 = (origin[0] + 0.6, origin[1] + 0.6, origin[2] + 0.9)
+            mesh.refine_box(p1, p2, levels=5, finalize=True)
+        return mesh
+
+    def test_bounds(self, mesh):
+        """Test bounds method of one of the cells in the mesh."""
+        cell = mesh[16]
+        nodes = mesh.nodes[cell.nodes]
+        x1, x2 = nodes[0][0], nodes[-1][0]
+        y1, y2 = nodes[0][1], nodes[-1][1]
+        if mesh.dim == 2:
+            expected_bounds = np.array([x1, x2, y1, y2])
+        else:
+            z1, z2 = nodes[0][2], nodes[-1][2]
+            expected_bounds = np.array([x1, x2, y1, y2, z1, z2])
+        np.testing.assert_allclose(cell.bounds, expected_bounds)
+
+
 class Test2DInterpolation(unittest.TestCase):
     def setUp(self):
         def topo(x):

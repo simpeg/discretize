@@ -218,6 +218,39 @@ cdef class TreeCell:
         return self._cell.index
 
     @property
+    @cython.boundscheck(False)
+    def bounds(self):
+        """
+        Bounds of the cell.
+
+        Coordinates that define the bounds of the cell. Bounds are returned in
+        the following order: ``x1``, ``x2``, ``y1``, ``y2``, ``z1``, ``z2``.
+
+        Returns
+        -------
+        bounds : (2 * dim) array
+            Array with the cell bounds.
+        """
+        bounds = np.empty(self._dim * 2, dtype=np.float64)
+        if(self._dim == 1):
+            bounds[0] = self._x0
+            bounds[1] = self._x0 + self._wx
+        elif(self._dim == 2):
+            bounds[0] = self._x0
+            bounds[1] = self._x0 + self._wx
+            bounds[2] = self._y0
+            bounds[3] = self._y0 + self._wy
+        else:
+            bounds[0] = self._x0
+            bounds[1] = self._x0 + self._wx
+            bounds[2] = self._y0
+            bounds[3] = self._y0 + self._wy
+            bounds[4] = self._z0
+            bounds[5] = self._z0 + self._wz
+        return bounds
+
+
+    @property
     def neighbors(self):
         """Indices for this cell's neighbors within its parent tree mesh.
 
