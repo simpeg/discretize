@@ -232,21 +232,22 @@ cdef class TreeCell:
             Array with the cell bounds.
         """
         bounds = np.empty(self._dim * 2, dtype=np.float64)
+        cdef np.float64_t[:] bounds_view = bounds
         if(self._dim == 1):
-            bounds[0] = self._x0
-            bounds[1] = self._x0 + self._wx
+            bounds_view[0] = self._x0
+            bounds_view[1] = self._x0 + self._wx
         elif(self._dim == 2):
-            bounds[0] = self._x0
-            bounds[1] = self._x0 + self._wx
-            bounds[2] = self._y0
-            bounds[3] = self._y0 + self._wy
+            bounds_view[0] = self._x0
+            bounds_view[1] = self._x0 + self._wx
+            bounds_view[2] = self._y0
+            bounds_view[3] = self._y0 + self._wy
         else:
-            bounds[0] = self._x0
-            bounds[1] = self._x0 + self._wx
-            bounds[2] = self._y0
-            bounds[3] = self._y0 + self._wy
-            bounds[4] = self._z0
-            bounds[5] = self._z0 + self._wz
+            bounds_view[0] = self._x0
+            bounds_view[1] = self._x0 + self._wx
+            bounds_view[2] = self._y0
+            bounds_view[3] = self._y0 + self._wy
+            bounds_view[4] = self._z0
+            bounds_view[5] = self._z0 + self._wz
         return bounds
 
 
