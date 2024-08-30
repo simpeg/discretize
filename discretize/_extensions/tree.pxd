@@ -58,6 +58,7 @@ cdef extern from "tree.h":
         Face *faces[6]
         int_t location_ind[3]
         double location[3]
+        double bounds[6]
         int_t key, level, max_level
         long long int index
         double volume

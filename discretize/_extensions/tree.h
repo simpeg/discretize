@@ -110,6 +110,7 @@ class Cell{
     long long int index; // non root parents will have a -1 value
     double location[3];
     double volume;
+    double bounds[6];
 
     Cell();
     Cell(Node *pts[4], int_t ndim, int_t maxlevel);//, function func);

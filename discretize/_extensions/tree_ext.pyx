@@ -1137,6 +1137,16 @@ cdef class _TreeMesh:
         """
         return self._finalized
 
+    @property
+    def cell_bounds(self):
+        cell_bounds = np.empty((self.n_nodes, 2 * self._dim), dtype=np.float64)
+        cdef np.float64_t[:, :] cell_bounds_view = cell_bounds
+
+        for cell in self.tree.cells:
+            cell_bounds_view[cell.index, :] = cell.bounds
+
+        return cell_bounds
+
     def number(self):
         """Number the cells, nodes, faces, and edges of the TreeMesh."""
         self.tree.number()
