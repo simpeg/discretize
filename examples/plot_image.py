@@ -4,6 +4,7 @@ Basic: PlotImage
 
 You can use M.PlotImage to plot images on all of the Meshes.
 """
+
 import discretize
 import matplotlib.pyplot as plt
 

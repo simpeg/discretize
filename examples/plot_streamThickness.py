@@ -6,6 +6,7 @@ A simple example to vary streamline thickness based on the vector amplitudes
 
 Author: `@micmitch <https://github.com/micmitch>`
 """
+
 import numpy as np
 import matplotlib.pyplot as plt
 
