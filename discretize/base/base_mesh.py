@@ -1,4 +1,5 @@
 """Module for the base ``discretize`` mesh."""
+
 import numpy as np
 import scipy.sparse as sp
 import os
@@ -97,7 +98,7 @@ class BaseMesh:
         bool
             *True* if meshes are identical and *False* otherwise.
         """
-        if type(self) != type(other_mesh):
+        if type(self) is not type(other_mesh):
             return False
         for item in self._items:
             my_attr = getattr(self, item, None)
@@ -448,7 +449,7 @@ class BaseMesh:
         >>> ax1.scatter(x_faces[:, 0], x_faces[:, 1], 30, 'r')
         >>> ax1.scatter(y_faces[:, 0], y_faces[:, 1], 30, 'g')
         >>> ax1.legend(['Mesh', 'X-faces', 'Y-faces'], fontsize=16)
-        >>> plt.plot()
+        >>> plt.show()
 
         Here, we provide an example of a highly irregular curvilinear mesh.
         In this case, the y-faces are not defined by normal vectors along
@@ -466,7 +467,7 @@ class BaseMesh:
         >>> ax2.scatter(x_faces[:, 0], x_faces[:, 1], 30, 'r')
         >>> ax2.scatter(y_faces[:, 0], y_faces[:, 1], 30, 'g')
         >>> ax2.legend(['Mesh', 'X-faces', 'Y-faces'], fontsize=16)
-        >>> plt.plot()
+        >>> plt.show()
 
         """
         raise NotImplementedError(f"faces not implemented for {type(self)}")
@@ -526,7 +527,7 @@ class BaseMesh:
         >>> ax1.scatter(x_edges[:, 0], x_edges[:, 1], 30, 'r')
         >>> ax1.scatter(y_edges[:, 0], y_edges[:, 1], 30, 'g')
         >>> ax1.legend(['Mesh', 'X-edges', 'Y-edges'], fontsize=16)
-        >>> plt.plot()
+        >>> plt.show()
 
         Here, we provide an example of a highly irregular curvilinear mesh.
         In this case, the y-edges are not defined by normal vectors along
@@ -1026,7 +1027,7 @@ class BaseMesh:
         >>> ax2.set_title("Spy Plot", fontsize=14, pad=5)
         >>> ax2.set_ylabel("Edge Index", fontsize=12)
         >>> ax2.set_xlabel("Node Index", fontsize=12)
-        >>> plt.plot()
+        >>> plt.show()
         """
         raise NotImplementedError(f"nodal_gradient not implemented for {type(self)}")
 
@@ -1159,28 +1160,28 @@ class BaseMesh:
         ...     loc='upper right', fontsize=14
         ... )
 
-            Manually make axis properties invisible
+        Manually make axis properties invisible
 
-            >>> ax1.set_xticks([])
-            >>> ax1.set_yticks([])
-            >>> ax1.set_zticks([])
-            >>> ax1.w_xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
-            >>> ax1.w_yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
-            >>> ax1.w_zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
-            >>> ax1.w_xaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
-            >>> ax1.w_yaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
-            >>> ax1.w_zaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
-            >>> ax1.set_xlabel('X', labelpad=-15, fontsize=16)
-            >>> ax1.set_ylabel('Y', labelpad=-20, fontsize=16)
-            >>> ax1.set_zlabel('Z', labelpad=-20, fontsize=16)
-            >>> ax1.set_title("Mapping for a Single Face", fontsize=16, pad=-15)
+        >>> ax1.set_xticks([])
+        >>> ax1.set_yticks([])
+        >>> ax1.set_zticks([])
+        >>> ax1.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        >>> ax1.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        >>> ax1.zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        >>> ax1.xaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
+        >>> ax1.yaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
+        >>> ax1.zaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
+        >>> ax1.set_xlabel('X', labelpad=-15, fontsize=16)
+        >>> ax1.set_ylabel('Y', labelpad=-20, fontsize=16)
+        >>> ax1.set_zlabel('Z', labelpad=-20, fontsize=16)
+        >>> ax1.set_title("Mapping for a Single Face", fontsize=16, pad=-15)
 
-            >>> ax2 = fig.add_axes([0.05, 0.05, 0.9, 0.3])
-            >>> ax2.spy(Ce)
-            >>> ax2.set_title("Spy Plot", fontsize=16, pad=5)
-            >>> ax2.set_ylabel("Face Index", fontsize=12)
-            >>> ax2.set_xlabel("Edge Index", fontsize=12)
-            >>> plt.show()
+        >>> ax2 = fig.add_axes([0.05, 0.05, 0.9, 0.3])
+        >>> ax2.spy(Ce)
+        >>> ax2.set_title("Spy Plot", fontsize=16, pad=5)
+        >>> ax2.set_ylabel("Face Index", fontsize=12)
+        >>> ax2.set_xlabel("Edge Index", fontsize=12)
+        >>> plt.show()
         """
         raise NotImplementedError(f"edge_curl not implemented for {type(self)}")
 
@@ -2442,7 +2443,7 @@ class BaseMesh:
         >>> ax2 = fig.add_axes([0.43, 0.05, 0.17, 0.8])
         >>> ax2.spy(dFdm_u, ms=6)
         >>> ax2.set_title(
-        ...     "$u^T \, \dfrac{\partial M(m)}{\partial m}$ (Isotropic)",
+        ...     r"$u^T \, \dfrac{\partial M(m)}{\partial m}$ (Isotropic)",
         ...     fontsize=14, pad=5
         ... )
         >>> ax2.set_xlabel("Parameter Index", fontsize=12)
@@ -2474,7 +2475,7 @@ class BaseMesh:
         >>> ax2 = fig.add_axes([0.4, 0.05, 0.45, 0.85])
         >>> ax2.spy(dFdm_u, ms=6)
         >>> ax2.set_title(
-        ...     "$u^T \, \dfrac{\partial M(m)}{\partial m} \;$ (Full Tensor)",
+        ...     r"$u^T \, \dfrac{\partial M(m)}{\partial m} \;$ (Full Tensor)",
         ...     fontsize=14, pad=5
         ... )
         >>> ax2.set_xlabel("Parameter Index", fontsize=12)
@@ -2624,7 +2625,7 @@ class BaseMesh:
         >>> ax2 = fig.add_axes([0.43, 0.05, 0.17, 0.8])
         >>> ax2.spy(dFdm_u, ms=6)
         >>> ax2.set_title(
-        ...     "$u^T \, \dfrac{\partial M(m)}{\partial m}$ (Isotropic)",
+        ...     r"$u^T \, \dfrac{\partial M(m)}{\partial m}$ (Isotropic)",
         ...     fontsize=14, pad=5
         ... )
         >>> ax2.set_xlabel("Parameter Index", fontsize=12)
@@ -2656,7 +2657,7 @@ class BaseMesh:
         >>> ax2 = fig.add_axes([0.4, 0.05, 0.45, 0.8])
         >>> ax2.spy(dFdm_u, ms=6)
         >>> ax2.set_title(
-        ...     "$u^T \, \dfrac{\partial M(m)}{\partial m} \;$ (Full Tensor)",
+        ...     r"$u^T \, \dfrac{\partial M(m)}{\partial m} \;$ (Full Tensor)",
         ...     fontsize=14, pad=5
         ... )
         >>> ax2.set_xlabel("Parameter Index", fontsize=12)

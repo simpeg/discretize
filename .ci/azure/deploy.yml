@@ -1,0 +1,63 @@
+jobs:
+- job:
+  displayName: "Deploy Docs and source"
+  pool:
+    vmImage: ubuntu-latest
+  steps:
+    # No need to checkout the repo here!
+    - checkout: none
+
+    # Just download all of the items already built
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        buildType: 'current'
+        artifactName: 'wheels'
+        targetPath: 'dist'
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        buildType: 'current'
+        artifactName: 'source_dist'
+        targetPath: 'dist'
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        buildType: 'current'
+        artifactName: 'html_docs'
+        targetPath: 'html'
+
+    - bash: |
+        ls -l dist
+        ls -l html
+
+    - bash: |
+        git config --global user.name ${GH_NAME}
+        git config --global user.email ${GH_EMAIL}
+        git config --list | grep user.
+      displayName: 'Configure git'
+      env:
+        GH_NAME: $(gh.name)
+        GH_EMAIL: $(gh.email)
+
+    - bash: |
+        twine upload --skip-existing dist/*
+      displayName: Deploy source and wheels
+      env:
+        TWINE_USERNAME: $(twine.username)
+        TWINE_PASSWORD: $(twine.password)
+
+    # upload documentation to discretize-docs gh-pages on tags
+    - bash: |
+        git clone --depth 1 https://${GH_TOKEN}@github.com/simpeg/discretize-docs.git
+        cd discretize-docs
+        git gc --prune=now
+        git remote prune origin
+        rm -rf en/main/*
+        cp -r html/* en/main/
+        touch .nojekyll
+        git add .
+        git commit -am "Azure CI commit ref $(Build.SourceVersion)"
+        git push
+      displayName: Push documentation to discretize-docs
+      env:
+        GH_TOKEN: $(gh.token)
