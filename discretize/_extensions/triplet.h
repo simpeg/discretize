@@ -7,15 +7,11 @@
 
 template<class T, class U, class V>
 struct triplet{
-    T v1;
-    U v2;
-    V v3;
+    T v1{};
+    U v2{};
+    V v3{};
 
-    triplet(){
-        v1 = NULL;
-        v2 = NULL;
-        v3 = NULL;
-    }
+    triplet(){}
 
     triplet(T first, U second, V third){
         v1 = first;

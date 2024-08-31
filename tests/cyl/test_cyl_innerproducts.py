@@ -171,9 +171,7 @@ class FaceInnerProductFctsFacePropertiesIsotropic(object):
         j_r, j_z, tau_r, tau_z = self.fcts()
 
         # we are integrating in cyl coordinates
-        int_r = sympy.integrate(
-            r_plane * j_r**2 * tau_r, (z, 0, 1), (t, 0, 2 * np.pi)
-        )
+        int_r = sympy.integrate(r_plane * j_r**2 * tau_r, (z, 0, 1), (t, 0, 2 * np.pi))
         int_z = sympy.integrate(r * j_z**2 * tau_z, (r, 0, 1), (t, 0, 2 * np.pi))
 
         # return int_z(z_plane)

@@ -4,6 +4,7 @@ Basic Forward 2D DC Resistivity
 
 2D DC forward modeling example with Tensor and Curvilinear Meshes
 """
+
 import discretize
 from pymatsolver import SolverLU
 import numpy as np
