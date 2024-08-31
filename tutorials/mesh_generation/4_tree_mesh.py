@@ -226,7 +226,7 @@ x0 = mesh.x0
 # The total number of cells
 nC = mesh.nC
 
-# An (nC, 2) array containing the cell-center locations
+# An (nC, 3) array containing the cell-center locations
 cc = mesh.gridCC
 
 # A boolean array specifying which cells lie on the boundary

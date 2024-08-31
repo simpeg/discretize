@@ -53,6 +53,7 @@ and PVGeo_:
 .. _`Laguna del Maule Bouguer Gravity`: http://docs.simpeg.xyz/content/examples/20-published/plot_laguna_del_maule_inversion.html
 
 """
+
 import os
 import numpy as np
 from discretize.utils import cyl2cart
@@ -640,8 +641,7 @@ class InterfaceVTK(object):
         directory : str
             directory where the UBC GIF file lives
         """
-        _vtk, _, extra = load_vtk(("VTK_VERSION", "vtkXMLUnstructuredGridWriter"))
-        _vtk_version, _vtkUnstWriter = extra
+        _vtk, _, _vtkUnstWriter = load_vtk("vtkXMLUnstructuredGridWriter")
 
         if not isinstance(vtkUnstructGrid, _vtk.vtkUnstructuredGrid):
             raise RuntimeError(
@@ -657,13 +657,11 @@ class InterfaceVTK(object):
             raise IOError("{:s} is an incorrect extension, has to be .vtu".format(ext))
         # Make the writer
         vtuWriteFilter = _vtkUnstWriter()
-        if float(_vtk_version.split(".")[0]) >= 6:
-            vtuWriteFilter.SetInputDataObject(vtkUnstructGrid)
-        else:
-            vtuWriteFilter.SetInput(vtkUnstructGrid)
+        vtuWriteFilter.SetDataModeToBinary()
+        vtuWriteFilter.SetInputDataObject(vtkUnstructGrid)
         vtuWriteFilter.SetFileName(fname)
         # Write the file
-        vtuWriteFilter.Update()
+        vtuWriteFilter.Write()
 
     @staticmethod
     def _save_structured_grid(file_name, vtkStructGrid, directory=""):
@@ -679,8 +677,7 @@ class InterfaceVTK(object):
         directory : str
             directory where the UBC GIF file lives
         """
-        _vtk, _, extra = load_vtk(("VTK_VERSION", "vtkXMLStructuredGridWriter"))
-        _vtk_version, _vtkStrucWriter = extra
+        _vtk, _, _vtkStrucWriter = load_vtk("vtkXMLStructuredGridWriter")
 
         if not isinstance(vtkStructGrid, _vtk.vtkStructuredGrid):
             raise RuntimeError(
@@ -697,13 +694,11 @@ class InterfaceVTK(object):
             raise IOError("{:s} is an incorrect extension, has to be .vts".format(ext))
         # Make the writer
         writer = _vtkStrucWriter()
-        if float(_vtk_version.split(".")[0]) >= 6:
-            writer.SetInputDataObject(vtkStructGrid)
-        else:
-            writer.SetInput(vtkStructGrid)
+        writer.SetDataModeToBinary()
+        writer.SetInputDataObject(vtkStructGrid)
         writer.SetFileName(fname)
         # Write the file
-        writer.Update()
+        writer.Write()
 
     @staticmethod
     def _save_rectilinear_grid(file_name, vtkRectGrid, directory=""):
@@ -736,9 +731,10 @@ class InterfaceVTK(object):
             raise IOError("{:s} is an incorrect extension, has to be .vtr".format(ext))
         # Write the file.
         vtrWriteFilter = _vtkRectWriter()
-        vtrWriteFilter.SetInputDataObject(vtkRectGrid)
+        vtrWriteFilter.SetDataModeToBinary()
         vtrWriteFilter.SetFileName(fname)
-        vtrWriteFilter.Update()
+        vtrWriteFilter.SetInputDataObject(vtkRectGrid)
+        vtrWriteFilter.Write()
 
     def write_vtk(mesh, file_name, models=None, directory=""):
         """Convert mesh (and models) to corresponding VTK or PyVista data object then writes to file.

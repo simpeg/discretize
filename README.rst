@@ -30,8 +30,8 @@ discretize
 .. image:: https://img.shields.io/discourse/users?server=http%3A%2F%2Fsimpeg.discourse.group%2F
     :target: http://simpeg.discourse.group/
 
-.. image:: https://img.shields.io/badge/Slack-simpeg-4B0082.svg?logo=slack
-    :target: http://slack.simpeg.xyz
+.. image:: https://img.shields.io/badge/simpeg-purple?logo=mattermost&label=Mattermost
+    :target: https://mattermost.softwareunderground.org/simpeg
 
 .. image:: https://img.shields.io/badge/Youtube%20channel-GeoSci.xyz-FF0000.svg?logo=youtube
     :target: https://www.youtube.com/channel/UCBrC4M8_S4GXhyHht7FyQqw
@@ -122,4 +122,5 @@ Questions:
 http://simpeg.discourse.group/
 
 Chat:
-http://slack.simpeg.xyz/
+https://mattermost.softwareunderground.org/simpeg
+

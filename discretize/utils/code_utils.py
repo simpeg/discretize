@@ -1,4 +1,5 @@
 """Utilities for common operations within code."""
+
 import numpy as np
 import warnings
 
@@ -51,10 +52,7 @@ def as_array_n_by_dim(pts, dim):
     (n_pts, dim) numpy.ndarray
         verified array
     """
-    if type(pts) == list:
-        pts = np.array(pts)
-    if not isinstance(pts, np.ndarray):
-        raise TypeError("pts must be a numpy array")
+    pts = np.asarray(pts)
 
     if dim > 1:
         pts = np.atleast_2d(pts)
