@@ -10,6 +10,7 @@ stencil, volumes, and areas. This yields a divergence defined for every
 cell in the mesh using all faces. There is, however, redundant information
 when hanging faces are included.
 """
+
 import discretize
 import matplotlib.pyplot as plt
 import numpy as np

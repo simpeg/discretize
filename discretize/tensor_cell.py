@@ -1,4 +1,5 @@
 """Cell class for TensorMesh."""
+
 import itertools
 import numpy as np
 
