@@ -1,4 +1,5 @@
 """Module housing the TensorMesh implementation."""
+
 import itertools
 import numpy as np
 
@@ -208,9 +209,11 @@ class TensorMesh(
             return self._get_cell(indices)
         # Slice and int indices
         indices_per_dim = [
-            _slice_to_index(index, self.shape_cells[dim])
-            if isinstance(index, slice)
-            else [self._sanitize_indices(index, dim=dim)]
+            (
+                _slice_to_index(index, self.shape_cells[dim])
+                if isinstance(index, slice)
+                else [self._sanitize_indices(index, dim=dim)]
+            )
             for dim, index in enumerate(indices)
         ]
         # Combine the indices_per_dim using itertools.product.

@@ -1,4 +1,5 @@
 """Module for ``omf`` interaction with ``discretize``."""
+
 import numpy as np
 import discretize
 

@@ -68,3 +68,7 @@ examples/*.tar.gz
 
 # setuptools_scm
 discretize/version.py
+
+.idea/
+
+docs/sg_execution_times.rst

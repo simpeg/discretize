@@ -87,6 +87,7 @@ everything else to the right.
 
 Now lets actually code this solution up using these matrices!
 """
+
 import numpy as np
 import discretize
 import matplotlib.pyplot as plt
