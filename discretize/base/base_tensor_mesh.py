@@ -918,11 +918,7 @@ class BaseTensorMesh(BaseRegularMesh):
                 dMdprop = n_elements * Av.T * V * ones
             elif invert_matrix and invert_model:
                 dMdprop = n_elements * (
-                    sdiag(MI.diagonal() ** 2)
-                    * Av.T
-                    * V
-                    * ones
-                    * sdiag(1.0 / model**2)
+                    sdiag(MI.diagonal() ** 2) * Av.T * V * ones * sdiag(1.0 / model**2)
                 )
             elif invert_model:
                 dMdprop = n_elements * Av.T * V * sdiag(-1.0 / model**2)

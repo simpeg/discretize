@@ -1,4 +1,5 @@
 """Functions for working with curvilinear meshes."""
+
 import numpy as np
 from discretize.utils.matrix_utils import mkvc, ndgrid, sub2ind
 from discretize.utils.code_utils import deprecate_function
@@ -118,7 +119,6 @@ def volume_tetrahedron(xyz, A, B, C, D):
     >>> import numpy as np
     >>> import matplotlib.pyplot as plt
     >>> import matplotlib as mpl
-    >>> mpl.rcParams.update({"font.size": 14})
 
     Define corners of a uniform cube
 
@@ -143,7 +143,7 @@ def volume_tetrahedron(xyz, A, B, C, D):
     Plotting small mesh and tetrahedron
 
     >>> fig = plt.figure(figsize=(7, 7))
-    >>> ax = fig.gca(projection='3d')
+    >>> ax = plt.subplot(projection='3d')
     >>> mesh.plot_grid(ax=ax)
     >>> k = [0, 6, 8, 0, 24, 6, 24, 8]
     >>> xyz_tetra = xyz[k, :]
@@ -384,7 +384,6 @@ def face_info(xyz, A, B, C, D, average=True, normalize_normals=True, **kwargs):
     >>> import numpy as np
     >>> import matplotlib.pyplot as plt
     >>> import matplotlib as mpl
-    >>> mpl.rcParams.update({"font.size": 14})
 
     Define Corners of a uniform cube.
 
@@ -408,7 +407,7 @@ def face_info(xyz, A, B, C, D, average=True, normalize_normals=True, **kwargs):
     Plot surface for example 1 on mesh
 
     >>> fig = plt.figure(figsize=(7, 7))
-    >>> ax = fig.gca(projection='3d')
+    >>> ax = plt.subplot(projection='3d')
     >>> mesh.plot_grid(ax=ax)
     >>> k = [0, 4, 26, 18, 0]
     >>> xyz_quad = xyz[k, :]
@@ -438,7 +437,7 @@ def face_info(xyz, A, B, C, D, average=True, normalize_normals=True, **kwargs):
     Plot surface for example 2 on mesh
 
     >>> fig = plt.figure(figsize=(7, 7))
-    >>> ax = fig.gca(projection='3d')
+    >>> ax = plt.subplot(projection='3d')
     >>> mesh.plot_grid(ax=ax)
     >>> k = [0, 5, 26, 18, 0]
     >>> xyz_quad = xyz[k, :]

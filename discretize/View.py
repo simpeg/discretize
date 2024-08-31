@@ -1,4 +1,5 @@
 """Deprecated view module."""
+
 from discretize.utils.code_utils import deprecate_module
 
 deprecate_module(

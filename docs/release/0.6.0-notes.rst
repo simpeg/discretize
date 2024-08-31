@@ -43,7 +43,7 @@ to clean up and drop python 2 compatibility.
 
 .. note::
 
-	Testing now uses Azure CI. The new hub can be found at https://dev.azure.com/simpeg/
+	Testing now uses Azure CI
 
 Changes
 =======

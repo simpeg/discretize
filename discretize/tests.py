@@ -349,7 +349,7 @@ class OrderTest(unittest.TestCase):
             self.tolerance = np.ones(len(self.meshTypes)) * self.tolerance
 
         # if we just provide one expected order, repeat it for each mesh type
-        if type(self.expectedOrders) == float or type(self.expectedOrders) == int:
+        if isinstance(self.expectedOrders, (float, int)):
             self.expectedOrders = [self.expectedOrders for i in self.meshTypes]
         try:
             self.expectedOrders = list(self.expectedOrders)

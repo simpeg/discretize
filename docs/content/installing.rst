@@ -6,7 +6,7 @@ Installing
 Which Python?
 =============
 
-Currently, ``discretize`` is tested on python 3.8, 3.9, 3.10, and 3.11. We recommend that you
+Currently, ``discretize`` is tested on python 3.10 through 3.12. We recommend that you
 use the latest version of Python available on `Anaconda <https://www.anaconda.com/download>`_.
 
 Installing Python
@@ -72,6 +72,16 @@ there is no ``setup.py`` file to run. You must use ``pip`` to install ``discreti
 you have an available compiler you should be able to install ``discretize`` from the source as::
 
     pip install .
+
+
+.. note::
+    For Windows users, make sure you are using compilers that are compatible with your python
+    installation. If you have gnu compilers on your system, ``meson`` will default to using those,
+    and you might have to force ``meson`` to use the ``msvc`` compilers by appending::
+
+        --config-settings=setup-args="--vsenv"
+
+    to the ``pip`` installation command.
 
 Editable Installs
 ^^^^^^^^^^^^^^^^^

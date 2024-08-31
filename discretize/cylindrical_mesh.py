@@ -1,4 +1,5 @@
 """Module containing the cylindrical mesh implementation."""
+
 import numpy as np
 import scipy.sparse as sp
 from scipy.constants import pi
@@ -967,13 +968,13 @@ class CylindricalMesh(
                 is_hanging = np.zeros(self._shape_total_edges_z, dtype=bool, order="F")
                 if self.includes_zero:
                     is_hanging[0] = True  # axis of symmetry nodes are hanging
-                    is_hanging[
-                        0, 0
-                    ] = False  # axis of symmetry nodes which are not hanging
+                    is_hanging[0, 0] = (
+                        False  # axis of symmetry nodes which are not hanging
+                    )
                 if self.is_wrapped:
-                    is_hanging[
-                        :, -1
-                    ] = True  # nodes at maximum theta that are duplicated
+                    is_hanging[:, -1] = (
+                        True  # nodes at maximum theta that are duplicated
+                    )
                 self._ishanging_edges_z_bool = is_hanging.reshape(-1, order="F")
 
         return self._ishanging_edges_z_bool
@@ -1016,9 +1017,9 @@ class CylindricalMesh(
                 if self.includes_zero:
                     is_hanging[0, 1:] = True  # axis of symmetry nodes that are hanging
                 if self.is_wrapped:
-                    is_hanging[
-                        :, -1
-                    ] = True  # nodes at maximum theta that are duplicated
+                    is_hanging[:, -1] = (
+                        True  # nodes at maximum theta that are duplicated
+                    )
                 self._ishanging_nodes_bool = is_hanging.reshape(-1, order="F")
 
         return self._ishanging_nodes_bool
