@@ -13,12 +13,11 @@ In the notebook, you have to use :code:`%matplotlib notebook`.
 """
 
 # %matplotlib notebook
-import os
 import discretize
 import numpy as np
-import tarfile
 import matplotlib.pyplot as plt
 from matplotlib.colors import SymLogNorm
+import pooch
 
 ###############################################################################
 # Download and load data
@@ -27,17 +26,18 @@ from matplotlib.colors import SymLogNorm
 # In the following we load the :code:`mesh` and :code:`Lpout` that you would
 # get from running the laguna-del-maule inversion notebook.
 
-f = discretize.utils.download(
-    "https://storage.googleapis.com/simpeg/laguna_del_maule_slicer.tar.gz",
-    overwrite=True,
+model_url = "https://storage.googleapis.com/simpeg/laguna_del_maule_slicer.tar.gz"
+downloaded_items = pooch.retrieve(
+    model_url,
+    known_hash="107293bfdeb77b314f4cb451a24c2c93a55aae40da28f43cf3c075d71acfb957",
+    processor=pooch.Untar(),
 )
-tar = tarfile.open(f, "r")
-tar.extractall()
-tar.close()
+mesh_path = next(filter(lambda f: f.endswith("mesh.json"), downloaded_items))
+model_path = next(filter(lambda f: f.endswith("Lpout.npy"), downloaded_items))
 
 # Load the mesh and model
-mesh = discretize.load_mesh(os.path.join("laguna_del_maule_slicer", "mesh.json"))
-Lpout = np.load(os.path.join("laguna_del_maule_slicer", "Lpout.npy"))
+mesh = discretize.load_mesh(mesh_path)
+Lpout = np.load(model_path)
 
 ###############################################################################
 # Case 1: Using the intrinsinc functionality

@@ -1,4 +1,5 @@
 """Module containing the TreeMesh implementation."""
+
 #      ___          ___       ___          ___          ___          ___
 #     /\  \        /\  \     /\  \        /\  \        /\  \        /\  \
 #    /::\  \      /::\  \    \:\  \      /::\  \      /::\  \      /::\  \

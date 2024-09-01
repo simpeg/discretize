@@ -14,12 +14,12 @@ Using the inversion result from the example notebook
 `plot_laguna_del_maule_inversion.ipynb <http://docs.simpeg.xyz/content/examples/20-published/plot_laguna_del_maule_inversion.html>`_
 
 """
+
 # sphinx_gallery_thumbnail_number = 2
-import os
-import tarfile
 import discretize
 import pyvista as pv
 import numpy as np
+import pooch
 
 # Set a documentation friendly plotting theme
 pv.set_plot_theme("document")
@@ -35,27 +35,27 @@ print("PyVista Version: {}".format(pv.__version__))
 # the raw data for the topography surface and gravity observations.
 
 # Download Topography and Observed gravity data
-url = "https://storage.googleapis.com/simpeg/Chile_GRAV_4_Miller/Chile_GRAV_4_Miller.tar.gz"
-downloads = discretize.utils.download(url, overwrite=True)
-basePath = downloads.split(".")[0]
-
-# unzip the tarfile
-tar = tarfile.open(downloads, "r")
-tar.extractall()
-tar.close()
-
-# Download the inverted model
-f = discretize.utils.download(
-    "https://storage.googleapis.com/simpeg/laguna_del_maule_slicer.tar.gz",
-    overwrite=True,
+data_url = "https://storage.googleapis.com/simpeg/Chile_GRAV_4_Miller/Chile_GRAV_4_Miller.tar.gz"
+downloaded_items = pooch.retrieve(
+    data_url,
+    known_hash="28022bf8802eeb4892cac6c3efd1eb4275c84003a6723c047fe5e1738a66ea04",
+    processor=pooch.Untar(),
 )
-tar = tarfile.open(f, "r")
-tar.extractall()
-tar.close()
+data_path = next(filter(lambda f: f.endswith("LdM_grav_obs.grv"), downloaded_items))
+topo_path = next(filter(lambda f: f.endswith("LdM_topo.topo"), downloaded_items))
 
-# Load the mesh/data
-mesh = discretize.load_mesh(os.path.join("laguna_del_maule_slicer", "mesh.json"))
-models = {"Lpout": np.load(os.path.join("laguna_del_maule_slicer", "Lpout.npy"))}
+model_url = "https://storage.googleapis.com/simpeg/laguna_del_maule_slicer.tar.gz"
+downloaded_items = pooch.retrieve(
+    model_url,
+    known_hash="107293bfdeb77b314f4cb451a24c2c93a55aae40da28f43cf3c075d71acfb957",
+    processor=pooch.Untar(),
+)
+mesh_path = next(filter(lambda f: f.endswith("mesh.json"), downloaded_items))
+model_path = next(filter(lambda f: f.endswith("Lpout.npy"), downloaded_items))
+
+# # Load the mesh/data
+mesh = discretize.load_mesh(mesh_path)
+models = {"Lpout": np.load(model_path)}
 
 
 ###############################################################################
@@ -72,14 +72,14 @@ dataset.set_active_scalars("Lpout")
 ###############################################################################
 
 # Load topography points from text file as XYZ numpy array
-topo_pts = np.loadtxt("Chile_GRAV_4_Miller/LdM_topo.topo", skiprows=1)
+topo_pts = np.loadtxt(topo_path, skiprows=1)
 # Create the topography points and apply an elevation filter
 topo = pv.PolyData(topo_pts).delaunay_2d().elevation()
 
 ###############################################################################
 
 # Load the gravity data from text file as XYZ+attributes numpy array
-grav_data = np.loadtxt("Chile_GRAV_4_Miller/LdM_grav_obs.grv", skiprows=1)
+grav_data = np.loadtxt(data_path, skiprows=1)
 print("gravity file shape: ", grav_data.shape)
 # Use the points to create PolyData
 grav = pv.PolyData(grav_data[:, 0:3])

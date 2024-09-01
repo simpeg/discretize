@@ -70,3 +70,5 @@ examples/*.tar.gz
 discretize/version.py
 
 .idea/
+
+docs/sg_execution_times.rst

@@ -5,7 +5,7 @@ dependencies:
   - numpy>=1.22.4
   - scipy>=1.8
   # optionals
-  - vtk
+  - vtk>=6
   - pyvista
   - omf
   - matplotlib
@@ -18,26 +18,16 @@ dependencies:
   - graphviz
   - pymatsolver>=0.1.2
   - pillow
+  - pooch
   # testing
   - sympy
   - pytest
   - pytest-cov
+
   # Building
   - pip
   - meson-python>=0.14.0
   - meson
   - ninja
-  - build
   - cython>=0.29.35
   - setuptools_scm
-  # Distribute
-  - twine
-  - wheel
-  # Linters and checkers
-  - black==23.1.0
-  - flake8==6.0.0
-  - flake8-bugbear
-  - flake8-builtins
-  - flake8-mutable
-  - flake8-rst-docstrings
-  - flake8-docstrings
