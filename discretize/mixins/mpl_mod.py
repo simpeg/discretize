@@ -2553,17 +2553,22 @@ class Slicer(object):
         else:
             aspect3 = 1.0 / aspect2
 
-        # Ensure a consistent color normalization for the three plots.
-        if "norm" not in self.pc_props:
-            # Create a default normalizer
-            self.pc_props["norm"] = Normalize()
-        norm = self.pc_props["norm"]
         if clim is not None:
-            # set the norm's min and max consistently.
-            norm.vmin, norm.vmax = clim
-        # Autoscales None values for norm.vmin and norm.vmax.
-        # self.v is a nan masked array, so this
-        # is safe.
+            vmin, vmax = clim
+            self.pc_props["vmin"] = vmin
+            self.pc_props["vmax"] = vmax
+
+        # Ensure a consistent color normalization for the three plots.
+        if norm := self.pc_props.get("norm", None) is None:
+            # Create a default normalizer
+            norm = Normalize()
+            if clim is not None:
+                norm.vmin = self.pc_props.pop("vmin")
+                norm.vmax = self.pc_props.pop("vmax")
+            self.pc_props["norm"] = norm
+
+        # Auto scales None values for norm.vmin and norm.vmax.
+        # self.v is a nan masked array, so this is safe.
         norm.autoscale_None(self.v)
 
         # 2. Start populating figure
