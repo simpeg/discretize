@@ -75,7 +75,7 @@ def random_model(shape, seed=None, anisotropy=None, its=100, bounds=None):
     if type(shape) in num_types:
         shape = (shape,)  # make it a tuple for consistency
 
-    mr = rng.random(*shape)
+    mr = rng.random(shape)
     if anisotropy is None:
         if len(shape) == 1:
             smth = np.array([1, 10.0, 1], dtype=float)
