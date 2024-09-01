@@ -428,8 +428,9 @@ def mesh_builder_xyz(
     >>> import discretize
     >>> import matplotlib.pyplot as plt
     >>> import numpy as np
+    >>> rng = np.random.default_rng(87142)
 
-    >>> xy_loc = np.random.randn(8,2)
+    >>> xy_loc = rng.standard_normal((8,2))
     >>> mesh = discretize.utils.mesh_builder_xyz(
     ...     xy_loc, [0.1, 0.1], depth_core=0.5,
     ...     padding_distance=[[1,2], [1,0]],

@@ -160,9 +160,9 @@ def test_triangle3d():
 
 
 def test_triangle_errors():
-    not_triangles_array = np.random.rand(4, 2, 2)
-    triangle3 = np.random.rand(3, 3)
-    triangles2 = np.random.rand(10, 3, 2)
+    not_triangles_array = np.empty((4, 2, 2))
+    triangle3 = np.empty((3, 3))
+    triangles2 = np.empty((10, 3, 2))
     levels = np.full(8, -1)
 
     mesh1 = discretize.TreeMesh([64, 64])
@@ -324,9 +324,9 @@ def test_tetra3d():
 
 
 def test_tetra_errors():
-    not_simplex_array = np.random.rand(4, 3, 3)
-    simplex = np.random.rand(4, 2)
-    simplices = np.random.rand(10, 4, 3)
+    not_simplex_array = np.empty((4, 3, 3))
+    simplex = np.empty((4, 2))
+    simplices = np.empty((10, 4, 3))
     levels = np.full(8, -1)
 
     mesh1 = discretize.TreeMesh([32, 32, 32])
@@ -461,24 +461,25 @@ def test_refine_triang_prism_errors():
         mesh.refine_vertical_trianglular_prism(xyz[:, :-1], h, -1)
 
     # incorrect levels and triangles
-    ps = np.random.rand(10, 3, 3)
+    ps = np.empty((10, 3, 3))
     with pytest.raises(ValueError):
         mesh.refine_vertical_trianglular_prism(ps, h, [-1, -2])
 
     # incorrect heights and triangles
-    ps = np.random.rand(10, 3, 3)
+    ps = np.empty((10, 3, 3))
     with pytest.raises(ValueError):
         mesh.refine_vertical_trianglular_prism(ps, [h, h], -1)
 
     # negative heights
-    ps = np.random.rand(10, 3, 3)
+    ps = np.empty((10, 3, 3))
     with pytest.raises(ValueError):
         mesh.refine_vertical_trianglular_prism(ps, -h, -1)
 
 
 def test_bounding_box():
     # No padding
-    xyz = np.random.rand(20, 2) * 0.25 + 3 / 8
+    rng = np.random.default_rng(51623978)
+    xyz = rng.random((20, 2)) * 0.25 + 3 / 8
     mesh1 = discretize.TreeMesh([32, 32])
     mesh1.refine_bounding_box(xyz, -1, None)
 
@@ -512,7 +513,7 @@ def test_bounding_box():
 def test_bounding_box_errors():
     mesh1 = discretize.TreeMesh([32, 32])
 
-    xyz = np.random.rand(20, 3)
+    xyz = np.empty((20, 3))
     # incorrect padding shape
     with pytest.raises(ValueError):
         mesh1.refine_bounding_box(xyz, -1, [[2, 3, 4]])

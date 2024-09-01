@@ -4,8 +4,6 @@ import numpy as np
 import discretize
 from discretize import utils
 
-rng = np.random.default_rng(16)
-
 TOL = 1e-1
 
 

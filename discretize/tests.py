@@ -100,8 +100,9 @@ def setup_mesh(mesh_type, nC, nDim, rng=None):
     nDim : int
         The dimension of the mesh. Must be 1, 2 or 3.
     rng : numpy.random.Generator, int, optional
-        The random number generator to use for the adjoint test, if an integer or None
-        it used to seed a new `numpy.random.default_rng`. Only used if mesh_type is 'random'
+        If ``random`` is in `mesh_type`, this is the random number generator to use for
+        creating a random mesh. If an integer or None it is used to seed a new
+        `numpy.random.default_rng`.
 
     Returns
     -------
@@ -309,9 +310,9 @@ class OrderTest(unittest.TestCase):
     meshTypes = ["uniformTensorMesh"]
     _meshType = meshTypes[0]
     meshDimension = 3
-    rng = np.random.default_rng()
+    rng = None
 
-    def setupMesh(self, nC, rng=None):
+    def setupMesh(self, nC):
         """Generate mesh and set as current mesh for testing.
 
         Parameters
@@ -327,9 +328,7 @@ class OrderTest(unittest.TestCase):
         Float
             Maximum cell width for the mesh
         """
-        if rng is None:
-            rng = self.rng
-        mesh, max_h = setup_mesh(self._meshType, nC, self.meshDimension, rng=rng)
+        mesh, max_h = setup_mesh(self._meshType, nC, self.meshDimension, rng=self.rng)
         self.M = mesh
         return max_h
 
@@ -373,8 +372,11 @@ class OrderTest(unittest.TestCase):
                 "expectedOrders must have the same length as the meshTypes"
             )
 
+        if rng is not None:
+            self.rng = rng
+
         def test_func(n_cells):
-            max_h = self.setupMesh(n_cells, rng=rng)
+            max_h = self.setupMesh(n_cells)
             err = self.getError()
             return err, max_h
 
@@ -574,8 +576,8 @@ def check_derivative(
 
     Parameters
     ----------
-    fctn : function
-        Function handle
+    fctn : callable
+        The function to test.
     x0 : numpy.ndarray
         Point at which to check derivative
     num : int, optional
@@ -584,7 +586,7 @@ def check_derivative(
         If *True*, plot the convergence of the approximation of the derivative
     dx : numpy.ndarray, optional
         Step direction. By default, this parameter is set to *None* and a random
-        step direction is chosen.
+        step direction is chosen using `rng`.
     expectedOrder : int, optional
         The expected order of convergence for the numerical derivative
     tolerance : float, optional
@@ -595,8 +597,9 @@ def check_derivative(
         An axis object for the convergence plot if *plotIt = True*.
         Otherwise, the function will create a new axis.
     rng : numpy.random.Generator, int, optional
-        The random number generator to use for the adjoint test, if an integer or None
-        it used to seed a new `numpy.random.default_rng`.
+        If `dx` is ``None``, This is the random number generator to use for
+        generating a step direction. If an integer or None, it is used to seed
+        a new `numpy.random.default_rng`.
 
     Returns
     -------
@@ -608,10 +611,11 @@ def check_derivative(
     >>> from discretize import tests, utils
     >>> import numpy as np
     >>> import matplotlib.pyplot as plt
+    >>> rng = np.random.default_rng(786412)
 
     >>> def simplePass(x):
     ...     return np.sin(x), utils.sdiag(np.cos(x))
-    >>> passed = tests.check_derivative(simplePass, np.random.randn(5))
+    >>> passed = tests.check_derivative(simplePass, rng.standard_normal(5), rng=rng)
     ==================== check_derivative ====================
     iter    h         |ft-f0|   |ft-f0-h*J0*dx|  Order
     ---------------------------------------------------------
@@ -628,7 +632,6 @@ def check_derivative(
     __tracebackhide__ = True
     # matplotlib is a soft dependencies for discretize,
     # lazy-loaded to decrease load time of discretize.
-    rng = np.random.default_rng(rng)
 
     try:
         import matplotlib
@@ -646,6 +649,7 @@ def check_derivative(
     x0 = mkvc(x0)
 
     if dx is None:
+        rng = np.random.default_rng(rng)
         dx = rng.standard_normal(len(x0))
 
     h = np.logspace(-1, -num, num)
@@ -712,11 +716,14 @@ def check_derivative(
             # Thus it has no higher order derivatives.
             pass
         else:
-            test = np.mean(order1) > tolerance * expectedOrder
+            order_mean = np.mean(order1)
+            expected = tolerance * expectedOrder
+            test = order_mean > expected
             if not test:
                 raise AssertionError(
-                    f"\n Order mean {np.mean(order1)} is not greater than"
-                    f" {tolerance} of the expected order {expectedOrder}."
+                    f"\n Order mean {order_mean} is not greater than"
+                    f" {expected} = tolerance: {tolerance} "
+                    f"* expected order: {expectedOrder}."
                 )
         print("{0!s} PASS! {1!s}".format("=" * 25, "=" * 25))
         print(_happiness_rng.choice(happiness) + "\n")
@@ -844,8 +851,8 @@ def assert_isadjoint(
         returned as boolean and a message is printed.
 
     rng : numpy.random.Generator, int, optional
-        The random number generator to use for the adjoint test, if an integer or None
-        it used to seed a new `numpy.random.default_rng`.
+        The random number generator to use for the adjoint test. If an integer or None
+        it is used to seed a new `numpy.random.default_rng`.
 
     Returns
     -------

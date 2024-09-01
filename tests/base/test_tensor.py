@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 import unittest
 import discretize
-from pymatsolver import Solver
+from scipy.sparse.linalg import spsolve
 
 TOL = 1e-10
 
@@ -299,7 +299,7 @@ class TestPoissonEqn(discretize.tests.OrderTest):
             err = np.linalg.norm((sA - sN), np.inf)
         else:
             fA = fun(self.M.gridCC)
-            fN = Solver(D * G) * (sol(self.M.gridCC))
+            fN = spsolve(D * G, sol(self.M.gridCC))
             err = np.linalg.norm((fA - fN), np.inf)
         return err
 

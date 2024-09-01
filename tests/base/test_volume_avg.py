@@ -7,9 +7,10 @@ from numpy.testing import assert_array_equal, assert_allclose
 
 class TestVolumeAverage(unittest.TestCase):
     def test_tensor_to_tensor(self):
-        h1 = np.random.rand(16)
+        rng = np.random.default_rng(68723)
+        h1 = rng.random(16)
         h1 /= h1.sum()
-        h2 = np.random.rand(16)
+        h2 = rng.random(16)
         h2 /= h2.sum()
 
         h1s = []
@@ -21,7 +22,7 @@ class TestVolumeAverage(unittest.TestCase):
             mesh1 = discretize.TensorMesh(h1s)
             mesh2 = discretize.TensorMesh(h2s)
 
-            in_put = np.random.rand(mesh1.nC)
+            in_put = rng.random(mesh1.nC)
             out_put = np.empty(mesh2.nC)
             # test the three ways of calling...
             out1 = volume_average(mesh1, mesh2, in_put, out_put)
@@ -40,9 +41,10 @@ class TestVolumeAverage(unittest.TestCase):
             self.assertAlmostEqual(vol1, vol2)
 
     def test_tree_to_tree(self):
-        h1 = np.random.rand(16)
+        rng = np.random.default_rng(68723)
+        h1 = rng.random(16)
         h1 /= h1.sum()
-        h2 = np.random.rand(16)
+        h2 = rng.random(16)
         h2 /= h2.sum()
 
         h1s = [h1]
@@ -60,7 +62,7 @@ class TestVolumeAverage(unittest.TestCase):
             mesh2 = discretize.TreeMesh(h2s)
             mesh2.insert_cells([insert_2], [4])
 
-            in_put = np.random.rand(mesh1.nC)
+            in_put = rng.random(mesh1.nC)
             out_put = np.empty(mesh2.nC)
             # test the three ways of calling...
             out1 = volume_average(mesh1, mesh2, in_put, out_put)
@@ -79,9 +81,10 @@ class TestVolumeAverage(unittest.TestCase):
             self.assertAlmostEqual(vol1, vol2)
 
     def test_tree_to_tensor(self):
-        h1 = np.random.rand(16)
+        rng = np.random.default_rng(68723)
+        h1 = rng.random(16)
         h1 /= h1.sum()
-        h2 = np.random.rand(16)
+        h2 = rng.random(16)
         h2 /= h2.sum()
 
         h1s = [h1]
@@ -96,7 +99,7 @@ class TestVolumeAverage(unittest.TestCase):
             mesh1.insert_cells([insert_1], [4])
             mesh2 = discretize.TensorMesh(h2s)
 
-            in_put = np.random.rand(mesh1.nC)
+            in_put = rng.random(mesh1.nC)
             out_put = np.empty(mesh2.nC)
             # test the three ways of calling...
             out1 = volume_average(mesh1, mesh2, in_put, out_put)
@@ -115,9 +118,10 @@ class TestVolumeAverage(unittest.TestCase):
             self.assertAlmostEqual(vol1, vol2)
 
     def test_tensor_to_tree(self):
-        h1 = np.random.rand(16)
+        rng = np.random.default_rng(68723)
+        h1 = rng.random(16)
         h1 /= h1.sum()
-        h2 = np.random.rand(16)
+        h2 = rng.random(16)
         h2 /= h2.sum()
 
         h1s = [h1]
@@ -132,7 +136,7 @@ class TestVolumeAverage(unittest.TestCase):
             mesh2 = discretize.TreeMesh(h2s)
             mesh2.insert_cells([insert_2], [4])
 
-            in_put = np.random.rand(mesh1.nC)
+            in_put = rng.random(mesh1.nC)
             out_put = np.empty(mesh2.nC)
             # test the three ways of calling...
             out1 = volume_average(mesh1, mesh2, in_put, out_put)
@@ -151,9 +155,10 @@ class TestVolumeAverage(unittest.TestCase):
             self.assertAlmostEqual(vol1, vol2)
 
     def test_errors(self):
-        h1 = np.random.rand(16)
+        rng = np.random.default_rng(68723)
+        h1 = rng.random(16)
         h1 /= h1.sum()
-        h2 = np.random.rand(16)
+        h2 = rng.random(16)
         h2 /= h2.sum()
         mesh1D = discretize.TensorMesh([h1])
         mesh2D = discretize.TensorMesh([h1, h1])
@@ -175,9 +180,9 @@ class TestVolumeAverage(unittest.TestCase):
             # Gives mismatching mesh dimensions
             volume_average(mesh2D, mesh3D)
 
-        model1 = np.random.randn(mesh2D.nC)
-        bad_model1 = np.random.randn(3)
-        bad_model2 = np.random.rand(1)
+        model1 = rng.standard_normal(mesh2D.nC)
+        bad_model1 = rng.standard_normal(3)
+        bad_model2 = rng.random(1)
         # gives input values with incorrect lengths
         with self.assertRaises(ValueError):
             volume_average(mesh2D, mesh2, bad_model1)
@@ -185,7 +190,8 @@ class TestVolumeAverage(unittest.TestCase):
             volume_average(mesh2D, mesh2, model1, bad_model2)
 
     def test_tree_to_tree_same_base(self):
-        h1 = np.random.rand(16)
+        rng = np.random.default_rng(68723)
+        h1 = rng.random(16)
         h1 /= h1.sum()
 
         h1s = [h1]
@@ -201,7 +207,7 @@ class TestVolumeAverage(unittest.TestCase):
             mesh2 = discretize.TreeMesh(h1s)
             mesh2.insert_cells([insert_2], [4])
 
-            in_put = np.random.rand(mesh1.nC)
+            in_put = rng.random(mesh1.nC)
             out_put = np.empty(mesh2.nC)
             # test the three ways of calling...
             out1 = volume_average(mesh1, mesh2, in_put, out_put)
@@ -220,7 +226,8 @@ class TestVolumeAverage(unittest.TestCase):
             self.assertAlmostEqual(vol1, vol2)
 
     def test_tree_to_tensor_same_base(self):
-        h1 = np.random.rand(16)
+        rng = np.random.default_rng(867532)
+        h1 = rng.random(16)
         h1 /= h1.sum()
 
         h1s = [h1]
@@ -233,7 +240,7 @@ class TestVolumeAverage(unittest.TestCase):
             mesh1.insert_cells([insert_1], [4])
             mesh2 = discretize.TensorMesh(h1s)
 
-            in_put = np.random.rand(mesh1.nC)
+            in_put = rng.random(mesh1.nC)
             out_put = np.empty(mesh2.nC)
             # test the three ways of calling...
             out1 = volume_average(mesh1, mesh2, in_put, out_put)
@@ -252,7 +259,8 @@ class TestVolumeAverage(unittest.TestCase):
             self.assertAlmostEqual(vol1, vol2)
 
     def test_tensor_to_tree_same_base(self):
-        h1 = np.random.rand(16)
+        rng = np.random.default_rng(91)
+        h1 = rng.random(16)
         h1 /= h1.sum()
 
         h1s = [h1]
@@ -265,7 +273,7 @@ class TestVolumeAverage(unittest.TestCase):
             mesh2 = discretize.TreeMesh(h1s)
             mesh2.insert_cells([insert_2], [4])
 
-            in_put = np.random.rand(mesh1.nC)
+            in_put = rng.random(mesh1.nC)
             out_put = np.empty(mesh2.nC)
             # test the three ways of calling...
             out1 = volume_average(mesh1, mesh2, in_put, out_put)
@@ -284,6 +292,7 @@ class TestVolumeAverage(unittest.TestCase):
             self.assertAlmostEqual(vol1, vol2)
 
     def test_tensor_to_tensor_sub(self):
+        rng = np.random.default_rng(9867153)
         h1 = np.ones(32)
         h2 = np.ones(16)
 
@@ -296,7 +305,7 @@ class TestVolumeAverage(unittest.TestCase):
             mesh1 = discretize.TensorMesh(h1s)
             mesh2 = discretize.TensorMesh(h2s)
 
-            in_put = np.random.rand(mesh1.nC)
+            in_put = rng.random(mesh1.nC)
             out_put = np.empty(mesh2.nC)
             # test the three ways of calling...
             out1 = volume_average(mesh1, mesh2, in_put, out_put)
@@ -320,6 +329,7 @@ class TestVolumeAverage(unittest.TestCase):
             self.assertAlmostEqual(vol1, vol2)
 
     def test_tree_to_tree_sub(self):
+        rng = np.random.default_rng(987263)
         h1 = np.ones(32)
         h2 = np.ones(16)
 
@@ -338,7 +348,7 @@ class TestVolumeAverage(unittest.TestCase):
             mesh2 = discretize.TreeMesh(h2s)
             mesh2.insert_cells([insert_2], [4])
 
-            in_put = np.random.rand(mesh1.nC)
+            in_put = rng.random(mesh1.nC)
             out_put = np.empty(mesh2.nC)
             # test the three ways of calling...
             out1 = volume_average(mesh1, mesh2, in_put, out_put)
@@ -362,6 +372,7 @@ class TestVolumeAverage(unittest.TestCase):
             self.assertAlmostEqual(vol1, vol2)
 
     def test_tree_to_tensor_sub(self):
+        rng = np.random.default_rng(5)
         h1 = np.ones(32)
         h2 = np.ones(16)
 
@@ -377,7 +388,7 @@ class TestVolumeAverage(unittest.TestCase):
             mesh1.insert_cells([insert_1], [4])
             mesh2 = discretize.TensorMesh(h2s)
 
-            in_put = np.random.rand(mesh1.nC)
+            in_put = rng.random(mesh1.nC)
             out_put = np.empty(mesh2.nC)
             # test the three ways of calling...
             out1 = volume_average(mesh1, mesh2, in_put, out_put)
@@ -401,6 +412,7 @@ class TestVolumeAverage(unittest.TestCase):
             self.assertAlmostEqual(vol1, vol2)
 
     def test_tensor_to_tree_sub(self):
+        rng = np.random.default_rng(1)
         h1 = np.ones(32)
         h2 = np.ones(16)
 
@@ -416,7 +428,7 @@ class TestVolumeAverage(unittest.TestCase):
             mesh2 = discretize.TreeMesh(h2s)
             mesh2.insert_cells([insert_2], [4])
 
-            in_put = np.random.rand(mesh1.nC)
+            in_put = rng.random(mesh1.nC)
             out_put = np.empty(mesh2.nC)
             # test the three ways of calling...
             out1 = volume_average(mesh1, mesh2, in_put, out_put)

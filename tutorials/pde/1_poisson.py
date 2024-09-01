@@ -92,7 +92,7 @@ obtained by computing:
 
 
 from discretize import TensorMesh
-from pymatsolver import SolverLU
+from scipy.sparse.linalg import spsolve
 import matplotlib.pyplot as plt
 import numpy as np
 from discretize.utils import sdiag
@@ -124,8 +124,7 @@ rho[kneg] = -1
 rho[kpos] = 1
 
 # LU factorization and solve
-AinvM = SolverLU(A)
-phi = AinvM * rho
+phi = spsolve(A, rho)
 
 # Compute electric fields
 E = Mf_inv * DIV.T * Mc * phi

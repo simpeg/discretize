@@ -9,7 +9,7 @@ import scipy.sparse as sp
 TOL = 1e-1
 TOLD = 0.7  # tolerance on deriv checks
 
-np.random.seed(99)
+rng = np.random.default_rng(99)
 
 
 class FaceInnerProductFctsIsotropic(object):
@@ -465,8 +465,8 @@ class TestCylInnerProducts_Deriv(unittest.TestCase):
     def setUp(self):
         n = 2
         self.mesh = discretize.CylindricalMesh([n, 1, n])
-        self.face_vec = np.random.rand(self.mesh.nF)
-        self.edge_vec = np.random.rand(self.mesh.nE)
+        self.face_vec = rng.random(self.mesh.nF)
+        self.edge_vec = rng.random(self.mesh.nE)
         # make up a smooth function
         self.x0 = 2 * self.mesh.gridCC[:, 0] ** 2 + self.mesh.gridCC[:, 2] ** 4
 
@@ -579,8 +579,8 @@ class TestCylInnerProductsAnisotropic_Deriv(unittest.TestCase):
     def setUp(self):
         n = 60
         self.mesh = discretize.CylindricalMesh([n, 1, n])
-        self.face_vec = np.random.rand(self.mesh.nF)
-        self.edge_vec = np.random.rand(self.mesh.nE)
+        self.face_vec = rng.random(self.mesh.nF)
+        self.edge_vec = rng.random(self.mesh.nE)
         # make up a smooth function
         self.x0 = np.array(
             [2 * self.mesh.gridCC[:, 0] ** 2 + self.mesh.gridCC[:, 2] ** 4]
@@ -745,8 +745,8 @@ class TestCylInnerProductsFaceProperties_Deriv(unittest.TestCase):
     def setUp(self):
         n = 2
         self.mesh = discretize.CylindricalMesh([n, 1, n])
-        self.face_vec = np.random.rand(self.mesh.nF)
-        self.edge_vec = np.random.rand(self.mesh.nE)
+        self.face_vec = rng.random(self.mesh.nF)
+        self.edge_vec = rng.random(self.mesh.nE)
         # make up a smooth function
         self.x0 = np.r_[
             2 * self.mesh.gridFx[:, 0] ** 2 + self.mesh.gridFx[:, 2] ** 4,

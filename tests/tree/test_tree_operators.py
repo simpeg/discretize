@@ -38,6 +38,7 @@ class TestCellGrad2D(discretize.tests.OrderTest):
     meshSizes = [8, 16]
     # because of the averaging involved in the ghost point. u_b = (u_n + u_g)/2
     expectedOrders = 1
+    rng = np.random.default_rng(87964213)
 
     def getError(self):
         # Test function
@@ -55,7 +56,6 @@ class TestCellGrad2D(discretize.tests.OrderTest):
         return err
 
     def test_order(self):
-        np.random.seed(7)
         self.orderTest()
 
 
@@ -66,6 +66,7 @@ class TestCellGrad3D(discretize.tests.OrderTest):
     meshSizes = [8, 16]
     # because of the averaging involved in the ghost point. u_b = (u_n + u_g)/2
     expectedOrders = 1
+    rng = np.random.default_rng(6957832)
 
     def getError(self):
         # Test function
@@ -105,7 +106,6 @@ class TestCellGrad3D(discretize.tests.OrderTest):
         return err
 
     def test_order(self):
-        np.random.seed(6)
         self.orderTest()
 
 
@@ -114,6 +114,7 @@ class TestFaceDivxy2D(discretize.tests.OrderTest):
     meshTypes = MESHTYPES
     meshDimension = 2
     meshSizes = [16, 32]
+    rng = np.random.default_rng(19647823)
 
     def getError(self):
         # Test function
@@ -136,7 +137,6 @@ class TestFaceDivxy2D(discretize.tests.OrderTest):
         return err
 
     def test_order(self):
-        np.random.seed(4)
         self.orderTest()
 
 
@@ -144,6 +144,7 @@ class TestFaceDiv3D(discretize.tests.OrderTest):
     name = "Face Divergence 3D"
     meshTypes = MESHTYPES
     meshSizes = [8, 16, 32]
+    rng = np.random.default_rng(81725364)
 
     def getError(self):
         fx = lambda x, y, z: np.sin(2 * np.pi * x)
@@ -164,7 +165,6 @@ class TestFaceDiv3D(discretize.tests.OrderTest):
         return np.linalg.norm((divF - divF_ana), np.inf)
 
     def test_order(self):
-        np.random.seed(7)
         self.orderTest()
 
 
@@ -173,6 +173,7 @@ class TestFaceDivxyz3D(discretize.tests.OrderTest):
     meshTypes = MESHTYPES
     meshDimension = 3
     meshSizes = [8, 16, 32]
+    rng = np.random.default_rng(6172824)
 
     def getError(self):
         # Test function
@@ -202,13 +203,12 @@ class TestFaceDivxyz3D(discretize.tests.OrderTest):
         return err
 
     def test_order(self):
-        np.random.seed(7)
         self.orderTest()
 
 
 class TestCurl(discretize.tests.OrderTest):
     name = "Curl"
-    meshTypes = ["notatreeTree", "uniformTree"]  # , 'randomTree']#, 'uniformTree']
+    meshTypes = ["notatreeTree", "uniformTree"]
     meshSizes = [8, 16]  # , 32]
     expectedOrders = [2, 1]  # This is due to linear interpolation in the Re projection
 
@@ -238,13 +238,12 @@ class TestCurl(discretize.tests.OrderTest):
         return err
 
     def test_order(self):
-        np.random.seed(7)
         self.orderTest()
 
 
 class TestNodalGrad(discretize.tests.OrderTest):
     name = "Nodal Gradient"
-    meshTypes = ["notatreeTree", "uniformTree"]  # ['randomTree', 'uniformTree']
+    meshTypes = ["notatreeTree", "uniformTree"]
     meshSizes = [8, 16]  # , 32]
     expectedOrders = [2, 1]
 
@@ -267,13 +266,12 @@ class TestNodalGrad(discretize.tests.OrderTest):
         return err
 
     def test_order(self):
-        np.random.seed(7)
         self.orderTest()
 
 
 class TestNodalGrad2D(discretize.tests.OrderTest):
     name = "Nodal Gradient 2D"
-    meshTypes = ["notatreeTree", "uniformTree"]  # ['randomTree', 'uniformTree']
+    meshTypes = ["notatreeTree", "uniformTree"]
     meshSizes = [8, 16]  # , 32]
     expectedOrders = [2, 1]
     meshDimension = 2
@@ -296,7 +294,6 @@ class TestNodalGrad2D(discretize.tests.OrderTest):
         return err
 
     def test_order(self):
-        np.random.seed(7)
         self.orderTest()
 
 
@@ -918,7 +915,7 @@ class TestInnerProductsEdgeProperties2D(discretize.tests.OrderTest):
 class TestTreeAveraging2D(discretize.tests.OrderTest):
     """Integrate an function over a unit cube domain using edgeInnerProducts and faceInnerProducts."""
 
-    meshTypes = ["notatreeTree", "uniformTree"]  # 'randomTree']
+    meshTypes = ["notatreeTree", "uniformTree"]
     meshDimension = 2
     meshSizes = [4, 8, 16]
     expectedOrders = [2, 1]
@@ -998,7 +995,7 @@ class TestTreeAveraging2D(discretize.tests.OrderTest):
 
 class TestAveraging3D(discretize.tests.OrderTest):
     name = "Averaging 3D"
-    meshTypes = ["notatreeTree", "uniformTree"]  # , 'randomTree']
+    meshTypes = ["notatreeTree", "uniformTree"]
     meshDimension = 3
     meshSizes = [8, 16]
     expectedOrders = [2, 1]

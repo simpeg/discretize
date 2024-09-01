@@ -50,6 +50,7 @@ if has_omf:
                 self.assertTrue(np.allclose(models[name], arr))
 
         def test_from_omf(self):
+            rng = np.random.default_rng(52134)
             omf_element = omf.VolumeElement(
                 name="vol_ir",
                 geometry=omf.VolumeGridGeometry(
@@ -65,7 +66,7 @@ if has_omf:
                     omf.ScalarData(
                         name="Random Data",
                         location="cells",
-                        array=np.random.rand(10, 15, 20).flatten(),
+                        array=rng.random((10, 15, 20)).flatten(),
                     )
                 ],
             )

@@ -73,20 +73,23 @@ class TestCheckDerivative:
         def simplePass(x):
             return np.sin(x), sp.diags(np.cos(x))
 
-        check_derivative(simplePass, np.random.randn(5), plotIt=False)
+        rng = np.random.default_rng(5322)
+        check_derivative(simplePass, rng.standard_normal(5), plotIt=False, rng=rng)
 
     def test_simpleFunction(self):
         def simpleFunction(x):
             return np.sin(x), lambda xi: np.cos(x) * xi
 
-        check_derivative(simpleFunction, np.random.randn(5), plotIt=False)
+        rng = np.random.default_rng(5322)
+        check_derivative(simpleFunction, rng.standard_normal(5), plotIt=False, rng=rng)
 
     def test_simpleFail(self):
         def simpleFail(x):
             return np.sin(x), -sp.diags(np.cos(x))
 
+        rng = np.random.default_rng(5322)
         with pytest.raises(AssertionError):
-            check_derivative(simpleFail, np.random.randn(5), plotIt=False)
+            check_derivative(simpleFail, rng.standard_normal(5), plotIt=False, rng=rng)
 
 
 @pytest.mark.parametrize("test_type", ["mean", "min", "last", "all", "mean_at_least"])

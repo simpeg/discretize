@@ -436,7 +436,8 @@ class TreeMesh(
         >>> import matplotlib.pyplot as plt
         >>> import matplotlib.patches as patches
         >>> mesh = discretize.TreeMesh([32, 32])
-        >>> points = np.random.rand(20, 2) * 0.25 + 3/8
+        >>> rng = np.random.default_rng(852)
+        >>> points = rng.random((20, 2)) * 0.25 + 3/8
 
         Now we want to refine to the maximum level, with no padding the in `x`
         direction and `2` cells in `y`. At the second highest level we want 2 padding

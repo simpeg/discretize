@@ -45,7 +45,6 @@ cartE3 = lambda M, ex, ey, ez: np.vstack(
 class TestCurl(discretize.tests.OrderTest):
     name = "Curl"
     meshTypes = MESHTYPES
-    rng = gen
 
     def getError(self):
         # fun: i (cos(y)) + j (cos(z)) + k (cos(x))
@@ -83,7 +82,6 @@ class TestCurl2D(discretize.tests.OrderTest):
     meshTypes = ["uniformTensorMesh"]
     meshDimension = 2
     meshSizes = [8, 16, 32, 64]
-    rng = gen
 
     def getError(self):
         # Test function
@@ -110,7 +108,6 @@ class TestCurl2D(discretize.tests.OrderTest):
 #         1  # because of the averaging involved in the ghost point. u_b = (u_n + u_g)/2
 #     )
 #     meshSizes = [8, 16, 32, 64]
-#     rng = gen
 #
 #     def getError(self):
 #         # Test function
@@ -138,7 +135,6 @@ class TestCellGrad2D_Dirichlet(discretize.tests.OrderTest):
     meshTypes = ["uniformTensorMesh"]
     meshDimension = 2
     meshSizes = [8, 16, 32, 64]
-    rng = gen
 
     def getError(self):
         # Test function
@@ -167,7 +163,6 @@ class TestCellGrad3D_Dirichlet(discretize.tests.OrderTest):
     meshTypes = ["uniformTensorMesh"]
     meshDimension = 3
     meshSizes = [8, 16, 32]
-    rng = gen
 
     def getError(self):
         # Test function
@@ -219,7 +214,6 @@ class TestCellGrad2D_Neumann(discretize.tests.OrderTest):
     meshTypes = ["uniformTensorMesh"]
     meshDimension = 2
     meshSizes = [8, 16, 32, 64]
-    rng = gen
 
     def getError(self):
         # Test function
@@ -248,7 +242,6 @@ class TestCellGrad3D_Neumann(discretize.tests.OrderTest):
     meshTypes = ["uniformTensorMesh"]
     meshDimension = 3
     meshSizes = [8, 16, 32]
-    rng = gen
 
     def getError(self):
         # Test function
@@ -299,7 +292,6 @@ class TestFaceDiv3D(discretize.tests.OrderTest):
     name = "Face Divergence 3D"
     meshTypes = MESHTYPES
     meshSizes = [8, 16, 32, 64]
-    rng = gen
 
     def getError(self):
         # Test function
@@ -335,7 +327,6 @@ class TestFaceDiv2D(discretize.tests.OrderTest):
     meshTypes = MESHTYPES
     meshDimension = 2
     meshSizes = [8, 16, 32, 64]
-    rng = gen
 
     def getError(self):
         # Test function
@@ -360,7 +351,6 @@ class TestFaceDiv2D(discretize.tests.OrderTest):
 class TestNodalGrad(discretize.tests.OrderTest):
     name = "Nodal Gradient"
     meshTypes = MESHTYPES
-    rng = gen
 
     def getError(self):
         # Test function
@@ -388,7 +378,6 @@ class TestNodalGrad2D(discretize.tests.OrderTest):
     name = "Nodal Gradient 2D"
     meshTypes = MESHTYPES
     meshDimension = 2
-    rng = gen
 
     def getError(self):
         # Test function
@@ -416,7 +405,6 @@ class TestAveraging1D(discretize.tests.OrderTest):
     meshTypes = ["uniformTensorMesh"]
     meshDimension = 1
     meshSizes = [16, 32, 64]
-    rng = gen
 
     def getError(self):
         num = self.getAve(self.M) * self.getHere(self.M)
@@ -518,8 +506,8 @@ class TestAveraging1D(discretize.tests.OrderTest):
 
 class TestAverating2DSimple(unittest.TestCase):
     def setUp(self):
-        hx = np.random.rand(10)
-        hy = np.random.rand(10)
+        hx = gen.random(10)
+        hy = gen.random(10)
         self.mesh = discretize.TensorMesh([hx, hy])
 
     def test_constantEdges(self):
@@ -538,7 +526,6 @@ class TestAveraging2D(discretize.tests.OrderTest):
     meshTypes = MESHTYPES
     meshDimension = 2
     meshSizes = [16, 32, 64]
-    rng = gen
 
     def getError(self):
         num = self.getAve(self.M) * self.getHere(self.M)
@@ -637,9 +624,9 @@ class TestAveraging2D(discretize.tests.OrderTest):
 
 class TestAverating3DSimple(unittest.TestCase):
     def setUp(self):
-        hx = np.random.rand(10)
-        hy = np.random.rand(10)
-        hz = np.random.rand(10)
+        hx = gen.random(10)
+        hy = gen.random(10)
+        hz = gen.random(10)
         self.mesh = discretize.TensorMesh([hx, hy, hz])
 
     def test_constantEdges(self):
@@ -658,7 +645,6 @@ class TestAveraging3D(discretize.tests.OrderTest):
     meshTypes = MESHTYPES
     meshDimension = 3
     meshSizes = [16, 32, 64]
-    rng = gen
 
     def getError(self):
         num = self.getAve(self.M) * self.getHere(self.M)
@@ -792,7 +778,7 @@ class MimeticProperties(unittest.TestCase):
             mesh, _ = discretize.tests.setup_mesh(
                 meshType, self.meshSize, self.meshDimension
             )
-            v = np.random.rand(mesh.nE)
+            v = gen.random(mesh.nE)
             divcurlv = mesh.face_divergence * (mesh.edge_curl * v)
             rel_err = np.linalg.norm(divcurlv) / np.linalg.norm(v)
             passed = rel_err < self.tol
@@ -806,7 +792,7 @@ class MimeticProperties(unittest.TestCase):
             mesh, _ = discretize.tests.setup_mesh(
                 meshType, self.meshSize, self.meshDimension
             )
-            v = np.random.rand(mesh.nN)
+            v = gen.random(mesh.nN)
             curlgradv = mesh.edge_curl * (mesh.nodal_gradient * v)
             rel_err = np.linalg.norm(curlgradv) / np.linalg.norm(v)
             passed = rel_err < self.tol

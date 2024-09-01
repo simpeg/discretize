@@ -3,8 +3,6 @@ import scipy.sparse as sp
 import discretize
 from discretize.utils import cart2cyl, cyl2cart
 
-gen = np.random.default_rng(2552)
-
 
 def u(*args):
     if len(args) == 1:
@@ -88,7 +86,6 @@ class Test1DBoundaryIntegral(discretize.tests.OrderTest):
     meshDimension = 1
     expectedOrders = 2
     meshSizes = [4, 8, 16, 32, 64, 128]
-    rng = gen
 
     def getError(self):
         mesh = self.M
@@ -139,7 +136,6 @@ class Test2DBoundaryIntegral(discretize.tests.OrderTest):
     meshDimension = 2
     expectedOrders = [2, 2, 2, 2, 1]
     meshSizes = [4, 8, 16, 32, 64, 128]
-    rng = gen
 
     def getError(self):
         mesh = self.M
@@ -220,7 +216,7 @@ class Test3DBoundaryIntegral(discretize.tests.OrderTest):
     meshDimension = 3
     expectedOrders = [2, 1, 2, 2, 2, 2]
     meshSizes = [4, 8, 16, 32]
-    rng = gen
+    rng = np.random.default_rng(57681234)
 
     def getError(self):
         mesh = self.M

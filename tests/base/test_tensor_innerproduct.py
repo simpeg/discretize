@@ -4,8 +4,6 @@ import discretize
 from discretize import TensorMesh
 from discretize.utils import sdinv
 
-gen = np.random.default_rng(50)
-
 
 class TestInnerProducts(discretize.tests.OrderTest):
     """Integrate an function over a unit cube domain
@@ -14,7 +12,6 @@ class TestInnerProducts(discretize.tests.OrderTest):
     meshTypes = ["uniformTensorMesh", "uniformCurv", "rotateCurv"]
     meshDimension = 3
     meshSizes = [16, 32]
-    rng = gen
 
     def getError(self):
         call = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1], xyz[:, 2])
@@ -174,7 +171,6 @@ class TestInnerProductsFaceProperties3D(discretize.tests.OrderTest):
     meshTypes = ["uniformTensorMesh"]
     meshDimension = 3
     meshSizes = [16, 32]
-    rng = gen
 
     def getError(self):
         call = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1], xyz[:, 2])
@@ -321,7 +317,6 @@ class TestInnerProductsEdgeProperties3D(discretize.tests.OrderTest):
     meshTypes = ["uniformTensorMesh"]
     meshDimension = 3
     meshSizes = [16, 32]
-    rng = gen
 
     def getError(self):
         call = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1], xyz[:, 2])
@@ -410,7 +405,6 @@ class TestInnerProducts2D(discretize.tests.OrderTest):
     meshTypes = ["uniformTensorMesh", "uniformCurv", "rotateCurv"]
     meshDimension = 2
     meshSizes = [4, 8, 16, 32, 64, 128]
-    rng = gen
 
     def getError(self):
         z = 5  # Because 5 is just such a great number.
@@ -556,7 +550,6 @@ class TestInnerProductsFaceProperties2D(discretize.tests.OrderTest):
     meshTypes = ["uniformTensorMesh"]
     meshDimension = 2
     meshSizes = [8, 16, 32]
-    rng = gen
 
     def getError(self):
         call = lambda fun, xy: fun(xy[:, 0], xy[:, 1])
@@ -647,7 +640,6 @@ class TestInnerProductsEdgeProperties2D(discretize.tests.OrderTest):
     meshTypes = ["uniformTensorMesh"]
     meshDimension = 2
     meshSizes = [8, 16, 32]
-    rng = gen
 
     def getError(self):
         call = lambda fun, xy: fun(xy[:, 0], xy[:, 1])
@@ -710,7 +702,6 @@ class TestInnerProducts1D(discretize.tests.OrderTest):
     meshTypes = ["uniformTensorMesh"]
     meshDimension = 1
     meshSizes = [4, 8, 16, 32, 64, 128]
-    rng = gen
 
     def getError(self):
         y = 12  # Because 12 is just such a great number.

@@ -3,8 +3,6 @@ import unittest
 
 import discretize
 
-gen = np.random.default_rng(182)
-
 MESHTYPES = ["uniformTensorMesh", "randomTensorMesh"]
 TOLERANCES = [0.9, 0.5, 0.5]
 call1 = lambda fun, xyz: fun(xyz)
@@ -43,13 +41,13 @@ TOL = 1e-7
 
 
 class TestInterpolation1D(discretize.tests.OrderTest):
-    LOCS = np.random.rand(50) * 0.6 + 0.2
     name = "Interpolation 1D"
     meshTypes = MESHTYPES
     tolerance = TOLERANCES
     meshDimension = 1
     meshSizes = [8, 16, 32, 64, 128]
-    rng = gen
+    rng = np.random.default_rng(5136)
+    LOCS = rng.random(50) * 0.6 + 0.2
 
     def getError(self):
         funX = lambda x: np.cos(2 * np.pi * x)
@@ -96,12 +94,12 @@ class TestOutliersInterp1D(unittest.TestCase):
 
 class TestInterpolation2d(discretize.tests.OrderTest):
     name = "Interpolation 2D"
-    LOCS = np.random.rand(50, 2) * 0.6 + 0.2
     meshTypes = MESHTYPES
     tolerance = TOLERANCES
     meshDimension = 2
     meshSizes = [8, 16, 32, 64]
-    rng = gen
+    rng = np.random.default_rng(2457)
+    LOCS = rng.random((50, 2)) * 0.6 + 0.2
 
     def getError(self):
         funX = lambda x, y: np.cos(2 * np.pi * y)
@@ -180,14 +178,12 @@ class TestInterpolationSymmetricCyl_Simple(unittest.TestCase):
 
 class TestInterpolationSymCyl(discretize.tests.OrderTest):
     name = "Interpolation Symmetric 3D"
-    LOCS = np.c_[
-        np.random.rand(4) * 0.6 + 0.2, np.zeros(4), np.random.rand(4) * 0.6 + 0.2
-    ]
     meshTypes = ["uniform_symmetric_CylMesh"]  # MESHTYPES +
     tolerance = 0.6
     meshDimension = 3
     meshSizes = [32, 64, 128, 256]
-    rng = gen
+    rng = np.random.default_rng(81756234)
+    LOCS = np.c_[rng.random(4) * 0.6 + 0.2, np.zeros(4), rng.random(4) * 0.6 + 0.2]
 
     def getError(self):
         funX = lambda x, y: np.cos(2 * np.pi * y)
@@ -247,15 +243,15 @@ class TestInterpolationSymCyl(discretize.tests.OrderTest):
 
 class TestInterpolationCyl(discretize.tests.OrderTest):
     name = "Interpolation Cylindrical 3D"
-    LOCS = np.c_[
-        np.random.rand(20) * 0.6 + 0.2,
-        2 * np.pi * (np.random.rand(20) * 0.6 + 0.2),
-        np.random.rand(20) * 0.6 + 0.2,
-    ]
     meshTypes = ["uniformCylMesh", "randomCylMesh"]  # MESHTYPES +
     meshDimension = 3
     meshSizes = [8, 16, 32, 64]
-    rng = gen
+    rng = np.random.default_rng(876234)
+    LOCS = np.c_[
+        rng.random(20) * 0.6 + 0.2,
+        2 * np.pi * (rng.random(20) * 0.6 + 0.2),
+        rng.random(20) * 0.6 + 0.2,
+    ]
 
     def getError(self):
         func = lambda x, y, z: np.cos(2 * np.pi * x) + np.cos(y) + np.cos(2 * np.pi * z)
@@ -318,13 +314,13 @@ class TestInterpolationCyl(discretize.tests.OrderTest):
 
 
 class TestInterpolation3D(discretize.tests.OrderTest):
+    rng = np.random.default_rng(234)
     name = "Interpolation"
-    LOCS = np.random.rand(50, 3) * 0.6 + 0.2
+    LOCS = rng.random((50, 3)) * 0.6 + 0.2
     meshTypes = MESHTYPES
     tolerance = TOLERANCES
     meshDimension = 3
     meshSizes = [8, 16, 32, 64]
-    rng = gen
 
     def getError(self):
         funX = lambda x, y, z: np.cos(2 * np.pi * y)
