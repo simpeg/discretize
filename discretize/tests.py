@@ -227,7 +227,7 @@ class OrderTest(unittest.TestCase):
         Name the convergence test
     meshTypes : list of str
         List denoting the mesh types on which the convergence will be tested.
-        List entries must of the list {'uniformTensorMesh', 'randomTensorMesh',
+        List entries must be of the list {'uniformTensorMesh', 'randomTensorMesh',
         'uniformCylindricalMesh', 'randomCylindricalMesh', 'uniformTree', 'randomTree',
         'uniformCurv', 'rotateCurv', 'sphereCurv'}
     expectedOrders : float or list of float (default = 2.0)
@@ -242,8 +242,9 @@ class OrderTest(unittest.TestCase):
     meshDimension : int
         Mesh dimension. Must be 1, 2 or 3
     rng : numpy.random.Generator, int, optional
-        The random number generator to use for the adjoint test, if an integer or None
-        it used to seed a new `numpy.random.default_rng`. Only used if mesh_type is 'random'
+        If ``random`` is in `mesh_type`, this is the random number generator
+        used generate the random meshes, if an ``int`` or ``None``, it used to seed
+        a new `numpy.random.default_rng`.
 
     Notes
     -----
