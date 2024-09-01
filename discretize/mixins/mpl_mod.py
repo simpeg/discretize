@@ -2551,35 +2551,18 @@ class Slicer(object):
         else:
             aspect3 = 1.0 / aspect2
 
-        # set color limits if clim is None (and norm doesn't have vmin, vmax).
-        if clim is None:
-            if "norm" in self.pc_props:
-                vmin = self.pc_props["norm"].vmin
-                vmax = self.pc_props["norm"].vmax
-            else:
-                vmin = vmax = None
-            clim = [
-                np.nanmin(self.v) if vmin is None else vmin,
-                np.nanmax(self.v) if vmax is None else vmax,
-            ]
-            # In the case of a homogeneous fullspace provide a small range to
-            # avoid problems with colorbar and the three subplots.
-            if clim[0] == clim[1]:
-                clim[0] *= 0.99
-                clim[1] *= 1.01
-
-            # Edge-case. If the entire vector is zero, `clim` is still
-            #  [0, 0] after the above check, hence `clim[0]==clim[1]`.
-            if clim[0] == clim[1]:
-                clim = [-0.1, 0.1]
-
-        # ensure vmin/vmax of the norm is consistent with clim
-        if "norm" in self.pc_props:
-            self.pc_props["norm"].vmin = clim[0]
-            self.pc_props["norm"].vmax = clim[1]
-        else:
-            self.pc_props["vmin"] = clim[0]
-            self.pc_props["vmax"] = clim[1]
+        # Ensure a consistent color normalization for the three plots.
+        if "norm" not in self.pc_props:
+            # Create a default normalizer
+            self.pc_props["norm"] = Normalize()
+        norm = self.pc_props["norm"]
+        if clim is not None:
+            # set the norm's min and max consistently.
+            norm.vmin, norm.vmax = clim
+        # Autoscales None values for norm.vmin and norm.vmax.
+        # self.v is a nan masked array, so this
+        # is safe.
+        norm.autoscale_None(self.v)
 
         # 2. Start populating figure
 
