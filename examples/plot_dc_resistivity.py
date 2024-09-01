@@ -8,7 +8,7 @@ Basic Forward 2D DC Resistivity
 import discretize
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.solver.linalg import spsolve
+from scipy.sparse.linalg import spsolve
 
 
 def run(plotIt=True):
