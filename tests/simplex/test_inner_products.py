@@ -343,7 +343,9 @@ class TestInnerProductsDerivs(unittest.TestCase):
             return M * v, Md(v)
 
         print("Face", rep)
-        return discretize.tests.check_derivative(fun, sig, num=5, plotIt=False)
+        return discretize.tests.check_derivative(
+            fun, sig, num=5, plotIt=False, rng=5352
+        )
 
     def doTestEdge(self, h, rep):
         nodes, simplices = example_simplex_mesh(h)
@@ -357,7 +359,7 @@ class TestInnerProductsDerivs(unittest.TestCase):
             return M * v, Md(v)
 
         print("Edge", rep)
-        return discretize.tests.check_derivative(fun, sig, num=5, plotIt=False)
+        return discretize.tests.check_derivative(fun, sig, num=5, plotIt=False, rng=532)
 
     def test_FaceIP_2D_float(self):
         self.assertTrue(self.doTestFace([10, 4], 0))

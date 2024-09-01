@@ -40,7 +40,9 @@ class TestInnerProductsDerivsTensor(unittest.TestCase):
             fast,
             ("harmonic" if invert_model and invert_matrix else "standard"),
         )
-        return discretize.tests.check_derivative(fun, sig, num=5, plotIt=False, rng=rng)
+        return discretize.tests.check_derivative(
+            fun, sig, num=5, plotIt=False, rng=4421
+        )
 
     def doTestEdge(
         self, h, rep, fast, meshType, invert_model=False, invert_matrix=False
@@ -76,7 +78,7 @@ class TestInnerProductsDerivsTensor(unittest.TestCase):
             fast,
             ("harmonic" if invert_model and invert_matrix else "standard"),
         )
-        return discretize.tests.check_derivative(fun, sig, num=5, plotIt=False, rng=rng)
+        return discretize.tests.check_derivative(fun, sig, num=5, plotIt=False, rng=643)
 
     def test_FaceIP_2D_float_Tree(self):
         self.assertTrue(self.doTestFace([8, 8], 0, False, "Tree"))
@@ -193,7 +195,7 @@ class TestFacePropertiesInnerProductsDerivsTensor(unittest.TestCase):
             # fast,
             ("harmonic" if invert_model and invert_matrix else "standard"),
         )
-        return discretize.tests.check_derivative(fun, sig, num=5, plotIt=False, rng=rng)
+        return discretize.tests.check_derivative(fun, sig, num=5, plotIt=False, rng=677)
 
     def doTestEdge(self, h, rep, meshType, invert_model=False, invert_matrix=False):
         if meshType == "Curv":
@@ -226,7 +228,7 @@ class TestFacePropertiesInnerProductsDerivsTensor(unittest.TestCase):
             # fast,
             ("harmonic" if invert_model and invert_matrix else "standard"),
         )
-        return discretize.tests.check_derivative(fun, sig, num=5, plotIt=False, rng=rng)
+        return discretize.tests.check_derivative(fun, sig, num=5, plotIt=False, rng=543)
 
     def test_FaceIP_2D_float_fast_Tree(self):
         self.assertTrue(self.doTestFace([8, 8], 0, "Tree"))
@@ -285,7 +287,7 @@ class TestEdgePropertiesInnerProductsDerivsTensor(unittest.TestCase):
             # fast,
             ("harmonic" if invert_model and invert_matrix else "standard"),
         )
-        return discretize.tests.check_derivative(fun, sig, num=5, plotIt=False, rng=rng)
+        return discretize.tests.check_derivative(fun, sig, num=5, plotIt=False, rng=23)
 
     def test_EdgeIP_2D_float_fast_Tree(self):
         self.assertTrue(self.doTestEdge([8, 8], 0, "Tree"))
