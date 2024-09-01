@@ -16,7 +16,6 @@ dependencies:
   - numpydoc>=1.5
   - jupyter
   - graphviz
-  - pymatsolver>=0.1.2
   - pillow
   - pooch
   # testing
