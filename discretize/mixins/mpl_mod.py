@@ -2458,6 +2458,7 @@ class Slicer(object):
         """Initialize interactive figure."""
         _, plt = load_matplotlib()
         from matplotlib.widgets import Slider  # Lazy loaded
+        from matplotlib.colors import Normalize
 
         # 0. Some checks, not very extensive
         if "pcolorOpts" in kwargs:
