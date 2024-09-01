@@ -26,6 +26,7 @@ class TestAssertIsAdjoint:
             mesh1.n_cells,
             mesh2.n_cells,
             assert_error=False,
+            rng=41,
         )
         out2, _ = capsys.readouterr()
         assert out1
@@ -38,6 +39,7 @@ class TestAssertIsAdjoint:
                 lambda v: P.T * v,
                 mesh1.n_cells,
                 mesh2.n_cells,
+                rng=42,
             )
 
     def test_different_shape(self):
@@ -53,7 +55,13 @@ class TestAssertIsAdjoint:
             out = np.expand_dims(inp, 1)
             return np.tile(out, nt)
 
-        assert_isadjoint(fwd, adj, shape_u=(4, nt), shape_v=(4,))
+        assert_isadjoint(
+            fwd,
+            adj,
+            shape_u=(4, nt),
+            shape_v=(4,),
+            rng=42,
+        )
 
     def test_complex_clinear(self):
         # The complex conjugate is self-adjoint, real-linear.
@@ -65,6 +73,7 @@ class TestAssertIsAdjoint:
             complex_u=True,
             complex_v=True,
             clinear=False,
+            rng=112,
         )
 
 
