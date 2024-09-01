@@ -78,12 +78,14 @@ class TestBaseMesh(unittest.TestCase):
 
                 n_params = sum(
                     [
-                        1
-                        if (
-                            param.default is param.empty
-                            and param.kind != param.VAR_KEYWORD
+                        (
+                            1
+                            if (
+                                param.default is param.empty
+                                and param.kind != param.VAR_KEYWORD
+                            )
+                            else 0
                         )
-                        else 0
                         for param in params.values()
                     ]
                 )

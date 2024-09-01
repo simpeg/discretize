@@ -1,4 +1,5 @@
 """Utilities for creating averaging operators."""
+
 import numpy as np
 import scipy.sparse as sp
 from discretize.utils.matrix_utils import mkvc, sub2ind

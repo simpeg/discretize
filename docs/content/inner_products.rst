@@ -195,9 +195,9 @@ Which is nice and easy to invert if necessary, however, in the fully anisotropic
     m2 = np.random.rand(mesh.nC,3)
     m3 = np.random.rand(mesh.nC,6)
     M = list(range(3))
-    M[0] = mesh.getFaceInnerProduct(m1)
-    M[1] = mesh.getFaceInnerProduct(m2)
-    M[2] = mesh.getFaceInnerProduct(m3)
+    M[0] = mesh.get_face_inner_product(m1)
+    M[1] = mesh.get_face_inner_product(m2)
+    M[2] = mesh.get_face_inner_product(m3)
     plt.figure(figsize=(13,5))
     for i, lab in enumerate(['Isotropic','Anisotropic','Tensor']):
         plt.subplot(131 + i)

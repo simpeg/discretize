@@ -1,4 +1,5 @@
 """Module for ``matplotlib`` interaction with ``discretize``."""
+
 import numpy as np
 import warnings
 from discretize.utils import mkvc, ndgrid

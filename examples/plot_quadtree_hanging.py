@@ -10,6 +10,7 @@ Occasionally it is useful to initially refine to a constant level
 on an 8x8 mesh (2^3).
 
 """
+
 import discretize
 import matplotlib.pyplot as plt
 

@@ -1,4 +1,5 @@
 """Useful functions for working with vectors and matrices."""
+
 import numpy as np
 import scipy.sparse as sp
 from discretize.utils.code_utils import is_scalar, deprecate_function
@@ -60,7 +61,7 @@ def mkvc(x, n_dims=1, **kwargs):
             "The numDims keyword argument has been removed, please use n_dims. "
             "This will be removed in discretize 1.0.0",
         )
-    if type(x) == np.matrix:
+    if isinstance(x, np.matrix):
         x = np.array(x)
 
     if hasattr(x, "tovec"):
@@ -360,7 +361,7 @@ def ndgrid(*args, vector=True, order="F"):
         raise TypeError("'vector' keyword must be a bool")
 
     # you can either pass a list [x1, x2, x3] or each seperately
-    if type(args[0]) == list:
+    if isinstance(args[0], list):
         xin = args[0]
     else:
         xin = args
