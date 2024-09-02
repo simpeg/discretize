@@ -792,9 +792,6 @@ class InterfaceMPL(object):
         # Connect figure to scrolling
         fig.canvas.mpl_connect("scroll_event", tracker.onscroll)
 
-        # Show figure
-        plt.show()
-
     # TensorMesh plotting
     def __plot_grid_tensor(
         self,
@@ -2513,7 +2510,7 @@ class Slicer(object):
 
         # Store data in self as (nx, ny, nz)
         self.v = mesh.reshape(v.reshape((mesh.nC, -1), order="F"), "CC", "CC", "M")
-        self.v = np.ma.masked_where(np.isnan(self.v), self.v)
+        self.v = np.ma.masked_array(self.v, np.isnan(self.v))
 
         # Store relevant information from mesh in self
         self.x = mesh.nodes_x  # x-node locations
@@ -2568,8 +2565,7 @@ class Slicer(object):
                 )
 
         # Auto scales None values for norm.vmin and norm.vmax.
-        # self.v is a nan masked array, so this is safe.
-        norm.autoscale_None(self.v)
+        norm.autoscale_None(self.v[~self.v.mask].reshape(-1, order="A"))
 
         # 2. Start populating figure
 
@@ -2662,6 +2658,7 @@ class Slicer(object):
 
         # Remove transparent value
         if isinstance(transparent, str) and transparent.lower() == "slider":
+            clim = (norm.vmin, norm.vmax)
             # Sliders
             self.ax_smin = plt.axes([0.7, 0.11, 0.15, 0.03])
             self.ax_smax = plt.axes([0.7, 0.15, 0.15, 0.03])
