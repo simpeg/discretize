@@ -9,10 +9,13 @@ The example demonstrates the `plot_3d_slicer`
 Using the inversion result from the example notebook
 `plot_laguna_del_maule_inversion.ipynb <http://docs.simpeg.xyz/content/examples/20-published/plot_laguna_del_maule_inversion.html>`_
 
-In the notebook, you have to use :code:`%matplotlib notebook`.
+You have to use :code:`%matplotlib notebook` in Jupyter Notebook, and
+:code:`%matplotlib widget` in Jupyter Lab (latter requires the package
+``ipympl``).
 """
 
 # %matplotlib notebook
+# %matplotlib widget
 import discretize
 import numpy as np
 import matplotlib.pyplot as plt
