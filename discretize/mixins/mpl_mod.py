@@ -2553,19 +2553,19 @@ class Slicer(object):
         else:
             aspect3 = 1.0 / aspect2
 
-        if clim is not None:
-            vmin, vmax = clim
-            self.pc_props["vmin"] = vmin
-            self.pc_props["vmax"] = vmax
-
         # Ensure a consistent color normalization for the three plots.
-        if norm := self.pc_props.get("norm", None) is None:
+        if (norm := self.pc_props.get("norm", None)) is None:
             # Create a default normalizer
             norm = Normalize()
             if clim is not None:
-                norm.vmin = self.pc_props.pop("vmin")
-                norm.vmax = self.pc_props.pop("vmax")
+                norm.vmin, norm.vmax = clim
             self.pc_props["norm"] = norm
+        else:
+            if clim is not None:
+                raise ValueError(
+                    "Passing a Normalize instance simultaneously with clim is not supported. "
+                    "Please pass vmin/vmax directly to the norm when creating it."
+                )
 
         # Auto scales None values for norm.vmin and norm.vmax.
         # self.v is a nan masked array, so this is safe.
