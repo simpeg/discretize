@@ -15,6 +15,7 @@ import os
 import sys
 from pathlib import Path
 from datetime import datetime
+from packaging.version import parse
 import discretize
 from sphinx_gallery.sorting import FileNameSortKey
 import shutil
@@ -246,6 +247,13 @@ external_links = [
     dict(name="Contact", url="https://mattermost.softwareunderground.org/simpeg"),
 ]
 
+# Define discretize version for the version switcher
+discretize_version = parse(discretize.__version__)
+if discretize_version.is_devrelease:
+    switcher_version = "main"
+else:
+    switcher_version = discretize_version.public
+
 # Use Pydata Sphinx theme
 html_theme = "pydata_sphinx_theme"
 
@@ -279,7 +287,13 @@ html_theme_options = {
     "use_edit_page_button": False,
     "collapse_navigation": True,
     "navbar_align": "left",  # make elements closer to logo on the left
-    "navbar_end": ["theme-switcher", "navbar-icon-links"],
+    "navbar_end": ["version-switcher", "theme-switcher", "navbar-icon-links"],
+    # Configure version switcher (remember to add it to the "navbar_end")
+    "switcher": {
+        "version_match": switcher_version,
+        "json_url": "https://discretize.simpeg.xyz/en/latest/_static/versions.json",
+    },
+    "show_version_warning_banner": True,
 }
 
 html_logo = "images/discretize-logo.png"
