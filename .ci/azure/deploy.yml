@@ -63,6 +63,9 @@ jobs:
         git remote prune origin
         mv html en/$VERSION
         touch .nojekyll
+        # Update latest symlink
+        ln -s en/$VERSION en/latest
+        # Commit and push
         git add .
         git commit -am "Azure CI commit ref $(Build.SourceVersion)"
         git push
