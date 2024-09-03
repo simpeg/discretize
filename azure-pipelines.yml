@@ -60,12 +60,12 @@ stages:
         vmImage: ubuntu-latest
 
       # Get stored variables.
-      # called "version".
       variables:
         # Get the discretize version used to build the docs in the "DocBuild"
-        # stage, "BuildDocs" job, and "discretizeVersion" task. The variable is
+        # stage, "BuildDocs" job, and "GetVersion" task. The variable is
+        # called "version".
         - name: VERSION
-          value: $[ stageDependencies.DocBuild.BuildDocs.outputs['discretizeVersion.version'] ]
+          value: $[ stageDependencies.DocBuild.BuildDocs.outputs['GetVersion.version'] ]
 
       steps:
         - bash: |
