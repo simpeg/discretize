@@ -52,6 +52,7 @@ stages:
     dependsOn:
       - BuildWheels
       - BuildSource
+      - DocBuild
     condition: and(succeeded(), startsWith(variables['build.sourceBranch'], 'refs/tags/'))
     jobs:
       - template: .ci/azure/deploy.yml
