@@ -3,6 +3,15 @@ jobs:
   displayName: "Deploy Docs and source"
   pool:
     vmImage: ubuntu-latest
+
+  # Get stored variables.
+  variables:
+    # Get the discretize version used to build the docs in the "DocBuild"
+    # stage, "BuildDocs" job, and "GetVersion" task. The variable is
+    # called "version".
+    - name: VERSION
+      value: $[ stageDependencies.DocBuild.BuildDocs.outputs['GetVersion.version'] ]
+
   steps:
     # No need to checkout the repo here!
     - checkout: none
@@ -52,8 +61,7 @@ jobs:
         cd discretize-docs
         git gc --prune=now
         git remote prune origin
-        rm -rf en/main/*
-        cp -r html/* en/main/
+        mv html en/$VERSION
         touch .nojekyll
         git add .
         git commit -am "Azure CI commit ref $(Build.SourceVersion)"
@@ -61,3 +69,4 @@ jobs:
       displayName: Push documentation to discretize-docs
       env:
         GH_TOKEN: $(gh.token)
+        VERSION: $(VERSION) # defined in variables section
