@@ -55,18 +55,21 @@ cdef class TreeCell:
     cdef void _set(self, c_Cell* cell):
         self._cell = cell
         self._dim = cell.n_dim
-        self._x = cell.location[0]
-        self._x0 = cell.points[0].location[0]
+        cdef:
+            Node *min_n = cell.min_node()
+            Node *max_n = cell.max_node()
+        self._x = self._cell.location[0]
+        self._x0 = min_n.location[0]
 
-        self._y = cell.location[1]
-        self._y0 = cell.points[0].location[1]
+        self._y = self._cell.location[1]
+        self._y0 = min_n.location[1]
 
-        self._wx = cell.points[3].location[0] - self._x0
-        self._wy = cell.points[3].location[1] - self._y0
+        self._wx = max_n.location[0] - self._x0
+        self._wy = max_n.location[1] - self._y0
         if(self._dim > 2):
-            self._z = cell.location[2]
-            self._z0 = cell.points[0].location[2]
-            self._wz = cell.points[7].location[2] - self._z0
+            self._z = self._cell.location[2]
+            self._z0 = min_n.location[2]
+            self._wz = max_n.location[2] - self._z0
 
     @property
     def nodes(self):

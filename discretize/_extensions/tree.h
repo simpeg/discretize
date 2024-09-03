@@ -82,6 +82,9 @@ class Edge{
     Edge *parents[2];
     Edge();
     Edge(Node& p1, Node&p2);
+    double operator[](int_t index){
+      return location[index];
+    };
 };
 
 class Face{
@@ -98,6 +101,9 @@ class Face{
         Face *parent;
         Face();
         Face(Node& p1, Node& p2, Node& p3, Node& p4);
+        double operator[](int_t index){
+          return location[index];
+    };
 };
 
 class Cell{
@@ -111,6 +117,9 @@ class Cell{
     int_t location_ind[3], key, level, max_level;
     long long int index; // non root parents will have a -1 value
     double location[3];
+    double operator[](int_t index){
+      return location[index];
+    };
     double volume;
 
     Cell();

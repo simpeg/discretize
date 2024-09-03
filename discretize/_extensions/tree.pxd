@@ -15,7 +15,7 @@ cdef extern from "tree.h":
         Node *parents[4]
         Node()
         Node(int_t, int_t, int_t, double, double, double)
-        int_t operator[](int_t)
+        double operator[](int_t)
 
     cdef cppclass Edge:
         int_t location_ind[3]
@@ -29,6 +29,7 @@ cdef extern from "tree.h":
         Edge *parents[2]
         Edge()
         Edge(Node& p1, Node& p2)
+        double operator[](int_t)
 
     cdef cppclass Face:
         int_t location_ind[3]
@@ -43,6 +44,7 @@ cdef extern from "tree.h":
         Face *parent
         Face()
         Face(Node& p1, Node& p2, Node& p3, Node& p4)
+        double operator[](int_t)
 
     ctypedef map[int_t, Node *] node_map_t
     ctypedef map[int_t, Edge *] edge_map_t
@@ -64,6 +66,7 @@ cdef extern from "tree.h":
         inline bool is_leaf()
         inline Node* min_node()
         inline Node* max_node()
+        double operator[](int_t)
 
     cdef cppclass PyWrapper:
         PyWrapper()
