@@ -47,6 +47,35 @@ stages:
     jobs:
       - template: .ci/azure/sdist.yml
 
+# -----------------------------------------------------------------------------
+
+  - stage: Experiment
+    displayName: "Experiment with pipelines (remove this stage)"
+    dependsOn:
+      - DocBuild
+    jobs:
+    - job:
+      displayName: "Experiment with variable"
+      pool:
+        vmImage: ubuntu-latest
+
+      # Get stored variables.
+      # called "version".
+      variables:
+        # Get the discretize version used to build the docs in the "DocBuild"
+        # stage, "BuildDocs" job, and "discretizeVersion" task. The variable is
+        - name: VERSION
+          value: $[ stageDependencies.DocBuild.BuildDocs.outputs['discretizeVersion.version'] ]
+
+      steps:
+        - bash: |
+            echo $VERSION
+          displayName: Echo variable
+          env:
+            VERSION: $(VERSION) # defined in variables section
+
+# -----------------------------------------------------------------------------
+
   - stage: Deploy
     displayName: "Deploy Source, Wheels, and Docs"
     dependsOn:
