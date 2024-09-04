@@ -134,13 +134,13 @@ class TestCC1D_InhomogeneousNeumann(discretize.tests.OrderTest):
         A = V @ D @ MfI @ (-G + B_bc)
         rhs = V @ q_ana - V @ D @ MfI @ b_bc
 
-        xc_disc, info = sp.linalg.minres(A, rhs, tol=1e-6)
+        xc_disc, info = sp.linalg.minres(A, rhs, rtol=1e-6)
 
         if self.myTest == "j":
             err = np.linalg.norm((j - j_ana), np.inf)
         elif self.myTest == "xcJ":
             # TODO: fix the null space
-            xc, info = linalg.minres(A, rhs, tol=1e-6)
+            xc, info = linalg.minres(A, rhs, rtol=1e-6)
             j = MfI @ ((-G + B_bc) @ xc + b_bc)
             err = np.linalg.norm((j - j_ana)) / np.sqrt(mesh.n_edges)
             if info > 0:
@@ -203,7 +203,7 @@ class TestCC2D_InhomogeneousNeumann(discretize.tests.OrderTest):
         A = V @ D @ MfI @ (-G + B_bc)
         rhs = V @ q_ana - V @ D @ MfI @ b_bc
 
-        phi_test, info = linalg.minres(A, rhs, tol=1e-6)
+        phi_test, info = linalg.minres(A, rhs, rtol=1e-6)
         phi_test -= phi_test.mean()
         phi_ana -= phi_ana.mean()
 

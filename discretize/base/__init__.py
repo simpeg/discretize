@@ -16,6 +16,7 @@ Base Mesh Class
   BaseRectangularMesh
   BaseTensorMesh
 """
+
 from discretize.base.base_mesh import BaseMesh
 from discretize.base.base_regular_mesh import BaseRegularMesh, BaseRectangularMesh
 from discretize.base.base_tensor_mesh import BaseTensorMesh

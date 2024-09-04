@@ -5,6 +5,7 @@ Plot Mirrored Cylindrically Symmetric Model
 Here, we demonstrate plotting a model on a cylindrically
 symmetric mesh with the plotting symmetric about x=0.
 """
+
 import numpy as np
 import matplotlib.pyplot as plt
 import discretize

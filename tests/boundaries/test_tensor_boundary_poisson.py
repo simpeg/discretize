@@ -217,14 +217,14 @@ class Test1D_InhomogeneousNeumann(discretize.tests.OrderTest):
             err = np.linalg.norm((q - V * q_ana), np.inf)
         elif self.myTest == "xc":
             # TODO: fix the null space
-            xc, info = sp.linalg.minres(A, rhs, tol=1e-6)
+            xc, info = sp.linalg.minres(A, rhs, rtol=1e-6)
             err = np.linalg.norm((xc - xc_ana), np.inf)
             if info > 0:
                 print("Solve does not work well")
                 print("ACCURACY", np.linalg.norm(utils.mkvc(A * xc) - rhs))
         elif self.myTest == "xcJ":
             # TODO: fix the null space
-            xc, info = sp.linalg.minres(A, rhs, tol=1e-6)
+            xc, info = sp.linalg.minres(A, rhs, rtol=1e-6)
             j = McI * (G * xc + P * phi_bc)
             err = np.linalg.norm((Pin * j - Pin * j_ana), np.inf)
             if info > 0:
@@ -302,14 +302,14 @@ class Test2D_InhomogeneousNeumann(discretize.tests.OrderTest):
             err = np.linalg.norm((q - V * q_ana), np.inf)
         elif self.myTest == "xc":
             # TODO: fix the null space
-            xc, info = sp.linalg.minres(A, rhs, tol=1e-6)
+            xc, info = sp.linalg.minres(A, rhs, rtol=1e-6)
             err = np.linalg.norm((xc - xc_ana), np.inf)
             if info > 0:
                 print("Solve does not work well")
                 print("ACCURACY", np.linalg.norm(utils.mkvc(A * xc) - rhs))
         elif self.myTest == "xcJ":
             # TODO: fix the null space
-            xc, info = sp.linalg.minres(A, rhs, tol=1e-6)
+            xc, info = sp.linalg.minres(A, rhs, rtol=1e-6)
             j = McI * (G * xc + P * phi_bc)
             err = np.linalg.norm((Pin * j - Pin * j_ana), np.inf)
             if info > 0:
@@ -379,14 +379,14 @@ class Test1D_InhomogeneousMixed(discretize.tests.OrderTest):
             err = np.linalg.norm((q - V * q_ana), np.inf)
         elif self.myTest == "xc":
             # TODO: fix the null space
-            xc, info = sp.linalg.minres(A, rhs, tol=1e-6)
+            xc, info = sp.linalg.minres(A, rhs, rtol=1e-6)
             err = np.linalg.norm((xc - xc_ana), np.inf)
             if info > 0:
                 print("Solve does not work well")
                 print("ACCURACY", np.linalg.norm(utils.mkvc(A * xc) - rhs))
         elif self.myTest == "xcJ":
             # TODO: fix the null space
-            xc, info = sp.linalg.minres(A, rhs, tol=1e-6)
+            xc, info = sp.linalg.minres(A, rhs, rtol=1e-6)
             j = McI * (G * xc + P * phi_bc)
             err = np.linalg.norm((Pin * j - Pin * j_ana), np.inf)
             if info > 0:
@@ -479,14 +479,14 @@ class Test2D_InhomogeneousMixed(discretize.tests.OrderTest):
             err = np.linalg.norm((q - V * q_ana), np.inf)
         elif self.myTest == "xc":
             # TODO: fix the null space
-            xc, info = sp.linalg.minres(A, rhs, tol=1e-6)
+            xc, info = sp.linalg.minres(A, rhs, rtol=1e-6)
             err = np.linalg.norm((xc - xc_ana), np.inf)
             if info > 0:
                 print("Solve does not work well")
                 print("ACCURACY", np.linalg.norm(utils.mkvc(A * xc) - rhs))
         elif self.myTest == "xcJ":
             # TODO: fix the null space
-            xc, info = sp.linalg.minres(A, rhs, tol=1e-6)
+            xc, info = sp.linalg.minres(A, rhs, rtol=1e-6)
             j = McI * (G * xc + P * phi_bc)
             err = np.linalg.norm((Pin * j - Pin * j_ana), np.inf)
             if info > 0:

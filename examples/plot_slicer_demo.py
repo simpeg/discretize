@@ -9,16 +9,18 @@ The example demonstrates the `plot_3d_slicer`
 Using the inversion result from the example notebook
 `plot_laguna_del_maule_inversion.ipynb <http://docs.simpeg.xyz/content/examples/20-published/plot_laguna_del_maule_inversion.html>`_
 
-In the notebook, you have to use :code:`%matplotlib notebook`.
+You have to use :code:`%matplotlib notebook` in Jupyter Notebook, and
+:code:`%matplotlib widget` in Jupyter Lab (latter requires the package
+``ipympl``).
 """
 
 # %matplotlib notebook
-import os
+# %matplotlib widget
 import discretize
 import numpy as np
-import tarfile
 import matplotlib.pyplot as plt
 from matplotlib.colors import SymLogNorm
+import pooch
 
 ###############################################################################
 # Download and load data
@@ -27,17 +29,18 @@ from matplotlib.colors import SymLogNorm
 # In the following we load the :code:`mesh` and :code:`Lpout` that you would
 # get from running the laguna-del-maule inversion notebook.
 
-f = discretize.utils.download(
-    "https://storage.googleapis.com/simpeg/laguna_del_maule_slicer.tar.gz",
-    overwrite=True,
+model_url = "https://storage.googleapis.com/simpeg/laguna_del_maule_slicer.tar.gz"
+downloaded_items = pooch.retrieve(
+    model_url,
+    known_hash="107293bfdeb77b314f4cb451a24c2c93a55aae40da28f43cf3c075d71acfb957",
+    processor=pooch.Untar(),
 )
-tar = tarfile.open(f, "r")
-tar.extractall()
-tar.close()
+mesh_path = next(filter(lambda f: f.endswith("mesh.json"), downloaded_items))
+model_path = next(filter(lambda f: f.endswith("Lpout.npy"), downloaded_items))
 
 # Load the mesh and model
-mesh = discretize.load_mesh(os.path.join("laguna_del_maule_slicer", "mesh.json"))
-Lpout = np.load(os.path.join("laguna_del_maule_slicer", "Lpout.npy"))
+mesh = discretize.load_mesh(mesh_path)
+Lpout = np.load(model_path)
 
 ###############################################################################
 # Case 1: Using the intrinsinc functionality
@@ -47,6 +50,7 @@ Lpout = np.load(os.path.join("laguna_del_maule_slicer", "Lpout.npy"))
 # ^^^^^^^^^^^^^^^^^^^
 
 mesh.plot_3d_slicer(Lpout)
+plt.show()
 
 ###############################################################################
 # 1.2 Create a function to improve plots, labeling after creation
@@ -101,6 +105,7 @@ def beautify(title, fig=None):
 #
 mesh.plot_3d_slicer(Lpout)
 beautify("mesh.plot_3d_slicer(Lpout)")
+plt.show()
 
 ###############################################################################
 # 1.3 Set `xslice`, `yslice`, and `zslice`; transparent region
@@ -115,6 +120,7 @@ beautify(
     "mesh.plot_3d_slicer("
     "\nLpout, 370000, 6002500, -2500, transparent=[[-0.02, 0.1]])"
 )
+plt.show()
 
 ###############################################################################
 # 1.4 Set `clim`, use `pcolor_opts` to show grid lines
@@ -127,6 +133,7 @@ beautify(
     "mesh.plot_3d_slicer(\nLpout, clim=[-0.4, 0.2], "
     "pcolor_opts={'edgecolor': 'k', 'linewidth': 0.1})"
 )
+plt.show()
 
 ###############################################################################
 # 1.5 Use `pcolor_opts` to set `SymLogNorm`, and another `cmap`
@@ -139,6 +146,7 @@ beautify(
     "mesh.plot_3d_slicer(Lpout,"
     "\npcolor_opts={'norm': SymLogNorm(linthresh=0.01),'cmap': 'RdBu_r'})`"
 )
+plt.show()
 
 ###############################################################################
 # 1.6 Use :code:`aspect` and :code:`grid`
@@ -156,6 +164,7 @@ beautify(
 
 mesh.plot_3d_slicer(Lpout, aspect=["equal", 1.5], grid=[4, 4, 3])
 beautify("mesh.plot_3d_slicer(Lpout, aspect=['equal', 1.5], grid=[4, 4, 3])")
+plt.show()
 
 ###############################################################################
 # 1.7 Transparency-slider
@@ -166,6 +175,7 @@ beautify("mesh.plot_3d_slicer(Lpout, aspect=['equal', 1.5], grid=[4, 4, 3])")
 
 mesh.plot_3d_slicer(Lpout, transparent="slider")
 beautify("mesh.plot_3d_slicer(Lpout, transparent='slider')")
+plt.show()
 
 
 ###############################################################################
