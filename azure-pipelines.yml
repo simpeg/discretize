@@ -15,6 +15,11 @@ pr:
     exclude:
     - '*no-ci*'
 
+variables:
+  BRANCH_NAME: $(Build.SourceBranchName)
+  IS_TAG: $[startsWith(variables['Build.SourceBranch'], 'refs/tags/')]
+  IS_MAIN: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
+
 stages:
   - stage: StyleChecks
     displayName: "Style Checks"
@@ -47,42 +52,12 @@ stages:
     jobs:
       - template: .ci/azure/sdist.yml
 
-# -----------------------------------------------------------------------------
-
-  - stage: Experiment
-    displayName: "Experiment with pipelines (remove this stage)"
-    dependsOn:
-      - DocBuild
-    jobs:
-    - job:
-      displayName: "Experiment with variable"
-      pool:
-        vmImage: ubuntu-latest
-
-      # Get stored variables.
-      variables:
-        # Get the discretize version used to build the docs in the "DocBuild"
-        # stage, "BuildDocs" job, and "GetVersion" task. The variable is
-        # called "version".
-        - name: VERSION
-          value: $[ stageDependencies.DocBuild.BuildDocs.outputs['GetVersion.version'] ]
-
-      steps:
-        - bash: |
-            echo $VERSION
-          displayName: Echo variable
-          env:
-            VERSION: $(VERSION) # defined in variables section
-
-# -----------------------------------------------------------------------------
-
   - stage: Deploy
     displayName: "Deploy Source, Wheels, and Docs"
     dependsOn:
       - BuildWheels
       - BuildSource
-      - DocBuild
-    condition: and(succeeded(), startsWith(variables['build.sourceBranch'], 'refs/tags/'))
+    condition: and(succeeded(), or(variables.IS_TAG, variables.IS_MAIN))
     jobs:
       - template: .ci/azure/deploy.yml
 

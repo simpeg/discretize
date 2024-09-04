@@ -4,14 +4,6 @@ jobs:
   pool:
     vmImage: ubuntu-latest
 
-  # Get stored variables.
-  variables:
-    # Get the discretize version used to build the docs in the "DocBuild"
-    # stage, "BuildDocs" job, and "GetVersion" task. The variable is
-    # called "version".
-    - name: VERSION
-      value: $[ stageDependencies.DocBuild.BuildDocs.outputs['GetVersion.version'] ]
-
   steps:
     # No need to checkout the repo here!
     - checkout: none
@@ -40,6 +32,11 @@ jobs:
         ls -l html
 
     - bash: |
+        echo $IS_TAG
+        echo $IS_MAIN
+        echo $BRANCH_NAME
+
+    - bash: |
         git config --global user.name ${GH_NAME}
         git config --global user.email ${GH_EMAIL}
         git config --list | grep user.
@@ -51,6 +48,7 @@ jobs:
     - bash: |
         twine upload --skip-existing dist/*
       displayName: Deploy source and wheels
+      condition: $(variables.IS_TAG)
       env:
         TWINE_USERNAME: $(twine.username)
         TWINE_PASSWORD: $(twine.password)
@@ -61,10 +59,17 @@ jobs:
         cd discretize-docs
         git gc --prune=now
         git remote prune origin
-        mv html en/$VERSION
+        mv html en/$BRANCH_NAME
         touch .nojekyll
+      displayName: Set Doc Folder
+
+    - bash:
         # Update latest symlink
-        ln -s en/$VERSION en/latest
+        ln -s en/$BRANCH_NAME en/latest
+      displayName: Point Latest to tag
+      condition: $(variables.IS_TAG)
+
+    - bash:
         # Commit and push
         git add .
         git commit -am "Azure CI commit ref $(Build.SourceVersion)"
@@ -72,4 +77,3 @@ jobs:
       displayName: Push documentation to discretize-docs
       env:
         GH_TOKEN: $(gh.token)
-        VERSION: $(VERSION) # defined in variables section

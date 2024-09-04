@@ -21,14 +21,6 @@ jobs:
 
     - bash: |
         source activate discretize-test
-        version=$(python -c "import discretize; print(discretize.__version__)")
-        echo "discretize version:" "$version"
-        echo "##vso[task.setvariable variable=version;isOutput=true]$version"
-      displayName: 'Store discretize version in variable'
-      name: GetVersion
-
-    - bash: |
-        source activate discretize-test
         make -C docs html
       displayName: 'Building HTML'
 
