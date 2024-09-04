@@ -26,7 +26,7 @@ class TestAssertIsAdjoint:
             mesh1.n_cells,
             mesh2.n_cells,
             assert_error=False,
-            rng=41,
+            random_seed=41,
         )
         out2, _ = capsys.readouterr()
         assert out1
@@ -39,7 +39,7 @@ class TestAssertIsAdjoint:
                 lambda v: P.T * v,
                 mesh1.n_cells,
                 mesh2.n_cells,
-                rng=42,
+                random_seed=42,
             )
 
     def test_different_shape(self):
@@ -60,7 +60,7 @@ class TestAssertIsAdjoint:
             adj,
             shape_u=(4, nt),
             shape_v=(4,),
-            rng=42,
+            random_seed=42,
         )
 
     def test_complex_clinear(self):
@@ -73,7 +73,7 @@ class TestAssertIsAdjoint:
             complex_u=True,
             complex_v=True,
             clinear=False,
-            rng=112,
+            random_seed=112,
         )
 
 
@@ -83,14 +83,18 @@ class TestCheckDerivative:
             return np.sin(x), sp.diags(np.cos(x))
 
         rng = np.random.default_rng(5322)
-        check_derivative(simplePass, rng.standard_normal(5), plotIt=False, rng=42)
+        check_derivative(
+            simplePass, rng.standard_normal(5), plotIt=False, random_seed=42
+        )
 
     def test_simpleFunction(self):
         def simpleFunction(x):
             return np.sin(x), lambda xi: np.cos(x) * xi
 
         rng = np.random.default_rng(5322)
-        check_derivative(simpleFunction, rng.standard_normal(5), plotIt=False, rng=23)
+        check_derivative(
+            simpleFunction, rng.standard_normal(5), plotIt=False, random_seed=23
+        )
 
     def test_simpleFail(self):
         def simpleFail(x):
@@ -98,7 +102,9 @@ class TestCheckDerivative:
 
         rng = np.random.default_rng(5322)
         with pytest.raises(AssertionError):
-            check_derivative(simpleFail, rng.standard_normal(5), plotIt=False, rng=64)
+            check_derivative(
+                simpleFail, rng.standard_normal(5), plotIt=False, random_seed=64
+            )
 
 
 @pytest.mark.parametrize("test_type", ["mean", "min", "last", "all", "mean_at_least"])

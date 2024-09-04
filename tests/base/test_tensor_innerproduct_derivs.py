@@ -42,7 +42,9 @@ class TestInnerProductsDerivsTensor(unittest.TestCase):
             fast,
             ("harmonic" if invert_model and invert_matrix else "standard"),
         )
-        return discretize.tests.check_derivative(fun, sig, num=5, plotIt=False, rng=452)
+        return discretize.tests.check_derivative(
+            fun, sig, num=5, plotIt=False, random_seed=452
+        )
 
     def doTestEdge(
         self, h, rep, fast, meshType, invert_model=False, invert_matrix=False
@@ -80,7 +82,7 @@ class TestInnerProductsDerivsTensor(unittest.TestCase):
             ("harmonic" if invert_model and invert_matrix else "standard"),
         )
         return discretize.tests.check_derivative(
-            fun, sig, num=5, plotIt=False, rng=4567
+            fun, sig, num=5, plotIt=False, random_seed=4567
         )
 
     def test_FaceIP_1D_float(self):
@@ -362,7 +364,9 @@ class TestFacePropertiesInnerProductsDerivsTensor(unittest.TestCase):
             rep,
             ("harmonic" if invert_model and invert_matrix else "standard"),
         )
-        return discretize.tests.check_derivative(fun, sig, num=5, plotIt=False, rng=421)
+        return discretize.tests.check_derivative(
+            fun, sig, num=5, plotIt=False, random_seed=421
+        )
 
     def doTestEdge(self, h, rep, meshType, invert_model=False, invert_matrix=False):
         if meshType == "Curv":
@@ -393,7 +397,9 @@ class TestFacePropertiesInnerProductsDerivsTensor(unittest.TestCase):
             rep,
             ("harmonic" if invert_model and invert_matrix else "standard"),
         )
-        return discretize.tests.check_derivative(fun, sig, num=5, plotIt=False, rng=31)
+        return discretize.tests.check_derivative(
+            fun, sig, num=5, plotIt=False, random_seed=31
+        )
 
     def test_FaceIP_2D_float(self):
         self.assertTrue(self.doTestFace([10, 4], 0, "Tensor"))
@@ -502,7 +508,9 @@ class TestEdgePropertiesInnerProductsDerivsTensor(unittest.TestCase):
             rep,
             ("harmonic" if invert_model and invert_matrix else "standard"),
         )
-        return discretize.tests.check_derivative(fun, sig, num=5, plotIt=False, rng=64)
+        return discretize.tests.check_derivative(
+            fun, sig, num=5, plotIt=False, random_seed=64
+        )
 
     def test_EdgeIP_2D_float(self):
         self.assertTrue(self.doTestEdge([10, 4], 0, "Tensor"))

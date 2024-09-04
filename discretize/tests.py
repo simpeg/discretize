@@ -81,7 +81,7 @@ sadness = [
 _happiness_rng = np.random.default_rng()
 
 
-def setup_mesh(mesh_type, nC, nDim, rng=None):
+def setup_mesh(mesh_type, nC, nDim, random_seed=None):
     """Generate arbitrary mesh for testing.
 
     For the mesh type, number of cells along each axis and dimension specified,
@@ -99,9 +99,9 @@ def setup_mesh(mesh_type, nC, nDim, rng=None):
         number of base mesh cells and must be a power of 2.
     nDim : int
         The dimension of the mesh. Must be 1, 2 or 3.
-    rng : numpy.random.Generator, int, optional
+    random_seed : numpy.random.Generator, int, optional
         If ``random`` is in `mesh_type`, this is the random number generator to use for
-        creating a random mesh. If an integer or None it is used to seed a new
+        creating that random mesh. If an integer or None it is used to seed a new
         `numpy.random.default_rng`.
 
     Returns
@@ -110,7 +110,7 @@ def setup_mesh(mesh_type, nC, nDim, rng=None):
         A discretize mesh of class specified by the input argument *mesh_type*
     """
     if "random" in mesh_type:
-        rng = np.random.default_rng(rng)
+        rng = np.random.default_rng(random_seed)
     if "TensorMesh" in mesh_type:
         if "uniform" in mesh_type:
             h = [nC, nC, nC]
@@ -221,7 +221,7 @@ class OrderTest(unittest.TestCase):
 
     OrderTest inherits from :class:`unittest.TestCase`.
 
-    Parameters
+    Attributes
     ----------
     name : str
         Name the convergence test
@@ -241,7 +241,7 @@ class OrderTest(unittest.TestCase):
         for the meshes used in the convergence test; e.g. [4, 8, 16, 32]
     meshDimension : int
         Mesh dimension. Must be 1, 2 or 3
-    rng : numpy.random.Generator, int, optional
+    random_seed : numpy.random.Generator, int, optional
         If ``random`` is in `mesh_type`, this is the random number generator
         used generate the random meshes, if an ``int`` or ``None``, it used to seed
         a new `numpy.random.default_rng`.
@@ -311,7 +311,7 @@ class OrderTest(unittest.TestCase):
     meshTypes = ["uniformTensorMesh"]
     _meshType = meshTypes[0]
     meshDimension = 3
-    rng = None
+    random_seed = None
 
     def setupMesh(self, nC):
         """Generate mesh and set as current mesh for testing.
@@ -320,16 +320,15 @@ class OrderTest(unittest.TestCase):
         ----------
         nC : int
             Number of cells along each axis.
-        rng : numpy.random.Generator, int, optional
-            The random number generator to use for the adjoint test, if an integer or None
-            it used to seed a new `numpy.random.default_rng`. Only used if mesh_type is 'random'
 
         Returns
         -------
         Float
             Maximum cell width for the mesh
         """
-        mesh, max_h = setup_mesh(self._meshType, nC, self.meshDimension, rng=self.rng)
+        mesh, max_h = setup_mesh(
+            self._meshType, nC, self.meshDimension, random_seed=self.random_seed
+        )
         self.M = mesh
         return max_h
 
@@ -348,7 +347,7 @@ class OrderTest(unittest.TestCase):
         """
         return 1.0
 
-    def orderTest(self, rng=None):
+    def orderTest(self, random_seed=None):
         """Perform an order test.
 
         For number of cells specified in meshSizes setup mesh, call getError
@@ -373,8 +372,8 @@ class OrderTest(unittest.TestCase):
                 "expectedOrders must have the same length as the meshTypes"
             )
 
-        if rng is not None:
-            self.rng = rng
+        if random_seed is not None:
+            self.random_seed = random_seed
 
         def test_func(n_cells):
             max_h = self.setupMesh(n_cells)
@@ -568,7 +567,7 @@ def check_derivative(
     tolerance=0.85,
     eps=1e-10,
     ax=None,
-    rng=None,
+    random_seed=None,
 ):
     """Perform a basic derivative check.
 
@@ -597,8 +596,8 @@ def check_derivative(
     ax : matplotlib.pyplot.Axes, optional
         An axis object for the convergence plot if *plotIt = True*.
         Otherwise, the function will create a new axis.
-    rng : numpy.random.Generator, int, optional
-        If `dx` is ``None``, This is the random number generator to use for
+    random_seed : numpy.random.Generator, int, optional
+        If `dx` is ``None``, this is the random number generator to use for
         generating a step direction. If an integer or None, it is used to seed
         a new `numpy.random.default_rng`.
 
@@ -616,7 +615,7 @@ def check_derivative(
 
     >>> def simplePass(x):
     ...     return np.sin(x), utils.sdiag(np.cos(x))
-    >>> passed = tests.check_derivative(simplePass, rng.standard_normal(5), rng=rng)
+    >>> passed = tests.check_derivative(simplePass, rng.standard_normal(5), random_seed=rng)
     ==================== check_derivative ====================
     iter    h         |ft-f0|   |ft-f0-h*J0*dx|  Order
     ---------------------------------------------------------
@@ -650,7 +649,7 @@ def check_derivative(
     x0 = mkvc(x0)
 
     if dx is None:
-        rng = np.random.default_rng(rng)
+        rng = np.random.default_rng(random_seed)
         dx = rng.standard_normal(len(x0))
 
     h = np.logspace(-1, -num, num)
@@ -800,7 +799,7 @@ def assert_isadjoint(
     rtol=1e-6,
     atol=0.0,
     assert_error=True,
-    rng=None,
+    random_seed=None,
 ):
     r"""Do a dot product test for the forward operator and its adjoint operator.
 
@@ -851,7 +850,7 @@ def assert_isadjoint(
         assertion error if failed). If set to False, the result of the test is
         returned as boolean and a message is printed.
 
-    rng : numpy.random.Generator, int, optional
+    random_seed : numpy.random.Generator, int, optional
         The random number generator to use for the adjoint test. If an integer or None
         it is used to seed a new `numpy.random.default_rng`.
 
@@ -868,7 +867,7 @@ def assert_isadjoint(
     """
     __tracebackhide__ = True
 
-    rng = np.random.default_rng(rng)
+    rng = np.random.default_rng(random_seed)
 
     def random(size, iscomplex):
         """Create random data of size and dtype of <size>."""
