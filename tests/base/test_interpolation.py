@@ -46,8 +46,8 @@ class TestInterpolation1D(discretize.tests.OrderTest):
     tolerance = TOLERANCES
     meshDimension = 1
     meshSizes = [8, 16, 32, 64, 128]
-    rng = np.random.default_rng(5136)
-    LOCS = rng.random(50) * 0.6 + 0.2
+    random_seed = np.random.default_rng(55124)
+    LOCS = random_seed.random(50) * 0.6 + 0.2
 
     def getError(self):
         funX = lambda x: np.cos(2 * np.pi * x)
@@ -98,8 +98,8 @@ class TestInterpolation2d(discretize.tests.OrderTest):
     tolerance = TOLERANCES
     meshDimension = 2
     meshSizes = [8, 16, 32, 64]
-    rng = np.random.default_rng(2457)
-    LOCS = rng.random((50, 2)) * 0.6 + 0.2
+    random_seed = np.random.default_rng(2457)
+    LOCS = random_seed.random((50, 2)) * 0.6 + 0.2
 
     def getError(self):
         funX = lambda x, y: np.cos(2 * np.pi * y)
@@ -182,8 +182,12 @@ class TestInterpolationSymCyl(discretize.tests.OrderTest):
     tolerance = 0.6
     meshDimension = 3
     meshSizes = [32, 64, 128, 256]
-    rng = np.random.default_rng(81756234)
-    LOCS = np.c_[rng.random(4) * 0.6 + 0.2, np.zeros(4), rng.random(4) * 0.6 + 0.2]
+    random_seed = np.random.default_rng(81756234)
+    LOCS = np.c_[
+        random_seed.random(4) * 0.6 + 0.2,
+        np.zeros(4),
+        random_seed.random(4) * 0.6 + 0.2,
+    ]
 
     def getError(self):
         funX = lambda x, y: np.cos(2 * np.pi * y)
@@ -246,11 +250,11 @@ class TestInterpolationCyl(discretize.tests.OrderTest):
     meshTypes = ["uniformCylMesh", "randomCylMesh"]  # MESHTYPES +
     meshDimension = 3
     meshSizes = [8, 16, 32, 64]
-    rng = np.random.default_rng(876234)
+    random_seed = np.random.default_rng(876234)
     LOCS = np.c_[
-        rng.random(20) * 0.6 + 0.2,
-        2 * np.pi * (rng.random(20) * 0.6 + 0.2),
-        rng.random(20) * 0.6 + 0.2,
+        random_seed.random(20) * 0.6 + 0.2,
+        2 * np.pi * (random_seed.random(20) * 0.6 + 0.2),
+        random_seed.random(20) * 0.6 + 0.2,
     ]
 
     def getError(self):
@@ -314,9 +318,9 @@ class TestInterpolationCyl(discretize.tests.OrderTest):
 
 
 class TestInterpolation3D(discretize.tests.OrderTest):
-    rng = np.random.default_rng(234)
+    random_seed = np.random.default_rng(234)
     name = "Interpolation"
-    LOCS = rng.random((50, 3)) * 0.6 + 0.2
+    LOCS = random_seed.random((50, 3)) * 0.6 + 0.2
     meshTypes = MESHTYPES
     tolerance = TOLERANCES
     meshDimension = 3

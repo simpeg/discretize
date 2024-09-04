@@ -278,7 +278,6 @@ class TestTensorMeshCellNodes:
 class TestPoissonEqn(discretize.tests.OrderTest):
     name = "Poisson Equation"
     meshSizes = [10, 16, 20]
-    rng = gen
 
     def getError(self):
         # Create some functions to integrate
