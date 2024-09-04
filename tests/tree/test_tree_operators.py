@@ -38,7 +38,6 @@ class TestCellGrad2D(discretize.tests.OrderTest):
     meshSizes = [8, 16]
     # because of the averaging involved in the ghost point. u_b = (u_n + u_g)/2
     expectedOrders = 1
-    rng = np.random.default_rng(87964213)
 
     def getError(self):
         # Test function
@@ -56,7 +55,7 @@ class TestCellGrad2D(discretize.tests.OrderTest):
         return err
 
     def test_order(self):
-        self.orderTest()
+        self.orderTest(random_seed=421)
 
 
 class TestCellGrad3D(discretize.tests.OrderTest):
@@ -66,7 +65,6 @@ class TestCellGrad3D(discretize.tests.OrderTest):
     meshSizes = [8, 16]
     # because of the averaging involved in the ghost point. u_b = (u_n + u_g)/2
     expectedOrders = 1
-    rng = np.random.default_rng(6957832)
 
     def getError(self):
         # Test function
@@ -106,7 +104,7 @@ class TestCellGrad3D(discretize.tests.OrderTest):
         return err
 
     def test_order(self):
-        self.orderTest()
+        self.orderTest(5532)
 
 
 class TestFaceDivxy2D(discretize.tests.OrderTest):
@@ -114,7 +112,6 @@ class TestFaceDivxy2D(discretize.tests.OrderTest):
     meshTypes = MESHTYPES
     meshDimension = 2
     meshSizes = [16, 32]
-    rng = np.random.default_rng(19647823)
 
     def getError(self):
         # Test function
@@ -137,14 +134,13 @@ class TestFaceDivxy2D(discretize.tests.OrderTest):
         return err
 
     def test_order(self):
-        self.orderTest()
+        self.orderTest(random_seed=19647823)
 
 
 class TestFaceDiv3D(discretize.tests.OrderTest):
     name = "Face Divergence 3D"
     meshTypes = MESHTYPES
     meshSizes = [8, 16, 32]
-    rng = np.random.default_rng(81725364)
 
     def getError(self):
         fx = lambda x, y, z: np.sin(2 * np.pi * x)
@@ -165,7 +161,7 @@ class TestFaceDiv3D(discretize.tests.OrderTest):
         return np.linalg.norm((divF - divF_ana), np.inf)
 
     def test_order(self):
-        self.orderTest()
+        self.orderTest(random_seed=81725364)
 
 
 class TestFaceDivxyz3D(discretize.tests.OrderTest):
@@ -173,7 +169,6 @@ class TestFaceDivxyz3D(discretize.tests.OrderTest):
     meshTypes = MESHTYPES
     meshDimension = 3
     meshSizes = [8, 16, 32]
-    rng = np.random.default_rng(6172824)
 
     def getError(self):
         # Test function
@@ -203,7 +198,7 @@ class TestFaceDivxyz3D(discretize.tests.OrderTest):
         return err
 
     def test_order(self):
-        self.orderTest()
+        self.orderTest(random_seed=6172824)
 
 
 class TestCurl(discretize.tests.OrderTest):
