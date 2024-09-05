@@ -604,7 +604,7 @@ class TensorMesh(
         """
         centers, widths = self.cell_centers, self.h_gridded
         if self.dim == 1:
-            bounds = (centers - widths.ravel() / 2, centers + widths.ravel() /2)
+            bounds = (centers - widths.ravel() / 2, centers + widths.ravel() / 2)
         elif self.dim == 2:
             x1 = centers[:, 0] - widths[:, 0] / 2
             x2 = centers[:, 0] + widths[:, 0] / 2
