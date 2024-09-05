@@ -602,27 +602,25 @@ class TensorMesh(
         a particular cell in the following order: ``x1``, ``x2``, ``y1``,
         ``y2``, ``z1``, ``z2``, where ``x1 < x2``, ``y1 < y2`` and ``z1 < z2``.
         """
-        # Define indexing for meshgrid and order for ravel
-        indexing = "ij"
-        order = "F"
-
+        centers, widths = self.cell_centers, self.h_gridded
         if self.dim == 1:
-            x = self.nodes_x
-            bounds = (x[:-1], x[1:])
+            bounds = (centers - widths.ravel() / 2, centers + widths.ravel() /2)
         elif self.dim == 2:
-            x, y = self.nodes_x, self.nodes_y
-            x1, y1 = np.meshgrid(x[:-1], y[:-1], indexing=indexing)
-            x2, y2 = np.meshgrid(x[1:], y[1:], indexing=indexing)
+            x1 = centers[:, 0] - widths[:, 0] / 2
+            x2 = centers[:, 0] + widths[:, 0] / 2
+            y1 = centers[:, 1] - widths[:, 1] / 2
+            y2 = centers[:, 1] + widths[:, 1] / 2
             bounds = (x1, x2, y1, y2)
         else:
-            x, y, z = self.nodes_x, self.nodes_y, self.nodes_z
-            x1, y1, z1 = np.meshgrid(x[:-1], y[:-1], z[:-1], indexing=indexing)
-            x2, y2, z2 = np.meshgrid(x[1:], y[1:], z[1:], indexing=indexing)
+            x1 = centers[:, 0] - widths[:, 0] / 2
+            x2 = centers[:, 0] + widths[:, 0] / 2
+            y1 = centers[:, 1] - widths[:, 1] / 2
+            y2 = centers[:, 1] + widths[:, 1] / 2
+            z1 = centers[:, 2] - widths[:, 2] / 2
+            z2 = centers[:, 2] + widths[:, 2] / 2
             bounds = (x1, x2, y1, y2, z1, z2)
 
-        cell_bounds = np.hstack(
-            tuple(v.ravel(order=order)[:, np.newaxis] for v in bounds)
-        )
+        cell_bounds = np.hstack(tuple(v[:, np.newaxis] for v in bounds))
         return cell_bounds
 
     @property
