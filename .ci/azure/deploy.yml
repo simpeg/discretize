@@ -58,23 +58,27 @@ jobs:
     # upload documentation to discretize-docs gh-pages on tags
     - bash: |
         git clone -q --branch gh-pages --depth 1 https://${GH_TOKEN}@github.com/simpeg/discretize-docs.git
+      displayName: Checkout doc repository
+
+    - bash: |
         cd discretize-docs
+        rm -rf "en/$BRANCH_NAME"
         mv ../html "en/$BRANCH_NAME"
         touch .nojekyll
-        git add "en/$BRANCH_NAME" .nojekyll
       displayName: Set Doc Folder
 
     - bash:
         # Update latest symlink
         cd discretize-docs
+        rm -f en/latest
         ln -s "en/$BRANCH_NAME" en/latest
-        git add en/latest
       displayName: Point Latest to tag
       condition: eq(variables.IS_TAG, true)
 
     - bash:
         # Commit and push
         cd discretize-docs
+        git add --all
         git commit -am "Azure CI commit ref $(Build.SourceVersion)"
         git push
       displayName: Push documentation to discretize-docs
