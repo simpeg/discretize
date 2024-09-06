@@ -8,6 +8,12 @@ jobs:
     # No need to checkout the repo here!
     - checkout: none
 
+    - bash: |
+        echo $IS_TAG
+        echo $IS_MAIN
+        echo $BRANCH_NAME
+      displayName: Report branch parameters
+
     # Just download all of the items already built
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -30,11 +36,7 @@ jobs:
     - bash: |
         ls -l dist
         ls -l html
-
-    - bash: |
-        echo $IS_TAG
-        echo $IS_MAIN
-        echo $BRANCH_NAME
+      displayName: Report downloaded cache contents.
 
     - bash: |
         git config --global user.name ${GH_NAME}
@@ -55,23 +57,24 @@ jobs:
 
     # upload documentation to discretize-docs gh-pages on tags
     - bash: |
-        git clone --depth 1 https://${GH_TOKEN}@github.com/simpeg/discretize-docs.git
+        git clone -q --branch gh-pages --depth 1 https://${GH_TOKEN}@github.com/simpeg/discretize-docs.git
         cd discretize-docs
-        git gc --prune=now
-        git remote prune origin
-        mv html en/$BRANCH_NAME
+        mv ../html "en/$BRANCH_NAME"
         touch .nojekyll
+        git add "en/$BRANCH_NAME" .nojekyll
       displayName: Set Doc Folder
 
     - bash:
         # Update latest symlink
-        ln -s en/$BRANCH_NAME en/latest
+        cd discretize-docs
+        ln -s "en/$BRANCH_NAME" en/latest
+        git add en/latest
       displayName: Point Latest to tag
       condition: eq(variables.IS_TAG, true)
 
     - bash:
         # Commit and push
-        git add .
+        cd discretize-docs
         git commit -am "Azure CI commit ref $(Build.SourceVersion)"
         git push
       displayName: Push documentation to discretize-docs
