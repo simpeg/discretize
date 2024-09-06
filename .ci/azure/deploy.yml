@@ -59,6 +59,8 @@ jobs:
     - bash: |
         git clone -q --branch gh-pages --depth 1 https://${GH_TOKEN}@github.com/simpeg/discretize-docs.git
       displayName: Checkout doc repository
+      env:
+        GH_TOKEN: $(gh.token)
 
     - bash: |
         cd discretize-docs
