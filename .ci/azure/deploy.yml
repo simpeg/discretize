@@ -48,7 +48,7 @@ jobs:
     - bash: |
         twine upload --skip-existing dist/*
       displayName: Deploy source and wheels
-      condition: variables.IS_TAG
+      condition: eq(variables.IS_TAG, true)
       env:
         TWINE_USERNAME: $(twine.username)
         TWINE_PASSWORD: $(twine.password)
@@ -67,7 +67,7 @@ jobs:
         # Update latest symlink
         ln -s en/$BRANCH_NAME en/latest
       displayName: Point Latest to tag
-      condition: variables.IS_TAG
+      condition: eq(variables.IS_TAG, true)
 
     - bash:
         # Commit and push

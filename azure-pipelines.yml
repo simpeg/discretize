@@ -57,7 +57,7 @@ stages:
     dependsOn:
       - BuildWheels
       - BuildSource
-    condition: and(succeeded(), or(variables.IS_TAG, variables.IS_MAIN))
+    condition: and(succeeded(), or(eq(variables.IS_TAG, true), eq(variables.IS_MAIN, true)))
     jobs:
       - template: .ci/azure/deploy.yml
 
