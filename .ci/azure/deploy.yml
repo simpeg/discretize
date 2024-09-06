@@ -67,7 +67,7 @@ jobs:
         touch .nojekyll
       displayName: Set Doc Folder
 
-    - bash:
+    - bash: |
         # Update latest symlink
         cd discretize-docs
         rm -f en/latest
@@ -75,7 +75,7 @@ jobs:
       displayName: Point Latest to tag
       condition: eq(variables.IS_TAG, true)
 
-    - bash:
+    - bash: |
         # Commit and push
         cd discretize-docs
         git add --all
