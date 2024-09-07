@@ -282,8 +282,8 @@ html_theme_options = {
     "navbar_end": ["version-switcher", "theme-switcher", "navbar-icon-links"],
     # Configure version switcher (remember to add it to the "navbar_end")
     "switcher": {
-        "version_match": branch,
-        "json_url": "https://discretize.simpeg.xyz/en/latest/_static/versions.json",
+        "version_match": "dev" if branch == "main" else branch,
+        "json_url": "https://discretize.simpeg.xyz/en/main/_static/versions.json",
     },
     "show_version_warning_banner": True,
 }
