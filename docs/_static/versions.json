@@ -1,0 +1,13 @@
+[
+    {   "name": "main",
+        "version": "dev",
+        "url": "https://discretize.simpeg.xyz/en/main/"
+    },
+    {
+        "name": "0.10.0 (stable)",
+        "version": "v0.10.0",
+        "url": "https://discretize.simpeg.xyz/en/v0.10.0/",
+        "preferred": true
+    }
+]
+
