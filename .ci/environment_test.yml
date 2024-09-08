@@ -4,11 +4,13 @@ channels:
 dependencies:
   - numpy>=1.22.4
   - scipy>=1.8
+
   # optionals
   - vtk>=6
   - pyvista
   - omf
   - matplotlib
+
   # documentation
   - sphinx
   - pydata-sphinx-theme==0.13.3
@@ -16,9 +18,9 @@ dependencies:
   - numpydoc>=1.5
   - jupyter
   - graphviz
-  - pymatsolver>=0.1.2
   - pillow
   - pooch
+
   # testing
   - sympy
   - pytest

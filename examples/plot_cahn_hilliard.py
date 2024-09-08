@@ -44,9 +44,9 @@ as the time increases.
 """
 
 import discretize
-from pymatsolver import Solver
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.sparse.linalg import spsolve
 
 
 def run(plotIt=True, n=60):
@@ -92,7 +92,7 @@ def run(plotIt=True, n=60):
 
         MAT = dt * A * d2fdphi2 - I - dt * A * L
         rhs = (dt * A * d2fdphi2 - I) * phi - dt * A * dfdphi
-        phi = Solver(MAT) * rhs
+        phi = spsolve(MAT, rhs)
 
         if elapsed > capture[jj]:
             PHIS += [(elapsed, phi.copy())]

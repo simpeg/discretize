@@ -3,7 +3,7 @@ import unittest
 import discretize
 from discretize import TensorMesh
 
-np.random.seed(50)
+rng = np.random.default_rng(542)
 
 
 class TestInnerProductsDerivsTensor(unittest.TestCase):
@@ -19,8 +19,8 @@ class TestInnerProductsDerivsTensor(unittest.TestCase):
             mesh.number(balance=False)
         elif meshType == "Tensor":
             mesh = discretize.TensorMesh(h)
-        v = np.random.rand(mesh.nF)
-        sig = np.random.rand(1) if rep == 0 else np.random.rand(mesh.nC * rep)
+        v = rng.random(mesh.nF)
+        sig = rng.random(1) if rep == 0 else rng.random(mesh.nC * rep)
 
         def fun(sig):
             M = mesh.get_face_inner_product(
@@ -42,7 +42,9 @@ class TestInnerProductsDerivsTensor(unittest.TestCase):
             fast,
             ("harmonic" if invert_model and invert_matrix else "standard"),
         )
-        return discretize.tests.check_derivative(fun, sig, num=5, plotIt=False)
+        return discretize.tests.check_derivative(
+            fun, sig, num=5, plotIt=False, random_seed=452
+        )
 
     def doTestEdge(
         self, h, rep, fast, meshType, invert_model=False, invert_matrix=False
@@ -56,8 +58,8 @@ class TestInnerProductsDerivsTensor(unittest.TestCase):
             mesh.number(balance=False)
         elif meshType == "Tensor":
             mesh = discretize.TensorMesh(h)
-        v = np.random.rand(mesh.nE)
-        sig = np.random.rand(1) if rep == 0 else np.random.rand(mesh.nC * rep)
+        v = rng.random(mesh.nE)
+        sig = rng.random(1) if rep == 0 else rng.random(mesh.nC * rep)
 
         def fun(sig):
             M = mesh.get_edge_inner_product(
@@ -79,7 +81,9 @@ class TestInnerProductsDerivsTensor(unittest.TestCase):
             fast,
             ("harmonic" if invert_model and invert_matrix else "standard"),
         )
-        return discretize.tests.check_derivative(fun, sig, num=5, plotIt=False)
+        return discretize.tests.check_derivative(
+            fun, sig, num=5, plotIt=False, random_seed=4567
+        )
 
     def test_FaceIP_1D_float(self):
         self.assertTrue(self.doTestFace([10], 0, False, "Tensor"))
@@ -341,8 +345,8 @@ class TestFacePropertiesInnerProductsDerivsTensor(unittest.TestCase):
             mesh.number(balance=False)
         elif meshType == "Tensor":
             mesh = discretize.TensorMesh(h)
-        v = np.random.rand(mesh.nF)
-        sig = np.random.rand(1) if rep == 0 else np.random.rand(mesh.nF * rep)
+        v = rng.random(mesh.nF)
+        sig = rng.random(1) if rep == 0 else rng.random(mesh.nF * rep)
 
         def fun(sig):
             M = mesh.get_face_inner_product_surface(
@@ -360,7 +364,9 @@ class TestFacePropertiesInnerProductsDerivsTensor(unittest.TestCase):
             rep,
             ("harmonic" if invert_model and invert_matrix else "standard"),
         )
-        return discretize.tests.check_derivative(fun, sig, num=5, plotIt=False)
+        return discretize.tests.check_derivative(
+            fun, sig, num=5, plotIt=False, random_seed=421
+        )
 
     def doTestEdge(self, h, rep, meshType, invert_model=False, invert_matrix=False):
         if meshType == "Curv":
@@ -372,8 +378,8 @@ class TestFacePropertiesInnerProductsDerivsTensor(unittest.TestCase):
             mesh.number(balance=False)
         elif meshType == "Tensor":
             mesh = discretize.TensorMesh(h)
-        v = np.random.rand(mesh.nE)
-        sig = np.random.rand(1) if rep == 0 else np.random.rand(mesh.nF * rep)
+        v = rng.random(mesh.nE)
+        sig = rng.random(1) if rep == 0 else rng.random(mesh.nF * rep)
 
         def fun(sig):
             M = mesh.get_edge_inner_product_surface(
@@ -391,7 +397,9 @@ class TestFacePropertiesInnerProductsDerivsTensor(unittest.TestCase):
             rep,
             ("harmonic" if invert_model and invert_matrix else "standard"),
         )
-        return discretize.tests.check_derivative(fun, sig, num=5, plotIt=False)
+        return discretize.tests.check_derivative(
+            fun, sig, num=5, plotIt=False, random_seed=31
+        )
 
     def test_FaceIP_2D_float(self):
         self.assertTrue(self.doTestFace([10, 4], 0, "Tensor"))
@@ -477,8 +485,8 @@ class TestEdgePropertiesInnerProductsDerivsTensor(unittest.TestCase):
             mesh.number(balance=False)
         elif meshType == "Tensor":
             mesh = discretize.TensorMesh(h)
-        v = np.random.rand(mesh.nE)
-        sig = np.random.rand(1) if rep == 0 else np.random.rand(mesh.nE * rep)
+        v = rng.random(mesh.nE)
+        sig = rng.random(1) if rep == 0 else rng.random(mesh.nE * rep)
 
         def fun(sig):
             M = mesh.get_edge_inner_product_line(
@@ -500,7 +508,9 @@ class TestEdgePropertiesInnerProductsDerivsTensor(unittest.TestCase):
             rep,
             ("harmonic" if invert_model and invert_matrix else "standard"),
         )
-        return discretize.tests.check_derivative(fun, sig, num=5, plotIt=False)
+        return discretize.tests.check_derivative(
+            fun, sig, num=5, plotIt=False, random_seed=64
+        )
 
     def test_EdgeIP_2D_float(self):
         self.assertTrue(self.doTestEdge([10, 4], 0, "Tensor"))
@@ -544,7 +554,7 @@ class TestTensorSizeErrorRaises(unittest.TestCase):
 
     def setUp(self):
         self.mesh3D = TensorMesh([4, 4, 4])
-        self.model = np.random.rand(self.mesh3D.nC)
+        self.model = rng.random(self.mesh3D.nC)
 
     def test_edge_inner_product_surface_deriv(self):
         self.assertRaises(

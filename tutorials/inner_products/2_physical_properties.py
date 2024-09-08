@@ -75,6 +75,8 @@ from discretize import TensorMesh
 import numpy as np
 import matplotlib.pyplot as plt
 
+rng = np.random.default_rng(87236)
+
 # sphinx_gallery_thumbnail_number = 1
 
 #####################################################
@@ -181,17 +183,17 @@ h = np.ones(5)
 mesh = TensorMesh([h, h, h])
 
 # Isotropic case: (nC, ) numpy array
-sig = np.random.rand(mesh.nC)  # sig for each cell
+sig = rng.random(mesh.nC)  # sig for each cell
 Me1 = mesh.get_edge_inner_product(sig)  # Edges inner product matrix
 Mf1 = mesh.get_face_inner_product(sig)  # Faces inner product matrix
 
 # Linear case: (nC, dim) numpy array
-sig = np.random.rand(mesh.nC, mesh.dim)
+sig = rng.random((mesh.nC, mesh.dim))
 Me2 = mesh.get_edge_inner_product(sig)
 Mf2 = mesh.get_face_inner_product(sig)
 
 # Anisotropic case: (nC, 3) for 2D and (nC, 6) for 3D
-sig = np.random.rand(mesh.nC, 6)
+sig = rng.random((mesh.nC, 6))
 Me3 = mesh.get_edge_inner_product(sig)
 Mf3 = mesh.get_face_inner_product(sig)
 
@@ -235,17 +237,17 @@ h = np.ones(5)
 mesh = TensorMesh([h, h, h])
 
 # Isotropic case: (nC, ) numpy array
-sig = np.random.rand(mesh.nC)
+sig = rng.random(mesh.nC)
 Me1_inv = mesh.get_edge_inner_product(sig, invert_matrix=True)
 Mf1_inv = mesh.get_face_inner_product(sig, invert_matrix=True)
 
 # Diagonal anisotropic: (nC, dim) numpy array
-sig = np.random.rand(mesh.nC, mesh.dim)
+sig = rng.random((mesh.nC, mesh.dim))
 Me2_inv = mesh.get_edge_inner_product(sig, invert_matrix=True)
 Mf2_inv = mesh.get_face_inner_product(sig, invert_matrix=True)
 
 # Full anisotropic: (nC, 3) for 2D and (nC, 6) for 3D
-sig = np.random.rand(mesh.nC, 6)
+sig = rng.random((mesh.nC, 6))
 Me3 = mesh.get_edge_inner_product(sig)
 Mf3 = mesh.get_face_inner_product(sig)
 

@@ -216,6 +216,7 @@ class Test3DBoundaryIntegral(discretize.tests.OrderTest):
     meshDimension = 3
     expectedOrders = [2, 1, 2, 2, 2, 2]
     meshSizes = [4, 8, 16, 32]
+    rng = np.random.default_rng(57681234)
 
     def getError(self):
         mesh = self.M

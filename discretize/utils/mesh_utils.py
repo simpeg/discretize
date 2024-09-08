@@ -29,7 +29,7 @@ def random_model(shape, seed=None, anisotropy=None, its=100, bounds=None):
     ----------
     shape : (dim) tuple of int
         shape of the model.
-    seed : int, optional
+    seed : numpy.random.Generator, int, optional
         pick which model to produce, prints the seed if you don't choose
     anisotropy : numpy.ndarray, optional
         this is the kernel that is convolved with the model
@@ -68,15 +68,14 @@ def random_model(shape, seed=None, anisotropy=None, its=100, bounds=None):
     if bounds is None:
         bounds = [0, 1]
 
+    rng = np.random.default_rng(seed)
     if seed is None:
-        seed = np.random.randint(1e3)
-        print("Using a seed of: ", seed)
+        print("Using a seed of: ", rng.bit_generator.seed_seq)
 
     if type(shape) in num_types:
         shape = (shape,)  # make it a tuple for consistency
 
-    np.random.seed(seed)
-    mr = np.random.rand(*shape)
+    mr = rng.random(shape)
     if anisotropy is None:
         if len(shape) == 1:
             smth = np.array([1, 10.0, 1], dtype=float)
@@ -429,8 +428,9 @@ def mesh_builder_xyz(
     >>> import discretize
     >>> import matplotlib.pyplot as plt
     >>> import numpy as np
+    >>> rng = np.random.default_rng(87142)
 
-    >>> xy_loc = np.random.randn(8,2)
+    >>> xy_loc = rng.standard_normal((8,2))
     >>> mesh = discretize.utils.mesh_builder_xyz(
     ...     xy_loc, [0.1, 0.1], depth_core=0.5,
     ...     padding_distance=[[1,2], [1,0]],

@@ -5,7 +5,7 @@ import discretize
 # Tolerance
 TOL = 1e-14
 
-np.random.seed(1)
+gen = np.random.default_rng(1)
 
 MESHTYPES = [
     "uniformTensorMesh",
@@ -506,8 +506,8 @@ class TestAveraging1D(discretize.tests.OrderTest):
 
 class TestAverating2DSimple(unittest.TestCase):
     def setUp(self):
-        hx = np.random.rand(10)
-        hy = np.random.rand(10)
+        hx = gen.random(10)
+        hy = gen.random(10)
         self.mesh = discretize.TensorMesh([hx, hy])
 
     def test_constantEdges(self):
@@ -624,9 +624,9 @@ class TestAveraging2D(discretize.tests.OrderTest):
 
 class TestAverating3DSimple(unittest.TestCase):
     def setUp(self):
-        hx = np.random.rand(10)
-        hy = np.random.rand(10)
-        hz = np.random.rand(10)
+        hx = gen.random(10)
+        hy = gen.random(10)
+        hz = gen.random(10)
         self.mesh = discretize.TensorMesh([hx, hy, hz])
 
     def test_constantEdges(self):
@@ -778,7 +778,7 @@ class MimeticProperties(unittest.TestCase):
             mesh, _ = discretize.tests.setup_mesh(
                 meshType, self.meshSize, self.meshDimension
             )
-            v = np.random.rand(mesh.nE)
+            v = gen.random(mesh.nE)
             divcurlv = mesh.face_divergence * (mesh.edge_curl * v)
             rel_err = np.linalg.norm(divcurlv) / np.linalg.norm(v)
             passed = rel_err < self.tol
@@ -792,7 +792,7 @@ class MimeticProperties(unittest.TestCase):
             mesh, _ = discretize.tests.setup_mesh(
                 meshType, self.meshSize, self.meshDimension
             )
-            v = np.random.rand(mesh.nN)
+            v = gen.random(mesh.nN)
             curlgradv = mesh.edge_curl * (mesh.nodal_gradient * v)
             rel_err = np.linalg.norm(curlgradv) / np.linalg.norm(v)
             passed = rel_err < self.tol

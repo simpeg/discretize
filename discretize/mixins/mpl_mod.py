@@ -470,7 +470,7 @@ class InterfaceMPL(object):
 
         >>> from matplotlib import pyplot as plt
         >>> import discretize
-        >>> from pymatsolver import Solver
+        >>> from scipy.sparse.linalg import spsolve
         >>> hx = [(5, 2, -1.3), (2, 4), (5, 2, 1.3)]
         >>> hy = [(2, 2, -1.3), (2, 6), (2, 2, 1.3)]
         >>> hz = [(2, 2, -1.3), (2, 6), (2, 2, 1.3)]
@@ -482,7 +482,7 @@ class InterfaceMPL(object):
         >>> q[[4, 4], [4, 4], [2, 6]]=[-1, 1]
         >>> q = discretize.utils.mkvc(q)
         >>> A = M.face_divergence * M.cell_gradient
-        >>> b = Solver(A) * (q)
+        >>> b = spsolve(A, q)
 
         and finaly, plot the vector values of the result, which are defined on faces
 
