@@ -13,7 +13,7 @@ dependencies:
 
   # documentation
   - sphinx
-  - pydata-sphinx-theme==0.13.3
+  - pydata-sphinx-theme==0.15.4
   - sphinx-gallery>=0.1.13
   - numpydoc>=1.5
   - jupyter
