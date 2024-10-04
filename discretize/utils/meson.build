@@ -8,12 +8,6 @@ python_sources = [
   'io_utils.py',
   'matrix_utils.py',
   'mesh_utils.py',
-  'codeutils.py',
-  'coordutils.py',
-  'curvutils.py',
-  'interputils.py',
-  'matutils.py',
-  'meshutils.py',
 ]
 
 py.install_sources(
