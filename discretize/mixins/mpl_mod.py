@@ -470,7 +470,7 @@ class InterfaceMPL(object):
 
         >>> from matplotlib import pyplot as plt
         >>> import discretize
-        >>> from pymatsolver import Solver
+        >>> from scipy.sparse.linalg import spsolve
         >>> hx = [(5, 2, -1.3), (2, 4), (5, 2, 1.3)]
         >>> hy = [(2, 2, -1.3), (2, 6), (2, 2, 1.3)]
         >>> hz = [(2, 2, -1.3), (2, 6), (2, 2, 1.3)]
@@ -482,7 +482,7 @@ class InterfaceMPL(object):
         >>> q[[4, 4], [4, 4], [2, 6]]=[-1, 1]
         >>> q = discretize.utils.mkvc(q)
         >>> A = M.face_divergence * M.cell_gradient
-        >>> b = Solver(A) * (q)
+        >>> b = spsolve(A, q)
 
         and finaly, plot the vector values of the result, which are defined on faces
 
@@ -791,9 +791,6 @@ class InterfaceMPL(object):
 
         # Connect figure to scrolling
         fig.canvas.mpl_connect("scroll_event", tracker.onscroll)
-
-        # Show figure
-        plt.show()
 
     # TensorMesh plotting
     def __plot_grid_tensor(
@@ -2455,6 +2452,7 @@ class Slicer(object):
         """Initialize interactive figure."""
         _, plt = load_matplotlib()
         from matplotlib.widgets import Slider  # Lazy loaded
+        from matplotlib.colors import Normalize
 
         # 0. Some checks, not very extensive
         if "pcolorOpts" in kwargs:
@@ -2509,7 +2507,7 @@ class Slicer(object):
 
         # Store data in self as (nx, ny, nz)
         self.v = mesh.reshape(v.reshape((mesh.nC, -1), order="F"), "CC", "CC", "M")
-        self.v = np.ma.masked_where(np.isnan(self.v), self.v)
+        self.v = np.ma.masked_array(self.v, np.isnan(self.v))
 
         # Store relevant information from mesh in self
         self.x = mesh.nodes_x  # x-node locations
@@ -2549,30 +2547,22 @@ class Slicer(object):
         else:
             aspect3 = 1.0 / aspect2
 
-        # set color limits if clim is None (and norm doesn't have vmin, vmax).
-        if clim is None:
-            if "norm" in self.pc_props:
-                vmin = self.pc_props["norm"].vmin
-                vmax = self.pc_props["norm"].vmax
-            else:
-                vmin = vmax = None
-            clim = [
-                np.nanmin(self.v) if vmin is None else vmin,
-                np.nanmax(self.v) if vmax is None else vmax,
-            ]
-            # In the case of a homogeneous fullspace provide a small range to
-            # avoid problems with colorbar and the three subplots.
-            if clim[0] == clim[1]:
-                clim[0] *= 0.99
-                clim[1] *= 1.01
-
-        # ensure vmin/vmax of the norm is consistent with clim
-        if "norm" in self.pc_props:
-            self.pc_props["norm"].vmin = clim[0]
-            self.pc_props["norm"].vmax = clim[1]
+        # Ensure a consistent color normalization for the three plots.
+        if (norm := self.pc_props.get("norm", None)) is None:
+            # Create a default normalizer
+            norm = Normalize()
+            if clim is not None:
+                norm.vmin, norm.vmax = clim
+            self.pc_props["norm"] = norm
         else:
-            self.pc_props["vmin"] = clim[0]
-            self.pc_props["vmax"] = clim[1]
+            if clim is not None:
+                raise ValueError(
+                    "Passing a Normalize instance simultaneously with clim is not supported. "
+                    "Please pass vmin/vmax directly to the norm when creating it."
+                )
+
+        # Auto scales None values for norm.vmin and norm.vmax.
+        norm.autoscale_None(self.v[~self.v.mask].reshape(-1, order="A"))
 
         # 2. Start populating figure
 
@@ -2665,6 +2655,7 @@ class Slicer(object):
 
         # Remove transparent value
         if isinstance(transparent, str) and transparent.lower() == "slider":
+            clim = (norm.vmin, norm.vmax)
             # Sliders
             self.ax_smin = plt.axes([0.7, 0.11, 0.15, 0.03])
             self.ax_smax = plt.axes([0.7, 0.15, 0.15, 0.03])

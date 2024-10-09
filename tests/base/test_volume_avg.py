@@ -96,9 +96,9 @@ def test_volume_average(dim, mesh1_type, mesh2_type, same_base, sub_mesh, seed=1
 
 
 def test_errors():
-    h1 = np.random.rand(16)
+    h1 = np.ones(16) + np.arange(16)
     h1 /= h1.sum()
-    h2 = np.random.rand(16)
+    h2 = np.ones(16) + 2 * np.arange(16)
     h2 /= h2.sum()
     mesh1D = discretize.TensorMesh([h1])
     mesh2D = discretize.TensorMesh([h1, h1])
@@ -121,8 +121,8 @@ def test_errors():
         volume_average(mesh2D, mesh3D)
 
     model1 = np.random.randn(mesh2D.nC)
-    bad_model1 = np.random.randn(3)
-    bad_model2 = np.random.rand(1)
+    bad_model1 = np.array([-1, 2, 3])
+    bad_model2 = np.array([1])
     # gives input values with incorrect lengths
     with pytest.raises(ValueError):
         volume_average(mesh2D, mesh2, bad_model1)

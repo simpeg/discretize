@@ -74,6 +74,8 @@ from discretize import TensorMesh
 import matplotlib.pyplot as plt
 import numpy as np
 
+rng = np.random.default_rng(8572)
+
 # sphinx_gallery_thumbnail_number = 2
 
 
@@ -257,10 +259,10 @@ Mf = mesh.get_face_inner_product()
 Mf_inv = mesh.get_face_inner_product(invert_matrix=True)
 
 # Generate some random vectors
-phi_c = np.random.rand(mesh.nC)
-# phi_n = np.random.rand(mesh.nN)
-vec_e = np.random.rand(mesh.nE)
-vec_f = np.random.rand(mesh.nF)
+phi_c = rng.random(mesh.nC)
+# phi_n = rng.random(mesh.nN)
+vec_e = rng.random(mesh.nE)
+vec_f = rng.random(mesh.nF)
 
 # Generate some random vectors
 norm_c = np.linalg.norm(phi_c - Mc_inv.dot(Mc.dot(phi_c)))

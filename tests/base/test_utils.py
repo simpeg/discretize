@@ -123,7 +123,8 @@ class TestSequenceFunctions(unittest.TestCase):
         )
 
     def test_invXXXBlockDiagonal(self):
-        a = [np.random.rand(5, 1) for i in range(4)]
+        rng = np.random.default_rng(78352)
+        a = [rng.random((5, 1)) for i in range(4)]
 
         B = inverse_2x2_block_diagonal(*a)
 
@@ -137,7 +138,7 @@ class TestSequenceFunctions(unittest.TestCase):
         Z2 = B * A - sp.identity(10)
         self.assertTrue(np.linalg.norm(Z2.todense().ravel(), 2) < TOL)
 
-        a = [np.random.rand(5, 1) for i in range(9)]
+        a = [rng.random((5, 1)) for i in range(9)]
         B = inverse_3x3_block_diagonal(*a)
 
         A = sp.vstack(
@@ -153,10 +154,11 @@ class TestSequenceFunctions(unittest.TestCase):
         self.assertTrue(np.linalg.norm(Z3.todense().ravel(), 2) < TOL)
 
     def test_inverse_property_tensor2D(self):
+        rng = np.random.default_rng(763)
         M = discretize.TensorMesh([6, 6])
-        a1 = np.random.rand(M.nC)
-        a2 = np.random.rand(M.nC)
-        a3 = np.random.rand(M.nC)
+        a1 = rng.random(M.nC)
+        a2 = rng.random(M.nC)
+        a3 = rng.random(M.nC)
         prop1 = a1
         prop2 = np.c_[a1, a2]
         prop3 = np.c_[a1, a2, a3]
@@ -173,10 +175,11 @@ class TestSequenceFunctions(unittest.TestCase):
             self.assertTrue(np.linalg.norm(Z.todense().ravel(), 2) < TOL)
 
     def test_TensorType2D(self):
+        rng = np.random.default_rng(8546)
         M = discretize.TensorMesh([6, 6])
-        a1 = np.random.rand(M.nC)
-        a2 = np.random.rand(M.nC)
-        a3 = np.random.rand(M.nC)
+        a1 = rng.random(M.nC)
+        a2 = rng.random(M.nC)
+        a3 = rng.random(M.nC)
         prop1 = a1
         prop2 = np.c_[a1, a2]
         prop3 = np.c_[a1, a2, a3]
@@ -188,13 +191,14 @@ class TestSequenceFunctions(unittest.TestCase):
         self.assertTrue(TensorType(M, None) == -1)
 
     def test_TensorType3D(self):
+        rng = np.random.default_rng(78352)
         M = discretize.TensorMesh([6, 6, 7])
-        a1 = np.random.rand(M.nC)
-        a2 = np.random.rand(M.nC)
-        a3 = np.random.rand(M.nC)
-        a4 = np.random.rand(M.nC)
-        a5 = np.random.rand(M.nC)
-        a6 = np.random.rand(M.nC)
+        a1 = rng.random(M.nC)
+        a2 = rng.random(M.nC)
+        a3 = rng.random(M.nC)
+        a4 = rng.random(M.nC)
+        a5 = rng.random(M.nC)
+        a6 = rng.random(M.nC)
         prop1 = a1
         prop2 = np.c_[a1, a2, a3]
         prop3 = np.c_[a1, a2, a3, a4, a5, a6]
@@ -206,13 +210,14 @@ class TestSequenceFunctions(unittest.TestCase):
         self.assertTrue(TensorType(M, None) == -1)
 
     def test_inverse_property_tensor3D(self):
+        rng = np.random.default_rng(78352)
         M = discretize.TensorMesh([6, 6, 6])
-        a1 = np.random.rand(M.nC)
-        a2 = np.random.rand(M.nC)
-        a3 = np.random.rand(M.nC)
-        a4 = np.random.rand(M.nC)
-        a5 = np.random.rand(M.nC)
-        a6 = np.random.rand(M.nC)
+        a1 = rng.random(M.nC)
+        a2 = rng.random(M.nC)
+        a3 = rng.random(M.nC)
+        a4 = rng.random(M.nC)
+        a5 = rng.random(M.nC)
+        a6 = rng.random(M.nC)
         prop1 = a1
         prop2 = np.c_[a1, a2, a3]
         prop3 = np.c_[a1, a2, a3, a4, a5, a6]

@@ -6,6 +6,8 @@ from discretize import TreeMesh
 
 matplotlib.use("Agg")
 
+rng = np.random.default_rng(4213678)
+
 
 class TestOcTreePlotting(unittest.TestCase):
     def setUp(self):
@@ -22,8 +24,8 @@ class TestOcTreePlotting(unittest.TestCase):
         mesh.plot_grid(faces=True, edges=True, nodes=True)
 
         # CC plot
-        mod_cc = np.random.rand(len(mesh)) + 1j * np.random.rand(len(mesh))
-        mod_cc[np.random.rand(len(mesh)) < 0.2] = np.nan
+        mod_cc = rng.random(len(mesh)) + 1j * rng.random(len(mesh))
+        mod_cc[rng.random(len(mesh)) < 0.2] = np.nan
 
         mesh.plot_slice(mod_cc, normal="X", grid=True)
         mesh.plot_slice(mod_cc, normal="Y", ax=ax)
@@ -31,11 +33,11 @@ class TestOcTreePlotting(unittest.TestCase):
         mesh.plot_slice(mod_cc, view="imag", ax=ax)
         mesh.plot_slice(mod_cc, view="abs", ax=ax)
 
-        mod_ccv = np.random.rand(len(mesh), 3)
+        mod_ccv = rng.random((len(mesh), 3))
         mesh.plot_slice(mod_ccv, v_type="CCv", view="vec", ax=ax)
 
         # F plot tests
-        mod_f = np.random.rand(mesh.n_faces)
+        mod_f = rng.random(mesh.n_faces)
         mesh.plot_slice(mod_f, v_type="Fx", ax=ax)
         mesh.plot_slice(mod_f, v_type="Fy", ax=ax)
         mesh.plot_slice(mod_f, v_type="Fz", ax=ax)
@@ -43,7 +45,7 @@ class TestOcTreePlotting(unittest.TestCase):
         mesh.plot_slice(mod_f, v_type="F", view="vec", ax=ax)
 
         # E plot tests
-        mod_e = np.random.rand(mesh.n_edges)
+        mod_e = rng.random(mesh.n_edges)
         mesh.plot_slice(mod_e, v_type="Ex", ax=ax)
         mesh.plot_slice(mod_e, v_type="Ey", ax=ax)
         mesh.plot_slice(mod_e, v_type="Ez", ax=ax)
@@ -51,7 +53,7 @@ class TestOcTreePlotting(unittest.TestCase):
         mesh.plot_slice(mod_e, v_type="E", view="vec", ax=ax)
 
         # Nodes
-        mod_n = np.random.rand(mesh.n_nodes)
+        mod_n = rng.random(mesh.n_nodes)
         mesh.plot_slice(mod_n, v_type="N")
         plt.close("all")
 
@@ -70,32 +72,32 @@ class TestQuadTreePlotting(unittest.TestCase):
         mesh.plot_grid(faces=True, edges=True, nodes=True)
 
         # CC plot
-        mod_cc = np.random.rand(len(mesh)) + 1j * np.random.rand(len(mesh))
-        mod_cc[np.random.rand(len(mesh)) < 0.2] = np.nan
+        mod_cc = rng.random(len(mesh)) + 1j * rng.random(len(mesh))
+        mod_cc[rng.random(len(mesh)) < 0.2] = np.nan
 
         mesh.plot_image(mod_cc)
         mesh.plot_image(mod_cc, ax=ax)
         mesh.plot_image(mod_cc, view="imag", ax=ax)
         mesh.plot_image(mod_cc, view="abs", ax=ax)
 
-        mod_ccv = np.random.rand(len(mesh), 2)
+        mod_ccv = rng.random((len(mesh), 2))
         mesh.plot_image(mod_ccv, v_type="CCv", view="vec", ax=ax)
 
         # F plot tests
-        mod_f = np.random.rand(mesh.n_faces)
+        mod_f = rng.random(mesh.n_faces)
         mesh.plot_image(mod_f, v_type="Fx", ax=ax)
         mesh.plot_image(mod_f, v_type="Fy", ax=ax)
         mesh.plot_image(mod_f, v_type="F", ax=ax)
         mesh.plot_image(mod_f, v_type="F", view="vec", ax=ax)
 
         # E plot tests
-        mod_e = np.random.rand(mesh.n_edges)
+        mod_e = rng.random(mesh.n_edges)
         mesh.plot_image(mod_e, v_type="Ex", ax=ax)
         mesh.plot_image(mod_e, v_type="Ey", ax=ax)
         mesh.plot_image(mod_e, v_type="E", ax=ax)
         mesh.plot_image(mod_e, v_type="E", view="vec", ax=ax)
 
         # Nodes
-        mod_n = np.random.rand(mesh.n_nodes)
+        mod_n = rng.random(mesh.n_nodes)
         mesh.plot_image(mod_n, v_type="N", ax=ax)
         plt.close("all")

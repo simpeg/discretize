@@ -3,6 +3,9 @@ import numpy as np
 import discretize
 
 
+rng = np.random.default_rng(53679)
+
+
 class RobinOperatorTest(unittest.TestCase):
     def setUp(self):
         self.mesh = discretize.TensorMesh([18, 20, 32])
@@ -28,7 +31,7 @@ class RobinOperatorTest(unittest.TestCase):
                     np.testing.assert_equal(bt, b1)
                     self.assertEqual((B1 - B_t).nnz, 0)
 
-        gamma = np.random.rand(n_boundary_faces, 2)
+        gamma = rng.random((n_boundary_faces, 2))
         B1, b1 = mesh.cell_gradient_weak_form_robin(
             alpha=0.5, beta=1.5, gamma=gamma[:, 0]
         )
@@ -78,7 +81,7 @@ class RobinOperatorTest(unittest.TestCase):
                     np.testing.assert_allclose(bt, b1)
                     np.testing.assert_allclose(B1.data, B_t.data)
 
-        gamma = np.random.rand(n_boundary_faces, 2)
+        gamma = rng.random((n_boundary_faces, 2))
         B1, b1 = mesh.edge_divergence_weak_form_robin(
             alpha=0.5, beta=1.5, gamma=gamma[:, 0]
         )
@@ -90,7 +93,7 @@ class RobinOperatorTest(unittest.TestCase):
         np.testing.assert_allclose(B1.data, B3.data)
         np.testing.assert_allclose(np.c_[b1, b2], b3)
 
-        gamma = np.random.rand(n_boundary_nodes, 2)
+        gamma = rng.random((n_boundary_nodes, 2))
         B1, b1 = mesh.edge_divergence_weak_form_robin(
             alpha=0.5, beta=1.5, gamma=gamma[:, 0]
         )

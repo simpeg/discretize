@@ -6,8 +6,6 @@ import discretize
 
 import pytest
 
-np.random.seed(16)
-
 TOL = 1e-1
 
 
@@ -51,7 +49,7 @@ class Cyl3DView(unittest.TestCase):
 
     def test_plot_image(self):
         with self.assertRaises(NotImplementedError):
-            self.mesh.plot_image(np.random.rand(self.mesh.nC))
+            self.mesh.plot_image(np.empty(self.mesh.nC))
 
 
 if __name__ == "__main__":

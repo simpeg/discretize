@@ -6,9 +6,9 @@ Basic Forward 2D DC Resistivity
 """
 
 import discretize
-from pymatsolver import SolverLU
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.sparse.linalg import spsolve
 
 
 def run(plotIt=True):
@@ -37,12 +37,10 @@ def run(plotIt=True):
 
     # Step3: Solve DC problem (LU solver)
     AtM, rhstM = DCfun(tM, pts)
-    AinvtM = SolverLU(AtM)
-    phitM = AinvtM * rhstM
+    phitM = spsolve(AtM, rhstM)
 
     ArM, rhsrM = DCfun(rM, pts)
-    AinvrM = SolverLU(ArM)
-    phirM = AinvrM * rhsrM
+    phirM = spsolve(ArM, rhsrM)
 
     if not plotIt:
         return
