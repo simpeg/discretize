@@ -2924,18 +2924,24 @@ cdef class _TreeMesh:
                     next_cell = next_cell.neighbors[0]
                 else: # go +x
                     next_cell = next_cell.neighbors[1]
+            if next_cell is NULL:
+                break
             if t == ty:
                 # step in y direction
                 if ay>by: # go -y
                     next_cell = next_cell.neighbors[2]
                 else: # go +y
                     next_cell = next_cell.neighbors[3]
+            if next_cell is NULL:
+                break
             if dim==3 and t == tz:
                 # step in z direction
                 if az>bz: # go -z
                     next_cell = next_cell.neighbors[4]
                 else: # go +z
                     next_cell = next_cell.neighbors[5]
+            if next_cell is NULL:
+                break
 
             # check if next_cell is not a leaf
             # (if so need to traverse down the children and find the closest leaf cell)
