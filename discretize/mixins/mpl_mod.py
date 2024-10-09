@@ -2153,7 +2153,7 @@ class InterfaceMPL(object):
         level_diff = self.max_level - temp_mesh.max_level
 
         # get list of cells which intersect the slicing plane
-        inds = self.get_cells_along_plane(slice_origin, normal)
+        inds = self.get_cells_on_plane(slice_origin, normal)
         levels = self._cell_levels_by_indexes(inds) - level_diff
         grid2d = self.cell_centers[inds][:, antiNormalInd]
 

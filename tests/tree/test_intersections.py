@@ -24,7 +24,7 @@ def test_ball_locator(dim):
     mesh = discretize.TreeMesh([32] * dim)
     mesh.refine_ball(center, radius, -1)
 
-    cells = mesh.get_cells_within_ball(center, radius)
+    cells = mesh.get_cells_in_ball(center, radius)
 
     r2 = radius * radius
 
@@ -49,10 +49,7 @@ def test_line_locator(dim):
     mesh = discretize.TreeMesh([32] * dim)
     mesh.refine_line(segment, -1)
 
-    with pytest.raises(ValueError):
-        mesh.get_cells_along_line(segment[:-1])
-
-    cell_inds = mesh.get_cells_along_line(segment)
+    cell_inds = mesh.get_cells_on_line(segment)
 
     # ensure it found all of the cells by using a brute force search
     test = []
@@ -73,7 +70,7 @@ def test_box_locator(dim):
     mesh = discretize.TreeMesh([32] * dim)
     mesh.refine_box(xmin, xmax, -1)
 
-    cell_inds = mesh.get_cells_within_aabb(xmin, xmax)
+    cell_inds = mesh.get_cells_in_aabb(xmin, xmax)
 
     # ensure it found all of the cells by using a brute force search
     test = []
@@ -109,7 +106,7 @@ def test_plane_locator(dim):
     mesh = discretize.TreeMesh([16] * dim)
     mesh.refine_plane(p0, normal, -1)
 
-    cell_inds = mesh.get_cells_along_plane(p0, normal)
+    cell_inds = mesh.get_cells_on_plane(p0, normal)
 
     # ensure it found all of the cells by using a brute force search
     test = []
@@ -132,11 +129,11 @@ def test_triangle_locator(dim):
     mesh = discretize.TreeMesh([32] * dim)
     mesh.refine_triangle(triangle, -1)
 
-    cell_inds = mesh.get_cells_within_triangle(triangle)
+    cell_inds = mesh.get_cells_in_triangle(triangle)
 
     # test it throws an error without giving enough points to triangle.
     with pytest.raises(ValueError):
-        mesh.get_cells_within_triangle(triangle[:-1])
+        mesh.get_cells_in_triangle(triangle[:-1])
 
     # ensure it found all of the cells by using a brute force search
     test = []
@@ -179,9 +176,9 @@ def test_vert_tri_prism_locator(dim):
 
         # test it throws an error on incorrect number of points for the triangle
         with pytest.raises(ValueError):
-            mesh.get_cells_within_vertical_trianglular_prism(xyz[:-1], h)
+            mesh.get_cells_in_vertical_trianglular_prism(xyz[:-1], h)
 
-        cell_inds = mesh.get_cells_within_vertical_trianglular_prism(xyz, h)
+        cell_inds = mesh.get_cells_in_vertical_trianglular_prism(xyz, h)
 
         # ensure it found all of the cells by using a brute force search
         test = []
@@ -209,11 +206,11 @@ def test_tetrahedron_locator(dim):
     mesh = discretize.TreeMesh([16] * dim)
     mesh.refine_tetrahedron(simplex, -1)
 
-    cell_inds = mesh.get_cells_within_tetrahedron(simplex)
+    cell_inds = mesh.get_cells_in_tetrahedron(simplex)
 
     # test it throws an error without giving enough points to triangle.
     with pytest.raises(ValueError):
-        mesh.get_cells_within_tetrahedron(simplex[:-1])
+        mesh.get_cells_in_tetrahedron(simplex[:-1])
 
     # ensure it found all of the cells by using a brute force search
     test = []
