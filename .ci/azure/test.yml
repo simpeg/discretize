@@ -40,10 +40,6 @@ jobs:
       displayName: Add conda to PATH
       condition: ne(variables.varOS, 'Windows_NT')
 
-    - bash: sudo chown -R $USER $CONDA
-      displayName: Take ownership of conda directory
-      condition: eq(variables.varOS, 'Darwin')
-
     - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
       displayName: Add conda to PATH
       condition: eq(variables.varOS, 'Windows_NT')
