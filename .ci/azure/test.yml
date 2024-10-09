@@ -35,7 +35,12 @@ jobs:
     vmImage: $(image)
   variables:
     varOS: $(Agent.OS)
+    ARCH: $(Agent.OSArchitecture)
   steps:
+    - bash: .ci/azure/setup_miniconda_macos.sh
+      displayName: Install miniconda on mac
+      condition: eq(variables.varOS, 'Darwin')
+
     - bash: echo "##vso[task.prependpath]$CONDA/bin"
       displayName: Add conda to PATH
       condition: ne(variables.varOS, 'Windows_NT')
