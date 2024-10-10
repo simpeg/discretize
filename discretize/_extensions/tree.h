@@ -6,6 +6,8 @@
 #include <iostream>
 #include <algorithm>
 
+#include "geom.h"
+
 typedef std::size_t int_t;
 
 inline int_t key_func(int_t x, int_t y){
@@ -80,6 +82,9 @@ class Edge{
     Edge *parents[2];
     Edge();
     Edge(Node& p1, Node&p2);
+    double operator[](int_t index){
+      return location[index];
+    };
 };
 
 class Face{
@@ -96,6 +101,9 @@ class Face{
         Face *parent;
         Face();
         Face(Node& p1, Node& p2, Node& p3, Node& p4);
+        double operator[](int_t index){
+          return location[index];
+    };
 };
 
 class Cell{
@@ -109,6 +117,9 @@ class Cell{
     int_t location_ind[3], key, level, max_level;
     long long int index; // non root parents will have a -1 value
     double location[3];
+    double operator[](int_t index){
+      return location[index];
+    };
     double volume;
 
     Cell();
@@ -116,36 +127,58 @@ class Cell{
     Cell(Node *pts[4], Cell *parent);
     ~Cell();
 
-    bool inline is_leaf(){ return children[0]==NULL;};
+    inline Node* min_node(){ return points[0];};
+    inline Node* max_node(){ return points[(1<<n_dim)-1];};
+
+    // intersection tests
+    bool intersects_point(double *x);
+    Cell* containing_cell(double, double, double);
+    void insert_cell(node_map_t &nodes, double *new_center, int_t p_level, double* xs, double *ys, double *zs, bool diag_balance=false);
+
+    void refine_func(node_map_t& nodes, function test_func, double *xs, double *ys, double* zs, bool diag_balance=false);
+
+    inline bool is_leaf(){ return children[0]==NULL;};
     void spawn(node_map_t& nodes, Cell *kids[8], double* xs, double *ys, double *zs);
     void divide(node_map_t& nodes, double* xs, double* ys, double* zs, bool balance=true, bool diag_balance=false);
     void set_neighbor(Cell* other, int_t direction);
     void build_cell_vector(cell_vec_t& cells);
-    void find_overlapping_cells(int_vec_t& cells, double xm, double xp, double ym, double yp, double zm, double zp);
 
-    void insert_cell(node_map_t &nodes, double *new_center, int_t p_level, double* xs, double *ys, double *zs, bool diag_balance=false);
-    void refine_ball(node_map_t& nodes, double* center, double r2, int_t p_level, double *xs, double *ys, double* zs, bool diag_balance=false);
-    void refine_box(node_map_t& nodes, double* x0, double* x1, int_t p_level, double *xs, double *ys, double* zs, bool enclosed=false, bool diag_balance=false);
-    void refine_line(node_map_t& nodes, double* x0, double* x1, double* diff_inv, int_t p_level, double *xs, double *ys, double* zs, bool diag_balance=false);
-    void refine_func(node_map_t& nodes, function test_func, double *xs, double *ys, double* zs, bool diag_balance=false);
-    void refine_triangle(node_map_t& nodes,
-      double* x0, double* x1, double* x2, double* e0, double* e1, double* e2, double* t_norm,
-      int_t p_level, double *xs, double *ys, double* zs, bool diag_balance=false
-    );
-    void refine_vert_triang_prism(node_map_t& nodes,
-      double* x0, double* x1, double* x2, double h,
-      double* e0, double* e1, double* e2, double* t_norm,
-      int_t p_level, double *xs, double *ys, double* zs, bool diag_balance=false
-    );
-    void refine_tetra(
-      node_map_t& nodes,
-      double* x0, double* x1, double* x2, double* x3,
-      double edge_tans[6][3], double face_normals[4][3],
-      int_t p_level, double *xs, double *ys, double* zs, bool diag_balance
-    );
-
-    Cell* containing_cell(double, double, double);
     void shift_centers(double * shift);
+
+    template <class T>
+    void refine_geom(node_map_t& nodes, const T& geom, int_t p_level, double *xs, double *ys, double* zs, bool diag_balance=false){
+        // early exit if my level is higher than or equal to target
+        if (level >= p_level || level == max_level){
+            return;
+        }
+        double *a = min_node()->location;
+        double *b = max_node()->location;
+        // if I intersect cell, I will need to be divided (if I'm not already)
+        if (geom.intersects_cell(a, b)){
+            if(is_leaf()){
+                divide(nodes, xs, ys, zs, true, diag_balance);
+            }
+            // recurse into children
+            for(int_t i = 0; i < (1<<n_dim); ++i){
+                children[i]->refine_geom(nodes, geom, p_level, xs, ys, zs, diag_balance);
+            }
+        }
+    }
+
+    template <class T>
+    void find_cells_geom(int_vec_t &cells, const T& geom){
+        double *a = min_node()->location;
+        double *b = max_node()->location;
+        if(geom.intersects_cell(a, b)){
+            if(this->is_leaf()){
+                cells.push_back(index);
+                return;
+            }
+            for(int_t i = 0; i < (1<<n_dim); ++i){
+                children[i]->find_cells_geom(cells, geom);
+            }
+        }
+    }
 };
 
 class Tree{
@@ -174,26 +207,37 @@ class Tree{
     void set_levels(int_t l_x, int_t l_y, int_t l_z);
     void set_xs(double *x , double *y, double *z);
     void initialize_roots();
-    void refine_function(function test_func, bool diagonal_balance=false);
-    void refine_ball(double *center, double r, int_t p_level, bool diagonal_balance=false);
-    void refine_box(double* x0, double* x1, int_t p_level, bool diagonal_balance=false);
-    void refine_line(double* x0, double* x1, int_t p_level, bool diag_balance=false);
-    void refine_triangle(
-        double* x0, double* x1, double* x2, int_t p_level, bool diag_balance=false
-    );
-    void refine_tetra(
-        double* x0, double* x1, double* x2, double* x3, int_t p_level, bool diag_balance=false
-    );
-    void refine_vert_triang_prism(
-        double* x0, double* x1, double* x2, double h, int_t p_level, bool diagonal_balance=false
-    );
     void number();
     void finalize_lists();
 
-    void insert_cell(double *new_center, int_t p_level, bool diagonal_balance=false);
-
-    Cell* containing_cell(double, double, double);
-    int_vec_t find_overlapping_cells(double xm, double xp, double ym, double yp, double zm, double zp);
     void shift_cell_centers(double *shift);
+
+    void insert_cell(double *new_center, int_t p_level, bool diagonal_balance=false);
+    Cell* containing_cell(double, double, double);
+
+    void refine_function(function test_func, bool diagonal_balance=false);
+
+    template <class T>
+    void refine_geom(const T& geom, int_t p_level, bool diagonal_balance=false){
+        for(int_t iz=0; iz<nz_roots; ++iz)
+            for(int_t iy=0; iy<ny_roots; ++iy)
+                for(int_t ix=0; ix<nx_roots; ++ix)
+                    roots[iz][iy][ix]->refine_geom(nodes, geom, p_level, xs, ys, zs, diagonal_balance);
+    };
+
+    template <class T>
+    int_vec_t find_cells_geom(const T& geom){
+        int_vec_t intersections;
+        for(int_t iz=0; iz<nz_roots; ++iz){
+            for(int_t iy=0; iy<ny_roots; ++iy){
+                for(int_t ix=0; ix<nx_roots; ++ix){
+                    roots[iz][iy][ix]->find_cells_geom(intersections, geom);
+                }
+            }
+        }
+        return intersections;
+    };
+
 };
+
 #endif

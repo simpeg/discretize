@@ -908,6 +908,120 @@ def assert_isadjoint(
         return passed
 
 
+def assert_cell_intersects_geometric(
+    cell, points, edges=None, faces=None, as_refine=False
+):
+    """Assert if a cell intersects a convex polygon.
+
+    Parameters
+    ----------
+    cell : tree_mesh.TreeCell
+        Must have cell.origin and cell.h properties
+    points : (*, dim) array_like
+        The points of the geometric object.
+    edges : (*, 2) array_like of int, optional
+        The 2 indices into points defining each edge
+    faces : (*, 3) array_like of int, optional
+        The 3 indices into points which lie on each face. These are used
+        to define the face normals from the three points as
+        ``norm = cross(p1 - p0, p2 - p0)``.
+    as_refine : bool, or int
+        If ``True`` (or a nonzero integer), this function will not assert and instead
+        return either 0, -1, or the integer making it suitable (but slow) for
+        refining a TreeMesh.
+
+    Returns
+    -------
+    int
+
+    Raises
+    ------
+    AssertionError
+    """
+    __tracebackhide__ = True
+
+    x0 = cell.origin
+    xF = x0 + cell.h
+
+    points = np.atleast_2d(points)
+    if edges is not None:
+        edges = np.atleast_2d(edges)
+        if edges.shape[-1] != 2:
+            raise ValueError("Last dimension of edges must be 2.")
+    if faces is not None:
+        faces = np.atleast_2d(faces)
+        if faces.shape[-1] != 3:
+            raise ValueError("Last dimension of faces must be 3.")
+
+    do_asserts = not as_refine
+    level = -1
+    if as_refine and not isinstance(as_refine, bool):
+        level = int(as_refine)
+
+    dim = points.shape[-1]
+    # first the bounding box tests (associated with the 3 face normals of the cell
+    mins = points.min(axis=0)
+    for i_d in range(dim):
+        if do_asserts:
+            assert mins[i_d] <= xF[i_d]
+        else:
+            if mins[i_d] > xF[i_d]:
+                return 0
+
+    maxs = points.max(axis=0)
+    for i_d in range(dim):
+        if do_asserts:
+            assert maxs[i_d] >= x0[i_d]
+        else:
+            if maxs[i_d] < x0[i_d]:
+                return 0
+
+    # create array of all the box points
+    if edges is not None or faces is not None:
+        box_points = np.meshgrid(*list(zip(x0, xF)))
+        box_points = np.stack(box_points, axis=-1).reshape(-1, dim)
+
+        def project_min_max(points, axis):
+            ps = points @ axis
+            return ps.min(), ps.max()
+
+        if edges is not None and dim > 1:
+            box_dirs = np.eye(dim)
+            edge_dirs = points[edges[:, 1]] - points[edges[:, 0]]
+            # perform the edge-edge intersection tests
+            # these project all points onto the axis formed by the cross
+            # product of the geometric edges and the bounding box's edges/faces normals
+            for i in range(edges.shape[0]):
+                for j in range(dim):
+                    if dim == 3:
+                        axis = np.cross(edge_dirs[i], box_dirs[j])
+                    else:
+                        axis = [-edge_dirs[i, 1], edge_dirs[i, 0]]
+                    bmin, bmax = project_min_max(box_points, axis)
+                    gmin, gmax = project_min_max(points, axis)
+                    if do_asserts:
+                        assert bmax >= gmin and bmin <= gmax
+                    else:
+                        if bmax < gmin or bmin > gmax:
+                            return 0
+
+        if faces is not None and dim > 2:
+            face_normals = np.cross(
+                points[faces[:, 1]] - points[faces[:, 0]],
+                points[faces[:, 2]] - points[faces[:, 0]],
+            )
+            for i in range(faces.shape[0]):
+                bmin, bmax = project_min_max(box_points, face_normals[i])
+                gmin, gmax = project_min_max(points, face_normals[i])
+                if do_asserts:
+                    assert bmax >= gmin and bmin <= gmax
+                else:
+                    if bmax < gmin or bmin > gmax:
+                        return 0
+    if not do_asserts:
+        return level
+
+
 # DEPRECATIONS
 setupMesh = deprecate_function(
     setup_mesh, "setupMesh", removal_version="1.0.0", error=True
