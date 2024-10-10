@@ -12,17 +12,24 @@ jobs:
         linux-Python312:
           image: 'Ubuntu-20.04'
           CIBW_BUILD: 'cp312-*'
+        linux-Python313:
+          image: 'Ubuntu-20.04'
+          CIBW_BUILD: 'cp313-*'
         osx-Python310:
-          image: 'macOS-12'
+          image: 'macOS-14'
           CIBW_BUILD: 'cp310-*'
           CIBW_ARCHS_MACOS: 'x86_64 arm64'
         osx-Python311:
-          image: 'macOS-12'
+          image: 'macOS-14'
           CIBW_BUILD: 'cp311-*'
           CIBW_ARCHS_MACOS: 'x86_64 arm64'
         osx-Python312:
-          image: 'macOS-12'
+          image: 'macOS-14'
           CIBW_BUILD: 'cp312-*'
+          CIBW_ARCHS_MACOS: 'x86_64 arm64'
+        osx-Python313:
+          image: 'macOS-14'
+          CIBW_BUILD: 'cp313-*'
           CIBW_ARCHS_MACOS: 'x86_64 arm64'
         win-Python310:
           image: 'windows-2019'
@@ -37,6 +44,11 @@ jobs:
         win-Python312:
           image: 'windows-2019'
           CIBW_BUILD: 'cp312-*'
+          CIBW_ARCHS_WINDOWS: 'AMD64'
+          CIBW_CONFIG_SETTINGS: 'setup-args=--vsenv'
+        win-Python313:
+          image: 'windows-2019'
+          CIBW_BUILD: 'cp313-*'
           CIBW_ARCHS_WINDOWS: 'AMD64'
           CIBW_CONFIG_SETTINGS: 'setup-args=--vsenv'
   pool:
