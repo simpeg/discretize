@@ -2140,29 +2140,26 @@ class InterfaceMPL(object):
         if not isinstance(ind, (np.integer, int)):
             raise ValueError("ind must be an integer")
 
-        cc_tensor = [None, None, None]
-        for i in range(3):
-            cc_tensor[i] = np.cumsum(np.r_[self.origin[i], self.h[i]])
-            cc_tensor[i] = (cc_tensor[i][1:] + cc_tensor[i][:-1]) * 0.5
+        cc_tensor = [self.cell_centers_x, self.cell_centers_y, self.cell_centers_z]
         slice_loc = cc_tensor[normalInd][ind]
+
+        slice_origin = self.origin.copy()
+        slice_origin[normalInd] = slice_loc
+        normal = [0, 0, 0]
+        normal[normalInd] = 1
 
         # create a temporary TreeMesh with the slice through
         temp_mesh = discretize.TreeMesh(h2d, x2d)
         level_diff = self.max_level - temp_mesh.max_level
 
-        XS = [None, None, None]
-        XS[antiNormalInd[0]], XS[antiNormalInd[1]] = np.meshgrid(
-            cc_tensor[antiNormalInd[0]], cc_tensor[antiNormalInd[1]]
-        )
-        XS[normalInd] = np.ones_like(XS[antiNormalInd[0]]) * slice_loc
-        loc_grid = np.c_[XS[0].reshape(-1), XS[1].reshape(-1), XS[2].reshape(-1)]
-        inds = np.unique(self._get_containing_cell_indexes(loc_grid))
-
-        grid2d = self.gridCC[inds][:, antiNormalInd]
+        # get list of cells which intersect the slicing plane
+        inds = self.get_cells_on_plane(slice_origin, normal)
         levels = self._cell_levels_by_indexes(inds) - level_diff
+        grid2d = self.cell_centers[inds][:, antiNormalInd]
+
         temp_mesh.insert_cells(grid2d, levels)
-        tm_gridboost = np.empty((temp_mesh.nC, 3))
-        tm_gridboost[:, antiNormalInd] = temp_mesh.gridCC
+        tm_gridboost = np.empty((temp_mesh.n_cells, 3))
+        tm_gridboost[:, antiNormalInd] = temp_mesh.cell_centers
         tm_gridboost[:, normalInd] = slice_loc
 
         # interpolate values to self.gridCC if not "CC" or "CCv"
@@ -2195,7 +2192,7 @@ class InterfaceMPL(object):
             v = np.linalg.norm(v, axis=1)
 
         # interpolate values from self.gridCC to grid2d
-        ind_3d_to_2d = self._get_containing_cell_indexes(tm_gridboost)
+        ind_3d_to_2d = self.get_containing_cells(tm_gridboost)
         v2d = v[ind_3d_to_2d]
 
         out = temp_mesh.plot_image(
