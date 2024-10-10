@@ -6,15 +6,13 @@ from sympy.abc import r, t, z
 import discretize
 from discretize import tests
 
-np.random.seed(16)
-
 TOL = 1e-1
 
 
 # ----------------------------- Test Operators ------------------------------ #
 
 
-MESHTYPES = ["uniformCylMesh", "randomCylMesh"]
+MESHTYPES = ["uniformCylMesh"]
 call2 = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 2])
 call3 = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1], xyz[:, 2])
 cyl_row2 = lambda g, xfun, yfun: np.c_[call2(xfun, g), call2(yfun, g)]

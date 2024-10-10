@@ -14,14 +14,14 @@ found on the official websites of the packages
 Python for scientific computing
 -------------------------------
 
-* `Python for Scientists <https://sites.google.com/site/pythonforscientists/>`_ Links to commonly used packages, Matlab to Python comparison
+* `Learn Python <https://pyzo.org/learn.html>`_ Links to commonly used packages, Matlab to Python comparison
 * `Python Wiki <http://wiki.python.org/moin/NumericAndScientific>`_ Lists packages and resources for scientific computing in Python
 
 Numpy and Matlab
 ----------------
 
 * `NumPy for Matlab Users <https://docs.scipy.org/doc/numpy/user/numpy-for-matlab-users.html>`_
-* `Python vs Matlab <https://sites.google.com/site/pythonforscientists/python-vs-matlab>`_
+* `Python vs Matlab <https://pyzo.org/python_vs_matlab.html>`_
 
 Lessons in Python
 -----------------

@@ -4,6 +4,8 @@ import discretize
 import scipy.sparse as sp
 from discretize.utils import example_simplex_mesh
 
+rng = np.random.default_rng(4421)
+
 
 def u(*args):
     if len(args) == 1:
@@ -332,8 +334,8 @@ class TestInnerProductsDerivs(unittest.TestCase):
     def doTestFace(self, h, rep):
         nodes, simplices = example_simplex_mesh(h)
         mesh = discretize.SimplexMesh(nodes, simplices)
-        v = np.random.rand(mesh.n_faces)
-        sig = np.random.rand(1) if rep == 0 else np.random.rand(mesh.nC * rep)
+        v = rng.random(mesh.n_faces)
+        sig = rng.random(1) if rep == 0 else rng.random(mesh.nC * rep)
 
         def fun(sig):
             M = mesh.get_face_inner_product(sig)
@@ -341,13 +343,15 @@ class TestInnerProductsDerivs(unittest.TestCase):
             return M * v, Md(v)
 
         print("Face", rep)
-        return discretize.tests.check_derivative(fun, sig, num=5, plotIt=False)
+        return discretize.tests.check_derivative(
+            fun, sig, num=5, plotIt=False, random_seed=5352
+        )
 
     def doTestEdge(self, h, rep):
         nodes, simplices = example_simplex_mesh(h)
         mesh = discretize.SimplexMesh(nodes, simplices)
-        v = np.random.rand(mesh.n_edges)
-        sig = np.random.rand(1) if rep == 0 else np.random.rand(mesh.nC * rep)
+        v = rng.random(mesh.n_edges)
+        sig = rng.random(1) if rep == 0 else rng.random(mesh.nC * rep)
 
         def fun(sig):
             M = mesh.get_edge_inner_product(sig)
@@ -355,7 +359,9 @@ class TestInnerProductsDerivs(unittest.TestCase):
             return M * v, Md(v)
 
         print("Edge", rep)
-        return discretize.tests.check_derivative(fun, sig, num=5, plotIt=False)
+        return discretize.tests.check_derivative(
+            fun, sig, num=5, plotIt=False, random_seed=532
+        )
 
     def test_FaceIP_2D_float(self):
         self.assertTrue(self.doTestFace([10, 4], 0))
@@ -544,7 +550,7 @@ class TestBadModels(unittest.TestCase):
 
     def test_bad_model_size(self):
         mesh = self.mesh
-        bad_model = np.random.rand(mesh.n_cells, 5)
+        bad_model = rng.random((mesh.n_cells, 5))
         with self.assertRaises(ValueError):
             mesh.get_face_inner_product(bad_model)
         with self.assertRaises(ValueError):
@@ -552,7 +558,7 @@ class TestBadModels(unittest.TestCase):
 
     def test_cant_invert(self):
         mesh = self.mesh
-        good_model = np.random.rand(mesh.n_cells)
+        good_model = rng.random(mesh.n_cells)
         with self.assertRaises(NotImplementedError):
             mesh.get_face_inner_product(good_model, invert_matrix=True)
         with self.assertRaises(NotImplementedError):

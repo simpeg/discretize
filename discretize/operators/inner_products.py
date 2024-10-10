@@ -1,4 +1,5 @@
 """Construct inner product operators for tensor like meshes."""
+
 from scipy import sparse as sp
 from discretize.base import BaseMesh
 from discretize.utils import (
@@ -373,11 +374,7 @@ class InnerProducts(BaseMesh):
                 dMdprop = n_elements * Av.T * A * ones
             elif invert_matrix and invert_model:
                 dMdprop = n_elements * (
-                    sdiag(MI.diagonal() ** 2)
-                    * Av.T
-                    * A
-                    * ones
-                    * sdiag(1.0 / model**2)
+                    sdiag(MI.diagonal() ** 2) * Av.T * A * ones * sdiag(1.0 / model**2)
                 )
             elif invert_model:
                 dMdprop = n_elements * Av.T * A * sdiag(-1.0 / model**2)
@@ -822,29 +819,17 @@ class InnerProducts(BaseMesh):
             posX = (
                 [0, 0]
                 if xEdge == "eX0"
-                else [1, 0]
-                if xEdge == "eX1"
-                else [0, 1]
-                if xEdge == "eX2"
-                else [1, 1]
+                else [1, 0] if xEdge == "eX1" else [0, 1] if xEdge == "eX2" else [1, 1]
             )
             posY = (
                 [0, 0]
                 if yEdge == "eY0"
-                else [1, 0]
-                if yEdge == "eY1"
-                else [0, 1]
-                if yEdge == "eY2"
-                else [1, 1]
+                else [1, 0] if yEdge == "eY1" else [0, 1] if yEdge == "eY2" else [1, 1]
             )
             posZ = (
                 [0, 0]
                 if zEdge == "eZ0"
-                else [1, 0]
-                if zEdge == "eZ1"
-                else [0, 1]
-                if zEdge == "eZ2"
-                else [1, 1]
+                else [1, 0] if zEdge == "eZ1" else [0, 1] if zEdge == "eZ2" else [1, 1]
             )
 
             ind1 = sub2ind(M.vnEx, np.c_[ii, jj + posX[0], kk + posX[1]])

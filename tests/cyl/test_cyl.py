@@ -5,7 +5,7 @@ import pytest
 import discretize
 from discretize import tests, utils
 
-np.random.seed(13)
+rng = np.random.default_rng(87564123)
 
 
 class TestCylSymmetricMesh(unittest.TestCase):
@@ -54,9 +54,7 @@ class TestCylSymmetricMesh(unittest.TestCase):
         self.assertEqual(mesh.cell_volumes, np.pi)
 
         mesh = discretize.CylindricalMesh([2.0, 1.0, 1.0])
-        self.assertTrue(
-            np.all(mesh.cell_volumes == np.pi * np.r_[0.5**2, 1 - 0.5**2])
-        )
+        self.assertTrue(np.all(mesh.cell_volumes == np.pi * np.r_[0.5**2, 1 - 0.5**2]))
 
     def test_gridSizes(self):
         self.assertEqual(self.mesh.gridCC.shape, (self.mesh.nC, 3))
@@ -390,8 +388,8 @@ class TestCellGrad2D_Dirichlet(unittest.TestCase):
     #     self.orderTest()
 
     def setUp(self):
-        hx = np.random.rand(10)
-        hz = np.random.rand(10)
+        hx = rng.random(10)
+        hz = rng.random(10)
         self.mesh = discretize.CylindricalMesh([hx, 1, hz])
 
     def test_NotImplementedError(self):
@@ -401,8 +399,8 @@ class TestCellGrad2D_Dirichlet(unittest.TestCase):
 
 class TestAveragingSimple(unittest.TestCase):
     def setUp(self):
-        hx = np.random.rand(10)
-        hz = np.random.rand(10)
+        hx = rng.random(10)
+        hz = rng.random(10)
         self.mesh = discretize.CylindricalMesh([hx, 1, hz])
 
     def test_simpleEdges(self):

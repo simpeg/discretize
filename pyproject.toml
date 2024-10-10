@@ -2,31 +2,17 @@
 [build-system]
 build-backend = 'mesonpy'
 requires = [
-    "meson-python>=0.14.0",
-    "Cython>=0.29.35",  # when updating version, also update check in meson.build
+    "meson-python>=0.15.0",
+    "Cython>=3.0.8",
     "setuptools_scm[toml]>=6.2",
 
-    # This package automatically provides all of the numpy pinning for different python
-    # versions and runtime requirements.
-    "oldest-supported-numpy",
-
-    # The following is taken from scipy's pyproject.toml file to handle
-    # building against the proper numpy API
-
-    # When numpy 2.0.0rc1 comes out, we should update this to build against 2.0,
-    # and then runtime depend on the range 1.22.X to <2.3. No need to switch to
-    # 1.25.2 in the meantime (1.25.x is the first version which exports older C
-    # API versions by default).
-
-    # default numpy requirements
-    # "numpy==1.22.4; python_version<='3.10' and platform_python_implementation != 'PyPy'",
-    # "numpy==1.23.2; python_version=='3.11' and platform_python_implementation != 'PyPy'",
-
-    # For Python versions which aren't yet officially supported, we specify an
-    # unpinned NumPy which allows source distributions to be used and allows
-    # wheels to be used as soon as they become available.
-    # "numpy>=1.26.0b1; python_version>='3.12'",
-    # "numpy; python_version>='3.8' and platform_python_implementation=='PyPy'",
+    # numpy requirement for wheel builds for distribution on PyPI - building
+    # against 2.x yields wheels that are also compatible with numpy 1.x at
+    # runtime.
+    # Note that building against numpy 1.x works fine too - users and
+    # redistributors can do this by installing the numpy version they like and
+    # disabling build isolation.
+    "numpy>=2.0.0rc1",
 ]
 
 [project]
@@ -34,7 +20,7 @@ name = 'discretize'
 dynamic = ["version"]
 description = 'Discretization tools for finite volume and inverse problems'
 readme = 'README.rst'
-requires-python = '>=3.8'
+requires-python = '>=3.10'
 authors = [
   {name = 'SimPEG developers', email = 'rowanc1@gmail.com'},
 ]
@@ -74,18 +60,18 @@ file = 'LICENSE'
 
 [project.optional-dependencies]
 plot = ["matplotlib"]
-viz = ["vtk", "pyvista"]
+viz = ["vtk>=6", "pyvista"]
 omf = ["omf"]
 all = ["discretize[plot,viz,omf]"]
 doc = [
     "sphinx!=4.1.0",
-    "pydata-sphinx-theme==0.9.0",
+    "pydata-sphinx-theme==0.15.4",
     "sphinx-gallery==0.1.13",
     "numpydoc>=1.5",
     "jupyter",
     "graphviz",
-    "pymatsolver>=0.1.2",
     "pillow",
+    "pooch",
     "discretize[all]",
 ]
 test = [
@@ -94,14 +80,16 @@ test = [
     "sympy",
     "discretize[doc,all]",
 ]
+# when changing these, make sure to keep it consistent with .pre-commit-config.
 style = [
-    "black==23.1.0",
-    "flake8==6.0.0",
-    "flake8-bugbear",
-    "flake8-builtins",
-    "flake8-mutable",
-    "flake8-rst-docstrings",
-    "flake8-docstrings>=1.7",
+    "black==24.3.0",
+    "flake8==7.0.0",
+    "flake8-bugbear==23.12.2",
+    "flake8-builtins==2.2.0",
+    "flake8-mutable==1.2.0",
+    "flake8-rst-docstrings==0.3.0",
+    "flake8-docstrings==1.7.0",
+    "flake8-pyproject==1.2.3",
 ]
 build = [
     "meson-python>=0.14.0",
@@ -119,16 +107,112 @@ Repository = 'http://github.com/simpeg/discretize.git'
 
 [tool.setuptools_scm]
 
-[tool.meson-python.args]
-# for windows this will prioritize the msvc compilers
-setup = ['--vsenv']
-
 [tool.cibuildwheel]
-# skip building wheels for python 3.6, 3.7, all pypy versions, and specialty linux
+# skip building wheels for python 3.6, 3.7, 3.8, 3.9, all pypy versions, and specialty linux
 # processors (still does arm builds though).
 # skip windows 32bit
-skip = "cp36-* cp37-* pp* *_ppc64le *_i686 *_s390x *-win32 cp38-musllinux_x86_64"
+skip = "cp36-* cp37-* cp38-* cp39-* pp* *_ppc64le *_i686 *_s390x *-win32"
 build-verbosity = "3"
 
 # test importing discretize to make sure externals are loadable.
 test-command = 'python -c "import discretize; print(discretize.__version__)"'
+
+[tool.coverage.run]
+branch = true
+source = ["discretize", "tests", "examples", "tutorials"]
+plugins = [
+    "Cython.Coverage",
+]
+
+[tool.coverage.report]
+ignore_errors = false
+show_missing = true
+# Regexes for lines to exclude from consideration
+exclude_also = [
+    # Don't complain about missing debug-only code:
+    "def __repr__",
+    "if self\\.debug",
+
+    # Don't complain if tests don't hit defensive assertion code:
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "AbstractMethodError",
+
+    # Don't complain if non-runnable code isn't run:
+    "if 0:",
+    "if __name__ == .__main__.:",
+
+    # Don't complain about abstract methods, they aren't run:
+    "@(abc\\.)?abstractmethod",
+]
+
+[tool.black]
+required-version = '24.3.0'
+target-version = ['py38', 'py39', 'py310', 'py311']
+
+[tool.flake8]
+extend-ignore = [
+    # Too many leading '#' for block comment
+    'E266',
+    # Line too long (82 > 79 characters)
+    'E501',
+    # Do not use variables named 'I', 'O', or 'l'
+    'E741',
+    # Line break before binary operator (conflicts with black)
+    'W503',
+    # Ignore spaces before a colon (Black handles it)
+    'E203',
+    # Ignore spaces around an operator (Black handles it)
+    'E225',
+    # Ignore rst warnings for start and end, due to *args and **kwargs being invalid rst, but good for numpydoc
+    'RST210',
+    'RST213',
+    # ignore undocced __init__
+    'D107',
+]
+exclude = [
+    '.git',
+    '.eggs',
+    '__pycache__',
+    '.ipynb_checkpoints',
+    'docs/examples/*',
+    'docs/tutorials/*',
+    'docs/*',
+    'discretize/_extensions/*.py',
+    '.ci/*'
+]
+per-file-ignores = [
+    # disable unused-imports errors on __init__.py
+    # Automodule used for __init__ scripts' description
+    '__init__.py: F401, D204, D205, D400',
+    # do not check for assigned lambdas in tests
+    # do not check for missing docstrings in tests
+    'tests/*: E731, D',
+    'tutorials/*: D',
+    'examples/*: D',
+]
+exclude-from-doctest = [
+    # Only check discretize for docstring style
+    'tests',
+    'tutorials',
+    'examples',
+]
+
+rst-roles = [
+    'class',
+    'func',
+    'mod',
+    'meth',
+    'attr',
+    'ref',
+    'data',
+    # Python programming language:
+    'py:func','py:mod','py:attr','py:meth',
+]
+
+rst-directives = [
+    # These are sorted alphabetically - but that does not matter
+    'autosummary',
+    'currentmodule',
+    'deprecated',
+]

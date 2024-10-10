@@ -1,4 +1,5 @@
 """Module containing unstructured meshes for discretize."""
+
 import numpy as np
 import scipy.sparse as sp
 from scipy.spatial import KDTree
@@ -404,7 +405,8 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
     ):
         if getattr(self, "_proj_stash", None) is None:
             self._proj_stash = {}
-        if i_type not in self._proj_stash:
+        key = (i_type, with_volume)
+        if key not in self._proj_stash:
             dim = self.dim
             n_cells = self.n_cells
             if i_type == "F":
@@ -455,8 +457,8 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
                 )
                 Ps.append(T @ P)
 
-            self._proj_stash[i_type] = (Ps, T_col_inds, T_ind_ptr)
-        Ps, T_col_inds, T_ind_ptr = self._proj_stash[i_type]
+            self._proj_stash[key] = (Ps, T_col_inds, T_ind_ptr)
+        Ps, T_col_inds, T_ind_ptr = self._proj_stash[key]
         if return_pointers:
             return Ps, (T_col_inds, T_ind_ptr)
         else:

@@ -1,0 +1,63 @@
+jobs:
+- job:
+  strategy:
+    matrix:
+      linux-Python310:
+        image: ubuntu-latest
+        python.version: '3.10'
+        coverage: True
+      linux-Python311:
+        image: ubuntu-latest
+        python.version: '3.11'
+      linux-Python312:
+        image: ubuntu-latest
+        python.version: '3.12'
+      osx-Python310:
+        image: macOS-latest
+        python.version: '3.10'
+      osx-Python311:
+        image: macOS-latest
+        python.version: '3.11'
+      osx-Python312:
+        image: macOS-latest
+        python.version: '3.12'
+      win-Python310:
+        image: windows-latest
+        python.version: '3.10'
+      win-Python311:
+        image: windows-latest
+        python.version: '3.11'
+      win-Python312:
+        image: windows-latest
+        python.version: '3.12'
+  displayName: "${{ variables.image }} ${{ variables.python.version }}"
+  pool:
+    vmImage: $(image)
+  variables:
+    varOS: $(Agent.OS)
+    ARCH: $(Agent.OSArchitecture)
+  steps:
+    - bash: .ci/azure/setup_miniconda_macos.sh
+      displayName: Install miniconda on mac
+      condition: eq(variables.varOS, 'Darwin')
+
+    - bash: echo "##vso[task.prependpath]$CONDA/bin"
+      displayName: Add conda to PATH
+      condition: ne(variables.varOS, 'Windows_NT')
+
+    - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
+      displayName: Add conda to PATH
+      condition: eq(variables.varOS, 'Windows_NT')
+
+    - bash: .ci/azure/setup_env.sh
+      displayName: Setup discretize environment
+
+    - bash: .ci/azure/run_tests.sh
+      displayName: 'Testing'
+
+    - bash: |
+        curl -Os https://uploader.codecov.io/latest/linux/codecov
+        chmod +x codecov
+        ./codecov
+      displayName: 'Upload coverage to codecov.io'
+      condition: variables.coverage

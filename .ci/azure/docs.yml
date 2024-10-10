@@ -1,0 +1,36 @@
+jobs:
+- job: BuildDocs
+  displayName: "Build Documentation"
+  pool:
+    vmImage: ubuntu-latest
+  variables:
+    python.version: "3.11"
+    doc.build: True
+    PYVISTA_OFF_SCREEN: True
+    DISPLAY: ":99"
+  steps:
+    - bash:
+        git fetch --tags
+      displayName: Fetch tags
+
+    - bash: echo "##vso[task.prependpath]$CONDA/bin"
+      displayName: Add conda to PATH
+
+    - bash: .ci/azure/setup_env.sh
+      displayName: Setup discretize environment
+
+    - bash: |
+        source activate discretize-test
+        make -C docs html
+      displayName: 'Building HTML'
+
+    - bash: |
+        source activate discretize-test
+        make -C docs linkcheck
+      displayName: 'Checking Links'
+
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: 'docs/_build/html'
+        artifact: 'html_docs'
+        parallel: true

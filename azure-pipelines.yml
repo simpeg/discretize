@@ -15,194 +15,50 @@ pr:
     exclude:
     - '*no-ci*'
 
+variables:
+  BRANCH_NAME: $(Build.SourceBranchName)
+  IS_TAG: $[startsWith(variables['Build.SourceBranch'], 'refs/tags/')]
+  IS_MAIN: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
+
 stages:
+  - stage: StyleChecks
+    displayName: "Style Checks"
+    jobs:
+      - template: .ci/azure/style.yml
 
-- stage: StyleChecks
-  displayName: "Style Checks"
-  jobs:
-    - job:
-      displayName: Run style checks with Black
-      pool:
-        vmImage: ubuntu-latest
-      variables:
-        python.version: '3.9'
-      steps:
-        - script: |
-            pip install -r requirements_style.txt
-          displayName: "Install dependencies to run the checks"
-        - script: black --check .
-          displayName: "Run black"
+  - stage: Testing
+    dependsOn: StyleChecks
+    jobs:
+      - template: .ci/azure/test.yml
 
-    - job:
-      displayName: Run style checks with flake8
-      pool:
-        vmImage: ubuntu-latest
-      variables:
-        python.version: '3.9'
-      steps:
-        - script: |
-            pip install -r requirements_style.txt
-          displayName: "Install dependencies to run the checks"
-        - script: flake8
-          displayName: "Run flake8"
+  - stage: DocBuild
+    dependsOn: StyleChecks
+    jobs:
+      - template: .ci/azure/docs.yml
 
-- stage: Testing
-  jobs:
-    - template: ./.azure-pipelines/azure-pipelines-linux.yml
-    - template: ./.azure-pipelines/azure-pipelines-osx.yml
-    - template: ./.azure-pipelines/azure-pipelines-win.yml
+  - stage: BuildWheels
+    dependsOn:
+      - Testing
+      - DocBuild
+    displayName: "Build Wheels"
+    jobs:
+      - template: .ci/azure/wheels.yml
 
-- stage: Deploy
-  displayName: "Deploy Source Wheels and Docs"
-  condition: and(succeeded(), startsWith(variables['build.sourceBranch'], 'refs/tags/'))
-  jobs:
-    - job:
-      displayName: Deploy Docs and source
-      pool:
-        vmImage: ubuntu-latest
-      variables:
-        DISPLAY: ':99.0'
-        PYVISTA_OFF_SCREEN: 'True'
-        python.version: '3.10'
-      timeoutInMinutes: 180
-      steps:
-        - bash: |
-            git config --global user.name ${GH_NAME}
-            git config --global user.email ${GH_EMAIL}
-            git config --list | grep user.
-          displayName: 'Configure git'
-          env:
-            GH_NAME: $(gh.name)
-            GH_EMAIL: $(gh.email)
+  - stage: BuildSource
+    dependsOn:
+      - Testing
+      - DocBuild
+    displayName: "Build Source distribution"
+    jobs:
+      - template: .ci/azure/sdist.yml
 
-        - bash: |
-            wget -O Mambaforge.sh  "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh"
-            bash Mambaforge.sh -b -p "${HOME}/conda"
-          displayName: Install mamba
+  - stage: Deploy
+    displayName: "Deploy Source, Wheels, and Docs"
+    dependsOn:
+      - BuildWheels
+      - BuildSource
+    condition: and(succeeded(), or(eq(variables.IS_TAG, true), eq(variables.IS_MAIN, true)))
+    jobs:
+      - template: .ci/azure/deploy.yml
 
-        - bash: |
-            source "${HOME}/conda/etc/profile.d/conda.sh"
-            source "${HOME}/conda/etc/profile.d/mamba.sh"
-            cp environment_test.yml environment_test_with_pyversion.yml
-            echo "  - python="$(python.version) >> environment_test_with_pyversion.yml
-            mamba env create -f environment_test_with_pyversion.yml
-            conda activate discretize-test
-            pip install pytest-azurepipelines
-          displayName: Create Anaconda testing environment
 
-        - bash: |
-            source "${HOME}/conda/etc/profile.d/conda.sh"
-            conda activate discretize-test
-            pip install --no-build-isolation --editable .
-          displayName: Build package
-
-        - bash: |
-            source "${HOME}/conda/etc/profile.d/conda.sh"
-            conda activate discretize-test
-            python -m build --no-isolation --skip-dependency-check --sdist .
-            ls -la dist
-            twine upload --skip-existing dist/*
-          displayName: Deploy source
-          env:
-            TWINE_USERNAME: $(twine.username)
-            TWINE_PASSWORD: $(twine.password)
-
-        - bash: |
-            source "${HOME}/conda/etc/profile.d/conda.sh"
-            conda activate discretize-test
-            .ci/setup_headless_display.sh
-            cd docs
-            make html
-            cd ..
-          displayName: Building documentation
-        # upload documentation to discretize-docs gh-pages on tags
-        - bash: |
-            git clone --depth 1 https://${GH_TOKEN}@github.com/simpeg/discretize-docs.git
-            cd discretize-docs
-            git gc --prune=now
-            git remote prune origin
-            rm -rf en/main/*
-            cp -r $BUILD_SOURCESDIRECTORY/docs/_build/html/* en/main/
-            touch .nojekyll
-            git add .
-            git commit -am "Azure CI commit ref $(Build.SourceVersion)"
-            git push
-          displayName: Push documentation to discretize-docs
-          env:
-            GH_TOKEN: $(gh.token)
-
-    - job: linux
-      displayName: Build Linux wheels
-      pool: { vmImage: 'Ubuntu-20.04' }
-      steps:
-        - task: UsePythonVersion@0
-        - bash:
-            git fetch --tags
-          displayName: Fetch tags
-        - bash: |
-            set -o errexit
-            python3 -m pip install --upgrade pip
-            pip3 install cibuildwheel==2.16.2
-            pip3 install twine
-          displayName: Install dependencies
-        - bash: cibuildwheel --output-dir wheelhouse .
-          displayName: Build wheels
-        - script: twine upload --skip-existing wheelhouse/*
-          displayName: Upload to PYPI
-          env:
-            TWINE_USERNAME: $(twine.username)
-            TWINE_PASSWORD: $(twine.password)
-        - task: PublishBuildArtifacts@1
-          inputs: { pathtoPublish: 'wheelhouse' }
-
-    - job: macos
-      displayName: Build Mac wheels
-      pool: { vmImage: 'macOS-11' }
-      variables:
-        CIBW_ARCHS_MACOS: "x86_64 arm64"
-      steps:
-        - task: UsePythonVersion@0
-        - bash:
-            git fetch --tags
-          displayName: Fetch tags
-        - bash: |
-            set -o errexit
-            python3 -m pip install --upgrade pip
-            python3 -m pip install cibuildwheel==2.16.2
-            python3 -m pip install twine
-          displayName: Install dependencies
-        - bash: cibuildwheel --output-dir wheelhouse .
-          displayName: Build wheels
-        - script: twine upload --skip-existing wheelhouse/*
-          displayName: Upload to PYPI
-          env:
-            TWINE_USERNAME: $(twine.username)
-            TWINE_PASSWORD: $(twine.password)
-        - task: PublishBuildArtifacts@1
-          inputs: { pathtoPublish: wheelhouse }
-
-    - job: windows
-      displayName: Build Windows wheels
-      pool: { vmImage: 'windows-2019' }
-      variables:
-        CIBW_ARCHS_WINDOWS: "AMD64"
-      steps:
-        - task: UsePythonVersion@0
-        - bash:
-            git fetch --tags
-          displayName: Fetch tags
-        - bash: |
-            set -o errexit
-            python -m pip install --upgrade pip
-            pip install cibuildwheel==2.16.2
-            pip install twine
-          displayName: Install dependencies
-        - bash: cibuildwheel --output-dir wheelhouse .
-          displayName: Build wheels
-        - script: twine upload --skip-existing wheelhouse/*
-          displayName: Upload to PYPI
-          env:
-            TWINE_USERNAME: $(twine.username)
-            TWINE_PASSWORD: $(twine.password)
-        - task: PublishBuildArtifacts@1
-          inputs: { pathtoPublish: 'wheelhouse' }
