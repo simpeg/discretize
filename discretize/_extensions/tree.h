@@ -121,6 +121,7 @@ class Cell{
       return location[index];
     };
     double volume;
+    double bounds[6];
 
     Cell();
     Cell(Node *pts[4], int_t ndim, int_t maxlevel);//, function func);

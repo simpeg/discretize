@@ -222,6 +222,40 @@ cdef class TreeCell:
         return self._cell.index
 
     @property
+    @cython.boundscheck(False)
+    def bounds(self):
+        """
+        Bounds of the cell.
+
+        Coordinates that define the bounds of the cell. Bounds are returned in
+        the following order: ``x1``, ``x2``, ``y1``, ``y2``, ``z1``, ``z2``.
+
+        Returns
+        -------
+        bounds : (2 * dim) array
+            Array with the cell bounds.
+        """
+        bounds = np.empty(self._dim * 2, dtype=np.float64)
+        cdef np.float64_t[:] bounds_view = bounds
+        if(self._dim == 1):
+            bounds_view[0] = self._x0
+            bounds_view[1] = self._x0 + self._wx
+        elif(self._dim == 2):
+            bounds_view[0] = self._x0
+            bounds_view[1] = self._x0 + self._wx
+            bounds_view[2] = self._y0
+            bounds_view[3] = self._y0 + self._wy
+        else:
+            bounds_view[0] = self._x0
+            bounds_view[1] = self._x0 + self._wx
+            bounds_view[2] = self._y0
+            bounds_view[3] = self._y0 + self._wy
+            bounds_view[4] = self._z0
+            bounds_view[5] = self._z0 + self._wz
+        return bounds
+
+
+    @property
     def neighbors(self):
         """Indices for this cell's neighbors within its parent tree mesh.
 
@@ -1189,6 +1223,16 @@ cdef class _TreeMesh:
             Returns *True* if finalized, *False* otherwise
         """
         return self._finalized
+
+    @property
+    def cell_bounds(self):
+        cell_bounds = np.empty((self.n_nodes, 2 * self._dim), dtype=np.float64)
+        cdef np.float64_t[:, :] cell_bounds_view = cell_bounds
+
+        for cell in self.tree.cells:
+            cell_bounds_view[cell.index, :] = cell.bounds
+
+        return cell_bounds
 
     def number(self):
         """Number the cells, nodes, faces, and edges of the TreeMesh."""
