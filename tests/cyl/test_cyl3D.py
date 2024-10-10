@@ -4,8 +4,6 @@ import numpy as np
 import discretize
 from discretize import utils
 
-np.random.seed(16)
-
 TOL = 1e-1
 
 

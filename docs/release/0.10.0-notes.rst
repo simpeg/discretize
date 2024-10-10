@@ -22,7 +22,7 @@ Build system
 ``discretize`` now uses a ``pyproject.toml`` file with a ``meson-python`` backend to build
 the compiled external modules (used for the ``TreeMesh``, ``SimplexMesh``, and interpolation
 functions. Moving away from a ``setup.py`` file allows us to reliably control the build environment
-seperate from the install environment, as the build requirements are not the same as the runtime
+separate from the install environment, as the build requirements are not the same as the runtime
 requirements.
 
 We will also begin distributing many more pre-compiled wheels on pypi for Windows, MacOS, and Linux
@@ -30,11 +30,11 @@ systems from python 3.8 to 3.12. Our goal is to provide a pre-compiled wheel for
 scipy provides wheels for.
 
 Tensor Mesh
-------------
-You can now directly index a ``TensorMesh``, and it will then return a ``TensorCell`` object.
-This functionality mimics what is currently available in ``TreeMesh``s.
+-----------
+You can now directly index a ``TensorMesh`` and return a ``TensorCell`` object.
+This functionality mimics what is currently available in ``TreeMesh``.
 
-``Tensor Mesh`` also has a ``cell_nodes`` property that list the indices of each node of every
+``TensorMesh`` also has a ``cell_nodes`` property that list the indices of each node of every
 cell (again similar to the ``TreeMesh``).
 
 Face Properties

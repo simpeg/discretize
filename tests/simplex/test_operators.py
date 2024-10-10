@@ -1,5 +1,8 @@
 import numpy as np
+import pytest
+
 import discretize
+from discretize import SimplexMesh
 from discretize.utils import example_simplex_mesh
 
 
@@ -179,3 +182,16 @@ class TestOperators3D(discretize.tests.OrderTest):
         self.name = "SimplexMesh grad order test"
         self._test_type = "Grad"
         self.orderTest()
+
+
+@pytest.mark.parametrize("i_type", ["E", "F"])
+def test_simplex_projection_caching(i_type):
+    n = 5
+    mesh = SimplexMesh(*example_simplex_mesh((n, n)))
+    P1 = mesh._SimplexMesh__get_inner_product_projection_matrices(
+        i_type, with_volume=False, return_pointers=False
+    )
+    P2 = mesh._SimplexMesh__get_inner_product_projection_matrices(
+        i_type, with_volume=True, return_pointers=False
+    )
+    assert P1 is not P2

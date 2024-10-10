@@ -84,11 +84,11 @@ def interpolation_matrix(locs, x, y=None, z=None):
     >>> from discretize import TensorMesh
     >>> import numpy as np
     >>> import matplotlib.pyplot as plt
-    >>> np.random.seed(14)
+    >>> rng = np.random.default_rng(14)
 
     Create an interpolation matrix
 
-    >>> locs = np.random.rand(50)*0.8+0.1
+    >>> locs = rng.random(50)*0.8+0.1
     >>> x = np.linspace(0, 1, 7)
     >>> dense = np.linspace(0, 1, 200)
     >>> fun = lambda x: np.cos(2*np.pi*x)
@@ -217,6 +217,7 @@ def volume_average(mesh_in, mesh_out, values=None, output=None):
 
     >>> import numpy as np
     >>> from discretize import TensorMesh
+    >>> rng = np.random.default_rng(853)
     >>> h1 = np.ones(32)
     >>> h2 = np.ones(16)*2
     >>> mesh_in = TensorMesh([h1, h1])
@@ -226,7 +227,7 @@ def volume_average(mesh_in, mesh_out, values=None, output=None):
     interpolate it to the output mesh.
 
     >>> from discretize.utils import volume_average
-    >>> model1 = np.random.rand(mesh_in.nC)
+    >>> model1 = rng.random(mesh_in.nC)
     >>> model2 = volume_average(mesh_in, mesh_out, model1)
 
     Because these two meshes' cells are perfectly aligned, but the output mesh

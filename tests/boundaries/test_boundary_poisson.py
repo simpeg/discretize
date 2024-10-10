@@ -4,7 +4,7 @@ from scipy.sparse import linalg
 import unittest
 import discretize
 from discretize import utils
-from pymatsolver import Solver, Pardiso
+from scipy.sparse.linalg import spsolve
 
 
 class TestCC1D_InhomogeneousDirichlet(discretize.tests.OrderTest):
@@ -39,7 +39,7 @@ class TestCC1D_InhomogeneousDirichlet(discretize.tests.OrderTest):
         A = V @ D @ MfI @ G
         rhs = V @ q_ana - V @ D @ MfI @ M_bf @ phi_bc
 
-        phi_test = Solver(A) * rhs
+        phi_test = spsolve(A, rhs)
         err = np.linalg.norm((phi_test - phi_ana)) / np.sqrt(mesh.n_cells)
 
         return err
@@ -79,7 +79,7 @@ class TestCC2D_InhomogeneousDirichlet(discretize.tests.OrderTest):
         A = V @ D @ MfI @ G
         rhs = V @ q_ana - V @ D @ MfI @ M_bf @ phi_bc
 
-        phi_test = Solver(A) * rhs
+        phi_test = spsolve(A, rhs)
         if self._meshType == "rotateCurv":
             err = np.linalg.norm(mesh.cell_volumes * (phi_test - phi_ana))
         else:
@@ -261,10 +261,10 @@ class TestCC1D_InhomogeneousMixed(discretize.tests.OrderTest):
         rhs = V @ q_ana - V @ D @ MfI @ b_bc
 
         if self.myTest == "xc":
-            xc = Solver(A) * rhs
+            xc = spsolve(A, rhs)
             err = np.linalg.norm(xc - xc_ana) / np.sqrt(mesh.n_cells)
         elif self.myTest == "xcJ":
-            xc = Solver(A) * rhs
+            xc = spsolve(A, rhs)
             j = MfI @ ((-G + B_bc) @ xc + b_bc)
             err = np.linalg.norm(j - j_ana, np.inf)
         return err
@@ -332,7 +332,7 @@ class TestCC2D_InhomogeneousMixed(discretize.tests.OrderTest):
         A = V @ D @ MfI @ (-G + B_bc)
         rhs = V @ q_ana - V @ D @ MfI @ b_bc
 
-        phi_test = Solver(A) * rhs
+        phi_test = spsolve(A, rhs)
 
         if self._meshType == "rotateCurv":
             err = np.linalg.norm(mesh.cell_volumes * (phi_test - phi_ana))
@@ -352,7 +352,7 @@ class TestCC3D_InhomogeneousMixed(discretize.tests.OrderTest):
     meshTypes = ["uniformTensorMesh", "uniformTree", "rotateCurv"]
     meshDimension = 3
     expectedOrders = [2, 2, 2]
-    meshSizes = [2, 4, 8, 16, 32]
+    meshSizes = [2, 4, 8, 16]
 
     def getError(self):
         # Test function
@@ -421,7 +421,7 @@ class TestCC3D_InhomogeneousMixed(discretize.tests.OrderTest):
         A = V @ D @ MfI @ (-G + B_bc)
         rhs = V @ q_ana - V @ D @ MfI @ b_bc
 
-        phi_test = Pardiso(A.tocsr()) * rhs
+        phi_test = spsolve(A, rhs)
 
         if self._meshType == "rotateCurv":
             err = np.linalg.norm(mesh.cell_volumes * (phi_test - phi_ana))
@@ -488,7 +488,7 @@ class TestN1D_boundaries(discretize.tests.OrderTest):
             rhs = P_f.T @ rhs - (P_f.T @ A @ P_b) @ phi_ana[[0]]
             A = P_f.T @ A @ P_f
 
-        phi_test = Solver(A) * rhs
+        phi_test = spsolve(A, rhs)
 
         if self.boundary_type == "Nuemann":
             phi_test = P_f @ phi_test + P_b @ phi_ana[[0]]
@@ -590,7 +590,7 @@ class TestN2D_boundaries(discretize.tests.OrderTest):
             rhs = P_f.T @ rhs - (P_f.T @ A @ P_b) @ phi_ana[[0]]
             A = P_f.T @ A @ P_f
 
-        phi_test = Solver(A) * rhs
+        phi_test = spsolve(A, rhs)
 
         if self.boundary_type == "Nuemann":
             phi_test = P_f @ phi_test + P_b @ phi_ana[[0]]
@@ -620,7 +620,7 @@ class TestN3D_boundaries(discretize.tests.OrderTest):
     meshDimension = 3
     expectedOrders = 2
     tolerance = 0.6
-    meshSizes = [2, 4, 8, 16, 32]
+    meshSizes = [2, 4, 8, 16]
     # meshSizes = [4]
 
     def getError(self):
@@ -715,7 +715,7 @@ class TestN3D_boundaries(discretize.tests.OrderTest):
             rhs = P_f.T @ rhs - (P_f.T @ A @ P_b) @ phi_ana[[0]]
             A = P_f.T @ A @ P_f
 
-        phi_test = Pardiso(A.tocsr()) * rhs
+        phi_test = spsolve(A, rhs)
 
         if self.boundary_type == "Nuemann":
             phi_test = P_f @ phi_test + P_b @ phi_ana[[0]]

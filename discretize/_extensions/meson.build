@@ -70,7 +70,7 @@ py.extension_module(
 
 py.extension_module(
     'tree_ext',
-    ['tree_ext.pyx' , 'tree.cpp'],
+    ['tree_ext.pyx' , 'tree.cpp', 'geom.cpp'],
     include_directories: incdir_numpy,
     cpp_args: cython_cpp_args,
     install: true,

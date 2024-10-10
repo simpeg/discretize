@@ -3,9 +3,16 @@ jobs:
   displayName: "Deploy Docs and source"
   pool:
     vmImage: ubuntu-latest
+
   steps:
     # No need to checkout the repo here!
     - checkout: none
+
+    - bash: |
+        echo $IS_TAG
+        echo $IS_MAIN
+        echo $BRANCH_NAME
+      displayName: Report branch parameters
 
     # Just download all of the items already built
     - task: DownloadPipelineArtifact@2
@@ -29,6 +36,7 @@ jobs:
     - bash: |
         ls -l dist
         ls -l html
+      displayName: Report downloaded cache contents.
 
     - bash: |
         git config --global user.name ${GH_NAME}
@@ -42,20 +50,37 @@ jobs:
     - bash: |
         twine upload --skip-existing dist/*
       displayName: Deploy source and wheels
+      condition: eq(variables.IS_TAG, true)
       env:
         TWINE_USERNAME: $(twine.username)
         TWINE_PASSWORD: $(twine.password)
 
     # upload documentation to discretize-docs gh-pages on tags
     - bash: |
-        git clone --depth 1 https://${GH_TOKEN}@github.com/simpeg/discretize-docs.git
+        git clone -q --branch gh-pages --depth 1 https://${GH_TOKEN}@github.com/simpeg/discretize-docs.git
+      displayName: Checkout doc repository
+      env:
+        GH_TOKEN: $(gh.token)
+
+    - bash: |
         cd discretize-docs
-        git gc --prune=now
-        git remote prune origin
-        rm -rf en/main/*
-        cp -r html/* en/main/
+        rm -rf "en/$BRANCH_NAME"
+        mv ../html "en/$BRANCH_NAME"
         touch .nojekyll
-        git add .
+      displayName: Set Doc Folder
+
+    - bash: |
+        # Update latest symlink
+        cd discretize-docs
+        rm -f en/latest
+        ln -s "en/$BRANCH_NAME" en/latest
+      displayName: Point Latest to tag
+      condition: eq(variables.IS_TAG, true)
+
+    - bash: |
+        # Commit and push
+        cd discretize-docs
+        git add --all
         git commit -am "Azure CI commit ref $(Build.SourceVersion)"
         git push
       displayName: Push documentation to discretize-docs
