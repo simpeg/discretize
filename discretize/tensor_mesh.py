@@ -594,6 +594,36 @@ class TensorMesh(
             return indxd, indxu, indyd, indyu, indzd, indzu
 
     @property
+    def cell_bounds(self):
+        """The bounds of each cell.
+
+        Return a 2D array with the coordinates that define the bounds of each
+        cell in the mesh. Each row of the array contains the bounds for
+        a particular cell in the following order: ``x1``, ``x2``, ``y1``,
+        ``y2``, ``z1``, ``z2``, where ``x1 < x2``, ``y1 < y2`` and ``z1 < z2``.
+        """
+        centers, widths = self.cell_centers, self.h_gridded
+        if self.dim == 1:
+            bounds = (centers - widths.ravel() / 2, centers + widths.ravel() / 2)
+        elif self.dim == 2:
+            x1 = centers[:, 0] - widths[:, 0] / 2
+            x2 = centers[:, 0] + widths[:, 0] / 2
+            y1 = centers[:, 1] - widths[:, 1] / 2
+            y2 = centers[:, 1] + widths[:, 1] / 2
+            bounds = (x1, x2, y1, y2)
+        else:
+            x1 = centers[:, 0] - widths[:, 0] / 2
+            x2 = centers[:, 0] + widths[:, 0] / 2
+            y1 = centers[:, 1] - widths[:, 1] / 2
+            y2 = centers[:, 1] + widths[:, 1] / 2
+            z1 = centers[:, 2] - widths[:, 2] / 2
+            z2 = centers[:, 2] + widths[:, 2] / 2
+            bounds = (x1, x2, y1, y2, z1, z2)
+
+        cell_bounds = np.hstack(tuple(v[:, np.newaxis] for v in bounds))
+        return cell_bounds
+
+    @property
     def cell_nodes(self):
         """The index of all nodes for each cell.
 
