@@ -414,7 +414,15 @@ class TestTreeCellBounds:
         else:
             z1, z2 = nodes[0][2], nodes[-1][2]
             expected_bounds = np.array([x1, x2, y1, y2, z1, z2])
-        np.testing.assert_allclose(cell.bounds, expected_bounds)
+        np.testing.assert_equal(cell.bounds, expected_bounds)
+
+    def test_cell_bounds(self, mesh):
+        """Test cell_bounds method of the tree mesh."""
+        cell_bounds = mesh.cell_bounds
+        cell_bounds_slow = np.empty((mesh.n_cells, 2 * mesh.dim))
+        for i, cell in enumerate(mesh):
+            cell_bounds_slow[i] = cell.bounds
+        np.testing.assert_equal(cell_bounds, cell_bounds_slow)
 
 
 class Test2DInterpolation(unittest.TestCase):

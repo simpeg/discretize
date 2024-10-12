@@ -1229,6 +1229,7 @@ cdef class _TreeMesh:
         return self._finalized
 
     @property
+    @cython.boundscheck(False)
     def cell_bounds(self):
         cell_bounds = np.empty((self.n_cells, self.dim, 2), dtype=np.float64)
         cdef np.float64_t[:, :, ::1] cell_bounds_view = cell_bounds
