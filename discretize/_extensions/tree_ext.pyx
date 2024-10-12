@@ -55,21 +55,6 @@ cdef class TreeCell:
     cdef void _set(self, c_Cell* cell):
         self._cell = cell
         self._dim = cell.n_dim
-        cdef:
-            Node *min_n = cell.min_node()
-            Node *max_n = cell.max_node()
-        self._x = self._cell.location[0]
-        self._x0 = min_n.location[0]
-
-        self._y = self._cell.location[1]
-        self._y0 = min_n.location[1]
-
-        self._wx = max_n.location[0] - self._x0
-        self._wy = max_n.location[1] - self._y0
-        if(self._dim > 2):
-            self._z = self._cell.location[2]
-            self._z0 = min_n.location[2]
-            self._wz = max_n.location[2] - self._z0
 
     @property
     def nodes(self):
@@ -150,8 +135,10 @@ cdef class TreeCell:
         (dim) numpy.ndarray
             Cell center location for the tree cell
         """
-        if self._dim == 2: return np.array([self._x, self._y])
-        return np.array([self._x, self._y, self._z])
+        loc = self._cell.location
+        if self._dim == 2:
+            return np.array([loc[0], loc[1]])
+        return np.array([loc[0], loc[1], loc[2]])
 
     @property
     def origin(self):
@@ -166,8 +153,10 @@ cdef class TreeCell:
         (dim) numpy.ndarray
             Origin location ('anchor point') for the tree cell
         """
-        if self._dim == 2: return np.array([self._x0, self._y0])
-        return np.array([self._x0, self._y0, self._z0])
+        loc = self._cell.min_node().location
+        if self._dim == 2:
+            return np.array([loc[0], loc[1]])
+        return np.array([loc[0], loc[1], loc[2]])
 
     @property
     def x0(self):
@@ -196,8 +185,19 @@ cdef class TreeCell:
         (dim) numpy.ndarray
             Cell dimension along each axis direction
         """
-        if self._dim == 2: return np.array([self._wx, self._wy])
-        return np.array([self._wx, self._wy, self._wz])
+        loc_min = self._cell.min_node().location
+        loc_max = self._cell.max_node().location
+
+        if self._dim == 2:
+            return np.array([
+                loc_max[0] - loc_min[0],
+                loc_max[1] - loc_min[1],
+            ])
+        return np.array([
+            loc_max[0] - loc_min[0],
+            loc_max[1] - loc_min[1],
+            loc_max[2] - loc_min[2],
+        ])
 
     @property
     def dim(self):
@@ -222,37 +222,40 @@ cdef class TreeCell:
         return self._cell.index
 
     @property
-    @cython.boundscheck(False)
     def bounds(self):
         """
         Bounds of the cell.
 
         Coordinates that define the bounds of the cell. Bounds are returned in
-        the following order: ``x1``, ``x2``, ``y1``, ``y2``, ``z1``, ``z2``.
+        the following order: ``x0``, ``x1``, ``y0``, ``y1``, ``z0``, ``z1``.
 
         Returns
         -------
         bounds : (2 * dim) array
             Array with the cell bounds.
         """
-        bounds = np.empty(self._dim * 2, dtype=np.float64)
-        cdef np.float64_t[:] bounds_view = bounds
-        if(self._dim == 1):
-            bounds_view[0] = self._x0
-            bounds_view[1] = self._x0 + self._wx
-        elif(self._dim == 2):
-            bounds_view[0] = self._x0
-            bounds_view[1] = self._x0 + self._wx
-            bounds_view[2] = self._y0
-            bounds_view[3] = self._y0 + self._wy
-        else:
-            bounds_view[0] = self._x0
-            bounds_view[1] = self._x0 + self._wx
-            bounds_view[2] = self._y0
-            bounds_view[3] = self._y0 + self._wy
-            bounds_view[4] = self._z0
-            bounds_view[5] = self._z0 + self._wz
-        return bounds
+        loc_min = self._cell.min_node().location
+        loc_max = self._cell.max_node().location
+
+        if self.dim == 2:
+            return np.array(
+                [
+                    loc_min[0],
+                    loc_max[0],
+                    loc_min[1],
+                    loc_max[1],
+                ]
+            )
+        return np.array(
+            [
+                loc_min[0],
+                loc_max[0],
+                loc_min[1],
+                loc_max[1],
+                loc_min[2],
+                loc_max[2],
+            ]
+        )
 
 
     @property
@@ -276,63 +279,64 @@ cdef class TreeCell:
         neighbors = [-1]*self._dim*2
 
         for i in range(self._dim*2):
-            if self._cell.neighbors[i] is NULL:
+            neighbor = self._cell.neighbors[i]
+            if neighbor is NULL:
                 continue
-            elif self._cell.neighbors[i].is_leaf():
-                neighbors[i] = self._cell.neighbors[i].index
+            elif neighbor.is_leaf():
+                neighbors[i] = neighbor.index
             else:
                 if self._dim==2:
                     if i==0:
-                        neighbors[i] = [self._cell.neighbors[i].children[1].index,
-                                        self._cell.neighbors[i].children[3].index]
+                        neighbors[i] = [neighbor.children[1].index,
+                                        neighbor.children[3].index]
                     elif i==1:
-                        neighbors[i] = [self._cell.neighbors[i].children[0].index,
-                                        self._cell.neighbors[i].children[2].index]
+                        neighbors[i] = [neighbor.children[0].index,
+                                        neighbor.children[2].index]
                     elif i==2:
-                        neighbors[i] = [self._cell.neighbors[i].children[2].index,
-                                        self._cell.neighbors[i].children[3].index]
+                        neighbors[i] = [neighbor.children[2].index,
+                                        neighbor.children[3].index]
                     else:
-                        neighbors[i] = [self._cell.neighbors[i].children[0].index,
-                                        self._cell.neighbors[i].children[1].index]
+                        neighbors[i] = [neighbor.children[0].index,
+                                        neighbor.children[1].index]
                 else:
                     if i==0:
-                        neighbors[i] = [self._cell.neighbors[i].children[1].index,
-                                        self._cell.neighbors[i].children[3].index,
-                                        self._cell.neighbors[i].children[5].index,
-                                        self._cell.neighbors[i].children[7].index]
+                        neighbors[i] = [neighbor.children[1].index,
+                                        neighbor.children[3].index,
+                                        neighbor.children[5].index,
+                                        neighbor.children[7].index]
                     elif i==1:
-                        neighbors[i] = [self._cell.neighbors[i].children[0].index,
-                                        self._cell.neighbors[i].children[2].index,
-                                        self._cell.neighbors[i].children[4].index,
-                                        self._cell.neighbors[i].children[6].index]
+                        neighbors[i] = [neighbor.children[0].index,
+                                        neighbor.children[2].index,
+                                        neighbor.children[4].index,
+                                        neighbor.children[6].index]
                     elif i==2:
-                        neighbors[i] = [self._cell.neighbors[i].children[2].index,
-                                        self._cell.neighbors[i].children[3].index,
-                                        self._cell.neighbors[i].children[6].index,
-                                        self._cell.neighbors[i].children[7].index]
+                        neighbors[i] = [neighbor.children[2].index,
+                                        neighbor.children[3].index,
+                                        neighbor.children[6].index,
+                                        neighbor.children[7].index]
                     elif i==3:
-                        neighbors[i] = [self._cell.neighbors[i].children[0].index,
-                                        self._cell.neighbors[i].children[1].index,
-                                        self._cell.neighbors[i].children[4].index,
-                                        self._cell.neighbors[i].children[5].index]
+                        neighbors[i] = [neighbor.children[0].index,
+                                        neighbor.children[1].index,
+                                        neighbor.children[4].index,
+                                        neighbor.children[5].index]
                     elif i==4:
-                        neighbors[i] = [self._cell.neighbors[i].children[4].index,
-                                        self._cell.neighbors[i].children[5].index,
-                                        self._cell.neighbors[i].children[6].index,
-                                        self._cell.neighbors[i].children[7].index]
+                        neighbors[i] = [neighbor.children[4].index,
+                                        neighbor.children[5].index,
+                                        neighbor.children[6].index,
+                                        neighbor.children[7].index]
                     else:
-                        neighbors[i] = [self._cell.neighbors[i].children[0].index,
-                                        self._cell.neighbors[i].children[1].index,
-                                        self._cell.neighbors[i].children[2].index,
-                                        self._cell.neighbors[i].children[3].index]
+                        neighbors[i] = [neighbor.children[0].index,
+                                        neighbor.children[1].index,
+                                        neighbor.children[2].index,
+                                        neighbor.children[3].index]
         return neighbors
 
     @property
     def _index_loc(self):
+        loc_ind = self._cell.location_ind
         if self._dim == 2:
-            return tuple((self._cell.location_ind[0], self._cell.location_ind[1]))
-        return tuple((self._cell.location_ind[0], self._cell.location_ind[1],
-                      self._cell.location_ind[2]))
+            return tuple((loc_ind[0], loc_ind[1]))
+        return tuple((loc_ind[0], loc_ind[1], loc_ind[2]))
 
     @property
     def _level(self):
@@ -1226,13 +1230,18 @@ cdef class _TreeMesh:
 
     @property
     def cell_bounds(self):
-        cell_bounds = np.empty((self.n_nodes, 2 * self._dim), dtype=np.float64)
-        cdef np.float64_t[:, :] cell_bounds_view = cell_bounds
+        cell_bounds = np.empty((self.n_cells, self.dim, 2), dtype=np.float64)
+        cdef np.float64_t[:, :, ::1] cell_bounds_view = cell_bounds
 
         for cell in self.tree.cells:
-            cell_bounds_view[cell.index, :] = cell.bounds
+            min_loc = cell.min_node().location
+            max_loc = cell.max_node().location
 
-        return cell_bounds
+            for i in range(self._dim):
+                cell_bounds_view[cell.index, i, 0] = min_loc[i]
+                cell_bounds_view[cell.index, i, 1] = max_loc[i]
+
+        return cell_bounds.reshape((self.n_cells, -1))
 
     def number(self):
         """Number the cells, nodes, faces, and edges of the TreeMesh."""
