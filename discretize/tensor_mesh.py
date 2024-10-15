@@ -602,25 +602,15 @@ class TensorMesh(
         a particular cell in the following order: ``x1``, ``x2``, ``y1``,
         ``y2``, ``z1``, ``z2``, where ``x1 < x2``, ``y1 < y2`` and ``z1 < z2``.
         """
-        centers, widths = self.cell_centers, self.h_gridded
-        if self.dim == 1:
-            bounds = (centers - widths.ravel() / 2, centers + widths.ravel() / 2)
-        elif self.dim == 2:
-            x1 = centers[:, 0] - widths[:, 0] / 2
-            x2 = centers[:, 0] + widths[:, 0] / 2
-            y1 = centers[:, 1] - widths[:, 1] / 2
-            y2 = centers[:, 1] + widths[:, 1] / 2
-            bounds = (x1, x2, y1, y2)
-        else:
-            x1 = centers[:, 0] - widths[:, 0] / 2
-            x2 = centers[:, 0] + widths[:, 0] / 2
-            y1 = centers[:, 1] - widths[:, 1] / 2
-            y2 = centers[:, 1] + widths[:, 1] / 2
-            z1 = centers[:, 2] - widths[:, 2] / 2
-            z2 = centers[:, 2] + widths[:, 2] / 2
-            bounds = (x1, x2, y1, y2, z1, z2)
-
-        cell_bounds = np.hstack(tuple(v[:, np.newaxis] for v in bounds))
+        nodes = self.nodes.reshape((*self.shape_nodes, -1), order="F")
+    
+        min_nodes = nodes[(slice(-1), )*self.dim]
+        min_nodes = min_nodes.reshape((self.n_cells, -1), order="F")
+        max_nodes = nodes[(slice(1, None), )*self.dim]
+        max_nodes = max_nodes.reshape((self.n_cells, -1), order="F")
+    
+        cell_bounds = np.stack((min_nodes, max_nodes), axis=-1)
+        cell_bounds = cell_bounds.reshape((self.n_cells, -1))
         return cell_bounds
 
     @property
