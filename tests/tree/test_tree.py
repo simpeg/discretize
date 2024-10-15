@@ -416,6 +416,19 @@ class TestTreeCellBounds:
             expected_bounds = np.array([x1, x2, y1, y2, z1, z2])
         np.testing.assert_equal(cell.bounds, expected_bounds)
 
+    def test_bounds_relations(self, mesh):
+        """Test if bounds are in the right order for one cell in the mesh."""
+        cell = mesh[16]
+        if mesh.dim == 2:
+            x1, x2, y1, y2 = cell.bounds
+            assert x1 < x2
+            assert y1 < y2
+        else:
+            x1, x2, y1, y2, z1, z2 = cell.bounds
+            assert x1 < x2
+            assert y1 < y2
+            assert z1 < z2
+
     def test_cell_bounds(self, mesh):
         """Test cell_bounds method of the tree mesh."""
         cell_bounds = mesh.cell_bounds
