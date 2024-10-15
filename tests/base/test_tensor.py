@@ -275,12 +275,12 @@ class TestTensorMeshProperties:
     def test_cell_nodes(self, mesh):
         """Test TensorMesh.cell_nodes."""
         expected_cell_nodes = np.array([cell.nodes for cell in mesh])
-        np.testing.assert_allclose(mesh.cell_nodes, expected_cell_nodes)
+        np.testing.assert_equal(mesh.cell_nodes, expected_cell_nodes)
 
     def test_cell_bounds(self, mesh):
         """Test TensorMesh.cell_bounds."""
         expected_cell_bounds = np.array([cell.bounds for cell in mesh])
-        np.testing.assert_allclose(mesh.cell_bounds, expected_cell_bounds)
+        np.testing.assert_equal(mesh.cell_bounds, expected_cell_bounds)
 
 
 class TestPoissonEqn(discretize.tests.OrderTest):
