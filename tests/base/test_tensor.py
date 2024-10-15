@@ -253,9 +253,9 @@ class BasicTensorMeshTests(unittest.TestCase):
         self.assertTrue(np.all(self.mesh2.gridCC == mesh.gridCC))
 
 
-class TestTensorMeshCellNodes:
+class TestTensorMeshProperties:
     """
-    Test TensorMesh.cell_nodes
+    Test some of the properties in TensorMesh
     """
 
     @pytest.fixture(params=[1, 2, 3], ids=["dims-1", "dims-2", "dims-3"])
@@ -263,16 +263,24 @@ class TestTensorMeshCellNodes:
         """Sample TensorMesh."""
         if request.param == 1:
             h = [10]
+            origin = (-35.5,)
         elif request.param == 2:
             h = [10, 15]
+            origin = (-35.5, 105.3)
         else:
             h = [10, 15, 20]
-        return discretize.TensorMesh(h)
+            origin = (-35.5, 105.3, -27.3)
+        return discretize.TensorMesh(h, origin=origin)
 
     def test_cell_nodes(self, mesh):
         """Test TensorMesh.cell_nodes."""
         expected_cell_nodes = np.array([cell.nodes for cell in mesh])
-        np.testing.assert_allclose(mesh.cell_nodes, expected_cell_nodes)
+        np.testing.assert_equal(mesh.cell_nodes, expected_cell_nodes)
+
+    def test_cell_bounds(self, mesh):
+        """Test TensorMesh.cell_bounds."""
+        expected_cell_bounds = np.array([cell.bounds for cell in mesh])
+        np.testing.assert_equal(mesh.cell_bounds, expected_cell_bounds)
 
 
 class TestPoissonEqn(discretize.tests.OrderTest):
