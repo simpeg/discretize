@@ -603,12 +603,12 @@ class TensorMesh(
         ``y2``, ``z1``, ``z2``, where ``x1 < x2``, ``y1 < y2`` and ``z1 < z2``.
         """
         nodes = self.nodes.reshape((*self.shape_nodes, -1), order="F")
-    
-        min_nodes = nodes[(slice(-1), )*self.dim]
+
+        min_nodes = nodes[(slice(-1),) * self.dim]
         min_nodes = min_nodes.reshape((self.n_cells, -1), order="F")
-        max_nodes = nodes[(slice(1, None), )*self.dim]
+        max_nodes = nodes[(slice(1, None),) * self.dim]
         max_nodes = max_nodes.reshape((self.n_cells, -1), order="F")
-    
+
         cell_bounds = np.stack((min_nodes, max_nodes), axis=-1)
         cell_bounds = cell_bounds.reshape((self.n_cells, -1))
         return cell_bounds
