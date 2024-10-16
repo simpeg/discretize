@@ -12,6 +12,9 @@ jobs:
       linux-Python312:
         image: ubuntu-latest
         python.version: '3.12'
+      linux-Python313:
+        image: ubuntu-latest
+        python.version: '3.13'
       osx-Python310:
         image: macOS-latest
         python.version: '3.10'
@@ -21,6 +24,9 @@ jobs:
       osx-Python312:
         image: macOS-latest
         python.version: '3.12'
+      osx-Python313:
+        image: macOS-latest
+        python.version: '3.13'
       win-Python310:
         image: windows-latest
         python.version: '3.10'
@@ -30,6 +36,9 @@ jobs:
       win-Python312:
         image: windows-latest
         python.version: '3.12'
+      win-Python313:
+        image: windows-latest
+        python.version: '3.13'
   displayName: "${{ variables.image }} ${{ variables.python.version }}"
   pool:
     vmImage: $(image)
