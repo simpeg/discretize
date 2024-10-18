@@ -161,8 +161,8 @@ class TestCylSymmetricMesh(unittest.TestCase):
         fycc = Mr.aveFy2CC * Mr.reshape(frect, "F", "Fy")
         fzcc = Mr.reshape(frect, "F", "Fz")
 
-        indX = utils.closest_points_index(Mr, [0.45, -0.2, 0.5])
-        indY = utils.closest_points_index(Mr, [-0.2, 0.45, 0.5])
+        indX = utils.closest_points_index(Mr, [0.45, -0.2, 0.5])[0]
+        indY = utils.closest_points_index(Mr, [-0.2, 0.45, 0.5])[0]
 
         TOL = 1e-2
         assert np.abs(float(fxcc[indX]) - 1) < TOL
@@ -194,8 +194,8 @@ class TestCylSymmetricMesh(unittest.TestCase):
         eycc = Mr.aveEy2CC * Mr.reshape(ecart, "E", "Ey")
         ezcc = Mr.reshape(ecart, "E", "Ez")
 
-        indX = utils.closest_points_index(Mr, [0.45, -0.2, 0.5])
-        indY = utils.closest_points_index(Mr, [-0.2, 0.45, 0.5])
+        indX = utils.closest_points_index(Mr, [0.45, -0.2, 0.5])[0]
+        indY = utils.closest_points_index(Mr, [-0.2, 0.45, 0.5])[0]
 
         TOL = 1e-2
         assert np.abs(float(excc[indX]) - 1) < TOL
@@ -225,8 +225,8 @@ class TestCylSymmetricMesh(unittest.TestCase):
         eycc = Mr.aveEy2CC * Mr.reshape(ecart, "E", "Ey")
         ezcc = Mr.aveEz2CC * Mr.reshape(ecart, "E", "Ez")
 
-        indX = utils.closest_points_index(Mr, [0.45, -0.2, 0.5])
-        indY = utils.closest_points_index(Mr, [-0.2, 0.45, 0.5])
+        indX = utils.closest_points_index(Mr, [0.45, -0.2, 0.5])[0]
+        indY = utils.closest_points_index(Mr, [-0.2, 0.45, 0.5])[0]
 
         TOL = 1e-2
         assert np.abs(float(excc[indX]) - 0) < TOL
@@ -256,8 +256,8 @@ class TestCylSymmetricMesh(unittest.TestCase):
         eycc = Mr.aveFy2CC * Mr.reshape(frect, "F", "Fy")
         ezcc = Mr.reshape(frect, "F", "Fz")
 
-        indX = utils.closest_points_index(Mr, [0.45, -0.2, 0.5])
-        indY = utils.closest_points_index(Mr, [-0.2, 0.45, 0.5])
+        indX = utils.closest_points_index(Mr, [0.45, -0.2, 0.5])[0]
+        indY = utils.closest_points_index(Mr, [-0.2, 0.45, 0.5])[0]
 
         TOL = 1e-2
         assert np.abs(float(excc[indX]) - 0) < TOL

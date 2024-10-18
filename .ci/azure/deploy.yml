@@ -1,6 +1,6 @@
 jobs:
 - job:
-  displayName: "Deploy Docs and source"
+  displayName: "Deploy Docs"
   pool:
     vmImage: ubuntu-latest
 
@@ -14,19 +14,6 @@ jobs:
         echo $BRANCH_NAME
       displayName: Report branch parameters
 
-    # Just download all of the items already built
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        buildType: 'current'
-        artifactName: 'wheels'
-        targetPath: 'dist'
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        buildType: 'current'
-        artifactName: 'source_dist'
-        targetPath: 'dist'
-
     - task: DownloadPipelineArtifact@2
       inputs:
         buildType: 'current'
@@ -34,7 +21,6 @@ jobs:
         targetPath: 'html'
 
     - bash: |
-        ls -l dist
         ls -l html
       displayName: Report downloaded cache contents.
 
@@ -46,14 +32,6 @@ jobs:
       env:
         GH_NAME: $(gh.name)
         GH_EMAIL: $(gh.email)
-
-    - bash: |
-        twine upload --skip-existing dist/*
-      displayName: Deploy source and wheels
-      condition: eq(variables.IS_TAG, true)
-      env:
-        TWINE_USERNAME: $(twine.username)
-        TWINE_PASSWORD: $(twine.password)
 
     # upload documentation to discretize-docs gh-pages on tags
     - bash: |
