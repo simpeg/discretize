@@ -1434,6 +1434,31 @@ def inverse_property_tensor(mesh, tensor, return_matrix=False, **kwargs):
     return T
 
 
+def cross2d(x, y):
+    """Compute the cross product of two vectors.
+
+    This function will calculate the cross product as if
+    the third component of each of these vectors was zero.
+
+    The returned direction is perpendicular to both inputs,
+    making it be solely in the third dimension.
+
+    Parameters
+    ----------
+    x, y : array_like
+        The vectors for the cross product.
+
+    Returns
+    -------
+    x_cross_y : numpy.ndarray
+        The cross product of x and y.
+    """
+    x = np.asarray(x)
+    y = np.asarray(y)
+    # np.cross(x, y) is deprecated for 2D input
+    return x[..., 0] * y[..., 1] - x[..., 1] * y[..., 0]
+
+
 class Zero(object):
     """Carries out arithmetic operations between 0 and arbitrary quantities.
 
