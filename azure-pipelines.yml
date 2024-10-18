@@ -36,27 +36,10 @@ stages:
     jobs:
       - template: .ci/azure/docs.yml
 
-  - stage: BuildWheels
-    dependsOn:
-      - Testing
-      - DocBuild
-    displayName: "Build Wheels"
-    jobs:
-      - template: .ci/azure/wheels.yml
-
-  - stage: BuildSource
-    dependsOn:
-      - Testing
-      - DocBuild
-    displayName: "Build Source distribution"
-    jobs:
-      - template: .ci/azure/sdist.yml
-
   - stage: Deploy
-    displayName: "Deploy Source, Wheels, and Docs"
+    displayName: "Deploy Docs"
     dependsOn:
-      - BuildWheels
-      - BuildSource
+      - DocBuild
     condition: and(succeeded(), or(eq(variables.IS_TAG, true), eq(variables.IS_MAIN, true)))
     jobs:
       - template: .ci/azure/deploy.yml
