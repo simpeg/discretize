@@ -117,6 +117,13 @@ build-verbosity = "3"
 # test importing discretize to make sure externals are loadable.
 test-command = 'python -c "import discretize; print(discretize.__version__)"'
 
+
+# use the visual studio compilers
+[tool.cibuildwheel.windows.config-settings]
+setup-args = [
+    '--vsenv'
+]
+
 [tool.coverage.run]
 branch = true
 source = ["discretize", "tests", "examples", "tutorials"]
