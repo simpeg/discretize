@@ -13,15 +13,15 @@ jobs:
           image: 'Ubuntu-20.04'
           CIBW_BUILD: 'cp312-*'
         osx-Python310:
-          image: 'macOS-12'
+          image: 'macOS-14'
           CIBW_BUILD: 'cp310-*'
           CIBW_ARCHS_MACOS: 'x86_64 arm64'
         osx-Python311:
-          image: 'macOS-12'
+          image: 'macOS-14'
           CIBW_BUILD: 'cp311-*'
           CIBW_ARCHS_MACOS: 'x86_64 arm64'
         osx-Python312:
-          image: 'macOS-12'
+          image: 'macOS-14'
           CIBW_BUILD: 'cp312-*'
           CIBW_ARCHS_MACOS: 'x86_64 arm64'
         win-Python310:
@@ -50,8 +50,8 @@ jobs:
 
     - bash: |
         set -o errexit
-        python3 -m pip install --upgrade pip
-        pip3 install cibuildwheel==2.20.0
+        python -m pip install --upgrade pip
+        python -m pip install cibuildwheel==2.21.3
       displayName: Install dependencies
 
     - bash: cibuildwheel --output-dir wheelhouse .
