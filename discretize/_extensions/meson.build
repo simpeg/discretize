@@ -1,6 +1,34 @@
 # NumPy include directory
-np_dep = dependency('numpy')
-numpy_nodepr_api = ['-DNPY_NO_DEPRECATED_API=NPY_1_9_API_VERSION']
+numpy_nodepr_api = ['-DNPY_NO_DEPRECATED_API=NPY_1_22_API_VERSION']
+np_dep = dependency('numpy', required: false)
+if not np_dep.found()
+  # For cross-compilation it is often not possible to run the Python interpreter
+  # in order to retrieve numpy's include directory. It can be specified in the
+  # cross file instead:
+  #   [properties]
+  #   numpy-include-dir = /abspath/to/host-pythons/site-packages/numpy/core/include
+  #
+  # This uses the path as is, and avoids running the interpreter.
+  incdir_numpy = meson.get_external_property('numpy-include-dir', 'not-given')
+  if incdir_numpy == 'not-given'
+    incdir_numpy = run_command(py,
+      [
+        '-c',
+        '''import os
+import numpy as np
+try:
+  incdir = os.path.relpath(np.get_include())
+except Exception:
+  incdir = np.get_include()
+print(incdir)
+    '''
+      ],
+      check: true
+    ).stdout().strip()
+  endif
+  inc_np = include_directories(incdir_numpy)
+  np_dep = declare_dependency(include_directories: inc_np)
+endif
 
 # Deal with M_PI & friends; add `use_math_defines` to c_args or cpp_args
 # Cython doesn't always get this right itself (see, e.g., gh-16800), so
