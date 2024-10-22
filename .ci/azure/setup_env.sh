@@ -13,11 +13,8 @@ then
   fi
 fi
 
-cp .ci/environment_test.yml environment_test_with_pyversion.yml
-echo "  - python="$PYTHON_VERSION >> environment_test_with_pyversion.yml
-
-conda env create --file environment_test_with_pyversion.yml
-rm environment_test_with_pyversion.yml
+conda create -n discretize-test python=$PYTHON_VERSION
+conda env update --name discretize-test --file .ci/environment_test.yml --prune
 
 if ${is_azure}
 then
