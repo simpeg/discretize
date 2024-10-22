@@ -49,6 +49,11 @@ if cy_line_trace
   cython_c_args += ['-DCYTHON_TRACE_NOGIL=1']
 endif
 
+cython_args = []
+if cy.version().version_compare('>=3.1.0')
+  cython_args += ['-Xfreethreading_compatible=True']
+endif
+
 cython_cpp_args = cython_c_args
 
 module_path = 'discretize/_extensions'
@@ -56,6 +61,7 @@ module_path = 'discretize/_extensions'
 py.extension_module(
     'interputils_cython',
     'interputils_cython.pyx',
+    cython_args: cython_args,
     c_args: cython_c_args,
     install: true,
     subdir: module_path,
@@ -65,6 +71,7 @@ py.extension_module(
 py.extension_module(
     'tree_ext',
     ['tree_ext.pyx' , 'tree.cpp', 'geom.cpp'],
+    cython_args: cython_args,
     cpp_args: cython_cpp_args,
     install: true,
     subdir: module_path,
@@ -75,6 +82,7 @@ py.extension_module(
 py.extension_module(
     'simplex_helpers',
     'simplex_helpers.pyx',
+    cython_args: cython_args,
     cpp_args: cython_cpp_args,
     install: true,
     subdir: module_path,
