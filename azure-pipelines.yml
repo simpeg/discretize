@@ -39,6 +39,7 @@ stages:
   - stage: Deploy
     displayName: "Deploy Docs"
     dependsOn:
+      - Testing
       - DocBuild
     condition: and(succeeded(), or(eq(variables.IS_TAG, true), eq(variables.IS_MAIN, true)))
     jobs:
