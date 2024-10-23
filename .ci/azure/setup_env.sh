@@ -13,17 +13,18 @@ then
   fi
 fi
 
-env_name="discretize-test"
+cp .ci/environment_test.yml environment_test_with_pyversion.yml
+echo "  - python="$PYTHON_VERSION >> environment_test_with_pyversion.yml
 
-conda create --yes -n $env_name -c conda-forge python=$PYTHON_VERSION
-conda env update --name $env_name --file .ci/environment_test.yml --prune
+conda env create --file environment_test_with_pyversion.yml
+rm environment_test_with_pyversion.yml
 
 if ${is_azure}
 then
-  source activate $env_name
+  source activate discretize-test
   pip install pytest-azurepipelines
 else
-  conda activate $env_name
+  conda activate discretize-test
 fi
 
 # The --vsenv config setting will prefer msvc compilers on windows.
