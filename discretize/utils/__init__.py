@@ -77,6 +77,7 @@ Matrix Utilities
   invert_blocks
   make_property_tensor
   inverse_property_tensor
+  cross2d
 
 Mesh Utilities
 --------------
@@ -165,6 +166,7 @@ from discretize.utils.matrix_utils import (
     inv2X2BlockDiagonal,
     makePropertyTensor,
     invPropertyTensor,
+    cross2d,
 )
 from discretize.utils.mesh_utils import (
     meshTensor,

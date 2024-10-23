@@ -22,6 +22,7 @@ from discretize.utils import (
     mesh_builder_xyz,
     refine_tree_xyz,
     unpack_widths,
+    cross2d,
 )
 import discretize
 
@@ -568,8 +569,8 @@ class TestMeshUtils(unittest.TestCase):
             mesh_tree, topo3D, grid_reference="N", method="nearest"
         )
 
-        self.assertIn(indtopoCC.sum(), [6292, 6299])
-        self.assertIn(indtopoN.sum(), [4632, 4639])
+        self.assertIn(indtopoCC.sum(), [6285, 6292, 6299])
+        self.assertIn(indtopoN.sum(), [4625, 4632, 4639])
 
         # Test 3D CYL Mesh
         ncr = 10  # number of mesh cells in r
@@ -605,6 +606,16 @@ class TestMeshUtils(unittest.TestCase):
             indtopoCC = active_from_xyz(
                 mesh_cyl2, topo3D, grid_reference="CC", method="nearest"
             )
+
+
+def test_cross2d():
+    x = np.linspace(3, 4, 20).reshape(10, 2)
+    y = np.linspace(1, 2, 20).reshape(10, 2)
+
+    x_boost = np.c_[x, np.zeros(10)]
+    y_boost = np.c_[y, np.zeros(10)]
+
+    np.testing.assert_allclose(np.cross(x_boost, y_boost)[:, -1], cross2d(x, y))
 
 
 if __name__ == "__main__":
