@@ -15,7 +15,7 @@ fi
 
 env_name="discretize-test"
 
-conda create --yes -n $env_name python=$PYTHON_VERSION
+conda create --yes -n $env_name -c conda-forge python=$PYTHON_VERSION
 conda env update --name $env_name --file .ci/environment_test.yml --prune
 
 if ${is_azure}
