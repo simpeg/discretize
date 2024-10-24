@@ -123,8 +123,8 @@ class Cell{
     double volume;
 
     Cell();
-    Cell(Node *pts[4], int_t ndim, int_t maxlevel);//, function func);
-    Cell(Node *pts[4], Cell *parent);
+    Cell(Node *pts[8], int_t ndim, int_t maxlevel);//, function func);
+    Cell(Node *pts[8], Cell *parent);
     ~Cell();
 
     inline Node* min_node(){ return points[0];};
