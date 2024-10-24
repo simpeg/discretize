@@ -721,6 +721,7 @@ class BaseTensorMesh(BaseRegularMesh):
                 raise ValueError("Points outside of mesh")
         else:
             indZeros = np.logical_not(self.is_inside(loc))
+            loc = loc.copy()
             loc[indZeros, :] = np.array([v.mean() for v in self.get_tensor("CC")])
 
         location_type = self._parse_location_type(location_type)

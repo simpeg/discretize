@@ -61,24 +61,25 @@ Currently, discretize supports:
 
 Installing
 ^^^^^^^^^^
-**discretize** is on conda-forge
+**discretize** is on conda-forge, and is the recommended installation method.
 
 .. code:: shell
 
     conda install -c conda-forge discretize
 
-**discretize** is on pypi
+Prebuilt wheels of **discretize** are on pypi for most platforms
 
 .. code:: shell
 
     pip install discretize
 
-To install from source
+To install from source, note this requires a `c++` compiler supporting the `c++17` standard.
 
 .. code:: shell
 
     git clone https://github.com/simpeg/discretize.git
-    python setup.py install
+    cd discretize
+    pip install .
 
 Citing discretize
 ^^^^^^^^^^^^^^^^^

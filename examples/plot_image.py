@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 def run(plotIt=True):
     M = discretize.TensorMesh([32, 32])
-    v = discretize.utils.random_model(M.vnC, seed=789)
+    v = discretize.utils.random_model(M.vnC, random_seed=789)
     v = discretize.utils.mkvc(v)
 
     O = discretize.TreeMesh([32, 32])

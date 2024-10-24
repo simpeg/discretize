@@ -1,0 +1,89 @@
+.. currentmodule:: discretize
+
+.. _0.11.0_notes:
+
+===================================
+``discretize`` 0.11.0 Release Notes
+===================================
+
+October 24, 2024
+
+This minor release contains many bugfixes and updates related to new package builds.
+
+Numpy 2
+-------
+`discretize` now fully supports `numpy` 2! It is both built against and tested against `numpy` 2.0. It still
+has a minimum required runtime of `numpy` 1.22 though, as building against numpy 2.0 emits ABI compatible calls for
+older numpy versions.
+
+Of note to developers, we now require `numpy` 2.0 for building as it makes use of the `numpy-config` tool to locate
+the `numpy` include directory.
+
+Python versions
+---------------
+`discretize` has bumped its minimum supported `python` version to 3.10, and is tested against versions 3.10-3.13. In the
+future we intended to stay in line with the minimum `python` version supported by the most recent `numpy` release.
+
+
+Random Generators
+-----------------
+`discretize` and its testing utilities now make use of ``numpy.random.RandomGenerator`` to make draws from random
+number generators instead of the deprecated ``numpy.random.rand`` functions. These functions now support a new keyword
+argument `random_seed` :
+
+* :func:``discretize.tests.setup_mesh`` (only used when ``"random" in mesh_type``)
+* :func:``discretize.tests.check_derivative``  (only used when ``dx=None``)
+* :func:``discretize.tests.assert_isadjoint``
+* :func:``discretize.tests.OrderTest.orderTest``  (only used when ``"random" in mesh_type``)
+* :func:``discretize.utils.random_model``
+
+Maintainers of downstream packages should explicitly set seeded generators when using these methods for testing
+purposess to ensure reproducibility.
+
+
+Cell Bounds
+-----------
+:class:``discretize.TensorMesh`` and :class:``discretize.TreeMesh`` now have a ``cell_bounds`` property that returns the
+``(x_min, x_max, y_min, y_max, z_min, z_max)`` of every cell in the mesh at once. Also now the
+:class:``discretize.tree_mesh.TreeCell`` has a corresponding ``bounds`` property.
+
+
+``TreeMesh`` updates
+--------------------
+You can now query a :class:``discretize.TreeMesh`` for cells contained in the same geometric primitives that are supported
+for refining. In addition there is a new :func:``discretize.TreeMesh.refine_plane`` method for refining along a plane.
+
+
+Contributors
+============
+
+* @jcapriot
+* @santisoler
+* @prisae
+* @xiaolongw1223
+* @lheagy
+* @omid-b
+
+Pull requests
+=============
+
+* `#347 <https://github.com/simpeg/discretize/pull/347>`__: Replace deprecated Numpy's `product` by `prod`
+* `#351 <https://github.com/simpeg/discretize/pull/351>`__: Replace Slack links for Mattermost links
+* `#353 <https://github.com/simpeg/discretize/pull/353>`__: Fix typo in tutorials
+* `#354 <https://github.com/simpeg/discretize/pull/354>`__: Update year in LICENSE
+* `#356 <https://github.com/simpeg/discretize/pull/356>`__: Expose TreeMesh geometric intersections used for refine functions.
+* `#358 <https://github.com/simpeg/discretize/pull/358>`__: Replace hanging CurviMesh in docstring for CurvilinearMesh
+* `#360 <https://github.com/simpeg/discretize/pull/360>`__: Update use of `numpy`'s random number generators.
+* `#364 <https://github.com/simpeg/discretize/pull/364>`__: Fix slicer re #363
+* `#366 <https://github.com/simpeg/discretize/pull/366>`__: Add `TensorMesh.cell_bounds` property
+* `#367 <https://github.com/simpeg/discretize/pull/367>`__: Add `TreeCell.bounds` and `TreeMesh.cell_bounds` methods
+* `#368 <https://github.com/simpeg/discretize/pull/368>`__: Set minimum to Python 3.10 (and general CI Maintenance)
+* `#371 <https://github.com/simpeg/discretize/pull/371>`__: Add version switcher to discretize docs
+* `#372 <https://github.com/simpeg/discretize/pull/372>`__: Deploy docs to a new folder named after their tagged version
+* `#373 <https://github.com/simpeg/discretize/pull/373>`__: display dev doc banner
+* `#374 <https://github.com/simpeg/discretize/pull/374>`__: Bump pydata_sphinx_theme version to 0.15.4
+* `#375 <https://github.com/simpeg/discretize/pull/375>`__: Fix caching of internal projection matrices
+* `#376 <https://github.com/simpeg/discretize/pull/376>`__: Fix macos-latest build
+* `#379 <https://github.com/simpeg/discretize/pull/379>`__: Numpy2.0 updates
+* `#380 <https://github.com/simpeg/discretize/pull/380>`__: Create build_distributions.yml
+* `#381 <https://github.com/simpeg/discretize/pull/381>`__: 0.11.0 Release Notes
