@@ -68,22 +68,22 @@ Pull requests
 =============
 
 * `#347 <https://github.com/simpeg/discretize/pull/347>`__: Replace deprecated Numpy's `product` by `prod`
-* `#353 <https://github.com/simpeg/discretize/pull/353>`__: Fix typo in tutorials
 * `#351 <https://github.com/simpeg/discretize/pull/351>`__: Replace Slack links for Mattermost links
+* `#353 <https://github.com/simpeg/discretize/pull/353>`__: Fix typo in tutorials
 * `#354 <https://github.com/simpeg/discretize/pull/354>`__: Update year in LICENSE
-* `#368 <https://github.com/simpeg/discretize/pull/368>`__: Set minimum to Python 3.10 (and general CI Maintenance)
+* `#356 <https://github.com/simpeg/discretize/pull/356>`__: Expose TreeMesh geometric intersections used for refine functions.
 * `#358 <https://github.com/simpeg/discretize/pull/358>`__: Replace hanging CurviMesh in docstring for CurvilinearMesh
+* `#360 <https://github.com/simpeg/discretize/pull/360>`__: Update use of `numpy`'s random number generators.
 * `#364 <https://github.com/simpeg/discretize/pull/364>`__: Fix slicer re #363
+* `#366 <https://github.com/simpeg/discretize/pull/366>`__: Add `TensorMesh.cell_bounds` property
+* `#367 <https://github.com/simpeg/discretize/pull/367>`__: Add `TreeCell.bounds` and `TreeMesh.cell_bounds` methods
+* `#368 <https://github.com/simpeg/discretize/pull/368>`__: Set minimum to Python 3.10 (and general CI Maintenance)
 * `#371 <https://github.com/simpeg/discretize/pull/371>`__: Add version switcher to discretize docs
 * `#372 <https://github.com/simpeg/discretize/pull/372>`__: Deploy docs to a new folder named after their tagged version
 * `#373 <https://github.com/simpeg/discretize/pull/373>`__: display dev doc banner
-* `#360 <https://github.com/simpeg/discretize/pull/360>`__: Update use of `numpy`'s random number generators.
 * `#374 <https://github.com/simpeg/discretize/pull/374>`__: Bump pydata_sphinx_theme version to 0.15.4
 * `#375 <https://github.com/simpeg/discretize/pull/375>`__: Fix caching of internal projection matrices
 * `#376 <https://github.com/simpeg/discretize/pull/376>`__: Fix macos-latest build
-* `#356 <https://github.com/simpeg/discretize/pull/356>`__: Expose TreeMesh geometric intersections used for refine functions.
-* `#366 <https://github.com/simpeg/discretize/pull/366>`__: Add `TensorMesh.cell_bounds` property
-* `#367 <https://github.com/simpeg/discretize/pull/367>`__: Add `TreeCell.bounds` and `TreeMesh.cell_bounds` methods
-* `#380 <https://github.com/simpeg/discretize/pull/380>`__: Create build_distributions.yml
 * `#379 <https://github.com/simpeg/discretize/pull/379>`__: Numpy2.0 updates
+* `#380 <https://github.com/simpeg/discretize/pull/380>`__: Create build_distributions.yml
 * `#381 <https://github.com/simpeg/discretize/pull/381>`__: 0.11.0 Release Notes
