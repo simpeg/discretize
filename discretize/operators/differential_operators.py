@@ -15,7 +15,6 @@ from discretize.utils import (
     make_boundary_bool,
     cross2d,
 )
-from discretize.utils.code_utils import deprecate_method, deprecate_property
 
 
 def _validate_BC(bc):
@@ -1731,35 +1730,6 @@ class DiffOperators(BaseMesh):
         return A, b
 
     @property
-    def cell_gradient_BC(self):
-        """Boundary conditions matrix for the cell gradient operator (Deprecated)."""
-        warnings.warn(
-            "cell_gradient_BC is deprecated and is not longer used. See cell_gradient",
-            stacklevel=2,
-        )
-        if getattr(self, "_cell_gradient_BC", None) is None:
-            BC = self.set_cell_gradient_BC(self._cell_gradient_BC_list)
-            n = self.vnC
-            if self.dim == 1:
-                G = _ddxCellGradBC(n[0], BC[0])
-            elif self.dim == 2:
-                G1 = sp.kron(speye(n[1]), _ddxCellGradBC(n[0], BC[0]))
-                G2 = sp.kron(_ddxCellGradBC(n[1], BC[1]), speye(n[0]))
-                G = sp.block_diag((G1, G2), format="csr")
-            elif self.dim == 3:
-                G1 = kron3(speye(n[2]), speye(n[1]), _ddxCellGradBC(n[0], BC[0]))
-                G2 = kron3(speye(n[2]), _ddxCellGradBC(n[1], BC[1]), speye(n[0]))
-                G3 = kron3(_ddxCellGradBC(n[2], BC[2]), speye(n[1]), speye(n[0]))
-                G = sp.block_diag((G1, G2, G3), format="csr")
-            # Compute areas of cell faces & volumes
-            S = self.face_areas
-            V = (
-                self.aveCC2F * self.cell_volumes
-            )  # Average volume between adjacent cells
-            self._cell_gradient_BC = sdiag(S / V) * G
-        return self._cell_gradient_BC
-
-    @property
     def cell_gradient_x(self):
         r"""X-derivative operator (cell centers to x-faces).
 
@@ -3426,69 +3396,3 @@ class DiffOperators(BaseMesh):
 
         is_b = make_boundary_bool(self.shape_nodes)
         return sp.eye(self.n_nodes, format="csr")[is_b]
-
-    # DEPRECATED
-    cellGrad = deprecate_property(
-        "cell_gradient", "cellGrad", removal_version="1.0.0", error=True
-    )
-    cellGradBC = deprecate_property(
-        "cell_gradient_BC", "cellGradBC", removal_version="1.0.0", error=True
-    )
-    cellGradx = deprecate_property(
-        "cell_gradient_x", "cellGradx", removal_version="1.0.0", error=True
-    )
-    cellGrady = deprecate_property(
-        "cell_gradient_y", "cellGrady", removal_version="1.0.0", error=True
-    )
-    cellGradz = deprecate_property(
-        "cell_gradient_z", "cellGradz", removal_version="1.0.0", error=True
-    )
-    faceDivx = deprecate_property(
-        "face_x_divergence", "faceDivx", removal_version="1.0.0", error=True
-    )
-    faceDivy = deprecate_property(
-        "face_y_divergence", "faceDivy", removal_version="1.0.0", error=True
-    )
-    faceDivz = deprecate_property(
-        "face_z_divergence", "faceDivz", removal_version="1.0.0", error=True
-    )
-    _cellGradStencil = deprecate_property(
-        "stencil_cell_gradient",
-        "_cellGradStencil",
-        removal_version="1.0.0",
-        error=True,
-    )
-    _cellGradxStencil = deprecate_property(
-        "stencil_cell_gradient_x",
-        "_cellGradxStencil",
-        removal_version="1.0.0",
-        error=True,
-    )
-    _cellGradyStencil = deprecate_property(
-        "stencil_cell_gradient_y",
-        "_cellGradyStencil",
-        removal_version="1.0.0",
-        error=True,
-    )
-    _cellGradzStencil = deprecate_property(
-        "stencil_cell_gradient_z",
-        "_cellGradzStencil",
-        removal_version="1.0.0",
-        error=True,
-    )
-
-    setCellGradBC = deprecate_method(
-        "set_cell_gradient_BC",
-        "setCellGradBC",
-        removal_version="1.0.0",
-        error=True,
-    )
-    getBCProjWF = deprecate_method(
-        "get_BC_projections", "getBCProjWF", removal_version="1.0.0", error=True
-    )
-    getBCProjWF_simple = deprecate_method(
-        "get_BC_projections_simple",
-        "getBCProjWF_simple",
-        removal_version="1.0.0",
-        error=True,
-    )
