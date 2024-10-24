@@ -31,7 +31,7 @@ def random_model(
     ----------
     shape : (dim) tuple of int
         shape of the model.
-    seed : numpy.random.Generator, int, optional
+    random_seed : numpy.random.Generator, int, optional
         pick which model to produce, prints the seed if you don't choose
     anisotropy : numpy.ndarray, optional
         this is the kernel that is convolved with the model
