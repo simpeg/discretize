@@ -257,7 +257,7 @@ html_theme_options = {
     "icon_links": [
         {
             "name": "GitHub",
-            "url": "https://github.com/simpeg/simpeg",
+            "url": "https://github.com/simpeg/discretize",
             "icon": "fab fa-github",
         },
         {
