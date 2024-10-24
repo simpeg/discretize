@@ -3,7 +3,7 @@
 import numpy as np
 import scipy.sparse as sp
 from scipy.spatial import KDTree
-from discretize.utils import Identity, invert_blocks, spzeros
+from discretize.utils import Identity, invert_blocks, spzeros, cross2d
 from discretize.base import BaseMesh
 from discretize._extensions.simplex_helpers import (
     _build_faces_edges,
@@ -264,7 +264,7 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
             if self.dim == 2:
                 # Take the normal as being the cross product of edge_tangents
                 # and a unit vector in a "3rd" dimension.
-                normal = np.cross(self.edge_tangents, [0, 0, 1])[:, :-1]
+                normal = np.c_[self.edge_tangents[:, 1], -self.edge_tangents[:, 0]]
             else:
                 # define normal as |01 x 02|
                 # therefore clockwise path about the normal is 0->1->2->0
@@ -346,7 +346,7 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
                 # cp = np.cross(l01, -l20)
                 # cp is a bunch of 1s (where simplices are CCW) and -1s (where simplices are CW)
                 # (but we take the sign here to guard against numerical precision)
-                cp = np.sign(np.cross(l20, l01))
+                cp = np.sign(cross2d(l20, l01))
                 face_areas = face_areas * cp
                 # don't due *= here
 
@@ -405,7 +405,8 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
     ):
         if getattr(self, "_proj_stash", None) is None:
             self._proj_stash = {}
-        if i_type not in self._proj_stash:
+        key = (i_type, with_volume)
+        if key not in self._proj_stash:
             dim = self.dim
             n_cells = self.n_cells
             if i_type == "F":
@@ -456,8 +457,8 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
                 )
                 Ps.append(T @ P)
 
-            self._proj_stash[i_type] = (Ps, T_col_inds, T_ind_ptr)
-        Ps, T_col_inds, T_ind_ptr = self._proj_stash[i_type]
+            self._proj_stash[key] = (Ps, T_col_inds, T_ind_ptr)
+        Ps, T_col_inds, T_ind_ptr = self._proj_stash[key]
         if return_pointers:
             return Ps, (T_col_inds, T_ind_ptr)
         else:
@@ -811,10 +812,7 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
                 n_items = self.n_edges
             elif location_type[:-2] == "faces":
                 # grab the barycentric transforms associated with each simplex:
-                ts = transform[
-                    inds,
-                    :,
-                ]
+                ts = transform[inds, :]
                 ts = np.hstack((ts, -ts.sum(axis=1)[:, None]))
                 # use  Whitney 2 - form basis functions for face vector interp
                 faces = self._simplex_faces[inds]
@@ -822,18 +820,26 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
 
                 # [1, 2], [0, 2], [0, 1]
                 if self.dim == 2:
+                    # i j k
+                    # t0 t1 t2
+                    # 0 0 1
+                    # t1 * i - t0 * j
+
                     f0 = (
-                        barys[:, 1] * (np.cross(ts[:, 2], [0, 0, 1])[:, i_dir])
-                        + barys[:, 2] * (np.cross([0, 0, 1], ts[:, 1])[:, i_dir])
-                    ) * areas[faces[:, 0]]
+                        cross2d(barys[:, 1:], ts[:, 1:, 1 - i_dir]) * areas[faces[:, 0]]
+                    )
                     f1 = (
-                        barys[:, 0] * (np.cross(ts[:, 2], [0, 0, 1])[:, i_dir])
-                        + barys[:, 2] * (np.cross([0, 0, 1], ts[:, 0])[:, i_dir])
-                    ) * areas[faces[:, 1]]
+                        cross2d(barys[:, [0, 2]], ts[:, [0, 2], 1 - i_dir])
+                        * areas[faces[:, 1]]
+                    )
                     f2 = (
-                        barys[:, 0] * (np.cross(ts[:, 1], [0, 0, 1])[:, i_dir])
-                        + barys[:, 1] * (np.cross([0, 0, 1], ts[:, 0])[:, i_dir])
-                    ) * areas[faces[:, 2]]
+                        cross2d(barys[:, :-1], ts[:, :-1, 1 - i_dir])
+                        * areas[faces[:, 2]]
+                    )
+                    if i_dir == 1:
+                        f0 *= -1
+                        f1 *= -1
+                        f2 *= -1
                     Aij = np.c_[f0, f1, f2].reshape(-1)
                     ind_ptr = 3 * np.arange(n_loc + 1)
                 else:
@@ -1218,7 +1224,7 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
             Pe = self.project_edge_to_boundary_edge
             n_boundary_edges, n_edges = Pe.shape
             index = boundary_face_edges
-            w_cross_n = np.cross(-self.edge_tangents[index], dA)
+            w_cross_n = cross2d(dA, self.edge_tangents[index])
             M_be = (
                 sp.csr_matrix((w_cross_n, (index, index)), shape=(n_edges, n_edges))
                 @ Pe.T

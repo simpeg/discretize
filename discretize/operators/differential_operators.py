@@ -13,6 +13,7 @@ from discretize.utils import (
     av,
     av_extrap,
     make_boundary_bool,
+    cross2d,
 )
 
 
@@ -2207,7 +2208,12 @@ class DiffOperators(BaseMesh):
         if self.dim > 2:
             Av *= 2
 
-        w_cross_n = np.cross(-w, Av.T @ dA)
+        av_da = Av.T @ dA
+
+        if self.dim == 2:
+            w_cross_n = cross2d(av_da, w)
+        else:
+            w_cross_n = np.cross(av_da, w)
 
         if self.dim == 2:
             return Pe.T @ sp.diags(w_cross_n, format="csr")

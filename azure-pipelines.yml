@@ -15,6 +15,11 @@ pr:
     exclude:
     - '*no-ci*'
 
+variables:
+  BRANCH_NAME: $(Build.SourceBranchName)
+  IS_TAG: $[startsWith(variables['Build.SourceBranch'], 'refs/tags/')]
+  IS_MAIN: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
+
 stages:
   - stage: StyleChecks
     displayName: "Style Checks"
@@ -31,28 +36,12 @@ stages:
     jobs:
       - template: .ci/azure/docs.yml
 
-  - stage: BuildWheels
-    dependsOn:
-      - Testing
-      - DocBuild
-    displayName: "Build Wheels"
-    jobs:
-      - template: .ci/azure/wheels.yml
-
-  - stage: BuildSource
-    dependsOn:
-      - Testing
-      - DocBuild
-    displayName: "Build Source distribution"
-    jobs:
-      - template: .ci/azure/sdist.yml
-
   - stage: Deploy
-    displayName: "Deploy Source, Wheels, and Docs"
+    displayName: "Deploy Docs"
     dependsOn:
-      - BuildWheels
-      - BuildSource
-    condition: and(succeeded(), startsWith(variables['build.sourceBranch'], 'refs/tags/'))
+      - Testing
+      - DocBuild
+    condition: and(succeeded(), or(eq(variables.IS_TAG, true), eq(variables.IS_MAIN, true)))
     jobs:
       - template: .ci/azure/deploy.yml
 

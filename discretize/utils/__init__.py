@@ -77,6 +77,7 @@ Matrix Utilities
   invert_blocks
   make_property_tensor
   inverse_property_tensor
+  cross2d
 
 Mesh Utilities
 --------------

@@ -425,7 +425,7 @@ class InterfaceMPL(object):
 
         >>> from matplotlib import pyplot as plt
         >>> import discretize
-        >>> from pymatsolver import Solver
+        >>> from scipy.sparse.linalg import spsolve
         >>> hx = [(5, 2, -1.3), (2, 4), (5, 2, 1.3)]
         >>> hy = [(2, 2, -1.3), (2, 6), (2, 2, 1.3)]
         >>> hz = [(2, 2, -1.3), (2, 6), (2, 2, 1.3)]
@@ -437,7 +437,7 @@ class InterfaceMPL(object):
         >>> q[[4, 4], [4, 4], [2, 6]]=[-1, 1]
         >>> q = discretize.utils.mkvc(q)
         >>> A = M.face_divergence * M.cell_gradient
-        >>> b = Solver(A) * (q)
+        >>> b = spsolve(A, q)
 
         and finaly, plot the vector values of the result, which are defined on faces
 
@@ -703,9 +703,6 @@ class InterfaceMPL(object):
 
         # Connect figure to scrolling
         fig.canvas.mpl_connect("scroll_event", tracker.onscroll)
-
-        # Show figure
-        plt.show()
 
     # TensorMesh plotting
     def __plot_grid_tensor(
@@ -2047,29 +2044,26 @@ class InterfaceMPL(object):
         if not isinstance(ind, (np.integer, int)):
             raise ValueError("ind must be an integer")
 
-        cc_tensor = [None, None, None]
-        for i in range(3):
-            cc_tensor[i] = np.cumsum(np.r_[self.origin[i], self.h[i]])
-            cc_tensor[i] = (cc_tensor[i][1:] + cc_tensor[i][:-1]) * 0.5
+        cc_tensor = [self.cell_centers_x, self.cell_centers_y, self.cell_centers_z]
         slice_loc = cc_tensor[normalInd][ind]
+
+        slice_origin = self.origin.copy()
+        slice_origin[normalInd] = slice_loc
+        normal = [0, 0, 0]
+        normal[normalInd] = 1
 
         # create a temporary TreeMesh with the slice through
         temp_mesh = discretize.TreeMesh(h2d, x2d)
         level_diff = self.max_level - temp_mesh.max_level
 
-        XS = [None, None, None]
-        XS[antiNormalInd[0]], XS[antiNormalInd[1]] = np.meshgrid(
-            cc_tensor[antiNormalInd[0]], cc_tensor[antiNormalInd[1]]
-        )
-        XS[normalInd] = np.ones_like(XS[antiNormalInd[0]]) * slice_loc
-        loc_grid = np.c_[XS[0].reshape(-1), XS[1].reshape(-1), XS[2].reshape(-1)]
-        inds = np.unique(self._get_containing_cell_indexes(loc_grid))
-
-        grid2d = self.gridCC[inds][:, antiNormalInd]
+        # get list of cells which intersect the slicing plane
+        inds = self.get_cells_on_plane(slice_origin, normal)
         levels = self._cell_levels_by_indexes(inds) - level_diff
+        grid2d = self.cell_centers[inds][:, antiNormalInd]
+
         temp_mesh.insert_cells(grid2d, levels)
-        tm_gridboost = np.empty((temp_mesh.nC, 3))
-        tm_gridboost[:, antiNormalInd] = temp_mesh.gridCC
+        tm_gridboost = np.empty((temp_mesh.n_cells, 3))
+        tm_gridboost[:, antiNormalInd] = temp_mesh.cell_centers
         tm_gridboost[:, normalInd] = slice_loc
 
         # interpolate values to self.gridCC if not "CC" or "CCv"
@@ -2102,7 +2096,7 @@ class InterfaceMPL(object):
             v = np.linalg.norm(v, axis=1)
 
         # interpolate values from self.gridCC to grid2d
-        ind_3d_to_2d = self._get_containing_cell_indexes(tm_gridboost)
+        ind_3d_to_2d = self.get_containing_cells(tm_gridboost)
         v2d = v[ind_3d_to_2d]
 
         out = temp_mesh.plot_image(
@@ -2351,6 +2345,7 @@ class Slicer(object):
         """Initialize interactive figure."""
         _, plt = load_matplotlib()
         from matplotlib.widgets import Slider  # Lazy loaded
+        from matplotlib.colors import Normalize
 
         # Add pcolor_opts to self
         self.pc_props = pcolor_opts if pcolor_opts is not None else {}
@@ -2396,7 +2391,7 @@ class Slicer(object):
 
         # Store data in self as (nx, ny, nz)
         self.v = mesh.reshape(v.reshape((mesh.nC, -1), order="F"), "CC", "CC", "M")
-        self.v = np.ma.masked_where(np.isnan(self.v), self.v)
+        self.v = np.ma.masked_array(self.v, np.isnan(self.v))
 
         # Store relevant information from mesh in self
         self.x = mesh.nodes_x  # x-node locations
@@ -2436,30 +2431,22 @@ class Slicer(object):
         else:
             aspect3 = 1.0 / aspect2
 
-        # set color limits if clim is None (and norm doesn't have vmin, vmax).
-        if clim is None:
-            if "norm" in self.pc_props:
-                vmin = self.pc_props["norm"].vmin
-                vmax = self.pc_props["norm"].vmax
-            else:
-                vmin = vmax = None
-            clim = [
-                np.nanmin(self.v) if vmin is None else vmin,
-                np.nanmax(self.v) if vmax is None else vmax,
-            ]
-            # In the case of a homogeneous fullspace provide a small range to
-            # avoid problems with colorbar and the three subplots.
-            if clim[0] == clim[1]:
-                clim[0] *= 0.99
-                clim[1] *= 1.01
-
-        # ensure vmin/vmax of the norm is consistent with clim
-        if "norm" in self.pc_props:
-            self.pc_props["norm"].vmin = clim[0]
-            self.pc_props["norm"].vmax = clim[1]
+        # Ensure a consistent color normalization for the three plots.
+        if (norm := self.pc_props.get("norm", None)) is None:
+            # Create a default normalizer
+            norm = Normalize()
+            if clim is not None:
+                norm.vmin, norm.vmax = clim
+            self.pc_props["norm"] = norm
         else:
-            self.pc_props["vmin"] = clim[0]
-            self.pc_props["vmax"] = clim[1]
+            if clim is not None:
+                raise ValueError(
+                    "Passing a Normalize instance simultaneously with clim is not supported. "
+                    "Please pass vmin/vmax directly to the norm when creating it."
+                )
+
+        # Auto scales None values for norm.vmin and norm.vmax.
+        norm.autoscale_None(self.v[~self.v.mask].reshape(-1, order="A"))
 
         # 2. Start populating figure
 
@@ -2552,6 +2539,7 @@ class Slicer(object):
 
         # Remove transparent value
         if isinstance(transparent, str) and transparent.lower() == "slider":
+            clim = (norm.vmin, norm.vmax)
             # Sliders
             self.ax_smin = plt.axes([0.7, 0.11, 0.15, 0.03])
             self.ax_smax = plt.axes([0.7, 0.15, 0.15, 0.03])

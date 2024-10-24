@@ -206,24 +206,22 @@ class InterfaceVTK(object):
 
         # Make the data parts for the vtu object
         # Points
-        ptsMat = np.vstack((mesh.gridN, mesh.gridhN))
+        nodes = mesh.total_nodes
 
         # Adjust if result was 2D (voxels are pixels in 2D):
-        VTK_CELL_TYPE = _vtk.VTK_VOXEL
-        if ptsMat.shape[1] == 2:
-            # Add Z values of 0.0 if 2D
-            ptsMat = np.c_[ptsMat, np.zeros(ptsMat.shape[0])]
-            VTK_CELL_TYPE = _vtk.VTK_PIXEL
-        if ptsMat.shape[1] != 3:
-            raise RuntimeError("Points of the mesh are improperly defined.")
+        VTK_CELL_TYPE = _vtk.VTK_VOXEL if mesh.dim == 3 else _vtk.VTK_PIXEL
+
         # Rotate the points to the cartesian system
-        ptsMat = np.dot(ptsMat, mesh.rotation_matrix)
+        nodes = np.dot(nodes, mesh.rotation_matrix)
+        if mesh.dim == 2:
+            nodes = np.pad(nodes, ((0, 0), (0, 1)))
+
         # Grab the points
         vtkPts = _vtk.vtkPoints()
-        vtkPts.SetData(_nps.numpy_to_vtk(ptsMat, deep=True))
+        vtkPts.SetData(_nps.numpy_to_vtk(nodes, deep=True))
+
         # Cells
-        cellArray = [c for c in mesh]
-        cellConn = np.array([cell.nodes for cell in cellArray])
+        cellConn = mesh.cell_nodes
         cellsMat = np.concatenate(
             (np.ones((cellConn.shape[0], 1), dtype=int) * cellConn.shape[1], cellConn),
             axis=1,
@@ -239,7 +237,7 @@ class InterfaceVTK(object):
         output.SetPoints(vtkPts)
         output.SetCells(VTK_CELL_TYPE, cellsArr)
         # Add the level of refinement as a cell array
-        cell_levels = np.array([cell._level for cell in cellArray])
+        cell_levels = mesh._cell_levels_by_indexes()
         refineLevelArr = _nps.numpy_to_vtk(cell_levels, deep=1)
         refineLevelArr.SetName("octreeLevel")
         output.GetCellData().AddArray(refineLevelArr)

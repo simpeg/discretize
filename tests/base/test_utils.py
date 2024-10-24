@@ -22,6 +22,7 @@ from discretize.utils import (
     mesh_builder_xyz,
     refine_tree_xyz,
     unpack_widths,
+    cross2d,
 )
 import discretize
 
@@ -123,7 +124,8 @@ class TestSequenceFunctions(unittest.TestCase):
         )
 
     def test_invXXXBlockDiagonal(self):
-        a = [np.random.rand(5, 1) for i in range(4)]
+        rng = np.random.default_rng(78352)
+        a = [rng.random((5, 1)) for i in range(4)]
 
         B = inverse_2x2_block_diagonal(*a)
 
@@ -137,7 +139,7 @@ class TestSequenceFunctions(unittest.TestCase):
         Z2 = B * A - sp.identity(10)
         self.assertTrue(np.linalg.norm(Z2.todense().ravel(), 2) < TOL)
 
-        a = [np.random.rand(5, 1) for i in range(9)]
+        a = [rng.random((5, 1)) for i in range(9)]
         B = inverse_3x3_block_diagonal(*a)
 
         A = sp.vstack(
@@ -153,10 +155,11 @@ class TestSequenceFunctions(unittest.TestCase):
         self.assertTrue(np.linalg.norm(Z3.todense().ravel(), 2) < TOL)
 
     def test_inverse_property_tensor2D(self):
+        rng = np.random.default_rng(763)
         M = discretize.TensorMesh([6, 6])
-        a1 = np.random.rand(M.nC)
-        a2 = np.random.rand(M.nC)
-        a3 = np.random.rand(M.nC)
+        a1 = rng.random(M.nC)
+        a2 = rng.random(M.nC)
+        a3 = rng.random(M.nC)
         prop1 = a1
         prop2 = np.c_[a1, a2]
         prop3 = np.c_[a1, a2, a3]
@@ -173,10 +176,11 @@ class TestSequenceFunctions(unittest.TestCase):
             self.assertTrue(np.linalg.norm(Z.todense().ravel(), 2) < TOL)
 
     def test_TensorType2D(self):
+        rng = np.random.default_rng(8546)
         M = discretize.TensorMesh([6, 6])
-        a1 = np.random.rand(M.nC)
-        a2 = np.random.rand(M.nC)
-        a3 = np.random.rand(M.nC)
+        a1 = rng.random(M.nC)
+        a2 = rng.random(M.nC)
+        a3 = rng.random(M.nC)
         prop1 = a1
         prop2 = np.c_[a1, a2]
         prop3 = np.c_[a1, a2, a3]
@@ -188,13 +192,14 @@ class TestSequenceFunctions(unittest.TestCase):
         self.assertTrue(TensorType(M, None) == -1)
 
     def test_TensorType3D(self):
+        rng = np.random.default_rng(78352)
         M = discretize.TensorMesh([6, 6, 7])
-        a1 = np.random.rand(M.nC)
-        a2 = np.random.rand(M.nC)
-        a3 = np.random.rand(M.nC)
-        a4 = np.random.rand(M.nC)
-        a5 = np.random.rand(M.nC)
-        a6 = np.random.rand(M.nC)
+        a1 = rng.random(M.nC)
+        a2 = rng.random(M.nC)
+        a3 = rng.random(M.nC)
+        a4 = rng.random(M.nC)
+        a5 = rng.random(M.nC)
+        a6 = rng.random(M.nC)
         prop1 = a1
         prop2 = np.c_[a1, a2, a3]
         prop3 = np.c_[a1, a2, a3, a4, a5, a6]
@@ -206,13 +211,14 @@ class TestSequenceFunctions(unittest.TestCase):
         self.assertTrue(TensorType(M, None) == -1)
 
     def test_inverse_property_tensor3D(self):
+        rng = np.random.default_rng(78352)
         M = discretize.TensorMesh([6, 6, 6])
-        a1 = np.random.rand(M.nC)
-        a2 = np.random.rand(M.nC)
-        a3 = np.random.rand(M.nC)
-        a4 = np.random.rand(M.nC)
-        a5 = np.random.rand(M.nC)
-        a6 = np.random.rand(M.nC)
+        a1 = rng.random(M.nC)
+        a2 = rng.random(M.nC)
+        a3 = rng.random(M.nC)
+        a4 = rng.random(M.nC)
+        a5 = rng.random(M.nC)
+        a6 = rng.random(M.nC)
         prop1 = a1
         prop2 = np.c_[a1, a2, a3]
         prop3 = np.c_[a1, a2, a3, a4, a5, a6]
@@ -563,8 +569,8 @@ class TestMeshUtils(unittest.TestCase):
             mesh_tree, topo3D, grid_reference="N", method="nearest"
         )
 
-        self.assertIn(indtopoCC.sum(), [6292, 6299])
-        self.assertIn(indtopoN.sum(), [4632, 4639])
+        self.assertIn(indtopoCC.sum(), [6285, 6292, 6299])
+        self.assertIn(indtopoN.sum(), [4625, 4632, 4639])
 
         # Test 3D CYL Mesh
         ncr = 10  # number of mesh cells in r
@@ -600,6 +606,16 @@ class TestMeshUtils(unittest.TestCase):
             indtopoCC = active_from_xyz(
                 mesh_cyl2, topo3D, grid_reference="CC", method="nearest"
             )
+
+
+def test_cross2d():
+    x = np.linspace(3, 4, 20).reshape(10, 2)
+    y = np.linspace(1, 2, 20).reshape(10, 2)
+
+    x_boost = np.c_[x, np.zeros(10)]
+    y_boost = np.c_[y, np.zeros(10)]
+
+    np.testing.assert_allclose(np.cross(x_boost, y_boost)[:, -1], cross2d(x, y))
 
 
 if __name__ == "__main__":

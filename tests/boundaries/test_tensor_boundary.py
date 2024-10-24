@@ -1,7 +1,7 @@
 import numpy as np
 import unittest
 import discretize
-from pymatsolver import Solver
+from scipy.sparse.linalg import spsolve
 
 MESHTYPES = ["uniformTensorMesh"]
 
@@ -225,8 +225,7 @@ class Test1D_InhomogeneousMixed(discretize.tests.OrderTest):
 
         if self.myTest == "xc":
             # TODO: fix the null space
-            Ainv = Solver(A)
-            xc = Ainv * rhs
+            xc = spsolve(A, rhs)
             err = np.linalg.norm((xc - xc_ana), np.inf)
         else:
             NotImplementedError
@@ -320,8 +319,7 @@ class Test2D_InhomogeneousMixed(discretize.tests.OrderTest):
         A = Div * MfrhoI * G
 
         if self.myTest == "xc":
-            Ainv = Solver(A)
-            xc = Ainv * rhs
+            xc = spsolve(A, rhs)
             err = np.linalg.norm((xc - xc_ana), np.inf)
         else:
             NotImplementedError
@@ -452,8 +450,7 @@ class Test3D_InhomogeneousMixed(discretize.tests.OrderTest):
 
         if self.myTest == "xc":
             # TODO: fix the null space
-            Ainv = Solver(A)
-            xc = Ainv * rhs
+            xc = spsolve(A, rhs)
             err = np.linalg.norm((xc - xc_ana), np.inf)
         else:
             NotImplementedError

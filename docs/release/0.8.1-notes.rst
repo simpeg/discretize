@@ -54,5 +54,5 @@ Pull requests
 * `#284 <https://github.com/simpeg/discretize/pull/284>`__: Improve load time
 * `#285 <https://github.com/simpeg/discretize/pull/285>`__: zeros_outside
 * `#286 <https://github.com/simpeg/discretize/pull/286>`__: Cell node tree
-* `#288 <https://github.com/simpeg/discretize/pull/288>`__: Allow np.int_
+* `#288 <https://github.com/simpeg/discretize/pull/288>`__: Allow ``np.int_``
 * `#289 <https://github.com/simpeg/discretize/pull/289>`__: 0.8.1 Release

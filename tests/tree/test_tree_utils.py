@@ -3,7 +3,6 @@ import unittest
 from discretize.utils import mesh_builder_xyz, refine_tree_xyz
 
 TOL = 1e-8
-np.random.seed(12)
 
 
 class TestRefineOcTree(unittest.TestCase):

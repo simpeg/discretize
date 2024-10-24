@@ -34,8 +34,9 @@ def mkvc(x, n_dims=1):
 
     >>> from discretize.utils import mkvc
     >>> import numpy as np
+    >>> rng = np.random.default_rng(856)
 
-    >>> a = np.random.rand(3, 2)
+    >>> a = rng.random(3, 2)
     >>> a
     array([[0.33534155, 0.25334363],
            [0.07147884, 0.81080958],
@@ -555,7 +556,8 @@ def get_subarray(A, ind):
 
     >>> from discretize.utils import get_subarray
     >>> import numpy as np
-    >>> A = np.random.rand(3, 3)
+    >>> rng = np.random.default_rng(421)
+    >>> A = rng.random((3, 3))
     >>> A
     array([[1.07969034e-04, 9.78613931e-01, 6.62123429e-01],
            [8.80722877e-01, 7.61035691e-01, 7.42546796e-01],
@@ -1143,6 +1145,7 @@ def make_property_tensor(mesh, tensor):
     >>> import numpy as np
     >>> import matplotlib.pyplot as plt
     >>> import matplotlib as mpl
+    >>> rng = np.random.default_rng(421)
 
     Define a 2D tensor mesh
 
@@ -1152,9 +1155,9 @@ def make_property_tensor(mesh, tensor):
     Define a physical property for all cases (2D)
 
     >>> sigma_scalar = 4.
-    >>> sigma_isotropic = np.random.randint(1, 10, mesh.nC)
-    >>> sigma_anisotropic = np.random.randint(1, 10, (mesh.nC, 2))
-    >>> sigma_tensor = np.random.randint(1, 10, (mesh.nC, 3))
+    >>> sigma_isotropic = rng.integers(1, 10, mesh.nC)
+    >>> sigma_anisotropic = rng.integers(1, 10, (mesh.nC, 2))
+    >>> sigma_tensor = rng.integers(1, 10, (mesh.nC, 3))
 
     Construct the property tensor in each case
 
@@ -1295,6 +1298,7 @@ def inverse_property_tensor(mesh, tensor, return_matrix=False):
     >>> import numpy as np
     >>> import matplotlib.pyplot as plt
     >>> import matplotlib as mpl
+    >>> rng = np.random.default_rng(421)
 
     Define a 2D tensor mesh
 
@@ -1304,9 +1308,9 @@ def inverse_property_tensor(mesh, tensor, return_matrix=False):
     Define a physical property for all cases (2D)
 
     >>> sigma_scalar = 4.
-    >>> sigma_isotropic = np.random.randint(1, 10, mesh.nC)
-    >>> sigma_anisotropic = np.random.randint(1, 10, (mesh.nC, 2))
-    >>> sigma_tensor = np.random.randint(1, 10, (mesh.nC, 3))
+    >>> sigma_isotropic = rng.integers(1, 10, mesh.nC)
+    >>> sigma_anisotropic = rng.integers(1, 10, (mesh.nC, 2))
+    >>> sigma_tensor = rng.integers(1, 10, (mesh.nC, 3))
 
     Construct the property tensor in each case
 
@@ -1395,6 +1399,31 @@ def inverse_property_tensor(mesh, tensor, return_matrix=False):
         return make_property_tensor(mesh, T)
 
     return T
+
+
+def cross2d(x, y):
+    """Compute the cross product of two vectors.
+
+    This function will calculate the cross product as if
+    the third component of each of these vectors was zero.
+
+    The returned direction is perpendicular to both inputs,
+    making it be solely in the third dimension.
+
+    Parameters
+    ----------
+    x, y : array_like
+        The vectors for the cross product.
+
+    Returns
+    -------
+    x_cross_y : numpy.ndarray
+        The cross product of x and y.
+    """
+    x = np.asarray(x)
+    y = np.asarray(y)
+    # np.cross(x, y) is deprecated for 2D input
+    return x[..., 0] * y[..., 1] - x[..., 1] * y[..., 0]
 
 
 class Zero(object):

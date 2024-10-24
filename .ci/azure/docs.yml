@@ -1,5 +1,5 @@
 jobs:
-- job:
+- job: BuildDocs
   displayName: "Build Documentation"
   pool:
     vmImage: ubuntu-latest

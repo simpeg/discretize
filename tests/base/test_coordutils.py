@@ -4,15 +4,16 @@ from discretize import utils
 
 tol = 1e-15
 
+rng = np.random.default_rng(523)
+
 
 class coorutilsTest(unittest.TestCase):
     def test_rotation_matrix_from_normals(self):
-        np.random.seed(0)
-        v0 = np.random.rand(3)
+        v0 = rng.random(3)
         v0 *= 1.0 / np.linalg.norm(v0)
 
         np.random.seed(5)
-        v1 = np.random.rand(3)
+        v1 = rng.random(3)
         v1 *= 1.0 / np.linalg.norm(v1)
 
         Rf = utils.rotation_matrix_from_normals(v0, v1)
@@ -22,12 +23,11 @@ class coorutilsTest(unittest.TestCase):
         self.assertTrue(np.linalg.norm(utils.mkvc(Ri.dot(v1) - v0)) < tol)
 
     def test_rotate_points_from_normals(self):
-        np.random.seed(10)
-        v0 = np.random.rand(3)
+        v0 = rng.random(3)
         v0 *= 1.0 / np.linalg.norm(v0)
 
         np.random.seed(15)
-        v1 = np.random.rand(3)
+        v1 = rng.random(3)
         v1 *= 1.0 / np.linalg.norm(v1)
 
         v2 = utils.mkvc(utils.rotate_points_from_normals(utils.mkvc(v0, 2).T, v0, v1))
@@ -35,16 +35,15 @@ class coorutilsTest(unittest.TestCase):
         self.assertTrue(np.linalg.norm(v2 - v1) < tol)
 
     def test_rotateMatrixFromNormals(self):
-        np.random.seed(20)
-        n0 = np.random.rand(3)
+        n0 = rng.random(3)
         n0 *= 1.0 / np.linalg.norm(n0)
 
         np.random.seed(25)
-        n1 = np.random.rand(3)
+        n1 = rng.random(3)
         n1 *= 1.0 / np.linalg.norm(n1)
 
         np.random.seed(30)
-        scale = np.random.rand(100, 1)
+        scale = rng.random((100, 1))
         XYZ0 = scale * n0
         XYZ1 = scale * n1
 

@@ -42,4 +42,4 @@ Pull requests
 * `#256 <https://github.com/simpeg/discretize/pull/256>`__: Update mpl_mod.py
 * `#258 <https://github.com/simpeg/discretize/pull/258>`__: Numpy docstrings api review
 * `#262 <https://github.com/simpeg/discretize/pull/262>`__: Fix wrong colour for fullspaces - again /
-`#264 <https://github.com/simpeg/discretize/pull/264>`__: patch for fullspace slicer colorscales
+* `#264 <https://github.com/simpeg/discretize/pull/264>`__: patch for fullspace slicer colorscales

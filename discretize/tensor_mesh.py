@@ -593,6 +593,26 @@ class TensorMesh(
             return indxd, indxu, indyd, indyu, indzd, indzu
 
     @property
+    def cell_bounds(self):
+        """The bounds of each cell.
+
+        Return a 2D array with the coordinates that define the bounds of each
+        cell in the mesh. Each row of the array contains the bounds for
+        a particular cell in the following order: ``x1``, ``x2``, ``y1``,
+        ``y2``, ``z1``, ``z2``, where ``x1 < x2``, ``y1 < y2`` and ``z1 < z2``.
+        """
+        nodes = self.nodes.reshape((*self.shape_nodes, -1), order="F")
+
+        min_nodes = nodes[(slice(-1),) * self.dim]
+        min_nodes = min_nodes.reshape((self.n_cells, -1), order="F")
+        max_nodes = nodes[(slice(1, None),) * self.dim]
+        max_nodes = max_nodes.reshape((self.n_cells, -1), order="F")
+
+        cell_bounds = np.stack((min_nodes, max_nodes), axis=-1)
+        cell_bounds = cell_bounds.reshape((self.n_cells, -1))
+        return cell_bounds
+
+    @property
     def cell_nodes(self):
         """The index of all nodes for each cell.
 

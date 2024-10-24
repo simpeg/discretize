@@ -65,12 +65,11 @@ omf = ["omf"]
 all = ["discretize[plot,viz,omf]"]
 doc = [
     "sphinx!=4.1.0",
-    "pydata-sphinx-theme==0.9.0",
+    "pydata-sphinx-theme==0.15.4",
     "sphinx-gallery==0.1.13",
     "numpydoc>=1.5",
     "jupyter",
     "graphviz",
-    "pymatsolver>=0.1.2",
     "pillow",
     "pooch",
     "discretize[all]",
@@ -117,6 +116,13 @@ build-verbosity = "3"
 
 # test importing discretize to make sure externals are loadable.
 test-command = 'python -c "import discretize; print(discretize.__version__)"'
+
+
+# use the visual studio compilers
+[tool.cibuildwheel.windows.config-settings]
+setup-args = [
+    '--vsenv'
+]
 
 [tool.coverage.run]
 branch = true

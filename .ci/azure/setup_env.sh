@@ -7,7 +7,6 @@ do_doc=$(echo "${DOC_BUILD:-false}" | tr '[:upper:]' '[:lower:]')
 
 if ${is_azure}
 then
-  conda update --yes -n base conda
   if ${do_doc}
   then
     .ci/setup_headless_display.sh

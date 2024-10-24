@@ -21,6 +21,8 @@ from discretize import TensorMesh
 import numpy as np
 import matplotlib.pyplot as plt
 
+rng = np.random.default_rng(4321)
+
 
 #####################################################
 # Constitive Relations and Differential Operators
@@ -74,8 +76,8 @@ import matplotlib.pyplot as plt
 # Make basic mesh
 h = np.ones(10)
 mesh = TensorMesh([h, h, h])
-sig = np.random.rand(mesh.nC)  # isotropic
-Sig = np.random.rand(mesh.nC, 6)  # anisotropic
+sig = rng.random(mesh.nC)  # isotropic
+Sig = rng.random((mesh.nC, 6))  # anisotropic
 
 # Inner product matricies
 Mc = sdiag(mesh.cell_volumes * sig)  # Inner product matrix (centers)

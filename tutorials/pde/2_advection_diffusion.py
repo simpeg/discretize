@@ -164,7 +164,7 @@ Where :math:`\Delta t` is the step size:
 #
 
 from discretize import TensorMesh
-from pymatsolver import SolverLU
+from scipy.sparse.linalg import splu
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import numpy as np
@@ -224,7 +224,7 @@ I = sdiag(np.ones(mesh.nC))  # Identity matrix
 B = I + dt * M
 s = Mc_inv * q
 
-Binv = SolverLU(B)
+Binv = splu(B)
 
 
 # Plot the vector field
@@ -252,7 +252,7 @@ cbar.set_label("Velocity (m/s)", rotation=270, labelpad=5)
 n = 3
 
 for ii in range(300):
-    p = Binv * (p + s)
+    p = Binv.solve(p + s)
 
     if ii + 1 in (1, 25, 50, 100, 200, 300):
         ax[n] = fig.add_subplot(3, 3, n + 1)

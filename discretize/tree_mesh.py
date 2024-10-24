@@ -90,7 +90,6 @@
 from discretize.base import BaseTensorMesh
 from discretize.operators import InnerProducts, DiffOperators
 from discretize.mixins import InterfaceMixins, TreeMeshIO
-from discretize.utils import as_array_n_by_dim
 from discretize._extensions.tree_ext import _TreeMesh, TreeCell  # NOQA F401
 import numpy as np
 import scipy.sparse as sp
@@ -435,7 +434,8 @@ class TreeMesh(
         >>> import matplotlib.pyplot as plt
         >>> import matplotlib.patches as patches
         >>> mesh = discretize.TreeMesh([32, 32])
-        >>> points = np.random.rand(20, 2) * 0.25 + 3/8
+        >>> rng = np.random.default_rng(852)
+        >>> points = rng.random((20, 2)) * 0.25 + 3/8
 
         Now we want to refine to the maximum level, with no padding the in `x`
         direction and `2` cells in `y`. At the second highest level we want 2 padding
@@ -925,9 +925,7 @@ class TreeMesh(
 
     def point2index(self, locs):  # NOQA D102
         # Documentation inherited from discretize.base.BaseMesh
-        locs = as_array_n_by_dim(locs, self.dim)
-        inds = self._get_containing_cell_indexes(locs)
-        return inds
+        return self.get_containing_cell_indexes(locs)
 
     def cell_levels_by_index(self, indices):
         """Fast function to return a list of levels for the given cell indices.
@@ -948,14 +946,11 @@ class TreeMesh(
         self, locs, location_type="cell_centers", zeros_outside=False
     ):
         # Documentation inherited from discretize.base.BaseMesh
-        locs = as_array_n_by_dim(locs, self.dim)
         location_type = self._parse_location_type(location_type)
-
         if self.dim == 2 and "z" in location_type:
             raise NotImplementedError("Unable to interpolate from Z edges/faces in 2D")
 
-        locs = np.require(np.atleast_2d(locs), dtype=np.float64, requirements="C")
-
+        locs = self._require_ndarray_with_dim("locs", locs, ndim=2, dtype=np.float64)
         if location_type == "nodes":
             Av = self._getNodeIntMat(locs, zeros_outside)
         elif location_type in ["edges_x", "edges_y", "edges_z"]:

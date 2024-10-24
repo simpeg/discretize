@@ -3,7 +3,7 @@ import scipy.sparse as sp
 import unittest
 import discretize
 from discretize import utils
-from pymatsolver import Solver, SolverCG
+from scipy.sparse.linalg import spsolve
 
 
 MESHTYPES = ["uniformTensorMesh"]
@@ -55,13 +55,12 @@ class Test1D_InhomogeneousDirichlet(discretize.tests.OrderTest):
             err = np.linalg.norm((q - q_ana), np.inf)
         elif self.myTest == "xc":
             # TODO: fix the null space
-            solver = SolverCG(A, maxiter=1000)
-            xc = solver * rhs
+            xc = spsolve(A, rhs)
             print("ACCURACY", np.linalg.norm(utils.mkvc(A * xc) - rhs))
             err = np.linalg.norm((xc - xc_ana), np.inf)
         elif self.myTest == "xcJ":
             # TODO: fix the null space
-            xc = Solver(A) * rhs
+            xc = spsolve(A, rhs)
             print(np.linalg.norm(utils.mkvc(A * xc) - rhs))
             j = McI * (G * xc + P * phi_bc)
             err = np.linalg.norm((j - j_ana), np.inf)
@@ -141,10 +140,10 @@ class Test2D_InhomogeneousDirichlet(discretize.tests.OrderTest):
         elif self.myTest == "q":
             err = np.linalg.norm((q - q_ana), np.inf)
         elif self.myTest == "xc":
-            xc = Solver(A) * (rhs)
+            xc = spsolve(A, rhs)
             err = np.linalg.norm((xc - xc_ana), np.inf)
         elif self.myTest == "xcJ":
-            xc = Solver(A) * (rhs)
+            xc = spsolve(A, rhs)
             j = McI * (G * xc + P * bc)
             err = np.linalg.norm((j - j_ana), np.inf)
 

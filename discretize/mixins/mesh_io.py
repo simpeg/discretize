@@ -133,7 +133,7 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         return tensMsh
 
     @classmethod
-    def read_UBC(cls, file_name, directory=""):
+    def read_UBC(cls, file_name, directory=None):
         """Read 2D or 3D tensor mesh from UBC-GIF formatted file.
 
         Parameters
@@ -149,6 +149,8 @@ class TensorMeshIO(InterfaceTensorread_vtk):
             The tensor mesh
         """
         # Check the expected mesh dimensions
+        if directory is None:
+            directory = ""
         fname = os.path.join(directory, file_name)
         # Read the file as line strings, remove lines with comment = !
         msh = np.genfromtxt(fname, delimiter="\n", dtype=str, comments="!", max_rows=1)
@@ -221,7 +223,7 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         model = mkvc(model)
         return model
 
-    def read_model_UBC(mesh, file_name, directory=""):
+    def read_model_UBC(mesh, file_name, directory=None):
         """Read UBC-GIF formatted model file for 2D or 3D tensor mesh.
 
         Parameters
@@ -236,6 +238,8 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         (n_cells) numpy.ndarray
             The model defined on the mesh
         """
+        if directory is None:
+            directory = ""
         fname = os.path.join(directory, file_name)
         if mesh.dim == 3:
             model = mesh._readModelUBC_3D(fname)
@@ -245,7 +249,7 @@ class TensorMeshIO(InterfaceTensorread_vtk):
             raise Exception("mesh must be a Tensor Mesh 2D or 3D")
         return model
 
-    def write_model_UBC(mesh, file_name, model, directory=""):
+    def write_model_UBC(mesh, file_name, model, directory=None):
         """Write 2D or 3D tensor model to UBC-GIF formatted file.
 
         Parameters
@@ -257,6 +261,8 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         directory : str, optional
             output directory
         """
+        if directory is None:
+            directory = ""
         fname = os.path.join(directory, file_name)
         if mesh.dim == 3:
             # Reshape model to a matrix
@@ -372,7 +378,7 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         f.write(outStr)
         f.close()
 
-    def write_UBC(mesh, file_name, models=None, directory="", comment_lines=""):
+    def write_UBC(mesh, file_name, models=None, directory=None, comment_lines=""):
         """Write 2D or 3D tensor mesh (and models) to UBC-GIF formatted file(s).
 
         Parameters
@@ -387,6 +393,8 @@ class TensorMeshIO(InterfaceTensorread_vtk):
         comment_lines : str, optional
             comment lines preceded are preceeded with '!'
         """
+        if directory is None:
+            directory = ""
         fname = os.path.join(directory, file_name)
         if mesh.dim == 3:
             mesh._writeUBC_3DMesh(fname, comment_lines=comment_lines)
@@ -419,7 +427,7 @@ class TreeMeshIO(object):
     """
 
     @classmethod
-    def read_UBC(TreeMesh, file_name, directory=""):
+    def read_UBC(TreeMesh, file_name, directory=None):
         """Read 3D tree mesh (OcTree mesh) from UBC-GIF formatted file.
 
         Parameters
@@ -434,6 +442,8 @@ class TreeMeshIO(object):
         discretize.TreeMesh
             The tree mesh
         """
+        if directory is None:
+            directory = ""
         fname = os.path.join(directory, file_name)
         fileLines = np.genfromtxt(fname, dtype=str, delimiter="\n", comments="!")
         nCunderMesh = np.array(fileLines[0].split("!")[0].split(), dtype=int)
@@ -468,7 +478,7 @@ class TreeMeshIO(object):
         mesh.__setstate__((indArr, levels))
         return mesh
 
-    def read_model_UBC(mesh, file_name):
+    def read_model_UBC(mesh, file_name, directory=None):
         """Read UBC-GIF formatted file model file for 3D tree mesh (OcTree).
 
         Parameters
@@ -477,7 +487,7 @@ class TreeMeshIO(object):
             full path to the UBC-GIF formatted model file or
             just its name if directory is specified. It can also be a list of file_names.
         directory : str
-            directory where the UBC-GIF file lives (optional)
+            directory where the UBC-GIF file(s) lives (optional)
 
         Returns
         -------
@@ -485,10 +495,12 @@ class TreeMeshIO(object):
             The model defined on the mesh. If **file_name** is a ``dict``, it is a
             dictionary of models indexed by the file names.
         """
+        if directory is None:
+            directory = ""
         if type(file_name) is list:
             out = {}
             for f in file_name:
-                out[f] = mesh.read_model_UBC(f)
+                out[f] = mesh.read_model_UBC(f, directory=directory)
             return out
 
         modArr = np.loadtxt(file_name)
@@ -502,7 +514,7 @@ class TreeMeshIO(object):
         model = modArr[un_order].copy()  # ensure a contiguous array
         return model
 
-    def write_UBC(mesh, file_name, models=None, directory=""):
+    def write_UBC(mesh, file_name, models=None, directory=None):
         """Write OcTree mesh (and models) to UBC-GIF formatted files.
 
         Parameters
@@ -515,6 +527,8 @@ class TreeMeshIO(object):
         directory : str, optional
             output directory (optional)
         """
+        if directory is None:
+            directory = ""
         uniform_hs = np.array([np.allclose(h, h[0]) for h in mesh.h])
         if np.any(~uniform_hs):
             raise Exception("UBC form does not support variable cell widths")
@@ -545,13 +559,9 @@ class TreeMeshIO(object):
         if not isinstance(models, dict):
             raise TypeError("models must be a dict")
         for key in models:
-            if not isinstance(key, str):
-                raise TypeError(
-                    "The dict key must be a string representing the file name"
-                )
             mesh.write_model_UBC(key, models[key], directory=directory)
 
-    def write_model_UBC(mesh, file_name, model, directory=""):
+    def write_model_UBC(mesh, file_name, model, directory=None):
         """Write 3D tree model (OcTree) to UBC-GIF formatted file.
 
         Parameters
@@ -563,6 +573,8 @@ class TreeMeshIO(object):
         directory : str
             output directory (optional)
         """
+        if directory is None:
+            directory = ""
         if type(file_name) is list:
             for f, m in zip(file_name, model):
                 mesh.write_model_UBC(f, m)

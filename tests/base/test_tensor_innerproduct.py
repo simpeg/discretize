@@ -4,8 +4,6 @@ import discretize
 from discretize import TensorMesh
 from discretize.utils import sdinv
 
-np.random.seed(50)
-
 
 class TestInnerProducts(discretize.tests.OrderTest):
     """Integrate an function over a unit cube domain
@@ -750,7 +748,7 @@ class TestTensorSizeErrorRaises(unittest.TestCase):
 
     def setUp(self):
         self.mesh3D = TensorMesh([4, 4, 4])
-        self.model = np.random.rand(self.mesh3D.nC)
+        self.model = np.ones(self.mesh3D.nC)
 
     def test_edge_inner_product_surface(self):
         self.assertRaises(

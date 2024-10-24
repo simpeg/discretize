@@ -77,11 +77,10 @@ sadness = [
     "You break it, you fix it.",
 ]
 
-# Initiate random number generator
-rng = np.random.default_rng()
+_happiness_rng = np.random.default_rng()
 
 
-def setup_mesh(mesh_type, nC, nDim):
+def setup_mesh(mesh_type, nC, nDim, random_seed=None):
     """Generate arbitrary mesh for testing.
 
     For the mesh type, number of cells along each axis and dimension specified,
@@ -99,19 +98,25 @@ def setup_mesh(mesh_type, nC, nDim):
         number of base mesh cells and must be a power of 2.
     nDim : int
         The dimension of the mesh. Must be 1, 2 or 3.
+    random_seed : numpy.random.Generator, int, optional
+        If ``random`` is in `mesh_type`, this is the random number generator to use for
+        creating that random mesh. If an integer or None it is used to seed a new
+        `numpy.random.default_rng`.
 
     Returns
     -------
     discretize.base.BaseMesh
         A discretize mesh of class specified by the input argument *mesh_type*
     """
+    if "random" in mesh_type:
+        rng = np.random.default_rng(random_seed)
     if "TensorMesh" in mesh_type:
         if "uniform" in mesh_type:
             h = [nC, nC, nC]
         elif "random" in mesh_type:
-            h1 = np.random.rand(nC) * nC * 0.5 + nC * 0.5
-            h2 = np.random.rand(nC) * nC * 0.5 + nC * 0.5
-            h3 = np.random.rand(nC) * nC * 0.5 + nC * 0.5
+            h1 = rng.random(nC) * nC * 0.5 + nC * 0.5
+            h2 = rng.random(nC) * nC * 0.5 + nC * 0.5
+            h3 = rng.random(nC) * nC * 0.5 + nC * 0.5
             h = [hi / np.sum(hi) for hi in [h1, h2, h3]]  # normalize
         else:
             raise Exception("Unexpected mesh_type")
@@ -126,14 +131,14 @@ def setup_mesh(mesh_type, nC, nDim):
             else:
                 h = [nC, nC, nC]
         elif "random" in mesh_type:
-            h1 = np.random.rand(nC) * nC * 0.5 + nC * 0.5
+            h1 = rng.random(nC) * nC * 0.5 + nC * 0.5
             if "symmetric" in mesh_type:
                 h2 = [
                     2 * np.pi,
                 ]
             else:
-                h2 = np.random.rand(nC) * nC * 0.5 + nC * 0.5
-            h3 = np.random.rand(nC) * nC * 0.5 + nC * 0.5
+                h2 = rng.random(nC) * nC * 0.5 + nC * 0.5
+            h3 = rng.random(nC) * nC * 0.5 + nC * 0.5
             h = [hi / np.sum(hi) for hi in [h1, h2, h3]]  # normalize
             h[1] = h[1] * 2 * np.pi
         else:
@@ -178,9 +183,9 @@ def setup_mesh(mesh_type, nC, nDim):
         if "uniform" in mesh_type or "notatree" in mesh_type:
             h = [nC, nC, nC]
         elif "random" in mesh_type:
-            h1 = np.random.rand(nC) * nC * 0.5 + nC * 0.5
-            h2 = np.random.rand(nC) * nC * 0.5 + nC * 0.5
-            h3 = np.random.rand(nC) * nC * 0.5 + nC * 0.5
+            h1 = rng.random(nC) * nC * 0.5 + nC * 0.5
+            h2 = rng.random(nC) * nC * 0.5 + nC * 0.5
+            h3 = rng.random(nC) * nC * 0.5 + nC * 0.5
             h = [hi / np.sum(hi) for hi in [h1, h2, h3]]  # normalize
         else:
             raise Exception("Unexpected mesh_type")
@@ -215,13 +220,13 @@ class OrderTest(unittest.TestCase):
 
     OrderTest inherits from :class:`unittest.TestCase`.
 
-    Parameters
+    Attributes
     ----------
     name : str
         Name the convergence test
     meshTypes : list of str
         List denoting the mesh types on which the convergence will be tested.
-        List entries must of the list {'uniformTensorMesh', 'randomTensorMesh',
+        List entries must be of the list {'uniformTensorMesh', 'randomTensorMesh',
         'uniformCylindricalMesh', 'randomCylindricalMesh', 'uniformTree', 'randomTree',
         'uniformCurv', 'rotateCurv', 'sphereCurv'}
     expectedOrders : float or list of float (default = 2.0)
@@ -235,6 +240,10 @@ class OrderTest(unittest.TestCase):
         for the meshes used in the convergence test; e.g. [4, 8, 16, 32]
     meshDimension : int
         Mesh dimension. Must be 1, 2 or 3
+    random_seed : numpy.random.Generator, int, optional
+        If ``random`` is in `mesh_type`, this is the random number generator
+        used generate the random meshes, if an ``int`` or ``None``, it used to seed
+        a new `numpy.random.default_rng`.
 
     Notes
     -----
@@ -301,6 +310,7 @@ class OrderTest(unittest.TestCase):
     meshTypes = ["uniformTensorMesh"]
     _meshType = meshTypes[0]
     meshDimension = 3
+    random_seed = None
 
     def setupMesh(self, nC):
         """Generate mesh and set as current mesh for testing.
@@ -315,7 +325,9 @@ class OrderTest(unittest.TestCase):
         Float
             Maximum cell width for the mesh
         """
-        mesh, max_h = setup_mesh(self._meshType, nC, self.meshDimension)
+        mesh, max_h = setup_mesh(
+            self._meshType, nC, self.meshDimension, random_seed=self.random_seed
+        )
         self.M = mesh
         return max_h
 
@@ -334,7 +346,7 @@ class OrderTest(unittest.TestCase):
         """
         return 1.0
 
-    def orderTest(self):
+    def orderTest(self, random_seed=None):
         """Perform an order test.
 
         For number of cells specified in meshSizes setup mesh, call getError
@@ -358,6 +370,9 @@ class OrderTest(unittest.TestCase):
             raise ValueError(
                 "expectedOrders must have the same length as the meshTypes"
             )
+
+        if random_seed is not None:
+            self.random_seed = random_seed
 
         def test_func(n_cells):
             max_h = self.setupMesh(n_cells)
@@ -495,9 +510,9 @@ def assert_expected_order(
             np.testing.assert_allclose(orders[-1], expected_order, rtol=rtol)
         elif test_type == "all":
             np.testing.assert_allclose(orders, expected_order, rtol=rtol)
-        print(np.random.choice(happiness))
+        print(_happiness_rng.choice(happiness))
     except AssertionError as err:
-        print(np.random.choice(sadness))
+        print(_happiness_rng.choice(sadness))
         raise err
 
     return orders
@@ -551,6 +566,7 @@ def check_derivative(
     tolerance=0.85,
     eps=1e-10,
     ax=None,
+    random_seed=None,
 ):
     """Perform a basic derivative check.
 
@@ -559,8 +575,8 @@ def check_derivative(
 
     Parameters
     ----------
-    fctn : function
-        Function handle
+    fctn : callable
+        The function to test.
     x0 : numpy.ndarray
         Point at which to check derivative
     num : int, optional
@@ -569,7 +585,7 @@ def check_derivative(
         If *True*, plot the convergence of the approximation of the derivative
     dx : numpy.ndarray, optional
         Step direction. By default, this parameter is set to *None* and a random
-        step direction is chosen.
+        step direction is chosen using `rng`.
     expectedOrder : int, optional
         The expected order of convergence for the numerical derivative
     tolerance : float, optional
@@ -579,6 +595,10 @@ def check_derivative(
     ax : matplotlib.pyplot.Axes, optional
         An axis object for the convergence plot if *plotIt = True*.
         Otherwise, the function will create a new axis.
+    random_seed : numpy.random.Generator, int, optional
+        If `dx` is ``None``, this is the random number generator to use for
+        generating a step direction. If an integer or None, it is used to seed
+        a new `numpy.random.default_rng`.
 
     Returns
     -------
@@ -590,10 +610,11 @@ def check_derivative(
     >>> from discretize import tests, utils
     >>> import numpy as np
     >>> import matplotlib.pyplot as plt
+    >>> rng = np.random.default_rng(786412)
 
     >>> def simplePass(x):
     ...     return np.sin(x), utils.sdiag(np.cos(x))
-    >>> passed = tests.check_derivative(simplePass, np.random.randn(5))
+    >>> passed = tests.check_derivative(simplePass, rng.standard_normal(5), random_seed=rng)
     ==================== check_derivative ====================
     iter    h         |ft-f0|   |ft-f0-h*J0*dx|  Order
     ---------------------------------------------------------
@@ -610,6 +631,7 @@ def check_derivative(
     __tracebackhide__ = True
     # matplotlib is a soft dependencies for discretize,
     # lazy-loaded to decrease load time of discretize.
+
     try:
         import matplotlib
         import matplotlib.pyplot as plt
@@ -626,7 +648,8 @@ def check_derivative(
     x0 = mkvc(x0)
 
     if dx is None:
-        dx = np.random.randn(len(x0))
+        rng = np.random.default_rng(random_seed)
+        dx = rng.standard_normal(len(x0))
 
     h = np.logspace(-1, -num, num)
     E0 = np.ones(h.shape)
@@ -692,14 +715,17 @@ def check_derivative(
             # Thus it has no higher order derivatives.
             pass
         else:
-            test = np.mean(order1) > tolerance * expectedOrder
+            order_mean = np.mean(order1)
+            expected = tolerance * expectedOrder
+            test = order_mean > expected
             if not test:
                 raise AssertionError(
-                    f"\n Order mean {np.mean(order1)} is not greater than"
-                    f" {tolerance} of the expected order {expectedOrder}."
+                    f"\n Order mean {order_mean} is not greater than"
+                    f" {expected} = tolerance: {tolerance} "
+                    f"* expected order: {expectedOrder}."
                 )
         print("{0!s} PASS! {1!s}".format("=" * 25, "=" * 25))
-        print(np.random.choice(happiness) + "\n")
+        print(_happiness_rng.choice(happiness) + "\n")
         if plotIt:
             _plot_it(ax, True)
     except AssertionError as err:
@@ -708,7 +734,7 @@ def check_derivative(
                 "*" * 57, "<" * 25, ">" * 25, "*" * 57
             )
         )
-        print(np.random.choice(sadness) + "\n")
+        print(_happiness_rng.choice(sadness) + "\n")
         if plotIt:
             _plot_it(ax, False)
         raise err
@@ -772,6 +798,7 @@ def assert_isadjoint(
     rtol=1e-6,
     atol=0.0,
     assert_error=True,
+    random_seed=None,
 ):
     r"""Do a dot product test for the forward operator and its adjoint operator.
 
@@ -822,6 +849,9 @@ def assert_isadjoint(
         assertion error if failed). If set to False, the result of the test is
         returned as boolean and a message is printed.
 
+    random_seed : numpy.random.Generator, int, optional
+        The random number generator to use for the adjoint test. If an integer or None
+        it is used to seed a new `numpy.random.default_rng`.
 
     Returns
     -------
@@ -835,6 +865,8 @@ def assert_isadjoint(
 
     """
     __tracebackhide__ = True
+
+    rng = np.random.default_rng(random_seed)
 
     def random(size, iscomplex):
         """Create random data of size and dtype of <size>."""
@@ -873,3 +905,117 @@ def assert_isadjoint(
         )
 
         return passed
+
+
+def assert_cell_intersects_geometric(
+    cell, points, edges=None, faces=None, as_refine=False
+):
+    """Assert if a cell intersects a convex polygon.
+
+    Parameters
+    ----------
+    cell : tree_mesh.TreeCell
+        Must have cell.origin and cell.h properties
+    points : (*, dim) array_like
+        The points of the geometric object.
+    edges : (*, 2) array_like of int, optional
+        The 2 indices into points defining each edge
+    faces : (*, 3) array_like of int, optional
+        The 3 indices into points which lie on each face. These are used
+        to define the face normals from the three points as
+        ``norm = cross(p1 - p0, p2 - p0)``.
+    as_refine : bool, or int
+        If ``True`` (or a nonzero integer), this function will not assert and instead
+        return either 0, -1, or the integer making it suitable (but slow) for
+        refining a TreeMesh.
+
+    Returns
+    -------
+    int
+
+    Raises
+    ------
+    AssertionError
+    """
+    __tracebackhide__ = True
+
+    x0 = cell.origin
+    xF = x0 + cell.h
+
+    points = np.atleast_2d(points)
+    if edges is not None:
+        edges = np.atleast_2d(edges)
+        if edges.shape[-1] != 2:
+            raise ValueError("Last dimension of edges must be 2.")
+    if faces is not None:
+        faces = np.atleast_2d(faces)
+        if faces.shape[-1] != 3:
+            raise ValueError("Last dimension of faces must be 3.")
+
+    do_asserts = not as_refine
+    level = -1
+    if as_refine and not isinstance(as_refine, bool):
+        level = int(as_refine)
+
+    dim = points.shape[-1]
+    # first the bounding box tests (associated with the 3 face normals of the cell
+    mins = points.min(axis=0)
+    for i_d in range(dim):
+        if do_asserts:
+            assert mins[i_d] <= xF[i_d]
+        else:
+            if mins[i_d] > xF[i_d]:
+                return 0
+
+    maxs = points.max(axis=0)
+    for i_d in range(dim):
+        if do_asserts:
+            assert maxs[i_d] >= x0[i_d]
+        else:
+            if maxs[i_d] < x0[i_d]:
+                return 0
+
+    # create array of all the box points
+    if edges is not None or faces is not None:
+        box_points = np.meshgrid(*list(zip(x0, xF)))
+        box_points = np.stack(box_points, axis=-1).reshape(-1, dim)
+
+        def project_min_max(points, axis):
+            ps = points @ axis
+            return ps.min(), ps.max()
+
+        if edges is not None and dim > 1:
+            box_dirs = np.eye(dim)
+            edge_dirs = points[edges[:, 1]] - points[edges[:, 0]]
+            # perform the edge-edge intersection tests
+            # these project all points onto the axis formed by the cross
+            # product of the geometric edges and the bounding box's edges/faces normals
+            for i in range(edges.shape[0]):
+                for j in range(dim):
+                    if dim == 3:
+                        axis = np.cross(edge_dirs[i], box_dirs[j])
+                    else:
+                        axis = [-edge_dirs[i, 1], edge_dirs[i, 0]]
+                    bmin, bmax = project_min_max(box_points, axis)
+                    gmin, gmax = project_min_max(points, axis)
+                    if do_asserts:
+                        assert bmax >= gmin and bmin <= gmax
+                    else:
+                        if bmax < gmin or bmin > gmax:
+                            return 0
+
+        if faces is not None and dim > 2:
+            face_normals = np.cross(
+                points[faces[:, 1]] - points[faces[:, 0]],
+                points[faces[:, 2]] - points[faces[:, 0]],
+            )
+            for i in range(faces.shape[0]):
+                bmin, bmax = project_min_max(box_points, face_normals[i])
+                gmin, gmax = project_min_max(points, face_normals[i])
+                if do_asserts:
+                    assert bmax >= gmin and bmin <= gmax
+                else:
+                    if bmax < gmin or bmin > gmax:
+                        return 0
+    if not do_asserts:
+        return level
