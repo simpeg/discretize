@@ -86,7 +86,4 @@ Pull requests
 * `#367 <https://github.com/simpeg/discretize/pull/367>`__: Add `TreeCell.bounds` and `TreeMesh.cell_bounds` methods
 * `#380 <https://github.com/simpeg/discretize/pull/380>`__: Create build_distributions.yml
 * `#379 <https://github.com/simpeg/discretize/pull/379>`__: Numpy2.0 updates
-
-
-
-* `#342 <https://github.com/simpeg/discretize/pull/343>`__: 0.11.0 Release Notes
+* `#381 <https://github.com/simpeg/discretize/pull/381>`__: 0.11.0 Release Notes
