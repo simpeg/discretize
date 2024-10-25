@@ -49,9 +49,9 @@ jobs:
 
     - bash: |
         # Update latest symlink
-        cd discretize-docs
-        rm -f en/latest
-        ln -s "en/$BRANCH_NAME" en/latest
+        cd discretize-docs/en
+        rm -f latest
+        ln -s "$BRANCH_NAME" latest
       displayName: Point Latest to tag
       condition: eq(variables.IS_TAG, true)
 
