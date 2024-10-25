@@ -926,7 +926,7 @@ class TreeMesh(
 
     def point2index(self, locs):  # NOQA D102
         # Documentation inherited from discretize.base.BaseMesh
-        return self.get_containing_cell_indexes(locs)
+        return self.get_containing_cells(locs)
 
     def cell_levels_by_index(self, indices):
         """Fast function to return a list of levels for the given cell indices.
