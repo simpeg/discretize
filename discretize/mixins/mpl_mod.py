@@ -450,7 +450,7 @@ class InterfaceMPL(object):
         the given normal.
 
         >>> M = discretize.TensorMesh([32, 32, 32])
-        >>> v = discretize.utils.random_model(M.vnC, seed=789).reshape(-1, order='F')
+        >>> v = discretize.utils.random_model(M.vnC, random_seed=789).reshape(-1, order='F')
         >>> x_slice, y_slice, z_slice = 0.75, 0.25, 0.9
         >>> plt.figure(figsize=(7.5, 3))
         >>> ax = plt.subplot(131)

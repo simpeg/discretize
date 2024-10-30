@@ -1,5 +1,7 @@
 """Module containing the TreeMesh implementation."""
 
+import warnings
+
 #      ___          ___       ___          ___          ___          ___
 #     /\  \        /\  \     /\  \        /\  \        /\  \        /\  \
 #    /::\  \      /::\  \    \:\  \      /::\  \      /::\  \      /::\  \
@@ -168,7 +170,7 @@ class TreeMesh(
 
     diagonal_balance : bool, optional
         Whether to balance cells along the diagonal of the tree during construction.
-        This will effect all calls to refine the tree.
+        This will affect all calls to refine the tree.
 
     Examples
     --------
@@ -232,9 +234,20 @@ class TreeMesh(
     _items = {"h", "origin", "cell_state"}
 
     # inheriting stuff from BaseTensorMesh that isn't defined in _QuadTree
-    def __init__(self, h=None, origin=None, diagonal_balance=False, **kwargs):
+    def __init__(self, h=None, origin=None, diagonal_balance=None, **kwargs):
         if "x0" in kwargs:
             origin = kwargs.pop("x0")
+
+        if diagonal_balance is None:
+            diagonal_balance = False
+            warnings.warn(
+                "In discretize v1.0 the TreeMesh will change the default value of "
+                "diagonal_balance to True, which will likely slightly change meshes you have"
+                "previously created. If you need to keep the current behavoir, explicitly set "
+                "diagonal_balance=False.",
+                FutureWarning,
+                stacklevel=2,
+            )
         super().__init__(h=h, origin=origin, diagonal_balance=diagonal_balance)
 
         cell_state = kwargs.pop("cell_state", None)
@@ -925,7 +938,7 @@ class TreeMesh(
 
     def point2index(self, locs):  # NOQA D102
         # Documentation inherited from discretize.base.BaseMesh
-        return self.get_containing_cell_indexes(locs)
+        return self.get_containing_cells(locs)
 
     def cell_levels_by_index(self, indices):
         """Fast function to return a list of levels for the given cell indices.

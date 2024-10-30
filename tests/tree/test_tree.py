@@ -573,5 +573,22 @@ class TestWrapAroundLevels(unittest.TestCase):
         self.assertEqual(mesh1.nC, mesh2.nC)
 
 
+@pytest.mark.parametrize("dim", [2, 3])
+def test_cell_locator(dim):
+    mesh = discretize.TreeMesh((16, 16, 16)[:dim])
+    mesh.insert_cells([0.5, 0.5, 0.5][:dim], levels=-1)
+
+    query_point = [0.21, 0.42, 0.22][:dim]
+    identified_cell = mesh.point2index(query_point)
+    found = False
+    for i, cell in enumerate(mesh):
+        bounds = cell.bounds.reshape((-1, 2))
+
+        if np.all((bounds[:, 0] <= query_point) & (bounds[:, 1] >= query_point)):
+            found = True
+            assert i == identified_cell
+    assert found
+
+
 if __name__ == "__main__":
     unittest.main()
