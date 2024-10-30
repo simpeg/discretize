@@ -25,7 +25,6 @@ Functions
   assert_isadjoint
 """  # NOQA D205
 
-import os
 import warnings
 
 import numpy as np
@@ -85,10 +84,9 @@ _happiness_rng = np.random.default_rng()
 
 
 def _warn_random_test():
-    in_pytest = "PYTEST_CURRENT_TEST" in os.environ
-    in_nosetest = any(
-        x[0].f_globals["__name__"].startswith("nose.") for x in inspect.stack()
-    )
+    stack = inspect.stack()
+    in_pytest = any(x[0].f_globals["__name__"].startswith("_pytest.") for x in stack)
+    in_nosetest = any(x[0].f_globals["__name__"].startswith("nose.") for x in stack)
 
     if in_pytest or in_nosetest:
         test = "pytest" if in_pytest else "nosetest"
