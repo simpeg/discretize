@@ -25,6 +25,9 @@ Functions
   assert_isadjoint
 """  # NOQA D205
 
+import os
+import warnings
+
 import numpy as np
 import scipy.sparse as sp
 
@@ -81,6 +84,24 @@ sadness = [
 _happiness_rng = np.random.default_rng()
 
 
+def _warn_random_test():
+    in_pytest = "PYTEST_CURRENT_TEST" in os.environ
+    in_nosetest = any(
+        x[0].f_globals["__name__"].startswith("nose.") for x in inspect.stack()
+    )
+
+    if in_pytest or in_nosetest:
+        test = "pytest" if in_pytest else "nosetest"
+        warnings.warn(
+            f"You are running a {test} without setting a random seed, the results might not be"
+            "repeatable. For repeatable tests please pass an argument to `random seed` that is"
+            "not `None`.",
+            UserWarning,
+            stacklevel=3,
+        )
+    return in_pytest or in_nosetest
+
+
 def setup_mesh(mesh_type, nC, nDim, random_seed=None):
     """Generate arbitrary mesh for testing.
 
@@ -110,6 +131,8 @@ def setup_mesh(mesh_type, nC, nDim, random_seed=None):
         A discretize mesh of class specified by the input argument *mesh_type*
     """
     if "random" in mesh_type:
+        if random_seed is None:
+            _warn_random_test()
         rng = np.random.default_rng(random_seed)
     if "TensorMesh" in mesh_type:
         if "uniform" in mesh_type:
@@ -649,6 +672,8 @@ def check_derivative(
     x0 = mkvc(x0)
 
     if dx is None:
+        if random_seed is None:
+            _warn_random_test()
         rng = np.random.default_rng(random_seed)
         dx = rng.standard_normal(len(x0))
 
@@ -867,6 +892,8 @@ def assert_isadjoint(
     """
     __tracebackhide__ = True
 
+    if random_seed is None:
+        _warn_random_test()
     rng = np.random.default_rng(random_seed)
 
     def random(size, iscomplex):
