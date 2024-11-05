@@ -4,7 +4,13 @@ import discretize
 import subprocess
 import numpy as np
 import scipy.sparse as sp
-from discretize.tests import assert_isadjoint, check_derivative, assert_expected_order
+from discretize.tests import (
+    assert_isadjoint,
+    check_derivative,
+    assert_expected_order,
+    _warn_random_test,
+    setup_mesh,
+)
 
 
 class TestAssertIsAdjoint:
@@ -166,3 +172,22 @@ def test_import_time():
 
     # Currently we check t < 1.0s.
     assert float(out.stderr.decode("utf-8")[:-1]) < 1.0
+
+
+def test_random_test_warning():
+
+    match = r"You are running a pytest without setting a random seed.*"
+    with pytest.warns(UserWarning, match=match):
+        _warn_random_test()
+
+    def simple_deriv(x):
+        return np.sin(x), lambda y: np.cos(x) * y
+
+    with pytest.warns(UserWarning, match=match):
+        check_derivative(simple_deriv, np.zeros(10), plotIt=False)
+
+    with pytest.warns(UserWarning, match=match):
+        setup_mesh("randomTensorMesh", 10, 1)
+
+    with pytest.warns(UserWarning, match=match):
+        assert_isadjoint(lambda x: x, lambda x: x, 5, 5)
