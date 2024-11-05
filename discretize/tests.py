@@ -582,7 +582,7 @@ def check_derivative(
     fctn,
     x0,
     num=7,
-    plotIt=True,
+    plotIt=False,
     dx=None,
     expectedOrder=2,
     tolerance=0.85,

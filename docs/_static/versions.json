@@ -6,8 +6,13 @@
     {
         "name": "0.11.0 (stable)",
         "version": "v0.11.0",
-        "url": "https://discretize.simpeg.xyz/en/v0.11.0/",
+        "url": "https://discretize.simpeg.xyz/en/v0.11.1/",
         "preferred": true
+    },
+    {
+        "name": "0.11.0",
+        "version": "v0.11.0",
+        "url": "https://discretize.simpeg.xyz/en/v0.11.0/"
     },
     {
         "name": "0.10.0",
