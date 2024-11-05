@@ -3,15 +3,18 @@
 .. _0.11.1_notes:
 
 ===================================
-``discretize`` 0.11.0 Release Notes
+``discretize`` 0.11.1 Release Notes
 ===================================
 
-October 24, 2024
+November 5, 2024
 
 This is a bugfix release for issues found in the previous release, and adds some warning messages for users.
 
+Updates
+=======
+
 Warning Messages
-================
+----------------
 * Added a warning to the `TreeMesh` informing of incoming future behavoir changes regarding
   diagonal balancing. This will default to ``True`` in `discretize` 1.0.
 * Added warning messages to test functions using uncontrolled randomized input that appear when run under
@@ -19,11 +22,17 @@ Warning Messages
 * Changed the default for ``plotIt`` argument to ``False`` for testing functions.
 
 Fixed Bugs
-==========
+----------
 * `TreeMesh.point2index` now refers to the correction function.
+
+
+Contributors
+============
+* @jcapriot
 
 Pull requests
 =============
 
-* Outstanding bugfixes. by @jcapriot in `#347 <https://github.com/simpeg/discretize/pull/382>`__.
+* Outstanding bugfixes. by @jcapriot in `#382 <https://github.com/simpeg/discretize/pull/382>`__.
 * Warn for non-repeatable random tests in a testing environment by @jcapriot in `#384 <https://github.com/simpeg/discretize/pull/384>`__.
+* Staging for 0.11.1 by @jcapriot in `#385 <https://github.com/simpeg/discretize/pull/385>`__.
