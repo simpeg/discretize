@@ -14,7 +14,9 @@ import warnings
 num_types = [int, float]
 
 
-def random_model(shape, seed=None, anisotropy=None, its=100, bounds=None):
+def random_model(
+    shape, random_seed=None, anisotropy=None, its=100, bounds=None, seed=None
+):
     """Create random tensor model.
 
     Creates a random tensor model by convolving a kernel function with a
@@ -29,7 +31,7 @@ def random_model(shape, seed=None, anisotropy=None, its=100, bounds=None):
     ----------
     shape : (dim) tuple of int
         shape of the model.
-    seed : numpy.random.Generator, int, optional
+    random_seed : numpy.random.Generator, int, optional
         pick which model to produce, prints the seed if you don't choose
     anisotropy : numpy.ndarray, optional
         this is the kernel that is convolved with the model
@@ -56,7 +58,7 @@ def random_model(shape, seed=None, anisotropy=None, its=100, bounds=None):
     >>> vmin, vmax = 0., 1.
     >>> mesh = TensorMesh([h, h])
 
-    >>> model = random_model(mesh.shape_cells, seed=4, bounds=[vmin, vmax])
+    >>> model = random_model(mesh.shape_cells, random_seed=4, bounds=[vmin, vmax])
 
     >>> fig = plt.figure(figsize=(5, 4))
     >>> ax = plt.subplot(111)
@@ -68,8 +70,17 @@ def random_model(shape, seed=None, anisotropy=None, its=100, bounds=None):
     if bounds is None:
         bounds = [0, 1]
 
-    rng = np.random.default_rng(seed)
-    if seed is None:
+    if seed is not None:
+        warnings.warn(
+            "Deprecated in version 0.11.0. The `seed` keyword argument has been renamed to `random_seed` "
+            "for consistency across the package. Please update your code to use the new keyword argument.",
+            FutureWarning,
+            stacklevel=2,
+        )
+        random_seed = seed
+
+    rng = np.random.default_rng(random_seed)
+    if random_seed is None:
         print("Using a seed of: ", rng.bit_generator.seed_seq)
 
     if type(shape) in num_types:
