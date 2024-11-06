@@ -17,7 +17,6 @@ from discretize.utils import (
     interpolation_matrix,
     make_boundary_bool,
 )
-from discretize.utils.code_utils import deprecate_method, deprecate_property
 import warnings
 
 
@@ -635,7 +634,7 @@ class BaseTensorMesh(BaseRegularMesh):
 
     # --------------- Methods ---------------------
 
-    def is_inside(self, pts, location_type="nodes", **kwargs):
+    def is_inside(self, pts, location_type="nodes"):
         """Determine which points lie within the mesh.
 
         For an arbitrary set of points, **is_indside** returns a
@@ -656,11 +655,6 @@ class BaseTensorMesh(BaseRegularMesh):
             Boolean array identifying points which lie within the mesh
 
         """
-        if "locType" in kwargs:
-            raise TypeError(
-                "The locType keyword argument has been removed, please use location_type. "
-                "This will be removed in discretize 1.0.0",
-            )
         pts = as_array_n_by_dim(pts, self.dim)
 
         tensors = self.get_tensor(location_type)
@@ -774,19 +768,9 @@ class BaseTensorMesh(BaseRegularMesh):
         return Q.tocsr()
 
     def get_interpolation_matrix(  # NOQA D102
-        self, loc, location_type="cell_centers", zeros_outside=False, **kwargs
+        self, loc, location_type="cell_centers", zeros_outside=False
     ):
         # Documentation inherited from discretize.base.BaseMesh
-        if "locType" in kwargs:
-            raise TypeError(
-                "The locType keyword argument has been removed, please use location_type. "
-                "This will be removed in discretize 1.0.0",
-            )
-        if "zerosOutside" in kwargs:
-            raise TypeError(
-                "The zerosOutside keyword argument has been removed, please use zeros_outside. "
-                "This will be removed in discretize 1.0.0",
-            )
         return self._get_interpolation_matrix(loc, location_type, zeros_outside)
 
     def _fastInnerProduct(
@@ -986,65 +970,3 @@ class BaseTensorMesh(BaseRegularMesh):
             return innerProductDeriv
         else:
             return None
-
-    # DEPRECATED
-    @property
-    def hx(self):
-        """Width of cells in the x direction.
-
-        `hx` will be removed in discretize 1.0.0, it is replaced by
-        `mesh.h[0]` to reduce namespace clutter.
-        """
-        raise NotImplementedError(
-            "The hx property is removed, please access as mesh.h[0]. "
-            "This message will be removed in discretize 1.0.0."
-        )
-
-    @property
-    def hy(self):
-        """Width of cells in the y direction.
-
-        `hy` will be removed in discretize 1.0.0, it is replaced by
-        `mesh.h[1]` to reduce namespace clutter.
-        """
-        raise NotImplementedError(
-            "The hy property is removed, please access as mesh.h[1]. "
-            "This message will be removed in discretize 1.0.0."
-        )
-
-    @property
-    def hz(self):
-        """Width of cells in the z direction.
-
-        `hz` will be removed in discretize 1.0.0, it is replaced by
-        `mesh.h[2]` to reduce namespace clutter.
-        """
-        raise NotImplementedError(
-            "The hz property is removed, please access as mesh.h[2]. "
-            "This message will be removed in discretize 1.0.0."
-        )
-
-    vectorNx = deprecate_property(
-        "nodes_x", "vectorNx", removal_version="1.0.0", error=True
-    )
-    vectorNy = deprecate_property(
-        "nodes_y", "vectorNy", removal_version="1.0.0", error=True
-    )
-    vectorNz = deprecate_property(
-        "nodes_z", "vectorNz", removal_version="1.0.0", error=True
-    )
-    vectorCCx = deprecate_property(
-        "cell_centers_x", "vectorCCx", removal_version="1.0.0", error=True
-    )
-    vectorCCy = deprecate_property(
-        "cell_centers_y", "vectorCCy", removal_version="1.0.0", error=True
-    )
-    vectorCCz = deprecate_property(
-        "cell_centers_z", "vectorCCz", removal_version="1.0.0", error=True
-    )
-    isInside = deprecate_method(
-        "is_inside", "isInside", removal_version="1.0.0", error=True
-    )
-    getTensor = deprecate_method(
-        "get_tensor", "getTensor", removal_version="1.0.0", error=True
-    )

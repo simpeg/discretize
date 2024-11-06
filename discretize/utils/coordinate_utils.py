@@ -2,7 +2,7 @@
 
 import numpy as np
 from discretize.utils.matrix_utils import mkvc
-from discretize.utils.code_utils import as_array_n_by_dim, deprecate_function
+from discretize.utils.code_utils import as_array_n_by_dim
 
 
 def cylindrical_to_cartesian(grid, vec=None):
@@ -295,17 +295,3 @@ def rotate_points_from_normals(xyz, v0, v1, x0=np.r_[0.0, 0.0, 0.0]):
     X0 = np.ones([xyz.shape[0], 1]) * mkvc(x0)
 
     return (xyz - X0).dot(R.T) + X0  # equivalent to (R*(xyz - X0)).T + X0
-
-
-rotationMatrixFromNormals = deprecate_function(
-    rotation_matrix_from_normals,
-    "rotationMatrixFromNormals",
-    removal_version="1.0.0",
-    error=True,
-)
-rotatePointsFromNormals = deprecate_function(
-    rotate_points_from_normals,
-    "rotatePointsFromNormals",
-    removal_version="1.0.0",
-    error=True,
-)
