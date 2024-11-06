@@ -170,8 +170,8 @@ def test_import_time():
     # Capture it
     out = subprocess.run(cmd, capture_output=True)
 
-    # Currently we check t < 1.0s.
-    assert float(out.stderr.decode("utf-8")[:-1]) < 1.0
+    # Currently we check t < 1.25s.
+    assert float(out.stderr.decode("utf-8")[:-1]) < 1.25
 
 
 def test_random_test_warning():

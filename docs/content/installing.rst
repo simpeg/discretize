@@ -23,6 +23,8 @@ You can download the package manager and use it to install the dependencies abov
         conda update conda
         conda update anaconda
 
+.. _discretize_dependencies:
+
 Dependencies
 ============
 
@@ -61,7 +63,8 @@ systems will require a build.
 Installing from Source
 ----------------------
 .. attention::
-    Install ``discretize`` from the source code only if you need to run the development version. Otherwise it's usually better to install it from ``conda-forge``.
+    Install ``discretize`` from the source code only if you need to run the development version.
+    Otherwise it's usually better to install it from ``conda-forge`` or ``pypi``.
 
 As ``discretize`` contains several compiled extensions and is not a pure python pacakge,
 installing ``discretize`` from the source code requires a C/C++ compiler capable of
@@ -88,25 +91,29 @@ Editable Installs
 If you are an active developer of ``discretize``, and find yourself modifying the code often,
 you might want to install it from source, in an editable installation. ``discretize`` uses
 ``meson-python`` to build the external modules and install the package. As such, there are a few extra
-steps to take. First, make sure you have the runtime dependencies installed in your environment (see Dependencies listed above).
-Then you must install some packages needed to build ``discretize`` in your environment. You can do so with ``pip``::
+steps to take:
 
-    pip install meson-python meson ninja cython setuptools_scm
+1. Make sure you have the runtime dependencies installed in your environment (see :ref:`discretize_dependencies` listed above).
+   However, you **must** install ``numpy >=2.0`` when *building* ``discretize``.
+2. You must also install packages needed to build ``discretize`` into your environment. You can do so with ``pip``::
 
-Or with ``conda`` (or ``mamba``)::
+      pip install meson-python meson ninja cython setuptools_scm
 
-    conda install -c conda-forge meson-python meson ninja cython setuptools_scm
+   Or with ``conda``::
 
-This will allow you to use the build backend required by `discretize`.
+      conda install -c conda-forge meson-python meson ninja cython setuptools_scm
 
-Finally, you should then be able to perform an editable install using the source code::
+   This will allow you to use the build backend required by `discretize`.
 
-    pip install --no-build-isolation --editable .
+3. Finally, you should then be able to perform an editable install using the source code::
+
+      pip install --no-build-isolation --editable .
 
 
 This builds and installs the local directory to your active python environment in an
-"editable" mode; when source code is changed, you will be able to make use of it immediately. It also builds against the packages installed
-in your environment instead of creating and isolated environment to build a wheel for the package.
+"editable" mode; when source code is changed, you will be able to make use of it immediately. It also builds against the
+packages installed in your environment instead of creating and isolated environment to build a wheel for the package,
+which is why we needed to install the build requirements into the environment.
 
 Testing your installation
 =========================
