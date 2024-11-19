@@ -418,6 +418,48 @@ void Cell::refine_func(node_map_t& nodes, function test_func, double *xs, double
     }
 }
 
+void Cell::refine_image(node_map_t& nodes, double* image, int_t *shape_cells, double *xs, double*ys, double *zs, bool diagonal_balance){
+    // early exit if my level is higher than or equal to target
+    if (level == max_level){
+        return;
+    }
+    int_t start_ix = points[0].location_ind[0]/2;
+    int_t start_iy = points[0].location_ind[1]/2;
+    int_t start_iz = n_dim == 2 ? 0 : points[0].location_ind[2]/2;
+    int_t nx = shape_cells[0]
+    int_t ny = shape_cells[1]
+    int_t nz = shape_cells[2]
+
+    // same as 2**(max_level - level), but quicker since power of 2 and integers
+    int_t span = 1<<(max_level - level);
+    int_t span_z = n_dim == 2 ? 1 : span;
+    int_t i_image = (nz * ny) * start_ix + nz * start_iy + start_iz;
+    double val_start = image[0];
+    bool subdivide = false;
+
+    // if any of the image data contained in the cell are different, subdivide myself
+    for(int_t ix=0; ix<span && !subdivide; ++ix){
+        for(int_t iy=0; iy<span && !subdivide; ++iy){
+            for(int_t iz=0; iz<span_z && !subdivide; ++iz){
+                subdivide = image[i_image] != val_start;
+                i_image += 1;
+            }
+            i_image += nz;
+        }
+        i_image += nz * ny;
+    }
+    if(subdivide){
+        if(is_leaf()){
+            divide(nodes, xs, ys, zs, true, diag_balance);
+        }
+        // recurse into children
+        for(int_t i = 0; i < (1<<n_dim); ++i){
+            children[i]->refine_image(nodes, geom, p_level, xs, ys, zs, diag_balance);
+        }
+    }
+
+}
+
 void Cell::divide(node_map_t& nodes, double* xs, double* ys, double* zs, bool balance, bool diag_balance){
     // Gaurd against dividing a cell that is already at the max level
     if (level == max_level){
@@ -895,6 +937,18 @@ void Tree::refine_function(function test_func, bool diagonal_balance){
             for(int_t ix=0; ix<nx_roots; ++ix)
                 roots[iz][iy][ix]->refine_func(nodes, test_func, xs, ys, zs, diagonal_balance);
 };
+
+void Tree:refine_image(double *image, bool diagonal_balance){
+    int_t[3] shape_cells;
+    shape_cells[0] = nx/2;
+    shape_cells[1] = ny/2;
+    shape_cells[2] = nz/2;
+    for(int_t iz=0; iz<nz_roots; ++iz)
+        for(int_t iy=0; iy<ny_roots; ++iy)
+            for(int_t ix=0; ix<nx_roots; ++ix)
+                roots[iz][iy][ix]->refine_image(nodes, image, xs, ys, zs, diagonal_balance);
+}
+
 
 void Tree::finalize_lists(){
     for(int_t iz=0; iz<nz_roots; ++iz)

@@ -136,6 +136,7 @@ class Cell{
     void insert_cell(node_map_t &nodes, double *new_center, int_t p_level, double* xs, double *ys, double *zs, bool diag_balance=false);
 
     void refine_func(node_map_t& nodes, function test_func, double *xs, double *ys, double* zs, bool diag_balance=false);
+    void refine_image(node_map_t& nodes, double* image, int_t *shape_cells, double *xs, double*ys, double *zs, bool diagonal_balance=false);
 
     inline bool is_leaf(){ return children[0]==NULL;};
     void spawn(node_map_t& nodes, Cell *kids[8], double* xs, double *ys, double *zs);
@@ -216,6 +217,8 @@ class Tree{
     Cell* containing_cell(double, double, double);
 
     void refine_function(function test_func, bool diagonal_balance=false);
+
+    void refine_image(double* image, bool diagonal_balance=false);
 
     template <class T>
     void refine_geom(const T& geom, int_t p_level, bool diagonal_balance=false){

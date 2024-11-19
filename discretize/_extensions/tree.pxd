@@ -93,6 +93,8 @@ cdef extern from "tree.h":
 
         void refine_geom[T](const T&, int_t, bool)
 
+        void refine_image(double*, bool)
+
         void number()
         void initialize_roots()
         void insert_cell(double *new_center, int_t p_level, bool)
