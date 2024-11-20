@@ -1,3 +1,4 @@
+import warnings
 import numpy as np
 import discretize
 import pickle
@@ -47,6 +48,19 @@ def test_UBCfiles(mesh, tmp_path):
     mesh.write_model_UBC([model_file], [vec])
     vecUBC2 = mesh.read_model_UBC(model_file)
     np.testing.assert_array_equal(vec, vecUBC2)
+
+
+def test_ubc_files_no_warning_diagonal_balance(mesh, tmp_path):
+    """
+    Test that reading UBC files don't trigger the diagonal balance warning.
+    """
+    # Save the sample mesh into a UBC file
+    fname = tmp_path / "temp.msh"
+    mesh.write_UBC(fname)
+    # Make sure that no warning is raised when reading the mesh
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        discretize.TreeMesh.read_UBC(fname)
 
 
 if has_vtk:
