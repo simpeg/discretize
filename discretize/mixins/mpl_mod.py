@@ -2149,7 +2149,7 @@ class InterfaceMPL(object):
         normal[normalInd] = 1
 
         # create a temporary TreeMesh with the slice through
-        temp_mesh = discretize.TreeMesh(h2d, x2d)
+        temp_mesh = discretize.TreeMesh(h2d, x2d, diagonal_balance=False)
         level_diff = self.max_level - temp_mesh.max_level
 
         # get list of cells which intersect the slicing plane
