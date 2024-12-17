@@ -238,9 +238,15 @@ class TestSequenceFunctions(unittest.TestCase):
         self.assertTrue(is_scalar(1.0))
         self.assertTrue(is_scalar(1))
         self.assertTrue(is_scalar(1j))
-        self.assertTrue(is_scalar(np.r_[1.0]))
-        self.assertTrue(is_scalar(np.r_[1]))
-        self.assertTrue(is_scalar(np.r_[1j]))
+        self.assertTrue(is_scalar(np.array(1.0)))
+        self.assertTrue(is_scalar(np.array(1)))
+        self.assertTrue(is_scalar(np.array(1j)))
+        self.assertTrue(is_scalar(np.array([1.0])))
+        self.assertTrue(is_scalar(np.array([1])))
+        self.assertTrue(is_scalar(np.array([1j])))
+        self.assertTrue(is_scalar(np.array([[1.0]])))
+        self.assertTrue(is_scalar(np.array([[1]])))
+        self.assertTrue(is_scalar(np.array([[1j]])))
 
     def test_as_array_n_by_dim(self):
         true = np.array([[1, 2, 3]])

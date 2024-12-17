@@ -1071,7 +1071,7 @@ class TreeMesh(
 
     def __reduce__(self):
         """Return the necessary items to reconstruct this object's state."""
-        return TreeMesh, (self.h, self.origin), self.__getstate__()
+        return TreeMesh, (self.h, self.origin, False), self.__getstate__()
 
     cellGrad = deprecate_property(
         "cell_gradient", "cellGrad", removal_version="1.0.0", error=True

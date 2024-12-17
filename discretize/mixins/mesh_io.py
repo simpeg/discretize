@@ -492,7 +492,7 @@ class TreeMeshIO(object):
         else:
             max_level = min(ls) + 1
 
-        mesh = TreeMesh(hs, origin=origin)
+        mesh = TreeMesh(hs, origin=origin, diagonal_balance=False)
         levels = indArr[:, -1]
         indArr = indArr[:, :-1]
 
