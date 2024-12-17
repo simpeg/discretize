@@ -243,8 +243,9 @@ class TreeMesh(
             diagonal_balance = False
             warnings.warn(
                 "In discretize v1.0 the TreeMesh will change the default value of "
-                "diagonal_balance to True, which will likely slightly change meshes you have"
-                "previously created. If you need to keep the current behavoir, explicitly set "
+                "diagonal_balance to True, which will likely slightly change meshes "
+                "you have previously created. "
+                "If you need to keep the current behavior, explicitly set "
                 "diagonal_balance=False.",
                 FutureWarning,
                 stacklevel=2,
@@ -1070,7 +1071,7 @@ class TreeMesh(
 
     def __reduce__(self):
         """Return the necessary items to reconstruct this object's state."""
-        return TreeMesh, (self.h, self.origin), self.__getstate__()
+        return TreeMesh, (self.h, self.origin, False), self.__getstate__()
 
     cellGrad = deprecate_property(
         "cell_gradient", "cellGrad", removal_version="1.0.0", error=True
