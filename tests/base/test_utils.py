@@ -273,6 +273,7 @@ class TestSequenceFunctions(unittest.TestCase):
 class TestZero(unittest.TestCase):
     def test_zero(self):
         z = Zero()
+        assert not z
         assert z == 0
         assert not (z < 0)
         assert z <= 0
@@ -319,6 +320,7 @@ class TestZero(unittest.TestCase):
 
     def test_one(self):
         o = Identity()
+        assert o
         assert o == 1
         assert not (o < 1)
         assert o <= 1
@@ -411,6 +413,9 @@ class TestZero(unittest.TestCase):
     def test_both(self):
         z = Zero()
         o = Identity()
+        assert z or o
+        assert not (z and o)
+        assert o and not z
         assert o * z == 0
         assert o * z + o == 1
         assert o - z == 1
