@@ -335,7 +335,7 @@ class TreeMesh(
                 "<table>",  # need to close this tag
                 "<tr>",
                 "<th></th>",
-                '<th {style} colspan="2">Mesh extent</th>',
+                f'<th {style} colspan="2">Mesh extent</th>',
                 "</tr>",
                 "<tr>",
                 "<th></th>",
