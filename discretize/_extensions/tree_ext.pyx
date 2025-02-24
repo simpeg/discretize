@@ -2069,6 +2069,7 @@ cdef class _TreeMesh:
         (n_cells, dim) numpy.ndarray of float
             Gridded cell dimensions
         """
+        self._error_if_not_finalized("h_gridded", is_property=True)
         if self._h_gridded is not None:
             return self._h_gridded
         cdef np.float64_t[:, :] gridCH
@@ -6963,6 +6964,19 @@ cdef class _TreeMesh:
             The indices of cells which overlap the axis aligned rectangle.
         """
         return self.get_cells_in_aabb(*rectangle.reshape(self.dim, 2).T)
+
+    def _error_if_not_finalized(self, method: str, is_property: bool):
+        """
+        Raise error if mesh is not finalized.
+        """
+        object_name = "property" if is_property else "method"
+        if not self.finalized:
+            msg = (
+                f"The `{method}` {object_name} "
+                "cannot be accessed before the mesh is finalized. "
+                "Use the `finalize()` method to finalize it."
+            )
+            raise AttributeError(msg)
 
     def _require_ndarray_with_dim(self, name, arr, ndim=1, dtype=None, requirements=None):
         """Returns an ndarray that has dim along it's last dimension, with ndim dims,
