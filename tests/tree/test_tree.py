@@ -624,6 +624,7 @@ class TestRepr:
             p1 = (origin[0] + 0.4, origin[1] + 0.4, origin[2] + 0.7)
             p2 = (origin[0] + 0.6, origin[1] + 0.6, origin[2] + 0.9)
             mesh.refine_box(p1, p2, levels=5, finalize=True)
+        mesh.finalize()
 
     @pytest.mark.parametrize("finalize", [True, False])
     def test_repr(self, mesh, finalize):
