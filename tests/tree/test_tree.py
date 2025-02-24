@@ -619,11 +619,11 @@ class TestRepr:
         if mesh.dim == 2:
             p1 = (origin[0] + 0.4, origin[1] + 0.4)
             p2 = (origin[0] + 0.6, origin[1] + 0.6)
-            mesh.refine_box(p1, p2, levels=5, finalize=True)
+            mesh.refine_box(p1, p2, levels=5)
         else:
             p1 = (origin[0] + 0.4, origin[1] + 0.4, origin[2] + 0.7)
             p2 = (origin[0] + 0.6, origin[1] + 0.6, origin[2] + 0.9)
-            mesh.refine_box(p1, p2, levels=5, finalize=True)
+            mesh.refine_box(p1, p2, levels=5)
         mesh.finalize()
 
     @pytest.mark.parametrize("finalize", [True, False])
