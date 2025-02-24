@@ -768,6 +768,7 @@ class TreeMesh(
         (n_total_nodes, dim) numpy.ndarray of float
             Gridded hanging and non-hanging node locations
         """
+        self._error_if_not_finalized("total_nodes", is_property=True)
         return np.vstack((self.nodes, self.hanging_nodes))
 
     @property

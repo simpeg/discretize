@@ -1959,6 +1959,7 @@ cdef class _TreeMesh:
         (n_cells, dim) numpy.ndarray of float
             Gridded cell center locations
         """
+        self._error_if_not_finalized("cell_centers", is_property=True)
         cdef np.float64_t[:, :] gridCC
         cdef np.int64_t ii, ind, dim
         if self._cell_centers is None:
@@ -1984,6 +1985,7 @@ cdef class _TreeMesh:
         (n_nodes, dim) numpy.ndarray of float
             Gridded non-hanging node locations
         """
+        self._error_if_not_finalized("nodes", is_property=True)
         cdef np.float64_t[:, :] gridN
         cdef Node *node
         cdef np.int64_t ii, ind, dim
@@ -2012,6 +2014,7 @@ cdef class _TreeMesh:
         (n_hanging_nodes, dim) numpy.ndarray of float
             Gridded hanging node locations
         """
+        self._error_if_not_finalized("hanging_nodes", is_property=True)
         cdef np.float64_t[:, :] gridN
         cdef Node *node
         cdef np.int64_t ii, ind, dim
@@ -2038,6 +2041,7 @@ cdef class _TreeMesh:
         (n_boundary_nodes, dim) numpy.ndarray of float
             Gridded boundary node locations
         """
+        self._error_if_not_finalized("boundary_nodes", is_property=True)
         nodes = self.nodes
         x0, xF = self._xs[0], self._xs[-1]
         y0, yF = self._ys[0], self._ys[-1]
@@ -2098,6 +2102,7 @@ cdef class _TreeMesh:
         (n_edges_x, dim) numpy.ndarray of float
             Gridded locations of all non-hanging x-edges
         """
+        self._error_if_not_finalized("edges_x", is_property=True)
         cdef np.float64_t[:, :] gridEx
         cdef Edge *edge
         cdef np.int64_t ii, ind, dim
@@ -2125,6 +2130,7 @@ cdef class _TreeMesh:
         (n_hanging_edges_x, dim) numpy.ndarray of float
             Gridded locations of all hanging x-edges
         """
+        self._error_if_not_finalized("hanging_edges_x", is_property=True)
         cdef np.float64_t[:, :] gridhEx
         cdef Edge *edge
         cdef np.int64_t ii, ind, dim
@@ -2150,6 +2156,7 @@ cdef class _TreeMesh:
         (n_edges_y, dim) numpy.ndarray of float
             Gridded locations of all non-hanging y-edges
         """
+        self._error_if_not_finalized("edges_y", is_property=True)
         cdef np.float64_t[:, :] gridEy
         cdef Edge *edge
         cdef np.int64_t ii, ind, dim
@@ -2177,6 +2184,7 @@ cdef class _TreeMesh:
         (n_haning_edges_y, dim) numpy.ndarray of float
             Gridded locations of all hanging y-edges
         """
+        self._error_if_not_finalized("hanging_edges_y", is_property=True)
         cdef np.float64_t[:, :] gridhEy
         cdef Edge *edge
         cdef np.int64_t ii, ind, dim
@@ -2202,6 +2210,7 @@ cdef class _TreeMesh:
         (n_edges_z, dim) numpy.ndarray of float
             Gridded locations of all non-hanging z-edges
         """
+        self._error_if_not_finalized("edges_z", is_property=True)
         cdef np.float64_t[:, :] gridEz
         cdef Edge *edge
         cdef np.int64_t ii, ind, dim
@@ -2229,6 +2238,7 @@ cdef class _TreeMesh:
         (n_hanging_edges_z, dim) numpy.ndarray of float
             Gridded locations of all hanging z-edges
         """
+        self._error_if_not_finalized("hanging_edges_z", is_property=True)
         cdef np.float64_t[:, :] gridhEz
         cdef Edge *edge
         cdef np.int64_t ii, ind, dim
@@ -2256,6 +2266,7 @@ cdef class _TreeMesh:
         (n_boundary_edges, dim) numpy.ndarray of float
             Gridded boundary edge locations
         """
+        self._error_if_not_finalized("boundary_edges", is_property=True)
         edges_x = self.edges_x
         edges_y = self.edges_y
         x0, xF = self._xs[0], self._xs[-1]
@@ -2295,6 +2306,7 @@ cdef class _TreeMesh:
         (n_faces_x, dim) numpy.ndarray of float
             Gridded locations of all non-hanging x-faces
         """
+        self._error_if_not_finalized("faces_x", is_property=True)
         if(self._dim == 2): return self.edges_y
 
         cdef np.float64_t[:, :] gridFx
@@ -2324,6 +2336,7 @@ cdef class _TreeMesh:
         (n_faces_y, dim) numpy.ndarray of float
             Gridded locations of all non-hanging y-faces
         """
+        self._error_if_not_finalized("faces_y", is_property=True)
         if(self._dim == 2): return self.edges_x
         cdef np.float64_t[:, :] gridFy
         cdef Face *face
@@ -2352,6 +2365,7 @@ cdef class _TreeMesh:
         (n_faces_z, dim) numpy.ndarray of float
             Gridded locations of all non-hanging z-faces
         """
+        self._error_if_not_finalized("faces_z", is_property=True)
         if(self._dim == 2): return self.cell_centers
 
         cdef np.float64_t[:, :] gridFz
@@ -2381,6 +2395,7 @@ cdef class _TreeMesh:
         (n_hanging_faces_x, dim) numpy.ndarray of float
             Gridded locations of all hanging x-faces
         """
+        self._error_if_not_finalized("hanging_faces_x", is_property=True)
         if(self._dim == 2): return self.hanging_edges_y
 
         cdef np.float64_t[:, :] gridFx
@@ -2408,6 +2423,7 @@ cdef class _TreeMesh:
         (n_hanging_faces_y, dim) numpy.ndarray of float
             Gridded locations of all hanging y-faces
         """
+        self._error_if_not_finalized("hanging_faces_y", is_property=True)
         if(self._dim == 2): return self.hanging_edges_x
 
         cdef np.float64_t[:, :] gridhFy
@@ -2435,6 +2451,7 @@ cdef class _TreeMesh:
         (n_hanging_faces_z, dim) numpy.ndarray of float
             Gridded locations of all hanging z-faces
         """
+        self._error_if_not_finalized("hanging_faces_z", is_property=True)
         if(self._dim == 2): return np.array([])
 
         cdef np.float64_t[:, :] gridhFz
@@ -2464,6 +2481,7 @@ cdef class _TreeMesh:
         (n_boundary_faces, dim) numpy.ndarray of float
             Gridded boundary face locations
         """
+        self._error_if_not_finalized("boundary_faces", is_property=True)
         faces_x = self.faces_x
         faces_y = self.faces_y
         x0, xF = self._xs[0], self._xs[-1]
@@ -2493,6 +2511,7 @@ cdef class _TreeMesh:
         (n_boundary_faces, dim) numpy.ndarray of float
             Outward normals of boundary faces
         """
+        self._error_if_not_finalized("boundary_face_outward_normals", is_property=True)
         faces_x = self.faces_x
         faces_y = self.faces_y
         x0, xF = self._xs[0], self._xs[-1]
@@ -2535,6 +2554,7 @@ cdef class _TreeMesh:
               - *3D:* Returns the cell volumes
 
         """
+        self._error_if_not_finalized("cell_volumes", is_property=True)
         cdef np.float64_t[:] vol
         if self._cell_volumes is None:
             self._cell_volumes = np.empty(self.n_cells, dtype=np.float64)
@@ -2559,6 +2579,7 @@ cdef class _TreeMesh:
               respectively
             - *3D:* returns the x, y and z-face areas in order
         """
+        self._error_if_not_finalized("face_areas", is_property=True)
         if self._dim == 2 and self._face_areas is None:
             self._face_areas = np.r_[self.edge_lengths[self.n_edges_x:], self.edge_lengths[:self.n_edges_x]]
         cdef np.float64_t[:] area
@@ -2601,6 +2622,7 @@ cdef class _TreeMesh:
             - *2D:* returns the x-edge and y-edge lengths in order
             - *3D:* returns the x, y and z-edge lengths in order
         """
+        self._error_if_not_finalized("edge_lengths", is_property=True)
         cdef np.float64_t[:] edge_l
         cdef Edge *edge
         cdef int_t ind, offset
@@ -3565,6 +3587,7 @@ cdef class _TreeMesh:
         (n_total_faces_x, n_cells) scipy.sparse.csr_matrix
             The stencil for the x-component of the cell gradient
         """
+        self._error_if_not_finalized("stencil_cell_gradient_x", is_property=True)
         if getattr(self, '_stencil_cell_gradient_x', None) is not None:
             return self._stencil_cell_gradient_x
         cdef np.int64_t[:] I = np.zeros(2*self.n_total_faces_x, dtype=np.int64)
@@ -3642,6 +3665,7 @@ cdef class _TreeMesh:
         (n_total_faces_y, n_cells) scipy.sparse.csr_matrix
             The stencil for the y-component of the cell gradient
         """
+        self._error_if_not_finalized("stencil_cell_gradient_y", is_property=True)
         if getattr(self, '_stencil_cell_gradient_y', None) is not None:
             return self._stencil_cell_gradient_y
 
@@ -3720,6 +3744,7 @@ cdef class _TreeMesh:
         (n_total_faces_z, n_cells) scipy.sparse.csr_matrix
             The stencil for the z-component of the cell gradient
         """
+        self._error_if_not_finalized("stencil_cell_gradient_z", is_property=True)
         if getattr(self, '_stencil_cell_gradient_z', None) is not None:
             return self._stencil_cell_gradient_z
 
@@ -5020,6 +5045,7 @@ cdef class _TreeMesh:
 
             phi_f = Acf @ phi_c
         """
+        self._error_if_not_finalized("average_cell_to_face", is_property=True)
         if self._average_cell_to_face is not None:
             return self._average_cell_to_face
         stacks = [self.average_cell_to_face_x, self.average_cell_to_face_y]
@@ -5080,6 +5106,7 @@ cdef class _TreeMesh:
         in the x-direction. For boundary faces, nearest neighbor is used to extrapolate
         the values.
         """
+        self._error_if_not_finalized("average_cell_vector_to_face", is_property=True)
         if self._average_cell_vector_to_face is not None:
             return self._average_cell_vector_to_face
         stacks = [self.average_cell_to_face_x, self.average_cell_to_face_y]
@@ -5103,6 +5130,7 @@ cdef class _TreeMesh:
         (n_faces_x, n_cells) scipy.sparse.csr_matrix
             The scalar averaging operator from cell centers to x faces
         """
+        self._error_if_not_finalized("average_cell_to_face_x", is_property=True)
         if self._average_cell_to_face_x is not None:
             return self._average_cell_to_face_x
         cdef np.int64_t[:] I = np.zeros(2*self.n_total_faces_x, dtype=np.int64)
@@ -5219,6 +5247,7 @@ cdef class _TreeMesh:
         (n_faces_y, n_cells) scipy.sparse.csr_matrix
             The scalar averaging operator from cell centers to y faces
         """
+        self._error_if_not_finalized("average_cell_to_face_y", is_property=True)
         if self._average_cell_to_face_y is not None:
             return self._average_cell_to_face_y
         cdef np.int64_t[:] I = np.zeros(2*self.n_total_faces_y, dtype=np.int64)
@@ -5335,6 +5364,7 @@ cdef class _TreeMesh:
         (n_faces_z, n_cells) scipy.sparse.csr_matrix
             The scalar averaging operator from cell centers to z faces
         """
+        self._error_if_not_finalized("average_cell_to_face_z", is_property=True)
         if self.dim == 2:
             raise Exception('TreeMesh has no z-faces in 2D')
         if self._average_cell_to_face_z is not None:
@@ -5425,6 +5455,7 @@ cdef class _TreeMesh:
         scipy.sparse.csr_matrix
             (n_boundary_faces, n_faces) Projection matrix with shape
         """
+        self._error_if_not_finalized("project_face_to_boundary_face", is_property=True)
         faces_x = self.faces_x
         faces_y = self.faces_y
 
@@ -5460,6 +5491,7 @@ cdef class _TreeMesh:
         (n_boundary_edges, n_edges) scipy.sparse.csr_matrix
             Projection matrix with shape
         """
+        self._error_if_not_finalized("project_edge_to_boundary_edge", is_property=True)
         edges_x = self.edges_x
         edges_y = self.edges_y
 
@@ -5502,6 +5534,7 @@ cdef class _TreeMesh:
         (n_boundary_nodes, n_nodes) scipy.sparse.csr_matrix
             Projection matrix with shape
         """
+        self._error_if_not_finalized("project_node_to_boundary_node", is_property=True)
         nodes = self.nodes
         x0, xF = self._xs[0], self._xs[-1]
         y0, yF = self._ys[0], self._ys[-1]
