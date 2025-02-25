@@ -92,12 +92,11 @@ import warnings
 from discretize.base import BaseTensorMesh
 from discretize.operators import InnerProducts, DiffOperators
 from discretize.mixins import InterfaceMixins, TreeMeshIO
-from discretize._extensions.tree_ext import _TreeMesh, TreeCell  # NOQA F401
+from discretize._extensions.tree_ext import _TreeMesh, TreeCell, TreeMeshNotFinalizedError  # NOQA F401
 import numpy as np
 import scipy.sparse as sp
 from discretize.utils.code_utils import deprecate_property
 from scipy.spatial import Delaunay
-
 
 class TreeMesh(
     _TreeMesh,
@@ -768,7 +767,7 @@ class TreeMesh(
         (n_total_nodes, dim) numpy.ndarray of float
             Gridded hanging and non-hanging node locations
         """
-        self._error_if_not_finalized("total_nodes", is_property=True)
+        self._error_if_not_finalized("total_nodes")
         return np.vstack((self.nodes, self.hanging_nodes))
 
     @property

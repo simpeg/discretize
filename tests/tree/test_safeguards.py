@@ -6,6 +6,7 @@ import re
 import pytest
 
 from discretize import TreeMesh
+from discretize.tree_mesh import TreeMeshNotFinalizedError
 
 
 @pytest.fixture
@@ -82,10 +83,9 @@ class TestSafeGuards:
         if refine:
             refine_mesh(mesh)
         msg = re.escape(
-            f"The `{prop_name}` property cannot be accessed before "
-            "the mesh is finalized."
+            f"`TreeMesh.{prop_name}` requires a finalized mesh. "
         )
-        with pytest.raises(AttributeError, match=msg):
+        with pytest.raises(TreeMeshNotFinalizedError, match=msg):
             getattr(mesh, prop_name)
 
     @pytest.mark.parametrize("prop_name", PROPERTIES)
