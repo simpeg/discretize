@@ -118,6 +118,11 @@ class TestSafeGuards:
         These inherited properties are the ones that ``TreeMesh`` inherit, but
         they depend on the ones defined by it that should not be accessed
         before finalizing the mesh (e.g. ``edges`` and ``faces``).
+
+        These inherited properties raise errors after trying to access one of
+        the other properties. Their error message does not include the name of
+        the inherited property, but the first offending property that is being
+        accessed.
         """
         if refine:
             refine_mesh(mesh)
