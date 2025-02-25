@@ -56,6 +56,7 @@ INHERITED_PROPERTIES = [
     "permute_cells",
     "permute_edges",
     "permute_faces",
+    "stencil_cell_gradient",
 ]
 
 
