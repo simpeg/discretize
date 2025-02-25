@@ -82,9 +82,7 @@ class TestSafeGuards:
         """
         if refine:
             refine_mesh(mesh)
-        msg = re.escape(
-            f"`TreeMesh.{prop_name}` requires a finalized mesh. "
-        )
+        msg = re.escape(f"`TreeMesh.{prop_name}` requires a finalized mesh. ")
         with pytest.raises(TreeMeshNotFinalizedError, match=msg):
             getattr(mesh, prop_name)
 
