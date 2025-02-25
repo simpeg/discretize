@@ -9,28 +9,6 @@ from discretize import TreeMesh
 from discretize.tree_mesh import TreeMeshNotFinalizedError
 
 
-@pytest.fixture
-def mesh():
-    """Return a sample TreeMesh"""
-    nc = 16
-    h = [nc, nc, nc]
-    origin = (-32.4, 245.4, 192.3)
-    mesh = TreeMesh(h, origin, diagonal_balance=True)
-    return mesh
-
-
-def refine_mesh(mesh):
-    """
-    Refine the sample tree mesh.
-
-    Don't finalize the mesh.
-    """
-    origin = mesh.origin
-    p1 = (origin[0] + 0.4, origin[1] + 0.4, origin[2] + 0.7)
-    p2 = (origin[0] + 0.6, origin[1] + 0.6, origin[2] + 0.9)
-    mesh.refine_box(p1, p2, levels=5, finalize=False)
-
-
 PROPERTIES = [
     "average_cell_to_face",
     "average_cell_to_face_x",
@@ -69,6 +47,39 @@ PROPERTIES = [
     "total_nodes",
 ]
 
+INHERITED_PROPERTIES = [
+    "boundary_edge_vector_integral",
+    "boundary_face_scalar_integral",
+    "boundary_node_vector_integral",
+    "edges",
+    "faces",
+    "permute_cells",
+    "permute_edges",
+    "permute_faces",
+]
+
+
+@pytest.fixture
+def mesh():
+    """Return a sample TreeMesh"""
+    nc = 16
+    h = [nc, nc, nc]
+    origin = (-32.4, 245.4, 192.3)
+    mesh = TreeMesh(h, origin, diagonal_balance=True)
+    return mesh
+
+
+def refine_mesh(mesh):
+    """
+    Refine the sample tree mesh.
+
+    Don't finalize the mesh.
+    """
+    origin = mesh.origin
+    p1 = (origin[0] + 0.4, origin[1] + 0.4, origin[2] + 0.7)
+    p2 = (origin[0] + 0.6, origin[1] + 0.6, origin[2] + 0.9)
+    mesh.refine_box(p1, p2, levels=5, finalize=False)
+
 
 class TestSafeGuards:
 
@@ -82,7 +93,7 @@ class TestSafeGuards:
         """
         if refine:
             refine_mesh(mesh)
-        msg = re.escape(f"`TreeMesh.{prop_name}` requires a finalized mesh. ")
+        msg = re.escape(f"`TreeMesh.{prop_name}` requires a finalized mesh.")
         with pytest.raises(TreeMeshNotFinalizedError, match=msg):
             getattr(mesh, prop_name)
 
@@ -96,3 +107,19 @@ class TestSafeGuards:
         mesh.finalize()
         # Accessing the property should not error out
         getattr(mesh, prop_name)
+
+    @pytest.mark.parametrize("prop_name", INHERITED_PROPERTIES)
+    @pytest.mark.parametrize("refine", [True, False], ids=["refined", "non-refined"])
+    def test_errors_inherited_properties(self, mesh, prop_name, refine):
+        """
+        Test errors when accessing inherited properties before finalizing the mesh.
+
+        These inherited properties are the ones that ``TreeMesh`` inherit, but
+        they depend on the ones defined by it that should not be accessed
+        before finalizing the mesh (e.g. ``edges`` and ``faces``).
+        """
+        if refine:
+            refine_mesh(mesh)
+        msg = r"\`TreeMesh\.[a-z_]+\`" + re.escape(" requires a finalized mesh.")
+        with pytest.raises(TreeMeshNotFinalizedError, match=msg):
+            getattr(mesh, prop_name)
