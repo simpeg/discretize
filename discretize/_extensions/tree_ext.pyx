@@ -7002,14 +7002,12 @@ cdef class _TreeMesh:
         """
         Raise error if mesh is not finalized.
         """
-        object_name = "property" if is_property else "method"
         if not self.finalized:
             msg = (
-                f"The `{method}` {object_name} "
-                "cannot be accessed before the mesh is finalized. "
+                f"`{type(self).__name__}.{method}` requires a finalized mesh. "
                 "Use the `finalize()` method to finalize it."
             )
-            raise AttributeError(msg)
+            raise TreeMeshNotFinalizedError(msg)
 
     def _require_ndarray_with_dim(self, name, arr, ndim=1, dtype=None, requirements=None):
         """Returns an ndarray that has dim along it's last dimension, with ndim dims,
