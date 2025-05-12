@@ -721,6 +721,7 @@ class BaseTensorMesh(BaseRegularMesh):
                 raise ValueError("Points outside of mesh")
         else:
             indZeros = np.logical_not(self.is_inside(loc))
+            loc = loc.copy()
             loc[indZeros, :] = np.array([v.mean() for v in self.get_tensor("CC")])
 
         location_type = self._parse_location_type(location_type)
@@ -918,11 +919,7 @@ class BaseTensorMesh(BaseRegularMesh):
                 dMdprop = n_elements * Av.T * V * ones
             elif invert_matrix and invert_model:
                 dMdprop = n_elements * (
-                    sdiag(MI.diagonal() ** 2)
-                    * Av.T
-                    * V
-                    * ones
-                    * sdiag(1.0 / model**2)
+                    sdiag(MI.diagonal() ** 2) * Av.T * V * ones * sdiag(1.0 / model**2)
                 )
             elif invert_model:
                 dMdprop = n_elements * Av.T * V * sdiag(-1.0 / model**2)

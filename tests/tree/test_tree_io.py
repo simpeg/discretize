@@ -1,9 +1,9 @@
+import warnings
 import numpy as np
-import unittest
-import os
 import discretize
 import pickle
 import json
+import pytest
 
 try:
     import vtk  # NOQA F401
@@ -13,206 +13,85 @@ except ImportError:
     has_vtk = False
 
 
-class TestOcTreeMeshIO(unittest.TestCase):
-    def setUp(self):
+@pytest.fixture(params=[2, 3])
+def mesh(request):
+    dim = request.param
+    if dim == 2:
+        mesh = discretize.TreeMesh([8, 8])
+        mesh.refine(2, finalize=False)
+        mesh.refine_ball([0.25, 0.25], 0.25, 3)
+    else:
         h = np.ones(16)
         mesh = discretize.TreeMesh([h, 2 * h, 3 * h])
         cell_points = np.array([[0.5, 0.5, 0.5], [0.5, 2.5, 0.5]])
         cell_levels = np.array([4, 4])
         mesh.insert_cells(cell_points, cell_levels)
-        self.mesh = mesh
+    return mesh
 
-    def test_UBC3Dfiles(self):
-        mesh = self.mesh
-        # Make a vector
+
+def test_UBCfiles(mesh, tmp_path):
+    # Make a vector
+    vec = np.arange(mesh.n_cells)
+    # Write and read
+    mesh_file = tmp_path / "temp.msh"
+    model_file = tmp_path / "arange.txt"
+
+    mesh.write_UBC(mesh_file, {model_file: vec})
+    meshUBC = discretize.TreeMesh.read_UBC(mesh_file)
+    vecUBC = meshUBC.read_model_UBC(model_file)
+
+    assert mesh is not meshUBC
+    assert mesh.equals(meshUBC)
+    np.testing.assert_array_equal(vec, vecUBC)
+
+    # Write it again with another IO function
+    mesh.write_model_UBC([model_file], [vec])
+    vecUBC2 = mesh.read_model_UBC(model_file)
+    np.testing.assert_array_equal(vec, vecUBC2)
+
+
+def test_ubc_files_no_warning_diagonal_balance(mesh, tmp_path):
+    """
+    Test that reading UBC files don't trigger the diagonal balance warning.
+    """
+    # Save the sample mesh into a UBC file
+    fname = tmp_path / "temp.msh"
+    mesh.write_UBC(fname)
+    # Make sure that no warning is raised when reading the mesh
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        discretize.TreeMesh.read_UBC(fname)
+
+
+if has_vtk:
+
+    def test_write_VTU_files(mesh, tmp_path):
         vec = np.arange(mesh.nC)
-        # Write and read
-        mesh.write_UBC("temp.msh", {"arange.txt": vec})
-        meshUBC = discretize.TreeMesh.read_UBC("temp.msh")
-        vecUBC = meshUBC.read_model_UBC("arange.txt")
-
-        self.assertEqual(mesh.nC, meshUBC.nC)
-        self.assertEqual(mesh.__str__(), meshUBC.__str__())
-        self.assertTrue(np.allclose(mesh.gridCC, meshUBC.gridCC))
-        self.assertTrue(np.allclose(vec, vecUBC))
-        self.assertTrue(np.allclose(np.array(mesh.h), np.array(meshUBC.h)))
-
-        # Write it again with another IO function
-        mesh.write_model_UBC(["arange.txt"], [vec])
-        vecUBC2 = mesh.read_model_UBC("arange.txt")
-        self.assertTrue(np.allclose(vec, vecUBC2))
-
-        print("IO of UBC octree files is working")
-        os.remove("temp.msh")
-        os.remove("arange.txt")
-
-    def test_UBC2Dfiles(self):
-        mesh0 = discretize.TreeMesh([8, 8])
-
-        def refine(cell):
-            xyz = cell.center
-            dist = ((xyz - 0.25) ** 2).sum() ** 0.5
-            if dist < 0.25:
-                return 3
-            return 2
-
-        mesh0.refine(refine)
-
-        mod0 = np.arange(mesh0.nC)
-        mesh0.write_UBC("tmp.msh", {"arange.txt": mod0})
-        mesh1 = discretize.TreeMesh.read_UBC("tmp.msh")
-        mod1 = mesh1.read_model_UBC("arange.txt")
-
-        self.assertEqual(mesh0.nC, mesh1.nC)
-        self.assertEqual(mesh0.__str__(), mesh1.__str__())
-        self.assertTrue(np.allclose(mesh0.gridCC, mesh1.gridCC))
-        self.assertTrue(np.allclose(np.array(mesh0.h), np.array(mesh1.h)))
-        self.assertTrue(np.allclose(mod0, mod1))
-        print("IO of UBC like 2D TreeMesh is working")
-
-    if has_vtk:
-
-        def test_VTUfiles(self):
-            mesh = self.mesh
-            vec = np.arange(mesh.nC)
-            mesh.write_vtk("temp.vtu", {"arange": vec})
-            print("Writing of VTU files is working")
-            os.remove("temp.vtu")
+        mesh_file = tmp_path / "temp.vtu"
+        mesh.write_vtk(mesh_file, {"arange": vec})
 
 
-class TestPickle(unittest.TestCase):
-    def test_pickle2D(self):
-        mesh0 = discretize.TreeMesh([8, 8])
+def test_pickle(mesh):
+    byte_string = pickle.dumps(mesh)
+    mesh_pickle = pickle.loads(byte_string)
 
-        def refine(cell):
-            xyz = cell.center
-            dist = ((xyz - 0.25) ** 2).sum() ** 0.5
-            if dist < 0.25:
-                return 3
-            return 2
-
-        mesh0.refine(refine)
-
-        byte_string = pickle.dumps(mesh0)
-        mesh1 = pickle.loads(byte_string)
-
-        self.assertEqual(mesh0.nC, mesh1.nC)
-        self.assertEqual(mesh0.__str__(), mesh1.__str__())
-        self.assertTrue(np.allclose(mesh0.gridCC, mesh1.gridCC))
-        self.assertTrue(np.allclose(np.array(mesh0.h), np.array(mesh1.h)))
-        print("Pickling of 2D TreeMesh is working")
-
-    def test_pickle3D(self):
-        mesh0 = discretize.TreeMesh([8, 8, 8])
-
-        def refine(cell):
-            xyz = cell.center
-            dist = ((xyz - 0.25) ** 2).sum() ** 0.5
-            if dist < 0.25:
-                return 3
-            return 2
-
-        mesh0.refine(refine)
-
-        byte_string = pickle.dumps(mesh0)
-        mesh1 = pickle.loads(byte_string)
-
-        self.assertEqual(mesh0.nC, mesh1.nC)
-        self.assertEqual(mesh0.__str__(), mesh1.__str__())
-        self.assertTrue(np.allclose(mesh0.gridCC, mesh1.gridCC))
-        self.assertTrue(np.allclose(np.array(mesh0.h), np.array(mesh1.h)))
-        print("Pickling of 3D TreeMesh is working")
+    assert mesh is not mesh_pickle
+    assert mesh.equals(mesh_pickle)
 
 
-class TestSerialize(unittest.TestCase):
-    def test_dic_serialize2D(self):
-        mesh0 = discretize.TreeMesh([8, 8])
-
-        def refine(cell):
-            xyz = cell.center
-            dist = ((xyz - 0.25) ** 2).sum() ** 0.5
-            if dist < 0.25:
-                return 3
-            return 2
-
-        mesh0.refine(refine)
-
-        mesh_dict = mesh0.serialize()
-        mesh1 = discretize.TreeMesh.deserialize(mesh_dict)
-
-        self.assertEqual(mesh0.nC, mesh1.nC)
-        self.assertEqual(mesh0.__str__(), mesh1.__str__())
-        self.assertTrue(np.allclose(mesh0.gridCC, mesh1.gridCC))
-        self.assertTrue(np.allclose(np.array(mesh0.h), np.array(mesh1.h)))
-        print("dic serialize 2D is working")
-
-    def test_save_load_json2D(self):
-        mesh0 = discretize.TreeMesh([8, 8])
-
-        def refine(cell):
-            xyz = cell.center
-            dist = ((xyz - 0.25) ** 2).sum() ** 0.5
-            if dist < 0.25:
-                return 3
-            return 2
-
-        mesh0.refine(refine)
-
-        mesh0.save("tree.json")
-        with open("tree.json", "r") as outfile:
-            jsondict = json.load(outfile)
-        mesh1 = discretize.TreeMesh.deserialize(jsondict)
-
-        self.assertEqual(mesh0.nC, mesh1.nC)
-        self.assertEqual(mesh0.__str__(), mesh1.__str__())
-        self.assertTrue(np.allclose(mesh0.gridCC, mesh1.gridCC))
-        self.assertTrue(np.allclose(np.array(mesh0.h), np.array(mesh1.h)))
-        print("json serialize 2D is working")
-
-    def test_dic_serialize3D(self):
-        mesh0 = discretize.TreeMesh([8, 8, 8])
-
-        def refine(cell):
-            xyz = cell.center
-            dist = ((xyz - 0.25) ** 2).sum() ** 0.5
-            if dist < 0.25:
-                return 3
-            return 2
-
-        mesh0.refine(refine)
-
-        mesh_dict = mesh0.serialize()
-        mesh1 = discretize.TreeMesh.deserialize(mesh_dict)
-
-        self.assertEqual(mesh0.nC, mesh1.nC)
-        self.assertEqual(mesh0.__str__(), mesh1.__str__())
-        self.assertTrue(np.allclose(mesh0.gridCC, mesh1.gridCC))
-        self.assertTrue(np.allclose(np.array(mesh0.h), np.array(mesh1.h)))
-        print("dic serialize 3D is working")
-
-    def test_save_load_json3D(self):
-        mesh0 = discretize.TreeMesh([8, 8, 8])
-
-        def refine(cell):
-            xyz = cell.center
-            dist = ((xyz - 0.25) ** 2).sum() ** 0.5
-            if dist < 0.25:
-                return 3
-            return 2
-
-        mesh0.refine(refine)
-
-        mesh0.save("tree.json")
-        with open("tree.json", "r") as outfile:
-            jsondict = json.load(outfile)
-        mesh1 = discretize.TreeMesh.deserialize(jsondict)
-
-        self.assertEqual(mesh0.nC, mesh1.nC)
-        self.assertEqual(mesh0.__str__(), mesh1.__str__())
-        self.assertTrue(np.allclose(mesh0.gridCC, mesh1.gridCC))
-        self.assertTrue(np.allclose(np.array(mesh0.h), np.array(mesh1.h)))
-        print("json serialize 3D is working")
+def test_dic_serialize(mesh):
+    mesh_dict = mesh.serialize()
+    mesh2 = discretize.TreeMesh.deserialize(mesh_dict)
+    assert mesh is not mesh2
+    assert mesh.equals(mesh2)
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_json_serialize(mesh, tmp_path):
+    json_file = tmp_path / "tree.json"
+
+    mesh.save(json_file)
+    with open(json_file, "r") as outfile:
+        jsondict = json.load(outfile)
+    mesh2 = discretize.TreeMesh.deserialize(jsondict)
+    assert mesh is not mesh2
+    assert mesh.equals(mesh2)

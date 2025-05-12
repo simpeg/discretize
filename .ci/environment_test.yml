@@ -1,0 +1,35 @@
+name: discretize-test
+channels:
+  - conda-forge
+dependencies:
+  - numpy>=1.22.4
+  - scipy>=1.8
+
+  # optionals
+  - vtk>=6
+  - pyvista
+  - omf
+  - matplotlib
+
+  # documentation
+  - sphinx
+  - pydata-sphinx-theme==0.15.4
+  - sphinx-gallery>=0.1.13
+  - numpydoc>=1.5
+  - jupyter
+  - graphviz
+  - pillow
+  - pooch
+
+  # testing
+  - sympy
+  - pytest
+  - pytest-cov
+
+  # Building
+  - pip
+  - meson-python>=0.14.0
+  - meson
+  - ninja
+  - cython>=0.29.35
+  - setuptools_scm

@@ -1,4 +1,7 @@
 """Module containing the TreeMesh implementation."""
+
+import warnings
+
 #      ___          ___       ___          ___          ___          ___
 #     /\  \        /\  \     /\  \        /\  \        /\  \        /\  \
 #    /::\  \      /::\  \    \:\  \      /::\  \      /::\  \      /::\  \
@@ -89,7 +92,6 @@
 from discretize.base import BaseTensorMesh
 from discretize.operators import InnerProducts, DiffOperators
 from discretize.mixins import InterfaceMixins, TreeMeshIO
-from discretize.utils import as_array_n_by_dim
 from discretize._extensions.tree_ext import _TreeMesh, TreeCell  # NOQA F401
 import numpy as np
 import scipy.sparse as sp
@@ -169,7 +171,7 @@ class TreeMesh(
 
     diagonal_balance : bool, optional
         Whether to balance cells along the diagonal of the tree during construction.
-        This will effect all calls to refine the tree.
+        This will affect all calls to refine the tree.
 
     Examples
     --------
@@ -233,9 +235,21 @@ class TreeMesh(
     _items = {"h", "origin", "cell_state"}
 
     # inheriting stuff from BaseTensorMesh that isn't defined in _QuadTree
-    def __init__(self, h=None, origin=None, diagonal_balance=False, **kwargs):
+    def __init__(self, h=None, origin=None, diagonal_balance=None, **kwargs):
         if "x0" in kwargs:
             origin = kwargs.pop("x0")
+
+        if diagonal_balance is None:
+            diagonal_balance = False
+            warnings.warn(
+                "In discretize v1.0 the TreeMesh will change the default value of "
+                "diagonal_balance to True, which will likely slightly change meshes "
+                "you have previously created. "
+                "If you need to keep the current behavior, explicitly set "
+                "diagonal_balance=False.",
+                FutureWarning,
+                stacklevel=2,
+            )
         super().__init__(h=h, origin=origin, diagonal_balance=diagonal_balance)
 
         cell_state = kwargs.pop("cell_state", None)
@@ -435,7 +449,8 @@ class TreeMesh(
         >>> import matplotlib.pyplot as plt
         >>> import matplotlib.patches as patches
         >>> mesh = discretize.TreeMesh([32, 32])
-        >>> points = np.random.rand(20, 2) * 0.25 + 3/8
+        >>> rng = np.random.default_rng(852)
+        >>> points = rng.random((20, 2)) * 0.25 + 3/8
 
         Now we want to refine to the maximum level, with no padding the in `x`
         direction and `2` cells in `y`. At the second highest level we want 2 padding
@@ -925,9 +940,7 @@ class TreeMesh(
 
     def point2index(self, locs):  # NOQA D102
         # Documentation inherited from discretize.base.BaseMesh
-        locs = as_array_n_by_dim(locs, self.dim)
-        inds = self._get_containing_cell_indexes(locs)
-        return inds
+        return self.get_containing_cells(locs)
 
     def cell_levels_by_index(self, indices):
         """Fast function to return a list of levels for the given cell indices.
@@ -958,14 +971,11 @@ class TreeMesh(
                 "The zerosOutside keyword argument has been removed, please use zeros_outside. "
                 "This will be removed in discretize 1.0.0"
             )
-        locs = as_array_n_by_dim(locs, self.dim)
         location_type = self._parse_location_type(location_type)
-
         if self.dim == 2 and "z" in location_type:
             raise NotImplementedError("Unable to interpolate from Z edges/faces in 2D")
 
-        locs = np.require(np.atleast_2d(locs), dtype=np.float64, requirements="C")
-
+        locs = self._require_ndarray_with_dim("locs", locs, ndim=2, dtype=np.float64)
         if location_type == "nodes":
             Av = self._getNodeIntMat(locs, zeros_outside)
         elif location_type in ["edges_x", "edges_y", "edges_z"]:
@@ -1061,7 +1071,7 @@ class TreeMesh(
 
     def __reduce__(self):
         """Return the necessary items to reconstruct this object's state."""
-        return TreeMesh, (self.h, self.origin), self.__getstate__()
+        return TreeMesh, (self.h, self.origin, False), self.__getstate__()
 
     cellGrad = deprecate_property(
         "cell_gradient", "cellGrad", removal_version="1.0.0", error=True

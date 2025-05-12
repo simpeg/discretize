@@ -5,12 +5,14 @@ import discretize
 
 TOL = 1e-8
 
+rng = np.random.default_rng(6234)
+
 
 class TestSimpleQuadTree(unittest.TestCase):
     def test_counts(self):
         nc = 8
-        h1 = np.random.rand(nc) * nc * 0.5 + nc * 0.5
-        h2 = np.random.rand(nc) * nc * 0.5 + nc * 0.5
+        h1 = rng.random(nc) * nc * 0.5 + nc * 0.5
+        h2 = rng.random(nc) * nc * 0.5 + nc * 0.5
         h = [hi / np.sum(hi) for hi in [h1, h2]]  # normalize
         M = discretize.TreeMesh(h)
         points = np.array([[0.1, 0.1]])
@@ -132,9 +134,9 @@ class TestSimpleQuadTree(unittest.TestCase):
 class TestOcTree(unittest.TestCase):
     def test_counts(self):
         nc = 8
-        h1 = np.random.rand(nc) * nc * 0.5 + nc * 0.5
-        h2 = np.random.rand(nc) * nc * 0.5 + nc * 0.5
-        h3 = np.random.rand(nc) * nc * 0.5 + nc * 0.5
+        h1 = rng.random(nc) * nc * 0.5 + nc * 0.5
+        h2 = rng.random(nc) * nc * 0.5 + nc * 0.5
+        h3 = rng.random(nc) * nc * 0.5 + nc * 0.5
         h = [hi / np.sum(hi) for hi in [h1, h2, h3]]  # normalize
         M = discretize.TreeMesh(h, levels=3)
         points = np.array([[0.2, 0.1, 0.7], [0.8, 0.4, 0.2]])
@@ -311,8 +313,8 @@ class TestOcTree(unittest.TestCase):
     def test_cell_nodes(self):
         # 2D
         nc = 8
-        h1 = np.random.rand(nc) * nc * 0.5 + nc * 0.5
-        h2 = np.random.rand(nc) * nc * 0.5 + nc * 0.5
+        h1 = rng.random(nc) * nc * 0.5 + nc * 0.5
+        h2 = rng.random(nc) * nc * 0.5 + nc * 0.5
         h = [hi / np.sum(hi) for hi in [h1, h2]]  # normalize
         M = discretize.TreeMesh(h)
         points = np.array([[0.2, 0.1], [0.8, 0.4]])
@@ -326,9 +328,9 @@ class TestOcTree(unittest.TestCase):
 
         # 3D
         nc = 8
-        h1 = np.random.rand(nc) * nc * 0.5 + nc * 0.5
-        h2 = np.random.rand(nc) * nc * 0.5 + nc * 0.5
-        h3 = np.random.rand(nc) * nc * 0.5 + nc * 0.5
+        h1 = rng.random(nc) * nc * 0.5 + nc * 0.5
+        h2 = rng.random(nc) * nc * 0.5 + nc * 0.5
+        h3 = rng.random(nc) * nc * 0.5 + nc * 0.5
         h = [hi / np.sum(hi) for hi in [h1, h2, h3]]  # normalize
         M = discretize.TreeMesh(h, levels=3)
         points = np.array([[0.2, 0.1, 0.7], [0.8, 0.4, 0.2]])
@@ -346,8 +348,8 @@ class TestTreeMeshNodes:
     def sample_mesh(self, request):
         """Return a sample TreeMesh"""
         nc = 8
-        h1 = np.random.rand(nc) * nc * 0.5 + nc * 0.5
-        h2 = np.random.rand(nc) * nc * 0.5 + nc * 0.5
+        h1 = rng.random(nc) * nc * 0.5 + nc * 0.5
+        h2 = rng.random(nc) * nc * 0.5 + nc * 0.5
         if request.param == "2D":
             h = [hi / np.sum(hi) for hi in [h1, h2]]  # normalize
             mesh = discretize.TreeMesh(h)
@@ -355,7 +357,7 @@ class TestTreeMeshNodes:
             levels = np.array([1, 2])
             mesh.insert_cells(points, levels, finalize=True)
         else:
-            h3 = np.random.rand(nc) * nc * 0.5 + nc * 0.5
+            h3 = rng.random(nc) * nc * 0.5 + nc * 0.5
             h = [hi / np.sum(hi) for hi in [h1, h2, h3]]  # normalize
             mesh = discretize.TreeMesh(h, levels=3)
             points = np.array([[0.2, 0.1, 0.7], [0.8, 0.4, 0.2]])
@@ -376,6 +378,64 @@ class TestTreeMeshNodes:
         np.testing.assert_equal(
             sample_mesh.total_nodes[n_non_hanging_nodes:, :], sample_mesh.hanging_nodes
         )
+
+
+class TestTreeCellBounds:
+    """Test ``TreeCell.bounds`` method"""
+
+    @pytest.fixture(params=["2D", "3D"])
+    def mesh(self, request):
+        """Return a sample TreeMesh"""
+        nc = 16
+        if request.param == "2D":
+            h = [nc, nc]
+            origin = (-32.4, 245.4)
+            mesh = discretize.TreeMesh(h, origin)
+            p1 = (origin[0] + 0.4, origin[1] + 0.4)
+            p2 = (origin[0] + 0.6, origin[1] + 0.6)
+            mesh.refine_box(p1, p2, levels=5, finalize=True)
+        else:
+            h = [nc, nc, nc]
+            origin = (-32.4, 245.4, 192.3)
+            mesh = discretize.TreeMesh(h, origin)
+            p1 = (origin[0] + 0.4, origin[1] + 0.4, origin[2] + 0.7)
+            p2 = (origin[0] + 0.6, origin[1] + 0.6, origin[2] + 0.9)
+            mesh.refine_box(p1, p2, levels=5, finalize=True)
+        return mesh
+
+    def test_bounds(self, mesh):
+        """Test bounds method of one of the cells in the mesh."""
+        cell = mesh[16]
+        nodes = mesh.nodes[cell.nodes]
+        x1, x2 = nodes[0][0], nodes[-1][0]
+        y1, y2 = nodes[0][1], nodes[-1][1]
+        if mesh.dim == 2:
+            expected_bounds = np.array([x1, x2, y1, y2])
+        else:
+            z1, z2 = nodes[0][2], nodes[-1][2]
+            expected_bounds = np.array([x1, x2, y1, y2, z1, z2])
+        np.testing.assert_equal(cell.bounds, expected_bounds)
+
+    def test_bounds_relations(self, mesh):
+        """Test if bounds are in the right order for one cell in the mesh."""
+        cell = mesh[16]
+        if mesh.dim == 2:
+            x1, x2, y1, y2 = cell.bounds
+            assert x1 < x2
+            assert y1 < y2
+        else:
+            x1, x2, y1, y2, z1, z2 = cell.bounds
+            assert x1 < x2
+            assert y1 < y2
+            assert z1 < z2
+
+    def test_cell_bounds(self, mesh):
+        """Test cell_bounds method of the tree mesh."""
+        cell_bounds = mesh.cell_bounds
+        cell_bounds_slow = np.empty((mesh.n_cells, 2 * mesh.dim))
+        for i, cell in enumerate(mesh):
+            cell_bounds_slow[i] = cell.bounds
+        np.testing.assert_equal(cell_bounds, cell_bounds_slow)
 
 
 class Test2DInterpolation(unittest.TestCase):
@@ -407,12 +467,12 @@ class Test2DInterpolation(unittest.TestCase):
         self.M = M
 
     def test_fx(self):
-        r = np.random.rand(self.M.nFx)
+        r = rng.random(self.M.nFx)
         P = self.M.get_interpolation_matrix(self.M.gridFx, "Fx")
         self.assertLess(np.abs(P[:, : self.M.nFx] * r - r).max(), TOL)
 
     def test_fy(self):
-        r = np.random.rand(self.M.nFy)
+        r = rng.random(self.M.nFy)
         P = self.M.get_interpolation_matrix(self.M.gridFy, "Fy")
         self.assertLess(np.abs(P[:, self.M.nFx :] * r - r).max(), TOL)
 
@@ -437,36 +497,36 @@ class Test3DInterpolation(unittest.TestCase):
         self.M = M
 
     def test_Fx(self):
-        r = np.random.rand(self.M.nFx)
+        r = rng.random(self.M.nFx)
         P = self.M.get_interpolation_matrix(self.M.gridFx, "Fx")
         self.assertLess(np.abs(P[:, : self.M.nFx] * r - r).max(), TOL)
 
     def test_Fy(self):
-        r = np.random.rand(self.M.nFy)
+        r = rng.random(self.M.nFy)
         P = self.M.get_interpolation_matrix(self.M.gridFy, "Fy")
         self.assertLess(
             np.abs(P[:, self.M.nFx : (self.M.nFx + self.M.nFy)] * r - r).max(), TOL
         )
 
     def test_Fz(self):
-        r = np.random.rand(self.M.nFz)
+        r = rng.random(self.M.nFz)
         P = self.M.get_interpolation_matrix(self.M.gridFz, "Fz")
         self.assertLess(np.abs(P[:, (self.M.nFx + self.M.nFy) :] * r - r).max(), TOL)
 
     def test_Ex(self):
-        r = np.random.rand(self.M.nEx)
+        r = rng.random(self.M.nEx)
         P = self.M.get_interpolation_matrix(self.M.gridEx, "Ex")
         self.assertLess(np.abs(P[:, : self.M.nEx] * r - r).max(), TOL)
 
     def test_Ey(self):
-        r = np.random.rand(self.M.nEy)
+        r = rng.random(self.M.nEy)
         P = self.M.get_interpolation_matrix(self.M.gridEy, "Ey")
         self.assertLess(
             np.abs(P[:, self.M.nEx : (self.M.nEx + self.M.nEy)] * r - r).max(), TOL
         )
 
     def test_Ez(self):
-        r = np.random.rand(self.M.nEz)
+        r = rng.random(self.M.nEz)
         P = self.M.get_interpolation_matrix(self.M.gridEz, "Ez")
         self.assertLess(np.abs(P[:, (self.M.nEx + self.M.nEy) :] * r - r).max(), TOL)
 
@@ -511,6 +571,23 @@ class TestWrapAroundLevels(unittest.TestCase):
         mesh2.insert_cells([[8, 8, 8]], [mesh2.max_level])
 
         self.assertEqual(mesh1.nC, mesh2.nC)
+
+
+@pytest.mark.parametrize("dim", [2, 3])
+def test_cell_locator(dim):
+    mesh = discretize.TreeMesh((16, 16, 16)[:dim])
+    mesh.insert_cells([0.5, 0.5, 0.5][:dim], levels=-1)
+
+    query_point = [0.21, 0.42, 0.22][:dim]
+    identified_cell = mesh.point2index(query_point)
+    found = False
+    for i, cell in enumerate(mesh):
+        bounds = cell.bounds.reshape((-1, 2))
+
+        if np.all((bounds[:, 0] <= query_point) & (bounds[:, 1] >= query_point)):
+            found = True
+            assert i == identified_cell
+    assert found
 
 
 if __name__ == "__main__":

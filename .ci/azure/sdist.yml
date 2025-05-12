@@ -1,0 +1,29 @@
+jobs:
+- job:
+  displayName: "Build source dist."
+  pool:
+    vmImage: ubuntu-latest
+  steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: "3.11"
+
+    - bash:
+        git fetch --tags
+      displayName: Fetch tags
+
+    - bash: |
+        set -o errexit
+        python -m pip install --upgrade pip
+        pip install build
+      displayName: Install source build tools.
+
+    - bash: |
+        python -m build --skip-dependency-check --sdist .
+        ls -la dist
+      displayName: Build Source
+
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: 'dist'
+        artifact: 'source_dist'

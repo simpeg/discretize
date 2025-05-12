@@ -13,6 +13,8 @@ try:
 except ImportError:
     has_vtk = False
 
+rng = np.random.default_rng(87916253)
+
 
 class SimplexTests(unittest.TestCase):
     def test_init_errors(self):
@@ -42,7 +44,7 @@ class SimplexTests(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             # pass bad dimensionality
-            discretize.SimplexMesh(np.random.rand(10, 4), simplices[:, :-1])
+            discretize.SimplexMesh(np.ones((10, 4)), simplices[:, :-1])
 
     def test_find_containing(self):
         n = 4
@@ -81,11 +83,11 @@ class SimplexTests(unittest.TestCase):
         points, simplices = discretize.utils.example_simplex_mesh((n, n))
         mesh = discretize.SimplexMesh(points, simplices)
 
-        cc_dat = np.random.rand(mesh.n_cells)
-        n_dat = np.random.rand(mesh.n_nodes)
-        f_dat = np.random.rand(mesh.n_faces)
-        e_dat = np.random.rand(mesh.n_edges)
-        ccv_dat = np.random.rand(mesh.n_cells, 2)
+        cc_dat = rng.random(mesh.n_cells)
+        n_dat = rng.random(mesh.n_nodes)
+        f_dat = rng.random(mesh.n_faces)
+        e_dat = rng.random(mesh.n_edges)
+        ccv_dat = rng.random((mesh.n_cells, 2))
 
         mesh.plot_image(cc_dat)
         mesh.plot_image(ccv_dat, v_type="CCv", view="vec")
@@ -106,7 +108,7 @@ class SimplexTests(unittest.TestCase):
             points, simplices = discretize.utils.example_simplex_mesh((n, n, n))
             mesh = discretize.SimplexMesh(points, simplices)
 
-            cc_dat = np.random.rand(mesh.n_cells)
+            cc_dat = rng.random(mesh.n_cells)
             mesh.plot_image(cc_dat)
 
         plt.close("all")
@@ -128,7 +130,7 @@ class SimplexTests(unittest.TestCase):
             n = 5
             points, simplices = discretize.utils.example_simplex_mesh((n, n))
             mesh = discretize.SimplexMesh(points, simplices)
-            cc_dat = np.random.rand(mesh.n_cells)
+            cc_dat = rng.random(mesh.n_cells)
 
             vtk_obj = mesh.to_vtk(models={"info": cc_dat})
 
@@ -149,7 +151,7 @@ class SimplexTests(unittest.TestCase):
             n = 5
             points, simplices = discretize.utils.example_simplex_mesh((n, n, n))
             mesh = discretize.SimplexMesh(points, simplices)
-            cc_dat = np.random.rand(mesh.n_cells)
+            cc_dat = rng.random(mesh.n_cells)
 
             vtk_obj = mesh.to_vtk(models={"info": cc_dat})
 

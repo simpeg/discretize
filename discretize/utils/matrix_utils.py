@@ -1,4 +1,5 @@
 """Useful functions for working with vectors and matrices."""
+
 import numpy as np
 import scipy.sparse as sp
 from discretize.utils.code_utils import is_scalar, deprecate_function
@@ -34,8 +35,9 @@ def mkvc(x, n_dims=1, **kwargs):
 
     >>> from discretize.utils import mkvc
     >>> import numpy as np
+    >>> rng = np.random.default_rng(856)
 
-    >>> a = np.random.rand(3, 2)
+    >>> a = rng.random(3, 2)
     >>> a
     array([[0.33534155, 0.25334363],
            [0.07147884, 0.81080958],
@@ -60,7 +62,7 @@ def mkvc(x, n_dims=1, **kwargs):
             "The numDims keyword argument has been removed, please use n_dims. "
             "This will be removed in discretize 1.0.0",
         )
-    if type(x) == np.matrix:
+    if isinstance(x, np.matrix):
         x = np.array(x)
 
     if hasattr(x, "tovec"):
@@ -360,7 +362,7 @@ def ndgrid(*args, vector=True, order="F"):
         raise TypeError("'vector' keyword must be a bool")
 
     # you can either pass a list [x1, x2, x3] or each seperately
-    if type(args[0]) == list:
+    if isinstance(args[0], list):
         xin = args[0]
     else:
         xin = args
@@ -569,7 +571,8 @@ def get_subarray(A, ind):
 
     >>> from discretize.utils import get_subarray
     >>> import numpy as np
-    >>> A = np.random.rand(3, 3)
+    >>> rng = np.random.default_rng(421)
+    >>> A = rng.random((3, 3))
     >>> A
     array([[1.07969034e-04, 9.78613931e-01, 6.62123429e-01],
            [8.80722877e-01, 7.61035691e-01, 7.42546796e-01],
@@ -1166,6 +1169,7 @@ def make_property_tensor(mesh, tensor):
     >>> import numpy as np
     >>> import matplotlib.pyplot as plt
     >>> import matplotlib as mpl
+    >>> rng = np.random.default_rng(421)
 
     Define a 2D tensor mesh
 
@@ -1175,9 +1179,9 @@ def make_property_tensor(mesh, tensor):
     Define a physical property for all cases (2D)
 
     >>> sigma_scalar = 4.
-    >>> sigma_isotropic = np.random.randint(1, 10, mesh.nC)
-    >>> sigma_anisotropic = np.random.randint(1, 10, (mesh.nC, 2))
-    >>> sigma_tensor = np.random.randint(1, 10, (mesh.nC, 3))
+    >>> sigma_isotropic = rng.integers(1, 10, mesh.nC)
+    >>> sigma_anisotropic = rng.integers(1, 10, (mesh.nC, 2))
+    >>> sigma_tensor = rng.integers(1, 10, (mesh.nC, 3))
 
     Construct the property tensor in each case
 
@@ -1318,6 +1322,7 @@ def inverse_property_tensor(mesh, tensor, return_matrix=False, **kwargs):
     >>> import numpy as np
     >>> import matplotlib.pyplot as plt
     >>> import matplotlib as mpl
+    >>> rng = np.random.default_rng(421)
 
     Define a 2D tensor mesh
 
@@ -1327,9 +1332,9 @@ def inverse_property_tensor(mesh, tensor, return_matrix=False, **kwargs):
     Define a physical property for all cases (2D)
 
     >>> sigma_scalar = 4.
-    >>> sigma_isotropic = np.random.randint(1, 10, mesh.nC)
-    >>> sigma_anisotropic = np.random.randint(1, 10, (mesh.nC, 2))
-    >>> sigma_tensor = np.random.randint(1, 10, (mesh.nC, 3))
+    >>> sigma_isotropic = rng.integers(1, 10, mesh.nC)
+    >>> sigma_anisotropic = rng.integers(1, 10, (mesh.nC, 2))
+    >>> sigma_tensor = rng.integers(1, 10, (mesh.nC, 3))
 
     Construct the property tensor in each case
 
@@ -1429,6 +1434,31 @@ def inverse_property_tensor(mesh, tensor, return_matrix=False, **kwargs):
     return T
 
 
+def cross2d(x, y):
+    """Compute the cross product of two vectors.
+
+    This function will calculate the cross product as if
+    the third component of each of these vectors was zero.
+
+    The returned direction is perpendicular to both inputs,
+    making it be solely in the third dimension.
+
+    Parameters
+    ----------
+    x, y : array_like
+        The vectors for the cross product.
+
+    Returns
+    -------
+    x_cross_y : numpy.ndarray
+        The cross product of x and y.
+    """
+    x = np.asarray(x)
+    y = np.asarray(y)
+    # np.cross(x, y) is deprecated for 2D input
+    return x[..., 0] * y[..., 1] - x[..., 1] * y[..., 0]
+
+
 class Zero(object):
     """Carries out arithmetic operations between 0 and arbitrary quantities.
 
@@ -1462,6 +1492,10 @@ class Zero(object):
     def __repr__(self):
         """Represent zeros a string."""
         return "Zero"
+
+    def __bool__(self):
+        """Return False for zero matrix."""
+        return False
 
     def __add__(self, v):
         """Add a value to zero."""
@@ -1624,6 +1658,10 @@ class Identity(object):
             return "I"
         else:
             return "-I"
+
+    def __bool__(self):
+        """Return True for identity matrix."""
+        return True
 
     def __pos__(self):
         """Return positive 1 (or -1 if not positive)."""

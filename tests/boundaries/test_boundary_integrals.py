@@ -268,14 +268,14 @@ class Test3DBoundaryIntegral(discretize.tests.OrderTest):
     def test_orderWeakCellGradIntegral(self):
         self.name = "3D - weak cell gradient integral w/boundary"
         self.myTest = "cell_grad"
-        self.orderTest()
+        self.orderTest(random_seed=51235)
 
     def test_orderWeakEdgeDivIntegral(self):
         self.name = "3D - weak edge divergence integral w/boundary"
         self.myTest = "edge_div"
-        self.orderTest()
+        self.orderTest(random_seed=51123)
 
     def test_orderWeakFaceCurlIntegral(self):
         self.name = "3D - weak face curl integral w/boundary"
         self.myTest = "face_curl"
-        self.orderTest()
+        self.orderTest(random_seed=5522)

@@ -13,6 +13,8 @@ C = CoordSys3D(
     variable_names=list("RTZ"),
 )
 
+rng = np.random.default_rng(563279)
+
 
 def lambdify_vector(variabls, u_vecs, func):
     funcs = [sp.lambdify(variabls, func.coeff(u_hat), "numpy") for u_hat in u_vecs]
@@ -346,7 +348,7 @@ def test_ave_edge_to_cell_vector(mesh_type):
 def test_mimetic_div_curl(mesh_type):
     mesh, _ = setup_mesh(mesh_type, 10)
 
-    v = np.random.rand(mesh.n_edges)
+    v = rng.random(mesh.n_edges)
     divcurlv = mesh.face_divergence @ (mesh.edge_curl @ v)
     np.testing.assert_allclose(divcurlv, 0, atol=1e-11)
 
@@ -355,7 +357,7 @@ def test_mimetic_div_curl(mesh_type):
 def test_mimetic_curl_grad(mesh_type):
     mesh, _ = setup_mesh(mesh_type, 10)
 
-    v = np.random.rand(mesh.n_nodes)
+    v = rng.random(mesh.n_nodes)
     divcurlv = mesh.edge_curl @ (mesh.nodal_gradient @ v)
     np.testing.assert_allclose(divcurlv, 0, atol=1e-11)
 

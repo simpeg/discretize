@@ -1,4 +1,5 @@
 """Module containing the curvilinear mesh implementation."""
+
 import numpy as np
 import scipy.sparse as sp
 
@@ -199,7 +200,7 @@ class CurvilinearMesh(
         >>> mesh1.plot_grid(ax=ax1)
         >>> ax1.scatter(x_faces[:, 0], x_faces[:, 1], 30, 'r')
         >>> ax1.legend(['Mesh', 'X-faces'], fontsize=16)
-        >>> plt.plot()
+        >>> plt.show()
 
         Here, we provide an example of a highly irregular curvilinear mesh.
         In this case, the x-faces are not defined by normal vectors along
@@ -214,7 +215,7 @@ class CurvilinearMesh(
         >>> mesh2.plot_grid(ax=ax2)
         >>> ax2.scatter(x_faces[:, 0], x_faces[:, 1], 30, 'r')
         >>> ax2.legend(['Mesh', 'X-faces'], fontsize=16)
-        >>> plt.plot()
+        >>> plt.show()
         """
         if getattr(self, "_faces_x", None) is None:
             N = self.reshape(self.gridN, "N", "N", "M")
@@ -272,7 +273,7 @@ class CurvilinearMesh(
         >>> mesh1.plot_grid(ax=ax1)
         >>> ax1.scatter(y_faces[:, 0], y_faces[:, 1], 30, 'r')
         >>> ax1.legend(['Mesh', 'Y-faces'], fontsize=16)
-        >>> plt.plot()
+        >>> plt.show()
 
         Here, we provide an example of a highly irregular curvilinear mesh.
         In this case, the y-faces are not defined by normal vectors along
@@ -287,7 +288,7 @@ class CurvilinearMesh(
         >>> mesh2.plot_grid(ax=ax2)
         >>> ax2.scatter(y_faces[:, 0], y_faces[:, 1], 30, 'r')
         >>> ax2.legend(['Mesh', 'Y-faces'], fontsize=16)
-        >>> plt.plot()
+        >>> plt.show()
         """
         if getattr(self, "_faces_y", None) is None:
             N = self.reshape(self.gridN, "N", "N", "M")
@@ -380,7 +381,7 @@ class CurvilinearMesh(
         >>> mesh1.plot_grid(ax=ax1)
         >>> ax1.scatter(x_edges[:, 0], x_edges[:, 1], 30, 'r')
         >>> ax1.legend(['Mesh', 'X-edges'], fontsize=16)
-        >>> plt.plot()
+        >>> plt.show()
 
         Here, we provide an example of a highly irregular curvilinear mesh.
         In this case, the x-edges are not aligned primarily along
@@ -395,7 +396,7 @@ class CurvilinearMesh(
         >>> mesh2.plot_grid(ax=ax2)
         >>> ax2.scatter(x_edges[:, 0], x_edges[:, 1], 30, 'r')
         >>> ax2.legend(['Mesh', 'X-edges'], fontsize=16)
-        >>> plt.plot()
+        >>> plt.show()
         """
         if getattr(self, "_edges_x", None) is None:
             N = self.reshape(self.gridN, "N", "N", "M")
@@ -441,7 +442,7 @@ class CurvilinearMesh(
         >>> mesh1.plot_grid(ax=ax1)
         >>> ax1.scatter(y_edges[:, 0], y_edges[:, 1], 30, 'r')
         >>> ax1.legend(['Mesh', 'Y-edges'], fontsize=16)
-        >>> plt.plot()
+        >>> plt.show()
 
         Here, we provide an example of a highly irregular curvilinear mesh.
         In this case, the y-edges are not aligned primarily along
@@ -456,7 +457,7 @@ class CurvilinearMesh(
         >>> mesh2.plot_grid(ax=ax2)
         >>> ax2.scatter(y_edges[:, 0], y_edges[:, 1], 30, 'r')
         >>> ax2.legend(['Mesh', 'X-edges'], fontsize=16)
-        >>> plt.plot()
+        >>> plt.show()
         """
         if getattr(self, "_edges_y", None) is None:
             N = self.reshape(self.gridN, "N", "N", "M")

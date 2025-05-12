@@ -15,7 +15,7 @@ cdef extern from "tree.h":
         Node *parents[4]
         Node()
         Node(int_t, int_t, int_t, double, double, double)
-        int_t operator[](int_t)
+        double operator[](int_t)
 
     cdef cppclass Edge:
         int_t location_ind[3]
@@ -29,6 +29,7 @@ cdef extern from "tree.h":
         Edge *parents[2]
         Edge()
         Edge(Node& p1, Node& p2)
+        double operator[](int_t)
 
     cdef cppclass Face:
         int_t location_ind[3]
@@ -43,6 +44,7 @@ cdef extern from "tree.h":
         Face *parent
         Face()
         Face(Node& p1, Node& p2, Node& p3, Node& p4)
+        double operator[](int_t)
 
     ctypedef map[int_t, Node *] node_map_t
     ctypedef map[int_t, Edge *] edge_map_t
@@ -62,6 +64,9 @@ cdef extern from "tree.h":
         long long int index
         double volume
         inline bool is_leaf()
+        inline Node* min_node()
+        inline Node* max_node()
+        double operator[](int_t)
 
     cdef cppclass PyWrapper:
         PyWrapper()
@@ -85,16 +90,13 @@ cdef extern from "tree.h":
         void set_levels(int_t, int_t, int_t)
         void set_xs(double*, double*, double*)
         void refine_function(PyWrapper *, bool)
-        void refine_ball(double*, double, int_t, bool)
-        void refine_box(double*, double*, int_t, bool)
-        void refine_line(double*, double*, int_t, bool)
-        void refine_triangle(double*, double*, double*, int_t, bool)
-        void refine_vert_triang_prism(double*, double*, double*, double, int_t, bool)
-        void refine_tetra(double*, double*, double*, double*, int_t, bool)
+
+        void refine_geom[T](const T&, int_t, bool)
+
         void number()
         void initialize_roots()
         void insert_cell(double *new_center, int_t p_level, bool)
         void finalize_lists()
         Cell * containing_cell(double, double, double)
-        vector[int_t] find_overlapping_cells(double xm, double xp, double ym, double yp, double zm, double zp)
+        vector[int_t] find_cells_geom[T](const T& geom)
         void shift_cell_centers(double*)

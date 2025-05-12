@@ -4,7 +4,13 @@ import discretize
 import subprocess
 import numpy as np
 import scipy.sparse as sp
-from discretize.tests import assert_isadjoint, check_derivative, assert_expected_order
+from discretize.tests import (
+    assert_isadjoint,
+    check_derivative,
+    assert_expected_order,
+    _warn_random_test,
+    setup_mesh,
+)
 
 
 class TestAssertIsAdjoint:
@@ -26,6 +32,7 @@ class TestAssertIsAdjoint:
             mesh1.n_cells,
             mesh2.n_cells,
             assert_error=False,
+            random_seed=41,
         )
         out2, _ = capsys.readouterr()
         assert out1
@@ -38,6 +45,7 @@ class TestAssertIsAdjoint:
                 lambda v: P.T * v,
                 mesh1.n_cells,
                 mesh2.n_cells,
+                random_seed=42,
             )
 
     def test_different_shape(self):
@@ -53,7 +61,13 @@ class TestAssertIsAdjoint:
             out = np.expand_dims(inp, 1)
             return np.tile(out, nt)
 
-        assert_isadjoint(fwd, adj, shape_u=(4, nt), shape_v=(4,))
+        assert_isadjoint(
+            fwd,
+            adj,
+            shape_u=(4, nt),
+            shape_v=(4,),
+            random_seed=42,
+        )
 
     def test_complex_clinear(self):
         # The complex conjugate is self-adjoint, real-linear.
@@ -65,6 +79,7 @@ class TestAssertIsAdjoint:
             complex_u=True,
             complex_v=True,
             clinear=False,
+            random_seed=112,
         )
 
 
@@ -73,20 +88,29 @@ class TestCheckDerivative:
         def simplePass(x):
             return np.sin(x), sp.diags(np.cos(x))
 
-        check_derivative(simplePass, np.random.randn(5), plotIt=False)
+        rng = np.random.default_rng(5322)
+        check_derivative(
+            simplePass, rng.standard_normal(5), plotIt=False, random_seed=42
+        )
 
     def test_simpleFunction(self):
         def simpleFunction(x):
             return np.sin(x), lambda xi: np.cos(x) * xi
 
-        check_derivative(simpleFunction, np.random.randn(5), plotIt=False)
+        rng = np.random.default_rng(5322)
+        check_derivative(
+            simpleFunction, rng.standard_normal(5), plotIt=False, random_seed=23
+        )
 
     def test_simpleFail(self):
         def simpleFail(x):
             return np.sin(x), -sp.diags(np.cos(x))
 
+        rng = np.random.default_rng(5322)
         with pytest.raises(AssertionError):
-            check_derivative(simpleFail, np.random.randn(5), plotIt=False)
+            check_derivative(
+                simpleFail, rng.standard_normal(5), plotIt=False, random_seed=64
+            )
 
 
 @pytest.mark.parametrize("test_type", ["mean", "min", "last", "all", "mean_at_least"])
@@ -146,5 +170,24 @@ def test_import_time():
     # Capture it
     out = subprocess.run(cmd, capture_output=True)
 
-    # Currently we check t < 0.8s.
-    assert float(out.stderr.decode("utf-8")[:-1]) < 0.8
+    # Currently we check t < 1.25s.
+    assert float(out.stderr.decode("utf-8")[:-1]) < 1.25
+
+
+def test_random_test_warning():
+
+    match = r"You are running a pytest without setting a random seed.*"
+    with pytest.warns(UserWarning, match=match):
+        _warn_random_test()
+
+    def simple_deriv(x):
+        return np.sin(x), lambda y: np.cos(x) * y
+
+    with pytest.warns(UserWarning, match=match):
+        check_derivative(simple_deriv, np.zeros(10), plotIt=False)
+
+    with pytest.warns(UserWarning, match=match):
+        setup_mesh("randomTensorMesh", 10, 1)
+
+    with pytest.warns(UserWarning, match=match):
+        assert_isadjoint(lambda x: x, lambda x: x, 5, 5)

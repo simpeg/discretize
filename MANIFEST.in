@@ -1,8 +1,0 @@
-prune .azure-pipelines
-prune .ci
-prune docs
-prune examples
-prune tests
-prune tutorials
-exclude .coveragerc .gitignore azure-pipelines.yml MANIFEST.in setup.cfg
-exclude requirements_dev.txt requirements.txt

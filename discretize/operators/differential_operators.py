@@ -1,4 +1,5 @@
 """Differential operators for meshes."""
+
 import numpy as np
 from scipy import sparse as sp
 import warnings
@@ -12,6 +13,7 @@ from discretize.utils import (
     av,
     av_extrap,
     make_boundary_bool,
+    cross2d,
 )
 from discretize.utils.code_utils import deprecate_method, deprecate_property
 
@@ -329,7 +331,7 @@ class DiffOperators(BaseMesh):
         >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
         >>> ax1.set_title("Mapping of Face-X Divergence", fontsize=14, pad=15)
         >>> ax1.legend(
-        ...     ['Mesh', '$\mathbf{\phi}$ (x-faces)', '$\partial \mathbf{phi}/\partial x$ (centers)'],
+        ...     ['Mesh', r'$\mathbf{\phi}$ (x-faces)', r'$\partial \mathbf{phi}/\partial x$ (centers)'],
         ...     loc='upper right', fontsize=14
         ... )
         >>> ax2 = fig.add_subplot(212)
@@ -441,7 +443,7 @@ class DiffOperators(BaseMesh):
         >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
         >>> ax1.set_title("Mapping of Face-Y Divergence", fontsize=14, pad=15)
         >>> ax1.legend(
-        ...     ['Mesh','$\mathbf{\phi}$ (y-faces)','$\partial_y \mathbf{\phi}/\partial y$ (centers)'],
+        ...     ['Mesh',r'$\mathbf{\phi}$ (y-faces)',r'$\partial_y \mathbf{\phi}/\partial y$ (centers)'],
         ...     loc='upper right', fontsize=14
         ... )
         >>> ax2 = fig.add_subplot(212)
@@ -546,7 +548,7 @@ class DiffOperators(BaseMesh):
         >>> for ii, loc in zip(range(mesh.nC), mesh.cell_centers):
         ...     ax1.text(loc[0] + 0.05, loc[1] + 0.05, loc[2], "{0:d}".format(ii), color="r")
         >>> ax1.legend(
-        ...     ['Mesh','$\mathbf{\phi}$ (z-faces)','$\partial \mathbf{\phi}/\partial z$ (centers)'],
+        ...     ['Mesh',r'$\mathbf{\phi}$ (z-faces)',r'$\partial \mathbf{\phi}/\partial z$ (centers)'],
         ...     loc='upper right', fontsize=14
         ... )
 
@@ -555,12 +557,12 @@ class DiffOperators(BaseMesh):
             >>> ax1.set_xticks([])
             >>> ax1.set_yticks([])
             >>> ax1.set_zticks([])
-            >>> ax1.w_xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
-            >>> ax1.w_yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
-            >>> ax1.w_zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
-            >>> ax1.w_xaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
-            >>> ax1.w_yaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
-            >>> ax1.w_zaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
+            >>> ax1.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+            >>> ax1.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+            >>> ax1.zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+            >>> ax1.xaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
+            >>> ax1.yaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
+            >>> ax1.zaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
             >>> ax1.set_xlabel('X', labelpad=-15, fontsize=16)
             >>> ax1.set_ylabel('Y', labelpad=-20, fontsize=16)
             >>> ax1.set_zlabel('Z', labelpad=-20, fontsize=16)
@@ -1152,7 +1154,7 @@ class DiffOperators(BaseMesh):
         >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
         >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
         >>> ax1.legend(
-        ...     ['Mesh', '$\mathbf{\phi}$ (centers)', '$\mathbf{Gx^* \phi}$ (x-faces)'],
+        ...     ['Mesh', r'$\mathbf{\phi}$ (centers)', r'$\mathbf{Gx^* \phi}$ (x-faces)'],
         ...     loc='upper right', fontsize=14
         ... )
         >>> ax2 = fig.add_subplot(122)
@@ -1285,7 +1287,7 @@ class DiffOperators(BaseMesh):
         >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
         >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
         >>> ax1.legend(
-        ...     ['Mesh', '$\mathbf{\phi}$ (centers)', '$\mathbf{Gy^* \phi}$ (y-faces)'],
+        ...     ['Mesh', r'$\mathbf{\phi}$ (centers)', r'$\mathbf{Gy^* \phi}$ (y-faces)'],
         ...     loc='upper right', fontsize=14
         ... )
         >>> ax2 = fig.add_subplot(122)
@@ -1573,7 +1575,7 @@ class DiffOperators(BaseMesh):
         >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
         >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
         >>> ax1.legend(
-        ...     ['Mesh', '$\mathbf{\phi}$ (centers)', '$\mathbf{u}$ (faces)'],
+        ...     ['Mesh', r'$\mathbf{\phi}$ (centers)', r'$\mathbf{u}$ (faces)'],
         ...     loc='upper right', fontsize=14
         ... )
         >>> ax2 = fig.add_subplot(122)
@@ -1855,7 +1857,7 @@ class DiffOperators(BaseMesh):
         >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
         >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
         >>> ax1.legend(
-        ...     ['Mesh', '$\mathbf{\phi}$ (centers)', '$\mathbf{Gx^* \phi}$ (x-faces)'],
+        ...     ['Mesh', r'$\mathbf{\phi}$ (centers)', r'$\mathbf{Gx^* \phi}$ (x-faces)'],
         ...     loc='upper right', fontsize=14
         ... )
         >>> ax2 = fig.add_subplot(122)
@@ -1970,7 +1972,7 @@ class DiffOperators(BaseMesh):
         >>> ax1.set_xlabel('X', fontsize=16, labelpad=-5)
         >>> ax1.set_ylabel('Y', fontsize=16, labelpad=-15)
         >>> ax1.legend(
-        ...     ['Mesh', '$\mathbf{\phi}$ (centers)', '$\mathbf{Gy^* \phi}$ (y-faces)'],
+        ...     ['Mesh', r'$\mathbf{\phi}$ (centers)', r'$\mathbf{Gy^* \phi}$ (y-faces)'],
         ...     loc='upper right', fontsize=14
         ... )
         >>> ax2 = fig.add_subplot(122)
@@ -2236,7 +2238,12 @@ class DiffOperators(BaseMesh):
         if self.dim > 2:
             Av *= 2
 
-        w_cross_n = np.cross(-w, Av.T @ dA)
+        av_da = Av.T @ dA
+
+        if self.dim == 2:
+            w_cross_n = cross2d(av_da, w)
+        else:
+            w_cross_n = np.cross(av_da, w)
 
         if self.dim == 2:
             return Pe.T @ sp.diags(w_cross_n, format="csr")
