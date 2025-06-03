@@ -6,7 +6,7 @@ cimport numpy as np
 from libc.stdlib cimport malloc, free
 from libcpp.vector cimport vector
 from libcpp cimport bool
-from numpy.math cimport INFINITY
+from libc.math cimport INFINITY
 
 from .tree cimport int_t, Tree as c_Tree, PyWrapper, Node, Edge, Face, Cell as c_Cell
 from . cimport geom
