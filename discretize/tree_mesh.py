@@ -291,6 +291,11 @@ class TreeMesh(
                 "{}: {:^13},{:^13}".format(dim_label[dim], n_vector[0], n_vector[-1])
             )
 
+        # Return partial information if mesh is not finalized
+        if not self.finalized:
+            top = f"\n {mesh_name} (non finalized)\n\n"
+            return top + "\n".join(extent_display)
+
         for i, line in enumerate(extent_display):
             if i == len(cell_display):
                 cell_display.append(" " * (len(cell_display[0]) - 3 - len(line)))
@@ -315,14 +320,47 @@ class TreeMesh(
     def _repr_html_(self):
         """HTML representation."""
         mesh_name = "{0!s}TreeMesh".format(("Oc" if self.dim == 3 else "Quad"))
+        style = " style='padding: 5px 20px 5px 20px;'"
+        dim_label = {0: "x", 1: "y", 2: "z"}
+
+        if not self.finalized:
+            style_bold = '"font-weight: bold; font-size: 1.2em; text-align: center;"'
+            style_regular = '"font-size: 1.2em; text-align: center;"'
+            output = [
+                "<table>",  # need to close this tag
+                "<tr>",
+                f"<td style={style_bold}>{mesh_name}</td>",
+                f"<td style={style_regular} colspan='2'>(non finalized)</td>",
+                "</tr>",
+                "<table>",  # need to close this tag
+                "<tr>",
+                "<th></th>",
+                f'<th {style} colspan="2">Mesh extent</th>',
+                "</tr>",
+                "<tr>",
+                "<th></th>",
+                f"<th {style}>min</th>",
+                f"<th {style}>max</th>",
+                "</tr>",
+            ]
+            for dim in range(self.dim):
+                n_vector = getattr(self, "nodes_" + dim_label[dim])
+                output += [
+                    "<tr>",
+                    f"<td {style}>{dim_label[dim]}</td>",
+                    f"<td {style}>{n_vector[0]}</td>",
+                    f"<td {style}>{n_vector[-1]}</td>",
+                    "</tr>",
+                ]
+            output += ["</table>", "</table>"]
+            return "\n".join(output)
+
         level_count = self._count_cells_per_index()
         non_zero_levels = np.nonzero(level_count)[0]
-        dim_label = {0: "x", 1: "y", 2: "z"}
         h_gridded = self.h_gridded
         mins = np.min(h_gridded, axis=0)
         maxs = np.max(h_gridded, axis=0)
 
-        style = " style='padding: 5px 20px 5px 20px;'"
         # Cell level table:
         cel_tbl = "<table>\n"
         cel_tbl += "<tr>\n"
