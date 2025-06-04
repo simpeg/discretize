@@ -33,3 +33,4 @@ Pull requests
 * Allow `TreeMesh.__repr__` to run when non finalized by @santisoler in `#393 <https://github.com/simpeg/discretize/pull/393>`__
 * Add safeguards to TreeMesh properties by @santisoler in `#394 <https://github.com/simpeg/discretize/pull/394>`__
 * Switches to libc math import by @jcapriot in `#396 <https://github.com/simpeg/discretize/pull/396>`__
+* 0.11.3 staging by @jcapriot in `#3967 <https://github.com/simpeg/discretize/pull/397>`__
