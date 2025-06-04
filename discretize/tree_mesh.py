@@ -92,7 +92,11 @@ import warnings
 from discretize.base import BaseTensorMesh
 from discretize.operators import InnerProducts, DiffOperators
 from discretize.mixins import InterfaceMixins, TreeMeshIO
-from discretize._extensions.tree_ext import _TreeMesh, TreeCell  # NOQA F401
+from discretize._extensions.tree_ext import (  # noqa: F401
+    _TreeMesh,
+    TreeCell,
+    TreeMeshNotFinalizedError,
+)
 import numpy as np
 import scipy.sparse as sp
 from scipy.spatial import Delaunay
@@ -242,8 +246,9 @@ class TreeMesh(
             diagonal_balance = False
             warnings.warn(
                 "In discretize v1.0 the TreeMesh will change the default value of "
-                "diagonal_balance to True, which will likely slightly change meshes you have"
-                "previously created. If you need to keep the current behavoir, explicitly set "
+                "diagonal_balance to True, which will likely slightly change meshes "
+                "you have previously created. "
+                "If you need to keep the current behavior, explicitly set "
                 "diagonal_balance=False.",
                 FutureWarning,
                 stacklevel=2,
@@ -289,6 +294,11 @@ class TreeMesh(
                 "{}: {:^13},{:^13}".format(dim_label[dim], n_vector[0], n_vector[-1])
             )
 
+        # Return partial information if mesh is not finalized
+        if not self.finalized:
+            top = f"\n {mesh_name} (non finalized)\n\n"
+            return top + "\n".join(extent_display)
+
         for i, line in enumerate(extent_display):
             if i == len(cell_display):
                 cell_display.append(" " * (len(cell_display[0]) - 3 - len(line)))
@@ -313,14 +323,47 @@ class TreeMesh(
     def _repr_html_(self):
         """HTML representation."""
         mesh_name = "{0!s}TreeMesh".format(("Oc" if self.dim == 3 else "Quad"))
+        style = " style='padding: 5px 20px 5px 20px;'"
+        dim_label = {0: "x", 1: "y", 2: "z"}
+
+        if not self.finalized:
+            style_bold = '"font-weight: bold; font-size: 1.2em; text-align: center;"'
+            style_regular = '"font-size: 1.2em; text-align: center;"'
+            output = [
+                "<table>",  # need to close this tag
+                "<tr>",
+                f"<td style={style_bold}>{mesh_name}</td>",
+                f"<td style={style_regular} colspan='2'>(non finalized)</td>",
+                "</tr>",
+                "<table>",  # need to close this tag
+                "<tr>",
+                "<th></th>",
+                f'<th {style} colspan="2">Mesh extent</th>',
+                "</tr>",
+                "<tr>",
+                "<th></th>",
+                f"<th {style}>min</th>",
+                f"<th {style}>max</th>",
+                "</tr>",
+            ]
+            for dim in range(self.dim):
+                n_vector = getattr(self, "nodes_" + dim_label[dim])
+                output += [
+                    "<tr>",
+                    f"<td {style}>{dim_label[dim]}</td>",
+                    f"<td {style}>{n_vector[0]}</td>",
+                    f"<td {style}>{n_vector[-1]}</td>",
+                    "</tr>",
+                ]
+            output += ["</table>", "</table>"]
+            return "\n".join(output)
+
         level_count = self._count_cells_per_index()
         non_zero_levels = np.nonzero(level_count)[0]
-        dim_label = {0: "x", 1: "y", 2: "z"}
         h_gridded = self.h_gridded
         mins = np.min(h_gridded, axis=0)
         maxs = np.max(h_gridded, axis=0)
 
-        style = " style='padding: 5px 20px 5px 20px;'"
         # Cell level table:
         cel_tbl = "<table>\n"
         cel_tbl += "<tr>\n"
@@ -766,6 +809,7 @@ class TreeMesh(
         (n_total_nodes, dim) numpy.ndarray of float
             Gridded hanging and non-hanging node locations
         """
+        self._error_if_not_finalized("total_nodes")
         return np.vstack((self.nodes, self.hanging_nodes))
 
     @property
@@ -1059,4 +1103,4 @@ class TreeMesh(
 
     def __reduce__(self):
         """Return the necessary items to reconstruct this object's state."""
-        return TreeMesh, (self.h, self.origin), self.__getstate__()
+        return TreeMesh, (self.h, self.origin, False), self.__getstate__()
