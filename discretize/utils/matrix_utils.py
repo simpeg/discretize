@@ -1493,6 +1493,10 @@ class Zero(object):
         """Represent zeros a string."""
         return "Zero"
 
+    def __bool__(self):
+        """Return False for zero matrix."""
+        return False
+
     def __add__(self, v):
         """Add a value to zero."""
         return v
@@ -1654,6 +1658,10 @@ class Identity(object):
             return "I"
         else:
             return "-I"
+
+    def __bool__(self):
+        """Return True for identity matrix."""
+        return True
 
     def __pos__(self):
         """Return positive 1 (or -1 if not positive)."""

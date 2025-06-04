@@ -91,9 +91,9 @@ def _warn_random_test():
     if in_pytest or in_nosetest:
         test = "pytest" if in_pytest else "nosetest"
         warnings.warn(
-            f"You are running a {test} without setting a random seed, the results might not be"
-            "repeatable. For repeatable tests please pass an argument to `random seed` that is"
-            "not `None`.",
+            f"You are running a {test} without setting a random seed, the results might not "
+            "be repeatable. For repeatable tests please pass an argument to `random seed` "
+            "that is not `None`.",
             UserWarning,
             stacklevel=3,
         )

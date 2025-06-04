@@ -1,0 +1,38 @@
+.. currentmodule:: discretize
+
+.. _0.11.2_notes:
+
+===================================
+``discretize`` 0.11.2 Release Notes
+===================================
+
+January 28, 2025
+
+This is a bugfix release for discretize with some minor updates.
+
+Updates
+=======
+
+Fixed Bugs
+----------
+* ``is_scalar`` will now return true for any numpy array broadcastable as a scalar (any array with ``arr.size == 1``).
+* Explicitly set diagonal balancing on internal plotting and reading routines that build a ``TreeMesh``.
+* Fixes formatting across line breaks in new warnings.
+* the ``Zero`` and ``Identity`` classes now return expected truthiness values: ``bool(Zero()) == False`` and ``bool(Identity()) == True``.
+
+
+Contributors
+============
+* @jcapriot
+* @santisoler
+* @prisae
+
+Pull requests
+=============
+
+* improve scalar test to handle arbitrary dimensional ndarrays by @jcapriot in `#388 <https://github.com/simpeg/discretize/pull/388>`__.
+* Set no diagonal balance when reading UBC tree meshes by @santisoler in `#386 <https://github.com/simpeg/discretize/pull/386>`__
+* Fix small typos in diagonal_balance warning by @santisoler in `#387 <https://github.com/simpeg/discretize/pull/387>`__
+* Implement truthiness for Zero and Identity by @jcapriot in `#389 <https://github.com/simpeg/discretize/pull/389>`__
+* Fix formatting new warning by @prisae in `#390 <https://github.com/simpeg/discretize/pull/390>`__
+* v0.11.2 staging @jcapriot in `#391 <https://github.com/simpeg/discretize/pull/390>`__
