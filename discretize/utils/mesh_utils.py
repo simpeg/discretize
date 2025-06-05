@@ -395,6 +395,7 @@ def mesh_builder_xyz(
     depth_core=None,
     expansion_factor=1.3,
     mesh_type="tensor",
+    tree_diagonal_balance=None,
 ):
     """Generate a tensor or tree mesh using a cloud of points.
 
@@ -422,6 +423,9 @@ def mesh_builder_xyz(
         Expansion factor for padding cells. Ignored if *mesh_type* = *tree*
     mesh_type : {'tensor', 'tree'}
         Specify output mesh type
+    tree_diagonal_balance : bool, optional
+        Whether to diagonally balance the tree mesh, `None` will use the `TreeMesh`
+        default behavoir.
 
     Returns
     -------
@@ -515,7 +519,7 @@ def mesh_builder_xyz(
             h_dim += [np.ones(2**maxLevel) * h[ii]]
 
         # Define the mesh and origin
-        mesh = discretize.TreeMesh(h_dim)
+        mesh = discretize.TreeMesh(h_dim, diagonal_balance=tree_diagonal_balance)
 
         for ii, _cc in enumerate(nC):
             core = limits[ii][0] - limits[ii][1]

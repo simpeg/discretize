@@ -590,5 +590,64 @@ def test_cell_locator(dim):
     assert found
 
 
+class TestRepr:
+    """
+    Test repr methods on TreeMesh.
+
+    Check if no error is raised when calling repr methods on a finalized and
+    non finalized meshes.
+    """
+
+    @pytest.fixture(params=["2D", "3D"])
+    def mesh(self, request):
+        """Return a sample TreeMesh"""
+        nc = 16
+        if request.param == "2D":
+            h = [nc, nc]
+            origin = (-32.4, 245.4)
+        else:
+            h = [nc, nc, nc]
+            origin = (-32.4, 245.4, 192.3)
+        mesh = discretize.TreeMesh(h, origin, diagonal_balance=True)
+        return mesh
+
+    def finalize(self, mesh):
+        """
+        Finalize the sample tree mesh.
+        """
+        origin = mesh.origin
+        if mesh.dim == 2:
+            p1 = (origin[0] + 0.4, origin[1] + 0.4)
+            p2 = (origin[0] + 0.6, origin[1] + 0.6)
+            mesh.refine_box(p1, p2, levels=5)
+        else:
+            p1 = (origin[0] + 0.4, origin[1] + 0.4, origin[2] + 0.7)
+            p2 = (origin[0] + 0.6, origin[1] + 0.6, origin[2] + 0.9)
+            mesh.refine_box(p1, p2, levels=5)
+        mesh.finalize()
+
+    @pytest.mark.parametrize("finalize", [True, False])
+    def test_repr(self, mesh, finalize):
+        """
+        Test if __repr__ doesn't raise errors on any TreeMesh.
+        """
+        if finalize:
+            self.finalize(mesh)
+        output = mesh.__repr__()
+        assert type(output) is str
+        assert len(output) != 0
+
+    @pytest.mark.parametrize("finalize", [True, False])
+    def test_repr_html(self, mesh, finalize):
+        """
+        Test if _repr_html_ doesn't raise errors on any TreeMesh.
+        """
+        if finalize:
+            self.finalize(mesh)
+        output = mesh._repr_html_()
+        assert type(output) is str
+        assert len(output) != 0
+
+
 if __name__ == "__main__":
     unittest.main()
