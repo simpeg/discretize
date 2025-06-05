@@ -156,31 +156,3 @@ from discretize.utils.coordinate_utils import (
 )
 
 from discretize.utils.io_utils import download, load_mesh
-
-# DEPRECATIONS
-from discretize.utils.code_utils import isScalar, asArray_N_x_Dim
-from discretize.utils.matrix_utils import (
-    sdInv,
-    getSubArray,
-    inv3X3BlockDiagonal,
-    inv2X2BlockDiagonal,
-    makePropertyTensor,
-    invPropertyTensor,
-    cross2d,
-)
-from discretize.utils.mesh_utils import (
-    meshTensor,
-    closestPoints,
-    ExtractCoreMesh,
-)
-from discretize.utils.curvilinear_utils import (
-    exampleLrmGrid,
-    volTetra,
-    indexCube,
-    faceInfo,
-)
-from discretize.utils.interpolation_utils import interpmat
-from discretize.utils.coordinate_utils import (
-    rotationMatrixFromNormals,
-    rotatePointsFromNormals,
-)

@@ -2,11 +2,10 @@
 
 import numpy as np
 import scipy.sparse as sp
-from discretize.utils.code_utils import is_scalar, deprecate_function
-import warnings
+from discretize.utils.code_utils import is_scalar
 
 
-def mkvc(x, n_dims=1, **kwargs):
+def mkvc(x, n_dims=1):
     """Coerce a vector to the specified dimensionality.
 
     This function converts a :class:`numpy.ndarray` to a vector. In general,
@@ -57,11 +56,6 @@ def mkvc(x, n_dims=1, **kwargs):
     Shape of output with n_dim = 2 :  (6, 1)
     Shape of output with n_dim = 3 :  (6, 1, 1)
     """
-    if "numDims" in kwargs:
-        raise TypeError(
-            "The numDims keyword argument has been removed, please use n_dims. "
-            "This will be removed in discretize 1.0.0",
-        )
     if isinstance(x, np.matrix):
         x = np.array(x)
 
@@ -380,7 +374,7 @@ def ndgrid(*args, vector=True, order="F"):
     return meshed
 
 
-def make_boundary_bool(shape, bdir="xyz", **kwargs):
+def make_boundary_bool(shape, bdir="xyz"):
     r"""Return boundary indices of a tensor grid.
 
     For a tensor grid whose shape is given (1D, 2D or 3D), this function
@@ -440,15 +434,6 @@ def make_boundary_bool(shape, bdir="xyz", **kwargs):
            [1, 6],
            [3, 6]])
     """
-    old_dir = kwargs.pop("dir", None)
-    if old_dir is not None:
-        warnings.warn(
-            "The `dir` keyword argument has been renamed to `bdir` to avoid shadowing the "
-            "builtin variable `dir`. This will be removed in discretize 1.0.0",
-            FutureWarning,
-            stacklevel=2,
-        )
-        bdir = old_dir
     is_b = np.zeros(shape, dtype=bool, order="F")
     if "x" in bdir:
         is_b[[0, -1]] = True
@@ -605,7 +590,16 @@ def get_subarray(A, ind):
 
 
 def inverse_3x3_block_diagonal(
-    a11, a12, a13, a21, a22, a23, a31, a32, a33, return_matrix=True, **kwargs
+    a11,
+    a12,
+    a13,
+    a21,
+    a22,
+    a23,
+    a31,
+    a32,
+    a33,
+    return_matrix=True,
 ):
     r"""Invert a set of 3x3 matricies from vectors containing their elements.
 
@@ -712,15 +706,6 @@ def inverse_3x3_block_diagonal(
     >>> plt.spy(M)
     >>> plt.show()
     """
-    if "returnMatrix" in kwargs:
-        warnings.warn(
-            "The returnMatrix keyword argument has been deprecated, please use return_matrix. "
-            "This will be removed in discretize 1.0.0",
-            FutureWarning,
-            stacklevel=2,
-        )
-        return_matrix = kwargs["returnMatrix"]
-
     a11 = mkvc(a11)
     a12 = mkvc(a12)
     a13 = mkvc(a13)
@@ -764,7 +749,7 @@ def inverse_3x3_block_diagonal(
     )
 
 
-def inverse_2x2_block_diagonal(a11, a12, a21, a22, return_matrix=True, **kwargs):
+def inverse_2x2_block_diagonal(a11, a12, a21, a22, return_matrix=True):
     r"""
     Invert a set of 2x2 matricies from vectors containing their elements.
 
@@ -865,15 +850,6 @@ def inverse_2x2_block_diagonal(a11, a12, a21, a22, return_matrix=True, **kwargs)
     >>> plt.spy(M)
     >>> plt.show()
     """
-    if "returnMatrix" in kwargs:
-        warnings.warn(
-            "The returnMatrix keyword argument has been deprecated, please use return_matrix. "
-            "This will be removed in discretize 1.0.0",
-            FutureWarning,
-            stacklevel=2,
-        )
-        return_matrix = kwargs["returnMatrix"]
-
     a11 = mkvc(a11)
     a12 = mkvc(a12)
     a21 = mkvc(a21)
@@ -1243,7 +1219,7 @@ def make_property_tensor(mesh, tensor):
     return Sigma
 
 
-def inverse_property_tensor(mesh, tensor, return_matrix=False, **kwargs):
+def inverse_property_tensor(mesh, tensor, return_matrix=False):
     r"""Construct the inverse of the physical property tensor.
 
     For a given *mesh*, the input parameter *tensor* is a :class:`numpy.ndarray`
@@ -1387,15 +1363,6 @@ def inverse_property_tensor(mesh, tensor, return_matrix=False, **kwargs):
     ... )
     >>> plt.show()
     """
-    if "returnMatrix" in kwargs:
-        warnings.warn(
-            "The returnMatrix keyword argument has been deprecated, please use return_matrix. "
-            "This will be removed in discretize 1.0.0",
-            FutureWarning,
-            stacklevel=2,
-        )
-        return_matrix = kwargs["returnMatrix"]
-
     propType = TensorType(mesh, tensor)
 
     if is_scalar(tensor):
@@ -1793,42 +1760,3 @@ class _inftup(tuple):
 
     def __repr__(self):
         return f"({self._val}, {self._val}, ...)"
-
-
-################################################
-#             DEPRECATED FUNCTIONS
-################################################
-
-sdInv = deprecate_function(sdinv, "sdInv", removal_version="1.0.0", error=True)
-
-getSubArray = deprecate_function(
-    get_subarray, "getSubArray", removal_version="1.0.0", error=True
-)
-
-inv3X3BlockDiagonal = deprecate_function(
-    inverse_3x3_block_diagonal,
-    "inv3X3BlockDiagonal",
-    removal_version="1.0.0",
-    error=True,
-)
-
-inv2X2BlockDiagonal = deprecate_function(
-    inverse_2x2_block_diagonal,
-    "inv2X2BlockDiagonal",
-    removal_version="1.0.0",
-    error=True,
-)
-
-makePropertyTensor = deprecate_function(
-    make_property_tensor,
-    "makePropertyTensor",
-    removal_version="1.0.0",
-    error=True,
-)
-
-invPropertyTensor = deprecate_function(
-    inverse_property_tensor,
-    "invPropertyTensor",
-    removal_version="1.0.0",
-    error=True,
-)

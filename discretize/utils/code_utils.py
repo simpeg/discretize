@@ -381,12 +381,3 @@ def deprecate_function(
         doc = doc.replace("deprecated", "removed")
     dep_function.__doc__ = doc
     return dep_function
-
-
-# DEPRECATIONS
-isScalar = deprecate_function(
-    is_scalar, "isScalar", removal_version="1.0.0", error=True
-)
-asArray_N_x_Dim = deprecate_function(
-    as_array_n_by_dim, "asArray_N_x_Dim", removal_version="1.0.0", error=True
-)
