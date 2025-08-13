@@ -778,9 +778,7 @@ class TensorMesh(
             for n, p in zip(cell_bounds, locs.T)
         )
         # and of course, we are fortran ordered in a tensor mesh.
-        return np.ravel_multi_index(
-            multi_inds, self.shape_cells, order="F", mode="clip"
-        )
+        return np.ravel_multi_index(multi_inds, self.shape_cells, order="F")
 
     def _repr_attributes(self):
         """Represent attributes of the mesh."""
