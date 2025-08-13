@@ -1,5 +1,6 @@
 import pytest
 import numpy as np
+import numpy.testing as npt
 import unittest
 import discretize
 from scipy.sparse.linalg import spsolve
@@ -319,6 +320,71 @@ class TestPoissonEqn(discretize.tests.OrderTest):
         self.name = "Poisson Equation - Backward"
         self.forward = False
         self.orderTest()
+
+
+@pytest.fixture(params=[1, 2, 3], ids=["dims-1", "dims-2", "dims-3"])
+def random_tensor_mesh(request):
+    dim = request.param
+    rng = np.random.default_rng(440122)
+    shape = rng.integers(5, 10, dim)
+    cell_widths = [rng.uniform(3.0, 872634.321, n) for n in shape]
+    origin = rng.uniform(-101.031, 33.2, dim)
+
+    return discretize.TensorMesh(cell_widths, origin)
+
+
+def test_tensor_point2index_inside_points(random_tensor_mesh):
+    mesh = random_tensor_mesh
+    dim = mesh.dim
+    m_origin = mesh.origin
+    m_extent = np.max(mesh.nodes, axis=0)
+
+    nd = 15
+    points = np.stack(np.meshgrid(*np.linspace(m_origin, m_extent, nd).T), axis=-1)
+    points = points.reshape((-1, dim))
+
+    npt.assert_array_equal(mesh.is_inside(points), True)
+
+    cell_inds = mesh.point2index(points)
+    for icell, p in zip(cell_inds, points):
+        cell = mesh[icell]
+        c_origin, c_extent = cell.bounds.reshape((dim, 2)).T
+        dim_test = (p >= c_origin) & (p <= c_extent)
+        npt.assert_equal(dim_test, True)
+
+
+def test_tensor_point2index_outside_points(random_tensor_mesh):
+    mesh = random_tensor_mesh
+    dim = mesh.dim
+    m_origin = mesh.origin
+    m_extent = np.max(mesh.nodes, axis=0)
+    m_width = m_extent - m_origin
+
+    nd = 15
+    points = np.stack(
+        np.meshgrid(*np.linspace(m_origin - m_width * 2, m_extent + m_width * 2, nd).T),
+        axis=-1,
+    )
+    points = points.reshape((-1, dim))
+    outside_points = points[~mesh.is_inside(points)]
+
+    npt.assert_array_equal(mesh.is_inside(outside_points), False)
+
+    # manually check each point that is outside
+    cell_inds = mesh.point2index(outside_points)
+    for icell, p in zip(cell_inds, outside_points):
+        cell = mesh[icell]
+        c_origin, c_extent = cell.bounds.reshape((dim, 2)).T
+        dim_test = np.zeros(dim, bool)
+        for i in range(dim):
+            p_d = p[i]
+            if p_d < m_origin[i]:
+                dim_test[i] = p_d < c_origin[i]
+            elif p_d > m_extent[i]:
+                dim_test[i] = p_d > c_extent[i]
+            else:
+                dim_test[i] = p_d >= c_origin[i] and p_d <= c_extent[i]
+        npt.assert_equal(dim_test, True)
 
 
 if __name__ == "__main__":
