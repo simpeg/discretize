@@ -12,8 +12,8 @@ dependencies:
   - matplotlib
 
   # documentation
-  - sphinx
-  - pydata-sphinx-theme==0.15.4
+  - sphinx==8.2.3
+  - pydata-sphinx-theme==0.16.1
   - sphinx-gallery>=0.1.13
   - numpydoc>=1.5
   - jupyter
