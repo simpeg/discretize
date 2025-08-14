@@ -337,7 +337,7 @@ def test_tensor_point2index_inside_points(random_tensor_mesh):
     mesh = random_tensor_mesh
     dim = mesh.dim
     m_origin = mesh.origin
-    m_extent = np.max(mesh.nodes, axis=0)
+    m_extent = np.atleast_1d(np.max(mesh.nodes, axis=0))
 
     nd = 15
     points = np.stack(np.meshgrid(*np.linspace(m_origin, m_extent, nd).T), axis=-1)
@@ -357,7 +357,7 @@ def test_tensor_point2index_outside_points(random_tensor_mesh):
     mesh = random_tensor_mesh
     dim = mesh.dim
     m_origin = mesh.origin
-    m_extent = np.max(mesh.nodes, axis=0)
+    m_extent = np.atleast_1d(np.max(mesh.nodes, axis=0))
     m_width = m_extent - m_origin
 
     nd = 15

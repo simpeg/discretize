@@ -774,11 +774,14 @@ class TensorMesh(
         # at index 1 to maintain the sorted list, but that corresponds to cell 0.
         # clipping here ensures that anything outside the mesh will return the nearest cell.
         multi_inds = tuple(
-            np.clip(np.searchsorted(n, p) - 1, 0, len(n) - 1)
+            np.clip(np.searchsorted(n, p) - 1, 0, len(n) - 2)
             for n, p in zip(cell_bounds, locs.T)
         )
         # and of course, we are fortran ordered in a tensor mesh.
-        return np.ravel_multi_index(multi_inds, self.shape_cells, order="F")
+        if self.dim == 1:
+            return multi_inds[0]
+        else:
+            return np.ravel_multi_index(multi_inds, self.shape_cells, order="F")
 
     def _repr_attributes(self):
         """Represent attributes of the mesh."""
