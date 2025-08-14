@@ -4,10 +4,15 @@
         "url": "https://discretize.simpeg.xyz/en/main/"
     },
     {
-        "name": "0.11.2 (stable)",
+        "name": "0.11.3 (stable)",
+        "version": "v0.11.3",
+        "url": "https://discretize.simpeg.xyz/en/v0.11.3/",
+        "preferred": true
+    },
+    {
+        "name": "0.11.2",
         "version": "v0.11.2",
         "url": "https://discretize.simpeg.xyz/en/v0.11.2/",
-        "preferred": true
     },
     {
         "name": "0.11.1",
