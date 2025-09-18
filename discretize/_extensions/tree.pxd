@@ -68,9 +68,10 @@ cdef extern from "tree.h":
         inline Node* max_node()
         double operator[](int_t)
 
+    ctypedef int (*eval_func_ptr)(void*, Cell*)
     cdef cppclass PyWrapper:
         PyWrapper()
-        void set(void*, int(*)(void*, Cell*))
+        void set(void*, eval_func_ptr eval)
 
     cdef cppclass Tree:
         int_t n_dim

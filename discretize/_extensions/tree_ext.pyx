@@ -350,7 +350,6 @@ cdef int _evaluate_func(void* function, c_Cell* cell) noexcept with gil:
     func = <object> function
     pycell = TreeCell()
     pycell._set(cell)
-    val = func(pycell)
     return <int> func(pycell)
 
 cdef class _TreeMesh:
@@ -370,7 +369,7 @@ cdef class _TreeMesh:
 
     cdef object _h_gridded
     cdef object _cell_volumes, _face_areas, _edge_lengths
-    cdef object _average_face_x_to_cell, _average_face_y_to_cell, _average_face_z_to_cell, _average_face_to_cell, _average_face_to_cell_vector,
+    cdef object _average_face_x_to_cell, _average_face_y_to_cell, _average_face_z_to_cell, _average_face_to_cell, _average_face_to_cell_vector
     cdef object _average_node_to_cell, _average_node_to_edge, _average_node_to_edge_x, _average_node_to_edge_y, _average_node_to_edge_z
     cdef object _average_node_to_face, _average_node_to_face_x, _average_node_to_face_y, _average_node_to_face_z
     cdef object _average_edge_x_to_cell, _average_edge_y_to_cell, _average_edge_z_to_cell, _average_edge_to_cell, _average_edge_to_cell_vector
@@ -4944,7 +4943,7 @@ cdef class _TreeMesh:
             raise Exception('TreeMesh has no z faces in 2D')
         cdef np.int64_t[:] I, J
         cdef np.float64_t[:] V
-        cdef np.int64_t ii, id,
+        cdef np.int64_t ii, id
         if self._average_node_to_face_z is not None:
             return self._average_node_to_face_z
 
@@ -6617,16 +6616,15 @@ cdef class _TreeMesh:
                 return output
             return P
 
-        cdef geom.Box *box
+
         cdef int_t last_point_ind = 7 if self._dim==3 else 3
         for cell in self.tree.cells:
             for i_d in range(self._dim):
                 x1m[i_d] = min(cell.min_node().location[i_d], xF[i_d])
                 x1p[i_d] = max(cell.max_node().location[i_d], origin[i_d])
 
-            box = new geom.Box(self._dim, x1m, x1p)
-            overlapping_cell_inds = meshin.tree.find_cells_geom(box[0])
-            del box
+            box = geom.Box(self._dim, x1m, x1p)
+            overlapping_cell_inds = meshin.tree.find_cells_geom(box)
             n_overlap = overlapping_cell_inds.size()
             weights = <double *> malloc(n_overlap*sizeof(double))
             i = 0
@@ -6763,9 +6761,8 @@ cdef class _TreeMesh:
                     x1m[0] = min(nodes_x[ix], xF[0])
                     x1p[0] = max(nodes_x[ix+1], origin[0])
 
-                    box = new geom.Box(self._dim, x1m, x1p)
-                    overlapping_cell_inds = self.tree.find_cells_geom(box[0])
-                    del box
+                    box = geom.Box(self._dim, x1m, x1p)
+                    overlapping_cell_inds = self.tree.find_cells_geom(box)
 
                     n_overlap = overlapping_cell_inds.size()
                     weights = <double *> malloc(n_overlap*sizeof(double))
