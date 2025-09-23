@@ -45,7 +45,7 @@ jobs:
       win-Python313:
         image: windows-latest
         python.version: '3.13'
-      win-Python313:
+      win-Python313t:
         image: windows-latest
         python.version: '3.13t'
   displayName: "${{ variables.image }} ${{ variables.python.version }}"

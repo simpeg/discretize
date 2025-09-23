@@ -3,7 +3,7 @@
 build-backend = 'mesonpy'
 requires = [
     "meson-python>=0.15.0",
-    "Cython>=3.0.8",
+    "Cython>=3.1.0",
     "setuptools_scm[toml]>=6.2",
 
     # numpy requirement for wheel builds for distribution on PyPI - building
@@ -93,7 +93,7 @@ build = [
     "meson",
     "ninja",
     "numpy>=1.22.4",
-    "cython>=0.29.35",
+    "cython>=3.1.0",
     "setuptools_scm",
 ]
 
