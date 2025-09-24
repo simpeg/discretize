@@ -17,7 +17,8 @@ jobs:
         python.version: '3.13'
       linux-Python313t:
         image: ubuntu-latest
-        python.version: '3.13t'
+        python.version: '3.13'
+        python.freethreading: True
       osx-Python310:
         image: macOS-latest
         python.version: '3.10'
@@ -32,7 +33,8 @@ jobs:
         python.version: '3.13'
       osx-Python313t:
         image: macOS-latest
-        python.version: '3.13t'
+        python.version: '3.13'
+        python.freethreading: True
       win-Python310:
         image: windows-latest
         python.version: '3.10'
@@ -47,7 +49,8 @@ jobs:
         python.version: '3.13'
       win-Python313t:
         image: windows-latest
-        python.version: '3.13t'
+        python.version: '3.13'
+        python.freethreading: True
   displayName: "${{ variables.image }} ${{ variables.python.version }}"
   pool:
     vmImage: $(image)
