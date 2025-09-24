@@ -8,22 +8,31 @@ try:
 except ImportError:
     plt = None
 
+try:
+    import vtk
+except ImportError:
+    vtk = None
 
+
+@pytest.mark.skipif(vtk is None, reason="Requires vtk")
 def test_convert_zero_wrapped_to_vtk():
     mesh = discretize.CylindricalMesh([20, 15, 10])
     mesh.to_vtk()
 
 
+@pytest.mark.skipif(vtk is None, reason="Requires vtk")
 def test_convert_zero_nonwrapped_to_vtk():
     mesh = discretize.CylindricalMesh([20, np.ones(3), 10])
     mesh.to_vtk()
 
 
+@pytest.mark.skipif(vtk is None, reason="Requires vtk")
 def test_convert_nonzero_wrapped_to_vtk():
     mesh = discretize.CylindricalMesh([20, 15, 10], origin=[1, 0, 0])
     mesh.to_vtk()
 
 
+@pytest.mark.skipif(vtk is None, reason="Requires vtk")
 def test_convert_nonzero_nonwrapped_to_vtk():
     mesh = discretize.CylindricalMesh([20, np.ones(3), 10], origin=[1, 0, 0])
     mesh.to_vtk()
