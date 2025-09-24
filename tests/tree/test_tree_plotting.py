@@ -1,5 +1,12 @@
-import matplotlib
-import matplotlib.pyplot as plt
+import pytest
+
+try:
+    import matplotlib
+    import matplotlib.pyplot as plt
+except ImportError:
+    pytest.skip(
+        "Skipping TreeMesh plotting tests due to no matplotlib", allow_module_level=True
+    )
 import numpy as np
 import unittest
 from discretize import TreeMesh

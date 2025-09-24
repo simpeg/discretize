@@ -1,17 +1,20 @@
 import unittest
+import pytest
 import numpy as np
 import discretize
 from discretize.utils import example_simplex_mesh
 import os
 import pickle
-import matplotlib.pyplot as plt
+
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    plt = None
 
 try:
     import vtk  # NOQA F401
-
-    has_vtk = True
 except ImportError:
-    has_vtk = False
+    vtk = None
 
 rng = np.random.default_rng(87916253)
 
@@ -78,6 +81,7 @@ class SimplexTests(unittest.TestCase):
         np.testing.assert_equal(mesh0.nodes, mesh1.nodes)
         np.testing.assert_equal(mesh0._simplices, mesh1._simplices)
 
+    @pytest.mark.skipif(plt is None, reason="Requires matplotlib")
     def test_image_plotting(self):
         n = 5
         points, simplices = discretize.utils.example_simplex_mesh((n, n))
@@ -113,6 +117,7 @@ class SimplexTests(unittest.TestCase):
 
         plt.close("all")
 
+    @pytest.mark.skipif(plt is None, reason="Requires matplotlib")
     def test_plot_grid(self):
         n = 5
         points, simplices = discretize.utils.example_simplex_mesh((n, n))
@@ -124,49 +129,49 @@ class SimplexTests(unittest.TestCase):
         mesh.plot_grid(nodes=True, faces=True, edges=True, centers=True)
         plt.close("all")
 
-    if has_vtk:
+    @pytest.mark.skipif(vtk is None, reason="Requires vtk")
+    def test_2D_vtk(self):
+        n = 5
+        points, simplices = discretize.utils.example_simplex_mesh((n, n))
+        mesh = discretize.SimplexMesh(points, simplices)
+        cc_dat = rng.random(mesh.n_cells)
 
-        def test_2D_vtk(self):
-            n = 5
-            points, simplices = discretize.utils.example_simplex_mesh((n, n))
-            mesh = discretize.SimplexMesh(points, simplices)
-            cc_dat = rng.random(mesh.n_cells)
+        vtk_obj = mesh.to_vtk(models={"info": cc_dat})
 
-            vtk_obj = mesh.to_vtk(models={"info": cc_dat})
+        mesh2, models = discretize.SimplexMesh.vtk_to_simplex_mesh(vtk_obj)
 
-            mesh2, models = discretize.SimplexMesh.vtk_to_simplex_mesh(vtk_obj)
+        np.testing.assert_equal(mesh.nodes, mesh2.nodes)
+        np.testing.assert_equal(mesh._simplices, mesh2._simplices)
+        np.testing.assert_equal(cc_dat, models["info"])
 
-            np.testing.assert_equal(mesh.nodes, mesh2.nodes)
-            np.testing.assert_equal(mesh._simplices, mesh2._simplices)
-            np.testing.assert_equal(cc_dat, models["info"])
+        mesh.write_vtk("test.vtu", models={"info": cc_dat})
+        mesh2, models = discretize.SimplexMesh.read_vtk("test.vtu")
 
-            mesh.write_vtk("test.vtu", models={"info": cc_dat})
-            mesh2, models = discretize.SimplexMesh.read_vtk("test.vtu")
+        np.testing.assert_equal(mesh.nodes, mesh2.nodes)
+        np.testing.assert_equal(mesh._simplices, mesh2._simplices)
+        np.testing.assert_equal(cc_dat, models["info"])
 
-            np.testing.assert_equal(mesh.nodes, mesh2.nodes)
-            np.testing.assert_equal(mesh._simplices, mesh2._simplices)
-            np.testing.assert_equal(cc_dat, models["info"])
+    @pytest.mark.skipif(vtk is None, reason="Requires vtk")
+    def test_3D_vtk(self):
+        n = 5
+        points, simplices = discretize.utils.example_simplex_mesh((n, n, n))
+        mesh = discretize.SimplexMesh(points, simplices)
+        cc_dat = rng.random(mesh.n_cells)
 
-        def test_3D_vtk(self):
-            n = 5
-            points, simplices = discretize.utils.example_simplex_mesh((n, n, n))
-            mesh = discretize.SimplexMesh(points, simplices)
-            cc_dat = rng.random(mesh.n_cells)
+        vtk_obj = mesh.to_vtk(models={"info": cc_dat})
 
-            vtk_obj = mesh.to_vtk(models={"info": cc_dat})
+        mesh2, models = discretize.SimplexMesh.vtk_to_simplex_mesh(vtk_obj)
 
-            mesh2, models = discretize.SimplexMesh.vtk_to_simplex_mesh(vtk_obj)
+        np.testing.assert_equal(mesh.nodes, mesh2.nodes)
+        np.testing.assert_equal(mesh._simplices, mesh2._simplices)
+        np.testing.assert_equal(cc_dat, models["info"])
 
-            np.testing.assert_equal(mesh.nodes, mesh2.nodes)
-            np.testing.assert_equal(mesh._simplices, mesh2._simplices)
-            np.testing.assert_equal(cc_dat, models["info"])
+        mesh.write_vtk("test.vtu", models={"info": cc_dat})
+        mesh2, models = discretize.SimplexMesh.read_vtk("test.vtu")
 
-            mesh.write_vtk("test.vtu", models={"info": cc_dat})
-            mesh2, models = discretize.SimplexMesh.read_vtk("test.vtu")
-
-            np.testing.assert_equal(mesh.nodes, mesh2.nodes)
-            np.testing.assert_equal(mesh._simplices, mesh2._simplices)
-            np.testing.assert_equal(cc_dat, models["info"])
+        np.testing.assert_equal(mesh.nodes, mesh2.nodes)
+        np.testing.assert_equal(mesh._simplices, mesh2._simplices)
+        np.testing.assert_equal(cc_dat, models["info"])
 
     def tearDown(self):
         try:
