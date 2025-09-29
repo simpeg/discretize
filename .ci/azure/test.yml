@@ -5,10 +5,10 @@ jobs:
       linux-Python310:
         image: ubuntu-latest
         python.version: '3.10'
-        coverage: True
       linux-Python311:
         image: ubuntu-latest
         python.version: '3.11'
+        coverage: True
       linux-Python312:
         image: ubuntu-latest
         python.version: '3.12'
@@ -19,6 +19,7 @@ jobs:
         image: ubuntu-latest
         python.version: '3.13'
         python.freethreading: True
+        coverage: True
       osx-Python310:
         image: macOS-latest
         python.version: '3.10'
