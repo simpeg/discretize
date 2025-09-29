@@ -9,6 +9,7 @@ dependencies:
   - sympy
   - pytest
   - pytest-cov
+  - matplotlib
 
   # Building
   - pip
