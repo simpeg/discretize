@@ -6,7 +6,7 @@ import numpy as np
 from discretize.base import BaseRectangularMesh, BaseTensorMesh
 from discretize.operators import DiffOperators, InnerProducts
 from discretize.mixins import InterfaceMixins, TensorMeshIO
-from discretize.utils import mkvc
+from discretize.utils import mkvc, as_array_n_by_dim
 
 from .tensor_cell import TensorCell
 
@@ -754,6 +754,33 @@ class TensorMesh(
             indzd = self.gridCC[:, 2] == min(self.gridCC[:, 2])
             indzu = self.gridCC[:, 2] == max(self.gridCC[:, 2])
             return indxd, indxu, indyd, indyu, indzd, indzu
+
+    def point2index(self, locs):  # NOQA D102
+        # Documentation inherited from discretize.base.BaseMesh
+
+        locs = as_array_n_by_dim(locs, self.dim)
+        # in each dimension do a sorted search within the nodes
+        # arrays to find the containing cell in that dimension
+        cell_bounds = [
+            self.nodes_x,
+        ]
+        if self.dim > 1:
+            cell_bounds.append(self.nodes_y)
+        if self.dim == 3:
+            cell_bounds.append(self.nodes_z)
+
+        # subtract 1 here because given the nodes [0, 1], the point 0.5 would be inserted
+        # at index 1 to maintain the sorted list, but that corresponds to cell 0.
+        # clipping here ensures that anything outside the mesh will return the nearest cell.
+        multi_inds = tuple(
+            np.clip(np.searchsorted(n, p) - 1, 0, len(n) - 2)
+            for n, p in zip(cell_bounds, locs.T)
+        )
+        # and of course, we are fortran ordered in a tensor mesh.
+        if self.dim == 1:
+            return multi_inds[0]
+        else:
+            return np.ravel_multi_index(multi_inds, self.shape_cells, order="F")
 
     def _repr_attributes(self):
         """Represent attributes of the mesh."""

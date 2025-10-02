@@ -1,6 +1,10 @@
 import numpy as np
 import pytest
-from matplotlib.colors import Normalize
+
+try:
+    from matplotlib.colors import Normalize
+except ImportError:
+    pytest.skip("Skipping Slicer tests due to no matplotlib", allow_module_level=True)
 import discretize
 from discretize.mixins.mpl_mod import Slicer
 
