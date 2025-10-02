@@ -124,9 +124,9 @@ setup-args = [
 [tool.coverage.run]
 branch = true
 source = ["discretize", "tests", "examples", "tutorials"]
-plugins = [
-    "Cython.Coverage",
-]
+# plugins = [
+#     "Cython.Coverage",
+# ]
 
 [tool.coverage.report]
 ignore_errors = false
