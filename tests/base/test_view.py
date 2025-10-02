@@ -1,7 +1,13 @@
 import unittest
 import numpy as np
-import matplotlib.pyplot as plt
+import pytest
 
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    pytest.skip(
+        "Skipping CylindricalMesh tests due to no matplotlib", allow_module_level=True
+    )
 import discretize
 
 import pytest

@@ -4,6 +4,7 @@ set -ex #echo on and exit if any line fails
 # TF_BUILD is set to True on azure pipelines.
 is_azure=$(echo "${TF_BUILD:-false}" | tr '[:upper:]' '[:lower:]')
 do_doc=$(echo "${DOC_BUILD:-false}" | tr '[:upper:]' '[:lower:]')
+is_free_threaded=$(echo "${PYTHON_FREETHREADING:-false}" | tr '[:upper:]' '[:lower:]')
 
 if ${is_azure}
 then
@@ -13,8 +14,14 @@ then
   fi
 fi
 
-cp .ci/environment_test.yml environment_test_with_pyversion.yml
-echo "  - python="$PYTHON_VERSION >> environment_test_with_pyversion.yml
+if ${is_free_threaded}
+then
+  cp .ci/environment_test_bare.yml environment_test_with_pyversion.yml
+  echo "  - python-freethreading="$PYTHON_VERSION >> environment_test_with_pyversion.yml
+else
+  cp .ci/environment_test.yml environment_test_with_pyversion.yml
+  echo "  - python="$PYTHON_VERSION >> environment_test_with_pyversion.yml
+fi
 
 conda env create --file environment_test_with_pyversion.yml
 rm environment_test_with_pyversion.yml
