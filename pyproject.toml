@@ -17,7 +17,7 @@ name = 'discretize'
 dynamic = ["version"]
 description = 'Discretization tools for finite volume and inverse problems'
 readme = 'README.rst'
-requires-python = '>=3.10'
+requires-python = '>=3.11'
 authors = [
   {name = 'SimPEG developers', email = 'rowanc1@gmail.com'},
 ]
@@ -32,7 +32,7 @@ dependencies = [
     # TODO: update to "pin-compatible" once possible, see
     # https://github.com/mesonbuild/meson-python/issues/29
     "numpy>=1.22.4",
-    "scipy>=1.8",
+    "scipy>=1.12",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -108,8 +108,9 @@ Repository = 'http://github.com/simpeg/discretize.git'
 # skip building wheels for python 3.6, 3.7, 3.8, 3.9, all pypy versions, and specialty linux
 # processors (still does arm builds though).
 # skip windows 32bit
-skip = "cp36-* cp37-* cp38-* cp39-* pp* *_ppc64le *_i686 *_s390x *-win32"
-build-verbosity = "3"
+skip = "cp38-* cp39-* cp310-* *_ppc64le *_i686 *_s390x *-win32 cp310-win_arm64"
+build-verbosity = 3
+enable = ["cpython-freethreading"]
 
 # test importing discretize to make sure externals are loadable.
 test-command = 'python -c "import discretize; print(discretize.__version__)"'

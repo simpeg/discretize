@@ -5,6 +5,7 @@ set -ex #echo on and exit if any line fails
 is_azure=$(echo "${TF_BUILD:-false}" | tr '[:upper:]' '[:lower:]')
 do_doc=$(echo "${DOC_BUILD:-false}" | tr '[:upper:]' '[:lower:]')
 is_free_threaded=$(echo "${PYTHON_FREETHREADING:-false}" | tr '[:upper:]' '[:lower:]')
+is_rc=$(echo "${PYTHON_RELEASE_CANDIDATE:-false}" | tr '[:upper:]' '[:lower:]')
 
 if ${is_azure}
 then
@@ -23,6 +24,10 @@ else
   echo "  - python="$PYTHON_VERSION >> environment_test_with_pyversion.yml
 fi
 
+if ${is_rc}
+then
+  sed -i '/^channels:/a\  - conda-forge/label/python_rc' environment_test_with_pyversion.yml
+fi
 conda env create --file environment_test_with_pyversion.yml
 rm environment_test_with_pyversion.yml
 
