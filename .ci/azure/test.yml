@@ -2,9 +2,6 @@ jobs:
 - job:
   strategy:
     matrix:
-      linux-Python310:
-        image: ubuntu-latest
-        python.version: '3.10'
       linux-Python311:
         image: ubuntu-latest
         python.version: '3.11'
@@ -22,10 +19,7 @@ jobs:
         coverage: True
       linux-Python314:
         image: ubuntu-latest
-        python.version: '3.14'
-      osx-Python310:
-        image: macOS-latest
-        python.version: '3.10'
+        python.version: '3.14.0.rc3'
       osx-Python311:
         image: macOS-latest
         python.version: '3.11'
@@ -41,10 +35,7 @@ jobs:
         python.freethreading: True
       osx-Python314:
         image: macOS-latest
-        python.version: '3.14'
-      win-Python310:
-        image: windows-latest
-        python.version: '3.10'
+        python.version: '3.14.0.rc3'
       win-Python311:
         image: windows-latest
         python.version: '3.11'
@@ -60,7 +51,7 @@ jobs:
         python.freethreading: True
       win-Python314:
         image: windows-latest
-        python.version: '3.14'
+        python.version: '3.14.0.rc3'
   displayName: "${{ variables.image }} ${{ variables.python.version }}"
   pool:
     vmImage: $(image)
