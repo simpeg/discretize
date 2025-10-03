@@ -30,11 +30,9 @@ else
 fi
 
 if ${is_rc}
-then
-conda env create --file environment_test_with_pyversion.yml -c conda-forge -c conda-forge/label/python_rc --override-channels
-else
-conda env create --file environment_test_with_pyversion.yml
+  sed -i '/^channels:/,/^dependencies:/ { /^  - /h; }; ${x;s/.*/  - conda-forge/label/python_rc/;p}' environment_test_with_pyversion.yml
 fi
+conda env create --file environment_test_with_pyversion.yml
 rm environment_test_with_pyversion.yml
 
 if ${is_azure}

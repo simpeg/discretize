@@ -53,7 +53,7 @@ jobs:
         python.freethreading: True
       win-Python314:
         image: windows-latest
-        python.version: '3.14.0'
+        python.version: '3.14'
         python.release_candidate: True
   displayName: "${{ variables.image }} ${{ variables.python.version }}"
   pool:
