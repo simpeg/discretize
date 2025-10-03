@@ -25,8 +25,8 @@ else
 fi
 
 if ${is_rc}
-then
-  sed -i '/^channels:/,/^dependencies:/ { /^  - /h; }; ${x;s/.*/  - conda-forge/label/python_rc/;p}' environment_test_with_pyversion.yml
+then2
+  sed -i '/^channels:/a\  - conda-forge/label/python_rc' environment_test_with_pyversion.yml
 fi
 conda env create --file environment_test_with_pyversion.yml
 rm environment_test_with_pyversion.yml
