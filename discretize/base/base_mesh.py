@@ -6,11 +6,7 @@ import os
 import json
 from scipy.spatial import KDTree
 from discretize.utils import is_scalar, mkvc, sdiag, sdinv
-from discretize.utils.code_utils import (
-    deprecate_property,
-    deprecate_method,
-    as_array_n_by_dim,
-)
+from discretize.utils.code_utils import as_array_n_by_dim
 
 
 class BaseMesh:
@@ -154,7 +150,7 @@ class BaseMesh:
         items.pop("__class__", None)
         return cls(**items)
 
-    def save(self, file_name="mesh.json", verbose=False, **kwargs):
+    def save(self, file_name="mesh.json", verbose=False):
         """Save the mesh to json.
 
         This method is used to save a mesh by writing
@@ -168,11 +164,6 @@ class BaseMesh:
         verbose : bool, optional
             If *True*, the path of the json file is printed
         """
-        if "filename" in kwargs:
-            raise TypeError(
-                "The filename keyword argument has been removed, please use file_name. "
-                "This will be removed in discretize 1.0.0"
-            )
         f = os.path.abspath(file_name)  # make sure we are working with abs path
         with open(f, "w") as outfile:
             json.dump(self.to_dict(), outfile)
@@ -4201,70 +4192,3 @@ class BaseMesh:
                 return "cell_centers"
         else:
             return location_type
-
-    # DEPRECATED
-    normals = deprecate_property(
-        "face_normals", "normals", removal_version="1.0.0", error=True
-    )
-    tangents = deprecate_property(
-        "edge_tangents", "tangents", removal_version="1.0.0", error=True
-    )
-    projectEdgeVector = deprecate_method(
-        "project_edge_vector",
-        "projectEdgeVector",
-        removal_version="1.0.0",
-        error=True,
-    )
-    projectFaceVector = deprecate_method(
-        "project_face_vector",
-        "projectFaceVector",
-        removal_version="1.0.0",
-        error=True,
-    )
-    getInterpolationMat = deprecate_method(
-        "get_interpolation_matrix",
-        "getInterpolationMat",
-        removal_version="1.0.0",
-        error=True,
-    )
-    nodalGrad = deprecate_property(
-        "nodal_gradient", "nodalGrad", removal_version="1.0.0", error=True
-    )
-    nodalLaplacian = deprecate_property(
-        "nodal_laplacian", "nodalLaplacian", removal_version="1.0.0", error=True
-    )
-    faceDiv = deprecate_property(
-        "face_divergence", "faceDiv", removal_version="1.0.0", error=True
-    )
-    edgeCurl = deprecate_property(
-        "edge_curl", "edgeCurl", removal_version="1.0.0", error=True
-    )
-    getFaceInnerProduct = deprecate_method(
-        "get_face_inner_product",
-        "getFaceInnerProduct",
-        removal_version="1.0.0",
-        error=True,
-    )
-    getEdgeInnerProduct = deprecate_method(
-        "get_edge_inner_product",
-        "getEdgeInnerProduct",
-        removal_version="1.0.0",
-        error=True,
-    )
-    getFaceInnerProductDeriv = deprecate_method(
-        "get_face_inner_product_deriv",
-        "getFaceInnerProductDeriv",
-        removal_version="1.0.0",
-        error=True,
-    )
-    getEdgeInnerProductDeriv = deprecate_method(
-        "get_edge_inner_product_deriv",
-        "getEdgeInnerProductDeriv",
-        removal_version="1.0.0",
-        error=True,
-    )
-    vol = deprecate_property("cell_volumes", "vol", removal_version="1.0.0", error=True)
-    area = deprecate_property("face_areas", "area", removal_version="1.0.0", error=True)
-    edge = deprecate_property(
-        "edge_lengths", "edge", removal_version="1.0.0", error=True
-    )

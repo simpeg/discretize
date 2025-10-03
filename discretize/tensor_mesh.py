@@ -7,7 +7,6 @@ from discretize.base import BaseRectangularMesh, BaseTensorMesh
 from discretize.operators import DiffOperators, InnerProducts
 from discretize.mixins import InterfaceMixins, TensorMeshIO
 from discretize.utils import mkvc, as_array_n_by_dim
-from discretize.utils.code_utils import deprecate_property
 
 from .tensor_cell import TensorCell
 
@@ -815,38 +814,6 @@ class TensorMesh(
             attrs[name]["nC"] = self.shape_cells[i]
 
         return attrs
-
-    # DEPRECATIONS
-    areaFx = deprecate_property(
-        "face_x_areas", "areaFx", removal_version="1.0.0", error=True
-    )
-    areaFy = deprecate_property(
-        "face_y_areas", "areaFy", removal_version="1.0.0", error=True
-    )
-    areaFz = deprecate_property(
-        "face_z_areas", "areaFz", removal_version="1.0.0", error=True
-    )
-    edgeEx = deprecate_property(
-        "edge_x_lengths", "edgeEx", removal_version="1.0.0", error=True
-    )
-    edgeEy = deprecate_property(
-        "edge_y_lengths", "edgeEy", removal_version="1.0.0", error=True
-    )
-    edgeEz = deprecate_property(
-        "edge_z_lengths", "edgeEz", removal_version="1.0.0", error=True
-    )
-    faceBoundaryInd = deprecate_property(
-        "face_boundary_indices",
-        "faceBoundaryInd",
-        removal_version="1.0.0",
-        error=True,
-    )
-    cellBoundaryInd = deprecate_property(
-        "cell_boundary_indices",
-        "cellBoundaryInd",
-        removal_version="1.0.0",
-        error=True,
-    )
 
 
 def _slice_to_index(index_slice, end):

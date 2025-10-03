@@ -8,7 +8,6 @@ from discretize.utils.code_utils import is_scalar
 from scipy.spatial import cKDTree, Delaunay
 from scipy import interpolate
 import discretize
-from discretize.utils.code_utils import deprecate_function
 import warnings
 
 num_types = [int, float]
@@ -186,7 +185,7 @@ def unpack_widths(value):
     return np.array(proposed)
 
 
-def closest_points_index(mesh, pts, grid_loc="CC", **kwargs):
+def closest_points_index(mesh, pts, grid_loc="CC"):
     """Find the indicies for the nearest grid location for a set of points.
 
     Parameters
@@ -237,11 +236,6 @@ def closest_points_index(mesh, pts, grid_loc="CC", **kwargs):
     >>> ax.scatter(xy_nodes[ind_nodes, 0], xy_nodes[ind_nodes, 1], 50, 'b')
     >>> plt.show()
     """
-    if "gridLoc" in kwargs:
-        raise TypeError(
-            "The gridLoc keyword argument has been removed, please use grid_loc. "
-            "This message will be removed in discretize 1.0.0",
-        )
     warnings.warn(
         "The closest_points_index utilty function has been moved to be a method of "
         "a class object. Please access it as mesh.closest_points_index(). This will "
@@ -1213,17 +1207,3 @@ def example_simplex_mesh(rect_shape):
         ]
 
     return points, simplices
-
-
-meshTensor = deprecate_function(
-    unpack_widths, "meshTensor", removal_version="1.0.0", error=True
-)
-closestPoints = deprecate_function(
-    closest_points_index, "closestPoints", removal_version="1.0.0", error=True
-)
-ExtractCoreMesh = deprecate_function(
-    extract_core_mesh, "ExtractCoreMesh", removal_version="1.0.0", error=True
-)
-closest_points = deprecate_function(
-    closest_points_index, "closest_points", removal_version="1.0.0", error=True
-)

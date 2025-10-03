@@ -3,7 +3,6 @@
 import numpy as np
 import scipy.sparse as sp
 from discretize.utils.matrix_utils import mkvc, sub2ind
-from discretize.utils.code_utils import deprecate_function
 
 try:
     from discretize._extensions import interputils_cython as pyx
@@ -285,8 +284,3 @@ def volume_average(mesh_in, mesh_out, values=None, output=None):
             return mesh_out._vol_avg_from_tree(mesh_in, values, output)
     else:
         raise TypeError("Unsupported mesh types")
-
-
-interpmat = deprecate_function(
-    interpolation_matrix, "interpmat", removal_version="1.0.0", error=True
-)
