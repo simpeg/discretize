@@ -20,16 +20,12 @@ then
   cp .ci/environment_test_bare.yml environment_test_with_pyversion.yml
   echo "  - python-freethreading="$PYTHON_VERSION >> environment_test_with_pyversion.yml
 else
-  if ${is_rc}
-  then
-    cp .ci/environment_test_bare.yml environment_test_with_pyversion.yml
-  else
-    cp .ci/environment_test.yml environment_test_with_pyversion.yml
-  fi
+  cp .ci/environment_test.yml environment_test_with_pyversion.yml
   echo "  - python="$PYTHON_VERSION >> environment_test_with_pyversion.yml
 fi
 
 if ${is_rc}
+then
   sed -i '/^channels:/,/^dependencies:/ { /^  - /h; }; ${x;s/.*/  - conda-forge/label/python_rc/;p}' environment_test_with_pyversion.yml
 fi
 conda env create --file environment_test_with_pyversion.yml
