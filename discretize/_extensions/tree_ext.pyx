@@ -7,7 +7,7 @@ cimport numpy as np
 from libc.stdlib cimport malloc, free
 from libcpp.vector cimport vector
 from libcpp cimport bool
-from libc.math cimport INFINITYs
+from libc.math cimport INFINITY
 
 from .tree cimport int_t, Tree as c_Tree, PyWrapper, Node, Edge, Face, Cell as c_Cell
 from . cimport geom
@@ -1229,12 +1229,19 @@ cdef class _TreeMesh:
             refined to it's maximum level.
 
         """
-        cdef int max_level = self.max_level
         if diagonal_balance is None:
             diagonal_balance = self._diagonal_balance
         cdef bool diag_balance = diagonal_balance
 
-        image = self._require_ndarray_with_dim('image', image, ndim=self.dim, dtype=np.float64)
+        image = np.require(image, dtype=np.float64, requirements="F")
+        cdef size_t n_expected = np.prod(self.shape_cells)
+        if image.size != n_expected:
+            raise ValueError(
+                f"image array size: {image.size} must match the total number of cells in the base tensor mesh: {n_expected}"
+            )
+        if image.ndim == 1:
+            image = image.reshape(self.shape_cells, order="F")
+
         if image.shape != self.shape_cells:
             raise ValueError(
                 f"image array shape: {image.shape} must match the base cell shapes: {self.shape_cells}"
@@ -1242,8 +1249,10 @@ cdef class _TreeMesh:
         if self.dim == 2:
             image = image[..., None]
 
-        cdef double[:,:,::1] image_dat = image
-        self.tree.refine_image(&image[0, 0, 0], diagonal_balance)
+        cdef double[::1,:,:] image_dat = image
+        
+        with self._tree_modify_lock:
+            self.tree.refine_image(&image_dat[0, 0, 0], diag_balance)
         if finalize:
             self.finalize()
 
