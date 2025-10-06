@@ -25,7 +25,11 @@ def is_scalar(f):
     """
     if isinstance(f, SCALARTYPES):
         return True
-    elif isinstance(f, np.ndarray) and f.size == 1 and isinstance(f[0], SCALARTYPES):
+    elif (
+        isinstance(f, np.ndarray)
+        and f.size == 1
+        and isinstance(f.reshape(-1)[0], SCALARTYPES)
+    ):
         return True
     return False
 

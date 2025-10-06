@@ -17,7 +17,6 @@ from pathlib import Path
 from datetime import datetime
 from packaging.version import parse
 import discretize
-from sphinx_gallery.sorting import FileNameSortKey
 import shutil
 from importlib.metadata import version
 
@@ -499,13 +498,12 @@ sphinx_gallery_conf = {
         "tutorials/inner_products",
         "tutorials/pde",
     ],
-    "within_subsection_order": FileNameSortKey,
+    "within_subsection_order": "FileNameSortKey",
     "filename_pattern": "\\.py",
     "backreferences_dir": "api/generated/backreferences",
     "doc_module": "discretize",
-    # 'reference_url': {'discretize': None},
+    "image_scrapers": ("pyvista", "matplotlib"),
 }
-sphinx_gallery_conf["image_scrapers"] = (pyvista.Scraper(), "matplotlib")
 
 
 # Documents to append as an appendix to all manuals.

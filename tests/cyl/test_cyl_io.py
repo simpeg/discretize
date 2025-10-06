@@ -2,44 +2,61 @@ import discretize
 import pytest
 import os
 import numpy as np
-import matplotlib.pyplot as plt
+
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    plt = None
+
+try:
+    import vtk
+except ImportError:
+    vtk = None
 
 
+@pytest.mark.skipif(vtk is None, reason="Requires vtk")
 def test_convert_zero_wrapped_to_vtk():
     mesh = discretize.CylindricalMesh([20, 15, 10])
     mesh.to_vtk()
 
 
+@pytest.mark.skipif(vtk is None, reason="Requires vtk")
 def test_convert_zero_nonwrapped_to_vtk():
     mesh = discretize.CylindricalMesh([20, np.ones(3), 10])
     mesh.to_vtk()
 
 
+@pytest.mark.skipif(vtk is None, reason="Requires vtk")
 def test_convert_nonzero_wrapped_to_vtk():
     mesh = discretize.CylindricalMesh([20, 15, 10], origin=[1, 0, 0])
     mesh.to_vtk()
 
 
+@pytest.mark.skipif(vtk is None, reason="Requires vtk")
 def test_convert_nonzero_nonwrapped_to_vtk():
     mesh = discretize.CylindricalMesh([20, np.ones(3), 10], origin=[1, 0, 0])
     mesh.to_vtk()
 
 
+@pytest.mark.skipif(plt is None, reason="Requires matplotlib")
 def test_convert_zero_wrapped_plot_grid():
     mesh = discretize.CylindricalMesh([20, 15, 10])
     mesh.plot_grid()
 
 
+@pytest.mark.skipif(plt is None, reason="Requires matplotlib")
 def test_convert_zero_nonwrapped_plot_grid():
     mesh = discretize.CylindricalMesh([20, np.ones(3), 10])
     mesh.plot_grid()
 
 
+@pytest.mark.skipif(plt is None, reason="Requires matplotlib")
 def test_convert_nonzero_wrapped_plot_grid():
     mesh = discretize.CylindricalMesh([20, 15, 10], origin=[1, 0, 0])
     mesh.plot_grid()
 
 
+@pytest.mark.skipif(plt is None, reason="Requires matplotlib")
 def test_convert_nonzero_nonwrapped_plot_grid():
     mesh = discretize.CylindricalMesh([20, np.ones(3), 10], origin=[1, 0, 0])
     mesh.plot_grid()
@@ -54,4 +71,5 @@ def cleanup_files(monkeypatch):
             os.remove(file)
         except FileNotFoundError:
             pass
-    plt.close("all")
+    if plt is not None:
+        plt.close("all")
