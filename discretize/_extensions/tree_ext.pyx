@@ -1227,6 +1227,11 @@ cdef class _TreeMesh:
         image : (shape_cells) numpy.ndarray
             Must have the same shape as the base tensor mesh (TreeMesh.shape_cells), as if every cell on this mesh was
             refined to it's maximum level.
+        finalize : bool, optional
+            Whether to finalize after inserting point(s)
+        diagonal_balance : bool or None, optional
+            Whether to balance cells diagonally in the refinement, `None` implies using
+            the same setting used to instantiate the TreeMesh`.
 
         """
         if diagonal_balance is None:
