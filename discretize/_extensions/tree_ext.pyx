@@ -25,7 +25,7 @@ cdef class TreeCell:
 
     This cannot be created in python, it can only be accessed by indexing the
     :class:`~discretize.TreeMesh` object. ``TreeCell`` is the object being passed
-    to the user defined refine function when calling tshe
+    to the user defined refine function when calling the
     :py:attr:`~discretize.TreeMesh.refine` method for a :class:`~discretize.TreeMesh`.
 
     Examples
@@ -1219,19 +1219,19 @@ cdef class _TreeMesh:
 
         This function takes an N-dimensional image, defined on the underlying fine tensor mesh,
         and recursively subdivides each cell if that cell contains more than 1 unique value in the
-        image. This is useful when using the TreeMesh to represent an exact compressed form of an input
+        image. This is useful when using the `TreeMesh` to represent an exact compressed form of an input
         model.
 
         Parameters
         ----------
         image : (shape_cells) numpy.ndarray
-            Must have the same shape as the base tensor mesh (TreeMesh.shape_cells), as if every cell on this mesh was
+            Must have the same shape as the base tensor mesh (`TreeMesh.shape_cells`), as if every cell on this mesh was
             refined to it's maximum level.
         finalize : bool, optional
             Whether to finalize after inserting point(s)
         diagonal_balance : bool or None, optional
             Whether to balance cells diagonally in the refinement, `None` implies using
-            the same setting used to instantiate the TreeMesh`.
+            the same setting used to instantiate the `TreeMesh`.
 
         """
         if diagonal_balance is None:
