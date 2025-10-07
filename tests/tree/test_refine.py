@@ -1,5 +1,7 @@
+import re
 import discretize
 import numpy as np
+import numpy.testing as npt
 import pytest
 from discretize.tests import assert_cell_intersects_geometric
 
@@ -490,3 +492,149 @@ def test_refine_plane3D():
     mesh2.refine_triangle(tris, -1)
 
     assert mesh1.equals(mesh2)
+
+
+def _make_quadrant_model(mesh, order):
+    shape_cells = mesh.shape_cells
+    model = np.zeros(shape_cells, order="F" if order == "flat" else order)
+    if mesh.dim == 2:
+        model[: shape_cells[0] // 2, : shape_cells[1] // 2] = 1.0
+        model[: shape_cells[0] // 4, : shape_cells[1] // 4] = 0.5
+    else:
+        model[: shape_cells[0] // 2, : shape_cells[1] // 2, : shape_cells[2] // 2] = 1.0
+        model[: shape_cells[0] // 4, : shape_cells[1] // 4, : shape_cells[2] // 4] = 0.5
+    if order == "flat":
+        model = model.reshape(-1, order="F")
+    return model
+
+
+@pytest.mark.parametrize(
+    "tens_inp",
+    [
+        dict(h=[16, 16]),
+        dict(h=[16, 32]),
+        dict(h=[32, 16]),
+        dict(h=[16, 16, 16]),
+        dict(h=[16, 16, 8]),
+        dict(h=[16, 8, 16]),
+        dict(h=[8, 16, 16]),
+        dict(h=[8, 8, 16]),
+        dict(h=[8, 16, 8]),
+        dict(h=[16, 8, 8]),
+    ],
+    ids=[
+        "16x16",
+        "16x32",
+        "32x16",
+        "16x16x16",
+        "16x16x8",
+        "16x8x16",
+        "8x16x16",
+        "8x8x16",
+        "8x16x8",
+        "16x8x8",
+    ],
+)
+def test_refine_image_input_ordering(tens_inp):
+    base_mesh = discretize.TensorMesh(**tens_inp)
+    model_0 = _make_quadrant_model(base_mesh, order="flat")
+    model_1 = _make_quadrant_model(base_mesh, order="C")
+    model_2 = _make_quadrant_model(base_mesh, order="F")
+
+    tree0 = discretize.TreeMesh(base_mesh.h, base_mesh.origin)
+    tree0.refine_image(model_0)
+
+    tree1 = discretize.TreeMesh(base_mesh.h, base_mesh.origin)
+    tree1.refine_image(model_1)
+
+    tree2 = discretize.TreeMesh(base_mesh.h, base_mesh.origin)
+    tree2.refine_image(model_2)
+
+    assert tree0.n_cells == tree1.n_cells == tree2.n_cells
+
+    for cell0, cell1, cell2 in zip(tree0, tree1, tree2):
+        assert cell0.nodes == cell1.nodes == cell2.nodes
+
+
+@pytest.mark.parametrize(
+    "tens_inp",
+    [
+        dict(h=[16, 16]),
+        dict(h=[16, 32]),
+        dict(h=[32, 16]),
+        dict(h=[16, 16, 16]),
+        dict(h=[16, 16, 8]),
+        dict(h=[16, 8, 16]),
+        dict(h=[8, 16, 16]),
+        dict(h=[8, 8, 16]),
+        dict(h=[8, 16, 8]),
+        dict(h=[16, 8, 8]),
+    ],
+    ids=[
+        "16x16",
+        "16x32",
+        "32x16",
+        "16x16x16",
+        "16x16x8",
+        "16x8x16",
+        "8x16x16",
+        "8x8x16",
+        "8x16x8",
+        "16x8x8",
+    ],
+)
+@pytest.mark.parametrize(
+    "model_func",
+    [
+        lambda mesh: np.zeros(mesh.n_cells),
+        lambda mesh: np.arange(mesh.n_cells, dtype=float),
+        lambda mesh: _make_quadrant_model(mesh, order="flat"),
+    ],
+    ids=["constant", "full", "quadrant"],
+)
+def test_refine_image(tens_inp, model_func):
+    base_mesh = discretize.TensorMesh(**tens_inp)
+    model = model_func(base_mesh)
+    mesh = discretize.TreeMesh(base_mesh.h, base_mesh.origin, diagonal_balance=False)
+    mesh.refine_image(model)
+
+    # for every cell in the tree mesh, all aligned cells in the tensor mesh
+    # should have a single unique value.
+    # quickest way is to generate a volume interp operator and look at indices in the
+    # csr matrix
+    interp_mat = discretize.utils.volume_average(base_mesh, mesh)
+
+    # ensure in canonical form:
+    interp_mat.sum_duplicates()
+    interp_mat.sort_indices()
+    assert interp_mat.has_canonical_format
+
+    model = model.reshape(-1, order="F")
+    for row in interp_mat:
+        vals = model[row.indices]
+        npt.assert_equal(vals, vals[0])
+
+
+def test_refine_image_bad_size():
+    mesh = discretize.TreeMesh([32, 32])
+    model = np.zeros(32 * 32 + 1)
+    base_cells = np.prod(mesh.shape_cells)
+    with pytest.raises(
+        ValueError,
+        match=re.escape(
+            f"image array size: {len(model)} must match the total number of cells in the base tensor mesh: {base_cells}"
+        ),
+    ):
+        mesh.refine_image(model)
+
+
+def test_refine_image_bad_shape():
+    mesh = discretize.TreeMesh([32, 32])
+    model = np.zeros((16, 64))
+    with pytest.raises(
+        ValueError,
+        match=re.escape(
+            f"image array shape: {model.shape} must match the base cell shapes: {mesh.shape_cells}"
+        ),
+    ):
+        mesh.refine_image(model)

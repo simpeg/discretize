@@ -1214,6 +1214,55 @@ cdef class _TreeMesh:
         if finalize:
             self.finalize()
 
+    def refine_image(self, image, finalize=True, diagonal_balance=None):
+        """Refine using an ND image, ensuring that each cell contains exactly one unique value.
+
+        This function takes an N-dimensional image, defined on the underlying fine tensor mesh,
+        and recursively subdivides each cell if that cell contains more than 1 unique value in the
+        image. This is useful when using the `TreeMesh` to represent an exact compressed form of an input
+        model.
+
+        Parameters
+        ----------
+        image : (shape_cells) numpy.ndarray
+            Must have the same shape as the base tensor mesh (`TreeMesh.shape_cells`), as if every cell on this mesh was
+            refined to it's maximum level.
+        finalize : bool, optional
+            Whether to finalize after inserting point(s)
+        diagonal_balance : bool or None, optional
+            Whether to balance cells diagonally in the refinement, `None` implies using
+            the same setting used to instantiate the `TreeMesh`.
+
+        """
+        if diagonal_balance is None:
+            diagonal_balance = self._diagonal_balance
+        cdef bool diag_balance = diagonal_balance
+
+        image = np.require(image, dtype=np.float64, requirements="F")
+        cdef size_t n_expected = np.prod(self.shape_cells)
+        if image.size != n_expected:
+            raise ValueError(
+                f"image array size: {image.size} must match the total number of cells in the base tensor mesh: {n_expected}"
+            )
+        if image.ndim == 1:
+            image = image.reshape(self.shape_cells, order="F")
+
+        if image.shape != self.shape_cells:
+            raise ValueError(
+                f"image array shape: {image.shape} must match the base cell shapes: {self.shape_cells}"
+            )
+        if self.dim == 2:
+            image = image[..., None]
+
+        cdef double[::1,:,:] image_dat = image
+        
+        with self._tree_modify_lock:
+            self.tree.refine_image(&image_dat[0, 0, 0], diag_balance)
+        if finalize:
+            self.finalize()
+
+
+
     def finalize(self):
         """Finalize the :class:`~discretize.TreeMesh`.
 
