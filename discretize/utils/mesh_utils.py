@@ -931,7 +931,7 @@ def refine_tree_xyz(
 
     else:
         raise NotImplementedError(
-            "Only method= 'radial', 'surface'" " or 'box' have been implemented"
+            "Only method= 'radial', 'surface' or 'box' have been implemented"
         )
 
     return mesh

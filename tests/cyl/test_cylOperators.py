@@ -67,9 +67,7 @@ class FaceInnerProductFctsIsotropic(object):
         ans = sympy.integrate(
             sympy.integrate(sympy.integrate(r * jTSj, (r, 0, 1)), (t, 0, 2 * sympy.pi)),
             (z, 0, 1),
-        )[
-            0
-        ]  # The `[0]` is to make it a number rather than a matrix
+        )[0]  # The `[0]` is to make it a number rather than a matrix
 
         return ans
 
@@ -119,9 +117,7 @@ class EdgeInnerProductFctsIsotropic(object):
         ans = sympy.integrate(
             sympy.integrate(sympy.integrate(r * hTSh, (r, 0, 1)), (t, 0, 2 * sympy.pi)),
             (z, 0, 1),
-        )[
-            0
-        ]  # The `[0]` is to make it a scalar
+        )[0]  # The `[0]` is to make it a scalar
 
         return ans
 

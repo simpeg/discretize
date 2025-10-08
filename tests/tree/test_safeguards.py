@@ -83,7 +83,6 @@ def refine_mesh(mesh):
 
 
 class TestSafeGuards:
-
     @pytest.mark.parametrize("prop_name", PROPERTIES)
     @pytest.mark.parametrize("refine", [True, False], ids=["refined", "non-refined"])
     def test_errors(self, mesh, prop_name, refine):
