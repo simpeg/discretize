@@ -79,7 +79,7 @@ test = [
 ]
 # when changing these, make sure to keep it consistent with .pre-commit-config.
 style = [
-    "ruff=0.14.0",
+    "ruff==0.14.0",
 ]
 build = [
     "meson-python>=0.14.0",
