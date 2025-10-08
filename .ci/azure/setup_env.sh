@@ -22,14 +22,13 @@ else
   echo "  - python="$PYTHON_VERSION >> environment_test_with_pyversion.yml
 fi
 
-if [[ "$is_rc" == "true"]]; then
+if [[ "$is_rc" == "true" ]]; then
   sed -i '/^channels:/a\  - conda-forge/label/python_rc' environment_test_with_pyversion.yml
 fi
 conda env create --file environment_test_with_pyversion.yml
 rm environment_test_with_pyversion.yml
 
 if [[ "$is_azure" == "true" ]]; then
-then
   source activate discretize-test
   pip install pytest-azurepipelines
 else
