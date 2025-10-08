@@ -6,3 +6,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/ruff-action@v3
+        with:
+          version: "0.14.0"
+          checksum: "28fe06f700caf99eee235f90e6e349f48b7f9a4b0d42e3ee5b3686f9259649a3"

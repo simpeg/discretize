@@ -144,7 +144,7 @@ exclude_also = [
     "@(abc\\.)?abstractmethod",
 ]
 [tool.ruff]
-required-version='0.14.0'
+required-version = '0.14.0'
 target-version = 'py311'
 #extend-exclude = [
 #    'docs/examples/*',
