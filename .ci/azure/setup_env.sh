@@ -6,17 +6,15 @@ is_azure=$(echo "${TF_BUILD:-false}" | tr '[:upper:]' '[:lower:]')
 do_doc=$(echo "${DOC_BUILD:-false}" | tr '[:upper:]' '[:lower:]')
 is_free_threaded=$(echo "${PYTHON_FREETHREADING:-false}" | tr '[:upper:]' '[:lower:]')
 is_rc=$(echo "${PYTHON_RELEASE_CANDIDATE:-false}" | tr '[:upper:]' '[:lower:]')
+is_bare=$(echo "${ENVIRON_BARE:-false}" | tr '[:upper:]' '[:lower:]')
 
-if ${is_azure}
-then
-  if ${do_doc}
-  then
+if [[ "$is_azure" == "true" ]]; then
+  if [[ "$do_doc" == "true" ]]; then
     .ci/setup_headless_display.sh
   fi
 fi
 
-if ${is_free_threaded}
-then
+if [[ "$is_free_threaded" == "true" || "$is_bare" == "true" ]]; then
   cp .ci/environment_test_bare.yml environment_test_with_pyversion.yml
   echo "  - python-freethreading="$PYTHON_VERSION >> environment_test_with_pyversion.yml
 else
@@ -24,15 +22,13 @@ else
   echo "  - python="$PYTHON_VERSION >> environment_test_with_pyversion.yml
 fi
 
-if ${is_rc}
-then
+if [[ "$is_rc" == "true" ]]; then
   sed -i '/^channels:/a\  - conda-forge/label/python_rc' environment_test_with_pyversion.yml
 fi
 conda env create --file environment_test_with_pyversion.yml
 rm environment_test_with_pyversion.yml
 
-if ${is_azure}
-then
+if [[ "$is_azure" == "true" ]]; then
   source activate discretize-test
   pip install pytest-azurepipelines
 else

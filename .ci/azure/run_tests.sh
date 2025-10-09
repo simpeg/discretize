@@ -10,23 +10,19 @@ test_args=""
 
 source activate discretize-test
 
-if ${do_doc}
-then
-  if ${is_azure}
-  then
+if [[ "$is_azure" == "true" ]]; then
+  if [[ "$do_doc" == "true" ]]; then
     .ci/setup_headless_display.sh
   fi
 fi
-if ${do_cov}
-then
+if [[ "do_cov" == "true" ]]; then
   echo "Testing with coverage"
   test_args="--cov --cov-config=pyproject.toml $test_args"
 fi
 
 pytest -vv $test_args
 
-if ${do_cov}
-then
+if [[ "do_cov" == "true" ]]; then
   coverage xml
 fi
 
