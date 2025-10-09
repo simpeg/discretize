@@ -114,7 +114,7 @@ Code:
 https://github.com/simpeg/discretize
 
 Tests:
-https://travis-ci.org/simpeg/discretize
+https://dev.azure.com/simpeg/discretize/_build
 
 Bugs & Issues:
 https://github.com/simpeg/discretize/issues

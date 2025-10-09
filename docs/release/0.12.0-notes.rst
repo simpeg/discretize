@@ -1,0 +1,44 @@
+.. currentmodule:: discretize
+
+.. _0.12.0_notes:
+
+===================================
+``discretize`` 0.12.0 Release Notes
+===================================
+
+October 8, 2025
+
+This minor release contains many bugfixes and updates related to new package builds.
+
+Python versions
+---------------
+`discretize` has bumped its minimum supported `python` version to 3.11, and is tested against versions 3.11-3.14. Minimum scipy versions
+have also been bumped to 1.12. Users on older python versions should continue to use `discretize` 0.11.x.
+
+We have also added support for (and tests against) free-threaded python builds for python 3.13 and later, which should be available through
+the normal python distribution channels (pypi, conda-forge).
+
+``TreeMesh`` updates
+--------------------
+Tree meshes now support a `refine_image` method that allows users to refine a mesh based on an image (2D or 3D numpy array). See
+:func:``discretize.TreeMesh.refine_image`` for more details.
+
+``TensorMesh`` updates
+----------------------
+A new :func:``discretize.TensorMesh.point2index`` method has been added to convert a point location to the corresponding cell index in
+a tensor mesh, similar to the existing :func:``discretize.TreeMesh.point2index`` method.
+
+
+Contributors
+============
+
+* @jcapriot
+
+Pull requests
+=============
+* bump sphinx and pydata-sphinx to more recent versions by @jcapriot in `#402 <https://github.com/simpeg/discretize/pull/402>`__
+* Small cleanups to the external TreeMesh code, no functionality changes by @jcapriot in `#400 <https://github.com/simpeg/discretize/pull/400>`__
+* Add point2index functionality for `tensor_mesh` by @jcapriot in `#401 <https://github.com/simpeg/discretize/pull/401>`__
+* Updates for python free threading by @jcapriot in `#403 <https://github.com/simpeg/discretize/pull/403>`__
+* Updates for cibuildwheel by @jcapriot in `#405 <https://github.com/simpeg/discretize/pull/405>`__
+* Add functionality to refine a `TreeMesh` using an "image" by @jcapriot in `#406 <https://github.com/simpeg/discretize/pull/406>`__

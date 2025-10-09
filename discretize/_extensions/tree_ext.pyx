@@ -1,6 +1,7 @@
 # distutils: language=c++
 # cython: embedsignature=True, language_level=3
 # cython: linetrace=True
+# cython: freethreading_compatible=True
 cimport cython
 cimport numpy as np
 from libc.stdlib cimport malloc, free
@@ -359,6 +360,7 @@ cdef class _TreeMesh:
     cdef int_t[3] ls
     cdef int _finalized
     cdef bool _diagonal_balance
+    cdef cython.pymutex _tree_modify_lock
 
     cdef double[:] _xs, _ys, _zs
     cdef double[:] _origin
@@ -546,9 +548,12 @@ cdef class _TreeMesh:
 
         #Wrapping function so it can be called in c++
         cdef void * func_ptr = <void *> function
-        self.wrapper.set(func_ptr, _evaluate_func)
-        #Then tell c++ to build the tree
-        self.tree.refine_function(self.wrapper, diag_balance)
+        
+
+        with self._tree_modify_lock:
+            self.wrapper.set(func_ptr, _evaluate_func)
+            #Then tell c++ to build the tree
+            self.tree.refine_function(self.wrapper, diag_balance)
         if finalize:
             self.finalize()
 
@@ -631,7 +636,9 @@ cdef class _TreeMesh:
         for i in range(n_balls):
             ball = geom.Ball(self._dim, &cs[i_c, 0], rs[i_r])
             l = _wrap_levels(ls[i_l], max_level)
-            self.tree.refine_geom(ball, l, diag_balance)
+        
+            with self._tree_modify_lock:
+                    self.tree.refine_geom(ball, l, diag_balance)
 
             i_c += cs_step
             i_r += rs_step
@@ -715,7 +722,8 @@ cdef class _TreeMesh:
         for i in range(n_boxes):
             box = geom.Box(self._dim, &x0[i_x0, 0], &x1[i_x1, 0])
             l = _wrap_levels(ls[i_l], max_level)
-            self.tree.refine_geom(box, l, diag_balance)
+            with self._tree_modify_lock:
+                self.tree.refine_geom(box, l, diag_balance)
 
             i_x0 += x0_step
             i_x1 += x1_step
@@ -792,7 +800,8 @@ cdef class _TreeMesh:
         for i in range(n_segments):
             line = geom.Line(self._dim, &line_nodes[i_line, 0], &line_nodes[i_line+1, 0])
             l = _wrap_levels(ls[i_l], max_level)
-            self.tree.refine_geom(line, l, diag_balance)
+            with self._tree_modify_lock:
+                self.tree.refine_geom(line, l, diag_balance)
 
             i_line += line_step
             i_l += l_step
@@ -875,7 +884,8 @@ cdef class _TreeMesh:
         for i in range(n_planes):
             plane = geom.Plane(self._dim, &x_0s[i_o, 0], &norms[i_n, 0])
             l = _wrap_levels(ls[i_l], max_level)
-            self.tree.refine_geom(plane, l, diag_balance)
+            with self._tree_modify_lock:
+                self.tree.refine_geom(plane, l, diag_balance)
 
             i_o += origin_step
             i_n += normal_step
@@ -953,7 +963,8 @@ cdef class _TreeMesh:
         for i in range(n_triangles):
             triang = geom.Triangle(self._dim, &tris[i_tri, 0, 0], &tris[i_tri, 1, 0], &tris[i_tri, 2, 0])
             l = _wrap_levels(ls[i_l], max_level)
-            self.tree.refine_geom(triang, l, diag_balance)
+            with self._tree_modify_lock:
+                self.tree.refine_geom(triang, l, diag_balance)
 
             i_tri += tri_step
             i_l += l_step
@@ -1048,7 +1059,8 @@ cdef class _TreeMesh:
         for i in range(n_triangles):
             vert_prism = geom.VerticalTriangularPrism(self._dim, &tris[i_tri, 0, 0], &tris[i_tri, 1, 0], &tris[i_tri, 2, 0], hs[i_h])
             l = _wrap_levels(ls[i_l], max_level)
-            self.tree.refine_geom(vert_prism, l, diag_balance)
+            with self._tree_modify_lock:
+                self.tree.refine_geom(vert_prism, l, diag_balance)
 
             i_tri += tri_step
             i_h += h_step
@@ -1133,7 +1145,9 @@ cdef class _TreeMesh:
         for i in range(n_triangles):
             l = _wrap_levels(ls[i_l], max_level)
             tet = geom.Tetrahedron(self._dim, &tris[i_tri, 0, 0], &tris[i_tri, 1, 0], &tris[i_tri, 2, 0], &tris[i_tri, 3, 0])
-            self.tree.refine_geom(tet, l, diag_balance)
+            
+            with self._tree_modify_lock:
+                self.tree.refine_geom(tet, l, diag_balance)
 
             i_tri += tri_step
             i_l += l_step
@@ -1192,12 +1206,62 @@ cdef class _TreeMesh:
 
         for i in range(ls.shape[0]):
             l = _wrap_levels(ls[i_l], max_level)
-            self.tree.insert_cell(&cs[i_p, 0], l, diagonal_balance)
+            with self._tree_modify_lock:
+                self.tree.insert_cell(&cs[i_p, 0], l, diagonal_balance)
 
             i_l += l_step
             i_p += p_step
         if finalize:
             self.finalize()
+
+    def refine_image(self, image, finalize=True, diagonal_balance=None):
+        """Refine using an ND image, ensuring that each cell contains exactly one unique value.
+
+        This function takes an N-dimensional image, defined on the underlying fine tensor mesh,
+        and recursively subdivides each cell if that cell contains more than 1 unique value in the
+        image. This is useful when using the `TreeMesh` to represent an exact compressed form of an input
+        model.
+
+        Parameters
+        ----------
+        image : (shape_cells) numpy.ndarray
+            Must have the same shape as the base tensor mesh (`TreeMesh.shape_cells`), as if every cell on this mesh was
+            refined to it's maximum level.
+        finalize : bool, optional
+            Whether to finalize after inserting point(s)
+        diagonal_balance : bool or None, optional
+            Whether to balance cells diagonally in the refinement, `None` implies using
+            the same setting used to instantiate the `TreeMesh`.
+
+        """
+        if diagonal_balance is None:
+            diagonal_balance = self._diagonal_balance
+        cdef bool diag_balance = diagonal_balance
+
+        image = np.require(image, dtype=np.float64, requirements="F")
+        cdef size_t n_expected = np.prod(self.shape_cells)
+        if image.size != n_expected:
+            raise ValueError(
+                f"image array size: {image.size} must match the total number of cells in the base tensor mesh: {n_expected}"
+            )
+        if image.ndim == 1:
+            image = image.reshape(self.shape_cells, order="F")
+
+        if image.shape != self.shape_cells:
+            raise ValueError(
+                f"image array shape: {image.shape} must match the base cell shapes: {self.shape_cells}"
+            )
+        if self.dim == 2:
+            image = image[..., None]
+
+        cdef double[::1,:,:] image_dat = image
+        
+        with self._tree_modify_lock:
+            self.tree.refine_image(&image_dat[0, 0, 0], diag_balance)
+        if finalize:
+            self.finalize()
+
+
 
     def finalize(self):
         """Finalize the :class:`~discretize.TreeMesh`.
@@ -1208,10 +1272,11 @@ cdef class _TreeMesh:
         operators. When finalized, mesh refinement is no longer enabled.
 
         """
-        if not self._finalized:
-            self.tree.finalize_lists()
-            self.tree.number()
-            self._finalized=True
+        with self._tree_modify_lock:
+            if not self._finalized:
+                self.tree.finalize_lists()
+                self.tree.number()
+                self._finalized=True
 
     @property
     def finalized(self):
@@ -1228,7 +1293,9 @@ cdef class _TreeMesh:
         bool
             Returns *True* if finalized, *False* otherwise
         """
-        return self._finalized
+        with self._tree_modify_lock:
+            val = self._finalized
+        return val
 
     @property
     @cython.boundscheck(False)
@@ -1248,7 +1315,9 @@ cdef class _TreeMesh:
 
     def number(self):
         """Number the cells, nodes, faces, and edges of the TreeMesh."""
-        self.tree.number()
+        
+        with self._tree_modify_lock:
+            self.tree.number()
 
     def get_containing_cells(self, points):
         """Return the cells containing the given points.
@@ -1453,52 +1522,53 @@ cdef class _TreeMesh:
             if dim == 3:
                 shift[2] = self._origin[2] - self._zs[0]
 
-            for i in range(self._xs.shape[0]):
-                self._xs[i] += shift[0]
-            for i in range(self._ys.shape[0]):
-                self._ys[i] += shift[1]
-            if dim == 3:
-                for i in range(self._zs.shape[0]):
-                    self._zs[i] += shift[2]
+            with self._tree_modify_lock:
+                for i in range(self._xs.shape[0]):
+                    self._xs[i] += shift[0]
+                for i in range(self._ys.shape[0]):
+                    self._ys[i] += shift[1]
+                if dim == 3:
+                    for i in range(self._zs.shape[0]):
+                        self._zs[i] += shift[2]
 
-            #update the locations of all of the items
-            self.tree.shift_cell_centers(&shift[0])
+                #update the locations of all of the items
+                self.tree.shift_cell_centers(&shift[0])
 
-            for itN in self.tree.nodes:
-                node = itN.second
-                for i in range(dim):
-                    node.location[i] += shift[i]
+                for itN in self.tree.nodes:
+                    node = itN.second
+                    for i in range(dim):
+                        node.location[i] += shift[i]
 
-            for itE in self.tree.edges_x:
-                edge = itE.second
-                for i in range(dim):
-                    edge.location[i] += shift[i]
-
-            for itE in self.tree.edges_y:
-                edge = itE.second
-                for i in range(dim):
-                    edge.location[i] += shift[i]
-
-            if dim == 3:
-                for itE in self.tree.edges_z:
+                for itE in self.tree.edges_x:
                     edge = itE.second
                     for i in range(dim):
                         edge.location[i] += shift[i]
 
-                for itF in self.tree.faces_x:
-                    face = itF.second
+                for itE in self.tree.edges_y:
+                    edge = itE.second
                     for i in range(dim):
-                        face.location[i] += shift[i]
+                        edge.location[i] += shift[i]
 
-                for itF in self.tree.faces_y:
-                    face = itF.second
-                    for i in range(dim):
-                        face.location[i] += shift[i]
+                if dim == 3:
+                    for itE in self.tree.edges_z:
+                        edge = itE.second
+                        for i in range(dim):
+                            edge.location[i] += shift[i]
 
-                for itF in self.tree.faces_z:
-                    face = itF.second
-                    for i in range(dim):
-                        face.location[i] += shift[i]
+                    for itF in self.tree.faces_x:
+                        face = itF.second
+                        for i in range(dim):
+                            face.location[i] += shift[i]
+
+                    for itF in self.tree.faces_y:
+                        face = itF.second
+                        for i in range(dim):
+                            face.location[i] += shift[i]
+
+                    for itF in self.tree.faces_z:
+                        face = itF.second
+                        for i in range(dim):
+                            face.location[i] += shift[i]
             #clear out all cached grids
             self._cell_centers = None
             self._nodes = None
@@ -7045,7 +7115,6 @@ cdef class _TreeMesh:
                 f"Expected the last dimension of {name}.shape={arr.shape} to be {self.dim}."
             )
         return np.require(arr, dtype=dtype, requirements=requirements)
-
 
 def _check_first_dim_broadcast(**kwargs):
     """Perform a check to make sure that the first dimensions of the inputs will broadcast."""

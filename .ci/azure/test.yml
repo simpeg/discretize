@@ -2,22 +2,31 @@ jobs:
 - job:
   strategy:
     matrix:
-      linux-Python310:
-        image: ubuntu-latest
-        python.version: '3.10'
-        coverage: True
       linux-Python311:
         image: ubuntu-latest
         python.version: '3.11'
+        coverage: True
       linux-Python312:
         image: ubuntu-latest
         python.version: '3.12'
       linux-Python313:
         image: ubuntu-latest
         python.version: '3.13'
-      osx-Python310:
-        image: macOS-latest
-        python.version: '3.10'
+      linux-Python313t:
+        image: ubuntu-latest
+        python.version: '3.13'
+        environ.bare: True
+        python.freethreading: True
+        coverage: True
+      linux-Python314:
+        image: ubuntu-latest
+        environ.bare: True
+        python.version: '3.14'
+      linux-Python314t:
+        image: ubuntu-latest
+        python.version: '3.14'
+        environ.bare: True
+        python.freethreading: True
       osx-Python311:
         image: macOS-latest
         python.version: '3.11'
@@ -27,9 +36,19 @@ jobs:
       osx-Python313:
         image: macOS-latest
         python.version: '3.13'
-      win-Python310:
-        image: windows-latest
-        python.version: '3.10'
+      osx-Python313t:
+        image: macOS-latest
+        python.version: '3.13'
+        python.freethreading: True
+      osx-Python314:
+        image: macOS-latest
+        python.version: '3.14'
+        environ.bare: True
+      osx-Python314t:
+        image: macOS-latest
+        python.version: '3.14'
+        environ.bare: True
+        python.freethreading: True
       win-Python311:
         image: windows-latest
         python.version: '3.11'
@@ -39,6 +58,20 @@ jobs:
       win-Python313:
         image: windows-latest
         python.version: '3.13'
+      win-Python313t:
+        image: windows-latest
+        python.version: '3.13'
+        environ.bare: True
+        python.freethreading: True
+      win-Python314:
+        image: windows-latest
+        environ.bare: True
+        python.version: '3.14'
+      win-Python314t:
+        image: windows-latest
+        python.version: '3.14'
+        environ.bare: True
+        python.freethreading: True
   displayName: "${{ variables.image }} ${{ variables.python.version }}"
   pool:
     vmImage: $(image)
