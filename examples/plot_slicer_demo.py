@@ -117,8 +117,7 @@ plt.show()
 
 mesh.plot_3d_slicer(Lpout, 370000, 6002500, -2500, transparent=[[-0.02, 0.1]])
 beautify(
-    "mesh.plot_3d_slicer("
-    "\nLpout, 370000, 6002500, -2500, transparent=[[-0.02, 0.1]])"
+    "mesh.plot_3d_slicer(\nLpout, 370000, 6002500, -2500, transparent=[[-0.02, 0.1]])"
 )
 plt.show()
 

@@ -79,14 +79,7 @@ test = [
 ]
 # when changing these, make sure to keep it consistent with .pre-commit-config.
 style = [
-    "black==24.3.0",
-    "flake8==7.0.0",
-    "flake8-bugbear==23.12.2",
-    "flake8-builtins==2.2.0",
-    "flake8-mutable==1.2.0",
-    "flake8-rst-docstrings==0.3.0",
-    "flake8-docstrings==1.7.0",
-    "flake8-pyproject==1.2.3",
+    "ruff==0.14.0",
 ]
 build = [
     "meson-python>=0.15.0",
@@ -150,74 +143,23 @@ exclude_also = [
     # Don't complain about abstract methods, they aren't run:
     "@(abc\\.)?abstractmethod",
 ]
+[tool.ruff]
+required-version = '0.14.0'
+target-version = 'py311'
+#extend-exclude = [
+#    'docs/examples/*',
+#    'docs/tutorials/*',
+#]
 
-[tool.black]
-required-version = '24.3.0'
-target-version = ['py38', 'py39', 'py310', 'py311']
-
-[tool.flake8]
+[tool.ruff.lint]
 extend-ignore = [
-    # Too many leading '#' for block comment
-    'E266',
-    # Line too long (82 > 79 characters)
-    'E501',
     # Do not use variables named 'I', 'O', or 'l'
     'E741',
-    # Line break before binary operator (conflicts with black)
-    'W503',
-    # Ignore spaces before a colon (Black handles it)
-    'E203',
-    # Ignore spaces around an operator (Black handles it)
-    'E225',
-    # Ignore rst warnings for start and end, due to *args and **kwargs being invalid rst, but good for numpydoc
-    'RST210',
-    'RST213',
-    # ignore undocced __init__
-    'D107',
-]
-exclude = [
-    '.git',
-    '.eggs',
-    '__pycache__',
-    '.ipynb_checkpoints',
-    'docs/examples/*',
-    'docs/tutorials/*',
-    'docs/*',
-    'discretize/_extensions/*.py',
-    '.ci/*'
-]
-per-file-ignores = [
-    # disable unused-imports errors on __init__.py
-    # Automodule used for __init__ scripts' description
-    '__init__.py: F401, D204, D205, D400',
-    # do not check for assigned lambdas in tests
-    # do not check for missing docstrings in tests
-    'tests/*: E731, D',
-    'tutorials/*: D',
-    'examples/*: D',
-]
-exclude-from-doctest = [
-    # Only check discretize for docstring style
-    'tests',
-    'tutorials',
-    'examples',
 ]
 
-rst-roles = [
-    'class',
-    'func',
-    'mod',
-    'meth',
-    'attr',
-    'ref',
-    'data',
-    # Python programming language:
-    'py:func','py:mod','py:attr','py:meth',
-]
+[tool.ruff.lint.extend-per-file-ignores]
+"tests/*" = ["E731"]  # Ignore assigning lambdas in tests
+"__init__.py" = ["F401"]  # Ignore unused import in __init__.py
 
-rst-directives = [
-    # These are sorted alphabetically - but that does not matter
-    'autosummary',
-    'currentmodule',
-    'deprecated',
-]
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"

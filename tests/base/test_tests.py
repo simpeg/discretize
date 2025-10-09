@@ -175,7 +175,6 @@ def test_import_time():
 
 
 def test_random_test_warning():
-
     match = r"You are running a pytest without setting a random seed.*"
     with pytest.warns(UserWarning, match=match):
         _warn_random_test()

@@ -72,3 +72,5 @@ discretize/version.py
 .idea/
 
 docs/sg_execution_times.rst
+
+.vscode/
