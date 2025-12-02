@@ -119,7 +119,7 @@ def test_order(tree_type, dim, mesh_locs, zeros_outside):
         "faces_z",
     ],
 )
-def test_zeros_outside(dim, mesh_locs, zeros_outside):
+def test_zeros_outside(dim, mesh_locs):
     if dim == 2 and "z" in mesh_locs:
         pytest.skip()
 
