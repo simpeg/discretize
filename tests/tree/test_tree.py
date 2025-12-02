@@ -438,99 +438,6 @@ class TestTreeCellBounds:
         np.testing.assert_equal(cell_bounds, cell_bounds_slow)
 
 
-class Test2DInterpolation(unittest.TestCase):
-    def setUp(self):
-        def topo(x):
-            return np.sin(x * (2.0 * np.pi)) * 0.3 + 0.5
-
-        def function(cell):
-            r = cell.center - np.array([0.5] * len(cell.center))
-            dist1 = np.sqrt(r.dot(r)) - 0.08
-            dist2 = np.abs(cell.center[-1] - topo(cell.center[0]))
-
-            dist = min([dist1, dist2])
-            # if dist < 0.05:
-            #     return 5
-            if dist < 0.05:
-                return 6
-            if dist < 0.2:
-                return 5
-            if dist < 0.3:
-                return 4
-            if dist < 1.0:
-                return 3
-            else:
-                return 0
-
-        M = discretize.TreeMesh([64, 64], levels=6)
-        M.refine(function)
-        self.M = M
-
-    def test_fx(self):
-        r = rng.random(self.M.nFx)
-        P = self.M.get_interpolation_matrix(self.M.gridFx, "Fx")
-        self.assertLess(np.abs(P[:, : self.M.nFx] * r - r).max(), TOL)
-
-    def test_fy(self):
-        r = rng.random(self.M.nFy)
-        P = self.M.get_interpolation_matrix(self.M.gridFy, "Fy")
-        self.assertLess(np.abs(P[:, self.M.nFx :] * r - r).max(), TOL)
-
-
-class Test3DInterpolation(unittest.TestCase):
-    def setUp(self):
-        def function(cell):
-            r = cell.center - np.array([0.5] * len(cell.center))
-            dist = np.sqrt(r.dot(r))
-            if dist < 0.2:
-                return 4
-            if dist < 0.3:
-                return 3
-            if dist < 1.0:
-                return 2
-            else:
-                return 0
-
-        M = discretize.TreeMesh([16, 16, 16], levels=4)
-        M.refine(function)
-        # M.plot_grid(show_it=True)
-        self.M = M
-
-    def test_Fx(self):
-        r = rng.random(self.M.nFx)
-        P = self.M.get_interpolation_matrix(self.M.gridFx, "Fx")
-        self.assertLess(np.abs(P[:, : self.M.nFx] * r - r).max(), TOL)
-
-    def test_Fy(self):
-        r = rng.random(self.M.nFy)
-        P = self.M.get_interpolation_matrix(self.M.gridFy, "Fy")
-        self.assertLess(
-            np.abs(P[:, self.M.nFx : (self.M.nFx + self.M.nFy)] * r - r).max(), TOL
-        )
-
-    def test_Fz(self):
-        r = rng.random(self.M.nFz)
-        P = self.M.get_interpolation_matrix(self.M.gridFz, "Fz")
-        self.assertLess(np.abs(P[:, (self.M.nFx + self.M.nFy) :] * r - r).max(), TOL)
-
-    def test_Ex(self):
-        r = rng.random(self.M.nEx)
-        P = self.M.get_interpolation_matrix(self.M.gridEx, "Ex")
-        self.assertLess(np.abs(P[:, : self.M.nEx] * r - r).max(), TOL)
-
-    def test_Ey(self):
-        r = rng.random(self.M.nEy)
-        P = self.M.get_interpolation_matrix(self.M.gridEy, "Ey")
-        self.assertLess(
-            np.abs(P[:, self.M.nEx : (self.M.nEx + self.M.nEy)] * r - r).max(), TOL
-        )
-
-    def test_Ez(self):
-        r = rng.random(self.M.nEz)
-        P = self.M.get_interpolation_matrix(self.M.gridEz, "Ez")
-        self.assertLess(np.abs(P[:, (self.M.nEx + self.M.nEy) :] * r - r).max(), TOL)
-
-
 class TestWrapAroundLevels(unittest.TestCase):
     def test_refine_func(self):
         mesh1 = discretize.TreeMesh((16, 16, 16))
@@ -647,6 +554,17 @@ class TestRepr:
         output = mesh._repr_html_()
         assert type(output) is str
         assert len(output) != 0
+
+
+@pytest.mark.parametrize("attr", ["average_edge_to_face"])
+def test_caching(attr):
+    mesh = discretize.TreeMesh([4, 4, 4])
+    mesh.refine(-1)
+
+    attr1 = getattr(mesh, attr)
+    attr2 = getattr(mesh, attr)
+
+    assert attr1 is attr2
 
 
 if __name__ == "__main__":

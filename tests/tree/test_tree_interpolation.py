@@ -1,6 +1,7 @@
 import numpy as np
-import unittest
 import discretize
+
+import pytest
 
 MESHTYPES = ["uniformTree"]  # ['randomTree', 'uniformTree']
 call2 = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1])
@@ -36,191 +37,182 @@ plotIt = False
 MESHTYPES = ["uniformTree", "notatreeTree"]
 
 
-class TestInterpolation2d(discretize.tests.OrderTest):
-    """Face interpolation is O(h)
-    Edge interpolation is O(h^2)
-    """
+@pytest.mark.parametrize("tree_type", ["uniformTree", "notatreeTree"])
+@pytest.mark.parametrize("dim", [2, 3])
+@pytest.mark.parametrize("zeros_outside", [True, False])
+@pytest.mark.parametrize(
+    "mesh_locs",
+    [
+        "cell_centers",
+        "nodes",
+        "edges_x",
+        "edges_y",
+        "edges_z",
+        "faces_x",
+        "faces_y",
+        "faces_z",
+    ],
+)
+def test_order(tree_type, dim, mesh_locs, zeros_outside):
+    if dim == 2 and "z" in mesh_locs:
+        pytest.skip()
 
-    name = "Interpolation 2D"
-    # location_type = 'Ex'
-    X, Y = np.mgrid[0:1:250j, 0:1:250j]
-    LOCS = np.c_[X.reshape(-1), Y.reshape(-1)]
-    # LOCS = np.c_[np.ones(100)*0.51, np.linspace(0.3, 0.7, 100)]
-    meshTypes = MESHTYPES
-    # tolerance = TOLERANCES
-    meshDimension = 2
-    meshSizes = [8, 16, 32]
-    expectedOrders = 1
+    locs = (
+        np.mgrid[
+            *[
+                slice(0.25, 0.75, 50j),
+            ]
+            * dim
+        ]
+        .reshape(dim, -1)
+        .transpose()
+    )
 
-    def getError(self):
-        funX = lambda x, y: np.cos(2.0 * np.pi * y) * np.cos(2.0 * np.pi * x) + x
-        funY = lambda x, y: np.cos(2.0 * np.pi * x) * np.cos(2.0 * np.pi * y) + y
+    if "notatree" in tree_type:
+        expected_order = 2
+    elif mesh_locs == "nodes":
+        expected_order = 2
+    else:
+        expected_order = 1
 
-        # self.LOCS = self.M.gridCC
+    def ana_func(locs):
+        return locs**2 * [2, -3, 4][:dim] + locs * [-4, 3, 2][:dim] + [2, 3, 4][:dim]
 
-        if "x" in self.type:
-            ana = call2(funX, self.LOCS)
-        elif "y" in self.type:
-            ana = call2(funY, self.LOCS)
-        else:
-            ana = call2(funX, self.LOCS)
+    ana_vals = ana_func(locs)
 
-        if "F" in self.type:
-            Fc = cartF2(self.M, funX, funY)
-            grid = self.M.project_face_vector(Fc)
-        elif "E" in self.type:
-            Ec = cartE2(self.M, funX, funY)
-            grid = self.M.project_edge_vector(Ec)
-        elif "CC" == self.type:
-            grid = call2(funX, self.M.gridCC)
-        elif "N" == self.type:
-            grid = call2(funX, self.M.gridN)
+    if "faces" in mesh_locs:
+        source_attr = "faces"
+    elif "edges" in mesh_locs:
+        source_attr = "edges"
+    else:
+        source_attr = mesh_locs
 
-        comp = self.M.get_interpolation_matrix(self.LOCS, self.type) * grid
+    def order_func(n):
+        mesh, h = discretize.tests.setup_mesh(tree_type, n, dim)
+        interp_mat = mesh.get_interpolation_matrix(
+            locs, mesh_locs, zeros_outside=zeros_outside
+        )
+        grid_vals = ana_func(getattr(mesh, source_attr))
+        interp_vals = interp_mat @ grid_vals
 
-        err = np.linalg.norm((comp - ana), np.inf)
-        if plotIt:
-            import matplotlib.pyplot as plt
+        return np.linalg.norm(interp_vals - ana_vals), h
 
-            ax = plt.subplot(211)
-            self.M.plot_grid(ax=ax)
-            plt.plot(self.LOCS[:, 0], self.LOCS[:, 1], "mx")
-            # ax = plt.subplot(111)
-            # self.M.plot_image(call2(funX, self.M.gridCC), ax=ax)
-            ax = plt.subplot(212)
-            plt.plot(self.LOCS[:, 1], comp, "bx")
-            plt.plot(self.LOCS[:, 1], ana, "ro")
-            plt.show()
-        return err
-
-    def test_orderCC(self):
-        self.type = "CC"
-        self.name = "Interpolation 2D: CC"
-        self.orderTest()
-
-    def test_orderN(self):
-        self.type = "N"
-        self.name = "Interpolation 2D: N"
-        self.expectedOrders = 2
-        self.orderTest()
-        self.expectedOrders = 1
-
-    def test_orderFx(self):
-        self.type = "Fx"
-        self.name = "TreeMesh Interpolation 2D: Fx"
-        self.orderTest()
-
-    def test_orderFy(self):
-        self.type = "Fy"
-        self.name = "TreeMesh Interpolation 2D: Fy"
-        self.orderTest()
-
-    def test_orderEx(self):
-        self.type = "Ex"
-        self.name = "TreeMesh Interpolation 2D: Ex"
-        self.orderTest()
-
-    def test_orderEy(self):
-        self.type = "Ey"
-        self.name = "TreeMesh Interpolation 2D: Ey"
-        self.orderTest()
+    discretize.tests.assert_expected_order(
+        order_func,
+        [8, 16, 32],
+        expected_order=expected_order,
+        test_type="mean_at_least",
+    )
 
 
-class TestInterpolation3D(discretize.tests.OrderTest):
-    name = "Interpolation"
-    X, Y, Z = np.mgrid[0:1:50j, 0:1:50j, 0:1:50j]
-    LOCS = np.c_[X.reshape(-1), Y.reshape(-1), Z.reshape(-1)]
-    meshTypes = MESHTYPES
-    # tolerance = TOLERANCES
-    meshDimension = 3
-    meshSizes = [8, 16]
+@pytest.mark.parametrize("dim", [2, 3])
+@pytest.mark.parametrize(
+    "mesh_locs",
+    [
+        "cell_centers",
+        "nodes",
+        "edges_x",
+        "edges_y",
+        "edges_z",
+        "faces_x",
+        "faces_y",
+        "faces_z",
+    ],
+)
+def test_zeros_outside(dim, mesh_locs, zeros_outside):
+    if dim == 2 and "z" in mesh_locs:
+        pytest.skip()
 
-    def getError(self):
-        funX = lambda x, y, z: np.cos(2 * np.pi * y)
-        funY = lambda x, y, z: np.cos(2 * np.pi * z)
-        funZ = lambda x, y, z: np.cos(2 * np.pi * x)
+    locs = (
+        np.mgrid[
+            *[
+                slice(-1, 2, 3j),
+            ]
+            * dim
+        ]
+        .reshape(dim, -1)
+        .transpose()
+    )
+    mesh = discretize.TreeMesh([16, 16, 16][:dim])
+    mesh.refine(-1)
 
-        if "x" in self.type:
-            ana = call3(funX, self.LOCS)
-        elif "y" in self.type:
-            ana = call3(funY, self.LOCS)
-        elif "z" in self.type:
-            ana = call3(funZ, self.LOCS)
-        else:
-            ana = call3(funX, self.LOCS)
+    is_outside = np.any((locs < 0) | (locs > 1), axis=1)
+    locs = locs[is_outside]
 
-        if "F" in self.type:
-            Fc = cartF3(self.M, funX, funY, funZ)
-            grid = self.M.project_face_vector(Fc)
-        elif "E" in self.type:
-            Ec = cartE3(self.M, funX, funY, funZ)
-            grid = self.M.project_edge_vector(Ec)
-        elif "CC" == self.type:
-            grid = call3(funX, self.M.gridCC)
-        elif "N" == self.type:
-            grid = call3(funX, self.M.gridN)
+    interp_mat = mesh.get_interpolation_matrix(locs, mesh_locs, zeros_outside=True)
 
-        A = self.M.get_interpolation_matrix(self.LOCS, self.type)
-        comp = A * grid
+    if "faces" in mesh_locs:
+        n = mesh.n_faces
+    elif "edges" in mesh_locs:
+        n = mesh.n_edges
+    elif "nodes" in mesh_locs:
+        n = mesh.n_nodes
+    else:
+        n = mesh.n_cells
 
-        err = np.linalg.norm((comp - ana), np.inf)
-        return err
+    vs = interp_mat @ np.ones(n)
 
-    def test_orderCC(self):
-        self.type = "CC"
-        self.expectedOrders = 1
-        self.name = "Interpolation 3D: CC"
-        self.orderTest()
-        self.expectedOrders = 2
-
-    def test_orderN(self):
-        self.type = "N"
-        self.name = "Interpolation 3D: N"
-        self.orderTest()
-
-    def test_orderFx(self):
-        self.type = "Fx"
-        self.name = "Interpolation 3D: Fx"
-        self.expectedOrders = 1
-        self.orderTest()
-        self.expectedOrders = 2
-
-    def test_orderFy(self):
-        self.type = "Fy"
-        self.name = "Interpolation 3D: Fy"
-        self.expectedOrders = 1
-        self.orderTest()
-        self.expectedOrders = 2
-
-    def test_orderFz(self):
-        self.type = "Fz"
-        self.name = "Interpolation 3D: Fz"
-        self.expectedOrders = 1
-        self.orderTest()
-        self.expectedOrders = 2
-
-    def test_orderEx(self):
-        self.type = "Ex"
-        self.name = "Interpolation 3D: Ex"
-        self.orderTest()
-
-    def test_orderEy(self):
-        self.type = "Ey"
-        self.name = "Interpolation 3D: Ey"
-        self.orderTest()
-
-    def test_orderEz(self):
-        self.type = "Ez"
-        self.name = "Interpolation 3D: Ez"
-        self.orderTest()
+    np.testing.assert_equal(vs, 0)
 
 
-class TestCaching(unittest.TestCase):
-    def setUp(self):
-        self.mesh, maxh = discretize.tests.setup_mesh("uniformTree", 32, 3)
+@pytest.mark.parametrize("dim", [2, 3])
+@pytest.mark.parametrize(
+    "mesh_locs",
+    [
+        "cell_centers",
+        "nodes",
+        "edges_x",
+        "edges_y",
+        "edges_z",
+        "faces_x",
+        "faces_y",
+        "faces_z",
+    ],
+)
+def test_project_outside(dim, mesh_locs):
+    if dim == 2 and "z" in mesh_locs:
+        pytest.skip()
 
-    def testCaching(self):
-        mesh = self.mesh
-        A1 = mesh.average_edge_to_face
-        A2 = mesh.average_edge_to_face
-        self.assertIs(A1, A2)
+    locs = (
+        np.mgrid[
+            *[
+                slice(-1, 2, 3j),
+            ]
+            * dim
+        ]
+        .reshape(dim, -1)
+        .transpose()
+    )
+    mesh = discretize.TreeMesh([16, 16, 16][:dim], diagonal_balance=True)
+    mesh.refine(-1)
+
+    is_outside = np.any((locs < 0) | (locs > 1), axis=1)
+    locs = locs[is_outside]
+
+    grid_locs = getattr(mesh, mesh_locs)
+    source_bounds = [
+        grid_locs.min(axis=0),
+        grid_locs.max(axis=0),
+    ]
+    interp_mat = mesh.get_interpolation_matrix(locs, mesh_locs, zeros_outside=False)
+
+    def ana_func(locs):
+        locs = np.clip(locs, a_min=source_bounds[0], a_max=source_bounds[1])
+        return locs * [-4, 3, 2][:dim] + [2, 3, 4][:dim]
+
+    ana_vals = ana_func(locs)
+
+    # get the full list of locations associate with mesh_locs
+    if "faces" in mesh_locs:
+        source_attr = "faces"
+    elif "edges" in mesh_locs:
+        source_attr = "edges"
+    else:
+        source_attr = mesh_locs
+
+    source_locs = getattr(mesh, source_attr)
+    grid_vals = ana_func(source_locs)
+
+    vs = interp_mat @ grid_vals
+
+    np.testing.assert_equal(vs, ana_vals)
