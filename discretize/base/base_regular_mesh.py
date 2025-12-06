@@ -955,8 +955,9 @@ class BaseRectangularMesh(BaseRegularMesh):
                     if dimName in out_type:
                         if self.dim <= dim:
                             raise ValueError(
-                                "Dimensions of mesh not great enough for "
-                                "{}_{}".format(x_type, dimName)
+                                "Dimensions of mesh not great enough for {}_{}".format(
+                                    x_type, dimName
+                                )
                             )
                         if xx.size != np.sum(nn):
                             raise ValueError("Vector is not the right size.")

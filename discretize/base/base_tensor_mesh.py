@@ -924,7 +924,7 @@ class BaseTensorMesh(BaseRegularMesh):
             elif invert_model:
                 dMdprop = n_elements * Av.T * V * sdiag(-1.0 / model**2)
             elif invert_matrix:
-                dMdprop = n_elements * (sdiag(-MI.diagonal() ** 2) * Av.T * V)
+                dMdprop = n_elements * (sdiag(-(MI.diagonal() ** 2)) * Av.T * V)
 
         elif tensorType == 1:  # isotropic, variable in space
             Av = getattr(self, "ave" + projection_type + "2CC")
@@ -938,7 +938,7 @@ class BaseTensorMesh(BaseRegularMesh):
             elif invert_model:
                 dMdprop = n_elements * Av.T * V * sdiag(-1.0 / model**2)
             elif invert_matrix:
-                dMdprop = n_elements * (sdiag(-MI.diagonal() ** 2) * Av.T * V)
+                dMdprop = n_elements * (sdiag(-(MI.diagonal() ** 2)) * Av.T * V)
 
         elif tensorType == 2:  # anisotropic
             Av = getattr(self, "ave" + projection_type + "2CCV")
@@ -967,7 +967,7 @@ class BaseTensorMesh(BaseRegularMesh):
             elif invert_model:
                 dMdprop = Av.T * P * V * sdiag(-1.0 / model**2)
             elif invert_matrix:
-                dMdprop = sdiag(-MI.diagonal() ** 2) * Av.T * P * V
+                dMdprop = sdiag(-(MI.diagonal() ** 2)) * Av.T * P * V
 
         if dMdprop is not None:
 

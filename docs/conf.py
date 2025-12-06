@@ -13,12 +13,13 @@
 
 import os
 import sys
-from pathlib import Path
 from datetime import datetime
 from packaging.version import parse
 import discretize
 import shutil
 from importlib.metadata import version
+import math
+import pyvista
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -217,8 +218,6 @@ np.random.seed(0)
 """
 plot_include_source = True
 plot_formats = [("png", 100), "pdf"]
-
-import math
 
 phi = (math.sqrt(5) + 1) / 2
 
@@ -457,7 +456,7 @@ texinfo_documents = [
 ]
 
 # -- pyvista configuration ---------------------------------------------------
-import pyvista
+
 
 # Manage errors
 pyvista.set_error_output_file("errors.txt")

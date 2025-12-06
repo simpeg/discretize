@@ -2796,7 +2796,7 @@ class BaseMesh:
             elif invert_model:
                 dMdprop = A * sdiag(-1.0 / model**2)
             elif invert_matrix:
-                dMdprop = sdiag(-MI.diagonal() ** 2) * A
+                dMdprop = sdiag(-(MI.diagonal() ** 2)) * A
 
         elif tensorType == 1:  # isotropic, variable in space
             if not invert_matrix and not invert_model:
@@ -2806,7 +2806,7 @@ class BaseMesh:
             elif invert_model:
                 dMdprop = A * sdiag(-1.0 / model**2)
             elif invert_matrix:
-                dMdprop = sdiag(-MI.diagonal() ** 2) * A
+                dMdprop = sdiag(-(MI.diagonal() ** 2)) * A
 
         if dMdprop is not None:
 
@@ -2901,7 +2901,7 @@ class BaseMesh:
             elif invert_model:
                 dMdprop = L * sdiag(-1.0 / model**2)
             elif invert_matrix:
-                dMdprop = sdiag(-MI.diagonal() ** 2) * L
+                dMdprop = sdiag(-(MI.diagonal() ** 2)) * L
 
         elif tensorType == 1:  # isotropic, variable in space
             if not invert_matrix and not invert_model:
@@ -2911,7 +2911,7 @@ class BaseMesh:
             elif invert_model:
                 dMdprop = L * sdiag(-1.0 / model**2)
             elif invert_matrix:
-                dMdprop = sdiag(-MI.diagonal() ** 2) * L
+                dMdprop = sdiag(-(MI.diagonal() ** 2)) * L
 
         if dMdprop is not None:
 

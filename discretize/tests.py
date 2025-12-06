@@ -926,7 +926,7 @@ def assert_isadjoint(
 
         print(
             f"Adjoint test {'PASSED' if passed else 'FAILED'} ::  "
-            f"{abs(rhs-lhs):.3e} < {atol+rtol*abs(lhs):.3e}  :: "
+            f"{abs(rhs - lhs):.3e} < {atol + rtol * abs(lhs):.3e}  :: "
             f"|rhs-lhs| < atol + rtol|lhs|"
         )
 

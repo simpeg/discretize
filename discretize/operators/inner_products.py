@@ -379,7 +379,7 @@ class InnerProducts(BaseMesh):
             elif invert_model:
                 dMdprop = n_elements * Av.T * A * sdiag(-1.0 / model**2)
             elif invert_matrix:
-                dMdprop = n_elements * (sdiag(-MI.diagonal() ** 2) * Av.T * A)
+                dMdprop = n_elements * (sdiag(-(MI.diagonal() ** 2)) * Av.T * A)
 
         elif tensorType == 1:  # isotropic, variable in space
             if not invert_matrix and not invert_model:
@@ -391,7 +391,7 @@ class InnerProducts(BaseMesh):
             elif invert_model:
                 dMdprop = n_elements * Av.T * A * sdiag(-1.0 / model**2)
             elif invert_matrix:
-                dMdprop = n_elements * (sdiag(-MI.diagonal() ** 2) * Av.T * A)
+                dMdprop = n_elements * (sdiag(-(MI.diagonal() ** 2)) * Av.T * A)
 
         if dMdprop is not None:
 
@@ -819,17 +819,29 @@ class InnerProducts(BaseMesh):
             posX = (
                 [0, 0]
                 if xEdge == "eX0"
-                else [1, 0] if xEdge == "eX1" else [0, 1] if xEdge == "eX2" else [1, 1]
+                else [1, 0]
+                if xEdge == "eX1"
+                else [0, 1]
+                if xEdge == "eX2"
+                else [1, 1]
             )
             posY = (
                 [0, 0]
                 if yEdge == "eY0"
-                else [1, 0] if yEdge == "eY1" else [0, 1] if yEdge == "eY2" else [1, 1]
+                else [1, 0]
+                if yEdge == "eY1"
+                else [0, 1]
+                if yEdge == "eY2"
+                else [1, 1]
             )
             posZ = (
                 [0, 0]
                 if zEdge == "eZ0"
-                else [1, 0] if zEdge == "eZ1" else [0, 1] if zEdge == "eZ2" else [1, 1]
+                else [1, 0]
+                if zEdge == "eZ1"
+                else [0, 1]
+                if zEdge == "eZ2"
+                else [1, 1]
             )
 
             ind1 = sub2ind(M.vnEx, np.c_[ii, jj + posX[0], kk + posX[1]])

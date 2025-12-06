@@ -90,7 +90,6 @@ obtained by computing:
 # Here we import the packages required for this tutorial.
 #
 
-
 from discretize import TensorMesh
 from scipy.sparse.linalg import spsolve
 import matplotlib.pyplot as plt

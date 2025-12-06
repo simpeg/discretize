@@ -783,8 +783,9 @@ class MimeticProperties(unittest.TestCase):
             rel_err = np.linalg.norm(divcurlv) / np.linalg.norm(v)
             passed = rel_err < self.tol
             print(
-                "Testing Div * Curl on {} : |Div Curl v| / |v| = {} "
-                "... {}".format(meshType, rel_err, "FAIL" if not passed else "ok")
+                "Testing Div * Curl on {} : |Div Curl v| / |v| = {} ... {}".format(
+                    meshType, rel_err, "FAIL" if not passed else "ok"
+                )
             )
 
     def test_CurlGrad(self):
@@ -797,8 +798,9 @@ class MimeticProperties(unittest.TestCase):
             rel_err = np.linalg.norm(curlgradv) / np.linalg.norm(v)
             passed = rel_err < self.tol
             print(
-                "Testing Curl * Grad on {} : |Curl Grad v| / |v|= {} "
-                "... {}".format(meshType, rel_err, "FAIL" if not passed else "ok")
+                "Testing Curl * Grad on {} : |Curl Grad v| / |v|= {} ... {}".format(
+                    meshType, rel_err, "FAIL" if not passed else "ok"
+                )
             )
 
 

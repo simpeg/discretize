@@ -2318,7 +2318,7 @@ class DiffOperators(BaseMesh):
         """
         if discretization != "CC":
             raise NotImplementedError(
-                "Boundary conditions only implemented" "for CC discretization."
+                "Boundary conditions only implemented for CC discretization."
             )
 
         if isinstance(BC, str):
@@ -2411,7 +2411,7 @@ class DiffOperators(BaseMesh):
         """Create weak form boundary condition projection matrices for mixed boundary condition."""
         if discretization != "CC":
             raise NotImplementedError(
-                "Boundary conditions only implemented" "for CC discretization."
+                "Boundary conditions only implemented for CC discretization."
             )
 
         def projBC(n):
