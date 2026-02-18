@@ -5813,26 +5813,33 @@ cdef class _TreeMesh:
             cell = self.tree.containing_cell(x, y, z)
             row_inds = indices[indptr[i]:indptr[i+1]]
             row_data = data[indptr[i]:indptr[i+1]]
+            was_outside = False
             if zeros_out:
                 if x < cell.points[0].location[0]-eps:
                     row_data[:] = 0.0
                     row_inds[:] = 0
+                    was_outside = True
                 elif x > cell.points[3].location[0]+eps:
                     row_data[:] = 0.0
                     row_inds[:] = 0
+                    was_outside = True
                 elif y < cell.points[0].location[1]-eps:
                     row_data[:] = 0.0
                     row_inds[:] = 0
+                    was_outside = True
                 elif y > cell.points[3].location[1]+eps:
                     row_data[:] = 0.0
                     row_inds[:] = 0
+                    was_outside = True
                 elif dim == 3 and z < cell.points[0].location[2]-eps:
                     row_data[:] = 0.0
                     row_inds[:] = 0
+                    was_outside = True
                 elif dim == 3 and z > cell.points[7].location[2]+eps:
                     row_data[:] = 0.0
                     row_inds[:] = 0
-            else:
+                    was_outside = True
+            if not was_outside:
                 # look + dir and - dir away
                 if (
                     locations[i, dir] < cell.location[dir]
@@ -5964,26 +5971,33 @@ cdef class _TreeMesh:
             cell = self.tree.containing_cell(x, y, z)
             row_inds = indices[indptr[i]:indptr[i+1]]
             row_data = data[indptr[i]:indptr[i+1]]
+            was_outside = False
             if zeros_out:
                 if x < cell.points[0].location[0]-eps:
                     row_data[:] = 0.0
                     row_inds[:] = 0
+                    was_outside = True
                 elif x > cell.points[3].location[0]+eps:
                     row_data[:] = 0.0
                     row_inds[:] = 0
+                    was_outside = True
                 elif y < cell.points[0].location[1]-eps:
                     row_data[:] = 0.0
                     row_inds[:] = 0
+                    was_outside = True
                 elif y > cell.points[3].location[1]+eps:
                     row_data[:] = 0.0
                     row_inds[:] = 0
+                    was_outside = True
                 elif dim == 3 and z < cell.points[0].location[2]-eps:
                     row_data[:] = 0.0
                     row_inds[:] = 0
+                    was_outside = True
                 elif dim == 3 and z > cell.points[7].location[2]+eps:
                     row_data[:] = 0.0
                     row_inds[:] = 0
-            else:
+                    was_outside = True
+            if not was_outside:
               # Find containing cells
               # Decide order to search based on which face it is closest to
               if dim == 3:
@@ -6219,26 +6233,33 @@ cdef class _TreeMesh:
             cell = self.tree.containing_cell(x, y, z)
             row_inds = indices[indptr[i]:indptr[i + 1]]
             row_data = data[indptr[i]:indptr[i + 1]]
+            was_outside = False
             if zeros_out:
                 if x < cell.points[0].location[0]-eps:
                     row_data[:] = 0.0
                     row_inds[:] = 0
+                    was_outside = True
                 elif x > cell.points[3].location[0]+eps:
                     row_data[:] = 0.0
                     row_inds[:] = 0
+                    was_outside = True
                 elif y < cell.points[0].location[1]-eps:
                     row_data[:] = 0.0
                     row_inds[:] = 0
+                    was_outside = True
                 elif y > cell.points[3].location[1]+eps:
                     row_data[:] = 0.0
                     row_inds[:] = 0
+                    was_outside = True
                 elif dim == 3 and z < cell.points[0].location[2]-eps:
                     row_data[:] = 0.0
                     row_inds[:] = 0
+                    was_outside = True
                 elif dim == 3 and z > cell.points[7].location[2]+eps:
                     row_data[:] = 0.0
                     row_inds[:] = 0
-            else:
+                    was_outside = True
+            if not was_outside:
                 # decide order to search based on distance to each faces
                 #
                 if (
