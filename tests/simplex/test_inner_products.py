@@ -737,29 +737,29 @@ class TestFacePropertiesInnerProductsDerivs(unittest.TestCase):
         print("Edge", rep)
         return discretize.tests.check_derivative(fun, tau, num=5, plotIt=False)
 
-    # def test_FaceIP_2D_float(self):
-    #     self.assertTrue(self.doTestFace([10, 4], 0))
+    def test_FaceIP_2D_float(self):
+        self.assertTrue(self.doTestFace([10, 4], 0))
 
-    # def test_FaceIP_3D_float(self):
-    #     self.assertTrue(self.doTestFace([10, 4, 5], 0))
+    def test_FaceIP_3D_float(self):
+        self.assertTrue(self.doTestFace([10, 4, 5], 0))
 
-    # def test_FaceIP_2D_isotropic(self):
-    #     self.assertTrue(self.doTestFace([10, 4], 1))
+    def test_FaceIP_2D_isotropic(self):
+        self.assertTrue(self.doTestFace([10, 4], 1))
 
-    # def test_FaceIP_3D_isotropic(self):
-    #     self.assertTrue(self.doTestFace([10, 4, 5], 1))
+    def test_FaceIP_3D_isotropic(self):
+        self.assertTrue(self.doTestFace([10, 4, 5], 1))
 
-    # def test_EdgeIP_2D_float(self):
-    #     self.assertTrue(self.doTestEdge([10, 4], 0))
+    def test_EdgeIP_2D_float(self):
+        self.assertTrue(self.doTestEdge([10, 4], 0))
 
-    # def test_EdgeIP_3D_float(self):
-    #     self.assertTrue(self.doTestEdge([10, 4, 5], 0))
+    def test_EdgeIP_3D_float(self):
+        self.assertTrue(self.doTestEdge([10, 4, 5], 0))
 
-    # def test_EdgeIP_2D_isotropic(self):
-    #     self.assertTrue(self.doTestEdge([10, 4], 1))
+    def test_EdgeIP_2D_isotropic(self):
+        self.assertTrue(self.doTestEdge([10, 4], 1))
 
-    # def test_EdgeIP_3D_isotropic(self):
-    #     self.assertTrue(self.doTestEdge([10, 4, 5], 1))
+    def test_EdgeIP_3D_isotropic(self):
+        self.assertTrue(self.doTestEdge([10, 4, 5], 1))
 
 class TestFacePropertiesInnerProductsDerivs(unittest.TestCase):
     def doTestEdge(self, h, rep):
@@ -776,17 +776,17 @@ class TestFacePropertiesInnerProductsDerivs(unittest.TestCase):
         print("Edge", rep)
         return discretize.tests.check_derivative(fun, tau, num=5, plotIt=False)
 
-    # def test_EdgeIP_2D_float(self):
-    #     self.assertTrue(self.doTestEdge([10, 4], 0))
+    def test_EdgeIP_2D_float(self):
+        self.assertTrue(self.doTestEdge([10, 4], 0))
 
-    # def test_EdgeIP_3D_float(self):
-    #     self.assertTrue(self.doTestEdge([10, 4, 5], 0))
+    def test_EdgeIP_3D_float(self):
+        self.assertTrue(self.doTestEdge([10, 4, 5], 0))
 
-    # def test_EdgeIP_2D_isotropic(self):
-    #     self.assertTrue(self.doTestEdge([10, 4], 1))
+    def test_EdgeIP_2D_isotropic(self):
+        self.assertTrue(self.doTestEdge([10, 4], 1))
 
-    # def test_EdgeIP_3D_isotropic(self):
-    #     self.assertTrue(self.doTestEdge([10, 4, 5], 1))
+    def test_EdgeIP_3D_isotropic(self):
+        self.assertTrue(self.doTestEdge([10, 4, 5], 1))
 
 
 class Test2DBoundaryIntegral(discretize.tests.OrderTest):
