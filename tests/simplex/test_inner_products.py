@@ -1,5 +1,6 @@
 import numpy as np
 import unittest
+import pytest
 import discretize
 import scipy.sparse as sp
 from discretize.utils import example_simplex_mesh
@@ -180,6 +181,7 @@ class TestInnerProducts2D(discretize.tests.OrderTest):
         self.invert_model = True
         self.orderTest()
 
+
 class TestInnerProductsFaceProperties2D(discretize.tests.OrderTest):
     meshSizes = [8, 16, 32]
     meshTypes = ["uniform simplex mesh"]
@@ -190,7 +192,7 @@ class TestInnerProductsFaceProperties2D(discretize.tests.OrderTest):
         return 1.0 / n
 
     def getError(self):
-        
+
         call = lambda fun, xy: fun(xy[:, 0], xy[:, 1])  # NOQA F841
 
         ex = lambda x, y: x**2 + y
@@ -209,7 +211,7 @@ class TestInnerProductsFaceProperties2D(discretize.tests.OrderTest):
         # integrate components parallel to the plane of integration
         if self.location == "edges":
             analytic = 2.24166666666667  # Found using sympy.
-            
+
             p = mesh.edges
             Ec = np.c_[ex(*p.T), ey(*p.T)]
             E = mesh.project_edge_vector(Ec)
@@ -281,17 +283,15 @@ class TestInnerProductsEdgeProperties2D(discretize.tests.OrderTest):
 
         tau_x = lambda x, y: x + 1  # x-face properties  # NOQA F841
         tau_y = lambda x, y: y + 2  # y-face properties  # NOQA F841
-        
+
         mesh = self.M
 
         tau = 1e-8 * np.ones(mesh.n_edges)
         for ii, comp in enumerate(["x", "y"]):
-            k = (
-                np.isclose(self.M.edges[:, ii - 1], 0.5) & 
-                np.isclose(self.M.edges[:, ii - 2], 0.5)
+            k = np.isclose(self.M.edges[:, ii - 1], 0.5) & np.isclose(
+                self.M.edges[:, ii - 2], 0.5
             )  # x, y or z location for each line
             tau[k] = eval("call(tau_{}, self.M.edges[k, :])".format(comp))
-            
 
         analytic = 1.38229166666667  # Found using sympy.
 
@@ -471,6 +471,7 @@ class TestInnerProducts3D(discretize.tests.OrderTest):
         self.invert_model = True
         self.orderTest()
 
+
 class TestInnerProductsFaceProperties3D(discretize.tests.OrderTest):
     meshSizes = [8, 16, 32]
     meshTypes = ["uniform simplex mesh"]
@@ -481,28 +482,30 @@ class TestInnerProductsFaceProperties3D(discretize.tests.OrderTest):
         return 1.0 / n
 
     def getError(self):
-        
+
         call = lambda fun, xyz: fun(xyz[:, 0], xyz[:, 1], xyz[:, 2])
 
         ex = lambda x, y, z: x**2 + y * z
         ey = lambda x, y, z: (z**2) * x + y * z
         ez = lambda x, y, z: y**2 + x * z
 
-        tau_x = lambda x, y, z: y * z + 1  # x-face properties  # NOQA F841
-        tau_y = lambda x, y, z: x * z + 2  # y-face properties  # NOQA F841
-        tau_z = lambda x, y, z: 3 + x * y  # z-face properties  # NOQA F841
+        tau_funcs = {
+            "x": lambda x, y, z: y * z + 1,  # x-face properties
+            "y": lambda x, y, z: x * z + 2,  # y-face properties
+            "z": lambda x, y, z: 3 + x * y,  # z-face properties
+        }
 
         mesh = self.M
 
         tau = 1e-8 * np.ones(mesh.n_faces)
         for ii, comp in enumerate(["x", "y", "z"]):
             k = np.isclose(self.M.faces[:, ii], 0.5)  # x, or y location for each plane
-            tau[k] = eval("call(tau_{}, self.M.faces[k, :])".format(comp))
+            tau[k] = call(tau_funcs[comp], self.M.faces[k, :])
 
         # integrate components parallel to the plane of integration
         if self.location == "edges":
             analytic = 5.02760416666667  # Found using sympy.
-            
+
             p = mesh.edges
             Ec = np.c_[ex(*p.T), ey(*p.T), ez(*p.T)]
             E = mesh.project_edge_vector(Ec)
@@ -528,10 +531,10 @@ class TestInnerProductsFaceProperties3D(discretize.tests.OrderTest):
                 A = self.M.get_face_inner_product_surface(tau)
 
             numeric = F.T.dot(A.dot(F))
-        
+
         print(analytic)
         print(numeric)
-        print(analytic/numeric)
+        print(analytic / numeric)
 
         err = np.abs(numeric - analytic)
 
@@ -581,20 +584,20 @@ class TestInnerProductsEdgeProperties3D(discretize.tests.OrderTest):
         ey = lambda x, y, z: (z**2) * x + y * z
         ez = lambda x, y, z: y**2 + x * z
 
-        tau_x = lambda x, y, z: x + 1  # x-face properties  # NOQA F841
-        tau_y = lambda x, y, z: y + 2  # y-face properties  # NOQA F841
-        tau_z = lambda x, y, z: 3 * z + 1  # z-face properties  # NOQA F841
-        
+        tau_funcs = {
+            "x": lambda x, y, z: x + 1,  # x-face properties
+            "y": lambda x, y, z: y + 2,  # y-face properties
+            "z": lambda x, y, z: 3 * z + 1,  # z-face properties
+        }
+
         mesh = self.M
 
         tau = 1e-8 * np.ones(mesh.n_edges)
         for ii, comp in enumerate(["x", "y", "z"]):
-            k = (
-                np.isclose(self.M.edges[:, ii - 1], 0.5) & 
-                np.isclose(self.M.edges[:, ii - 2], 0.5)
+            k = np.isclose(self.M.edges[:, ii - 1], 0.5) & np.isclose(
+                self.M.edges[:, ii - 2], 0.5
             )  # x, y or z location for each line
-            tau[k] = eval("call(tau_{}, self.M.edges[k, :])".format(comp))
-            
+            tau[k] = call(tau_funcs[comp], self.M.edges[k, :])
 
         analytic = 1.98906250000000  # Found using sympy.
 
@@ -708,85 +711,53 @@ class TestInnerProductsDerivs(unittest.TestCase):
         self.assertTrue(self.doTestEdge([10, 4, 5], 6))
 
 
-class TestFacePropertiesInnerProductsDerivs(unittest.TestCase):
-    def doTestFace(self, h, rep):
-        nodes, simplices = example_simplex_mesh(h)
-        mesh = discretize.SimplexMesh(nodes, simplices)
-        v = np.random.rand(mesh.n_faces)
-        tau = np.random.rand(1) if rep == 0 else np.random.rand(mesh.nF * rep)
+@pytest.mark.parametrize("u_type", ["edge", "face"])
+@pytest.mark.parametrize("h", [(10, 4), (10, 4, 5)], ids=["2D", "3D"])
+@pytest.mark.parametrize("rep", [0, 1], ids=["uniform", "isotropic"])
+def test_surface_inner_product_prop_deriv(u_type, h, rep):
+    rng = np.random.default_rng(6732)
+    nodes, simplices = example_simplex_mesh(h)
+    mesh = discretize.SimplexMesh(nodes, simplices)
+    tau = rng.uniform(1, 2, 1) if rep == 0 else rng.uniform(1, 2, mesh.n_faces * rep)
 
-        def fun(tau):
-            M = mesh.get_face_inner_product_surface(tau)
-            Md = mesh.get_face_inner_product_surface_deriv(tau)
-            return M * v, Md(v)
+    match u_type:
+        case "edge":
+            v = rng.uniform(1, 2, mesh.n_edges)
 
-        print("Face", rep)
-        return discretize.tests.check_derivative(fun, tau, num=5, plotIt=False)
+            def fun(tau):
+                M = mesh.get_edge_inner_product_surface(tau)
+                Md = mesh.get_edge_inner_product_surface_deriv(tau)
+                return M * v, Md(v)
 
-    def doTestEdge(self, h, rep):
-        nodes, simplices = example_simplex_mesh(h)
-        mesh = discretize.SimplexMesh(nodes, simplices)
-        v = np.random.rand(mesh.n_edges)
-        tau = np.random.rand(1) if rep == 0 else np.random.rand(mesh.nF * rep)
+        case "face":
+            v = rng.uniform(1, 2, mesh.n_faces)
 
-        def fun(tau):
-            M = mesh.get_edge_inner_product_surface(tau)
-            Md = mesh.get_edge_inner_product_surface_deriv(tau)
-            return M * v, Md(v)
+            def fun(tau):
+                M = mesh.get_face_inner_product_surface(tau)
+                Md = mesh.get_face_inner_product_surface_deriv(tau)
+                return M * v, Md(v)
 
-        print("Edge", rep)
-        return discretize.tests.check_derivative(fun, tau, num=5, plotIt=False)
+        case _:
+            raise Exception("Invalid test parameter.")
 
-    def test_FaceIP_2D_float(self):
-        self.assertTrue(self.doTestFace([10, 4], 0))
+    discretize.tests.check_derivative(fun, tau, num=5, random_seed=rng)
 
-    def test_FaceIP_3D_float(self):
-        self.assertTrue(self.doTestFace([10, 4, 5], 0))
 
-    def test_FaceIP_2D_isotropic(self):
-        self.assertTrue(self.doTestFace([10, 4], 1))
+@pytest.mark.parametrize("h", [(10, 4), (10, 4, 5)], ids=["2D", "3D"])
+@pytest.mark.parametrize("rep", [0, 1], ids=["uniform", "isotropic"])
+def test_line_inner_product_prop_deriv(h, rep):
+    rng = np.random.default_rng(6732)
+    nodes, simplices = example_simplex_mesh(h)
+    mesh = discretize.SimplexMesh(nodes, simplices)
+    v = rng.uniform(1, 2, mesh.n_edges)
+    tau = rng.uniform(1, 2, 1) if rep == 0 else rng.uniform(1, 2, mesh.n_edges * rep)
 
-    def test_FaceIP_3D_isotropic(self):
-        self.assertTrue(self.doTestFace([10, 4, 5], 1))
+    def fun(tau):
+        M = mesh.get_edge_inner_product_line(tau)
+        Md = mesh.get_edge_inner_product_line_deriv(tau)
+        return M * v, Md(v)
 
-    def test_EdgeIP_2D_float(self):
-        self.assertTrue(self.doTestEdge([10, 4], 0))
-
-    def test_EdgeIP_3D_float(self):
-        self.assertTrue(self.doTestEdge([10, 4, 5], 0))
-
-    def test_EdgeIP_2D_isotropic(self):
-        self.assertTrue(self.doTestEdge([10, 4], 1))
-
-    def test_EdgeIP_3D_isotropic(self):
-        self.assertTrue(self.doTestEdge([10, 4, 5], 1))
-
-class TestFacePropertiesInnerProductsDerivs(unittest.TestCase):
-    def doTestEdge(self, h, rep):
-        nodes, simplices = example_simplex_mesh(h)
-        mesh = discretize.SimplexMesh(nodes, simplices)
-        v = np.random.rand(mesh.n_edges)
-        tau = np.random.rand(1) if rep == 0 else np.random.rand(mesh.nE * rep)
-
-        def fun(tau):
-            M = mesh.get_edge_inner_product_line(tau)
-            Md = mesh.get_edge_inner_product_line_deriv(tau)
-            return M * v, Md(v)
-
-        print("Edge", rep)
-        return discretize.tests.check_derivative(fun, tau, num=5, plotIt=False)
-
-    def test_EdgeIP_2D_float(self):
-        self.assertTrue(self.doTestEdge([10, 4], 0))
-
-    def test_EdgeIP_3D_float(self):
-        self.assertTrue(self.doTestEdge([10, 4, 5], 0))
-
-    def test_EdgeIP_2D_isotropic(self):
-        self.assertTrue(self.doTestEdge([10, 4], 1))
-
-    def test_EdgeIP_3D_isotropic(self):
-        self.assertTrue(self.doTestEdge([10, 4, 5], 1))
+    discretize.tests.check_derivative(fun, tau, num=5, random_seed=rng)
 
 
 class Test2DBoundaryIntegral(discretize.tests.OrderTest):
