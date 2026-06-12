@@ -1,7 +1,11 @@
 import numpy as np
 import unittest
+import pytest
+
 from discretize import TensorMesh, CurvilinearMesh
 from discretize.utils import ndgrid
+from discretize.tests import setup_mesh
+from discretize.tests import check_derivative
 
 
 class BasicCurvTests(unittest.TestCase):
@@ -285,6 +289,53 @@ class BasicCurvTests(unittest.TestCase):
         self.assertTrue(np.all(self.Curv3.gridEx == self.TM3.gridEx))
         self.assertTrue(np.all(self.Curv3.gridEy == self.TM3.gridEy))
         self.assertTrue(np.all(self.Curv3.gridEz == self.TM3.gridEz))
+
+
+@pytest.mark.parametrize("u_type", ["edge", "face"])
+@pytest.mark.parametrize("dim", [2, 3], ids=["2D", "3D"])
+@pytest.mark.parametrize("rep", [0, 1], ids=["uniform", "isotropic"])
+def test_surface_inner_product_prop_deriv(u_type, dim, rep):
+    rng = np.random.default_rng(6732)
+    mesh, _ = setup_mesh("rotateCurv", 20, dim)
+    tau = rng.uniform(1, 2, 1) if rep == 0 else rng.uniform(1, 2, mesh.n_faces * rep)
+
+    match u_type:
+        case "edge":
+            v = rng.uniform(1, 2, mesh.n_edges)
+
+            def fun(tau):
+                M = mesh.get_edge_inner_product_surface(tau)
+                Md = mesh.get_edge_inner_product_surface_deriv(tau)
+                return M * v, Md(v)
+
+        case "face":
+            v = rng.uniform(1, 2, mesh.n_faces)
+
+            def fun(tau):
+                M = mesh.get_face_inner_product_surface(tau)
+                Md = mesh.get_face_inner_product_surface_deriv(tau)
+                return M * v, Md(v)
+
+        case _:
+            raise Exception("Invalid test parameter.")
+
+    check_derivative(fun, tau, num=5, random_seed=rng)
+
+
+@pytest.mark.parametrize("dim", [2, 3], ids=["2D", "3D"])
+@pytest.mark.parametrize("rep", [0, 1], ids=["uniform", "isotropic"])
+def test_line_inner_product_prop_deriv(dim, rep):
+    rng = np.random.default_rng(6732)
+    mesh, _ = setup_mesh("rotateCurv", 20, dim)
+    v = rng.uniform(1, 2, mesh.n_edges)
+    tau = rng.uniform(1, 2, 1) if rep == 0 else rng.uniform(1, 2, mesh.n_edges * rep)
+
+    def fun(tau):
+        M = mesh.get_edge_inner_product_line(tau)
+        Md = mesh.get_edge_inner_product_line_deriv(tau)
+        return M * v, Md(v)
+
+    check_derivative(fun, tau, num=5, random_seed=rng)
 
 
 if __name__ == "__main__":

@@ -11,7 +11,7 @@ from discretize.utils import (
     make_boundary_bool,
 )
 from discretize.base import BaseRectangularMesh
-from discretize.operators import DiffOperators, InnerProducts
+from discretize.operators import DiffOperators, InnerProducts, UnstructuredInnerProducts
 from discretize.mixins import InterfaceMixins
 
 
@@ -33,7 +33,11 @@ def _normalize3D(x):
 
 
 class CurvilinearMesh(
-    DiffOperators, InnerProducts, BaseRectangularMesh, InterfaceMixins
+    DiffOperators,
+    UnstructuredInnerProducts,
+    InnerProducts,
+    BaseRectangularMesh,
+    InterfaceMixins,
 ):
     """Curvilinear mesh class.
 

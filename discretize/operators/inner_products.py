@@ -18,6 +18,7 @@ from discretize.utils import (
     is_scalar,
 )
 import numpy as np
+from abc import ABC, abstractmethod
 
 
 class InnerProducts(BaseMesh):
@@ -861,3 +862,131 @@ class InnerProducts(BaseMesh):
             return PXXX
 
         return Pxxx
+
+
+class UnstructuredInnerProducts(BaseMesh, ABC):
+    """Abstract class for constructing inner product matrices on generalized meshes.
+
+    ``UnstructuredInnerProducts`` is a mixin class that does not assume axis-alignment
+    for the edges and faces of a mesh, suitable for the `SimplexMesh` and `CurvilinearMesh`.
+    """
+
+    @abstractmethod
+    def _get_edge_surf_int_proj_mats(self, only_boundary=False, with_area=True):
+        """Return the projection operators for integrating edges on each face.
+
+        Parameters
+        ----------
+        only_boundary : bool, optional
+            Whether to only operate on the boundary faces or not.
+        with_area : bool, optional
+            Whether to include the face area.
+
+        Returns
+        -------
+        list of (3 * n_faces, n_edges) scipy.sparse.csr_matrix
+        """
+
+    def get_edge_inner_product_surface(  # NOQA D102
+        self, model=None, invert_model=False, invert_matrix=False
+    ):
+        # Documentation inherited from discretize.base.BaseMesh
+        dim = self.dim
+        if dim == 2:
+            # in 2D edges are faces.
+            return super().get_face_inner_product_surface(
+                model=model, invert_model=invert_model, invert_matrix=invert_matrix
+            )
+
+        if invert_matrix:
+            raise NotImplementedError(
+                f"The inverse of the inner product matrix with a '{type(self).__name__}' is not supported."
+            )
+
+        # Edge inner product surface projection matrices
+        n_faces = self.n_faces
+        face_areas = self.face_areas
+
+        Ps = self._get_edge_surf_int_proj_mats(with_area=False)
+
+        if model is None:
+            Mu = sp.diags(np.tile(face_areas, dim))  # Number of edges per face
+        else:
+            if invert_model:
+                model = 1.0 / model
+
+            if (model.size == 1) | (model.size == n_faces):
+                Mu = sp.diags(
+                    np.tile(model * face_areas, dim)
+                )  # Number of edges per face
+            else:
+                raise ValueError(
+                    "Unrecognized size of model vector.",
+                    "Must be scalar or have length equal to total number of faces.",
+                )
+
+        A = np.sum([P.T @ Mu @ P for P in Ps])
+
+        return A
+
+    def get_edge_inner_product_surface_deriv(  # NOQA D102
+        self,
+        model,
+        invert_model=False,
+        invert_matrix=False,
+    ):
+        # Documentation inherited from discretize.base.BaseMesh
+        dim = self.dim
+        if dim == 2:
+            return super().get_face_inner_product_surface_deriv(
+                model=model, invert_model=invert_model, invert_matrix=invert_matrix
+            )
+
+        if invert_model:
+            raise NotImplementedError(
+                "Inverted model derivatives are not supported here"
+            )
+        if invert_matrix:
+            raise NotImplementedError(
+                "The inverse of the inner product matrix with a tetrahedral mesh is not supported."
+            )
+        model = np.asarray(model)
+        # Edge inner product surface projection matrices
+        n_faces = self.n_faces
+        n_edges = self.n_edges
+        face_areas = self.face_areas
+
+        Ps = self._get_edge_surf_int_proj_mats(with_area=False)
+        area = sp.diags(np.tile(np.sqrt(face_areas), dim))
+        Ps = list([area @ P for P in Ps])
+
+        if model.size == 1:
+
+            def func(v):
+                dMdm = spzeros(n_edges, 1)
+                for P in Ps:
+                    dMdm = dMdm + sp.csr_matrix(
+                        (P.T @ (P @ v), (range(n_edges), np.zeros(n_edges))),
+                        shape=(n_edges, 1),
+                    )
+                return dMdm
+
+        elif model.size == n_faces:
+            col_inds = np.tile(np.arange(n_faces), dim)
+            ind_ptr = np.arange(n_faces * dim + 1)
+
+            def func(v):
+                dMdm = spzeros(n_edges, n_faces)
+                for P in Ps:
+                    ys = P @ v
+                    dMdm = dMdm + P.T @ sp.csr_matrix(
+                        (ys, col_inds, ind_ptr), shape=(n_faces * dim, n_faces)
+                    )
+                return dMdm
+
+        else:
+            raise ValueError(
+                "Unrecognized size of model vector.",
+                "Must be scalar or have length equal to total number of faces.",
+            )
+        return func
