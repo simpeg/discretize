@@ -693,7 +693,7 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
                 return dMdm
 
         elif model.size == n_faces:
-            col_inds = np.repeat(np.arange(n_faces), 3)
+            col_inds = np.tile(np.arange(n_faces), 3)
             ind_ptr = np.arange(n_faces * 3 + 1)
 
             def func(v):
