@@ -11,6 +11,16 @@ dependencies:
   - omf
   - matplotlib
 
+  # documentation
+  - sphinx==9.1
+  - pydata-sphinx-theme==0.19.0
+  - sphinx-gallery==0.21.0
+  - numpydoc==1.10.0
+  - jupyter
+  - graphviz
+  - pillow
+  - pooch
+
   # testing
   - sympy
   - pytest
