@@ -32,7 +32,6 @@ from discretize import TensorMesh
 import numpy as np
 import matplotlib.pyplot as plt
 
-
 #####################################################
 # Gradient
 # --------

@@ -5,7 +5,6 @@ import discretize
 from discretize import utils
 from scipy.sparse.linalg import spsolve
 
-
 MESHTYPES = ["uniformTensorMesh"]
 
 

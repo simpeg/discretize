@@ -1,18 +1,27 @@
 repos:
+  - repo: local
+    hooks:
+      - id: check-version-sync
+        name: check version pin consistency
+        entry: python .ci/check_version_sync.py
+        language: python
+        additional_dependencies: [pyyaml]
+        pass_filenames: false
+        files: ^(pyproject\.toml|\.pre-commit-config\.yaml|\.ci/environment.*\.yml)$
   - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 24.3.0
+    rev: 26.5.1
     hooks:
       - id: black
         language_version: python3.11
   - repo: https://github.com/pycqa/flake8
-    rev: 7.0.0
+    rev: 7.3.0
     hooks:
       - id: flake8
         language_version: python3.11
         additional_dependencies:
-          - flake8-bugbear==23.12.2
-          - flake8-builtins==2.2.0
+          - flake8-bugbear==25.11.29
+          - flake8-builtins==3.1.0
           - flake8-mutable==1.2.0
-          - flake8-rst-docstrings==0.3.0
+          - flake8-rst-docstrings==0.4.0
           - flake8-docstrings==1.7.0
-          - flake8-pyproject==1.2.3
+          - flake8-pyproject==1.2.4

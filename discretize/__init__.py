@@ -53,15 +53,13 @@ except ImportError as err:
     file_test = os.path.dirname(os.path.abspath(__file__)) + "/_extensions/tree_ext.pyx"
     if os.path.isfile(file_test):
         # Then we are being run from a repository
-        raise ImportError(
-            """
+        raise ImportError("""
             It would appear that discretize is being imported from its source code
             directory and is unable to load its compiled extension modules. Try changing
             your directory and re-launching your python interpreter.
 
             If this was intentional, you need to install discretize in an editable mode.
-            """
-        )
+            """)
     else:
         raise err
 from discretize import tests
