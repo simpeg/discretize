@@ -338,11 +338,14 @@ def test_line_inner_product_prop_deriv(dim, rep):
 
 
 def test_edge_surface_integral_2d():
-    # testing the line integral here of:
-    # vector field w: [y**2, x**2]
-    # physical property u: (1 - x) * (1 + x)
-    # over the path x=t, y=(t - 1) * (t + 1)
-    # from t=-1 to 1
+    """
+    testing the line integral here of:
+    vector field w: [y**2, x**2]
+    physical property u: (1 - x) * (1 + x)
+    over the path x=t, y=(t - 1) * (t + 1)
+    from t=-1 to 1
+    """
+
     def error_eval(nx):
         ny = 4  # not really important to this test, as only one "surface" is non-zeros
         xlocs = np.linspace(-1, 1, nx + 1)
@@ -368,7 +371,6 @@ def test_edge_surface_integral_2d():
 
         discrete_val = np.sum(M @ edge_vals)
         reference_value = 208 / 105
-        print(discrete_val, reference_value)
         return np.abs(discrete_val - reference_value), xlocs[1] - xlocs[0]
 
     assert_expected_order(error_eval, [20.0, 30.0, 40.0, 50.0])
@@ -448,6 +450,61 @@ def test_edge_surface_integral_3d():
         return np.abs(discrete_val - reference_value), xlocs[1] - xlocs[0]
 
     assert_expected_order(error_eval, [20.0, 30.0, 40.0, 50.0])
+
+
+def test_edge_line_integral_3d():
+    """
+    testing the line integral here of:
+    scalar field: v = x**2 + y**2
+    times the property: mu = (1 - x) * (x + 1) + 1
+    over the path x=t, y = 2 * t, z=(t - 1) * (t + 1)
+    from t=-1 to 1
+
+    >>> t = sy.Symbol('t')
+    >>> x, y, z = t, 2 * t, (t-1)*(t+1)
+    >>> mu = (1 - t) * (t+1) + 1
+    >>> v = x**2 + y**2
+    >>> dx = sy.diff(x, t)
+    >>> dy = sy.diff(y, t)
+    >>> dz = sy.diff(z, t)
+    >>> dl = sy.sqrt(dx **2 + dy**2 + dz**2)
+    >>> integrand  = mu * v * dl
+    >>> val = sy.integrate(integrand, (t, -1, 1))
+    >>> float(val)
+    12.490674765352512
+
+    """
+
+    def error_eval(nx):
+        nz = ny = 4  # not really important to this test, as only one "line" is non-zero
+        xlocs = np.linspace(-1, 1, nx + 1)
+        nodes_x = xlocs[:, None, None] * np.ones((1, ny + 1, nz + 1))
+        nodes_y = 2 * nodes_x + np.linspace(-1, 1, ny + 1)[None, :, None]
+        nodes_z = (nodes_x - 1) * (nodes_x + 1) + np.linspace(-1, 1, nz + 1)[
+            None, None, :
+        ]
+
+        mesh = CurvilinearMesh((nodes_x, nodes_y, nodes_z))
+
+        # edge indices along the path... are x-edges:
+        edge_inds = np.arange(mesh.n_edges_x).reshape((nz + 1, ny + 1, nx))[2, 2, :]
+
+        prop = (1 - mesh.edges[:, 0]) * (mesh.edges[:, 0] + 1) + 1
+        edge_props = np.zeros(mesh.n_edges)
+        edge_props[edge_inds] = prop[edge_inds]
+
+        ex = mesh.edges[:, 0]
+        ey = mesh.edges[:, 1]
+        w = ex**2 + ey**2
+
+        M = mesh.get_edge_inner_product_line(model=edge_props)
+
+        discrete_val = np.sum(M @ w)
+        reference_value = 12.490674765352512
+        print(discrete_val)
+        return np.abs(discrete_val - reference_value), xlocs[1] - xlocs[0]
+
+    assert_expected_order(error_eval, [20.0, 40.0, 80.0])
 
 
 if __name__ == "__main__":
