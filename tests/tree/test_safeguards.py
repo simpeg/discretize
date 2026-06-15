@@ -8,7 +8,6 @@ import pytest
 from discretize import TreeMesh
 from discretize.tree_mesh import TreeMeshNotFinalizedError
 
-
 PROPERTIES = [
     "average_cell_to_face",
     "average_cell_to_face_x",

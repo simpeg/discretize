@@ -2,7 +2,6 @@ import unittest
 import numpy as np
 import discretize
 
-
 rng = np.random.default_rng(53679)
 
 
