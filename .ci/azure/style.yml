@@ -9,7 +9,7 @@ jobs:
           versionSpec: "3.13"
       - bash: pip install pyyaml
         displayName: "Install dependencies to run the checks"
-      - script: python .\.ci\check_version_sync.py
+      - script: python .ci/check_version_sync.py
         displayName: "Check versions"
 
   - job:
