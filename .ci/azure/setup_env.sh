@@ -18,7 +18,7 @@ if [[ "$is_free_threaded" == "true" || "$is_bare" == "true" ]]; then
   cp .ci/environment_test_bare.yml environment_test_with_pyversion.yml
   echo "  - python-freethreading="$PYTHON_VERSION >> environment_test_with_pyversion.yml
 elif [[ "$do_doc" == "true" ]]; then
-  cp .ci/environment_doc.yml environment_test_with_pyversion.yml
+  cp .ci/environment_docs.yml environment_test_with_pyversion.yml
   echo "  - python="$PYTHON_VERSION >> environment_test_with_pyversion.yml
 else
   cp .ci/environment_test.yml environment_test_with_pyversion.yml
