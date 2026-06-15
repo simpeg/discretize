@@ -1,4 +1,13 @@
 repos:
+  - repo: local
+    hooks:
+      - id: check-version-sync
+        name: check version pin consistency
+        entry: python .ci/check_version_sync.py
+        language: python
+        additional_dependencies: [pyyaml]
+        pass_filenames: false
+        files: ^(pyproject\.toml|\.pre-commit-config\.yaml|\.ci/environment.*\.yml)$
   - repo: https://github.com/psf/black-pre-commit-mirror
     rev: 26.5.1
     hooks:
