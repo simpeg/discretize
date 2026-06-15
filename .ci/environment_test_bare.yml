@@ -12,7 +12,7 @@ dependencies:
 
   # Building
   - pip
-  - meson-python>=0.14.0
+  - meson-python>=0.15.0
   - meson
   - ninja
   - cython>=3.1.0
