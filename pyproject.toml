@@ -96,10 +96,9 @@ Repository = 'http://github.com/simpeg/discretize.git'
 [tool.setuptools_scm]
 
 [tool.cibuildwheel]
-skip = "cp38-* cp39-* cp310-* *_ppc64le *_i686 *_s390x *-win32 cp310-win_arm64"
-# skip building wheels for python 3.6, 3.7, 3.8, 3.9, all pypy versions, and specialty linux
-# processors (still does arm builds though).
-# skip windows 32bit
+build = "cp311* cp312* cp313* cp314*"
+skip = "*_ppc64le *_i686 *_s390x *-win32"
+# skip specialty linux and windows 32bit
 build-verbosity = 3
 
 # test importing discretize to make sure externals are loadable.
