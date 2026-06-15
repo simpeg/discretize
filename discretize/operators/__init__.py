@@ -14,8 +14,7 @@ Operator Classes
 
   DiffOperators
   InnerProducts
-  UnstructuredInnerProducts
 """
 
 from discretize.operators.differential_operators import DiffOperators
-from discretize.operators.inner_products import InnerProducts, UnstructuredInnerProducts
+from discretize.operators.inner_products import InnerProducts

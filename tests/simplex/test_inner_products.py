@@ -198,15 +198,17 @@ class TestInnerProductsFaceProperties2D(discretize.tests.OrderTest):
         ex = lambda x, y: x**2 + y
         ey = lambda x, y: (y**2) * x
 
-        tau_x = lambda x, y: 2 * y + 1  # x-face properties  # NOQA F841
-        tau_y = lambda x, y: x + 2  # y-face properties  # NOQA F841
+        tau_funcs = {
+            "x": lambda x, y: 2 * y + 1,  # x-face properties
+            "y": lambda x, y: x + 2,  # y-face properties
+        }
 
         mesh = self.M
 
         tau = 1e-8 * np.ones(mesh.n_faces)
         for ii, comp in enumerate(["x", "y"]):
             k = np.isclose(self.M.faces[:, ii], 0.5)  # x, or y location for each plane
-            tau[k] = eval("call(tau_{}, self.M.faces[k, :])".format(comp))
+            tau[k] = call(tau_funcs[comp], self.M.faces[k, :])
 
         # integrate components parallel to the plane of integration
         if self.location == "edges":
