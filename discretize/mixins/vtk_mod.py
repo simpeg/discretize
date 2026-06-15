@@ -946,7 +946,7 @@ class InterfaceSimplexReadVTK:
         _, _nps = load_vtk()
 
         # check if all of the cells are the same type
-        cell_types = np.unique(_nps.vtk_to_numpy(vtuGrid.GetCellTypesArray()))
+        cell_types = np.unique(_nps.vtk_to_numpy(vtuGrid.GetCellTypes()))
         if len(cell_types) > 1:
             raise ValueError(
                 "Incompatible unstructured grid. All cell's must have the same type."
