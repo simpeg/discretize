@@ -1,12 +1,25 @@
 jobs:
   - job:
+    displayName: Check version consistency
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: "3.13"
+      - bash: pip install pyyaml
+        displayName: "Install dependencies to run the checks"
+      - script: python .ci/check_version_sync.py
+        displayName: "Check versions"
+
+  - job:
     displayName: Run style checks with Black
     pool:
       vmImage: ubuntu-latest
     steps:
       - task: UsePythonVersion@0
         inputs:
-          versionSpec: "3.11"
+          versionSpec: "3.13"
       - bash: .ci/install_style.sh
         displayName: "Install dependencies to run the checks"
       - script: black --check .
@@ -19,7 +32,7 @@ jobs:
     steps:
       - task: UsePythonVersion@0
         inputs:
-          versionSpec: "3.11"
+          versionSpec: "3.13"
       - bash: .ci/install_style.sh
         displayName: "Install dependencies to run the checks"
       - script: flake8

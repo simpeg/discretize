@@ -192,12 +192,8 @@ class TensorMeshIO(InterfaceTensorread_vtk):
             model.extend([float(val) for val in line.split()])
         model = np.asarray(model)
         if not len(model) == mesh.nC:
-            raise Exception(
-                """Something is not right, expected size is {:d}
-                but unwrap vector is size {:d}""".format(
-                    mesh.nC, len(model)
-                )
-            )
+            raise Exception("""Something is not right, expected size is {:d}
+                but unwrap vector is size {:d}""".format(mesh.nC, len(model)))
 
         return model.reshape(mesh.vnC, order="F")[:, ::-1].reshape(-1, order="F")
 

@@ -8,7 +8,6 @@ from libcpp.unordered_map cimport unordered_map
 from cython.operator cimport dereference
 cimport cython
 cimport numpy as np
-from cython cimport view
 from libc.math cimport sqrt
 
 cdef extern from "triplet.h":

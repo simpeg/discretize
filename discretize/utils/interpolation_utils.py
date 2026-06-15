@@ -26,8 +26,7 @@ except ImportError as err:
     )
     if os.path.isfile(file_test):
         # Then we are being run from a repository
-        print(
-            """
+        print("""
             Unable to import interputils_cython.
 
             It would appear that discretize is being imported from its repository.
@@ -36,8 +35,7 @@ except ImportError as err:
             python setup.py build_ext --inplace
 
             to build the cython code.
-            """
-        )
+            """)
     _interpCython = False
 
 

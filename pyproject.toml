@@ -18,12 +18,8 @@ dynamic = ["version"]
 description = 'Discretization tools for finite volume and inverse problems'
 readme = 'README.rst'
 requires-python = '>=3.11'
-authors = [
-  {name = 'SimPEG developers', email = 'rowanc1@gmail.com'},
-]
-keywords = [
-    'finite volume', 'discretization', 'pde', 'ode'
-]
+authors = [{ name = 'SimPEG developers', email = 'rowanc1@gmail.com' }]
+keywords = ['finite volume', 'discretization', 'pde', 'ode']
 
 # Note: Python and NumPy upper version bounds should be set correctly in
 # release branches, see:
@@ -57,36 +53,31 @@ file = 'LICENSE'
 
 [project.optional-dependencies]
 plot = ["matplotlib"]
-viz = ["vtk>=6", "pyvista"]
+viz = ["vtk>=9", "pyvista"]
 omf = ["omf"]
 all = ["discretize[plot,viz,omf]"]
 doc = [
-    "sphinx==8.1.3",
-    "pydata-sphinx-theme==0.16.1",
-    "sphinx-gallery==0.19.0",
-    "numpydoc==1.9.0",
+    "sphinx==9.1",
+    "pydata-sphinx-theme==0.19.0",
+    "sphinx-gallery==0.21.0",
+    "numpydoc==1.10.0",
     "jupyter",
     "graphviz",
     "pillow",
     "pooch",
     "discretize[all]",
 ]
-test = [
-    "pytest",
-    "pytest-cov",
-    "sympy",
-    "discretize[doc,all]",
-]
+test = ["pytest", "pytest-cov", "sympy", "discretize[doc,all]"]
 # when changing these, make sure to keep it consistent with .pre-commit-config.
 style = [
-    "black==24.3.0",
-    "flake8==7.0.0",
-    "flake8-bugbear==23.12.2",
-    "flake8-builtins==2.2.0",
+    "black==26.5.1",
+    "flake8==7.3.0",
+    "flake8-bugbear==25.11.29",
+    "flake8-builtins==3.1.0",
     "flake8-mutable==1.2.0",
-    "flake8-rst-docstrings==0.3.0",
+    "flake8-rst-docstrings==0.4.0",
     "flake8-docstrings==1.7.0",
-    "flake8-pyproject==1.2.3",
+    "flake8-pyproject==1.2.4",
 ]
 build = [
     "meson-python>=0.15.0",
@@ -105,12 +96,10 @@ Repository = 'http://github.com/simpeg/discretize.git'
 [tool.setuptools_scm]
 
 [tool.cibuildwheel]
-# skip building wheels for python 3.6, 3.7, 3.8, 3.9, all pypy versions, and specialty linux
-# processors (still does arm builds though).
-# skip windows 32bit
-skip = "cp38-* cp39-* cp310-* *_ppc64le *_i686 *_s390x *-win32 cp310-win_arm64"
+build = "cp311* cp312* cp313* cp314*"
+skip = "*_ppc64le *_i686 *_s390x *-win32"
+# skip specialty linux and windows 32bit
 build-verbosity = 3
-enable = ["cpython-freethreading"]
 
 # test importing discretize to make sure externals are loadable.
 test-command = 'python -c "import discretize; print(discretize.__version__)"'
@@ -118,9 +107,7 @@ test-command = 'python -c "import discretize; print(discretize.__version__)"'
 
 # use the visual studio compilers
 [tool.cibuildwheel.windows.config-settings]
-setup-args = [
-    '--vsenv'
-]
+setup-args = ['--vsenv']
 
 [tool.coverage.run]
 branch = true
@@ -152,8 +139,8 @@ exclude_also = [
 ]
 
 [tool.black]
-required-version = '24.3.0'
-target-version = ['py38', 'py39', 'py310', 'py311']
+required-version = '26.5.1'
+target-version = ['py311', 'py312', 'py313', 'py314']
 
 [tool.flake8]
 extend-ignore = [
@@ -184,7 +171,7 @@ exclude = [
     'docs/tutorials/*',
     'docs/*',
     'discretize/_extensions/*.py',
-    '.ci/*'
+    '.ci/*',
 ]
 per-file-ignores = [
     # disable unused-imports errors on __init__.py
@@ -212,7 +199,10 @@ rst-roles = [
     'ref',
     'data',
     # Python programming language:
-    'py:func','py:mod','py:attr','py:meth',
+    'py:func',
+    'py:mod',
+    'py:attr',
+    'py:meth',
 ]
 
 rst-directives = [
