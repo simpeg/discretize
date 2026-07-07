@@ -1164,7 +1164,11 @@ cdef class _TreeMesh:
         Parameters
         ----------
         points : (N, dim) array_like
-        levels : (N) array_like of int
+            Array with coordinates of points on which cells will be inserted.
+        levels : int or (N) array_like of int
+            Integer indicating the refinement level for every point in ``points``,
+            or array of integers specifying the refinement level for each one of the
+            points.
         finalize : bool, optional
             Whether to finalize after inserting point(s)
         diagonal_balance : bool or None, optional
