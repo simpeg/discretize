@@ -1200,11 +1200,12 @@ cdef class _TreeMesh:
             diagonal_balance = self._diagonal_balance
         cdef bool diag_balance = diagonal_balance
 
+        cdef int_t n_iters = max(ls.shape[0], cs.shape[0])
         cdef int_t p_step = cs.shape[0] > 1
         cdef int_t l_step = ls.shape[0] > 1
         cdef int_t i_p=0, i_l=0
 
-        for i in range(ls.shape[0]):
+        for i in range(n_iters):
             l = _wrap_levels(ls[i_l], max_level)
             with self._tree_modify_lock:
                 self.tree.insert_cell(&cs[i_p, 0], l, diagonal_balance)
