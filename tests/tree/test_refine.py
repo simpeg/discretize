@@ -239,6 +239,20 @@ def test_insert_errors():
     with pytest.raises(ValueError):
         mesh.insert_cells(x0s2d, [1, 1, 3], finalize=False)
 
+    # Incorrect dimension of levels
+    levels_nd = np.array([[1, 2]])
+    points = np.array([[0.1, 0.1], [0.5, 0.5]])
+    msg = re.escape("Invalid levels argument with '2' dimensions")
+    with pytest.raises(ValueError, match=msg):
+        mesh.insert_cells(points, levels_nd, finalize=False)
+
+    # Multiple levels on a single point
+    levels_large = np.array([3, 2, 1])
+    points = np.array([[0.1, 0.1]])
+    msg = re.escape("Invalid levels argument with '3' elements")
+    with pytest.raises(ValueError, match=msg):
+        mesh.insert_cells(points, levels_large, finalize=False)
+
 
 def test_refine_triang_prism():
     xyz = np.array(
