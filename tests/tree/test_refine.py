@@ -254,6 +254,36 @@ def test_insert_errors():
         mesh.insert_cells(points, levels_large, finalize=False)
 
 
+def test_refine_multiple_points():
+    """
+    Test refining multiple points.
+
+    Test for bugfix introduced in #416.
+    """
+    mesh_a = discretize.TreeMesh([64, 64, 64], origin="CCC", diagonal_balance=True)
+    mesh_b = discretize.TreeMesh([64, 64, 64], origin="CCC", diagonal_balance=True)
+
+    points = np.array(
+        [
+            [-0.8, -0.8, 0.0],
+            [0.8, 0.8, 0.0],
+            [-0.8, 0.8, 0.0],
+        ]
+    )
+
+    # Refine mesh_a with all points
+    mesh_a.insert_cells(points, levels=-1)
+
+    # Refine mesh_b point by point
+    for point in points:
+        mesh_b.insert_cells(np.array([point]), levels=-1, finalize=False)
+    mesh_b.finalize()
+
+    # Check they are the same mesh
+    assert mesh_a.n_cells == mesh_b.n_cells
+    npt.assert_allclose(mesh_a.nodes, mesh_b.nodes)
+
+
 def test_refine_triang_prism():
     xyz = np.array(
         [
