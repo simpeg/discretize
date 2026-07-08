@@ -1195,17 +1195,17 @@ cdef class _TreeMesh:
         levels = np.require(np.atleast_1d(levels), dtype=np.int32, requirements='C')
         cdef int_t n_points = _check_first_dim_broadcast(points=points, levels=levels)
 
-        if levels.ndim !=1:
+        if levels.ndim != 1:
             msg = (
-                "Invalid levels argument with '{levels.ndim}' dimensions. "
+                f"Invalid levels argument with '{levels.ndim}' dimensions. "
                 "It must be a single integer or a 1D array."
             )
             raise ValueError(msg)
         if levels.size > points.shape[0]:
             msg = (
-                "Invalid levels argument with '{levels.size}' elements. "
+                f"Invalid levels argument with '{levels.size}' elements. "
                 "It must be a single integer or an arry with the same amount of "
-                "elements as points ('{points.shape[0]}')."
+                f"elements as points ('{points.shape[0]}')."
             )
             raise ValueError(msg)
 
