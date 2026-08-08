@@ -839,7 +839,7 @@ class CurvilinearMesh(
 
         if invert_matrix:
             raise NotImplementedError(
-                "The inverse of the inner product matrix with a tetrahedral mesh is not supported."
+                "The inverse of the inner product matrix with a curvilinear mesh is not supported."
             )
 
         # Edge inner product surface projection matrices
@@ -899,7 +899,7 @@ class CurvilinearMesh(
             )
         if invert_matrix:
             raise NotImplementedError(
-                "The inverse of the inner product matrix with a tetrahedral mesh is not supported."
+                "The inverse of the inner product matrix with a curvilinear mesh is not supported."
             )
         model = np.asarray(model)
         # Edge inner product surface projection matrices
