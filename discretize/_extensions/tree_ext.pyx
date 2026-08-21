@@ -548,7 +548,7 @@ cdef class _TreeMesh:
 
         #Wrapping function so it can be called in c++
         cdef void * func_ptr = <void *> function
-        
+
 
         with self._tree_modify_lock:
             self.wrapper.set(func_ptr, _evaluate_func)
@@ -636,7 +636,7 @@ cdef class _TreeMesh:
         for i in range(n_balls):
             ball = geom.Ball(self._dim, &cs[i_c, 0], rs[i_r])
             l = _wrap_levels(ls[i_l], max_level)
-        
+
             with self._tree_modify_lock:
                     self.tree.refine_geom(ball, l, diag_balance)
 
@@ -1145,7 +1145,7 @@ cdef class _TreeMesh:
         for i in range(n_triangles):
             l = _wrap_levels(ls[i_l], max_level)
             tet = geom.Tetrahedron(self._dim, &tris[i_tri, 0, 0], &tris[i_tri, 1, 0], &tris[i_tri, 2, 0], &tris[i_tri, 3, 0])
-            
+
             with self._tree_modify_lock:
                 self.tree.refine_geom(tet, l, diag_balance)
 
@@ -1164,7 +1164,11 @@ cdef class _TreeMesh:
         Parameters
         ----------
         points : (N, dim) array_like
-        levels : (N) array_like of int
+            Array with coordinates of points on which cells will be inserted.
+        levels : int or (N) array_like of int
+            Integer indicating the refinement level for every point in ``points``,
+            or array of integers specifying the refinement level for each one of the
+            points.
         finalize : bool, optional
             Whether to finalize after inserting point(s)
         diagonal_balance : bool or None, optional
@@ -1189,7 +1193,25 @@ cdef class _TreeMesh:
         """
         points = self._require_ndarray_with_dim('points', points, ndim=2, dtype=np.float64)
         levels = np.require(np.atleast_1d(levels), dtype=np.int32, requirements='C')
-        cdef int_t n_points = _check_first_dim_broadcast(points=points, levels=levels)
+
+        # Sanity checks for points and levels arrays
+        _check_first_dim_broadcast(points=points, levels=levels)
+
+        if levels.ndim != 1:
+            msg = (
+                f"Invalid levels argument with '{levels.ndim}' dimensions. "
+                "It must be a single integer or a 1D array."
+            )
+            raise ValueError(msg)
+
+        cdef int_t n_points = points.shape[0]
+        if levels.size > n_points:
+            msg = (
+                f"Invalid levels argument with '{levels.size}' elements. "
+                "It must be a single integer or an arry with the same amount of "
+                f"elements as points ('{n_points}')."
+            )
+            raise ValueError(msg)
 
         cdef double[:, :] cs = points
         cdef int[:] ls = levels
@@ -1200,17 +1222,14 @@ cdef class _TreeMesh:
             diagonal_balance = self._diagonal_balance
         cdef bool diag_balance = diagonal_balance
 
-        cdef int_t p_step = cs.shape[0] > 1
-        cdef int_t l_step = ls.shape[0] > 1
-        cdef int_t i_p=0, i_l=0
-
-        for i in range(ls.shape[0]):
-            l = _wrap_levels(ls[i_l], max_level)
+        cdef int_t level_i=0
+        cdef int_t levels_step = ls.shape[0] > 1
+        for point_i in range(n_points):
+            l = _wrap_levels(ls[level_i], max_level)
             with self._tree_modify_lock:
-                self.tree.insert_cell(&cs[i_p, 0], l, diagonal_balance)
+                self.tree.insert_cell(&cs[point_i, 0], l, diagonal_balance)
+            level_i += levels_step
 
-            i_l += l_step
-            i_p += p_step
         if finalize:
             self.finalize()
 
@@ -1255,7 +1274,7 @@ cdef class _TreeMesh:
             image = image[..., None]
 
         cdef double[::1,:,:] image_dat = image
-        
+
         with self._tree_modify_lock:
             self.tree.refine_image(&image_dat[0, 0, 0], diag_balance)
         if finalize:
@@ -1315,7 +1334,7 @@ cdef class _TreeMesh:
 
     def number(self):
         """Number the cells, nodes, faces, and edges of the TreeMesh."""
-        
+
         with self._tree_modify_lock:
             self.tree.number()
 

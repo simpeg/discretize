@@ -239,6 +239,50 @@ def test_insert_errors():
     with pytest.raises(ValueError):
         mesh.insert_cells(x0s2d, [1, 1, 3], finalize=False)
 
+    # Incorrect dimension of levels
+    levels_nd = np.array([[1, 2]])
+    points = np.array([[0.1, 0.1], [0.5, 0.5]])
+    msg = re.escape("Invalid levels argument with '2' dimensions")
+    with pytest.raises(ValueError, match=msg):
+        mesh.insert_cells(points, levels_nd, finalize=False)
+
+    # Multiple levels on a single point
+    levels_large = np.array([3, 2, 1])
+    points = np.array([[0.1, 0.1]])
+    msg = re.escape("Invalid levels argument with '3' elements")
+    with pytest.raises(ValueError, match=msg):
+        mesh.insert_cells(points, levels_large, finalize=False)
+
+
+def test_refine_multiple_points():
+    """
+    Test refining multiple points.
+
+    Test for bugfix introduced in #416.
+    """
+    mesh_a = discretize.TreeMesh([64, 64, 64], origin="CCC", diagonal_balance=True)
+    mesh_b = discretize.TreeMesh([64, 64, 64], origin="CCC", diagonal_balance=True)
+
+    points = np.array(
+        [
+            [-0.8, -0.8, 0.0],
+            [0.8, 0.8, 0.0],
+            [-0.8, 0.8, 0.0],
+        ]
+    )
+
+    # Refine mesh_a with all points
+    mesh_a.insert_cells(points, levels=-1)
+
+    # Refine mesh_b point by point
+    for point in points:
+        mesh_b.insert_cells(np.array([point]), levels=-1, finalize=False)
+    mesh_b.finalize()
+
+    # Check they are the same mesh
+    assert mesh_a.n_cells == mesh_b.n_cells
+    npt.assert_allclose(mesh_a.nodes, mesh_b.nodes)
+
 
 def test_refine_triang_prism():
     xyz = np.array(
