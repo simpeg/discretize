@@ -13,6 +13,7 @@ from discretize.utils import (
 from discretize.base import BaseRectangularMesh
 from discretize.operators import DiffOperators, InnerProducts
 from discretize.mixins import InterfaceMixins
+from discretize.utils import spzeros
 
 
 # Some helper functions.
@@ -33,7 +34,10 @@ def _normalize3D(x):
 
 
 class CurvilinearMesh(
-    DiffOperators, InnerProducts, BaseRectangularMesh, InterfaceMixins
+    DiffOperators,
+    InnerProducts,
+    BaseRectangularMesh,
+    InterfaceMixins,
 ):
     """Curvilinear mesh class.
 
@@ -797,10 +801,13 @@ class CurvilinearMesh(
             edge_dirs = self.edge_tangents[node_edges]
             t_for = np.concatenate((edge_dirs, face_normals[:, None, :]), axis=1)
             t_inv = np.linalg.inv(t_for)
-            t_inv = t_inv[:, :, :-1] / 4  # n_edges_per_thing
+            t_inv = t_inv[:, :, :-1]
 
             if with_area:
                 t_inv *= face_areas[:, None, None]
+                t_inv /= 4  # n_edges_per_thing
+            else:
+                t_inv /= 2  # sqrt n_edges_per_thing
 
             T = C2F @ sp.csr_matrix(
                 (t_inv.reshape(-1), T_col_inds, T_ind_ptr),
@@ -808,6 +815,132 @@ class CurvilinearMesh(
             )
             Ps.append((T @ P))
         return Ps
+
+    def get_edge_inner_product_surface(  # NOQA D102
+        self, model=None, invert_model=False, invert_matrix=False
+    ):
+        # Documentation inherited from discretize.base.BaseMesh
+        dim = self.dim
+        if dim == 2:
+            # in 2D faces_x -> edges_y and edges_x -> faces_y, so need to permute the x and y faces to x and y edges.
+            P_e2f = sp.diags(
+                [1, 1],
+                (-self.n_edges_y, self.n_edges_x),
+                shape=(self.n_edges, self.n_edges),
+                format="csr",
+            )
+            return (
+                P_e2f.T
+                @ super().get_face_inner_product_surface(
+                    model=model, invert_model=invert_model, invert_matrix=invert_matrix
+                )
+                @ P_e2f
+            )
+
+        if invert_matrix:
+            raise NotImplementedError(
+                "The inverse of the inner product matrix with a curvilinear mesh is not supported."
+            )
+
+        # Edge inner product surface projection matrices
+        n_faces = self.n_faces
+        face_areas = self.face_areas
+
+        Ps = self._get_edge_surf_int_proj_mats(with_area=False)
+
+        if model is None:
+            Mu = sp.diags(np.tile(face_areas, dim))  # Number of edges per face
+        else:
+            if invert_model:
+                model = 1.0 / model
+
+            if (model.size == 1) | (model.size == n_faces):
+                Mu = sp.diags(
+                    np.tile(model * face_areas, dim)
+                )  # Number of edges per face
+            else:
+                raise ValueError(
+                    "Unrecognized size of model vector.",
+                    "Must be scalar or have length equal to total number of faces.",
+                )
+
+        A = np.sum([P.T @ Mu @ P for P in Ps])
+
+        return A
+
+    def get_edge_inner_product_surface_deriv(  # NOQA D102
+        self,
+        model,
+        invert_model=False,
+        invert_matrix=False,
+    ):
+        # Documentation inherited from discretize.base.BaseMesh
+        dim = self.dim
+        if dim == 2:
+            # in 2D faces_x -> edges_y and edges_x -> faces_y, so need to permute the x and y faces to x and y edges.
+            P_e2f = sp.diags(
+                [1, 1],
+                (-self.n_edges_y, self.n_edges_x),
+                shape=(self.n_edges, self.n_edges),
+                format="csr",
+            )
+            face_func = self.get_face_inner_product_surface_deriv(
+                model=model, invert_model=invert_model, invert_matrix=invert_matrix
+            )
+
+            def func(v):
+                return P_e2f.T @ (face_func(P_e2f @ v))
+
+            return func
+
+        if invert_model:
+            raise NotImplementedError(
+                "Inverted model derivatives are not supported here"
+            )
+        if invert_matrix:
+            raise NotImplementedError(
+                "The inverse of the inner product matrix with a curvilinear mesh is not supported."
+            )
+        model = np.asarray(model)
+        # Edge inner product surface projection matrices
+        n_faces = self.n_faces
+        n_edges = self.n_edges
+        face_areas = self.face_areas
+
+        Ps = self._get_edge_surf_int_proj_mats(with_area=False)
+        area = sp.diags(np.tile(np.sqrt(face_areas), dim))
+        Ps = list([area @ P for P in Ps])
+
+        if model.size == 1:
+
+            def func(v):
+                dMdm = spzeros(n_edges, 1)
+                for P in Ps:
+                    dMdm = dMdm + sp.csr_matrix(
+                        (P.T @ (P @ v), (range(n_edges), np.zeros(n_edges))),
+                        shape=(n_edges, 1),
+                    )
+                return dMdm
+
+        elif model.size == n_faces:
+            col_inds = np.tile(np.arange(n_faces), dim)
+            ind_ptr = np.arange(n_faces * dim + 1)
+
+            def func(v):
+                dMdm = spzeros(n_edges, n_faces)
+                for P in Ps:
+                    ys = P @ v
+                    dMdm = dMdm + P.T @ sp.csr_matrix(
+                        (ys, col_inds, ind_ptr), shape=(n_faces * dim, n_faces)
+                    )
+                return dMdm
+
+        else:
+            raise ValueError(
+                "Unrecognized size of model vector.",
+                "Must be scalar or have length equal to total number of faces.",
+            )
+        return func
 
     @property
     def boundary_edge_vector_integral(self):  # NOQA D102

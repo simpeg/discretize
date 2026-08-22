@@ -1,7 +1,10 @@
 import numpy as np
 import unittest
+import pytest
+
 from discretize import TensorMesh, CurvilinearMesh
 from discretize.utils import ndgrid
+from discretize.tests import setup_mesh, check_derivative, assert_expected_order
 
 
 class BasicCurvTests(unittest.TestCase):
@@ -285,6 +288,223 @@ class BasicCurvTests(unittest.TestCase):
         self.assertTrue(np.all(self.Curv3.gridEx == self.TM3.gridEx))
         self.assertTrue(np.all(self.Curv3.gridEy == self.TM3.gridEy))
         self.assertTrue(np.all(self.Curv3.gridEz == self.TM3.gridEz))
+
+
+@pytest.mark.parametrize("u_type", ["edge", "face"])
+@pytest.mark.parametrize("dim", [2, 3], ids=["2D", "3D"])
+@pytest.mark.parametrize("rep", [0, 1], ids=["uniform", "isotropic"])
+def test_surface_inner_product_prop_deriv(u_type, dim, rep):
+    rng = np.random.default_rng(6732)
+    mesh, _ = setup_mesh("rotateCurv", 20, dim)
+    tau = rng.uniform(1, 2, 1) if rep == 0 else rng.uniform(1, 2, mesh.n_faces * rep)
+
+    match u_type:
+        case "edge":
+            v = rng.uniform(1, 2, mesh.n_edges)
+
+            def fun(tau):
+                M = mesh.get_edge_inner_product_surface(tau)
+                Md = mesh.get_edge_inner_product_surface_deriv(tau)
+                return M * v, Md(v)
+
+        case "face":
+            v = rng.uniform(1, 2, mesh.n_faces)
+
+            def fun(tau):
+                M = mesh.get_face_inner_product_surface(tau)
+                Md = mesh.get_face_inner_product_surface_deriv(tau)
+                return M * v, Md(v)
+
+        case _:
+            raise Exception("Invalid test parameter.")
+
+    check_derivative(fun, tau, num=5, random_seed=rng)
+
+
+@pytest.mark.parametrize("dim", [2, 3], ids=["2D", "3D"])
+@pytest.mark.parametrize("rep", [0, 1], ids=["uniform", "isotropic"])
+def test_line_inner_product_prop_deriv(dim, rep):
+    rng = np.random.default_rng(6732)
+    mesh, _ = setup_mesh("rotateCurv", 20, dim)
+    v = rng.uniform(1, 2, mesh.n_edges)
+    tau = rng.uniform(1, 2, 1) if rep == 0 else rng.uniform(1, 2, mesh.n_edges * rep)
+
+    def fun(tau):
+        M = mesh.get_edge_inner_product_line(tau)
+        Md = mesh.get_edge_inner_product_line_deriv(tau)
+        return M * v, Md(v)
+
+    check_derivative(fun, tau, num=5, random_seed=rng)
+
+
+def test_edge_surface_integral_2d():
+    """
+    testing the line integral here of:
+    vector field w: [y**2, x**2]
+    physical property u: (1 - x) * (1 + x)
+    over the path x=t, y=(t - 1) * (t + 1)
+    from t=-1 to 1
+    """
+
+    def error_eval(nx):
+        ny = 4  # not really important to this test, as only one "surface" is non-zeros
+        xlocs = np.linspace(-1, 1, nx + 1)
+        nodes_x = xlocs[:, None] * np.ones(ny + 1)[None, :]
+
+        ylocs = (xlocs - 1) * (xlocs + 1)
+        nodes_y = ylocs[:, None] + np.linspace(-1, 1, ny + 1)
+
+        mesh = CurvilinearMesh((nodes_x, nodes_y))
+
+        faces = (np.arange(mesh.n_faces_y) + mesh.n_faces_x).reshape(ny + 1, nx)
+        face_inds = faces[2, :]
+
+        xcs = (xlocs[1:] + xlocs[:-1]) * 0.5
+        prop = (1 - xcs) * (xcs + 1) + 1
+        face_props = np.zeros(mesh.n_faces)
+        face_props[face_inds] = prop
+
+        edge_vectors = np.c_[mesh.edges[:, 1] ** 2, mesh.edges[:, 0] ** 2]
+        edge_vals = mesh.project_edge_vector(edge_vectors)
+
+        M = mesh.get_edge_inner_product_surface(model=face_props)
+
+        discrete_val = np.sum(M @ edge_vals)
+        reference_value = 208 / 105
+        return np.abs(discrete_val - reference_value), xlocs[1] - xlocs[0]
+
+    assert_expected_order(error_eval, [20.0, 30.0, 40.0, 50.0])
+
+
+def test_edge_surface_integral_3d():
+    """
+    For this test, we will use a single surface within the curvilinear mesh
+    parameterized as:
+    x = u
+    y = v
+    z = u**2 + v**2
+    (a simple parabola)
+
+    we want to test the integral of:
+    mu * w.dot(w) ds
+    over this surface, for some a vector field that is always tangent to the surface
+    the two vectors that are perpendicular and tangent to this surface are:
+    r_u = [1, 0, 2*u]
+    r_v = [0, 1, 2*v]
+
+    so any linear combination of these vectors will be tangent to the surface, let's use:
+    w = x * y * z * (r_u + r_v)
+
+    the ds integrand is sqrt(|| r_u.cross(r_v) ||) or:
+    sqrt(4 * x**2 + 4 * y**2 + 1)
+
+    and a property field: mu = x**2 + y**2 + z**2
+
+    the analytic integral over the range u=[-1, 1], v=[-1,1] found by numeric integration:
+
+    >>> def int_f(x, y):
+    ...    xsq = x**2
+    ...    ysq = y**2
+    ...    z = x**2 + y**2
+    ...    zsq = z**2
+    ...    v1 = 2 * xsq * ysq * zsq + (2 * xsq * y * z + 2 * x * ysq * z)**2
+    ...    v2 = (xsq + ysq + zsq) * np.sqrt(4 * xsq + 4 * ysq + 1)
+    ...    return v1 * v2
+    >>> scint.dblquad(int_f, -1, 1, -1, 1, epsrel=1e-20, epsabs=1E-20)
+    (51.8667132595898, 2.241102757162104e-12)
+    """
+
+    def error_eval(nx):
+        ny = nx
+        nz = 4  # not really important to this test, as only one "surface" is non-zero
+        xlocs = np.linspace(-1, 1, nx + 1)
+        ylocs = np.linspace(-1, 1, ny + 1)
+        nodes_x = xlocs[:, None, None] * np.ones((1, ny + 1, nz + 1))
+        nodes_y = ylocs[None, :, None] * np.ones((nx + 1, 1, nz + 1))
+
+        nodes_z = nodes_x**2 + nodes_y**2 + np.linspace(-1, 1, nz + 1)[None, None, :]
+        mesh = CurvilinearMesh((nodes_x, nodes_y, nodes_z))
+
+        faces = (np.arange(mesh.n_faces_z) + mesh.n_faces_x + mesh.n_faces_y).reshape(
+            nz + 1, nx * ny
+        )
+        face_inds = faces[2, :]
+
+        prop = mesh.faces[:, 0] ** 2 + mesh.faces[:, 1] ** 2 + mesh.faces[:, 2] ** 2
+        face_props = np.zeros(mesh.n_faces)
+        face_props[face_inds] = prop[face_inds]
+
+        ex = mesh.edges[:, 0]
+        ey = mesh.edges[:, 1]
+        w_vec = (ex * ey * (ex**2 + ey**2))[:, None] * np.c_[
+            np.ones_like(ex),
+            np.ones_like(ex),
+            2 * ex + 2 * ey,
+        ]
+        w = mesh.project_edge_vector(w_vec)
+
+        M = mesh.get_edge_inner_product_surface(model=face_props)
+
+        discrete_val = w @ M @ w
+        reference_value = 51.8667132595898
+        return np.abs(discrete_val - reference_value), xlocs[1] - xlocs[0]
+
+    assert_expected_order(error_eval, [20.0, 30.0, 40.0, 50.0])
+
+
+def test_edge_line_integral_3d():
+    """
+    testing the line integral here of:
+    scalar field: v = x**2 + y**2
+    times the property: mu = (1 - x) * (x + 1) + 1
+    over the path x=t, y = 2 * t, z=(t - 1) * (t + 1)
+    from t=-1 to 1
+
+    >>> t = sy.Symbol('t')
+    >>> x, y, z = t, 2 * t, (t-1)*(t+1)
+    >>> mu = (1 - t) * (t+1) + 1
+    >>> v = x**2 + y**2
+    >>> dx = sy.diff(x, t)
+    >>> dy = sy.diff(y, t)
+    >>> dz = sy.diff(z, t)
+    >>> dl = sy.sqrt(dx **2 + dy**2 + dz**2)
+    >>> integrand  = mu * v * dl
+    >>> val = sy.integrate(integrand, (t, -1, 1))
+    >>> float(val)
+    12.490674765352512
+
+    """
+
+    def error_eval(nx):
+        nz = ny = 4  # not really important to this test, as only one "line" is non-zero
+        xlocs = np.linspace(-1, 1, nx + 1)
+        nodes_x = xlocs[:, None, None] * np.ones((1, ny + 1, nz + 1))
+        nodes_y = 2 * nodes_x + np.linspace(-1, 1, ny + 1)[None, :, None]
+        nodes_z = (nodes_x - 1) * (nodes_x + 1) + np.linspace(-1, 1, nz + 1)[
+            None, None, :
+        ]
+
+        mesh = CurvilinearMesh((nodes_x, nodes_y, nodes_z))
+
+        # edge indices along the path... are x-edges:
+        edge_inds = np.arange(mesh.n_edges_x).reshape((nz + 1, ny + 1, nx))[2, 2, :]
+
+        prop = (1 - mesh.edges[:, 0]) * (mesh.edges[:, 0] + 1) + 1
+        edge_props = np.zeros(mesh.n_edges)
+        edge_props[edge_inds] = prop[edge_inds]
+
+        ex = mesh.edges[:, 0]
+        ey = mesh.edges[:, 1]
+        w = ex**2 + ey**2
+
+        M = mesh.get_edge_inner_product_line(model=edge_props)
+
+        discrete_val = np.sum(M @ w)
+        reference_value = 12.490674765352512
+        print(discrete_val)
+        return np.abs(discrete_val - reference_value), xlocs[1] - xlocs[0]
+
+    assert_expected_order(error_eval, [20.0, 40.0, 80.0])
 
 
 if __name__ == "__main__":

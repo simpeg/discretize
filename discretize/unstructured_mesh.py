@@ -520,6 +520,47 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
             )
         return self.__get_inner_product("E", model, invert_model)
 
+    def get_edge_inner_product_surface(  # NOQA D102
+        self, model=None, invert_model=False, invert_matrix=False
+    ):
+        # Documentation inherited from discretize.base.BaseMesh
+        dim = self.dim
+        if dim == 2:
+            return self.get_face_inner_product_surface(
+                model=model, invert_model=invert_model, invert_matrix=invert_matrix
+            )
+
+        if invert_matrix:
+            raise NotImplementedError(
+                "The inverse of the inner product matrix with a tetrahedral mesh is not supported."
+            )
+
+        # Edge inner product surface projection matrices
+        n_faces = self.n_faces
+        face_areas = self.face_areas
+
+        Ps = self._get_edge_surf_int_proj_mats(with_area=False)
+
+        if model is None:
+            Mu = sp.diags(np.tile(face_areas, dim))  # Number of edges per face
+        else:
+            if invert_model:
+                model = 1.0 / model
+
+            if (model.size == 1) | (model.size == n_faces):
+                Mu = sp.diags(
+                    np.tile(model * face_areas, dim)
+                )  # Number of edges per face
+            else:
+                raise ValueError(
+                    "Unrecognized size of model vector.",
+                    "Must be scalar or have length equal to total number of faces.",
+                )
+
+        A = np.sum([P.T @ Mu @ P for P in Ps])
+
+        return A
+
     def __get_inner_product_deriv_func(self, i_type, model):
         Ps, _ = self.__get_inner_product_projection_matrices(i_type)
         dim = self.dim
@@ -611,6 +652,68 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
             raise NotImplementedError("Inverted matrix derivatives are not supported")
         return self.__get_inner_product_deriv_func("E", model)
 
+    def get_edge_inner_product_surface_deriv(  # NOQA D102
+        self,
+        model,
+        invert_model=False,
+        invert_matrix=False,
+    ):
+        # Documentation inherited from discretize.base.BaseMesh
+        dim = self.dim
+        if dim == 2:
+            return super().get_face_inner_product_surface_deriv(
+                model=model, invert_model=invert_model, invert_matrix=invert_matrix
+            )
+
+        if invert_model:
+            raise NotImplementedError(
+                "Inverted model derivatives are not supported here"
+            )
+        if invert_matrix:
+            raise NotImplementedError(
+                "The inverse of the inner product matrix with a tetrahedral mesh is not supported."
+            )
+        model = np.asarray(model)
+        # Edge inner product surface projection matrices
+        n_faces = self.n_faces
+        n_edges = self.n_edges
+        face_areas = self.face_areas
+
+        Ps = self._get_edge_surf_int_proj_mats(with_area=False)
+        area = sp.diags(np.tile(np.sqrt(face_areas), dim))
+        Ps = list([area @ P for P in Ps])
+
+        if model.size == 1:
+
+            def func(v):
+                dMdm = spzeros(n_edges, 1)
+                for P in Ps:
+                    dMdm = dMdm + sp.csr_matrix(
+                        (P.T @ (P @ v), (range(n_edges), np.zeros(n_edges))),
+                        shape=(n_edges, 1),
+                    )
+                return dMdm
+
+        elif model.size == n_faces:
+            col_inds = np.tile(np.arange(n_faces), dim)
+            ind_ptr = np.arange(n_faces * dim + 1)
+
+            def func(v):
+                dMdm = spzeros(n_edges, n_faces)
+                for P in Ps:
+                    ys = P @ v
+                    dMdm = dMdm + P.T @ sp.csr_matrix(
+                        (ys, col_inds, ind_ptr), shape=(n_faces * dim, n_faces)
+                    )
+                return dMdm
+
+        else:
+            raise ValueError(
+                "Unrecognized size of model vector.",
+                "Must be scalar or have length equal to total number of faces.",
+            )
+        return func
+
     def _get_edge_surf_int_proj_mats(self, only_boundary=False, with_area=True):
         """Return the projection operators for integrating edges on each face.
 
@@ -668,10 +771,13 @@ class SimplexMesh(BaseMesh, SimplexMeshIO, InterfaceMixins):
             edge_dirs = self.edge_tangents[node_edges]
             t_for = np.concatenate((edge_dirs, face_normals[:, None, :]), axis=1)
             t_inv = invert_blocks(t_for)
-            t_inv = t_inv[:, :, :-1] / 3  # n_edges_per_thing
+            t_inv = t_inv[:, :, :-1]
 
             if with_area:
                 t_inv *= face_areas[:, None, None]
+                t_inv /= 3  # n_edges_per_thing
+            else:
+                t_inv /= np.sqrt(3)  # sqrt n_edges_per_thing
 
             T = C2F @ sp.csr_matrix(
                 (t_inv.reshape(-1), T_col_inds, T_ind_ptr),
