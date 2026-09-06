@@ -67,7 +67,7 @@ doc = [
     "pooch",
     "discretize[all]",
 ]
-test = ["pytest", "pytest-cov", "sympy", "discretize[doc,all]"]
+test = ["pytest", "pytest-cov", "sympy"]
 # when changing these, make sure to keep it consistent with .pre-commit-config.
 style = [
     "black==26.5.1",

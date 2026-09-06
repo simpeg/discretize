@@ -4,12 +4,11 @@ jobs:
     pool:
       vmImage: ubuntu-latest
     steps:
-      - task: UsePythonVersion@0
-        inputs:
-          versionSpec: "3.13"
-      - bash: pip install pyyaml
-        displayName: "Install dependencies to run the checks"
-      - script: python .ci/check_version_sync.py
+      - bash: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "##vso[task.prependpath]$HOME/.local/bin"
+        displayName: Install uv
+      - bash: uv run --no-project --with pyyaml -- python .ci/check_version_sync.py
         displayName: "Check versions"
 
   - job:
@@ -17,12 +16,13 @@ jobs:
     pool:
       vmImage: ubuntu-latest
     steps:
-      - task: UsePythonVersion@0
-        inputs:
-          versionSpec: "3.13"
+      - bash: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "##vso[task.prependpath]$HOME/.local/bin"
+        displayName: Install uv
       - bash: .ci/install_style.sh
         displayName: "Install dependencies to run the checks"
-      - script: black --check .
+      - bash: uv run --no-sync -- black --check .
         displayName: "Run black"
 
   - job:
@@ -30,10 +30,11 @@ jobs:
     pool:
       vmImage: ubuntu-latest
     steps:
-      - task: UsePythonVersion@0
-        inputs:
-          versionSpec: "3.13"
+      - bash: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "##vso[task.prependpath]$HOME/.local/bin"
+        displayName: Install uv
       - bash: .ci/install_style.sh
         displayName: "Install dependencies to run the checks"
-      - script: flake8
+      - bash: uv run --no-sync -- flake8
         displayName: "Run flake8"

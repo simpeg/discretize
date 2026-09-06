@@ -14,39 +14,50 @@ if [[ "$is_azure" == "true" ]]; then
   fi
 fi
 
-if [[ "$is_bare" == "true" ]]; then
-  cp .ci/environment_test_bare.yml environment_test_with_pyversion.yml
-elif [[ "$do_doc" == "true" ]]; then
-  cp .ci/environment_docs.yml environment_test_with_pyversion.yml
-else
-  cp .ci/environment_test.yml environment_test_with_pyversion.yml
-fi
-
+# resolve python spec: freethreaded uses a "t" suffix; is_rc is informational
+# here -- PYTHON_VERSION for the rc matrix job is itself an exact rc
+# specifier (e.g. "3.15.0rc2") set in test.yml, since uv (unlike
+# conda-forge's python_rc label) needs an exact pin rather than a
+# "latest rc" moving target.
+py_spec="$PYTHON_VERSION"
 if [[ "$is_free_threaded" == "true" ]]; then
-  echo "  - python-freethreading="$PYTHON_VERSION >> environment_test_with_pyversion.yml
-else
-  echo "  - python="$PYTHON_VERSION >> environment_test_with_pyversion.yml
+  py_spec="${py_spec}t"
 fi
 
-if [[ "$is_rc" == "true" ]]; then
-  sed -i '/^channels:/a\  - conda-forge/label/python_rc' environment_test_with_pyversion.yml
+if [[ "$is_bare" == "true" ]]; then
+  extra_flags="--extra test --extra build"
+elif [[ "$do_doc" == "true" ]]; then
+  extra_flags="--extra test --extra doc --extra build"
+else
+  extra_flags="--extra test --extra all --extra build"
 fi
-conda env create --file environment_test_with_pyversion.yml
-rm environment_test_with_pyversion.yml
+
+# Resolve+install the selected extras only, then do one explicit editable
+# build of discretize below. Must stay editable (a plain install is shadowed
+# by the source tree when pytest runs from the repo root) and must stay a
+# two-step install with --no-build-isolation below (a single-call install
+# builds in an ephemeral env that breaks the editable rebuild-on-import
+# check once it's cleaned up). See dev-prototypes/uv-ci-migration-notes.md.
+# --config-settings must match exactly between both calls, or meson's
+# --reconfigure of the shared build dir fails on the second call.
+uv sync --python "$py_spec" --no-install-project $extra_flags \
+  --config-settings=setup-args="--vsenv"
+
+if [[ -f .venv/bin/python ]]; then
+  VENV_PY=.venv/bin/python
+else
+  VENV_PY=.venv/Scripts/python.exe
+fi
+
+uv pip install --python "$VENV_PY" --no-build-isolation --editable . \
+  --config-settings=setup-args="--vsenv"
 
 if [[ "$is_azure" == "true" ]]; then
-  source activate discretize-test
-  pip install pytest-azurepipelines
-else
-  conda activate discretize-test
+  uv pip install --python "$VENV_PY" pytest-azurepipelines
 fi
 
-# The --vsenv config setting will prefer msvc compilers on windows.
-# but will do nothing on mac and linux.
-pip install --no-build-isolation --editable . --config-settings=setup-args="--vsenv"
-
-echo "Conda Environment:"
-conda list
+echo "Installed packages:"
+uv pip list --python "$VENV_PY"
 
 echo "Installed discretize version:"
-python -c "import discretize; print(discretize.__version__)"
+"$VENV_PY" -c "import discretize; print(discretize.__version__)"

@@ -68,17 +68,10 @@ jobs:
       varOS: $(Agent.OS)
       ARCH: $(Agent.OSArchitecture)
     steps:
-      - bash: .ci/azure/setup_miniconda_macos.sh
-        displayName: Install miniconda on mac
-        condition: eq(variables.varOS, 'Darwin')
-
-      - bash: echo "##vso[task.prependpath]$CONDA/bin"
-        displayName: Add conda to PATH
-        condition: ne(variables.varOS, 'Windows_NT')
-
-      - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
-        displayName: Add conda to PATH
-        condition: eq(variables.varOS, 'Windows_NT')
+      - bash: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "##vso[task.prependpath]$HOME/.local/bin"
+        displayName: Install uv
 
       - bash: .ci/azure/setup_env.sh
         displayName: Setup discretize environment
@@ -93,27 +86,28 @@ jobs:
         displayName: "Upload coverage to codecov.io"
         condition: variables.coverage
 
-  # Python 3.15 is still pre-release (rc). This job pulls from conda-forge's
-  # python_rc label via PYTHON_RELEASE_CANDIDATE and is allowed to fail so
-  # upstream rc package gaps don't block unrelated PRs. Merge it into the
-  # main matrix above once 3.15 goes final and stabilizes.
+  # Python 3.15 is still pre-release (rc). This job pulls the exact rc build
+  # via uv/python-build-standalone and is allowed to fail so upstream package
+  # gaps don't block unrelated PRs. Merge it into the main matrix above once
+  # 3.15 goes final and stabilizes. Bump python.version by hand as new rcs
+  # are cut (rc2 -> rc3 -> final).
   - job:
     continueOnError: true
     strategy:
       matrix:
         linux-Python315:
           image: ubuntu-latest
-          python.version: "3.15"
+          python.version: "3.15.0rc2"
           environ.bare: True
           python.release_candidate: True
         osx-Python315:
           image: macOS-latest
-          python.version: "3.15"
+          python.version: "3.15.0rc2"
           environ.bare: True
           python.release_candidate: True
         win-Python315:
           image: windows-latest
-          python.version: "3.15"
+          python.version: "3.15.0rc2"
           environ.bare: True
           python.release_candidate: True
     displayName: "${{ variables.image }} ${{ variables.python.version }} (rc)"
@@ -123,17 +117,10 @@ jobs:
       varOS: $(Agent.OS)
       ARCH: $(Agent.OSArchitecture)
     steps:
-      - bash: .ci/azure/setup_miniconda_macos.sh
-        displayName: Install miniconda on mac
-        condition: eq(variables.varOS, 'Darwin')
-
-      - bash: echo "##vso[task.prependpath]$CONDA/bin"
-        displayName: Add conda to PATH
-        condition: ne(variables.varOS, 'Windows_NT')
-
-      - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
-        displayName: Add conda to PATH
-        condition: eq(variables.varOS, 'Windows_NT')
+      - bash: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "##vso[task.prependpath]$HOME/.local/bin"
+        displayName: Install uv
 
       - bash: .ci/azure/setup_env.sh
         displayName: Setup discretize environment

@@ -12,20 +12,18 @@ jobs:
       - bash: git fetch --tags
         displayName: Fetch tags
 
-      - bash: echo "##vso[task.prependpath]$CONDA/bin"
-        displayName: Add conda to PATH
+      - bash: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "##vso[task.prependpath]$HOME/.local/bin"
+        displayName: Install uv
 
       - bash: .ci/azure/setup_env.sh
         displayName: Setup discretize environment
 
-      - bash: |
-          source activate discretize-test
-          make -C docs html
+      - bash: uv run --no-sync -- make -C docs html
         displayName: "Building HTML"
 
-      - bash: |
-          source activate discretize-test
-          make -C docs linkcheck
+      - bash: uv run --no-sync -- make -C docs linkcheck
         displayName: "Checking Links"
 
       - task: PublishPipelineArtifact@1
