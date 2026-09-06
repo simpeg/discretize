@@ -32,32 +32,26 @@ else
   extra_flags="--extra test --extra all --extra build"
 fi
 
-# Resolve+install the selected extras only, then do one explicit editable
-# build of discretize below. Must stay editable (a plain install is shadowed
-# by the source tree when pytest runs from the repo root) and must stay a
-# two-step install with --no-build-isolation below (a single-call install
-# builds in an ephemeral env that breaks the editable rebuild-on-import
-# check once it's cleaned up). See dev-prototypes/uv-ci-migration-notes.md.
-# --config-settings must match exactly between both calls, or meson's
-# --reconfigure of the shared build dir fails on the second call.
-uv sync --python "$py_spec" --no-install-project $extra_flags \
+if [[ "$is_azure" == "true" ]]; then
+  extra_flags="$extra_flags --extra azure"
+fi
+
+# pytest is ran with its import mode set to importlib from pyproject.toml's
+# [tool.pytest.ini_options], so we do not need an editable install here.
+uv sync --python "$py_spec" --no-editable $extra_flags \
   --config-settings=setup-args="--vsenv"
 
 if [[ -f .venv/bin/python ]]; then
-  VENV_PY=.venv/bin/python
+  VENV_PY="$(pwd)/.venv/bin/python"
 else
-  VENV_PY=.venv/Scripts/python.exe
-fi
-
-uv pip install --python "$VENV_PY" --no-build-isolation --editable . \
-  --config-settings=setup-args="--vsenv"
-
-if [[ "$is_azure" == "true" ]]; then
-  uv pip install --python "$VENV_PY" pytest-azurepipelines
+  VENV_PY="$(pwd)/.venv/Scripts/python.exe"
 fi
 
 echo "Installed packages:"
 uv pip list --python "$VENV_PY"
 
 echo "Installed discretize version:"
-"$VENV_PY" -c "import discretize; print(discretize.__version__)"
+# run from outside the repo root, so this doesn't hit the same
+# discretize/-shadows-the-installed-package issue --import-mode=importlib
+# fixes for pytest specifically (plain `python -c` has no such flag).
+(cd / && "$VENV_PY" -c "import discretize; print(discretize.__version__)")

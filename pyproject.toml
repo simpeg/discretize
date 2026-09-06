@@ -87,6 +87,9 @@ build = [
     "cython>=3.1.0",
     "setuptools_scm",
 ]
+azure = [
+    "pytest-azurepipelines>=1.0.5",
+]
 
 [project.urls]
 Homepage = 'https://simpeg.xyz'
@@ -108,6 +111,13 @@ test-command = 'python -c "import discretize; print(discretize.__version__)"'
 # use the visual studio compilers
 [tool.cibuildwheel.windows.config-settings]
 setup-args = ['--vsenv']
+
+[tool.pytest.ini_options]
+# avoids discretize/ (a sibling of tests/) shadowing an installed, compiled
+# discretize when pytest is invoked from the repo root -- matters most for
+# non-editable installs, where the default "prepend" import mode can resolve
+# the uncompiled source tree ahead of the real (site-packages) package.
+addopts = "--import-mode=importlib"
 
 [tool.coverage.run]
 branch = true
