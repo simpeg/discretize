@@ -17,7 +17,6 @@ jobs:
           coverage: True
         linux-Python314:
           image: ubuntu-latest
-          environ.bare: True
           python.version: "3.14"
         linux-Python314t:
           image: ubuntu-latest
@@ -33,11 +32,11 @@ jobs:
         osx-Python313t:
           image: macOS-latest
           python.version: "3.13"
+          environ.bare: True
           python.freethreading: True
         osx-Python314:
           image: macOS-latest
           python.version: "3.14"
-          environ.bare: True
         osx-Python314t:
           image: macOS-latest
           python.version: "3.14"
@@ -56,7 +55,6 @@ jobs:
           python.freethreading: True
         win-Python314:
           image: windows-latest
-          environ.bare: True
           python.version: "3.14"
         win-Python314t:
           image: windows-latest
