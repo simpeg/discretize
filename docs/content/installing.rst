@@ -30,8 +30,8 @@ Dependencies
 
 ``discretize``'s runtime requirements are:
 
-- `numpy <http://www.numpy.org>`_ 1.22.4 (or greater)
-- `scipy <https://docs.scipy.org/doc/scipy/reference>`_ 1.8 (or greater)
+- `numpy <http://www.numpy.org>`_ 1.26.0 (or greater)
+- `scipy <https://docs.scipy.org/doc/scipy/reference>`_ 1.12 (or greater)
 
 Additional functionality is provided when the following optional packages
 are installed:
