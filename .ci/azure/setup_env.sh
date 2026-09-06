@@ -14,14 +14,17 @@ if [[ "$is_azure" == "true" ]]; then
   fi
 fi
 
-if [[ "$is_free_threaded" == "true" || "$is_bare" == "true" ]]; then
+if [[ "$is_bare" == "true" ]]; then
   cp .ci/environment_test_bare.yml environment_test_with_pyversion.yml
-  echo "  - python-freethreading="$PYTHON_VERSION >> environment_test_with_pyversion.yml
 elif [[ "$do_doc" == "true" ]]; then
   cp .ci/environment_docs.yml environment_test_with_pyversion.yml
-  echo "  - python="$PYTHON_VERSION >> environment_test_with_pyversion.yml
 else
   cp .ci/environment_test.yml environment_test_with_pyversion.yml
+fi
+
+if [[ "$is_free_threaded" == "true" ]]; then
+  echo "  - python-freethreading="$PYTHON_VERSION >> environment_test_with_pyversion.yml
+else
   echo "  - python="$PYTHON_VERSION >> environment_test_with_pyversion.yml
 fi
 

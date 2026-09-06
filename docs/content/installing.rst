@@ -6,7 +6,7 @@ Installing
 Which Python?
 =============
 
-Currently, ``discretize`` is tested on python 3.10 through 3.12. We recommend that you
+Currently, ``discretize`` is tested on python 3.12 through 3.14. We recommend that you
 use the latest version of Python available on `Anaconda <https://www.anaconda.com/download>`_.
 
 Installing Python
@@ -30,8 +30,8 @@ Dependencies
 
 ``discretize``'s runtime requirements are:
 
-- `numpy <http://www.numpy.org>`_ 1.22.4 (or greater)
-- `scipy <https://docs.scipy.org/doc/scipy/reference>`_ 1.8 (or greater)
+- `numpy <http://www.numpy.org>`_ 1.26.0 (or greater)
+- `scipy <https://docs.scipy.org/doc/scipy/reference>`_ 1.12 (or greater)
 
 Additional functionality is provided when the following optional packages
 are installed:
