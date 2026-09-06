@@ -17,7 +17,7 @@ name = 'discretize'
 dynamic = ["version"]
 description = 'Discretization tools for finite volume and inverse problems'
 readme = 'README.rst'
-requires-python = '>=3.11'
+requires-python = '>=3.12'
 authors = [{ name = 'SimPEG developers', email = 'rowanc1@gmail.com' }]
 keywords = ['finite volume', 'discretization', 'pde', 'ode']
 
@@ -96,7 +96,7 @@ Repository = 'http://github.com/simpeg/discretize.git'
 [tool.setuptools_scm]
 
 [tool.cibuildwheel]
-build = "cp311* cp312* cp313* cp314*"
+build = "cp312* cp313* cp314*"
 skip = "*_ppc64le *_i686 *_s390x *-win32"
 # skip specialty linux and windows 32bit
 build-verbosity = 3
@@ -140,7 +140,7 @@ exclude_also = [
 
 [tool.black]
 required-version = '26.5.1'
-target-version = ['py311', 'py312', 'py313', 'py314']
+target-version = ['py312', 'py313', 'py314']
 
 [tool.flake8]
 extend-ignore = [
