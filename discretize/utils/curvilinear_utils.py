@@ -2,7 +2,6 @@
 
 import numpy as np
 from discretize.utils.matrix_utils import mkvc, ndgrid, sub2ind
-from discretize.utils.code_utils import deprecate_function
 
 
 def example_curvilinear_grid(nC, exType):
@@ -300,7 +299,7 @@ def index_cube(nodes, grid_shape, n=None):
     return out
 
 
-def face_info(xyz, A, B, C, D, average=True, normalize_normals=True, **kwargs):
+def face_info(xyz, A, B, C, D, average=True, normalize_normals=True):
     r"""Return normal surface vectors and areas for a given set of faces.
 
     Let *xyz* be an (n, 3) array denoting a set of vertex locations.
@@ -448,11 +447,6 @@ def face_info(xyz, A, B, C, D, average=True, normalize_normals=True, **kwargs):
     ... )
     >>> plt.show()
     """
-    if "normalizeNormals" in kwargs:
-        raise TypeError(
-            "The normalizeNormals keyword argument has been removed, please use normalize_normals. "
-            "This will be removed in discretize 1.0.0",
-        )
     if not isinstance(average, bool):
         raise TypeError("average must be a boolean")
     if not isinstance(normalize_normals, bool):
@@ -503,20 +497,3 @@ def face_info(xyz, A, B, C, D, average=True, normalize_normals=True, **kwargs):
     area = (length(nA) + length(nB) + length(nC) + length(nD)) / 4
 
     return N, area
-
-
-exampleLrmGrid = deprecate_function(
-    example_curvilinear_grid,
-    "exampleLrmGrid",
-    removal_version="1.0.0",
-    error=True,
-)
-volTetra = deprecate_function(
-    volume_tetrahedron, "volTetra", removal_version="1.0.0", error=True
-)
-indexCube = deprecate_function(
-    index_cube, "indexCube", removal_version="1.0.0", error=True
-)
-faceInfo = deprecate_function(
-    face_info, "faceInfo", removal_version="1.0.0", error=True
-)

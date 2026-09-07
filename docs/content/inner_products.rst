@@ -190,7 +190,7 @@ Which is nice and easy to invert if necessary, however, in the fully anisotropic
     import discretize
     import numpy as np
     import matplotlib.pyplot as plt
-    mesh = discretize.TensorMesh([10,50,3])
+    mesh = discretize.TensorMesh([10,50,3])R
     m1 = np.random.rand(mesh.nC)
     m2 = np.random.rand(mesh.nC,3)
     m3 = np.random.rand(mesh.nC,6)

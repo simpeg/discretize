@@ -37,7 +37,7 @@ a tensor or tree mesh.
 """
 
 from discretize.tensor_mesh import TensorMesh
-from discretize.cylindrical_mesh import CylMesh, CylindricalMesh
+from discretize.cylindrical_mesh import CylindricalMesh
 from discretize.curvilinear_mesh import CurvilinearMesh
 from discretize.unstructured_mesh import SimplexMesh
 from discretize.utils.io_utils import load_mesh

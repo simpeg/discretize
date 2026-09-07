@@ -3,7 +3,6 @@
 import numpy as np
 import warnings
 from discretize.utils import mkvc, ndgrid
-from discretize.utils.code_utils import deprecate_method
 
 import discretize
 
@@ -162,14 +161,6 @@ class InterfaceMPL(object):
                 )
             )
 
-        if "showIt" in kwargs:
-            show_it = kwargs.pop("showIt")
-            warnings.warn(
-                "showIt has been deprecated, please use show_it",
-                FutureWarning,
-                stacklevel=2,
-            )
-
         if ax is not None:
             ax_test = ax
             if not isinstance(ax, (list, tuple, np.ndarray)):
@@ -301,42 +292,6 @@ class InterfaceMPL(object):
                 "Mesh type `{}` does not have a plot_image implementation.".format(
                     type(self).__name__
                 )
-            )
-
-        if "pcolorOpts" in kwargs:
-            pcolor_opts = kwargs.pop("pcolorOpts")
-            warnings.warn(
-                "pcolorOpts has been deprecated, please use pcolor_opts",
-                FutureWarning,
-                stacklevel=2,
-            )
-        if "streamOpts" in kwargs:
-            stream_opts = kwargs.pop("streamOpts")
-            warnings.warn(
-                "streamOpts has been deprecated, please use stream_opts",
-                FutureWarning,
-                stacklevel=2,
-            )
-        if "gridOpts" in kwargs:
-            grid_opts = kwargs.pop("gridOpts")
-            warnings.warn(
-                "gridOpts has been deprecated, please use grid_opts",
-                FutureWarning,
-                stacklevel=2,
-            )
-        if "showIt" in kwargs:
-            show_it = kwargs.pop("showIt")
-            warnings.warn(
-                "showIt has been deprecated, please use show_it",
-                FutureWarning,
-                stacklevel=2,
-            )
-        if "vType" in kwargs:
-            v_type = kwargs.pop("vType")
-            warnings.warn(
-                "vType has been deprecated, please use v_type",
-                FutureWarning,
-                stacklevel=2,
             )
 
         # Some Error checking and common defaults
@@ -547,41 +502,6 @@ class InterfaceMPL(object):
             )
 
         normal = normal.upper()
-        if "pcolorOpts" in kwargs:
-            pcolor_opts = kwargs["pcolorOpts"]
-            warnings.warn(
-                "pcolorOpts has been deprecated, please use pcolor_opts",
-                FutureWarning,
-                stacklevel=2,
-            )
-        if "streamOpts" in kwargs:
-            stream_opts = kwargs["streamOpts"]
-            warnings.warn(
-                "streamOpts has been deprecated, please use stream_opts",
-                FutureWarning,
-                stacklevel=2,
-            )
-        if "gridOpts" in kwargs:
-            grid_opts = kwargs["gridOpts"]
-            warnings.warn(
-                "gridOpts has been deprecated, please use grid_opts",
-                FutureWarning,
-                stacklevel=2,
-            )
-        if "showIt" in kwargs:
-            show_it = kwargs["showIt"]
-            warnings.warn(
-                "showIt has been deprecated, please use show_it",
-                FutureWarning,
-                stacklevel=2,
-            )
-        if "vType" in kwargs:
-            v_type = kwargs["vType"]
-            warnings.warn(
-                "vType has been deprecated, please use v_type",
-                FutureWarning,
-                stacklevel=2,
-            )
         if pcolor_opts is None:
             pcolor_opts = {}
         if stream_opts is None:
@@ -760,14 +680,6 @@ class InterfaceMPL(object):
             fig = plt.figure()
         else:
             fig.clf()
-
-        if "pcolorOpts" in kwargs:
-            pcolor_opts = kwargs["pcolorOpts"]
-            warnings.warn(
-                "pcolorOpts has been deprecated, please use pcolor_opts",
-                FutureWarning,
-                stacklevel=2,
-            )
 
         # Populate figure
         tracker = Slicer(
@@ -1036,14 +948,6 @@ class InterfaceMPL(object):
         stream_threshold=None,
         **kwargs,
     ):
-        if "annotationColor" in kwargs:
-            annotation_color = kwargs.pop("annotationColor")
-            warnings.warn(
-                "annotationColor has been deprecated, please use annotation_color",
-                FutureWarning,
-                stacklevel=2,
-            )
-
         if self.dim == 1:
             if v_type == "CC":
                 ph = ax.plot(
@@ -2350,16 +2254,6 @@ class InterfaceMPL(object):
 
         return out
 
-    plotGrid = deprecate_method(
-        "plot_grid", "plotGrid", removal_version="1.0.0", future_warn=True
-    )
-    plotImage = deprecate_method(
-        "plot_image", "plotImage", removal_version="1.0.0", future_warn=True
-    )
-    plotSlice = deprecate_method(
-        "plot_slice", "plotSlice", removal_version="1.0.0", future_warn=True
-    )
-
 
 class Slicer(object):
     """Plot slices of a 3D volume, interactively (scroll wheel).
@@ -2447,21 +2341,11 @@ class Slicer(object):
         aspect="auto",
         grid=(2, 2, 1),
         pcolor_opts=None,
-        **kwargs,
     ):
         """Initialize interactive figure."""
         _, plt = load_matplotlib()
         from matplotlib.widgets import Slider  # Lazy loaded
         from matplotlib.colors import Normalize
-
-        # 0. Some checks, not very extensive
-        if "pcolorOpts" in kwargs:
-            pcolor_opts = kwargs["pcolorOpts"]
-            warnings.warn(
-                "pcolorOpts has been deprecated, please use pcolor_opts",
-                FutureWarning,
-                stacklevel=2,
-            )
 
         # Add pcolor_opts to self
         self.pc_props = pcolor_opts if pcolor_opts is not None else {}

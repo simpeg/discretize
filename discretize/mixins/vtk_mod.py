@@ -625,22 +625,6 @@ class InterfaceVTK(object):
             )
         return cvtd
 
-    def toVTK(mesh, models=None):
-        """Convert mesh (and models) to corresponding VTK or PyVista data object.
-
-        *toVTK* has been deprecated and replaced by *to_vtk*.
-
-        See Also
-        --------
-        to_vtk
-        """
-        warnings.warn(
-            "Deprecation Warning: `toVTK` is deprecated, use `to_vtk` instead",
-            category=FutureWarning,
-            stacklevel=2,
-        )
-        return InterfaceVTK.to_vtk(mesh, models=models)
-
     @staticmethod
     def _save_unstructured_grid(file_name, vtkUnstructGrid, directory=""):
         """Save an unstructured grid to a vtk file.
@@ -787,24 +771,6 @@ class InterfaceVTK(object):
             raise RuntimeError("VTK data type `%s` is not currently supported." % key)
         return write(file_name, vtkObj, directory=directory)
 
-    def writeVTK(mesh, file_name, models=None, directory=""):
-        """Convert mesh (and models) to corresponding VTK or PyVista data object then writes to file.
-
-        *writeVTK* has been deprecated and replaced by *write_vtk*
-
-        See Also
-        --------
-        write_vtk
-        """
-        warnings.warn(
-            "Deprecation Warning: `writeVTK` is deprecated, use `write_vtk` instead",
-            category=FutureWarning,
-            stacklevel=2,
-        )
-        return InterfaceVTK.write_vtk(
-            mesh, file_name, models=models, directory=directory
-        )
-
 
 class InterfaceTensorread_vtk(object):
     """Mixin class for converting vtk to TensorMesh.
@@ -898,25 +864,6 @@ class InterfaceTensorread_vtk(object):
         vtrReader.Update()
         vtrGrid = vtrReader.GetOutput()
         return TensorMesh.vtk_to_tensor_mesh(vtrGrid)
-
-    @classmethod
-    def readVTK(TensorMesh, file_name, directory=""):
-        """Read VTK rectilinear file (vtr or xml) and return a discretize tensor mesh (and models).
-
-        *readVTK* has been deprecated and replaced by *read_vtk*
-
-        See Also
-        --------
-        read_vtk
-        """
-        warnings.warn(
-            "Deprecation Warning: `readVTK` is deprecated, use `read_vtk` instead",
-            category=FutureWarning,
-            stacklevel=2,
-        )
-        return InterfaceTensorread_vtk.read_vtk(
-            TensorMesh, file_name, directory=directory
-        )
 
 
 class InterfaceSimplexReadVTK:

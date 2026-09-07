@@ -3,7 +3,6 @@
 import numpy as np
 from discretize.utils import mkvc, Identity
 from discretize.base.base_mesh import BaseMesh
-from discretize.utils.code_utils import deprecate_method
 
 
 class BaseRegularMesh(BaseMesh):
@@ -56,11 +55,6 @@ class BaseRegularMesh(BaseMesh):
             shape_cells = kwargs.pop("n")
         if "x0" in kwargs:
             origin = kwargs.pop("x0")
-        axis_u = kwargs.pop("axis_u", None)
-        axis_v = kwargs.pop("axis_v", None)
-        axis_w = kwargs.pop("axis_w", None)
-        if axis_u is not None and axis_v is not None and axis_w is not None:
-            orientation = np.array([axis_u, axis_v, axis_w])
 
         shape_cells = tuple((int(val) for val in shape_cells))
         self._shape_cells = shape_cells
@@ -516,66 +510,6 @@ class BaseRegularMesh(BaseMesh):
         """
         return self.orientation  # np.array([self.axis_u, self.axis_v, self.axis_w])
 
-    @property
-    def axis_u(self):
-        """Orientation of the first axis.
-
-        .. deprecated:: 0.7.0
-          `axis_u` will be removed in discretize 1.0.0. This functionality was replaced
-          by the :py:attr:`~.BaseRegularMesh.orientation`.
-        """
-        raise NotImplementedError(
-            "The axis_u property is rmoved, please access as self.orientation[0]. "
-            "This will be removed in discretize 1.0.0."
-        )
-
-    @axis_u.setter
-    def axis_u(self, value):
-        raise NotImplementedError(
-            "The axis_u property is removed, please access as self.orientation[0]. "
-            "This will be removed in discretize 1.0.0."
-        )
-
-    @property
-    def axis_v(self):
-        """Orientation of the second axis.
-
-        .. deprecated:: 0.7.0
-          `axis_v` will be removed in discretize 1.0.0. This functionality was replaced
-          by the :py:attr:`~.BaseRegularMesh.orientation`.
-        """
-        raise NotImplementedError(
-            "The axis_v property is removed, please access as self.orientation[1]. "
-            "This will be removed in discretize 1.0.0."
-        )
-
-    @axis_v.setter
-    def axis_v(self, value):
-        raise NotImplementedError(
-            "The axis_v property is removed, please access as self.orientation[1]. "
-            "This will be removed in discretize 1.0.0."
-        )
-
-    @property
-    def axis_w(self):
-        """Orientation of the third axis.
-
-        .. deprecated:: 0.7.0
-          `axis_w` will be removed in discretize 1.0.0. This functionality was replaced
-          by the :py:attr:`~.BaseRegularMesh.orientation`.
-        """
-        raise NotImplementedError(
-            "The axis_w property is removed, please access as self.orientation[2]. "
-            "This will be removed in discretize 1.0.0."
-        )
-
-    @axis_w.setter
-    def axis_w(self, value):
-        raise NotImplementedError(
-            "The axis_w property is removed, please access as self.orientation[2]. "
-            "This will be removed in discretize 1.0.0."
-        )
-
 
 class BaseRectangularMesh(BaseRegularMesh):
     """Base rectangular mesh class for the ``discretize`` package.
@@ -820,7 +754,6 @@ class BaseRectangularMesh(BaseRegularMesh):
         x_type="cell_centers",
         out_type="cell_centers",
         return_format="V",
-        **kwargs,
     ):
         """Reshape tensor quantities.
 
@@ -849,24 +782,6 @@ class BaseRectangularMesh(BaseRegularMesh):
             - *M:* return matrix (nD array) or a list of matrices
 
         """
-        if "xType" in kwargs:
-            raise TypeError(
-                "The xType keyword argument has been removed, please use x_type. "
-                "This will be removed in discretize 1.0.0"
-            )
-            x_type = kwargs["xType"]
-        if "outType" in kwargs:
-            raise TypeError(
-                "The outType keyword argument has been removed, please use out_type. "
-                "This will be removed in discretize 1.0.0",
-            )
-        if "format" in kwargs:
-            raise TypeError(
-                "The format keyword argument has been removed, please use return_format. "
-                "This will be removed in discretize 1.0.0",
-            )
-            return_format = kwargs["format"]
-
         x_type = self._parse_location_type(x_type)
         out_type = self._parse_location_type(out_type)
 
@@ -998,78 +913,3 @@ class BaseRectangularMesh(BaseRegularMesh):
             return out
         else:
             return switchKernal(x)
-
-    # DEPRECATED
-    r = deprecate_method("reshape", "r", removal_version="1.0.0", error=True)
-
-    @property
-    def nCx(self):
-        """Number of cells in the x direction.
-
-        `nCx` will be removed in discretize 1.0.0, it is replaced by
-        `mesh.shape_cells[0]` to reduce namespace clutter.
-        """
-        raise NotImplementedError(
-            "The nCx property is removed, please access as mesh.shape_cells[0]. "
-            "This message will be removed in discretize 1.0.0."
-        )
-
-    @property
-    def nCy(self):
-        """Number of cells in the y direction.
-
-        `nCy` will be removed in discretize 1.0.0, it is replaced by
-        `mesh.shape_cells[1]` to reduce namespace clutter.
-        """
-        raise NotImplementedError(
-            "The nCy property is removed, please access as mesh.shape_cells[1]. "
-            "This message will be removed in discretize 1.0.0."
-        )
-
-    @property
-    def nCz(self):
-        """Number of cells in the z direction.
-
-        `nCz` will be removed in discretize 1.0.0, it is replaced by
-        `mesh.shape_cells[2]` to reduce namespace clutter.
-        """
-        raise NotImplementedError(
-            "The nCz property is removed, please access as mesh.shape_cells[2]. "
-            "This message will be removed in discretize 1.0.0."
-        )
-
-    @property
-    def nNx(self):
-        """Number of nodes in the x-direction.
-
-        `nNx` will be removed in discretize 1.0.0, it is replaced by
-        `mesh.shape_nodes[0]` to reduce namespace clutter.
-        """
-        raise NotImplementedError(
-            "The nNx property is removed, please access as mesh.shape_nodes[0]. "
-            "This message will be removed in discretize 1.0.0."
-        )
-
-    @property
-    def nNy(self):
-        """Number of nodes in the y-direction.
-
-        `nNy` will be removed in discretize 1.0.0, it is replaced by
-        `mesh.shape_nodes[1]` to reduce namespace clutter.
-        """
-        raise NotImplementedError(
-            "The nNy property is removed, please access as mesh.shape_nodes[1]. "
-            "This message will be removed in discretize 1.0.0."
-        )
-
-    @property
-    def nNz(self):
-        """Number of nodes in the z-direction.
-
-        `nNz` will be removed in discretize 1.0.0, it is replaced by
-        `mesh.shape_nodes[2]` to reduce namespace clutter.
-        """
-        raise NotImplementedError(
-            "The nNz property is removed, please access as mesh.shape_nodes[2]. "
-            "This message will be removed in discretize 1.0.0."
-        )

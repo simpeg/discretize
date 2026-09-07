@@ -38,26 +38,8 @@ class InnerProducts(BaseMesh):
         invert_model=False,
         invert_matrix=False,
         do_fast=True,
-        **kwargs,
     ):
         # Inherited documentation from discretize.base.BaseMesh
-        if "invProp" in kwargs:
-            raise TypeError(
-                "The invProp keyword argument has been removed, please use invert_model. "
-                "This will be removed in discretize 1.0.0",
-            )
-        if "invMat" in kwargs:
-            raise TypeError(
-                "The invMat keyword argument has been removed, please use invert_matrix. "
-                "This will be removed in discretize 1.0.0",
-            )
-        if "doFast" in kwargs:
-            raise TypeError(
-                "The doFast keyword argument has been removed, please use do_fast. "
-                "This will be removed in discretize 1.0.0",
-            )
-            do_fast = kwargs["doFast"]
-
         return self._getInnerProduct(
             "F",
             model=model,
@@ -72,24 +54,8 @@ class InnerProducts(BaseMesh):
         invert_model=False,
         invert_matrix=False,
         do_fast=True,
-        **kwargs,
     ):
         # Inherited documentation from discretize.base.BaseMesh
-        if "invProp" in kwargs:
-            raise TypeError(
-                "The invProp keyword argument has been removed, please use invert_model. "
-                "This will be removed in discretize 1.0.0",
-            )
-        if "invMat" in kwargs:
-            raise TypeError(
-                "The invMat keyword argument has been removed, please use invert_matrix. "
-                "This will be removed in discretize 1.0.0",
-            )
-        if "doFast" in kwargs:
-            raise TypeError(
-                "The doFast keyword argument has been removed, please use do_fast. "
-                "This will be removed in discretize 1.0.0",
-            )
         return self._getInnerProduct(
             "E",
             model=model,
@@ -151,7 +117,6 @@ class InnerProducts(BaseMesh):
         invert_model=False,
         invert_matrix=False,
         do_fast=True,
-        **kwargs,
     ):
         """Get the inner product matrix.
 
@@ -173,21 +138,6 @@ class InnerProducts(BaseMesh):
         scipy.sparse.csr_matrix
             M, the inner product matrix (nE, nE)
         """
-        if "invProp" in kwargs:
-            raise TypeError(
-                "The invProp keyword argument has been removed, please use invert_model. "
-                "This will be removed in discretize 1.0.0",
-            )
-        if "invMat" in kwargs:
-            raise TypeError(
-                "The invMat keyword argument has been removed, please use invert_matrix. "
-                "This will be removed in discretize 1.0.0",
-            )
-        if "doFast" in kwargs:
-            raise TypeError(
-                "The doFast keyword argument has been removed, please use do_fast. "
-                "This will be removed in discretize 1.0.0",
-            )
         if projection_type not in ["F", "E"]:
             raise TypeError("projection_type must be 'F' for faces or 'E' for edges")
 
@@ -272,24 +222,9 @@ class InnerProducts(BaseMesh):
         return [V * proj(*locs[node][d - 1]) for node in nodes]
 
     def get_face_inner_product_deriv(  # NOQA D102
-        self, model, do_fast=True, invert_model=False, invert_matrix=False, **kwargs
+        self, model, do_fast=True, invert_model=False, invert_matrix=False
     ):
         # Inherited documentation from discretize.base.BaseMesh
-        if "invProp" in kwargs:
-            raise TypeError(
-                "The invProp keyword argument has been removed, please use invert_model. "
-                "This will be removed in discretize 1.0.0",
-            )
-        if "invMat" in kwargs:
-            raise TypeError(
-                "The invMat keyword argument has been removed, please use invert_matrix. "
-                "This will be removed in discretize 1.0.0",
-            )
-        if "doFast" in kwargs:
-            raise TypeError(
-                "The doFast keyword argument has been removed, please use do_fast. "
-                "This will be removed in discretize 1.0.0",
-            )
         return self._getInnerProductDeriv(
             model,
             "F",
@@ -299,24 +234,9 @@ class InnerProducts(BaseMesh):
         )
 
     def get_edge_inner_product_deriv(  # NOQA D102
-        self, model, do_fast=True, invert_model=False, invert_matrix=False, **kwargs
+        self, model, do_fast=True, invert_model=False, invert_matrix=False
     ):
         # Inherited documentation from discretize.base.BaseMesh
-        if "invProp" in kwargs:
-            raise TypeError(
-                "The invProp keyword argument has been removed, please use invert_model. "
-                "This will be removed in discretize 1.0.0",
-            )
-        if "invMat" in kwargs:
-            raise TypeError(
-                "The invMat keyword argument has been removed, please use invert_matrix. "
-                "This will be removed in discretize 1.0.0",
-            )
-        if "doFast" in kwargs:
-            raise TypeError(
-                "The doFast keyword argument has been removed, please use do_fast. "
-                "This will be removed in discretize 1.0.0",
-            )
         return self._getInnerProductDeriv(
             model,
             "E",
