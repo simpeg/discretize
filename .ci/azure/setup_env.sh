@@ -25,40 +25,53 @@ if [[ "$is_free_threaded" == "true" ]]; then
 fi
 
 if [[ "$is_bare" == "true" ]]; then
-  extra_flags="--extra test --extra build"
+  extras_csv="test,build"
 elif [[ "$do_doc" == "true" ]]; then
-  extra_flags="--extra test --extra doc --extra build"
+  extras_csv="test,doc,build"
 else
-  extra_flags="--extra test --extra all --extra build"
+  extras_csv="test,all,build"
 fi
 
-# numpy/scipy dropped cp313t wheels starting at 2.5.0/1.18.0 (cp314t is
-# still published); without this, uv resolves the latest version anyway and
-# falls back to a source build, which fails here (no OpenBLAS toolchain).
-# A temp constraints file (not a pyproject.toml extra) keeps this CI-only
-# workaround out of the project's own dependency declarations.
 if [[ "$is_free_threaded" == "true" && "$PYTHON_VERSION" == 3.13* ]]; then
+  # numpy/scipy dropped cp313t wheels starting at 2.5.0/1.18.0 (cp314t is
+  # still published); `uv sync` has no way to constrain package versions on
+  # its own (astral-sh/uv#12490 -- `--constraints`/`UV_CONSTRAINT` are
+  # silently ignored by `uv sync`), so this case uses `uv venv` + `uv pip
+  # install` instead, which does respect --constraints, in place of `uv
+  # sync` for this one case. A temp constraints file (not a pyproject.toml
+  # extra or dependency) keeps this CI-only workaround out of the project's
+  # own dependency declarations.
+  uv venv --python "$py_spec" .venv
+
+  if [[ -f .venv/bin/python ]]; then
+    VENV_PY="$(pwd)/.venv/bin/python"
+  else
+    VENV_PY="$(pwd)/.venv/Scripts/python.exe"
+  fi
+
   constraints_file=$(mktemp)
   printf 'numpy<2.5\nscipy<1.18\n' > "$constraints_file"
-  export UV_CONSTRAINT="$constraints_file"
-fi
 
-# pytest is ran with its import mode set to importlib from pyproject.toml's
-# [tool.pytest.ini_options], so we do not need an editable install here.
-# --no-build-package on these two turns any future wheel gap into a clear
-# resolution error instead of a silent, doomed-to-fail source build.
-uv sync --python "$py_spec" --no-editable $extra_flags \
-  --no-build-package numpy --no-build-package scipy \
-  --config-settings=setup-args="--vsenv"
+  uv pip install --python "$VENV_PY" ".[${extras_csv}]" \
+    --constraints "$constraints_file" \
+    --only-binary numpy --only-binary scipy \
+    --config-settings=setup-args="--vsenv"
 
-if [[ -n "${constraints_file:-}" ]]; then
   rm -f "$constraints_file"
-fi
-
-if [[ -f .venv/bin/python ]]; then
-  VENV_PY="$(pwd)/.venv/bin/python"
 else
-  VENV_PY="$(pwd)/.venv/Scripts/python.exe"
+  # pytest is ran with its import mode set to importlib from pyproject.toml's
+  # [tool.pytest.ini_options], so we do not need an editable install here.
+  # --no-build-package on these two turns any future wheel gap into a clear
+  # resolution error instead of a silent, doomed-to-fail source build.
+  uv sync --python "$py_spec" --no-editable --extra ${extras_csv//,/ --extra } \
+    --no-build-package numpy --no-build-package scipy \
+    --config-settings=setup-args="--vsenv"
+
+  if [[ -f .venv/bin/python ]]; then
+    VENV_PY="$(pwd)/.venv/bin/python"
+  else
+    VENV_PY="$(pwd)/.venv/Scripts/python.exe"
+  fi
 fi
 
 if [[ "$is_azure" == "true" ]]; then
