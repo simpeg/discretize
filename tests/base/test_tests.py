@@ -163,7 +163,10 @@ def test_expected_order_bad_test_type():
 @pytest.mark.skipif(not sys.platform.startswith("linux"), reason="Not Linux.")
 def test_import_time():
     # Relevant for the CLI: How long does it take to import?
-    cmd = ["time", "-f", "%U", "python", "-c", "import discretize"]
+    # -P (safe path) keeps the cwd out of sys.path, so this doesn't import an
+    # uncompiled discretize/ if it happens to be a sibling of the cwd (e.g.
+    # a non-editable install run from a source checkout).
+    cmd = ["time", "-f", "%U", "python", "-P", "-c", "import discretize"]
     # Run it twice, just in case.
     subprocess.run(cmd)
     subprocess.run(cmd)

@@ -67,7 +67,7 @@ doc = [
     "pooch",
     "discretize[all]",
 ]
-test = ["pytest", "pytest-cov", "sympy", "discretize[doc,all]"]
+test = ["pytest", "pytest-cov", "sympy"]
 # when changing these, make sure to keep it consistent with .pre-commit-config.
 style = [
     "black==26.5.1",
@@ -108,6 +108,13 @@ test-command = 'python -c "import discretize; print(discretize.__version__)"'
 # use the visual studio compilers
 [tool.cibuildwheel.windows.config-settings]
 setup-args = ['--vsenv']
+
+[tool.pytest.ini_options]
+# avoids discretize/ (a sibling of tests/) shadowing an installed, compiled
+# discretize when pytest is invoked from the repo root -- matters most for
+# non-editable installs, where the default "prepend" import mode can resolve
+# the uncompiled source tree ahead of the real (site-packages) package.
+addopts = "--import-mode=importlib"
 
 [tool.coverage.run]
 branch = true
