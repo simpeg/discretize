@@ -32,19 +32,37 @@ else
   extra_flags="--extra test --extra all --extra build"
 fi
 
-if [[ "$is_azure" == "true" ]]; then
-  extra_flags="$extra_flags --extra azure"
+# numpy/scipy dropped cp313t wheels starting at 2.5.0/1.18.0 (cp314t is
+# still published); without this, uv resolves the latest version anyway and
+# falls back to a source build, which fails here (no OpenBLAS toolchain).
+# A temp constraints file (not a pyproject.toml extra) keeps this CI-only
+# workaround out of the project's own dependency declarations.
+if [[ "$is_free_threaded" == "true" && "$PYTHON_VERSION" == 3.13* ]]; then
+  constraints_file=$(mktemp)
+  printf 'numpy<2.5\nscipy<1.18\n' > "$constraints_file"
+  export UV_CONSTRAINT="$constraints_file"
 fi
 
 # pytest is ran with its import mode set to importlib from pyproject.toml's
 # [tool.pytest.ini_options], so we do not need an editable install here.
+# --no-build-package on these two turns any future wheel gap into a clear
+# resolution error instead of a silent, doomed-to-fail source build.
 uv sync --python "$py_spec" --no-editable $extra_flags \
+  --no-build-package numpy --no-build-package scipy \
   --config-settings=setup-args="--vsenv"
+
+if [[ -n "${constraints_file:-}" ]]; then
+  rm -f "$constraints_file"
+fi
 
 if [[ -f .venv/bin/python ]]; then
   VENV_PY="$(pwd)/.venv/bin/python"
 else
   VENV_PY="$(pwd)/.venv/Scripts/python.exe"
+fi
+
+if [[ "$is_azure" == "true" ]]; then
+  uv pip install --python "$VENV_PY" pytest-azurepipelines
 fi
 
 echo "Installed packages:"

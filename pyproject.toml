@@ -87,9 +87,6 @@ build = [
     "cython>=3.1.0",
     "setuptools_scm",
 ]
-azure = [
-    "pytest-azurepipelines>=1.0.5",
-]
 
 [project.urls]
 Homepage = 'https://simpeg.xyz'
