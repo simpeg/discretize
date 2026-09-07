@@ -32,46 +32,20 @@ else
   extras_csv="test,all,build"
 fi
 
-if [[ "$is_free_threaded" == "true" && "$PYTHON_VERSION" == 3.13* ]]; then
-  # numpy/scipy dropped cp313t wheels starting at 2.5.0/1.18.0 (cp314t is
-  # still published); `uv sync` has no way to constrain package versions on
-  # its own (astral-sh/uv#12490 -- `--constraints`/`UV_CONSTRAINT` are
-  # silently ignored by `uv sync`), so this case uses `uv venv` + `uv pip
-  # install` instead, which does respect --constraints, in place of `uv
-  # sync` for this one case. A temp constraints file (not a pyproject.toml
-  # extra or dependency) keeps this CI-only workaround out of the project's
-  # own dependency declarations.
-  uv venv --python "$py_spec" .venv
+# pytest is ran with its import mode set to importlib from pyproject.toml's
+# [tool.pytest.ini_options], so we do not need an editable install here.
+# --no-build-package on these two turns a future wheel gap (numpy/scipy
+# dropped cp313t wheels at 2.5.0/1.18.0, hence no 3.13t testing -- see
+# dev-prototypes/uv-ci-migration-notes.md) into a clear resolution error
+# instead of a silent, doomed-to-fail source build.
+uv sync --python "$py_spec" --no-editable --extra ${extras_csv//,/ --extra } \
+  --no-build-package numpy --no-build-package scipy \
+  --config-settings=setup-args="--vsenv"
 
-  if [[ -f .venv/bin/python ]]; then
-    VENV_PY="$(pwd)/.venv/bin/python"
-  else
-    VENV_PY="$(pwd)/.venv/Scripts/python.exe"
-  fi
-
-  constraints_file=$(mktemp)
-  printf 'numpy<2.5\nscipy<1.18\n' > "$constraints_file"
-
-  uv pip install --python "$VENV_PY" ".[${extras_csv}]" \
-    --constraints "$constraints_file" \
-    --only-binary numpy --only-binary scipy \
-    --config-settings=setup-args="--vsenv"
-
-  rm -f "$constraints_file"
+if [[ -f .venv/bin/python ]]; then
+  VENV_PY="$(pwd)/.venv/bin/python"
 else
-  # pytest is ran with its import mode set to importlib from pyproject.toml's
-  # [tool.pytest.ini_options], so we do not need an editable install here.
-  # --no-build-package on these two turns any future wheel gap into a clear
-  # resolution error instead of a silent, doomed-to-fail source build.
-  uv sync --python "$py_spec" --no-editable --extra ${extras_csv//,/ --extra } \
-    --no-build-package numpy --no-build-package scipy \
-    --config-settings=setup-args="--vsenv"
-
-  if [[ -f .venv/bin/python ]]; then
-    VENV_PY="$(pwd)/.venv/bin/python"
-  else
-    VENV_PY="$(pwd)/.venv/Scripts/python.exe"
-  fi
+  VENV_PY="$(pwd)/.venv/Scripts/python.exe"
 fi
 
 if [[ "$is_azure" == "true" ]]; then
