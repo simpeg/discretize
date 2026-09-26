@@ -30,6 +30,13 @@ cython_cpp_args = cython_c_args
 
 module_path = 'discretize/_extensions'
 
+# Target the 3.12 limited API so a single abi3 wheel covers every
+# GIL-enabled CPython >= 3.12 (see [tool.meson-python] in pyproject.toml).
+# Meson only honours this while `python.allow_limited_api` is true, so
+# `-Dpython.allow_limited_api=false` turns it off for free-threaded builds,
+# which Cython can't yet target the stable ABI for.
+limited_api = '3.12'
+
 py.extension_module(
     'interputils_cython',
     'interputils_cython.pyx',
@@ -37,6 +44,7 @@ py.extension_module(
     c_args: cython_c_args,
     install: true,
     subdir: module_path,
+    limited_api: limited_api,
     dependencies : [py_dep, np_dep],
 )
 
@@ -47,6 +55,7 @@ py.extension_module(
     cpp_args: cython_cpp_args,
     install: true,
     subdir: module_path,
+    limited_api: limited_api,
     dependencies : [py_dep, np_dep],
     override_options : ['cython_language=cpp'],
 )
@@ -58,6 +67,7 @@ py.extension_module(
     cpp_args: cython_cpp_args,
     install: true,
     subdir: module_path,
+    limited_api: limited_api,
     dependencies : [py_dep, np_dep],
     override_options : ['cython_language=cpp'],
 )

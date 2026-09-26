@@ -16,8 +16,12 @@ fi
 # resolve python spec: freethreaded uses a "t" suffix. Pre-release jobs set
 # PYTHON_VERSION to an exact rc specifier (e.g. "3.15.0rc2") in test.yml.
 py_spec="$PYTHON_VERSION"
+extra_setup_args=()
 if [[ "$is_free_threaded" == "true" ]]; then
   py_spec="${py_spec}t"
+  # the limited API (abi3) build from pyproject.toml's [tool.meson-python]
+  # isn't available for free-threaded builds yet, so opt out of it.
+  extra_setup_args+=(--config-settings=setup-args="-Dpython.allow_limited_api=false")
 fi
 
 if [[ "$is_bare" == "true" ]]; then
@@ -35,7 +39,7 @@ fi
 # clear resolution error instead of a silent, doomed-to-fail source build.
 uv sync --python "$py_spec" --no-editable --extra ${extras_csv//,/ --extra } \
   --no-build-package numpy --no-build-package scipy \
-  --config-settings=setup-args="--vsenv"
+  --config-settings=setup-args="--vsenv" "${extra_setup_args[@]}"
 
 if [[ -f .venv/bin/python ]]; then
   VENV_PY="$(pwd)/.venv/bin/python"
