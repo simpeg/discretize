@@ -118,10 +118,19 @@ addopts = "--import-mode=importlib"
 
 [tool.coverage.run]
 branch = true
-source = ["discretize", "tests", "examples", "tutorials"]
+# discretize is measured as an importable package (wherever it's installed,
+# e.g. site-packages for CI's non-editable install) rather than as the
+# discretize/ source directory, which the tests don't actually execute.
+source_pkgs = ["discretize"]
+source = ["tests", "examples", "tutorials"]
 # plugins = [
 #     "Cython.Coverage",
 # ]
+
+[tool.coverage.paths]
+# map an installed discretize back onto the repo's discretize/ directory, so
+# reports (and codecov) point at the source files.
+discretize = ["discretize/", "*/site-packages/discretize/"]
 
 [tool.coverage.report]
 ignore_errors = false

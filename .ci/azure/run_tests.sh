@@ -13,14 +13,14 @@ if [[ "$is_azure" == "true" ]]; then
     .ci/setup_headless_display.sh
   fi
 fi
-if [[ "do_cov" == "true" ]]; then
+if [[ "$do_cov" == "true" ]]; then
   echo "Testing with coverage"
   test_args="--cov --cov-config=pyproject.toml $test_args"
 fi
 
 uv run --no-sync pytest -vv $test_args
 
-if [[ "do_cov" == "true" ]]; then
+if [[ "$do_cov" == "true" ]]; then
   uv run --no-sync coverage xml
 fi
 

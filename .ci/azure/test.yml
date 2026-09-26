@@ -83,17 +83,14 @@ jobs:
           image: ubuntu-latest
           python.version: "3.15.0rc2"
           environ.bare: True
-          python.release_candidate: True
         osx-Python315:
           image: macOS-latest
           python.version: "3.15.0rc2"
           environ.bare: True
-          python.release_candidate: True
         win-Python315:
           image: windows-latest
           python.version: "3.15.0rc2"
           environ.bare: True
-          python.release_candidate: True
     displayName: "${{ variables.image }} ${{ variables.python.version }} (rc)"
     pool:
       vmImage: $(image)
