@@ -8,21 +8,19 @@ do_cov=$(echo "${COVERAGE:-false}" | tr '[:upper:]' '[:lower:]')
 
 test_args=""
 
-source activate discretize-test
-
 if [[ "$is_azure" == "true" ]]; then
   if [[ "$do_doc" == "true" ]]; then
     .ci/setup_headless_display.sh
   fi
 fi
-if [[ "do_cov" == "true" ]]; then
+if [[ "$do_cov" == "true" ]]; then
   echo "Testing with coverage"
   test_args="--cov --cov-config=pyproject.toml $test_args"
 fi
 
-pytest -vv $test_args
+uv run --no-sync pytest -vv $test_args
 
-if [[ "do_cov" == "true" ]]; then
-  coverage xml
+if [[ "$do_cov" == "true" ]]; then
+  uv run --no-sync coverage xml
 fi
 

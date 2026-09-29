@@ -1,5 +1,4 @@
-"""Verify version pins are consistent across pyproject.toml, .pre-commit-config.yaml,
-and .ci/environment*.yml files.
+"""Verify version pins are consistent between pyproject.toml and .pre-commit-config.yaml.
 
 Exit 1 if any mismatch is found, 0 otherwise.
 """
@@ -21,7 +20,6 @@ except ImportError:
 ROOT = pathlib.Path(__file__).parent.parent
 PYPROJECT = ROOT / "pyproject.toml"
 PRE_COMMIT_CONFIG = ROOT / ".pre-commit-config.yaml"
-CI_DIR = ROOT / ".ci"
 
 # Maps a substring of the pre-commit repo URL to the corresponding pip package name.
 # Only repos whose rev tracks the package version should be listed here.
@@ -46,25 +44,10 @@ def parse_pip_req(req: str):
     return None
 
 
-def parse_conda_dep(dep: str):
-    """Return (normalized_name, op, version) for a conda dependency string, or None.
-
-    Normalizes conda's single-= exact-version operator to == for comparison.
-    """
-    m = re.match(
-        r"^([A-Za-z0-9][A-Za-z0-9._\-]*)\s*(==|>=|<=|!=|=)\s*(\S+)$", dep.strip()
-    )
-    if m:
-        op = "==" if m.group(2) == "=" else m.group(2)
-        return normalize_name(m.group(1)), op, m.group(3)
-    return None
-
-
 def load_pyproject():
-    """Return (optional_deps, main_deps, tool_black_version).
+    """Return (optional_deps, tool_black_version).
 
     optional_deps: {group: {normalized_name: (op, version)}}
-    main_deps:     {normalized_name: (op, version)}
     tool_black_version: plain version string from [tool.black] required-version, or None
     """
     with open(PYPROJECT, "rb") as f:
@@ -80,18 +63,11 @@ def load_pyproject():
                 parsed[name] = (op, ver)
         optional_deps[group] = parsed
 
-    main_deps: dict[str, tuple[str, str]] = {}
-    for req in data["project"].get("dependencies", []):
-        result = parse_pip_req(req)
-        if result:
-            name, op, ver = result
-            main_deps[name] = (op, ver)
-
     tool_black_version: str | None = (
         data.get("tool", {}).get("black", {}).get("required-version")
     )
 
-    return optional_deps, main_deps, tool_black_version
+    return optional_deps, tool_black_version
 
 
 def load_precommit():
@@ -118,32 +94,10 @@ def load_precommit():
     return result
 
 
-def load_conda_env(env_file: pathlib.Path):
-    """Return {normalized_name: (op, version)} from a conda environment YAML."""
-    with open(env_file) as f:
-        env = yaml.safe_load(f)
-
-    result: dict[str, tuple[str, str]] = {}
-    for dep in env.get("dependencies", []):
-        if isinstance(dep, str):
-            parsed = parse_conda_dep(dep)
-            if parsed:
-                name, op, ver = parsed
-                result[name] = (op, ver)
-        elif isinstance(dep, dict):
-            for pip_dep in dep.get("pip", []):
-                parsed = parse_pip_req(pip_dep)
-                if parsed:
-                    name, op, ver = parsed
-                    result[name] = (op, ver)
-    return result
-
-
 def main() -> int:
-    optional_deps, main_deps, tool_black_version = load_pyproject()
+    optional_deps, tool_black_version = load_pyproject()
     precommit_versions = load_precommit()
     style_deps = optional_deps.get("style", {})
-    doc_deps = optional_deps.get("doc", {})
 
     errors: list[str] = []
 
@@ -184,61 +138,7 @@ def main() -> int:
             )
             style_check_failed = True
 
-    # Check B: pyproject.toml [doc] ↔ .ci/environment_docs.yml
-    env_docs_file = CI_DIR / "environment_docs.yml"
-    doc_check_failed = False
-    if env_docs_file.exists():
-        conda_doc = load_conda_env(env_docs_file)
-        for pkg, (op, ver) in doc_deps.items():
-            if op != "==":
-                continue  # only track exact pins
-            if pkg in conda_doc:
-                c_op, c_ver = conda_doc[pkg]
-                if (c_op, c_ver) != (op, ver):
-                    errors.append(
-                        f"  {pkg}: pyproject.toml [doc] has =={ver},"
-                        f" environment_docs.yml has {c_op}{c_ver}"
-                    )
-            else:
-                errors.append(
-                    f"  {pkg}: in pyproject.toml [doc] (=={ver})"
-                    f" but not found in environment_docs.yml"
-                )
-        if errors:
-            print(
-                "FAIL: pyproject.toml [doc] and .ci/environment_docs.yml"
-                " are out of sync:"
-            )
-            for e in errors:
-                print(e)
-            errors.clear()
-            doc_check_failed = True
-
-    # Check C: pyproject.toml [dependencies] ↔ each .ci/environment*.yml
-    dep_check_failed = False
-    for env_file in sorted(CI_DIR.glob("environment*.yml")):
-        conda_env = load_conda_env(env_file)
-        for pkg, (op, ver) in main_deps.items():
-            if pkg in conda_env:
-                c_op, c_ver = conda_env[pkg]
-                if (c_op, c_ver) != (op, ver):
-                    errors.append(
-                        f"  {pkg}: pyproject.toml [dependencies] has {op}{ver},"
-                        f" {env_file.name} has {c_op}{c_ver}"
-                    )
-        if errors:
-            print(
-                f"FAIL: pyproject.toml [dependencies] and .ci/{env_file.name}"
-                f" are out of sync:"
-            )
-            for e in errors:
-                print(e)
-            errors.clear()
-            dep_check_failed = True
-
-    if any([style_check_failed, doc_check_failed, dep_check_failed]):
-        return 1
-    return 0
+    return 1 if style_check_failed else 0
 
 
 if __name__ == "__main__":

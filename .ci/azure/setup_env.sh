@@ -5,7 +5,6 @@ set -ex #echo on and exit if any line fails
 is_azure=$(echo "${TF_BUILD:-false}" | tr '[:upper:]' '[:lower:]')
 do_doc=$(echo "${DOC_BUILD:-false}" | tr '[:upper:]' '[:lower:]')
 is_free_threaded=$(echo "${PYTHON_FREETHREADING:-false}" | tr '[:upper:]' '[:lower:]')
-is_rc=$(echo "${PYTHON_RELEASE_CANDIDATE:-false}" | tr '[:upper:]' '[:lower:]')
 is_bare=$(echo "${ENVIRON_BARE:-false}" | tr '[:upper:]' '[:lower:]')
 
 if [[ "$is_azure" == "true" ]]; then
@@ -14,39 +13,45 @@ if [[ "$is_azure" == "true" ]]; then
   fi
 fi
 
-if [[ "$is_bare" == "true" ]]; then
-  cp .ci/environment_test_bare.yml environment_test_with_pyversion.yml
-elif [[ "$do_doc" == "true" ]]; then
-  cp .ci/environment_docs.yml environment_test_with_pyversion.yml
-else
-  cp .ci/environment_test.yml environment_test_with_pyversion.yml
-fi
-
+# resolve python spec: freethreaded uses a "t" suffix. Pre-release jobs set
+# PYTHON_VERSION to an exact rc specifier (e.g. "3.15.0rc2") in test.yml.
+py_spec="$PYTHON_VERSION"
 if [[ "$is_free_threaded" == "true" ]]; then
-  echo "  - python-freethreading="$PYTHON_VERSION >> environment_test_with_pyversion.yml
-else
-  echo "  - python="$PYTHON_VERSION >> environment_test_with_pyversion.yml
+  py_spec="${py_spec}t"
 fi
 
-if [[ "$is_rc" == "true" ]]; then
-  sed -i '/^channels:/a\  - conda-forge/label/python_rc' environment_test_with_pyversion.yml
+if [[ "$is_bare" == "true" ]]; then
+  extras_csv="test,build"
+elif [[ "$do_doc" == "true" ]]; then
+  extras_csv="test,doc,build"
+else
+  extras_csv="test,all,build"
 fi
-conda env create --file environment_test_with_pyversion.yml
-rm environment_test_with_pyversion.yml
+
+# pytest is ran with its import mode set to importlib from pyproject.toml's
+# [tool.pytest.ini_options], so we do not need an editable install here.
+# --no-build-package on these two turns a future wheel gap (numpy/scipy
+# dropped cp313t wheels at 2.5.0/1.18.0, hence no 3.13t testing) into a
+# clear resolution error instead of a silent, doomed-to-fail source build.
+uv sync --python "$py_spec" --no-editable --extra ${extras_csv//,/ --extra } \
+  --no-build-package numpy --no-build-package scipy \
+  --config-settings=setup-args="--vsenv"
+
+if [[ -f .venv/bin/python ]]; then
+  VENV_PY="$(pwd)/.venv/bin/python"
+else
+  VENV_PY="$(pwd)/.venv/Scripts/python.exe"
+fi
 
 if [[ "$is_azure" == "true" ]]; then
-  source activate discretize-test
-  pip install pytest-azurepipelines
-else
-  conda activate discretize-test
+  uv pip install --python "$VENV_PY" pytest-azurepipelines
 fi
 
-# The --vsenv config setting will prefer msvc compilers on windows.
-# but will do nothing on mac and linux.
-pip install --no-build-isolation --editable . --config-settings=setup-args="--vsenv"
-
-echo "Conda Environment:"
-conda list
+echo "Installed packages:"
+uv pip list --python "$VENV_PY"
 
 echo "Installed discretize version:"
-python -c "import discretize; print(discretize.__version__)"
+# run from outside the repo root, so this doesn't hit the same
+# discretize/-shadows-the-installed-package issue --import-mode=importlib
+# fixes for pytest specifically (plain `python -c` has no such flag).
+(cd / && "$VENV_PY" -c "import discretize; print(discretize.__version__)")

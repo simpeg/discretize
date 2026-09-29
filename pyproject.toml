@@ -67,7 +67,7 @@ doc = [
     "pooch",
     "discretize[all]",
 ]
-test = ["pytest", "pytest-cov", "sympy", "discretize[doc,all]"]
+test = ["pytest", "pytest-cov", "sympy"]
 # when changing these, make sure to keep it consistent with .pre-commit-config.
 style = [
     "black==26.5.1",
@@ -109,12 +109,28 @@ test-command = 'python -c "import discretize; print(discretize.__version__)"'
 [tool.cibuildwheel.windows.config-settings]
 setup-args = ['--vsenv']
 
+[tool.pytest.ini_options]
+# avoids discretize/ (a sibling of tests/) shadowing an installed, compiled
+# discretize when pytest is invoked from the repo root -- matters most for
+# non-editable installs, where the default "prepend" import mode can resolve
+# the uncompiled source tree ahead of the real (site-packages) package.
+addopts = "--import-mode=importlib"
+
 [tool.coverage.run]
 branch = true
-source = ["discretize", "tests", "examples", "tutorials"]
+# discretize is measured as an importable package (wherever it's installed,
+# e.g. site-packages for CI's non-editable install) rather than as the
+# discretize/ source directory, which the tests don't actually execute.
+source_pkgs = ["discretize"]
+source = ["tests", "examples", "tutorials"]
 # plugins = [
 #     "Cython.Coverage",
 # ]
+
+[tool.coverage.paths]
+# map an installed discretize back onto the repo's discretize/ directory, so
+# reports (and codecov) point at the source files.
+discretize = ["discretize/", "*/site-packages/discretize/"]
 
 [tool.coverage.report]
 ignore_errors = false

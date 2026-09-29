@@ -115,6 +115,22 @@ This builds and installs the local directory to your active python environment i
 packages installed in your environment instead of creating and isolated environment to build a wheel for the package,
 which is why we needed to install the build requirements into the environment.
 
+Alternatively, if you use `uv <https://docs.astral.sh/uv/>`_, steps 1 and 2 above can be done
+in one command, which also creates and manages a virtual environment for you::
+
+    uv sync --no-install-project --extra build --config-settings=setup-args="--vsenv"
+
+Followed by the same editable install as step 3, using ``uv`` in place of ``pip``::
+
+    uv pip install --no-build-isolation --editable . --config-settings=setup-args="--vsenv"
+
+.. note::
+    The ``--config-settings=setup-args="--vsenv"`` must be passed identically to *both*
+    commands above (it's a no-op on mac/linux, and prefers the msvc compilers on windows).
+    ``uv sync`` builds ``discretize`` once already just to resolve its own metadata, even with
+    ``--no-install-project``, and passing a different set of setup args to the following
+    editable install will make meson fail to reconfigure the same build directory.
+
 Testing your installation
 =========================
 

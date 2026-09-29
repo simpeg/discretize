@@ -6,10 +6,10 @@ jobs:
     steps:
       - task: UsePythonVersion@0
         inputs:
-          versionSpec: "3.13"
-      - bash: pip install pyyaml
-        displayName: "Install dependencies to run the checks"
-      - script: python .ci/check_version_sync.py
+          versionSpec: "3.12"
+      - bash: pip install pre-commit
+        displayName: "Install pre-commit"
+      - bash: pre-commit run check-version-sync --all-files
         displayName: "Check versions"
 
   - job:
@@ -19,10 +19,10 @@ jobs:
     steps:
       - task: UsePythonVersion@0
         inputs:
-          versionSpec: "3.13"
-      - bash: .ci/install_style.sh
-        displayName: "Install dependencies to run the checks"
-      - script: black --check .
+          versionSpec: "3.12"
+      - bash: pip install pre-commit
+        displayName: "Install pre-commit"
+      - bash: pre-commit run black --all-files
         displayName: "Run black"
 
   - job:
@@ -32,8 +32,8 @@ jobs:
     steps:
       - task: UsePythonVersion@0
         inputs:
-          versionSpec: "3.13"
-      - bash: .ci/install_style.sh
-        displayName: "Install dependencies to run the checks"
-      - script: flake8
+          versionSpec: "3.12"
+      - bash: pip install pre-commit
+        displayName: "Install pre-commit"
+      - bash: pre-commit run flake8 --all-files
         displayName: "Run flake8"
