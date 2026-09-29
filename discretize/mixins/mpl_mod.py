@@ -2130,9 +2130,6 @@ class InterfaceMPL(object):
         normalInd = {"X": 0, "Y": 1, "Z": 2}[normal]
         antiNormalInd = {"X": [1, 2], "Y": [0, 2], "Z": [0, 1]}[normal]
 
-        h2d = (self.h[antiNormalInd[0]], self.h[antiNormalInd[1]])
-        x2d = (self.origin[antiNormalInd[0]], self.origin[antiNormalInd[1]])
-
         #: Size of the sliced dimension
         szSliceDim = len(self.h[normalInd])
         if ind is None:
@@ -2143,24 +2140,10 @@ class InterfaceMPL(object):
         cc_tensor = [self.cell_centers_x, self.cell_centers_y, self.cell_centers_z]
         slice_loc = cc_tensor[normalInd][ind]
 
-        slice_origin = self.origin.copy()
-        slice_origin[normalInd] = slice_loc
-        normal = [0, 0, 0]
-        normal[normalInd] = 1
-
-        # create a temporary TreeMesh with the slice through
-        temp_mesh = discretize.TreeMesh(h2d, x2d, diagonal_balance=False)
-        level_diff = self.max_level - temp_mesh.max_level
-
-        # get list of cells which intersect the slicing plane
-        inds = self.get_cells_on_plane(slice_origin, normal)
-        levels = self._cell_levels_by_indexes(inds) - level_diff
-        grid2d = self.cell_centers[inds][:, antiNormalInd]
-
-        temp_mesh.insert_cells(grid2d, levels)
-        tm_gridboost = np.empty((temp_mesh.n_cells, 3))
-        tm_gridboost[:, antiNormalInd] = temp_mesh.cell_centers
-        tm_gridboost[:, normalInd] = slice_loc
+        # a temporary 2D TreeMesh of the slice, and the 3D cell of each 2D cell
+        temp_mesh, ind_3d_to_2d = discretize.utils.slice_tree_mesh(
+            self, normalInd, slice_loc, return_indices=True
+        )
 
         # interpolate values to self.gridCC if not "CC" or "CCv"
         if v_type[:2] != "CC":
@@ -2191,8 +2174,7 @@ class InterfaceMPL(object):
             vecs = v[:, antiNormalInd]
             v = np.linalg.norm(v, axis=1)
 
-        # interpolate values from self.gridCC to grid2d
-        ind_3d_to_2d = self.get_containing_cells(tm_gridboost)
+        # take the cell values from the 3D mesh to the slice
         v2d = v[ind_3d_to_2d]
 
         out = temp_mesh.plot_image(

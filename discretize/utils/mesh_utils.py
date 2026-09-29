@@ -1111,6 +1111,106 @@ def active_from_xyz(mesh, xyz, grid_reference="CC", method="linear"):
     return active.ravel()
 
 
+def slice_tree_mesh(mesh, normal="Z", location=None, return_indices=False):
+    """Extract an axis-aligned 2D slice of a 3D TreeMesh as a 2D TreeMesh.
+
+    The cells of an octree that intersect an axis-aligned plane form a
+    quadtree. This builds that quadtree as a 2D :class:`~discretize.TreeMesh`,
+    with one 2D cell for each 3D cell cut by the plane, and can also return
+    which 3D cell each 2D cell came from.
+
+    Parameters
+    ----------
+    mesh : discretize.TreeMesh
+        A 3D tree mesh.
+    normal : {"X", "Y", "Z"} or int
+        The axis normal to the slicing plane.
+    location : float, optional
+        The coordinate of the plane along `normal`. Defaults to the center of
+        the middle base cell along `normal`, as used by
+        :meth:`~discretize.TreeMesh.plot_slice`. If the plane lies on cell
+        faces, the cells on the high side of the plane are used, or the cells
+        on the low side if the plane is the high boundary of the mesh.
+    return_indices : bool, default: False
+        Whether to also return the index of the 3D cell each 2D cell lies in.
+
+    Returns
+    -------
+    mesh_2d : discretize.TreeMesh
+        The 2D tree mesh of the slice. Its first and second dimensions are the
+        remaining axes in increasing order (e.g. ``(x, z)`` for a ``"Y"``
+        normal).
+    indices : (mesh_2d.n_cells,) numpy.ndarray of int
+        Only returned if `return_indices` is ``True``. The index of the 3D cell
+        containing each 2D cell, so that ``values_2d = values_3d[indices]``
+        takes cell values from the 3D mesh to the slice.
+
+    Examples
+    --------
+    Slice a 3D tree mesh refined around a point, and take a model to the slice.
+
+    >>> import numpy as np
+    >>> import discretize
+    >>> from discretize.utils import slice_tree_mesh
+    >>> mesh = discretize.TreeMesh([16, 16, 16], diagonal_balance=True)
+    >>> mesh.refine_ball([0.5, 0.5, 0.5], 0.2, levels=-1)
+    >>> model = mesh.cell_centers[:, 2]
+    >>> mesh_2d, indices = slice_tree_mesh(mesh, "Y", 0.51, return_indices=True)
+    >>> mesh_2d.dim
+    2
+    >>> model_2d = model[indices]
+    >>> np.allclose(model_2d, mesh_2d.cell_centers[:, 1])
+    True
+    """
+    if not isinstance(mesh, discretize.TreeMesh) or mesh.dim != 3:
+        raise ValueError("slice_tree_mesh requires a 3D TreeMesh.")
+    if isinstance(normal, str):
+        try:
+            axis = {"X": 0, "Y": 1, "Z": 2}[normal.upper()]
+        except KeyError:
+            raise ValueError(f"normal must be 'X', 'Y' or 'Z', got {normal!r}.")
+    else:
+        axis = int(normal)
+        if axis not in (0, 1, 2):
+            raise ValueError(f"normal must be 0, 1 or 2, got {normal!r}.")
+    in_plane = [i for i in range(3) if i != axis]
+
+    nodes = np.r_[0.0, np.cumsum(mesh.h[axis])] + mesh.origin[axis]
+    if location is None:
+        location = 0.5 * (nodes[:-1] + nodes[1:])[len(mesh.h[axis]) // 2]
+    location = float(location)
+    if location < nodes[0] or location > nodes[-1]:
+        raise ValueError(
+            f"location {location} is outside of the mesh along axis {axis} "
+            f"({nodes[0]} to {nodes[-1]})."
+        )
+    # move a plane lying on cell faces just inside the cells on its high side
+    # (the low side at the top of the mesh), so each cut cell is unambiguous
+    delta = 1e-6 * np.min(mesh.h[axis])
+    location = location + delta if location + delta < nodes[-1] else location - delta
+
+    origin = mesh.origin.copy()
+    origin[axis] = location
+    plane_normal = np.zeros(3)
+    plane_normal[axis] = 1.0
+    cells = mesh.get_cells_on_plane(origin, plane_normal)
+
+    mesh_2d = discretize.TreeMesh(
+        [mesh.h[i] for i in in_plane],
+        [mesh.origin[i] for i in in_plane],
+        diagonal_balance=False,
+    )
+    levels = mesh.cell_levels_by_index(cells) - (mesh.max_level - mesh_2d.max_level)
+    mesh_2d.insert_cells(mesh.cell_centers[cells][:, in_plane], levels, finalize=True)
+
+    if not return_indices:
+        return mesh_2d
+    points = np.empty((mesh_2d.n_cells, 3))
+    points[:, in_plane] = mesh_2d.cell_centers
+    points[:, axis] = location
+    return mesh_2d, np.atleast_1d(mesh.get_containing_cells(points))
+
+
 def example_simplex_mesh(rect_shape):
     """Create a simple tetrahedral mesh on a unit cube in 2D or 3D.
 
