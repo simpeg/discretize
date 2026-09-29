@@ -5238,7 +5238,17 @@ cdef class _TreeMesh:
         for cell in self.tree.cells :
             next_cell = cell.neighbors[1]
             prev_cell = cell.neighbors[0]
-            # handle extrapolation to boundary faces
+            # handle extrapolation to boundary faces. The -x face is handled
+            # first: a cell spanning the whole mesh has no neighbor on either
+            # side, and the +x branch below skips the rest of the loop.
+            if prev_cell == NULL:
+                if dim == 2:
+                    ind = cell.edges[2].index # -x face
+                else:
+                    ind = cell.faces[0].index # -x face
+                I[2*ind  ] = ind
+                J[2*ind  ] = cell.index
+                V[2*ind  ] = 1.0
             if next_cell == NULL:
                 if dim == 2:
                     ind = cell.edges[3].index # +x face
@@ -5248,14 +5258,6 @@ cdef class _TreeMesh:
                 J[2*ind  ] = cell.index
                 V[2*ind  ] = 1.0
                 continue
-            if prev_cell == NULL:
-                if dim == 2:
-                    ind = cell.edges[2].index # -x face
-                else:
-                    ind = cell.faces[0].index # -x face
-                I[2*ind  ] = ind
-                J[2*ind  ] = cell.index
-                V[2*ind  ] = 1.0
 
             if next_cell.is_leaf():
                 if next_cell.level == cell.level:
@@ -5355,7 +5357,17 @@ cdef class _TreeMesh:
         for cell in self.tree.cells :
             next_cell = cell.neighbors[3]
             prev_cell = cell.neighbors[2]
-            # handle extrapolation to boundary faces
+            # handle extrapolation to boundary faces. The -y face is handled
+            # first: a cell spanning the whole mesh has no neighbor on either
+            # side, and the +y branch below skips the rest of the loop.
+            if prev_cell == NULL:
+                if dim == 2:
+                    ind = cell.edges[0].index
+                else:
+                    ind = cell.faces[2].index
+                I[2*ind  ] = ind
+                J[2*ind  ] = cell.index
+                V[2*ind  ] = 1.0
             if next_cell == NULL:
                 if dim == 2:
                     ind = cell.edges[1].index
@@ -5365,14 +5377,6 @@ cdef class _TreeMesh:
                 J[2*ind  ] = cell.index
                 V[2*ind  ] = 1.0
                 continue
-            if prev_cell == NULL:
-                if dim == 2:
-                    ind = cell.edges[0].index
-                else:
-                    ind = cell.faces[2].index
-                I[2*ind  ] = ind
-                J[2*ind  ] = cell.index
-                V[2*ind  ] = 1.0
 
             if next_cell.is_leaf():
                 if next_cell.level == cell.level:
@@ -5474,18 +5478,20 @@ cdef class _TreeMesh:
         for cell in self.tree.cells :
             next_cell = cell.neighbors[5]
             prev_cell = cell.neighbors[4]
-            # handle extrapolation to boundary faces
+            # handle extrapolation to boundary faces. The -z face is handled
+            # first: a cell spanning the whole mesh has no neighbor on either
+            # side, and the +z branch below skips the rest of the loop.
+            if prev_cell == NULL:
+                ind = cell.faces[4].index # -z face
+                I[2*ind  ] = ind
+                J[2*ind  ] = cell.index
+                V[2*ind  ] = 1.0
             if next_cell == NULL:
                 ind = cell.faces[5].index # +z face
                 I[2*ind  ] = ind
                 J[2*ind  ] = cell.index
                 V[2*ind  ] = 1.0
                 continue
-            if prev_cell == NULL:
-                ind = cell.faces[4].index # -z face
-                I[2*ind  ] = ind
-                J[2*ind  ] = cell.index
-                V[2*ind  ] = 1.0
 
             if next_cell.is_leaf():
                 if next_cell.level == cell.level:
