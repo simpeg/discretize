@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 import discretize
 
 MESHTYPES = ["uniformTree", "randomTree"]
@@ -1135,3 +1136,48 @@ class TestAveraging3D(discretize.tests.OrderTest):
         self.expectedOrders = 1
         self.orderTest()
         self.expectedOrders = 2
+
+
+def _full_width_tree(dim):
+    # A small refinement in the middle of a base mesh with few cells across
+    # leaves coarse cells that span the whole mesh in the horizontal
+    # directions, with no neighbor on either side.
+    h = [np.full(8, 100.0)] * (dim - 1) + [np.full(64, 50.0)]
+    mesh = discretize.TreeMesh(h, origin="C" * dim, diagonal_balance=True)
+    mesh.refine_box([-100.0] * dim, [100.0] * dim, levels=-1)
+    return mesh
+
+
+@pytest.mark.parametrize("dim", [2, 3])
+@pytest.mark.parametrize(
+    "operator",
+    ["average_cell_to_face_x", "average_cell_to_face_y", "average_cell_to_face_z"],
+)
+def test_average_cell_to_face_full_width_cells(dim, operator):
+    """Every face, including both boundary faces of a full-width cell, gets a value."""
+    if dim == 2 and operator.endswith("_z"):
+        pytest.skip("no z faces in 2D")
+    mesh = _full_width_tree(dim)
+    axis = "xyz".index(operator[-1])
+    # the test mesh must actually contain cells with no neighbor on either side
+    widths = mesh.h_gridded[:, axis]
+    extent = mesh.nodes[:, axis].max() - mesh.nodes[:, axis].min()
+    if axis < dim - 1:
+        assert np.any(np.isclose(widths, extent))
+    A = getattr(mesh, operator)
+    np.testing.assert_allclose(A @ np.ones(mesh.n_cells), 1.0)
+
+
+@pytest.mark.parametrize("dim", [2, 3])
+def test_average_cell_to_face_boundary_faces_use_their_cell(dim):
+    mesh = _full_width_tree(dim)
+    Pf = mesh.project_face_to_boundary_face
+    A = (Pf @ mesh.average_cell_to_face).tocsr()
+    A.eliminate_zeros()
+    # boundary faces take the value of the one cell they bound
+    assert np.all(np.diff(A.indptr) == 1)
+    cells = A.indices
+    faces = Pf @ mesh.faces
+    lo = mesh.cell_centers[cells] - mesh.h_gridded[cells] / 2
+    hi = mesh.cell_centers[cells] + mesh.h_gridded[cells] / 2
+    assert np.all((faces >= lo - 1e-8) & (faces <= hi + 1e-8))
