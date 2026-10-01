@@ -91,6 +91,7 @@ Mesh Utilities
   refine_tree_xyz
   active_from_xyz
   mesh_builder_xyz
+  extend_surface_boundary
 
 Utilities for Curvilinear Meshes
 --------------------------------
@@ -137,6 +138,7 @@ from discretize.utils.mesh_utils import (
     active_from_xyz,
     mesh_builder_xyz,
     example_simplex_mesh,
+    extend_surface_boundary,
 )
 from discretize.utils.curvilinear_utils import (
     example_curvilinear_grid,

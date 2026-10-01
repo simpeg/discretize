@@ -1227,3 +1227,176 @@ ExtractCoreMesh = deprecate_function(
 closest_points = deprecate_function(
     closest_points_index, "closest_points", removal_version="1.0.0", error=True
 )
+
+
+def _outward_boundary_directions(xy, simps, max_miter=5.0):
+    """Outward offset directions for every boundary node of a 2D triangulation.
+
+    Parameters
+    ----------
+    xy : (n_points, 2) numpy.ndarray
+        The horizontal locations of the points.
+    simps : (n_simplices, 3) numpy.ndarray
+        The triangles of the triangulation.
+    max_miter : float
+        Maximum allowed length of the offset direction, (for very sharp corners).
+
+    Returns
+    -------
+    nodes : (n_boundary,) numpy.ndarray
+        Indices of the nodes on the boundary.
+    directions : (n_boundary, 2) numpy.ndarray
+        Outward directions such that offsetting a node by ``d * directions`` moves
+        the adjacent boundary edges out by a perpendicular distance ``d`` (a miter).
+    edges : (n_edges, 2) numpy.ndarray
+        The boundary edges (as node indices).
+    """
+    edges = np.r_[simps[:, [0, 1]], simps[:, [1, 2]], simps[:, [2, 0]]]
+    third = np.r_[simps[:, 2], simps[:, 0], simps[:, 1]]
+    _, inverse, counts = np.unique(
+        np.sort(edges, axis=1), axis=0, return_inverse=True, return_counts=True
+    )
+    on_boundary = counts[inverse.reshape(-1)] == 1
+    edges = edges[on_boundary]
+    third = third[on_boundary]
+
+    tangent = xy[edges[:, 1]] - xy[edges[:, 0]]
+    normals = np.c_[tangent[:, 1], -tangent[:, 0]]
+    length = np.linalg.norm(normals, axis=1)
+    length[length == 0] = 1.0
+    normals /= length[:, None]
+    # point away from the triangle the edge belongs to
+    inward = np.sum(normals * (xy[third] - xy[edges[:, 0]]), axis=1) > 0
+    normals[inward] *= -1
+
+    nodes = np.unique(edges)
+    local = np.searchsorted(nodes, edges)
+    n_sum = np.zeros((len(nodes), 2))
+    n_count = np.zeros(len(nodes))
+    for k in range(2):
+        np.add.at(n_sum, local[:, k], normals)
+        np.add.at(n_count, local[:, k], 1)
+
+    bisector = n_sum / n_count[:, None]
+    b_len = np.linalg.norm(bisector, axis=1)
+    b_len[b_len == 0] = 1.0
+    bisector /= b_len[:, None]
+
+    # mean of cos(half angle) between the bisector and adjacent edge normals
+    cos_half = np.zeros(len(nodes))
+    for k in range(2):
+        np.add.at(cos_half, local[:, k], np.sum(bisector[local[:, k]] * normals, 1))
+    cos_half /= n_count
+    scale = 1.0 / np.clip(cos_half, 1.0 / max_miter, 1.0)
+    return nodes, bisector * scale[:, None], edges
+
+
+def extend_surface_boundary(xyz, max_miter=5.0):
+    """Extend a triangulated surface outward from every node on its boundary.
+
+    A new point is added for every node along the boundary of the triangulation
+    (not just the convex hull). Each new point starts at the same location as the
+    node it comes from, and is offset horizontally along the outward bisector of the
+    boundary edges adjacent to that node. The new points are triangulated with the
+    original ones once, so extending the surface by a distance ``d`` (a nearest
+    neighbor extrapolation of the surface) is just a scaling of the returned
+    directions.
+
+    Parameters
+    ----------
+    xyz : (n_points, dim) array_like or tuple
+        Surface points, where ``dim`` is 2 or 3. The last column is the vertical
+        coordinate. A point cloud is triangulated (Delaunay) along the horizontal
+        dimensions (in 2D it is sorted along x and connected as a line). Alternatively
+        supply your own connectivity as a tuple of ``(xyz, simplices)``, where
+        ``simplices`` are line segments (2D) or triangles (3D) indexing ``xyz``.
+    max_miter : float, optional
+        Maximum length of the offset direction, which limits how far the extension
+        of very sharp boundary corners can reach.
+
+    Returns
+    -------
+    xyz_ext : (n_points + n_new, dim) numpy.ndarray
+        The original (sorted, in 2D) points followed by the new points, which have
+        the vertical coordinate of the node they extend.
+    simplices_ext : (n_simplices + n_new_simplices, dim) numpy.ndarray
+        The simplices connecting the original and new points.
+    directions : (n_points + n_new, dim - 1) numpy.ndarray
+        Horizontal offset directions, which are zero for the original points. The
+        extended surface for a distance ``d`` (a scalar, or one value per horizontal
+        dimension) is ``xyz_ext[:, :-1] + d * directions``. The directions are
+        scaled such that boundary edges move out by a perpendicular distance ``d``.
+
+    Raises
+    ------
+    ValueError
+        If ``xyz`` has 2 columns and all of its points have the same x location.
+
+    Notes
+    -----
+    For surfaces with a non-convex boundary, the outward bisectors of different
+    boundary nodes can intersect if the distance is large compared to the size of
+    local features of the boundary (e.g. notches or concavities). The extended
+    surface can then fold over itself and be unreliable.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from discretize.utils import extend_surface_boundary
+    >>> x, y = np.mgrid[0:1:3j, 0:1:3j]
+    >>> xyz = np.stack([x, y, x + y], axis=-1).reshape(-1, 3)
+    >>> xyz_ext, simps, dirs = extend_surface_boundary(xyz)
+    >>> padded = xyz_ext[:, :-1] + 0.1 * dirs
+    >>> padded.shape
+    (17, 2)
+    """
+    if isinstance(xyz, tuple):
+        xyz, simplices = xyz
+        simplices = np.asarray(simplices)
+    else:
+        simplices = None
+    xyz = np.asarray(xyz, dtype=float)
+    dim = xyz.shape[1]
+    if dim not in (2, 3):
+        raise ValueError("xyz must have 2 or 3 columns.")
+    n_ps = len(xyz)
+    if dim == 2:
+        if np.ptp(xyz[:, 0]) == 0:
+            raise ValueError(
+                "The surface has no horizontal extent, so it has no outward direction."
+            )
+        if simplices is None:
+            xyz = xyz[np.argsort(xyz[:, 0])]
+            simplices = np.c_[np.arange(n_ps - 1), np.arange(1, n_ps)]
+        # boundary nodes are those on a single segment
+        ends, counts = np.unique(simplices, return_counts=True)
+        nodes = ends[counts == 1]
+        # neighbor of each end point, to point away from
+        neighbor = np.empty(n_ps, dtype=int)
+        neighbor[simplices[:, 0]] = simplices[:, 1]
+        neighbor[simplices[:, 1]] = simplices[:, 0]
+        dirs = np.sign(xyz[nodes, :1] - xyz[neighbor[nodes], :1])
+        # vertical segment at an end: fall back to which side of the middle it is on
+        tie = dirs == 0
+        dirs[tie] = np.sign(xyz[nodes, :1] - xyz[:, :1].mean())[tie]
+        dirs[dirs == 0] = 1.0
+        new_inds = n_ps + np.arange(len(nodes))
+        simplices = np.r_[simplices, np.c_[nodes, new_inds]]
+    else:
+        if simplices is None:
+            simplices = Delaunay(xyz[:, :2]).simplices
+        nodes, dirs, edges = _outward_boundary_directions(
+            xyz[:, :2], simplices, max_miter
+        )
+        new_of_node = np.full(n_ps, -1)
+        new_of_node[nodes] = n_ps + np.arange(len(nodes))
+        i, j = edges[:, 0], edges[:, 1]
+        simplices = np.r_[
+            simplices,
+            np.c_[i, j, new_of_node[j]],
+            np.c_[i, new_of_node[j], new_of_node[i]],
+        ]
+    xyz_ext = np.r_[xyz, xyz[nodes]]
+    directions = np.zeros((len(xyz_ext), dim - 1))
+    directions[n_ps:] = dirs
+    return xyz_ext, simplices, directions
