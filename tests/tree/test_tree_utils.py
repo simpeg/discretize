@@ -171,13 +171,13 @@ def _refined_tree():
 
 @pytest.mark.parametrize("normal", ["X", "Y", "Z"])
 @pytest.mark.parametrize("location", [3.0, -61.0, 45.5])
-def test_slice_tree_mesh_cells_and_indices(normal, location):
-    from discretize.utils import slice_tree_mesh
+def test_slice_mesh_tree_cells_and_indices(normal, location):
+    from discretize.utils import slice_mesh
 
     mesh = _refined_tree()
     axis = "XYZ".index(normal)
     in_plane = [i for i in range(3) if i != axis]
-    mesh_2d, indices = slice_tree_mesh(mesh, normal, location, return_indices=True)
+    mesh_2d, indices = slice_mesh(mesh, normal, location, return_indices=True)
 
     # one 2D cell for every 3D cell cut by the plane
     lo = mesh.cell_centers[:, axis] - mesh.h_gridded[:, axis] / 2
@@ -194,12 +194,12 @@ def test_slice_tree_mesh_cells_and_indices(normal, location):
     np.testing.assert_allclose(mesh_2d.origin, mesh.origin[in_plane])
 
 
-def test_slice_tree_mesh_on_faces():
-    from discretize.utils import slice_tree_mesh
+def test_slice_mesh_tree_on_faces():
+    from discretize.utils import slice_mesh
 
     mesh = _refined_tree()
     for location, expected_side in ((0.0, "high"), (-80.0, "high"), (80.0, "low")):
-        mesh_2d, indices = slice_tree_mesh(mesh, "Z", location, return_indices=True)
+        mesh_2d, indices = slice_mesh(mesh, "Z", location, return_indices=True)
         lo = mesh.cell_centers[indices, 2] - mesh.h_gridded[indices, 2] / 2
         hi = mesh.cell_centers[indices, 2] + mesh.h_gridded[indices, 2] / 2
         if expected_side == "high":
@@ -209,25 +209,25 @@ def test_slice_tree_mesh_on_faces():
             np.testing.assert_allclose(hi, location)
 
 
-def test_slice_tree_mesh_default_matches_plot_slice_location():
-    from discretize.utils import slice_tree_mesh
+def test_slice_mesh_tree_default_matches_plot_slice_location():
+    from discretize.utils import slice_mesh
 
     mesh = _refined_tree()
     middle = mesh.cell_centers_z[len(mesh.h[2]) // 2]
-    a = slice_tree_mesh(mesh, "Z")
-    b = slice_tree_mesh(mesh, "Z", middle)
+    a = slice_mesh(mesh, "Z")
+    b = slice_mesh(mesh, "Z", middle)
     np.testing.assert_allclose(a.cell_centers, b.cell_centers)
 
 
-def test_slice_tree_mesh_errors():
-    from discretize.utils import slice_tree_mesh
+def test_slice_mesh_tree_errors():
+    from discretize.utils import slice_mesh
 
     mesh = _refined_tree()
     with pytest.raises(ValueError):
-        slice_tree_mesh(mesh, "W")
+        slice_mesh(mesh, "W")
     with pytest.raises(ValueError):
-        slice_tree_mesh(mesh, "Z", 1000.0)
+        slice_mesh(mesh, "Z", 1000.0)
     mesh_2d = discretize.TreeMesh([8, 8])
     mesh_2d.refine(2)
     with pytest.raises(ValueError):
-        slice_tree_mesh(mesh_2d, "Z")
+        slice_mesh(mesh_2d, "Z")

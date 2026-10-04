@@ -91,7 +91,7 @@ Mesh Utilities
   refine_tree_xyz
   active_from_xyz
   mesh_builder_xyz
-  slice_tree_mesh
+  slice_mesh
 
 Utilities for Curvilinear Meshes
 --------------------------------
@@ -138,7 +138,7 @@ from discretize.utils.mesh_utils import (
     active_from_xyz,
     mesh_builder_xyz,
     example_simplex_mesh,
-    slice_tree_mesh,
+    slice_mesh,
 )
 from discretize.utils.curvilinear_utils import (
     example_curvilinear_grid,

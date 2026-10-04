@@ -2141,7 +2141,7 @@ class InterfaceMPL(object):
         slice_loc = cc_tensor[normalInd][ind]
 
         # a temporary 2D TreeMesh of the slice, and the 3D cell of each 2D cell
-        temp_mesh, ind_3d_to_2d = discretize.utils.slice_tree_mesh(
+        temp_mesh, ind_3d_to_2d = discretize.utils.slice_mesh(
             self, normalInd, slice_loc, return_indices=True
         )
 
