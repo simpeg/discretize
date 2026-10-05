@@ -1,4 +1,5 @@
 import unittest
+import pytest
 import numpy as np
 import scipy.sparse as sp
 from discretize.utils import (
@@ -627,6 +628,79 @@ def test_cross2d():
     y_boost = np.c_[y, np.zeros(10)]
 
     np.testing.assert_allclose(np.cross(x_boost, y_boost)[:, -1], cross2d(x, y))
+
+
+def _tensor_3d():
+    return discretize.TensorMesh(
+        [np.linspace(1.0, 3.0, 7), np.full(5, 2.0), np.geomspace(1.0, 8.0, 6)],
+        origin=[-5.0, 0.0, "N"],
+    )
+
+
+@pytest.mark.parametrize("normal", ["X", "Y", "Z"])
+@pytest.mark.parametrize("fraction", [0.0, 0.37, 0.5, 0.81, 1.0])
+def test_slice_mesh_tensor_cells_and_indices(normal, fraction):
+    from discretize.utils import slice_mesh
+
+    mesh = _tensor_3d()
+    axis = "XYZ".index(normal)
+    in_plane = [i for i in range(3) if i != axis]
+    nodes = [mesh.nodes_x, mesh.nodes_y, mesh.nodes_z][axis]
+    location = (1 - fraction) * nodes[0] + fraction * nodes[-1]
+    mesh_2d, indices = slice_mesh(mesh, normal, location, return_indices=True)
+
+    assert isinstance(mesh_2d, discretize.TensorMesh)
+    assert mesh_2d.shape_cells == tuple(mesh.shape_cells[i] for i in in_plane)
+    np.testing.assert_allclose(mesh_2d.origin, mesh.origin[in_plane])
+
+    # the cut cells, taking the high side of a face (the low side at the top)
+    lo = mesh.cell_centers[:, axis] - mesh.h_gridded[:, axis] / 2
+    hi = mesh.cell_centers[:, axis] + mesh.h_gridded[:, axis] / 2
+    cut = (lo <= location) & (location < hi)
+    if fraction == 1.0:
+        cut = np.isclose(hi, location)
+    np.testing.assert_array_equal(np.sort(indices), np.where(cut)[0])
+
+    # each 2D cell is its 3D cell, seen in the plane
+    np.testing.assert_allclose(
+        mesh_2d.cell_centers, mesh.cell_centers[indices][:, in_plane]
+    )
+
+
+def test_slice_mesh_tensor_on_interior_face():
+    from discretize.utils import slice_mesh
+
+    mesh = _tensor_3d()
+    location = mesh.nodes_z[3]
+    _, indices = slice_mesh(mesh, 2, location, return_indices=True)
+    lo = mesh.cell_centers[indices, 2] - mesh.h_gridded[indices, 2] / 2
+    np.testing.assert_allclose(lo, location)
+
+
+def test_slice_mesh_tensor_default_location():
+    from discretize.utils import slice_mesh
+
+    mesh = _tensor_3d()
+    middle = mesh.cell_centers_y[len(mesh.h[1]) // 2]
+    _, a = slice_mesh(mesh, "Y", return_indices=True)
+    _, b = slice_mesh(mesh, "Y", middle, return_indices=True)
+    np.testing.assert_array_equal(a, b)
+
+
+def test_slice_mesh_errors():
+    from discretize.utils import slice_mesh
+
+    mesh = _tensor_3d()
+    with pytest.raises(ValueError):
+        slice_mesh(mesh, "W")
+    with pytest.raises(ValueError):
+        slice_mesh(mesh, 3)
+    with pytest.raises(ValueError):
+        slice_mesh(mesh, "Z", 1000.0)
+    with pytest.raises(ValueError):
+        slice_mesh(discretize.TensorMesh([4, 4]), "Z")
+    with pytest.raises(TypeError):
+        slice_mesh(discretize.CylindricalMesh([4, 4, 4]), "Z")
 
 
 if __name__ == "__main__":

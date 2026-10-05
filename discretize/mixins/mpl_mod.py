@@ -1343,58 +1343,35 @@ class InterfaceMPL(object):
             ind = szSliceDim // 2
         if not isinstance(ind, (np.integer, int)):
             raise TypeError("ind must be an integer")
+        in_plane = [i for i in range(3) if i != dim_ind]
 
-        def getIndSlice(v):
-            if normal == "X":
-                v = v[ind, :, :]
-            elif normal == "Y":
-                v = v[:, ind, :]
-            elif normal == "Z":
-                v = v[:, :, ind]
-            return v
+        cc_tensor = [self.cell_centers_x, self.cell_centers_y, self.cell_centers_z]
+        # a temporary 2D TensorMesh of the slice, and the 3D cell of each 2D cell
+        tM, ind_3d_to_2d = discretize.utils.slice_mesh(
+            self, dim_ind, cc_tensor[dim_ind][ind], return_indices=True
+        )
 
-        def doSlice(v):
-            if v_type == "CC":
-                return getIndSlice(self.reshape(v, "CC", "CC", "M"))
-            elif v_type == "CCv":
-                if view != "vec":
-                    raise AssertionError("Other types for CCv not supported")
+        # average values to cell centers if not "CC" or "CCv"
+        if v_type == "CCv":
+            if view != "vec":
+                raise AssertionError("Other types for CCv not supported")
+        elif v_type != "CC":
+            # Now just deal with 'F' and 'E' (x, y, z, maybe...)
+            aveOp = "ave" + v_type + ("2CCV" if view == "vec" else "2CC")
+            Av = getattr(self, aveOp)
+            if v.size == Av.shape[1]:
+                v = Av * v
             else:
-                # Now just deal with 'F' and 'E' (x, y, z, maybe...)
-                aveOp = "ave" + v_type + ("2CCV" if view == "vec" else "2CC")
-                Av = getattr(self, aveOp)
-                if v.size == Av.shape[1]:
-                    v = Av * v
-                else:
-                    v = self.reshape(v, v_type[0], v_type)  # get specific component
-                    v = Av * v
-                # we should now be averaged to cell centers (might be a vector)
-            v = self.reshape(v.reshape((self.nC, -1), order="F"), "CC", "CC", "M")
-            if view == "vec":
-                outSlice = []
-                if "X" not in normal:
-                    outSlice.append(getIndSlice(v[0]))
-                if "Y" not in normal:
-                    outSlice.append(getIndSlice(v[1]))
-                if "Z" not in normal:
-                    outSlice.append(getIndSlice(v[2]))
-                return np.r_[mkvc(outSlice[0]), mkvc(outSlice[1])]
-            else:
-                return getIndSlice(self.reshape(v, "CC", "CC", "M"))
+                v = self.reshape(v, v_type[0], v_type)  # get specific component
+                v = Av * v
+            # we should now be averaged to cell centers (might be a vector)
 
-        h2d = []
-        x2d = []
-        if "X" not in normal:
-            h2d.append(self.h[0])
-            x2d.append(self.origin[0])
-        if "Y" not in normal:
-            h2d.append(self.h[1])
-            x2d.append(self.origin[1])
-        if "Z" not in normal:
-            h2d.append(self.h[2])
-            x2d.append(self.origin[2])
-        tM = self.__class__(h=h2d, origin=x2d)  #: Temp Mesh
-        v2d = doSlice(v)
+        # take the cell values from the 3D mesh to the slice
+        v2d = v.reshape((self.nC, -1), order="F")[ind_3d_to_2d]
+        if view == "vec":
+            v2d = mkvc(v2d[:, in_plane])
+        else:
+            v2d = v2d[:, 0]
 
         out = tM.__plot_image_tensor2D(
             v2d,
@@ -2130,9 +2107,6 @@ class InterfaceMPL(object):
         normalInd = {"X": 0, "Y": 1, "Z": 2}[normal]
         antiNormalInd = {"X": [1, 2], "Y": [0, 2], "Z": [0, 1]}[normal]
 
-        h2d = (self.h[antiNormalInd[0]], self.h[antiNormalInd[1]])
-        x2d = (self.origin[antiNormalInd[0]], self.origin[antiNormalInd[1]])
-
         #: Size of the sliced dimension
         szSliceDim = len(self.h[normalInd])
         if ind is None:
@@ -2143,24 +2117,10 @@ class InterfaceMPL(object):
         cc_tensor = [self.cell_centers_x, self.cell_centers_y, self.cell_centers_z]
         slice_loc = cc_tensor[normalInd][ind]
 
-        slice_origin = self.origin.copy()
-        slice_origin[normalInd] = slice_loc
-        normal = [0, 0, 0]
-        normal[normalInd] = 1
-
-        # create a temporary TreeMesh with the slice through
-        temp_mesh = discretize.TreeMesh(h2d, x2d, diagonal_balance=False)
-        level_diff = self.max_level - temp_mesh.max_level
-
-        # get list of cells which intersect the slicing plane
-        inds = self.get_cells_on_plane(slice_origin, normal)
-        levels = self._cell_levels_by_indexes(inds) - level_diff
-        grid2d = self.cell_centers[inds][:, antiNormalInd]
-
-        temp_mesh.insert_cells(grid2d, levels)
-        tm_gridboost = np.empty((temp_mesh.n_cells, 3))
-        tm_gridboost[:, antiNormalInd] = temp_mesh.cell_centers
-        tm_gridboost[:, normalInd] = slice_loc
+        # a temporary 2D TreeMesh of the slice, and the 3D cell of each 2D cell
+        temp_mesh, ind_3d_to_2d = discretize.utils.slice_mesh(
+            self, normalInd, slice_loc, return_indices=True
+        )
 
         # interpolate values to self.gridCC if not "CC" or "CCv"
         if v_type[:2] != "CC":
@@ -2191,8 +2151,7 @@ class InterfaceMPL(object):
             vecs = v[:, antiNormalInd]
             v = np.linalg.norm(v, axis=1)
 
-        # interpolate values from self.gridCC to grid2d
-        ind_3d_to_2d = self.get_containing_cells(tm_gridboost)
+        # take the cell values from the 3D mesh to the slice
         v2d = v[ind_3d_to_2d]
 
         out = temp_mesh.plot_image(

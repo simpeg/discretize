@@ -1111,6 +1111,141 @@ def active_from_xyz(mesh, xyz, grid_reference="CC", method="linear"):
     return active.ravel()
 
 
+def slice_mesh(mesh, normal="Z", location=None, return_indices=False):
+    """Extract an axis-aligned 2D slice of a 3D TensorMesh or TreeMesh.
+
+    The cells of a 3D tensor mesh or octree that intersect an axis-aligned
+    plane form a 2D mesh of the same type. This builds that mesh, with one 2D
+    cell for each 3D cell cut by the plane, and can also return which 3D cell
+    each 2D cell came from.
+
+    Parameters
+    ----------
+    mesh : discretize.TensorMesh or discretize.TreeMesh
+        A 3D tensor or tree mesh.
+    normal : {"X", "Y", "Z"} or int
+        The axis normal to the slicing plane.
+    location : float, optional
+        The coordinate of the plane along `normal`. Defaults to the center of
+        the middle base cell along `normal`, as used by ``plot_slice``. If the
+        plane lies on cell faces, the cells on the high side of the plane are
+        used, or the cells on the low side if the plane is the high boundary
+        of the mesh.
+    return_indices : bool, default: False
+        Whether to also return the index of the 3D cell each 2D cell lies in.
+
+    Returns
+    -------
+    mesh_2d : discretize.TensorMesh or discretize.TreeMesh
+        The 2D mesh of the slice, of the same type as `mesh`. Its first and
+        second dimensions are the remaining axes in increasing order (e.g.
+        ``(x, z)`` for a ``"Y"`` normal).
+    indices : (mesh_2d.n_cells,) numpy.ndarray of int
+        Only returned if `return_indices` is ``True``. The index of the 3D cell
+        containing each 2D cell, so that ``values_2d = values_3d[indices]``
+        takes cell values from the 3D mesh to the slice.
+
+    Examples
+    --------
+    Slice a 3D tree mesh refined around a point, and take a model to the slice.
+
+    >>> import numpy as np
+    >>> import discretize
+    >>> from discretize.utils import slice_mesh
+    >>> mesh = discretize.TreeMesh([16, 16, 16], diagonal_balance=True)
+    >>> mesh.refine_ball([0.5, 0.5, 0.5], 0.2, levels=-1)
+    >>> model = mesh.cell_centers[:, 2]
+    >>> mesh_2d, indices = slice_mesh(mesh, "Y", 0.51, return_indices=True)
+    >>> mesh_2d.dim
+    2
+    >>> model_2d = model[indices]
+    >>> np.allclose(model_2d, mesh_2d.cell_centers[:, 1])
+    True
+
+    Tensor meshes slice the same way, giving a 2D tensor mesh.
+
+    >>> mesh = discretize.TensorMesh([4, 5, 6])
+    >>> mesh_2d = slice_mesh(mesh, "X", 0.3)
+    >>> mesh_2d.shape_cells
+    (5, 6)
+    """
+    if isinstance(mesh, discretize.TreeMesh):
+        slicer = _slice_tree_mesh
+    elif isinstance(mesh, discretize.TensorMesh):
+        slicer = _slice_tensor_mesh
+    else:
+        raise TypeError(
+            f"slice_mesh requires a TensorMesh or TreeMesh, got {type(mesh).__name__}."
+        )
+    if mesh.dim != 3:
+        raise ValueError(f"slice_mesh requires a 3D mesh, got a {mesh.dim}D mesh.")
+    if isinstance(normal, str):
+        try:
+            axis = {"X": 0, "Y": 1, "Z": 2}[normal.upper()]
+        except KeyError:
+            raise ValueError(f"normal must be 'X', 'Y' or 'Z', got {normal!r}.")
+    else:
+        axis = int(normal)
+        if axis not in (0, 1, 2):
+            raise ValueError(f"normal must be 0, 1 or 2, got {normal!r}.")
+
+    nodes = [mesh.nodes_x, mesh.nodes_y, mesh.nodes_z][axis]
+    if location is None:
+        location = 0.5 * (nodes[:-1] + nodes[1:])[len(mesh.h[axis]) // 2]
+    location = float(location)
+    if location < nodes[0] or location > nodes[-1]:
+        raise ValueError(
+            f"location {location} is outside of the mesh along axis {axis} "
+            f"({nodes[0]} to {nodes[-1]})."
+        )
+    return slicer(mesh, axis, location, nodes, return_indices)
+
+
+def _slice_tensor_mesh(mesh, axis, location, nodes, return_indices):
+    """Slice a 3D TensorMesh, see :func:`slice_mesh`."""
+    in_plane = [i for i in range(3) if i != axis]
+    mesh_2d = discretize.TensorMesh(
+        [mesh.h[i] for i in in_plane], [mesh.origin[i] for i in in_plane]
+    )
+    if not return_indices:
+        return mesh_2d
+    # the last cell whose low face is at or below the plane, which takes the
+    # high side of a plane on cell faces (the low side at the top of the mesh)
+    ind = min(np.searchsorted(nodes, location, side="right"), len(nodes) - 1) - 1
+    cell_inds = np.arange(mesh.n_cells).reshape(mesh.shape_cells, order="F")
+    return mesh_2d, np.take(cell_inds, ind, axis=axis).reshape(-1, order="F")
+
+
+def _slice_tree_mesh(mesh, axis, location, nodes, return_indices):
+    """Slice a 3D TreeMesh, see :func:`slice_mesh`."""
+    in_plane = [i for i in range(3) if i != axis]
+    # move a plane lying on cell faces just inside the cells on its high side
+    # (the low side at the top of the mesh), so each cut cell is unambiguous
+    delta = 1e-6 * np.min(mesh.h[axis])
+    location = location + delta if location + delta < nodes[-1] else location - delta
+
+    origin = mesh.origin.copy()
+    origin[axis] = location
+    plane_normal = np.zeros(3)
+    plane_normal[axis] = 1.0
+    cells = mesh.get_cells_on_plane(origin, plane_normal)
+
+    mesh_2d = discretize.TreeMesh(
+        [mesh.h[i] for i in in_plane],
+        [mesh.origin[i] for i in in_plane],
+        diagonal_balance=False,
+    )
+    levels = mesh.cell_levels_by_index(cells) - (mesh.max_level - mesh_2d.max_level)
+    mesh_2d.insert_cells(mesh.cell_centers[cells][:, in_plane], levels, finalize=True)
+
+    if not return_indices:
+        return mesh_2d
+    points = np.empty((mesh_2d.n_cells, 3))
+    points[:, in_plane] = mesh_2d.cell_centers
+    points[:, axis] = location
+    return mesh_2d, np.atleast_1d(mesh.get_containing_cells(points))
+
+
 def example_simplex_mesh(rect_shape):
     """Create a simple tetrahedral mesh on a unit cube in 2D or 3D.
 
