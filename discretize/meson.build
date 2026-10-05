@@ -8,7 +8,6 @@ python_sources = [
   'tests.py',
   'tree_mesh.py',
   'unstructured_mesh.py',
-  'View.py',
 ]
 
 py.install_sources(
@@ -21,4 +20,3 @@ subdir('_extensions')
 subdir('mixins')
 subdir('operators')
 subdir('utils')
-subdir('Tests')
