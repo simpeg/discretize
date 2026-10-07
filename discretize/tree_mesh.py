@@ -645,6 +645,7 @@ class TreeMesh(
         pad_down=True,
         finalize=True,
         diagonal_balance=None,
+        extrapolate_surface=None,
     ):
         """Refine along a surface triangulated from xyz to the prescribed level.
 
@@ -653,11 +654,14 @@ class TreeMesh(
         level.
 
         It also optionally pads the surface at each level based on the number of
-        padding cells at each dimension. Horizontally, it does so by adding points
-        outward from every node along the boundary of the triangulation, along the
-        outward bisector of the adjacent boundary edges (equivalent to a nearest
-        neighbor extrapolation of the surface). Vertically, the surface is shifted
-        down (and/or up) by the padding amount.
+        padding cells at each dimension. Vertically, the surface is shifted down
+        (and/or up) by the padding amount. Horizontally, the padding is done in one
+        of two ways, set by ``extrapolate_surface``. If ``False`` (the current
+        default), the bounding box of the surface is stretched in each dimension. If
+        ``True``, points are added outward from every node along the boundary of the
+        triangulation, along the outward bisector of the adjacent boundary edges
+        (equivalent to a nearest neighbor extrapolation of the surface), see
+        :func:`~discretize.utils.extend_surface_boundary`.
 
         Parameters
         ----------
@@ -684,15 +688,22 @@ class TreeMesh(
         diagonal_balance : None or bool, optional
             Whether to balance cells diagonally in the refinement, `None` implies using
             the same setting used to instantiate the TreeMesh`.
+        extrapolate_surface : None or bool, optional
+            Whether to pad horizontally by extrapolating the surface outward from the
+            nodes on its boundary, instead of stretching its bounding box. `None`
+            implies `False`, but issues a warning if horizontal padding is requested,
+            as the default will change to `True` in discretize v1.0. This has no
+            effect if there is no horizontal padding.
 
         See Also
         --------
-        refine_triangle, refine_vertical_trianglular_prism
+        refine_triangle, refine_vertical_trianglular_prism, discretize.utils.extend_surface_boundary
 
         Notes
         -----
-        For surfaces with a non-convex boundary, the outward bisectors of different
-        boundary nodes can intersect if the horizontal padding is large compared to
+        When ``extrapolate_surface=True`` and the surface has a non-convex boundary,
+        the outward bisectors of different boundary nodes can intersect if the
+        horizontal padding is large compared to
         the size of local features of the boundary (e.g. notches or concavities). In
         that case the padded region can fold over itself and the result may be
         unreliable. Keep the padding small relative to such features, or use a convex
@@ -775,12 +786,33 @@ class TreeMesh(
             simps = Delaunay(xyz[:, :2]).simplices
         n_ps = len(xyz)
 
+        if extrapolate_surface is None:
+            extrapolate_surface = False
+            if has_h_pad:
+                warnings.warn(
+                    "In discretize v1.0 refine_surface will change the default "
+                    "behavior of horizontal padding to extrapolate the surface "
+                    "outwards from the nodes on its boundary, instead of stretching "
+                    "its bounding box. To use the new behavior now, set "
+                    "extrapolate_surface=True. To keep the current behavior, "
+                    "explicitly set extrapolate_surface=False.",
+                    FutureWarning,
+                    stacklevel=2,
+                )
+
         # Add points outward from the boundary of the triangulation, so that padding
         # is a scaling of their offsets, without needing to re-triangulate.
-        if has_h_pad:
+        if has_h_pad and extrapolate_surface:
             xyz, simps, pad_dirs = extend_surface_boundary((xyz, simps))
         else:
             pad_dirs = np.zeros((n_ps, self.dim - 1))
+        stretch = has_h_pad and not extrapolate_surface
+        if stretch:
+            # bounding box of the surface, to stretch for padding
+            bb_min = np.min(xyz, axis=0)[:-1]
+            bb_max = np.max(xyz, axis=0)[:-1]
+            half_width = (bb_max - bb_min) / 2
+            center = (bb_max + bb_min) / 2
         n_pts = len(xyz)
 
         if self.dim == 2:
@@ -795,7 +827,11 @@ class TreeMesh(
         for lv, n_pad in zip(np.arange(level, 1, -1), padding_cells_by_level):
             pad += n_pad * h_min * 2 ** (self.max_level - lv)
             h = 0
-            points[:, :-1] = xyz[:, :-1] + pad[:-1] * pad_dirs
+            if stretch:
+                horizontal_expansion = (half_width + pad[:-1]) / half_width
+                points[:, :-1] = horizontal_expansion * (xyz[:, :-1] - center) + center
+            else:
+                points[:, :-1] = xyz[:, :-1] + pad[:-1] * pad_dirs
             points[:, -1] = xyz[:, -1]
             if pad_up:
                 h += pad[-1]
