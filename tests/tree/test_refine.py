@@ -1,3 +1,4 @@
+import warnings
 import re
 import discretize
 import numpy as np
@@ -439,10 +440,13 @@ def test_refine_points_errors():
         mesh1.refine_points(point, 20)
 
 
-def test_refine_surface2D():
+@pytest.mark.parametrize("extrapolate", [False, True])
+def test_refine_surface2D(extrapolate):
     mesh1 = discretize.TreeMesh([32, 32])
     points = [[0.3, 0.3], [0.7, 0.3]]
-    mesh1.refine_surface(points, -1, None, pad_up=True, pad_down=True)
+    mesh1.refine_surface(
+        points, -1, None, pad_up=True, pad_down=True, extrapolate_surface=extrapolate
+    )
 
     mesh2 = discretize.TreeMesh([32, 32])
     x0 = [0.3, 0.3]
@@ -454,7 +458,14 @@ def test_refine_surface2D():
     mesh1 = discretize.TreeMesh([32, 32])
     points = [[0.3, 0.3], [0.7, 0.3]]
     n_cell_pad = 2
-    mesh1.refine_surface(points, -1, n_cell_pad, pad_up=True, pad_down=True)
+    mesh1.refine_surface(
+        points,
+        -1,
+        n_cell_pad,
+        pad_up=True,
+        pad_down=True,
+        extrapolate_surface=extrapolate,
+    )
 
     mesh2 = discretize.TreeMesh([32, 32])
     x0 = np.r_[0.3, 0.3]
@@ -469,7 +480,8 @@ def test_refine_surface2D():
     assert mesh1.equals(mesh2)
 
 
-def test_refine_surface3D():
+@pytest.mark.parametrize("extrapolate", [False, True])
+def test_refine_surface3D(extrapolate):
     mesh1 = discretize.TreeMesh([32, 32, 32])
     points = [
         [0.3, 0.3, 0.5],
@@ -477,7 +489,14 @@ def test_refine_surface3D():
         [0.3, 0.7, 0.5],
         [0.7, 0.7, 0.5],
     ]
-    mesh1.refine_surface(points, -1, [[1, 2, 3]], pad_up=True, pad_down=True)
+    mesh1.refine_surface(
+        points,
+        -1,
+        [[1, 2, 3]],
+        pad_up=True,
+        pad_down=True,
+        extrapolate_surface=extrapolate,
+    )
 
     mesh2 = discretize.TreeMesh([32, 32, 32])
     pad = np.array([1, 2, 3]) / 32
@@ -489,9 +508,113 @@ def test_refine_surface3D():
 
     mesh3 = discretize.TreeMesh([32, 32, 32])
     simps = [[0, 1, 2], [1, 2, 3]]
-    mesh3.refine_surface((points, simps), -1, [[1, 2, 3]], pad_up=True, pad_down=True)
+    mesh3.refine_surface(
+        (points, simps),
+        -1,
+        [[1, 2, 3]],
+        pad_up=True,
+        pad_down=True,
+        extrapolate_surface=extrapolate,
+    )
 
     assert mesh1.equals(mesh3)
+
+
+def test_refine_surface3D_boundary_nodes():
+    # 3x3 grid, includes mid-edge boundary nodes, should match the padded box
+    x, y = np.mgrid[0.3:0.7:3j, 0.3:0.7:3j]
+    points = np.stack([x, y, np.full_like(x, 0.5)], axis=-1).reshape(-1, 3)
+    pad_cells = [[1, 2, 3]]
+
+    mesh1 = discretize.TreeMesh([32, 32, 32])
+    mesh1.refine_surface(
+        points, -1, pad_cells, pad_up=True, pad_down=True, extrapolate_surface=True
+    )
+
+    mesh2 = discretize.TreeMesh([32, 32, 32])
+    pad = np.array([1, 2, 3]) / 32
+    mesh2.refine_box([0.3, 0.3, 0.5] - pad, [0.7, 0.7, 0.5] + pad, -1)
+    assert mesh1.equals(mesh2)
+
+
+def test_refine_surface3D_nonconvex():
+    # L-shaped surface, padding follows the boundary rather than the bounding box
+    x, y = np.mgrid[0.2:0.8:13j, 0.2:0.8:13j]
+    keep = ~((x > 0.5) & (y > 0.5))
+    points = np.stack([x[keep], y[keep], np.full(keep.sum(), 0.5)], axis=-1)
+    # triangulate only the L (drop triangles in the removed corner)
+    from scipy.spatial import Delaunay
+
+    simps = Delaunay(points[:, :2]).simplices
+    cent = points[simps, :2].mean(axis=1)
+    simps = simps[~((cent[:, 0] > 0.5) & (cent[:, 1] > 0.5))]
+
+    mesh1 = discretize.TreeMesh([64, 64, 64])
+    mesh1.refine_surface((points, simps), -1, [[2, 2, 2]], extrapolate_surface=True)
+
+    # the removed corner, away from the L, is not refined to the finest level
+    inds = np.atleast_1d(mesh1.get_containing_cells([[0.75, 0.75, 0.5]]))
+    assert mesh1.cell_levels_by_index(inds[0]) < mesh1.max_level
+    # points just outside the L edges are
+    inds = np.atleast_1d(
+        mesh1.get_containing_cells([[0.19, 0.3, 0.5], [0.3, 0.19, 0.5]])
+    )
+    lvl = [mesh1.cell_levels_by_index(i) for i in inds]
+    assert np.all(np.asarray(lvl) == mesh1.max_level)
+
+
+def test_extend_surface_boundary():
+    from discretize.utils import extend_surface_boundary
+    from scipy.spatial import Delaunay
+
+    x, y = np.mgrid[0.0:1.0:3j, 0.0:1.0:3j]
+    xyz = np.stack([x, y, x + y], axis=-1).reshape(-1, 3)
+    xyz_ext, simps, dirs = extend_surface_boundary(xyz)
+    # every one of the 8 boundary nodes gets a copy
+    assert len(xyz_ext) == 9 + 8
+    assert np.all(dirs[:9] == 0)
+    # copies keep their parent's elevation
+    assert np.all(np.isin(xyz_ext[9:, 2], xyz[:, 2]))
+    padded = xyz_ext[:, :-1] + 0.1 * dirs
+    assert np.isclose(padded[:, 0].min(), -0.1)
+    assert np.isclose(padded[:, 0].max(), 1.1)
+    assert simps.max() == len(xyz_ext) - 1
+
+    # user supplied triangulation gives the same result
+    simps_in = Delaunay(xyz[:, :2]).simplices
+    out2 = extend_surface_boundary((xyz, simps_in))
+    out1 = extend_surface_boundary(xyz)
+    for a, b in zip(out1, out2):
+        np.testing.assert_allclose(a, b)
+
+    xz = np.array([[0.7, 1.0], [0.3, 2.0]])
+    xz_seg = extend_surface_boundary((xz, [[1, 0]]))
+    np.testing.assert_allclose(xz_seg[0][:2], xz)
+    np.testing.assert_allclose(xz_seg[2][2:, 0], [1.0, -1.0])
+    xz_ext, simps, dirs = extend_surface_boundary(xz)
+    padded = xz_ext[:, :-1] + 0.1 * dirs
+    np.testing.assert_allclose(padded[:, 0], [0.3, 0.7, 0.2, 0.8])
+    np.testing.assert_allclose(xz_ext[2:, 1], [2.0, 1.0])
+
+
+def test_refine_surface_extrapolate_warning():
+    points = [[0.3, 0.3], [0.7, 0.3]]
+
+    # default is the old behavior, and warns when there is horizontal padding
+    mesh1 = discretize.TreeMesh([32, 32], diagonal_balance=False)
+    with pytest.warns(FutureWarning, match="extrapolate_surface"):
+        mesh1.refine_surface(points, -1, 2)
+    mesh2 = discretize.TreeMesh([32, 32], diagonal_balance=False)
+    mesh2.refine_surface(points, -1, 2, extrapolate_surface=False)
+    assert mesh1.equals(mesh2)
+
+    # no warning without horizontal padding, or when explicitly set
+    mesh3 = discretize.TreeMesh([32, 32], diagonal_balance=False)
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        mesh3.refine_surface(points, -1, None)
+        mesh3.refine_surface(points, -1, [[0, 2]])
+        mesh3.refine_surface(points, -1, 2, extrapolate_surface=True)
 
 
 def test_refine_surface_errors():
