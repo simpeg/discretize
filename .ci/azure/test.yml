@@ -17,6 +17,10 @@ jobs:
           python.version: "3.14"
           environ.bare: True
           python.freethreading: True
+        linux-Python315:
+          image: ubuntu-latest
+          python.version: "3.15"
+          environ.bare: True
         osx-Python312:
           image: macOS-latest
           python.version: "3.12"
@@ -31,6 +35,10 @@ jobs:
           python.version: "3.14"
           environ.bare: True
           python.freethreading: True
+        osx-Python315:
+          image: macOS-latest
+          python.version: "3.15"
+          environ.bare: True
         win-Python312:
           image: windows-latest
           python.version: "3.12"
@@ -45,6 +53,10 @@ jobs:
           python.version: "3.14"
           environ.bare: True
           python.freethreading: True
+        win-Python315:
+          image: windows-latest
+          python.version: "3.15"
+          environ.bare: True
     displayName: "${{ variables.image }} ${{ variables.python.version }}"
     pool:
       vmImage: $(image)
@@ -69,42 +81,3 @@ jobs:
           ./codecov
         displayName: "Upload coverage to codecov.io"
         condition: variables.coverage
-
-  # Python 3.15 is still pre-release (rc). This job pulls the exact rc build
-  # via uv/python-build-standalone and is allowed to fail so upstream package
-  # gaps don't block unrelated PRs. Merge it into the main matrix above once
-  # 3.15 goes final and stabilizes. Bump python.version by hand as new rcs
-  # are cut (rc2 -> rc3 -> final).
-  - job:
-    continueOnError: true
-    strategy:
-      matrix:
-        linux-Python315:
-          image: ubuntu-latest
-          python.version: "3.15.0rc2"
-          environ.bare: True
-        osx-Python315:
-          image: macOS-latest
-          python.version: "3.15.0rc2"
-          environ.bare: True
-        win-Python315:
-          image: windows-latest
-          python.version: "3.15.0rc2"
-          environ.bare: True
-    displayName: "${{ variables.image }} ${{ variables.python.version }} (rc)"
-    pool:
-      vmImage: $(image)
-    variables:
-      varOS: $(Agent.OS)
-      ARCH: $(Agent.OSArchitecture)
-    steps:
-      - bash: |
-          curl -LsSf https://astral.sh/uv/install.sh | sh
-          echo "##vso[task.prependpath]$HOME/.local/bin"
-        displayName: Install uv
-
-      - bash: .ci/azure/setup_env.sh
-        displayName: Setup discretize environment
-
-      - bash: .ci/azure/run_tests.sh
-        displayName: "Testing"
