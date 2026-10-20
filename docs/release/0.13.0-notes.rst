@@ -1,0 +1,76 @@
+.. currentmodule:: discretize
+
+.. _0.13.0_notes:
+
+===================================
+``discretize`` 0.13.0 Release Notes
+===================================
+
+October 15, 2026
+
+This minor release adds a few new mesh utilities, extends the surface inner product matrices to more mesh types,
+fixes several bugs, and moves to a smaller set of wheels for new Python versions.
+
+Python versions
+---------------
+``discretize`` has bumped its minimum supported ``python`` version to 3.12 (and ``numpy`` to 1.26), and is tested against versions 3.12-3.15.
+Users on older python versions should continue to use ``discretize`` ``0.12.x``.
+
+Wheels
+------
+Wheels for GIL-enabled ``python`` are now built against the limited API (abi3), so a single wheel per platform covers every
+``python`` version from 3.12 on. This means new wheels are available as soon as a new ``python`` version is released, without waiting
+on a new ``discretize`` release. The free-threaded builds (3.14t and 3.15t) are still built as separate per-version wheels.
+
+Mesh slicing
+------------
+A new :func:`discretize.utils.slice_mesh` utility extracts an axis-aligned 2D slice of a 3D :class:`~discretize.TensorMesh` or :class:`~discretize.TreeMesh`, returning a 2D mesh
+of the same type. It can also return the index of the 3D cell that each 2D cell came from (with ``return_indices=True``), which makes it
+easy to take a model from the 3D mesh onto the slice. ``plot_slice`` now uses it internally.
+
+``TreeMesh`` updates
+--------------------
+:meth:`discretize.TreeMesh.refine_surface` has a new ``extrapolate_surface`` keyword that changes how the surface is padded horizontally.
+Currently the point cloud is stretched about its center, which distorts the surface when it is not centered or convex. With
+``extrapolate_surface=True`` the surface is instead extended outward from every node along its boundary, which is a nearest
+neighbor extrapolation of the surface. The extension step is also available on its own as
+:func:`discretize.utils.extend_surface_boundary`, which is useful for selecting the cells intersected by the padded surface.
+
+.. attention::
+
+    In ``discretize`` 1.0 ``extrapolate_surface=True`` will become the default. For now the old behavior is kept, and a ``FutureWarning``
+    is issued when horizontal padding is requested without setting ``extrapolate_surface``.
+
+Inner products
+--------------
+Edge inner product matrices over surfaces (``get_edge_inner_product_surface`` and its derivative) are now implemented for
+:class:`~discretize.CurvilinearMesh` and :class:`~discretize.SimplexMesh`, in both 2D and 3D.
+
+Bugfixes
+--------
+* Fixed ``zeros_outside=True`` skipping the interpolation of locations that were inside the mesh for :class:`~discretize.TreeMesh`.
+* Fixed :meth:`discretize.TreeMesh.insert_cells` (and :meth:`~discretize.TreeMesh.refine_points`) when given multiple points with a single level.
+* Fixed :meth:`discretize.TreeMesh.average_cell_to_face` for cells that span the whole mesh.
+* Fixed an out-of-bounds read when volume averaging between two ``TreeMesh`` objects (:func:`discretize.utils.volume_average`), which could occasionally cause a segmentation fault.
+
+
+Contributors
+============
+
+* `@jcapriot <https://github.com/jcapriot>`__
+* `@santisoler <https://github.com/santisoler>`__
+* `@dccowan <https://github.com/dccowan>`__
+
+Pull requests
+=============
+
+* Fix logic error when zeros_outside was True by `@jcapriot <https://github.com/jcapriot>`__ in `#410 <https://github.com/simpeg/discretize/pull/410>`__
+* Hierarchical inner products for unstructured meshes by `@dccowan <https://github.com/dccowan>`__ in `#412 <https://github.com/simpeg/discretize/pull/412>`__
+* Maintenance on build/testing scripts by `@jcapriot <https://github.com/jcapriot>`__ in `#413 <https://github.com/simpeg/discretize/pull/413>`__
+* Fix bug in mesh refinement with multiple points by `@santisoler <https://github.com/santisoler>`__ in `#416 <https://github.com/simpeg/discretize/pull/416>`__
+* Bump minimum version and start testing on 3.15 by `@jcapriot <https://github.com/jcapriot>`__ in `#417 <https://github.com/simpeg/discretize/pull/417>`__
+* Test out using uv instead of conda for a testing by `@jcapriot <https://github.com/jcapriot>`__ in `#418 <https://github.com/simpeg/discretize/pull/418>`__
+* Abi3 wheels by `@jcapriot <https://github.com/jcapriot>`__ in `#419 <https://github.com/simpeg/discretize/pull/419>`__
+* Add slice_tree_mesh utility for axis-aligned TreeMesh slices by `@jcapriot <https://github.com/jcapriot>`__ in `#420 <https://github.com/simpeg/discretize/pull/420>`__
+* Fix TreeMesh ``average_cell_to_face`` for cells spanning the whole mesh by `@jcapriot <https://github.com/jcapriot>`__ in `#421 <https://github.com/simpeg/discretize/pull/421>`__
+* Make refine_surface not distort the point cloud to handle horizontal extensions. by `@jcapriot <https://github.com/jcapriot>`__ in `#422 <https://github.com/simpeg/discretize/pull/422>`__

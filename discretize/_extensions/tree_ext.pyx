@@ -6655,7 +6655,7 @@ cdef class _TreeMesh:
         cdef double x1m[3]
         cdef double x1p[3]
         cdef double x2m[3]
-        cdef double x2p[33]
+        cdef double x2p[3]
         cdef double[:] origin = meshin._origin
         cdef double[:] xF
         if self.dim == 2:

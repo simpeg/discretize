@@ -13,8 +13,8 @@ if [[ "$is_azure" == "true" ]]; then
   fi
 fi
 
-# resolve python spec: freethreaded uses a "t" suffix. Pre-release jobs set
-# PYTHON_VERSION to an exact rc specifier (e.g. "3.15.0rc2") in test.yml.
+# resolve python spec: freethreaded uses a "t" suffix. Pre-release jobs can set
+# PYTHON_VERSION to an exact rc specifier (e.g. "3.16.0rc1") in test.yml.
 py_spec="$PYTHON_VERSION"
 extra_setup_args=()
 if [[ "$is_free_threaded" == "true" ]]; then
