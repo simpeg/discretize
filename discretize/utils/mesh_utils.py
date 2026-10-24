@@ -1388,10 +1388,12 @@ def _outward_boundary_directions(xy, simps, max_miter=5.0):
     """
     edges = np.r_[simps[:, [0, 1]], simps[:, [1, 2]], simps[:, [2, 0]]]
     third = np.r_[simps[:, 2], simps[:, 0], simps[:, 1]]
-    _, inverse, counts = np.unique(
-        np.sort(edges, axis=1), axis=0, return_inverse=True, return_counts=True
-    )
-    on_boundary = counts[inverse.reshape(-1)] == 1
+    # A boundary edge belongs to only one triangle. Each edge is packed into a single
+    # integer key, as np.unique over rows (axis=0) is much slower on large surfaces.
+    sorted_edges = np.sort(edges, axis=1).astype(np.int64)
+    keys = sorted_edges[:, 0] * (int(simps.max()) + 1) + sorted_edges[:, 1]
+    _, inverse, counts = np.unique(keys, return_inverse=True, return_counts=True)
+    on_boundary = counts[inverse] == 1
     edges = edges[on_boundary]
     third = third[on_boundary]
 
